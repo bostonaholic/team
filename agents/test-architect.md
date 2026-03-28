@@ -4,6 +4,8 @@ description: Use when failing acceptance tests need to be written before impleme
 model: inherit
 tools: Read, Write, Edit, Grep, Glob, Bash
 permissionMode: acceptEdits
+consumes: plan.approved
+produces: tests.written
 ---
 
 # Test Architect Agent

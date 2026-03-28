@@ -4,6 +4,8 @@ description: Use when the planner encounters requirements ambiguity, missing acc
 model: sonnet
 tools: Read, Grep, Glob
 permissionMode: plan
+consumes: research.completed
+produces: ambiguity.resolved
 ---
 
 # Product Owner Agent

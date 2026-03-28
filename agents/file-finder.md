@@ -4,6 +4,8 @@ description: Use when you need to locate files in a codebase relevant to a speci
 model: haiku
 tools: Read, Grep, Glob
 permissionMode: plan
+consumes: feature.requested
+produces: files.found
 ---
 
 # File Finder Agent

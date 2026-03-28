@@ -4,6 +4,8 @@ description: Use when you need to explore and understand a codebase area before 
 model: sonnet
 tools: Read, Grep, Glob
 permissionMode: plan
+consumes: feature.requested
+produces: research.completed
 ---
 
 # Researcher Agent

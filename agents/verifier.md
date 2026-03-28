@@ -4,6 +4,8 @@ description: Use when comprehensive verification checks need to run before compl
 model: haiku
 tools: Read, Grep, Glob, Bash
 permissionMode: plan
+consumes: implementation.completed
+produces: verification.completed
 ---
 
 # Verifier Agent

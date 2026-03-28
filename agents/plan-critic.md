@@ -4,6 +4,8 @@ description: Use after the planner produces an implementation plan. Reviews the 
 model: sonnet
 tools: Read, Grep, Glob
 permissionMode: plan
+consumes: plan.drafted
+produces: plan.critiqued
 ---
 
 # Plan Critic Agent
