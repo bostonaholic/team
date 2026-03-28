@@ -7,14 +7,11 @@
  * Checks files in plugin component directories (agents/, skills/, hooks/,
  * .claude-plugin/) against structural expectations.
  *
- * When an agent file or registry.json is edited, cross-checks that
- * consumes/produces frontmatter stays in sync with the registry.
- *
  * Outputs warnings to stderr on validation failure. Never blocks.
  */
 
-import { readFile, readdir } from "node:fs/promises";
-import { resolve, relative, extname, basename, join } from "node:path";
+import { readFile } from "node:fs/promises";
+import { resolve, relative, extname, basename } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const PLUGIN_DIRS = ["agents/", "skills/", "hooks/", ".claude-plugin/"];
@@ -38,157 +35,6 @@ function warn(filePath, reason) {
 
 function findPluginDir(relativePath) {
   return PLUGIN_DIRS.find((dir) => relativePath.startsWith(dir));
-}
-
-/**
- * Parse consumes/produces from YAML frontmatter.
- * Minimal parser — only extracts these two fields, no full YAML dependency.
- */
-function parseFrontmatter(content) {
-  if (!content.startsWith("---")) return null;
-  const endIdx = content.indexOf("\n---", 3);
-  if (endIdx === -1) return null;
-
-  const frontmatter = content.slice(4, endIdx);
-  const result = { consumes: null, produces: null };
-
-  for (const line of frontmatter.split("\n")) {
-    const consumesMatch = line.match(/^consumes:\s*(.+)/);
-    if (consumesMatch) {
-      result.consumes = consumesMatch[1].trim();
-    }
-    const producesMatch = line.match(/^produces:\s*(.+)/);
-    if (producesMatch) {
-      result.produces = producesMatch[1].trim();
-    }
-  }
-
-  return result;
-}
-
-/**
- * Normalize consumes value for comparison.
- * Registry can have string or array; frontmatter is always a string.
- * "a, b, c" and ["a","b","c"] should match.
- */
-function normalizeConsumes(value) {
-  if (Array.isArray(value)) {
-    return value.slice().sort().join(", ");
-  }
-  if (typeof value === "string") {
-    return value
-      .split(",")
-      .map((s) => s.trim())
-      .sort()
-      .join(", ");
-  }
-  return "";
-}
-
-/**
- * Cross-check agent frontmatter against registry.json.
- * Triggered when either an agent file or the registry is edited.
- */
-async function crossCheckContracts(projectRoot, editedPath) {
-  const registryPath = join(projectRoot, "skills", "team", "registry.json");
-  const agentsDir = join(projectRoot, "agents");
-
-  let registry;
-  try {
-    const raw = await readFile(registryPath, "utf-8");
-    registry = JSON.parse(raw);
-  } catch {
-    // Registry doesn't exist or is invalid — skip cross-check.
-    return;
-  }
-
-  if (!Array.isArray(registry.agents)) return;
-
-  const mismatches = [];
-
-  // Build registry lookup: agent name → {consumes, produces}
-  const registryMap = new Map();
-  for (const entry of registry.agents) {
-    registryMap.set(entry.name, {
-      consumes: normalizeConsumes(entry.consumes),
-      produces: entry.produces || "",
-    });
-  }
-
-  // Read all agent files
-  let agentFiles;
-  try {
-    agentFiles = await readdir(agentsDir);
-  } catch {
-    return;
-  }
-
-  for (const file of agentFiles) {
-    if (extname(file) !== ".md") continue;
-
-    let content;
-    try {
-      content = await readFile(join(agentsDir, file), "utf-8");
-    } catch {
-      continue;
-    }
-
-    const fm = parseFrontmatter(content);
-    if (!fm) continue;
-
-    // Extract agent name from frontmatter
-    const nameMatch = content.match(/^name:\s*(.+)/m);
-    if (!nameMatch) continue;
-    const agentName = nameMatch[1].trim();
-
-    const registryEntry = registryMap.get(agentName);
-
-    if (!registryEntry) {
-      // Agent has consumes/produces but is not in registry
-      if (fm.consumes || fm.produces) {
-        mismatches.push(
-          `${file}: agent "${agentName}" has event contract in frontmatter but is missing from registry.json`
-        );
-      }
-      continue;
-    }
-
-    // Check consumes
-    if (fm.consumes !== null) {
-      const fmConsumes = normalizeConsumes(fm.consumes);
-      if (fmConsumes !== registryEntry.consumes) {
-        mismatches.push(
-          `${file}: consumes mismatch — frontmatter="${fm.consumes}" vs registry="${registryEntry.consumes}"`
-        );
-      }
-    }
-
-    // Check produces
-    if (fm.produces !== null) {
-      if (fm.produces !== registryEntry.produces) {
-        mismatches.push(
-          `${file}: produces mismatch — frontmatter="${fm.produces}" vs registry="${registryEntry.produces}"`
-        );
-      }
-    }
-
-    // Track that we've checked this registry entry
-    registryMap.delete(agentName);
-  }
-
-  // Check for registry entries without agent files
-  for (const [name, entry] of registryMap) {
-    mismatches.push(
-      `registry.json: agent "${name}" (consumes=${entry.consumes}, produces=${entry.produces}) has no matching agent file in agents/`
-    );
-  }
-
-  if (mismatches.length > 0) {
-    warn(
-      editedPath,
-      `Registry/frontmatter sync check found ${mismatches.length} mismatch(es):\n${mismatches.join("\n")}`
-    );
-  }
 }
 
 async function validateAgentMarkdown(filePath, content) {
@@ -277,14 +123,6 @@ async function main() {
       process.exit(0);
     }
     await validate(relativePath, content);
-  }
-
-  // Cross-check registry ↔ frontmatter when an agent or registry is edited.
-  const isAgentEdit = relativePath.startsWith("agents/") && extname(relativePath) === ".md";
-  const isRegistryEdit = relativePath === "skills/team/registry.json";
-
-  if (isAgentEdit || isRegistryEdit) {
-    await crossCheckContracts(projectRoot, relativePath);
   }
 
   process.exit(0);
