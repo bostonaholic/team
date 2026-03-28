@@ -1,0 +1,7 @@
+name: team
+
+up:
+  - claude-code
+
+check:
+  plugin: "claude plugin validate ."
