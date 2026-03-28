@@ -1,0 +1,21 @@
+{
+  "name": "team-dev",
+  "owner": {
+    "name": "Matthew Boston"
+  },
+  "metadata": {
+    "description": "Task Execution Agent Mesh — orchestrates specialized agents to autonomously implement entire features end-to-end"
+  },
+  "plugins": [
+    {
+      "name": "team",
+      "description": "Task Execution Agent Mesh — orchestrates specialized agents to autonomously implement entire features end-to-end",
+      "version": "0.1.0",
+      "source": "./",
+      "author": {
+        "name": "Matthew Boston",
+        "url": "https://matthewboston.com"
+      }
+    }
+  ]
+}

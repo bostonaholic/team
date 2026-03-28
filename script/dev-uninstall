@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "Uninstalling TEAM plugin (dev)..."
+echo
+
+claude plugin uninstall team@team-dev 2>&1 || true
+claude plugin marketplace remove team-dev 2>&1 || true
+
+echo
+echo "Done. Restart Claude Code to unload the plugin."

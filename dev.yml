@@ -11,6 +11,12 @@ check:
   plugin: "claude plugin validate ."
 
 commands:
+  install:
+    desc: "Symlink plugin agents, skills, and hooks to ~/.claude for global access"
+    run: "script/dev-install"
+  uninstall:
+    desc: "Remove dev symlinks and hook config from ~/.claude"
+    run: "script/dev-uninstall"
   update:
     desc: "Update all agent skills"
     # TODO: `npx skills update` ignores project-level skills-lock.json
