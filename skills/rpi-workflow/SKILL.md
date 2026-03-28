@@ -92,12 +92,12 @@ Examples: documentation gap analysis, style suggestions.
 
 ## Phase Transition Protocol
 
-Every transition between phases follows this sequence:
+Phase transitions are event-driven. Every transition follows this sequence:
 
-1. **Write state** — Update `.team/state.json` with the new phase
-2. **Verify artifacts** — Confirm all required artifacts from the current phase exist and are valid
-3. **Evaluate gates** — Check gate conditions for the current phase
-4. **Proceed** — Enter the next phase only after all gates pass
+1. **Record event** — Append the output event to `.team/events.jsonl`
+2. **Verify artifacts** — Confirm all required artifacts from the current phase exist on disk
+3. **Evaluate gates** — Check gate conditions defined in `skills/team/registry.json`
+4. **Proceed** — Dispatch the next agent(s) that consume the output event
 
 Never proceed to the next phase while a HARD gate is failing. SOFT gates
 require user acknowledgment before proceeding.
