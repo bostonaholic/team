@@ -9,3 +9,12 @@ up:
 
 check:
   plugin: "claude plugin validate ."
+
+commands:
+  update:
+    desc: "Update all agent skills"
+    # TODO: `npx skills update` ignores project-level skills-lock.json
+    #   https://github.com/vercel-labs/skills/issues/775
+    #   https://github.com/vercel-labs/skills/issues/690
+    #   Workaround: reinstall from source until fix is merged.
+    run: "npx skills add steveyegge/beads --skill beads --agent claude-code pi -y"
