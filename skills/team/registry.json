@@ -1,0 +1,108 @@
+{
+  "agents": [
+    {
+      "name": "file-finder",
+      "consumes": "feature.requested",
+      "produces": "files.found",
+      "parallel": true
+    },
+    {
+      "name": "researcher",
+      "consumes": "feature.requested",
+      "produces": "research.completed",
+      "parallel": true
+    },
+    {
+      "name": "product-owner",
+      "consumes": "research.completed",
+      "produces": "ambiguity.resolved",
+      "condition": "event.data.openQuestions > 0"
+    },
+    {
+      "name": "planner",
+      "consumes": ["research.completed", "ambiguity.resolved", "plan.revision-requested"],
+      "produces": "plan.drafted"
+    },
+    {
+      "name": "plan-critic",
+      "consumes": "plan.drafted",
+      "produces": "plan.critiqued"
+    },
+    {
+      "name": "test-architect",
+      "consumes": "plan.approved",
+      "produces": "tests.written"
+    },
+    {
+      "name": "implementer",
+      "consumes": "tests.confirmed-failing",
+      "produces": "implementation.completed"
+    },
+    {
+      "name": "code-reviewer",
+      "consumes": "implementation.completed",
+      "produces": "review.completed",
+      "parallel": true
+    },
+    {
+      "name": "security-reviewer",
+      "consumes": "implementation.completed",
+      "produces": "security-review.completed",
+      "parallel": true
+    },
+    {
+      "name": "technical-writer",
+      "consumes": "implementation.completed",
+      "produces": "docs-review.completed",
+      "parallel": true
+    },
+    {
+      "name": "ux-reviewer",
+      "consumes": "implementation.completed",
+      "produces": "ux-review.completed",
+      "parallel": true
+    },
+    {
+      "name": "verifier",
+      "consumes": "implementation.completed",
+      "produces": "verification.completed",
+      "parallel": true
+    }
+  ],
+  "gates": [
+    {
+      "after": "plan.critiqued",
+      "type": "human",
+      "passEvent": "plan.approved",
+      "failEvent": "plan.revision-requested"
+    },
+    {
+      "after": "tests.written",
+      "type": "mechanical",
+      "condition": "all tests fail with assertion errors, not crashes",
+      "passEvent": "tests.confirmed-failing"
+    },
+    {
+      "after": [
+        "review.completed",
+        "security-review.completed",
+        "docs-review.completed",
+        "ux-review.completed",
+        "verification.completed"
+      ],
+      "type": "aggregate",
+      "hardGates": ["security-review.completed", "verification.completed"],
+      "passEvent": "verification.passed",
+      "failEvent": "hard-gate.failed",
+      "maxRetries": 3
+    }
+  ],
+  "joins": [
+    {
+      "wait": ["files.found"],
+      "with": "researcher",
+      "produces": "research.completed",
+      "artifact": "docs/plans/YYYY-MM-DD-<topic>-research.md"
+    }
+  ]
+}
