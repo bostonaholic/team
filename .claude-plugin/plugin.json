@@ -1,0 +1,11 @@
+{
+  "name": "team",
+  "version": "0.1.0",
+  "description": "Task Execution Agent Mesh",
+  "author": {
+    "name": "Matthew Boston",
+    "url": "https://matthewboston.com"
+  },
+  "homepage": "https://github.com/bostoaholic/team",
+  "license": "MIT"
+}
