@@ -3,11 +3,11 @@ name: team
 description: Full 6-phase autonomous feature implementation pipeline. Trigger on "build a feature", "implement end to end", "autonomous implementation", or "/team".
 ---
 
-# TEAM — Full Pipeline Orchestrator
+# TEAM — Thin Event Router
 
-You are the TEAM pipeline orchestrator. You drive a feature from description
-to shipped code through 6 phases: RESEARCH, PLAN, TEST-FIRST, IMPLEMENT,
-VERIFY, SHIP.
+You are the TEAM event router. You drive a feature from description to shipped
+code by dispatching agents based on the event log. You have **zero knowledge of
+what any agent does**. You only know events, the registry, and gates.
 
 ## Input
 
@@ -17,139 +17,94 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
 
 ## Setup
 
-1. Derive a kebab-case `topic` from the feature description (e.g.,
-   "add user authentication" becomes `add-user-authentication`).
-2. Set `today` to the current date in `YYYY-MM-DD` format.
-3. Create `.team/state.json`:
+1. Derive a kebab-case `topic` from the description.
+2. Set `today` to the current date (`YYYY-MM-DD`).
+3. Create `.team/` directory if it does not exist.
+4. Create `docs/plans/` directory if it does not exist.
+5. Append the first event to `.team/events.jsonl`:
 
 ```json
-{
-  "phase": "RESEARCH",
-  "topic": "<topic>",
-  "planPath": null,
-  "researchPath": null,
-  "currentStep": null,
-  "backwardTransitions": 0,
-  "testFiles": [],
-  "startedAt": "<ISO-8601 timestamp>"
-}
+{"seq":1,"event":"feature.requested","producer":"router","ts":"<ISO-8601>","data":{"topic":"<topic>","description":"<description>","today":"<today>"},"artifact":null,"causedBy":null,"gate":null}
 ```
 
-## Phase 1: RESEARCH
+## The Event Loop
 
-Update state: `phase: "RESEARCH"`.
+Read `skills/team/registry.json`. This is the **only** source of truth for
+pipeline wiring. Then loop:
 
-Dispatch two agents **in parallel**:
+```
+loop:
+  1. Read .team/events.jsonl — parse each line as JSON
+  2. Find the latest event(s) that have NOT yet been consumed
+     (an event is "consumed" when an agent that subscribes to it
+      has already produced its output event in the log)
+  3. Check gates: does registry.gates define a gate for the latest event?
+     - human gate → present to user, wait for approval/rejection
+     - mechanical gate → evaluate the condition, emit pass/fail event
+     - aggregate gate → check if ALL required events exist in the log
+  4. Find agents in registry.agents whose "consumes" matches an unconsumed event
+     - Skip agents whose "produces" event already exists in the log
+     - If agent has "condition", evaluate it against the event data
+  5. Check joins: does registry.joins require waiting for parallel agents?
+     - If a join is pending (not all "wait" events present), skip
+     - If a join is satisfied, merge outputs and emit the join's "produces" event
+  6. Dispatch eligible agents:
+     - If multiple agents share parallel:true for the same consumed event,
+       dispatch them ALL in a single message (parallel Agent tool calls)
+     - Otherwise dispatch sequentially
+  7. When an agent returns, append its output event to events.jsonl:
+     {"seq":<next>,"event":"<produces>","producer":"<agent-name>","ts":"<now>","data":<result>,"artifact":<path-or-null>,"causedBy":<triggering-seq>}
+  8. If the event is "feature.shipped" → cleanup and exit
+  9. Goto loop
+```
 
-- **file-finder** — locate all files relevant to the feature
-- **researcher** — explore the codebase area, document patterns and constraints
+## Gate Handling
 
-Collect both outputs. Write the combined findings to
-`docs/plans/<today>-<topic>-research.md`.
+### Human Gate (plan approval)
 
-Update state: `researchPath` to the artifact path.
+When `plan.critiqued` is recorded:
+1. Read the plan artifact and the critique from the event data
+2. Present both to the user
+3. Ask: "Do you approve this plan?"
+4. If approved → append `plan.approved` event
+5. If rejected → append `plan.revision-requested` event with user feedback
 
-## Phase 2: PLAN
+### Mechanical Gate (test confirmation)
 
-Update state: `phase: "PLAN"`.
+When `tests.written` is recorded:
+1. Run the test suite
+2. If all tests fail with assertion errors (not crashes) → append `tests.confirmed-failing`
+3. If tests crash or error → report the issue, do NOT emit the pass event
 
-1. **Ambiguity check.** Read the research artifact. If open questions exist,
-   dispatch **product-owner** to resolve them. Append decisions to the
-   research artifact.
+### Aggregate Gate (review collection)
 
-2. **Create plan.** Dispatch **planner** with the research artifact path.
-   The planner writes `docs/plans/<today>-<topic>-plan.md`.
+When all 5 review events exist in the log:
+1. Collect all verdicts
+2. Check hard gates: `security-review.completed` and `verification.completed`
+3. If hard gates have CRITICAL findings or FAIL verdicts:
+   - Count existing `hard-gate.failed` events in the log
+   - If count < 3 → append `hard-gate.failed`, dispatch implementer to fix
+   - If count >= 3 → escalate to user, stop
+4. If all hard gates pass → append `verification.passed`
 
-3. **Critique plan.** Dispatch **plan-critic** to review the plan
-   adversarially. Present the critique alongside the plan.
+### Ship
 
-4. **HARD GATE: User approval.** Present the plan and critique to the user.
-   Ask explicitly: "Do you approve this plan?" Do NOT proceed until the user
-   approves. If the user requests changes, loop back to step 2 with feedback.
-
-Update state: `planPath` to the artifact path.
-
-## Phase 3: TEST-FIRST
-
-Update state: `phase: "TEST-FIRST"`.
-
-Dispatch **test-architect** with the plan artifact path. The test-architect:
-- Writes all acceptance tests defined in the plan
-- Confirms every test fails correctly (assertion failure, not runtime error)
-
-Record `testFiles` in state.
-
-**Gate:** All acceptance tests exist and fail cleanly. If any test errors
-instead of failing, fix the test setup and re-run.
-
-## Phase 4: IMPLEMENT
-
-Update state: `phase: "IMPLEMENT"`.
-
-Execute the plan step by step. For each step:
-
-1. Read the step from the plan artifact
-2. Implement the change
-3. Run the test suite
-4. Update `currentStep` in state
-5. Report progress: which tests now pass, which still fail
-
-Continue until all acceptance tests pass.
-
-**Gate:** All acceptance tests pass.
-
-## Phase 5: VERIFY
-
-Update state: `phase: "VERIFY"`.
-
-Dispatch 5 reviewers **in parallel**:
-
-- **code-reviewer** — quality and correctness (soft gate)
-- **security-reviewer** — OWASP audit (HARD gate on CRITICAL findings)
-- **technical-writer** — documentation gap analysis (advisory)
-- **ux-reviewer** — live application verification (soft gate)
-- **verifier** — lint, type check, build, tests (hard gate on failure)
-
-Aggregate all verdicts. Present the full report to the user.
-
-**Hard gate check:**
-- If security-reviewer reports CRITICAL findings OR verifier reports FAIL:
-  increment `backwardTransitions` in state. If `backwardTransitions < 3`,
-  loop back to IMPLEMENT to fix the issues. If `backwardTransitions >= 3`,
-  escalate to the user and stop.
-
-## Phase 6: SHIP
-
-Update state: `phase: "SHIP"`.
-
-Present shipping options to the user:
-
-1. **Commit + PR** — create a branch, commit changes, open a pull request
-2. **Commit locally** — commit to the current branch without pushing
-3. **Keep as-is** — leave changes uncommitted for manual handling
-
-Execute the user's chosen option. If creating a PR, include the plan and
-verification report in the PR description.
-
-**Cleanup:** Delete `.team/state.json` after successful completion.
-
-## Error Handling
-
-If any phase fails unexpectedly:
-
-1. Update state with the current phase and error details
-2. Report the failure to the user with full context
-3. Suggest: "Run `/team-resume` to continue from where you left off."
-
-Never silently swallow errors. Every failure must be visible.
+When `verification.passed` is recorded:
+1. Present shipping options: commit + PR, commit locally, keep as-is
+2. Execute user's choice
+3. Append `feature.shipped` event
+4. Delete `.team/` directory
 
 ## Rules
 
-- Update `.team/state.json` at every phase transition and after every
-  significant step within a phase.
-- The plan approval gate is the ONLY point where the user must interact.
-  Everything else is autonomous with mechanical gates.
-- File artifacts in `docs/plans/` are the communication protocol between
-  phases. Always write findings to disk — they survive context compaction.
-- If the `.team/` directory does not exist, create it.
-- If `docs/plans/` does not exist, create it.
+- The event log is **append-only**. Never modify or delete events.
+- The router is the **only writer** to `events.jsonl`. Agents report results
+  to you; you append the event.
+- `seq` values are **gapless and monotonically increasing**.
+- File artifacts in `docs/plans/` are the durable communication protocol.
+  Always write research/plan findings to disk.
+- The plan approval gate is the **only** human interaction point.
+- On any unexpected failure: append an error note to the log, report to the
+  user, and suggest `/team-resume`.
+- To add a new agent to the pipeline, add an entry to `registry.json`. The
+  router requires no changes.
