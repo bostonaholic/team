@@ -2,6 +2,11 @@ name: team
 
 up:
   - claude-code
+  - custom:
+      name: beads
+      met?: "which bd"
+      meet: "brew install beads"
+
 
 check:
   plugin: "claude plugin validate ."
