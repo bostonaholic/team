@@ -82,6 +82,11 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodolog
 
 Event log at `.team/events.jsonl` (append-only, gitignored). State is derived from events, never stored directly. Three-layer compaction defense.
 
+## Learned Rules
+
+- **No `commands/` directory.** Skills are the only entry point mechanism. They auto-register as slash commands.
+- **No project-scoped memory.** Do not save memories to `~/.claude/projects/*/memory/`. All project knowledge belongs in this file or docs linked from here. This file is checked into git and travels with the project.
+
 ## Issue Tracking
 
 This project uses **bd (beads)**. See [docs/beads-workflow.md](docs/beads-workflow.md) for rules, commands, and session completion protocol.
