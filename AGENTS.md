@@ -6,7 +6,11 @@
 
 ## What This Is
 
-TEAM (Task Execution Agent Mesh) is a Claude Code plugin that orchestrates specialized agents to implement features end-to-end. See [docs/architecture.md](docs/architecture.md) for the full architecture.
+TEAM (Task Execution Agent Mesh) is a Claude Code plugin that orchestrates specialized agents to implement features end-to-end using an event-driven architecture. See [docs/architecture.md](docs/architecture.md) for the full design.
+
+## Design Philosophy
+
+Agents are **decoupled microservices**. Each consumes events, does work, produces events. No agent knows about any other. The pipeline emerges from event flow defined in `skills/team/registry.json`. See [docs/event-catalog.md](docs/event-catalog.md) for all events.
 
 ## Pipeline
 
@@ -24,26 +28,26 @@ Single human gate at Plan approval. Everything else is autonomous with mechanica
 | `/team-research <desc>` | Research only |
 | `/team-plan <desc>` | Plan (runs research if missing) |
 | `/team-test` | Write failing acceptance tests |
-| `/team-implement` | Implement (make tests pass) |
+| `/team-implement` | Dispatch implementer agent |
 | `/team-verify` | 5 parallel reviewers |
 | `/team-ship` | Commit + PR |
-| `/team-resume` | Resume from `.team/state.json` |
+| `/team-resume` | Replay event log, resume |
 
-## Agents (11)
+## Agents (12)
 
-See `agents/*.md` for definitions. Model tiering: haiku (mechanical), sonnet (judgment), opus (planning).
+See `agents/*.md`. Each has `consumes`/`produces` in frontmatter. Model tiering: haiku (mechanical), sonnet (judgment), opus (planning + implementation).
 
-## Skills (14)
+## Skills (13)
 
 See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodology skills are loaded by agents.
 
 ## Hooks (4)
 
-See `hooks/*.mjs`. Pre-bash guard, compaction anchor/recovery, post-write validation.
+See `hooks/*.mjs`. Pre-bash guard, compaction anchor/recovery (event-log aware), post-write validation.
 
 ## State
 
-Pipeline state at `.team/state.json` (gitignored). Three-layer compaction defense.
+Event log at `.team/events.jsonl` (append-only, gitignored). State is derived from events, never stored directly. Three-layer compaction defense.
 
 ## Issue Tracking
 
