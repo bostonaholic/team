@@ -7,6 +7,5 @@ up:
       met?: "which bd"
       meet: "brew install beads"
 
-
 check:
   plugin: "claude plugin validate ."
