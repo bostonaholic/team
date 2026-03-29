@@ -235,7 +235,9 @@ no changes.
 
 | Skill            | Command                 | Description                              |
 |------------------|-------------------------|------------------------------------------|
+| `team-brainstorm`| `/team-brainstorm <idea>` | Optional pre-research brainstorming    |
 | `team`           | `/team <desc>`          | Full pipeline -- emit `feature.requested` |
+| `team-fix`       | `/team-fix <bug>`       | Compressed bug-fix pipeline (no research/plan) |
 | `team-research`  | `/team-research <desc>` | Emit `feature.requested`, stop after `research.completed` |
 | `team-plan`      | `/team-plan <desc>`     | Resume or start from `research.completed` |
 | `team-test`      | `/team-test`            | Resume from `plan.approved`              |

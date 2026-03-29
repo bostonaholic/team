@@ -33,16 +33,18 @@ Agents are **decoupled microservices**. Each consumes events, does work, produce
 ## Pipeline
 
 ```
-RESEARCH → PLAN → TEST-FIRST → IMPLEMENT → VERIFY → SHIP
+[BRAINSTORM] → RESEARCH → PLAN → TEST-FIRST → IMPLEMENT → VERIFY → SHIP
 ```
 
-Single human gate at Plan approval. Everything else is autonomous with mechanical gates.
+Brainstorming is optional — use `/team-brainstorm` to shape vague ideas before committing to implementation. Single human gate at Plan approval. Everything else is autonomous with mechanical gates.
 
 ## Entry Points
 
 | Command | Phase |
 |---------|-------|
+| `/team-brainstorm <idea>` | Optional pre-research brainstorming |
 | `/team <desc>` | Full 6-phase pipeline |
+| `/team-fix <bug>` | Compressed bug-fix pipeline (no research/plan) |
 | `/team-research <desc>` | Research only |
 | `/team-plan <desc>` | Plan (runs research if missing) |
 | `/team-test` | Write failing acceptance tests |

@@ -9,9 +9,10 @@ Agents are decoupled microservices. Each consumes events, does work, produces ev
 ## Pipeline
 
 ```
-feature.requested → research.completed → plan.drafted → plan.approved → tests.confirmed-failing → implementation.completed → verification.passed → feature.shipped
+[BRAINSTORM] → RESEARCH → PLAN → TEST-FIRST → IMPLEMENT → VERIFY → SHIP
 ```
 
+- **Brainstorm** *(optional)* — Interactive session to clarify intent, explore alternatives, negotiate scope
 - **Research** — Parallel agents explore the codebase, produce findings
 - **Plan** — Planner + adversarial critic create implementation plan (user approves)
 - **Test-First** — Test architect writes all acceptance tests; confirmed failing
@@ -23,6 +24,18 @@ feature.requested → research.completed → plan.drafted → plan.approved → 
 
 ```
 /team Add rate limiting middleware to all API endpoints
+```
+
+For vague ideas, brainstorm first:
+
+```
+/team-brainstorm Add a notification system
+```
+
+For well-understood bugs, skip research and planning:
+
+```
+/team-fix Users see stale cache after profile update
 ```
 
 Or run individual phases:
