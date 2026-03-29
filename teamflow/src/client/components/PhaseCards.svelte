@@ -173,6 +173,10 @@
                 box-shadow var(--duration-normal) var(--ease-in-out);
   }
 
+  .phase-card.completed {
+    border-color: color-mix(in srgb, var(--color-success) 30%, var(--border-color));
+  }
+
   .phase-card.active {
     border-color: var(--color-success);
     box-shadow: inset 0 0 0 1px var(--color-success);
@@ -218,6 +222,9 @@
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
     white-space: nowrap;
+    transition: background var(--duration-normal) var(--ease-in-out),
+                border-color var(--duration-normal) var(--ease-in-out),
+                color var(--duration-normal) var(--ease-in-out);
   }
 
   .status-badge.completed {
