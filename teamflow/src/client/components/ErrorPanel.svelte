@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { slide } from "svelte/transition";
+
   interface ErrorEntry {
     event: string;
     data: Record<string, unknown>;
@@ -9,10 +11,13 @@
   }
 
   let { errors }: Props = $props();
+
+  const reducedMotion = typeof window !== "undefined"
+    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 </script>
 
 {#if errors.length > 0}
-  <div class="error-panel">
+  <div class="error-panel" transition:slide={{ duration: reducedMotion ? 0 : 250 }}>
     <h2 class="section-title">Errors</h2>
     {#each errors as error}
       <div class="error-entry">

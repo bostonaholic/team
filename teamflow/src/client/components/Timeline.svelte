@@ -1,5 +1,6 @@
 <script lang="ts">
   import { tick } from "svelte";
+  import { fly } from "svelte/transition";
 
   interface TimelineEntry {
     seq: number;
@@ -14,6 +15,9 @@
   }
 
   let { events }: Props = $props();
+
+  const reducedMotion = typeof window !== "undefined"
+    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   let scrollContainer: HTMLDivElement | undefined = $state();
 
@@ -48,8 +52,8 @@
 <div class="timeline" bind:this={scrollContainer}>
   <h2 class="section-title">Timeline</h2>
   <div class="event-list">
-    {#each events as entry}
-      <div class="event-entry">
+    {#each events as entry (entry.seq)}
+      <div class="event-entry" in:fly={{ y: 10, duration: reducedMotion ? 0 : 250 }}>
         <span class="event-time">{formatTime(entry.ts)}</span>
         <span class="event-name">{entry.event}</span>
         <span class="event-producer">{entry.producer}</span>

@@ -168,11 +168,26 @@
     border-radius: 8px;
     padding: var(--space-sm) var(--space-md);
     background: var(--bg-secondary);
+    transition: border-color var(--duration-normal) var(--ease-in-out),
+                opacity var(--duration-normal) var(--ease-in-out),
+                box-shadow var(--duration-normal) var(--ease-in-out);
   }
 
   .phase-card.active {
     border-color: var(--color-success);
-    border-width: 2px;
+    box-shadow: inset 0 0 0 1px var(--color-success);
+    animation: pulse var(--duration-slow) ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: inset 0 0 0 1px var(--color-success); }
+    50% { box-shadow: inset 0 0 0 1px rgba(63, 185, 80, 0.4); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .phase-card.active {
+      animation: none;
+    }
   }
 
   .phase-card.pending {
@@ -238,6 +253,21 @@
     align-items: center;
     flex-shrink: 0;
     line-height: 0;
+    transition: opacity var(--duration-fast) var(--ease-out),
+                transform var(--duration-fast) var(--ease-out);
+  }
+
+  .agent-icon.running {
+    transform: scale(1.15);
+  }
+
+  .agent-icon.done {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  .agent-icon.idle {
+    opacity: 0.5;
   }
 
   .agent-name {
