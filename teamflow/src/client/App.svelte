@@ -140,6 +140,7 @@
   }
 
   .main-content {
-    overflow: hidden;
+    overflow-y: auto;
+    min-height: 0;
   }
 </style>
