@@ -92,6 +92,26 @@ for the full methodology. Key checkpoints:
 - **ISP:** Expose only what callers need. Split fat interfaces.
 - **DIP:** Inject dependencies. Do not instantiate infrastructure inside domain logic.
 
+## Working With Existing Code
+
+When the plan requires modifying existing code, apply the refactoring
+methodology from `skills/refactoring-to-patterns/SKILL.md`:
+
+1. **Read before changing.** Identify code smells before writing.
+2. **Separate refactoring from feature work.** If a refactoring is needed
+   to make the feature easier to add, do the refactoring in its own commit
+   first with a `refactor:` prefix, then add the feature.
+3. **Refactor only what you touch.** Do not opportunistically refactor
+   unrelated code — that is scope creep.
+4. **Every refactoring step must leave tests passing.** Run tests after each
+   structural change. If tests break, undo immediately.
+5. **Name the smell and the pattern in the commit message.** For example:
+   `refactor: extract validation into UserValidator (Long Method smell)`
+
+Common smells to watch for: Long Method, Duplicate Code, Feature Envy,
+Primitive Obsession, and Shotgun Surgery. See the skill for the full catalog
+of smells and their corresponding refactorings.
+
 ## Progress Reporting
 
 After each step, report concisely:
