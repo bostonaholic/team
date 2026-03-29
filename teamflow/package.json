@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "start": "node --import tsx src/server.ts",
+    "demo": "node bin/demo.mjs",
     "test": "vitest run"
   },
   "dependencies": {

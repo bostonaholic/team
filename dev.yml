@@ -21,6 +21,9 @@ commands:
   uninstall:
     desc: "Unregister plugin and clean up cache"
     run: "script/dev-uninstall"
+  demo:
+    desc: "Start the Teamflow dashboard with a live demo pipeline (~60s)"
+    run: "cd teamflow && npm install --silent && npm run demo"
   update:
     desc: "Update all agent skills"
     # TODO: `npx skills update` ignores project-level skills-lock.json
