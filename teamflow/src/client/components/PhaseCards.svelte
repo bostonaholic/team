@@ -1,0 +1,308 @@
+<script lang="ts">
+  interface AgentStatus {
+    name: string;
+    status: "idle" | "running" | "done" | "error";
+    producedEvent?: string;
+  }
+
+  interface TimelineEntry {
+    seq: number;
+    event: string;
+    producer: string;
+    ts: string;
+    data?: Record<string, unknown>;
+  }
+
+  interface Props {
+    phase: string | null;
+    agents: Record<string, AgentStatus>;
+    events: TimelineEntry[];
+    now: number;
+  }
+
+  let { phase, agents, events, now }: Props = $props();
+
+  const pipeline = [
+    { name: "RESEARCH", agents: ["file-finder", "researcher"] },
+    { name: "PLAN", agents: ["product-owner", "planner", "plan-critic"] },
+    { name: "TEST-FIRST", agents: ["test-architect"] },
+    { name: "IMPLEMENT", agents: ["implementer"] },
+    { name: "VERIFY", agents: ["code-reviewer", "security-reviewer", "technical-writer", "ux-reviewer", "verifier"] },
+    { name: "SHIP", agents: ["orchestrator"] },
+  ];
+
+  const gateCount = pipeline.length - 1;
+
+  const phaseNames = pipeline.map((p) => p.name);
+
+  const EVENT_TO_PHASE: Record<string, string> = {
+    "feature.requested": "RESEARCH",
+    "research.completed": "PLAN",
+    "plan.drafted": "PLAN",
+    "plan.approved": "TEST-FIRST",
+    "plan.revision-requested": "PLAN",
+    "tests.confirmed-failing": "IMPLEMENT",
+    "implementation.completed": "VERIFY",
+    "hard-gate.failed": "IMPLEMENT",
+    "verification.passed": "SHIP",
+    "feature.shipped": "SHIPPED",
+  };
+
+  function phaseStatus(p: string): "completed" | "active" | "pending" {
+    if (!phase) return "pending";
+    if (phase === "SHIPPED") return "completed";
+    const currentIdx = phaseNames.indexOf(phase);
+    const pIdx = phaseNames.indexOf(p);
+    if (pIdx < currentIdx) return "completed";
+    if (pIdx === currentIdx) return "active";
+    return "pending";
+  }
+
+  function phaseDuration(phaseName: string): string {
+    let enterTs: string | null = null;
+    let exitTs: string | null = null;
+
+    for (const ev of events) {
+      const evPhase = EVENT_TO_PHASE[ev.event];
+      if (evPhase === phaseName && !enterTs) {
+        enterTs = ev.ts;
+      }
+      if (enterTs && !exitTs && evPhase) {
+        const pIdx = phaseNames.indexOf(phaseName);
+        const evIdx = phaseNames.indexOf(evPhase);
+        if (evIdx > pIdx) {
+          exitTs = ev.ts;
+          break;
+        }
+      }
+    }
+
+    if (!enterTs) return "";
+
+    const start = new Date(enterTs).getTime();
+    const end = exitTs ? new Date(exitTs).getTime() : now;
+    const ms = end - start;
+
+    if (ms < 1000) return "<1s";
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    if (hours > 0) return `${hours}h ${minutes % 60}m`;
+    if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+    return `${seconds}s`;
+  }
+
+  function agentStatus(name: string, phaseName: string): "idle" | "running" | "done" | "error" {
+    if (agents[name]) return agents[name].status;
+    // Agent not in registry — derive from phase status
+    const ps = phaseStatus(phaseName);
+    if (ps === "completed") return "done";
+    if (ps === "active") return "running";
+    return "idle";
+  }
+</script>
+
+<div class="phase-cards">
+  {#each pipeline as p, i}
+    <div class="phase-card {phaseStatus(p.name)}">
+      <div class="card-header">
+        <span class="phase-name">{p.name}</span>
+        <span class="status-badge {phaseStatus(p.name)}">{phaseStatus(p.name).toUpperCase()}</span>
+      </div>
+      {#if phaseDuration(p.name)}
+        <div class="phase-duration">{phaseDuration(p.name)}</div>
+      {/if}
+      {#if p.agents.length > 0}
+        <div class="agent-list">
+          {#each p.agents as agentName}
+            <div class="agent-row">
+              <span class="agent-icon {agentStatus(agentName, p.name)}">
+                {#if agentStatus(agentName, p.name) === "done"}
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                    <rect width="16" height="16" rx="3" fill="var(--color-success)"/>
+                    <path d="M4.5 8L7 10.5L11.5 5.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                {:else if agentStatus(agentName, p.name) === "running"}
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                    <rect width="16" height="16" rx="3" fill="var(--color-accent)"/>
+                    <circle cx="8" cy="8" r="3" fill="white"/>
+                  </svg>
+                {:else if agentStatus(agentName, p.name) === "error"}
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                    <rect width="16" height="16" rx="3" fill="var(--color-danger)"/>
+                    <path d="M5 5L11 11M11 5L5 11" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                {:else}
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                    <rect x="0.5" y="0.5" width="15" height="15" rx="2.5" stroke="var(--border-color)"/>
+                  </svg>
+                {/if}
+              </span>
+              <span class="agent-name">{agentName}</span>
+            </div>
+          {/each}
+        </div>
+      {/if}
+    </div>
+
+    {#if i < gateCount}
+      <div class="gate">
+        <span class="gate-arrow">&rarr;</span>
+      </div>
+    {/if}
+  {/each}
+</div>
+
+<style>
+  .phase-cards {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    padding: var(--space-sm) var(--space-md);
+    overflow-x: auto;
+  }
+
+  .phase-card {
+    flex: 1 1 0;
+    min-width: 140px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-secondary);
+    transition: border-color var(--duration-normal) var(--ease-in-out),
+                opacity var(--duration-normal) var(--ease-in-out),
+                box-shadow var(--duration-normal) var(--ease-in-out);
+  }
+
+  .phase-card.completed {
+    border-color: color-mix(in srgb, var(--color-success) 30%, var(--border-color));
+  }
+
+  .phase-card.active {
+    border-color: var(--color-success);
+    box-shadow: inset 0 0 0 1px var(--color-success);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: inset 0 0 0 1px var(--color-success); }
+    50% { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-success) 40%, transparent); }
+  }
+
+  .phase-card.pending {
+    opacity: 0.5;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: 2px;
+  }
+
+  .phase-name {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .status-badge {
+    font-size: 0.5625rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 1px 6px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    white-space: nowrap;
+    transition: background var(--duration-normal) var(--ease-in-out),
+                border-color var(--duration-normal) var(--ease-in-out),
+                color var(--duration-normal) var(--ease-in-out);
+  }
+
+  .status-badge.completed {
+    border-color: var(--color-success);
+    color: var(--color-success);
+  }
+
+  .status-badge.active {
+    background: var(--color-success);
+    border-color: var(--color-success);
+    color: var(--bg-primary);
+  }
+
+  .phase-duration {
+    font-size: 0.6875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-sm);
+  }
+
+  .agent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .agent-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .agent-icon {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    line-height: 0;
+    transition: opacity var(--duration-fast) var(--ease-out),
+                transform var(--duration-fast) var(--ease-out);
+  }
+
+  .agent-icon.running {
+    transform: scale(1.15);
+    animation: agent-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes agent-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .agent-icon.done {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  .agent-icon.idle {
+    opacity: 0.5;
+  }
+
+  .agent-icon.error {
+    opacity: 1;
+  }
+
+  .agent-name {
+    font-size: 0.75rem;
+    color: var(--text-primary);
+  }
+
+  .phase-card.pending .agent-name {
+    color: var(--text-secondary);
+  }
+
+  /* Gate connectors — vertically centered */
+  .gate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  .gate-arrow {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    opacity: 0.5;
+  }
+</style>
