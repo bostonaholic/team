@@ -27,7 +27,7 @@
     { name: "TEST-FIRST", agents: ["test-architect"] },
     { name: "IMPLEMENT", agents: ["implementer"] },
     { name: "VERIFY", agents: ["code-reviewer", "security-reviewer", "technical-writer", "ux-reviewer", "verifier"] },
-    { name: "SHIP", agents: [] },
+    { name: "SHIP", agents: ["orchestrator"] },
   ];
 
   const gateCount = pipeline.length - 1;
