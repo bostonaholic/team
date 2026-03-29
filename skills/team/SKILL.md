@@ -56,7 +56,12 @@ loop:
      - If multiple agents share parallel:true for the same consumed event,
        dispatch them ALL in a single message (parallel Agent tool calls)
      - Otherwise dispatch sequentially
-  7. When an agent returns, append its output event to events.jsonl:
+  7. When an agent returns:
+     a. If the result includes an artifact path, write the agent's output to
+        that path BEFORE appending the event. Some agents (e.g., researcher,
+        file-finder) have read-only tools and cannot write files themselves —
+        the router is responsible for persisting their artifacts to disk.
+     b. Append the output event to events.jsonl:
      {"seq":<next>,"event":"<produces>","producer":"<agent-name>","ts":"<now>","data":<result>,"artifact":<path-or-null>,"causedBy":<triggering-seq>}
   8. If the event is "feature.shipped" → cleanup and exit
   9. Goto loop
