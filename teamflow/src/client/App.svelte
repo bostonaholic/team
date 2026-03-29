@@ -45,6 +45,13 @@
   let connected = $state(false);
   let reconnecting = $state(false);
 
+  // Tick every second so durations update live
+  let now = $state(Date.now());
+  $effect(() => {
+    const id = setInterval(() => { now = Date.now(); }, 1000);
+    return () => clearInterval(id);
+  });
+
   let theme = $state<"dark" | "light" | "system">("system");
 
   function applyTheme(t: "dark" | "light" | "system") {
@@ -94,7 +101,7 @@
 <div class="dashboard">
   <Header
     topic={state.topic}
-    duration={state.duration}
+    duration={state.startedAt && state.phase !== "SHIPPED" ? now - new Date(state.startedAt).getTime() : state.duration}
     {theme}
     onToggleTheme={toggleTheme}
   />
@@ -103,7 +110,7 @@
     <div class="reconnecting">Reconnecting...</div>
   {/if}
 
-  <PhaseCards phase={state.phase} agents={state.agents} events={state.events} />
+  <PhaseCards phase={state.phase} agents={state.agents} events={state.events} {now} />
 
   <div class="main-content">
     <Timeline events={state.events} />

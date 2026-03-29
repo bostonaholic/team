@@ -17,9 +17,10 @@
     phase: string | null;
     agents: Record<string, AgentStatus>;
     events: TimelineEntry[];
+    now: number;
   }
 
-  let { phase, agents, events }: Props = $props();
+  let { phase, agents, events, now }: Props = $props();
 
   const pipeline = [
     { name: "RESEARCH", agents: ["file-finder", "researcher"] },
@@ -79,7 +80,7 @@
     if (!enterTs) return "";
 
     const start = new Date(enterTs).getTime();
-    const end = exitTs ? new Date(exitTs).getTime() : new Date(events[events.length - 1]?.ts ?? enterTs).getTime();
+    const end = exitTs ? new Date(exitTs).getTime() : now;
     const ms = end - start;
 
     if (ms < 1000) return "<1s";
