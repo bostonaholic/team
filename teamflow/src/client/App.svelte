@@ -1,7 +1,6 @@
 <script lang="ts">
   import Header from "./components/Header.svelte";
-  import PhaseTracker from "./components/PhaseTracker.svelte";
-  import AgentList from "./components/AgentList.svelte";
+  import PhaseCards from "./components/PhaseCards.svelte";
   import Timeline from "./components/Timeline.svelte";
   import ErrorPanel from "./components/ErrorPanel.svelte";
 
@@ -105,10 +104,9 @@
     <div class="reconnecting">Reconnecting...</div>
   {/if}
 
-  <PhaseTracker phase={state.phase} />
+  <PhaseCards phase={state.phase} agents={state.agents} events={state.events} />
 
   <div class="main-content">
-    <AgentList agents={state.agents} />
     <Timeline events={state.events} />
   </div>
 
@@ -136,9 +134,6 @@
   }
 
   .main-content {
-    display: grid;
-    grid-template-columns: 300px 1fr;
-    gap: var(--space-md, 1rem);
     overflow: hidden;
   }
 </style>
