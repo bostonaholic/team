@@ -1,13 +1,12 @@
 <script lang="ts">
   interface Props {
     topic: string | null;
-    phase: string | null;
     duration: number | null;
     theme: "dark" | "light" | "system";
     onToggleTheme: () => void;
   }
 
-  let { topic, phase, duration, theme, onToggleTheme }: Props = $props();
+  let { topic, duration, theme, onToggleTheme }: Props = $props();
 
   function formatDuration(ms: number | null): string {
     if (ms === null) return "--";
@@ -26,9 +25,6 @@
     <h1 class="title">Teamflow{#if topic}<span class="separator">/</span><span class="topic">{topic}</span>{/if}</h1>
   </div>
   <div class="header-right">
-    {#if phase}
-      <span class="phase-badge">{phase}</span>
-    {/if}
     <span class="duration">{formatDuration(duration)}</span>
     <button class="theme-toggle" onclick={onToggleTheme} title="Toggle theme ({theme})">
       {#if theme === "light"}
@@ -81,16 +77,6 @@
   .topic {
     font-weight: 500;
     opacity: 0.85;
-  }
-
-  .phase-badge {
-    background: var(--color-accent, #58a6ff);
-    color: var(--bg-primary, #0d1117);
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
   }
 
   .duration {

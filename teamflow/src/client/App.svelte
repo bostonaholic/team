@@ -94,7 +94,6 @@
 <div class="dashboard">
   <Header
     topic={state.topic}
-    phase={state.phase}
     duration={state.duration}
     {theme}
     onToggleTheme={toggleTheme}
