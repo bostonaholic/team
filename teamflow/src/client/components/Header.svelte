@@ -23,10 +23,7 @@
 
 <header class="header">
   <div class="header-left">
-    <h1 class="title">Teamflow</h1>
-    {#if topic}
-      <span class="topic">{topic}</span>
-    {/if}
+    <h1 class="title">Teamflow{#if topic}<span class="separator">/</span><span class="topic">{topic}</span>{/if}</h1>
   </div>
   <div class="header-right">
     {#if phase}
@@ -70,11 +67,20 @@
     font-size: 1.25rem;
     font-weight: 700;
     margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0;
+  }
+
+  .separator {
+    opacity: 0.3;
+    font-weight: 400;
+    margin: 0 0.25rem;
   }
 
   .topic {
-    font-size: 0.875rem;
-    opacity: 0.7;
+    font-weight: 500;
+    opacity: 0.85;
   }
 
   .phase-badge {
