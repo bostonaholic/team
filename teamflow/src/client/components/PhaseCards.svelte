@@ -176,16 +176,17 @@
   .phase-card.active {
     border-color: var(--color-success);
     box-shadow: inset 0 0 0 1px var(--color-success);
-    animation: pulse var(--duration-slow) ease-in-out infinite;
+    animation: pulse 2s ease-in-out infinite;
   }
 
   @keyframes pulse {
     0%, 100% { box-shadow: inset 0 0 0 1px var(--color-success); }
-    50% { box-shadow: inset 0 0 0 1px rgba(63, 185, 80, 0.4); }
+    50% { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-success) 40%, transparent); }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .phase-card.active {
+    .phase-card.active,
+    .agent-icon.running {
       animation: none;
     }
   }
@@ -259,6 +260,12 @@
 
   .agent-icon.running {
     transform: scale(1.15);
+    animation: agent-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes agent-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
   }
 
   .agent-icon.done {
@@ -268,6 +275,10 @@
 
   .agent-icon.idle {
     opacity: 0.5;
+  }
+
+  .agent-icon.error {
+    opacity: 1;
   }
 
   .agent-name {
