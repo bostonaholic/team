@@ -6,6 +6,10 @@ up:
       name: beads
       met?: "which bd"
       meet: "brew install beads"
+  - custom:
+      name: playwright-cli
+      met?: "npx --no-install playwright-cli --version 2>/dev/null"
+      meet: "npm install -g @playwright/cli@latest && playwright-cli install --skills"
 
 check:
   plugin: "claude plugin validate ."
