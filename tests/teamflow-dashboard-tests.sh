@@ -290,7 +290,7 @@ T17_PASS=true
 T17_DETAIL=""
 
 # Check session-start-recover.mjs for inline EVENT_TO_PHASE object literal
-RECOVER_INLINE=$(grep -c "EVENT_TO_PHASE\s*=" "$REPO_ROOT/hooks/session-start-recover.mjs" 2>/dev/null || echo "0")
+RECOVER_INLINE=$(grep -c "EVENT_TO_PHASE\s*=" "$REPO_ROOT/hooks/session-start-recover.mjs" 2>/dev/null) || RECOVER_INLINE=0
 if [ "$RECOVER_INLINE" -gt 0 ]; then
   # If the file has EVENT_TO_PHASE = { ... } it still has the inline copy.
   # Only an import re-export (import { EVENT_TO_PHASE } from ...) is acceptable.
@@ -301,7 +301,7 @@ if [ "$RECOVER_INLINE" -gt 0 ]; then
 fi
 
 # Check pre-compact-anchor.mjs for inline EVENT_TO_PHASE object literal
-COMPACT_INLINE=$(grep -c "EVENT_TO_PHASE\s*=" "$REPO_ROOT/hooks/pre-compact-anchor.mjs" 2>/dev/null || echo "0")
+COMPACT_INLINE=$(grep -c "EVENT_TO_PHASE\s*=" "$REPO_ROOT/hooks/pre-compact-anchor.mjs" 2>/dev/null) || COMPACT_INLINE=0
 if [ "$COMPACT_INLINE" -gt 0 ]; then
   if ! grep -q "import.*EVENT_TO_PHASE.*from" "$REPO_ROOT/hooks/pre-compact-anchor.mjs" 2>/dev/null; then
     T17_PASS=false

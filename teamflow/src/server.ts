@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
+import type { RunState } from "./state.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -18,7 +19,7 @@ app.get("/api/health", async () => {
 });
 
 // Import and wire state engine, tailer, SSE, and API once they exist
-let stateEngine: ReturnType<typeof import("./state.js").createStateEngine> extends Promise<infer T> ? T : never;
+let stateEngine: { apply(events: Record<string, unknown>[]): void; getSnapshot(): RunState } | null = null;
 let broadcast: ((data: unknown) => void) | null = null;
 
 async function start() {
@@ -31,30 +32,28 @@ async function start() {
 
     stateEngine = createStateEngine();
 
-    await app.register(ssePlugin, { getSnapshot: () => stateEngine.getSnapshot() });
+    await app.register(ssePlugin, { getSnapshot: () => stateEngine!.getSnapshot() });
     broadcast = getBroadcast(app);
 
-    await app.register(apiPlugin, { getSnapshot: () => stateEngine.getSnapshot() });
+    await app.register(apiPlugin, { getSnapshot: () => stateEngine!.getSnapshot() });
 
     // Static file serving for the built frontend
     const distDir = join(__dirname, "..", "dist");
     if (existsSync(distDir)) {
-      const { default: fastifyStatic } = await import("@fastify/static").catch(() => ({ default: null }));
-      if (fastifyStatic) {
-        await app.register(fastifyStatic, {
-          root: distDir,
-          prefix: "/",
-          wildcard: false,
-        });
-      }
+      const { default: fastifyStatic } = await import("@fastify/static");
+      await app.register(fastifyStatic, {
+        root: distDir,
+        prefix: "/",
+        wildcard: false,
+      });
     }
 
     // Start tailing the event log
     const eventsPath = join(projectDir, ".team", "events.jsonl");
     createTailer(eventsPath, (events) => {
-      stateEngine.apply(events);
+      stateEngine!.apply(events);
       if (broadcast) {
-        broadcast(stateEngine.getSnapshot());
+        broadcast(stateEngine!.getSnapshot());
       }
     });
   } catch (err) {

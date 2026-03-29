@@ -9,6 +9,8 @@
 
   function phaseStatus(p: string): "completed" | "current" | "future" {
     if (!phase) return "future";
+    // SHIPPED means all phases are complete
+    if (phase === "SHIPPED") return "completed";
     const currentIdx = phases.indexOf(phase);
     const pIdx = phases.indexOf(p);
     if (pIdx < currentIdx) return "completed";

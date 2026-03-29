@@ -6,9 +6,8 @@
  * into a single callback). Buffers partial lines across reads.
  */
 
-import { open, watch, stat } from "node:fs/promises";
-import { existsSync, watchFile, unwatchFile } from "node:fs";
-import { dirname } from "node:path";
+import { open } from "node:fs/promises";
+import { existsSync } from "node:fs";
 
 export interface TailedEvent {
   seq: number;
@@ -27,8 +26,8 @@ export function createTailer(
   let offset = 0;
   let partialLine = "";
   let closed = false;
-  let watcher: ReturnType<typeof watchFile> | null = null;
-  let fsWatcher: Awaited<ReturnType<typeof watch>> | null = null;
+  let pollInterval: ReturnType<typeof setInterval> | null = null;
+  let creationPollInterval: ReturnType<typeof setInterval> | null = null;
 
   async function readNewData(): Promise<void> {
     if (closed) return;
@@ -84,62 +83,25 @@ export function createTailer(
     if (closed) return;
 
     if (existsSync(filePath)) {
-      // Watch the file directly
-      try {
-        const ac = new AbortController();
-        fsWatcher = watch(filePath, { signal: ac.signal }) as any;
-        (async () => {
-          try {
-            for await (const _event of watch(filePath, { signal: ac.signal })) {
-              if (closed) break;
-              await readNewData();
-            }
-          } catch {
-            // Watcher closed or aborted
-          }
-        })();
-        // Store abort controller for cleanup
-        (fsWatcher as any).__ac = ac;
-      } catch {
-        // Fallback to polling
-        watchFile(filePath, { interval: 200 }, () => {
-          readNewData();
-        });
-        watcher = filePath as any;
-      }
+      // Use polling as the primary mechanism — reliable on all platforms.
+      // fs.watch on macOS can miss or coalesce file-append events.
+      // 300ms is fast enough for a local dev dashboard.
+      pollInterval = setInterval(() => {
+        if (!closed) readNewData();
+      }, 300);
     } else {
-      // File doesn't exist yet -- watch the parent directory
-      const dir = dirname(filePath);
-      try {
-        const ac = new AbortController();
-        (async () => {
-          try {
-            for await (const event of watch(dir, { signal: ac.signal })) {
-              if (closed) break;
-              if (existsSync(filePath)) {
-                ac.abort();
-                await startWatching();
-                break;
-              }
-            }
-          } catch {
-            // Watcher closed or aborted
-          }
-        })();
-        fsWatcher = { __ac: ac } as any;
-      } catch {
-        // Fallback: poll for file creation
-        const interval = setInterval(async () => {
-          if (closed) {
-            clearInterval(interval);
-            return;
-          }
-          if (existsSync(filePath)) {
-            clearInterval(interval);
-            await startWatching();
-          }
-        }, 200);
-      }
+      // File doesn't exist yet — poll for creation
+      creationPollInterval = setInterval(async () => {
+        if (closed) {
+          if (creationPollInterval) clearInterval(creationPollInterval);
+          return;
+        }
+        if (existsSync(filePath)) {
+          if (creationPollInterval) clearInterval(creationPollInterval);
+          creationPollInterval = null;
+          await startWatching();
+        }
+      }, 300);
     }
   }
 
@@ -148,12 +110,8 @@ export function createTailer(
   return {
     close() {
       closed = true;
-      if (fsWatcher && (fsWatcher as any).__ac) {
-        (fsWatcher as any).__ac.abort();
-      }
-      if (typeof watcher === "string") {
-        unwatchFile(watcher);
-      }
+      if (pollInterval) clearInterval(pollInterval);
+      if (creationPollInterval) clearInterval(creationPollInterval);
     },
   };
 }
