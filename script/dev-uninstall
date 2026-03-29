@@ -1,11 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+PLUGIN_VERSION=$(node -p "require('${PLUGIN_ROOT}/.claude-plugin/plugin.json').version")
+CACHE_PATH="${HOME}/.claude/plugins/cache/team-dev/team/${PLUGIN_VERSION}"
+
 echo "Uninstalling TEAM plugin (dev)..."
 echo
 
 claude plugin uninstall team@team-dev 2>&1 || true
 claude plugin marketplace remove team-dev 2>&1 || true
+
+# Clean up the symlink left in the cache
+if [ -L "$CACHE_PATH" ]; then
+  rm "$CACHE_PATH"
+  rmdir "${HOME}/.claude/plugins/cache/team-dev/team" 2>/dev/null || true
+  rmdir "${HOME}/.claude/plugins/cache/team-dev" 2>/dev/null || true
+fi
 
 echo
 echo "Done. Restart Claude Code to unload the plugin."
