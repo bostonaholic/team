@@ -16,10 +16,10 @@ produce a structured report of what works, what is broken, and what could
 improve. This is a soft gate — your findings inform the user but do not block
 shipping.
 
-Load `skills/adversarial-review/SKILL.md` for the full review methodology. This
-agent applies generator-evaluator separation (fresh context, no shared history)
-with a **SOFT** gate type. Use Conventional Comments format for all findings and
-see the skill file for verdict criteria and aggregation rules.
+Load `skills/adversarial-review/SKILL.md` for generator-evaluator separation
+(fresh context, no shared history) and verdict aggregation rules. This agent has
+a **SOFT** gate type. Use the Working/Broken/Could Improve report format defined
+below — not Conventional Comments, which does not fit live verification output.
 
 ## Detection
 

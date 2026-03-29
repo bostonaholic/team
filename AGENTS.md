@@ -59,9 +59,9 @@ See `agents/*.md`. Each has `consumes`/`produces` in frontmatter. Model tiering:
 
 **Invariant:** Agent frontmatter (`consumes`/`produces`) and `skills/team/registry.json` must always be in sync. When changing one, update the other in the same commit. The dev hook `.claude/hooks/check-registry-sync.mjs` enforces this automatically.
 
-## Skills (13)
+## Skills (24)
 
-See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodology skills are loaded by agents.
+See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodology skills are loaded by agents. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
 
 ## Hooks
 
