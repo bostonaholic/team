@@ -252,13 +252,28 @@ prerequisite phases first.
 
 ### Methodology (loaded by agents, not directly invoked)
 
-| Skill                    | Description                                    |
-|--------------------------|------------------------------------------------|
-| `rpi-workflow`           | Phase discipline, artifact conventions, gates  |
-| `test-first-development` | Acceptance tests as scope fence                |
-| `adversarial-review`     | Generator-evaluator separation, review method  |
-| `systematic-debugging`   | Root cause investigation                       |
-| `documenting-decisions`  | ADR creation and management                    |
+| Skill                    | Description                                    | Consumers                                                    |
+|--------------------------|------------------------------------------------|--------------------------------------------------------------|
+| `rpi-workflow`           | Phase discipline, artifact conventions, gates  | Loaded by router/orchestrator skills                         |
+| `test-first-development` | Acceptance tests as scope fence                | Loaded by test-architect, orchestrator                       |
+| `adversarial-review`     | Generator-evaluator separation, review method  | Loaded by code-reviewer, security-reviewer, ux-reviewer, technical-writer |
+| `systematic-debugging`   | Root cause investigation                       | Loaded by agents when debugging                              |
+| `documenting-decisions`  | ADR creation and management                    | Loaded by planner, orchestrator                              |
+
+### Design Guidelines
+
+1. **Methodology skill load limit:** Soft limit of 3 methodology skills per
+   agent invocation. At ~143 lines average per skill, 3 skills add ~430 lines
+   (~6K-10K tokens, under 6% of 200K context). A fourth skill signals the
+   agent's responsibility may be too broad. This is a design convention, not a
+   hard constraint.
+
+2. **Extraction threshold:** Extract methodology to a separate skill file when
+   it forms a coherent, independently maintainable body of knowledge --
+   regardless of consumer count. Extraction is justified by swappability,
+   independent versioning, and file size (inlining would meaningfully grow the
+   consuming file). Do not require 2+ consumers as a prerequisite. The
+   threshold is about cohesion and maintainability, not reuse count.
 
 ## 7. Hooks
 

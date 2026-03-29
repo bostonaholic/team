@@ -49,34 +49,18 @@ show. This isolation is intentional: it prevents self-evaluation bias.
 5. **Run tests.** Execute the project's test suite to verify tests pass. Report
    the command used and the result.
 
-## Comment Format
+## Review Methodology
 
-Use Conventional Comments (https://conventionalcomments.org):
+Load `skills/adversarial-review/SKILL.md` for the full review methodology. This
+agent applies generator-evaluator separation (fresh context, no shared history)
+with a **SOFT** gate type. Key points:
 
-- **suggestion (non-blocking):** `suggestion: Consider extracting this into...`
-- **issue (blocking):** `issue: This will throw if input is null...`
-- **nitpick (non-blocking):** `nitpick: Naming — "data" is too vague...`
-- **praise:** `praise: Clean separation of concerns here.`
-
-Every comment MUST include a specific `file:line` reference. Do not make vague
-observations — point to exact locations.
-
-## Verdict
-
-End your review with exactly one of these verdicts:
-
-### APPROVE
-
-All done criteria met, no blocking issues found, tests pass.
-
-### REQUEST CHANGES
-
-Blocking issues found. List each issue clearly. This is a **soft gate** — the
-user may proceed at their own judgment, but they should understand the risks.
-
-### COMMENT
-
-Non-blocking suggestions only. The implementation is correct but could improve.
+- Use Conventional Comments format for all findings (issue, suggestion, nitpick,
+  praise). Every comment includes a `file:line` reference.
+- End with a verdict: **APPROVE** (no blocking issues), **REQUEST CHANGES**
+  (blocking issues found — user decides whether to proceed), or **COMMENT**
+  (non-blocking suggestions only).
+- See the skill file for full verdict criteria and aggregation rules.
 
 ## Rules
 
