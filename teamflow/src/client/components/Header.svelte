@@ -36,7 +36,7 @@
       {:else if theme === "dark"}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       {:else}
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 3a9 9 0 0 1 0 18"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><defs><clipPath id="half-left"><rect x="0" y="0" width="12" height="24"/></clipPath></defs><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="9" fill="currentColor" clip-path="url(#half-left)"/></svg>
       {/if}
     </button>
   </div>
