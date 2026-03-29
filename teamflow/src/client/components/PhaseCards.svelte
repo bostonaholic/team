@@ -91,8 +91,13 @@
     return `${seconds}s`;
   }
 
-  function agentStatus(name: string): "idle" | "running" | "done" | "error" {
-    return agents[name]?.status ?? "idle";
+  function agentStatus(name: string, phaseName: string): "idle" | "running" | "done" | "error" {
+    if (agents[name]) return agents[name].status;
+    // Agent not in registry — derive from phase status
+    const ps = phaseStatus(phaseName);
+    if (ps === "completed") return "done";
+    if (ps === "active") return "running";
+    return "idle";
   }
 </script>
 
@@ -110,18 +115,18 @@
         <div class="agent-list">
           {#each p.agents as agentName}
             <div class="agent-row">
-              <span class="agent-icon {agentStatus(agentName)}">
-                {#if agentStatus(agentName) === "done"}
+              <span class="agent-icon {agentStatus(agentName, p.name)}">
+                {#if agentStatus(agentName, p.name) === "done"}
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                     <rect width="16" height="16" rx="3" fill="var(--color-success)"/>
                     <path d="M4.5 8L7 10.5L11.5 5.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
-                {:else if agentStatus(agentName) === "running"}
+                {:else if agentStatus(agentName, p.name) === "running"}
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                     <rect width="16" height="16" rx="3" fill="var(--color-accent)"/>
                     <circle cx="8" cy="8" r="3" fill="white"/>
                   </svg>
-                {:else if agentStatus(agentName) === "error"}
+                {:else if agentStatus(agentName, p.name) === "error"}
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                     <rect width="16" height="16" rx="3" fill="var(--color-danger)"/>
                     <path d="M5 5L11 11M11 5L5 11" stroke="white" stroke-width="2" stroke-linecap="round"/>
