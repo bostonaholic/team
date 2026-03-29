@@ -86,6 +86,23 @@ The documentation gap could cause confusion but would not block usage. Examples:
 - `path/to/doc.md` — Still reflects current behavior
 ```
 
+## Quality Assessment
+
+When assessing the quality of existing documentation (not just gaps), apply the
+writing-prose methodology: evaluate for plain language, active voice, concrete
+examples, and scannable structure. Load `skills/writing-prose/SKILL.md` for the
+full quality rubric.
+
+Use these dimensions when classifying documentation gaps:
+
+- **Accuracy** — Is the documentation true and current?
+- **Completeness** — Does it cover failure cases, prerequisites, and edge cases?
+- **Readability** — Plain language, active voice, consistent terminology, examples?
+
+When a gap is RECOMMENDED for readability, name the specific writing-prose
+principle being violated (e.g., "missing example", "passive-everything smell",
+"unexplained acronym") so the author knows exactly what to fix.
+
 ## Rules
 
 - Do NOT rewrite or generate documentation. Your job is to identify gaps.
@@ -95,3 +112,5 @@ The documentation gap could cause confusion but would not block usage. Examples:
 - If all documentation is current and complete, say so clearly.
 - Prioritize accuracy over completeness — stale docs are worse than missing
   docs.
+- Apply writing-prose quality criteria when evaluating existing docs, not just
+  when checking for presence of docs.
