@@ -11,13 +11,31 @@ Run the SHIP phase. Requires `verification.passed` in the event log.
 
 1. Read `.team/events.jsonl`. Scan for `verification.passed`.
 2. If not found: report "Verification not passed. Run /team-verify first." and stop.
-3. Present shipping options:
+3. **Update CHANGELOG.md** before committing (see Changelog Update below).
+4. Present shipping options:
    - **Commit + PR** — branch, commit, open pull request
    - **Commit locally** — commit to current branch
    - **Keep as-is** — leave changes uncommitted
-4. Execute user's choice.
-5. Append `feature.shipped` event to the log.
-6. Delete `.team/` directory.
+5. Execute user's choice.
+6. Append `feature.shipped` event to the log.
+7. Delete `.team/` directory.
+
+## Changelog Update
+
+Before creating the ship commit, update `CHANGELOG.md` following the changelog
+methodology in `skills/changelog/SKILL.md`:
+
+1. Scan commits since the last changelog entry using `git log`.
+2. Filter to user-facing commits: `feat:`, `fix:`, `perf:`, `security:`, and
+   any `BREAKING CHANGE:` footer. Exclude `chore:`, `test:`, `refactor:`,
+   `ci:`, and `docs:` commits.
+3. Translate each included commit to a plain-language user-facing bullet.
+4. Add entries under the `[Unreleased]` section in `CHANGELOG.md`. Create the
+   file with the Keep a Changelog header if it does not exist.
+5. Include the `CHANGELOG.md` change in the ship commit.
+
+If there are no user-facing commits to document (all changes are internal),
+skip the changelog update and note this in the completion report.
 
 ## Commit Discipline
 
