@@ -19,9 +19,13 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
 
 1. Derive a kebab-case `topic` from the description.
 2. Set `today` to the current date (`YYYY-MM-DD`).
-3. Create `.team/` directory if it does not exist.
-4. Create `docs/plans/` directory if it does not exist.
-5. Append the first event to `.team/events.jsonl`:
+3. **Create an isolated worktree** for this pipeline run. Use Claude Code's
+   native worktree support: `claude --worktree <topic>` or dispatch yourself
+   into a worktree context. All subsequent work happens inside the worktree.
+   See `skills/worktree-isolation/SKILL.md` for the full methodology.
+4. Create `.team/` directory if it does not exist.
+5. Create `docs/plans/` directory if it does not exist.
+6. Append the first event to `.team/events.jsonl`:
 
 ```json
 {"seq":1,"event":"feature.requested","producer":"router","ts":"<ISO-8601>","data":{"topic":"<topic>","description":"<description>","today":"<today>"},"artifact":null,"causedBy":null,"gate":null}
@@ -94,6 +98,8 @@ When `verification.passed` is recorded:
 2. Execute user's choice
 3. Append `feature.shipped` event
 4. Delete `.team/` directory
+5. Clean up the worktree (cherry-pick/rebase commits onto the target branch,
+   then let Claude Code remove the worktree)
 
 ## Rules
 

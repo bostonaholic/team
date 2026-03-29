@@ -11,7 +11,7 @@ Run the IMPLEMENT phase. Requires `tests.confirmed-failing` in the event log.
 
 1. Read `.team/events.jsonl`. Scan for `tests.confirmed-failing`.
 2. If not found: report "No confirmed tests. Run /team-test first." and stop.
-3. Follow the event loop — dispatches `implementer` agent.
+3. Dispatch the `implementer` agent.
 4. The implementer works through the plan, emitting `step.completed` events.
 5. **Stop after `implementation.completed` is recorded.**
 
