@@ -61,35 +61,6 @@ describe("T1: motion_tokens_present_in_root", () => {
 });
 
 // ---------------------------------------------------------------------------
-// T2: Reduced motion zeroes durations (Plan steps 1.1, 5.1)
-// ---------------------------------------------------------------------------
-describe("T2: reduced_motion_zeroes_durations", () => {
-  it("contains a prefers-reduced-motion: reduce media query", () => {
-    const css = readSource(THEME_CSS);
-    expect(css).toMatch(/prefers-reduced-motion\s*:\s*reduce/);
-  });
-
-  it("sets --duration-fast to 0ms under reduced motion", () => {
-    const css = readSource(THEME_CSS);
-    // Extract the reduced-motion block and verify it overrides duration-fast
-    const reducedBlock = extractReducedMotionBlock(css);
-    expect(reducedBlock).toMatch(/--duration-fast\s*:\s*0ms/);
-  });
-
-  it("sets --duration-normal to 0ms under reduced motion", () => {
-    const css = readSource(THEME_CSS);
-    const reducedBlock = extractReducedMotionBlock(css);
-    expect(reducedBlock).toMatch(/--duration-normal\s*:\s*0ms/);
-  });
-
-  it("sets --duration-slow to 0ms under reduced motion", () => {
-    const css = readSource(THEME_CSS);
-    const reducedBlock = extractReducedMotionBlock(css);
-    expect(reducedBlock).toMatch(/--duration-slow\s*:\s*0ms/);
-  });
-});
-
-// ---------------------------------------------------------------------------
 // T3/T4: Agent icon CSS transitions (Plan step 2.1)
 // Structural check: .agent-icon has transition for opacity and transform
 // ---------------------------------------------------------------------------
@@ -135,12 +106,6 @@ describe("T5: active_phase_card_pulses", () => {
     expect(svelte).toMatch(/infinite/);
   });
 
-  it("reduced motion disables pulse animation on .phase-card.active", () => {
-    const svelte = readSource(PHASE_CARDS);
-    // There should be a prefers-reduced-motion media query that sets animation: none
-    expect(svelte).toMatch(/prefers-reduced-motion\s*:\s*reduce/);
-    expect(svelte).toMatch(/animation\s*:\s*none/);
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -218,34 +183,6 @@ describe("T10: demo_includes_hard_gate_failed", () => {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/**
- * Extract the @media (prefers-reduced-motion: reduce) block from CSS text.
- * Returns the full block content including nested braces.
- */
-function extractReducedMotionBlock(css: string): string {
-  const marker = "prefers-reduced-motion: reduce";
-  const idx = css.indexOf(marker);
-  if (idx === -1) return "";
-
-  // Find the opening brace after the media query
-  const braceStart = css.indexOf("{", idx);
-  if (braceStart === -1) return "";
-
-  // Match braces to find the closing brace
-  let depth = 0;
-  let end = braceStart;
-  for (let i = braceStart; i < css.length; i++) {
-    if (css[i] === "{") depth++;
-    if (css[i] === "}") depth--;
-    if (depth === 0) {
-      end = i;
-      break;
-    }
-  }
-
-  return css.slice(braceStart, end + 1);
-}
 
 /**
  * Extract the CSS rule block for a given selector from Svelte <style> content.

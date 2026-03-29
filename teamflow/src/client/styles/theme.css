@@ -89,12 +89,3 @@ body {
   margin: 0;
   min-height: 100vh;
 }
-
-/* Reduced motion: disable all animations */
-@media (prefers-reduced-motion: reduce) {
-  :root {
-    --duration-fast: 0ms;
-    --duration-normal: 0ms;
-    --duration-slow: 0ms;
-  }
-}

@@ -189,13 +189,6 @@
     50% { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-success) 40%, transparent); }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .phase-card.active,
-    .agent-icon.running {
-      animation: none;
-    }
-  }
-
   .phase-card.pending {
     opacity: 0.5;
   }
