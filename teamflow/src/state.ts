@@ -178,6 +178,8 @@ export function createStateEngine() {
   return {
     apply(events: Array<Record<string, unknown>>): void {
       for (const event of events) {
+        const seq = event.seq as number;
+        if (seq <= state.lastSeq) continue; // skip already-applied events
         state = applyEvent(state, event);
       }
     },
