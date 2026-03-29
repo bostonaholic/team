@@ -70,12 +70,37 @@ A checklist of observable outcomes that prove the feature is complete:
 - No regressions in existing tests
 - Any additional criteria specific to this feature (e.g., "CLI help text updated", "migration is reversible")
 
+## Technical Design Document
+
+For features that introduce new architectural patterns, have multiple valid
+approaches, or require non-trivial rollout planning, load
+`skills/technical-design-doc/SKILL.md` and produce an enhanced plan that
+includes TDD sections alongside the standard phases and steps.
+
+Include TDD sections when the research identifies:
+- Multiple valid approaches with real trade-offs
+- New data models, API contracts, or service boundaries
+- Schema migrations, backward compatibility requirements, or phased rollout
+- Performance or security decisions that need explicit documentation
+
+Add these sections between **Context** and **Steps** when warranted:
+- `### Trade-offs` — major design decisions and rejected alternatives
+- `### Data Model` — new data structures, schemas, or types
+- `### Rollout Plan` — migration strategy, feature flags, rollback plan
+
+Keep the total plan under 300 lines. If TDD content would exceed that,
+extract it to a separate `docs/plans/YYYY-MM-DD-<topic>-design.md` and
+reference it from the plan.
+
+For simple, well-scoped features, the standard plan format is sufficient —
+do not add TDD sections for their own sake.
+
 ## Rules
 
 1. **Reuse, don't reinvent.** Reference existing functions, utilities, and
    patterns found in the research. If a helper already exists, use it.
-2. **Stay under 200 lines.** The plan must be concise enough to scan in one
-   sitting, detailed enough to execute without guesswork.
+2. **Stay under 200 lines** (300 with TDD sections). The plan must be concise
+   enough to scan in one sitting, detailed enough to execute without guesswork.
 3. **Resolve what you can, flag what you cannot.** If the research identified
    ambiguities, note them in a `### Open Questions` section at the top — these
    must be resolved by the product-owner before execution begins.
