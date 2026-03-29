@@ -12,10 +12,10 @@ check:
 
 commands:
   install:
-    desc: "Symlink plugin agents, skills, and hooks to ~/.claude for global access"
+    desc: "Register plugin as a local marketplace for global access"
     run: "script/dev-install"
   uninstall:
-    desc: "Remove dev symlinks and hook config from ~/.claude"
+    desc: "Unregister plugin and clean up cache"
     run: "script/dev-uninstall"
   update:
     desc: "Update all agent skills"
