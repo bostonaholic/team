@@ -23,6 +23,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 | Registry sync validation | `.claude/hooks/check-registry-sync.mjs` | Plugin developers |
 | Dev settings/hooks | `.claude/settings.json` | Plugin developers |
 | Issue tracking | `.beads/` | Plugin developers |
+| Teamflow dashboard | `teamflow/` | Plugin developers (optional sidecar) |
 
 **Rule of thumb:** If it validates that the plugin is *built correctly*, it's a dev concern (`.claude/`). If it runs *as part of the plugin's functionality*, it's runtime (`hooks/`).
 
@@ -83,6 +84,16 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodolog
 ## State
 
 Event log at `.team/events.jsonl` (append-only, gitignored). State is derived from events, never stored directly. Three-layer compaction defense.
+
+## Teamflow Dashboard
+
+A local Svelte 5 dashboard served by Fastify that tails `.team/events.jsonl` and streams pipeline state to the browser via SSE. Start it alongside the pipeline (not auto-started):
+
+```
+node teamflow/bin/teamflow.mjs
+```
+
+Binds to `127.0.0.1:7425` by default. Override with `TEAMFLOW_PORT`. Suppress browser auto-open with `TEAMFLOW_NO_OPEN=1`. Shared event logic lives in `lib/events.mjs` (imported by both hooks and the dashboard).
 
 ## Learned Rules
 

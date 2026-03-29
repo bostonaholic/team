@@ -8,3 +8,7 @@
 .dolt/
 *.db
 .beads-credential-key
+
+# Teamflow dashboard
+teamflow/node_modules/
+node_modules
