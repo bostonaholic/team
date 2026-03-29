@@ -83,6 +83,15 @@ incorrect):
 - Handle errors explicitly — fail fast, fail loud.
 - Prefer simple, readable code over clever abstractions.
 
+Apply SOLID principles when writing new code. Load `skills/solid-principles/SKILL.md`
+for the full methodology. Key checkpoints:
+
+- **SRP:** Each function/class has one reason to change. No "and" in names.
+- **OCP:** Extend behavior by adding new implementations, not modifying tested code.
+- **LSP:** Subtypes honor the base type's full contract.
+- **ISP:** Expose only what callers need. Split fat interfaces.
+- **DIP:** Inject dependencies. Do not instantiate infrastructure inside domain logic.
+
 ## Progress Reporting
 
 After each step, report concisely:

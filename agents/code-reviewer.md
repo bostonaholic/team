@@ -38,6 +38,13 @@ show. This isolation is intentional: it prevents self-evaluation bias.
      intent without requiring comments?
    - **Unnecessary complexity** — Is there abstraction that serves no current
      need? Are there simpler ways to achieve the same result?
+   - **SOLID violations** — Check for design principle violations using the
+     methodology in `skills/solid-principles/SKILL.md`:
+     - SRP: does this unit have more than one reason to change?
+     - OCP: does adding new behavior require modifying this existing code?
+     - LSP: do subtypes honor the base type's full contract?
+     - ISP: does this interface force clients to depend on unused methods?
+     - DIP: does business logic instantiate its own infrastructure dependencies?
 
 5. **Run tests.** Execute the project's test suite to verify tests pass. Report
    the command used and the result.
