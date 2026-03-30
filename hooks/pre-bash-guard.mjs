@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
 /**
- * Claude Code PreToolUse hook — blocks dangerous bash commands.
+ * Claude Code PreToolUse hook — guards against dangerous bash commands.
  *
  * Reads JSON from stdin with { tool_name, tool_input: { command } }.
- * Exits 0 to allow, exits 2 with JSON on stderr to block.
+ * When a dangerous pattern is detected, returns permissionDecision: "ask"
+ * so the user is prompted for confirmation instead of being silently blocked.
  * Fails open (exit 0) on any read/parse error so non-Bash calls pass through.
  */
 
@@ -51,10 +52,15 @@ async function readStdin() {
   return Buffer.concat(chunks).toString("utf-8");
 }
 
-function block(reason) {
-  const payload = JSON.stringify({ decision: "block", reason });
-  process.stderr.write(payload);
-  process.exit(2);
+function askUser(reason) {
+  const payload = JSON.stringify({
+    hookSpecificOutput: {
+      permissionDecision: "ask",
+    },
+    systemMessage: `⚠️ Dangerous command detected: ${reason}`,
+  });
+  process.stdout.write(payload);
+  process.exit(0);
 }
 
 async function main() {
@@ -75,7 +81,7 @@ async function main() {
 
   for (const { pattern, reason } of DANGEROUS_PATTERNS) {
     if (pattern.test(command)) {
-      block(reason);
+      askUser(reason);
     }
   }
 
