@@ -18,11 +18,19 @@
     data?: Record<string, unknown>;
   }
 
+  interface GateStatus {
+    type: "human" | "mechanical" | "aggregate" | "join";
+    status: "pending" | "waiting" | "passed" | "failed";
+    label: string;
+    phase: string;
+  }
+
   interface RunState {
     phase: string | null;
     topic: string | null;
     startedAt: string | null;
     agents: Record<string, AgentStatus>;
+    gates: Record<string, GateStatus>;
     events: TimelineEntry[];
     errors: Array<{ event: string; data: Record<string, unknown> }>;
     progress: { step: string | null; total: number | null };
@@ -35,6 +43,7 @@
     topic: null,
     startedAt: null,
     agents: {},
+    gates: {},
     events: [],
     errors: [],
     progress: { step: null, total: null },
@@ -110,7 +119,7 @@
     <div class="reconnecting">Reconnecting...</div>
   {/if}
 
-  <PhaseCards phase={state.phase} agents={state.agents} events={state.events} {now} />
+  <PhaseCards phase={state.phase} agents={state.agents} gates={state.gates} events={state.events} {now} />
 
   <div class="main-content">
     <Timeline events={state.events} />

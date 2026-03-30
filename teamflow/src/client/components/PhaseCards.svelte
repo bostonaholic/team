@@ -13,21 +13,29 @@
     data?: Record<string, unknown>;
   }
 
+  interface GateStatus {
+    type: "human" | "mechanical" | "aggregate" | "join";
+    status: "pending" | "waiting" | "passed" | "failed";
+    label: string;
+    phase: string;
+  }
+
   interface Props {
     phase: string | null;
     agents: Record<string, AgentStatus>;
+    gates: Record<string, GateStatus>;
     events: TimelineEntry[];
     now: number;
   }
 
-  let { phase, agents, events, now }: Props = $props();
+  let { phase, agents, gates, events, now }: Props = $props();
 
-  const pipeline = [
-    { name: "RESEARCH", agents: ["file-finder", "researcher"] },
-    { name: "PLAN", agents: ["product-owner", "planner", "plan-critic"] },
-    { name: "TEST-FIRST", agents: ["test-architect"] },
+  const pipeline: Array<{ name: string; agents: string[]; gate?: string }> = [
+    { name: "RESEARCH", agents: ["file-finder", "researcher"], gate: "research-join" },
+    { name: "PLAN", agents: ["product-owner", "planner", "plan-critic"], gate: "plan-gate" },
+    { name: "TEST-FIRST", agents: ["test-architect"], gate: "test-gate" },
     { name: "IMPLEMENT", agents: ["implementer"] },
-    { name: "VERIFY", agents: ["code-reviewer", "security-reviewer", "technical-writer", "ux-reviewer", "verifier"] },
+    { name: "VERIFY", agents: ["code-reviewer", "security-reviewer", "technical-writer", "ux-reviewer", "verifier"], gate: "verify-gate" },
     { name: "SHIP", agents: ["orchestrator"] },
   ];
 
@@ -100,6 +108,21 @@
     if (ps === "active") return "running";
     return "idle";
   }
+
+  function gateTypeLabel(type: GateStatus["type"]): string {
+    switch (type) {
+      case "human": return "Human Gate";
+      case "mechanical": return "Mechanical Gate";
+      case "aggregate": return "Aggregate Gate";
+      case "join": return "Join";
+    }
+  }
+
+  function connectorStatus(phaseName: string): string {
+    const entry = pipeline.find((p) => p.name === phaseName);
+    if (!entry?.gate || !gates[entry.gate]) return "";
+    return gates[entry.gate].status;
+  }
 </script>
 
 <div class="phase-cards">
@@ -143,11 +166,38 @@
           {/each}
         </div>
       {/if}
+      {#if p.gate && gates[p.gate]}
+        <div class="gate-row">
+          <span class="gate-icon {gates[p.gate].status}">
+            {#if gates[p.gate].status === "passed"}
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <rect width="16" height="16" rx="3" fill="var(--color-success)"/>
+                <path d="M4.5 8L7 10.5L11.5 5.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            {:else if gates[p.gate].status === "waiting"}
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <rect width="16" height="16" rx="3" fill="var(--color-accent)"/>
+                <circle cx="8" cy="8" r="3" fill="white"/>
+              </svg>
+            {:else if gates[p.gate].status === "failed"}
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <rect width="16" height="16" rx="3" fill="var(--color-danger)"/>
+                <path d="M5 5L11 11M11 5L5 11" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            {:else}
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <rect x="0.5" y="0.5" width="15" height="15" rx="2.5" stroke="var(--border-color)"/>
+              </svg>
+            {/if}
+          </span>
+          <span class="gate-label">{gateTypeLabel(gates[p.gate].type)}</span>
+        </div>
+      {/if}
     </div>
 
     {#if i < gateCount}
       <div class="gate">
-        <span class="gate-arrow">&rarr;</span>
+        <span class="gate-arrow {connectorStatus(p.name)}">&rarr;</span>
       </div>
     {/if}
   {/each}
@@ -304,5 +354,60 @@
     font-size: 1.125rem;
     color: var(--text-secondary);
     opacity: 0.5;
+    transition: color var(--duration-normal) var(--ease-in-out),
+                opacity var(--duration-normal) var(--ease-in-out);
+  }
+
+  .gate-arrow.passed {
+    color: var(--color-success);
+    opacity: 1;
+  }
+
+  .gate-arrow.waiting {
+    color: var(--color-accent);
+    opacity: 1;
+    animation: agent-pulse 1.5s ease-in-out infinite;
+  }
+
+  .gate-arrow.failed {
+    color: var(--color-danger);
+    opacity: 1;
+  }
+
+  .gate-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-top: 1px solid var(--border-color);
+    margin-top: var(--space-sm);
+    padding-top: var(--space-sm);
+  }
+
+  .gate-label {
+    font-size: 0.6875rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .gate-icon {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    line-height: 0;
+    transition: opacity var(--duration-fast) var(--ease-out),
+                transform var(--duration-fast) var(--ease-out);
+  }
+
+  .gate-icon.waiting {
+    animation: agent-pulse 1.5s ease-in-out infinite;
+  }
+
+  .gate-icon.passed {
+    color: var(--color-success);
+  }
+
+  .gate-icon.failed {
+    color: var(--color-danger);
   }
 </style>
