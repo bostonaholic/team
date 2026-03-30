@@ -1,8 +1,8 @@
 /**
  * PreCompact hook — anchors TEAM pipeline state before context compaction.
  *
- * Reads .team/events.jsonl (the source of truth) and derives pipeline state.
- * Falls back to .team/state.json if the event log doesn't exist.
+ * Reads ~/.team/events.jsonl (the source of truth) and derives pipeline state.
+ * Falls back to ~/.team/state.json if the event log doesn't exist.
  * Injects a concise summary into the compacted context so the agent retains
  * awareness of the active pipeline.
  *
@@ -11,10 +11,10 @@
 
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { EVENT_TO_PHASE, deriveState, readEventLog, projectDir } from "../lib/events.mjs";
+import { EVENT_TO_PHASE, deriveState, readEventLog, teamDir } from "../lib/events.mjs";
 
 async function readStateFile() {
-  const statePath = join(projectDir(), ".team", "state.json");
+  const statePath = join(teamDir(), "state.json");
 
   try {
     const raw = await readFile(statePath, "utf-8");

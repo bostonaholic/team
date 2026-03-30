@@ -36,7 +36,9 @@ During the router's Setup phase, before the first event is appended:
 
 1. Create an isolated worktree for this pipeline run.
 2. All subsequent agent dispatches operate within the worktree.
-3. The `.team/` event log and `docs/plans/` artifacts live in the worktree.
+3. The event log lives at `~/.team/events.jsonl` (global, not per-worktree)
+   so the Teamflow dashboard can tail events regardless of which worktree
+   the pipeline runs in. Plan artifacts stay in the worktree's `docs/plans/`.
 
 ### During the pipeline
 

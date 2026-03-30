@@ -94,7 +94,7 @@ Examples: documentation gap analysis, style suggestions.
 
 Phase transitions are event-driven. Every transition follows this sequence:
 
-1. **Record event** — Append the output event to `.team/events.jsonl`
+1. **Record event** — Append the output event to `~/.team/events.jsonl`
 2. **Verify artifacts** — Confirm all required artifacts from the current phase exist on disk
 3. **Evaluate gates** — Check gate conditions defined in `skills/team/registry.json`
 4. **Proceed** — Dispatch the next agent(s) that consume the output event

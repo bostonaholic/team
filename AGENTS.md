@@ -83,11 +83,11 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodolog
 
 ## State
 
-Event log at `.team/events.jsonl` (append-only, gitignored). State is derived from events, never stored directly. Event parsing logic lives in `lib/events.mjs`. Three-layer compaction defense.
+Event log at `~/.team/events.jsonl` (append-only, global). State is derived from events, never stored directly. Event parsing logic lives in `lib/events.mjs`. Three-layer compaction defense.
 
 ## Teamflow Dashboard
 
-A local Svelte 5 dashboard served by Fastify that tails `.team/events.jsonl` and streams pipeline state to the browser via SSE.
+A local Svelte 5 dashboard served by Fastify that tails `~/.team/events.jsonl` and streams pipeline state to the browser via SSE.
 
 ```
 dev server    # Start dashboard server only (foreground, no browser auto-open)

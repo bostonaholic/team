@@ -17,6 +17,11 @@ up:
 
 build: "cd teamflow && npm run build"
 
+server:
+  desc: "Start the Teamflow dashboard server (foreground, no demo data)"
+  run: "cd teamflow && TEAMFLOW_NO_OPEN=1 npm start"
+  build_first: true
+
 check:
   plugin: "claude plugin validate ."
 
@@ -30,10 +35,6 @@ commands:
   demo:
     desc: "Start the Teamflow dashboard with a live demo pipeline (~60s)"
     run: "cd teamflow && npm run demo"
-  server:
-    desc: "Start the Teamflow dashboard server (foreground, no demo data)"
-    run: "cd teamflow && TEAMFLOW_NO_OPEN=1 npm start"
-    build_first: true
   update:
     desc: "Update all agent skills"
     # TODO: `npx skills update` ignores project-level skills-lock.json

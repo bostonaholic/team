@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Teamflow demo — writes fake pipeline events to .team/events.jsonl
+ * Teamflow demo — writes fake pipeline events to ~/.team/events.jsonl
  * over ~60 seconds while the dashboard server streams them live.
  *
  * Usage: node teamflow/bin/demo.mjs
@@ -11,10 +11,10 @@ import { spawn } from "node:child_process";
 import { mkdirSync, writeFileSync, appendFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { homedir } from "node:os";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const projectDir = join(__dirname, "..", "..");
-const teamDir = join(projectDir, ".team");
+const teamDir = join(homedir(), ".team");
 const eventsPath = join(teamDir, "events.jsonl");
 const serverPath = join(__dirname, "..", "src", "server.ts");
 
@@ -104,7 +104,6 @@ async function main() {
       stdio: "inherit",
       env: {
         ...process.env,
-        CLAUDE_PROJECT_DIR: projectDir,
         TEAMFLOW_PORT: port,
         TEAMFLOW_NO_OPEN: "1",
       },

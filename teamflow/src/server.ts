@@ -2,14 +2,15 @@ import Fastify from "fastify";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
+import { homedir } from "node:os";
 import type { RunState } from "./state.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const port = parseInt(process.env.TEAMFLOW_PORT || "7425", 10);
 const host = "127.0.0.1";
-const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const noOpen = process.env.TEAMFLOW_NO_OPEN === "1";
+const teamDir = join(homedir(), ".team");
 
 const app = Fastify({ logger: false });
 
@@ -49,7 +50,7 @@ async function start() {
     }
 
     // Start tailing the event log
-    const eventsPath = join(projectDir, ".team", "events.jsonl");
+    const eventsPath = join(teamDir, "events.jsonl");
     createTailer(eventsPath, (events) => {
       stateEngine!.apply(events);
       if (broadcast) {

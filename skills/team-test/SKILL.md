@@ -9,7 +9,7 @@ Run the TEST-FIRST phase. Requires `plan.approved` in the event log.
 
 ## Execution
 
-1. Read `.team/events.jsonl`. Scan for `plan.approved`.
+1. Read `~/.team/events.jsonl`. Scan for `plan.approved`.
 2. If not found: report "No approved plan. Run /team-plan first." and stop.
 3. Follow the event loop — dispatches `test-architect`.
 4. At the mechanical gate (`tests.written`): verify all tests fail correctly.

@@ -9,7 +9,7 @@ Run the VERIFY phase. Requires `implementation.completed` in the event log.
 
 ## Execution
 
-1. Read `.team/events.jsonl`. Scan for `implementation.completed`.
+1. Read `~/.team/events.jsonl`. Scan for `implementation.completed`.
 2. If not found: report "No implementation to verify. Run /team-implement first." and stop.
 3. Follow the event loop — dispatches 5 reviewers in parallel:
    `code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`

@@ -1,8 +1,8 @@
 /**
  * SessionStart hook — detects an active TEAM pipeline and prompts recovery.
  *
- * Reads .team/events.jsonl (the source of truth) and derives pipeline state.
- * Falls back to .team/state.json if the event log doesn't exist.
+ * Reads ~/.team/events.jsonl (the source of truth) and derives pipeline state.
+ * Falls back to ~/.team/state.json if the event log doesn't exist.
  * Injects a recovery notice into the session context so the agent knows
  * to suggest /team-resume.
  *
@@ -11,10 +11,10 @@
 
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { EVENT_TO_PHASE, deriveState, readEventLog, projectDir } from "../lib/events.mjs";
+import { EVENT_TO_PHASE, deriveState, readEventLog, teamDir } from "../lib/events.mjs";
 
 async function readStateFile() {
-  const statePath = join(projectDir(), ".team", "state.json");
+  const statePath = join(teamDir(), "state.json");
 
   try {
     const raw = await readFile(statePath, "utf-8");
@@ -92,7 +92,7 @@ function formatRecoveryContext(state, events) {
 
   lines.push("");
   lines.push("To resume: run /team-resume");
-  lines.push("To abandon: delete .team/events.jsonl");
+  lines.push("To abandon: delete ~/.team/events.jsonl");
 
   return lines.join("\n");
 }
