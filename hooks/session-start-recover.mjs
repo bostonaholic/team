@@ -67,7 +67,7 @@ function formatRecoveryContext(state, events) {
   }
 
   const transitions = state.backwardTransitions ?? 0;
-  lines.push(`Backward Transitions: ${transitions}/3`);
+  lines.push(`Backward Transitions: ${transitions}/5`);
 
   lines.push(`Test Files: ${formatTestFiles(state.testFiles)}`);
 

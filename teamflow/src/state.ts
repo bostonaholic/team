@@ -30,6 +30,7 @@ interface RegistryGate {
   type: "human" | "mechanical" | "aggregate";
   passEvent: string;
   failEvent?: string;
+  failEvents?: Record<string, string | Record<string, string>>;
   condition?: string;
   hardGates?: string[];
   maxRetries?: number;
@@ -76,6 +77,7 @@ interface GateConfig {
   afterEvents: string[];
   passEvent: string;
   failEvent?: string;
+  isFailEvent?: (event: string) => boolean;
 }
 
 // Phase ordering for deriving which phase a gate lives in.
@@ -108,6 +110,13 @@ for (const gate of registry.gates) {
 
   const label = GATE_TYPE_LABELS[gate.type] ?? gate.passEvent;
 
+  // For aggregate gates with typed failEvents, use pattern matching
+  const isFailEvent = gate.failEvents
+    ? (ev: string) => ev.startsWith("hard-gate.") && ev.endsWith("-failed")
+    : gate.failEvent
+      ? (ev: string) => ev === gate.failEvent
+      : undefined;
+
   gateConfigs.push({
     key,
     type: gate.type,
@@ -116,6 +125,7 @@ for (const gate of registry.gates) {
     afterEvents,
     passEvent: gate.passEvent,
     failEvent: gate.failEvent,
+    isFailEvent,
   });
 }
 
@@ -194,8 +204,8 @@ export function applyEvent(state: RunState, event: Record<string, unknown>): Run
     newState.startedAt = ts ?? null;
   }
 
-  // Track errors from hard-gate.failed
-  if (eventName === "hard-gate.failed") {
+  // Track errors from typed hard-gate failures
+  if (eventName.startsWith("hard-gate.") && eventName.endsWith("-failed")) {
     newState.errors = [...state.errors, { event: eventName, data }];
   }
 
@@ -260,7 +270,7 @@ export function applyEvent(state: RunState, event: Record<string, unknown>): Run
         hasPass = true;
         passIdx = i;
       }
-      if (!hasFail && gc.failEvent && ev === gc.failEvent) {
+      if (!hasFail && gc.isFailEvent && gc.isFailEvent(ev)) {
         hasFail = true;
         failIdx = i;
       }

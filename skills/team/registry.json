@@ -35,7 +35,15 @@
     },
     {
       "name": "implementer",
-      "consumes": "tests.confirmed-failing",
+      "consumes": [
+        "tests.confirmed-failing",
+        "hard-gate.security-failed",
+        "hard-gate.lint-failed",
+        "hard-gate.typecheck-failed",
+        "hard-gate.build-failed",
+        "hard-gate.test-failed",
+        "hard-gate.review-failed"
+      ],
       "produces": "implementation.completed"
     },
     {
@@ -91,10 +99,20 @@
         "verification.completed"
       ],
       "type": "aggregate",
-      "hardGates": ["security-review.completed", "verification.completed"],
+      "hardGates": ["security-review.completed", "verification.completed", "review.completed"],
       "passEvent": "verification.passed",
-      "failEvent": "hard-gate.failed",
-      "maxRetries": 3
+      "failEvents": {
+        "security-review.completed": "hard-gate.security-failed",
+        "verification.completed": {
+          "format": "hard-gate.lint-failed",
+          "lint": "hard-gate.lint-failed",
+          "typecheck": "hard-gate.typecheck-failed",
+          "build": "hard-gate.build-failed",
+          "test": "hard-gate.test-failed"
+        },
+        "review.completed": "hard-gate.review-failed"
+      },
+      "maxRetries": 5
     }
   ],
   "joins": [

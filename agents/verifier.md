@@ -68,10 +68,12 @@ Exit code: 1
 
 ## Verdict Logic
 
-- **PASS** — All detected checks passed.
+- **PASS** — All detected checks passed (at least one check must exist).
 - **FAIL** — One or more detected checks failed. List every failure.
-- If no checks are detected at all, report that and suggest what the user
-  should configure.
+- **FAIL** — No checks detected at all. A project with zero configured quality
+  checks (no linter, no type checker, no test suite, no build) cannot pass
+  verification. Report what is missing and recommend configuring at least
+  format, lint, and test scripts.
 
 ## Rules
 

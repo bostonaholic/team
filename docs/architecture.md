@@ -128,8 +128,8 @@ feature.requested
                                /                \
                        all pass              hard gate fails
                           │                       │
-                   verification.passed     hard-gate.failed
-                          │                       │
+                   verification.passed     hard-gate.*-failed
+                          │               (typed per failure)
                    feature.shipped          └──> implementer (retry)
 ```
 
@@ -160,7 +160,7 @@ feature.requested
 
 ### Phase 4: Implement
 
-**Trigger:** `tests.confirmed-failing` (or `hard-gate.failed` on retry)
+**Trigger:** `tests.confirmed-failing` (or `hard-gate.*-failed` on retry)
 **Agent:** `implementer`
 **Progress events:** `step.completed` (per plan step)
 **Output event:** `implementation.completed` (when all tests pass)
@@ -171,10 +171,12 @@ feature.requested
 **Parallel agents:** `code-reviewer`, `security-reviewer`, `technical-writer`,
 `ux-reviewer`, `verifier`
 **Aggregation event:** `reviews.aggregated`
-**Gate:** Aggregate -- hard gates on `security-review.completed` and
-`verification.completed`
+**Gate:** Aggregate -- hard gates on `security-review.completed`,
+`verification.completed`, and `review.completed`
 **Pass event:** `verification.passed`
-**Fail event:** `hard-gate.failed` (loops to implementer, max 3 retries)
+**Fail events:** `hard-gate.security-failed`, `hard-gate.lint-failed`,
+`hard-gate.typecheck-failed`, `hard-gate.build-failed`, `hard-gate.test-failed`,
+`hard-gate.review-failed` (loops to implementer, max 5 rounds)
 
 ### Phase 6: Ship
 

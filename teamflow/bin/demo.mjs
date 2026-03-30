@@ -39,7 +39,7 @@ const timeline = [
   { delay: 2000, event: "security-review.completed", producer: "security-reviewer", data: { verdict: "approve", findings: ["No security concerns"] } },
   { delay: 2000, event: "ux-review.completed",       producer: "ux-reviewer",      data: { verdict: "approve", findings: ["SSE reconnect is transparent to user"] } },
   { delay: 2000, event: "verification.completed",    producer: "verifier",         data: { verdict: "fail", checks: ["format", "lint", "typecheck", "build", "test"] } },
-  { delay: 2000, event: "hard-gate.failed",          producer: "verifier",         data: { findings: ["Lint check failed on src/sse.ts"], retryCount: 1, maxRetries: 3 } },
+  { delay: 2000, event: "hard-gate.lint-failed",      producer: "router",           data: { command: "npm run lint", exitCode: 1, errors: "Lint check failed on src/sse.ts", retryRound: 1, maxRetries: 5 } },
   { delay: 3000, event: "verification.completed",    producer: "verifier",         data: { verdict: "pass", checks: ["format", "lint", "typecheck", "build", "test"] } },
   { delay: 2000, event: "verification.passed",       producer: "orchestrator",     data: {} },
   { delay: 3000, event: "feature.shipped",           producer: "orchestrator",     data: { pr: "#42", branch: "feat/sse-reconnect" } },

@@ -7,7 +7,7 @@
  * Checks files in plugin component directories (agents/, skills/, hooks/,
  * .claude-plugin/) against structural expectations.
  *
- * Outputs warnings to stderr on validation failure. Never blocks.
+ * Blocks on validation failure (exit 1) to enforce structural quality.
  */
 
 import { readFile } from "node:fs/promises";
@@ -24,10 +24,13 @@ async function readStdin() {
   return Buffer.concat(chunks).toString("utf-8");
 }
 
+let hasFailure = false;
+
 function warn(filePath, reason) {
+  hasFailure = true;
   const payload = JSON.stringify({
     hookSpecificOutput: {
-      additionalContext: `WARNING: Plugin file validation failed for ${filePath}: ${reason}`,
+      additionalContext: `BLOCKED: Plugin file validation failed for ${filePath}: ${reason}. Fix the issue before proceeding.`,
     },
   });
   process.stderr.write(payload);
@@ -125,7 +128,7 @@ async function main() {
     await validate(relativePath, content);
   }
 
-  process.exit(0);
+  process.exit(hasFailure ? 1 : 0);
 }
 
 main().catch(() => process.exit(0));

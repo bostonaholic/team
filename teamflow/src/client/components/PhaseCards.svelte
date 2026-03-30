@@ -32,7 +32,12 @@
     "plan.revision-requested": "PLAN",
     "tests.confirmed-failing": "IMPLEMENT",
     "implementation.completed": "VERIFY",
-    "hard-gate.failed": "IMPLEMENT",
+    "hard-gate.security-failed": "IMPLEMENT",
+    "hard-gate.lint-failed": "IMPLEMENT",
+    "hard-gate.typecheck-failed": "IMPLEMENT",
+    "hard-gate.build-failed": "IMPLEMENT",
+    "hard-gate.test-failed": "IMPLEMENT",
+    "hard-gate.review-failed": "IMPLEMENT",
     "verification.passed": "SHIP",
     "feature.shipped": "SHIPPED",
   };

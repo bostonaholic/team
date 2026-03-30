@@ -72,9 +72,9 @@ The code MUST NOT ship with these findings. Examples:
 - Authentication bypass
 - Missing authorization on sensitive endpoints
 
-### HIGH
+### HIGH — Hard Gate
 
-Significant risk that should be addressed before shipping. Examples:
+The code MUST NOT ship with these findings. Examples:
 - XSS in user-facing output
 - CSRF on state-changing endpoints
 - Sensitive data in logs
@@ -114,7 +114,7 @@ Minor risk or defense-in-depth improvement. Examples:
 | MEDIUM   | 0     |
 | LOW      | 0     |
 
-**Verdict:** PASS | FAIL (if any CRITICAL findings exist)
+**Verdict:** PASS | FAIL (if any CRITICAL or HIGH findings exist)
 ```
 
 ## Rules

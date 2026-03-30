@@ -4,7 +4,14 @@ description: Use when the implementation plan needs to be executed step by step.
 model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
 permissionMode: acceptEdits
-consumes: tests.confirmed-failing
+consumes:
+  - tests.confirmed-failing
+  - hard-gate.security-failed
+  - hard-gate.lint-failed
+  - hard-gate.typecheck-failed
+  - hard-gate.build-failed
+  - hard-gate.test-failed
+  - hard-gate.review-failed
 produces: implementation.completed
 ---
 
@@ -17,6 +24,8 @@ you do not deviate.
 
 ## Input
 
+### Initial dispatch (from `tests.confirmed-failing`)
+
 1. **Read the approved plan** from `docs/plans/` to understand the full
    implementation strategy: context, phases, steps, file paths, and done
    criteria.
@@ -24,6 +33,59 @@ you do not deviate.
 2. **Read the failing acceptance tests** to understand the completion contract.
    These tests define what "done" looks like. Run the test suite once to
    establish the baseline of failing tests.
+
+### Review-fix dispatch (from `hard-gate.*-failed`)
+
+When dispatched after a typed failure event, you are in a **fix loop**. The
+event type tells you exactly what class of issue to fix:
+
+#### `hard-gate.security-failed`
+Security vulnerabilities (CRITICAL or HIGH severity) were found.
+1. Read the `hard-gate.security-failed` event data for the specific findings.
+2. Fix each vulnerability directly — parameterize queries, remove hardcoded
+   secrets, add auth checks, escape output, etc.
+3. Do not weaken the fix. The security reviewer will re-check with fresh eyes.
+
+#### `hard-gate.lint-failed`
+Format or lint checks failed.
+1. Read the event data for the linter error output and failing rules.
+2. Fix each violation — auto-fixable issues first (`--fix`), then manual fixes.
+3. Re-run the format/lint check to confirm it passes.
+
+#### `hard-gate.typecheck-failed`
+Type checking failed (e.g., `tsc --noEmit`).
+1. Read the event data for the type errors — file paths, line numbers, error codes.
+2. Fix each type error — add missing types, fix mismatched signatures, resolve
+   import issues.
+3. Re-run the type checker to confirm it passes.
+
+#### `hard-gate.build-failed`
+Production build failed.
+1. Read the event data for the build error output.
+2. Fix the build errors — missing dependencies, broken imports, config issues.
+3. Re-run the build command to confirm it succeeds.
+
+#### `hard-gate.test-failed`
+Test suite has failing tests.
+1. Read the event data for failing test names and assertion output.
+2. Fix the code (not the tests) to make failing tests pass. Tests are the
+   contract — the implementation must satisfy them.
+3. Re-run the full test suite to confirm all tests pass.
+
+#### `hard-gate.review-failed`
+Code review found blocking quality issues (REQUEST CHANGES verdict).
+1. Read the `hard-gate.review-failed` event data for the `issue:` comments.
+2. Fix each blocking issue — correctness bugs, missing error handling,
+   naming problems, unnecessary complexity, SOLID violations.
+3. Do not argue with the review — fix the code.
+
+### Common to all fix dispatches
+
+- **Re-run the full test suite** after fixes to ensure nothing regressed.
+- **Report which findings were fixed** and what changed.
+- If multiple failure types were emitted in the same round, address all of
+  them before reporting completion.
+- The pipeline will re-dispatch ALL 5 reviewers to verify your fixes.
 
 ## Execution Method
 

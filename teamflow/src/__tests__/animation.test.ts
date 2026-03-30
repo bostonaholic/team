@@ -168,12 +168,12 @@ describe("T9: error_panel_slides_in_on_mount", () => {
 });
 
 // ---------------------------------------------------------------------------
-// T10: demo.mjs includes hard-gate.failed event (seq 7 constraint)
+// T10: demo.mjs includes typed hard-gate.*-failed event (seq 7 constraint)
 // ---------------------------------------------------------------------------
 describe("T10: demo_includes_hard_gate_failed", () => {
-  it("demo timeline contains a hard-gate.failed event", () => {
+  it("demo timeline contains a typed hard-gate.*-failed event", () => {
     const demo = readSource(DEMO_MJS);
-    expect(demo).toMatch(/hard-gate\.failed/);
+    expect(demo).toMatch(/hard-gate\.\w+-failed/);
   });
 });
 

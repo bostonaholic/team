@@ -123,7 +123,7 @@ describe("G9: gate_arrow_has_status_classes", () => {
 // ---------------------------------------------------------------------------
 // G10: demo_emits_all_gate_trigger_events
 // Verifies: demo.mjs contains plan.approved, tests.confirmed-failing,
-// hard-gate.failed, and verification.passed
+// hard-gate.*-failed (typed), and verification.passed
 // ---------------------------------------------------------------------------
 describe("G10: demo_emits_all_gate_trigger_events", () => {
   it("demo contains plan.approved event", () => {
@@ -136,9 +136,9 @@ describe("G10: demo_emits_all_gate_trigger_events", () => {
     expect(demo).toMatch(/tests\.confirmed-failing/);
   });
 
-  it("demo contains hard-gate.failed event", () => {
+  it("demo contains a typed hard-gate.*-failed event", () => {
     const demo = readSource(DEMO_MJS);
-    expect(demo).toMatch(/hard-gate\.failed/);
+    expect(demo).toMatch(/hard-gate\.\w+-failed/);
   });
 
   it("demo contains verification.passed event", () => {

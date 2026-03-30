@@ -89,8 +89,8 @@ feature.requested
                                /                \
                        all pass              hard gate fails
                           │                       │
-                   verification.passed     hard-gate.failed
-                          │                       │
+                   verification.passed     hard-gate.*-failed
+                          │               (typed per failure)
                    feature.shipped          └──> implementer (retry)
 ```
 
@@ -392,7 +392,7 @@ Code reviewer has finished quality review.
 |-----------|----------------------|
 | Producer  | `code-reviewer`      |
 | Consumers | `router` (aggregate) |
-| Gate      | soft                 |
+| Gate      | **hard**             |
 | Artifact  | none                 |
 
 **Payload:**
@@ -551,9 +551,9 @@ Router emits after collecting all five reviewer events.
 
 ---
 
-### hard-gate.failed
+### hard-gate.security-failed
 
-Router emits when a hard gate fails during aggregate review.
+Router emits when the security reviewer finds CRITICAL or HIGH severity vulnerabilities.
 
 | Field     | Value                |
 |-----------|----------------------|
@@ -566,10 +566,150 @@ Router emits when a hard gate fails during aggregate review.
 
 ```json
 {
-  "failedGates": ["string — event names of failed hard gates"],
-  "findings": ["string — critical findings that caused failure"],
-  "retryCount": "integer — current retry attempt",
-  "maxRetries": 3
+  "findings": [
+    {
+      "severity": "string — 'critical' | 'high'",
+      "category": "string — OWASP category",
+      "file": "string",
+      "line": "integer",
+      "description": "string",
+      "remediation": "string"
+    }
+  ],
+  "retryRound": "integer — current round (across all failure types)",
+  "maxRetries": 5
+}
+```
+
+---
+
+### hard-gate.lint-failed
+
+Router emits when format or lint checks fail.
+
+| Field     | Value                |
+|-----------|----------------------|
+| Producer  | `router`             |
+| Consumers | `implementer` (retry)|
+| Gate      | aggregate gate fail  |
+| Artifact  | none                 |
+
+**Payload:**
+
+```json
+{
+  "command": "string — the lint/format command that failed",
+  "exitCode": "integer",
+  "errors": "string — relevant error output",
+  "retryRound": "integer",
+  "maxRetries": 5
+}
+```
+
+---
+
+### hard-gate.typecheck-failed
+
+Router emits when type checking fails.
+
+| Field     | Value                |
+|-----------|----------------------|
+| Producer  | `router`             |
+| Consumers | `implementer` (retry)|
+| Gate      | aggregate gate fail  |
+| Artifact  | none                 |
+
+**Payload:**
+
+```json
+{
+  "command": "string — the typecheck command that failed",
+  "exitCode": "integer",
+  "errors": "string — type error output with file paths and line numbers",
+  "retryRound": "integer",
+  "maxRetries": 5
+}
+```
+
+---
+
+### hard-gate.build-failed
+
+Router emits when the production build fails.
+
+| Field     | Value                |
+|-----------|----------------------|
+| Producer  | `router`             |
+| Consumers | `implementer` (retry)|
+| Gate      | aggregate gate fail  |
+| Artifact  | none                 |
+
+**Payload:**
+
+```json
+{
+  "command": "string — the build command that failed",
+  "exitCode": "integer",
+  "errors": "string — build error output",
+  "retryRound": "integer",
+  "maxRetries": 5
+}
+```
+
+---
+
+### hard-gate.test-failed
+
+Router emits when the test suite has failures.
+
+| Field     | Value                |
+|-----------|----------------------|
+| Producer  | `router`             |
+| Consumers | `implementer` (retry)|
+| Gate      | aggregate gate fail  |
+| Artifact  | none                 |
+
+**Payload:**
+
+```json
+{
+  "command": "string — the test command that failed",
+  "exitCode": "integer",
+  "failingTests": ["string — names of failing tests"],
+  "errors": "string — relevant assertion/error output",
+  "retryRound": "integer",
+  "maxRetries": 5
+}
+```
+
+---
+
+### hard-gate.review-failed
+
+Router emits when the code reviewer issues a REQUEST CHANGES verdict.
+
+| Field     | Value                |
+|-----------|----------------------|
+| Producer  | `router`             |
+| Consumers | `implementer` (retry)|
+| Gate      | aggregate gate fail  |
+| Artifact  | none                 |
+
+**Payload:**
+
+```json
+{
+  "verdict": "string — 'request-changes'",
+  "blockingIssues": [
+    {
+      "type": "string — 'issue'",
+      "file": "string",
+      "line": "integer | null",
+      "body": "string"
+    }
+  ],
+  "retryRound": "integer",
+  "maxRetries": 5
 }
 ```
 
@@ -622,9 +762,9 @@ Router emits after successful commit/PR/merge.
 
 ## Gate Reference
 
-| Gate Type    | Trigger Event     | Pass Event               | Fail Event                | Decision By |
+| Gate Type    | Trigger Event     | Pass Event               | Fail Events               | Decision By |
 |-------------|-------------------|--------------------------|---------------------------|-------------|
 | human       | `plan.critiqued`  | `plan.approved`          | `plan.revision-requested` | User        |
 | mechanical  | `tests.written`   | `tests.confirmed-failing`| (retry test setup)        | Test runner |
-| aggregate   | all 5 reviews     | `verification.passed`    | `hard-gate.failed`        | Router      |
+| aggregate   | all 5 reviews     | `verification.passed`    | `hard-gate.{security,lint,typecheck,build,test,review}-failed` | Router |
 | join        | `files.found`     | `research.completed`     | —                         | Router (fan-in) |

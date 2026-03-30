@@ -64,9 +64,9 @@ file: src/services/billing.ts:30-45
 
 | Reviewer | Gate Type | Blocks Ship? |
 |----------|-----------|--------------|
-| `security-reviewer` | HARD | Yes — critical findings are non-negotiable |
+| `security-reviewer` | HARD | Yes — critical or high findings are non-negotiable |
 | `verifier` | HARD | Yes — tests must pass, build must succeed |
-| `code-reviewer` | SOFT | User decides — presented with findings |
+| `code-reviewer` | HARD | Yes — blocking issues must be resolved |
 | `ux-reviewer` | SOFT | User decides — presented with findings |
 | `technical-writer` | ADVISORY | No — findings recorded, pipeline proceeds |
 
@@ -74,10 +74,10 @@ file: src/services/billing.ts:30-45
 
 ### Security Reviewer
 
-- **PASS:** No CRITICAL findings. HIGH/MEDIUM/LOW findings are reported but
+- **PASS:** No CRITICAL or HIGH findings. MEDIUM/LOW findings are reported but
   do not block.
-- **FAIL:** Any CRITICAL finding. The pipeline MUST loop back to IMPLEMENT.
-  No override.
+- **FAIL:** Any CRITICAL or HIGH finding. The pipeline MUST loop back to
+  IMPLEMENT. No override.
 
 ### Verifier
 
@@ -87,8 +87,8 @@ file: src/services/billing.ts:30-45
 ### Code Reviewer
 
 - **APPROVE:** All done criteria met, no blocking issues, tests pass.
-- **REQUEST CHANGES:** Blocking issues found. User sees the issues and decides
-  whether to proceed or fix.
+- **REQUEST CHANGES:** Blocking issues found. The pipeline MUST loop back to
+  IMPLEMENT. No override — quality issues must be resolved before shipping.
 - **COMMENT:** Non-blocking suggestions only. Implementation is correct.
 
 ### UX Reviewer
@@ -111,6 +111,10 @@ pipeline gate decision:
 2. If all hard-gate reviewers pass but soft-gate reviewers request changes ->
    pipeline gate is CONDITIONAL (present findings, user decides)
 3. If all reviewers pass/approve -> pipeline gate PASSES (proceed to SHIP)
+
+Hard gates: security-reviewer (CRITICAL or HIGH), verifier (any failure),
+code-reviewer (REQUEST CHANGES). These are non-negotiable — the pipeline
+loops back to IMPLEMENT until all hard gates pass clean.
 
 Hard gate failures are never aggregated away. A single CRITICAL security
 finding blocks shipping regardless of how many other reviewers approved.

@@ -215,11 +215,11 @@ describe("T3: human_gate_transitions_to_passed_after_plan_approved", () => {
 });
 
 // ---------------------------------------------------------------------------
-// T4: aggregate_gate_transitions_to_failed_after_hard_gate_failed
-// Verifies: After applying hard-gate.failed, verify-gate status is "failed"
+// T4: aggregate_gate_transitions_to_failed_after_typed_hard_gate_failure
+// Verifies: After applying a typed hard-gate.*-failed event, verify-gate status is "failed"
 // ---------------------------------------------------------------------------
-describe("T4: aggregate_gate_transitions_to_failed_after_hard_gate_failed", () => {
-  it("verify-gate is failed after hard-gate.failed event", () => {
+describe("T4: aggregate_gate_transitions_to_failed_after_typed_hard_gate_failure", () => {
+  it("verify-gate is failed after hard-gate.lint-failed event", () => {
     const state = applySequence([
       { event: "feature.requested", producer: "orchestrator", data: { topic: "test" } },
       { event: "research.completed", producer: "researcher" },
@@ -229,14 +229,14 @@ describe("T4: aggregate_gate_transitions_to_failed_after_hard_gate_failed", () =
       { event: "tests.written", producer: "test-architect" },
       { event: "tests.confirmed-failing", producer: "orchestrator" },
       { event: "implementation.completed", producer: "implementer" },
-      { event: "hard-gate.failed", producer: "verifier", data: { findings: ["lint error"], retryCount: 1, maxRetries: 3 } },
+      { event: "hard-gate.lint-failed", producer: "router", data: { command: "npm run lint", exitCode: 1, errors: "lint error", retryRound: 1, maxRetries: 5 } },
     ]);
     expect(getGateStatus(state, "verify-gate")).toBe("failed");
   });
 
-  // Critic M4: hard-gate.failed sets verify-gate to "failed" regardless of afterEvents
+  // Critic M4: typed hard-gate failure sets verify-gate to "failed" regardless of afterEvents
   it("verify-gate is failed even if not all afterEvents have fired", () => {
-    // Only some review events have fired, but hard-gate.failed should
+    // Only some review events have fired, but hard-gate.*-failed should
     // independently trigger "failed" status
     const state = applySequence([
       { event: "feature.requested", producer: "orchestrator", data: { topic: "test" } },
@@ -248,8 +248,8 @@ describe("T4: aggregate_gate_transitions_to_failed_after_hard_gate_failed", () =
       { event: "tests.confirmed-failing", producer: "orchestrator" },
       { event: "implementation.completed", producer: "implementer" },
       { event: "review.completed", producer: "code-reviewer" },
-      // Not all review events have fired — but hard-gate.failed fires anyway
-      { event: "hard-gate.failed", producer: "verifier", data: { findings: ["test failure"], retryCount: 1, maxRetries: 3 } },
+      // Not all review events have fired — but typed hard-gate failure fires anyway
+      { event: "hard-gate.test-failed", producer: "router", data: { command: "npm test", exitCode: 1, failingTests: ["test1"], errors: "test failure", retryRound: 1, maxRetries: 5 } },
     ]);
     expect(getGateStatus(state, "verify-gate")).toBe("failed");
   });

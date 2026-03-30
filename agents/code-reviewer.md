@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: Use when an adversarial code review is needed after implementation. Reviews with fresh context and no shared conversation history to prevent self-evaluation bias. Produces a soft-gating verdict. Example triggers — "review my changes", "code review the implementation", "check this PR for issues".
+description: Use when an adversarial code review is needed after implementation. Reviews with fresh context and no shared conversation history to prevent self-evaluation bias. Produces a hard-gating verdict — REQUEST CHANGES blocks shipping. Example triggers — "review my changes", "code review the implementation", "check this PR for issues".
 model: sonnet
 tools: Read, Grep, Glob, Bash
 permissionMode: plan
@@ -53,7 +53,7 @@ show. This isolation is intentional: it prevents self-evaluation bias.
 
 Load `skills/adversarial-review/SKILL.md` for the full review methodology. This
 agent applies generator-evaluator separation (fresh context, no shared history)
-with a **SOFT** gate type. Key points:
+with a **HARD** gate type. Key points:
 
 - Use Conventional Comments format for all findings (issue, suggestion, nitpick,
   praise). Every comment includes a `file:line` reference.
