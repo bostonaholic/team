@@ -83,17 +83,24 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodolog
 
 ## State
 
-Event log at `.team/events.jsonl` (append-only, gitignored). State is derived from events, never stored directly. Three-layer compaction defense.
+Event log at `.team/events.jsonl` (append-only, gitignored). State is derived from events, never stored directly. Event parsing logic lives in `lib/events.mjs`. Three-layer compaction defense.
 
 ## Teamflow Dashboard
 
-A local Svelte 5 dashboard served by Fastify that tails `.team/events.jsonl` and streams pipeline state to the browser via SSE. Start it alongside the pipeline (not auto-started):
+A local Svelte 5 dashboard served by Fastify that tails `.team/events.jsonl` and streams pipeline state to the browser via SSE.
 
 ```
-node teamflow/bin/teamflow.mjs
+dev server    # Start dashboard server only (foreground, no browser auto-open)
+dev demo      # Start dashboard + synthetic pipeline demo (~60s)
 ```
 
-Binds to `127.0.0.1:7425` by default. Override with `TEAMFLOW_PORT`. Suppress browser auto-open with `TEAMFLOW_NO_OPEN=1`. Shared event logic lives in `lib/events.mjs` (imported by both hooks and the dashboard).
+Or directly: `node teamflow/bin/teamflow.mjs`
+
+Binds to `127.0.0.1:7425` by default. Override with `TEAMFLOW_PORT`. Suppress browser auto-open with `TEAMFLOW_NO_OPEN=1`. `dev demo` detects a running server and skips spawning a duplicate.
+
+## Shared Event Library
+
+`lib/events.mjs` — canonical location for event-to-phase mapping and state derivation. Exports `EVENT_TO_PHASE`, `deriveState`, `readEventLog`, and `projectDir`. Imported by both runtime hooks and the Teamflow dashboard.
 
 ## Learned Rules
 

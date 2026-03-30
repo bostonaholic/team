@@ -65,5 +65,6 @@ See [docs/architecture.md](docs/architecture.md) for the full event-driven archi
 - **12 agents** in `agents/` — decoupled workers with `consumes`/`produces` contracts
 - **13 skills** in `skills/` — methodology guides and slash command entry points
 - **4 hooks** in `hooks/` — safety guards and event-log-aware compaction resilience
+- **1 shared library** at `lib/events.mjs` — event parsing logic used by hooks and dashboard
 - **1 registry** at `skills/team/registry.json` — the single source of pipeline wiring
 - **Event log** at `.team/events.jsonl` — append-only state (derived, never stored)

@@ -370,6 +370,105 @@ if [ -n "$T19_SERVER_PID" ] && kill -0 "$T19_SERVER_PID" 2>/dev/null; then
 fi
 
 # ===========================================================================
+# Phase 5: Dev Server Integration
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# T20: dev.yml has server command
+#      Static check: the commands.server key must exist in dev.yml.
+#      Use anchored grep (^  server:) to match the top-level commands entry
+#      and avoid false positives from nested keys or comments.
+# ---------------------------------------------------------------------------
+if grep -q "^  server:" "$REPO_ROOT/dev.yml" 2>/dev/null; then
+  pass "T20: dev.yml has server command"
+else
+  fail "T20: dev.yml has server command -- expected 'server:' under commands: in dev.yml"
+fi
+
+# ---------------------------------------------------------------------------
+# T21: demo.mjs detects running server (health-check dedup)
+#      Start a server in the background, then run demo.mjs with
+#      TEAMFLOW_NO_OPEN=1. The refactored demo.mjs should detect the running
+#      server and log "already running" instead of spawning a duplicate.
+# ---------------------------------------------------------------------------
+T21_SERVER_PID=""
+T21_DEMO_OUTPUT=""
+T21_PASSED=false
+
+if [ -f "$REPO_ROOT/teamflow/package.json" ] && [ -d "$REPO_ROOT/teamflow/node_modules" ]; then
+  # Start a background server for demo.mjs to detect
+  TEAMFLOW_NO_OPEN=1 CLAUDE_PROJECT_DIR="$TMPDIR_FIXTURE" \
+    node --import tsx "$REPO_ROOT/teamflow/src/server.ts" &>/dev/null &
+  T21_SERVER_PID=$!
+
+  # Wait up to 5 seconds for the server to be ready
+  T21_SERVER_READY=false
+  for i in $(seq 1 50); do
+    if nc -z 127.0.0.1 7425 2>/dev/null; then
+      T21_SERVER_READY=true
+      break
+    fi
+    sleep 0.1
+  done
+
+  if [ "$T21_SERVER_READY" = "true" ]; then
+    # Run demo.mjs — it should detect the running server and skip spawn.
+    # Timeout after 15s so the test doesn't hang.
+    T21_DEMO_OUTPUT=$(
+      timeout 15 \
+        env TEAMFLOW_NO_OPEN=1 CLAUDE_PROJECT_DIR="$TMPDIR_FIXTURE" \
+        node "$REPO_ROOT/teamflow/bin/demo.mjs" 2>&1
+    ) || true
+
+    if echo "$T21_DEMO_OUTPUT" | grep -qi "already running"; then
+      T21_PASSED=true
+    fi
+  fi
+fi
+
+if [ "$T21_PASSED" = "true" ]; then
+  pass "T21: demo.mjs detects running server (health-check dedup)"
+else
+  fail "T21: demo.mjs detects running server (health-check dedup) -- expected 'already running' in demo.mjs output when server is already up; got: $(echo "$T21_DEMO_OUTPUT" | head -5)"
+fi
+
+# Inline cleanup — kill T21's server regardless of pass/fail
+if [ -n "$T21_SERVER_PID" ] && kill -0 "$T21_SERVER_PID" 2>/dev/null; then
+  kill "$T21_SERVER_PID" 2>/dev/null || true
+  wait "$T21_SERVER_PID" 2>/dev/null || true
+fi
+
+# ---------------------------------------------------------------------------
+# T22: dev server command sets TEAMFLOW_NO_OPEN=1
+#      Scope the search to the server command block in dev.yml so we don't
+#      get a false positive from other command blocks. Use awk to extract
+#      the run: line that belongs to the server: block, then assert it
+#      contains TEAMFLOW_NO_OPEN=1.
+# ---------------------------------------------------------------------------
+T22_SERVER_RUN=$(awk '/^  server:/{found=1} found && /run:/{print; exit}' "$REPO_ROOT/dev.yml" 2>/dev/null || true)
+
+if echo "$T22_SERVER_RUN" | grep -q "TEAMFLOW_NO_OPEN=1"; then
+  pass "T22: dev server command sets TEAMFLOW_NO_OPEN=1"
+else
+  fail "T22: dev server command sets TEAMFLOW_NO_OPEN=1 -- expected TEAMFLOW_NO_OPEN=1 in server command's run: line; got: $T22_SERVER_RUN"
+fi
+
+# ---------------------------------------------------------------------------
+# T23: dev server command builds frontend before starting
+#      The server command must build the frontend before starting, so that
+#      teamflow/dist/ is always up to date when the server is launched.
+#      This is done via build_first: true + a top-level build: key.
+# ---------------------------------------------------------------------------
+T23_BUILD_FIRST=$(awk '/^  server:/{found=1} found && /build_first:/{print; exit}' "$REPO_ROOT/dev.yml" 2>/dev/null || true)
+T23_BUILD_KEY=$(grep -q "^build:" "$REPO_ROOT/dev.yml" 2>/dev/null && echo "exists" || echo "")
+
+if echo "$T23_BUILD_FIRST" | grep -q "true" && [ "$T23_BUILD_KEY" = "exists" ]; then
+  pass "T23: dev server command builds frontend before starting"
+else
+  fail "T23: dev server command builds frontend before starting -- expected build_first: true on server command and top-level build: key; got build_first='$T23_BUILD_FIRST', build_key='$T23_BUILD_KEY'"
+fi
+
+# ===========================================================================
 # Summary
 # ===========================================================================
 echo ""

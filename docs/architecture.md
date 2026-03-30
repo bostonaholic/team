@@ -63,7 +63,8 @@ Each line is a self-contained event:
 
 - Events are **append-only**. Never modify or delete a line.
 - `seq` values are **gapless** and **monotonically increasing**.
-- The router is the **only writer** to the event log.
+- During live pipeline runs, the router is the **only writer** to the event log.
+  (Dev tools like `demo.mjs` also write to the log for demonstration purposes.)
 - Current pipeline state is **derived** by scanning the log for the latest
   event of each type.
 
@@ -284,7 +285,22 @@ prerequisite phases first.
 | `session-start-recover.mjs`| SessionStart            | Replay event log to recover pipeline state |
 | `post-write-validate.mjs` | PostToolUse(Write\|Edit) | Validate plugin structure                  |
 
-## 8. State Management
+## 8. Shared Event Library
+
+**File:** `lib/events.mjs`
+
+Canonical location for event parsing logic shared across hooks and the
+Teamflow dashboard. Exports:
+
+- `EVENT_TO_PHASE` — maps event names to pipeline phases
+- `deriveState(events)` — derives current pipeline state from an event array
+- `readEventLog(dir)` — reads and parses `.team/events.jsonl`
+- `projectDir()` — resolves the project root directory
+
+Both `session-start-recover.mjs` and `pre-compact-anchor.mjs` import from
+this library rather than duplicating event logic.
+
+## 9. State Management
 
 **Primary state:** `.team/events.jsonl` (append-only event log)
 

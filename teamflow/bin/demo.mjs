@@ -50,6 +50,21 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Check if a server is already listening by hitting /api/health.
+ * Returns true if server responds 200, false on any error.
+ */
+async function checkHealth(port) {
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/health`, {
+      signal: AbortSignal.timeout(1000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 function emit(seq, entry) {
   const now = new Date().toISOString();
   const record = {
@@ -69,32 +84,54 @@ function emit(seq, entry) {
 // --- Main ---
 
 async function main() {
+  const port = process.env.TEAMFLOW_PORT || "7425";
+
   // Clean slate
   mkdirSync(teamDir, { recursive: true });
   writeFileSync(eventsPath, "");
 
   console.log("Starting Teamflow dashboard...\n");
 
-  // Start server (use node --import tsx, matching package.json "start" script)
-  const server = spawn("node", ["--import", "tsx", serverPath], {
-    stdio: "inherit",
-    env: {
-      ...process.env,
-      CLAUDE_PROJECT_DIR: projectDir,
-      TEAMFLOW_PORT: process.env.TEAMFLOW_PORT || "7425",
-      TEAMFLOW_NO_OPEN: "1",
-    },
-  });
+  // Check if a server is already running
+  let server = null;
+  const alreadyRunning = await checkHealth(port);
 
-  // Give server a moment to boot
-  await sleep(1500);
+  if (alreadyRunning) {
+    console.log("Server already running, skipping spawn.");
+  } else {
+    // Start server (use node --import tsx, matching package.json "start" script)
+    server = spawn("node", ["--import", "tsx", serverPath], {
+      stdio: "inherit",
+      env: {
+        ...process.env,
+        CLAUDE_PROJECT_DIR: projectDir,
+        TEAMFLOW_PORT: port,
+        TEAMFLOW_NO_OPEN: "1",
+      },
+    });
+
+    // Poll for server readiness (up to 5 seconds)
+    let ready = false;
+    for (let i = 0; i < 25; i++) {
+      await sleep(200);
+      if (await checkHealth(port)) {
+        ready = true;
+        break;
+      }
+    }
+
+    if (!ready) {
+      console.error("Error: server failed to become healthy within 5 seconds.");
+      if (server) server.kill();
+      process.exit(1);
+    }
+  }
 
   // Open browser
   const noOpen = process.env.TEAMFLOW_NO_OPEN === "1";
   if (!noOpen) {
     try {
       const { default: open } = await import("open");
-      const port = process.env.TEAMFLOW_PORT || "7425";
       await open(`http://127.0.0.1:${port}`);
     } catch {
       // open is optional
@@ -114,16 +151,18 @@ async function main() {
 
   // Keep running until killed
   process.on("SIGINT", () => {
-    server.kill();
-    // Clean up .team directory
-    try {
-      rmSync(teamDir, { recursive: true, force: true });
-    } catch { /* ignore */ }
+    if (server) server.kill();
+    // Only clean up .team directory if we own the server
+    if (server) {
+      try {
+        rmSync(teamDir, { recursive: true, force: true });
+      } catch { /* ignore */ }
+    }
     process.exit(0);
   });
 
   process.on("SIGTERM", () => {
-    server.kill();
+    if (server) server.kill();
     process.exit(0);
   });
 }
