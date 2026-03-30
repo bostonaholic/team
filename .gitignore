@@ -1,3 +1,6 @@
+# Claude worktrees
+.claude/worktrees/
+
 # dev CLI
 .dev/
 
