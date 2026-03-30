@@ -1,24 +1,5 @@
 <script lang="ts">
-  interface AgentStatus {
-    name: string;
-    status: "idle" | "running" | "done" | "error";
-    producedEvent?: string;
-  }
-
-  interface TimelineEntry {
-    seq: number;
-    event: string;
-    producer: string;
-    ts: string;
-    data?: Record<string, unknown>;
-  }
-
-  interface GateStatus {
-    type: "human" | "mechanical" | "aggregate" | "join";
-    status: "pending" | "waiting" | "passed" | "failed";
-    label: string;
-    phase: string;
-  }
+  import type { AgentStatus, GateStatus, TimelineEntry } from "../../types.js";
 
   interface Props {
     phase: string | null;
@@ -118,6 +99,9 @@
     }
   }
 
+  // Returns the gate status for the connector arrow leaving a phase.
+  // IMPLEMENT has no gate (it is purely agent work), so its arrow to VERIFY
+  // stays at the default dimmed style — this is intentional.
   function connectorStatus(phaseName: string): string {
     const entry = pipeline.find((p) => p.name === phaseName);
     if (!entry?.gate || !gates[entry.gate]) return "";

@@ -9,9 +9,9 @@
  * Approval: .team/events.jsonl seq 7 (plan.approved)
  */
 
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it, expect } from "vitest";
+import { readSource, extractStyleBlock } from "./helpers.js";
 
 // Resolve paths relative to the teamflow package root
 const TEAMFLOW_ROOT = join(import.meta.dirname, "..", "..");
@@ -21,9 +21,6 @@ const TIMELINE = join(TEAMFLOW_ROOT, "src", "client", "components", "Timeline.sv
 const ERROR_PANEL = join(TEAMFLOW_ROOT, "src", "client", "components", "ErrorPanel.svelte");
 const DEMO_MJS = join(TEAMFLOW_ROOT, "bin", "demo.mjs");
 
-function readSource(path: string): string {
-  return readFileSync(path, "utf-8");
-}
 
 // ---------------------------------------------------------------------------
 // T1: Motion tokens present in :root (Plan step 1.1)
@@ -180,34 +177,3 @@ describe("T10: demo_includes_hard_gate_failed", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Extract the CSS rule block for a given selector from Svelte <style> content.
- * Returns the content between the braces for the first matching selector.
- * Handles nested selectors by looking for the exact selector pattern.
- */
-function extractStyleBlock(source: string, selector: string): string {
-  // Escape special regex chars in selector
-  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  // Match the selector followed by optional whitespace and opening brace
-  const re = new RegExp(escaped + "\\s*\\{", "g");
-  const match = re.exec(source);
-  if (!match) return "";
-
-  const braceStart = match.index + match[0].length - 1;
-  let depth = 0;
-  let end = braceStart;
-  for (let i = braceStart; i < source.length; i++) {
-    if (source[i] === "{") depth++;
-    if (source[i] === "}") depth--;
-    if (depth === 0) {
-      end = i;
-      break;
-    }
-  }
-
-  return source.slice(braceStart, end + 1);
-}

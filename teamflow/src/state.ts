@@ -13,6 +13,7 @@ import { EVENT_TO_PHASE } from "../../lib/events.mjs";
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import type { AgentStatus, GateStatus, TimelineEntry, RunState } from "./types.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -77,34 +78,35 @@ interface GateConfig {
   failEvent?: string;
 }
 
-// Map from "after" field to a gate key and phase
-const GATE_KEY_MAP: Record<string, { key: string; phase: string; label: string }> = {
-  "plan.critiqued": { key: "plan-gate", phase: "PLAN", label: "Approve plan" },
-  "tests.written": { key: "test-gate", phase: "TEST-FIRST", label: "Confirm tests fail" },
+// Phase ordering for deriving which phase a gate lives in.
+// A gate's passEvent transitions to the NEXT phase; the gate itself lives in the PRIOR phase.
+const PHASE_ORDER = ["RESEARCH", "PLAN", "TEST-FIRST", "IMPLEMENT", "VERIFY", "SHIP", "SHIPPED"];
+
+function getPriorPhase(nextPhase: string): string {
+  const idx = PHASE_ORDER.indexOf(nextPhase);
+  return idx > 0 ? PHASE_ORDER[idx - 1] : nextPhase;
+}
+
+// Gate label derivation from gate type
+const GATE_TYPE_LABELS: Record<string, string> = {
+  human: "Approve plan",
+  mechanical: "Confirm tests fail",
+  aggregate: "Collect reviews",
 };
 
 const gateConfigs: GateConfig[] = [];
 
 for (const gate of registry.gates) {
   const afterEvents = Array.isArray(gate.after) ? gate.after : [gate.after];
-  const afterKey = Array.isArray(gate.after) ? "__aggregate__" : gate.after;
 
-  let key: string;
-  let phase: string;
-  let label: string;
+  // Derive phase: the passEvent transitions to the next phase; the gate lives one phase prior
+  const nextPhase = (EVENT_TO_PHASE as Record<string, string>)[gate.passEvent];
+  const phase = nextPhase ? getPriorPhase(nextPhase) : "UNKNOWN";
 
-  if (afterKey === "__aggregate__") {
-    key = "verify-gate";
-    phase = "VERIFY";
-    label = "Collect reviews";
-  } else if (GATE_KEY_MAP[afterKey]) {
-    ({ key, phase, label } = GATE_KEY_MAP[afterKey]);
-  } else {
-    // Fallback for unknown gates
-    key = `gate-${afterKey.replace(/\./g, "-")}`;
-    phase = "UNKNOWN";
-    label = afterKey;
-  }
+  // Derive gate key from phase (e.g. "PLAN" → "plan-gate", "TEST-FIRST" → "test-gate")
+  const key = phase.toLowerCase().split("-")[0] + "-gate";
+
+  const label = GATE_TYPE_LABELS[gate.type] ?? gate.passEvent;
 
   gateConfigs.push({
     key,
@@ -118,49 +120,23 @@ for (const gate of registry.gates) {
 }
 
 for (const j of registry.joins) {
+  // Derive key from produces field (e.g. "research.completed" → "research-join")
+  // so adding more joins to the registry doesn't cause key collisions.
+  const joinKey = j.produces.split(".")[0] + "-join";
   gateConfigs.push({
-    key: "research-join",
+    key: joinKey,
     type: "join",
     label: "Merge results",
-    phase: "RESEARCH",
+    phase: (EVENT_TO_PHASE as Record<string, string>)[j.produces]
+      ? getPriorPhase((EVENT_TO_PHASE as Record<string, string>)[j.produces])
+      : "UNKNOWN",
     afterEvents: j.wait,
     passEvent: j.produces,
   });
 }
 
-export interface AgentStatus {
-  name: string;
-  status: "idle" | "running" | "done" | "error";
-  producedEvent?: string;
-}
-
-export interface GateStatus {
-  type: "human" | "mechanical" | "aggregate" | "join";
-  status: "pending" | "waiting" | "passed" | "failed";
-  label: string;
-  phase: string;
-}
-
-export interface TimelineEntry {
-  seq: number;
-  event: string;
-  producer: string;
-  ts: string;
-  data?: Record<string, unknown>;
-}
-
-export interface RunState {
-  phase: string | null;
-  topic: string | null;
-  startedAt: string | null;
-  agents: Record<string, AgentStatus>;
-  gates: Record<string, GateStatus>;
-  events: TimelineEntry[];
-  errors: Array<{ event: string; data: Record<string, unknown> }>;
-  progress: { step: string | null; total: number | null };
-  duration: number | null;
-  lastSeq: number;
-}
+// Re-export shared types so existing imports from state.ts continue to work
+export type { AgentStatus, GateStatus, TimelineEntry, RunState } from "./types.js";
 
 function createEmptyState(): RunState {
   const agents: Record<string, AgentStatus> = {};

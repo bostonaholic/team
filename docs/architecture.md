@@ -300,6 +300,29 @@ Teamflow dashboard. Exports:
 Both `session-start-recover.mjs` and `pre-compact-anchor.mjs` import from
 this library rather than duplicating event logic.
 
+### Teamflow State Engine
+
+**File:** `teamflow/src/state.ts`
+
+The Teamflow dashboard maintains its own state engine that extends the shared
+event library with richer tracking. It reads `skills/team/registry.json` at
+startup to build agent and gate configuration, then derives per-agent status,
+per-gate status, and timeline entries from each event via `applyEvent()`.
+
+Shared types live in `teamflow/src/types.ts` (`AgentStatus`, `GateStatus`,
+`TimelineEntry`, `RunState`) and are imported by both the server-side state
+engine and Svelte client components.
+
+Gate status is derived from registry gates and joins:
+- **human** — plan approval gate (PLAN phase)
+- **mechanical** — test confirmation gate (TEST-FIRST phase)
+- **aggregate** — review collection gate (VERIFY phase)
+- **join** — parallel agent fan-in (RESEARCH phase)
+
+Each gate transitions through `pending → waiting → passed/failed` as events
+arrive. Gate keys, phases, and labels are derived from `registry.json` and
+`EVENT_TO_PHASE` — no hardcoded mapping.
+
 ## 9. State Management
 
 **Primary state:** `.team/events.jsonl` (append-only event log)

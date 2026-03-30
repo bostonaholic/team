@@ -3,40 +3,7 @@
   import PhaseCards from "./components/PhaseCards.svelte";
   import Timeline from "./components/Timeline.svelte";
   import ErrorPanel from "./components/ErrorPanel.svelte";
-
-  interface AgentStatus {
-    name: string;
-    status: "idle" | "running" | "done" | "error";
-    producedEvent?: string;
-  }
-
-  interface TimelineEntry {
-    seq: number;
-    event: string;
-    producer: string;
-    ts: string;
-    data?: Record<string, unknown>;
-  }
-
-  interface GateStatus {
-    type: "human" | "mechanical" | "aggregate" | "join";
-    status: "pending" | "waiting" | "passed" | "failed";
-    label: string;
-    phase: string;
-  }
-
-  interface RunState {
-    phase: string | null;
-    topic: string | null;
-    startedAt: string | null;
-    agents: Record<string, AgentStatus>;
-    gates: Record<string, GateStatus>;
-    events: TimelineEntry[];
-    errors: Array<{ event: string; data: Record<string, unknown> }>;
-    progress: { step: string | null; total: number | null };
-    duration: number | null;
-    lastSeq: number;
-  }
+  import type { RunState } from "../types.js";
 
   let state: RunState = $state({
     phase: null,

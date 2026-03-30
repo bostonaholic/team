@@ -627,3 +627,4 @@ Router emits after successful commit/PR/merge.
 | human       | `plan.critiqued`  | `plan.approved`          | `plan.revision-requested` | User        |
 | mechanical  | `tests.written`   | `tests.confirmed-failing`| (retry test setup)        | Test runner |
 | aggregate   | all 5 reviews     | `verification.passed`    | `hard-gate.failed`        | Router      |
+| join        | `files.found`     | `research.completed`     | —                         | Router (fan-in) |
