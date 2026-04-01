@@ -252,10 +252,10 @@ describe("MS-T10: no_tab_bar_for_single_session", () => {
     expect(svelte).toMatch(/showTabs\s*=\s*\$derived/);
   });
 
-  it("App.svelte showTabs uses size >= 2 threshold", () => {
+  it("App.svelte showTabs uses size >= 1 threshold", () => {
     const svelte = readSource(APP_SVELTE);
-    // Match sessionCount >= 2 or sessions.size >= 2
-    expect(svelte).toMatch(/(?:sessionCount|\.size)\s*>=\s*2/);
+    // Match sessionCount >= 1 or sessions.size >= 1 (always show tabs when sessions exist)
+    expect(svelte).toMatch(/(?:sessionCount|\.size)\s*>=\s*1/);
   });
 });
 
