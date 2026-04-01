@@ -67,4 +67,4 @@ See [docs/architecture.md](docs/architecture.md) for the full event-driven archi
 - **4 hooks** in `hooks/` — safety guards and event-log-aware compaction resilience
 - **1 shared library** at `lib/events.mjs` — event parsing logic used by hooks and dashboard
 - **1 registry** at `skills/team/registry.json` — the single source of pipeline wiring
-- **Event log** at `.team/events.jsonl` — append-only state (derived, never stored)
+- **Event log** at `.team/<topic>/events.jsonl` — append-only state (derived, never stored)

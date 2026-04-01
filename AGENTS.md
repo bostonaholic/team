@@ -83,11 +83,11 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodolog
 
 ## State
 
-Event log at `~/.team/events.jsonl` (append-only, global). State is derived from events, never stored directly. Event parsing logic lives in `lib/events.mjs`. Three-layer compaction defense.
+Event log at `~/.team/<topic>/events.jsonl` (append-only, per-pipeline). State is derived from events, never stored directly. Event parsing logic lives in `lib/events.mjs`. Three-layer compaction defense.
 
 ## Teamflow Dashboard
 
-A local Svelte 5 dashboard served by Fastify that tails `~/.team/events.jsonl` and streams pipeline state to the browser via SSE. Visualizes per-phase agent status and gate/join status (human, mechanical, aggregate, join) with live transitions. Shows an empty state screen when no pipeline is active — "Connecting to Teamflow..." before SSE connects, then "No pipeline running" with a `/team` prompt until the first event arrives. State engine in `teamflow/src/state.ts`; shared types in `teamflow/src/types.ts`.
+A local Svelte 5 dashboard served by Fastify that tails `~/.team/<topic>/events.jsonl` per-session subdirectories and streams pipeline state to the browser via multiplexed SSE. Supports multiple concurrent sessions with a tab bar for switching between them. Visualizes per-phase agent status and gate/join status (human, mechanical, aggregate, join) with live transitions. Shows an empty state screen when no pipeline is active — "Connecting to Teamflow..." before SSE connects, then "No pipeline running" with a `/team` prompt until the first event arrives. State engine in `teamflow/src/state.ts`; shared types in `teamflow/src/types.ts`.
 
 ```
 dev server    # Start dashboard server only (foreground, no browser auto-open)
@@ -100,7 +100,7 @@ Binds to `127.0.0.1:7425` by default. Override with `TEAMFLOW_PORT`. Suppress br
 
 ## Shared Event Library
 
-`lib/events.mjs` — canonical location for event-to-phase mapping and state derivation. Exports `EVENT_TO_PHASE`, `deriveState`, `readEventLog`, and `projectDir`. Imported by both runtime hooks and the Teamflow dashboard.
+`lib/events.mjs` — canonical location for event-to-phase mapping and state derivation. Exports `EVENT_TO_PHASE`, `deriveState`, `readEventLog`, `projectDir`, and `sessionDir`. Imported by both runtime hooks and the Teamflow dashboard.
 
 ## Learned Rules
 

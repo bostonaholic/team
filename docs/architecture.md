@@ -31,7 +31,7 @@ events, and checks gates. It contains zero agent-specific knowledge.
 
 ## 2. Event Store
 
-**File:** `.team/events.jsonl` (append-only JSONL, gitignored)
+**File:** `.team/<topic>/events.jsonl` (append-only JSONL, gitignored)
 
 Each line is a self-contained event:
 
@@ -210,7 +210,7 @@ The `team` skill implements a pure event loop:
 
 ```
 loop:
-  1. Read .team/events.jsonl
+  1. Read .team/<topic>/events.jsonl
   2. Determine current state from latest events
   3. Consult registry.json for agents that consume the latest event(s)
   4. Check gate conditions (if any triggered)
@@ -296,8 +296,9 @@ Teamflow dashboard. Exports:
 
 - `EVENT_TO_PHASE` — maps event names to pipeline phases
 - `deriveState(events)` — derives current pipeline state from an event array
-- `readEventLog(dir)` — reads and parses `.team/events.jsonl`
+- `readEventLog(dir)` — reads and parses `.team/<topic>/events.jsonl`
 - `projectDir()` — resolves the project root directory
+- `sessionDir(topic)` — resolves the per-topic session directory under `~/.team/<topic>/`
 
 Both `session-start-recover.mjs` and `pre-compact-anchor.mjs` import from
 this library rather than duplicating event logic.
@@ -332,7 +333,7 @@ not yet connected or when connected with no phase and no events, the
 
 ## 9. State Management
 
-**Primary state:** `.team/events.jsonl` (append-only event log)
+**Primary state:** `.team/<topic>/events.jsonl` (append-only event log)
 
 State is never stored directly. It is always derived by replaying the event
 log. To determine the current phase, scan for the latest event and consult

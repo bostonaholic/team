@@ -13,7 +13,7 @@ Feature description: `$ARGUMENTS` (optional if event log already has a topic).
 
 ## Execution
 
-1. Read `~/.team/events.jsonl`. Scan for `research.completed`.
+1. Read `~/.team/<topic>/events.jsonl`. Scan for `research.completed`.
 2. If not found: run `/team-research $ARGUMENTS` first.
 3. Follow the event loop from `skills/team/registry.json`.
 4. The loop will dispatch `product-owner` (if needed), `planner`, `plan-critic`.

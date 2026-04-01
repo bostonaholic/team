@@ -65,4 +65,8 @@
     color: var(--color-accent, #58a6ff);
     font-weight: 600;
   }
+
+  :global(.has-tabs) .empty-state {
+    grid-row: 3 / 5;
+  }
 </style>

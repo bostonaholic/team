@@ -36,8 +36,8 @@ No research phase. No plan phase. No human gate.
 
 ## Setup
 
-1. Create `~/.team/` directory if it does not exist (`mkdir -p ~/.team`).
-2. Append the first event to `~/.team/events.jsonl`:
+1. Create `~/.team/<topic>/` directory if it does not exist (`mkdir -p ~/.team/<topic>`).
+2. Append the first event to `~/.team/<topic>/events.jsonl`:
 
 ```json
 {"seq":1,"event":"bug.reported","producer":"router","ts":"<ISO-8601>","data":{"description":"<bug description>"},"artifact":null,"causedBy":null,"gate":null}
@@ -48,7 +48,7 @@ No research phase. No plan phase. No human gate.
 Follow the test-driven-bug-fix methodology from
 `skills/test-driven-bug-fix/SKILL.md`. Read that skill before proceeding.
 
-For each phase transition, append an event to `~/.team/events.jsonl`:
+For each phase transition, append an event to `~/.team/<topic>/events.jsonl`:
 
 | Phase | Event | Data |
 |-------|-------|------|
@@ -68,7 +68,7 @@ assertion failure, not a crash. Do not proceed to the fix until confirmed.
    - `fix:` commit with the minimal fix
 2. Create a PR if working on a branch, or commit to the working branch.
 3. Append `feature.shipped` event.
-4. Delete `~/.team/` directory.
+4. Delete `~/.team/<topic>/` directory.
 
 ## Aborting
 

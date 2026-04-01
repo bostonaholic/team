@@ -5,7 +5,7 @@
 
 ## Event Envelope
 
-Every event in `.team/events.jsonl` follows this envelope:
+Every event in `.team/<topic>/events.jsonl` follows this envelope:
 
 ```json
 {

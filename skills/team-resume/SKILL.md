@@ -1,6 +1,6 @@
 ---
 name: team-resume
-description: Resume an interrupted TEAM pipeline from where it left off. Replays ~/.team/events.jsonl and continues from the last recorded event. Trigger on "resume the pipeline", "continue where we left off", or "/team-resume".
+description: Resume an interrupted TEAM pipeline from where it left off. Replays ~/.team/<topic>/events.jsonl and continues from the last recorded event. Trigger on "resume the pipeline", "continue where we left off", or "/team-resume".
 ---
 
 # TEAM Resume — Pipeline Recovery
@@ -9,7 +9,7 @@ Resume an interrupted pipeline by replaying the event log.
 
 ## Execution
 
-1. Read `~/.team/events.jsonl`.
+1. Read `~/.team/<topic>/events.jsonl`.
 2. If the file does not exist: report "No active pipeline. Run /team to start." and stop.
 3. Replay the log to derive current state:
    - Find the last recorded event
