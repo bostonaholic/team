@@ -24,6 +24,14 @@
   let sessionCount = $state(0);
   let activeSessionId: string | null = $state(null);
 
+  // Svelte 5's $state(Map) proxy does not reliably trigger re-renders
+  // when mutated from async callbacks (EventSource handlers). Reassigning
+  // the Map to a new reference forces Svelte to detect the change.
+  function updateSessions() {
+    sessions = new Map(sessions);
+    sessionCount = sessions.size;
+  }
+
   const activeState: RunState = $derived(sessions.get(activeSessionId ?? "") ?? emptyRunState);
 
   let connected = $state(false);
@@ -85,7 +93,7 @@
 
   function handleDismiss(id: string) {
     sessions.delete(id);
-    sessionCount = sessions.size;
+    updateSessions();
     const dismissed = getDismissedSessions();
     if (!dismissed.includes(id)) {
       dismissed.push(id);
@@ -114,7 +122,7 @@
       if (getDismissedSessions().includes(sessionId)) return;
 
       sessions.set(sessionId, state);
-      sessionCount = sessions.size;
+      updateSessions();
 
       // Auto-select first session if none active, or recover if active session
       // no longer exists (e.g. after reconnect cleared sessions map)
@@ -131,7 +139,7 @@
       if (getDismissedSessions().includes(sessionId)) return;
 
       sessions.set(sessionId, state);
-      sessionCount = sessions.size;
+      updateSessions();
 
       // Auto-select if no active session
       if (activeSessionId === null) {
@@ -144,7 +152,7 @@
       const { sessionId } = data;
 
       sessions.delete(sessionId);
-      sessionCount = sessions.size;
+      updateSessions();
 
       if (activeSessionId === sessionId) {
         const remaining = [...sessions.keys()];
