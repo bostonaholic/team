@@ -38,7 +38,7 @@
   // does not reliably trigger $derived re-evaluation on .size changes.
   const showEmptyState = $derived(!hasEverConnected || (connected && sessionCount === 0));
 
-  const showTabs = $derived(sessionCount >= 2);
+  const showTabs = $derived(sessionCount >= 1);
 
   // Tick every second so durations update live
   let now = $state(Date.now());
