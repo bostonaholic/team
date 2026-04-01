@@ -87,7 +87,7 @@ Event log at `~/.team/events.jsonl` (append-only, global). State is derived from
 
 ## Teamflow Dashboard
 
-A local Svelte 5 dashboard served by Fastify that tails `~/.team/events.jsonl` and streams pipeline state to the browser via SSE. Visualizes per-phase agent status and gate/join status (human, mechanical, aggregate, join) with live transitions. State engine in `teamflow/src/state.ts`; shared types in `teamflow/src/types.ts`.
+A local Svelte 5 dashboard served by Fastify that tails `~/.team/events.jsonl` and streams pipeline state to the browser via SSE. Visualizes per-phase agent status and gate/join status (human, mechanical, aggregate, join) with live transitions. Shows an empty state screen when no pipeline is active — "Connecting to Teamflow..." before SSE connects, then "No pipeline running" with a `/team` prompt until the first event arrives. State engine in `teamflow/src/state.ts`; shared types in `teamflow/src/types.ts`.
 
 ```
 dev server    # Start dashboard server only (foreground, no browser auto-open)

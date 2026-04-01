@@ -52,6 +52,7 @@ function createFreshState(): RunState {
     topic: null,
     startedAt: null,
     agents: {},
+    gates: {},
     events: [],
     errors: [],
     progress: { step: null, total: null },

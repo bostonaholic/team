@@ -325,6 +325,11 @@ Each gate transitions through `pending → waiting → passed/failed` as events
 arrive. Gate keys, phases, and labels are derived from `registry.json` and
 `EVENT_TO_PHASE` — no hardcoded mapping.
 
+The client tracks a `hasEverConnected` flag (set on first SSE snapshot, never
+reset) to distinguish initial connection from mid-session disconnects. When
+not yet connected or when connected with no phase and no events, the
+`EmptyState` component replaces `PhaseCards` and `Timeline`.
+
 ## 9. State Management
 
 **Primary state:** `.team/events.jsonl` (append-only event log)

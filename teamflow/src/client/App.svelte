@@ -3,6 +3,7 @@
   import PhaseCards from "./components/PhaseCards.svelte";
   import Timeline from "./components/Timeline.svelte";
   import ErrorPanel from "./components/ErrorPanel.svelte";
+  import EmptyState from "./components/EmptyState.svelte";
   import type { RunState } from "../types.js";
 
   let state: RunState = $state({
@@ -20,6 +21,13 @@
 
   let connected = $state(false);
   let reconnecting = $state(false);
+  let hasEverConnected = $state(false);
+
+  // Invariant: EmptyState and the reconnecting banner are never simultaneously visible.
+  // When hasEverConnected && !connected, reconnecting is true and showEmptyState is false,
+  // so EmptyState is hidden. This matters because EmptyState uses grid-row: 2 / 4 and
+  // would collide with the reconnecting banner if both rendered at once.
+  const showEmptyState = $derived(!hasEverConnected || (connected && state.phase === null && state.events.length === 0));
 
   // Tick every second so durations update live
   let now = $state(Date.now());
@@ -53,6 +61,7 @@
     es.addEventListener("snapshot", (e) => {
       state = JSON.parse(e.data);
       connected = true;
+      hasEverConnected = true;
       reconnecting = false;
     });
 
@@ -83,14 +92,18 @@
   />
 
   {#if reconnecting}
-    <div class="reconnecting">Reconnecting...</div>
+    <div class="reconnecting">Reconnecting<span class="dots"></span></div>
   {/if}
 
-  <PhaseCards phase={state.phase} agents={state.agents} gates={state.gates} events={state.events} {now} />
+  {#if !showEmptyState}
+    <PhaseCards phase={state.phase} agents={state.agents} gates={state.gates} events={state.events} {now} />
 
-  <div class="main-content">
-    <Timeline events={state.events} />
-  </div>
+    <div class="main-content">
+      <Timeline events={state.events} />
+    </div>
+  {:else}
+    <EmptyState {connected} />
+  {/if}
 
   <ErrorPanel errors={state.errors} />
 </div>
@@ -113,6 +126,23 @@
     color: var(--bg-primary, #0d1117);
     border-radius: 4px;
     font-weight: 600;
+  }
+
+  .dots {
+    display: inline-block;
+    width: 1.5ch;
+    text-align: left;
+  }
+
+  .dots::after {
+    content: '.';
+    animation: dots 1.5s steps(1) infinite;
+  }
+
+  @keyframes dots {
+    0%   { content: '.'; }
+    33%  { content: '..'; }
+    66%  { content: '...'; }
   }
 
   .main-content {
