@@ -16,7 +16,9 @@ import { homedir } from "node:os";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const teamDir = join(homedir(), ".team");
 const demoDir = join(teamDir, "demo");
+const demo2Dir = join(teamDir, "demo-bugfix");
 const eventsPath = join(demoDir, "events.jsonl");
+const events2Path = join(demo2Dir, "events.jsonl");
 const serverPath = join(__dirname, "..", "src", "server.ts");
 
 // --- Event timeline (delay in ms from previous event) ---
@@ -46,6 +48,29 @@ const timeline = [
   { delay: 3000, event: "feature.shipped",           producer: "orchestrator",     data: { pr: "#42", branch: "feat/sse-reconnect" } },
 ];
 
+// Second session: a shorter bug-fix pipeline that appears ~15s into the first
+const SECOND_SESSION_DELAY = 15000;
+
+const timeline2 = [
+  { delay: 0,    event: "feature.requested",       producer: "orchestrator",     data: { topic: "Fix off-by-one in billing calculation" } },
+  { delay: 3000, event: "files.found",              producer: "file-finder",      data: { files: ["src/billing.ts", "src/__tests__/billing.test.ts"], count: 2 } },
+  { delay: 4000, event: "research.completed",       producer: "researcher",       data: { openQuestions: 0 }, artifact: "docs/plans/2026-03-29-billing-fix-research.md" },
+  { delay: 5000, event: "plan.drafted",             producer: "planner",          data: { steps: 2, testCases: 4 }, artifact: "docs/plans/2026-03-29-billing-fix-plan.md" },
+  { delay: 3000, event: "plan.critiqued",           producer: "plan-critic",      data: { verdict: "approve", findings: [] } },
+  { delay: 2000, event: "plan.approved",            producer: "orchestrator",     data: {} },
+  { delay: 4000, event: "tests.written",            producer: "test-architect",   data: { testFiles: ["src/__tests__/billing-fix.test.ts"], testCount: 4 } },
+  { delay: 2000, event: "tests.confirmed-failing",  producer: "orchestrator",     data: { testFiles: ["src/__tests__/billing-fix.test.ts"], failCount: 4 } },
+  { delay: 3000, event: "step.completed",           producer: "implementer",      data: { step: "Fix boundary condition in invoice total", totalTests: 4 } },
+  { delay: 3000, event: "implementation.completed",  producer: "implementer",      data: { filesChanged: 2, testsPass: true } },
+  { delay: 3000, event: "review.completed",          producer: "code-reviewer",    data: { verdict: "approve", findings: ["Minimal, correct fix"] } },
+  { delay: 1000, event: "docs-review.completed",     producer: "technical-writer", data: { verdict: "approve", findings: [] } },
+  { delay: 1000, event: "security-review.completed", producer: "security-reviewer", data: { verdict: "approve", findings: [] } },
+  { delay: 1000, event: "ux-review.completed",       producer: "ux-reviewer",      data: { verdict: "approve", findings: [] } },
+  { delay: 2000, event: "verification.completed",    producer: "verifier",         data: { verdict: "pass", checks: ["format", "lint", "typecheck", "build", "test"] } },
+  { delay: 2000, event: "verification.passed",       producer: "orchestrator",     data: {} },
+  { delay: 2000, event: "feature.shipped",           producer: "orchestrator",     data: { pr: "#43", branch: "fix/billing-off-by-one" } },
+];
+
 // --- Helpers ---
 
 function sleep(ms) {
@@ -67,7 +92,7 @@ async function checkHealth(port) {
   }
 }
 
-function emit(seq, entry) {
+function emit(path, label, seq, entry) {
   const now = new Date().toISOString();
   const record = {
     seq,
@@ -79,8 +104,17 @@ function emit(seq, entry) {
   if (entry.artifact) record.artifact = entry.artifact;
 
   const line = JSON.stringify(record) + "\n";
-  appendFileSync(eventsPath, line);
-  console.log(`  [seq ${String(seq).padStart(2)}] ${entry.event} (${entry.producer})`);
+  appendFileSync(path, line);
+  console.log(`  [${label} seq ${String(seq).padStart(2)}] ${entry.event} (${entry.producer})`);
+}
+
+async function playTimeline(path, label, entries) {
+  let seq = 0;
+  for (const entry of entries) {
+    if (entry.delay > 0) await sleep(entry.delay);
+    seq++;
+    emit(path, label, seq, entry);
+  }
 }
 
 // --- Main ---
@@ -91,6 +125,7 @@ async function main() {
   // Clean slate
   mkdirSync(demoDir, { recursive: true });
   writeFileSync(eventsPath, "");
+  // Second session dir created later when it "appears"
 
   console.log("Starting Teamflow dashboard...\n");
 
@@ -140,23 +175,31 @@ async function main() {
   }
 
   console.log("Playing pipeline events...\n");
+  console.log("  Session 1: SSE reconnection feature");
+  console.log("  Session 2: billing bug fix (appears in ~15s)\n");
 
-  let seq = 0;
-  for (const entry of timeline) {
-    if (entry.delay > 0) await sleep(entry.delay);
-    seq++;
-    emit(seq, entry);
-  }
+  // Play first session, and after SECOND_SESSION_DELAY start the second
+  const session1 = playTimeline(eventsPath, "session-1", timeline);
 
-  console.log("\nPipeline complete! Dashboard remains running. Press Ctrl+C to stop.\n");
+  const session2 = sleep(SECOND_SESSION_DELAY).then(() => {
+    console.log("\n  >>> Second session starting! <<<\n");
+    mkdirSync(demo2Dir, { recursive: true });
+    writeFileSync(events2Path, "");
+    return playTimeline(events2Path, "session-2", timeline2);
+  });
+
+  await Promise.all([session1, session2]);
+
+  console.log("\nBoth pipelines complete! Dashboard remains running. Press Ctrl+C to stop.\n");
 
   // Keep running until killed
   process.on("SIGINT", () => {
     if (server) server.kill();
-    // Only clean up .team directory if we own the server
+    // Only clean up demo directories if we own the server
     if (server) {
       try {
         rmSync(demoDir, { recursive: true, force: true });
+        rmSync(demo2Dir, { recursive: true, force: true });
       } catch { /* ignore */ }
     }
     process.exit(0);
