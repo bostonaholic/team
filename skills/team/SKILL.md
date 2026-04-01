@@ -17,18 +17,26 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
 
 ## Setup
 
-1. Derive a kebab-case `topic` from the description.
-2. Set `today` to the current date (`YYYY-MM-DD`).
-3. **Create an isolated worktree** for this pipeline run. Use Claude Code's
+1. **Check for a beads issue ID.** If the first token of `$ARGUMENTS` matches
+   a beads ID pattern (e.g., `team-p3t`, `proj-42a`), use `/beads:show <id>`
+   to verify it exists. If valid:
+   - Use `/beads:update <id>` to claim and mark the issue as in-progress.
+   - Strip the beads ID from the description (use the remainder as the feature
+     description). If no remainder, use the issue title from the show output.
+   - Set `beadsId` to the matched ID.
+   If the first token is not a beads ID, set `beadsId` to `null`.
+2. Derive a kebab-case `topic` from the description.
+3. Set `today` to the current date (`YYYY-MM-DD`).
+4. **Create an isolated worktree** for this pipeline run. Use Claude Code's
    native worktree support: `claude --worktree <topic>` or dispatch yourself
    into a worktree context. All subsequent work happens inside the worktree.
    See `skills/worktree-isolation/SKILL.md` for the full methodology.
-4. Create `~/.team/<topic>/` directory if it does not exist (`mkdir -p ~/.team/<topic>`).
-5. Create `docs/plans/` directory if it does not exist.
-6. Append the first event to `~/.team/<topic>/events.jsonl`:
+5. Create `~/.team/<topic>/` directory if it does not exist (`mkdir -p ~/.team/<topic>`).
+6. Create `docs/plans/` directory if it does not exist.
+7. Append the first event to `~/.team/<topic>/events.jsonl`:
 
 ```json
-{"seq":1,"event":"feature.requested","producer":"router","ts":"<ISO-8601>","data":{"topic":"<topic>","description":"<description>","today":"<today>"},"artifact":null,"causedBy":null,"gate":null}
+{"seq":1,"event":"feature.requested","producer":"router","ts":"<ISO-8601>","data":{"topic":"<topic>","description":"<description>","today":"<today>","beadsId":"<beadsId or null>"},"artifact":null,"causedBy":null,"gate":null}
 ```
 
 ## The Event Loop
@@ -126,9 +134,12 @@ The implementer receives typed events so it knows exactly what class of issue to
 When `verification.passed` is recorded:
 1. Present shipping options: commit + PR, commit locally, keep as-is
 2. Execute user's choice
-3. Append `feature.shipped` event
-4. Delete `~/.team/<topic>/` directory
-5. Clean up the worktree (cherry-pick/rebase commits onto the target branch,
+3. If `beadsId` is present in the `feature.requested` event data and the user
+   chose to commit (either option), use `/beads:close <beadsId>` to mark the
+   issue as done. Skip if the user chose "keep as-is".
+4. Append `feature.shipped` event
+5. Delete `~/.team/<topic>/` directory
+6. Clean up the worktree (cherry-pick/rebase commits onto the target branch,
    then let Claude Code remove the worktree)
 
 ## Rules

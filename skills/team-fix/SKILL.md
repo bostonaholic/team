@@ -14,6 +14,17 @@ Bug description: `$ARGUMENTS`
 
 If `$ARGUMENTS` is empty, ask the user to describe the bug and stop.
 
+### Beads Integration
+
+Check if the first token of `$ARGUMENTS` matches a beads issue ID pattern
+(e.g., `team-89z`, `proj-42a`). If it does, use `/beads:show <id>` to verify
+it exists. If valid:
+- Use `/beads:update <id>` to claim and mark the issue as in-progress.
+- Strip the beads ID from the description (use the remainder as the bug
+  description). If no remainder, use the issue title from the show output.
+- Set `beadsId` to the matched ID.
+If the first token is not a beads ID, set `beadsId` to `null`.
+
 ## When to Use
 
 Use `/team-fix` when:
@@ -40,7 +51,7 @@ No research phase. No plan phase. No human gate.
 2. Append the first event to `~/.team/<topic>/events.jsonl`:
 
 ```json
-{"seq":1,"event":"bug.reported","producer":"router","ts":"<ISO-8601>","data":{"description":"<bug description>"},"artifact":null,"causedBy":null,"gate":null}
+{"seq":1,"event":"bug.reported","producer":"router","ts":"<ISO-8601>","data":{"description":"<bug description>","beadsId":"<beadsId or null>"},"artifact":null,"causedBy":null,"gate":null}
 ```
 
 ## Execution
@@ -67,8 +78,10 @@ assertion failure, not a crash. Do not proceed to the fix until confirmed.
    - `test:` commit with the failing test
    - `fix:` commit with the minimal fix
 2. Create a PR if working on a branch, or commit to the working branch.
-3. Append `feature.shipped` event.
-4. Delete `~/.team/<topic>/` directory.
+3. If `beadsId` is present in the `bug.reported` event data, use
+   `/beads:close <beadsId>` to mark the issue as done.
+4. Append `feature.shipped` event.
+5. Delete `~/.team/<topic>/` directory.
 
 ## Aborting
 

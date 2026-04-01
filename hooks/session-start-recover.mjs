@@ -58,6 +58,10 @@ function formatRecoveryContext(state, events) {
     `Phase: ${state.phase} | Topic: ${state.topic}`,
   ];
 
+  if (state.beadsId) {
+    lines.push(`Beads Issue: ${state.beadsId} (in progress)`);
+  }
+
   if (state.planPath) {
     lines.push(`Plan: ${state.planPath}`);
   }

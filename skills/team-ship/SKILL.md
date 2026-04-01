@@ -11,14 +11,20 @@ Run the SHIP phase. Requires `verification.passed` in the event log.
 
 1. Read `~/.team/<topic>/events.jsonl`. Scan for `verification.passed`.
 2. If not found: report "Verification not passed. Run /team-verify first." and stop.
-3. **Update CHANGELOG.md** before committing (see Changelog Update below).
-4. Present shipping options:
+3. **Extract beads ID** from the first event in the log (`feature.requested` or
+   `bug.reported`). Check `data.beadsId`. If present, this pipeline is tracking
+   a beads issue.
+4. **Update CHANGELOG.md** before committing (see Changelog Update below).
+5. Present shipping options:
    - **Commit + PR** — branch, commit, open pull request
    - **Commit locally** — commit to current branch
    - **Keep as-is** — leave changes uncommitted
-5. Execute user's choice.
-6. Append `feature.shipped` event to the log.
-7. Delete `~/.team/<topic>/` directory.
+6. Execute user's choice.
+7. **Close beads issue.** If `beadsId` was found in step 3 and the user chose
+   to commit (either option), use `/beads:close <beadsId>` to mark the issue
+   as done. Skip this if the user chose "keep as-is".
+8. Append `feature.shipped` event to the log.
+9. Delete `~/.team/<topic>/` directory.
 
 ## Changelog Update
 
