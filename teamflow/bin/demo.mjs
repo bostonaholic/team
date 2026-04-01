@@ -15,7 +15,8 @@ import { homedir } from "node:os";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const teamDir = join(homedir(), ".team");
-const eventsPath = join(teamDir, "events.jsonl");
+const demoDir = join(teamDir, "demo");
+const eventsPath = join(demoDir, "events.jsonl");
 const serverPath = join(__dirname, "..", "src", "server.ts");
 
 // --- Event timeline (delay in ms from previous event) ---
@@ -88,7 +89,7 @@ async function main() {
   const port = process.env.TEAMFLOW_PORT || "7425";
 
   // Clean slate
-  mkdirSync(teamDir, { recursive: true });
+  mkdirSync(demoDir, { recursive: true });
   writeFileSync(eventsPath, "");
 
   console.log("Starting Teamflow dashboard...\n");
@@ -155,7 +156,7 @@ async function main() {
     // Only clean up .team directory if we own the server
     if (server) {
       try {
-        rmSync(teamDir, { recursive: true, force: true });
+        rmSync(demoDir, { recursive: true, force: true });
       } catch { /* ignore */ }
     }
     process.exit(0);

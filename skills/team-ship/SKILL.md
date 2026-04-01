@@ -9,7 +9,7 @@ Run the SHIP phase. Requires `verification.passed` in the event log.
 
 ## Execution
 
-1. Read `~/.team/events.jsonl`. Scan for `verification.passed`.
+1. Read `~/.team/<topic>/events.jsonl`. Scan for `verification.passed`.
 2. If not found: report "Verification not passed. Run /team-verify first." and stop.
 3. **Update CHANGELOG.md** before committing (see Changelog Update below).
 4. Present shipping options:
@@ -18,7 +18,7 @@ Run the SHIP phase. Requires `verification.passed` in the event log.
    - **Keep as-is** — leave changes uncommitted
 5. Execute user's choice.
 6. Append `feature.shipped` event to the log.
-7. Delete `~/.team/` directory.
+7. Delete `~/.team/<topic>/` directory.
 
 ## Changelog Update
 

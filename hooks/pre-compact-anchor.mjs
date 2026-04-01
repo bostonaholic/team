@@ -1,15 +1,15 @@
 /**
  * PreCompact hook — anchors TEAM pipeline state before context compaction.
  *
- * Reads ~/.team/events.jsonl (the source of truth) and derives pipeline state.
- * Falls back to ~/.team/state.json if the event log doesn't exist.
+ * Scans ~/.team/ subdirectories for events.jsonl (per-session layout).
+ * Falls back to flat ~/.team/events.jsonl if no subdirectories found.
  * Injects a concise summary into the compacted context so the agent retains
  * awareness of the active pipeline.
  *
  * Contract: always exits 0. A missing or malformed state file is not an error.
  */
 
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { EVENT_TO_PHASE, deriveState, readEventLog, teamDir } from "../lib/events.mjs";
 
@@ -67,15 +67,59 @@ function formatAnchorContext(state, events) {
   return lines.join("\n");
 }
 
+/**
+ * Scan ~/.team/ subdirectories for the most recently active session.
+ * Falls back to flat ~/.team/events.jsonl if no subdirectories found.
+ */
+async function findActiveSession() {
+  const base = teamDir();
+
+  try {
+    const entries = await readdir(base, { withFileTypes: true });
+    let bestEvents = null;
+    let bestState = null;
+    let bestTs = null;
+
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        const subdir = join(base, entry.name);
+        const eventLog = await readEventLog(subdir);
+        if (eventLog && eventLog.length > 0) {
+          const lastTs = eventLog[eventLog.length - 1].ts;
+          if (bestTs === null || lastTs > bestTs) {
+            bestTs = lastTs;
+            bestEvents = eventLog;
+            bestState = deriveState(eventLog);
+          }
+        }
+      }
+    }
+
+    if (bestEvents) {
+      return { state: bestState, events: bestEvents };
+    }
+  } catch {
+    // ~/.team/ may not exist
+  }
+
+  // Fall back to flat file
+  const eventLog = await readEventLog();
+  if (eventLog && eventLog.length > 0) {
+    return { state: deriveState(eventLog), events: eventLog };
+  }
+
+  return null;
+}
+
 async function main() {
   let state = null;
   let events = null;
 
-  const eventLog = await readEventLog();
+  const session = await findActiveSession();
 
-  if (eventLog && eventLog.length > 0) {
-    events = eventLog;
-    state = deriveState(events);
+  if (session) {
+    state = session.state;
+    events = session.events;
   } else {
     state = await readStateFile();
   }

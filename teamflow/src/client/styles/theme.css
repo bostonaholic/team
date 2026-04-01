@@ -4,6 +4,7 @@
   /* Dark theme (default) */
   --bg-primary: #0d1117;
   --bg-secondary: #161b22;
+  --bg-tertiary: #21262d;
   --bg-danger: #1a0a0a;
   --text-primary: #c9d1d9;
   --text-secondary: #8b949e;
@@ -36,6 +37,7 @@
 .theme-light {
   --bg-primary: #ffffff;
   --bg-secondary: #f6f8fa;
+  --bg-tertiary: #e1e4e8;
   --bg-danger: #fff5f5;
   --text-primary: #24292f;
   --text-secondary: #57606a;
@@ -50,6 +52,7 @@
 .theme-dark {
   --bg-primary: #0d1117;
   --bg-secondary: #161b22;
+  --bg-tertiary: #21262d;
   --bg-danger: #1a0a0a;
   --text-primary: #c9d1d9;
   --text-secondary: #8b949e;
@@ -65,6 +68,7 @@
   :root:not(.theme-dark) {
     --bg-primary: #ffffff;
     --bg-secondary: #f6f8fa;
+    --bg-tertiary: #e1e4e8;
     --bg-danger: #fff5f5;
     --text-primary: #24292f;
     --text-secondary: #57606a;

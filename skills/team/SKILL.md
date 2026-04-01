@@ -23,9 +23,9 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
    native worktree support: `claude --worktree <topic>` or dispatch yourself
    into a worktree context. All subsequent work happens inside the worktree.
    See `skills/worktree-isolation/SKILL.md` for the full methodology.
-4. Create `~/.team/` directory if it does not exist (`mkdir -p ~/.team`).
+4. Create `~/.team/<topic>/` directory if it does not exist (`mkdir -p ~/.team/<topic>`).
 5. Create `docs/plans/` directory if it does not exist.
-6. Append the first event to `~/.team/events.jsonl`:
+6. Append the first event to `~/.team/<topic>/events.jsonl`:
 
 ```json
 {"seq":1,"event":"feature.requested","producer":"router","ts":"<ISO-8601>","data":{"topic":"<topic>","description":"<description>","today":"<today>"},"artifact":null,"causedBy":null,"gate":null}
@@ -38,7 +38,7 @@ pipeline wiring. Then loop:
 
 ```
 loop:
-  1. Read ~/.team/events.jsonl — parse each line as JSON
+  1. Read ~/.team/<topic>/events.jsonl — parse each line as JSON
   2. Find the latest event(s) that have NOT yet been consumed
      (an event is "consumed" when an agent that subscribes to it
       has already produced its output event in the log)
@@ -127,7 +127,7 @@ When `verification.passed` is recorded:
 1. Present shipping options: commit + PR, commit locally, keep as-is
 2. Execute user's choice
 3. Append `feature.shipped` event
-4. Delete `~/.team/` directory
+4. Delete `~/.team/<topic>/` directory
 5. Clean up the worktree (cherry-pick/rebase commits onto the target branch,
    then let Claude Code remove the worktree)
 

@@ -19,24 +19,29 @@ app.get("/api/health", async () => {
   return { status: "ok" };
 });
 
-// Import and wire state engine, tailer, SSE, and API once they exist
-let stateEngine: { apply(events: Record<string, unknown>[]): void; getSnapshot(): RunState } | null = null;
-let broadcast: ((data: unknown) => void) | null = null;
-
 async function start() {
-  // Lazily import modules -- they may not exist yet during scaffolding
   try {
     const { createStateEngine } = await import("./state.js");
     const { createTailer } = await import("./tail.js");
     const { ssePlugin, getBroadcast } = await import("./sse.js");
     const { apiPlugin } = await import("./api.js");
+    const { discoverSessions, createSessionPoller } = await import("./sessions.js");
 
-    stateEngine = createStateEngine();
+    // Per-session map: sessionId -> { engine, tailer }
+    const sessions = new Map<string, { engine: ReturnType<typeof createStateEngine>, tailer: ReturnType<typeof createTailer> }>();
 
-    await app.register(ssePlugin, { getSnapshot: () => stateEngine!.getSnapshot() });
-    broadcast = getBroadcast(app);
+    function getAllSnapshots(): Array<{ sessionId: string; state: RunState }> {
+      const result: Array<{ sessionId: string; state: RunState }> = [];
+      for (const [id, entry] of sessions) {
+        result.push({ sessionId: id, state: entry.engine.getSnapshot() });
+      }
+      return result;
+    }
 
-    await app.register(apiPlugin, { getSnapshot: () => stateEngine!.getSnapshot() });
+    await app.register(ssePlugin, { getAllSnapshots: () => getAllSnapshots() });
+    const { broadcastSession, broadcastRemoval } = getBroadcast(app);
+
+    await app.register(apiPlugin, { getAllSnapshots: () => getAllSnapshots() });
 
     // Static file serving for the built frontend
     const distDir = join(__dirname, "..", "dist");
@@ -49,12 +54,41 @@ async function start() {
       });
     }
 
-    // Start tailing the event log
-    const eventsPath = join(teamDir, "events.jsonl");
-    createTailer(eventsPath, (events) => {
-      stateEngine!.apply(events);
-      if (broadcast) {
-        broadcast(stateEngine!.getSnapshot());
+    function addSession(id: string, path: string) {
+      if (sessions.has(id)) return;
+
+      const engine = createStateEngine();
+      const eventsPath = join(path, "events.jsonl");
+      const tailer = createTailer(eventsPath, (events) => {
+        engine.apply(events);
+        broadcastSession(id, engine.getSnapshot());
+      });
+
+      sessions.set(id, { engine, tailer });
+    }
+
+    function removeSession(id: string) {
+      const entry = sessions.get(id);
+      if (entry) {
+        entry.tailer.close();
+        sessions.delete(id);
+        broadcastRemoval(id);
+      }
+    }
+
+    // Discover existing sessions on startup
+    const initial = await discoverSessions(teamDir);
+    for (const session of initial) {
+      addSession(session.id, session.path);
+    }
+
+    // Poll for new/removed sessions
+    createSessionPoller(teamDir, (added, removed) => {
+      for (const session of added) {
+        addSession(session.id, session.path);
+      }
+      for (const id of removed) {
+        removeSession(id);
       }
     });
   } catch (err) {

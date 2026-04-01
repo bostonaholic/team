@@ -1,14 +1,15 @@
 /**
  * REST API Fastify plugin.
  *
- * Registers GET /api/state which returns the current RunState snapshot as JSON.
+ * Registers GET /api/state which returns all session snapshots as a
+ * Record<string, RunState> keyed by sessionId.
  */
 
 import type { FastifyInstance, FastifyPluginOptions } from "fastify";
 import type { RunState } from "./state.js";
 
 interface ApiPluginOptions extends FastifyPluginOptions {
-  getSnapshot: () => RunState;
+  getAllSnapshots: () => Array<{ sessionId: string; state: RunState }>;
 }
 
 export async function apiPlugin(
@@ -16,6 +17,11 @@ export async function apiPlugin(
   opts: ApiPluginOptions,
 ): Promise<void> {
   app.get("/api/state", async () => {
-    return opts.getSnapshot();
+    const snapshots = opts.getAllSnapshots();
+    const result: Record<string, RunState> = {};
+    for (const entry of snapshots) {
+      result[entry.sessionId] = entry.state;
+    }
+    return result;
   });
 }
