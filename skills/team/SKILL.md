@@ -1,6 +1,6 @@
 ---
 name: team
-description: Full 6-phase autonomous feature implementation pipeline. Trigger on "build a feature", "implement end to end", "autonomous implementation", or "/team".
+description: Full 6-phase autonomous feature implementation pipeline. Trigger on "hey team", "build a feature", "implement end to end", "autonomous implementation", or "/team".
 ---
 
 # TEAM — Thin Event Router
