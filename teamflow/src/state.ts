@@ -27,13 +27,14 @@ interface RegistryAgent {
 
 interface RegistryGate {
   after: string | string[];
-  type: "human" | "mechanical" | "aggregate";
+  type: "human" | "mechanical" | "aggregate" | "interview";
   passEvent: string;
   failEvent?: string;
   failEvents?: Record<string, string | Record<string, string>>;
   condition?: string;
   hardGates?: string[];
   maxRetries?: number;
+  threshold?: number;
 }
 
 interface RegistryJoin {
@@ -71,7 +72,7 @@ for (const agent of registry.agents) {
 // Derived once at module load from registry.gates and registry.joins.
 interface GateConfig {
   key: string;
-  type: "human" | "mechanical" | "aggregate" | "join";
+  type: "human" | "mechanical" | "aggregate" | "interview" | "join";
   label: string;
   phase: string;
   afterEvents: string[];
@@ -91,6 +92,7 @@ function getPriorPhase(nextPhase: string): string {
 
 // Gate label derivation from gate type
 const GATE_TYPE_LABELS: Record<string, string> = {
+  interview: "Validate requirements",
   human: "Approve plan",
   mechanical: "Confirm tests fail",
   aggregate: "Collect reviews",

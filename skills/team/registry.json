@@ -14,13 +14,12 @@
     },
     {
       "name": "product-owner",
-      "consumes": "research.completed",
-      "produces": "ambiguity.resolved",
-      "condition": "event.data.openQuestions > 0"
+      "consumes": ["research.completed", "requirements.revision-requested"],
+      "produces": "requirements.assessed"
     },
     {
       "name": "planner",
-      "consumes": ["research.completed", "ambiguity.resolved", "plan.revision-requested"],
+      "consumes": ["requirements.confirmed", "plan.revision-requested"],
       "produces": "plan.drafted"
     },
     {
@@ -78,6 +77,13 @@
     }
   ],
   "gates": [
+    {
+      "after": "requirements.assessed",
+      "type": "interview",
+      "threshold": 95,
+      "passEvent": "requirements.confirmed",
+      "failEvent": "requirements.revision-requested"
+    },
     {
       "after": "plan.critiqued",
       "type": "human",

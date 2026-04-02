@@ -126,7 +126,7 @@ When the planner finds a PRD artifact in `docs/plans/`, it should:
   for this feature, regardless of how easy it seems to add.
 - **The PRD belongs to the product-owner.** The planner may ask for
   clarification on acceptance criteria but may not change them unilaterally.
-- **Never ask the user.** The product-owner resolves ambiguity by analyzing
-  the codebase and request — it does not escalate to the user except for
-  contradictions or irreversible decisions. See the product-owner agent for
-  escalation criteria.
+- **Surface questions through the interview gate.** When the product-owner's
+  confidence is below 95%, open questions are surfaced to the user via the
+  router's interview gate — not asked directly by the product-owner agent.
+  See the product-owner agent for the confidence assessment method.

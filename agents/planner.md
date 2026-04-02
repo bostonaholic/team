@@ -4,7 +4,7 @@ description: Use when an implementation plan needs to be created from research f
 model: opus
 tools: Read, Write, Edit, Grep, Glob
 permissionMode: acceptEdits
-consumes: research.completed, ambiguity.resolved, plan.revision-requested
+consumes: requirements.confirmed, plan.revision-requested
 produces: plan.drafted
 ---
 

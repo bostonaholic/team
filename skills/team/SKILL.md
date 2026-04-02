@@ -78,6 +78,25 @@ loop:
 
 ## Gate Handling
 
+### Interview Gate (requirements validation)
+
+When `requirements.assessed` is recorded:
+1. Read the product-owner's output: confidence level, validated requirements,
+   and any questions for the user
+2. If confidence ≥ 95%: **auto-pass** — append `requirements.confirmed` event
+   without asking the user anything. Include the validated requirements and
+   any decisions in the event data.
+3. If confidence < 95%: **interview the user** —
+   a. Present the product-owner's understanding of the user's intent
+   b. Present the clarifying questions
+   c. Collect the user's answers
+   d. Append `requirements.revision-requested` event with the answers
+   e. This re-dispatches the product-owner with the new context
+   f. Loop until confidence ≥ 95% (typically 0-1 rounds)
+
+The interview gate is the mechanism for: "Interview me until you have 95%
+confidence about what I actually want — not what I think I should want."
+
 ### Human Gate (plan approval)
 
 When `plan.critiqued` is recorded:
@@ -150,8 +169,8 @@ When `verification.passed` is recorded:
 - `seq` values are **gapless and monotonically increasing**.
 - File artifacts in `docs/plans/` are the durable communication protocol.
   Always write research/plan findings to disk.
-- The plan approval gate is the primary human interaction point. The only
-  other is quality escalation after 5 failed review rounds.
+- The interview gate and plan approval gate are the two human interaction
+  points. The only other is quality escalation after 5 failed review rounds.
 - On any unexpected failure: append an error note to the log, report to the
   user, and suggest `/team-resume`.
 - To add a new agent to the pipeline, add an entry to `registry.json`. The

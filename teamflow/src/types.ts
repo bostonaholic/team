@@ -12,7 +12,7 @@ export interface AgentStatus {
 }
 
 export interface GateStatus {
-  type: "human" | "mechanical" | "aggregate" | "join";
+  type: "human" | "mechanical" | "aggregate" | "interview" | "join";
   status: "pending" | "waiting" | "passed" | "failed";
   label: string;
   phase: string;

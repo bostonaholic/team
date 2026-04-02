@@ -38,15 +38,20 @@ feature.requested
     ├──> file-finder ──> files.found ─────────────┐
     └──> researcher ──────────────────────────────>├──> research.completed
                                                    │
-                                      [openQuestions > 0?]
-                                         yes │          no │
-                                             v             │
-                                      product-owner        │
-                                             │             │
-                                      ambiguity.resolved   │
-                                             │             │
-                                             v             v
-                                          planner ──> plan.drafted
+                                            product-owner
+                                                   │
+                                          requirements.assessed
+                                                   │
+                                           [INTERVIEW GATE]
+                                          /                 \
+                                   confidence              confidence
+                                     ≥ 95%                   < 95%
+                                       │                       │
+                                requirements.       requirements.revision
+                                  confirmed            -requested
+                                       │                       │
+                                       v                       └──> product-owner
+                                    planner ──> plan.drafted
                                                           │
                                                     plan-critic
                                                           │
@@ -148,7 +153,7 @@ Router emits after merging `files.found` with the researcher's output.
 | Field     | Value                |
 |-----------|----------------------|
 | Producer  | `router`             |
-| Consumers | `product-owner` (conditional), `planner` |
+| Consumers | `product-owner`      |
 | Gate      | none                 |
 | Artifact  | `docs/plans/YYYY-MM-DD-<topic>-research.md` |
 
@@ -165,29 +170,80 @@ Router emits after merging `files.found` with the researcher's output.
 
 ---
 
-### ambiguity.resolved
+### requirements.assessed
 
-Product-owner has resolved open questions from the research.
+Product-owner has assessed the user's requirements and rated confidence.
 
 | Field     | Value                |
 |-----------|----------------------|
 | Producer  | `product-owner`      |
-| Consumers | `planner`            |
-| Gate      | none                 |
-| Artifact  | `docs/plans/YYYY-MM-DD-<topic>-research.md` (appended) |
+| Consumers | `router` (interview gate) |
+| Gate      | triggers `interview` gate |
+| Artifact  | `docs/plans/YYYY-MM-DD-<topic>-prd.md` (if PRD produced) |
 
 **Payload:**
 
 ```json
 {
+  "confidence": "integer — 0-100, percentage confidence in understanding",
+  "understanding": "string — restated user intent in product-owner's words",
+  "validatedRequirements": ["string — requirements stated clearly and actionably"],
   "decisions": [
     {
-      "question": "string — the original question",
+      "question": "string — an ambiguity resolved autonomously",
       "decision": "string — the resolution",
-      "rationale": "string — why this decision was made"
+      "rationale": "string — why, citing codebase precedent"
     }
   ],
-  "researchPath": "string — path to updated research artifact"
+  "openQuestions": ["string — questions for the user, empty when confidence ≥ 95%"],
+  "prdPath": "string | null — path to PRD artifact if produced"
+}
+```
+
+---
+
+### requirements.confirmed
+
+Router emits when the interview gate passes (confidence ≥ 95%).
+
+| Field     | Value                |
+|-----------|----------------------|
+| Producer  | `router`             |
+| Consumers | `planner`            |
+| Gate      | interview gate pass  |
+| Artifact  | none                 |
+
+**Payload:**
+
+```json
+{
+  "validatedRequirements": ["string — confirmed requirements"],
+  "decisions": ["object — autonomous decisions from the product-owner"],
+  "prdPath": "string | null — path to PRD artifact if produced",
+  "interviewRounds": "integer — number of question rounds (0 = auto-passed)"
+}
+```
+
+---
+
+### requirements.revision-requested
+
+Router emits when interview gate needs more information (confidence < 95%).
+
+| Field     | Value                |
+|-----------|----------------------|
+| Producer  | `router`             |
+| Consumers | `product-owner`      |
+| Gate      | interview gate fail  |
+| Artifact  | none                 |
+
+**Payload:**
+
+```json
+{
+  "answers": ["string — user's answers to the product-owner's questions"],
+  "priorAssessment": "object — the previous requirements.assessed payload",
+  "revisionNumber": "integer — which round of questions this is"
 }
 ```
 
@@ -762,9 +818,10 @@ Router emits after successful commit/PR/merge.
 
 ## Gate Reference
 
-| Gate Type    | Trigger Event     | Pass Event               | Fail Events               | Decision By |
-|-------------|-------------------|--------------------------|---------------------------|-------------|
-| human       | `plan.critiqued`  | `plan.approved`          | `plan.revision-requested` | User        |
-| mechanical  | `tests.written`   | `tests.confirmed-failing`| (retry test setup)        | Test runner |
-| aggregate   | all 5 reviews     | `verification.passed`    | `hard-gate.{security,lint,typecheck,build,test,review}-failed` | Router |
-| join        | `files.found`     | `research.completed`     | —                         | Router (fan-in) |
+| Gate Type    | Trigger Event            | Pass Event               | Fail Events               | Decision By |
+|-------------|--------------------------|--------------------------|---------------------------|-------------|
+| interview   | `requirements.assessed`  | `requirements.confirmed` | `requirements.revision-requested` | Router (auto-pass ≥95%) or User |
+| human       | `plan.critiqued`         | `plan.approved`          | `plan.revision-requested` | User        |
+| mechanical  | `tests.written`          | `tests.confirmed-failing`| (retry test setup)        | Test runner |
+| aggregate   | all 5 reviews            | `verification.passed`    | `hard-gate.{security,lint,typecheck,build,test,review}-failed` | Router |
+| join        | `files.found`            | `research.completed`     | —                         | Router (fan-in) |

@@ -24,8 +24,9 @@ events, and checks gates. It contains zero agent-specific knowledge.
 - **File artifacts survive compaction.** Agents communicate through file
   artifacts in `docs/plans/`. These survive context window compaction and
   can be re-read by any agent in any session.
-- **Single human gate.** Plan approval is the only point requiring user
-  interaction. Everything else is autonomous with mechanical gates.
+- **Two human touchpoints.** The interview gate (requirements validation)
+  and plan approval are the only points requiring user interaction.
+  Everything else is autonomous with mechanical gates.
 - **Hooks enforce discipline mechanically.** LLMs forget instructions ~20%
   of the time; hooks are deterministic.
 
@@ -77,15 +78,20 @@ feature.requested
     ├──> file-finder ──> files.found ─────────────┐
     └──> researcher ──────────────────────────────>├──> research.completed
                                                    │
-                                      [openQuestions > 0?]
-                                         yes │          no │
-                                             v             │
-                                      product-owner        │
-                                             │             │
-                                      ambiguity.resolved   │
-                                             │             │
-                                             v             v
-                                          planner ──> plan.drafted
+                                            product-owner
+                                                   │
+                                          requirements.assessed
+                                                   │
+                                           [INTERVIEW GATE]
+                                          /                 \
+                                   confidence              confidence
+                                     ≥ 95%                   < 95%
+                                       │                       │
+                                requirements.       requirements.revision
+                                  confirmed            -requested
+                                       │                       │
+                                       v                       └──> product-owner
+                                    planner ──> plan.drafted
                                                           │
                                                     plan-critic
                                                           │
@@ -143,12 +149,13 @@ feature.requested
 
 ### Phase 2: Plan
 
-**Trigger:** `research.completed` (or `ambiguity.resolved` if questions exist)
-**Conditional agent:** `product-owner` (if `openQuestions > 0`)
-**Sequential agents:** `planner`, then `plan-critic`
-**Output events:** `plan.drafted`, `plan.critiqued`
-**Gate:** Human approval -- `plan.approved` or `plan.revision-requested`
-**Artifact:** `docs/plans/YYYY-MM-DD-<topic>-plan.md`
+**Trigger:** `research.completed`
+**Sequential agents:** `product-owner`, then `planner`, then `plan-critic`
+**Output events:** `requirements.assessed`, `plan.drafted`, `plan.critiqued`
+**Gates:** Interview gate (confidence ≥ 95% auto-passes, < 95% interviews user),
+then human approval -- `plan.approved` or `plan.revision-requested`
+**Artifacts:** `docs/plans/YYYY-MM-DD-<topic>-prd.md` (if PRD produced),
+`docs/plans/YYYY-MM-DD-<topic>-plan.md`
 
 ### Phase 3: Test-First
 
@@ -190,8 +197,8 @@ feature.requested
 |--------------------|---------|-------------|------------------------------------|------------------------------------|------------------------------|
 | `file-finder`      | haiku   | plan        | Read, Grep, Glob                   | `feature.requested`                | `files.found`                |
 | `researcher`       | sonnet  | plan        | Read, Grep, Glob                   | `feature.requested`                | `research.completed`         |
-| `product-owner`    | sonnet  | plan        | Read, Grep, Glob                   | `research.completed`               | `ambiguity.resolved`         |
-| `planner`          | opus    | acceptEdits | Read, Write, Edit, Grep, Glob      | `research.completed`, `ambiguity.resolved`, `plan.revision-requested` | `plan.drafted` |
+| `product-owner`    | sonnet  | acceptEdits | Read, Write, Grep, Glob            | `research.completed`, `requirements.revision-requested` | `requirements.assessed` |
+| `planner`          | opus    | acceptEdits | Read, Write, Edit, Grep, Glob      | `requirements.confirmed`, `plan.revision-requested` | `plan.drafted` |
 | `plan-critic`      | sonnet  | plan        | Read, Grep, Glob                   | `plan.drafted`                     | `plan.critiqued`             |
 | `test-architect`   | inherit | acceptEdits | Read, Write, Edit, Grep, Glob, Bash| `plan.approved`                    | `tests.written`              |
 | `implementer`      | opus    | acceptEdits | Read, Write, Edit, Grep, Glob, Bash| `tests.confirmed-failing`          | `implementation.completed`   |
@@ -317,6 +324,7 @@ Shared types live in `teamflow/src/types.ts` (`AgentStatus`, `GateStatus`,
 engine and Svelte client components.
 
 Gate status is derived from registry gates and joins:
+- **interview** — requirements validation gate (PLAN phase)
 - **human** — plan approval gate (PLAN phase)
 - **mechanical** — test confirmation gate (TEST-FIRST phase)
 - **aggregate** — review collection gate (VERIFY phase)
