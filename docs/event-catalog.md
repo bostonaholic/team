@@ -326,13 +326,13 @@ Router emits after the user approves the plan.
 
 ### plan.revision-requested
 
-Router emits if the user rejects the plan.
+Router emits when auto-revision triggers (any non-PASS verdict with < 3 prior revisions) or the user rejects the plan at the human gate.
 
 | Field     | Value                |
 |-----------|----------------------|
 | Producer  | `router`             |
 | Consumers | `planner`            |
-| Gate      | human gate fail      |
+| Gate      | auto-revision or human gate fail |
 | Artifact  | none                 |
 
 **Payload:**
@@ -340,7 +340,7 @@ Router emits if the user rejects the plan.
 ```json
 {
   "planPath": "string — path to rejected plan",
-  "feedback": "string — user's revision instructions",
+  "feedback": "string — critic-extracted findings (auto-revision) or user's revision instructions (human rejection)",
   "revisionNumber": "integer — how many times the plan has been revised"
 }
 ```
@@ -822,7 +822,7 @@ Router emits after successful commit/PR/merge.
 | Gate Type    | Trigger Event            | Pass Event               | Fail Events               | Decision By |
 |-------------|--------------------------|--------------------------|---------------------------|-------------|
 | interview   | `requirements.assessed`  | `requirements.confirmed` | `requirements.revision-requested` | Router (auto-pass ≥95%) or User |
-| human       | `plan.critiqued`         | `plan.approved`          | `plan.revision-requested` | User        |
+| human       | `plan.critiqued`         | `plan.approved`          | `plan.revision-requested` | Router (auto-revise non-PASS) or User (clean PASS or safety valve exhaustion) |
 | mechanical  | `tests.written`          | `tests.confirmed-failing`| (retry test setup)        | Test runner |
 | aggregate   | all 5 reviews            | `verification.passed`    | `hard-gate.{security,lint,typecheck,build,test,review}-failed` | Router |
 | join        | `files.found`            | `research.completed`     | —                         | Router (fan-in) |

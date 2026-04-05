@@ -37,7 +37,7 @@ Agents are **decoupled microservices**. Each consumes events, does work, produce
 [BRAINSTORM] → RESEARCH → PLAN → TEST-FIRST → IMPLEMENT → VERIFY → SHIP
 ```
 
-Brainstorming is optional — use `/team-brainstorm` to shape vague ideas before committing to implementation. Two human touchpoints: interview gate (requirements validation, auto-passes at ≥95% confidence) and plan approval. Everything else is autonomous with mechanical gates.
+Brainstorming is optional — use `/team-brainstorm` to shape vague ideas before committing to implementation. Two human touchpoints: interview gate (requirements validation, auto-passes at ≥95% confidence) and plan approval. The plan approval gate has an auto-revision pre-pass: any non-PASS critic verdict (REVISE or PASS WITH CHANGES) triggers automatic revision (up to 3 rounds) before user presentation. Everything else is autonomous with mechanical gates.
 
 ## Entry Points
 

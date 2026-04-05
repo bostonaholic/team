@@ -100,22 +100,47 @@ confidence about what I actually want — not what I think I should want."
 ### Human Gate (plan approval)
 
 When `plan.critiqued` is recorded:
+
+**Auto-revision pre-pass** — before presenting to the user, check the verdict:
+1. Read the `verdict` field from the `plan.critiqued` event data. The verdict
+   field is the **sole driver** of the auto-revision decision (no separate
+   defensive rule — a conforming critic always produces REVISE when critical
+   findings exist).
+2. If verdict is **REVISE** or **PASS WITH CHANGES** (any non-PASS verdict):
+   a. Count all `plan.revision-requested` events in the event log.
+   b. If count < 3: **auto-revise** — construct a `feedback` string from the
+      critic agent's return value (the markdown prose the router receives before
+      writing the `plan.critiqued` event). Extract the `### CRITICAL`, `### MAJOR`, and
+      `### MINOR` sections to construct the feedback string. For REVISE, include
+      all three sections. For PASS WITH CHANGES, include MAJOR and MINOR
+      sections. If none of the expected sections are found (degenerate case),
+      include the full critique text as feedback. Append a
+      `plan.revision-requested` event with
+      `{planPath, feedback, revisionNumber: <count + 1>}`. The planner consumes
+      this, produces a new `plan.drafted`, the critic re-reviews, and the loop
+      continues. Do not present anything to the user.
+   c. If count >= 3: **safety valve** — fall through to the human gate below.
+      The budget is 3 total `plan.revision-requested` events in the log (both
+      auto-revisions and user rejections count).
+3. If verdict is **PASS**: proceed directly to the human gate presentation
+   below (no auto-revision). Only a clean PASS reaches the user without
+   auto-revision (except safety valve exhaustion).
+
+**Human gate presentation** — present the plan for user approval:
 1. Read the plan artifact and the critique from the event data
-2. Always present the **plan artifact in full** so the human can read what
-   they are approving. Then, from the critique, filter what to show based
-   on the critic's verdict. **Defensive rule:** if the `### CRITICAL`
-   section is non-empty, always show it regardless of verdict — escalate
-   the presentation to the REVISE branch.
+2. Always present the **plan artifact in full**. From the critique, filter
+   what to show based on the critic's verdict:
    - **PASS** — Show the verdict and the `### Verified` section only.
      Suppress MAJOR and MINOR finding sections entirely.
-   - **PASS WITH CHANGES** — Show the verdict, any MAJOR findings, and the
-     `### Verified` section. Suppress MINOR findings only.
-   - **REVISE** — Show all findings (CRITICAL, MAJOR, and MINOR) with the
-     warning: "The plan critic recommends revision. Approving a REVISE-rated
-     plan means shipping with known design concerns. Are you sure?"
+   - **REVISE or PASS WITH CHANGES (safety valve)** — Show all findings
+     (CRITICAL, MAJOR, and MINOR) with the warning: "Auto-revision exhausted
+     (3 attempts). The plan critic still found issues. Approving means
+     shipping with known design concerns. Are you sure?"
 3. Ask: "Do you approve this plan?"
 4. If approved → append `plan.approved` event (include critic verdict in event data)
-5. If rejected → append `plan.revision-requested` event with user feedback
+5. If rejected → append `plan.revision-requested` event with
+   `{planPath, feedback: <user input>, revisionNumber: <count + 1>}`
+   (note: this counts toward the 3-revision budget)
 
 ### Mechanical Gate (test confirmation)
 
@@ -178,7 +203,11 @@ When `verification.passed` is recorded:
 - File artifacts in `docs/plans/` are the durable communication protocol.
   Always write research/plan findings to disk.
 - The interview gate and plan approval gate are the two human interaction
-  points. The only other is quality escalation after 5 failed review rounds.
+  points. The plan approval gate has an auto-revision pre-pass that
+  auto-revises any non-PASS verdict (REVISE or PASS WITH CHANGES) up to 3
+  total rounds before user presentation. Only a clean PASS or safety valve
+  exhaustion reaches the user. The only other human interaction is quality
+  escalation after 5 failed review rounds.
 - On any unexpected failure: append an error note to the log, report to the
   user, and suggest `/team-resume`.
 - To add a new agent to the pipeline, add an entry to `registry.json`. The
