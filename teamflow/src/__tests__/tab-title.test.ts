@@ -2,7 +2,7 @@
  * Acceptance tests for Teamflow Tab Title Bug Fix.
  *
  * These tests verify that the dashboard displays human-readable titles
- * (from feature.requested data.description) instead of raw kebab-case slugs,
+ * (from feature.requested data.topic, kebab-to-sentence-case) instead of raw kebab-case slugs,
  * with appropriate fallbacks and truncation.
  *
  * - Structural tests (TT-1, TT-4 through TT-13) use readSource from ./helpers.js
@@ -106,13 +106,13 @@ describe("TT-1: title_field_exists_on_RunState", () => {
 });
 
 // ---------------------------------------------------------------------------
-// TT-2: applyEvent_extracts_title_from_description
-// Verifies: applyEvent with feature.requested containing data.description
-// sets state.title to the description string
-// Step: 1.2
+// TT-2: applyEvent_extracts_title_from_topic
+// Verifies: applyEvent with feature.requested converts data.topic from
+// kebab-case to sentence case and sets state.title
+// Step: 1.1, 1.2
 // ---------------------------------------------------------------------------
-describe("TT-2: applyEvent_extracts_title_from_description", () => {
-  it("state.title equals the description after feature.requested", () => {
+describe("TT-2: applyEvent_extracts_title_from_topic", () => {
+  it("state.title is sentence-cased topic after feature.requested", () => {
     const state = applySequence([
       {
         event: "feature.requested",
@@ -123,18 +123,18 @@ describe("TT-2: applyEvent_extracts_title_from_description", () => {
         },
       },
     ]);
-    expect(getTitle(state)).toBe("Add SSE reconnection with exponential backoff");
+    expect(getTitle(state)).toBe("Add sse reconnection");
   });
 });
 
 // ---------------------------------------------------------------------------
-// TT-3: applyEvent_title_null_when_no_description
+// TT-3: applyEvent_title_from_topic_when_no_description
 // Verifies: applyEvent with feature.requested missing data.description
-// leaves state.title as null
-// Step: 1.2
+// derives state.title from data.topic (kebab-to-sentence-case)
+// Step: 1.1, 1.3
 // ---------------------------------------------------------------------------
-describe("TT-3: applyEvent_title_null_when_no_description", () => {
-  it("state.title is null when feature.requested has no description", () => {
+describe("TT-3: applyEvent_title_from_topic_when_no_description", () => {
+  it("state.title is sentence-cased topic when description is absent", () => {
     const state = applySequence([
       {
         event: "feature.requested",
@@ -142,7 +142,7 @@ describe("TT-3: applyEvent_title_null_when_no_description", () => {
         data: { topic: "some-topic" },
       },
     ]);
-    expect(getTitle(state)).toBe(null);
+    expect(getTitle(state)).toBe("Some topic");
   });
 });
 
@@ -323,13 +323,13 @@ describe("TT-13: createFreshState_has_null_title", () => {
 });
 
 // ---------------------------------------------------------------------------
-// TT-14: applyEvent_title_null_when_empty_string_description
+// TT-14: applyEvent_title_from_topic_ignores_empty_description
 // Verifies: applyEvent with feature.requested containing data.description: ""
-// (empty string) leaves state.title as null
-// Step: 1.2
+// (empty string) derives state.title from data.topic (kebab-to-sentence-case)
+// Step: 1.1, 1.4
 // ---------------------------------------------------------------------------
-describe("TT-14: applyEvent_title_null_when_empty_string_description", () => {
-  it("state.title is null when feature.requested has empty string description", () => {
+describe("TT-14: applyEvent_title_from_topic_ignores_empty_description", () => {
+  it("state.title is sentence-cased topic when description is empty string", () => {
     const state = applySequence([
       {
         event: "feature.requested",
@@ -337,6 +337,6 @@ describe("TT-14: applyEvent_title_null_when_empty_string_description", () => {
         data: { topic: "some-topic", description: "" },
       },
     ]);
-    expect(getTitle(state)).toBe(null);
+    expect(getTitle(state)).toBe("Some topic");
   });
 });

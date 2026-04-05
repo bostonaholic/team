@@ -204,7 +204,9 @@ export function applyEvent(state: RunState, event: Record<string, unknown>): Run
   // Extract topic, title, and startedAt
   if (eventName === "feature.requested") {
     newState.topic = (data.topic as string) ?? null;
-    newState.title = (data.description as string) || null;
+    newState.title = newState.topic
+      ? newState.topic.replace(/-/g, " ").replace(/^./, (c) => c.toUpperCase())
+      : null;
     newState.startedAt = ts ?? null;
   }
 

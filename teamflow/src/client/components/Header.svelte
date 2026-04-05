@@ -52,6 +52,8 @@
     display: flex;
     align-items: center;
     gap: var(--space-md, 1rem);
+    min-width: 0;
+    overflow: hidden;
   }
 
   .header-right {
@@ -67,6 +69,8 @@
     display: flex;
     align-items: baseline;
     gap: 0;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .separator {
@@ -78,6 +82,10 @@
   .topic {
     font-weight: 500;
     opacity: 0.85;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
   }
 
   .duration {
