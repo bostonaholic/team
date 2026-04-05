@@ -1,12 +1,13 @@
 <script lang="ts">
   interface Props {
     topic: string | null;
+    title?: string | null;
     duration: number | null;
     theme: "dark" | "light" | "system";
     onToggleTheme: () => void;
   }
 
-  let { topic, duration, theme, onToggleTheme }: Props = $props();
+  let { topic, title, duration, theme, onToggleTheme }: Props = $props();
 
   function formatDuration(ms: number | null): string {
     if (ms === null) return "--";
@@ -22,7 +23,7 @@
 
 <header class="header">
   <div class="header-left">
-    <h1 class="title">Teamflow{#if topic}<span class="separator">/</span><span class="topic">{topic}</span>{/if}</h1>
+    <h1 class="title">Teamflow{#if title ?? topic}<span class="separator">/</span><span class="topic">{title ?? topic}</span>{/if}</h1>
   </div>
   <div class="header-right">
     <span class="duration">{formatDuration(duration)}</span>

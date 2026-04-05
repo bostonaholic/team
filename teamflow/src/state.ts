@@ -162,6 +162,7 @@ function createEmptyState(): RunState {
   return {
     phase: null,
     topic: null,
+    title: null,
     startedAt: null,
     agents,
     gates,
@@ -200,9 +201,10 @@ export function applyEvent(state: RunState, event: Record<string, unknown>): Run
     newState.phase = phase;
   }
 
-  // Extract topic and startedAt
+  // Extract topic, title, and startedAt
   if (eventName === "feature.requested") {
     newState.topic = (data.topic as string) ?? null;
+    newState.title = (data.description as string) || null;
     newState.startedAt = ts ?? null;
   }
 

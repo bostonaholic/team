@@ -50,6 +50,7 @@ function createFreshState(): RunState {
   return {
     phase: null,
     topic: null,
+    title: null,
     startedAt: null,
     agents: {},
     gates: {},

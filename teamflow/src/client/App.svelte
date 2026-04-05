@@ -10,6 +10,7 @@
   const emptyRunState: RunState = {
     phase: null,
     topic: null,
+    title: null,
     startedAt: null,
     agents: {},
     gates: {},
@@ -180,6 +181,7 @@
 <div class="dashboard" class:has-tabs={showTabs}>
   <Header
     topic={activeState.topic}
+    title={activeState.title}
     duration={activeState.startedAt && activeState.phase !== "SHIPPED" ? now - new Date(activeState.startedAt).getTime() : activeState.duration}
     {theme}
     onToggleTheme={toggleTheme}

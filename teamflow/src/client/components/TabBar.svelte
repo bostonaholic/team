@@ -9,10 +9,16 @@
   }
 
   let { sessions, activeSessionId, onSelect, onDismiss }: Props = $props();
+
+  /** Truncate a label to 40 characters, appending an ellipsis if needed */
+  function truncate(text: string): string {
+    return text.length > 40 ? text.slice(0, 40) + "…" : text;
+  }
 </script>
 
 <div class="tab-bar">
   {#each [...sessions.entries()] as [sessionId, state]}
+    {@const label = state.title ?? state.topic ?? sessionId}
     <div
       class="tab"
       class:active={sessionId === activeSessionId}
@@ -23,7 +29,7 @@
       onclick={() => onSelect(sessionId)}
       onkeydown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(sessionId); } }}
     >
-      <span class="tab-label">{state.topic ?? sessionId}</span>
+      <span class="tab-label">{truncate(label)}</span>
       <span class="tab-phase">{state.phase ?? "..."}</span>
       {#if state.phase === "SHIPPED"}
         <button

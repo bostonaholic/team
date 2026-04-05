@@ -24,7 +24,7 @@ const serverPath = join(__dirname, "..", "src", "server.ts");
 // --- Event timeline (delay in ms from previous event) ---
 
 const timeline = [
-  { delay: 0,    event: "feature.requested",       producer: "orchestrator",     data: { topic: "Add SSE reconnection with exponential backoff" } },
+  { delay: 0,    event: "feature.requested",       producer: "orchestrator",     data: { topic: "add-sse-reconnection-exponential-backoff", description: "Add SSE reconnection with exponential backoff" } },
   { delay: 3000, event: "files.found",              producer: "file-finder",      data: { files: ["src/sse.ts", "src/client/App.svelte"], count: 2 } },
   { delay: 5000, event: "research.completed",       producer: "researcher",       data: { openQuestions: 1 }, artifact: "docs/plans/2026-03-29-sse-reconnect-research.md" },
   { delay: 4000, event: "requirements.assessed",    producer: "product-owner",    data: { confidence: 97, validatedRequirements: ["Add SSE reconnection with jittered exponential backoff, 30s ceiling"], openQuestions: [] } },
@@ -53,7 +53,7 @@ const timeline = [
 const SECOND_SESSION_DELAY = 15000;
 
 const timeline2 = [
-  { delay: 0,    event: "feature.requested",       producer: "orchestrator",     data: { topic: "Fix off-by-one in billing calculation" } },
+  { delay: 0,    event: "feature.requested",       producer: "orchestrator",     data: { topic: "fix-off-by-one-billing-calculation", description: "Fix off-by-one in billing calculation" } },
   { delay: 3000, event: "files.found",              producer: "file-finder",      data: { files: ["src/billing.ts", "src/__tests__/billing.test.ts"], count: 2 } },
   { delay: 4000, event: "research.completed",       producer: "researcher",       data: { openQuestions: 0 }, artifact: "docs/plans/2026-03-29-billing-fix-research.md" },
   { delay: 5000, event: "plan.drafted",             producer: "planner",          data: { steps: 2, testCases: 4 }, artifact: "docs/plans/2026-03-29-billing-fix-plan.md" },

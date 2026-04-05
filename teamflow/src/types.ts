@@ -29,6 +29,7 @@ export interface TimelineEntry {
 export interface RunState {
   phase: string | null;
   topic: string | null;
+  title: string | null;
   startedAt: string | null;
   agents: Record<string, AgentStatus>;
   gates: Record<string, GateStatus>;
