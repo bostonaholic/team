@@ -17,7 +17,7 @@ Feature description: `$ARGUMENTS` (optional if event log already has a topic).
 2. If not found: run `/team-research $ARGUMENTS` first.
 3. Follow the event loop from `skills/team/registry.json`.
 4. The loop will dispatch `product-owner` (if needed), `planner`, `plan-critic`.
-5. At the human gate (`plan.critiqued`): present plan + critique for approval.
+5. At the human gate (`plan.critiqued`): present plan + verdict-filtered critique for approval.
 6. **Stop after `plan.approved` or `plan.revision-requested` is recorded.**
 
 ## Completion

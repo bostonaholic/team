@@ -287,7 +287,7 @@ Plan-critic has reviewed the plan adversarially.
 
 ```json
 {
-  "verdict": "string — 'approve' | 'revise'",
+  "verdict": "string — 'PASS' | 'PASS WITH CHANGES' | 'REVISE'",
   "issues": [
     {
       "severity": "string — 'critical' | 'major' | 'minor' | 'nitpick'",
@@ -317,6 +317,7 @@ Router emits after the user approves the plan.
 ```json
 {
   "planPath": "string — path to approved plan",
+  "criticVerdict": "string — critic verdict at time of approval ('PASS' | 'PASS WITH CHANGES' | 'REVISE')",
   "userFeedback": "string | null — any notes from the user"
 }
 ```

@@ -101,13 +101,21 @@ confidence about what I actually want — not what I think I should want."
 
 When `plan.critiqued` is recorded:
 1. Read the plan artifact and the critique from the event data
-2. Present both to the user with the critic's verdict prominently displayed
-3. If the critic verdict is **REVISE**, warn the user explicitly:
-   "The plan critic recommends revision. Approving a REVISE-rated plan means
-   shipping with known design concerns. Are you sure?"
-4. Ask: "Do you approve this plan?"
-5. If approved → append `plan.approved` event (include critic verdict in event data)
-6. If rejected → append `plan.revision-requested` event with user feedback
+2. Always present the **plan artifact in full** so the human can read what
+   they are approving. Then, from the critique, filter what to show based
+   on the critic's verdict. **Defensive rule:** if the `### CRITICAL`
+   section is non-empty, always show it regardless of verdict — escalate
+   the presentation to the REVISE branch.
+   - **PASS** — Show the verdict and the `### Verified` section only.
+     Suppress MAJOR and MINOR finding sections entirely.
+   - **PASS WITH CHANGES** — Show the verdict, any MAJOR findings, and the
+     `### Verified` section. Suppress MINOR findings only.
+   - **REVISE** — Show all findings (CRITICAL, MAJOR, and MINOR) with the
+     warning: "The plan critic recommends revision. Approving a REVISE-rated
+     plan means shipping with known design concerns. Are you sure?"
+3. Ask: "Do you approve this plan?"
+4. If approved → append `plan.approved` event (include critic verdict in event data)
+5. If rejected → append `plan.revision-requested` event with user feedback
 
 ### Mechanical Gate (test confirmation)
 
