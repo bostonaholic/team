@@ -71,3 +71,7 @@ with a **HARD** gate type. Key points:
 - Be specific. "This could be better" is not a useful comment. Say exactly
   what is wrong and why it matters.
 - Be fair. Acknowledge what is done well, not just what is wrong.
+- **Apply engineering standards.** Load `skills/engineering-standards/SKILL.md` and use
+  the "When Reviewing" section as additional review criteria. Evaluate each
+  quality checklist item for every changed file and cite the specific checklist
+  item name in findings.

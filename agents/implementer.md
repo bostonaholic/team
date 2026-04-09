@@ -154,6 +154,12 @@ for the full methodology. Key checkpoints:
 - **ISP:** Expose only what callers need. Split fat interfaces.
 - **DIP:** Inject dependencies. Do not instantiate infrastructure inside domain logic.
 
+Apply engineering standards when writing new code. Load `skills/engineering-standards/SKILL.md`
+for implementation standards and the quality checklist. Follow the "When
+Implementing" section: start with the design-first workflow, run the quality
+checklist before marking each step complete, and apply the core philosophy as
+a lens for design decisions.
+
 ## Working With Existing Code
 
 When the plan requires modifying existing code, apply the refactoring

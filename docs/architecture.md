@@ -267,8 +267,12 @@ prerequisite phases first.
 | `rpi-workflow`           | Phase discipline, artifact conventions, gates  | Loaded by router/orchestrator skills                         |
 | `test-first-development` | Acceptance tests as scope fence                | Loaded by test-architect, orchestrator                       |
 | `adversarial-review`     | Generator-evaluator separation, review method  | Loaded by code-reviewer, security-reviewer, ux-reviewer, technical-writer |
+| `engineering-standards`   | Engineering standards, implementation methodology, quality checklist | Loaded by planner, implementer, code-reviewer |
+| `refactoring-to-patterns`| Code smells and safe refactoring procedures     | Loaded by implementer                                        |
+| `solid-principles`       | SOLID design principles (SRP, OCP, LSP, ISP, DIP) | Loaded by implementer, code-reviewer                      |
 | `systematic-debugging`   | Root cause investigation                       | Loaded by agents when debugging                              |
 | `documenting-decisions`  | ADR creation and management                    | Loaded by planner, orchestrator                              |
+| `writing-prose`          | Clear documentation and readable explanation methodology | Loaded by technical-writer                                   |
 
 ### Design Guidelines
 

@@ -111,3 +111,8 @@ do not add TDD sections for their own sake.
    Never plan a phase that breaks something another phase must fix later.
 6. **Test coverage is non-negotiable.** Every behavioral change must have a
    corresponding acceptance test in the Tests section.
+7. **Apply engineering standards methodology.** Load `skills/engineering-standards/SKILL.md` for
+   the design-first workflow and quality checklist. Use the design-first
+   workflow to structure plan phases (understand, design, implement, review,
+   explain) and reference the quality checklist as verification criteria for
+   implementation steps.
