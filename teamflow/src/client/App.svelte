@@ -88,11 +88,28 @@
     localStorage.setItem("teamflow:dismissed-sessions", JSON.stringify(ids));
   }
 
+  function getStoredActiveSession(): string | null {
+    try { return localStorage.getItem("teamflow:active-session"); }
+    catch { return null; }
+  }
+
+  function saveActiveSession(id: string | null) {
+    try {
+      if (id === null) localStorage.removeItem("teamflow:active-session");
+      else localStorage.setItem("teamflow:active-session", id); }
+    catch { /* ignore */ }
+  }
+
+  let activeSetByUser = false;
+
   function handleSelect(id: string) {
     activeSessionId = id;
+    saveActiveSession(id);
+    activeSetByUser = true;
   }
 
   function handleDismiss(id: string) {
+    if (getStoredActiveSession() === id) { saveActiveSession(null); activeSetByUser = false; }
     sessions.delete(id);
     updateSessions();
     const dismissed = getDismissedSessions();
@@ -103,6 +120,8 @@
     if (activeSessionId === id) {
       const remaining = [...sessions.keys()];
       activeSessionId = remaining.length > 0 ? remaining[0] : null;
+      // Programmatic fallback — not a user choice, so allow storage-based restore later
+      activeSetByUser = false;
     }
   }
 
@@ -125,10 +144,18 @@
       sessions.set(sessionId, state);
       updateSessions();
 
-      // Auto-select first session if none active, or recover if active session
-      // no longer exists (e.g. after reconnect cleared sessions map)
-      if (activeSessionId === null || !sessions.has(activeSessionId)) {
-        activeSessionId = sessionId;
+      // Auto-select logic: user choice > stored session > first arriving session
+      if (activeSetByUser && activeSessionId && sessions.has(activeSessionId)) {
+        // User made an explicit choice — never override it
+      } else {
+        const storedId = getStoredActiveSession();
+        if (storedId && sessions.has(storedId)) {
+          activeSessionId = storedId;
+          // No saveActiveSession — storedId was just read from localStorage
+          activeSetByUser = true;
+        } else {
+          activeSessionId = sessionId;
+        }
       }
     });
 
@@ -142,9 +169,18 @@
       sessions.set(sessionId, state);
       updateSessions();
 
-      // Auto-select if no active session
-      if (activeSessionId === null) {
-        activeSessionId = sessionId;
+      // Auto-select logic: user choice > stored session > first arriving session
+      if (activeSetByUser && activeSessionId !== null) {
+        // User made an explicit choice — never override it
+      } else {
+        const storedId = getStoredActiveSession();
+        if (storedId && sessions.has(storedId)) {
+          activeSessionId = storedId;
+          // No saveActiveSession — storedId was just read from localStorage, no need to write it back
+          activeSetByUser = true;
+        } else {
+          activeSessionId = sessionId;
+        }
       }
     });
 
@@ -155,9 +191,16 @@
       sessions.delete(sessionId);
       updateSessions();
 
+      if (getStoredActiveSession() === sessionId) {
+        saveActiveSession(null);
+        activeSetByUser = false;
+      }
+
       if (activeSessionId === sessionId) {
         const remaining = [...sessions.keys()];
         activeSessionId = remaining.length > 0 ? remaining[0] : null;
+        // Programmatic fallback — not a user choice, so allow storage-based restore later
+        activeSetByUser = false;
       }
     });
 
