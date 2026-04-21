@@ -1,22 +1,22 @@
 ---
-name: team-ship
-description: Commit, create PR, and ship the implementation after verification passes. Trigger on "ship it", "create the PR", or "/team-ship".
+name: team-pr
+description: Open the pull request after verification passes. Updates the changelog, optionally closes the tracking beads issue, and emits the terminal feature.shipped event. Trigger on "open the PR", "ship it", or "/team-pr".
 ---
 
-# TEAM Ship — Standalone Phase
+# TEAM PR — Standalone Phase
 
-Run the SHIP phase. Requires `verification.passed` in the event log.
+Run the PR phase. Requires `verification.passed` in the event log.
 
 ## Execution
 
 1. Read `~/.team/<topic>/events.jsonl`. Scan for `verification.passed`.
-2. If not found: report "Verification not passed. Run /team-verify first." and stop.
+2. If not found: report "Verification not passed. Run /team-implement first." and stop.
 3. **Extract beads ID** from the first event in the log (`feature.requested` or
    `bug.reported`). Check `data.beadsId`. If present, this pipeline is tracking
    a beads issue.
 4. **Update CHANGELOG.md** before committing (see Changelog Update below).
 5. Present shipping options:
-   - **Commit + PR** — branch, commit, open pull request
+   - **Open PR** — branch, commit, open pull request
    - **Commit locally** — commit to current branch
    - **Keep as-is** — leave changes uncommitted
 6. Execute user's choice.
@@ -25,6 +25,7 @@ Run the SHIP phase. Requires `verification.passed` in the event log.
    as done. Skip this if the user chose "keep as-is".
 8. Append `feature.shipped` event to the log.
 9. Delete `~/.team/<topic>/` directory.
+10. If a worktree was created in WORKTREE phase, clean it up.
 
 ## Changelog Update
 
@@ -55,8 +56,13 @@ When creating the commit, apply the git-commit methodology from
   implementation steps
 - Reference the issue or plan in the footer if one exists
 
-The ship commit represents the complete, user-visible feature. Write the
+The PR commit represents the complete, user-visible feature. Write the
 subject to describe what the feature does for users, not how it was built.
+
+Note: implementer already committed each slice atomically during the
+Implement phase. The PR may contain multiple commits (one per slice). The
+ship commit is only used if there are uncommitted final changes (e.g.,
+changelog updates).
 
 ## Completion
 

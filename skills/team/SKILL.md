@@ -1,6 +1,6 @@
 ---
 name: team
-description: Full 6-phase autonomous feature implementation pipeline. Trigger on "hey team", "build a feature", "implement end to end", "autonomous implementation", or "/team".
+description: Full 8-phase autonomous feature implementation pipeline (QRSPI). Trigger on "hey team", "build a feature", "implement end to end", "autonomous implementation", or "/team".
 ---
 
 # TEAM — Thin Event Router
@@ -27,17 +27,16 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
    If the first token is not a beads ID, set `beadsId` to `null`.
 2. Derive a kebab-case `topic` from the description.
 3. Set `today` to the current date (`YYYY-MM-DD`).
-4. **Create an isolated worktree** for this pipeline run. Use Claude Code's
-   native worktree support: `claude --worktree <topic>` or dispatch yourself
-   into a worktree context. All subsequent work happens inside the worktree.
-   See `skills/worktree-isolation/SKILL.md` for the full methodology.
-5. Create `~/.team/<topic>/` directory if it does not exist (`mkdir -p ~/.team/<topic>`).
-6. Create `docs/plans/` directory if it does not exist.
-7. Append the first event to `~/.team/<topic>/events.jsonl`:
+4. Create `~/.team/<topic>/` directory if it does not exist (`mkdir -p ~/.team/<topic>`).
+5. Create `docs/plans/` directory if it does not exist.
+6. Append the first event to `~/.team/<topic>/events.jsonl`:
 
 ```json
 {"seq":1,"event":"feature.requested","producer":"router","ts":"<ISO-8601>","data":{"topic":"<topic>","description":"<description>","today":"<today>","beadsId":"<beadsId or null>"},"artifact":null,"causedBy":null,"gate":null}
 ```
+
+The router holds onto the description. Downstream of `feature.requested`,
+the description must NEVER appear in any event payload.
 
 ## The Event Loop
 
@@ -53,6 +52,7 @@ loop:
   3. Check gates: does registry.gates define a gate for the latest event?
      - human gate → present to user, wait for approval/rejection
      - mechanical gate → evaluate the condition, emit pass/fail event
+     - router-emit gate → router performs the named action and emits passEvent
      - aggregate gate → check if ALL required events exist in the log,
        then evaluate each hard gate and emit typed failure events per failEvents map
   4. Find agents in registry.agents whose "consumes" matches an unconsumed event
@@ -76,71 +76,59 @@ loop:
   9. Goto loop
 ```
 
+## Blind Research Invariant
+
+The questioner is the only agent that ever sees `data.description` from the
+`feature.requested` event. When dispatching the questioner, pass the full
+description. When the questioner returns:
+
+1. Write `task.md`, `questions.md`, `brief.md` to `docs/plans/` per the
+   artifact convention.
+2. Append `task.captured` event with payload
+   `{taskPath, questionsPath, briefPath, topic}`. **No `description` field.
+   No `taskMd` field.** Any leakage of the original description into this
+   event or downstream events breaks the blind-research invariant.
+
+When dispatching `file-finder` and `researcher` (which consume `task.captured`),
+pass them only `questionsPath` and `briefPath`. They are forbidden from
+reading `task.md` and the router must not provide the original description
+in their context.
+
 ## Gate Handling
 
-### Interview Gate (requirements validation)
+### Human Gate (design approval)
 
-When `requirements.assessed` is recorded:
-1. Read the product-owner's output: confidence level, validated requirements,
-   and any questions for the user
-2. If confidence ≥ 95%: **auto-pass** — append `requirements.confirmed` event
-   without asking the user anything. Include the validated requirements and
-   any decisions in the event data.
-3. If confidence < 95%: **interview the user** —
-   a. Present the product-owner's understanding of the user's intent
-   b. Present the clarifying questions
-   c. Collect the user's answers
-   d. Append `requirements.revision-requested` event with the answers
-   e. This re-dispatches the product-owner with the new context
-   f. Loop until confidence ≥ 95% (typically 0-1 rounds)
+When `design.drafted` is recorded:
+1. Read the design artifact (`design.md`) from disk
+2. Present the design **in full** to the user
+3. Ask: "Do you approve this design?"
+4. If approved → append `design.approved` event
+5. If rejected → append `design.revision-requested` event with
+   `{designPath, feedback: <user input>, revisionNumber: <count + 1>}`
+   (where count is the number of `design.revision-requested` events in the log)
+6. The design-author consumes `design.revision-requested` and produces a
+   new `design.drafted` for re-review
 
-The interview gate is the mechanism for: "Interview me until you have 95%
-confidence about what I actually want — not what I think I should want."
+### Human Gate (structure approval)
 
-### Human Gate (plan approval)
+When `structure.drafted` is recorded:
+1. Read the structure artifact (`structure.md`) from disk
+2. Present the structure **in full** to the user
+3. Ask: "Do you approve this structure?"
+4. If approved → append `structure.approved` event
+5. If rejected → append `structure.revision-requested` event with
+   `{structurePath, feedback: <user input>, revisionNumber: <count + 1>}`
+6. The structure-planner consumes `structure.revision-requested` and produces
+   a new `structure.drafted`
 
-When `plan.critiqued` is recorded:
+### Router-Emit Gate (worktree preparation)
 
-**Auto-revision pre-pass** — before presenting to the user, check the verdict:
-1. Read the `verdict` field from the `plan.critiqued` event data. The verdict
-   field is the **sole driver** of the auto-revision decision (no separate
-   defensive rule — a conforming critic always produces REVISE when critical
-   findings exist).
-2. If verdict is **REVISE** or **PASS WITH CHANGES** (any non-PASS verdict):
-   a. Count all `plan.revision-requested` events in the event log.
-   b. If count < 3: **auto-revise** — construct a `feedback` string from the
-      critic agent's return value (the markdown prose the router receives before
-      writing the `plan.critiqued` event). Extract the `### CRITICAL`, `### MAJOR`, and
-      `### MINOR` sections to construct the feedback string. For REVISE, include
-      all three sections. For PASS WITH CHANGES, include MAJOR and MINOR
-      sections. If none of the expected sections are found (degenerate case),
-      include the full critique text as feedback. Append a
-      `plan.revision-requested` event with
-      `{planPath, feedback, revisionNumber: <count + 1>}`. The planner consumes
-      this, produces a new `plan.drafted`, the critic re-reviews, and the loop
-      continues. Do not present anything to the user.
-   c. If count >= 3: **safety valve** — fall through to the human gate below.
-      The budget is 3 total `plan.revision-requested` events in the log (both
-      auto-revisions and user rejections count).
-3. If verdict is **PASS**: proceed directly to the human gate presentation
-   below (no auto-revision). Only a clean PASS reaches the user without
-   auto-revision (except safety valve exhaustion).
-
-**Human gate presentation** — present the plan for user approval:
-1. Read the plan artifact and the critique from the event data
-2. Always present the **plan artifact in full**. From the critique, filter
-   what to show based on the critic's verdict:
-   - **PASS** — Show the verdict and the `### Verified` section only.
-     Suppress MAJOR and MINOR finding sections entirely.
-   - **REVISE or PASS WITH CHANGES (safety valve)** — Show all findings
-     (CRITICAL, MAJOR, and MINOR) with the warning: "Auto-revision exhausted
-     (3 attempts). The plan critic still found issues. Approving means
-     shipping with known design concerns. Are you sure?"
-3. Ask: "Do you approve this plan?"
-4. If approved → append `plan.approved` event (include critic verdict in event data)
-5. If rejected → append `plan.revision-requested` event with
-   `{planPath, feedback: <user input>, revisionNumber: <count + 1>}`
-   (note: this counts toward the 3-revision budget)
+When `plan.drafted` is recorded:
+1. Use Claude Code's native worktree support to create an isolated worktree
+   for this topic (`claude --worktree <topic>` or equivalent).
+2. See `skills/worktree-isolation/SKILL.md` for the full methodology.
+3. Append `worktree.prepared` event with
+   `{worktreePath, branch, isolation: "worktree" | "in-place"}`.
 
 ### Mechanical Gate (test confirmation)
 
@@ -181,18 +169,20 @@ When all 5 review events exist in the log:
 Each round is a complete re-review. Reviewers get fresh context every round.
 The implementer receives typed events so it knows exactly what class of issue to fix.
 
-### Ship
+### Router-Emit Gate (PR / ship)
 
 When `verification.passed` is recorded:
-1. Present shipping options: commit + PR, commit locally, keep as-is
-2. Execute user's choice
-3. If `beadsId` is present in the `feature.requested` event data and the user
+1. Update `CHANGELOG.md` per `skills/changelog/SKILL.md` (filter for user-facing
+   commits since last release).
+2. Present shipping options: commit + PR, commit locally, keep as-is
+3. Execute user's choice
+4. If `beadsId` is present in the `feature.requested` event data and the user
    chose to commit (either option), use `/beads:close <beadsId>` to mark the
    issue as done. Skip if the user chose "keep as-is".
-4. Append `feature.shipped` event
-5. Delete `~/.team/<topic>/` directory
-6. Clean up the worktree (cherry-pick/rebase commits onto the target branch,
-   then let Claude Code remove the worktree)
+5. Append `feature.shipped` event
+6. Delete `~/.team/<topic>/` directory
+7. If a worktree was created, clean it up (cherry-pick/rebase commits onto
+   the target branch, then let Claude Code remove the worktree)
 
 ## Rules
 
@@ -201,13 +191,14 @@ When `verification.passed` is recorded:
   to you; you append the event.
 - `seq` values are **gapless and monotonically increasing**.
 - File artifacts in `docs/plans/` are the durable communication protocol.
-  Always write research/plan findings to disk.
-- The interview gate and plan approval gate are the two human interaction
-  points. The plan approval gate has an auto-revision pre-pass that
-  auto-revises any non-PASS verdict (REVISE or PASS WITH CHANGES) up to 3
-  total rounds before user presentation. Only a clean PASS or safety valve
-  exhaustion reaches the user. The only other human interaction is quality
-  escalation after 5 failed review rounds.
+  Always write phase findings to disk.
+- The two human gates are **design approval** and **structure approval**.
+  These are where the user reviews and steers. Never present the plan to the
+  user for approval — the plan is a tactical agent artifact, the structure
+  is the human contract.
+- The blind-research invariant is non-negotiable. If a researcher's context
+  contains the user's original description, the pipeline has a defect. Stop
+  and report.
 - On any unexpected failure: append an error note to the log, report to the
   user, and suggest `/team-resume`.
 - To add a new agent to the pipeline, add an entry to `registry.json`. The

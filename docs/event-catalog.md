@@ -1,7 +1,9 @@
 # Event Catalog
 
 > Every state change in the TEAM pipeline is an event. This catalog is the
-> definitive reference for all events, their schemas, and their relationships.
+> definitive reference for all QRSPI events, their schemas, and their
+> relationships. The pipeline runs through eight phases:
+> Question → Research → Design → Structure → Plan → Worktree → Implement → PR.
 
 ## Event Envelope
 
@@ -12,7 +14,7 @@ Every event in `.team/<topic>/events.jsonl` follows this envelope:
   "seq": 1,
   "event": "feature.requested",
   "producer": "router",
-  "ts": "2026-03-28T14:30:00Z",
+  "ts": "2026-04-20T14:30:00Z",
   "data": {},
   "artifact": null,
   "causedBy": null,
@@ -31,75 +33,84 @@ Every event in `.team/<topic>/events.jsonl` follows this envelope:
 | `causedBy` | integer\|null | `seq` of the event that triggered this one         |
 | `gate`     | object\|null  | Gate metadata when event represents a gate result  |
 
+## Blind-Research Invariant
+
+The `description` field from `feature.requested` MUST NEVER appear in any
+downstream event payload. The `questioner` is the only agent that ever reads
+it. From `task.captured` onward, every payload uses path references
+(`taskPath`, `questionsPath`, `briefPath`) instead of the description itself,
+and `researcher`/`file-finder` are forbidden from reading `task.md`.
+
 ## Event Flow
 
 ```
 feature.requested
-    ├──> file-finder ──> files.found ─────────────┐
-    └──> researcher ──────────────────────────────>├──> research.completed
-                                                   │
-                                            product-owner
-                                                   │
-                                          requirements.assessed
-                                                   │
-                                           [INTERVIEW GATE]
-                                          /                 \
-                                   confidence              confidence
-                                     ≥ 95%                   < 95%
+    │
+    v
+ questioner ─> task.captured
+                │
+                ├──> file-finder ─> files.found ─┐
+                └──> researcher ─────────────────┴─> research.completed
+                                                        │
+                                                  design-author
+                                                        │
+                                                  design.drafted
+                                                        │
+                                                [HUMAN GATE]
+                                                /            \
+                                          approved        rejected
+                                              │              │
+                                     design.approved  design.revision-requested
+                                              │              │
+                                              v              └─> design-author
+                                       structure-planner
+                                              │
+                                       structure.drafted
+                                              │
+                                       [HUMAN GATE]
+                                       /            \
+                                  approved        rejected
+                                     │               │
+                          structure.approved  structure.revision-requested
+                                     │               │
+                                     v               └─> structure-planner
+                                  planner ─> plan.drafted
+                                                  │
+                                          [ROUTER-EMIT]
+                                                  │
+                                          worktree.prepared
+                                                  │
+                                                  v
+                                            test-architect ─> tests.written
+                                                                  │
+                                                          [MECHANICAL GATE]
+                                                                  │
+                                                       tests.confirmed-failing
+                                                                  │
+                                                            implementer
+                                                            │       │
+                                                  slice.completed  ...
+                                                            │
+                                                  implementation.completed
+                                                            │
+                          ┌──────┬───────┬──────────────────┼──────────────────┬─────────┐
+                          v      v       v                  v                  v         v
+                    code-rev. security tech-writer   ux-rev.            verifier
+                          │      │       │                  │                  │
+                          └──────┴───────┴──────────────────┴──────────────────┘
+                                                     │
+                                            [AGGREGATE GATE]
+                                            /              \
+                                    all pass            hard gate fails
                                        │                       │
-                                requirements.       requirements.revision
-                                  confirmed            -requested
-                                       │                       │
-                                       v                       └──> product-owner
-                                    planner ──> plan.drafted
-                                                          │
-                                                    plan-critic
-                                                          │
-                                                    plan.critiqued
-                                                          │
-                                                   [HUMAN GATE]
-                                                  /             \
-                                          approved             rejected
-                                             │                    │
-                                       plan.approved    plan.revision-requested
-                                             │                    │
-                                             v                    └──> planner
-                                       test-architect
-                                             │
-                                       tests.written
-                                             │
-                                      [MECHANICAL GATE]
-                                             │
-                                   tests.confirmed-failing
-                                             │
-                                        implementer
-                                        │         │
-                                 step.completed  ...
-                                        │
-                                implementation.completed
-                                        │
-                  ┌─────────┬───────────┼───────────┬─────────────┐
-                  v         v           v           v             v
-            code-reviewer  security  technical   ux-reviewer  verifier
-                  │       -reviewer    -writer       │            │
-                  v         v           v            v            v
-            review     security-    docs-review  ux-review  verification
-           .completed  review       .completed   .completed  .completed
-                  │    .completed       │            │            │
-                  └─────────┴───────────┴────────────┴────────────┘
-                                        │
-                                 reviews.aggregated
-                                        │
-                                [AGGREGATE GATE]
-                               /                \
-                       all pass              hard gate fails
-                          │                       │
-                   verification.passed     hard-gate.*-failed
-                          │               (typed per failure)
-                   feature.shipped          └──> implementer (retry)
+                              verification.passed     hard-gate.*-failed
+                                       │              (typed per failure)
+                                  [ROUTER-EMIT]            │
+                                       │                  └─> implementer (retry)
+                                feature.shipped
 ```
 
-## Events
+## Phase 1: Question
 
 ### feature.requested
 
@@ -108,7 +119,7 @@ The entry point. Emitted when the user invokes `/team`.
 | Field     | Value                |
 |-----------|----------------------|
 | Producer  | `router`             |
-| Consumers | `file-finder`, `researcher` |
+| Consumers | `questioner`         |
 | Gate      | none                 |
 | Artifact  | none                 |
 
@@ -116,17 +127,46 @@ The entry point. Emitted when the user invokes `/team`.
 
 ```json
 {
-  "description": "string — the user's feature description",
+  "description": "string — the user's feature description (read ONLY by questioner)",
   "topic": "string — kebab-case derived topic name",
-  "today": "string — YYYY-MM-DD"
+  "today": "string — YYYY-MM-DD",
+  "beadsId": "string | null — beads issue id if tracking one"
 }
 ```
 
 ---
 
+### task.captured
+
+Questioner has decomposed the user's intent into three artifacts.
+
+| Field     | Value                |
+|-----------|----------------------|
+| Producer  | `questioner`         |
+| Consumers | `file-finder`, `researcher` |
+| Gate      | none                 |
+| Artifact  | three files in `docs/plans/` (referenced via path fields) |
+
+**Payload:**
+
+```json
+{
+  "taskPath": "string — docs/plans/<today>-<topic>-task.md (NOT read downstream)",
+  "questionsPath": "string — docs/plans/<today>-<topic>-questions.md",
+  "briefPath": "string — docs/plans/<today>-<topic>-brief.md",
+  "topic": "string"
+}
+```
+
+The `description` MUST NOT appear in this payload.
+
+---
+
+## Phase 2: Research (blind)
+
 ### files.found
 
-File-finder has located all files relevant to the feature.
+File-finder has located all files relevant to the brief.
 
 | Field     | Value                |
 |-----------|----------------------|
@@ -139,8 +179,8 @@ File-finder has located all files relevant to the feature.
 
 ```json
 {
-  "files": ["string — file paths relevant to the feature"],
-  "summary": "string — brief description of what was found"
+  "files": ["string — file paths relevant to the brief"],
+  "summary": "string — brief description of what was found (no inferred intent)"
 }
 ```
 
@@ -153,7 +193,7 @@ Router emits after merging `files.found` with the researcher's output.
 | Field     | Value                |
 |-----------|----------------------|
 | Producer  | `router`             |
-| Consumers | `product-owner`      |
+| Consumers | `design-author`      |
 | Gate      | none                 |
 | Artifact  | `docs/plans/YYYY-MM-DD-<topic>-research.md` |
 
@@ -170,192 +210,195 @@ Router emits after merging `files.found` with the researcher's output.
 
 ---
 
-### requirements.assessed
+## Phase 3: Design
 
-Product-owner has assessed the user's requirements and rated confidence.
+### design.drafted
+
+Design author has produced the alignment document. Open questions were
+resolved interactively with the user before this event was emitted.
 
 | Field     | Value                |
 |-----------|----------------------|
-| Producer  | `product-owner`      |
-| Consumers | `router` (interview gate) |
-| Gate      | triggers `interview` gate |
-| Artifact  | `docs/plans/YYYY-MM-DD-<topic>-prd.md` (if PRD produced) |
+| Producer  | `design-author`      |
+| Consumers | `router` (human gate)|
+| Gate      | triggers `human` gate (`design-gate`) |
+| Artifact  | `docs/plans/YYYY-MM-DD-<topic>-design.md` |
 
 **Payload:**
 
 ```json
 {
-  "confidence": "integer — 0-100, percentage confidence in understanding",
-  "understanding": "string — restated user intent in product-owner's words",
-  "validatedRequirements": ["string — requirements stated clearly and actionably"],
-  "decisions": [
-    {
-      "question": "string — an ambiguity resolved autonomously",
-      "decision": "string — the resolution",
-      "rationale": "string — why, citing codebase precedent"
-    }
-  ],
-  "openQuestions": ["string — questions for the user, empty when confidence ≥ 95%"],
-  "prdPath": "string | null — path to PRD artifact if produced"
+  "designPath": "string",
+  "topic": "string",
+  "openQuestionsResolved": "integer — number of questions answered with the user before drafting"
 }
 ```
 
 ---
 
-### requirements.confirmed
+### design.approved
 
-Router emits when the interview gate passes (confidence ≥ 95%).
+Router emits after the user approves the design.
+
+| Field     | Value                |
+|-----------|----------------------|
+| Producer  | `router`             |
+| Consumers | `structure-planner`  |
+| Gate      | human gate pass      |
+| Artifact  | none                 |
+
+**Payload:** `{ "designPath": "string" }`
+
+---
+
+### design.revision-requested
+
+Router emits after the user rejects the design.
+
+| Field     | Value                |
+|-----------|----------------------|
+| Producer  | `router`             |
+| Consumers | `design-author`      |
+| Gate      | human gate fail      |
+| Artifact  | none                 |
+
+**Payload:**
+
+```json
+{
+  "designPath": "string",
+  "feedback": "string — user's revision instructions",
+  "revisionNumber": "integer"
+}
+```
+
+---
+
+## Phase 4: Structure
+
+### structure.drafted
+
+Structure planner has broken the approved design into vertical slices.
+
+| Field     | Value                |
+|-----------|----------------------|
+| Producer  | `structure-planner`  |
+| Consumers | `router` (human gate)|
+| Gate      | triggers `human` gate (`structure-gate`) |
+| Artifact  | `docs/plans/YYYY-MM-DD-<topic>-structure.md` |
+
+**Payload:**
+
+```json
+{
+  "structurePath": "string",
+  "topic": "string",
+  "sliceCount": "integer"
+}
+```
+
+---
+
+### structure.approved
+
+Router emits after the user approves the structure.
 
 | Field     | Value                |
 |-----------|----------------------|
 | Producer  | `router`             |
 | Consumers | `planner`            |
-| Gate      | interview gate pass  |
+| Gate      | human gate pass      |
 | Artifact  | none                 |
 
-**Payload:**
-
-```json
-{
-  "validatedRequirements": ["string — confirmed requirements"],
-  "decisions": ["object — autonomous decisions from the product-owner"],
-  "prdPath": "string | null — path to PRD artifact if produced",
-  "interviewRounds": "integer — number of question rounds (0 = auto-passed)"
-}
-```
+**Payload:** `{ "structurePath": "string" }`
 
 ---
 
-### requirements.revision-requested
+### structure.revision-requested
 
-Router emits when interview gate needs more information (confidence < 95%).
+Router emits after the user rejects the structure.
 
 | Field     | Value                |
 |-----------|----------------------|
 | Producer  | `router`             |
-| Consumers | `product-owner`      |
-| Gate      | interview gate fail  |
+| Consumers | `structure-planner`  |
+| Gate      | human gate fail      |
 | Artifact  | none                 |
 
 **Payload:**
 
 ```json
 {
-  "answers": ["string — user's answers to the product-owner's questions"],
-  "priorAssessment": "object — the previous requirements.assessed payload",
-  "revisionNumber": "integer — which round of questions this is"
+  "structurePath": "string",
+  "feedback": "string",
+  "revisionNumber": "integer"
 }
 ```
 
 ---
 
+## Phase 5: Plan
+
 ### plan.drafted
 
-Planner has produced an implementation plan.
+Planner has produced the tactical plan. No human gate — the structure was
+the contract.
 
 | Field     | Value                |
 |-----------|----------------------|
 | Producer  | `planner`            |
-| Consumers | `plan-critic`        |
-| Gate      | none                 |
+| Consumers | `router` (worktree-emit gate) |
+| Gate      | triggers `router-emit` gate (`worktree-gate`) |
 | Artifact  | `docs/plans/YYYY-MM-DD-<topic>-plan.md` |
 
 **Payload:**
 
 ```json
 {
-  "planPath": "string — path to plan artifact",
-  "steps": "integer — number of implementation steps",
-  "testCount": "integer — number of acceptance tests specified"
+  "planPath": "string",
+  "slices": "integer — slices in the plan",
+  "testCount": "integer — total acceptance tests across all slices"
 }
 ```
 
 ---
 
-### plan.critiqued
+## Phase 6: Worktree
 
-Plan-critic has reviewed the plan adversarially.
+### worktree.prepared
 
-| Field     | Value                |
-|-----------|----------------------|
-| Producer  | `plan-critic`        |
-| Consumers | `router` (human gate)|
-| Gate      | triggers `human` gate|
-| Artifact  | none                 |
-
-**Payload:**
-
-```json
-{
-  "verdict": "string — 'PASS' | 'PASS WITH CHANGES' | 'REVISE'",
-  "issues": [
-    {
-      "severity": "string — 'critical' | 'major' | 'minor' | 'nitpick'",
-      "description": "string",
-      "suggestion": "string"
-    }
-  ],
-  "planPath": "string — path to the plan under review"
-}
-```
-
----
-
-### plan.approved
-
-Router emits after the user approves the plan.
+Router emits after creating an isolated git worktree (or recording in-place).
 
 | Field     | Value                |
 |-----------|----------------------|
 | Producer  | `router`             |
 | Consumers | `test-architect`     |
-| Gate      | human gate pass      |
+| Gate      | router-emit gate pass|
 | Artifact  | none                 |
 
 **Payload:**
 
 ```json
 {
-  "planPath": "string — path to approved plan",
-  "criticVerdict": "string — critic verdict at time of approval ('PASS' | 'PASS WITH CHANGES' | 'REVISE')",
-  "userFeedback": "string | null — any notes from the user"
+  "worktreePath": "string",
+  "branch": "string",
+  "isolation": "string — 'worktree' | 'in-place'"
 }
 ```
 
 ---
 
-### plan.revision-requested
-
-Router emits when auto-revision triggers (any non-PASS verdict with < 3 prior revisions) or the user rejects the plan at the human gate.
-
-| Field     | Value                |
-|-----------|----------------------|
-| Producer  | `router`             |
-| Consumers | `planner`            |
-| Gate      | auto-revision or human gate fail |
-| Artifact  | none                 |
-
-**Payload:**
-
-```json
-{
-  "planPath": "string — path to rejected plan",
-  "feedback": "string — critic-extracted findings (auto-revision) or user's revision instructions (human rejection)",
-  "revisionNumber": "integer — how many times the plan has been revised"
-}
-```
-
----
+## Phase 7: Implement
 
 ### tests.written
 
-Test-architect has written all acceptance tests.
+Test-architect has written all acceptance tests, organized by slice.
 
 | Field     | Value                |
 |-----------|----------------------|
 | Producer  | `test-architect`     |
 | Consumers | `router` (mechanical gate) |
-| Gate      | triggers `mechanical` gate |
+| Gate      | triggers `mechanical` gate (`tests-gate`) |
 | Artifact  | none                 |
 
 **Payload:**
@@ -393,9 +436,9 @@ Router emits after verifying all tests fail with assertion errors.
 
 ---
 
-### step.completed
+### slice.completed
 
-Implementer signals progress after completing a plan step.
+Implementer signals progress after completing one vertical slice (with commit).
 
 | Field     | Value                |
 |-----------|----------------------|
@@ -408,10 +451,9 @@ Implementer signals progress after completing a plan step.
 
 ```json
 {
-  "step": "string — step identifier from the plan",
-  "testsPassingBefore": "integer",
-  "testsPassingAfter": "integer",
-  "totalTests": "integer"
+  "slice": "string — slice name from the structure",
+  "testsPassing": ["string — test names now passing"],
+  "commit": "string — commit sha for this slice"
 }
 ```
 
@@ -419,7 +461,7 @@ Implementer signals progress after completing a plan step.
 
 ### implementation.completed
 
-Implementer signals all acceptance tests pass.
+Implementer signals all slices done and all acceptance tests pass.
 
 | Field     | Value                |
 |-----------|----------------------|
@@ -435,352 +477,46 @@ Implementer signals all acceptance tests pass.
   "testFiles": ["string — test file paths"],
   "testsTotal": "integer — total tests",
   "testsPassing": "integer — passing tests (should equal total)",
-  "changedFiles": ["string — files modified during implementation"]
+  "changedFiles": ["string — files modified during implementation"],
+  "slices": "integer — total slices completed"
 }
 ```
 
 ---
 
-### review.completed
+### review.completed / security-review.completed / docs-review.completed / ux-review.completed / verification.completed
 
-Code reviewer has finished quality review.
+Five parallel reviewer outputs feeding the aggregate gate. Schemas mirror the
+RPI-era equivalents:
 
-| Field     | Value                |
-|-----------|----------------------|
-| Producer  | `code-reviewer`      |
-| Consumers | `router` (aggregate) |
-| Gate      | **hard**             |
-| Artifact  | none                 |
-
-**Payload:**
-
-```json
-{
-  "verdict": "string — 'pass' | 'fail'",
-  "comments": [
-    {
-      "type": "string — conventional comment type",
-      "file": "string",
-      "line": "integer | null",
-      "body": "string"
-    }
-  ]
-}
-```
+- `review.completed` (code-reviewer) — verdict, comments, **hard gate**
+- `security-review.completed` (security-reviewer) — verdict, OWASP findings, **hard gate**
+- `docs-review.completed` (technical-writer) — verdict, doc gaps, advisory
+- `ux-review.completed` (ux-reviewer) — verdict, ergonomics findings, soft gate
+- `verification.completed` (verifier) — verdict + per-check status (lint, typecheck, build, test), **hard gate**
 
 ---
 
-### security-review.completed
+### hard-gate.security-failed / hard-gate.lint-failed / hard-gate.typecheck-failed / hard-gate.build-failed / hard-gate.test-failed / hard-gate.review-failed
 
-Security reviewer has finished OWASP audit.
+Router emits one or more typed failure events when the aggregate gate
+detects hard-gate failures. The implementer consumes these in a fix loop
+(max 5 rounds across all types).
 
-| Field     | Value                |
-|-----------|----------------------|
-| Producer  | `security-reviewer`  |
-| Consumers | `router` (aggregate) |
-| Gate      | **hard**             |
-| Artifact  | none                 |
-
-**Payload:**
-
-```json
-{
-  "verdict": "string — 'pass' | 'fail'",
-  "findings": [
-    {
-      "severity": "string — 'critical' | 'high' | 'medium' | 'low' | 'info'",
-      "category": "string — OWASP category",
-      "description": "string",
-      "file": "string",
-      "remediation": "string"
-    }
-  ]
-}
-```
-
----
-
-### docs-review.completed
-
-Technical writer has finished documentation gap analysis.
-
-| Field     | Value                |
-|-----------|----------------------|
-| Producer  | `technical-writer`   |
-| Consumers | `router` (aggregate) |
-| Gate      | advisory             |
-| Artifact  | none                 |
-
-**Payload:**
-
-```json
-{
-  "verdict": "string — 'pass' | 'fail'",
-  "gaps": [
-    {
-      "type": "string — 'missing' | 'outdated' | 'incomplete'",
-      "file": "string",
-      "description": "string"
-    }
-  ]
-}
-```
-
----
-
-### ux-review.completed
-
-UX reviewer has finished ergonomics review.
-
-| Field     | Value                |
-|-----------|----------------------|
-| Producer  | `ux-reviewer`        |
-| Consumers | `router` (aggregate) |
-| Gate      | soft                 |
-| Artifact  | none                 |
-
-**Payload:**
-
-```json
-{
-  "verdict": "string — 'pass' | 'fail'",
-  "findings": [
-    {
-      "severity": "string — 'critical' | 'major' | 'minor'",
-      "description": "string",
-      "suggestion": "string"
-    }
-  ]
-}
-```
-
----
-
-### verification.completed
-
-Verifier has run lint, type check, build, and tests.
-
-| Field     | Value                |
-|-----------|----------------------|
-| Producer  | `verifier`           |
-| Consumers | `router` (aggregate) |
-| Gate      | **hard**             |
-| Artifact  | none                 |
-
-**Payload:**
-
-```json
-{
-  "verdict": "string — 'pass' | 'fail'",
-  "checks": {
-    "lint": "string — 'pass' | 'fail' | 'skipped'",
-    "typecheck": "string — 'pass' | 'fail' | 'skipped'",
-    "build": "string — 'pass' | 'fail' | 'skipped'",
-    "tests": "string — 'pass' | 'fail' | 'skipped'"
-  },
-  "failures": ["string — descriptions of what failed"]
-}
-```
-
----
-
-### reviews.aggregated
-
-Router emits after collecting all five reviewer events.
-
-| Field     | Value                |
-|-----------|----------------------|
-| Producer  | `router`             |
-| Consumers | `router` (gate check)|
-| Gate      | triggers `aggregate` gate |
-| Artifact  | none                 |
-
-**Payload:**
-
-```json
-{
-  "reviewEvents": ["integer — seq numbers of all five review events"],
-  "hardGatesPassed": "boolean",
-  "softGatesPassed": "boolean",
-  "summary": "string — aggregated verdict summary"
-}
-```
-
----
-
-### hard-gate.security-failed
-
-Router emits when the security reviewer finds CRITICAL or HIGH severity vulnerabilities.
-
-| Field     | Value                |
-|-----------|----------------------|
-| Producer  | `router`             |
-| Consumers | `implementer` (retry)|
-| Gate      | aggregate gate fail  |
-| Artifact  | none                 |
-
-**Payload:**
-
-```json
-{
-  "findings": [
-    {
-      "severity": "string — 'critical' | 'high'",
-      "category": "string — OWASP category",
-      "file": "string",
-      "line": "integer",
-      "description": "string",
-      "remediation": "string"
-    }
-  ],
-  "retryRound": "integer — current round (across all failure types)",
-  "maxRetries": 5
-}
-```
-
----
-
-### hard-gate.lint-failed
-
-Router emits when format or lint checks fail.
-
-| Field     | Value                |
-|-----------|----------------------|
-| Producer  | `router`             |
-| Consumers | `implementer` (retry)|
-| Gate      | aggregate gate fail  |
-| Artifact  | none                 |
-
-**Payload:**
-
-```json
-{
-  "command": "string — the lint/format command that failed",
-  "exitCode": "integer",
-  "errors": "string — relevant error output",
-  "retryRound": "integer",
-  "maxRetries": 5
-}
-```
-
----
-
-### hard-gate.typecheck-failed
-
-Router emits when type checking fails.
-
-| Field     | Value                |
-|-----------|----------------------|
-| Producer  | `router`             |
-| Consumers | `implementer` (retry)|
-| Gate      | aggregate gate fail  |
-| Artifact  | none                 |
-
-**Payload:**
-
-```json
-{
-  "command": "string — the typecheck command that failed",
-  "exitCode": "integer",
-  "errors": "string — type error output with file paths and line numbers",
-  "retryRound": "integer",
-  "maxRetries": 5
-}
-```
-
----
-
-### hard-gate.build-failed
-
-Router emits when the production build fails.
-
-| Field     | Value                |
-|-----------|----------------------|
-| Producer  | `router`             |
-| Consumers | `implementer` (retry)|
-| Gate      | aggregate gate fail  |
-| Artifact  | none                 |
-
-**Payload:**
-
-```json
-{
-  "command": "string — the build command that failed",
-  "exitCode": "integer",
-  "errors": "string — build error output",
-  "retryRound": "integer",
-  "maxRetries": 5
-}
-```
-
----
-
-### hard-gate.test-failed
-
-Router emits when the test suite has failures.
-
-| Field     | Value                |
-|-----------|----------------------|
-| Producer  | `router`             |
-| Consumers | `implementer` (retry)|
-| Gate      | aggregate gate fail  |
-| Artifact  | none                 |
-
-**Payload:**
-
-```json
-{
-  "command": "string — the test command that failed",
-  "exitCode": "integer",
-  "failingTests": ["string — names of failing tests"],
-  "errors": "string — relevant assertion/error output",
-  "retryRound": "integer",
-  "maxRetries": 5
-}
-```
-
----
-
-### hard-gate.review-failed
-
-Router emits when the code reviewer issues a REQUEST CHANGES verdict.
-
-| Field     | Value                |
-|-----------|----------------------|
-| Producer  | `router`             |
-| Consumers | `implementer` (retry)|
-| Gate      | aggregate gate fail  |
-| Artifact  | none                 |
-
-**Payload:**
-
-```json
-{
-  "verdict": "string — 'request-changes'",
-  "blockingIssues": [
-    {
-      "type": "string — 'issue'",
-      "file": "string",
-      "line": "integer | null",
-      "body": "string"
-    }
-  ],
-  "retryRound": "integer",
-  "maxRetries": 5
-}
-```
+Each event carries class-specific data: security findings, lint output,
+type errors, build errors, failing test names, or blocking `issue:` comments.
 
 ---
 
 ### verification.passed
 
-Router emits when all hard gates pass in the aggregate review.
+Router emits when all hard gates in the aggregate gate pass.
 
 | Field     | Value                |
 |-----------|----------------------|
 | Producer  | `router`             |
-| Consumers | `router` (ship)      |
-| Gate      | aggregate gate pass  |
+| Consumers | `router` (PR phase)  |
+| Gate      | aggregate gate pass (`verification-gate`) |
 | Artifact  | none                 |
 
 **Payload:**
@@ -794,15 +530,18 @@ Router emits when all hard gates pass in the aggregate review.
 
 ---
 
+## Phase 8: PR
+
 ### feature.shipped
 
-Router emits after successful commit/PR/merge.
+Terminal event. Router emits after the user-chosen ship action completes
+(open PR, commit locally, or leave uncommitted).
 
 | Field     | Value                |
 |-----------|----------------------|
 | Producer  | `router`             |
 | Consumers | none (terminal)      |
-| Gate      | none                 |
+| Gate      | router-emit gate (`feature-gate`) |
 | Artifact  | none                 |
 
 **Payload:**
@@ -819,10 +558,12 @@ Router emits after successful commit/PR/merge.
 
 ## Gate Reference
 
-| Gate Type    | Trigger Event            | Pass Event               | Fail Events               | Decision By |
-|-------------|--------------------------|--------------------------|---------------------------|-------------|
-| interview   | `requirements.assessed`  | `requirements.confirmed` | `requirements.revision-requested` | Router (auto-pass ≥95%) or User |
-| human       | `plan.critiqued`         | `plan.approved`          | `plan.revision-requested` | Router (auto-revise non-PASS) or User (clean PASS or safety valve exhaustion) |
-| mechanical  | `tests.written`          | `tests.confirmed-failing`| (retry test setup)        | Test runner |
-| aggregate   | all 5 reviews            | `verification.passed`    | `hard-gate.{security,lint,typecheck,build,test,review}-failed` | Router |
-| join        | `files.found`            | `research.completed`     | —                         | Router (fan-in) |
+| Gate Key            | Type        | Trigger Event             | Pass Event              | Fail Events                                       | Decision By           |
+|---------------------|-------------|---------------------------|-------------------------|---------------------------------------------------|-----------------------|
+| `design-gate`       | human       | `design.drafted`          | `design.approved`       | `design.revision-requested`                       | User                  |
+| `structure-gate`    | human       | `structure.drafted`       | `structure.approved`    | `structure.revision-requested`                    | User                  |
+| `worktree-gate`     | router-emit | `plan.drafted`            | `worktree.prepared`     | —                                                 | Router                |
+| `tests-gate`        | mechanical  | `tests.written`           | `tests.confirmed-failing` | (retry test setup)                              | Test runner           |
+| `verification-gate` | aggregate   | all 5 reviews             | `verification.passed`   | `hard-gate.{security,lint,typecheck,build,test,review}-failed` | Router |
+| `feature-gate`      | router-emit | `verification.passed`     | `feature.shipped`       | —                                                 | Router (after user choice) |
+| `research-join`     | join        | `files.found`             | `research.completed`    | —                                                 | Router (fan-in)       |

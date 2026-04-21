@@ -27,7 +27,7 @@ interface RegistryAgent {
 
 interface RegistryGate {
   after: string | string[];
-  type: "human" | "mechanical" | "aggregate" | "interview";
+  type: "human" | "mechanical" | "aggregate" | "interview" | "router-emit";
   passEvent: string;
   failEvent?: string;
   failEvents?: Record<string, string | Record<string, string>>;
@@ -83,7 +83,7 @@ interface GateConfig {
 
 // Phase ordering for deriving which phase a gate lives in.
 // A gate's passEvent transitions to the NEXT phase; the gate itself lives in the PRIOR phase.
-const PHASE_ORDER = ["RESEARCH", "PLAN", "TEST-FIRST", "IMPLEMENT", "VERIFY", "SHIP", "SHIPPED"];
+const PHASE_ORDER = ["QUESTION", "RESEARCH", "DESIGN", "STRUCTURE", "PLAN", "WORKTREE", "IMPLEMENT", "PR", "SHIPPED"];
 
 function getPriorPhase(nextPhase: string): string {
   const idx = PHASE_ORDER.indexOf(nextPhase);
@@ -93,9 +93,10 @@ function getPriorPhase(nextPhase: string): string {
 // Gate label derivation from gate type
 const GATE_TYPE_LABELS: Record<string, string> = {
   interview: "Validate requirements",
-  human: "Approve plan",
-  mechanical: "Confirm tests fail",
+  human: "Human approval",
+  mechanical: "Mechanical check",
   aggregate: "Collect reviews",
+  "router-emit": "Router action",
 };
 
 const gateConfigs: GateConfig[] = [];
@@ -107,8 +108,14 @@ for (const gate of registry.gates) {
   const nextPhase = (EVENT_TO_PHASE as Record<string, string>)[gate.passEvent];
   const phase = nextPhase ? getPriorPhase(nextPhase) : "UNKNOWN";
 
-  // Derive gate key from phase (e.g. "PLAN" → "plan-gate", "TEST-FIRST" → "test-gate")
-  const key = phase.toLowerCase().split("-")[0] + "-gate";
+  // Derive gate key from the passEvent's domain prefix so multiple gates in
+  // the same phase (e.g. tests-gate + verification-gate both in IMPLEMENT)
+  // do not collide. Examples:
+  //   design.approved → "design-gate"
+  //   tests.confirmed-failing → "tests-gate"
+  //   verification.passed → "verification-gate"
+  const passPrefix = gate.passEvent.split(".")[0];
+  const key = `${passPrefix}-gate`;
 
   const label = GATE_TYPE_LABELS[gate.type] ?? gate.passEvent;
 
@@ -215,11 +222,12 @@ export function applyEvent(state: RunState, event: Record<string, unknown>): Run
     newState.errors = [...state.errors, { event: eventName, data }];
   }
 
-  // Track step progress (critic issue C1: use `step` not `stepId`)
-  if (eventName === "step.completed") {
+  // Track slice progress — implementer emits one slice.completed per
+  // vertical slice with its commit sha and the tests that now pass.
+  if (eventName === "slice.completed") {
     newState.progress = {
-      step: (data.step as string) ?? null,
-      total: (data.totalTests as number) ?? null,
+      step: (data.slice as string) ?? null,
+      total: (data.totalSlices as number) ?? null,
     };
   }
 

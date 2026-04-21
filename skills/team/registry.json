@@ -1,35 +1,50 @@
 {
+  "phases": [
+    {"name": "QUESTION", "artifacts": ["task.md", "questions.md", "brief.md"]},
+    {"name": "RESEARCH", "artifacts": ["research.md"]},
+    {"name": "DESIGN", "artifacts": ["design.md"]},
+    {"name": "STRUCTURE", "artifacts": ["structure.md"]},
+    {"name": "PLAN", "artifacts": ["plan.md"]},
+    {"name": "WORKTREE", "artifacts": []},
+    {"name": "IMPLEMENT", "artifacts": []},
+    {"name": "PR", "artifacts": []}
+  ],
   "agents": [
     {
-      "name": "file-finder",
+      "name": "questioner",
       "consumes": "feature.requested",
+      "produces": "task.captured"
+    },
+    {
+      "name": "file-finder",
+      "consumes": "task.captured",
       "produces": "files.found",
       "parallel": true
     },
     {
       "name": "researcher",
-      "consumes": "feature.requested",
+      "consumes": "task.captured",
       "produces": "research.completed",
       "parallel": true
     },
     {
-      "name": "product-owner",
-      "consumes": ["research.completed", "requirements.revision-requested"],
-      "produces": "requirements.assessed"
+      "name": "design-author",
+      "consumes": ["research.completed", "design.revision-requested"],
+      "produces": "design.drafted"
+    },
+    {
+      "name": "structure-planner",
+      "consumes": ["design.approved", "structure.revision-requested"],
+      "produces": "structure.drafted"
     },
     {
       "name": "planner",
-      "consumes": ["requirements.confirmed", "plan.revision-requested"],
+      "consumes": "structure.approved",
       "produces": "plan.drafted"
     },
     {
-      "name": "plan-critic",
-      "consumes": "plan.drafted",
-      "produces": "plan.critiqued"
-    },
-    {
       "name": "test-architect",
-      "consumes": "plan.approved",
+      "consumes": "worktree.prepared",
       "produces": "tests.written"
     },
     {
@@ -78,17 +93,22 @@
   ],
   "gates": [
     {
-      "after": "requirements.assessed",
-      "type": "interview",
-      "threshold": 95,
-      "passEvent": "requirements.confirmed",
-      "failEvent": "requirements.revision-requested"
+      "after": "design.drafted",
+      "type": "human",
+      "passEvent": "design.approved",
+      "failEvent": "design.revision-requested"
     },
     {
-      "after": "plan.critiqued",
+      "after": "structure.drafted",
       "type": "human",
-      "passEvent": "plan.approved",
-      "failEvent": "plan.revision-requested"
+      "passEvent": "structure.approved",
+      "failEvent": "structure.revision-requested"
+    },
+    {
+      "after": "plan.drafted",
+      "type": "router-emit",
+      "passEvent": "worktree.prepared",
+      "condition": "router prepares isolated git worktree"
     },
     {
       "after": "tests.written",
@@ -119,6 +139,12 @@
         "review.completed": "hard-gate.review-failed"
       },
       "maxRetries": 5
+    },
+    {
+      "after": "verification.passed",
+      "type": "router-emit",
+      "passEvent": "feature.shipped",
+      "condition": "router opens PR or commits per user choice"
     }
   ],
   "joins": [

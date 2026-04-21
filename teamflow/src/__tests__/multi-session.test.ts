@@ -34,18 +34,20 @@ const LIB_EVENTS = join(PROJECT_ROOT, "lib", "events.mjs");
 const HOOK_SESSION_START = join(PROJECT_ROOT, "hooks", "session-start-recover.mjs");
 const HOOK_PRE_COMPACT = join(PROJECT_ROOT, "hooks", "pre-compact-anchor.mjs");
 
-// Skill files (all 11 that reference ~/.team paths)
+// Skill files that reference ~/.team paths
 const SKILL_FILES = [
   join(PROJECT_ROOT, "skills", "team", "SKILL.md"),
+  join(PROJECT_ROOT, "skills", "team-question", "SKILL.md"),
   join(PROJECT_ROOT, "skills", "team-research", "SKILL.md"),
+  join(PROJECT_ROOT, "skills", "team-design", "SKILL.md"),
+  join(PROJECT_ROOT, "skills", "team-structure", "SKILL.md"),
   join(PROJECT_ROOT, "skills", "team-plan", "SKILL.md"),
-  join(PROJECT_ROOT, "skills", "team-test", "SKILL.md"),
+  join(PROJECT_ROOT, "skills", "team-worktree", "SKILL.md"),
   join(PROJECT_ROOT, "skills", "team-implement", "SKILL.md"),
-  join(PROJECT_ROOT, "skills", "team-verify", "SKILL.md"),
-  join(PROJECT_ROOT, "skills", "team-ship", "SKILL.md"),
+  join(PROJECT_ROOT, "skills", "team-pr", "SKILL.md"),
   join(PROJECT_ROOT, "skills", "team-fix", "SKILL.md"),
   join(PROJECT_ROOT, "skills", "team-resume", "SKILL.md"),
-  join(PROJECT_ROOT, "skills", "rpi-workflow", "SKILL.md"),
+  join(PROJECT_ROOT, "skills", "qrspi-workflow", "SKILL.md"),
   join(PROJECT_ROOT, "skills", "worktree-isolation", "SKILL.md"),
 ];
 
