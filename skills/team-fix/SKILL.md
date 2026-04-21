@@ -1,12 +1,12 @@
 ---
 name: team-fix
-description: Compressed bug-fix pipeline — reproduce, write failing test, minimal fix, verify. Skips research and plan phases. Trigger on "/team-fix <bug description>".
+description: Compressed bug-fix pipeline — reproduce, write failing test, minimal fix, verify. Skips Question/Research/Design/Structure/Plan phases. Trigger on "/team-fix <bug description>".
 ---
 
 # TEAM Fix — Bug Fix Pipeline
 
 Run the compressed bug-fix pipeline. Goes straight to test-driven fix
-discipline without research or planning overhead.
+discipline without the full QRSPI ceremony.
 
 ## Input
 
@@ -32,10 +32,11 @@ Use `/team-fix` when:
 - The fix is likely contained to a small number of files
 - No architectural decisions are needed — this is a defect correction
 
-Use `/team` (full pipeline) when:
+Use `/team` (full QRSPI pipeline) when:
 - The root cause is unknown and needs investigation
 - The fix requires designing new behavior or APIs
 - Multiple subsystems may be involved
+- The user wants to align on the approach before code is written
 
 ## Pipeline
 
@@ -43,7 +44,7 @@ Use `/team` (full pipeline) when:
 REPRODUCE → RED (failing test) → GREEN (minimal fix) → VERIFY → SHIP
 ```
 
-No research phase. No plan phase. No human gate.
+No Question phase. No Research. No Design. No Structure. No Plan. No human gate.
 
 ## Setup
 

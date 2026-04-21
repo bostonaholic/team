@@ -2,7 +2,7 @@
 
 > **Task Execution Agent Mesh** -- A Claude Code plugin that orchestrates
 > specialized agents to autonomously implement entire features end-to-end,
-> driven by an append-only event log.
+> driven by an append-only event log and the QRSPI methodology.
 
 ## 1. Design Philosophy
 
@@ -24,9 +24,13 @@ events, and checks gates. It contains zero agent-specific knowledge.
 - **File artifacts survive compaction.** Agents communicate through file
   artifacts in `docs/plans/`. These survive context window compaction and
   can be re-read by any agent in any session.
-- **Two human touchpoints.** The interview gate (requirements validation)
-  and plan approval are the only points requiring user interaction.
-  Everything else is autonomous with mechanical gates.
+- **Blind research.** The researcher and file-finder never see the user's
+  original task description. They consume only the neutral `brief.md` and
+  `questions.md` produced by the questioner. This structurally prevents
+  opinion-bias in research.
+- **Two human touchpoints.** Design approval (~200-line alignment doc) and
+  Structure approval (~2-page vertical-slice breakdown). The Plan is not
+  human-gated — humans review the structure, which is the real contract.
 - **Hooks enforce discipline mechanically.** LLMs forget instructions ~20%
   of the time; hooks are deterministic.
 
@@ -41,8 +45,8 @@ Each line is a self-contained event:
   "seq": 1,
   "event": "feature.requested",
   "producer": "router",
-  "ts": "2026-03-28T14:30:00Z",
-  "data": { "description": "add user auth", "topic": "add-user-auth", "today": "2026-03-28" },
+  "ts": "2026-04-20T14:30:00Z",
+  "data": { "description": "add user auth", "topic": "add-user-auth", "today": "2026-04-20" },
   "artifact": null,
   "causedBy": null,
   "gate": null
@@ -68,140 +72,182 @@ Each line is a self-contained event:
   (Dev tools like `demo.mjs` also write to the log for demonstration purposes.)
 - Current pipeline state is **derived** by scanning the log for the latest
   event of each type.
+- The `description` field from `feature.requested` must NEVER appear in any
+  downstream event payload. The questioner is the only agent that reads it.
 
-## 3. Pipeline
+## 3. Pipeline (QRSPI)
 
-The pipeline has six phases, expressed as event flow:
+The pipeline has eight phases, expressed as event flow:
 
 ```
 feature.requested
-    ├──> file-finder ──> files.found ─────────────┐
-    └──> researcher ──────────────────────────────>├──> research.completed
-                                                   │
-                                            product-owner
-                                                   │
-                                          requirements.assessed
-                                                   │
-                                           [INTERVIEW GATE]
-                                          /                 \
-                                   confidence              confidence
-                                     ≥ 95%                   < 95%
-                                       │                       │
-                                requirements.       requirements.revision
-                                  confirmed            -requested
-                                       │                       │
-                                       v                       └──> product-owner
-                                    planner ──> plan.drafted
-                                                          │
-                                                    plan-critic
-                                                          │
-                                                    plan.critiqued
-                                                          │
-                                                   [HUMAN GATE]
-                                                  /             \
-                                          approved             rejected
-                                             │                    │
-                                       plan.approved    plan.revision-requested
-                                             │                    │
-                                             v                    └──> planner
-                                       test-architect
-                                             │
-                                       tests.written
-                                             │
-                                      [MECHANICAL GATE]
-                                             │
-                                   tests.confirmed-failing
-                                             │
-                                        implementer
-                                        │         │
-                                 step.completed  ...
-                                        │
-                                implementation.completed
-                                        │
-                  ┌─────────┬───────────┼───────────┬─────────────┐
-                  v         v           v           v             v
-            code-reviewer  security  technical   ux-reviewer  verifier
-                  │       -reviewer    -writer       │            │
-                  v         v           v            v            v
-            review     security-    docs-review  ux-review  verification
-           .completed  review       .completed   .completed  .completed
-                  │    .completed       │            │            │
-                  └─────────┴───────────┴────────────┴────────────┘
-                                        │
-                                 reviews.aggregated
-                                        │
-                                [AGGREGATE GATE]
-                               /                \
-                       all pass              hard gate fails
-                          │                       │
-                   verification.passed     hard-gate.*-failed
-                          │               (typed per failure)
-                   feature.shipped          └──> implementer (retry)
+    │
+    v
+ questioner
+    │
+    v
+ task.captured  ────────────────────────┐
+    │                                    │
+    ├──> file-finder ──> files.found ───┤
+    │                                    │
+    └──> researcher ────────────────────>├──> research.completed
+                                         │
+                                    design-author
+                                         │
+                                    design.drafted
+                                         │
+                                  [HUMAN GATE]
+                                  /            \
+                           approved           rejected
+                              │                  │
+                     design.approved  design.revision-requested
+                              │                  │
+                              v                  └──> design-author
+                        structure-planner
+                              │
+                        structure.drafted
+                              │
+                       [HUMAN GATE]
+                      /              \
+                approved           rejected
+                   │                  │
+          structure.approved  structure.revision-requested
+                   │                  │
+                   v                  └──> structure-planner
+                planner
+                   │
+              plan.drafted
+                   │
+              [ROUTER-EMIT]
+                   │
+           worktree.prepared
+                   │
+                   v
+            test-architect
+                   │
+             tests.written
+                   │
+           [MECHANICAL GATE]
+                   │
+         tests.confirmed-failing
+                   │
+                   v
+             implementer
+             │         │
+      slice.completed  ...
+             │
+    implementation.completed
+             │
+  ┌──────┬──────┼──────┬──────┐
+  v      v      v      v      v
+ code  security docs   ux   verifier
+ -rev. -rev.    -writer -rev.
+  │      │      │      │      │
+  └──────┴──────┴──────┴──────┘
+             │
+    [AGGREGATE GATE]
+   /                \
+ all pass      hard gate fails
+  │                  │
+verification.passed  hard-gate.*-failed
+  │             (typed per failure)
+[ROUTER-EMIT]     └──> implementer (retry)
+  │
+feature.shipped
 ```
 
-### Phase 1: Research
+### Phase 1: Question
 
 **Trigger:** `feature.requested`
-**Parallel agents:** `file-finder`, `researcher`
+**Agent:** `questioner`
+**Output event:** `task.captured`
+**Artifacts:** `docs/plans/YYYY-MM-DD-<topic>-{task,questions,brief}.md`
+
+Decomposes the user's intent into three artifacts. Only the questioner ever
+sees the user's description.
+
+### Phase 2: Research (blind)
+
+**Trigger:** `task.captured`
+**Parallel agents:** `file-finder`, `researcher` (both BLIND to task.md)
 **Join:** Router waits for `files.found`, then merges with researcher output
 **Output event:** `research.completed`
 **Artifact:** `docs/plans/YYYY-MM-DD-<topic>-research.md`
 
-### Phase 2: Plan
+### Phase 3: Design
 
 **Trigger:** `research.completed`
-**Sequential agents:** `product-owner`, then `planner`, then `plan-critic`
-**Output events:** `requirements.assessed`, `plan.drafted`, `plan.critiqued`
-**Gates:** Interview gate (confidence ≥ 95% auto-passes, < 95% interviews user),
-then human approval -- `plan.approved` or `plan.revision-requested`
-**Artifacts:** `docs/plans/YYYY-MM-DD-<topic>-prd.md` (if PRD produced),
-`docs/plans/YYYY-MM-DD-<topic>-plan.md`
+**Agent:** `design-author` (MUST ask open questions interactively before drafting)
+**Output events:** `design.drafted`
+**Gate:** HUMAN — `design.approved` or `design.revision-requested`
+**Artifact:** `docs/plans/YYYY-MM-DD-<topic>-design.md`
 
-### Phase 3: Test-First
+### Phase 4: Structure
 
-**Trigger:** `plan.approved`
-**Agent:** `test-architect`
-**Output event:** `tests.written`
-**Gate:** Mechanical -- all tests must fail with assertion errors, not crashes
-**Pass event:** `tests.confirmed-failing`
+**Trigger:** `design.approved`
+**Agent:** `structure-planner`
+**Output events:** `structure.drafted`
+**Gate:** HUMAN — `structure.approved` or `structure.revision-requested`
+**Artifact:** `docs/plans/YYYY-MM-DD-<topic>-structure.md`
 
-### Phase 4: Implement
+Breaks the approved design into vertical slices with per-slice acceptance
+tests.
 
-**Trigger:** `tests.confirmed-failing` (or `hard-gate.*-failed` on retry)
-**Agent:** `implementer`
-**Progress events:** `step.completed` (per plan step)
-**Output event:** `implementation.completed` (when all tests pass)
+### Phase 5: Plan
 
-### Phase 5: Verify
+**Trigger:** `structure.approved`
+**Agent:** `planner`
+**Output event:** `plan.drafted`
+**Artifact:** `docs/plans/YYYY-MM-DD-<topic>-plan.md`
 
-**Trigger:** `implementation.completed`
-**Parallel agents:** `code-reviewer`, `security-reviewer`, `technical-writer`,
-`ux-reviewer`, `verifier`
-**Aggregation event:** `reviews.aggregated`
-**Gate:** Aggregate -- hard gates on `security-review.completed`,
-`verification.completed`, and `review.completed`
+No human gate — humans reviewed the structure; the plan is tactical.
+
+### Phase 6: Worktree
+
+**Trigger:** `plan.drafted`
+**Producer:** router (no agent)
+**Output event:** `worktree.prepared`
+**Artifact:** isolated git worktree under `.claude/worktrees/<topic>/`
+
+### Phase 7: Implement
+
+**Trigger:** `worktree.prepared`
+**Sequential sub-agents:**
+1. `test-architect` → `tests.written`
+2. Mechanical gate → `tests.confirmed-failing`
+3. `implementer` → `slice.completed` (per slice) → `implementation.completed`
+4. 5 parallel reviewers → `review.completed`, `security-review.completed`,
+   `docs-review.completed`, `ux-review.completed`, `verification.completed`
+5. Aggregate gate → `verification.passed` or typed `hard-gate.*-failed`
+
+**Progress events:** `slice.completed` (one per vertical slice, with
+per-slice commit sha)
 **Pass event:** `verification.passed`
 **Fail events:** `hard-gate.security-failed`, `hard-gate.lint-failed`,
 `hard-gate.typecheck-failed`, `hard-gate.build-failed`, `hard-gate.test-failed`,
 `hard-gate.review-failed` (loops to implementer, max 5 rounds)
 
-### Phase 6: Ship
+### Phase 8: PR
 
 **Trigger:** `verification.passed`
+**Producer:** router (no agent)
 **Output event:** `feature.shipped`
-**Cleanup:** Router deletes `.team/` directory after recording terminal event
+**Actions:** update CHANGELOG, commit + open PR (or commit locally / leave
+uncommitted per user choice), close beads issue if present, delete
+`~/.team/<topic>/`, clean up worktree
 
 ## 4. Agent Roster
 
 | Agent              | Model   | Mode        | Tools                              | Consumes                           | Produces                    |
 |--------------------|---------|-------------|------------------------------------|------------------------------------|------------------------------|
-| `file-finder`      | haiku   | plan        | Read, Grep, Glob                   | `feature.requested`                | `files.found`                |
-| `researcher`       | sonnet  | plan        | Read, Grep, Glob                   | `feature.requested`                | `research.completed`         |
-| `product-owner`    | sonnet  | acceptEdits | Read, Write, Grep, Glob            | `research.completed`, `requirements.revision-requested` | `requirements.assessed` |
-| `planner`          | opus    | acceptEdits | Read, Write, Edit, Grep, Glob      | `requirements.confirmed`, `plan.revision-requested` | `plan.drafted` |
-| `plan-critic`      | sonnet  | plan        | Read, Grep, Glob                   | `plan.drafted`                     | `plan.critiqued`             |
-| `test-architect`   | inherit | acceptEdits | Read, Write, Edit, Grep, Glob, Bash| `plan.approved`                    | `tests.written`              |
-| `implementer`      | opus    | acceptEdits | Read, Write, Edit, Grep, Glob, Bash| `tests.confirmed-failing`          | `implementation.completed`   |
+| `questioner`       | sonnet  | acceptEdits | Read, Write, Grep, Glob            | `feature.requested`                | `task.captured`              |
+| `file-finder`      | haiku   | plan        | Read, Grep, Glob                   | `task.captured` (blind)            | `files.found`                |
+| `researcher`       | sonnet  | plan        | Read, Grep, Glob                   | `task.captured` (blind)            | `research.completed`         |
+| `design-author`    | opus    | acceptEdits | Read, Write, Edit, Grep, Glob      | `research.completed`, `design.revision-requested` | `design.drafted` |
+| `structure-planner`| opus    | acceptEdits | Read, Write, Edit, Grep, Glob      | `design.approved`, `structure.revision-requested` | `structure.drafted` |
+| `planner`          | opus    | acceptEdits | Read, Write, Edit, Grep, Glob      | `structure.approved`               | `plan.drafted`               |
+| `test-architect`   | inherit | acceptEdits | Read, Write, Edit, Grep, Glob, Bash| `worktree.prepared`                | `tests.written`              |
+| `implementer`      | opus    | acceptEdits | Read, Write, Edit, Grep, Glob, Bash| `tests.confirmed-failing`, `hard-gate.*-failed` | `implementation.completed` |
 | `code-reviewer`    | sonnet  | plan        | Read, Grep, Glob, Bash             | `implementation.completed`         | `review.completed`           |
 | `security-reviewer`| sonnet  | plan        | Read, Grep, Glob, Bash             | `implementation.completed`         | `security-review.completed`  |
 | `technical-writer` | sonnet  | plan        | Read, Grep, Glob, Bash             | `implementation.completed`         | `docs-review.completed`      |
@@ -209,7 +255,7 @@ then human approval -- `plan.approved` or `plan.revision-requested`
 | `verifier`         | haiku   | plan        | Read, Grep, Glob, Bash             | `implementation.completed`         | `verification.completed`     |
 
 **Model tiering:** haiku for mechanical tasks, sonnet for judgment, opus for
-planning and implementation.
+design + structure + planning + implementation.
 
 ## 5. Thin Router
 
@@ -225,11 +271,12 @@ loop:
   6. Record output event(s) to the log
   7. If terminal event (feature.shipped) → exit
   8. If human gate → pause and prompt user
-  9. Goto loop
+  9. If router-emit gate → perform the action, emit passEvent
+ 10. Goto loop
 ```
 
 **The router has no agent-specific logic.** It does not know what a
-`file-finder` does or what a `planner` produces. It only knows:
+`questioner` does or what a `planner` produces. It only knows:
 
 - Which events have occurred (from the log)
 - Which agents subscribe to those events (from the registry)
@@ -243,18 +290,19 @@ no changes.
 
 ### Entry Points (slash commands)
 
-| Skill            | Command                 | Description                              |
-|------------------|-------------------------|------------------------------------------|
-| `team-brainstorm`| `/team-brainstorm <idea>` | Optional pre-research brainstorming    |
-| `team`           | `/team <desc>`          | Full pipeline -- emit `feature.requested` |
-| `team-fix`       | `/team-fix <bug>`       | Compressed bug-fix pipeline (no research/plan) |
-| `team-research`  | `/team-research <desc>` | Emit `feature.requested`, stop after `research.completed` |
-| `team-plan`      | `/team-plan <desc>`     | Resume or start from `research.completed` |
-| `team-test`      | `/team-test`            | Resume from `plan.approved`              |
-| `team-implement` | `/team-implement`       | Resume from `tests.confirmed-failing`    |
-| `team-verify`    | `/team-verify`          | Resume from `implementation.completed`   |
-| `team-ship`      | `/team-ship`            | Resume from `verification.passed`        |
-| `team-resume`    | `/team-resume`          | Replay event log, resume from last state |
+| Skill            | Command                    | Description                              |
+|------------------|----------------------------|------------------------------------------|
+| `team`           | `/team <desc>`             | Full 8-phase QRSPI pipeline              |
+| `team-fix`       | `/team-fix <bug>`          | Compressed bug-fix pipeline              |
+| `team-question`  | `/team-question <desc>`    | Decompose intent (runs alone)            |
+| `team-research`  | `/team-research`           | Blind research (runs Question if missing)|
+| `team-design`    | `/team-design`             | Design alignment (human gate)            |
+| `team-structure` | `/team-structure`          | Vertical-slice structure (human gate)    |
+| `team-plan`      | `/team-plan`               | Tactical plan from approved structure    |
+| `team-worktree`  | `/team-worktree`           | Prepare isolated worktree                |
+| `team-implement` | `/team-implement`          | Test-first + slice exec + 5-reviewer     |
+| `team-pr`        | `/team-pr`                 | Commit + PR                              |
+| `team-resume`    | `/team-resume`             | Replay event log, resume from last state |
 
 Each partial skill works by scanning the event log for the required
 prerequisite events and either resuming from that point or running the
@@ -264,15 +312,16 @@ prerequisite phases first.
 
 | Skill                    | Description                                    | Consumers                                                    |
 |--------------------------|------------------------------------------------|--------------------------------------------------------------|
-| `rpi-workflow`           | Phase discipline, artifact conventions, gates  | Loaded by router/orchestrator skills                         |
+| `qrspi-workflow`         | Phase discipline, artifact conventions, gates  | Loaded by router/orchestrator skills                         |
 | `test-first-development` | Acceptance tests as scope fence                | Loaded by test-architect, orchestrator                       |
 | `adversarial-review`     | Generator-evaluator separation, review method  | Loaded by code-reviewer, security-reviewer, ux-reviewer, technical-writer |
-| `engineering-standards`   | Engineering standards, implementation methodology, quality checklist | Loaded by planner, implementer, code-reviewer |
-| `refactoring-to-patterns`| Code smells and safe refactoring procedures     | Loaded by implementer                                        |
-| `solid-principles`       | SOLID design principles (SRP, OCP, LSP, ISP, DIP) | Loaded by implementer, code-reviewer                      |
+| `engineering-standards`  | Engineering standards, implementation methodology, quality checklist | Loaded by planner, implementer, code-reviewer |
+| `refactoring-to-patterns`| Code smells and safe refactoring procedures    | Loaded by implementer                                        |
+| `solid-principles`       | SOLID design principles                        | Loaded by implementer, code-reviewer                         |
 | `systematic-debugging`   | Root cause investigation                       | Loaded by agents when debugging                              |
-| `documenting-decisions`  | ADR creation and management                    | Loaded by planner, orchestrator                              |
-| `writing-prose`          | Clear documentation and readable explanation methodology | Loaded by technical-writer                                   |
+| `documenting-decisions`  | ADR creation and management                    | Loaded by design-author, structure-planner                   |
+| `writing-prose`          | Clear documentation and readable explanation   | Loaded by technical-writer                                   |
+| `worktree-isolation`     | Worktree setup + cleanup                       | Loaded by router during Worktree phase                       |
 
 ### Design Guidelines
 
@@ -293,10 +342,10 @@ prerequisite phases first.
 
 | Hook                       | Event                    | Purpose                                    |
 |----------------------------|--------------------------|--------------------------------------------|
-| `pre-bash-guard.mjs`      | PreToolUse(Bash)         | Block dangerous commands                   |
-| `pre-compact-anchor.mjs`  | PreCompact               | Snapshot latest event seq before compaction |
-| `session-start-recover.mjs`| SessionStart            | Replay event log to recover pipeline state |
-| `post-write-validate.mjs` | PostToolUse(Write\|Edit) | Validate plugin structure                  |
+| `pre-bash-guard.mjs`       | PreToolUse(Bash)         | Block dangerous commands                   |
+| `pre-compact-anchor.mjs`   | PreCompact               | Snapshot latest event seq before compaction |
+| `session-start-recover.mjs`| SessionStart             | Replay event log to recover pipeline state |
+| `post-write-validate.mjs`  | PostToolUse(Write\|Edit) | Validate plugin structure                  |
 
 ## 8. Shared Event Library
 
@@ -305,7 +354,8 @@ prerequisite phases first.
 Canonical location for event parsing logic shared across hooks and the
 Teamflow dashboard. Exports:
 
-- `EVENT_TO_PHASE` — maps event names to pipeline phases
+- `EVENT_TO_PHASE` — maps event names to pipeline phases (QUESTION, RESEARCH,
+  DESIGN, STRUCTURE, PLAN, WORKTREE, IMPLEMENT, PR, SHIPPED)
 - `deriveState(events)` — derives current pipeline state from an event array
 - `readEventLog(dir)` — reads and parses `.team/<topic>/events.jsonl`
 - `projectDir()` — resolves the project root directory
@@ -328,11 +378,12 @@ Shared types live in `teamflow/src/types.ts` (`AgentStatus`, `GateStatus`,
 engine and Svelte client components.
 
 Gate status is derived from registry gates and joins:
-- **interview** — requirements validation gate (PLAN phase)
-- **human** — plan approval gate (PLAN phase)
-- **mechanical** — test confirmation gate (TEST-FIRST phase)
-- **aggregate** — review collection gate (VERIFY phase)
-- **join** — parallel agent fan-in (RESEARCH phase)
+
+- **human** — design approval (DESIGN phase), structure approval (STRUCTURE phase)
+- **mechanical** — test confirmation gate (IMPLEMENT phase)
+- **aggregate** — review collection gate (IMPLEMENT phase)
+- **router-emit** — worktree preparation (WORKTREE phase), PR/ship (PR phase)
+- **join** — parallel research agent fan-in (RESEARCH phase)
 
 Each gate transitions through `pending → waiting → passed/failed` as events
 arrive. Gate keys, phases, and labels are derived from `registry.json` and

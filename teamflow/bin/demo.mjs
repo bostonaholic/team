@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Teamflow demo — writes fake pipeline events to ~/.team/events.jsonl
- * over ~60 seconds while the dashboard server streams them live.
+ * Teamflow demo — writes fake QRSPI pipeline events to ~/.team/<topic>/events.jsonl
+ * over ~90 seconds while the dashboard server streams them live.
  *
  * Usage: node teamflow/bin/demo.mjs
  */
@@ -24,52 +24,42 @@ const serverPath = join(__dirname, "..", "src", "server.ts");
 // --- Event timeline (delay in ms from previous event) ---
 
 const timeline = [
-  { delay: 0,    event: "feature.requested",       producer: "orchestrator",     data: { topic: "add-sse-reconnection-exponential-backoff", description: "Add SSE reconnection with exponential backoff" } },
-  { delay: 3000, event: "files.found",              producer: "file-finder",      data: { files: ["src/sse.ts", "src/client/App.svelte"], count: 2 } },
-  { delay: 5000, event: "research.completed",       producer: "researcher",       data: { openQuestions: 1 }, artifact: "docs/plans/2026-03-29-sse-reconnect-research.md" },
-  { delay: 4000, event: "requirements.assessed",    producer: "product-owner",    data: { confidence: 97, validatedRequirements: ["Add SSE reconnection with jittered exponential backoff, 30s ceiling"], openQuestions: [] } },
-  { delay: 1000, event: "requirements.confirmed",   producer: "router",           data: { interviewRounds: 0 } },
-  { delay: 6000, event: "plan.drafted",             producer: "planner",          data: { steps: 5, testCases: 3 }, artifact: "docs/plans/2026-03-29-sse-reconnect-plan.md" },
-  { delay: 4000, event: "plan.critiqued",           producer: "plan-critic",      data: { verdict: "approve", findings: ["Consider adding connection timeout"] } },
-  { delay: 3000, event: "plan.approved",            producer: "orchestrator",     data: {} },
-  { delay: 5000, event: "tests.written",            producer: "test-architect",   data: { testFiles: ["src/__tests__/sse-reconnect.test.ts"], testCount: 3 } },
-  { delay: 3000, event: "tests.confirmed-failing",  producer: "orchestrator",     data: { testFiles: ["src/__tests__/sse-reconnect.test.ts"], failCount: 3 } },
-  { delay: 4000, event: "step.completed",           producer: "implementer",      data: { step: "Add backoff utility function", totalTests: 3 } },
-  { delay: 4000, event: "step.completed",           producer: "implementer",      data: { step: "Integrate backoff into SSE client", totalTests: 3 } },
-  { delay: 4000, event: "step.completed",           producer: "implementer",      data: { step: "Add connection timeout handling", totalTests: 3 } },
-  { delay: 3000, event: "implementation.completed",  producer: "implementer",      data: { filesChanged: 3, testsPass: true } },
-  { delay: 4000, event: "review.completed",          producer: "code-reviewer",    data: { verdict: "approve", findings: ["Clean implementation, good test coverage"] } },
-  { delay: 1000, event: "docs-review.completed",     producer: "technical-writer", data: { verdict: "approve", findings: ["No doc updates needed"] } },
+  { delay: 0,    event: "feature.requested",       producer: "router",            data: { topic: "add-sse-reconnection-exponential-backoff", description: "Add SSE reconnection with exponential backoff" } },
+  { delay: 3000, event: "task.captured",            producer: "questioner",        data: { taskPath: "docs/plans/2026-04-20-sse-reconnect-task.md", questionsPath: "docs/plans/2026-04-20-sse-reconnect-questions.md", briefPath: "docs/plans/2026-04-20-sse-reconnect-brief.md", topic: "add-sse-reconnection-exponential-backoff" } },
+  { delay: 3000, event: "files.found",              producer: "file-finder",       data: { files: ["src/sse.ts", "src/client/App.svelte"], count: 2 } },
+  { delay: 4000, event: "research.completed",       producer: "researcher",        data: { openQuestions: 1 }, artifact: "docs/plans/2026-04-20-sse-reconnect-research.md" },
+  { delay: 5000, event: "design.drafted",           producer: "design-author",     data: { designPath: "docs/plans/2026-04-20-sse-reconnect-design.md", openQuestionsResolved: 2 }, artifact: "docs/plans/2026-04-20-sse-reconnect-design.md" },
+  { delay: 2000, event: "design.approved",          producer: "router",            data: {} },
+  { delay: 4000, event: "structure.drafted",        producer: "structure-planner", data: { structurePath: "docs/plans/2026-04-20-sse-reconnect-structure.md", sliceCount: 3 }, artifact: "docs/plans/2026-04-20-sse-reconnect-structure.md" },
+  { delay: 2000, event: "structure.approved",       producer: "router",            data: {} },
+  { delay: 4000, event: "plan.drafted",             producer: "planner",           data: { slices: 3, testCases: 6 }, artifact: "docs/plans/2026-04-20-sse-reconnect-plan.md" },
+  { delay: 1500, event: "worktree.prepared",        producer: "router",            data: { worktreePath: ".claude/worktrees/sse-reconnect", branch: "feat/sse-reconnect", isolation: "worktree" } },
+  { delay: 4000, event: "tests.written",            producer: "test-architect",    data: { testFiles: ["src/__tests__/sse-reconnect.test.ts"], testCount: 6 } },
+  { delay: 2000, event: "tests.confirmed-failing",  producer: "router",            data: { testFiles: ["src/__tests__/sse-reconnect.test.ts"], failCount: 6 } },
+  { delay: 3000, event: "slice.completed",          producer: "implementer",       data: { slice: "Backoff utility with mock endpoint", commit: "abc1234" } },
+  { delay: 3000, event: "slice.completed",          producer: "implementer",       data: { slice: "Wire backoff into SSE client", commit: "def5678" } },
+  { delay: 3000, event: "slice.completed",          producer: "implementer",       data: { slice: "Connection-timeout handling end-to-end", commit: "1234abc" } },
+  { delay: 2000, event: "implementation.completed", producer: "implementer",       data: { filesChanged: 3, testsPass: true } },
+  { delay: 4000, event: "review.completed",         producer: "code-reviewer",     data: { verdict: "approve", findings: ["Clean implementation, good test coverage"] } },
+  { delay: 1000, event: "docs-review.completed",    producer: "technical-writer",  data: { verdict: "approve", findings: ["No doc updates needed"] } },
   { delay: 2000, event: "security-review.completed", producer: "security-reviewer", data: { verdict: "approve", findings: ["No security concerns"] } },
-  { delay: 2000, event: "ux-review.completed",       producer: "ux-reviewer",      data: { verdict: "approve", findings: ["SSE reconnect is transparent to user"] } },
-  { delay: 2000, event: "verification.completed",    producer: "verifier",         data: { verdict: "fail", checks: ["format", "lint", "typecheck", "build", "test"] } },
-  { delay: 2000, event: "hard-gate.lint-failed",      producer: "router",           data: { command: "npm run lint", exitCode: 1, errors: "Lint check failed on src/sse.ts", retryRound: 1, maxRetries: 5 } },
-  { delay: 3000, event: "verification.completed",    producer: "verifier",         data: { verdict: "pass", checks: ["format", "lint", "typecheck", "build", "test"] } },
-  { delay: 2000, event: "verification.passed",       producer: "orchestrator",     data: {} },
-  { delay: 3000, event: "feature.shipped",           producer: "orchestrator",     data: { pr: "#42", branch: "feat/sse-reconnect" } },
+  { delay: 2000, event: "ux-review.completed",       producer: "ux-reviewer",       data: { verdict: "approve", findings: ["SSE reconnect is transparent to user"] } },
+  { delay: 2000, event: "verification.completed",    producer: "verifier",          data: { verdict: "fail", checks: ["format", "lint", "typecheck", "build", "test"] } },
+  { delay: 2000, event: "hard-gate.lint-failed",     producer: "router",            data: { command: "npm run lint", exitCode: 1, errors: "Lint check failed on src/sse.ts", retryRound: 1, maxRetries: 5 } },
+  { delay: 3000, event: "verification.completed",    producer: "verifier",          data: { verdict: "pass", checks: ["format", "lint", "typecheck", "build", "test"] } },
+  { delay: 2000, event: "verification.passed",       producer: "router",            data: {} },
+  { delay: 3000, event: "feature.shipped",           producer: "router",            data: { pr: "#42", branch: "feat/sse-reconnect" } },
 ];
 
 // Second session: a shorter bug-fix pipeline that appears ~15s into the first
 const SECOND_SESSION_DELAY = 15000;
 
 const timeline2 = [
-  { delay: 0,    event: "feature.requested",       producer: "orchestrator",     data: { topic: "fix-off-by-one-billing-calculation", description: "Fix off-by-one in billing calculation" } },
-  { delay: 3000, event: "files.found",              producer: "file-finder",      data: { files: ["src/billing.ts", "src/__tests__/billing.test.ts"], count: 2 } },
-  { delay: 4000, event: "research.completed",       producer: "researcher",       data: { openQuestions: 0 }, artifact: "docs/plans/2026-03-29-billing-fix-research.md" },
-  { delay: 5000, event: "plan.drafted",             producer: "planner",          data: { steps: 2, testCases: 4 }, artifact: "docs/plans/2026-03-29-billing-fix-plan.md" },
-  { delay: 3000, event: "plan.critiqued",           producer: "plan-critic",      data: { verdict: "approve", findings: [] } },
-  { delay: 2000, event: "plan.approved",            producer: "orchestrator",     data: {} },
-  { delay: 4000, event: "tests.written",            producer: "test-architect",   data: { testFiles: ["src/__tests__/billing-fix.test.ts"], testCount: 4 } },
-  { delay: 2000, event: "tests.confirmed-failing",  producer: "orchestrator",     data: { testFiles: ["src/__tests__/billing-fix.test.ts"], failCount: 4 } },
-  { delay: 3000, event: "step.completed",           producer: "implementer",      data: { step: "Fix boundary condition in invoice total", totalTests: 4 } },
-  { delay: 3000, event: "implementation.completed",  producer: "implementer",      data: { filesChanged: 2, testsPass: true } },
-  { delay: 3000, event: "review.completed",          producer: "code-reviewer",    data: { verdict: "approve", findings: ["Minimal, correct fix"] } },
-  { delay: 1000, event: "docs-review.completed",     producer: "technical-writer", data: { verdict: "approve", findings: [] } },
-  { delay: 1000, event: "security-review.completed", producer: "security-reviewer", data: { verdict: "approve", findings: [] } },
-  { delay: 1000, event: "ux-review.completed",       producer: "ux-reviewer",      data: { verdict: "approve", findings: [] } },
-  { delay: 2000, event: "verification.completed",    producer: "verifier",         data: { verdict: "pass", checks: ["format", "lint", "typecheck", "build", "test"] } },
-  { delay: 2000, event: "verification.passed",       producer: "orchestrator",     data: {} },
-  { delay: 2000, event: "feature.shipped",           producer: "orchestrator",     data: { pr: "#43", branch: "fix/billing-off-by-one" } },
+  { delay: 0,    event: "bug.reported",            producer: "router",         data: { topic: "fix-off-by-one-billing-calculation", description: "Fix off-by-one in billing calculation" } },
+  { delay: 3000, event: "tests.confirmed-failing", producer: "router",         data: { testName: "billing_includes_last_day", failureReason: "expected 30 got 29" } },
+  { delay: 5000, event: "implementation.completed", producer: "implementer",   data: { fixSummary: "Fix boundary condition in invoice total", filesChanged: 2 } },
+  { delay: 2000, event: "verification.passed",      producer: "router",        data: {} },
+  { delay: 2000, event: "feature.shipped",          producer: "router",        data: { pr: "#43", branch: "fix/billing-off-by-one" } },
 ];
 
 // --- Helpers ---
@@ -176,8 +166,8 @@ async function main() {
   }
 
   console.log("Playing pipeline events...\n");
-  console.log("  Session 1: SSE reconnection feature");
-  console.log("  Session 2: billing bug fix (appears in ~15s)\n");
+  console.log("  Session 1: SSE reconnection feature (full QRSPI)");
+  console.log("  Session 2: billing bug fix (compressed, appears in ~15s)\n");
 
   // Play first session, and after SECOND_SESSION_DELAY start the second
   const session1 = playTimeline(eventsPath, "session-1", timeline);

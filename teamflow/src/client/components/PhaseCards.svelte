@@ -12,12 +12,14 @@
   let { phase, agents, gates, events, now }: Props = $props();
 
   const pipeline: Array<{ name: string; agents: string[]; gate?: string }> = [
+    { name: "QUESTION", agents: ["questioner"] },
     { name: "RESEARCH", agents: ["file-finder", "researcher"], gate: "research-join" },
-    { name: "PLAN", agents: ["product-owner", "planner", "plan-critic"], gate: "plan-gate" },
-    { name: "TEST-FIRST", agents: ["test-architect"], gate: "test-gate" },
-    { name: "IMPLEMENT", agents: ["implementer"] },
-    { name: "VERIFY", agents: ["code-reviewer", "security-reviewer", "technical-writer", "ux-reviewer", "verifier"], gate: "verify-gate" },
-    { name: "SHIP", agents: ["orchestrator"] },
+    { name: "DESIGN", agents: ["design-author"], gate: "design-gate" },
+    { name: "STRUCTURE", agents: ["structure-planner"], gate: "structure-gate" },
+    { name: "PLAN", agents: ["planner"] },
+    { name: "WORKTREE", agents: ["router"], gate: "worktree-gate" },
+    { name: "IMPLEMENT", agents: ["test-architect", "implementer", "code-reviewer", "security-reviewer", "technical-writer", "ux-reviewer", "verifier"], gate: "verification-gate" },
+    { name: "PR", agents: ["router"], gate: "feature-gate" },
   ];
 
   const gateCount = pipeline.length - 1;
@@ -25,20 +27,35 @@
   const phaseNames = pipeline.map((p) => p.name);
 
   const EVENT_TO_PHASE: Record<string, string> = {
-    "feature.requested": "RESEARCH",
-    "research.completed": "PLAN",
-    "plan.drafted": "PLAN",
-    "plan.approved": "TEST-FIRST",
-    "plan.revision-requested": "PLAN",
+    "feature.requested": "QUESTION",
+    "bug.reported": "QUESTION",
+    "task.captured": "RESEARCH",
+    "files.found": "RESEARCH",
+    "research.completed": "DESIGN",
+    "design.drafted": "DESIGN",
+    "design.approved": "STRUCTURE",
+    "design.revision-requested": "DESIGN",
+    "structure.drafted": "STRUCTURE",
+    "structure.approved": "PLAN",
+    "structure.revision-requested": "STRUCTURE",
+    "plan.drafted": "WORKTREE",
+    "worktree.prepared": "IMPLEMENT",
+    "tests.written": "IMPLEMENT",
     "tests.confirmed-failing": "IMPLEMENT",
-    "implementation.completed": "VERIFY",
+    "slice.completed": "IMPLEMENT",
+    "implementation.completed": "IMPLEMENT",
+    "review.completed": "IMPLEMENT",
+    "security-review.completed": "IMPLEMENT",
+    "docs-review.completed": "IMPLEMENT",
+    "ux-review.completed": "IMPLEMENT",
+    "verification.completed": "IMPLEMENT",
     "hard-gate.security-failed": "IMPLEMENT",
     "hard-gate.lint-failed": "IMPLEMENT",
     "hard-gate.typecheck-failed": "IMPLEMENT",
     "hard-gate.build-failed": "IMPLEMENT",
     "hard-gate.test-failed": "IMPLEMENT",
     "hard-gate.review-failed": "IMPLEMENT",
-    "verification.passed": "SHIP",
+    "verification.passed": "PR",
     "feature.shipped": "SHIPPED",
   };
 
@@ -102,6 +119,7 @@
       case "mechanical": return "Mechanical Gate";
       case "aggregate": return "Aggregate Gate";
       case "join": return "Join";
+      case "router-emit": return "Router Action";
     }
   }
 

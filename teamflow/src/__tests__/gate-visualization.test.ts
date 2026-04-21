@@ -126,9 +126,14 @@ describe("G9: gate_arrow_has_status_classes", () => {
 // hard-gate.*-failed (typed), and verification.passed
 // ---------------------------------------------------------------------------
 describe("G10: demo_emits_all_gate_trigger_events", () => {
-  it("demo contains plan.approved event", () => {
+  it("demo contains design.approved event", () => {
     const demo = readSource(DEMO_MJS);
-    expect(demo).toMatch(/plan\.approved/);
+    expect(demo).toMatch(/design\.approved/);
+  });
+
+  it("demo contains structure.approved event", () => {
+    const demo = readSource(DEMO_MJS);
+    expect(demo).toMatch(/structure\.approved/);
   });
 
   it("demo contains tests.confirmed-failing event", () => {

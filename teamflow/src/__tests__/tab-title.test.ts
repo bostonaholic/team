@@ -272,10 +272,10 @@ describe("TT-10: demo_session1_has_description_and_kebab_topic", () => {
 // Step: 3.1
 // ---------------------------------------------------------------------------
 describe("TT-11: demo_session2_has_description_and_kebab_topic", () => {
-  it("demo.mjs session 2 feature.requested has a description field", () => {
+  it("demo.mjs session 2 entry event has a description field", () => {
     const source = readSource(DEMO_MJS);
-    // Find the second timeline (timeline2) and check for description
-    const timeline2Block = source.match(/const timeline2\s*=[\s\S]*?feature\.requested[\s\S]*?\{[\s\S]*?topic[\s\S]*?\}/);
+    // Either feature.requested (full pipeline) or bug.reported (team-fix path).
+    const timeline2Block = source.match(/const timeline2\s*=[\s\S]*?(?:feature\.requested|bug\.reported)[\s\S]*?\{[\s\S]*?topic[\s\S]*?\}/);
     expect(timeline2Block).not.toBeNull();
     expect(timeline2Block![0]).toMatch(/description\s*:/);
   });

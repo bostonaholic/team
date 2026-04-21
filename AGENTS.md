@@ -34,33 +34,34 @@ Agents are **decoupled microservices**. Each consumes events, does work, produce
 ## Pipeline
 
 ```
-[BRAINSTORM] → RESEARCH → PLAN → TEST-FIRST → IMPLEMENT → VERIFY → SHIP
+QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → WORKTREE → IMPLEMENT → PR
 ```
 
-Brainstorming is optional — use `/team-brainstorm` to shape vague ideas before committing to implementation. Two human touchpoints: interview gate (requirements validation, auto-passes at ≥95% confidence) and plan approval. The plan approval gate has an auto-revision pre-pass: any non-PASS critic verdict (REVISE or PASS WITH CHANGES) triggers automatic revision (up to 3 rounds) before user presentation. Everything else is autonomous with mechanical gates.
+TEAM runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-PR). Two human gates: **Design approval** (~200-line alignment doc) and **Structure approval** (~2-page vertical-slice breakdown). Research is **blind** — the researcher never sees the user's original task description. The Plan is a tactical artifact for the implementer, not for human review. Implement is a sub-pipeline (test-first → slice execution → 5-reviewer adversarial verify with hard-gate retry loop). Everything outside the two human gates is autonomous with mechanical gates.
 
 ## Entry Points
 
 | Command | Phase |
 |---------|-------|
-| `/team-brainstorm <idea>` | Optional pre-research brainstorming |
-| `/team <desc>` | Full 6-phase pipeline |
-| `/team-fix <bug>` | Compressed bug-fix pipeline (no research/plan) |
-| `/team-research <desc>` | Research only |
-| `/team-plan <desc>` | Plan (runs research if missing) |
-| `/team-test` | Write failing acceptance tests |
-| `/team-implement` | Dispatch implementer agent |
-| `/team-verify` | 5 parallel reviewers |
-| `/team-ship` | Commit + PR |
+| `/team <desc>` | Full 8-phase QRSPI pipeline |
+| `/team-fix <bug>` | Compressed bug-fix pipeline (no QRSPI ceremony) |
+| `/team-question <desc>` | Decompose intent into task + questions + brief |
+| `/team-research` | Blind codebase research (runs Question if missing) |
+| `/team-design` | Align with user on approach (human gate) |
+| `/team-structure` | Break design into vertical slices (human gate) |
+| `/team-plan` | Tactical plan from approved structure |
+| `/team-worktree` | Prepare isolated git worktree |
+| `/team-implement` | Test-first + slice execution + 5-reviewer verify |
+| `/team-pr` | Commit + open PR |
 | `/team-resume` | Replay event log, resume |
 
-## Agents (12)
+## Agents (13)
 
 See `agents/*.md`. Each has `consumes`/`produces` in frontmatter. Model tiering: haiku (mechanical), sonnet (judgment), opus (planning + implementation).
 
 **Invariant:** Agent frontmatter (`consumes`/`produces`) and `skills/team/registry.json` must always be in sync. When changing one, update the other in the same commit. The dev hook `.claude/hooks/check-registry-sync.mjs` enforces this automatically.
 
-## Skills (25)
+## Skills (24)
 
 See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodology skills are loaded by agents. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
 

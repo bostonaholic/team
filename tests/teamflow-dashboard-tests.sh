@@ -227,22 +227,23 @@ fi
 #      rapid appends are captured (critic issue C3).
 # ---------------------------------------------------------------------------
 if [ "$SERVER_STARTED" = "true" ]; then
-  # Append three events in rapid succession to test tailing + rapid capture
+  # Append events in rapid succession to test tailing + rapid capture
   cat >> "$TMPDIR_FIXTURE/.team/events.jsonl" <<'EVENTS'
-{"seq":2,"event":"research.completed","producer":"router","ts":"2026-03-28T10:01:00Z","data":{"researchPath":"docs/plans/research.md","openQuestions":0},"artifact":"docs/plans/research.md"}
-{"seq":3,"event":"plan.drafted","producer":"planner","ts":"2026-03-28T10:02:00Z","data":{"planPath":"docs/plans/plan.md","steps":5,"testCount":10},"artifact":"docs/plans/plan.md"}
-{"seq":4,"event":"plan.approved","producer":"router","ts":"2026-03-28T10:03:00Z","data":{"planPath":"docs/plans/plan.md"}}
+{"seq":2,"event":"task.captured","producer":"questioner","ts":"2026-03-28T10:01:00Z","data":{"taskPath":"docs/plans/task.md","questionsPath":"docs/plans/questions.md","briefPath":"docs/plans/brief.md","topic":"test"}}
+{"seq":3,"event":"research.completed","producer":"researcher","ts":"2026-03-28T10:02:00Z","data":{"researchPath":"docs/plans/research.md","openQuestions":0},"artifact":"docs/plans/research.md"}
+{"seq":4,"event":"design.drafted","producer":"design-author","ts":"2026-03-28T10:03:00Z","data":{"designPath":"docs/plans/design.md"},"artifact":"docs/plans/design.md"}
+{"seq":5,"event":"design.approved","producer":"router","ts":"2026-03-28T10:04:00Z","data":{}}
 EVENTS
 
   # Give the tailer time to pick up the appends
   sleep 1
 
   STATE_AFTER=$(curl -s -f http://127.0.0.1:7425/api/state 2>/dev/null || echo "")
-  # After plan.approved, the phase should be TEST-FIRST
-  if echo "$STATE_AFTER" | grep -q "TEST-FIRST"; then
+  # After design.approved, the phase should be STRUCTURE
+  if echo "$STATE_AFTER" | grep -q "STRUCTURE"; then
     pass "T14: state reflects events from file"
   else
-    fail "T14: state reflects events from file -- expected phase TEST-FIRST after appending plan.approved event, got: $(echo "$STATE_AFTER" | head -3)"
+    fail "T14: state reflects events from file -- expected phase STRUCTURE after appending design.approved event, got: $(echo "$STATE_AFTER" | head -3)"
   fi
 else
   fail "T14: state reflects events from file -- server not running, cannot test state tailing"

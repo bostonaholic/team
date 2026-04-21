@@ -35,16 +35,35 @@ function detectPartialWork(events) {
   const eventNames = new Set(events.map((e) => e.event));
   const gaps = [];
 
+  // Shipped pipelines have no partial work by definition.
+  if (eventNames.has("feature.shipped")) return gaps;
+
+  if (eventNames.has("task.captured") && !eventNames.has("research.completed")) {
+    gaps.push("Question phase done but research not completed");
+  }
+
   if (eventNames.has("files.found") && !eventNames.has("research.completed")) {
     gaps.push("Research started (files found) but not completed");
   }
 
-  if (eventNames.has("plan.drafted") && !eventNames.has("plan.approved") && !eventNames.has("plan.revision-requested")) {
-    gaps.push("Plan drafted but not yet reviewed");
+  if (eventNames.has("design.drafted") && !eventNames.has("design.approved") && !eventNames.has("design.revision-requested")) {
+    gaps.push("Design drafted but awaiting human approval");
+  }
+
+  if (eventNames.has("structure.drafted") && !eventNames.has("structure.approved") && !eventNames.has("structure.revision-requested")) {
+    gaps.push("Structure drafted but awaiting human approval");
+  }
+
+  if (eventNames.has("plan.drafted") && !eventNames.has("worktree.prepared")) {
+    gaps.push("Plan drafted but worktree not prepared");
   }
 
   if (eventNames.has("tests.confirmed-failing") && !eventNames.has("implementation.completed")) {
     gaps.push("Tests written but implementation not completed");
+  }
+
+  if (eventNames.has("implementation.completed") && !eventNames.has("verification.passed")) {
+    gaps.push("Implementation completed but verification not passed");
   }
 
   return gaps;
