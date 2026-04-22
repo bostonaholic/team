@@ -114,7 +114,6 @@
 
   function gateTypeLabel(type: GateStatus["type"]): string {
     switch (type) {
-      case "interview": return "Interview Gate";
       case "human": return "Human Gate";
       case "mechanical": return "Mechanical Gate";
       case "aggregate": return "Aggregate Gate";

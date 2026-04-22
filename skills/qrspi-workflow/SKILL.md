@@ -113,19 +113,27 @@ and match across every artifact for the same feature.
 ## Blind Research
 
 Research is the most-corruptible phase: an LLM that knows what it is being
-asked to build will return opinions instead of facts. QRSPI structurally
-prevents this:
+asked to build will return opinions instead of facts. QRSPI enforces the
+invariant in two layers — structural at the event boundary, procedural at
+the agent boundary:
 
-1. The `task.captured` event payload carries `{taskPath, questionsPath,
-   briefPath, topic}` — never the user's description.
-2. The `researcher` agent's frontmatter consumes only `task.captured` (not
-   `feature.requested`, which carries the description).
-3. The `researcher` agent system prompt forbids reading `task.md`. It reads
-   `questions.md` and `brief.md` only.
-4. The `file-finder` agent operates under the same constraint.
+1. **Structural** — the `task.captured` event payload carries
+   `{taskPath, questionsPath, briefPath, topic}` — never the user's
+   description. Every downstream event obeys the same rule.
+2. **Structural** — the `researcher` and `file-finder` agent frontmatter
+   consume only `task.captured` (not `feature.requested`, which carries
+   the description). The router is forbidden from handing the description
+   to blind agents at dispatch time.
+3. **Procedural** — the `researcher` and `file-finder` agent system prompts
+   forbid reading `task.md`. Both have `Read`/`Grep`/`Glob` tools with
+   `permissionMode: plan`, so nothing mechanically stops a `Read` of
+   `task.md`; enforcement relies on the agent following its prompt.
+4. **Procedural** — if a researcher needs context the brief lacks, it must
+   surface that as an open question rather than guessing the intent.
 
-If a researcher needs context the brief lacks, it must surface that as an
-open question rather than guessing the intent.
+A PreToolUse(Read) hook that blocks `*-task.md` reads from blind agents
+would convert step 3 from procedural to structural. Treat this as a
+follow-up if procedural enforcement proves insufficient in practice.
 
 ## Vertical Slices
 
