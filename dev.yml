@@ -10,17 +10,6 @@ up:
       name: playwright-cli
       met?: "npx --no-install playwright-cli --version 2>/dev/null"
       meet: "npm install -g @playwright/cli@latest && playwright-cli install --skills"
-  - custom:
-      name: teamflow dependencies
-      met?: "test -d teamflow/node_modules"
-      meet: "cd teamflow && npm install --silent"
-
-build: "cd teamflow && npm run build"
-
-server:
-  desc: "Start the Teamflow dashboard server (foreground, no demo data)"
-  run: "cd teamflow && TEAMFLOW_NO_OPEN=1 npm start"
-  build_first: true
 
 check:
   plugin: "claude plugin validate ."
@@ -32,9 +21,6 @@ commands:
   uninstall:
     desc: "Unregister plugin and clean up cache"
     run: "script/dev-uninstall"
-  demo:
-    desc: "Start the Teamflow dashboard with a live demo pipeline (~60s)"
-    run: "cd teamflow && npm run demo"
   update:
     desc: "Update all agent skills"
     # TODO: `npx skills update` ignores project-level skills-lock.json
