@@ -35,6 +35,11 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
 {"seq":1,"event":"feature.requested","producer":"router","ts":"<ISO-8601>","data":{"topic":"<topic>","description":"<description>","today":"<today>","beadsId":"<beadsId or null>"},"artifact":null,"causedBy":null,"gate":null}
 ```
 
+Also mirror the snapshot: call `initState(topic, beadsId, today)` from
+`lib/state.mjs` to write `~/.team/<topic>/state.json`. The state snapshot is
+the forward-looking source of truth; the event log remains as the in-flight
+record until the cutover.
+
 The router holds onto the description. Downstream of `feature.requested`,
 the description must NEVER appear in any event payload.
 
@@ -102,10 +107,12 @@ When `design.drafted` is recorded:
 1. Read the design artifact (`design.md`) from disk
 2. Present the design **in full** to the user
 3. Ask: "Do you approve this design?"
-4. If approved → append `design.approved` event
+4. If approved → append `design.approved` event. Also
+   `writeState(topic, { phase: 'STRUCTURE' })`.
 5. If rejected → append `design.revision-requested` event with
    `{designPath, feedback: <user input>, revisionNumber: <count + 1>}`
-   (where count is the number of `design.revision-requested` events in the log)
+   (where count is the number of `design.revision-requested` events in the log).
+   Also `writeState(topic, { designRevisionCount: <count + 1> })`.
 6. The design-author consumes `design.revision-requested` and produces a
    new `design.drafted` for re-review
 
@@ -115,9 +122,11 @@ When `structure.drafted` is recorded:
 1. Read the structure artifact (`structure.md`) from disk
 2. Present the structure **in full** to the user
 3. Ask: "Do you approve this structure?"
-4. If approved → append `structure.approved` event
+4. If approved → append `structure.approved` event. Also
+   `writeState(topic, { phase: 'PLAN' })`.
 5. If rejected → append `structure.revision-requested` event with
-   `{structurePath, feedback: <user input>, revisionNumber: <count + 1>}`
+   `{structurePath, feedback: <user input>, revisionNumber: <count + 1>}`.
+   Also `writeState(topic, { structureRevisionCount: <count + 1> })`.
 6. The structure-planner consumes `structure.revision-requested` and produces
    a new `structure.drafted`
 
@@ -128,13 +137,16 @@ When `plan.drafted` is recorded:
    for this topic (`claude --worktree <topic>` or equivalent).
 2. See `skills/worktree-isolation/SKILL.md` for the full methodology.
 3. Append `worktree.prepared` event with
-   `{worktreePath, branch, isolation: "worktree" | "in-place"}`.
+   `{worktreePath, branch, isolation: "worktree" | "in-place"}`. Also
+   `writeState(topic, { phase: 'IMPLEMENT' })`.
 
 ### Mechanical Gate (test confirmation)
 
 When `tests.written` is recorded:
 1. Run the test suite
-2. If all tests fail with assertion errors (not crashes) → append `tests.confirmed-failing`
+2. If all tests fail with assertion errors (not crashes) → append
+   `tests.confirmed-failing`. Also `writeState(topic, {})` (no phase change —
+   still IMPLEMENT — but refreshes `lastUpdated`).
 3. If tests crash or error → report the issue, do NOT emit the pass event
 
 ### Aggregate Gate (review collection)
@@ -157,6 +169,8 @@ When all 5 review events exist in the log:
    - Code review failure → `hard-gate.review-failed` (data: blocking `issue:` comments)
    Emit one event per specific failure. If multiple gates or checks fail in
    one round, emit multiple failure events — the implementer will see all of them.
+   For each `hard-gate.*-failed` event appended, also
+   `writeState(topic, { verificationRetryCount: <current + 1> })`.
 4. Count total `hard-gate.*-failed` events in the log (across all types):
    - If total < 5 → dispatch implementer to fix. The implementer reads the
      specific failure event(s) to know exactly what to address. After fixes,
@@ -179,7 +193,8 @@ When `verification.passed` is recorded:
 4. If `beadsId` is present in the `feature.requested` event data and the user
    chose to commit (either option), use `/beads:close <beadsId>` to mark the
    issue as done. Skip if the user chose "keep as-is".
-5. Append `feature.shipped` event
+5. Append `feature.shipped` event. Also
+   `writeState(topic, { phase: 'SHIPPED' })` before the cleanup step.
 6. Delete `~/.team/<topic>/` directory
 7. If a worktree was created, clean it up (cherry-pick/rebase commits onto
    the target branch, then let Claude Code remove the worktree)
