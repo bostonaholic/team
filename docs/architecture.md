@@ -1,169 +1,108 @@
 # TEAM Architecture
 
-> **Task Execution Agent Mesh** -- A Claude Code plugin that orchestrates
+> **Task Execution Agent Mesh** — A Claude Code plugin that orchestrates
 > specialized agents to autonomously implement entire features end-to-end,
-> driven by an append-only event log and the QRSPI methodology.
+> driven by a `state.json` snapshot, artifact files on disk, and the QRSPI
+> methodology.
 
 ## 1. Design Philosophy
 
-Agents are **decoupled microservices**. Each agent consumes events, does work,
-and produces events. No agent knows about any other agent. The pipeline
-emerges from event flow, not from orchestrator logic.
+Agents are **decoupled microservices**. Each agent consumes a predecessor
+artifact on disk, does work, and produces its own artifact under
+`docs/plans/`. No agent knows about any other agent. The pipeline emerges
+from artifact flow driven by the router's phase table.
 
-The `team` skill is a **thin event router**. It reads the event log, consults
-`registry.json` to find the next agent(s) to dispatch, records their output
-events, and checks gates. It contains zero agent-specific knowledge.
+The `team` skill is a **phase-table router**. It reads
+`~/.team/<topic>/state.json`, looks up the current phase in a linear table,
+verifies predecessor artifacts exist on disk, dispatches the next agent(s),
+persists their output artifacts, runs the gate for that phase, updates the
+snapshot, and advances. It contains zero agent-specific logic.
 
 **Principles:**
 
-- **Events are the source of truth.** State is derived from the event log,
-  never stored directly. Replay the log to reconstruct any point in time.
-- **Registry defines wiring.** `skills/team/registry.json` is the single
-  source of truth for which agent consumes which event. Change the pipeline
-  by editing the registry, not the router.
-- **File artifacts survive compaction.** Agents communicate through file
-  artifacts in `docs/plans/`. These survive context window compaction and
-  can be re-read by any agent in any session.
+- **State is a `state.json` snapshot + artifact presence.** The router and
+  hooks read `~/.team/<topic>/state.json` (~10 fields) and stat files under
+  `docs/plans/`. Phase completion is signaled by the presence of an artifact
+  file (or a zero-byte `.approved` sidecar for human-gated phases).
+- **Registry is documentation.** `skills/team/registry.json` lists the 13
+  agents and their historical event vocabulary as reference material. The
+  router no longer consults `consumes`/`produces` for dispatch; those live
+  in `skills/team/SKILL.md` as a phase table.
+- **File artifacts survive compaction.** Agents communicate through files in
+  `docs/plans/`. These survive context window compaction and can be re-read
+  by any agent in any session.
 - **Blind research.** The researcher and file-finder never receive the
-  user's original task description. Enforcement has two layers:
-  *structural* — the `task.captured` event payload and every downstream
-  event omit the description, and the blind agents' frontmatter consume
-  `task.captured` rather than `feature.requested`; *procedural* — the
-  blind agents' system prompts forbid reading `task.md`. A PreToolUse
-  hook could upgrade the procedural layer to structural.
+  user's original task description. Enforcement is two-layer: *structural* —
+  the router only passes `brief.md` + `questions.md` paths to the blind
+  agents; *procedural* — the blind agents' system prompts forbid reading
+  `task.md`.
 - **Two human touchpoints.** Design approval (~200-line alignment doc) and
-  Structure approval (~2-page vertical-slice breakdown). The Plan is not
-  human-gated — humans review the structure, which is the real contract.
+  Structure approval (~2-page vertical-slice breakdown). Each produces a
+  zero-byte `<artifact>.md.approved` sidecar as the durable approval
+  record. The Plan is not human-gated — humans review the structure, which
+  is the real contract.
 - **Hooks enforce discipline mechanically.** LLMs forget instructions ~20%
   of the time; hooks are deterministic.
 
-## 2. Event Store
+## 2. State Snapshot
 
-**File:** `.team/<topic>/events.jsonl` (append-only JSONL, gitignored)
+**File:** `~/.team/<topic>/state.json` (single JSON object, overwritten in
+place via atomic rename)
 
-Each line is a self-contained event:
+The snapshot is the only runtime state the router needs. All pipeline
+history is reconstructed from the files under `docs/plans/<today>-<topic>-*.md`
+plus their `.approved` sidecars.
 
 ```json
 {
-  "seq": 1,
-  "event": "feature.requested",
-  "producer": "router",
-  "ts": "2026-04-20T14:30:00Z",
-  "data": { "description": "add user auth", "topic": "add-user-auth", "today": "2026-04-20" },
-  "artifact": null,
-  "causedBy": null,
-  "gate": null
+  "topic": "simplify-orchestration",
+  "today": "2026-04-22",
+  "beadsId": "team-x7z",
+  "phase": "DESIGN",
+  "startedAt": "2026-04-22T14:03:11Z",
+  "lastUpdated": "2026-04-22T14:47:02Z",
+  "designRevisionCount": 0,
+  "structureRevisionCount": 0,
+  "verificationRetryCount": 0,
+  "currentSlice": null
 }
 ```
 
-| Field      | Type          | Description                                       |
-|------------|---------------|---------------------------------------------------|
-| `seq`      | integer       | Monotonically increasing, assigned by router       |
-| `event`    | string        | Event name from the [event catalog](event-catalog.md) |
-| `producer` | string        | Agent name or `router`                             |
-| `ts`       | ISO-8601      | When the event was recorded                        |
-| `data`     | object        | Event-specific payload                             |
-| `artifact` | string\|null  | Path to file artifact, if produced                 |
-| `causedBy` | integer\|null | `seq` of the triggering event                      |
-| `gate`     | object\|null  | Gate result metadata                               |
+| Field                    | Type            | Description                                           |
+|--------------------------|-----------------|-------------------------------------------------------|
+| `topic`                  | string          | Kebab-case slug                                       |
+| `today`                  | string          | `YYYY-MM-DD` from start                               |
+| `beadsId`                | string \| null  | Tracking beads issue, if present                      |
+| `phase`                  | enum            | `QUESTION` … `SHIPPED`                                |
+| `startedAt`              | ISO-8601        | Pipeline start                                        |
+| `lastUpdated`            | ISO-8601        | Last `writeState` call                                |
+| `designRevisionCount`    | integer         | Human-gate rejections (design)                        |
+| `structureRevisionCount` | integer         | Human-gate rejections (structure)                     |
+| `verificationRetryCount` | integer         | Aggregate-gate retries (max 5)                        |
+| `currentSlice`           | string \| null  | Latest slice the implementer is working on           |
 
 **Invariants:**
 
-- Events are **append-only**. Never modify or delete a line.
-- `seq` values are **gapless** and **monotonically increasing**.
-- During live pipeline runs, the router is the **only writer** to the event log.
-  (Dev tools like `demo.mjs` also write to the log for demonstration purposes.)
-- Current pipeline state is **derived** by scanning the log for the latest
-  event of each type.
-- The `description` field from `feature.requested` must NEVER appear in any
-  downstream event payload. The questioner is the only agent that reads it.
+- `state.json` is the single source of pipeline state. Updates go through
+  `lib/state.mjs` (`writeState` performs atomic tmp-file + rename).
+- `.approved` sidecars are the durable record of human gate passes. They
+  are zero-byte files at `docs/plans/<today>-<topic>-{design,structure}.md.approved`.
+- On `SHIPPED`, the router deletes `~/.team/<topic>/` — the `docs/plans/`
+  artifacts remain as the only record.
 
 ## 3. Pipeline (QRSPI)
 
-The pipeline has eight phases, expressed as event flow:
+The pipeline has eight phases. The router walks them in order; each phase
+requires the prior phase's artifact on disk.
 
 ```
-feature.requested
-    │
-    v
- questioner
-    │
-    v
- task.captured  ────────────────────────┐
-    │                                    │
-    ├──> file-finder ──> files.found ───┤
-    │                                    │
-    └──> researcher ────────────────────>├──> research.completed
-                                         │
-                                    design-author
-                                         │
-                                    design.drafted
-                                         │
-                                  [HUMAN GATE]
-                                  /            \
-                           approved           rejected
-                              │                  │
-                     design.approved  design.revision-requested
-                              │                  │
-                              v                  └──> design-author
-                        structure-planner
-                              │
-                        structure.drafted
-                              │
-                       [HUMAN GATE]
-                      /              \
-                approved           rejected
-                   │                  │
-          structure.approved  structure.revision-requested
-                   │                  │
-                   v                  └──> structure-planner
-                planner
-                   │
-              plan.drafted
-                   │
-              [ROUTER-EMIT]
-                   │
-           worktree.prepared
-                   │
-                   v
-            test-architect
-                   │
-             tests.written
-                   │
-           [MECHANICAL GATE]
-                   │
-         tests.confirmed-failing
-                   │
-                   v
-             implementer
-             │         │
-      slice.completed  ...
-             │
-    implementation.completed
-             │
-  ┌──────┬──────┼──────┬──────┐
-  v      v      v      v      v
- code  security docs   ux   verifier
- -rev. -rev.    -writer -rev.
-  │      │      │      │      │
-  └──────┴──────┴──────┴──────┘
-             │
-    [AGGREGATE GATE]
-   /                \
- all pass      hard gate fails
-  │                  │
-verification.passed  hard-gate.*-failed
-  │             (typed per failure)
-[ROUTER-EMIT]     └──> implementer (retry)
-  │
-feature.shipped
+QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → WORKTREE → IMPLEMENT → PR → SHIPPED
 ```
 
 ### Phase 1: Question
 
-**Trigger:** `feature.requested`
 **Agent:** `questioner`
-**Output event:** `task.captured`
+**Predecessor:** (none — description in `$ARGUMENTS`)
 **Artifacts:** `docs/plans/YYYY-MM-DD-<topic>-{task,questions,brief}.md`
 
 Decomposes the user's intent into three artifacts. Only the questioner ever
@@ -171,123 +110,125 @@ sees the user's description.
 
 ### Phase 2: Research (blind)
 
-**Trigger:** `task.captured`
-**Parallel agents:** `file-finder`, `researcher` (both BLIND to task.md)
-**Join:** Router waits for `files.found`, then merges with researcher output
-**Output event:** `research.completed`
+**Parallel agents:** `file-finder`, `researcher` (both BLIND to `task.md`)
+**Predecessor:** `task.md`
 **Artifact:** `docs/plans/YYYY-MM-DD-<topic>-research.md`
+
+Router waits for both agents to return, then persists the combined research
+artifact.
 
 ### Phase 3: Design
 
-**Trigger:** `research.completed`
-**Agent:** `design-author` (MUST ask open questions interactively before drafting)
-**Output events:** `design.drafted`
-**Gate:** HUMAN — `design.approved` or `design.revision-requested`
+**Agent:** `design-author` (MUST ask open questions interactively before
+drafting)
+**Predecessor:** `research.md`
 **Artifact:** `docs/plans/YYYY-MM-DD-<topic>-design.md`
+**Gate:** HUMAN — on approval the router touches `design.md.approved`; on
+rejection the router increments `designRevisionCount` and re-dispatches
+`design-author` with the feedback.
 
 ### Phase 4: Structure
 
-**Trigger:** `design.approved`
 **Agent:** `structure-planner`
-**Output events:** `structure.drafted`
-**Gate:** HUMAN — `structure.approved` or `structure.revision-requested`
+**Predecessor:** `design.md.approved` sidecar
 **Artifact:** `docs/plans/YYYY-MM-DD-<topic>-structure.md`
-
-Breaks the approved design into vertical slices with per-slice acceptance
-tests.
+**Gate:** HUMAN — on approval the router touches `structure.md.approved`;
+on rejection it increments `structureRevisionCount` and re-dispatches.
 
 ### Phase 5: Plan
 
-**Trigger:** `structure.approved`
 **Agent:** `planner`
-**Output event:** `plan.drafted`
+**Predecessor:** `structure.md.approved` sidecar
 **Artifact:** `docs/plans/YYYY-MM-DD-<topic>-plan.md`
 
-No human gate — humans reviewed the structure; the plan is tactical.
+No human gate. Humans reviewed the structure; the plan is tactical.
 
 ### Phase 6: Worktree
 
-**Trigger:** `plan.drafted`
 **Producer:** router (no agent)
-**Output event:** `worktree.prepared`
-**Artifact:** isolated git worktree under `.claude/worktrees/<topic>/`
+**Predecessor:** `plan.md`
+**Artifact:** isolated git worktree under `.claude/worktrees/<topic>/`.
+**Gate:** ROUTER-EMIT. On success the router advances `phase` to
+`IMPLEMENT` and records `worktreePath`/`branch` in `state.json`.
 
 ### Phase 7: Implement
 
-**Trigger:** `worktree.prepared`
 **Sequential sub-agents:**
-1. `test-architect` → `tests.written`
-2. Mechanical gate → `tests.confirmed-failing`
-3. `implementer` → `slice.completed` (per slice) → `implementation.completed`
-4. 5 parallel reviewers → `review.completed`, `security-review.completed`,
-   `docs-review.completed`, `ux-review.completed`, `verification.completed`
-5. Aggregate gate → `verification.passed` or typed `hard-gate.*-failed`
+1. `test-architect` writes failing acceptance tests.
+2. Mechanical gate: confirm all tests fail with assertion errors (not
+   crashes).
+3. `implementer` executes vertical slices with per-slice commits.
+4. 5 parallel reviewers: `code-reviewer`, `security-reviewer`,
+   `technical-writer`, `ux-reviewer`, `verifier`.
+5. Aggregate gate evaluates hard gates (security + verifier + code-review).
 
-**Progress events:** `slice.completed` (one per vertical slice, with
-per-slice commit sha)
-**Pass event:** `verification.passed`
-**Fail events:** `hard-gate.security-failed`, `hard-gate.lint-failed`,
-`hard-gate.typecheck-failed`, `hard-gate.build-failed`, `hard-gate.test-failed`,
-`hard-gate.review-failed` (loops to implementer, max 5 rounds)
+On hard-gate failure the router increments `verificationRetryCount` in
+`state.json`, dispatches the implementer with the typed failure class to
+address (security, lint, typecheck, build, test, review), and re-runs the
+5 reviewers from scratch. At `verificationRetryCount >= 5` the router
+escalates to the team lead.
+
+On clean pass the router advances `phase` to `PR`.
 
 ### Phase 8: PR
 
-**Trigger:** `verification.passed`
 **Producer:** router (no agent)
-**Output event:** `feature.shipped`
-**Actions:** update CHANGELOG, commit + open PR (or commit locally / leave
-uncommitted per user choice), close beads issue if present, delete
-`~/.team/<topic>/`, clean up worktree
+**Actions:** update `CHANGELOG.md`, commit + open PR (or commit locally /
+leave uncommitted per user choice), close beads issue if present, advance
+`phase` to `SHIPPED`, delete `~/.team/<topic>/`, clean up worktree.
 
 ## 4. Agent Roster
 
-| Agent              | Model   | Mode        | Tools                              | Consumes                           | Produces                    |
-|--------------------|---------|-------------|------------------------------------|------------------------------------|------------------------------|
-| `questioner`       | sonnet  | acceptEdits | Read, Write, Grep, Glob            | `feature.requested`                | `task.captured`              |
-| `file-finder`      | haiku   | plan        | Read, Grep, Glob                   | `task.captured` (blind)            | `files.found`                |
-| `researcher`       | sonnet  | plan        | Read, Grep, Glob                   | `task.captured` (blind)            | `research.completed`         |
-| `design-author`    | opus    | acceptEdits | Read, Write, Edit, Grep, Glob      | `research.completed`, `design.revision-requested` | `design.drafted` |
-| `structure-planner`| opus    | acceptEdits | Read, Write, Edit, Grep, Glob      | `design.approved`, `structure.revision-requested` | `structure.drafted` |
-| `planner`          | opus    | acceptEdits | Read, Write, Edit, Grep, Glob      | `structure.approved`               | `plan.drafted`               |
-| `test-architect`   | inherit | acceptEdits | Read, Write, Edit, Grep, Glob, Bash| `worktree.prepared`                | `tests.written`              |
-| `implementer`      | opus    | acceptEdits | Read, Write, Edit, Grep, Glob, Bash| `tests.confirmed-failing`, `hard-gate.*-failed` | `implementation.completed` |
-| `code-reviewer`    | sonnet  | plan        | Read, Grep, Glob, Bash             | `implementation.completed`         | `review.completed`           |
-| `security-reviewer`| sonnet  | plan        | Read, Grep, Glob, Bash             | `implementation.completed`         | `security-review.completed`  |
-| `technical-writer` | sonnet  | plan        | Read, Grep, Glob, Bash             | `implementation.completed`         | `docs-review.completed`      |
-| `ux-reviewer`      | sonnet  | plan        | Read, Grep, Glob, Bash             | `implementation.completed`         | `ux-review.completed`        |
-| `verifier`         | haiku   | plan        | Read, Grep, Glob, Bash             | `implementation.completed`         | `verification.completed`     |
+| Agent              | Model   | Mode        | Tools                              | Phase      |
+|--------------------|---------|-------------|------------------------------------|------------|
+| `questioner`       | sonnet  | acceptEdits | Read, Write, Grep, Glob            | QUESTION   |
+| `file-finder`      | haiku   | plan        | Read, Grep, Glob                   | RESEARCH   |
+| `researcher`       | sonnet  | plan        | Read, Grep, Glob                   | RESEARCH   |
+| `design-author`    | opus    | acceptEdits | Read, Write, Edit, Grep, Glob      | DESIGN     |
+| `structure-planner`| opus    | acceptEdits | Read, Write, Edit, Grep, Glob      | STRUCTURE  |
+| `planner`          | opus    | acceptEdits | Read, Write, Edit, Grep, Glob      | PLAN       |
+| `test-architect`   | inherit | acceptEdits | Read, Write, Edit, Grep, Glob, Bash| IMPLEMENT  |
+| `implementer`      | opus    | acceptEdits | Read, Write, Edit, Grep, Glob, Bash| IMPLEMENT  |
+| `code-reviewer`    | sonnet  | plan        | Read, Grep, Glob, Bash             | IMPLEMENT  |
+| `security-reviewer`| sonnet  | plan        | Read, Grep, Glob, Bash             | IMPLEMENT  |
+| `technical-writer` | sonnet  | plan        | Read, Grep, Glob, Bash             | IMPLEMENT  |
+| `ux-reviewer`      | sonnet  | plan        | Read, Grep, Glob, Bash             | IMPLEMENT  |
+| `verifier`         | haiku   | plan        | Read, Grep, Glob, Bash             | IMPLEMENT  |
 
-**Model tiering:** haiku for mechanical tasks, sonnet for judgment, opus for
-design + structure + planning + implementation.
+**Model tiering:** haiku for mechanical tasks, sonnet for judgment, opus
+for design + structure + planning + implementation.
 
-## 5. Thin Router
+Agents carry `consumes`/`produces` fields in their frontmatter and in
+`skills/team/registry.json`. After the state.json migration these fields
+are documentation — they describe the agent inventory and the historical
+event vocabulary. The dev hook `.claude/hooks/check-registry-sync.mjs`
+still enforces that agent frontmatter matches the registry listing.
 
-The `team` skill implements a pure event loop:
+## 5. Phase-Table Router
+
+The `team` skill implements a linear phase-table loop:
 
 ```
+setup:
+  1. Parse $ARGUMENTS → topic, today, beadsId.
+  2. If ~/.team/<topic>/state.json exists → load it, resume from phase.
+     Else initState(topic, beadsId, today) with phase=QUESTION.
+
 loop:
-  1. Read .team/<topic>/events.jsonl
-  2. Determine current state from latest events
-  3. Consult registry.json for agents that consume the latest event(s)
-  4. Check gate conditions (if any triggered)
-  5. Dispatch eligible agent(s) — parallel if marked
-  6. Record output event(s) to the log
-  7. If terminal event (feature.shipped) → exit
-  8. If human gate → pause and prompt user
-  9. If router-emit gate → perform the action, emit passEvent
- 10. Goto loop
+  1. Read state.json. If phase == SHIPPED → cleanup and exit.
+  2. Look up the phase in the phase table.
+  3. Verify predecessor artifact(s) exist on disk (stat).
+  4. Dispatch the agent(s) — parallel if the phase marks them so.
+  5. Write each returned artifact to docs/plans/<today>-<topic>-<name>.md.
+  6. Run the phase's gate (HUMAN / MECHANICAL / ROUTER-EMIT / AGGREGATE).
+  7. writeState with new phase, refreshed lastUpdated, updated counters.
+  8. Goto loop.
 ```
 
-**The router has no agent-specific logic.** It does not know what a
-`questioner` does or what a `planner` produces. It only knows:
-
-- Which events have occurred (from the log)
-- Which agents subscribe to those events (from the registry)
-- Which gates apply (from the registry)
-- Whether gate conditions are met (from event payloads)
-
-To add, remove, or reorder agents, edit `registry.json`. The router requires
-no changes.
+**The router has no agent-specific logic.** It knows only the phase
+table, the snapshot schema, and the artifact layout. To add or reorder
+agents, edit the phase table in `skills/team/SKILL.md` and (for
+documentation) `registry.json`.
 
 ## 6. Skills
 
@@ -305,11 +246,12 @@ no changes.
 | `team-worktree`  | `/team-worktree`           | Prepare isolated worktree                |
 | `team-implement` | `/team-implement`          | Test-first + slice exec + 5-reviewer     |
 | `team-pr`        | `/team-pr`                 | Commit + PR                              |
-| `team-resume`    | `/team-resume`             | Replay event log, resume from last state |
+| `team-resume`    | `/team-resume`             | Resume from state.json + docs/plans/     |
 
-Each partial skill works by scanning the event log for the required
-prerequisite events and either resuming from that point or running the
-prerequisite phases first.
+Each partial skill gates on artifact presence: it stats
+`docs/plans/<today>-<topic>-<predecessor>.md` (or a `.approved` sidecar,
+or `state.json.phase`) and either runs the prerequisite phase first or
+delegates to the phase dispatcher in `/team`.
 
 ### Methodology (loaded by agents, not directly invoked)
 
@@ -343,77 +285,54 @@ prerequisite phases first.
 
 ## 7. Hooks
 
-| Hook                       | Event                    | Purpose                                    |
-|----------------------------|--------------------------|--------------------------------------------|
-| `pre-bash-guard.mjs`       | PreToolUse(Bash)         | Block dangerous commands                   |
-| `pre-compact-anchor.mjs`   | PreCompact               | Snapshot latest event seq before compaction |
-| `session-start-recover.mjs`| SessionStart             | Replay event log to recover pipeline state |
-| `post-write-validate.mjs`  | PostToolUse(Write\|Edit) | Validate plugin structure                  |
+| Hook                       | Event                    | Purpose                                                  |
+|----------------------------|--------------------------|----------------------------------------------------------|
+| `pre-bash-guard.mjs`       | PreToolUse(Bash)         | Block dangerous commands                                 |
+| `pre-compact-anchor.mjs`   | PreCompact               | Read state.json; inject 4-line anchor into context       |
+| `session-start-recover.mjs`| SessionStart             | Read state.json; emit a recovery notice                  |
+| `post-write-validate.mjs`  | PostToolUse(Write\|Edit) | Validate plugin structure                                |
 
-## 8. Shared Event Library
+Both runtime state hooks (`pre-compact-anchor.mjs`,
+`session-start-recover.mjs`) are stateless: they scan
+`~/.team/<topic>/state.json` under the home directory, pick the most
+recently modified snapshot, and format a short status line. No event-log
+replay, no shared library.
 
-**File:** `lib/events.mjs`
+## 8. State Helper
 
-Canonical location for event parsing logic shared across hooks and the
-Teamflow dashboard. Exports:
+**File:** `lib/state.mjs`
 
-- `EVENT_TO_PHASE` — maps event names to pipeline phases (QUESTION, RESEARCH,
-  DESIGN, STRUCTURE, PLAN, WORKTREE, IMPLEMENT, PR, SHIPPED)
-- `deriveState(events)` — derives current pipeline state from an event array
-- `readEventLog(dir)` — reads and parses `.team/<topic>/events.jsonl`
-- `projectDir()` — resolves the project root directory
-- `sessionDir(topic)` — resolves the per-topic session directory under `~/.team/<topic>/`
+Pure functions for the snapshot substrate. Imported by the router
+(conceptually, via SKILL.md pseudocode) and optionally by future tools.
 
-Both `session-start-recover.mjs` and `pre-compact-anchor.mjs` import from
-this library rather than duplicating event logic.
+- `PHASE` — frozen enum of phase strings.
+- `statePath(topic)` — `~/.team/<topic>/state.json`.
+- `readState(topic)` — returns the parsed snapshot or `null`. Never
+  throws on ENOENT.
+- `writeState(topic, patch)` — shallow merges `patch`, refreshes
+  `lastUpdated`, writes atomically (tmp-file + rename).
+- `initState(topic, beadsId, today)` — writes a fresh 10-field snapshot
+  with `phase: 'QUESTION'`.
 
-### Teamflow State Engine
-
-**File:** `teamflow/src/state.ts`
-
-The Teamflow dashboard maintains its own state engine that extends the shared
-event library with richer tracking. It reads `skills/team/registry.json` at
-startup to build agent and gate configuration, then derives per-agent status,
-per-gate status, and timeline entries from each event via `applyEvent()`.
-
-Shared types live in `teamflow/src/types.ts` (`AgentStatus`, `GateStatus`,
-`TimelineEntry`, `RunState`) and are imported by both the server-side state
-engine and Svelte client components.
-
-Gate status is derived from registry gates and joins:
-
-- **human** — design approval (DESIGN phase), structure approval (STRUCTURE phase)
-- **mechanical** — test confirmation gate (IMPLEMENT phase)
-- **aggregate** — review collection gate (IMPLEMENT phase)
-- **router-emit** — worktree preparation (WORKTREE phase), PR/ship (PR phase)
-- **join** — parallel research agent fan-in (RESEARCH phase)
-
-Each gate transitions through `pending → waiting → passed/failed` as events
-arrive. Gate keys, phases, and labels are derived from `registry.json` and
-`EVENT_TO_PHASE` — no hardcoded mapping.
-
-The client tracks a `hasEverConnected` flag (set on first SSE snapshot, never
-reset) to distinguish initial connection from mid-session disconnects. When
-not yet connected or when connected with no phase and no events, the
-`EmptyState` component replaces `PhaseCards` and `Timeline`.
+The module follows the `hooks/pre-bash-guard.mjs` discipline: only
+imports from `node:fs/promises`, `node:path`, `node:os`; no
+module-level side effects; pure function exports.
 
 ## 9. State Management
 
-**Primary state:** `.team/<topic>/events.jsonl` (append-only event log)
+**Primary state:** `~/.team/<topic>/state.json` — the single JSON
+snapshot updated in place via atomic rename.
 
-State is never stored directly. It is always derived by replaying the event
-log. To determine the current phase, scan for the latest event and consult
-the registry for what comes next.
+**Approval markers:** `.approved` sidecars under `docs/plans/` record
+human gate passes durably.
 
-**Compaction defense (three layers):**
+**Compaction defense:** The PreCompact hook reads `state.json` directly
+and injects a 4-line anchor (phase, topic, counters, "run
+/team-resume"). The SessionStart hook does the same, adding the start
+timestamp. Both are within the 5000ms hook budget and require no event
+replay.
 
-1. **Event log on disk** -- survives everything. The log is the ground truth.
-2. **PreCompact hook** -- injects the latest event sequence number and current
-   phase into the compacted context, so the router can resume without
-   re-reading the entire log.
-3. **SessionStart hook** -- replays the event log on session start to
-   reconstruct the pipeline position.
-
-**Artifact persistence:** File artifacts in `docs/plans/` are committed to
-git and survive across sessions, compaction events, and context resets. They
-are the durable communication protocol between agents.
+**Artifact persistence:** File artifacts in `docs/plans/` are committed
+to git and survive across sessions, compaction events, and context
+resets. They are the durable communication protocol between agents and
+the source of truth for "did phase N finish?"

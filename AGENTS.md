@@ -6,7 +6,7 @@
 
 ## What This Is
 
-TEAM (Task Execution Agent Mesh) is a Claude Code plugin that orchestrates specialized agents to implement features end-to-end using an event-driven architecture. See [docs/architecture.md](docs/architecture.md) for the full design.
+TEAM (Task Execution Agent Mesh) is a Claude Code plugin that orchestrates specialized agents to implement features end-to-end. The router walks a linear phase table driven by `~/.team/<topic>/state.json` plus artifact files under `docs/plans/`. See [docs/architecture.md](docs/architecture.md) for the full design.
 
 ## Runtime vs. Development
 
@@ -23,13 +23,12 @@ This project produces a **distributed plugin**. Two contexts exist:
 | Registry sync validation | `.claude/hooks/check-registry-sync.mjs` | Plugin developers |
 | Dev settings/hooks | `.claude/settings.json` | Plugin developers |
 | Issue tracking | `.beads/` | Plugin developers |
-| Teamflow dashboard | `teamflow/` | Plugin developers (optional sidecar) |
 
 **Rule of thumb:** If it validates that the plugin is *built correctly*, it's a dev concern (`.claude/`). If it runs *as part of the plugin's functionality*, it's runtime (`hooks/`).
 
 ## Design Philosophy
 
-Agents are **decoupled microservices**. Each consumes events, does work, produces events. No agent knows about any other. The pipeline emerges from event flow defined in `skills/team/registry.json`. See [docs/event-catalog.md](docs/event-catalog.md) for all events.
+Agents are **decoupled microservices**. Each consumes a predecessor artifact on disk, does work, and writes its output artifact to `docs/plans/`. The router walks a linear phase table in `skills/team/SKILL.md`; `skills/team/registry.json` lists the 13 agents as documentation.
 
 ## Pipeline
 
@@ -53,7 +52,7 @@ TEAM runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-
 | `/team-worktree` | Prepare isolated git worktree |
 | `/team-implement` | Test-first + slice execution + 5-reviewer verify |
 | `/team-pr` | Commit + open PR |
-| `/team-resume` | Replay event log, resume |
+| `/team-resume` | Resume from state.json + docs/plans/ artifacts |
 
 ## Agents (13)
 
@@ -72,8 +71,8 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodolog
 | Hook | Event | Purpose |
 |------|-------|---------|
 | `pre-bash-guard.mjs` | PreToolUse(Bash) | Block dangerous commands |
-| `pre-compact-anchor.mjs` | PreCompact | Snapshot event log before compaction |
-| `session-start-recover.mjs` | SessionStart | Recover pipeline from event log |
+| `pre-compact-anchor.mjs` | PreCompact | Inject state.json snapshot anchor before compaction |
+| `session-start-recover.mjs` | SessionStart | Recover pipeline from state.json snapshot |
 | `post-write-validate.mjs` | PostToolUse(Write\|Edit) | Structural validation of plugin files |
 
 **Development** (in `.claude/hooks/`):
@@ -84,24 +83,7 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodolog
 
 ## State
 
-Event log at `~/.team/<topic>/events.jsonl` (append-only, per-pipeline). State is derived from events, never stored directly. Event parsing logic lives in `lib/events.mjs`. Three-layer compaction defense.
-
-## Teamflow Dashboard
-
-A local Svelte 5 dashboard served by Fastify that tails `~/.team/<topic>/events.jsonl` per-session subdirectories and streams pipeline state to the browser via multiplexed SSE. Supports multiple concurrent sessions with a tab bar for switching between them. Visualizes per-phase agent status and gate/join status (human, mechanical, aggregate, join) with live transitions. Shows an empty state screen when no pipeline is active — "Connecting to Teamflow..." before SSE connects, then "No pipeline running" with a `/team` prompt until the first event arrives. State engine in `teamflow/src/state.ts`; shared types in `teamflow/src/types.ts`.
-
-```
-dev server    # Start dashboard server only (foreground, no browser auto-open)
-dev demo      # Start dashboard + synthetic pipeline demo (~60s)
-```
-
-Or directly: `node teamflow/bin/teamflow.mjs`
-
-Binds to `127.0.0.1:7425` by default. Override with `TEAMFLOW_PORT`. Suppress browser auto-open with `TEAMFLOW_NO_OPEN=1`. `dev demo` detects a running server and skips spawning a duplicate.
-
-## Shared Event Library
-
-`lib/events.mjs` — canonical location for event-to-phase mapping and state derivation. Exports `EVENT_TO_PHASE`, `deriveState`, `readEventLog`, `projectDir`, and `sessionDir`. Imported by both runtime hooks and the Teamflow dashboard.
+State is a single `~/.team/<topic>/state.json` snapshot plus `.approved` sidecar markers in `docs/plans/`. The state helper lives at `lib/state.mjs` (pure functions: `readState`, `writeState`, `initState`). The PreCompact hook reads `state.json` directly and injects a 4-line anchor; no event-log replay.
 
 ## Learned Rules
 

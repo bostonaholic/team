@@ -1,4 +1,5 @@
 {
+  "$comment": "consumes/produces fields are documentation-only; dispatch is driven by the phase table in skills/team/SKILL.md and state.json. Retained to keep the agent inventory and its event vocabulary as reference material.",
   "phases": [
     {"name": "QUESTION", "artifacts": ["task.md", "questions.md", "brief.md"]},
     {"name": "RESEARCH", "artifacts": ["research.md"]},
