@@ -75,7 +75,7 @@ If worktree creation fails (shallow clones, certain CI systems):
 
 1. Report the failure: "Worktree creation failed. Falling back to main tree."
 2. Continue the entire pipeline in the main working tree.
-3. Note in the `feature.requested` event that isolation was not used.
+3. The router proceeds with in-place work and updates `state.json` to note that isolation was not used.
 
 Never block the pipeline because worktree creation failed — isolation is
 a best-practice enhancement, not a hard requirement.

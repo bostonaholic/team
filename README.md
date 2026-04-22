@@ -1,10 +1,10 @@
 # TEAM: Task Execution Agent Mesh
 
-A Claude Code plugin that orchestrates specialized agents to autonomously implement entire features end-to-end, driven by an append-only event log and the **QRSPI** workflow.
+A Claude Code plugin that orchestrates specialized agents to autonomously implement entire features end-to-end, driven by a state.json snapshot and the **QRSPI** workflow.
 
 ## Design Philosophy
 
-Agents are decoupled microservices. Each consumes events, does work, produces events. No agent knows about any other. The pipeline emerges from event flow — change it by editing `registry.json`, not the router.
+Each agent does work and returns an artifact. The router dispatches the next agent based on a phase table. Agents remain decoupled, they know nothing about each other or the router's internal state.
 
 ## Pipeline (QRSPI)
 

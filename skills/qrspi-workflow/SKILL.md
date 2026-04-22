@@ -91,7 +91,7 @@ sub-phase and 5-reviewer adversarial verification with hard-gate retry loop.
 Open the pull request, update the changelog, close any tracking beads issue.
 
 - **Artifact:** GitHub PR (or local commit per user choice)
-- **Gate:** Terminal — `feature.shipped` event ends the pipeline
+- **Gate:** Terminal — router sets `phase: 'SHIPPED'` and deletes `~/.team/<topic>/`
 
 ## Artifact Conventions
 
