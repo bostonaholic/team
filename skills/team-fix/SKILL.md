@@ -50,8 +50,11 @@ No Question phase. No Research. No Design. No Structure. No Plan. No human gate.
 
 1. Create `~/.team/<topic>/` directory if it does not exist.
 2. Call `initState(topic, beadsId, today)` from `lib/state.mjs` to
-   bootstrap `state.json` with `phase: 'QUESTION'`. The fix flow will
-   advance the phase directly without passing through DESIGN/STRUCTURE.
+   bootstrap `state.json` (it writes `phase: 'QUESTION'` by default).
+3. Immediately call `writeState(topic, { phase: 'IMPLEMENT' })` to jump
+   the pipeline past QUESTION/RESEARCH/DESIGN/STRUCTURE/PLAN/WORKTREE
+   straight into IMPLEMENT. This ensures `/team-resume` correctly
+   identifies the phase even if the fix is interrupted mid-flow.
 
 ## Execution
 
@@ -62,7 +65,7 @@ For each phase transition, update `state.json` via `writeState(topic, ...)`:
 
 | Phase     | state.json update                                         |
 |-----------|-----------------------------------------------------------|
-| Reproduce | `phase: 'IMPLEMENT'` once the bug is reproduced on disk   |
+| Reproduce | `writeState(topic, {})` — already IMPLEMENT from Setup    |
 | Red       | `writeState(topic, {})` — refresh lastUpdated             |
 | Green     | `writeState(topic, {})` — still IMPLEMENT, fix in place   |
 | Verify    | `phase: 'PR'` once verification passes                    |

@@ -83,7 +83,7 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodolog
 
 ## State
 
-State is a single `~/.team/<topic>/state.json` snapshot plus `.approved` sidecar markers in `docs/plans/`. The state helper lives at `lib/state.mjs` (pure functions: `readState`, `writeState`, `initState`). The PreCompact hook reads `state.json` directly and injects a 4-line anchor; no event-log replay.
+State is a single `~/.team/<topic>/state.json` snapshot plus `.approved` sidecar markers in `docs/plans/`. The state helper lives at `lib/state.mjs` (pure functions: `readState`, `writeState`, `initState`). The PreCompact hook reads `state.json` directly and injects a 4-line anchor; no event-log replay. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
 
 ## Learned Rules
 

@@ -55,13 +55,13 @@ claude plugin add /path/to/team
 
 ## Architecture
 
-See [docs/architecture.md](docs/architecture.md) for the full event-driven architecture and [docs/event-catalog.md](docs/event-catalog.md) for the complete event reference.
+See [docs/architecture.md](docs/architecture.md) for the full architecture and the `state.json` schema.
 
 ## Components
 
-- **13 agents** in `agents/` — decoupled workers with `consumes`/`produces` contracts
+- **13 agents** in `agents/` — decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
 - **15 entry-point + methodology skills** in `skills/` — slash commands and shared methodologies
-- **4 hooks** in `hooks/` — safety guards and event-log-aware compaction resilience
-- **1 shared library** at `lib/events.mjs` — event parsing logic used by hooks and dashboard
-- **1 registry** at `skills/team/registry.json` — the single source of pipeline wiring
-- **Event log** at `.team/<topic>/events.jsonl` — append-only state (derived, never stored)
+- **4 hooks** in `hooks/` — safety guards and `state.json`-aware compaction resilience
+- **1 shared library** at `lib/state.mjs` — pure state helpers (`readState`, `writeState`, `initState`)
+- **1 registry** at `skills/team/registry.json` — agent inventory and event vocabulary (documentation only since the state.json migration)
+- **State snapshot** at `~/.team/<topic>/state.json` — single source of pipeline state, plus `.approved` sidecar markers under `docs/plans/`

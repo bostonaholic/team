@@ -1,6 +1,6 @@
 ---
 name: team-pr
-description: Open the pull request after verification passes. Updates the changelog, optionally closes the tracking beads issue, and emits the terminal feature.shipped event. Trigger on "open the PR", "ship it", or "/team-pr".
+description: Open the pull request after verification passes. Updates the changelog, optionally closes the tracking beads issue, and advances `state.json` to `phase: 'SHIPPED'`. Trigger on "open the PR", "ship it", or "/team-pr".
 ---
 
 # TEAM PR — Standalone Phase

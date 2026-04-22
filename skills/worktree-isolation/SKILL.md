@@ -32,13 +32,14 @@ No custom worktree creation, path management, or teardown logic is needed.
 
 ### Setup (router responsibility)
 
-During the router's Setup phase, before the first event is appended:
+During the router's Setup phase, before any agent is dispatched:
 
 1. Create an isolated worktree for this pipeline run.
 2. All subsequent agent dispatches operate within the worktree.
-3. The event log lives at `~/.team/<topic>/events.jsonl` (per-pipeline, not per-worktree)
-   so the Teamflow dashboard can tail events regardless of which worktree
-   the pipeline runs in. Plan artifacts stay in the worktree's `docs/plans/`.
+3. The state snapshot lives at `~/.team/<topic>/state.json` (per-pipeline,
+   not per-worktree). The durable inter-agent protocol is the artifact
+   files under the worktree's `docs/plans/` directory (design.md,
+   structure.md, their `.approved` sidecars, etc.).
 
 ### During the pipeline
 

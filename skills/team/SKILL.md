@@ -32,11 +32,12 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
 5. Create `docs/plans/` directory if it does not exist.
 6. **Pre-upgrade guard.** If `~/.team/<topic>/` contains any legacy
    append-only event-log file (the previous orchestration substrate) but
-   `~/.team/<topic>/state.json` does not exist, stop with: "Found a
-   pre-upgrade pipeline state for topic <topic> without a state.json. This
-   pipeline predates the state.json migration. Please delete
-   `~/.team/<topic>/` and restart." Specifically, look for a `.jsonl` file
-   under `~/.team/<topic>/` as the legacy signal.
+   `~/.team/<topic>/state.json` does not exist, stop with: "Detected a
+   legacy `.jsonl` append-only event-log file under `~/.team/<topic>/`
+   with no `state.json` alongside it. That file is the previous
+   orchestration substrate, and this pipeline predates the state.json
+   migration. Please delete `~/.team/<topic>/` and restart." Specifically,
+   look for a `.jsonl` file under `~/.team/<topic>/` as the legacy signal.
 7. If `state.json` exists, load it via `readState(topic)` from `lib/state.mjs`
    and resume from `state.phase`. Else call `initState(topic, beadsId, today)`
    to write a fresh snapshot with `phase: 'QUESTION'`.
@@ -80,12 +81,16 @@ loop:
 |------------|----------------------------|--------------------------------------------------------|--------------------|
 | QUESTION   | `questioner`               | (none — description in `$ARGUMENTS`)                   | RESEARCH           |
 | RESEARCH   | `file-finder`, `researcher` (parallel) | `docs/plans/<today>-<topic>-task.md`       | DESIGN             |
-| DESIGN     | `designer` (→ human gate)  | `docs/plans/<today>-<topic>-research.md`               | STRUCTURE          |
-| STRUCTURE  | `structurer` (→ human gate)| `docs/plans/<today>-<topic>-design.md.approved`        | PLAN               |
+| DESIGN     | `design-author` (→ human gate)  | `docs/plans/<today>-<topic>-research.md`          | STRUCTURE          |
+| STRUCTURE  | `structure-planner` (→ human gate)| `docs/plans/<today>-<topic>-design.md.approved` | PLAN               |
 | PLAN       | `planner`                  | `docs/plans/<today>-<topic>-structure.md.approved`     | WORKTREE           |
 | WORKTREE   | (router-emit)              | `docs/plans/<today>-<topic>-plan.md`                   | IMPLEMENT          |
-| IMPLEMENT  | `test-writer`, `implementer`, 5 reviewers (parallel) | worktree prepared               | PR                 |
+| IMPLEMENT  | `test-architect`, `implementer`, 5 reviewers (parallel) | worktree prepared            | PR                 |
 | PR         | (router-emit)              | aggregate gate passed                                  | SHIPPED            |
+
+For RESEARCH, dispatch `file-finder` and `researcher` in parallel and
+combine their returned content into a single `docs/plans/<today>-<topic>-research.md`
+artifact before advancing the phase.
 
 The `skills/team/registry.json` file still lists the 13 agents and their
 documented event vocabulary as a reference, but the router no longer
@@ -111,7 +116,7 @@ description in their context.
 
 ### Human Gate (design approval)
 
-When the designer returns a draft:
+When the `design-author` returns a draft:
 1. Write `docs/plans/<today>-<topic>-design.md` to disk.
 2. Present the design **in full** to the user.
 3. Ask: "Do you approve this design?"
@@ -119,19 +124,19 @@ When the designer returns a draft:
    (zero-byte sidecar marker — the durable approval artifact), then
    `writeState(topic, { phase: 'STRUCTURE' })`.
 5. If rejected → `writeState(topic, { designRevisionCount: <current + 1> })`
-   and re-dispatch the designer with the user's feedback to produce a new
+   and re-dispatch `design-author` with the user's feedback to produce a new
    draft for re-review. Phase stays `DESIGN`.
 
 ### Human Gate (structure approval)
 
-When the structurer returns a draft:
+When the `structure-planner` returns a draft:
 1. Write `docs/plans/<today>-<topic>-structure.md` to disk.
 2. Present the structure **in full** to the user.
 3. Ask: "Do you approve this structure?"
 4. If approved → `touch docs/plans/<today>-<topic>-structure.md.approved`,
    then `writeState(topic, { phase: 'PLAN' })`.
 5. If rejected → `writeState(topic, { structureRevisionCount: <current + 1> })`
-   and re-dispatch the structurer with feedback. Phase stays `STRUCTURE`.
+   and re-dispatch `structure-planner` with feedback. Phase stays `STRUCTURE`.
 
 ### Router-Emit Gate (worktree preparation)
 
@@ -144,7 +149,7 @@ When the plan artifact exists:
 
 ### Mechanical Gate (test confirmation)
 
-When the test-writer returns failing tests:
+When the `test-architect` returns failing tests:
 1. Run the test suite.
 2. If all tests fail with assertion errors (not crashes), advance — call
    `writeState(topic, {})` to refresh `lastUpdated`. Phase remains
@@ -206,7 +211,7 @@ When phase is `PR`:
 - To add a new agent to the pipeline, add an entry to the phase table and
   a reference in `registry.json`. The `consumes`/`produces` fields in
   `registry.json` are documentation after the state.json migration (see
-  slice 9's `$comment`).
+  the `$comment` in `skills/team/registry.json`).
 
 ### Approval marker convention
 

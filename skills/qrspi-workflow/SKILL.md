@@ -173,15 +173,22 @@ Examples: documentation gap analysis, style suggestions.
 
 ## Phase Transition Protocol
 
-Phase transitions are event-driven. Every transition follows this sequence:
+Phase transitions are driven by `~/.team/<topic>/state.json` plus the
+presence of artifact files under `docs/plans/`. Every transition follows
+this sequence:
 
-1. **Record event** — Append the output event to `~/.team/<topic>/events.jsonl`
-2. **Verify artifacts** — Confirm all required artifacts from the current phase exist on disk
-3. **Evaluate gates** — Check gate conditions defined in `skills/team/registry.json`
-4. **Proceed** — Dispatch the next agent(s) that consume the output event
+1. **Verify artifacts** — Confirm all required artifacts from the current
+   phase exist on disk (`docs/plans/<today>-<topic>-*.md` and, for human
+   gates, their `<artifact>.approved` sidecars).
+2. **Advance phase** — The router calls `writeState(topic, { phase: <next> })`
+   from `lib/state.mjs` to update `state.json` atomically.
+3. **Dispatch next agent(s)** — The phase table in `skills/team/SKILL.md`
+   names the agent(s) to dispatch for the new phase.
 
-Never proceed to the next phase while a HARD gate is failing. SOFT gates
-require user acknowledgment before proceeding.
+Human approval creates a zero-byte `<artifact>.approved` sidecar file; the
+sidecar is the durable signal that downstream phases check. Never proceed
+to the next phase while a HARD gate is failing. SOFT gates require user
+acknowledgment before proceeding.
 
 ## Anti-Patterns
 

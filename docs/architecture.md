@@ -81,6 +81,10 @@ plus their `.approved` sidecars.
 | `verificationRetryCount` | integer         | Aggregate-gate retries (max 5)                        |
 | `currentSlice`           | string \| null  | Latest slice the implementer is working on           |
 
+Optional observability fields `worktreePath` and `branch` may also appear
+once the WORKTREE phase completes (written by the router-emit WORKTREE
+gate). They are not load-bearing — downstream phases do not depend on them.
+
 **Invariants:**
 
 - `state.json` is the single source of pipeline state. Updates go through
