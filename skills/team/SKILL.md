@@ -107,8 +107,9 @@ When `design.drafted` is recorded:
 1. Read the design artifact (`design.md`) from disk
 2. Present the design **in full** to the user
 3. Ask: "Do you approve this design?"
-4. If approved → append `design.approved` event. Also
-   `writeState(topic, { phase: 'STRUCTURE' })`.
+4. If approved → `touch docs/plans/<today>-<topic>-design.md.approved`
+   (zero-byte sidecar marker — the durable approval artifact), then append
+   `design.approved` event. Also `writeState(topic, { phase: 'STRUCTURE' })`.
 5. If rejected → append `design.revision-requested` event with
    `{designPath, feedback: <user input>, revisionNumber: <count + 1>}`
    (where count is the number of `design.revision-requested` events in the log).
@@ -122,7 +123,8 @@ When `structure.drafted` is recorded:
 1. Read the structure artifact (`structure.md`) from disk
 2. Present the structure **in full** to the user
 3. Ask: "Do you approve this structure?"
-4. If approved → append `structure.approved` event. Also
+4. If approved → `touch docs/plans/<today>-<topic>-structure.md.approved`
+   (zero-byte sidecar marker), then append `structure.approved` event. Also
    `writeState(topic, { phase: 'PLAN' })`.
 5. If rejected → append `structure.revision-requested` event with
    `{structurePath, feedback: <user input>, revisionNumber: <count + 1>}`.
@@ -218,3 +220,10 @@ When `verification.passed` is recorded:
   user, and suggest `/team-resume`.
 - To add a new agent to the pipeline, add an entry to `registry.json`. The
   router requires no changes.
+
+### Approval marker convention
+
+Human approval creates a zero-byte sidecar file at `<artifact>.approved`
+(for example, `docs/plans/<today>-<topic>-design.md.approved`). The sidecar
+is the durable signal that downstream phases check to decide whether the
+prior human gate has passed.
