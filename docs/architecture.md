@@ -24,10 +24,13 @@ events, and checks gates. It contains zero agent-specific knowledge.
 - **File artifacts survive compaction.** Agents communicate through file
   artifacts in `docs/plans/`. These survive context window compaction and
   can be re-read by any agent in any session.
-- **Blind research.** The researcher and file-finder never see the user's
-  original task description. They consume only the neutral `brief.md` and
-  `questions.md` produced by the questioner. This structurally prevents
-  opinion-bias in research.
+- **Blind research.** The researcher and file-finder never receive the
+  user's original task description. Enforcement has two layers:
+  *structural* — the `task.captured` event payload and every downstream
+  event omit the description, and the blind agents' frontmatter consume
+  `task.captured` rather than `feature.requested`; *procedural* — the
+  blind agents' system prompts forbid reading `task.md`. A PreToolUse
+  hook could upgrade the procedural layer to structural.
 - **Two human touchpoints.** Design approval (~200-line alignment doc) and
   Structure approval (~2-page vertical-slice breakdown). The Plan is not
   human-gated — humans review the structure, which is the real contract.

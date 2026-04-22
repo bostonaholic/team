@@ -27,7 +27,7 @@ interface RegistryAgent {
 
 interface RegistryGate {
   after: string | string[];
-  type: "human" | "mechanical" | "aggregate" | "interview" | "router-emit";
+  type: "human" | "mechanical" | "aggregate" | "router-emit";
   passEvent: string;
   failEvent?: string;
   failEvents?: Record<string, string | Record<string, string>>;
@@ -44,7 +44,13 @@ interface RegistryJoin {
   artifact?: string;
 }
 
+interface RegistryPhase {
+  name: string;
+  artifacts?: string[];
+}
+
 interface Registry {
+  phases?: RegistryPhase[];
   agents: RegistryAgent[];
   gates: RegistryGate[];
   joins: RegistryJoin[];
@@ -72,7 +78,7 @@ for (const agent of registry.agents) {
 // Derived once at module load from registry.gates and registry.joins.
 interface GateConfig {
   key: string;
-  type: "human" | "mechanical" | "aggregate" | "interview" | "join";
+  type: "human" | "mechanical" | "aggregate" | "join" | "router-emit";
   label: string;
   phase: string;
   afterEvents: string[];
@@ -81,9 +87,22 @@ interface GateConfig {
   isFailEvent?: (event: string) => boolean;
 }
 
-// Phase ordering for deriving which phase a gate lives in.
-// A gate's passEvent transitions to the NEXT phase; the gate itself lives in the PRIOR phase.
-const PHASE_ORDER = ["QUESTION", "RESEARCH", "DESIGN", "STRUCTURE", "PLAN", "WORKTREE", "IMPLEMENT", "PR", "SHIPPED"];
+// Phase ordering is derived from the registry's phases array so adding a
+// phase only requires editing registry.json. SHIPPED is a terminal pseudo-
+// phase not in the registry — appended here.
+const PHASE_ORDER: string[] = [
+  ...(registry.phases?.map((p) => p.name) ?? [
+    "QUESTION",
+    "RESEARCH",
+    "DESIGN",
+    "STRUCTURE",
+    "PLAN",
+    "WORKTREE",
+    "IMPLEMENT",
+    "PR",
+  ]),
+  "SHIPPED",
+];
 
 function getPriorPhase(nextPhase: string): string {
   const idx = PHASE_ORDER.indexOf(nextPhase);
@@ -92,7 +111,6 @@ function getPriorPhase(nextPhase: string): string {
 
 // Gate label derivation from gate type
 const GATE_TYPE_LABELS: Record<string, string> = {
-  interview: "Validate requirements",
   human: "Human approval",
   mechanical: "Mechanical check",
   aggregate: "Collect reviews",
@@ -223,11 +241,22 @@ export function applyEvent(state: RunState, event: Record<string, unknown>): Run
   }
 
   // Track slice progress — implementer emits one slice.completed per
-  // vertical slice with its commit sha and the tests that now pass.
+  // vertical slice with its commit sha and the tests that now pass. The
+  // planner supplies the total slice count via plan.drafted; we carry it
+  // forward so progress.total is populated once plan.drafted has fired,
+  // instead of remaining null for the whole IMPLEMENT phase.
+  if (eventName === "plan.drafted") {
+    const planSlices = (data.slices as number) ?? state.progress.total ?? null;
+    newState.progress = { ...state.progress, total: planSlices };
+  }
+
   if (eventName === "slice.completed") {
     newState.progress = {
       step: (data.slice as string) ?? null,
-      total: (data.totalSlices as number) ?? null,
+      total:
+        (data.totalSlices as number) ??
+        state.progress.total ??
+        null,
     };
   }
 

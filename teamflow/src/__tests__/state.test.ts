@@ -252,3 +252,69 @@ describe("T6: structure_gate_transitions_through_human_loop", () => {
     expect(getGateStatus(state, "structure-gate")).toBe("passed");
   });
 });
+
+// ---------------------------------------------------------------------------
+// T7: slice_progress_total_is_populated_from_plan_drafted
+//
+// Regression guard for B1 (PR #3 review): slice.completed payloads do not
+// carry totalSlices, so progress.total must be derived from plan.drafted's
+// slices field and carried forward.
+// ---------------------------------------------------------------------------
+describe("T7: slice_progress_total_is_populated_from_plan_drafted", () => {
+  function getProgress(state: RunState): { step: string | null; total: number | null } {
+    return (state as unknown as { progress: { step: string | null; total: number | null } }).progress;
+  }
+
+  it("progress.total is populated once plan.drafted fires with slices count", () => {
+    const state = applySequence([
+      { event: "feature.requested", data: { topic: "test" } },
+      { event: "task.captured", producer: "questioner" },
+      { event: "research.completed", producer: "researcher" },
+      { event: "design.drafted", producer: "design-author" },
+      { event: "design.approved", producer: "router" },
+      { event: "structure.drafted", producer: "structure-planner" },
+      { event: "structure.approved", producer: "router" },
+      { event: "plan.drafted", producer: "planner", data: { slices: 3, testCount: 7 } },
+    ]);
+    expect(getProgress(state).total).toBe(3);
+  });
+
+  it("progress.total is carried across slice.completed events when payload omits totalSlices", () => {
+    const state = applySequence([
+      { event: "feature.requested", data: { topic: "test" } },
+      { event: "task.captured", producer: "questioner" },
+      { event: "research.completed", producer: "researcher" },
+      { event: "design.drafted", producer: "design-author" },
+      { event: "design.approved", producer: "router" },
+      { event: "structure.drafted", producer: "structure-planner" },
+      { event: "structure.approved", producer: "router" },
+      { event: "plan.drafted", producer: "planner", data: { slices: 3 } },
+      { event: "worktree.prepared", producer: "router" },
+      { event: "tests.written", producer: "test-architect" },
+      { event: "tests.confirmed-failing", producer: "router" },
+      { event: "slice.completed", producer: "implementer", data: { slice: "first slice", commit: "abc" } },
+    ]);
+    const progress = getProgress(state);
+    expect(progress.step).toBe("first slice");
+    expect(progress.total).toBe(3);
+  });
+
+  it("progress.total prefers explicit totalSlices on slice.completed when provided", () => {
+    const state = applySequence([
+      { event: "feature.requested", data: { topic: "test" } },
+      { event: "plan.drafted", producer: "planner", data: { slices: 3 } },
+      { event: "slice.completed", producer: "implementer", data: { slice: "first slice", totalSlices: 5, commit: "abc" } },
+    ]);
+    // An explicit totalSlices on the event wins over the plan-drafted value.
+    expect(getProgress(state).total).toBe(5);
+  });
+
+  it("progress.total is null when plan.drafted never carried a slices field", () => {
+    const state = applySequence([
+      { event: "feature.requested", data: { topic: "test" } },
+      { event: "plan.drafted", producer: "planner", data: {} },
+      { event: "slice.completed", producer: "implementer", data: { slice: "first slice", commit: "abc" } },
+    ]);
+    expect(getProgress(state).total).toBeNull();
+  });
+});

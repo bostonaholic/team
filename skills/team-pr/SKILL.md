@@ -15,10 +15,16 @@ Run the PR phase. Requires `verification.passed` in the event log.
    `bug.reported`). Check `data.beadsId`. If present, this pipeline is tracking
    a beads issue.
 4. **Update CHANGELOG.md** before committing (see Changelog Update below).
-5. Present shipping options:
-   - **Open PR** — branch, commit, open pull request
-   - **Commit locally** — commit to current branch
-   - **Keep as-is** — leave changes uncommitted
+5. Present shipping options. The implementer already committed each slice
+   atomically during the Implement phase; the PR branch contains one commit
+   per slice. These options decide what to do with that history now:
+   - **Open PR from slice commits** — push the existing slice commits and
+     open a pull request. Any uncommitted final changes (typically
+     CHANGELOG.md) land as a single trailing ship commit.
+   - **Keep slice commits locally** — leave commits on the current branch
+     without opening a PR.
+   - **Keep as-is** — leave the final changes uncommitted; slice commits
+     already made during Implement remain.
 6. Execute user's choice.
 7. **Close beads issue.** If `beadsId` was found in step 3 and the user chose
    to commit (either option), use `/beads:close <beadsId>` to mark the issue
