@@ -9,7 +9,7 @@
  * Contract: always exits 0. A missing or malformed state file is not an error.
  */
 
-import { readFile, readdir } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { EVENT_TO_PHASE, deriveState, readEventLog, teamDir } from "../lib/events.mjs";
 
@@ -22,6 +22,50 @@ async function readStateFile() {
   } catch {
     return null;
   }
+}
+
+/**
+ * Scan ~/.team/<topic>/state.json across all topics, return the most
+ * recently modified snapshot or null. Inlined here (not imported from
+ * lib/state.mjs) to keep slice 3's revert surface minimal — dedupe and
+ * hoisting happen in slice 7.
+ */
+async function findActiveSnapshot() {
+  const base = teamDir();
+  try {
+    const entries = await readdir(base, { withFileTypes: true });
+    let best = null;
+    let bestMtime = -Infinity;
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const snapPath = join(base, entry.name, "state.json");
+      try {
+        const st = await stat(snapPath);
+        if (st.mtimeMs > bestMtime) {
+          const raw = await readFile(snapPath, "utf-8");
+          best = { topic: entry.name, snapshot: JSON.parse(raw) };
+          bestMtime = st.mtimeMs;
+        }
+      } catch {
+        // no snapshot for this topic
+      }
+    }
+    return best;
+  } catch {
+    return null;
+  }
+}
+
+function formatSnapshotAnchor(snapshot) {
+  const designRev = snapshot.designRevisionCount ?? 0;
+  const structureRev = snapshot.structureRevisionCount ?? 0;
+  const verifyRetry = snapshot.verificationRetryCount ?? 0;
+  return [
+    "[TEAM Pipeline State -- Anchor before compaction]",
+    `Phase: ${snapshot.phase} | Topic: ${snapshot.topic}`,
+    `Counters: designRev=${designRev} structureRev=${structureRev} verifyRetry=${verifyRetry}`,
+    "Run /team-resume to continue the pipeline.",
+  ].join("\n");
 }
 
 function formatTestFiles(testFiles) {
@@ -112,6 +156,15 @@ async function findActiveSession() {
 }
 
 async function main() {
+  // Prefer state.json snapshot. Fall back to event-log replay.
+  const active = await findActiveSnapshot();
+  if (active && active.snapshot && active.snapshot.phase && active.snapshot.phase !== "SHIPPED") {
+    const additionalContext = formatSnapshotAnchor(active.snapshot);
+    const output = JSON.stringify({ hookSpecificOutput: { additionalContext } });
+    process.stderr.write(output + "\n");
+    process.exit(0);
+  }
+
   let state = null;
   let events = null;
 
