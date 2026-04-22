@@ -5,17 +5,17 @@ description: Open the pull request after verification passes. Updates the change
 
 # TEAM PR — Standalone Phase
 
-Run the PR phase. Requires `verification.passed` in the event log.
+Run the PR phase. Requires `state.json.phase === 'PR'` (the aggregate
+gate transitioned us there after verification passed).
 
 ## Execution
 
-1. Read `~/.team/<topic>/events.jsonl`. Scan for `verification.passed`.
-2. If not found: report "Verification not passed. Run /team-implement first." and stop.
-3. **Extract beads ID** from the first event in the log (`feature.requested` or
-   `bug.reported`). Check `data.beadsId`. If present, this pipeline is tracking
-   a beads issue.
-4. **Update CHANGELOG.md** before committing (see Changelog Update below).
-5. Present shipping options. The implementer already committed each slice
+1. Read `~/.team/<topic>/state.json`. If `phase !== 'PR'`, report
+   "Verification not passed. Run /team-implement first." and stop.
+2. **Read `beadsId`** from `state.json`. If non-null, this pipeline is
+   tracking a beads issue.
+3. **Update CHANGELOG.md** before committing (see Changelog Update below).
+4. Present shipping options. The implementer already committed each slice
    atomically during the Implement phase; the PR branch contains one commit
    per slice. These options decide what to do with that history now:
    - **Open PR from slice commits** — push the existing slice commits and
@@ -25,13 +25,13 @@ Run the PR phase. Requires `verification.passed` in the event log.
      without opening a PR.
    - **Keep as-is** — leave the final changes uncommitted; slice commits
      already made during Implement remain.
-6. Execute user's choice.
-7. **Close beads issue.** If `beadsId` was found in step 3 and the user chose
-   to commit (either option), use `/beads:close <beadsId>` to mark the issue
-   as done. Skip this if the user chose "keep as-is".
-8. Append `feature.shipped` event to the log.
-9. Delete `~/.team/<topic>/` directory.
-10. If a worktree was created in WORKTREE phase, clean it up.
+5. Execute user's choice.
+6. **Close beads issue.** If `beadsId` was non-null in step 2 and the user
+   chose to commit (either option), use `/beads:close <beadsId>` to mark
+   the issue as done. Skip this if the user chose "keep as-is".
+7. `writeState(topic, { phase: 'SHIPPED' })`.
+8. Delete `~/.team/<topic>/` directory.
+9. If a worktree was created in WORKTREE phase, clean it up.
 
 ## Changelog Update
 

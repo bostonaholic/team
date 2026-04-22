@@ -48,27 +48,25 @@ No Question phase. No Research. No Design. No Structure. No Plan. No human gate.
 
 ## Setup
 
-1. Create `~/.team/<topic>/` directory if it does not exist (`mkdir -p ~/.team/<topic>`).
-2. Append the first event to `~/.team/<topic>/events.jsonl`:
-
-```json
-{"seq":1,"event":"bug.reported","producer":"router","ts":"<ISO-8601>","data":{"description":"<bug description>","beadsId":"<beadsId or null>"},"artifact":null,"causedBy":null,"gate":null}
-```
+1. Create `~/.team/<topic>/` directory if it does not exist.
+2. Call `initState(topic, beadsId, today)` from `lib/state.mjs` to
+   bootstrap `state.json` with `phase: 'QUESTION'`. The fix flow will
+   advance the phase directly without passing through DESIGN/STRUCTURE.
 
 ## Execution
 
 Follow the test-driven-bug-fix methodology from
 `skills/test-driven-bug-fix/SKILL.md`. Read that skill before proceeding.
 
-For each phase transition, append an event to `~/.team/<topic>/events.jsonl`:
+For each phase transition, update `state.json` via `writeState(topic, ...)`:
 
-| Phase | Event | Data |
-|-------|-------|------|
-| Reproduce | `bug.reported` | `description`, `affectedFiles`, `reproduced`, `reproductionSteps` |
-| Red | `tests.confirmed-failing` | `testName`, `failureReason` |
-| Green | `implementation.completed` | `fixSummary`, `filesChanged` |
-| Verify | `verification.passed` | (empty) |
-| Ship | `feature.shipped` | (empty) |
+| Phase     | state.json update                                         |
+|-----------|-----------------------------------------------------------|
+| Reproduce | `phase: 'IMPLEMENT'` once the bug is reproduced on disk   |
+| Red       | `writeState(topic, {})` — refresh lastUpdated             |
+| Green     | `writeState(topic, {})` — still IMPLEMENT, fix in place   |
+| Verify    | `phase: 'PR'` once verification passes                    |
+| Ship      | `phase: 'SHIPPED'` before directory cleanup               |
 
 **Mechanical gate between Red and Green:** the new test must fail with an
 assertion failure, not a crash. Do not proceed to the fix until confirmed.
@@ -79,9 +77,9 @@ assertion failure, not a crash. Do not proceed to the fix until confirmed.
    - `test:` commit with the failing test
    - `fix:` commit with the minimal fix
 2. Create a PR if working on a branch, or commit to the working branch.
-3. If `beadsId` is present in the `bug.reported` event data, use
-   `/beads:close <beadsId>` to mark the issue as done.
-4. Append `feature.shipped` event.
+3. If `beadsId` is non-null in `state.json`, use `/beads:close <beadsId>`
+   to mark the issue as done.
+4. `writeState(topic, { phase: 'SHIPPED' })`.
 5. Delete `~/.team/<topic>/` directory.
 
 ## Aborting

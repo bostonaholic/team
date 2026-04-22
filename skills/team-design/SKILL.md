@@ -5,26 +5,27 @@ description: Align with the user on the approach before any code is written. The
 
 # TEAM Design — Standalone Phase
 
-Run the DESIGN phase. Requires `research.completed` in the event log.
+Run the DESIGN phase. Requires a research artifact on disk.
 
 ## Execution
 
-1. Read `~/.team/<topic>/events.jsonl`. Scan for `research.completed`.
-2. If not found: report "No research found. Run /team-research first." and stop.
-3. Follow the event loop from `skills/team/registry.json`. This dispatches
-   `design-author`, which:
+1. Stat `docs/plans/<today>-<topic>-research.md`. If missing, report "No
+   research found. Run /team-research first." and stop.
+2. Follow the phase loop from `/team`. It dispatches `design-author`, which:
    a. Presents open questions to the user interactively
    b. Waits for answers
    c. Writes `docs/plans/<today>-<topic>-design.md`
-4. At the human gate (`design.drafted`): present the design **in full** and
-   ask "Do you approve this design?".
-5. **Stop after `design.approved` or `design.revision-requested` is recorded.**
+3. At the human gate: present the design **in full** and ask "Do you
+   approve this design?".
+4. **Stop once `docs/plans/<today>-<topic>-design.md.approved` sidecar is
+   touched, or the design has been re-dispatched for revision.**
 
 ## On revision
 
-If the user rejects, capture their feedback verbatim into the
-`design.revision-requested` event. The design-author re-drafts on the next
-loop iteration. There is no auto-revision pass — the human is the loop.
+If the user rejects, pass the feedback verbatim to the design-author on
+re-dispatch and increment `designRevisionCount` in `state.json`. The
+design-author re-drafts. There is no auto-revision pass — the human is
+the loop.
 
 ## Completion
 

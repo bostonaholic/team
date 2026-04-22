@@ -20,9 +20,12 @@ If `$ARGUMENTS` is empty, ask the user to describe what they want and stop.
 
 1. Derive a kebab-case `topic` and set `today` to `YYYY-MM-DD`.
 2. Create `~/.team/<topic>/` and `docs/plans/` directories if needed.
-3. Append `feature.requested` event to `~/.team/<topic>/events.jsonl`.
-4. Follow the event loop defined in `/team` (read `skills/team/registry.json`).
-5. **Stop after `task.captured` is recorded** — do not continue to RESEARCH.
+3. If `~/.team/<topic>/state.json` already exists, load it and resume; else
+   the router (`/team`) bootstraps it via `initState(topic, beadsId, today)`.
+4. Follow the phase loop defined in `/team` — it dispatches the `questioner`
+   to produce `task.md`, `questions.md`, `brief.md` in `docs/plans/`.
+5. **Stop once the three Question artifacts exist on disk** — do not
+   continue to RESEARCH.
 
 ## When to use
 

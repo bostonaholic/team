@@ -5,7 +5,9 @@ description: Execute the plan slice by slice. Includes test-first sub-step (writ
 
 # TEAM Implement — Standalone Phase
 
-Run the IMPLEMENT phase. Requires `worktree.prepared` in the event log.
+Run the IMPLEMENT phase. Requires `state.json.phase === 'IMPLEMENT'` (the
+WORKTREE phase transitioned us there) or a `worktreePath` field set on
+the snapshot.
 
 The Implement phase has three internal sub-steps:
 
@@ -13,29 +15,35 @@ The Implement phase has three internal sub-steps:
 2. **Slice execution** — `implementer` executes vertical slices with per-slice commits
 3. **Adversarial review** — 5 parallel reviewers + aggregate hard-gate retry loop
 
+> Events named below (`tests.written`, `hard-gate.*-failed`, etc.) are
+> internal signals routed via `state.json` counters and in-memory dispatch,
+> not log lines. They remain as descriptive labels for the verifier /
+> reviewer output classes.
+
 ## Execution
 
-1. Read `~/.team/<topic>/events.jsonl`. Scan for `worktree.prepared`.
-2. If not found: report "No worktree prepared. Run /team-worktree first." and stop.
-3. Follow the event loop from `skills/team/registry.json`:
-   a. Dispatch `test-architect` → produces `tests.written`
-   b. Mechanical gate: confirm all tests fail with assertion errors → `tests.confirmed-failing`
-   c. Dispatch `implementer` → emits `slice.completed` per slice, then `implementation.completed`
+1. Read `~/.team/<topic>/state.json`. Confirm `phase === 'IMPLEMENT'` (or
+   `worktreePath` is set). If not, report "No worktree prepared. Run
+   /team-worktree first." and stop.
+2. Follow the phase loop from `/team`:
+   a. Dispatch `test-architect` → produces failing tests.
+   b. Mechanical gate: confirm all tests fail with assertion errors.
+   c. Dispatch `implementer` → executes slices with per-slice commits.
    d. Dispatch 5 reviewers in parallel: `code-reviewer`, `security-reviewer`,
-      `technical-writer`, `ux-reviewer`, `verifier`
-   e. At the aggregate gate, evaluate hard gates (security + verifier + code-reviewer)
-4. If any hard gate fails:
-   - Emit typed failure events per gate:
-     - Security: `hard-gate.security-failed`
-     - Verifier: `hard-gate.lint-failed`, `hard-gate.typecheck-failed`,
-       `hard-gate.build-failed`, `hard-gate.test-failed` (one per failing check)
-     - Code review: `hard-gate.review-failed`
-   - Count total `hard-gate.*-failed` events across all types in the log
-   - If < 5 total: dispatch implementer to fix the specific findings,
-     then re-dispatch ALL 5 reviewers for a complete fresh review
-   - If >= 5 total: escalate to the team lead with a full summary of unresolved
-     findings across all rounds, organized by type. Stop and wait for direction.
-5. **Stop after `verification.passed` or escalation.**
+      `technical-writer`, `ux-reviewer`, `verifier`.
+   e. At the aggregate gate, evaluate hard gates (security + verifier +
+      code-reviewer).
+3. If any hard gate fails:
+   - Record a typed failure class (security, lint, typecheck, build,
+     test, review) for the implementer to address.
+   - Increment `verificationRetryCount` in `state.json` via `writeState`.
+   - If `verificationRetryCount < 5`: dispatch implementer to fix the
+     specific findings, then re-dispatch ALL 5 reviewers for a complete
+     fresh review.
+   - If `verificationRetryCount >= 5`: escalate to the team lead with a
+     full summary of unresolved findings across all rounds, organized
+     by type. Stop and wait for direction.
+4. **Stop once `state.json.phase === 'PR'` or escalation.**
 
 ## Quality Loop
 

@@ -14,17 +14,18 @@ phase.
 
 Feature description: `$ARGUMENTS` (only used if no Question phase has run yet)
 
-If `$ARGUMENTS` is empty AND no `~/.team/<topic>/events.jsonl` exists,
-ask the user what to research and stop.
+If `$ARGUMENTS` is empty AND no Question artifacts exist, ask the user
+what to research and stop.
 
 ## Execution
 
-1. Read `~/.team/<topic>/events.jsonl`. Scan for `task.captured`.
-2. If not found: run `/team-question $ARGUMENTS` first to produce the
-   Question artifacts.
-3. Follow the event loop defined in `/team` (read `skills/team/registry.json`).
-   This dispatches `file-finder` and `researcher` in parallel.
-4. **Stop after `research.completed` is recorded** — do not continue to DESIGN.
+1. Stat `docs/plans/<today>-<topic>-task.md`. If missing, run
+   `/team-question $ARGUMENTS` first to produce the Question artifacts.
+2. Follow the phase loop defined in `/team`. It dispatches `file-finder`
+   and `researcher` in parallel; the router writes the combined research
+   artifact to `docs/plans/<today>-<topic>-research.md`.
+3. **Stop once `docs/plans/<today>-<topic>-research.md` exists** — do
+   not continue to DESIGN.
 
 ## Completion
 
