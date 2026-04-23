@@ -13,9 +13,5 @@
 .beads-credential-key
 .beads/
 
-# Teamflow dashboard
-teamflow/node_modules/
-node_modules
-
 # Playwright
 .playwright-mcp/
