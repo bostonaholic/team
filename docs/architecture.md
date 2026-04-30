@@ -252,10 +252,19 @@ documentation) `registry.json`.
 | `team-pr`        | `/team-pr`                 | Commit + PR                              |
 | `team-resume`    | `/team-resume`             | Resume from state.json + docs/plans/     |
 
-Each partial skill gates on artifact presence: it stats
-`docs/plans/<today>-<topic>-<predecessor>.md` (or a `.approved` sidecar,
-or `state.json.phase`) and either runs the prerequisite phase first or
-delegates to the phase dispatcher in `/team`.
+Each partial skill works in two modes:
+
+- **Resume mode** — predecessor artifact (`docs/plans/<today>-<topic>-<predecessor>.md`,
+  a `.approved` sidecar, or `state.json.phase`) is present. The skill picks
+  up where `/team` left off.
+- **Standalone mode** — no predecessor on disk. The skill accepts a beads
+  ID or free-form description in `$ARGUMENTS` and bootstraps the missing
+  upstream artifacts inline (or, for `/team-implement`, synthesizes a
+  `task.md` and dispatches the implement loop directly). `/team-implement`
+  also asks the user about creating a worktree when invoked outside one.
+
+Standalone mode skips alignment gates the user did not run — the user is
+explicitly opting into a faster, less ceremonious path.
 
 ### Methodology (loaded by agents, not directly invoked)
 

@@ -5,19 +5,37 @@ description: Align with the user on the approach before any code is written. The
 
 # TEAM Design — Standalone Phase
 
-Run the DESIGN phase. Requires a research artifact on disk.
+Run the DESIGN phase. Two modes:
+
+- **Resume mode** — research artifact exists; design-author consumes it.
+- **Standalone mode** — no research yet, but `$ARGUMENTS` provides a
+  description. Bootstrap the missing upstream artifacts before designing.
+
+## Input
+
+`$ARGUMENTS` may be:
+
+- Empty — resume mode. Requires existing research on disk.
+- A beads issue ID — resolve via `/beads:show <id>`.
+- Free-form text — treated as the feature/task description.
 
 ## Execution
 
-1. Stat `docs/plans/<today>-<topic>-research.md`. If missing, report "No
-   research found. Run /team-research first." and stop.
-2. Follow the phase loop from `/team`. It dispatches `design-author`, which:
+1. Stat `docs/plans/<today>-<topic>-research.md`.
+2. **If missing and `$ARGUMENTS` is non-empty** — bootstrap by chaining
+   inline: dispatch `questioner` to produce Question artifacts, then
+   dispatch `file-finder` + `researcher` in parallel to produce
+   `research.md`. Continue to design without prompting the user to re-run
+   earlier commands.
+3. **If missing and `$ARGUMENTS` is empty** — ask the user to describe
+   the feature, then bootstrap as above. If still empty, stop.
+4. Follow the phase loop from `/team`. It dispatches `design-author`, which:
    a. Presents open questions to the user interactively
    b. Waits for answers
    c. Writes `docs/plans/<today>-<topic>-design.md`
-3. At the human gate: present the design **in full** and ask "Do you
+5. At the human gate: present the design **in full** and ask "Do you
    approve this design?".
-4. **Stop once `docs/plans/<today>-<topic>-design.md.approved` sidecar is
+6. **Stop once `docs/plans/<today>-<topic>-design.md.approved` sidecar is
    touched, or the design has been re-dispatched for revision.**
 
 ## On revision

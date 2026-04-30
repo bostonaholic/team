@@ -5,18 +5,36 @@ description: Break the approved design into vertical slices with verification ch
 
 # TEAM Structure — Standalone Phase
 
-Run the STRUCTURE phase. Requires design approval on disk.
+Run the STRUCTURE phase. Two modes:
+
+- **Resume mode** — `design.md.approved` sidecar exists; structure-planner
+  consumes the approved design.
+- **Standalone mode** — no approved design, but the user wants to plan
+  vertical slices directly. Bootstrap the missing upstream artifacts.
+
+## Input
+
+`$ARGUMENTS` may be:
+
+- Empty — resume mode. Requires `design.md.approved` on disk.
+- A beads issue ID — resolve via `/beads:show <id>`.
+- Free-form text — treated as the feature/task description.
+- A path to an existing design-like document — accepted as the design.
 
 ## Execution
 
-1. Stat `docs/plans/<today>-<topic>-design.md.approved`. If missing,
-   report "Design not yet approved — run /team-design first." and stop.
-2. Follow the phase loop from `/team`. It dispatches `structure-planner`,
+1. Stat `docs/plans/<today>-<topic>-design.md.approved`.
+2. **If missing and `$ARGUMENTS` is non-empty** — bootstrap by chaining
+   inline: produce Question + Research + Design artifacts, then run the
+   design human gate. After approval, continue to structure.
+3. **If missing and `$ARGUMENTS` is empty** — ask the user for a
+   description; if still empty, stop.
+4. Follow the phase loop from `/team`. It dispatches `structure-planner`,
    which writes `docs/plans/<today>-<topic>-structure.md` with vertical
    slices.
-3. At the human gate: present the structure **in full** and ask "Do you
+5. At the human gate: present the structure **in full** and ask "Do you
    approve this structure?".
-4. **Stop once `docs/plans/<today>-<topic>-structure.md.approved` sidecar
+6. **Stop once `docs/plans/<today>-<topic>-structure.md.approved` sidecar
    is touched, or the structure has been re-dispatched for revision.**
 
 ## On revision
