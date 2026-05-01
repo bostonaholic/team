@@ -1,9 +1,9 @@
 ---
-name: adversarial-review
+name: code-review
 description: Generator-evaluator separation and review methodology — loaded by review agents to enforce fresh-context review discipline, Conventional Comments format, and gate verdicts
 ---
 
-# Adversarial Review
+# Code Review
 
 Reviews must be performed by agents with fresh context. The generator (the
 agent that wrote the code) must never evaluate its own output. This separation

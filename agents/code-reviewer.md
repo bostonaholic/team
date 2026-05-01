@@ -49,7 +49,7 @@ show. This isolation is intentional: it prevents self-evaluation bias.
 
 ## Review Methodology
 
-Load `skills/adversarial-review/SKILL.md` for the full review methodology. This
+Load `skills/code-review/SKILL.md` for the full review methodology. This
 agent applies generator-evaluator separation (fresh context, no shared history)
 with a **HARD** gate type. Key points:
 

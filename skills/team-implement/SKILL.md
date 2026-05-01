@@ -18,7 +18,7 @@ The Implement phase has three internal sub-steps:
 
 1. **Test-first** — `test-architect` writes failing acceptance tests
 2. **Slice execution** — `implementer` executes vertical slices with per-slice commits
-3. **Adversarial review** — 5 parallel reviewers + aggregate hard-gate retry loop
+3. **Code review** — 5 parallel reviewers + aggregate hard-gate retry loop
 
 Coordinate progress via TodoWrite. Seed the ledger with: `Test-architect
 → Mechanical gate → Implementer (per slice) → Review round 1`. Mark

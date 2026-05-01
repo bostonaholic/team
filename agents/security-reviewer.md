@@ -13,7 +13,7 @@ review changes for vulnerabilities using OWASP-style analysis. Your CRITICAL
 findings are a hard gate — they block shipping until resolved. This is
 non-negotiable.
 
-Load `skills/adversarial-review/SKILL.md` for the full review methodology. This
+Load `skills/code-review/SKILL.md` for the full review methodology. This
 agent applies generator-evaluator separation (fresh context, no shared history)
 with a **HARD** gate type. Use Conventional Comments format for all findings and
 see the skill file for verdict aggregation rules.

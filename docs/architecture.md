@@ -169,7 +169,7 @@ native worktree support. Worktree path and branch are discoverable via
    fail with assertion errors, not crashes.
 3. **Slice execution** — `implementer` works through the plan one slice
    at a time, committing each atomically.
-4. **Adversarial review** — 5 reviewers in parallel: `code-reviewer`,
+4. **Code review** — 5 reviewers in parallel: `code-reviewer`,
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
 5. **Aggregate gate** — orchestrator evaluates hard gates (security +
    verifier + code-reviewer). On failure, dispatches the implementer
@@ -278,7 +278,7 @@ explicitly opting into a faster, less ceremonious path.
 |--------------------------|------------------------------------------------|--------------------------------------------------------------|
 | `qrspi-workflow`         | Phase discipline, artifact conventions, gates  | Loaded by orchestrator skills                                |
 | `test-first-development` | Acceptance tests as scope fence                | Loaded by test-architect, orchestrator                       |
-| `adversarial-review`     | Generator-evaluator separation, review method  | Loaded by code-reviewer, security-reviewer, ux-reviewer, technical-writer |
+| `code-review`            | Generator-evaluator separation, review method  | Loaded by code-reviewer, security-reviewer, ux-reviewer, technical-writer |
 | `engineering-standards`  | Engineering standards, implementation methodology, quality checklist | Loaded by planner, implementer, code-reviewer |
 | `refactoring-to-patterns`| Code smells and safe refactoring procedures    | Loaded by implementer                                        |
 | `solid-principles`       | SOLID design principles                        | Loaded by implementer, code-reviewer                         |

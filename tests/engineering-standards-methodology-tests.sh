@@ -138,24 +138,24 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# T9: architecture.md adversarial-review row unchanged
+# T9: architecture.md code-review row unchanged
 # ---------------------------------------------------------------------------
 T9_PASS=true
 
-ADVERSARIAL_ROW=$(grep "adversarial-review" "$REPO_ROOT/docs/architecture.md" \
+CODE_REVIEW_ROW=$(grep '`code-review`' "$REPO_ROOT/docs/architecture.md" \
   | grep -v "^#\|^>\|SKILL.md\|//\|event" | head -5 || true)
 
 for agent in "code-reviewer" "security-reviewer" "ux-reviewer" "technical-writer"; do
-  if ! echo "$ADVERSARIAL_ROW" | grep -q "$agent"; then
+  if ! echo "$CODE_REVIEW_ROW" | grep -q "$agent"; then
     T9_PASS=false
     break
   fi
 done
 
 if [ "$T9_PASS" = "true" ]; then
-  pass "T9: architecture.md adversarial-review row unchanged"
+  pass "T9: architecture.md code-review row unchanged"
 else
-  fail "T9: architecture.md adversarial-review row unchanged"
+  fail "T9: architecture.md code-review row unchanged"
 fi
 
 # ---------------------------------------------------------------------------
@@ -195,12 +195,12 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# T14: code-reviewer.md still references adversarial-review/SKILL.md (no regression)
+# T14: code-reviewer.md still references code-review/SKILL.md (no regression)
 # ---------------------------------------------------------------------------
-if grep -q "adversarial-review/SKILL.md" "$REPO_ROOT/agents/code-reviewer.md"; then
-  pass "T14: code-reviewer.md still references adversarial-review/SKILL.md"
+if grep -q "code-review/SKILL.md" "$REPO_ROOT/agents/code-reviewer.md"; then
+  pass "T14: code-reviewer.md still references code-review/SKILL.md"
 else
-  fail "T14: code-reviewer.md still references adversarial-review/SKILL.md"
+  fail "T14: code-reviewer.md still references code-review/SKILL.md"
 fi
 
 # ---------------------------------------------------------------------------

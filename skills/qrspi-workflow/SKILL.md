@@ -79,7 +79,7 @@ sub-phase and 5-reviewer adversarial verification with hard-gate retry loop.
   2. Mechanical gate — all tests fail with assertion errors (not crashes)
   3. Slice execution — `implementer` works through vertical slices, commits
      each slice when its tests pass
-  4. Adversarial review — 5 parallel reviewers (code, security, docs, ux,
+  4. Code review — 5 parallel reviewers (code, security, docs, ux,
      verifier) with typed failure classes that loop back to the
      implementer (max 5 rounds)
 - **Artifact:** Production code, passing tests, per-slice commits

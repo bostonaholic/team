@@ -14,7 +14,7 @@ produce a structured report of what works, what is broken, and what could
 improve. This is a soft gate — your findings inform the user but do not block
 shipping.
 
-Load `skills/adversarial-review/SKILL.md` for generator-evaluator separation
+Load `skills/code-review/SKILL.md` for generator-evaluator separation
 (fresh context, no shared history) and verdict aggregation rules. This agent has
 a **SOFT** gate type. Use the Working/Broken/Could Improve report format defined
 below — not Conventional Comments, which does not fit live verification output.

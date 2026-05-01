@@ -19,39 +19,39 @@ fail() {
 }
 
 # ---------------------------------------------------------------------------
-# T1: code-reviewer loads adversarial-review/SKILL.md
+# T1: code-reviewer loads code-review/SKILL.md
 # ---------------------------------------------------------------------------
-if grep -q "adversarial-review/SKILL.md" "$REPO_ROOT/agents/code-reviewer.md"; then
-  pass "T1: code-reviewer references adversarial-review/SKILL.md"
+if grep -q "code-review/SKILL.md" "$REPO_ROOT/agents/code-reviewer.md"; then
+  pass "T1: code-reviewer references code-review/SKILL.md"
 else
-  fail "T1: code-reviewer references adversarial-review/SKILL.md"
+  fail "T1: code-reviewer references code-review/SKILL.md"
 fi
 
 # ---------------------------------------------------------------------------
-# T2: security-reviewer loads adversarial-review/SKILL.md
+# T2: security-reviewer loads code-review/SKILL.md
 # ---------------------------------------------------------------------------
-if grep -q "adversarial-review/SKILL.md" "$REPO_ROOT/agents/security-reviewer.md"; then
-  pass "T2: security-reviewer references adversarial-review/SKILL.md"
+if grep -q "code-review/SKILL.md" "$REPO_ROOT/agents/security-reviewer.md"; then
+  pass "T2: security-reviewer references code-review/SKILL.md"
 else
-  fail "T2: security-reviewer references adversarial-review/SKILL.md"
+  fail "T2: security-reviewer references code-review/SKILL.md"
 fi
 
 # ---------------------------------------------------------------------------
-# T3: ux-reviewer loads adversarial-review/SKILL.md
+# T3: ux-reviewer loads code-review/SKILL.md
 # ---------------------------------------------------------------------------
-if grep -q "adversarial-review/SKILL.md" "$REPO_ROOT/agents/ux-reviewer.md"; then
-  pass "T3: ux-reviewer references adversarial-review/SKILL.md"
+if grep -q "code-review/SKILL.md" "$REPO_ROOT/agents/ux-reviewer.md"; then
+  pass "T3: ux-reviewer references code-review/SKILL.md"
 else
-  fail "T3: ux-reviewer references adversarial-review/SKILL.md"
+  fail "T3: ux-reviewer references code-review/SKILL.md"
 fi
 
 # ---------------------------------------------------------------------------
-# T4: technical-writer loads adversarial-review/SKILL.md
+# T4: technical-writer loads code-review/SKILL.md
 # ---------------------------------------------------------------------------
-if grep -q "adversarial-review/SKILL.md" "$REPO_ROOT/agents/technical-writer.md"; then
-  pass "T4: technical-writer references adversarial-review/SKILL.md"
+if grep -q "code-review/SKILL.md" "$REPO_ROOT/agents/technical-writer.md"; then
+  pass "T4: technical-writer references code-review/SKILL.md"
 else
-  fail "T4: technical-writer references adversarial-review/SKILL.md"
+  fail "T4: technical-writer references code-review/SKILL.md"
 fi
 
 # ---------------------------------------------------------------------------
@@ -68,28 +68,28 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# T6: verifier does NOT reference adversarial-review/SKILL.md
+# T6: verifier does NOT reference code-review/SKILL.md
 # ---------------------------------------------------------------------------
-if grep -q "adversarial-review/SKILL.md" "$REPO_ROOT/agents/verifier.md"; then
-  fail "T6: verifier does NOT reference adversarial-review/SKILL.md (found unexpected reference)"
+if grep -q "code-review/SKILL.md" "$REPO_ROOT/agents/verifier.md"; then
+  fail "T6: verifier does NOT reference code-review/SKILL.md (found unexpected reference)"
 else
-  pass "T6: verifier does NOT reference adversarial-review/SKILL.md"
+  pass "T6: verifier does NOT reference code-review/SKILL.md"
 fi
 
 # ---------------------------------------------------------------------------
-# T7: All 4 consumer agent names appear in the adversarial-review row of
+# T7: All 4 consumer agent names appear in the code-review row of
 #     docs/architecture.md. Uses separate greps (not order-dependent).
-#     The methodology table row for adversarial-review must name all 4 agents.
+#     The methodology table row for code-review must name all 4 agents.
 # ---------------------------------------------------------------------------
 T7_PASS=true
 
-# Extract the adversarial-review row from the methodology table, then check
+# Extract the code-review row from the methodology table, then check
 # each agent name appears within that row.
-ADVERSARIAL_ROW=$(grep "adversarial-review" "$REPO_ROOT/docs/architecture.md" \
+CODE_REVIEW_ROW=$(grep '`code-review`' "$REPO_ROOT/docs/architecture.md" \
   | grep -v "^#\|^>\|SKILL.md\|//\|event" | head -5 || true)
 
 for agent in "code-reviewer" "security-reviewer" "ux-reviewer" "technical-writer"; do
-  if echo "$ADVERSARIAL_ROW" | grep -q "$agent"; then
+  if echo "$CODE_REVIEW_ROW" | grep -q "$agent"; then
     : # found
   else
     T7_PASS=false
@@ -98,9 +98,9 @@ for agent in "code-reviewer" "security-reviewer" "ux-reviewer" "technical-writer
 done
 
 if [ "$T7_PASS" = "true" ]; then
-  pass "T7: adversarial-review row in docs/architecture.md names all 4 consumer agents"
+  pass "T7: code-review row in docs/architecture.md names all 4 consumer agents"
 else
-  fail "T7: adversarial-review row in docs/architecture.md names all 4 consumer agents (one or more missing: code-reviewer, security-reviewer, ux-reviewer, technical-writer)"
+  fail "T7: code-review row in docs/architecture.md names all 4 consumer agents (one or more missing: code-reviewer, security-reviewer, ux-reviewer, technical-writer)"
 fi
 
 # ---------------------------------------------------------------------------
