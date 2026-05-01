@@ -1,6 +1,7 @@
 ---
 name: team
 description: Full 8-phase autonomous feature implementation pipeline (QRSPI). Trigger on "hey team", "build a feature", "implement end to end", "autonomous implementation", or "/team".
+argument-hint: "<ticket id, issue URL, or feature description>"
 ---
 
 # TEAM — Phase-Table Orchestrator
@@ -11,44 +12,45 @@ to shipped code by walking a linear phase table, dispatching specialist
 agents, and coordinating progress via TodoWrite.
 
 You hold no special state of your own. The durable record is the set of
-artifacts under `docs/plans/<today>-<topic>-*.md` (each carrying YAML
-frontmatter that describes its phase, approval state, and revision
-count). Live in-session coordination uses TodoWrite.
+artifacts under `docs/plans/<id>/*.md` (each carrying YAML frontmatter
+that describes its phase, approval state, and revision count). Live
+in-session coordination uses TodoWrite.
 
 ## Input
 
-Feature description: `$ARGUMENTS`
+`$ARGUMENTS` may be:
+
+- A ticket identifier (e.g. `ENG-1234`) — used as `<id>` prefix and
+  recorded as `ticketId` on `task.md`.
+- An issue URL (e.g. `https://github.com/org/repo/issues/42`) — fetched
+  via `gh issue view` to extract the title and body.
+- Free-form text — used directly as the feature description.
 
 If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
 
 ## Setup
 
-1. **Check for a tracking ticket ID.** If the first token of
-   `$ARGUMENTS` looks like a ticket identifier (e.g., a kebab-case
-   `<system>-<id>` slug), set it aside as `ticketId` and strip it from
-   the rest of the description. The questioner will record it on
-   `task.md`'s frontmatter as `ticketId`. The TEAM pipeline does not
-   integrate with any specific ticketing system — the ID is recorded
-   for the user's reference and for any project-specific automation
-   they may layer on top (e.g., a hook that marks the ticket
-   in-progress when `task.md` is created). If the first token does not
-   look like a ticket ID, treat all of `$ARGUMENTS` as the description
-   and leave `ticketId` as `null`.
-2. Derive a kebab-case `topic` from the description.
-3. Set `today` to the current date (`YYYY-MM-DD`).
-4. Create `docs/plans/` if it does not exist.
+1. **Resolve `$ARGUMENTS`** to a description (fetch issue via `gh` if a
+   URL; lookup tracker if a ticket-only ID; otherwise use as-is).
+2. **Capture `ticketId`** — if `$ARGUMENTS` starts with a ticket-like
+   pattern (e.g., `<system>-<id>`), set it aside as `ticketId` for
+   `task.md`. Otherwise leave `ticketId` as `null`.
+3. **Derive `<id>`:**
+   - With ticket: `<TICKET>-<kebab-topic>` (e.g., `ENG-1234-add-auth`)
+   - Without ticket: `<YYYY-MM-DD>-<kebab-topic>` (e.g.,
+     `2026-05-01-add-auth`)
+4. Create `docs/plans/<id>/` if it does not exist.
 5. **Seed the TodoWrite ledger** with one item per phase, in order:
    `Question → Research → Design → Structure → Plan → Worktree →
    Implement → PR`. Mark `Question` as `in_progress`.
-6. **Resume detection.** If artifacts already exist for this topic under
-   `docs/plans/<today>-<topic>-*.md`, fast-forward the ledger by marking
-   completed any phases whose artifacts are already on disk and
-   (for human-gated phases) carry `approved: true`. Then mark the
-   first incomplete phase `in_progress`.
+6. **Resume detection.** If artifacts already exist for `<id>` under
+   `docs/plans/<id>/`, fast-forward the ledger by marking completed any
+   phases whose artifacts are present and (for human-gated phases) carry
+   `approved: true`. Then mark the first incomplete phase `in_progress`.
 
-You hold the description in your own context. Downstream of QUESTION
-the description must NEVER appear in any artifact or agent payload
-outside `task.md` and the questioner's own outputs.
+You hold the description in your own context. Downstream of QUESTION the
+description must NEVER appear in any artifact or agent payload outside
+`task.md` and the questioner's own outputs.
 
 ## The Phase Loop
 
@@ -61,7 +63,7 @@ loop:
      phases) carry `approved: true` in their frontmatter. If missing,
      report a desync and suggest re-invoking the same /team-* command.
   4. Dispatch the agent(s) (parallel where the phase table marks them).
-  5. Write each returned artifact to docs/plans/<today>-<topic>-<name>.md
+  5. Write each returned artifact to docs/plans/<id>/<name>.md
      with the YAML frontmatter the agent specifies (see the agent file
      and skills/qrspi-workflow/SKILL.md).
   6. Run the gate for this phase:
@@ -82,21 +84,21 @@ loop:
 
 ### Phase table
 
-| Phase      | Agent(s)                              | Predecessor artifact                                                       | Next phase on pass |
-|------------|---------------------------------------|----------------------------------------------------------------------------|--------------------|
-| QUESTION   | `questioner`                          | (none — description in `$ARGUMENTS`)                                       | RESEARCH           |
-| RESEARCH   | `file-finder`, `researcher` (parallel)| `docs/plans/<today>-<topic>-task.md`                                       | DESIGN             |
-| DESIGN     | `design-author` (→ human gate)        | `docs/plans/<today>-<topic>-research.md`                                   | STRUCTURE          |
-| STRUCTURE  | `structure-planner` (→ human gate)    | `docs/plans/<today>-<topic>-design.md` (frontmatter `approved: true`)      | PLAN               |
-| PLAN       | `planner`                             | `docs/plans/<today>-<topic>-structure.md` (frontmatter `approved: true`)   | WORKTREE           |
-| WORKTREE   | (orchestrator-emit)                   | `docs/plans/<today>-<topic>-plan.md`                                       | IMPLEMENT          |
-| IMPLEMENT  | `test-architect`, `implementer`, 5 reviewers (parallel) | worktree prepared                                        | PR                 |
-| PR         | (orchestrator-emit)                   | aggregate gate passed                                                      | SHIPPED            |
+| Phase      | Agent(s)                                                | Predecessor artifact                                            | Next phase on pass |
+|------------|---------------------------------------------------------|-----------------------------------------------------------------|--------------------|
+| QUESTION   | `questioner`                                            | (none — description in `$ARGUMENTS`)                            | RESEARCH           |
+| RESEARCH   | `file-finder`, `researcher` (parallel, BLIND)           | `docs/plans/<id>/questions.md`                                  | DESIGN             |
+| DESIGN     | `design-author` (→ human gate)                          | `docs/plans/<id>/research.md`                                   | STRUCTURE          |
+| STRUCTURE  | `structure-planner` (→ human gate)                      | `docs/plans/<id>/design.md` (frontmatter `approved: true`)      | PLAN               |
+| PLAN       | `planner`                                               | `docs/plans/<id>/structure.md` (frontmatter `approved: true`)   | WORKTREE           |
+| WORKTREE   | (orchestrator-emit)                                     | `docs/plans/<id>/plan.md`                                       | IMPLEMENT          |
+| IMPLEMENT  | `test-architect`, `implementer`, 5 reviewers (parallel) | worktree prepared                                               | PR                 |
+| PR         | (orchestrator-emit)                                     | aggregate gate passed                                           | SHIPPED            |
 
-For RESEARCH, dispatch `file-finder` and `researcher` in parallel and
-combine their returned content into a single
-`docs/plans/<today>-<topic>-research.md` artifact (with the frontmatter
-the researcher's documentation specifies) before advancing the phase.
+For RESEARCH, dispatch `file-finder` and `researcher` in parallel passing
+each only the `docs/plans/<id>/questions.md` path. Combine their returned
+content into a single `docs/plans/<id>/research.md` artifact (with the
+frontmatter the researcher's documentation specifies) before advancing.
 
 `skills/team/registry.json` is an inventory of the 13 specialist agents
 for documentation purposes only. The orchestrator dispatches based on
@@ -108,64 +110,58 @@ The questioner is the only agent that ever sees the raw description from
 `$ARGUMENTS`. When dispatching the questioner, pass the full description.
 When the questioner returns:
 
-1. Confirm `task.md`, `questions.md`, `brief.md` exist in
-   `docs/plans/<today>-<topic>-*.md`. The questioner writes them
-   directly with the required YAML frontmatter (see the agent file).
+1. Confirm `task.md` and `questions.md` exist in `docs/plans/<id>/`. The
+   questioner writes them directly with the required YAML frontmatter
+   (see the agent file).
 2. Mark Question complete in TodoWrite and Research `in_progress`.
 
-When dispatching `file-finder` and `researcher` (which consume the
-RESEARCH phase), pass them only `questionsPath` and `briefPath`. They
-are forbidden from reading `task.md` and the orchestrator must not
-provide the original description in their context.
+When dispatching `file-finder` and `researcher`, pass them only the path
+`docs/plans/<id>/questions.md`. They are forbidden from reading
+`task.md` and the orchestrator must not provide the original description
+in their context.
 
 ## Gate Handling
 
 ### Human Gate (design approval)
 
 When the `design-author` returns a draft:
-1. Confirm `docs/plans/<today>-<topic>-design.md` exists with frontmatter
+
+1. Confirm `docs/plans/<id>/design.md` exists with frontmatter
    `approved: false` and `approved_at: null`.
 2. Present the design **in full** to the user.
 3. Ask: "Do you approve this design?"
 4. If approved → edit the artifact's frontmatter to set `approved: true`
-   and `approved_at: <ISO-8601 timestamp>`. The frontmatter on the
-   artifact is the durable approval signal.
+   and `approved_at: <ISO-8601 timestamp>`.
 5. If rejected → re-dispatch `design-author` with the user's feedback.
    The new draft must increment `revision: <n+1>` in its frontmatter.
-   Cap at `revision: 5`; beyond that, escalate to the user for direction.
+   Cap at `revision: 5`.
 
 ### Human Gate (structure approval)
 
-When the `structure-planner` returns a draft:
-1. Confirm `docs/plans/<today>-<topic>-structure.md` exists with
-   frontmatter `approved: false` and `approved_at: null`.
-2. Present the structure **in full** to the user.
-3. Ask: "Do you approve this structure?"
-4. If approved → edit frontmatter to `approved: true` and stamp
-   `approved_at: <ISO-8601 timestamp>`.
-5. If rejected → re-dispatch `structure-planner` with feedback. The new
-   draft increments `revision: <n+1>`. Cap at `revision: 5`.
+Same mechanics as design, applied to `docs/plans/<id>/structure.md`.
 
 ### Orchestrator-Emit Gate (worktree preparation)
 
 When the plan artifact exists:
+
 1. Use Claude Code's native worktree support to create an isolated
-   worktree for this topic. See `skills/worktree-isolation/SKILL.md` for
-   the methodology.
-2. The worktree path and branch are discoverable via
-   `git worktree list --porcelain`; no need to persist them.
+   worktree for `<id>`. See `skills/worktree-isolation/SKILL.md`.
+2. Copy `docs/plans/<id>/` into the new worktree (untracked files do
+   not propagate to worktrees automatically).
 
 ### Mechanical Gate (test confirmation)
 
 When the `test-architect` returns failing tests:
+
 1. Run the test suite.
 2. If all tests fail with assertion errors (not crashes), advance.
-3. If tests crash or error, report the issue and stop.
+3. If tests crash or error, fix infrastructure and re-run.
 
 ### Aggregate Gate (review collection)
 
 When the 5 reviewers (security, docs, ux, code, verifier) have all
 returned:
+
 1. Collect all verdicts from the most recent round.
 2. Check each hard gate independently:
    - `security-review` — FAIL on any CRITICAL or HIGH findings.
@@ -173,11 +169,9 @@ returned:
    - `code-review` — FAIL on REQUEST CHANGES verdict.
 3. Track the round count by appending a TodoWrite item like
    "Review round 2" each retry. Cap at 5 rounds.
-4. If under cap → dispatch implementer to fix, passing the specific
-   failure class(es) so it knows what to address. After fixes, all 5
-   reviewers re-run from scratch.
-5. If at cap → escalate to the user. Present all unresolved findings
-   organized by failure type and stop.
+4. If under cap → dispatch implementer to fix, passing the typed failure
+   class(es). After fixes, all 5 reviewers re-run from scratch.
+5. If at cap → escalate to the user with all unresolved findings.
 6. If all hard gates pass clean → advance to PR.
 
 **The loop is: IMPLEMENT → VERIFY (5 reviewers) → typed gate check →
@@ -188,34 +182,35 @@ failure classes so it knows exactly what to fix.
 ### Orchestrator-Emit Gate (PR / ship)
 
 When the aggregate gate passes:
-1. Update `CHANGELOG.md` per `skills/changelog/SKILL.md` (filter for
-   user-facing commits since last release).
+
+1. Update `CHANGELOG.md` per `skills/changelog/SKILL.md`.
 2. Present shipping options: commit + PR, commit locally, keep as-is.
 3. Execute user's choice.
-4. If `task.md` frontmatter has `ticketId` set, the user may want to
-   close the ticket in their tracking system. The orchestrator does
-   not close tickets automatically.
+4. If `task.md` frontmatter has `ticketId` set, surface it so the user
+   can close the ticket. The orchestrator does not close tickets.
 5. Mark all TodoWrite items complete.
-6. If a worktree was created, clean it up (cherry-pick/rebase commits
-   onto the target branch, then let Claude Code remove the worktree).
+6. If a worktree was created, clean it up (cherry-pick or rebase
+   commits onto the target branch, then let Claude Code remove the
+   worktree).
 
 ## Rules
 
-- The artifacts in `docs/plans/` are the single durable record of
+- Artifacts in `docs/plans/<id>/` are the single durable record of
   pipeline state. Each artifact's YAML frontmatter describes its phase,
   approval state, and revision count.
 - TodoWrite is the orchestrator's live coordination ledger. It is
   session-scoped and is rebuilt on entry to any `/team-*` command by
   scanning artifacts.
-- File artifacts in `docs/plans/` are the durable communication protocol.
-  Always write phase findings to disk before advancing.
+- File artifacts in `docs/plans/<id>/` are the durable communication
+  protocol. Always write phase findings to disk before advancing.
 - The two human gates are **design approval** and **structure approval**.
-  Never present the plan to the user for approval — the plan is a tactical
-  agent artifact, the structure is the human contract.
+  Never present the plan to the user for approval — the plan is a
+  tactical agent artifact, the structure is the human contract.
 - The blind-research invariant is non-negotiable. If a researcher's
   context contains the user's original description, the pipeline has a
   defect. Stop and report.
-- On any unexpected failure: report to the user and suggest re-invoking the same /team-* command.
+- On any unexpected failure: report to the user and suggest re-invoking
+  the same /team-* command with `docs/plans/<id>/`.
 - To add a new agent to the pipeline, add an entry to the phase table
   above and to the inventory in `skills/team/registry.json`.
 

@@ -16,8 +16,8 @@ the design-author later turns the task into an approach.
 
 ## When to Write a PRD
 
-The questioner produces a PRD (in addition to the standard `task.md`,
-`questions.md`, and `brief.md`) when the feature request is:
+The questioner produces a PRD (in addition to the standard `task.md`
+and `questions.md`) when the feature request is:
 
 - **Vague or underspecified** — the request does not say what "done" looks
   like ("improve the onboarding experience" has no clear scope boundary)
@@ -33,8 +33,8 @@ standard `task.md` is sufficient — no PRD needed.
 
 ## PRD Structure
 
-Write the PRD to `docs/plans/YYYY-MM-DD-<topic>-prd.md`. Reference its path
-from `task.md` so the design-author knows to read it.
+Write the PRD to `docs/plans/<id>/prd.md`. Reference its path from
+`task.md` so the design-author knows to read it.
 
 ### Problem Statement
 

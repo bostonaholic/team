@@ -3,37 +3,38 @@
 > **Audience:** Plugin maintainers and contributors. End users only need
 > the README + `/team` slash command.
 >
-> **Source of truth:** the artifacts in `docs/plans/<today>-<topic>-*.md`
-> and the in-session TodoWrite ledger.
+> **Source of truth:** the artifacts in `docs/plans/<id>/*.md` and the
+> in-session TodoWrite ledger.
 
 ## 1. Design Philosophy
 
 Agents are **decoupled microservices**. Each agent consumes a predecessor
 artifact on disk, does work, and produces its own artifact under
-`docs/plans/`. The orchestrator is the main Claude Code session: it walks
-a linear phase table, dispatches the right specialist for each phase,
+`docs/plans/<id>/`. The orchestrator is the main Claude Code session: it
+walks a linear phase table, dispatches the right specialist for each phase,
 seeds and updates a TodoWrite ledger, and runs the human gates.
 
 **Principles:**
 
 - **Files on disk are the durable record.** Every artifact under
-  `docs/plans/` carries YAML frontmatter that describes its phase and,
-  for human-gated phases, the approval state. Phase progression is
+  `docs/plans/<id>/` carries YAML frontmatter that describes its phase
+  and, for human-gated phases, the approval state. Phase progression is
   inferred by scanning artifacts.
 - **TodoWrite is the live coordination ledger.** It is session-scoped.
-  Re-invoking any `/team-*` command rebuilds the ledger by scanning artifacts on entry.
+  Re-invoking any `/team-*` command rebuilds the ledger by scanning
+  artifacts on entry.
 - **Registry is a phase-tagged inventory.** `skills/team/registry.json`
   lists the 13 specialist agents and the QRSPI phase each serves. The
   orchestrator dispatches via the phase table in `skills/team/SKILL.md`,
   not via the registry.
 - **File artifacts survive compaction.** Agents communicate through
-  files in `docs/plans/`. These survive context-window compaction, can
-  be re-read by any agent in any session, and live in git history.
+  files in `docs/plans/<id>/`. These survive context-window compaction,
+  can be re-read by any agent in any session, and live in git history.
 - **Blind research.** The researcher and file-finder never receive the
   user's original task description. Enforcement is two-layer:
-  *structural* — the orchestrator only passes `brief.md` + `questions.md`
-  paths to the blind agents; *procedural* — the blind agents' system
-  prompts forbid reading `task.md`.
+  *structural* — the orchestrator only passes the `questions.md` path to
+  the blind agents; *procedural* — the blind agents' system prompts
+  forbid reading `task.md`.
 - **Two human touchpoints.** Design approval (~200-line alignment doc)
   and Structure approval (~2-page vertical-slice breakdown). Approval
   is recorded by flipping `approved: true` (and stamping `approved_at`)
@@ -43,16 +44,22 @@ seeds and updates a TodoWrite ledger, and runs the human gates.
 - **Hooks enforce discipline mechanically.** LLMs forget instructions
   ~20% of the time; hooks are deterministic.
 
-## 2. Artifact Frontmatter
+## 2. Artifact Layout & Frontmatter
 
-Every artifact under `docs/plans/` opens with YAML frontmatter. Common
-fields:
+All phase artifacts live in `docs/plans/<id>/`, where `<id>` is one of:
+
+- **Ticket-prefixed**: `<TICKET>-<kebab-topic>` (e.g.,
+  `ENG-1234-add-rate-limiting`)
+- **Date-prefixed**: `<YYYY-MM-DD>-<kebab-topic>` (e.g.,
+  `2026-05-01-add-rate-limiting`)
+
+Every artifact opens with YAML frontmatter. Common fields:
 
 ```yaml
 ---
 topic: <kebab-case>
 date: 2026-04-30
-phase: design        # task | questions | brief | research | design | structure | plan
+phase: design        # task | questions | research | design | structure | plan
 ---
 ```
 
@@ -60,9 +67,8 @@ Per-phase additions:
 
 | Phase     | Extra frontmatter                                                       |
 |-----------|-------------------------------------------------------------------------|
-| task      | `ticketId: <id>` (or `null`)                                         |
+| task      | `ticketId: <id>` (or `null`)                                            |
 | questions | (none)                                                                  |
-| brief     | (none)                                                                  |
 | research  | (none)                                                                  |
 | design    | `approved: false`, `approved_at: null`, `revision: 0`                   |
 | structure | `approved: false`, `approved_at: null`, `revision: 0`                   |
@@ -85,18 +91,18 @@ Cap at 5; beyond that, escalate to the user.
 
 | Latest artifact present                                | Current phase       |
 |--------------------------------------------------------|---------------------|
-| `task.md` only                                         | RESEARCH (next up)  |
+| `task.md` + `questions.md` only                        | RESEARCH (next up)  |
 | `research.md`                                          | DESIGN (next up)    |
 | `design.md` (frontmatter `approved: false`)            | DESIGN (human gate) |
 | `design.md` (frontmatter `approved: true`)             | STRUCTURE (next up) |
 | `structure.md` (frontmatter `approved: false`)         | STRUCTURE (gate)    |
 | `structure.md` (frontmatter `approved: true`)          | PLAN (next up)      |
 | `plan.md`                                              | WORKTREE (next up)  |
-| worktree exists for the topic branch                   | IMPLEMENT           |
+| worktree exists for the `<id>` branch                  | IMPLEMENT           |
 | topic branch has slice commits + verifier passed       | PR (next up)        |
 | PR opened or commit shipped                            | SHIPPED             |
 
-Worktree presence: `git worktree list --porcelain | grep -q <branch>`.
+Worktree presence: `git worktree list --porcelain | grep -q <id>`.
 
 ## 3. Pipeline (QRSPI)
 
@@ -111,17 +117,19 @@ QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → WORKTREE → IMPLEME
 
 **Agent:** `questioner`
 **Predecessor:** (none — description in `$ARGUMENTS`)
-**Artifacts:** `docs/plans/YYYY-MM-DD-<topic>-{task,questions,brief}.md`
+**Artifacts:** `docs/plans/<id>/{task,questions}.md`
 
-Decomposes the user's intent into three artifacts. Only the questioner
-ever sees the user's description.
+Decomposes the user's intent into two artifacts. Only the questioner
+ever sees the user's description. There is no separate `brief.md`;
+neutral codebase context lives in a "Codebase context" section at the top
+of `questions.md`.
 
 ### Phase 2: Research
 
 **Agents:** `file-finder` and `researcher` (parallel, blind)
-**Predecessor:** `task.md` (orchestrator passes only `questions.md` and
-`brief.md` paths to the blind agents)
-**Artifact:** `docs/plans/YYYY-MM-DD-<topic>-research.md`
+**Predecessor:** `questions.md` (orchestrator passes only the
+`questions.md` path to the blind agents)
+**Artifact:** `docs/plans/<id>/research.md`
 
 Orchestrator waits for both agents to return, then writes the combined
 research artifact (with the required frontmatter).
@@ -131,7 +139,7 @@ research artifact (with the required frontmatter).
 **Agent:** `design-author` (MUST ask open questions interactively before
 drafting)
 **Predecessor:** `research.md`
-**Artifact:** `docs/plans/YYYY-MM-DD-<topic>-design.md`
+**Artifact:** `docs/plans/<id>/design.md`
 **Gate:** HUMAN — on approval the orchestrator edits `design.md`'s
 frontmatter to set `approved: true` and `approved_at: <ISO-8601>`; on
 rejection the agent re-drafts and increments `revision`.
@@ -140,14 +148,14 @@ rejection the agent re-drafts and increments `revision`.
 
 **Agent:** `structure-planner`
 **Predecessor:** `design.md` with frontmatter `approved: true`
-**Artifact:** `docs/plans/YYYY-MM-DD-<topic>-structure.md`
+**Artifact:** `docs/plans/<id>/structure.md`
 **Gate:** HUMAN — same flip-frontmatter mechanics as Design.
 
 ### Phase 5: Plan
 
 **Agent:** `planner`
 **Predecessor:** `structure.md` with frontmatter `approved: true`
-**Artifact:** `docs/plans/YYYY-MM-DD-<topic>-plan.md`
+**Artifact:** `docs/plans/<id>/plan.md`
 
 No human gate. The plan is mechanically derived from the approved
 structure.
@@ -158,8 +166,10 @@ structure.
 **Predecessor:** `plan.md`
 
 The orchestrator creates an isolated git worktree using Claude Code's
-native worktree support. Worktree path and branch are discoverable via
-`git worktree list --porcelain` — no need to persist them.
+native worktree support. The branch name is `<id>`. Worktree path and
+branch are discoverable via `git worktree list --porcelain` — no need to
+persist them. The orchestrator copies `docs/plans/<id>/` into the
+worktree (untracked files don't propagate automatically).
 
 ### Phase 7: Implement
 
@@ -185,7 +195,7 @@ items to the TodoWrite ledger.
 **Predecessor:** aggregate gate passed
 
 Update CHANGELOG.md (filter for user-facing commits since last release),
-present shipping options to the user, execute the chosen action, close
+present shipping options to the user, execute the chosen action, surface
 the tracking ticket (if `task.md` carries `ticketId`), clean up the worktree.
 
 ## 4. Agent Roster
@@ -218,9 +228,11 @@ walking the phase table in `skills/team/SKILL.md`. Pseudocode:
 
 ```
 setup:
-  derive topic + today, create docs/plans/ if needed.
+  resolve $ARGUMENTS (issue URL → gh issue view; ticket → use as prefix).
+  derive <id> = "<TICKET>-<topic>" or "<YYYY-MM-DD>-<topic>".
+  create docs/plans/<id>/ if needed.
   seed TodoWrite ledger with one item per phase.
-  on resume: scan docs/plans/ for the topic, fast-forward the ledger.
+  on resume: scan docs/plans/<id>/, fast-forward the ledger.
 
 loop:
   1. Inspect TodoWrite. If all phases completed → exit.
@@ -228,10 +240,11 @@ loop:
      artifact path(s) in the phase table.
   3. Verify predecessors exist on disk and (for human-gated phases)
      carry `approved: true` in frontmatter. If missing → desync;
-     suggest re-invoking the same /team-* command.
-  4. Dispatch the agent(s).
-  5. Write returned artifacts to docs/plans/<today>-<topic>-<name>.md
-     with the YAML frontmatter the agent specifies.
+     suggest re-invoking the same /team-* command with docs/plans/<id>/.
+  4. Dispatch the agent(s) — pass them the artifact directory
+     `docs/plans/<id>/`.
+  5. Write returned artifacts to docs/plans/<id>/<name>.md with the
+     YAML frontmatter the agent specifies.
   6. Run the gate for this phase (HUMAN | MECHANICAL | ORCHESTRATOR-EMIT
      | AGGREGATE).
   7. Mark current TodoWrite item complete and the next one in_progress.
@@ -244,33 +257,28 @@ Skills live under `skills/`. There are two flavors:
 
 ### Entry-point skills (slash commands)
 
-| Skill            | Command                    | Description                              |
-|------------------|----------------------------|------------------------------------------|
-| `team`           | `/team <desc>`             | Full 8-phase QRSPI pipeline              |
-| `team-fix`       | `/team-fix <bug>`          | Compressed bug-fix pipeline              |
-| `team-question`  | `/team-question <desc>`    | Decompose intent (runs alone)            |
-| `team-research`  | `/team-research`           | Blind research (runs Question if missing)|
-| `team-design`    | `/team-design`             | Design alignment (human gate)            |
-| `team-structure` | `/team-structure`          | Vertical-slice structure (human gate)    |
-| `team-plan`      | `/team-plan`               | Tactical plan from approved structure    |
-| `team-worktree`  | `/team-worktree`           | Prepare isolated worktree                |
-| `team-implement` | `/team-implement`          | Test-first + slice exec + 5-reviewer     |
-| `team-pr`        | `/team-pr`                 | Commit + PR                              |
+| Skill            | Command                            | Description                              |
+|------------------|------------------------------------|------------------------------------------|
+| `team`           | `/team <desc>`                     | Full 8-phase QRSPI pipeline              |
+| `team-fix`       | `/team-fix <bug>`                  | Compressed bug-fix pipeline              |
+| `team-question`  | `/team-question <desc>`            | Decompose intent (runs alone)            |
+| `team-research`  | `/team-research docs/plans/<id>/`  | Blind research                           |
+| `team-design`    | `/team-design docs/plans/<id>/`    | Design alignment (human gate)            |
+| `team-structure` | `/team-structure docs/plans/<id>/` | Vertical-slice structure (human gate)    |
+| `team-plan`      | `/team-plan docs/plans/<id>/`      | Tactical plan from approved structure    |
+| `team-worktree`  | `/team-worktree docs/plans/<id>/`  | Prepare isolated worktree                |
+| `team-implement` | `/team-implement docs/plans/<id>/` | Test-first + slice exec + 5-reviewer     |
+| `team-pr`        | `/team-pr docs/plans/<id>/`        | Commit + PR                              |
 
-Each partial skill works in two modes:
+Every entry-point skill carries an `argument-hint` field in its
+frontmatter (Claude Code [skills frontmatter](https://code.claude.com/docs/en/skills#frontmatter-reference))
+that documents the expected `$ARGUMENTS` shape.
 
-- **Resume mode** — predecessor artifact (`docs/plans/<today>-<topic>-<predecessor>.md`,
-  with `approved: true` in its frontmatter for human-gated artifacts) is
-  present. The skill picks up where `/team` left off.
-- **Standalone mode** — no predecessor on disk. The skill accepts a
-  ticket ID or free-form description in `$ARGUMENTS` and bootstraps the
-  missing upstream artifacts inline (or, for `/team-implement`,
-  synthesizes a `task.md` and dispatches the implement loop directly).
-  `/team-implement` also asks the user about creating a worktree when
-  invoked outside one.
-
-Standalone mode skips alignment gates the user did not run — the user is
-explicitly opting into a faster, less ceremonious path.
+Each downstream skill (`team-research` and beyond) treats `$ARGUMENTS` as
+an artifact directory — typically the path printed by the previous
+phase's completion message. Standalone modes still exist: a partial
+skill invoked without an artifact directory (or with a free-form
+description) bootstraps the missing upstream artifacts inline.
 
 ### Methodology skills (loaded by agents, not directly invoked)
 
@@ -310,16 +318,17 @@ Runtime hooks (`hooks/` — distributed with the plugin):
 | Hook                       | Event                    | Purpose                                                    |
 |----------------------------|--------------------------|------------------------------------------------------------|
 | `pre-bash-guard.mjs`       | PreToolUse(Bash)         | Block dangerous shell commands                             |
-| `pre-compact-anchor.mjs`   | PreCompact               | Scan docs/plans/ for active topic; inject 4-line anchor    |
-| `session-start-recover.mjs`| SessionStart             | Scan docs/plans/ for active topic; emit recovery notice    |
+| `pre-compact-anchor.mjs`   | PreCompact               | Scan docs/plans/<id>/ for active topic; inject 4-line anchor |
+| `session-start-recover.mjs`| SessionStart             | Scan docs/plans/<id>/ for active topic; emit recovery notice |
 | `post-write-validate.mjs`  | PostToolUse(Write\|Edit) | Structural validation of plugin component files            |
 
 Both `pre-compact-anchor.mjs` and `session-start-recover.mjs` work the
-same way: list `docs/plans/*.md`, pick the most recent topic by file
-mtime, infer the current phase from artifact presence + frontmatter,
-and emit a short context message naming the phase, topic, and the
-suggested next `/team-*` command. Both are stateless, exit 0 on any
-error, and return within the 5000ms hook budget.
+same way: list `docs/plans/*/` directories, pick the most recent
+artifact directory by mtime of any contained artifact, infer the
+current phase from artifact presence + frontmatter, and emit a short
+context message naming the phase, `<id>`, and the suggested next
+`/team-*` command. Both are stateless, exit 0 on any error, and return
+within the 5000ms hook budget.
 
 Development hook (`.claude/hooks/` — not distributed):
 
@@ -329,26 +338,27 @@ Development hook (`.claude/hooks/` — not distributed):
 
 ## 8. State Management
 
-**Primary state:** the artifacts in `docs/plans/<today>-<topic>-*.md`.
-Each artifact's YAML frontmatter is the source of truth for "did this
-phase finish?" and "was the human gate passed?"
+**Primary state:** the artifacts in `docs/plans/<id>/*.md`. Each
+artifact's YAML frontmatter is the source of truth for "did this phase
+finish?" and "was the human gate passed?"
 
 **Live coordination:** TodoWrite (session-scoped). The orchestrator
 seeds the ledger at the start of `/team`, marks each item `in_progress`
 when dispatching, and `completed` when the artifact lands. Any `/team-*`
 command rebuilds the ledger by scanning artifacts on entry, so an
-interrupted run can be resumed by re-invoking any of them.
+interrupted run can be resumed by re-invoking any of them with
+`docs/plans/<id>/`.
 
 **Approval markers:** the gated artifact's own YAML frontmatter
 (`approved: true`, `approved_at: <ISO-8601>`) records human gate passes
 durably. The artifact is self-describing.
 
-**Compaction defense:** the PreCompact hook scans `docs/plans/` for the
-active topic and injects a 4-line anchor (phase, topic, date, suggested
-next `/team-*` command). The SessionStart hook does the same for new
-sessions.
+**Compaction defense:** the PreCompact hook scans `docs/plans/<id>/`
+directories for the active topic and injects a 4-line anchor (phase,
+`<id>`, suggested next `/team-*` command). The SessionStart hook does
+the same for new sessions.
 
-**Artifact persistence:** files in `docs/plans/` are committed to git
-and survive across sessions, compaction events, and context resets.
+**Artifact persistence:** files in `docs/plans/<id>/` are committed to
+git and survive across sessions, compaction events, and context resets.
 They are the durable communication protocol between agents and the
 source of truth for "did phase N finish?"
