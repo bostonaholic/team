@@ -202,9 +202,11 @@ the beads issue (if `task.md` carries `beadsId`), clean up the worktree.
 | IMPLEMENT | `test-architect`, `implementer`, `code-reviewer`, `security-reviewer`,            |
 |           | `technical-writer`, `ux-reviewer`, `verifier` (last 5 parallel)                   |
 
-Each agent's frontmatter carries a `phase` field naming its QRSPI phase.
+Each agent's QRSPI phase is recorded in `skills/team/registry.json`.
+Agent frontmatter uses only Claude Code's [supported fields](https://code.claude.com/docs/en/agents#supported-frontmatter-fields).
 The dev hook `.claude/hooks/check-registry-sync.mjs` validates that
-agent frontmatter and `skills/team/registry.json` stay in sync.
+the inventory in registry.json and the files under `agents/` agree by
+name.
 
 Model tiering: `haiku` (mechanical), `sonnet` (judgment), `opus`
 (planning + implementation).

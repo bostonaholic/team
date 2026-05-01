@@ -4,7 +4,6 @@ description: Use as the first agent of the QRSPI pipeline. Decomposes a user's t
 model: sonnet
 tools: Read, Write, Grep, Glob
 permissionMode: acceptEdits
-phase: QUESTION
 ---
 
 # Questioner Agent

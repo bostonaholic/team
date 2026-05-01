@@ -4,7 +4,6 @@ description: Use when a security review is needed after implementation. Applies 
 model: sonnet
 tools: Read, Grep, Glob, Bash
 permissionMode: plan
-phase: IMPLEMENT
 ---
 
 # Security Reviewer Agent

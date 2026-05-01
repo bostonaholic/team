@@ -88,7 +88,7 @@ assert_shell "no hook imports homedir from node:os" \
 # =============================================================================
 # Event vocabulary purged from agent frontmatter and registry
 # =============================================================================
-section "Event vocabulary stripped: agent frontmatter has phase, not consumes/produces"
+section "Event vocabulary stripped from agent frontmatter; phase lives in registry"
 
 assert_shell "no agent frontmatter contains consumes:" \
   "! grep -lE '^consumes:' agents/*.md"
@@ -96,8 +96,8 @@ assert_shell "no agent frontmatter contains consumes:" \
 assert_shell "no agent frontmatter contains produces:" \
   "! grep -lE '^produces:' agents/*.md"
 
-assert_shell "every agent file has a phase: field in frontmatter" \
-  "[ \"\$(grep -lE '^phase:' agents/*.md | wc -l | tr -d ' ')\" = '13' ]"
+assert_shell "no agent frontmatter contains phase: (Claude Code does not support custom fields)" \
+  "for f in agents/*.md; do awk 'NR==1 && /^---/ {inFm=1; next} inFm && /^---/ {exit} inFm && /^phase:/ {print FILENAME; exit 1}' \"\$f\" || exit 1; done"
 
 assert_shell "registry.json has no passEvent fields" \
   "! grep -q passEvent skills/team/registry.json"
@@ -105,7 +105,7 @@ assert_shell "registry.json has no passEvent fields" \
 assert_shell "registry.json agents array still has 13 entries" \
   "[ \"\$(jq '.agents | length' skills/team/registry.json)\" = '13' ]"
 
-assert_shell "every registry agent has a phase field" \
+assert_shell "every registry agent has a phase field (registry is the source of truth)" \
   "[ \"\$(jq '[.agents[] | select(.phase != null)] | length' skills/team/registry.json)\" = '13' ]"
 
 # =============================================================================

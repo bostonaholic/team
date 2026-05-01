@@ -4,7 +4,6 @@ description: Use when an adversarial code review is needed after implementation.
 model: sonnet
 tools: Read, Grep, Glob, Bash
 permissionMode: plan
-phase: IMPLEMENT
 ---
 
 # Code Reviewer Agent

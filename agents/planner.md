@@ -4,7 +4,6 @@ description: Use after the structure is approved to produce the tactical impleme
 model: opus
 tools: Read, Write, Edit, Grep, Glob
 permissionMode: acceptEdits
-phase: PLAN
 ---
 
 # Planner Agent

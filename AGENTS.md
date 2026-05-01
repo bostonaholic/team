@@ -56,9 +56,9 @@ TEAM runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-
 
 ## Agents (13)
 
-See `agents/*.md`. Each has a `phase` field in frontmatter naming the QRSPI phase it serves. Model tiering: haiku (mechanical), sonnet (judgment), opus (planning + implementation).
+See `agents/*.md`. Each agent file uses only Claude Code's [supported frontmatter fields](https://code.claude.com/docs/en/agents#supported-frontmatter-fields) (no custom fields). Model tiering: haiku (mechanical), sonnet (judgment), opus (planning + implementation).
 
-**Invariant:** Agent frontmatter (`phase`) and `skills/team/registry.json` must always be in sync. When adding or renaming an agent, update both in the same commit. The dev hook `.claude/hooks/check-registry-sync.mjs` enforces this automatically.
+**Invariant:** the agent inventory in `skills/team/registry.json` (which carries the `phase` mapping) and the files under `agents/` must always agree by name. When adding or renaming an agent, update both in the same commit. The dev hook `.claude/hooks/check-registry-sync.mjs` enforces this automatically.
 
 ## Skills (24)
 

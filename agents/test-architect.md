@@ -4,7 +4,6 @@ description: Use after the worktree is prepared to write all failing acceptance 
 model: inherit
 tools: Read, Write, Edit, Grep, Glob, Bash
 permissionMode: acceptEdits
-phase: IMPLEMENT
 ---
 
 # Test Architect Agent

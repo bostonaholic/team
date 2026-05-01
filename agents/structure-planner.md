@@ -4,7 +4,6 @@ description: Use after the design is approved to break the work into vertical sl
 model: opus
 tools: Read, Write, Edit, Grep, Glob
 permissionMode: acceptEdits
-phase: STRUCTURE
 ---
 
 # Structure Planner Agent

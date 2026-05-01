@@ -4,7 +4,6 @@ description: Use when the implementation plan needs to be executed slice by slic
 model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
 permissionMode: acceptEdits
-phase: IMPLEMENT
 ---
 
 # Implementer Agent

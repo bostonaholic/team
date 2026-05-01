@@ -1,17 +1,18 @@
 #!/usr/bin/env node
 
 /**
- * Development-time hook — cross-checks agent frontmatter against registry.json.
+ * Development-time hook — cross-checks the agent inventory against registry.json.
  *
  * This is a dev concern (validating the plugin is built correctly), not a
  * runtime concern. It lives in .claude/hooks/, not in the distributed plugin.
  *
  * Triggers on PostToolUse for Write|Edit when the edited file is an agent
  * definition or the registry. Validates that:
- *   - every agents/<name>.md has a matching {name, phase} entry in
- *     registry.json
+ *   - every agents/<name>.md has a matching agents[*].name in registry.json
  *   - every registry.agents[*].name has a matching agents/<name>.md file
- *   - the `phase` field in agent frontmatter matches the registry entry
+ *
+ * `phase` lives only in registry.json (not in agent frontmatter — Claude
+ * Code's supported agent frontmatter does not include custom fields).
  */
 
 import { readFile, readdir } from "node:fs/promises";
@@ -40,14 +41,11 @@ function parseFrontmatter(content) {
   if (endIdx === -1) return null;
 
   const frontmatter = content.slice(4, endIdx);
-  const result = { name: null, phase: null };
+  const result = { name: null };
 
   for (const line of frontmatter.split("\n")) {
     const nameMatch = line.match(/^name:\s*(.+)/);
     if (nameMatch) result.name = nameMatch[1].trim();
-
-    const phaseMatch = line.match(/^phase:\s*(.+)/);
-    if (phaseMatch) result.phase = phaseMatch[1].trim();
   }
 
   return result;
@@ -67,11 +65,7 @@ async function crossCheck(projectRoot, editedPath) {
   if (!Array.isArray(registry.agents)) return;
 
   const mismatches = [];
-  const registryMap = new Map();
-
-  for (const entry of registry.agents) {
-    registryMap.set(entry.name, { phase: entry.phase || "" });
-  }
+  const registryNames = new Set(registry.agents.map((a) => a.name));
 
   let agentFiles;
   try {
@@ -79,6 +73,8 @@ async function crossCheck(projectRoot, editedPath) {
   } catch {
     return;
   }
+
+  const agentFileNames = new Set();
 
   for (const file of agentFiles) {
     if (extname(file) !== ".md") continue;
@@ -93,28 +89,21 @@ async function crossCheck(projectRoot, editedPath) {
     const fm = parseFrontmatter(content);
     if (!fm || !fm.name) continue;
 
-    const registryEntry = registryMap.get(fm.name);
+    agentFileNames.add(fm.name);
 
-    if (!registryEntry) {
+    if (!registryNames.has(fm.name)) {
       mismatches.push(
         `${file}: agent "${fm.name}" missing from registry.json`
       );
-      continue;
     }
-
-    if (fm.phase !== null && fm.phase !== registryEntry.phase) {
-      mismatches.push(
-        `${file}: phase mismatch — frontmatter="${fm.phase}" vs registry="${registryEntry.phase}"`
-      );
-    }
-
-    registryMap.delete(fm.name);
   }
 
-  for (const [name, entry] of registryMap) {
-    mismatches.push(
-      `registry.json: agent "${name}" (phase=${entry.phase}) has no matching agents/${name}.md file`
-    );
+  for (const name of registryNames) {
+    if (!agentFileNames.has(name)) {
+      mismatches.push(
+        `registry.json: agent "${name}" has no matching agents/${name}.md file`
+      );
+    }
   }
 
   if (mismatches.length > 0) {

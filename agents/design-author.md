@@ -4,7 +4,6 @@ description: Use after research is complete to align with the user on the approa
 model: opus
 tools: Read, Write, Edit, Grep, Glob
 permissionMode: acceptEdits
-phase: DESIGN
 ---
 
 # Design Author Agent

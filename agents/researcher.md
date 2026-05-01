@@ -4,7 +4,6 @@ description: Use when codebase facts need to be gathered before any design or im
 model: sonnet
 tools: Read, Grep, Glob
 permissionMode: plan
-phase: RESEARCH
 ---
 
 # Researcher Agent
