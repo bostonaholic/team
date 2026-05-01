@@ -1,13 +1,18 @@
 #!/usr/bin/env node
 
 /**
- * Development-time hook — cross-checks agent frontmatter against registry.json.
+ * Development-time hook — cross-checks the agent inventory against registry.json.
  *
  * This is a dev concern (validating the plugin is built correctly), not a
  * runtime concern. It lives in .claude/hooks/, not in the distributed plugin.
  *
  * Triggers on PostToolUse for Write|Edit when the edited file is an agent
- * definition or the registry. Reports mismatches as warnings.
+ * definition or the registry. Validates that:
+ *   - every agents/<name>.md has a matching agents[*].name in registry.json
+ *   - every registry.agents[*].name has a matching agents/<name>.md file
+ *
+ * `phase` lives only in registry.json (not in agent frontmatter — Claude
+ * Code's supported agent frontmatter does not include custom fields).
  */
 
 import { readFile, readdir } from "node:fs/promises";
@@ -36,34 +41,14 @@ function parseFrontmatter(content) {
   if (endIdx === -1) return null;
 
   const frontmatter = content.slice(4, endIdx);
-  const result = { name: null, consumes: null, produces: null };
+  const result = { name: null };
 
   for (const line of frontmatter.split("\n")) {
     const nameMatch = line.match(/^name:\s*(.+)/);
     if (nameMatch) result.name = nameMatch[1].trim();
-
-    const consumesMatch = line.match(/^consumes:\s*(.+)/);
-    if (consumesMatch) result.consumes = consumesMatch[1].trim();
-
-    const producesMatch = line.match(/^produces:\s*(.+)/);
-    if (producesMatch) result.produces = producesMatch[1].trim();
   }
 
   return result;
-}
-
-function normalizeConsumes(value) {
-  if (Array.isArray(value)) {
-    return value.slice().sort().join(", ");
-  }
-  if (typeof value === "string") {
-    return value
-      .split(",")
-      .map((s) => s.trim())
-      .sort()
-      .join(", ");
-  }
-  return "";
 }
 
 async function crossCheck(projectRoot, editedPath) {
@@ -80,14 +65,7 @@ async function crossCheck(projectRoot, editedPath) {
   if (!Array.isArray(registry.agents)) return;
 
   const mismatches = [];
-  const registryMap = new Map();
-
-  for (const entry of registry.agents) {
-    registryMap.set(entry.name, {
-      consumes: normalizeConsumes(entry.consumes),
-      produces: entry.produces || "",
-    });
-  }
+  const registryNames = new Set(registry.agents.map((a) => a.name));
 
   let agentFiles;
   try {
@@ -95,6 +73,8 @@ async function crossCheck(projectRoot, editedPath) {
   } catch {
     return;
   }
+
+  const agentFileNames = new Set();
 
   for (const file of agentFiles) {
     if (extname(file) !== ".md") continue;
@@ -109,39 +89,21 @@ async function crossCheck(projectRoot, editedPath) {
     const fm = parseFrontmatter(content);
     if (!fm || !fm.name) continue;
 
-    const registryEntry = registryMap.get(fm.name);
+    agentFileNames.add(fm.name);
 
-    if (!registryEntry) {
-      if (fm.consumes || fm.produces) {
-        mismatches.push(
-          `${file}: agent "${fm.name}" has event contract in frontmatter but is missing from registry.json`
-        );
-      }
-      continue;
-    }
-
-    if (fm.consumes !== null) {
-      const fmConsumes = normalizeConsumes(fm.consumes);
-      if (fmConsumes !== registryEntry.consumes) {
-        mismatches.push(
-          `${file}: consumes mismatch — frontmatter="${fm.consumes}" vs registry="${registryEntry.consumes}"`
-        );
-      }
-    }
-
-    if (fm.produces !== null && fm.produces !== registryEntry.produces) {
+    if (!registryNames.has(fm.name)) {
       mismatches.push(
-        `${file}: produces mismatch — frontmatter="${fm.produces}" vs registry="${registryEntry.produces}"`
+        `${file}: agent "${fm.name}" missing from registry.json`
       );
     }
-
-    registryMap.delete(fm.name);
   }
 
-  for (const [name, entry] of registryMap) {
-    mismatches.push(
-      `registry.json: agent "${name}" (consumes=${entry.consumes}, produces=${entry.produces}) has no matching agent file`
-    );
+  for (const name of registryNames) {
+    if (!agentFileNames.has(name)) {
+      mismatches.push(
+        `registry.json: agent "${name}" has no matching agents/${name}.md file`
+      );
+    }
   }
 
   if (mismatches.length > 0) {

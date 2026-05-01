@@ -4,8 +4,6 @@ description: Use after the design is approved to break the work into vertical sl
 model: opus
 tools: Read, Write, Edit, Grep, Glob
 permissionMode: acceptEdits
-consumes: design.approved, structure.revision-requested
-produces: structure.drafted
 ---
 
 # Structure Planner Agent
@@ -27,21 +25,39 @@ even if the demo is narrow.
 
 ## Inputs
 
-For initial dispatch (consuming `design.approved`):
+For initial dispatch (after the design's frontmatter shows
+`approved: true`):
 - `design.md` — the approved design (current state, desired end state,
   decisions, patterns)
 - `research.md` — codebase facts
 - `task.md` — the user's intent
 
-For revision dispatch (consuming `structure.revision-requested`):
+For revision dispatch (after a human gate rejection):
 - The previous `structure.md`
-- The user's `feedback` field from the revision event
+- The user's verbatim feedback supplied by the orchestrator
 
 ## Output
 
 Write to `docs/plans/<today>-<topic>-structure.md` (overwrite on revision).
 
-Aim for ~2 pages (≈100-200 lines).
+The file MUST open with this YAML frontmatter — the `approved` and
+`approved_at` fields are how the human gate is recorded:
+
+```yaml
+---
+topic: <kebab-case-topic>
+date: <YYYY-MM-DD>
+phase: structure
+approved: false
+approved_at: null
+---
+```
+
+Leave `approved: false` on every draft, including revisions. The
+orchestrator flips it to `true` (and stamps `approved_at`) when the user
+approves at the human gate.
+
+Aim for ~2 pages (≈100-200 lines, excluding frontmatter).
 
 ## Structure document format
 
@@ -100,7 +116,8 @@ does not accidentally include it>
 - **Migrations alone are never a slice.** A migration without a consumer is
   infrastructure scaffolding. Pair it with the read/write that uses it.
 
-## Output to router
+## Output to orchestrator
 
-When done, the router appends `structure.drafted` with
-`{structurePath, topic, sliceCount: <number>}`.
+When done, return a short summary to the orchestrator:
+`{structurePath, topic, sliceCount: <number>}`. The orchestrator will
+then run the human gate (present the structure, capture approval).

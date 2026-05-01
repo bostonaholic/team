@@ -1,13 +1,18 @@
 ---
 name: team-implement
-description: Execute the plan slice by slice. Includes test-first sub-step (writing failing tests, mechanical confirmation gate) and adversarial verification (5 parallel reviewers with hard-gate retry loop). Trigger on "implement this", "execute the plan", or "/team-implement".
+description: Execute the implementation phase. Includes test-first sub-step (writing failing tests, mechanical confirmation gate) and adversarial verification (5 parallel reviewers with hard-gate retry loop). Trigger on "implement this", "execute the plan", or "/team-implement".
 ---
 
 # TEAM Implement — Standalone Phase
 
-Run the IMPLEMENT phase. Requires `state.json.phase === 'IMPLEMENT'` (the
-WORKTREE phase transitioned us there) or a `worktreePath` field set on
-the snapshot.
+Run the IMPLEMENT phase. Works in two modes:
+
+- **Resume mode** — predecessor artifacts (`plan.md`, `structure.md`)
+  are present in `docs/plans/`. Behave as the full pipeline expects.
+- **Standalone mode** — invoked directly with a ticket ID or feature
+  description. No upstream QRSPI artifacts required. Bootstrap a minimal
+  `task.md` and run test-architect → implementer → reviewers from the
+  issue alone.
 
 The Implement phase has three internal sub-steps:
 
@@ -15,35 +20,73 @@ The Implement phase has three internal sub-steps:
 2. **Slice execution** — `implementer` executes vertical slices with per-slice commits
 3. **Adversarial review** — 5 parallel reviewers + aggregate hard-gate retry loop
 
-> Events named below (`tests.written`, `hard-gate.*-failed`, etc.) are
-> internal signals routed via `state.json` counters and in-memory dispatch,
-> not log lines. They remain as descriptive labels for the verifier /
-> reviewer output classes.
+Coordinate progress via TodoWrite. Seed the ledger with: `Test-architect
+→ Mechanical gate → Implementer (per slice) → Review round 1`. Mark
+each item `in_progress` when you dispatch and `completed` when the
+artifact lands. Append `Review round 2` (etc.) on each retry; cap at 5.
+
+## Input
+
+`$ARGUMENTS` may be:
+
+- Empty — assume resume mode; require `plan.md` (or at minimum
+  `structure.md`) on disk for the topic.
+- A ticket ID — recorded as `ticketId` in `task.md` for the user's reference. If your project provides ticket details out-of-band, fold them into the description before invoking. The orchestrator does not call any ticketing system.
+- Free-form text — treat as the feature/task description.
+
+## Worktree Check
+
+Before any agent dispatch, decide where to work:
+
+1. Run `git rev-parse --absolute-git-dir` and inspect the path. If it
+   contains `/worktrees/`, you are already inside a Claude Code worktree —
+   proceed in place.
+2. If you are in the main working tree:
+   - Ask the user: "You are not in a worktree. Run this implementation in a
+     new isolated worktree (recommended), or in the current tree?"
+   - If worktree: derive a kebab-case topic from `$ARGUMENTS` (or the ticket
+     issue title), then create a worktree via Claude Code's native support
+     (see `skills/worktree-isolation/SKILL.md`). Tell the user the path
+     and ask them to re-run `/team-implement` from that directory, since
+     the slash command runs in the current shell context.
+   - If in-place: proceed.
 
 ## Execution
 
-1. Read `~/.team/<topic>/state.json`. Confirm `phase === 'IMPLEMENT'` (or
-   `worktreePath` is set). If not, report "No worktree prepared. Run
-   /team-worktree first." and stop.
-2. Follow the phase loop from `/team`:
-   a. Dispatch `test-architect` → produces failing tests.
+1. Derive `topic` (kebab-case from `$ARGUMENTS`, ticket title, or
+   current branch) and `today` (`YYYY-MM-DD`).
+2. **Resume path.** If `docs/plans/<today>-<topic>-plan.md` (or at
+   minimum `structure.md`) exists, proceed using those artifacts as the
+   work source.
+3. **Standalone path.** If no plan/structure on disk:
+   - Write a minimal `docs/plans/<today>-<topic>-task.md` from
+     `$ARGUMENTS` (or the ticket body) with the standard task.md
+     frontmatter (`topic`, `date`, `phase: task`, `ticketId`). This gives
+     downstream agents a single source of intent.
+4. Follow the phase loop from `/team`:
+   a. Dispatch `test-architect` → produces failing tests. In standalone
+      mode it derives acceptance criteria from `task.md` (or the ticket
+      issue) instead of `structure.md`.
    b. Mechanical gate: confirm all tests fail with assertion errors.
-   c. Dispatch `implementer` → executes slices with per-slice commits.
+   c. Dispatch `implementer` → executes slices with per-slice commits. In
+      standalone mode it works from `task.md` and the failing tests
+      instead of `plan.md`.
    d. Dispatch 5 reviewers in parallel: `code-reviewer`, `security-reviewer`,
       `technical-writer`, `ux-reviewer`, `verifier`.
    e. At the aggregate gate, evaluate hard gates (security + verifier +
       code-reviewer).
-3. If any hard gate fails:
+5. If any hard gate fails:
    - Record a typed failure class (security, lint, typecheck, build,
      test, review) for the implementer to address.
-   - Increment `verificationRetryCount` in `state.json` via `writeState`.
-   - If `verificationRetryCount < 5`: dispatch implementer to fix the
-     specific findings, then re-dispatch ALL 5 reviewers for a complete
-     fresh review.
-   - If `verificationRetryCount >= 5`: escalate to the team lead with a
-     full summary of unresolved findings across all rounds, organized
-     by type. Stop and wait for direction.
-4. **Stop once `state.json.phase === 'PR'` or escalation.**
+   - Append a "Review round <n+1>" item to the TodoWrite ledger and mark
+     the previous round complete.
+   - If round count < 5: dispatch implementer to fix the specific
+     findings, then re-dispatch ALL 5 reviewers for a complete fresh
+     review.
+   - If round count >= 5: escalate to the user with a full summary of
+     unresolved findings across all rounds, organized by type. Stop and
+     wait for direction.
+6. **Stop once all hard gates pass — suggest /team-pr to ship.**
 
 ## Quality Loop
 
@@ -54,11 +97,24 @@ test-architect → mechanical gate → implementer → 5 reviewers → aggregate
                                        ↑                            ↓ fail
                                        └────── (specific fix) ──────┘
                                                                     ↓ pass
-                                                              verification.passed
+                                                              verification clean
 ```
 
-Maximum 5 review rounds before escalation. Each round is a complete re-review
-with fresh context — reviewers do not remember previous rounds.
+Maximum 5 review rounds before escalation. Each round is a complete
+re-review with fresh context — reviewers do not remember previous
+rounds. Track the round count in TodoWrite.
+
+## Standalone Mode Tradeoffs
+
+Standalone mode skips the Question/Research/Design/Structure/Plan ceremony.
+You forfeit blind research, human design alignment, and explicit slice
+breakdown. Use it when:
+
+- The work is well-scoped and tracked in a tracking ticket with clear acceptance.
+- You have already decided the approach and just want test-first execution.
+- The change is small enough that the QRSPI artifacts would be overhead.
+
+For larger features, prefer `/team` (full pipeline) for the alignment gates.
 
 ## Completion
 

@@ -4,8 +4,6 @@ description: Use after the structure is approved to produce the tactical impleme
 model: opus
 tools: Read, Write, Edit, Grep, Glob
 permissionMode: acceptEdits
-consumes: structure.approved
-produces: plan.drafted
 ---
 
 # Planner Agent
@@ -27,7 +25,16 @@ in detail — your audience is the implementer.
 
 ## Output
 
-Write to `docs/plans/<today>-<topic>-plan.md`.
+Write to `docs/plans/<today>-<topic>-plan.md`. The file MUST open with
+this YAML frontmatter:
+
+```yaml
+---
+topic: <kebab-case-topic>
+date: <YYYY-MM-DD>
+phase: plan
+---
+```
 
 ## Plan structure
 

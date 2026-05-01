@@ -1,78 +1,96 @@
 /**
  * SessionStart hook — detects an active TEAM pipeline and prompts recovery.
  *
- * Reads ~/.team/<topic>/state.json (the most recently modified snapshot)
- * and injects a recovery notice into additionalContext so the agent knows
- * to suggest /team-resume.
+ * Scans docs/plans/<today>-<topic>-*.md for the most recent active topic,
+ * infers the current phase from artifact presence + YAML frontmatter,
+ * and injects a recovery notice into additionalContext so the agent
+ * suggests re-invoking any /team-* command.
  *
- * Contract: always exits 0. Missing or malformed snapshot is not an error.
+ * Contract: always exits 0. Missing or unparseable artifacts are not an error.
  */
 
 import { readFile, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { homedir } from "node:os";
 
-// Inlined (not imported) to keep hooks stateless and self-contained.
-const TOPIC_RE = /^[a-z0-9_][a-z0-9_-]{0,99}$/;
-const PHASES = new Set([
-  "QUESTION", "RESEARCH", "DESIGN", "STRUCTURE",
-  "PLAN", "WORKTREE", "IMPLEMENT", "PR", "SHIPPED",
-]);
-const int0 = (v) => Number.isInteger(v) ? v : 0;
+const ARTIFACT_RE =
+  /^(\d{4}-\d{2}-\d{2})-([a-z0-9_][a-z0-9_-]{0,99})-(task|research|design|structure|plan)\.md$/;
 
-function teamDir() {
-  return join(homedir(), ".team");
+async function readStdinJSON() {
+  const chunks = [];
+  for await (const chunk of process.stdin) chunks.push(chunk);
+  try { return JSON.parse(Buffer.concat(chunks).toString("utf-8")); }
+  catch { return {}; }
 }
 
-async function findActiveSnapshot() {
-  const base = teamDir();
-  try {
-    const entries = await readdir(base, { withFileTypes: true });
-    let best = null;
-    let bestMtime = -Infinity;
-    for (const entry of entries) {
-      if (!entry.isDirectory()) continue;
-      if (!TOPIC_RE.test(entry.name)) continue;
-      const snapPath = join(base, entry.name, "state.json");
-      try {
-        const st = await stat(snapPath);
-        if (st.mtimeMs > bestMtime) {
-          best = JSON.parse(await readFile(snapPath, "utf-8"));
-          bestMtime = st.mtimeMs;
-        }
-      } catch { /* no snapshot for this topic */ }
-    }
-    return best;
-  } catch {
-    return null;
+function projectDir(input) {
+  return input?.cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd();
+}
+
+async function findActiveTopic(plansDir) {
+  let entries;
+  try { entries = await readdir(plansDir); } catch { return null; }
+  let best = null, bestMtime = -Infinity;
+  for (const name of entries) {
+    const m = name.match(ARTIFACT_RE);
+    if (!m) continue;
+    try {
+      const st = await stat(join(plansDir, name));
+      if (st.mtimeMs > bestMtime) {
+        bestMtime = st.mtimeMs;
+        best = { date: m[1], topic: m[2] };
+      }
+    } catch { /* skip */ }
   }
+  return best;
 }
 
-function formatRecoveryContext(s) {
-  if (!PHASES.has(s.phase)) return null;
-  if (typeof s.topic !== "string" || !TOPIC_RE.test(s.topic)) return null;
-  const dr = int0(s.designRevisionCount);
-  const sr = int0(s.structureRevisionCount);
-  const vr = int0(s.verificationRetryCount);
-  const lines = [
-    "[TEAM Pipeline Recovery]",
-    "An active TEAM pipeline was detected. Resume with /team-resume.",
-    "",
-    `Phase: ${s.phase} | Topic: ${s.topic}`,
-    `Counters: designRev=${dr} structureRev=${sr} verifyRetry=${vr}`,
-  ];
-  if (typeof s.startedAt === "string") lines.push(`Started: ${s.startedAt}`);
-  lines.push("To resume: run /team-resume");
-  return lines.join("\n");
+async function readFrontmatter(path) {
+  try {
+    const head = (await readFile(path, "utf-8")).split("\n", 60);
+    if (head[0] !== "---") return {};
+    const out = {};
+    for (let i = 1; i < head.length; i++) {
+      if (head[i] === "---") break;
+      const m = head[i].match(/^([a-zA-Z_][a-zA-Z0-9_]*):\s*(.+?)\s*$/);
+      if (m) out[m[1]] = m[2];
+    }
+    return out;
+  } catch { return {}; }
+}
+
+const isTrue = (v) => v === "true" || v === true;
+
+async function inferPhase(plansDir, { date, topic }) {
+  const p = (kind) => join(plansDir, `${date}-${topic}-${kind}.md`);
+  const has = async (path) => { try { await stat(path); return true; } catch { return false; } };
+  if (await has(p("plan"))) return "WORKTREE";
+  if (await has(p("structure"))) {
+    return isTrue((await readFrontmatter(p("structure"))).approved) ? "PLAN" : "STRUCTURE";
+  }
+  if (await has(p("design"))) {
+    return isTrue((await readFrontmatter(p("design"))).approved) ? "STRUCTURE" : "DESIGN";
+  }
+  if (await has(p("research"))) return "DESIGN";
+  if (await has(p("task"))) return "RESEARCH";
+  return null;
 }
 
 async function main() {
-  const snapshot = await findActiveSnapshot();
-  if (!snapshot || snapshot.phase === "SHIPPED") process.exit(0);
-  const ctx = formatRecoveryContext(snapshot);
-  if (!ctx) process.exit(0);
-  const output = JSON.stringify({ hookSpecificOutput: { additionalContext: ctx } });
-  process.stderr.write(output + "\n");
+  const input = await readStdinJSON();
+  const plansDir = join(projectDir(input), "docs", "plans");
+  const active = await findActiveTopic(plansDir);
+  if (!active) process.exit(0);
+  const phase = await inferPhase(plansDir, active);
+  if (!phase) process.exit(0);
+  const ctx = [
+    "[TEAM Pipeline Recovery]",
+    "An active TEAM pipeline was detected. Re-invoke any /team-* command to continue.",
+    "",
+    `Phase: ${phase} | Topic: ${active.topic} | Date: ${active.date}`,
+    `Latest artifact: docs/plans/${active.date}-${active.topic}-*.md`,
+    "To continue: re-invoke any /team-* command",
+  ].join("\n");
+  process.stderr.write(JSON.stringify({ hookSpecificOutput: { additionalContext: ctx } }) + "\n");
   process.exit(0);
 }
 

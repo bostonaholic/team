@@ -1,30 +1,19 @@
 #!/usr/bin/env bash
-# Acceptance tests for the simplify-orchestration refactor.
+# Acceptance tests for the artifact-frontmatter rearchitecture.
 #
-# This script is the immutable scope fence for the 9-slice strangler-fig
-# rewrite that replaces the events.jsonl event log with a state.json snapshot
-# plus .approved sidecar markers. When every assertion here passes, the
-# refactor is done.
+# This script is the immutable scope fence for the rearchitecture that
+# replaces ~/.team/<topic>/state.json + lib/state.mjs with artifact-only
+# state (YAML frontmatter on every docs/plans/ artifact) and TodoWrite
+# as the live coordination ledger. When every assertion here passes, the
+# rearchitecture is done.
 #
 # Fails loudly on the first failing assertion (set -e). Run from the
 # repository root: bash tests/simplify-orchestration-acceptance.sh
-#
-# Plan: docs/plans/2026-04-22-simplify-orchestration-plan.md
-# Structure: docs/plans/2026-04-22-simplify-orchestration-structure.md
-# Design: docs/plans/2026-04-22-simplify-orchestration-design.md
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
-
-TEST_TOPIC="_test_slice1"
-TEST_STATE_DIR="${HOME}/.team/${TEST_TOPIC}"
-
-cleanup() {
-  command rm -rf "${TEST_STATE_DIR}" 2>/dev/null || true
-}
-trap cleanup EXIT
 
 section() {
   echo ""
@@ -60,48 +49,26 @@ assert_shell() {
 }
 
 # =============================================================================
-# Slice 1: state.json schema + helper module (write-only)
+# State infrastructure removal
 # =============================================================================
-section "Slice 1: lib/state.mjs helper and 10-field schema"
+section "lib/state.mjs is deleted; no references remain in active code"
 
-assert "lib/state.mjs file exists" \
-  test -f lib/state.mjs
+assert "lib/state.mjs no longer exists" \
+  test ! -f lib/state.mjs
 
-# initState('_test_slice1', null, '2026-04-22') must produce a 10-field
-# snapshot with phase=QUESTION and designRevisionCount=0. Run the exact
-# one-liner from the plan's Slice 1 verification.
-cleanup
-assert_shell "initState creates 10-field snapshot with phase=QUESTION" \
-  "node -e \"import('./lib/state.mjs').then(m => m.initState('${TEST_TOPIC}', null, '2026-04-22').then(() => m.readState('${TEST_TOPIC}'))).then(s => { if (s.phase !== 'QUESTION' || s.designRevisionCount !== 0 || Object.keys(s).length !== 10) process.exit(1); })\""
+assert_shell "no source files import lib/state (excluding docs/plans/)" \
+  "! grep -rn 'lib/state' hooks/ skills/ agents/ .claude/"
 
-assert_shell "state.json jq keys length is 10" \
-  "[ \"\$(jq 'keys | length' '${TEST_STATE_DIR}/state.json')\" = '10' ]"
+assert_shell "no active code references writeState/readState/initState (excluding docs/plans/)" \
+  "! grep -rEn 'writeState|readState|initState' hooks/ skills/ agents/ .claude/"
 
-cleanup
+assert_shell "no active code (mjs/json) references ~/.team or state.json filename" \
+  "! grep -rEn --include='*.mjs' --include='*.json' '~/\.team|state\.json' hooks/ skills/ agents/ .claude/"
 
 # =============================================================================
-# Slice 5: router SKILL.md no longer references events.jsonl
+# Hooks scan docs/plans/, not ~/.team/
 # =============================================================================
-section "Slice 5: router rewritten to phase-table loop (no events.jsonl)"
-
-assert_shell "skills/team/SKILL.md contains zero 'events.jsonl' references" \
-  "[ \"\$(grep -c events.jsonl skills/team/SKILL.md)\" = '0' ]"
-
-# =============================================================================
-# Slice 6: nine team-<phase> entry points dropped events.jsonl scans
-# =============================================================================
-section "Slice 6: partial entry-point skills gate on artifacts, not events"
-
-assert_shell "grep -r events.jsonl skills/team-*/SKILL.md returns no matches" \
-  "! grep -r events.jsonl skills/team-*/SKILL.md"
-
-# =============================================================================
-# Slice 7: lib/events.mjs deleted, hooks compile and stay under line targets
-# =============================================================================
-section "Slice 7: lib/events.mjs removed, hooks stateless"
-
-assert "lib/events.mjs no longer exists" \
-  test ! -f lib/events.mjs
+section "Hooks rewritten: scan docs/plans/ for active topic"
 
 assert "hooks/pre-compact-anchor.mjs parses with node --check" \
   node --check hooks/pre-compact-anchor.mjs
@@ -109,52 +76,53 @@ assert "hooks/pre-compact-anchor.mjs parses with node --check" \
 assert "hooks/session-start-recover.mjs parses with node --check" \
   node --check hooks/session-start-recover.mjs
 
-assert_shell "hooks/pre-compact-anchor.mjs is <= 60 lines" \
-  "lines=\$(wc -l < hooks/pre-compact-anchor.mjs); [ \"\$lines\" -le 60 ]"
+assert_shell "pre-compact-anchor reads docs/plans/ (not ~/.team/)" \
+  "grep -q 'docs.*plans' hooks/pre-compact-anchor.mjs"
 
-assert_shell "hooks/session-start-recover.mjs is <= 80 lines" \
-  "lines=\$(wc -l < hooks/session-start-recover.mjs); [ \"\$lines\" -le 80 ]"
+assert_shell "session-start-recover reads docs/plans/ (not ~/.team/)" \
+  "grep -q 'docs.*plans' hooks/session-start-recover.mjs"
 
-assert_shell "no source files import lib/events (excluding docs/plans and tests)" \
-  "! grep -rn 'lib/events' hooks/ skills/ agents/ .claude/"
-
-# =============================================================================
-# Slice 8: teamflow/ tree deleted
-# =============================================================================
-section "Slice 8: teamflow/ dev sidecar removed"
-
-assert "teamflow/ directory no longer exists" \
-  test ! -d teamflow
-
-assert_shell "no JSON/MJS/TS files under repo reference teamflow" \
-  "! grep -R teamflow . --include='*.json' --include='*.mjs' --include='*.mts' --include='*.ts' --exclude-dir=plans --exclude-dir=node_modules --exclude-dir=.git"
+assert_shell "no hook imports homedir from node:os" \
+  "! grep -E '\\bhomedir\\b' hooks/*.mjs"
 
 # =============================================================================
-# Slice 9: documentation sync and registry $comment
+# Event vocabulary purged from agent frontmatter and registry
 # =============================================================================
-section "Slice 9: docs purged of events.jsonl + Teamflow; registry annotated"
+section "Event vocabulary stripped from agent frontmatter; phase lives in registry"
 
-# Exclude docs/plans/ — plan artifacts are a historical record and are
-# expected to reference events.jsonl and Teamflow.
-assert_shell "docs/ and CLAUDE.md contain zero 'events.jsonl' references (excluding docs/plans/)" \
-  "! grep -rn --exclude-dir=plans events.jsonl docs/ CLAUDE.md"
+assert_shell "no agent frontmatter contains consumes:" \
+  "! grep -lE '^consumes:' agents/*.md"
 
-assert_shell "docs/ and CLAUDE.md contain zero 'teamflow' references (case-insensitive, excluding docs/plans/)" \
-  "! grep -rn -i --exclude-dir=plans teamflow docs/ CLAUDE.md"
+assert_shell "no agent frontmatter contains produces:" \
+  "! grep -lE '^produces:' agents/*.md"
 
-assert_shell "skills/team/registry.json has a non-null \$comment top-level field" \
-  "val=\$(jq '.[\"\$comment\"]' skills/team/registry.json); [ \"\$val\" != 'null' ] && [ -n \"\$val\" ]"
+assert_shell "no agent frontmatter contains phase: (Claude Code does not support custom fields)" \
+  "for f in agents/*.md; do awk 'NR==1 && /^---/ {inFm=1; next} inFm && /^---/ {exit} inFm && /^phase:/ {print FILENAME; exit 1}' \"\$f\" || exit 1; done"
 
-assert_shell "skills/team/registry.json still lists exactly 13 agents" \
+assert_shell "registry.json has no passEvent fields" \
+  "! grep -q passEvent skills/team/registry.json"
+
+assert_shell "registry.json agents array still has 13 entries" \
   "[ \"\$(jq '.agents | length' skills/team/registry.json)\" = '13' ]"
 
-# =============================================================================
-# Done criteria (from plan.md)
-# =============================================================================
-section "Done criteria: lib/ contains state.mjs"
+assert_shell "every registry agent has a phase field (registry is the source of truth)" \
+  "[ \"\$(jq '[.agents[] | select(.phase != null)] | length' skills/team/registry.json)\" = '13' ]"
 
-assert_shell "ls lib/ includes state.mjs" \
-  "ls lib/ | grep -q '^state.mjs$'"
+# =============================================================================
+# Approval recorded as artifact frontmatter, not sidecar files
+# =============================================================================
+section "Approval is recorded as artifact frontmatter (no .approved sidecar files)"
+
+assert_shell "no active code references .md.approved sidecar file paths" \
+  "! grep -rEn '\\.md\\.approved' skills/ agents/ hooks/ .claude/"
+
+# =============================================================================
+# Documentation aligned: no stale state.json mentions outside docs/plans/
+# =============================================================================
+section "Docs aligned: no stale state.json/event-log references"
+
+assert_shell "docs/architecture.md does not describe writeState/readState/initState as live API" \
+  "! grep -E '(writeState|readState|initState)\\(' docs/architecture.md"
 
 # =============================================================================
 # Success banner
@@ -162,5 +130,5 @@ assert_shell "ls lib/ includes state.mjs" \
 echo ""
 echo "=============================================================="
 echo "  ALL ACCEPTANCE TESTS PASSED"
-echo "  simplify-orchestration refactor scope fence satisfied."
+echo "  artifact-frontmatter rearchitecture scope fence satisfied."
 echo "=============================================================="

@@ -1,37 +1,57 @@
 ---
 name: team-pr
-description: Open the pull request after verification passes. Updates the changelog, optionally closes the tracking beads issue, and advances `state.json` to `phase: 'SHIPPED'`. Trigger on "open the PR", "ship it", or "/team-pr".
+description: Open the pull request after verification passes. Updates the changelog, optionally closes the tracking tracking ticket, and closes out the topic. Trigger on "open the PR", "ship it", or "/team-pr".
 ---
 
 # TEAM PR — Standalone Phase
 
-Run the PR phase. Requires `state.json.phase === 'PR'` (the aggregate
-gate transitioned us there after verification passed).
+Run the PR phase. Two modes:
+
+- **Resume mode** — Implement passed the aggregate gate; the topic
+  branch has slice commits ready and a `task.md` with `ticketId`
+  exists in `docs/plans/`. Read the ticket ID from there.
+- **Standalone mode** — no matching task.md, but the working tree has
+  commits or staged changes ready to ship. Treat the current branch as
+  the work source.
+
+## Input
+
+`$ARGUMENTS` is optional. If a ticket ID is supplied, use it as `ticketId`
+even in standalone mode (the orchestrator records it on task.md but does not close any ticket).
 
 ## Execution
 
-1. Read `~/.team/<topic>/state.json`. If `phase !== 'PR'`, report
-   "Verification not passed. Run /team-implement first." and stop.
-2. **Read `beadsId`** from `state.json`. If non-null, this pipeline is
-   tracking a beads issue.
-3. **Update CHANGELOG.md** before committing (see Changelog Update below).
-4. Present shipping options. The implementer already committed each slice
-   atomically during the Implement phase; the PR branch contains one commit
-   per slice. These options decide what to do with that history now:
-   - **Open PR from slice commits** — push the existing slice commits and
+1. Derive `topic` (from current branch, `$ARGUMENTS`, or the most recent
+   `docs/plans/<today>-*-task.md`).
+2. **Resume path** — `docs/plans/<today>-<topic>-task.md` exists: read
+   `ticketId` from its frontmatter. Proceed with the documented flow
+   below.
+3. **Standalone path** — no matching task.md:
+   - Verify the branch has commits ahead of the default branch, or
+     uncommitted changes worth shipping. If neither, report "Nothing to
+     ship." and stop.
+   - Skip verification gate enforcement — the user is taking
+     responsibility for correctness. Warn them once.
+   - Use `$ARGUMENTS` (if a ticket ID) as `ticketId`; otherwise `null`.
+4. **Update CHANGELOG.md** before committing (see Changelog Update below).
+5. Present shipping options. In resume mode the implementer already
+   committed each slice atomically during the Implement phase; in
+   standalone mode the branch may have any commit shape. These options
+   decide what to do with that history now:
+   - **Open PR from existing commits** — push the current branch and
      open a pull request. Any uncommitted final changes (typically
      CHANGELOG.md) land as a single trailing ship commit.
-   - **Keep slice commits locally** — leave commits on the current branch
+   - **Keep commits locally** — leave commits on the current branch
      without opening a PR.
-   - **Keep as-is** — leave the final changes uncommitted; slice commits
-     already made during Implement remain.
-5. Execute user's choice.
-6. **Close beads issue.** If `beadsId` was non-null in step 2 and the user
-   chose to commit (either option), use `/beads:close <beadsId>` to mark
-   the issue as done. Skip this if the user chose "keep as-is".
-7. `writeState(topic, { phase: 'SHIPPED' })`.
-8. Delete `~/.team/<topic>/` directory.
-9. If a worktree was created in WORKTREE phase, clean it up.
+   - **Keep as-is** — leave final changes uncommitted; existing commits
+     remain.
+6. Execute user's choice.
+7. **Tracking ticket.** If `ticketId` is non-null, surface it in the
+   completion report so the user can close it in their tracking
+   system. The orchestrator does not close tickets automatically.
+8. If a worktree was created in the Worktree phase, clean it up
+   (cherry-pick or rebase commits onto the target branch, then let
+   Claude Code remove the worktree).
 
 ## Changelog Update
 

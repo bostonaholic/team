@@ -7,24 +7,29 @@ description: Research a codebase area before making changes. Dispatches parallel
 
 Run the RESEARCH phase only, then stop. Research is **blind** — the
 researcher and file-finder never see the user's original task description.
-They consume only `brief.md` and `questions.md` from the prior Question
-phase.
+They consume only `brief.md` and `questions.md`.
 
 ## Input
 
-Feature description: `$ARGUMENTS` (only used if no Question phase has run yet)
+`$ARGUMENTS` may be:
 
-If `$ARGUMENTS` is empty AND no Question artifacts exist, ask the user
-what to research and stop.
+- Empty — resume mode. Requires existing Question artifacts on disk.
+- A ticket ID — recorded as `ticketId` in `task.md` for the user's reference. The orchestrator does not call any ticketing system.
+- Free-form text — treated as the feature/task description.
 
 ## Execution
 
-1. Stat `docs/plans/<today>-<topic>-task.md`. If missing, run
-   `/team-question $ARGUMENTS` first to produce the Question artifacts.
-2. Follow the phase loop defined in `/team`. It dispatches `file-finder`
+1. Stat `docs/plans/<today>-<topic>-task.md`.
+2. **If missing and `$ARGUMENTS` is non-empty** — dispatch the `questioner`
+   inline to produce `task.md`, `questions.md`, `brief.md` from
+   `$ARGUMENTS` before continuing. Do not ask the user to re-run
+   `/team-question` first; just bootstrap the artifacts.
+3. **If missing and `$ARGUMENTS` is empty** — ask the user what to
+   research and stop.
+4. Follow the phase loop defined in `/team`. It dispatches `file-finder`
    and `researcher` in parallel; the router writes the combined research
    artifact to `docs/plans/<today>-<topic>-research.md`.
-3. **Stop once `docs/plans/<today>-<topic>-research.md` exists** — do
+5. **Stop once `docs/plans/<today>-<topic>-research.md` exists** — do
    not continue to DESIGN.
 
 ## Completion

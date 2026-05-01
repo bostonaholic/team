@@ -19,9 +19,10 @@ If `$ARGUMENTS` is empty, ask the user to describe what they want and stop.
 ## Execution
 
 1. Derive a kebab-case `topic` and set `today` to `YYYY-MM-DD`.
-2. Create `~/.team/<topic>/` and `docs/plans/` directories if needed.
-3. If `~/.team/<topic>/state.json` already exists, load it and resume; else
-   the router (`/team`) bootstraps it via `initState(topic, beadsId, today)`.
+2. Create `docs/plans/` if needed.
+3. If `task.md` for this topic already exists in `docs/plans/`, resume by
+   re-reading it; else the questioner produces a fresh one with the
+   required frontmatter.
 4. Follow the phase loop defined in `/team` — it dispatches the `questioner`
    to produce `task.md`, `questions.md`, `brief.md` in `docs/plans/`.
 5. **Stop once the three Question artifacts exist on disk** — do not
