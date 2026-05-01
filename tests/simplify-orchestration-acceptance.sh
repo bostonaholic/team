@@ -3,8 +3,8 @@
 #
 # This script is the immutable scope fence for the 9-slice strangler-fig
 # rewrite that replaces the events.jsonl event log with a state.json snapshot
-# plus .approved sidecar markers. When every assertion here passes, the
-# refactor is done.
+# plus per-artifact `approved: true` frontmatter on human-gated artifacts.
+# When every assertion here passes, the refactor is done.
 #
 # Fails loudly on the first failing assertion (set -e). Run from the
 # repository root: bash tests/simplify-orchestration-acceptance.sh

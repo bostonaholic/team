@@ -178,17 +178,49 @@ presence of artifact files under `docs/plans/`. Every transition follows
 this sequence:
 
 1. **Verify artifacts** — Confirm all required artifacts from the current
-   phase exist on disk (`docs/plans/<today>-<topic>-*.md` and, for human
-   gates, their `<artifact>.approved` sidecars).
+   phase exist on disk (`docs/plans/<today>-<topic>-*.md`), and for
+   human-gated phases that the artifact's frontmatter shows
+   `approved: true`.
 2. **Advance phase** — The router calls `writeState(topic, { phase: <next> })`
    from `lib/state.mjs` to update `state.json` atomically.
 3. **Dispatch next agent(s)** — The phase table in `skills/team/SKILL.md`
    names the agent(s) to dispatch for the new phase.
 
-Human approval creates a zero-byte `<artifact>.approved` sidecar file; the
-sidecar is the durable signal that downstream phases check. Never proceed
-to the next phase while a HARD gate is failing. SOFT gates require user
-acknowledgment before proceeding.
+Human approval flips the `approved` field in the artifact's own YAML
+frontmatter from `false` to `true` (and stamps `approved_at`). The
+artifact is therefore self-describing — downstream phases check the
+artifact itself, not a sidecar. Never proceed to the next phase while a
+HARD gate is failing. SOFT gates require user acknowledgment before
+proceeding.
+
+### Frontmatter convention for gated artifacts
+
+Every artifact under `docs/plans/` opens with YAML frontmatter:
+
+```yaml
+---
+topic: <kebab-case>
+date: 2026-04-30
+phase: design        # design | structure | plan | research | task | …
+approved: false      # only present on human-gated phases (design, structure)
+approved_at: null    # ISO-8601 timestamp on approval
+---
+```
+
+Approval check (used by downstream phase entry):
+
+```sh
+grep -qE '^approved:[[:space:]]*true[[:space:]]*$' <artifact>
+```
+
+Approval flip (used by the orchestrator at the human gate):
+
+```sh
+# Edit the file in place — flip false to true, set approved_at.
+```
+
+Rejection: the agent re-drafts the artifact (frontmatter resets to
+`approved: false`); revision counters live in `state.json`.
 
 ## Anti-Patterns
 

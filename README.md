@@ -64,4 +64,4 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture and t
 - **4 hooks** in `hooks/` — safety guards and `state.json`-aware compaction resilience
 - **1 shared library** at `lib/state.mjs` — pure state helpers (`readState`, `writeState`, `initState`)
 - **1 registry** at `skills/team/registry.json` — agent inventory and event vocabulary (documentation only since the state.json migration)
-- **State snapshot** at `~/.team/<topic>/state.json` — single source of pipeline state, plus `.approved` sidecar markers under `docs/plans/`
+- **State snapshot** at `~/.team/<topic>/state.json` — single source of pipeline state. Human approval is recorded as `approved: true` in the gated artifact's own YAML frontmatter under `docs/plans/`.

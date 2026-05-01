@@ -7,8 +7,8 @@ description: Break the approved design into vertical slices with verification ch
 
 Run the STRUCTURE phase. Two modes:
 
-- **Resume mode** — `design.md.approved` sidecar exists; structure-planner
-  consumes the approved design.
+- **Resume mode** — `design.md` carries `approved: true` in its
+  frontmatter; structure-planner consumes the approved design.
 - **Standalone mode** — no approved design, but the user wants to plan
   vertical slices directly. Bootstrap the missing upstream artifacts.
 
@@ -16,14 +16,16 @@ Run the STRUCTURE phase. Two modes:
 
 `$ARGUMENTS` may be:
 
-- Empty — resume mode. Requires `design.md.approved` on disk.
+- Empty — resume mode. Requires `design.md` on disk with
+  `approved: true` in its frontmatter.
 - A beads issue ID — resolve via `/beads:show <id>`.
 - Free-form text — treated as the feature/task description.
 - A path to an existing design-like document — accepted as the design.
 
 ## Execution
 
-1. Stat `docs/plans/<today>-<topic>-design.md.approved`.
+1. Read `docs/plans/<today>-<topic>-design.md` and check the frontmatter
+   for `approved: true`.
 2. **If missing and `$ARGUMENTS` is non-empty** — bootstrap by chaining
    inline: produce Question + Research + Design artifacts, then run the
    design human gate. After approval, continue to structure.
@@ -34,8 +36,9 @@ Run the STRUCTURE phase. Two modes:
    slices.
 5. At the human gate: present the structure **in full** and ask "Do you
    approve this structure?".
-6. **Stop once `docs/plans/<today>-<topic>-structure.md.approved` sidecar
-   is touched, or the structure has been re-dispatched for revision.**
+6. **Stop once `docs/plans/<today>-<topic>-structure.md` carries
+   `approved: true` in its frontmatter, or the structure has been
+   re-dispatched for revision.**
 
 ## On revision
 

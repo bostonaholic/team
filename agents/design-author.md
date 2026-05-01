@@ -30,7 +30,25 @@ For revision dispatch (consuming `design.revision-requested`):
 
 Write to `docs/plans/<today>-<topic>-design.md` (overwrite on revision).
 
-Aim for ~200 lines. Less is OK; more means you are doing the planner's job.
+The file MUST open with this YAML frontmatter — the `approved` and
+`approved_at` fields are how the human gate is recorded:
+
+```yaml
+---
+topic: <kebab-case-topic>
+date: <YYYY-MM-DD>
+phase: design
+approved: false
+approved_at: null
+---
+```
+
+Leave `approved: false` on every draft, including revisions. The
+orchestrator flips it to `true` (and stamps `approved_at`) when the user
+approves at the human gate.
+
+Aim for ~200 lines (excluding frontmatter). Less is OK; more means you
+are doing the planner's job.
 
 ## MANDATORY interactive step
 

@@ -39,7 +39,8 @@ During the router's Setup phase, before any agent is dispatched:
 3. The state snapshot lives at `~/.team/<topic>/state.json` (per-pipeline,
    not per-worktree). The durable inter-agent protocol is the artifact
    files under the worktree's `docs/plans/` directory (design.md,
-   structure.md, their `.approved` sidecars, etc.).
+   structure.md, with `approved: true` flipped in their frontmatter on
+   human approval, etc.).
 
 ### During the pipeline
 

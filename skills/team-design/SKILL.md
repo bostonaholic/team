@@ -35,8 +35,9 @@ Run the DESIGN phase. Two modes:
    c. Writes `docs/plans/<today>-<topic>-design.md`
 5. At the human gate: present the design **in full** and ask "Do you
    approve this design?".
-6. **Stop once `docs/plans/<today>-<topic>-design.md.approved` sidecar is
-   touched, or the design has been re-dispatched for revision.**
+6. **Stop once `docs/plans/<today>-<topic>-design.md` carries
+   `approved: true` in its frontmatter, or the design has been
+   re-dispatched for revision.**
 
 ## On revision
 

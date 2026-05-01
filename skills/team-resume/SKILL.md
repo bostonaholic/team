@@ -15,7 +15,9 @@ artifacts on disk. No event-log replay.
 2. If no snapshot is found: report "No active pipeline. Run /team to start."
    and stop.
 3. From the snapshot's `topic` and `today`, list files matching
-   `docs/plans/<today>-<topic>-*.md` and their `.approved` sidecars.
+   `docs/plans/<today>-<topic>-*.md`. For gated artifacts (design,
+   structure), inspect each one's frontmatter to determine if
+   `approved: true`.
 4. Report `phase`, `designRevisionCount`, `structureRevisionCount`,
    `verificationRetryCount`, the artifacts found on disk, and the next
    expected phase (see table below). Ask the user "Continue?"
@@ -23,14 +25,14 @@ artifacts on disk. No event-log replay.
 
 ## Phase inference
 
-| Latest artifact present                         | Expected next phase |
-|-------------------------------------------------|---------------------|
-| `task.md` only                                  | RESEARCH            |
-| `research.md`                                   | DESIGN              |
-| `design.md` (no `.approved` sidecar)            | DESIGN (human gate) |
-| `design.md.approved`                            | STRUCTURE           |
-| `structure.md` (no `.approved` sidecar)         | STRUCTURE (gate)    |
-| `structure.md.approved`                         | PLAN                |
-| `plan.md`                                       | WORKTREE            |
-| worktree prepared (snapshot `phase=IMPLEMENT`)  | IMPLEMENT           |
-| verification passed (snapshot `phase=PR`)       | PR                  |
+| Latest artifact present                                         | Expected next phase |
+|-----------------------------------------------------------------|---------------------|
+| `task.md` only                                                  | RESEARCH            |
+| `research.md`                                                   | DESIGN              |
+| `design.md` (frontmatter `approved: false`)                     | DESIGN (human gate) |
+| `design.md` (frontmatter `approved: true`)                      | STRUCTURE           |
+| `structure.md` (frontmatter `approved: false`)                  | STRUCTURE (gate)    |
+| `structure.md` (frontmatter `approved: true`)                   | PLAN                |
+| `plan.md`                                                       | WORKTREE            |
+| worktree prepared (snapshot `phase=IMPLEMENT`)                  | IMPLEMENT           |
+| verification passed (snapshot `phase=PR`)                       | PR                  |

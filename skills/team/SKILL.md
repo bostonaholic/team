@@ -60,7 +60,8 @@ loop:
   5. Write each returned artifact to docs/plans/<today>-<topic>-<name>.md.
   6. Run the gate for this phase:
      - HUMAN (design, structure): present the artifact, wait for verdict.
-       On approve, touch <artifact>.approved and writeState(topic,
+       On approve, edit the artifact's YAML frontmatter to set
+       `approved: true` and `approved_at: <ISO-8601>`, then writeState(topic,
        { phase: <next> }). On reject, increment the revision counter via
        writeState and re-dispatch the same agent with the feedback.
      - MECHANICAL (tests-failing): run the suite; on assertion-only
@@ -82,8 +83,8 @@ loop:
 | QUESTION   | `questioner`               | (none — description in `$ARGUMENTS`)                   | RESEARCH           |
 | RESEARCH   | `file-finder`, `researcher` (parallel) | `docs/plans/<today>-<topic>-task.md`       | DESIGN             |
 | DESIGN     | `design-author` (→ human gate)  | `docs/plans/<today>-<topic>-research.md`          | STRUCTURE          |
-| STRUCTURE  | `structure-planner` (→ human gate)| `docs/plans/<today>-<topic>-design.md.approved` | PLAN               |
-| PLAN       | `planner`                  | `docs/plans/<today>-<topic>-structure.md.approved`     | WORKTREE           |
+| STRUCTURE  | `structure-planner` (→ human gate)| `docs/plans/<today>-<topic>-design.md` (frontmatter `approved: true`) | PLAN               |
+| PLAN       | `planner`                  | `docs/plans/<today>-<topic>-structure.md` (frontmatter `approved: true`) | WORKTREE           |
 | WORKTREE   | (router-emit)              | `docs/plans/<today>-<topic>-plan.md`                   | IMPLEMENT          |
 | IMPLEMENT  | `test-architect`, `implementer`, 5 reviewers (parallel) | worktree prepared            | PR                 |
 | PR         | (router-emit)              | aggregate gate passed                                  | SHIPPED            |
@@ -117,12 +118,14 @@ description in their context.
 ### Human Gate (design approval)
 
 When the `design-author` returns a draft:
-1. Write `docs/plans/<today>-<topic>-design.md` to disk.
+1. Write `docs/plans/<today>-<topic>-design.md` to disk. The artifact's
+   YAML frontmatter must include `approved: false` and `approved_at: null`.
 2. Present the design **in full** to the user.
 3. Ask: "Do you approve this design?"
-4. If approved → `touch docs/plans/<today>-<topic>-design.md.approved`
-   (zero-byte sidecar marker — the durable approval artifact), then
-   `writeState(topic, { phase: 'STRUCTURE' })`.
+4. If approved → edit the artifact's frontmatter to flip `approved: false`
+   to `approved: true` and set `approved_at: <ISO-8601 timestamp>`, then
+   `writeState(topic, { phase: 'STRUCTURE' })`. The frontmatter on the
+   artifact is the durable approval signal.
 5. If rejected → `writeState(topic, { designRevisionCount: <current + 1> })`
    and re-dispatch `design-author` with the user's feedback to produce a new
    draft for re-review. Phase stays `DESIGN`.
@@ -130,11 +133,13 @@ When the `design-author` returns a draft:
 ### Human Gate (structure approval)
 
 When the `structure-planner` returns a draft:
-1. Write `docs/plans/<today>-<topic>-structure.md` to disk.
+1. Write `docs/plans/<today>-<topic>-structure.md` to disk. Frontmatter
+   includes `approved: false` and `approved_at: null`.
 2. Present the structure **in full** to the user.
 3. Ask: "Do you approve this structure?"
-4. If approved → `touch docs/plans/<today>-<topic>-structure.md.approved`,
-   then `writeState(topic, { phase: 'PLAN' })`.
+4. If approved → edit the artifact's frontmatter to flip `approved: true`
+   and set `approved_at: <ISO-8601 timestamp>`, then `writeState(topic,
+   { phase: 'PLAN' })`.
 5. If rejected → `writeState(topic, { structureRevisionCount: <current + 1> })`
    and re-dispatch `structure-planner` with feedback. Phase stays `STRUCTURE`.
 
@@ -197,8 +202,8 @@ When phase is `PR`:
 
 - `state.json` is the single source of pipeline state; update it via
   `lib/state.mjs` only.
-- Approval markers (`.approved` sidecars in `docs/plans/`) are the durable
-  record of human gate passes.
+- Approval is recorded as `approved: true` in the gated artifact's own
+  YAML frontmatter — the artifact is self-describing.
 - File artifacts in `docs/plans/` are the durable communication protocol.
   Always write phase findings to disk before advancing.
 - The two human gates are **design approval** and **structure approval**.
@@ -215,7 +220,8 @@ When phase is `PR`:
 
 ### Approval marker convention
 
-Human approval creates a zero-byte sidecar file at `<artifact>.approved`
-(for example, `docs/plans/<today>-<topic>-design.md.approved`). The
-sidecar is the durable signal that downstream phases check to decide
-whether the prior human gate has passed.
+Human approval flips the `approved` field in the gated artifact's own
+YAML frontmatter from `false` to `true` and stamps an `approved_at`
+ISO-8601 timestamp. Downstream phases verify approval by re-reading the
+artifact (`grep -qE '^approved:[[:space:]]*true[[:space:]]*$' <artifact>`).
+See `skills/qrspi-workflow/SKILL.md` for the full frontmatter convention.

@@ -7,7 +7,8 @@ description: Produce the tactical implementation plan from the approved structur
 
 Run the PLAN phase. Two modes:
 
-- **Resume mode** — `structure.md.approved` exists; planner consumes it.
+- **Resume mode** — `structure.md` carries `approved: true` in its
+  frontmatter; planner consumes it.
 - **Standalone mode** — no approved structure, but the user wants a
   tactical plan now. Bootstrap upstream artifacts inline.
 
@@ -15,13 +16,15 @@ Run the PLAN phase. Two modes:
 
 `$ARGUMENTS` may be:
 
-- Empty — resume mode. Requires `structure.md.approved` on disk.
+- Empty — resume mode. Requires `structure.md` on disk with
+  `approved: true` in its frontmatter.
 - A beads issue ID — resolve via `/beads:show <id>`.
 - Free-form text — treated as the feature/task description.
 
 ## Execution
 
-1. Stat `docs/plans/<today>-<topic>-structure.md.approved`.
+1. Read `docs/plans/<today>-<topic>-structure.md` and check the
+   frontmatter for `approved: true`.
 2. **If missing and `$ARGUMENTS` is non-empty** — bootstrap by chaining
    inline: Question → Research → Design (with human gate) → Structure
    (with human gate). After both approvals, continue to plan.

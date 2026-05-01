@@ -23,7 +23,8 @@ snapshot, and advances. It contains zero agent-specific logic.
 - **State is a `state.json` snapshot + artifact presence.** The router and
   hooks read `~/.team/<topic>/state.json` (~10 fields) and stat files under
   `docs/plans/`. Phase completion is signaled by the presence of an artifact
-  file (or a zero-byte `.approved` sidecar for human-gated phases).
+  file. For human-gated phases, the artifact's own YAML frontmatter carries
+  `approved: true` once the gate passes.
 - **Registry is documentation.** `skills/team/registry.json` lists the 13
   agents and their historical event vocabulary as reference material. The
   router no longer consults `consumes`/`produces` for dispatch; those live
@@ -37,10 +38,11 @@ snapshot, and advances. It contains zero agent-specific logic.
   agents; *procedural* — the blind agents' system prompts forbid reading
   `task.md`.
 - **Two human touchpoints.** Design approval (~200-line alignment doc) and
-  Structure approval (~2-page vertical-slice breakdown). Each produces a
-  zero-byte `<artifact>.md.approved` sidecar as the durable approval
-  record. The Plan is not human-gated — humans review the structure, which
-  is the real contract.
+  Structure approval (~2-page vertical-slice breakdown). Approval is
+  recorded by flipping `approved: true` (and stamping `approved_at`) in
+  the gated artifact's own YAML frontmatter — the artifact is
+  self-describing. The Plan is not human-gated — humans review the
+  structure, which is the real contract.
 - **Hooks enforce discipline mechanically.** LLMs forget instructions ~20%
   of the time; hooks are deterministic.
 
@@ -50,8 +52,9 @@ snapshot, and advances. It contains zero agent-specific logic.
 place via atomic rename)
 
 The snapshot is the only runtime state the router needs. All pipeline
-history is reconstructed from the files under `docs/plans/<today>-<topic>-*.md`
-plus their `.approved` sidecars.
+history is reconstructed from the files under `docs/plans/<today>-<topic>-*.md`,
+inspecting each gated artifact's own YAML frontmatter to determine
+approval state.
 
 ```json
 {
@@ -89,8 +92,9 @@ gate). They are not load-bearing — downstream phases do not depend on them.
 
 - `state.json` is the single source of pipeline state. Updates go through
   `lib/state.mjs` (`writeState` performs atomic tmp-file + rename).
-- `.approved` sidecars are the durable record of human gate passes. They
-  are zero-byte files at `docs/plans/<today>-<topic>-{design,structure}.md.approved`.
+- The gated artifact's frontmatter (`approved: true`, `approved_at: <ISO-8601>`)
+  is the durable record of human gate passes. Lives on the `design.md` /
+  `structure.md` artifact itself; no sidecar files.
 - On `SHIPPED`, the router deletes `~/.team/<topic>/` — the `docs/plans/`
   artifacts remain as the only record.
 
@@ -127,22 +131,24 @@ artifact.
 drafting)
 **Predecessor:** `research.md`
 **Artifact:** `docs/plans/YYYY-MM-DD-<topic>-design.md`
-**Gate:** HUMAN — on approval the router touches `design.md.approved`; on
-rejection the router increments `designRevisionCount` and re-dispatches
-`design-author` with the feedback.
+**Gate:** HUMAN — on approval the router edits `design.md`'s frontmatter
+to set `approved: true` and `approved_at: <ISO-8601>`; on rejection the
+router increments `designRevisionCount` and re-dispatches `design-author`
+with the feedback.
 
 ### Phase 4: Structure
 
 **Agent:** `structure-planner`
-**Predecessor:** `design.md.approved` sidecar
+**Predecessor:** `design.md` with frontmatter `approved: true`
 **Artifact:** `docs/plans/YYYY-MM-DD-<topic>-structure.md`
-**Gate:** HUMAN — on approval the router touches `structure.md.approved`;
-on rejection it increments `structureRevisionCount` and re-dispatches.
+**Gate:** HUMAN — on approval the router edits `structure.md`'s
+frontmatter to set `approved: true` and `approved_at: <ISO-8601>`; on
+rejection it increments `structureRevisionCount` and re-dispatches.
 
 ### Phase 5: Plan
 
 **Agent:** `planner`
-**Predecessor:** `structure.md.approved` sidecar
+**Predecessor:** `structure.md` with frontmatter `approved: true`
 **Artifact:** `docs/plans/YYYY-MM-DD-<topic>-plan.md`
 
 No human gate. Humans reviewed the structure; the plan is tactical.
@@ -255,8 +261,8 @@ documentation) `registry.json`.
 Each partial skill works in two modes:
 
 - **Resume mode** — predecessor artifact (`docs/plans/<today>-<topic>-<predecessor>.md`,
-  a `.approved` sidecar, or `state.json.phase`) is present. The skill picks
-  up where `/team` left off.
+  with `approved: true` in its frontmatter for human-gated artifacts, or
+  `state.json.phase`) is present. The skill picks up where `/team` left off.
 - **Standalone mode** — no predecessor on disk. The skill accepts a beads
   ID or free-form description in `$ARGUMENTS` and bootstraps the missing
   upstream artifacts inline (or, for `/team-implement`, synthesizes a
@@ -336,8 +342,9 @@ module-level side effects; pure function exports.
 **Primary state:** `~/.team/<topic>/state.json` — the single JSON
 snapshot updated in place via atomic rename.
 
-**Approval markers:** `.approved` sidecars under `docs/plans/` record
-human gate passes durably.
+**Approval markers:** the gated artifact's own YAML frontmatter
+(`approved: true`, `approved_at: <ISO-8601>`) records human gate passes
+durably. No sidecar files — the artifact is self-describing.
 
 **Compaction defense:** The PreCompact hook reads `state.json` directly
 and injects a 4-line anchor (phase, topic, counters, "run
