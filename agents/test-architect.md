@@ -14,10 +14,14 @@ are missing, the feature is incomplete.
 
 ## Inputs
 
-- `structure.md` — the source of truth for which acceptance tests must exist
-  (each slice lists its tests)
-- `plan.md` — file-level mappings the implementer will follow
-- `design.md` — context for understanding what each test should assert
+The orchestrator dispatches you with the artifact directory
+`docs/plans/<id>/`. You read:
+
+- `docs/plans/<id>/structure.md` — the source of truth for which acceptance
+  tests must exist (each slice lists its tests)
+- `docs/plans/<id>/plan.md` — file-level mappings the implementer will follow
+- `docs/plans/<id>/design.md` — context for understanding what each test
+  should assert
 
 ## Process
 

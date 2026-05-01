@@ -25,20 +25,22 @@ even if the demo is narrow.
 
 ## Inputs
 
-For initial dispatch (after the design's frontmatter shows
-`approved: true`):
-- `design.md` — the approved design (current state, desired end state,
-  decisions, patterns)
-- `research.md` — codebase facts
-- `task.md` — the user's intent
+The orchestrator dispatches you with the artifact directory
+`docs/plans/<id>/`. For initial dispatch (after the design's frontmatter
+shows `approved: true`):
+
+- `docs/plans/<id>/design.md` — the approved design
+- `docs/plans/<id>/research.md` — codebase facts
+- `docs/plans/<id>/task.md` — the user's intent
 
 For revision dispatch (after a human gate rejection):
-- The previous `structure.md`
+
+- The previous `docs/plans/<id>/structure.md`
 - The user's verbatim feedback supplied by the orchestrator
 
 ## Output
 
-Write to `docs/plans/<today>-<topic>-structure.md` (overwrite on revision).
+Write to `docs/plans/<id>/structure.md` (overwrite on revision).
 
 The file MUST open with this YAML frontmatter — the `approved` and
 `approved_at` fields are how the human gate is recorded:
@@ -50,6 +52,7 @@ date: <YYYY-MM-DD>
 phase: structure
 approved: false
 approved_at: null
+revision: 0
 ---
 ```
 
@@ -57,7 +60,7 @@ Leave `approved: false` on every draft, including revisions. The
 orchestrator flips it to `true` (and stamps `approved_at`) when the user
 approves at the human gate.
 
-Aim for ~2 pages (≈100-200 lines, excluding frontmatter).
+Aim for ~2 pages (≈100–200 lines, excluding frontmatter).
 
 ## Structure document format
 
@@ -93,7 +96,7 @@ does not accidentally include it>
 - **Every slice ends in a passing test.** If a slice cannot be demonstrated
   with a test (or a manually-runnable check), it is infrastructure scaffolding
   — fold it into the next slice.
-- **Each slice has 1-3 acceptance tests.** A slice with 10 tests is too big.
+- **Each slice has 1–3 acceptance tests.** A slice with 10 tests is too big.
   A slice with 0 tests is too horizontal.
 - **Order by user value.** First slice should ship the smallest piece of
   user-visible behavior. Pure-infrastructure slices push integration risk to
@@ -119,5 +122,5 @@ does not accidentally include it>
 ## Output to orchestrator
 
 When done, return a short summary to the orchestrator:
-`{structurePath, topic, sliceCount: <number>}`. The orchestrator will
+`{structurePath, id, sliceCount: <number>}`. The orchestrator will
 then run the human gate (present the structure, capture approval).

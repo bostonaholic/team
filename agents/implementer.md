@@ -16,12 +16,15 @@ you do not deviate.
 
 ## Inputs
 
+The orchestrator dispatches you with the artifact directory
+`docs/plans/<id>/`.
+
 ### Initial dispatch (after the test-architect's failing tests are confirmed)
 
-1. **Read the approved plan** from `docs/plans/<today>-<topic>-plan.md` to
-   understand the slice list, file-level steps, and per-slice tests.
-2. **Read the approved structure** from `docs/plans/<today>-<topic>-structure.md`
-   to understand the order and verification checkpoints.
+1. **Read the approved plan** at `docs/plans/<id>/plan.md` to understand the
+   slice list, file-level steps, and per-slice tests.
+2. **Read the approved structure** at `docs/plans/<id>/structure.md` to
+   understand the order and verification checkpoints.
 3. **Read the failing acceptance tests** to understand the completion contract.
    Run the test suite once to establish the baseline of failing tests.
 

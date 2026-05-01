@@ -18,15 +18,18 @@ in detail — your audience is the implementer.
 
 ## Inputs
 
-- `structure.md` — the approved vertical-slice breakdown
-- `design.md` — context, decisions, patterns
-- `research.md` — codebase facts
+The orchestrator dispatches you with the artifact directory
+`docs/plans/<id>/`. You read:
+
+- `docs/plans/<id>/structure.md` — the approved vertical-slice breakdown
+- `docs/plans/<id>/design.md` — context, decisions, patterns
+- `docs/plans/<id>/research.md` — codebase facts
 - The plan should not need to read `task.md`
 
 ## Output
 
-Write to `docs/plans/<today>-<topic>-plan.md`. The file MUST open with
-this YAML frontmatter:
+Write to `docs/plans/<id>/plan.md`. The file MUST open with this YAML
+frontmatter:
 
 ```yaml
 ---

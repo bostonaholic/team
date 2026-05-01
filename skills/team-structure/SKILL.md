@@ -1,52 +1,42 @@
 ---
 name: team-structure
 description: Break the approved design into vertical slices with verification checkpoints. The structure document is the human's last review point before code is written. Trigger on "slice this up", "break the design into steps", or "/team-structure".
+argument-hint: "docs/plans/<id>/"
 ---
 
-# TEAM Structure — Standalone Phase
+# TEAM Structure — How Do We Get There?
 
-Run the STRUCTURE phase. Two modes:
-
-- **Resume mode** — `design.md` carries `approved: true` in its
-  frontmatter; structure-planner consumes the approved design.
-- **Standalone mode** — no approved design, but the user wants to plan
-  vertical slices directly. Bootstrap the missing upstream artifacts.
+Run the STRUCTURE phase. This is the second (and final) human gate.
 
 ## Input
 
-`$ARGUMENTS` may be:
+`$ARGUMENTS` is the artifact directory: `docs/plans/<id>/`.
 
-- Empty — resume mode. Requires `design.md` on disk with
-  `approved: true` in its frontmatter.
-- A ticket ID — recorded as `ticketId` in `task.md` for the user's reference. The orchestrator does not call any ticketing system.
-- Free-form text — treated as the feature/task description.
-- A path to an existing design-like document — accepted as the design.
+The `structure-planner` reads:
+
+- `$ARGUMENTS/design.md` (must carry `approved: true` in its frontmatter)
+- `$ARGUMENTS/research.md`
+- `$ARGUMENTS/task.md` (for cross-reference; not for re-litigating intent)
+
+If `$ARGUMENTS/design.md` is missing or not approved, tell the user to
+run `/team-design docs/plans/<id>/` first and stop.
 
 ## Execution
 
-1. Read `docs/plans/<today>-<topic>-design.md` and check the frontmatter
-   for `approved: true`.
-2. **If missing and `$ARGUMENTS` is non-empty** — bootstrap by chaining
-   inline: produce Question + Research + Design artifacts, then run the
-   design human gate. After approval, continue to structure.
-3. **If missing and `$ARGUMENTS` is empty** — ask the user for a
-   description; if still empty, stop.
-4. Follow the phase loop from `/team`. It dispatches `structure-planner`,
-   which writes `docs/plans/<today>-<topic>-structure.md` with vertical
-   slices.
-5. At the human gate: present the structure **in full** and ask "Do you
-   approve this structure?".
-6. **Stop once `docs/plans/<today>-<topic>-structure.md` carries
-   `approved: true` in its frontmatter, or the structure has been
-   re-dispatched for revision.**
-
-## On revision
-
-If the user rejects, pass the feedback verbatim to the structure-planner
-on re-dispatch. The structure-planner re-drafts and increments
-`revision: <n+1>` in the new draft's frontmatter (cap 5; beyond that,
-escalate to the user).
+1. **Verify** `$ARGUMENTS/design.md` exists and frontmatter shows
+   `approved: true`.
+2. Dispatch `structure-planner`, which writes `$ARGUMENTS/structure.md`
+   with vertical slices and frontmatter `approved: false`,
+   `approved_at: null`, `revision: 0`.
+3. **Human gate.** Present the structure **in full** and ask: "Do you
+   approve this structure?"
+   - On approve → edit `$ARGUMENTS/structure.md` frontmatter to set
+     `approved: true` and `approved_at: <ISO-8601>`.
+   - On reject → re-dispatch `structure-planner` with feedback verbatim.
+     New draft increments `revision: <n+1>`. Cap at `revision: 5`.
+4. **Stop once `$ARGUMENTS/structure.md` carries `approved: true`.**
 
 ## Completion
 
-Report structure path and suggest: "/team-plan to produce the tactical plan"
+Report structure path and tell the user:
+**"Next: run `/team-plan docs/plans/<id>/`"**

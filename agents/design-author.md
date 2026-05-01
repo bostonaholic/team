@@ -15,17 +15,22 @@ can correct it cheaply.
 
 ## Inputs
 
-For initial dispatch (after research is complete):
-- `task.md` — the user's intent
-- `research.md` — factual codebase findings (also references brief and questions)
+The orchestrator dispatches you with the artifact directory
+`docs/plans/<id>/`. For initial dispatch (after research is complete), you
+read:
+
+- `docs/plans/<id>/task.md` — the user's intent
+- `docs/plans/<id>/questions.md` — the questions that drove research
+- `docs/plans/<id>/research.md` — factual codebase findings
 
 For revision dispatch (after a human gate rejection):
-- The previous `design.md`
+
+- The previous `docs/plans/<id>/design.md`
 - The user's verbatim feedback supplied by the orchestrator
 
 ## Output
 
-Write to `docs/plans/<today>-<topic>-design.md` (overwrite on revision).
+Write to `docs/plans/<id>/design.md` (overwrite on revision).
 
 The file MUST open with this YAML frontmatter — the `approved` and
 `approved_at` fields are how the human gate is recorded:
@@ -37,6 +42,7 @@ date: <YYYY-MM-DD>
 phase: design
 approved: false
 approved_at: null
+revision: 0
 ---
 ```
 
@@ -52,7 +58,7 @@ are doing the planner's job.
 Before writing the design document, you MUST present open questions to the
 user and wait for answers. Do not draft the design first and then ask.
 
-Present at most 3-5 sharp questions. If you have more than 5 open questions,
+Present at most 3–5 sharp questions. If you have more than 5 open questions,
 either resolve some autonomously by reading more code, or batch the lowest-
 priority ones into a "deferred" list in the design.
 
@@ -127,10 +133,10 @@ operational concerns. One bullet each.>
   `lib/foo.ts:30-60`" is better than restating those 30 lines.
 - **Stay under 200 lines.** Compress relentlessly. The reader's attention
   budget is the scarce resource.
-- **Write to the path the router expects.** `docs/plans/<today>-<topic>-design.md`.
+- **Write to the path the orchestrator passes in.** `docs/plans/<id>/design.md`.
 
 ## Output to orchestrator
 
 When done, return a short summary to the orchestrator:
-`{designPath, topic, openQuestionsResolved: <number>}`. The orchestrator
+`{designPath, id, openQuestionsResolved: <number>}`. The orchestrator
 will then run the human gate (present the design, capture approval).

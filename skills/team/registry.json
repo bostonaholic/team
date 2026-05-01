@@ -1,7 +1,7 @@
 {
   "$comment": "Agent inventory for the TEAM pipeline. Dispatch is driven by the phase table in skills/team/SKILL.md, not by this file. The phases array documents which artifacts each phase produces under docs/plans/. The agents array lists every specialist agent and the phase it serves. The gates array documents the gate kind that follows each phase. Kept in sync with agents/*.md frontmatter (each agent's `phase` field) by .claude/hooks/check-registry-sync.mjs.",
   "phases": [
-    {"name": "QUESTION", "artifacts": ["task.md", "questions.md", "brief.md"]},
+    {"name": "QUESTION", "artifacts": ["task.md", "questions.md"]},
     {"name": "RESEARCH", "artifacts": ["research.md"]},
     {"name": "DESIGN", "artifacts": ["design.md"]},
     {"name": "STRUCTURE", "artifacts": ["structure.md"]},

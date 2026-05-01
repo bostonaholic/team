@@ -18,20 +18,22 @@ QUESTION -> RESEARCH -> DESIGN -> STRUCTURE -> PLAN -> WORKTREE -> IMPLEMENT -> 
 ### QUESTION
 
 Decompose the user's intent into neutral research questions. Capture the
-full task for the human, write a sanitized brief that downstream phases use.
+full task for the human; phrase questions so a stranger can answer them
+without knowing the goal.
 
 - **Artifacts:**
-  - `docs/plans/YYYY-MM-DD-<topic>-task.md` — full description (human-only)
-  - `docs/plans/YYYY-MM-DD-<topic>-questions.md` — neutral research questions
-  - `docs/plans/YYYY-MM-DD-<topic>-brief.md` — sanitized brief (no intent, no opinions)
-- **Gate:** HARD — all three artifacts must exist on disk before proceeding
+  - `docs/plans/<id>/task.md` — full description (human-only)
+  - `docs/plans/<id>/questions.md` — neutral research questions, plus a
+    "Codebase context" section that names files/modules/vocabulary but
+    NOT the goal
+- **Gate:** HARD — both artifacts must exist on disk before proceeding
 
 ### RESEARCH
 
 Explore the codebase to answer the questions. Researcher is **BLIND** to
-intent: it never reads `task.md`, only `questions.md` + `brief.md`.
+intent: it never reads `task.md`, only `questions.md`.
 
-- **Artifact:** `docs/plans/YYYY-MM-DD-<topic>-research.md`
+- **Artifact:** `docs/plans/<id>/research.md`
 - **Gate:** HARD — artifact must exist on disk before proceeding
 
 ### DESIGN
@@ -40,7 +42,7 @@ Align on approach with the user. The design author MUST present open
 questions to the user before writing the design document. The result is
 a ~200-line markdown artifact the human reviews carefully.
 
-- **Artifact:** `docs/plans/YYYY-MM-DD-<topic>-design.md`
+- **Artifact:** `docs/plans/<id>/design.md`
 - **Gate:** HARD — user must explicitly approve the design
 
 ### STRUCTURE
@@ -49,7 +51,7 @@ Break the approved design into vertical slices with verification checkpoints.
 Each slice is end-to-end and independently testable. The result is a ~2-page
 markdown artifact the human reviews.
 
-- **Artifact:** `docs/plans/YYYY-MM-DD-<topic>-structure.md`
+- **Artifact:** `docs/plans/<id>/structure.md`
 - **Gate:** HARD — user must explicitly approve the structure
 
 ### PLAN
@@ -58,7 +60,7 @@ Tactical implementation details for the agent. Read by the implementer.
 No human approval gate — the plan is mechanically derived from the
 approved structure.
 
-- **Artifact:** `docs/plans/YYYY-MM-DD-<topic>-plan.md`
+- **Artifact:** `docs/plans/<id>/plan.md`
 - **Gate:** SOFT — no human approval; the structure is the contract
 
 ### WORKTREE
@@ -66,7 +68,7 @@ approved structure.
 Router prepares an isolated git worktree for implementation work. No agent;
 purely a router responsibility.
 
-- **Artifact:** git worktree under `.claude/worktrees/<topic>/`
+- **Artifact:** git worktree under Claude Code's native worktree directory
 - **Gate:** HARD — worktree must exist before tests are written
 
 ### IMPLEMENT
@@ -88,27 +90,30 @@ sub-phase and 5-reviewer adversarial verification with hard-gate retry loop.
 
 ### PR
 
-Open the pull request, update the changelog, close any tracking tracking ticket.
+Open the pull request, update the changelog, surface the tracking ticket.
 
 - **Artifact:** GitHub PR (or local commit per user choice)
 - **Gate:** Terminal — orchestrator records the PR URL or final commit, then closes the topic's TodoWrite ledger.
 
 ## Artifact Conventions
 
-All phase artifacts live in `docs/plans/`:
+All phase artifacts live under `docs/plans/<id>/`, where `<id>` is one of:
 
-| Artifact  | Pattern                                       | Created By         |
-|-----------|-----------------------------------------------|--------------------|
-| Task      | `YYYY-MM-DD-<topic>-task.md`                  | questioner agent   |
-| Questions | `YYYY-MM-DD-<topic>-questions.md`             | questioner agent   |
-| Brief     | `YYYY-MM-DD-<topic>-brief.md`                 | questioner agent   |
-| Research  | `YYYY-MM-DD-<topic>-research.md`              | researcher agent   |
-| Design    | `YYYY-MM-DD-<topic>-design.md`                | design-author agent|
-| Structure | `YYYY-MM-DD-<topic>-structure.md`             | structure-planner agent |
-| Plan      | `YYYY-MM-DD-<topic>-plan.md`                  | planner agent      |
+- **Ticket-prefixed**: `<TICKET>-<kebab-topic>` (e.g.,
+  `ENG-1234-add-rate-limiting`)
+- **Date-prefixed**: `<YYYY-MM-DD>-<kebab-topic>` (e.g.,
+  `2026-05-01-add-rate-limiting`)
 
-Use today's date. The `<topic>` slug should be lowercase, hyphen-separated,
-and match across every artifact for the same feature.
+| Artifact  | Path                              | Created By              |
+|-----------|-----------------------------------|-------------------------|
+| Task      | `docs/plans/<id>/task.md`         | questioner agent        |
+| Questions | `docs/plans/<id>/questions.md`    | questioner agent        |
+| Research  | `docs/plans/<id>/research.md`     | researcher agent        |
+| Design    | `docs/plans/<id>/design.md`       | design-author agent     |
+| Structure | `docs/plans/<id>/structure.md`    | structure-planner agent |
+| Plan      | `docs/plans/<id>/plan.md`         | planner agent           |
+
+The `<id>` slug should match across every artifact for the same feature.
 
 ## Blind Research
 
@@ -118,17 +123,17 @@ invariant in two layers — structural at the dispatch boundary, procedural
 at the agent boundary:
 
 1. **Structural** — when the orchestrator dispatches `researcher` or
-   `file-finder`, it passes only the paths to `questions.md` and
-   `brief.md`. The orchestrator is forbidden from handing the
-   description (or `task.md`) to blind agents at dispatch time.
+   `file-finder`, it passes only the path to `questions.md`. The
+   orchestrator is forbidden from handing the description (or `task.md`)
+   to blind agents at dispatch time.
 2. **Procedural** — the `researcher` and `file-finder` agent system prompts
    forbid reading `task.md`. Both have `Read`/`Grep`/`Glob` tools with
    `permissionMode: plan`, so nothing mechanically stops a `Read` of
    `task.md`; enforcement relies on the agent following its prompt.
-3. **Procedural** — if a researcher needs context the brief lacks, it must
+3. **Procedural** — if a researcher needs context the questions lack, it must
    surface that as an open question rather than guessing the intent.
 
-A PreToolUse(Read) hook that blocks `*-task.md` reads from blind agents
+A PreToolUse(Read) hook that blocks `*/task.md` reads from blind agents
 would convert step 2 from procedural to structural. Treat this as a
 follow-up if procedural enforcement proves insufficient in practice.
 
@@ -171,9 +176,9 @@ Examples: documentation gap analysis, style suggestions.
 ## State and Coordination
 
 Pipeline state is reconstructed by scanning artifacts in
-`docs/plans/<today>-<topic>-*.md` and reading their YAML frontmatter.
-The orchestrator (the main Claude Code session) tracks in-flight work
-via TodoWrite — a session-scoped ledger that mirrors the phase table.
+`docs/plans/<id>/*.md` and reading their YAML frontmatter. The orchestrator
+(the main Claude Code session) tracks in-flight work via TodoWrite — a
+session-scoped ledger that mirrors the phase table.
 
 ### Frontmatter schema (all artifacts)
 
@@ -183,7 +188,7 @@ Every artifact opens with YAML frontmatter. Common fields:
 ---
 topic: <kebab-case>
 date: 2026-04-30
-phase: design        # task | research | design | structure | plan
+phase: design        # task | questions | research | design | structure | plan
 ---
 ```
 
@@ -191,7 +196,8 @@ Per-phase additions:
 
 | Phase     | Extra frontmatter                                                                  |
 |-----------|------------------------------------------------------------------------------------|
-| task      | `ticketId: <id>` (or `null`)                                                    |
+| task      | `ticketId: <id>` (or `null`)                                                       |
+| questions | (none)                                                                             |
 | research  | (none)                                                                             |
 | design    | `approved: false`, `approved_at: null`, `revision: 0`                              |
 | structure | `approved: false`, `approved_at: null`, `revision: 0`                              |
@@ -212,24 +218,24 @@ beyond that, escalate to the user for direction.
 
 ### Phase inference from artifacts
 
-The orchestrator infers the current phase by scanning what exists on
-disk for the topic:
+The orchestrator infers the current phase by scanning what exists in
+`docs/plans/<id>/`:
 
 | Latest artifact present                                | Current phase       |
 |--------------------------------------------------------|---------------------|
-| `task.md` only                                         | RESEARCH (next up)  |
+| `task.md` + `questions.md`                             | RESEARCH (next up)  |
 | `research.md`                                          | DESIGN (next up)    |
 | `design.md` (frontmatter `approved: false`)            | DESIGN (human gate) |
 | `design.md` (frontmatter `approved: true`)             | STRUCTURE (next up) |
 | `structure.md` (frontmatter `approved: false`)         | STRUCTURE (gate)    |
 | `structure.md` (frontmatter `approved: true`)          | PLAN (next up)      |
 | `plan.md`                                              | WORKTREE (next up)  |
-| worktree exists for the topic branch                   | IMPLEMENT           |
+| worktree exists for `<id>` branch                      | IMPLEMENT           |
 | topic branch has commits ahead and verifier passed     | PR (next up)        |
 | PR opened or commit shipped                            | SHIPPED             |
 
-Worktree presence: `git worktree list --porcelain | grep -q <branch>`.
-Verifier passed: latest review artifact in `docs/plans/<today>-<topic>-review-<n>.md`
+Worktree presence: `git worktree list --porcelain | grep -q <id>`.
+Verifier passed: latest review artifact in `docs/plans/<id>/review-<n>.md`
 shows aggregate gate clean.
 
 ### Orchestrator coordination via TodoWrite
