@@ -21,7 +21,7 @@ seeds and updates a TodoWrite ledger, and runs the human gates.
   for human-gated phases, the approval state. Phase progression is
   inferred by scanning artifacts.
 - **TodoWrite is the live coordination ledger.** It is session-scoped.
-  `/team-resume` rebuilds the ledger by scanning artifacts.
+  Re-invoking any `/team-*` command rebuilds the ledger by scanning artifacts on entry.
 - **Registry is a phase-tagged inventory.** `skills/team/registry.json`
   lists the 13 specialist agents and the QRSPI phase each serves. The
   orchestrator dispatches via the phase table in `skills/team/SKILL.md`,
@@ -60,7 +60,7 @@ Per-phase additions:
 
 | Phase     | Extra frontmatter                                                       |
 |-----------|-------------------------------------------------------------------------|
-| task      | `beadsId: team-89z` (or `null`)                                         |
+| task      | `ticketId: <id>` (or `null`)                                         |
 | questions | (none)                                                                  |
 | brief     | (none)                                                                  |
 | research  | (none)                                                                  |
@@ -186,7 +186,7 @@ items to the TodoWrite ledger.
 
 Update CHANGELOG.md (filter for user-facing commits since last release),
 present shipping options to the user, execute the chosen action, close
-the beads issue (if `task.md` carries `beadsId`), clean up the worktree.
+the tracking ticket (if `task.md` carries `ticketId`), clean up the worktree.
 
 ## 4. Agent Roster
 
@@ -228,7 +228,7 @@ loop:
      artifact path(s) in the phase table.
   3. Verify predecessors exist on disk and (for human-gated phases)
      carry `approved: true` in frontmatter. If missing → desync;
-     suggest /team-resume.
+     suggest re-invoking the same /team-* command.
   4. Dispatch the agent(s).
   5. Write returned artifacts to docs/plans/<today>-<topic>-<name>.md
      with the YAML frontmatter the agent specifies.
@@ -256,7 +256,6 @@ Skills live under `skills/`. There are two flavors:
 | `team-worktree`  | `/team-worktree`           | Prepare isolated worktree                |
 | `team-implement` | `/team-implement`          | Test-first + slice exec + 5-reviewer     |
 | `team-pr`        | `/team-pr`                 | Commit + PR                              |
-| `team-resume`    | `/team-resume`             | Rebuild TodoWrite ledger from artifacts  |
 
 Each partial skill works in two modes:
 
@@ -264,7 +263,7 @@ Each partial skill works in two modes:
   with `approved: true` in its frontmatter for human-gated artifacts) is
   present. The skill picks up where `/team` left off.
 - **Standalone mode** — no predecessor on disk. The skill accepts a
-  beads ID or free-form description in `$ARGUMENTS` and bootstraps the
+  ticket ID or free-form description in `$ARGUMENTS` and bootstraps the
   missing upstream artifacts inline (or, for `/team-implement`,
   synthesizes a `task.md` and dispatches the implement loop directly).
   `/team-implement` also asks the user about creating a worktree when
@@ -318,15 +317,15 @@ Runtime hooks (`hooks/` — distributed with the plugin):
 Both `pre-compact-anchor.mjs` and `session-start-recover.mjs` work the
 same way: list `docs/plans/*.md`, pick the most recent topic by file
 mtime, infer the current phase from artifact presence + frontmatter,
-emit a short context message naming the phase, topic, and the
-`/team-resume` command. Both are stateless, exit 0 on any error, and
-return within the 5000ms hook budget.
+and emit a short context message naming the phase, topic, and the
+suggested next `/team-*` command. Both are stateless, exit 0 on any
+error, and return within the 5000ms hook budget.
 
 Development hook (`.claude/hooks/` — not distributed):
 
-| Hook                     | Event                    | Purpose                                                  |
-|--------------------------|--------------------------|----------------------------------------------------------|
-| `check-registry-sync.mjs`| PostToolUse(Write\|Edit) | Verify agents/*.md `phase` field matches registry.json   |
+| Hook                     | Event                    | Purpose                                                              |
+|--------------------------|--------------------------|----------------------------------------------------------------------|
+| `check-registry-sync.mjs`| PostToolUse(Write\|Edit) | Verify the agents/ directory and registry.json agree by agent name   |
 
 ## 8. State Management
 
@@ -336,16 +335,18 @@ phase finish?" and "was the human gate passed?"
 
 **Live coordination:** TodoWrite (session-scoped). The orchestrator
 seeds the ledger at the start of `/team`, marks each item `in_progress`
-when dispatching, and `completed` when the artifact lands. On
-`/team-resume`, the ledger is rebuilt by scanning artifacts.
+when dispatching, and `completed` when the artifact lands. Any `/team-*`
+command rebuilds the ledger by scanning artifacts on entry, so an
+interrupted run can be resumed by re-invoking any of them.
 
 **Approval markers:** the gated artifact's own YAML frontmatter
 (`approved: true`, `approved_at: <ISO-8601>`) records human gate passes
 durably. The artifact is self-describing.
 
 **Compaction defense:** the PreCompact hook scans `docs/plans/` for the
-active topic and injects a 4-line anchor (phase, topic, date, "run
-/team-resume"). The SessionStart hook does the same for new sessions.
+active topic and injects a 4-line anchor (phase, topic, date, suggested
+next `/team-*` command). The SessionStart hook does the same for new
+sessions.
 
 **Artifact persistence:** files in `docs/plans/` are committed to git
 and survive across sessions, compaction events, and context resets.

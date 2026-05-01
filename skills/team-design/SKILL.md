@@ -16,7 +16,7 @@ Run the DESIGN phase. Two modes:
 `$ARGUMENTS` may be:
 
 - Empty — resume mode. Requires existing research on disk.
-- A beads issue ID — resolve via `/beads:show <id>`.
+- A ticket ID — recorded as `ticketId` in `task.md` for the user's reference. The orchestrator does not call any ticketing system.
 - Free-form text — treated as the feature/task description.
 
 ## Execution

@@ -10,7 +10,7 @@ Create an isolated worktree for a topic. Two modes:
 - **Resume mode** — a plan artifact exists. Create the worktree; the
   next phase (Implement) is detectable by the worktree's existence on
   the topic branch (`git worktree list --porcelain`).
-- **Standalone mode** — no plan, just a topic name (or beads ID, or
+- **Standalone mode** — no plan, just a topic name (or ticket ID, or
   description). Create the worktree and stop, without running the rest
   of the pipeline.
 
@@ -19,7 +19,7 @@ Create an isolated worktree for a topic. Two modes:
 `$ARGUMENTS` may be:
 
 - Empty — resume mode. Requires an existing plan on disk.
-- A beads issue ID — derive topic from the issue title.
+- A ticket ID — derive topic from the issue title.
 - Free-form text — derive a kebab-case topic from it.
 
 ## Execution
@@ -31,7 +31,7 @@ Create an isolated worktree for a topic. Two modes:
    and stop. The Implement phase is detectable by future invocations via
    `git worktree list --porcelain`.
 3. **Standalone mode** — `$ARGUMENTS` is non-empty and no plan exists:
-   - Derive `topic` from the input (or beads issue title).
+   - Derive `topic` from the input (or ticket title).
    - Create the worktree using Claude Code's native worktree support.
    - Report the worktree path and suggest: "cd to <path> and run
      /team-implement <id-or-description> to start coding, or /team

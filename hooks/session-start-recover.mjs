@@ -4,7 +4,7 @@
  * Scans docs/plans/<today>-<topic>-*.md for the most recent active topic,
  * infers the current phase from artifact presence + YAML frontmatter,
  * and injects a recovery notice into additionalContext so the agent
- * suggests /team-resume.
+ * suggests re-invoking any /team-* command.
  *
  * Contract: always exits 0. Missing or unparseable artifacts are not an error.
  */
@@ -84,11 +84,11 @@ async function main() {
   if (!phase) process.exit(0);
   const ctx = [
     "[TEAM Pipeline Recovery]",
-    "An active TEAM pipeline was detected. Resume with /team-resume.",
+    "An active TEAM pipeline was detected. Re-invoke any /team-* command to continue.",
     "",
     `Phase: ${phase} | Topic: ${active.topic} | Date: ${active.date}`,
     `Latest artifact: docs/plans/${active.date}-${active.topic}-*.md`,
-    "To resume: run /team-resume",
+    "To continue: re-invoke any /team-* command",
   ].join("\n");
   process.stderr.write(JSON.stringify({ hookSpecificOutput: { additionalContext: ctx } }) + "\n");
   process.exit(0);

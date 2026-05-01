@@ -44,7 +44,6 @@ Or run individual phases:
 /team-worktree
 /team-implement
 /team-pr
-/team-resume
 ```
 
 ## Install

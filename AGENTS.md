@@ -52,7 +52,6 @@ TEAM runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-
 | `/team-worktree` | Prepare isolated git worktree |
 | `/team-implement` | Test-first + slice execution + 5-reviewer verify |
 | `/team-pr` | Commit + open PR |
-| `/team-resume` | Rebuild TodoWrite ledger by scanning docs/plans/ artifacts |
 
 ## Agents (13)
 
@@ -72,7 +71,7 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodolog
 |------|-------|---------|
 | `pre-bash-guard.mjs` | PreToolUse(Bash) | Block dangerous commands |
 | `pre-compact-anchor.mjs` | PreCompact | Scan docs/plans/ for active topic, inject phase anchor before compaction |
-| `session-start-recover.mjs` | SessionStart | Scan docs/plans/ for active topic, prompt /team-resume |
+| `session-start-recover.mjs` | SessionStart | Scan docs/plans/ for active topic, surface phase + suggested next command |
 | `post-write-validate.mjs` | PostToolUse(Write\|Edit) | Structural validation of plugin files |
 
 **Development** (in `.claude/hooks/`):
@@ -83,7 +82,7 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodolog
 
 ## State
 
-State is the set of artifacts in `docs/plans/<today>-<topic>-*.md`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`; gated artifacts also carry `approved`, `approved_at`, `revision`). Live in-session coordination uses TodoWrite (session-scoped); `/team-resume` rebuilds the ledger by scanning artifacts. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
+State is the set of artifacts in `docs/plans/<today>-<topic>-*.md`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`; gated artifacts also carry `approved`, `approved_at`, `revision`). Live in-session coordination uses TodoWrite (session-scoped); any `/team-*` command rebuilds the ledger by scanning artifacts on entry. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
 
 ## Learned Rules
 

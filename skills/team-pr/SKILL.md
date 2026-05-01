@@ -1,6 +1,6 @@
 ---
 name: team-pr
-description: Open the pull request after verification passes. Updates the changelog, optionally closes the tracking beads issue, and closes out the topic. Trigger on "open the PR", "ship it", or "/team-pr".
+description: Open the pull request after verification passes. Updates the changelog, optionally closes the tracking tracking ticket, and closes out the topic. Trigger on "open the PR", "ship it", or "/team-pr".
 ---
 
 # TEAM PR — Standalone Phase
@@ -8,23 +8,23 @@ description: Open the pull request after verification passes. Updates the change
 Run the PR phase. Two modes:
 
 - **Resume mode** — Implement passed the aggregate gate; the topic
-  branch has slice commits ready and a `task.md` with `beadsId`
-  exists in `docs/plans/`. Read the beads ID from there.
+  branch has slice commits ready and a `task.md` with `ticketId`
+  exists in `docs/plans/`. Read the ticket ID from there.
 - **Standalone mode** — no matching task.md, but the working tree has
   commits or staged changes ready to ship. Treat the current branch as
   the work source.
 
 ## Input
 
-`$ARGUMENTS` is optional. If a beads ID is supplied, use it as `beadsId`
-even in standalone mode (so `bd close` runs at ship time).
+`$ARGUMENTS` is optional. If a ticket ID is supplied, use it as `ticketId`
+even in standalone mode (the orchestrator records it on task.md but does not close any ticket).
 
 ## Execution
 
 1. Derive `topic` (from current branch, `$ARGUMENTS`, or the most recent
    `docs/plans/<today>-*-task.md`).
 2. **Resume path** — `docs/plans/<today>-<topic>-task.md` exists: read
-   `beadsId` from its frontmatter. Proceed with the documented flow
+   `ticketId` from its frontmatter. Proceed with the documented flow
    below.
 3. **Standalone path** — no matching task.md:
    - Verify the branch has commits ahead of the default branch, or
@@ -32,7 +32,7 @@ even in standalone mode (so `bd close` runs at ship time).
      ship." and stop.
    - Skip verification gate enforcement — the user is taking
      responsibility for correctness. Warn them once.
-   - Use `$ARGUMENTS` (if a beads ID) as `beadsId`; otherwise `null`.
+   - Use `$ARGUMENTS` (if a ticket ID) as `ticketId`; otherwise `null`.
 4. **Update CHANGELOG.md** before committing (see Changelog Update below).
 5. Present shipping options. In resume mode the implementer already
    committed each slice atomically during the Implement phase; in
@@ -46,9 +46,9 @@ even in standalone mode (so `bd close` runs at ship time).
    - **Keep as-is** — leave final changes uncommitted; existing commits
      remain.
 6. Execute user's choice.
-7. **Close beads issue.** If `beadsId` is non-null and the user chose to
-   commit (either option), use `/beads:close <beadsId>` to mark the issue
-   as done. Skip if the user chose "keep as-is".
+7. **Tracking ticket.** If `ticketId` is non-null, surface it in the
+   completion report so the user can close it in their tracking
+   system. The orchestrator does not close tickets automatically.
 8. If a worktree was created in the Worktree phase, clean it up
    (cherry-pick or rebase commits onto the target branch, then let
    Claude Code remove the worktree).

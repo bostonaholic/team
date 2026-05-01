@@ -82,7 +82,7 @@ async function main() {
     "[TEAM Pipeline State — Anchor before compaction]",
     `Phase: ${phase} | Topic: ${active.topic} | Date: ${active.date}`,
     `Latest artifact: docs/plans/${active.date}-${active.topic}-*.md`,
-    "Run /team-resume to continue the pipeline.",
+    "Re-invoke any /team-* command to pick up from the latest artifact.",
   ].join("\n");
   process.stderr.write(JSON.stringify({ hookSpecificOutput: { additionalContext: ctx } }) + "\n");
   process.exit(0);

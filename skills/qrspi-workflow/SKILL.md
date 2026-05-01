@@ -88,7 +88,7 @@ sub-phase and 5-reviewer adversarial verification with hard-gate retry loop.
 
 ### PR
 
-Open the pull request, update the changelog, close any tracking beads issue.
+Open the pull request, update the changelog, close any tracking tracking ticket.
 
 - **Artifact:** GitHub PR (or local commit per user choice)
 - **Gate:** Terminal — orchestrator records the PR URL or final commit, then closes the topic's TodoWrite ledger.
@@ -191,7 +191,7 @@ Per-phase additions:
 
 | Phase     | Extra frontmatter                                                                  |
 |-----------|------------------------------------------------------------------------------------|
-| task      | `beadsId: team-89z` (or `null`)                                                    |
+| task      | `ticketId: <id>` (or `null`)                                                    |
 | research  | (none)                                                                             |
 | design    | `approved: false`, `approved_at: null`, `revision: 0`                              |
 | structure | `approved: false`, `approved_at: null`, `revision: 0`                              |
@@ -238,7 +238,8 @@ When the orchestrator (the main Claude Code session) drives a `/team` or
 `/team-*` skill, it MUST seed a TodoWrite ledger that mirrors the phase
 table for the topic, then mark each item `in_progress` as it dispatches
 the matching agent and `completed` when the artifact lands. TodoWrite is
-session-scoped — `/team-resume` rebuilds the todos by scanning artifacts.
+session-scoped — re-invoking any `/team-*` command rebuilds the todos
+by scanning artifacts on entry.
 
 ### Phase Transition Protocol
 

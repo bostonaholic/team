@@ -66,7 +66,7 @@ Capture the user's intent in their own framing. Required frontmatter:
 topic: <kebab-case-topic>
 date: <YYYY-MM-DD>
 phase: task
-beadsId: null               # set if a beads issue is tracking this work
+ticketId: null               # set if a tracking ticket is tracking this work
 ---
 ```
 

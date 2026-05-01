@@ -23,16 +23,17 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
 
 ## Setup
 
-1. **Check for a beads issue ID.** If the first token of `$ARGUMENTS`
-   matches a beads ID pattern (e.g., `team-p3t`, `proj-42a`), use
-   `/beads:show <id>` to verify it exists. If valid:
-   - Use `/beads:update <id>` to claim and mark the issue as in-progress.
-   - Strip the beads ID from the description (use the remainder as the
-     feature description). If no remainder, use the issue title from the
-     show output.
-   - Remember the beads ID — the questioner will record it on `task.md`'s
-     frontmatter as `beadsId`.
-   If the first token is not a beads ID, the beads ID is `null`.
+1. **Check for a tracking ticket ID.** If the first token of
+   `$ARGUMENTS` looks like a ticket identifier (e.g., a kebab-case
+   `<system>-<id>` slug), set it aside as `ticketId` and strip it from
+   the rest of the description. The questioner will record it on
+   `task.md`'s frontmatter as `ticketId`. The TEAM pipeline does not
+   integrate with any specific ticketing system — the ID is recorded
+   for the user's reference and for any project-specific automation
+   they may layer on top (e.g., a hook that marks the ticket
+   in-progress when `task.md` is created). If the first token does not
+   look like a ticket ID, treat all of `$ARGUMENTS` as the description
+   and leave `ticketId` as `null`.
 2. Derive a kebab-case `topic` from the description.
 3. Set `today` to the current date (`YYYY-MM-DD`).
 4. Create `docs/plans/` if it does not exist.
@@ -58,7 +59,7 @@ loop:
      get the expected agent(s) and predecessor artifact path(s).
   3. Verify predecessor artifacts exist on disk and (for human-gated
      phases) carry `approved: true` in their frontmatter. If missing,
-     report a desync and suggest /team-resume.
+     report a desync and suggest re-invoking the same /team-* command.
   4. Dispatch the agent(s) (parallel where the phase table marks them).
   5. Write each returned artifact to docs/plans/<today>-<topic>-<name>.md
      with the YAML frontmatter the agent specifies (see the agent file
@@ -191,9 +192,9 @@ When the aggregate gate passes:
    user-facing commits since last release).
 2. Present shipping options: commit + PR, commit locally, keep as-is.
 3. Execute user's choice.
-4. If `task.md` frontmatter has `beadsId` set and the user chose to
-   commit, use `/beads:close <beadsId>` to mark the issue done. Skip if
-   "keep as-is".
+4. If `task.md` frontmatter has `ticketId` set, the user may want to
+   close the ticket in their tracking system. The orchestrator does
+   not close tickets automatically.
 5. Mark all TodoWrite items complete.
 6. If a worktree was created, clean it up (cherry-pick/rebase commits
    onto the target branch, then let Claude Code remove the worktree).
@@ -204,7 +205,8 @@ When the aggregate gate passes:
   pipeline state. Each artifact's YAML frontmatter describes its phase,
   approval state, and revision count.
 - TodoWrite is the orchestrator's live coordination ledger. It is
-  session-scoped and is rebuilt on `/team-resume` by scanning artifacts.
+  session-scoped and is rebuilt on entry to any `/team-*` command by
+  scanning artifacts.
 - File artifacts in `docs/plans/` are the durable communication protocol.
   Always write phase findings to disk before advancing.
 - The two human gates are **design approval** and **structure approval**.
@@ -213,7 +215,7 @@ When the aggregate gate passes:
 - The blind-research invariant is non-negotiable. If a researcher's
   context contains the user's original description, the pipeline has a
   defect. Stop and report.
-- On any unexpected failure: report to the user and suggest `/team-resume`.
+- On any unexpected failure: report to the user and suggest re-invoking the same /team-* command.
 - To add a new agent to the pipeline, add an entry to the phase table
   above and to the inventory in `skills/team/registry.json`.
 
