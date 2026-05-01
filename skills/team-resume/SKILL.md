@@ -1,31 +1,38 @@
 ---
 name: team-resume
-description: Resume an interrupted TEAM pipeline by inspecting docs/plans/ artifacts and ~/.team/<topic>/state.json. Trigger on "resume the pipeline", "continue where we left off", or "/team-resume".
+description: Resume an interrupted TEAM pipeline by inspecting docs/plans/ artifacts and rebuilding the TodoWrite ledger. Trigger on "resume the pipeline", "continue where we left off", or "/team-resume".
 ---
 
 # TEAM Resume — Pipeline Recovery
 
-Resume an interrupted pipeline by reading the snapshot and listing the
-artifacts on disk. No event-log replay.
+Resume an interrupted pipeline by scanning artifacts on disk and
+rebuilding the TodoWrite ledger. There is no `state.json` to read; the
+artifacts and their frontmatter are the only durable record.
 
 ## Execution
 
-1. Scan `~/.team/*/state.json`. Load the most recent by `lastUpdated` using
-   `readState(topic)` from `lib/state.mjs`.
-2. If no snapshot is found: report "No active pipeline. Run /team to start."
-   and stop.
-3. From the snapshot's `topic` and `today`, list files matching
-   `docs/plans/<today>-<topic>-*.md`. For gated artifacts (design,
-   structure), inspect each one's frontmatter to determine if
-   `approved: true`.
-4. Report `phase`, `designRevisionCount`, `structureRevisionCount`,
-   `verificationRetryCount`, the artifacts found on disk, and the next
-   expected phase (see table below). Ask the user "Continue?"
-5. On confirmation, re-enter the phase loop at `snapshot.phase`.
+1. List `docs/plans/*-task.md` and pick the most recent topic by file
+   mtime. (You can also accept a `topic` slug as `$ARGUMENTS` to jump
+   directly to a specific topic.)
+2. If no task.md is found: report "No active pipeline. Run /team to
+   start." and stop.
+3. From the matched filename, derive `today` and `topic`. List all
+   `docs/plans/<today>-<topic>-*.md` artifacts.
+4. For gated artifacts (design, structure), read the YAML frontmatter
+   to determine `approved` (boolean) and `revision` (count).
+5. Determine the current phase from the inference table below.
+6. **Rebuild TodoWrite** — seed it with one item per phase, marking
+   completed each phase whose artifact is on disk (and approved, if
+   gated). Mark the current phase `in_progress`.
+7. Report: phase, revisions on design/structure if any, the artifact
+   list, the rebuilt TodoWrite ledger, and the next expected phase.
+   Ask the user "Continue?"
+8. On confirmation, re-enter the phase loop at the inferred phase via
+   `/team`.
 
 ## Phase inference
 
-| Latest artifact present                                         | Expected next phase |
+| Latest artifact present                                         | Current phase       |
 |-----------------------------------------------------------------|---------------------|
 | `task.md` only                                                  | RESEARCH            |
 | `research.md`                                                   | DESIGN              |
@@ -34,5 +41,6 @@ artifacts on disk. No event-log replay.
 | `structure.md` (frontmatter `approved: false`)                  | STRUCTURE (gate)    |
 | `structure.md` (frontmatter `approved: true`)                   | PLAN                |
 | `plan.md`                                                       | WORKTREE            |
-| worktree prepared (snapshot `phase=IMPLEMENT`)                  | IMPLEMENT           |
-| verification passed (snapshot `phase=PR`)                       | PR                  |
+| worktree exists for the topic branch (`git worktree list`)      | IMPLEMENT           |
+| topic branch has slice commits + verifier passed                | PR                  |
+| PR opened or commit shipped                                     | SHIPPED             |

@@ -4,8 +4,7 @@ description: Use after implementation to review whether project documentation ne
 model: sonnet
 tools: Read, Grep, Glob, Bash
 permissionMode: plan
-consumes: implementation.completed
-produces: docs-review.completed
+phase: IMPLEMENT
 ---
 
 # Technical Writer Agent

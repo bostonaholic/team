@@ -4,8 +4,7 @@ description: Use when codebase facts need to be gathered before any design or im
 model: sonnet
 tools: Read, Grep, Glob
 permissionMode: plan
-consumes: task.captured
-produces: research.completed
+phase: RESEARCH
 ---
 
 # Researcher Agent
@@ -96,5 +95,6 @@ Report your findings in this structure. Keep the entire report under 100 lines.
 - **Stay under 100 lines.** If you need more space, cut the least
   information-dense sections.
 - **Report back to the orchestrator.** Your findings will be written to
-  `docs/plans/<today>-<topic>-research.md` by the orchestrator. Do not
-  attempt to write files yourself.
+  `docs/plans/<today>-<topic>-research.md` by the orchestrator (which
+  also prepends the required YAML frontmatter — `topic`, `date`,
+  `phase: research`). Do not attempt to write files yourself.

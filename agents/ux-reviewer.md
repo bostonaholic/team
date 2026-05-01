@@ -4,8 +4,7 @@ description: Use when live application verification is needed after implementati
 model: sonnet
 tools: Read, Grep, Glob, Bash
 permissionMode: plan
-consumes: implementation.completed
-produces: ux-review.completed
+phase: IMPLEMENT
 ---
 
 # UX Reviewer Agent

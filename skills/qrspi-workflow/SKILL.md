@@ -78,10 +78,10 @@ sub-phase and 5-reviewer adversarial verification with hard-gate retry loop.
   1. Test-first — `test-architect` writes failing acceptance tests
   2. Mechanical gate — all tests fail with assertion errors (not crashes)
   3. Slice execution — `implementer` works through vertical slices, commits
-     each slice when its tests pass (`slice.completed` events)
+     each slice when its tests pass
   4. Adversarial review — 5 parallel reviewers (code, security, docs, ux,
-     verifier) with typed `hard-gate.*-failed` failure events that loop back
-     to the implementer (max 5 rounds)
+     verifier) with typed failure classes that loop back to the
+     implementer (max 5 rounds)
 - **Artifact:** Production code, passing tests, per-slice commits
 - **Gate:** AGGREGATE — security, verifier, and code-review hard gates must
   all pass
@@ -91,7 +91,7 @@ sub-phase and 5-reviewer adversarial verification with hard-gate retry loop.
 Open the pull request, update the changelog, close any tracking beads issue.
 
 - **Artifact:** GitHub PR (or local commit per user choice)
-- **Gate:** Terminal — router sets `phase: 'SHIPPED'` and deletes `~/.team/<topic>/`
+- **Gate:** Terminal — orchestrator records the PR URL or final commit, then closes the topic's TodoWrite ledger.
 
 ## Artifact Conventions
 
@@ -114,25 +114,22 @@ and match across every artifact for the same feature.
 
 Research is the most-corruptible phase: an LLM that knows what it is being
 asked to build will return opinions instead of facts. QRSPI enforces the
-invariant in two layers — structural at the event boundary, procedural at
-the agent boundary:
+invariant in two layers — structural at the dispatch boundary, procedural
+at the agent boundary:
 
-1. **Structural** — the `task.captured` event payload carries
-   `{taskPath, questionsPath, briefPath, topic}` — never the user's
-   description. Every downstream event obeys the same rule.
-2. **Structural** — the `researcher` and `file-finder` agent frontmatter
-   consume only `task.captured` (not `feature.requested`, which carries
-   the description). The router is forbidden from handing the description
-   to blind agents at dispatch time.
-3. **Procedural** — the `researcher` and `file-finder` agent system prompts
+1. **Structural** — when the orchestrator dispatches `researcher` or
+   `file-finder`, it passes only the paths to `questions.md` and
+   `brief.md`. The orchestrator is forbidden from handing the
+   description (or `task.md`) to blind agents at dispatch time.
+2. **Procedural** — the `researcher` and `file-finder` agent system prompts
    forbid reading `task.md`. Both have `Read`/`Grep`/`Glob` tools with
    `permissionMode: plan`, so nothing mechanically stops a `Read` of
    `task.md`; enforcement relies on the agent following its prompt.
-4. **Procedural** — if a researcher needs context the brief lacks, it must
+3. **Procedural** — if a researcher needs context the brief lacks, it must
    surface that as an open question rather than guessing the intent.
 
 A PreToolUse(Read) hook that blocks `*-task.md` reads from blind agents
-would convert step 3 from procedural to structural. Treat this as a
+would convert step 2 from procedural to structural. Treat this as a
 follow-up if procedural enforcement proves insufficient in practice.
 
 ## Vertical Slices
@@ -143,7 +140,7 @@ horizontal layers (all migrations, then all APIs, then all UI). Each slice:
 
 - Has its own acceptance tests
 - Can be implemented and verified independently
-- Is committed atomically when complete (`slice.completed` event)
+- Is committed atomically when complete
 
 This enforces incremental verifiability over big-bang integration.
 
@@ -171,56 +168,93 @@ pipeline proceeds automatically.
 
 Examples: documentation gap analysis, style suggestions.
 
-## Phase Transition Protocol
+## State and Coordination
 
-Phase transitions are driven by `~/.team/<topic>/state.json` plus the
-presence of artifact files under `docs/plans/`. Every transition follows
-this sequence:
+There is no central state file. Pipeline state is reconstructed by
+scanning artifacts in `docs/plans/<today>-<topic>-*.md` and reading their
+YAML frontmatter. The orchestrator (the main Claude Code session) tracks
+in-flight work via TodoWrite — a session-scoped ledger that mirrors the
+phase table.
 
-1. **Verify artifacts** — Confirm all required artifacts from the current
-   phase exist on disk (`docs/plans/<today>-<topic>-*.md`), and for
-   human-gated phases that the artifact's frontmatter shows
-   `approved: true`.
-2. **Advance phase** — The router calls `writeState(topic, { phase: <next> })`
-   from `lib/state.mjs` to update `state.json` atomically.
-3. **Dispatch next agent(s)** — The phase table in `skills/team/SKILL.md`
-   names the agent(s) to dispatch for the new phase.
+### Frontmatter schema (all artifacts)
 
-Human approval flips the `approved` field in the artifact's own YAML
-frontmatter from `false` to `true` (and stamps `approved_at`). The
-artifact is therefore self-describing — downstream phases check the
-artifact itself, not a sidecar. Never proceed to the next phase while a
-HARD gate is failing. SOFT gates require user acknowledgment before
-proceeding.
-
-### Frontmatter convention for gated artifacts
-
-Every artifact under `docs/plans/` opens with YAML frontmatter:
+Every artifact opens with YAML frontmatter. Common fields:
 
 ```yaml
 ---
 topic: <kebab-case>
 date: 2026-04-30
-phase: design        # design | structure | plan | research | task | …
-approved: false      # only present on human-gated phases (design, structure)
-approved_at: null    # ISO-8601 timestamp on approval
+phase: design        # task | research | design | structure | plan
 ---
 ```
 
-Approval check (used by downstream phase entry):
+Per-phase additions:
+
+| Phase     | Extra frontmatter                                                                  |
+|-----------|------------------------------------------------------------------------------------|
+| task      | `beadsId: team-89z` (or `null`)                                                    |
+| research  | (none)                                                                             |
+| design    | `approved: false`, `approved_at: null`, `revision: 0`                              |
+| structure | `approved: false`, `approved_at: null`, `revision: 0`                              |
+| plan      | (none — derived mechanically from the approved structure)                          |
+
+**Approval check** (used by downstream phase entry):
 
 ```sh
 grep -qE '^approved:[[:space:]]*true[[:space:]]*$' <artifact>
 ```
 
-Approval flip (used by the orchestrator at the human gate):
+**Approval flip** (orchestrator at human gate): edit the file in place
+to set `approved: true` and stamp `approved_at: <ISO-8601>`.
 
-```sh
-# Edit the file in place — flip false to true, set approved_at.
-```
+**Rejection**: the agent re-drafts the artifact. The orchestrator
+increments `revision: <n+1>` in the new draft's frontmatter. Cap at 5;
+beyond that, escalate to the user for direction.
 
-Rejection: the agent re-drafts the artifact (frontmatter resets to
-`approved: false`); revision counters live in `state.json`.
+### Phase inference from artifacts
+
+The orchestrator infers the current phase by scanning what exists on
+disk for the topic:
+
+| Latest artifact present                                | Current phase       |
+|--------------------------------------------------------|---------------------|
+| `task.md` only                                         | RESEARCH (next up)  |
+| `research.md`                                          | DESIGN (next up)    |
+| `design.md` (frontmatter `approved: false`)            | DESIGN (human gate) |
+| `design.md` (frontmatter `approved: true`)             | STRUCTURE (next up) |
+| `structure.md` (frontmatter `approved: false`)         | STRUCTURE (gate)    |
+| `structure.md` (frontmatter `approved: true`)          | PLAN (next up)      |
+| `plan.md`                                              | WORKTREE (next up)  |
+| worktree exists for the topic branch                   | IMPLEMENT           |
+| topic branch has commits ahead and verifier passed     | PR (next up)        |
+| PR opened or commit shipped                            | SHIPPED             |
+
+Worktree presence: `git worktree list --porcelain | grep -q <branch>`.
+Verifier passed: latest review artifact in `docs/plans/<today>-<topic>-review-<n>.md`
+shows aggregate gate clean.
+
+### Orchestrator coordination via TodoWrite
+
+When the orchestrator (the main Claude Code session) drives a `/team` or
+`/team-*` skill, it MUST seed a TodoWrite ledger that mirrors the phase
+table for the topic, then mark each item `in_progress` as it dispatches
+the matching agent and `completed` when the artifact lands. TodoWrite is
+session-scoped — `/team-resume` rebuilds the todos by scanning artifacts.
+
+### Phase Transition Protocol
+
+Every transition follows this sequence:
+
+1. **Verify artifacts** — confirm the required artifacts from the
+   current phase exist on disk, and for human-gated phases that the
+   artifact's frontmatter shows `approved: true`.
+2. **Update the ledger** — mark the current TodoWrite item complete and
+   the next one `in_progress`.
+3. **Dispatch next agent(s)** — the phase table in `skills/team/SKILL.md`
+   names the agent(s) to dispatch for the new phase.
+
+Never proceed to the next phase while a HARD gate is failing. SOFT gates
+require user acknowledgment before proceeding.
 
 ## Anti-Patterns
 

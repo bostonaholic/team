@@ -4,8 +4,7 @@ description: Use after research is complete to align with the user on the approa
 model: opus
 tools: Read, Write, Edit, Grep, Glob
 permissionMode: acceptEdits
-consumes: research.completed, design.revision-requested
-produces: design.drafted
+phase: DESIGN
 ---
 
 # Design Author Agent
@@ -17,14 +16,13 @@ can correct it cheaply.
 
 ## Inputs
 
-For initial dispatch (consuming `research.completed`):
+For initial dispatch (after research is complete):
 - `task.md` — the user's intent
-- `research.md` — factual codebase findings
-- The research event payload may also reference the brief and questions
+- `research.md` — factual codebase findings (also references brief and questions)
 
-For revision dispatch (consuming `design.revision-requested`):
+For revision dispatch (after a human gate rejection):
 - The previous `design.md`
-- The user's `feedback` field from the revision event
+- The user's verbatim feedback supplied by the orchestrator
 
 ## Output
 
@@ -75,9 +73,9 @@ write design.md.
 
 Wait for the user's response. Then incorporate their answers into the design.
 
-When consuming `design.revision-requested`, skip the open-question phase
-unless the user's feedback raises new ambiguities — in that case, ask the
-follow-ups before re-drafting.
+On a revision dispatch, skip the open-question phase unless the user's
+feedback raises new ambiguities — in that case, ask the follow-ups before
+re-drafting.
 
 ## Design document structure
 
@@ -132,7 +130,8 @@ operational concerns. One bullet each.>
   budget is the scarce resource.
 - **Write to the path the router expects.** `docs/plans/<today>-<topic>-design.md`.
 
-## Output to router
+## Output to orchestrator
 
-When done, the router appends `design.drafted` with
-`{designPath, topic, openQuestionsResolved: <number>}`.
+When done, return a short summary to the orchestrator:
+`{designPath, topic, openQuestionsResolved: <number>}`. The orchestrator
+will then run the human gate (present the design, capture approval).

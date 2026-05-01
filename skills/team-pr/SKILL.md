@@ -1,16 +1,16 @@
 ---
 name: team-pr
-description: Open the pull request after verification passes. Updates the changelog, optionally closes the tracking beads issue, and advances `state.json` to `phase: 'SHIPPED'`. Trigger on "open the PR", "ship it", or "/team-pr".
+description: Open the pull request after verification passes. Updates the changelog, optionally closes the tracking beads issue, and closes out the topic. Trigger on "open the PR", "ship it", or "/team-pr".
 ---
 
 # TEAM PR — Standalone Phase
 
 Run the PR phase. Two modes:
 
-- **Resume mode** — `state.json.phase === 'PR'` (the aggregate gate
-  transitioned us there after verification passed). Read `beadsId` from
-  state.
-- **Standalone mode** — no matching state.json, but the working tree has
+- **Resume mode** — Implement passed the aggregate gate; the topic
+  branch has slice commits ready and a `task.md` with `beadsId`
+  exists in `docs/plans/`. Read the beads ID from there.
+- **Standalone mode** — no matching task.md, but the working tree has
   commits or staged changes ready to ship. Treat the current branch as
   the work source.
 
@@ -21,11 +21,12 @@ even in standalone mode (so `bd close` runs at ship time).
 
 ## Execution
 
-1. Read `~/.team/<topic>/state.json` if a topic can be derived (from the
-   current branch or `$ARGUMENTS`).
-2. **Resume path** — `phase === 'PR'`: proceed with the documented flow
-   below. Read `beadsId` from state.
-3. **Standalone path** — no matching state, or `phase !== 'PR'`:
+1. Derive `topic` (from current branch, `$ARGUMENTS`, or the most recent
+   `docs/plans/<today>-*-task.md`).
+2. **Resume path** — `docs/plans/<today>-<topic>-task.md` exists: read
+   `beadsId` from its frontmatter. Proceed with the documented flow
+   below.
+3. **Standalone path** — no matching task.md:
    - Verify the branch has commits ahead of the default branch, or
      uncommitted changes worth shipping. If neither, report "Nothing to
      ship." and stop.
@@ -48,9 +49,9 @@ even in standalone mode (so `bd close` runs at ship time).
 7. **Close beads issue.** If `beadsId` is non-null and the user chose to
    commit (either option), use `/beads:close <beadsId>` to mark the issue
    as done. Skip if the user chose "keep as-is".
-8. If state.json existed: `writeState(topic, { phase: 'SHIPPED' })` and
-   delete `~/.team/<topic>/`. Otherwise nothing to clean up.
-9. If a worktree was created in WORKTREE phase, clean it up.
+8. If a worktree was created in the Worktree phase, clean it up
+   (cherry-pick or rebase commits onto the target branch, then let
+   Claude Code remove the worktree).
 
 ## Changelog Update
 

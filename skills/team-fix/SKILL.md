@@ -48,28 +48,21 @@ No Question phase. No Research. No Design. No Structure. No Plan. No human gate.
 
 ## Setup
 
-1. Create `~/.team/<topic>/` directory if it does not exist.
-2. Call `initState(topic, beadsId, today)` from `lib/state.mjs` to
-   bootstrap `state.json` (it writes `phase: 'QUESTION'` by default).
-3. Immediately call `writeState(topic, { phase: 'IMPLEMENT' })` to jump
-   the pipeline past QUESTION/RESEARCH/DESIGN/STRUCTURE/PLAN/WORKTREE
-   straight into IMPLEMENT. This ensures `/team-resume` correctly
-   identifies the phase even if the fix is interrupted mid-flow.
+1. Write a minimal `docs/plans/<today>-<topic>-task.md` with the standard
+   task.md frontmatter (`topic`, `date`, `phase: task`, `beadsId`) plus
+   a brief description of the bug. This is the single durable record for
+   the fix and lets `/team-resume` pick it up if interrupted.
+2. **Seed the TodoWrite ledger** with the bug-fix phases:
+   `Reproduce → Red (failing test) → Green (minimal fix) → Verify → Ship`.
+   Mark `Reproduce` as `in_progress`.
 
 ## Execution
 
 Follow the test-driven-bug-fix methodology from
 `skills/test-driven-bug-fix/SKILL.md`. Read that skill before proceeding.
 
-For each phase transition, update `state.json` via `writeState(topic, ...)`:
-
-| Phase     | state.json update                                         |
-|-----------|-----------------------------------------------------------|
-| Reproduce | `writeState(topic, {})` — already IMPLEMENT from Setup    |
-| Red       | `writeState(topic, {})` — refresh lastUpdated             |
-| Green     | `writeState(topic, {})` — still IMPLEMENT, fix in place   |
-| Verify    | `phase: 'PR'` once verification passes                    |
-| Ship      | `phase: 'SHIPPED'` before directory cleanup               |
+Mark each TodoWrite item `in_progress` when you begin and `completed`
+when it finishes.
 
 **Mechanical gate between Red and Green:** the new test must fail with an
 assertion failure, not a crash. Do not proceed to the fix until confirmed.
@@ -80,10 +73,9 @@ assertion failure, not a crash. Do not proceed to the fix until confirmed.
    - `test:` commit with the failing test
    - `fix:` commit with the minimal fix
 2. Create a PR if working on a branch, or commit to the working branch.
-3. If `beadsId` is non-null in `state.json`, use `/beads:close <beadsId>`
-   to mark the issue as done.
-4. `writeState(topic, { phase: 'SHIPPED' })`.
-5. Delete `~/.team/<topic>/` directory.
+3. If `beadsId` is non-null in `task.md`'s frontmatter, use
+   `/beads:close <beadsId>` to mark the issue as done.
+4. Mark all TodoWrite items complete.
 
 ## Aborting
 

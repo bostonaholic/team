@@ -7,13 +7,12 @@ description: Execute the implementation phase. Includes test-first sub-step (wri
 
 Run the IMPLEMENT phase. Works in two modes:
 
-- **Resume mode** — `state.json.phase === 'IMPLEMENT'` (the WORKTREE phase
-  transitioned us there) or `worktreePath` is set on the snapshot. Predecessor
-  artifacts (`plan.md`, `structure.md`) are present. Behave as the full
-  pipeline expects.
+- **Resume mode** — predecessor artifacts (`plan.md`, `structure.md`)
+  are present in `docs/plans/`. Behave as the full pipeline expects.
 - **Standalone mode** — invoked directly with a beads ID or feature
-  description. No upstream QRSPI artifacts required. Bootstrap minimal state
-  and run test-architect → implementer → reviewers from the issue alone.
+  description. No upstream QRSPI artifacts required. Bootstrap a minimal
+  `task.md` and run test-architect → implementer → reviewers from the
+  issue alone.
 
 The Implement phase has three internal sub-steps:
 
@@ -21,18 +20,20 @@ The Implement phase has three internal sub-steps:
 2. **Slice execution** — `implementer` executes vertical slices with per-slice commits
 3. **Adversarial review** — 5 parallel reviewers + aggregate hard-gate retry loop
 
-> Events named below (`tests.written`, `hard-gate.*-failed`, etc.) are
-> internal signals routed via `state.json` counters and in-memory dispatch,
-> not log lines. They remain as descriptive labels for the verifier /
-> reviewer output classes.
+Coordinate progress via TodoWrite. Seed the ledger with: `Test-architect
+→ Mechanical gate → Implementer (per slice) → Review round 1`. Mark
+each item `in_progress` when you dispatch and `completed` when the
+artifact lands. Append `Review round 2` (etc.) on each retry; cap at 5.
 
 ## Input
 
 `$ARGUMENTS` may be:
 
-- Empty — assume resume mode; require `state.json.phase === 'IMPLEMENT'`.
-- A beads issue ID (e.g., `team-89z`) — resolve via `/beads:show <id>` and
-  use the issue title + body as the task description. Set `beadsId`.
+- Empty — assume resume mode; require `plan.md` (or at minimum
+  `structure.md`) on disk for the topic.
+- A beads issue ID (e.g., `team-89z`) — resolve via `/beads:show <id>`
+  and use the issue title + body as the task description. Record the
+  beads ID in `task.md`'s frontmatter.
 - Free-form text — treat as the feature/task description.
 
 ## Worktree Check
@@ -50,25 +51,20 @@ Before any agent dispatch, decide where to work:
      (see `skills/worktree-isolation/SKILL.md`). Tell the user the path
      and ask them to re-run `/team-implement` from that directory, since
      the slash command runs in the current shell context.
-   - If in-place: proceed and record `isolation: "in-place"` in `state.json`.
+   - If in-place: proceed.
 
 ## Execution
 
-1. Read `~/.team/<topic>/state.json` if a topic can be derived (from
-   `$ARGUMENTS`, beads issue, or current branch).
-2. **Resume path.** If `state.json` exists and `phase === 'IMPLEMENT'` (or
-   `worktreePath` is set), proceed using the on-disk plan/structure as the
+1. Derive `topic` (kebab-case from `$ARGUMENTS`, beads issue title, or
+   current branch) and `today` (`YYYY-MM-DD`).
+2. **Resume path.** If `docs/plans/<today>-<topic>-plan.md` (or at
+   minimum `structure.md`) exists, proceed using those artifacts as the
    work source.
-3. **Standalone path.** If no `state.json` matches:
-   - Derive `topic` (kebab-case from `$ARGUMENTS` or issue title) and `today`
-     (`YYYY-MM-DD`).
-   - Bootstrap state: `initState(topic, beadsId, today)` then
-     `writeState(topic, { phase: 'IMPLEMENT', isolation: <mode> })`.
-   - If no `docs/plans/<today>-<topic>-plan.md` exists, write a minimal
-     `docs/plans/<today>-<topic>-task.md` from `$ARGUMENTS` (or the beads
-     issue body) so downstream agents have a single source of intent.
-     `test-architect` and `implementer` consume `task.md` when no plan or
-     structure is present.
+3. **Standalone path.** If no plan/structure on disk:
+   - Write a minimal `docs/plans/<today>-<topic>-task.md` from
+     `$ARGUMENTS` (or the beads issue body) with the standard task.md
+     frontmatter (`topic`, `date`, `phase: task`, `beadsId`). This gives
+     downstream agents a single source of intent.
 4. Follow the phase loop from `/team`:
    a. Dispatch `test-architect` → produces failing tests. In standalone
       mode it derives acceptance criteria from `task.md` (or the beads
@@ -84,14 +80,15 @@ Before any agent dispatch, decide where to work:
 5. If any hard gate fails:
    - Record a typed failure class (security, lint, typecheck, build,
      test, review) for the implementer to address.
-   - Increment `verificationRetryCount` in `state.json` via `writeState`.
-   - If `verificationRetryCount < 5`: dispatch implementer to fix the
-     specific findings, then re-dispatch ALL 5 reviewers for a complete
-     fresh review.
-   - If `verificationRetryCount >= 5`: escalate to the team lead with a
-     full summary of unresolved findings across all rounds, organized
-     by type. Stop and wait for direction.
-6. **Stop once `state.json.phase === 'PR'` or escalation.**
+   - Append a "Review round <n+1>" item to the TodoWrite ledger and mark
+     the previous round complete.
+   - If round count < 5: dispatch implementer to fix the specific
+     findings, then re-dispatch ALL 5 reviewers for a complete fresh
+     review.
+   - If round count >= 5: escalate to the user with a full summary of
+     unresolved findings across all rounds, organized by type. Stop and
+     wait for direction.
+6. **Stop once all hard gates pass — suggest /team-pr to ship.**
 
 ## Quality Loop
 
@@ -102,11 +99,12 @@ test-architect → mechanical gate → implementer → 5 reviewers → aggregate
                                        ↑                            ↓ fail
                                        └────── (specific fix) ──────┘
                                                                     ↓ pass
-                                                              verification.passed
+                                                              verification clean
 ```
 
-Maximum 5 review rounds before escalation. Each round is a complete re-review
-with fresh context — reviewers do not remember previous rounds.
+Maximum 5 review rounds before escalation. Each round is a complete
+re-review with fresh context — reviewers do not remember previous
+rounds. Track the round count in TodoWrite.
 
 ## Standalone Mode Tradeoffs
 

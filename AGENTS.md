@@ -6,7 +6,7 @@
 
 ## What This Is
 
-TEAM (Task Execution Agent Mesh) is a Claude Code plugin that orchestrates specialized agents to implement features end-to-end. The router walks a linear phase table driven by `~/.team/<topic>/state.json` plus artifact files under `docs/plans/`. See [docs/architecture.md](docs/architecture.md) for the full design.
+TEAM (Task Execution Agent Mesh) is a Claude Code plugin that orchestrates specialized agents to implement features end-to-end. The orchestrator (the main Claude Code session) walks a linear phase table, persisting state as artifact files in `docs/plans/` (with YAML frontmatter carrying phase, approval, and revision metadata) and coordinating live progress via TodoWrite. See [docs/architecture.md](docs/architecture.md) for the full design.
 
 ## Runtime vs. Development
 
@@ -28,7 +28,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 
 ## Design Philosophy
 
-Agents are **decoupled microservices**. Each consumes a predecessor artifact on disk, does work, and writes its output artifact to `docs/plans/`. The router walks a linear phase table in `skills/team/SKILL.md`; `skills/team/registry.json` lists the 13 agents as documentation.
+Agents are **decoupled microservices**. Each consumes a predecessor artifact on disk, does work, and writes its output artifact to `docs/plans/` (with YAML frontmatter on every artifact). The orchestrator walks a linear phase table in `skills/team/SKILL.md`; `skills/team/registry.json` lists the 13 agents as a phase-tagged inventory.
 
 ## Pipeline
 
@@ -52,13 +52,13 @@ TEAM runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-
 | `/team-worktree` | Prepare isolated git worktree |
 | `/team-implement` | Test-first + slice execution + 5-reviewer verify |
 | `/team-pr` | Commit + open PR |
-| `/team-resume` | Resume from state.json + docs/plans/ artifacts |
+| `/team-resume` | Rebuild TodoWrite ledger by scanning docs/plans/ artifacts |
 
 ## Agents (13)
 
-See `agents/*.md`. Each has `consumes`/`produces` in frontmatter. Model tiering: haiku (mechanical), sonnet (judgment), opus (planning + implementation).
+See `agents/*.md`. Each has a `phase` field in frontmatter naming the QRSPI phase it serves. Model tiering: haiku (mechanical), sonnet (judgment), opus (planning + implementation).
 
-**Invariant:** Agent frontmatter (`consumes`/`produces`) and `skills/team/registry.json` must always be in sync. When changing one, update the other in the same commit. The dev hook `.claude/hooks/check-registry-sync.mjs` enforces this automatically.
+**Invariant:** Agent frontmatter (`phase`) and `skills/team/registry.json` must always be in sync. When adding or renaming an agent, update both in the same commit. The dev hook `.claude/hooks/check-registry-sync.mjs` enforces this automatically.
 
 ## Skills (24)
 
@@ -71,8 +71,8 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodolog
 | Hook | Event | Purpose |
 |------|-------|---------|
 | `pre-bash-guard.mjs` | PreToolUse(Bash) | Block dangerous commands |
-| `pre-compact-anchor.mjs` | PreCompact | Inject state.json snapshot anchor before compaction |
-| `session-start-recover.mjs` | SessionStart | Recover pipeline from state.json snapshot |
+| `pre-compact-anchor.mjs` | PreCompact | Scan docs/plans/ for active topic, inject phase anchor before compaction |
+| `session-start-recover.mjs` | SessionStart | Scan docs/plans/ for active topic, prompt /team-resume |
 | `post-write-validate.mjs` | PostToolUse(Write\|Edit) | Structural validation of plugin files |
 
 **Development** (in `.claude/hooks/`):
@@ -83,7 +83,7 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodolog
 
 ## State
 
-State is a single `~/.team/<topic>/state.json` snapshot plus `.approved` sidecar markers in `docs/plans/`. The state helper lives at `lib/state.mjs` (pure functions: `readState`, `writeState`, `initState`). The PreCompact hook reads `state.json` directly and injects a 4-line anchor; no event-log replay. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
+State is the set of artifacts in `docs/plans/<today>-<topic>-*.md`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`; gated artifacts also carry `approved`, `approved_at`, `revision`). There is no central state file, no `~/.team/<topic>/` directory, no event log. Live in-session coordination uses TodoWrite (session-scoped); `/team-resume` rebuilds the ledger by scanning artifacts. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
 
 ## Learned Rules
 

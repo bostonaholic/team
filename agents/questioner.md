@@ -4,8 +4,7 @@ description: Use as the first agent of the QRSPI pipeline. Decomposes a user's t
 model: sonnet
 tools: Read, Write, Grep, Glob
 permissionMode: acceptEdits
-consumes: feature.requested
-produces: task.captured
+phase: QUESTION
 ---
 
 # Questioner Agent
@@ -30,9 +29,9 @@ opinionated and biased toward the user's framing. So you write:
 
 ## Inputs
 
-The router dispatches you with the full feature description from
-`feature.requested`. You also have read access to the codebase to ground your
-questions in real file paths and module names.
+The orchestrator dispatches you with the full feature description as
+your input prompt. You also have read access to the codebase to ground
+your questions in real file paths and module names.
 
 ## Outputs
 
@@ -43,7 +42,9 @@ slug:
 - `docs/plans/<today>-<topic>-questions.md`
 - `docs/plans/<today>-<topic>-brief.md`
 
-Then return a structured result to the router:
+Each file MUST open with YAML frontmatter (see per-file format below).
+
+Then return a structured result to the orchestrator:
 
 ```json
 {
@@ -54,12 +55,23 @@ Then return a structured result to the router:
 }
 ```
 
-The router will append `task.captured` with this payload. **No `description`
-field, no `taskMd` field.**
+**No `description` field, no `taskMd` field** — the orchestrator must
+not propagate the user's framing to blind agents.
 
 ## task.md
 
-Capture the user's intent in their own framing. Include:
+Capture the user's intent in their own framing. Required frontmatter:
+
+```yaml
+---
+topic: <kebab-case-topic>
+date: <YYYY-MM-DD>
+phase: task
+beadsId: null               # set if a beads issue is tracking this work
+---
+```
+
+Then the body:
 
 ```markdown
 # Task: <topic>
@@ -90,6 +102,18 @@ not about the **goal**. Bad: "How should we add rate limiting?". Good:
 "Where do incoming HTTP requests enter the application and what middleware
 chain do they pass through?"
 
+Required frontmatter:
+
+```yaml
+---
+topic: <kebab-case-topic>
+date: <YYYY-MM-DD>
+phase: questions
+---
+```
+
+Then the body:
+
 ```markdown
 # Research Questions: <topic>
 
@@ -118,6 +142,18 @@ guessing intent.
 A neutral codebase-context document. Topic name, scope (which area of the
 codebase), and vocabulary. NO statement of what is being built. NO statement
 of why. NO desired outcome.
+
+Required frontmatter:
+
+```yaml
+---
+topic: <kebab-case-topic>
+date: <YYYY-MM-DD>
+phase: brief
+---
+```
+
+Then the body:
 
 ```markdown
 # Brief: <topic>

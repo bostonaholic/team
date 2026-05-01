@@ -1,13 +1,17 @@
 #!/usr/bin/env node
 
 /**
- * Development-time hook — cross-checks agent frontmatter against registry.json.
+ * Development-time hook -- cross-checks agent frontmatter against registry.json.
  *
  * This is a dev concern (validating the plugin is built correctly), not a
  * runtime concern. It lives in .claude/hooks/, not in the distributed plugin.
  *
  * Triggers on PostToolUse for Write|Edit when the edited file is an agent
- * definition or the registry. Reports mismatches as warnings.
+ * definition or the registry. Validates that:
+ *   - every agents/<name>.md has a matching {name, phase} entry in
+ *     registry.json
+ *   - every registry.agents[*].name has a matching agents/<name>.md file
+ *   - the `phase` field in agent frontmatter matches the registry entry
  */
 
 import { readFile, readdir } from "node:fs/promises";
@@ -36,34 +40,17 @@ function parseFrontmatter(content) {
   if (endIdx === -1) return null;
 
   const frontmatter = content.slice(4, endIdx);
-  const result = { name: null, consumes: null, produces: null };
+  const result = { name: null, phase: null };
 
   for (const line of frontmatter.split("\n")) {
     const nameMatch = line.match(/^name:\s*(.+)/);
     if (nameMatch) result.name = nameMatch[1].trim();
 
-    const consumesMatch = line.match(/^consumes:\s*(.+)/);
-    if (consumesMatch) result.consumes = consumesMatch[1].trim();
-
-    const producesMatch = line.match(/^produces:\s*(.+)/);
-    if (producesMatch) result.produces = producesMatch[1].trim();
+    const phaseMatch = line.match(/^phase:\s*(.+)/);
+    if (phaseMatch) result.phase = phaseMatch[1].trim();
   }
 
   return result;
-}
-
-function normalizeConsumes(value) {
-  if (Array.isArray(value)) {
-    return value.slice().sort().join(", ");
-  }
-  if (typeof value === "string") {
-    return value
-      .split(",")
-      .map((s) => s.trim())
-      .sort()
-      .join(", ");
-  }
-  return "";
 }
 
 async function crossCheck(projectRoot, editedPath) {
@@ -74,7 +61,7 @@ async function crossCheck(projectRoot, editedPath) {
   try {
     registry = JSON.parse(await readFile(registryPath, "utf-8"));
   } catch {
-    return; // Registry missing or invalid — nothing to check.
+    return; // Registry missing or invalid -- nothing to check.
   }
 
   if (!Array.isArray(registry.agents)) return;
@@ -83,10 +70,7 @@ async function crossCheck(projectRoot, editedPath) {
   const registryMap = new Map();
 
   for (const entry of registry.agents) {
-    registryMap.set(entry.name, {
-      consumes: normalizeConsumes(entry.consumes),
-      produces: entry.produces || "",
-    });
+    registryMap.set(entry.name, { phase: entry.phase || "" });
   }
 
   let agentFiles;
@@ -112,26 +96,15 @@ async function crossCheck(projectRoot, editedPath) {
     const registryEntry = registryMap.get(fm.name);
 
     if (!registryEntry) {
-      if (fm.consumes || fm.produces) {
-        mismatches.push(
-          `${file}: agent "${fm.name}" has event contract in frontmatter but is missing from registry.json`
-        );
-      }
+      mismatches.push(
+        `${file}: agent "${fm.name}" missing from registry.json`
+      );
       continue;
     }
 
-    if (fm.consumes !== null) {
-      const fmConsumes = normalizeConsumes(fm.consumes);
-      if (fmConsumes !== registryEntry.consumes) {
-        mismatches.push(
-          `${file}: consumes mismatch — frontmatter="${fm.consumes}" vs registry="${registryEntry.consumes}"`
-        );
-      }
-    }
-
-    if (fm.produces !== null && fm.produces !== registryEntry.produces) {
+    if (fm.phase !== null && fm.phase !== registryEntry.phase) {
       mismatches.push(
-        `${file}: produces mismatch — frontmatter="${fm.produces}" vs registry="${registryEntry.produces}"`
+        `${file}: phase mismatch -- frontmatter="${fm.phase}" vs registry="${registryEntry.phase}"`
       );
     }
 
@@ -140,7 +113,7 @@ async function crossCheck(projectRoot, editedPath) {
 
   for (const [name, entry] of registryMap) {
     mismatches.push(
-      `registry.json: agent "${name}" (consumes=${entry.consumes}, produces=${entry.produces}) has no matching agent file`
+      `registry.json: agent "${name}" (phase=${entry.phase}) has no matching agents/${name}.md file`
     );
   }
 

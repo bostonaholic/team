@@ -43,7 +43,9 @@ Run the STRUCTURE phase. Two modes:
 ## On revision
 
 If the user rejects, pass the feedback verbatim to the structure-planner
-on re-dispatch and increment `structureRevisionCount` in `state.json`.
+on re-dispatch. The structure-planner re-drafts and increments
+`revision: <n+1>` in the new draft's frontmatter (cap 5; beyond that,
+escalate to the user).
 
 ## Completion
 

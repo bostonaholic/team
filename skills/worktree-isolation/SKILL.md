@@ -36,11 +36,11 @@ During the router's Setup phase, before any agent is dispatched:
 
 1. Create an isolated worktree for this pipeline run.
 2. All subsequent agent dispatches operate within the worktree.
-3. The state snapshot lives at `~/.team/<topic>/state.json` (per-pipeline,
-   not per-worktree). The durable inter-agent protocol is the artifact
-   files under the worktree's `docs/plans/` directory (design.md,
-   structure.md, with `approved: true` flipped in their frontmatter on
-   human approval, etc.).
+3. There is no per-pipeline state snapshot. The durable inter-agent
+   protocol is the artifact files under the worktree's `docs/plans/`
+   directory (design.md, structure.md, with `approved: true` flipped in
+   their frontmatter on human approval, etc.). The orchestrator's live
+   coordination uses TodoWrite (session-scoped).
 
 ### During the pipeline
 
@@ -76,7 +76,7 @@ If worktree creation fails (shallow clones, certain CI systems):
 
 1. Report the failure: "Worktree creation failed. Falling back to main tree."
 2. Continue the entire pipeline in the main working tree.
-3. The router proceeds with in-place work and updates `state.json` to note that isolation was not used.
+3. The orchestrator proceeds with in-place work — no isolation, but the pipeline still runs.
 
 Never block the pipeline because worktree creation failed — isolation is
 a best-practice enhancement, not a hard requirement.

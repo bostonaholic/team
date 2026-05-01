@@ -42,8 +42,9 @@ Run the DESIGN phase. Two modes:
 ## On revision
 
 If the user rejects, pass the feedback verbatim to the design-author on
-re-dispatch and increment `designRevisionCount` in `state.json`. The
-design-author re-drafts. There is no auto-revision pass — the human is
+re-dispatch. The design-author re-drafts and increments
+`revision: <n+1>` in the new draft's frontmatter (cap 5; beyond that,
+escalate to the user). There is no auto-revision pass — the human is
 the loop.
 
 ## Completion
