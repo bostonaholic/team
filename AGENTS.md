@@ -83,7 +83,7 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodolog
 
 ## State
 
-State is the set of artifacts in `docs/plans/<today>-<topic>-*.md`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`; gated artifacts also carry `approved`, `approved_at`, `revision`). There is no central state file, no `~/.team/<topic>/` directory, no event log. Live in-session coordination uses TodoWrite (session-scoped); `/team-resume` rebuilds the ledger by scanning artifacts. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
+State is the set of artifacts in `docs/plans/<today>-<topic>-*.md`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`; gated artifacts also carry `approved`, `approved_at`, `revision`). Live in-session coordination uses TodoWrite (session-scoped); `/team-resume` rebuilds the ledger by scanning artifacts. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
 
 ## Learned Rules
 

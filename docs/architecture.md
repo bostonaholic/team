@@ -4,8 +4,7 @@
 > the README + `/team` slash command.
 >
 > **Source of truth:** the artifacts in `docs/plans/<today>-<topic>-*.md`
-> and the in-session TodoWrite ledger. There is no `state.json`, no
-> `~/.team/<topic>/` directory, and no event log.
+> and the in-session TodoWrite ledger.
 
 ## 1. Design Philosophy
 
@@ -20,7 +19,7 @@ seeds and updates a TodoWrite ledger, and runs the human gates.
 - **Files on disk are the durable record.** Every artifact under
   `docs/plans/` carries YAML frontmatter that describes its phase and,
   for human-gated phases, the approval state. Phase progression is
-  inferred by scanning artifacts — no central state file.
+  inferred by scanning artifacts.
 - **TodoWrite is the live coordination ledger.** It is session-scoped.
   `/team-resume` rebuilds the ledger by scanning artifacts.
 - **Registry is a phase-tagged inventory.** `skills/team/registry.json`
@@ -340,7 +339,7 @@ when dispatching, and `completed` when the artifact lands. On
 
 **Approval markers:** the gated artifact's own YAML frontmatter
 (`approved: true`, `approved_at: <ISO-8601>`) records human gate passes
-durably. No sidecar files — the artifact is self-describing.
+durably. The artifact is self-describing.
 
 **Compaction defense:** the PreCompact hook scans `docs/plans/` for the
 active topic and injects a 4-line anchor (phase, topic, date, "run

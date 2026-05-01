@@ -170,11 +170,10 @@ Examples: documentation gap analysis, style suggestions.
 
 ## State and Coordination
 
-There is no central state file. Pipeline state is reconstructed by
-scanning artifacts in `docs/plans/<today>-<topic>-*.md` and reading their
-YAML frontmatter. The orchestrator (the main Claude Code session) tracks
-in-flight work via TodoWrite — a session-scoped ledger that mirrors the
-phase table.
+Pipeline state is reconstructed by scanning artifacts in
+`docs/plans/<today>-<topic>-*.md` and reading their YAML frontmatter.
+The orchestrator (the main Claude Code session) tracks in-flight work
+via TodoWrite — a session-scoped ledger that mirrors the phase table.
 
 ### Frontmatter schema (all artifacts)
 

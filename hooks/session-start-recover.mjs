@@ -1,5 +1,5 @@
 /**
- * SessionStart hook -- detects an active TEAM pipeline and prompts recovery.
+ * SessionStart hook — detects an active TEAM pipeline and prompts recovery.
  *
  * Scans docs/plans/<today>-<topic>-*.md for the most recent active topic,
  * infers the current phase from artifact presence + YAML frontmatter,

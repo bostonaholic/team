@@ -63,4 +63,4 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 - **15 entry-point + methodology skills** in `skills/` — slash commands and shared methodologies
 - **4 hooks** in `hooks/` — safety guards and `docs/plans/`-aware compaction resilience
 - **1 registry** at `skills/team/registry.json` — phase-tagged inventory of the 13 agents
-- **State** lives entirely in `docs/plans/<today>-<topic>-*.md` — each artifact carries YAML frontmatter (`topic`, `date`, `phase`; gated artifacts also carry `approved`, `approved_at`, `revision`). No central state file. Live in-session coordination uses TodoWrite.
+- **State** lives in `docs/plans/<today>-<topic>-*.md` — each artifact carries YAML frontmatter (`topic`, `date`, `phase`; gated artifacts also carry `approved`, `approved_at`, `revision`). Live in-session coordination uses TodoWrite.

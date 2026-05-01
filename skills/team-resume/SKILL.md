@@ -6,8 +6,8 @@ description: Resume an interrupted TEAM pipeline by inspecting docs/plans/ artif
 # TEAM Resume — Pipeline Recovery
 
 Resume an interrupted pipeline by scanning artifacts on disk and
-rebuilding the TodoWrite ledger. There is no `state.json` to read; the
-artifacts and their frontmatter are the only durable record.
+rebuilding the TodoWrite ledger. The artifacts and their frontmatter
+are the durable record.
 
 ## Execution
 

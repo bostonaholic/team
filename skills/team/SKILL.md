@@ -13,8 +13,7 @@ agents, and coordinating progress via TodoWrite.
 You hold no special state of your own. The durable record is the set of
 artifacts under `docs/plans/<today>-<topic>-*.md` (each carrying YAML
 frontmatter that describes its phase, approval state, and revision
-count). Live in-session coordination uses TodoWrite. There is no
-`state.json`, no `~/.team/<topic>/` directory, and no event log.
+count). Live in-session coordination uses TodoWrite.
 
 ## Input
 

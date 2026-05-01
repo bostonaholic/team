@@ -36,11 +36,11 @@ During the router's Setup phase, before any agent is dispatched:
 
 1. Create an isolated worktree for this pipeline run.
 2. All subsequent agent dispatches operate within the worktree.
-3. There is no per-pipeline state snapshot. The durable inter-agent
-   protocol is the artifact files under the worktree's `docs/plans/`
-   directory (design.md, structure.md, with `approved: true` flipped in
-   their frontmatter on human approval, etc.). The orchestrator's live
-   coordination uses TodoWrite (session-scoped).
+3. The durable inter-agent protocol is the artifact files under the
+   worktree's `docs/plans/` directory (design.md, structure.md, with
+   `approved: true` flipped in their frontmatter on human approval,
+   etc.). The orchestrator's live coordination uses TodoWrite
+   (session-scoped).
 
 ### During the pipeline
 

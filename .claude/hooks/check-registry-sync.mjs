@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Development-time hook -- cross-checks agent frontmatter against registry.json.
+ * Development-time hook — cross-checks agent frontmatter against registry.json.
  *
  * This is a dev concern (validating the plugin is built correctly), not a
  * runtime concern. It lives in .claude/hooks/, not in the distributed plugin.
@@ -61,7 +61,7 @@ async function crossCheck(projectRoot, editedPath) {
   try {
     registry = JSON.parse(await readFile(registryPath, "utf-8"));
   } catch {
-    return; // Registry missing or invalid -- nothing to check.
+    return; // Registry missing or invalid — nothing to check.
   }
 
   if (!Array.isArray(registry.agents)) return;
@@ -104,7 +104,7 @@ async function crossCheck(projectRoot, editedPath) {
 
     if (fm.phase !== null && fm.phase !== registryEntry.phase) {
       mismatches.push(
-        `${file}: phase mismatch -- frontmatter="${fm.phase}" vs registry="${registryEntry.phase}"`
+        `${file}: phase mismatch — frontmatter="${fm.phase}" vs registry="${registryEntry.phase}"`
       );
     }
 
