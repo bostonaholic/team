@@ -2,6 +2,8 @@
 
 A Claude Code plugin that orchestrates specialized agents to autonomously implement entire features end-to-end, driven by the **QRSPI** workflow. The orchestrator is the main Claude Code session; it persists pipeline state as artifacts in `docs/plans/` and tracks live progress with TodoWrite.
 
+📖 **Documentation:** [team.bostonaholic.dev](https://team.bostonaholic.dev)
+
 ## Design Philosophy
 
 Each agent does work and returns an artifact. The orchestrator dispatches the next agent based on a phase table. Agents remain decoupled — they know nothing about each other.

@@ -28,3 +28,10 @@ commands:
     #   https://github.com/vercel-labs/skills/issues/690
     #   Workaround: reinstall from source until fix is merged.
     run: "npx skills add steveyegge/beads --skill beads --agent claude-code pi -y"
+  docs:
+    desc: "Build and serve the docs site locally at http://localhost:4000"
+    run: "cd docs && bundle config set --local path 'vendor/bundle' && bundle install && bundle exec jekyll serve --livereload"
+
+open:
+  docs: "http://localhost:4000"
+  site: "https://team.bostonaholic.dev"
