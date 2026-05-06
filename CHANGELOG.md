@@ -9,8 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.0] - 2026-05-06
 
-Inaugural tagged release. Captures the work since the project began under a single 0.2.0 marker; the prior `0.1.0` in the manifest was a placeholder and was never tagged.
-
 ### Added
 
 - **QRSPI pipeline.** Eight-phase implementation workflow: Question → Research → Design → Structure → Plan → Worktree → Implement → PR.
