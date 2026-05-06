@@ -23,3 +23,6 @@ docs/.sass-cache/
 docs/.jekyll-metadata
 docs/.bundle/
 docs/vendor/
+
+# Stray Bundler installs at repo root (gems should go in docs/vendor/bundle/)
+/vendor/
