@@ -30,7 +30,7 @@ commands:
     run: "npx skills add steveyegge/beads --skill beads --agent claude-code pi -y"
   docs:
     desc: "Build and serve the docs site locally at http://localhost:4000"
-    run: "cd docs && bundle install && bundle exec jekyll serve --livereload"
+    run: "cd docs && bundle config set --local path 'vendor/bundle' && bundle install && bundle exec jekyll serve --livereload"
 
 open:
   docs: "http://localhost:4000"
