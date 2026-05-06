@@ -1,6 +1,5 @@
 ---
 title: Architecture
-nav_order: 2
 description: "TEAM plugin architecture — agents as microservices, the QRSPI pipeline, artifact frontmatter, and phase-inference rules."
 ---
 

@@ -1,6 +1,5 @@
 ---
 title: Beads Workflow
-nav_order: 3
 description: "How TEAM tracks issues across sessions using bd (beads)."
 ---
 

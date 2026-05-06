@@ -1,20 +1,12 @@
 ---
 title: Overview
-nav_order: 1
 description: "TEAM (Task Execution Agent Mesh) — a Claude Code plugin that orchestrates specialized agents to autonomously implement features end-to-end via the QRSPI pipeline."
 permalink: /
 ---
 
 # TEAM
-{: .fs-9 }
 
 The autonomous engineering mesh for Claude Code.
-{: .fs-6 .fw-300 }
-
-[Get started](#install){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[View on GitHub](https://github.com/bostonaholic/team){: .btn .fs-5 .mb-4 .mb-md-0 }
-
----
 
 ## What is TEAM?
 
@@ -22,18 +14,8 @@ TEAM orchestrates a mesh of **13 specialized agents** — from blind researchers
 
 ## The Pipeline
 
-```mermaid
-flowchart LR
-  Q[Question] --> R[Research]
-  R --> D[Design]
-  D -->|human gate| S[Structure]
-  S -->|human gate| P[Plan]
-  P --> W[Worktree]
-  W --> I[Implement]
-  I --> PR[PR]
-
-  classDef gate fill:#3730a3,stroke:#a5b4fc,color:#fff
-  class D,S gate
+```
+QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → WORKTREE → IMPLEMENT → PR
 ```
 
 | Phase | What happens |
