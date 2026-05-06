@@ -15,3 +15,11 @@
 
 # Playwright
 .playwright-mcp/
+
+# Jekyll site build artifacts
+docs/_site/
+docs/.jekyll-cache/
+docs/.sass-cache/
+docs/.jekyll-metadata
+docs/.bundle/
+docs/vendor/

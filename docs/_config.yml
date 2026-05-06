@@ -1,0 +1,57 @@
+title: TEAM
+description: Task Execution Agent Mesh — autonomous feature delivery for Claude Code
+url: "https://team.bostonaholic.dev"
+baseurl: ""
+
+remote_theme: just-the-docs/just-the-docs
+
+plugins:
+  - jekyll-relative-links
+  - jekyll-optional-front-matter
+  - jekyll-remote-theme
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+relative_links:
+  enabled: true
+  collections: true
+
+# just-the-docs settings
+search_enabled: true
+heading_anchors: true
+color_scheme: dark
+
+# enable Mermaid (just-the-docs built-in)
+mermaid:
+  version: "10.9.0"
+
+# repo metadata
+gh_edit_link: true
+gh_edit_link_text: "Edit this page on GitHub"
+gh_edit_repository: "https://github.com/bostonaholic/team"
+gh_edit_branch: "main"
+gh_edit_source: docs
+gh_edit_view_mode: "tree"
+
+aux_links:
+  "GitHub":
+    - "https://github.com/bostonaholic/team"
+
+footer_content: 'TEAM is open-source under the <a href="https://github.com/bostonaholic/team/blob/main/LICENSE">MIT License</a>.'
+
+# what NOT to publish
+exclude:
+  - plans
+  - Gemfile
+  - Gemfile.lock
+  - vendor
+  - .bundle
+  - .jekyll-cache
+  - .sass-cache
+  - .jekyll-metadata
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default

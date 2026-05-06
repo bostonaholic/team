@@ -1,3 +1,9 @@
+---
+title: Beads Workflow
+nav_order: 3
+description: "How TEAM tracks issues across sessions using bd (beads)."
+---
+
 # Beads Issue Tracker
 
 This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.

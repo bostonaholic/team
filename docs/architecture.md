@@ -1,3 +1,9 @@
+---
+title: Architecture
+nav_order: 2
+description: "TEAM plugin architecture — agents as microservices, the QRSPI pipeline, artifact frontmatter, and phase-inference rules."
+---
+
 # TEAM Plugin — Architecture
 
 > **Audience:** Plugin maintainers and contributors. End users only need
