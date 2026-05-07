@@ -28,12 +28,19 @@ run `/team-design docs/plans/<id>/` first and stop.
 2. Dispatch `structure-planner`, which writes `$ARGUMENTS/structure.md`
    with vertical slices and frontmatter `approved: false`,
    `approved_at: null`, `revision: 0`.
-3. **Human gate.** Present the structure **in full** and ask: "Do you
-   approve this structure?"
-   - On approve → edit `$ARGUMENTS/structure.md` frontmatter to set
+3. **Human gate.** Present the structure **in full**, then use
+   `AskUserQuestion` to capture the verdict. Use a single question with a
+   `Decision` header and these options:
+   - **Approve** — structure is ready; advance to PLAN.
+   - **Request changes** — describe what to revise; re-dispatch
+     `structure-planner` with the user's feedback verbatim.
+   - **Reject** — abandon this structure and revisit DESIGN.
+
+   - On Approve → edit `$ARGUMENTS/structure.md` frontmatter to set
      `approved: true` and `approved_at: <ISO-8601>`.
-   - On reject → re-dispatch `structure-planner` with feedback verbatim.
-     New draft increments `revision: <n+1>`. Cap at `revision: 5`.
+   - On Request changes → re-dispatch `structure-planner` with feedback
+     verbatim. New draft increments `revision: <n+1>`. Cap at
+     `revision: 5`.
 4. **Stop once `$ARGUMENTS/structure.md` carries `approved: true`.**
 
 ## Completion

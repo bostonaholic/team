@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Use Claude Code's `AskUserQuestion` at every multi-choice prompt.** The `design-author` agent now opens the open-questions step with the built-in `AskUserQuestion` tool (multi-choice with labeled trade-offs) instead of printing a markdown numbered list and waiting for free-text. The orchestrator skills (`team`, `team-design`, `team-structure`, `team-implement`, `team-pr`) use `AskUserQuestion` for human-gate verdicts (Approve / Request changes / Reject), the worktree-vs-in-place decision, and shipping options (Open PR / Keep commits locally / Keep as-is). Locked in by `tests/ask-user-question-tool-tests.sh`.
+
 ### Fixed
 
 - **Artifact frontmatter `topic` consistency.** Pipeline agents could write inconsistent `topic` values across artifacts in the same `docs/plans/<id>/` directory (e.g. `task.md` carrying the kebab slug while `questions.md` carried the ticket id and `research.md` carried a mash of both). Every agent now copies `topic` verbatim from its predecessor artifact, and the questioner is the single point where the value is chosen — the kebab portion of `<id>`. The invariant is documented in `qrspi-workflow` and locked in by `tests/topic-consistency-tests.sh`. The `ticketId` scope rule (only on `task.md`) is now documented as well.

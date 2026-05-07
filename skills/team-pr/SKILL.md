@@ -39,9 +39,10 @@ identifier (if any) is read from `$ARGUMENTS/task.md`'s frontmatter.
    - Skip aggregate-gate enforcement. Warn the user once that they are
      taking responsibility for correctness.
 4. **Update CHANGELOG.md** before committing (see Changelog Update below).
-5. Present shipping options:
-   - **Open PR from existing commits** — push the branch and open a PR.
-     Any uncommitted final changes (typically `CHANGELOG.md`) land as a
+5. Present shipping options via `AskUserQuestion`. Use a single question
+   with a `Ship` header and these options:
+   - **Open PR (Recommended)** — push the branch and open a PR. Any
+     uncommitted final changes (typically `CHANGELOG.md`) land as a
      single trailing ship commit.
    - **Keep commits locally** — leave commits on the branch without
      opening a PR.

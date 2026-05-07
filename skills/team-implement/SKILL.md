@@ -40,15 +40,20 @@ Before any agent dispatch, decide where to work:
 1. Run `git rev-parse --absolute-git-dir`. If the path contains
    `/worktrees/`, you are already inside a Claude Code worktree — proceed
    in place.
-2. If you are in the main working tree, ask: "You are not in a worktree.
-   Run this implementation in a new isolated worktree (recommended), or
-   in the current tree?"
-   - **Worktree** — derive `<id>` from `$ARGUMENTS`, create a worktree
+2. If you are in the main working tree, use `AskUserQuestion` to ask
+   where to run the implementation. Use a single question with a
+   `Worktree` header and these options:
+   - **Worktree (Recommended)** — isolate this implementation in a new
+     git worktree.
+   - **In-place** — implement on the current branch in the main working
+     tree.
+
+   - On **Worktree** — derive `<id>` from `$ARGUMENTS`, create a worktree
      via Claude Code's native support (see
      `skills/worktree-isolation/SKILL.md`), tell the user the path, and
      ask them to re-run `/team-implement docs/plans/<id>/` from that
      directory.
-   - **In-place** — proceed.
+   - On **In-place** — proceed.
 
 ## Execution
 

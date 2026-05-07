@@ -129,16 +129,21 @@ When the `design-author` returns a draft:
 1. Confirm `docs/plans/<id>/design.md` exists with frontmatter
    `approved: false` and `approved_at: null`.
 2. Present the design **in full** to the user.
-3. Ask: "Do you approve this design?"
+3. Use `AskUserQuestion` to capture the verdict. Use a single question
+   with a `Decision` header and three options: **Approve**, **Request
+   changes**, **Reject**. Do not ask "Do you approve?" as free text —
+   `AskUserQuestion` is the canonical Claude Code tool for multi-choice
+   user prompts.
 4. If approved → edit the artifact's frontmatter to set `approved: true`
    and `approved_at: <ISO-8601 timestamp>`.
-5. If rejected → re-dispatch `design-author` with the user's feedback.
-   The new draft must increment `revision: <n+1>` in its frontmatter.
-   Cap at `revision: 5`.
+5. If request-changes → re-dispatch `design-author` with the user's
+   feedback. The new draft must increment `revision: <n+1>` in its
+   frontmatter. Cap at `revision: 5`.
 
 ### Human Gate (structure approval)
 
 Same mechanics as design, applied to `docs/plans/<id>/structure.md`.
+Use `AskUserQuestion` for the verdict the same way.
 
 ### Orchestrator-Emit Gate (worktree preparation)
 
@@ -184,7 +189,9 @@ failure classes so it knows exactly what to fix.
 When the aggregate gate passes:
 
 1. Update `CHANGELOG.md` per `skills/changelog/SKILL.md`.
-2. Present shipping options: commit + PR, commit locally, keep as-is.
+2. Present shipping options via `AskUserQuestion` (header `Ship`):
+   **Open PR**, **Keep commits locally**, **Keep as-is**. See
+   `skills/team-pr/SKILL.md` for the canonical option text.
 3. Execute user's choice.
 4. If `task.md` frontmatter has `ticketId` set, surface it so the user
    can close the ticket. The orchestrator does not close tickets.
@@ -201,6 +208,12 @@ When the aggregate gate passes:
 - TodoWrite is the orchestrator's live coordination ledger. It is
   session-scoped and is rebuilt on entry to any `/team-*` command by
   scanning artifacts.
+- `AskUserQuestion` is the canonical Claude Code tool for any
+  multi-choice user prompt — design/structure approval, worktree-vs-
+  in-place, shipping options. Free-text prompts ("Do you approve?") are
+  not the convention. Free-form text input remains appropriate when the
+  question genuinely has no enumerable options (e.g. capturing the
+  user's revision feedback after they pick "Request changes").
 - File artifacts in `docs/plans/<id>/` are the durable communication
   protocol. Always write phase findings to disk before advancing.
 - The two human gates are **design approval** and **structure approval**.
