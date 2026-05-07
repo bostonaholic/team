@@ -25,7 +25,11 @@ fail() {
 
 QUESTIONER="$REPO_ROOT/agents/questioner.md"
 RESEARCHER="$REPO_ROOT/agents/researcher.md"
+DESIGN_AUTHOR="$REPO_ROOT/agents/design-author.md"
+STRUCTURE_PLANNER="$REPO_ROOT/agents/structure-planner.md"
+PLANNER="$REPO_ROOT/agents/planner.md"
 TEAM_RESEARCH="$REPO_ROOT/skills/team-research/SKILL.md"
+TEAM_FIX="$REPO_ROOT/skills/team-fix/SKILL.md"
 QRSPI="$REPO_ROOT/skills/qrspi-workflow/SKILL.md"
 
 # Flatten newlines so multi-line prose can be matched in one regex.
@@ -81,6 +85,46 @@ if flat "$QRSPI" | grep -qiE "ticketId[^.]{0,200}(only|just)[^.]{0,200}task\.md|
   pass "T5: qrspi-workflow documents why ticketId lives only on task.md"
 else
   fail "T5: qrspi-workflow documents why ticketId lives only on task.md"
+fi
+
+# ---------------------------------------------------------------------------
+# T6: design-author.md tells the agent to copy `topic` verbatim from the
+#     predecessor artifact (research.md or task.md) when writing design.md.
+# ---------------------------------------------------------------------------
+if flat "$DESIGN_AUTHOR" | grep -qiE "topic.{0,250}(copy|verbatim|reuse|read|same as|inherit|carry|preserve).{0,100}(research\.md|task\.md|predecessor|upstream|questions\.md)"; then
+  pass "T6: design-author copies topic verbatim from the predecessor artifact"
+else
+  fail "T6: design-author copies topic verbatim from the predecessor artifact"
+fi
+
+# ---------------------------------------------------------------------------
+# T7: structure-planner.md tells the agent to copy `topic` verbatim from
+#     the predecessor artifact (design.md) when writing structure.md.
+# ---------------------------------------------------------------------------
+if flat "$STRUCTURE_PLANNER" | grep -qiE "topic.{0,250}(copy|verbatim|reuse|read|same as|inherit|carry|preserve).{0,100}(design\.md|predecessor|upstream)"; then
+  pass "T7: structure-planner copies topic verbatim from the predecessor artifact"
+else
+  fail "T7: structure-planner copies topic verbatim from the predecessor artifact"
+fi
+
+# ---------------------------------------------------------------------------
+# T8: planner.md tells the agent to copy `topic` verbatim from the
+#     predecessor artifact (structure.md) when writing plan.md.
+# ---------------------------------------------------------------------------
+if flat "$PLANNER" | grep -qiE "topic.{0,250}(copy|verbatim|reuse|read|same as|inherit|carry|preserve).{0,100}(structure\.md|predecessor|upstream)"; then
+  pass "T8: planner copies topic verbatim from the predecessor artifact"
+else
+  fail "T8: planner copies topic verbatim from the predecessor artifact"
+fi
+
+# ---------------------------------------------------------------------------
+# T9: team-fix's directly-written task.md must use the same kebab-portion-
+#     of-<id> rule as the questioner.
+# ---------------------------------------------------------------------------
+if flat "$TEAM_FIX" | grep -qiE "topic.{0,250}(kebab portion of \`?<id>|slug portion of \`?<id>|<id>.{0,40}minus the.{0,40}(ticket|date)|without the (ticket|date) prefix)"; then
+  pass "T9: team-fix specifies topic = kebab portion of <id>"
+else
+  fail "T9: team-fix specifies topic = kebab portion of <id>"
 fi
 
 echo
