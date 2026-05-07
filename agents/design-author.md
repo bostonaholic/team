@@ -50,6 +50,11 @@ Leave `approved: false` on every draft, including revisions. The
 orchestrator flips it to `true` (and stamps `approved_at`) when the user
 approves at the human gate.
 
+The `topic` value MUST be copied verbatim from the predecessor artifact
+(`research.md`, or `task.md` if research is absent). Never re-derive,
+re-word, or combine it with the ticket id. Every artifact in
+`docs/plans/<id>/` carries the same `topic` slug.
+
 Aim for ~200 lines (excluding frontmatter). Less is OK; more means you
 are doing the planner's job.
 

@@ -39,6 +39,11 @@ phase: plan
 ---
 ```
 
+The `topic` value MUST be copied verbatim from the predecessor
+`structure.md`. Never re-derive, re-word, or combine it with the
+ticket id. Every artifact in `docs/plans/<id>/` carries the same
+`topic` slug.
+
 ## Plan structure
 
 ```markdown

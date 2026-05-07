@@ -49,8 +49,11 @@ No Question. No Research. No Design. No Structure. No Plan. No human gate.
    date-prefixed kebab slug). Create `docs/plans/<id>/`.
 2. Write a minimal `docs/plans/<id>/task.md` with the standard frontmatter
    (`topic`, `date`, `phase: task`, `ticketId`) plus a brief description
-   of the bug. This is the single durable record for the fix and lets
-   any `/team-*` command pick it up if interrupted.
+   of the bug. The `topic` value is the kebab portion of `<id>` — i.e.
+   `<id>` minus the `<TICKET>-` or `<YYYY-MM-DD>-` prefix. Never use the
+   ticket id, the date, or a re-worded description as the topic.
+   `ticketId` lives only on `task.md`. This is the single durable record
+   for the fix and lets any `/team-*` command pick it up if interrupted.
 3. **Seed the TodoWrite ledger** with the bug-fix phases:
    `Reproduce → Red (failing test) → Green (minimal fix) → Verify → Ship`.
    Mark `Reproduce` as `in_progress`.
