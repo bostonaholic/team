@@ -1,6 +1,6 @@
 {
   "name": "team",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Task Execution Agent Mesh — orchestrates specialized agents to autonomously implement entire features end-to-end",
   "author": {
     "name": "Matthew Boston",

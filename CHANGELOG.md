@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-05-07
+
 ### Changed
 
 - **Use Claude Code's `AskUserQuestion` at every multi-choice prompt.** The `design-author` agent now opens the open-questions step with the built-in `AskUserQuestion` tool (multi-choice with labeled trade-offs) instead of printing a markdown numbered list and waiting for free-text. The orchestrator skills (`team`, `team-design`, `team-structure`, `team-implement`, `team-pr`) use `AskUserQuestion` for human-gate verdicts (Approve / Request changes / Reject), the worktree-vs-in-place decision, and shipping options (Open PR / Keep commits locally / Keep as-is). Locked in by `tests/ask-user-question-tool-tests.sh`.
@@ -38,5 +40,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/bostonaholic/team/releases/tag/v0.2.1
 [0.2.0]: https://github.com/bostonaholic/team/releases/tag/v0.2.0
