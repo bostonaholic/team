@@ -60,6 +60,22 @@ Then return a structured result to the orchestrator:
 **No `description` field, no `taskMd` field** — the orchestrator must
 not propagate the user's framing to blind agents.
 
+## The `topic` field
+
+`topic` must be **identical across `task.md` and `questions.md`**. It is
+the kebab portion of `<id>` — i.e. `<id>` minus the `<TICKET>-` or
+`<YYYY-MM-DD>-` prefix the orchestrator added. Examples:
+
+| `<id>`                                  | `topic`                       |
+|-----------------------------------------|-------------------------------|
+| `ENG-9876-cache-invalidation`           | `cache-invalidation`          |
+| `2026-05-01-add-rate-limiting`          | `add-rate-limiting`           |
+
+Never use the ticket id, the date, or a re-worded form of the
+description as the topic. Never write a different topic in
+`questions.md` than the one in `task.md`. Downstream phases (research,
+design, structure, plan) inherit the same topic value.
+
 ## task.md
 
 Capture the user's intent in their own framing. Required frontmatter:
@@ -72,6 +88,11 @@ phase: task
 ticketId: null               # set if a tracking ticket is tracking this work
 ---
 ```
+
+`ticketId` lives **only** on `task.md`. The directory name `<id>`
+already encodes the ticket prefix, and `task.md` is the canonical
+intent record — re-encoding `ticketId` on every artifact would be
+duplication. No other artifact carries `ticketId`.
 
 Then the body:
 

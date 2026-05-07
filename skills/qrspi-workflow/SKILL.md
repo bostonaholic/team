@@ -115,6 +115,31 @@ All phase artifacts live under `docs/plans/<id>/`, where `<id>` is one of:
 
 The `<id>` slug should match across every artifact for the same feature.
 
+### Topic consistency invariant
+
+Every artifact's `topic` frontmatter field MUST be identical across all
+artifacts in the same `docs/plans/<id>/` directory. The `topic` value
+is the kebab portion of `<id>` — i.e. `<id>` minus the `<TICKET>-` or
+`<YYYY-MM-DD>-` prefix:
+
+| `<id>`                                  | `topic`                       |
+|-----------------------------------------|-------------------------------|
+| `ENG-9876-cache-invalidation`           | `cache-invalidation`          |
+| `2026-05-01-add-rate-limiting`          | `add-rate-limiting`           |
+
+Never use the ticket id, the date, or a re-worded description as the
+topic. Downstream agents copy the topic verbatim from upstream
+artifacts; the questioner is the one place where it is chosen.
+
+### ticketId scope
+
+`ticketId` lives **only on `task.md`**. It does not appear on
+`questions.md`, `research.md`, `design.md`, `structure.md`, or
+`plan.md`. The rationale: the directory name `<id>` already encodes
+the ticket prefix, and `task.md` is the canonical intent record. Re-
+encoding `ticketId` on every artifact would be duplication that can
+drift out of sync with the directory name.
+
 ## Blind Research
 
 Research is the most-corruptible phase: an LLM that knows what it is being

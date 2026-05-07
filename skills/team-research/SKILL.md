@@ -28,7 +28,9 @@ ask the user to provide an artifact directory (typically the one printed by
    description, `task.md`, or any framing.
 3. Combine their returned content into a single `research.md` written to
    `$ARGUMENTS/research.md` with the required frontmatter (see the
-   researcher agent for the schema).
+   researcher agent for the schema). The `topic` value MUST be read
+   from `$ARGUMENTS/questions.md`'s frontmatter and copied verbatim —
+   never improvised, never combined with the ticket id.
 4. **Stop once `$ARGUMENTS/research.md` exists** — do not continue to
    DESIGN.
 

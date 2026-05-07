@@ -96,4 +96,6 @@ Report your findings in this structure. Keep the entire report under 100 lines.
 - **Report back to the orchestrator.** Your findings will be written to
   `docs/plans/<id>/research.md` by the orchestrator (which also prepends
   the required YAML frontmatter — `topic`, `date`, `phase: research`).
+  The `topic` value MUST be copied verbatim from `questions.md`'s
+  frontmatter — never improvised, never combined with the ticket id.
   Do not attempt to write files yourself.
