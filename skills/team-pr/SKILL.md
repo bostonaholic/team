@@ -24,36 +24,51 @@ identifier (if any) is read from `$ARGUMENTS/task.md`'s frontmatter.
 
 ## Execution
 
-1. **Detect the base branch:**
+1. **Detect mode and inventory worktrees with commits.**
+   - Read `$ARGUMENTS/repos.md` if present. When present, you are in
+     **multi-repo mode** — read the `## Worktrees` section to get each
+     repo's worktree path.
+   - For each involved worktree (single-repo: just the current one;
+     multi-repo: every repo's worktree from `repos.md`), check whether
+     it has commits ahead of its base branch. Skip any with no commits.
+2. **Detect the base branch (per repo):**
    ```
-   git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'
+   git -C <worktree-path> symbolic-ref refs/remotes/origin/HEAD \
+     | sed 's@^refs/remotes/origin/@@'
    ```
-   Falls back to `main`.
-2. **Resume path** — `$ARGUMENTS/task.md` exists: read `ticketId` from
+   Falls back to `main` per repo.
+3. **Resume path** — `$ARGUMENTS/task.md` exists: read `ticketId` from
    its frontmatter. Read `$ARGUMENTS/design.md` for the "why" behind the
    changes.
-3. **Standalone path** — no matching artifact directory:
+4. **Standalone path** — no matching artifact directory:
    - Verify the branch has commits ahead of the base, or uncommitted
      changes worth shipping. If neither, report "Nothing to ship." and
-     stop.
+     stop. (Standalone mode is single-repo only.)
    - Skip aggregate-gate enforcement. Warn the user once that they are
      taking responsibility for correctness.
-4. **Update CHANGELOG.md** before committing (see Changelog Update below).
-5. Present shipping options via `AskUserQuestion`. Use a single question
+5. **Update CHANGELOG.md** before committing (see Changelog Update below).
+   In multi-repo mode, update each repo's `CHANGELOG.md` with the
+   entries belonging to that repo's commits.
+6. Present shipping options via `AskUserQuestion`. Use a single question
    with a `Ship` header and these options:
    - **Open PR (Recommended)** — push the branch and open a PR. Any
      uncommitted final changes (typically `CHANGELOG.md`) land as a
-     single trailing ship commit.
-   - **Keep commits locally** — leave commits on the branch without
-     opening a PR.
+     single trailing ship commit. In multi-repo mode this opens **one
+     PR per repo with commits** and cross-links them.
+   - **Keep commits locally** — leave commits on the branch(es) without
+     opening any PR.
    - **Keep as-is** — leave final changes uncommitted.
-6. Execute the user's choice.
-7. **Tracking ticket.** If `ticketId` is non-null, surface it in the
+7. Execute the user's choice. In multi-repo mode, push each repo's
+   branch independently and open one PR per repo. Cross-link the PRs
+   in their bodies (see PR Body Template below).
+8. **Tracking ticket.** If `ticketId` is non-null, surface it in the
    completion report so the user can close it in their tracking system.
    The orchestrator does not close tickets automatically.
-8. **Worktree cleanup.** If a worktree was created in the Worktree
-   phase, cherry-pick or rebase commits onto the target branch, then
-   let Claude Code remove the worktree.
+9. **Worktree cleanup.** For each worktree that was created in the
+   Worktree phase, cherry-pick or rebase commits onto the target branch
+   in that repo, then let Claude Code (or `git -C <repo-path> worktree
+   remove`) remove the worktree. In multi-repo mode, run cleanup for
+   every involved repo.
 
 ## PR Body Template
 
@@ -75,6 +90,20 @@ identifier (if any) is read from `$ARGUMENTS/task.md`'s frontmatter.
 - Design: $ARGUMENTS/design.md
 - Plan:   $ARGUMENTS/plan.md
 ```
+
+In multi-repo mode, append a `## Companion PRs` section to each PR
+listing the URLs of every other PR opened for the same topic, so a
+reviewer can navigate the full change set:
+
+```
+## Companion PRs
+This change spans multiple repos. The companion PRs are:
+- [<repo-name>] <pr-url>
+- [<repo-name>] <pr-url>
+```
+
+Open the PRs first to obtain URLs, then edit each PR's body to add the
+section once all URLs are known.
 
 ## Changelog Update
 

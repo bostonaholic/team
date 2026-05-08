@@ -25,8 +25,15 @@ The orchestrator dispatches you with the artifact directory
    slice list, file-level steps, and per-slice tests.
 2. **Read the approved structure** at `docs/plans/<id>/structure.md` to
    understand the order and verification checkpoints.
-3. **Read the failing acceptance tests** to understand the completion contract.
-   Run the test suite once to establish the baseline of failing tests.
+3. **Read `docs/plans/<id>/repos.md` if present.** It defines multi-repo
+   mode and lists each repo's slug, absolute path, and worktree path
+   (under `## Worktrees`). When present, every step that carries a
+   `[repo: <slug>]` annotation in the plan is applied inside that
+   repo's worktree — `cd` to the worktree path before running the
+   step's edits, tests, and commits.
+4. **Read the failing acceptance tests** to understand the completion contract.
+   Run the test suite once (in each involved worktree, in multi-repo
+   mode) to establish the baseline of failing tests.
 
 ### Review-fix dispatch (after a hard-gate failure)
 
@@ -87,18 +94,29 @@ Execute the plan one slice at a time, in the order the plan specifies.
 
 For each slice:
 
-1. **Read the slice spec** — the plan lists its acceptance tests and the
-   file-level steps.
+1. **Read the slice spec** — the plan lists its acceptance tests, the
+   file-level steps, and (multi-repo) the slice's `Repos:` field.
 2. **Implement the steps within the slice** in the order given. Steps marked
    `[parallel]` may be done in any order; `[sequential]` steps depend on
-   prior steps in the slice.
+   prior steps in the slice. In multi-repo mode, each step carries
+   `[repo: <slug>]`; cd into that repo's worktree before applying the
+   step. Cross-repo steps within one slice are routine — switch
+   directories as needed.
 3. **Run the slice's acceptance tests.** When they all pass and prior
-   slices' tests still pass, the slice is done.
-4. **Commit atomically.** One commit per slice, using the slice's
-   `Atomic commit message` from the plan as the subject. Include a body that
-   references the design and structure paths.
+   slices' tests still pass, the slice is done. In multi-repo mode, run
+   each test in the worktree where it lives (the test name in the plan
+   carries a `<repo>:` prefix).
+4. **Commit atomically.** Single-repo: one commit per slice using the
+   slice's `Commit:` line as the subject, body referencing the design
+   and structure paths. Multi-repo: when the slice's `Repos:` field
+   names more than one repo, produce **one commit per repo** in their
+   respective worktrees, using each per-repo `Commit:` subject from the
+   plan. Each commit body references the same design/structure paths
+   and notes "part of slice <N>: <name>" so reviewers can correlate.
 5. **Report the slice as complete** — return a brief summary to the
-   orchestrator: `{slice: <name>, testsPassing: [list], commit: <sha>}`.
+   orchestrator: `{slice: <name>, testsPassing: [list], commits: [
+   {repo: <slug>, sha: <sha>}, ... ]}` (`commits` is a single-entry
+   list in single-repo mode).
 6. **Move to the next slice.**
 
 When all slices are done, return a final implementation summary to the

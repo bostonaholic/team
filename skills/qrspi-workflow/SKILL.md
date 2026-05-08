@@ -104,16 +104,70 @@ All phase artifacts live under `docs/plans/<id>/`, where `<id>` is one of:
 - **Date-prefixed**: `<YYYY-MM-DD>-<kebab-topic>` (e.g.,
   `2026-05-01-add-rate-limiting`)
 
-| Artifact  | Path                              | Created By              |
-|-----------|-----------------------------------|-------------------------|
-| Task      | `docs/plans/<id>/task.md`         | questioner agent        |
-| Questions | `docs/plans/<id>/questions.md`    | questioner agent        |
-| Research  | `docs/plans/<id>/research.md`     | researcher agent        |
-| Design    | `docs/plans/<id>/design.md`       | design-author agent     |
-| Structure | `docs/plans/<id>/structure.md`    | structure-planner agent |
-| Plan      | `docs/plans/<id>/plan.md`         | planner agent           |
+| Artifact  | Path                              | Created By              | Required? |
+|-----------|-----------------------------------|-------------------------|-----------|
+| Task      | `docs/plans/<id>/task.md`         | questioner agent        | yes       |
+| Questions | `docs/plans/<id>/questions.md`    | questioner agent        | yes       |
+| Repos     | `docs/plans/<id>/repos.md`        | questioner / design-author | when topic spans repos |
+| Research  | `docs/plans/<id>/research.md`     | researcher agent        | yes       |
+| Design    | `docs/plans/<id>/design.md`       | design-author agent     | yes       |
+| Structure | `docs/plans/<id>/structure.md`    | structure-planner agent | yes       |
+| Plan      | `docs/plans/<id>/plan.md`         | planner agent           | yes       |
 
 The `<id>` slug should match across every artifact for the same feature.
+
+### Repos artifact (`repos.md`)
+
+When a topic touches **more than one repository**, the questioner or
+design-author writes `docs/plans/<id>/repos.md` to enumerate the repos
+involved. The presence of this file switches the WORKTREE phase into
+multi-repo mode (one worktree per listed repo, see
+`skills/worktree-isolation/SKILL.md`). Its absence keeps the pipeline in
+single-repo mode — today's default.
+
+`repos.md` schema:
+
+```yaml
+---
+topic: <kebab-case-topic>
+date: <YYYY-MM-DD>
+phase: repos
+---
+
+# Repos: <topic>
+
+## Home repo
+- **name:** <short-slug>
+- **path:** <absolute-path>
+- **role:** One sentence describing what kind of work happens here.
+
+## Additional repos
+- **name:** <short-slug>
+  **path:** <absolute-path>
+  **role:** One sentence describing what kind of work happens here.
+- **name:** <short-slug>
+  **path:** <absolute-path>
+  **role:** ...
+
+## Worktrees
+<written by the orchestrator after WORKTREE phase succeeds>
+- home: <home-worktree-path>
+- <repo-name>: <repo-path>/.claude/worktrees/<id>
+- ...
+```
+
+Rules:
+
+- **Names are short slugs** (e.g. `frontend`, `api`, `shared-types`) used
+  in slice and plan annotations like `[repo: api]`. Names must be unique
+  across `repos.md`.
+- **Paths are absolute.** Each must be a git working tree.
+- **The home repo is the one the user invoked `/team` from.** Its
+  `docs/plans/<id>/` directory is the canonical artifact location;
+  other repos' worktrees do not carry duplicate artifacts.
+- **The `## Worktrees` section is written by the orchestrator** during
+  the WORKTREE phase, not by the questioner or design-author. Until that
+  phase runs, `repos.md` lists only the repos to be involved.
 
 ### Topic consistency invariant
 
@@ -255,11 +309,14 @@ The orchestrator infers the current phase by scanning what exists in
 | `structure.md` (frontmatter `approved: false`)         | STRUCTURE (gate)    |
 | `structure.md` (frontmatter `approved: true`)          | PLAN (next up)      |
 | `plan.md`                                              | WORKTREE (next up)  |
-| worktree exists for `<id>` branch                      | IMPLEMENT           |
+| worktree exists for `<id>` branch in every involved repo | IMPLEMENT         |
 | topic branch has commits ahead and verifier passed     | PR (next up)        |
-| PR opened or commit shipped                            | SHIPPED             |
+| PR(s) opened or commit(s) shipped                      | SHIPPED             |
 
-Worktree presence: `git worktree list --porcelain | grep -q <id>`.
+Worktree presence (single-repo): `git worktree list --porcelain | grep -q <id>`.
+Worktree presence (multi-repo): for each repo path in
+`docs/plans/<id>/repos.md`, `git -C <repo-path> worktree list --porcelain
+| grep -q <id>`.
 Verifier passed: latest review artifact in `docs/plans/<id>/review-<n>.md`
 shows aggregate gate clean.
 
