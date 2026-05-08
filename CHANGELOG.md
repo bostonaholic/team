@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Multi-repo topics.** A single `/team` pipeline can now span more than one repository. When the questioner detects multiple repos in the description (or the design-author confirms it during open-questions), it writes `docs/plans/<id>/repos.md` listing each involved repo's slug, absolute path, and role. The Worktree phase then creates a worktree per repo (`<repo>/.claude/worktrees/<id>`, all on the same `<id>` branch); the structure annotates each slice with the repos it touches; the planner prefixes each step with `[repo: <slug>]`; the implementer cd's between worktrees per step and produces one commit per repo; the PR phase opens one cross-linked PR per repo. Single-repo topics keep today's behavior — `repos.md` is optional and absent by default.
+
 ## [0.2.1] - 2026-05-07
 
 ### Changed
