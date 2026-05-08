@@ -149,10 +149,18 @@ Use `AskUserQuestion` for the verdict the same way.
 
 When the plan artifact exists:
 
-1. Use Claude Code's native worktree support to create an isolated
-   worktree for `<id>`. See `skills/worktree-isolation/SKILL.md`.
-2. Copy `docs/plans/<id>/` into the new worktree (untracked files do
-   not propagate to worktrees automatically).
+1. **Detect mode.** If `docs/plans/<id>/repos.md` exists, you are in
+   **multi-repo mode** — create one worktree per repo listed in that
+   file, all on the same `<id>` branch. Otherwise you are in
+   **single-repo mode** — create one worktree in the current repo.
+   See `skills/worktree-isolation/SKILL.md` for the topology and
+   `skills/team-worktree/SKILL.md` for the procedure.
+2. Copy `docs/plans/<id>/` into the **home worktree** only (other
+   repos' worktrees do not duplicate the artifacts; agents that need
+   them read from the home worktree path the orchestrator passes in).
+3. In multi-repo mode, append a `## Worktrees` section to `repos.md`
+   recording each repo's worktree path so later `/team-*` invocations
+   can rediscover them.
 
 ### Mechanical Gate (test confirmation)
 
@@ -188,17 +196,21 @@ failure classes so it knows exactly what to fix.
 
 When the aggregate gate passes:
 
-1. Update `CHANGELOG.md` per `skills/changelog/SKILL.md`.
+1. Update `CHANGELOG.md` per `skills/changelog/SKILL.md`. In multi-repo
+   mode, update each repo's `CHANGELOG.md` with the entries belonging
+   to that repo's commits.
 2. Present shipping options via `AskUserQuestion` (header `Ship`):
    **Open PR**, **Keep commits locally**, **Keep as-is**. See
    `skills/team-pr/SKILL.md` for the canonical option text.
-3. Execute user's choice.
+3. Execute user's choice. In multi-repo mode this opens **one PR per
+   repo with commits ahead**, and the PR bodies cross-link to each
+   other so reviewers can see the full change set.
 4. If `task.md` frontmatter has `ticketId` set, surface it so the user
    can close the ticket. The orchestrator does not close tickets.
 5. Mark all TodoWrite items complete.
-6. If a worktree was created, clean it up (cherry-pick or rebase
-   commits onto the target branch, then let Claude Code remove the
-   worktree).
+6. For each worktree that was created, clean it up (cherry-pick or
+   rebase commits onto the target branch in that repo, then let Claude
+   Code or `git worktree remove` remove the worktree).
 
 ## Rules
 
@@ -226,6 +238,19 @@ When the aggregate gate passes:
   the same /team-* command with `docs/plans/<id>/`.
 - To add a new agent to the pipeline, add an entry to the phase table
   above and to the inventory in `skills/team/registry.json`.
+
+### Multi-repo topics
+
+A topic that touches more than one repository is recorded in
+`docs/plans/<id>/repos.md` (schema in `skills/qrspi-workflow/SKILL.md`).
+The questioner creates `repos.md` if the user's description names
+multiple repos; the design-author confirms or amends the list during
+the open-questions step. Once `repos.md` exists, every downstream phase
+respects it: research spans every listed repo, slices and plan steps
+carry `[repo: <name>]` annotations, the WORKTREE phase creates a
+worktree per repo, the implementer changes directory between them per
+step, and PR opens one PR per repo. When `repos.md` is absent, the
+pipeline runs in single-repo mode (today's default).
 
 ### Approval marker convention
 

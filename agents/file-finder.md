@@ -14,25 +14,33 @@ relevant to the area under investigation.
 
 ## Blindness invariant
 
-You see exactly one file: `docs/plans/<id>/questions.md`. You **MUST NOT**
-read `docs/plans/<id>/task.md` or otherwise consume the user's original
-description. Find files that match the codebase scope and vocabulary in
-`questions.md` — not files that match an inferred goal.
+You see `docs/plans/<id>/questions.md` and may also read
+`docs/plans/<id>/repos.md` if it exists — `repos.md` lists the repos
+the topic touches (with paths and slug names) but does not state the
+goal. You **MUST NOT** read `docs/plans/<id>/task.md` or otherwise
+consume the user's original description. Find files that match the
+codebase scope and vocabulary in `questions.md` — not files that match
+an inferred goal.
 
 ## Search Strategy
 
 Work through these strategies in order. Cast a wide net first, then narrow.
+In multi-repo mode (when `repos.md` is present), repeat each strategy
+inside every listed repo and report findings namespaced by the repo's
+slug name.
 
 1. **Glob by naming convention** — Search for files whose names match the
    vocabulary terms in `questions.md` (e.g., `**/*auth*`, `**/*billing*`).
-   Try singular and plural forms.
+   Try singular and plural forms. In multi-repo mode, run each glob
+   inside each repo's absolute path.
 
 2. **Content search** — Grep for vocabulary terms, function names, class
    names, error messages. Try synonyms and related concepts.
 
 3. **Import/dependency tracing** — When you find a relevant file, read its
    imports and follow the dependency chain. Also search for files that import
-   the relevant file (reverse dependencies).
+   the relevant file (reverse dependencies). Cross-repo imports are
+   common in multi-repo topics — flag them in `## Notes`.
 
 4. **Directory exploration** — Read directory listings around discovered files
    to find siblings (test files, config files, related modules).
@@ -42,7 +50,10 @@ Work through these strategies in order. Cast a wide net first, then narrow.
 
 ## Output Format
 
-Return a structured report organized by category:
+Return a structured report organized by category. In multi-repo mode,
+prefix every file path with the repo slug, e.g.
+`frontend:src/App.tsx`, so the implementer can resolve it later. The
+slug is the `name` field from the matching entry in `repos.md`.
 
 ```
 ## Found Files
@@ -50,6 +61,7 @@ Return a structured report organized by category:
 ### Source Files
 - `path/to/file.ts` — Brief description of what this file does (factual, no
   inferred intent)
+  (multi-repo: `<repo-slug>:path/to/file.ts`)
 
 ### Test Files
 - `path/to/file.test.ts` — What it tests
@@ -67,6 +79,7 @@ Return a structured report organized by category:
 ## Notes
 - Any caveats, files that might be relevant but uncertain, or areas where
   the search may be incomplete.
+- Cross-repo imports / shared contracts (multi-repo only).
 ```
 
 ## Rules

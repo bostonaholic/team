@@ -22,6 +22,8 @@ read:
 - `docs/plans/<id>/task.md` — the user's intent
 - `docs/plans/<id>/questions.md` — the questions that drove research
 - `docs/plans/<id>/research.md` — factual codebase findings
+- `docs/plans/<id>/repos.md` — repo scope (only present when the topic
+  spans more than one repository)
 
 For revision dispatch (after a human gate rejection):
 
@@ -57,6 +59,30 @@ re-word, or combine it with the ticket id. Every artifact in
 
 Aim for ~200 lines (excluding frontmatter). Less is OK; more means you
 are doing the planner's job.
+
+## Confirm repo scope (before drafting)
+
+If `docs/plans/<id>/repos.md` is **present**, read it and treat the
+listed repos as the working assumption. The design must respect that
+scope — note in `## Decisions made` which repos each decision touches
+and why.
+
+If `repos.md` is **absent**, scan `research.md` for signals that the
+work plausibly spans more than one repo (cross-service contracts,
+shared schemas, references to "the other repo"). When you see such
+signals, raise the question via `AskUserQuestion` in your interactive
+step (see below) — header `Repos`, options:
+
+- **Single repo (Recommended unless clearly multi-repo)** — keep all
+  work in the current repo.
+- **Multi-repo** — list the additional repos; the user provides paths.
+
+If the user picks **Multi-repo**, write `docs/plans/<id>/repos.md`
+yourself (schema in `skills/qrspi-workflow/SKILL.md`) before continuing
+the design. If they pick **Single repo**, do not write `repos.md`.
+
+Never silently expand scope across repos. The design either ships
+single-repo or it asks first.
 
 ## MANDATORY interactive step
 

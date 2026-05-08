@@ -24,6 +24,8 @@ The orchestrator dispatches you with the artifact directory
 - `docs/plans/<id>/structure.md` — the approved vertical-slice breakdown
 - `docs/plans/<id>/design.md` — context, decisions, patterns
 - `docs/plans/<id>/research.md` — codebase facts
+- `docs/plans/<id>/repos.md` — repo scope (only present when the topic
+  spans more than one repository); use it to map slugs to absolute paths
 - The plan should not need to read `task.md`
 
 ## Output
@@ -52,7 +54,9 @@ ticket id. Every artifact in `docs/plans/<id>/` carries the same
 ## Context
 
 Two to three sentences summarizing the change. Reference the approved
-structure by path.
+structure by path. In multi-repo mode, list the repo slugs and their
+worktree paths (read from repos.md `## Worktrees` once the worktrees
+exist) so the implementer knows where to cd for each step.
 
 ## Slices
 
@@ -60,21 +64,31 @@ For each slice from structure.md, expand it into file-level steps.
 
 ### Slice 1: <name from structure.md>
 
+**Repos:** <multi-repo only — comma-separated repo slugs>
 **Acceptance tests** (from structure.md):
 - `test_name_1` — what it asserts
+  (multi-repo: `<repo>:test_name_1`)
 - `test_name_2` — what it asserts
 
 **Steps:**
 
 1. `path/to/file.ts` — <what to add/modify/remove. Reference patterns to
    follow with file:line. Mark as `[parallel]` or `[sequential]`.>
+   (multi-repo: prefix the file path with the repo slug, e.g.
+   `[repo: api] path/to/file.ts` — the implementer cd's into that repo's
+   worktree before applying the step)
 
 2. `path/to/other.ts` — ...
 
 **Verification:** Run `<command>`. The slice is done when its acceptance
 tests pass and prior slices' tests still pass.
+(multi-repo: list one verification command per repo, scoped to that
+repo's worktree)
 
 **Commit:** `<conventional-commit subject for this slice>`
+(multi-repo: when the slice spans repos, list one **Commit** per repo;
+the implementer creates one commit per repo, all with the same slice
+context referenced in the body)
 
 ### Slice 2: <name>
 ...
@@ -84,6 +98,8 @@ tests pass and prior slices' tests still pass.
 - All acceptance tests for every slice pass
 - No regressions in existing tests
 - Any additional criteria specific to this feature
+- (multi-repo) every involved repo's worktree has only the commits this
+  topic produced — no incidental edits in other repos
 ```
 
 ## Rules

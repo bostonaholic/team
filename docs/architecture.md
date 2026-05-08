@@ -168,13 +168,26 @@ structure.
 ### Phase 6: Worktree
 
 **Action:** orchestrator-emit
-**Predecessor:** `plan.md`
+**Predecessor:** `plan.md` (and optionally `repos.md`)
 
-The orchestrator creates an isolated git worktree using Claude Code's
-native worktree support. The branch name is `<id>`. Worktree path and
-branch are discoverable via `git worktree list --porcelain` — no need to
-persist them. The orchestrator copies `docs/plans/<id>/` into the
-worktree (untracked files don't propagate automatically).
+The orchestrator creates an isolated git worktree per involved repo. The
+branch name is `<id>` in every repo. Worktree paths and branches are
+discoverable via `git -C <repo-path> worktree list --porcelain` per repo
+— for multi-repo topics the orchestrator also writes a `## Worktrees`
+section to `repos.md` so any later `/team-*` invocation can rediscover
+all paths from one file.
+
+**Single-repo (default):** `repos.md` is absent. The orchestrator uses
+Claude Code's native worktree support to create one worktree at
+`<repo>/.claude/worktrees/<id>` and copies `docs/plans/<id>/` into it
+(untracked files don't propagate automatically).
+
+**Multi-repo:** `repos.md` is present. The orchestrator iterates over
+the listed repos, creating one worktree per repo with `git -C
+<repo-path> worktree add .claude/worktrees/<id> -b <id> origin/HEAD`.
+Only the home repo's worktree carries `docs/plans/<id>/`; other repos'
+worktrees do not duplicate the artifacts. See
+`skills/worktree-isolation/SKILL.md` for full topology.
 
 ### Phase 7: Implement
 

@@ -32,6 +32,8 @@ shows `approved: true`):
 - `docs/plans/<id>/design.md` — the approved design
 - `docs/plans/<id>/research.md` — codebase facts
 - `docs/plans/<id>/task.md` — the user's intent
+- `docs/plans/<id>/repos.md` — repo scope (only present when the topic
+  spans more than one repository)
 
 For revision dispatch (after a human gate rejection):
 
@@ -76,11 +78,16 @@ Aim for ~2 pages (≈100–200 lines, excluding frontmatter).
 
 ### Slice 1: <name>
 **Goal:** <one sentence describing the user-visible behavior this slice ships>
+**Repos:** <multi-repo only — comma-separated repo slugs from repos.md
+that this slice touches; e.g. `frontend, api`>
 **Layers touched:** <e.g., migration, repository, service, API handler, client>
-**Tests:** <list of acceptance test names that prove this slice is done>
+**Tests:** <list of acceptance test names that prove this slice is done.
+In multi-repo mode prefix each with `<repo>:` to say where it lives.>
 **Verification checkpoint:** <how the human or CI confirms this slice works in
 isolation, even if later slices are not yet written>
-**Atomic commit message:** <conventional-commit subject for this slice>
+**Atomic commit message:** <conventional-commit subject for this slice.
+In multi-repo mode, if the slice spans repos, use a separate
+**Atomic commit message per repo:** block listing one subject per repo.>
 
 ### Slice 2: <name>
 ...
@@ -88,7 +95,9 @@ isolation, even if later slices are not yet written>
 ## Cross-slice concerns
 <things that span slices — shared types, configuration, feature flags. Each
 should be either pulled into the earliest slice that needs it, or called out
-explicitly.>
+explicitly. In multi-repo mode, contracts between repos (API schemas,
+shared types, protobufs) are common cross-slice concerns — name the
+contract and the slice that defines it.>
 
 ## Out of structure
 <work the design called out as "out of scope" — restated here so the planner
@@ -122,6 +131,14 @@ does not accidentally include it>
   internals are fine, but the user-visible surface must work).
 - **Migrations alone are never a slice.** A migration without a consumer is
   infrastructure scaffolding. Pair it with the read/write that uses it.
+- **Multi-repo: a slice may span repos.** A vertical slice that needs
+  the API and the UI shipped together to demo is one slice that touches
+  two repos, not two slices. Record this in the slice's `**Repos:**`
+  field and produce one atomic commit per repo (each commit is its
+  own atomic unit; the slice as a whole ships when both commits land).
+- **Multi-repo: contract-first when ordering matters.** If repo A's
+  consumer depends on repo B's contract, the slice that defines the
+  contract goes first, and the slice that consumes it cites it.
 
 ## Output to orchestrator
 

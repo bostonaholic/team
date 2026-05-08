@@ -22,6 +22,9 @@ The agents read:
 - `$ARGUMENTS/plan.md` — file-level steps and per-slice tests
 - `$ARGUMENTS/structure.md` — slice ordering and verification checkpoints
 - `$ARGUMENTS/design.md` — context for what each test should assert
+- `$ARGUMENTS/repos.md` — repo scope (only present when the topic spans
+  more than one repository); the implementer cd's between worktrees as
+  the plan steps require
 - `$ARGUMENTS/task.md` — intent (for the implementer when in standalone mode)
 
 If `$ARGUMENTS/plan.md` does not exist:
@@ -37,23 +40,30 @@ gate → Implementer (per slice) → Review round 1`.
 
 Before any agent dispatch, decide where to work:
 
-1. Run `git rev-parse --absolute-git-dir`. If the path contains
-   `/worktrees/`, you are already inside a Claude Code worktree — proceed
-   in place.
-2. If you are in the main working tree, use `AskUserQuestion` to ask
+1. **Read `$ARGUMENTS/repos.md` if present.** When present, you are in
+   multi-repo mode. Confirm a worktree exists in **every** listed repo
+   (read the `## Worktrees` section). If any are missing, tell the
+   user to run `/team-worktree docs/plans/<id>/` and stop.
+2. Run `git rev-parse --absolute-git-dir`. If the path contains
+   `/worktrees/`, you are already inside a Claude Code worktree —
+   proceed in place. In multi-repo mode this should be the home repo's
+   worktree; the implementer cd's into the other repos' worktrees as
+   the plan steps require.
+3. If you are in the main working tree, use `AskUserQuestion` to ask
    where to run the implementation. Use a single question with a
    `Worktree` header and these options:
    - **Worktree (Recommended)** — isolate this implementation in a new
-     git worktree.
+     git worktree (or set of worktrees in multi-repo mode).
    - **In-place** — implement on the current branch in the main working
      tree.
 
-   - On **Worktree** — derive `<id>` from `$ARGUMENTS`, create a worktree
-     via Claude Code's native support (see
-     `skills/worktree-isolation/SKILL.md`), tell the user the path, and
-     ask them to re-run `/team-implement docs/plans/<id>/` from that
-     directory.
-   - On **In-place** — proceed.
+   - On **Worktree** — derive `<id>` from `$ARGUMENTS`, create the
+     worktree(s) via `/team-worktree docs/plans/<id>/`, tell the user
+     the home worktree path, and ask them to re-run
+     `/team-implement docs/plans/<id>/` from that directory.
+   - On **In-place** — proceed. (In-place is single-repo only — refuse
+     in-place if `repos.md` is present and tell the user that
+     multi-repo work requires worktrees.)
 
 ## Execution
 

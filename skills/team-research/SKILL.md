@@ -14,9 +14,10 @@ They read `questions.md` and nothing else.
 
 `$ARGUMENTS` is the artifact directory: `docs/plans/<id>/`.
 
-The dispatched agents receive only `$ARGUMENTS/questions.md`. They do **not**
-read `task.md`. If `$ARGUMENTS` is empty or the directory does not exist,
-ask the user to provide an artifact directory (typically the one printed by
+The dispatched agents receive `$ARGUMENTS/questions.md` and (when it
+exists) `$ARGUMENTS/repos.md`. They do **not** read `task.md`. If
+`$ARGUMENTS` is empty or the directory does not exist, ask the user to
+provide an artifact directory (typically the one printed by
 `/team-question`) and stop.
 
 ## Execution
@@ -24,20 +25,27 @@ ask the user to provide an artifact directory (typically the one printed by
 1. **Verify** `$ARGUMENTS/questions.md` exists. If missing, tell the user
    to run `/team-question <description>` first and stop.
 2. Dispatch `file-finder` and `researcher` in **parallel**, passing each
-   only the path `$ARGUMENTS/questions.md`. Do **not** pass the original
+   the path `$ARGUMENTS/questions.md`. If `$ARGUMENTS/repos.md` exists,
+   include its path too — `repos.md` carries scope (which repos and
+   where) without leaking intent. Do **not** pass the original
    description, `task.md`, or any framing.
 3. Combine their returned content into a single `research.md` written to
    `$ARGUMENTS/research.md` with the required frontmatter (see the
    researcher agent for the schema). The `topic` value MUST be read
    from `$ARGUMENTS/questions.md`'s frontmatter and copied verbatim —
-   never improvised, never combined with the ticket id.
+   never improvised, never combined with the ticket id. In multi-repo
+   mode, preserve the repo-slug prefix on every file reference (e.g.
+   `frontend:src/App.tsx:42`).
 4. **Stop once `$ARGUMENTS/research.md` exists** — do not continue to
    DESIGN.
 
 ## Blindness invariant
 
-- The orchestrator passes only `questions.md` paths to blind agents.
-- Blind agent system prompts forbid reading `task.md`.
+- The orchestrator passes blind agents only `questions.md` (and
+  optionally `repos.md` for scope). Never `task.md`, never the
+  description.
+- Blind agent system prompts forbid reading `task.md`. They are allowed
+  to read `repos.md` because it carries scope, not intent.
 - If the agents need context the questions lack, they must surface it as
   an open question rather than guessing intent.
 

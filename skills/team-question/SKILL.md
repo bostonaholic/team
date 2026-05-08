@@ -7,7 +7,7 @@ argument-hint: "<ticket id, issue URL, or task description>"
 # TEAM Question — Decompose the Task
 
 Run the QUESTION phase only, then stop. The Question phase decomposes the
-user's intent into two artifacts that the rest of the QRSPI pipeline
+user's intent into the artifacts that the rest of the QRSPI pipeline
 consumes:
 
 - `task.md` — the human's full intent. Read by `design-author` and
@@ -15,8 +15,14 @@ consumes:
   `file-finder` (blindness invariant).
 - `questions.md` — neutral research questions phrased without intent. The
   only file `researcher` and `file-finder` ever read.
+- `repos.md` — written **only when the topic spans more than one
+  repository**. Lists each involved repo's slug, absolute path, and
+  role. Its presence switches the rest of the pipeline into multi-repo
+  mode (one worktree per repo, slice/step `[repo: <slug>]` annotations,
+  one PR per repo). See `skills/qrspi-workflow/SKILL.md` for the schema
+  and `agents/questioner.md` for the detection rules.
 
-Both files live in `docs/plans/<id>/` where `<id>` is either a
+These files live in `docs/plans/<id>/` where `<id>` is either a
 ticket-derived slug (`ENG-1234-add-rate-limiting`) or a date-derived slug
 (`2026-05-01-add-rate-limiting`).
 
@@ -55,8 +61,11 @@ If `$ARGUMENTS` is empty, ask the user to describe what they want and stop.
    questioner only writes `questions.md`.
 5. Dispatch the `questioner` agent with the full description and the
    target directory `docs/plans/<id>/`. The agent writes `task.md` and
-   `questions.md` to that directory.
-6. **Stop once both artifacts exist on disk** — do not continue to RESEARCH.
+   `questions.md`, plus `repos.md` when it confirms with the user that
+   the topic spans multiple repos.
+6. **Stop once `task.md` and `questions.md` exist on disk** — do not
+   continue to RESEARCH. (`repos.md` may also exist if multi-repo was
+   confirmed; that does not change the stop condition.)
 
 ## When to use
 
@@ -71,6 +80,8 @@ If `$ARGUMENTS` is empty, ask the user to describe what they want and stop.
 
 Report:
 
-- Path to `task.md` and `questions.md`
+- Path to `task.md` and `questions.md` (and `repos.md` when written)
 - Topic slug and `<id>`
+- Mode: single-repo or multi-repo (with the list of involved repo slugs
+  if multi-repo)
 - Tell the user: **"Next: run `/team-research docs/plans/<id>/`"**
