@@ -1,12 +1,9 @@
 ---
+layout: home
 title: Overview
 description: "Team — a Claude Code plugin that orchestrates specialized agents to autonomously implement features end-to-end via the QRSPI pipeline."
 permalink: /
 ---
-
-# Team
-
-The autonomous engineering mesh for Claude Code.
 
 ## What is Team?
 

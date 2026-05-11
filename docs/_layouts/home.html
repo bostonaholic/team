@@ -1,0 +1,159 @@
+---
+layout: default
+---
+
+<!-- ── Hero ─────────────────────────────────────────────────────────────────── -->
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero__bg" aria-hidden="true"></div>
+  <div class="container">
+    <div class="hero__content">
+      <span class="hero__eyebrow">Claude Code Plugin</span>
+      <h1 class="hero__title" id="hero-title">
+        The autonomous<br>
+        <span class="highlight-word">engineering mesh</span>
+      </h1>
+      <p class="hero__subtitle">
+        13 specialized agents. 8 pipeline phases. One command delivers
+        a verified pull request — with only two human touch points.
+      </p>
+      <div class="hero__cta">
+        <a href="https://github.com/bostonaholic/team" class="btn btn--primary btn--lg" target="_blank" rel="noopener noreferrer">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          View on GitHub
+        </a>
+        <a href="{{ '/architecture' | relative_url }}" class="btn btn--secondary btn--lg">
+          Architecture →
+        </a>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row reveal">
+      <div class="stat">
+        <div class="stat__value">13</div>
+        <div class="stat__label">Specialized agents</div>
+      </div>
+      <div class="stat">
+        <div class="stat__value">8</div>
+        <div class="stat__label">Pipeline phases</div>
+      </div>
+      <div class="stat">
+        <div class="stat__value">2</div>
+        <div class="stat__label">Human touch points</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Pipeline Visualization ────────────────────────────────────────────────── -->
+<section class="pipeline-section" aria-labelledby="pipeline-title">
+  <div class="container">
+    <div class="pipeline-section__header reveal">
+      <span class="pipeline-section__label">QRSPI pipeline</span>
+      <h2 class="pipeline-section__title" id="pipeline-title">From description to PR</h2>
+      <p class="pipeline-section__desc">
+        Phases flow left to right. Amber nodes require your approval before
+        the pipeline continues. Everything else runs autonomously.
+      </p>
+    </div>
+    <div class="reveal reveal--delay-2">
+      {% include pipeline.html %}
+    </div>
+  </div>
+</section>
+
+<!-- ── Original content from index.md ───────────────────────────────────────── -->
+<section class="container" style="padding-top: var(--space-20); padding-bottom: var(--space-12);">
+  <div class="prose reveal">
+    {{ content }}
+  </div>
+</section>
+
+<!-- ── Features Grid ─────────────────────────────────────────────────────────── -->
+<section class="features-section" aria-labelledby="features-title">
+  <div class="container">
+    <div class="features-section__header reveal">
+      <span class="features-section__label">Design principles</span>
+      <h2 class="features-section__title" id="features-title">Built for trust and correctness</h2>
+      <p class="features-section__desc">
+        Every design decision in TEAM exists to prevent a class of failures that
+        affect autonomous AI systems.
+      </p>
+    </div>
+
+    <div class="features-section__grid">
+
+      {% include feature-card.html
+         icon='<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="1" y1="1" x2="23" y2="23"/>'
+         title="Blind Research"
+         desc="The file-finder and researcher never see your original task description. Structural isolation prevents opinion-bias from poisoning the research phase."
+         tag="structural guarantee"
+         tag_type="accent"
+         delay="1" %}
+
+      {% include feature-card.html
+         icon='<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'
+         title="Two Human Gates"
+         desc="You review the Design alignment doc and the vertical-slice Structure. These are the only moments you intervene — everything else is automated."
+         tag="human gate"
+         tag_type="gate"
+         delay="2" %}
+
+      {% include feature-card.html
+         icon='<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'
+         title="5 Parallel Reviewers"
+         desc="After implementation, five agents run concurrently: code-reviewer, security-reviewer, technical-writer, ux-reviewer, and verifier. Hard gates trigger typed retries."
+         tag="parallel"
+         tag_type="accent"
+         delay="3" %}
+
+      {% include feature-card.html
+         icon='<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>'
+         title="Artifact-Driven"
+         desc="Every phase writes a Markdown artifact with YAML frontmatter. Files on disk are the durable record — they survive compaction, context resets, and session boundaries."
+         tag="durable"
+         tag_type="muted"
+         delay="4" %}
+
+      {% include feature-card.html
+         icon='<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'
+         title="Hooks Enforce Discipline"
+         desc="Pre-compact and session-start hooks scan artifacts to re-anchor context automatically. LLMs forget 20% of instructions; hooks are deterministic."
+         tag="deterministic"
+         tag_type="muted"
+         delay="5" %}
+
+      {% include feature-card.html
+         icon='<line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>'
+         title="Isolated Git Worktrees"
+         desc="Each feature runs in its own git worktree — never on your working branch. Multi-repo support included. Worktree cleanup is automatic on PR merge."
+         tag="isolated"
+         tag_type="muted"
+         delay="1" %}
+
+    </div>
+  </div>
+</section>
+
+<!-- ── Install CTA ────────────────────────────────────────────────────────────── -->
+<section class="cta-section" aria-labelledby="cta-title">
+  <div class="container container--narrow">
+    <div class="cta-section__inner reveal">
+      <span class="cta-section__label">Get started</span>
+      <h2 class="cta-section__title" id="cta-title">One command. Full pipeline.</h2>
+      <p class="cta-section__desc">
+        Install TEAM as a Claude Code plugin and run your first autonomous feature delivery in minutes.
+      </p>
+      <div class="cta-section__actions">
+        <a href="https://github.com/bostonaholic/team" class="btn btn--primary btn--lg" target="_blank" rel="noopener noreferrer">
+          Install TEAM
+        </a>
+        <a href="{{ '/architecture' | relative_url }}" class="btn btn--ghost btn--lg">
+          Read the docs
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

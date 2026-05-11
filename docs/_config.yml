@@ -3,7 +3,7 @@ description: Autonomous feature delivery for Claude Code
 url: "https://team.bostonaholic.dev"
 baseurl: ""
 
-theme: minima
+# No theme: key — fully custom theme via _layouts/, _includes/, _sass/, assets/
 
 plugins:
   - jekyll-relative-links
@@ -14,6 +14,19 @@ plugins:
 relative_links:
   enabled: true
   collections: true
+
+markdown: kramdown
+highlighter: rouge
+
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: "highlight"
+    span:
+      line_numbers: false
+    block:
+      line_numbers: false
 
 # what NOT to publish
 exclude:

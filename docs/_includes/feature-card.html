@@ -1,0 +1,26 @@
+{% comment %}
+  Feature card include
+  Parameters:
+    include.icon   — SVG path(s) for the icon (24x24 viewBox assumed)
+    include.title  — Card heading
+    include.desc   — Card description text
+    include.tag    — Optional badge text
+    include.tag_type — Optional: "accent" | "gate" | "muted" (default: "muted")
+    include.delay  — Optional: reveal delay class suffix 1–5
+{% endcomment %}
+<div class="feature-card reveal{% if include.delay %} reveal--delay-{{ include.delay }}{% endif %}">
+  <div class="feature-card__icon">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      {{ include.icon }}
+    </svg>
+  </div>
+  <div>
+    <h3 class="feature-card__title">{{ include.title }}</h3>
+    <p class="feature-card__desc">{{ include.desc }}</p>
+  </div>
+  {% if include.tag %}
+  <div class="feature-card__tag">
+    <span class="badge badge--{{ include.tag_type | default: 'muted' }}">{{ include.tag }}</span>
+  </div>
+  {% endif %}
+</div>

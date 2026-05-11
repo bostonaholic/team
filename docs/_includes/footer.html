@@ -1,0 +1,59 @@
+<footer class="site-footer" role="contentinfo">
+  <div class="container">
+    <div class="site-footer__grid">
+
+      <!-- Brand -->
+      <div class="site-footer__brand">
+        <a href="{{ '/' | relative_url }}" class="site-footer__brand-logo">
+          <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="20" cy="6"  r="3.5" fill="#00D4FF" opacity="0.9"/>
+            <circle cx="34" cy="16" r="3.5" fill="#00D4FF" opacity="0.7"/>
+            <circle cx="34" cy="30" r="3.5" fill="#FFB800" opacity="0.8"/>
+            <circle cx="6"  cy="30" r="3.5" fill="#00D4FF" opacity="0.7"/>
+            <circle cx="6"  cy="16" r="3.5" fill="#FFB800" opacity="0.8"/>
+            <circle cx="20" cy="22" r="4.5" fill="#00D4FF"/>
+          </svg>
+          <span style="font-weight: 700; letter-spacing: 0.08em; font-size: 0.9rem;">TEAM</span>
+        </a>
+        <p class="site-footer__brand-desc">
+          Task Execution Agent Mesh — autonomous feature delivery for Claude Code via the 8-phase QRSPI pipeline.
+        </p>
+        <div class="site-footer__badges">
+          <a href="https://github.com/bostonaholic/team/stargazers" target="_blank" rel="noopener noreferrer">
+            <img src="https://img.shields.io/github/stars/bostonaholic/team?style=flat&logo=github&label=stars&color=00D4FF&labelColor=161A1F" alt="GitHub stars" height="20">
+          </a>
+          <a href="https://github.com/bostonaholic/team/releases" target="_blank" rel="noopener noreferrer">
+            <img src="https://img.shields.io/github/v/release/bostonaholic/team?style=flat&label=release&color=FFB800&labelColor=161A1F" alt="Latest release" height="20">
+          </a>
+        </div>
+      </div>
+
+      <!-- Docs -->
+      <div>
+        <p class="site-footer__col-title">Documentation</p>
+        <ul class="site-footer__links">
+          <li><a href="{{ '/' | relative_url }}">Overview</a></li>
+          <li><a href="{{ '/architecture' | relative_url }}">Architecture</a></li>
+          <li><a href="{{ '/beads-workflow' | relative_url }}">Beads Workflow</a></li>
+        </ul>
+      </div>
+
+      <!-- Project -->
+      <div>
+        <p class="site-footer__col-title">Project</p>
+        <ul class="site-footer__links">
+          <li><a href="https://github.com/bostonaholic/team" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+          <li><a href="https://github.com/bostonaholic/team/releases" target="_blank" rel="noopener noreferrer">Releases</a></li>
+          <li><a href="https://github.com/bostonaholic/team/issues" target="_blank" rel="noopener noreferrer">Issues</a></li>
+          <li><a href="https://github.com/bostonaholic/team/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="site-footer__bottom">
+      <span>© {{ 'now' | date: "%Y" }} bostonaholic. Built with Jekyll.</span>
+      <span>Powered by Claude Code &amp; TEAM</span>
+    </div>
+  </div>
+</footer>

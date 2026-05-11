@@ -1,0 +1,15 @@
+---
+---
+
+// -----------------------------------------------------------------------------
+// TEAM site stylesheet
+// Entry point --- imports all partials in dependency order
+// -----------------------------------------------------------------------------
+
+@import "tokens";
+@import "base";
+@import "layout";
+@import "components";
+@import "prose";
+@import "syntax";
+@import "utilities";

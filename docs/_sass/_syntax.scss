@@ -1,0 +1,95 @@
+// -----------------------------------------------------------------------------
+// Syntax --- Rouge syntax highlighting theme matching the brand
+// Dark: deep bg, cyan accent for keywords, amber for strings
+// -----------------------------------------------------------------------------
+
+.highlight {
+  background: #0F1218;
+  color: #C8D0DB;
+
+  // Comment
+  .c, .c1, .cm, .cs, .cp, .cd { color: #4A5568; font-style: italic; }
+
+  // Error
+  .err { color: #EF4444; background: rgba(239, 68, 68, 0.08); }
+
+  // Keyword
+  .k, .kc, .kd, .kn, .kp, .kr, .kt { color: #00D4FF; font-weight: 500; }
+
+  // Name
+  .n  { color: #C8D0DB; }
+  .na { color: #7DD3FC; } // Name.Attribute
+  .nb { color: #93C5FD; } // Name.Builtin
+  .nc { color: #86EFAC; } // Name.Class
+  .no { color: #FFB800; } // Name.Constant
+  .nd { color: #A78BFA; } // Name.Decorator
+  .ni { color: #C8D0DB; } // Name.Entity
+  .ne { color: #EF4444; } // Name.Exception
+  .nf { color: #7DD3FC; } // Name.Function
+  .nl { color: #C8D0DB; } // Name.Label
+  .nn { color: #86EFAC; } // Name.Namespace
+  .nt { color: #00D4FF; } // Name.Tag (HTML)
+  .nv { color: #C8D0DB; } // Name.Variable
+  .nx { color: #7DD3FC; } // Name.Other
+
+  // Literal
+  .l  { color: #FFB800; }
+  .ld { color: #86EFAC; } // Literal.Date
+  .m, .mf, .mh, .mi, .mo, .mx { color: #FB923C; } // Numbers --- warm orange
+  .s, .sa, .sb, .sc, .sd, .s2, .se, .sh, .si, .sx, .sr, .s1, .ss { color: #86EFAC; } // Strings --- mint
+
+  // Operator
+  .o, .ow { color: #00D4FF; }
+  .p  { color: #8892A0; } // Punctuation
+
+  // Generic
+  .gd { color: #EF4444; background: rgba(239, 68, 68, 0.08); } // Generic.Deleted
+  .gi { color: #22C55E; background: rgba(34, 197, 94, 0.08); } // Generic.Inserted
+  .go { color: #6B7280; } // Generic.Output
+  .gp { color: #00D4FF; font-weight: 600; } // Generic.Prompt
+  .gs { font-weight: 700; } // Generic.Strong
+  .gu { color: #A78BFA; } // Generic.Subheading
+  .gt { color: #EF4444; } // Generic.Traceback
+
+  // Line numbers
+  .gl  { color: #3D4450; }
+  .lineno { color: #3D4450; padding-right: var(--space-5); user-select: none; }
+
+  // Shell
+  .nv.language-bash { color: #00D4FF; }
+
+  // Bash/shell specific
+  &.language-bash,
+  &.language-sh {
+    .nb { color: #00D4FF; }
+    .nv { color: #FFB800; }
+  }
+
+  // YAML specific
+  &.language-yaml,
+  &.language-yml {
+    .na { color: #7DD3FC; }
+    .s, .s2 { color: #86EFAC; }
+    .no { color: #FFB800; }
+    .l { color: #FFB800; }
+  }
+}
+
+// -- Light mode adjustments -------------------------------------------------
+[data-theme="light"] .highlight {
+  background: #F8F9FC;
+  color: #1E2432;
+  border: 1px solid #E2E6EF;
+
+  .c, .c1, .cm, .cs, .cp { color: #9BA3AF; }
+  .k, .kc, .kd, .kn, .kp, .kr, .kt { color: #0077AA; }
+  .nf { color: #0055AA; }
+  .nc { color: #007755; }
+  .no { color: #AA6600; }
+  .s, .sa, .sb, .sc, .sd, .s2, .se, .sh, .si, .sx, .sr, .s1, .ss { color: #006644; }
+  .m, .mf, .mh, .mi, .mo { color: #CC5500; }
+  .o, .ow { color: #0077AA; }
+  .gd { background: rgba(239, 68, 68, 0.05); }
+  .gi { background: rgba(34, 197, 94, 0.05); }
+  .lineno { color: #C0C8D4; }
+}

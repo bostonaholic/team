@@ -1,0 +1,64 @@
+---
+layout: default
+---
+
+<div class="page-header">
+  <div class="container">
+    <span class="page-header__eyebrow">Documentation</span>
+    <h1 class="page-header__title">{{ page.title }}</h1>
+    {% if page.description %}
+    <p class="page-header__desc">{{ page.description }}</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-layout">
+    <!-- Main prose content -->
+    <article class="prose" id="content">
+      {{ content }}
+    </article>
+
+    <!-- Table of contents sidebar -->
+    <aside class="toc" aria-label="Table of contents" id="toc">
+      <span class="toc__title">On this page</span>
+      <ul class="toc__list" id="toc-list">
+        <!-- Populated by JS from h2/h3 headings in #content -->
+      </ul>
+    </aside>
+  </div>
+</div>
+
+<script>
+// Build TOC from headings in the prose block
+(function () {
+  var content = document.getElementById('content');
+  var tocList = document.getElementById('toc-list');
+  if (!content || !tocList) return;
+
+  var headings = content.querySelectorAll('h2, h3');
+  if (!headings.length) return;
+
+  headings.forEach(function (h) {
+    // Ensure heading has an id
+    if (!h.id) {
+      h.id = h.textContent
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim();
+    }
+
+    var li = document.createElement('li');
+    li.className = 'toc__item' + (h.tagName === 'H3' ? ' toc__item--h3' : '');
+
+    var a = document.createElement('a');
+    a.href = '#' + h.id;
+    a.textContent = h.textContent.replace(/#$/, '').trim();
+
+    li.appendChild(a);
+    tocList.appendChild(li);
+  });
+})();
+</script>

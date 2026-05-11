@@ -1,0 +1,360 @@
+<div class="pipeline-viz" role="img" aria-label="QRSPI pipeline: 8 phases from Question to PR, with human gates at Design and Structure">
+  <div class="pipeline-viz__scroll">
+    <svg class="pipeline-svg" viewBox="0 0 920 160" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <!-- Animated flow gradient along the connector path -->
+        <linearGradient id="flow-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"   stop-color="#00D4FF" stop-opacity="0.15"/>
+          <stop offset="50%"  stop-color="#00D4FF" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="#00D4FF" stop-opacity="0.15"/>
+        </linearGradient>
+
+        <!-- Gate glow filter -->
+        <filter id="gate-glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+
+        <!-- Cyan glow filter -->
+        <filter id="cyan-glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+
+        <!-- Arrow marker -->
+        <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#00D4FF" opacity="0.5"/>
+        </marker>
+
+        <!-- Gate arrow -->
+        <marker id="arrow-gate" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#FFB800" opacity="0.6"/>
+        </marker>
+      </defs>
+
+      <!-- ── Phase node positions: x centers at 60,170,280,390,500,610,720,830 ── -->
+
+      <!-- Connector lines (drawn first, behind nodes) -->
+      <!-- Q→R -->
+      <line x1="88" y1="70" x2="142" y2="70" stroke="#00D4FF" stroke-width="1.5" stroke-opacity="0.35" stroke-dasharray="4 3" class="pipe-line" marker-end="url(#arrow)"/>
+      <!-- R→D -->
+      <line x1="198" y1="70" x2="252" y2="70" stroke="#00D4FF" stroke-width="1.5" stroke-opacity="0.35" stroke-dasharray="4 3" class="pipe-line" marker-end="url(#arrow)"/>
+      <!-- D→S (gate) -->
+      <line x1="308" y1="70" x2="362" y2="70" stroke="#FFB800" stroke-width="1.5" stroke-opacity="0.35" stroke-dasharray="4 3" class="pipe-line pipe-line--gate" marker-end="url(#arrow-gate)"/>
+      <!-- S→P (gate) -->
+      <line x1="418" y1="70" x2="472" y2="70" stroke="#FFB800" stroke-width="1.5" stroke-opacity="0.35" stroke-dasharray="4 3" class="pipe-line pipe-line--gate" marker-end="url(#arrow-gate)"/>
+      <!-- P→W -->
+      <line x1="528" y1="70" x2="582" y2="70" stroke="#00D4FF" stroke-width="1.5" stroke-opacity="0.35" stroke-dasharray="4 3" class="pipe-line" marker-end="url(#arrow)"/>
+      <!-- W→I -->
+      <line x1="638" y1="70" x2="692" y2="70" stroke="#00D4FF" stroke-width="1.5" stroke-opacity="0.35" stroke-dasharray="4 3" class="pipe-line" marker-end="url(#arrow)"/>
+      <!-- I→PR -->
+      <line x1="748" y1="70" x2="802" y2="70" stroke="#00D4FF" stroke-width="1.5" stroke-opacity="0.35" stroke-dasharray="4 3" class="pipe-line" marker-end="url(#arrow)"/>
+
+      <!-- ── Animated flow particle overlays ── -->
+      <g class="flow-particles">
+        <circle r="3" fill="#00D4FF" opacity="0.8" class="particle particle-1"><animateMotion dur="2.4s" repeatCount="indefinite" begin="0s"><mpath href="#flow-path-1"/></animateMotion></circle>
+        <circle r="3" fill="#00D4FF" opacity="0.8" class="particle particle-2"><animateMotion dur="2.4s" repeatCount="indefinite" begin="0.3s"><mpath href="#flow-path-2"/></animateMotion></circle>
+        <circle r="2.5" fill="#FFB800" opacity="0.8" class="particle particle-3"><animateMotion dur="2.4s" repeatCount="indefinite" begin="0.6s"><mpath href="#flow-path-3"/></animateMotion></circle>
+        <circle r="2.5" fill="#FFB800" opacity="0.8" class="particle particle-4"><animateMotion dur="2.4s" repeatCount="indefinite" begin="0.9s"><mpath href="#flow-path-4"/></animateMotion></circle>
+        <circle r="3" fill="#00D4FF" opacity="0.8" class="particle particle-5"><animateMotion dur="2.4s" repeatCount="indefinite" begin="1.2s"><mpath href="#flow-path-5"/></animateMotion></circle>
+        <circle r="3" fill="#00D4FF" opacity="0.8" class="particle particle-6"><animateMotion dur="2.4s" repeatCount="indefinite" begin="1.5s"><mpath href="#flow-path-6"/></animateMotion></circle>
+        <circle r="3" fill="#00D4FF" opacity="0.8" class="particle particle-7"><animateMotion dur="2.4s" repeatCount="indefinite" begin="1.8s"><mpath href="#flow-path-7"/></animateMotion></circle>
+      </g>
+
+      <!-- Motion paths (invisible) -->
+      <path id="flow-path-1" d="M88,70 L142,70" fill="none"/>
+      <path id="flow-path-2" d="M198,70 L252,70" fill="none"/>
+      <path id="flow-path-3" d="M308,70 L362,70" fill="none"/>
+      <path id="flow-path-4" d="M418,70 L472,70" fill="none"/>
+      <path id="flow-path-5" d="M528,70 L582,70" fill="none"/>
+      <path id="flow-path-6" d="M638,70 L692,70" fill="none"/>
+      <path id="flow-path-7" d="M748,70 L802,70" fill="none"/>
+
+      <!-- ── Phase 1: QUESTION ── -->
+      <g class="phase-node" data-phase="question">
+        <circle cx="60" cy="70" r="28" fill="#0F1218" stroke="#00D4FF" stroke-width="1.5" stroke-opacity="0.6" class="node-ring"/>
+        <circle cx="60" cy="70" r="18" fill="#00D4FF" fill-opacity="0.1"/>
+        <text x="60" y="65" text-anchor="middle" fill="#00D4FF" font-family="JetBrains Mono, monospace" font-size="9" font-weight="600" letter-spacing="0.5">Q</text>
+        <text x="60" y="75" text-anchor="middle" fill="#9BA3AF" font-family="JetBrains Mono, monospace" font-size="7">01</text>
+      </g>
+      <text x="60" y="112" text-anchor="middle" fill="#E8EAED" font-family="Space Grotesk, sans-serif" font-size="10" font-weight="600">QUESTION</text>
+      <text x="60" y="125" text-anchor="middle" fill="#5C6470" font-family="Space Grotesk, sans-serif" font-size="8.5">questioner</text>
+
+      <!-- ── Phase 2: RESEARCH ── -->
+      <g class="phase-node" data-phase="research">
+        <circle cx="170" cy="70" r="28" fill="#0F1218" stroke="#00D4FF" stroke-width="1.5" stroke-opacity="0.6" class="node-ring"/>
+        <circle cx="170" cy="70" r="18" fill="#00D4FF" fill-opacity="0.1"/>
+        <text x="170" y="65" text-anchor="middle" fill="#00D4FF" font-family="JetBrains Mono, monospace" font-size="9" font-weight="600">R</text>
+        <text x="170" y="75" text-anchor="middle" fill="#9BA3AF" font-family="JetBrains Mono, monospace" font-size="7">02</text>
+        <!-- Blind indicator -->
+        <circle cx="191" cy="50" r="7" fill="#161A1F" stroke="#1E242C" stroke-width="1"/>
+        <text x="191" y="53.5" text-anchor="middle" fill="#5C6470" font-family="JetBrains Mono, monospace" font-size="7">⊘</text>
+      </g>
+      <text x="170" y="112" text-anchor="middle" fill="#E8EAED" font-family="Space Grotesk, sans-serif" font-size="10" font-weight="600">RESEARCH</text>
+      <text x="170" y="125" text-anchor="middle" fill="#5C6470" font-family="Space Grotesk, sans-serif" font-size="8.5">blind · parallel</text>
+
+      <!-- ── Phase 3: DESIGN (human gate) ── -->
+      <g class="phase-node phase-node--gate" data-phase="design" filter="url(#gate-glow)">
+        <circle cx="280" cy="70" r="28" fill="#0F1218" stroke="#FFB800" stroke-width="2" stroke-opacity="0.8" class="node-ring node-ring--gate"/>
+        <circle cx="280" cy="70" r="18" fill="#FFB800" fill-opacity="0.08"/>
+        <text x="280" y="65" text-anchor="middle" fill="#FFB800" font-family="JetBrains Mono, monospace" font-size="9" font-weight="600">D</text>
+        <text x="280" y="75" text-anchor="middle" fill="#9BA3AF" font-family="JetBrains Mono, monospace" font-size="7">03</text>
+        <!-- Human gate indicator -->
+        <circle cx="301" cy="50" r="7" fill="#1A1500" stroke="#FFB800" stroke-width="1" stroke-opacity="0.5"/>
+        <text x="301" y="53.5" text-anchor="middle" fill="#FFB800" font-family="JetBrains Mono, monospace" font-size="7.5">▣</text>
+      </g>
+      <text x="280" y="112" text-anchor="middle" fill="#E8EAED" font-family="Space Grotesk, sans-serif" font-size="10" font-weight="600">DESIGN</text>
+      <text x="280" y="125" text-anchor="middle" fill="#FFB800" font-family="Space Grotesk, sans-serif" font-size="8.5">human gate</text>
+
+      <!-- ── Phase 4: STRUCTURE (human gate) ── -->
+      <g class="phase-node phase-node--gate" data-phase="structure" filter="url(#gate-glow)">
+        <circle cx="390" cy="70" r="28" fill="#0F1218" stroke="#FFB800" stroke-width="2" stroke-opacity="0.8" class="node-ring node-ring--gate"/>
+        <circle cx="390" cy="70" r="18" fill="#FFB800" fill-opacity="0.08"/>
+        <text x="390" y="65" text-anchor="middle" fill="#FFB800" font-family="JetBrains Mono, monospace" font-size="9" font-weight="600">S</text>
+        <text x="390" y="75" text-anchor="middle" fill="#9BA3AF" font-family="JetBrains Mono, monospace" font-size="7">04</text>
+        <circle cx="411" cy="50" r="7" fill="#1A1500" stroke="#FFB800" stroke-width="1" stroke-opacity="0.5"/>
+        <text x="411" y="53.5" text-anchor="middle" fill="#FFB800" font-family="JetBrains Mono, monospace" font-size="7.5">▣</text>
+      </g>
+      <text x="390" y="112" text-anchor="middle" fill="#E8EAED" font-family="Space Grotesk, sans-serif" font-size="10" font-weight="600">STRUCTURE</text>
+      <text x="390" y="125" text-anchor="middle" fill="#FFB800" font-family="Space Grotesk, sans-serif" font-size="8.5">human gate</text>
+
+      <!-- ── Phase 5: PLAN ── -->
+      <g class="phase-node" data-phase="plan">
+        <circle cx="500" cy="70" r="28" fill="#0F1218" stroke="#00D4FF" stroke-width="1.5" stroke-opacity="0.6" class="node-ring"/>
+        <circle cx="500" cy="70" r="18" fill="#00D4FF" fill-opacity="0.1"/>
+        <text x="500" y="65" text-anchor="middle" fill="#00D4FF" font-family="JetBrains Mono, monospace" font-size="9" font-weight="600">P</text>
+        <text x="500" y="75" text-anchor="middle" fill="#9BA3AF" font-family="JetBrains Mono, monospace" font-size="7">05</text>
+      </g>
+      <text x="500" y="112" text-anchor="middle" fill="#E8EAED" font-family="Space Grotesk, sans-serif" font-size="10" font-weight="600">PLAN</text>
+      <text x="500" y="125" text-anchor="middle" fill="#5C6470" font-family="Space Grotesk, sans-serif" font-size="8.5">planner</text>
+
+      <!-- ── Phase 6: WORKTREE ── -->
+      <g class="phase-node" data-phase="worktree">
+        <circle cx="610" cy="70" r="28" fill="#0F1218" stroke="#00D4FF" stroke-width="1.5" stroke-opacity="0.6" class="node-ring"/>
+        <circle cx="610" cy="70" r="18" fill="#00D4FF" fill-opacity="0.1"/>
+        <text x="610" y="65" text-anchor="middle" fill="#00D4FF" font-family="JetBrains Mono, monospace" font-size="9" font-weight="600">W</text>
+        <text x="610" y="75" text-anchor="middle" fill="#9BA3AF" font-family="JetBrains Mono, monospace" font-size="7">06</text>
+      </g>
+      <text x="610" y="112" text-anchor="middle" fill="#E8EAED" font-family="Space Grotesk, sans-serif" font-size="10" font-weight="600">WORKTREE</text>
+      <text x="610" y="125" text-anchor="middle" fill="#5C6470" font-family="Space Grotesk, sans-serif" font-size="8.5">isolated git</text>
+
+      <!-- ── Phase 7: IMPLEMENT ── -->
+      <g class="phase-node" data-phase="implement">
+        <circle cx="720" cy="70" r="28" fill="#0F1218" stroke="#00D4FF" stroke-width="1.5" stroke-opacity="0.6" class="node-ring"/>
+        <circle cx="720" cy="70" r="18" fill="#00D4FF" fill-opacity="0.1"/>
+        <text x="720" y="65" text-anchor="middle" fill="#00D4FF" font-family="JetBrains Mono, monospace" font-size="9" font-weight="600">I</text>
+        <text x="720" y="75" text-anchor="middle" fill="#9BA3AF" font-family="JetBrains Mono, monospace" font-size="7">07</text>
+        <!-- Parallel indicator -->
+        <circle cx="741" cy="50" r="7" fill="#161A1F" stroke="#1E242C" stroke-width="1"/>
+        <text x="741" y="53.5" text-anchor="middle" fill="#5C6470" font-family="JetBrains Mono, monospace" font-size="7">∥</text>
+      </g>
+      <text x="720" y="112" text-anchor="middle" fill="#E8EAED" font-family="Space Grotesk, sans-serif" font-size="10" font-weight="600">IMPLEMENT</text>
+      <text x="720" y="125" text-anchor="middle" fill="#5C6470" font-family="Space Grotesk, sans-serif" font-size="8.5">5 reviewers</text>
+
+      <!-- ── Phase 8: PR ── -->
+      <g class="phase-node phase-node--end" data-phase="pr">
+        <circle cx="830" cy="70" r="28" fill="#00D4FF" fill-opacity="0.12" stroke="#00D4FF" stroke-width="2" class="node-ring node-ring--end" filter="url(#cyan-glow)"/>
+        <circle cx="830" cy="70" r="18" fill="#00D4FF" fill-opacity="0.18"/>
+        <text x="830" y="65" text-anchor="middle" fill="#00D4FF" font-family="JetBrains Mono, monospace" font-size="9" font-weight="600">PR</text>
+        <text x="830" y="75" text-anchor="middle" fill="#9BA3AF" font-family="JetBrains Mono, monospace" font-size="7">08</text>
+      </g>
+      <text x="830" y="112" text-anchor="middle" fill="#E8EAED" font-family="Space Grotesk, sans-serif" font-size="10" font-weight="600">PR</text>
+      <text x="830" y="125" text-anchor="middle" fill="#5C6470" font-family="Space Grotesk, sans-serif" font-size="8.5">shipped</text>
+
+      <!-- ── Legend ── -->
+      <g transform="translate(0, 148)">
+        <circle cx="8" cy="6" r="5" fill="none" stroke="#00D4FF" stroke-width="1.5" opacity="0.7"/>
+        <text x="18" y="10" fill="#5C6470" font-family="Space Grotesk, sans-serif" font-size="8">Automated</text>
+        <circle cx="110" cy="6" r="5" fill="none" stroke="#FFB800" stroke-width="1.5" opacity="0.8"/>
+        <text x="120" y="10" fill="#5C6470" font-family="Space Grotesk, sans-serif" font-size="8">Human gate</text>
+        <circle cx="210" cy="6" r="4" fill="#161A1F" stroke="#1E242C" stroke-width="1"/>
+        <text x="210" y="9.5" text-anchor="middle" fill="#5C6470" font-family="JetBrains Mono, monospace" font-size="6.5">⊘</text>
+        <text x="220" y="10" fill="#5C6470" font-family="Space Grotesk, sans-serif" font-size="8">Blind research</text>
+        <circle cx="320" cy="6" r="4" fill="#161A1F" stroke="#1E242C" stroke-width="1"/>
+        <text x="320" y="9.5" text-anchor="middle" fill="#5C6470" font-family="JetBrains Mono, monospace" font-size="6.5">∥</text>
+        <text x="330" y="10" fill="#5C6470" font-family="Space Grotesk, sans-serif" font-size="8">Parallel</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Mobile: phase list fallback -->
+  <ol class="pipeline-phases" aria-hidden="true">
+    <li class="pipeline-phases__item">
+      <span class="pipeline-phases__num">01</span>
+      <span class="pipeline-phases__name">Question</span>
+    </li>
+    <li class="pipeline-phases__item">
+      <span class="pipeline-phases__num">02</span>
+      <span class="pipeline-phases__name">Research</span>
+      <span class="badge badge--muted" style="font-size:0.6rem;padding:1px 5px;">blind</span>
+    </li>
+    <li class="pipeline-phases__item pipeline-phases__item--gate">
+      <span class="pipeline-phases__num" style="color:var(--gate)">03</span>
+      <span class="pipeline-phases__name">Design</span>
+      <span class="badge badge--gate" style="font-size:0.6rem;padding:1px 5px;">human gate</span>
+    </li>
+    <li class="pipeline-phases__item pipeline-phases__item--gate">
+      <span class="pipeline-phases__num" style="color:var(--gate)">04</span>
+      <span class="pipeline-phases__name">Structure</span>
+      <span class="badge badge--gate" style="font-size:0.6rem;padding:1px 5px;">human gate</span>
+    </li>
+    <li class="pipeline-phases__item">
+      <span class="pipeline-phases__num">05</span>
+      <span class="pipeline-phases__name">Plan</span>
+    </li>
+    <li class="pipeline-phases__item">
+      <span class="pipeline-phases__num">06</span>
+      <span class="pipeline-phases__name">Worktree</span>
+    </li>
+    <li class="pipeline-phases__item">
+      <span class="pipeline-phases__num">07</span>
+      <span class="pipeline-phases__name">Implement</span>
+      <span class="badge badge--muted" style="font-size:0.6rem;padding:1px 5px;">5 reviewers</span>
+    </li>
+    <li class="pipeline-phases__item pipeline-phases__item--end">
+      <span class="pipeline-phases__num" style="color:var(--accent)">08</span>
+      <span class="pipeline-phases__name">PR</span>
+      <span class="badge badge--accent" style="font-size:0.6rem;padding:1px 5px;">shipped</span>
+    </li>
+  </ol>
+</div>
+
+<style>
+.pipeline-viz {
+  width: 100%;
+  margin: var(--space-8) 0;
+}
+
+.pipeline-viz__scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: var(--space-2);
+}
+
+.pipeline-svg {
+  width: 100%;
+  min-width: 680px;
+  height: auto;
+  display: block;
+}
+
+/* Node hover interaction */
+.phase-node {
+  cursor: default;
+}
+
+.phase-node .node-ring {
+  transition: stroke-opacity 0.2s, r 0.2s;
+}
+
+.phase-node:hover .node-ring {
+  stroke-opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.5));
+}
+
+.phase-node--gate:hover .node-ring--gate {
+  filter: drop-shadow(0 0 8px rgba(255, 184, 0, 0.6));
+}
+
+/* Connector line animation */
+.pipe-line {
+  stroke-dashoffset: 0;
+  animation: dash-flow 1.6s linear infinite;
+}
+
+.pipe-line--gate {
+  animation-duration: 1.8s;
+}
+
+@keyframes dash-flow {
+  to { stroke-dashoffset: -28; }
+}
+
+/* Gate node pulse */
+.node-ring--gate {
+  animation: gate-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes gate-pulse {
+  0%, 100% { stroke-opacity: 0.6; }
+  50%       { stroke-opacity: 1.0; }
+}
+
+/* End node glow pulse */
+.node-ring--end {
+  animation: end-pulse 3s ease-in-out infinite;
+}
+
+@keyframes end-pulse {
+  0%, 100% { stroke-opacity: 0.7; }
+  50%       { stroke-opacity: 1.0; }
+}
+
+/* Mobile phase list */
+.pipeline-phases {
+  display: none;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+@media (min-width: 520px) {
+  .pipeline-phases { display: none; }
+  .pipeline-viz__scroll { display: block; }
+}
+
+@media (max-width: 519px) {
+  .pipeline-viz__scroll { display: none; }
+  .pipeline-phases { display: flex; }
+}
+
+.pipeline-phases__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.pipeline-phases__item--gate {
+  border-color: rgba(255, 184, 0, 0.2);
+  background: rgba(255, 184, 0, 0.04);
+}
+
+.pipeline-phases__item--end {
+  border-color: rgba(0, 212, 255, 0.2);
+  background: rgba(0, 212, 255, 0.04);
+}
+
+.pipeline-phases__num {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--accent);
+  min-width: 24px;
+}
+
+.pipeline-phases__name {
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  flex: 1;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .pipe-line,
+  .node-ring--gate,
+  .node-ring--end {
+    animation: none;
+  }
+  .particle {
+    display: none;
+  }
+}
+</style>

@@ -1,6 +1,7 @@
 ---
 title: Beads Workflow
 description: "How Team tracks issues across sessions using bd (beads)."
+layout: page
 ---
 
 # Beads Issue Tracker

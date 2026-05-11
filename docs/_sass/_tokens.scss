@@ -1,0 +1,143 @@
+// -----------------------------------------------------------------------------
+// Design Tokens --- TEAM site
+// -----------------------------------------------------------------------------
+
+:root {
+  // -- Color: Dark mode (default) ----------------------------------------------
+  --bg-0:          #0A0B0D;   // deepest bg
+  --bg-1:          #0F1114;   // surface (cards, panels)
+  --bg-2:          #161A1F;   // raised surface
+  --bg-3:          #1E242C;   // border-level surface
+  --border:        #262D38;   // default border
+  --border-subtle: #1A2030;   // very subtle border
+
+  --text-primary:  #E8EAED;   // headings
+  --text-secondary:#9BA3AF;   // body prose
+  --text-muted:    #5C6470;   // captions, metadata
+  --text-inverse:  #0A0B0D;   // text on accent backgrounds
+
+  // -- Accent: Signal Cyan ------------------------------------------------------
+  --accent:        #00D4FF;   // primary accent
+  --accent-dim:    #0099BB;   // dimmed accent
+  --accent-glow:   rgba(0, 212, 255, 0.15);
+  --accent-glow-sm:rgba(0, 212, 255, 0.08);
+
+  // -- Gate: Amber (human-gate phases) -----------------------------------------
+  --gate:          #FFB800;   // human gate accent
+  --gate-dim:      #CC9200;
+  --gate-glow:     rgba(255, 184, 0, 0.15);
+
+  // -- Semantic -----------------------------------------------------------------
+  --success:       #22C55E;
+  --danger:        #EF4444;
+  --info:          #3B82F6;
+
+  // -- Typography ---------------------------------------------------------------
+  --font-sans:     'Geist', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:     'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  --text-xs:       0.75rem;    // 12px
+  --text-sm:       0.875rem;   // 14px
+  --text-base:     1rem;       // 16px
+  --text-lg:       1.125rem;   // 18px
+  --text-xl:       1.25rem;    // 20px
+  --text-2xl:      1.5rem;     // 24px
+  --text-3xl:      1.875rem;   // 30px
+  --text-4xl:      2.25rem;    // 36px
+  --text-5xl:      3rem;       // 48px
+  --text-6xl:      3.75rem;    // 60px
+  --text-7xl:      4.5rem;     // 72px
+
+  --weight-normal:  400;
+  --weight-medium:  500;
+  --weight-semibold:600;
+  --weight-bold:    700;
+
+  --leading-tight:  1.2;
+  --leading-snug:   1.375;
+  --leading-normal: 1.6;
+  --leading-relaxed:1.75;
+
+  --tracking-tight: -0.03em;
+  --tracking-snug:  -0.02em;
+  --tracking-normal: 0em;
+  --tracking-wide:  0.04em;
+  --tracking-wider: 0.08em;
+  --tracking-widest:0.15em;
+
+  // -- Spacing -------------------------------------------------------------------
+  --space-1:   0.25rem;
+  --space-2:   0.5rem;
+  --space-3:   0.75rem;
+  --space-4:   1rem;
+  --space-5:   1.25rem;
+  --space-6:   1.5rem;
+  --space-8:   2rem;
+  --space-10:  2.5rem;
+  --space-12:  3rem;
+  --space-16:  4rem;
+  --space-20:  5rem;
+  --space-24:  6rem;
+  --space-32:  8rem;
+
+  // -- Radius --------------------------------------------------------------------
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+  --radius-2xl: 24px;
+  --radius-full:9999px;
+
+  // -- Shadows -------------------------------------------------------------------
+  --shadow-sm:  0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.3);
+  --shadow-lg:  0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-glow:0 0 32px var(--accent-glow), 0 0 8px var(--accent-glow);
+
+  // -- Motion --------------------------------------------------------------------
+  --ease-out-expo:  cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-back:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-out:    cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast:  150ms;
+  --duration-base:  250ms;
+  --duration-slow:  400ms;
+  --duration-xslow: 600ms;
+
+  // -- Layout --------------------------------------------------------------------
+  --container-sm:   640px;
+  --container-md:   768px;
+  --container-lg:   1024px;
+  --container-xl:   1280px;
+  --container-2xl:  1440px;
+
+  --header-height:  64px;
+}
+
+// -- Light mode ---------------------------------------------------------------
+[data-theme="light"] {
+  --bg-0:          #F7F8FA;
+  --bg-1:          #FFFFFF;
+  --bg-2:          #F0F2F5;
+  --bg-3:          #E5E8ED;
+  --border:        #D8DCE3;
+  --border-subtle: #EDF0F5;
+
+  --text-primary:  #0A0B0D;
+  --text-secondary:#3D4450;
+  --text-muted:    #8892A0;
+  --text-inverse:  #FFFFFF;
+
+  --accent:        #0099BB;
+  --accent-dim:    #007A99;
+  --accent-glow:   rgba(0, 153, 187, 0.12);
+  --accent-glow-sm:rgba(0, 153, 187, 0.06);
+
+  --gate:          #CC7A00;
+  --gate-dim:      #A86200;
+  --gate-glow:     rgba(204, 122, 0, 0.12);
+
+  --shadow-sm:  0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05);
+  --shadow-lg:  0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-glow:0 0 32px var(--accent-glow), 0 0 8px var(--accent-glow);
+}

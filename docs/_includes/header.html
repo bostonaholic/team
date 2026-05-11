@@ -1,0 +1,93 @@
+<header class="site-header" role="banner">
+  <div class="container">
+    <div class="site-header__inner">
+
+      <!-- Logo -->
+      <a href="{{ '/' | relative_url }}" class="site-header__logo" aria-label="{{ site.title }} home">
+        <svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="20" cy="6"  r="3.5" fill="#00D4FF" opacity="0.9"/>
+          <circle cx="34" cy="16" r="3.5" fill="#00D4FF" opacity="0.7"/>
+          <circle cx="34" cy="30" r="3.5" fill="#FFB800" opacity="0.8"/>
+          <circle cx="6"  cy="30" r="3.5" fill="#00D4FF" opacity="0.7"/>
+          <circle cx="6"  cy="16" r="3.5" fill="#FFB800" opacity="0.8"/>
+          <circle cx="20" cy="22" r="4.5" fill="#00D4FF"/>
+          <line x1="20" y1="9.5"  x2="20" y2="17.5" stroke="#00D4FF" stroke-width="1.2" opacity="0.5"/>
+          <line x1="23.2" y1="20.2" x2="30.8" y2="17" stroke="#00D4FF" stroke-width="1.2" opacity="0.4"/>
+          <line x1="23.2" y1="24.2" x2="30.8" y2="28" stroke="#FFB800" stroke-width="1.2" opacity="0.4"/>
+          <line x1="16.8" y1="24.2" x2="9.2"  y2="28" stroke="#00D4FF" stroke-width="1.2" opacity="0.4"/>
+          <line x1="16.8" y1="20.2" x2="9.2"  y2="17" stroke="#FFB800" stroke-width="1.2" opacity="0.4"/>
+        </svg>
+        <span class="site-header__logo-name">
+          <span class="logo-title">TEAM</span>
+          <span class="logo-sub">Agent Mesh</span>
+        </span>
+      </a>
+
+      <!-- Desktop nav -->
+      <nav class="site-header__nav" aria-label="Main navigation">
+        <a href="{{ '/' | relative_url }}"
+           class="site-header__nav-link{% if page.url == '/' %} active{% endif %}">
+          Overview
+        </a>
+        <a href="{{ '/architecture' | relative_url }}"
+           class="site-header__nav-link{% if page.url contains 'architecture' %} active{% endif %}">
+          Architecture
+        </a>
+        <a href="{{ '/beads-workflow' | relative_url }}"
+           class="site-header__nav-link{% if page.url contains 'beads' %} active{% endif %}">
+          Beads
+        </a>
+      </nav>
+
+      <!-- Actions -->
+      <div class="site-header__actions">
+        <!-- Theme toggle -->
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle color theme" title="Toggle theme">
+          <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        </button>
+
+        <!-- GitHub link -->
+        <a href="https://github.com/bostonaholic/team"
+           class="site-header__github"
+           target="_blank"
+           rel="noopener noreferrer"
+           aria-label="View on GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span class="github-text">GitHub</span>
+        </a>
+
+        <!-- Mobile nav toggle -->
+        <button class="site-header__mobile-toggle" id="mobile-nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="mobile-nav">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Mobile nav -->
+<nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
+  <a href="{{ '/' | relative_url }}">Overview</a>
+  <a href="{{ '/architecture' | relative_url }}">Architecture</a>
+  <a href="{{ '/beads-workflow' | relative_url }}">Beads Workflow</a>
+  <a href="https://github.com/bostonaholic/team" target="_blank" rel="noopener noreferrer">GitHub →</a>
+</nav>
