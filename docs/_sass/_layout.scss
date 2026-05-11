@@ -351,24 +351,6 @@
   }
 }
 
-// -- Progress Bar -------------------------------------------------------------
-#progress-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 9999;
-  height: 2px;
-  width: 0%;
-  background: linear-gradient(90deg, var(--accent), var(--gate));
-  transition: width 0.2s var(--ease-out-expo);
-  pointer-events: none;
-
-  &.done {
-    opacity: 0;
-    transition: width 0.2s var(--ease-out-expo), opacity 0.4s 0.2s;
-  }
-}
-
 // -- Main content wrapper ------------------------------------------------------
 .site-main {
   min-height: calc(100vh - var(--header-height));

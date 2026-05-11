@@ -275,36 +275,6 @@
     headings.forEach(function (h) { tocObs.observe(h.heading); });
   }
 
-  // ── Progress bar (page load indicator) ───────────────────────────────────────
-  function initProgressBar() {
-    var bar = document.getElementById('progress-bar');
-    if (!bar || prefersReduced) return;
-
-    var pct = 0;
-
-    function tick() {
-      if (pct < 88) {
-        pct += Math.random() * 14 + 4;
-        if (pct > 88) pct = 88;
-        bar.style.width = pct + '%';
-        setTimeout(tick, 80 + Math.random() * 60);
-      }
-    }
-
-    tick();
-
-    window.addEventListener('load', function () {
-      bar.style.width = '100%';
-      setTimeout(function () {
-        bar.classList.add('done');
-        setTimeout(function () {
-          bar.style.width = '0%';
-          bar.classList.remove('done');
-        }, 600);
-      }, 200);
-    });
-  }
-
   // ── Heading anchor links ─────────────────────────────────────────────────────
   function addAnchorLinks() {
     var prose = document.querySelector('.prose');
@@ -324,7 +294,6 @@
   function init() {
     wrapCodeBlocks();
     initToc();
-    initProgressBar();
     addAnchorLinks();
   }
 
