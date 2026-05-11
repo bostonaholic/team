@@ -49,5 +49,4 @@ For a focused bug fix that skips the QRSPI ceremony:
 ## Read next
 
 - **[Architecture](architecture.md)** — full design, artifact frontmatter, phase-inference rules.
-- **[Beads Workflow](beads-workflow.md)** — how this project tracks issues across sessions.
 - **[GitHub repository](https://github.com/bostonaholic/team)** — source, agents, skills.
