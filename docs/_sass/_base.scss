@@ -38,8 +38,23 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
+  padding-top: var(--space-4);
   transition: background-color var(--duration-slow) var(--ease-in-out),
               color var(--duration-slow) var(--ease-in-out);
+}
+
+// Opaque lid covering the gap above the floating sticky header, so content
+// scrolling under it doesn't bleed through.
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--space-4);
+  background-color: var(--bg-0);
+  z-index: 99;
+  pointer-events: none;
 }
 
 // -- Selection -----------------------------------------------------------------
