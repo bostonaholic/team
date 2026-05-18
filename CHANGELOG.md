@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Multi-repo topics.** A single `/team` pipeline can now span more than one repository. When the questioner detects multiple repos in the description (or the design-author confirms it during open-questions), it writes `docs/plans/<id>/repos.md` listing each involved repo's slug, absolute path, and role. The Worktree phase then creates a worktree per repo (`<repo>/.claude/worktrees/<id>`, all on the same `<id>` branch); the structure annotates each slice with the repos it touches; the planner prefixes each step with `[repo: <slug>]`; the implementer cd's between worktrees per step and produces one commit per repo; the PR phase opens one cross-linked PR per repo. Single-repo topics keep today's behavior — `repos.md` is optional and absent by default.
 
+### Fixed
+
+- **Worktree-isolation skill documented phase 6 placement.** `skills/worktree-isolation/SKILL.md` previously said worktree creation happens "before any agent is dispatched," which contradicted the phase table at `skills/team/SKILL.md` (WORKTREE is phase 6 of 8, after PLAN and before IMPLEMENT). The Setup section is rewritten to describe phase-6 placement directly, a new "Why late" subsection captures the two load-bearing rationales (human gates land on `main`; branch scope is a Plan output), and `skills/qrspi-workflow/SKILL.md` now cross-links to that rationale from its WORKTREE phase block. **No behavior change** — every phase still runs where it ran before.
+
 ## [0.2.1] - 2026-05-07
 
 ### Changed
