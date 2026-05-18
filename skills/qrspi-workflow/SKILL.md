@@ -68,8 +68,8 @@ approved structure.
 Router prepares an isolated git worktree for implementation work. No agent;
 purely a router responsibility.
 
-*Why phase 6?* See the "Why late" subsection in
-`skills/worktree-isolation/SKILL.md`.
+For the rationale behind the phase-6 placement, see the "Why late"
+subsection in `skills/worktree-isolation/SKILL.md`.
 
 - **Artifact:** git worktree under Claude Code's native worktree directory
 - **Gate:** HARD — worktree must exist before tests are written
