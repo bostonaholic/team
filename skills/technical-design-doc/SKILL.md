@@ -80,6 +80,24 @@ For features with non-obvious control flow, describe the sequence of
 operations from trigger to completion. A numbered list or ASCII sequence
 diagram works well.
 
+#### Edge Cases and Failure Modes
+
+Enumerate the boundary conditions, error paths, and unusual inputs the
+feature must handle. For each, name the scenario and the chosen
+behavior. Walk these categories so none gets skipped:
+
+- **Boundary values:** empty inputs, zero, one, max size, off-by-one.
+- **Invalid inputs:** malformed payloads, wrong types, missing fields.
+- **Failure paths:** downstream errors, timeouts, partial writes,
+  network failures, retries.
+- **Concurrency:** simultaneous requests, idempotency, races.
+- **Authorization:** unauthenticated, unauthorized, expired credentials.
+- **Resource limits:** rate exhaustion, quota, memory pressure.
+
+Edge cases that are intentionally out of scope belong in **Non-Goals**,
+so downstream agents do not silently expand coverage. A TDD with no
+edge-case section is incomplete.
+
 ### Trade-offs Considered
 
 Every design choice implies rejected alternatives. For each major decision:

@@ -79,8 +79,11 @@ Six foundational perspectives guide every design and implementation decision:
 Follow these five steps for every non-trivial implementation:
 
 1. **Understand Requirements**: Before writing code, clarify the exact
-   requirements, edge cases, and constraints. Ask questions if anything is
-   ambiguous.
+   requirements, edge cases, and constraints. Edge case enumeration is
+   mandatory, not aspirational — walk boundary values (empty/zero/max),
+   invalid inputs, failure paths (timeouts, partial writes), concurrency,
+   authorization edges, and resource limits before implementation. Ask
+   questions if anything is ambiguous.
 
 2. **Design First**: Sketch the interfaces, data structures, and module
    boundaries before implementation. Think about how components will

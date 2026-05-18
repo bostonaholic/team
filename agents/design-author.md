@@ -162,6 +162,19 @@ questions phase here.>
 <bulleted list of things this design explicitly does NOT do. Be specific —
 "error handling" is not out of scope, "rate limiting on the public API" is.>
 
+## Edge cases
+<bulleted list of boundary conditions, error paths, and unusual inputs the
+design must handle. Each item names the scenario AND the chosen behavior.
+Walk these categories explicitly so none gets skipped:
+- **Boundary values:** empty, zero, one, max-size, off-by-one.
+- **Invalid inputs:** malformed payloads, wrong types, missing fields.
+- **Failure paths:** downstream errors, timeouts, partial writes, retries.
+- **Concurrency:** simultaneous requests, idempotency, races.
+- **Authorization:** unauthenticated, unauthorized, expired credentials.
+- **Resource limits:** rate exhaustion, quota, memory pressure.
+Edge cases that are intentionally deferred belong in `## Out of scope`,
+not here — so structure and tests do not silently expand into them.>
+
 ## Open questions (deferred)
 <low-priority questions parked for the structure or implement phase>
 
@@ -186,6 +199,12 @@ operational concerns. One bullet each.>
   `lib/foo.ts:30-60`" is better than restating those 30 lines.
 - **Stay under 200 lines.** Compress relentlessly. The reader's attention
   budget is the scarce resource.
+- **Enumerate edge cases before finalizing.** Walk the six categories in
+  `## Edge cases` (boundary, invalid, failure, concurrency, auth,
+  resource limits) explicitly. Each scenario lands in `## Edge cases`
+  with a chosen behavior, or in `## Out of scope` if deliberately
+  deferred. A design with no `## Edge cases` section — or one that only
+  lists the happy path — is incomplete.
 - **Write to the path the orchestrator passes in.** `docs/plans/<id>/design.md`.
 
 ## Output to orchestrator

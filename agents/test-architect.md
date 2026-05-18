@@ -51,9 +51,19 @@ Each test must:
 - Import from the correct module paths (even if the module doesn't exist yet)
 - Use minimal setup — only what is needed to verify the behavior
 - Include a clear arrange/act/assert structure
+- **Cover edge-case scenarios from the structure exactly as listed.**
+  Boundary, invalid-input, failure-path, concurrency, auth, and
+  resource-limit tests are not optional — write them with the same care
+  as happy-path tests, and confirm they fail cleanly like the rest.
 
 Do NOT write tests beyond what the structure specifies. The structure's test
 list is the scope fence.
+
+**Edge-case gaps are structure defects, not test-architect inventions.**
+If the structure's test list for a slice reads as happy-path only and
+the design's `## Edge cases` section names scenarios that are not
+covered, stop and report this to the orchestrator. Fix the gap upstream
+(structure phase) rather than silently inventing tests here.
 
 ### 3. Confirm tests fail correctly
 

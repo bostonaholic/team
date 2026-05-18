@@ -27,6 +27,12 @@ The plan's Tests section enumerates every acceptance test by name and
 description. Write all of them. Use the exact names from the plan. Do not add
 tests. Do not omit tests. Do not rename tests.
 
+**Edge cases are part of the contract.** The test list is expected to
+include boundary values, invalid inputs, failure paths, concurrency,
+auth, and resource-limit scenarios identified during design. If the test
+list reads as happy-path only, that is a plan defect — return to the
+PLAN phase rather than silently filling the gap during implementation.
+
 ### 2. Confirm Tests Fail Correctly
 
 Run the full test suite after writing all acceptance tests. Every new test must:
