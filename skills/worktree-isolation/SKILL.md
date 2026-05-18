@@ -64,16 +64,28 @@ difference downstream.
 
 ### Setup (router responsibility)
 
-During the router's Setup phase, before any agent is dispatched:
+Worktree creation runs at the WORKTREE phase — phase 6 of 8, after
+PLAN and before IMPLEMENT. By that point the approved structure and
+the tactical plan already exist on the home tree, so the branch name
+(`<id>`) and the set of repos to isolate are derivable from
+artifacts rather than guessed. The router's responsibilities at this
+phase are:
 
-1. Create the home repo's worktree. If `repos.md` is present, create a
-   worktree in each additional repo it lists (same `<id>` branch in each).
-2. All subsequent agent dispatches operate within the appropriate
-   worktree (the home worktree by default; per-repo worktrees when a
-   slice or step carries a `[repo: <name>]` annotation).
-3. The durable inter-agent protocol is the artifact files under the
-   home worktree's `docs/plans/<id>/` directory. Live coordination uses
-   TodoWrite (session-scoped).
+1. Create the home repo's worktree. If `repos.md` is present, create
+   a worktree in each additional repo it lists (same `<id>` branch
+   in each).
+2. Carry the artifact directory into the home worktree. Untracked
+   files do not propagate automatically into a fresh worktree, so
+   the orchestrator copies `docs/plans/<id>/` into the home worktree
+   after creation (see `skills/team-worktree/SKILL.md` for the
+   procedure). In multi-repo mode only the home worktree gets the
+   copy.
+3. After this phase, all IMPLEMENT-phase agent dispatches operate
+   within the appropriate worktree (the home worktree by default;
+   per-repo worktrees when a slice or step carries a
+   `[repo: <name>]` annotation). The durable inter-agent protocol is
+   the artifact files under the home worktree's `docs/plans/<id>/`
+   directory; live coordination uses TodoWrite (session-scoped).
 
 ### During the pipeline
 
