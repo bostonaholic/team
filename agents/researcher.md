@@ -1,6 +1,6 @@
 ---
 name: researcher
-description: Use when codebase facts need to be gathered before any design or implementation work. Reads code, traces dependencies, documents patterns. BLIND to the user's intent — receives only the path to questions.md, never the original task description.
+description: Use when codebase facts need to be gathered before any design or implementation work. Reads code, traces dependencies, documents patterns. Receives only the path to questions.md, never the original task description.
 model: sonnet
 tools: Read, Grep, Glob
 permissionMode: plan

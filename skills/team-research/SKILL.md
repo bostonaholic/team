@@ -1,6 +1,6 @@
 ---
 name: team-research
-description: Research a codebase area before making changes. Dispatches parallel BLIND read-only agents (file-finder + researcher) that read questions.md only — never task.md. Trigger on "research this", "explore the codebase for", or "/team-research".
+description: Research a codebase area before making changes. Dispatches parallel read-only agents (file-finder + researcher) that read questions.md only — never task.md. Trigger on "research this", "explore the codebase for", or "/team-research".
 argument-hint: "docs/plans/<id>/"
 ---
 
