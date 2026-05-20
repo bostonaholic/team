@@ -647,3 +647,55 @@ table {
   }
 }
 
+// -- Pipeline Phases (QRSPI ordered list) -------------------------------------
+.pipeline-phases {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+
+    .badge {
+      font-size: 0.6rem;
+      padding: 1px 5px;
+    }
+  }
+
+  &__item--gate {
+    border-color: rgba(255, 184, 0, 0.2);
+    background: rgba(255, 184, 0, 0.04);
+
+    .pipeline-phases__num {
+      color: var(--gate);
+    }
+  }
+
+  &__item--end {
+    border-color: rgba(0, 212, 255, 0.2);
+    background: rgba(0, 212, 255, 0.04);
+  }
+
+  &__num {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--accent);
+    min-width: 24px;
+  }
+
+  &__name {
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+    flex: 1;
+  }
+}

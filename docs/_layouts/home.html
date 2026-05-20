@@ -58,9 +58,45 @@ layout: default
         the pipeline continues. Everything else runs autonomously.
       </p>
     </div>
-    <div>
-      {% include pipeline.html %}
-    </div>
+    <ol class="pipeline-phases" aria-label="QRSPI pipeline phases">
+      <li class="pipeline-phases__item">
+        <span class="pipeline-phases__num">01</span>
+        <span class="pipeline-phases__name">Question</span>
+      </li>
+      <li class="pipeline-phases__item">
+        <span class="pipeline-phases__num">02</span>
+        <span class="pipeline-phases__name">Research</span>
+        <span class="badge badge--muted">blind</span>
+      </li>
+      <li class="pipeline-phases__item pipeline-phases__item--gate">
+        <span class="pipeline-phases__num">03</span>
+        <span class="pipeline-phases__name">Design</span>
+        <span class="badge badge--gate">human gate</span>
+      </li>
+      <li class="pipeline-phases__item pipeline-phases__item--gate">
+        <span class="pipeline-phases__num">04</span>
+        <span class="pipeline-phases__name">Structure</span>
+        <span class="badge badge--gate">human gate</span>
+      </li>
+      <li class="pipeline-phases__item">
+        <span class="pipeline-phases__num">05</span>
+        <span class="pipeline-phases__name">Plan</span>
+      </li>
+      <li class="pipeline-phases__item">
+        <span class="pipeline-phases__num">06</span>
+        <span class="pipeline-phases__name">Worktree</span>
+      </li>
+      <li class="pipeline-phases__item">
+        <span class="pipeline-phases__num">07</span>
+        <span class="pipeline-phases__name">Implement</span>
+        <span class="badge badge--muted">5 reviewers</span>
+      </li>
+      <li class="pipeline-phases__item pipeline-phases__item--end">
+        <span class="pipeline-phases__num">08</span>
+        <span class="pipeline-phases__name">PR</span>
+        <span class="badge badge--accent">shipped</span>
+      </li>
+    </ol>
   </div>
 </section>
 
