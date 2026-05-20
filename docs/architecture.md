@@ -4,12 +4,19 @@ description: "Team plugin architecture — agents as microservices, the QRSPI pi
 ---
 
 # Team Plugin — Architecture
+{:.no_toc}
 
 > **Audience:** Plugin maintainers and contributors. End users only need
 > the README + `/team` slash command.
 >
 > **Source of truth:** the artifacts in `docs/plans/<id>/*.md` and the
 > in-session TodoWrite ledger.
+
+## Contents
+{:.no_toc}
+
+* TOC
+{:toc}
 
 ## 1. Design Philosophy
 
