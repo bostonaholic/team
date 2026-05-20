@@ -33,8 +33,8 @@
   --info:          #3B82F6;
 
   // -- Typography ---------------------------------------------------------------
-  --font-sans:     'Geist', 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono:     'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --font-sans:     system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono:     ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --text-xs:       0.75rem;    // 12px
   --text-sm:       0.875rem;   // 14px
