@@ -34,10 +34,6 @@
   transition: background var(--duration-slow) var(--ease-in-out),
               border-color var(--duration-slow) var(--ease-in-out);
 
-  [data-theme="light"] & {
-    background: rgba(247, 248, 250, 0.85);
-  }
-
   &__inner {
     display: flex;
     align-items: center;
@@ -209,42 +205,6 @@
       color: var(--text-primary);
       background: var(--bg-2);
     }
-  }
-}
-
-// -- Theme Toggle -------------------------------------------------------------
-.theme-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: color var(--duration-fast), border-color var(--duration-fast),
-              background var(--duration-fast);
-  flex-shrink: 0;
-
-  &:hover {
-    color: var(--text-primary);
-    border-color: var(--text-muted);
-    background: var(--bg-2);
-  }
-
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  .icon-sun { display: none; }
-  .icon-moon { display: block; }
-
-  [data-theme="light"] & {
-    .icon-sun { display: block; }
-    .icon-moon { display: none; }
   }
 }
 

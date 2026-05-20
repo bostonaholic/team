@@ -76,20 +76,22 @@
 }
 
 // -- Light mode adjustments -------------------------------------------------
-[data-theme="light"] .highlight {
-  background: #F8F9FC;
-  color: #1E2432;
-  border: 1px solid #E2E6EF;
+@media (prefers-color-scheme: light) {
+  .highlight {
+    background: #F8F9FC;
+    color: #1E2432;
+    border: 1px solid #E2E6EF;
 
-  .c, .c1, .cm, .cs, .cp { color: #9BA3AF; }
-  .k, .kc, .kd, .kn, .kp, .kr, .kt { color: #0077AA; }
-  .nf { color: #0055AA; }
-  .nc { color: #007755; }
-  .no { color: #AA6600; }
-  .s, .sa, .sb, .sc, .sd, .s2, .se, .sh, .si, .sx, .sr, .s1, .ss { color: #006644; }
-  .m, .mf, .mh, .mi, .mo { color: #CC5500; }
-  .o, .ow { color: #0077AA; }
-  .gd { background: rgba(239, 68, 68, 0.05); }
-  .gi { background: rgba(34, 197, 94, 0.05); }
-  .lineno { color: #C0C8D4; }
+    .c, .c1, .cm, .cs, .cp { color: #9BA3AF; }
+    .k, .kc, .kd, .kn, .kp, .kr, .kt { color: #0077AA; }
+    .nf { color: #0055AA; }
+    .nc { color: #007755; }
+    .no { color: #AA6600; }
+    .s, .sa, .sb, .sc, .sd, .s2, .se, .sh, .si, .sx, .sr, .s1, .ss { color: #006644; }
+    .m, .mf, .mh, .mi, .mo { color: #CC5500; }
+    .o, .ow { color: #0077AA; }
+    .gd { background: rgba(239, 68, 68, 0.05); }
+    .gi { background: rgba(34, 197, 94, 0.05); }
+    .lineno { color: #C0C8D4; }
+  }
 }

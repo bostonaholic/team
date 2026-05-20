@@ -1,40 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // TEAM site — main.js
-// Theme toggle, mobile nav, scroll-reveal, copy-code buttons, TOC tracking
+// Mobile nav, TOC tracking, heading anchors
 // All DOM construction uses safe createElement/textContent — no innerHTML.
 // ─────────────────────────────────────────────────────────────────────────────
 
 (function () {
   'use strict';
-
-  // ── Theme toggle ────────────────────────────────────────────────────────────
-  var THEME_KEY = 'team-theme';
-
-  function getTheme() {
-    var stored = localStorage.getItem(THEME_KEY);
-    if (stored) return stored;
-    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  }
-
-  function applyTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem(THEME_KEY, theme);
-  }
-
-  var themeBtn = document.getElementById('theme-toggle');
-  if (themeBtn) {
-    applyTheme(getTheme());
-    themeBtn.addEventListener('click', function () {
-      var current = document.documentElement.getAttribute('data-theme');
-      applyTheme(current === 'light' ? 'dark' : 'light');
-    });
-  }
-
-  window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', function (e) {
-    if (!localStorage.getItem(THEME_KEY)) {
-      applyTheme(e.matches ? 'light' : 'dark');
-    }
-  });
 
   // ── Mobile nav ──────────────────────────────────────────────────────────────
   var mobileToggle = document.getElementById('mobile-nav-toggle');

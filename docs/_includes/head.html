@@ -14,15 +14,5 @@
 <!-- Favicon -->
 <link rel="icon" type="image/svg+xml" href="{{ '/assets/favicon.svg' | relative_url }}">
 
-<!-- Theme: apply before paint to avoid flash -->
-<script>
-  (function() {
-    var stored = localStorage.getItem('team-theme');
-    var preferred = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-    var theme = stored || preferred;
-    document.documentElement.setAttribute('data-theme', theme);
-  })();
-</script>
-
 <!-- Canonical -->
 <link rel="canonical" href="{{ page.url | absolute_url }}">
