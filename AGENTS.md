@@ -91,4 +91,4 @@ State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKE
 
 ## Issue Tracking
 
-This project uses **bd (beads)**. See [docs/beads-workflow.md](docs/beads-workflow.md) for rules, commands, and session completion protocol.
+This project uses **bd (beads)**. Run `bd prime` for full workflow context and commands.
