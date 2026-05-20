@@ -4,13 +4,13 @@
     "name": "Matthew Boston"
   },
   "metadata": {
-    "description": "Task Execution Agent Mesh — orchestrates specialized agents to autonomously implement entire features end-to-end",
+    "description": "Orchestrates specialized agents to autonomously implement entire features end-to-end",
     "version": "0.2.1"
   },
   "plugins": [
     {
       "name": "team",
-      "description": "Task Execution Agent Mesh — orchestrates specialized agents to autonomously implement entire features end-to-end",
+      "description": "Orchestrates specialized agents to autonomously implement entire features end-to-end",
       "version": "0.2.1",
       "source": "./",
       "author": {

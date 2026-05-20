@@ -1,4 +1,4 @@
-# TEAM: Task Execution Agent Mesh
+# TEAM
 
 A Claude Code plugin that orchestrates specialized agents to autonomously implement entire features end-to-end, driven by the **QRSPI** workflow. The orchestrator is the main Claude Code session; it persists pipeline state as artifacts in `docs/plans/` and tracks live progress with TodoWrite.
 
