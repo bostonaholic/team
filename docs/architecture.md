@@ -183,8 +183,12 @@ Claude Code's native worktree support to create one worktree at
 (untracked files don't propagate automatically).
 
 **Multi-repo:** `repos.md` is present. The orchestrator iterates over
-the listed repos, creating one worktree per repo with `git -C
-<repo-path> worktree add .claude/worktrees/<id> -b <id> origin/HEAD`.
+the listed repos, creating one worktree per repo with:
+
+```sh
+git -C <repo-path> worktree add .claude/worktrees/<id> -b <id> origin/HEAD
+```
+
 Only the home repo's worktree carries `docs/plans/<id>/`; other repos'
 worktrees do not duplicate the artifacts. See
 `skills/worktree-isolation/SKILL.md` for full topology.
