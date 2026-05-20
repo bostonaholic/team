@@ -647,21 +647,3 @@ table {
   }
 }
 
-// -- Scroll reveal -------------------------------------------------------------
-.reveal {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity var(--duration-xslow) var(--ease-out-expo),
-              transform var(--duration-xslow) var(--ease-out-expo);
-
-  &.revealed {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.reveal--delay-1 { transition-delay: 100ms; }
-.reveal--delay-2 { transition-delay: 200ms; }
-.reveal--delay-3 { transition-delay: 300ms; }
-.reveal--delay-4 { transition-delay: 400ms; }
-.reveal--delay-5 { transition-delay: 500ms; }

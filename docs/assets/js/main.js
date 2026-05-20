@@ -63,32 +63,6 @@
     });
   }
 
-  // ── Scroll-reveal ────────────────────────────────────────────────────────────
-  var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  function revealAll() {
-    document.querySelectorAll('.reveal').forEach(function (el) {
-      el.classList.add('revealed');
-    });
-  }
-
-  if (!prefersReduced && 'IntersectionObserver' in window) {
-    var revealObserver = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('revealed');
-          revealObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
-
-    document.querySelectorAll('.reveal').forEach(function (el) {
-      revealObserver.observe(el);
-    });
-  } else {
-    revealAll();
-  }
-
   // ── Copy SVG icon (constructed via DOM, not innerHTML) ───────────────────────
   function makeCopySvg() {
     var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

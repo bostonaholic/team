@@ -30,7 +30,7 @@ layout: default
     </div>
 
     <!-- Stats -->
-    <div class="stats-row reveal">
+    <div class="stats-row">
       <div class="stat">
         <div class="stat__value">13</div>
         <div class="stat__label">Specialized agents</div>
@@ -50,7 +50,7 @@ layout: default
 <!-- ── Pipeline Visualization ────────────────────────────────────────────────── -->
 <section class="pipeline-section" aria-labelledby="pipeline-title">
   <div class="container">
-    <div class="pipeline-section__header reveal">
+    <div class="pipeline-section__header">
       <span class="pipeline-section__label">QRSPI pipeline</span>
       <h2 class="pipeline-section__title" id="pipeline-title">From description to PR</h2>
       <p class="pipeline-section__desc">
@@ -58,7 +58,7 @@ layout: default
         the pipeline continues. Everything else runs autonomously.
       </p>
     </div>
-    <div class="reveal reveal--delay-2">
+    <div>
       {% include pipeline.html %}
     </div>
   </div>
@@ -66,7 +66,7 @@ layout: default
 
 <!-- ── Original content from index.md ───────────────────────────────────────── -->
 <section class="container" style="padding-top: var(--space-20); padding-bottom: var(--space-12);">
-  <div class="prose reveal">
+  <div class="prose">
     {{ content }}
   </div>
 </section>
@@ -74,7 +74,7 @@ layout: default
 <!-- ── Features Grid ─────────────────────────────────────────────────────────── -->
 <section class="features-section" aria-labelledby="features-title">
   <div class="container">
-    <div class="features-section__header reveal">
+    <div class="features-section__header">
       <span class="features-section__label">Design principles</span>
       <h2 class="features-section__title" id="features-title">Built for trust and correctness</h2>
       <p class="features-section__desc">
@@ -140,7 +140,7 @@ layout: default
 <!-- ── Install CTA ────────────────────────────────────────────────────────────── -->
 <section class="cta-section" aria-labelledby="cta-title">
   <div class="container container--narrow">
-    <div class="cta-section__inner reveal">
+    <div class="cta-section__inner">
       <span class="cta-section__label">Get started</span>
       <h2 class="cta-section__title" id="cta-title">One command. Full pipeline.</h2>
       <p class="cta-section__desc">
