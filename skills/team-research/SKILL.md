@@ -4,7 +4,7 @@ description: Research a codebase area before making changes. Dispatches parallel
 argument-hint: "docs/plans/<id>/"
 ---
 
-# TEAM Research — Answer the Questions
+# Team Research — Answer the Questions
 
 Run the RESEARCH phase only, then stop. Research is **blind** — the
 researcher and file-finder never see the user's original task description.

@@ -4,7 +4,7 @@
 # dev CLI
 .dev/
 
-# TEAM pipeline state
+# Team pipeline state
 .team/
 
 # Beads / Dolt files (added by bd init)

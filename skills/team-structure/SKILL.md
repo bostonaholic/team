@@ -4,7 +4,7 @@ description: Break the approved design into vertical slices with verification ch
 argument-hint: "docs/plans/<id>/"
 ---
 
-# TEAM Structure — How Do We Get There?
+# Team Structure — How Do We Get There?
 
 Run the STRUCTURE phase. This is the second (and final) human gate.
 

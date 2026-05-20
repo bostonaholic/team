@@ -12,11 +12,11 @@ fi
 
 # Already linked — nothing to do
 if [ -L "$CACHE_PATH" ] && [ "$(readlink "$CACHE_PATH")" = "$PLUGIN_ROOT" ]; then
-  echo "TEAM plugin already installed (dev)."
+  echo "Team plugin already installed (dev)."
   exit 0
 fi
 
-echo "Installing TEAM plugin (dev)..."
+echo "Installing Team plugin (dev)..."
 echo "  Source: ${PLUGIN_ROOT}"
 echo
 

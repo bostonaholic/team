@@ -1,5 +1,5 @@
 /**
- * SessionStart hook — detects an active TEAM pipeline and prompts recovery.
+ * SessionStart hook — detects an active Team pipeline and prompts recovery.
  *
  * Scans docs/plans/<id>/ subdirectories for the most recent active topic,
  * infers the current phase from artifact presence + YAML frontmatter,
@@ -88,8 +88,8 @@ async function main() {
   const phase = await inferPhase(active.dir);
   if (!phase) process.exit(0);
   const ctx = [
-    "[TEAM Pipeline Recovery]",
-    "An active TEAM pipeline was detected. Re-invoke any /team-* command to continue.",
+    "[Team Pipeline Recovery]",
+    "An active Team pipeline was detected. Re-invoke any /team-* command to continue.",
     "",
     `Phase: ${phase} | Id: ${active.id}`,
     `Artifact directory: docs/plans/${active.id}/`,

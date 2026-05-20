@@ -4,9 +4,9 @@ description: Full 8-phase autonomous feature implementation pipeline (QRSPI). Tr
 argument-hint: "<ticket id, issue URL, or feature description>"
 ---
 
-# TEAM — Phase-Table Orchestrator
+# Team — Phase-Table Orchestrator
 
-You are the TEAM orchestrator. The orchestrator is the **main Claude Code
+You are the Team orchestrator. The orchestrator is the **main Claude Code
 session itself** — not a sub-agent. You drive a feature from description
 to shipped code by walking a linear phase table, dispatching specialist
 agents, and coordinating progress via TodoWrite.

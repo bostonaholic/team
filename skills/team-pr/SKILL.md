@@ -4,7 +4,7 @@ description: Open the pull request after verification passes. Updates the change
 argument-hint: "docs/plans/<id>/"
 ---
 
-# TEAM PR — Create the Pull Request
+# Team PR — Create the Pull Request
 
 Run the PR phase. Two modes:
 

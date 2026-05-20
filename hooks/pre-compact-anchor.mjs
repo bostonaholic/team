@@ -1,5 +1,5 @@
 /**
- * PreCompact hook — anchors TEAM pipeline state before compaction.
+ * PreCompact hook — anchors Team pipeline state before compaction.
  * Scans docs/plans/<id>/ subdirectories for the most recent active
  * topic, infers the current phase from artifact presence + YAML
  * frontmatter, and injects a 4-line anchor into additionalContext.
@@ -84,7 +84,7 @@ async function main() {
   const phase = await inferPhase(active.dir);
   if (!phase) process.exit(0);
   const ctx = [
-    "[TEAM Pipeline State — Anchor before compaction]",
+    "[Team Pipeline State — Anchor before compaction]",
     `Phase: ${phase} | Id: ${active.id}`,
     `Artifact directory: docs/plans/${active.id}/`,
     `Re-invoke any /team-* command with docs/plans/${active.id}/ to continue.`,

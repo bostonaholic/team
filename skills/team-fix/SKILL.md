@@ -4,7 +4,7 @@ description: Compressed bug-fix pipeline — reproduce, write failing test, mini
 argument-hint: "<ticket id, issue URL, or bug description>"
 ---
 
-# TEAM Fix — Bug Fix Pipeline
+# Team Fix — Bug Fix Pipeline
 
 Run the compressed bug-fix pipeline. Goes straight to test-driven fix
 discipline without the full QRSPI ceremony.

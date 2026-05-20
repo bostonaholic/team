@@ -4,7 +4,7 @@ description: Execute the implementation phase. Includes test-first sub-step (wri
 argument-hint: "docs/plans/<id>/"
 ---
 
-# TEAM Implement — Execute the Plan
+# Team Implement — Execute the Plan
 
 Run the IMPLEMENT phase. Three internal sub-steps:
 

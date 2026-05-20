@@ -4,7 +4,7 @@ description: Decompose a feature description, ticket, or issue link into the QRS
 argument-hint: "<ticket id, issue URL, or task description>"
 ---
 
-# TEAM Question — Decompose the Task
+# Team Question — Decompose the Task
 
 Run the QUESTION phase only, then stop. The Question phase decomposes the
 user's intent into the artifacts that the rest of the QRSPI pipeline

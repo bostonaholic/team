@@ -4,7 +4,7 @@ description: Align with the user on the approach before any code is written. The
 argument-hint: "docs/plans/<id>/"
 ---
 
-# TEAM Design — Where Are We Going?
+# Team Design — Where Are We Going?
 
 Run the DESIGN phase. This is the first human gate — get alignment here
 before investing in detailed planning.

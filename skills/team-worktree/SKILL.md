@@ -4,7 +4,7 @@ description: Prepare one or more isolated git worktrees — one per repository t
 argument-hint: "docs/plans/<id>/"
 ---
 
-# TEAM Worktree — Isolate the Implementation
+# Team Worktree — Isolate the Implementation
 
 Create a git worktree per involved repository so implementation happens on
 isolated branches without affecting any main working tree. In single-repo

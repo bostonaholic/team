@@ -4,7 +4,7 @@ description: Produce the tactical implementation plan from the approved structur
 argument-hint: "docs/plans/<id>/"
 ---
 
-# TEAM Plan — Tactical Implementation Plan
+# Team Plan — Tactical Implementation Plan
 
 Run the PLAN phase. There is no human gate here; humans reviewed the
 structure already, and the plan is a tactical artifact for the implementer.

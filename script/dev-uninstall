@@ -5,7 +5,7 @@ PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PLUGIN_VERSION=$(node -p "require('${PLUGIN_ROOT}/.claude-plugin/plugin.json').version")
 CACHE_PATH="${HOME}/.claude/plugins/cache/team-dev/team/${PLUGIN_VERSION}"
 
-echo "Uninstalling TEAM plugin (dev)..."
+echo "Uninstalling Team plugin (dev)..."
 echo
 
 claude plugin uninstall team@team-dev 2>&1 || true

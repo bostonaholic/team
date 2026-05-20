@@ -5,7 +5,7 @@ description: Question-Research-Design-Structure-Plan-Worktree-Implement-PR phase
 
 # QRSPI Workflow
 
-Phase discipline for the TEAM pipeline. Every feature flows through eight
+Phase discipline for the Team pipeline. Every feature flows through eight
 sequential phases. No phase may be skipped. Each phase produces artifacts
 that downstream phases consume.
 
