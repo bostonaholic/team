@@ -159,6 +159,21 @@ incorrect):
 - Keep functions small and focused on a single responsibility.
 - Handle errors explicitly — fail fast, fail loud.
 - Prefer simple, readable code over clever abstractions.
+- **Construct with collaborators, call with work.** Constructors take the
+  long-lived dependencies (clock, DB, logger, HTTP client) that define
+  identity. Methods take the per-call work parameters (date range, request
+  body). Constructors do no work — no I/O, no static lookups, no expensive
+  computation.
+- **No mixed levels of abstraction in a function.** A function calls
+  functions one level below its own. If you find yourself doing high-level
+  orchestration and low-level byte-level work in the same function,
+  extract the low-level work into a helper named at the surrounding level.
+- **No primitive obsession in new domain types.** When adding a new domain
+  concept (Money, Duration, OrderId, EmailAddress), give it a type. Long
+  parameter lists with related primitives signal a missing value object.
+- **Targeted exception scopes only.** Wrap exactly the call that can
+  throw; catch the specific exception subclass; rethrow with the original
+  cause chained. Never `catch (Exception e)` around a large block.
 
 Apply SOLID principles when writing new code. Load `skills/solid-principles/SKILL.md`
 for the full methodology. Key checkpoints:

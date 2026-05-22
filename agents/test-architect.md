@@ -65,6 +65,28 @@ the design's `## Edge cases` section names scenarios that are not
 covered, stop and report this to the orchestrator. Fix the gap upstream
 (structure phase) rather than silently inventing tests here.
 
+### 2.5 Apply the test-quality bar
+
+Before moving to step 3, audit each test against this bar. Every "NO" is
+an issue to fix before confirming failures. The rules are spelled out in
+full in `skills/test-first-development/SKILL.md` under "Test Style Rules";
+the bar below is the audit checklist.
+
+| Check | Pass criterion |
+|-------|----------------|
+| Behavior-named | Test name describes the behavior, not the method. `sendsEmailWhenBalanceIsLow`, not `testProcess_1`. |
+| Narrow assertion | The assertion targets the specific field/effect under test. No full-equality on complex objects unless that IS the contract. |
+| Actionable failure | If the test fails, the failure message names the failing condition. `EXPECT_OK(...)` not `EXPECT_TRUE(...ok())`. |
+| No sleeps | No `sleep()` for synchronization. Use wait-for-condition primitives. |
+| No test logic | No `if`, no loops, no string-building inside the test body. |
+| One scenario per test | The test verifies one behavior and runs independently in any order. |
+| DAMP setup | Setup the reader needs to understand the test lives in the test (or a helper that takes the asserted value as a parameter). |
+| Fidelity ladder | Real > fake > mock. No mocks where a fake is feasible. No mocks for types you don't own — wrap them. |
+
+When reporting issues to the orchestrator, cite the failing check by name
+(e.g., "Test 7 fails the Narrow assertion bar — it asserts on the full
+order object when only `order.total` is the slice's contract").
+
 ### 3. Confirm tests fail correctly
 
 Run the full test suite. Every acceptance test you wrote must:

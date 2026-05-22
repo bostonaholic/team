@@ -82,3 +82,18 @@ Exit code: 1
 - Keep output concise. For failures, include only the lines needed to
   understand what went wrong. Do not dump entire build logs.
 - If a check hangs for more than 120 seconds, kill it and report TIMEOUT.
+- **Do NOT retry to mask intermittent failures.** Each check runs once. If
+  a test or check fails, report it. If you happen to know the same test
+  passed in a previous run (e.g., the orchestrator re-dispatched after a
+  code fix), note the intermittency in the report
+  (`### Notes — Intermittent: testFoo passed on retry; the underlying race
+  condition is unresolved`). Reruns that turn red → green without a code
+  change are evidence of a flake or a real intermittent bug, not a
+  verdict of PASS.
+- **Coverage is reported, not gated.** If the project has a coverage tool
+  configured, run it and report the coverage delta for changed files
+  (e.g., "coverage on changed files: 73% → 78%"). Do NOT gate on an
+  absolute coverage threshold. Coverage tells you what is NOT tested; it
+  does not tell you what IS tested is good. Pair with mutation testing
+  when available; require coverage to trend upward rather than mandating
+  a fixed threshold.
