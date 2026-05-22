@@ -92,7 +92,7 @@ loop:
 | STRUCTURE  | `structure-planner` (→ human gate)                      | `docs/plans/<id>/design.md` (frontmatter `approved: true`)      | PLAN               |
 | PLAN       | `planner`                                               | `docs/plans/<id>/structure.md` (frontmatter `approved: true`)   | WORKTREE           |
 | WORKTREE   | (orchestrator-emit)                                     | `docs/plans/<id>/plan.md`                                       | IMPLEMENT          |
-| IMPLEMENT  | `test-architect`, `implementer`, 5 reviewers (parallel) | worktree prepared                                               | PR                 |
+| IMPLEMENT  | `test-architect` (per slice), `greener` (per slice), 5 reviewers (parallel) | worktree prepared                                               | PR                 |
 | PR         | (orchestrator-emit)                                     | aggregate gate passed                                           | SHIPPED            |
 
 For RESEARCH, dispatch `file-finder` and `researcher` in parallel passing
@@ -100,7 +100,7 @@ each only the `docs/plans/<id>/questions.md` path. Combine their returned
 content into a single `docs/plans/<id>/research.md` artifact (with the
 frontmatter the researcher's documentation specifies) before advancing.
 
-`skills/team/registry.json` is an inventory of the 13 specialist agents
+`skills/team/registry.json` is an inventory of the 14 specialist agents
 for documentation purposes only. The orchestrator dispatches based on
 the phase table above, not on registry contents.
 
