@@ -24,9 +24,9 @@ QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → WORKTREE → IMPLEME
 | **Research** *(blind)* | Parallel agents (file-finder + researcher) consume only `questions.md`. They never see the task — structurally preventing opinion-bias. |
 | **Design** *(human gate)* | The design author runs an interactive interview, then drafts a ~200-line alignment doc. You review here. |
 | **Structure** *(human gate)* | Break the design into vertical slices with verification checkpoints. ~2-page doc. You review here. |
-| **Plan** | Tactical implementation plan derived from the approved structure. Read by the implementer; not human-gated. |
+| **Plan** | Tactical implementation plan derived from the approved structure. Read by the per-slice trio (`test-architect`, `greener`, `refactorer`); the implementer reads it only for review-fix context. Not human-gated. |
 | **Worktree** | Orchestrator prepares an isolated git worktree. |
-| **Implement** | Test-first → slice execution → 5 parallel reviewers + typed retry loop. |
+| **Implement** | Per-slice R-G-R trio (`test-architect` → red gate → `greener` → green gate → `refactorer` with optional commit) for every slice → 5 parallel reviewers + typed retry loop. |
 | **PR** | Update changelog, commit, open pull request. |
 
 ## Install

@@ -56,7 +56,9 @@ markdown artifact the human reviews.
 
 ### PLAN
 
-Tactical implementation details for the agent. Read by the implementer.
+Tactical implementation details for the agents. Read by the per-slice
+trio (`test-architect`, `greener`, `refactorer`); the `implementer` agent
+reads it only when re-dispatched into the aggregate-gate review-fix loop.
 No human approval gate — the plan is mechanically derived from the
 approved structure.
 
@@ -79,14 +81,26 @@ subsection in `skills/worktree-isolation/SKILL.md`.
 Execute the plan slice by slice, making tests pass. Includes test-first
 sub-phase and 5-reviewer adversarial verification with hard-gate retry loop.
 
-- **Sub-phases:**
-  1. Test-first — `test-architect` writes failing acceptance tests
-  2. Mechanical gate — all tests fail with assertion errors (not crashes)
-  3. Slice execution — `implementer` works through vertical slices, commits
-     each slice when its tests pass
-  4. Code review — 5 parallel reviewers (code, security, docs, ux,
-     verifier) with typed failure classes that loop back to the
-     implementer (max 5 rounds)
+- **Sub-phases (per-slice R-G-R trio, repeated for every slice):**
+  1. Red — `test-architect` (dispatched per slice) writes that slice's
+     failing acceptance tests
+  2. Mechanical red gate — the current slice's tests fail with assertion
+     errors (not crashes), and any prior slices' tests still pass
+  3. Green — `greener` (dispatched per slice) writes the minimum code that
+     turns the slice's failing tests green and commits as `feat: <slice>`
+  4. Mechanical green gate — the current slice's tests pass and all prior
+     slices' tests still pass; on failure, re-dispatch `greener` with the
+     typed `green failed` class (cap at 3 attempts per slice)
+  5. Refactor — `refactorer` (dispatched per slice) improves structure
+     while preserving behavior, commits as `refactor: <slice>` only if
+     the suite stays green; **commit is optional** — a `no-op` produces
+     no commit
+- **After every slice completes:**
+  6. Code review — 5 parallel reviewers (code, security, docs, ux,
+     verifier). On aggregate-gate failure the `implementer` agent is
+     re-dispatched with the typed failure class (security, lint,
+     typecheck, build, test, review) and all 5 reviewers re-run (max 5
+     rounds). `implementer` is reserved for this review-fix loop only.
 - **Artifact:** Production code, passing tests, per-slice commits
 - **Gate:** AGGREGATE — security, verifier, and code-review hard gates must
   all pass
