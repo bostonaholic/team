@@ -111,6 +111,12 @@ implement.
 
 - Business logic classes that instantiate their own dependencies with `new`
 - `import DatabaseClient from './database'` inside a domain service
+- Static method calls into infrastructure (`Database.query(...)`,
+  `Clock.now()`, `Config.get(...)`) — static calls have no seam, so tests
+  cannot substitute them
+- Singletons fetched from inside business code (`Registry.getInstance()`) —
+  the dependency is real but invisible in the signature, so the class lies
+  about what it needs
 - Tests that cannot run without real databases, network calls, or file system
   access
 - Difficult to test without mocking entire subsystems
@@ -122,6 +128,13 @@ implement.
   layer
 - Pass in collaborators as arguments rather than instantiating them inside
   the function
+- **Construct with collaborators; call with work.** The constructor takes
+  the long-lived collaborators that define what the object IS (its clients,
+  its loggers, its clock, its database handle). Methods take the per-call
+  work parameters. A `ReportGenerator(reportingDb, clock)` can serve many
+  date ranges via `generate(startDate, endDate)`. A
+  `ReportGenerator(reportingDb, clock, startDate, endDate)` creates a new
+  instance per query and conflates identity with work.
 
 ## Applying SOLID in the Implementer Role
 

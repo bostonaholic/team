@@ -27,6 +27,13 @@ Six foundational perspectives guide every design and implementation decision:
 - **John Ousterhout**: Fight complexity by designing deep modules with simple
   interfaces. Pull complexity downward into implementations rather than
   exposing it to callers.
+- **Cost-benefit, not religion**: Every test, abstraction, and interface
+  has an ongoing cost — maintenance, runtime, false-positive triage,
+  cognitive load. A test that catches no real bug and slows the build is
+  a liability, not an asset. The same applies to abstractions — premature
+  DRY couples behaviors that need to evolve independently. Apply the Rule
+  of Three: tolerate duplication the second time, extract on the third
+  occurrence.
 
 ## Implementation Standards
 
@@ -114,6 +121,16 @@ Before considering any implementation complete, verify each item:
 8. **DRY** -- No unnecessary duplication (Rule of Three applied).
 9. **Performance Awareness** -- No unnecessary computation or memory
    allocation, but no premature optimization either.
+10. **Functional Core, Imperative Shell** -- Pure functions hold business
+    logic; a thin shell handles I/O. Pure logic is unit-testable in
+    isolation; the shell is swap-and-test as a thin integration layer.
+11. **No Primitive Obsession** -- Domain concepts (Money, Duration,
+    EmailAddress, OrderId) carry a type, not a raw `string`/`int`. Long
+    parameter lists with related primitives signal a missing value object.
+12. **Failures are actionable** -- Errors and test failures name the
+    failing condition with enough context that the next reader can start
+    debugging without rerunning. Avoid `assert(predicate)` when
+    `assert_eq(actual, expected)` would print the values.
 
 ## When Implementing
 
