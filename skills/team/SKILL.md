@@ -82,6 +82,11 @@ loop:
   8. Goto loop.
 ```
 
+Within IMPLEMENT, each slice runs through a test-first trio: the
+`test-architect` writes the slice's failing acceptance tests, then the
+`greener` writes the minimum code that turns those tests green, then
+a refactor step (see prose below) cleans up the result.
+
 ### Phase table
 
 | Phase      | Agent(s)                                                | Predecessor artifact                                            | Next phase on pass |
@@ -92,17 +97,25 @@ loop:
 | STRUCTURE  | `structure-planner` (→ human gate)                      | `docs/plans/<id>/design.md` (frontmatter `approved: true`)      | PLAN               |
 | PLAN       | `planner`                                               | `docs/plans/<id>/structure.md` (frontmatter `approved: true`)   | WORKTREE           |
 | WORKTREE   | (orchestrator-emit)                                     | `docs/plans/<id>/plan.md`                                       | IMPLEMENT          |
-| IMPLEMENT  | `test-architect` (per slice), `greener` (per slice), 5 reviewers (parallel) | worktree prepared                                               | PR                 |
+| IMPLEMENT  | `test-architect` (per slice), then `greener` (per slice), then `refactorer` (per slice), then 5 reviewers (parallel) | worktree prepared                                               | PR                 |
 | PR         | (orchestrator-emit)                                     | aggregate gate passed                                           | SHIPPED            |
+
+The IMPLEMENT row runs as a per-slice trio. After the mechanical green
+gate confirms the suite is clean, the orchestrator dispatches the
+refactor-step agent to improve structure without changing behavior.
+The refactor-step agent's commit is optional — a no-op produces no
+commit and the orchestrator advances to the next slice.
 
 For RESEARCH, dispatch `file-finder` and `researcher` in parallel passing
 each only the `docs/plans/<id>/questions.md` path. Combine their returned
 content into a single `docs/plans/<id>/research.md` artifact (with the
 frontmatter the researcher's documentation specifies) before advancing.
 
-`skills/team/registry.json` is an inventory of the 14 specialist agents
+`skills/team/registry.json` is an inventory of the 15 specialist agents
 for documentation purposes only. The orchestrator dispatches based on
-the phase table above, not on registry contents.
+the phase table above, not on registry contents. Within IMPLEMENT the
+per-slice dispatch sequence is `test-architect (per slice) → greener →
+refactorer → next slice → 5 reviewers`.
 
 ## Blind Research Invariant
 
