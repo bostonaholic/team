@@ -14,6 +14,24 @@ regression. The test-driven bug fix discipline ensures that every fix is:
 3. **Fixed minimally** — the smallest change that makes the test pass
 4. **Verified** — no regression in existing behavior
 
+## Triage Before Reproducing
+
+Before reproducing, classify the failure into one of four buckets:
+
+| Bucket | Symptom | Action |
+|--------|---------|--------|
+| **Product** | Real defect in the code under test | Continue with the four-step discipline below |
+| **Test impl** | Test wrong; behavior correct | File a separate test-fix; do NOT change production code to satisfy a bad test |
+| **Infra** | CI environment, DB, network, container | Fix the env; do not encode the env-fix as a test |
+| **Tooling** | Test runner / build system | Fix the tool; the bug is not in the product |
+
+Intermittent failures are not a fifth bucket — they belong in one of the
+four above. Quarantining a test as "flaky" without classifying the failure
+hides the very intermittent product bug that the test surfaced. The
+conditions that make a test flaky are frequently the conditions that
+trigger the bug. Reproduce deterministically before fixing — see
+`skills/systematic-debugging/SKILL.md`.
+
 ## The Four-Step Discipline
 
 ### Step 1: Reproduce
@@ -83,9 +101,12 @@ After the fix:
    missing null check), search the codebase for the same pattern. File issues
    for related instances — do not fix them in this commit.
 
-4. **Review the minimal fix.** Is the fix correct, or did it just make the
-   symptom go away? A fix that hides the bug without addressing the root
-   cause will recur.
+4. **Review the minimal fix with a mutation check.** Temporarily revert one
+   line of the fix and re-run the new test. It must go red again. If it
+   still passes, the test does not exercise the fix — strengthen the
+   assertion or the reproduction inputs. This guards against fixes that
+   hide the symptom without addressing the root cause, and against tests
+   that drift away from the bug.
 
 ## Commit Structure
 

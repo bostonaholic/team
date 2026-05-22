@@ -27,6 +27,14 @@ picture of what is happening.
   narrows the search space dramatically.
 - **Record timestamps and sequence.** When did it start failing? What changed
   just before? Check git log, deployment history, and dependency updates.
+- **Treat intermittency as evidence, not noise.** A test that fails 1 in 10
+  runs is not "flaky" — it is reporting a real condition (timing, ordering,
+  resource contention, hidden global state) that most invocations don't hit.
+  The conditions that make a test intermittent are frequently the conditions
+  that make the product intermittently misbehave in production. Record the
+  failure rate (e.g., 3/30 runs), the variance across environments (local vs
+  CI), what is concurrent/asynchronous/stateful in the path, and any shared
+  state (`/tmp`, env vars, singletons, DB rows).
 
 Do not hypothesize during OBSERVE. Just collect.
 
@@ -59,6 +67,11 @@ elimination, not confirmation.
   and what actually happened — even for negative results.
 - **Eliminate definitively.** If a hypothesis is disproven, cross it off and
   do not revisit it unless new evidence emerges.
+- **When you have a working baseline and a failing tip, bisect.** Don't
+  reason from first principles about which of 40 commits broke it —
+  `git bisect` is faster and more reliable. Each step discriminates half the
+  commit range. The same logic applies to config changes, dependency
+  versions, and feature-flag rollouts.
 
 ### Phase 4: CONCLUDE
 
