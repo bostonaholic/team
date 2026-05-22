@@ -43,6 +43,14 @@ show. This isolation is intentional: it prevents self-evaluation bias.
      - LSP: do subtypes honor the base type's full contract?
      - ISP: does this interface force clients to depend on unused methods?
      - DIP: does business logic instantiate its own infrastructure dependencies?
+   - **Test files** — Walk every changed `*test*` / `*spec*` /
+     `__tests__/*` file against the test-quality flags in
+     `skills/code-review/SKILL.md` (Code Reviewer verdict section) and the
+     style rules in `skills/test-first-development/SKILL.md`. Flag
+     change-detector patterns, mock chains, full-equality assertions on
+     complex objects, `sleep()` for synchronization, logic in tests, and
+     method-named tests. A single occurrence is a `suggestion:`; multiple
+     occurrences across the diff become `issue:`.
 
 5. **Run tests.** Execute the project's test suite to verify tests pass. Report
    the command used and the result.
