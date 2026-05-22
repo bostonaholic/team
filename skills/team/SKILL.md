@@ -83,8 +83,8 @@ loop:
 ```
 
 Within IMPLEMENT, each slice runs through a test-first trio: the
-`test-architect` writes the slice's failing acceptance tests, then the
-`greener` writes the minimum code that turns those tests green, then
+`red-author` writes the slice's failing acceptance tests, then the
+`green-author` writes the minimum code that turns those tests green, then
 a refactor step (see prose below) cleans up the result.
 
 ### Phase table
@@ -97,7 +97,7 @@ a refactor step (see prose below) cleans up the result.
 | STRUCTURE  | `structure-planner` (→ human gate)                      | `docs/plans/<id>/design.md` (frontmatter `approved: true`)      | PLAN               |
 | PLAN       | `planner`                                               | `docs/plans/<id>/structure.md` (frontmatter `approved: true`)   | WORKTREE           |
 | WORKTREE   | (orchestrator-emit)                                     | `docs/plans/<id>/plan.md`                                       | IMPLEMENT          |
-| IMPLEMENT  | `test-architect` (per slice), then `greener` (per slice), then `refactorer` (per slice), then 5 reviewers (parallel) | worktree prepared                                               | PR                 |
+| IMPLEMENT  | `red-author` (per slice), then `green-author` (per slice), then `refactor-author` (per slice), then 5 reviewers (parallel) | worktree prepared                                               | PR                 |
 | PR         | (orchestrator-emit)                                     | aggregate gate passed                                           | SHIPPED            |
 
 The IMPLEMENT row runs as a per-slice trio. After the mechanical green
@@ -114,8 +114,8 @@ frontmatter the researcher's documentation specifies) before advancing.
 `skills/team/registry.json` is an inventory of the 15 specialist agents
 for documentation purposes only. The orchestrator dispatches based on
 the phase table above, not on registry contents. Within IMPLEMENT the
-per-slice dispatch sequence is `test-architect (per slice) → greener →
-refactorer → next slice → 5 reviewers`.
+per-slice dispatch sequence is `red-author (per slice) → green-author →
+refactor-author → next slice → 5 reviewers`.
 
 ## Blind Research Invariant
 
@@ -177,7 +177,7 @@ When the plan artifact exists:
 
 ### Mechanical Gate (test confirmation)
 
-When the `test-architect` returns failing tests:
+When the `red-author` returns failing tests:
 
 1. Run the test suite.
 2. If all tests fail with assertion errors (not crashes), advance.

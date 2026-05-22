@@ -17,9 +17,9 @@
     {"name": "design-author", "phase": "DESIGN"},
     {"name": "structure-planner", "phase": "STRUCTURE"},
     {"name": "planner", "phase": "PLAN"},
-    {"name": "test-architect", "phase": "IMPLEMENT"},
-    {"name": "greener", "phase": "IMPLEMENT"},
-    {"name": "refactorer", "phase": "IMPLEMENT"},
+    {"name": "red-author", "phase": "IMPLEMENT"},
+    {"name": "green-author", "phase": "IMPLEMENT"},
+    {"name": "refactor-author", "phase": "IMPLEMENT"},
     {"name": "implementer", "phase": "IMPLEMENT"},
     {"name": "code-reviewer", "phase": "IMPLEMENT", "parallel": true},
     {"name": "security-reviewer", "phase": "IMPLEMENT", "parallel": true},
@@ -31,8 +31,8 @@
     {"after": "DESIGN", "type": "human", "field": "approved"},
     {"after": "STRUCTURE", "type": "human", "field": "approved"},
     {"after": "PLAN", "type": "orchestrator-emit", "action": "prepare worktree"},
-    {"after": "test-architect", "type": "mechanical", "condition": "all tests fail with assertion errors, not crashes"},
-    {"after": "greener", "type": "mechanical", "condition": "all current-slice acceptance tests pass and prior slices still pass", "maxRetries": 3},
+    {"after": "red-author", "type": "mechanical", "condition": "all tests fail with assertion errors, not crashes"},
+    {"after": "green-author", "type": "mechanical", "condition": "all current-slice acceptance tests pass and prior slices still pass", "maxRetries": 3},
     {"after": "5 reviewers", "type": "aggregate", "hardGates": ["security-reviewer", "verifier", "code-reviewer"], "maxRetries": 5}
   ]
 }

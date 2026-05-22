@@ -57,7 +57,7 @@ markdown artifact the human reviews.
 ### PLAN
 
 Tactical implementation details for the agents. Read by the per-slice
-trio (`test-architect`, `greener`, `refactorer`); the `implementer` agent
+trio (`red-author`, `green-author`, `refactor-author`); the `implementer` agent
 reads it only when re-dispatched into the aggregate-gate review-fix loop.
 No human approval gate — the plan is mechanically derived from the
 approved structure.
@@ -82,16 +82,16 @@ Execute the plan slice by slice, making tests pass. Includes test-first
 sub-phase and 5-reviewer adversarial verification with hard-gate retry loop.
 
 - **Sub-phases (per-slice R-G-R trio, repeated for every slice):**
-  1. Red — `test-architect` (dispatched per slice) writes that slice's
+  1. Red — `red-author` (dispatched per slice) writes that slice's
      failing acceptance tests
   2. Mechanical red gate — the current slice's tests fail with assertion
      errors (not crashes), and any prior slices' tests still pass
-  3. Green — `greener` (dispatched per slice) writes the minimum code that
+  3. Green — `green-author` (dispatched per slice) writes the minimum code that
      turns the slice's failing tests green and commits as `feat: <slice>`
   4. Mechanical green gate — the current slice's tests pass and all prior
-     slices' tests still pass; on failure, re-dispatch `greener` with the
+     slices' tests still pass; on failure, re-dispatch `green-author` with the
      typed `green failed` class (cap at 3 attempts per slice)
-  5. Refactor — `refactorer` (dispatched per slice) improves structure
+  5. Refactor — `refactor-author` (dispatched per slice) improves structure
      while preserving behavior, commits as `refactor: <slice>` only if
      the suite stays green; **commit is optional** — a `no-op` produces
      no commit

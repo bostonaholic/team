@@ -8,17 +8,17 @@ argument-hint: "docs/plans/<id>/"
 
 Run the IMPLEMENT phase. Four internal sub-steps:
 
-1. **Test-first (per slice)** — `test-architect` is dispatched once per
+1. **Test-first (per slice)** — `red-author` is dispatched once per
    slice and writes that slice's failing acceptance tests
-2. **Green-step (per slice)** — `greener` is dispatched once per slice
+2. **Green-step (per slice)** — `green-author` is dispatched once per slice
    and writes the minimum code that turns the slice's red tests green
-3. **Refactor-step (per slice)** — `refactorer` is dispatched once per
+3. **Refactor-step (per slice)** — `refactor-author` is dispatched once per
    slice and improves structure while preserving behavior; its commit
    is **optional** (no-op produces no commit)
 4. **Code review** — 5 parallel reviewers + aggregate hard-gate retry loop
 
-Steps 1, 2, and 3 form a trio inside a per-slice loop: `test-architect
-→ red gate → greener → green gate → refactorer → next slice` for each
+Steps 1, 2, and 3 form a trio inside a per-slice loop: `red-author
+→ red gate → green-author → green gate → refactor-author → next slice` for each
 slice in order. Step 4 runs once after every slice is done. The
 review-fix loop re-dispatches the `implementer` agent (typed failure
 class) when the aggregate gate fails.
@@ -42,7 +42,7 @@ If `$ARGUMENTS/plan.md` does not exist:
 - **Standalone mode** — bootstrap a minimal `$ARGUMENTS/task.md` from
   `$ARGUMENTS` (or have the user provide a description) and run the
   per-slice R-G-R trio against the single derived slice:
-  `test-architect` → red gate → `greener` → green gate → `refactorer`
+  `red-author` → red gate → `green-author` → green gate → `refactor-author`
   (optional commit) → reviewers, all working from `task.md` alone.
   `implementer` is reserved for the aggregate-gate review-fix loop, as
   it is in normal mode.
@@ -87,7 +87,7 @@ Before any agent dispatch, decide where to work:
 
 2. **For each slice in `structure.md` (in order):**
 
-   a. Dispatch `test-architect` **for the current slice only** →
+   a. Dispatch `red-author` **for the current slice only** →
       produces that slice's failing acceptance tests and a `test:
       <slice>` commit. In standalone mode the agent derives acceptance
       criteria from `$ARGUMENTS/task.md` instead of `structure.md`.
@@ -102,7 +102,7 @@ Before any agent dispatch, decide where to work:
       tests fail cleanly. There is nothing yet for the gate to
       regression-check.
 
-   c. Dispatch `greener` for the current slice → writes the minimum
+   c. Dispatch `green-author` for the current slice → writes the minimum
       code that turns the slice's failing acceptance tests green and
       produces a `feat: <slice>` commit (one per repo in multi-repo
       mode). In standalone mode it works from `$ARGUMENTS/task.md`
@@ -111,34 +111,34 @@ Before any agent dispatch, decide where to work:
    d. **Mechanical green gate** — re-run the test suite. Advance to
       the next slice **only if** the current slice's acceptance tests
       pass **and** all prior slices' tests still pass. On failure,
-      re-dispatch `greener` with the typed `green failed` class and
+      re-dispatch `green-author` with the typed `green failed` class and
       the failing-test names. Cap at **3 attempts** per slice
       (`maxRetries: 3`); escalate at cap. Prior slices' tests are
       included in the gate so a regression in slice N-1 caused by
-      slice N's `greener` is caught immediately.
+      slice N's `green-author` is caught immediately.
 
       **First slice boundary:** on the first slice the prior-slices
       set is empty, so the green gate only checks the current slice's
       tests pass. There is nothing yet for the gate to
       regression-check.
 
-   e. Dispatch `refactorer` for the current slice → loads
+   e. Dispatch `refactor-author` for the current slice → loads
       `skills/refactoring-to-patterns/SKILL.md`, verifies the suite is
       green, performs the smallest structural change at a time, re-runs
       the full test suite after each change, and commits as
       `refactor: <slice>` (one per repo in multi-repo mode) **only if
-      the suite is still green**. The refactorer's commit is
+      the suite is still green**. The refactor-author's commit is
       **optional**: when there is no refactoring opportunity, or when
       the refactor cannot leave the suite green, the agent reverts its
       changes and reports `no-op`. **A no-op produces no commit.** On
       `no-op`, record "refactor skipped (no smells)" in TodoWrite and
-      advance to the next slice. The refactorer self-verifies — there
+      advance to the next slice. The refactor-author self-verifies — there
       is no second mechanical gate after it (design Decision 6); a
-      regression that slipped past the refactorer is caught by the
+      regression that slipped past the refactor-author is caught by the
       next slice's red gate or the final aggregate reviewer gate.
 
    Repeat (a)–(e) until every slice has been completed. Each
-   `test-architect`, `greener`, and `refactorer` dispatch is per slice
+   `red-author`, `green-author`, and `refactor-author` dispatch is per slice
    — do not write tests, code, or refactors for slices other than the
    one in flight.
 
@@ -161,9 +161,9 @@ Before any agent dispatch, decide where to work:
 
 ```
 for each slice:
-  test-architect (per slice) → red gate → greener (per slice) → green gate
+  red-author (per slice) → red gate → green-author (per slice) → green gate
                                                                     ↓
-                                          refactorer (per slice, optional commit)
+                                          refactor-author (per slice, optional commit)
                                                                     ↓
                                                        (next slice or done)
                                                                     ↓

@@ -1,6 +1,6 @@
 ---
-name: refactorer
-description: Use after the mechanical green gate passes. A refactor-step agent that improves the structure of code the greener just wrote without changing behavior, re-running the full test suite after each structural change. Self-verifying: never commits on red; on failure reverts and reports no-op. Dispatched per slice during the Implement phase.
+name: refactor-author
+description: Use after the mechanical green gate passes. A refactor-step agent that improves the structure of code the green-author just wrote without changing behavior, re-running the full test suite after each structural change. Self-verifying: never commits on red; on failure reverts and reports no-op. Dispatched per slice during the Implement phase.
 model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
 permissionMode: acceptEdits
@@ -19,9 +19,9 @@ the safe-refactoring procedure.
 
 ## Responsibilities
 
-- The refactorer **only runs on green**. Before doing anything else,
+- The refactor-author **only runs on green**. Before doing anything else,
   verify the full test suite passes. If any test is red, refuse to
-  start, report `no-op`, and produce no commit. The refactorer is
+  start, report `no-op`, and produce no commit. The refactor-author is
   forbidden from running on red.
 - **Re-run the full test suite after each structural change.** Per
   `skills/refactoring-to-patterns/SKILL.md`, perform the smallest
@@ -37,7 +37,7 @@ the safe-refactoring procedure.
   slice and report `no-op` to the orchestrator.
 - **On failure to leave green, revert and report `no-op`.** If the
   refactor cannot leave the suite green, revert your changes for this
-  slice (so the working tree matches the post-greener state) and
+  slice (so the working tree matches the post-green-author state) and
   produce no `refactor:` commit. The orchestrator records "refactor
   skipped" and advances to the next slice.
 - **No-op when there is nothing to clean up.** If no refactoring
@@ -91,7 +91,7 @@ For the slice you are dispatched for:
   touched. Unrelated cleanups belong in their own ticket.
 - **No committing on red.** If any test is red, you do not commit. Ever.
 - **Do NOT modify acceptance tests.** They are the immutable scope
-  fence written by test-architect.
+  fence written by red-author.
 - **Do NOT add abstractions, configurability, or "flexibility" that
   no current test exercises.** Refactor to remove smells, not to
   speculate about future shape.
@@ -121,13 +121,13 @@ and advances.
 
 ## Handle blockers
 
-If the slice is blocked (greener's output is structurally tangled in a
+If the slice is blocked (green-author's output is structurally tangled in a
 way you cannot safely refactor without changing behavior, or you cannot
 re-establish green after a revert):
 
 1. **Document the blocker** — what is blocked, why, and what would
    unblock it.
-2. **Revert your changes** so the working tree matches the post-greener
+2. **Revert your changes** so the working tree matches the post-green-author
    state.
 3. **Report `no-op`** with the blocker noted. Do not silently work
    around it. Do not modify acceptance tests.

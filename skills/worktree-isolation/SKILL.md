@@ -105,7 +105,7 @@ choice rather than inertia.
 
 ### During the pipeline
 
-All agents — researcher, planner, test-architect, implementer, reviewers —
+All agents — researcher, planner, red-author, implementer, reviewers —
 run inside whichever worktree the orchestrator hands them for the current
 slice or step. In single-repo mode that is always the home worktree. In
 multi-repo mode the implementer changes directory between repos as the
