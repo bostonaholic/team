@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Code reviews no longer emit praise comments.** The `praise` Conventional Comments type is removed from `skills/code-review/SKILL.md`, and the matching inline list + "Be fair. Acknowledge what is done well…" rule are removed from `agents/code-reviewer.md`. Reviewer output is restricted to types that require author action or attention (`issue`, `suggestion`, `nitpick`), raising signal-to-noise. Verdict criteria, gate types, and aggregation rules are unchanged.
 - **Edge-case enumeration is mandatory in design and tests.** The `design-author` agent now writes a dedicated `## Edge cases` section walking six categories (boundary values, invalid inputs, failure paths, concurrency, authorization, resource limits); the `structure-planner` pulls those scenarios into each slice's acceptance tests; the `test-architect` writes them with the same care as happy-path tests and reports any gap as an upstream structure defect rather than inventing tests. Reinforced by methodology updates in `test-first-development`, `technical-design-doc`, and `engineering-standards`.
 
 ### Added
