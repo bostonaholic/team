@@ -19,6 +19,7 @@
     {"name": "planner", "phase": "PLAN"},
     {"name": "test-architect", "phase": "IMPLEMENT"},
     {"name": "greener", "phase": "IMPLEMENT"},
+    {"name": "refactorer", "phase": "IMPLEMENT"},
     {"name": "implementer", "phase": "IMPLEMENT"},
     {"name": "code-reviewer", "phase": "IMPLEMENT", "parallel": true},
     {"name": "security-reviewer", "phase": "IMPLEMENT", "parallel": true},

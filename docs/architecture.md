@@ -36,7 +36,7 @@ seeds and updates a TodoWrite ledger, and runs the human gates.
   Re-invoking any `/team-*` command rebuilds the ledger by scanning
   artifacts on entry.
 - **Registry is a phase-tagged inventory.** `skills/team/registry.json`
-  lists the 13 specialist agents and the QRSPI phase each serves. The
+  lists the 15 specialist agents and the QRSPI phase each serves. The
   orchestrator dispatches via the phase table in `skills/team/SKILL.md`,
   not via the registry.
 - **File artifacts survive compaction.** Agents communicate through
@@ -229,7 +229,7 @@ the tracking ticket (if `task.md` carries `ticketId`), clean up the worktree.
 
 ## 4. Agent Roster
 
-13 specialist agents, organized by phase:
+15 specialist agents, organized by phase:
 
 | Phase     | Agents                                                                            |
 |-----------|-----------------------------------------------------------------------------------|
@@ -238,7 +238,8 @@ the tracking ticket (if `task.md` carries `ticketId`), clean up the worktree.
 | DESIGN    | `design-author`                                                                   |
 | STRUCTURE | `structure-planner`                                                               |
 | PLAN      | `planner`                                                                         |
-| IMPLEMENT | `test-architect`, `implementer`, `code-reviewer`, `security-reviewer`,            |
+| IMPLEMENT | `test-architect` (per slice), `greener` (per slice), `refactorer` (per slice),    |
+|           | `implementer` (review-fix only), `code-reviewer`, `security-reviewer`,            |
 |           | `technical-writer`, `ux-reviewer`, `verifier` (last 5 parallel)                   |
 
 Each agent's QRSPI phase is recorded in `skills/team/registry.json`.
@@ -317,7 +318,7 @@ description) bootstraps the missing upstream artifacts inline.
 | `test-first-development` | Acceptance tests as scope fence                | Loaded by test-architect, orchestrator                       |
 | `code-review`            | Generator-evaluator separation, review method  | Loaded by code-reviewer, security-reviewer, ux-reviewer, technical-writer |
 | `engineering-standards`  | Engineering standards, implementation methodology, quality checklist | Loaded by planner, implementer, code-reviewer |
-| `refactoring-to-patterns`| Code smells and safe refactoring procedures    | Loaded by implementer                                        |
+| `refactoring-to-patterns`| Code smells and safe refactoring procedures    | Loaded by refactorer                                         |
 | `solid-principles`       | SOLID design principles                        | Loaded by implementer, code-reviewer                         |
 | `systematic-debugging`   | Root cause investigation                       | Loaded by agents when debugging                              |
 | `documenting-decisions`  | ADR creation and management                    | Loaded by design-author, structure-planner                   |

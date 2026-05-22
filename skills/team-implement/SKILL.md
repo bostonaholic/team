@@ -6,18 +6,22 @@ argument-hint: "docs/plans/<id>/"
 
 # Team Implement — Execute the Plan
 
-Run the IMPLEMENT phase. Three internal sub-steps:
+Run the IMPLEMENT phase. Four internal sub-steps:
 
 1. **Test-first (per slice)** — `test-architect` is dispatched once per
    slice and writes that slice's failing acceptance tests
 2. **Green-step (per slice)** — `greener` is dispatched once per slice
    and writes the minimum code that turns the slice's red tests green
-3. **Code review** — 5 parallel reviewers + aggregate hard-gate retry loop
+3. **Refactor-step (per slice)** — `refactorer` is dispatched once per
+   slice and improves structure while preserving behavior; its commit
+   is **optional** (no-op produces no commit)
+4. **Code review** — 5 parallel reviewers + aggregate hard-gate retry loop
 
-Steps 1 and 2 alternate inside a per-slice loop: `test-architect →
-red gate → greener → green gate` for each slice in order. Step 3 runs
-once after every slice is done. The review-fix loop re-dispatches the
-`implementer` agent (typed failure class) when the aggregate gate fails.
+Steps 1, 2, and 3 form a trio inside a per-slice loop: `test-architect
+→ red gate → greener → green gate → refactorer → next slice` for each
+slice in order. Step 4 runs once after every slice is done. The
+review-fix loop re-dispatches the `implementer` agent (typed failure
+class) when the aggregate gate fails.
 
 ## Input
 
@@ -40,7 +44,8 @@ If `$ARGUMENTS/plan.md` does not exist:
   `test-architect` → `implementer` → reviewers from `task.md` alone.
 
 Coordinate progress via TodoWrite. Seed: `Test-architect (per slice) →
-Red gate → Greener (per slice) → Green gate → Review round 1`.
+Red gate → Greener (per slice) → Green gate → Refactorer (per slice) →
+Review round 1`.
 
 ## Worktree Check
 
@@ -113,9 +118,25 @@ Before any agent dispatch, decide where to work:
       tests pass. There is nothing yet for the gate to
       regression-check.
 
-   Repeat (a)–(d) until every slice has been completed. Each
-   `test-architect` and `greener` dispatch is per slice — do not write
-   tests or code for slices other than the one in flight.
+   e. Dispatch `refactorer` for the current slice → loads
+      `skills/refactoring-to-patterns/SKILL.md`, verifies the suite is
+      green, performs the smallest structural change at a time, re-runs
+      the full test suite after each change, and commits as
+      `refactor: <slice>` (one per repo in multi-repo mode) **only if
+      the suite is still green**. The refactorer's commit is
+      **optional**: when there is no refactoring opportunity, or when
+      the refactor cannot leave the suite green, the agent reverts its
+      changes and reports `no-op`. **A no-op produces no commit.** On
+      `no-op`, record "refactor skipped (no smells)" in TodoWrite and
+      advance to the next slice. The refactorer self-verifies — there
+      is no second mechanical gate after it (design Decision 6); a
+      regression that slipped past the refactorer is caught by the
+      next slice's red gate or the final aggregate reviewer gate.
+
+   Repeat (a)–(e) until every slice has been completed. Each
+   `test-architect`, `greener`, and `refactorer` dispatch is per slice
+   — do not write tests, code, or refactors for slices other than the
+   one in flight.
 
 3. Dispatch 5 reviewers in parallel: `code-reviewer`,
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
@@ -137,14 +158,16 @@ Before any agent dispatch, decide where to work:
 ```
 for each slice:
   test-architect (per slice) → red gate → greener (per slice) → green gate
-                                                ↓
-                                       (next slice or done)
-                                                ↓
-                          5 reviewers → aggregate gate
-                              ↑                ↓ fail
-                              └─ implementer (typed class)
-                                                ↓ pass
-                                          verification clean
+                                                                    ↓
+                                          refactorer (per slice, optional commit)
+                                                                    ↓
+                                                       (next slice or done)
+                                                                    ↓
+                                              5 reviewers → aggregate gate
+                                                  ↑                ↓ fail
+                                                  └─ implementer (typed class)
+                                                                    ↓ pass
+                                                              verification clean
 ```
 
 Maximum 5 rounds. Each round is a complete re-review with fresh context —
