@@ -40,8 +40,12 @@ The agents read:
 If `$ARGUMENTS/plan.md` does not exist:
 
 - **Standalone mode** — bootstrap a minimal `$ARGUMENTS/task.md` from
-  `$ARGUMENTS` (or have the user provide a description) and run
-  `test-architect` → `implementer` → reviewers from `task.md` alone.
+  `$ARGUMENTS` (or have the user provide a description) and run the
+  per-slice R-G-R trio against the single derived slice:
+  `test-architect` → red gate → `greener` → green gate → `refactorer`
+  (optional commit) → reviewers, all working from `task.md` alone.
+  `implementer` is reserved for the aggregate-gate review-fix loop, as
+  it is in normal mode.
 
 Coordinate progress via TodoWrite. Seed: `Test-architect (per slice) →
 Red gate → Greener (per slice) → Green gate → Refactorer (per slice) →

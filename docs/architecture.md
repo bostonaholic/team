@@ -202,18 +202,52 @@ worktrees do not duplicate the artifacts. See
 
 ### Phase 7: Implement
 
-**Sub-pipeline:**
-1. **Test-first** — `test-architect` writes failing acceptance tests.
-2. **Mechanical gate** — orchestrator runs the suite; all tests must
-   fail with assertion errors, not crashes.
-3. **Slice execution** — `implementer` works through the plan one slice
-   at a time, committing each atomically.
-4. **Code review** — 5 reviewers in parallel: `code-reviewer`,
+**Sub-pipeline (per-slice R-G-R trio, repeated for every slice in the
+`structure.md` order):**
+
+1. **Red — Test-architect (per slice)** — `test-architect` is dispatched
+   once per slice and writes only that slice's failing acceptance tests,
+   then commits as `test: <slice>`.
+2. **Mechanical red gate** — the orchestrator runs the suite. The current
+   slice's tests must fail with assertion errors (not crashes), and any
+   prior slices' tests must still pass. On the first slice the prior-
+   slices set is empty, so the gate only checks the current slice's
+   tests fail cleanly.
+3. **Green — Greener (per slice)** — `greener` is dispatched once per
+   slice and writes the minimum code that turns the slice's failing
+   tests green, then commits as `feat: <slice>`.
+4. **Mechanical green gate** — the orchestrator re-runs the suite. The
+   slice advances only if the current slice's acceptance tests pass
+   **and** all prior slices' tests still pass. On failure, the
+   orchestrator re-dispatches `greener` with the typed `green failed`
+   class and the failing-test names. The gate is capped at **3
+   attempts** per slice (`maxRetries: 3`); at the cap, the orchestrator
+   escalates. The prior-slices regression check is what catches a slice
+   N green attempt that breaks slice N-1.
+5. **Refactor — Refactorer (per slice, optional commit)** — `refactorer`
+   is dispatched once per slice, loads
+   `skills/refactoring-to-patterns/SKILL.md`, performs the smallest
+   structural change at a time, re-runs the full test suite after each
+   change, and commits as `refactor: <slice>` only if the suite is still
+   green. **The commit is optional**: when there is no refactoring
+   opportunity, or when the refactor cannot leave the suite green, the
+   agent reverts its changes and reports `no-op`. A no-op produces no
+   commit. The refactorer self-verifies; there is no separate mechanical
+   gate after it (a regression that slipped past would be caught by the
+   next slice's red gate or the final aggregate reviewer gate).
+
+After every slice has completed its trio:
+
+6. **Code review** — 5 reviewers in parallel: `code-reviewer`,
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
-5. **Aggregate gate** — orchestrator evaluates hard gates (security +
-   verifier + code-reviewer). On failure, dispatches the implementer
-   to fix the typed failure class, then re-runs all 5 reviewers. Cap
-   at 5 rounds; beyond that, escalate.
+7. **Aggregate gate** — orchestrator evaluates hard gates (security +
+   verifier + code-reviewer). On failure, the orchestrator dispatches
+   the `implementer` agent with the typed failure class (security,
+   lint, typecheck, build, test, review) to fix the findings, then
+   re-runs all 5 reviewers for a fresh review. Cap at 5 rounds; beyond
+   that, escalate. **`implementer` is reserved for this review-fix loop
+   on aggregate-gate failure** — it is no longer the per-slice green
+   agent (that role belongs to `greener`).
 
 The orchestrator tracks the round count by appending "Review round N"
 items to the TodoWrite ledger.
