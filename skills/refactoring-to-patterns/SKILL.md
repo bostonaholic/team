@@ -144,6 +144,20 @@ time a new variant is added. Frequently accompanies Primitive Obsession.
 - **Decompose Conditional** — Extract the condition and its branches into
   named methods so the intent is readable.
 
+### Mixed Levels of Abstraction
+
+**Smell:** A single function alternates between high-level orchestration
+("save the order, charge the card, send the receipt") and low-level
+primitives ("for each line, format the price as fixed-width 8 chars").
+Readers must repeatedly swap mental contexts. Often a sign of an
+unextracted helper.
+
+**Refactorings:**
+- **Extract Method** — pull the low-level primitive into a function named
+  at the surrounding level's abstraction.
+- **Rule of thumb:** a function should call functions one level of
+  abstraction below its own; never two or more levels at once.
+
 ### Middle Man
 
 **Smell:** A class that delegates most of its methods to another class. If
@@ -153,6 +167,27 @@ the middle man adds no value.
 **Refactorings:**
 - **Remove Middle Man** — Let callers call the delegated class directly.
 - **Inline Method** — If a method just calls another, inline the delegation.
+
+### Constructor Doing Work
+
+**Smell:** A class instantiates its dependencies inside methods
+(`new HttpClient()` inside `fetchUser()`), takes per-call work parameters
+in the constructor (`new ReportGenerator(2024, 1, 1, 2024, 12, 31)`), or
+does I/O / static lookups in the constructor. No seam exists for tests to
+substitute collaborators.
+
+**Refactorings:**
+- **Construct with collaborators, call with work.** Move long-lived
+  dependencies (HTTP client, DB, clock, logger) to the constructor
+  signature. Inject them; do not `new` them inside.
+- **Move per-call work parameters to method signatures.** Date ranges,
+  query strings, and request bodies belong on the method, not the
+  constructor.
+- **Constructors do no work.** No I/O, no XML parsing, no static lookups,
+  no expensive computation. Just assign collaborators and return.
+
+This creates a seam: production wires real collaborators through DI;
+tests substitute fakes or stubs at construction.
 
 ## Safe Refactoring Procedure
 

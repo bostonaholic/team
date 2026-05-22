@@ -30,6 +30,27 @@ All review comments use the Conventional Comments format
 (https://conventionalcomments.org). Every comment MUST include a specific
 `file:line` reference.
 
+### Comment Style
+
+Critique the code, not the coder. Assume competence. The same finding can
+read as collaborative or hostile depending on phrasing:
+
+| Avoid (person-directed) | Prefer (code-directed) |
+|-------------------------|------------------------|
+| "Your approach is adding unnecessary complexity." | "The complexity this adds isn't worth the result." |
+| "You're not handling the null case." | "The null case isn't handled here." |
+| "This doesn't make any sense." | "I can't follow what this branch is doing — clarify?" |
+
+- Explain *why* the change is requested. A finding without a reason loses
+  the rationale for the next reader of the diff.
+- Reserve `issue:` for findings that materially affect correctness,
+  security, or maintainability. Use `suggestion:` or `nitpick:` for
+  preferences.
+- A high comment density on a single change is a design signal, not just a
+  style problem. When the count climbs past ~10 substantive comments,
+  propose splitting the change or escalating the design conversation out
+  of the review tool.
+
 ### Comment Types
 
 **issue (blocking):**
@@ -83,6 +104,25 @@ file: src/models/types.ts:7
 - **REQUEST CHANGES:** Blocking issues found. The pipeline MUST loop back to
   IMPLEMENT. No override — quality issues must be resolved before shipping.
 - **COMMENT:** Non-blocking suggestions only. Implementation is correct.
+
+**Test-quality flags.** Test files are part of the diff. Walk every changed
+`*test*` / `*spec*` / `__tests__/*` file against the rules in
+`skills/test-first-development/SKILL.md` ("Test Style Rules"). The
+following anti-patterns are `suggestion:` individually and `issue:` when
+they appear across multiple tests:
+
+- Change-detector tests — assertions on which collaborator methods were
+  called without verifying observable state
+- Mock-everything / mock chains — mocks for collaborators that have a
+  real or fake equivalent
+- Full-equality assertions on complex objects when one field carries the
+  contract
+- `sleep()` for synchronization
+- Logic in tests (`if`, loops, string-building) that can carry the same
+  bug as the code
+- Tests named after methods (`testProcessOrder_2`) rather than behaviors
+  (`refundsCardOnPartialFailure`)
+- DRY helpers that hide the asserted value
 
 ### UX Reviewer
 
