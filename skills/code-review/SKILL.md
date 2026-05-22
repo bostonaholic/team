@@ -53,13 +53,6 @@ nitpick: "data" is too vague — consider "userProfile" to match the domain.
 file: src/models/types.ts:7
 ```
 
-**praise:**
-Acknowledges good work. Reinforces positive patterns.
-```
-praise: Clean separation of side effects from pure logic here.
-file: src/services/billing.ts:30-45
-```
-
 ## Gate Types by Reviewer
 
 | Reviewer | Gate Type | Blocks Ship? |
