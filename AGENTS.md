@@ -51,7 +51,7 @@ Team runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-
 | `/team-structure` | Break design into vertical slices (human gate) |
 | `/team-plan` | Tactical plan from approved structure |
 | `/team-worktree` | Prepare isolated git worktree |
-| `/team-implement` | Test-first + slice execution + 5-reviewer verify |
+| `/team-implement` | Per-slice R-G-R trio + 5-reviewer verify |
 | `/team-pr` | Commit + open PR |
 
 ## Agents (15)
