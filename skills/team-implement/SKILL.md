@@ -8,10 +8,15 @@ argument-hint: "docs/plans/<id>/"
 
 Run the IMPLEMENT phase. Three internal sub-steps:
 
-1. **Test-first** — `test-architect` writes failing acceptance tests
-2. **Slice execution** — `implementer` executes vertical slices with
-   per-slice commits
+1. **Test-first (per slice)** — `test-architect` is dispatched once per
+   slice and writes that slice's failing acceptance tests
+2. **Slice execution (per slice)** — `implementer` executes the slice's
+   file-level steps and produces the slice's commit(s)
 3. **Code review** — 5 parallel reviewers + aggregate hard-gate retry loop
+
+Steps 1 and 2 alternate inside a per-slice loop: `test-architect →
+red gate → implementer` for each slice in order. Step 3 runs once after
+every slice is done.
 
 ## Input
 
@@ -33,8 +38,8 @@ If `$ARGUMENTS/plan.md` does not exist:
   `$ARGUMENTS` (or have the user provide a description) and run
   `test-architect` → `implementer` → reviewers from `task.md` alone.
 
-Coordinate progress via TodoWrite. Seed: `Test-architect → Mechanical
-gate → Implementer (per slice) → Review round 1`.
+Coordinate progress via TodoWrite. Seed: `Test-architect (per slice) →
+Red gate → Implementer (per slice) → Review round 1`.
 
 ## Worktree Check
 
@@ -69,37 +74,61 @@ Before any agent dispatch, decide where to work:
 
 1. **Verify** `$ARGUMENTS/plan.md` (resume mode) or bootstrap
    `$ARGUMENTS/task.md` (standalone mode).
-2. Dispatch `test-architect` → produces failing tests. In standalone
-   mode it derives acceptance criteria from `$ARGUMENTS/task.md` instead
-   of `structure.md`.
-3. **Mechanical gate** — confirm all tests fail with assertion errors
-   (not crashes). On crash, fix test infrastructure before proceeding.
-4. Dispatch `implementer` → executes slices with per-slice commits. In
-   standalone mode it works from `$ARGUMENTS/task.md` and the failing
-   tests.
-5. Dispatch 5 reviewers in parallel: `code-reviewer`,
+
+2. **For each slice in `structure.md` (in order):**
+
+   a. Dispatch `test-architect` **for the current slice only** →
+      produces that slice's failing acceptance tests and a `test:
+      <slice>` commit. In standalone mode the agent derives acceptance
+      criteria from `$ARGUMENTS/task.md` instead of `structure.md`.
+
+   b. **Mechanical red gate** — confirm the current slice's tests fail
+      with assertion errors (not crashes), and that any prior slices'
+      tests still pass. On crash, fix test infrastructure before
+      proceeding.
+
+      **First slice boundary:** on the first slice the prior-slices
+      set is empty, so the red gate only checks the current slice's
+      tests fail cleanly. There is nothing yet for the gate to
+      regression-check.
+
+   c. Dispatch `implementer` for the current slice → executes its
+      file-level steps and produces the slice's commit(s). In
+      standalone mode it works from `$ARGUMENTS/task.md` and the
+      slice's failing tests.
+
+   Repeat (a)–(c) until every slice has been completed. Each
+   `test-architect` dispatch is per slice — do not write tests for
+   slices other than the one in flight.
+
+3. Dispatch 5 reviewers in parallel: `code-reviewer`,
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
-6. **Aggregate gate** — evaluate hard gates:
+4. **Aggregate gate** — evaluate hard gates:
    - `security-review` FAIL on CRITICAL or HIGH findings
    - `verification` FAIL if any check failed or no checks detected
    - `code-review` FAIL on REQUEST CHANGES verdict
-7. On hard-gate failure:
+5. On hard-gate failure:
    - Record a typed failure class (security, lint, typecheck, build,
      test, review)
    - Append `Review round <n+1>` to the TodoWrite ledger
    - If round count < 5: re-dispatch implementer with the typed class,
      then re-dispatch ALL 5 reviewers for a fresh review
    - If round count ≥ 5: escalate with a full unresolved-findings summary
-8. **Stop once all hard gates pass clean.** Suggest `/team-pr`.
+6. **Stop once all hard gates pass clean.** Suggest `/team-pr`.
 
 ## Quality Loop
 
 ```
-test-architect → mechanical gate → implementer → 5 reviewers → aggregate gate
-                                       ↑                            ↓ fail
-                                       └────── (specific fix) ──────┘
-                                                                    ↓ pass
-                                                              verification clean
+for each slice:
+  test-architect (per slice) → red gate → implementer (per slice)
+                                                ↓
+                                       (next slice or done)
+                                                ↓
+                          5 reviewers → aggregate gate
+                              ↑                ↓ fail
+                              └─ (specific fix)┘
+                                                ↓ pass
+                                          verification clean
 ```
 
 Maximum 5 rounds. Each round is a complete re-review with fresh context —
