@@ -47,6 +47,7 @@ Team runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-
 | `/team-question <desc>` | Decompose intent into task + questions + brief |
 | `/team-research` | Blind codebase research (runs Question if missing) |
 | `/team-design` | Align with user on approach (human gate) |
+| `/team-design-review` | *(optional)* Adversarial fresh-context audit of `design.md` before the human gate |
 | `/team-structure` | Break design into vertical slices (human gate) |
 | `/team-plan` | Tactical plan from approved structure |
 | `/team-worktree` | Prepare isolated git worktree |
@@ -59,7 +60,7 @@ See `agents/*.md`. Each agent file uses only Claude Code's [supported frontmatte
 
 **Invariant:** the agent inventory in `skills/team/registry.json` (which carries the `phase` mapping) and the files under `agents/` must always agree by name. When adding or renaming an agent, update both in the same commit. The dev hook `.claude/hooks/check-registry-sync.mjs` enforces this automatically.
 
-## Skills (24)
+## Skills (26)
 
 See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodology skills are loaded by agents. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
 
