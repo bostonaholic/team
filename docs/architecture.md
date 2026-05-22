@@ -205,7 +205,7 @@ worktrees do not duplicate the artifacts. See
 **Sub-pipeline (per-slice R-G-R trio, repeated for every slice in the
 `structure.md` order):**
 
-1. **Red — Test-architect (per slice)** — `test-architect` is dispatched
+1. **Red — Test-architect (per slice)** — `red-author` is dispatched
    once per slice and writes only that slice's failing acceptance tests,
    then commits as `test: <slice>`.
 2. **Mechanical red gate** — the orchestrator runs the suite. The current
@@ -213,18 +213,18 @@ worktrees do not duplicate the artifacts. See
    prior slices' tests must still pass. On the first slice the prior-
    slices set is empty, so the gate only checks the current slice's
    tests fail cleanly.
-3. **Green — Greener (per slice)** — `greener` is dispatched once per
+3. **Green — Greener (per slice)** — `green-author` is dispatched once per
    slice and writes the minimum code that turns the slice's failing
    tests green, then commits as `feat: <slice>`.
 4. **Mechanical green gate** — the orchestrator re-runs the suite. The
    slice advances only if the current slice's acceptance tests pass
    **and** all prior slices' tests still pass. On failure, the
-   orchestrator re-dispatches `greener` with the typed `green failed`
+   orchestrator re-dispatches `green-author` with the typed `green failed`
    class and the failing-test names. The gate is capped at **3
    attempts** per slice (`maxRetries: 3`); at the cap, the orchestrator
    escalates. The prior-slices regression check is what catches a slice
    N green attempt that breaks slice N-1.
-5. **Refactor — Refactorer (per slice, optional commit)** — `refactorer`
+5. **Refactor — Refactorer (per slice, optional commit)** — `refactor-author`
    is dispatched once per slice, loads
    `skills/refactoring-to-patterns/SKILL.md`, performs the smallest
    structural change at a time, re-runs the full test suite after each
@@ -232,7 +232,7 @@ worktrees do not duplicate the artifacts. See
    green. **The commit is optional**: when there is no refactoring
    opportunity, or when the refactor cannot leave the suite green, the
    agent reverts its changes and reports `no-op`. A no-op produces no
-   commit. The refactorer self-verifies; there is no separate mechanical
+   commit. The refactor-author self-verifies; there is no separate mechanical
    gate after it (a regression that slipped past would be caught by the
    next slice's red gate or the final aggregate reviewer gate).
 
@@ -247,7 +247,7 @@ After every slice has completed its trio:
    re-runs all 5 reviewers for a fresh review. Cap at 5 rounds; beyond
    that, escalate. **`implementer` is reserved for this review-fix loop
    on aggregate-gate failure** — it is no longer the per-slice green
-   agent (that role belongs to `greener`).
+   agent (that role belongs to `green-author`).
 
 The orchestrator tracks the round count by appending "Review round N"
 items to the TodoWrite ledger.
@@ -272,7 +272,7 @@ the tracking ticket (if `task.md` carries `ticketId`), clean up the worktree.
 | DESIGN    | `design-author`                                                                   |
 | STRUCTURE | `structure-planner`                                                               |
 | PLAN      | `planner`                                                                         |
-| IMPLEMENT | `test-architect` (per slice), `greener` (per slice), `refactorer` (per slice),    |
+| IMPLEMENT | `red-author` (per slice), `green-author` (per slice), `refactor-author` (per slice),    |
 |           | `implementer` (review-fix only), `code-reviewer`, `security-reviewer`,            |
 |           | `technical-writer`, `ux-reviewer`, `verifier` (last 5 parallel)                   |
 
@@ -349,10 +349,10 @@ description) bootstraps the missing upstream artifacts inline.
 | Skill                    | Description                                    | Consumers                                                    |
 |--------------------------|------------------------------------------------|--------------------------------------------------------------|
 | `qrspi-workflow`         | Phase discipline, artifact conventions, gates  | Loaded by orchestrator skills                                |
-| `test-first-development` | Acceptance tests as scope fence                | Loaded by test-architect, orchestrator                       |
+| `test-first-development` | Acceptance tests as scope fence                | Loaded by red-author, orchestrator                       |
 | `code-review`            | Generator-evaluator separation, review method  | Loaded by code-reviewer, security-reviewer, ux-reviewer, technical-writer |
 | `engineering-standards`  | Engineering standards, implementation methodology, quality checklist | Loaded by planner, implementer, code-reviewer |
-| `refactoring-to-patterns`| Code smells and safe refactoring procedures    | Loaded by refactorer                                         |
+| `refactoring-to-patterns`| Code smells and safe refactoring procedures    | Loaded by refactor-author                                         |
 | `solid-principles`       | SOLID design principles                        | Loaded by implementer, code-reviewer                         |
 | `systematic-debugging`   | Root cause investigation                       | Loaded by agents when debugging                              |
 | `documenting-decisions`  | ADR creation and management                    | Loaded by design-author, structure-planner                   |

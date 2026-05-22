@@ -36,7 +36,7 @@ Agents are **decoupled microservices**. Each consumes a predecessor artifact on 
 QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → WORKTREE → IMPLEMENT → PR
 ```
 
-Team runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-PR). Two human gates: **Design approval** (~200-line alignment doc) and **Structure approval** (~2-page vertical-slice breakdown). Research is **blind** — the researcher never sees the user's original task description. The Plan is a tactical artifact for the per-slice agents (test-architect, greener, refactorer); the implementer reads it only in review-fix context. Implement is a sub-pipeline of per-slice R-G-R trios (`test-architect` per slice → red gate → `greener` per slice → green gate → `refactorer` per slice with optional commit) followed by a 5-reviewer adversarial aggregate gate with a typed failure-class retry loop. Everything outside the two human gates is autonomous with mechanical gates.
+Team runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-PR). Two human gates: **Design approval** (~200-line alignment doc) and **Structure approval** (~2-page vertical-slice breakdown). Research is **blind** — the researcher never sees the user's original task description. The Plan is a tactical artifact for the per-slice agents (red-author, green-author, refactor-author); the implementer reads it only in review-fix context. Implement is a sub-pipeline of per-slice R-G-R trios (`red-author` per slice → red gate → `green-author` per slice → green gate → `refactor-author` per slice with optional commit) followed by a 5-reviewer adversarial aggregate gate with a typed failure-class retry loop. Everything outside the two human gates is autonomous with mechanical gates.
 
 ## Entry Points
 

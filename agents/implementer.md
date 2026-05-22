@@ -12,8 +12,8 @@ You are dispatched **only** as part of the review-fix loop after the
 5-reviewer aggregate hard gate fails. The orchestrator passes you a typed
 failure class telling you what to fix; you fix it and return so the next
 review round can run with fresh reviewer context. You do not run normal
-per-slice green or refactor work — those belong to `greener` and
-`refactorer` respectively.
+per-slice green or refactor work — those belong to `green-author` and
+`refactor-author` respectively.
 
 ## Review-fix dispatch (after a hard-gate failure)
 

@@ -2,9 +2,9 @@
 # Acceptance tests for the red-green-refactor-tdd rearchitecture.
 #
 # This script is the immutable scope fence for the IMPLEMENT-phase
-# rearchitecture that reshapes test-architect -> implementer -> reviewers
-# into test-architect (per slice) -> red gate -> greener -> green gate ->
-# refactorer -> next slice -> 5 reviewers. When every assertion here
+# rearchitecture that reshapes red-author -> implementer -> reviewers
+# into red-author (per slice) -> red gate -> green-author -> green gate ->
+# refactor-author -> next slice -> 5 reviewers. When every assertion here
 # passes, the rearchitecture is done.
 #
 # Conventions:
@@ -160,27 +160,27 @@ PY
 }
 
 # ---------------------------------------------------------------------------
-# Slice 1: test-architect goes per-slice
+# Slice 1: red-author goes per-slice
 # ---------------------------------------------------------------------------
-section "### Slice 1 ### test-architect goes per-slice"
+section "### Slice 1 ### red-author goes per-slice"
 
-# test-architect-responsibilities-per-slice
+# red-author-responsibilities-per-slice
 assert_grep "Slice 1" \
-  "test-architect-responsibilities-per-slice" \
+  "red-author-responsibilities-per-slice" \
   "per[ -]slice" \
-  "agents/test-architect.md"
+  "agents/red-author.md"
 
 # The previous "every acceptance test from structure.md" wording must be gone.
 assert_not_grep "Slice 1" \
-  "test-architect-old-every-test-wording-removed" \
+  "red-author-old-every-test-wording-removed" \
   "every acceptance test from" \
-  "agents/test-architect.md"
+  "agents/red-author.md"
 
-# test-architect-emits-test-commit
+# red-author-emits-test-commit
 assert_grep "Slice 1" \
-  "test-architect-emits-test-commit" \
+  "red-author-emits-test-commit" \
   "test: <slice>|test:.*slice|^## Commit" \
-  "agents/test-architect.md"
+  "agents/red-author.md"
 
 # team-implement-per-slice-dispatch-loop
 assert_grep "Slice 1" \
@@ -198,35 +198,35 @@ assert_grep "Slice 1" \
 assert_hook_exit_zero "Slice 1" "registry-sync-still-passes-slice-1"
 
 # ---------------------------------------------------------------------------
-# Slice 2: introduce greener and the mechanical green gate
+# Slice 2: introduce green-author and the mechanical green gate
 # ---------------------------------------------------------------------------
-section "### Slice 2 ### introduce greener and the mechanical green gate"
+section "### Slice 2 ### introduce green-author and the mechanical green gate"
 
-# greener-agent-file-exists
+# green-author-agent-file-exists
 assert_file_exists "Slice 2" \
-  "greener-agent-file-exists" \
-  "agents/greener.md"
+  "green-author-agent-file-exists" \
+  "agents/green-author.md"
 
-# greener-frontmatter-complete (all five required fields)
-assert_grep "Slice 2" "greener-frontmatter-name"           "^name:"           "agents/greener.md"
-assert_grep "Slice 2" "greener-frontmatter-description"    "^description:"    "agents/greener.md"
-assert_grep "Slice 2" "greener-frontmatter-model"          "^model:"          "agents/greener.md"
-assert_grep "Slice 2" "greener-frontmatter-tools"          "^tools:"          "agents/greener.md"
-assert_grep "Slice 2" "greener-frontmatter-permissionMode" "^permissionMode:" "agents/greener.md"
+# green-author-frontmatter-complete (all five required fields)
+assert_grep "Slice 2" "green-author-frontmatter-name"           "^name:"           "agents/green-author.md"
+assert_grep "Slice 2" "green-author-frontmatter-description"    "^description:"    "agents/green-author.md"
+assert_grep "Slice 2" "green-author-frontmatter-model"          "^model:"          "agents/green-author.md"
+assert_grep "Slice 2" "green-author-frontmatter-tools"          "^tools:"          "agents/green-author.md"
+assert_grep "Slice 2" "green-author-frontmatter-permissionMode" "^permissionMode:" "agents/green-author.md"
 
-# greener-scope-fence-present (forbids refactoring/abstraction beyond a failing test)
+# green-author-scope-fence-present (forbids refactoring/abstraction beyond a failing test)
 assert_grep "Slice 2" \
-  "greener-scope-fence-present" \
+  "green-author-scope-fence-present" \
   "[Ss]cope fence|cannot refactor|forbidden.*refactor|do NOT.*refactor|no.*abstraction" \
-  "agents/greener.md"
+  "agents/green-author.md"
 
-# greener-in-registry (entry exists, phase=IMPLEMENT, no parallel:true)
-assert_registry_agent "Slice 2" "greener-in-registry" "greener"
+# green-author-in-registry (entry exists, phase=IMPLEMENT, no parallel:true)
+assert_registry_agent "Slice 2" "green-author-in-registry" "green-author"
 
-# greener-in-phase-table
+# green-author-in-phase-table
 assert_grep "Slice 2" \
-  "greener-in-phase-table" \
-  "greener" \
+  "green-author-in-phase-table" \
+  "green-author" \
   "skills/team/SKILL.md"
 
 # green-gate-documented in skills/team-implement/SKILL.md
@@ -274,83 +274,83 @@ fi
 assert_hook_exit_zero "Slice 2" "registry-sync-passes-slice-2"
 
 # ---------------------------------------------------------------------------
-# Slice 3: introduce refactorer and complete the trio
+# Slice 3: introduce refactor-author and complete the trio
 # ---------------------------------------------------------------------------
-section "### Slice 3 ### introduce refactorer and complete the trio"
+section "### Slice 3 ### introduce refactor-author and complete the trio"
 
-# refactorer-agent-file-exists
+# refactor-author-agent-file-exists
 assert_file_exists "Slice 3" \
-  "refactorer-agent-file-exists" \
-  "agents/refactorer.md"
+  "refactor-author-agent-file-exists" \
+  "agents/refactor-author.md"
 
-# refactorer-frontmatter-complete
-assert_grep "Slice 3" "refactorer-frontmatter-name"           "^name:"           "agents/refactorer.md"
-assert_grep "Slice 3" "refactorer-frontmatter-description"    "^description:"    "agents/refactorer.md"
-assert_grep "Slice 3" "refactorer-frontmatter-model"          "^model:"          "agents/refactorer.md"
-assert_grep "Slice 3" "refactorer-frontmatter-tools"          "^tools:"          "agents/refactorer.md"
-assert_grep "Slice 3" "refactorer-frontmatter-permissionMode" "^permissionMode:" "agents/refactorer.md"
+# refactor-author-frontmatter-complete
+assert_grep "Slice 3" "refactor-author-frontmatter-name"           "^name:"           "agents/refactor-author.md"
+assert_grep "Slice 3" "refactor-author-frontmatter-description"    "^description:"    "agents/refactor-author.md"
+assert_grep "Slice 3" "refactor-author-frontmatter-model"          "^model:"          "agents/refactor-author.md"
+assert_grep "Slice 3" "refactor-author-frontmatter-tools"          "^tools:"          "agents/refactor-author.md"
+assert_grep "Slice 3" "refactor-author-frontmatter-permissionMode" "^permissionMode:" "agents/refactor-author.md"
 
-# refactorer-runs-only-on-green
+# refactor-author-runs-only-on-green
 assert_grep "Slice 3" \
-  "refactorer-runs-only-on-green" \
+  "refactor-author-runs-only-on-green" \
   "only runs on green|only.*on green|runs only on green" \
-  "agents/refactorer.md"
+  "agents/refactor-author.md"
 
-# refactorer-reruns-tests-each-change
+# refactor-author-reruns-tests-each-change
 assert_grep "Slice 3" \
-  "refactorer-reruns-tests-each-change" \
+  "refactor-author-reruns-tests-each-change" \
   "re-?run.*test.*after each|after each.*(structural )?change.*re-?run|re-?run the full test suite after each" \
-  "agents/refactorer.md"
+  "agents/refactor-author.md"
 
-# refactorer-noop-on-failure (revert + report no-op when refactoring breaks a previously-green test)
+# refactor-author-noop-on-failure (revert + report no-op when refactoring breaks a previously-green test)
 assert_grep "Slice 3" \
-  "refactorer-noop-on-failure" \
+  "refactor-author-noop-on-failure" \
   "no-op|noop" \
-  "agents/refactorer.md"
+  "agents/refactor-author.md"
 
 assert_grep "Slice 3" \
-  "refactorer-revert-on-red" \
+  "refactor-author-revert-on-red" \
   "revert|forbidden.*commit.*red|do NOT commit.*red|cannot commit.*red" \
-  "agents/refactorer.md"
+  "agents/refactor-author.md"
 
-# refactorer-in-registry
-assert_registry_agent "Slice 3" "refactorer-in-registry" "refactorer"
+# refactor-author-in-registry
+assert_registry_agent "Slice 3" "refactor-author-in-registry" "refactor-author"
 
-# refactorer-in-phase-table (both greener and refactorer in IMPLEMENT row)
+# refactor-author-in-phase-table (both green-author and refactor-author in IMPLEMENT row)
 assert_grep "Slice 3" \
-  "refactorer-in-phase-table-greener" \
-  "greener" \
+  "refactor-author-in-phase-table-green-author" \
+  "green-author" \
   "skills/team/SKILL.md"
 
 assert_grep "Slice 3" \
-  "refactorer-in-phase-table-refactorer" \
-  "refactorer" \
+  "refactor-author-in-phase-table-refactor-author" \
+  "refactor-author" \
   "skills/team/SKILL.md"
 
-# Order check: greener appears before refactorer in skills/team/SKILL.md.
+# Order check: green-author appears before refactor-author in skills/team/SKILL.md.
 skill_path="skills/team/SKILL.md"
 if [ -f "$skill_path" ]; then
-  greener_line=$(grep -nE "greener" "$skill_path" | head -n 1 | cut -d: -f1 || true)
-  refactorer_line=$(grep -nE "refactorer" "$skill_path" | head -n 1 | cut -d: -f1 || true)
-  if [ -n "${greener_line:-}" ] && [ -n "${refactorer_line:-}" ] && [ "$greener_line" -lt "$refactorer_line" ]; then
-    pass "Slice 3" "phase-table-order-greener-before-refactorer"
+  green_author_line=$(grep -nE "green-author" "$skill_path" | head -n 1 | cut -d: -f1 || true)
+  refactor_author_line=$(grep -nE "refactor-author" "$skill_path" | head -n 1 | cut -d: -f1 || true)
+  if [ -n "${green_author_line:-}" ] && [ -n "${refactor_author_line:-}" ] && [ "$green_author_line" -lt "$refactor_author_line" ]; then
+    pass "Slice 3" "phase-table-order-green-author-before-refactor-author"
   else
-    fail "Slice 3" "phase-table-order-greener-before-refactorer" \
-      "expected greener (line=${greener_line:-NONE}) before refactorer (line=${refactorer_line:-NONE}) in $skill_path"
+    fail "Slice 3" "phase-table-order-green-author-before-refactor-author" \
+      "expected green-author (line=${green_author_line:-NONE}) before refactor-author (line=${refactor_author_line:-NONE}) in $skill_path"
   fi
 else
-  fail "Slice 3" "phase-table-order-greener-before-refactorer" "file missing: $skill_path"
+  fail "Slice 3" "phase-table-order-green-author-before-refactor-author" "file missing: $skill_path"
 fi
 
 # trio-loop-documented in team-implement skill (full trio + optional refactor commit)
 assert_grep "Slice 3" \
-  "trio-loop-documented-greener" \
-  "greener" \
+  "trio-loop-documented-green-author" \
+  "green-author" \
   "skills/team-implement/SKILL.md"
 
 assert_grep "Slice 3" \
-  "trio-loop-documented-refactorer" \
-  "refactorer" \
+  "trio-loop-documented-refactor-author" \
+  "refactor-author" \
   "skills/team-implement/SKILL.md"
 
 assert_grep "Slice 3" \

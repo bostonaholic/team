@@ -106,14 +106,14 @@ context referenced in the body)
 
 1. **One slice at a time.** Steps within a slice may parallelize, but slices
    themselves are sequential. The per-slice R-G-R trio commits each slice
-   atomically: `test-architect` lands the slice's failing tests, `greener`
-   lands the minimum code that turns them green, and `refactorer` may land
+   atomically: `red-author` lands the slice's failing tests, `green-author`
+   lands the minimum code that turns them green, and `refactor-author` may land
    an optional structural-improvement commit when one is available.
 2. **Reuse, don't reinvent.** Reference existing functions, utilities, and
    patterns from research.md.
 3. **Stay under 300 lines.** The plan must be scannable in one sitting.
 4. **No implementation code.** Describe *what* to build and *where*. Leave
-   *how* (the actual code) to `greener` (and `refactorer` for any
+   *how* (the actual code) to `green-author` (and `refactor-author` for any
    structural improvements).
 5. **Atomic slices.** Each slice should leave the codebase in a working
    state with its acceptance tests passing.
