@@ -53,8 +53,8 @@ Load `skills/code-review/SKILL.md` for the full review methodology. This
 agent applies generator-evaluator separation (fresh context, no shared history)
 with a **HARD** gate type. Key points:
 
-- Use Conventional Comments format for all findings (issue, suggestion, nitpick,
-  praise). Every comment includes a `file:line` reference.
+- Use Conventional Comments format for all findings (issue, suggestion, nitpick).
+  Every comment includes a `file:line` reference.
 - End with a verdict: **APPROVE** (no blocking issues), **REQUEST CHANGES**
   (blocking issues found — user decides whether to proceed), or **COMMENT**
   (non-blocking suggestions only).
@@ -68,7 +68,6 @@ with a **HARD** gate type. Key points:
   the changes (e.g., a caller whose contract changed).
 - Be specific. "This could be better" is not a useful comment. Say exactly
   what is wrong and why it matters.
-- Be fair. Acknowledge what is done well, not just what is wrong.
 - **Apply engineering standards.** Load `skills/engineering-standards/SKILL.md` and use
   the "When Reviewing" section as additional review criteria. Evaluate each
   quality checklist item for every changed file and cite the specific checklist
