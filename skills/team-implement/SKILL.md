@@ -10,13 +10,14 @@ Run the IMPLEMENT phase. Three internal sub-steps:
 
 1. **Test-first (per slice)** — `test-architect` is dispatched once per
    slice and writes that slice's failing acceptance tests
-2. **Slice execution (per slice)** — `implementer` executes the slice's
-   file-level steps and produces the slice's commit(s)
+2. **Green-step (per slice)** — `greener` is dispatched once per slice
+   and writes the minimum code that turns the slice's red tests green
 3. **Code review** — 5 parallel reviewers + aggregate hard-gate retry loop
 
 Steps 1 and 2 alternate inside a per-slice loop: `test-architect →
-red gate → implementer` for each slice in order. Step 3 runs once after
-every slice is done.
+red gate → greener → green gate` for each slice in order. Step 3 runs
+once after every slice is done. The review-fix loop re-dispatches the
+`implementer` agent (typed failure class) when the aggregate gate fails.
 
 ## Input
 
@@ -39,7 +40,7 @@ If `$ARGUMENTS/plan.md` does not exist:
   `test-architect` → `implementer` → reviewers from `task.md` alone.
 
 Coordinate progress via TodoWrite. Seed: `Test-architect (per slice) →
-Red gate → Implementer (per slice) → Review round 1`.
+Red gate → Greener (per slice) → Green gate → Review round 1`.
 
 ## Worktree Check
 
@@ -92,14 +93,29 @@ Before any agent dispatch, decide where to work:
       tests fail cleanly. There is nothing yet for the gate to
       regression-check.
 
-   c. Dispatch `implementer` for the current slice → executes its
-      file-level steps and produces the slice's commit(s). In
-      standalone mode it works from `$ARGUMENTS/task.md` and the
-      slice's failing tests.
+   c. Dispatch `greener` for the current slice → writes the minimum
+      code that turns the slice's failing acceptance tests green and
+      produces a `feat: <slice>` commit (one per repo in multi-repo
+      mode). In standalone mode it works from `$ARGUMENTS/task.md`
+      and the slice's failing tests.
 
-   Repeat (a)–(c) until every slice has been completed. Each
-   `test-architect` dispatch is per slice — do not write tests for
-   slices other than the one in flight.
+   d. **Mechanical green gate** — re-run the test suite. Advance to
+      the next slice **only if** the current slice's acceptance tests
+      pass **and** all prior slices' tests still pass. On failure,
+      re-dispatch `greener` with the typed `green failed` class and
+      the failing-test names. Cap at **3 attempts** per slice
+      (`maxRetries: 3`); escalate at cap. Prior slices' tests are
+      included in the gate so a regression in slice N-1 caused by
+      slice N's `greener` is caught immediately.
+
+      **First slice boundary:** on the first slice the prior-slices
+      set is empty, so the green gate only checks the current slice's
+      tests pass. There is nothing yet for the gate to
+      regression-check.
+
+   Repeat (a)–(d) until every slice has been completed. Each
+   `test-architect` and `greener` dispatch is per slice — do not write
+   tests or code for slices other than the one in flight.
 
 3. Dispatch 5 reviewers in parallel: `code-reviewer`,
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
@@ -120,13 +136,13 @@ Before any agent dispatch, decide where to work:
 
 ```
 for each slice:
-  test-architect (per slice) → red gate → implementer (per slice)
+  test-architect (per slice) → red gate → greener (per slice) → green gate
                                                 ↓
                                        (next slice or done)
                                                 ↓
                           5 reviewers → aggregate gate
                               ↑                ↓ fail
-                              └─ (specific fix)┘
+                              └─ implementer (typed class)
                                                 ↓ pass
                                           verification clean
 ```
