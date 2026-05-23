@@ -68,7 +68,7 @@ done
   tier 2 (no explicit arg), announce the resolved directory to the user before
   proceeding, so an auto-picked topic is never silent.
 - **If the block printed nothing** (tier 3 — no directory under `docs/plans/`
-  holds `plan.md`, and `$ARGUMENTS` is empty), do not hard-error. Fire
+  holds `plan.md`), do not hard-error. Fire
   `AskUserQuestion` with a `Setup` header and labeled options:
   - **Run the producer** — run `/team-plan docs/plans/<id>/` to produce the
     missing `plan.md`.
@@ -97,7 +97,8 @@ Before any agent dispatch, decide where to work:
 1. **Read `$ARGUMENTS/repos.md` if present.** When present, you are in
    multi-repo mode. Confirm a worktree exists in **every** listed repo
    (read the `## Worktrees` section). If any are missing, tell the
-   user to run `/team-worktree docs/plans/<id>/` and stop.
+   user to run `/team-worktree [docs/plans/<id>/]` (the path is
+   optional — discovery resolves it) and stop.
 2. Run `git rev-parse --absolute-git-dir`. If the path contains
    `/worktrees/`, you are already inside a Claude Code worktree —
    proceed in place. In multi-repo mode this should be the home repo's
@@ -112,9 +113,9 @@ Before any agent dispatch, decide where to work:
      tree.
 
    - On **Worktree** — derive `<id>` from `$ARGUMENTS`, create the
-     worktree(s) via `/team-worktree docs/plans/<id>/`, tell the user
+     worktree(s) via `/team-worktree [docs/plans/<id>/]`, tell the user
      the home worktree path, and ask them to re-run
-     `/team-implement docs/plans/<id>/` from that directory.
+     `/team-implement [docs/plans/<id>/]` from that directory.
    - On **In-place** — proceed. (In-place is single-repo only — refuse
      in-place if `repos.md` is present and tell the user that
      multi-repo work requires worktrees.)

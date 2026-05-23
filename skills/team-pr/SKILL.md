@@ -34,6 +34,9 @@ call — agent threads reset cwd between calls):
 # NOTE: this block is duplicated across 8 skills by design (see docs/architecture.md); future: shared discover-topic.sh.
 ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
 PHASE_FILES="task questions research design structure plan"
+# design.md is a lenient discovery proxy: the canonical PR-phase predecessor is
+# "aggregate gate passed" (no single artifact), so we key on design.md to mean
+# "topic progressed far enough to have design context". team-pr also runs standalone.
 PRED="design.md"            # predecessor artifact this skill consumes
 # Tier 1 — explicit: $ARGUMENTS names an existing dir → use verbatim.
 if [ -n "$ARGUMENTS" ] && [ -d "$ARGUMENTS" ]; then
