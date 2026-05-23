@@ -18,7 +18,11 @@ discipline without the full QRSPI ceremony.
 - An issue URL — fetched via `gh issue view` to extract title and body.
 - Free-form text — treated as the bug description.
 
-If `$ARGUMENTS` is empty, ask the user to describe the bug and stop.
+When `$ARGUMENTS` is empty, **discover, don't demand**: ground in repo context
+before asking. Read recent `git log` activity (which can surface the likely
+failing area) and the repo's `README` / `CLAUDE.md` to propose a likely topic,
+then use `AskUserQuestion` with labeled options to fill any genuine gap. Never
+bare-stop with a plain "describe the bug" demand when context is available.
 
 ## When to Use
 

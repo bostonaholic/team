@@ -38,11 +38,18 @@ ticket-derived slug (`ENG-1234-add-rate-limiting`) or a date-derived slug
   before decomposition.
 - Free-form text — treated directly as the feature/task description.
 
-If `$ARGUMENTS` is empty, ask the user to describe what they want and stop.
+When `$ARGUMENTS` is empty, **discover, don't demand**: ground in repo context
+before asking. Read recent `git log` activity and the repo's `README` /
+`CLAUDE.md` to propose a likely topic, then use `AskUserQuestion` with labeled
+options to fill any genuine gap in intent. Never bare-stop with a plain
+"describe it" demand when context is already available.
 
 ## Execution
 
 1. **Resolve the input** to a description:
+   - Ground (empty `$ARGUMENTS`): read recent `git log` activity and the repo's
+     `README` / `CLAUDE.md` to propose a likely topic; ask only for genuine
+     gaps via `AskUserQuestion` (labeled options), never a bare-stop demand.
    - Ticket-only: ask the user for context, or use any tracker integration
      they have configured to fetch the issue body.
    - Issue URL: run `gh issue view <url> --json title,body` and use the
