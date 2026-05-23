@@ -314,10 +314,23 @@ directory through a three-tier chain — explicit `$ARGUMENTS` →
 newest-mtime convention discovery (filtering by `ID_RE` / `PHASE_FILES`,
 ported from `hooks/session-start-recover.mjs:15-16` as a POSIX ERE
 translation, and the skill's required predecessor artifact) →
-`AskUserQuestion`. Standalone
-modes still exist: a partial skill invoked with no resolvable directory
-(or with a free-form description) bootstraps the missing upstream
-artifacts inline rather than hard-erroring.
+`AskUserQuestion`. Standalone modes still exist: a partial skill invoked
+with no resolvable directory (or with a free-form description) bootstraps
+the missing upstream artifacts inline rather than hard-erroring.
+
+**Discovery duplication — design rationale.** Each archetype-A skill
+embeds the three-tier resolver as a single self-contained bash block
+rather than calling a shared script. Agent threads reset their cwd
+between Bash calls, so the block cannot rely on any shared shell state
+and must stand alone in one invocation. The ~6 load-bearing lines
+(`ID_RE`, `PHASE_FILES`, root literal, predecessor filter) are therefore
+duplicated verbatim across the 8 directory-consuming skills by deliberate
+decision — no shared runtime helper was added, and the
+`check-discovery-consistency.sh` gate enforces byte-identity so the
+copies cannot drift. A shared `discover-topic.sh` that could also dedup
+the two hooks' `findActiveTopic` is a recorded future consolidation; it
+is what the `# NOTE: ... future: shared discover-topic.sh` comment in
+each block points at.
 
 ### Methodology skills (loaded by agents, not directly invoked)
 
