@@ -52,3 +52,7 @@
 # - linear.api-key
 # - github.org
 # - github.repo
+
+dolt.auto-commit: "on"
+
+export.interval: 0

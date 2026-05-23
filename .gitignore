@@ -8,10 +8,13 @@
 .team/
 
 # Beads / Dolt files (added by bd init)
+# NOTE: do NOT add a blanket `.beads/` ignore — bd's own .beads/.gitignore
+# tracks issues.jsonl + config while ignoring the Dolt runtime. Ignoring all of
+# .beads/ breaks bd's JSONL auto-export (its `git add` fails). The credential
+# key and *.db files stay ignored via the patterns below.
 .dolt/
 *.db
 .beads-credential-key
-.beads/
 
 # Playwright
 .playwright-mcp/
