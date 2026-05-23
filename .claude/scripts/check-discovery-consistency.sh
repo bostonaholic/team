@@ -3,12 +3,13 @@
 # check-discovery-consistency.sh — acceptance suite for skill-input-discovery.
 #
 # Dev-only, non-distributed (lives under .claude/, not hooks/) per the
-# runtime-vs-development split in CLAUDE.md. This is slice 6's named
-# deliverable, authored test-first: it currently FAILS (the eight skills carry
-# no discovery block yet) and will pass once slices 1-5 land.
+# runtime-vs-development split in CLAUDE.md. This is the committed consistency
+# gate for the skill-input-discovery feature: it asserts every archetype-A
+# skill carries the discovery block, the load-bearing fragments stay
+# byte-identical to canon, and the blind-research invariant holds.
 #
 # It is the scope fence for the whole feature. If every assertion here passes,
-# the feature is done; any failing assertion names an incomplete slice.
+# the feature is intact; any failing assertion names a regression or drift.
 #
 # set -uo pipefail (NOT -e): every assertion must run so the failure count is
 # complete. fail() prints the violating skill + expected-vs-actual and bumps a
@@ -33,6 +34,18 @@ CANON_PHASE_FILES='PHASE_FILES="task questions research design structure plan"'
 CANON_APPROVAL_GREP="grep -qE '^approved:[[:space:]]*true[[:space:]]*\$'"
 CANON_ROOT_LITERAL='docs/plans/'
 MARKER='Three-tier artifact-directory discovery'
+
+# --- temp cleanup -------------------------------------------------------------
+# The executable checks below create a mktemp snippet file and per-fixture
+# mktemp -d dirs (`snippet` / `fx`), removed inline on the happy path. This
+# trap is the safety net: on EXIT/INT/TERM it removes whatever those vars
+# currently point at, so an interrupt never leaks temp artifacts. It touches
+# no assertion and no exit code.
+cleanup() {
+  [ -n "${snippet:-}" ] && \rm -f "$snippet" 2>/dev/null || true
+  [ -n "${fx:-}" ] && \rm -rf "$fx" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
 
 # --- failure bookkeeping ------------------------------------------------------
 ERRORS=0
