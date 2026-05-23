@@ -63,27 +63,29 @@ done
 # Tier 3 — none found: print nothing → fall to AskUserQuestion (prose below).
 ```
 
-If the block printed a path, use it as `$ARGUMENTS` (tier 1 explicit arg, or
-tier 2 discovery). When the path came from tier 2 (no explicit arg), announce
-the resolved directory to the user before proceeding, so an auto-picked topic
-is never silent.
+- **If the block printed a path**, use it as `$ARGUMENTS` for the rest of this
+  skill (tier 1 explicit arg, or tier 2 discovery). When the path came from
+  tier 2 (no explicit arg), announce the resolved directory to the user before
+  proceeding, so an auto-picked topic is never silent.
+- **If the block printed nothing** (tier 3 — no directory under `docs/plans/`
+  holds `plan.md`, and `$ARGUMENTS` is empty), do not hard-error. Fire
+  `AskUserQuestion` with a `Setup` header and labeled options:
+  - **Run the producer** — run `/team-plan docs/plans/<id>/` to produce the
+    missing `plan.md`.
+  - **Provide a path** — the user supplies the `docs/plans/<id>/` directory
+    directly (run `ls docs/plans/` to find your topic directory).
+  - **Describe the task** — the user types a 1–2 sentence description of what
+    to implement. Derive a fresh `<id>` (date-prefixed kebab slug, the same way
+    the questioner does), create `docs/plans/<id>/task.md` from that
+    description, then proceed from the new directory in **standalone mode**.
 
-If the block printed nothing (tier 3 — no directory under `docs/plans/` holds
-`plan.md`, and `$ARGUMENTS` is empty), do not hard-error and do not bootstrap
-from an empty `$ARGUMENTS`. Fire `AskUserQuestion` with a `Setup` header and
-labeled options:
-
-- **Provide a path** — the user supplies a `docs/plans/<id>/` directory to
-  resume from (run `ls docs/plans/` to find your topic directory).
-- **Describe the task** — the user supplies a task description; bootstrap a
-  minimal `$ARGUMENTS/task.md` from it and proceed in standalone mode.
-- **Run the producer** — run `/team-plan docs/plans/<id>/` to produce the
-  missing `plan.md` first.
-
-**Standalone mode** — a directory IS resolved (tier 1 or tier 2). Then:
-If `$ARGUMENTS/plan.md` does not exist in it, bootstrap a minimal
-`$ARGUMENTS/task.md` from `$ARGUMENTS` (or have the user provide a description)
-and run `test-architect` → `implementer` → reviewers from `task.md` alone.
+**Standalone mode** — the resolved or provided directory has no `plan.md`, so
+the run starts from that directory's `task.md` instead. It triggers whenever
+tier 1 (explicit `$ARGUMENTS`), a user-provided path, or a freshly derived
+directory (from **Describe the task**) names a `docs/plans/<id>/` that lacks
+`plan.md`. The directory is always defined in this case.
+If `$ARGUMENTS/plan.md` does not exist in it, run `test-architect` →
+`implementer` → reviewers from `$ARGUMENTS/task.md` alone.
 
 Coordinate progress via TodoWrite. Seed: `Test-architect → Mechanical
 gate → Implementer (per slice) → Review round 1`.
