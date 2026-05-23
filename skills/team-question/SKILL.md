@@ -47,9 +47,8 @@ options to fill any genuine gap in intent. Never bare-stop with a plain
 ## Execution
 
 1. **Resolve the input** to a description:
-   - Ground (empty `$ARGUMENTS`): read recent `git log` activity and the repo's
-     `README` / `CLAUDE.md` to propose a likely topic; ask only for genuine
-     gaps via `AskUserQuestion` (labeled options), never a bare-stop demand.
+   - Empty `$ARGUMENTS`: ground in repo context, then ask only for genuine
+     gaps, per the **"discover, don't demand"** rule in `## Input`.
    - Ticket-only: ask the user for context, or use any tracker integration
      they have configured to fetch the issue body.
    - Issue URL: run `gh issue view <url> --json title,body` and use the

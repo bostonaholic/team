@@ -49,16 +49,20 @@ No Question. No Research. No Design. No Structure. No Plan. No human gate.
 
 ## Setup
 
-1. **Derive `<id>`** the same way `/team` does (ticket-prefixed or
+1. **Resolve the input** to a bug description first. On empty `$ARGUMENTS`,
+   ground in repo context, then ask only for genuine gaps, per the
+   **"discover, don't demand"** rule in `## Input`. A ticket id or issue URL is
+   resolved as `## Input` describes (`gh issue view` for URLs).
+2. **Derive `<id>`** the same way `/team` does (ticket-prefixed or
    date-prefixed kebab slug). Create `docs/plans/<id>/`.
-2. Write a minimal `docs/plans/<id>/task.md` with the standard frontmatter
+3. Write a minimal `docs/plans/<id>/task.md` with the standard frontmatter
    (`topic`, `date`, `phase: task`, `ticketId`) plus a brief description
    of the bug. The `topic` value is the kebab portion of `<id>` — i.e.
    `<id>` minus the `<TICKET>-` or `<YYYY-MM-DD>-` prefix. Never use the
    ticket id, the date, or a re-worded description as the topic.
    `ticketId` lives only on `task.md`. This is the single durable record
    for the fix and lets any `/team-*` command pick it up if interrupted.
-3. **Seed the TodoWrite ledger** with the bug-fix phases:
+4. **Seed the TodoWrite ledger** with the bug-fix phases:
    `Reproduce → Red (failing test) → Green (minimal fix) → Verify → Ship`.
    Mark `Reproduce` as `in_progress`.
 

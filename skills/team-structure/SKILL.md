@@ -1,7 +1,7 @@
 ---
 name: team-structure
 description: Break the approved design into vertical slices with verification checkpoints. The structure document is the human's last review point before code is written. Trigger on "slice this up", "break the design into steps", or "/team-structure".
-argument-hint: "docs/plans/<id>/"
+argument-hint: "[docs/plans/<id>/]"
 ---
 
 # Team Structure — How Do We Get There?
@@ -27,6 +27,7 @@ an **approved** `design.md`, so unapproved candidates are skipped:
 # Three-tier artifact-directory discovery (archetype A).
 # ID_RE + PHASE_FILES canonical from hooks/session-start-recover.mjs:15-16.
 # PHASE_FILES recency mirrors findActiveTopic (session-start-recover.mjs:29-49).
+# NOTE: this block is duplicated across 8 skills by design (see design.md decision 1); future: shared discover-topic.sh.
 ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
 PHASE_FILES="task questions research design structure plan"
 PRED="design.md"            # predecessor artifact this skill consumes
@@ -36,19 +37,20 @@ if [ -n "$ARGUMENTS" ] && [ -d "$ARGUMENTS" ]; then
 fi
 # Tier 2 — discover: newest ID_RE dir under docs/plans/ that holds PRED.
 best=""; best_mtime=-1
-for d in docs/plans/*/; do
-  name="$(basename "$d")"
+# Assumes cwd is the repo/worktree root (where docs/plans/ lives).
+for dir in docs/plans/*/; do
+  name="$(basename "$dir")"
   printf '%s' "$name" | grep -qE "$ID_RE" || continue   # ID_RE filter
-  [ -f "$d$PRED" ] || continue                          # predecessor filter
-  grep -qE '^approved:[[:space:]]*true[[:space:]]*$' "$d$PRED" || continue
+  [ -f "$dir$PRED" ] || continue                        # predecessor filter
+  grep -qE '^approved:[[:space:]]*true[[:space:]]*$' "$dir$PRED" || continue
   m=-1
   for p in $PHASE_FILES; do
-    f="$d$p.md"
+    f="$dir$p.md"
     [ -f "$f" ] || continue                             # skip racing/absent
     s="$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f" 2>/dev/null)" || continue
     [ "${s:-0}" -gt "$m" ] && m="$s"                    # max-mtime over PHASE_FILES
   done
-  [ "$m" -gt "$best_mtime" ] && { best_mtime="$m"; best="$d"; }
+  [ "$m" -gt "$best_mtime" ] && { best_mtime="$m"; best="$dir"; }
 done
 [ -n "$best" ] && { echo "$best"; exit 0; }
 # Tier 3 — none found: print nothing → fall to AskUserQuestion (prose below).
@@ -56,13 +58,16 @@ done
 
 - **If the block printed a path**, use it as `$ARGUMENTS` for the rest of this
   skill (tier 1 explicit arg, or tier 2 discovery of an approved predecessor).
+  When the path came from tier 2 (no explicit arg), announce the resolved
+  directory to the user before proceeding, so an auto-picked topic is never
+  silent.
 - **If the block printed nothing** (tier 3 — no directory holds an approved
   `design.md`), do not hard-error. Fire `AskUserQuestion` with a `Setup` header
   and labeled options:
   - **Run the producer** — run `/team-design docs/plans/<id>/` to produce or
     approve `design.md`.
   - **Provide a path** — the user supplies the `docs/plans/<id>/` directory
-    directly.
+    directly (run `ls docs/plans/` to find your topic directory).
 
 ## Execution
 
