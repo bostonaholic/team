@@ -312,7 +312,7 @@ phase's completion message. For the 8 directory-consuming skills
 the `docs/plans/<id>/` argument is **optional**: each resolves the
 directory through a three-tier chain — explicit `$ARGUMENTS` →
 newest-mtime convention discovery (filtering by `ID_RE` / `PHASE_FILES`,
-ported from `hooks/session-start-recover.mjs:15-16` as a POSIX ERE
+ported from `hooks/session-start-recover.mjs` as a POSIX ERE
 translation, and the skill's required predecessor artifact) →
 `AskUserQuestion`. Standalone modes still exist: a partial skill invoked
 with no resolvable directory (or with a free-form description) bootstraps

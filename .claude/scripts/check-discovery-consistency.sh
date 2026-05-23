@@ -24,7 +24,7 @@ ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SKILLS="$ROOT/skills"
 
 # --- canonical fragments (the single source of truth) ------------------------
-# ID_RE + PHASE_FILES are byte-sourced from hooks/session-start-recover.mjs:15-16
+# ID_RE + PHASE_FILES are byte-sourced from hooks/session-start-recover.mjs
 # (ported to POSIX ERE: \d -> [0-9]). The approval grep is from
 # skills/qrspi-workflow/SKILL.md:290. The root literal is docs/plans/.
 # Every archetype-A copy must embed these verbatim; drift here is the bug the
