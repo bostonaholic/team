@@ -12,18 +12,59 @@ They read `questions.md` and nothing else.
 
 ## Input
 
-`$ARGUMENTS` is the artifact directory: `docs/plans/<id>/`.
+`$ARGUMENTS` is the artifact directory: `docs/plans/<id>/`. If empty, the
+discovery block below resolves it.
 
 The dispatched agents receive `$ARGUMENTS/questions.md` and (when it
-exists) `$ARGUMENTS/repos.md`. They do **not** read `task.md`. If
-`$ARGUMENTS` is empty or the directory does not exist, ask the user to
-provide an artifact directory (typically the one printed by
-`/team-question`) and stop.
+exists) `$ARGUMENTS/repos.md`. They do **not** read `task.md`.
+
+Resolve the artifact directory by running this self-contained block (one bash
+call — agent threads reset cwd between calls):
+
+```sh
+# Three-tier artifact-directory discovery (archetype A).
+# ID_RE + PHASE_FILES canonical from hooks/session-start-recover.mjs:15-16.
+# PHASE_FILES recency mirrors findActiveTopic (session-start-recover.mjs:29-49).
+ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
+PHASE_FILES="task questions research design structure plan"
+PRED="questions.md"            # predecessor artifact this skill consumes
+# Tier 1 — explicit: $ARGUMENTS names an existing dir → use verbatim.
+if [ -n "$ARGUMENTS" ] && [ -d "$ARGUMENTS" ]; then
+  echo "$ARGUMENTS"; exit 0
+fi
+# Tier 2 — discover: newest ID_RE dir under docs/plans/ that holds PRED.
+best=""; best_mtime=-1
+for d in docs/plans/*/; do
+  name="$(basename "$d")"
+  printf '%s' "$name" | grep -qE "$ID_RE" || continue   # ID_RE filter
+  [ -f "$d$PRED" ] || continue                          # predecessor filter
+  m=-1
+  for p in $PHASE_FILES; do
+    f="$d$p.md"
+    [ -f "$f" ] || continue                             # skip racing/absent
+    s="$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f" 2>/dev/null)" || continue
+    [ "${s:-0}" -gt "$m" ] && m="$s"                    # max-mtime over PHASE_FILES
+  done
+  [ "$m" -gt "$best_mtime" ] && { best_mtime="$m"; best="$d"; }
+done
+[ -n "$best" ] && { echo "$best"; exit 0; }
+# Tier 3 — none found: print nothing → fall to AskUserQuestion (prose below).
+```
+
+- **If the block printed a path**, use it as `$ARGUMENTS` (tier 1 explicit arg,
+  or tier 2 discovery). Discovery resolves only the directory variable — the
+  dispatch step below still forwards exactly `{questions.md, repos.md?}`.
+- **If the block printed nothing** (tier 3 — no directory holds `questions.md`),
+  do not hard-error. Fire `AskUserQuestion` with a `Setup` header and labeled
+  options:
+  - **Run the producer** — run `/team-question <description>` to produce the
+    missing `questions.md`.
+  - **Provide a path** — the user supplies the `docs/plans/<id>/` directory
+    directly.
 
 ## Execution
 
-1. **Verify** `$ARGUMENTS/questions.md` exists. If missing, tell the user
-   to run `/team-question <description>` first and stop.
+1. Use the directory resolved in `## Input`.
 2. Dispatch `file-finder` and `researcher` in **parallel**, passing each
    the path `$ARGUMENTS/questions.md`. If `$ARGUMENTS/repos.md` exists,
    include its path too — `repos.md` carries scope (which repos and

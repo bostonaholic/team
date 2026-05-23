@@ -15,7 +15,8 @@ Run the IMPLEMENT phase. Three internal sub-steps:
 
 ## Input
 
-`$ARGUMENTS` is the artifact directory: `docs/plans/<id>/`.
+`$ARGUMENTS` is the artifact directory: `docs/plans/<id>/`. If empty, the
+discovery block below resolves it.
 
 The agents read:
 
@@ -26,6 +27,43 @@ The agents read:
   more than one repository); the implementer cd's between worktrees as
   the plan steps require
 - `$ARGUMENTS/task.md` — intent (for the implementer when in standalone mode)
+
+Resolve the artifact directory by running this self-contained block (one bash
+call — agent threads reset cwd between calls):
+
+```sh
+# Three-tier artifact-directory discovery (archetype A).
+# ID_RE + PHASE_FILES canonical from hooks/session-start-recover.mjs:15-16.
+# PHASE_FILES recency mirrors findActiveTopic (session-start-recover.mjs:29-49).
+ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
+PHASE_FILES="task questions research design structure plan"
+PRED="plan.md"            # predecessor artifact this skill consumes
+# Tier 1 — explicit: $ARGUMENTS names an existing dir → use verbatim.
+if [ -n "$ARGUMENTS" ] && [ -d "$ARGUMENTS" ]; then
+  echo "$ARGUMENTS"; exit 0
+fi
+# Tier 2 — discover: newest ID_RE dir under docs/plans/ that holds PRED.
+best=""; best_mtime=-1
+for d in docs/plans/*/; do
+  name="$(basename "$d")"
+  printf '%s' "$name" | grep -qE "$ID_RE" || continue   # ID_RE filter
+  [ -f "$d$PRED" ] || continue                          # predecessor filter
+  m=-1
+  for p in $PHASE_FILES; do
+    f="$d$p.md"
+    [ -f "$f" ] || continue                             # skip racing/absent
+    s="$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f" 2>/dev/null)" || continue
+    [ "${s:-0}" -gt "$m" ] && m="$s"                    # max-mtime over PHASE_FILES
+  done
+  [ "$m" -gt "$best_mtime" ] && { best_mtime="$m"; best="$d"; }
+done
+[ -n "$best" ] && { echo "$best"; exit 0; }
+# Tier 3 — none found: print nothing → fall to AskUserQuestion (prose below).
+```
+
+If the block printed a path, use it as `$ARGUMENTS` (tier 1 explicit arg, or
+tier 2 discovery). If it printed nothing — no directory under `docs/plans/`
+holds `plan.md` — fall to the standalone branch below.
 
 If `$ARGUMENTS/plan.md` does not exist:
 
