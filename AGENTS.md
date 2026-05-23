@@ -92,4 +92,4 @@ State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKE
 
 ## Issue Tracking
 
-This project uses **bd (beads)**. Run `bd prime` for full workflow context and commands.
+This project uses **bd (beads)**. Run `bd prime` for full workflow context and commands. After a fresh clone, run `bd hooks install` once to activate the git hooks that keep `.beads/issues.jsonl` in sync (the hook logic lives in `.beads/hooks/`; the `.git/hooks/` wrappers are local and not versioned).
