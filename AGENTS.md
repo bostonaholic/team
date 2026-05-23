@@ -28,7 +28,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 
 ## Design Philosophy
 
-Agents are **decoupled microservices**. Each consumes a predecessor artifact on disk, does work, and writes its output artifact to `docs/plans/` (with YAML frontmatter on every artifact). The orchestrator walks a linear phase table in `skills/team/SKILL.md`; `skills/team/registry.json` lists the 14 agents as a phase-tagged inventory.
+Agents are **decoupled microservices**. Each consumes a predecessor artifact on disk, does work, and writes its output artifact to `docs/plans/` (with YAML frontmatter on every artifact). The orchestrator walks a linear phase table in `skills/team/SKILL.md`; `skills/team/registry.json` lists the 13 agents as a phase-tagged inventory.
 
 ## Pipeline
 
@@ -47,14 +47,14 @@ Team runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-
 | `/team-question <desc>` | Decompose intent into task + questions + brief |
 | `/team-research` | Blind codebase research (runs Question if missing) |
 | `/team-design` | Align with user on approach (human gate) |
-| `/team-design-review` | *(optional)* Adversarial fresh-context audit of `design.md` before the human gate |
+| `/eng-design-doc-review` | *(optional)* Adversarial fresh-context audit of `design.md` before the human gate |
 | `/team-structure` | Break design into vertical slices (human gate) |
 | `/team-plan` | Tactical plan from approved structure |
 | `/team-worktree` | Prepare isolated git worktree |
 | `/team-implement` | Test-first + slice execution + 5-reviewer verify |
 | `/team-pr` | Commit + open PR |
 
-## Agents (14)
+## Agents (13)
 
 See `agents/*.md`. Each agent file uses only Claude Code's [supported frontmatter fields](https://code.claude.com/docs/en/agents#supported-frontmatter-fields) (no custom fields). Model tiering: haiku (mechanical), sonnet (judgment), opus (planning + implementation).
 

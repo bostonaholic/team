@@ -15,7 +15,6 @@
     {"name": "file-finder", "phase": "RESEARCH", "parallel": true},
     {"name": "researcher", "phase": "RESEARCH", "parallel": true},
     {"name": "design-author", "phase": "DESIGN"},
-    {"name": "design-doc-reviewer", "phase": "DESIGN"},
     {"name": "structure-planner", "phase": "STRUCTURE"},
     {"name": "planner", "phase": "PLAN"},
     {"name": "test-architect", "phase": "IMPLEMENT"},
