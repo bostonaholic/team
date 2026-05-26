@@ -33,7 +33,7 @@ Two heterogeneous input streams:
    transcripts in this change. The orchestrator forwards their
    verdict-bearing transcripts to the aggregator's prompt. Migrating
    them to artifact-first is explicitly **Out of scope** (see
-   `docs/plans/team-bvc-multi-model-adversarial-review/design.md`).
+   `docs/plans/<id>/design.md`).
 
 ## Normalization
 

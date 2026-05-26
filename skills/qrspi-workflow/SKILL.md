@@ -90,7 +90,7 @@ hard-gate retry loop.
      gemini) followed by `review-aggregator` synthesis, with typed
      failure classes that loop back to the implementer (max 5 rounds)
 - **Artifact:** Production code, passing tests, per-slice commits
-- **Gate:** AGGREGATE — security, verifier, and code-review hard gates must
+- **Gate:** AGGREGATE — security, verifier, and code-reviewer hard gates must
   all pass
 
 ### PR
@@ -322,7 +322,7 @@ Worktree presence (single-repo): `git worktree list --porcelain | grep -q <id>`.
 Worktree presence (multi-repo): for each repo path in
 `docs/plans/<id>/repos.md`, `git -C <repo-path> worktree list --porcelain
 | grep -q <id>`.
-Verifier passed: latest review artifact in `docs/plans/<id>/review-<n>.md`
+Verifier passed: latest review artifact in `docs/plans/<id>/reviews/review-aggregator.md`
 shows aggregate gate clean.
 
 ### Orchestrator coordination via TodoWrite

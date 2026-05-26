@@ -102,7 +102,7 @@ each only the `docs/plans/<id>/questions.md` path. Combine their returned
 content into a single `docs/plans/<id>/research.md` artifact (with the
 frontmatter the researcher's documentation specifies) before advancing.
 
-`skills/team/registry.json` is an inventory of the 13 specialist agents
+`skills/team/registry.json` is an inventory of the 16 specialist agents
 for documentation purposes only. The orchestrator dispatches based on
 the phase table above, not on registry contents.
 
