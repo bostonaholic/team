@@ -132,6 +132,14 @@ Before any agent dispatch, decide where to work:
 4. Dispatch `implementer` → executes slices with per-slice commits. In
    standalone mode it works from `$ARGUMENTS/task.md` and the failing
    tests.
+4.5. **Clear `docs/plans/<id>/reviews/`.** Before dispatching the
+     reviewer fan-out, run `rm -rf docs/plans/<id>/reviews && mkdir -p
+     docs/plans/<id>/reviews`. This step runs once per IMPLEMENT
+     *round*, before the parallel fan-out — never during a
+     single-reviewer re-dispatch. The aggregator and every external
+     reviewer write their artifacts to this directory; clearing it
+     guarantees no stale artifacts from a prior round (or a prior
+     topic) contaminate aggregation.
 5. Dispatch 5 reviewers in parallel: `code-reviewer`,
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
 6. **Aggregate gate** — evaluate hard gates:
@@ -146,6 +154,11 @@ Before any agent dispatch, decide where to work:
      then re-dispatch ALL 5 reviewers for a fresh review
    - If round count ≥ 5: escalate with a full unresolved-findings summary
 8. **Stop once all hard gates pass clean.** Suggest `/team-pr`.
+
+**Reviewer artifact convention:** any reviewer that writes a report
+artifact (currently `external-reviewer-codex`,
+`external-reviewer-gemini`, and `review-aggregator`) writes to
+`docs/plans/<id>/reviews/<agent-name>.md` (kebab-case agent name).
 
 ## Quality Loop
 
