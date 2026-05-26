@@ -56,6 +56,24 @@ artifact_is_skip() {
   [ "$v" = "SKIP" ]
 }
 
+# Extract the SKIP reason from a SKIP artifact. The wrapper agents
+# emit a fixed-form line "SKIP — <reason>" (em-dash) per the SKIP
+# template in agents/external-reviewer-{codex,gemini}.md. Returns the
+# raw <reason> text trimmed of surrounding whitespace, or the empty
+# string when no recognizable reason line is present.
+artifact_skip_reason() {
+  awk '
+    # Match "SKIP" followed by either an em-dash, en-dash, or ASCII
+    # hyphen, then capture everything after the separator.
+    /^SKIP[[:space:]]*[—–-]/ {
+      sub(/^SKIP[[:space:]]*[—–-][[:space:]]*/, "")
+      sub(/[[:space:]]+$/, "")
+      print
+      exit
+    }
+  ' "$1"
+}
+
 # Extract findings as TSV: reviewer<TAB>file:line<TAB>summary
 # - file:line comes from the `file:` line in the Conventional Comments block
 # - summary is the text after `**issue (...)**:` / `**suggestion ...**:` /
@@ -95,13 +113,20 @@ extract_findings() {
   done
 }
 
-# Build reviewer inventories.
+# Build reviewer inventories. For each external reviewer we also
+# capture the verdict-or-skip-reason string used in the consulted-
+# header parenthetical (codex: ..., gemini: ...). See
+# skills/review-aggregation/SKILL.md "Header".
 claude_total=0
 ext_total=0
 ext_pass=0
 non_skip_total=0
 non_skip_names=""
 consulted_lines=""
+# Per-CLI display strings — keyed by short cli name (codex|gemini|...)
+ext_codex_display=""
+ext_gemini_display=""
+ext_other_displays=""
 
 for f in "$REVIEWS_DIR"/*.md; do
   [ -f "$f" ] || continue
@@ -109,9 +134,21 @@ for f in "$REVIEWS_DIR"/*.md; do
   v="$(artifact_verdict "$f")"
   if is_external "$reviewer"; then
     ext_total=$((ext_total + 1))
-    if [ "$v" != "SKIP" ]; then
+    # Strip the external-reviewer- prefix to get the CLI tag.
+    cli="${reviewer#external-reviewer-}"
+    if [ "$v" = "SKIP" ]; then
+      reason="$(artifact_skip_reason "$f")"
+      [ -z "$reason" ] && reason="SKIP"
+      display="$cli: $reason"
+    else
       ext_pass=$((ext_pass + 1))
+      display="$cli: $v"
     fi
+    case "$cli" in
+      codex)  ext_codex_display="$display" ;;
+      gemini) ext_gemini_display="$display" ;;
+      *)      ext_other_displays="${ext_other_displays:+$ext_other_displays, }$display" ;;
+    esac
   else
     claude_total=$((claude_total + 1))
   fi
@@ -122,10 +159,23 @@ for f in "$REVIEWS_DIR"/*.md; do
   consulted_lines="$consulted_lines- $reviewer: $v"$'\n'
 done
 
+# Build the parenthetical (codex: ..., gemini: ...[, other: ...]).
+# Order is fixed: codex first, then gemini, then any others in the
+# order they appeared.
+ext_parts=""
+[ -n "$ext_codex_display" ]  && ext_parts="$ext_codex_display"
+[ -n "$ext_gemini_display" ] && ext_parts="${ext_parts:+$ext_parts, }$ext_gemini_display"
+[ -n "$ext_other_displays" ] && ext_parts="${ext_parts:+$ext_parts, }$ext_other_displays"
+
 # Header
 printf '## Review Aggregation\n\n'
-printf 'Reviewers consulted: %s Claude + %s/%s external\n\n' \
-  "$claude_total" "$ext_pass" "$ext_total"
+if [ -n "$ext_parts" ]; then
+  printf 'Reviewers consulted: %s Claude + %s/%s external (%s)\n\n' \
+    "$claude_total" "$ext_pass" "$ext_total" "$ext_parts"
+else
+  printf 'Reviewers consulted: %s Claude + %s/%s external\n\n' \
+    "$claude_total" "$ext_pass" "$ext_total"
+fi
 printf '%s\n' "$consulted_lines"
 
 # Group findings by file:line. file:unknown never groups.

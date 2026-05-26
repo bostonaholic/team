@@ -52,8 +52,10 @@ if [ ! -x "$HELPER" ]; then
 fi
 
 # Run the helper against an artifact directory. Args: <reviews-dir>
+# Stderr is NOT discarded — helper diagnostics surface on the test's
+# stderr so a real failure is visible instead of masked.
 run_aggregator() {
-  bash "$HELPER" "$1" 2>/dev/null
+  bash "$HELPER" "$1"
 }
 
 # =============================================================================
@@ -250,6 +252,17 @@ EOF
 out="$(run_aggregator "$fx/reviews")"
 echo "$out" | grep -qF 'Reviewers consulted: 5 Claude + 0/2 external' \
   || fail "D header shape" "header reads exactly '5 Claude + 0/2 external'" "header drifted"
+# The parenthetical MUST carry each external reviewer's SKIP reason
+# verbatim (skills/review-aggregation/SKILL.md "Header"). Without
+# this, silent SKIP fatigue is invisible to the user.
+echo "$out" | grep -qF '(codex: codex not installed' \
+  || fail "D parenthetical codex" \
+       "header parenthetical includes 'codex: codex not installed'" \
+       "codex SKIP reason missing from parenthetical"
+echo "$out" | grep -qF 'gemini: gemini not installed)' \
+  || fail "D parenthetical gemini" \
+       "header parenthetical includes 'gemini: gemini not installed'" \
+       "gemini SKIP reason missing from parenthetical"
 echo "$out" | grep -qE 'corroborated by [0-9]+/5' \
   || fail "D /5 denominator" "corroboration uses /5 denominator (SKIPs excluded)" "no /5 corroboration found"
 if echo "$out" | grep -qE 'corroborated by [0-9]+/7'; then
@@ -293,6 +306,14 @@ count=$(echo "$out" | grep -cF 'file: path/foo.ts:42')
 if [ "$count" -ne 1 ]; then
   fail "E collapsed" "exactly ONE finding emerges at path/foo.ts:42 (most-severe kind wins)" "got $count emissions"
 fi
+# Kind promotion — when an 'issue' and a 'suggestion' collide at the
+# same file:line, the most-severe kind ('issue') survives.
+# skills/review-aggregation/SKILL.md "Fuzzy matching" defines the
+# severity order issue > suggestion > nitpick.
+echo "$out" | grep -qF '**issue:' \
+  || fail "E kind promotion" \
+       "surviving collapsed finding labelled with most-severe kind ('issue')" \
+       "no '**issue:' label survived collapse"
 \rm -rf "$fx"
 
 # =============================================================================
