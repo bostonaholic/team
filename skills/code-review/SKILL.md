@@ -87,6 +87,9 @@ file: src/models/types.ts:7
 | `code-reviewer` | HARD | Yes — blocking issues must be resolved |
 | `ux-reviewer` | SOFT | User decides — presented with findings |
 | `technical-writer` | ADVISORY | No — findings recorded, pipeline proceeds |
+| `external-reviewer-codex` | ADVISORY | No — adds corroboration weight only |
+| `external-reviewer-gemini` | ADVISORY | No — adds corroboration weight only |
+| `review-aggregator` | ADVISORY | No — synthesizes findings; never overrides hard-gate verdicts |
 
 ## Verdict Criteria
 

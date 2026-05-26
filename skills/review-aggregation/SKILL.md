@@ -44,7 +44,8 @@ Every finding is rewritten into Conventional Comments per
   the source emitted no location.
 - `kind` — `issue` | `suggestion` | `nitpick`.
 - `severity` — `CRITICAL` | `HIGH` | `MEDIUM` | `LOW` (preserve the
-  reviewer's classification; see `skills/code-review/SKILL.md:81-89`).
+  reviewer's classification; see the severity sections of
+  `agents/security-reviewer.md`).
 - `summary` — one-sentence description.
 - `originating_reviewer` — the reviewer name (e.g. `security-reviewer`,
   `external-reviewer-codex`).
@@ -85,18 +86,20 @@ file: src/api/users.ts:42
 
 The aggregator detects the matching `file:line` and the keyword
 overlap (`userInput`, `null`, `check`/`guard`) ≥ 3 — both conditions
-hold, so the findings merge. The synthesis emits a single entry:
+hold, so the findings merge. The synthesis emits a single entry
+(assuming both externals SKIPped, so 5 non-SKIP reviewers run this
+round):
 
 ```
 ---
 **issue (blocking):** userInput dereferenced without null guard
 file: src/api/users.ts:42
 originating: code-reviewer, security-reviewer
-corroborated by 2/N
+corroborated by 2/5
 ```
 
-Where `N` is the count of non-SKIP reviewers in the round (e.g. `5`
-if the 2 externals SKIP'd and all 5 Claude reviewers returned). The
+The denominator `5` is the count of non-SKIP reviewers in the round
+(here: the 5 Claude reviewers, with the 2 externals SKIPped). The
 two underlying Claude hard-gate verdicts (`REQUEST CHANGES` and
 `FAIL`) remain preserved verbatim in the verdict-token portion of
 the synthesis — the merge is a display-layer deduplication, never a
@@ -131,7 +134,8 @@ Reviewers consulted: <claude_count> Claude + <ext_pass>/<ext_total> external (co
 
 `<ext_pass>` is the number of external reviewers whose verdict was NOT
 SKIP. `<ext_total>` is the total external reviewer count for the round
-(today: 2).
+(today: 2). PARTIAL counts toward `<ext_pass>` (the CLI ran and
+returned output, even if incomplete).
 
 The header makes silent SKIP fatigue visible — if a CLI is installed
 but always SKIPs (auth misconfigured), the user sees the SKIP reason

@@ -57,6 +57,25 @@ the previous step (`docs/plans/<id>/`) as its single argument.
 claude plugin add /path/to/team
 ```
 
+### Optional: External Reviewers
+
+The IMPLEMENT phase's adversarial review fan-out includes two
+external-CLI wrappers — `external-reviewer-codex` and
+`external-reviewer-gemini` — that shell out to the `codex` and
+`gemini` CLIs respectively for a second-opinion review of the diff.
+Both are **optional**:
+
+- When the CLI is installed AND authenticated, it participates in the
+  review round; its verdict is advisory (does NOT trigger a hard
+  gate) and adds corroboration weight to Claude reviewer findings.
+- When the CLI is absent, unauthenticated, or times out, the wrapper
+  writes a `SKIP` artifact and the pipeline proceeds with only the
+  Claude reviewers. No setup is required and no error is raised.
+
+Install whichever you have access to (or neither) — the pipeline runs
+either way. The `review-aggregator` always surfaces SKIP reasons in
+the synthesis header so silent skips never go unnoticed.
+
 ## Architecture
 
 See [docs/architecture.md](docs/architecture.md) for the full architecture, the artifact frontmatter schema, and the phase-inference rules.
