@@ -92,7 +92,7 @@ loop:
 | STRUCTURE  | `structure-planner` (→ human gate)                      | `docs/plans/<id>/design.md` (frontmatter `approved: true`)      | PLAN               |
 | PLAN       | `planner`                                               | `docs/plans/<id>/structure.md` (frontmatter `approved: true`)   | WORKTREE           |
 | WORKTREE   | (orchestrator-emit)                                     | `docs/plans/<id>/plan.md`                                       | IMPLEMENT          |
-| IMPLEMENT  | `test-architect`, `implementer`, 5 reviewers (parallel) + review-aggregator | worktree prepared                                               | PR                 |
+| IMPLEMENT  | `test-architect`, `implementer`, 6 reviewers (parallel) + review-aggregator | worktree prepared                                               | PR                 |
 | PR         | (orchestrator-emit)                                     | aggregate gate passed                                           | SHIPPED            |
 
 For RESEARCH, dispatch `file-finder` and `researcher` in parallel passing

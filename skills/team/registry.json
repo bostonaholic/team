@@ -24,6 +24,7 @@
     {"name": "technical-writer", "phase": "IMPLEMENT", "parallel": true},
     {"name": "ux-reviewer", "phase": "IMPLEMENT", "parallel": true},
     {"name": "verifier", "phase": "IMPLEMENT", "parallel": true},
+    {"name": "external-reviewer-codex", "phase": "IMPLEMENT", "parallel": true},
     {"name": "review-aggregator", "phase": "IMPLEMENT"}
   ],
   "gates": [
