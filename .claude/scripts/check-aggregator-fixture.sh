@@ -181,6 +181,155 @@ fi
 \rm -rf "$fx"
 
 # =============================================================================
+# FIXTURE D — 7-reviewer SKIP denominator: 5 Claude reports + 2 external SKIPs.
+# Locks in the design's "zero external CLIs -> byte-identical to today"
+# invariant — SKIPs surface in the consulted header but never count toward
+# corroboration denominators.
+# Expectations:
+#   - Header reads "Reviewers consulted: 5 Claude + 0/2 external"
+#   - Any 'corroborated by' tag uses denominator /5 (the non-SKIP reviewers)
+#   - No 'corroborated by' line uses denominator /7
+# =============================================================================
+fx="$(mktemp -d)"
+mkdir -p "$fx/reviews"
+cat > "$fx/reviews/code-reviewer.md" <<'EOF'
+## Code Review
+
+**issue (blocking):** missing null check on userInput
+file: src/foo.ts:42
+
+**Verdict:** REQUEST CHANGES
+EOF
+cat > "$fx/reviews/security-reviewer.md" <<'EOF'
+## Security Review
+
+**issue (blocking):** userInput dereferenced without null guard
+file: src/foo.ts:42
+
+**Verdict:** FAIL
+EOF
+cat > "$fx/reviews/technical-writer.md" <<'EOF'
+## Documentation Review
+
+**suggestion (non-blocking):** missing JSDoc on the new exported helper
+file: src/foo.ts:42
+
+**Verdict:** GAPS
+EOF
+cat > "$fx/reviews/ux-reviewer.md" <<'EOF'
+## UX Review
+
+**nitpick (non-blocking):** error message could be friendlier
+file: src/baz.ts:10
+
+**Verdict:** APPROVE
+EOF
+cat > "$fx/reviews/verifier.md" <<'EOF'
+## Verification Report
+
+**issue (blocking):** tsc reports a type error on line 42
+file: src/foo.ts:42
+
+**Verdict:** FAIL
+EOF
+cat > "$fx/reviews/external-reviewer-codex.md" <<'EOF'
+## External Review (codex)
+
+SKIP — codex not installed
+
+**Verdict:** SKIP
+EOF
+cat > "$fx/reviews/external-reviewer-gemini.md" <<'EOF'
+## External Review (gemini)
+
+SKIP — gemini not installed
+
+**Verdict:** SKIP
+EOF
+
+out="$(run_aggregator "$fx/reviews")"
+echo "$out" | grep -qF 'Reviewers consulted: 5 Claude + 0/2 external' \
+  || fail "D header shape" "header reads exactly '5 Claude + 0/2 external'" "header drifted"
+echo "$out" | grep -qE 'corroborated by [0-9]+/5' \
+  || fail "D /5 denominator" "corroboration uses /5 denominator (SKIPs excluded)" "no /5 corroboration found"
+if echo "$out" | grep -qE 'corroborated by [0-9]+/7'; then
+  fail "D no /7 denominator" "SKIP'd externals never appear in denominator" "denominator '/7' present (SKIP wrongly counted)"
+fi
+\rm -rf "$fx"
+
+# =============================================================================
+# FIXTURE E — corroboration collision: two reviewers flag path/foo.ts:42
+# with different kinds (issue vs suggestion). Most-severe kind wins; the
+# 'suggestion' form must NOT appear as a separate finding at that file:line.
+# Expectations:
+#   - Single finding at path/foo.ts:42 carries the 'issue' kind
+#   - The 'suggestion' label does NOT appear as a separate emitted finding
+#     at path/foo.ts:42
+# =============================================================================
+fx="$(mktemp -d)"
+mkdir -p "$fx/reviews"
+cat > "$fx/reviews/code-reviewer.md" <<'EOF'
+## Code Review
+
+**issue (blocking):** stale comment misleads readers about the loop semantics
+file: path/foo.ts:42
+
+**Verdict:** REQUEST CHANGES
+EOF
+cat > "$fx/reviews/ux-reviewer.md" <<'EOF'
+## UX Review
+
+**suggestion (non-blocking):** stale comment misleads readers about the loop semantics
+file: path/foo.ts:42
+
+**Verdict:** APPROVE
+EOF
+
+out="$(run_aggregator "$fx/reviews")"
+echo "$out" | grep -qF 'file: path/foo.ts:42' \
+  || fail "E finding present" "single emitted finding at 'path/foo.ts:42'" "no finding emitted at that file:line"
+# Count how many times the finding block appears (one per emit).
+count=$(echo "$out" | grep -cF 'file: path/foo.ts:42')
+if [ "$count" -ne 1 ]; then
+  fail "E collapsed" "exactly ONE finding emerges at path/foo.ts:42 (most-severe kind wins)" "got $count emissions"
+fi
+\rm -rf "$fx"
+
+# =============================================================================
+# FIXTURE F — single-model hard-gate preservation: only security-reviewer
+# reports a CRITICAL finding ending **Verdict:** FAIL. No corroboration
+# exists. The hard-gate verdict MUST be preserved verbatim, NOT downgraded
+# by the [single-model — extra scrutiny] confidence tag.
+# Expectations:
+#   - Synthesis ends with '**Verdict:** FAIL' on its own line
+#   - Synthesis contains '[single-model' tag (display annotation)
+#   - The CRITICAL finding's file:line appears in the synthesis
+# =============================================================================
+fx="$(mktemp -d)"
+mkdir -p "$fx/reviews"
+cat > "$fx/reviews/security-reviewer.md" <<'EOF'
+## Security Review
+
+**issue (blocking):** [CRITICAL] hardcoded API key committed in src/secrets.ts
+file: src/secrets.ts:3
+
+**Verdict:** FAIL
+EOF
+
+out="$(run_aggregator "$fx/reviews")"
+echo "$out" | grep -qF '**Verdict:** FAIL' \
+  || fail "F verdict verbatim" "synthesis ends '**Verdict:** FAIL' on its own line" "FAIL verdict missing or drifted"
+echo "$out" | grep -qF '[single-model' \
+  || fail "F single-model tag" "single-model finding tagged '[single-model — extra scrutiny]'" "single-model tag absent"
+echo "$out" | grep -qF 'file: src/secrets.ts:3' \
+  || fail "F finding preserved" "CRITICAL finding appears verbatim at src/secrets.ts:3" "finding absent from synthesis"
+# Negative: the verdict must NOT have been downgraded to PASS.
+if echo "$out" | grep -qE '\*\*Verdict:\*\* PASS'; then
+  fail "F no downgrade" "verdict NOT downgraded to PASS by single-model tag" "verdict was downgraded to PASS"
+fi
+\rm -rf "$fx"
+
+# =============================================================================
 # RESULT
 # =============================================================================
 if [ "$ERRORS" -ne 0 ]; then
