@@ -37,8 +37,9 @@ Two heterogeneous input streams:
 
 ## Normalization
 
-Every finding is rewritten into Conventional Comments per
-`skills/code-review/SKILL.md:70-79`. Each normalized finding carries:
+Every finding is rewritten into Conventional Comments per the
+"Comment Types" section of `skills/code-review/SKILL.md`. Each
+normalized finding carries:
 
 - `file:line` — the location reference. Use literal `file: unknown` when
   the source emitted no location.

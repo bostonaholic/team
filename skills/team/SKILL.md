@@ -174,6 +174,15 @@ When the `test-architect` returns failing tests:
 
 ### Aggregate Gate (review collection)
 
+Each IMPLEMENT round writes its reviewer artifacts to a
+`docs/plans/<id>/reviews/` subdirectory: the two external wrappers
+(`external-reviewer-codex.md`, `external-reviewer-gemini.md`) plus the
+synthesis (`review-aggregator.md`). The orchestrator creates this
+subdirectory fresh per round and clears it before each re-dispatch — it
+is ephemeral transcript-like output, not gated phase state. The 5
+Claude reviewers still return via subagent transcripts that the
+orchestrator forwards to the aggregator's prompt.
+
 When the 7 reviewers (security, docs, ux, code, verifier,
 external-codex, external-gemini) have all returned AND the
 `review-aggregator` synthesis exists at

@@ -99,6 +99,15 @@ artifacts from prior rounds or prior topics contaminate aggregation.
 The 5 Claude reviewers still return via subagent transcripts; they do
 not yet write artifacts.
 
+`reviews/` is **ephemeral-per-round**, not a durable phase artifact.
+Unlike `task.md`/`design.md`/`structure.md`/`plan.md` — each a single
+file with `approved` / `revision` frontmatter that survives across
+rounds — every file under `reviews/` is rewritten from scratch on each
+IMPLEMENT round and carries no YAML frontmatter with `approved` fields.
+Reviewers write fresh artifacts every round; the orchestrator wipes the
+subdirectory before re-dispatching. Treat `reviews/` as transcript-like
+output, not as gated state.
+
 **Approval check** (used by downstream phase entry):
 
 ```sh
