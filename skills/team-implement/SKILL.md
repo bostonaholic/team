@@ -1,7 +1,7 @@
 ---
 name: team-implement
 description: Execute the implementation phase. Includes test-first sub-step (writing failing tests, mechanical confirmation gate) and adversarial verification (5 parallel reviewers with hard-gate retry loop). Trigger on "implement this", "execute the plan", or "/team-implement".
-argument-hint: "docs/plans/<id>/"
+argument-hint: "[docs/plans/<id>/]"
 ---
 
 # Team Implement — Execute the Plan
@@ -15,7 +15,8 @@ Run the IMPLEMENT phase. Three internal sub-steps:
 
 ## Input
 
-`$ARGUMENTS` is the artifact directory: `docs/plans/<id>/`.
+`$ARGUMENTS` is the artifact directory: `docs/plans/<id>/`. If empty, the
+discovery block below resolves it.
 
 The agents read:
 
@@ -27,11 +28,64 @@ The agents read:
   the plan steps require
 - `$ARGUMENTS/task.md` — intent (for the implementer when in standalone mode)
 
-If `$ARGUMENTS/plan.md` does not exist:
+Resolve the artifact directory by running this self-contained block (one bash
+call — agent threads reset cwd between calls):
 
-- **Standalone mode** — bootstrap a minimal `$ARGUMENTS/task.md` from
-  `$ARGUMENTS` (or have the user provide a description) and run
-  `test-architect` → `implementer` → reviewers from `task.md` alone.
+```sh
+# Three-tier artifact-directory discovery (archetype A).
+# ID_RE + PHASE_FILES canonical from hooks/session-start-recover.mjs.
+# PHASE_FILES recency mirrors findActiveTopic() in session-start-recover.mjs.
+# NOTE: this block is duplicated across 8 skills by design (see docs/architecture.md); future: shared discover-topic.sh.
+ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
+PHASE_FILES="task questions research design structure plan"
+PRED="plan.md"            # predecessor artifact this skill consumes
+# Tier 1 — explicit: $ARGUMENTS names an existing dir → use verbatim.
+if [ -n "$ARGUMENTS" ] && [ -d "$ARGUMENTS" ]; then
+  echo "$ARGUMENTS"; exit 0
+fi
+# Tier 2 — discover: newest ID_RE dir under docs/plans/ that holds PRED.
+best=""; best_mtime=-1
+# Assumes cwd is the repo/worktree root (where docs/plans/ lives).
+for dir in docs/plans/*/; do
+  name="$(basename "$dir")"
+  printf '%s' "$name" | grep -qE "$ID_RE" || continue   # ID_RE filter
+  [ -f "$dir$PRED" ] || continue                        # predecessor filter
+  m=-1
+  for p in $PHASE_FILES; do
+    f="$dir$p.md"
+    [ -f "$f" ] || continue                             # skip racing/absent
+    s="$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f" 2>/dev/null)" || continue
+    [ "${s:-0}" -gt "$m" ] && m="$s"                    # max-mtime over PHASE_FILES
+  done
+  [ "$m" -gt "$best_mtime" ] && { best_mtime="$m"; best="$dir"; }
+done
+[ -n "$best" ] && { echo "$best"; exit 0; }
+# Tier 3 — none found: print nothing → fall to AskUserQuestion (prose below).
+```
+
+- **If the block printed a path**, use it as `$ARGUMENTS` for the rest of this
+  skill (tier 1 explicit arg, or tier 2 discovery). When the path came from
+  tier 2 (no explicit arg), announce the resolved directory to the user before
+  proceeding, so an auto-picked topic is never silent.
+- **If the block printed nothing** (tier 3 — no directory under `docs/plans/`
+  holds `plan.md`), do not hard-error. Fire
+  `AskUserQuestion` with a `Setup` header and labeled options:
+  - **Run the producer** — run `/team-plan docs/plans/<id>/` to produce the
+    missing `plan.md`.
+  - **Provide a path** — the user supplies the `docs/plans/<id>/` directory
+    directly (run `ls docs/plans/` to find your topic directory).
+  - **Describe the task** — the user types a 1–2 sentence description of what
+    to implement. Derive a fresh `<id>` (date-prefixed kebab slug, the same way
+    the questioner does), create `docs/plans/<id>/task.md` from that
+    description, then proceed from the new directory in **standalone mode**.
+
+**Standalone mode** — the resolved or provided directory has no `plan.md`, so
+the run starts from that directory's `task.md` instead. It triggers whenever
+tier 1 (explicit `$ARGUMENTS`), a user-provided path, or a freshly derived
+directory (from **Describe the task**) names a `docs/plans/<id>/` that lacks
+`plan.md`. The directory is always defined in this case.
+If `$ARGUMENTS/plan.md` does not exist in it, run `test-architect` →
+`implementer` → reviewers from `$ARGUMENTS/task.md` alone.
 
 Coordinate progress via TodoWrite. Seed: `Test-architect → Mechanical
 gate → Implementer (per slice) → Review round 1`.
@@ -43,7 +97,8 @@ Before any agent dispatch, decide where to work:
 1. **Read `$ARGUMENTS/repos.md` if present.** When present, you are in
    multi-repo mode. Confirm a worktree exists in **every** listed repo
    (read the `## Worktrees` section). If any are missing, tell the
-   user to run `/team-worktree docs/plans/<id>/` and stop.
+   user to run `/team-worktree [docs/plans/<id>/]` (the path is
+   optional — discovery resolves it) and stop.
 2. Run `git rev-parse --absolute-git-dir`. If the path contains
    `/worktrees/`, you are already inside a Claude Code worktree —
    proceed in place. In multi-repo mode this should be the home repo's
@@ -57,10 +112,10 @@ Before any agent dispatch, decide where to work:
    - **In-place** — implement on the current branch in the main working
      tree.
 
-   - On **Worktree** — derive `<id>` from `$ARGUMENTS`, create the
-     worktree(s) via `/team-worktree docs/plans/<id>/`, tell the user
+   - On **Worktree** — derive `<id>` from the resolved directory, create the
+     worktree(s) via `/team-worktree [docs/plans/<id>/]`, tell the user
      the home worktree path, and ask them to re-run
-     `/team-implement docs/plans/<id>/` from that directory.
+     `/team-implement [docs/plans/<id>/]` from that directory.
    - On **In-place** — proceed. (In-place is single-repo only — refuse
      in-place if `repos.md` is present and tell the user that
      multi-repo work requires worktrees.)

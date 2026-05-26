@@ -4,7 +4,8 @@
  * Scans docs/plans/<id>/ subdirectories for the most recent active topic,
  * infers the current phase from artifact presence + YAML frontmatter,
  * and injects a recovery notice into additionalContext so the agent
- * suggests re-invoking any /team-* command with docs/plans/<id>/.
+ * suggests re-invoking any /team-* command bare — discovery auto-resolves
+ * the directory (an explicit docs/plans/<id>/ is still accepted).
  *
  * Contract: always exits 0. Missing or unparseable artifacts are not an error.
  */
@@ -93,7 +94,7 @@ async function main() {
     "",
     `Phase: ${phase} | Id: ${active.id}`,
     `Artifact directory: docs/plans/${active.id}/`,
-    `To continue: re-invoke any /team-* command with docs/plans/${active.id}/`,
+    `To continue: re-invoke any /team-* command bare (discovery auto-resolves the directory; an explicit docs/plans/${active.id}/ is still accepted).`,
   ].join("\n");
   process.stderr.write(JSON.stringify({ hookSpecificOutput: { additionalContext: ctx } }) + "\n");
   process.exit(0);

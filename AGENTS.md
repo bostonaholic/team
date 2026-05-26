@@ -21,6 +21,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 | Pipeline agents, skills, hooks | `agents/`, `skills/`, `hooks/` | End users |
 | Plugin manifest | `.claude-plugin/plugin.json` | End users |
 | Registry sync validation | `.claude/hooks/check-registry-sync.mjs` | Plugin developers |
+| Dev acceptance scripts | `.claude/scripts/` | Plugin developers |
 | Dev settings/hooks | `.claude/settings.json` | Plugin developers |
 | Issue tracking | `.beads/` | Plugin developers |
 

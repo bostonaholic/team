@@ -269,7 +269,8 @@ loop:
      artifact path(s) in the phase table.
   3. Verify predecessors exist on disk and (for human-gated phases)
      carry `approved: true` in frontmatter. If missing → desync;
-     suggest re-invoking the same /team-* command with docs/plans/<id>/.
+     suggest re-invoking the bare /team-* command — its three-tier
+     discovery resolves docs/plans/<id>/ without an explicit arg.
   4. Dispatch the agent(s) — pass them the artifact directory
      `docs/plans/<id>/`.
   5. Write returned artifacts to docs/plans/<id>/<name>.md with the
@@ -286,18 +287,18 @@ Skills live under `skills/`. There are two flavors:
 
 ### Entry-point skills (slash commands)
 
-| Skill            | Command                            | Description                              |
-|------------------|------------------------------------|------------------------------------------|
-| `team`           | `/team <desc>`                     | Full 8-phase QRSPI pipeline              |
-| `team-fix`       | `/team-fix <bug>`                  | Compressed bug-fix pipeline              |
-| `team-question`  | `/team-question <desc>`            | Decompose intent (runs alone)            |
-| `team-research`  | `/team-research docs/plans/<id>/`  | Blind research                           |
-| `team-design`    | `/team-design docs/plans/<id>/`    | Design alignment (human gate)            |
-| `team-structure` | `/team-structure docs/plans/<id>/` | Vertical-slice structure (human gate)    |
-| `team-plan`      | `/team-plan docs/plans/<id>/`      | Tactical plan from approved structure    |
-| `team-worktree`  | `/team-worktree docs/plans/<id>/`  | Prepare isolated worktree                |
-| `team-implement` | `/team-implement docs/plans/<id>/` | Test-first + slice exec + 5-reviewer     |
-| `team-pr`        | `/team-pr docs/plans/<id>/`        | Commit + PR                              |
+| Skill            | Command                              | Description                              |
+|------------------|--------------------------------------|------------------------------------------|
+| `team`           | `/team <desc>`                       | Full 8-phase QRSPI pipeline              |
+| `team-fix`       | `/team-fix <bug>`                    | Compressed bug-fix pipeline              |
+| `team-question`  | `/team-question <desc>`              | Decompose intent (runs alone)            |
+| `team-research`  | `/team-research [docs/plans/<id>/]`  | Blind research                           |
+| `team-design`    | `/team-design [docs/plans/<id>/]`    | Design alignment (human gate)            |
+| `team-structure` | `/team-structure [docs/plans/<id>/]` | Vertical-slice structure (human gate)    |
+| `team-plan`      | `/team-plan [docs/plans/<id>/]`      | Tactical plan from approved structure    |
+| `team-worktree`  | `/team-worktree [docs/plans/<id>/]`  | Prepare isolated worktree                |
+| `team-implement` | `/team-implement [docs/plans/<id>/]` | Test-first + slice exec + 5-reviewer     |
+| `team-pr`        | `/team-pr [docs/plans/<id>/]`        | Commit + PR                              |
 
 Every entry-point skill carries an `argument-hint` field in its
 frontmatter (Claude Code [skills frontmatter](https://code.claude.com/docs/en/skills#frontmatter-reference))
@@ -305,9 +306,31 @@ that documents the expected `$ARGUMENTS` shape.
 
 Each downstream skill (`team-research` and beyond) treats `$ARGUMENTS` as
 an artifact directory — typically the path printed by the previous
-phase's completion message. Standalone modes still exist: a partial
-skill invoked without an artifact directory (or with a free-form
-description) bootstraps the missing upstream artifacts inline.
+phase's completion message. For the 8 directory-consuming skills
+(`team-research`, `team-design`, `team-structure`, `team-plan`,
+`team-worktree`, `team-implement`, `team-pr`, `eng-design-doc-review`)
+the `docs/plans/<id>/` argument is **optional**: each resolves the
+directory through a three-tier chain — explicit `$ARGUMENTS` →
+newest-mtime convention discovery (filtering by `ID_RE` / `PHASE_FILES`,
+ported from `hooks/session-start-recover.mjs` as a POSIX ERE
+translation, and the skill's required predecessor artifact) →
+`AskUserQuestion`. Standalone modes still exist: a partial skill invoked
+with no resolvable directory (or with a free-form description) bootstraps
+the missing upstream artifacts inline rather than hard-erroring.
+
+**Discovery duplication — design rationale.** Each archetype-A skill
+embeds the three-tier resolver as a single self-contained bash block
+rather than calling a shared script. Agent threads reset their cwd
+between Bash calls, so the block cannot rely on any shared shell state
+and must stand alone in one invocation. The ~6 load-bearing lines
+(`ID_RE`, `PHASE_FILES`, root literal, predecessor filter) are therefore
+duplicated verbatim across the 8 directory-consuming skills by deliberate
+decision — no shared runtime helper was added, and the
+`check-discovery-consistency.sh` gate enforces byte-identity so the
+copies cannot drift. A shared `discover-topic.sh` that could also dedup
+the two hooks' `findActiveTopic` is a recorded future consolidation; it
+is what the `# NOTE: ... future: shared discover-topic.sh` comment in
+each block points at.
 
 ### Methodology skills (loaded by agents, not directly invoked)
 
@@ -365,6 +388,13 @@ Development hook (`.claude/hooks/` — not distributed):
 |--------------------------|--------------------------|----------------------------------------------------------------------|
 | `check-registry-sync.mjs`| PostToolUse(Write\|Edit) | Verify the agents/ directory and registry.json agree by agent name   |
 
+Development scripts (`.claude/scripts/` — not distributed) house dev-only
+acceptance tooling run by plugin developers. `check-discovery-consistency.sh`
+is the committed consistency gate for the input-discovery feature: it asserts
+every archetype-A skill carries the discovery block, the load-bearing fragments
+(`ID_RE`, `PHASE_FILES`, approval grep, `docs/plans/` root) stay byte-identical
+to canon, and the blind-research invariant holds.
+
 ## 8. State Management
 
 **Primary state:** the artifacts in `docs/plans/<id>/*.md`. Each
@@ -375,8 +405,9 @@ finish?" and "was the human gate passed?"
 seeds the ledger at the start of `/team`, marks each item `in_progress`
 when dispatching, and `completed` when the artifact lands. Any `/team-*`
 command rebuilds the ledger by scanning artifacts on entry, so an
-interrupted run can be resumed by re-invoking any of them with
-`docs/plans/<id>/`.
+interrupted run can be resumed by re-invoking any of them bare — discovery
+auto-resolves the artifact directory (an explicit `docs/plans/<id>/` is still
+accepted).
 
 **Approval markers:** the gated artifact's own YAML frontmatter
 (`approved: true`, `approved_at: <ISO-8601>`) records human gate passes
