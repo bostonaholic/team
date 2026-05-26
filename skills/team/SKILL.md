@@ -74,9 +74,11 @@ loop:
      - MECHANICAL (tests-failing): run the suite; on assertion-only
        failure, advance.
      - ROUTER-EMIT (worktree, PR): perform the action.
-     - AGGREGATE (5 reviewers): dispatch in parallel, collect results,
-       run hard-gate evaluation; on failure track the round count in
-       TodoWrite, cap at 5 rounds and escalate.
+     - AGGREGATE (7 reviewers + aggregator): dispatch in parallel,
+       collect results, dispatch `review-aggregator` to synthesize,
+       run hard-gate evaluation against the aggregator's report; on
+       failure track the round count in TodoWrite, cap at 5 rounds
+       and escalate.
   7. Update TodoWrite — mark current phase `completed` and the next one
      `in_progress`.
   8. Goto loop.
@@ -185,17 +187,22 @@ external-codex, external-gemini) have all returned AND the
    - `security-review` — FAIL on any CRITICAL or HIGH findings.
    - `verification` — FAIL if any check failed or no checks detected.
    - `code-review` — FAIL on REQUEST CHANGES verdict.
+
+   `PARTIAL` verdicts from any reviewer (typically an external
+   wrapper whose CLI returned partial output) are treated as
+   advisory — like `SKIP`, they do not gate.
 3. Track the round count by appending a TodoWrite item like
    "Review round 2" each retry. Cap at 5 rounds.
 4. If under cap → dispatch implementer to fix, passing the typed failure
-   class(es). After fixes, all 5 reviewers re-run from scratch.
+   class(es). After fixes, all 7 reviewers + aggregator re-run from scratch.
 5. If at cap → escalate to the user with all unresolved findings.
 6. If all hard gates pass clean → advance to PR.
 
-**The loop is: IMPLEMENT → VERIFY (5 reviewers) → typed gate check →
-IMPLEMENT → VERIFY → ...** Each round is a complete re-review.
-Reviewers get fresh context every round. The implementer receives typed
-failure classes so it knows exactly what to fix.
+**The loop is: IMPLEMENT → VERIFY (7 reviewers + aggregator) →
+typed gate check → IMPLEMENT → VERIFY → ...** Each round is a
+complete re-review. Reviewers get fresh context every round. The
+implementer receives typed failure classes so it knows exactly what
+to fix.
 
 ### Orchestrator-Emit Gate (PR / ship)
 

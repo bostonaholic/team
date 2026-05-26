@@ -33,6 +33,6 @@
     {"after": "STRUCTURE", "type": "human", "field": "approved"},
     {"after": "PLAN", "type": "orchestrator-emit", "action": "prepare worktree"},
     {"after": "test-architect", "type": "mechanical", "condition": "all tests fail with assertion errors, not crashes"},
-    {"after": "5 reviewers", "type": "aggregate", "hardGates": ["security-reviewer", "verifier", "code-reviewer"], "maxRetries": 5}
+    {"after": "7 reviewers + aggregator", "type": "aggregate", "hardGates": ["security-reviewer", "verifier", "code-reviewer"], "maxRetries": 5}
   ]
 }

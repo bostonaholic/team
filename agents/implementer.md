@@ -86,7 +86,8 @@ Code review found blocking quality issues (REQUEST CHANGES verdict).
 - **Report which findings were fixed** and what changed.
 - If multiple failure types were reported in the same round, address all of
    them before reporting completion.
-- The orchestrator will re-dispatch ALL 5 reviewers to verify your fixes.
+- The orchestrator will re-dispatch ALL 7 reviewers + the
+  `review-aggregator` to verify your fixes.
 
 ## Slice-by-slice execution
 

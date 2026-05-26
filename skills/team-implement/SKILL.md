@@ -1,6 +1,6 @@
 ---
 name: team-implement
-description: Execute the implementation phase. Includes test-first sub-step (writing failing tests, mechanical confirmation gate) and adversarial verification (5 parallel reviewers with hard-gate retry loop). Trigger on "implement this", "execute the plan", or "/team-implement".
+description: Execute the implementation phase. Includes test-first sub-step (writing failing tests, mechanical confirmation gate) and adversarial verification (7 parallel reviewers + aggregator with hard-gate retry loop). Trigger on "implement this", "execute the plan", or "/team-implement".
 argument-hint: "[docs/plans/<id>/]"
 ---
 
@@ -11,7 +11,8 @@ Run the IMPLEMENT phase. Three internal sub-steps:
 1. **Test-first** — `test-architect` writes failing acceptance tests
 2. **Slice execution** — `implementer` executes vertical slices with
    per-slice commits
-3. **Code review** — 5 parallel reviewers + aggregate hard-gate retry loop
+3. **Code review** — 7 parallel reviewers + `review-aggregator`
+   synthesis + aggregate hard-gate retry loop
 
 ## Input
 
@@ -133,13 +134,24 @@ Before any agent dispatch, decide where to work:
    standalone mode it works from `$ARGUMENTS/task.md` and the failing
    tests.
 4.5. **Clear `docs/plans/<id>/reviews/`.** Before dispatching the
-     reviewer fan-out, run `rm -rf docs/plans/<id>/reviews && mkdir -p
-     docs/plans/<id>/reviews`. This step runs once per IMPLEMENT
-     *round*, before the parallel fan-out — never during a
-     single-reviewer re-dispatch. The aggregator and every external
-     reviewer write their artifacts to this directory; clearing it
-     guarantees no stale artifacts from a prior round (or a prior
-     topic) contaminate aggregation.
+     reviewer fan-out, re-validate `<id>` against the canonical
+     `ID_RE` regex and clear the reviews directory:
+     ```sh
+     # Defense in depth: validate <id> again at the destructive
+     # call site (the discovery block above is upstream — never
+     # rely on it alone for an `rm -rf`).
+     ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
+     id_part="$(basename "$ARGUMENTS")"
+     printf '%s' "$id_part" | grep -qE "$ID_RE" \
+       || { echo "Unsafe id rejected: $id_part" >&2; exit 1; }
+     rm -rf "docs/plans/$id_part/reviews"
+     mkdir -p "docs/plans/$id_part/reviews"
+     ```
+     This step runs once per IMPLEMENT *round*, before the parallel
+     fan-out — never during a single-reviewer re-dispatch. The
+     aggregator and every external reviewer write their artifacts to
+     this directory; clearing it guarantees no stale artifacts from a
+     prior round (or a prior topic) contaminate aggregation.
 5. Dispatch 7 reviewers in parallel: `code-reviewer`,
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`,
    `external-reviewer-codex`, `external-reviewer-gemini`. The 5 Claude
@@ -149,7 +161,13 @@ Before any agent dispatch, decide where to work:
      completes. It reads `docs/plans/<id>/reviews/` (the two external
      artifacts) and the 5 Claude transcripts (forwarded by the
      orchestrator) and writes the synthesis to
-     `docs/plans/<id>/reviews/review-aggregator.md`.
+     `docs/plans/<id>/reviews/review-aggregator.md`. The orchestrator
+     forwards each Claude reviewer's subagent return value verbatim in
+     the aggregator dispatch prompt, prefaced with `## <reviewer-name>`
+     (e.g. `## code-reviewer`, `## security-reviewer`,
+     `## technical-writer`, `## ux-reviewer`, `## verifier`) so the
+     aggregator can attribute findings to each reviewer when
+     reconciling.
 6. **Aggregate gate** — read
    `docs/plans/<id>/reviews/review-aggregator.md` and evaluate the
    three hard gates against the verdict tokens emitted by the 5 Claude
@@ -159,6 +177,11 @@ Before any agent dispatch, decide where to work:
    - `security-review` FAIL on CRITICAL or HIGH findings
    - `verification` FAIL if any check failed or no checks detected
    - `code-review` FAIL on REQUEST CHANGES verdict
+
+   `PARTIAL` verdicts (from a non-SKIP external reviewer whose CLI
+   returned partial output) are treated as advisory — like `SKIP`,
+   they do not gate. Only the three hard-gate verdicts above can
+   trigger a fail.
 7. On hard-gate failure:
    - Record a typed failure class (security, lint, typecheck, build,
      test, review)
