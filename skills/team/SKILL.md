@@ -92,7 +92,7 @@ loop:
 | STRUCTURE  | `structure-planner` (→ human gate)                      | `docs/plans/<id>/design.md` (frontmatter `approved: true`)      | PLAN               |
 | PLAN       | `planner`                                               | `docs/plans/<id>/structure.md` (frontmatter `approved: true`)   | WORKTREE           |
 | WORKTREE   | (orchestrator-emit)                                     | `docs/plans/<id>/plan.md`                                       | IMPLEMENT          |
-| IMPLEMENT  | `test-architect`, `implementer`, 5 reviewers (parallel) | worktree prepared                                               | PR                 |
+| IMPLEMENT  | `test-architect`, `implementer`, 5 reviewers (parallel) + review-aggregator | worktree prepared                                               | PR                 |
 | PR         | (orchestrator-emit)                                     | aggregate gate passed                                           | SHIPPED            |
 
 For RESEARCH, dispatch `file-finder` and `researcher` in parallel passing
@@ -175,7 +175,10 @@ When the `test-architect` returns failing tests:
 When the 5 reviewers (security, docs, ux, code, verifier) have all
 returned:
 
-1. Collect all verdicts from the most recent round.
+1. Collect all verdicts from the most recent round. The
+   `review-aggregator`'s synthesis at
+   `docs/plans/<id>/reviews/review-aggregator.md` is the orchestrator's
+   input for hard-gate evaluation.
 2. Check each hard gate independently:
    - `security-review` — FAIL on any CRITICAL or HIGH findings.
    - `verification` — FAIL if any check failed or no checks detected.

@@ -23,7 +23,8 @@
     {"name": "security-reviewer", "phase": "IMPLEMENT", "parallel": true},
     {"name": "technical-writer", "phase": "IMPLEMENT", "parallel": true},
     {"name": "ux-reviewer", "phase": "IMPLEMENT", "parallel": true},
-    {"name": "verifier", "phase": "IMPLEMENT", "parallel": true}
+    {"name": "verifier", "phase": "IMPLEMENT", "parallel": true},
+    {"name": "review-aggregator", "phase": "IMPLEMENT"}
   ],
   "gates": [
     {"after": "DESIGN", "type": "human", "field": "approved"},
