@@ -93,8 +93,8 @@ format your output must conform to.
 5. **Artifact path.**
    `docs/plans/<id>/reviews/external-reviewer-codex.md`. The
    orchestrator passes `<id>` as an argument; do not derive it
-   yourself. Use the `Write` tool to write the artifact so the
-   `post-write-validate.mjs` hook fires on it.
+   yourself. Use the `Write` tool (not Bash) so the write is
+   explicit and auditable.
 
 ## Prompt template
 

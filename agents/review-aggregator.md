@@ -34,8 +34,8 @@ The orchestrator passes the artifact directory path. You read:
 Write your synthesis to
 `docs/plans/<id>/reviews/review-aggregator.md` (kebab-case agent name,
 matching the reviewer artifact convention in
-`skills/team-implement/SKILL.md`). Use the `Write` tool so the
-`post-write-validate.mjs` hook fires on the artifact.
+`skills/team-implement/SKILL.md`). Use the `Write` tool (not Bash) so
+the write is explicit and auditable.
 
 The synthesis MUST:
 
