@@ -1,8 +1,8 @@
 ---
 name: review-aggregator
-description: Use after the 5-reviewer + 2-external fan-out completes. Reads docs/plans/<id>/reviews/*.md, fuzzy-matches findings across reviewers, emits one ranked synthesis with severity × confidence tags. Example triggers — "aggregate reviewer reports", "synthesize the review".
+description: Use after the 7-reviewer fan-out (5 Claude + 2 external) completes. Reads docs/plans/<id>/reviews/*.md, fuzzy-matches findings across reviewers, emits one ranked synthesis with severity × confidence tags. Example triggers — "aggregate reviewer reports", "synthesize the review".
 model: sonnet
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob, Bash, Write
 permissionMode: plan
 ---
 
@@ -34,14 +34,15 @@ The orchestrator passes the artifact directory path. You read:
 Write your synthesis to
 `docs/plans/<id>/reviews/review-aggregator.md` (kebab-case agent name,
 matching the reviewer artifact convention in
-`skills/team-implement/SKILL.md`).
+`skills/team-implement/SKILL.md`). Use the `Write` tool so the
+`post-write-validate.mjs` hook fires on the artifact.
 
 The synthesis MUST:
 
 1. Open with a **`Reviewers consulted:`** header line of the form
    `Reviewers consulted: <claude_count> Claude + <ext_pass>/<ext_total> external (codex: <verdict_or_skip_reason>, gemini: <verdict_or_skip_reason>)`.
-2. Render every finding in Conventional Comments format per
-   `skills/code-review/SKILL.md:60-79`.
+2. Render every finding in Conventional Comments format per the
+   "Comment Types" section of `skills/code-review/SKILL.md`.
 3. Tag every multi-model finding with
    `corroborated by N/M` (N = reviewers flagging it; M = non-SKIP
    reviewers in the round).
@@ -49,10 +50,12 @@ The synthesis MUST:
    `[single-model — extra scrutiny]`.
 5. Preserve every Claude hard-gate verdict (`FAIL`, `REQUEST CHANGES`)
    verbatim — confidence is display-only and MUST NOT alter a hard-gate
-   verdict. See `skills/code-review/SKILL.md:156` ("hard gate failures
-   are never aggregated away").
+   verdict. See the "Aggregating Verdicts" section of
+   `skills/code-review/SKILL.md` ("hard gate failures are never
+   aggregated away").
 6. End with `**Verdict:** PASS | FAIL | SKIP | PARTIAL` on its own
-   line, mirroring `agents/security-reviewer.md:115`.
+   line, mirroring the "Report Format" section of
+   `agents/security-reviewer.md`.
 
 ## Rules
 
