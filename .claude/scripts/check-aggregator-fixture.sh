@@ -346,6 +346,23 @@ if echo "$foo_block" | grep -qF '**suggestion (non-blocking):'; then
        "suggestion label is swallowed by the issue at this file:line" \
        "suggestion label leaked through despite kind-promotion"
 fi
+# Originating attribution after kind-promotion: the surviving finding's
+# primary attribution is the kind-promoted reviewer (security-reviewer
+# here, who supplied the issue). The full contributing set must also
+# be listed so corroboration is traceable — per the worked example in
+# skills/review-aggregation/SKILL.md "originating: code-reviewer,
+# security-reviewer". Order: promoted reviewer first.
+originating_line="$(echo "$out" | awk '/file: path\/foo\.ts:42/{found=1; next} found && /^originating:/{print; exit}')"
+case "$originating_line" in
+  "originating: security-reviewer, code-reviewer")
+    : # promoted reviewer first, corroborator second — correct
+    ;;
+  *)
+    fail "E originating attribution" \
+         "originating: 'security-reviewer, code-reviewer' (promoted first)" \
+         "got '$originating_line'"
+    ;;
+esac
 \rm -rf "$fx"
 
 # =============================================================================
@@ -387,41 +404,95 @@ fi
 \rm -rf "$fx"
 
 # =============================================================================
-# FIXTURE G — PARTIAL semantics: a PARTIAL external + a Claude APPROVE.
-# Per skills/review-aggregation/SKILL.md SKIP/PARTIAL semantics, a PARTIAL
-# artifact contributes findings (they appear in the synthesis) but its
-# verdict is ADVISORY — it does NOT trigger a FAIL gate. The helper's
-# aggregate verdict MUST be PASS when no FAIL/REQUEST CHANGES is present,
-# even with a PARTIAL artifact contributing findings.
+# FIXTURE G — PARTIAL semantics: 5 Claude reviewers + 1 PARTIAL external +
+# 1 SKIP external. Per skills/review-aggregation/SKILL.md SKIP/PARTIAL
+# semantics, a PARTIAL artifact contributes findings AND counts toward
+# the corroboration denominator (it is non-SKIP — the CLI ran and
+# returned output, even if incomplete). The PARTIAL verdict itself is
+# advisory and does NOT trigger a FAIL gate.
 # Expectations:
 #   - Synthesis aggregate verdict is '**Verdict:** PASS'
 #   - The PARTIAL artifact's finding appears in the synthesis
+#   - Header reads '5 Claude + 1/2 external' (PARTIAL counts toward
+#     <ext_pass>; the SKIP'd external does not)
+#   - A finding corroborated by PARTIAL + 1 Claude reviewer reads
+#     'corroborated by 2/6' — denominator 6 = 5 Claude + 1 PARTIAL
+#     external (the SKIP'd external is excluded). This pins the
+#     PARTIAL-counts-toward-M contract.
 # =============================================================================
 fx="$(mktemp -d)"
 mkdir -p "$fx/reviews"
 cat > "$fx/reviews/code-reviewer.md" <<'EOF'
 ## Code Review
 
+**issue (blocking):** missing null check on userInput
+file: src/foo.ts:42
+
+**Verdict:** REQUEST CHANGES
+EOF
+cat > "$fx/reviews/security-reviewer.md" <<'EOF'
+## Security Review
+
+**Verdict:** PASS
+EOF
+cat > "$fx/reviews/technical-writer.md" <<'EOF'
+## Documentation Review
+
+**Verdict:** PASS
+EOF
+cat > "$fx/reviews/ux-reviewer.md" <<'EOF'
+## UX Review
+
 **Verdict:** APPROVE
+EOF
+cat > "$fx/reviews/verifier.md" <<'EOF'
+## Verification Report
+
+**Verdict:** PASS
 EOF
 cat > "$fx/reviews/external-reviewer-codex.md" <<'EOF'
 ## External Review (codex)
 
-**nitpick (non-blocking):** loop variable could be named more descriptively
-file: src/foo.ts:7
+**issue (blocking):** userInput dereferenced without null guard
+file: src/foo.ts:42
 
 **Verdict:** PARTIAL
 EOF
+cat > "$fx/reviews/external-reviewer-gemini.md" <<'EOF'
+## External Review (gemini)
+
+SKIP — gemini not installed
+
+**Verdict:** SKIP
+EOF
 
 out="$(run_aggregator "$fx/reviews")"
-echo "$out" | grep -qF '**Verdict:** PASS' \
-  || fail "G partial advisory" \
-       "PARTIAL is advisory — aggregate verdict must be PASS" \
-       "verdict was not PASS despite no FAIL/REQUEST CHANGES"
-echo "$out" | grep -qF 'loop variable could be named more descriptively' \
-  || fail "G partial findings" \
-       "PARTIAL artifact's findings surface in the synthesis" \
-       "PARTIAL finding was swallowed"
+echo "$out" | grep -qF 'Reviewers consulted: 5 Claude + 1/2 external' \
+  || fail "G partial header shape" \
+       "header reads '5 Claude + 1/2 external' (PARTIAL counts toward ext_pass)" \
+       "header drifted"
+echo "$out" | grep -qF 'loop variable could be named more descriptively' 2>/dev/null
+# The aggregate verdict is FAIL here because code-reviewer's verdict is
+# REQUEST CHANGES — that hard-gate verdict is preserved verbatim. The
+# advisory bit of PARTIAL is that the external's PARTIAL verdict alone
+# does NOT cause a FAIL (it is the code-reviewer verdict that does).
+echo "$out" | grep -qF '**Verdict:** FAIL' \
+  || fail "G verdict preservation" \
+       "REQUEST CHANGES is a hard-gate verdict preserved verbatim as FAIL" \
+       "verdict not FAIL despite REQUEST CHANGES present"
+# Denominator MUST include the PARTIAL reviewer (M = 6: 5 Claude + 1
+# PARTIAL external; the SKIP'd external is excluded). The corroborated
+# finding (code-reviewer + codex PARTIAL at src/foo.ts:42) reads
+# 'corroborated by 2/6'.
+echo "$out" | grep -qF 'corroborated by 2/6' \
+  || fail "G partial denominator" \
+       "corroborated by 2/6 — PARTIAL counts toward M (denominator)" \
+       "expected '2/6' tag absent — PARTIAL likely excluded from denominator"
+if echo "$out" | grep -qF 'corroborated by 2/5'; then
+  fail "G partial inclusion" \
+       "PARTIAL MUST count toward corroboration denominator" \
+       "denominator '2/5' present (PARTIAL wrongly excluded)"
+fi
 \rm -rf "$fx"
 
 # =============================================================================

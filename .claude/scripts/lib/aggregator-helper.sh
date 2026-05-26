@@ -154,7 +154,6 @@ claude_total=0
 ext_total=0
 ext_pass=0
 non_skip_total=0
-non_skip_names=""
 consulted_lines=""
 # Per-CLI display strings — keyed by short cli name (codex|gemini|...)
 ext_codex_display=""
@@ -187,7 +186,6 @@ for f in "$REVIEWS_DIR"/*.md; do
   fi
   if [ "$v" != "SKIP" ]; then
     non_skip_total=$((non_skip_total + 1))
-    non_skip_names="$non_skip_names $reviewer"
   fi
   consulted_lines="$consulted_lines- $reviewer: $v"$'\n'
 done
@@ -244,10 +242,15 @@ else
     n=$(printf '%s\n' "$findings_tsv" | awk -F'\t' -v key="$file_ref" '$2 == key {print $1}' | sort -u | wc -l | tr -d ' ')
     # Kind promotion: scan every TSV row sharing this file:line and pick
     # the highest-ranked kind. The matching row's summary is the survivor
-    # so the label and summary are emitted by the same source.
+    # so the label and summary are emitted by the same source. Track the
+    # reviewer who supplied the surviving (promoted) finding so the
+    # originating: attribution lists them first, matching the
+    # skills/review-aggregation/SKILL.md "Worked example — corroboration
+    # merge" output shape.
     promoted_kind="$kind"
     promoted_summary="$summary"
     promoted_rank="$(kind_rank "$kind")"
+    promoted_reviewer="$reviewer"
     while IFS=$'\t' read -r r_other f_other k_other s_other; do
       [ "$f_other" = "$file_ref" ] || continue
       r_other_rank="$(kind_rank "$k_other")"
@@ -255,12 +258,27 @@ else
         promoted_kind="$k_other"
         promoted_summary="$s_other"
         promoted_rank="$r_other_rank"
+        promoted_reviewer="$r_other"
       fi
+    done <<< "$findings_tsv"
+    # Build the originating: list — promoted reviewer first, then every
+    # other distinct contributing reviewer in TSV order. Per
+    # skills/review-aggregation/SKILL.md the surviving finding's primary
+    # attribution is the kind-promoted reviewer, and corroborating
+    # reviewers are listed after.
+    contributors="$promoted_reviewer"
+    while IFS=$'\t' read -r r_c f_c k_c s_c; do
+      [ "$f_c" = "$file_ref" ] || continue
+      [ "$r_c" = "$promoted_reviewer" ] && continue
+      case " $contributors " in
+        *" $r_c "*) continue ;;
+      esac
+      contributors="$contributors, $r_c"
     done <<< "$findings_tsv"
     printf -- '---\n'
     printf '%s %s\n' "$(kind_label "$promoted_kind")" "$promoted_summary"
     printf 'file: %s\n' "$file_ref"
-    printf 'originating: %s\n' "$reviewer"
+    printf 'originating: %s\n' "$contributors"
     if [ "$n" -ge 2 ]; then
       printf 'corroborated by %s/%s\n' "$n" "$non_skip_total"
     else
