@@ -163,8 +163,8 @@ reviewers do not remember previous rounds.
 ## Standalone Mode Tradeoffs
 
 Standalone mode skips the Question/Research/Design/Structure/Plan
-ceremony. You forfeit blind research, human design alignment, and explicit
-slice breakdown. Use it when:
+ceremony. You forfeit isolated research, human design alignment, and
+explicit slice breakdown. Use it when:
 
 - The work is well-scoped and tracked in a ticket with clear acceptance
 - You have already decided the approach and want test-first execution

@@ -12,7 +12,7 @@ consumes:
 
 - `task.md` — the human's full intent. Read by `design-author` and
   downstream phases that need intent. **Never** read by `researcher` or
-  `file-finder` (blindness invariant).
+  `file-finder` — they only see `questions.md`.
 - `questions.md` — neutral research questions phrased without intent. The
   only file `researcher` and `file-finder` ever read.
 - `repos.md` — written **only when the topic spans more than one

@@ -231,7 +231,7 @@ When the aggregate gate passes:
 - The two human gates are **design approval** and **structure approval**.
   Never present the plan to the user for approval — the plan is a
   tactical agent artifact, the structure is the human contract.
-- The blind-research invariant is non-negotiable. If a researcher's
+- The research-isolation invariant is non-negotiable. If a researcher's
   context contains the user's original description, the pipeline has a
   defect. Stop and report.
 - On any unexpected failure: report to the user and suggest re-invoking

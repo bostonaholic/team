@@ -197,7 +197,7 @@ the ticket prefix, and `task.md` is the canonical intent record. Re-
 encoding `ticketId` on every artifact would be duplication that can
 drift out of sync with the directory name.
 
-## Blind Research
+## Research Isolation
 
 Research is the most-corruptible phase: an LLM that knows what it is being
 asked to build will return opinions instead of facts. QRSPI enforces the
@@ -207,7 +207,7 @@ at the agent boundary:
 1. **Structural** — when the orchestrator dispatches `researcher` or
    `file-finder`, it passes only the path to `questions.md`. The
    orchestrator is forbidden from handing the description (or `task.md`)
-   to blind agents at dispatch time.
+   to the research agents at dispatch time.
 2. **Procedural** — the `researcher` and `file-finder` agent system prompts
    forbid reading `task.md`. Both have `Read`/`Grep`/`Glob` tools with
    `permissionMode: plan`, so nothing mechanically stops a `Read` of
@@ -215,9 +215,9 @@ at the agent boundary:
 3. **Procedural** — if a researcher needs context the questions lack, it must
    surface that as an open question rather than guessing the intent.
 
-A PreToolUse(Read) hook that blocks `*/task.md` reads from blind agents
-would convert step 2 from procedural to structural. Treat this as a
-follow-up if procedural enforcement proves insufficient in practice.
+A PreToolUse(Read) hook that blocks `*/task.md` reads from the research
+agents would convert step 2 from procedural to structural. Treat this as
+a follow-up if procedural enforcement proves insufficient in practice.
 
 ## Vertical Slices
 
@@ -358,8 +358,8 @@ Always run the questioner first.
 ### Letting Research See Intent
 
 If the researcher reads `task.md` or receives the user's description in any
-form, the blindness invariant is broken. Treat any leakage as a critical
-defect.
+form, the research-isolation invariant is broken. Treat any leakage as a
+critical defect.
 
 ### Reviewing the Plan
 
