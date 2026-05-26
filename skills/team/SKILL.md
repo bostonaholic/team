@@ -172,8 +172,10 @@ When the `test-architect` returns failing tests:
 
 ### Aggregate Gate (review collection)
 
-When the 5 reviewers (security, docs, ux, code, verifier) have all
-returned:
+When the 7 reviewers (security, docs, ux, code, verifier,
+external-codex, external-gemini) have all returned AND the
+`review-aggregator` synthesis exists at
+`docs/plans/<id>/reviews/review-aggregator.md`:
 
 1. Collect all verdicts from the most recent round. The
    `review-aggregator`'s synthesis at

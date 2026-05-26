@@ -140,9 +140,22 @@ Before any agent dispatch, decide where to work:
      reviewer write their artifacts to this directory; clearing it
      guarantees no stale artifacts from a prior round (or a prior
      topic) contaminate aggregation.
-5. Dispatch 5 reviewers in parallel: `code-reviewer`,
-   `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
-6. **Aggregate gate** — evaluate hard gates:
+5. Dispatch 7 reviewers in parallel: `code-reviewer`,
+   `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`,
+   `external-reviewer-codex`, `external-reviewer-gemini`. The 5 Claude
+   reviewers emit through their transcripts as today; the 2 external
+   wrappers write artifacts to `docs/plans/<id>/reviews/`.
+5.5. Dispatch `review-aggregator` after the parallel fan-out
+     completes. It reads `docs/plans/<id>/reviews/` (the two external
+     artifacts) and the 5 Claude transcripts (forwarded by the
+     orchestrator) and writes the synthesis to
+     `docs/plans/<id>/reviews/review-aggregator.md`.
+6. **Aggregate gate** — read
+   `docs/plans/<id>/reviews/review-aggregator.md` and evaluate the
+   three hard gates against the verdict tokens emitted by the 5 Claude
+   reviewers (the aggregator preserves these verbatim). Confidence
+   tags (`[single-model — extra scrutiny]`, `corroborated by N/M`) are
+   display-only and MUST NOT alter the hard-gate decision:
    - `security-review` FAIL on CRITICAL or HIGH findings
    - `verification` FAIL if any check failed or no checks detected
    - `code-review` FAIL on REQUEST CHANGES verdict
@@ -151,7 +164,8 @@ Before any agent dispatch, decide where to work:
      test, review)
    - Append `Review round <n+1>` to the TodoWrite ledger
    - If round count < 5: re-dispatch implementer with the typed class,
-     then re-dispatch ALL 5 reviewers for a fresh review
+     then re-dispatch ALL 7 reviewers + the aggregator for a fresh
+     review
    - If round count ≥ 5: escalate with a full unresolved-findings summary
 8. **Stop once all hard gates pass clean.** Suggest `/team-pr`.
 
@@ -163,7 +177,7 @@ artifact (currently `external-reviewer-codex`,
 ## Quality Loop
 
 ```
-test-architect → mechanical gate → implementer → 5 reviewers → aggregate gate
+test-architect → mechanical gate → implementer → 7 reviewers + aggregator → aggregate gate
                                        ↑                            ↓ fail
                                        └────── (specific fix) ──────┘
                                                                     ↓ pass
