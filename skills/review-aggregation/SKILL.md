@@ -10,11 +10,12 @@ fan-out and emits a single ranked synthesis. This skill defines the
 algorithm; `agents/review-aggregator.md` is the agent that runs it.
 
 The aggregator is the **only** structured-synthesis layer in the
-pipeline. The orchestrator's hard-gate evaluation (step 6 of
+pipeline. The orchestrator's hard-gate evaluation (step 8 of
 `skills/team-implement/SKILL.md`) still reads verdict tokens directly,
-not the aggregator's confidence tags. See
-`skills/code-review/SKILL.md:142-158` for the hard-gate contract — this
-skill preserves those verdicts verbatim and never aggregates them away.
+not the aggregator's confidence tags. See the "Aggregating Verdicts"
+section of `skills/code-review/SKILL.md` for the hard-gate contract —
+this skill preserves those verdicts verbatim and never aggregates them
+away.
 
 ## Inputs
 
@@ -155,7 +156,7 @@ aggregated away."*
 
 Confidence (`corroborated by N/M`, `[single-model — extra scrutiny]`)
 is a **display annotation**. The orchestrator's hard-gate evaluation at
-step 6 of `skills/team-implement/SKILL.md` reads the verdict token,
+step 8 of `skills/team-implement/SKILL.md` reads the verdict token,
 NOT the confidence tag. A single-model `security-reviewer` CRITICAL
 must still trigger the hard gate.
 
@@ -187,4 +188,4 @@ corroborated by N/M | [single-model — extra scrutiny]
 
 The verdict line on the last line MUST match the contract from
 `agents/security-reviewer.md:115` so prose-only verdict scanners
-(including the orchestrator at step 6) continue to work.
+(including the orchestrator at step 8) continue to work.

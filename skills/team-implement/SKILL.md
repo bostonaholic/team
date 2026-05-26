@@ -133,56 +133,56 @@ Before any agent dispatch, decide where to work:
 4. Dispatch `implementer` → executes slices with per-slice commits. In
    standalone mode it works from `$ARGUMENTS/task.md` and the failing
    tests.
-4.5. **Clear `docs/plans/<id>/reviews/`.** Before dispatching the
-     reviewer fan-out, re-validate `<id>` against the canonical
-     `ID_RE` regex and clear the reviews directory:
-     ```sh
-     # Defense in depth: validate <id> again at the destructive
-     # call site (the discovery block above is upstream — never
-     # rely on it alone for an `rm -rf`).
-     ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
-     id_part="$(basename "$ARGUMENTS")"
-     printf '%s' "$id_part" | grep -qE "$ID_RE" \
-       || { echo "Unsafe id rejected: $id_part" >&2; exit 1; }
-     rm -rf "docs/plans/$id_part/reviews"
-     mkdir -p "docs/plans/$id_part/reviews"
-     ```
-     This step runs once per IMPLEMENT *round*, before the parallel
-     fan-out — never during a single-reviewer re-dispatch. The
-     aggregator and every external reviewer write their artifacts to
-     this directory; clearing it guarantees no stale artifacts from a
-     prior round (or a prior topic) contaminate aggregation.
-5. Dispatch 7 reviewers in parallel: `code-reviewer`,
+5. **Clear `docs/plans/<id>/reviews/`.** Before dispatching the
+   reviewer fan-out, re-validate `<id>` against the canonical
+   `ID_RE` regex and clear the reviews directory:
+   ```sh
+   # Defense in depth: validate <id> again at the destructive
+   # call site (the discovery block above is upstream — never
+   # rely on it alone for an `rm -rf`).
+   ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
+   id_part="$(basename "$ARGUMENTS")"
+   printf '%s' "$id_part" | grep -qE "$ID_RE" \
+     || { echo "Unsafe id rejected: $id_part" >&2; exit 1; }
+   rm -rf "docs/plans/$id_part/reviews"
+   mkdir -p "docs/plans/$id_part/reviews"
+   ```
+   This step runs once per IMPLEMENT *round*, before the parallel
+   fan-out — never during a single-reviewer re-dispatch. The
+   aggregator and every external reviewer write their artifacts to
+   this directory; clearing it guarantees no stale artifacts from a
+   prior round (or a prior topic) contaminate aggregation.
+6. Dispatch 7 reviewers in parallel: `code-reviewer`,
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`,
    `external-reviewer-codex`, `external-reviewer-gemini`. The 5 Claude
    reviewers emit through their transcripts as today; the 2 external
    wrappers write artifacts to `docs/plans/<id>/reviews/`.
-5.5. Dispatch `review-aggregator` after the parallel fan-out
-     completes. It reads `docs/plans/<id>/reviews/` (the two external
-     artifacts) and the 5 Claude transcripts (forwarded by the
-     orchestrator) and writes the synthesis to
-     `docs/plans/<id>/reviews/review-aggregator.md`. The orchestrator
-     forwards each Claude reviewer's subagent return value verbatim in
-     the aggregator dispatch prompt, prefaced with `## <reviewer-name>`
-     (e.g. `## code-reviewer`, `## security-reviewer`,
-     `## technical-writer`, `## ux-reviewer`, `## verifier`) so the
-     aggregator can attribute findings to each reviewer when
-     reconciling.
-6. **Aggregate gate** — read
+7. Dispatch `review-aggregator` after the parallel fan-out
+   completes. It reads `docs/plans/<id>/reviews/` (the two external
+   artifacts) and the 5 Claude transcripts (forwarded by the
+   orchestrator) and writes the synthesis to
+   `docs/plans/<id>/reviews/review-aggregator.md`. The orchestrator
+   forwards each Claude reviewer's subagent return value verbatim in
+   the aggregator dispatch prompt, prefaced with `## <reviewer-name>`
+   (e.g. `## code-reviewer`, `## security-reviewer`,
+   `## technical-writer`, `## ux-reviewer`, `## verifier`) so the
+   aggregator can attribute findings to each reviewer when
+   reconciling.
+8. **Aggregate gate** — read
    `docs/plans/<id>/reviews/review-aggregator.md` and evaluate the
    three hard gates against the verdict tokens emitted by the 5 Claude
    reviewers (the aggregator preserves these verbatim). Confidence
    tags (`[single-model — extra scrutiny]`, `corroborated by N/M`) are
    display-only and MUST NOT alter the hard-gate decision:
-   - `security-review` FAIL on CRITICAL or HIGH findings
-   - `verification` FAIL if any check failed or no checks detected
-   - `code-review` FAIL on REQUEST CHANGES verdict
+   - `security-reviewer` FAIL on CRITICAL or HIGH findings
+   - `verifier` FAIL if any check failed or no checks detected
+   - `code-reviewer` FAIL on REQUEST CHANGES verdict
 
    `PARTIAL` verdicts (from a non-SKIP external reviewer whose CLI
    returned partial output) are treated as advisory — like `SKIP`,
    they do not gate. Only the three hard-gate verdicts above can
    trigger a fail.
-7. On hard-gate failure:
+9. On hard-gate failure:
    - Record a typed failure class (security, lint, typecheck, build,
      test, review)
    - Append `Review round <n+1>` to the TodoWrite ledger
@@ -190,7 +190,7 @@ Before any agent dispatch, decide where to work:
      then re-dispatch ALL 7 reviewers + the aggregator for a fresh
      review
    - If round count ≥ 5: escalate with a full unresolved-findings summary
-8. **Stop once all hard gates pass clean.** Suggest `/team-pr`.
+10. **Stop once all hard gates pass clean.** Suggest `/team-pr`.
 
 **Reviewer artifact convention:** any reviewer that writes a report
 artifact (currently `external-reviewer-codex`,

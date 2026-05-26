@@ -184,9 +184,9 @@ external-codex, external-gemini) have all returned AND the
    `docs/plans/<id>/reviews/review-aggregator.md` is the orchestrator's
    input for hard-gate evaluation.
 2. Check each hard gate independently:
-   - `security-review` — FAIL on any CRITICAL or HIGH findings.
-   - `verification` — FAIL if any check failed or no checks detected.
-   - `code-review` — FAIL on REQUEST CHANGES verdict.
+   - `security-reviewer` — FAIL on any CRITICAL or HIGH findings.
+   - `verifier` — FAIL if any check failed or no checks detected.
+   - `code-reviewer` — FAIL on REQUEST CHANGES verdict.
 
    `PARTIAL` verdicts from any reviewer (typically an external
    wrapper whose CLI returned partial output) are treated as
