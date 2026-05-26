@@ -70,3 +70,8 @@ The synthesis MUST:
   count toward corroboration of passes.
 - A finding with `file:unknown` (CLI emitted no `file:line`) is
   included verbatim and never matched against any other finding.
+- A missing or silent Claude reviewer transcript is treated as SKIP
+  for that reviewer — no fallback, no inference. List the reviewer in
+  the consulted header with a `SKIP — transcript missing` reason; do
+  NOT synthesize findings on the reviewer's behalf, do NOT contribute
+  to corroboration counts.

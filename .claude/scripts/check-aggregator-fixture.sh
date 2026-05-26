@@ -100,6 +100,12 @@ echo "$out" | grep -qF 'corroborated by 2/3' \
   || fail "A corroboration" "two-model finding tagged 'corroborated by 2/3'" "corroboration tag absent"
 echo "$out" | grep -qF '[single-model' \
   || fail "A single-model" "single-model finding tagged '[single-model — extra scrutiny]'" "single-model tag absent"
+# Every emitted finding MUST carry the fully-decorated Conventional
+# Comments label per skills/code-review/SKILL.md "Comment Types":
+# '**issue (blocking):**', not the prefix '**issue:**'. Anchored on
+# the full token so a regression to the bare prefix surfaces here.
+echo "$out" | grep -qF '**issue (blocking):' \
+  || fail "A full label" "findings carry full label '**issue (blocking):'" "label not fully decorated"
 \rm -rf "$fx"
 
 # =============================================================================
@@ -271,31 +277,39 @@ fi
 \rm -rf "$fx"
 
 # =============================================================================
-# FIXTURE E — corroboration collision: two reviewers flag path/foo.ts:42
-# with different kinds (issue vs suggestion). Most-severe kind wins; the
-# 'suggestion' form must NOT appear as a separate finding at that file:line.
+# FIXTURE E — kind-promotion collision: two reviewers flag path/foo.ts:42
+# with different kinds AND different summary text. The lower-severity
+# reviewer (suggestion) is listed FIRST in the artifact directory's lexical
+# order; the issue artifact lands SECOND. The aggregator MUST promote to
+# 'issue (blocking)' — the issue's label AND its distinct summary text
+# must win, proving the helper is selecting by severity (not just by
+# input order).
 # Expectations:
-#   - Single finding at path/foo.ts:42 carries the 'issue' kind
-#   - The 'suggestion' label does NOT appear as a separate emitted finding
-#     at path/foo.ts:42
+#   - Exactly ONE finding emerges at path/foo.ts:42
+#   - Surviving label is '**issue (blocking):' (full token, anchored)
+#   - Surviving summary is the issue reviewer's wording, NOT the
+#     suggestion reviewer's
+#   - The suggestion label does NOT appear as a separate emitted finding
+#     at that file:line
 # =============================================================================
 fx="$(mktemp -d)"
 mkdir -p "$fx/reviews"
+# Lexical filename order: code-reviewer.md emits the suggestion FIRST.
 cat > "$fx/reviews/code-reviewer.md" <<'EOF'
 ## Code Review
 
-**issue (blocking):** stale comment misleads readers about the loop semantics
+**suggestion (non-blocking):** comment could be clearer about the loop semantics
 file: path/foo.ts:42
 
-**Verdict:** REQUEST CHANGES
+**Verdict:** COMMENT
 EOF
-cat > "$fx/reviews/ux-reviewer.md" <<'EOF'
-## UX Review
+cat > "$fx/reviews/security-reviewer.md" <<'EOF'
+## Security Review
 
-**suggestion (non-blocking):** stale comment misleads readers about the loop semantics
+**issue (blocking):** stale comment hides a null deref on this branch
 file: path/foo.ts:42
 
-**Verdict:** APPROVE
+**Verdict:** FAIL
 EOF
 
 out="$(run_aggregator "$fx/reviews")"
@@ -306,14 +320,32 @@ count=$(echo "$out" | grep -cF 'file: path/foo.ts:42')
 if [ "$count" -ne 1 ]; then
   fail "E collapsed" "exactly ONE finding emerges at path/foo.ts:42 (most-severe kind wins)" "got $count emissions"
 fi
-# Kind promotion — when an 'issue' and a 'suggestion' collide at the
-# same file:line, the most-severe kind ('issue') survives.
-# skills/review-aggregation/SKILL.md "Fuzzy matching" defines the
-# severity order issue > suggestion > nitpick.
-echo "$out" | grep -qF '**issue:' \
-  || fail "E kind promotion" \
-       "surviving collapsed finding labelled with most-severe kind ('issue')" \
-       "no '**issue:' label survived collapse"
+# Kind promotion — fully-decorated label, anchored on the FULL token.
+# Anchoring on '**issue:' would vacuously pass even if the helper
+# regressed to emitting the bare-prefix form; '**issue (blocking):'
+# pins the Conventional Comments contract.
+echo "$out" | grep -qF '**issue (blocking):' \
+  || fail "E kind promotion (label)" \
+       "surviving collapsed finding carries '**issue (blocking):' label" \
+       "no '**issue (blocking):' label survived collapse"
+# The surviving summary text must come from the issue reviewer
+# (security-reviewer's wording), not from the suggestion reviewer's
+# (code-reviewer's). This proves promotion is selecting by severity
+# rather than by input/lexical order.
+echo "$out" | grep -qF 'stale comment hides a null deref on this branch' \
+  || fail "E kind promotion (summary)" \
+       "surviving summary is the issue reviewer's wording" \
+       "issue summary missing — suggestion summary likely survived"
+# Negative: the bare suggestion label must NOT appear as a separate
+# emitted finding at this file:line. Look only inside the block for
+# path/foo.ts:42 (other fixtures' suggestion-bearing artifacts are
+# already torn down by their `\rm -rf "$fx"` lines above).
+foo_block="$(echo "$out" | awk '/^---$/{block=""} {block=block"\n"$0} /file: path\/foo\.ts:42/{print block}')"
+if echo "$foo_block" | grep -qF '**suggestion (non-blocking):'; then
+  fail "E suggestion swallowed" \
+       "suggestion label is swallowed by the issue at this file:line" \
+       "suggestion label leaked through despite kind-promotion"
+fi
 \rm -rf "$fx"
 
 # =============================================================================
@@ -344,10 +376,52 @@ echo "$out" | grep -qF '[single-model' \
   || fail "F single-model tag" "single-model finding tagged '[single-model — extra scrutiny]'" "single-model tag absent"
 echo "$out" | grep -qF 'file: src/secrets.ts:3' \
   || fail "F finding preserved" "CRITICAL finding appears verbatim at src/secrets.ts:3" "finding absent from synthesis"
+# Fully-decorated Conventional Comments label — anchored on the full
+# token, not the bare-prefix form.
+echo "$out" | grep -qF '**issue (blocking):' \
+  || fail "F full label" "preserved finding carries '**issue (blocking):' label" "label not fully decorated"
 # Negative: the verdict must NOT have been downgraded to PASS.
 if echo "$out" | grep -qE '\*\*Verdict:\*\* PASS'; then
   fail "F no downgrade" "verdict NOT downgraded to PASS by single-model tag" "verdict was downgraded to PASS"
 fi
+\rm -rf "$fx"
+
+# =============================================================================
+# FIXTURE G — PARTIAL semantics: a PARTIAL external + a Claude APPROVE.
+# Per skills/review-aggregation/SKILL.md SKIP/PARTIAL semantics, a PARTIAL
+# artifact contributes findings (they appear in the synthesis) but its
+# verdict is ADVISORY — it does NOT trigger a FAIL gate. The helper's
+# aggregate verdict MUST be PASS when no FAIL/REQUEST CHANGES is present,
+# even with a PARTIAL artifact contributing findings.
+# Expectations:
+#   - Synthesis aggregate verdict is '**Verdict:** PASS'
+#   - The PARTIAL artifact's finding appears in the synthesis
+# =============================================================================
+fx="$(mktemp -d)"
+mkdir -p "$fx/reviews"
+cat > "$fx/reviews/code-reviewer.md" <<'EOF'
+## Code Review
+
+**Verdict:** APPROVE
+EOF
+cat > "$fx/reviews/external-reviewer-codex.md" <<'EOF'
+## External Review (codex)
+
+**nitpick (non-blocking):** loop variable could be named more descriptively
+file: src/foo.ts:7
+
+**Verdict:** PARTIAL
+EOF
+
+out="$(run_aggregator "$fx/reviews")"
+echo "$out" | grep -qF '**Verdict:** PASS' \
+  || fail "G partial advisory" \
+       "PARTIAL is advisory — aggregate verdict must be PASS" \
+       "verdict was not PASS despite no FAIL/REQUEST CHANGES"
+echo "$out" | grep -qF 'loop variable could be named more descriptively' \
+  || fail "G partial findings" \
+       "PARTIAL artifact's findings surface in the synthesis" \
+       "PARTIAL finding was swallowed"
 \rm -rf "$fx"
 
 # =============================================================================

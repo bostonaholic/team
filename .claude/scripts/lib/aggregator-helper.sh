@@ -74,10 +74,12 @@ artifact_skip_reason() {
   ' "$1"
 }
 
-# Extract findings as TSV: reviewer<TAB>file:line<TAB>summary
+# Extract findings as TSV: reviewer<TAB>file:line<TAB>kind<TAB>summary
 # - file:line comes from the `file:` line in the Conventional Comments block
-# - summary is the text after `**issue (...)**:` / `**suggestion ...**:` /
-#   `**nitpick ...**:`
+# - kind is `issue` | `suggestion` | `nitpick` (the fully-decorated label
+#   `**issue (blocking):**`, `**suggestion (non-blocking):**`,
+#   `**nitpick (non-blocking):**` is parsed; only the base kind is kept).
+# - summary is the text after the `:**` colon-suffix terminator.
 # Skips artifacts whose verdict is SKIP.
 extract_findings() {
   for f in "$REVIEWS_DIR"/*.md; do
@@ -88,6 +90,10 @@ extract_findings() {
     reviewer="$(basename "$f" .md)"
     awk -v reviewer="$reviewer" '
       /^\*\*(issue|suggestion|nitpick)/ {
+        # capture kind (issue|suggestion|nitpick)
+        kind = "issue"
+        if ($0 ~ /^\*\*suggestion/) kind = "suggestion"
+        else if ($0 ~ /^\*\*nitpick/) kind = "nitpick"
         # capture summary after the colon
         idx = index($0, ":**")
         if (idx > 0) {
@@ -97,6 +103,7 @@ extract_findings() {
         } else {
           summary = $0
         }
+        last_kind = kind
         last_summary = summary
         have_summary = 1
         next
@@ -105,12 +112,38 @@ extract_findings() {
         file_ref = $0
         sub(/^file:[[:space:]]*/, "", file_ref)
         sub(/[[:space:]]+$/, "", file_ref)
-        printf "%s\t%s\t%s\n", reviewer, file_ref, last_summary
+        printf "%s\t%s\t%s\t%s\n", reviewer, file_ref, last_kind, last_summary
         have_summary = 0
+        last_kind = ""
         last_summary = ""
       }
     ' "$f"
   done
+}
+
+# Render a base kind ("issue"|"suggestion"|"nitpick") to its
+# fully-decorated Conventional Comments label per
+# skills/code-review/SKILL.md "Comment Types". Drift here breaks the
+# fixture E assertions anchored on the full label token.
+kind_label() {
+  case "$1" in
+    issue)      printf '**issue (blocking):**' ;;
+    suggestion) printf '**suggestion (non-blocking):**' ;;
+    nitpick)    printf '**nitpick (non-blocking):**' ;;
+    *)          printf '**issue (blocking):**' ;;
+  esac
+}
+
+# Numeric severity for kind-promotion (higher = more severe).
+# Severity order per skills/review-aggregation/SKILL.md "Fuzzy matching":
+# issue > suggestion > nitpick.
+kind_rank() {
+  case "$1" in
+    issue)      printf '3' ;;
+    suggestion) printf '2' ;;
+    nitpick)    printf '1' ;;
+    *)          printf '0' ;;
+  esac
 }
 
 # Build reviewer inventories. For each external reviewer we also
@@ -181,20 +214,22 @@ printf '%s\n' "$consulted_lines"
 # Group findings by file:line. file:unknown never groups.
 findings_tsv="$(extract_findings)"
 
-# Emit findings. Walk unique file:line, count corroborations.
+# Emit findings. Walk unique file:line, count corroborations, and
+# promote the surviving kind to the most-severe of any colliding inputs
+# at that file:line (skills/review-aggregation/SKILL.md "Fuzzy
+# matching": issue > suggestion > nitpick).
 emitted_keys=""
 printf '\n## Findings\n\n'
 if [ -z "$findings_tsv" ]; then
   printf '(no findings)\n'
 else
-  while IFS=$'\t' read -r reviewer file_ref summary; do
+  while IFS=$'\t' read -r reviewer file_ref kind summary; do
     [ -z "$reviewer" ] && continue
-    # de-dup by file:line — first reviewer wins as the emitted summary;
-    # but file:unknown always emits separately (one per occurrence) and
-    # never corroborates.
+    # file:unknown always emits separately (one per occurrence) and
+    # never corroborates and never participates in kind-promotion.
     if [ "$file_ref" = "unknown" ]; then
       printf -- '---\n'
-      printf '**issue:** %s\n' "$summary"
+      printf '%s %s\n' "$(kind_label "$kind")" "$summary"
       printf 'file: unknown\n'
       printf 'originating: %s\n' "$reviewer"
       printf '\n'
@@ -207,8 +242,23 @@ else
     emitted_keys="$emitted_keys $file_ref"
     # Count how many distinct non-SKIP reviewers flagged this file:line
     n=$(printf '%s\n' "$findings_tsv" | awk -F'\t' -v key="$file_ref" '$2 == key {print $1}' | sort -u | wc -l | tr -d ' ')
+    # Kind promotion: scan every TSV row sharing this file:line and pick
+    # the highest-ranked kind. The matching row's summary is the survivor
+    # so the label and summary are emitted by the same source.
+    promoted_kind="$kind"
+    promoted_summary="$summary"
+    promoted_rank="$(kind_rank "$kind")"
+    while IFS=$'\t' read -r r_other f_other k_other s_other; do
+      [ "$f_other" = "$file_ref" ] || continue
+      r_other_rank="$(kind_rank "$k_other")"
+      if [ "$r_other_rank" -gt "$promoted_rank" ]; then
+        promoted_kind="$k_other"
+        promoted_summary="$s_other"
+        promoted_rank="$r_other_rank"
+      fi
+    done <<< "$findings_tsv"
     printf -- '---\n'
-    printf '**issue:** %s\n' "$summary"
+    printf '%s %s\n' "$(kind_label "$promoted_kind")" "$promoted_summary"
     printf 'file: %s\n' "$file_ref"
     printf 'originating: %s\n' "$reviewer"
     if [ "$n" -ge 2 ]; then
@@ -223,6 +273,13 @@ fi
 # Verdict: FAIL if any non-SKIP reviewer's verdict was FAIL or
 # REQUEST CHANGES; PASS otherwise. (Hard-gate verdicts preserved
 # verbatim — this helper does NOT downgrade them.)
+#
+# PARTIAL verdicts are intentionally treated as ADVISORY: they
+# contribute findings to the synthesis (see extract_findings — only
+# SKIP artifacts are skipped) but do not gate. This mirrors the
+# orchestrator's hard-gate evaluation in
+# skills/team-implement/SKILL.md "Aggregate gate", which lists only
+# the three hard gates and explicitly notes PARTIAL is advisory.
 verdict="PASS"
 for f in "$REVIEWS_DIR"/*.md; do
   [ -f "$f" ] || continue

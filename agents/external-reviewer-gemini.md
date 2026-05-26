@@ -162,11 +162,12 @@ on its own line, mirroring the "Report Format" section of
   flag pointing at a temp file. Always run with stderr discarded
   (`2>/dev/null`) so raw CLI errors cannot leak into the SKIP reason.
 - **No retries.** Do NOT retry on rate-limit, auth failure, or
-  transient errors. The 5-round implementer loop already provides
+  transient errors. The 5-round review loop already provides
   retry pressure.
 - **No credential prompting.** If the CLI exits non-zero with an auth
   error, write SKIP. Do not interactively prompt for credentials.
 - **Advisory only.** Your `FAIL` verdict adds corroboration weight to
   a Claude hard-gate finding. It does NOT trigger a hard gate on its
-  own. See design decision 6 in
-  `docs/plans/team-bvc-multi-model-adversarial-review/design.md`.
+  own. The hard-gate trio (`security-reviewer`, `verifier`,
+  `code-reviewer`) is the source of truth — see the "Gate Types by
+  Reviewer" table in `skills/code-review/SKILL.md`.
