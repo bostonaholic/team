@@ -53,24 +53,28 @@ read as collaborative or hostile depending on phrasing:
 
 ### Comment Types
 
+Every comment body MUST begin with the label and decoration wrapped in
+`**...**` so GitHub renders it bold. Copy the format in the examples below
+literally — including the asterisks — into the comment body you emit.
+
 **issue (blocking):**
 Identifies a defect that must be fixed before approval.
 ```
-issue: This query interpolates user input without parameterization.
+**issue (blocking):** This query interpolates user input without parameterization.
 file: src/api/users.ts:42
 ```
 
 **suggestion (non-blocking):**
 Proposes an improvement. The author may accept or decline.
 ```
-suggestion: Consider extracting this validation into a shared utility.
+**suggestion (non-blocking):** Consider extracting this validation into a shared utility.
 file: src/handlers/create.ts:18
 ```
 
 **nitpick (non-blocking):**
 Minor style or naming observation. Never blocks approval.
 ```
-nitpick: "data" is too vague — consider "userProfile" to match the domain.
+**nitpick (non-blocking):** "data" is too vague — consider "userProfile" to match the domain.
 file: src/models/types.ts:7
 ```
 
