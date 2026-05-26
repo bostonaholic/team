@@ -77,16 +77,18 @@ subsection in `skills/worktree-isolation/SKILL.md`.
 ### IMPLEMENT
 
 Execute the plan slice by slice, making tests pass. Includes test-first
-sub-phase and 5-reviewer adversarial verification with hard-gate retry loop.
+sub-phase and 7-reviewer + aggregator adversarial verification with
+hard-gate retry loop.
 
 - **Sub-phases:**
   1. Test-first — `test-architect` writes failing acceptance tests
   2. Mechanical gate — all tests fail with assertion errors (not crashes)
   3. Slice execution — `implementer` works through vertical slices, commits
      each slice when its tests pass
-  4. Code review — 5 parallel reviewers (code, security, docs, ux,
-     verifier) with typed failure classes that loop back to the
-     implementer (max 5 rounds)
+  4. Code review — 7 parallel reviewers (5 Claude — code, security,
+     docs, ux, verifier — plus 2 external CLI wrappers — codex,
+     gemini) followed by `review-aggregator` synthesis, with typed
+     failure classes that loop back to the implementer (max 5 rounds)
 - **Artifact:** Production code, passing tests, per-slice commits
 - **Gate:** AGGREGATE — security, verifier, and code-review hard gates must
   all pass

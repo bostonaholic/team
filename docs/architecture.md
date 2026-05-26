@@ -36,7 +36,7 @@ seeds and updates a TodoWrite ledger, and runs the human gates.
   Re-invoking any `/team-*` command rebuilds the ledger by scanning
   artifacts on entry.
 - **Registry is a phase-tagged inventory.** `skills/team/registry.json`
-  lists the 13 specialist agents and the QRSPI phase each serves. The
+  lists the 16 specialist agents and the QRSPI phase each serves. The
   orchestrator dispatches via the phase table in `skills/team/SKILL.md`,
   not via the registry.
 - **File artifacts survive compaction.** Agents communicate through
@@ -85,6 +85,19 @@ Per-phase additions:
 | design    | `approved: false`, `approved_at: null`, `revision: 0`                   |
 | structure | `approved: false`, `approved_at: null`, `revision: 0`                   |
 | plan      | (none — derived mechanically from the approved structure)               |
+
+The IMPLEMENT phase additionally writes per-round reviewer artifacts
+to a `docs/plans/<id>/reviews/` subdirectory:
+
+- `external-reviewer-codex.md` — codex CLI wrapper output (or SKIP)
+- `external-reviewer-gemini.md` — gemini CLI wrapper output (or SKIP)
+- `review-aggregator.md` — cross-reviewer synthesis with confidence tags
+
+The orchestrator clears this directory at the start of every IMPLEMENT
+round (with an `ID_RE` guard at the `rm -rf` call site) so no stale
+artifacts from prior rounds or prior topics contaminate aggregation.
+The 5 Claude reviewers still return via subagent transcripts; they do
+not yet write artifacts.
 
 **Approval check** (used by downstream phase entry):
 
@@ -208,12 +221,28 @@ worktrees do not duplicate the artifacts. See
    fail with assertion errors, not crashes.
 3. **Slice execution** — `implementer` works through the plan one slice
    at a time, committing each atomically.
-4. **Code review** — 5 reviewers in parallel: `code-reviewer`,
-   `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
-5. **Aggregate gate** — orchestrator evaluates hard gates (security +
-   verifier + code-reviewer). On failure, dispatches the implementer
-   to fix the typed failure class, then re-runs all 5 reviewers. Cap
-   at 5 rounds; beyond that, escalate.
+4. **Code review** — 7 reviewers in parallel: `code-reviewer`,
+   `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`,
+   `external-reviewer-codex`, `external-reviewer-gemini`. The 5 Claude
+   reviewers return via subagent transcripts; the 2 external wrappers
+   shell out to their respective CLIs and write artifacts to
+   `docs/plans/<id>/reviews/` (each fail-open as `SKIP` when the CLI
+   is absent or unauthenticated).
+5. **Aggregation** — `review-aggregator` reads every artifact under
+   `docs/plans/<id>/reviews/` plus the 5 Claude transcripts the
+   orchestrator forwards, fuzzy-matches findings across reviewers,
+   and writes a synthesis to
+   `docs/plans/<id>/reviews/review-aggregator.md` with `corroborated
+   by N/M` and `[single-model — extra scrutiny]` confidence tags.
+6. **Aggregate gate** — orchestrator reads the synthesis and
+   evaluates hard gates (security + verifier + code-reviewer)
+   against the verdict tokens emitted by the 5 Claude reviewers,
+   which the aggregator preserves verbatim. Confidence tags are
+   display-only and never alter the hard-gate decision. `PARTIAL`
+   verdicts are advisory like `SKIP` and do not gate. On failure,
+   dispatches the implementer to fix the typed failure class, then
+   re-runs all 7 reviewers + the aggregator. Cap at 5 rounds; beyond
+   that, escalate.
 
 The orchestrator tracks the round count by appending "Review round N"
 items to the TodoWrite ledger.
@@ -229,7 +258,7 @@ the tracking ticket (if `task.md` carries `ticketId`), clean up the worktree.
 
 ## 4. Agent Roster
 
-13 specialist agents, organized by phase:
+16 specialist agents, organized by phase:
 
 | Phase     | Agents                                                                            |
 |-----------|-----------------------------------------------------------------------------------|
@@ -239,7 +268,9 @@ the tracking ticket (if `task.md` carries `ticketId`), clean up the worktree.
 | STRUCTURE | `structure-planner`                                                               |
 | PLAN      | `planner`                                                                         |
 | IMPLEMENT | `test-architect`, `implementer`, `code-reviewer`, `security-reviewer`,            |
-|           | `technical-writer`, `ux-reviewer`, `verifier` (last 5 parallel)                   |
+|           | `technical-writer`, `ux-reviewer`, `verifier`,                                    |
+|           | `external-reviewer-codex`, `external-reviewer-gemini` (last 7 parallel),          |
+|           | then `review-aggregator` to synthesize                                            |
 
 Each agent's QRSPI phase is recorded in `skills/team/registry.json`.
 Agent frontmatter uses only Claude Code's [supported fields](https://code.claude.com/docs/en/agents#supported-frontmatter-fields).
@@ -297,7 +328,7 @@ Skills live under `skills/`. There are two flavors:
 | `team-structure` | `/team-structure [docs/plans/<id>/]` | Vertical-slice structure (human gate)    |
 | `team-plan`      | `/team-plan [docs/plans/<id>/]`      | Tactical plan from approved structure    |
 | `team-worktree`  | `/team-worktree [docs/plans/<id>/]`  | Prepare isolated worktree                |
-| `team-implement` | `/team-implement [docs/plans/<id>/]` | Test-first + slice exec + 5-reviewer     |
+| `team-implement` | `/team-implement [docs/plans/<id>/]` | Test-first + slice exec + 7-reviewer + aggregator |
 | `team-pr`        | `/team-pr [docs/plans/<id>/]`        | Commit + PR                              |
 
 Every entry-point skill carries an `argument-hint` field in its
@@ -339,6 +370,7 @@ each block points at.
 | `qrspi-workflow`         | Phase discipline, artifact conventions, gates  | Loaded by orchestrator skills                                |
 | `test-first-development` | Acceptance tests as scope fence                | Loaded by test-architect, orchestrator                       |
 | `code-review`            | Generator-evaluator separation, review method  | Loaded by code-reviewer, security-reviewer, ux-reviewer, technical-writer |
+| `review-aggregation`     | Fuzzy-match cross-reviewer findings, derive corroboration counts, preserve hard-gate verdicts verbatim | Loaded by review-aggregator |
 | `engineering-standards`  | Engineering standards, implementation methodology, quality checklist | Loaded by planner, implementer, code-reviewer |
 | `refactoring-to-patterns`| Code smells and safe refactoring procedures    | Loaded by implementer                                        |
 | `solid-principles`       | SOLID design principles                        | Loaded by implementer, code-reviewer                         |

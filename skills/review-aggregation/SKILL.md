@@ -65,6 +65,42 @@ Threshold calibration (the `≥ 3` value above) is a known follow-up
 question per design *Open questions*. Treat it as the current default;
 re-evaluate after the first real run.
 
+### Worked example — corroboration merge
+
+Two reviewers flag the same file:line with overlapping summaries.
+Inputs:
+
+```
+# code-reviewer.md
+**issue (blocking):** userInput dereferenced without null guard
+file: src/api/users.ts:42
+**Verdict:** REQUEST CHANGES
+
+# security-reviewer.md
+**issue (blocking):** missing null check on userInput could panic the handler
+file: src/api/users.ts:42
+**Verdict:** FAIL
+```
+
+The aggregator detects the matching `file:line` and the keyword
+overlap (`userInput`, `null`, `check`/`guard`) ≥ 3 — both conditions
+hold, so the findings merge. The synthesis emits a single entry:
+
+```
+---
+**issue (blocking):** userInput dereferenced without null guard
+file: src/api/users.ts:42
+originating: code-reviewer, security-reviewer
+corroborated by 2/N
+```
+
+Where `N` is the count of non-SKIP reviewers in the round (e.g. `5`
+if the 2 externals SKIP'd and all 5 Claude reviewers returned). The
+two underlying Claude hard-gate verdicts (`REQUEST CHANGES` and
+`FAIL`) remain preserved verbatim in the verdict-token portion of
+the synthesis — the merge is a display-layer deduplication, never a
+verdict downgrade.
+
 ## Confidence
 
 `corroborated by N/M` where:

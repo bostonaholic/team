@@ -20,7 +20,7 @@ QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → WORKTREE → IMPLEME
 - **Structure** *(human gate)* — Break the design into vertical slices with verification checkpoints. Humans review the ~2-page structure here.
 - **Plan** — Tactical implementation plan derived from the approved structure. Read by the implementer; not human-gated.
 - **Worktree** — Orchestrator prepares an isolated git worktree.
-- **Implement** — Test-first (test-architect writes failing tests, mechanical gate confirms) → slice execution (implementer commits each vertical slice atomically) → adversarial verification (5 parallel reviewers + typed failure-class retry loop, max 5 rounds).
+- **Implement** — Test-first (test-architect writes failing tests, mechanical gate confirms) → slice execution (implementer commits each vertical slice atomically) → adversarial verification (7 parallel reviewers + `review-aggregator` synthesis + typed failure-class retry loop, max 5 rounds).
 - **PR** — Update changelog, commit, open pull request, close beads issue.
 
 ## Usage
@@ -63,8 +63,8 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 
 ## Components
 
-- **13 agents** in `agents/` — decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
-- **15 entry-point + methodology skills** in `skills/` — slash commands and shared methodologies
+- **16 agents** in `agents/` — decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
+- **27 entry-point + methodology skills** in `skills/` — slash commands and shared methodologies
 - **4 hooks** in `hooks/` — safety guards and `docs/plans/`-aware compaction resilience
-- **1 registry** at `skills/team/registry.json` — phase-tagged inventory of the 13 agents
+- **1 registry** at `skills/team/registry.json` — phase-tagged inventory of the 16 agents
 - **State** lives in `docs/plans/<id>/*.md` — `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`; gated artifacts also carry `approved`, `approved_at`, `revision`). Live in-session coordination uses TodoWrite.
