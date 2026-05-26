@@ -6,9 +6,9 @@ argument-hint: "[docs/plans/<id>/]"
 
 # Team Research — Answer the Questions
 
-Run the RESEARCH phase only, then stop. Research is **blind** — the
-researcher and file-finder never see the user's original task description.
-They read `questions.md` and nothing else.
+Run the RESEARCH phase only, then stop. The researcher and file-finder
+read `questions.md` (and optionally `repos.md`) — never the user's
+original task description.
 
 ## Input
 
@@ -85,13 +85,12 @@ done
 4. **Stop once `$ARGUMENTS/research.md` exists** — do not continue to
    DESIGN.
 
-## Blindness invariant
+## Scope isolation
 
-- The orchestrator passes blind agents only `questions.md` (and
-  optionally `repos.md` for scope). Never `task.md`, never the
-  description.
-- Blind agent system prompts forbid reading `task.md`. They are allowed
-  to read `repos.md` because it carries scope, not intent.
+- The orchestrator passes the agents only `questions.md` (and optionally
+  `repos.md` for scope). Never `task.md`, never the description.
+- Agent system prompts forbid reading `task.md`. They are allowed to
+  read `repos.md` because it carries scope, not intent.
 - If the agents need context the questions lack, they must surface it as
   an open question rather than guessing intent.
 
