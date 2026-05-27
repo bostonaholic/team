@@ -210,10 +210,14 @@ worktrees do not duplicate the artifacts. See
    at a time, committing each atomically.
 4. **Code review** — 5 reviewers in parallel: `code-reviewer`,
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
-5. **Aggregate gate** — orchestrator evaluates hard gates (security +
-   verifier + code-reviewer). On failure, dispatches the implementer
-   to fix the typed failure class, then re-runs all 5 reviewers. Cap
-   at 5 rounds; beyond that, escalate.
+5. **Aggregate gate** — orchestrator sorts every finding into a severity
+   tier (**Blocking / Major / Minor-and-below**; see
+   `skills/code-review/SKILL.md`). While any Blocking or Major finding
+   remains, it dispatches the implementer to fix the typed failure
+   class and re-runs all 5 reviewers — automatically, never consulting
+   the user (the *consult guard*). Cap at 5 rounds; beyond that,
+   escalate. Once Blocking and Major are clean, any Minor-and-below
+   residue is presented to the user, who decides.
 
 The orchestrator tracks the round count by appending "Review round N"
 items to the TodoWrite ledger.
