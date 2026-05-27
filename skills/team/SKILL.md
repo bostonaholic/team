@@ -208,9 +208,15 @@ When the aggregate gate passes:
 4. If `task.md` frontmatter has `ticketId` set, surface it so the user
    can close the ticket. The orchestrator does not close tickets.
 5. Mark all TodoWrite items complete.
-6. For each worktree that was created, clean it up (cherry-pick or
-   rebase commits onto the target branch in that repo, then let Claude
-   Code or `git worktree remove` remove the worktree).
+6. **Leave the worktree(s) in place.** Do not remove a worktree when a
+   PR is opened — the user may need to iterate on the branch (push
+   follow-up commits, address review feedback). Clean up a worktree only
+   after its PR is merged or when the user explicitly asks. When cleanup
+   does happen, cherry-pick or rebase commits onto the target branch in
+   that repo, then let Claude Code or `git worktree remove` remove the
+   worktree. The same rule applies when the user chose **Keep commits
+   locally** or **Keep as-is** instead of opening a PR — leave the
+   worktree until they ask to remove it.
 
 ## Rules
 

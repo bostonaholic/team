@@ -114,7 +114,12 @@ files live. Main working trees are never touched.
 
 ### Ship (teardown)
 
-After shipping:
+Opening a PR does **not** tear down the worktree — the user may need to
+iterate on the branch (push follow-up commits, address review feedback).
+Keep the worktree until the PR is merged or the user explicitly asks to
+remove it. The same holds when commits are kept locally without a PR.
+
+When teardown is warranted (post-merge or on explicit request):
 
 1. For each worktree with commits ahead of its base branch, cherry-pick
    or rebase commits onto the target branch in that repo, then let

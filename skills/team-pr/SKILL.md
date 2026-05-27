@@ -115,11 +115,13 @@ done
 8. **Tracking ticket.** If `ticketId` is non-null, surface it in the
    completion report so the user can close it in their tracking system.
    The orchestrator does not close tickets automatically.
-9. **Worktree cleanup.** For each worktree that was created in the
-   Worktree phase, cherry-pick or rebase commits onto the target branch
-   in that repo, then let Claude Code (or `git -C <repo-path> worktree
-   remove`) remove the worktree. In multi-repo mode, run cleanup for
-   every involved repo.
+9. **Leave the worktree(s) in place.** Do not remove a worktree after
+   opening a PR — the user may need to iterate on the branch (push
+   follow-up commits, address review feedback). Clean up only after the
+   PR is merged or when the user explicitly asks. When that happens,
+   cherry-pick or rebase commits onto the target branch in that repo,
+   then let Claude Code (or `git -C <repo-path> worktree remove`) remove
+   the worktree; in multi-repo mode, run cleanup for every involved repo.
 
 ## PR Body Template
 
