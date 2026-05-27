@@ -321,3 +321,70 @@ per-agent load manifest; an agent typically loads at most three.
 - **Loaded by:** orchestrator (team, team-worktree).
 - **Key behaviors:** Set up and tear down isolated worktrees so
   implementation never touches the main checkout.
+
+## Skill ↔ agent ↔ phase
+
+This table ties each skill to the agents or orchestrator skills that load
+it and the phase where that happens. The `Invoked / loaded by` column
+carries two meanings depending on the row: for **entry-point skills** it
+names who *invokes* the skill (you directly, or the orchestrator running a
+phase); for **methodology skills** it names the agent(s) that *load* the
+skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see the
+entry-point section above rather than repeating them here.
+
+| Skill | Invoked / loaded by | Phase / context |
+|---|---|---|
+| `team` | orchestrator (runs the pipeline) | All phases |
+| `team-question` | orchestrator | Question |
+| `team-research` | orchestrator → researcher, file-finder | Research |
+| `team-design` | orchestrator → design-author | Design (human gate) |
+| `team-structure` | orchestrator → structure-planner | Structure (human gate) |
+| `team-plan` | orchestrator → planner | Plan |
+| `team-worktree` | orchestrator | Worktree |
+| `team-implement` | orchestrator → implementer + reviewers | Implement |
+| `team-pr` | orchestrator | PR |
+| `team-fix` | user (direct invocation) | Compressed bug-fix flow (outside QRSPI) |
+| `eng-design-doc-review` | user (direct invocation) | Optional pre-Design audit; dispatches a general-purpose subagent |
+| `qrspi-workflow` | orchestrator skills; questioner (schema) | All phases |
+| `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
+| `engineering-standards` | planner, implementer, code-reviewer | Plan, Implement |
+| `test-first-development` | test-architect, code-reviewer; orchestrator | Implement |
+| `test-driven-bug-fix` | team-fix | Bug-fix flow |
+| `solid-principles` | implementer, code-reviewer | Implement |
+| `refactoring-to-patterns` | implementer | Implement |
+| `systematic-debugging` | agents when debugging (advisory) | Any (debugging) |
+| `documenting-decisions` | design-author, structure-planner | Design, Structure |
+| `technical-design-doc` | planner | Plan |
+| `product-requirements-doc` | questioner | Question |
+| `writing-prose` | technical-writer | Implement (verify) |
+| `git-commit` | team-pr | PR |
+| `changelog` | team, team-pr | PR |
+| `worktree-isolation` | orchestrator (team, team-worktree) | Worktree |
+
+The `general-purpose` subagent dispatched by `eng-design-doc-review` is an
+additional consumer of `technical-design-doc`, `code-review`,
+`engineering-standards`, and `documenting-decisions` — it loads all four as
+the criteria for the optional pre-Design audit.
+
+## Name-collision pairs
+
+Several skills and agents share a stem, which is an easy trap. The pattern
+is consistent: the **skill** is the orchestrator or methodology, while the
+**agent** is the specialist that does the work.
+
+| Skill | Agent | How they differ |
+|---|---|---|
+| `team-research` | `researcher` | Skill dispatches the Research phase; the agent is the doer that runs the research. |
+| `code-review` | `code-reviewer` | Skill is the review methodology; the agent is the reviewer that applies it. |
+| `team-question` | `questioner` | Skill drives the Question phase; the agent decomposes the intent. |
+| `team-design` | `design-author` | Skill drives the Design phase; the agent drafts the alignment doc. |
+| `technical-design-doc` | `technical-writer` | Both contain "technical" but differ: the skill is design-doc methodology; the agent writes documentation during verify. |
+| `eng-design-doc-review` | `design-author` | The review skill dispatches a `general-purpose` subagent, **not** the `design-author` agent — keeping the audit independent of the author. |
+
+## See also
+
+- **[architecture.md](architecture.md)** — the design rationale behind
+  skills (two flavors, three-tier discovery, load limits) in §6.
+- **[index.md](index.md)** — the landing page and pipeline overview.
+- **`skills/team/registry.json`** — the phase-tagged inventory of the 13
+  specialist agents, in the source tree.
