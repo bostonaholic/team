@@ -40,7 +40,7 @@ into `task.md`:
 
 These lens questions shape only how the questioner frames the inferred goal and
 acceptance signals — never what gets researched or what goes into
-`questions.md`. (The questioner is blind to the goal by design.)
+`questions.md`. (The goal stays out of `questions.md` by design.)
 
 ## When Designing
 

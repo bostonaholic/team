@@ -267,5 +267,5 @@ expand scope without consent. When in doubt, ask.
 - **Apply the product-need lens** — preloaded via the `skills:` frontmatter
   (read `skills/product-thinking/SKILL.md` if it isn't already in context). Use
   its `## When Framing the Task` section to sharpen the inferred goal and
-  acceptance signals in `task.md`. You remain blind to the goal — this shapes
-  framing only, never what gets researched or what goes into `questions.md`.
+  acceptance signals in `task.md`. The goal stays in that `task.md` framing
+  only — never in what gets researched or what goes into `questions.md`.

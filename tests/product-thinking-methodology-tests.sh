@@ -155,10 +155,10 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# T8 (edge: questioner blindness contract lives in the skill).
+# T8 (edge: goal-isolation contract lives in the skill).
 #     The ## When Framing the Task section must scope its questions to the
-#     blind questioner — name who it's for and what signal shows demand,
-#     without nudging goal inference (design Edge case "Questioner blindness").
+#     goal-isolated questioner — name who it's for and what signal shows demand,
+#     without nudging goal inference.
 #     Structural proxy: the skill mentions a demand signal and "specifically".
 # ---------------------------------------------------------------------------
 T8_PASS=true
@@ -274,19 +274,17 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# T15 (edge: blindness preserved). The questioner directive must restate the
-#      blindness constraint and scope itself to task.md framing, so it cannot
-#      nudge goal inference or leak into questions.md (design Edge case
-#      "Questioner blindness", Risk "Questioner leak").
+# T15 (edge: goal isolation preserved). The questioner directive must restate
+#      the goal-isolation constraint and scope itself to task.md framing, so it
+#      cannot nudge goal inference or leak into questions.md.
 #      The property is asserted on the directive block itself (anchored on the
-#      product-need-lens directive plus its continuation lines), NOT anywhere
-#      in the body — the questioner's pre-existing prose already says "blind"
-#      for unrelated reasons.
+#      product-need-lens directive plus its continuation lines), so it verifies
+#      the lens directive, not unrelated prose elsewhere in the body.
 # ---------------------------------------------------------------------------
 QUESTIONER_DIRECTIVE=$(echo "$QUESTIONER_BODY" | grep -iA4 "Apply the product-need lens\|product-thinking" || true)
 T15_PASS=true
-if echo "$QUESTIONER_DIRECTIVE" | grep -qi "blind"; then
-  : # blindness restated inside the directive
+if echo "$QUESTIONER_DIRECTIVE" | grep -qiE "questions\.md|never"; then
+  : # goal-isolation restated inside the directive
 else
   T15_PASS=false
 fi
@@ -297,9 +295,9 @@ else
 fi
 
 if [ "$T15_PASS" = "true" ]; then
-  pass "T15: questioner directive restates blindness and scopes to task.md framing"
+  pass "T15: questioner directive restates goal isolation and scopes to task.md framing"
 else
-  fail "T15: questioner directive restates blindness and scopes to task.md framing"
+  fail "T15: questioner directive restates goal isolation and scopes to task.md framing"
 fi
 
 # ---------------------------------------------------------------------------
