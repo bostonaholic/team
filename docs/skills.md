@@ -168,6 +168,8 @@ argument shape.
 - **Phase:** PR (the pipeline's final phase).
 - **Key behaviors:** Loads `git-commit` for commit discipline and
   `changelog` for the changelog update; adds a PR body from its template.
+  Leaves the worktree in place after opening the PR so you can iterate;
+  teardown waits until the PR merges or you ask.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
   the missing upstream artifacts inline rather than hard-erroring.
 
@@ -319,8 +321,10 @@ per-agent load manifest; an agent typically loads at most three.
 
 - **Purpose:** Worktree topology for single- and multi-repo work.
 - **Loaded by:** orchestrator (team, team-worktree).
-- **Key behaviors:** Set up and tear down isolated worktrees so
-  implementation never touches the main checkout.
+- **Key behaviors:** Set up isolated worktrees so implementation never
+  touches the main checkout, and tear them down only after the PR merges
+  or on explicit request — a branch stays available for iteration while
+  its PR is open.
 
 ## Skill ↔ agent ↔ phase
 
