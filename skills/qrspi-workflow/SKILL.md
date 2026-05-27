@@ -30,8 +30,8 @@ without knowing the goal.
 
 ### RESEARCH
 
-Explore the codebase to answer the questions. Researcher is **BLIND** to
-intent: it never reads `task.md`, only `questions.md`.
+Explore the codebase to answer the questions. The researcher reads only
+`questions.md` — never `task.md` or the user's intent.
 
 - **Artifact:** `docs/plans/<id>/research.md`
 - **Gate:** HARD — artifact must exist on disk before proceeding
