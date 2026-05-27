@@ -348,6 +348,7 @@ each block points at.
 | `solid-principles`       | SOLID design principles                        | Loaded by implementer, code-reviewer                         |
 | `systematic-debugging`   | Root cause investigation                       | Loaded by agents when debugging                              |
 | `documenting-decisions`  | ADR creation and management                    | Loaded by design-author, structure-planner                   |
+| `product-thinking`       | Product-need reasoning lens ("make something people want") | Loaded by questioner, design-author, structure-planner       |
 | `writing-prose`          | Clear documentation and readable explanation   | Loaded by technical-writer                                   |
 | `worktree-isolation`     | Worktree setup + cleanup                       | Loaded by orchestrator during Worktree phase                 |
 
