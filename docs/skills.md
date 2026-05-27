@@ -194,3 +194,130 @@ argument shape.
   That subagent loads four methodology skills as its review criteria —
   `technical-design-doc`, `code-review`, `engineering-standards`, and
   `documenting-decisions` — making this an additional consumer of all four.
+
+## Methodology skills
+
+The 15 methodology skills carry no `argument-hint` and are never invoked
+directly. Agents load them at runtime through inline prose in the agent
+body. The "Loaded by" line for each skill names its consumers from the
+per-agent load manifest; an agent typically loads at most three.
+
+### qrspi-workflow
+
+- **Purpose:** Phase discipline plus the artifact and frontmatter
+  conventions every phase follows.
+- **Loaded by:** orchestrator skills; questioner (for the artifact schema).
+- **Key behaviors:** The structural backbone of the pipeline: defines the
+  phase sequence, the artifact/frontmatter schema (including the `repos.md`
+  schema), the gate mechanics, and an anti-patterns catalog.
+
+### code-review
+
+- **Purpose:** Generator-evaluator separation, Conventional Comments, and
+  the gate verdict vocabulary.
+- **Loaded by:** code-reviewer, security-reviewer, ux-reviewer,
+  technical-writer (4).
+- **Key behaviors:** Defines how a reviewer reads with fresh eyes and emits
+  a structured verdict the orchestrator's hard gate can act on.
+
+### engineering-standards
+
+- **Purpose:** The design-first workflow, implementation standards, and the
+  quality checklist.
+- **Loaded by:** planner, implementer, code-reviewer (3).
+- **Key behaviors:** Anchors planning and implementation in a shared
+  standard so reviewers check against the same bar.
+
+### test-first-development
+
+- **Purpose:** Treat acceptance tests as the immutable scope fence.
+- **Loaded by:** test-architect, code-reviewer; orchestrator.
+- **Key behaviors:** Tests are written first and never edited to pass; the
+  implementation must satisfy them as the contract.
+
+### test-driven-bug-fix
+
+- **Purpose:** Reproduce-first, red-green bug discipline.
+- **Loaded by:** team-fix.
+- **Key behaviors:** Write a failing test that reproduces the bug, then make
+  it green — no fix lands without a reproducing test.
+
+### solid-principles
+
+- **Purpose:** The five object-oriented design principles.
+- **Loaded by:** implementer, code-reviewer (2).
+- **Key behaviors:** SRP, OCP, LSP, ISP, and DIP as concrete checkpoints
+  for new code and review.
+
+### refactoring-to-patterns
+
+- **Purpose:** Code smells and the safe transformations that resolve them
+  (Fowler).
+- **Loaded by:** implementer.
+- **Key behaviors:** Name the smell, apply the pattern in its own commit,
+  and keep tests green at every step.
+
+### systematic-debugging
+
+- **Purpose:** Evidence-first root-cause diagnosis.
+- **Loaded by:** any agent that enters a debugging investigation
+  (**advisory**). No agent body names it in a static `Load
+  skills/<name>/SKILL.md` instruction; agents load it on demand when an
+  investigation begins.
+- **Key behaviors:** Gather evidence before theorizing, then isolate the
+  root cause rather than patching symptoms.
+
+### documenting-decisions
+
+- **Purpose:** Creating and managing architecture decision records (ADRs).
+- **Loaded by:** design-author, structure-planner.
+- **Key behaviors:** Capture the decision, its alternatives, and its
+  rationale so later readers understand the "why".
+
+### technical-design-doc
+
+- **Purpose:** Technical-design / architecture-doc methodology.
+- **Loaded by:** planner (per the skill's own self-description; the
+  `planner` agent body loads `engineering-standards` explicitly but does not
+  carry an explicit `Load skills/technical-design-doc/SKILL.md` instruction).
+- **Key behaviors:** Structures the design narrative — current state,
+  desired end state, patterns to follow, and trade-offs.
+
+### product-requirements-doc
+
+- **Purpose:** Optional product-requirements-document methodology.
+- **Loaded by:** questioner (per the skill's own self-description; the
+  `questioner` agent body references `qrspi-workflow` for the artifact schema
+  but does not carry an explicit `Load
+  skills/product-requirements-doc/SKILL.md` instruction).
+- **Key behaviors:** Frames the problem, users, and success criteria when a
+  request warrants a PRD before design.
+
+### writing-prose
+
+- **Purpose:** Plain-language documentation quality.
+- **Loaded by:** technical-writer.
+- **Key behaviors:** Readable, plain prose aimed at someone who has not seen
+  the code — clarity over cleverness.
+
+### git-commit
+
+- **Purpose:** Commit discipline — conventional commits, the 50/72 subject
+  and body rule, and atomic commits.
+- **Loaded by:** team-pr.
+- **Key behaviors:** One logical change per commit with a clear, scoped
+  message.
+
+### changelog
+
+- **Purpose:** Keep a Changelog methodology.
+- **Loaded by:** team, team-pr.
+- **Key behaviors:** Record user-facing changes under the standard
+  Added / Changed / Fixed headings before the PR opens.
+
+### worktree-isolation
+
+- **Purpose:** Worktree topology for single- and multi-repo work.
+- **Loaded by:** orchestrator (team, team-worktree).
+- **Key behaviors:** Set up and tear down isolated worktrees so
+  implementation never touches the main checkout.
