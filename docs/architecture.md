@@ -328,9 +328,12 @@ each block points at.
 
 ### Methodology skills (loaded by agents, not directly invoked)
 
-Methodology skills carry no `argument-hint` and are loaded by agents at
-runtime via inline prose in the agent body (for example, `code-review` is
-loaded by the `code-reviewer` agent).
+Methodology skills carry no `argument-hint` and are loaded by agents
+through one of two mechanisms: a `skills:` YAML list in the agent's
+frontmatter (for example, `agents/design-author.md` declares
+`skills: [product-thinking]`), or an inline prose load instruction in the
+agent body (for example, `code-review` is loaded by the `code-reviewer`
+agent).
 
 For the full per-skill reference — all 27 skills, their arguments,
 consumers, and behaviors — see [skills.md](skills.md).

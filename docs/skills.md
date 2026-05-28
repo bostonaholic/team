@@ -210,9 +210,11 @@ argument shape.
 ## Methodology skills
 
 The 16 methodology skills carry no `argument-hint` and are never invoked
-directly. Agents load them at runtime through inline prose in the agent
-body. The "Loaded by" line for each skill names its consumers from the
-per-agent load manifest; an agent typically loads at most three.
+directly. Agents load them through one of two mechanisms: a `skills:` YAML
+list in the agent's frontmatter, or an inline prose load instruction in
+the agent body (see the "Two flavors of skill" section above). The
+"Loaded by" line for each skill names its consumers from the per-agent
+load manifest; an agent typically loads at most three.
 
 ### qrspi-workflow
 
@@ -289,7 +291,9 @@ per-agent load manifest; an agent typically loads at most three.
 ### documenting-decisions
 
 - **Purpose:** Creating and managing architecture decision records (ADRs).
-- **Loaded by:** design-author, structure-planner.
+- **Loaded by:** planner, orchestrator (per the skill's own self-description;
+  no agent body carries an explicit `Load skills/documenting-decisions/SKILL.md`
+  instruction and no agent declares it via `skills:` frontmatter).
 - **Key behaviors:** Capture the decision, its alternatives, and its
   rationale so later readers understand the "why".
 
