@@ -98,14 +98,15 @@ argument shape.
 - **`$ARGUMENTS`:** `<ticket id, issue URL, or task description>`.
 - **Phase:** Question (the pipeline's first phase).
 - **Key behaviors:** The only step that sees your original description; it
-  emits the neutral `questions.md` that keeps the downstream research blind.
+  emits the neutral `questions.md` so the downstream research sees only
+  the questions, not your task framing.
 
 ### team-research
 
-- **Purpose:** Run blind codebase research against the neutral question set.
+- **Purpose:** Run isolated codebase research against the neutral question set.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` — optional; resolves via the
   shared three-tier chain above.
-- **Phase:** Research (blind).
+- **Phase:** Research (isolated).
 - **Key behaviors:** Reads only `questions.md`, never the task, so the
   research carries no opinion-bias. Writes `research.md`.
 
