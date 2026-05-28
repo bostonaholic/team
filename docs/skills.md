@@ -4,7 +4,6 @@ description: "The Team plugin's 27 skills — 11 entry-point slash commands and 
 ---
 
 # Team Plugin — Skills
-{:.no_toc}
 
 > **Audience:** Plugin maintainers and contributors. End users only need
 > the README + `/team` slash command.
@@ -14,10 +13,13 @@ description: "The Team plugin's 27 skills — 11 entry-point slash commands and 
 > `SKILL.md`, the `SKILL.md` wins.
 
 ## Contents
-{:.no_toc}
 
-* TOC
-{:toc}
+- [Two flavors of skill](#two-flavors-of-skill)
+- [Entry-point skills](#entry-point-skills)
+- [Methodology skills](#methodology-skills)
+- [Skill ↔ agent ↔ phase](#skill--agent--phase)
+- [Name-collision pairs](#name-collision-pairs)
+- [See also](#see-also)
 
 ## Two flavors of skill
 
