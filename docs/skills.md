@@ -29,12 +29,14 @@ catalog into two flavors:
   as slash commands (`/team`, `/team-research`, and so on); the
   `argument-hint` documents what to pass as `$ARGUMENTS`.
 - **Methodology skills omit `argument-hint`.** They are never invoked
-  directly. Agents load them at runtime through inline prose in the agent
-  body, such as `Load skills/<name>/SKILL.md for …`.
+  directly. Agents load them through one of two mechanisms: a `skills:`
+  YAML list in the agent's frontmatter (e.g., `agents/design-author.md`
+  declares `skills: [product-thinking]`), or an inline prose load
+  instruction in the agent body (e.g., `Load skills/<name>/SKILL.md for
+  …`).
 
-That binary marker is the whole distinction. There is no `skills:`
-frontmatter key and no other flavor. The split is **11 entry-point + 16
-methodology = 27**.
+That `argument-hint` marker is the whole flavor distinction. The split
+is **11 entry-point + 16 methodology = 27**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -86,10 +88,13 @@ argument shape.
 - **Key behaviors:** Walks a linear Phase Loop, dispatching the specialist
   agent(s) for each phase per its phase table, then running that phase's
   gate before advancing. Enforces the two human gates (Design, Structure)
-  and the aggregate five-reviewer review gate during Implement. Its body is
-  organized as `## Input`, `## Setup`, `## The Phase Loop`, `## Gate
-  Handling`, and `## Rules` — not the downstream Input / Execution /
-  Completion template.
+  and the aggregate five-reviewer review gate during Implement — that
+  aggregate gate sorts every finding into Blocking / Major / Minor-and-below
+  tiers and auto-loops on any Blocking or Major (the consult guard: the
+  user is never asked about a Blocking or Major finding), surfacing only
+  the Minor-and-below residue. Its body is organized as `## Input`,
+  `## Setup`, `## The Phase Loop`, `## Gate Handling`, and `## Rules` —
+  not the downstream Input / Execution / Completion template.
 
 ### team-question
 
@@ -157,7 +162,11 @@ argument shape.
   shared three-tier chain above.
 - **Phase:** Implement.
 - **Key behaviors:** Runs the test-first → slice-execution → five-reviewer
-  verify sub-pipeline with a typed hard-gate retry loop.
+  verify sub-pipeline. The verify loop sorts findings into Blocking / Major
+  / Minor-and-below tiers; while any Blocking or Major remains it
+  re-dispatches the implementer automatically without consulting the user
+  (the consult guard), capped at 5 rounds. Only the Minor-and-below
+  residue is surfaced once Blocking and Major are clean.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
   the missing upstream artifacts inline rather than hard-erroring.
 
@@ -211,8 +220,9 @@ per-agent load manifest; an agent typically loads at most three.
   conventions every phase follows.
 - **Loaded by:** orchestrator skills; questioner (for the artifact schema).
 - **Key behaviors:** The structural backbone of the pipeline: defines the
-  phase sequence, the artifact/frontmatter schema (including the `repos.md`
-  schema), the gate mechanics, and an anti-patterns catalog.
+  phase sequence, the artifact/frontmatter schema (including the
+  `repos.md` schema), the gate mechanics (severity tiers and the consult
+  guard for the aggregate review gate), and an anti-patterns catalog.
 
 ### code-review
 
@@ -220,8 +230,14 @@ per-agent load manifest; an agent typically loads at most three.
   the gate verdict vocabulary.
 - **Loaded by:** code-reviewer, security-reviewer, ux-reviewer,
   technical-writer (4).
-- **Key behaviors:** Defines how a reviewer reads with fresh eyes and emits
-  a structured verdict the orchestrator's hard gate can act on.
+- **Key behaviors:** Defines how a reviewer reads with fresh eyes and
+  emits a structured verdict. Carries the authoritative severity-tier
+  table (Blocking / Major / Minor-and-below) that maps every reviewer
+  vocabulary onto one scale, plus the consult guard — the rule that the
+  orchestrator never surfaces a Blocking or Major finding to the user and
+  loops the implementer automatically until only Minor-and-below remains.
+  Reclassifies `ux-reviewer` from a soft user-decides gate to an
+  auto-fixed Major.
 
 ### engineering-standards
 
