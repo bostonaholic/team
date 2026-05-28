@@ -4,6 +4,8 @@ description: Use as the first agent of the QRSPI pipeline. Decomposes a user's t
 model: sonnet
 tools: Read, Write, Grep, Glob, Bash, AskUserQuestion
 permissionMode: acceptEdits
+skills:
+  - product-thinking
 ---
 
 # Questioner Agent
@@ -262,3 +264,8 @@ expand scope without consent. When in doubt, ask.
   approaches. Approaches are the design-author's job.
 - **Stay under your line limits.** Each artifact has a soft cap; bigger isn't
   better.
+- **Apply the product-need lens** — preloaded via the `skills:` frontmatter
+  (read `skills/product-thinking/SKILL.md` if it isn't already in context). Use
+  its `## When Framing the Task` section to sharpen the inferred goal and
+  acceptance signals in `task.md`. The goal stays in that `task.md` framing
+  only — never in what gets researched or what goes into `questions.md`.

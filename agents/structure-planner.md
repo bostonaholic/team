@@ -4,6 +4,8 @@ description: Use after the design is approved to break the work into vertical sl
 model: opus
 tools: Read, Write, Edit, Grep, Glob
 permissionMode: acceptEdits
+skills:
+  - product-thinking
 ---
 
 # Structure Planner Agent
@@ -127,6 +129,12 @@ does not accidentally include it>
   not function bodies.
 - **Stay under ~200 lines.** If you need more, you have too many slices —
   consolidate, or push some out of scope and re-approve the design.
+- **Apply the product-need lens** — preloaded via the `skills:` frontmatter
+  (read `skills/product-thinking/SKILL.md` if it isn't already in context). Use
+  its `## When Slicing` section while ordering the slices (in `## Slices` /
+  `## Out of structure`): ensure slice 1 ships something a real person wants,
+  not infrastructure, and cut scope to the smallest wanted thing. Adds no new
+  gate.
 
 ## Heuristics for slicing
 

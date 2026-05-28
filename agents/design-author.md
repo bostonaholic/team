@@ -4,6 +4,8 @@ description: Use after research is complete to align with the user on the approa
 model: opus
 tools: Read, Write, Edit, Grep, Glob, AskUserQuestion
 permissionMode: acceptEdits
+skills:
+  - product-thinking
 ---
 
 # Design Author Agent
@@ -206,6 +208,12 @@ operational concerns. One bullet each.>
   deferred. A design with no `## Edge cases` section — or one that only
   lists the happy path — is incomplete.
 - **Write to the path the orchestrator passes in.** `docs/plans/<id>/design.md`.
+- **Apply the product-need lens** — preloaded via the `skills:` frontmatter
+  (read `skills/product-thinking/SKILL.md` if it isn't already in context). Use
+  its `## When Designing` section while writing `## Decisions made` and
+  `## Out of scope`: prefer the thinnest design that delivers what real users
+  want, and surface where an assumption stands in for demand. Adds no gate and
+  requires no extra research.
 
 ## Output to orchestrator
 
