@@ -31,23 +31,23 @@ const DESKS = [
 
 const OCCUPIED = new Set();
 
-// 12 NPC spawn positions arranged on a 4x3 grid (rows y=96/144/210/232,
+// 12 NPC spawn positions arranged on a 4x3 grid (rows y=96/144/210/228,
 // columns x=50/160/270). Constraints encoded here:
 //   * Horizontal separation between sprite centers on the same row is 110px.
 //     The widest agent labels (`structure-planner`, `security-reviewer`) are
 //     ~55px wide, so 110px guarantees ~55px of clear gap between adjacent
 //     labels at spawn — no two labels can overlap horizontally on a row.
 //   * Rows y=96 and y=144 sit above the top desk band (y=110..128); rows
-//     y=210 and y=232 sit below the bottom desk band (y=180..198), so no
+//     y=210 and y=228 sit below the bottom desk band (y=180..198), so no
 //     NPC spawns inside a desk hitbox.
 //   * Row spacing keeps name labels (rendered 20px above each sprite) from
 //     stacking visually: y=144 vs y=96 -> 48px gap; y=210 vs y=144 -> 66px;
-//     y=232 vs y=210 -> 22px (label top on bottom row sits at world-y
-//     ≈ 212, well below the y=210 row's working/walking indicator bottom
-//     at world-y ≈ 198, so the two rows no longer crowd). The y=232 row
-//     stays within the 320x240 canvas: sprite half-height 8 + label
-//     extending ~10px below the sprite center keeps the bottom edge
-//     above y=240.
+//     y=228 vs y=210 -> 18px (label top on bottom row sits at world-y
+//     ≈ 208, comfortably below the y=210 row's working/walking indicator
+//     bottom at world-y ≈ 198, so the two rows do not crowd).
+//   * Bottom row y=228 keeps the sprite fully inside the 320x240 canvas:
+//     sprite half-height 8 puts the sprite bottom at world-y 236 (4px
+//     margin above the y=240 canvas edge), so NPC feet are not clipped.
 const NPC_SPAWNS = [
   { x: 50,  y: 96  },
   { x: 160, y: 96  },
@@ -58,9 +58,9 @@ const NPC_SPAWNS = [
   { x: 50,  y: 210 },
   { x: 160, y: 210 },
   { x: 270, y: 210 },
-  { x: 50,  y: 232 },
-  { x: 160, y: 232 },
-  { x: 270, y: 232 }
+  { x: 50,  y: 228 },
+  { x: 160, y: 228 },
+  { x: 270, y: 228 }
 ];
 
 const NPC_TINTS = [
