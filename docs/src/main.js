@@ -31,19 +31,31 @@ const DESKS = [
 
 const OCCUPIED = new Set();
 
+// 12 NPC spawn positions arranged on a 4x3 grid (rows y=96/144/210/226,
+// columns x=50/160/270). Constraints encoded here:
+//   * Horizontal separation between sprite centers on the same row is 110px.
+//     The widest agent labels (`structure-planner`, `security-reviewer`) are
+//     ~55px wide, so 110px guarantees ~55px of clear gap between adjacent
+//     labels at spawn — no two labels can overlap horizontally on a row.
+//   * Rows y=96 and y=144 sit above the top desk band (y=110..128); rows
+//     y=210 and y=226 sit below the bottom desk band (y=180..198), so no
+//     NPC spawns inside a desk hitbox.
+//   * Row spacing keeps name labels (rendered 20px above each sprite) from
+//     stacking visually: y=144 vs y=96 -> 48px gap; y=210 vs y=144 -> 66px;
+//     y=226 vs y=210 -> 16px (sufficient for the 7px label font).
 const NPC_SPAWNS = [
-  { x: 80, y: 96 },
-  { x: 200, y: 96 },
-  { x: 240, y: 96 },
-  { x: 100, y: 144 },
-  { x: 200, y: 144 },
-  { x: 90, y: 160 },
-  { x: 230, y: 160 },
-  { x: 80, y: 212 },
-  { x: 200, y: 212 },
-  { x: 240, y: 212 },
-  { x: 120, y: 144 },
-  { x: 220, y: 144 }
+  { x: 50,  y: 96  },
+  { x: 160, y: 96  },
+  { x: 270, y: 96  },
+  { x: 50,  y: 144 },
+  { x: 160, y: 144 },
+  { x: 270, y: 144 },
+  { x: 50,  y: 210 },
+  { x: 160, y: 210 },
+  { x: 270, y: 210 },
+  { x: 50,  y: 226 },
+  { x: 160, y: 226 },
+  { x: 270, y: 226 }
 ];
 
 const NPC_TINTS = [
