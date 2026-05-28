@@ -59,7 +59,7 @@ claude plugin add /path/to/team
 
 ## Architecture
 
-See [docs/architecture.md](docs/architecture.md) for the full architecture, the artifact frontmatter schema, and the phase-inference rules.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the full architecture, the artifact frontmatter schema, and the phase-inference rules.
 
 ## Components
 
