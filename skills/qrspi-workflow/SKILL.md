@@ -344,8 +344,10 @@ Every transition follows this sequence:
 3. **Dispatch next agent(s)** — the phase table in `skills/team/SKILL.md`
    names the agent(s) to dispatch for the new phase.
 
-Never proceed to the next phase while a HARD gate is failing. SOFT gates
-require user acknowledgment before proceeding.
+Never proceed to the next phase while a Blocking or Major finding remains —
+the implementer loops automatically and the user is never consulted about it
+(the consult guard; see `skills/code-review/SKILL.md`). Minor-and-below
+findings are presented to the user only once Blocking and Major are clean.
 
 ## Anti-Patterns
 

@@ -75,8 +75,9 @@ loop:
        failure, advance.
      - ROUTER-EMIT (worktree, PR): perform the action.
      - AGGREGATE (5 reviewers): dispatch in parallel, collect results,
-       run hard-gate evaluation; on failure track the round count in
-       TodoWrite, cap at 5 rounds and escalate.
+       sort findings into severity tiers; auto-loop on any Blocking or
+       Major finding (never consulting the user), tracking the round count
+       in TodoWrite, capped at 5 rounds; consult only on Minor-and-below.
   7. Update TodoWrite — mark current phase `completed` and the next one
      `in_progress`.
   8. Goto loop.
@@ -175,17 +176,24 @@ When the `test-architect` returns failing tests:
 When the 5 reviewers (security, docs, ux, code, verifier) have all
 returned:
 
-1. Collect all verdicts from the most recent round.
-2. Check each hard gate independently:
-   - `security-review` — FAIL on any CRITICAL or HIGH findings.
-   - `verification` — FAIL if any check failed or no checks detected.
-   - `code-review` — FAIL on REQUEST CHANGES verdict.
-3. Track the round count by appending a TodoWrite item like
+1. Collect all verdicts from the most recent round and sort every finding
+   into a severity tier (see `skills/code-review/SKILL.md` → "Severity Tiers
+   and the Auto-Fix Boundary"):
+   - **Blocking** — security CRITICAL/HIGH, any verification failure,
+     code-review REQUEST CHANGES, any `issue (blocking)` comment.
+   - **Major** — `suggestion (non-blocking)`, security MEDIUM, ux REQUEST CHANGES.
+   - **Minor and below** — `nitpick (non-blocking)`, security LOW, doc gaps,
+     COMMENT-level notes.
+2. Track the round count by appending a TodoWrite item like
    "Review round 2" each retry. Cap at 5 rounds.
-4. If under cap → dispatch implementer to fix, passing the typed failure
-   class(es). After fixes, all 5 reviewers re-run from scratch.
-5. If at cap → escalate to the user with all unresolved findings.
-6. If all hard gates pass clean → advance to PR.
+3. While any **Blocking or Major** finding remains and under cap → dispatch
+   implementer to fix, passing the typed failure class(es). After fixes, all
+   5 reviewers re-run from scratch. **Never** stop to consult the user while a
+   Blocking or Major finding is open — loop automatically (the consult guard).
+4. If at cap → escalate to the user with all unresolved findings.
+5. Once Blocking and Major are clean → if any **Minor-and-below** findings
+   remain, present that residue to the user, who decides; otherwise advance
+   to PR.
 
 **The loop is: IMPLEMENT → VERIFY (5 reviewers) → typed gate check →
 IMPLEMENT → VERIFY → ...** Each round is a complete re-review.

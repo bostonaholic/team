@@ -134,18 +134,27 @@ Before any agent dispatch, decide where to work:
    tests.
 5. Dispatch 5 reviewers in parallel: `code-reviewer`,
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
-6. **Aggregate gate** — evaluate hard gates:
-   - `security-review` FAIL on CRITICAL or HIGH findings
-   - `verification` FAIL if any check failed or no checks detected
-   - `code-review` FAIL on REQUEST CHANGES verdict
-7. On hard-gate failure:
-   - Record a typed failure class (security, lint, typecheck, build,
-     test, review)
-   - Append `Review round <n+1>` to the TodoWrite ledger
-   - If round count < 5: re-dispatch implementer with the typed class,
-     then re-dispatch ALL 5 reviewers for a fresh review
-   - If round count ≥ 5: escalate with a full unresolved-findings summary
-8. **Stop once all hard gates pass clean.** Suggest `/team-pr`.
+6. **Aggregate gate** — sort every finding into a severity tier (see
+   `skills/code-review/SKILL.md` → "Severity Tiers and the Auto-Fix Boundary"):
+   - **Blocking** — `security-review` CRITICAL/HIGH, any `verification` failure,
+     `code-review` REQUEST CHANGES, any `issue (blocking)` comment.
+   - **Major** — `suggestion (non-blocking)`, security MEDIUM, ux-reviewer
+     REQUEST CHANGES.
+   - **Minor and below** — `nitpick (non-blocking)`, security LOW, doc gaps,
+     any COMMENT-level note.
+7. While any **Blocking or Major** finding remains:
+   - Record the typed failure class(es) (security, lint, typecheck, build,
+     test, review, suggestion, ux).
+   - Append `Review round <n+1>` to the TodoWrite ledger.
+   - If round count < 5: re-dispatch implementer with the typed class(es),
+     then re-dispatch ALL 5 reviewers for a fresh review.
+   - If round count ≥ 5: escalate with a full unresolved-findings summary.
+   - **Never** stop to ask the user which Blocking or Major items to address —
+     this is the consult guard. A prompt that lists a blocking or major
+     finding is a defect.
+8. **Once Blocking and Major are clean:** if any **Minor-and-below** findings
+   remain, present that residue to the user and let them decide (auto-fix,
+   defer, or skip). Then suggest `/team-pr`.
 
 ## Quality Loop
 

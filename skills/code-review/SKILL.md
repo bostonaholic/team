@@ -85,7 +85,7 @@ file: src/models/types.ts:7
 | `security-reviewer` | HARD | Yes — critical or high findings are non-negotiable |
 | `verifier` | HARD | Yes — tests must pass, build must succeed |
 | `code-reviewer` | HARD | Yes — blocking issues must be resolved |
-| `ux-reviewer` | SOFT | User decides — presented with findings |
+| `ux-reviewer` | AUTO-FIX | REQUEST CHANGES is auto-applied in the loop (a *major*); only COMMENT notes may reach you |
 | `technical-writer` | ADVISORY | No — findings recorded, pipeline proceeds |
 
 ## Verdict Criteria
@@ -131,27 +131,52 @@ they appear across multiple tests:
 ### UX Reviewer
 
 - **APPROVE:** API/UX is intuitive, consistent with existing patterns.
-- **REQUEST CHANGES:** Usability issues found. User sees the issues and decides.
-- **COMMENT:** Minor ergonomic suggestions.
+- **REQUEST CHANGES:** Usability issues found. Treated as a *major* — auto-fixed
+  in the loop, not surfaced to the user.
+- **COMMENT:** Minor ergonomic suggestions (minor-and-below — may be surfaced).
 
 ### Technical Writer
 
 - **PASS:** Documentation is adequate for the changes made.
 - **GAPS:** Documentation gaps identified. Recorded for future work.
 
+## Severity Tiers and the Auto-Fix Boundary
+
+There is no single "blocker/critical/major/minor" scale — reviewers raise
+findings in three different vocabularies (Conventional Comments
+`issue`/`suggestion`/`nitpick`, security CRITICAL/HIGH/MEDIUM/LOW, and the
+APPROVE/REQUEST CHANGES/COMMENT verdict). This table is the authoritative map
+from any of those onto the action the orchestrator takes. Every finding lands
+in exactly one tier.
+
+| Tier | Findings in this tier | Action |
+|------|-----------------------|--------|
+| **Blocking** | `issue (blocking)`, code-reviewer REQUEST CHANGES, security CRITICAL/HIGH, any verifier failure | Auto-fixed in the loop. **Never** surfaced to the user. |
+| **Major** | `suggestion (non-blocking)`, security MEDIUM, ux-reviewer REQUEST CHANGES | Auto-fixed in the loop. **Never** surfaced to the user. |
+| **Minor and below** | `nitpick (non-blocking)`, security LOW, technical-writer GAPS, any COMMENT-level note | Surfaced to the user for a decision — but **only after** Blocking and Major are clean. |
+
+**The consult guard (non-negotiable).** While *any* Blocking or Major finding
+remains unresolved, the orchestrator MUST NOT present findings to the user or
+ask which ones to address. It loops the implementer automatically. The user is
+consulted exclusively for the Minor-and-below residue, and only once the loop
+has driven Blocking and Major to zero. A consult prompt that lists a blocking
+or major finding is a defect.
+
 ## Aggregating Verdicts
 
 When multiple reviewers produce verdicts, aggregate them into a single
 pipeline gate decision:
 
-1. If ANY hard-gate reviewer fails -> pipeline gate FAILS (loop to IMPLEMENT)
-2. If all hard-gate reviewers pass but soft-gate reviewers request changes ->
-   pipeline gate is CONDITIONAL (present findings, user decides)
-3. If all reviewers pass/approve -> pipeline gate PASSES (proceed to SHIP)
+1. If ANY Blocking or Major finding exists -> pipeline gate FAILS — loop back
+   to IMPLEMENT automatically, with no consult.
+2. If only Minor-and-below findings remain -> pipeline gate is CONDITIONAL:
+   present that residue to the user, who decides. If none remain, proceed to
+   SHIP.
+3. If no findings remain -> pipeline gate PASSES (proceed to SHIP).
 
-Hard gates: security-reviewer (CRITICAL or HIGH), verifier (any failure),
-code-reviewer (REQUEST CHANGES). These are non-negotiable — the pipeline
-loops back to IMPLEMENT until all hard gates pass clean.
+The loop continues until Blocking and Major are zero, capped at 5 rounds; at
+the cap, escalate with the full unresolved-findings summary.
 
-Hard gate failures are never aggregated away. A single CRITICAL security
-finding blocks shipping regardless of how many other reviewers approved.
+Blocking and Major failures are never aggregated away and never surfaced for
+triage. A single CRITICAL security finding blocks shipping regardless of how
+many other reviewers approved.

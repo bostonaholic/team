@@ -64,8 +64,8 @@ with a **HARD** gate type. Key points:
 - Use Conventional Comments format for all findings (issue, suggestion, nitpick).
   Every comment includes a `file:line` reference.
 - End with a verdict: **APPROVE** (no blocking issues), **REQUEST CHANGES**
-  (blocking issues found — user decides whether to proceed), or **COMMENT**
-  (non-blocking suggestions only).
+  (blocking issues found — auto-fixed in the loop, never sent to the user to
+  triage), or **COMMENT** (non-blocking suggestions only).
 - See the skill file for full verdict criteria and aggregation rules.
 
 ## Rules
