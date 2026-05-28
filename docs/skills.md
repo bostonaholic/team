@@ -40,7 +40,7 @@ is **11 entry-point + 16 methodology = 27**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
-[architecture.md §6](architecture.md#6-skills). The architecture page
+[ARCHITECTURE.md §6](../ARCHITECTURE.md#6-skills). The architecture page
 explains the design; the full per-skill enumeration now lives here.
 
 ## Entry-point skills
@@ -420,8 +420,8 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 
 ## See also
 
-- **[architecture.md](architecture.md)** — the design rationale behind
+- **[ARCHITECTURE.md](../ARCHITECTURE.md)** — the design rationale behind
   skills (two flavors, three-tier discovery, load limits) in §6.
-- **[index.md](index.md)** — the landing page and pipeline overview.
+- **[README.md](README.md)** — the demo's own landing page and overview.
 - **`skills/team/registry.json`** — the phase-tagged inventory of the 13
   specialist agents, in the source tree.

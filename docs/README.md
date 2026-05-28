@@ -7,13 +7,6 @@ this `docs/` directory by GitHub Pages.
 
 ## Run it
 
-### Zero install (CDN)
-
-Open `docs/index.html` directly in any modern browser. Phaser loads
-from jsDelivr; nothing else is needed.
-
-### Local with live-reload
-
 ```sh
 cd docs
 npm install
@@ -22,7 +15,12 @@ npm start
 
 This launches [`live-server`](https://www.npmjs.com/package/live-server)
 at <http://localhost:8080>, opens the demo automatically, and
-auto-reloads on file changes.
+auto-reloads on file changes. Phaser itself is delivered from jsDelivr,
+so `npm install` only pulls the dev server.
+
+(Opening `docs/index.html` directly over `file://` is not supported —
+browsers vary in whether they allow Phaser's loader to fetch the
+`assets/` PNGs from disk, and Chrome blocks it outright.)
 
 ### Regenerate the pixel art
 
