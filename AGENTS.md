@@ -37,7 +37,7 @@ Agents are **decoupled microservices**. Each consumes a predecessor artifact on 
 QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → WORKTREE → IMPLEMENT → PR
 ```
 
-Team runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-PR). Two human gates: **Design approval** (~200-line alignment doc) and **Structure approval** (~2-page vertical-slice breakdown). Research is **blind** — the researcher never sees the user's original task description. The Plan is a tactical artifact for the implementer, not for human review. Implement is a sub-pipeline (test-first → slice execution → 5-reviewer adversarial verify with hard-gate retry loop). Everything outside the two human gates is autonomous with mechanical gates.
+Team runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-PR). Two human gates: **Design approval** (~200-line alignment doc) and **Structure approval** (~2-page vertical-slice breakdown). Research is **isolated** — the researcher reads only `questions.md`, never `task.md` or the user's framing. The Plan is a tactical artifact for the implementer, not for human review. Implement is a sub-pipeline (test-first → slice execution → 5-reviewer adversarial verify with hard-gate retry loop). Everything outside the two human gates is autonomous with mechanical gates.
 
 ## Entry Points
 
@@ -46,7 +46,7 @@ Team runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-
 | `/team <desc>` | Full 8-phase QRSPI pipeline |
 | `/team-fix <bug>` | Compressed bug-fix pipeline (no QRSPI ceremony) |
 | `/team-question <desc>` | Decompose intent into task + questions + brief |
-| `/team-research` | Blind codebase research (runs Question if missing) |
+| `/team-research` | Isolated codebase research (runs Question if missing) |
 | `/team-design` | Align with user on approach (human gate) |
 | `/eng-design-doc-review` | *(optional)* Adversarial fresh-context audit of `design.md` before the human gate |
 | `/team-structure` | Break design into vertical slices (human gate) |
