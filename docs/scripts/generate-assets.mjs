@@ -1,8 +1,9 @@
 // Deterministic asset generator for the Phaser office demo.
 //
-// Produces two PNGs that the runtime loads:
+// Produces three PNGs that the runtime loads:
 //   - docs/assets/sprites/agent.png       (64x16, 4 frames of 16x16)
 //   - docs/assets/backgrounds/office.png  (320x240)
+//   - docs/favicon.png                    (16x16, reuses agent frame 0)
 //
 // Idempotency is the contract: running the script twice yields byte-identical
 // files. No Math.random, no Date.now, no host-dependent state. The runtime
@@ -128,6 +129,17 @@ function buildAgentSheet() {
   return png;
 }
 
+// 16x16 favicon — reuses the agent sprite's idle pose (frame 0) so the
+// browser tab icon matches the on-screen player. Identical pixel buffer
+// to the first 16 columns of the agent sheet, ensuring visual identity
+// across the runtime and tab icon.
+function buildFavicon() {
+  const png = new PNG({ width: 16, height: 16, colorType: 6 });
+  fillAll(png, PALETTE.transparent);
+  drawAgentFrame(png, 0, 'together');
+  return png;
+}
+
 // -----------------------------------------------------------------------------
 // Office background — 320x240. A single-room top-down-ish view:
 //   - upper third = wall (with monitors mounted)
@@ -222,14 +234,19 @@ async function main() {
   try {
     const agentSheet = buildAgentSheet();
     const office = buildOfficeBackground();
+    const favicon = buildFavicon();
     const agentOut = join(DOCS_ROOT, 'assets', 'sprites', 'agent.png');
     const officeOut = join(DOCS_ROOT, 'assets', 'backgrounds', 'office.png');
+    const faviconOut = join(DOCS_ROOT, 'favicon.png');
     await writePng(agentSheet, agentOut);
     await writePng(office, officeOut);
+    await writePng(favicon, faviconOut);
     // eslint-disable-next-line no-console
     console.log(`wrote ${agentOut}`);
     // eslint-disable-next-line no-console
     console.log(`wrote ${officeOut}`);
+    // eslint-disable-next-line no-console
+    console.log(`wrote ${faviconOut}`);
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('generate-assets failed:', err && err.stack ? err.stack : err);
