@@ -19,7 +19,11 @@
 # Playwright
 .playwright-mcp/
 
-# Jekyll site build artifacts
+# Phaser demo (docs/) dependencies and lockfile artifacts
+docs/node_modules/
+docs/package-lock.json
+
+# Jekyll site build artifacts (kept for historical clean-up; safe no-op now)
 docs/_site/
 docs/.jekyll-cache/
 docs/.sass-cache/

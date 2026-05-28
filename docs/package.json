@@ -1,0 +1,8 @@
+{
+  "name": "team-docs",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "pngjs": "^7.0.0"
+  }
+}
