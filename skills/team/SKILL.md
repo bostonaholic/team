@@ -87,7 +87,7 @@ loop:
 | Phase      | Agent(s)                                                | Predecessor artifact                                            | Next phase on pass |
 |------------|---------------------------------------------------------|-----------------------------------------------------------------|--------------------|
 | QUESTION   | `questioner`                                            | (none — description in `$ARGUMENTS`)                            | RESEARCH           |
-| RESEARCH   | `file-finder`, `researcher` (parallel, BLIND)           | `docs/plans/<id>/questions.md`                                  | DESIGN             |
+| RESEARCH   | `file-finder`, `researcher` (parallel, isolated)        | `docs/plans/<id>/questions.md`                                  | DESIGN             |
 | DESIGN     | `design-author` (→ human gate)                          | `docs/plans/<id>/research.md`                                   | STRUCTURE          |
 | STRUCTURE  | `structure-planner` (→ human gate)                      | `docs/plans/<id>/design.md` (frontmatter `approved: true`)      | PLAN               |
 | PLAN       | `planner`                                               | `docs/plans/<id>/structure.md` (frontmatter `approved: true`)   | WORKTREE           |
@@ -104,7 +104,7 @@ frontmatter the researcher's documentation specifies) before advancing.
 for documentation purposes only. The orchestrator dispatches based on
 the phase table above, not on registry contents.
 
-## Blind Research Invariant
+## Research Isolation Invariant
 
 The questioner is the only agent that ever sees the raw description from
 `$ARGUMENTS`. When dispatching the questioner, pass the full description.

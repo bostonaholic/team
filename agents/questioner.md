@@ -66,7 +66,7 @@ In single-repo mode omit those fields (or set `reposPath: null` and
 `multiRepo: false`).
 
 **No `description` field, no `taskMd` field** — the orchestrator must
-not propagate the user's framing to blind agents.
+not propagate the user's framing to the research agents.
 
 ## The `topic` field
 

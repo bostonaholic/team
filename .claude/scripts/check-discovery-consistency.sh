@@ -6,7 +6,7 @@
 # runtime-vs-development split in CLAUDE.md. This is the committed consistency
 # gate for the skill-input-discovery feature: it asserts every archetype-A
 # skill carries the discovery block, the load-bearing fragments stay
-# byte-identical to canon, and the blind-research invariant holds.
+# byte-identical to canon, and the research-isolation invariant holds.
 #
 # It is the scope fence for the whole feature. If every assertion here passes,
 # the feature is intact; any failing assertion names a regression or drift.
@@ -260,13 +260,13 @@ fi
 \rm -f "$snippet"
 
 # =============================================================================
-# BLIND-INVARIANT (slices 2 & 6): team-research forwards exactly
+# RESEARCH-ISOLATION (slices 2 & 6): team-research forwards exactly
 # {questions.md, repos.md?} and never task.md / a description; the
-# ## Blindness invariant section is intact.
+# ## Scope isolation section is intact.
 # =============================================================================
 research_file="$SKILLS/team-research/SKILL.md"
 if [ ! -f "$research_file" ]; then
-  fail "team-research blind" "SKILL.md exists" "file not found"
+  fail "team-research isolation" "SKILL.md exists" "file not found"
 else
   # Isolate the dispatch step (## Execution step 2) to scope the assertions.
   dispatch="$(awk '
@@ -282,11 +282,11 @@ else
 
   # The dispatch step must NOT widen the forwarded set to task.md or a description.
   if printf '%s' "$dispatch" | grep -qiE 'pass[^.]*task\.md|forward[^.]*task\.md|include[^.]*task\.md'; then
-    fail "team-research dispatch" "never forwards task.md to blind agents" "dispatch step appears to pass task.md"
+    fail "team-research dispatch" "never forwards task.md to the research agents" "dispatch step appears to pass task.md"
   fi
 
-  grep -qF '## Blindness invariant' "$research_file" \
-    || fail "team-research" "## Blindness invariant section present" "section missing"
+  grep -qF '## Scope isolation' "$research_file" \
+    || fail "team-research" "## Scope isolation section present" "section missing"
 fi
 
 # =============================================================================
