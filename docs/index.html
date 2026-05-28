@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team — Plugin Office Demo</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #1b1b1b;
+      color: #eee;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 1rem;
+      box-sizing: border-box;
+    }
+    #game canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      display: block;
+    }
+    #cdn-fallback {
+      max-width: 480px;
+      padding: 1rem 1.25rem;
+      background: #3a1f1f;
+      border: 1px solid #a05050;
+      border-radius: 6px;
+      line-height: 1.4;
+    }
+    #cdn-fallback code {
+      background: #222;
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+  <div id="cdn-fallback" hidden>
+    Phaser failed to load from the CDN. Check your network connection, or
+    run <code>cd docs &amp;&amp; npm start</code> locally to serve the demo.
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"
+          integrity="sha384-Fi7F0CYQBHYa+s2vvYJeiqvOQf3tuZ28vafRGXvMt7ijxNTVf3+eXPkNRIUi9JD2"
+          crossorigin="anonymous"></script>
+  <script>
+    // CDN fallback: if Phaser hasn't loaded ~3s after DOMContentLoaded, show
+    // the fallback message. Catches both network failures and SRI mismatches.
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        if (typeof window.Phaser === 'undefined') {
+          const fallback = document.getElementById('cdn-fallback');
+          if (fallback) fallback.hidden = false;
+        }
+      }, 3000);
+    });
+  </script>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
