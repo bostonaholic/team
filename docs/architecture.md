@@ -42,10 +42,10 @@ seeds and updates a TodoWrite ledger, and runs the human gates.
 - **File artifacts survive compaction.** Agents communicate through
   files in `docs/plans/<id>/`. These survive context-window compaction,
   can be re-read by any agent in any session, and live in git history.
-- **Blind research.** The researcher and file-finder never receive the
-  user's original task description. Enforcement is two-layer:
+- **Research isolation.** The researcher and file-finder never receive
+  the user's original task description. Enforcement is two-layer:
   *structural* — the orchestrator only passes the `questions.md` path to
-  the blind agents; *procedural* — the blind agents' system prompts
+  the research agents; *procedural* — the research agents' system prompts
   forbid reading `task.md`.
 - **Two human touchpoints.** Design approval (~200-line alignment doc)
   and Structure approval (~2-page vertical-slice breakdown). Approval
@@ -138,9 +138,9 @@ of `questions.md`.
 
 ### Phase 2: Research
 
-**Agents:** `file-finder` and `researcher` (parallel, blind)
+**Agents:** `file-finder` and `researcher` (parallel, isolated)
 **Predecessor:** `questions.md` (orchestrator passes only the
-`questions.md` path to the blind agents)
+`questions.md` path to the research agents)
 **Artifact:** `docs/plans/<id>/research.md`
 
 Orchestrator waits for both agents to return, then writes the combined
@@ -296,7 +296,7 @@ Skills live under `skills/`. There are two flavors:
 | `team`           | `/team <desc>`                       | Full 8-phase QRSPI pipeline              |
 | `team-fix`       | `/team-fix <bug>`                    | Compressed bug-fix pipeline              |
 | `team-question`  | `/team-question <desc>`              | Decompose intent (runs alone)            |
-| `team-research`  | `/team-research [docs/plans/<id>/]`  | Blind research                           |
+| `team-research`  | `/team-research [docs/plans/<id>/]`  | Isolated research                        |
 | `team-design`    | `/team-design [docs/plans/<id>/]`    | Design alignment (human gate)            |
 | `team-structure` | `/team-structure [docs/plans/<id>/]` | Vertical-slice structure (human gate)    |
 | `team-plan`      | `/team-plan [docs/plans/<id>/]`      | Tactical plan from approved structure    |
@@ -398,7 +398,7 @@ acceptance tooling run by plugin developers. `check-discovery-consistency.sh`
 is the committed consistency gate for the input-discovery feature: it asserts
 every archetype-A skill carries the discovery block, the load-bearing fragments
 (`ID_RE`, `PHASE_FILES`, approval grep, `docs/plans/` root) stay byte-identical
-to canon, and the blind-research invariant holds.
+to canon, and the research-isolation invariant holds.
 
 ## 8. State Management
 
