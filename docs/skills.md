@@ -389,7 +389,7 @@ entry-point section above rather than repeating them here.
 | `solid-principles` | implementer, code-reviewer | Implement |
 | `refactoring-to-patterns` | implementer | Implement |
 | `systematic-debugging` | agents when debugging (advisory) | Any (debugging) |
-| `documenting-decisions` | design-author, structure-planner | Design, Structure |
+| `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
 | `technical-design-doc` | planner | Plan |
 | `product-requirements-doc` | questioner | Question |
 | `product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
