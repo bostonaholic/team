@@ -27,7 +27,7 @@ call — agent threads reset cwd between calls):
 # Three-tier artifact-directory discovery (archetype A).
 # ID_RE + PHASE_FILES canonical from hooks/session-start-recover.mjs.
 # PHASE_FILES recency mirrors findActiveTopic() in session-start-recover.mjs.
-# NOTE: this block is duplicated across 8 skills by design (see docs/architecture.md); future: shared discover-topic.sh.
+# NOTE: this block is duplicated across 8 skills by design (see ARCHITECTURE.md); future: shared discover-topic.sh.
 ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
 PHASE_FILES="task questions research design structure plan"
 PRED="research.md"            # predecessor artifact this skill consumes
