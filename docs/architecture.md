@@ -332,7 +332,7 @@ Methodology skills carry no `argument-hint` and are loaded by agents at
 runtime via inline prose in the agent body (for example, `code-review` is
 loaded by the `code-reviewer` agent).
 
-For the full per-skill reference — all 26 skills, their arguments,
+For the full per-skill reference — all 27 skills, their arguments,
 consumers, and behaviors — see [skills.md](skills.md).
 
 ### Design Guidelines

@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 26 skills — 11 entry-point slash commands and 15 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 27 skills — 11 entry-point slash commands and 16 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 ---
 
 # Team Plugin — Skills
@@ -33,8 +33,8 @@ catalog into two flavors:
   body, such as `Load skills/<name>/SKILL.md for …`.
 
 That binary marker is the whole distinction. There is no `skills:`
-frontmatter key and no other flavor. The split is **11 entry-point + 15
-methodology = 26**.
+frontmatter key and no other flavor. The split is **11 entry-point + 16
+methodology = 27**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -200,7 +200,7 @@ argument shape.
 
 ## Methodology skills
 
-The 15 methodology skills carry no `argument-hint` and are never invoked
+The 16 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them at runtime through inline prose in the agent
 body. The "Loaded by" line for each skill names its consumers from the
 per-agent load manifest; an agent typically loads at most three.
@@ -296,6 +296,17 @@ per-agent load manifest; an agent typically loads at most three.
 - **Key behaviors:** Frames the problem, users, and success criteria when a
   request warrants a PRD before design.
 
+### product-thinking
+
+- **Purpose:** Product-need reasoning lens for "make something people
+  want" — sharpens framing, design, and slicing so the work serves real
+  users.
+- **Loaded by:** questioner, design-author, structure-planner.
+- **Key behaviors:** A reasoning lens, not a gate — produces no artifact
+  of its own and blocks nothing. Four lenses (demand evidence, smallest
+  thing people want, named user, talk-to-users mindset) shape the
+  pre-implementation phases.
+
 ### writing-prose
 
 - **Purpose:** Plain-language documentation quality.
@@ -361,6 +372,7 @@ entry-point section above rather than repeating them here.
 | `documenting-decisions` | design-author, structure-planner | Design, Structure |
 | `technical-design-doc` | planner | Plan |
 | `product-requirements-doc` | questioner | Question |
+| `product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
 | `writing-prose` | technical-writer | Implement (verify) |
 | `git-commit` | team-pr | PR |
 | `changelog` | team, team-pr | PR |
