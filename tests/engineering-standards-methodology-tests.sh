@@ -117,7 +117,7 @@ fi
 # ---------------------------------------------------------------------------
 T8_PASS=true
 
-ENGINEERING_STANDARDS_ROW=$(grep "engineering-standards" "$REPO_ROOT/docs/architecture.md" \
+ENGINEERING_STANDARDS_ROW=$(grep "engineering-standards" "$REPO_ROOT/ARCHITECTURE.md" \
   | grep -v "^#\|^>\|//\|event" | head -5 || true)
 
 if [ -z "$ENGINEERING_STANDARDS_ROW" ]; then
@@ -142,7 +142,7 @@ fi
 # ---------------------------------------------------------------------------
 T9_PASS=true
 
-CODE_REVIEW_ROW=$(grep '`code-review`' "$REPO_ROOT/docs/architecture.md" \
+CODE_REVIEW_ROW=$(grep '`code-review`' "$REPO_ROOT/ARCHITECTURE.md" \
   | grep -v "^#\|^>\|SKILL.md\|//\|event" | head -5 || true)
 
 for agent in "code-reviewer" "security-reviewer" "ux-reviewer" "technical-writer"; do
@@ -248,7 +248,7 @@ fi
 # ---------------------------------------------------------------------------
 # T17: architecture.md methodology table includes solid-principles row
 # ---------------------------------------------------------------------------
-SOLID_ROW=$(grep "solid-principles" "$REPO_ROOT/docs/architecture.md" \
+SOLID_ROW=$(grep "solid-principles" "$REPO_ROOT/ARCHITECTURE.md" \
   | grep -v "^#\|^>\|//\|event" | head -5 || true)
 
 if [ -n "$SOLID_ROW" ]; then
@@ -260,7 +260,7 @@ fi
 # ---------------------------------------------------------------------------
 # T18: architecture.md methodology table includes refactoring-to-patterns row
 # ---------------------------------------------------------------------------
-REFACTORING_ROW=$(grep "refactoring-to-patterns" "$REPO_ROOT/docs/architecture.md" \
+REFACTORING_ROW=$(grep "refactoring-to-patterns" "$REPO_ROOT/ARCHITECTURE.md" \
   | grep -v "^#\|^>\|//\|event" | head -5 || true)
 
 if [ -n "$REFACTORING_ROW" ]; then

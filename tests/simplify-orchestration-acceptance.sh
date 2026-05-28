@@ -121,8 +121,8 @@ assert_shell "no active code references .md.approved sidecar file paths" \
 # =============================================================================
 section "Docs aligned: no stale state.json/event-log references"
 
-assert_shell "docs/architecture.md does not describe writeState/readState/initState as live API" \
-  "! grep -E '(writeState|readState|initState)\\(' docs/architecture.md"
+assert_shell "ARCHITECTURE.md does not describe writeState/readState/initState as live API" \
+  "! grep -E '(writeState|readState|initState)\\(' ARCHITECTURE.md"
 
 # =============================================================================
 # Success banner

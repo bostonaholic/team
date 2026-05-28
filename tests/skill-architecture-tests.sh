@@ -78,14 +78,14 @@ fi
 
 # ---------------------------------------------------------------------------
 # T7: All 4 consumer agent names appear in the code-review row of
-#     docs/architecture.md. Uses separate greps (not order-dependent).
+#     ARCHITECTURE.md. Uses separate greps (not order-dependent).
 #     The methodology table row for code-review must name all 4 agents.
 # ---------------------------------------------------------------------------
 T7_PASS=true
 
 # Extract the code-review row from the methodology table, then check
 # each agent name appears within that row.
-CODE_REVIEW_ROW=$(grep '`code-review`' "$REPO_ROOT/docs/architecture.md" \
+CODE_REVIEW_ROW=$(grep '`code-review`' "$REPO_ROOT/ARCHITECTURE.md" \
   | grep -v "^#\|^>\|SKILL.md\|//\|event" | head -5 || true)
 
 for agent in "code-reviewer" "security-reviewer" "ux-reviewer" "technical-writer"; do
@@ -98,27 +98,27 @@ for agent in "code-reviewer" "security-reviewer" "ux-reviewer" "technical-writer
 done
 
 if [ "$T7_PASS" = "true" ]; then
-  pass "T7: code-review row in docs/architecture.md names all 4 consumer agents"
+  pass "T7: code-review row in ARCHITECTURE.md names all 4 consumer agents"
 else
-  fail "T7: code-review row in docs/architecture.md names all 4 consumer agents (one or more missing: code-reviewer, security-reviewer, ux-reviewer, technical-writer)"
+  fail "T7: code-review row in ARCHITECTURE.md names all 4 consumer agents (one or more missing: code-reviewer, security-reviewer, ux-reviewer, technical-writer)"
 fi
 
 # ---------------------------------------------------------------------------
-# T8: Extraction threshold documented in docs/architecture.md
+# T8: Extraction threshold documented in ARCHITECTURE.md
 # ---------------------------------------------------------------------------
-if grep -qi "extraction threshold" "$REPO_ROOT/docs/architecture.md"; then
-  pass "T8: extraction threshold documented in docs/architecture.md"
+if grep -qi "extraction threshold" "$REPO_ROOT/ARCHITECTURE.md"; then
+  pass "T8: extraction threshold documented in ARCHITECTURE.md"
 else
-  fail "T8: extraction threshold documented in docs/architecture.md"
+  fail "T8: extraction threshold documented in ARCHITECTURE.md"
 fi
 
 # ---------------------------------------------------------------------------
-# T9: Soft limit of 3 methodology skills documented in docs/architecture.md
+# T9: Soft limit of 3 methodology skills documented in ARCHITECTURE.md
 # ---------------------------------------------------------------------------
-if grep -qiE "soft limit.*3|3 methodology skills" "$REPO_ROOT/docs/architecture.md"; then
-  pass "T9: soft limit of 3 methodology skills documented in docs/architecture.md"
+if grep -qiE "soft limit.*3|3 methodology skills" "$REPO_ROOT/ARCHITECTURE.md"; then
+  pass "T9: soft limit of 3 methodology skills documented in ARCHITECTURE.md"
 else
-  fail "T9: soft limit of 3 methodology skills documented in docs/architecture.md"
+  fail "T9: soft limit of 3 methodology skills documented in ARCHITECTURE.md"
 fi
 
 # ---------------------------------------------------------------------------
