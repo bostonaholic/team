@@ -1,8 +1,14 @@
 {
-  "name": "team-docs",
+  "name": "team-bostonaholic-dev-site",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "start": "live-server --port=8080 --open=./index.html",
+    "generate-assets": "node scripts/generate-assets.mjs"
+  },
   "devDependencies": {
+    "live-server": "^1.2.2",
     "pngjs": "^7.0.0"
   }
 }

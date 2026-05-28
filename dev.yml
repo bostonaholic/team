@@ -30,7 +30,7 @@ commands:
     run: "npx skills add steveyegge/beads --skill beads --agent claude-code pi -y"
   docs:
     desc: "Serve the Phaser office demo locally at http://localhost:8080"
-    run: "cd docs && npm start"
+    run: "cd docs && npm install && npm start"
 
 open:
   docs: "http://localhost:8080"
