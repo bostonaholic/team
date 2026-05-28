@@ -1,22 +1,10 @@
----
-title: Architecture
-description: "Team plugin architecture — agents as microservices, the QRSPI pipeline, artifact frontmatter, and phase-inference rules."
----
-
 # Team Plugin — Architecture
-{:.no_toc}
 
 > **Audience:** Plugin maintainers and contributors. End users only need
 > the README + `/team` slash command.
 >
 > **Source of truth:** the artifacts in `docs/plans/<id>/*.md` and the
 > in-session TodoWrite ledger.
-
-## Contents
-{:.no_toc}
-
-* TOC
-{:toc}
 
 ## 1. Design Philosophy
 
@@ -336,7 +324,7 @@ agent body (for example, `code-review` is loaded by the `code-reviewer`
 agent).
 
 For the full per-skill reference — all 27 skills, their arguments,
-consumers, and behaviors — see [skills.md](skills.md).
+consumers, and behaviors — see [`docs/skills.md`](docs/skills.md).
 
 ### Design Guidelines
 

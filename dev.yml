@@ -29,9 +29,9 @@ commands:
     #   Workaround: reinstall from source until fix is merged.
     run: "npx skills add steveyegge/beads --skill beads --agent claude-code pi -y"
   docs:
-    desc: "Build and serve the docs site locally at http://localhost:4000"
-    run: "cd docs && bundle config set --local path 'vendor/bundle' && bundle install && bundle exec jekyll serve --livereload"
+    desc: "Serve the Phaser office demo locally at http://localhost:8080"
+    run: "cd docs && npm start"
 
 open:
-  docs: "http://localhost:4000"
+  docs: "http://localhost:8080"
   site: "https://team.bostonaholic.dev"
