@@ -52,6 +52,26 @@ const NPC_TINTS = [
   0xc06060, 0x90a060, 0x60a090, 0xa07060
 ];
 
+// 13 plugin agent names in registry.json order. Index 0 names the player;
+// indices 1..12 name the NPCs in NPC_SPAWNS order. The registry is the
+// source of truth — keep this array byte-identical to the names returned
+// by `grep -oE '"name": "[a-z-]+"' skills/team/registry.json`.
+const AGENT_NAMES = [
+  'questioner',
+  'file-finder',
+  'researcher',
+  'design-author',
+  'structure-planner',
+  'planner',
+  'test-architect',
+  'implementer',
+  'code-reviewer',
+  'security-reviewer',
+  'technical-writer',
+  'ux-reviewer',
+  'verifier'
+];
+
 const DEBUG_DESKS = false;
 
 // Center coordinate of a desk (NPCs walk to this point).
@@ -125,6 +145,8 @@ class OfficeScene extends Phaser.Scene {
     this.player.body.setSize(12, 14).setOffset(2, 1);
     this.player.setCollideWorldBounds(true);
     this.player.play('idle');
+    this.player.agentName = AGENT_NAMES[0];
+    this.player.nameLabel = this.makeNameLabel(this.player.agentName);
 
     // NPC sprites + per-NPC state machine.
     this.npcs = [];
@@ -145,6 +167,9 @@ class OfficeScene extends Phaser.Scene {
         stroke: '#000000',
         strokeThickness: 2
       }).setOrigin(0.5, 1);
+      // Name label (slice 7) — separate Text so sprite flip doesn't mirror it.
+      npc.agentName = AGENT_NAMES[i + 1];
+      npc.nameLabel = this.makeNameLabel(npc.agentName);
       this.npcs.push(npc);
       // Stagger initial walks so they don't all surge at once.
       const delay = Phaser.Math.Between(IDLE_DELAY_MIN, IDLE_DELAY_MAX);
@@ -156,6 +181,15 @@ class OfficeScene extends Phaser.Scene {
 
     this.cursors = this.input.keyboard.createCursorKeys();
     this.wasd = this.input.keyboard.addKeys('W,A,S,D');
+  }
+
+  makeNameLabel(name) {
+    return this.add.text(0, 0, name, {
+      fontSize: '7px',
+      color: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 2
+    }).setOrigin(0.5, 1);
   }
 
   showAssetLoadFailureOverlay() {
@@ -267,6 +301,12 @@ class OfficeScene extends Phaser.Scene {
       if (this.player.anims.currentAnim?.key !== 'idle') this.player.play('idle');
     }
 
+    // Player name label tracks the player position; clamped to stay onscreen.
+    // Labels are bottom-anchored (origin 0.5, 1); a y of 8 means the label's
+    // bottom is at canvas row 8 and it extends upward from there.
+    this.player.nameLabel.x = this.player.x;
+    this.player.nameLabel.y = Math.max(8, this.player.y - 20);
+
     // NPC state machine.
     for (const npc of this.npcs) {
       if (npc.mode === 'walking' && npc.targetDeskId) {
@@ -284,9 +324,13 @@ class OfficeScene extends Phaser.Scene {
           }
         }
       }
-      // Sync indicator position to follow the sprite (label slice will refine).
+      // Sync indicator below the name label; name label clamped to canvas.
+      // Both labels are NOT sprite children, so sprite flip never mirrors them.
+      // Name label sits at y-20; indicator at y-12 (just below name, above head).
+      npc.nameLabel.x = npc.x;
+      npc.nameLabel.y = Math.max(8, npc.y - 20);
       npc.indicator.x = npc.x;
-      npc.indicator.y = Math.max(8, npc.y - 12);
+      npc.indicator.y = Math.max(16, npc.y - 12);
     }
   }
 }
