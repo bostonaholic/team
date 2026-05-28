@@ -2,20 +2,24 @@
 //
 // Slice 2: Phaser bootstrap (canvas + camera zoom).
 // Slice 4: player-controlled sprite + walk/idle anims + flip + load-error overlay.
-// Slice 5: office desks (hitbox config), occupation Set, 12 NPC sprites with
-//          deterministic spawn positions and distinct tints. No NPC behavior
-//          yet — slice 6 adds the patrol state machine.
+// Slice 5: 6-desk hitbox config, OCCUPIED Set, 12 deterministic NPC spawns.
+// Slice 6: per-NPC state machine (idle -> walking -> working), desk-occupation
+//          checks, 4-6s sit timer via this.time.addEvent, walking/working
+//          text indicator above each NPC.
 //
 // Source of truth for the design and slicing:
 // docs/plans/2026-05-28-phaser-office-demo/{design,structure,plan}.md
 
 const GAME_WIDTH = 320;
 const GAME_HEIGHT = 240;
-const PLAYER_SPEED = 60; // pixels per second; tuned for the 320x240 world
+const PLAYER_SPEED = 60;
+const NPC_SPEED = 40;
+const ARRIVAL_THRESHOLD = 4; // pixels — NPC has arrived at desk center
+const IDLE_DELAY_MIN = 2000;
+const IDLE_DELAY_MAX = 4000;
+const SIT_DURATION_MIN = 4000;
+const SIT_DURATION_MAX = 6000;
 
-// Desk hitboxes match the background art generator (docs/scripts/generate-assets.mjs).
-// Two rows of three desks, each 36x18, top-left coords as below.
-// Slice 6 will track occupation by id; slice 5 only defines the geometry.
 const DESKS = [
   { id: 'desk-0', x: 20, y: 110, w: 36, h: 18 },
   { id: 'desk-1', x: 142, y: 110, w: 36, h: 18 },
@@ -25,21 +29,8 @@ const DESKS = [
   { id: 'desk-5', x: 264, y: 180, w: 36, h: 18 }
 ];
 
-// Module-level occupation tracker (slice 6 mutates this).
 const OCCUPIED = new Set();
 
-// Twelve deterministic NPC spawn positions, chosen to avoid:
-//   - the player spawn at (160, 120),
-//   - every desk hitbox above,
-//   - and the canvas edges (sprite is 16x16; keep a 4-px margin).
-// Positions cluster in the walkable aisles between desks and along the
-// wall stripe so the visitor sees a full crowd of 13 from the first frame.
-// Walkable bands (sprites must NOT spawn on a desk hitbox):
-//   y=88..104  : above row-1 desks (desks start at y=110)
-//   y=140..168 : aisle between rows (desks end at y=128, next row starts y=180)
-//   y=204..220 : below row-2 desks (desks end at y=198)
-// All x values are picked to sit fully between desk columns (gaps at
-// x=56..142, x=178..264) or in the side margins (x<20, x>300).
 const NPC_SPAWNS = [
   { x: 80, y: 96 },
   { x: 200, y: 96 },
@@ -55,16 +46,18 @@ const NPC_SPAWNS = [
   { x: 220, y: 144 }
 ];
 
-// Distinct tints per NPC give visible identity even before name labels (slice 7).
-// Colors chosen for contrast against the office wall (#d2d7dc) and floor (#b4a082).
 const NPC_TINTS = [
   0xe05050, 0xe09a50, 0xd0c050, 0x70b050,
   0x50b09a, 0x5090d0, 0x7060c0, 0xc060b0,
   0xc06060, 0x90a060, 0x60a090, 0xa07060
 ];
 
-// Debug flag: when true, draws each desk's hitbox as a translucent rectangle.
 const DEBUG_DESKS = false;
+
+// Center coordinate of a desk (NPCs walk to this point).
+function deskCenter(desk) {
+  return { x: desk.x + desk.w / 2, y: desk.y + desk.h / 2 };
+}
 
 class OfficeScene extends Phaser.Scene {
   constructor() {
@@ -93,17 +86,15 @@ class OfficeScene extends Phaser.Scene {
       return;
     }
 
-    // Fail-fast per design §Edge cases "Empty desk set".
     if (DESKS.length === 0) {
       throw new Error('DESKS config must contain at least one desk');
     }
 
-    // Background fills the 320x240 world; origin centered at (160, 120).
     this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'office');
 
     if (DEBUG_DESKS) {
       for (const desk of DESKS) {
-        const rect = this.add.rectangle(
+        this.add.rectangle(
           desk.x + desk.w / 2,
           desk.y + desk.h / 2,
           desk.w,
@@ -111,11 +102,9 @@ class OfficeScene extends Phaser.Scene {
           0xff0000,
           0.3
         );
-        rect.setOrigin(0.5, 0.5);
       }
     }
 
-    // Animations (shared by player and NPCs).
     if (!this.anims.exists('walk')) {
       this.anims.create({
         key: 'walk',
@@ -132,13 +121,12 @@ class OfficeScene extends Phaser.Scene {
       });
     }
 
-    // Player sprite.
     this.player = this.physics.add.sprite(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'agent', 0);
     this.player.body.setSize(12, 14).setOffset(2, 1);
     this.player.setCollideWorldBounds(true);
     this.player.play('idle');
 
-    // NPC sprites — one per NPC_SPAWNS entry. No behavior yet (slice 6).
+    // NPC sprites + per-NPC state machine.
     this.npcs = [];
     for (let i = 0; i < NPC_SPAWNS.length; i++) {
       const spawn = NPC_SPAWNS[i];
@@ -147,10 +135,25 @@ class OfficeScene extends Phaser.Scene {
       npc.setCollideWorldBounds(true);
       npc.setTint(NPC_TINTS[i]);
       npc.play('idle');
+      // State machine attached to the sprite for slice 6.
+      npc.mode = 'idle';
+      npc.targetDeskId = null;
+      npc.releaseEvent = null;
+      npc.indicator = this.add.text(npc.x, npc.y - 12, '', {
+        fontSize: '6px',
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 2
+      }).setOrigin(0.5, 1);
       this.npcs.push(npc);
+      // Stagger initial walks so they don't all surge at once.
+      const delay = Phaser.Math.Between(IDLE_DELAY_MIN, IDLE_DELAY_MAX);
+      this.time.addEvent({
+        delay,
+        callback: () => this.pickNextDestination(npc)
+      });
     }
 
-    // Input: arrow keys + WASD.
     this.cursors = this.input.keyboard.createCursorKeys();
     this.wasd = this.input.keyboard.addKeys('W,A,S,D');
   }
@@ -165,9 +168,83 @@ class OfficeScene extends Phaser.Scene {
     text.setOrigin(0.5, 0.5);
   }
 
+  pickNextDestination(npc) {
+    if (!npc.active) return; // sprite destroyed; do nothing
+    const available = DESKS.filter((d) => !OCCUPIED.has(d.id));
+    if (available.length === 0) {
+      // All desks busy; try again shortly.
+      npc.mode = 'idle';
+      npc.indicator.setText('');
+      this.time.addEvent({
+        delay: Phaser.Math.Between(IDLE_DELAY_MIN, IDLE_DELAY_MAX),
+        callback: () => this.pickNextDestination(npc)
+      });
+      return;
+    }
+    const target = available[Phaser.Math.Between(0, available.length - 1)];
+    npc.targetDeskId = target.id;
+    npc.mode = 'walking';
+    npc.indicator.setText('walking');
+    const center = deskCenter(target);
+    this.physics.moveTo(npc, center.x, center.y, NPC_SPEED);
+    if (npc.body.velocity.x < 0) npc.setFlipX(true);
+    else if (npc.body.velocity.x > 0) npc.setFlipX(false);
+    if (npc.anims.currentAnim?.key !== 'walk') npc.play('walk');
+  }
+
+  arriveAtDesk(npc) {
+    const targetDesk = DESKS.find((d) => d.id === npc.targetDeskId);
+    if (!targetDesk) {
+      // Defensive: lost target somehow; restart.
+      npc.mode = 'idle';
+      npc.indicator.setText('');
+      npc.setVelocity(0, 0);
+      this.time.addEvent({
+        delay: Phaser.Math.Between(IDLE_DELAY_MIN, IDLE_DELAY_MAX),
+        callback: () => this.pickNextDestination(npc)
+      });
+      return;
+    }
+    // Concurrency check (design §Edge cases "Concurrency"): if the desk
+    // became occupied while this NPC was walking, pick a different target.
+    if (OCCUPIED.has(targetDesk.id)) {
+      this.pickNextDestination(npc);
+      return;
+    }
+    OCCUPIED.add(targetDesk.id);
+    npc.mode = 'working';
+    npc.setVelocity(0, 0);
+    if (npc.anims.currentAnim?.key !== 'idle') npc.play('idle');
+    // Snap to desk center so the sprite sits cleanly on the desk.
+    const center = deskCenter(targetDesk);
+    npc.setPosition(center.x, center.y);
+    npc.indicator.setText('working');
+    const sitDuration = Phaser.Math.Between(SIT_DURATION_MIN, SIT_DURATION_MAX);
+    npc.releaseEvent = this.time.addEvent({
+      delay: sitDuration,
+      callback: () => this.releaseDesk(npc)
+    });
+  }
+
+  releaseDesk(npc) {
+    if (!npc.active) return;
+    if (npc.targetDeskId) OCCUPIED.delete(npc.targetDeskId);
+    npc.targetDeskId = null;
+    npc.releaseEvent = null;
+    npc.mode = 'idle';
+    npc.indicator.setText('');
+    // Small idle delay before picking the next desk so the room doesn't
+    // feel mechanical.
+    this.time.addEvent({
+      delay: Phaser.Math.Between(IDLE_DELAY_MIN, IDLE_DELAY_MAX),
+      callback: () => this.pickNextDestination(npc)
+    });
+  }
+
   update() {
     if (this.assetLoadFailed || !this.player) return;
 
+    // Player input.
     const left = this.cursors.left.isDown || this.wasd.A.isDown;
     const right = this.cursors.right.isDown || this.wasd.D.isDown;
     const up = this.cursors.up.isDown || this.wasd.W.isDown;
@@ -181,13 +258,35 @@ class OfficeScene extends Phaser.Scene {
     if (down) vy += PLAYER_SPEED;
     this.player.setVelocity(vx, vy);
 
-    const moving = vx !== 0 || vy !== 0;
-    if (moving) {
+    const playerMoving = vx !== 0 || vy !== 0;
+    if (playerMoving) {
       if (this.player.anims.currentAnim?.key !== 'walk') this.player.play('walk');
       if (vx < 0) this.player.setFlipX(true);
       else if (vx > 0) this.player.setFlipX(false);
     } else {
       if (this.player.anims.currentAnim?.key !== 'idle') this.player.play('idle');
+    }
+
+    // NPC state machine.
+    for (const npc of this.npcs) {
+      if (npc.mode === 'walking' && npc.targetDeskId) {
+        const target = DESKS.find((d) => d.id === npc.targetDeskId);
+        if (target) {
+          const center = deskCenter(target);
+          const dx = center.x - npc.x;
+          const dy = center.y - npc.y;
+          if (Math.hypot(dx, dy) < ARRIVAL_THRESHOLD) {
+            this.arriveAtDesk(npc);
+          } else {
+            // Keep facing right direction as we walk.
+            if (npc.body.velocity.x < -1) npc.setFlipX(true);
+            else if (npc.body.velocity.x > 1) npc.setFlipX(false);
+          }
+        }
+      }
+      // Sync indicator position to follow the sprite (label slice will refine).
+      npc.indicator.x = npc.x;
+      npc.indicator.y = Math.max(8, npc.y - 12);
     }
   }
 }
