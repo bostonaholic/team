@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-28
+
 ### Changed
 
 - **The review loop auto-fixes blockers and majors; the user is consulted only on minor findings.** During the IMPLEMENT verification loop the orchestrator could ask the user *which* findings to address even while a hard gate was still failing — a mixed batch (a blocking issue plus a UX/nitpick) was handed over for triage with blockers included. `skills/code-review/SKILL.md` now carries one authoritative **severity-tier table** mapping all three reviewer vocabularies (Conventional Comments `issue`/`suggestion`/`nitpick`, security CRITICAL/HIGH/MEDIUM/LOW, and APPROVE/REQUEST CHANGES/COMMENT) onto a single **Blocking / Major / Minor-and-below** scale. A non-negotiable **consult guard** forbids surfacing findings to the user while any Blocking or Major finding remains: the loop re-dispatches the implementer automatically (≤5 rounds), and consultation is reserved for the Minor-and-below residue once Blocking and Major are clean. The `ux-reviewer` is reclassified from a SOFT "user decides" gate into the **Major** auto-fix tier — its `REQUEST CHANGES` verdict is now resolved in the loop rather than shown to the user. The aggregation rules in `skills/team-implement/SKILL.md`, `skills/team/SKILL.md`, and `skills/qrspi-workflow/SKILL.md`, plus the verdict descriptions in `agents/code-reviewer.md` and `agents/ux-reviewer.md`, are aligned to the tiers and the guard. The 5-round cap and the set of hard gates are unchanged.
@@ -22,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Worktree is kept in place after the PR is opened so iteration can continue.** The PR/ship phase previously removed the worktree as soon as a PR was opened, which prevented pushing follow-up commits or addressing review feedback from inside the worktree. Worktree teardown is now deferred until the PR is merged (or the user explicitly asks for cleanup), in the three skills that document it: `skills/team/SKILL.md` (PR gate step 6), `skills/team-pr/SKILL.md` (step 9 worktree handling), and `skills/worktree-isolation/SKILL.md` (Ship teardown).
 - **Worktree-isolation skill documented phase 6 placement.** `skills/worktree-isolation/SKILL.md` previously said worktree creation happens "before any agent is dispatched," which contradicted the phase table at `skills/team/SKILL.md` (WORKTREE is phase 6 of 8, after PLAN and before IMPLEMENT). The Setup section is rewritten to describe phase-6 placement directly, a new "Why late" subsection captures the two load-bearing rationales (human gates land on `main`; branch scope is a Plan output), and `skills/qrspi-workflow/SKILL.md` now cross-links to that rationale from its WORKTREE phase block. **No behavior change** — every phase still runs where it ran before.
 
 ## [0.2.1] - 2026-05-07
@@ -57,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/bostonaholic/team/releases/tag/v0.3.0
 [0.2.1]: https://github.com/bostonaholic/team/releases/tag/v0.2.1
 [0.2.0]: https://github.com/bostonaholic/team/releases/tag/v0.2.0

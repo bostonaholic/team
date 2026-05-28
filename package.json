@@ -1,6 +1,6 @@
 {
   "name": "team",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Drive a feature from idea to PR with a team of Claude Code agents.",
   "license": "MIT",
   "type": "module",
