@@ -24,8 +24,10 @@ browsers vary in whether they allow Phaser's loader to fetch the
 
 ### Regenerate the pixel art
 
-The two PNGs under `docs/assets/` are produced by a deterministic
-generator. To regenerate them (re-running yields byte-identical output):
+The pixel-art PNGs under `docs/assets/sprites/` and
+`docs/assets/backgrounds/`, plus the 16x16 `docs/favicon.png`, are
+produced by a deterministic generator. To regenerate them (re-running
+yields byte-identical output):
 
 ```sh
 cd docs
