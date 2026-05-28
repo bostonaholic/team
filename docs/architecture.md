@@ -228,8 +228,11 @@ items to the TodoWrite ledger.
 **Predecessor:** aggregate gate passed
 
 Update CHANGELOG.md (filter for user-facing commits since last release),
-present shipping options to the user, execute the chosen action, surface
-the tracking ticket (if `task.md` carries `ticketId`), clean up the worktree.
+present shipping options to the user, execute the chosen action, and
+surface the tracking ticket (if `task.md` carries `ticketId`). The
+worktree stays in place after the PR opens — teardown is deferred until
+the PR merges or the user asks, so the branch remains available for
+iteration.
 
 ## 4. Agent Roster
 
@@ -291,19 +294,6 @@ Skills live under `skills/`. There are two flavors:
 
 ### Entry-point skills (slash commands)
 
-| Skill            | Command                              | Description                              |
-|------------------|--------------------------------------|------------------------------------------|
-| `team`           | `/team <desc>`                       | Full 8-phase QRSPI pipeline              |
-| `team-fix`       | `/team-fix <bug>`                    | Compressed bug-fix pipeline              |
-| `team-question`  | `/team-question <desc>`              | Decompose intent (runs alone)            |
-| `team-research`  | `/team-research [docs/plans/<id>/]`  | Isolated research                        |
-| `team-design`    | `/team-design [docs/plans/<id>/]`    | Design alignment (human gate)            |
-| `team-structure` | `/team-structure [docs/plans/<id>/]` | Vertical-slice structure (human gate)    |
-| `team-plan`      | `/team-plan [docs/plans/<id>/]`      | Tactical plan from approved structure    |
-| `team-worktree`  | `/team-worktree [docs/plans/<id>/]`  | Prepare isolated worktree                |
-| `team-implement` | `/team-implement [docs/plans/<id>/]` | Test-first + slice exec + 5-reviewer     |
-| `team-pr`        | `/team-pr [docs/plans/<id>/]`        | Commit + PR                              |
-
 Every entry-point skill carries an `argument-hint` field in its
 frontmatter (Claude Code [skills frontmatter](https://code.claude.com/docs/en/skills#frontmatter-reference))
 that documents the expected `$ARGUMENTS` shape.
@@ -338,19 +328,15 @@ each block points at.
 
 ### Methodology skills (loaded by agents, not directly invoked)
 
-| Skill                    | Description                                    | Consumers                                                    |
-|--------------------------|------------------------------------------------|--------------------------------------------------------------|
-| `qrspi-workflow`         | Phase discipline, artifact conventions, gates  | Loaded by orchestrator skills                                |
-| `test-first-development` | Acceptance tests as scope fence                | Loaded by test-architect, orchestrator                       |
-| `code-review`            | Generator-evaluator separation, review method  | Loaded by code-reviewer, security-reviewer, ux-reviewer, technical-writer |
-| `engineering-standards`  | Engineering standards, implementation methodology, quality checklist | Loaded by planner, implementer, code-reviewer |
-| `refactoring-to-patterns`| Code smells and safe refactoring procedures    | Loaded by implementer                                        |
-| `solid-principles`       | SOLID design principles                        | Loaded by implementer, code-reviewer                         |
-| `systematic-debugging`   | Root cause investigation                       | Loaded by agents when debugging                              |
-| `documenting-decisions`  | ADR creation and management                    | Loaded by design-author, structure-planner                   |
-| `product-thinking`       | Product-need reasoning lens ("make something people want") | Loaded by questioner, design-author, structure-planner       |
-| `writing-prose`          | Clear documentation and readable explanation   | Loaded by technical-writer                                   |
-| `worktree-isolation`     | Worktree setup + cleanup                       | Loaded by orchestrator during Worktree phase                 |
+Methodology skills carry no `argument-hint` and are loaded by agents
+through one of two mechanisms: a `skills:` YAML list in the agent's
+frontmatter (for example, `agents/design-author.md` declares
+`skills: [product-thinking]`), or an inline prose load instruction in the
+agent body (for example, `code-review` is loaded by the `code-reviewer`
+agent).
+
+For the full per-skill reference — all 27 skills, their arguments,
+consumers, and behaviors — see [skills.md](skills.md).
 
 ### Design Guidelines
 
