@@ -31,18 +31,23 @@ const DESKS = [
 
 const OCCUPIED = new Set();
 
-// 12 NPC spawn positions arranged on a 4x3 grid (rows y=96/144/210/226,
+// 12 NPC spawn positions arranged on a 4x3 grid (rows y=96/144/210/232,
 // columns x=50/160/270). Constraints encoded here:
 //   * Horizontal separation between sprite centers on the same row is 110px.
 //     The widest agent labels (`structure-planner`, `security-reviewer`) are
 //     ~55px wide, so 110px guarantees ~55px of clear gap between adjacent
 //     labels at spawn — no two labels can overlap horizontally on a row.
 //   * Rows y=96 and y=144 sit above the top desk band (y=110..128); rows
-//     y=210 and y=226 sit below the bottom desk band (y=180..198), so no
+//     y=210 and y=232 sit below the bottom desk band (y=180..198), so no
 //     NPC spawns inside a desk hitbox.
 //   * Row spacing keeps name labels (rendered 20px above each sprite) from
 //     stacking visually: y=144 vs y=96 -> 48px gap; y=210 vs y=144 -> 66px;
-//     y=226 vs y=210 -> 16px (sufficient for the 7px label font).
+//     y=232 vs y=210 -> 22px (label top on bottom row sits at world-y
+//     ≈ 212, well below the y=210 row's working/walking indicator bottom
+//     at world-y ≈ 198, so the two rows no longer crowd). The y=232 row
+//     stays within the 320x240 canvas: sprite half-height 8 + label
+//     extending ~10px below the sprite center keeps the bottom edge
+//     above y=240.
 const NPC_SPAWNS = [
   { x: 50,  y: 96  },
   { x: 160, y: 96  },
@@ -53,9 +58,9 @@ const NPC_SPAWNS = [
   { x: 50,  y: 210 },
   { x: 160, y: 210 },
   { x: 270, y: 210 },
-  { x: 50,  y: 226 },
-  { x: 160, y: 226 },
-  { x: 270, y: 226 }
+  { x: 50,  y: 232 },
+  { x: 160, y: 232 },
+  { x: 270, y: 232 }
 ];
 
 const NPC_TINTS = [
@@ -118,9 +123,12 @@ class OfficeScene extends Phaser.Scene {
       return;
     }
 
-    if (DESKS.length === 0) {
-      throw new Error('DESKS config must contain at least one desk');
-    }
+    // Clear any stale desk occupations from a previous scene instance.
+    // The OCCUPIED Set is module-scoped, so it survives `this.scene.restart()`;
+    // without this clear the NPCs would deadlock in the retry loop after a
+    // restart. The demo never restarts today, but the latent bug is cheap
+    // to defuse.
+    OCCUPIED.clear();
 
     this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'office');
 
@@ -202,6 +210,23 @@ class OfficeScene extends Phaser.Scene {
       stroke: '#000000',
       strokeThickness: 2
     }).setOrigin(0.5, 1);
+  }
+
+  // Clamp a center-anchored label's x so it stays fully within the
+  // canvas with a 4px margin on each side. Long labels at corner desks
+  // (e.g. `structure-planner`, `security-reviewer`) would otherwise
+  // clip off the canvas by a fraction of a pixel up to several pixels.
+  // Short labels are untouched (clamp is a no-op when they already fit).
+  clampLabelX(label, desiredX) {
+    const half = label.width / 2;
+    const minX = 4 + half;
+    const maxX = GAME_WIDTH - 4 - half;
+    if (maxX < minX) {
+      // Label is wider than the safe band; center it.
+      label.x = GAME_WIDTH / 2;
+      return;
+    }
+    label.x = Phaser.Math.Clamp(desiredX, minX, maxX);
   }
 
   showAssetLoadFailureOverlay() {
@@ -288,7 +313,7 @@ class OfficeScene extends Phaser.Scene {
   }
 
   update() {
-    if (this.assetLoadFailed || !this.player) return;
+    if (!this.player) return;
 
     // Player input.
     const left = this.cursors.left.isDown || this.wasd.A.isDown;
@@ -315,8 +340,9 @@ class OfficeScene extends Phaser.Scene {
 
     // Player name label tracks the player position; clamped to stay onscreen.
     // Labels are bottom-anchored (origin 0.5, 1); a y of 8 means the label's
-    // bottom is at canvas row 8 and it extends upward from there.
-    this.player.nameLabel.x = this.player.x;
+    // bottom is at canvas row 8 and it extends upward from there. X is
+    // clamped via clampLabelX so long labels never clip the canvas edges.
+    this.clampLabelX(this.player.nameLabel, this.player.x);
     this.player.nameLabel.y = Math.max(8, this.player.y - 20);
 
     // NPC state machine.
@@ -336,12 +362,14 @@ class OfficeScene extends Phaser.Scene {
           }
         }
       }
-      // Sync indicator below the name label; name label clamped to canvas.
-      // Both labels are NOT sprite children, so sprite flip never mirrors them.
-      // Name label sits at y-20; indicator at y-12 (just below name, above head).
-      npc.nameLabel.x = npc.x;
+      // Sync indicator below the name label; name label clamped to canvas
+      // on both axes. Both labels are NOT sprite children, so sprite flip
+      // never mirrors them. Name label sits at y-20; indicator at y-12
+      // (just below name, above head). X-clamp keeps long labels like
+      // `structure-planner` from clipping at corner-desk x positions.
+      this.clampLabelX(npc.nameLabel, npc.x);
       npc.nameLabel.y = Math.max(8, npc.y - 20);
-      npc.indicator.x = npc.x;
+      this.clampLabelX(npc.indicator, npc.x);
       npc.indicator.y = Math.max(16, npc.y - 12);
     }
   }
