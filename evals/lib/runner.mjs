@@ -19,6 +19,7 @@
 //   EVALS_TIMEOUT      per-case agent subprocess timeout (seconds)
 //   EVALS_WALLCLOCK_CAP   total run wall-clock cap (seconds)
 //   EVALS_CASE_NAME    set per-case before invoking agent (consumed by mocks)
+//   EVALS_TIER         gate | periodic — restrict to that tier's cases
 //
 // Path-safety contract:
 //   - runId is constrained to `[A-Za-z0-9._-]+`; `..` or `/` are refused.
@@ -26,7 +27,6 @@
 //     the system tempdir. Anything else fails fast.
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 import {
@@ -74,26 +74,6 @@ function nowIso() {
   return new Date().toISOString();
 }
 
-function listFixtures(agentName) {
-  const root = fixtureRoot();
-  const agentDir = join(root, agentName);
-  if (!existsSync(agentDir)) return [];
-  const cases = [];
-  for (const dirent of readdirSync(agentDir, { withFileTypes: true })) {
-    if (!dirent.isDirectory()) continue;
-    const caseDir = join(agentDir, dirent.name);
-    const inputPath = join(caseDir, "input.md");
-    const groundTruthPath = join(caseDir, "ground-truth.json");
-    cases.push({
-      caseName: dirent.name,
-      caseDir,
-      inputPath,
-      groundTruthPath,
-    });
-  }
-  return cases;
-}
-
 function rubricPathFor(agentName) {
   return join(rubricRoot(), `${agentName}.md`);
 }
@@ -139,14 +119,27 @@ export async function main(argv) {
   }
 
   const mockingAgent = !!process.env.EVALS_MOCK_AGENT;
+  const { assertValidTier, getChangedFiles, selectCases } = await import(
+    "./select.mjs"
+  );
+
+  // Validate EVALS_TIER once, up front. Both the diff-selection path and
+  // the single-agent path honor it.
+  const tierFilter = process.env.EVALS_TIER || null;
+  if (tierFilter !== null) {
+    try {
+      assertValidTier(tierFilter, "EVALS_TIER");
+    } catch (err) {
+      process.stderr.write(`runner: ${err.message}\n`);
+      return 1;
+    }
+  }
 
   // Diff-based selection (no <agent> arg path); if EVALS_FAKE_CHANGED_FILES
-  // is set, the selector uses it directly. Lazy-import so slice 1 doesn't
-  // need the selector module on disk. The empty-match exit happens BEFORE
-  // the PERIODIC/key preflight: there's nothing to spend money on.
+  // is set, the selector uses it directly. The empty-match exit happens
+  // BEFORE the PERIODIC/key preflight: there's nothing to spend money on.
   let casesToRun;
   if (!agentName) {
-    const { getChangedFiles, selectCases } = await import("./select.mjs");
     let changed;
     if (process.env.EVALS_FAKE_CHANGED_FILES !== undefined) {
       changed = process.env.EVALS_FAKE_CHANGED_FILES
@@ -167,9 +160,10 @@ export async function main(argv) {
         fixtureRoot: fixtureRoot(),
         changedFiles: changed,
         all,
+        tier: tierFilter,
       });
     } catch (err) {
-      if (err.code === "EMALFORMED_DEPS") {
+      if (err.code === "EMALFORMED_DEPS" || err.code === "EBAD_TIER") {
         process.stderr.write(`selector: ${err.message}\n`);
         return 1;
       }
@@ -183,11 +177,25 @@ export async function main(argv) {
     }
     casesToRun = selected;
   } else {
-    // Single-agent path: enumerate that agent's cases.
-    casesToRun = listFixtures(agentName).map((c) => ({
-      ...c,
-      agent: agentName,
-    }));
+    // Single-agent path: run the selector with ALL=1 against just that
+    // agent's fixtures so we get per-case tier and frontmatter parsing
+    // for free (and honor EVALS_TIER consistently).
+    let allCases;
+    try {
+      allCases = selectCases({
+        fixtureRoot: fixtureRoot(),
+        changedFiles: null,
+        all: true,
+        tier: tierFilter,
+      });
+    } catch (err) {
+      if (err.code === "EMALFORMED_DEPS" || err.code === "EBAD_TIER") {
+        process.stderr.write(`selector: ${err.message}\n`);
+        return 1;
+      }
+      throw err;
+    }
+    casesToRun = allCases.filter((c) => c.agent === agentName);
   }
 
   // Pre-flight: ANTHROPIC_API_KEY check (mock seams suppress it).
@@ -242,7 +250,6 @@ async function runSelectedCases(cases, { resumeRunId }) {
 
   let exitCode = 0;
   const branch = detectBranch();
-  const tier = "periodic";
   const wallCap = parseInt(
     process.env.EVALS_WALLCLOCK_CAP || String(DEFAULT_WALLCLOCK_SEC),
     10,
@@ -275,7 +282,7 @@ async function runSelectedCases(cases, { resumeRunId }) {
         inputPath: c.inputPath,
         groundTruthPath: c.groundTruthPath,
         branch,
-        tier,
+        tier: c.tier,
       });
       result.run_id = runId;
 

@@ -12,11 +12,19 @@
 // On shallow clone / detached HEAD, getChangedFiles returns null and
 // the caller falls back to "run all" with a warning on stderr.
 //
+// Tier filtering:
+//   Each fixture's frontmatter carries `tier: gate | periodic`. Setting
+//   `EVALS_TIER=gate` (or `EVALS_TIER=periodic`) restricts the selected
+//   set to cases of that tier. Unset means no tier filter. An invalid
+//   env value or fixture tier is a hard error surfaced before any
+//   matching work happens.
+//
 // Mock seams (tests):
 //   EVALS_FAKE_CHANGED_FILES  comma-separated list, bypasses git
 //   EVALS_FAKE_GIT_DIFF_FAIL  simulate non-zero git diff
 //   EVALS_FIXTURE_ROOT        override the fixtures root
 //   EVALS_BASE                base branch for `git diff`
+//   EVALS_TIER                gate | periodic — restricts the selection
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
@@ -41,12 +49,25 @@ const BASE_BRANCH_FALLBACKS = [
   "master",
 ];
 
+export const VALID_TIERS = ["gate", "periodic"];
+
+export function assertValidTier(value, label) {
+  if (!VALID_TIERS.includes(value)) {
+    const err = new Error(
+      `${label} must be one of ${VALID_TIERS.join("|")}; got '${value}'`,
+    );
+    err.code = "EBAD_TIER";
+    throw err;
+  }
+}
+
 // ---------------------------------------------------------------------------
-// Frontmatter parsing: we need just the `deps:` block. Returns either an
-// array of strings (well-formed) or { malformed: true, reason } otherwise.
+// Frontmatter parsing: pulls `deps:` (YAML list) and `tier:` (scalar)
+// out of the fixture's frontmatter block. Returns { deps, tier } when
+// well-formed, or { malformed: true, reason } otherwise.
 // ---------------------------------------------------------------------------
 
-function parseDepsFromFrontmatter(text, sourcePath) {
+function parseFixtureFrontmatter(text, sourcePath) {
   if (!text.startsWith("---")) {
     return { malformed: true, reason: "no YAML frontmatter", sourcePath };
   }
@@ -59,6 +80,7 @@ function parseDepsFromFrontmatter(text, sourcePath) {
   let inDeps = false;
   let depsScalar = null;
   const deps = [];
+  let tier = null;
 
   for (const raw of lines) {
     const line = raw.replace(/\r$/, "");
@@ -81,14 +103,19 @@ function parseDepsFromFrontmatter(text, sourcePath) {
         };
       }
     }
-    const m = /^deps:\s*(.*)$/.exec(line);
-    if (m) {
-      const trailing = m[1].trim();
+    const depsMatch = /^deps:\s*(.*)$/.exec(line);
+    if (depsMatch) {
+      const trailing = depsMatch[1].trim();
       if (trailing === "") {
         inDeps = true;
       } else {
         depsScalar = trailing;
       }
+      continue;
+    }
+    const tierMatch = /^tier:\s*(.+?)\s*$/.exec(line);
+    if (tierMatch) {
+      tier = tierMatch[1].trim();
     }
   }
 
@@ -100,7 +127,23 @@ function parseDepsFromFrontmatter(text, sourcePath) {
     };
   }
 
-  return { deps };
+  if (tier === null) {
+    return {
+      malformed: true,
+      reason: "missing required field: tier",
+      sourcePath,
+    };
+  }
+
+  if (!VALID_TIERS.includes(tier)) {
+    return {
+      malformed: true,
+      reason: `tier must be one of ${VALID_TIERS.join("|")}; got '${tier}'`,
+      sourcePath,
+    };
+  }
+
+  return { deps, tier };
 }
 
 // ---------------------------------------------------------------------------
@@ -218,39 +261,51 @@ export function getChangedFiles({ base } = {}) {
 // .caseName) that should run for this changed-file set.
 // ---------------------------------------------------------------------------
 
-export function selectCases({ fixtureRoot, changedFiles, all = false } = {}) {
+export function selectCases({
+  fixtureRoot,
+  changedFiles,
+  all = false,
+  tier = null,
+} = {}) {
   if (!fixtureRoot) {
     throw new Error("selectCases: fixtureRoot is required");
   }
+  if (tier !== null) {
+    assertValidTier(tier, "EVALS_TIER");
+  }
   const cases = enumerateCases(fixtureRoot);
 
-  // Parse every fixture's deps once. A malformed `deps:` block is a
+  // Parse every fixture's frontmatter once. A malformed block is a
   // hard error: surface it before any matching work happens.
   const parsedCases = [];
   for (const c of cases) {
     const text = readFileSync(c.inputPath, "utf8");
-    const parsed = parseDepsFromFrontmatter(text, c.inputPath);
+    const parsed = parseFixtureFrontmatter(text, c.inputPath);
     if (parsed.malformed) {
       const err = new Error(
-        `malformed deps in ${c.inputPath} (${c.caseName}): ${parsed.reason}`,
+        `malformed frontmatter in ${c.inputPath} (${c.caseName}): ${parsed.reason}`,
       );
       err.code = "EMALFORMED_DEPS";
       err.sourcePath = c.inputPath;
       err.caseName = c.caseName;
       throw err;
     }
-    parsedCases.push({ ...c, deps: parsed.deps });
+    parsedCases.push({ ...c, deps: parsed.deps, tier: parsed.tier });
   }
 
-  if (all) return parsedCases;
+  const tierFiltered = tier === null
+    ? parsedCases
+    : parsedCases.filter((c) => c.tier === tier);
+
+  if (all) return tierFiltered;
   if (changedFiles === null || changedFiles === undefined) {
     // Caller is signalling "couldn't determine changes": run all.
-    return parsedCases;
+    return tierFiltered;
   }
   if (changedFiles.length === 0) return [];
-  if (isGlobalDepsHit(changedFiles)) return parsedCases;
+  if (isGlobalDepsHit(changedFiles)) return tierFiltered;
 
-  return parsedCases.filter((c) =>
+  return tierFiltered.filter((c) =>
     depsMatchChangedFile(c.deps, changedFiles),
   );
 }
@@ -297,12 +352,21 @@ function runCli(argv) {
   }
 
   const all = process.env.ALL === "1";
+  const tier = process.env.EVALS_TIER || null;
+  if (tier !== null) {
+    try {
+      assertValidTier(tier, "EVALS_TIER");
+    } catch (err) {
+      process.stderr.write(`selector: ${err.message}\n`);
+      return 1;
+    }
+  }
 
   let selected;
   try {
-    selected = selectCases({ fixtureRoot, changedFiles, all });
+    selected = selectCases({ fixtureRoot, changedFiles, all, tier });
   } catch (err) {
-    if (err.code === "EMALFORMED_DEPS") {
+    if (err.code === "EMALFORMED_DEPS" || err.code === "EBAD_TIER") {
       process.stderr.write(`selector: ${err.message}\n`);
       return 1;
     }

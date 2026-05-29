@@ -65,6 +65,7 @@ unattended local run; CI is expected to leave them alone.
 | `EVALS_TIMEOUT` | `120` (sec) | Per-case agent subprocess timeout. |
 | `EVALS_JUDGE_TIMEOUT` | `90` (sec) | Per-case judge subprocess timeout. |
 | `EVALS_BASE` | `origin/main` | Base ref for diff-based case selection. |
+| `EVALS_TIER` | unset | Restrict to one tier — `gate` or `periodic`. Unset runs all tiers. Invalid values fail fast. |
 | `EVALS_FIXTURE_ROOT` | `evals/fixtures` | Fixture root (must be under repo root or system tempdir). |
 | `EVALS_RUBRIC_ROOT` | `evals/rubrics` | Rubric root (same path-confinement constraint). |
 | `EVALS_RESULTS_ROOT` | `evals/results` | Results root (same path-confinement constraint). |
@@ -166,9 +167,12 @@ with YAML frontmatter:
 
 - `agent:` — the agent name. Must match the parent directory name under
   `evals/fixtures/`.
-- `tier:` — one of `gate` or `periodic`. Mirrors the design's gate /
-  periodic split: `gate` cases run on every save (no model call);
-  `periodic` cases run only when the operator opts in with `PERIODIC=1`.
+- `tier:` — one of `gate` or `periodic`. Set `EVALS_TIER=gate` (or
+  `EVALS_TIER=periodic`) on the runner to restrict to that tier; unset
+  runs both. Any other value fails fast at selection time. The CI
+  workflows lean on this split — `evals.yml` runs the structural gate
+  on every PR; `evals-periodic.yml` runs cost-bearing cases on a
+  weekly cron with `EVALS_TIER=periodic`.
 - `deps:` — YAML list of file globs. The runner matches these against
   `git diff --name-only origin/main...HEAD` (or whichever `EVALS_BASE`
   resolves to). A case runs only when at least one entry matches. See

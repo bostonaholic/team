@@ -46,6 +46,10 @@ jobs:
           # into the run: shell) so the pattern stays correct as the
           # matrix grows — even though matrix values are author-controlled.
           AGENT: ${{ matrix.agent }}
+          # Explicit tier scope: weekly workflow runs only cost-bearing
+          # cases. Gate-tier cases (if any) stay out so the gate workflow
+          # owns them.
+          EVALS_TIER: periodic
         # PERIODIC=1 is the cost-control opt-in (refuses to call the
         # model otherwise). ALL=1 ignores diff-based selection so the
         # weekly run exercises every fixture for the agent.
