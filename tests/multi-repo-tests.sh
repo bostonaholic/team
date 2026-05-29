@@ -69,12 +69,27 @@ else
   fail "T4: team-worktree does not record worktree paths back into repos.md"
 fi
 
-# T5 — questioner has AskUserQuestion tool and a multi-repo detection step
-if grep -Eq "^tools:.*AskUserQuestion" "$QUESTIONER" \
-  && grep -q "Multi-repo detection" "$QUESTIONER"; then
-  pass "T5: questioner has AskUserQuestion tool + multi-repo detection"
+# T5 — questioner does NOT have AskUserQuestion in tools (subagents emit
+# the envelope; the orchestrator renders the prompt) AND has a multi-repo
+# detection step that uses the openQuestions envelope protocol.
+T5_TOOLS_OK=0
+T5_BODY_OK=0
+if awk '/^---$/{c++; next} c==1' "$QUESTIONER" \
+   | grep -qE '^tools:.*\bAskUserQuestion\b'; then
+  T5_TOOLS_OK=0
 else
-  fail "T5: questioner missing AskUserQuestion tool or multi-repo step"
+  T5_TOOLS_OK=1
+fi
+if grep -q "Multi-repo detection" "$QUESTIONER" \
+   && grep -q "openQuestions" "$QUESTIONER" \
+   && grep -q "agent-open-questions" "$QUESTIONER" \
+   && grep -q "Repos" "$QUESTIONER"; then
+  T5_BODY_OK=1
+fi
+if [[ $T5_TOOLS_OK -eq 1 && $T5_BODY_OK -eq 1 ]]; then
+  pass "T5: questioner excludes AskUserQuestion + multi-repo detection uses openQuestions envelope"
+else
+  fail "T5: questioner must exclude AskUserQuestion from tools AND use openQuestions envelope for multi-repo detection"
 fi
 
 # T6 — design-author confirms repo scope before drafting

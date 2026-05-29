@@ -214,6 +214,9 @@ at the agent boundary:
    `task.md`; enforcement relies on the agent following its prompt.
 3. **Procedural** — if a researcher needs context the questions lack, it must
    surface that as an open question rather than guessing the intent.
+   The canonical mechanism for surfacing open questions interactively
+   from any subagent is `skills/agent-open-questions/SKILL.md` — emit
+   the envelope, let the orchestrator render and resume.
 
 A PreToolUse(Read) hook that blocks `*/task.md` reads from the research
 agents would convert step 2 from procedural to structural. Treat this as

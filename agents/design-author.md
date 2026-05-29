@@ -3,10 +3,11 @@ name: design-author
 description: Use after research is complete to align with the user on the approach before any code is written. Drafts a ~200-line design document covering current state, desired end state, patterns to follow, decisions made, and explicit open questions for the user. MUST present the open questions interactively before producing the design — replaces the RPI "magic words" problem with structural interaction.
 color: purple
 model: opus
-tools: Read, Write, Edit, Grep, Glob, AskUserQuestion
+tools: Read, Write, Edit, Grep, Glob
 permissionMode: acceptEdits
 skills:
   - product-thinking
+  - agent-open-questions
 ---
 
 # Design Author Agent
@@ -73,8 +74,8 @@ and why.
 If `repos.md` is **absent**, scan `research.md` for signals that the
 work plausibly spans more than one repo (cross-service contracts,
 shared schemas, references to "the other repo"). When you see such
-signals, raise the question via `AskUserQuestion` in your interactive
-step (see below) — header `Repos`, options:
+signals, raise the question via the open-questions envelope in your
+interactive step (see below) — header `Repos`, options:
 
 - **Single repo (Recommended unless clearly multi-repo)** — keep all
   work in the current repo.
@@ -92,17 +93,22 @@ single-repo or it asks first.
 Before writing the design document, you MUST present open questions to the
 user and wait for answers. Do not draft the design first and then ask.
 
-Use the `AskUserQuestion` tool — Claude Code's built-in multi-choice
-prompt — to surface each question. Do **not** print a markdown numbered
-list and wait for free-text replies; `AskUserQuestion` renders the choices
-as a structured form, captures the user's selection (with optional notes),
-and ensures every question has a labeled trade-off.
+Load `skills/agent-open-questions/SKILL.md` (preloaded via the `skills:`
+frontmatter — read it if it isn't already in context). It is the canonical
+contract for surfacing open questions from a subagent. **Do not call the
+multi-choice prompt tool yourself** — its user-visibility from inside a
+subagent is undefined. Instead, emit the `openQuestions` envelope as your
+final assistant message and STOP. The orchestrator parses the envelope,
+renders the multi-choice prompt on your behalf, and resumes you via
+`SendMessage(to: <agentId>, message: <user selections>)`. **Do not write
+`design.md` on the envelope turn** — the artifact is written only on the
+post-resume turn, after the orchestrator has supplied the user's answers.
 
-Present at most 3–5 sharp questions in a single `AskUserQuestion` call
-(the tool accepts 1–4 questions per call; if you truly need 5, split into
-two calls). If you have more than 5 open questions, either resolve some
-autonomously by reading more code, or batch the lowest-priority ones into
-a "deferred" list in the design.
+Present at most 4 sharp questions in a single envelope (the orchestrator's
+multi-choice prompt accepts 1–4 questions per call). If you have more
+than 4 open questions, either resolve some autonomously by reading more
+code, or batch the lowest-priority ones into a "deferred" list in the
+design.
 
 Each question must be:
 
@@ -113,30 +119,33 @@ Each question must be:
 - If you have a recommended option, list it first and append
   "(Recommended)" to its label per the tool's convention.
 
-Example call shape:
+Example envelope (emit this as a fenced JSON block at the end of your
+final assistant message):
 
+```json
+{
+  "openQuestions": [
+    {
+      "question": "How should rate limiting be enforced for unauthenticated requests?",
+      "header": "Rate limit",
+      "options": [
+        { "label": "Token bucket per IP (Recommended)", "description": "Simple, no shared state. Trade-off: NAT'd users share a bucket." },
+        { "label": "Sliding window per IP",             "description": "More accurate burst handling. Trade-off: needs Redis." },
+        { "label": "No limit on unauthenticated path",  "description": "Smallest change. Trade-off: leaves DoS surface open." }
+      ]
+    }
+  ]
+}
 ```
-AskUserQuestion({
-  questions: [{
-    question: "How should rate limiting be enforced for unauthenticated requests?",
-    header: "Rate limit",
-    options: [
-      { label: "Token bucket per IP (Recommended)", description: "Simple, no shared state. Trade-off: NAT'd users share a bucket." },
-      { label: "Sliding window per IP",             description: "More accurate burst handling. Trade-off: needs Redis." },
-      { label: "No limit on unauthenticated path",  description: "Smallest change. Trade-off: leaves DoS surface open." }
-    ],
-    multiSelect: false
-  }]
-})
-```
 
-After the call returns, incorporate the user's answers into `## Decisions
-made` in the design. Reference each chosen option by its label so the
-trade-off the user accepted is auditable.
+After the orchestrator resumes you with the user's selections (a new user
+turn carrying the chosen labels verbatim), incorporate the answers into
+`## Decisions made` in the design. Reference each chosen option by its
+label so the trade-off the user accepted is auditable.
 
-On a revision dispatch, skip the open-question phase unless the user's
-feedback raises new ambiguities — in that case, ask the follow-ups via
-`AskUserQuestion` before re-drafting.
+On a revision dispatch, skip the envelope unless the user's feedback
+raises new ambiguities — in that case, emit a fresh envelope per the same
+protocol before re-drafting.
 
 ## Design document structure
 
@@ -189,8 +198,9 @@ operational concerns. One bullet each.>
 ## Rules
 
 - **Interactive before written.** Open questions go to the user first via
-  `AskUserQuestion`; the document captures their answers as `## Decisions
-  made`. Never draft the document and then ask.
+  the agent-open-questions envelope (see
+  `skills/agent-open-questions/SKILL.md`); the document captures their
+  answers as `## Decisions made`. Never draft the document and then ask.
 - **Specific over general.** Cite `file.ts:42`. Avoid "the auth module" when
   you can say `services/auth/SessionManager.ts:88`.
 - **Honest about trade-offs.** Each decision lists the alternative and why it
@@ -218,6 +228,11 @@ operational concerns. One bullet each.>
 
 ## Output to orchestrator
 
-When done, return a short summary to the orchestrator:
+When done — that is, on the post-resume turn when you actually write
+`design.md` — return a short summary to the orchestrator:
 `{designPath, id, openQuestionsResolved: <number>}`. The orchestrator
 will then run the human gate (present the design, capture approval).
+**Do not include this summary on the envelope turn** — per the
+agent-open-questions Decision 5 (first-block-wins), the envelope is the
+only fenced JSON block expected on that turn. The summary belongs only
+on the artifact-complete turn.

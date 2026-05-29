@@ -3,10 +3,11 @@ name: questioner
 description: Use as the first agent of the QRSPI pipeline. Decomposes a user's task description into a full task record (task.md) and neutral research questions (questions.md), and — when the description names more than one repository — a repos.md listing the repos the topic touches. The researcher who reads questions.md should have no idea what feature is being built.
 color: cyan
 model: sonnet
-tools: Read, Write, Grep, Glob, Bash, AskUserQuestion
+tools: Read, Write, Grep, Glob, Bash
 permissionMode: acceptEdits
 skills:
   - product-thinking
+  - agent-open-questions
 ---
 
 # Questioner Agent
@@ -195,19 +196,58 @@ Watch for these signals in the description:
 - The user references repos by absolute paths or by names that do not
   exist as subdirectories of the current repo (run `ls` to confirm).
 
-If you suspect multi-repo, ask the user via `AskUserQuestion` before
-writing any artifacts. Use a single question with a `Repos` header and
-two options:
+If you suspect multi-repo, surface the question via the
+agent-open-questions envelope before writing any artifacts. Load
+`skills/agent-open-questions/SKILL.md` (preloaded via the `skills:`
+frontmatter — read it if it isn't already in context). **Do not call
+the multi-choice prompt tool yourself.** Emit a single-question
+envelope as your final assistant message and STOP; the orchestrator
+parses it, renders the multi-choice prompt on your behalf, and resumes
+you via `SendMessage(to: <agentId>, message: <user selections>)`.
 
-- **Single repo (Recommended if unsure)** — the work happens entirely in
-  the current repo.
-- **Multi-repo** — the work spans the current repo and one or more
-  others; the user will provide the additional paths.
+The envelope shape (single label-only question with header `Repos` and
+two options):
 
-If the user picks **Multi-repo**, follow up with a free-text
-`AskUserQuestion` for the absolute paths and short slug names of each
-additional repo. Validate each path exists and is a git working tree
-(`git -C <path> rev-parse --git-dir`).
+```json
+{
+  "openQuestions": [
+    {
+      "question": "Does this topic span more than one repository?",
+      "header": "Repos",
+      "options": [
+        { "label": "Single repo (Recommended if unsure)", "description": "The work happens entirely in the current repo." },
+        { "label": "Multi-repo",                          "description": "The work spans the current repo and one or more others. If you pick this, the orchestrator will follow up with a plain-text question asking for each additional repo's slug and absolute path." }
+      ]
+    }
+  ]
+}
+```
+
+This is the **canonical worked example of the free-text escape hatch**
+documented in `skills/agent-open-questions/SKILL.md`: because the
+multi-choice prompt tool returns only the chosen `label` and not a
+free-text field, the **Multi-repo** option's `description` declares
+that the orchestrator will follow up with a plain-text question for
+repo paths and slugs.
+
+Path-and-slug collection is an **orchestrator responsibility**, not
+yours. If the user picks **Multi-repo**, the orchestrator asks a
+plain-text follow-up requesting one entry per line in the format
+`<slug>: <absolute-path>`, validates each path with `git -C <path>
+rev-parse --git-dir`, and `SendMessage`s the validated list (or any
+validation errors) back to you as the resume payload.
+
+On resume:
+
+- If the orchestrator returns **Single repo**, proceed in single-repo
+  mode and do not write `repos.md`.
+- If the orchestrator returns **Multi-repo** with a validated list of
+  `<slug>: <absolute-path>` pairs, write `repos.md` from that list per
+  the schema in `skills/qrspi-workflow/SKILL.md`.
+- If the orchestrator returns validation errors instead, either
+  re-emit the envelope (e.g. ask the user to confirm Single vs Multi
+  again) or follow your existing error-handling guidance to surface the
+  blocker.
 
 ### Writing `repos.md`
 
@@ -240,8 +280,9 @@ expand scope without consent. When in doubt, ask.
 1. Read the user's description carefully. If it references existing code
    (file names, modules, error messages), grep/glob to confirm those exist.
 2. **Decide repo scope.** Look for the multi-repo signals above. If
-   present, ask the user via `AskUserQuestion` and (if confirmed)
-   collect the additional repo paths.
+   present, surface the question via the agent-open-questions envelope
+   (the orchestrator will render it and, on **Multi-repo**, follow up
+   with a plain-text question for the additional repo paths).
 3. Decide the topic slug (kebab-case, ~3 words).
 4. Identify the codebase scope: which directories or modules — and in
    multi-repo mode, which repos — will research touch? Confirm by

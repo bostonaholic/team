@@ -312,7 +312,9 @@ directory through a three-tier chain — explicit `$ARGUMENTS` →
 newest-mtime convention discovery (filtering by `ID_RE` / `PHASE_FILES`,
 ported from `hooks/session-start-recover.mjs` as a POSIX ERE
 translation, and the skill's required predecessor artifact) →
-`AskUserQuestion`. Standalone modes still exist: a partial skill invoked
+`AskUserQuestion` (called by the orchestrator/entry-point skill itself —
+not by a subagent; subagents use the `agent-open-questions` envelope
+protocol instead). Standalone modes still exist: a partial skill invoked
 with no resolvable directory (or with a free-form description) bootstraps
 the missing upstream artifacts inline rather than hard-erroring.
 
