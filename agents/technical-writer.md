@@ -1,6 +1,7 @@
 ---
 name: technical-writer
 description: Use after implementation to review whether project documentation needs updating. Reads the diff and compares against existing docs to identify gaps and stale content. Produces a structured report — does not rewrite docs itself. Example triggers — "check if docs need updating", "documentation review", "are the docs still accurate".
+color: cyan
 model: sonnet
 tools: Read, Grep, Glob, Bash
 permissionMode: plan

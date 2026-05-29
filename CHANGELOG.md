@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Agent display colors.** Every pipeline agent now declares a `color` in its frontmatter so the Claude Code UI distinguishes them in the task list and transcript. Colors are grouped by phase — cyan for intake and docs (`questioner`, `technical-writer`), blue for research (`file-finder`, `researcher`), purple for design and planning (`design-author`, `structure-planner`, `planner`), green for implementation (`test-architect`, `implementer`), and warm colors for the four parallel adversarial reviewers (`verifier` yellow, `code-reviewer` orange, `security-reviewer` red, `ux-reviewer` pink). No behavior change; the dev registry-sync hook continues to validate `name`/`model` alignment and ignores `color`.
+
 ## [0.3.0] - 2026-05-28
 
 ### Changed

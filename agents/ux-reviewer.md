@@ -1,6 +1,7 @@
 ---
 name: ux-reviewer
 description: Use when live application verification is needed after implementation. Boots the application, interacts with it as a user would, and evaluates the experience. For API-only projects, sends real HTTP requests. Example triggers — "verify the app works", "test the UI", "check the user experience", "smoke test the application".
+color: pink
 model: sonnet
 tools: Read, Grep, Glob, Bash
 permissionMode: plan

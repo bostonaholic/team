@@ -1,6 +1,7 @@
 ---
 name: file-finder
 description: Use when you need to locate files in a codebase relevant to a specific area. Maps conceptual goals to actual file locations even when exact names are unknown. Operates from questions.md only, never the original task description.
+color: blue
 model: haiku
 tools: Read, Grep, Glob
 permissionMode: plan
