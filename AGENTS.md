@@ -91,6 +91,10 @@ State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKE
 - **No `commands/` directory.** Skills are the only entry point mechanism. They auto-register as slash commands.
 - **No project-scoped memory.** Do not save memories to `~/.claude/projects/*/memory/`. All project knowledge belongs in this file or docs linked from here. This file is checked into git and travels with the project.
 
+## Behavioral Evals
+
+Behavioral regression harness for pipeline agents lives in `evals/`. See [evals/README.md](evals/README.md) for the gate / E2E / judge tiers and the cost-control opt-in (`PERIODIC=1`).
+
 ## Issue Tracking
 
 This project uses **bd (beads)**. Run `bd prime` for full workflow context and commands. After a fresh clone, run `bd hooks install` once to activate the git hooks that keep `.beads/issues.jsonl` in sync (the hook logic lives in `.beads/hooks/`; the `.git/hooks/` wrappers are local and not versioned).
