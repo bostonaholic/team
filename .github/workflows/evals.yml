@@ -48,7 +48,3 @@ jobs:
             if ! bash "$f"; then failures=$((failures + 1)); fi
           done
           exit $failures
-
-# TODO(follow-up): add a `report` job that downloads eval artifacts and
-# summarizes PASS/FAIL + cost into a single PR comment, upserting on rerun.
-# Deferred from slice 1 to keep the gate tier dependency-free.

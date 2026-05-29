@@ -23,29 +23,29 @@ fail() {
 GATE_DIR="$REPO_ROOT/evals/gate"
 
 # ---------------------------------------------------------------------------
-# T1: gate directory exists.
+# T0: precondition — gate directory exists.
 # ---------------------------------------------------------------------------
 if [ -d "$GATE_DIR" ]; then
-  pass "T1: evals/gate/ directory exists"
+  pass "T0: evals/gate/ directory exists"
 else
-  fail "T1: evals/gate/ directory exists (not found at $GATE_DIR)"
+  fail "T0: evals/gate/ directory exists (not found at $GATE_DIR)"
 fi
 
 # ---------------------------------------------------------------------------
-# T2: no file under evals/gate/ invokes the `claude` CLI.
+# T1: no file under evals/gate/ invokes the `claude` CLI.
 #     Word-boundary match avoids matching directory/file names that happen
 #     to contain "claude" (none in scope, but defensive).
 # ---------------------------------------------------------------------------
 if [ -d "$GATE_DIR" ]; then
   # If grep matches anything, that's a fail.
   if grep -rE '\bclaude\b' "$GATE_DIR" >/tmp/.evals-gate-claude-hits.$$ 2>/dev/null; then
-    fail "T2: no \`claude\` invocations under evals/gate/ (found: $(head -3 /tmp/.evals-gate-claude-hits.$$ | tr '\n' '|'))"
+    fail "T1: no \`claude\` invocations under evals/gate/ (found: $(head -3 /tmp/.evals-gate-claude-hits.$$ | tr '\n' '|'))"
   else
-    pass "T2: no \`claude\` invocations under evals/gate/"
+    pass "T1: no \`claude\` invocations under evals/gate/"
   fi
   rm -f "/tmp/.evals-gate-claude-hits.$$"
 else
-  fail "T2: no \`claude\` invocations under evals/gate/ (directory missing)"
+  fail "T1: no \`claude\` invocations under evals/gate/ (directory missing)"
 fi
 
 # ===========================================================================

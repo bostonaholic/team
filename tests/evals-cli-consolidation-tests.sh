@@ -23,6 +23,22 @@ fail() {
 }
 
 LIB_DIR="$REPO_ROOT/evals/lib"
+RUN_AGENT_MJS="$LIB_DIR/run-agent.mjs"
+JUDGE_MJS="$LIB_DIR/judge.mjs"
+
+# ---------------------------------------------------------------------------
+# T0a/T0b: preconditions — the modules whose contracts we assert exist.
+# ---------------------------------------------------------------------------
+if [ -f "$RUN_AGENT_MJS" ]; then
+  pass "T0a: evals/lib/run-agent.mjs exists"
+else
+  fail "T0a: evals/lib/run-agent.mjs exists"
+fi
+if [ -f "$JUDGE_MJS" ]; then
+  pass "T0b: evals/lib/judge.mjs exists"
+else
+  fail "T0b: evals/lib/judge.mjs exists"
+fi
 
 # ---------------------------------------------------------------------------
 # T1: exactly ONE `spawn("claude"` (or `spawn('claude'`) invocation across

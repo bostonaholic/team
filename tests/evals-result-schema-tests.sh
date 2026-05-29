@@ -25,6 +25,15 @@ ENTRY="$REPO_ROOT/evals/e2e/run.sh"
 RESULT_STORE="$REPO_ROOT/evals/lib/result-store.mjs"
 
 # ---------------------------------------------------------------------------
+# T0: precondition — result-store module exists.
+# ---------------------------------------------------------------------------
+if [ -f "$RESULT_STORE" ]; then
+  pass "T0: evals/lib/result-store.mjs exists"
+else
+  fail "T0: evals/lib/result-store.mjs exists (not found at $RESULT_STORE)"
+fi
+
+# ---------------------------------------------------------------------------
 # T1: SCHEMA_VERSION = 1 is pinned in the result-store module (constant in
 #     source, not runtime-only).
 # ---------------------------------------------------------------------------

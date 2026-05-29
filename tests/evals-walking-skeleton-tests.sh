@@ -26,6 +26,15 @@ fail() {
 ENTRY="$REPO_ROOT/evals/e2e/run.sh"
 
 # ---------------------------------------------------------------------------
+# T0: precondition — entry script exists.
+# ---------------------------------------------------------------------------
+if [ -f "$ENTRY" ]; then
+  pass "T0: evals/e2e/run.sh exists"
+else
+  fail "T0: evals/e2e/run.sh exists (not found at $ENTRY)"
+fi
+
+# ---------------------------------------------------------------------------
 # Workspace + mock outputs for a fully deterministic, offline run.
 # Mock agent output mentions the detection hint ("null deref") that the
 # seeded ground-truth uses, so the deterministic rubric criterion records a
@@ -59,16 +68,7 @@ RESULTS_DIR="$WORKDIR/results"
 mkdir -p "$RESULTS_DIR"
 
 # ---------------------------------------------------------------------------
-# T1: entry script exists and is executable
-# ---------------------------------------------------------------------------
-if [ -f "$ENTRY" ]; then
-  pass "T1: evals/e2e/run.sh exists"
-else
-  fail "T1: evals/e2e/run.sh exists (not found at $ENTRY)"
-fi
-
-# ---------------------------------------------------------------------------
-# T2: run completes deterministically without ANTHROPIC_API_KEY using mock
+# T1: run completes deterministically without ANTHROPIC_API_KEY using mock
 #     seams. Documented exit codes per structure.md slice 1: 0 = pass,
 #     non-zero = rubric failure. Either is accepted here; what we forbid is
 #     a crash before producing a result JSON.
@@ -84,28 +84,28 @@ ENTRY_EXIT=$?
 set -e
 
 if [ "$ENTRY_EXIT" -eq 0 ] || [ "$ENTRY_EXIT" -eq 2 ]; then
-  pass "T2: entry script exits 0 or documented non-zero (rubric-failure) code (got $ENTRY_EXIT)"
+  pass "T1: entry script exits 0 or documented non-zero (rubric-failure) code (got $ENTRY_EXIT)"
 else
-  fail "T2: entry script exits 0 or documented non-zero (got $ENTRY_EXIT, stderr: $(cat "$WORKDIR/stderr.log" 2>/dev/null | head -5 | tr '\n' '|'))"
+  fail "T1: entry script exits 0 or documented non-zero (got $ENTRY_EXIT, stderr: $(cat "$WORKDIR/stderr.log" 2>/dev/null | head -5 | tr '\n' '|'))"
 fi
 
 # ---------------------------------------------------------------------------
-# T3: a result JSON for the planted-null-deref case was written under
+# T2: a result JSON for the planted-null-deref case was written under
 #     EVALS_RESULTS_ROOT and parses as valid JSON.
 # ---------------------------------------------------------------------------
 RESULT_FILE=$(find "$RESULTS_DIR" -name '*.json' -not -name '_partial-*.json' 2>/dev/null | head -1)
 if [ -n "$RESULT_FILE" ] && [ -f "$RESULT_FILE" ]; then
   if node -e "JSON.parse(require('fs').readFileSync('$RESULT_FILE','utf8'))" >/dev/null 2>&1; then
-    pass "T3: a result JSON was written and parses"
+    pass "T2: a result JSON was written and parses"
   else
-    fail "T3: result JSON written but does not parse ($RESULT_FILE)"
+    fail "T2: result JSON written but does not parse ($RESULT_FILE)"
   fi
 else
-  fail "T3: a result JSON was written (no *.json found under $RESULTS_DIR)"
+  fail "T2: a result JSON was written (no *.json found under $RESULTS_DIR)"
 fi
 
 # ---------------------------------------------------------------------------
-# T4: result JSON names at least one rubric criterion BY NAME with a numeric
+# T3: result JSON names at least one rubric criterion BY NAME with a numeric
 #     score. Specific assertion: `criteria[]` is a non-empty array whose
 #     first entry has a string `name` and a numeric `score`.
 # ---------------------------------------------------------------------------
@@ -119,30 +119,28 @@ if [ -n "$RESULT_FILE" ] && [ -f "$RESULT_FILE" ]; then
     console.log('ok');
   " 2>/dev/null || echo "node-error")
   if [ "$CHECK" = "ok" ]; then
-    pass "T4: result JSON names >= 1 criterion with a numeric score"
+    pass "T3: result JSON names >= 1 criterion with a numeric score"
   else
-    fail "T4: result JSON names >= 1 criterion with a numeric score (check: $CHECK)"
+    fail "T3: result JSON names >= 1 criterion with a numeric score (check: $CHECK)"
   fi
 else
-  fail "T4: result JSON names >= 1 criterion with a numeric score (no result file)"
+  fail "T3: result JSON names >= 1 criterion with a numeric score (no result file)"
 fi
 
 # ---------------------------------------------------------------------------
-# T5: no ANTHROPIC_API_KEY was needed. The entry script must exist AND must
-#     not abort with a missing-key message when mocks are active. The
-#     "entry must exist" check prevents vacuous pass when the script is
-#     missing (stderr is "No such file" — no key error, trivially).
+# T4: no ANTHROPIC_API_KEY was needed. The entry script must not abort with
+#     a missing-key message when mocks are active. (T0 already proved the
+#     entry script exists, so a "No such file" stderr can't masquerade as a
+#     suppressed-error pass here.)
 # ---------------------------------------------------------------------------
-if [ ! -f "$ENTRY" ]; then
-  fail "T5: mock seams suppress the missing-ANTHROPIC_API_KEY abort path (entry script missing)"
-elif grep -qiE "ANTHROPIC_API_KEY.*(required|missing)" "$WORKDIR/stderr.log" 2>/dev/null; then
-  fail "T5: missing-key error must be suppressed when EVALS_MOCK_AGENT is set"
+if grep -qiE "ANTHROPIC_API_KEY.*(required|missing)" "$WORKDIR/stderr.log" 2>/dev/null; then
+  fail "T4: missing-key error must be suppressed when EVALS_MOCK_AGENT is set"
 else
-  pass "T5: mock seams suppress the missing-ANTHROPIC_API_KEY abort path"
+  pass "T4: mock seams suppress the missing-ANTHROPIC_API_KEY abort path"
 fi
 
 # ---------------------------------------------------------------------------
-# T6: misconfigured mock seam (`EVALS_MOCK_AGENT=1`) produces an actionable
+# T5: misconfigured mock seam (`EVALS_MOCK_AGENT=1`) produces an actionable
 #     error pointing at the offending env var. The prior implementation
 #     crashed with a bare ENOENT; the fix names the var explicitly.
 # ---------------------------------------------------------------------------
@@ -153,17 +151,17 @@ env -u ANTHROPIC_API_KEY \
   EVALS_RESULTS_ROOT="$WORKDIR/t6-results" \
   PERIODIC=1 \
   bash "$ENTRY" code-reviewer >"$WORKDIR/t6.out" 2>"$WORKDIR/t6.err"
-T6_EXIT=$?
+T5_EXIT=$?
 set -e
 
 # Search both stdout and stderr (the runner records agent errors in the
 # result JSON via stdout failure-block).
-T6_OUTPUT="$(cat "$WORKDIR/t6.out" "$WORKDIR/t6.err" 2>/dev/null)"
-if echo "$T6_OUTPUT" | grep -qE "EVALS_MOCK_AGENT" \
-  && echo "$T6_OUTPUT" | grep -qE "path|file"; then
-  pass "T6: misconfigured EVALS_MOCK_AGENT='1' produces an actionable error"
+T5_OUTPUT="$(cat "$WORKDIR/t6.out" "$WORKDIR/t6.err" 2>/dev/null)"
+if echo "$T5_OUTPUT" | grep -qE "EVALS_MOCK_AGENT" \
+  && echo "$T5_OUTPUT" | grep -qE "path|file"; then
+  pass "T5: misconfigured EVALS_MOCK_AGENT='1' produces an actionable error"
 else
-  fail "T6: misconfigured EVALS_MOCK_AGENT='1' must name the env var (output: $(echo "$T6_OUTPUT" | head -10 | tr '\n' '|' | head -c 360))"
+  fail "T5: misconfigured EVALS_MOCK_AGENT='1' must name the env var (output: $(echo "$T5_OUTPUT" | head -10 | tr '\n' '|' | head -c 360))"
 fi
 
 # ===========================================================================

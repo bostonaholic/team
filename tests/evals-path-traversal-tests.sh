@@ -23,6 +23,27 @@ fail() {
 
 ENTRY="$REPO_ROOT/evals/e2e/run.sh"
 SELECT="$REPO_ROOT/evals/lib/select.mjs"
+GC="$REPO_ROOT/evals/e2e/gc.sh"
+
+# ---------------------------------------------------------------------------
+# T0a/T0b/T0c: preconditions — the entry points whose path-confinement
+# guards we assert exist.
+# ---------------------------------------------------------------------------
+if [ -f "$ENTRY" ]; then
+  pass "T0a: evals/e2e/run.sh exists"
+else
+  fail "T0a: evals/e2e/run.sh exists (not found at $ENTRY)"
+fi
+if [ -f "$SELECT" ]; then
+  pass "T0b: evals/lib/select.mjs exists"
+else
+  fail "T0b: evals/lib/select.mjs exists (not found at $SELECT)"
+fi
+if [ -f "$GC" ]; then
+  pass "T0c: evals/e2e/gc.sh exists"
+else
+  fail "T0c: evals/e2e/gc.sh exists (not found at $GC)"
+fi
 
 WORKDIR=$(mktemp -d)
 trap 'rm -rf "$WORKDIR"' EXIT

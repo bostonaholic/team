@@ -23,6 +23,15 @@ fail() {
 ENTRY="$REPO_ROOT/evals/e2e/run.sh"
 
 # ---------------------------------------------------------------------------
+# T0: precondition — E2E entry script exists.
+# ---------------------------------------------------------------------------
+if [ -f "$ENTRY" ]; then
+  pass "T0: evals/e2e/run.sh exists"
+else
+  fail "T0: evals/e2e/run.sh exists (not found at $ENTRY)"
+fi
+
+# ---------------------------------------------------------------------------
 # Workspace: one fixture, sleeping mock agent, valid rubric and ground-truth.
 # ---------------------------------------------------------------------------
 WORKDIR=$(mktemp -d)

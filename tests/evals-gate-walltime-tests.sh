@@ -24,25 +24,25 @@ GATE="$REPO_ROOT/evals/gate/run.sh"
 FIXTURES="$REPO_ROOT/evals/fixtures"
 
 # ---------------------------------------------------------------------------
-# T1: gate entry script exists.
+# T0a: precondition — gate entry script exists.
 # ---------------------------------------------------------------------------
 if [ -f "$GATE" ]; then
-  pass "T1: evals/gate/run.sh exists"
+  pass "T0a: evals/gate/run.sh exists"
 else
-  fail "T1: evals/gate/run.sh exists (not found at $GATE)"
+  fail "T0a: evals/gate/run.sh exists (not found at $GATE)"
 fi
 
 # ---------------------------------------------------------------------------
-# T2: fixtures directory exists (gate must have something to check).
+# T0b: precondition — fixtures directory exists (gate must have something to check).
 # ---------------------------------------------------------------------------
 if [ -d "$FIXTURES" ]; then
-  pass "T2: evals/fixtures/ directory exists"
+  pass "T0b: evals/fixtures/ directory exists"
 else
-  fail "T2: evals/fixtures/ directory exists (not found at $FIXTURES)"
+  fail "T0b: evals/fixtures/ directory exists (not found at $FIXTURES)"
 fi
 
 # ---------------------------------------------------------------------------
-# T3: gate completes in < 5 seconds on the real fixture directory and exits
+# T1: gate completes in < 5 seconds on the real fixture directory and exits
 #     0 (no key needed; gate runs free).
 # ---------------------------------------------------------------------------
 if [ -f "$GATE" ] && [ -d "$FIXTURES" ]; then
@@ -55,15 +55,15 @@ if [ -f "$GATE" ] && [ -d "$FIXTURES" ]; then
   ELAPSED=$((END - START))
 
   if [ "$EXIT_CODE" -ne 0 ]; then
-    fail "T3: gate exits 0 on real fixtures (got $EXIT_CODE, output: $(head -3 "/tmp/.evals-gate-walltime.$$.log" | tr '\n' '|'))"
+    fail "T1: gate exits 0 on real fixtures (got $EXIT_CODE, output: $(head -3 "/tmp/.evals-gate-walltime.$$.log" | tr '\n' '|'))"
   elif [ "$ELAPSED" -ge 5 ]; then
-    fail "T3: gate runs in <5s on real fixtures (took ${ELAPSED}s)"
+    fail "T1: gate runs in <5s on real fixtures (took ${ELAPSED}s)"
   else
-    pass "T3: gate runs in <5s on real fixtures (took ${ELAPSED}s)"
+    pass "T1: gate runs in <5s on real fixtures (took ${ELAPSED}s)"
   fi
   rm -f "/tmp/.evals-gate-walltime.$$.log"
 else
-  fail "T3: gate runs in <5s on real fixtures (gate or fixtures missing)"
+  fail "T1: gate runs in <5s on real fixtures (gate or fixtures missing)"
 fi
 
 # ===========================================================================
