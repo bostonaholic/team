@@ -11,7 +11,7 @@ import {
   findBudgetRegressions,
   generateCommentary,
   type EvalResult,
-} from "../test/helpers/eval-store";
+} from "../tests/helpers/eval-store";
 
 function usage(): never {
   process.stderr.write("usage: bun run eval:compare <prev.json> <curr.json>\n");

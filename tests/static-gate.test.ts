@@ -1,4 +1,4 @@
-// test/static-gate.test.ts
+// tests/static-gate.test.ts
 //
 // Gate tier: structural validation of every fixture and rubric on disk.
 // Free, deterministic, no model calls. Replaces the bash gate from the

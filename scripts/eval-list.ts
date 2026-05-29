@@ -7,7 +7,7 @@ import {
   E2E_TIERS,
   E2E_TOUCHFILES,
   LLM_JUDGE_TOUCHFILES,
-} from "../test/helpers/touchfiles";
+} from "../tests/helpers/touchfiles";
 
 function dump(label: string, map: Record<string, string[]>, tiers?: Record<string, string>): void {
   process.stdout.write(`${label}:\n`);

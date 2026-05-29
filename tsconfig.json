@@ -14,6 +14,6 @@
     "lib": ["ES2022"],
     "resolveJsonModule": true
   },
-  "include": ["test/**/*.ts", "scripts/**/*.ts"],
+  "include": ["tests/**/*.ts", "scripts/**/*.ts"],
   "exclude": ["node_modules", "evals/lib/**", "evals/results/**"]
 }

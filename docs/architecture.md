@@ -397,7 +397,7 @@ to canon, and the research-isolation invariant holds.
 
 The behavioral regression harness defends pipeline agents against silent
 behavior drift across model upgrades. The implementation is TypeScript +
-Bun: harness code in `test/`, fixtures/rubrics/results in `evals/`.
+Bun: harness code in `tests/`, fixtures/rubrics/results in `evals/`.
 Plugin-developer tooling — not distributed with the plugin. Three tiers:
 
 - **Gate** (free) — `bun test`. Static schema validation on every

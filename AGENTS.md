@@ -24,7 +24,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 | Dev acceptance scripts | `.claude/scripts/` | Plugin developers |
 | Dev settings/hooks | `.claude/settings.json` | Plugin developers |
 | Issue tracking | `.beads/` | Plugin developers |
-| Behavioral regression harness | `test/`, `evals/` | Plugin developers |
+| Behavioral regression harness | `tests/`, `evals/` | Plugin developers |
 
 **Rule of thumb:** If it validates that the plugin is *built correctly*, it's a dev concern (`.claude/`). If it runs *as part of the plugin's functionality*, it's runtime (`hooks/`).
 
@@ -94,7 +94,7 @@ State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKE
 
 ## Behavioral Evals
 
-Behavioral regression harness for pipeline agents — TypeScript + Bun. Harness code lives in `test/`; fixtures, rubrics, and stored runs live in `evals/`. `bun test` runs the free static gate; `EVALS=1 bun test` runs the paid E2E + LLM-judge tiers. See [evals/README.md](evals/README.md).
+Behavioral regression harness for pipeline agents — TypeScript + Bun. Harness code lives in `tests/`; fixtures, rubrics, and stored runs live in `evals/`. `bun test` runs the free static gate; `EVALS=1 bun test` runs the paid E2E + LLM-judge tiers. See [evals/README.md](evals/README.md).
 
 ## Issue Tracking
 

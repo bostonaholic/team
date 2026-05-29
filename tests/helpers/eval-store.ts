@@ -1,4 +1,4 @@
-// test/helpers/eval-store.ts
+// tests/helpers/eval-store.ts
 //
 // Persist eval results to disk and compare against the previous run on the
 // same branch+tier. Storage path is in-repo at evals/results/ so CI uploads

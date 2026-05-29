@@ -1,4 +1,4 @@
-// test/helpers/fixtures.ts
+// tests/helpers/fixtures.ts
 //
 // Loaders for the on-disk fixture artifacts under evals/fixtures/<agent>/<case>/.
 

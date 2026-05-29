@@ -12,7 +12,7 @@ import {
   filterByTier,
   getChangedFiles,
   selectTests,
-} from "../test/helpers/touchfiles";
+} from "../tests/helpers/touchfiles";
 
 const base = detectBaseBranch();
 const changed = getChangedFiles(base);

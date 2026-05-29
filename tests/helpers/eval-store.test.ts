@@ -1,4 +1,4 @@
-// test/helpers/eval-store.test.ts
+// tests/helpers/eval-store.test.ts
 //
 // Unit tests for the persistence + comparison layer. All offline; $0.
 

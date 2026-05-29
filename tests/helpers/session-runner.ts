@@ -1,4 +1,4 @@
-// test/helpers/session-runner.ts
+// tests/helpers/session-runner.ts
 //
 // Spawn `claude -p` as a subprocess, stream its NDJSON output, and return a
 // structured SkillTestResult. Single point of CLI drift; everywhere else in

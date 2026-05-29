@@ -1,4 +1,4 @@
-// test/helpers/llm-judge.ts
+// tests/helpers/llm-judge.ts
 //
 // Rubric-based LLM judging. Two patterns:
 //   1. Deterministic-first: cheap regex / structural checks gate the LLM

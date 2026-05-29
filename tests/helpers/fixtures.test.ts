@@ -1,4 +1,4 @@
-// test/helpers/fixtures.test.ts
+// tests/helpers/fixtures.test.ts
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";

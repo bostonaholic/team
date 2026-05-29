@@ -1,12 +1,12 @@
 # Behavioral evals for pipeline agents
 
 This directory ships fixtures, rubrics, and stored results for the behavioral
-regression harness. The harness code lives in `test/` and runs under `bun test`.
+regression harness. The harness code lives in `tests/` and runs under `bun test`.
 
 ## Layout
 
 ```
-test/
+tests/
   helpers/
     session-runner.ts   # spawns `claude -p`, streams NDJSON, parses transcript
     eval-store.ts       # persist + compare + budget-regression detection
@@ -44,12 +44,12 @@ Bun's default test discovery matches `*.test.{ts,tsx,js,jsx}`. Files named
 never loads them — no skipped tests in the output, no surprise model calls.
 The paid suite runs only when an explicit path is passed:
 
-- `bun run test:periodic` — runs every `./test/*.evals.ts`, sets `EVALS_TIER=periodic` + `EVALS_ALL=1`
-- `bun test ./test/code-reviewer.evals.ts` — ad-hoc single file (needs `ANTHROPIC_API_KEY`)
+- `bun run test:periodic` — runs every `./tests/*.evals.ts`, sets `EVALS_TIER=periodic` + `EVALS_ALL=1`
+- `bun test ./tests/code-reviewer.evals.ts` — ad-hoc single file (needs `ANTHROPIC_API_KEY`)
 
-> **Path must be `./`-prefixed.** Bun treats a bare `test/foo.evals.ts`
+> **Path must be `./`-prefixed.** Bun treats a bare `tests/foo.evals.ts`
 > argument as a *name filter* (matches nothing here), not a path. Always
-> pass `./test/…`.
+> pass `./tests/…`.
 
 Within a paid file, each test is registered through `testIfSelected`, which
 consults the selector: `EVALS_TIER` and diff-based selection decide whether
@@ -125,7 +125,7 @@ agent: code-reviewer
 is only invoked when an `llm` criterion is present and the structural gates
 have passed. Haiku for narrow rubrics; Sonnet for nuanced ones.
 
-Both tiers run in the live eval. `test/code-reviewer.evals.ts` calls
+Both tiers run in the live eval. `tests/code-reviewer.evals.ts` calls
 `outcomeJudge` (deterministic planted-bug detection) **and**
 `judgeReviewerOutput` (LLM reasoning-quality score), and passes only when
 the bug is detected *and* `reason_substance >= 3`. Mentioning the hint in
@@ -160,7 +160,7 @@ When an eval fails on your branch, rerun on the base before blaming the
 branch:
 
 ```
-git checkout origin/main && bun test ./test/code-reviewer.evals.ts
+git checkout origin/main && bun test ./tests/code-reviewer.evals.ts
 ```
 
 If it fails there too, the regression predates your change.
@@ -170,12 +170,12 @@ If it fails there too, the regression predates your change.
 1. Write `evals/fixtures/<agent>/<case>/input.md` and `ground-truth.json`.
 2. Write `evals/rubrics/<agent>.md`.
 3. Add an entry to `E2E_TOUCHFILES` and `E2E_TIERS` in
-   `test/helpers/touchfiles.ts`.
-4. Write `test/<agent>.evals.ts` mirroring `test/code-reviewer.evals.ts`.
+   `tests/helpers/touchfiles.ts`.
+4. Write `tests/<agent>.evals.ts` mirroring `tests/code-reviewer.evals.ts`.
    Use the `.evals.ts` suffix (not `.test.ts`) so `bun test` doesn't pick it
    up, and register the test through `testIfSelected(name, ...)` so tier /
    diff selection applies.
 5. `bun test` — verify the gate validates the new schemas.
-6. `bun test ./test/<agent>.evals.ts` — run end-to-end (needs `ANTHROPIC_API_KEY`).
+6. `bun test ./tests/<agent>.evals.ts` — run end-to-end (needs `ANTHROPIC_API_KEY`).
 
 Run `bun run eval:list` to see the registered tests and their tiers.

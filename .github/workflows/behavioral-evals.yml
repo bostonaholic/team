@@ -29,9 +29,9 @@ jobs:
       fail-fast: false
       matrix:
         suite:
-          # File path MUST be `./`-prefixed: bun treats a bare `test/...`
+          # File path MUST be `./`-prefixed: bun treats a bare `tests/...`
           # arg as a name filter (matches nothing), not a path.
-          - { name: code-reviewer, file: ./test/code-reviewer.evals.ts }
+          - { name: code-reviewer, file: ./tests/code-reviewer.evals.ts }
     steps:
       - uses: actions/checkout@v6
         with:

@@ -1,4 +1,4 @@
-// test/helpers/session-runner.test.ts
+// tests/helpers/session-runner.test.ts
 //
 // Unit tests for the pure helpers extracted from session-runner. These run
 // under `bun test` with no env vars and no subprocess; they cost $0.

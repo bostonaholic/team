@@ -1,4 +1,4 @@
-// test/helpers/touchfiles.ts
+// tests/helpers/touchfiles.ts
 //
 // Diff-based test selection. Maps test names to file globs; intersects
 // against `git diff` to decide which tests need to run.

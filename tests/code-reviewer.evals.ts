@@ -1,4 +1,4 @@
-// test/code-reviewer.evals.ts
+// tests/code-reviewer.evals.ts
 //
 // End-to-end eval for the code-reviewer agent. Paid tier — spawns a real
 // `claude -p` subprocess and scores its output with the LLM judge.

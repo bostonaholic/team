@@ -1,4 +1,4 @@
-// test/helpers/touchfiles.test.ts
+// tests/helpers/touchfiles.test.ts
 
 import { afterEach, describe, expect, test } from "bun:test";
 

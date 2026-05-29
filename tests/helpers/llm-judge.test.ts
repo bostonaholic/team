@@ -1,4 +1,4 @@
-// test/helpers/llm-judge.test.ts
+// tests/helpers/llm-judge.test.ts
 //
 // Tests for the deterministic-first paths and the JSON extractor. No real
 // SDK calls — judges-that-call-LLMs aren't exercised here. Run free.

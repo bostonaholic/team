@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "bun test",
-    "test:periodic": "EVALS=1 EVALS_ALL=1 EVALS_TIER=periodic bun test --concurrent --max-concurrency 15 ./test/*.evals.ts",
+    "test:periodic": "EVALS=1 EVALS_ALL=1 EVALS_TIER=periodic bun test --concurrent --max-concurrency 15 ./tests/*.evals.ts",
     "eval:select": "bun run scripts/eval-select.ts",
     "eval:list": "bun run scripts/eval-list.ts",
     "eval:compare": "bun run scripts/eval-compare.ts"
