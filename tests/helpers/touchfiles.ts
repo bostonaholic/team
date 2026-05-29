@@ -18,11 +18,11 @@ export const LLM_JUDGE_TOUCHFILES: Record<string, string[]> = {
 };
 
 export const GLOBAL_TOUCHFILES: string[] = [
-  "test/helpers/session-runner.ts",
-  "test/helpers/eval-store.ts",
-  "test/helpers/touchfiles.ts",
-  "test/helpers/llm-judge.ts",
-  "test/helpers/fixtures.ts",
+  "tests/helpers/session-runner.ts",
+  "tests/helpers/eval-store.ts",
+  "tests/helpers/touchfiles.ts",
+  "tests/helpers/llm-judge.ts",
+  "tests/helpers/fixtures.ts",
 ];
 
 export const E2E_TIERS: Record<string, "gate" | "periodic"> = {

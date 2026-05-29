@@ -14,7 +14,7 @@ const TOUCHFILES: Record<string, string[]> = {
   "beta": ["src/beta.ts", "src/shared/*.ts"],
 };
 
-const GLOBALS = ["test/helpers/touchfiles.ts"];
+const GLOBALS = ["tests/helpers/touchfiles.ts"];
 
 afterEach(() => {
   delete process.env.EVALS_ALL;
@@ -58,7 +58,7 @@ describe("selectTests", () => {
   });
 
   test("global touchfile change triggers full run", () => {
-    const sel = selectTests(["test/helpers/touchfiles.ts"], TOUCHFILES, GLOBALS);
+    const sel = selectTests(["tests/helpers/touchfiles.ts"], TOUCHFILES, GLOBALS);
     expect([...sel.selected].sort()).toEqual(["alpha", "beta"]);
     expect(sel.reason).toBe("global touchfile changed");
   });
