@@ -1,0 +1,61 @@
+# Evals (periodic) — weekly E2E + judge tier.
+#
+# Cost-bearing tier: invokes `claude -p` against fixtures under
+# evals/fixtures/<agent>/<case>/, then hands output to the judge.
+# Requires ANTHROPIC_API_KEY (stored as a repo secret) and runs only on
+# the weekly cron or via manual workflow_dispatch.
+#
+# Matches gstack's cron cadence (Monday 06:00 UTC) so all repos share
+# the same regression cycle. Gate tier (offline) lives in evals.yml.
+name: Evals (periodic)
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Monday 06:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: evals-periodic
+  cancel-in-progress: true
+
+jobs:
+  periodic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30  # matches EVALS_WALLCLOCK_CAP default (1800s)
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        # Add new agents under behavioral coverage by appending here.
+        # Each entry runs as an independent matrix leg so a flaky agent
+        # does not mask regressions in another.
+        agent: [code-reviewer]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run E2E + judge for ${{ matrix.agent }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Route matrix value through env (not direct ${{ }} expansion
+          # into the run: shell) so the pattern stays correct as the
+          # matrix grows — even though matrix values are author-controlled.
+          AGENT: ${{ matrix.agent }}
+        # PERIODIC=1 is the cost-control opt-in (refuses to call the
+        # model otherwise). ALL=1 ignores diff-based selection so the
+        # weekly run exercises every fixture for the agent.
+        run: PERIODIC=1 ALL=1 bash evals/e2e/run.sh "$AGENT"
+
+      - name: Upload eval results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-periodic-${{ matrix.agent }}-${{ github.run_id }}
+          path: evals/results/
+          retention-days: 90

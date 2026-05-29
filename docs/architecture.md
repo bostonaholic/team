@@ -413,6 +413,13 @@ Periodic (cost-bearing) tiers are off by default; opt in with
 schema, rubric format, env-var knobs, and the rerun-on-base blame
 protocol.
 
+**CI wiring.** Two GitHub Actions workflows live in `.github/workflows/`:
+`evals.yml` runs the gate tier on every PR (offline, no secrets), and
+`evals-periodic.yml` runs the E2E + judge tier on a weekly cron
+(Monday 06:00 UTC) with `ANTHROPIC_API_KEY` from repo secrets. See
+[evals/README.md](../evals/README.md#ci-integration) for the trigger
+and extension contract.
+
 ## 9. State Management
 
 **Primary state:** the artifacts in `docs/plans/<id>/*.md`. Each

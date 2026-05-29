@@ -251,6 +251,19 @@ Set `EVALS_TEST_MODE=1` to enable test-only side effects (currently:
 
 ## CI integration
 
-Deferred. A `bd` follow-up ticket tracks the GitHub Actions integration.
-Until that lands, run the gate locally on every save and the periodic
-tier on demand before bumping the underlying model.
+Two GitHub Actions workflows under `.github/workflows/`:
+
+- **`evals.yml`** (`Evals (gate)`) — runs on every PR to `main` and on
+  `workflow_dispatch`. Executes `bash evals/gate/run.sh` (offline,
+  structural) and the 18 `tests/evals-*-tests.sh` acceptance scripts.
+  No secrets required.
+- **`evals-periodic.yml`** (`Evals (periodic)`) — runs weekly (Monday
+  06:00 UTC) and on `workflow_dispatch`. Runs the E2E + judge tier for
+  each agent listed in the workflow's `matrix.agent`. Requires the
+  `ANTHROPIC_API_KEY` repo secret. Uploads `evals/results/` as an
+  artifact with a 90-day retention.
+
+Trigger either workflow on demand from the GitHub UI ("Run workflow")
+or via `gh workflow run evals.yml` / `gh workflow run evals-periodic.yml`.
+Add new agents to the periodic matrix by appending to the `agent:` list
+in `evals-periodic.yml`.
