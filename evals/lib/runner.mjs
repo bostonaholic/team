@@ -156,9 +156,59 @@ export async function main(argv) {
     }
   }
 
-  // Pre-flight: ANTHROPIC_API_KEY check (mock seams suppress it).
   const mockingAgent = !!process.env.EVALS_MOCK_AGENT;
-  const mockingJudge = !!process.env.EVALS_MOCK_JUDGE;
+
+  // Diff-based selection (no <agent> arg path); if EVALS_FAKE_CHANGED_FILES
+  // is set, the selector uses it directly. Lazy-import so slice 1 doesn't
+  // need the selector module on disk. The empty-match exit happens BEFORE
+  // the PERIODIC/key preflight: there's nothing to spend money on.
+  let casesToRun;
+  if (!agentName) {
+    const { getChangedFiles, selectCases } = await import("./select.mjs");
+    let changed;
+    if (process.env.EVALS_FAKE_CHANGED_FILES !== undefined) {
+      changed = process.env.EVALS_FAKE_CHANGED_FILES
+        .split(",")
+        .filter(Boolean);
+    } else {
+      changed = getChangedFiles({});
+      if (changed === null) {
+        process.stderr.write(
+          "warning: git diff failed (shallow clone / detached HEAD); falling back to running all cases\n",
+        );
+      }
+    }
+    const all = process.env.ALL === "1";
+    let selected;
+    try {
+      selected = selectCases({
+        fixtureRoot: fixtureRoot(),
+        changedFiles: changed,
+        all,
+      });
+    } catch (err) {
+      if (err.code === "EMALFORMED_DEPS") {
+        process.stderr.write(`selector: ${err.message}\n`);
+        return 1;
+      }
+      throw err;
+    }
+    if (selected.length === 0) {
+      process.stdout.write(
+        "no matching evals; use `ALL=1` to force a full run.\n",
+      );
+      return 0;
+    }
+    casesToRun = selected;
+  } else {
+    // Single-agent path: enumerate that agent's cases.
+    casesToRun = listFixtures(agentName).map((c) => ({
+      ...c,
+      agent: agentName,
+    }));
+  }
+
+  // Pre-flight: ANTHROPIC_API_KEY check (mock seams suppress it).
   if (!mockingAgent && !process.env.ANTHROPIC_API_KEY) {
     process.stderr.write(
       "ANTHROPIC_API_KEY is required to invoke the model (mock seam not set).\n",
@@ -172,35 +222,7 @@ export async function main(argv) {
     return 3;
   }
 
-  // Diff-based selection (no <agent> arg path); if EVALS_FAKE_CHANGED_FILES
-  // is set, the selector uses it directly. Lazy-import so slice 1 doesn't
-  // need the selector module on disk.
-  if (!agentName) {
-    const { getChangedFiles, selectCases } = await import("./select.mjs");
-    const changed = process.env.EVALS_FAKE_CHANGED_FILES
-      ? process.env.EVALS_FAKE_CHANGED_FILES.split(",").filter(Boolean)
-      : getChangedFiles({});
-    const all = process.env.ALL === "1";
-    const selected = await selectCases({
-      fixtureRoot: fixtureRoot(),
-      changedFiles: changed,
-      all,
-    });
-    if (selected.length === 0) {
-      process.stdout.write(
-        "no matching evals; use `ALL=1` to force a full run.\n",
-      );
-      return 0;
-    }
-    return await runSelectedCases(selected, { resumeRunId });
-  }
-
-  // Single-agent path: enumerate that agent's cases.
-  const cases = listFixtures(agentName).map((c) => ({
-    ...c,
-    agent: agentName,
-  }));
-  return await runSelectedCases(cases, { resumeRunId });
+  return await runSelectedCases(casesToRun, { resumeRunId });
 }
 
 async function runSelectedCases(cases, { resumeRunId }) {
