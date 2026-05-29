@@ -9,6 +9,7 @@ import { join } from "node:path";
 
 import {
   EvalCollector,
+  assertNoBudgetRegressions,
   buildResultFilename,
   compareEvalResults,
   extractToolCounts,
@@ -27,6 +28,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   rmSync(scratchDir, { recursive: true, force: true });
+  delete process.env.EVALS_BRANCH;
 });
 
 function mockTranscript(toolUseCount: number): unknown[] {
@@ -108,6 +110,48 @@ describe("EvalCollector", () => {
     const mid = JSON.parse(readFileSync(join(scratchDir, path), "utf8")) as EvalResult;
     expect(mid.total_tests).toBe(1);
     expect(mid.passed).toBe(1);
+  });
+
+  test("finalize populates budgetRegressions vs the previous run", async () => {
+    process.env.EVALS_BRANCH = "budget-branch";
+    // Seed a previous run with a low tool-call count.
+    const prev: EvalResult = {
+      schema_version: SCHEMA_VERSION,
+      version: "0.0.0",
+      branch: "budget-branch",
+      git_sha: "x",
+      timestamp: "2026-01-01T00:00:00.000Z",
+      hostname: "h",
+      tier: "e2e",
+      total_tests: 1,
+      passed: 1,
+      failed: 0,
+      total_cost_usd: 0.01,
+      total_duration_ms: 100,
+      tests: [entry("efficient-case", { transcript: mockTranscript(4) })],
+    };
+    writeFileSync(
+      join(scratchDir, "0.0.0-budget-branch-e2e-2026-01-01T00-00-00.000Z.json"),
+      JSON.stringify(prev),
+      "utf8",
+    );
+
+    // Current run does the same work in 3× the tool calls.
+    const c = new EvalCollector("e2e", scratchDir);
+    c.addTest(entry("efficient-case", { transcript: mockTranscript(13) }));
+    await c.finalize();
+
+    expect(c.budgetRegressions.length).toBe(1);
+    expect(c.budgetRegressions[0]?.name).toBe("efficient-case");
+    expect(() => assertNoBudgetRegressions(c)).toThrow(/budget regression/);
+  });
+
+  test("assertNoBudgetRegressions is a no-op with no prior run", async () => {
+    const c = new EvalCollector("e2e", scratchDir);
+    c.addTest(entry("only-run", { transcript: mockTranscript(9) }));
+    await c.finalize();
+    expect(c.budgetRegressions.length).toBe(0);
+    expect(() => assertNoBudgetRegressions(c)).not.toThrow();
   });
 });
 

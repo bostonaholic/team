@@ -79,4 +79,26 @@ describe("loadFixture", () => {
     );
     expect(() => loadFixture("code-reviewer", "no-min", root)).toThrow(/minimum_detection/);
   });
+
+  test("rejects fixture missing the deps field entirely", () => {
+    writeCase(
+      "code-reviewer",
+      "no-deps",
+      "---\nagent: code-reviewer\ntier: periodic\n---\n",
+      { bugs: [{ id: "x", description: "y", detection_hint: "z" }], minimum_detection: 1 },
+    );
+    expect(() => loadFixture("code-reviewer", "no-deps", root)).toThrow(/deps/);
+  });
+
+  test("rejects fixture with an empty deps list", () => {
+    // `deps:` present but no list items — diff selection would never match,
+    // silently skipping the fixture. Must fail loudly.
+    writeCase(
+      "code-reviewer",
+      "empty-deps",
+      "---\nagent: code-reviewer\ntier: periodic\ndeps:\n---\n",
+      { bugs: [{ id: "x", description: "y", detection_hint: "z" }], minimum_detection: 1 },
+    );
+    expect(() => loadFixture("code-reviewer", "empty-deps", root)).toThrow(/deps/);
+  });
 });

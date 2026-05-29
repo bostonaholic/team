@@ -4,6 +4,7 @@
 // against `git diff` to decide which tests need to run.
 
 import { execFileSync } from "node:child_process";
+import { test } from "bun:test";
 
 export const E2E_TOUCHFILES: Record<string, string[]> = {
   "planted-null-deref": [
@@ -211,4 +212,22 @@ export function getSelectedE2ETests(): Set<string> {
 // Re-export for testing.
 export function _resetMemoForTests(): void {
   _selectedE2E = null;
+}
+
+// ---------------------------------------------------------------------------
+// testIfSelected — bun-test wrapper that consults the selector. A paid eval
+// file calls this instead of `test(...)` directly so that EVALS_TIER and
+// diff-based selection actually gate execution. When the named test is not
+// in the selected set, it is registered as `test.skip` (visible, but not
+// run — and not billed). EVALS_ALL=1 selects everything.
+// ---------------------------------------------------------------------------
+
+export function testIfSelected(
+  name: string,
+  fn: () => void | Promise<void>,
+  timeoutMs?: number,
+): void {
+  const runner = getSelectedE2ETests().has(name) ? test : test.skip;
+  if (timeoutMs === undefined) runner(name, fn);
+  else runner(name, fn, timeoutMs);
 }

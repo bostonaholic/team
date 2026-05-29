@@ -47,6 +47,7 @@ function parseFrontmatter(text: string): { frontmatter: FixtureFrontmatter; body
   let agent: string | null = null;
   let tier: string | null = null;
   const deps: string[] = [];
+  let depsSeen = false;
   let inDeps = false;
 
   for (const raw of lines) {
@@ -66,6 +67,7 @@ function parseFrontmatter(text: string): { frontmatter: FixtureFrontmatter; body
     }
     const depsMatch = /^deps:\s*(.*)$/.exec(line);
     if (depsMatch) {
+      depsSeen = true;
       const trailing = depsMatch[1]?.trim() ?? "";
       if (trailing === "") inDeps = true;
       else throw new Error("fixture: deps must be a YAML list");
@@ -81,6 +83,14 @@ function parseFrontmatter(text: string): { frontmatter: FixtureFrontmatter; body
   if (tier === null) throw new Error("fixture: missing required field: tier");
   if (!(TIERS as readonly string[]).includes(tier)) {
     throw new Error(`fixture: tier must be one of ${TIERS.join("|")}; got '${tier}'`);
+  }
+  // `deps` is load-bearing for diff-based selection: a fixture with no deps
+  // would never match a changed file and would be silently skipped unless
+  // EVALS_ALL=1. Require the field to be present and non-empty so that
+  // omission fails loudly at load time rather than vanishing from runs.
+  if (!depsSeen) throw new Error("fixture: missing required field: deps");
+  if (deps.length === 0) {
+    throw new Error("fixture: deps must list at least one glob (got empty list)");
   }
   return {
     frontmatter: { agent, tier: tier as Tier, deps },

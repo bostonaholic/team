@@ -142,6 +142,12 @@ export class EvalCollector {
   private result: EvalResult;
   private finalized = false;
 
+  /** Budget regressions detected against the previous run, populated by
+   *  finalize(). Empty until finalize() runs (and stays empty when there
+   *  is no prior run to compare against). Callers fail CI on a non-empty
+   *  array — see `assertNoBudgetRegressions`. */
+  budgetRegressions: BudgetRegression[] = [];
+
   constructor(tier: Tier, evalDir: string = defaultEvalDir()) {
     this.tier = tier;
     this.evalDir = evalDir;
@@ -196,15 +202,17 @@ export class EvalCollector {
     if (previous !== null) {
       const cmp = compareEvalResults(previous.result, this.result);
       const commentary = generateCommentary(cmp);
-      const regressions = findBudgetRegressions(cmp);
+      this.budgetRegressions = findBudgetRegressions(cmp);
       process.stderr.write(
         `\n=== eval comparison: ${previous.filename} -> ${pathBasename(this.path)} ===\n`,
       );
       process.stderr.write(commentary + "\n");
-      if (regressions.length > 0) {
+      if (this.budgetRegressions.length > 0) {
         process.stderr.write(
-          "BUDGET REGRESSIONS (treat as failure):\n" +
-            regressions.map((r) => `  - ${r.name}: ${r.reason}`).join("\n") +
+          "BUDGET REGRESSIONS (fails the run):\n" +
+            this.budgetRegressions
+              .map((r) => `  - ${r.name}: ${r.reason}`)
+              .join("\n") +
             "\n",
         );
       }
@@ -221,6 +229,18 @@ export class EvalCollector {
 function pathBasename(p: string): string {
   const parts = p.split("/");
   return parts[parts.length - 1] ?? p;
+}
+
+/** Throw if the collector recorded budget regressions during finalize().
+ *  Call this from an eval file's afterAll so a ≥2× efficiency regression
+ *  fails the run (and therefore CI), not just prints to stderr. No-op when
+ *  there was no prior run to compare against. */
+export function assertNoBudgetRegressions(collector: EvalCollector): void {
+  const regressions = collector.budgetRegressions;
+  if (regressions.length > 0) {
+    const detail = regressions.map((r) => `  - ${r.name}: ${r.reason}`).join("\n");
+    throw new Error(`budget regression(s) detected:\n${detail}`);
+  }
 }
 
 // ---------------------------------------------------------------------------

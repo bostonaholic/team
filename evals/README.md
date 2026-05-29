@@ -44,8 +44,16 @@ Bun's default test discovery matches `*.test.{ts,tsx,js,jsx}`. Files named
 never loads them — no skipped tests in the output, no surprise model calls.
 The paid suite runs only when an explicit path is passed:
 
-- `bun run test:periodic` — runs every `test/*.evals.ts`, sets `EVALS_TIER=periodic` + `EVALS_ALL=1`
-- `bun test test/code-reviewer.evals.ts` — ad-hoc single file (needs `ANTHROPIC_API_KEY`)
+- `bun run test:periodic` — runs every `./test/*.evals.ts`, sets `EVALS_TIER=periodic` + `EVALS_ALL=1`
+- `bun test ./test/code-reviewer.evals.ts` — ad-hoc single file (needs `ANTHROPIC_API_KEY`)
+
+> **Path must be `./`-prefixed.** Bun treats a bare `test/foo.evals.ts`
+> argument as a *name filter* (matches nothing here), not a path. Always
+> pass `./test/…`.
+
+Within a paid file, each test is registered through `testIfSelected`, which
+consults the selector: `EVALS_TIER` and diff-based selection decide whether
+the test runs or is registered as `test.skip`. `EVALS_ALL=1` forces all.
 
 ## Environment
 
@@ -58,6 +66,7 @@ The paid suite runs only when an explicit path is passed:
 | `EVALS_BASE` | Base ref for diff-based selection | `origin/main` (fallback chain) |
 | `EVALS_RESULTS_ROOT` | Override result storage root | `evals/results/` |
 | `EVALS_MOCK_AGENT` | NDJSON file replayed instead of spawning `claude` | unset |
+| `EVALS_MOCK_JUDGE` | JSON file replayed instead of calling the LLM judge | unset |
 | `ANTHROPIC_API_KEY` | Required for paid tiers | — |
 
 ## Fixture format
@@ -68,11 +77,16 @@ The paid suite runs only when an explicit path is passed:
 ---
 agent: code-reviewer
 tier: periodic           # 'gate' or 'periodic'
-deps:                    # diff-matching globs; '*' single-segment, '**' multi-segment
-  - "agents/code-reviewer.md"
+deps:                    # REQUIRED, non-empty. Diff-matching globs;
+  - "agents/code-reviewer.md"   # '*' single-segment, '**' multi-segment
 ---
 synthetic task body for the agent
 ```
+
+All three frontmatter fields (`agent`, `tier`, `deps`) are required and
+validated at load time. `deps` must list at least one glob — an empty or
+missing `deps` would make the fixture invisible to diff selection, so the
+loader rejects it rather than letting it silently never run.
 
 `evals/fixtures/<agent>/<case>/ground-truth.json`:
 
@@ -111,6 +125,13 @@ agent: code-reviewer
 is only invoked when an `llm` criterion is present and the structural gates
 have passed. Haiku for narrow rubrics; Sonnet for nuanced ones.
 
+Both tiers run in the live eval. `test/code-reviewer.evals.ts` calls
+`outcomeJudge` (deterministic planted-bug detection) **and**
+`judgeReviewerOutput` (LLM reasoning-quality score), and passes only when
+the bug is detected *and* `reason_substance >= 3`. Mentioning the hint in
+junk prose is not enough to pass. Both scores are recorded in
+`judge_scores` on the result entry.
+
 ## Run history & comparison
 
 Every run writes `<version>-<branch>-<tier>-<timestamp>.json` to
@@ -121,9 +142,17 @@ run on the same branch+tier and prints a comparison to stderr:
 - improvements (verdict fail → pass)
 - additions / removals
 - ≥20% deltas on cost or duration
-- **budget regressions** (≥2× growth in tool calls or turns) — fail CI
+- **budget regressions** (≥2× growth in tool calls or turns)
 
-Manually: `bun run eval:compare evals/results/<a>.json evals/results/<b>.json`.
+Budget regressions don't just print — the eval file's `afterAll` calls
+`assertNoBudgetRegressions(collector)`, which throws after `finalize()`
+writes the result. A throw in `afterAll` fails the bun run, so a
+passing-but-3×-more-expensive run fails CI. The floor (`minPriorTools`/
+`minPriorTurns` = 3) suppresses noise from tiny baselines (1 → 3 isn't a
+regression).
+
+Manually: `bun run eval:compare evals/results/<a>.json evals/results/<b>.json`
+(exits non-zero on budget regression or verdict regression).
 
 ## Blame protocol
 
@@ -131,7 +160,7 @@ When an eval fails on your branch, rerun on the base before blaming the
 branch:
 
 ```
-git checkout origin/main && bun test test/code-reviewer.evals.ts
+git checkout origin/main && bun test ./test/code-reviewer.evals.ts
 ```
 
 If it fails there too, the regression predates your change.
@@ -143,8 +172,10 @@ If it fails there too, the regression predates your change.
 3. Add an entry to `E2E_TOUCHFILES` and `E2E_TIERS` in
    `test/helpers/touchfiles.ts`.
 4. Write `test/<agent>.evals.ts` mirroring `test/code-reviewer.evals.ts`.
-   Use the `.evals.ts` suffix (not `.test.ts`) so `bun test` doesn't pick it up.
+   Use the `.evals.ts` suffix (not `.test.ts`) so `bun test` doesn't pick it
+   up, and register the test through `testIfSelected(name, ...)` so tier /
+   diff selection applies.
 5. `bun test` — verify the gate validates the new schemas.
-6. `bun test test/<agent>.evals.ts` — run end-to-end (needs `ANTHROPIC_API_KEY`).
+6. `bun test ./test/<agent>.evals.ts` — run end-to-end (needs `ANTHROPIC_API_KEY`).
 
 Run `bun run eval:list` to see the registered tests and their tiers.
