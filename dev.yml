@@ -14,6 +14,10 @@ up:
 check:
   plugin: "claude plugin validate ."
 
+test:
+  run: "script/test"
+  desc: "Run all acceptance test scripts under tests/"
+
 commands:
   install:
     desc: "Register plugin as a local marketplace for global access"
