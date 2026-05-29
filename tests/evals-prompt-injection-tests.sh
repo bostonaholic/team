@@ -118,6 +118,7 @@ EOF
 
 set +e
 env -u ANTHROPIC_API_KEY \
+  EVALS_TEST_MODE=1 \
   EVALS_MOCK_JUDGE="$MOCK_JUDGE_OUT" \
   EVALS_MOCK_JUDGE_PROMPT_CAPTURE="$PROMPT_CAPTURE" \
   node "$DRIVER" >/dev/null 2>"$WORKDIR/drive.err"
@@ -134,6 +135,30 @@ if [ "$DRIVE_EXIT" -eq 0 ] && [ -f "$PROMPT_CAPTURE" ]; then
   fi
 else
   fail "T3: prompt-capture seam did not fire (driver exit=$DRIVE_EXIT, err: $(head -3 "$WORKDIR/drive.err" 2>/dev/null | tr '\n' '|'))"
+fi
+
+# ---------------------------------------------------------------------------
+# T4: EVALS_MOCK_JUDGE_PROMPT_CAPTURE is IGNORED when EVALS_TEST_MODE is
+#     unset. This prevents an attacker-controlled env var from writing to
+#     arbitrary paths in production. The capture file must not exist
+#     after the driver runs.
+# ---------------------------------------------------------------------------
+PROD_CAPTURE="$WORKDIR/should-not-be-written.txt"
+\rm -f "$PROD_CAPTURE" 2>/dev/null || true
+
+set +e
+env -u ANTHROPIC_API_KEY \
+  -u EVALS_TEST_MODE \
+  EVALS_MOCK_JUDGE="$MOCK_JUDGE_OUT" \
+  EVALS_MOCK_JUDGE_PROMPT_CAPTURE="$PROD_CAPTURE" \
+  node "$DRIVER" >/dev/null 2>"$WORKDIR/drive2.err"
+DRIVE2_EXIT=$?
+set -e
+
+if [ "$DRIVE2_EXIT" -eq 0 ] && [ ! -f "$PROD_CAPTURE" ]; then
+  pass "T4: prompt-capture seam is ignored without EVALS_TEST_MODE=1"
+else
+  fail "T4: prompt-capture seam must be ignored without EVALS_TEST_MODE=1 (capture exists: $([ -f "$PROD_CAPTURE" ] && echo yes || echo no); exit=$DRIVE2_EXIT)"
 fi
 
 # ===========================================================================

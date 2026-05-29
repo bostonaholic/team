@@ -31,6 +31,8 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 
+import { assertSafeRunId } from "./paths.mjs";
+
 export const SCHEMA_VERSION = 1;
 
 const PARTIAL_NAME = "_partial-e2e.json";
@@ -47,6 +49,7 @@ export function createRunDir(resultsRoot, runId) {
   if (!runId) {
     throw new Error("createRunDir: runId is required");
   }
+  assertSafeRunId(runId);
   const runDir = join(resultsRoot, runId);
   mkdirSync(runDir, { recursive: true });
   return runDir;

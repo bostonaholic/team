@@ -4,6 +4,10 @@
 # No model calls. Runs fast (<5s on the real fixture tree). Fails loud
 # when a fixture, rubric, or ground-truth file is malformed.
 #
+# Each structural check emits `PASS  <desc>` on success and `FAIL  <desc>`
+# on failure, matching the acceptance-test convention. Silence-on-success
+# was a UX hazard for the most-run command.
+#
 # Environment:
 #   EVALS_FIXTURE_ROOT  override the fixtures + rubrics root (tests).
 #                       When set, the directory layout is:
@@ -19,6 +23,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+GT_VALIDATOR="$REPO_ROOT/evals/lib/validate-ground-truth.mjs"
 FAILURES=0
 
 pass() {
@@ -107,12 +112,15 @@ if [ -d "$FIXTURES_DIR" ]; then
     if [ ! -f "$RUBRIC_FILE" ]; then
       fail "missing rubric for agent: $AGENT_NAME (expected $RUBRIC_FILE)"
     else
+      pass "rubric present for agent: $AGENT_NAME"
       # Body of the rubric (excluding frontmatter) must contain >= 1
       # numbered criterion line: lines starting with `<digit>.`.
       RUBRIC_BODY=$(awk 'NR==1 && $0=="---"{f=1;next} f && $0=="---"{f=2;next} f==2{print}' "$RUBRIC_FILE")
       CRIT_COUNT=$(echo "$RUBRIC_BODY" | grep -cE '^[[:space:]]*[0-9]+\.' || true)
       if [ "${CRIT_COUNT:-0}" -lt 1 ]; then
         fail "rubric for $AGENT_NAME has zero numbered criteria (file: $RUBRIC_FILE)"
+      else
+        pass "rubric for $AGENT_NAME has $CRIT_COUNT numbered criterion(a)"
       fi
     fi
 
@@ -130,41 +138,49 @@ if [ -d "$FIXTURES_DIR" ]; then
       fi
 
       # Frontmatter must declare agent, tier, and deps.
+      FRONTMATTER_OK=1
       if ! frontmatter_has_key "$INPUT_FILE" "agent"; then
         fail "missing field: agent in $INPUT_FILE"
+        FRONTMATTER_OK=0
       fi
       if ! frontmatter_has_key "$INPUT_FILE" "tier"; then
         fail "missing field: tier in $INPUT_FILE"
+        FRONTMATTER_OK=0
       fi
       if ! frontmatter_has_deps "$INPUT_FILE"; then
         fail "missing field: deps in $INPUT_FILE"
+        FRONTMATTER_OK=0
       elif ! deps_is_list "$INPUT_FILE"; then
         fail "malformed field: deps must be a YAML list of strings in $INPUT_FILE"
+        FRONTMATTER_OK=0
+      fi
+      if [ "$FRONTMATTER_OK" -eq 1 ]; then
+        pass "fixture frontmatter valid: $AGENT_NAME/$CASE_NAME"
       fi
 
       # 50 KB ceiling on the fixture body to bound judge prompts.
       SIZE=$(wc -c <"$INPUT_FILE" | tr -d ' ')
       if [ "$SIZE" -gt 51200 ]; then
         fail "oversize fixture: $INPUT_FILE is $SIZE bytes (>50 KB cap)"
+      else
+        pass "fixture size within 50 KB cap: $AGENT_NAME/$CASE_NAME ($SIZE bytes)"
       fi
 
       # Ground-truth schema (only when present — design pattern #5
       # requires it for code-reviewer; structural slot is the same).
       if [ -f "$GROUND_TRUTH_FILE" ]; then
-        if ! node -e "
-          const d = JSON.parse(require('fs').readFileSync('$GROUND_TRUTH_FILE','utf8'));
-          if (!Array.isArray(d.bugs) || d.bugs.length === 0) { console.log('missing bugs'); process.exit(1); }
-          if (typeof d.minimum_detection !== 'number') { console.log('missing minimum_detection'); process.exit(1); }
-          " >/tmp/.evals-gate-gt.$$ 2>&1; then
-          REASON=$(cat /tmp/.evals-gate-gt.$$ 2>/dev/null || echo "parse error")
-          if echo "$REASON" | grep -q "bugs"; then
-            fail "ground-truth missing bugs[]: $GROUND_TRUTH_FILE"
-          elif echo "$REASON" | grep -q "minimum_detection"; then
-            fail "ground-truth missing minimum_detection: $GROUND_TRUTH_FILE"
-          else
-            fail "ground-truth malformed: $GROUND_TRUTH_FILE ($REASON)"
-          fi
-          rm -f /tmp/.evals-gate-gt.$$
+        set +e
+        VALIDATOR_OUT=$(node "$GT_VALIDATOR" "$GROUND_TRUTH_FILE" 2>&1)
+        VALIDATOR_CODE=$?
+        set -e
+        if [ "$VALIDATOR_CODE" -eq 0 ]; then
+          pass "ground-truth schema valid: $AGENT_NAME/$CASE_NAME"
+        elif [ "$VALIDATOR_CODE" -eq 1 ]; then
+          fail "ground-truth missing bugs[]: $GROUND_TRUTH_FILE"
+        elif [ "$VALIDATOR_CODE" -eq 2 ]; then
+          fail "ground-truth missing minimum_detection: $GROUND_TRUTH_FILE"
+        else
+          fail "ground-truth malformed: $GROUND_TRUTH_FILE ($VALIDATOR_OUT)"
         fi
       else
         # Ground-truth is required for code-reviewer fixtures per design.
@@ -176,6 +192,8 @@ fi
 
 if [ "$AGENT_COUNT" -eq 0 ]; then
   fail "no agent fixture directories found under $FIXTURES_DIR"
+else
+  pass "found $AGENT_COUNT agent fixture directory(ies)"
 fi
 
 # ---------------------------------------------------------------------------

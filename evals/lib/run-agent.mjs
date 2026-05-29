@@ -2,22 +2,32 @@
 //
 // Subprocess wrapper around `claude -p --output-format stream-json`.
 // All `claude` CLI knowledge lives here so future CLI drift is a
-// one-file patch (per design risk note).
+// one-file patch (per design risk note). The shared `spawnClaude`
+// helper is exported so judge.mjs can use the same code path.
 //
 // Mock seam:
 //   EVALS_MOCK_AGENT=<path>
-//     When the path ends in `.sh`, the file is executed (with
-//     `EVALS_CASE_NAME` exported) and its stdout used as the agent
-//     output. Otherwise the file is read verbatim. This is the seam
-//     the slice 1 walking-skeleton test uses.
+//     The file at <path> is read and used as the agent output. When the
+//     path ends in `.sh`, the file is executed (with `EVALS_CASE_NAME`
+//     exported) and its stdout used as the agent output. If the value
+//     is set but the file does not exist, runAgent fails fast with a
+//     descriptive error pointing at the misconfiguration.
 //
 // Timeout: EVALS_TIMEOUT (seconds), default 120. On expiry the child
 // is killed and the result records exit_reason='timeout'.
+//
+// Fixture size cap: input.md is rejected at runtime when > 50 KB,
+// matching the gate's static check.
 
 import { spawn, spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 
 const DEFAULT_TIMEOUT_SEC = 120;
+
+// 50 KB cap on fixture / rubric / ground-truth bodies; the gate enforces
+// this statically, the runtime enforces it again so a hand-edited file
+// past the cap can't bypass the gate.
+export const FIXTURE_SIZE_CAP = 51200;
 
 /**
  * Run the named agent against the fixture input.
@@ -42,7 +52,34 @@ export async function runAgent({ agentName, inputPath, caseName, env = {} }) {
   return runClaude({ agentName, inputPath, caseName, timeoutSec, env });
 }
 
+/**
+ * Validate that an env var points at an existing readable file.
+ * Returns null on success, or throws with a clear, actionable error.
+ */
+function assertMockEnvIsFile(envName, mockPath) {
+  try {
+    const s = statSync(mockPath);
+    if (!s.isFile()) {
+      throw new Error(
+        `${envName} must be a path to an existing file (got: '${mockPath}'). ` +
+          `Set to /path/to/mock-output.json or unset.`,
+      );
+    }
+  } catch (err) {
+    if (err && err.code === "ENOENT") {
+      throw new Error(
+        `${envName} must be a path to an existing file (got: '${mockPath}'). ` +
+          `Set to /path/to/mock-output.json or unset.`,
+      );
+    }
+    throw err;
+  }
+}
+
 function runMockAgent({ mockPath, caseName, timeoutSec }) {
+  // Fail fast on misconfiguration (e.g. EVALS_MOCK_AGENT=1).
+  assertMockEnvIsFile("EVALS_MOCK_AGENT", mockPath);
+
   // Executable mock: run it as a shell script so the test can vary
   // behavior by case name via EVALS_CASE_NAME.
   if (mockPath.endsWith(".sh")) {
@@ -86,15 +123,55 @@ function runMockAgent({ mockPath, caseName, timeoutSec }) {
 }
 
 function runClaude({ agentName, inputPath, caseName, timeoutSec, env }) {
+  // Enforce the 50 KB fixture cap at runtime before paying for a model call.
+  let inputBody;
+  try {
+    const s = statSync(inputPath);
+    if (s.size > FIXTURE_SIZE_CAP) {
+      return Promise.resolve({
+        output: "",
+        stderr: `fixture too large: ${inputPath} is ${s.size} bytes (>${FIXTURE_SIZE_CAP} cap)`,
+        exitCode: null,
+        exitReason: "spawn_error",
+      });
+    }
+    inputBody = readFileSync(inputPath, "utf8");
+  } catch (err) {
+    return Promise.resolve({
+      output: "",
+      stderr: String(err.message || err),
+      exitCode: null,
+      exitReason: "spawn_error",
+    });
+  }
+
+  return spawnClaude(["-p", "--output-format", "stream-json"], inputBody, {
+    timeoutSec,
+    extraEnv: {
+      ...env,
+      EVALS_CASE_NAME: caseName || "",
+      EVALS_AGENT_NAME: agentName || "",
+    },
+  });
+}
+
+/**
+ * Spawn `claude` with the given argv, pipe `stdinPayload` to its stdin,
+ * and resolve with { output, stderr, exitCode, exitReason }. This is the
+ * single point of CLI drift — both the agent runner (above) and the
+ * judge (judge.mjs) call through here so a `claude` CLI change is a
+ * one-file patch.
+ *
+ * opts:
+ *   timeoutSec  hard kill after this many seconds (default 120)
+ *   extraEnv    merged onto process.env for the child
+ */
+export function spawnClaude(args, stdinPayload, opts = {}) {
+  const timeoutSec = opts.timeoutSec || DEFAULT_TIMEOUT_SEC;
+  const extraEnv = opts.extraEnv || {};
   return new Promise((resolve) => {
-    const args = ["-p", "--output-format", "stream-json"];
     const child = spawn("claude", args, {
-      env: {
-        ...process.env,
-        ...env,
-        EVALS_CASE_NAME: caseName || "",
-        EVALS_AGENT_NAME: agentName || "",
-      },
+      env: { ...process.env, ...extraEnv },
       stdio: ["pipe", "pipe", "pipe"],
     });
 
@@ -152,13 +229,12 @@ function runClaude({ agentName, inputPath, caseName, timeoutSec, env }) {
       });
     });
 
-    // Feed input.md on stdin so the agent receives it as the user prompt.
     try {
-      const input = readFileSync(inputPath, "utf8");
-      child.stdin.write(input);
+      if (stdinPayload !== undefined && stdinPayload !== null) {
+        child.stdin.write(stdinPayload);
+      }
       child.stdin.end();
     } catch (err) {
-      // Surface read errors via the same return shape rather than throwing.
       if (!settled) {
         settled = true;
         clearTimeout(timer);

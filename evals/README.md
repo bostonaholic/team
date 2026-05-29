@@ -104,6 +104,48 @@ evals/
         └── _partial-e2e.json      # resume checkpoint (atomic .tmp+rename)
 ```
 
+## Mock seams (offline testing)
+
+Two env vars short-circuit the model calls so acceptance tests can run
+without `ANTHROPIC_API_KEY` and without spending money:
+
+- `EVALS_MOCK_AGENT=<path>` — the file at `<path>` is treated as the
+  agent's stdout. A `.sh` suffix runs the file as a shell script (with
+  `EVALS_CASE_NAME` exported so it can branch by case).
+- `EVALS_MOCK_JUDGE=<path>` — the file at `<path>` is parsed as the
+  judge's JSON verdict + criteria payload.
+
+Both **require an existing file path**. Setting `EVALS_MOCK_AGENT=1` or
+any boolean-ish value will fail fast with:
+
+```
+EVALS_MOCK_AGENT must be a path to an existing file (got: '1'). Set to /path/to/mock-output.json or unset.
+```
+
+Working example (see `tests/evals-walking-skeleton-tests.sh`):
+
+```bash
+WORKDIR=$(mktemp -d)
+cat >"$WORKDIR/mock-agent.txt" <<'EOF'
+Found a null deref on line 42.
+EOF
+cat >"$WORKDIR/mock-judge.json" <<'EOF'
+{ "verdict": "pass", "criteria": [
+  { "name": "reasoning_quality", "kind": "llm", "score": 4, "evidence": "ok" }
+] }
+EOF
+env -u ANTHROPIC_API_KEY \
+  EVALS_MOCK_AGENT="$WORKDIR/mock-agent.txt" \
+  EVALS_MOCK_JUDGE="$WORKDIR/mock-judge.json" \
+  EVALS_RESULTS_ROOT="$WORKDIR/results" \
+  PERIODIC=1 \
+  bash evals/e2e/run.sh code-reviewer
+```
+
+There is also `EVALS_MOCK_JUDGE_PROMPT_CAPTURE=<path>` for the
+prompt-injection test, but it is gated behind `EVALS_TEST_MODE=1` to
+prevent a stray env var in production from writing to arbitrary paths.
+
 ## CI integration
 
 Deferred. A `bd` follow-up ticket tracks the GitHub Actions integration.

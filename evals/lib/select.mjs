@@ -22,7 +22,9 @@
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
+
+import { assertRootWithinSafeArea } from "./paths.mjs";
 
 // Files whose changes invalidate every cached selection — touching them
 // means every case should run.
@@ -278,9 +280,16 @@ function runCli(argv) {
     return 2;
   }
 
-  const fixtureRoot =
+  const fixtureRootRaw =
     process.env.EVALS_FIXTURE_ROOT ||
     join(process.cwd(), "evals/fixtures");
+  try {
+    assertRootWithinSafeArea(fixtureRootRaw, "EVALS_FIXTURE_ROOT");
+  } catch (err) {
+    process.stderr.write(`selector: ${err.message}\n`);
+    return 1;
+  }
+  const fixtureRoot = resolve(fixtureRootRaw);
 
   let changedFiles = getChangedFiles({});
   if (changedFiles === null) {

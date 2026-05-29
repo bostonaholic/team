@@ -24,8 +24,9 @@ import {
   readdirSync,
   statSync,
 } from "node:fs";
-import { basename, join } from "node:path";
+import { basename, join, resolve } from "node:path";
 
+import { assertRootWithinSafeArea } from "./paths.mjs";
 import { SCHEMA_VERSION } from "./result-store.mjs";
 
 // Directory name convention from slice 1's result-store:
@@ -51,7 +52,10 @@ function parseRunDirName(name) {
 }
 
 function resultsRoot() {
-  return process.env.EVALS_RESULTS_ROOT || join(process.cwd(), "evals/results");
+  const raw =
+    process.env.EVALS_RESULTS_ROOT || join(process.cwd(), "evals/results");
+  assertRootWithinSafeArea(raw, "EVALS_RESULTS_ROOT");
+  return resolve(raw);
 }
 
 // ---------------------------------------------------------------------------
@@ -298,7 +302,9 @@ function runCli(argv) {
   }
 
   if (argv.includes("--auto")) {
-    // Used by the runner; resolved against EVALS_RESULTS_ROOT.
+    // TODO: wire from runner — currently a no-op so the runner can call
+    // it unconditionally without erroring. The runner will eventually
+    // print "vs previous: …" tail; until then this exits cleanly.
     return 0;
   }
 

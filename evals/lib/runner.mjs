@@ -19,10 +19,15 @@
 //   EVALS_TIMEOUT      per-case agent subprocess timeout (seconds)
 //   EVALS_WALLCLOCK_CAP   total run wall-clock cap (seconds)
 //   EVALS_CASE_NAME    set per-case before invoking agent (consumed by mocks)
+//
+// Path-safety contract:
+//   - runId is constrained to `[A-Za-z0-9._-]+`; `..` or `/` are refused.
+//   - Every EVALS_*_ROOT must resolve inside the repo root or under
+//     the system tempdir. Anything else fails fast.
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { basename, join, resolve } from "node:path";
+import { existsSync, readdirSync } from "node:fs";
+import { join, resolve } from "node:path";
 
 import {
   acquireLock,
@@ -35,62 +40,38 @@ import {
 } from "./result-store.mjs";
 import { runAgent } from "./run-agent.mjs";
 import { runJudge } from "./judge.mjs";
+import {
+  assertRootWithinSafeArea,
+  assertSafeRunId,
+  findRepoRoot,
+} from "./paths.mjs";
 
 const DEFAULT_WALLCLOCK_SEC = 30 * 60;
 
 function repoRoot() {
-  // The entry script always cds to its own dir; resolve relative to here.
-  return resolve(new URL("../..", import.meta.url).pathname);
+  return findRepoRoot();
 }
 
 function fixtureRoot() {
-  return process.env.EVALS_FIXTURE_ROOT || join(repoRoot(), "evals/fixtures");
+  const raw = process.env.EVALS_FIXTURE_ROOT || join(repoRoot(), "evals/fixtures");
+  assertRootWithinSafeArea(raw, "EVALS_FIXTURE_ROOT");
+  return resolve(raw);
 }
 
 function rubricRoot() {
-  return process.env.EVALS_RUBRIC_ROOT || join(repoRoot(), "evals/rubrics");
+  const raw = process.env.EVALS_RUBRIC_ROOT || join(repoRoot(), "evals/rubrics");
+  assertRootWithinSafeArea(raw, "EVALS_RUBRIC_ROOT");
+  return resolve(raw);
 }
 
 function resultsRoot() {
-  return process.env.EVALS_RESULTS_ROOT || join(repoRoot(), "evals/results");
+  const raw = process.env.EVALS_RESULTS_ROOT || join(repoRoot(), "evals/results");
+  assertRootWithinSafeArea(raw, "EVALS_RESULTS_ROOT");
+  return resolve(raw);
 }
 
 function nowIso() {
   return new Date().toISOString();
-}
-
-function parseFrontmatter(text) {
-  if (!text.startsWith("---")) return {};
-  const end = text.indexOf("\n---", 3);
-  if (end === -1) return {};
-  const block = text.slice(3, end);
-  const fm = {};
-  let key = null;
-  let listKey = null;
-  let list = null;
-  for (const raw of block.split(/\r?\n/)) {
-    const line = raw.replace(/\r$/, "");
-    if (!line.trim()) continue;
-    if (listKey && /^\s+-\s+/.test(line)) {
-      list.push(line.replace(/^\s+-\s+/, "").trim());
-      continue;
-    }
-    listKey = null;
-    list = null;
-    const m = /^([A-Za-z0-9_-]+):\s*(.*)$/.exec(line);
-    if (m) {
-      key = m[1];
-      const val = m[2];
-      if (val === "" || val === undefined) {
-        listKey = key;
-        list = [];
-        fm[key] = list;
-      } else {
-        fm[key] = val.trim();
-      }
-    }
-  }
-  return fm;
 }
 
 function listFixtures(agentName) {
@@ -111,14 +92,6 @@ function listFixtures(agentName) {
     });
   }
   return cases;
-}
-
-function detectAgentsUnderRoot() {
-  const root = fixtureRoot();
-  if (!existsSync(root)) return [];
-  return readdirSync(root, { withFileTypes: true })
-    .filter((e) => e.isDirectory())
-    .map((e) => e.name);
 }
 
 function rubricPathFor(agentName) {
@@ -153,6 +126,15 @@ export async function main(argv) {
       resumeRunId = argv[++i];
     } else if (!a.startsWith("--")) {
       agentName = agentName || a;
+    }
+  }
+
+  if (resumeRunId !== null) {
+    try {
+      assertSafeRunId(resumeRunId);
+    } catch (err) {
+      process.stderr.write(`runner: ${err.message}\n`);
+      return 1;
     }
   }
 
@@ -231,7 +213,18 @@ async function runSelectedCases(cases, { resumeRunId }) {
     return 0;
   }
 
-  const runId = resumeRunId || process.env.EVALS_RUN_ID || newRunId();
+  // Validate the run-id source before it becomes a directory name.
+  const envRunId = process.env.EVALS_RUN_ID;
+  if (envRunId !== undefined && envRunId !== "") {
+    try {
+      assertSafeRunId(envRunId);
+    } catch (err) {
+      process.stderr.write(`runner: EVALS_RUN_ID: ${err.message}\n`);
+      return 1;
+    }
+  }
+
+  const runId = resumeRunId || envRunId || newRunId();
   const runDir = createRunDir(resultsRoot(), runId);
 
   // Concurrency lock: fail fast on collision.
@@ -314,11 +307,27 @@ async function runOneCase({
   tier,
 }) {
   // 1. Run the agent (real or mocked).
-  const agentResult = await runAgent({
-    agentName,
-    inputPath,
-    caseName,
-  });
+  let agentResult;
+  try {
+    agentResult = await runAgent({
+      agentName,
+      inputPath,
+      caseName,
+    });
+  } catch (err) {
+    return {
+      case: caseName,
+      agent: agentName,
+      tier,
+      branch,
+      verdict: "fail",
+      status: "errored",
+      exit_reason: `agent_error: ${err.message}`,
+      timestamp: nowIso(),
+      run_id: "",
+      criteria: [],
+    };
+  }
 
   // Timeout / error path: produce a record without invoking the judge.
   if (agentResult.exitReason === "timeout") {
@@ -389,6 +398,8 @@ async function runOneCase({
 }
 
 function newRunId() {
+  // Colons are unsafe for filenames; the rest of the timestamp is already
+  // in the safe character set.
   return `run-${nowIso().replace(/[:.]/g, "-")}`;
 }
 

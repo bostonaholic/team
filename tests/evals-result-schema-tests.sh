@@ -134,6 +134,161 @@ else
   fail "T11: schema_version === 1 in written result (no result file)"
 fi
 
+# ---------------------------------------------------------------------------
+# T12: oversize rubric (>50 KB) is rejected at runtime by the judge. We
+#      drive runJudge directly with an oversize rubric file and expect
+#      a fail-fast error naming the cap.
+# ---------------------------------------------------------------------------
+OVERSIZE_DIR="$WORKDIR/oversize"
+mkdir -p "$OVERSIZE_DIR"
+
+OVERSIZE_RUBRIC="$OVERSIZE_DIR/rubric.md"
+{
+  echo "---"
+  echo "agent: code-reviewer"
+  echo "---"
+  echo ""
+  echo "# Oversize rubric"
+  echo ""
+  echo "1. Reasoning quality (kind: llm)"
+  # Pad past the 50 KB cap.
+  head -c 52224 /dev/zero | tr '\0' 'x'
+  echo ""
+} >"$OVERSIZE_RUBRIC"
+
+OVERSIZE_GT="$OVERSIZE_DIR/ground-truth.json"
+cat >"$OVERSIZE_GT" <<'EOF'
+{
+  "bugs": [{"id":"b1","category":"x","severity":"high","description":"x","detection_hint":"x"}],
+  "minimum_detection": 1.0,
+  "max_false_positives": 1
+}
+EOF
+
+DRIVER12="$OVERSIZE_DIR/drive.mjs"
+cat >"$DRIVER12" <<EOF
+import { runJudge } from "$REPO_ROOT/evals/lib/judge.mjs";
+try {
+  await runJudge({
+    rubricPath: "$OVERSIZE_RUBRIC",
+    agentOutput: "",
+    groundTruthPath: "$OVERSIZE_GT"
+  });
+  console.error("expected throw");
+  process.exit(99);
+} catch (err) {
+  process.stderr.write(err.message + "\n");
+  process.exit(2);
+}
+EOF
+
+set +e
+node "$DRIVER12" >/dev/null 2>"$OVERSIZE_DIR/err"
+T12_CODE=$?
+set -e
+
+if [ "$T12_CODE" -eq 2 ] && grep -qE "too large|50|cap" "$OVERSIZE_DIR/err"; then
+  pass "T12: oversize rubric (>50 KB) is rejected at runtime by judge"
+else
+  fail "T12: oversize rubric rejection (exit=$T12_CODE; err: $(head -2 "$OVERSIZE_DIR/err" 2>/dev/null | tr '\n' '|' | head -c 240))"
+fi
+
+# ---------------------------------------------------------------------------
+# T13: oversize ground-truth (>50 KB) is rejected at runtime by the judge.
+# ---------------------------------------------------------------------------
+OVERSIZE_GT_BIG="$OVERSIZE_DIR/ground-truth-big.json"
+# Make the file > 50 KB by padding the description field.
+node -e "
+const fs = require('fs');
+const pad = 'x'.repeat(60000);
+const gt = {
+  bugs: [{id:'b1',category:'x',severity:'high',description:pad,detection_hint:'x'}],
+  minimum_detection: 1.0,
+  max_false_positives: 1
+};
+fs.writeFileSync('$OVERSIZE_GT_BIG', JSON.stringify(gt));
+"
+
+SMALL_RUBRIC="$OVERSIZE_DIR/small-rubric.md"
+cat >"$SMALL_RUBRIC" <<'EOF'
+---
+agent: code-reviewer
+---
+
+# Small rubric
+
+1. Reasoning quality (kind: llm)
+EOF
+
+DRIVER13="$OVERSIZE_DIR/drive13.mjs"
+cat >"$DRIVER13" <<EOF
+import { runJudge } from "$REPO_ROOT/evals/lib/judge.mjs";
+try {
+  await runJudge({
+    rubricPath: "$SMALL_RUBRIC",
+    agentOutput: "",
+    groundTruthPath: "$OVERSIZE_GT_BIG"
+  });
+  console.error("expected throw");
+  process.exit(99);
+} catch (err) {
+  process.stderr.write(err.message + "\n");
+  process.exit(2);
+}
+EOF
+
+set +e
+node "$DRIVER13" >/dev/null 2>"$OVERSIZE_DIR/err13"
+T13_CODE=$?
+set -e
+
+if [ "$T13_CODE" -eq 2 ] && grep -qE "too large|50|cap" "$OVERSIZE_DIR/err13"; then
+  pass "T13: oversize ground-truth (>50 KB) is rejected at runtime by judge"
+else
+  fail "T13: oversize ground-truth rejection (exit=$T13_CODE; err: $(head -2 "$OVERSIZE_DIR/err13" 2>/dev/null | tr '\n' '|' | head -c 240))"
+fi
+
+# ---------------------------------------------------------------------------
+# T14: parseRubric joins wrapped continuation lines into a single
+#      description (M7). A criterion whose description wraps onto an
+#      indented next line must still parse with the trailing text included.
+# ---------------------------------------------------------------------------
+WRAP_DIR="$WORKDIR/wrap"
+mkdir -p "$WRAP_DIR"
+WRAP_RUBRIC="$WRAP_DIR/rubric.md"
+cat >"$WRAP_RUBRIC" <<'EOF'
+---
+agent: code-reviewer
+---
+
+# Rubric
+
+1. Reasoning quality (kind: llm) — should identify the planted bug
+   with concrete evidence and a line reference.
+2. Coverage (kind: deterministic)
+EOF
+
+DRIVER14="$WRAP_DIR/drive.mjs"
+cat >"$DRIVER14" <<EOF
+import { parseRubric } from "$REPO_ROOT/evals/lib/judge.mjs";
+import { readFileSync } from "node:fs";
+const r = parseRubric(readFileSync("$WRAP_RUBRIC", "utf8"));
+console.log(JSON.stringify(r.criteria.map(c => ({ name: c.name, description: c.description }))));
+EOF
+
+set +e
+WRAP_OUT=$(node "$DRIVER14" 2>"$WRAP_DIR/err")
+WRAP_CODE=$?
+set -e
+
+if [ "$WRAP_CODE" -eq 0 ] \
+  && echo "$WRAP_OUT" | grep -q "concrete evidence" \
+  && echo "$WRAP_OUT" | grep -q "line reference"; then
+  pass "T14: parseRubric joins wrapped continuation lines into description"
+else
+  fail "T14: parseRubric continuation joining (exit=$WRAP_CODE; out: $(echo "$WRAP_OUT" | head -c 360))"
+fi
+
 # ===========================================================================
 # Summary
 # ===========================================================================

@@ -241,6 +241,34 @@ make_valid_rubric "$ROOT_T7"
 run_gate_against "$ROOT_T7" "T7: oversize fixture (>50 KB) is rejected by name" "50|size|too large|oversize"
 rm -rf "$ROOT_T7"
 
+# ---------------------------------------------------------------------------
+# T8: gate emits `PASS  <desc>` lines on a fully-clean fixture tree. The
+#     gate had previously been silent on success — a UX hazard for the
+#     most-run command.
+# ---------------------------------------------------------------------------
+ROOT_T8=$(mktemp -d)
+mkdir -p "$ROOT_T8/fixtures/code-reviewer/case-a"
+make_valid_input "$ROOT_T8/fixtures/code-reviewer/case-a"
+make_valid_ground_truth "$ROOT_T8/fixtures/code-reviewer/case-a"
+make_valid_rubric "$ROOT_T8"
+
+OUT_LOG_T8=$(mktemp)
+set +e
+env -u ANTHROPIC_API_KEY \
+  EVALS_FIXTURE_ROOT="$ROOT_T8" \
+  bash "$GATE" >"$OUT_LOG_T8" 2>&1
+T8_CODE=$?
+set -e
+
+PASS_COUNT=$(grep -c '^PASS  ' "$OUT_LOG_T8" 2>/dev/null || echo 0)
+if [ "$T8_CODE" -eq 0 ] && [ "${PASS_COUNT:-0}" -ge 4 ]; then
+  pass "T8: gate emits PASS lines for each structural check ($PASS_COUNT PASS lines)"
+else
+  fail "T8: gate must emit PASS lines on success (exit=$T8_CODE; PASS count=$PASS_COUNT; output: $(tr '\n' '|' <"$OUT_LOG_T8" | head -c 360))"
+fi
+rm -f "$OUT_LOG_T8"
+rm -rf "$ROOT_T8"
+
 # ===========================================================================
 # Summary
 # ===========================================================================

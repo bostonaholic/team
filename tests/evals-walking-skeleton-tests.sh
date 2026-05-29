@@ -141,6 +141,31 @@ else
   pass "T5: mock seams suppress the missing-ANTHROPIC_API_KEY abort path"
 fi
 
+# ---------------------------------------------------------------------------
+# T6: misconfigured mock seam (`EVALS_MOCK_AGENT=1`) produces an actionable
+#     error pointing at the offending env var. The prior implementation
+#     crashed with a bare ENOENT; the fix names the var explicitly.
+# ---------------------------------------------------------------------------
+set +e
+env -u ANTHROPIC_API_KEY \
+  EVALS_MOCK_AGENT="1" \
+  EVALS_MOCK_JUDGE="$MOCK_JUDGE_OUT" \
+  EVALS_RESULTS_ROOT="$WORKDIR/t6-results" \
+  PERIODIC=1 \
+  bash "$ENTRY" code-reviewer >"$WORKDIR/t6.out" 2>"$WORKDIR/t6.err"
+T6_EXIT=$?
+set -e
+
+# Search both stdout and stderr (the runner records agent errors in the
+# result JSON via stdout failure-block).
+T6_OUTPUT="$(cat "$WORKDIR/t6.out" "$WORKDIR/t6.err" 2>/dev/null)"
+if echo "$T6_OUTPUT" | grep -qE "EVALS_MOCK_AGENT" \
+  && echo "$T6_OUTPUT" | grep -qE "path|file"; then
+  pass "T6: misconfigured EVALS_MOCK_AGENT='1' produces an actionable error"
+else
+  fail "T6: misconfigured EVALS_MOCK_AGENT='1' must name the env var (output: $(echo "$T6_OUTPUT" | head -10 | tr '\n' '|' | head -c 360))"
+fi
+
 # ===========================================================================
 # Summary
 # ===========================================================================
