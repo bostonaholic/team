@@ -167,7 +167,9 @@ function runClaude({ agentName, inputPath, caseName, timeoutSec, env }) {
  *   extraEnv    merged onto process.env for the child
  */
 export function spawnClaude(args, stdinPayload, opts = {}) {
-  const timeoutSec = opts.timeoutSec || DEFAULT_TIMEOUT_SEC;
+  // Use `??` not `||` so a deliberate `0` (or future caller passing `null`)
+  // doesn't silently get rewritten to the 120s default.
+  const timeoutSec = opts.timeoutSec ?? DEFAULT_TIMEOUT_SEC;
   const extraEnv = opts.extraEnv || {};
   return new Promise((resolve) => {
     const child = spawn("claude", args, {

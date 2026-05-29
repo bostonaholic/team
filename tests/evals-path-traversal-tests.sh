@@ -247,6 +247,44 @@ else
   \rm -f "$PWN_FILE2" 2>/dev/null || true
 fi
 
+# ---------------------------------------------------------------------------
+# T11: gc.sh with EVALS_RESULTS_ROOT outside repo+tempdir is rejected.
+#     Round-2 fix: gc-runner.mjs now calls assertRootWithinSafeArea so the
+#     path-confinement invariant holds across both run.sh and gc.sh entry
+#     points. Without this fix, `EVALS_RESULTS_ROOT=/etc bash evals/e2e/gc.sh`
+#     would rmSync subdirectories of /etc.
+# ---------------------------------------------------------------------------
+set +e
+env EVALS_RESULTS_ROOT="/etc/evil-gc-target" \
+  bash "$REPO_ROOT/evals/e2e/gc.sh" \
+  >"$WORKDIR/t11.out" 2>"$WORKDIR/t11.err"
+T11_CODE=$?
+set -e
+
+if [ "$T11_CODE" -ne 0 ] && grep -qE "EVALS_RESULTS_ROOT|refused|not under" "$WORKDIR/t11.err"; then
+  pass "T11: gc.sh rejects EVALS_RESULTS_ROOT outside safe area"
+else
+  fail "T11: gc.sh rejects EVALS_RESULTS_ROOT outside safe area (exit=$T11_CODE; err: $(tr '\n' '|' <"$WORKDIR/t11.err" | head -c 240))"
+fi
+
+# ---------------------------------------------------------------------------
+# T12: gc.sh with EVALS_RESULTS_ROOT containing `..` traversal that escapes
+#     to /etc is rejected. Defense-in-depth against a path that looks
+#     repo-relative but resolves outside the safe area.
+# ---------------------------------------------------------------------------
+set +e
+env EVALS_RESULTS_ROOT="$REPO_ROOT/../../../../../../etc/evil-traversal" \
+  bash "$REPO_ROOT/evals/e2e/gc.sh" \
+  >"$WORKDIR/t12.out" 2>"$WORKDIR/t12.err"
+T12_CODE=$?
+set -e
+
+if [ "$T12_CODE" -ne 0 ] && grep -qE "EVALS_RESULTS_ROOT|refused|not under" "$WORKDIR/t12.err"; then
+  pass "T12: gc.sh rejects EVALS_RESULTS_ROOT that traverses out via '..'"
+else
+  fail "T12: gc.sh rejects EVALS_RESULTS_ROOT '..' traversal (exit=$T12_CODE; err: $(tr '\n' '|' <"$WORKDIR/t12.err" | head -c 240))"
+fi
+
 # ===========================================================================
 # Summary
 # ===========================================================================

@@ -113,18 +113,28 @@ export async function runJudge({ rubricPath, agentOutput, groundTruthPath }) {
   return { verdict, criteria };
 }
 
+// Typed size error so the catch below re-throws by type, not by string
+// match. String matching is fragile — if the message wording drifts (refactor,
+// localization), oversized files would silently slip through.
+class SizeError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "SizeError";
+  }
+}
+
 function assertFixtureSizeOk(path, label) {
   try {
     const s = statSync(path);
     if (s.size > FIXTURE_SIZE_CAP) {
-      throw new Error(
+      throw new SizeError(
         `${label} too large: ${path} is ${s.size} bytes (>${FIXTURE_SIZE_CAP} cap)`,
       );
     }
   } catch (err) {
     // Only swallow not-found (the caller will surface that more usefully
-    // via readFileSync). Re-throw size errors.
-    if (err && err.message && err.message.includes("too large")) {
+    // via readFileSync). Re-throw size errors by type.
+    if (err instanceof SizeError) {
       throw err;
     }
     // Other stat errors fall through; readFileSync will raise.

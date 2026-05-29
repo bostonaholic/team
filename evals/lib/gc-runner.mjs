@@ -9,6 +9,7 @@
 //   EVALS_RESULTS_ROOT  results root (required; gc.sh always sets it)
 //   EVALS_GC_KEEP       integer >= 0 (default 10). Rejected on non-integer.
 
+import { assertRootWithinSafeArea } from "./paths.mjs";
 import { gc } from "./result-store.mjs";
 
 function main() {
@@ -17,6 +18,17 @@ function main() {
     process.stderr.write(
       "gc-runner: EVALS_RESULTS_ROOT is required\n",
     );
+    return 1;
+  }
+
+  // Defense-in-depth: gc.sh is operator-invoked but the path-confinement
+  // invariant must hold at every entry point. Without this, a poisoned
+  // EVALS_RESULTS_ROOT pointed at /etc would let gc rmSync subdirectories
+  // there.
+  try {
+    assertRootWithinSafeArea(resultsRoot, "EVALS_RESULTS_ROOT");
+  } catch (err) {
+    process.stderr.write(`gc-runner: ${err.message}\n`);
     return 1;
   }
 
