@@ -48,7 +48,11 @@ jobs:
           EVALS: "1"
           EVALS_ALL: "1"
           EVALS_TIER: periodic
-        run: bun test ${{ matrix.suite.file }}
+          # Route matrix values through env (not direct ${{ }} expansion into
+          # the run: shell). Matrix values are author-controlled here, but
+          # the env-wrapping pattern stays correct as the matrix grows.
+          SUITE_FILE: ${{ matrix.suite.file }}
+        run: bun test "$SUITE_FILE"
 
       - name: Upload eval results
         if: always()
