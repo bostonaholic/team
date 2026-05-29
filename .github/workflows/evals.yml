@@ -17,26 +17,19 @@ concurrency:
   group: evals-gate-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
-# Opt JavaScript actions onto Node 24 ahead of the June 2026 default flip.
-# Affects actions/checkout@v4 and actions/setup-node@v4 — both ship Node 20
-# today, which the runner deprecation warning flags. Switch is forward-only;
-# Node 20 stops being installed in Sept 2026.
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
 jobs:
   gate:
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # fetch-depth: 0 — the diff-based fixture selector
           # (evals/lib/select.mjs) compares against origin/main.
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
 

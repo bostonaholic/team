@@ -17,13 +17,6 @@ concurrency:
   group: evals-periodic
   cancel-in-progress: true
 
-# Opt JavaScript actions onto Node 24 ahead of the June 2026 default flip.
-# Affects actions/checkout@v4 and actions/setup-node@v4 — both ship Node 20
-# today, which the runner deprecation warning flags. Switch is forward-only;
-# Node 20 stops being installed in Sept 2026.
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
 jobs:
   periodic:
     runs-on: ubuntu-latest
@@ -38,11 +31,11 @@ jobs:
         # does not mask regressions in another.
         agent: [code-reviewer]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
 
@@ -64,7 +57,7 @@ jobs:
 
       - name: Upload eval results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: eval-periodic-${{ matrix.agent }}-${{ github.run_id }}
           path: evals/results/
