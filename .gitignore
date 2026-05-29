@@ -32,3 +32,6 @@ docs/vendor/
 
 # Eval run results (generated locally; CI uploads them as artifacts)
 evals/results/
+
+# Bun / npm dependencies
+node_modules/

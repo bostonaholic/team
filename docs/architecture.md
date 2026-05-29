@@ -395,30 +395,33 @@ to canon, and the research-isolation invariant holds.
 
 ## 8. Behavioral Evals
 
-The behavioral regression harness lives in `evals/` (plugin-developer
-tooling — not distributed with the plugin). It defends pipeline agents
-against silent behavior drift across model upgrades. Three tiers:
+The behavioral regression harness defends pipeline agents against silent
+behavior drift across model upgrades. The implementation is TypeScript +
+Bun: harness code in `test/`, fixtures/rubrics/results in `evals/`.
+Plugin-developer tooling — not distributed with the plugin. Three tiers:
 
-- **Gate** — structural assertions only, no model calls; runs on every
-  save and is wired into the pre-push path.
-- **E2E** — invokes an agent via `claude -p --output-format stream-json`
-  against fixtures under `evals/fixtures/<agent>/<case>/`, captures the
-  output, and persists a per-case result.
-- **Judge** — deterministic regex match against `ground-truth.json`
-  first, then Sonnet-as-judge for criteria the rubric declares
-  `kind: llm`.
+- **Gate** (free) — `bun test`. Static schema validation on every
+  fixture and rubric plus unit tests for the harness helpers. No model
+  calls, no `ANTHROPIC_API_KEY`. Runs in CI on every PR.
+- **E2E** (paid) — `EVALS=1 bun test`. Spawns `claude -p --output-format
+  stream-json` against a fixture, parses the NDJSON transcript, persists
+  a per-case result JSON with timing axes (`firstResponseMs`,
+  `maxInterTurnMs`).
+- **LLM-judge** (paid) — deterministic-first regex / ground-truth checks
+  run cheap and gate the LLM call. Haiku for narrow rubrics, Sonnet for
+  nuanced ones. Untrusted agent output is wrapped in
+  `<<<UNTRUSTED_OUTPUT>>>` delimiters before reaching the judge.
 
-Periodic (cost-bearing) tiers are off by default; opt in with
-`PERIODIC=1`. See [evals/README.md](../evals/README.md) for fixture
-schema, rubric format, env-var knobs, and the rerun-on-base blame
-protocol.
+`EvalCollector` writes incrementally, finds the previous run on the same
+branch+tier, and prints regressions + budget regressions (≥2× growth in
+tool calls or turns without a verdict change). See
+[evals/README.md](../evals/README.md) for fixture schema, rubric format,
+env-var knobs, and the rerun-on-base blame protocol.
 
-**CI wiring.** Two GitHub Actions workflows live in `.github/workflows/`:
-`evals.yml` runs the gate tier on every PR (offline, no secrets), and
+**CI wiring.** Two GitHub Actions workflows in `.github/workflows/`:
+`evals.yml` runs the gate on every PR (offline, no secrets);
 `evals-periodic.yml` runs the E2E + judge tier on a weekly cron
-(Monday 06:00 UTC) with `ANTHROPIC_API_KEY` from repo secrets. See
-[evals/README.md](../evals/README.md#ci-integration) for the trigger
-and extension contract.
+(Monday 06:00 UTC) with `ANTHROPIC_API_KEY` from repo secrets.
 
 ## 9. State Management
 

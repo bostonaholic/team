@@ -1,9 +1,9 @@
-# Evals (periodic) — weekly E2E + judge tier.
+# Evals (periodic) — weekly cost-bearing E2E + LLM-judge tier.
 #
-# Cost-bearing tier: invokes `claude -p` against fixtures under
-# evals/fixtures/<agent>/<case>/, then hands output to the judge.
-# Requires ANTHROPIC_API_KEY (stored as a repo secret) and runs only on
-# the weekly cron or via manual workflow_dispatch.
+# Invokes `claude -p` against fixtures under evals/fixtures/<agent>/<case>/,
+# then runs the LLM-judge over agent output. Requires ANTHROPIC_API_KEY
+# (stored as a repo secret) and runs only on the weekly cron or via manual
+# workflow_dispatch.
 #
 # Runs Monday 06:00 UTC. Gate tier (offline) lives in evals.yml.
 name: Evals (periodic)
@@ -20,45 +20,38 @@ concurrency:
 jobs:
   periodic:
     runs-on: ubuntu-latest
-    timeout-minutes: 30  # matches EVALS_WALLCLOCK_CAP default (1800s)
+    timeout-minutes: 30
     permissions:
       contents: read
     strategy:
       fail-fast: false
       matrix:
-        # Add new agents under behavioral coverage by appending here.
-        # Each entry runs as an independent matrix leg so a flaky agent
-        # does not mask regressions in another.
-        agent: [code-reviewer]
+        suite:
+          - { name: code-reviewer-e2e, file: test/code-reviewer-e2e.test.ts }
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v6
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: '22'
+          bun-version: latest
 
-      - name: Run E2E + judge for ${{ matrix.agent }}
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run ${{ matrix.suite.name }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          # Route matrix value through env (not direct ${{ }} expansion
-          # into the run: shell) so the pattern stays correct as the
-          # matrix grows — even though matrix values are author-controlled.
-          AGENT: ${{ matrix.agent }}
-          # Explicit tier scope: weekly workflow runs only cost-bearing
-          # cases. Gate-tier cases (if any) stay out so the gate workflow
-          # owns them.
+          EVALS: "1"
+          EVALS_ALL: "1"
           EVALS_TIER: periodic
-        # PERIODIC=1 is the cost-control opt-in (refuses to call the
-        # model otherwise). ALL=1 ignores diff-based selection so the
-        # weekly run exercises every fixture for the agent.
-        run: PERIODIC=1 ALL=1 bash evals/e2e/run.sh "$AGENT"
+        run: bun test ${{ matrix.suite.file }}
 
       - name: Upload eval results
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: eval-periodic-${{ matrix.agent }}-${{ github.run_id }}
+          name: eval-periodic-${{ matrix.suite.name }}-${{ github.run_id }}
           path: evals/results/
           retention-days: 90

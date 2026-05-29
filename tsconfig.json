@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "types": ["bun-types"],
+    "lib": ["ES2022"],
+    "resolveJsonModule": true
+  },
+  "include": ["test/**/*.ts", "scripts/**/*.ts"],
+  "exclude": ["node_modules", "evals/lib/**", "evals/results/**"]
+}
