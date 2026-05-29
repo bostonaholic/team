@@ -63,10 +63,55 @@ loop:
      phases) carry `approved: true` in their frontmatter. If missing,
      report a desync and suggest re-invoking the same /team-* command.
   4. Dispatch the agent(s) (parallel where the phase table marks them).
-  5. Write each returned artifact to docs/plans/<id>/<name>.md
+  5. Parse the subagent's final assistant text for an open-questions
+     envelope (see `skills/agent-open-questions/SKILL.md` — the
+     canonical contract):
+     a. Scan the Task tool result for fenced ```json blocks in order.
+        Per Decision 5 (first-block-wins), the FIRST block whose
+        top-level object contains an `openQuestions` array is the
+        envelope. Ignore other fenced JSON blocks (e.g. the
+        `{designPath, ...}` summary at the end of an artifact-complete
+        message) when an envelope is present.
+     b. If an envelope is present, call `AskUserQuestion` with the
+        parsed `openQuestions` array verbatim.
+        - **Size cap.** `AskUserQuestion` accepts 1–4 questions per
+          call. If the envelope carries more than 4, render only the
+          first 4 and `SendMessage` the subagent with a note that the
+          remainder must be re-emitted in a follow-up envelope or
+          deferred into the artifact (per the agent-open-questions
+          ≤ 4 cap).
+     c. Free-text escape hatch: if a chosen option's `description`
+        declares that the orchestrator must follow up with free-text
+        input (or the subagent's prompt explicitly requires it for that
+        branch), ask the user a plain-text follow-up question and
+        incorporate the response into the resume message. This is
+        necessary because `AskUserQuestion` returns only the chosen
+        `label` — no free-text field. The questioner's multi-repo flow
+        is the canonical worked example.
+     d. Resume the same subagent via the Task tool's
+        `SendMessage(to: <agentId>, message: <user selections verbatim,
+        plus any free-text follow-up response>)`. The subagent receives
+        the selections as a new user turn with its prior transcript
+        intact; this is NOT a fresh dispatch.
+     e. On malformed JSON or a missing `label`, follow the two-attempt
+        path: attempt 1 = `SendMessage` the subagent the exact parse
+        error and request a corrected envelope; attempt 2 failure =
+        write `docs/plans/<id>/dispatch-failure.md` with frontmatter
+        `phase: <current>, status: parse-failed`, mark the phase halted
+        in TodoWrite, and surface the artifact path to the user.
+     f. If no envelope is present, proceed to step 6.
+     g. **User cancels the `AskUserQuestion` prompt mid-flight.** Do
+        NOT `SendMessage` the subagent (it remains paused awaiting a
+        resume that will never come). Mark the current phase halted
+        in TodoWrite, surface a "user cancelled at <phase>" message
+        to the user, and stop the loop. The next `/team-*` invocation
+        re-enters the loop at the same phase: on resume detection the
+        subagent is re-dispatched fresh, re-emits the envelope, and
+        the orchestrator re-renders the prompt.
+  6. Write each returned artifact to docs/plans/<id>/<name>.md
      with the YAML frontmatter the agent specifies (see the agent file
      and skills/qrspi-workflow/SKILL.md).
-  6. Run the gate for this phase:
+  7. Run the gate for this phase:
      - HUMAN (design, structure): present the artifact, wait for verdict.
        On approve, edit the artifact's frontmatter to set
        `approved: true` and `approved_at: <ISO-8601>`. On reject,
@@ -78,9 +123,9 @@ loop:
        sort findings into severity tiers; auto-loop on any Blocking or
        Major finding (never consulting the user), tracking the round count
        in TodoWrite, capped at 5 rounds; consult only on Minor-and-below.
-  7. Update TodoWrite — mark current phase `completed` and the next one
+  8. Update TodoWrite — mark current phase `completed` and the next one
      `in_progress`.
-  8. Goto loop.
+  9. Goto loop.
 ```
 
 ### Phase table
@@ -235,11 +280,17 @@ When the aggregate gate passes:
   session-scoped and is rebuilt on entry to any `/team-*` command by
   scanning artifacts.
 - `AskUserQuestion` is the canonical Claude Code tool for any
-  multi-choice user prompt — design/structure approval, worktree-vs-
-  in-place, shipping options. Free-text prompts ("Do you approve?") are
-  not the convention. Free-form text input remains appropriate when the
-  question genuinely has no enumerable options (e.g. capturing the
-  user's revision feedback after they pick "Request changes").
+  multi-choice user prompt **from the orchestrator** — design/structure
+  approval, worktree-vs-in-place, shipping options. Free-text prompts
+  ("Do you approve?") are not the convention. Free-form text input
+  remains appropriate when the question genuinely has no enumerable
+  options (e.g. capturing the user's revision feedback after they pick
+  "Request changes"). **Subagents that need user input emit the
+  `openQuestions` envelope per `skills/agent-open-questions/SKILL.md`;
+  the orchestrator parses, renders the prompt via `AskUserQuestion`,
+  and resumes the subagent via `SendMessage`. The orchestrator-side
+  parse + render + resume sequence is documented in the phase loop
+  above (step 5).** Subagents must not call `AskUserQuestion` directly.
 - File artifacts in `docs/plans/<id>/` are the durable communication
   protocol. Always write phase findings to disk before advancing.
 - The two human gates are **design approval** and **structure approval**.
