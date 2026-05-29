@@ -16,7 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  gate:
+  evals-gate:
+    name: Evals — static gate
     runs-on: ubuntu-latest
     permissions:
       contents: read
