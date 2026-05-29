@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 27 skills — 11 entry-point slash commands and 16 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 28 skills — 11 entry-point slash commands and 17 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 ---
 
 # Team Plugin — Skills
@@ -38,7 +38,7 @@ catalog into two flavors:
   …`).
 
 That `argument-hint` marker is the whole flavor distinction. The split
-is **11 entry-point + 16 methodology = 27**.
+is **11 entry-point + 17 methodology = 28**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -211,7 +211,7 @@ argument shape.
 
 ## Methodology skills
 
-The 16 methodology skills carry no `argument-hint` and are never invoked
+The 17 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -227,6 +227,20 @@ load manifest; an agent typically loads at most three.
   phase sequence, the artifact/frontmatter schema (including the
   `repos.md` schema), the gate mechanics (severity tiers and the consult
   guard for the aggregate review gate), and an anti-patterns catalog.
+
+### agent-open-questions
+
+- **Purpose:** Protocol a subagent uses to surface multi-choice open
+  questions to the user without calling `AskUserQuestion` itself.
+- **Loaded by:** questioner, design-author (2).
+- **Key behaviors:** The subagent emits a fenced `openQuestions` JSON
+  envelope as its final assistant message and STOPs; the orchestrator
+  parses it (Decision 5 first-block-wins), renders the prompt via
+  `AskUserQuestion`, and resumes the subagent via `SendMessage` with
+  the user's selections. Caps envelopes at 4 questions per call,
+  documents the free-text escape hatch for collecting additional
+  plain-text input, and defines the two-attempt malformed-envelope
+  fallback.
 
 ### code-review
 
@@ -384,6 +398,7 @@ entry-point section above rather than repeating them here.
 | `team-fix` | user (direct invocation) | Compressed bug-fix flow (outside QRSPI) |
 | `eng-design-doc-review` | user (direct invocation) | Optional pre-Design audit; dispatches a general-purpose subagent |
 | `qrspi-workflow` | orchestrator skills; questioner (schema) | All phases |
+| `agent-open-questions` | questioner, design-author | Question, Design (subagent → user via orchestrator) |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
 | `engineering-standards` | planner, implementer, code-reviewer | Plan, Implement |
 | `test-first-development` | test-architect, code-reviewer; orchestrator | Implement |
