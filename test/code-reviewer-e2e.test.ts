@@ -86,8 +86,13 @@ describeEval("code-reviewer E2E", () => {
     },
     240_000,
   );
-
-  afterAll(async () => {
-    if (collector) await collector.finalize();
-  });
 });
+
+// Register the collector finalize at module top-level, NOT inside the
+// describe.skip block. Otherwise Bun reports the lifecycle hook as a
+// second "(unnamed)" skipped test when EVALS is unset.
+if (collector !== null) {
+  afterAll(async () => {
+    await collector.finalize();
+  });
+}
