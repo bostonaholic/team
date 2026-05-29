@@ -24,3 +24,31 @@ updates:
         dependency-type: "development"
         update-types: ["minor", "patch"]
     open-pull-requests-limit: 5
+
+  # .github/workflows/ — actions/checkout, actions/setup-node, actions/upload-artifact,
+  # oven-sh/setup-bun, etc. Major bumps here have historically required env-var
+  # workarounds (Node 20 deprecation); keeping these current avoids that drift.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      actions-minor-patch:
+        update-types: ["minor", "patch"]
+    open-pull-requests-limit: 5
+
+  # docs/Gemfile — Jekyll site (github-pages, jekyll-remote-theme, webrick).
+  - package-ecosystem: "bundler"
+    directory: "/docs"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      bundler-minor-patch:
+        update-types: ["minor", "patch"]
+    open-pull-requests-limit: 5
