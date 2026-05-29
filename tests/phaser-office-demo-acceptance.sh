@@ -145,14 +145,14 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# T14: docs/src/main.js references canvas dimensions 320 and 240
+# T14: docs/src/main.js references canvas dimensions 640 and 480
 # ---------------------------------------------------------------------------
 if [ -f "$REPO_ROOT/docs/src/main.js" ] && \
-   grep -q "320" "$REPO_ROOT/docs/src/main.js" && \
-   grep -q "240" "$REPO_ROOT/docs/src/main.js"; then
-  pass "T14: docs/src/main.js references canvas dimensions 320 and 240"
+   grep -q "640" "$REPO_ROOT/docs/src/main.js" && \
+   grep -q "480" "$REPO_ROOT/docs/src/main.js"; then
+  pass "T14: docs/src/main.js references canvas dimensions 640 and 480"
 else
-  fail "T14: docs/src/main.js references canvas dimensions 320 and 240"
+  fail "T14: docs/src/main.js references canvas dimensions 640 and 480"
 fi
 
 # ---------------------------------------------------------------------------
@@ -257,13 +257,13 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# T22: docs/assets/backgrounds/office.png is exactly 320x240
+# T22: docs/assets/backgrounds/office.png is exactly 640x480
 # ---------------------------------------------------------------------------
 if [ -f "$REPO_ROOT/docs/assets/backgrounds/office.png" ] && \
-   file "$REPO_ROOT/docs/assets/backgrounds/office.png" | grep -q "320 x 240"; then
-  pass "T22: docs/assets/backgrounds/office.png is 320x240"
+   file "$REPO_ROOT/docs/assets/backgrounds/office.png" | grep -q "640 x 480"; then
+  pass "T22: docs/assets/backgrounds/office.png is 640x480"
 else
-  fail "T22: docs/assets/backgrounds/office.png is 320x240"
+  fail "T22: docs/assets/backgrounds/office.png is 640x480"
 fi
 
 # ---------------------------------------------------------------------------
@@ -366,6 +366,18 @@ if [ -f "$REPO_ROOT/dev.yml" ] && \
   pass "T32: dev.yml docs command no longer references bundle exec jekyll serve"
 else
   fail "T32: dev.yml docs command no longer references bundle exec jekyll serve"
+fi
+
+# ---------------------------------------------------------------------------
+# T33: docs/src/main.js contains the literal player label 'You'
+#      (the player character represents the orchestrator, distinct from the
+#      13 NPC agent names)
+# ---------------------------------------------------------------------------
+if [ -f "$REPO_ROOT/docs/src/main.js" ] && \
+   grep -q "'You'" "$REPO_ROOT/docs/src/main.js"; then
+  pass "T33: docs/src/main.js contains player label 'You'"
+else
+  fail "T33: docs/src/main.js contains player label 'You'"
 fi
 
 # ---------------------------------------------------------------------------
