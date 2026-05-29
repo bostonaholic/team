@@ -419,9 +419,10 @@ tool calls or turns without a verdict change). See
 env-var knobs, and the rerun-on-base blame protocol.
 
 **CI wiring.** Two GitHub Actions workflows in `.github/workflows/`:
-`evals.yml` runs the gate on every PR (offline, no secrets);
-`evals-periodic.yml` runs the E2E + judge tier on a weekly cron
-(Monday 06:00 UTC) with `ANTHROPIC_API_KEY` from repo secrets.
+`harness-checks.yml` runs the offline harness validation on every PR
+(no secrets, ~5s); `behavioral-evals.yml` runs the live-agent regression
+check on a weekly cron (Monday 06:00 UTC) with `ANTHROPIC_API_KEY` from
+repo secrets.
 
 ## 9. State Management
 
