@@ -1,7 +1,11 @@
 # Team — Plugin Office Demo
 
 A pixel-art Phaser 3 demo that visualizes the [Team plugin](../README.md)'s
-13 specialist agents as characters wandering an office. Deployed at
+orchestrator and its 13 specialist agents as characters in an office.
+The player character is **You** — the orchestrator session that walks the
+QRSPI phase table — and the 13 NPCs are the specialist agents wandering
+between desks. Native canvas is 640×480 and renders at 1280×960 (2× zoom)
+for crisp pixels. Deployed at
 [team.bostonaholic.dev](https://team.bostonaholic.dev) and served from
 this `docs/` directory by GitHub Pages.
 
@@ -36,20 +40,25 @@ npm run generate-assets
 
 ## Controls
 
-Arrow keys or WASD move the player-controlled agent (the one without
-a colored tint). The other twelve agents wander between desks on their
-own — each picks a free desk, walks to it, "works" for 4-6 seconds,
-then releases the desk and picks the next one.
+Arrow keys or WASD move the player character — labeled **You** and
+rendered without a tint at canvas center — around the office. The 13
+tinted NPCs wander between desks on their own: each picks a free desk,
+walks to it, "works" for 4-6 seconds, then releases the desk and picks
+the next one. Always-on name labels (12px sans-serif) sit above every
+sprite so each character is identifiable at a glance.
 
-## The 13 characters
+## You + 13 NPCs
 
-Each on-screen character maps 1:1 to one of the plugin's 13 specialist
-agents, listed in [`skills/team/registry.json`](../skills/team/registry.json).
-The character labels stay above each sprite for easy identification. The
-agents and the QRSPI phases they serve:
+The player character represents **You** — the orchestrator session (the
+user-controlled Claude Code session that walks the QRSPI phase table).
+The 13 NPCs are the plugin's specialist agents, one each, listed in
+[`skills/team/registry.json`](../skills/team/registry.json). Total
+characters on screen: 14 (1 player + 13 NPCs). Each NPC has a distinct
+tint so no two agents share a color. The agents and the QRSPI phases
+they serve:
 
 - **questioner** — Phase 1 (QUESTION). Decomposes user intent into a
-  task and clarifying questions. Player-controlled in this demo.
+  task and clarifying questions.
 - **file-finder** — Phase 2 (RESEARCH). Locates relevant files in the
   codebase, isolated from the user's framing.
 - **researcher** — Phase 2 (RESEARCH). Reads the located files and
