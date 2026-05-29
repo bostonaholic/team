@@ -1,8 +1,12 @@
 // Team plugin office demo — Phaser 3 scene.
 //
+// The player character at canvas center represents "You" — the orchestrator
+// session that walks the QRSPI phase table. The 13 NPCs are the specialist
+// agents listed in skills/team/registry.json (questioner through verifier).
+//
 // Slice 2: Phaser bootstrap (canvas + camera zoom).
 // Slice 4: player-controlled sprite + walk/idle anims + flip + load-error overlay.
-// Slice 5: 6-desk hitbox config, OCCUPIED Set, 12 deterministic NPC spawns.
+// Slice 5: desk hitbox config, OCCUPIED Set, 13 deterministic NPC spawns.
 // Slice 6: per-NPC state machine (idle -> walking -> working), desk-occupation
 //          checks, 4-6s sit timer via this.time.addEvent, walking/working
 //          text indicator above each NPC.
@@ -10,69 +14,92 @@
 // Source of truth for the design and slicing:
 // docs/plans/2026-05-28-phaser-office-demo/{design,structure,plan}.md
 
-const GAME_WIDTH = 320;
-const GAME_HEIGHT = 240;
-const PLAYER_SPEED = 60;
-const NPC_SPEED = 40;
+const GAME_WIDTH = 640;
+const GAME_HEIGHT = 480;
+const PLAYER_SPEED = 120;
+const NPC_SPEED = 80;
 const ARRIVAL_THRESHOLD = 4; // pixels — NPC has arrived at desk center
 const IDLE_DELAY_MIN = 2000;
 const IDLE_DELAY_MAX = 4000;
 const SIT_DURATION_MIN = 4000;
 const SIT_DURATION_MAX = 6000;
 
+// Player label — the orchestrator session is "You".
+const PLAYER_NAME = 'You';
+const PLAYER_LABEL_COLOR = '#ffeb3b'; // bright yellow, distinct from NPC labels
+
+// 15 desks on a 3x5 grid. Two extra over the 13 NPCs so the room never
+// deadlocks waiting for an open desk. Each desk is 48x24 px and the row
+// y-positions sit cleanly in the floor band (y >= 160).
 const DESKS = [
-  { id: 'desk-0', x: 20, y: 110, w: 36, h: 18 },
-  { id: 'desk-1', x: 142, y: 110, w: 36, h: 18 },
-  { id: 'desk-2', x: 264, y: 110, w: 36, h: 18 },
-  { id: 'desk-3', x: 20, y: 180, w: 36, h: 18 },
-  { id: 'desk-4', x: 142, y: 180, w: 36, h: 18 },
-  { id: 'desk-5', x: 264, y: 180, w: 36, h: 18 }
+  // Row 1 (y=200)
+  { id: 'desk-0',  x: 32,  y: 200, w: 48, h: 24 },
+  { id: 'desk-1',  x: 164, y: 200, w: 48, h: 24 },
+  { id: 'desk-2',  x: 296, y: 200, w: 48, h: 24 },
+  { id: 'desk-3',  x: 428, y: 200, w: 48, h: 24 },
+  { id: 'desk-4',  x: 560, y: 200, w: 48, h: 24 },
+  // Row 2 (y=290)
+  { id: 'desk-5',  x: 32,  y: 290, w: 48, h: 24 },
+  { id: 'desk-6',  x: 164, y: 290, w: 48, h: 24 },
+  { id: 'desk-7',  x: 296, y: 290, w: 48, h: 24 },
+  { id: 'desk-8',  x: 428, y: 290, w: 48, h: 24 },
+  { id: 'desk-9',  x: 560, y: 290, w: 48, h: 24 },
+  // Row 3 (y=380)
+  { id: 'desk-10', x: 32,  y: 380, w: 48, h: 24 },
+  { id: 'desk-11', x: 164, y: 380, w: 48, h: 24 },
+  { id: 'desk-12', x: 296, y: 380, w: 48, h: 24 },
+  { id: 'desk-13', x: 428, y: 380, w: 48, h: 24 },
+  { id: 'desk-14', x: 560, y: 380, w: 48, h: 24 }
 ];
 
 const OCCUPIED = new Set();
 
-// 12 NPC spawn positions arranged on a 4x3 grid (rows y=96/144/210/228,
-// columns x=50/160/270). Constraints encoded here:
-//   * Horizontal separation between sprite centers on the same row is 110px.
-//     The widest agent labels (`structure-planner`, `security-reviewer`) are
-//     ~55px wide, so 110px guarantees ~55px of clear gap between adjacent
-//     labels at spawn — no two labels can overlap horizontally on a row.
-//   * Rows y=96 and y=144 sit above the top desk band (y=110..128); rows
-//     y=210 and y=228 sit below the bottom desk band (y=180..198), so no
-//     NPC spawns inside a desk hitbox.
-//   * Row spacing keeps name labels (rendered 20px above each sprite) from
-//     stacking visually: y=144 vs y=96 -> 48px gap; y=210 vs y=144 -> 66px;
-//     y=228 vs y=210 -> 18px (label top on bottom row sits at world-y
-//     ≈ 208, comfortably below the y=210 row's working/walking indicator
-//     bottom at world-y ≈ 198, so the two rows do not crowd).
-//   * Bottom row y=228 keeps the sprite fully inside the 320x240 canvas:
-//     sprite half-height 8 puts the sprite bottom at world-y 236 (4px
-//     margin above the y=240 canvas edge), so NPC feet are not clipped.
+// 13 NPC spawn positions distributed in the aisles between desk rows.
+// Constraints encoded here:
+//   * Columns x = 70 / 230 / 410 / 570 give >= 160px horizontal gap between
+//     sprite centers; the widest agent labels (`structure-planner`,
+//     `security-reviewer`) are ~110px at 12px sans-serif, so adjacent
+//     labels on the same row clear each other by ~50px.
+//   * Aisle rows y = 170 / 255 / 345 / 440 sit in the gaps between desk
+//     rows (200..224, 290..314, 380..404), so no NPC spawns inside a desk
+//     hitbox.
+//   * Row spacing is 85px / 90px / 95px — comfortably above the 80px floor
+//     called out in the redesign brief, so name labels (12px) and
+//     walking/working indicators (10px) never collide vertically.
+//   * Bottom row y=440 keeps sprite feet at y=448, leaving a 32px margin
+//     above the y=480 canvas edge.
+//   * 13 of 16 grid slots — the three slots geometrically closest to the
+//     player-spawn at (320, 240) are omitted so the player has breathing
+//     room at the room's heart.
 const NPC_SPAWNS = [
-  { x: 50,  y: 96  },
-  { x: 160, y: 96  },
-  { x: 270, y: 96  },
-  { x: 50,  y: 144 },
-  { x: 160, y: 144 },
-  { x: 270, y: 144 },
-  { x: 50,  y: 210 },
-  { x: 160, y: 210 },
-  { x: 270, y: 210 },
-  { x: 50,  y: 228 },
-  { x: 160, y: 228 },
-  { x: 270, y: 228 }
+  { x: 70,  y: 170 },
+  { x: 230, y: 170 },
+  { x: 410, y: 170 },
+  { x: 570, y: 170 },
+  { x: 70,  y: 255 },
+  { x: 570, y: 255 },
+  { x: 70,  y: 345 },
+  { x: 230, y: 345 },
+  { x: 410, y: 345 },
+  { x: 570, y: 345 },
+  { x: 70,  y: 440 },
+  { x: 230, y: 440 },
+  { x: 570, y: 440 }
 ];
 
+// 13 distinct NPC tints — one per specialist agent. Extended from the
+// previous 12-color palette with a bright cyan to give the new 13th NPC
+// its own identity.
 const NPC_TINTS = [
   0xe05050, 0xe09a50, 0xd0c050, 0x70b050,
   0x50b09a, 0x5090d0, 0x7060c0, 0xc060b0,
-  0xc06060, 0x90a060, 0x60a090, 0xa07060
+  0xc06060, 0x90a060, 0x60a090, 0xa07060,
+  0x40b0e0
 ];
 
-// 13 plugin agent names in registry.json order. Index 0 names the player;
-// indices 1..12 name the NPCs in NPC_SPAWNS order. The registry is the
-// source of truth — keep this array byte-identical to the names returned
-// by `grep -oE '"name": "[a-z-]+"' skills/team/registry.json`.
+// 13 NPC agent names in skills/team/registry.json order. The player
+// character at canvas center is "You" (the orchestrator) and is named
+// separately via PLAYER_NAME — it is NOT one of these 13.
 const AGENT_NAMES = [
   'questioner',
   'file-finder',
@@ -161,12 +188,14 @@ class OfficeScene extends Phaser.Scene {
       });
     }
 
+    // Player ("You" — the orchestrator) spawns at canvas center.
+    // No tint so the player visually stands out from the 13 tinted NPCs.
     this.player = this.physics.add.sprite(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'agent', 0);
     this.player.body.setSize(12, 14).setOffset(2, 1);
     this.player.setCollideWorldBounds(true);
     this.player.play('idle');
-    this.player.agentName = AGENT_NAMES[0];
-    this.player.nameLabel = this.makeNameLabel(this.player.agentName);
+    this.player.agentName = PLAYER_NAME;
+    this.player.nameLabel = this.makeNameLabel(PLAYER_NAME, PLAYER_LABEL_COLOR);
 
     // NPC sprites + per-NPC state machine.
     this.npcs = [];
@@ -181,15 +210,16 @@ class OfficeScene extends Phaser.Scene {
       npc.mode = 'idle';
       npc.targetDeskId = null;
       npc.releaseEvent = null;
-      npc.indicator = this.add.text(npc.x, npc.y - 12, '', {
-        fontSize: '6px',
+      npc.indicator = this.add.text(npc.x, npc.y - 11, '', {
+        fontSize: '10px',
+        fontFamily: 'sans-serif',
         color: '#ffffff',
         stroke: '#000000',
-        strokeThickness: 2
+        strokeThickness: 3
       }).setOrigin(0.5, 1);
       // Name label (slice 7) — separate Text so sprite flip doesn't mirror it.
-      npc.agentName = AGENT_NAMES[i + 1];
-      npc.nameLabel = this.makeNameLabel(npc.agentName);
+      npc.agentName = AGENT_NAMES[i];
+      npc.nameLabel = this.makeNameLabel(npc.agentName, '#ffffff');
       this.npcs.push(npc);
       // Stagger initial walks so they don't all surge at once.
       const delay = Phaser.Math.Between(IDLE_DELAY_MIN, IDLE_DELAY_MAX);
@@ -203,24 +233,25 @@ class OfficeScene extends Phaser.Scene {
     this.wasd = this.input.keyboard.addKeys('W,A,S,D');
   }
 
-  makeNameLabel(name) {
+  makeNameLabel(name, color) {
     return this.add.text(0, 0, name, {
-      fontSize: '7px',
-      color: '#ffffff',
+      fontSize: '12px',
+      fontFamily: 'sans-serif',
+      color: color,
       stroke: '#000000',
-      strokeThickness: 2
+      strokeThickness: 3
     }).setOrigin(0.5, 1);
   }
 
   // Clamp a center-anchored label's x so it stays fully within the
-  // canvas with a 4px margin on each side. Long labels at corner desks
+  // canvas with an 8px margin on each side. Long labels at corner desks
   // (e.g. `structure-planner`, `security-reviewer`) would otherwise
-  // clip off the canvas by a fraction of a pixel up to several pixels.
-  // Short labels are untouched (clamp is a no-op when they already fit).
+  // clip off the canvas. Short labels are untouched (clamp is a no-op
+  // when they already fit).
   clampLabelX(label, desiredX) {
     const half = label.width / 2;
-    const minX = 4 + half;
-    const maxX = GAME_WIDTH - 4 - half;
+    const minX = 8 + half;
+    const maxX = GAME_WIDTH - 8 - half;
     if (maxX < minX) {
       // Label is wider than the safe band; center it.
       label.x = GAME_WIDTH / 2;
@@ -231,10 +262,11 @@ class OfficeScene extends Phaser.Scene {
 
   showAssetLoadFailureOverlay() {
     const text = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'asset load failed', {
-      fontSize: '10px',
+      fontSize: '16px',
+      fontFamily: 'sans-serif',
       color: '#ff8080',
       backgroundColor: '#000000',
-      padding: { x: 4, y: 2 }
+      padding: { x: 6, y: 3 }
     });
     text.setOrigin(0.5, 0.5);
   }
@@ -339,11 +371,11 @@ class OfficeScene extends Phaser.Scene {
     }
 
     // Player name label tracks the player position; clamped to stay onscreen.
-    // Labels are bottom-anchored (origin 0.5, 1); a y of 8 means the label's
-    // bottom is at canvas row 8 and it extends upward from there. X is
-    // clamped via clampLabelX so long labels never clip the canvas edges.
+    // Labels are bottom-anchored (origin 0.5, 1); a min y of 12 keeps the
+    // top of the 12px font visible. X is clamped via clampLabelX so long
+    // labels never clip the canvas edges.
     this.clampLabelX(this.player.nameLabel, this.player.x);
-    this.player.nameLabel.y = Math.max(8, this.player.y - 20);
+    this.player.nameLabel.y = Math.max(12, this.player.y - 22);
 
     // NPC state machine.
     for (const npc of this.npcs) {
@@ -364,13 +396,13 @@ class OfficeScene extends Phaser.Scene {
       }
       // Sync indicator below the name label; name label clamped to canvas
       // on both axes. Both labels are NOT sprite children, so sprite flip
-      // never mirrors them. Name label sits at y-20; indicator at y-12
+      // never mirrors them. Name label sits at y-22; indicator at y-11
       // (just below name, above head). X-clamp keeps long labels like
       // `structure-planner` from clipping at corner-desk x positions.
       this.clampLabelX(npc.nameLabel, npc.x);
-      npc.nameLabel.y = Math.max(8, npc.y - 20);
+      npc.nameLabel.y = Math.max(12, npc.y - 22);
       this.clampLabelX(npc.indicator, npc.x);
-      npc.indicator.y = Math.max(16, npc.y - 12);
+      npc.indicator.y = Math.max(10, npc.y - 11);
     }
   }
 }
