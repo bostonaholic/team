@@ -57,13 +57,13 @@ assert "lib/state.mjs no longer exists" \
   test ! -f lib/state.mjs
 
 assert_shell "no source files import lib/state (excluding docs/plans/)" \
-  "! grep -rn 'lib/state' hooks/ skills/ agents/ .claude/"
+  "! grep -rn --exclude-dir=worktrees 'lib/state' hooks/ skills/ agents/ .claude/"
 
 assert_shell "no active code references writeState/readState/initState (excluding docs/plans/)" \
-  "! grep -rEn 'writeState|readState|initState' hooks/ skills/ agents/ .claude/"
+  "! grep -rEn --exclude-dir=worktrees 'writeState|readState|initState' hooks/ skills/ agents/ .claude/"
 
 assert_shell "no active code (mjs/json) references ~/.team or state.json filename" \
-  "! grep -rEn --include='*.mjs' --include='*.json' '~/\.team|state\.json' hooks/ skills/ agents/ .claude/"
+  "! grep -rEn --exclude-dir=worktrees --include='*.mjs' --include='*.json' '~/\.team|state\.json' hooks/ skills/ agents/ .claude/"
 
 # =============================================================================
 # Hooks scan docs/plans/, not ~/.team/
@@ -114,7 +114,7 @@ assert_shell "every registry agent has a phase field (registry is the source of 
 section "Approval is recorded as artifact frontmatter (no .approved sidecar files)"
 
 assert_shell "no active code references .md.approved sidecar file paths" \
-  "! grep -rEn '\\.md\\.approved' skills/ agents/ hooks/ .claude/"
+  "! grep -rEn --exclude-dir=worktrees '\\.md\\.approved' skills/ agents/ hooks/ .claude/"
 
 # =============================================================================
 # Documentation aligned: no stale state.json mentions outside docs/plans/

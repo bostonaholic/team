@@ -112,12 +112,12 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# T8: architecture.md methodology table includes engineering-standards row with all 3
+# T8: skills.md methodology table includes engineering-standards row with all 3
 #     consumers (planner, implementer, code-reviewer)
 # ---------------------------------------------------------------------------
 T8_PASS=true
 
-ENGINEERING_STANDARDS_ROW=$(grep "engineering-standards" "$REPO_ROOT/docs/architecture.md" \
+ENGINEERING_STANDARDS_ROW=$(grep "engineering-standards" "$REPO_ROOT/docs/skills.md" \
   | grep -v "^#\|^>\|//\|event" | head -5 || true)
 
 if [ -z "$ENGINEERING_STANDARDS_ROW" ]; then
@@ -132,17 +132,17 @@ else
 fi
 
 if [ "$T8_PASS" = "true" ]; then
-  pass "T8: architecture.md methodology table includes engineering-standards row with all 3 consumers"
+  pass "T8: skills.md methodology table includes engineering-standards row with all 3 consumers"
 else
-  fail "T8: architecture.md methodology table includes engineering-standards row with all 3 consumers"
+  fail "T8: skills.md methodology table includes engineering-standards row with all 3 consumers"
 fi
 
 # ---------------------------------------------------------------------------
-# T9: architecture.md code-review row unchanged
+# T9: skills.md code-review row unchanged
 # ---------------------------------------------------------------------------
 T9_PASS=true
 
-CODE_REVIEW_ROW=$(grep '`code-review`' "$REPO_ROOT/docs/architecture.md" \
+CODE_REVIEW_ROW=$(grep '`code-review`' "$REPO_ROOT/docs/skills.md" \
   | grep -v "^#\|^>\|SKILL.md\|//\|event" | head -5 || true)
 
 for agent in "code-reviewer" "security-reviewer" "ux-reviewer" "technical-writer"; do
@@ -153,9 +153,9 @@ for agent in "code-reviewer" "security-reviewer" "ux-reviewer" "technical-writer
 done
 
 if [ "$T9_PASS" = "true" ]; then
-  pass "T9: architecture.md code-review row unchanged"
+  pass "T9: skills.md code-review row unchanged"
 else
-  fail "T9: architecture.md code-review row unchanged"
+  fail "T9: skills.md code-review row unchanged"
 fi
 
 # ---------------------------------------------------------------------------
@@ -246,27 +246,27 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# T17: architecture.md methodology table includes solid-principles row
+# T17: skills.md methodology table includes solid-principles row
 # ---------------------------------------------------------------------------
-SOLID_ROW=$(grep "solid-principles" "$REPO_ROOT/docs/architecture.md" \
+SOLID_ROW=$(grep "solid-principles" "$REPO_ROOT/docs/skills.md" \
   | grep -v "^#\|^>\|//\|event" | head -5 || true)
 
 if [ -n "$SOLID_ROW" ]; then
-  pass "T17: architecture.md methodology table includes solid-principles row"
+  pass "T17: skills.md methodology table includes solid-principles row"
 else
-  fail "T17: architecture.md methodology table includes solid-principles row"
+  fail "T17: skills.md methodology table includes solid-principles row"
 fi
 
 # ---------------------------------------------------------------------------
-# T18: architecture.md methodology table includes refactoring-to-patterns row
+# T18: skills.md methodology table includes refactoring-to-patterns row
 # ---------------------------------------------------------------------------
-REFACTORING_ROW=$(grep "refactoring-to-patterns" "$REPO_ROOT/docs/architecture.md" \
+REFACTORING_ROW=$(grep "refactoring-to-patterns" "$REPO_ROOT/docs/skills.md" \
   | grep -v "^#\|^>\|//\|event" | head -5 || true)
 
 if [ -n "$REFACTORING_ROW" ]; then
-  pass "T18: architecture.md methodology table includes refactoring-to-patterns row"
+  pass "T18: skills.md methodology table includes refactoring-to-patterns row"
 else
-  fail "T18: architecture.md methodology table includes refactoring-to-patterns row"
+  fail "T18: skills.md methodology table includes refactoring-to-patterns row"
 fi
 
 # ---------------------------------------------------------------------------

@@ -78,14 +78,14 @@ fi
 
 # ---------------------------------------------------------------------------
 # T7: All 4 consumer agent names appear in the code-review row of
-#     docs/architecture.md. Uses separate greps (not order-dependent).
+#     docs/skills.md. Uses separate greps (not order-dependent).
 #     The methodology table row for code-review must name all 4 agents.
 # ---------------------------------------------------------------------------
 T7_PASS=true
 
 # Extract the code-review row from the methodology table, then check
 # each agent name appears within that row.
-CODE_REVIEW_ROW=$(grep '`code-review`' "$REPO_ROOT/docs/architecture.md" \
+CODE_REVIEW_ROW=$(grep '`code-review`' "$REPO_ROOT/docs/skills.md" \
   | grep -v "^#\|^>\|SKILL.md\|//\|event" | head -5 || true)
 
 for agent in "code-reviewer" "security-reviewer" "ux-reviewer" "technical-writer"; do
@@ -98,9 +98,9 @@ for agent in "code-reviewer" "security-reviewer" "ux-reviewer" "technical-writer
 done
 
 if [ "$T7_PASS" = "true" ]; then
-  pass "T7: code-review row in docs/architecture.md names all 4 consumer agents"
+  pass "T7: code-review row in docs/skills.md names all 4 consumer agents"
 else
-  fail "T7: code-review row in docs/architecture.md names all 4 consumer agents (one or more missing: code-reviewer, security-reviewer, ux-reviewer, technical-writer)"
+  fail "T7: code-review row in docs/skills.md names all 4 consumer agents (one or more missing: code-reviewer, security-reviewer, ux-reviewer, technical-writer)"
 fi
 
 # ---------------------------------------------------------------------------
