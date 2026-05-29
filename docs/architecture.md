@@ -20,7 +20,8 @@ description: "Team plugin architecture — agents as microservices, the QRSPI pi
 - [5. Phase-Table Orchestrator](#5-phase-table-orchestrator)
 - [6. Skills](#6-skills)
 - [7. Hooks](#7-hooks)
-- [8. State Management](#8-state-management)
+- [8. Behavioral Evals](#8-behavioral-evals)
+- [9. State Management](#9-state-management)
 
 ## 1. Design Philosophy
 
@@ -392,7 +393,27 @@ every archetype-A skill carries the discovery block, the load-bearing fragments
 (`ID_RE`, `PHASE_FILES`, approval grep, `docs/plans/` root) stay byte-identical
 to canon, and the research-isolation invariant holds.
 
-## 8. State Management
+## 8. Behavioral Evals
+
+The behavioral regression harness lives in `evals/` (plugin-developer
+tooling — not distributed with the plugin). It defends pipeline agents
+against silent behavior drift across model upgrades. Three tiers:
+
+- **Gate** — structural assertions only, no model calls; runs on every
+  save and is wired into the pre-push path.
+- **E2E** — invokes an agent via `claude -p --output-format stream-json`
+  against fixtures under `evals/fixtures/<agent>/<case>/`, captures the
+  output, and persists a per-case result.
+- **Judge** — deterministic regex match against `ground-truth.json`
+  first, then Sonnet-as-judge for criteria the rubric declares
+  `kind: llm`.
+
+Periodic (cost-bearing) tiers are off by default; opt in with
+`PERIODIC=1`. See [evals/README.md](../evals/README.md) for fixture
+schema, rubric format, env-var knobs, and the rerun-on-base blame
+protocol.
+
+## 9. State Management
 
 **Primary state:** the artifacts in `docs/plans/<id>/*.md`. Each
 artifact's YAML frontmatter is the source of truth for "did this phase
