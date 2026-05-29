@@ -1,17 +1,23 @@
 // test/code-reviewer-e2e.test.ts
 //
-// End-to-end eval for the code-reviewer agent.
+// End-to-end eval for the code-reviewer agent. Paid tier — spawns a real
+// `claude -p` subprocess and consumes tokens.
 //
-// Default (no EVALS env): the entire describe block is skipped — bun test
-// stays free.
+// File-level gating: this file is excluded from the default `bun run test`
+// invocation via the package.json --ignore patterns. It runs only when
+// explicitly invoked through:
 //
-// `EVALS=1 bun test test/code-reviewer-e2e.test.ts` — invokes the real
-// `claude -p` subprocess. Requires ANTHROPIC_API_KEY. Each test costs
-// roughly $0.10–$1.
+//   bun run test:periodic       # full paid suite, all evals files
+//   bun run test:evals          # paid suite scoped by EVALS_TIER
+//   bun test test/code-reviewer-e2e.test.ts   # ad-hoc, with EVALS_MOCK_AGENT
 //
-// `EVALS=1 EVALS_MOCK_AGENT=<path> bun test test/code-reviewer-e2e.test.ts`
-// — replays a recorded NDJSON transcript instead of spawning claude. Used
-// by the dev acceptance loop and by smoke-testing the harness offline.
+// The runtime cost gate (`EVALS=1`) lives in package.json scripts; this
+// file does not re-implement the gate, so it never appears as a "skipped"
+// test in the gate-tier output.
+//
+// Mock seam: `EVALS_MOCK_AGENT=<path>` replays a recorded NDJSON transcript
+// instead of spawning claude — useful for harness smoke tests without
+// spending money or needing ANTHROPIC_API_KEY.
 
 import { afterAll, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -22,11 +28,9 @@ import { EvalCollector } from "./helpers/eval-store";
 import { loadFixture } from "./helpers/fixtures";
 import { runAgentTest } from "./helpers/session-runner";
 
-const evalsEnabled = !!process.env.EVALS;
-const describeEval = evalsEnabled ? describe : describe.skip;
-const collector = evalsEnabled ? new EvalCollector("e2e") : null;
+const collector = new EvalCollector("e2e");
 
-describeEval("code-reviewer E2E", () => {
+describe("code-reviewer E2E", () => {
   test(
     "planted-null-deref: agent surfaces the seeded bug",
     async () => {
@@ -62,7 +66,7 @@ describeEval("code-reviewer E2E", () => {
           result.exitReason === "success" &&
           detectionRate >= fixture.groundTruth.minimum_detection;
 
-        collector?.addTest({
+        collector.addTest({
           name: "planted-null-deref",
           suite: "code-reviewer-e2e",
           tier: "e2e",
@@ -88,11 +92,6 @@ describeEval("code-reviewer E2E", () => {
   );
 });
 
-// Register the collector finalize at module top-level, NOT inside the
-// describe.skip block. Otherwise Bun reports the lifecycle hook as a
-// second "(unnamed)" skipped test when EVALS is unset.
-if (collector !== null) {
-  afterAll(async () => {
-    await collector.finalize();
-  });
-}
+afterAll(async () => {
+  await collector.finalize();
+});

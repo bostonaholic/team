@@ -8,11 +8,8 @@
     "bun": ">=1.0.0"
   },
   "scripts": {
-    "test": "bun test --ignore 'test/**/*-eval.test.ts' --ignore 'test/**/*-e2e.test.ts'",
-    "test:evals": "EVALS=1 bun test --concurrent --max-concurrency 15 'test/**/*-eval.test.ts' 'test/**/*-e2e.test.ts'",
-    "test:evals:all": "EVALS_ALL=1 bun run test:evals",
-    "test:gate": "EVALS_TIER=gate bun run test:evals",
-    "test:periodic": "EVALS_TIER=periodic EVALS_ALL=1 bun run test:evals",
+    "test": "bun test",
+    "test:periodic": "EVALS_ALL=1 EVALS_TIER=periodic bun test --concurrent --max-concurrency 15 test/*.evals.ts",
     "eval:select": "bun run scripts/eval-select.ts",
     "eval:list": "bun run scripts/eval-list.ts",
     "eval:compare": "bun run scripts/eval-compare.ts"

@@ -13,8 +13,8 @@ test/
     touchfiles.ts       # diff-based test selection
     llm-judge.ts        # deterministic-first + Sonnet/Haiku scoring
     fixtures.ts         # frontmatter + ground-truth loaders
-  static-gate.test.ts   # offline schema validation (free)
-  code-reviewer-e2e.test.ts   # gated by EVALS=1
+  static-gate.test.ts        # free; auto-discovered by `bun test`
+  code-reviewer.evals.ts     # paid; .evals.ts suffix is OUTSIDE auto-discovery
 
 scripts/
   eval-select.ts        # `bun run eval:select` — which tests would run today
@@ -29,25 +29,28 @@ evals/
   results/              # generated JSON, one file per run (gitignored)
 ```
 
-## Three tiers
+## Two-tier file naming
 
-| Tier | Cost | Command |
-|---|---|---|
-| Static (gate) | $0 | `bun test` |
-| E2E | ~$0.10–$1 per case | `EVALS=1 bun test` (real `claude -p`) |
-| LLM-judge | ~$0.005 (Haiku) – $0.05 (Sonnet) per call | bundled into `EVALS=1 bun test` |
+The gate / paid split is enforced by **file extension**, not by runtime
+flags or `describe.skip`:
 
-`bun test` runs only the static tier — no model calls, no `ANTHROPIC_API_KEY`,
-no cost. CI runs this on every PR.
+| Suffix | Discovery | Cost | Command |
+|---|---|---|---|
+| `*.test.ts` | Auto-discovered by `bun test` | $0 | `bun test` |
+| `*.evals.ts` | NOT auto-discovered — must be targeted explicitly | $$ | `bun run test:periodic` |
 
-`EVALS=1 bun test` enables the paid tiers. Requires `ANTHROPIC_API_KEY`. CI
-runs this weekly on a cron (Mon 06:00 UTC) plus on `workflow_dispatch`.
+Bun's default test discovery matches `*.test.{ts,tsx,js,jsx}`. Files named
+`*.evals.ts` fall outside that pattern, so `bun test` with no arguments
+never loads them — no skipped tests in the output, no surprise model calls.
+The paid suite runs only when an explicit path is passed:
+
+- `bun run test:periodic` — runs every `test/*.evals.ts`, sets `EVALS_TIER=periodic` + `EVALS_ALL=1`
+- `bun test test/code-reviewer.evals.ts` — ad-hoc single file (needs `ANTHROPIC_API_KEY`)
 
 ## Environment
 
 | Var | Purpose | Default |
 |---|---|---|
-| `EVALS` | Enable paid tests; `bun test` skips E2E/judge tiers when unset | unset |
 | `EVALS_ALL` | Ignore diff-based selection; run every test | unset |
 | `EVALS_TIER` | Filter to one tier — `gate` or `periodic` | unset (all) |
 | `EVALS_MODEL` | Override the default model for the agent under test | `claude-sonnet-4-6` |
@@ -128,7 +131,7 @@ When an eval fails on your branch, rerun on the base before blaming the
 branch:
 
 ```
-git checkout origin/main && EVALS=1 bun test test/code-reviewer-e2e.test.ts
+git checkout origin/main && bun test test/code-reviewer.evals.ts
 ```
 
 If it fails there too, the regression predates your change.
@@ -139,8 +142,9 @@ If it fails there too, the regression predates your change.
 2. Write `evals/rubrics/<agent>.md`.
 3. Add an entry to `E2E_TOUCHFILES` and `E2E_TIERS` in
    `test/helpers/touchfiles.ts`.
-4. Write `test/<agent>-e2e.test.ts` mirroring `test/code-reviewer-e2e.test.ts`.
+4. Write `test/<agent>.evals.ts` mirroring `test/code-reviewer.evals.ts`.
+   Use the `.evals.ts` suffix (not `.test.ts`) so `bun test` doesn't pick it up.
 5. `bun test` — verify the gate validates the new schemas.
-6. `EVALS=1 EVALS_ALL=1 bun test test/<agent>-e2e.test.ts` — run end-to-end.
+6. `bun test test/<agent>.evals.ts` — run end-to-end (needs `ANTHROPIC_API_KEY`).
 
 Run `bun run eval:list` to see the registered tests and their tiers.

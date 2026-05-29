@@ -34,4 +34,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Static gate (free, no secrets)
+        # Paid E2E + judge files are named *.evals.ts — outside Bun's
+        # auto-discovery pattern (*.test.{ts,js,...}) — so `bun test`
+        # with no args never loads them.
         run: bun test

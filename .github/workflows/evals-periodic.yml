@@ -27,7 +27,7 @@ jobs:
       fail-fast: false
       matrix:
         suite:
-          - { name: code-reviewer-e2e, file: test/code-reviewer-e2e.test.ts }
+          - { name: code-reviewer, file: test/code-reviewer.evals.ts }
     steps:
       - uses: actions/checkout@v6
         with:
