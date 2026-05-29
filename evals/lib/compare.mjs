@@ -1,10 +1,8 @@
 // evals/lib/compare.mjs
 //
 // Compare two run directories or auto-find the previous same-branch run.
-// Ports findPreviousRun, compareEvalResults, formatComparison, and
-// generateCommentary from gstack/test/helpers/eval-store.ts (:177, :220,
-// :323, :437). The TS-to-mjs adaptation drops typing but keeps the
-// algorithm verbatim.
+// Exports findPreviousRun, compareEvalResults, formatComparison, and
+// generateCommentary.
 //
 // CLI shape:
 //   node compare.mjs <run-a> <run-b>
@@ -255,8 +253,7 @@ export function formatComparison(diff) {
 }
 
 // ---------------------------------------------------------------------------
-// Commentary heuristics ported from gstack's generateCommentary:437.
-// Surface deltas >= 20% explicitly.
+// Commentary heuristics. Surface deltas >= 20% explicitly.
 // ---------------------------------------------------------------------------
 
 export function generateCommentary(diff) {

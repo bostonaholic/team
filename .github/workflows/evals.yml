@@ -49,6 +49,6 @@ jobs:
           done
           exit $failures
 
-# TODO(follow-up): Port gstack's `report` job (download eval artifacts,
-# summarize PASS/FAIL + cost into a single PR comment, upsert on rerun).
+# TODO(follow-up): add a `report` job that downloads eval artifacts and
+# summarizes PASS/FAIL + cost into a single PR comment, upserting on rerun.
 # Deferred from slice 1 to keep the gate tier dependency-free.

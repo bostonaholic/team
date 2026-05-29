@@ -5,8 +5,7 @@
 # Requires ANTHROPIC_API_KEY (stored as a repo secret) and runs only on
 # the weekly cron or via manual workflow_dispatch.
 #
-# Matches gstack's cron cadence (Monday 06:00 UTC) so all repos share
-# the same regression cycle. Gate tier (offline) lives in evals.yml.
+# Runs Monday 06:00 UTC. Gate tier (offline) lives in evals.yml.
 name: Evals (periodic)
 
 on:

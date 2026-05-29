@@ -122,7 +122,7 @@ The earliest *judgment-heavy* phase is **DESIGN**; the earliest phase where regr
 - `skills/team/SKILL.md` — phase loop semantics; an eval verifying orchestrator behavior would model against this.
 
 ### Headless invocation reference
-The codebase does not currently invoke `claude -p` anywhere; the gstack reference pattern would be net-new tooling for this repo.
+The codebase does not currently invoke `claude -p` anywhere; the subprocess-driven eval pattern would be net-new tooling for this repo.
 
 ### Things conspicuously absent
 - No fixtures directory; evals would need to introduce one.

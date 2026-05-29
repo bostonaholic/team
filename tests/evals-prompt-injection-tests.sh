@@ -41,7 +41,7 @@ fi
 
 # ---------------------------------------------------------------------------
 # T1: judge module source contains the data-not-commands instruction in
-#     the prompt template (per gstack llm-judge.ts:285-294 pattern).
+#     the prompt template (untrusted-content delimiter pattern).
 # ---------------------------------------------------------------------------
 if [ -f "$JUDGE_MJS" ] && grep -qiE "data,? not (commands|instructions)" "$JUDGE_MJS"; then
   pass "T1: judge prompt template contains 'data, not instructions/commands' sentence"

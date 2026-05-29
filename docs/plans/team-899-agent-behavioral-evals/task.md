@@ -62,7 +62,7 @@ ship model bumps quickly rather than discovering regressions in production.
 - The repo's test runner remains bash (consistent with `tests/*.sh`); Bun
   native test runner is available but not yet used for this repo's test suite.
 - `claude -p` (headless Claude Code invocation) is the subprocess runner for
-  agent execution, matching the gstack pattern referenced in the ticket.
+  agent execution.
 - The judge model is Sonnet (same tier as reviewer agents) rather than Opus,
   to keep periodic-tier cost manageable.
 - Synthetic inputs will be hand-authored (not generated) for the first slice

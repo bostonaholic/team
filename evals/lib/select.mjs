@@ -1,8 +1,6 @@
 // evals/lib/select.mjs
 //
-// Diff-based test selection. Ports the touchfile pattern from
-// gstack/test/helpers/touchfiles.ts:34 (E2E_TOUCHFILES), :731
-// (GLOBAL_TOUCHFILES), :756 (getChangedFiles), :774 (selectTests).
+// Diff-based test selection.
 //
 // Each fixture's frontmatter carries `deps:` (YAML list of globs). The
 // selector intersects the union of every case's deps against the

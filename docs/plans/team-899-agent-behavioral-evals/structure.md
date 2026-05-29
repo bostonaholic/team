@@ -137,9 +137,9 @@ improvements, and ≥20% deltas — satisfying the design's acceptance signal
 "a failed eval names the specific rubric criterion that degraded, not
 'output changed.'"
 
-**Layers touched:** `evals/lib/compare.mjs` (ports `findPreviousRun`,
-`compareEvalResults`, `formatComparison`, `generateCommentary` from
-gstack), `evals/e2e/compare.sh` (entry point), result-store wiring so
+**Layers touched:** `evals/lib/compare.mjs` (exports `findPreviousRun`,
+`compareEvalResults`, `formatComparison`, `generateCommentary`),
+`evals/e2e/compare.sh` (entry point), result-store wiring so
 the E2E run prints "vs previous: …" tail on completion.
 
 **Tests:**
@@ -246,6 +246,6 @@ them in:
 - Cost dashboards, token accounting, per-run budget enforcement,
   budget regression assertions.
 - Statistical aggregation across many runs.
-- Worktree-harvest pattern from gstack.
+- Worktree-harvest pattern (capturing implementer diffs as evaluable artifacts).
 - Weighted rubric criteria (start unweighted, revisit when needed).
 - Multi-repo `repos.md`-aware evals.
