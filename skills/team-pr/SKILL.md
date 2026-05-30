@@ -119,6 +119,10 @@ done
    cherry-pick or rebase commits onto the target branch in that repo,
    then let Claude Code (or `git -C <repo-path> worktree remove`) remove
    the worktree; in multi-repo mode, run cleanup for every involved repo.
+   After removing the worktree, bring the repo's local default branch up
+   to date with the merge: `git -C <repo-root> pull --rebase origin
+   <base>` (rebase, never a merge commit — the project keeps linear
+   history). Do this for every involved repo in multi-repo mode.
 
 ## PR Body Template
 

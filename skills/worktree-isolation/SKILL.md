@@ -128,6 +128,9 @@ When teardown is warranted (post-merge or on explicit request):
 2. Empty worktrees clean up automatically.
 3. If manual cleanup is needed: `git -C <repo-path> worktree remove
    <worktree-path>` and `git -C <repo-path> branch -D <id>`.
+4. After the worktree is gone, update the repo's local default branch
+   with the merge: `git -C <repo-path> pull --rebase origin <base>`.
+   Always rebase — never a merge commit — so history stays linear.
 
 ## Gitignored Files
 
