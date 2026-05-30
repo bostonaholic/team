@@ -269,7 +269,10 @@ When the aggregate gate passes:
    after its PR is merged or when the user explicitly asks. When cleanup
    does happen, cherry-pick or rebase commits onto the target branch in
    that repo, then let Claude Code or `git worktree remove` remove the
-   worktree.
+   worktree. After removal, update the repo's local default branch with
+   the merge: `git -C <repo-root> pull --rebase origin <base>` (rebase,
+   never a merge commit — linear history is the rule). In multi-repo
+   mode, do this for every involved repo.
 
 ## Rules
 
