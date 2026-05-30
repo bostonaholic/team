@@ -13,7 +13,7 @@
 // as `test.skip` and never spawns the model.
 //
 // Run paths:
-//   bun run test:periodic                    # all *.evals.ts, EVALS_ALL=1
+//   bun run test:evals                       # all *.evals.ts, EVALS_ALL=1
 //   bun test test/code-reviewer.evals.ts     # ad-hoc (needs EVALS_ANTHROPIC_API_KEY)
 //
 // Mock seams (offline, no key, no cost):
