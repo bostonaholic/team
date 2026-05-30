@@ -1,55 +1,36 @@
-# Behavioral evals for pipeline agents
+# Behavioral Evals
 
-This directory ships fixtures, rubrics, and stored results for the behavioral
-regression harness. The harness code lives in `tests/` and runs under `bun test`.
+Behavioral regression harness for the Team pipeline agents and skills.
 
-## Layout
+This directory holds fixtures, rubrics, and stored runs. The harness code
+(TypeScript + Bun) lives in `tests/`. Two tiers:
 
-```
-tests/
-  helpers/
-    session-runner.ts   # spawns `claude -p`, streams NDJSON, parses transcript
-    eval-store.ts       # persist + compare + budget-regression detection
-    touchfiles.ts       # diff-based test selection
-    llm-judge.ts        # deterministic-first + Sonnet/Haiku scoring
-    fixtures.ts         # frontmatter + ground-truth loaders
-  static-gate.test.ts        # free; auto-discovered by `bun test`
-  code-reviewer.evals.ts     # paid; .evals.ts suffix is OUTSIDE auto-discovery
+- **Static gate** (`bun run test:gate`) — free, runs on every PR. Loads each
+  agent/skill fixture, applies the rubric's structural assertions, no API
+  calls.
+- **E2E + LLM-judge** (`bun run test:periodic`) — paid, nightly + manual.
+  Runs the agent end-to-end and scores output with an LLM judge. Requires
+  `EVALS_ANTHROPIC_API_KEY`.
 
-scripts/
-  eval-select.ts        # `bun run eval:select` — which tests would run today
-  eval-list.ts          # `bun run eval:list` — every known test + tier
-  eval-compare.ts       # `bun run eval:compare <prev> <curr>`
+See `tests/` for the harness implementation and `evals/*/` for fixtures.
 
-evals/
-  fixtures/<agent>/<case>/
-    input.md            # synthetic task with YAML frontmatter (agent, tier, deps)
-    ground-truth.json   # planted bugs + minimum_detection
-  rubrics/<agent>.md    # numbered criteria, deterministic | llm
-  results/              # generated JSON, one file per run (gitignored)
-```
+## Coverage
 
-## Two-tier file naming
+Coverage spans all 13 agents (12 new + code-reviewer) and 28 skills. Every
+agent and skill has a fixture.
 
-The gate / paid split is enforced by **file extension**, not by runtime
-flags or `describe.skip`:
+## Skill harness
 
-| Suffix | Discovery | Cost | Command |
-|---|---|---|---|
-| `*.test.ts` | Auto-discovered by `bun test` | $0 | `bun test` |
-| `*.evals.ts` | NOT auto-discovered — must be targeted explicitly | $$ | `bun run test:evals` |
+The skill harness loads each `SKILL.md`, extracts its rubric block, and
+asserts the documented structure is present. See `tests/skills.test.ts`.
 
-Bun's default test discovery matches `*.test.{ts,tsx,js,jsx}`. Files named
-`*.evals.ts` fall outside that pattern, so `bun test` with no arguments
-never loads them — no skipped tests in the output, no surprise model calls.
-The paid suite runs only when an explicit path is passed:
+## Gate runner
 
-- `bun run test:evals` — runs every `./tests/*.evals.ts` with `EVALS_ALL=1` (all tiers)
-- `bun test ./tests/code-reviewer.evals.ts` — ad-hoc single file (needs `EVALS_ANTHROPIC_API_KEY`)
+The gate runner (`bun scripts/run-gate-evals.ts`) aggregates every gate
+case and exits non-zero on the first rubric failure. CI invokes it via
+`bun run test:gate`.
 
-> **Path must be `./`-prefixed.** Bun treats a bare `tests/foo.evals.ts`
-> argument as a *name filter* (matches nothing here), not a path. Always
-> pass `./tests/…`.
+## Tier reference
 
 Within a paid file, each test is registered through `testIfSelected`, which
 consults the selector: `EVALS_TIER` and diff-based selection decide whether

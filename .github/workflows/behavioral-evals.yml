@@ -58,6 +58,19 @@ jobs:
           # File path MUST be `./`-prefixed: bun treats a bare `tests/...`
           # arg as a name filter (matches nothing), not a path.
           - { name: code-reviewer, file: ./tests/code-reviewer.evals.ts }
+          - { name: file-finder, file: ./tests/file-finder.evals.ts }
+          - { name: verifier, file: ./tests/verifier.evals.ts }
+          - { name: test-architect, file: ./tests/test-architect.evals.ts }
+          - { name: security-reviewer, file: ./tests/security-reviewer.evals.ts }
+          - { name: design-author, file: ./tests/design-author.evals.ts }
+          - { name: structure-planner, file: ./tests/structure-planner.evals.ts }
+          - { name: planner, file: ./tests/planner.evals.ts }
+          - { name: questioner, file: ./tests/questioner.evals.ts }
+          - { name: researcher, file: ./tests/researcher.evals.ts }
+          - { name: technical-writer, file: ./tests/technical-writer.evals.ts }
+          - { name: ux-reviewer, file: ./tests/ux-reviewer.evals.ts }
+          - { name: implementer, file: ./tests/implementer.evals.ts }
+          - { name: skills, file: ./tests/skills.evals.ts }
     steps:
       - uses: actions/checkout@v7
         with:
