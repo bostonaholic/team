@@ -1,0 +1,12 @@
+{
+  "bugs": [
+    {
+      "id": "v1",
+      "category": "contract-violation",
+      "severity": "high",
+      "description": "parsePort returns NaN for non-numeric input instead of throwing RangeError; the acceptance contract is violated and the implementer's 'all tests pass' claim is false.",
+      "detection_hint": "(contract violation|does not throw|fails the acceptance|RangeError is never thrown|returns NaN)"
+    }
+  ],
+  "minimum_detection": 1.0
+}

@@ -1,0 +1,29 @@
+{
+  "bugs": [
+    {
+      "id": "f1",
+      "category": "file-location",
+      "description": "The session-runner module that spawns claude -p must be located.",
+      "detection_hint": "tests/helpers/session-runner\\.ts"
+    },
+    {
+      "id": "f2",
+      "category": "file-location",
+      "description": "The fixtures loader module must be located.",
+      "detection_hint": "tests/helpers/fixtures\\.ts"
+    },
+    {
+      "id": "f3",
+      "category": "file-location",
+      "description": "The llm-judge module must be located.",
+      "detection_hint": "tests/helpers/llm-judge\\.ts"
+    },
+    {
+      "id": "f4",
+      "category": "file-location",
+      "description": "The static-gate test must be located.",
+      "detection_hint": "tests/static-gate\\.test\\.ts"
+    }
+  ],
+  "minimum_detection": 1.0
+}

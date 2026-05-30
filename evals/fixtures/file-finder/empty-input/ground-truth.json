@@ -1,0 +1,11 @@
+{
+  "bugs": [
+    {
+      "id": "f1",
+      "category": "file-location",
+      "description": "With an empty task body there is no file to find; a correct file-finder surfaces that the request is empty rather than fabricating a path. This hint must NOT appear in a graceful empty-input response.",
+      "detection_hint": "tests/helpers/session-runner\\.ts"
+    }
+  ],
+  "minimum_detection": 1.0
+}

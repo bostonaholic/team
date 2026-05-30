@@ -11,6 +11,18 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "agents/code-reviewer.md",
     "skills/code-review/**",
   ],
+  "file-finder-finds-planted-files": [
+    "agents/file-finder.md",
+  ],
+  "file-finder-empty-input": [
+    "agents/file-finder.md",
+  ],
+  "verifier-detects-violation": [
+    "agents/verifier.md",
+  ],
+  "verifier-no-op-guard": [
+    "agents/verifier.md",
+  ],
 };
 
 export const LLM_JUDGE_TOUCHFILES: Record<string, string[]> = {
@@ -29,6 +41,10 @@ export const E2E_TIERS: Record<string, "gate" | "periodic"> = {
   // Note: gate-tier E2E tests would do offline assertions (e.g. against a
   // recorded transcript). The single live fixture is periodic.
   "planted-null-deref": "periodic",
+  "file-finder-finds-planted-files": "gate",
+  "file-finder-empty-input": "gate",
+  "verifier-detects-violation": "gate",
+  "verifier-no-op-guard": "gate",
 };
 
 const BASE_BRANCH_FALLBACKS = ["origin/main", "origin/master", "main", "master"];

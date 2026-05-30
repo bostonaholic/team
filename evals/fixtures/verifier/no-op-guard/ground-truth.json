@@ -1,0 +1,19 @@
+{
+  "bugs": [
+    {
+      "id": "v1",
+      "category": "contract-violation",
+      "severity": "high",
+      "description": "clampPercent does not clamp the upper bound; values above 100 pass through, violating Acceptance A.",
+      "detection_hint": "(upper clamp|above 100|exceeds 100|values over 100|Acceptance A)"
+    },
+    {
+      "id": "v2",
+      "category": "contract-violation",
+      "severity": "high",
+      "description": "clampPercent does not clamp the lower bound; negative values pass through, violating Acceptance B.",
+      "detection_hint": "(lower clamp|negative value|below 0|less than 0|Acceptance B)"
+    }
+  ],
+  "minimum_detection": 1.0
+}
