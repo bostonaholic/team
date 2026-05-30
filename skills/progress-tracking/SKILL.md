@@ -1,6 +1,6 @@
 ---
 name: progress-tracking
-description: Todo-first progress convention for multi-step procedures — loaded by every agent that runs a numbered procedure (questioner, design-author, structure-planner, planner, test-architect, implementer, code-reviewer, security-reviewer, ux-reviewer, technical-writer, researcher, verifier) so each tracks its own steps without drift
+description: Todo-first progress convention for multi-step procedures — loaded by every multi-step agent to track its own steps without drift
 user-invocable: false
 ---
 

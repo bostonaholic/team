@@ -176,7 +176,9 @@ describe("Slices 2-3: canonical reference sentence is byte-identical (drift guar
         if (line.includes(CANONICAL_INNER)) variants.add(line.trim());
       }
     }
-    // The sentence must appear (at least once) and never drift.
+    // Exactly one distinct variant: the sentence is present across the
+    // targets and never drifts into a second wording. (size 0 — absent —
+    // also fails, so this requires presence as a side effect.)
     expect(variants.size).toBe(1);
   });
 });
