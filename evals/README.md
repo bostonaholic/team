@@ -73,7 +73,7 @@ It does NOT reimplement spawning. Callers then score the output with
 ## Free static gates
 
 These `.test.ts` suites run on every PR (no model calls), alongside the harness
-unit tests under `tests/helpers/` — currently five:
+unit tests under `tests/helpers/` — currently four:
 
 - `tests/static-gate.test.ts` — validates every `evals/fixtures/<agent>/<case>/`
   one level deep. It SKIPS the `skills/` directory (skill fixtures are nested
@@ -85,15 +85,12 @@ unit tests under `tests/helpers/` — currently five:
   exists with >= 1 numbered criterion.
 - `tests/skill-contracts.test.ts` — the 11-orchestration-skill structural
   contract check.
-- `tests/matrix-coverage.test.ts` — asserts every `tests/*.evals.ts` is wired
-  into the `behavioral-evals.yml` matrix (and every matrix row points at a
-  real file), so a suite cannot land unwired.
-- `tests/tier-coverage.test.ts` — asserts no eval belongs to a tier that runs
-  in zero workflows: every periodic test's suite is a `behavioral-evals.yml`
-  matrix row, and every gate test resolves (via the shared
-  `tests/helpers/gate-cases.ts` resolver — the SAME one the runner uses) to its
-  own fixture dir with the `mocks/agent.ndjson` that `scripts/run-gate-evals.ts`
-  needs to run it free and mocked. It also caps each mock at 50 KB.
+- `tests/tier-coverage.test.ts` — asserts every gate test resolves (via the
+  shared `tests/helpers/gate-cases.ts` resolver — the SAME one the runner uses)
+  to its own fixture dir with the `mocks/agent.ndjson` that
+  `scripts/run-gate-evals.ts` needs to run it free and mocked. It also caps each
+  mock at 50 KB. The periodic matrix needs no static check: it is
+  auto-discovered from `tests/*.evals.ts` by `behavioral-evals.yml`.
 
 ## Running
 
@@ -192,12 +189,12 @@ itself from `E2E_TIERS`.
    the conceptual reference, but it is periodic-only and has no `mocks/` dir.)
 4. Wire the test name into `E2E_TOUCHFILES` + `E2E_TIERS` in
    `tests/helpers/touchfiles.ts`.
-5. Add a matrix row to `.github/workflows/behavioral-evals.yml`
-   (`matrix-coverage.test.ts` enforces this).
+5. For periodic suites, nothing to wire: the `behavioral-evals.yml` matrix is
+   auto-discovered from `tests/*.evals.ts`, so a new suite runs automatically
+   with no workflow edit.
 6. For a **gate-tier** case, add `evals/fixtures/<agent>/<case>/mocks/agent.ndjson`
    (and `mocks/judge.json` for judgment agents; deterministic edge cases need
    no judge) so `scripts/run-gate-evals.ts` can run it free & mocked.
-   `tier-coverage.test.ts` is what enforces that every eval is wired to a
-   workflow — it fails the PR if a gate case does not resolve to its own
-   fixture dir with an agent mock, or if a periodic suite is missing its matrix
-   row.
+   `tier-coverage.test.ts` is what enforces every gate case is runnable free —
+   it fails the PR if a gate case does not resolve to its own fixture dir with
+   an agent mock.

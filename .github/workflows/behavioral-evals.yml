@@ -9,6 +9,10 @@
 # workflow_dispatch.
 #
 # Runs Monday 06:00 UTC. Offline harness checks live in harness-checks.yml.
+#
+# The eval matrix is AUTO-DISCOVERED from tests/*.evals.ts by the `discover`
+# job below — there is no manual suite list to maintain. Adding a new
+# tests/<name>.evals.ts makes it run here automatically with no workflow edit.
 name: Behavioral evals
 
 # Hard ban (issue #51, design Decision 5): token/secret-consuming jobs
@@ -26,8 +30,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  discover:
+    name: Discover eval suites
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      suites: ${{ steps.find.outputs.suites }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - id: find
+        # Glob tests/*.evals.ts into the matrix. File path MUST be
+        # `./`-prefixed: bun treats a bare `tests/...` arg as a name filter
+        # (matches nothing), not a path. jq is preinstalled on ubuntu-latest.
+        run: |
+          suites=$(ls tests/*.evals.ts \
+            | sed 's#^tests/##; s#\.evals\.ts$##' \
+            | jq -R -s -c 'split("\n") | map(select(length > 0)) | map({name: ., file: ("./tests/" + . + ".evals.ts")})')
+          echo "suites=$suites" >> "$GITHUB_OUTPUT"
+          echo "Discovered suites: $suites"
+
   behavioral-evals:
     name: Live agent runs (${{ matrix.suite.name }})
+    needs: discover
     # Author gate (issue #51): only OWNER/MEMBER/COLLABORATOR may spend tokens
     # via a pull_request. Event-aware so schedule/workflow_dispatch (no PR
     # context) stay ungated; only pull_request* events are author-gated.
@@ -54,23 +80,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite:
-          # File path MUST be `./`-prefixed: bun treats a bare `tests/...`
-          # arg as a name filter (matches nothing), not a path.
-          - { name: code-reviewer, file: ./tests/code-reviewer.evals.ts }
-          - { name: file-finder, file: ./tests/file-finder.evals.ts }
-          - { name: verifier, file: ./tests/verifier.evals.ts }
-          - { name: test-architect, file: ./tests/test-architect.evals.ts }
-          - { name: security-reviewer, file: ./tests/security-reviewer.evals.ts }
-          - { name: design-author, file: ./tests/design-author.evals.ts }
-          - { name: structure-planner, file: ./tests/structure-planner.evals.ts }
-          - { name: planner, file: ./tests/planner.evals.ts }
-          - { name: questioner, file: ./tests/questioner.evals.ts }
-          - { name: researcher, file: ./tests/researcher.evals.ts }
-          - { name: technical-writer, file: ./tests/technical-writer.evals.ts }
-          - { name: ux-reviewer, file: ./tests/ux-reviewer.evals.ts }
-          - { name: implementer, file: ./tests/implementer.evals.ts }
-          - { name: skills, file: ./tests/skills.evals.ts }
+        suite: ${{ fromJSON(needs.discover.outputs.suites) }}
     steps:
       - uses: actions/checkout@v7
         with:
