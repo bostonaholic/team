@@ -131,15 +131,27 @@ export interface OutcomeScore {
   minimum_detection: number;
 }
 
+// A fixture's `detection_hint` is treated as a case-insensitive regex (per
+// the rubric's documented contract), with a literal-substring fallback when
+// the string isn't valid regex. This lets a hint match real reviewer
+// phrasing ("null dereference", "user could be null", "missing null check")
+// instead of one brittle literal that a model rarely emits verbatim.
+export function matchesHint(output: string, hint: string): boolean {
+  try {
+    return new RegExp(hint, "is").test(output);
+  } catch {
+    return output.toLowerCase().includes(hint.toLowerCase());
+  }
+}
+
 export function outcomeJudge(
   groundTruth: GroundTruth,
   agentOutput: string,
 ): OutcomeScore {
-  const lowered = agentOutput.toLowerCase();
   const detected: string[] = [];
   const missed: string[] = [];
   for (const bug of groundTruth.bugs) {
-    if (lowered.includes(bug.detection_hint.toLowerCase())) {
+    if (matchesHint(agentOutput, bug.detection_hint)) {
       detected.push(bug.id);
     } else {
       missed.push(bug.id);

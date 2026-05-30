@@ -10,6 +10,7 @@ import {
   _setClientForTests,
   extractJson,
   judgeReviewerOutput,
+  matchesHint,
   outcomeJudge,
   wrapUntrusted,
 } from "./llm-judge";
@@ -35,6 +36,31 @@ describe("extractJson", () => {
 
   test("throws on missing JSON", () => {
     expect(() => extractJson("no json here")).toThrow(/JSON object/);
+  });
+});
+
+describe("matchesHint", () => {
+  // The planted-null-deref fixture's hint: order-independent — the null
+  // concept AND a dereference-locus term must both appear, anywhere.
+  const hint =
+    "(?=[\\s\\S]*(?:null|undefined))" +
+    "(?=[\\s\\S]*(?:deref|user|email|cache|render|profile|access|check))";
+
+  test("matches varied real phrasings of the same bug", () => {
+    expect(matchesHint("possible null dereference on user.email", hint)).toBe(true);
+    expect(matchesHint("the user object could be null here", hint)).toBe(true);
+    expect(matchesHint("missing a null check before reading email", hint)).toBe(true);
+  });
+
+  test("does not match bare 'null' or unrelated prose", () => {
+    expect(matchesHint("this function returns null on success", hint)).toBe(false);
+    expect(matchesHint("looks good, no issues found", hint)).toBe(false);
+  });
+
+  test("falls back to literal substring when the hint is invalid regex", () => {
+    // An unbalanced group is invalid regex; matchesHint must not throw.
+    expect(matchesHint("contains a (b literal", "a (b")).toBe(true);
+    expect(matchesHint("nope", "a (b")).toBe(false);
   });
 });
 
