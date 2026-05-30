@@ -1,6 +1,7 @@
 ---
 name: qrspi-workflow
 description: Question-Research-Design-Structure-Plan-Worktree-Implement-PR phase discipline with gate enforcement — loaded by orchestrator to govern pipeline phase transitions, artifact conventions, and anti-patterns
+user-invocable: false
 ---
 
 # QRSPI Workflow

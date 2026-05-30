@@ -1,6 +1,7 @@
 ---
 name: agent-open-questions
 description: Protocol a subagent uses to surface open questions to the user. Emit a fenced JSON envelope as the final assistant message and STOP; the orchestrator renders AskUserQuestion and resumes via SendMessage with the user's selections. Load this skill from any agent whose prompt has an interactive step.
+user-invocable: false
 ---
 
 # Agent Open Questions Protocol

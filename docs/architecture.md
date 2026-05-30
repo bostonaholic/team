@@ -342,6 +342,32 @@ frontmatter (for example, `agents/design-author.md` declares
 agent body (for example, `code-review` is loaded by the `code-reviewer`
 agent).
 
+Because they are reference material rather than user actions, methodology
+skills set `user-invocable: false` in their frontmatter. This keeps them
+out of the `/` slash-command menu (a `/qrspi-workflow` command is
+meaningless to a user) while leaving them fully loadable by their two
+mechanisms above — neither the `skills:` preload nor a by-path load is
+affected by the field, which governs only menu visibility. The model can
+still auto-load a methodology skill when relevant, so `disable-model-invocation`
+is deliberately **not** set. When adding a new methodology skill, set
+`user-invocable: false`; when adding a new entry-point skill, leave it
+unset so it registers as a slash command.
+
+Among methodology skills, `code-review` is the only one kept
+user-invocable: it is both a building block (loaded as working methodology
+by the `code-reviewer`, `security-reviewer`, `ux-reviewer`, and
+`technical-writer` agents) **and** a meaningful standalone user action
+("review this diff"), so the field stays unset. The distinction is the
+*primary* surface: a skill earns a slash command when a user would
+plausibly run it directly, even if agents also compose it.
+
+(This is separate from the entry-point skills, which are user-invocable by
+definition. Some of those — e.g. `team-worktree`, `team-pr` — are also
+*referenced by path* from `team/SKILL.md`, but those are procedural
+cross-links in the orchestrator's prose, not a parent loading the skill as
+a building block. `code-review` is the only skill loaded as composed
+methodology that is also a user command.)
+
 For the full per-skill reference — all 27 skills, their arguments,
 consumers, and behaviors — see [skills.md](skills.md).
 

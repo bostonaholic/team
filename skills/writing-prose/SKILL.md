@@ -1,6 +1,7 @@
 ---
 name: writing-prose
 description: Clear documentation and readable explanation methodology — loaded by technical-writer agent to produce high-quality documentation assessments grounded in plain language and readability principles
+user-invocable: false
 ---
 
 # Writing Prose

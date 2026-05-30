@@ -40,13 +40,32 @@ more than the path: every handoff uses the same convention so skills stay decoup
 The load-bearing rule: **composition never goes through the skill-invocation tool.**
 The invocation tool is for the top surface only — a user typing the skill, or the model
 auto-invoking it by intent. When one skill pulls in another, it *reads that skill's file*
-or *spawns a subagent*. Decide which surface(s) this skill lives on:
+or *spawns a subagent*.
 
-| Question | If yes → |
-|----------|----------|
-| A user will trigger this by intent ("ship it", "review this", "I have an idea") | **ENTRY POINT** → §1A |
-| Another skill will pull this in as a step of a larger workflow | **BUILDING BLOCK** → §1B |
-| Both (common — e.g. an ideation skill a user invokes AND a planner inlines) | wire both |
+**First, make the invocation-surface decision — do not skip it.** Classify the skill
+into exactly one of three buckets, then carry the verdict into the frontmatter:
+
+| Bucket | What it means | Frontmatter | Examples |
+|--------|---------------|-------------|----------|
+| **Both** (default for anything a user might run) | A user triggers it by intent **and** the model/another skill may pull it in | leave `user-invocable` unset (default) | `team`, `team-*`, `code-review` |
+| **User-invocable only** | A user must trigger it explicitly; the model must NOT auto-fire it | `disable-model-invocation: true` | irreversible actions: deploy, force-push, destructive cleanup |
+| **Model-invocable only** (pure building block) | Reference material loaded by agents / read by path; a `/<skill>` command is meaningless to users | `user-invocable: false` | every pure methodology skill (`qrspi-workflow`, `solid-principles`, …) |
+
+Decide with these tests, in order:
+
+1. **Is it irreversible or side-effecting** (deploys, pushes, deletes, sends)? →
+   **User-invocable only**. Never let the model auto-trigger it.
+2. **Is it purely reference material** — methodology, conventions, a protocol another
+   agent reads — with no standalone "do this now" meaning for a user? →
+   **Model-invocable only**.
+3. **Would a user plausibly type `/<skill>` to run it as an action**, even if agents
+   also compose it? → **Both** (the default; don't over-restrict).
+
+**If you cannot place the skill in one bucket with high confidence, STOP and ask the
+user** via `AskUserQuestion` (header `Invocation`) with the three buckets as options —
+state your leaning and why, and let them confirm. Do not silently guess; the wrong
+choice either clutters the menu or hides a command users expect. Once decided, wire the
+surface(s) per §1A / §1B below and set the frontmatter from the table above.
 
 ### §1A — Wire it as an entry point
 
@@ -92,6 +111,17 @@ HOW a parent pulls it in, by whether the parent needs coordination or isolation:
   > "No <artifact> found. A) run /<child> now  B) skip and proceed."
   If accepted, the parent inlines it (mechanism a).
 
+**Hide it from the slash menu.** A pure building block is reference material, not a
+user action, so a `/<skill>` command for it is meaningless. Set `user-invocable: false`
+in its frontmatter to keep it out of the `/` menu. The field governs *menu visibility
+only* — it does not affect read-and-follow or subagent composition (those reach the file
+directly), and the model can still auto-load it when relevant. In this repo every
+pure methodology skill sets this; entry-point skills leave it unset so they register as
+slash commands. (A skill wired as *both* surfaces stays user-invocable — don't set it;
+`code-review` is the repo's standing example: it is loaded as composed methodology by
+the review agents yet is also a direct user action ("review this diff"). It's the only
+methodology skill kept user-invocable.)
+
 ### Invocation invariants
 - Never compose via the skill-invocation tool. Composition = read-and-follow OR subagent.
 - Heavy or adversarial sub-work → subagent (keeps the parent lean and unbiased).
@@ -99,6 +129,7 @@ HOW a parent pulls it in, by whether the parent needs coordination or isolation:
 - A skill can serve both surfaces; just make its description trigger correctly AND its
   sections survive being inlined/subagented.
 - Don't auto-trigger irreversible skills.
+- Pure building block → `user-invocable: false` (out of the slash menu, still loadable).
 
 ---
 
@@ -219,9 +250,10 @@ Gate yourself before acting:
 ## Acceptance checklist (verify before the skill is done)
 
 Invocation
-- [ ] Classified: entry point, building block, or both — only the intended path(s) wired.
+- [ ] Invocation surface decided — **both** / **user-invocable only** / **model-invocable only** — with high confidence; if not, asked the user via `AskUserQuestion`.
+- [ ] Frontmatter matches the verdict: both → neither flag; user-only → `disable-model-invocation: true`; model-only → `user-invocable: false`.
+- [ ] Only the intended path(s) wired (entry point §1A, building block §1B, or both).
 - [ ] Entry point: description has WHAT + explicit trigger intents/phrases; added to routing map.
-- [ ] Irreversible skill: proactive language removed; host opt-out flag set if available.
 - [ ] Building block: chose inline (sequential) vs subagent (isolated/parallel) deliberately.
 - [ ] If subagented: self-contained, returns a conclusion not a transcript. If inlined: headed, independently-runnable sections.
 - [ ] No skill invokes another via the skill-invocation tool.

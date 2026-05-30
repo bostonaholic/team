@@ -1,6 +1,7 @@
 ---
 name: product-requirements-doc
 description: Optional PRD methodology — loaded by the questioner agent when a feature request is vague or complex enough to warrant a structured product spec alongside task.md. Produces a PRD artifact that downstream design-author work can ground decisions in.
+user-invocable: false
 ---
 
 # Product Requirements Document
