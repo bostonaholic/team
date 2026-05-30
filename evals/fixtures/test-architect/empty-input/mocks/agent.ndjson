@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"The task body is empty — there is no code or acceptance contract to analyze. I will not fabricate a coverage gap. Please provide the slice's code and its acceptance contract so I can identify the untested paths."}]}}
+{"type":"result","subtype":"success","usage":{"input_tokens":300,"output_tokens":40}}

@@ -1,0 +1,13 @@
+{
+  "bugs": [
+    {
+      "id": "s1",
+      "category": "injection",
+      "severity": "critical",
+      "description": "False-positive guard: the parameterized query is SAFE. A correct reviewer does NOT report SQL injection here. This hint must NOT appear in the output; the eval asserts s1 is in outcome.missed and respects max_false_positives 0.",
+      "detection_hint": "(sql injection|sqli|injection vulnerab)"
+    }
+  ],
+  "minimum_detection": 1.0,
+  "max_false_positives": 0
+}

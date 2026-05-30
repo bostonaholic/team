@@ -23,6 +23,18 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "verifier-no-op-guard": [
     "agents/verifier.md",
   ],
+  "security-reviewer-planted-vuln": [
+    "agents/security-reviewer.md",
+  ],
+  "security-reviewer-safe-pattern": [
+    "agents/security-reviewer.md",
+  ],
+  "test-architect-covers-branch": [
+    "agents/test-architect.md",
+  ],
+  "test-architect-empty-input": [
+    "agents/test-architect.md",
+  ],
 };
 
 export const LLM_JUDGE_TOUCHFILES: Record<string, string[]> = {
@@ -45,6 +57,10 @@ export const E2E_TIERS: Record<string, "gate" | "periodic"> = {
   "file-finder-empty-input": "gate",
   "verifier-detects-violation": "gate",
   "verifier-no-op-guard": "gate",
+  "security-reviewer-planted-vuln": "gate",
+  "security-reviewer-safe-pattern": "gate",
+  "test-architect-covers-branch": "gate",
+  "test-architect-empty-input": "gate",
 };
 
 const BASE_BRANCH_FALLBACKS = ["origin/main", "origin/master", "main", "master"];
