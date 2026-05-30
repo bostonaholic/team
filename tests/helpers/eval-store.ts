@@ -203,18 +203,25 @@ export class EvalCollector {
       const cmp = compareEvalResults(previous.result, this.result);
       const commentary = generateCommentary(cmp);
       this.budgetRegressions = findBudgetRegressions(cmp);
-      process.stderr.write(
-        `\n=== eval comparison: ${previous.filename} -> ${pathBasename(this.path)} ===\n`,
-      );
-      process.stderr.write(commentary + "\n");
-      if (this.budgetRegressions.length > 0) {
+      // Unit tests exercise this path with synthetic records; they set
+      // EVALS_SILENCE_BUDGET_LOG=1 so the alarming comparison/regression banner
+      // doesn't surface in `bun test` output and read as a real regression.
+      // Real eval runs leave it unset and log normally.
+      const silenced = process.env.EVALS_SILENCE_BUDGET_LOG === "1";
+      if (!silenced) {
         process.stderr.write(
-          "BUDGET REGRESSIONS (fails the run):\n" +
-            this.budgetRegressions
-              .map((r) => `  - ${r.name}: ${r.reason}`)
-              .join("\n") +
-            "\n",
+          `\n=== eval comparison: ${previous.filename} -> ${pathBasename(this.path)} ===\n`,
         );
+        process.stderr.write(commentary + "\n");
+        if (this.budgetRegressions.length > 0) {
+          process.stderr.write(
+            "BUDGET REGRESSIONS (fails the run):\n" +
+              this.budgetRegressions
+                .map((r) => `  - ${r.name}: ${r.reason}`)
+                .join("\n") +
+              "\n",
+          );
+        }
       }
     } else {
       process.stderr.write(
