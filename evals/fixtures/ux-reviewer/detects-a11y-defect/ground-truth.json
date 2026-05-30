@@ -1,0 +1,16 @@
+{
+  "bugs": [
+    {
+      "id": "u1",
+      "detection_hint": "alt text|alt attribute|missing alt|non-text content|WCAG 1\\.1\\.1",
+      "description": "The hero <img> has no alt attribute (WCAG 1.1.1 Non-text Content)."
+    },
+    {
+      "id": "u2",
+      "detection_hint": "unlabeled|missing label|no label|aria-label|<label>|WCAG 1\\.3\\.1|name, role",
+      "description": "The search <input> has no associated label (WCAG 1.3.1 / 4.1.2)."
+    }
+  ],
+  "minimum_detection": 1.0,
+  "max_false_positives": 0
+}

@@ -1,0 +1,3 @@
+{"type":"system","subtype":"init"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"UX/accessibility review of the rendered surface.\n\nThe hero image carries descriptive alt text and the search field is bound to a visible label, so assistive technology can announce both. Keyboard focus order is logical and the submit button has an accessible name.\n\nVerdict: no accessibility defects found on this surface."}]}}
+{"type":"result","subtype":"success","usage":{"input_tokens":1300,"output_tokens":180}}
