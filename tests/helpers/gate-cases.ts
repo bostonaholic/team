@@ -15,7 +15,7 @@
 // the dir is the one whose own path spells the test name.
 
 import { existsSync, readdirSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -51,6 +51,9 @@ export interface GateCase {
  */
 export function buildCaseIndex(repoRoot: string = REPO_ROOT): Map<string, GateCase> {
   const fixturesRoot = join(repoRoot, FIXTURES_REL);
+  // Resolve the root once so each derived fixture dir can be checked to stay
+  // inside it (containment guard below).
+  const fixturesRootAbs = resolve(fixturesRoot);
   const index = new Map<string, GateCase>();
   for (const agentEnt of readdirSync(fixturesRoot, { withFileTypes: true })) {
     if (!agentEnt.isDirectory()) continue;
@@ -61,8 +64,30 @@ export function buildCaseIndex(repoRoot: string = REPO_ROOT): Map<string, GateCa
       if (!caseEnt.isDirectory()) continue;
       const testCase = caseEnt.name;
       const fixtureDir = join(agentDir, testCase);
-      index.set(`${agent}-${testCase}`, {
-        name: `${agent}-${testCase}`,
+      // Containment guard: a derived fixture dir must resolve INSIDE
+      // evals/fixtures/. Inputs are repo-controlled today, so this is
+      // defense-in-depth — mirrors the path-escape check in
+      // tests/implementer.evals.ts applyWriteToolCalls.
+      const fixtureDirAbs = resolve(fixtureDir);
+      if (!fixtureDirAbs.startsWith(fixturesRootAbs + sep)) {
+        throw new Error(
+          `fixture dir '${fixtureDir}' resolves outside ${fixturesRootAbs}; refusing to index it`,
+        );
+      }
+      // Canonical-name collision guard: two distinct (agent, testCase) dirs can
+      // render to the SAME `<agent>-<testCase>` key (e.g. `a-b/c` and `a/b-c`
+      // both spell `a-b-c`). A silent overwrite would let the runner replay the
+      // wrong dir's mock for a case, so we fail loud instead. Correctness
+      // demands the name be unambiguous — there is no "longest wins" tiebreak.
+      const canonical = `${agent}-${testCase}`;
+      const prior = index.get(canonical);
+      if (prior !== undefined) {
+        throw new Error(
+          `ambiguous gate-case name '${canonical}': both '${prior.agent}/${prior.testCase}' and '${agent}/${testCase}' spell it; rename one fixture dir`,
+        );
+      }
+      index.set(canonical, {
+        name: canonical,
         agent,
         testCase,
         fixtureDir,
