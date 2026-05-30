@@ -14,7 +14,9 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: harness-checks-${{ github.head_ref || github.run_id }}
+  # Use the PR number (or run id outside a PR), never the attacker-controlled
+  # branch name (github.head_ref) in the group key.
+  group: harness-checks-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
 jobs:
@@ -41,3 +43,9 @@ jobs:
         # auto-discovery pattern (*.test.{ts,js,...}) — so `bun test`
         # with no args never loads them.
         run: bun test
+
+      - name: Run gate-tier evals (mocked, free)
+        # Replays each gate-tier eval case against its recorded mock seams
+        # (EVALS_MOCK_AGENT / EVALS_MOCK_JUDGE) one case per invocation. No
+        # API key, no `claude -p` spawn — deterministic and free on every PR.
+        run: node scripts/run-gate-evals.mjs
