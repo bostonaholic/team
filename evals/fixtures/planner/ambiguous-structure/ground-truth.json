@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "surfaces-assumptions",
+      "detection_hint": "##\\s+(Assumptions|Open Questions|Unknowns)|cannot|blocked",
+      "description": "Ambiguous structure must make the plan surface assumptions/open questions rather than invent steps"
+    }
+  ],
+  "minimum_detection": 1
+}

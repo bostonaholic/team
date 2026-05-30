@@ -1,0 +1,15 @@
+{
+  "bugs": [
+    {
+      "id": "has-file-level-steps",
+      "detection_hint": "src/cache\\.ts|src/lookup\\.ts",
+      "description": "Plan must reference the concrete files from the structure"
+    },
+    {
+      "id": "has-steps-per-slice",
+      "detection_hint": "Slice\\s+1|Step\\s+1|step",
+      "description": "Plan enumerates ordered steps per slice"
+    }
+  ],
+  "minimum_detection": 1
+}

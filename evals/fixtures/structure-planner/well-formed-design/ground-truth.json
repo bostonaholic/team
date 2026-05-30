@@ -1,0 +1,15 @@
+{
+  "bugs": [
+    {
+      "id": "has-slices-section",
+      "detection_hint": "##\\s+(Slices?|Vertical Slices?)|Slice\\s+1",
+      "description": "Structure must break the design into vertical slices"
+    },
+    {
+      "id": "has-acceptance",
+      "detection_hint": "acceptance|independently testable|test",
+      "description": "Each slice carries an acceptance/test signal"
+    }
+  ],
+  "minimum_detection": 1
+}
