@@ -1,0 +1,15 @@
+{
+  "bugs": [
+    {
+      "id": "gap-read-write",
+      "detection_hint": "read|write",
+      "description": "Flags the undocumented public read/write functions"
+    },
+    {
+      "id": "gap-env-var",
+      "detection_hint": "TOOL_CACHE_TTL_MS",
+      "description": "Flags the undocumented public env var"
+    }
+  ],
+  "minimum_detection": 1
+}
