@@ -1,0 +1,13 @@
+{
+  "bugs": [
+    {
+      "id": "b1",
+      "category": "null-dereference",
+      "severity": "high",
+      "description": "renderProfileHeader dereferences user.email without null-checking getUserFromCache's return value; null is reachable for fresh visitors per the implementer's own note.",
+      "detection_hint": "null deref"
+    }
+  ],
+  "minimum_detection": 1.0,
+  "max_false_positives": 1
+}

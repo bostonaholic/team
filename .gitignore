@@ -29,3 +29,9 @@ docs/vendor/
 
 # Stray Bundler installs at repo root (gems should go in docs/vendor/bundle/)
 /vendor/
+
+# Eval run results (generated locally; CI uploads them as artifacts)
+evals/results/
+
+# Bun / npm dependencies
+node_modules/

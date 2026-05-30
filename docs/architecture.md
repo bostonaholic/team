@@ -20,7 +20,8 @@ description: "Team plugin architecture — agents as microservices, the QRSPI pi
 - [5. Phase-Table Orchestrator](#5-phase-table-orchestrator)
 - [6. Skills](#6-skills)
 - [7. Hooks](#7-hooks)
-- [8. State Management](#8-state-management)
+- [8. Behavioral Evals](#8-behavioral-evals)
+- [9. State Management](#9-state-management)
 
 ## 1. Design Philosophy
 
@@ -392,7 +393,38 @@ every archetype-A skill carries the discovery block, the load-bearing fragments
 (`ID_RE`, `PHASE_FILES`, approval grep, `docs/plans/` root) stay byte-identical
 to canon, and the research-isolation invariant holds.
 
-## 8. State Management
+## 8. Behavioral Evals
+
+The behavioral regression harness defends pipeline agents against silent
+behavior drift across model upgrades. The implementation is TypeScript +
+Bun: harness code in `tests/`, fixtures/rubrics/results in `evals/`.
+Plugin-developer tooling — not distributed with the plugin. Three tiers:
+
+- **Gate** (free) — `bun test`. Static schema validation on every
+  fixture and rubric plus unit tests for the harness helpers. No model
+  calls, no `ANTHROPIC_API_KEY`. Runs in CI on every PR.
+- **E2E** (paid) — `EVALS=1 bun test`. Spawns `claude -p --output-format
+  stream-json` against a fixture, parses the NDJSON transcript, persists
+  a per-case result JSON with timing axes (`firstResponseMs`,
+  `maxInterTurnMs`).
+- **LLM-judge** (paid) — deterministic-first regex / ground-truth checks
+  run cheap and gate the LLM call. Haiku for narrow rubrics, Sonnet for
+  nuanced ones. Untrusted agent output is wrapped in
+  `<<<UNTRUSTED_OUTPUT>>>` delimiters before reaching the judge.
+
+`EvalCollector` writes incrementally, finds the previous run on the same
+branch+tier, and prints regressions + budget regressions (≥2× growth in
+tool calls or turns without a verdict change). See
+[evals/README.md](../evals/README.md) for fixture schema, rubric format,
+env-var knobs, and the rerun-on-base blame protocol.
+
+**CI wiring.** Two GitHub Actions workflows in `.github/workflows/`:
+`harness-checks.yml` runs the offline harness validation on every PR
+(no secrets, ~5s); `behavioral-evals.yml` runs the live-agent regression
+check on a weekly cron (Monday 06:00 UTC) with `ANTHROPIC_API_KEY` from
+repo secrets.
+
+## 9. State Management
 
 **Primary state:** the artifacts in `docs/plans/<id>/*.md`. Each
 artifact's YAML frontmatter is the source of truth for "did this phase

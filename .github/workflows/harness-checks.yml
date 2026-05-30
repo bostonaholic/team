@@ -1,0 +1,43 @@
+# Harness checks — runs on every PR to main.
+#
+# Validates the eval harness itself: unit tests for the TS helpers
+# (parsers, storage, selection, judging) plus schema validation of every
+# fixture and rubric on disk. No model calls, no ANTHROPIC_API_KEY,
+# completes in well under 5 seconds.
+#
+# Live agent runs against the model live in behavioral-evals.yml.
+name: Harness checks
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: harness-checks-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  harness-checks:
+    name: Validate harness + fixtures
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # fetch-depth: 0 — diff-based test selection compares against origin/main.
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run harness checks
+        # Paid agent-behavior files are named *.evals.ts — outside Bun's
+        # auto-discovery pattern (*.test.{ts,js,...}) — so `bun test`
+        # with no args never loads them.
+        run: bun test

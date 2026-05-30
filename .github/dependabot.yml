@@ -1,0 +1,54 @@
+# Dependabot keeps the dependency graph current.
+#
+# Behavior per ecosystem:
+#   - Minor + patch updates are grouped into one PR per ecosystem per week.
+#   - Major version bumps still get an individual PR for human review.
+#   - The repo's safely-merge-dependabots / rebase-dependabots skills handle
+#     the actual merge cadence; Dependabot's job here is just to surface
+#     what's available.
+version: 2
+updates:
+  # package.json — TS + Bun harness deps (@anthropic-ai/sdk, bun-types, typescript).
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      production-minor-patch:
+        dependency-type: "production"
+        update-types: ["minor", "patch"]
+      development-minor-patch:
+        dependency-type: "development"
+        update-types: ["minor", "patch"]
+    open-pull-requests-limit: 5
+
+  # .github/workflows/ — actions/checkout, actions/setup-node, actions/upload-artifact,
+  # oven-sh/setup-bun, etc. Major bumps here have historically required env-var
+  # workarounds (Node 20 deprecation); keeping these current avoids that drift.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      actions-minor-patch:
+        update-types: ["minor", "patch"]
+    open-pull-requests-limit: 5
+
+  # docs/Gemfile — Jekyll site (github-pages, jekyll-remote-theme, webrick).
+  - package-ecosystem: "bundler"
+    directory: "/docs"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      bundler-minor-patch:
+        update-types: ["minor", "patch"]
+    open-pull-requests-limit: 5

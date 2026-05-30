@@ -24,6 +24,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 | Dev acceptance scripts | `.claude/scripts/` | Plugin developers |
 | Dev settings/hooks | `.claude/settings.json` | Plugin developers |
 | Issue tracking | `.beads/` | Plugin developers |
+| Behavioral regression harness | `tests/`, `evals/` | Plugin developers |
 
 **Rule of thumb:** If it validates that the plugin is *built correctly*, it's a dev concern (`.claude/`). If it runs *as part of the plugin's functionality*, it's runtime (`hooks/`).
 
@@ -84,12 +85,16 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodolog
 
 ## State
 
-State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`; gated artifacts also carry `approved`, `approved_at`, `revision`). Live in-session coordination uses TodoWrite (session-scoped); any `/team-*` command rebuilds the ledger by scanning artifacts on entry. See [docs/architecture.md section 8](docs/architecture.md#8-state-management) for the full compaction-defense explanation.
+State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`; gated artifacts also carry `approved`, `approved_at`, `revision`). Live in-session coordination uses TodoWrite (session-scoped); any `/team-*` command rebuilds the ledger by scanning artifacts on entry. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
 
 ## Learned Rules
 
 - **No `commands/` directory.** Skills are the only entry point mechanism. They auto-register as slash commands.
 - **No project-scoped memory.** Do not save memories to `~/.claude/projects/*/memory/`. All project knowledge belongs in this file or docs linked from here. This file is checked into git and travels with the project.
+
+## Behavioral Evals
+
+Behavioral regression harness for pipeline agents — TypeScript + Bun. Harness code lives in `tests/`; fixtures, rubrics, and stored runs live in `evals/`. `bun test` runs the free static gate; `EVALS=1 bun test` runs the paid E2E + LLM-judge tiers. See [evals/README.md](evals/README.md).
 
 ## Issue Tracking
 
