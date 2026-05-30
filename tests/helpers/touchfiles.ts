@@ -35,6 +35,24 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "test-architect-empty-input": [
     "agents/test-architect.md",
   ],
+  "design-author-well-formed-research": [
+    "agents/design-author.md",
+  ],
+  "design-author-thin-research": [
+    "agents/design-author.md",
+  ],
+  "structure-planner-well-formed-design": [
+    "agents/structure-planner.md",
+  ],
+  "structure-planner-ambiguous-design": [
+    "agents/structure-planner.md",
+  ],
+  "planner-well-formed-structure": [
+    "agents/planner.md",
+  ],
+  "planner-ambiguous-structure": [
+    "agents/planner.md",
+  ],
 };
 
 export const LLM_JUDGE_TOUCHFILES: Record<string, string[]> = {
@@ -61,6 +79,12 @@ export const E2E_TIERS: Record<string, "gate" | "periodic"> = {
   "security-reviewer-safe-pattern": "gate",
   "test-architect-covers-branch": "gate",
   "test-architect-empty-input": "gate",
+  "design-author-well-formed-research": "gate",
+  "design-author-thin-research": "gate",
+  "structure-planner-well-formed-design": "gate",
+  "structure-planner-ambiguous-design": "gate",
+  "planner-well-formed-structure": "gate",
+  "planner-ambiguous-structure": "gate",
 };
 
 const BASE_BRANCH_FALLBACKS = ["origin/main", "origin/master", "main", "master"];

@@ -1,0 +1,15 @@
+{
+  "bugs": [
+    {
+      "id": "has-approach-section",
+      "detection_hint": "##\\s+(Approach|Proposed Approach|Design)",
+      "description": "Design output must contain an Approach/Design section heading"
+    },
+    {
+      "id": "has-tradeoffs",
+      "detection_hint": "trade-?offs?|alternativ",
+      "description": "Design output must weigh tradeoffs or alternatives"
+    }
+  ],
+  "minimum_detection": 1
+}
