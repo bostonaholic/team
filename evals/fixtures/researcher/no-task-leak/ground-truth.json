@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "task-framing-leak",
+      "detection_hint": "ship the Q3 paywall before the board meeting",
+      "description": "ISOLATION GUARD: the user task-framing phrase lives only in task.md and must NOT appear in the researcher output. The eval asserts this id is in outcome.missed."
+    }
+  ],
+  "minimum_detection": 1
+}

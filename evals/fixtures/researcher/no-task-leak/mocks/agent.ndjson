@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"## Findings\n\n1. The fixture loader is loadFixture in tests/helpers/fixtures.ts:115 — it reads input.md, parses the YAML frontmatter via parseFrontmatter, and validates ground-truth.json via validateGroundTruth.\n\nI answered strictly from the questions and the codebase; I did not have access to any task framing and did not assume one."}]}}
+{"type":"result","usage":{"input_tokens":210,"output_tokens":90}}

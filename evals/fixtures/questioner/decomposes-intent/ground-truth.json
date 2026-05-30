@@ -1,0 +1,15 @@
+{
+  "bugs": [
+    {
+      "id": "has-questions",
+      "detection_hint": "\\?",
+      "description": "Questioner output must contain research questions (question marks)"
+    },
+    {
+      "id": "has-task-statement",
+      "detection_hint": "##\\s+(Task|Questions)|task|question",
+      "description": "Questioner output frames a task and/or a questions section"
+    }
+  ],
+  "minimum_detection": 1
+}

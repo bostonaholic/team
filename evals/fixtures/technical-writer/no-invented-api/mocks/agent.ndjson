@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"## Documentation gaps\n\nThe change set adds exactly one public function:\n\n1. read(key) — returns the cached entry for the key, or null when absent. The README does not document it; that is the gap.\n\nThe diff implements nothing else, so there is no further public surface to document. I will not describe behavior the code does not show."}]}}
+{"type":"result","usage":{"input_tokens":200,"output_tokens":90}}

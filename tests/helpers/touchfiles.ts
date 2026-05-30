@@ -53,6 +53,24 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "planner-ambiguous-structure": [
     "agents/planner.md",
   ],
+  "questioner-decomposes-intent": [
+    "agents/questioner.md",
+  ],
+  "questioner-no-intent-leak": [
+    "agents/questioner.md",
+  ],
+  "researcher-answers-from-questions": [
+    "agents/researcher.md",
+  ],
+  "researcher-no-task-leak": [
+    "agents/researcher.md",
+  ],
+  "technical-writer-flags-doc-gaps": [
+    "agents/technical-writer.md",
+  ],
+  "technical-writer-no-invented-api": [
+    "agents/technical-writer.md",
+  ],
 };
 
 export const LLM_JUDGE_TOUCHFILES: Record<string, string[]> = {
@@ -85,6 +103,12 @@ export const E2E_TIERS: Record<string, "gate" | "periodic"> = {
   "structure-planner-ambiguous-design": "gate",
   "planner-well-formed-structure": "gate",
   "planner-ambiguous-structure": "gate",
+  "questioner-decomposes-intent": "gate",
+  "questioner-no-intent-leak": "gate",
+  "researcher-answers-from-questions": "gate",
+  "researcher-no-task-leak": "gate",
+  "technical-writer-flags-doc-gaps": "gate",
+  "technical-writer-no-invented-api": "gate",
 };
 
 const BASE_BRANCH_FALLBACKS = ["origin/main", "origin/master", "main", "master"];

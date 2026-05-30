@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "intent-leak",
+      "detection_hint": "use a Redis token-bucket",
+      "description": "LEAK GUARD: the chosen solution phrase must NOT appear as a settled answer in the questions; a correctly isolated questioner keeps questions open. The eval asserts this id is in outcome.missed."
+    }
+  ],
+  "minimum_detection": 1
+}
