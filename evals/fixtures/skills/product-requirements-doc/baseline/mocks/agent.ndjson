@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"# PRD: Notification Center\n\n## Problem\n\nUsers miss important events.\n\n## Goals\n\n- Surface events in-app.\n\n## Non-Goals\n\n- Email digests are out of scope."}]}}
+{"type":"result","usage":{"input_tokens":200,"output_tokens":120}}

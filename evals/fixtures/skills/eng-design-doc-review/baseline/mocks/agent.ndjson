@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"Verdict: REQUEST CHANGES\n\nFindings:\n\n1. Cache invalidation is unaddressed — stale reads are possible.\n2. No failure mode for cache unavailability."}]}}
+{"type":"result","usage":{"input_tokens":200,"output_tokens":120}}

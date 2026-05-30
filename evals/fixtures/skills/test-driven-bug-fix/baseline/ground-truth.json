@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "failing-test-first",
+      "description": "Output must write a reproducing failing test before the fix.",
+      "detection_hint": "failing test"
+    }
+  ],
+  "minimum_detection": 1
+}

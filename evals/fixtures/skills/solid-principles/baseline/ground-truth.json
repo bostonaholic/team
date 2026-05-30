@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "solid-violation-named",
+      "description": "Output must name the violated SOLID principle.",
+      "detection_hint": "SRP|Single Responsibility"
+    }
+  ],
+  "minimum_detection": 1
+}

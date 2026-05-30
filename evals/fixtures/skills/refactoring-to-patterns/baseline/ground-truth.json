@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "smell-and-pattern",
+      "description": "Output must name a code smell.",
+      "detection_hint": "Long Method"
+    }
+  ],
+  "minimum_detection": 1
+}

@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "approach-and-alternatives",
+      "description": "Doc must include an Alternatives section.",
+      "detection_hint": "##\\s+Alternatives"
+    }
+  ],
+  "minimum_detection": 1
+}

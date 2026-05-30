@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"Quality checklist:\n\n- [ ] Tests pass\n- [ ] Types check\n- [ ] No dead code\n- [ ] Errors handled explicitly"}]}}
+{"type":"result","usage":{"input_tokens":200,"output_tokens":120}}

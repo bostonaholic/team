@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "test-before-implementation",
+      "description": "Output must write the test before the implementation.",
+      "detection_hint": "test before implementation"
+    }
+  ],
+  "minimum_detection": 1
+}

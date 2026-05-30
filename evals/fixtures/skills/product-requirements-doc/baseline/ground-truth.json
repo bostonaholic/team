@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "prd-non-goals",
+      "description": "PRD must scope work out with a Non-Goals section.",
+      "detection_hint": "##\\s+Non-Goals"
+    }
+  ],
+  "minimum_detection": 1
+}
