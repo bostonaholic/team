@@ -97,6 +97,14 @@ unit tests under `tests/helpers/` — currently five:
 
 ## Running
 
+The entry points form a cost/scope ladder:
+
+| Command | Scope | Cost |
+|---------|-------|------|
+| `bun test` | Free unit + static/contract/integrity gates | Free |
+| `bun run test:gate` | Gate-tier agent evals, replayed against recorded mocks | Free |
+| `bun run test:periodic` | Full live-agent matrix (needs `EVALS_ANTHROPIC_API_KEY`) | Paid |
+
 ```sh
 # Free — static/contract/integrity gates + harness unit tests. Runs on every PR.
 bun test
@@ -134,6 +142,12 @@ Gate-tier eval cases (mocked, free):
   ...
 Gate-tier eval summary: 20 passed, 0 failed (of 20).
 ```
+
+> **Maintainer tip (negative proof).** To confirm the gate would catch a bad
+> mock rather than passing vacuously, temporarily point one case at the wrong
+> fixture (e.g. copy another case's `mocks/agent.ndjson` over it) and re-run
+> `bun run test:gate` — it must report that case as `FAIL` and exit non-zero.
+> Restore the file afterward.
 
 > `EVALS=1` is NOT a real switch — the harness only reads `EVALS_ALL`,
 > `EVALS_TIER`, `EVALS_ANTHROPIC_API_KEY`, and `EVALS_MOCK_*`. Setting `EVALS=1`
