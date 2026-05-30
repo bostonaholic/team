@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"The existing tests exercise only Branch A (an order of 150, at or above the 100 threshold). Branch B is an uncovered branch: an order under 100 must be returned unchanged, and there is no test for the below-threshold case. Proposed acceptance test: assert applyDiscount(80) === 80 (an order of less than 100 is returned with no discount), covering the below-threshold branch."}]}}
+{"type":"result","subtype":"success","usage":{"input_tokens":900,"output_tokens":120}}

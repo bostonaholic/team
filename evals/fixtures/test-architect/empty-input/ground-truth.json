@@ -1,0 +1,11 @@
+{
+  "bugs": [
+    {
+      "id": "t1",
+      "category": "coverage-gap",
+      "description": "With an empty task body there is no code to analyze; a correct test-architect surfaces that the request is empty rather than fabricating an untested branch. This hint must NOT appear in a graceful empty-input response.",
+      "detection_hint": "(below[- ]?threshold|under 100|Branch B|uncovered branch)"
+    }
+  ],
+  "minimum_detection": 1.0
+}

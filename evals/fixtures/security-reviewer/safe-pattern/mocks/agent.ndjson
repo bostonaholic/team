@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"No exploitable vulnerabilities found in src/api/find-user.js. The query uses a bound parameter (the `?` placeholder with `[name]`), so the untrusted input is passed as a value and never interpolated into the SQL text. This is the safe, recommended pattern. No remediation needed."}]}}
+{"type":"result","subtype":"success","usage":{"input_tokens":900,"output_tokens":90}}

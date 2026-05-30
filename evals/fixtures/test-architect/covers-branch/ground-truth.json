@@ -1,0 +1,11 @@
+{
+  "bugs": [
+    {
+      "id": "t1",
+      "category": "coverage-gap",
+      "description": "The below-threshold branch (Branch B, order under 100 returned unchanged) is untested; the test-architect must propose an acceptance test that covers it.",
+      "detection_hint": "(below[- ]?threshold|under 100|Branch B|less than 100|uncovered branch)"
+    }
+  ],
+  "minimum_detection": 1.0
+}
