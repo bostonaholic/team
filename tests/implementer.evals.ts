@@ -30,7 +30,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
 
 import { EvalCollector, assertNoBudgetRegressions } from "./helpers/eval-store";
 import { loadFixture } from "./helpers/fixtures";
@@ -71,7 +71,10 @@ function applyWriteToolCalls(workDir: string, toolCalls: ToolCall[]): void {
     const input = call.input as Record<string, unknown>;
     const filePath = input.file_path;
     if (typeof filePath !== "string") continue;
-    const abs = join(workDir, filePath);
+    // Containment guard: a replayed transcript is untrusted input. Reject any
+    // path that resolves outside workDir (e.g. `../../etc/...` or absolute).
+    const abs = resolve(workDir, filePath);
+    if (!abs.startsWith(resolve(workDir) + sep)) continue;
     if (call.tool === "Write") {
       const content = typeof input.content === "string" ? input.content : "";
       mkdirSync(dirname(abs), { recursive: true });
