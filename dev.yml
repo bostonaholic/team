@@ -40,7 +40,7 @@ commands:
     run: "bun test"
   evals:gate:
     desc: "Run the gate-tier agent evals mocked & offline (free, deterministic, no API key)"
-    run: "node scripts/run-gate-evals.mjs"
+    run: "bun scripts/run-gate-evals.ts"
   evals:periodic:
     desc: "Run the paid E2E + judge tier (requires EVALS_ANTHROPIC_API_KEY; spends real money)"
     run: "bun run test:periodic"

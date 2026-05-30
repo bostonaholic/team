@@ -59,4 +59,6 @@ jobs:
         # Replays each gate-tier eval case against its recorded mock seams
         # (EVALS_MOCK_AGENT / EVALS_MOCK_JUDGE) one case per invocation. No
         # API key, no `claude -p` spawn — deterministic and free on every PR.
-        run: node scripts/run-gate-evals.mjs
+        # Runs under bun (not node) so the script can import the real
+        # E2E_TIERS map + shared gate-case resolver instead of scraping source.
+        run: bun scripts/run-gate-evals.ts
