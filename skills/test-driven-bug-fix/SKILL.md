@@ -1,6 +1,7 @@
 ---
 name: test-driven-bug-fix
 description: Test-driven bug fix methodology — loaded by the bug-fix pipeline to enforce reproduce-first, red-green discipline when fixing defects
+user-invocable: false
 ---
 
 # Test-Driven Bug Fix

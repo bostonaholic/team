@@ -1,6 +1,7 @@
 ---
 name: refactoring-to-patterns
 description: Fowler's refactoring methodology — loaded by the implementer agent when working with existing code to recognize code smells and apply proven transformations
+user-invocable: false
 ---
 
 # Refactoring to Patterns

@@ -1,6 +1,7 @@
 ---
 name: changelog
 description: Keep a Changelog methodology — loaded by the ship phase to update CHANGELOG.md with user-facing changes, filtering out internal-only commits
+user-invocable: false
 ---
 
 # Changelog

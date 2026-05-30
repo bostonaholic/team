@@ -1,6 +1,7 @@
 ---
 name: test-first-development
 description: Acceptance tests as immutable scope fence — loaded by test-architect and orchestrator to enforce test-before-implementation discipline and completion contracts
+user-invocable: false
 ---
 
 # Test-First Development

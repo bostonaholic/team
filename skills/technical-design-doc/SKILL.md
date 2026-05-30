@@ -1,6 +1,7 @@
 ---
 name: technical-design-doc
 description: Technical design document methodology — loaded by the planner agent when producing implementation plans for features that warrant architecture documentation, trade-off analysis, and rollout planning
+user-invocable: false
 ---
 
 # Technical Design Document

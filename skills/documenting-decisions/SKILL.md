@@ -1,6 +1,7 @@
 ---
 name: documenting-decisions
 description: Architecture Decision Record creation and management — loaded by planner and orchestrator when significant technical decisions need to be recorded with context and consequences
+user-invocable: false
 ---
 
 # Documenting Decisions
