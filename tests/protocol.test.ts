@@ -72,8 +72,8 @@ describe("agent-open-questions protocol", () => {
     expect(read(QRSPI_SKILL)).toContain("agent-open-questions");
   });
 
-  test("CLAUDE.md has '## Skills (28)' heading", () => {
-    expect(/^## Skills \(28\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md has '## Skills (29)' heading", () => {
+    expect(/^## Skills \(29\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 });
 
