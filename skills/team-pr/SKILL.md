@@ -112,7 +112,15 @@ done
 8. **Tracking ticket.** If `ticketId` is non-null, surface it in the
    completion report so the user can close it in their tracking system.
    The orchestrator does not close tickets automatically.
-9. **Leave the worktree(s) in place.** Do not remove a worktree after
+9. **Whenever you push to a PR, review and adjust its description.** Any
+   push that adds, removes, or changes commits on a PR's branch — the
+   initial open *and* every follow-up push (review feedback, fixups,
+   rebases) — must be followed by re-reading the current PR body against
+   the now-pushed commits and updating it (`gh pr edit --body`) so the
+   Summary, Changes, and How-to-Verify sections still match what the
+   branch actually does. Never leave a stale description after a push. In
+   multi-repo mode, do this for each repo's PR whose branch you pushed.
+10. **Leave the worktree(s) in place.** Do not remove a worktree after
    opening a PR — the user may need to iterate on the branch (push
    follow-up commits, address review feedback). Clean up only after the
    PR is merged or when the user explicitly asks. When that happens,
