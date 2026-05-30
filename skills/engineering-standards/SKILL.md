@@ -52,7 +52,11 @@ Six foundational perspectives guide every design and implementation decision:
 - **Functions**: Keep them small, focused on a single responsibility, typically
   under 20 lines.
 - **Comments**: Write self-documenting code; use comments only for "why" not
-  "what".
+  "what". Never write an **ephemeral comment** —
+  a comment that exists only because of the act of editing — describing the change, the process, or a temporary state — and that must be cleaned up later
+  (`// added this`, `// TODO remove later`, `// changed from X`, `// for now`,
+  scaffolding notes). Keep only durable comments that explain a non-obvious
+  *why* — an invariant, workaround rationale, or business rule.
 - **Formatting**: Consistent indentation, logical grouping, vertical density
   that aids comprehension.
 - **Error Handling**: Fail fast, fail loud -- never silently swallow errors.
