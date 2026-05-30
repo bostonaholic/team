@@ -70,7 +70,9 @@ const DEFAULT_FRONTMATTER = ["name", "description"];
  * contain a directory separator and carry no template markers (`<id>`,
  * `$ARGUMENTS`, `*` globs) or whitespace. Bare artifact names without a
  * slash (e.g. `structure.md`) are conceptual references, not file paths,
- * and are intentionally skipped — as are absolute paths.
+ * and are intentionally skipped — as are absolute paths, URLs (anything
+ * with a `scheme://` prefix), and git refspecs like `origin/HEAD` /
+ * `origin/main`, none of which name a file in the tree.
  */
 function referencedPaths(body: string): string[] {
   const refs = new Set<string>();
@@ -82,6 +84,8 @@ function referencedPaths(body: string): string[] {
     const trimmed = token.trim();
     if (trimmed.length === 0) continue;
     if (/[<>$*\s]/.test(trimmed)) continue;
+    if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) continue; // URL, not a path
+    if (/^origin\//.test(trimmed)) continue; // git refspec, not a path
     if (isAbsolute(trimmed)) continue;
     if (!trimmed.includes("/")) continue;
     refs.add(trimmed);
