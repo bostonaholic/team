@@ -81,6 +81,16 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/fixtures/ux-reviewer/**",
     "tests/ux-reviewer.evals.ts",
   ],
+  "implementer-implements-slice": [
+    "agents/implementer.md",
+    "evals/fixtures/implementer/**",
+    "tests/implementer.evals.ts",
+  ],
+  "implementer-noop-when-green": [
+    "agents/implementer.md",
+    "evals/fixtures/implementer/**",
+    "tests/implementer.evals.ts",
+  ],
 };
 
 export const LLM_JUDGE_TOUCHFILES: Record<string, string[]> = {
@@ -121,6 +131,8 @@ export const E2E_TIERS: Record<string, "gate" | "periodic"> = {
   "technical-writer-no-invented-api": "gate",
   "ux-reviewer-detects-a11y-defect": "periodic",
   "ux-reviewer-clean-surface": "periodic",
+  "implementer-implements-slice": "periodic",
+  "implementer-noop-when-green": "periodic",
 };
 
 const BASE_BRANCH_FALLBACKS = ["origin/main", "origin/master", "main", "master"];

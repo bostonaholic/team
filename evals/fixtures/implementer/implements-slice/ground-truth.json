@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "i1",
+      "detection_hint": "sum|src/sum\\.js|implement",
+      "description": "The implementer must create src/sum.js so the planted acceptance test passes. Scored by running the test in the workdir, not by transcript text."
+    }
+  ],
+  "minimum_detection": 1.0
+}
