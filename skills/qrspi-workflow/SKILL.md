@@ -93,9 +93,10 @@ sub-phase and 5-reviewer adversarial verification with hard-gate retry loop.
 
 ### PR
 
-Open the pull request, update the changelog, surface the tracking ticket.
+Open the pull request as a draft (no human gate — the orchestrator does
+not stop to ask), update the changelog, surface the tracking ticket.
 
-- **Artifact:** GitHub PR (or local commit per user choice)
+- **Artifact:** GitHub draft PR
 - **Gate:** Terminal — orchestrator records the PR URL or final commit, then closes the topic's TodoWrite ledger.
 
 ## Artifact Conventions

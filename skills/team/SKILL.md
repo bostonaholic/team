@@ -252,12 +252,14 @@ When the aggregate gate passes:
 1. Update `CHANGELOG.md` per `skills/changelog/SKILL.md`. In multi-repo
    mode, update each repo's `CHANGELOG.md` with the entries belonging
    to that repo's commits.
-2. Present shipping options via `AskUserQuestion` (header `Ship`):
-   **Open PR**, **Keep commits locally**, **Keep as-is**. See
-   `skills/team-pr/SKILL.md` for the canonical option text.
-3. Execute user's choice. In multi-repo mode this opens **one PR per
-   repo with commits ahead**, and the PR bodies cross-link to each
-   other so reviewers can see the full change set.
+2. **Open a draft PR automatically — do not stop to ask.** The PR phase
+   is not a human gate (the two human gates are design and structure
+   approval), so opening the PR needs no approval. Push the branch and
+   open the PR as a **draft** (`gh pr create --draft`). See
+   `skills/team-pr/SKILL.md` for the canonical procedure.
+3. In multi-repo mode this opens **one draft PR per repo with commits
+   ahead**, and the PR bodies cross-link to each other so reviewers can
+   see the full change set.
 4. If `task.md` frontmatter has `ticketId` set, surface it so the user
    can close the ticket. The orchestrator does not close tickets.
 5. Mark all TodoWrite items complete.
@@ -267,9 +269,7 @@ When the aggregate gate passes:
    after its PR is merged or when the user explicitly asks. When cleanup
    does happen, cherry-pick or rebase commits onto the target branch in
    that repo, then let Claude Code or `git worktree remove` remove the
-   worktree. The same rule applies when the user chose **Keep commits
-   locally** or **Keep as-is** instead of opening a PR — leave the
-   worktree until they ask to remove it.
+   worktree.
 
 ## Rules
 
@@ -281,7 +281,7 @@ When the aggregate gate passes:
   scanning artifacts.
 - `AskUserQuestion` is the canonical Claude Code tool for any
   multi-choice user prompt **from the orchestrator** — design/structure
-  approval, worktree-vs-in-place, shipping options. Free-text prompts
+  approval, worktree-vs-in-place. Free-text prompts
   ("Do you approve?") are not the convention. Free-form text input
   remains appropriate when the question genuinely has no enumerable
   options (e.g. capturing the user's revision feedback after they pick

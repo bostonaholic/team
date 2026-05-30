@@ -82,7 +82,9 @@ assertion failure, not a crash. Do not proceed to the fix until confirmed.
 1. Commit in two commits:
    - `test:` commit with the failing test
    - `fix:` commit with the minimal fix
-2. Create a PR if working on a branch, or commit to the working branch.
+2. **Open a draft PR automatically — do not stop to ask.** If working on
+   a branch, push it and open the PR as a **draft** (`gh pr create
+   --draft`). If not on a branch, commit to the working branch.
 3. If `ticketId` is non-null in `task.md`'s frontmatter, surface it so
    the user can close the ticket. The orchestrator does not close
    tickets automatically.
