@@ -8,6 +8,7 @@ permissionMode: acceptEdits
 skills:
   - product-thinking
   - agent-open-questions
+  - progress-tracking
 ---
 
 # Design Author Agent

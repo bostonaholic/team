@@ -7,6 +7,7 @@ tools: Read, Write, Edit, Grep, Glob
 permissionMode: acceptEdits
 skills:
   - product-thinking
+  - progress-tracking
 ---
 
 # Structure Planner Agent
