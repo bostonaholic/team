@@ -12,6 +12,8 @@ leaving the disease.
 
 ## 4-Phase Investigation
 
+> Follow `skills/progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
+
 ### Phase 1: OBSERVE
 
 Gather evidence before forming any theories. The goal is to build a factual

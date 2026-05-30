@@ -35,6 +35,8 @@ trigger the bug. Reproduce deterministically before fixing — see
 
 ## The Four-Step Discipline
 
+> Follow `skills/progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
+
 ### Step 1: Reproduce
 
 Before writing any code, reproduce the bug. Understanding exactly when and
