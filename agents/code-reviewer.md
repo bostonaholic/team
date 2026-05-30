@@ -37,6 +37,15 @@ show. This isolation is intentional: it prevents self-evaluation bias.
      intent without requiring comments?
    - **Unnecessary complexity** — Is there abstraction that serves no current
      need? Are there simpler ways to achieve the same result?
+   - **Ephemeral comments** — Are there ephemeral comments —
+     a comment that exists only because of the act of editing — describing the change, the process, or a temporary state — and that must be cleaned up later
+     (`// added this`, `// TODO remove later`, `// changed from X`,
+     `// for now`, scaffolding notes)?
+     A single occurrence is a `suggestion:`; multiple occurrences across the diff become `issue:`.
+     Zero produces no finding — do not add review noise. A durable, tracked TODO
+     (`// TODO(ISSUE-123): remove after migration ships 2026-Q3`) and a comment
+     explaining a non-obvious *why* (invariant, workaround, business rule) are
+     allowed — do not flag them.
    - **SOLID violations** — Check for design principle violations using the
      methodology in `skills/solid-principles/SKILL.md`:
      - SRP: does this unit have more than one reason to change?
@@ -50,8 +59,8 @@ show. This isolation is intentional: it prevents self-evaluation bias.
      style rules in `skills/test-first-development/SKILL.md`. Flag
      change-detector patterns, mock chains, full-equality assertions on
      complex objects, `sleep()` for synchronization, logic in tests, and
-     method-named tests. A single occurrence is a `suggestion:`; multiple
-     occurrences across the diff become `issue:`.
+     method-named tests.
+     A single occurrence is a `suggestion:`; multiple occurrences across the diff become `issue:`.
 
 5. **Run tests.** Execute the project's test suite to verify tests pass. Report
    the command used and the result.
