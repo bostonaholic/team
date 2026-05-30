@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"Smell: Long Method. The function mixes parsing, validation, and persistence.\n\nPattern: Extract Method — pull each responsibility into its own named helper, then compose them."}]}}
+{"type":"result","usage":{"input_tokens":200,"output_tokens":120}}

@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "review-verdict",
+      "description": "Review must open with an explicit verdict.",
+      "detection_hint": "REQUEST CHANGES|APPROVE"
+    }
+  ],
+  "minimum_detection": 1
+}

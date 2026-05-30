@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "adr-decision-section",
+      "description": "Output must be an ADR with a Decision section.",
+      "detection_hint": "##\\s+Decision"
+    }
+  ],
+  "minimum_detection": 1
+}

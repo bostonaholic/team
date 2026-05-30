@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"The pipeline runs QUESTION -> RESEARCH -> DESIGN -> STRUCTURE -> PLAN -> WORKTREE -> IMPLEMENT -> PR, with human gates at DESIGN and STRUCTURE."}]}}
+{"type":"result","usage":{"input_tokens":200,"output_tokens":120}}

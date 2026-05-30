@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"# ADR 001: Adopt Postgres\n\n## Status\n\nAccepted\n\n## Context\n\nWe need a relational store with strong JSONB support.\n\n## Decision\n\nUse Postgres as the primary datastore.\n\n## Consequences\n\nTeam must learn Postgres operational tooling."}]}}
+{"type":"result","usage":{"input_tokens":200,"output_tokens":120}}

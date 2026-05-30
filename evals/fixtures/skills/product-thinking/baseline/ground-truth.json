@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "user-outcome-framing",
+      "description": "Output must frame value in user-outcome terms.",
+      "detection_hint": "as a .+ i want .+ so that"
+    }
+  ],
+  "minimum_detection": 1
+}

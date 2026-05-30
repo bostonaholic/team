@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"## [Unreleased]\n\n### Added\n\n- `--json` flag on the export command for machine-readable output."}]}}
+{"type":"result","usage":{"input_tokens":200,"output_tokens":120}}

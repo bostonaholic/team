@@ -44,6 +44,9 @@ function enumerate(): { agent: string; caseName: string }[] {
   const out: { agent: string; caseName: string }[] = [];
   for (const agentEnt of readdirSync(FIXTURE_ROOT, { withFileTypes: true })) {
     if (!agentEnt.isDirectory()) continue;
+    // Skill fixtures live one level deeper (evals/fixtures/skills/<skill>/<case>/)
+    // and have their own integrity gate in tests/skill-fixtures.test.ts.
+    if (agentEnt.name === "skills") continue;
     const agentDir = join(FIXTURE_ROOT, agentEnt.name);
     for (const caseEnt of readdirSync(agentDir, { withFileTypes: true })) {
       if (!caseEnt.isDirectory()) continue;

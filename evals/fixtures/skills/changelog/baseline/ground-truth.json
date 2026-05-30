@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "keepachangelog-section",
+      "description": "Output must use a Keep a Changelog section heading.",
+      "detection_hint": "###\\s+(Added|Changed|Fixed|Removed|Deprecated|Security)"
+    }
+  ],
+  "minimum_detection": 1
+}

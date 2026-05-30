@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"As a returning user I want to save a search query so that I can re-run it without retyping filters."}]}}
+{"type":"result","usage":{"input_tokens":200,"output_tokens":120}}

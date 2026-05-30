@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "conventional-commit-subject",
+      "description": "Output must start with a conventional-commit subject.",
+      "detection_hint": "^(feat|fix|chore|docs|refactor|test|perf|build|ci)(\\([a-z0-9-]+\\))?:\\s"
+    }
+  ],
+  "minimum_detection": 1
+}
