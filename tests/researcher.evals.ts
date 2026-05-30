@@ -15,6 +15,9 @@
 // Mock seams (offline, no key, no cost):
 //   EVALS_MOCK_AGENT=<path>   replay a recorded NDJSON transcript
 //   EVALS_MOCK_JUDGE=<path>   replay a recorded judge verdict JSON
+//   Per-case: EVALS_MOCK_* point at THAT case's mocks/ files; run one case at
+//   a time (`-t "<case>"`) — the env vars are global single files, so running
+//   the whole file with one case's mocks makes the other cases fail.
 
 import { afterAll } from "bun:test";
 import { expect } from "bun:test";
