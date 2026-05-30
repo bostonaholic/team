@@ -5,6 +5,8 @@ color: yellow
 model: haiku
 tools: Read, Grep, Glob, Bash
 permissionMode: plan
+skills:
+  - progress-tracking
 ---
 
 # Verifier Agent

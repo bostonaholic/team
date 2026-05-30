@@ -5,6 +5,8 @@ color: purple
 model: opus
 tools: Read, Write, Edit, Grep, Glob
 permissionMode: acceptEdits
+skills:
+  - progress-tracking
 ---
 
 # Planner Agent

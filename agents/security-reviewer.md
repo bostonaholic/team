@@ -5,6 +5,8 @@ color: red
 model: sonnet
 tools: Read, Grep, Glob, Bash
 permissionMode: plan
+skills:
+  - progress-tracking
 ---
 
 # Security Reviewer Agent

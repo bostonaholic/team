@@ -5,6 +5,8 @@ color: pink
 model: sonnet
 tools: Read, Grep, Glob, Bash
 permissionMode: plan
+skills:
+  - progress-tracking
 ---
 
 # UX Reviewer Agent

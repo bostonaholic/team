@@ -5,6 +5,8 @@ color: green
 model: opus
 tools: Read, Write, Edit, Grep, Glob, Bash
 permissionMode: acceptEdits
+skills:
+  - progress-tracking
 ---
 
 # Implementer Agent

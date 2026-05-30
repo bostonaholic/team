@@ -5,6 +5,8 @@ color: blue
 model: sonnet
 tools: Read, Grep, Glob
 permissionMode: plan
+skills:
+  - progress-tracking
 ---
 
 # Researcher Agent

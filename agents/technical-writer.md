@@ -5,6 +5,8 @@ color: cyan
 model: sonnet
 tools: Read, Grep, Glob, Bash
 permissionMode: plan
+skills:
+  - progress-tracking
 ---
 
 # Technical Writer Agent

@@ -5,6 +5,8 @@ color: green
 model: inherit
 tools: Read, Write, Edit, Grep, Glob, Bash
 permissionMode: acceptEdits
+skills:
+  - progress-tracking
 ---
 
 # Test Architect Agent
