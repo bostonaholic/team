@@ -72,8 +72,8 @@ It does NOT reimplement spawning. Callers then score the output with
 
 ## Free static gates
 
-Five `.test.ts` suites run on every PR (no model calls), alongside the harness
-unit tests under `tests/helpers/`:
+These `.test.ts` suites run on every PR (no model calls), alongside the harness
+unit tests under `tests/helpers/` — currently five:
 
 - `tests/static-gate.test.ts` — validates every `evals/fixtures/<agent>/<case>/`
   one level deep. It SKIPS the `skills/` directory (skill fixtures are nested
@@ -90,8 +90,10 @@ unit tests under `tests/helpers/`:
   real file), so a suite cannot land unwired.
 - `tests/tier-coverage.test.ts` — asserts no eval belongs to a tier that runs
   in zero workflows: every periodic test's suite is a `behavioral-evals.yml`
-  matrix row, and every gate test has the `mocks/agent.ndjson` that
-  `scripts/run-gate-evals.mjs` needs to run it free and mocked.
+  matrix row, and every gate test resolves (via the shared
+  `tests/helpers/gate-cases.ts` resolver — the SAME one the runner uses) to its
+  own fixture dir with the `mocks/agent.ndjson` that `scripts/run-gate-evals.ts`
+  needs to run it free and mocked. It also caps each mock at 50 KB.
 
 ## Running
 
@@ -99,25 +101,38 @@ unit tests under `tests/helpers/`:
 # Free — static/contract/integrity gates + harness unit tests. Runs on every PR.
 bun test
 
-# Free + deterministic — gate-tier agent evals, all replayed against their
-# recorded mock seams (no API key, no `claude` spawn). Runs on every PR.
-node scripts/run-gate-evals.mjs
+# Free + deterministic — ALL gate-tier agent evals, each replayed against its
+# OWN recorded mock seams (no API key, no `claude` spawn). Runs on every PR.
+# Equivalent: `bun run test:gate` or `dev evals:gate`.
+bun scripts/run-gate-evals.ts
+
+# Free + deterministic — replay ONE case's mocked transcript instead of calling
+# the model. EVALS_MOCK_AGENT / EVALS_MOCK_JUDGE are GLOBAL single files, so you
+# MUST scope to that case with `-t "<agent>-<case>"`; without `-t`, the other
+# cases in a multi-case suite get this case's mock and fail. The file arg MUST
+# be `./`-prefixed (a bare `tests/foo.evals.ts` is a name filter, not a path).
+EVALS_MOCK_AGENT=evals/fixtures/<agent>/<case>/mocks/agent.ndjson \
+EVALS_MOCK_JUDGE=evals/fixtures/<agent>/<case>/mocks/judge.json \
+EVALS_ALL=1 bun test ./tests/<agent>.evals.ts -t "<agent>-<case>"
 
 # Paid — the full live-agent periodic matrix. Requires EVALS_ANTHROPIC_API_KEY.
 bun run test:periodic
 
 # Paid — a single live suite. Requires EVALS_ANTHROPIC_API_KEY.
-# NOTE: the file arg MUST be `./`-prefixed. A bare `tests/foo.evals.ts` is a
-# name filter to bun (matches nothing), not a path.
 EVALS_ALL=1 bun test ./tests/code-reviewer.evals.ts
+```
 
-# Free + deterministic — replay mocked transcripts instead of calling the model.
-# EVALS_MOCK_AGENT and EVALS_MOCK_JUDGE are GLOBAL single files, so run ONE case
-# at a time with `-t "<case>"`; pointing them at one case's mocks while running
-# a whole multi-case file makes the other cases fail.
-EVALS_MOCK_AGENT=evals/fixtures/<agent>/<case>/mocks/agent.ndjson \
-EVALS_MOCK_JUDGE=evals/fixtures/<agent>/<case>/mocks/judge.json \
-EVALS_ALL=1 bun test ./tests/<agent>.evals.ts -t "<agent>-<case>"
+The gate runner prints each case's mock alignment, then a per-case PASS/FAIL
+list and a summary line — for example:
+
+```text
+Gate-tier case -> mock alignment:
+  file-finder-empty-input -> evals/fixtures/file-finder/empty-input/mocks/agent.ndjson
+  ...
+Gate-tier eval cases (mocked, free):
+  PASS  file-finder-empty-input
+  ...
+Gate-tier eval summary: 20 passed, 0 failed (of 20).
 ```
 
 > `EVALS=1` is NOT a real switch — the harness only reads `EVALS_ALL`,
@@ -135,16 +150,18 @@ EVALS_ALL=1 bun test ./tests/<agent>.evals.ts -t "<agent>-<case>"
 - `EVALS_MOCK_JUDGE=<file.json>` replays one judge verdict JSON (the first
   `{...}` block is extracted). See `callJudge` in `tests/helpers/llm-judge.ts`.
 
-Mock fixtures live under each fixture's `mocks/` subdir. Gate-tier evals use
-these seams so they run free and deterministically in CI via
-`scripts/run-gate-evals.mjs` (wired into `harness-checks.yml` on every PR);
-periodic-tier evals (ux-reviewer, implementer, skills) are excluded from the
-gate path and run only on the weekly cron.
+Mock fixtures live under each fixture's `mocks/` subdir. Edge-case detection
+evals that assert deterministically (e.g. `*-empty-input`, `*-safe-pattern`)
+need no `judge.json`. Gate-tier evals use these seams so they run free and
+deterministically in CI via `scripts/run-gate-evals.ts` (wired into
+`harness-checks.yml` on every PR); periodic-tier evals (ux-reviewer,
+implementer, skills) are excluded from the gate path and run only on the weekly
+cron.
 
 ## Tiers
 
 - **gate** — fast, deterministic; blocks every PR. Run mocked & free by
-  `scripts/run-gate-evals.mjs` (invoked from `harness-checks.yml`).
+  `scripts/run-gate-evals.ts` (invoked under `bun` from `harness-checks.yml`).
 - **periodic** — live/expensive; run on the weekly cron in
   `.github/workflows/behavioral-evals.yml`.
 
@@ -164,6 +181,9 @@ itself from `E2E_TIERS`.
 5. Add a matrix row to `.github/workflows/behavioral-evals.yml`
    (`matrix-coverage.test.ts` enforces this).
 6. For a **gate-tier** case, add `evals/fixtures/<agent>/<case>/mocks/agent.ndjson`
-   (and `mocks/judge.json` for judgment agents) so
-   `scripts/run-gate-evals.mjs` can run it free & mocked. `tier-coverage.test.ts`
-   fails the PR if a gate case is missing its agent mock.
+   (and `mocks/judge.json` for judgment agents; deterministic edge cases need
+   no judge) so `scripts/run-gate-evals.ts` can run it free & mocked.
+   `tier-coverage.test.ts` is what enforces that every eval is wired to a
+   workflow — it fails the PR if a gate case does not resolve to its own
+   fixture dir with an agent mock, or if a periodic suite is missing its matrix
+   row.
