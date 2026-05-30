@@ -100,18 +100,15 @@ done
 5. **Update CHANGELOG.md** before committing (see Changelog Update below).
    In multi-repo mode, update each repo's `CHANGELOG.md` with the
    entries belonging to that repo's commits.
-6. Present shipping options via `AskUserQuestion`. Use a single question
-   with a `Ship` header and these options:
-   - **Open PR (Recommended)** — push the branch and open a PR. Any
-     uncommitted final changes (typically `CHANGELOG.md`) land as a
-     single trailing ship commit. In multi-repo mode this opens **one
-     PR per repo with commits** and cross-links them.
-   - **Keep commits locally** — leave commits on the branch(es) without
-     opening any PR.
-   - **Keep as-is** — leave final changes uncommitted.
-7. Execute the user's choice. In multi-repo mode, push each repo's
-   branch independently and open one PR per repo. Cross-link the PRs
-   in their bodies (see PR Body Template below).
+6. **Open a draft PR automatically — do not stop to ask.** The PR phase
+   is not a human gate; opening the PR requires no approval. Push the
+   branch and open the PR as a **draft** (`gh pr create --draft`). Any
+   uncommitted final changes (typically `CHANGELOG.md`) land as a single
+   trailing ship commit before the push. In multi-repo mode this opens
+   **one draft PR per repo with commits** and cross-links them.
+7. In multi-repo mode, push each repo's branch independently and open one
+   draft PR per repo. Cross-link the PRs in their bodies (see PR Body
+   Template below).
 8. **Tracking ticket.** If `ticketId` is non-null, surface it in the
    completion report so the user can close it in their tracking system.
    The orchestrator does not close tickets automatically.
@@ -191,4 +188,4 @@ only used if there are uncommitted final changes (e.g., changelog).
 
 ## Completion
 
-Report the outcome (PR URL, commit hash, or "kept uncommitted").
+Report the outcome (draft PR URL and commit hash).

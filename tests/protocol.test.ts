@@ -117,8 +117,11 @@ describe("ask-user-question contract", () => {
     expect(read(TEAM_IMPLEMENT)).toContain("AskUserQuestion");
   });
 
-  test("team-pr SKILL references AskUserQuestion for shipping options", () => {
-    expect(read(TEAM_PR)).toContain("AskUserQuestion");
+  test("team-pr opens a draft PR automatically without a shipping prompt", () => {
+    const text = read(TEAM_PR);
+    expect(text).toContain("gh pr create --draft");
+    expect(text).toContain("do not stop to ask");
+    expect(text).not.toContain("Keep commits locally");
   });
 
   test("team SKILL references AskUserQuestion at human gates", () => {
@@ -226,7 +229,7 @@ describe("multi-repo support", () => {
   test("team-pr opens cross-linked PRs in multi-repo mode", () => {
     const text = read(TEAM_PR);
     expect(text).toContain("Companion PRs");
-    expect(text).toContain("one PR per repo");
+    expect(text).toContain("one draft PR per repo");
   });
 
   test("team SKILL describes multi-repo flow", () => {
