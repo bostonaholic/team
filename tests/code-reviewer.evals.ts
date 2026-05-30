@@ -14,7 +14,7 @@
 //
 // Run paths:
 //   bun run test:periodic                    # all *.evals.ts, EVALS_ALL=1
-//   bun test test/code-reviewer.evals.ts     # ad-hoc (needs ANTHROPIC_API_KEY)
+//   bun test test/code-reviewer.evals.ts     # ad-hoc (needs EVALS_ANTHROPIC_API_KEY)
 //
 // Mock seams (offline, no key, no cost):
 //   EVALS_MOCK_AGENT=<path>   replay a recorded NDJSON transcript

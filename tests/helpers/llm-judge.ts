@@ -41,9 +41,12 @@ let _client: AnthropicLike | null = null;
 
 async function getClient(): Promise<AnthropicLike> {
   if (_client !== null) return _client;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  // Namespaced so it is NOT auto-picked-up by ambient Claude Code sessions
+  // (the agent under test spawns its own `claude` and would inherit a bare
+  // ANTHROPIC_API_KEY). We hand this key to the SDK client explicitly below.
+  const apiKey = process.env.EVALS_ANTHROPIC_API_KEY;
   if (apiKey === undefined || apiKey === "") {
-    throw new Error("ANTHROPIC_API_KEY is required for the LLM-judge tier");
+    throw new Error("EVALS_ANTHROPIC_API_KEY is required for the LLM-judge tier");
   }
   const mod = await import("@anthropic-ai/sdk");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

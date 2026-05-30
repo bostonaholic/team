@@ -2,7 +2,7 @@
 #
 # Validates the eval harness itself: unit tests for the TS helpers
 # (parsers, storage, selection, judging) plus schema validation of every
-# fixture and rubric on disk. No model calls, no ANTHROPIC_API_KEY,
+# fixture and rubric on disk. No model calls, no EVALS_ANTHROPIC_API_KEY,
 # completes in well under 5 seconds.
 #
 # Live agent runs against the model live in behavioral-evals.yml.

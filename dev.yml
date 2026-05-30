@@ -39,7 +39,7 @@ commands:
     desc: "Run the behavioral evals gate tier (static, offline, no API key)"
     run: "bun test"
   evals:periodic:
-    desc: "Run the paid E2E + judge tier (requires ANTHROPIC_API_KEY; spends real money)"
+    desc: "Run the paid E2E + judge tier (requires EVALS_ANTHROPIC_API_KEY; spends real money)"
     run: "bun run test:periodic"
 
 open:

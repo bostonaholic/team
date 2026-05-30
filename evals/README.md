@@ -45,7 +45,7 @@ never loads them — no skipped tests in the output, no surprise model calls.
 The paid suite runs only when an explicit path is passed:
 
 - `bun run test:periodic` — runs every `./tests/*.evals.ts`, sets `EVALS_TIER=periodic` + `EVALS_ALL=1`
-- `bun test ./tests/code-reviewer.evals.ts` — ad-hoc single file (needs `ANTHROPIC_API_KEY`)
+- `bun test ./tests/code-reviewer.evals.ts` — ad-hoc single file (needs `EVALS_ANTHROPIC_API_KEY`)
 
 > **Path must be `./`-prefixed.** Bun treats a bare `tests/foo.evals.ts`
 > argument as a *name filter* (matches nothing here), not a path. Always
@@ -67,7 +67,7 @@ the test runs or is registered as `test.skip`. `EVALS_ALL=1` forces all.
 | `EVALS_RESULTS_ROOT` | Override result storage root | `evals/results/` |
 | `EVALS_MOCK_AGENT` | NDJSON file replayed instead of spawning `claude` | unset |
 | `EVALS_MOCK_JUDGE` | JSON file replayed instead of calling the LLM judge | unset |
-| `ANTHROPIC_API_KEY` | Required for paid tiers | — |
+| `EVALS_ANTHROPIC_API_KEY` | Anthropic API key for the judge (paid tiers). Namespaced so an ambient Claude Code session (incl. the spawned agent under test) won't auto-pick it up; passed explicitly to the judge's Anthropic SDK client. | — |
 
 ## Fixture format
 
@@ -176,6 +176,6 @@ If it fails there too, the regression predates your change.
    up, and register the test through `testIfSelected(name, ...)` so tier /
    diff selection applies.
 5. `bun test` — verify the gate validates the new schemas.
-6. `bun test ./tests/<agent>.evals.ts` — run end-to-end (needs `ANTHROPIC_API_KEY`).
+6. `bun test ./tests/<agent>.evals.ts` — run end-to-end (needs `EVALS_ANTHROPIC_API_KEY`).
 
 Run `bun run eval:list` to see the registered tests and their tiers.

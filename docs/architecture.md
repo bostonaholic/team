@@ -402,7 +402,7 @@ Plugin-developer tooling — not distributed with the plugin. Three tiers:
 
 - **Gate** (free) — `bun test`. Static schema validation on every
   fixture and rubric plus unit tests for the harness helpers. No model
-  calls, no `ANTHROPIC_API_KEY`. Runs in CI on every PR.
+  calls, no `EVALS_ANTHROPIC_API_KEY`. Runs in CI on every PR.
 - **E2E** (paid) — `EVALS=1 bun test`. Spawns `claude -p --output-format
   stream-json` against a fixture, parses the NDJSON transcript, persists
   a per-case result JSON with timing axes (`firstResponseMs`,
@@ -421,8 +421,8 @@ env-var knobs, and the rerun-on-base blame protocol.
 **CI wiring.** Two GitHub Actions workflows in `.github/workflows/`:
 `harness-checks.yml` runs the offline harness validation on every PR
 (no secrets, ~5s); `behavioral-evals.yml` runs the live-agent regression
-check on a weekly cron (Monday 06:00 UTC) with `ANTHROPIC_API_KEY` from
-repo secrets.
+check on a weekly cron (Monday 06:00 UTC) with the `EVALS_ANTHROPIC_API_KEY`
+repo secret.
 
 ## 9. State Management
 
