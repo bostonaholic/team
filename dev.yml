@@ -15,8 +15,8 @@ check:
   plugin: "claude plugin validate ."
 
 test:
-  run: "bun test"
-  desc: "Run the test suite (bun test)"
+  run: "script/test"
+  desc: "Run all acceptance test scripts under tests/"
 
 commands:
   install:
@@ -36,8 +36,14 @@ commands:
     desc: "Build and serve the docs site locally at http://localhost:4000"
     run: "cd docs && bundle config set --local path 'vendor/bundle' && bundle install && bundle exec jekyll serve --livereload"
   evals:
-    desc: "Run the paid behavioral evals — live agent runs + LLM judge (requires EVALS_ANTHROPIC_API_KEY; spends real money)"
-    run: "bun run test:evals"
+    desc: "Run the free static gate (fixture/contract/integrity checks + harness unit tests, no API key)"
+    run: "bun test"
+  evals:gate:
+    desc: "Run the gate-tier agent evals mocked & offline (free, deterministic, no API key)"
+    run: "node scripts/run-gate-evals.mjs"
+  evals:periodic:
+    desc: "Run the paid E2E + judge tier (requires EVALS_ANTHROPIC_API_KEY; spends real money)"
+    run: "bun run test:periodic"
 
 open:
   docs: "http://localhost:4000"

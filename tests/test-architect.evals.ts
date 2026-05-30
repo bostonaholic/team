@@ -6,6 +6,9 @@
 //
 // Mock seam (offline, no key, no cost):
 //   EVALS_MOCK_AGENT=<path>   replay a recorded NDJSON transcript
+//   Per-case: EVALS_MOCK_AGENT points at THAT case's mocks/ file. It is a
+//   GLOBAL single file, so run ONE case at a time (`-t "<case>"`); running the
+//   whole file with a single case's mock makes the other cases fail.
 
 import { afterAll } from "bun:test";
 import { expect } from "bun:test";
