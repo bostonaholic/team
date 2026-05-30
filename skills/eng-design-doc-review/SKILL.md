@@ -122,6 +122,8 @@ four methodology skills before you begin — they are your review criteria:
 
 ### Review process
 
+> Follow `skills/progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
+
 1. **Locate the document.** Read `$ARGUMENTS/design.md`. Also read the
    sibling artifacts (`task.md`, `questions.md`, `research.md`, `repos.md`)
    when present — they ground the design in the work that produced it.
