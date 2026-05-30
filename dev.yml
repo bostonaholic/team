@@ -15,8 +15,8 @@ check:
   plugin: "claude plugin validate ."
 
 test:
-  run: "script/test"
-  desc: "Run all acceptance test scripts under tests/"
+  run: "bun test"
+  desc: "Run the test suite (bun test)"
 
 commands:
   install:
