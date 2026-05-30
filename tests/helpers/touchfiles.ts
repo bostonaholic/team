@@ -71,6 +71,16 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "technical-writer-no-invented-api": [
     "agents/technical-writer.md",
   ],
+  "ux-reviewer-detects-a11y-defect": [
+    "agents/ux-reviewer.md",
+    "evals/fixtures/ux-reviewer/**",
+    "tests/ux-reviewer.evals.ts",
+  ],
+  "ux-reviewer-clean-surface": [
+    "agents/ux-reviewer.md",
+    "evals/fixtures/ux-reviewer/**",
+    "tests/ux-reviewer.evals.ts",
+  ],
 };
 
 export const LLM_JUDGE_TOUCHFILES: Record<string, string[]> = {
@@ -109,6 +119,8 @@ export const E2E_TIERS: Record<string, "gate" | "periodic"> = {
   "researcher-no-task-leak": "gate",
   "technical-writer-flags-doc-gaps": "gate",
   "technical-writer-no-invented-api": "gate",
+  "ux-reviewer-detects-a11y-defect": "periodic",
+  "ux-reviewer-clean-surface": "periodic",
 };
 
 const BASE_BRANCH_FALLBACKS = ["origin/main", "origin/master", "main", "master"];
