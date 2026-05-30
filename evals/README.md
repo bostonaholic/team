@@ -37,14 +37,14 @@ flags or `describe.skip`:
 | Suffix | Discovery | Cost | Command |
 |---|---|---|---|
 | `*.test.ts` | Auto-discovered by `bun test` | $0 | `bun test` |
-| `*.evals.ts` | NOT auto-discovered — must be targeted explicitly | $$ | `bun run test:periodic` |
+| `*.evals.ts` | NOT auto-discovered — must be targeted explicitly | $$ | `bun run test:evals` |
 
 Bun's default test discovery matches `*.test.{ts,tsx,js,jsx}`. Files named
 `*.evals.ts` fall outside that pattern, so `bun test` with no arguments
 never loads them — no skipped tests in the output, no surprise model calls.
 The paid suite runs only when an explicit path is passed:
 
-- `bun run test:periodic` — runs every `./tests/*.evals.ts`, sets `EVALS_TIER=periodic` + `EVALS_ALL=1`
+- `bun run test:evals` — runs every `./tests/*.evals.ts` with `EVALS_ALL=1` (all tiers)
 - `bun test ./tests/code-reviewer.evals.ts` — ad-hoc single file (needs `EVALS_ANTHROPIC_API_KEY`)
 
 > **Path must be `./`-prefixed.** Bun treats a bare `tests/foo.evals.ts`

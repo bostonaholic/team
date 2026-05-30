@@ -1,0 +1,328 @@
+import { describe, expect, test } from "bun:test";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+
+import { frontmatter, read } from "./helpers/text";
+
+const REPO_ROOT = process.cwd();
+
+// Flatten newlines so multi-line prose can be matched in one regex.
+function flat(text: string): string {
+  return text.replace(/\n/g, " ");
+}
+
+describe("agent-open-questions protocol", () => {
+  const AOQ_SKILL = join(REPO_ROOT, "skills", "agent-open-questions", "SKILL.md");
+  const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
+  const QRSPI_SKILL = join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md");
+  const CLAUDE_MD = join(REPO_ROOT, "CLAUDE.md");
+
+  test("skills/agent-open-questions/SKILL.md exists", () => {
+    expect(existsSync(AOQ_SKILL)).toBe(true);
+  });
+
+  test("agent-open-questions frontmatter declares name: agent-open-questions", () => {
+    const fm = frontmatter(read(AOQ_SKILL));
+    expect(/^name:\s*agent-open-questions\s*$/m.test(fm)).toBe(true);
+  });
+
+  test("agent-open-questions frontmatter has a non-empty description", () => {
+    const fm = frontmatter(read(AOQ_SKILL));
+    expect(/^description:\s*\S/m.test(fm)).toBe(true);
+  });
+
+  test("agent-open-questions body references openQuestions", () => {
+    expect(read(AOQ_SKILL)).toContain("openQuestions");
+  });
+
+  test("agent-open-questions body references SendMessage", () => {
+    expect(read(AOQ_SKILL)).toContain("SendMessage");
+  });
+
+  test("agent-open-questions states first-block-wins near openQuestions", () => {
+    // Any-occurrence ±5-line window: "first" appears in some openQuestions
+    // window AND "block" appears in some window — not necessarily the same
+    // window. Two independent passes.
+    const lines = read(AOQ_SKILL).split("\n");
+    const matchIndices: number[] = [];
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line !== undefined && /openQuestions/.test(line)) matchIndices.push(i);
+    }
+    const capped = matchIndices.slice(0, 50);
+    let windows = "";
+    for (const i of capped) {
+      const start = Math.max(0, i - 5);
+      const end = i + 5;
+      windows += lines.slice(start, end + 1).join("\n") + "\n";
+    }
+    expect(/first/i.test(windows)).toBe(true);
+    expect(/block/i.test(windows)).toBe(true);
+  });
+
+  test("skills/team/SKILL.md cross-links agent-open-questions", () => {
+    expect(read(TEAM_SKILL)).toContain("agent-open-questions");
+  });
+
+  test("skills/team/SKILL.md scopes AskUserQuestion 'from the orchestrator'", () => {
+    expect(read(TEAM_SKILL)).toContain("from the orchestrator");
+  });
+
+  test("skills/qrspi-workflow/SKILL.md cross-links agent-open-questions", () => {
+    expect(read(QRSPI_SKILL)).toContain("agent-open-questions");
+  });
+
+  test("CLAUDE.md has '## Skills (28)' heading", () => {
+    expect(/^## Skills \(28\)/m.test(read(CLAUDE_MD))).toBe(true);
+  });
+});
+
+describe("ask-user-question contract", () => {
+  const DESIGN_AUTHOR = join(REPO_ROOT, "agents", "design-author.md");
+  const QUESTIONER = join(REPO_ROOT, "agents", "questioner.md");
+  const TEAM_DESIGN = join(REPO_ROOT, "skills", "team-design", "SKILL.md");
+  const TEAM_STRUCTURE = join(REPO_ROOT, "skills", "team-structure", "SKILL.md");
+  const TEAM_IMPLEMENT = join(REPO_ROOT, "skills", "team-implement", "SKILL.md");
+  const TEAM_PR = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
+  const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
+
+  test("design-author tools frontmatter excludes AskUserQuestion", () => {
+    const fm = frontmatter(read(DESIGN_AUTHOR));
+    expect(/^tools:.*\bAskUserQuestion\b/m.test(fm)).toBe(false);
+  });
+
+  test("design-author body references openQuestions + agent-open-questions", () => {
+    const text = read(DESIGN_AUTHOR);
+    expect(text).toContain("openQuestions");
+    expect(text).toContain("agent-open-questions");
+  });
+
+  test("team-design SKILL references AskUserQuestion", () => {
+    expect(read(TEAM_DESIGN)).toContain("AskUserQuestion");
+  });
+
+  test("team-design SKILL replaced free-text approve prompt", () => {
+    expect(/"Do you\s+approve/.test(read(TEAM_DESIGN))).toBe(false);
+  });
+
+  test("team-structure SKILL references AskUserQuestion", () => {
+    expect(read(TEAM_STRUCTURE)).toContain("AskUserQuestion");
+  });
+
+  test("team-structure SKILL replaced free-text approve prompt", () => {
+    expect(/"Do you\s+approve/.test(read(TEAM_STRUCTURE))).toBe(false);
+  });
+
+  test("team-implement SKILL references AskUserQuestion", () => {
+    expect(read(TEAM_IMPLEMENT)).toContain("AskUserQuestion");
+  });
+
+  test("team-pr SKILL references AskUserQuestion for shipping options", () => {
+    expect(read(TEAM_PR)).toContain("AskUserQuestion");
+  });
+
+  test("team SKILL references AskUserQuestion at human gates", () => {
+    expect(read(TEAM_SKILL)).toContain("AskUserQuestion");
+  });
+
+  test("questioner tools frontmatter excludes AskUserQuestion", () => {
+    const fm = frontmatter(read(QUESTIONER));
+    expect(/^tools:.*\bAskUserQuestion\b/m.test(fm)).toBe(false);
+  });
+
+  test("questioner body references openQuestions + agent-open-questions", () => {
+    const text = read(QUESTIONER);
+    expect(text).toContain("openQuestions");
+    expect(text).toContain("agent-open-questions");
+  });
+});
+
+describe("multi-repo support", () => {
+  const QRSPI = join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md");
+  const WORKTREE_ISO = join(REPO_ROOT, "skills", "worktree-isolation", "SKILL.md");
+  const TEAM_WT = join(REPO_ROOT, "skills", "team-worktree", "SKILL.md");
+  const TEAM_IMPL = join(REPO_ROOT, "skills", "team-implement", "SKILL.md");
+  const TEAM_PR = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
+  const TEAM_RES = join(REPO_ROOT, "skills", "team-research", "SKILL.md");
+  const TEAM = join(REPO_ROOT, "skills", "team", "SKILL.md");
+  const QUESTIONER = join(REPO_ROOT, "agents", "questioner.md");
+  const DESIGN_AUTHOR = join(REPO_ROOT, "agents", "design-author.md");
+  const RESEARCHER = join(REPO_ROOT, "agents", "researcher.md");
+  const FILE_FINDER = join(REPO_ROOT, "agents", "file-finder.md");
+  const STRUCTURE_PLANNER = join(REPO_ROOT, "agents", "structure-planner.md");
+  const PLANNER = join(REPO_ROOT, "agents", "planner.md");
+  const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
+
+  test("qrspi-workflow documents repos.md artifact + schema", () => {
+    const text = read(QRSPI);
+    expect(text).toContain("repos.md");
+    expect(text).toContain("phase: repos");
+  });
+
+  test("worktree-isolation documents multi-repo topology", () => {
+    const text = read(WORKTREE_ISO);
+    expect(text).toContain("Multi-repo");
+    expect(text).toContain("one worktree per listed repo");
+  });
+
+  test("team-worktree reads repos.md and runs per-repo worktree add", () => {
+    const text = read(TEAM_WT);
+    expect(text).toContain("repos.md");
+    expect(/git -C .* worktree add/.test(text)).toBe(true);
+  });
+
+  test("team-worktree records ## Worktrees section in repos.md", () => {
+    expect(read(TEAM_WT)).toContain("## Worktrees");
+  });
+
+  test("questioner excludes AskUserQuestion + multi-repo detection uses openQuestions envelope", () => {
+    const text = read(QUESTIONER);
+    const fm = frontmatter(text);
+    expect(/^tools:.*\bAskUserQuestion\b/m.test(fm)).toBe(false);
+    expect(text).toContain("Multi-repo detection");
+    expect(text).toContain("openQuestions");
+    expect(text).toContain("agent-open-questions");
+    expect(text).toContain("Repos");
+  });
+
+  test("design-author confirms repo scope before drafting", () => {
+    expect(read(DESIGN_AUTHOR)).toContain("Confirm repo scope");
+  });
+
+  test("researcher allowed to read repos.md (scope, not intent)", () => {
+    const text = read(RESEARCHER);
+    expect(text).toContain("repos.md");
+    expect(text).toContain("scope, not intent");
+  });
+
+  test("file-finder references repos.md", () => {
+    expect(read(FILE_FINDER)).toContain("repos.md");
+  });
+
+  test("team-research includes repos.md path in dispatch", () => {
+    expect(read(TEAM_RES)).toContain("repos.md");
+  });
+
+  test("structure-planner supports per-slice Repos: field", () => {
+    expect(read(STRUCTURE_PLANNER)).toContain("Repos:");
+  });
+
+  test("planner uses [repo: <slug>] step prefix", () => {
+    expect(/\[repo: <slug>\]|\[repo: /.test(read(PLANNER))).toBe(true);
+  });
+
+  test("implementer cd's into per-repo worktrees per step", () => {
+    const text = read(IMPLEMENTER);
+    expect(/\[repo: <slug>\]|\[repo: /.test(text)).toBe(true);
+    expect(text).toContain("cd ");
+  });
+
+  test("team-implement detects multi-repo and refuses in-place", () => {
+    const text = read(TEAM_IMPL);
+    expect(text).toContain("repos.md");
+    expect(text).toContain("multi-repo work requires worktrees");
+  });
+
+  test("team-pr opens cross-linked PRs in multi-repo mode", () => {
+    const text = read(TEAM_PR);
+    expect(text).toContain("Companion PRs");
+    expect(text).toContain("one PR per repo");
+  });
+
+  test("team SKILL describes multi-repo flow", () => {
+    const text = read(TEAM);
+    expect(text).toContain("Multi-repo topics");
+    expect(text).toContain("multi-repo mode");
+  });
+});
+
+describe("topic consistency", () => {
+  const QUESTIONER = join(REPO_ROOT, "agents", "questioner.md");
+  const RESEARCHER = join(REPO_ROOT, "agents", "researcher.md");
+  const DESIGN_AUTHOR = join(REPO_ROOT, "agents", "design-author.md");
+  const STRUCTURE_PLANNER = join(REPO_ROOT, "agents", "structure-planner.md");
+  const PLANNER = join(REPO_ROOT, "agents", "planner.md");
+  const TEAM_RESEARCH = join(REPO_ROOT, "skills", "team-research", "SKILL.md");
+  const TEAM_FIX = join(REPO_ROOT, "skills", "team-fix", "SKILL.md");
+  const QRSPI = join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md");
+
+  test("questioner requires identical topic across task.md and questions.md", () => {
+    const text = flat(read(QUESTIONER));
+    expect(
+      /topic[^.]{0,200}(identical|same|match)[^.]{0,200}(task\.md|questions\.md|both)/i.test(text),
+    ).toBe(true);
+  });
+
+  test("questioner ties topic to the kebab portion of <id>", () => {
+    const text = flat(read(QUESTIONER));
+    expect(
+      /topic.{0,250}(kebab portion of `?<id>|slug portion of `?<id>|<id>.{0,40}minus the.{0,40}(ticket|date)|without the (ticket|date) prefix)/i.test(
+        text,
+      ),
+    ).toBe(true);
+  });
+
+  test("research.md frontmatter must reuse the topic from questions.md", () => {
+    const a = /topic[^.]{0,200}(from|copy|read|same as|match)[^.]{0,200}questions\.md/i.test(
+      flat(read(RESEARCHER)),
+    );
+    const b = /topic[^.]{0,200}(from|copy|read|same as|match)[^.]{0,200}questions\.md/i.test(
+      flat(read(TEAM_RESEARCH)),
+    );
+    expect(a || b).toBe(true);
+  });
+
+  test("qrspi-workflow states topic-consistency invariant", () => {
+    const text = flat(read(QRSPI));
+    expect(
+      /topic[^.]{0,200}(must|should)[^.]{0,200}(identical|same|match)[^.]{0,200}(across|every|all)[^.]{0,200}artifact/i.test(
+        text,
+      ),
+    ).toBe(true);
+  });
+
+  test("qrspi-workflow documents why ticketId lives only on task.md", () => {
+    const text = flat(read(QRSPI));
+    expect(
+      /ticketId[^.]{0,200}(only|just)[^.]{0,200}task\.md|task\.md[^.]{0,200}(canonical|sole|only)[^.]{0,200}ticketId|<id>[^.]{0,200}already[^.]{0,200}(encode|carry|contain)[^.]{0,200}ticket/i.test(
+        text,
+      ),
+    ).toBe(true);
+  });
+
+  test("design-author copies topic verbatim from the predecessor artifact", () => {
+    const text = flat(read(DESIGN_AUTHOR));
+    expect(
+      /topic.{0,250}(copy|verbatim|reuse|read|same as|inherit|carry|preserve).{0,100}(research\.md|task\.md|predecessor|upstream|questions\.md)/i.test(
+        text,
+      ),
+    ).toBe(true);
+  });
+
+  test("structure-planner copies topic verbatim from the predecessor artifact", () => {
+    const text = flat(read(STRUCTURE_PLANNER));
+    expect(
+      /topic.{0,250}(copy|verbatim|reuse|read|same as|inherit|carry|preserve).{0,100}(design\.md|predecessor|upstream)/i.test(
+        text,
+      ),
+    ).toBe(true);
+  });
+
+  test("planner copies topic verbatim from the predecessor artifact", () => {
+    const text = flat(read(PLANNER));
+    expect(
+      /topic.{0,250}(copy|verbatim|reuse|read|same as|inherit|carry|preserve).{0,100}(structure\.md|predecessor|upstream)/i.test(
+        text,
+      ),
+    ).toBe(true);
+  });
+
+  test("team-fix specifies topic = kebab portion of <id>", () => {
+    const text = flat(read(TEAM_FIX));
+    expect(
+      /topic.{0,250}(kebab portion of `?<id>|slug portion of `?<id>|<id>.{0,40}minus the.{0,40}(ticket|date)|without the (ticket|date) prefix)/i.test(
+        text,
+      ),
+    ).toBe(true);
+  });
+});
