@@ -1,28 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
+import { frontmatter, read } from "./helpers/text";
+
 const REPO_ROOT = process.cwd();
-
-function read(path: string): string {
-  return readFileSync(path, "utf8");
-}
-
-// Frontmatter slice: lines strictly between the first and second `---` markers.
-function frontmatter(text: string): string {
-  const lines = text.split("\n");
-  let count = 0;
-  const out: string[] = [];
-  for (const line of lines) {
-    if (/^---$/.test(line)) {
-      count++;
-      continue;
-    }
-    if (count === 1) out.push(line);
-  }
-  return out.join("\n");
-}
 
 // Keep lines containing `key`, drop lines matching the `exclude` regex, take
 // the first 5, join. Isolates a single table row from a methodology doc.

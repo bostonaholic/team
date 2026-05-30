@@ -1,28 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 
+import { frontmatter, read } from "./helpers/text";
+
 const REPO_ROOT = process.cwd();
-
-function read(path: string): string {
-  return readFileSync(path, "utf8");
-}
-
-// Frontmatter slice: lines strictly between the first and second `---` markers.
-// Empty if fewer than two markers — dependent assertions then fail, not skip.
-function frontmatter(text: string): string {
-  const lines = text.split("\n");
-  let count = 0;
-  const out: string[] = [];
-  for (const line of lines) {
-    if (/^---$/.test(line)) {
-      count++;
-      continue;
-    }
-    if (count === 1) out.push(line);
-  }
-  return out.join("\n");
-}
 
 // Body slice: lines after the second `---`.
 function body(text: string): string {
