@@ -175,6 +175,13 @@ incorrect):
 - **Targeted exception scopes only.** Wrap exactly the call that can
   throw; catch the specific exception subclass; rethrow with the original
   cause chained. Never `catch (Exception e)` around a large block.
+- **No ephemeral comments.** Never write an ephemeral comment —
+  a comment that exists only because of the act of editing — describing the change, the process, or a temporary state — and that must be cleaned up later
+  (`// added this`, `// TODO remove later`, `// changed from X`, `// for now`,
+  scaffolding notes). Clean up any you wrote, but only within the lines and
+  functions your slice touched; leave pre-existing comments outside that scope
+  alone. Keep durable comments that explain a non-obvious *why* — an invariant,
+  workaround rationale, or business rule.
 
 Apply SOLID principles when writing new code. Load `skills/solid-principles/SKILL.md`
 for the full methodology. Key checkpoints:
