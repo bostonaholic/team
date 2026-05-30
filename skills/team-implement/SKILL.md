@@ -89,6 +89,7 @@ If `$ARGUMENTS/plan.md` does not exist in it, run `test-architect` →
 
 Coordinate progress via TodoWrite. Seed: `Test-architect → Mechanical
 gate → Implementer (per slice) → Review round 1`.
+See `skills/progress-tracking/SKILL.md` for the per-step tracking convention agents follow within each phase.
 
 ## Worktree Check
 
