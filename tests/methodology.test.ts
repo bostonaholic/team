@@ -1,0 +1,351 @@
+import { describe, expect, test } from "bun:test";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+
+const REPO_ROOT = process.cwd();
+
+function read(path: string): string {
+  return readFileSync(path, "utf8");
+}
+
+// Frontmatter slice: lines strictly between the first and second `---` markers.
+// Empty if fewer than two markers — dependent assertions then fail, not skip.
+function frontmatter(text: string): string {
+  const lines = text.split("\n");
+  let count = 0;
+  const out: string[] = [];
+  for (const line of lines) {
+    if (/^---$/.test(line)) {
+      count++;
+      continue;
+    }
+    if (count === 1) out.push(line);
+  }
+  return out.join("\n");
+}
+
+// Body slice: lines after the second `---`.
+function body(text: string): string {
+  const lines = text.split("\n");
+  let f = false;
+  let b = false;
+  const out: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i] ?? "";
+    if (i === 0 && line === "---") {
+      f = true;
+      continue;
+    }
+    if (f && line === "---") {
+      f = false;
+      b = true;
+      continue;
+    }
+    if (b) out.push(line);
+  }
+  return out.join("\n");
+}
+
+// Keep lines containing `key`, drop lines matching the `exclude` regex, take
+// the first 5, join. Isolates a single table row from a methodology doc.
+function filterRows(text: string, key: string, exclude: RegExp): string {
+  return text
+    .split("\n")
+    .filter((line) => line.includes(key))
+    .filter((line) => !exclude.test(line))
+    .slice(0, 5)
+    .join("\n");
+}
+
+// Find each line matching the pattern and emit it plus the next 4 lines,
+// concatenating each window. Scopes a directive assertion to the directive
+// block rather than the whole body.
+function grepA4(text: string, pattern: RegExp): string {
+  const lines = text.split("\n");
+  const out: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i] ?? "";
+    if (pattern.test(line)) {
+      out.push(...lines.slice(i, i + 5));
+    }
+  }
+  return out.join("\n");
+}
+
+describe("engineering-standards methodology", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "engineering-standards", "SKILL.md");
+  const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
+  const PLANNER = join(REPO_ROOT, "agents", "planner.md");
+  const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
+  const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
+
+  test("skill file exists with valid frontmatter", () => {
+    expect(existsSync(SKILL_FILE)).toBe(true);
+    const head10 = read(SKILL_FILE).split("\n").slice(0, 10).join("\n");
+    expect(head10).toContain("name: engineering-standards");
+  });
+
+  test("skill contains all 6 philosopher names", () => {
+    const text = read(SKILL_FILE);
+    for (const name of ["Hickey", "Carmack", "Armstrong", "Knuth", "Liskov", "Ousterhout"]) {
+      expect(text).toContain(name);
+    }
+  });
+
+  test("skill contains all 9 quality checklist items", () => {
+    const text = read(SKILL_FILE);
+    for (const item of [
+      "Single Responsibility",
+      "Clear Naming",
+      "No Magic Numbers",
+      "Explicit Error Handling",
+      "Low Coupling",
+      "Testability",
+      "Readability",
+      "DRY",
+      "Performance Awareness",
+    ]) {
+      expect(text).toContain(item);
+    }
+  });
+
+  test("skill contains role-specific sections", () => {
+    const text = read(SKILL_FILE);
+    expect(text).toContain("When Implementing");
+    expect(text).toContain("When Reviewing");
+  });
+
+  test("planner.md references engineering-standards/SKILL.md", () => {
+    expect(read(PLANNER)).toContain("engineering-standards/SKILL.md");
+  });
+
+  test("implementer.md references engineering-standards/SKILL.md", () => {
+    expect(read(IMPLEMENTER)).toContain("engineering-standards/SKILL.md");
+  });
+
+  test("code-reviewer.md references engineering-standards/SKILL.md", () => {
+    expect(read(CODE_REVIEWER)).toContain("engineering-standards/SKILL.md");
+  });
+
+  test("skills.md methodology table includes engineering-standards row with all 3 consumers", () => {
+    const row = filterRows(read(SKILLS_MD), "engineering-standards", /^#|^>|\/\/|event/);
+    expect(row.length).toBeGreaterThan(0);
+    for (const agent of ["planner", "implementer", "code-reviewer"]) {
+      expect(row).toContain(agent);
+    }
+  });
+
+  test("skills.md code-review row unchanged", () => {
+    const row = filterRows(read(SKILLS_MD), "`code-review`", /^#|^>|SKILL\.md|\/\/|event/);
+    for (const agent of ["code-reviewer", "security-reviewer", "ux-reviewer", "technical-writer"]) {
+      expect(row).toContain(agent);
+    }
+  });
+
+  test("skill defers to solid-principles for LSP/SRP", () => {
+    expect(read(SKILL_FILE)).toContain("solid-principles/SKILL.md");
+  });
+
+  test("implementer.md still references solid-principles/SKILL.md", () => {
+    expect(read(IMPLEMENTER)).toContain("solid-principles/SKILL.md");
+  });
+
+  test("implementer.md still references refactoring-to-patterns/SKILL.md", () => {
+    expect(read(IMPLEMENTER)).toContain("refactoring-to-patterns/SKILL.md");
+  });
+
+  test("code-reviewer.md still references solid-principles/SKILL.md", () => {
+    expect(read(CODE_REVIEWER)).toContain("solid-principles/SKILL.md");
+  });
+
+  test("code-reviewer.md still references code-review/SKILL.md", () => {
+    expect(read(CODE_REVIEWER)).toContain("code-review/SKILL.md");
+  });
+
+  test("skill contains design-first workflow with all 5 steps", () => {
+    const text = read(SKILL_FILE);
+    expect(/Design.First|Design-First/i.test(text)).toBe(true);
+    expect(/understand|requirements/i.test(text)).toBe(true);
+    expect(/incrementally|incremental/i.test(text)).toBe(true);
+    expect(/self-review|quality checklist/i.test(text)).toBe(true);
+    expect(/explain decisions|trade-offs/i.test(text)).toBe(true);
+  });
+
+  // The working-tree `git diff` cleanliness check is a CI-hygiene concern, not
+  // a property of the code under test, so it is intentionally not covered here.
+
+  test("skills.md methodology table includes solid-principles row", () => {
+    const row = filterRows(read(SKILLS_MD), "solid-principles", /^#|^>|\/\/|event/);
+    expect(row.length).toBeGreaterThan(0);
+  });
+
+  test("skills.md methodology table includes refactoring-to-patterns row", () => {
+    const row = filterRows(read(SKILLS_MD), "refactoring-to-patterns", /^#|^>|\/\/|event/);
+    expect(row.length).toBeGreaterThan(0);
+  });
+});
+
+describe("product-thinking methodology", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "product-thinking", "SKILL.md");
+  const QUESTIONER = join(REPO_ROOT, "agents", "questioner.md");
+  const DESIGN_AUTHOR = join(REPO_ROOT, "agents", "design-author.md");
+  const STRUCTURE_PLANNER = join(REPO_ROOT, "agents", "structure-planner.md");
+
+  test("skill file exists and first line is ---", () => {
+    expect(existsSync(SKILL_FILE)).toBe(true);
+    expect(read(SKILL_FILE).split("\n")[0]).toBe("---");
+  });
+
+  test("frontmatter declares name: product-thinking", () => {
+    const head10 = read(SKILL_FILE).split("\n").slice(0, 10).join("\n");
+    expect(/^name: product-thinking$/m.test(head10)).toBe(true);
+  });
+
+  test("description names all three loaders (questioner, design-author, structure-planner)", () => {
+    const descBlock = read(SKILL_FILE)
+      .split("\n")
+      .slice(0, 10)
+      .filter((line) => /^description:/.test(line))
+      .join("\n");
+    for (const loader of ["questioner", "design-author", "structure-planner"]) {
+      expect(descBlock).toContain(loader);
+    }
+  });
+
+  test("frontmatter is exactly name + description (no argument-hint/model/tools/permissionMode)", () => {
+    const fm = frontmatter(read(SKILL_FILE));
+    expect(/^argument-hint:|^model:|^tools:|^permissionMode:/m.test(fm)).toBe(false);
+    expect(/^name:/m.test(fm)).toBe(true);
+    expect(/^description:/m.test(fm)).toBe(true);
+  });
+
+  test("the five H2 headings exist verbatim and in order", () => {
+    const expectedH2 = [
+      "## Core Lenses",
+      "## When Framing the Task",
+      "## When Designing",
+      "## When Slicing",
+      "## Lens, Not Dogma",
+    ].join("\n");
+    const actualH2 = (read(SKILL_FILE).match(/^## .*$/gm) ?? []).join("\n");
+    expect(actualH2).toBe(expectedH2);
+  });
+
+  test("H1 title is # Product Thinking", () => {
+    expect(/^# Product Thinking$/m.test(read(SKILL_FILE))).toBe(true);
+  });
+
+  test("all four named lenses are present", () => {
+    const text = read(SKILL_FILE);
+    expect(/Demand evidence/i.test(text)).toBe(true);
+    expect(/Smallest thing/i.test(text)).toBe(true);
+    expect(/someone specific/i.test(text)).toBe(true);
+    expect(/Talk-to-users|talk to users/i.test(text)).toBe(true);
+  });
+
+  test("## When Framing the Task carries the demand-signal / smallest-version framing questions", () => {
+    const text = read(SKILL_FILE);
+    expect(/specifically/i.test(text)).toBe(true);
+    expect(/signal/i.test(text)).toBe(true);
+    expect(/smallest version/i.test(text)).toBe(true);
+  });
+
+  test("Lens, Not Dogma closer is present", () => {
+    expect(/^## Lens, Not Dogma$/m.test(read(SKILL_FILE))).toBe(true);
+  });
+
+  test("pure-lens shape — no ## Overview / ## Summary heading", () => {
+    expect(/^## (Overview|Summary)$/im.test(read(SKILL_FILE))).toBe(false);
+  });
+
+  test("pure-lens shape — no checklist / gate / self-check heading", () => {
+    expect(/^## .*(Checklist|Gate|Self-check|Self check)/im.test(read(SKILL_FILE))).toBe(false);
+  });
+
+  test("skill is within the <= 175 line soft norm", () => {
+    // Count newlines, not lines.
+    const lineCount = read(SKILL_FILE).split("\n").length - 1;
+    expect(lineCount).toBeLessThanOrEqual(175);
+  });
+
+  test("questioner frontmatter has a skills: block listing product-thinking", () => {
+    const fm = frontmatter(read(QUESTIONER));
+    expect(/^skills:/m.test(fm)).toBe(true);
+    expect(/product-thinking|team:product-thinking/.test(fm)).toBe(true);
+  });
+
+  test("questioner body directive cites ## When Framing the Task", () => {
+    const b = body(read(QUESTIONER));
+    expect(b).toContain("## When Framing the Task");
+    expect(/product-thinking|product-need lens/i.test(b)).toBe(true);
+  });
+
+  test("questioner directive restates goal isolation and scopes to task.md framing", () => {
+    const directive = grepA4(body(read(QUESTIONER)), /Apply the product-need lens|product-thinking/i);
+    expect(/questions\.md|never/i.test(directive)).toBe(true);
+    expect(/task\.md|framing/i.test(directive)).toBe(true);
+  });
+
+  test("questioner description frontmatter is unchanged", () => {
+    const expected =
+      "description: Use as the first agent of the QRSPI pipeline. Decomposes a user's task description into a full task record (task.md) and neutral research questions (questions.md), and — when the description names more than one repository — a repos.md listing the repos the topic touches. The researcher who reads questions.md should have no idea what feature is being built.";
+    expect(read(QUESTIONER)).toContain(expected);
+  });
+
+  test("design-author frontmatter has a skills: block listing product-thinking", () => {
+    const fm = frontmatter(read(DESIGN_AUTHOR));
+    expect(/^skills:/m.test(fm)).toBe(true);
+    expect(/product-thinking|team:product-thinking/.test(fm)).toBe(true);
+  });
+
+  test("design-author body directive cites ## When Designing", () => {
+    const b = body(read(DESIGN_AUTHOR));
+    expect(b).toContain("## When Designing");
+    expect(/product-thinking|product-need lens/i.test(b)).toBe(true);
+  });
+
+  test("design-author directive states it adds no gate / no extra research", () => {
+    const directive = grepA4(body(read(DESIGN_AUTHOR)), /Apply the product-need lens|product-thinking/i);
+    expect(/no gate|adds no gate|no extra research|requires no/i.test(directive)).toBe(true);
+  });
+
+  test("design-author description frontmatter is unchanged", () => {
+    const expected =
+      'description: Use after research is complete to align with the user on the approach before any code is written. Drafts a ~200-line design document covering current state, desired end state, patterns to follow, decisions made, and explicit open questions for the user. MUST present the open questions interactively before producing the design — replaces the RPI "magic words" problem with structural interaction.';
+    expect(read(DESIGN_AUTHOR)).toContain(expected);
+  });
+
+  test("structure-planner frontmatter has a skills: block listing product-thinking", () => {
+    const fm = frontmatter(read(STRUCTURE_PLANNER));
+    expect(/^skills:/m.test(fm)).toBe(true);
+    expect(/product-thinking|team:product-thinking/.test(fm)).toBe(true);
+  });
+
+  test("structure-planner body directive cites ## When Slicing", () => {
+    const b = body(read(STRUCTURE_PLANNER));
+    expect(b).toContain("## When Slicing");
+    expect(/product-thinking|product-need lens/i.test(b)).toBe(true);
+  });
+
+  test("structure-planner directive nudges slice-1-value / smallest scope and adds no gate", () => {
+    const directive = grepA4(body(read(STRUCTURE_PLANNER)), /Apply the product-need lens|product-thinking/i);
+    expect(/slice 1|smallest/i.test(directive)).toBe(true);
+    expect(/no new gate|no gate|adds no/i.test(directive)).toBe(true);
+  });
+
+  test("structure-planner description frontmatter is unchanged", () => {
+    const expected =
+      "description: Use after the design is approved to break the work into vertical slices with verification checkpoints. Each slice is end-to-end (touches every layer needed to deliver one piece of functionality), independently testable, and atomically committable. Produces a ~2-page document the human reviews before any code is written.";
+    expect(read(STRUCTURE_PLANNER)).toContain(expected);
+  });
+
+  test("every ## When ... heading cited by the agents resolves to a real skill heading", () => {
+    const skillText = read(SKILL_FILE);
+    const agentTexts = [read(QUESTIONER), read(DESIGN_AUTHOR), read(STRUCTURE_PLANNER)];
+    for (const heading of ["## When Framing the Task", "## When Designing", "## When Slicing"]) {
+      const cited = agentTexts.some((t) => t.includes(heading));
+      expect(cited).toBe(true);
+      expect(skillText).toContain(heading);
+    }
+  });
+});
