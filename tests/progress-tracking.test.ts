@@ -88,6 +88,12 @@ function skillsArrayHasProgressTracking(text: string): boolean {
   return false;
 }
 
+// True if an agent's frontmatter `tools:` line grants the TodoWrite tool, so
+// the preloaded progress-tracking convention is actually executable.
+function toolsLineHasTodoWrite(text: string): boolean {
+  return /^tools:.*\bTodoWrite\b/m.test(frontmatter(text));
+}
+
 describe("Slice 1: progress-tracking convention skill exists", () => {
   const PT = skill("progress-tracking");
 
@@ -214,6 +220,18 @@ describe("Slices 5-6: multi-step agents preload progress-tracking", () => {
 
   test("file-finder does NOT preload progress-tracking", () => {
     expect(skillsArrayHasProgressTracking(read(agent("file-finder")))).toBe(false);
+  });
+});
+
+describe("Slices 5-6: multi-step agents grant the TodoWrite tool", () => {
+  for (const name of PRELOAD_AGENTS) {
+    test(`${name} tools: frontmatter includes TodoWrite`, () => {
+      expect(toolsLineHasTodoWrite(read(agent(name)))).toBe(true);
+    });
+  }
+
+  test("file-finder does NOT grant TodoWrite", () => {
+    expect(toolsLineHasTodoWrite(read(agent("file-finder")))).toBe(false);
   });
 });
 

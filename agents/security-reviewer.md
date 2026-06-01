@@ -3,7 +3,7 @@ name: security-reviewer
 description: Use when a security review is needed after implementation. Applies OWASP-style checks with fresh context. Critical findings are a hard gate — they block shipping until resolved. Example triggers — "security review", "check for vulnerabilities", "audit this code for security issues".
 color: red
 model: sonnet
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob, Bash, TodoWrite
 permissionMode: plan
 skills:
   - progress-tracking
