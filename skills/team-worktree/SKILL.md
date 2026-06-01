@@ -100,6 +100,17 @@ just the home repo.
   Claude Code's native worktree convention; see
   `skills/worktree-isolation/SKILL.md`)
 
+**Branch names must never contain a slash (`/`).** Use `-` as the only
+delimiter. A `/` in a branch name creates a nested ref path in
+`.git/refs/heads/` that collides with Claude Code's `.claude/worktrees/`
+directory convention and breaks worktree cleanup. The `<id>` produced by
+the questioner is already slash-free, but if `basename "$ARGUMENTS"` ever
+yields a name containing `/` (e.g. a ticket prefix like `TEAM/123`),
+replace every `/` with `-` first and use that sanitized name as **both**
+the branch name and the worktree directory name so the two stay in sync
+for cleanup: `branch="$(printf '%s' "$id" | tr '/' '-')"`. Only the
+`docs/plans/<id>/` artifact directory keeps the original `<id>`.
+
 ### Confirm with the user
 
 Single-repo:
@@ -134,12 +145,16 @@ Use `AskUserQuestion` with a `Worktree` header and **Proceed** /
 
 After the user confirms:
 
+Use the slash-sanitized name (`<branch>`, derived above) for both the
+worktree directory and the `-b` flag in every repo. In the common case
+`<branch>` equals `<id>`.
+
 - **Single-repo:** create the home worktree using Claude Code's native
   worktree support, branched off `origin/HEAD`.
 - **Multi-repo:** for each listed repo:
   ```
   git -C <repo-path> fetch origin --quiet
-  git -C <repo-path> worktree add .claude/worktrees/<id> -b <id> origin/HEAD
+  git -C <repo-path> worktree add .claude/worktrees/<branch> -b <branch> origin/HEAD
   ```
   If a repo lacks an `origin` remote or `origin/HEAD`, fall back to its
   current default branch and warn the user once for that repo.
