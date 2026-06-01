@@ -167,9 +167,25 @@ the work.
 you start, not after. When the PR opens, move it to **In review**. When the
 PR merges, move it to **Done**.
 
+Dragging the card on the board UI is the simplest way. To do it from the CLI,
+look up the item's ID, then set its Status option:
+
 ```sh
-# Update an item's Status field from the CLI (see `gh project --help`),
-# or just drag the card on the board UI.
+# 1. Find the board item ID (PVTI_…) for your issue number:
+gh project item-list 5 --owner bostonaholic --format json \
+  --jq '.items[] | select(.content.number == <issue-number>) | .id'
+
+# 2. Set its Status. The project, field, and option IDs below are fixed for
+#    the "🤖 Team" board; re-derive them any time with:
+#      gh project field-list 5 --owner bostonaholic --format json
+gh project item-edit \
+  --project-id PVT_kwHOAAWGos4BZZUB \
+  --id <item-id> \
+  --field-id PVTSSF_lAHOAAWGos4BZZUBzhUYPNQ \
+  --single-select-option-id df73e18b   # In review
+
+# Status option IDs:
+#   Backlog f75ad846 · Ready 61e4505c · In progress 47fc9ee4 · In review df73e18b · Done 98236657
 ```
 
 ## How it ties to the QRSPI pipeline
