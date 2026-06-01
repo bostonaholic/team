@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-01
+
 ### Changed
 
 - **Post-merge cleanup now syncs the local default branch via rebase.** When a worktree is torn down after its PR merges, the PR/ship phase now also brings the repo's local default branch up to date with `git -C <repo-root> pull --rebase origin <base>` — previously the worktree and branch were removed but the local `main` was left behind the just-merged commit, so the next session started stale. Always a rebase, never a merge commit, to keep history linear. Documented in `skills/team-pr/SKILL.md` (step 9), `skills/team/SKILL.md` (PR gate step 6), and `skills/worktree-isolation/SKILL.md` (Ship teardown); in multi-repo mode the pull runs for every involved repo.
@@ -73,7 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/bostonaholic/team/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/bostonaholic/team/releases/tag/v0.3.0
 [0.2.1]: https://github.com/bostonaholic/team/releases/tag/v0.2.1
 [0.2.0]: https://github.com/bostonaholic/team/releases/tag/v0.2.0
