@@ -45,9 +45,19 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      # The live suite spawns the `claude` CLI (tests/helpers/session-runner.ts).
+      # It is not a project dependency, so install it globally onto $PATH here.
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
       - name: Run ${{ matrix.suite.name }} agent live
         env:
+          # The judge reads EVALS_ANTHROPIC_API_KEY (namespaced so the spawned
+          # agent won't auto-pick it up in local dev). In CI there is no
+          # logged-in session, so the agent under test gets its own credential
+          # via the bare ANTHROPIC_API_KEY, sourced from the same secret.
           EVALS_ANTHROPIC_API_KEY: ${{ secrets.EVALS_ANTHROPIC_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.EVALS_ANTHROPIC_API_KEY }}
           EVALS: "1"
           EVALS_ALL: "1"
           EVALS_TIER: periodic
