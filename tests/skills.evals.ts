@@ -1,6 +1,6 @@
 // tests/skills.evals.ts
 //
-// Methodology skill-harness evals. One parameterized file over the 17
+// Methodology skill-harness evals. One parameterized file over the 18
 // methodology skills. For each skill we drive its SKILL.md procedure through
 // the skill harness against a synthetic task, then:
 //   1. a deterministic structural contract check (outcomeJudge) runs first —
@@ -30,7 +30,7 @@ const collector = new EvalCollector("e2e");
 // LLM judge. Mirrors code-reviewer's MIN_REASON_SUBSTANCE.
 const MIN_QUALITY = 3;
 
-// The 17 methodology skills. Each gets its own selectable eval.
+// The 18 methodology skills. Each gets its own selectable eval.
 const SKILLS = [
   "agent-open-questions",
   "changelog",
@@ -41,6 +41,7 @@ const SKILLS = [
   "git-commit",
   "product-requirements-doc",
   "product-thinking",
+  "progress-tracking",
   "qrspi-workflow",
   "refactoring-to-patterns",
   "solid-principles",

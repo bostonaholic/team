@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "per-step-ledger",
+      "description": "Output must seed and complete one ledger item per numbered step — a per-step progress ledger rather than a single lumped status line.",
+      "detection_hint": "(\\[x\\][^\\n]*step\\s*[123]|step\\s*[123][^\\n]*\\b(done|complete[d]?)\\b)"
+    }
+  ],
+  "minimum_detection": 1
+}
