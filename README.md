@@ -21,7 +21,7 @@ QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → WORKTREE → IMPLEME
 - **Plan** — Tactical implementation plan derived from the approved structure. Read by the implementer; not human-gated.
 - **Worktree** — Orchestrator prepares an isolated git worktree.
 - **Implement** — Test-first (test-architect writes failing tests, mechanical gate confirms) → slice execution (implementer commits each vertical slice atomically) → adversarial verification (5 parallel reviewers + typed failure-class retry loop, max 5 rounds).
-- **PR** — Update changelog, commit, open pull request, close beads issue.
+- **PR** — Update changelog, commit, open pull request, surface the tracking item.
 
 ## Usage
 
