@@ -12,6 +12,12 @@ import { loadFixture } from "./helpers/fixtures";
 
 const FIXTURE_ROOT = join(process.cwd(), "evals", "fixtures");
 const RUBRIC_ROOT = join(process.cwd(), "evals", "rubrics");
+const EVALS_WORKFLOW = join(
+  process.cwd(),
+  ".github",
+  "workflows",
+  "behavioral-evals.yml",
+);
 const FIXTURE_SIZE_CAP = 50 * 1024;
 
 function enumerate(): { agent: string; caseName: string }[] {
@@ -58,6 +64,35 @@ describe("static gate: fixtures", () => {
       const rubric = join(RUBRIC_ROOT, `${agent}.md`);
       expect(existsSync(rubric)).toBe(true);
     }
+  });
+});
+
+// The behavioral-evals workflow spawns the `claude` CLI live
+// (tests/helpers/session-runner.ts). A scheduled run is the only place this
+// fires, so a missing CLI install or missing agent credentials surfaces only
+// once a week, in CI, with no PR signal. These guards keep that contract
+// visible in the free gate that runs on every PR.
+describe("static gate: behavioral-evals workflow", () => {
+  const workflow = existsSync(EVALS_WORKFLOW)
+    ? readFileSync(EVALS_WORKFLOW, "utf8")
+    : "";
+
+  test("workflow file exists", () => {
+    expect(existsSync(EVALS_WORKFLOW)).toBe(true);
+  });
+
+  test("installs the Claude Code CLI before spawning the agent", () => {
+    // The live suite calls spawn("claude", ...); without this install the
+    // step dies with `ENOENT: claude not in $PATH`.
+    expect(workflow).toContain("@anthropic-ai/claude-code");
+  });
+
+  test("exposes ANTHROPIC_API_KEY so the spawned agent can authenticate", () => {
+    // EVALS_ANTHROPIC_API_KEY is namespaced for the judge only; the agent
+    // under test needs its own credential or it fails auth on every run.
+    // Anchor to the bare key at line start so the existing namespaced
+    // EVALS_ANTHROPIC_API_KEY: entry does not satisfy this on its own.
+    expect(/^\s*ANTHROPIC_API_KEY:/m.test(workflow)).toBe(true);
   });
 });
 
