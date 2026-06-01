@@ -63,70 +63,91 @@ or chore.
 
 Labels classify *what a card is* and *how it should be handled* — the kanban
 column already tracks *where it is*, so labels never duplicate status. Reuse
-the existing labels; do not invent new ones casually. They fall into four
-groups.
+the existing labels; do not invent new ones casually.
 
-### Type — what the work is (apply exactly one)
+These are the **only** labels in the repository. The "Definition" column is the
+label's own GitHub description; the "Assign when" column is the rule an agent
+follows to decide whether the label applies. They fall into four groups: pick
+**exactly one Type label** for every issue, then add other labels only when
+their "Assign when" rule is satisfied.
 
-Every issue gets exactly one type label. This is the primary axis for
-filtering the board.
+### Type — what the work is (assign exactly one)
 
-| Label | Use it for |
-|-------|------------|
-| `bug` | Something isn't working — a defect in existing behavior. |
-| `enhancement` | A new feature or improvement to existing behavior. *(This is the "feature" label — there is no separate `feature` label.)* |
-| `documentation` | Improvements or additions to docs only — no behavior change. |
+Every issue gets exactly one type label. This is the primary axis for filtering
+the board. If none of the three fits, the item is almost certainly a
+`question`, not work.
 
-### Resolution — why a card was closed (apply when closing)
+| Label | Definition | Assign when |
+|-------|------------|-------------|
+| `bug` | Something isn't working | Existing behavior is broken, incorrect, or crashes — a defect in shipped functionality. Reproduction steps belong in the issue. |
+| `enhancement` | New feature or request | New capability, or an improvement to existing behavior that works but should do more or do it better. **This is the "feature" label — there is no separate `feature` label.** |
+| `documentation` | Improvements or additions to documentation | The change is to docs only (`README`, `docs/`, `AGENTS.md`, code comments) with no behavior change. If code *and* docs change, use the code label (`bug`/`enhancement`), not this. |
 
-These are *close reasons*, not work to be done. Apply one **and close the
-issue** at the same time; never leave a resolution label on an open card.
+### Resolution — why a card was closed (assign only while closing)
 
-| Label | Apply when closing because… |
-|-------|------------------------------|
-| `duplicate` | The same issue or PR already exists. Link the original. |
-| `invalid` | The report doesn't hold up — not reproducible or out of scope. |
-| `wontfix` | A deliberate decision not to act on it. Say why in a comment. |
+These are *close reasons*, not work to be done. Assign one **at the moment you
+close the issue**; never leave a resolution label on an open card. They do not
+replace the Type label — an invalid bug keeps `bug` and gains `invalid`.
+
+| Label | Definition | Assign when |
+|-------|------------|-------------|
+| `duplicate` | This issue or pull request already exists | Closing because the same item is already tracked elsewhere. Link the original in a comment. |
+| `invalid` | This doesn't seem right | Closing because the report doesn't hold up — not reproducible, misfiled, or out of scope for this repo. |
+| `wontfix` | This will not be worked on | Closing by deliberate decision not to act, even though the item may be valid. State the reasoning in a comment. |
 
 ### Discussion — not committed work
 
-| Label | Use it for |
-|-------|------------|
-| `question` | A request for information or a discussion, not a unit of work. Keep these in **Backlog** (or close once answered); don't pull them into *In progress*. |
+| Label | Definition | Assign when |
+|-------|------------|-------------|
+| `question` | Further information is requested | The item is a request for information or a discussion, not a unit of work. Keep it in **Backlog** (or close once answered); never pull a `question` into *In progress*. Drop it once it converts into a `bug`/`enhancement`. |
 
-### Contributor signals — layer on top of a type label
+### Contributor signals — additive, layered on a Type label
 
-These help others find work; they never replace a type label.
+These help humans find work; they never replace a Type label and an agent
+rarely needs to apply them on its own.
 
-| Label | Meaning |
-|-------|---------|
-| `good first issue` | Self-contained and well-scoped — a good entry point for a newcomer. |
-| `help wanted` | Maintainers are actively looking for someone to take this. |
+| Label | Definition | Assign when |
+|-------|------------|-------------|
+| `good first issue` | Good for newcomers | The work is self-contained, well-scoped, and needs little repo context — a safe entry point for a first-time contributor. |
+| `help wanted` | Extra attention is needed | Maintainers are explicitly inviting someone else to pick this up. |
 
-### Area labels — mostly automated
+### Area — mostly automated
 
-`dependencies` and `ruby` are applied automatically by Dependabot to the PRs
-it opens (dependency-file updates, and Ruby code updates respectively). Don't
-hand-apply them unless a PR genuinely fits and the bot missed it.
+These mark *what part of the codebase* a change touches. Dependabot applies
+them automatically to the PRs it opens; an agent should hand-apply one only
+when a PR genuinely fits the area and the bot missed it.
 
-### Rules of thumb
+| Label | Definition | Assign when |
+|-------|------------|-------------|
+| `dependencies` | Pull requests that update a dependency file | A PR bumps or changes a dependency manifest/lockfile. Normally set by Dependabot. |
+| `ruby` | Pull requests that update ruby code | A PR changes Ruby code. Normally set by Dependabot. |
 
-- **One type label, always.** `bug`, `enhancement`, or `documentation` — pick
-  the one that fits. If it's none of these, it's probably a `question`.
-- **Resolution labels travel with a close.** `duplicate` / `invalid` /
-  `wontfix` on an *open* issue is a contradiction.
-- **Labels describe the work; the board column describes its progress.** Don't
-  add a "wip" or "in review" label — that's what Status is for.
-- **`good first issue` / `help wanted` are additive**, layered onto a type
-  label, never a substitute for one.
-- **Stick to the existing set.** Need a label that doesn't exist? Raise it
-  with the maintainer before creating one — label sprawl makes the board
-  harder to filter, not easier.
+### Decision procedure for an agent
+
+1. **Pick the one Type label** — `bug` if existing behavior is broken,
+   `enhancement` if it's new/better capability, `documentation` if it's docs
+   only. Can't pick one? It's a `question`.
+2. **Stop there for a normal open issue.** Type label (or `question`) is
+   usually the whole answer.
+3. **Add `good first issue` / `help wanted`** only if that signal is true — and
+   only on top of a Type label, never instead of one.
+4. **Add an Area label** (`dependencies` / `ruby`) only for a PR that fits it
+   and only if automation missed it.
+5. **Add a Resolution label** (`duplicate` / `invalid` / `wontfix`) *only* in
+   the same action that closes the issue, with a one-line reason in a comment.
+6. **Never** add a status-like label (no "wip", "in review", "blocked") — the
+   board's **Status** field owns progress. And never invent a label that isn't
+   in the tables above; if one is genuinely missing, raise it with the
+   maintainer first — label sprawl makes the board harder to filter, not
+   easier.
 
 ```sh
 # Apply or change labels from the CLI:
 gh issue edit <number> --repo bostonaholic/team --add-label enhancement
 gh issue edit <number> --repo bostonaholic/team --add-label "good first issue"
+
+# The authoritative list always lives here:
+gh label list --repo bostonaholic/team
 ```
 
 ## The kanban flow
