@@ -62,7 +62,7 @@ See `agents/*.md`. Each agent file uses only Claude Code's [supported frontmatte
 
 **Invariant:** the agent inventory in `skills/team/registry.json` (which carries the `phase` mapping) and the files under `agents/` must always agree by name. When adding or renaming an agent, update both in the same commit. The dev hook `.claude/hooks/check-registry-sync.mjs` enforces this automatically.
 
-## Skills (28)
+## Skills (29)
 
 See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodology skills are loaded by agents. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
 
@@ -91,6 +91,7 @@ State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKE
 
 - **No `commands/` directory.** Skills are the only entry point mechanism. They auto-register as slash commands.
 - **No project-scoped memory.** Do not save memories to `~/.claude/projects/*/memory/`. All project knowledge belongs in this file or docs linked from here. This file is checked into git and travels with the project.
+- **Todo-first progress tracking.** Any agent or skill that executes a multi-step numbered procedure seeds one TodoWrite item per step before starting and marks each complete as it goes. See `skills/progress-tracking/SKILL.md` for the convention and ledger-ownership rules.
 
 ## Behavioral Evals
 

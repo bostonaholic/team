@@ -92,6 +92,8 @@ just the home repo.
 
 ## Execution
 
+> Follow `skills/progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
+
 ### Derive identifiers
 
 - `<id>` = `basename "$ARGUMENTS"`

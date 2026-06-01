@@ -65,6 +65,7 @@ No Question. No Research. No Design. No Structure. No Plan. No human gate.
 4. **Seed the TodoWrite ledger** with the bug-fix phases:
    `Reproduce → Red (failing test) → Green (minimal fix) → Verify → Ship`.
    Mark `Reproduce` as `in_progress`.
+   See `skills/progress-tracking/SKILL.md` for the per-step tracking convention agents follow within each phase.
 
 ## Execution
 

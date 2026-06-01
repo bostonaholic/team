@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 28 skills — 11 entry-point slash commands and 17 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 29 skills — 11 entry-point slash commands and 18 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 ---
 
 # Team Plugin — Skills
@@ -38,7 +38,7 @@ catalog into two flavors:
   …`).
 
 That `argument-hint` marker is the whole flavor distinction. The split
-is **11 entry-point + 17 methodology = 28**.
+is **11 entry-point + 18 methodology = 29**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -211,7 +211,7 @@ argument shape.
 
 ## Methodology skills
 
-The 17 methodology skills carry no `argument-hint` and are never invoked
+The 18 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -303,6 +303,18 @@ load manifest; an agent typically loads at most three.
   investigation begins.
 - **Key behaviors:** Gather evidence before theorizing, then isolate the
   root cause rather than patching symptoms.
+
+### progress-tracking
+
+- **Purpose:** Todo-first progress convention for multi-step procedures.
+- **Loaded by:** every multi-step agent (questioner, design-author,
+  structure-planner, planner, test-architect, implementer, code-reviewer,
+  security-reviewer, ux-reviewer, technical-writer, researcher, verifier).
+- **Key behaviors:** A convention, not a gate — produces no artifact and
+  blocks nothing. When a procedure has two or more steps, seed one todo
+  item per step before starting and mark each complete as you go. The
+  orchestrator owns the phase ledger; an agent tracks its own sub-steps in
+  its own context and never merges them up.
 
 ### documenting-decisions
 
@@ -406,6 +418,7 @@ entry-point section above rather than repeating them here.
 | `solid-principles` | implementer, code-reviewer | Implement |
 | `refactoring-to-patterns` | implementer | Implement |
 | `systematic-debugging` | agents when debugging (advisory) | Any (debugging) |
+| `progress-tracking` | every multi-step agent (convention) | Any (multi-step procedure) |
 | `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
 | `technical-design-doc` | planner | Plan |
 | `product-requirements-doc` | questioner | Question |

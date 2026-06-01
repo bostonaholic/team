@@ -22,6 +22,8 @@ They answer two questions with certainty:
 
 ## Process
 
+> Follow `skills/progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
+
 ### 1. Write Every Test From the Plan
 
 The plan's Tests section enumerates every acceptance test by name and

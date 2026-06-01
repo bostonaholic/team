@@ -3,10 +3,11 @@ name: structure-planner
 description: Use after the design is approved to break the work into vertical slices with verification checkpoints. Each slice is end-to-end (touches every layer needed to deliver one piece of functionality), independently testable, and atomically committable. Produces a ~2-page document the human reviews before any code is written.
 color: purple
 model: opus
-tools: Read, Write, Edit, Grep, Glob
+tools: Read, Write, Edit, Grep, Glob, TodoWrite
 permissionMode: acceptEdits
 skills:
   - product-thinking
+  - progress-tracking
 ---
 
 # Structure Planner Agent

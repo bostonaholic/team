@@ -43,6 +43,7 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
 5. **Seed the TodoWrite ledger** with one item per phase, in order:
    `Question → Research → Design → Structure → Plan → Worktree →
    Implement → PR`. Mark `Question` as `in_progress`.
+   See `skills/progress-tracking/SKILL.md` for the per-step tracking convention agents follow within each phase.
 6. **Resume detection.** If artifacts already exist for `<id>` under
    `docs/plans/<id>/`, fast-forward the ledger by marking completed any
    phases whose artifacts are present and (for human-gated phases) carry

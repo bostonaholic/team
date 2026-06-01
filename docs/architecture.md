@@ -368,7 +368,7 @@ cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. `code-review` is the only skill loaded as composed
 methodology that is also a user command.)
 
-For the full per-skill reference — all 27 skills, their arguments,
+For the full per-skill reference — all 29 skills, their arguments,
 consumers, and behaviors — see [skills.md](skills.md).
 
 ### Design Guidelines
