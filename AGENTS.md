@@ -23,7 +23,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 | Registry sync validation | `.claude/hooks/check-registry-sync.mjs` | Plugin developers |
 | Dev acceptance scripts | `.claude/scripts/` | Plugin developers |
 | Dev settings/hooks | `.claude/settings.json` | Plugin developers |
-| Issue tracking | `.beads/` | Plugin developers |
+| Work tracking | [GitHub Project board](https://github.com/users/bostonaholic/projects/5/views/1) | Plugin developers |
 | Behavioral regression harness | `tests/`, `evals/` | Plugin developers |
 
 **Rule of thumb:** If it validates that the plugin is *built correctly*, it's a dev concern (`.claude/`). If it runs *as part of the plugin's functionality*, it's runtime (`hooks/`).
@@ -96,6 +96,8 @@ State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKE
 
 Behavioral regression harness for pipeline agents — TypeScript + Bun. Harness code lives in `tests/`; fixtures, rubrics, and stored runs live in `evals/`. `bun test` runs the free static gate; `bun run test:evals` runs the paid E2E + LLM-judge tiers (needs `EVALS_ANTHROPIC_API_KEY`). See [evals/README.md](evals/README.md).
 
-## Issue Tracking
+## Work Tracking
 
-This project uses **bd (beads)**. Run `bd prime` for full workflow context and commands. After a fresh clone, run `bd hooks install` once to activate the git hooks that keep `.beads/issues.jsonl` in sync (the hook logic lives in `.beads/hooks/`; the `.git/hooks/` wrappers are local and not versioned).
+All work — features, bugs, chores — is tracked on the [GitHub Project board](https://github.com/users/bostonaholic/projects/5/views/1). It is the single source of truth: if work is not on the board, it is not tracked. Create a GitHub issue in `bostonaholic/team`, add it to the project, and move its card across the kanban (**Backlog → Ready → In progress → In review → Done**) as the work progresses. See [docs/project-tracking.md](docs/project-tracking.md) for the full workflow.
+
+> The GitHub Project replaces the previous **bd (beads)** tracker. The `.beads/` directory remains for historical reference but is no longer the front door for new work.

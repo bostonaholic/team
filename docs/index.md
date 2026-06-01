@@ -53,4 +53,5 @@ For a focused bug fix that skips the QRSPI ceremony:
 
 - **[Architecture](architecture.md)** — full design, artifact frontmatter, phase-inference rules.
 - **[Skills](skills.md)** — all 27 skills, their arguments, consumers, and behaviors.
+- **[Project Tracking](project-tracking.md)** — how work is tracked on the GitHub Project board.
 - **[GitHub repository](https://github.com/bostonaholic/team)** — source, agents, skills.
