@@ -167,26 +167,22 @@ the work.
 you start, not after. When the PR opens, move it to **In review**. When the
 PR merges, move it to **Done**.
 
-Dragging the card on the board UI is the simplest way. To do it from the CLI,
-look up the item's ID, then set its Status option:
+Dragging the card on the board UI is the simplest way. From the CLI, two small
+helper scripts in `.claude/scripts/` compose over a pipe — one resolves an
+issue number to its board item ID, the other sets a Status column by name:
 
 ```sh
-# 1. Find the board item ID (PVTI_…) for your issue number:
-gh project item-list 5 --owner bostonaholic --format json \
-  --jq '.items[] | select(.content.number == <issue-number>) | .id'
-
-# 2. Set its Status. The project, field, and option IDs below are fixed for
-#    the "🤖 Team" board; re-derive them any time with:
-#      gh project field-list 5 --owner bostonaholic --format json
-gh project item-edit \
-  --project-id PVT_kwHOAAWGos4BZZUB \
-  --id <item-id> \
-  --field-id PVTSSF_lAHOAAWGos4BZZUBzhUYPNQ \
-  --single-select-option-id df73e18b   # In review
-
-# Status option IDs:
-#   Backlog f75ad846 · Ready 61e4505c · In progress 47fc9ee4 · In review df73e18b · Done 98236657
+# Move issue #42's card to "In review":
+.claude/scripts/project-item-id.sh 42 | .claude/scripts/project-set-status.sh "In review"
 ```
+
+`project-item-id.sh <issue-number>` prints the board item ID to stdout (and
+nothing else, so it pipes cleanly). `project-set-status.sh <status> [item-id]`
+takes the column name (case-insensitive: `Backlog` / `Ready` / `In progress` /
+`In review` / `Done`) and reads the item ID from stdin or a second argument.
+Both resolve every GitHub node ID at runtime, so they keep working if a field
+or option is recreated. They are dev-only helpers (under `.claude/`), not part
+of the distributed plugin.
 
 ## How it ties to the QRSPI pipeline
 
