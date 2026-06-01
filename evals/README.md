@@ -32,9 +32,9 @@ technical-writer, ux-reviewer, implementer.
 artifacts captured into `input.md` — never live pipeline output. The frozen
 input is what stops `structure-planner` (and friends) from grading themselves.
 
-**28 skills.** Skills split into two groups:
+**29 skills.** Skills split into two groups:
 
-- **17 methodology skills** (loaded by agents) get behavior evals via the
+- **18 methodology skills** (loaded by agents) get behavior evals via the
   skill-harness pattern: `tests/skills.evals.ts` is one parameterized suite
   that, for each skill, loads its `SKILL.md` into a generic agent on a
   synthetic task and asserts the skill measurably shifts the output (e.g.
