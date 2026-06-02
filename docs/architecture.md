@@ -494,9 +494,11 @@ behavior drift across model upgrades. The implementation is TypeScript +
 Bun: harness code in `tests/`, fixtures/rubrics/results in `evals/`.
 Plugin-developer tooling — not distributed with the plugin. Three tiers:
 
-- **Gate** (free) — `bun test`. Static schema validation on every
-  fixture and rubric plus unit tests for the harness helpers. No model
-  calls, no `EVALS_ANTHROPIC_API_KEY`. Runs in CI on every PR.
+- **Gate** (free) — `bun test` plus `bun run test:gate`. `bun test` runs
+  static schema validation on every fixture and rubric plus unit tests for
+  the harness helpers; `bun run test:gate` replays every gate-tier agent
+  eval against its recorded mock seams (no `claude` spawn). No model calls,
+  no `EVALS_ANTHROPIC_API_KEY`. Both run in CI on every PR.
 - **E2E** (paid) — `bun run test:periodic` (needs `EVALS_ANTHROPIC_API_KEY`). Spawns `claude -p --output-format
   stream-json` against a fixture, parses the NDJSON transcript, persists
   a per-case result JSON with timing axes (`firstResponseMs`,

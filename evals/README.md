@@ -57,7 +57,7 @@ evals/
   results/                        stored run artifacts (git-ignored)
 tests/
   <agent>.evals.ts               paid live-agent suites (*.evals.ts)
-  skills.evals.ts                 parameterized 17-skill harness suite
+  skills.evals.ts                 parameterized 18-skill harness suite
   *.test.ts                       free harness + static/contract gates
   helpers/                        shared harness code
 ```
@@ -119,6 +119,10 @@ bun scripts/run-gate-evals.ts
 EVALS_MOCK_AGENT=evals/fixtures/<agent>/<case>/mocks/agent.ndjson \
 EVALS_MOCK_JUDGE=evals/fixtures/<agent>/<case>/mocks/judge.json \
 EVALS_ALL=1 bun test ./tests/<agent>.evals.ts -t "<agent>-<case>"
+# Note: the eval-comparison banner's ADDED/REMOVED lines between successive runs
+# are INFORMATIONAL — they report which cases differ run-to-run (e.g. when you
+# scope to one case with -t), NOT a regression or a deletion to act on. Only the
+# REGRESSIONS / BUDGET REGRESSIONS lines fail the run.
 
 # Paid — the full live-agent periodic matrix. Requires EVALS_ANTHROPIC_API_KEY.
 bun run test:periodic
@@ -198,3 +202,17 @@ itself from `E2E_TIERS`.
    `tier-coverage.test.ts` is what enforces every gate case is runnable free —
    it fails the PR if a gate case does not resolve to its own fixture dir with
    an agent mock.
+
+### Adding a skill eval
+
+Skill evals are parameterized, not one-file-per-skill — do NOT create a new
+`tests/<skill>.evals.ts`. Instead:
+
+1. Add the fixture under `evals/fixtures/skills/<skill>/<case>/` (`input.md` +
+   `ground-truth.json`) and the rubric at `evals/rubrics/skills/<skill>.md`.
+2. Add `"<skill>"` to the `SKILLS` manifest array in `tests/skills.evals.ts`.
+3. Wire `skill:<skill>` into BOTH `E2E_TOUCHFILES` and `E2E_TIERS` in
+   `tests/helpers/touchfiles.ts`.
+
+To run a single skill's eval in isolation, scope by its case name:
+`-t "skill:<name>"`.
