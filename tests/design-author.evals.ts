@@ -1,10 +1,10 @@
 // tests/design-author.evals.ts
 //
 // Judgment-tier eval for the design-author agent. Scored with the generic
-// `judgeQuality` rubric (clarity / completeness / actionability). Mirrors the
-// structure of code-reviewer.evals.ts: the `.evals.ts` suffix keeps it out of
-// bare `bun test` auto-discovery; `testIfSelected` gates execution by
-// tier/diff.
+// `judgeQuality` rubric (clarity / completeness / actionability) plus the
+// deterministic `outcomeJudge`. Built on the shared `defineAgentEval` factory
+// (tests/helpers/agent-eval.ts), which calls judgeQuality automatically for
+// `mode: "judgment"` cases.
 //
 // Self-eval recursion guard: the fixtures are FROZEN predecessor artifacts
 // (a captured research.md excerpt) embedded in input.md, never live pipeline
@@ -14,19 +14,9 @@
 //   EVALS_MOCK_AGENT=<path>   replay a recorded NDJSON transcript
 //   EVALS_MOCK_JUDGE=<path>   replay a recorded judge verdict JSON
 
-import { afterAll } from "bun:test";
 import { expect } from "bun:test";
-import { mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 
-import { EvalCollector, assertNoBudgetRegressions } from "./helpers/eval-store";
-import { loadFixture } from "./helpers/fixtures";
-import { judgeQuality, outcomeJudge } from "./helpers/llm-judge";
-import { runAgentTest } from "./helpers/session-runner";
-import { testIfSelected } from "./helpers/touchfiles";
-
-const collector = new EvalCollector("e2e");
+import { defineAgentEval } from "./helpers/agent-eval.ts";
 
 // Minimum per-axis quality score (1-5) the design must earn from the LLM
 // judge. Mirrors code-reviewer's MIN_REASON_SUBSTANCE.
@@ -39,120 +29,64 @@ const PROMPT =
   "explicit assumptions and open questions instead of fabricating scope. " +
   "Do not invent findings that are not in the research.\n\n";
 
-testIfSelected(
-  "design-author-well-formed-research",
-  async () => {
-    const fixture = loadFixture("design-author", "well-formed-research");
-    const workDir = mkdtempSync(join(tmpdir(), "design-author-e2e-"));
-
-    try {
-      const result = await runAgentTest({
-        prompt: PROMPT + fixture.body,
-        workingDirectory: workDir,
-        maxTurns: 6,
-        timeout: 180_000,
-        testName: "design-author-well-formed-research",
-      });
-
-      const outcome = outcomeJudge(fixture.groundTruth, result.output);
-      const quality = await judgeQuality(result.output);
-
-      const passed =
-        result.exitReason === "success" &&
-        quality.clarity >= MIN_QUALITY &&
-        quality.completeness >= MIN_QUALITY &&
-        quality.actionability >= MIN_QUALITY;
-
-      collector.addTest({
-        name: "design-author-well-formed-research",
-        suite: "design-author-e2e",
-        tier: "e2e",
-        passed,
-        duration_ms: result.duration,
-        cost_usd: result.costEstimate.estimatedCost,
-        transcript: result.transcript,
-        judge_scores: {
+defineAgentEval({
+  agent: "design-author",
+  prompt: PROMPT,
+  cases: [
+    {
+      mode: "judgment",
+      name: "design-author-well-formed-research",
+      fixtureCase: "well-formed-research",
+      workdirPrefix: "design-author-e2e-",
+      score: ({ result, outcome, quality }) => ({
+        passed:
+          result.exitReason === "success" &&
+          outcome.passes_minimum &&
+          quality.clarity >= MIN_QUALITY &&
+          quality.completeness >= MIN_QUALITY &&
+          quality.actionability >= MIN_QUALITY,
+        judgeScores: {
           clarity: quality.clarity,
           completeness: quality.completeness,
           actionability: quality.actionability,
           detection_rate: outcome.detection_rate,
         },
-        exit_reason: result.exitReason,
-        model: result.model,
-        first_response_ms: result.firstResponseMs,
-        max_inter_turn_ms: result.maxInterTurnMs,
-      });
-
-      expect(result.exitReason).toBe("success");
-      expect(quality.clarity).toBeGreaterThanOrEqual(MIN_QUALITY);
-      expect(quality.completeness).toBeGreaterThanOrEqual(MIN_QUALITY);
-      expect(quality.actionability).toBeGreaterThanOrEqual(MIN_QUALITY);
-    } finally {
-      rmSync(workDir, { recursive: true, force: true });
-    }
-  },
-  240_000,
-);
-
-testIfSelected(
-  "design-author-thin-research",
-  async () => {
-    const fixture = loadFixture("design-author", "thin-research");
-    const workDir = mkdtempSync(join(tmpdir(), "design-author-thin-e2e-"));
-
-    try {
-      const result = await runAgentTest({
-        prompt: PROMPT + fixture.body,
-        workingDirectory: workDir,
-        maxTurns: 6,
-        timeout: 180_000,
-        testName: "design-author-thin-research",
-      });
-
+      }),
+      assert: ({ result, outcome, quality }) => {
+        expect(result.exitReason).toBe("success");
+        expect(outcome.passes_minimum).toBe(true);
+        expect(quality.clarity).toBeGreaterThanOrEqual(MIN_QUALITY);
+        expect(quality.completeness).toBeGreaterThanOrEqual(MIN_QUALITY);
+        expect(quality.actionability).toBeGreaterThanOrEqual(MIN_QUALITY);
+      },
+    },
+    {
       // Deterministic graceful-degradation guard: the design must surface an
       // assumptions / open-questions section (the structural detection_hint),
       // not fabricate scope.
-      const outcome = outcomeJudge(fixture.groundTruth, result.output);
-      const quality = await judgeQuality(result.output);
-
-      const passed =
-        result.exitReason === "success" &&
-        outcome.passes_minimum &&
-        quality.clarity >= MIN_QUALITY &&
-        quality.completeness >= MIN_QUALITY &&
-        quality.actionability >= MIN_QUALITY;
-
-      collector.addTest({
-        name: "design-author-thin-research",
-        suite: "design-author-e2e",
-        tier: "e2e",
-        passed,
-        duration_ms: result.duration,
-        cost_usd: result.costEstimate.estimatedCost,
-        transcript: result.transcript,
-        judge_scores: {
+      mode: "judgment",
+      name: "design-author-thin-research",
+      fixtureCase: "thin-research",
+      workdirPrefix: "design-author-thin-e2e-",
+      score: ({ result, outcome, quality }) => ({
+        passed:
+          result.exitReason === "success" &&
+          outcome.passes_minimum &&
+          quality.clarity >= MIN_QUALITY &&
+          quality.completeness >= MIN_QUALITY &&
+          quality.actionability >= MIN_QUALITY,
+        judgeScores: {
           clarity: quality.clarity,
           completeness: quality.completeness,
           actionability: quality.actionability,
           detection_rate: outcome.detection_rate,
         },
-        exit_reason: result.exitReason,
-        model: result.model,
-        first_response_ms: result.firstResponseMs,
-        max_inter_turn_ms: result.maxInterTurnMs,
-      });
-
-      expect(result.exitReason).toBe("success");
-      expect(outcome.passes_minimum).toBe(true);
-      expect(quality.clarity).toBeGreaterThanOrEqual(MIN_QUALITY);
-    } finally {
-      rmSync(workDir, { recursive: true, force: true });
-    }
-  },
-  240_000,
-);
-
-afterAll(async () => {
-  await collector.finalize();
-  assertNoBudgetRegressions(collector);
+      }),
+      assert: ({ result, outcome, quality }) => {
+        expect(result.exitReason).toBe("success");
+        expect(outcome.passes_minimum).toBe(true);
+        expect(quality.clarity).toBeGreaterThanOrEqual(MIN_QUALITY);
+      },
+    },
+  ],
 });
