@@ -154,7 +154,7 @@ Before any agent dispatch, decide where to work:
      this is the consult guard. A prompt that lists a blocking or major
      finding is a defect.
 8. **Once Blocking and Major are clean:** if any **Minor-and-below** findings
-   remain, present that residue to the user and let them decide (auto-fix,
+   remain, present them to the user and let them decide (auto-fix,
    defer, or skip). Then suggest `/team-pr`.
 
 ## Quality Loop

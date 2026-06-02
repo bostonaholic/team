@@ -238,7 +238,7 @@ returned:
    Blocking or Major finding is open — loop automatically (the consult guard).
 4. If at cap → escalate to the user with all unresolved findings.
 5. Once Blocking and Major are clean → if any **Minor-and-below** findings
-   remain, present that residue to the user, who decides; otherwise advance
+   remain, present them to the user, who decides; otherwise advance
    to PR.
 
 **The loop is: IMPLEMENT → VERIFY (5 reviewers) → typed gate check →
