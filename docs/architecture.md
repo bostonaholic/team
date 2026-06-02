@@ -221,8 +221,8 @@ worktrees do not duplicate the artifacts. See
    remains, it dispatches the implementer to fix the typed failure
    class and re-runs all 5 reviewers — automatically, never consulting
    the user (the *consult guard*). Cap at 5 rounds; beyond that,
-   escalate. Once Blocking and Major are clean, any Minor-and-below
-   residue is presented to the user, who decides.
+   escalate. Once Blocking and Major are clean, any remaining
+   Minor-and-below findings are presented to the user, who decides.
 
 The orchestrator tracks the round count by appending "Review round N"
 items to the TodoWrite ledger.

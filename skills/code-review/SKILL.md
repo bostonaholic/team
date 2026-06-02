@@ -158,7 +158,7 @@ in exactly one tier.
 **The consult guard (non-negotiable).** While *any* Blocking or Major finding
 remains unresolved, the orchestrator MUST NOT present findings to the user or
 ask which ones to address. It loops the implementer automatically. The user is
-consulted exclusively for the Minor-and-below residue, and only once the loop
+consulted exclusively for the remaining Minor-and-below findings, and only once the loop
 has driven Blocking and Major to zero. A consult prompt that lists a blocking
 or major finding is a defect.
 
@@ -170,7 +170,7 @@ pipeline gate decision:
 1. If ANY Blocking or Major finding exists -> pipeline gate FAILS — loop back
    to IMPLEMENT automatically, with no consult.
 2. If only Minor-and-below findings remain -> pipeline gate is CONDITIONAL:
-   present that residue to the user, who decides. If none remain, proceed to
+   present them to the user, who decides. If none remain, proceed to
    SHIP.
 3. If no findings remain -> pipeline gate PASSES (proceed to SHIP).
 

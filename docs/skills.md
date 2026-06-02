@@ -94,7 +94,7 @@ argument shape.
   aggregate gate sorts every finding into Blocking / Major / Minor-and-below
   tiers and auto-loops on any Blocking or Major (the consult guard: the
   user is never asked about a Blocking or Major finding), surfacing only
-  the Minor-and-below residue. Its body is organized as `## Input`,
+  the remaining Minor-and-below findings. Its body is organized as `## Input`,
   `## Setup`, `## The Phase Loop`, `## Gate Handling`, and `## Rules` —
   not the downstream Input / Execution / Completion template.
 
@@ -168,7 +168,7 @@ argument shape.
   / Minor-and-below tiers; while any Blocking or Major remains it
   re-dispatches the implementer automatically without consulting the user
   (the consult guard), capped at 5 rounds. Only the Minor-and-below
-  residue is surfaced once Blocking and Major are clean.
+  findings are surfaced once Blocking and Major are clean.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
   the missing upstream artifacts inline rather than hard-erroring.
 
