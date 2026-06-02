@@ -14,7 +14,9 @@ import { join } from "node:path";
 import { runAgentTest, type SkillTestResult } from "./session-runner.ts";
 
 export interface SkillHarnessOptions {
-  /** Absolute path to the SKILL.md under test. */
+  /** Path to the SKILL.md under test — absolute, or relative to the CWD
+   *  (callers pass `skills/<skill>/SKILL.md`, resolved against process.cwd()
+   *  by readFileSync below). */
   skillPath: string;
   /** The user task / prompt to drive the skill. */
   task: string;
