@@ -38,11 +38,23 @@ jobs:
         # Glob tests/*.evals.ts into the matrix. File path MUST be
         # `./`-prefixed: bun treats a bare `tests/...` arg as a name filter
         # (matches nothing), not a path. jq is preinstalled on ubuntu-latest.
+        #
+        # The `ls tests/*.evals.ts` is INTENDED to exit non-zero (and fail the
+        # job loudly) if the glob ever matches nothing — that means the eval
+        # suite vanished. Do NOT add `|| true`: it would silently produce an
+        # empty matrix and skip every eval with a green check.
         run: |
           suites=$(ls tests/*.evals.ts \
             | sed 's#^tests/##; s#\.evals\.ts$##' \
             | jq -R -s -c 'split("\n") | map(select(length > 0)) | map({name: ., file: ("./tests/" + . + ".evals.ts")})')
-          echo "suites=$suites" >> "$GITHUB_OUTPUT"
+          # Heredoc form so the value is newline-safe regardless of what jq
+          # emits — a single-line `echo "suites=$suites"` would corrupt the
+          # output file if the value ever contained a newline.
+          {
+            echo "suites<<EOF_SUITES"
+            echo "$suites"
+            echo "EOF_SUITES"
+          } >> "$GITHUB_OUTPUT"
           echo "Discovered suites: $suites"
 
   behavioral-evals:
