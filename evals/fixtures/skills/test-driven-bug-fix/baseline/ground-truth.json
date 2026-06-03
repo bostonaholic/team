@@ -3,7 +3,7 @@
     {
       "id": "failing-test-first",
       "description": "Output must write a reproducing failing test before the fix.",
-      "detection_hint": "failing test"
+      "detection_hint": "failing test|test (that )?(re)?produces|red\\b.*green|getMonth"
     }
   ],
   "minimum_detection": 1

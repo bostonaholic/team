@@ -61,11 +61,19 @@ for (const skill of SKILLS) {
       const fixture = loadFixture(`skills/${skill}`, "baseline");
 
       const result = await runSkillHarness({
+        // Skill fixtures elicit a prose artifact in a single response. 12 turns
+        // gives the agent room to read its loaded SKILL.md and emit the
+        // artifact without exhausting the turn budget on exploration — 6 was
+        // too tight and produced spurious error_max_turns failures.
         skillPath: `skills/${skill}/SKILL.md`,
         task: fixture.body,
-        maxTurns: 6,
+        maxTurns: 12,
         timeout: 180_000,
         testName: `skill:${skill}`,
+        // Headless CI runs the agent in permissionMode: default; without this a
+        // skill that reads/writes a file stalls on a permission prompt and dies
+        // with error_max_turns. The workdir is an ephemeral sandbox.
+        bypassPermissions: true,
       });
 
       // 1. Deterministic structural contract check first. The skill's

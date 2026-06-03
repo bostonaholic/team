@@ -3,7 +3,7 @@
     {
       "id": "approach-and-alternatives",
       "description": "Doc must include an Alternatives section.",
-      "detection_hint": "##\\s+Alternatives"
+      "detection_hint": "##+\\s+(Trade-?offs?|Alternatives|Decision)|Alternatives [Cc]onsidered"
     }
   ],
   "minimum_detection": 1

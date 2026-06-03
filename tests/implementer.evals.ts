@@ -130,6 +130,11 @@ testIfSelected(
         maxTurns: 12,
         timeout: IMPLEMENTER_TIMEOUT_MS,
         testName: "implementer-implements-slice",
+        // The implementer MUST write src/sum.js. In headless CI the agent runs
+        // in permissionMode: default, so without bypass its Write/Bash calls
+        // stall on an unanswerable permission prompt and the run dies with
+        // error_max_turns. The workdir is an ephemeral git sandbox.
+        bypassPermissions: true,
       });
 
       // On the deterministic mock path, apply the transcript's file edits.
@@ -188,6 +193,8 @@ testIfSelected(
         maxTurns: 12,
         timeout: IMPLEMENTER_TIMEOUT_MS,
         testName: "implementer-noop-when-green",
+        // Same headless-CI permission bypass as the implements-slice case.
+        bypassPermissions: true,
       });
 
       if (isMocked()) {

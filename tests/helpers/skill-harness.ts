@@ -28,6 +28,10 @@ export interface SkillHarnessOptions {
   testName?: string;
   /** Working directory for the spawned agent (defaults to a fresh tmp dir). */
   workingDirectory?: string;
+  /** Bypass interactive permission checks (see RunAgentTestOptions). Needed in
+   *  headless CI so a skill that reads/writes files isn't killed by an
+   *  unanswerable permission prompt. */
+  bypassPermissions?: boolean;
 }
 
 const PROMPT_BRIDGE = "\n\nApply the procedure above to this task:\n\n";
@@ -35,8 +39,15 @@ const PROMPT_BRIDGE = "\n\nApply the procedure above to this task:\n\n";
 export async function runSkillHarness(
   opts: SkillHarnessOptions,
 ): Promise<SkillTestResult> {
-  const { skillPath, task, maxTurns, timeout, testName, workingDirectory } =
-    opts;
+  const {
+    skillPath,
+    task,
+    maxTurns,
+    timeout,
+    testName,
+    workingDirectory,
+    bypassPermissions,
+  } = opts;
 
   const skillBody = readFileSync(skillPath, "utf8");
   const prompt = skillBody + PROMPT_BRIDGE + task;
@@ -49,5 +60,6 @@ export async function runSkillHarness(
     maxTurns,
     timeout,
     testName,
+    bypassPermissions,
   });
 }

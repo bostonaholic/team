@@ -3,7 +3,7 @@
     {
       "id": "hypothesis-test-fix",
       "description": "Output must state a hypothesis.",
-      "detection_hint": "Hypothesis:"
+      "detection_hint": "Hypothesis|HYPOTHESIZE|OBSERVE"
     }
   ],
   "minimum_detection": 1

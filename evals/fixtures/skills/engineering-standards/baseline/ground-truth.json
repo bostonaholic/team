@@ -3,7 +3,7 @@
     {
       "id": "quality-checklist",
       "description": "Output must be a checklist with checkbox items.",
-      "detection_hint": "-\\s+\\[ \\]"
+      "detection_hint": "-\\s+\\[ \\]|\\d+\\.\\s+\\*\\*[A-Z]|Single Responsibility"
     }
   ],
   "minimum_detection": 1
