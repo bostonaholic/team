@@ -3,7 +3,7 @@
     {
       "id": "adr-decision-section",
       "description": "Output must be an ADR with a Decision section.",
-      "detection_hint": "##\\s+Decision"
+      "detection_hint": "##+\\s*Decision\\b|\\bDecision\\s*:|##+\\s*(Status|Context|Consequences)"
     }
   ],
   "minimum_detection": 1

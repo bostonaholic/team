@@ -3,7 +3,7 @@
     {
       "id": "open-questions-envelope",
       "description": "Output must surface blocking unknowns under an Open Questions heading.",
-      "detection_hint": "##\\s+Open Questions"
+      "detection_hint": "\"openQuestions\"|##\\s+Open Questions|\\bopen question"
     }
   ],
   "minimum_detection": 1

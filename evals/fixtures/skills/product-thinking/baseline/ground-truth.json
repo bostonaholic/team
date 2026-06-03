@@ -3,7 +3,7 @@
     {
       "id": "user-outcome-framing",
       "description": "Output must frame value in user-outcome terms.",
-      "detection_hint": "as a .+ i want .+ so that"
+      "detection_hint": "as a .+ i want .+ so that|user-outcome|recurring (search )?workflow|demand signal"
     }
   ],
   "minimum_detection": 1

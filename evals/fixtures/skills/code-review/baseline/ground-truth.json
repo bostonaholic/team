@@ -3,7 +3,7 @@
     {
       "id": "severity-prefixed-finding",
       "description": "Review must use severity-prefixed comments and flag the SQL injection.",
-      "detection_hint": "issue:|nit:|suggestion:"
+      "detection_hint": "(issue|suggestion|nitpick|nit)\\s*\\((blocking|non-blocking)\\)"
     }
   ],
   "minimum_detection": 1

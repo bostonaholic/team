@@ -3,7 +3,7 @@
     {
       "id": "direct-technical-prose",
       "description": "Rewrite must be direct technical prose without filler.",
-      "detection_hint": "The export command writes"
+      "detection_hint": "leverage|utilize|filler|hedge|nominaliz"
     }
   ],
   "minimum_detection": 1

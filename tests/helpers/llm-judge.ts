@@ -141,7 +141,13 @@ export interface OutcomeScore {
 // instead of one brittle literal that a model rarely emits verbatim.
 export function matchesHint(output: string, hint: string): boolean {
   try {
-    return new RegExp(hint, "is").test(output);
+    // Flags: i (case-insensitive), m (multiline — `^`/`$` match line
+    // boundaries, not just string start/end), s (dotall — `.` spans
+    // newlines). The `m` flag is essential: agent output is multi-line, so a
+    // hint anchored with `^` (e.g. a conventional-commit subject) must be able
+    // to match the start of any line, not only the first character of the
+    // entire transcript.
+    return new RegExp(hint, "ims").test(output);
   } catch {
     return output.toLowerCase().includes(hint.toLowerCase());
   }
