@@ -1,0 +1,20 @@
+{
+  "bugs": [
+    {
+      "id": "topic-slug-reused",
+      "category": "required-property",
+      "severity": "high",
+      "description": "Required property (seeded-state guardrail): the plan must reuse the topic slug from the seeded structure verbatim — `topic: token-bucket`.",
+      "detection_hint": "topic:\\s*token-bucket"
+    },
+    {
+      "id": "acceptance-test-mapping",
+      "category": "required-property",
+      "severity": "high",
+      "description": "Required property: the plan must map each slice to its acceptance tests — the output must reference acceptance-test language.",
+      "detection_hint": "acceptance\\s+test|acceptance[- ]tests?"
+    }
+  ],
+  "minimum_detection": 1.0,
+  "max_false_positives": 0
+}
