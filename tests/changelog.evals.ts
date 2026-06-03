@@ -28,7 +28,7 @@ import { testIfSelected } from "./helpers/touchfiles";
 
 const collector = new EvalCollector("e2e");
 
-const MIN_FILTER_QUALITY = 3;
+const MIN_PROSE_CLARITY = 3;
 
 testIfSelected(
   "changelog-keep-a-changelog-filter",
@@ -51,27 +51,40 @@ testIfSelected(
         testName: "changelog-keep-a-changelog-filter",
       });
 
-      // Tier 1 — outcome judge (deterministic): are the required section
-      // headings present? Computed from ground-truth.json, no model call.
+      // Tier 1a — outcome judge (deterministic): are the required `### Added` /
+      // `### Fixed` section headings present? Computed from ground-truth.json,
+      // no model call.
       const outcome = outcomeJudge(fixture.groundTruth, result.output);
 
+      // Tier 1b — Exclude guard (deterministic): the skill's CORE job is to
+      // drop internal-only commits. That correctness is checkable for free, so
+      // it lives here, not in the model. The distinctive nouns/prefixes of the
+      // fixture's `chore:`/`test:`/`refactor:`/`ci:` commits must NOT leak into
+      // the changelog. (TESTING.md §1: push every check as far toward
+      // deterministic as it will go.)
+      const INTERNAL_LEAK =
+        /eslint|ubuntu|session middleware|shared utility|\bchore\b|\brefactor\b|\bci:/i;
+      const noInternalLeak = !INTERNAL_LEAK.test(result.output);
+
       // Tier 2 — LLM judge (gated): only spend on the model when the
-      // deterministic heading check passed. Grades filtering + user-facing
-      // language via the generic 1-5 quality rubric. Axis mapping: the
-      // changelog property under test is "did it cover the user-facing changes
-      // and exclude the internal commits?", which maps onto judgeQuality's
-      // `completeness` axis (coverage without gaps). The other axes
-      // (clarity/actionability) are not the property here.
-      let filterQuality = 1;
-      if (outcome.passes_minimum) {
+      // deterministic checks passed. Filtering correctness is already proven
+      // above, so the LLM axis grades the remaining, genuinely subjective
+      // property — is the kept prose written in clear, user-facing language? —
+      // which maps onto judgeQuality's `clarity` axis. NOT `completeness`: a
+      // correctly-filtered changelog intentionally OMITS internal commits, and
+      // a completeness judge reads those omissions as gaps and penalizes the
+      // exact behavior the skill exists to produce.
+      let proseClarity = 1;
+      if (outcome.passes_minimum && noInternalLeak) {
         const quality = await judgeQuality(result.output);
-        filterQuality = quality.completeness;
+        proseClarity = quality.clarity;
       }
 
       const passed =
         result.exitReason === "success" &&
         outcome.passes_minimum &&
-        filterQuality >= MIN_FILTER_QUALITY;
+        noInternalLeak &&
+        proseClarity >= MIN_PROSE_CLARITY;
 
       collector.addTest({
         name: "changelog-keep-a-changelog-filter",
@@ -83,7 +96,8 @@ testIfSelected(
         transcript: result.transcript,
         judge_scores: {
           detection_rate: outcome.detection_rate,
-          filter_quality: filterQuality,
+          no_internal_leak: noInternalLeak ? 1 : 0,
+          prose_clarity: proseClarity,
         },
         exit_reason: result.exitReason,
         model: result.model,
@@ -95,7 +109,8 @@ testIfSelected(
       expect(outcome.detection_rate).toBeGreaterThanOrEqual(
         fixture.groundTruth.minimum_detection,
       );
-      expect(filterQuality).toBeGreaterThanOrEqual(MIN_FILTER_QUALITY);
+      expect(noInternalLeak).toBe(true);
+      expect(proseClarity).toBeGreaterThanOrEqual(MIN_PROSE_CLARITY);
     } finally {
       rmSync(workDir, { recursive: true, force: true });
     }
