@@ -37,6 +37,14 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "skills/team-design/**",
     "agents/design-author.md",
   ],
+  "team-structure-seeded-design": [
+    "skills/team-structure/**",
+    "agents/structure-planner.md",
+  ],
+  "team-plan-seeded-structure": [
+    "skills/team-plan/**",
+    "agents/planner.md",
+  ],
 };
 
 export const LLM_JUDGE_TOUCHFILES: Record<string, string[]> = {
@@ -62,6 +70,8 @@ export const E2E_TIERS: Record<string, "gate" | "periodic"> = {
   "team-fix-test-first-ordering": "periodic",
   "team-research-answers-seeded-questions": "periodic",
   "team-design-seeded-research-and-task": "periodic",
+  "team-structure-seeded-design": "periodic",
+  "team-plan-seeded-structure": "periodic",
 };
 
 const BASE_BRANCH_FALLBACKS = ["origin/main", "origin/master", "main", "master"];
