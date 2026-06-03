@@ -54,7 +54,11 @@ testIfSelected(
       const outcome = outcomeJudge(fixture.groundTruth, result.output);
 
       // Tier 2 — LLM judge (gated): grade test-first ordering only when a
-      // failing-test step was actually mentioned.
+      // failing-test step was actually mentioned. Axis mapping: the team-fix
+      // property under test is "would a reader know to write the failing test
+      // before the fix and follow the steps in order?", which maps onto
+      // judgeQuality's `actionability` axis (a reader knows what to do next).
+      // The other axes (clarity/completeness) are not the property here.
       let ordering = 1;
       if (outcome.passes_minimum) {
         const quality = await judgeQuality(result.output);
