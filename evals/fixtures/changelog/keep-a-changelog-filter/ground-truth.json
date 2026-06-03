@@ -1,0 +1,20 @@
+{
+  "bugs": [
+    {
+      "id": "added-section-heading",
+      "category": "required-property",
+      "severity": "high",
+      "description": "Required property (text-artifact escape hatch): the output must contain a Keep-a-Changelog `### Added` section for the feat commit. A required-property hint, not a planted defect.",
+      "detection_hint": "###\\s+Added"
+    },
+    {
+      "id": "fixed-section-heading",
+      "category": "required-property",
+      "severity": "high",
+      "description": "Required property: the output must contain a `### Fixed` section for the fix commit.",
+      "detection_hint": "###\\s+Fixed"
+    }
+  ],
+  "minimum_detection": 1.0,
+  "max_false_positives": 0
+}

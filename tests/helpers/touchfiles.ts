@@ -14,6 +14,21 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "git-commit-conventional-subject": [
     "skills/git-commit/**",
   ],
+  "changelog-keep-a-changelog-filter": [
+    "skills/changelog/**",
+  ],
+  "team-question-neutral-questions": [
+    "skills/team-question/**",
+    "agents/questioner.md",
+  ],
+  "eng-design-doc-review-planted-missing-alternatives": [
+    "skills/eng-design-doc-review/**",
+    "skills/technical-design-doc/**",
+  ],
+  "team-fix-test-first-ordering": [
+    "skills/team-fix/**",
+    "skills/test-driven-bug-fix/**",
+  ],
 };
 
 export const LLM_JUDGE_TOUCHFILES: Record<string, string[]> = {
@@ -33,6 +48,10 @@ export const E2E_TIERS: Record<string, "gate" | "periodic"> = {
   // recorded transcript). Live-model fixtures are periodic.
   "planted-null-deref": "periodic",
   "git-commit-conventional-subject": "periodic",
+  "changelog-keep-a-changelog-filter": "periodic",
+  "team-question-neutral-questions": "periodic",
+  "eng-design-doc-review-planted-missing-alternatives": "periodic",
+  "team-fix-test-first-ordering": "periodic",
 };
 
 const BASE_BRANCH_FALLBACKS = ["origin/main", "origin/master", "main", "master"];
