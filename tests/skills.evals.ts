@@ -30,6 +30,22 @@ const collector = new EvalCollector("e2e");
 // LLM judge. Mirrors code-reviewer's MIN_REASON_SUBSTANCE.
 const MIN_QUALITY = 3;
 
+// Some skills produce a deliberately TERSE, structured artifact whose contract
+// is the structural marker itself — a Keep-a-Changelog entry, a conventional
+// commit, an Open Questions envelope, a per-step ledger. judgeQuality's
+// `completeness` and `actionability` axes were calibrated for reviews and
+// design docs; applying them to a two-line changelog entry is a category error
+// (a correct entry is minimal, so it scores low no matter how perfect it is).
+// For these skills the deterministic detection_rate already verifies the
+// contract, so the quality gate checks only `clarity` (is it well-formed and
+// readable). The substance skills keep all three axes.
+const STRUCTURAL_SKILLS = new Set<string>([
+  "changelog",
+  "git-commit",
+  "agent-open-questions",
+  "progress-tracking",
+]);
+
 // The 18 methodology skills. Each gets its own selectable eval.
 const SKILLS = [
   "agent-open-questions",
@@ -80,15 +96,23 @@ for (const skill of SKILLS) {
       //    procedure must have produced the expected contract marker.
       const outcome = outcomeJudge(fixture.groundTruth, result.output);
 
-      // 2. Then the LLM-judge quality pass for substance.
+      // 2. Then the LLM-judge quality pass for substance. Structural skills are
+      //    gated on clarity only (their terse artifact is verified by the
+      //    deterministic marker, not by prose-completeness — see
+      //    STRUCTURAL_SKILLS above).
       const quality = await judgeQuality(result.output);
+      const isStructural = STRUCTURAL_SKILLS.has(skill);
+
+      const qualityPasses = isStructural
+        ? quality.clarity >= MIN_QUALITY
+        : quality.clarity >= MIN_QUALITY &&
+          quality.completeness >= MIN_QUALITY &&
+          quality.actionability >= MIN_QUALITY;
 
       const passed =
         result.exitReason === "success" &&
         outcome.passes_minimum &&
-        quality.clarity >= MIN_QUALITY &&
-        quality.completeness >= MIN_QUALITY &&
-        quality.actionability >= MIN_QUALITY;
+        qualityPasses;
 
       collector.addTest({
         name: `skill:${skill}`,
@@ -113,8 +137,12 @@ for (const skill of SKILLS) {
       expect(result.exitReason).toBe("success");
       expect(outcome.passes_minimum).toBe(true);
       expect(quality.clarity).toBeGreaterThanOrEqual(MIN_QUALITY);
-      expect(quality.completeness).toBeGreaterThanOrEqual(MIN_QUALITY);
-      expect(quality.actionability).toBeGreaterThanOrEqual(MIN_QUALITY);
+      if (!isStructural) {
+        // Substance skills must also be complete and actionable; structural
+        // skills are exempt (their contract is the deterministic marker).
+        expect(quality.completeness).toBeGreaterThanOrEqual(MIN_QUALITY);
+        expect(quality.actionability).toBeGreaterThanOrEqual(MIN_QUALITY);
+      }
     },
     TIMEOUT_MS,
   );
