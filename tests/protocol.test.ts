@@ -329,3 +329,84 @@ describe("topic consistency", () => {
     ).toBe(true);
   });
 });
+
+// L2-demoted (heavy prior state): team, team-worktree, team-pr, team-implement
+//
+// These four pipeline skills have no cheap self-contained behavioral property
+// to drive at L5 — each needs heavy multi-phase prior state (the orchestrator
+// walks every phase and owns no single artifact; team-worktree produces git
+// side effects with no findings artifact; team-pr needs a fully implemented
+// branch plus a git remote; team-implement needs an approved structure + plan
+// + worktree + failing tests). Honestly seeding that state is too costly for a
+// behavioral guardrail, so they are demoted to free L2 wiring/content
+// tripwires (design option (b), Risk #2). The assertions below pin each one's
+// load-bearing contract that stands in for the absent L5 — no fixture, no
+// rubric, no eval, no E2E_TOUCHFILES/E2E_TIERS entry for these four (enforced
+// by tests/skill-eval-coverage.test.ts).
+describe("L2-demoted heavy-prior-state pipeline skills", () => {
+  const TEAM = join(REPO_ROOT, "skills", "team", "SKILL.md");
+  const TEAM_WT = join(REPO_ROOT, "skills", "team-worktree", "SKILL.md");
+  const TEAM_PR = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
+  const TEAM_IMPL = join(REPO_ROOT, "skills", "team-implement", "SKILL.md");
+
+  test("team: orchestrator walks the QRSPI phase table in order", () => {
+    const text = read(TEAM);
+    // The phase loop walks a linear phase table.
+    expect(/phase table/i.test(text)).toBe(true);
+    // The QRSPI sequence appears in order.
+    expect(text).toContain(
+      "Question → Research → Design → Structure → Plan → Worktree →",
+    );
+  });
+
+  test("team: two human gates are design approval and structure approval", () => {
+    const text = read(TEAM);
+    expect(text).toContain("the two human gates are design and structure");
+    expect(/### Human Gate \(design approval\)/.test(text)).toBe(true);
+    expect(/### Human Gate \(structure approval\)/.test(text)).toBe(true);
+  });
+
+  test("team-worktree: reads repos.md and runs per-repo git worktree add", () => {
+    const text = read(TEAM_WT);
+    expect(text).toContain("repos.md");
+    expect(/git -C .* worktree add/.test(text)).toBe(true);
+    // Single-repo worktree-creation contract (load-bearing default mode).
+    expect(text).toContain("single-repo mode");
+    expect(text).toContain("worktree add .claude/worktrees/<branch>");
+  });
+
+  test("team-worktree: records the ## Worktrees section", () => {
+    expect(read(TEAM_WT)).toContain("## Worktrees");
+  });
+
+  test("team-pr: opens a draft PR automatically without stopping to ask", () => {
+    const text = read(TEAM_PR);
+    expect(text).toContain("gh pr create --draft");
+    expect(text).toContain("do not stop to ask");
+  });
+
+  test("team-pr: commit/changelog precedes opening the PR", () => {
+    const text = read(TEAM_PR);
+    const changelogIdx = text.indexOf("Update CHANGELOG.md");
+    const prIdx = text.indexOf("Open a draft PR automatically");
+    expect(changelogIdx).toBeGreaterThan(-1);
+    expect(prIdx).toBeGreaterThan(-1);
+    // The changelog/commit step is listed before the open-PR step.
+    expect(changelogIdx).toBeLessThan(prIdx);
+  });
+
+  test("team-implement: requires an approved structure + plan + worktree", () => {
+    const text = read(TEAM_IMPL);
+    expect(text).toContain("structure.md");
+    expect(text).toContain("plan.md");
+    expect(/worktree/i.test(text)).toBe(true);
+  });
+
+  test("team-implement: drives the test-first → slice → 5-reviewer sub-pipeline", () => {
+    const text = read(TEAM_IMPL);
+    expect(/test-first/i.test(text)).toBe(true);
+    expect(text).toContain("Slice execution");
+    expect(/5 parallel reviewers/i.test(text)).toBe(true);
+    expect(/hard-gate retry loop/i.test(text)).toBe(true);
+  });
+});
