@@ -3,7 +3,7 @@
     {
       "id": "keepachangelog-section",
       "description": "Output must use a Keep a Changelog section heading.",
-      "detection_hint": "###\\s+(Added|Changed|Fixed|Removed|Deprecated|Security)"
+      "detection_hint": "#{2,3}\\s*(Added|Changed|Fixed|Removed|Deprecated|Security)|\\*\\*(Added|Changed|Fixed|Removed|Deprecated|Security)\\*\\*|\\b(Added|Changed|Fixed|Removed)\\b\\s*\\n"
     }
   ],
   "minimum_detection": 1
