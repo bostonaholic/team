@@ -24,33 +24,19 @@ import { dirname, join } from "node:path";
 import { EvalCollector, assertNoBudgetRegressions } from "./helpers/eval-store";
 import { loadFixture } from "./helpers/fixtures";
 import { judgeQuality, outcomeJudge } from "./helpers/llm-judge";
+import { extractSeed } from "./helpers/seed";
 import { runAgentTest } from "./helpers/session-runner";
 import { testIfSelected } from "./helpers/touchfiles";
 
 const collector = new EvalCollector("e2e");
 
 const MIN_PLAN_QUALITY = 3;
+// Topic id the seeded artifact lives under in the working dir. The slug
+// portion (after the date prefix) MUST equal the topic embedded in the
+// fixture seed — the assertion below makes drift fail loudly rather than
+// silently working off a stale constant.
 const TOPIC_ID = "2026-06-03-token-bucket";
-
-// Parse a labeled fenced block out of a fixture body. The fence opener is
-// ```<lang> <relativePath> and the content runs to the next ``` line.
-function extractSeed(body: string, relativePath: string): string | null {
-  const lines = body.split("\n");
-  let inBlock = false;
-  const out: string[] = [];
-  for (const line of lines) {
-    if (!inBlock) {
-      const open = /^```[A-Za-z0-9_-]*\s+(\S+)\s*$/.exec(line);
-      if (open && open[1] === relativePath) {
-        inBlock = true;
-      }
-      continue;
-    }
-    if (/^```\s*$/.test(line)) break;
-    out.push(line);
-  }
-  return inBlock ? out.join("\n") : null;
-}
+const TOPIC_SLUG = "token-bucket";
 
 testIfSelected(
   "team-plan-seeded-structure",
@@ -61,6 +47,8 @@ testIfSelected(
     try {
       const seed = extractSeed(fixture.body, "structure.md");
       expect(seed).not.toBeNull();
+      // Drift guard: the working-dir TOPIC_SLUG must match the seed's topic.
+      expect(seed).toContain(`topic: ${TOPIC_SLUG}`);
       const seedPath = join(workDir, "docs", "plans", TOPIC_ID, "structure.md");
       mkdirSync(dirname(seedPath), { recursive: true });
       writeFileSync(seedPath, `${seed}\n`, "utf8");

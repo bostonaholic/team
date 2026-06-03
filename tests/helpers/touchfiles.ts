@@ -29,21 +29,27 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "skills/team-fix/**",
     "skills/test-driven-bug-fix/**",
   ],
+  // The four seeded-state evals share tests/helpers/seed.ts (extractSeed); a
+  // change to it could alter any of their outcomes, so each lists it as a dep.
   "team-research-answers-seeded-questions": [
     "skills/team-research/**",
     "agents/researcher.md",
+    "tests/helpers/seed.ts",
   ],
   "team-design-seeded-research-and-task": [
     "skills/team-design/**",
     "agents/design-author.md",
+    "tests/helpers/seed.ts",
   ],
   "team-structure-seeded-design": [
     "skills/team-structure/**",
     "agents/structure-planner.md",
+    "tests/helpers/seed.ts",
   ],
   "team-plan-seeded-structure": [
     "skills/team-plan/**",
     "agents/planner.md",
+    "tests/helpers/seed.ts",
   ],
 };
 
