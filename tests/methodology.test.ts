@@ -331,3 +331,135 @@ describe("product-thinking methodology", () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// Zero-coverage methodology lenses — free L2 content tripwires (TESTING.md
+// §2). These lenses have no L5 behavioral output and gained no L5 eval in
+// Slices 1–4, so a content tripwire pins each lens's load-bearing
+// instructions: a regression that strips the contract fails the build in
+// milliseconds, no model call. Each block asserts the SKILL.md exists, the
+// `name:` frontmatter matches, and a real load-bearing phrase is present
+// (phrases verified against the source before pinning).
+// ---------------------------------------------------------------------------
+
+describe("documenting-decisions lens (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "documenting-decisions", "SKILL.md");
+
+  test("skill file exists with name: documenting-decisions", () => {
+    expect(existsSync(SKILL_FILE)).toBe(true);
+    expect(/^name:\s*documenting-decisions\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  });
+
+  test("pins the ADR section contract (Context / Decision / Consequences)", () => {
+    const text = read(SKILL_FILE);
+    expect(text).toContain("Architecture Decision Record");
+    expect(/^## Context$/m.test(text)).toBe(true);
+    expect(/^## Decision$/m.test(text)).toBe(true);
+    expect(/^## Consequences$/m.test(text)).toBe(true);
+  });
+});
+
+describe("product-requirements-doc lens (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "product-requirements-doc", "SKILL.md");
+
+  test("skill file exists with name: product-requirements-doc", () => {
+    expect(existsSync(SKILL_FILE)).toBe(true);
+    expect(/^name:\s*product-requirements-doc\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  });
+
+  test("pins the PRD section contract (problem, user stories, acceptance criteria, scope)", () => {
+    const text = read(SKILL_FILE);
+    expect(text).toContain("Problem Statement");
+    expect(text).toContain("User Stories");
+    expect(text).toContain("Acceptance Criteria");
+    expect(text).toContain("Scope Boundaries");
+  });
+});
+
+describe("technical-design-doc lens (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "technical-design-doc", "SKILL.md");
+
+  test("skill file exists with name: technical-design-doc", () => {
+    expect(existsSync(SKILL_FILE)).toBe(true);
+    expect(/^name:\s*technical-design-doc\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  });
+
+  test("pins the TDD section contract (goals/non-goals, trade-offs, edge cases, open questions)", () => {
+    const text = read(SKILL_FILE);
+    expect(text).toContain("Goals and Non-Goals");
+    expect(text).toContain("Trade-offs Considered");
+    expect(text).toContain("Edge Cases and Failure Modes");
+    expect(text).toContain("Open Questions");
+  });
+});
+
+describe("writing-prose lens (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "writing-prose", "SKILL.md");
+
+  test("skill file exists with name: writing-prose", () => {
+    expect(existsSync(SKILL_FILE)).toBe(true);
+    expect(/^name:\s*writing-prose\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  });
+
+  test("pins the prose-quality directives (one idea per sentence, active voice)", () => {
+    const text = read(SKILL_FILE);
+    expect(text).toContain("One idea per sentence");
+    expect(text).toContain("Active Voice");
+    expect(text).toContain("Plain Language");
+  });
+});
+
+describe("systematic-debugging lens (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "systematic-debugging", "SKILL.md");
+
+  test("skill file exists with name: systematic-debugging", () => {
+    expect(existsSync(SKILL_FILE)).toBe(true);
+    expect(/^name:\s*systematic-debugging\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  });
+
+  test("pins reproduce-first / hypothesize ordering (OBSERVE before HYPOTHESIZE)", () => {
+    const text = read(SKILL_FILE);
+    expect(text).toContain("Reproduce the failure");
+    const observeIdx = text.indexOf("Phase 1: OBSERVE");
+    const hypothesizeIdx = text.indexOf("Phase 2: HYPOTHESIZE");
+    expect(observeIdx).toBeGreaterThan(-1);
+    expect(hypothesizeIdx).toBeGreaterThan(-1);
+    expect(observeIdx).toBeLessThan(hypothesizeIdx);
+  });
+});
+
+describe("test-driven-bug-fix lens (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "test-driven-bug-fix", "SKILL.md");
+
+  test("skill file exists with name: test-driven-bug-fix", () => {
+    expect(existsSync(SKILL_FILE)).toBe(true);
+    expect(/^name:\s*test-driven-bug-fix\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  });
+
+  test("pins write-a-failing-test-that-reproduces-the-bug-first ordering", () => {
+    const text = read(SKILL_FILE);
+    expect(text).toContain("Write a Failing Test");
+    expect(text).toContain("Reproduces the bug");
+    // Reproduce step precedes the failing-test step.
+    const reproduceIdx = text.indexOf("Step 1: Reproduce");
+    const failingTestIdx = text.indexOf("Step 2: Write a Failing Test");
+    expect(reproduceIdx).toBeGreaterThan(-1);
+    expect(failingTestIdx).toBeGreaterThan(-1);
+    expect(reproduceIdx).toBeLessThan(failingTestIdx);
+  });
+});
+
+describe("test-first-development lens (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "test-first-development", "SKILL.md");
+
+  test("skill file exists with name: test-first-development", () => {
+    expect(existsSync(SKILL_FILE)).toBe(true);
+    expect(/^name:\s*test-first-development\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  });
+
+  test("pins write-the-test-before-the-code core rule and red-state contract", () => {
+    const text = read(SKILL_FILE);
+    expect(text).toContain("BEFORE any implementation code");
+    expect(text).toContain("Confirm Tests Fail Correctly");
+  });
+});
