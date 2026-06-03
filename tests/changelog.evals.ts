@@ -57,7 +57,11 @@ testIfSelected(
 
       // Tier 2 — LLM judge (gated): only spend on the model when the
       // deterministic heading check passed. Grades filtering + user-facing
-      // language via the generic 1-5 quality rubric.
+      // language via the generic 1-5 quality rubric. Axis mapping: the
+      // changelog property under test is "did it cover the user-facing changes
+      // and exclude the internal commits?", which maps onto judgeQuality's
+      // `completeness` axis (coverage without gaps). The other axes
+      // (clarity/actionability) are not the property here.
       let filterQuality = 1;
       if (outcome.passes_minimum) {
         const quality = await judgeQuality(result.output);

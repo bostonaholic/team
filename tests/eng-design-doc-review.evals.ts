@@ -57,14 +57,21 @@ testIfSelected(
       // ground-truth.json, no model call.
       const outcome = outcomeJudge(fixture.groundTruth, result.output);
 
-      // Tier 2 — LLM judge (gated on a Conventional Comment label inside
-      // judgeReviewerOutput): is the review actually substantive?
-      const review = await judgeReviewerOutput(result.output);
+      // Tier 2 — LLM judge: only invoked when the deterministic planted-gap
+      // check passed, matching the outer-guard cascade in the other skill
+      // evals. (judgeReviewerOutput ALSO has an internal Conventional-Comment
+      // gate that prevents a paid call on negative cases; the outer guard here
+      // is for symmetry and to skip the call entirely when the gap was missed.)
+      let reasonSubstance = 1;
+      if (outcome.passes_minimum) {
+        const review = await judgeReviewerOutput(result.output);
+        reasonSubstance = review.reason_substance;
+      }
 
       const passed =
         result.exitReason === "success" &&
         outcome.passes_minimum &&
-        review.reason_substance >= MIN_REASON_SUBSTANCE;
+        reasonSubstance >= MIN_REASON_SUBSTANCE;
 
       collector.addTest({
         name: "eng-design-doc-review-planted-missing-alternatives",
@@ -76,7 +83,7 @@ testIfSelected(
         transcript: result.transcript,
         judge_scores: {
           detection_rate: outcome.detection_rate,
-          reason_substance: review.reason_substance,
+          reason_substance: reasonSubstance,
         },
         exit_reason: result.exitReason,
         model: result.model,
@@ -88,9 +95,7 @@ testIfSelected(
       expect(outcome.detection_rate).toBeGreaterThanOrEqual(
         fixture.groundTruth.minimum_detection,
       );
-      expect(review.reason_substance).toBeGreaterThanOrEqual(
-        MIN_REASON_SUBSTANCE,
-      );
+      expect(reasonSubstance).toBeGreaterThanOrEqual(MIN_REASON_SUBSTANCE);
     } finally {
       rmSync(workDir, { recursive: true, force: true });
     }
