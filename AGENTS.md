@@ -92,10 +92,11 @@ State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKE
 - **No `commands/` directory.** Skills are the only entry point mechanism. They auto-register as slash commands.
 - **No project-scoped memory.** Do not save memories to `~/.claude/projects/*/memory/`. All project knowledge belongs in this file or docs linked from here. This file is checked into git and travels with the project.
 - **Todo-first progress tracking.** Any agent or skill that executes a multi-step numbered procedure seeds one TodoWrite item per step before starting and marks each complete as it goes. See `skills/progress-tracking/SKILL.md` for the convention and ledger-ownership rules.
+- **Read TESTING.md before writing any test.** Before adding or modifying ANY test — unit, tripwire, eval, fixture, or rubric — read [TESTING.md](TESTING.md) end to end and understand it. It decides *which layer* a check belongs at (push every check as far down and as deterministic as it goes), whether it is free (`*.test.ts`) or paid (`*.evals.ts`), and whether it gates or runs periodically. A test written at the wrong layer is worse than no test: it is slow, flaky, or costs money to learn nothing. No exceptions — this applies to agents, skills, and humans alike.
 
 ## Behavioral Evals
 
-Behavioral regression harness for pipeline agents — TypeScript + Bun. Harness code lives in `tests/`; fixtures, rubrics, and stored runs live in `evals/`. `bun test` runs the free static gate; `bun run test:evals` runs the paid E2E + LLM-judge tiers (needs `EVALS_ANTHROPIC_API_KEY`). See [evals/README.md](evals/README.md).
+Behavioral regression harness for pipeline agents — TypeScript + Bun. Harness code lives in `tests/`; fixtures, rubrics, and stored runs live in `evals/`. `bun test` runs the free static gate; `bun run test:evals` runs the paid E2E + LLM-judge tiers (needs `EVALS_ANTHROPIC_API_KEY`). See [TESTING.md](TESTING.md) for the six-layer testing strategy (what each layer is and which files implement it) and [evals/README.md](evals/README.md) for the operator's guide.
 
 ## Work Tracking
 
