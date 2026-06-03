@@ -5,7 +5,7 @@
       "category": "null-dereference",
       "severity": "high",
       "description": "renderProfileHeader dereferences user.email without null-checking getUserFromCache's return value; null is reachable for fresh visitors per the implementer's own note.",
-      "detection_hint": "null deref"
+      "detection_hint": "null deref|dereferenc|cannot read propert\\w* of null|user(?:\\.email)?\\b.{0,80}\\bnull\\b|\\bnull\\b.{0,80}user(?:\\.email)?"
     }
   ],
   "minimum_detection": 1.0,
