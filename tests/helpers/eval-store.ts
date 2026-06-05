@@ -195,6 +195,11 @@ export class EvalCollector {
   async finalize(): Promise<string> {
     if (this.finalized) return this.path;
     this.finalized = true;
+
+    if (this.result.total_tests === 0) {
+      return this.path;
+    }
+
     this.result.wall_clock_ms = Date.now() - this.startMs;
     atomicWriteJson(this.path, this.result);
 
