@@ -348,3 +348,244 @@ as the stochastic surface of your product grows.
   fixture replay, persisted spend.
 - **Pick the runner by observation surface.** Test what the user sees.
 - **Hermetic where you can, real where the integration is the point.**
+
+---
+
+## Appendix A — Diagrams
+
+### A.1 The two-axis layer model
+
+How the six layers sit against *scope* (vertical) and *determinism/cost*
+(horizontal), and where the free/paid line falls.
+
+```mermaid
+flowchart TB
+    subgraph FREE["FREE · deterministic · runs on every commit"]
+        direction TB
+        L1["L1 · Pure unit<br/><i>f(input) → output, no I/O</i>"]
+        L2["L2 · Static tripwires<br/><i>assert contracts on source</i>"]
+        L3["L3 · In-process integration<br/><i>real components, no external surface</i>"]
+        L4["L4 · Real-dependency E2E<br/><i>real browser/daemon/process</i>"]
+        L1 --> L2 --> L3 --> L4
+    end
+    subgraph PAID["PAID · stochastic · diff-selected"]
+        direction TB
+        L5["L5 · Behavioral E2E<br/><i>drive the live model</i>"]
+        L6["L6 · Model-as-judge evals<br/><i>graded 1–N, pass on floor/band</i>"]
+        L5 --> L6
+    end
+    FREE ==>|"free/paid line"| PAID
+
+    L5 --> G{"Can it be red for a<br/>non-bug reason?"}
+    G -->|"No → deterministic"| GATE["GATE tier<br/>blocks merge · every PR"]
+    G -->|"Yes → stochastic"| PER["PERIODIC tier<br/>scheduled · never blocks"]
+    L6 --> PER
+```
+
+### A.2 Pick the runner by observation surface
+
+```mermaid
+flowchart LR
+    Q{"What must the<br/>test observe?"}
+    Q -->|"tool calls, tokens, cost"| S["Stream runner<br/>invoke model CLI,<br/>parse streamed events"]
+    Q -->|"rendered UI:<br/>prompts, cursor, redraws"| P["PTY runner<br/>drive a real terminal"]
+    Q -->|"raw API events,<br/>low overhead A/B"| K["SDK runner<br/>call the model SDK"]
+```
+
+### A.3 CI execution flow
+
+What happens on a pull request vs. on the schedule.
+
+```mermaid
+flowchart TD
+    PR["Pull request opened / updated"] --> FREEJOB["Free suite<br/>L1–L4 · sharded · no secrets"]
+    PR --> LINT["Lint + meta-tests<br/>tripwires, selection integrity"]
+    PR --> SEL["Diff vs. base branch<br/>select touched paid tests"]
+    SEL --> GLOBAL{"Global touchfile<br/>changed?"}
+    GLOBAL -->|yes| ALL["select ALL paid tests"]
+    GLOBAL -->|no| SUBSET["select touched subset"]
+    ALL --> GATEJOB
+    SUBSET --> GATEJOB["GATE paid tests<br/>TIER=gate · secrets injected"]
+    FREEJOB --> VERDICT{"all required<br/>checks green?"}
+    LINT --> VERDICT
+    GATEJOB --> VERDICT
+    VERDICT -->|yes| MERGE["mergeable"]
+    VERDICT -->|no| BLOCK["blocked"]
+
+    CRON["Schedule · e.g. weekly"] --> PERJOB["PERIODIC paid tests<br/>TIER=periodic · RUN_ALL=1"]
+    PERJOB --> REPORT["report cost + scores<br/>compare vs. history · non-blocking"]
+```
+
+---
+
+## Appendix B — CI skeleton
+
+Drop-in scaffolding. It is intentionally vendor-neutral pseudo-config; adapt the
+runner, CI platform, and secret names to your stack. Bracketed tokens are
+placeholders.
+
+### B.1 Test scripts (`package.json` example, or a `Makefile`/`justfile` equivalent)
+
+```jsonc
+{
+  "scripts": {
+    // FREE — runs on every commit. No model, no metered API, no money.
+    // Must stay cheap enough that skipping it is never tempting.
+    "test": "[test runner] test <free-test-roots> --exclude '<paid-glob>'",
+
+    // FREE, sharded — for parallel CI workers (stable, total partition).
+    "test:shard": "[test runner] run scripts/free-shards.[ext]",
+
+    // PAID — diff-selected against the base branch. Run before shipping.
+    "test:paid": "PAID=1 [test runner] test <paid-glob>",
+
+    // PAID, gate subset — deterministic guardrails. What CI blocks on.
+    "test:gate": "PAID=1 TIER=gate [test runner] test <paid-glob>",
+
+    // PAID, periodic subset — quality/expensive/non-deterministic.
+    "test:periodic": "PAID=1 TIER=periodic RUN_ALL=1 [test runner] test <paid-glob>",
+
+    // PAID, ignore diff selection — for releases.
+    "test:paid:all": "PAID=1 RUN_ALL=1 [test runner] test <paid-glob>",
+
+    // Show which paid tests the current diff would select (dry run).
+    "test:select": "[test runner] run scripts/select.[ext]"
+  }
+}
+```
+
+### B.2 Diff-based selection (sketch)
+
+The data structure every paid test reads to decide whether to run.
+
+```ts
+// scripts/touchfiles.ts (or .py/.go — same shape in any language)
+
+// Each paid test name → the source globs that, if changed, could alter it.
+export const TOUCHFILES: Record<string, string[]> = {
+  "feature-a-guardrail": ["src/feature-a/**", "src/shared/dispatch.*"],
+  "feature-b-quality":   ["src/feature-b/**", "prompts/feature-b.*"],
+};
+
+// Tier of each paid test. Deterministic → gate; stochastic/expensive → periodic.
+export const TIERS: Record<string, "gate" | "periodic"> = {
+  "feature-a-guardrail": "gate",
+  "feature-b-quality":   "periodic",
+};
+
+// Changing any of these re-runs EVERYTHING — shared infra + the selector
+// itself, so you cannot deselect a test by editing one line.
+export const GLOBAL_TOUCHFILES = [
+  "test/helpers/run.*",       // the shared runner
+  "test/helpers/store.*",     // the result store
+  "scripts/touchfiles.*",     // this file
+];
+
+export function selectTests(changed: string[], tier?: "gate" | "periodic") {
+  const global = changed.some(f => GLOBAL_TOUCHFILES.some(g => match(f, g)));
+  return Object.keys(TOUCHFILES).filter(name => {
+    if (tier && TIERS[name] !== tier) return false;
+    if (process.env.RUN_ALL === "1" || global) return true;
+    return changed.some(f => TOUCHFILES[name].some(g => match(f, g)));
+  });
+}
+```
+
+A test file then guards itself:
+
+```ts
+const selected = process.env.RUN_ALL === "1"
+  || selectTests(diffAgainstBase(), process.env.TIER as any).includes("feature-a-guardrail");
+
+describe.if(selected)("feature-a guardrail", () => { /* ... */ });
+```
+
+### B.3 Pull-request workflow (gate)
+
+Runs on every PR. Blocks merge. Generic GitHub-Actions-style YAML; map to your
+CI of choice.
+
+```yaml
+name: ci
+on:
+  pull_request:
+    branches: ["[base branch]"]
+
+jobs:
+  free-tests:                      # L1–L4 · fast · no secrets
+    runs-on: [runner]
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }   # full history for diff selection
+      - run: "[install]"
+      - run: "[test runner] test"  # the free suite
+
+  lint-and-meta:                   # tripwires + selection integrity
+    runs-on: [runner]
+    steps:
+      - uses: actions/checkout@v4
+      - run: "[install]"
+      - run: "[lint command]"
+      - run: "[test runner] test test/meta"   # coverage audit, selection map, shards
+
+  gate-evals:                      # L5 gate subset · diff-selected · SECRETS
+    runs-on: [runner]
+    strategy:
+      matrix:                      # parallelize by suite to cut wall-clock
+        suite: [feature-a, feature-b, feature-c]
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - run: "[install]"
+      - run: "[build]"
+      - name: Run gate tests for ${{ matrix.suite }}
+        env:
+          PAID: "1"
+          TIER: "gate"
+          MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+        run: "[test runner] test test/e2e-${{ matrix.suite }}.* --retry 2"
+
+  # Branch protection: require free-tests + lint-and-meta + gate-evals to pass.
+```
+
+### B.4 Scheduled workflow (periodic)
+
+Runs the stochastic/expensive tier off the critical path. Never blocks merges.
+
+```yaml
+name: evals-periodic
+on:
+  schedule: [{ cron: "0 6 * * 1" }]   # weekly, Monday 06:00 UTC
+  workflow_dispatch: {}               # allow manual runs
+
+jobs:
+  periodic-evals:
+    runs-on: [runner]
+    strategy:
+      matrix:
+        suite: [feature-b, feature-c, external-service]
+    steps:
+      - uses: actions/checkout@v4
+      - run: "[install]"
+      - run: "[build]"
+      - name: Periodic eval ${{ matrix.suite }}
+        env:
+          PAID: "1"
+          TIER: "periodic"
+          RUN_ALL: "1"              # ignore diff: run the whole tier
+          MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+        run: "[test runner] test test/e2e-${{ matrix.suite }}.* --retry 2"
+      - name: Persist + compare cost/scores
+        run: "[test runner] run scripts/eval-report.[ext]"   # store, diff vs. history
+```
+
+### B.5 Branch-protection checklist
+
+- [ ] `free-tests` required — fast, deterministic, no secrets.
+- [ ] `lint-and-meta` required — tripwires and selection integrity.
+- [ ] `gate-evals` required — deterministic model guardrails only.
+- [ ] `periodic-evals` **not** required — scheduled, reports, never blocks.
+- [ ] Secrets exposed **only** to gate/periodic jobs, never to the free suite.
+- [ ] Fork PRs: decide deliberately whether they receive model secrets (default:
+      no — run free + meta only, or re-target the branch to a trusted remote).
+
