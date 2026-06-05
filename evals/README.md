@@ -50,7 +50,8 @@ Bun's default test discovery matches `*.test.{ts,tsx,js,jsx}`. Files named
 never loads them — no skipped tests in the output, no surprise model calls.
 The paid suite runs only when an explicit path is passed:
 
-- `bun run test:evals` — runs every `./tests/*.evals.ts` with `EVALS_ALL=1` (all tiers)
+- `bun run test:evals` — loads every `./tests/*.evals.ts`, but runs only the diff-selected tests
+- `bun run test:evals:all` — forces every registered eval with `EVALS_ALL=1`
 - `bun test ./tests/code-reviewer.evals.ts` — ad-hoc single file (needs `EVALS_ANTHROPIC_API_KEY`)
 
 > **Path must be `./`-prefixed.** Bun treats a bare `tests/foo.evals.ts`
@@ -59,7 +60,8 @@ The paid suite runs only when an explicit path is passed:
 
 Within a paid file, each test is registered through `testIfSelected`, which
 consults the selector: `EVALS_TIER` and diff-based selection decide whether
-the test runs or is registered as `test.skip`. `EVALS_ALL=1` forces all.
+the test runs or is registered as `test.skip`. `EVALS_ALL=1` is an explicit
+escape hatch for full scheduled/manual sweeps.
 
 ## Environment
 
@@ -207,8 +209,11 @@ field throughout.
    diff selection applies. A skill that needs upstream pipeline state seeds it
    from the fixture body with `extractSeed` (see the seeded-state evals) and
    writes it into the working dir before `runAgentTest`.
-5. `bun test` — verify the gate validates the new schemas. `skill-eval-coverage.test.ts`
+5. Add the eval file, fixture directory, and rubric to that test's
+   `E2E_TOUCHFILES` entry. The free gate enforces this so fixture/rubric edits
+   cannot be diff-selected out.
+6. `bun test` — verify the gate validates the new schemas. `skill-eval-coverage.test.ts`
    additionally enforces that every covered skill has all four artifacts.
-6. `bun test ./tests/<name>.evals.ts` — run end-to-end (needs `EVALS_ANTHROPIC_API_KEY`).
+7. `bun test ./tests/<name>.evals.ts` — run end-to-end (needs `EVALS_ANTHROPIC_API_KEY`).
 
 Run `bun run eval:list` to see the registered tests and their tiers.
