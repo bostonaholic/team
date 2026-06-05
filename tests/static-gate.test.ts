@@ -9,9 +9,12 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import { loadFixture } from "./helpers/fixtures";
+import { E2E_TOUCHFILES } from "./helpers/touchfiles";
 
 const FIXTURE_ROOT = join(process.cwd(), "evals", "fixtures");
 const RUBRIC_ROOT = join(process.cwd(), "evals", "rubrics");
+const TESTS_ROOT = join(process.cwd(), "tests");
+const PACKAGE_JSON = join(process.cwd(), "package.json");
 const EVALS_WORKFLOW = join(
   process.cwd(),
   ".github",
@@ -65,6 +68,15 @@ describe("static gate: fixtures", () => {
       expect(existsSync(rubric)).toBe(true);
     }
   });
+
+  test("every fixture/rubric pair is listed in E2E_TOUCHFILES", () => {
+    const globs = Object.values(E2E_TOUCHFILES).flat();
+    for (const { agent, caseName } of cases) {
+      expect(globs).toContain(`evals/fixtures/${agent}/${caseName}/**`);
+      expect(globs).toContain(`evals/rubrics/${agent}.md`);
+      expect(globs).toContain(`tests/${agent}.evals.ts`);
+    }
+  });
 });
 
 // The behavioral-evals workflow spawns the `claude` CLI live
@@ -93,6 +105,34 @@ describe("static gate: behavioral-evals workflow", () => {
     // Anchor to the bare key at line start so the existing namespaced
     // EVALS_ANTHROPIC_API_KEY: entry does not satisfy this on its own.
     expect(/^\s*ANTHROPIC_API_KEY:/m.test(workflow)).toBe(true);
+  });
+
+  test("scheduled workflow includes every eval file", () => {
+    const evalFiles = readdirSync(TESTS_ROOT)
+      .filter((name) => name.endsWith(".evals.ts"))
+      .sort();
+    for (const file of evalFiles) {
+      expect(workflow).toContain(`./tests/${file}`);
+    }
+  });
+});
+
+describe("static gate: package eval commands", () => {
+  const pkg = existsSync(PACKAGE_JSON)
+    ? JSON.parse(readFileSync(PACKAGE_JSON, "utf8")) as {
+        scripts?: Record<string, string>;
+      }
+    : {};
+  const scripts = pkg.scripts ?? {};
+
+  test("default paid eval command stays diff-selected", () => {
+    expect(scripts["test:evals"]).toContain("./tests/*.evals.ts");
+    expect(scripts["test:evals"]).not.toContain("EVALS_ALL=1");
+  });
+
+  test("full paid eval command is explicit", () => {
+    expect(scripts["test:evals:all"]).toContain("EVALS_ALL=1");
+    expect(scripts["test:evals:all"]).toContain("./tests/*.evals.ts");
   });
 });
 
