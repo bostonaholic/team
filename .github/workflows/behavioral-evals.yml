@@ -58,6 +58,15 @@ jobs:
           # File path MUST be `./`-prefixed: bun treats a bare `tests/...`
           # arg as a name filter (matches nothing), not a path.
           - { name: code-reviewer, file: ./tests/code-reviewer.evals.ts }
+          - { name: changelog, file: ./tests/changelog.evals.ts }
+          - { name: eng-design-doc-review, file: ./tests/eng-design-doc-review.evals.ts }
+          - { name: git-commit, file: ./tests/git-commit.evals.ts }
+          - { name: team-design, file: ./tests/team-design.evals.ts }
+          - { name: team-fix, file: ./tests/team-fix.evals.ts }
+          - { name: team-plan, file: ./tests/team-plan.evals.ts }
+          - { name: team-question, file: ./tests/team-question.evals.ts }
+          - { name: team-research, file: ./tests/team-research.evals.ts }
+          - { name: team-structure, file: ./tests/team-structure.evals.ts }
     steps:
       - uses: actions/checkout@v7
         with:
