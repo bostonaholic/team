@@ -10,24 +10,42 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "planted-null-deref": [
     "agents/code-reviewer.md",
     "skills/code-review/**",
+    "tests/code-reviewer.evals.ts",
+    "evals/fixtures/code-reviewer/planted-null-deref/**",
+    "evals/rubrics/code-reviewer.md",
   ],
   "git-commit-conventional-subject": [
     "skills/git-commit/**",
+    "tests/git-commit.evals.ts",
+    "evals/fixtures/git-commit/conventional-subject/**",
+    "evals/rubrics/git-commit.md",
   ],
   "changelog-keep-a-changelog-filter": [
     "skills/changelog/**",
+    "tests/changelog.evals.ts",
+    "evals/fixtures/changelog/keep-a-changelog-filter/**",
+    "evals/rubrics/changelog.md",
   ],
   "team-question-neutral-questions": [
     "skills/team-question/**",
     "agents/questioner.md",
+    "tests/team-question.evals.ts",
+    "evals/fixtures/team-question/neutral-questions/**",
+    "evals/rubrics/team-question.md",
   ],
   "eng-design-doc-review-planted-missing-alternatives": [
     "skills/eng-design-doc-review/**",
     "skills/technical-design-doc/**",
+    "tests/eng-design-doc-review.evals.ts",
+    "evals/fixtures/eng-design-doc-review/planted-missing-alternatives/**",
+    "evals/rubrics/eng-design-doc-review.md",
   ],
   "team-fix-test-first-ordering": [
     "skills/team-fix/**",
     "skills/test-driven-bug-fix/**",
+    "tests/team-fix.evals.ts",
+    "evals/fixtures/team-fix/test-first-ordering/**",
+    "evals/rubrics/team-fix.md",
   ],
   // The four seeded-state evals share tests/helpers/seed.ts (extractSeed); a
   // change to it could alter any of their outcomes, so each lists it as a dep.
@@ -35,21 +53,33 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "skills/team-research/**",
     "agents/researcher.md",
     "tests/helpers/seed.ts",
+    "tests/team-research.evals.ts",
+    "evals/fixtures/team-research/answers-seeded-questions/**",
+    "evals/rubrics/team-research.md",
   ],
   "team-design-seeded-research-and-task": [
     "skills/team-design/**",
     "agents/design-author.md",
     "tests/helpers/seed.ts",
+    "tests/team-design.evals.ts",
+    "evals/fixtures/team-design/seeded-research-and-task/**",
+    "evals/rubrics/team-design.md",
   ],
   "team-structure-seeded-design": [
     "skills/team-structure/**",
     "agents/structure-planner.md",
     "tests/helpers/seed.ts",
+    "tests/team-structure.evals.ts",
+    "evals/fixtures/team-structure/seeded-design/**",
+    "evals/rubrics/team-structure.md",
   ],
   "team-plan-seeded-structure": [
     "skills/team-plan/**",
     "agents/planner.md",
     "tests/helpers/seed.ts",
+    "tests/team-plan.evals.ts",
+    "evals/fixtures/team-plan/seeded-structure/**",
+    "evals/rubrics/team-plan.md",
   ],
 };
 
