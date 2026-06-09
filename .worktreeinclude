@@ -1,0 +1,4 @@
+# Gitignored files to copy into each new git worktree (.gitignore syntax).
+# Only files matching a pattern that are ALSO gitignored get copied.
+
+.envrc
