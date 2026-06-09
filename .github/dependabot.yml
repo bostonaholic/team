@@ -8,8 +8,10 @@
 #     what's available.
 version: 2
 updates:
-  # package.json — TS + Bun harness deps (@anthropic-ai/sdk, bun-types, typescript).
-  - package-ecosystem: "npm"
+  # package.json + bun.lock — TS + Bun harness deps (@anthropic-ai/sdk, bun-types, typescript).
+  # The "bun" ecosystem (GA since 2025-02) updates bun.lock alongside package.json;
+  # the "npm" ecosystem only touched package.json, breaking CI's --frozen-lockfile.
+  - package-ecosystem: "bun"
     directory: "/"
     schedule:
       interval: "weekly"
