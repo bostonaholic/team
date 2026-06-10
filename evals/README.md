@@ -191,8 +191,12 @@ If it fails there too, the regression predates your change.
 
 Any **new CI step** that consumes `EVALS_ANTHROPIC_API_KEY` or spawns
 `claude` on a `pull_request` event MUST carry the canonical trust `if:` so
-untrusted authors never spend tokens. Copy the expression from the contract
-comment on the `harness-checks` job in
-`.github/workflows/harness-checks.yml`.
+untrusted authors never spend tokens. Copy the expression from the live
+job-level `if:` on the `behavioral-evals` job in
+`.github/workflows/behavioral-evals.yml` — that is the authoritative,
+event-aware copy source (`!startsWith(github.event_name, 'pull_request') ||
+contains(...)`). The contract comment on the `harness-checks` job in
+`.github/workflows/harness-checks.yml` carries the same expression for
+reference, but the live `if:` is the canonical form to copy.
 
 Run `bun run eval:list` to see the registered tests and their tiers.
