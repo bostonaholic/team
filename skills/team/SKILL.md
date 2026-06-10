@@ -197,7 +197,11 @@ from phase 1, keeping the home checkout's `git status` clean for the whole run.
    `skills/team-worktree/SKILL.md` → "Create the worktree(s)"). Only the home
    repo gets a worktree at this phase; multi-repo secondary worktrees are
    deferred until after the design gate (see "Orchestrator-Emit Gate
-   (post-design-gate secondary worktrees)" below).
+   (post-design-gate secondary worktrees)" below). **If the run was started
+   from inside a linked worktree on a non-default branch, reuse it instead of
+   creating a new one** (see "Detect existing worktree" in
+   `skills/team-worktree/SKILL.md`); if that worktree is on the default branch,
+   stop rather than implement on it.
 2. **Create `docs/plans/<id>/` inside the worktree.** The artifact directory
    lives in the worktree from the start, so no copy is ever needed.
 3. **Compute the worktree's absolute path once** and thread it into every
