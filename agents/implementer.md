@@ -2,7 +2,7 @@
 name: implementer
 description: Use when the implementation plan needs to be executed slice by slice. A seasoned coding expert that reads the approved plan, follows TDD discipline, executes one vertical slice at a time, and commits each slice atomically when its tests pass. Dispatched during the Implement phase.
 color: green
-model: opus
+model: fable
 tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite
 permissionMode: acceptEdits
 skills:

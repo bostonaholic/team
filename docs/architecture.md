@@ -259,8 +259,24 @@ The dev hook `.claude/hooks/check-registry-sync.mjs` validates that
 the inventory in registry.json and the files under `agents/` agree by
 name.
 
-Model tiering: `haiku` (mechanical), `sonnet` (judgment), `opus`
-(planning + implementation).
+### Model tiering
+
+`haiku` (mechanical), `sonnet` (judgment), `fable`
+(planning + implementation: `design-author`, `structure-planner`,
+`planner`, `implementer`).
+
+Fable 5 notes:
+
+- Requires Claude Code ≥ v2.1.170 and Fable 5 access. It is not
+  available under zero data retention; on Bedrock/Vertex/Foundry, pin
+  `ANTHROPIC_DEFAULT_FABLE_MODEL` to your provider's Fable 5 model ID.
+- Users without access can override agent models with
+  `CLAUDE_CODE_SUBAGENT_MODEL` (applies to all subagents), or copy an
+  agent file into `.claude/agents/` with a different `model:`.
+- `security-reviewer` is deliberately pinned to `sonnet`: Fable 5's
+  cybersecurity safety classifiers flag security-review content, and in
+  non-interactive subagent contexts a flagged request ends the turn
+  with a refusal instead of falling back.
 
 ## 5. Phase-Table Orchestrator
 
