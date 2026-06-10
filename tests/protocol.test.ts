@@ -245,6 +245,45 @@ describe("multi-repo support", () => {
   });
 });
 
+describe("implement-to-pr continuation", () => {
+  const TEAM_IMPLEMENT = join(REPO_ROOT, "skills", "team-implement", "SKILL.md");
+  const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
+  const ARCHITECTURE = join(REPO_ROOT, "docs", "architecture.md");
+
+  test("team-implement full-pipeline mode continues into the PR phase in the same turn", () => {
+    const text = read(TEAM_IMPLEMENT);
+    expect(text).toContain("do **not** end the turn");
+    expect(text).toContain("same turn");
+    expect(text).toContain("team-pr/SKILL.md");
+  });
+
+  test("team-implement still suggests /team-pr in standalone mode", () => {
+    expect(/\*\*Standalone\*\*.{0,200}\/team-pr/.test(flat(read(TEAM_IMPLEMENT)))).toBe(true);
+  });
+
+  test("team-implement completion calls turn-end without a draft PR a defect", () => {
+    expect(
+      /Ending the turn with verdicts but\s+no draft PR is a defect/.test(read(TEAM_IMPLEMENT)),
+    ).toBe(true);
+  });
+
+  test("team SKILL advances IMPLEMENT to PR in the same turn", () => {
+    const text = flat(read(TEAM_SKILL));
+    expect(/advance\s+to PR \*\*in the same turn\*\*/.test(text)).toBe(true);
+    expect(
+      /turn that ends with review\s+verdicts but no draft PR URL is\s+a defect/.test(
+        read(TEAM_SKILL),
+      ),
+    ).toBe(true);
+  });
+
+  test("architecture.md no longer presents shipping options", () => {
+    const text = read(ARCHITECTURE);
+    expect(text).not.toContain("present shipping options");
+    expect(text).toContain("gh pr create");
+  });
+});
+
 describe("topic consistency", () => {
   const QUESTIONER = join(REPO_ROOT, "agents", "questioner.md");
   const RESEARCHER = join(REPO_ROOT, "agents", "researcher.md");
