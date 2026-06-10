@@ -240,3 +240,13 @@ note. Reviewer confirms the `environment: evals` line and ban comment in the
   `pull_request.number || github.run_id` form on security-review direction,
   superseding the earlier do-not-touch note. The change is byte-identical to
   PR #32's planned rename, so the conflict surface against #32 is nil.
+- **Event-aware `if:` hardened from `!=` to `!startsWith`** (commit b566990).
+  Slice 1 step 1 specified `github.event_name != 'pull_request' || contains(...)`.
+  On round-4 security direction this was hardened to
+  `!startsWith(github.event_name, 'pull_request') || contains(...)`. The bare
+  `!=` only excludes the exact `pull_request` event, so a future
+  `pull_request_target` (or any `pull_request*` variant) would short-circuit
+  the left side and bypass the allowlist entirely. The `startsWith` prefix
+  match covers every `pull_request*` event, so adding such a trigger consults
+  the allowlist instead of skipping the gate. Non-PR events
+  (schedule/workflow_dispatch) still fail the `startsWith` and stay ungated.
