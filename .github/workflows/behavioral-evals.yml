@@ -30,15 +30,16 @@ jobs:
     name: Live agent runs (${{ matrix.suite.name }})
     # Author gate (issue #51): only OWNER/MEMBER/COLLABORATOR may spend tokens
     # via a pull_request. Event-aware so schedule/workflow_dispatch (no PR
-    # context) stay ungated; only pull_request events are author-gated.
+    # context) stay ungated; only pull_request* events are author-gated.
     # Forward-proofing: this `if:` is dormant today (no pull_request trigger
     # above) and stays dormant until one is added — do NOT delete it as dead
     # code; it is the live gate the moment PRs can trigger this workflow. The
-    # guard covers ANY event where github.event.pull_request.author_association
-    # is set (e.g. pull_request and its variants), not just the literal
-    # `pull_request` event name, so future trigger additions consult the gate
-    # rather than bypass it.
-    if: github.event_name != 'pull_request' || contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
+    # `startsWith` prefix match covers ANY pull_request* event (pull_request AND
+    # pull_request_target and any future variant), so adding such a trigger
+    # consults the allowlist instead of short-circuiting the left side and
+    # bypassing the gate entirely. Non-PR events (schedule/dispatch) fail the
+    # startsWith and stay ungated.
+    if: ${{ !startsWith(github.event_name, 'pull_request') || contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association) }}
     # Backstop (issue #51, design Decision 1): scope EVALS_ANTHROPIC_API_KEY to
     # the protected `evals` environment so only this opted-in job can read it;
     # fails closed (secret simply unavailable) if the environment is absent.

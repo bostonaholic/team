@@ -32,6 +32,10 @@ jobs:
     #   contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
     # When PR #32's "Run gate-tier evals" step attaches paid execution here,
     # it inherits this gate so untrusted PR authors never spend tokens.
+    # Canonical in-use example: behavioral-evals.yml wires exactly this
+    # allowlist into a live job-level `if:` (wrapped event-aware with
+    # startsWith(github.event_name, 'pull_request')) — copy that form when
+    # adding the paid step here.
     steps:
       - uses: actions/checkout@v6
         with:
