@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **LLM-token-consuming CI jobs are now gated on PR author trust.** Any GitHub Actions job that could spend Anthropic API tokens is protected by a two-layer gate so external/fork PRs (including Dependabot and first-time contributors) can never trigger paid execution: (1) a job-level `if:` on `behavioral-evals.yml` allowing only `OWNER`/`MEMBER`/`COLLABORATOR` PR authors — written with `!startsWith(github.event_name, 'pull_request')` so every `pull_request*` event variant (including `pull_request_target`) consults the gate, and dormant today since the workflow has no `pull_request` trigger; and (2) `EVALS_ANTHROPIC_API_KEY` moved from a repo secret to an **environment secret scoped to a protected `evals` GitHub Environment** that the token job declares — the server-side backstop if the YAML gate is ever edited away. `pull_request_target` is hard-banned for token jobs (base-repo-context secret-exfiltration vector), and `harness-checks.yml` carries the canonical trust expression as a documented contract for any future paid step while its free job stays ungated so fork authors keep free CI. The `harness-checks` concurrency group is now keyed on the PR number instead of the attacker-controlled branch name, closing a run-cancellation griefing vector. All of it is machine-checked by free static-gate tripwires (`tests/static-gate.test.ts`): trust expression present and wired as a live `if:`, untrusted associations excluded, `environment: evals` declared, no live `pull_request:`/`pull_request_target:` triggers.
+
+### Fixed
+
+- **The eval harness fails fast when the live path has no API key.** `runAgentTest` previously spawned the `claude` CLI even when `EVALS_ANTHROPIC_API_KEY` was absent, empty, or whitespace-only, burning a CI runner until the CLI failed at auth. It now throws immediately — `EVALS_ANTHROPIC_API_KEY is empty; refusing live spawn (set it to a valid Anthropic API key, or set EVALS_MOCK_AGENT to replay a fixture)` — before any subprocess starts. The guard sits after the `EVALS_MOCK_AGENT` seam, so local mock-replay runs never need a credential.
+
 ## [0.5.0] - 2026-06-12
 
 ### Added
