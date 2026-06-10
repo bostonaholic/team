@@ -10,6 +10,11 @@
 # Runs Monday 06:00 UTC. Offline harness checks live in harness-checks.yml.
 name: Behavioral evals
 
+# Hard ban (issue #51, design Decision 5): token/secret-consuming jobs
+# MUST NOT trigger on pull_request_target. That event runs in base-repo
+# context with secrets available — a known exfiltration vector if PR code is
+# ever checked out. Paid execution stays on schedule / workflow_dispatch or
+# trust-gated pull_request only.
 on:
   schedule:
     - cron: '0 6 * * 1'  # Monday 06:00 UTC
@@ -26,6 +31,13 @@ jobs:
     # via a pull_request. Event-aware so schedule/workflow_dispatch (no PR
     # context) stay ungated; only pull_request events are author-gated.
     if: github.event_name != 'pull_request' || contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
+    # Backstop (issue #51, design Decision 1): scope EVALS_ANTHROPIC_API_KEY to
+    # the protected `evals` environment so only this opted-in job can read it;
+    # fails closed (secret simply unavailable) if the environment is absent.
+    # ONE-TIME SETUP: create the `evals` environment under repo Settings →
+    # Environments, attach EVALS_ANTHROPIC_API_KEY as an environment secret,
+    # and set required reviewers and/or restrict deployment branches to `main`.
+    environment: evals
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
