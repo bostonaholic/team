@@ -133,23 +133,30 @@ describe("static gate: author gate", () => {
     expect(harnessWorkflow).toContain(TRUST_EXPR);
   });
 
-  test("untrusted authors excluded", () => {
-    // Pull the actual allowlist literal(s) out of the workflow files (not
-    // this test's own constant) so drift in a live `if:` trips the gate.
-    const allowlistRe =
-      /fromJSON\('(\[[^\]]+\])'\), github\.event\.pull_request\.author_association/g;
-    const allowlists = [
-      ...harnessWorkflow.matchAll(allowlistRe),
-      ...evalsWorkflow.matchAll(allowlistRe),
-    ].map((m) => JSON.parse(m[1] ?? "[]") as string[]);
+  // Pull the actual allowlist literal out of a workflow file (not this test's
+  // own constant) so drift in a live `if:` or contract comment trips the gate.
+  const allowlistRe =
+    /fromJSON\('(\[[^\]]+\])'\), github\.event\.pull_request\.author_association/;
+  function extractAllowlist(workflow: string): string[] | null {
+    const m = workflow.match(allowlistRe);
+    if (m === null) return null;
+    return JSON.parse(m[1] ?? "[]") as string[];
+  }
 
-    // The trust allowlist must exist somewhere before exclusion means anything.
-    expect(allowlists.length).toBeGreaterThan(0);
-    for (const allowlist of allowlists) {
-      expect(allowlist).not.toContain("CONTRIBUTOR");
-      expect(allowlist).not.toContain("FIRST_TIME_CONTRIBUTOR");
-      expect(allowlist).not.toContain("NONE");
-    }
+  test("untrusted authors excluded", () => {
+    // Assert each workflow's allowlist independently — no loop, so a failure
+    // names exactly which workflow drifted.
+    const harnessAllowlist = extractAllowlist(harnessWorkflow);
+    expect(harnessAllowlist).not.toBeNull();
+    expect(harnessAllowlist).not.toContain("CONTRIBUTOR");
+    expect(harnessAllowlist).not.toContain("FIRST_TIME_CONTRIBUTOR");
+    expect(harnessAllowlist).not.toContain("NONE");
+
+    const evalsAllowlist = extractAllowlist(evalsWorkflow);
+    expect(evalsAllowlist).not.toBeNull();
+    expect(evalsAllowlist).not.toContain("CONTRIBUTOR");
+    expect(evalsAllowlist).not.toContain("FIRST_TIME_CONTRIBUTOR");
+    expect(evalsAllowlist).not.toContain("NONE");
   });
 
   test("canonical trust expression present in behavioral-evals.yml", () => {
