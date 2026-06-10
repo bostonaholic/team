@@ -1,6 +1,7 @@
 ---
 name: team-design
 description: Align with the user on the approach before any code is written. The design-author MUST present open questions interactively before drafting the ~200-line design document, then a human gate captures approval. Trigger on "design this", "let's align on the approach", or "/team-design".
+effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
 

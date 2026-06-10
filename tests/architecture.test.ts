@@ -232,6 +232,33 @@ describe("simplify orchestration scope fence", () => {
   });
 });
 
+describe("effort tiering", () => {
+  const EFFORT_LEVELS = /^effort: (low|medium|high|xhigh|max)$/m;
+
+  test("every agent frontmatter has a valid effort level", () => {
+    for (const file of agentFiles()) {
+      const fm = frontmatter(read(join(REPO_ROOT, file)));
+      expect(fm).toMatch(EFFORT_LEVELS);
+    }
+  });
+
+  test("every effort field in skill frontmatter has a valid level", () => {
+    for (const file of skillFiles()) {
+      const fm = frontmatter(read(join(REPO_ROOT, file)));
+      if (/^effort:/m.test(fm)) expect(fm).toMatch(EFFORT_LEVELS);
+    }
+  });
+
+  test("methodology skills carry no effort (it would override the loading agent's effort)", () => {
+    for (const file of skillFiles()) {
+      const fm = frontmatter(read(join(REPO_ROOT, file)));
+      if (/^user-invocable: false$/m.test(fm)) {
+        expect(/^effort:/m.test(fm)).toBe(false);
+      }
+    }
+  });
+});
+
 // Resolve `agents/*.md` and `hooks/*.mjs` globs, returning repo-relative paths
 // so grep receives the same file list a shell glob would expand to.
 function agentFiles(): string[] {
@@ -239,6 +266,13 @@ function agentFiles(): string[] {
     .filter((n) => n.endsWith(".md"))
     .sort()
     .map((n) => join("agents", n));
+}
+
+function skillFiles(): string[] {
+  return readdirSync(join(REPO_ROOT, "skills"))
+    .sort()
+    .map((n) => join("skills", n, "SKILL.md"))
+    .filter((p) => existsSync(join(REPO_ROOT, p)));
 }
 
 function hookFiles(): string[] {

@@ -1,6 +1,7 @@
 ---
 name: team-pr
 description: Open the pull request after verification passes. Updates the changelog, optionally surfaces the tracking ticket, and closes out the topic. Trigger on "open the PR", "ship it", or "/team-pr".
+effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
 
