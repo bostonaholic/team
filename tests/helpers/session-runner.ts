@@ -257,6 +257,14 @@ export async function runAgentTest(
       return runMocked(mockPath, model, startMs);
     }
 
+    // Live-path guard: fail fast and loud rather than spawning `claude` with
+    // no credential and failing at auth (or silently burning a logged-in
+    // session). Sits AFTER the mock seam, so mock replay never needs a key.
+    const apiKey = process.env.EVALS_ANTHROPIC_API_KEY;
+    if (apiKey === undefined || apiKey === "") {
+      throw new Error("EVALS_ANTHROPIC_API_KEY is empty; refusing live spawn");
+    }
+
     const args: string[] = [
       "-p",
       "--model",
