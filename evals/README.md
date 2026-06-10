@@ -69,6 +69,17 @@ the test runs or is registered as `test.skip`. `EVALS_ALL=1` forces all.
 | `EVALS_MOCK_JUDGE` | JSON file replayed instead of calling the LLM judge | unset |
 | `EVALS_ANTHROPIC_API_KEY` | Anthropic API key for the judge (paid tiers). Namespaced so an ambient Claude Code session (incl. the spawned agent under test) won't auto-pick it up; passed explicitly to the judge's Anthropic SDK client. | — |
 
+When this key is absent or empty and `EVALS_MOCK_AGENT` is unset, the live
+path now **throws immediately** ("refusing live spawn") rather than spawning
+`claude` and failing later at CLI auth. Set `EVALS_MOCK_AGENT` to replay a
+fixture without a key.
+
+In CI the key is an **`evals` environment secret** (not a plain repo secret),
+reachable only by the job declaring `environment: evals`. Token-consuming
+jobs are additionally **skipped for PR authors who are not
+OWNER/MEMBER/COLLABORATOR** — fork PRs, Dependabot (`CONTRIBUTOR`), and
+first-time contributors skip by design, so no tokens are spent on their PRs.
+
 ## Fixture format
 
 `evals/fixtures/<agent>/<case>/input.md`:
@@ -177,5 +188,11 @@ If it fails there too, the regression predates your change.
    diff selection applies.
 5. `bun test` — verify the gate validates the new schemas.
 6. `bun test ./tests/<agent>.evals.ts` — run end-to-end (needs `EVALS_ANTHROPIC_API_KEY`).
+
+Any **new CI step** that consumes `EVALS_ANTHROPIC_API_KEY` or spawns
+`claude` on a `pull_request` event MUST carry the canonical trust `if:` so
+untrusted authors never spend tokens. Copy the expression from the contract
+comment on the `harness-checks` job in
+`.github/workflows/harness-checks.yml`.
 
 Run `bun run eval:list` to see the registered tests and their tiers.
