@@ -4,7 +4,7 @@
 // under `bun test` with no env vars and no subprocess; they cost $0.
 
 import { test, expect, describe } from "bun:test";
-import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -161,6 +161,93 @@ describe("runAgentTest with EVALS_MOCK_AGENT", () => {
       expect(result.costEstimate.estimatedCost).toBeGreaterThan(0);
     } finally {
       delete process.env.EVALS_MOCK_AGENT;
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});
+
+// The live path must fail fast when EVALS_ANTHROPIC_API_KEY is empty or
+// unset: throw a named error BEFORE spawning `claude`, instead of spawning
+// and failing at auth (or silently burning a logged-in session's tokens).
+// The guard sits after the EVALS_MOCK_AGENT seam, so mock replay never
+// needs a key.
+describe("runAgentTest live-path API-key guard", () => {
+  test("throws on empty API key at live path", async () => {
+    const tmp = mkdtempSync(join(tmpdir(), "session-runner-test-"));
+    // Hermetic fake `claude` on PATH: if the guard is missing or misplaced,
+    // runAgentTest spawns this stub — never the real CLI, no auth, no
+    // tokens. The stub drains stdin (so the prompt write can't EPIPE) and
+    // drops a sentinel file proving a spawn happened.
+    const fakeBin = join(tmp, "bin");
+    mkdirSync(fakeBin);
+    const sentinel = join(tmp, "spawned.sentinel");
+    writeFileSync(
+      join(fakeBin, "claude"),
+      `#!/bin/sh\ncat > /dev/null\ntouch "${sentinel}"\nexit 0\n`,
+      { mode: 0o755 },
+    );
+
+    const savedPath = process.env.PATH;
+    const savedMock = process.env.EVALS_MOCK_AGENT;
+    const savedKey = process.env.EVALS_ANTHROPIC_API_KEY;
+    process.env.PATH = `${fakeBin}:${savedPath ?? ""}`;
+    delete process.env.EVALS_MOCK_AGENT;
+    delete process.env.EVALS_ANTHROPIC_API_KEY;
+    try {
+      await expect(
+        runAgentTest({
+          prompt: "Review x.ts.",
+          workingDirectory: tmp,
+          testName: "live-empty-key",
+          // Watchdog bound only: the guard must reject before any spawn, so
+          // this timer should never fire. It keeps a misbehaving stub from
+          // hitting bun's own per-test timeout (which would error, not fail).
+          timeout: 2_000,
+        }),
+      ).rejects.toThrow(/EVALS_ANTHROPIC_API_KEY is empty/);
+      // "Never spawns": the guard fired before spawn, so the stub never ran.
+      expect(existsSync(sentinel)).toBe(false);
+    } finally {
+      if (savedPath === undefined) delete process.env.PATH;
+      else process.env.PATH = savedPath;
+      if (savedMock !== undefined) process.env.EVALS_MOCK_AGENT = savedMock;
+      if (savedKey !== undefined) process.env.EVALS_ANTHROPIC_API_KEY = savedKey;
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test("mock path unaffected by empty key", async () => {
+    const tmp = mkdtempSync(join(tmpdir(), "session-runner-test-"));
+    const mockPath = join(tmp, "mock.ndjson");
+    const events = [
+      {
+        type: "assistant",
+        message: { content: [{ type: "text", text: "Mock replay ran." }] },
+      },
+      { type: "result", usage: { input_tokens: 5, output_tokens: 2 } },
+    ];
+    writeFileSync(
+      mockPath,
+      events.map((e) => JSON.stringify(e)).join("\n") + "\n",
+      "utf8",
+    );
+
+    const savedMock = process.env.EVALS_MOCK_AGENT;
+    const savedKey = process.env.EVALS_ANTHROPIC_API_KEY;
+    process.env.EVALS_MOCK_AGENT = mockPath;
+    delete process.env.EVALS_ANTHROPIC_API_KEY;
+    try {
+      const result = await runAgentTest({
+        prompt: "Review x.ts.",
+        workingDirectory: tmp,
+        testName: "mock-empty-key",
+      });
+      // The guard sits AFTER the mock seam: local mock dev needs no key.
+      expect(result.exitReason).toBe("success");
+    } finally {
+      if (savedMock === undefined) delete process.env.EVALS_MOCK_AGENT;
+      else process.env.EVALS_MOCK_AGENT = savedMock;
+      if (savedKey !== undefined) process.env.EVALS_ANTHROPIC_API_KEY = savedKey;
       rmSync(tmp, { recursive: true, force: true });
     }
   });
