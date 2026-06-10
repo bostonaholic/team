@@ -166,11 +166,11 @@ describe("runAgentTest with EVALS_MOCK_AGENT", () => {
   });
 });
 
-// The live path must fail fast when EVALS_ANTHROPIC_API_KEY is empty or
-// unset: throw a named error BEFORE spawning `claude`, instead of spawning
-// and failing at auth (or silently burning a logged-in session's tokens).
-// The guard sits after the EVALS_MOCK_AGENT seam, so mock replay never
-// needs a key.
+// The live path must fail fast when EVALS_ANTHROPIC_API_KEY is empty, unset,
+// or whitespace-only: throw a named error BEFORE spawning `claude`, instead
+// of spawning and failing at auth (or silently burning a logged-in session's
+// tokens). The guard sits after the EVALS_MOCK_AGENT seam, so mock replay
+// never needs a key.
 describe("runAgentTest live-path API-key guard", () => {
   test("throws on empty API key at live path", async () => {
     const tmp = mkdtempSync(join(tmpdir(), "session-runner-test-"));
@@ -212,6 +212,46 @@ describe("runAgentTest live-path API-key guard", () => {
       else process.env.PATH = savedPath;
       if (savedMock !== undefined) process.env.EVALS_MOCK_AGENT = savedMock;
       if (savedKey !== undefined) process.env.EVALS_ANTHROPIC_API_KEY = savedKey;
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test("throws on whitespace-only API key at live path", async () => {
+    const tmp = mkdtempSync(join(tmpdir(), "session-runner-test-"));
+    // Same hermetic fake `claude` sentinel pattern: a whitespace-only key is
+    // as useless as an empty one, so the guard must reject it before any spawn.
+    const fakeBin = join(tmp, "bin");
+    mkdirSync(fakeBin);
+    const sentinel = join(tmp, "spawned.sentinel");
+    writeFileSync(
+      join(fakeBin, "claude"),
+      `#!/bin/sh\ncat > /dev/null\ntouch "${sentinel}"\nexit 0\n`,
+      { mode: 0o755 },
+    );
+
+    const savedPath = process.env.PATH;
+    const savedMock = process.env.EVALS_MOCK_AGENT;
+    const savedKey = process.env.EVALS_ANTHROPIC_API_KEY;
+    process.env.PATH = `${fakeBin}:${savedPath ?? ""}`;
+    delete process.env.EVALS_MOCK_AGENT;
+    process.env.EVALS_ANTHROPIC_API_KEY = "   ";
+    try {
+      await expect(
+        runAgentTest({
+          prompt: "Review x.ts.",
+          workingDirectory: tmp,
+          testName: "live-whitespace-key",
+          // Watchdog bound only: the guard must reject before any spawn.
+          timeout: 2_000,
+        }),
+      ).rejects.toThrow(/EVALS_ANTHROPIC_API_KEY is empty/);
+      expect(existsSync(sentinel)).toBe(false);
+    } finally {
+      if (savedPath === undefined) delete process.env.PATH;
+      else process.env.PATH = savedPath;
+      if (savedMock !== undefined) process.env.EVALS_MOCK_AGENT = savedMock;
+      if (savedKey === undefined) delete process.env.EVALS_ANTHROPIC_API_KEY;
+      else process.env.EVALS_ANTHROPIC_API_KEY = savedKey;
       rmSync(tmp, { recursive: true, force: true });
     }
   });
