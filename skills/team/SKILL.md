@@ -200,6 +200,9 @@ When the plan artifact exists:
    **multi-repo mode** — create one worktree per repo listed in that
    file, all on the same `<id>` branch. Otherwise you are in
    **single-repo mode** — create one worktree in the current repo.
+   If the current checkout is already a linked worktree on a
+   non-default branch, reuse it instead of creating a new one (see
+   "Detect existing worktree" in `skills/team-worktree/SKILL.md`).
    See `skills/worktree-isolation/SKILL.md` for the topology and
    `skills/team-worktree/SKILL.md` for the procedure.
 2. Copy `docs/plans/<id>/` into the **home worktree** only (other
