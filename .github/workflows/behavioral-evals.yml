@@ -3,9 +3,10 @@
 # This is the actual eval tier: spawns `claude -p` against fixtures under
 # evals/fixtures/<agent>/<case>/, then runs the LLM-judge over the agent's
 # output. Detects behavior regression when the underlying model changes.
-# Requires an Anthropic API key (stored as the EVALS_ANTHROPIC_API_KEY repo
-# secret, exposed to the harness under the same name) and runs only on
-# the weekly cron or via manual workflow_dispatch.
+# Requires an Anthropic API key (an environment secret named
+# EVALS_ANTHROPIC_API_KEY scoped to the `evals` environment, exposed to the
+# harness under the same name) and runs only on the weekly cron or via manual
+# workflow_dispatch.
 #
 # Runs Monday 06:00 UTC. Offline harness checks live in harness-checks.yml.
 name: Behavioral evals
@@ -32,7 +33,11 @@ jobs:
     # context) stay ungated; only pull_request events are author-gated.
     # Forward-proofing: this `if:` is dormant today (no pull_request trigger
     # above) and stays dormant until one is added — do NOT delete it as dead
-    # code; it is the live gate the moment PRs can trigger this workflow.
+    # code; it is the live gate the moment PRs can trigger this workflow. The
+    # guard covers ANY event where github.event.pull_request.author_association
+    # is set (e.g. pull_request and its variants), not just the literal
+    # `pull_request` event name, so future trigger additions consult the gate
+    # rather than bypass it.
     if: github.event_name != 'pull_request' || contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
     # Backstop (issue #51, design Decision 1): scope EVALS_ANTHROPIC_API_KEY to
     # the protected `evals` environment so only this opted-in job can read it;
