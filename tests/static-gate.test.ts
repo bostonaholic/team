@@ -213,6 +213,18 @@ describe("static gate: evals environment backstop", () => {
     expect(/^\s*pull_request_target:/m.test(evalsWorkflow)).toBe(false);
     expect(/^\s*pull_request_target:/m.test(harnessWorkflow)).toBe(false);
   });
+
+  test("behavioral-evals stays off pull_request triggers until the gate is deliberately activated", () => {
+    // The author gate's `if:` is dormant today: behavioral-evals.yml triggers
+    // only on schedule + workflow_dispatch, so no untrusted author can reach
+    // the token job. Adding a live `pull_request:` trigger would activate that
+    // gate — and its sufficiency (does the allowlist cover every author state
+    // we care about? is checkout safe?) must be reviewed deliberately, not
+    // slipped in. This forbidden-key tripwire fails the free gate the moment a
+    // live `pull_request:` trigger appears, forcing that review. A comment
+    // mention (which is indented under `#`) does not match the bare-key regex.
+    expect(/^\s*pull_request:/m.test(evalsWorkflow)).toBe(false);
+  });
 });
 
 describe("static gate: rubrics", () => {

@@ -96,6 +96,11 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
+          # Direct ${{ }} expansion (not the SUITE_FILE env-indirection
+          # pattern above): a `with:` field is evaluated by the runner before
+          # any shell, so it cannot read a `$VAR` — env indirection is not
+          # possible here. Safe regardless: matrix.suite.name is a
+          # repo-controlled YAML literal, and GitHub sanitizes artifact names.
           name: behavioral-evals-${{ matrix.suite.name }}-${{ github.run_id }}
           path: evals/results/
           retention-days: 90
