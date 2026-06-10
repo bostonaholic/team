@@ -1,6 +1,7 @@
 ---
 name: eng-design-doc-review
 description: Adversarially review a technical design document with fresh context before the human gate. Dispatches the built-in `general-purpose` subagent (clean context, no shared history with the design-author) against `docs/plans/<id>/design.md` and presents its verdict — APPROVE, REQUEST CHANGES, or COMMENT. Optional, not part of the QRSPI pipeline. Trigger on "review the design doc", "audit design.md", "is this design ready", or `/eng-design-doc-review`.
+effort: high
 argument-hint: "[docs/plans/<id>/]"
 ---
 

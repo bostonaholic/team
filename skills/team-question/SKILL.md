@@ -1,6 +1,7 @@
 ---
 name: team-question
 description: Decompose a feature description, ticket, or issue link into the QRSPI Question artifacts (task.md, questions.md). Trigger on "shape this idea", "decompose this task", or "/team-question".
+effort: medium
 argument-hint: "<ticket id, issue URL, or task description>"
 ---
 

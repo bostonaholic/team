@@ -1,6 +1,7 @@
 ---
 name: team-plan
 description: Produce the tactical implementation plan from the structure. The plan is an autonomous artifact for the implementer — no human approval gate at this phase (design is the pipeline's only human gate). Trigger on "plan the implementation", "spell out the steps", or "/team-plan".
+effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
 

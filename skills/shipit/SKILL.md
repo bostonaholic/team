@@ -8,6 +8,7 @@ description: |
   nothing about how any project versions itself. Use ONLY when the user
   explicitly says "ship it", "land the PR", "land this", or runs "/shipit";
   never auto-fire it — it merges, which is irreversible.
+effort: medium
 disable-model-invocation: true
 argument-hint: "[<pr-number>] [--yes]"
 ---
