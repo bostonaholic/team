@@ -239,7 +239,8 @@ returned:
 4. If at cap → escalate to the user with all unresolved findings.
 5. Once Blocking and Major are clean → if any **Minor-and-below** findings
    remain, present them to the user, who decides; otherwise advance
-   to PR.
+   to PR **in the same turn** — do not summarize and end the turn. The
+   run is complete only when the draft PR URL is reported.
 
 **The loop is: IMPLEMENT → VERIFY (5 reviewers) → typed gate check →
 IMPLEMENT → VERIFY → ...** Each round is a complete re-review.
@@ -300,6 +301,12 @@ When the aggregate gate passes:
 - The two human gates are **design approval** and **structure approval**.
   Never present the plan to the user for approval — the plan is a
   tactical agent artifact, the structure is the human contract.
+- The phase loop pauses for the user only at (a) the two human gates,
+  (b) `openQuestions` envelopes, (c) aggregate-cap escalation, and
+  (d) Minor-findings consultation. Everywhere else, advance phases
+  within the same turn. In particular, IMPLEMENT → PR is not a stopping
+  point — a turn that ends with review verdicts but no draft PR URL is
+  a defect.
 - The research-isolation invariant is non-negotiable. If a researcher's
   context contains the user's original description, the pipeline has a
   defect. Stop and report.

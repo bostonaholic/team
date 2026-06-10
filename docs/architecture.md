@@ -233,8 +233,9 @@ items to the TodoWrite ledger.
 **Predecessor:** aggregate gate passed
 
 Update CHANGELOG.md (filter for user-facing commits since last release),
-present shipping options to the user, execute the chosen action, and
-surface the tracking ticket (if `task.md` carries `ticketId`). The
+push the branch and open a draft PR automatically (`gh pr create
+--draft` — the PR phase is not a human gate, so it needs no approval),
+and surface the tracking ticket (if `task.md` carries `ticketId`). The
 worktree stays in place after the PR opens — teardown is deferred until
 the PR merges or the user asks, so the branch remains available for
 iteration.
