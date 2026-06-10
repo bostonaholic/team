@@ -239,6 +239,11 @@ test poisons the whole base. A tripwire that greps tests for forbidden paid
 calls (`grep` for the model CLI / SDK import in the free test roots) is a good
 L2 guard for exactly this.
 
+Token-consuming CI jobs are additionally restricted to trusted PR authors
+(OWNER/MEMBER/COLLABORATOR); untrusted PRs (forks, Dependabot, first-time
+contributors) skip them — a security control against token-spend griefing,
+not just a cost optimization.
+
 ---
 
 ## 6. Meta-tests: test the test system
