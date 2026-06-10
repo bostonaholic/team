@@ -18,7 +18,20 @@ const EVALS_WORKFLOW = join(
   "workflows",
   "behavioral-evals.yml",
 );
+const HARNESS_WORKFLOW = join(
+  process.cwd(),
+  ".github",
+  "workflows",
+  "harness-checks.yml",
+);
 const FIXTURE_SIZE_CAP = 50 * 1024;
+
+// Canonical trust expression — the cross-workflow contract from
+// docs/plans/2026-06-09-gate-llm-ci-jobs-on-pr-author/structure.md.
+// Every job/step that consumes a secret or spawns `claude` on a
+// pull_request event applies this expression VERBATIM, which is what lets
+// the tripwires below match it as a plain substring.
+const TRUST_EXPR = `contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)`;
 
 function enumerate(): { agent: string; caseName: string }[] {
   if (!existsSync(FIXTURE_ROOT)) return [];
@@ -93,6 +106,93 @@ describe("static gate: behavioral-evals workflow", () => {
     // Anchor to the bare key at line start so the existing namespaced
     // EVALS_ANTHROPIC_API_KEY: entry does not satisfy this on its own.
     expect(/^\s*ANTHROPIC_API_KEY:/m.test(workflow)).toBe(true);
+  });
+});
+
+// Token-consuming CI must never run for an untrusted PR author (issue #51):
+// a fork PR from CONTRIBUTOR / FIRST_TIME_CONTRIBUTOR / NONE (Dependabot is
+// CONTRIBUTOR) must skip every job/step that consumes a secret or spawns
+// `claude`. Scheduled and workflow_dispatch runs carry no pull_request
+// context, so the gate is applied event-aware and leaves them unaffected.
+describe("static gate: author gate", () => {
+  const harnessWorkflow = existsSync(HARNESS_WORKFLOW)
+    ? readFileSync(HARNESS_WORKFLOW, "utf8")
+    : "";
+  const evalsWorkflow = existsSync(EVALS_WORKFLOW)
+    ? readFileSync(EVALS_WORKFLOW, "utf8")
+    : "";
+
+  test("author gate", () => {
+    // harness-checks.yml is the PR-triggered workflow where paid execution
+    // attaches next (#32's mocked gate-eval step). The canonical trust
+    // expression must be present at that seam — today as the documented
+    // contract any future token step inherits.
+    expect(harnessWorkflow).toContain(TRUST_EXPR);
+  });
+
+  test("untrusted authors excluded", () => {
+    // Pull the actual allowlist literal(s) out of the workflow files (not
+    // this test's own constant) so drift in a live `if:` trips the gate.
+    const allowlistRe =
+      /fromJSON\('(\[[^\]]+\])'\), github\.event\.pull_request\.author_association/g;
+    const allowlists = [
+      ...harnessWorkflow.matchAll(allowlistRe),
+      ...evalsWorkflow.matchAll(allowlistRe),
+    ].map((m) => JSON.parse(m[1] ?? "[]") as string[]);
+
+    // The trust allowlist must exist somewhere before exclusion means anything.
+    expect(allowlists.length).toBeGreaterThan(0);
+    for (const allowlist of allowlists) {
+      expect(allowlist).not.toContain("CONTRIBUTOR");
+      expect(allowlist).not.toContain("FIRST_TIME_CONTRIBUTOR");
+      expect(allowlist).not.toContain("NONE");
+    }
+  });
+
+  test("gate sits on every token job", () => {
+    // behavioral-evals.yml is the only workflow that consumes
+    // EVALS_ANTHROPIC_API_KEY today; its secret-consuming job must carry the
+    // trust expression wired as a live `if:` condition (not just a comment),
+    // so a future pull_request trigger cannot spend tokens for untrusted
+    // authors. Asserts on substring presence, not job/matrix shape, so it
+    // tolerates either #47's static matrix or #32's dynamic discover matrix.
+    expect(evalsWorkflow).toContain(TRUST_EXPR);
+    expect(/^\s*if:.*author_association/m.test(evalsWorkflow)).toBe(true);
+  });
+});
+
+// Backstop layer: even if a YAML gate is bypassed, the secret itself is
+// scoped to the protected `evals` GitHub environment, and the
+// `pull_request_target` exfiltration vector is hard-banned (design
+// Decisions 1 and 5).
+describe("static gate: evals environment backstop", () => {
+  const harnessWorkflow = existsSync(HARNESS_WORKFLOW)
+    ? readFileSync(HARNESS_WORKFLOW, "utf8")
+    : "";
+  const evalsWorkflow = existsSync(EVALS_WORKFLOW)
+    ? readFileSync(EVALS_WORKFLOW, "utf8")
+    : "";
+
+  test("evals environment declared", () => {
+    // The token job must declare `environment: evals` so the secret is
+    // reachable only inside the protected environment — fails closed
+    // (secret simply unavailable) if the environment is missing.
+    expect(/^\s*environment:\s*evals\s*$/m.test(evalsWorkflow)).toBe(true);
+    // The hard ban must be stated in the workflow: token/secret-consuming
+    // jobs MUST NOT trigger on pull_request_target (base-repo context with
+    // secrets — exfiltration vector). Anchor on the ban phrasing plus a
+    // comment line so an incidental mention can't satisfy this.
+    expect(evalsWorkflow).toContain("MUST NOT trigger on");
+    expect(/^\s*#.*pull_request_target/m.test(evalsWorkflow)).toBe(true);
+  });
+
+  test("no pull_request_target token trigger", () => {
+    // The forbidden form is a live trigger key under `on:`; a comment
+    // mention (the ban itself) is allowed. Forbidden-pattern tripwire:
+    // already satisfied today, exists to fail the build if the trigger
+    // ever appears.
+    expect(/^\s*pull_request_target:/m.test(evalsWorkflow)).toBe(false);
+    expect(/^\s*pull_request_target:/m.test(harnessWorkflow)).toBe(false);
   });
 });
 
