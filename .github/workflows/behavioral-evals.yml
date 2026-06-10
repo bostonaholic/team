@@ -30,6 +30,9 @@ jobs:
     # Author gate (issue #51): only OWNER/MEMBER/COLLABORATOR may spend tokens
     # via a pull_request. Event-aware so schedule/workflow_dispatch (no PR
     # context) stay ungated; only pull_request events are author-gated.
+    # Forward-proofing: this `if:` is dormant today (no pull_request trigger
+    # above) and stays dormant until one is added — do NOT delete it as dead
+    # code; it is the live gate the moment PRs can trigger this workflow.
     if: github.event_name != 'pull_request' || contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
     # Backstop (issue #51, design Decision 1): scope EVALS_ANTHROPIC_API_KEY to
     # the protected `evals` environment so only this opted-in job can read it;
