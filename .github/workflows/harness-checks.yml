@@ -29,7 +29,7 @@ jobs:
     # no `claude` spawn), so the job itself stays UNGATED — fork authors keep
     # free CI. But any step that consumes a secret or spawns `claude` MUST
     # carry this trust `if:`:
-    #   ${{ contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association) }}
+    #   contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
     # When PR #32's "Run gate-tier evals" step attaches paid execution here,
     # it inherits this gate so untrusted PR authors never spend tokens.
     steps:
