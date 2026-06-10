@@ -520,7 +520,10 @@ to empty, so no token spend leaks. `pull_request_target` is hard-banned for
 this and any secret-consuming / `claude`-spawning job — it runs in
 base-repo context with secrets available, a base-repo-context exfiltration
 vector — and the ban is enforced by a static tripwire in
-`tests/static-gate.test.ts`.
+`tests/static-gate.test.ts`. Live jobs that run on `pull_request` events
+additionally gate on PR-author trust: only OWNER/MEMBER/COLLABORATOR authors
+may spend tokens, so untrusted PRs (forks, Dependabot, first-time
+contributors) never trigger paid execution.
 
 These three tiers are the paid frontier of Team's broader six-layer testing
 model — see [Testing](testing.md) for where every check belongs.
