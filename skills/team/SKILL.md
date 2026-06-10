@@ -1,6 +1,7 @@
 ---
 name: team
 description: Full 8-phase autonomous feature implementation pipeline (QRSPI). Trigger on "hey team", "build a feature", "implement end to end", "autonomous implementation", or "/team".
+effort: medium
 argument-hint: "<ticket id, issue URL, or feature description>"
 ---
 

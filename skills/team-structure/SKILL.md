@@ -1,6 +1,7 @@
 ---
 name: team-structure
 description: Break the approved design into vertical slices with verification checkpoints. Runs autonomously and advances to PLAN — no human gate (design is the pipeline's only human gate). Trigger on "slice this up", "break the design into steps", or "/team-structure".
+effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
 

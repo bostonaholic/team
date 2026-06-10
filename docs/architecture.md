@@ -304,6 +304,13 @@ Notes:
   (applies to all subagents), or copy an agent file into
   `.claude/agents/` with a different `model:`.
 
+### Effort tiering
+
+Effort tiering mirrors the model tiers: `low` (mechanical),
+`medium`/`high` (judgment), `xhigh` (human-gate artifact authors).
+Methodology skills carry no `effort` — they inherit from the loading
+agent.
+
 ## 5. Phase-Table Orchestrator
 
 The orchestrator (the main Claude Code session) drives `/team` by

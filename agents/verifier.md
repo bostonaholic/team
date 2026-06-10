@@ -3,6 +3,7 @@ name: verifier
 description: Use when comprehensive verification checks need to run before completion. Runs all available checks (format, lint, type check, build, tests) in speed order and produces an evidence-based report. Example triggers — "run all checks", "verify the build", "pre-flight checks", "does everything pass".
 color: yellow
 model: haiku
+effort: low
 tools: Read, Grep, Glob, Bash, TodoWrite
 permissionMode: plan
 skills:
