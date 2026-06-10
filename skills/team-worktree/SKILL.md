@@ -79,17 +79,47 @@ done
 3. If `repos.md` is absent, you are in **single-repo mode**: only the
    home repo (the one this command is running in) gets a worktree.
 
-## Refusal
+## Detect existing worktree
 
-**Refuse to create a nested worktree in any involved repo.** For each
-target repo, run `git -C <repo-path> rev-parse --absolute-git-dir` and
-check whether the resulting path contains `/worktrees/`. If any repo's
-current checkout is already inside a worktree, report that and stop —
-nesting worktrees is not supported. The user should resolve the nested
-worktree (or invoke `/team` from a non-worktree checkout) before retrying.
+**Never create a nested worktree.** For each target repo, determine
+whether the current checkout is a **linked worktree** — any working
+tree other than the repository's main working tree, wherever it lives
+on disk. In the main working tree the git dir and the common git dir
+are the same path; in a linked worktree they differ:
+
+```sh
+[ "$(git -C <repo-path> rev-parse --path-format=absolute --git-dir)" != \
+  "$(git -C <repo-path> rev-parse --path-format=absolute --git-common-dir)" ] \
+  && echo "linked worktree"
+```
+
+If the checkout is a linked worktree, check which branch it is on:
+
+```sh
+git -C <repo-path> rev-parse --abbrev-ref HEAD
+```
+
+Compare against the repo's default branch
+(`git -C <repo-path> symbolic-ref refs/remotes/origin/HEAD | sed
+'s@^refs/remotes/origin/@@'`, falling back to `main`/`master` if unset):
+
+- **Non-default branch** → **skip worktree creation for this repo.**
+  Announce once: "Already in worktree `<path>` on branch `<branch>` —
+  skipping worktree creation, continuing in place." Treat the current
+  checkout as this repo's worktree for the rest of the pipeline. Work
+  continues on the current branch — no `<id>` branch is created.
+- **Default branch** → report and stop. Implementing directly on the
+  default branch inside a worktree is never acceptable, and nesting
+  worktrees is not supported. The user should switch that worktree to a
+  feature branch (or invoke `/team` from a non-worktree checkout) before
+  retrying.
+
+If the checkout is **not** a linked worktree, this repo proceeds through
+the normal creation flow below.
 
 In multi-repo mode, this check applies to **every** listed repo, not
-just the home repo.
+just the home repo. Skipped repos reuse their current checkout; the
+remaining repos still get fresh `<id>`-branch worktrees.
 
 ## Execution
 
@@ -115,6 +145,11 @@ for cleanup: `branch="$(printf '%s' "$id" | tr '/' '-')"`. Only the
 `docs/plans/<id>/` artifact directory keeps the original `<id>`.
 
 ### Confirm with the user
+
+Confirm only the repos that actually need a worktree created. If **no**
+repo needs creation (single-repo mode where the detect step skipped the
+home repo), skip this dialog entirely — the reuse announcement above is
+sufficient; proceed to Completion.
 
 Single-repo:
 ```
@@ -146,7 +181,8 @@ Use `AskUserQuestion` with a `Worktree` header and **Proceed** /
 
 ### Create the worktree(s)
 
-After the user confirms:
+After the user confirms, create a worktree in each repo the detect step
+did **not** skip:
 
 Use the slash-sanitized name (`<branch>`, derived above) for both the
 worktree directory and the `-b` flag in every repo. In the common case
@@ -166,6 +202,7 @@ worktree directory and the `-b` flag in every repo. In the common case
 
 After all worktrees are created, append a `## Worktrees` section to the
 home worktree's `docs/plans/<id>/repos.md` listing each repo's worktree
+path. For repos the detect step skipped, record the current checkout's
 path. This becomes the discoverable record any later `/team-*` invocation
 reads to relocate the worktrees.
 
@@ -188,6 +225,9 @@ in-place implementation is allowed — no worktree needed.
 Report the worktree paths and tell the user:
 
 - Single-repo: **"Next: cd <home-worktree> and run `/team-implement docs/plans/<id>/`"**
+- Home repo skipped (already in its worktree): **"Next: run
+  `/team-implement docs/plans/<id>/`"** — no `cd` needed; work continues
+  in the current checkout on the current branch.
 - Multi-repo: **"Next: cd <home-worktree> and run `/team-implement
   docs/plans/<id>/`. The implementer will navigate between the
   per-repo worktrees as the plan steps require."**

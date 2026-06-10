@@ -81,6 +81,19 @@ rationale). The router's responsibilities are:
    worktree's `docs/plans/<id>/` directory; live coordination uses
    TodoWrite (session-scoped).
 
+### Reusing an existing worktree
+
+If the session is already running inside a **linked worktree** — any
+working tree other than the repository's main working tree, detected by
+the checkout's git dir differing from its common git dir — on a
+**non-default branch**, the WORKTREE phase reuses it instead of creating
+a new one: no new branch, no artifact copy — work continues in place on
+the current branch. If that worktree is checked out on the default
+branch (main/master), the phase refuses and stops — implementing
+directly on the default branch is never acceptable, and nesting
+worktrees is not supported. See "Detect existing worktree" in
+`skills/team-worktree/SKILL.md` for the procedure.
+
 ### Why first
 
 Worktree creation is the leading phase — it runs first, before QUESTION —

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Running `/team` from inside an existing git worktree on a feature branch now reuses that worktree instead of refusing.** Previously the leading WORKTREE phase unconditionally refused whenever the checkout was already inside a linked worktree ("nesting worktrees is not supported"), which blocked common setups like Conductor workspaces or any pre-created per-task worktree. The phase now detects a linked worktree using the canonical, layout-independent git check — a checkout is linked when its git dir differs from its common git dir (`git rev-parse --path-format=absolute --git-dir` vs `--git-common-dir`), with no assumptions about where worktrees live on disk — and branches on the checked-out ref: a **non-default branch** is reused in place (no new `<id>` branch, no artifact copy), while the **default branch** (main/master) still stops, since implementing directly on the default branch is never acceptable. In multi-repo mode the check applies per repo, so already-isolated repos are reused while the rest still get fresh `<id>`-branch worktrees. Documented across [`skills/team-worktree/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/SKILL.md), [`skills/worktree-isolation/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/worktree-isolation/SKILL.md), and the leading-worktree orchestrator gate in [`skills/team/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md); locked in by L2 tripwires in [`tests/protocol.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/protocol.test.ts) and a new L3 subprocess-snapshot suite ([`tests/worktree-detection.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/worktree-detection.test.ts)) that runs the documented detection snippet against real git worktree fixtures.
+
 ## [0.9.1] - 2026-06-18
 
 ### Fixed
