@@ -122,11 +122,14 @@ describe("static gate: author gate", () => {
     ? readFileSync(EVALS_WORKFLOW, "utf8")
     : "";
 
-  test("author gate", () => {
+  test("trust expression documented as the contract at the future paid seam in harness-checks.yml", () => {
     // harness-checks.yml is the PR-triggered workflow where paid execution
-    // attaches next (#32's mocked gate-eval step). The canonical trust
-    // expression must be present at that seam — today as the documented
-    // contract any future token step inherits.
+    // attaches next (#32's mocked gate-eval step). Today the canonical trust
+    // expression lives ONLY inside the contract comment block on the
+    // harness-checks job — NOT as a live `if:`. The free `bun test` job stays
+    // ungated by design (fork authors keep free CI). When a paid step attaches
+    // here it inherits this documented contract as its live `if:`. This
+    // tripwire pins the contract text so the comment can't be deleted.
     expect(harnessWorkflow).toContain(TRUST_EXPR);
   });
 
@@ -149,14 +152,20 @@ describe("static gate: author gate", () => {
     }
   });
 
-  test("gate sits on every token job", () => {
+  test("canonical trust expression present in behavioral-evals.yml", () => {
     // behavioral-evals.yml is the only workflow that consumes
-    // EVALS_ANTHROPIC_API_KEY today; its secret-consuming job must carry the
-    // trust expression wired as a live `if:` condition (not just a comment),
-    // so a future pull_request trigger cannot spend tokens for untrusted
-    // authors. Asserts on substring presence, not job/matrix shape, so it
-    // tolerates either #47's static matrix or #32's dynamic discover matrix.
+    // EVALS_ANTHROPIC_API_KEY today; the canonical trust expression must
+    // appear verbatim so the gate reads identically across token jobs.
+    // Asserts on substring presence, not job/matrix shape, so it tolerates
+    // either #47's static matrix or #32's dynamic discover matrix.
     expect(evalsWorkflow).toContain(TRUST_EXPR);
+  });
+
+  test("trust expression wired as a live `if:` on behavioral-evals.yml's token job", () => {
+    // Unlike harness-checks.yml's documented-only contract, behavioral-evals'
+    // secret-consuming job carries the trust expression as a live `if:`
+    // condition (not just a comment), so a future pull_request trigger cannot
+    // spend tokens for untrusted authors.
     expect(/^\s*if:.*author_association/m.test(evalsWorkflow)).toBe(true);
   });
 });
@@ -173,11 +182,14 @@ describe("static gate: evals environment backstop", () => {
     ? readFileSync(EVALS_WORKFLOW, "utf8")
     : "";
 
-  test("evals environment declared", () => {
+  test("evals environment declared on the token job", () => {
     // The token job must declare `environment: evals` so the secret is
     // reachable only inside the protected environment — fails closed
     // (secret simply unavailable) if the environment is missing.
     expect(/^\s*environment:\s*evals\s*$/m.test(evalsWorkflow)).toBe(true);
+  });
+
+  test("pull_request_target ban stated as a workflow comment", () => {
     // The hard ban must be stated in the workflow: token/secret-consuming
     // jobs MUST NOT trigger on pull_request_target (base-repo context with
     // secrets — exfiltration vector). Anchor on the ban phrasing plus a
