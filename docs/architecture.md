@@ -510,8 +510,17 @@ env-var knobs, and the rerun-on-base blame protocol.
 **CI wiring.** Two GitHub Actions workflows in `.github/workflows/`:
 `harness-checks.yml` runs the offline harness validation on every PR
 (no secrets, ~5s); `behavioral-evals.yml` runs the live-agent regression
-check on a weekly cron (Monday 06:00 UTC) with the `EVALS_ANTHROPIC_API_KEY`
-repo secret.
+check on a weekly cron (Monday 06:00 UTC) with `EVALS_ANTHROPIC_API_KEY`.
+That key is an **environment secret** scoped to the `evals` GitHub
+Environment — a one-time Settings → Environments setup (create the `evals`
+environment, attach the secret, optionally set required reviewers / a
+main-only branch restriction). The job declares `environment: evals` and
+**fails closed** if the environment is absent: the secret simply resolves
+to empty, so no token spend leaks. `pull_request_target` is hard-banned for
+this and any secret-consuming / `claude`-spawning job — it runs in
+base-repo context with secrets available, a base-repo-context exfiltration
+vector — and the ban is enforced by a static tripwire in
+`tests/static-gate.test.ts`.
 
 These three tiers are the paid frontier of Team's broader six-layer testing
 model — see [Testing](testing.md) for where every check belongs.
