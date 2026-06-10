@@ -69,10 +69,10 @@ the test runs or is registered as `test.skip`. `EVALS_ALL=1` forces all.
 | `EVALS_MOCK_JUDGE` | JSON file replayed instead of calling the LLM judge | unset |
 | `EVALS_ANTHROPIC_API_KEY` | Anthropic API key for the judge (paid tiers). Namespaced so an ambient Claude Code session (incl. the spawned agent under test) won't auto-pick it up; passed explicitly to the judge's Anthropic SDK client. | — |
 
-When this key is absent or empty and `EVALS_MOCK_AGENT` is unset, the live
-path now **throws immediately** ("refusing live spawn") rather than spawning
-`claude` and failing later at CLI auth. Set `EVALS_MOCK_AGENT` to replay a
-fixture without a key.
+When this key is absent, empty, or whitespace-only and `EVALS_MOCK_AGENT` is
+unset, the live path now **throws immediately** ("refusing live spawn") rather
+than spawning `claude` and failing later at CLI auth. Set `EVALS_MOCK_AGENT` to
+replay a fixture without a key.
 
 In CI the key is an **`evals` environment secret** (not a plain repo secret),
 reachable only by the job declaring `environment: evals`. Token-consuming

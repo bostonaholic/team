@@ -229,3 +229,14 @@ note. Reviewer confirms the `environment: evals` line and ban comment in the
 - `behavioral-evals.yml`'s scheduled/dispatch runs remain ungated (event-aware
   `if:`); only `pull_request` events are author-gated.
 - The PR body documents the one-time `evals` environment setup.
+
+## Deviations (review-mandated)
+
+- **`harness-checks.yml` concurrency key changed** (commit 8a795ae). The
+  Reconciliation note above said "Do NOT change it" (concurrency on
+  `github.head_ref`), but a round-1 security MEDIUM required keying on the PR
+  number instead — an attacker-controlled `head_ref` can collide with or cancel
+  another PR's concurrency group. The key was changed to the
+  `pull_request.number || github.run_id` form on security-review direction,
+  superseding the earlier do-not-touch note. The change is byte-identical to
+  PR #32's planned rename, so the conflict surface against #32 is nil.
