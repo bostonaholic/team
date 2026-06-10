@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The full `/team` pipeline no longer stops after the implement phase — it continues into the PR phase and opens the draft PR in the same turn.** The v0.4.0 auto-draft-PR change made the PR phase prompt-free, but full pipeline runs could still end with a review-verdict summary and no PR: the `## Completion` section of `skills/team-implement/SKILL.md` ("Present all review verdicts and tell the user: *Next: run `/team-pr`*") was written for standalone `/team-implement` runs, and the orchestrator followed it during `/team` runs too, ending its turn before ever reaching the PR phase. The implement skill's step 8 and Completion section are now mode-aware — full pipeline (detected by the `PR` phase item `/team` seeds into the TodoWrite ledger) proceeds directly into `skills/team-pr/SKILL.md` in the same turn, standalone still suggests `/team-pr` — and `skills/team/SKILL.md` gains an explicit no-stop rule at the IMPLEMENT → PR seam (the phase loop pauses only at the design human gate, `openQuestions` envelopes, aggregate-cap escalation, and Minor-findings consultation; a turn that ends with review verdicts but no draft PR URL is a defect). The stale pre-0.4.0 "present shipping options to the user" wording in `docs/architecture.md` Phase 8 is corrected. Locked in by new tripwires in `tests/protocol.test.ts`.
+
 ## [0.7.0] - 2026-06-16
 
 ### Changed
