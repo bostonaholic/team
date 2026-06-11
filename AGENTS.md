@@ -63,9 +63,11 @@ Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-
 
 See `agents/*.md`. Each agent file uses only Claude Code's [supported frontmatter fields](https://code.claude.com/docs/en/agents#supported-frontmatter-fields) (no custom fields). Model tiering: haiku (mechanical), sonnet (bounded judgment), and the most capable available model for complex work (research, planning, implementation, code review, security review). That model is currently opus — Fable 5 is the intended target but is temporarily suspended for all customers ([notice](https://www.anthropic.com/news/fable-mythos-access)). See [docs/architecture.md](docs/architecture.md#model-tiering) for the restoration path and overrides. Effort tiering mirrors the model tiers: `low` (mechanical), `medium`/`high` (judgment), `xhigh` (human-gate artifact authors). Methodology skills carry no `effort` — they inherit from the loading agent.
 
+Four agents (`researcher`, `implementer`, `code-reviewer`, `security-reviewer`) hold the `Agent` tool and may spawn read-only nested sub-agents (Claude Code ≥ 2.1.172) under the guardrails in `skills/nested-agents/SKILL.md` — nesting is an optimization with an inline fallback, invisible to the orchestrator. See [docs/architecture.md](docs/architecture.md#10-nested-sub-agents).
+
 **Invariant:** the agent inventory in `skills/team/registry.json` (which carries the `phase` mapping) and the files under `agents/` must always agree by name. When adding or renaming an agent, update both in the same commit. The dev hook `.claude/hooks/check-registry-sync.mjs` enforces this automatically.
 
-## Skills (30)
+## Skills (31)
 
 See `skills/*/SKILL.md`. Entry point skills double as slash commands; `shipit` is a standalone slash-command utility (land a reviewed PR) that is not a QRSPI phase. Methodology skills are loaded by agents. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
 

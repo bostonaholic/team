@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 30 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 18 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 31 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 19 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -45,8 +45,8 @@ catalog into two flavors:
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
 standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 18 methodology =
-30**.
+split is **11 pipeline entry-point + 1 standalone utility + 19 methodology =
+31**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -249,7 +249,7 @@ phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 18 methodology skills carry no `argument-hint` and are never invoked
+The 19 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
