@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 29 skills — 11 entry-point slash commands and 18 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 30 skills — 11 entry-point slash commands and 19 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 ---
 
 # Team Plugin — Skills
@@ -38,7 +38,7 @@ catalog into two flavors:
   …`).
 
 That `argument-hint` marker is the whole flavor distinction. The split
-is **11 entry-point + 18 methodology = 29**.
+is **11 entry-point + 19 methodology = 30**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -211,7 +211,7 @@ argument shape.
 
 ## Methodology skills
 
-The 18 methodology skills carry no `argument-hint` and are never invoked
+The 19 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -241,6 +241,20 @@ load manifest; an agent typically loads at most three.
   documents the free-text escape hatch for collecting additional
   plain-text input, and defines the two-attempt malformed-envelope
   fallback.
+
+### nested-agents
+
+- **Purpose:** Guardrails for spawning nested sub-agents from inside a
+  pipeline agent (Claude Code ≥ 2.1.172).
+- **Loaded by:** researcher, implementer, code-reviewer,
+  security-reviewer (4).
+- **Key behaviors:** Frames nested dispatch as a context-economy
+  optimization, never a dependency (mandatory inline fallback when the
+  `Agent` tool is unavailable). Pins the depth budget (depth 2 of 5,
+  spawn at most one more level), read-only-by-default helpers that never
+  write under `docs/plans/`, the prohibition on nested helpers emitting
+  `openQuestions` envelopes, the neutral-claim rule for verification
+  helpers, and the 4-helper concurrency cap.
 
 ### code-review
 
@@ -411,6 +425,7 @@ entry-point section above rather than repeating them here.
 | `eng-design-doc-review` | user (direct invocation) | Optional pre-Design audit; dispatches a general-purpose subagent |
 | `qrspi-workflow` | orchestrator skills; questioner (schema) | All phases |
 | `agent-open-questions` | questioner, design-author | Question, Design (subagent → user via orchestrator) |
+| `nested-agents` | researcher, implementer, code-reviewer, security-reviewer | Research, Implement (scouts + skeptic verification) |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
 | `engineering-standards` | planner, implementer, code-reviewer | Plan, Implement |
 | `test-first-development` | test-architect, code-reviewer; orchestrator | Implement |
