@@ -261,9 +261,12 @@ name.
 
 ### Model tiering
 
-`haiku` (mechanical), `sonnet` (judgment), `fable`
-(planning + implementation: `design-author`, `structure-planner`,
-`planner`, `implementer`).
+`haiku` (mechanical), `sonnet` (bounded judgment), `fable` (complex
+work). All complex work uses Fable 5: `researcher`, `design-author`,
+`structure-planner`, `planner`, `implementer`, and `code-reviewer`.
+Sonnet covers bounded single-pass judgment (`questioner`,
+`security-reviewer`, `ux-reviewer`, `technical-writer`); haiku covers
+mechanical checks (`file-finder`, `verifier`).
 
 Fable 5 notes:
 

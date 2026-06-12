@@ -59,7 +59,7 @@ Team runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-
 
 ## Agents (13)
 
-See `agents/*.md`. Each agent file uses only Claude Code's [supported frontmatter fields](https://code.claude.com/docs/en/agents#supported-frontmatter-fields) (no custom fields). Model tiering: haiku (mechanical), sonnet (judgment), fable (planning + implementation). See [docs/architecture.md](docs/architecture.md#model-tiering) for Fable availability requirements and overrides.
+See `agents/*.md`. Each agent file uses only Claude Code's [supported frontmatter fields](https://code.claude.com/docs/en/agents#supported-frontmatter-fields) (no custom fields). Model tiering: haiku (mechanical), sonnet (bounded judgment), fable (complex work: research, planning, implementation, code review). See [docs/architecture.md](docs/architecture.md#model-tiering) for Fable availability requirements and overrides.
 
 **Invariant:** the agent inventory in `skills/team/registry.json` (which carries the `phase` mapping) and the files under `agents/` must always agree by name. When adding or renaming an agent, update both in the same commit. The dev hook `.claude/hooks/check-registry-sync.mjs` enforces this automatically.
 
