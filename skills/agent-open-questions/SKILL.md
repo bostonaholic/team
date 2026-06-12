@@ -129,6 +129,17 @@ envelopes, the orchestrator does not have a defined ordering rule yet.
 Avoid emitting envelopes from parallel agents until the protocol is
 extended.
 
+## Nested sub-agents: never emit envelopes below depth 2
+
+This protocol works exactly ONE level deep. The orchestrator parses the
+final message of its DIRECT child only. A nested sub-agent — a helper
+spawned by a pipeline agent that holds the `Agent` tool (Claude Code
+>= 2.1.172) — MUST NOT emit an `openQuestions` envelope: it would never
+reach the user, and the helper would stall awaiting a resume that cannot
+come. Parents must not delegate question-asking downward; questions
+discovered by nested helpers surface in the parent's own envelope or
+artifact. See `skills/nested-agents/SKILL.md` for the full guardrails.
+
 ## Orchestrator parse rule (Decision 5: first-block-wins)
 
 The orchestrator scans the subagent's final tool result for fenced

@@ -61,9 +61,11 @@ Team runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-
 
 See `agents/*.md`. Each agent file uses only Claude Code's [supported frontmatter fields](https://code.claude.com/docs/en/agents#supported-frontmatter-fields) (no custom fields). Model tiering: haiku (mechanical), sonnet (judgment), opus (planning + implementation).
 
+Four agents (`researcher`, `implementer`, `code-reviewer`, `security-reviewer`) hold the `Agent` tool and may spawn read-only nested sub-agents (Claude Code ≥ 2.1.172) under the guardrails in `skills/nested-agents/SKILL.md` — nesting is an optimization with an inline fallback, invisible to the orchestrator. See [docs/architecture.md](docs/architecture.md#10-nested-sub-agents).
+
 **Invariant:** the agent inventory in `skills/team/registry.json` (which carries the `phase` mapping) and the files under `agents/` must always agree by name. When adding or renaming an agent, update both in the same commit. The dev hook `.claude/hooks/check-registry-sync.mjs` enforces this automatically.
 
-## Skills (29)
+## Skills (30)
 
 See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodology skills are loaded by agents. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
 

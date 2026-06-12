@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Nested sub-agent support for four pipeline agents.** Claude Code v2.1.172 lets sub-agents spawn their own sub-agents (up to 5 levels deep); the plugin now uses this in two patterns. *Context-economy scouts:* `researcher` and `implementer` may fan out read-only `Explore` / `team:file-finder` helpers to absorb bulk reading that would otherwise flood their own context (the researcher's scouts inherit the research-isolation invariant — scout prompts are built only from verbatim `questions.md` text and `repos.md` paths). *Skeptic verification:* `code-reviewer` and `security-reviewer` hand each hard-gate finding (Blocking / CRITICAL / HIGH) to a fresh `general-purpose` sub-agent as a neutral falsifiable claim to refute before reporting — default-keep, so the pass removes false positives but can never remove a true positive; a false hard-gate finding costs an entire review round, so the pass pays for itself. All guardrails live in the new `nested-agents` methodology skill (depth budget, read-only helpers, no `openQuestions` envelopes from nested helpers, neutral-claim rule, 4-helper cap), preloaded by the four agents via `skills:` frontmatter and pinned by new static tripwires in `tests/nested-agents.test.ts`. Nesting is an **optimization, never a dependency**: on Claude Code versions without it, every agent degrades to its previous inline behavior, and the orchestrator's phase table, gates, and envelope protocol are untouched. `skills/agent-open-questions/SKILL.md` now states explicitly that the envelope protocol works one level deep and nested helpers must never emit envelopes; `docs/architecture.md` §10 records the policy plus the ship-later roadmap (verify-coordinator, research-coordinator, slice-level parallel sub-implementers).
+
 ## [0.5.0] - 2026-06-12
 
 ### Added

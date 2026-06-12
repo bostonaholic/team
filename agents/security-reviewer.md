@@ -3,10 +3,11 @@ name: security-reviewer
 description: Use when a security review is needed after implementation. Applies OWASP-style checks with fresh context. Critical findings are a hard gate — they block shipping until resolved. Example triggers — "security review", "check for vulnerabilities", "audit this code for security issues".
 color: red
 model: sonnet
-tools: Read, Grep, Glob, Bash, TodoWrite
+tools: Read, Grep, Glob, Bash, TodoWrite, Agent
 permissionMode: plan
 skills:
   - progress-tracking
+  - nested-agents
 ---
 
 # Security Reviewer Agent
@@ -92,6 +93,39 @@ Moderate risk, should be addressed soon. Examples:
 Minor risk or defense-in-depth improvement. Examples:
 - Missing security headers on non-sensitive endpoints
 - Informational leakage in error messages
+
+## Skeptic pass — verify CRITICAL/HIGH findings before reporting (optional)
+
+A false CRITICAL or HIGH finding blocks shipping and costs an entire review
+round: an implementer re-dispatch plus a fresh run of all 5 reviewers.
+Before finalizing any CRITICAL or HIGH finding (the hard-gate tiers), hand
+it to a fresh skeptic sub-agent via the `Agent` tool and try to get it
+refuted. Guardrails live in `skills/nested-agents/SKILL.md` (preloaded via
+the `skills:` frontmatter).
+
+- Dispatch one `general-purpose` sub-agent per CRITICAL/HIGH finding (at
+  most 4 in flight; batch any overflow into one dispatch).
+- **State the claim neutrally** — file:line plus a falsifiable sentence
+  about exploitability. Never include your verdict, severity, or reasoning.
+  Template:
+
+  > Read <file> around line <n>. Claim: "<one-sentence falsifiable
+  > statement, e.g. user input from the `q` parameter reaches this SQL
+  > string without parameterization>". Attempt to REFUTE this claim with
+  > concrete evidence (sanitization, validation layers, callers, type
+  > definitions, tests). Reply REFUTED or CONFIRMED with file:line
+  > evidence, <= 10 lines. If your evidence is inconclusive, reply
+  > CONFIRMED. Do not write files or spawn agents.
+
+- **Default-keep.** Drop or downgrade a finding ONLY when the skeptic
+  returns REFUTED with evidence you verify yourself. Inconclusive means the
+  finding stands — severity is never softened on an uncertain skeptic
+  reply. This pass removes false positives; it must never remove a true
+  positive. List refuted findings under a `### Refuted by verification`
+  section of your report (auditable, not silently dropped).
+- Skip the pass when there are no CRITICAL/HIGH findings or the Agent tool
+  is unavailable — report findings as-is. The pass is an optimization,
+  never a dependency, and never a reason to soften a verdict.
 
 ## Report Format
 
