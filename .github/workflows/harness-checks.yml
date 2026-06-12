@@ -14,7 +14,9 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: harness-checks-${{ github.head_ref || github.run_id }}
+  # Key on the PR number (never the attacker-controlled branch name) so a
+  # crafted head_ref can't collide with or cancel another PR's group.
+  group: harness-checks-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
 jobs:
@@ -23,6 +25,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    # Author gate contract (issue #51): the steps below are free (no secret,
+    # no `claude` spawn), so the job itself stays UNGATED — fork authors keep
+    # free CI. But any step that consumes a secret or spawns `claude` MUST
+    # carry this trust `if:`:
+    #   contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
+    # When PR #32's "Run gate-tier evals" step attaches paid execution here,
+    # it inherits this gate so untrusted PR authors never spend tokens.
+    # Canonical in-use example: behavioral-evals.yml wires exactly this
+    # allowlist into a live job-level `if:` (wrapped event-aware with
+    # startsWith(github.event_name, 'pull_request')) — copy that form when
+    # adding the paid step here.
     steps:
       - uses: actions/checkout@v6
         with:
