@@ -25,6 +25,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 | Dev settings/hooks | `.claude/settings.json` | Plugin developers |
 | Work tracking | [GitHub Project board](https://github.com/users/bostonaholic/projects/5/views/1) | Plugin developers |
 | Behavioral regression harness | `tests/`, `evals/` | Plugin developers |
+| Versioning & release automation | [docs/versioning.md](docs/versioning.md), `.claude/skills/version-bump/`, `.claude/scripts/next-version.sh`, `.github/workflows/` | Plugin developers |
 
 **Rule of thumb:** If it validates that the plugin is *built correctly*, it's a dev concern (`.claude/`). If it runs *as part of the plugin's functionality*, it's runtime (`hooks/`).
 
@@ -92,6 +93,7 @@ State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKE
 - **No `commands/` directory.** Skills are the only entry point mechanism. They auto-register as slash commands.
 - **No project-scoped memory.** Do not save memories to `~/.claude/projects/*/memory/`. All project knowledge belongs in this file or docs linked from here. This file is checked into git and travels with the project.
 - **Todo-first progress tracking.** Any agent or skill that executes a multi-step numbered procedure seeds one TodoWrite item per step before starting and marks each complete as it goes. See `skills/progress-tracking/SKILL.md` for the convention and ledger-ownership rules.
+- **Every PR bumps the plugin version.** Before opening any PR in this repo (including the `/team` pipeline's PR phase), run the `version-bump` dev skill (`.claude/skills/version-bump/SKILL.md`): bump the four version strings, add a `## [X.Y.Z]` changelog section, and title the PR `vX.Y.Z <type>: <subject>`. CI blocks unbumped PRs (`version-gate.yml`); merges auto-tag and publish the release. See [docs/versioning.md](docs/versioning.md).
 - **Read TESTING.md before writing any test.** Before adding or modifying ANY test — unit, tripwire, eval, fixture, or rubric — read [TESTING.md](TESTING.md) end to end and understand it. It decides *which layer* a check belongs at (push every check as far down and as deterministic as it goes), whether it is free (`*.test.ts`) or paid (`*.evals.ts`), and whether it gates or runs periodically. A test written at the wrong layer is worse than no test: it is slow, flaky, or costs money to learn nothing. No exceptions — this applies to agents, skills, and humans alike.
 
 ## Behavioral Evals
