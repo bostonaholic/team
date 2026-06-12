@@ -263,33 +263,35 @@ name.
 
 `haiku` (mechanical), `sonnet` (bounded judgment), `fable` (complex
 work). All complex work uses Fable 5: `researcher`, `design-author`,
-`structure-planner`, `planner`, `implementer`, and `code-reviewer`.
+`structure-planner`, `planner`, `implementer`, and `code-reviewer` —
+except `security-reviewer`, which runs `opus`, the most capable model
+that is safe from Fable's cybersecurity classifiers (see below).
 Sonnet covers bounded single-pass judgment (`questioner`,
-`security-reviewer`, `ux-reviewer`, `technical-writer`); haiku covers
-mechanical checks (`file-finder`, `verifier`).
+`ux-reviewer`, `technical-writer`); haiku covers mechanical checks
+(`file-finder`, `verifier`).
 
 Fable 5 notes:
 
 - Long-running work gets the 1M token context window automatically:
   Fable 5 supports 1M by default (always-on via the Anthropic API), so
-  the fable-tier agents need no `[1m]` suffix. `security-reviewer`
-  uses `sonnet[1m]` — it reviews the same implementation scope as the
-  fable-tier `code-reviewer` and would otherwise be the only
-  verify-phase reviewer capped at 200K. Note: Sonnet 1M requires usage
-  credits on subscription plans (full access on the API); 1M tokens
-  bill at standard Sonnet pricing with no premium beyond 200K. The
-  remaining sonnet agents stay at 200K — bounded single-pass work
-  nowhere near the ceiling. Haiku does not support 1M.
+  the fable-tier agents need no `[1m]` suffix. `security-reviewer`'s
+  `opus` likewise gets 1M without a suffix — Opus 4.8 always runs with
+  the 1M window on the API, and Max/Team/Enterprise plans include the
+  1M upgrade with the subscription (Pro degrades gracefully to 200K).
+  The sonnet agents stay at 200K — bounded single-pass work nowhere
+  near the ceiling. Haiku does not support 1M.
 - Requires Claude Code ≥ v2.1.170 and Fable 5 access. It is not
   available under zero data retention; on Bedrock/Vertex/Foundry, pin
   `ANTHROPIC_DEFAULT_FABLE_MODEL` to your provider's Fable 5 model ID.
 - Users without access can override agent models with
   `CLAUDE_CODE_SUBAGENT_MODEL` (applies to all subagents), or copy an
   agent file into `.claude/agents/` with a different `model:`.
-- `security-reviewer` is deliberately pinned to `sonnet`: Fable 5's
-  cybersecurity safety classifiers flag security-review content, and in
-  non-interactive subagent contexts a flagged request ends the turn
-  with a refusal instead of falling back.
+- `security-reviewer` is deliberately pinned to `opus`, not `fable`:
+  Fable 5's cybersecurity safety classifiers flag security-review
+  content, and in non-interactive subagent contexts a flagged request
+  ends the turn with a refusal instead of falling back. Opus is the
+  documented fallback target for flagged Fable requests, making it the
+  most capable classifier-safe choice.
 
 ## 5. Phase-Table Orchestrator
 
