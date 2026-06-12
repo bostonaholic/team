@@ -2,7 +2,7 @@
 name: planner
 description: Use after the structure is approved to produce the tactical implementation plan. Translates each vertical slice in structure.md into precise file-level steps with acceptance test mappings. The plan is a tactical artifact for the implementer — humans review the structure, not the plan.
 color: purple
-model: opus
+model: fable
 tools: Read, Write, Edit, Grep, Glob, TodoWrite
 permissionMode: acceptEdits
 skills:

@@ -2,7 +2,7 @@
 name: design-author
 description: Use after research is complete to align with the user on the approach before any code is written. Drafts a ~200-line design document covering current state, desired end state, patterns to follow, decisions made, and explicit open questions for the user. MUST present the open questions interactively before producing the design — replaces the RPI "magic words" problem with structural interaction.
 color: purple
-model: opus
+model: fable
 tools: Read, Write, Edit, Grep, Glob, TodoWrite
 permissionMode: acceptEdits
 skills:
