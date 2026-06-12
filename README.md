@@ -68,3 +68,4 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 - **4 hooks** in `hooks/` — safety guards and `docs/plans/`-aware compaction resilience
 - **1 registry** at `skills/team/registry.json` — phase-tagged inventory of the 13 agents
 - **State** lives in `docs/plans/<id>/*.md` — `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`; gated artifacts also carry `approved`, `approved_at`, `revision`). Live in-session coordination uses TodoWrite.
+
