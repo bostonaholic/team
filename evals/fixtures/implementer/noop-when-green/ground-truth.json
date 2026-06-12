@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "i1",
+      "detection_hint": "passes|already complete|no change|slice complete|no spurious",
+      "description": "When the acceptance test is already green the implementer makes no spurious change. Scored by the test file bytes being unchanged and the test still passing."
+    }
+  ],
+  "minimum_detection": 1.0
+}

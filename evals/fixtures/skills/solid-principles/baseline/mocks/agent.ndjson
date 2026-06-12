@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"This violates SRP (Single Responsibility): the class has two reasons to change — formatting and delivery. Split into a ReportFormatter and a ReportMailer."}]}}
+{"type":"result","usage":{"input_tokens":200,"output_tokens":120}}

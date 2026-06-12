@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "surfaces-assumptions",
+      "detection_hint": "##\\s+(Assumptions|Open Questions|Unknowns)",
+      "description": "Ambiguous design must make the structure surface assumptions/open questions rather than invent slices"
+    }
+  ],
+  "minimum_detection": 1
+}

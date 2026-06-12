@@ -50,6 +50,15 @@ export interface RunAgentTestOptions {
   timeout?: number;
   testName?: string;
   model?: string;
+  /**
+   * Bypass interactive permission checks (`--dangerously-skip-permissions`).
+   * In headless CI the spawned agent runs in `permissionMode: default`, so any
+   * Write/Edit/Bash call stalls on a permission prompt it cannot answer and the
+   * run dies with `error_max_turns`. The eval workdir is an ephemeral,
+   * sandboxed temp dir, so bypassing is safe and necessary for any eval whose
+   * agent must touch the filesystem. Opt-in.
+   */
+  bypassPermissions?: boolean;
 }
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
@@ -270,6 +279,9 @@ export async function runAgentTest(
     }
     if (options.allowedTools && options.allowedTools.length > 0) {
       args.push("--allowed-tools", ...options.allowedTools);
+    }
+    if (options.bypassPermissions) {
+      args.push("--dangerously-skip-permissions");
     }
 
     const child = spawn("claude", args, {

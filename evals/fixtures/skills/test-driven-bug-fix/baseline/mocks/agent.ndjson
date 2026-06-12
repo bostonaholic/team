@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"Step 1: write a failing test reproducing the bug — assert parse('2026-01').month === 1; it currently returns 0.\nStep 2: fix the off-by-one in the month index.\nStep 3: the failing test now passes."}]}}
+{"type":"result","usage":{"input_tokens":200,"output_tokens":120}}

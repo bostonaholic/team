@@ -1,0 +1,20 @@
+{
+  "bugs": [
+    {
+      "id": "q1-session-runner",
+      "detection_hint": "session-runner\\.ts",
+      "description": "Answer to Q1 cites the session-runner module"
+    },
+    {
+      "id": "q2-outcome-judge",
+      "detection_hint": "llm-judge\\.ts|outcomeJudge",
+      "description": "Answer to Q2 cites the outcomeJudge scorer module"
+    },
+    {
+      "id": "q3-static-gate",
+      "detection_hint": "static-gate\\.test\\.ts",
+      "description": "Answer to Q3 cites the static-gate test"
+    }
+  ],
+  "minimum_detection": 1
+}

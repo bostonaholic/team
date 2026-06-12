@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "invented-api",
+      "detection_hint": "flushAll\\(\\) clears the entire cache",
+      "description": "HALLUCINATION GUARD: flushAll() is not in the diff and must NOT be documented. The eval asserts this id is in outcome.missed."
+    }
+  ],
+  "minimum_detection": 1
+}

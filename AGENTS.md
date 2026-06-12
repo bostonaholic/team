@@ -98,7 +98,7 @@ State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKE
 
 ## Behavioral Evals
 
-Behavioral regression harness for pipeline agents — TypeScript + Bun. Harness code lives in `tests/`; fixtures, rubrics, and stored runs live in `evals/`. `bun test` runs the free static gate; `bun run test:evals` runs the paid E2E + LLM-judge tiers (needs `EVALS_ANTHROPIC_API_KEY`). See [TESTING.md](TESTING.md) for the six-layer testing strategy (what each layer is and which files implement it) and [evals/README.md](evals/README.md) for the operator's guide.
+Behavioral regression harness for pipeline agents — TypeScript + Bun. Harness code lives in `tests/`; fixtures, rubrics, and stored runs live in `evals/`. `bun test` runs the free static gate; `bun run test:gate` (`bun scripts/run-gate-evals.ts`) runs the free mocked gate-tier evals; `bun run test:periodic` runs the paid live matrix (needs `EVALS_ANTHROPIC_API_KEY`). See [TESTING.md](TESTING.md) for the six-layer testing strategy (what each layer is and which files implement it) and [evals/README.md](evals/README.md) for the operator's guide.
 
 ## Work Tracking
 

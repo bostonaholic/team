@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "qrspi-phase-table",
+      "description": "Output must reference the QRSPI phase progression.",
+      "detection_hint": "QUESTION\\s*-+>\\s*RESEARCH|QUESTION[\\s\\S]*RESEARCH[\\s\\S]*DESIGN"
+    }
+  ],
+  "minimum_detection": 1
+}

@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"The export command writes your data to disk using the storage engine."}]}}
+{"type":"result","usage":{"input_tokens":200,"output_tokens":120}}

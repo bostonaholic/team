@@ -1,181 +1,218 @@
-# Behavioral evals for pipeline agents
+# Behavioral Evals
 
-This directory ships fixtures, rubrics, and stored results for the behavioral
-regression harness. The harness code lives in `tests/` and runs under `bun test`.
+Behavioral regression tests for the Team pipeline's agents and skills. Each
+eval spawns a real agent against a fixture, captures its output, and scores it —
+either deterministically (detection rate) or with an LLM judge (quality axes).
+
+## Coverage
+
+**13 agents.** Every pipeline agent has a `tests/<agent>.evals.ts` suite:
+code-reviewer, file-finder, verifier, test-architect, security-reviewer,
+design-author, structure-planner, planner, questioner, researcher,
+technical-writer, ux-reviewer, implementer.
+
+- **Detection-rate agents** (file-finder, verifier, test-architect,
+  security-reviewer, ux-reviewer) score with the pure `outcomeJudge` — they
+  need no LLM judge. They still feed `EVALS_MOCK_AGENT` a transcript so the
+  scorer has text to grade.
+- **Judgment agents** (design-author, structure-planner, planner, questioner,
+  researcher, technical-writer) score with `judgeQuality` on three axes
+  (clarity, completeness, actionability), each gated at `>= 3`. Isolation /
+  leakage / hallucination edges are checked deterministically (a forbidden
+  phrase must NOT appear) rather than by the judge.
+- **implementer** runs a real single-slice task in a throwaway git repo and is
+  scored by whether the planted acceptance test passes (periodic tier).
+- **Hybrid (reference impl): code-reviewer** is neither a pure detection-rate
+  nor a pure judgeQuality suite — it combines `outcomeJudge` with
+  `judgeReviewerOutput`. Treat it as the conceptual reference when "mirroring
+  code-reviewer"; for a concrete gate-tier template (mocks + happy/guard pair),
+  copy `tests/file-finder.evals.ts` instead.
+
+**Self-eval recursion guard.** Judgment-agent fixtures are FROZEN predecessor
+artifacts captured into `input.md` — never live pipeline output. The frozen
+input is what stops `structure-planner` (and friends) from grading themselves.
+
+**29 skills.** Skills split into two groups:
+
+- **18 methodology skills** (loaded by agents) get behavior evals via the
+  skill-harness pattern: `tests/skills.evals.ts` is one parameterized suite
+  that, for each skill, loads its `SKILL.md` into a generic agent on a
+  synthetic task and asserts the skill measurably shifts the output (e.g.
+  `git-commit` -> conventional-commit subject; `test-first-development` ->
+  test precedes implementation). Each skill registers its own
+  `skill:<name>` case so diff-gating and the CI matrix can target one skill.
+- **11 orchestration skills** (the `/team-*` routers + `worktree-isolation`)
+  get a free structural contract check in `tests/skill-contracts.test.ts`
+  (frontmatter keys, required `## ` sections, resolvable referenced paths) —
+  no model call needed.
 
 ## Layout
 
 ```
-tests/
-  helpers/
-    session-runner.ts   # spawns `claude -p`, streams NDJSON, parses transcript
-    eval-store.ts       # persist + compare + budget-regression detection
-    touchfiles.ts       # diff-based test selection
-    llm-judge.ts        # deterministic-first + Sonnet/Haiku scoring
-    fixtures.ts         # frontmatter + ground-truth loaders
-  static-gate.test.ts        # free; auto-discovered by `bun test`
-  code-reviewer.evals.ts     # paid; .evals.ts suffix is OUTSIDE auto-discovery
-
-scripts/
-  eval-select.ts        # `bun run eval:select` — which tests would run today
-  eval-list.ts          # `bun run eval:list` — every known test + tier
-  eval-compare.ts       # `bun run eval:compare <prev> <curr>`
-
 evals/
-  fixtures/<agent>/<case>/
-    input.md            # synthetic task with YAML frontmatter (agent, tier, deps)
-    ground-truth.json   # planted bugs + minimum_detection
-  rubrics/<agent>.md    # numbered criteria, deterministic | llm
-  results/              # generated JSON, one file per run (gitignored)
+  fixtures/<agent>/<case>/        input.md + ground-truth.json (+ mocks/)
+  fixtures/skills/<skill>/<case>/ skill fixtures (agent: skills/<skill>)
+  rubrics/<agent>.md              numbered scoring criteria
+  rubrics/skills/<skill>.md       skill rubrics
+  results/                        stored run artifacts (git-ignored)
+tests/
+  <agent>.evals.ts               paid live-agent suites (*.evals.ts)
+  skills.evals.ts                 parameterized 18-skill harness suite
+  *.test.ts                       free harness + static/contract gates
+  helpers/                        shared harness code
 ```
 
-## Two-tier file naming
+## The skill-harness pattern
 
-The gate / paid split is enforced by **file extension**, not by runtime
-flags or `describe.skip`:
+`tests/helpers/skill-harness.ts` exports `runSkillHarness({skillPath, task})`.
+It reads a `SKILL.md`, composes a prompt of the skill body plus the synthetic
+task, and delegates to `runAgentTest` — the same spawner the agent evals use.
+It does NOT reimplement spawning. Callers then score the output with
+`outcomeJudge` / `judgeQuality` / `callJudge`, exactly like an agent eval.
 
-| Suffix | Discovery | Cost | Command |
-|---|---|---|---|
-| `*.test.ts` | Auto-discovered by `bun test` | $0 | `bun test` |
-| `*.evals.ts` | NOT auto-discovered — must be targeted explicitly | $$ | `bun run test:evals` |
+## Free static gates
 
-Bun's default test discovery matches `*.test.{ts,tsx,js,jsx}`. Files named
-`*.evals.ts` fall outside that pattern, so `bun test` with no arguments
-never loads them — no skipped tests in the output, no surprise model calls.
-The paid suite runs only when an explicit path is passed:
+These `.test.ts` suites run on every PR (no model calls), alongside the harness
+unit tests under `tests/helpers/` — currently four:
 
-- `bun run test:evals` — runs every `./tests/*.evals.ts` with `EVALS_ALL=1` (all tiers)
-- `bun test ./tests/code-reviewer.evals.ts` — ad-hoc single file (needs `EVALS_ANTHROPIC_API_KEY`)
+- `tests/static-gate.test.ts` — validates every `evals/fixtures/<agent>/<case>/`
+  one level deep. It SKIPS the `skills/` directory (skill fixtures are nested
+  two levels deep and would be mis-walked by the agent enumerator).
+- `tests/skill-fixtures.test.ts` — the skills-subtree integrity gate. Walks
+  `evals/fixtures/skills/<skill>/<case>/`, asserts the same fixture invariants
+  (frontmatter, `input.md` <= 50 KB, non-empty `bugs[]`, numeric
+  `minimum_detection`) and that a matching `evals/rubrics/skills/<skill>.md`
+  exists with >= 1 numbered criterion.
+- `tests/skill-contracts.test.ts` — the 11-orchestration-skill structural
+  contract check.
+- `tests/tier-coverage.test.ts` — asserts every gate test resolves (via the
+  shared `tests/helpers/gate-cases.ts` resolver — the SAME one the runner uses)
+  to its own fixture dir with the `mocks/agent.ndjson` that
+  `scripts/run-gate-evals.ts` needs to run it free and mocked. It also caps each
+  mock at 50 KB. The periodic matrix needs no static check: it is
+  auto-discovered from `tests/*.evals.ts` by `behavioral-evals.yml`.
 
-> **Path must be `./`-prefixed.** Bun treats a bare `tests/foo.evals.ts`
-> argument as a *name filter* (matches nothing here), not a path. Always
-> pass `./tests/…`.
+## Running
 
-Within a paid file, each test is registered through `testIfSelected`, which
-consults the selector: `EVALS_TIER` and diff-based selection decide whether
-the test runs or is registered as `test.skip`. `EVALS_ALL=1` forces all.
+The entry points form a cost/scope ladder:
 
-## Environment
+| Command | Scope | Cost |
+|---------|-------|------|
+| `bun test` | Free unit + static/contract/integrity gates | Free |
+| `bun run test:gate` | Gate-tier agent evals, replayed against recorded mocks | Free |
+| `bun run test:periodic` | Full live-agent matrix (needs `EVALS_ANTHROPIC_API_KEY`) | Paid |
 
-| Var | Purpose | Default |
-|---|---|---|
-| `EVALS_ALL` | Ignore diff-based selection; run every test | unset |
-| `EVALS_TIER` | Filter to one tier — `gate` or `periodic` | unset (all) |
-| `EVALS_MODEL` | Override the default model for the agent under test | `claude-sonnet-4-6` |
-| `EVALS_CONCURRENCY` | Max parallel tests | 15 |
-| `EVALS_BASE` | Base ref for diff-based selection | `origin/main` (fallback chain) |
-| `EVALS_RESULTS_ROOT` | Override result storage root | `evals/results/` |
-| `EVALS_MOCK_AGENT` | NDJSON file replayed instead of spawning `claude` | unset |
-| `EVALS_MOCK_JUDGE` | JSON file replayed instead of calling the LLM judge | unset |
-| `EVALS_ANTHROPIC_API_KEY` | Anthropic API key for the judge (paid tiers). Namespaced so an ambient Claude Code session (incl. the spawned agent under test) won't auto-pick it up; passed explicitly to the judge's Anthropic SDK client. | — |
+```sh
+# Free — static/contract/integrity gates + harness unit tests. Runs on every PR.
+bun test
 
-## Fixture format
+# Free + deterministic — ALL gate-tier agent evals, each replayed against its
+# OWN recorded mock seams (no API key, no `claude` spawn). Runs on every PR.
+# Equivalent: `bun run test:gate` or `dev evals:gate`.
+bun scripts/run-gate-evals.ts
 
-`evals/fixtures/<agent>/<case>/input.md`:
+# Free + deterministic — replay ONE case's mocked transcript instead of calling
+# the model. EVALS_MOCK_AGENT / EVALS_MOCK_JUDGE are GLOBAL single files, so you
+# MUST scope to that case with `-t "<agent>-<case>"`; without `-t`, the other
+# cases in a multi-case suite get this case's mock and fail. The file arg MUST
+# be `./`-prefixed (a bare `tests/foo.evals.ts` is a name filter, not a path).
+EVALS_MOCK_AGENT=evals/fixtures/<agent>/<case>/mocks/agent.ndjson \
+EVALS_MOCK_JUDGE=evals/fixtures/<agent>/<case>/mocks/judge.json \
+EVALS_ALL=1 bun test ./tests/<agent>.evals.ts -t "<agent>-<case>"
+# Note: the eval-comparison banner's ADDED/REMOVED lines between successive runs
+# are INFORMATIONAL — they report which cases differ run-to-run (e.g. when you
+# scope to one case with -t), NOT a regression or a deletion to act on. Only the
+# REGRESSIONS / BUDGET REGRESSIONS lines fail the run.
 
-```yaml
----
-agent: code-reviewer
-tier: periodic           # 'gate' or 'periodic'
-deps:                    # REQUIRED, non-empty. Diff-matching globs;
-  - "agents/code-reviewer.md"   # '*' single-segment, '**' multi-segment
----
-synthetic task body for the agent
+# Paid — the full live-agent periodic matrix. Requires EVALS_ANTHROPIC_API_KEY.
+bun run test:periodic
+
+# Paid — a single live suite. Requires EVALS_ANTHROPIC_API_KEY.
+EVALS_ALL=1 bun test ./tests/code-reviewer.evals.ts
 ```
 
-All three frontmatter fields (`agent`, `tier`, `deps`) are required and
-validated at load time. `deps` must list at least one glob — an empty or
-missing `deps` would make the fixture invisible to diff selection, so the
-loader rejects it rather than letting it silently never run.
+The gate runner prints each case's mock alignment, then a per-case PASS/FAIL
+list and a summary line — for example:
 
-`evals/fixtures/<agent>/<case>/ground-truth.json`:
-
-```json
-{
-  "bugs": [
-    {
-      "id": "b1",
-      "category": "null-dereference",
-      "severity": "high",
-      "description": "...",
-      "detection_hint": "null deref"
-    }
-  ],
-  "minimum_detection": 1.0,
-  "max_false_positives": 1
-}
+```text
+Gate-tier case -> mock alignment:
+  file-finder-empty-input -> evals/fixtures/file-finder/empty-input/mocks/agent.ndjson
+  ...
+Gate-tier eval cases (mocked, free):
+  PASS  file-finder-empty-input
+  ...
+Gate-tier eval summary: 20 passed, 0 failed (of 20).
 ```
 
-`outcomeJudge` counts hint-matches in agent output; passes when
-`detected / total_bugs >= minimum_detection`.
+> **Maintainer tip (negative proof).** To confirm the gate would catch a bad
+> mock rather than passing vacuously, temporarily point one case at the wrong
+> fixture (e.g. copy another case's `mocks/agent.ndjson` over it) and re-run
+> `bun run test:gate` — it must report that case as `FAIL` and exit non-zero.
+> Restore the file afterward.
 
-## Rubric format
+> `EVALS=1` is NOT a real switch — the harness only reads `EVALS_ALL`,
+> `EVALS_TIER`, `EVALS_ANTHROPIC_API_KEY`, and `EVALS_MOCK_*`. Setting `EVALS=1`
+> does nothing; plain `bun test` and `EVALS=1 bun test` are identical (the free
+> static gate only).
 
-`evals/rubrics/<agent>.md`:
+## Mock seams (deterministic CI)
 
-```yaml
----
-agent: code-reviewer
----
-1. Planted-bug detection (kind: deterministic). ...
-2. Reasoning quality (kind: llm). 1-5 scale: ...
-```
+- `EVALS_MOCK_AGENT=<file.ndjson>` replays an agent transcript (NDJSON, one
+  event per line). The text the scorer sees is the concatenation of
+  `type:"assistant"` -> `message.content[].type:"text"` blocks. See
+  `runMocked` and `extractToolCallsAndUsage` in
+  `tests/helpers/session-runner.ts`.
+- `EVALS_MOCK_JUDGE=<file.json>` replays one judge verdict JSON (the first
+  `{...}` block is extracted). See `callJudge` in `tests/helpers/llm-judge.ts`.
 
-`deterministic` criteria run first with regex / ground-truth counts. The LLM
-is only invoked when an `llm` criterion is present and the structural gates
-have passed. Haiku for narrow rubrics; Sonnet for nuanced ones.
+Mock fixtures live under each fixture's `mocks/` subdir. Edge-case detection
+evals that assert deterministically (e.g. `*-empty-input`, `*-safe-pattern`)
+need no `judge.json`. Gate-tier evals use these seams so they run free and
+deterministically in CI via `scripts/run-gate-evals.ts` (wired into
+`harness-checks.yml` on every PR); periodic-tier evals (ux-reviewer,
+implementer, skills) are excluded from the gate path and run only on the weekly
+cron.
 
-Both tiers run in the live eval. `tests/code-reviewer.evals.ts` calls
-`outcomeJudge` (deterministic planted-bug detection) **and**
-`judgeReviewerOutput` (LLM reasoning-quality score), and passes only when
-the bug is detected *and* `reason_substance >= 3`. Mentioning the hint in
-junk prose is not enough to pass. Both scores are recorded in
-`judge_scores` on the result entry.
+## Tiers
 
-## Run history & comparison
+- **gate** — fast, deterministic; blocks every PR. Run mocked & free by
+  `scripts/run-gate-evals.ts` (invoked under `bun` from `harness-checks.yml`).
+- **periodic** — live/expensive; run on the weekly cron in
+  `.github/workflows/behavioral-evals.yml`.
 
-Every run writes `<version>-<branch>-<tier>-<timestamp>.json` to
-`evals/results/`. On finalize, `EvalCollector.finalize()` finds the previous
-run on the same branch+tier and prints a comparison to stderr:
+The `EVALS_TIER=gate|periodic` env filters which fixtures run when driving the
+suites directly with `bun test`; the gate-evals script enumerates the gate set
+itself from `E2E_TIERS`.
 
-- regressions (verdict pass → fail) listed first
-- improvements (verdict fail → pass)
-- additions / removals
-- ≥20% deltas on cost or duration
-- **budget regressions** (≥2× growth in tool calls or turns)
+## Adding an eval
 
-Budget regressions don't just print — the eval file's `afterAll` calls
-`assertNoBudgetRegressions(collector)`, which throws after `finalize()`
-writes the result. A throw in `afterAll` fails the bun run, so a
-passing-but-3×-more-expensive run fails CI. The floor (`minPriorTools`/
-`minPriorTurns` = 3) suppresses noise from tiny baselines (1 → 3 isn't a
-regression).
-
-Manually: `bun run eval:compare evals/results/<a>.json evals/results/<b>.json`
-(exits non-zero on budget regression or verdict regression).
-
-## Blame protocol
-
-When an eval fails on your branch, rerun on the base before blaming the
-branch:
-
-```
-git checkout origin/main && bun test ./tests/code-reviewer.evals.ts
-```
-
-If it fails there too, the regression predates your change.
-
-## Adding an agent
-
-1. Write `evals/fixtures/<agent>/<case>/input.md` and `ground-truth.json`.
-2. Write `evals/rubrics/<agent>.md`.
-3. Add an entry to `E2E_TOUCHFILES` and `E2E_TIERS` in
+1. Create `evals/fixtures/<agent>/<case>/input.md` + `ground-truth.json`.
+2. Add `evals/rubrics/<agent>.md` with numbered criteria.
+3. Mirror `tests/file-finder.evals.ts` into `tests/<agent>.evals.ts` — it is the
+   gate-tier template (mocks + happy/guard pair). (`code-reviewer.evals.ts` is
+   the conceptual reference, but it is periodic-only and has no `mocks/` dir.)
+4. Wire the test name into `E2E_TOUCHFILES` + `E2E_TIERS` in
    `tests/helpers/touchfiles.ts`.
-4. Write `tests/<agent>.evals.ts` mirroring `tests/code-reviewer.evals.ts`.
-   Use the `.evals.ts` suffix (not `.test.ts`) so `bun test` doesn't pick it
-   up, and register the test through `testIfSelected(name, ...)` so tier /
-   diff selection applies.
-5. `bun test` — verify the gate validates the new schemas.
-6. `bun test ./tests/<agent>.evals.ts` — run end-to-end (needs `EVALS_ANTHROPIC_API_KEY`).
+5. For periodic suites, nothing to wire: the `behavioral-evals.yml` matrix is
+   auto-discovered from `tests/*.evals.ts`, so a new suite runs automatically
+   with no workflow edit.
+6. For a **gate-tier** case, add `evals/fixtures/<agent>/<case>/mocks/agent.ndjson`
+   (and `mocks/judge.json` for judgment agents; deterministic edge cases need
+   no judge) so `scripts/run-gate-evals.ts` can run it free & mocked.
+   `tier-coverage.test.ts` is what enforces every gate case is runnable free —
+   it fails the PR if a gate case does not resolve to its own fixture dir with
+   an agent mock.
 
-Run `bun run eval:list` to see the registered tests and their tiers.
+### Adding a skill eval
+
+Skill evals are parameterized, not one-file-per-skill — do NOT create a new
+`tests/<skill>.evals.ts`. Instead:
+
+1. Add the fixture under `evals/fixtures/skills/<skill>/<case>/` (`input.md` +
+   `ground-truth.json`) and the rubric at `evals/rubrics/skills/<skill>.md`.
+2. Add `"<skill>"` to the `SKILLS` manifest array in `tests/skills.evals.ts`.
+3. Wire `skill:<skill>` into BOTH `E2E_TOUCHFILES` and `E2E_TIERS` in
+   `tests/helpers/touchfiles.ts`.
+
+To run a single skill's eval in isolation, scope by its case name:
+`-t "skill:<name>"`.

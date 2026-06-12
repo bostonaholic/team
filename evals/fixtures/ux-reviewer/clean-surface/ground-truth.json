@@ -1,0 +1,16 @@
+{
+  "bugs": [
+    {
+      "id": "u1",
+      "detection_hint": "missing alt|no alt attribute|image has no alt|WCAG 1\\.1\\.1",
+      "description": "Planted-clean: the hero <img> already has descriptive alt text and must NOT be flagged."
+    },
+    {
+      "id": "u2",
+      "detection_hint": "unlabeled|missing label|no label|control has no label",
+      "description": "Planted-clean: the search <input> already has an associated <label> and must NOT be flagged."
+    }
+  ],
+  "minimum_detection": 1.0,
+  "max_false_positives": 0
+}

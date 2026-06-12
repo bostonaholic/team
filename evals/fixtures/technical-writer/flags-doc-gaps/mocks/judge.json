@@ -1,0 +1,1 @@
+{"clarity":4,"completeness":4,"actionability":4,"reasoning":"Identifies the three undocumented public surfaces (read, write, TOOL_CACHE_TTL_MS) grounded strictly in the diff, with no invented behavior."}

@@ -29,6 +29,7 @@ beforeEach(() => {
 afterEach(() => {
   rmSync(scratchDir, { recursive: true, force: true });
   delete process.env.EVALS_BRANCH;
+  delete process.env.EVALS_SILENCE_BUDGET_LOG;
 });
 
 function mockTranscript(toolUseCount: number): unknown[] {
@@ -114,6 +115,9 @@ describe("EvalCollector", () => {
 
   test("finalize populates budgetRegressions vs the previous run", async () => {
     process.env.EVALS_BRANCH = "budget-branch";
+    // Silence the stderr regression banner: this is a fixture scenario, not a
+    // real regression, and the banner alarms readers of `bun test` output.
+    process.env.EVALS_SILENCE_BUDGET_LOG = "1";
     // Seed a previous run with a low tool-call count.
     const prev: EvalResult = {
       schema_version: SCHEMA_VERSION,

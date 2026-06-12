@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "approach-and-alternatives",
+      "description": "Doc must include an Alternatives section.",
+      "detection_hint": "trade-?offs?|alternativ(e|es)|rejected|considered\\b|chosen over|instead of"
+    }
+  ],
+  "minimum_detection": 1
+}

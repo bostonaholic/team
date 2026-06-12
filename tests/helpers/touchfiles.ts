@@ -11,6 +11,104 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "agents/code-reviewer.md",
     "skills/code-review/**",
   ],
+  "file-finder-finds-planted-files": [
+    "agents/file-finder.md",
+  ],
+  "file-finder-empty-input": [
+    "agents/file-finder.md",
+  ],
+  "verifier-detects-violation": [
+    "agents/verifier.md",
+  ],
+  "verifier-no-op-guard": [
+    "agents/verifier.md",
+  ],
+  "security-reviewer-planted-vuln": [
+    "agents/security-reviewer.md",
+  ],
+  "security-reviewer-safe-pattern": [
+    "agents/security-reviewer.md",
+  ],
+  "test-architect-covers-branch": [
+    "agents/test-architect.md",
+  ],
+  "test-architect-empty-input": [
+    "agents/test-architect.md",
+  ],
+  "design-author-well-formed-research": [
+    "agents/design-author.md",
+  ],
+  "design-author-thin-research": [
+    "agents/design-author.md",
+  ],
+  "structure-planner-well-formed-design": [
+    "agents/structure-planner.md",
+  ],
+  "structure-planner-ambiguous-design": [
+    "agents/structure-planner.md",
+  ],
+  "planner-well-formed-structure": [
+    "agents/planner.md",
+  ],
+  "planner-ambiguous-structure": [
+    "agents/planner.md",
+  ],
+  "questioner-decomposes-intent": [
+    "agents/questioner.md",
+  ],
+  "questioner-no-intent-leak": [
+    "agents/questioner.md",
+  ],
+  "researcher-answers-from-questions": [
+    "agents/researcher.md",
+  ],
+  "researcher-no-task-leak": [
+    "agents/researcher.md",
+  ],
+  "technical-writer-flags-doc-gaps": [
+    "agents/technical-writer.md",
+  ],
+  "technical-writer-no-invented-api": [
+    "agents/technical-writer.md",
+  ],
+  "ux-reviewer-detects-a11y-defect": [
+    "agents/ux-reviewer.md",
+    "evals/fixtures/ux-reviewer/**",
+    "tests/ux-reviewer.evals.ts",
+  ],
+  "ux-reviewer-clean-surface": [
+    "agents/ux-reviewer.md",
+    "evals/fixtures/ux-reviewer/**",
+    "tests/ux-reviewer.evals.ts",
+  ],
+  "implementer-implements-slice": [
+    "agents/implementer.md",
+    "evals/fixtures/implementer/**",
+    "tests/implementer.evals.ts",
+  ],
+  "implementer-noop-when-green": [
+    "agents/implementer.md",
+    "evals/fixtures/implementer/**",
+    "tests/implementer.evals.ts",
+  ],
+  "skill:agent-open-questions": ["skills/agent-open-questions/**"],
+  "skill:changelog": ["skills/changelog/**"],
+  "skill:code-review": ["skills/code-review/**"],
+  "skill:documenting-decisions": ["skills/documenting-decisions/**"],
+  "skill:eng-design-doc-review": ["skills/eng-design-doc-review/**"],
+  "skill:engineering-standards": ["skills/engineering-standards/**"],
+  "skill:git-commit": ["skills/git-commit/**"],
+  "skill:product-requirements-doc": ["skills/product-requirements-doc/**"],
+  "skill:product-thinking": ["skills/product-thinking/**"],
+  "skill:progress-tracking": ["skills/progress-tracking/**"],
+  "skill:qrspi-workflow": ["skills/qrspi-workflow/**"],
+  "skill:refactoring-to-patterns": ["skills/refactoring-to-patterns/**"],
+  "skill:solid-principles": ["skills/solid-principles/**"],
+  "skill:systematic-debugging": ["skills/systematic-debugging/**"],
+  "skill:technical-design-doc": ["skills/technical-design-doc/**"],
+  "skill:test-driven-bug-fix": ["skills/test-driven-bug-fix/**"],
+  "skill:test-first-development": ["skills/test-first-development/**"],
+  "skill:writing-prose": ["skills/writing-prose/**"],
 };
 
 export const LLM_JUDGE_TOUCHFILES: Record<string, string[]> = {
@@ -29,6 +127,48 @@ export const E2E_TIERS: Record<string, "gate" | "periodic"> = {
   // Note: gate-tier E2E tests would do offline assertions (e.g. against a
   // recorded transcript). The single live fixture is periodic.
   "planted-null-deref": "periodic",
+  "file-finder-finds-planted-files": "gate",
+  "file-finder-empty-input": "gate",
+  "verifier-detects-violation": "gate",
+  "verifier-no-op-guard": "gate",
+  "security-reviewer-planted-vuln": "gate",
+  "security-reviewer-safe-pattern": "gate",
+  "test-architect-covers-branch": "gate",
+  "test-architect-empty-input": "gate",
+  "design-author-well-formed-research": "gate",
+  "design-author-thin-research": "gate",
+  "structure-planner-well-formed-design": "gate",
+  "structure-planner-ambiguous-design": "gate",
+  "planner-well-formed-structure": "gate",
+  "planner-ambiguous-structure": "gate",
+  "questioner-decomposes-intent": "gate",
+  "questioner-no-intent-leak": "gate",
+  "researcher-answers-from-questions": "gate",
+  "researcher-no-task-leak": "gate",
+  "technical-writer-flags-doc-gaps": "gate",
+  "technical-writer-no-invented-api": "gate",
+  "ux-reviewer-detects-a11y-defect": "periodic",
+  "ux-reviewer-clean-surface": "periodic",
+  "implementer-implements-slice": "periodic",
+  "implementer-noop-when-green": "periodic",
+  "skill:agent-open-questions": "periodic",
+  "skill:changelog": "periodic",
+  "skill:code-review": "periodic",
+  "skill:documenting-decisions": "periodic",
+  "skill:eng-design-doc-review": "periodic",
+  "skill:engineering-standards": "periodic",
+  "skill:git-commit": "periodic",
+  "skill:product-requirements-doc": "periodic",
+  "skill:product-thinking": "periodic",
+  "skill:progress-tracking": "periodic",
+  "skill:qrspi-workflow": "periodic",
+  "skill:refactoring-to-patterns": "periodic",
+  "skill:solid-principles": "periodic",
+  "skill:systematic-debugging": "periodic",
+  "skill:technical-design-doc": "periodic",
+  "skill:test-driven-bug-fix": "periodic",
+  "skill:test-first-development": "periodic",
+  "skill:writing-prose": "periodic",
 };
 
 const BASE_BRANCH_FALLBACKS = ["origin/main", "origin/master", "main", "master"];

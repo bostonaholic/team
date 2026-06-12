@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"Reviewing the diff.\n\nissue: SQL injection — `name` is concatenated directly into the query. Use a parameterized query.\nnit: prefer `const` over `let` for `query`."}]}}
+{"type":"result","usage":{"input_tokens":200,"output_tokens":120}}

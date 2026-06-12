@@ -8,6 +8,10 @@
 # the weekly cron or via manual workflow_dispatch.
 #
 # Runs Monday 06:00 UTC. Offline harness checks live in harness-checks.yml.
+#
+# The eval matrix is AUTO-DISCOVERED from tests/*.evals.ts by the `discover`
+# job below — there is no manual suite list to maintain. Adding a new
+# tests/<name>.evals.ts makes it run here automatically with no workflow edit.
 name: Behavioral evals
 
 on:
@@ -20,8 +24,42 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  discover:
+    name: Discover eval suites
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      suites: ${{ steps.find.outputs.suites }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - id: find
+        # Glob tests/*.evals.ts into the matrix. File path MUST be
+        # `./`-prefixed: bun treats a bare `tests/...` arg as a name filter
+        # (matches nothing), not a path. jq is preinstalled on ubuntu-latest.
+        #
+        # The `ls tests/*.evals.ts` is INTENDED to exit non-zero (and fail the
+        # job loudly) if the glob ever matches nothing — that means the eval
+        # suite vanished. Do NOT add `|| true`: it would silently produce an
+        # empty matrix and skip every eval with a green check.
+        run: |
+          suites=$(ls tests/*.evals.ts \
+            | sed 's#^tests/##; s#\.evals\.ts$##' \
+            | jq -R -s -c 'split("\n") | map(select(length > 0)) | map({name: ., file: ("./tests/" + . + ".evals.ts")})')
+          # Heredoc form so the value is newline-safe regardless of what jq
+          # emits — a single-line `echo "suites=$suites"` would corrupt the
+          # output file if the value ever contained a newline.
+          {
+            echo "suites<<EOF_SUITES"
+            echo "$suites"
+            echo "EOF_SUITES"
+          } >> "$GITHUB_OUTPUT"
+          echo "Discovered suites: $suites"
+
   behavioral-evals:
     name: Live agent runs (${{ matrix.suite.name }})
+    needs: discover
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -29,10 +67,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite:
-          # File path MUST be `./`-prefixed: bun treats a bare `tests/...`
-          # arg as a name filter (matches nothing), not a path.
-          - { name: code-reviewer, file: ./tests/code-reviewer.evals.ts }
+        suite: ${{ fromJSON(needs.discover.outputs.suites) }}
     steps:
       - uses: actions/checkout@v6
         with:

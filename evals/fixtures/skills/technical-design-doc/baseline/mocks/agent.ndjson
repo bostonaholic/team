@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"# TDD: Rate Limiter\n\n## Approach\n\nToken-bucket per API key, stored in Redis.\n\n## Alternatives\n\nFixed-window counter — simpler but allows burst at boundaries. Rejected."}]}}
+{"type":"result","usage":{"input_tokens":200,"output_tokens":120}}

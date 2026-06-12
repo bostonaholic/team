@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"Hypothesis: a connection-pool exhaustion under load causes the 500.\nTest: add pool metrics and reproduce under concurrent load.\nFix: raise pool size and add a timeout; confirm the 500 disappears."}]}}
+{"type":"result","usage":{"input_tokens":200,"output_tokens":120}}

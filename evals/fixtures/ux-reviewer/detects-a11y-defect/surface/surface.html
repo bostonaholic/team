@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Product</title>
+  </head>
+  <body>
+    <header>
+      <h1>Acme Widgets</h1>
+    </header>
+    <main>
+      <!-- Planted a11y defect (u1): hero image has no alt attribute. -->
+      <img src="hero.png" width="640" height="320" />
+
+      <section>
+        <h2>Find a widget</h2>
+        <!-- Planted a11y defect (u2): search input has no associated label. -->
+        <input type="text" name="q" placeholder="Search" />
+        <button type="submit">Go</button>
+      </section>
+    </main>
+  </body>
+</html>

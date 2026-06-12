@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"content":[{"type":"text","text":"feat(export): add --json flag for machine-readable output\n\nThe export command gains a --json flag that emits structured output.\n\nCo-Authored-By: Claude <noreply@anthropic.com>"}]}}
+{"type":"result","usage":{"input_tokens":200,"output_tokens":120}}

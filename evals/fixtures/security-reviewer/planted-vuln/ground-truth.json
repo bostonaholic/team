@@ -1,0 +1,13 @@
+{
+  "bugs": [
+    {
+      "id": "s1",
+      "category": "injection",
+      "severity": "critical",
+      "description": "findUser concatenates the untrusted req.query.name directly into a SQL string, enabling SQL injection. Must use a parameterized query.",
+      "detection_hint": "(sql injection|sqli|parameteriz|injection vulnerab)"
+    }
+  ],
+  "minimum_detection": 1.0,
+  "max_false_positives": 0
+}
