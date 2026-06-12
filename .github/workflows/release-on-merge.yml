@@ -1,0 +1,70 @@
+# Release on merge — tags and publishes every version that lands on main.
+#
+# Per-PR versioning (docs/versioning.md): every PR bumps the version in
+# .claude-plugin/plugin.json and carries its own `## [X.Y.Z]` CHANGELOG
+# section. When the PR merges, this workflow creates the annotated tag
+# `vX.Y.Z` and the GitHub release, with that changelog section verbatim as
+# the notes. This replaces the old manual /release skill.
+#
+# IDEMPOTENT: keyed on release existence first, then tag existence — a
+# partial failure (tag pushed, release create died) is repaired by re-running
+# the workflow. A push that does not change the version (e.g. a revert back
+# to a tagged version) no-ops. Duplicate-version slips past the version gate
+# fail loudly here (tag push rejects), never silently.
+name: Release on merge
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release-on-merge
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Tag and publish if version is new
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Full history so the annotated tag points at a complete clone and
+          # `git push origin <tag>` has everything it needs.
+          fetch-depth: 0
+
+      - name: Tag and release
+        run: |
+          set -euo pipefail
+          V=$(jq -r .version .claude-plugin/plugin.json)
+          grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$' <<<"$V" \
+            || { echo "::error::plugin.json version is not 3-part semver: '$V'"; exit 1; }
+
+          if gh release view "v$V" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release v$V already exists; nothing to do."
+            exit 0
+          fi
+
+          ESC=$(sed 's/\./\\./g' <<<"$V")
+          awk "/^## \[$ESC\]/{f=1;next} /^## \[/{f=0} f" CHANGELOG.md > notes.md
+          if ! grep -q '[^[:space:]]' notes.md; then
+            echo "::error::CHANGELOG.md has no content under '## [$V]' — cannot publish an empty release"
+            exit 1
+          fi
+
+          git fetch --tags --quiet
+          if ! git rev-parse -q --verify "refs/tags/v$V" >/dev/null; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "v$V" -m "Release v$V"
+            git push origin "v$V"
+          else
+            echo "Tag v$V already exists; reusing it."
+          fi
+
+          gh release create "v$V" --repo "$GITHUB_REPOSITORY" --title "v$V" --notes-file notes.md
+          echo "Published release v$V."

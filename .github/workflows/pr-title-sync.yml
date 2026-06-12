@@ -1,0 +1,63 @@
+# PR title sync — keeps PR titles prefixed with the version they ship.
+#
+# Per-PR versioning (docs/versioning.md): every PR title reads
+# `vX.Y.Z <type>: <subject>`. This workflow reads the version from the PR
+# head's .claude-plugin/plugin.json and rewrites the title to match. It is a
+# backstop — authors set the title themselves (version-bump skill, step 7).
+#
+# WHY plain `pull_request` (not pull_request_target): all PRs here come from
+# same-repo branches, where the default GITHUB_TOKEN honors
+# `pull-requests: write`. Skipping fork PRs (the `if:` below) eliminates the
+# entire pull_request_target attack surface; a fork PR's title is fixed by a
+# maintainer manually.
+#
+# SECURITY: the PR title is attacker-influenced content — it enters only via
+# `env:` and is referenced as a quoted "$VAR", never inlined as a `${{ }}`
+# expression in `run:`. It is also never echoed (Actions parses
+# ::workflow-commands:: from stdout). The version is regex-validated before
+# use. Loop safety: the rewrite fires an `edited` event, which re-enters this
+# job, computes an identical title, and exits at the no-op check.
+name: PR title sync
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, edited, reopened]
+
+concurrency:
+  group: pr-title-sync-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  sync-title:
+    name: Sync PR title to version
+    runs-on: ubuntu-latest
+    if: >
+      github.event.pull_request.head.repo.full_name == github.repository
+      && github.actor != 'github-actions[bot]'
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      # Attacker-influenced — env-only, never inlined in run:, never echoed.
+      CURRENT_TITLE: ${{ github.event.pull_request.title }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Rewrite title to match plugin.json version
+        run: |
+          set -euo pipefail
+          V=$(jq -r .version .claude-plugin/plugin.json)
+          grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$' <<<"$V" \
+            || { echo "::error::plugin.json version is not 3-part semver"; exit 1; }
+          STRIPPED=$(sed -E 's/^v[0-9]+\.[0-9]+\.[0-9]+[[:space:]:]+//' <<<"$CURRENT_TITLE")
+          WANT="v${V} ${STRIPPED}"
+          if [ "$WANT" = "$CURRENT_TITLE" ]; then
+            echo "Title already correct; no change."
+            exit 0
+          fi
+          gh pr edit "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --title "$WANT"
+          echo "Synced PR #$PR_NUMBER title to v$V."
