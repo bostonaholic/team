@@ -260,7 +260,10 @@ the inventory in registry.json and the files under `agents/` agree by
 name.
 
 Model tiering: `haiku` (mechanical), `sonnet` (judgment), `opus`
-(planning + implementation).
+(planning + implementation). Effort tiering mirrors it: `low`
+(mechanical), `medium`/`high` (judgment), `xhigh` (human-gate artifact
+authors). Methodology skills carry no `effort` — they inherit from the
+loading agent.
 
 ## 5. Phase-Table Orchestrator
 

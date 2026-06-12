@@ -1,6 +1,7 @@
 ---
 name: team-plan
 description: Produce the tactical implementation plan from the approved structure. The plan is for the implementer — humans review the structure, not the plan. No human approval gate at this phase. Trigger on "plan the implementation", "spell out the steps", or "/team-plan".
+effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
 

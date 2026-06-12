@@ -1,6 +1,7 @@
 ---
 name: team-structure
 description: Break the approved design into vertical slices with verification checkpoints. The structure document is the human's last review point before code is written. Trigger on "slice this up", "break the design into steps", or "/team-structure".
+effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
 

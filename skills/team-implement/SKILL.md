@@ -1,6 +1,7 @@
 ---
 name: team-implement
 description: Execute the implementation phase. Includes test-first sub-step (writing failing tests, mechanical confirmation gate) and adversarial verification (5 parallel reviewers with hard-gate retry loop). Trigger on "implement this", "execute the plan", or "/team-implement".
+effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
 

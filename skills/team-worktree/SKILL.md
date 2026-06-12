@@ -1,6 +1,7 @@
 ---
 name: team-worktree
 description: Prepare one or more isolated git worktrees — one per repository the topic touches. Router action — no agent. Trigger on "set up the worktree", "isolate this work", or "/team-worktree".
+effort: low
 argument-hint: "[docs/plans/<id>/]"
 ---
 
