@@ -178,6 +178,22 @@ describe("multi-repo support", () => {
     expect(read(TEAM_WT)).toContain("## Worktrees");
   });
 
+  test("team-worktree skips creation when already in a non-default-branch worktree", () => {
+    const text = read(TEAM_WT);
+    // Linked-worktree detection must be layout-independent: git dir vs common git dir.
+    expect(text).toContain("--git-common-dir");
+    expect(text).toContain("skip worktree creation for this repo");
+    expect(text).toContain("Non-default branch");
+    // Default-branch worktrees still refuse — never implement on main/master.
+    expect(text).toContain("Default branch** → report and stop");
+  });
+
+  test("worktree-isolation documents worktree reuse", () => {
+    const text = read(WORKTREE_ISO);
+    expect(text).toContain("Reusing an existing worktree");
+    expect(text).toContain("non-default branch");
+  });
+
   test("questioner excludes AskUserQuestion + multi-repo detection uses openQuestions envelope", () => {
     const text = read(QUESTIONER);
     const fm = frontmatter(text);
