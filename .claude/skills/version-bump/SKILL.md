@@ -1,10 +1,12 @@
 ---
 name: version-bump
 description: |
-  Bump the Team plugin version for the current PR — every PR that lands bumps the
-  version (docs/versioning.md): pick the SemVer level, compute the next free version,
-  update all four version strings, roll a per-PR changelog section, and title the PR
-  vX.Y.Z. This is a DEVELOPMENT concern (it versions the plugin itself), not a runtime
+  Bump the Team plugin version for the current PR — required iff the PR's diff
+  touches runtime/distributed paths (agents/, skills/, hooks/, .claude-plugin/);
+  dev-only PRs are exempt and skip the bump entirely (docs/versioning.md). When a
+  bump is needed: pick the SemVer level, compute the next free version, update all
+  four version strings, roll a per-PR changelog section, and title the PR vX.Y.Z.
+  This is a DEVELOPMENT concern (it versions the plugin itself), not a runtime
   pipeline phase. Use when preparing any PR in this repo, or when the user asks to
   "bump the version", "prepare the PR version", or runs "/version-bump".
 ---
@@ -20,6 +22,25 @@ before pushing new work to an existing PR). Tagging and the GitHub release are
 when the PR merges. Full policy: [docs/versioning.md](../../../docs/versioning.md).
 
 ## Steps
+
+### 0. Check whether a bump is required at all
+
+A bump is required **iff** the PR's diff touches runtime/distributed paths
+(docs/versioning.md):
+
+```bash
+git fetch origin main --quiet
+CHANGED=$(git -c core.quotePath=false diff --name-only --no-renames origin/main...HEAD)
+grep -E '^(agents|skills|hooks|\.claude-plugin)/' <<<"$CHANGED" || echo "NO RUNTIME PATHS TOUCHED"
+```
+
+- **Any runtime path listed** → a bump is required; continue with step 1.
+- **`NO RUNTIME PATHS TOUCHED`** → report "no bump required — this PR touches
+  only exempt paths" and **STOP**. Skip every remaining step: no version
+  change, no changelog section, and a plain `<type>: <subject>` PR title with
+  no version prefix. (A voluntary bump is still allowed — e.g. to force a
+  release — but it then faces every gate check, including the changelog
+  section.)
 
 ### 1. Decide the bump level
 

@@ -1,6 +1,6 @@
 ---
 title: Versioning
-description: "Per-PR versioning for the Team plugin — every PR bumps the version, rolls its own changelog section, and carries the version in its title; CI gates the bump and auto-publishes the release on merge."
+description: "Scoped per-PR versioning for the Team plugin — PRs touching runtime paths (agents/, skills/, hooks/, .claude-plugin/) bump the version, roll their own changelog section, and carry the version in their title; dev-only PRs are exempt. CI gates the bump and auto-publishes the release on merge."
 ---
 
 # Versioning
@@ -9,15 +9,38 @@ description: "Per-PR versioning for the Team plugin — every PR bumps the versi
 > this — it describes how the Team plugin *itself* is versioned. Nothing here
 > applies to projects that merely *use* the plugin.
 
-Team versions per pull request: **every PR that lands on `main`
-bumps the plugin version** — features, fixes, chores, docs, all of them. There
-is no batch release step; the merge *is* the release. CI tags and publishes
-automatically.
+Team versions per pull request, scoped to what actually ships: **a PR bumps
+the plugin version iff its diff touches runtime/distributed paths**
+(`agents/`, `skills/`, `hooks/`, `.claude-plugin/`). Dev-only PRs — docs,
+tests, CI, workspace tooling — merge without a bump and publish nothing. For
+bumping PRs there is no batch release step; the merge *is* the release. CI
+tags and publishes automatically.
 
 ## Policy
 
-One PR = one version. Pick the bump level from the highest-impact change in
-the PR (3-part [SemVer](https://semver.org)):
+A bump is required **iff** the PR's diff (vs the base branch) touches a
+runtime path — the runtime half of the runtime-vs-development split in
+[AGENTS.md](../AGENTS.md):
+
+| Paths | Bump |
+|-------|------|
+| **Runtime** — `agents/`, `skills/`, `hooks/`, `.claude-plugin/` | **Required** |
+| **Exempt** — `docs/`, `tests/`, `evals/`, `.claude/`, `.github/`, `.beads/`, root markdown (`README.md`, `AGENTS.md`, `TESTING.md`, `CHANGELOG.md`), `package.json` / lockfile | Not required |
+
+The `Version gate` applies three rules:
+
+1. Runtime paths touched and version unchanged vs base → **gate fails**.
+2. Version changed (regardless of paths) → **all** gate checks run: valid
+   increment shape, four strings agree, changelog section present, open-PR
+   collision. A **voluntary bump on an exempt PR is allowed** — but it then
+   faces every one of these checks, including the changelog section.
+3. Version unchanged and no runtime paths touched → gate **passes early with
+   a notice**. No changelog section, no `vX.Y.Z` title prefix, and
+   `release-on-merge.yml` no-ops on merge (the release for the unchanged
+   version already exists).
+
+One bumping PR = one version. When a bump is required, pick the level from
+the highest-impact change in the PR (3-part [SemVer](https://semver.org)):
 
 | Level | When |
 |-------|------|
@@ -25,7 +48,14 @@ the PR (3-part [SemVer](https://semver.org)):
 | **minor** (`x.Y.0`) | New backward-compatible capability (`feat:`) |
 | **patch** (`x.y.Z`) | Everything else — `fix:`, `docs:`, `chore:`, `refactor:`, `test:`, `ci:` |
 
-No PR merges without a bump. The `Version gate` CI check blocks unbumped PRs.
+The level is chosen by change *type*; whether a bump is needed at all is
+decided by *paths*. A `docs:` edit to `skills/*/SKILL.md` is a runtime change
+(skills ship to users) and bumps patch; a `docs:` edit to `docs/` is exempt
+and bumps nothing.
+
+No runtime change merges without a bump. The `Version gate` CI check blocks
+unbumped PRs that touch runtime paths and waves exempt PRs through with a
+notice.
 
 ## The four version strings
 
@@ -67,10 +97,12 @@ the gate reports your version is claimed by an older PR: rebase on `main`,
 re-run `next-version.sh`, re-bump, force-push. The gate passes the older PR
 and fails only the newer one, so exactly one side has to move.
 
-## Changelog: one section per PR
+## Changelog: one section per bumping PR
 
-Each PR inserts its own released section — entries never accumulate under
-`[Unreleased]`:
+Each **version-bumping** PR inserts its own released section — entries never
+accumulate under `[Unreleased]`. Exempt PRs add no changelog section: the
+merge publishes nothing, so there is nothing to release-note. To roll a
+section:
 
 1. Insert `## [X.Y.Z] - YYYY-MM-DD` (today's date) directly **below**
    `## [Unreleased]`, with the PR's `### Added` / `### Changed` / `### Fixed`
@@ -85,16 +117,18 @@ write it for a reader deciding whether to upgrade.
 
 ## PR title
 
-PR titles carry the version prefix:
+Version-bumping PRs carry the version prefix:
 
 ```
 vX.Y.Z <type>: <subject>
 ```
 
 e.g. `v0.5.0 feat: adopt per-PR versioning with CI gate and auto-release`.
-The `PR title sync` workflow rewrites drifted titles to match the PR head's
-`plugin.json` — but set it correctly yourself; the sync is a backstop, not
-the mechanism.
+Exempt PRs use a plain conventional title — `<type>: <subject>` — with no
+prefix. The `PR title sync` workflow rewrites a drifted title only when the
+PR's version differs from the base branch's; when the version is unchanged
+it does nothing (it never adds or strips a prefix on an exempt PR). Set the
+title correctly yourself; the sync is a backstop, not the mechanism.
 
 ## What CI enforces, and where
 
@@ -103,10 +137,15 @@ can catch it:
 
 | Check | Layer | Where |
 |-------|-------|-------|
-| Four version strings agree; strict semver; changelog section + footer links exist for the current version | L2 tripwire (free, every `bun test`) | `tests/version-consistency.test.ts` |
-| Version bumped vs base; valid increment shape; collision with other open PRs | CI (needs git/API context) | `.github/workflows/version-gate.yml` |
-| Title prefix matches the version | CI (needs PR context) | `.github/workflows/pr-title-sync.yml` |
+| Four version strings agree; strict semver; changelog section + footer links exist for the current version (holds for exempt PRs too — their current version is the base's released one) | L2 tripwire (free, every `bun test`) | `tests/version-consistency.test.ts` |
+| Runtime paths touched ⇒ version bumped vs base; any bump ⇒ valid increment shape, strings agree, changelog section, no open-PR collision; exempt + unchanged ⇒ early pass with notice | CI (needs git/API context) | `.github/workflows/version-gate.yml` |
+| Title prefix matches the version — only when the PR's version differs from base; no-op otherwise | CI (needs PR context) | `.github/workflows/pr-title-sync.yml` |
 | Tag + GitHub release on merge | CI (needs write perms) | `.github/workflows/release-on-merge.yml` |
+
+Defense in depth: the gate classifies by `plugin.json` (the canonical slot),
+so a PR that edits only `package.json`'s version takes the exempt path in the
+gate — the L2 tripwire under `harness-checks.yml` is what catches that
+partial bump.
 
 **Known race, accepted:** the version gate re-runs when *your* PR changes
 (`synchronize`), not when *another* PR merges. The mitigation is the branch
@@ -122,7 +161,11 @@ On every push to `main`, `release-on-merge.yml`:
 
 1. Reads the version from `.claude-plugin/plugin.json`.
 2. No-ops if the GitHub release `vX.Y.Z` already exists (idempotent —
-   safe to re-run after a partial failure).
+   safe to re-run after a partial failure). This idempotence is also what
+   makes exempt merges silent: an exempt PR merges with the version
+   unchanged, the release for that version already exists, so the workflow
+   no-ops — no tag, no release, no marketplace update prompt. (Existing
+   behavior — the workflow needed no change for the scoped policy.)
 3. Extracts that version's `## [X.Y.Z]` section from `CHANGELOG.md` as the
    release notes (verbatim — the changelog section *is* the release notes).
 4. Creates the annotated tag `vX.Y.Z` (message `Release vX.Y.Z`) if missing,
