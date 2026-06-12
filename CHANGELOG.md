@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-06-12
+
+### Changed
+
+- **TESTING.md gains two appendices.** Appendix A adds diagrams (the two-axis layer model, runner selection by observation surface, CI execution flow); Appendix B adds a CI skeleton (test scripts, diff-based selection sketch, gate and periodic workflows, branch-protection checklist). Documentation-only; no behavior change.
+
 ## [0.5.0] - 2026-06-12
 
 ### Added
@@ -81,7 +87,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/bostonaholic/team/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/bostonaholic/team/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/bostonaholic/team/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/bostonaholic/team/releases/tag/v0.3.0
