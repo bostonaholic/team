@@ -155,7 +155,11 @@ Before any agent dispatch, decide where to work:
      finding is a defect.
 8. **Once Blocking and Major are clean:** if any **Minor-and-below** findings
    remain, present them to the user and let them decide (auto-fix,
-   defer, or skip). Then suggest `/team-pr`.
+   defer, or skip). Then:
+   - **Full pipeline** (the TodoWrite ledger carries a `PR` phase item —
+     `/team` seeded it): do **not** end the turn. Proceed directly to the
+     PR phase (`skills/team-pr/SKILL.md`) in the same turn.
+   - **Standalone**: suggest `/team-pr`.
 
 ## Quality Loop
 
@@ -184,5 +188,12 @@ For larger features, prefer `/team` (full pipeline) for the alignment gates.
 
 ## Completion
 
-Present all review verdicts and tell the user:
-**"Next: run `/team-pr docs/plans/<id>/`"**
+How the phase ends depends on how it was entered:
+
+- **Full pipeline** (the TodoWrite ledger carries a `PR` phase item —
+  `/team` seeded it): present all review verdicts, then continue straight
+  into the PR phase per `skills/team-pr/SKILL.md` — push the branch and
+  open the draft PR in the same turn. Ending the turn with verdicts but
+  no draft PR is a defect.
+- **Standalone**: present all review verdicts and tell the user:
+  **"Next: run `/team-pr docs/plans/<id>/`"**
