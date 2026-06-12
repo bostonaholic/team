@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-12
+
+### Added
+
+- **Per-PR versioning with CI enforcement and automatic releases.** Every PR that lands on `main` now bumps the plugin version (3-part SemVer: breaking → major, `feat:` → minor, everything else → patch), rolls its own `## [X.Y.Z]` changelog section, and carries the version in its title (`vX.Y.Z <type>: <subject>`) — replacing the occasional batch `/release` skill. Three new CI workflows enforce and complete the cycle: `version-gate.yml` blocks any PR that doesn't bump, bumps invalidly, has disagreeing version strings, lacks a changelog section, or claims a version an older open PR already holds (fail-open on API errors); `pr-title-sync.yml` rewrites drifted PR titles to match the PR head's `plugin.json` version (same-repo PRs only — no `pull_request_target` attack surface); `release-on-merge.yml` creates the annotated `vX.Y.Z` tag and publishes the GitHub release on merge, with that version's changelog section verbatim as the notes (idempotent, safe to re-run after partial failures). Supporting tooling: `.claude/scripts/next-version.sh` computes the next version not claimed by `origin/main` or any open PR; a new dev skill `.claude/skills/version-bump/SKILL.md` walks the per-PR bump procedure (and replaces the deleted `.claude/skills/release/SKILL.md`); `tests/version-consistency.test.ts` is the free L2 tripwire asserting the four version strings agree and the changelog carries a dated section + footer links for the current version; [docs/versioning.md](docs/versioning.md) documents the full policy, the known re-run race and its branch-protection mitigation, and manual recovery procedures.
+
 ## [0.4.0] - 2026-06-01
 
 ### Changed
@@ -75,7 +81,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/bostonaholic/team/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/bostonaholic/team/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/bostonaholic/team/releases/tag/v0.3.0
 [0.2.1]: https://github.com/bostonaholic/team/releases/tag/v0.2.1
