@@ -1,0 +1,13 @@
+{
+  "bugs": [
+    {
+      "id": "failing-test-mentioned",
+      "category": "required-property",
+      "severity": "high",
+      "description": "Required property (artifact escape hatch): the output must reference a failing test step before the fix (the RED phase). A required-property hint, not a planted defect.",
+      "detection_hint": "(failing test|red\\b|test that reproduces|reproduce.{0,40}test)"
+    }
+  ],
+  "minimum_detection": 1.0,
+  "max_false_positives": 0
+}

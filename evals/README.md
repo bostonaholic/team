@@ -13,8 +13,14 @@ tests/
     touchfiles.ts       # diff-based test selection
     llm-judge.ts        # deterministic-first + Sonnet/Haiku scoring
     fixtures.ts         # frontmatter + ground-truth loaders
+    seed.ts             # extractSeed — parse a seeded artifact from a fixture body
+    seed.test.ts        # free; L1 unit tests for extractSeed
   static-gate.test.ts        # free; auto-discovered by `bun test`
+  skill-eval-coverage.test.ts # free; meta-test — every covered skill has its 4 artifacts
+  methodology.test.ts        # free; L2 content tripwires (incl. zero-coverage lenses)
+  protocol.test.ts           # free; L2 wiring tripwires (incl. L2-demoted pipeline skills)
   code-reviewer.evals.ts     # paid; .evals.ts suffix is OUTSIDE auto-discovery
+  <skill>.evals.ts           # paid; one per covered skill (9 skills + code-reviewer)
 
 scripts/
   eval-select.ts        # `bun run eval:select` — which tests would run today
@@ -22,10 +28,10 @@ scripts/
   eval-compare.ts       # `bun run eval:compare <prev> <curr>`
 
 evals/
-  fixtures/<agent>/<case>/
+  fixtures/<agent-or-skill>/<case>/
     input.md            # synthetic task with YAML frontmatter (agent, tier, deps)
-    ground-truth.json   # planted bugs + minimum_detection
-  rubrics/<agent>.md    # numbered criteria, deterministic | llm
+    ground-truth.json   # planted bugs (or required-property hints) + minimum_detection
+  rubrics/<agent-or-skill>.md  # numbered criteria, deterministic | llm
   results/              # generated JSON, one file per run (gitignored)
 ```
 
@@ -44,7 +50,8 @@ Bun's default test discovery matches `*.test.{ts,tsx,js,jsx}`. Files named
 never loads them — no skipped tests in the output, no surprise model calls.
 The paid suite runs only when an explicit path is passed:
 
-- `bun run test:evals` — runs every `./tests/*.evals.ts` with `EVALS_ALL=1` (all tiers)
+- `bun run test:evals` — loads every `./tests/*.evals.ts`, but runs only the diff-selected tests
+- `bun run test:evals:all` — forces every registered eval with `EVALS_ALL=1`
 - `bun test ./tests/code-reviewer.evals.ts` — ad-hoc single file (needs `EVALS_ANTHROPIC_API_KEY`)
 
 > **Path must be `./`-prefixed.** Bun treats a bare `tests/foo.evals.ts`
@@ -53,7 +60,8 @@ The paid suite runs only when an explicit path is passed:
 
 Within a paid file, each test is registered through `testIfSelected`, which
 consults the selector: `EVALS_TIER` and diff-based selection decide whether
-the test runs or is registered as `test.skip`. `EVALS_ALL=1` forces all.
+the test runs or is registered as `test.skip`. `EVALS_ALL=1` is an explicit
+escape hatch for full scheduled/manual sweeps.
 
 ## Environment
 
@@ -84,9 +92,18 @@ synthetic task body for the agent
 ```
 
 All three frontmatter fields (`agent`, `tier`, `deps`) are required and
-validated at load time. `deps` must list at least one glob — an empty or
-missing `deps` would make the fixture invisible to diff selection, so the
-loader rejects it rather than letting it silently never run.
+validated at load time. The `agent` field names the **agent or skill under
+test** and MUST equal the fixture's parent-directory name (e.g. a fixture under
+`evals/fixtures/git-commit/` declares `agent: git-commit`). `deps` must list at
+least one glob — an empty or missing `deps` would make the fixture invisible to
+diff selection, so the loader rejects it rather than letting it silently never
+run.
+
+For a skill whose output is prose rather than a findings list (e.g.
+`git-commit`, `changelog`), `bugs[]` entries express *required-property* hints
+— a regex the output MUST contain (a section heading, a subject shape) — rather
+than a planted defect. The subjective half of the property (mood, filtering,
+ordering) is pushed into an `llm`-kind rubric criterion.
 
 `evals/fixtures/<agent>/<case>/ground-truth.json`:
 
@@ -121,16 +138,21 @@ agent: code-reviewer
 2. Reasoning quality (kind: llm). 1-5 scale: ...
 ```
 
+The `agent` frontmatter field names the agent or skill under test and equals
+the rubric filename stem (`evals/rubrics/git-commit.md` → `agent: git-commit`).
 `deterministic` criteria run first with regex / ground-truth counts. The LLM
 is only invoked when an `llm` criterion is present and the structural gates
 have passed. Haiku for narrow rubrics; Sonnet for nuanced ones.
 
-Both tiers run in the live eval. `tests/code-reviewer.evals.ts` calls
+Both tiers run in the live eval, and every covered eval follows the same
+deterministic-first cascade. The template `tests/code-reviewer.evals.ts` calls
 `outcomeJudge` (deterministic planted-bug detection) **and**
 `judgeReviewerOutput` (LLM reasoning-quality score), and passes only when
 the bug is detected *and* `reason_substance >= 3`. Mentioning the hint in
-junk prose is not enough to pass. Both scores are recorded in
-`judge_scores` on the result entry.
+junk prose is not enough to pass. The skill evals mirror this: each runs
+`outcomeJudge` first and gates an `llm` judge (`judgeReviewerOutput` or the
+generic `judgeQuality`) behind the deterministic check. Both scores are
+recorded in `judge_scores` on the result entry.
 
 ## Run history & comparison
 
@@ -160,22 +182,38 @@ When an eval fails on your branch, rerun on the base before blaming the
 branch:
 
 ```
-git checkout origin/main && bun test ./tests/code-reviewer.evals.ts
+git checkout origin/main && bun test ./tests/<failing-eval>.evals.ts
 ```
 
-If it fails there too, the regression predates your change.
+(or `bun run test:evals` to rerun the whole diff-selected paid suite). If it
+fails there too, the regression predates your change.
 
-## Adding an agent
+## Adding an eval (agent or skill)
 
-1. Write `evals/fixtures/<agent>/<case>/input.md` and `ground-truth.json`.
-2. Write `evals/rubrics/<agent>.md`.
+The steps are identical whether the unit under test is a pipeline agent or an
+executable skill — `<name>` is the agent or skill name, and it must match the
+fixture parent-dir name, the rubric filename stem, and the `agent:` frontmatter
+field throughout.
+
+1. Write `evals/fixtures/<name>/<case>/input.md` and `ground-truth.json`. For a
+   prose-output skill, `bugs[]` are required-property hints (see Fixture
+   format) rather than planted defects.
+2. Write `evals/rubrics/<name>.md`.
 3. Add an entry to `E2E_TOUCHFILES` and `E2E_TIERS` in
-   `tests/helpers/touchfiles.ts`.
-4. Write `tests/<agent>.evals.ts` mirroring `tests/code-reviewer.evals.ts`.
+   `tests/helpers/touchfiles.ts`. The touchfile globs include the source the
+   eval depends on (`skills/<name>/**` or `agents/<name>.md`, plus any
+   methodology skill or shared helper it uses).
+4. Write `tests/<name>.evals.ts` mirroring `tests/code-reviewer.evals.ts`.
    Use the `.evals.ts` suffix (not `.test.ts`) so `bun test` doesn't pick it
    up, and register the test through `testIfSelected(name, ...)` so tier /
-   diff selection applies.
-5. `bun test` — verify the gate validates the new schemas.
-6. `bun test ./tests/<agent>.evals.ts` — run end-to-end (needs `EVALS_ANTHROPIC_API_KEY`).
+   diff selection applies. A skill that needs upstream pipeline state seeds it
+   from the fixture body with `extractSeed` (see the seeded-state evals) and
+   writes it into the working dir before `runAgentTest`.
+5. Add the eval file, fixture directory, and rubric to that test's
+   `E2E_TOUCHFILES` entry. The free gate enforces this so fixture/rubric edits
+   cannot be diff-selected out.
+6. `bun test` — verify the gate validates the new schemas. `skill-eval-coverage.test.ts`
+   additionally enforces that every covered skill has all four artifacts.
+7. `bun test ./tests/<name>.evals.ts` — run end-to-end (needs `EVALS_ANTHROPIC_API_KEY`).
 
 Run `bun run eval:list` to see the registered tests and their tiers.

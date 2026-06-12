@@ -1,0 +1,13 @@
+{
+  "bugs": [
+    {
+      "id": "emits-research-questions",
+      "category": "required-property",
+      "severity": "high",
+      "description": "Required property (artifact escape hatch): the output must contain at least one research question (a line ending in a question mark). A required-property hint, not a planted defect.",
+      "detection_hint": "\\?\\s*(?:\\n|$)"
+    }
+  ],
+  "minimum_detection": 1.0,
+  "max_false_positives": 0
+}

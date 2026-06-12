@@ -1,0 +1,13 @@
+{
+  "bugs": [
+    {
+      "id": "missing-alternative",
+      "category": "design-gap",
+      "severity": "high",
+      "description": "Decision 1 names no alternative considered and states no trade-off — a single-option decision. The review must flag the absent alternative / unjustified decision.",
+      "detection_hint": "(alternative|trade-?off|why|single[- ]option|no.{0,20}choice|justif)"
+    }
+  ],
+  "minimum_detection": 1.0,
+  "max_false_positives": 2
+}
