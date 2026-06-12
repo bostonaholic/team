@@ -270,6 +270,12 @@ mechanical checks (`file-finder`, `verifier`).
 
 Fable 5 notes:
 
+- Long-running work gets the 1M token context window automatically:
+  Fable 5 supports 1M by default (always-on via the Anthropic API), so
+  the fable-tier agents need no `[1m]` suffix. The sonnet agents stay
+  at 200K deliberately — they are bounded single-pass work, and
+  `sonnet[1m]` bills usage credits on every subscription plan. Haiku
+  does not support 1M.
 - Requires Claude Code ≥ v2.1.170 and Fable 5 access. It is not
   available under zero data retention; on Bedrock/Vertex/Foundry, pin
   `ANTHROPIC_DEFAULT_FABLE_MODEL` to your provider's Fable 5 model ID.
