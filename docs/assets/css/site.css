@@ -16,6 +16,45 @@
   --muted-2: #8a8a8a;
 }
 
+/* System dark mode: applies only when no explicit theme is forced. A user who
+   forces light ([data-theme="light"]) keeps the light palette even on a dark OS. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a0a0a;
+    --fg: #f2f2f2;
+    --border: rgba(255, 255, 255, 0.16);
+    --accent: #f2f2f2;
+    --code-bg: rgba(255, 255, 255, 0.06);
+    --admonition-bg: rgba(255, 255, 255, 0.06);
+    --muted: #b8b8b8;
+    --muted-2: #909090;
+  }
+}
+
+/* Forced light — same as base :root, wins over system dark. */
+[data-theme="light"] {
+  --bg: #fff;
+  --fg: #111;
+  --border: rgba(0, 0, 0, 0.12);
+  --accent: #111;
+  --code-bg: rgba(0, 0, 0, 0.04);
+  --admonition-bg: rgba(0, 0, 0, 0.04);
+  --muted: #5a5a5a;
+  --muted-2: #8a8a8a;
+}
+
+/* Forced dark — same as the system dark palette, regardless of OS. */
+[data-theme="dark"] {
+  --bg: #0a0a0a;
+  --fg: #f2f2f2;
+  --border: rgba(255, 255, 255, 0.16);
+  --accent: #f2f2f2;
+  --code-bg: rgba(255, 255, 255, 0.06);
+  --admonition-bg: rgba(255, 255, 255, 0.06);
+  --muted: #b8b8b8;
+  --muted-2: #909090;
+}
+
 /* --- reset ---------------------------------------------------------------- */
 *,
 *::before,
