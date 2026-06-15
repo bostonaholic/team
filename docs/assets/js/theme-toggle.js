@@ -61,14 +61,8 @@
     });
   }
 
-  // The <script> tag is at the end of <body>, so the toggle button already
-  // exists when this runs — initialize synchronously so the descriptive
-  // aria-label upgrades from the generic server label immediately, with no
-  // stale window for assistive tech. The DOMContentLoaded fallback only
-  // matters if this script is ever moved ahead of the button.
-  if (document.querySelector(".theme-toggle")) {
-    init();
-  } else {
-    document.addEventListener("DOMContentLoaded", init);
-  }
+  // The script tag uses `defer`, so the browser guarantees the full document
+  // is parsed before this runs — the toggle button always exists, and this
+  // executes before DOMContentLoaded. No readiness guard needed.
+  init();
 })();
