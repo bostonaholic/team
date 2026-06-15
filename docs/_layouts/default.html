@@ -3,6 +3,16 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          if (t === 'light' || t === 'dark') {
+            document.documentElement.dataset.theme = t;
+          }
+        } catch (e) {}
+      })();
+    </script>
     {%- seo -%}
     <link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}">
   </head>
@@ -16,10 +26,12 @@
           <a href="{{ '/skills' | relative_url }}">skills</a>
           <a href="{{ '/versioning' | relative_url }}">versioning</a>
           <a href="{{ '/project-tracking' | relative_url }}">project-tracking</a>
+          <button class="theme-toggle" type="button">◑</button>
         </nav>
       </div>
     </header>
     <main class="container">{{ content }}</main>
     {% include footer.html %}
+    <script src="{{ '/assets/js/theme-toggle.js' | relative_url }}" defer></script>
   </body>
 </html>
