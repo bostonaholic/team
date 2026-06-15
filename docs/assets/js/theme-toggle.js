@@ -2,6 +2,7 @@
   "use strict";
 
   var MODES = ["system", "light", "dark"];
+  var GLYPHS = { system: "◑", light: "☀", dark: "☾" };
 
   function readStored() {
     try {
@@ -36,8 +37,9 @@
     return MODES[(i + 1) % MODES.length];
   }
 
-  function updateAria(button, mode) {
+  function updateButton(button, mode) {
     var upcoming = next(mode);
+    button.textContent = GLYPHS[mode];
     button.setAttribute(
       "aria-label",
       "Theme: " + mode + ". Activate to switch to " + upcoming + "."
@@ -51,13 +53,13 @@
     }
 
     var current = readStored();
-    updateAria(button, current);
+    updateButton(button, current);
 
     button.addEventListener("click", function () {
       current = next(current);
       apply(current);
       persist(current);
-      updateAria(button, current);
+      updateButton(button, current);
     });
   }
 
