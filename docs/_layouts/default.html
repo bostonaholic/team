@@ -16,7 +16,7 @@
     {%- seo -%}
     <link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}">
   </head>
-  <body>
+  <body class="{% if page.url == '/' %}home{% endif %}">
     <header>
       <div class="container">
         <a class="site-title" href="{{ '/' | relative_url }}">{{ site.title | downcase }}</a>
@@ -26,7 +26,7 @@
           <a href="{{ '/skills' | relative_url }}">skills</a>
           <a href="{{ '/versioning' | relative_url }}">versioning</a>
           <a href="{{ '/project-tracking' | relative_url }}">project-tracking</a>
-          <button class="theme-toggle" type="button">◑</button>
+          <button class="theme-toggle" type="button" aria-label="Theme: system. Activate to switch to light." aria-pressed="false">◑</button>
         </nav>
       </div>
     </header>
