@@ -1,0 +1,29 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+header {
+  padding: 1rem 0;
+}
+
+header nav a + a {
+  margin-left: 1rem;
+}
+
+main.container {
+  width: 100%;
+}

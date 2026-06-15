@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {%- seo -%}
+    <link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}">
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <a class="site-title" href="{{ '/' | relative_url }}">{{ site.title | downcase }}</a>
+        <nav>
+          <a href="{{ '/' | relative_url }}">home</a>
+          <a href="{{ '/architecture' | relative_url }}">architecture</a>
+          <a href="{{ '/skills' | relative_url }}">skills</a>
+          <a href="{{ '/versioning' | relative_url }}">versioning</a>
+          <a href="{{ '/project-tracking' | relative_url }}">project-tracking</a>
+        </nav>
+      </div>
+    </header>
+    <main class="container">{{ content }}</main>
+    {% include footer.html %}
+  </body>
+</html>
