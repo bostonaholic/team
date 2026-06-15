@@ -42,7 +42,6 @@
       "aria-label",
       "Theme: " + mode + ". Activate to switch to " + upcoming + "."
     );
-    button.setAttribute("aria-pressed", mode === "system" ? "false" : "true");
   }
 
   function init() {
@@ -62,9 +61,14 @@
     });
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
+  // The <script> tag is at the end of <body>, so the toggle button already
+  // exists when this runs — initialize synchronously so the descriptive
+  // aria-label upgrades from the generic server label immediately, with no
+  // stale window for assistive tech. The DOMContentLoaded fallback only
+  // matters if this script is ever moved ahead of the button.
+  if (document.querySelector(".theme-toggle")) {
     init();
+  } else {
+    document.addEventListener("DOMContentLoaded", init);
   }
 })();
