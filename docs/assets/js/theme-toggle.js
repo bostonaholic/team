@@ -36,6 +36,15 @@
     return MODES[(i + 1) % MODES.length];
   }
 
+  function updateAria(button, mode) {
+    var upcoming = next(mode);
+    button.setAttribute(
+      "aria-label",
+      "Theme: " + mode + ". Activate to switch to " + upcoming + "."
+    );
+    button.setAttribute("aria-pressed", mode === "system" ? "false" : "true");
+  }
+
   function init() {
     var button = document.querySelector(".theme-toggle");
     if (!button) {
@@ -43,11 +52,13 @@
     }
 
     var current = readStored();
+    updateAria(button, current);
 
     button.addEventListener("click", function () {
       current = next(current);
       apply(current);
       persist(current);
+      updateAria(button, current);
     });
   }
 
