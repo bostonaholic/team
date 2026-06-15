@@ -1,29 +1,294 @@
+/* ==========================================================================
+   site.css — terminal aesthetic for the Team docs, ported verbatim from
+   matthewboston.com/stylesheets/site.css. Plain CSS, no front matter.
+
+   Custom-property name set (declared once, here). Slices 3+ only RE-VALUE
+   these names in new selector blocks; they never rename or invent names.
+   ========================================================================== */
+:root {
+  --bg: #fff;
+  --fg: #111;
+  --border: rgba(0, 0, 0, 0.12);
+  --accent: #111;
+  --code-bg: rgba(0, 0, 0, 0.04);
+  --admonition-bg: rgba(0, 0, 0, 0.04);
+  --muted: #5a5a5a;
+  --muted-2: #8a8a8a;
+}
+
+/* --- reset ---------------------------------------------------------------- */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+  border-radius: 0;
 }
 
+/* --- base typography ----------------------------------------------------- */
 body {
   margin: 0;
-  font-size: 16px;
-  line-height: 1.6;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--fg);
+  background: var(--bg);
+  /* sticky footer */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+::selection {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+strong,
+b {
+  font-weight: 600;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+  line-height: 1.4;
+  text-transform: lowercase;
+}
+
+h1 {
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  line-height: 1.3;
+}
+
+h2 {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.25px;
+}
+
+h3 {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.25px;
+}
+
+p {
+  margin: 1em 0;
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.1;
+  margin: 3em 0 2.25em;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* --- links + inverted hover ---------------------------------------------- */
+a {
+  color: inherit;
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  padding-bottom: 1px;
+  transition: background 0.15s ease, color 0.15s ease;
+  opacity: 0.9;
+}
+
+a:hover {
+  color: var(--bg);
+  background: var(--fg);
+  opacity: 1;
+}
+
+/* --- layout / sticky footer ---------------------------------------------- */
 .container {
   max-width: 800px;
   margin: 0 auto;
   padding: 0 1rem;
 }
 
+main.container {
+  width: 100%;
+  flex: 1;
+}
+
+/* --- header / nav -------------------------------------------------------- */
 header {
   padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+header .container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+header .site-title {
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: var(--fg);
+  text-transform: lowercase;
+  background: none;
+  opacity: 1;
+}
+
+header .site-title:hover {
+  color: var(--bg);
+  background: var(--fg);
 }
 
 header nav a + a {
-  margin-left: 1rem;
+  margin-left: 1.1rem;
 }
 
-main.container {
+header nav a {
+  text-transform: lowercase;
+  color: var(--muted);
+  background: none;
+  opacity: 1;
+}
+
+header nav a:hover {
+  color: var(--bg);
+  background: var(--fg);
+}
+
+/* --- footer -------------------------------------------------------------- */
+footer {
+  margin-top: auto;
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--border);
+  font-size: 0.9em;
+  color: var(--muted);
+}
+
+footer .container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+footer a {
+  text-transform: lowercase;
+  color: var(--muted);
+  background: none;
+  opacity: 1;
+}
+
+footer a:hover {
+  color: var(--bg);
+  background: var(--fg);
+}
+
+footer .copyright {
+  color: var(--muted-2);
+  font-size: 0.85em;
+}
+
+/* --- code / pre ---------------------------------------------------------- */
+code,
+pre {
+  font-family: inherit;
+  font-size: 13px;
+}
+
+code {
+  background: var(--code-bg);
+  padding: 0.1em 0.3em;
+}
+
+pre {
+  padding: 1rem;
+  overflow-x: auto;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  line-height: 1.6;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+}
+
+/* --- tables (thin borders, header tint, no zebra) ------------------------ */
+table {
   width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  font-size: 13px;
+}
+
+th,
+td {
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+}
+
+th {
+  background: var(--code-bg);
+  font-weight: 600;
+}
+
+/* --- blockquote admonitions (left accent border + faint tint) ------------ */
+blockquote {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  border-left: 4px solid var(--accent);
+  background: var(--admonition-bg);
+  color: var(--muted);
+}
+
+blockquote p:first-child {
+  margin-top: 0;
+}
+
+blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* --- responsive header reflow (narrow viewports) ------------------------- */
+@media (max-width: 600px) {
+  header .container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  header nav {
+    margin-top: 0.5rem;
+  }
+
+  header nav a {
+    margin-right: 1rem;
+  }
+
+  header nav a + a {
+    margin-left: 0;
+  }
+
+  h1 {
+    font-size: 19px;
+  }
 }
