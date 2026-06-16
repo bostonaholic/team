@@ -5,7 +5,7 @@
 // `bump(base, level)` and NOTHING else — a pure function of (base, level).
 //
 // Hermetic: every behavior case injects `BASE_VERSION`, so the script never
-// reads git or the network. Free, fast, gate-tier (L1/L3 per TESTING.md).
+// reads git or the network. Free, fast, gate-tier (L1/L3 per docs/testing.md).
 //
 // Regression: this pins the "0.5.1 -> 0.7.0, skipping 0.6.0" bug. The script
 // used to scan open PRs via the GitHub API and walk past any version they

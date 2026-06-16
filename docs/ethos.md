@@ -96,7 +96,7 @@ not discipline; it is hope.
 
 The corollary is layering: push every check to the cheapest, most deterministic
 layer that can catch it. A test at the wrong layer is worse than no test — it is
-slow, flaky, or costs money to learn nothing. *(See [TESTING.md](https://github.com/bostonaholic/team/blob/main/TESTING.md).)*
+slow, flaky, or costs money to learn nothing. *(See [the testing guide](testing.md).)*
 Detect errors early, surface them loudly, never mask them silently.
 
 **Anti-patterns:**
@@ -169,4 +169,4 @@ and what to ship.**
 
 - **[Vision](vision.md)** — the loop-driven end state Team builds toward.
 - **[Architecture](architecture.md)** — how the pipeline turns these principles into a system.
-- **[TESTING.md](https://github.com/bostonaholic/team/blob/main/TESTING.md)** — where each check belongs.
+- **[Testing](testing.md)** — where each check belongs.

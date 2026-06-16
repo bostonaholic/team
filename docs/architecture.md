@@ -492,6 +492,9 @@ env-var knobs, and the rerun-on-base blame protocol.
 check on a weekly cron (Monday 06:00 UTC) with the `EVALS_ANTHROPIC_API_KEY`
 repo secret.
 
+These three tiers are the paid frontier of Team's broader six-layer testing
+model — see [Testing](testing.md) for where every check belongs.
+
 ## 9. State Management
 
 **Primary state:** the artifacts in `docs/plans/<id>/*.md`. Each
@@ -523,6 +526,7 @@ source of truth for "did phase N finish?"
 ## See also
 
 - **[Skills](skills.md)** — the full per-skill reference for all 30 skills.
+- **[Testing](testing.md)** — the six-layer test harness and which layer each check belongs at.
 - **[Vision](vision.md)** — the loop-driven end state this design builds toward.
 - **[Ethos](ethos.md)** — the principles behind the pipeline.
 - **[Overview](index.md)** — the landing page and pipeline overview.
