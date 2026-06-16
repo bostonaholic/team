@@ -1,8 +1,24 @@
-# Vision
+---
+title: Vision
+description: "Team's north star — a human keeps the board fed and reviews finished work; everything in between runs itself via a continuously running, board-driven control loop."
+audience: [user, developer]
+nav_order: 2
+nav_label: vision
+---
 
-> **North star for the Team plugin.** This is the end state we are building
+# Team Vision
+
+> **The north star for the Team plugin.** This is the end state we are building
 > toward. It is not a description of how Team works today — it is the target
 > the project moves toward.
+
+## Contents
+
+- [The one-sentence vision](#the-one-sentence-vision)
+- [What the human does](#what-the-human-does)
+- [What the system does](#what-the-system-does)
+- [Why this is the goal](#why-this-is-the-goal)
+- [How we get there](#how-we-get-there)
 
 ## The one-sentence vision
 
@@ -79,5 +95,11 @@ and leaving the mechanical flow to the machine.
 
 The loop is assembled from capabilities the pipeline already has — isolated
 worktrees, adversarial review, durable artifacts — plus a control loop over the
-board. See [ETHOS.md](ETHOS.md) for the principles that make the autonomous
+board. See [Ethos](ethos.md) for the principles that make the autonomous
 middle trustworthy.
+
+## See also
+
+- **[Ethos](ethos.md)** — the principles that make the autonomous middle trustworthy.
+- **[Architecture](architecture.md)** — how the pipeline is built.
+- **[Overview](index.md)** — what Team is and how the pipeline runs.

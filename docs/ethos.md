@@ -1,12 +1,29 @@
-# Team Builder Ethos
-
-These are the principles that shape how Team thinks, plans, reviews, and ships.
-They are the beliefs behind the pipeline, the agents, and the loop — the reasons
-the system is built the way it is. They reflect what we believe about building
-software when the building itself is done by agents, and the human's scarce
-resource is judgment, not keystrokes.
-
 ---
+title: Ethos
+description: "The principles behind Team — files as the contract, mechanical gates over good intentions, adversarial-by-design review, and deep agents with narrow seams — that make the autonomous middle trustworthy."
+audience: [user, developer]
+nav_order: 3
+nav_label: ethos
+---
+
+# Team Ethos
+
+> **The principles behind the pipeline, the agents, and the loop.** They shape
+> how Team thinks, plans, reviews, and ships — the reasons the system is built
+> the way it is. They reflect what we believe about building software when the
+> building itself is done by agents, and the human's scarce resource is
+> judgment, not keystrokes.
+
+## Contents
+
+- [The Shift](#the-shift)
+- [1. The Human Owns the Ends](#1-the-human-owns-the-ends)
+- [2. Files Are the Contract](#2-files-are-the-contract)
+- [3. Mechanical Gates Over Good Intentions](#3-mechanical-gates-over-good-intentions)
+- [4. Adversarial by Design](#4-adversarial-by-design)
+- [5. Deep Agents, Narrow Seams](#5-deep-agents-narrow-seams)
+- [How They Work Together](#how-they-work-together)
+- [Autonomy Is Earned, Not Assumed](#autonomy-is-earned-not-assumed)
 
 ## The Shift
 
@@ -30,10 +47,8 @@ testing, reviewing, opening the PR — runs itself.
 | | Testing, reviewing, opening the PR |
 
 This only works if the autonomous middle is *trustworthy*. The rest of this
-document is how we earn that trust. See [VISION.md](VISION.md) for the end state
+document is how we earn that trust. See [Vision](vision.md) for the end state
 this drives toward.
-
----
 
 ## 1. The Human Owns the Ends
 
@@ -54,8 +69,6 @@ principle is to make the *ends* the only place a human is needed.
 - The loop merging its own PR. (Shipping is a human decision. Always.)
 - "Ask the user at every step." (Ask at the ends. Be autonomous in the middle.)
 
----
-
 ## 2. Files Are the Contract
 
 The conversation is ephemeral; the artifact on disk is durable. Every phase
@@ -74,8 +87,6 @@ artifact is the value.)*
 - Trusting "the model will remember." It won't — about one time in five.
 - A phase that produces no artifact. If it didn't write a file, it didn't happen.
 
----
-
 ## 3. Mechanical Gates Over Good Intentions
 
 LLMs forget instructions roughly one time in five. So where a rule **must** hold,
@@ -85,15 +96,13 @@ not discipline; it is hope.
 
 The corollary is layering: push every check to the cheapest, most deterministic
 layer that can catch it. A test at the wrong layer is worse than no test — it is
-slow, flaky, or costs money to learn nothing. *(See [TESTING.md](TESTING.md).)*
+slow, flaky, or costs money to learn nothing. *(See [TESTING.md](https://github.com/bostonaholic/team/blob/main/TESTING.md).)*
 Detect errors early, surface them loudly, never mask them silently.
 
 **Anti-patterns:**
 - "The agent's prompt says not to do X." (Add a hook that makes X impossible.)
 - A check that only passes when the model happens to be well-behaved.
 - An expensive LLM judge for something a regex could decide.
-
----
 
 ## 4. Adversarial by Design
 
@@ -112,8 +121,6 @@ but with the verifier structurally unable to collude with the generator.
 - A reviewer that read the conversation where the code was written.
 - Treating model confidence as correctness. Agreement is a signal, not a proof.
 
----
-
 ## 5. Deep Agents, Narrow Seams
 
 Each agent is a **deep module behind a narrow interface**: read one predecessor
@@ -129,8 +136,6 @@ downward. Armstrong: isolate failures so one fault can't take down the system.)*
 - An agent that reaches around its input artifact to peek at others' state.
 - Orchestration logic leaking into a specialist agent.
 - A "utility" agent that quietly does five unrelated things.
-
----
 
 ## How They Work Together
 
@@ -148,8 +153,6 @@ confident mistakes; without clean seams one failure becomes ten. Autonomy is not
 the *absence* of control — it is control moved out of the human's hands and into
 the system's structure.
 
----
-
 ## Autonomy Is Earned, Not Assumed
 
 The loop only gets to run hands-off because every step beneath it is gated,
@@ -162,6 +165,8 @@ where judgment is scarce." Build the system so well that the only things left
 worth a human's attention are the two that were always theirs: **what to build,
 and what to ship.**
 
----
+## See also
 
-*Read next: [VISION.md](VISION.md) — the end state · [docs/architecture.md](docs/architecture.md) — how the pipeline is built · [TESTING.md](TESTING.md) — where checks belong.*
+- **[Vision](vision.md)** — the loop-driven end state Team builds toward.
+- **[Architecture](architecture.md)** — how the pipeline turns these principles into a system.
+- **[TESTING.md](https://github.com/bostonaholic/team/blob/main/TESTING.md)** — where each check belongs.

@@ -1,6 +1,9 @@
 ---
 title: Project Tracking
 description: "How work on the Team plugin is tracked — the GitHub Project board is the single source of truth for features, bugs, and chores, moved across a Backlog → Ready → In progress → In review → Done kanban."
+audience: [developer]
+nav_order: 7
+nav_label: project-tracking
 ---
 
 # Project Tracking

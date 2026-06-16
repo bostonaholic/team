@@ -2,6 +2,9 @@
 title: Overview
 description: "Team — a Claude Code plugin that orchestrates specialized agents to autonomously implement features end-to-end via the QRSPI pipeline."
 permalink: /
+audience: [user, developer]
+nav_order: 1
+nav_label: home
 ---
 
 # Team
@@ -51,7 +54,8 @@ For a focused bug fix that skips the QRSPI ceremony:
 
 ## Read next
 
+- **[Vision](vision.md)** — the loop-driven end state Team builds toward.
+- **[Ethos](ethos.md)** — the principles that make the autonomous middle trustworthy.
 - **[Architecture](architecture.md)** — full design, artifact frontmatter, phase-inference rules.
 - **[Skills](skills.md)** — all 29 skills, their arguments, consumers, and behaviors.
-- **[Project Tracking](project-tracking.md)** — how work is tracked on the GitHub Project board.
 - **[GitHub repository](https://github.com/bostonaholic/team)** — source, agents, skills.

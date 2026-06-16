@@ -21,11 +21,24 @@
       <div class="container">
         <a class="site-title" href="{{ '/' | relative_url }}">{{ site.title | downcase }}</a>
         <nav>
-          <a href="{{ '/' | relative_url }}">home</a>
-          <a href="{{ '/architecture' | relative_url }}">architecture</a>
-          <a href="{{ '/skills' | relative_url }}">skills</a>
-          <a href="{{ '/versioning' | relative_url }}">versioning</a>
-          <a href="{{ '/project-tracking' | relative_url }}">project-tracking</a>
+          {%- comment -%} Nav is data-driven: each page declares `audience` + `nav_order`.
+          The shared group (audience: user) serves everyone; contributor-only pages
+          live in the "contributing" dropdown. Add a page → set its front matter. {%- endcomment -%}
+          {%- assign shared = site.html_pages | where_exp: "p", "p.audience contains 'user'" | sort: "nav_order" -%}
+          {%- for p in shared -%}
+          <a href="{{ p.url | relative_url }}">{{ p.nav_label | default: p.title | downcase }}</a>
+          {%- endfor -%}
+          {%- assign devpages = site.html_pages | where_exp: "p", "p.audience contains 'developer'" | sort: "nav_order" -%}
+          <details class="nav-dd">
+            <summary>contributing</summary>
+            <div class="nav-dd-menu">
+              {%- for p in devpages -%}
+              {%- unless p.audience contains 'user' -%}
+              <a href="{{ p.url | relative_url }}">{{ p.nav_label | default: p.title | downcase }}</a>
+              {%- endunless -%}
+              {%- endfor -%}
+            </div>
+          </details>
           <button class="theme-toggle" type="button" aria-label="Toggle color theme">◑</button>
         </nav>
       </div>
