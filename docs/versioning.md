@@ -1,6 +1,9 @@
 ---
 title: Versioning
 description: "Scoped per-PR versioning for the Team plugin — PRs touching runtime paths (agents/, skills/, hooks/, .claude-plugin/) bump the version, roll their own changelog section, and carry the version in their title; dev-only PRs are exempt. CI gates the bump and auto-publishes the release on merge."
+audience: [developer]
+nav_order: 6
+nav_label: versioning
 ---
 
 # Versioning
@@ -20,7 +23,7 @@ tags and publishes automatically.
 
 A bump is required **iff** the PR's diff (vs the base branch) touches a
 runtime path — the runtime half of the runtime-vs-development split in
-[AGENTS.md](../AGENTS.md):
+[AGENTS.md](https://github.com/bostonaholic/team/blob/main/AGENTS.md):
 
 | Paths | Bump |
 |-------|------|
@@ -132,7 +135,7 @@ title correctly yourself; the sync is a backstop, not the mechanism.
 
 ## What CI enforces, and where
 
-Per [TESTING.md](../TESTING.md), every check lives at the cheapest layer that
+Per [TESTING.md](https://github.com/bostonaholic/team/blob/main/TESTING.md), every check lives at the cheapest layer that
 can catch it:
 
 | Check | Layer | Where |
@@ -197,4 +200,4 @@ gh release create "v$V" --title "v$V" --notes-file /tmp/notes.md
 ## Read next
 
 - **[Project Tracking](project-tracking.md)** — the board the PR's issue moves across.
-- **[TESTING.md](../TESTING.md)** — why each check lives at its layer.
+- **[TESTING.md](https://github.com/bostonaholic/team/blob/main/TESTING.md)** — why each check lives at its layer.

@@ -1,12 +1,16 @@
 ---
 title: Architecture
 description: "Team plugin architecture — agents as microservices, the QRSPI pipeline, artifact frontmatter, and phase-inference rules."
+audience: [user, developer]
+nav_order: 4
+nav_label: architecture
 ---
 
-# Team Plugin — Architecture
+# Team Architecture
 
-> **Audience:** Plugin maintainers and contributors. End users only need
-> the README + `/team` slash command.
+> **A deep dive into how Team is built.** Skim it for the mental model, or read
+> it in full to contribute — the high-level pipeline overview lives on the
+> [home page](index.md).
 >
 > **Source of truth:** the artifacts in `docs/plans/<id>/*.md` and the
 > in-session TodoWrite ledger.
@@ -479,7 +483,7 @@ Plugin-developer tooling — not distributed with the plugin. Three tiers:
 `EvalCollector` writes incrementally, finds the previous run on the same
 branch+tier, and prints regressions + budget regressions (≥2× growth in
 tool calls or turns without a verdict change). See
-[evals/README.md](../evals/README.md) for fixture schema, rubric format,
+[evals/README.md](https://github.com/bostonaholic/team/blob/main/evals/README.md) for fixture schema, rubric format,
 env-var knobs, and the rerun-on-base blame protocol.
 
 **CI wiring.** Two GitHub Actions workflows in `.github/workflows/`:
@@ -515,3 +519,10 @@ the same for new sessions.
 git and survive across sessions, compaction events, and context resets.
 They are the durable communication protocol between agents and the
 source of truth for "did phase N finish?"
+
+## See also
+
+- **[Skills](skills.md)** — the full per-skill reference for all 29 skills.
+- **[Vision](vision.md)** — the loop-driven end state this design builds toward.
+- **[Ethos](ethos.md)** — the principles behind the pipeline.
+- **[Overview](index.md)** — the landing page and pipeline overview.

@@ -210,6 +210,57 @@ header nav a:hover {
   background: var(--fg);
 }
 
+/* contributor docs live in a "contributing" dropdown, kept out of the user-facing bar */
+header nav details.nav-dd {
+  position: relative;
+  display: inline-block;
+  margin-left: 1.1rem;
+}
+
+header nav details.nav-dd > summary {
+  list-style: none;
+  cursor: pointer;
+  color: var(--muted);
+  text-transform: lowercase;
+}
+
+header nav details.nav-dd > summary::-webkit-details-marker {
+  display: none;
+}
+
+header nav details.nav-dd > summary::after {
+  content: " \25BE";
+  color: var(--muted-2);
+}
+
+header nav details.nav-dd[open] > summary {
+  color: var(--fg);
+}
+
+header nav .nav-dd-menu {
+  position: absolute;
+  right: 0;
+  top: 1.7rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 0.4rem 0;
+  z-index: 20;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+header nav .nav-dd-menu a {
+  display: block;
+  margin: 0; /* override the `nav a + a` inline spacing */
+  padding: 0.25rem 0.9rem;
+  white-space: nowrap; /* keep "project-tracking" on one line */
+  color: var(--muted);
+}
+
+header nav .nav-dd-menu a:hover {
+  color: var(--bg);
+  background: var(--fg);
+}
+
 /* --- footer -------------------------------------------------------------- */
 footer {
   margin-top: auto;

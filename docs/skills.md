@@ -1,12 +1,16 @@
 ---
 title: Skills
 description: "The Team plugin's 29 skills — 11 entry-point slash commands and 18 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+audience: [user, developer]
+nav_order: 5
+nav_label: skills
 ---
 
-# Team Plugin — Skills
+# Team Skills
 
-> **Audience:** Plugin maintainers and contributors. End users only need
-> the README + `/team` slash command.
+> **The features you use.** Every entry-point skill is a slash command you can
+> run (`/team`, `/team-fix`, …); the methodology skills are the internal
+> building blocks the agents load to do their work.
 >
 > **Source of truth:** the skill bodies themselves, `skills/*/SKILL.md`.
 > This page is a hand-maintained reference; when it disagrees with a
@@ -450,8 +454,10 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 
 ## See also
 
-- **[architecture.md](architecture.md)** — the design rationale behind
+- **[Architecture](architecture.md)** — the design rationale behind
   skills (two flavors, three-tier discovery, load limits) in §6.
-- **[index.md](index.md)** — the landing page and pipeline overview.
+- **[Vision](vision.md)** — the loop-driven end state Team builds toward.
+- **[Ethos](ethos.md)** — the principles behind the pipeline.
+- **[Overview](index.md)** — the landing page and pipeline overview.
 - **`skills/team/registry.json`** — the phase-tagged inventory of the 13
   specialist agents, in the source tree.
