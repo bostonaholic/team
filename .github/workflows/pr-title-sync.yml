@@ -1,9 +1,15 @@
 # PR title sync — keeps PR titles prefixed with the version they ship.
 #
-# Per-PR versioning (docs/versioning.md): every PR title reads
-# `vX.Y.Z <type>: <subject>`. This workflow reads the version from the PR
-# head's .claude-plugin/plugin.json and rewrites the title to match. It is a
-# backstop — authors set the title themselves (version-bump skill, step 7).
+# Scoped per-PR versioning (docs/versioning.md): PRs that change the version
+# carry `vX.Y.Z <type>: <subject>` titles; exempt PRs (no version change)
+# keep their plain `<type>: <subject>` titles untouched. This workflow reads
+# the version from the PR's .claude-plugin/plugin.json and rewrites the title
+# to match — but only when that version differs from the base branch's; when
+# the version is unchanged it does nothing (it never adds or strips a
+# prefix). It is a backstop — authors set the title themselves (version-bump
+# skill, step 7). Accepted residue: a bump that is later reverted in-branch
+# leaves its now-wrong prefix in place (cosmetic only — the version gate, not
+# the title, is the enforcement).
 #
 # WHY plain `pull_request` (not pull_request_target): all PRs here come from
 # same-repo branches, where the default GITHUB_TOKEN honors
@@ -42,6 +48,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
+      BASE_REF: ${{ github.event.pull_request.base.ref }}
       # Attacker-influenced — env-only, never inlined in run:, never echoed.
       CURRENT_TITLE: ${{ github.event.pull_request.title }}
     steps:
@@ -50,9 +57,18 @@ jobs:
       - name: Rewrite title to match plugin.json version
         run: |
           set -euo pipefail
+          SEMVER_RE='^[0-9]+\.[0-9]+\.[0-9]+$'
           V=$(jq -r .version .claude-plugin/plugin.json)
-          grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$' <<<"$V" \
+          grep -qE "$SEMVER_RE" <<<"$V" \
             || { echo "::error::plugin.json version is not 3-part semver"; exit 1; }
+          git fetch origin "$BASE_REF" --depth=1 --quiet
+          BASE_V=$(git show FETCH_HEAD:.claude-plugin/plugin.json | jq -r .version)
+          grep -qE "$SEMVER_RE" <<<"$BASE_V" \
+            || { echo "::error::base plugin.json version is not 3-part semver"; exit 1; }
+          if [ "$V" = "$BASE_V" ]; then
+            echo "Version unchanged vs base ($V); leaving the title alone."
+            exit 0
+          fi
           STRIPPED=$(sed -E 's/^v[0-9]+\.[0-9]+\.[0-9]+[[:space:]:]+//' <<<"$CURRENT_TITLE")
           WANT="v${V} ${STRIPPED}"
           if [ "$WANT" = "$CURRENT_TITLE" ]; then

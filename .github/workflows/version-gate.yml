@@ -1,10 +1,13 @@
 # Version gate — runs on every PR to main.
 #
-# Enforces the per-PR versioning policy (docs/versioning.md): every PR bumps
-# the plugin version in .claude-plugin/plugin.json (the canonical slot), the
-# bump is a valid SemVer increment, all four version strings agree, the
-# CHANGELOG carries a section for the new version, and no OLDER open PR
-# already claims it. The in-tree half of the contract (string agreement,
+# Enforces the scoped per-PR versioning policy (docs/versioning.md): a PR
+# whose diff touches runtime paths (agents/, skills/, hooks/, .claude-plugin/
+# — the runtime half of the runtime-vs-development split in AGENTS.md) must
+# bump the plugin version in .claude-plugin/plugin.json (the canonical slot);
+# exempt PRs pass without a bump. Any changed version — required or voluntary
+# — must be a valid SemVer increment, all four version strings must agree, the
+# CHANGELOG must carry a section for the new version, and no OLDER open PR may
+# already claim it. The in-tree half of the contract (string agreement,
 # changelog shape) is authoritatively tested by
 # tests/version-consistency.test.ts under harness-checks.yml; the checks here
 # need git/API context that a bun test cannot have.
@@ -60,7 +63,50 @@ jobs:
           echo "base=$BASE_V" >> "$GITHUB_OUTPUT"
           echo "PR version: $PR_V (base: $BASE_V)"
 
+      - name: Classify PR scope
+        id: scope
+        # Decides which policy branch applies (docs/versioning.md): a bump is
+        # required iff the diff touches runtime paths — the runtime half of
+        # the runtime-vs-development split in AGENTS.md; adding a new runtime
+        # directory there means adding it to the grep below. Two-endpoint
+        # tree diff: HEAD is the PR merge ref, whose tree already contains
+        # the event-time base, so diffing the base tip (FETCH_HEAD, fetched
+        # by the previous step) against HEAD yields exactly the PR's changes.
+        # If base moved after the event, extra files appear — classification
+        # only gets STRICTER, never silently exempt (same staleness race as
+        # the header's). quotePath off so non-ASCII paths are not quoted (a
+        # leading '"' would defeat the anchor); --no-renames so both sides of
+        # a rename are listed (rename detection would hide the runtime side).
+        # Filenames are matched and logged as data, never executed; only
+        # true/false booleans cross the step boundary.
+        env:
+          PR_V: ${{ steps.versions.outputs.pr }}
+          BASE_V: ${{ steps.versions.outputs.base }}
+        run: |
+          set -euo pipefail
+          CHANGED=$(git -c core.quotePath=false diff --name-only --no-renames FETCH_HEAD HEAD)
+          echo "Files changed vs base:"
+          sed 's/^/  /' <<<"$CHANGED"
+          RUNTIME=$(grep -E '^(agents|skills|hooks|\.claude-plugin)/' <<<"$CHANGED" || true)
+          if [ -n "$RUNTIME" ]; then RUNTIME_TOUCHED=true; else RUNTIME_TOUCHED=false; fi
+          if [ "$PR_V" = "$BASE_V" ]; then VERSION_CHANGED=false; else VERSION_CHANGED=true; fi
+          echo "runtime_touched=$RUNTIME_TOUCHED" >> "$GITHUB_OUTPUT"
+          echo "version_changed=$VERSION_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "version_changed=$VERSION_CHANGED runtime_touched=$RUNTIME_TOUCHED"
+
+      - name: Runtime paths changed — version bump required
+        if: steps.scope.outputs.runtime_touched == 'true' && steps.scope.outputs.version_changed == 'false'
+        run: |
+          echo "::error::This PR changes runtime paths (agents/, skills/, hooks/, .claude-plugin/) but does not bump the plugin version. Run .claude/scripts/next-version.sh <major|minor|patch>, update all four version strings, add a '## [X.Y.Z]' CHANGELOG section, and title the PR 'vX.Y.Z <type>: <subject>' (docs/versioning.md). The changed files are listed in the 'Classify PR scope' step above."
+          exit 1
+
+      - name: Exempt — no runtime changes, no bump required
+        if: steps.scope.outputs.runtime_touched == 'false' && steps.scope.outputs.version_changed == 'false'
+        run: |
+          echo "::notice::Version gate passed without a bump: no runtime paths (agents/, skills/, hooks/, .claude-plugin/) changed and the version is unchanged. Exempt PRs need no changelog section or title prefix (docs/versioning.md)."
+
       - name: Version is bumped vs base
+        if: steps.scope.outputs.version_changed == 'true'
         env:
           PR_V: ${{ steps.versions.outputs.pr }}
           BASE_V: ${{ steps.versions.outputs.base }}
@@ -73,11 +119,12 @@ jobs:
             || { [ "$pM" -eq "$bM" ] && [ "$pm" -eq "$bm" ] && [ "$pp" -gt "$bp" ]; }; then
             echo "OK: $BASE_V -> $PR_V"
           else
-            echo "::error::Every PR must bump the version (docs/versioning.md). PR has $PR_V, base has $BASE_V. Run: .claude/scripts/next-version.sh <major|minor|patch>"
+            echo "::error::PR version $PR_V is not an increment over base $BASE_V (docs/versioning.md). If main bumped past your branch, rebase on main and re-run .claude/scripts/next-version.sh <major|minor|patch>"
             exit 1
           fi
 
       - name: Increment shape is valid
+        if: steps.scope.outputs.version_changed == 'true'
         env:
           PR_V: ${{ steps.versions.outputs.pr }}
           BASE_V: ${{ steps.versions.outputs.base }}
@@ -101,6 +148,7 @@ jobs:
       - name: Four version strings agree
         # Cheap restatement so the failure is visible in this gate; the
         # authoritative copy is tests/version-consistency.test.ts.
+        if: steps.scope.outputs.version_changed == 'true'
         env:
           PR_V: ${{ steps.versions.outputs.pr }}
         run: |
@@ -114,17 +162,19 @@ jobs:
           echo "OK: all four version strings read $PR_V"
 
       - name: Changelog section present
+        if: steps.scope.outputs.version_changed == 'true'
         env:
           PR_V: ${{ steps.versions.outputs.pr }}
         run: |
           set -euo pipefail
           ESC=$(sed 's/\./\\./g' <<<"$PR_V")
           grep -qE "^## \[$ESC\] - [0-9]{4}-[0-9]{2}-[0-9]{2}$" CHANGELOG.md \
-            || { echo "::error::CHANGELOG.md has no '## [$PR_V] - YYYY-MM-DD' section — each PR rolls its own (docs/versioning.md)"; exit 1; }
+            || { echo "::error::CHANGELOG.md has no '## [$PR_V] - YYYY-MM-DD' section — each version-bumping PR rolls its own (docs/versioning.md)"; exit 1; }
           echo "OK: CHANGELOG.md has a section for $PR_V"
 
       - name: No older open PR claims this version
         # Fail-open: an API error must not block merges on a network blip.
+        if: steps.scope.outputs.version_changed == 'true'
         env:
           PR_V: ${{ steps.versions.outputs.pr }}
         run: |
