@@ -410,7 +410,7 @@ cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. `code-review` is the only skill loaded as composed
 methodology that is also a user command.)
 
-For the full per-skill reference — all 29 skills, their arguments,
+For the full per-skill reference — all 30 skills, their arguments,
 consumers, and behaviors — see [skills.md](skills.md).
 
 ### Design Guidelines
@@ -522,7 +522,7 @@ source of truth for "did phase N finish?"
 
 ## See also
 
-- **[Skills](skills.md)** — the full per-skill reference for all 29 skills.
+- **[Skills](skills.md)** — the full per-skill reference for all 30 skills.
 - **[Vision](vision.md)** — the loop-driven end state this design builds toward.
 - **[Ethos](ethos.md)** — the principles behind the pipeline.
 - **[Overview](index.md)** — the landing page and pipeline overview.
