@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-06-16
+
 ### Added
 
 - **`/shipit` — a new skill to land a reviewed pull request.** The Team plugin now ships a generic `/shipit` slash command (`skills/shipit/SKILL.md`) that finalizes an open PR end to end: it discovers the open PR for your current branch, pushes any unpushed commits, waits for CI to go green with a bounded poll (`timeout 1800 gh pr checks --watch --fail-fast --interval 30`, capped at 30 minutes), and rebase-merges (`gh pr merge --rebase`). It handles a PR that has fallen behind its base (rebase + `--force-with-lease`, never a bare `--force`), surfaces branch-protection rejections verbatim, and refuses up front if there is no open PR or the PR is already merged/closed. An interactive pre-merge confirmation guards the irreversible merge; a non-interactive caller can pass `--yes` to skip it. The skill is project-agnostic — it does no versioning, changelog, or release work, so it works for any repository — and is user-invocable only (`disable-model-invocation: true`) because merging is irreversible.
@@ -95,7 +97,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/bostonaholic/team/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/bostonaholic/team/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/bostonaholic/team/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/bostonaholic/team/compare/v0.3.0...v0.4.0
