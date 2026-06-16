@@ -1,46 +1,43 @@
 ---
 name: version-bump
 description: |
-  Bump the Team plugin version for the current PR — required iff the PR's diff
-  touches runtime/distributed paths (agents/, skills/, hooks/, .claude-plugin/);
-  dev-only PRs are exempt and skip the bump entirely (docs/versioning.md). When a
-  bump is needed: pick the SemVer level, compute the next free version, update all
-  four version strings, roll a per-PR changelog section, and title the PR vX.Y.Z.
-  This is a DEVELOPMENT concern (it versions the plugin itself), not a runtime
-  pipeline phase. Use when preparing any PR in this repo, or when the user asks to
-  "bump the version", "prepare the PR version", or runs "/version-bump".
+  Version the Team plugin at land time (DEV-internal, not distributed): decide
+  the SemVer level, compute the next free version against current `main`, update
+  all four version strings, cut the `[Unreleased]` changelog body into a dated
+  `## [X.Y.Z]` section, run the land-time consistency assertion, and commit
+  `chore(version): X.Y.Z`. This is the Team-internal bumper; the generic runtime
+  `/shipit` skill then pushes, waits for CI, and rebase-merges. Use when landing
+  a Team PR, or when the user asks to "bump the version" or "version this PR".
 ---
 
-# Version Bump — version the current PR
+# Version Bump — version a Team PR at land time
 
 > Follow `skills/progress-tracking/SKILL.md`: this procedure has more than two steps —
 > seed one todo item per step below before starting and mark each complete as you go.
 
-This skill versions the **plugin itself**, once per PR, before the PR opens (or
-before pushing new work to an existing PR). Tagging and the GitHub release are
-**not** part of this procedure — `release-on-merge.yml` does both automatically
-when the PR merges. Full policy: [docs/versioning.md](../../../docs/versioning.md).
+This skill versions the **Team plugin itself** at land time. It is **dev-only**
+(lives under `.claude/`, never distributed to plugin users). Tagging and the
+GitHub release are **not** part of this procedure — `release-on-merge.yml` does
+both automatically when the PR merges. Full policy:
+[docs/versioning.md](../../../docs/versioning.md).
+
+## The dev land process
+
+Landing a Team PR is two steps, in order:
+
+1. **Bump (this skill).** Run `version-bump` against current `main`: it picks the
+   level, assigns the next free version, bumps the four version strings, cuts the
+   `[Unreleased]` changelog into a dated `## [X.Y.Z]` section, runs the land-time
+   consistency assertion, and commits `chore(version): X.Y.Z`.
+2. **Land (the generic `/shipit` skill).** Run the distributed runtime
+   [`/shipit`](../../../skills/shipit/SKILL.md) skill to push the branch, wait for
+   CI, and rebase-merge. `shipit` is project-agnostic — it does no versioning;
+   this skill is the Team-internal bumper it composes with.
+
+Run this skill **before** `/shipit`, against the version of `main` you intend to
+land onto.
 
 ## Steps
-
-### 0. Check whether a bump is required at all
-
-A bump is required **iff** the PR's diff touches runtime/distributed paths
-(docs/versioning.md):
-
-```bash
-git fetch origin main --quiet
-CHANGED=$(git -c core.quotePath=false diff --name-only --no-renames origin/main...HEAD)
-grep -E '^(agents|skills|hooks|\.claude-plugin)/' <<<"$CHANGED" || echo "NO RUNTIME PATHS TOUCHED"
-```
-
-- **Any runtime path listed** → a bump is required; continue with step 1.
-- **`NO RUNTIME PATHS TOUCHED`** → report "no bump required — this PR touches
-  only exempt paths" and **STOP**. Skip every remaining step: no version
-  change, no changelog section, and a plain `<type>: <subject>` PR title with
-  no version prefix. (A voluntary bump is still allowed — e.g. to force a
-  release — but it then faces every gate check, including the changelog
-  section.)
 
 ### 1. Decide the bump level
 
@@ -64,7 +61,9 @@ bash .claude/scripts/next-version.sh <level>
 ```
 
 This bumps from `origin/main` and walks past versions claimed by other open
-PRs (fail-open on API errors — CI's version gate is the authoritative check).
+PRs (fail-open on API errors). Under the land-time model only the landing PR
+carries a bump, so the walk-past is a **backstop** — serialization (one PR
+lands at a time) is the primary collision defense.
 
 ### 3. Bump all four version strings
 
@@ -84,27 +83,58 @@ grep -rn '"version"' package.json .claude-plugin/plugin.json .claude-plugin/mark
 
 All four lines must show the **new** version. Zero may still show the old one.
 
-### 4. Roll the changelog
+### 4. Cut the changelog section
 
-In `CHANGELOG.md` (Keep a Changelog format, entry style per
-`skills/changelog/SKILL.md`):
+This **moves** the accumulated `[Unreleased]` body into a new dated section —
+the inverse of `release-on-merge.yml`'s `awk` extraction (you write the section
+the release workflow later reads). In `CHANGELOG.md` (Keep a Changelog format,
+entry style per `skills/changelog/SKILL.md`):
 
-- Insert `## [X.Y.Z] - YYYY-MM-DD` (today's date) directly **below**
-  `## [Unreleased]`, containing this PR's `### Added/Changed/Fixed` entries.
-  `## [Unreleased]` stays in place, permanently empty.
-- Update the link-reference footer:
+- Move the entire `[Unreleased]` body into a new `## [X.Y.Z] - YYYY-MM-DD`
+  (today's date) section inserted directly **below** `## [Unreleased]`. Leave
+  `## [Unreleased]` in place, now empty again.
+- Re-point the link-reference footer:
   - `[Unreleased]` compare base → `vX.Y.Z...HEAD`
   - Add `[X.Y.Z]: https://github.com/bostonaholic/team/compare/v<prev>...vX.Y.Z`
 
-This section becomes the GitHub release notes verbatim — write it for a
-reader deciding whether to upgrade.
+This section becomes the GitHub release notes verbatim — write it for a reader
+deciding whether to upgrade.
 
-### 5. Verify
+**Empty-`[Unreleased]` edge case.** If the `[Unreleased]` body is empty,
+**derive at least one bullet from the PR's commits** (`feat:`/`fix:`/`perf:`/
+`security:` per `skills/changelog/SKILL.md` style). If no user-facing commit
+exists to derive a bullet from, **stop and ask the user to add an entry** —
+never write an empty section (`release-on-merge.yml` errors on empty release
+notes).
+
+### 5. Land-time consistency assertion
+
+After the changelog cut and **before committing**, run the consistency check —
+it must run **after** the cut (so the dated section exists to validate). This is
+the in-tree replacement for the retired `version-gate.yml`:
 
 ```bash
 bun test tests/version-consistency.test.ts
 node -e "['.claude-plugin/plugin.json','.claude-plugin/marketplace.json','package.json'].forEach(f=>JSON.parse(require('fs').readFileSync(f)));console.log('JSON OK')"
 ```
+
+The tripwire asserts strict semver and that all four strings agree. Additionally
+assert inline the released-section + footer-compare-link invariants (these hold
+only after the cut, so they live here, not in the tripwire):
+
+```bash
+V=$(jq -r .version .claude-plugin/plugin.json)
+ESC=$(sed 's/\./\\./g' <<<"$V")
+grep -qE "^## \[$ESC\] - [0-9]{4}-[0-9]{2}-[0-9]{2}$" CHANGELOG.md \
+  || { echo "::error::no '## [$V] - YYYY-MM-DD' section — the cut did not land"; exit 1; }
+grep -qE "^\[$ESC\]: https://" CHANGELOG.md \
+  || { echo "::error::no footer compare link for $V"; exit 1; }
+grep -q "\[Unreleased\]: https://github.com/bostonaholic/team/compare/v$V...HEAD" CHANGELOG.md \
+  || { echo "::error::[Unreleased] footer does not compare from v$V"; exit 1; }
+echo "OK: land-time consistency holds"
+```
+
+If any check fails, **stop before committing** and fix the cut.
 
 ### 6. Commit
 
@@ -117,7 +147,9 @@ git commit -m "chore(version): X.Y.Z"
 
 ### 7. Title the PR
 
-`vX.Y.Z <type>: <subject>` — e.g. `v0.5.0 feat: adopt per-PR versioning`.
-Set it when opening (`gh pr create --title`) or fix an existing PR
-(`gh pr edit --title`). The `PR title sync` workflow corrects drift, but it
-is a backstop — don't rely on it.
+`vX.Y.Z <type>: <subject>` — e.g. `v0.6.0 feat: add the shipit land skill`. Set
+it on the existing PR (`gh pr edit --title`). The `PR title sync` workflow
+corrects drift, but it is a backstop — don't rely on it.
+
+Then run `/shipit` (step 2 of the dev land process) to push, wait for CI, and
+rebase-merge.
