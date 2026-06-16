@@ -72,8 +72,14 @@ describe("agent-open-questions protocol", () => {
     expect(read(QRSPI_SKILL)).toContain("agent-open-questions");
   });
 
-  test("CLAUDE.md has '## Skills (29)' heading", () => {
-    expect(/^## Skills \(29\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md has '## Skills (30)' heading", () => {
+    expect(/^## Skills \(30\)/m.test(read(CLAUDE_MD))).toBe(true);
+  });
+
+  test("skills/shipit/SKILL.md exists as a runtime skill", () => {
+    // shipit is a distributed runtime land utility — it lives under skills/,
+    // not .claude/. (docs/plans/2026-06-15-version-at-land-time)
+    expect(existsSync(join(REPO_ROOT, "skills", "shipit", "SKILL.md"))).toBe(true);
   });
 });
 

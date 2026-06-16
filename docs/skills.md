@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 29 skills — 11 entry-point slash commands and 18 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 30 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 18 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -20,6 +20,7 @@ nav_label: skills
 
 - [Two flavors of skill](#two-flavors-of-skill)
 - [Entry-point skills](#entry-point-skills)
+- [Standalone utilities](#standalone-utilities)
 - [Methodology skills](#methodology-skills)
 - [Skill ↔ agent ↔ phase](#skill--agent--phase)
 - [Name-collision pairs](#name-collision-pairs)
@@ -41,8 +42,11 @@ catalog into two flavors:
   instruction in the agent body (e.g., `Load skills/<name>/SKILL.md for
   …`).
 
-That `argument-hint` marker is the whole flavor distinction. The split
-is **11 entry-point + 18 methodology = 29**.
+That `argument-hint` marker is the whole flavor distinction. Most
+`argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
+standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
+split is **11 pipeline entry-point + 1 standalone utility + 18 methodology =
+30**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -212,6 +216,30 @@ argument shape.
   That subagent loads four methodology skills as its review criteria —
   `technical-design-doc`, `code-review`, `engineering-standards`, and
   `documenting-decisions` — making this an additional consumer of all four.
+
+## Standalone utilities
+
+Carries `argument-hint` (so it is a slash command) but is **not** a QRSPI
+phase — a self-contained action a user runs on demand.
+
+### shipit
+
+- **Purpose:** Land a reviewed pull request — push unpushed commits, wait for
+  CI to go green, then rebase-merge.
+- **`$ARGUMENTS`:** `[<pr-number>] [--yes]` — optional PR number override;
+  `--yes` skips the interactive pre-merge confirmation for non-interactive
+  callers.
+- **Phase:** None — a standalone land action, not part of the pipeline.
+- **Key behaviors:** Discovers the open PR for the current branch via the §2B
+  fallback chain (refuses if there is none, or if it is already merged/closed);
+  pushes any unpushed commits; waits for CI with a mechanically bounded poll
+  (`timeout 1800 gh pr checks --watch --fail-fast --interval 30`); handles a PR
+  that has fallen behind its base (rebase + `--force-with-lease`, never a bare
+  `--force`) and surfaces branch-protection rejections verbatim; merges with
+  `gh pr merge --rebase`. **Project-agnostic** — it does no versioning,
+  changelog editing, or release work; those, if a project needs them, run in a
+  separate step before `/shipit` (in this repo, the dev `version-bump` skill).
+  `disable-model-invocation: true` — irreversible, so user-invoked only.
 
 ## Methodology skills
 
@@ -413,6 +441,7 @@ entry-point section above rather than repeating them here.
 | `team-pr` | orchestrator | PR |
 | `team-fix` | user (direct invocation) | Compressed bug-fix flow (outside QRSPI) |
 | `eng-design-doc-review` | user (direct invocation) | Optional pre-Design audit; dispatches a general-purpose subagent |
+| `shipit` | user (direct invocation) | Standalone — land a reviewed PR (not a QRSPI phase) |
 | `qrspi-workflow` | orchestrator skills; questioner (schema) | All phases |
 | `agent-open-questions` | questioner, design-author | Question, Design (subagent → user via orchestrator) |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |

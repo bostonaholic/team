@@ -65,9 +65,9 @@ See `agents/*.md`. Each agent file uses only Claude Code's [supported frontmatte
 
 **Invariant:** the agent inventory in `skills/team/registry.json` (which carries the `phase` mapping) and the files under `agents/` must always agree by name. When adding or renaming an agent, update both in the same commit. The dev hook `.claude/hooks/check-registry-sync.mjs` enforces this automatically.
 
-## Skills (29)
+## Skills (30)
 
-See `skills/*/SKILL.md`. Entry point skills double as slash commands. Methodology skills are loaded by agents. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
+See `skills/*/SKILL.md`. Entry point skills double as slash commands; `shipit` is a standalone slash-command utility (land a reviewed PR) that is not a QRSPI phase. Methodology skills are loaded by agents. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
 
 ## Hooks
 
@@ -95,7 +95,7 @@ State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKE
 - **No `commands/` directory.** Skills are the only entry point mechanism. They auto-register as slash commands.
 - **No project-scoped memory.** Do not save memories to `~/.claude/projects/*/memory/`. All project knowledge belongs in this file or docs linked from here. This file is checked into git and travels with the project.
 - **Todo-first progress tracking.** Any agent or skill that executes a multi-step numbered procedure seeds one TodoWrite item per step before starting and marks each complete as it goes. See `skills/progress-tracking/SKILL.md` for the convention and ledger-ownership rules.
-- **Runtime changes bump the plugin version; dev-only changes don't.** Before opening any PR in this repo (including the `/team` pipeline's PR phase), run the `version-bump` dev skill (`.claude/skills/version-bump/SKILL.md`). Its step 0 checks the diff: PRs touching runtime paths (`agents/`, `skills/`, `hooks/`, `.claude-plugin/`) must bump the four version strings, add a `## [X.Y.Z]` changelog section, and title the PR `vX.Y.Z <type>: <subject>`; everything else (`docs/`, `tests/`, `evals/`, `.claude/`, `.github/`, root markdown, lockfiles) is exempt — no bump, no changelog section, plain `<type>: <subject>` title. CI enforces both sides (`version-gate.yml`); merges of bumping PRs auto-tag and publish, exempt merges publish nothing. See [docs/versioning.md](docs/versioning.md).
+- **Team versions itself at land time via the dev `version-bump` skill, then lands via the generic `/shipit`.** A drafted PR carries no version, no `vX.Y.Z` title, and no released changelog section — it accumulates user-facing bullets under `## [Unreleased]`. To land a Team PR: (1) run the dev `version-bump` skill (`.claude/skills/version-bump/SKILL.md`) against current `main` — it assigns the next version, bumps the four version strings, cuts `[Unreleased]` into a dated `## [X.Y.Z]` section, sets the `vX.Y.Z <type>: <subject>` title, runs the land-time consistency assertion, and commits `chore(version)`; (2) run the distributed runtime `/shipit` skill (`skills/shipit/SKILL.md`) to push, wait for CI, and rebase-merge. `shipit` is project-agnostic (it does no versioning); `version-bump` is Team's internal bumper. `release-on-merge.yml` then auto-tags and publishes from the landed `plugin.json`. See [docs/versioning.md](docs/versioning.md).
 - **Read TESTING.md before writing any test.** Before adding or modifying ANY test — unit, tripwire, eval, fixture, or rubric — read [TESTING.md](TESTING.md) end to end and understand it. It decides *which layer* a check belongs at (push every check as far down and as deterministic as it goes), whether it is free (`*.test.ts`) or paid (`*.evals.ts`), and whether it gates or runs periodically. A test written at the wrong layer is worse than no test: it is slow, flaky, or costs money to learn nothing. No exceptions — this applies to agents, skills, and humans alike.
 
 ## Behavioral Evals
