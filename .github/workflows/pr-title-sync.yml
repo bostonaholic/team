@@ -1,15 +1,14 @@
 # PR title sync — keeps PR titles prefixed with the version they ship.
 #
-# Scoped per-PR versioning (docs/versioning.md): PRs that change the version
-# carry `vX.Y.Z <type>: <subject>` titles; exempt PRs (no version change)
-# keep their plain `<type>: <subject>` titles untouched. This workflow reads
-# the version from the PR's .claude-plugin/plugin.json and rewrites the title
-# to match — but only when that version differs from the base branch's; when
-# the version is unchanged it does nothing (it never adds or strips a
-# prefix). It is a backstop — authors set the title themselves (version-bump
-# skill, step 7). Accepted residue: a bump that is later reverted in-branch
-# leaves its now-wrong prefix in place (cosmetic only — the version gate, not
-# the title, is the enforcement).
+# A thin backstop for land-time versioning (docs/versioning.md): version is
+# assigned by `version-bump` at land time, so a drafted PR carries no version
+# until it lands. This workflow reads the version from the PR's
+# .claude-plugin/plugin.json and rewrites the title to match — but only when
+# that version differs from the base branch's; when the version is unchanged
+# (the normal pre-land state) it does nothing (it never adds or strips a
+# prefix). It is a backstop — `version-bump` sets the title when it bumps.
+# Accepted residue: a bump that is later reverted in-branch leaves its
+# now-wrong prefix in place (cosmetic only).
 #
 # WHY plain `pull_request` (not pull_request_target): all PRs here come from
 # same-repo branches, where the default GITHUB_TOKEN honors
