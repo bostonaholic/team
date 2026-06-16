@@ -1,13 +1,13 @@
 ---
 name: team-plan
-description: Produce the tactical implementation plan from the approved structure. The plan is for the implementer — humans review the structure, not the plan. No human approval gate at this phase. Trigger on "plan the implementation", "spell out the steps", or "/team-plan".
+description: Produce the tactical implementation plan from the structure. The plan is an autonomous artifact for the implementer — no human approval gate at this phase (design is the pipeline's only human gate). Trigger on "plan the implementation", "spell out the steps", or "/team-plan".
 argument-hint: "[docs/plans/<id>/]"
 ---
 
 # Team Plan — Tactical Implementation Plan
 
-Run the PLAN phase. There is no human gate here; humans reviewed the
-structure already, and the plan is a tactical artifact for the implementer.
+Run the PLAN phase. There is no human gate here; the plan is a tactical
+artifact for the implementer, mechanically derived from the structure.
 
 ## Input
 
@@ -16,13 +16,13 @@ discovery block below resolves it.
 
 The `planner` reads:
 
-- `$ARGUMENTS/structure.md` (must carry `approved: true` in its frontmatter)
+- `$ARGUMENTS/structure.md`
 - `$ARGUMENTS/design.md`
 - `$ARGUMENTS/research.md`
 
 Resolve the artifact directory by running this self-contained block (one bash
 call — agent threads reset cwd between calls). The predecessor filter requires
-an **approved** `structure.md`, so unapproved candidates are skipped:
+a `structure.md` (structure is not human-gated, so no approval check):
 
 ```sh
 # Three-tier artifact-directory discovery (archetype A).
@@ -43,7 +43,6 @@ for dir in docs/plans/*/; do
   name="$(basename "$dir")"
   printf '%s' "$name" | grep -qE "$ID_RE" || continue   # ID_RE filter
   [ -f "$dir$PRED" ] || continue                        # predecessor filter
-  grep -qE '^approved:[[:space:]]*true[[:space:]]*$' "$dir$PRED" || continue
   m=-1
   for p in $PHASE_FILES; do
     f="$dir$p.md"
@@ -58,15 +57,15 @@ done
 ```
 
 - **If the block printed a path**, use it as `$ARGUMENTS` for the rest of this
-  skill (tier 1 explicit arg, or tier 2 discovery of an approved predecessor).
+  skill (tier 1 explicit arg, or tier 2 discovery of the predecessor).
   When the path came from tier 2 (no explicit arg), announce the resolved
   directory to the user before proceeding, so an auto-picked topic is never
   silent.
-- **If the block printed nothing** (tier 3 — no directory holds an approved
+- **If the block printed nothing** (tier 3 — no directory holds a
   `structure.md`), do not hard-error. Fire `AskUserQuestion` with a `Setup`
   header and labeled options:
-  - **Run the producer** — run `/team-structure docs/plans/<id>/` to produce or
-    approve `structure.md`.
+  - **Run the producer** — run `/team-structure docs/plans/<id>/` to produce
+    `structure.md`.
   - **Provide a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
 
@@ -74,8 +73,8 @@ done
 
 > Follow `skills/progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
 
-1. Use the directory resolved in `## Input` (the approval grep there already
-   confirmed `structure.md` carries `approved: true`).
+1. Use the directory resolved in `## Input` (the discovery there already
+   confirmed `structure.md` exists).
 2. Dispatch `planner`, which writes `$ARGUMENTS/plan.md` with file-level
    steps and per-slice acceptance test mappings.
 3. **Stop once `$ARGUMENTS/plan.md` exists.**

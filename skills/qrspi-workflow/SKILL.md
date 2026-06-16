@@ -50,19 +50,20 @@ a ~200-line markdown artifact the human reviews carefully.
 
 Break the approved design into vertical slices with verification checkpoints.
 Each slice is end-to-end and independently testable. The result is a ~2-page
-markdown artifact the human reviews.
+markdown artifact, produced autonomously.
 
 - **Artifact:** `docs/plans/<id>/structure.md`
-- **Gate:** HARD — user must explicitly approve the structure
+- **Gate:** NONE — autonomous; once `structure.md` exists the pipeline
+  advances to PLAN. Design is the only human gate.
 
 ### PLAN
 
 Tactical implementation details for the agent. Read by the implementer.
 No human approval gate — the plan is mechanically derived from the
-approved structure.
+structure.
 
 - **Artifact:** `docs/plans/<id>/plan.md`
-- **Gate:** SOFT — no human approval; the structure is the contract
+- **Gate:** SOFT — no human approval; design is the human contract
 
 ### WORKTREE
 
@@ -243,8 +244,8 @@ This enforces incremental verifiability over big-bang integration.
 Blocks phase transition. The pipeline cannot proceed until the gate condition
 is satisfied. No override allowed except by explicit user command.
 
-Examples: design approval, structure approval, security review with critical
-findings, test failures.
+Examples: design approval, security review with critical findings, test
+failures.
 
 ### SOFT
 
@@ -287,8 +288,8 @@ Per-phase additions:
 | questions | (none)                                                                             |
 | research  | (none)                                                                             |
 | design    | `approved: false`, `approved_at: null`, `revision: 0`                              |
-| structure | `approved: false`, `approved_at: null`, `revision: 0`                              |
-| plan      | (none — derived mechanically from the approved structure)                          |
+| structure | (none — not human-gated; advances to PLAN once it exists)                          |
+| plan      | (none — derived mechanically from the structure)                                   |
 
 **Approval check** (used by downstream phase entry):
 
@@ -314,8 +315,7 @@ The orchestrator infers the current phase by scanning what exists in
 | `research.md`                                          | DESIGN (next up)    |
 | `design.md` (frontmatter `approved: false`)            | DESIGN (human gate) |
 | `design.md` (frontmatter `approved: true`)             | STRUCTURE (next up) |
-| `structure.md` (frontmatter `approved: false`)         | STRUCTURE (gate)    |
-| `structure.md` (frontmatter `approved: true`)          | PLAN (next up)      |
+| `structure.md`                                         | PLAN (next up)      |
 | `plan.md`                                              | WORKTREE (next up)  |
 | worktree exists for `<id>` branch in every involved repo | IMPLEMENT         |
 | topic branch has commits ahead and verifier passed     | PR (next up)        |
@@ -372,8 +372,9 @@ critical defect.
 
 The plan is a tactical artifact for the agent. Reviewing it duplicates
 effort: a 1000-line plan begets ~1000 lines of code, and surprises during
-implementation invalidate the review. Review the design (~200 lines) and
-the structure (~2 pages) instead — those are where leverage lives.
+implementation invalidate the review. Review the design (~200 lines)
+instead — that is where leverage lives. The structure and plan are
+autonomous artifacts.
 
 ### Horizontal Layering
 
@@ -381,16 +382,19 @@ Plans that build the entire database, then the entire API, then the entire
 UI defer integration risk to the very end. The structure phase exists to
 force vertical slicing — reject any structure that flattens into layers.
 
-### Implementing Without Structure Approval
+### Implementing Without a Structure
 
-The structure is the human contract. Bypassing its gate removes the user's
-ability to course-correct before code is written. Wait for explicit approval.
+The structure is the scope fence for implementation. Jumping from design
+straight to code skips the vertical-slice breakdown the planner and
+implementer rely on. Always produce the structure — even though it now
+advances autonomously, design remains the human contract behind it.
 
 ### Gold-Plating
 
 Adding features, tests, or abstractions beyond what the structure specifies.
 The structure defines the scope fence. If scope needs to expand, update the
-structure and get re-approval — do not silently add work.
+structure (and, for a material change, return to the DESIGN gate) — do not
+silently add work.
 
 ### Backward Skipping
 

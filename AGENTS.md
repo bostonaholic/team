@@ -41,7 +41,7 @@ Agents are **decoupled microservices**. Each consumes a predecessor artifact on 
 QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → WORKTREE → IMPLEMENT → PR
 ```
 
-Team runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-PR). Two human gates: **Design approval** (~200-line alignment doc) and **Structure approval** (~2-page vertical-slice breakdown). Research is **isolated** — the researcher reads only `questions.md`, never `task.md` or the user's framing. The Plan is a tactical artifact for the implementer, not for human review. Implement is a sub-pipeline (test-first → slice execution → 5-reviewer adversarial verify with hard-gate retry loop). Everything outside the two human gates is autonomous with mechanical gates.
+Team runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-PR). One human gate: **Design approval** (~200-line alignment doc). The Structure (~2-page vertical-slice breakdown) is produced autonomously and advances to Plan with no approval wait. Research is **isolated** — the researcher reads only `questions.md`, never `task.md` or the user's framing. The Plan is a tactical artifact for the implementer, not for human review. Implement is a sub-pipeline (test-first → slice execution → 5-reviewer adversarial verify with hard-gate retry loop). Everything outside the design gate is autonomous with mechanical gates.
 
 ## Entry Points
 
@@ -53,8 +53,8 @@ Team runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-
 | `/team-research` | Isolated codebase research (runs Question if missing) |
 | `/team-design` | Align with user on approach (human gate) |
 | `/eng-design-doc-review` | *(optional)* Adversarial fresh-context audit of `design.md` before the human gate |
-| `/team-structure` | Break design into vertical slices (human gate) |
-| `/team-plan` | Tactical plan from approved structure |
+| `/team-structure` | Break design into vertical slices (autonomous) |
+| `/team-plan` | Tactical plan from the structure |
 | `/team-worktree` | Prepare isolated git worktree |
 | `/team-implement` | Test-first + slice execution + 5-reviewer verify |
 | `/team-pr` | Commit + open PR |

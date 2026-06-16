@@ -17,8 +17,8 @@ QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → WORKTREE → IMPLEME
 - **Question** — Decompose intent into a full task record (`task.md`) and neutral research questions (`questions.md`). The questioner is the only agent that ever sees the user's original description.
 - **Research** *(isolated)* — Parallel agents (file-finder + researcher) consume only `questions.md`. They never see the task. This structurally prevents opinion-bias in research findings.
 - **Design** *(human gate)* — Design author asks open questions interactively, then drafts a ~200-line alignment doc. Humans review here.
-- **Structure** *(human gate)* — Break the design into vertical slices with verification checkpoints. Humans review the ~2-page structure here.
-- **Plan** — Tactical implementation plan derived from the approved structure. Read by the implementer; not human-gated.
+- **Structure** — Break the design into vertical slices with verification checkpoints. Produced autonomously; advances to Plan with no human gate.
+- **Plan** — Tactical implementation plan derived from the structure. Read by the implementer; not human-gated.
 - **Worktree** — Orchestrator prepares an isolated git worktree.
 - **Implement** — Test-first (test-architect writes failing tests, mechanical gate confirms) → slice execution (implementer commits each vertical slice atomically) → adversarial verification (5 parallel reviewers + typed failure-class retry loop, max 5 rounds).
 - **PR** — Update changelog, commit, open pull request, surface the tracking item.

@@ -6,8 +6,8 @@ argument-hint: "[docs/plans/<id>/]"
 
 # Team Design — Where Are We Going?
 
-Run the DESIGN phase. This is the first human gate — get alignment here
-before investing in detailed planning.
+Run the DESIGN phase. This is the pipeline's only human gate — get
+alignment here before investing in detailed planning.
 
 ## Input
 

@@ -1,12 +1,13 @@
 ---
 name: team-structure
-description: Break the approved design into vertical slices with verification checkpoints. The structure document is the human's last review point before code is written. Trigger on "slice this up", "break the design into steps", or "/team-structure".
+description: Break the approved design into vertical slices with verification checkpoints. Runs autonomously and advances to PLAN — no human gate (design is the pipeline's only human gate). Trigger on "slice this up", "break the design into steps", or "/team-structure".
 argument-hint: "[docs/plans/<id>/]"
 ---
 
 # Team Structure — How Do We Get There?
 
-Run the STRUCTURE phase. This is the second (and final) human gate.
+Run the STRUCTURE phase. It runs autonomously and advances to PLAN — there
+is **no human gate** here. Design is the pipeline's only human gate.
 
 ## Input
 
@@ -76,24 +77,17 @@ done
 1. Use the directory resolved in `## Input` (the approval grep there already
    confirmed `design.md` carries `approved: true`).
 2. Dispatch `structure-planner`, which writes `$ARGUMENTS/structure.md`
-   with vertical slices and frontmatter `approved: false`,
-   `approved_at: null`, `revision: 0`.
-3. **Human gate.** Present the structure **in full**, then use
-   `AskUserQuestion` to capture the verdict. Use a single question with a
-   `Decision` header and these options:
-   - **Approve** — structure is ready; advance to PLAN.
-   - **Request changes** — describe what to revise; re-dispatch
-     `structure-planner` with the user's feedback verbatim.
-   - **Reject** — abandon this structure and revisit DESIGN.
-
-   - On Approve → edit `$ARGUMENTS/structure.md` frontmatter to set
-     `approved: true` and `approved_at: <ISO-8601>`.
-   - On Request changes → re-dispatch `structure-planner` with feedback
-     verbatim. New draft increments `revision: <n+1>`. Cap at
-     `revision: 5`.
-4. **Stop once `$ARGUMENTS/structure.md` carries `approved: true`.**
+   with vertical slices. The artifact carries plain frontmatter
+   (`topic`, `date`, `phase: structure`) — no approval fields, because
+   structure is not human-gated.
+3. **No human gate.** Do not present the structure for approval — design is
+   the only human gate. Within a full `/team` run the orchestrator advances
+   to PLAN automatically; run standalone, this skill stops after writing the
+   structure and reports the next command.
+4. **Stop once `$ARGUMENTS/structure.md` exists.**
 
 ## Completion
 
-Report structure path and tell the user:
+Report the structure path. When run standalone, tell the user:
 **"Next: run `/team-plan docs/plans/<id>/`"**
+(Within a full `/team` run the orchestrator advances to PLAN automatically.)

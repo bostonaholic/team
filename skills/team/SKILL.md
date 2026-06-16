@@ -113,7 +113,7 @@ loop:
      with the YAML frontmatter the agent specifies (see the agent file
      and skills/qrspi-workflow/SKILL.md).
   7. Run the gate for this phase:
-     - HUMAN (design, structure): present the artifact, wait for verdict.
+     - HUMAN (design): present the artifact, wait for verdict.
        On approve, edit the artifact's frontmatter to set
        `approved: true` and `approved_at: <ISO-8601>`. On reject,
        increment `revision: <n+1>` on the new draft and re-dispatch.
@@ -136,8 +136,8 @@ loop:
 | QUESTION   | `questioner`                                            | (none — description in `$ARGUMENTS`)                            | RESEARCH           |
 | RESEARCH   | `file-finder`, `researcher` (parallel, isolated)        | `docs/plans/<id>/questions.md`                                  | DESIGN             |
 | DESIGN     | `design-author` (→ human gate)                          | `docs/plans/<id>/research.md`                                   | STRUCTURE          |
-| STRUCTURE  | `structure-planner` (→ human gate)                      | `docs/plans/<id>/design.md` (frontmatter `approved: true`)      | PLAN               |
-| PLAN       | `planner`                                               | `docs/plans/<id>/structure.md` (frontmatter `approved: true`)   | WORKTREE           |
+| STRUCTURE  | `structure-planner`                                     | `docs/plans/<id>/design.md` (frontmatter `approved: true`)      | PLAN               |
+| PLAN       | `planner`                                               | `docs/plans/<id>/structure.md`                                  | WORKTREE           |
 | WORKTREE   | (orchestrator-emit)                                     | `docs/plans/<id>/plan.md`                                       | IMPLEMENT          |
 | IMPLEMENT  | `test-architect`, `implementer`, 5 reviewers (parallel) | worktree prepared                                               | PR                 |
 | PR         | (orchestrator-emit)                                     | aggregate gate passed                                           | SHIPPED            |
@@ -187,10 +187,13 @@ When the `design-author` returns a draft:
    feedback. The new draft must increment `revision: <n+1>` in its
    frontmatter. Cap at `revision: 5`.
 
-### Human Gate (structure approval)
+### Structure (no gate — autonomous)
 
-Same mechanics as design, applied to `docs/plans/<id>/structure.md`.
-Use `AskUserQuestion` for the verdict the same way.
+When the `structure-planner` returns `docs/plans/<id>/structure.md`,
+record it and advance to PLAN immediately. There is no approval wait —
+**design is the only human gate**. Structure was formerly human-gated; it
+now auto-advances. The artifact carries no `approved`/`approved_at`/
+`revision` frontmatter.
 
 ### Orchestrator-Emit Gate (worktree preparation)
 
@@ -254,8 +257,8 @@ When the aggregate gate passes:
    mode, update each repo's `CHANGELOG.md` with the entries belonging
    to that repo's commits.
 2. **Open a draft PR automatically — do not stop to ask.** The PR phase
-   is not a human gate (the two human gates are design and structure
-   approval), so opening the PR needs no approval. Push the branch and
+   is not a human gate (the only human gate is design approval), so
+   opening the PR needs no approval. Push the branch and
    open the PR as a **draft** (`gh pr create --draft`). See
    `skills/team-pr/SKILL.md` for the canonical procedure.
 3. In multi-repo mode this opens **one draft PR per repo with commits
@@ -284,7 +287,7 @@ When the aggregate gate passes:
   session-scoped and is rebuilt on entry to any `/team-*` command by
   scanning artifacts.
 - `AskUserQuestion` is the canonical Claude Code tool for any
-  multi-choice user prompt **from the orchestrator** — design/structure
+  multi-choice user prompt **from the orchestrator** — design
   approval, worktree-vs-in-place. Free-text prompts
   ("Do you approve?") are not the convention. Free-form text input
   remains appropriate when the question genuinely has no enumerable
@@ -297,9 +300,9 @@ When the aggregate gate passes:
   above (step 5).** Subagents must not call `AskUserQuestion` directly.
 - File artifacts in `docs/plans/<id>/` are the durable communication
   protocol. Always write phase findings to disk before advancing.
-- The two human gates are **design approval** and **structure approval**.
-  Never present the plan to the user for approval — the plan is a
-  tactical agent artifact, the structure is the human contract.
+- The only human gate is **design approval**. Never present the structure
+  or the plan to the user for approval — design is the human contract; the
+  structure and plan are autonomous tactical artifacts.
 - The research-isolation invariant is non-negotiable. If a researcher's
   context contains the user's original description, the pipeline has a
   defect. Stop and report.

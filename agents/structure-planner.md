@@ -1,6 +1,6 @@
 ---
 name: structure-planner
-description: Use after the design is approved to break the work into vertical slices with verification checkpoints. Each slice is end-to-end (touches every layer needed to deliver one piece of functionality), independently testable, and atomically committable. Produces a ~2-page document the human reviews before any code is written.
+description: Use after the design is approved to break the work into vertical slices with verification checkpoints. Each slice is end-to-end (touches every layer needed to deliver one piece of functionality), independently testable, and atomically committable. Produces a ~2-page document that the planner and implementer consume; it advances autonomously to PLAN with no human gate.
 color: purple
 model: opus
 tools: Read, Write, Edit, Grep, Glob, TodoWrite
@@ -39,32 +39,29 @@ shows `approved: true`):
 - `docs/plans/<id>/repos.md` — repo scope (only present when the topic
   spans more than one repository)
 
-For revision dispatch (after a human gate rejection):
+For re-dispatch (e.g. the design changed, or implementation surfaced a
+structure flaw and the orchestrator returned to STRUCTURE):
 
 - The previous `docs/plans/<id>/structure.md`
-- The user's verbatim feedback supplied by the orchestrator
+- The reason for the re-run, supplied by the orchestrator
 
 ## Output
 
-Write to `docs/plans/<id>/structure.md` (overwrite on revision).
+Write to `docs/plans/<id>/structure.md` (overwrite on re-dispatch).
 
-The file MUST open with this YAML frontmatter — the `approved` and
-`approved_at` fields are how the human gate is recorded:
+The file MUST open with this YAML frontmatter:
 
 ```yaml
 ---
 topic: <kebab-case-topic>
 date: <YYYY-MM-DD>
 phase: structure
-approved: false
-approved_at: null
-revision: 0
 ---
 ```
 
-Leave `approved: false` on every draft, including revisions. The
-orchestrator flips it to `true` (and stamps `approved_at`) when the user
-approves at the human gate.
+Structure is **not human-gated** — it carries no `approved`/`approved_at`/
+`revision` fields. The orchestrator records the artifact and advances to
+PLAN automatically (design is the pipeline's only human gate).
 
 The `topic` value MUST be copied verbatim from the predecessor
 `design.md`. Never re-derive, re-word, or combine it with the ticket
@@ -160,5 +157,5 @@ does not accidentally include it>
 ## Output to orchestrator
 
 When done, return a short summary to the orchestrator:
-`{structurePath, id, sliceCount: <number>}`. The orchestrator will
-then run the human gate (present the structure, capture approval).
+`{structurePath, id, sliceCount: <number>}`. The orchestrator records
+the structure and advances to PLAN (no human gate).

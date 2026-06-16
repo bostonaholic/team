@@ -56,12 +56,12 @@ seeds and updates a TodoWrite ledger, and runs the human gates.
   *structural* — the orchestrator only passes the `questions.md` path to
   the research agents; *procedural* — the research agents' system prompts
   forbid reading `task.md`.
-- **Two human touchpoints.** Design approval (~200-line alignment doc)
-  and Structure approval (~2-page vertical-slice breakdown). Approval
-  is recorded by flipping `approved: true` (and stamping `approved_at`)
-  in the gated artifact's own YAML frontmatter — the artifact is
-  self-describing. The Plan is not human-gated; humans review the
-  structure, which is the real contract.
+- **One human touchpoint.** Design approval (~200-line alignment doc).
+  Approval is recorded by flipping `approved: true` (and stamping
+  `approved_at`) in the design's own YAML frontmatter — the artifact is
+  self-describing. The Structure (~2-page vertical-slice breakdown) and
+  the Plan are not human-gated; they advance autonomously. Design is the
+  real contract.
 - **Hooks enforce discipline mechanically.** LLMs forget instructions
   ~20% of the time; hooks are deterministic.
 
@@ -92,8 +92,8 @@ Per-phase additions:
 | questions | (none)                                                                  |
 | research  | (none)                                                                  |
 | design    | `approved: false`, `approved_at: null`, `revision: 0`                   |
-| structure | `approved: false`, `approved_at: null`, `revision: 0`                   |
-| plan      | (none — derived mechanically from the approved structure)               |
+| structure | (none — not human-gated; advances to PLAN once it exists)               |
+| plan      | (none — derived mechanically from the structure)                        |
 
 **Approval check** (used by downstream phase entry):
 
@@ -116,8 +116,7 @@ Cap at 5; beyond that, escalate to the user.
 | `research.md`                                          | DESIGN (next up)    |
 | `design.md` (frontmatter `approved: false`)            | DESIGN (human gate) |
 | `design.md` (frontmatter `approved: true`)             | STRUCTURE (next up) |
-| `structure.md` (frontmatter `approved: false`)         | STRUCTURE (gate)    |
-| `structure.md` (frontmatter `approved: true`)          | PLAN (next up)      |
+| `structure.md`                                         | PLAN (next up)      |
 | `plan.md`                                              | WORKTREE (next up)  |
 | worktree exists for the `<id>` branch                  | IMPLEMENT           |
 | topic branch has slice commits + verifier passed       | PR (next up)        |
@@ -170,16 +169,16 @@ rejection the agent re-drafts and increments `revision`.
 **Agent:** `structure-planner`
 **Predecessor:** `design.md` with frontmatter `approved: true`
 **Artifact:** `docs/plans/<id>/structure.md`
-**Gate:** HUMAN — same flip-frontmatter mechanics as Design.
+**Gate:** NONE — autonomous. Once `structure.md` exists the pipeline
+advances to PLAN; design is the only human gate.
 
 ### Phase 5: Plan
 
 **Agent:** `planner`
-**Predecessor:** `structure.md` with frontmatter `approved: true`
+**Predecessor:** `structure.md`
 **Artifact:** `docs/plans/<id>/plan.md`
 
-No human gate. The plan is mechanically derived from the approved
-structure.
+No human gate. The plan is mechanically derived from the structure.
 
 ### Phase 6: Worktree
 
