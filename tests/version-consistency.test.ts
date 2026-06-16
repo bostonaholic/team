@@ -44,8 +44,8 @@ describe("version consistency: the four version strings", () => {
 
 describe("version consistency: drift guard (land-time model)", () => {
   // Lock the rewrite: the dropped released-changelog invariants must not creep
-  // back into this tripwire. They live with `shipit`'s land-time assertion now,
-  // because they only hold after the cut — never on a drafted feature branch.
+  // back into this tripwire. They live with `version-bump`'s land-time assertion
+  // now, because they only hold after the cut — never on a drafted feature branch.
   const self = readFileSync(
     join(ROOT, "tests", "version-consistency.test.ts"),
     "utf8",
