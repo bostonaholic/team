@@ -1,9 +1,7 @@
 /* ==========================================================================
-   site.css — terminal aesthetic for the Team docs, ported verbatim from
-   matthewboston.com/stylesheets/site.css. Plain CSS, no front matter.
-
-   Custom-property name set (declared once, here). Slices 3+ only RE-VALUE
-   these names in new selector blocks; they never rename or invent names.
+   site.css — terminal aesthetic for the Team docs. Plain CSS, no front matter.
+   Theme custom properties are declared once here and only re-valued (never
+   renamed) in the theme blocks below.
    ========================================================================== */
 :root {
   --bg: #fff;

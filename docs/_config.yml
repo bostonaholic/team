@@ -1,8 +1,7 @@
 # minima was intentionally removed: the site is hand-rolled via
-# _layouts/default.html + assets/css/site.css (plain CSS ported from
-# matthewboston.com) + assets/js/theme-toggle.js. Run locally with
-# `bundle exec jekyll serve` from docs/. `minima` still appears in
-# Gemfile.lock only as a transitive dep of github-pages, NOT as the theme.
+# _layouts/default.html + assets/css/site.css + assets/js/theme-toggle.js.
+# Run locally with `bundle exec jekyll serve` from docs/. `minima` still
+# appears in Gemfile.lock only as a transitive dep of github-pages, NOT as the theme.
 title: Team
 description: Autonomous feature delivery for Claude Code
 url: "https://team.bostonaholic.dev"
