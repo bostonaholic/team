@@ -1,11 +1,17 @@
 // tests/version-consistency.test.ts
 //
-// L2 tripwire: the per-PR versioning contract (docs/versioning.md).
-// The version string lives in four places across three files; every PR
-// rolls its own released CHANGELOG section. Free, deterministic — the
-// authoritative in-tree half of the contract. The git-context half
-// (bumped vs base, open-PR collisions) lives in
-// .github/workflows/version-gate.yml.
+// L2 tripwire: the land-time versioning contract (docs/versioning.md).
+// The version string lives in four places across three files; on any honest
+// feature branch those four must always agree and be strict semver. Free,
+// deterministic — the invariant that holds at every commit, not just at land.
+//
+// The released-changelog invariants (a dated `## [X.Y.Z]` section, the footer
+// compare links, an empty `[Unreleased]` body) are NOT asserted here: under the
+// land-time model a drafted branch accumulates bullets under `[Unreleased]` and
+// carries no released section until the dev `version-bump` skill cuts it at land
+// time. Those released-section invariants are re-asserted by `version-bump`
+// step 5 after the cut (the land-time consistency assertion that replaced
+// version-gate.yml).
 
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
@@ -21,10 +27,8 @@ const marketplace = JSON.parse(
   readFileSync(join(ROOT, ".claude-plugin", "marketplace.json"), "utf8"),
 );
 const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
-const changelog = readFileSync(join(ROOT, "CHANGELOG.md"), "utf8");
 
 const version: string = plugin.version;
-const esc = version.replace(/\./g, "\\.");
 
 describe("version consistency: the four version strings", () => {
   test("plugin.json version is strict 3-part semver", () => {
@@ -38,28 +42,27 @@ describe("version consistency: the four version strings", () => {
   });
 });
 
-describe("version consistency: changelog", () => {
-  test("has a dated released section for the current version", () => {
-    expect(changelog).toMatch(
-      new RegExp(`^## \\[${esc}\\] - \\d{4}-\\d{2}-\\d{2}$`, "m"),
-    );
+describe("version consistency: drift guard (land-time model)", () => {
+  // Lock the rewrite: the dropped released-changelog invariants must not creep
+  // back into this tripwire. They live with `shipit`'s land-time assertion now,
+  // because they only hold after the cut — never on a drafted feature branch.
+  const self = readFileSync(
+    join(ROOT, "tests", "version-consistency.test.ts"),
+    "utf8",
+  );
+
+  test("no longer asserts a dated released-section regex", () => {
+    expect(/\^## \\\[/.test(self)).toBe(false);
   });
 
-  test("footer has a compare link for the current version", () => {
-    expect(changelog).toMatch(new RegExp(`^\\[${esc}\\]: https://`, "m"));
-  });
-
-  test("[Unreleased] footer link compares from the current version", () => {
-    expect(changelog).toContain(
-      `[Unreleased]: https://github.com/bostonaholic/team/compare/v${version}...HEAD`,
-    );
-  });
-
-  test("[Unreleased] section body is empty (each PR rolls its own section)", () => {
-    const match = changelog.match(
-      /^## \[Unreleased\]\n([\s\S]*?)^## \[/m,
-    );
-    expect(match).not.toBeNull();
-    expect((match as RegExpMatchArray)[1].trim()).toBe("");
+  test("no longer asserts the dropped released-section invariants", () => {
+    // The removed block keyed on a `## \[` released-section regex and a
+    // `compare/v…HEAD` footer literal. The needles are assembled from parts so
+    // this guard cannot match itself — a re-introduction restores the literal
+    // form and trips the guard.
+    const sectionRe = ["##", " ", "\\\\[" + "$"].join("");
+    const footerLiteral = ["compare/v", "${version}", "...HEAD"].join("");
+    expect(self).not.toContain(sectionRe);
+    expect(self).not.toContain(footerLiteral);
   });
 });
