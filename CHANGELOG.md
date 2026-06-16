@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-06-15
+
+### Changed
+
+- **Complex-work agents re-tiered to the most capable available model (`opus`).** Following a re-assessment of agent model assignments against Claude Code's model documentation, the tiering principle is now stated explicitly: complex work runs on the most capable available model, bounded single-pass judgment on `sonnet`, mechanical checks on `haiku`. Fable 5 was evaluated as the complex-work model but is [temporarily suspended for all customers](https://www.anthropic.com/news/fable-mythos-access) under a U.S. government export-control directive, so the most capable available model — and Fable's documented fallback target — is `opus` (Opus 4.8). Net effect: `researcher` and `code-reviewer` move `sonnet` → `opus`, joining the existing `opus` planning/implementation tier (`design-author`, `structure-planner`, `planner`, `implementer`); and `security-reviewer` moves `sonnet` → `opus`. `security-reviewer` stays on `opus` permanently even once Fable access returns, because Fable's cybersecurity safety classifiers refuse security-review content in non-interactive subagents. `opus` carries the 1M-token context window with no `[1m]` suffix (always-on via the Anthropic API; included with Max/Team/Enterprise subscriptions). `docs/architecture.md` records the tiering principle, the suspension, and the restoration path (flip complex-work agents `opus` → `fable` when access returns, except `security-reviewer`); the eval harness pricing table gains a `claude-fable-5` entry for when runs use it again.
+
 ## [0.5.0] - 2026-06-12
 
 ### Added
@@ -81,7 +87,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/bostonaholic/team/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/bostonaholic/team/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/bostonaholic/team/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/bostonaholic/team/releases/tag/v0.3.0
