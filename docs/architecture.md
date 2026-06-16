@@ -259,8 +259,46 @@ The dev hook `.claude/hooks/check-registry-sync.mjs` validates that
 the inventory in registry.json and the files under `agents/` agree by
 name.
 
-Model tiering: `haiku` (mechanical), `sonnet` (judgment), `opus`
-(planning + implementation).
+### Model tiering
+
+The principle: **complex work runs on the most capable available
+model; bounded judgment on `sonnet`; mechanical checks on `haiku`.**
+
+The most capable model is currently `opus` (Opus 4.8). Fable 5 was the
+intended complex-work model, but it is **temporarily suspended for all
+customers** under a U.S. government export-control directive (see
+[Anthropic's notice](https://www.anthropic.com/news/fable-mythos-access)).
+Until access is restored, complex work runs on `opus`, the documented
+fallback target for Fable and Anthropic's most capable Opus-tier model.
+
+- **`opus` — complex work:** `researcher`, `design-author`,
+  `structure-planner`, `planner`, `implementer`, `code-reviewer`, and
+  `security-reviewer`.
+- **`sonnet` — bounded single-pass judgment:** `questioner`,
+  `ux-reviewer`, `technical-writer`.
+- **`haiku` — mechanical checks:** `file-finder`, `verifier`.
+- **`inherit`:** `test-architect` follows the session model.
+
+Notes:
+
+- **1M context window comes for free at the opus tier.** Opus 4.8
+  always runs with the 1M window on the Anthropic API, and
+  Max/Team/Enterprise plans include the 1M upgrade with the
+  subscription (Pro degrades gracefully to 200K) — so the opus agents
+  need no `[1m]` suffix. The sonnet agents stay at 200K (bounded
+  single-pass work, nowhere near the ceiling); haiku does not support
+  1M.
+- **When Fable access is restored**, flip the complex-work agents from
+  `opus` to `fable` — *except* `security-reviewer`, which stays on
+  `opus` permanently: Fable 5's cybersecurity safety classifiers flag
+  security-review content, and in non-interactive subagent contexts a
+  flagged request ends the turn with a refusal instead of falling
+  back. Fable requires Claude Code ≥ v2.1.170 and Fable access (not
+  available under zero data retention; pin `ANTHROPIC_DEFAULT_FABLE_MODEL`
+  on Bedrock/Vertex/Foundry).
+- Users can override any agent's model with `CLAUDE_CODE_SUBAGENT_MODEL`
+  (applies to all subagents), or copy an agent file into
+  `.claude/agents/` with a different `model:`.
 
 ## 5. Phase-Table Orchestrator
 
