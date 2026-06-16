@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-06-16
+
 ### Changed
 
 - **Changelog entries now use absolute URLs for links.** A released changelog section is reused verbatim as the GitHub release notes, where repository-relative links (e.g. a bare `docs/versioning.md` target) render as dead links. The changelog convention (`skills/changelog/SKILL.md`) and the `version-bump` land-time changelog step now require full `https://…` URLs, and a new `tests/changelog-links.test.ts` tripwire fails the build if the `[Unreleased]` section contains a repository-relative link.
@@ -101,7 +103,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/bostonaholic/team/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/bostonaholic/team/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/bostonaholic/team/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/bostonaholic/team/compare/v0.4.0...v0.5.0
