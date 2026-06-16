@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`/shipit` — a new skill to land a reviewed pull request.** The Team plugin now ships a generic `/shipit` slash command (`skills/shipit/SKILL.md`) that finalizes an open PR end to end: it discovers the open PR for your current branch, pushes any unpushed commits, waits for CI to go green with a bounded poll (`timeout 1800 gh pr checks --watch --fail-fast --interval 30`, capped at 30 minutes), and rebase-merges (`gh pr merge --rebase`). It handles a PR that has fallen behind its base (rebase + `--force-with-lease`, never a bare `--force`), surfaces branch-protection rejections verbatim, and refuses up front if there is no open PR or the PR is already merged/closed. An interactive pre-merge confirmation guards the irreversible merge; a non-interactive caller can pass `--yes` to skip it. The skill is project-agnostic — it does no versioning, changelog, or release work, so it works for any repository — and is user-invocable only (`disable-model-invocation: true`) because merging is irreversible.
+
+### Changed
+
+- **The Team plugin now versions itself at land time, retiring the per-PR version gate.** Drafted PRs carry **no version** — no bump commit, no `vX.Y.Z` title, no released changelog section — and simply accumulate user-facing bullets under `## [Unreleased]`. Landing a Team PR is two steps: the dev-internal `version-bump` skill (`.claude/skills/version-bump/SKILL.md`) assigns the next version against current `main`, bumps the four version strings, cuts the `[Unreleased]` body into a dated `## [X.Y.Z]` section, runs a land-time consistency assertion, and commits `chore(version)`; then the generic `/shipit` skill above pushes, waits for CI, and rebase-merges. Because landing is serialized — one PR versioned against the latest `main` at a time — two PRs can no longer claim the same number, so the per-PR CI gate is gone: `.github/workflows/version-gate.yml` is **deleted**, `.github/workflows/pr-title-sync.yml` is slimmed to a thin backstop that no-ops for bump-less PRs, and `tests/version-consistency.test.ts` is narrowed to the invariants that always hold on a feature branch (strict 3-part semver + four-string agreement), with the released-section/footer-link checks moved into `version-bump`'s land-time assertion. `release-on-merge.yml` is unchanged — it still tags and publishes from the landed `plugin.json`. [docs/versioning.md](docs/versioning.md) and the `AGENTS.md`/`CLAUDE.md` versioning invariant document the model.
+
 ## [0.5.1] - 2026-06-15
 
 ### Changed
