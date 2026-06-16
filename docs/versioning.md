@@ -97,7 +97,7 @@ grep -rn '"version"' package.json .claude-plugin/plugin.json .claude-plugin/mark
 All four lines must show the same version. `tests/version-consistency.test.ts`
 enforces this on every `bun test` run.
 
-## Picking the next free version
+## Picking the next version
 
 `version-bump` computes the version with the helper:
 
@@ -105,11 +105,20 @@ enforces this on every `bun test` run.
 .claude/scripts/next-version.sh <major|minor|patch>
 ```
 
-It bumps from `origin/main`'s version, then walks past any version already
-claimed by another open PR (read from each PR head's `plugin.json` via the
-GitHub API; fail-open if the API is unreachable). Under the land-time model only
-the landing PR carries a bump, so this walk-past is now a **backstop** — the
-primary collision defense is serialization (one PR lands at a time).
+It prints `bump(<default branch>'s version, level)` — a **deterministic** pure
+function of the base version and the level, with **no open-PR scan**. The base
+is read from the remote's default branch, resolved via `origin/HEAD` (so
+`main`, `master`, or any other default branch works — it is not hardcoded). Under the
+land-time model the version is assigned against current `main` and landing is
+serialized (one PR at a time), so `bump(main, level)` is always free; the
+collision defenses are serialization, `shipit`'s rebase-and-recompute on a
+concurrent race, and `release-on-merge.yml`'s duplicate-tag rejection. (Set
+`BASE_VERSION=x.y.z` to override the base the script reads — used by its tests.)
+
+> Earlier revisions walked past any version *claimed by another open PR* (via
+> the GitHub API). That was the retired per-PR model's mechanism; it made the
+> output depend on whatever PRs were open and **skipped free versions** a stale
+> PR happened to claim. It is gone — `tests/next-version.test.ts` locks it out.
 
 ## Changelog: accumulate under `[Unreleased]`, cut at land time
 

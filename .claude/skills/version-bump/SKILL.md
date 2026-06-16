@@ -54,16 +54,19 @@ Pick the highest-impact change in the PR:
 
 State the chosen level and the reasoning. If genuinely ambiguous, ask.
 
-### 2. Compute the next free version
+### 2. Compute the next version
 
 ```bash
 bash .claude/scripts/next-version.sh <level>
 ```
 
-This bumps from `origin/main` and walks past versions claimed by other open
-PRs (fail-open on API errors). Under the land-time model only the landing PR
-carries a bump, so the walk-past is a **backstop** — serialization (one PR
-lands at a time) is the primary collision defense.
+This prints `bump(<default branch>'s version, level)` — **deterministic**, a
+pure function of the base and the level, with no open-PR scan. The base is read
+from the remote's default branch (resolved via `origin/HEAD`, not a hardcoded
+`main`). Under the land-time
+model the version is assigned against current `main` and landing is serialized,
+so `bump(main, level)` is always free; a concurrent race is handled by `/shipit`
+(rebase + recompute) and `release-on-merge.yml`'s duplicate-tag backstop.
 
 ### 3. Bump all four version strings
 
