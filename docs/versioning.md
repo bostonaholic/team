@@ -159,7 +159,7 @@ it does nothing. It is a backstop, not the mechanism.
 
 ## What CI enforces, and where
 
-Per [TESTING.md](https://github.com/bostonaholic/team/blob/main/TESTING.md), every check lives at the cheapest layer that
+Per [the testing guide](testing.md), every check lives at the cheapest layer that
 can catch it:
 
 | Check | Layer | Where |
@@ -224,4 +224,4 @@ gh release create "v$V" --title "v$V" --notes-file /tmp/notes.md
 ## Read next
 
 - **[Project Tracking](project-tracking.md)** — the board the PR's issue moves across.
-- **[TESTING.md](https://github.com/bostonaholic/team/blob/main/TESTING.md)** — why each check lives at its layer.
+- **[Testing](testing.md)** — why each check lives at its layer.

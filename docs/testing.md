@@ -1,4 +1,12 @@
-# TESTING.md — A Test Harness for Products Where the Model Is Part of the System
+---
+title: Testing
+description: "Team's six-layer test harness for products where a model is part of the system — push every check to the cheapest, most deterministic layer; gate on deterministic checks, run stochastic evals on a schedule."
+audience: [developer]
+nav_order: 8
+nav_label: testing
+---
+
+# Testing — a test harness for products where the model is part of the system
 
 This is Team's blueprint for testing a product that mixes ordinary software with
 **non-deterministic components** — most often a large language model, but the
