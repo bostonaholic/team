@@ -317,7 +317,7 @@ describe("product-thinking methodology", () => {
 
   test("structure-planner description frontmatter is unchanged", () => {
     const expected =
-      "description: Use after the design is approved to break the work into vertical slices with verification checkpoints. Each slice is end-to-end (touches every layer needed to deliver one piece of functionality), independently testable, and atomically committable. Produces a ~2-page document the human reviews before any code is written.";
+      "description: Use after the design is approved to break the work into vertical slices with verification checkpoints. Each slice is end-to-end (touches every layer needed to deliver one piece of functionality), independently testable, and atomically committable. Produces a ~2-page document that the planner and implementer consume; it advances autonomously to PLAN with no human gate.";
     expect(read(STRUCTURE_PLANNER)).toContain(expected);
   });
 

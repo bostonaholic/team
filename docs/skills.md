@@ -97,7 +97,7 @@ argument shape.
   Plan → Worktree → Implement → PR).
 - **Key behaviors:** Walks a linear Phase Loop, dispatching the specialist
   agent(s) for each phase per its phase table, then running that phase's
-  gate before advancing. Enforces the two human gates (Design, Structure)
+  gate before advancing. Enforces the single human gate (Design)
   and the aggregate five-reviewer review gate during Implement — that
   aggregate gate sorts every finding into Blocking / Major / Minor-and-below
   tiers and auto-loops on any Blocking or Major (the consult guard: the
@@ -132,7 +132,7 @@ argument shape.
   shared three-tier chain above.
 - **Phase:** Design (human gate).
 - **Key behaviors:** Runs an interactive interview, then writes a ~200-line
-  `design.md`. This is the first of the two human approval gates.
+  `design.md`. This is the pipeline's only human approval gate.
 
 ### team-structure
 
@@ -140,13 +140,13 @@ argument shape.
   per-slice verification checkpoints.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` — optional; resolves via the
   shared three-tier chain above.
-- **Phase:** Structure (human gate).
-- **Key behaviors:** Produces the ~2-page `structure.md`. This is the
-  second human approval gate.
+- **Phase:** Structure (autonomous — no human gate).
+- **Key behaviors:** Produces the ~2-page `structure.md`, then advances
+  to PLAN automatically. Design is the pipeline's only human gate.
 
 ### team-plan
 
-- **Purpose:** Turn the approved structure into a tactical, file-level
+- **Purpose:** Turn the structure into a tactical, file-level
   implementation plan.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` — optional; resolves via the
   shared three-tier chain above.
@@ -434,7 +434,7 @@ entry-point section above rather than repeating them here.
 | `team-question` | orchestrator | Question |
 | `team-research` | orchestrator → researcher, file-finder | Research |
 | `team-design` | orchestrator → design-author | Design (human gate) |
-| `team-structure` | orchestrator → structure-planner | Structure (human gate) |
+| `team-structure` | orchestrator → structure-planner | Structure (autonomous) |
 | `team-plan` | orchestrator → planner | Plan |
 | `team-worktree` | orchestrator | Worktree |
 | `team-implement` | orchestrator → implementer + reviewers | Implement |

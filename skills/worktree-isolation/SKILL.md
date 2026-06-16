@@ -90,16 +90,15 @@ rationale). The router's responsibilities at this phase are:
 Worktree creation lands at phase 6 rather than phase 0 for two
 load-bearing reasons.
 
-First, the two human gates — DESIGN and STRUCTURE — are reviewed on
-the home tree where the user invoked `/team`. That is the same
-context any reviewer already has open; moving those gates inside a
-worktree would force a `cd` or `git worktree list` before reading
-the artifact in an editor.
+First, the DESIGN human gate is reviewed on the home tree where the
+user invoked `/team`. That is the same context any reviewer already
+has open; moving the gate inside a worktree would force a `cd` or
+`git worktree list` before reading the artifact in an editor.
 
 Second, branch scope is a Plan output, not a Setup-time guess. By
-the time WORKTREE runs the structure has been approved and the plan
-exists, so the branch name and (in multi-repo mode) the per-repo
-worktree set are derivable from artifacts rather than guessed.
+the time WORKTREE runs the structure and plan exist, so the branch
+name and (in multi-repo mode) the per-repo worktree set are derivable
+from artifacts rather than guessed.
 
 Together these make phase-6 placement a deliberate, articulable
 choice rather than inertia.

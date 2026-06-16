@@ -67,9 +67,7 @@ async function inferPhase(dir) {
   const p = (kind) => join(dir, `${kind}.md`);
   const has = async (path) => { try { await stat(path); return true; } catch { return false; } };
   if (await has(p("plan"))) return "WORKTREE";
-  if (await has(p("structure"))) {
-    return isTrue((await readFrontmatter(p("structure"))).approved) ? "PLAN" : "STRUCTURE";
-  }
+  if (await has(p("structure"))) return "PLAN";   // structure is not gated; advances to PLAN
   if (await has(p("design"))) {
     return isTrue((await readFrontmatter(p("design"))).approved) ? "STRUCTURE" : "DESIGN";
   }

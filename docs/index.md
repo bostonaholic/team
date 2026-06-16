@@ -13,7 +13,7 @@ The autonomous engineering mesh for Claude Code.
 
 ## What is Team?
 
-Team orchestrates **13 specialized agents** — from isolated researchers to adversarial reviewers — that drive a feature through an 8-phase pipeline (QRSPI) and deliver a verified pull request. Agents are decoupled microservices: each consumes a predecessor artifact on disk, does its work, and writes its own artifact. The orchestrator (the main Claude Code session) walks a linear phase table and runs two human approval gates.
+Team orchestrates **13 specialized agents** — from isolated researchers to adversarial reviewers — that drive a feature through an 8-phase pipeline (QRSPI) and deliver a verified pull request. Agents are decoupled microservices: each consumes a predecessor artifact on disk, does its work, and writes its own artifact. The orchestrator (the main Claude Code session) walks a linear phase table and runs a single human approval gate (design).
 
 ## The Pipeline
 
@@ -26,8 +26,8 @@ QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → WORKTREE → IMPLEME
 | **Question** | Decompose intent into `task.md` + neutral `questions.md`. The questioner is the only agent that ever sees your original description. |
 | **Research** *(isolated)* | Parallel agents (file-finder + researcher) consume only `questions.md`. They never see the task — structurally preventing opinion-bias. |
 | **Design** *(human gate)* | The design author runs an interactive interview, then drafts a ~200-line alignment doc. You review here. |
-| **Structure** *(human gate)* | Break the design into vertical slices with verification checkpoints. ~2-page doc. You review here. |
-| **Plan** | Tactical implementation plan derived from the approved structure. Read by the implementer; not human-gated. |
+| **Structure** | Break the design into vertical slices with verification checkpoints. ~2-page doc. Produced autonomously — advances to Plan with no human gate. |
+| **Plan** | Tactical implementation plan derived from the structure. Read by the implementer; not human-gated. |
 | **Worktree** | Orchestrator prepares an isolated git worktree. |
 | **Implement** | Test-first → slice execution → 5 parallel reviewers + typed retry loop. |
 | **PR** | Update changelog, commit, open pull request. |

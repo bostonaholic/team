@@ -26,7 +26,7 @@ The orchestrator dispatches you with the artifact directory
 
 1. **Read the approved plan** at `docs/plans/<id>/plan.md` to understand the
    slice list, file-level steps, and per-slice tests.
-2. **Read the approved structure** at `docs/plans/<id>/structure.md` to
+2. **Read the structure** at `docs/plans/<id>/structure.md` to
    understand the order and verification checkpoints.
 3. **Read `docs/plans/<id>/repos.md` if present.** It defines multi-repo
    mode and lists each repo's slug, absolute path, and worktree path
