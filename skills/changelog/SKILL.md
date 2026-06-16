@@ -171,6 +171,14 @@ commits are rewritten in user-facing language.
 - **Write in past tense.** "Added X" not "Add X". The changelog records what
   happened.
 - **Keep entries short.** One to two sentences maximum. Link to documentation
-  for details if needed.
+  for details if needed — with an **absolute URL** (see next rule).
+- **Use absolute URLs for links.** A released changelog section is reused
+  *verbatim* as the GitHub release notes, and the release page is not served
+  from the repository root — so repository-relative links (e.g.
+  `[versioning](docs/versioning.md)`) become dead links there. Always write full
+  `https://…` URLs — the file's GitHub blob URL
+  (`https://github.com/<owner>/<repo>/blob/<default-branch>/<path>`) or your
+  published docs site — never relative paths. Bare `#anchors` and `mailto:`
+  targets are fine.
 - **Always update `[Unreleased]`.** Never create a versioned section without
   the user explicitly asking for a release.
