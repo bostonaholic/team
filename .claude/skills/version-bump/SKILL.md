@@ -101,7 +101,9 @@ entry style per `skills/changelog/SKILL.md`):
   - Add `[X.Y.Z]: https://github.com/bostonaholic/team/compare/v<prev>...vX.Y.Z`
 
 This section becomes the GitHub release notes verbatim — write it for a reader
-deciding whether to upgrade.
+deciding whether to upgrade. Any links must be **absolute URLs**: relative paths
+(e.g. `docs/versioning.md`) render as dead links on the release page (see
+`skills/changelog/SKILL.md`).
 
 **Empty-`[Unreleased]` edge case.** If the `[Unreleased]` body is empty,
 **derive at least one bullet from the PR's commits** (`feat:`/`fix:`/`perf:`/

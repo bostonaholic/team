@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Changelog entries now use absolute URLs for links.** A released changelog section is reused verbatim as the GitHub release notes, where repository-relative links (e.g. a bare `docs/versioning.md` target) render as dead links. The changelog convention (`skills/changelog/SKILL.md`) and the `version-bump` land-time changelog step now require full `https://…` URLs, and a new `tests/changelog-links.test.ts` tripwire fails the build if the `[Unreleased]` section contains a repository-relative link.
+
 ## [0.6.0] - 2026-06-16
 
 ### Added
@@ -15,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **The Team plugin now versions itself at land time, retiring the per-PR version gate.** Drafted PRs carry **no version** — no bump commit, no `vX.Y.Z` title, no released changelog section — and simply accumulate user-facing bullets under `## [Unreleased]`. Landing a Team PR is two steps: the dev-internal `version-bump` skill (`.claude/skills/version-bump/SKILL.md`) assigns the next version against current `main`, bumps the four version strings, cuts the `[Unreleased]` body into a dated `## [X.Y.Z]` section, runs a land-time consistency assertion, and commits `chore(version)`; then the generic `/shipit` skill above pushes, waits for CI, and rebase-merges. Because landing is serialized — one PR versioned against the latest `main` at a time — two PRs can no longer claim the same number, so the per-PR CI gate is gone: `.github/workflows/version-gate.yml` is **deleted**, `.github/workflows/pr-title-sync.yml` is slimmed to a thin backstop that no-ops for bump-less PRs, and `tests/version-consistency.test.ts` is narrowed to the invariants that always hold on a feature branch (strict 3-part semver + four-string agreement), with the released-section/footer-link checks moved into `version-bump`'s land-time assertion. `release-on-merge.yml` is unchanged — it still tags and publishes from the landed `plugin.json`. [docs/versioning.md](docs/versioning.md) and the `AGENTS.md`/`CLAUDE.md` versioning invariant document the model.
+- **The Team plugin now versions itself at land time, retiring the per-PR version gate.** Drafted PRs carry **no version** — no bump commit, no `vX.Y.Z` title, no released changelog section — and simply accumulate user-facing bullets under `## [Unreleased]`. Landing a Team PR is two steps: the dev-internal `version-bump` skill (`.claude/skills/version-bump/SKILL.md`) assigns the next version against current `main`, bumps the four version strings, cuts the `[Unreleased]` body into a dated `## [X.Y.Z]` section, runs a land-time consistency assertion, and commits `chore(version)`; then the generic `/shipit` skill above pushes, waits for CI, and rebase-merges. Because landing is serialized — one PR versioned against the latest `main` at a time — two PRs can no longer claim the same number, so the per-PR CI gate is gone: `.github/workflows/version-gate.yml` is **deleted**, `.github/workflows/pr-title-sync.yml` is slimmed to a thin backstop that no-ops for bump-less PRs, and `tests/version-consistency.test.ts` is narrowed to the invariants that always hold on a feature branch (strict 3-part semver + four-string agreement), with the released-section/footer-link checks moved into `version-bump`'s land-time assertion. `release-on-merge.yml` is unchanged — it still tags and publishes from the landed `plugin.json`. [docs/versioning.md](https://github.com/bostonaholic/team/blob/main/docs/versioning.md) and the `AGENTS.md`/`CLAUDE.md` versioning invariant document the model.
 
 ## [0.5.1] - 2026-06-15
 
