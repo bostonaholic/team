@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-06-16
+
 ### Changed
 
 - **The Structure phase is no longer a human approval gate.** The QRSPI pipeline now has a single human gate — **Design approval** — and the Structure phase advances to Plan autonomously: the `structure-planner` writes `structure.md` with plain frontmatter (no `approved`/`approved_at`/`revision` fields) and the orchestrator proceeds to PLAN with no approval wait. The orchestrator skill ([skills/team/SKILL.md](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md)), the Structure and Plan phase skills, the phase discipline ([skills/qrspi-workflow/SKILL.md](https://github.com/bostonaholic/team/blob/main/skills/qrspi-workflow/SKILL.md)), the gate registry, the `structure-planner` agent, and the phase-inference logic in the `session-start-recover` and `pre-compact-anchor` hooks all treat Structure as gateless. Documentation across `README.md`, `AGENTS.md`/`CLAUDE.md`, and [docs/architecture.md](https://github.com/bostonaholic/team/blob/main/docs/architecture.md) now describes one human gate instead of two.
@@ -107,7 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/bostonaholic/team/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/bostonaholic/team/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/bostonaholic/team/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/bostonaholic/team/compare/v0.5.0...v0.5.1
