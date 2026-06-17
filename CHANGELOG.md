@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-06-16
+
+### Added
+
+- **Every agent and user-facing slash-command skill now pins its own reasoning `effort` level in frontmatter.** Using Claude Code's supported [`effort` field](https://code.claude.com/docs/en/model-config#adjust-effort-level), the plugin sets reasoning depth per role instead of inheriting whatever the session happens to be on, mirroring the existing model tiering. The two human-gate artifact authors ([`design-author`](https://github.com/bostonaholic/team/blob/main/agents/design-author.md), [`structure-planner`](https://github.com/bostonaholic/team/blob/main/agents/structure-planner.md)) run at `xhigh`; planning, implementation, and the hard-gate reviewers (`planner`, `implementer`, `test-architect`, `questioner`, `researcher`, `code-reviewer`, `security-reviewer`) at `high`; report-only reviewers (`technical-writer`, `ux-reviewer`) and the dispatch/orchestration skills (`/team` and the `/team-*` phase commands, `/shipit`) at `medium`; the mechanical `haiku` agents (`file-finder`, `verifier`) and the worktree router (`/team-worktree`) at `low`; and inline-work skills (`/team-fix`, `/eng-design-doc-review`) at `high`. Methodology skills carry no `effort`, so they inherit from the agent that loads them rather than overriding its tier. New L2 tripwires in [`tests/architecture.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/architecture.test.ts) assert every agent and every argument-taking skill declares a valid level and that methodology skills stay unset; [`AGENTS.md`](https://github.com/bostonaholic/team/blob/main/AGENTS.md) and [docs/architecture.md](https://github.com/bostonaholic/team/blob/main/docs/architecture.md) document the effort tier alongside the model tier.
+
 ## [0.7.1] - 2026-06-16
 
 ### Fixed
@@ -115,7 +121,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.7.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/bostonaholic/team/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/bostonaholic/team/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/bostonaholic/team/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/bostonaholic/team/compare/v0.6.0...v0.6.1
