@@ -208,6 +208,16 @@ describe("multi-repo support", () => {
     expect(read(FILE_FINDER)).toContain("repos.md");
   });
 
+  test("file-finder forbids reading task.md and enumerating docs/plans/", () => {
+    const text = flat(read(FILE_FINDER));
+    // Hard isolation: must never read the user's original description.
+    expect(/MUST NOT.*task\.md/i.test(text)).toBe(true);
+    // Must never glob/list/enumerate the plan directory to discover the task,
+    // closing the wide-net search-strategy hole. Order-independent: the verb
+    // may precede or follow the `docs/plans/` reference.
+    expect(/\b(enumerate|glob|list)\b.{0,40}docs\/plans\/|docs\/plans\/.{0,40}\b(enumerate|glob|list)\b/i.test(text)).toBe(true);
+  });
+
   test("team-research includes repos.md path in dispatch", () => {
     expect(read(TEAM_RES)).toContain("repos.md");
   });

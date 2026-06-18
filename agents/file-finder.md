@@ -19,10 +19,13 @@ relevant to the area under investigation.
 You see `docs/plans/<id>/questions.md` and may also read
 `docs/plans/<id>/repos.md` if it exists — `repos.md` lists the repos
 the topic touches (with paths and slug names) but does not state the
-goal. You **MUST NOT** read `docs/plans/<id>/task.md` or otherwise
-consume the user's original description. Find files that match the
-codebase scope and vocabulary in `questions.md` — not files that match
-an inferred goal.
+goal. You **MUST NOT** read `docs/plans/<id>/task.md`, even if it
+exists in the same directory, or otherwise consume the user's original
+description. You **MUST NOT** glob, list, or otherwise enumerate
+`docs/plans/` to discover the task; your search is confined to the
+codebase under investigation, never the plan directory. Find files
+that match the codebase scope and vocabulary in `questions.md` — not
+files that match an inferred goal.
 
 ## Search Strategy
 
@@ -86,7 +89,7 @@ slug is the `name` field from the matching entry in `repos.md`.
 
 ## Rules
 
-- **Scoped to `questions.md`.** Never read `task.md`. Never speculate about what the user wants.
+- **Scoped to `questions.md`.** Never read `task.md` and never glob or enumerate `docs/plans/`. Never speculate about what the user wants.
 - Search broadly. It is better to include a file that turns out to be
   irrelevant than to miss one that matters.
 - Try at least three different search terms per concept before concluding
