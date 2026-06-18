@@ -162,19 +162,6 @@ worktree directory and the `-b` flag in every repo. In the common case
   If a repo lacks an `origin` remote or `origin/HEAD`, fall back to its
   current default branch and warn the user once for that repo.
 
-### Carry the artifact directory into the home worktree
-
-Untracked files do not appear automatically in worktrees, and
-`docs/plans/<id>/` is typically untracked until it is committed:
-
-```
-cp -r $ARGUMENTS <home-worktree>/docs/plans/<id>/
-```
-
-In multi-repo mode, **only the home worktree** gets the artifact
-directory. Agents working in additional repos read artifacts from the
-home worktree path, which the orchestrator passes in.
-
 ### Record the worktree paths (multi-repo only)
 
 After all worktrees are created, append a `## Worktrees` section to the
