@@ -1,6 +1,6 @@
 ---
 name: qrspi-workflow
-description: Question-Research-Design-Structure-Plan-Worktree-Implement-PR phase discipline with gate enforcement — loaded by orchestrator to govern pipeline phase transitions, artifact conventions, and anti-patterns
+description: Worktree-Question-Research-Design-Structure-Plan-Implement-PR phase discipline with gate enforcement — loaded by orchestrator to govern pipeline phase transitions, artifact conventions, and anti-patterns
 user-invocable: false
 ---
 
@@ -15,6 +15,20 @@ that downstream phases consume.
 ```
 WORKTREE -> QUESTION -> RESEARCH -> DESIGN -> STRUCTURE -> PLAN -> IMPLEMENT -> PR
 ```
+
+### WORKTREE
+
+The **leading** phase. Before QUESTION, the router creates the home worktree
+on branch `<id>` off `origin/HEAD` and authors `docs/plans/<id>/` inside it,
+so the home checkout's `git status` stays clean for the whole run. No agent;
+purely a router responsibility.
+
+For the rationale behind the leading placement, see the "Why first"
+subsection in `skills/worktree-isolation/SKILL.md`.
+
+- **Artifact:** git worktree under Claude Code's native worktree directory,
+  with `docs/plans/<id>/` authored inside it
+- **Gate:** HARD — the worktree must exist before QUESTION authors artifacts
 
 ### QUESTION
 
@@ -64,20 +78,6 @@ structure.
 
 - **Artifact:** `docs/plans/<id>/plan.md`
 - **Gate:** SOFT — no human approval; design is the human contract
-
-### WORKTREE
-
-The **leading** phase. Before QUESTION, the router creates the home worktree
-on branch `<id>` off `origin/HEAD` and authors `docs/plans/<id>/` inside it,
-so the home checkout's `git status` stays clean for the whole run. No agent;
-purely a router responsibility.
-
-For the rationale behind the leading placement, see the "Why first"
-subsection in `skills/worktree-isolation/SKILL.md`.
-
-- **Artifact:** git worktree under Claude Code's native worktree directory,
-  with `docs/plans/<id>/` authored inside it
-- **Gate:** HARD — the worktree must exist before QUESTION authors artifacts
 
 ### IMPLEMENT
 
