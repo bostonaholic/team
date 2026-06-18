@@ -47,10 +47,23 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
    The home worktree and `docs/plans/<id>/` are both created at the leading
    WORKTREE phase (see "Orchestrator-Emit Gate (leading worktree)" below) —
    not here.
-5. **Resume detection.** If artifacts already exist for `<id>` under
-   `docs/plans/<id>/`, fast-forward the ledger by marking completed any
-   phases whose artifacts are present and (for human-gated phases) carry
-   `approved: true`. Then mark the first incomplete phase `in_progress`.
+5. **Resolve the canonical artifact directory.** Because artifacts now live
+   inside the worktree (authored there at the leading WORKTREE phase), run
+   `git worktree list` and look for a worktree path whose basename is `<id>`
+   (the `.claude/worktrees/<id>` convention). If one exists, the canonical
+   artifact directory is `<worktree-path>/docs/plans/<id>/` — use it for
+   resume detection and for the rest of the session (thread its absolute path
+   into every downstream dispatch). If no worktree for `<id>` exists, fall
+   back to the in-place home `docs/plans/<id>/` (the fallback path from the
+   leading WORKTREE phase). This is the orchestrator-side mirror of the
+   recovery hooks' worktree discovery.
+6. **Resume detection.** If artifacts already exist for `<id>` under the
+   canonical artifact directory resolved in step 5, fast-forward the ledger by
+   marking completed any phases whose artifacts are present and (for
+   human-gated phases) carry `approved: true`. Then mark the first incomplete
+   phase `in_progress`. **Never re-dispatch a phase whose artifact already
+   exists** — re-running QUESTION over an existing `task.md`, for example,
+   would overwrite in-progress work (data loss).
 
 You hold the description in your own context. Downstream of QUESTION the
 description must NEVER appear in any artifact or agent payload outside
