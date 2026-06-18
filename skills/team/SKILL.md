@@ -40,12 +40,14 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
    - With ticket: `<TICKET>-<kebab-topic>` (e.g., `ENG-1234-add-auth`)
    - Without ticket: `<YYYY-MM-DD>-<kebab-topic>` (e.g.,
      `2026-05-01-add-auth`)
-4. Create `docs/plans/<id>/` if it does not exist.
-5. **Seed the TodoWrite ledger** with one item per phase, in order:
-   `Question → Research → Design → Structure → Plan → Worktree →
-   Implement → PR`. Mark `Question` as `in_progress`.
+4. **Seed the TodoWrite ledger** with one item per phase, in order:
+   `Worktree → Question → Research → Design → Structure → Plan → Implement → PR`.
+   Mark `Worktree` as `in_progress`.
    See `skills/progress-tracking/SKILL.md` for the per-step tracking convention agents follow within each phase.
-6. **Resume detection.** If artifacts already exist for `<id>` under
+   The home worktree and `docs/plans/<id>/` are both created at the leading
+   WORKTREE phase (see "Orchestrator-Emit Gate (leading worktree)" below) —
+   not here.
+5. **Resume detection.** If artifacts already exist for `<id>` under
    `docs/plans/<id>/`, fast-forward the ledger by marking completed any
    phases whose artifacts are present and (for human-gated phases) carry
    `approved: true`. Then mark the first incomplete phase `in_progress`.
@@ -134,13 +136,13 @@ loop:
 
 | Phase      | Agent(s)                                                | Predecessor artifact                                            | Next phase on pass |
 |------------|---------------------------------------------------------|-----------------------------------------------------------------|--------------------|
-| QUESTION   | `questioner`                                            | (none — description in `$ARGUMENTS`)                            | RESEARCH           |
+| WORKTREE   | (orchestrator-emit)                                     | (none — description in `$ARGUMENTS`)                            | QUESTION           |
+| QUESTION   | `questioner`                                            | worktree prepared (+ description in `$ARGUMENTS`)               | RESEARCH           |
 | RESEARCH   | `file-finder`, `researcher` (parallel, isolated)        | `docs/plans/<id>/questions.md`                                  | DESIGN             |
 | DESIGN     | `design-author` (→ human gate)                          | `docs/plans/<id>/research.md`                                   | STRUCTURE          |
 | STRUCTURE  | `structure-planner`                                     | `docs/plans/<id>/design.md` (frontmatter `approved: true`)      | PLAN               |
-| PLAN       | `planner`                                               | `docs/plans/<id>/structure.md`                                  | WORKTREE           |
-| WORKTREE   | (orchestrator-emit)                                     | `docs/plans/<id>/plan.md`                                       | IMPLEMENT          |
-| IMPLEMENT  | `test-architect`, `implementer`, 5 reviewers (parallel) | worktree prepared                                               | PR                 |
+| PLAN       | `planner`                                               | `docs/plans/<id>/structure.md`                                  | IMPLEMENT          |
+| IMPLEMENT  | `test-architect`, `implementer`, 5 reviewers (parallel) | `docs/plans/<id>/plan.md`                                       | PR                 |
 | PR         | (orchestrator-emit)                                     | aggregate gate passed                                           | SHIPPED            |
 
 For RESEARCH, dispatch `file-finder` and `researcher` in parallel passing
@@ -170,13 +172,44 @@ in their context.
 
 ## Gate Handling
 
+### Orchestrator-Emit Gate (leading worktree)
+
+This is the **first** phase — it runs before QUESTION, off the description in
+`$ARGUMENTS` alone (there is no predecessor artifact). It exists so a `/team`
+run authors `docs/plans/<id>/` inside an isolated worktree on branch `<id>`
+from phase 1, keeping the home checkout's `git status` clean for the whole run.
+
+1. **Create the home worktree** on branch `<id>` off `origin/HEAD`, using
+   Claude Code's native worktree support (single-repo block in
+   `skills/team-worktree/SKILL.md` → "Create the worktree(s)"). Only the home
+   repo gets a worktree at this phase; multi-repo secondary worktrees are
+   deferred until after the design gate (see "Orchestrator-Emit Gate
+   (post-design-gate secondary worktrees)" below).
+2. **Create `docs/plans/<id>/` inside the worktree.** The artifact directory
+   lives in the worktree from the start, so no copy is ever needed.
+3. **Compute the worktree's absolute path once** and thread it into every
+   downstream dispatch as the worktree-rooted `docs/plans/<id>/` path. The
+   main session does NOT `cd` into the worktree; it passes absolute paths to
+   each agent.
+4. **Edge — branch `<id>` already exists** (re-invocation): if a worktree is
+   already on branch `<id>`, reuse it; do not recreate.
+5. **Edge — home-worktree creation fails** (shallow clone, certain CI systems,
+   permissions): report loudly and fall back to **in-place for the entire
+   run** — author `docs/plans/<id>/` at the home-repo root, where the absolute
+   path threaded downstream is the home-repo root. Never block the pipeline
+   because worktree creation failed (mirror the best-effort fallback in
+   `skills/worktree-isolation/SKILL.md` → "Fallback").
+
 ### Human Gate (design approval)
 
 When the `design-author` returns a draft:
 
 1. Confirm `docs/plans/<id>/design.md` exists with frontmatter
    `approved: false` and `approved_at: null`.
-2. Present the design **in full** to the user.
+2. Present the design **in full** to the user, and **print the absolute
+   worktree-rooted `design.md` path** (the worktree path computed at the
+   leading WORKTREE phase joined with `docs/plans/<id>/design.md`) so the
+   reviewer can open the file cleanly without hunting for the worktree.
 3. Use `AskUserQuestion` to capture the verdict. Use a single question
    with a `Decision` header and three options: **Approve**, **Request
    changes**, **Reject**. Do not ask "Do you approve?" as free text —
@@ -196,22 +229,32 @@ record it and advance to PLAN immediately. There is no approval wait —
 now auto-advances. The artifact carries no `approved`/`approved_at`/
 `revision` frontmatter.
 
-### Orchestrator-Emit Gate (worktree preparation)
+### Orchestrator-Emit Gate (post-design-gate secondary worktrees)
 
-When the plan artifact exists:
+The home worktree is born at the leading WORKTREE phase. Secondary worktrees
+(multi-repo mode) are created **after the design gate**, because the set of
+repos a topic touches is only confirmed during the design open-questions step
+(`repos.md`). This is the documented asymmetry: the home worktree exists from
+phase 1, while secondary repos lag until post-design-gate.
+
+When the design gate passes:
 
 1. **Detect mode.** If `docs/plans/<id>/repos.md` exists, you are in
-   **multi-repo mode** — create one worktree per repo listed in that
-   file, all on the same `<id>` branch. Otherwise you are in
-   **single-repo mode** — create one worktree in the current repo.
-   See `skills/worktree-isolation/SKILL.md` for the topology and
-   `skills/team-worktree/SKILL.md` for the procedure.
-2. Copy `docs/plans/<id>/` into the **home worktree** only (other
-   repos' worktrees do not duplicate the artifacts; agents that need
-   them read from the home worktree path the orchestrator passes in).
-3. In multi-repo mode, append a `## Worktrees` section to `repos.md`
-   recording each repo's worktree path so later `/team-*` invocations
-   can rediscover them.
+   **multi-repo mode** — create one secondary worktree per additional repo
+   listed in that file, all on the same `<id>` branch. Otherwise you are in
+   **single-repo mode** and nothing further is needed here (the home worktree
+   already exists). See `skills/worktree-isolation/SKILL.md` for the topology
+   and `skills/team-worktree/SKILL.md` for the procedure.
+2. **Append a `## Worktrees` section to `repos.md`**, post-design-gate,
+   **back-recording the home worktree path** created at the leading WORKTREE
+   phase plus each secondary repo's worktree path, so later `/team-*`
+   invocations can rediscover every worktree from that one file. The other
+   repos' worktrees do not duplicate the artifacts; agents that need them read
+   from the home worktree path the orchestrator passes in.
+3. **Edge — a secondary repo's worktree fails to create** (shallow clone, CI,
+   permissions): report it and continue. That repo's portion of the work runs
+   in its main tree; the pipeline is never blocked (mirror
+   `skills/worktree-isolation/SKILL.md` → "Fallback").
 
 ### Mechanical Gate (test confirmation)
 
@@ -327,8 +370,9 @@ The questioner creates `repos.md` if the user's description names
 multiple repos; the design-author confirms or amends the list during
 the open-questions step. Once `repos.md` exists, every downstream phase
 respects it: research spans every listed repo, slices and plan steps
-carry `[repo: <name>]` annotations, the WORKTREE phase creates a
-worktree per repo, the implementer changes directory between them per
+carry `[repo: <name>]` annotations, secondary worktrees are created
+after the design gate (the home worktree already exists from the leading
+WORKTREE phase), the implementer changes directory between them per
 step, and PR opens one PR per repo. When `repos.md` is absent, the
 pipeline runs in single-repo mode (today's default).
 
