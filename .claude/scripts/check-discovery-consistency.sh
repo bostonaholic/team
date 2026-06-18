@@ -110,8 +110,7 @@ done
 
 # =============================================================================
 # VERBATIM-IDENTITY (slices 1-4): the load-bearing fragments are byte-identical
-# to canon in every copy. Approval grep present in team-structure + team-plan
-# ONLY.
+# to canon in every copy. Approval grep present in team-structure ONLY.
 # =============================================================================
 i=0
 while [ "$i" -lt "${#A_SKILLS[@]}" ]; do
@@ -129,13 +128,13 @@ while [ "$i" -lt "${#A_SKILLS[@]}" ]; do
   i=$((i + 1))
 done
 
-# Approval grep: present verbatim in team-structure + team-plan, absent elsewhere.
-for skill in team-structure team-plan; do
+# Approval grep: present verbatim in team-structure only, absent elsewhere.
+for skill in team-structure; do
   file="$SKILLS/$skill/SKILL.md"
   [ -f "$file" ] && grep -qF "$CANON_APPROVAL_GREP" "$file" \
     || fail "$skill approval grep" "verbatim approval grep in predecessor filter" "approval grep absent"
 done
-for skill in team-research team-design team-worktree team-implement team-pr eng-design-doc-review; do
+for skill in team-research team-design team-plan team-worktree team-implement team-pr eng-design-doc-review; do
   file="$SKILLS/$skill/SKILL.md"
   if [ -f "$file" ] && grep -qF "$CANON_APPROVAL_GREP" "$file"; then
     fail "$skill approval grep" "no approval grep (non-gated skill)" "approval grep unexpectedly present"
