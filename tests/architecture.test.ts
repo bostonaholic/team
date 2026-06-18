@@ -269,6 +269,123 @@ describe("effort tiering", () => {
   });
 });
 
+describe("worktree-first pipeline", () => {
+  // ---- Slice 4: phase-diagram sweep (6 files) -------------------------------
+  // Each file carries a phase-diagram string. After the sweep, every one must
+  // place Worktree before Question and must NOT carry a Plan-then-Worktree
+  // ordering. Tolerate both Unicode `→` and ASCII `->` arrows, case-insensitive.
+  // Shared regex iterated over the file list, mirroring EFFORT_LEVELS.
+  const DIAGRAM_FILES = [
+    join(REPO_ROOT, "README.md"),
+    join(REPO_ROOT, "docs", "architecture.md"),
+    join(REPO_ROOT, "docs", "index.md"),
+    join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md"),
+    join(REPO_ROOT, "skills", "team", "SKILL.md"),
+    join(REPO_ROOT, "AGENTS.md"),
+  ];
+
+  // Worktree precedes Question, with the canonical phase order between them.
+  // `[^\n]*` keeps the match on a single diagram line so a stray "Worktree"
+  // paragraphs-away from "Question" cannot satisfy it.
+  const WORKTREE_FIRST =
+    /Worktree[^\n]*(?:→|->)[^\n]*Question[^\n]*(?:→|->)[^\n]*Research[^\n]*(?:→|->)[^\n]*Design[^\n]*(?:→|->)[^\n]*Structure[^\n]*(?:→|->)[^\n]*Plan[^\n]*(?:→|->)[^\n]*Implement[^\n]*(?:→|->)[^\n]*PR/i;
+
+  // Old ordering: Plan immediately precedes Worktree on a diagram line.
+  const PLAN_THEN_WORKTREE = /Plan[^\n]*(?:→|->)[^\n]*Worktree/i;
+
+  for (const file of DIAGRAM_FILES) {
+    test(`phase diagram is worktree-first in ${file.replace(REPO_ROOT + "/", "")}`, () => {
+      const text = read(file);
+      expect(text).toMatch(WORKTREE_FIRST);
+      expect(PLAN_THEN_WORKTREE.test(text)).toBe(false);
+    });
+  }
+
+  // ---- Slice 4: prose inference tables (2 files) ---------------------------
+  const PROSE_TABLES = [
+    join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md"),
+    join(REPO_ROOT, "docs", "architecture.md"),
+  ];
+
+  // The `plan.md` inference row must map to IMPLEMENT. Match the table row that
+  // names `plan.md` and assert IMPLEMENT appears on that same row.
+  const PLAN_ROW_IMPLEMENT = /^\|[^\n]*`plan\.md`[^\n]*\|[^\n]*IMPLEMENT[^\n]*\|/m;
+  // No `plan.md` row may map to WORKTREE anymore.
+  const PLAN_ROW_WORKTREE = /^\|[^\n]*`plan\.md`[^\n]*\|[^\n]*WORKTREE[^\n]*\|/m;
+
+  for (const file of PROSE_TABLES) {
+    test(`plan.md inference row maps to IMPLEMENT in ${file.replace(REPO_ROOT + "/", "")}`, () => {
+      const text = read(file);
+      expect(text).toMatch(PLAN_ROW_IMPLEMENT);
+      expect(PLAN_ROW_WORKTREE.test(text)).toBe(false);
+    });
+  }
+
+  // A leading WORKTREE row whose signal is "worktree exists" / "no task.md"
+  // maps to WORKTREE. Match a single table row that mentions a worktree-exists
+  // signal and maps to WORKTREE.
+  const LEADING_WORKTREE_ROW = /^\|[^\n]*worktree exists[^\n]*\|[^\n]*WORKTREE[^\n]*\|/im;
+
+  for (const file of PROSE_TABLES) {
+    test(`leading WORKTREE inference row present in ${file.replace(REPO_ROOT + "/", "")}`, () => {
+      expect(read(file)).toMatch(LEADING_WORKTREE_ROW);
+    });
+  }
+
+  // The IMPLEMENT confirmation phrase must be byte-for-byte identical in both
+  // prose tables. The plan pins this verbatim string.
+  const IMPLEMENT_PHRASE = "≥1 commit on `<id>` since merge-base";
+
+  for (const file of PROSE_TABLES) {
+    test(`IMPLEMENT confirmation phrase is verbatim in ${file.replace(REPO_ROOT + "/", "")}`, () => {
+      expect(read(file)).toContain(IMPLEMENT_PHRASE);
+    });
+  }
+
+  // ---- Slice 4: hook shared-region byte-identity --------------------------
+  // Locks the Slice 2 invariant. Extract the shared region from each hook —
+  // from the `const ID_RE` line up to (not including) `async function main(` —
+  // and assert the two extracted substrings are === equal.
+  function sharedRegion(src: string): string {
+    const start = src.indexOf("const ID_RE");
+    const end = src.indexOf("async function main(");
+    if (start < 0 || end < 0 || end <= start) {
+      throw new Error("hook shared-region boundary markers not found");
+    }
+    return src.slice(start, end);
+  }
+
+  test("hooks share a byte-identical inference region", () => {
+    const a = sharedRegion(read(join(REPO_ROOT, "hooks", "session-start-recover.mjs")));
+    const b = sharedRegion(read(join(REPO_ROOT, "hooks", "pre-compact-anchor.mjs")));
+    expect(a).toBe(b);
+  });
+
+  // ---- Slice 5: registry WORKTREE-first -----------------------------------
+  test("registry.json lists WORKTREE as the first phase", () => {
+    const reg = JSON.parse(read(join(REPO_ROOT, "skills", "team", "registry.json")));
+    expect(reg.phases[0].name).toBe("WORKTREE");
+  });
+
+  // ---- Slices 1/3: no cp -r artifact-copy reference remains ----------------
+  const NO_CP_FILES = [
+    join(REPO_ROOT, "skills", "team", "SKILL.md"),
+    join(REPO_ROOT, "skills", "team-worktree", "SKILL.md"),
+    join(REPO_ROOT, "skills", "worktree-isolation", "SKILL.md"),
+  ];
+
+  for (const file of NO_CP_FILES) {
+    test(`no cp -r artifact-copy reference in ${file.replace(REPO_ROOT + "/", "")}`, () => {
+      expect(read(file)).not.toContain("cp -r");
+    });
+  }
+
+  // ---- Slice 3: worktree-isolation rationale is "why first" ----------------
+  test("worktree-isolation rewrites rationale as Why first", () => {
+    expect(read(join(REPO_ROOT, "skills", "worktree-isolation", "SKILL.md"))).toContain("Why first");
+  });
+});
+
 // Resolve `agents/*.md` and `hooks/*.mjs` globs, returning repo-relative paths
 // so grep receives the same file list a shell glob would expand to.
 function agentFiles(): string[] {
