@@ -243,6 +243,28 @@ describe("multi-repo support", () => {
     expect(text).toContain("Multi-repo topics");
     expect(text).toContain("multi-repo mode");
   });
+
+  // Worktree-first: secondary worktrees are created AFTER the design gate
+  // (the home worktree is born at the leading WORKTREE phase). Assert the
+  // post-design-gate phrasing is co-located with the `## Worktrees` /
+  // `repos.md` back-recording prose.
+  test("team SKILL creates secondary worktrees after the design gate", () => {
+    const text = flat(read(TEAM));
+    // A post-design-gate phrase appears within reach of the `## Worktrees`
+    // back-recording of `repos.md`.
+    expect(
+      /(after the design gate|post-design-gate)[^|]{0,400}(## Worktrees|repos\.md)|(## Worktrees|repos\.md)[^|]{0,400}(after the design gate|post-design-gate)/i.test(
+        text,
+      ),
+    ).toBe(true);
+  });
+
+  test("team SKILL back-records the home worktree path in repos.md", () => {
+    const text = flat(read(TEAM));
+    expect(
+      /(back-record|record)[^.]{0,200}home worktree[^.]{0,200}(path|`## Worktrees`|repos\.md)/i.test(text),
+    ).toBe(true);
+  });
 });
 
 describe("implement-to-pr continuation", () => {
