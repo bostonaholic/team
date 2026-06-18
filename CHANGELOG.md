@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-06-18
+
+### Fixed
+
+- **The `file-finder` research agent can no longer leak the task description into the isolated research phase.** Research isolation requires `file-finder` and `researcher` to work only from `questions.md` and never see `task.md` or the user's framing — but `agents/file-finder.md` only weakly prohibited reading `task.md` and said nothing about enumerating the plan directory, so the agent could (and did) glob `docs/plans/<id>/` and read `task.md`, absorbing the feature goal. The agent now carries a hard constraint forbidding it from reading `task.md` (even when it sits beside `questions.md` in the same directory) and from globbing/listing/enumerating `docs/plans/`, mirroring the stronger isolation language in [`agents/researcher.md`](https://github.com/bostonaholic/team/blob/main/agents/researcher.md). A new static tripwire in [`tests/protocol.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/protocol.test.ts) locks both halves of the prohibition (it fails if either the `task.md` or the `docs/plans/` enumeration ban is removed).
+
 ## [0.9.0] - 2026-06-18
 
 ### Changed
@@ -127,7 +133,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/bostonaholic/team/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/bostonaholic/team/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/bostonaholic/team/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/bostonaholic/team/compare/v0.7.0...v0.7.1
