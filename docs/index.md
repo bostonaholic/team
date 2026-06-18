@@ -18,7 +18,7 @@ Team orchestrates **13 specialized agents** — from isolated researchers to adv
 ## The Pipeline
 
 ```
-QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → WORKTREE → IMPLEMENT → PR
+WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → PR
 ```
 
 | Phase | What happens |

@@ -112,17 +112,22 @@ Cap at 5; beyond that, escalate to the user.
 
 | Latest artifact present                                | Current phase       |
 |--------------------------------------------------------|---------------------|
+| worktree exists for `<id>`, no `task.md` yet           | WORKTREE (next up)  |
 | `task.md` + `questions.md` only                        | RESEARCH (next up)  |
 | `research.md`                                          | DESIGN (next up)    |
 | `design.md` (frontmatter `approved: false`)            | DESIGN (human gate) |
 | `design.md` (frontmatter `approved: true`)             | STRUCTURE (next up) |
 | `structure.md`                                         | PLAN (next up)      |
-| `plan.md`                                              | WORKTREE (next up)  |
-| worktree exists for the `<id>` branch                  | IMPLEMENT           |
+| `plan.md` + ≥1 commit on `<id>` since merge-base       | IMPLEMENT           |
+| `plan.md` (no commit on `<id>` yet)                    | PLAN (next up)      |
 | topic branch has slice commits + verifier passed       | PR (next up)        |
 | PR opened or commit shipped                            | SHIPPED             |
 
 Worktree presence: `git worktree list --porcelain | grep -q <id>`.
+IMPLEMENT is confirmed only once there is **≥1 commit on `<id>` since
+merge-base** with the default branch (`git log <merge-base>..<id>`
+non-empty); `plan.md` present with no commit means the run is still
+pre-IMPLEMENT.
 
 ## 3. Pipeline (QRSPI)
 
@@ -130,13 +135,50 @@ The pipeline has eight phases. The orchestrator walks them in order;
 each phase requires the prior phase's artifact on disk.
 
 ```
-QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → WORKTREE → IMPLEMENT → PR → SHIPPED
+WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → PR → SHIPPED
 ```
 
-### Phase 1: Question
+### Phase 1: Worktree
+
+**Action:** orchestrator-emit (the leading phase)
+**Predecessor:** (none — description in `$ARGUMENTS`)
+
+Before QUESTION, the orchestrator creates the home worktree on branch
+`<id>` off `origin/HEAD` using Claude Code's native worktree support, and
+authors `docs/plans/<id>/` **inside** it. Because the artifact directory
+is born in the worktree, no copy is ever needed and the home checkout's
+`git status` stays clean for the whole run. The orchestrator computes the
+worktree's absolute path once and threads it into every downstream
+dispatch (the main session does not `cd`).
+
+**Single-repo (default):** `repos.md` is absent. One home worktree at
+`<repo>/.claude/worktrees/<id>`.
+
+**Multi-repo:** `repos.md` does not exist yet at this phase (the repo set
+is confirmed during the design open-questions step), so only the home
+worktree is created here. Secondary worktrees are created **after the
+design gate**, one per listed repo:
+
+```sh
+git -C <repo-path> worktree add .claude/worktrees/<id> -b <id> origin/HEAD
+```
+
+At that point the orchestrator writes a `## Worktrees` section to
+`repos.md`, back-recording the home worktree path plus each secondary
+path, so any later `/team-*` invocation can rediscover all paths from one
+file. Only the home repo's worktree carries `docs/plans/<id>/`; other
+repos' worktrees do not duplicate the artifacts. See
+`skills/worktree-isolation/SKILL.md` for full topology.
+
+**Fallback:** if home-worktree creation fails (shallow clone, certain CI
+systems, permissions), the orchestrator reports it and falls back to
+in-place for the entire run — `docs/plans/<id>/` lives at the home-repo
+root and the threaded path is the home-repo root.
+
+### Phase 2: Question
 
 **Agent:** `questioner`
-**Predecessor:** (none — description in `$ARGUMENTS`)
+**Predecessor:** worktree prepared (+ description in `$ARGUMENTS`)
 **Artifacts:** `docs/plans/<id>/{task,questions}.md`
 
 Decomposes the user's intent into two artifacts. Only the questioner
@@ -144,7 +186,7 @@ ever sees the user's description. There is no separate `brief.md`;
 neutral codebase context lives in a "Codebase context" section at the top
 of `questions.md`.
 
-### Phase 2: Research
+### Phase 3: Research
 
 **Agents:** `file-finder` and `researcher` (parallel, isolated)
 **Predecessor:** `questions.md` (orchestrator passes only the
@@ -154,7 +196,7 @@ of `questions.md`.
 Orchestrator waits for both agents to return, then writes the combined
 research artifact (with the required frontmatter).
 
-### Phase 3: Design
+### Phase 4: Design
 
 **Agent:** `design-author` (MUST ask open questions interactively before
 drafting)
@@ -164,7 +206,7 @@ drafting)
 frontmatter to set `approved: true` and `approved_at: <ISO-8601>`; on
 rejection the agent re-drafts and increments `revision`.
 
-### Phase 4: Structure
+### Phase 5: Structure
 
 **Agent:** `structure-planner`
 **Predecessor:** `design.md` with frontmatter `approved: true`
@@ -172,41 +214,13 @@ rejection the agent re-drafts and increments `revision`.
 **Gate:** NONE — autonomous. Once `structure.md` exists the pipeline
 advances to PLAN; design is the only human gate.
 
-### Phase 5: Plan
+### Phase 6: Plan
 
 **Agent:** `planner`
 **Predecessor:** `structure.md`
 **Artifact:** `docs/plans/<id>/plan.md`
 
 No human gate. The plan is mechanically derived from the structure.
-
-### Phase 6: Worktree
-
-**Action:** orchestrator-emit
-**Predecessor:** `plan.md` (and optionally `repos.md`)
-
-The orchestrator creates an isolated git worktree per involved repo. The
-branch name is `<id>` in every repo. Worktree paths and branches are
-discoverable via `git -C <repo-path> worktree list --porcelain` per repo
-— for multi-repo topics the orchestrator also writes a `## Worktrees`
-section to `repos.md` so any later `/team-*` invocation can rediscover
-all paths from one file.
-
-**Single-repo (default):** `repos.md` is absent. The orchestrator uses
-Claude Code's native worktree support to create one worktree at
-`<repo>/.claude/worktrees/<id>` and copies `docs/plans/<id>/` into it
-(untracked files don't propagate automatically).
-
-**Multi-repo:** `repos.md` is present. The orchestrator iterates over
-the listed repos, creating one worktree per repo with:
-
-```sh
-git -C <repo-path> worktree add .claude/worktrees/<id> -b <id> origin/HEAD
-```
-
-Only the home repo's worktree carries `docs/plans/<id>/`; other repos'
-worktrees do not duplicate the artifacts. See
-`skills/worktree-isolation/SKILL.md` for full topology.
 
 ### Phase 7: Implement
 

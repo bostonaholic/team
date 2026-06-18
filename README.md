@@ -11,7 +11,7 @@ Each agent does work and returns an artifact. The orchestrator dispatches the ne
 ## Pipeline (QRSPI)
 
 ```
-QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → WORKTREE → IMPLEMENT → PR
+WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → PR
 ```
 
 - **Question** — Decompose intent into a full task record (`task.md`) and neutral research questions (`questions.md`). The questioner is the only agent that ever sees the user's original description.

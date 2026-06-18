@@ -13,7 +13,7 @@ that downstream phases consume.
 ## Phase Sequence
 
 ```
-QUESTION -> RESEARCH -> DESIGN -> STRUCTURE -> PLAN -> WORKTREE -> IMPLEMENT -> PR
+WORKTREE -> QUESTION -> RESEARCH -> DESIGN -> STRUCTURE -> PLAN -> IMPLEMENT -> PR
 ```
 
 ### QUESTION
@@ -67,14 +67,17 @@ structure.
 
 ### WORKTREE
 
-Router prepares an isolated git worktree for implementation work. No agent;
+The **leading** phase. Before QUESTION, the router creates the home worktree
+on branch `<id>` off `origin/HEAD` and authors `docs/plans/<id>/` inside it,
+so the home checkout's `git status` stays clean for the whole run. No agent;
 purely a router responsibility.
 
-For the rationale behind the phase-6 placement, see the "Why late"
+For the rationale behind the leading placement, see the "Why first"
 subsection in `skills/worktree-isolation/SKILL.md`.
 
-- **Artifact:** git worktree under Claude Code's native worktree directory
-- **Gate:** HARD — worktree must exist before tests are written
+- **Artifact:** git worktree under Claude Code's native worktree directory,
+  with `docs/plans/<id>/` authored inside it
+- **Gate:** HARD — the worktree must exist before QUESTION authors artifacts
 
 ### IMPLEMENT
 
@@ -126,10 +129,11 @@ The `<id>` slug should match across every artifact for the same feature.
 
 When a topic touches **more than one repository**, the questioner or
 design-author writes `docs/plans/<id>/repos.md` to enumerate the repos
-involved. The presence of this file switches the WORKTREE phase into
-multi-repo mode (one worktree per listed repo, see
-`skills/worktree-isolation/SKILL.md`). Its absence keeps the pipeline in
-single-repo mode — today's default.
+involved. The presence of this file switches the pipeline into multi-repo
+mode (one worktree per listed repo, see
+`skills/worktree-isolation/SKILL.md`); the home worktree is created at the
+leading WORKTREE phase and secondary worktrees after the design gate. Its
+absence keeps the pipeline in single-repo mode — today's default.
 
 `repos.md` schema:
 
@@ -156,7 +160,7 @@ phase: repos
   **role:** ...
 
 ## Worktrees
-<written by the orchestrator after WORKTREE phase succeeds>
+<written by the orchestrator after the design gate; back-records the home worktree path created at the leading WORKTREE phase plus each secondary path>
 - home: <home-worktree-path>
 - <repo-name>: <repo-path>/.claude/worktrees/<id>
 - ...
@@ -171,9 +175,10 @@ Rules:
 - **The home repo is the one the user invoked `/team` from.** Its
   `docs/plans/<id>/` directory is the canonical artifact location;
   other repos' worktrees do not carry duplicate artifacts.
-- **The `## Worktrees` section is written by the orchestrator** during
-  the WORKTREE phase, not by the questioner or design-author. Until that
-  phase runs, `repos.md` lists only the repos to be involved.
+- **The `## Worktrees` section is written by the orchestrator** after the
+  design gate (back-recording the home worktree created at the leading
+  WORKTREE phase plus each secondary worktree), not by the questioner or
+  design-author. Until then, `repos.md` lists only the repos to be involved.
 
 ### Topic consistency invariant
 
@@ -311,13 +316,14 @@ The orchestrator infers the current phase by scanning what exists in
 
 | Latest artifact present                                | Current phase       |
 |--------------------------------------------------------|---------------------|
+| worktree exists for `<id>`, no `task.md` yet           | WORKTREE (next up)  |
 | `task.md` + `questions.md`                             | RESEARCH (next up)  |
 | `research.md`                                          | DESIGN (next up)    |
 | `design.md` (frontmatter `approved: false`)            | DESIGN (human gate) |
 | `design.md` (frontmatter `approved: true`)             | STRUCTURE (next up) |
 | `structure.md`                                         | PLAN (next up)      |
-| `plan.md`                                              | WORKTREE (next up)  |
-| worktree exists for `<id>` branch in every involved repo | IMPLEMENT         |
+| `plan.md` + ≥1 commit on `<id>` since merge-base       | IMPLEMENT           |
+| `plan.md` (no commit on `<id>` yet)                    | PLAN (next up)      |
 | topic branch has commits ahead and verifier passed     | PR (next up)        |
 | PR(s) opened or commit(s) shipped                      | SHIPPED             |
 
@@ -325,6 +331,10 @@ Worktree presence (single-repo): `git worktree list --porcelain | grep -q <id>`.
 Worktree presence (multi-repo): for each repo path in
 `docs/plans/<id>/repos.md`, `git -C <repo-path> worktree list --porcelain
 | grep -q <id>`.
+IMPLEMENT signal: a worktree alone is not enough — IMPLEMENT is confirmed
+only once there is **≥1 commit on `<id>` since merge-base** with the default
+branch (`git log <merge-base>..<id>` non-empty). Before that, `plan.md`
+present with no commit means the run is still pre-IMPLEMENT.
 Verifier passed: latest review artifact in `docs/plans/<id>/review-<n>.md`
 shows aggregate gate clean.
 
