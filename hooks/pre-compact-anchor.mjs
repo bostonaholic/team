@@ -4,11 +4,10 @@
  * docs/plans/<id>/ for the most recent active topic, infers the current phase
  * from artifact presence + git signals (a leading WORKTREE state when a
  * worktree exists with no task.md yet; IMPLEMENT once >=1 commit lands on the
- * <id> branch), and injects a 4-line anchor into additionalContext. The anchor
- * tells the agent to re-invoke any /team-* command bare — discovery
- * auto-resolves the directory (an explicit docs/plans/<id>/ is still accepted).
- * Stateless; always exits 0. Every git call is wrapped so git-absent /
- * not-a-repo degrades to a home scan.
+ * <id> branch since the default-branch merge-base), and injects a 4-line
+ * anchor into additionalContext. The anchor tells the agent to re-invoke
+ * /team to resume from the detected phase. Stateless; always exits 0. Every
+ * git call is wrapped so git-absent / not-a-repo degrades to a home scan.
  */
 import { execFileSync } from "node:child_process";
 import { readFile, readdir, stat } from "node:fs/promises";
@@ -44,12 +43,40 @@ function worktreePaths(rootDir) {
   } catch { return []; }
 }
 
+// The default branch ref to anchor the IMPLEMENT merge-base against. Prefers
+// origin/HEAD's symbolic target; falls back to the first of origin/main,
+// origin/master, main, master that resolves. Returns null if none exist.
+function defaultBranch(rootDir) {
+  const tryRev = (ref) => {
+    try {
+      execFileSync("git", ["-C", rootDir, "rev-parse", "--verify", "--quiet", ref], {
+        encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"],
+      });
+      return ref;
+    } catch { return null; }
+  };
+  try {
+    const sym = execFileSync("git", ["-C", rootDir, "symbolic-ref", "--quiet", "refs/remotes/origin/HEAD"], {
+      encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    if (sym) return sym.replace(/^refs\/remotes\//, "");
+  } catch { /* fall through to candidates */ }
+  for (const ref of ["origin/main", "origin/master", "main", "master"]) {
+    if (tryRev(ref)) return ref;
+  }
+  return null;
+}
+
 // True when branch <id> carries at least one commit since its merge-base with
-// the default branch — the signal that IMPLEMENT has begun. Any git error
-// (no such branch, no merge-base, git absent) degrades to false.
+// the default branch — the signal that IMPLEMENT has begun. Anchored on the
+// default branch (NOT HEAD): when the hook runs from inside the <id> worktree
+// HEAD is <id> itself, so a HEAD anchor would always be empty. Any git error
+// (no such branch, no merge-base, no default branch, git absent) → false.
 function hasImplCommit(rootDir, id) {
   try {
-    const base = execFileSync("git", ["-C", rootDir, "merge-base", "HEAD", id], {
+    const def = defaultBranch(rootDir);
+    if (!def) return false;
+    const base = execFileSync("git", ["-C", rootDir, "merge-base", def, id], {
       encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"],
     }).trim();
     if (!base) return false;
@@ -60,13 +87,24 @@ function hasImplCommit(rootDir, id) {
   } catch { return false; }
 }
 
+// True when some git worktree path corresponds to branch <id> (path basename
+// equals <id>, per the .claude/worktrees/<id> convention).
+function worktreeMatches(paths, id) {
+  return paths.some((p) => p.endsWith(`/${id}`) || p.endsWith(`\\${id}`));
+}
+
 // Scan the home docs/plans/ plus each worktree's docs/plans/ for the most
 // recently touched topic. Candidates are deduped by <id>; the tiebreak is the
-// max mtime over PHASE_FILES. On any git error the worktree set is empty and
-// only the home tree is scanned.
+// max mtime over PHASE_FILES. A freshly-created empty docs/plans/<id>/ (no
+// PHASE_FILES yet — the exact WORKTREE moment) has no file mtime, so when a
+// worktree for that <id> exists we fall back to the directory's own mtime so
+// the empty dir still becomes a candidate; without a matching worktree a stale
+// empty dir is skipped (mtime stays -Infinity). On any git error the worktree
+// set is empty and only the home tree is scanned.
 async function findActiveTopic(rootDir) {
   const seen = new Map();
-  const roots = [rootDir, ...worktreePaths(rootDir).filter((p) => p !== rootDir)];
+  const wtPaths = worktreePaths(rootDir);
+  const roots = [rootDir, ...wtPaths.filter((p) => p !== rootDir)];
   for (const root of roots) {
     const plansDir = join(root, "docs", "plans");
     let entries;
@@ -82,6 +120,10 @@ async function findActiveTopic(rootDir) {
           if (st.mtimeMs > dirMtime) dirMtime = st.mtimeMs;
         } catch { /* skip */ }
       }
+      if (dirMtime === -Infinity && worktreeMatches(wtPaths, ent.name)) {
+        try { dirMtime = (await stat(dir)).mtimeMs; } catch { /* leave -Infinity */ }
+      }
+      if (dirMtime === -Infinity) continue;
       const prev = seen.get(ent.name);
       if (!prev || dirMtime > prev.mtime) seen.set(ent.name, { id: ent.name, dir, mtime: dirMtime });
     }
@@ -136,14 +178,14 @@ async function main() {
   const rootDir = projectDir(input);
   const active = await findActiveTopic(rootDir);
   if (!active) process.exit(0);
-  const hasWorktree = worktreePaths(rootDir).some((p) => p.endsWith(`/${active.id}`) || p.endsWith(`\\${active.id}`));
+  const hasWorktree = worktreeMatches(worktreePaths(rootDir), active.id);
   const phase = await inferPhase(active.dir, rootDir, active.id, hasWorktree);
   if (!phase) process.exit(0);
   const ctx = [
     "[Team Pipeline State — Anchor before compaction]",
     `Phase: ${phase} | Id: ${active.id}`,
-    `Artifact directory: docs/plans/${active.id}/`,
-    `To continue: re-invoke any /team-* command bare (discovery auto-resolves the directory; an explicit docs/plans/${active.id}/ is still accepted).`,
+    `Artifact directory: ${active.dir}`,
+    `To continue: re-invoke /team to resume from the detected phase (it reads the artifacts at the path above).`,
   ].join("\n");
   process.stderr.write(JSON.stringify({ hookSpecificOutput: { additionalContext: ctx } }) + "\n");
   process.exit(0);
