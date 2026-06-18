@@ -47,10 +47,35 @@ function worktreePaths(rootDir) {
   } catch { return []; }
 }
 
+// The home checkout's branch, derived from `git worktree list --porcelain`:
+// the worktree whose path is NOT under .claude/worktrees/ and whose branch is
+// NOT <id> is where the user ran /team — the branch the <id> branch forked
+// from, whatever its name. Name-agnostic. Returns null on any error / no match.
+function homeBranch(rootDir, id) {
+  try {
+    const out = execFileSync("git", ["-C", rootDir, "worktree", "list", "--porcelain"], {
+      encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"],
+    });
+    let path = null;
+    for (const line of out.split("\n")) {
+      if (line.startsWith("worktree ")) {
+        path = line.slice("worktree ".length).trim();
+      } else if (line.startsWith("branch ")) {
+        const branch = line.slice("branch ".length).trim().replace(/^refs\/heads\//, "");
+        if (path && !path.includes("/.claude/worktrees/") && branch !== id) return branch;
+      }
+    }
+    return null;
+  } catch { return null; }
+}
+
 // The default branch ref to anchor the IMPLEMENT merge-base against. Prefers
 // origin/HEAD's symbolic target; falls back to the first of origin/main,
-// origin/master, main, master that resolves. Returns null if none exist.
-function defaultBranch(rootDir) {
+// origin/master, main, master that resolves. When none of those exist (a repo
+// whose default is e.g. develop/trunk with no origin/HEAD), falls back to the
+// home checkout's branch (name-agnostic, via homeBranch), then to the
+// configured init.defaultBranch. Returns null if nothing resolves.
+function defaultBranch(rootDir, id) {
   const tryRev = (ref) => {
     try {
       execFileSync("git", ["-C", rootDir, "rev-parse", "--verify", "--quiet", ref], {
@@ -68,6 +93,14 @@ function defaultBranch(rootDir) {
   for (const ref of ["origin/main", "origin/master", "main", "master"]) {
     if (tryRev(ref)) return ref;
   }
+  const home = homeBranch(rootDir, id);
+  if (home && tryRev(home)) return home;
+  try {
+    const cfg = execFileSync("git", ["-C", rootDir, "config", "--get", "init.defaultBranch"], {
+      encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    if (cfg && tryRev(cfg)) return cfg;
+  } catch { /* no config — give up */ }
   return null;
 }
 
@@ -78,7 +111,7 @@ function defaultBranch(rootDir) {
 // (no such branch, no merge-base, no default branch, git absent) → false.
 function hasImplCommit(rootDir, id) {
   try {
-    const def = defaultBranch(rootDir);
+    const def = defaultBranch(rootDir, id);
     if (!def) return false;
     const base = execFileSync("git", ["-C", rootDir, "merge-base", def, id], {
       encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"],
