@@ -38,18 +38,22 @@ For well-understood bugs, skip the QRSPI ceremony:
 Or run individual phases:
 
 ```
+/team-worktree docs/plans/<id>/
 /team-question Add rate limiting middleware to all API endpoints
 /team-research docs/plans/<id>/
 /team-design docs/plans/<id>/
 /team-structure docs/plans/<id>/
 /team-plan docs/plans/<id>/
-/team-worktree docs/plans/<id>/
 /team-implement docs/plans/<id>/
 /team-pr docs/plans/<id>/
 ```
 
-Each command after `/team-question` takes the artifact directory printed by
-the previous step (`docs/plans/<id>/`) as its single argument.
+In a full `/team` run the home worktree is created automatically at the
+leading WORKTREE phase. Invoked standalone, `/team-worktree` consumes
+`plan.md` (post-PLAN) — use it for manual recovery or multi-repo setup.
+
+Each downstream command takes the artifact directory `docs/plans/<id>/` as
+its argument.
 
 ## Install
 

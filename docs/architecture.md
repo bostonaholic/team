@@ -539,14 +539,17 @@ directories for the active topic and injects a 4-line anchor (phase,
 `<id>`, suggested next `/team-*` command). The SessionStart hook does
 the same for new sessions.
 
-**Artifact persistence:** files in `docs/plans/<id>/` live on disk in the
-worktree's working tree and are **not** committed to git — leaving them
-uncommitted is what lets the commit-based IMPLEMENT signal (≥1 commit on
+**Artifact persistence:** during a run, files in `docs/plans/<id>/` live on
+disk in the worktree's working tree and **the pipeline never commits them** —
+that discipline is what lets the commit-based IMPLEMENT signal (≥1 commit on
 `<id>` since the default-branch merge-base) distinguish "implementation has
-begun" from "artifacts merely exist." Persistence comes from the worktree's
-files surviving across sessions, compaction events, and context resets, not
-from git history. They remain the durable communication protocol between
-agents and the source of truth for "did phase N finish?"
+begun" from "artifacts merely exist": any commit on `<id>` is therefore a
+code/slice commit, never an artifact commit. (A finished plan directory may
+later be committed in its feature PR — that is outside the run.) Persistence
+across sessions, compaction events, and context resets comes from the
+worktree's files surviving, not from git history. They remain the durable
+communication protocol between agents and the source of truth for "did phase
+N finish?"
 
 ## See also
 

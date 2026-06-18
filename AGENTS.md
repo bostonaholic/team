@@ -49,13 +49,13 @@ Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-
 |---------|-------|
 | `/team <desc>` | Full 8-phase QRSPI pipeline |
 | `/team-fix <bug>` | Compressed bug-fix pipeline (no QRSPI ceremony) |
+| `/team-worktree` | Leading WORKTREE phase — create the home worktree (in a full run, automatic & first; standalone, consumes `plan.md` post-PLAN for manual recovery / multi-repo setup) |
 | `/team-question <desc>` | Decompose intent into task + questions + brief |
 | `/team-research` | Isolated codebase research (runs Question if missing) |
 | `/team-design` | Align with user on approach (human gate) |
 | `/eng-design-doc-review` | *(optional)* Adversarial fresh-context audit of `design.md` before the human gate |
 | `/team-structure` | Break design into vertical slices (autonomous) |
 | `/team-plan` | Tactical plan from the structure |
-| `/team-worktree` | Prepare isolated git worktree |
 | `/team-implement` | Test-first + slice execution + 5-reviewer verify |
 | `/team-pr` | Commit + open PR |
 
