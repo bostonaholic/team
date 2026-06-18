@@ -126,8 +126,25 @@ describe("shipit skill: push, wait for CI, merge", () => {
     expect(reportFailing).toBe(true);
   });
 
-  test("names `gh pr merge --rebase` explicitly", () => {
-    expect(body()).toContain("gh pr merge --rebase");
+  test("names `gh pr merge --squash` explicitly", () => {
+    // Squash lands the PR title as the commit subject (so a version in the
+    // title shows up in git log) while keeping linear history.
+    expect(body()).toContain("gh pr merge");
+    expect(body()).toContain("--squash");
+    expect(body()).not.toContain("gh pr merge <pr-number> --rebase");
+  });
+
+  test("gates the pre-flight check on squashMergeAllowed (the required strategy)", () => {
+    const t = flat(body());
+    expect(/squashMergeAllowed[^.]{0,80}(false|enabled)|(stop|report)[^.]{0,120}squashMergeAllowed/i.test(t)).toBe(true);
+  });
+
+  test("builds the squash subject from the PR title so the version lands in git log", () => {
+    // The PR title (which may carry a version) must become the commit subject:
+    // capture `title` at discovery and pass it via --subject.
+    const t = flat(body());
+    expect(/--json[^.]{0,80}title/i.test(t)).toBe(true);
+    expect(body()).toContain("--subject");
   });
 });
 

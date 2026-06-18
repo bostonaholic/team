@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-06-18
+
+### Changed
+
+- **`/shipit` now squash-merges instead of rebase-merging, so the PR title lands as the commit subject in `git log`.** Rebase-merge replayed each branch commit as-is and discarded the PR title, so the version that the dev `version-bump` skill writes into the PR title (`vX.Y.Z <type>: <subject>`) never appeared on the base branch — you could not see the shipped version by reading `git log`. `/shipit` now lands with `gh pr merge --squash`, building the commit subject explicitly from the PR title captured at discovery plus `(#<number>)`, so every landed commit shows both the version-bearing title and the PR number (e.g. `v0.11.0 feat: add foo (#42)`). Passing `--subject` is deliberate — it guarantees the PR title regardless of the repo's "default squash commit message" setting, and the PR number is appended by hand since an explicit subject is not auto-suffixed. A squash commit is a normal commit (not a merge commit), so linear history is preserved; the pre-flight merge-button check now gates on `squashMergeAllowed` rather than `rebaseMergeAllowed`. Documented in [`skills/shipit/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/shipit/SKILL.md) and the land-time flow ([`docs/versioning.md`](https://github.com/bostonaholic/team/blob/main/docs/versioning.md), [`.claude/skills/version-bump/SKILL.md`](https://github.com/bostonaholic/team/blob/main/.claude/skills/version-bump/SKILL.md)); locked in by updated L2 tripwires in [`tests/shipit-skill.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/shipit-skill.test.ts).
+
 ## [0.10.0] - 2026-06-18
 
 ### Changed
@@ -139,7 +145,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/bostonaholic/team/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/bostonaholic/team/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/bostonaholic/team/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/bostonaholic/team/compare/v0.8.0...v0.9.0

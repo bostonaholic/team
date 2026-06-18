@@ -6,7 +6,7 @@ description: |
   all four version strings, cut the `[Unreleased]` changelog body into a dated
   `## [X.Y.Z]` section, run the land-time consistency assertion, and commit
   `chore(version): X.Y.Z`. This is the Team-internal bumper; the generic runtime
-  `/shipit` skill then pushes, waits for CI, and rebase-merges. Use when landing
+  `/shipit` skill then pushes, waits for CI, and squash-merges. Use when landing
   a Team PR, or when the user asks to "bump the version" or "version this PR".
 ---
 
@@ -31,7 +31,7 @@ Landing a Team PR is two steps, in order:
    consistency assertion, and commits `chore(version): X.Y.Z`.
 2. **Land (the generic `/shipit` skill).** Run the distributed runtime
    [`/shipit`](../../../skills/shipit/SKILL.md) skill to push the branch, wait for
-   CI, and rebase-merge. `shipit` is project-agnostic — it does no versioning;
+   CI, and squash-merge. `shipit` is project-agnostic — it does no versioning;
    this skill is the Team-internal bumper it composes with.
 
 Run this skill **before** `/shipit`, against the version of `main` you intend to
@@ -157,4 +157,4 @@ it on the existing PR (`gh pr edit --title`). The `PR title sync` workflow
 corrects drift, but it is a backstop — don't rely on it.
 
 Then run `/shipit` (step 2 of the dev land process) to push, wait for CI, and
-rebase-merge.
+squash-merge.
