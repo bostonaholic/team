@@ -191,3 +191,10 @@ Report the worktree paths and tell the user:
 - Multi-repo: **"Next: cd <home-worktree> and run `/team-implement
   docs/plans/<id>/`. The implementer will navigate between the
   per-repo worktrees as the plan steps require."**
+
+> The `/team-implement` handoff above is for **standalone, post-PLAN**
+> invocation (this skill's discovery block is gated on `plan.md`). In a full
+> `/team` pipeline run, WORKTREE is the **leading** phase: the orchestrator
+> creates the home worktree first, supplying `<id>` directly (it does not run
+> this skill's `plan.md`-gated discovery), and proceeds to QUESTION next — not
+> to `/team-implement`.

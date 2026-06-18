@@ -83,8 +83,8 @@ rationale). The router's responsibilities are:
 
 ### Why first
 
-Worktree creation lands at phase 1 rather than after PLAN for two
-load-bearing reasons.
+Worktree creation is the leading phase — it runs first, before QUESTION —
+for two load-bearing reasons.
 
 First, authoring `docs/plans/<id>/` inside the worktree from phase 1
 keeps the home checkout's `git status` clean for the entire run. No
