@@ -93,8 +93,8 @@ argument shape.
 - **Purpose:** Run the full eight-phase QRSPI pipeline end to end, from a
   raw request to an opened pull request.
 - **`$ARGUMENTS`:** `<ticket id, issue URL, or feature description>`.
-- **Phase:** Drives all phases (Question → Research → Design → Structure →
-  Plan → Worktree → Implement → PR).
+- **Phase:** Drives all phases (Worktree → Question → Research → Design →
+  Structure → Plan → Implement → PR).
 - **Key behaviors:** Walks a linear Phase Loop, dispatching the specialist
   agent(s) for each phase per its phase table, then running that phase's
   gate before advancing. Enforces the single human gate (Design)
