@@ -41,7 +41,7 @@ Agents are **decoupled microservices**. Each consumes a predecessor artifact on 
 WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → PR
 ```
 
-Team runs **QRSPI** (Question-Research-Design-Structure-Plan-Worktree-Implement-PR). One human gate: **Design approval** (~200-line alignment doc). The Structure (~2-page vertical-slice breakdown) is produced autonomously and advances to Plan with no approval wait. Research is **isolated** — the researcher reads only `questions.md`, never `task.md` or the user's framing. The Plan is a tactical artifact for the implementer, not for human review. Implement is a sub-pipeline (test-first → slice execution → 5-reviewer adversarial verify with hard-gate retry loop). Everything outside the design gate is autonomous with mechanical gates.
+Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-PR). One human gate: **Design approval** (~200-line alignment doc). The Structure (~2-page vertical-slice breakdown) is produced autonomously and advances to Plan with no approval wait. Research is **isolated** — the researcher reads only `questions.md`, never `task.md` or the user's framing. The Plan is a tactical artifact for the implementer, not for human review. Implement is a sub-pipeline (test-first → slice execution → 5-reviewer adversarial verify with hard-gate retry loop). Everything outside the design gate is autonomous with mechanical gates.
 
 ## Entry Points
 

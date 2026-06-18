@@ -56,8 +56,8 @@ explains the design; the full per-skill enumeration now lives here.
 ## Entry-point skills
 
 Each entry-point skill either kicks off a full run (`team`, `team-fix`) or
-drives one phase of the QRSPI pipeline (Question, Research, Design,
-Structure, Plan, Worktree, Implement, PR). What ties most of them together
+drives one phase of the QRSPI pipeline (Worktree, Question, Research,
+Design, Structure, Plan, Implement, PR). What ties most of them together
 is a shared argument-resolution chain and a common body template.
 
 The **downstream phase skills** — `team-question` through `team-pr`, plus
@@ -156,13 +156,17 @@ argument shape.
 
 ### team-worktree
 
-- **Purpose:** Prepare an isolated git worktree for the implementation.
+- **Purpose:** Prepare an isolated git worktree. In a full `/team` run this
+  is the **leading** phase, running before QUESTION so `docs/plans/<id>/` is
+  authored inside the worktree and the home checkout's `git status` stays
+  clean for the whole run.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` — optional; resolves via the
   shared three-tier chain above.
-- **Phase:** Worktree.
-- **Key behaviors:** Creates the branch and worktree so implementation
-  never touches the main checkout. Loads `worktree-isolation` for the
-  single- and multi-repo topology.
+- **Phase:** Worktree (the first phase).
+- **Key behaviors:** Creates the branch and home worktree first, then
+  authors `docs/plans/<id>/` inside it so implementation — and every prior
+  phase's artifacts — never touch the main checkout. Loads
+  `worktree-isolation` for the single- and multi-repo topology.
 
 ### team-implement
 
