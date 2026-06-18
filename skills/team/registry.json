@@ -1,12 +1,12 @@
 {
-  "$comment": "Agent inventory for the Team pipeline. Dispatch is driven by the phase table in skills/team/SKILL.md, not by this file. The phases array documents which artifacts each phase produces under docs/plans/. The agents array lists every specialist agent and the phase it serves. The gates array documents the gate kind that follows each phase that has one (DESIGN is the only human gate; STRUCTURE advances autonomously). Kept in sync with agents/*.md frontmatter (each agent's `phase` field) by .claude/hooks/check-registry-sync.mjs.",
+  "$comment": "Agent inventory for the Team pipeline. Dispatch is driven by the phase table in skills/team/SKILL.md, not by this file. The phases array documents which artifacts each phase produces under docs/plans/. WORKTREE is the leading orchestrator-emit phase: it runs before QUESTION, creating the home worktree on branch <id> and authoring docs/plans/<id>/ inside it. The agents array lists every specialist agent and the phase it serves (no agent serves WORKTREE — it is orchestrator-emit). The gates array documents the gate kind that follows each phase that has one (DESIGN is the only human gate; STRUCTURE advances autonomously). Kept in sync with agents/*.md frontmatter (each agent's `phase` field) by .claude/hooks/check-registry-sync.mjs.",
   "phases": [
+    {"name": "WORKTREE", "artifacts": []},
     {"name": "QUESTION", "artifacts": ["task.md", "questions.md"]},
     {"name": "RESEARCH", "artifacts": ["research.md"]},
     {"name": "DESIGN", "artifacts": ["design.md"]},
     {"name": "STRUCTURE", "artifacts": ["structure.md"]},
     {"name": "PLAN", "artifacts": ["plan.md"]},
-    {"name": "WORKTREE", "artifacts": []},
     {"name": "IMPLEMENT", "artifacts": []},
     {"name": "PR", "artifacts": []}
   ],
@@ -26,8 +26,9 @@
     {"name": "verifier", "phase": "IMPLEMENT", "parallel": true}
   ],
   "gates": [
+    {"before": "QUESTION", "type": "orchestrator-emit", "action": "prepare home worktree on branch <id> and author docs/plans/<id>/ inside it"},
     {"after": "DESIGN", "type": "human", "field": "approved"},
-    {"after": "PLAN", "type": "orchestrator-emit", "action": "prepare worktree"},
+    {"after": "DESIGN", "type": "orchestrator-emit", "action": "prepare secondary worktrees per repos.md and back-record ## Worktrees (multi-repo only)"},
     {"after": "test-architect", "type": "mechanical", "condition": "all tests fail with assertion errors, not crashes"},
     {"after": "5 reviewers", "type": "aggregate", "hardGates": ["security-reviewer", "verifier", "code-reviewer"], "maxRetries": 5}
   ]
