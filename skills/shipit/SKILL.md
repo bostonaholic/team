@@ -2,7 +2,8 @@
 name: shipit
 description: |
   Land a reviewed pull request: discover the open PR for the current branch,
-  push any unpushed commits, wait for CI to go green, then rebase-merge it.
+  push any unpushed commits, wait for CI to go green, then squash-merge it so
+  the PR title (which may carry a version) lands as the commit subject.
   Handles a PR that has fallen behind its base (rebase + force-with-lease) and
   surfaces branch-protection rejections verbatim. Project-agnostic — it knows
   nothing about how any project versions itself. Use ONLY when the user
@@ -19,7 +20,9 @@ argument-hint: "[<pr-number>] [--yes]"
 > seed one todo item per step below before starting and mark each complete as you go.
 
 `shipit` lands a pull request that has already passed review: it pushes any
-unpushed local commits, waits for CI to go green, and rebase-merges. It
+unpushed local commits, waits for CI to go green, and squash-merges so the PR
+title lands as the commit subject on the base branch (if a project puts a
+version in the title, that version then shows up in `git log`). It
 **finalizes an existing open PR** — it never opens one. It is generic: it does
 no versioning, changelog editing, or release work. If a project assigns a
 version at land time, that happens in a separate project-specific step *before*
@@ -34,12 +37,13 @@ never auto-fires it.
 ## Input acquisition
 
 `shipit` lands the open PR for the **current branch**. Discover it with
-`gh pr view --json baseRefName,number,state` and a base-branch fallback; never
-hardcode the base branch. Run this in one bash call (an agent thread resets cwd
-between calls):
+`gh pr view --json baseRefName,number,state,title` and a base-branch fallback;
+never hardcode the base branch. The `title` is captured here because step 5
+lands it as the squash commit subject. Run this in one bash call (an agent
+thread resets cwd between calls):
 
 ```bash
-PR_JSON=$(gh pr view --json number,baseRefName,state 2>/dev/null)
+PR_JSON=$(gh pr view --json number,baseRefName,state,title 2>/dev/null)
 BASE=$(printf '%s' "$PR_JSON" | jq -r .baseRefName 2>/dev/null)
 [ -z "$BASE" ] || [ "$BASE" = "null" ] && BASE=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
 [ -z "$BASE" ] && BASE=main
@@ -63,17 +67,19 @@ The steps below are the **scriptable core**. The one interactive confirmation
 
 ### 1. Pre-flight merge-button check
 
-Before relying on `--rebase`, read the repo's merge strategy and report whether
-rebase merges are enabled. This is a **read-only** check, not enforcement:
+Before relying on `--squash`, read the repo's merge strategy and report whether
+squash merges are enabled. This is a **read-only** check, not enforcement:
 
 ```bash
 gh repo view --json mergeCommitAllowed,rebaseMergeAllowed,squashMergeAllowed
 ```
 
-Stop and report **only** if `rebaseMergeAllowed` is `false` — the project keeps
-linear history, so `--rebase` is the only acceptable strategy. If rebase merging
-is available, proceed regardless of which other methods (`mergeCommitAllowed`,
-`squashMergeAllowed`) are enabled.
+Stop and report **only** if `squashMergeAllowed` is `false` — squash-merge is
+how the PR title (and any version it carries) lands as the commit subject, and
+it keeps linear history (a squash commit is a normal commit, not a merge
+commit), so it is the only acceptable strategy here. If squash merging is
+available, proceed regardless of which other methods (`mergeCommitAllowed`,
+`rebaseMergeAllowed`) are enabled.
 
 ### 2. Push any unpushed local commits
 
@@ -139,12 +145,23 @@ since CI last ran. If the PR is **behind `<base>`**, bring it up to date:
    moved underneath you (**never a bare `--force`**).
 3. Re-run the CI wait (step 3) against the rebased tree before merging.
 
-**Merge with `gh pr merge --rebase`** (named explicitly — the project keeps
-linear history, so rebase is the only acceptable merge strategy):
+**Merge with `gh pr merge --squash`** (named explicitly — squash lands the PR
+title as the commit subject while keeping linear history, so it is the only
+acceptable merge strategy here). Build the subject explicitly from the PR title
+captured during discovery and append `(#<number>)` so every landed commit shows
+both the title (with any version it carries) and the PR number — exactly the
+`git log` shape the operator sees. Passing `--subject` is deliberate: it
+guarantees the PR title regardless of the repo's "default squash commit message"
+setting (an explicit `--subject` is **not** auto-suffixed with the PR number, so
+we add it ourselves):
 
 ```bash
-gh pr merge <pr-number> --rebase
+TITLE=$(printf '%s' "$PR_JSON" | jq -r .title)
+gh pr merge <pr-number> --squash --subject "$TITLE (#<pr-number>)"
 ```
+
+The squash body defaults to the concatenated commit messages — leave it as-is
+unless the operator asks otherwise.
 
 - On a **branch-protection rejection**, surface GitHub's rejection message
   **verbatim** to the user; **never force** the merge.

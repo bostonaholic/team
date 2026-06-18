@@ -229,7 +229,7 @@ phase — a self-contained action a user runs on demand.
 ### shipit
 
 - **Purpose:** Land a reviewed pull request — push unpushed commits, wait for
-  CI to go green, then rebase-merge.
+  CI to go green, then squash-merge (the PR title becomes the commit subject).
 - **`$ARGUMENTS`:** `[<pr-number>] [--yes]` — optional PR number override;
   `--yes` skips the interactive pre-merge confirmation for non-interactive
   callers.
@@ -240,7 +240,9 @@ phase — a self-contained action a user runs on demand.
   (`timeout 1800 gh pr checks --watch --fail-fast --interval 30`); handles a PR
   that has fallen behind its base (rebase + `--force-with-lease`, never a bare
   `--force`) and surfaces branch-protection rejections verbatim; merges with
-  `gh pr merge --rebase`. **Project-agnostic** — it does no versioning,
+  `gh pr merge --squash`, building the commit subject from the PR title plus
+  `(#<number>)` so any version in the title lands in `git log`.
+  **Project-agnostic** — it does no versioning,
   changelog editing, or release work; those, if a project needs them, run in a
   separate step before `/shipit` (in this repo, the dev `version-bump` skill).
   `disable-model-invocation: true` — irreversible, so user-invoked only.

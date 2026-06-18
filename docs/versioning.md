@@ -1,6 +1,6 @@
 ---
 title: Versioning
-description: "Land-time versioning for the Team plugin — a drafted PR carries no version and accumulates changelog bullets under [Unreleased]; at land time the dev version-bump skill assigns the version against current main, cuts the changelog section, sets the title, and runs the land-time consistency assertion, then the generic runtime /shipit skill pushes, waits for CI, and rebase-merges. CI auto-publishes the release on merge."
+description: "Land-time versioning for the Team plugin — a drafted PR carries no version and accumulates changelog bullets under [Unreleased]; at land time the dev version-bump skill assigns the version against current main, cuts the changelog section, sets the title, and runs the land-time consistency assertion, then the generic runtime /shipit skill pushes, waits for CI, and squash-merges. CI auto-publishes the release on merge."
 audience: [developer]
 nav_order: 6
 nav_label: versioning
@@ -22,7 +22,7 @@ bullets under `[Unreleased]`. Landing a Team PR is **two steps**:
    dated `## [X.Y.Z]` section, sets the PR title, runs the land-time consistency
    assertion, and commits `chore(version): X.Y.Z`.
 2. **Land** — the **generic, distributed** runtime `/shipit` skill
-   (`skills/shipit/SKILL.md`) pushes the branch, waits for CI, and rebase-merges.
+   (`skills/shipit/SKILL.md`) pushes the branch, waits for CI, and squash-merges.
    `shipit` is project-agnostic: it does no versioning or changelog work. It is
    shipped to Team's *users* as a general "land a reviewed PR" utility; Team's
    own version logic stays in `version-bump`.
@@ -56,7 +56,7 @@ intend to land:
    commit (see [Land-time consistency assertion](#land-time-consistency-assertion)).
 6. Commits the bump (`chore(version): X.Y.Z`) and sets the PR title.
 
-Then run `/shipit` to push, wait for CI, and rebase-merge.
+Then run `/shipit` to push, wait for CI, and squash-merge.
 
 ## Land-time consistency assertion
 
