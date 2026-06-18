@@ -65,43 +65,43 @@ difference downstream.
 
 ### Setup (router responsibility)
 
-Worktree creation runs at the WORKTREE phase — phase 6 of 8, after
-PLAN and before IMPLEMENT (see [Why late](#why-late) below for the
-rationale). The router's responsibilities at this phase are:
+The home worktree is created at the **leading WORKTREE phase** — phase 1
+of 8, before QUESTION (see [Why first](#why-first) below for the
+rationale). The router's responsibilities are:
 
-1. Create the home repo's worktree. If `repos.md` is present, create
-   a worktree in each additional repo it lists (same `<id>` branch
-   in each).
-2. Carry the artifact directory into the home worktree. Untracked
-   files do not propagate automatically into a fresh worktree, so
-   the orchestrator copies `docs/plans/<id>/` into the home worktree
-   after creation (see "Carry the artifact directory into the home
-   worktree" in `skills/team-worktree/SKILL.md`). In multi-repo mode
-   only the home worktree gets the copy.
-3. After this phase, all IMPLEMENT-phase agent dispatches operate
-   within the appropriate worktree (the home worktree by default;
-   per-repo worktrees when a slice or step carries a
-   `[repo: <name>]` annotation). The durable inter-agent protocol is
-   the artifact files under the home worktree's `docs/plans/<id>/`
-   directory; live coordination uses TodoWrite (session-scoped).
+1. Create the home repo's worktree on branch `<id>` off `origin/HEAD`,
+   and author `docs/plans/<id>/` **inside** it — no copy is ever needed
+   because the artifact directory is born in the worktree. (Secondary
+   repos in multi-repo mode get their worktrees after the design gate,
+   once `repos.md` confirms the repo set; same `<id>` branch in each.)
+2. After this phase, all downstream agent dispatches operate within the
+   appropriate worktree (the home worktree by default; per-repo worktrees
+   when a slice or step carries a `[repo: <name>]` annotation). The
+   durable inter-agent protocol is the artifact files under the home
+   worktree's `docs/plans/<id>/` directory; live coordination uses
+   TodoWrite (session-scoped).
 
-### Why late
+### Why first
 
-Worktree creation lands at phase 6 rather than phase 0 for two
+Worktree creation lands at phase 1 rather than after PLAN for two
 load-bearing reasons.
 
-First, the DESIGN human gate is reviewed on the home tree where the
-user invoked `/team`. That is the same context any reviewer already
-has open; moving the gate inside a worktree would force a `cd` or
-`git worktree list` before reading the artifact in an editor.
+First, authoring `docs/plans/<id>/` inside the worktree from phase 1
+keeps the home checkout's `git status` clean for the entire run. No
+intermediate artifacts, test scaffolding, or commits ever touch the
+main working tree.
 
-Second, branch scope is a Plan output, not a Setup-time guess. By
-the time WORKTREE runs the structure and plan exist, so the branch
-name and (in multi-repo mode) the per-repo worktree set are derivable
-from artifacts rather than guessed.
+Second, a leading worktree gives the recovery hooks a genuine first
+state to detect: "a worktree exists for `<id>`, no `task.md` yet" ⇒
+WORKTREE. The phase becomes inferable from the moment the run begins
+rather than only appearing midway through the pipeline.
 
-Together these make phase-6 placement a deliberate, articulable
-choice rather than inertia.
+For design-gate ergonomics, the orchestrator **prints the absolute
+worktree-rooted `design.md` path** when presenting the design, so the
+reviewer opens the file cleanly without hunting for the worktree — this
+supersedes the old "review on the home tree" rationale.
+
+Together these make leading placement a deliberate, articulable choice.
 
 ### During the pipeline
 
