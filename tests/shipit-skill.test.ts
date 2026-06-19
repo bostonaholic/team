@@ -5,7 +5,8 @@
 // distributed to Team's users (docs/plans/2026-06-15-version-at-land-time).
 // It knows NOTHING about Team's versioning: it discovers the open PR, pushes
 // unpushed commits, waits for CI, handles PR-behind-base and branch-protection,
-// and rebase-merges. Team's own version-bump mechanics are fenced separately by
+// and squash-merges so the PR title lands as the commit subject. Team's own
+// version-bump mechanics are fenced separately by
 // tests/version-bump-skill.test.ts (the dev skill).
 //
 // Every assertion is guarded so a not-yet-existing skill file yields a failed

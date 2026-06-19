@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-06-19
+
+### Fixed
+
+- **Corrected two stale "rebase-merge" references left over from the v0.11.0 squash-merge change.** The `/team-pr` skill description still told readers to use `/shipit` to "wait for CI, then rebase-merge," and the `tests/shipit-skill.test.ts` header comment still described shipit as rebase-merging — both now say squash-merge, matching shipit's actual behavior since v0.11.0. Documentation/comment text only; no behavior changed.
+
 ## [0.11.0] - 2026-06-18
 
 ### Changed
@@ -145,7 +151,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.11.1...HEAD
+[0.11.1]: https://github.com/bostonaholic/team/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/bostonaholic/team/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/bostonaholic/team/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/bostonaholic/team/compare/v0.9.0...v0.9.1
