@@ -1,6 +1,6 @@
 ---
 name: team-pr
-description: Open the pull request after verification passes. Updates the changelog, optionally surfaces the tracking ticket, and closes out the topic. Trigger on "open the PR", "open a draft PR", or "/team-pr". To land/merge a reviewed PR (wait for CI, then rebase-merge) use the separate /shipit skill — "ship it", "land the PR", and "land this" trigger /shipit, not this skill.
+description: Open the pull request after verification passes. Updates the changelog, optionally surfaces the tracking ticket, and closes out the topic. Trigger on "open the PR", "open a draft PR", or "/team-pr". To land/merge a reviewed PR (wait for CI, then squash-merge) use the separate /shipit skill — "ship it", "land the PR", and "land this" trigger /shipit, not this skill.
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
