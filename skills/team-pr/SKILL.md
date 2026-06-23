@@ -133,7 +133,10 @@ done
    After removing the worktree, bring the repo's local default branch up
    to date with the merge: `git -C <repo-root> pull --rebase origin
    <base>` (rebase, never a merge commit — the project keeps linear
-   history). Do this for every involved repo in multi-repo mode.
+   history). Do this for every involved repo in multi-repo mode. Finally,
+   delete the feature's local planning docs (`rm -rf docs/plans/<id>`,
+   verified untracked) as part of the same teardown — see
+   `worktree-isolation`.
 
 ## PR Body Template
 

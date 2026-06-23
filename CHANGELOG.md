@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Worktree teardown now deletes the feature's local planning docs (`docs/plans/<id>/`) as part of cleanup, alongside removing the branch and worktree.** The QRSPI planning artifacts (`questions`/`research`/`design`/`structure`/`plan`/`task.md`) are untracked scratch that exist only to drive a topic to a merged PR; previously teardown removed the branch and worktree but left the planning dir behind, cluttering `docs/plans/` and blurring which topics were still in flight. The teardown procedure now ends with `rm -rf docs/plans/<id>`, guarded to verify the directory is untracked first and to remove only that feature's `<id>` directory (never sibling dirs for other in-flight work). Documented as the procedure of record in [`skills/worktree-isolation/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/worktree-isolation/SKILL.md), with policy pointers in [`skills/team-pr/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md) and [`skills/team/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md).
+
 ## [0.11.1] - 2026-06-19
 
 ### Fixed
