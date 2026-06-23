@@ -338,7 +338,10 @@ When the aggregate gate passes:
    worktree. After removal, update the repo's local default branch with
    the merge: `git -C <repo-root> pull --rebase origin <base>` (rebase,
    never a merge commit — linear history is the rule). In multi-repo
-   mode, do this for every involved repo.
+   mode, do this for every involved repo. As the last teardown step,
+   delete the feature's local planning docs (`rm -rf docs/plans/<id>`,
+   verified untracked) — the QRSPI scratch dir is removed alongside the
+   branch and worktree, not left behind.
 
 ## Rules
 

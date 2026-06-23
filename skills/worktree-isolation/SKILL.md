@@ -143,6 +143,13 @@ When teardown is warranted (post-merge or on explicit request):
 4. After the worktree is gone, update the repo's local default branch
    with the merge: `git -C <repo-path> pull --rebase origin <base>`.
    Always rebase — never a merge commit — so history stays linear.
+5. Remove the feature's local planning docs: `rm -rf docs/plans/<id>`.
+   These are untracked QRSPI scratch that only existed to drive the work
+   to a merged PR; deleting them is part of teardown, alongside the
+   branch and worktree. Verify the directory is untracked first
+   (`git ls-files docs/plans/<id>` returns nothing) and remove only that
+   feature's `<id>` directory — never sibling dirs for other in-flight
+   work.
 
 ## Gitignored Files
 
