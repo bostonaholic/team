@@ -26,6 +26,7 @@ nav_label: architecture
 - [7. Hooks](#7-hooks)
 - [8. Behavioral Evals](#8-behavioral-evals)
 - [9. State Management](#9-state-management)
+- [10. Nested Sub-Agents](#10-nested-sub-agents)
 
 ## 1. Design Philosophy
 
@@ -318,6 +319,10 @@ Notes:
   (applies to all subagents), or copy an agent file into
   `.claude/agents/` with a different `model:`.
 
+- Four agents — `researcher`, `implementer`, `code-reviewer`,
+  `security-reviewer` — additionally hold the `Agent` tool and may spawn
+  read-only nested sub-agents. See [10. Nested Sub-Agents](#10-nested-sub-agents).
+
 ### Effort tiering
 
 Effort tiering mirrors the model tiers: `low` (mechanical),
@@ -431,7 +436,7 @@ cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. `code-review` is the only skill loaded as composed
 methodology that is also a user command.)
 
-For the full per-skill reference — all 30 skills, their arguments,
+For the full per-skill reference — all 31 skills, their arguments,
 consumers, and behaviors — see [skills.md](skills.md).
 
 ### Design Guidelines
@@ -563,9 +568,83 @@ worktree's files surviving, not from git history. They remain the durable
 communication protocol between agents and the source of truth for "did phase
 N finish?"
 
+## 10. Nested Sub-Agents
+
+Claude Code v2.1.172 lets sub-agents spawn their own sub-agents (up to
+5 levels deep). The plugin uses this capability in exactly two patterns,
+both governed by `skills/nested-agents/SKILL.md`:
+
+- **Context-economy scouts** (`researcher`, `implementer`): read-only
+  `Explore` / `team:file-finder` helpers that absorb bulk reading the
+  parent would otherwise hold in its own context without ever
+  referencing it again. The researcher's scouts inherit the research
+  isolation invariant — scout prompts are built only from verbatim
+  `questions.md` text and `repos.md` paths.
+- **Skeptic verification** (`code-reviewer`, `security-reviewer`): each
+  hard-gate finding (Blocking / CRITICAL / HIGH) is handed to a fresh
+  `general-purpose` sub-agent as a neutral, falsifiable claim — never
+  the reviewer's verdict or severity — with instructions to refute it.
+  Default-keep: a finding is dropped only on an evidence-backed
+  refutation the reviewer verifies itself. A false hard-gate finding
+  costs an entire review round (implementer re-dispatch + all 5
+  reviewers re-run), so the pass pays for itself.
+
+**Policy:**
+
+- The `Agent` tool is granted to exactly four agents: `researcher`,
+  `implementer`, `code-reviewer`, `security-reviewer`. The allowlist is
+  pinned by `tests/nested-agents.test.ts` — any other agent gaining the
+  tool must be a deliberate decision that updates the tripwire.
+- Nested helpers are read-only, never write under `docs/plans/`, and
+  never emit open-questions envelopes (the envelope protocol is one
+  level deep — see `skills/agent-open-questions/SKILL.md`).
+- Depth budget: pipeline agents sit at depth 2 of 5 and may spawn at
+  most one more level.
+- **Version-gated.** Nesting requires Claude Code >= 2.1.172. The
+  universal gate is `Agent`-tool presence — the platform withholds the
+  tool from sub-agents below that floor, so an agent that lacks `Agent`
+  (or any read-only agent like `researcher` that has no `Bash`) simply
+  works inline. Agents that also hold `Bash` additionally run the bundled
+  deterministic check `skills/nested-agents/supports-nesting.mjs
+  "$(claude --version)"` (pure comparison core unit-tested at L1; skill
+  contract and version floor pinned by `tests/nested-agents.test.ts`).
+  The check is fail-closed — an older release, unrecognizable version
+  output, or an environment where it cannot run all resolve to
+  "unsupported," routing the agent to its inline path.
+- **Optimization, never a dependency.** Every nested-dispatch section is
+  optional with a mandatory inline fallback. On Claude Code versions
+  without nesting, the plugin degrades to exactly its previous behavior.
+  Nesting is invisible to the orchestrator: no phase-table, gate, or
+  artifact contract depends on it.
+
+### Future work (ship-later)
+
+Recorded here so the next capability step is deliberate, not improvised.
+Prerequisite for all items: nesting survives 2–3 Claude Code releases
+without breaking changes, parallel dispatch semantics for nested
+children are confirmed, and the depth cap is stable.
+
+- **Verify-coordinator** (strongest candidate): an IMPLEMENT-phase
+  coordinator that owns the 5-reviewer fan-out + aggregate gate + typed
+  failure retry loop, returning a compact terminal verdict
+  (`{verdict: PASS | CONDITIONAL | ESCALATE, rounds, findings[]}`) for
+  the orchestrator to render. This keeps up to 25 reviewer reports out
+  of the orchestrator's long-lived context. Needs: a terminal-verdict
+  envelope protocol (sibling of agent-open-questions — the consult
+  guard means no mid-loop user interaction exists to forward), and
+  per-round state artifacts (`docs/plans/<id>/review/round-<n>.md`)
+  to replace live TodoWrite round visibility and survive coordinator
+  death.
+- **Research-coordinator**: only if multi-repo research outgrows the
+  current 2-agent fan-out (e.g. 2×N agents across N repos).
+- **Parallel sub-implementers**: only ever slice-level (never
+  step-level), one worktree per slice, coordinator cherry-picks
+  sequentially to preserve linear history. Requires measured wall-clock
+  pain on large plans.
+
 ## See also
 
-- **[Skills](skills.md)** — the full per-skill reference for all 30 skills.
+- **[Skills](skills.md)** — the full per-skill reference for all 31 skills.
 - **[Testing](testing.md)** — the six-layer test harness and which layer each check belongs at.
 - **[Vision](vision.md)** — the loop-driven end state this design builds toward.
 - **[Ethos](ethos.md)** — the principles behind the pipeline.

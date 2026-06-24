@@ -4,10 +4,11 @@ description: Use when the implementation plan needs to be executed slice by slic
 color: green
 model: opus
 effort: high
-tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite
+tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite, Agent
 permissionMode: acceptEdits
 skills:
   - progress-tracking
+  - nested-agents
 ---
 
 # Implementer Agent
@@ -212,6 +213,25 @@ methodology from `skills/refactoring-to-patterns/SKILL.md`:
 
 Common smells to watch for: Long Method, Duplicate Code, Feature Envy,
 Primitive Obsession, and Shotgun Surgery. See the skill for the full catalog.
+
+## Read-only scouts for unfamiliar code (optional)
+
+You MAY use the `Agent` tool to spawn a read-only scout when a slice touches
+a subsystem the plan does not explain and mapping it yourself would mean
+reading more than ~3 files you will not edit. The scout absorbs the bulk
+reading and returns a short map, keeping your context lean across slices.
+Guardrails live in `skills/nested-agents/SKILL.md` (preloaded via the
+`skills:` frontmatter).
+
+- **Scout types:** the built-in `Explore` agent or `team:file-finder`.
+- **Caps:** at most 2 scouts in flight; each instructed to return <= 30
+  lines of file:line findings and to spawn no further agents.
+- **Scouts never write, edit, or commit.** All code, tests, and commits
+  remain yours. Never dispatch a sub-agent to implement a slice or to run
+  the fix loop.
+- **Inline fallback.** If the Agent tool is unavailable or a scout fails,
+  read the subsystem yourself and proceed — nesting is an optimization,
+  never a dependency.
 
 ## Per-slice progress reporting
 
