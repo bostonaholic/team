@@ -18,23 +18,30 @@ toolset, a dispatch errors, or results never arrive: **do the work yourself
 inline** with your other tools and proceed. Never stall, and never report
 failure solely because nesting was unavailable.
 
-## Version gate — check before the first nested dispatch
+## Version gate — confirm before the first nested dispatch
 
 Nested dispatch requires **Claude Code >= 2.1.172**. Below that floor the
-capability does not exist, so confirm the running version before you spawn
-your first helper. Run the bundled deterministic check:
+platform does not grant a sub-agent the `Agent` tool at all, so your
+**universal gate is tool presence**: if `Agent` is not in your toolset,
+nesting is unavailable — do the work yourself inline per the rule above. This
+gate needs no command and holds for every agent, including read-only ones that
+have no `Bash` tool.
+
+When you also hold the `Bash` tool, additionally confirm the running version
+with the bundled deterministic check — it pins the exact floor rather than
+trusting tool presence alone:
 
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/skills/nested-agents/supports-nesting.mjs" "$(claude --version)"
 ```
 
-It prints `supported` and exits `0` when the version meets the floor, or
-`unsupported` and exits non-zero otherwise. The check is **fail-closed**: an
-older release, unrecognizable version output, or an environment where you
-cannot run the check at all all count as `unsupported`. On any non-zero
-result — i.e. whenever the version is less than 2.1.172 or undeterminable —
-**do not spawn helpers; do the work yourself inline** per the rule above.
-Run the gate once; a `supported` result holds for the rest of your turn.
+It prints `supported` and exits `0` at or above the floor, or `unsupported`
+and exits non-zero otherwise. The check is **fail-closed**: an older release,
+unrecognizable version output, or an environment where you cannot run the
+check all count as `unsupported`. On any non-zero result — i.e. whenever the
+version is less than 2.1.172 or undeterminable — **do not spawn helpers; do
+the work yourself inline.** Run the gate once; a `supported` result holds for
+the rest of your turn.
 
 ## When to spawn vs. do it yourself (context economy)
 

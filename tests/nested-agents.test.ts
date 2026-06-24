@@ -242,6 +242,23 @@ describe("nested-agents version gate — skill contract (L2 tripwires)", () => {
     expect(/inline/i.test(section)).toBe(true);
     expect(/fail-closed/i.test(section)).toBe(true);
   });
+
+  test("version gate names Agent-tool presence as the universal gate for no-Bash agents", () => {
+    // The researcher holds no `Bash` tool and cannot run the comparator, so the
+    // gate must not be Bash-only — tool presence is the universal fallback or
+    // the researcher could never nest. Pin both halves.
+    const lines = read(NESTED_SKILL).split("\n");
+    const start = lines.findIndex((l) => /^##\s+Version gate/i.test(l));
+    const next = lines.findIndex((l, i) => i > start && /^##\s+/.test(l));
+    const section = lines.slice(start, next === -1 ? undefined : next).join("\n");
+    expect(/toolset|tool presence/i.test(section)).toBe(true);
+    expect(section).toContain("Bash");
+  });
+
+  test("the read-only researcher gates on Agent-tool presence (no Bash to run the check)", () => {
+    expect(/^tools:.*\bBash\b/m.test(frontmatter(read(agent("researcher"))))).toBe(false);
+    expect(toolsLineHasAgent(read(agent("researcher")))).toBe(true);
+  });
 });
 
 describe("agent-open-questions skill forbids envelopes from nested helpers", () => {
