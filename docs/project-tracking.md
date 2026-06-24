@@ -161,22 +161,33 @@ of the work.
 | Column | Meaning | Move here when… |
 |--------|---------|-----------------|
 | **Backlog** | Captured but not started. Not yet committed to. | The card is created. |
-| **Bugs** | A **Backlog for `bug`-labeled issues only** — a convenience view so open bugs are easy to spot. Treated exactly like **Backlog**: captured, not started, not committed to. Not a separate stage in the flow. | A `bug` issue is captured. Use this instead of **Backlog** so it shows in the bugs view; it is picked up into **In progress** the same way. |
-| **Ready** | Shaped and ready to be picked up. Has enough detail to start. | The work is well-understood and prioritized. |
+| **Bugs** | A **Backlog for `bug`-labeled issues only** — a convenience view so open bugs are easy to spot. Captured, not started, not committed to. Not a separate stage in the flow. | A `bug` issue is captured. Use this instead of **Backlog** so it shows in the bugs view; bugs are pulled **directly into In progress** from here — they are **not** promoted to **Ready**. |
+| **Ready** | Shaped and ready to be picked up. Has enough detail to start. **WIP-limited to 5.** | The work is well-understood and prioritized, and Ready has an open slot (see WIP limit below). |
 | **In progress** | Actively being worked on. | You start work — open a worktree, run `/team`, or begin coding. |
 | **In review** | Implementation complete; a PR is open and under review. | A pull request is opened for the card. |
 | **Done** | Merged and complete. | The PR is merged. |
 
-> **The Bugs column.** `Bugs` is an entry bucket, not a stage. It is the same as
-> `Backlog` (captured-but-not-started) but reserved for `bug` issues so they are
-> easy to find at a glance. Everything that treats `Backlog` as "not started yet"
-> treats `Bugs` identically — a bug issue is groomed to `Ready` and/or picked up
-> into `In progress` from `Bugs` exactly as a non-bug issue is from `Backlog`.
+> **The Bugs column.** `Bugs` is an entry bucket, not a stage — the same
+> captured-but-not-started state as `Backlog`, reserved for `bug` issues so they
+> are easy to find at a glance. **Bug issues stay in `Bugs` and are pulled
+> directly into `In progress`; they are not promoted to `Ready`.** Grooming
+> therefore leaves bugs in `Bugs` (it does not move them to `Ready`) — the `Bugs`
+> column *is* their ready-to-pull state. Promotion to `Ready` is for non-bug
+> `Backlog` items only.
+
+> **WIP limit on `Ready`.** The `Ready` column is capped at **5** cards (a
+> work-in-progress limit). When it is full, promoting a new card means **swapping
+> one out**, not exceeding the cap: pick what is genuinely most important and move
+> the displaced card back to `Backlog`. (GitHub Projects' column limits are a
+> view-level UI setting and aren't reliably exposed via the API — treat this
+> number as the source of truth and keep the board UI limit in sync. This is the
+> WIP-limited-kanban discipline the loop-driven controller in
+> [#90](https://github.com/bostonaholic/team/issues/90) builds on; other columns
+> may carry their own limits under that model.)
 
 **Move the card as the work moves.** Pull a card into **In progress** when
-you start, not after — from `Ready`, `Backlog`, or `Bugs`, whichever it sits in.
-When the PR opens, move it to **In review**. When the PR merges, move it to
-**Done**.
+you start, not after — from `Ready` (non-bug work) or `Bugs` (bug work). When the
+PR opens, move it to **In review**. When the PR merges, move it to **Done**.
 
 Dragging the card on the board UI is the simplest way. From the CLI, two small
 helper scripts in `.claude/scripts/` compose over a pipe — one resolves an
