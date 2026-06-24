@@ -153,9 +153,11 @@ vX.Y.Z <type>: <subject>
 ```
 
 e.g. `v0.6.0 feat: add the shipit land skill`. The `PR title sync` workflow
-rewrites a drifted title only when the PR's version differs from the base
-branch's (i.e. after `version-bump` has bumped); while the version is unchanged
-it does nothing. It is a backstop, not the mechanism.
+rewrites a drifted title only when the branch bumped the version forward of its
+fork point — it reads the version at the PR head and compares it against the
+merge-base, not the live base tip, so a bump-less PR no-ops no matter how far
+`main` has advanced since the branch forked (#104). It is a backstop, not the
+mechanism.
 
 ## What CI enforces, and where
 
@@ -166,7 +168,7 @@ can catch it:
 |-------|-------|-------|
 | Four version strings agree; strict semver (holds on every commit, drafted or landed) | L2 tripwire (free, every `bun test`) | `tests/version-consistency.test.ts` |
 | Released-section + footer-compare-link invariants hold for the assigned version — run after the changelog cut, before the commit | Land-time assertion (`version-bump`) | `.claude/skills/version-bump/SKILL.md` |
-| Title prefix matches the version — only when the PR's version differs from base (after `version-bump` bumps); no-op otherwise | CI (needs PR context) | `.github/workflows/pr-title-sync.yml` |
+| Title prefix matches the version — only when the branch bumped the version forward of its merge-base/fork point (after `version-bump` bumps); no-op otherwise | CI (needs PR context) | `.github/workflows/pr-title-sync.yml` |
 | Tag + GitHub release on merge | CI (needs write perms) | `.github/workflows/release-on-merge.yml` |
 
 The land-time assertion row is the in-tree replacement for the per-PR CI gate
