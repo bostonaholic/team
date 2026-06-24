@@ -18,6 +18,24 @@ toolset, a dispatch errors, or results never arrive: **do the work yourself
 inline** with your other tools and proceed. Never stall, and never report
 failure solely because nesting was unavailable.
 
+## Version gate — check before the first nested dispatch
+
+Nested dispatch requires **Claude Code >= 2.1.172**. Below that floor the
+capability does not exist, so confirm the running version before you spawn
+your first helper. Run the bundled deterministic check:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/nested-agents/supports-nesting.mjs" "$(claude --version)"
+```
+
+It prints `supported` and exits `0` when the version meets the floor, or
+`unsupported` and exits non-zero otherwise. The check is **fail-closed**: an
+older release, unrecognizable version output, or an environment where you
+cannot run the check at all all count as `unsupported`. On any non-zero
+result — i.e. whenever the version is less than 2.1.172 or undeterminable —
+**do not spawn helpers; do the work yourself inline** per the rule above.
+Run the gate once; a `supported` result holds for the rest of your turn.
+
 ## When to spawn vs. do it yourself (context economy)
 
 Spawn a helper only when the side-quest would flood your context with

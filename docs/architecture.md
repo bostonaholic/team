@@ -600,6 +600,14 @@ both governed by `skills/nested-agents/SKILL.md`:
   level deep — see `skills/agent-open-questions/SKILL.md`).
 - Depth budget: pipeline agents sit at depth 2 of 5 and may spawn at
   most one more level.
+- **Version-gated.** Nesting requires Claude Code >= 2.1.172. Before its
+  first nested dispatch a pipeline agent runs the bundled deterministic
+  check `skills/nested-agents/supports-nesting.mjs "$(claude --version)"`
+  (pure comparison core unit-tested at L1; skill contract and version
+  floor pinned by `tests/nested-agents.test.ts`). The check is
+  fail-closed — an older release, unrecognizable version output, or an
+  environment where it cannot run all resolve to "unsupported," routing
+  the agent to its inline path.
 - **Optimization, never a dependency.** Every nested-dispatch section is
   optional with a mandatory inline fallback. On Claude Code versions
   without nesting, the plugin degrades to exactly its previous behavior.

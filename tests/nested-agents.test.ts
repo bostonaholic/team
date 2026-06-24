@@ -3,10 +3,16 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
+import {
+  MIN_VERSION,
+  meetsMinimum,
+  parseVersion,
+} from "../skills/nested-agents/supports-nesting.mjs";
 
 const REPO_ROOT = process.cwd();
 const AGENTS_DIR = join(REPO_ROOT, "agents");
 const NESTED_SKILL = join(REPO_ROOT, "skills", "nested-agents", "SKILL.md");
+const NESTED_VERSION_CHECK = join(REPO_ROOT, "skills", "nested-agents", "supports-nesting.mjs");
 const AOQ_SKILL = join(REPO_ROOT, "skills", "agent-open-questions", "SKILL.md");
 
 const agent = (name: string) => join(AGENTS_DIR, `${name}.md`);
@@ -168,6 +174,73 @@ describe("nested-agents skill structure and load-bearing rules", () => {
     const text = readOrEmpty(NESTED_SKILL);
     expect(/neutral/i.test(text)).toBe(true);
     expect(/refute/i.test(text)).toBe(true);
+  });
+});
+
+describe("nested-agents version gate — comparison core (L1 pure unit)", () => {
+  test("MIN_VERSION is 2.1.172 — the release that introduced nested sub-agents", () => {
+    expect(MIN_VERSION).toBe("2.1.172");
+  });
+
+  test("parseVersion extracts the semver from `claude --version` output", () => {
+    expect(parseVersion("2.1.185 (Claude Code)")).toEqual([2, 1, 185]);
+    expect(parseVersion("2.1.172")).toEqual([2, 1, 172]);
+  });
+
+  test("parseVersion returns null on input with no version triple", () => {
+    expect(parseVersion("")).toBeNull();
+    expect(parseVersion("unknown")).toBeNull();
+    expect(parseVersion(undefined as unknown as string)).toBeNull();
+  });
+
+  test("meetsMinimum is true at and above the 2.1.172 floor", () => {
+    expect(meetsMinimum("2.1.172")).toBe(true); // exactly equal
+    expect(meetsMinimum("2.1.185 (Claude Code)")).toBe(true); // patch greater
+    expect(meetsMinimum("2.2.0")).toBe(true); // minor greater
+    expect(meetsMinimum("3.0.0")).toBe(true); // major greater
+  });
+
+  test("meetsMinimum is false below the floor — do not utilize nesting", () => {
+    expect(meetsMinimum("2.1.171")).toBe(false); // patch lower
+    expect(meetsMinimum("2.0.999")).toBe(false); // minor lower
+    expect(meetsMinimum("1.9.9")).toBe(false); // major lower
+  });
+
+  test("meetsMinimum fails closed on unparseable / missing input", () => {
+    expect(meetsMinimum("")).toBe(false);
+    expect(meetsMinimum("not a version")).toBe(false);
+  });
+});
+
+describe("nested-agents version gate — skill contract (L2 tripwires)", () => {
+  test("the bundled deterministic version check ships beside the skill", () => {
+    expect(existsSync(NESTED_VERSION_CHECK)).toBe(true);
+  });
+
+  test("skill body declares a version-gate section", () => {
+    expect(/^##\s+Version gate/im.test(read(NESTED_SKILL))).toBe(true);
+  });
+
+  test("skill names the exact minimum version (drift guard vs. the script constant)", () => {
+    // The prose floor and the script's MIN_VERSION must never drift apart.
+    expect(read(NESTED_SKILL)).toContain(MIN_VERSION);
+  });
+
+  test("skill invokes the bundled check before nesting", () => {
+    expect(read(NESTED_SKILL)).toContain("supports-nesting.mjs");
+  });
+
+  test("skill ties a sub-floor version to the inline fallback (fail-closed)", () => {
+    // Window the version-gate heading and assert it both names the floor and
+    // routes a failing check to inline work.
+    const lines = read(NESTED_SKILL).split("\n");
+    const start = lines.findIndex((l) => /^##\s+Version gate/i.test(l));
+    expect(start).toBeGreaterThanOrEqual(0);
+    const next = lines.findIndex((l, i) => i > start && /^##\s+/.test(l));
+    const section = lines.slice(start, next === -1 ? undefined : next).join("\n");
+    expect(section).toContain(MIN_VERSION);
+    expect(/inline/i.test(section)).toBe(true);
+    expect(/fail-closed/i.test(section)).toBe(true);
   });
 });
 

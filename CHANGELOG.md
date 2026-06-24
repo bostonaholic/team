@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Nested sub-agent dispatch is now gated on a deterministic Claude Code version check.** The capability requires Claude Code >= 2.1.172 (the release that let sub-agents spawn sub-agents); below that floor the `Agent` tool is simply absent, so a nesting-enabled pipeline agent (`researcher`, `implementer`, `code-reviewer`, `security-reviewer`) must confirm the version before its first nested dispatch and otherwise degrade to inline work. A new bundled, zero-dependency comparator ([`skills/nested-agents/supports-nesting.mjs`](https://github.com/bostonaholic/team/blob/main/skills/nested-agents/supports-nesting.mjs)) parses `claude --version` and exits `supported`/`unsupported` against a single-source-of-truth `MIN_VERSION`; it is **fail-closed**, so an older release, unrecognizable version output, or an environment where the check cannot run all route the agent to its inline path. The [`skills/nested-agents/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/nested-agents/SKILL.md) guardrails gain a "Version gate" section documenting the check. The pure comparison core is unit-tested at L1 and the skill contract (section present, version floor named, fallback wired) is pinned by L2 tripwires in [`tests/nested-agents.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/nested-agents.test.ts); a drift guard fails the build if the prose floor and the script constant ever disagree.
+
 ## [0.12.0] - 2026-06-23
 
 ### Changed
