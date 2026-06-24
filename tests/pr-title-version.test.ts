@@ -89,7 +89,11 @@ function run(
   cwd: string,
   env: { HEAD_SHA: string; BASE_SHA: string; CURRENT_TITLE?: string },
 ) {
-  const r = spawnSync("bash", [SCRIPT], {
+  // Invoke the script directly (not via `bash SCRIPT`) so the test exercises
+  // the exact production path: the committed executable bit + shebang. A dropped
+  // mode or broken shebang — which would break the workflow on the runner —
+  // fails the test here instead of silently passing.
+  const r = spawnSync(SCRIPT, [], {
     cwd,
     encoding: "utf8",
     env: {

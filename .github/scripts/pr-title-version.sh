@@ -44,6 +44,9 @@ grep -qE "$SEMVER_RE" <<<"$HEAD_V" \
 # differ and a stale prefix gets stamped onto a PR that shipped no bump.
 MERGE_BASE=$(git merge-base "$HEAD_SHA" "$BASE_SHA") \
   || die "could not compute merge-base of head and base"
+# Fail loud locally rather than leaning on the downstream semver check: a
+# successful merge-base that printed nothing would otherwise read an empty ref.
+[ -n "$MERGE_BASE" ] || die "merge-base of head and base is empty"
 BASE_V=$(read_version "$MERGE_BASE")
 grep -qE "$SEMVER_RE" <<<"$BASE_V" \
   || die "merge-base plugin.json version is not 3-part semver: '$BASE_V'"
