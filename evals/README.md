@@ -165,6 +165,24 @@ regression).
 Manually: `bun run eval:compare evals/results/<a>.json evals/results/<b>.json`
 (exits non-zero on budget regression or verdict regression).
 
+## CI
+
+Two workflows run the evals:
+
+- **`.github/workflows/evals.yml`** runs on every pull request. It runs the
+  evals the diff selects (`git diff <base>...HEAD` against each eval's
+  touchfiles — no `EVALS_ALL`/`EVALS_TIER`, so cost scales with the change) and
+  upserts one `## PR Evals` comment on the PR with a per-suite pass/fail table
+  and cost. The comment body is produced by `scripts/eval-report.ts` (pure +
+  unit-tested in `tests/eval-report.test.ts`). It is **advisory** — it includes
+  stochastic periodic evals, which must not gate merges (see
+  [TESTING.md](../TESTING.md)) — and runs on **same-repo PRs only** (fork PRs
+  lack the `EVALS_ANTHROPIC_API_KEY` secret and a write token). When the diff
+  selects nothing, the comment says so.
+- **`.github/workflows/behavioral-evals.yml`** runs the full periodic tier
+  weekly (Monday 06:00 UTC) and on manual dispatch, uploading results as
+  artifacts.
+
 ## Blame protocol
 
 When an eval fails on your branch, rerun on the base before blaming the

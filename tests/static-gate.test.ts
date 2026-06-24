@@ -24,6 +24,12 @@ const HARNESS_WORKFLOW = join(
   "workflows",
   "harness-checks.yml",
 );
+const PR_EVALS_WORKFLOW = join(
+  process.cwd(),
+  ".github",
+  "workflows",
+  "evals.yml",
+);
 const FIXTURE_SIZE_CAP = 50 * 1024;
 
 // Canonical trust expression — the cross-workflow contract from
@@ -224,6 +230,58 @@ describe("static gate: evals environment backstop", () => {
     // live `pull_request:` trigger appears, forcing that review. A comment
     // mention (which is indented under `#`) does not match the bare-key regex.
     expect(/^\s*pull_request:/m.test(evalsWorkflow)).toBe(false);
+  });
+});
+
+// The PR evals workflow (evals.yml) runs diff-selected evals on pull requests
+// and upserts a `## PR Evals` comment. These guards lock the contracts that, if
+// broken, would silently stop evals running or stop the comment posting — and
+// would otherwise only surface live in CI on a real PR.
+describe("static gate: PR evals workflow", () => {
+  const workflow = existsSync(PR_EVALS_WORKFLOW)
+    ? readFileSync(PR_EVALS_WORKFLOW, "utf8")
+    : "";
+  const reportScript = existsSync(join(process.cwd(), "scripts", "eval-report.ts"))
+    ? readFileSync(join(process.cwd(), "scripts", "eval-report.ts"), "utf8")
+    : "";
+
+  test("workflow file exists", () => {
+    expect(existsSync(PR_EVALS_WORKFLOW)).toBe(true);
+  });
+
+  test("triggers on pull_request", () => {
+    expect(/^on:\s*$/m.test(workflow)).toBe(true);
+    expect(workflow).toContain("pull_request:");
+  });
+
+  test("installs the Claude Code CLI before spawning the agent", () => {
+    expect(workflow).toContain("@anthropic-ai/claude-code");
+  });
+
+  test("exposes ANTHROPIC_API_KEY so the spawned agent can authenticate", () => {
+    expect(/^\s*ANTHROPIC_API_KEY:/m.test(workflow)).toBe(true);
+  });
+
+  test("lets the diff drive selection: no EVALS_ALL, no EVALS_TIER", () => {
+    // Setting either as an env key would override diff selection (run
+    // everything / filter to one tier), defeating cost-scales-with-the-diff.
+    // Match assignments only, so the explanatory comment doesn't trip this.
+    expect(/^\s*EVALS_ALL:/m.test(workflow)).toBe(false);
+    expect(/^\s*EVALS_TIER:/m.test(workflow)).toBe(false);
+  });
+
+  test("report job can post PR comments (issues + pull-requests write)", () => {
+    // PR comments are issue comments: the gh api issues/comments endpoints need
+    // `issues: write`; without it the upsert 401s on every PR with results.
+    expect(/^\s*issues:\s*write\s*$/m.test(workflow)).toBe(true);
+    expect(/^\s*pull-requests:\s*write\s*$/m.test(workflow)).toBe(true);
+  });
+
+  test("comment marker stays in sync between workflow and formatter", () => {
+    // The workflow greps for this exact prefix to decide update-vs-create; the
+    // formatter emits it. If they drift, the upsert silently duplicates.
+    expect(workflow).toContain('startswith("## PR Evals")');
+    expect(reportScript).toContain('"## PR Evals"');
   });
 });
 

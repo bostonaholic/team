@@ -1,0 +1,126 @@
+# PR evals — diff-selected behavioral evals on pull requests, with a results comment.
+#
+# Run the evals relevant to a PR's diff, then upsert ONE comment summarizing
+# pass/fail and cost. Selection (which evals run)
+# is decided by the harness from `git diff <base>...HEAD` against each eval's
+# touchfiles (tests/helpers/touchfiles.ts) — cost scales with the diff, NOT the
+# whole suite. The weekly full periodic run stays in behavioral-evals.yml.
+#
+# ADVISORY: includes stochastic periodic evals, so this is intentionally NOT a
+# required merge check (TESTING.md: stochastic checks must not gate merges).
+#
+# SECURITY: same-repo PRs only. Fork PRs lack the EVALS_ANTHROPIC_API_KEY secret
+# and a write token, so both jobs are guarded on head.repo (mirrors
+# pr-title-sync.yml). No pull_request_target — avoids the secret-exfil surface.
+name: PR evals
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: evals-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  run-evals:
+    name: Diff-selected evals (${{ matrix.suite.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        suite:
+          # File path MUST be `./`-prefixed: bun treats a bare `tests/...` arg
+          # as a name filter (matches nothing), not a path.
+          - { name: code-reviewer, file: ./tests/code-reviewer.evals.ts }
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # diff-based selection needs history back to the base ref
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # The live suite spawns the `claude` CLI (tests/helpers/session-runner.ts).
+      # It is not a project dependency, so install it globally onto $PATH here.
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run ${{ matrix.suite.name }} evals (diff-selected)
+        env:
+          # The judge reads EVALS_ANTHROPIC_API_KEY (namespaced so a local agent
+          # won't auto-pick it up). In CI the agent under test has no logged-in
+          # session, so it gets its own credential via the bare ANTHROPIC_API_KEY,
+          # sourced from the same secret.
+          EVALS_ANTHROPIC_API_KEY: ${{ secrets.EVALS_ANTHROPIC_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.EVALS_ANTHROPIC_API_KEY }}
+          EVALS: "1"
+          # NOT EVALS_ALL and NOT EVALS_TIER: let the diff drive selection across
+          # all tiers, so cost scales with the change.
+          EVALS_BASE: origin/${{ github.event.pull_request.base.ref }}
+          SUITE_FILE: ${{ matrix.suite.file }}
+        run: bun test "$SUITE_FILE"
+
+      - name: Upload eval results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pr-evals-${{ matrix.suite.name }}-${{ github.run_id }}
+          path: evals/results/
+          if-no-files-found: ignore  # nothing selected -> no JSON written
+          retention-days: 30
+
+  report:
+    name: Post results comment
+    needs: run-evals
+    if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      # PR comments are issue comments: the gh api issues/comments endpoints are
+      # gated by `issues: write`, not `pull-requests: write`. Both are needed.
+      pull-requests: write
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      PR: ${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@v6  # for scripts/eval-report.ts + its imports
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Download eval result artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: artifacts
+          pattern: pr-evals-*
+          merge-multiple: true
+
+      - name: Build and upsert results comment
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          BODY="$(bun run scripts/eval-report.ts artifacts)"
+          # Upsert: find our existing comment by the stable marker prefix and
+          # PATCH it; otherwise create a new one. Keeps one comment per PR.
+          ID="$(gh api "repos/$REPO/issues/$PR/comments" \
+            --jq '.[] | select(.body | startswith("## PR Evals")) | .id' | tail -1 || true)"
+          if [ -n "${ID:-}" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$ID" -f body="$BODY" >/dev/null
+            echo "Updated comment $ID"
+          else
+            printf '%s' "$BODY" | gh pr comment "$PR" --repo "$REPO" --body-file -
+            echo "Created comment"
+          fi
