@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-06-24
+
+### Fixed
+
+- **The QRSPI workflow's SOFT-gate guidance no longer contradicts the review severity model.** [`skills/qrspi-workflow/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/qrspi-workflow/SKILL.md) listed *code review suggestions* and *UX review feedback* as canonical SOFT-gate examples, but the severity model in [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md) → "Severity Tiers and the Auto-Fix Boundary" classifies `code-reviewer` REQUEST CHANGES as **Blocking** and `ux-reviewer` REQUEST CHANGES as **Major** — both auto-fixed in the loop and never surfaced to the user. An agent loading both skills saw contradictory guidance, and the consult guard calls a prompt listing a Blocking/Major finding "a defect." The stale example list is removed and the SOFT section now cross-references the severity-tier table as the single source of truth, so future reclassifications touch only one file. Pinned by L2 tripwires in [`tests/protocol.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/protocol.test.ts), including a drift guard that fails the build if the cross-referenced heading is renamed in `code-review/SKILL.md`.
+
 ## [0.13.1] - 2026-06-24
 
 ### Fixed
@@ -169,7 +175,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.13.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.13.2...HEAD
+[0.13.2]: https://github.com/bostonaholic/team/compare/v0.13.1...v0.13.2
 [0.13.1]: https://github.com/bostonaholic/team/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/bostonaholic/team/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/bostonaholic/team/compare/v0.11.1...v0.12.0
