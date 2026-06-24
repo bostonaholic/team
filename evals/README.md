@@ -255,4 +255,9 @@ contains(...)`). The contract comment on the `harness-checks` job in
 `.github/workflows/harness-checks.yml` carries the same expression for
 reference, but the live `if:` is the canonical form to copy.
 
+Both `behavioral-evals.yml` and `evals.yml` now carry live copies of this
+canonical trust `if:` expression. They must stay byte-identical, and the
+`TRUST_EXPR` tripwire in `tests/static-gate.test.ts` enforces that — any drift
+fails the free gate.
+
 Run `bun run eval:list` to see the registered tests and their tiers.

@@ -337,6 +337,12 @@ describe("static gate: PR evals workflow", () => {
     expect(workflow).toContain(TRUST_EXPR);
   });
 
+  test("trust expression gates BOTH jobs (run-evals and report)", () => {
+    // Both the run-evals and report jobs must carry the author gate; if only
+    // one does, an untrusted same-repo author could still trigger the other.
+    expect(workflow.split(TRUST_EXPR).length - 1).toBe(2);
+  });
+
   test("author gate wired as a live if:", () => {
     // The author allowlist must be a live `if:` condition, not a comment, so
     // an untrusted same-repo author cannot spend the production key.

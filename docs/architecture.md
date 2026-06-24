@@ -519,7 +519,13 @@ check on a weekly cron (Monday 06:00 UTC) with `EVALS_ANTHROPIC_API_KEY`.
 That key is an **environment secret** scoped to the `evals` GitHub
 Environment — a one-time Settings → Environments setup (create the `evals`
 environment, attach the secret, optionally set required reviewers / a
-main-only branch restriction). The job declares `environment: evals` and
+main-only branch restriction). If the PR-eval workflow (`evals.yml`) is
+active, the `evals` environment must **not** restrict deployment branches to
+`main` — PR head/merge refs are not `main`, so a main-only policy blocks the
+secret on PRs and every gated eval fails at the deploy gate. Remove it via
+Settings → Environments → evals → Deployment branches → "No restriction", or
+`gh api -X DELETE repos/bostonaholic/team/environments/evals/deployment-branch-policies/<id>`.
+The job declares `environment: evals` and
 **fails closed** if the environment is absent: the secret simply resolves
 to empty, so no token spend leaks. `pull_request_target` is hard-banned for
 this and any secret-consuming / `claude`-spawning job — it runs in

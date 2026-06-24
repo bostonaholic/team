@@ -9,9 +9,17 @@
 # ADVISORY: includes stochastic periodic evals, so this is intentionally NOT a
 # required merge check (TESTING.md: stochastic checks must not gate merges).
 #
-# SECURITY: same-repo PRs only. Fork PRs lack the EVALS_ANTHROPIC_API_KEY secret
-# and a write token, so both jobs are guarded on head.repo (mirrors
-# pr-title-sync.yml). No pull_request_target — avoids the secret-exfil surface.
+# SECURITY: same-repo PRs only, AND trusted authors only. Fork PRs lack the
+# EVALS_ANTHROPIC_API_KEY secret and a write token, so both jobs are guarded on
+# head.repo (mirrors pr-title-sync.yml). Both jobs additionally gate on an
+# author-association allowlist (OWNER/MEMBER/COLLABORATOR — the verbatim
+# TRUST_EXPR), so untrusted same-repo authors (CONTRIBUTOR/FIRST_TIME_CONTRIBUTOR/
+# NONE) are skipped and never spend the key. run-evals declares
+# `environment: evals` so the env-scoped EVALS_ANTHROPIC_API_KEY is reachable on
+# trusted same-repo PRs — this requires the `evals` environment's main-only
+# deployment-branch policy to be removed (out-of-band maintainer step); without
+# that, gated PRs fail at the deploy gate. No pull_request_target — avoids the
+# secret-exfil surface.
 name: PR evals
 
 on:
