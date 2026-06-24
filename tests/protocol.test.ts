@@ -423,6 +423,44 @@ describe("topic consistency", () => {
   });
 });
 
+// Regression guard for issue #68: qrspi-workflow's SOFT-gate examples must not
+// contradict the severity model in code-review/SKILL.md. PR #23 made
+// code-reviewer REQUEST CHANGES Blocking (auto-fix) and ux-reviewer REQUEST
+// CHANGES Major (auto-fix), so neither can be a SOFT example. The severity
+// model lives in exactly one place — qrspi-workflow must cross-reference it,
+// never restate it.
+describe("qrspi-workflow SOFT gate aligns with severity tiers (issue #68)", () => {
+  const QRSPI = join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md");
+
+  // The SOFT subsection: from "### SOFT" up to the next "### " heading.
+  function softSection(text: string): string {
+    const lines = text.split("\n");
+    const start = lines.findIndex((l) => /^### SOFT\b/.test(l));
+    if (start === -1) return "";
+    let end = lines.length;
+    for (let i = start + 1; i < lines.length; i++) {
+      if (/^### /.test(lines[i] ?? "")) {
+        end = i;
+        break;
+      }
+    }
+    return lines.slice(start, end).join("\n");
+  }
+
+  test("no longer lists code-review or ux-reviewer feedback as SOFT examples", () => {
+    const text = read(QRSPI);
+    expect(/code review suggestions/i.test(text)).toBe(false);
+    expect(/UX review feedback/i.test(text)).toBe(false);
+  });
+
+  test("SOFT section cross-references the code-review severity-tier table", () => {
+    const soft = softSection(read(QRSPI));
+    expect(soft.length).toBeGreaterThan(0);
+    expect(soft).toContain("code-review/SKILL.md");
+    expect(soft).toContain("Severity Tiers and the Auto-Fix Boundary");
+  });
+});
+
 // L2-demoted (heavy prior state): team, team-worktree, team-pr, team-implement
 //
 // These four pipeline skills have no cheap self-contained behavioral property
