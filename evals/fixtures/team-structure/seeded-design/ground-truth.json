@@ -1,0 +1,20 @@
+{
+  "bugs": [
+    {
+      "id": "topic-slug-reused",
+      "category": "required-property",
+      "severity": "high",
+      "description": "Required property (seeded-state guardrail): the structure must reuse the topic slug from the seeded design verbatim — `topic: token-bucket`.",
+      "detection_hint": "topic:\\s*token-bucket"
+    },
+    {
+      "id": "verification-checkpoint",
+      "category": "required-property",
+      "severity": "high",
+      "description": "Required property: each slice must carry a verification checkpoint — the output must reference verification/checkpoint language.",
+      "detection_hint": "verif(y|ication)|checkpoint"
+    }
+  ],
+  "minimum_detection": 1.0,
+  "max_false_positives": 0
+}

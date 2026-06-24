@@ -1,0 +1,20 @@
+{
+  "bugs": [
+    {
+      "id": "topic-slug-reused",
+      "category": "required-property",
+      "severity": "high",
+      "description": "Required property (seeded-state guardrail): the design must reuse the topic slug from the seeded artifacts verbatim — `topic: token-bucket`.",
+      "detection_hint": "topic:\\s*token-bucket"
+    },
+    {
+      "id": "open-questions-section",
+      "category": "required-property",
+      "severity": "high",
+      "description": "Required property: the design must enumerate explicit open questions for the user in an Open Questions section.",
+      "detection_hint": "#+\\s*open\\s+questions"
+    }
+  ],
+  "minimum_detection": 1.0,
+  "max_false_positives": 0
+}

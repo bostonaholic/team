@@ -1,0 +1,13 @@
+{
+  "bugs": [
+    {
+      "id": "conventional-subject-shape",
+      "category": "required-property",
+      "severity": "high",
+      "description": "Required property (text-artifact escape hatch): the commit subject must follow the Conventional-Commit shape <type>[optional scope]: <description>. Expressed as a required-property hint, not a planted defect.",
+      "detection_hint": "(?:^|\\n)(feat|fix|refactor|test|docs|chore|perf|ci|revert)(\\([^)]+\\))?!?: \\S"
+    }
+  ],
+  "minimum_detection": 1.0,
+  "max_false_positives": 0
+}

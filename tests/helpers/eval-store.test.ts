@@ -103,6 +103,13 @@ describe("EvalCollector", () => {
     expect(() => c.addTest(entry("z"))).toThrow(/after finalize/);
   });
 
+  test("finalize with no tests writes no empty result artifact", async () => {
+    const c = new EvalCollector("e2e", scratchDir);
+    const path = await c.finalize();
+    expect(existsSync(path)).toBe(false);
+    expect(readdirSync(scratchDir).filter((f) => f.endsWith(".json"))).toEqual([]);
+  });
+
   test("incremental writes contain a valid snapshot at every step", () => {
     const c = new EvalCollector("e2e", scratchDir);
     c.addTest(entry("one"));
