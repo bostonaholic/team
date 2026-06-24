@@ -446,17 +446,21 @@ describe("L2-demoted heavy-prior-state pipeline skills", () => {
     const text = read(TEAM);
     // The phase loop walks a linear phase table.
     expect(/phase table/i.test(text)).toBe(true);
-    // The QRSPI sequence appears in order.
+    // The QRSPI sequence appears in order, with WORKTREE leading.
     expect(text).toContain(
-      "Question → Research → Design → Structure → Plan → Worktree →",
+      "Worktree → Question → Research → Design → Structure → Plan → Implement → PR",
     );
   });
 
-  test("team: two human gates are design approval and structure approval", () => {
+  test("team: design approval is the only human gate (structure is autonomous)", () => {
     const text = read(TEAM);
-    expect(text).toContain("the two human gates are design and structure");
+    // Design is the sole human gate as of the structure-autonomy change.
+    expect(text).toContain("design is the only human gate");
     expect(/### Human Gate \(design approval\)/.test(text)).toBe(true);
-    expect(/### Human Gate \(structure approval\)/.test(text)).toBe(true);
+    // Structure no longer gates — it advances autonomously.
+    expect(/### Structure \(no gate — autonomous\)/.test(text)).toBe(true);
+    // And the old structure human-gate section must be gone.
+    expect(/### Human Gate \(structure approval\)/.test(text)).toBe(false);
   });
 
   test("team-worktree: reads repos.md and runs per-repo git worktree add", () => {

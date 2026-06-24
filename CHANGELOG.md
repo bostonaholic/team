@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Behavioral evals for the executable skills, plus L2 tripwires for the rest.** The paid behavioral-eval harness previously exercised only the `code-reviewer` agent; this fills the gap at the layer [`TESTING.md`](https://github.com/bostonaholic/team/blob/main/TESTING.md) sanctions for each skill rather than forcing a uniform eval onto surfaces that can't produce one. Nine executable entry-point skills gain L5 behavioral evals — `git-commit`, `changelog`, `team-question`, `eng-design-doc-review`, `team-fix` (self-contained) and `team-research`, `team-design`, `team-structure`, `team-plan` (driven from a seeded upstream artifact written into the agent's working dir before `claude -p` is spawned, via the shared `tests/helpers/seed.ts` helper). Each ships a fixture (`evals/fixtures/<skill>/<case>/`), a rubric (`evals/rubrics/<skill>.md`), a `tests/<skill>.evals.ts` mirroring the code-reviewer template's deterministic-first cascade, and `E2E_TOUCHFILES`/`E2E_TIERS` wiring so it is diff-selectable; all are `periodic` (live-model variance, so none gate merge per TESTING.md §4). The heavy-prior-state pipeline skills (`team`, `team-worktree`, `team-pr`, `team-implement`) and the `shipit` utility are explicitly **demoted to free L2 tripwires** — a single `claude -p` call can't honestly drive them — and the zero-coverage methodology lenses gain free L2 content tripwires in `tests/methodology.test.ts`. A coverage-audit meta-test (`tests/skill-eval-coverage.test.ts`, TESTING.md §6) locks the triage in place: every L5 skill must have all four artifacts; every demoted skill must have none plus a documented demotion marker. The `code-reviewer` eval's brittle literal `detection_hint` and the `changelog` eval's mis-chosen judge axis were both fixed and calibrated against real transcripts.
+
 ## [0.13.0] - 2026-06-23
 
 ### Added

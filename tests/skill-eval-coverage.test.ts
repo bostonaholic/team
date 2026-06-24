@@ -445,3 +445,25 @@ describe("L2 demotion: team-implement", () => {
     expect(/\/\/ L2-demoted \(heavy prior state\):[^\n]*\bteam-implement\b/.test(text)).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Executable utility skill covered at L2 (not L5). `shipit` lands a reviewed
+// PR — heavy external state (an open PR, CI, the GitHub API) that cannot be
+// honestly driven in a single offline `claude -p` eval, the same reason
+// `team-pr` is demoted. Its behavioral contract is pinned by its dedicated
+// L2 tripwire, tests/shipit-skill.test.ts, not an L5 eval.
+// ---------------------------------------------------------------------------
+
+describe("L2 coverage: shipit (executable utility, not L5)", () => {
+  test("shipit has no evals/fixtures/shipit/ directory (no L5 eval)", () => {
+    expect(existsSync(fixtureDir("shipit"))).toBe(false);
+  });
+
+  test("shipit has no tests/shipit.evals.ts file (no L5 eval)", () => {
+    expect(existsSync(evalsFilePath("shipit"))).toBe(false);
+  });
+
+  test("shipit is pinned by its dedicated L2 tripwire tests/shipit-skill.test.ts", () => {
+    expect(existsSync(join(TESTS_ROOT, "shipit-skill.test.ts"))).toBe(true);
+  });
+});
