@@ -155,20 +155,28 @@ gh label list --repo bostonaholic/team
 
 ## The kanban flow
 
-Cards move left to right through five columns. The column *is* the status of
-the work.
+Cards move left to right through the status columns. The column *is* the status
+of the work.
 
 | Column | Meaning | Move here when… |
 |--------|---------|-----------------|
 | **Backlog** | Captured but not started. Not yet committed to. | The card is created. |
+| **Bugs** | A **Backlog for `bug`-labeled issues only** — a convenience view so open bugs are easy to spot. Treated exactly like **Backlog**: captured, not started, not committed to. Not a separate stage in the flow. | A `bug` issue is captured. Use this instead of **Backlog** so it shows in the bugs view; it is picked up into **In progress** the same way. |
 | **Ready** | Shaped and ready to be picked up. Has enough detail to start. | The work is well-understood and prioritized. |
 | **In progress** | Actively being worked on. | You start work — open a worktree, run `/team`, or begin coding. |
 | **In review** | Implementation complete; a PR is open and under review. | A pull request is opened for the card. |
 | **Done** | Merged and complete. | The PR is merged. |
 
+> **The Bugs column.** `Bugs` is an entry bucket, not a stage. It is the same as
+> `Backlog` (captured-but-not-started) but reserved for `bug` issues so they are
+> easy to find at a glance. Everything that treats `Backlog` as "not started yet"
+> treats `Bugs` identically — a bug issue is groomed to `Ready` and/or picked up
+> into `In progress` from `Bugs` exactly as a non-bug issue is from `Backlog`.
+
 **Move the card as the work moves.** Pull a card into **In progress** when
-you start, not after. When the PR opens, move it to **In review**. When the
-PR merges, move it to **Done**.
+you start, not after — from `Ready`, `Backlog`, or `Bugs`, whichever it sits in.
+When the PR opens, move it to **In review**. When the PR merges, move it to
+**Done**.
 
 Dragging the card on the board UI is the simplest way. From the CLI, two small
 helper scripts in `.claude/scripts/` compose over a pipe — one resolves an
@@ -181,8 +189,9 @@ issue number to its board item ID, the other sets a Status column by name:
 
 `project-item-id.sh <issue-number>` prints the board item ID to stdout (and
 nothing else, so it pipes cleanly). `project-set-status.sh <status> [item-id]`
-takes the column name (case-insensitive: `Backlog` / `Ready` / `In progress` /
-`In review` / `Done`) and reads the item ID from stdin or a second argument.
+takes the column name (case-insensitive: `Backlog` / `Bugs` / `Ready` /
+`In progress` / `In review` / `Done`) and reads the item ID from stdin or a
+second argument.
 Both resolve every GitHub node ID at runtime, so they keep working if a field
 or option is recreated. They are dev-only helpers (under `.claude/`), not part
 of the distributed plugin.
@@ -192,8 +201,9 @@ of the distributed plugin.
 A Team run (`/team`, or the individual `/team-*` phases) maps onto the board
 like this:
 
-- **Picking up work** → the card moves from **Ready** to **In progress**
-  **automatically** as the first action of the run. When `/team` or `/team-fix`
+- **Picking up work** → the card moves to **In progress** **automatically** as
+  the first action of the run, from whichever entry column it sits in (**Ready**,
+  **Backlog**, or **Bugs**). When `/team` or `/team-fix`
   is given a ticket id or issue, its Setup step performs the generic,
   best-effort "move to in-progress" defined in `skills/team/SKILL.md` and
   `skills/team-fix/SKILL.md`. The runtime stays tracker-agnostic; **this repo's
