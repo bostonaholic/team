@@ -51,7 +51,7 @@ jobs:
       # Attacker-influenced — env-only, never inlined in run:, never echoed.
       CURRENT_TITLE: ${{ github.event.pull_request.title }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Rewrite title to match plugin.json version
         run: |

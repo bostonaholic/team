@@ -33,7 +33,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # Full history so the annotated tag points at a complete clone and
           # `git push origin <tag>` has everything it needs.

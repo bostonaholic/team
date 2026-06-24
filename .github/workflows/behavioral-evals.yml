@@ -59,7 +59,7 @@ jobs:
           # arg as a name filter (matches nothing), not a path.
           - { name: code-reviewer, file: ./tests/code-reviewer.evals.ts }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
