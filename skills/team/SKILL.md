@@ -36,18 +36,25 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
 2. **Capture `ticketId`** — if `$ARGUMENTS` starts with a ticket-like
    pattern (e.g., `<system>-<id>`), set it aside as `ticketId` for
    `task.md`. Otherwise leave `ticketId` as `null`.
-3. **Derive `<id>`:**
+3. **Move the ticket to in-progress.** If a `ticketId` or issue was
+   resolved in steps 1–2, move that ticket to its tracker's in-progress
+   state — this is the first action of the run, before any other work
+   begins. Best-effort and tracker-agnostic: if the project defines no
+   tracker-move mechanism (e.g. free-form text with no ticket, or a
+   tracker the environment can't reach), skip silently and continue.
+   Never block the pipeline on a tracker update.
+4. **Derive `<id>`:**
    - With ticket: `<TICKET>-<kebab-topic>` (e.g., `ENG-1234-add-auth`)
    - Without ticket: `<YYYY-MM-DD>-<kebab-topic>` (e.g.,
      `2026-05-01-add-auth`)
-4. **Seed the TodoWrite ledger** with one item per phase, in order:
+5. **Seed the TodoWrite ledger** with one item per phase, in order:
    `Worktree → Question → Research → Design → Structure → Plan → Implement → PR`.
    Mark `Worktree` as `in_progress`.
    See `skills/progress-tracking/SKILL.md` for the per-step tracking convention agents follow within each phase.
    The home worktree and `docs/plans/<id>/` are both created at the leading
    WORKTREE phase (see "Orchestrator-Emit Gate (leading worktree)" below) —
    not here.
-5. **Resolve the canonical artifact directory.** Because artifacts now live
+6. **Resolve the canonical artifact directory.** Because artifacts now live
    inside the worktree (authored there at the leading WORKTREE phase), run
    `git worktree list` and look for a worktree path whose basename is `<id>`
    (the `.claude/worktrees/<id>` convention). If one exists, the canonical
@@ -57,8 +64,8 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
    back to the in-place home `docs/plans/<id>/` (the fallback path from the
    leading WORKTREE phase). This is the orchestrator-side mirror of the
    recovery hooks' worktree discovery.
-6. **Resume detection.** If artifacts already exist for `<id>` under the
-   canonical artifact directory resolved in step 5, fast-forward the ledger by
+7. **Resume detection.** If artifacts already exist for `<id>` under the
+   canonical artifact directory resolved in step 6, fast-forward the ledger by
    marking completed any phases whose artifacts are present and (for
    human-gated phases) carry `approved: true`. Then mark the first incomplete
    phase `in_progress`. **Never re-dispatch a phase whose artifact already

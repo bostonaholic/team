@@ -192,8 +192,19 @@ of the distributed plugin.
 A Team run (`/team`, or the individual `/team-*` phases) maps onto the board
 like this:
 
-- **Picking up work** → move the card from **Ready** to **In progress** before
-  you launch the pipeline.
+- **Picking up work** → the card moves from **Ready** to **In progress**
+  **automatically** as the first action of the run. When `/team` or `/team-fix`
+  is given a ticket id or issue, its Setup step performs the generic,
+  best-effort "move to in-progress" defined in `skills/team/SKILL.md` and
+  `skills/team-fix/SKILL.md`. The runtime stays tracker-agnostic; **this repo's
+  concrete binding** is the board scripts under `.claude/scripts/`. For an
+  issue number `<N>`:
+  ```sh
+  .claude/scripts/project-item-id.sh <N> | .claude/scripts/project-set-status.sh "In progress"
+  ```
+  Best-effort: if the card can't be resolved (no board item, free-form
+  description), the run continues without it — the move never blocks the
+  pipeline. You no longer need to pre-move the card by hand before launching.
 - **The PR phase** (`/team-pr`) opens a draft pull request. Link that PR to the
   card and move the card to **In review**.
 - **Merge** → move the card to **Done**.

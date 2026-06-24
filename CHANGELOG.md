@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **A picked-up ticket is now moved to its tracker's in-progress state as the first action of a run.** Running `/team <issue-url>` (or `/team-fix`) on a tracked ticket previously did nothing to advance its status — the board-move workflow was documented only as a *manual* dev step ("move the card to In progress **before** you launch the pipeline"), and the distributed runtime skills had no step that performed it. The Setup phase of [`skills/team/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md) and [`skills/team-fix/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md) now carries a generic, tracker-agnostic, best-effort step: when a `ticketId` or issue is resolved, move it to in-progress before any other work begins, skipping silently when the project defines no tracker-move mechanism and never blocking the pipeline on it. The runtime stays generic (no board hardcoded); this repo's concrete binding — the `.claude/scripts/project-item-id.sh | project-set-status.sh "In progress"` pipe — is documented in [`docs/project-tracking.md`](https://github.com/bostonaholic/team/blob/main/docs/project-tracking.md), which now states the move happens automatically on pickup rather than expecting a manual pre-move. Pinned by L2 tripwires in [`tests/protocol.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/protocol.test.ts).
+
 ## [0.13.0] - 2026-06-23
 
 ### Added
