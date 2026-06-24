@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-06-24
+
 ### Fixed
 
 - **A tracked ticket now advances through its full lifecycle automatically as the work moves — In progress on pickup, In review when the PR opens, and Done on merge.** Running `/team <issue-url>` (or `/team-fix`) on a tracked ticket previously did nothing to advance its status: the board-move workflow was documented only as a *manual* dev step, and the distributed runtime skills had no step that performed any transition. Three generic, tracker-agnostic, best-effort steps now run at the right moments — **(1)** Setup in [`skills/team/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md) and [`skills/team-fix/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md) moves a resolved `ticketId`/issue to **in-progress** as the first action of a run; **(2)** the PR phase ([`skills/team-pr/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md), the `/team` PR gate, and `/team-fix` Ship) moves it to **in-review** when the draft PR opens and links the PR to the ticket (`Closes #<n>`) so the ticket auto-closes on merge; **(3)** that link makes the ticket reach **done** when the PR merges, with no board logic added to the project-agnostic [`/shipit`](https://github.com/bostonaholic/team/blob/main/skills/shipit/SKILL.md). Every step skips silently when the project defines no tracker-move mechanism and never blocks the pipeline. The runtime stays generic (no board hardcoded); this repo's concrete binding — the `.claude/scripts/project-item-id.sh | project-set-status.sh` pipe plus the board's built-in close→Done automation — is documented in [`docs/project-tracking.md`](https://github.com/bostonaholic/team/blob/main/docs/project-tracking.md), which now states each transition happens automatically rather than expecting a manual move. Pinned by L2 tripwires in [`tests/protocol.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/protocol.test.ts).
@@ -167,7 +169,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.13.1...HEAD
+[0.13.1]: https://github.com/bostonaholic/team/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/bostonaholic/team/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/bostonaholic/team/compare/v0.11.1...v0.12.0
 [0.11.1]: https://github.com/bostonaholic/team/compare/v0.11.0...v0.11.1
