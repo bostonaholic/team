@@ -2,13 +2,18 @@
 #
 # A thin backstop for land-time versioning (docs/versioning.md): version is
 # assigned by `version-bump` at land time, so a drafted PR carries no version
-# until it lands. This workflow reads the version from the PR's
-# .claude-plugin/plugin.json and rewrites the title to match — but only when
-# that version differs from the base branch's; when the version is unchanged
-# (the normal pre-land state) it does nothing (it never adds or strips a
-# prefix). It is a backstop — `version-bump` sets the title when it bumps.
-# Accepted residue: a bump that is later reverted in-branch leaves its
-# now-wrong prefix in place (cosmetic only).
+# until it lands. This workflow decides the version this PR ships from what the
+# BRANCH changed — it reads .claude-plugin/plugin.json at the PR head and
+# compares it against the version at the MERGE-BASE (the fork point), rewriting
+# the title only on a strict forward bump. When the branch did not bump the
+# version (the normal pre-land state) it does nothing (it never adds or strips a
+# prefix), no matter how far the base has advanced since the fork (#104). It is a
+# backstop — `version-bump` sets the title when it bumps. Accepted residue: a
+# bump that is later reverted in-branch leaves its now-wrong prefix in place
+# (cosmetic only).
+#
+# The decision logic lives in .github/scripts/pr-title-version.sh and is pinned
+# by tests/pr-title-version.test.ts (free, deterministic git-fixture tests).
 #
 # WHY plain `pull_request` (not pull_request_target): all PRs here come from
 # same-repo branches, where the default GITHUB_TOKEN honors
@@ -19,9 +24,11 @@
 # SECURITY: the PR title is attacker-influenced content — it enters only via
 # `env:` and is referenced as a quoted "$VAR", never inlined as a `${{ }}`
 # expression in `run:`. It is also never echoed (Actions parses
-# ::workflow-commands:: from stdout). The version is regex-validated before
-# use. Loop safety: the rewrite fires an `edited` event, which re-enters this
-# job, computes an identical title, and exits at the no-op check.
+# ::workflow-commands:: from stdout); the computed title is captured via command
+# substitution and passed to `gh pr edit --title`, never printed. The version is
+# regex-validated before use. Loop safety: the rewrite fires an `edited` event,
+# which re-enters this job, computes an identical title, and exits at the
+# already-correct no-op check.
 name: PR title sync
 
 on:
@@ -47,32 +54,28 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
-      BASE_REF: ${{ github.event.pull_request.base.ref }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
       # Attacker-influenced — env-only, never inlined in run:, never echoed.
       CURRENT_TITLE: ${{ github.event.pull_request.title }}
     steps:
+      # fetch-depth: 0 so `git merge-base` can resolve the fork point of the
+      # head and base commits.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Rewrite title to match plugin.json version
         run: |
           set -euo pipefail
-          SEMVER_RE='^[0-9]+\.[0-9]+\.[0-9]+$'
-          V=$(jq -r .version .claude-plugin/plugin.json)
-          grep -qE "$SEMVER_RE" <<<"$V" \
-            || { echo "::error::plugin.json version is not 3-part semver"; exit 1; }
-          git fetch origin "$BASE_REF" --depth=1 --quiet
-          BASE_V=$(git show FETCH_HEAD:.claude-plugin/plugin.json | jq -r .version)
-          grep -qE "$SEMVER_RE" <<<"$BASE_V" \
-            || { echo "::error::base plugin.json version is not 3-part semver"; exit 1; }
-          if [ "$V" = "$BASE_V" ]; then
-            echo "Version unchanged vs base ($V); leaving the title alone."
+          WANT=$(.github/scripts/pr-title-version.sh)
+          if [ -z "$WANT" ]; then
+            echo "No forward version bump vs the fork point; leaving the title alone."
             exit 0
           fi
-          STRIPPED=$(sed -E 's/^v[0-9]+\.[0-9]+\.[0-9]+[[:space:]:]+//' <<<"$CURRENT_TITLE")
-          WANT="v${V} ${STRIPPED}"
           if [ "$WANT" = "$CURRENT_TITLE" ]; then
             echo "Title already correct; no change."
             exit 0
           fi
           gh pr edit "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --title "$WANT"
-          echo "Synced PR #$PR_NUMBER title to v$V."
+          echo "Synced PR #$PR_NUMBER title to the shipped version."

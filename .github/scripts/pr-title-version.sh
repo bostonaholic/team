@@ -37,15 +37,25 @@ HEAD_V=$(read_version "$HEAD_SHA")
 grep -qE "$SEMVER_RE" <<<"$HEAD_V" \
   || die "head plugin.json version is not 3-part semver: '$HEAD_V'"
 
-# The version this PR is measured against. (Current behavior — see #104: this
-# reads the base BRANCH TIP, which disagrees with the checked-out merge ref when
-# the PR is behind a version-bumped base, so a bump-less PR gets re-stamped.)
-BASE_V=$(read_version "$BASE_SHA")
+# Measure the version against the MERGE-BASE (the fork point), not the live base
+# tip — i.e. "did this branch move plugin.json's version relative to where it
+# forked?" (#104). Comparing against the base tip mis-fires for a bump-less PR
+# that is behind a version-bumped main: the tip has advanced, so the versions
+# differ and a stale prefix gets stamped onto a PR that shipped no bump.
+MERGE_BASE=$(git merge-base "$HEAD_SHA" "$BASE_SHA") \
+  || die "could not compute merge-base of head and base"
+BASE_V=$(read_version "$MERGE_BASE")
 grep -qE "$SEMVER_RE" <<<"$BASE_V" \
-  || die "base plugin.json version is not 3-part semver: '$BASE_V'"
+  || die "merge-base plugin.json version is not 3-part semver: '$BASE_V'"
 
-# Stamp on ANY difference vs the base tip.
-if [ "$HEAD_V" = "$BASE_V" ]; then
+# Only stamp on a STRICT FORWARD bump over the fork point. A bump-less PR
+# (HEAD_V == BASE_V) no-ops no matter how far the base has advanced; a branch
+# that lowered the version (revert) no-ops too.
+ver_gt() { # ver_gt A B -> true when A > B by semver order
+  [ "$1" = "$2" ] && return 1
+  [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -n1)" = "$1" ]
+}
+if ! ver_gt "$HEAD_V" "$BASE_V"; then
   exit 0
 fi
 

@@ -52,11 +52,44 @@ describe("ci workflows: pr-title-sync slimmed to a backstop, loop-safe (Slice 3)
     expect(text).toContain("github.actor != 'github-actions[bot]'");
   });
 
-  test("retains the version-unchanged-vs-base no-op early exit (loop safety)", () => {
-    // Slimmed, but the `version == base → no-op` early exit must survive so
-    // the workflow no-ops for bump-less PRs and never loops on its own edit.
-    const hasNoopExit = /if \[ "\$V" = "\$BASE_V" \]/.test(text);
-    expect(hasNoopExit).toBe(true);
+  test("delegates the version decision to pr-title-version.sh (#104)", () => {
+    // The branch-relative decision (head vs merge-base, strict forward bump)
+    // lives in the script so it can be pinned by deterministic git-fixture
+    // tests; the workflow only acts on its output.
+    expect(text).toContain(".github/scripts/pr-title-version.sh");
+  });
+
+  test("only edits the title when the script prints a non-empty result", () => {
+    // The empty-output → no-op early exit keeps the workflow from touching a
+    // bump-less PR's title (and from looping on its own `edited` event).
+    expect(/if \[ -z "\$WANT" \]/.test(text)).toBe(true);
+  });
+
+  test("retains the already-correct no-op early exit (loop safety)", () => {
+    // The rewrite fires an `edited` event that re-enters the job; with the
+    // title already correct it must exit without editing, so it cannot loop.
+    expect(/if \[ "\$WANT" = "\$CURRENT_TITLE" \]/.test(text)).toBe(true);
+  });
+
+  test("computes the candidate from the head SHA, not a base-tip fetch (#104)", () => {
+    // Regression fence: the misfire was reading the base BRANCH TIP. The fix
+    // measures the head against the merge-base, so the title is passed by
+    // head.sha and the old `git fetch origin "$BASE_REF"` base-tip read is gone.
+    expect(text).toContain("github.event.pull_request.head.sha");
+    expect(/git fetch origin "\$BASE_REF"/.test(text)).toBe(false);
+  });
+});
+
+describe("ci workflows: pr-title-version.sh decides by merge-base, not base tip (#104)", () => {
+  const SCRIPT = join(REPO_ROOT, ".github", "scripts", "pr-title-version.sh");
+  const src = readIf(SCRIPT);
+
+  test("pr-title-version.sh exists", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+  });
+
+  test("measures against the merge-base (fork point), not the base tip", () => {
+    expect(/git merge-base/.test(src)).toBe(true);
   });
 });
 
