@@ -34,9 +34,24 @@ case "$issue" in
   ''|*[!0-9]*) die "issue number must be numeric: '$issue'" ;;
 esac
 
-item_id="$(gh project item-list "$PROJECT_NUMBER" --owner "$OWNER" --format json \
-  | jq -r --argjson n "$issue" '.items[] | select(.content.number == $n) | .id')" \
+# `gh project item-list` defaults to 30 items; an active board has far more, so
+# a recent issue/PR (the common case for this resolver) falls past the first
+# page and was silently missed. Request a high limit. Guard against silent
+# truncation: if the board ever exceeds LIMIT, warn on stderr (stdout stays
+# pipe-clean) rather than failing to find an item that is genuinely on the board.
+LIMIT=10000
+items_json="$(gh project item-list "$PROJECT_NUMBER" --owner "$OWNER" --format json --limit "$LIMIT")" \
   || die "failed to list project items (is gh authenticated?)"
+
+total="$(printf '%s' "$items_json" | jq -r '.totalCount // (.items | length)')"
+fetched="$(printf '%s' "$items_json" | jq -r '.items | length')"
+if [ "${total:-0}" -gt "${fetched:-0}" ]; then
+  printf 'warning: board has %s items but only %s fetched (limit %s) — raise LIMIT in %s\n' \
+    "$total" "$fetched" "$LIMIT" "$(basename "$0")" >&2
+fi
+
+item_id="$(printf '%s' "$items_json" \
+  | jq -r --argjson n "$issue" '.items[] | select(.content.number == $n) | .id')"
 [ -n "$item_id" ] \
   || die "issue #$issue is not on project $PROJECT_NUMBER — add it to the board first"
 

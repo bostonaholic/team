@@ -155,20 +155,28 @@ gh label list --repo bostonaholic/team
 
 ## The kanban flow
 
-Cards move left to right through five columns. The column *is* the status of
-the work.
+Cards move left to right through the status columns. The column *is* the status
+of the work.
 
 | Column | Meaning | Move here when… |
 |--------|---------|-----------------|
 | **Backlog** | Captured but not started. Not yet committed to. | The card is created. |
+| **Bugs** | A **Backlog for `bug`-labeled issues only** — a convenience view so open bugs are easy to spot. Treated exactly like **Backlog**: captured, not started, not committed to. Not a separate stage in the flow. | A `bug` issue is captured. Use this instead of **Backlog** so it shows in the bugs view; it is picked up into **In progress** the same way. |
 | **Ready** | Shaped and ready to be picked up. Has enough detail to start. | The work is well-understood and prioritized. |
 | **In progress** | Actively being worked on. | You start work — open a worktree, run `/team`, or begin coding. |
 | **In review** | Implementation complete; a PR is open and under review. | A pull request is opened for the card. |
 | **Done** | Merged and complete. | The PR is merged. |
 
+> **The Bugs column.** `Bugs` is an entry bucket, not a stage. It is the same as
+> `Backlog` (captured-but-not-started) but reserved for `bug` issues so they are
+> easy to find at a glance. Everything that treats `Backlog` as "not started yet"
+> treats `Bugs` identically — a bug issue is groomed to `Ready` and/or picked up
+> into `In progress` from `Bugs` exactly as a non-bug issue is from `Backlog`.
+
 **Move the card as the work moves.** Pull a card into **In progress** when
-you start, not after. When the PR opens, move it to **In review**. When the
-PR merges, move it to **Done**.
+you start, not after — from `Ready`, `Backlog`, or `Bugs`, whichever it sits in.
+When the PR opens, move it to **In review**. When the PR merges, move it to
+**Done**.
 
 Dragging the card on the board UI is the simplest way. From the CLI, two small
 helper scripts in `.claude/scripts/` compose over a pipe — one resolves an
@@ -181,8 +189,9 @@ issue number to its board item ID, the other sets a Status column by name:
 
 `project-item-id.sh <issue-number>` prints the board item ID to stdout (and
 nothing else, so it pipes cleanly). `project-set-status.sh <status> [item-id]`
-takes the column name (case-insensitive: `Backlog` / `Ready` / `In progress` /
-`In review` / `Done`) and reads the item ID from stdin or a second argument.
+takes the column name (case-insensitive: `Backlog` / `Bugs` / `Ready` /
+`In progress` / `In review` / `Done`) and reads the item ID from stdin or a
+second argument.
 Both resolve every GitHub node ID at runtime, so they keep working if a field
 or option is recreated. They are dev-only helpers (under `.claude/`), not part
 of the distributed plugin.
@@ -192,11 +201,37 @@ of the distributed plugin.
 A Team run (`/team`, or the individual `/team-*` phases) maps onto the board
 like this:
 
-- **Picking up work** → move the card from **Ready** to **In progress** before
-  you launch the pipeline.
-- **The PR phase** (`/team-pr`) opens a draft pull request. Link that PR to the
-  card and move the card to **In review**.
-- **Merge** → move the card to **Done**.
+- **Picking up work** → the card moves to **In progress** **automatically** as
+  the first action of the run, from whichever entry column it sits in (**Ready**,
+  **Backlog**, or **Bugs**). When `/team` or `/team-fix`
+  is given a ticket id or issue, its Setup step performs the generic,
+  best-effort "move to in-progress" defined in `skills/team/SKILL.md` and
+  `skills/team-fix/SKILL.md`. The runtime stays tracker-agnostic; **this repo's
+  concrete binding** is the board scripts under `.claude/scripts/`. For an
+  issue number `<N>`:
+  ```sh
+  .claude/scripts/project-item-id.sh <N> | .claude/scripts/project-set-status.sh "In progress"
+  ```
+  Best-effort: if the card can't be resolved (no board item, free-form
+  description), the run continues without it — the move never blocks the
+  pipeline. You no longer need to pre-move the card by hand before launching.
+- **Opening the PR** → the card moves to **In review** **automatically**. The PR
+  phase (`/team-pr`, the `/team` PR gate, and `/team-fix` Ship) performs the
+  generic, best-effort "move to in-review" defined in those skills, and links
+  the PR to the issue (`Closes #<N>` in the PR body) so the issue closes on
+  merge. **This repo's concrete binding** is the same board scripts. For an
+  issue number `<N>`:
+  ```sh
+  .claude/scripts/project-item-id.sh <N> | .claude/scripts/project-set-status.sh "In review"
+  ```
+  Best-effort: if the card can't be resolved, the run continues — the move never
+  blocks opening the PR.
+- **Merge** → the card moves to **Done** **automatically**. Because the PR
+  carries `Closes #<N>`, merging it closes the issue, and the board's built-in
+  "an item is closed → Done" automation moves the card. No manual move and no
+  `/shipit` board logic is involved — `/shipit` stays tracker-agnostic. (A PR
+  added to the board as its own item is likewise moved to **Done** by the
+  built-in "pull request merged → Done" automation.)
 
 The pipeline persists its own intermediate state as artifacts in
 `docs/plans/<id>/` and tracks live in-session progress with TodoWrite — see

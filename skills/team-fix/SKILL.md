@@ -54,16 +54,23 @@ No Question. No Research. No Design. No Structure. No Plan. No human gate.
    ground in repo context, then ask only for genuine gaps, per the
    **"discover, don't demand"** rule in `## Input`. A ticket id or issue URL is
    resolved as `## Input` describes (`gh issue view` for URLs).
-2. **Derive `<id>`** the same way `/team` does (ticket-prefixed or
+2. **Move the ticket to in-progress.** If the input resolved to a ticket id
+   or issue, move that ticket to its tracker's in-progress state — this is
+   the first action of the fix, before any other work begins. Best-effort
+   and tracker-agnostic: if the project defines no tracker-move mechanism
+   (e.g. a free-form bug description, or a tracker the environment can't
+   reach), skip silently and continue. Never block the pipeline on a tracker
+   update.
+3. **Derive `<id>`** the same way `/team` does (ticket-prefixed or
    date-prefixed kebab slug). Create `docs/plans/<id>/`.
-3. Write a minimal `docs/plans/<id>/task.md` with the standard frontmatter
+4. Write a minimal `docs/plans/<id>/task.md` with the standard frontmatter
    (`topic`, `date`, `phase: task`, `ticketId`) plus a brief description
    of the bug. The `topic` value is the kebab portion of `<id>` — i.e.
    `<id>` minus the `<TICKET>-` or `<YYYY-MM-DD>-` prefix. Never use the
    ticket id, the date, or a re-worded description as the topic.
    `ticketId` lives only on `task.md`. This is the single durable record
    for the fix and lets any `/team-*` command pick it up if interrupted.
-4. **Seed the TodoWrite ledger** with the bug-fix phases:
+5. **Seed the TodoWrite ledger** with the bug-fix phases:
    `Reproduce → Red (failing test) → Green (minimal fix) → Verify → Ship`.
    Mark `Reproduce` as `in_progress`.
    See `skills/progress-tracking/SKILL.md` for the per-step tracking convention agents follow within each phase.
@@ -87,9 +94,14 @@ assertion failure, not a crash. Do not proceed to the fix until confirmed.
 2. **Open a draft PR automatically — do not stop to ask.** If working on
    a branch, push it and open the PR as a **draft** (`gh pr create
    --draft`). If not on a branch, commit to the working branch.
-3. If `ticketId` is non-null in `task.md`'s frontmatter, surface it so
-   the user can close the ticket. The orchestrator does not close
-   tickets automatically.
+3. **Ticket → in-review.** If `ticketId` is non-null in `task.md`'s
+   frontmatter: **link the PR to the ticket** so the tracker closes it —
+   and any board automation moves it to its done state — when the PR merges
+   (GitHub: `Closes #<n>` in the PR body); then **move the ticket to the
+   tracker's in-review state**. Best-effort and tracker-agnostic — skip
+   silently if the project defines no tracker-move mechanism; never block.
+   Because the link auto-closes the ticket on merge, the orchestrator never
+   closes tickets by hand. Surface the `ticketId` in the completion report.
 4. Mark all TodoWrite items complete.
 
 ## Aborting

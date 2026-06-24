@@ -172,3 +172,8 @@ Report the merge result (or the failing-check / timeout / branch-protection
 reason if it stopped short). If the project publishes a release on merge, that
 runs asynchronously after the merge — point the operator at `gh run watch` (or
 `gh run list`) so they can observe it rather than assuming it is already done.
+
+`shipit` touches no tracker or board — it stays generic. If the PR links a
+ticket (e.g. `Closes #<n>`), the tracker closes that ticket when the merge
+lands, and any board automation moves it to its done state on its own; that is
+a property of the link the PR phase added, not an action `shipit` performs.
