@@ -94,9 +94,14 @@ assertion failure, not a crash. Do not proceed to the fix until confirmed.
 2. **Open a draft PR automatically — do not stop to ask.** If working on
    a branch, push it and open the PR as a **draft** (`gh pr create
    --draft`). If not on a branch, commit to the working branch.
-3. If `ticketId` is non-null in `task.md`'s frontmatter, surface it so
-   the user can close the ticket. The orchestrator does not close
-   tickets automatically.
+3. **Ticket → in-review.** If `ticketId` is non-null in `task.md`'s
+   frontmatter: **link the PR to the ticket** so the tracker closes it —
+   and any board automation moves it to its done state — when the PR merges
+   (GitHub: `Closes #<n>` in the PR body); then **move the ticket to the
+   tracker's in-review state**. Best-effort and tracker-agnostic — skip
+   silently if the project defines no tracker-move mechanism; never block.
+   Because the link auto-closes the ticket on merge, the orchestrator never
+   closes tickets by hand. Surface the `ticketId` in the completion report.
 4. Mark all TodoWrite items complete.
 
 ## Aborting

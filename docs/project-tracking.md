@@ -205,9 +205,23 @@ like this:
   Best-effort: if the card can't be resolved (no board item, free-form
   description), the run continues without it — the move never blocks the
   pipeline. You no longer need to pre-move the card by hand before launching.
-- **The PR phase** (`/team-pr`) opens a draft pull request. Link that PR to the
-  card and move the card to **In review**.
-- **Merge** → move the card to **Done**.
+- **Opening the PR** → the card moves to **In review** **automatically**. The PR
+  phase (`/team-pr`, the `/team` PR gate, and `/team-fix` Ship) performs the
+  generic, best-effort "move to in-review" defined in those skills, and links
+  the PR to the issue (`Closes #<N>` in the PR body) so the issue closes on
+  merge. **This repo's concrete binding** is the same board scripts. For an
+  issue number `<N>`:
+  ```sh
+  .claude/scripts/project-item-id.sh <N> | .claude/scripts/project-set-status.sh "In review"
+  ```
+  Best-effort: if the card can't be resolved, the run continues — the move never
+  blocks opening the PR.
+- **Merge** → the card moves to **Done** **automatically**. Because the PR
+  carries `Closes #<N>`, merging it closes the issue, and the board's built-in
+  "an item is closed → Done" automation moves the card. No manual move and no
+  `/shipit` board logic is involved — `/shipit` stays tracker-agnostic. (A PR
+  added to the board as its own item is likewise moved to **Done** by the
+  built-in "pull request merged → Done" automation.)
 
 The pipeline persists its own intermediate state as artifacts in
 `docs/plans/<id>/` and tracks live in-session progress with TodoWrite — see
