@@ -4,14 +4,22 @@
 # pass/fail and cost. Selection (which evals run)
 # is decided by the harness from `git diff <base>...HEAD` against each eval's
 # touchfiles (tests/helpers/touchfiles.ts) — cost scales with the diff, NOT the
-# whole suite. The weekly full periodic run stays in behavioral-evals.yml.
+# whole suite. The weekly full periodic run stays in periodic-evals.yml.
 #
 # ADVISORY: includes stochastic periodic evals, so this is intentionally NOT a
 # required merge check (TESTING.md: stochastic checks must not gate merges).
 #
-# SECURITY: same-repo PRs only. Fork PRs lack the EVALS_ANTHROPIC_API_KEY secret
-# and a write token, so both jobs are guarded on head.repo (mirrors
-# pr-title-sync.yml). No pull_request_target — avoids the secret-exfil surface.
+# SECURITY: same-repo PRs only, AND trusted authors only. Fork PRs lack the
+# EVALS_ANTHROPIC_API_KEY secret and a write token, so both jobs are guarded on
+# head.repo (mirrors pr-title-sync.yml). Both jobs additionally gate on an
+# author-association allowlist (OWNER/MEMBER/COLLABORATOR — the verbatim
+# TRUST_EXPR), so untrusted same-repo authors (CONTRIBUTOR/FIRST_TIME_CONTRIBUTOR/
+# NONE) are skipped and never spend the key. run-evals declares
+# `environment: evals` so the env-scoped EVALS_ANTHROPIC_API_KEY is reachable on
+# trusted same-repo PRs — this requires the `evals` environment's main-only
+# deployment-branch policy to be removed (out-of-band maintainer step); without
+# that, gated PRs fail at the deploy gate. No pull_request_target — avoids the
+# secret-exfil surface.
 name: PR evals
 
 on:
@@ -27,7 +35,8 @@ jobs:
     name: Diff-selected evals (${{ matrix.suite.name }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && (!startsWith(github.event_name, 'pull_request') || contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)) }}
+    environment: evals
     permissions:
       contents: read
     strategy:
@@ -81,7 +90,7 @@ jobs:
   report:
     name: Post results comment
     needs: run-evals
-    if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    if: ${{ always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && (!startsWith(github.event_name, 'pull_request') || contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

@@ -191,7 +191,7 @@ Manually: `bun run eval:compare evals/results/<a>.json evals/results/<b>.json`
 
 Two workflows run the evals:
 
-- **`.github/workflows/evals.yml`** runs on every pull request. It runs the
+- **`.github/workflows/pr-evals.yml`** runs on every pull request. It runs the
   evals the diff selects (`git diff <base>...HEAD` against each eval's
   touchfiles — no `EVALS_ALL`/`EVALS_TIER`, so cost scales with the change) and
   upserts one `## PR Evals` comment on the PR with a per-suite pass/fail table
@@ -201,7 +201,7 @@ Two workflows run the evals:
   [TESTING.md](../TESTING.md)) — and runs on **same-repo PRs only** (fork PRs
   lack the `EVALS_ANTHROPIC_API_KEY` secret and a write token). When the diff
   selects nothing, the comment says so.
-- **`.github/workflows/behavioral-evals.yml`** runs the full periodic tier
+- **`.github/workflows/periodic-evals.yml`** runs the full periodic tier
   weekly (Monday 06:00 UTC) and on manual dispatch, uploading results as
   artifacts.
 
@@ -248,11 +248,16 @@ field throughout.
 Any **new CI step** that consumes `EVALS_ANTHROPIC_API_KEY` or spawns
 `claude` on a `pull_request` event MUST carry the canonical trust `if:` so
 untrusted authors never spend tokens. Copy the expression from the live
-job-level `if:` on the `behavioral-evals` job in
-`.github/workflows/behavioral-evals.yml` — that is the authoritative,
+job-level `if:` on the `periodic-evals` job in
+`.github/workflows/periodic-evals.yml` — that is the authoritative,
 event-aware copy source (`!startsWith(github.event_name, 'pull_request') ||
 contains(...)`). The contract comment on the `harness-checks` job in
 `.github/workflows/harness-checks.yml` carries the same expression for
 reference, but the live `if:` is the canonical form to copy.
+
+Both `periodic-evals.yml` and `pr-evals.yml` now carry live copies of this
+canonical trust `if:` expression. They must stay byte-identical, and the
+`TRUST_EXPR` tripwire in `tests/static-gate.test.ts` enforces that — any drift
+fails the free gate.
 
 Run `bun run eval:list` to see the registered tests and their tiers.
