@@ -119,6 +119,23 @@ describe("EvalCollector", () => {
     expect(mid.passed).toBe(1);
   });
 
+  test("collapses retried attempts to the final post-retry outcome", async () => {
+    // Bun's `--retry` re-runs the test body, so addTest fires once per
+    // attempt. A flap that recovers on retry must record only the final
+    // outcome — not a stale intermediate failure beside the recovered pass.
+    const c = new EvalCollector("e2e", scratchDir);
+    c.addTest(entry("flaky", { passed: false })); // attempt 1: missed the bug
+    c.addTest(entry("flaky", { passed: true })); // retry: caught it
+    const path = await c.finalize();
+
+    const result = JSON.parse(readFileSync(path, "utf8")) as EvalResult;
+    expect(result.tests.filter((t) => t.name === "flaky").length).toBe(1);
+    expect(result.total_tests).toBe(1);
+    expect(result.passed).toBe(1);
+    expect(result.failed).toBe(0);
+    expect(result.tests[0]?.passed).toBe(true);
+  });
+
   test("finalize populates budgetRegressions vs the previous run", async () => {
     process.env.EVALS_BRANCH = "budget-branch";
     // Seed a previous run with a low tool-call count.
