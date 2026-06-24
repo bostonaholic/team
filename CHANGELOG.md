@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-06-23
+
 ### Added
 
 - **Nested sub-agent support for four pipeline agents, version-gated on Claude Code >= 2.1.172.** Claude Code v2.1.172 lets sub-agents spawn their own sub-agents (up to 5 levels deep); the plugin now uses this in two patterns. *Context-economy scouts:* `researcher` and `implementer` may fan out read-only `Explore` / `team:file-finder` helpers to absorb bulk reading that would otherwise flood their own context (the researcher's scouts inherit the research-isolation invariant — scout prompts are built only from verbatim `questions.md` text and `repos.md` paths). *Skeptic verification:* `code-reviewer` and `security-reviewer` hand each hard-gate finding (Blocking / CRITICAL / HIGH) to a fresh `general-purpose` sub-agent as a neutral falsifiable claim to refute before reporting — default-keep, so the pass removes false positives but can never remove a true positive; a false hard-gate finding costs an entire review round, so the pass pays for itself. All guardrails live in the new `nested-agents` methodology skill (depth budget, read-only helpers, no `openQuestions` envelopes from nested helpers, neutral-claim rule, 4-helper cap), preloaded by the four agents via `skills:` frontmatter. Nesting is an **optimization, never a dependency**, gated on Claude Code >= 2.1.172: the universal gate is `Agent`-tool presence (the platform withholds the tool from sub-agents below that floor, so a read-only agent like `researcher` that has no `Bash` simply works inline), and agents that also hold `Bash` additionally run a bundled, zero-dependency comparator ([`skills/nested-agents/supports-nesting.mjs`](https://github.com/bostonaholic/team/blob/main/skills/nested-agents/supports-nesting.mjs)) that parses `claude --version` against a single-source-of-truth `MIN_VERSION` and exits `supported`/`unsupported`. The comparator is **fail-closed** — an older release, unrecognizable version output, or an environment where it cannot run all route the agent to its inline path — so on Claude Code versions without nesting every agent degrades to its previous inline behavior, and the orchestrator's phase table, gates, and envelope protocol are untouched. `skills/agent-open-questions/SKILL.md` states explicitly that the envelope protocol works one level deep and nested helpers must never emit envelopes; `docs/architecture.md` §10 records the policy plus the ship-later roadmap (verify-coordinator, research-coordinator, slice-level parallel sub-implementers). The pure comparison core is unit-tested at L1 and the skill/guardrail contract (allowlist of granted agents, version-gate section, floor named, fallback wired) is pinned by static tripwires in [`tests/nested-agents.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/nested-agents.test.ts), including a drift guard that fails the build if the prose floor and the script constant ever disagree.
@@ -161,7 +163,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/bostonaholic/team/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/bostonaholic/team/compare/v0.11.1...v0.12.0
 [0.11.1]: https://github.com/bostonaholic/team/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/bostonaholic/team/compare/v0.10.0...v0.11.0
