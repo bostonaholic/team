@@ -448,9 +448,12 @@ describe("qrspi-workflow SOFT gate aligns with severity tiers (issue #68)", () =
   }
 
   test("no longer lists code-review or ux-reviewer feedback as SOFT examples", () => {
-    const text = read(QRSPI);
-    expect(/code review suggestions/i.test(text)).toBe(false);
-    expect(/UX review feedback/i.test(text)).toBe(false);
+    const soft = softSection(read(QRSPI));
+    // Fail loud if the SOFT subsection vanished, so the absence assertions
+    // below can't pass vacuously against an empty string.
+    expect(soft.length).toBeGreaterThan(0);
+    expect(/code review suggestions/i.test(soft)).toBe(false);
+    expect(/UX review feedback/i.test(soft)).toBe(false);
   });
 
   test("SOFT section cross-references the code-review severity-tier table", () => {
@@ -458,6 +461,18 @@ describe("qrspi-workflow SOFT gate aligns with severity tiers (issue #68)", () =
     expect(soft.length).toBeGreaterThan(0);
     expect(soft).toContain("code-review/SKILL.md");
     expect(soft).toContain("Severity Tiers and the Auto-Fix Boundary");
+  });
+
+  // Drift guard: the SOFT section points at a heading by name. If that heading
+  // is renamed in code-review/SKILL.md, the cross-reference silently rots —
+  // fail the build here so the rename and the reference stay in sync.
+  test("the cross-referenced heading still exists in code-review/SKILL.md", () => {
+    const codeReview = read(
+      join(REPO_ROOT, "skills", "code-review", "SKILL.md"),
+    );
+    expect(
+      /^#{1,4} Severity Tiers and the Auto-Fix Boundary$/m.test(codeReview),
+    ).toBe(true);
   });
 });
 
