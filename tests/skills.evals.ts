@@ -44,6 +44,12 @@ const STRUCTURAL_SKILLS = new Set<string>([
   "git-commit",
   "agent-open-questions",
   "progress-tracking",
+  // nested-agents is a guardrail skill: its contract is that a dispatch plan
+  // applies the rules (read-only helpers, inline fallback, neutral verification
+  // claims), which the deterministic detection_rate verifies. A faithful plan
+  // is terse, so completeness/actionability would mis-penalize it — gate on
+  // clarity only, like the other protocol skills above.
+  "nested-agents",
 ]);
 
 // The 18 methodology skills. Each gets its own selectable eval.
@@ -55,6 +61,7 @@ const SKILLS = [
   "eng-design-doc-review",
   "engineering-standards",
   "git-commit",
+  "nested-agents",
   "product-requirements-doc",
   "product-thinking",
   "progress-tracking",

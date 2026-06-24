@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "nested-agents-guardrails",
+      "description": "Output must apply the nested-agents guardrails: dispatch read-only helpers, treat nesting as an optimization with an inline fallback when the Agent tool is unavailable, and ask a verification helper to refute a neutrally-stated claim.",
+      "detection_hint": "read-?only\\s+(helper|sub-?agent|dispatch|prompt)|\\b(Explore|file-finder)\\b|optimization,?\\s+(never|not)\\s+a\\s+dependency|fall\\s*back\\b|do(ing)?\\s+(the\\s+work\\s+)?(it\\s+)?(yourself\\s+)?inline|inline\\s+(myself|yourself|instead)|never\\s+stall|refute|neutral|falsifiable"
+    }
+  ],
+  "minimum_detection": 1
+}

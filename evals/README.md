@@ -32,15 +32,17 @@ technical-writer, ux-reviewer, implementer.
 artifacts captured into `input.md` — never live pipeline output. The frozen
 input is what stops `structure-planner` (and friends) from grading themselves.
 
-**29 skills.** Skills split into two groups:
+**30 skills.** Skills split into two groups:
 
-- **18 methodology skills** (loaded by agents) get behavior evals via the
+- **19 methodology skills** (loaded by agents) get behavior evals via the
   skill-harness pattern: `tests/skills.evals.ts` is one parameterized suite
   that, for each skill, loads its `SKILL.md` into a generic agent on a
   synthetic task and asserts the skill measurably shifts the output (e.g.
   `git-commit` -> conventional-commit subject; `test-first-development` ->
-  test precedes implementation). Each skill registers its own
-  `skill:<name>` case so diff-gating and the CI matrix can target one skill.
+  test precedes implementation; `nested-agents` -> a dispatch plan that keeps
+  helpers read-only and falls back to inline work when the `Agent` tool is
+  absent). Each skill registers its own `skill:<name>` case so diff-gating and
+  the CI matrix can target one skill.
 - **11 orchestration skills** (the `/team-*` routers + `worktree-isolation`)
   get a free structural contract check in `tests/skill-contracts.test.ts`
   (frontmatter keys, required `## ` sections, resolvable referenced paths) —
@@ -183,6 +185,13 @@ cron.
 The `EVALS_TIER=gate|periodic` env filters which fixtures run when driving the
 suites directly with `bun test`; the gate-evals script enumerates the gate set
 itself from `E2E_TIERS`.
+
+Separately, `.github/workflows/evals.yml` runs the **diff-selected** evals on
+every same-repo PR and upserts a single advisory `## PR Evals` comment
+(per-suite pass/fail + cost) rendered by `scripts/eval-report.ts`. It is
+**advisory only** — it can run stochastic periodic suites, so it never gates a
+merge — and is skipped on fork PRs, which lack the `EVALS_ANTHROPIC_API_KEY`
+secret.
 
 ## Adding an eval
 
