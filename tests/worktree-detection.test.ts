@@ -18,10 +18,10 @@ const TEAM_WT = join(REPO_ROOT, "skills", "team-worktree", "SKILL.md");
 // section's sh code block (the one comparing --git-dir to --git-common-dir).
 function detectionSnippet(): string {
   const text = read(TEAM_WT);
-  const blocks = [...text.matchAll(/```sh\n([\s\S]*?)```/g)].map((m) => m[1]);
+  const blocks = [...text.matchAll(/```sh\n([\s\S]*?)```/g)].map((m) => m[1]!);
   const matches = blocks.filter((b) => b.includes("--git-common-dir"));
   expect(matches.length).toBe(1); // guard: exactly one documented detection block
-  return matches[0];
+  return matches[0]!;
 }
 
 // Run the documented snippet against a repo path. Detection prints
