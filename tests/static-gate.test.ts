@@ -323,6 +323,31 @@ describe("static gate: PR evals workflow", () => {
     expect(workflow).toContain('startswith("## PR Evals")');
     expect(reportScript).toContain('"## PR Evals"');
   });
+
+  test("declares environment: evals on the secret-consuming job", () => {
+    // Without `environment: evals` the env-scoped EVALS_ANTHROPIC_API_KEY
+    // resolves empty and the harness fails loud — every diff-selected PR eval
+    // goes red with a credential error instead of a real signal.
+    expect(/^\s*environment:\s*evals\s*$/m.test(workflow)).toBe(true);
+  });
+
+  test("carries the verbatim trust expression", () => {
+    // The author-gate must use the canonical TRUST_EXPR byte-for-byte; a
+    // one-byte drift breaks the cross-workflow contract the gate relies on.
+    expect(workflow).toContain(TRUST_EXPR);
+  });
+
+  test("author gate wired as a live if:", () => {
+    // The author allowlist must be a live `if:` condition, not a comment, so
+    // an untrusted same-repo author cannot spend the production key.
+    expect(/^\s*if:.*author_association/m.test(workflow)).toBe(true);
+  });
+
+  test("retains the same-repo head.repo guard", () => {
+    // The fork exclusion must survive the author-gate edit: forks fail this
+    // guard and never reach the secret.
+    expect(workflow).toContain("head.repo.full_name == github.repository");
+  });
 });
 
 describe("static gate: rubrics", () => {

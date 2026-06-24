@@ -27,7 +27,8 @@ jobs:
     name: Diff-selected evals (${{ matrix.suite.name }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && (!startsWith(github.event_name, 'pull_request') || contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)) }}
+    environment: evals
     permissions:
       contents: read
     strategy:
@@ -81,7 +82,7 @@ jobs:
   report:
     name: Post results comment
     needs: run-evals
-    if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    if: ${{ always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && (!startsWith(github.event_name, 'pull_request') || contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
