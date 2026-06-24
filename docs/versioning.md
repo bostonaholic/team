@@ -40,14 +40,42 @@ bullets until the moment it lands. Because `version-bump` runs only at land and
 one PR lands at a time, the assigned number is always free — the serialization
 *is* the collision defense.
 
+## Only runtime changes bump (the runtime-vs-dev gate)
+
+The version, changelog, and release exist for **plugin end users**, so a bump is
+warranted **only when a PR changes the distributed plugin** — `agents/`,
+`skills/`, `hooks/`, or `.claude-plugin/` *content* (the
+[Runtime vs. Development](../AGENTS.md) split). Contributor-facing /
+plugin-developer infrastructure — `.github/`, `.claude/`, `docs/`, `tests/`,
+`evals/`, build tooling — **never bumps**, regardless of its conventional-commit
+type. A `ci:`/`docs:`/`test:`/`chore:` PR that ships no runtime change lands with
+**no bump, no changelog cut, and a plain conventional title** (precedent:
+`710d44c` CI, `7d2e218` docs, `0821129` evals `feat:`).
+
+This is the first thing `version-bump` checks (its **step 0**) and is enforced
+deterministically in CI by `.github/scripts/version-bump-required.sh` (pinned by
+`tests/version-bump-required.test.ts`): a dev-only diff that bumped, or a runtime
+diff that did not, **fails the PR**. It measures "did this branch bump?" against
+the merge-base (fork point), so a bump-less PR behind a version-bumped `main`
+reads correctly as "no bump" (the same branch-relative measure as
+[PR title sync](#pr-title)).
+
+> **Regression #120.** `version-bump` once treated *every* PR as bump-worthy and
+> bumped #118 (a `.github/`-only CI fix) `0.13.1 → 0.13.2`, cutting a changelog
+> section. The gate above removes the judgment call.
+
 ## The bump sequence (`version-bump`)
 
 Run the dev `version-bump` skill against current `main`, on the branch you
 intend to land:
 
-1. Decides the bump level from the PR's commits (3-part
+0. **Runtime-vs-dev gate.** If the PR changes no runtime files, stop here: no
+   bump, no changelog cut, plain title — go straight to `/shipit`. Only a
+   runtime change continues to the steps below.
+1. Decides the bump level from the PR's **runtime** commits (3-part
    [SemVer](https://semver.org): breaking → major, `feat:` → minor, everything
-   else → patch).
+   else → patch). The commit type only picks the *level* once step 0 has
+   established that a bump is warranted at all.
 2. Computes the next free version (`next-version.sh`).
 3. Bumps the four version strings.
 4. **Cuts the changelog section**: moves the `[Unreleased]` body into a dated
@@ -166,6 +194,7 @@ can catch it:
 
 | Check | Layer | Where |
 |-------|-------|-------|
+| Runtime-vs-dev bump invariant — a runtime diff must bump; a dev-only diff must not (branch-relative to the fork point) | CI (needs PR context) + L3/L4 git-fixture test (free) | `.github/scripts/version-bump-required.sh`, `tests/version-bump-required.test.ts` |
 | Four version strings agree; strict semver (holds on every commit, drafted or landed) | L2 tripwire (free, every `bun test`) | `tests/version-consistency.test.ts` |
 | Released-section + footer-compare-link invariants hold for the assigned version — run after the changelog cut, before the commit | Land-time assertion (`version-bump`) | `.claude/skills/version-bump/SKILL.md` |
 | Title prefix matches the version — only when the branch bumped the version forward of its merge-base/fork point (after `version-bump` bumps); no-op otherwise | CI (needs PR context) | `.github/workflows/pr-title-sync.yml` |

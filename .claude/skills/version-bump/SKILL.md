@@ -37,20 +37,72 @@ Landing a Team PR is two steps, in order:
 Run this skill **before** `/shipit`, against the version of `main` you intend to
 land onto.
 
+**The bump is conditional, not universal.** Step 0 below decides whether this PR
+warrants a bump at all: only PRs that change the **distributed plugin** bump.
+A dev-only PR (CI, docs, tests, evals, `.claude/` tooling) lands with no bump and
+no changelog cut — run step 0, see it say "no bump", and go straight to `/shipit`
+with the plain conventional title.
+
 ## Steps
 
+### 0. Runtime-vs-dev gate — does this PR warrant a bump at all?
+
+**Run this before everything else. Most steps below only apply if it says yes.**
+
+The version, changelog, and GitHub release exist for **plugin end users** —
+people who install Team and run `/team`. They are driven *only* by changes to the
+**distributed plugin**. Contributor-facing / plugin-developer infrastructure does
+not move the version, no matter what conventional-commit type it carries.
+
+Using the **Runtime vs. Development** split in `CLAUDE.md`:
+
+- **Runtime (bump-worthy):** `agents/`, `skills/`, `hooks/`, and
+  `.claude-plugin/` *content* (a real change to the manifest, not the bare
+  `"version"` field).
+- **Development (never bumps):** `.github/`, `.claude/`, `docs/`, `tests/`,
+  `evals/`, `package.json`/`bun.lock` tooling — everything that only validates or
+  builds the plugin.
+
+Check what this PR actually changed:
+
+```bash
+.github/scripts/version-bump-required.sh   # HEAD_SHA/BASE_SHA from the PR; deterministic gate
+# or, locally, just look:
+git diff origin/main...HEAD --name-only
+```
+
+- **No runtime files changed → DO NOT BUMP.** Skip every step below. Leave the
+  version untouched, do **not** cut the changelog, and land with the plain
+  conventional title (`<type>: <subject>`). Precedent: `710d44c` (CI), `7d2e218`
+  (docs), `0821129` (evals `feat:`) all landed plain. Then go straight to
+  `/shipit`.
+- **Runtime files changed → continue to step 1.**
+
+This is a hard gate, not a judgment call: the same check runs deterministically in
+CI (`.github/scripts/version-bump-required.sh`, pinned by
+`tests/version-bump-required.test.ts`) and **fails the PR** if a dev-only diff
+bumped, or a runtime diff did not.
+
 ### 1. Decide the bump level
+
+> Reached **only when step 0 said a bump is warranted** (the PR changed runtime
+> files). The level question is never "does this bump?" — step 0 already
+> answered that — only "how big is the bump?"
 
 ```bash
 git log origin/main..HEAD --oneline
 git diff origin/main...HEAD --stat
 ```
 
-Pick the highest-impact change in the PR:
+Pick the highest-impact **runtime** change in the PR:
 
 - **major** — breaking change to the plugin's contract (commands, artifact formats, hook behavior).
 - **minor** — new backward-compatible capability (`feat:`).
 - **patch** — everything else (`fix:`, `docs:`, `chore:`, `refactor:`, `test:`, `ci:`).
+
+The conventional-commit type only picks the *level*; it never overrides step 0.
+A `ci:`/`test:`/`docs:`/`chore:` commit that ships **no runtime change** never
+reaches this table — it already stopped at step 0 with no bump.
 
 State the chosen level and the reasoning. If genuinely ambiguous, ask.
 
@@ -105,12 +157,16 @@ deciding whether to upgrade. Any links must be **absolute URLs**: relative paths
 (e.g. `docs/versioning.md`) render as dead links on the release page (see
 `skills/changelog/SKILL.md`).
 
-**Empty-`[Unreleased]` edge case.** If the `[Unreleased]` body is empty,
-**derive at least one bullet from the PR's commits** (`feat:`/`fix:`/`perf:`/
-`security:` per `skills/changelog/SKILL.md` style). If no user-facing commit
-exists to derive a bullet from, **stop and ask the user to add an entry** —
-never write an empty section (`release-on-merge.yml` errors on empty release
-notes).
+**Empty-`[Unreleased]` edge case.** An empty `[Unreleased]` on a PR that reached
+this step (it passed step 0, so it *did* change runtime files) means the
+user-facing bullet was simply never written. **Derive at least one bullet from
+the PR's runtime commits** (`feat:`/`fix:`/`perf:`/`security:` per
+`skills/changelog/SKILL.md` style). Never write an empty section
+(`release-on-merge.yml` errors on empty release notes).
+
+Empty `[Unreleased]` **and** no runtime change is not this case — that PR should
+have stopped at **step 0** with no bump and no changelog cut. Do not invent a
+bullet to justify a bump that step 0 already declined; go back and land plain.
 
 ### 5. Land-time consistency assertion
 

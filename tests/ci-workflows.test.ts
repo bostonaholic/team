@@ -21,6 +21,7 @@ const VERSION_GATE = WF("version-gate.yml");
 const PR_TITLE_SYNC = WF("pr-title-sync.yml");
 const RELEASE_ON_MERGE = WF("release-on-merge.yml");
 const HARNESS_CHECKS = WF("harness-checks.yml");
+const VERSION_BUMP_CHECK = WF("version-bump-check.yml");
 
 function readIf(path: string): string {
   return existsSync(path) ? read(path) : "";
@@ -89,6 +90,45 @@ describe("ci workflows: pr-title-version.sh decides by merge-base, not base tip 
   });
 
   test("measures against the merge-base (fork point), not the base tip", () => {
+    expect(/git merge-base/.test(src)).toBe(true);
+  });
+});
+
+describe("ci workflows: runtime-vs-dev bump gate is wired on PRs (#120)", () => {
+  const text = readIf(VERSION_BUMP_CHECK);
+
+  test("version-bump-check.yml exists", () => {
+    expect(existsSync(VERSION_BUMP_CHECK)).toBe(true);
+  });
+
+  test("runs on pull_request to main", () => {
+    expect(/pull_request:/.test(text)).toBe(true);
+    expect(/branches:\s*\[main\]/.test(text)).toBe(true);
+  });
+
+  test("delegates the decision to version-bump-required.sh", () => {
+    expect(text).toContain(".github/scripts/version-bump-required.sh");
+  });
+
+  test("checks out full history so merge-base resolves", () => {
+    expect(/fetch-depth:\s*0/.test(text)).toBe(true);
+  });
+
+  test("passes the head and base SHAs the script reads", () => {
+    expect(text).toContain("github.event.pull_request.head.sha");
+    expect(text).toContain("github.event.pull_request.base.sha");
+  });
+});
+
+describe("ci workflows: version-bump-required.sh enforces the runtime-vs-dev invariant (#120)", () => {
+  const SCRIPT = join(REPO_ROOT, ".github", "scripts", "version-bump-required.sh");
+  const src = readIf(SCRIPT);
+
+  test("version-bump-required.sh exists", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+  });
+
+  test("measures the bump against the merge-base (fork point), not the base tip", () => {
     expect(/git merge-base/.test(src)).toBe(true);
   });
 });
