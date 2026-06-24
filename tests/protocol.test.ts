@@ -507,3 +507,48 @@ describe("L2-demoted heavy-prior-state pipeline skills", () => {
     expect(/hard-gate retry loop/i.test(text)).toBe(true);
   });
 });
+
+// Regression: a picked-up ticket must be moved to the tracker's in-progress
+// state as the first action of a run. The board-move was documented only as a
+// manual dev step, so the orchestrator never did it (issue surfaced on
+// `/team <issue-url>`). The fix is a generic, best-effort runtime step in both
+// the full pipeline and the bug-fix pipeline, plus a concrete dev binding in
+// the project-tracking doc. These tripwires pin the contract on the source.
+describe("ticket pickup → in-progress", () => {
+  const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
+  const TEAM_FIX = join(REPO_ROOT, "skills", "team-fix", "SKILL.md");
+  const PROJECT_TRACKING = join(REPO_ROOT, "docs", "project-tracking.md");
+
+  // The generic runtime contract: tracker-agnostic, best-effort, skip-silently,
+  // never blocking. Matched as flattened prose so wording can wrap across lines.
+  function assertInProgressContract(path: string) {
+    const text = flat(read(path));
+    // Names the move to an in-progress state.
+    expect(/in-progress/i.test(text)).toBe(true);
+    // Stays generic — best-effort and skips when no mechanism exists.
+    expect(/best-effort/i.test(text)).toBe(true);
+    expect(/skip/i.test(text)).toBe(true);
+    // Never block the pipeline on a tracker update.
+    expect(/never block/i.test(text)).toBe(true);
+    // Does not hardcode this repo's board into the distributed runtime.
+    expect(text).not.toContain("project-set-status");
+    expect(text).not.toContain("projects/5");
+  }
+
+  test("team: Setup moves a picked-up ticket to in-progress (generic)", () => {
+    assertInProgressContract(TEAM_SKILL);
+  });
+
+  test("team-fix: Setup moves a picked-up ticket to in-progress (generic)", () => {
+    assertInProgressContract(TEAM_FIX);
+  });
+
+  test("project-tracking: binds the concrete in-progress mechanism for this repo", () => {
+    const text = flat(read(PROJECT_TRACKING));
+    // The dev binding wires the actual board scripts to the in-progress move.
+    expect(text).toContain("project-set-status.sh");
+    expect(/"In progress"/i.test(text)).toBe(true);
+    // States the move is automatic on pickup, not a manual pre-step.
+    expect(/automatic/i.test(text)).toBe(true);
+  });
+});
