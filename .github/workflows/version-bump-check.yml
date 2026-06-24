@@ -1,0 +1,42 @@
+# Version-bump check — enforces the runtime-vs-dev bump invariant on every PR.
+#
+# The Team plugin's version exists for END USERS, so a bump is warranted only when
+# a PR changes the DISTRIBUTED PLUGIN (agents/, skills/, hooks/, .claude-plugin/
+# content). This gate fails a PR that bumps with no runtime change (the #118/#120
+# mistake) or changes runtime without a bump. It is the deterministic backstop to
+# version-bump's step 0 — see docs/versioning.md.
+#
+# The decision logic lives in .github/scripts/version-bump-required.sh and is
+# pinned by tests/version-bump-required.test.ts (free, deterministic git-fixture
+# tests). Read-only: this job only reports pass/fail, it never edits the PR.
+name: Version-bump check
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  # Key on the PR number (never the attacker-controlled branch name).
+  group: version-bump-check-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Runtime-vs-dev bump invariant
+    runs-on: ubuntu-latest
+    env:
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    steps:
+      # fetch-depth: 0 so `git merge-base` can resolve the fork point of the
+      # head and base commits.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Enforce the runtime-vs-dev bump invariant
+        run: .github/scripts/version-bump-required.sh
