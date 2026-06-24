@@ -1,4 +1,4 @@
-# Behavioral evals — weekly live-agent regression check.
+# Periodic evals — weekly live-agent regression check.
 #
 # This is the actual eval tier: spawns `claude -p` against fixtures under
 # evals/fixtures/<agent>/<case>/, then runs the LLM-judge over the agent's
@@ -9,7 +9,7 @@
 # workflow_dispatch.
 #
 # Runs Monday 06:00 UTC. Offline harness checks live in harness-checks.yml.
-name: Behavioral evals
+name: Periodic evals
 
 # Hard ban (issue #51, design Decision 5): token/secret-consuming jobs
 # MUST NOT trigger on pull_request_target. That event runs in base-repo
@@ -22,11 +22,11 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: behavioral-evals
+  group: periodic-evals
   cancel-in-progress: true
 
 jobs:
-  behavioral-evals:
+  periodic-evals:
     name: Live agent runs (${{ matrix.suite.name }})
     # Author gate (issue #51): only OWNER/MEMBER/COLLABORATOR may spend tokens
     # via a pull_request. Event-aware so schedule/workflow_dispatch (no PR
@@ -110,6 +110,6 @@ jobs:
           # any shell, so it cannot read a `$VAR` — env indirection is not
           # possible here. Safe regardless: matrix.suite.name is a
           # repo-controlled YAML literal, and GitHub sanitizes artifact names.
-          name: behavioral-evals-${{ matrix.suite.name }}-${{ github.run_id }}
+          name: periodic-evals-${{ matrix.suite.name }}-${{ github.run_id }}
           path: evals/results/
           retention-days: 90

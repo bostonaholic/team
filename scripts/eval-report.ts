@@ -4,7 +4,7 @@
 // CLI: `bun run scripts/eval-report.ts <results-dir>`
 // Formats one or more eval result JSONs (the schema written by
 // tests/helpers/eval-store.ts) into a Markdown body for a PR comment, then
-// prints it to stdout. Used by .github/workflows/evals.yml, which upserts the
+// prints it to stdout. Used by .github/workflows/pr-evals.yml, which upserts the
 // body as a single `## PR Evals` comment on the PR.
 //
 // The body builder is a pure function (buildReportBody) so it is unit-tested
@@ -19,7 +19,7 @@ import type { EvalResult, EvalTestEntry } from "../tests/helpers/eval-store";
 
 // The marker prefix the workflow greps for when deciding whether to update an
 // existing comment or create a new one. MUST stay stable and in sync with the
-// upsert logic in .github/workflows/evals.yml (locked by a tripwire test).
+// upsert logic in .github/workflows/pr-evals.yml (locked by a tripwire test).
 export const REPORT_MARKER = "## PR Evals";
 
 function fmtCost(usd: number): string {

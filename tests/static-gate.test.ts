@@ -15,11 +15,11 @@ const FIXTURE_ROOT = join(process.cwd(), "evals", "fixtures");
 const RUBRIC_ROOT = join(process.cwd(), "evals", "rubrics");
 const TESTS_ROOT = join(process.cwd(), "tests");
 const PACKAGE_JSON = join(process.cwd(), "package.json");
-const EVALS_WORKFLOW = join(
+const PERIODIC_EVALS_WORKFLOW = join(
   process.cwd(),
   ".github",
   "workflows",
-  "behavioral-evals.yml",
+  "periodic-evals.yml",
 );
 const HARNESS_WORKFLOW = join(
   process.cwd(),
@@ -31,7 +31,7 @@ const PR_EVALS_WORKFLOW = join(
   process.cwd(),
   ".github",
   "workflows",
-  "evals.yml",
+  "pr-evals.yml",
 );
 const FIXTURE_SIZE_CAP = 50 * 1024;
 
@@ -98,18 +98,18 @@ describe("static gate: fixtures", () => {
   });
 });
 
-// The behavioral-evals workflow spawns the `claude` CLI live
+// The periodic-evals workflow spawns the `claude` CLI live
 // (tests/helpers/session-runner.ts). A scheduled run is the only place this
 // fires, so a missing CLI install or missing agent credentials surfaces only
 // once a week, in CI, with no PR signal. These guards keep that contract
 // visible in the free gate that runs on every PR.
-describe("static gate: behavioral-evals workflow", () => {
-  const workflow = existsSync(EVALS_WORKFLOW)
-    ? readFileSync(EVALS_WORKFLOW, "utf8")
+describe("static gate: periodic-evals workflow", () => {
+  const workflow = existsSync(PERIODIC_EVALS_WORKFLOW)
+    ? readFileSync(PERIODIC_EVALS_WORKFLOW, "utf8")
     : "";
 
   test("workflow file exists", () => {
-    expect(existsSync(EVALS_WORKFLOW)).toBe(true);
+    expect(existsSync(PERIODIC_EVALS_WORKFLOW)).toBe(true);
   });
 
   test("installs the Claude Code CLI before spawning the agent", () => {
@@ -164,8 +164,8 @@ describe("static gate: author gate", () => {
   const harnessWorkflow = existsSync(HARNESS_WORKFLOW)
     ? readFileSync(HARNESS_WORKFLOW, "utf8")
     : "";
-  const evalsWorkflow = existsSync(EVALS_WORKFLOW)
-    ? readFileSync(EVALS_WORKFLOW, "utf8")
+  const evalsWorkflow = existsSync(PERIODIC_EVALS_WORKFLOW)
+    ? readFileSync(PERIODIC_EVALS_WORKFLOW, "utf8")
     : "";
 
   test("trust expression documented as the contract at the future paid seam in harness-checks.yml", () => {
@@ -205,8 +205,8 @@ describe("static gate: author gate", () => {
     expect(evalsAllowlist).not.toContain("NONE");
   });
 
-  test("canonical trust expression present in behavioral-evals.yml", () => {
-    // behavioral-evals.yml is the only workflow that consumes
+  test("canonical trust expression present in periodic-evals.yml", () => {
+    // periodic-evals.yml is the only workflow that consumes
     // EVALS_ANTHROPIC_API_KEY today; the canonical trust expression must
     // appear verbatim so the gate reads identically across token jobs.
     // Asserts on substring presence, not job/matrix shape, so it tolerates
@@ -214,8 +214,8 @@ describe("static gate: author gate", () => {
     expect(evalsWorkflow).toContain(TRUST_EXPR);
   });
 
-  test("trust expression wired as a live `if:` on behavioral-evals.yml's token job", () => {
-    // Unlike harness-checks.yml's documented-only contract, behavioral-evals'
+  test("trust expression wired as a live `if:` on periodic-evals.yml's token job", () => {
+    // Unlike harness-checks.yml's documented-only contract, periodic-evals'
     // secret-consuming job carries the trust expression as a live `if:`
     // condition (not just a comment), so a future pull_request trigger cannot
     // spend tokens for untrusted authors.
@@ -231,8 +231,8 @@ describe("static gate: evals environment backstop", () => {
   const harnessWorkflow = existsSync(HARNESS_WORKFLOW)
     ? readFileSync(HARNESS_WORKFLOW, "utf8")
     : "";
-  const evalsWorkflow = existsSync(EVALS_WORKFLOW)
-    ? readFileSync(EVALS_WORKFLOW, "utf8")
+  const evalsWorkflow = existsSync(PERIODIC_EVALS_WORKFLOW)
+    ? readFileSync(PERIODIC_EVALS_WORKFLOW, "utf8")
     : "";
 
   test("evals environment declared on the token job", () => {
@@ -260,8 +260,8 @@ describe("static gate: evals environment backstop", () => {
     expect(/^\s*pull_request_target:/m.test(harnessWorkflow)).toBe(false);
   });
 
-  test("behavioral-evals stays off pull_request triggers until the gate is deliberately activated", () => {
-    // The author gate's `if:` is dormant today: behavioral-evals.yml triggers
+  test("periodic-evals stays off pull_request triggers until the gate is deliberately activated", () => {
+    // The author gate's `if:` is dormant today: periodic-evals.yml triggers
     // only on schedule + workflow_dispatch, so no untrusted author can reach
     // the token job. Adding a live `pull_request:` trigger would activate that
     // gate — and its sufficiency (does the allowlist cover every author state
@@ -273,7 +273,7 @@ describe("static gate: evals environment backstop", () => {
   });
 });
 
-// The PR evals workflow (evals.yml) runs diff-selected evals on pull requests
+// The PR evals workflow (pr-evals.yml) runs diff-selected evals on pull requests
 // and upserts a `## PR Evals` comment. These guards lock the contracts that, if
 // broken, would silently stop evals running or stop the comment posting — and
 // would otherwise only surface live in CI on a real PR.

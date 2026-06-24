@@ -4,7 +4,7 @@
 # pass/fail and cost. Selection (which evals run)
 # is decided by the harness from `git diff <base>...HEAD` against each eval's
 # touchfiles (tests/helpers/touchfiles.ts) — cost scales with the diff, NOT the
-# whole suite. The weekly full periodic run stays in behavioral-evals.yml.
+# whole suite. The weekly full periodic run stays in periodic-evals.yml.
 #
 # ADVISORY: includes stochastic periodic evals, so this is intentionally NOT a
 # required merge check (TESTING.md: stochastic checks must not gate merges).
