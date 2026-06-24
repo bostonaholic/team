@@ -119,7 +119,7 @@ describe("L5 skill coverage: git-commit", () => {
     );
     expect(keys.length).toBeGreaterThan(0);
     for (const key of keys) {
-      expect(["gate", "periodic"]).toContain(E2E_TIERS[key]);
+      expect(["gate", "periodic"]).toContain(E2E_TIERS[key] ?? "");
     }
   });
 });
@@ -149,7 +149,7 @@ describe("L5 skill coverage: changelog", () => {
     );
     expect(keys.length).toBeGreaterThan(0);
     for (const key of keys) {
-      expect(["gate", "periodic"]).toContain(E2E_TIERS[key]);
+      expect(["gate", "periodic"]).toContain(E2E_TIERS[key] ?? "");
     }
   });
 });
@@ -179,7 +179,7 @@ describe("L5 skill coverage: team-question", () => {
     );
     expect(keys.length).toBeGreaterThan(0);
     for (const key of keys) {
-      expect(["gate", "periodic"]).toContain(E2E_TIERS[key]);
+      expect(["gate", "periodic"]).toContain(E2E_TIERS[key] ?? "");
     }
   });
 });
@@ -209,7 +209,7 @@ describe("L5 skill coverage: eng-design-doc-review", () => {
     );
     expect(keys.length).toBeGreaterThan(0);
     for (const key of keys) {
-      expect(["gate", "periodic"]).toContain(E2E_TIERS[key]);
+      expect(["gate", "periodic"]).toContain(E2E_TIERS[key] ?? "");
     }
   });
 });
@@ -239,7 +239,7 @@ describe("L5 skill coverage: team-fix", () => {
     );
     expect(keys.length).toBeGreaterThan(0);
     for (const key of keys) {
-      expect(["gate", "periodic"]).toContain(E2E_TIERS[key]);
+      expect(["gate", "periodic"]).toContain(E2E_TIERS[key] ?? "");
     }
   });
 });
@@ -269,7 +269,7 @@ describe("L5 skill coverage: team-research", () => {
     );
     expect(keys.length).toBeGreaterThan(0);
     for (const key of keys) {
-      expect(["gate", "periodic"]).toContain(E2E_TIERS[key]);
+      expect(["gate", "periodic"]).toContain(E2E_TIERS[key] ?? "");
     }
   });
 });
@@ -299,7 +299,7 @@ describe("L5 skill coverage: team-design", () => {
     );
     expect(keys.length).toBeGreaterThan(0);
     for (const key of keys) {
-      expect(["gate", "periodic"]).toContain(E2E_TIERS[key]);
+      expect(["gate", "periodic"]).toContain(E2E_TIERS[key] ?? "");
     }
   });
 });
@@ -329,7 +329,7 @@ describe("L5 skill coverage: team-structure", () => {
     );
     expect(keys.length).toBeGreaterThan(0);
     for (const key of keys) {
-      expect(["gate", "periodic"]).toContain(E2E_TIERS[key]);
+      expect(["gate", "periodic"]).toContain(E2E_TIERS[key] ?? "");
     }
   });
 });
@@ -359,7 +359,7 @@ describe("L5 skill coverage: team-plan", () => {
     );
     expect(keys.length).toBeGreaterThan(0);
     for (const key of keys) {
-      expect(["gate", "periodic"]).toContain(E2E_TIERS[key]);
+      expect(["gate", "periodic"]).toContain(E2E_TIERS[key] ?? "");
     }
   });
 });

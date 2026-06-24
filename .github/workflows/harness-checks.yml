@@ -49,6 +49,12 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Type-check harness
+        # `bun test` transpiles without type-checking, so type errors pass it
+        # silently. `tsc --noEmit` is the cheapest deterministic gate (static,
+        # free) and blocks the PR on any type error — see docs/testing.md.
+        run: bun run typecheck
+
       - name: Run harness checks
         # Paid agent-behavior files are named *.evals.ts — outside Bun's
         # auto-discovery pattern (*.test.{ts,js,...}) — so `bun test`

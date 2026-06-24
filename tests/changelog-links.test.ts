@@ -32,7 +32,7 @@ function linkTargets(md: string): string[] {
   const targets: string[] = [];
   const re = /\]\(([^)]+)\)/g;
   let m: RegExpExecArray | null;
-  while ((m = re.exec(md)) !== null) targets.push(m[1].trim());
+  while ((m = re.exec(md)) !== null) targets.push(m[1]!.trim());
   return targets;
 }
 

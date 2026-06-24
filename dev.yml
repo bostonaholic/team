@@ -13,6 +13,7 @@ up:
 
 check:
   plugin: "claude plugin validate ."
+  typecheck: "bun run typecheck"
 
 test:
   run: "bun test"
