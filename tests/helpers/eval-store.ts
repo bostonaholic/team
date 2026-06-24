@@ -181,7 +181,17 @@ export class EvalCollector {
     if (this.finalized) {
       throw new Error("EvalCollector: cannot addTest after finalize()");
     }
-    this.result.tests.push(entry);
+    // `--retry` re-runs the test body, so a flaky test calls addTest once per
+    // attempt. Upsert by name so only the final post-retry outcome is recorded
+    // — keeping the counts honest and the regression comparison free of stale
+    // intermediate failures. Cost/duration still accumulate below: retries
+    // really did spend money.
+    const existing = this.result.tests.findIndex((t) => t.name === entry.name);
+    if (existing >= 0) {
+      this.result.tests[existing] = entry;
+    } else {
+      this.result.tests.push(entry);
+    }
     this.result.total_tests = this.result.tests.length;
     this.result.passed = this.result.tests.filter((t) => t.passed).length;
     this.result.failed = this.result.total_tests - this.result.passed;
