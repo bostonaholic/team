@@ -552,3 +552,68 @@ describe("ticket pickup → in-progress", () => {
     expect(/automatic/i.test(text)).toBe(true);
   });
 });
+
+// Regression: when the PR phase opens a pull request, the ticket must move to
+// the tracker's in-review state, and the PR must be linked to the ticket so the
+// tracker closes it (and any board automation moves it to its done state) on
+// merge. The PR phase previously only "surfaced the ticketId so the user can
+// close it" — no in-review move, no link. The fix carries the same generic,
+// best-effort runtime contract through every skill that opens a PR, while the
+// merge skill (shipit) stays board-agnostic. These tripwires pin the contract.
+describe("PR open → in-review → (merge) done", () => {
+  const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
+  const TEAM_FIX = join(REPO_ROOT, "skills", "team-fix", "SKILL.md");
+  const TEAM_PR = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
+  const SHIPIT = join(REPO_ROOT, "skills", "shipit", "SKILL.md");
+  const PROJECT_TRACKING = join(REPO_ROOT, "docs", "project-tracking.md");
+
+  // The generic runtime contract for the PR phase: move the ticket to
+  // in-review, link it so it auto-closes on merge, best-effort, never blocking,
+  // and no board hardcoded into the distributed runtime.
+  function assertInReviewContract(path: string) {
+    const text = flat(read(path));
+    // Names the move to an in-review state.
+    expect(/in-review/i.test(text)).toBe(true);
+    // Links the PR to the ticket so it auto-closes on merge (drives "done").
+    expect(/closes #|link the pr/i.test(text)).toBe(true);
+    // Stays generic — best-effort and never blocks the pipeline.
+    expect(/best-effort/i.test(text)).toBe(true);
+    expect(/never block/i.test(text)).toBe(true);
+    // Does not hardcode this repo's board into the distributed runtime.
+    expect(text).not.toContain("project-set-status");
+    expect(text).not.toContain("projects/5");
+  }
+
+  test("team-pr: opening the PR moves the ticket to in-review and links it", () => {
+    assertInReviewContract(TEAM_PR);
+  });
+
+  test("team: PR gate moves the ticket to in-review and links it", () => {
+    assertInReviewContract(TEAM_SKILL);
+  });
+
+  test("team-fix: Ship moves the ticket to in-review and links it", () => {
+    assertInReviewContract(TEAM_FIX);
+  });
+
+  test("shipit: stays board-agnostic — done flows from the close-on-merge link", () => {
+    const text = flat(read(SHIPIT));
+    // shipit is generic: it must not hardcode this repo's board.
+    expect(text).not.toContain("project-set-status");
+    expect(text).not.toContain("projects/5");
+    // It documents that done happens via the tracker close-on-merge link,
+    // not via any board action shipit takes.
+    expect(/closes #|linked to the pr|tracker/i.test(text)).toBe(true);
+  });
+
+  test("project-tracking: binds in-review and done transitions for this repo", () => {
+    const text = flat(read(PROJECT_TRACKING));
+    // In-review binding: the board script with the "In review" column.
+    expect(/"In review"/i.test(text)).toBe(true);
+    // Done is automated by the board's close-on-merge automation, driven by
+    // the PR's Closes-link — not a manual move.
+    expect(/closes #/i.test(text)).toBe(true);
+    expect(/\bDone\b/.test(text)).toBe(true);
+    expect(/automatic/i.test(text)).toBe(true);
+  });
+});
