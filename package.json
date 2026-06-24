@@ -9,6 +9,7 @@
   },
   "scripts": {
     "test": "bun test",
+    "typecheck": "tsc --noEmit",
     "test:evals": "EVALS=1 bun test --concurrent --max-concurrency 15 ./tests/*.evals.ts",
     "test:evals:all": "EVALS=1 EVALS_ALL=1 bun test --concurrent --max-concurrency 15 ./tests/*.evals.ts",
     "eval:select": "bun run scripts/eval-select.ts",
