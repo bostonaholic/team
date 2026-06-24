@@ -423,6 +423,59 @@ describe("topic consistency", () => {
   });
 });
 
+// Regression guard for issue #68: qrspi-workflow's SOFT-gate examples must not
+// contradict the severity model in code-review/SKILL.md. PR #23 made
+// code-reviewer REQUEST CHANGES Blocking (auto-fix) and ux-reviewer REQUEST
+// CHANGES Major (auto-fix), so neither can be a SOFT example. The severity
+// model lives in exactly one place — qrspi-workflow must cross-reference it,
+// never restate it.
+describe("qrspi-workflow SOFT gate aligns with severity tiers (issue #68)", () => {
+  const QRSPI = join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md");
+
+  // The SOFT subsection: from "### SOFT" up to the next "### " heading.
+  function softSection(text: string): string {
+    const lines = text.split("\n");
+    const start = lines.findIndex((l) => /^### SOFT\b/.test(l));
+    if (start === -1) return "";
+    let end = lines.length;
+    for (let i = start + 1; i < lines.length; i++) {
+      if (/^### /.test(lines[i] ?? "")) {
+        end = i;
+        break;
+      }
+    }
+    return lines.slice(start, end).join("\n");
+  }
+
+  test("no longer lists code-review or ux-reviewer feedback as SOFT examples", () => {
+    const soft = softSection(read(QRSPI));
+    // Fail loud if the SOFT subsection vanished, so the absence assertions
+    // below can't pass vacuously against an empty string.
+    expect(soft.length).toBeGreaterThan(0);
+    expect(/code review suggestions/i.test(soft)).toBe(false);
+    expect(/UX review feedback/i.test(soft)).toBe(false);
+  });
+
+  test("SOFT section cross-references the code-review severity-tier table", () => {
+    const soft = softSection(read(QRSPI));
+    expect(soft.length).toBeGreaterThan(0);
+    expect(soft).toContain("code-review/SKILL.md");
+    expect(soft).toContain("Severity Tiers and the Auto-Fix Boundary");
+  });
+
+  // Drift guard: the SOFT section points at a heading by name. If that heading
+  // is renamed in code-review/SKILL.md, the cross-reference silently rots —
+  // fail the build here so the rename and the reference stay in sync.
+  test("the cross-referenced heading still exists in code-review/SKILL.md", () => {
+    const codeReview = read(
+      join(REPO_ROOT, "skills", "code-review", "SKILL.md"),
+    );
+    expect(
+      /^#{1,4} Severity Tiers and the Auto-Fix Boundary$/m.test(codeReview),
+    ).toBe(true);
+  });
+});
+
 // L2-demoted (heavy prior state): team, team-worktree, team-pr, team-implement
 //
 // These four pipeline skills have no cheap self-contained behavioral property
