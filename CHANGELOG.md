@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Extracted the three-tier artifact-directory discovery the `/team-*` phase skills run
+  into a single distributed script (`skills/qrspi-workflow/discover-topic.sh`), replacing
+  the bash block that was duplicated verbatim across eight skills. Behavior is unchanged
+  and is now pinned by `tests/discover-topic.test.ts` (gated on every PR).
+
 ## [0.13.2] - 2026-06-24
 
 ### Fixed
