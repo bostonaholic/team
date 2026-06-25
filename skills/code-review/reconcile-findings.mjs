@@ -101,9 +101,11 @@ export function dedupKey(finding) {
  * never silently demote a higher-severity flag a later model raised. The
  * body/fields come from the finding that owns that surviving tier. Each merged
  * finding carries the distinct `models` that raised it, a `corroboration`
- * count (= number of distinct models), and `modelTiers` — the per-model
- * `{ model, tier }` record so every contributing model's original tier is
- * preserved and nothing is lost on merge.
+ * count (= number of distinct models), and `modelTiers` — **one** per-model
+ * `{ model, tier }` record per distinct model, carrying that model's
+ * MAX-severity tier when the same model raised the same key more than once,
+ * so every contributing model's tier is preserved and nothing is lost on
+ * merge while no model is double-counted.
  *
  * Input: an array of `{ model, findings: Finding[] }`.
  */
@@ -114,20 +116,24 @@ export function reconcile(findingsByModel) {
       const key = dedupKey(finding);
       let group = groups.get(key);
       if (!group) {
-        group = { finding, models: new Set(), modelTiers: [] };
+        group = { finding, models: new Set(), tierByModel: new Map() };
         groups.set(key, group);
       } else if (severityRank(finding.tier) > severityRank(group.finding.tier)) {
         // Most severe wins: adopt the higher-severity finding's fields/body.
         group.finding = finding;
       }
       group.models.add(model);
-      group.modelTiers.push({ model, tier: finding.tier });
+      // One modelTiers entry per distinct model, keeping its max-severity tier.
+      const prior = group.tierByModel.get(model);
+      if (prior === undefined || severityRank(finding.tier) > severityRank(prior)) {
+        group.tierByModel.set(model, finding.tier);
+      }
     }
   }
-  return [...groups.values()].map(({ finding, models, modelTiers }) => ({
+  return [...groups.values()].map(({ finding, models, tierByModel }) => ({
     ...finding,
     models: [...models],
-    modelTiers,
+    modelTiers: [...tierByModel].map(([model, tier]) => ({ model, tier })),
     corroboration: models.size,
   }));
 }

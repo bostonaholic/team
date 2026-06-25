@@ -102,11 +102,23 @@ export async function availableReviewers(config, deps) {
 
 /**
  * Reject after `ms` so a hung primitive cannot stall the probe. Resolves with
- * the wrapped promise's value when it settles first.
+ * the wrapped value's promise when it settles first.
+ *
+ * `awaited` is either a bare promise (the injected-fake seam the unit suite
+ * uses) or a `{ promise, child }` pair from a real primitive that spawned a
+ * process. On the timeout path the spawned child is killed so a hung CLI does
+ * not leak as an orphan process; behavior is otherwise identical (timeout still
+ * ⇒ rejection ⇒ provider skipped).
  */
-function withTimeout(promise, ms) {
+function withTimeout(awaited, ms) {
+  const isPair = awaited && typeof awaited === "object" && "promise" in awaited;
+  const promise = isPair ? awaited.promise : awaited;
+  const child = isPair ? awaited.child : null;
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("probe timeout")), ms);
+    const timer = setTimeout(() => {
+      if (child) child.kill();
+      reject(new Error("probe timeout"));
+    }, ms);
     Promise.resolve(promise).then(
       (value) => {
         clearTimeout(timer);
@@ -120,10 +132,14 @@ function withTimeout(promise, ms) {
   });
 }
 
-/** Real `which`: resolve the binary path, or null when not on PATH. */
+/**
+ * Real `which`: resolve the binary path, or null when not on PATH. Returns a
+ * `{ promise, child }` pair so `withTimeout` can kill the spawned process if it
+ * hangs past the deadline.
+ */
 function realWhich(name) {
-  return new Promise((resolve) => {
-    const child = spawn("which", [name], { stdio: ["ignore", "pipe", "ignore"] });
+  const child = spawn("which", [name], { stdio: ["ignore", "pipe", "ignore"] });
+  const promise = new Promise((resolve) => {
     let out = "";
     child.stdout.on("data", (chunk) => {
       out += chunk;
@@ -131,15 +147,20 @@ function realWhich(name) {
     child.on("error", () => resolve(null));
     child.on("close", (code) => resolve(code === 0 && out.trim() ? out.trim() : null));
   });
+  return { promise, child };
 }
 
-/** Real `--version`: resolve the binary's exit code (non-zero on any failure). */
+/**
+ * Real `--version`: resolve the binary's exit code (non-zero on any failure).
+ * Returns a `{ promise, child }` pair so `withTimeout` can kill a hung process.
+ */
 function realVersion(name) {
-  return new Promise((resolve) => {
-    const child = spawn(name, ["--version"], { stdio: "ignore" });
+  const child = spawn(name, ["--version"], { stdio: "ignore" });
+  const promise = new Promise((resolve) => {
     child.on("error", () => resolve(1));
     child.on("close", (code) => resolve(code ?? 1));
   });
+  return { promise, child };
 }
 
 // CLI entry point — runs only when executed directly, not when imported by a

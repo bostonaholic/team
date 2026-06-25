@@ -192,6 +192,41 @@ describe("reconcile — default-keep grouping + corroboration count", () => {
     expect(byModel).toEqual({ claude: "Minor", codex: "Blocking" });
   });
 
+  test("same model raising the same key twice yields one modelTiers entry carrying its max tier", async () => {
+    const { reconcile } = await load();
+    const fn = reconcile as (
+      byModel: { model: string; findings: Finding[] }[],
+    ) => Array<
+      Finding & {
+        corroboration: number;
+        models: string[];
+        modelTiers: { model: string; tier?: string }[];
+      }
+    >;
+    // claude contributes the SAME file:line:claim twice with two tiers (Minor
+    // then Blocking); codex corroborates it once at Major. Distinct-model count
+    // must stay 2, claude must appear exactly once in modelTiers carrying its
+    // max (Blocking), and the merged tier is the group max (Blocking).
+    const merged = fn([
+      { model: "claude", findings: [{ file: "src/a.ts", line: 9, claim: "off-by-one", tier: "Minor" }] },
+      { model: "codex", findings: [{ file: "src/a.ts", line: 9, claim: "off-by-one", tier: "Major" }] },
+      { model: "claude", findings: [{ file: "src/a.ts", line: 9, claim: "off-by-one", tier: "Blocking" }] },
+    ]);
+    expect(merged.length).toBe(1);
+    // Corroboration counts distinct models — claude's duplicate must not inflate it.
+    expect(merged[0]!.corroboration).toBe(2);
+    // Exactly one modelTiers entry per distinct model.
+    expect(merged[0]!.modelTiers.length).toBe(2);
+    const claudeEntries = merged[0]!.modelTiers.filter((m) => m.model === "claude");
+    expect(claudeEntries.length).toBe(1);
+    // That single claude entry carries its MAX tier across its duplicates.
+    expect(claudeEntries[0]!.tier).toBe("Blocking");
+    // Max-severity merge across models still holds.
+    expect(merged[0]!.tier).toBe("Blocking");
+    const byModel = Object.fromEntries(merged[0]!.modelTiers.map((m) => [m.model, m.tier]));
+    expect(byModel).toEqual({ claude: "Blocking", codex: "Major" });
+  });
+
   test("max-severity wins independent of model order (severe-then-mild)", async () => {
     const { reconcile } = await load();
     const fn = reconcile as (
