@@ -232,7 +232,26 @@ No human gate. The plan is mechanically derived from the structure.
 3. **Slice execution** — `implementer` works through the plan one slice
    at a time, committing each atomically.
 4. **Code review** — 5 reviewers in parallel: `code-reviewer`,
-   `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
+   `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`. All
+   five are Claude subagents. The `code-reviewer` can additionally consult
+   **external reviewers** — independent third-party CLIs whose findings
+   corroborate (but never replace) its own pass. This is gated by the
+   user-facing `externalReviewers` array in the distributed
+   `.claude-plugin/plugin.json`: it lists which providers to consult, drawn
+   from `"codex"`, `"gemini"`, and `"cursor"`. It is **opt-in** and
+   **degrades gracefully** — left empty or omitted (the default), code review
+   runs exactly as a single Claude model with no new errors or warnings. Each
+   named provider's CLI must be **installed and authenticated** on the host;
+   a missing, unauthenticated, or non-conforming provider is silently skipped
+   for that round (`cursor` is best-effort and skipped unless it exposes a
+   headless review mode). Corroboration is **annotation-only**: a finding
+   raised by two or more models is tagged `corroborated by N models` and an
+   uncorroborated one `single-model — extra scrutiny`, but the
+   `code-reviewer` still emits **one** verdict, and corroboration never
+   re-tiers a finding or changes the verdict keyword the aggregate gate (step
+   5) consumes. External corroboration is **complementary to**, not a
+   replacement for, the `code-reviewer`'s skeptic pass (see
+   [10. Nested Sub-Agents](#10-nested-sub-agents)).
 5. **Aggregate gate** — orchestrator sorts every finding into a severity
    tier (**Blocking / Major / Minor-and-below**; see
    `skills/code-review/SKILL.md`). While any Blocking or Major finding
@@ -594,6 +613,19 @@ both governed by `skills/nested-agents/SKILL.md`:
   refutation the reviewer verifies itself. A false hard-gate finding
   costs an entire review round (implementer re-dispatch + all 5
   reviewers re-run), so the pass pays for itself.
+
+The `code-reviewer`'s skeptic pass is **complemented by — not replaced
+by — external-reviewer corroboration**, an opt-in configured through the
+user-facing `externalReviewers` array in `.claude-plugin/plugin.json`.
+Where the skeptic pass tries to *refute* the reviewer's own Blocking
+findings, corroboration runs independent third-party CLIs
+(`"codex"`, `"gemini"`, `"cursor"`) over the same diff and tags each
+finding with how many distinct models raised it. Both are optimizations,
+not dependencies: with `externalReviewers` empty or omitted (the
+default), and on any host where a named CLI is not installed and
+authenticated, code review degrades to exactly a single-Claude pass.
+Corroboration is annotation-only — it never re-tiers a finding and never
+changes the verdict keyword the aggregate gate consumes.
 
 **Policy:**
 
