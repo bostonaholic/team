@@ -342,23 +342,19 @@ describe("worktree-first pipeline", () => {
     });
   }
 
-  // ---- Slice 4: hook shared-region byte-identity --------------------------
-  // Locks the Slice 2 invariant. Extract the shared region from each hook —
-  // from the `const ID_RE` line up to (not including) `async function main(` —
-  // and assert the two extracted substrings are === equal.
-  function sharedRegion(src: string): string {
-    const start = src.indexOf("const ID_RE");
-    const end = src.indexOf("async function main(");
-    if (start < 0 || end < 0 || end <= start) {
-      throw new Error("hook shared-region boundary markers not found");
+  // ---- Slice 4: hooks share ONE inference source (no duplication) ---------
+  // The shared scan + phase-inference region (formerly duplicated byte-for-byte
+  // in both hooks) was extracted to hooks/lib/pipeline-state.mjs. Both hooks
+  // import it, so they cannot drift — a stronger guarantee than byte-identity.
+  test("both hooks import the shared pipeline-state lib (region not re-inlined)", () => {
+    expect(existsSync(join(REPO_ROOT, "hooks", "lib", "pipeline-state.mjs"))).toBe(true);
+    for (const hook of ["session-start-recover.mjs", "pre-compact-anchor.mjs"]) {
+      const src = read(join(REPO_ROOT, "hooks", hook));
+      expect(src).toContain('from "./lib/pipeline-state.mjs"');
+      // The logic must NOT be re-inlined into the hook.
+      expect(src).not.toContain("const ID_RE");
+      expect(src).not.toContain("function findActiveTopic");
     }
-    return src.slice(start, end);
-  }
-
-  test("hooks share a byte-identical inference region", () => {
-    const a = sharedRegion(read(join(REPO_ROOT, "hooks", "session-start-recover.mjs")));
-    const b = sharedRegion(read(join(REPO_ROOT, "hooks", "pre-compact-anchor.mjs")));
-    expect(a).toBe(b);
   });
 
   // ---- Slice 5: registry WORKTREE-first -----------------------------------

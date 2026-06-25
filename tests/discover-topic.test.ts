@@ -110,26 +110,25 @@ describe("discover-topic.sh — three-tier discovery (L3)", () => {
 });
 
 describe("discover-topic.sh drift tripwire (TESTING.md §2)", () => {
-  const HOOKS = [
-    join(REPO_ROOT, "hooks", "session-start-recover.mjs"),
-    join(REPO_ROOT, "hooks", "pre-compact-anchor.mjs"),
-  ];
+  // ID_RE + PHASE_FILES live once in the shared hook lib (both runtime hooks
+  // import them); the bash script must stay in sync with that single JS source.
+  const SYNC_SOURCES = [join(REPO_ROOT, "hooks", "lib", "pipeline-state.mjs")];
 
-  // The bash script writes [0-9]; the JS hooks write \d. Normalize so the two
+  // The bash script writes [0-9]; the JS lib writes \d. Normalize so the two
   // forms are compared as one contract.
   const normalize = (re: string): string => re.replace(/\\d/g, "[0-9]");
 
-  test("script ID_RE matches the hooks' ID_RE (normalized \\d -> [0-9])", () => {
+  test("script ID_RE matches the hook lib's ID_RE (normalized \\d -> [0-9])", () => {
     const scriptIdRe = read(SCRIPT).match(/ID_RE='(\^.*\$)'/)?.[1];
     expect(scriptIdRe).toBeTruthy();
-    for (const hook of HOOKS) {
-      const jsIdRe = read(hook).match(/const ID_RE = \/(\^.*\$)\//)?.[1];
+    for (const src of SYNC_SOURCES) {
+      const jsIdRe = read(src).match(/const ID_RE = \/(\^.*\$)\//)?.[1];
       expect(jsIdRe).toBeTruthy();
       expect(normalize(jsIdRe!)).toBe(scriptIdRe!);
     }
   });
 
-  test("script PHASE_FILES matches the hooks' PHASE_FILES", () => {
+  test("script PHASE_FILES matches the hook lib's PHASE_FILES", () => {
     const scriptPhases = read(SCRIPT)
       .match(/PHASE_FILES="([^"]+)"/)?.[1]
       ?.split(/\s+/);
@@ -141,8 +140,8 @@ describe("discover-topic.sh drift tripwire (TESTING.md §2)", () => {
       "structure",
       "plan",
     ]);
-    for (const hook of HOOKS) {
-      const jsPhases = read(hook)
+    for (const src of SYNC_SOURCES) {
+      const jsPhases = read(src)
         .match(/const PHASE_FILES = \[([^\]]+)\]/)?.[1]
         ?.match(/"([^"]+)"/g)
         ?.map((s) => s.replace(/"/g, ""));

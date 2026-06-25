@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   into a single distributed script (`skills/qrspi-workflow/discover-topic.sh`), replacing
   the bash block that was duplicated verbatim across eight skills. Behavior is unchanged
   and is now pinned by `tests/discover-topic.test.ts` (gated on every PR).
+- Deduplicated the two runtime hooks (`session-start-recover.mjs`, `pre-compact-anchor.mjs`):
+  their byte-identical topic-scan and phase-inference logic now lives once in
+  `hooks/lib/pipeline-state.mjs`, unit-tested in `tests/pipeline-state.test.ts`. Behavior is
+  unchanged.
 
 ## [0.13.2] - 2026-06-24
 
