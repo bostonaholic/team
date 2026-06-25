@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Opt-in multi-model corroboration in the IMPLEMENT-phase code review.** The 5-reviewer adversarial fan-out was all one model family, so a hallucinated finding was never cross-checked against an independent model and a real bug in that family's blind spot was never caught by a *different* model. Setting an `externalReviewers` array in [`.claude-plugin/plugin.json`](https://github.com/bostonaholic/team/blob/main/.claude-plugin/plugin.json) (any of `"codex"`, `"gemini"`, `"cursor"`) now has [`code-reviewer`](https://github.com/bostonaholic/team/blob/main/agents/code-reviewer.md) invoke those CLIs in parallel during review, hold them to the same Conventional-Comments + verdict-keyword contract, and reconcile their findings with its own: overlapping findings are deduped on `(file, line, claim)`, tagged `corroborated by N models`, and single-model-only findings are tagged `single-model — extra scrutiny` for extra scrutiny. Corroboration is **annotation-only** — it never re-tiers a finding or changes the verdict the aggregate gate consumes, so the severity tiers and consult guard in [`code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md) are unchanged. The capability is **off by default and degrades gracefully**: with the field empty/absent, or when a named CLI is missing or unauthenticated, behavior is identical to today. `cursor` is best-effort (skipped unless it exposes a headless review mode). New deterministic helpers [`skills/code-review/external-reviewers.mjs`](https://github.com/bostonaholic/team/blob/main/skills/code-review/external-reviewers.mjs) (config-read + `which`/`--version` availability probe) and [`skills/code-review/reconcile-findings.mjs`](https://github.com/bostonaholic/team/blob/main/skills/code-review/reconcile-findings.mjs) (dedup + most-severe-tier merge) are pinned by L1 unit tests. Closes [#52](https://github.com/bostonaholic/team/issues/52).
+
 ## [0.14.0] - 2026-06-27
 
 ### Added
