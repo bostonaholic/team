@@ -387,19 +387,22 @@ protocol instead). Standalone modes still exist: a partial skill invoked
 with no resolvable directory (or with a free-form description) bootstraps
 the missing upstream artifacts inline rather than hard-erroring.
 
-**Discovery duplication — design rationale.** Each archetype-A skill
-embeds the three-tier resolver as a single self-contained bash block
-rather than calling a shared script. Agent threads reset their cwd
-between Bash calls, so the block cannot rely on any shared shell state
-and must stand alone in one invocation. The ~6 load-bearing lines
-(`ID_RE`, `PHASE_FILES`, root literal, predecessor filter) are therefore
-duplicated verbatim across the 8 directory-consuming skills by deliberate
-decision — no shared runtime helper was added, and the
-`check-discovery-consistency.sh` gate enforces byte-identity so the
-copies cannot drift. A shared `discover-topic.sh` that could also dedup
-the two hooks' `findActiveTopic` is a recorded future consolidation; it
-is what the `# NOTE: ... future: shared discover-topic.sh` comment in
-each block points at.
+**Discovery extraction.** Each archetype-A skill resolves its working
+directory by calling one shared script,
+`skills/qrspi-workflow/discover-topic.sh`, invoked via
+`${CLAUDE_PLUGIN_ROOT}` (the same convention the hooks and the
+nested-agents helper use). The script is the single source of truth for
+the three-tier resolver; it scans `docs/plans/` relative to the agent's
+cwd in one self-contained invocation (agent threads reset cwd between Bash
+calls, so it relies on no shared shell state). Its behavior, and the sync
+of its `ID_RE` / `PHASE_FILES` with the two hooks' `findActiveTopic`, are
+pinned by the L3 + drift-tripwire tests in `tests/discover-topic.test.ts`,
+gated on every PR. This replaces the earlier design in which the ~6
+load-bearing lines (`ID_RE`, `PHASE_FILES`, root literal, predecessor
+filter) were duplicated verbatim across the eight directory-consuming
+skills and kept in lock-step by a byte-identity gate. Unifying the two
+hooks' JS `findActiveTopic` onto the same contract is a recorded
+follow-up.
 
 ### Methodology skills (loaded by agents, not directly invoked)
 
@@ -481,11 +484,12 @@ Development hook (`.claude/hooks/` — not distributed):
 | `check-registry-sync.mjs`| PostToolUse(Write\|Edit) | Verify the agents/ directory and registry.json agree by agent name   |
 
 Development scripts (`.claude/scripts/` — not distributed) house dev-only
-acceptance tooling run by plugin developers. `check-discovery-consistency.sh`
-is the committed consistency gate for the input-discovery feature: it asserts
-every archetype-A skill carries the discovery block, the load-bearing fragments
-(`ID_RE`, `PHASE_FILES`, approval grep, `docs/plans/` root) stay byte-identical
-to canon, and the research-isolation invariant holds.
+acceptance tooling run by plugin developers. (The former
+`check-discovery-consistency.sh` gate was retired when the three-tier discovery
+logic was extracted into the distributed, separately-tested
+`skills/qrspi-workflow/discover-topic.sh`; its behavior is now pinned by
+`tests/discover-topic.test.ts`, and the research-isolation invariant by
+`tests/protocol.test.ts`.)
 
 ## 8. Behavioral Evals
 

@@ -159,11 +159,15 @@ Resolve the directory with the canonical **three-tier** block:
    auto-picked directory before proceeding — never pick a topic silently.
 3. **None found** — fall to the empty case below; do not error.
 
-Do NOT hand-roll this block. Copy it **verbatim** from an existing archetype-A skill
-(e.g. `skills/team-research/SKILL.md`) — the dev gate
-`.claude/scripts/check-discovery-consistency.sh` asserts byte-identity across every
-archetype-A skill, so any variant fails the suite. Run it as a single bash call (an
-agent thread resets cwd between calls).
+Do NOT hand-roll this block. Invoke the shared, distributed resolver in a single bash
+call (an agent thread resets cwd between calls):
+```sh
+bash "${CLAUDE_PLUGIN_ROOT}/skills/qrspi-workflow/discover-topic.sh" "<predecessor.md>" "" "$ARGUMENTS"
+```
+Pass your skill's predecessor artifact as the first arg; `"1"` as the second to require
+an approved predecessor (the design gate), else `""`; and `"$ARGUMENTS"` as the
+explicit-override. The script is the single source of truth, pinned by
+`tests/discover-topic.test.ts` — copy the one-line call, never a re-implementation.
 
 - If a directory resolves: read the predecessor artifact from it; treat it as source of
   truth for problem, constraints, approach.
@@ -260,8 +264,8 @@ Invocation
 
 Input
 - [ ] Correct archetype chosen (default §2A for documents).
-- [ ] Archetype-A: `argument-hint` declared; discovery block copied verbatim from an
-      existing skill (e.g. team-research), not hand-rolled — the dev consistency gate enforces byte-identity.
+- [ ] Archetype-A: `argument-hint` declared; discovery resolved by a one-line call to
+      the shared `skills/qrspi-workflow/discover-topic.sh`, not a hand-rolled block.
 - [ ] Discovery runs before any question (except §2D); an auto-picked topic is announced.
 - [ ] Empty/not-found path uses `AskUserQuestion` (run producer / provide path) — never throws.
 - [ ] Base branch (if used) via the fallback chain, no bare `main`. Args carry a scalar
