@@ -117,8 +117,9 @@ about your verdict.
    node "${CLAUDE_PLUGIN_ROOT}/skills/code-review/external-reviewers.mjs"
    ```
 
-   It prints the available provider names space-separated (empty when none),
-   exit 0. **Empty output ⇒ behave exactly as today** — skip the rest of this
+   It prints the available provider names space-separated on one line (an
+   empty string when none), exit 0. **Empty output ⇒ behave exactly as
+   today** — skip the rest of this
    section. The probe already excludes any provider that is missing,
    unauthenticated, errored, or hung, so you never wait on a dead CLI.
 
@@ -156,6 +157,9 @@ about your verdict.
      "totalModels": 2
    }' | node "${CLAUDE_PLUGIN_ROOT}/skills/code-review/reconcile-findings.mjs"
    ```
+
+   `totalModels` is **optional** (defaults to the number of distinct models
+   in `byModel`).
 
    It dedupes by `file:line:claim` and tags each finding with a corroboration
    count and annotation. On a tier collision the merged finding carries the

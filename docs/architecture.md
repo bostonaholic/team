@@ -243,8 +243,12 @@ No human gate. The plan is mechanically derived from the structure.
    runs exactly as a single Claude model with no new errors or warnings. Each
    named provider's CLI must be **installed and authenticated** on the host;
    a missing, unauthenticated, or non-conforming provider is silently skipped
-   for that round (`cursor` is best-effort and skipped unless it exposes a
-   headless review mode). Corroboration is **annotation-only**: a finding
+   for that round. `cursor` is **best-effort**: the probe reports it as
+   available whenever its binary resolves on PATH and `cursor --version`
+   exits 0, but the `code-reviewer` (step 2 of its corroboration procedure)
+   still skips `cursor` at invocation unless a documented headless review
+   mode yields parseable Conventional-Comments output. Corroboration is
+   **annotation-only**: a finding
    raised by two or more models is tagged `corroborated by N models` and an
    uncorroborated one `single-model — extra scrutiny`, but the
    `code-reviewer` still emits **one** verdict, and corroboration never
@@ -625,7 +629,11 @@ not dependencies: with `externalReviewers` empty or omitted (the
 default), and on any host where a named CLI is not installed and
 authenticated, code review degrades to exactly a single-Claude pass.
 Corroboration is annotation-only — it never re-tiers a finding and never
-changes the verdict keyword the aggregate gate consumes.
+changes the verdict keyword the aggregate gate consumes. Enable
+`externalReviewers` only in environments with a trusted PATH — the
+availability probe resolves each provider's binary via PATH, so an
+attacker-controlled PATH could point a provider name at an arbitrary
+executable.
 
 **Policy:**
 

@@ -65,6 +65,8 @@ claude plugin add /path/to/team
 
 See [docs/architecture.md](docs/architecture.md) for the full architecture, the artifact frontmatter schema, and the phase-inference rules.
 
+Optional code-review corroboration is configured via the `externalReviewers` array in `.claude-plugin/plugin.json` — accepted values are `"codex"`, `"gemini"`, and `"cursor"` (opt-in; empty by default). See [docs/architecture.md](docs/architecture.md) for the full behavior.
+
 ## Components
 
 - **13 agents** in `agents/` — decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
