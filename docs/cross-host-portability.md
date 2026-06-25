@@ -107,7 +107,7 @@ Team primitive × host. Each cell: **native** (direct host equivalent),
 | **On-demand SKILL.md injection** | native (`skills:` + auto-load) | **hard gap** — GEMINI.md is always-on, no description-matched on-demand library | native (`.agents/skills/SKILL.md`, description-matched implicit invocation) |
 | **Subagent dispatch (parallel)** | native (Agent/Task tool) | native (`.gemini/agents/*.md`, ~v0.38.1, parallel) | native (`spawn_agent`/`wait_agent`…, `features.multi_agent`) |
 | **Nested subagents** | native (depth 2, ≤4, read-only) | workaround — parallel yes, but **subagents cannot spawn subagents** | workaround — `max_depth=1`; nesting capped one level |
-| **Structured agent→caller output** | native (final-text JSON envelope) | native at CLI (`--output-format json`/JSONL); **workaround** at subagent boundary — text-only return (#8022) | native + strongest (`--output-schema` JSON Schema); reliability caveat #15451 |
+| **Structured agent→caller output** | native (final-text JSON envelope) | native at CLI (`--output-format json`/JSONL, shipped via [gemini-cli#8022](https://github.com/google-gemini/gemini-cli/issues/8022)); subagent-return boundary under-specified (unverified) | native + strongest (`--output-schema` JSON Schema); a silent-drop bug under tools ([codex#15451](https://github.com/openai/codex/issues/15451)) was fixed Apr 2026 |
 | `PreToolUse` hook | native | native (`BeforeTool`) | native (`PreToolUse`) |
 | `PostToolUse` hook | native | native (`AfterTool`) | native (`PostToolUse`) |
 | `SessionStart` hook | native | native (`SessionStart`) | native (`SessionStart`) |
@@ -257,10 +257,13 @@ Both epics build the **hybrid core + per-host shim** for their host, targeting
 - **Known hazards (must track, not dodge):**
   - On-demand SKILL.md is a **hard gap** — fold each agent's `skills:` set into
     its system prompt or a scoped GEMINI.md at build time (gap 1).
-  - **Bug #8022** — subagent→orchestrator return is **text-only**; no structured
-    JSON return. The envelope convention still works (parse fenced JSON from
-    text), but full-parity structured returns must validate this path and track
-    the bug for a native fix.
+  - Structured subagent-return boundary is **under-specified** in public docs.
+    Gemini's CLI-level structured output shipped
+    ([gemini-cli#8022](https://github.com/google-gemini/gemini-cli/issues/8022),
+    completed Sep 2025), but whether a *subagent* can return structured JSON to its
+    orchestrator is unconfirmed (no tracking issue). The envelope convention works
+    regardless (parse fenced JSON from text); full-parity structured returns must
+    validate this path on the pinned Gemini version.
   - Nested subagents: Gemini subagents **cannot spawn subagents**. Full nesting
     parity (Claude's depth-2) requires the orchestrator to flatten or sequence
     what Team currently nests — track as a parity item, not a silent drop.
@@ -280,13 +283,15 @@ Both epics build the **hybrid core + per-host shim** for their host, targeting
   concrete Codex/GPT model IDs; the `model:` frontmatter is read as a tier key. The
   per-host parallelism cap (`agents.max_threads=6`) also comes from config.
 - **Known hazards (must track, not dodge):**
-  - **Bug #15250** — custom agents not always reachable from tool-backed
-    sessions; full subagent parity must verify dispatch works in Team's tool-heavy
-    flows and track the bug.
-  - **Bug #15451** — `--json`/`--output-schema` can be **silently dropped** when
-    tools/MCP are active. Team's structured returns run *with* tools active, so
-    full-parity structured output must guard against silent schema loss (e.g.
-    validate output shape, fall back to text-envelope parse) and track the bug.
+  - **[codex#15250](https://github.com/openai/codex/issues/15250) (open)** —
+    custom agents not always reachable from tool-backed sessions; full subagent
+    parity must verify dispatch works in Team's tool-heavy flows and track the
+    issue.
+  - **[codex#15451](https://github.com/openai/codex/issues/15451) — fixed Apr
+    2026** — `--json`/`--output-schema` were silently dropped when tools/MCP are
+    active. Resolved upstream, so this bites only on a pre-Apr-2026 Codex pin;
+    until the certified version is confirmed, structured output should still guard
+    (validate output shape, fall back to text-envelope parse).
   - MCP prompts/resources are a **hard gap** — keep all prompt/slash workflows on
     Skills.
 
@@ -318,12 +323,17 @@ handle.
 - **Invalid — host manifest schema drift:** a host changes its hook stdin schema.
   Chosen behavior: the schema adapter lives in the shim only; the `.mjs` core is
   untouched. This is the central reason for the hybrid boundary.
-- **Failure — Gemini #8022 text-only return:** structured envelope arrives as
-  text. Behavior: parse fenced JSON from text (the convention already does this);
-  treat structured-return parity as a tracked bug, not a blocker.
-- **Failure — Codex #15451 silent schema drop:** `--output-schema` ignored under
-  active tools. Behavior: validate the returned shape and fall back to
-  text-envelope parsing; track the bug.
+- **Failure — Gemini structured subagent return (unconfirmed):** if a subagent
+  cannot return structured JSON, the envelope arrives as text. Behavior: parse
+  fenced JSON from text (the convention already does this). Not a tracked bug —
+  CLI structured output shipped
+  ([gemini-cli#8022](https://github.com/google-gemini/gemini-cli/issues/8022));
+  only the subagent boundary is unverified.
+- **Failure — Codex pre-Apr-2026 silent schema drop:** on a Codex build before
+  the [codex#15451](https://github.com/openai/codex/issues/15451) fix,
+  `--output-schema` is ignored under active tools. Behavior: validate the returned
+  shape and fall back to text-envelope parsing; fixed on current Codex, so this is
+  a version-pin caveat.
 - **Concurrency — nested-subagent depth mismatch:** Gemini (no nesting) and Codex
   (`max_depth=1`) cannot match Claude's depth-2. Behavior: the orchestrator
   flattens/sequences nested work per host; parity item, not a silent capability
@@ -341,8 +351,13 @@ handle.
   which to use is a per-epic structure-phase choice for #56/#57.
 - **Host version pinning policy.** Which exact Gemini/Codex versions each port
   certifies against (recency risk) — an implementation detail for the port epics.
-- **Whether to upstream fixes for #8022/#15250/#15451** or only design around
-  them — a maintenance-posture call for the port epics.
+- **Posture on the one open host issue
+  ([codex#15250](https://github.com/openai/codex/issues/15250)).** Whether to
+  upstream a fix or only design around it — a maintenance-posture call for the port
+  epics. (The other two cited issues,
+  [gemini-cli#8022](https://github.com/google-gemini/gemini-cli/issues/8022) and
+  [codex#15451](https://github.com/openai/codex/issues/15451), are already resolved
+  upstream.)
 - **The full `.team/config.json` schema.** Decision 6 fixes its purpose and core
   fields (model-tier map, host, parallelism caps, repos); the exhaustive schema,
   defaults, and validation are for the port epics to pin.
@@ -351,15 +366,19 @@ handle.
 
 - **Young-host-API risk (high).** Gemini/Codex hooks + subagents shipped
   Jan–Apr 2026; contracts may break. Mitigation: bindings isolated in shims; pin
-  host versions; re-validate on upgrade.
-- **Gemini #8022 (moderate).** Text-only subagent return blocks *native*
-  structured parity; the text-envelope convention is the workaround. Tracked as a
-  parity hazard for #56.
-- **Codex #15250 (moderate).** Custom agents not always reachable from tool
-  sessions — directly hits Team's tool-heavy dispatch. Tracked for #57.
-- **Codex #15451 (moderate).** Silent `--output-schema` drop under active tools —
-  Team always runs with tools active. Needs shape validation + text fallback.
-  Tracked for #57.
+  host versions; re-validate on upgrade. *(Upstream issue statuses below verified
+  against the host repos on 2026-06-25.)*
+- **[codex#15250](https://github.com/openai/codex/issues/15250) — open
+  (moderate).** Custom agents not always reachable from tool sessions — directly
+  hits Team's tool-heavy dispatch. The one live host bug; tracked for #57.
+- **[codex#15451](https://github.com/openai/codex/issues/15451) — fixed Apr 2026
+  (low).** Silent `--output-schema` drop under active tools; resolved upstream.
+  Risk only on a pre-fix Codex pin — covered by shape validation + text fallback.
+- **Gemini structured subagent return — unverified (low–moderate).** No backing
+  issue; CLI structured output shipped
+  ([gemini-cli#8022](https://github.com/google-gemini/gemini-cli/issues/8022),
+  completed Sep 2025). #56 must confirm the subagent-return boundary on the pinned
+  version.
 - **Gemini on-demand-skill gap (moderate).** Always-on folding increases each
   agent's context size vs. Claude's on-demand load; watch token budgets.
 - **Hidden Claude Code assumptions (low–moderate).** Some agent prose may assume
