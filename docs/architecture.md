@@ -395,14 +395,17 @@ nested-agents helper use). The script is the single source of truth for
 the three-tier resolver; it scans `docs/plans/` relative to the agent's
 cwd in one self-contained invocation (agent threads reset cwd between Bash
 calls, so it relies on no shared shell state). Its behavior, and the sync
-of its `ID_RE` / `PHASE_FILES` with the two hooks' `findActiveTopic`, are
+of its `ID_RE` / `PHASE_FILES` with the hook lib's `findActiveTopic`, are
 pinned by the L3 + drift-tripwire tests in `tests/discover-topic.test.ts`,
 gated on every PR. This replaces the earlier design in which the ~6
 load-bearing lines (`ID_RE`, `PHASE_FILES`, root literal, predecessor
 filter) were duplicated verbatim across the eight directory-consuming
-skills and kept in lock-step by a byte-identity gate. Unifying the two
-hooks' JS `findActiveTopic` onto the same contract is a recorded
-follow-up.
+skills and kept in lock-step by a byte-identity gate. The JS side has the
+same shape: the two runtime hooks (`session-start-recover.mjs`,
+`pre-compact-anchor.mjs`) now share one `findActiveTopic` / `inferPhase`
+implementation in `hooks/lib/pipeline-state.mjs` (unit-tested in
+`tests/pipeline-state.test.ts`), and the drift tripwire keeps that single
+JS source in sync with the bash script.
 
 ### Methodology skills (loaded by agents, not directly invoked)
 
