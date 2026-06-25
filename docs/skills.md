@@ -335,10 +335,12 @@ load manifest; an agent typically loads at most three.
 ### systematic-debugging
 
 - **Purpose:** Evidence-first root-cause diagnosis.
-- **Loaded by:** any agent that enters a debugging investigation
-  (**advisory**). No agent body names it in a static `Load
-  skills/<name>/SKILL.md` instruction; agents load it on demand when an
-  investigation begins.
+- **Loaded by:** the `implementer` body carries an inline **conditional**
+  `Load skills/systematic-debugging/SKILL.md` directive, fired only on a
+  **non-obvious** mid-slice failure (it drills the Root Cause Analysis (5
+  Whys) chain before editing). For every other agent it remains
+  **advisory** — no static `Load skills/<name>/SKILL.md` instruction names
+  it; those agents load it on demand when an investigation begins.
 - **Key behaviors:** Gather evidence before theorizing, then isolate the
   root cause rather than patching symptoms.
 
@@ -456,7 +458,7 @@ entry-point section above rather than repeating them here.
 | `test-driven-bug-fix` | team-fix | Bug-fix flow |
 | `solid-principles` | implementer, code-reviewer | Implement |
 | `refactoring-to-patterns` | implementer | Implement |
-| `systematic-debugging` | agents when debugging (advisory) | Any (debugging) |
+| `systematic-debugging` | implementer (inline Load on non-obvious failures); other agents when debugging (advisory) | Implement; Any (debugging) |
 | `progress-tracking` | every multi-step agent (convention) | Any (multi-step procedure) |
 | `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
 | `technical-design-doc` | planner | Plan |
