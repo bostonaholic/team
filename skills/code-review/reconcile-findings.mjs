@@ -7,8 +7,12 @@
  * (see `external-reviewers.mjs`), each model produces a list of findings. This
  * module deduplicates findings that several models independently raised and
  * tags each one with how many distinct models corroborated it — without ever
- * altering the finding's severity `tier` or dropping a finding. Corroboration
- * is annotation-only metadata; the verdict the gate consumes is unchanged.
+ * dropping a finding. When two models collide on the same dedup key with
+ * different severities, the merged finding carries the MOST SEVERE tier in the
+ * group (corroboration must not silently demote a higher-severity flag), while
+ * every contributing model's original tier is preserved in `modelTiers` so
+ * nothing is lost. Corroboration is annotation-only metadata; the verdict the
+ * gate consumes is unchanged.
  *
  * The pure core (`normalizePath`, `normalizeClaim`, `dedupKey`, `reconcile`,
  * `annotate`) is unit-tested at L1. A small CLI lets the agent invoke it
@@ -53,9 +57,37 @@ export function normalizeClaim(c) {
 }
 
 /**
+ * Severity rank for a finding's `tier`, highest-wins. The vocabulary mirrors
+ * the severity-tier table in `code-review/SKILL.md` (Blocking > Major >
+ * Minor) and tolerates the Conventional-Comments labels external CLIs emit
+ * (`issue` ≈ Blocking, `suggestion` ≈ Major, `nitpick` ≈ Minor). Lookup is
+ * case-insensitive; an unknown or absent tier ranks 0 (below every named
+ * tier) so a known tier always wins a tie against an unlabeled finding. This
+ * ranking only decides which finding-object's `tier` survives a dedup merge —
+ * it does not re-tier findings or alter the SKILL.md tier table.
+ */
+const SEVERITY_RANK = {
+  blocking: 3,
+  issue: 3,
+  major: 2,
+  suggestion: 2,
+  minor: 1,
+  nitpick: 1,
+};
+
+export function severityRank(tier) {
+  if (typeof tier !== "string") return 0;
+  return SEVERITY_RANK[tier.trim().toLowerCase()] ?? 0;
+}
+
+/**
  * The canonical dedup key for a finding:
  * `${normalizePath(file)}::${line}::${normalizeClaim(claim)}`. Two findings
  * corroborate iff their keys are equal (same file, same line, same claim).
+ * `line` is intentionally compared by its string coercion — the same
+ * deliberate, no-normalization rationale as `normalizePath`/`normalizeClaim`
+ * above: a numeric `12` and a string `"12"` denote the same line and must
+ * collide, while genuinely different line numbers stay distinct.
  */
 export function dedupKey(finding) {
   return `${normalizePath(finding.file)}::${finding.line}::${normalizeClaim(finding.claim)}`;
@@ -64,9 +96,14 @@ export function dedupKey(finding) {
 /**
  * Group findings across all models by `dedupKey` and emit one merged finding
  * per group. Default-keep: every input finding lands in exactly one output
- * group; none is dropped. Each merged finding carries the original fields
- * (tier passed through verbatim), the distinct `models` that raised it, and a
- * `corroboration` count (= number of distinct models in the group).
+ * group; none is dropped. The merged finding's surviving `tier` is the
+ * MOST SEVERE tier across the group (see `severityRank`) — corroboration must
+ * never silently demote a higher-severity flag a later model raised. The
+ * body/fields come from the finding that owns that surviving tier. Each merged
+ * finding carries the distinct `models` that raised it, a `corroboration`
+ * count (= number of distinct models), and `modelTiers` — the per-model
+ * `{ model, tier }` record so every contributing model's original tier is
+ * preserved and nothing is lost on merge.
  *
  * Input: an array of `{ model, findings: Finding[] }`.
  */
@@ -77,15 +114,20 @@ export function reconcile(findingsByModel) {
       const key = dedupKey(finding);
       let group = groups.get(key);
       if (!group) {
-        group = { finding, models: new Set() };
+        group = { finding, models: new Set(), modelTiers: [] };
         groups.set(key, group);
+      } else if (severityRank(finding.tier) > severityRank(group.finding.tier)) {
+        // Most severe wins: adopt the higher-severity finding's fields/body.
+        group.finding = finding;
       }
       group.models.add(model);
+      group.modelTiers.push({ model, tier: finding.tier });
     }
   }
-  return [...groups.values()].map(({ finding, models }) => ({
+  return [...groups.values()].map(({ finding, models, modelTiers }) => ({
     ...finding,
     models: [...models],
+    modelTiers,
     corroboration: models.size,
   }));
 }

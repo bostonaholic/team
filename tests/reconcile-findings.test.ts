@@ -166,6 +166,45 @@ describe("reconcile — default-keep grouping + corroboration count", () => {
     expect(merged[0]!.tier).toBe("Blocking");
   });
 
+  test("colliding findings with different tiers merge to the max-severity tier and retain both models' tiers", async () => {
+    const { reconcile } = await load();
+    const fn = reconcile as (
+      byModel: { model: string; findings: Finding[] }[],
+    ) => Array<
+      Finding & {
+        corroboration: number;
+        models: string[];
+        modelTiers: { model: string; tier?: string }[];
+      }
+    >;
+    // Same file+line+claim from two models, but claude flags it Minor and
+    // codex flags the same line Blocking. Most severe must win the merge.
+    const merged = fn([
+      { model: "claude", findings: [{ file: "src/a.ts", line: 9, claim: "off-by-one", tier: "Minor" }] },
+      { model: "codex", findings: [{ file: "src/a.ts", line: 9, claim: "off-by-one", tier: "Blocking" }] },
+    ]);
+    expect(merged.length).toBe(1);
+    expect(merged[0]!.corroboration).toBe(2);
+    // Max-severity wins regardless of which model was seen first.
+    expect(merged[0]!.tier).toBe("Blocking");
+    // Every contributing model's original tier is preserved — nothing is lost.
+    const byModel = Object.fromEntries(merged[0]!.modelTiers.map((m) => [m.model, m.tier]));
+    expect(byModel).toEqual({ claude: "Minor", codex: "Blocking" });
+  });
+
+  test("max-severity wins independent of model order (severe-then-mild)", async () => {
+    const { reconcile } = await load();
+    const fn = reconcile as (
+      byModel: { model: string; findings: Finding[] }[],
+    ) => Array<Finding & { tier?: string }>;
+    const merged = fn([
+      { model: "codex", findings: [{ file: "src/a.ts", line: 9, claim: "off-by-one", tier: "Blocking" }] },
+      { model: "claude", findings: [{ file: "src/a.ts", line: 9, claim: "off-by-one", tier: "Minor" }] },
+    ]);
+    expect(merged.length).toBe(1);
+    expect(merged[0]!.tier).toBe("Blocking");
+  });
+
   test("differing real paths stay separate", async () => {
     const { reconcile } = await load();
     const fn = reconcile as (

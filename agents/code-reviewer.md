@@ -126,7 +126,7 @@ about your verdict.
    invoke its CLI **in parallel** via Bash against the same `git diff` snapshot
    you reviewed, holding it to the **same** fresh-context Conventional-Comments
    + verdict-keyword contract Team reviewers already emit (see
-   `code-review/SKILL.md`). `codex` and `gemini` are the corroborating
+   `skills/code-review/SKILL.md`). `codex` and `gemini` are the corroborating
    providers. `cursor` is **best-effort / degraded**: skip it unless a
    documented headless invocation yields parseable Conventional-Comments output;
    if it has no headless review mode, skip it silently.
@@ -138,14 +138,28 @@ about your verdict.
    nor blocks. Fail loud in the report, never in the gate.
 
 4. **Reconcile.** Feed your own findings plus each parsed provider's findings
-   into the reconciler — do NOT re-implement dedup in prose:
+   into the reconciler — do NOT re-implement dedup in prose. Pipe a single
+   JSON blob to stdin of the shape the reconciler documents: one entry per
+   model under `byModel`, each a `{ model, findings }` list of
+   `{ file, line, claim, tier }` findings (`body` optional):
 
    ```bash
-   node "${CLAUDE_PLUGIN_ROOT}/skills/code-review/reconcile-findings.mjs"
+   echo '{
+     "byModel": [
+       { "model": "claude", "findings": [
+         { "file": "src/auth.ts", "line": 42, "claim": "token compared with ==", "tier": "Blocking" }
+       ] },
+       { "model": "codex", "findings": [
+         { "file": "src/auth.ts", "line": 42, "claim": "token compared with ==", "tier": "Blocking" }
+       ] }
+     ],
+     "totalModels": 2
+   }' | node "${CLAUDE_PLUGIN_ROOT}/skills/code-review/reconcile-findings.mjs"
    ```
 
    It dedupes by `file:line:claim` and tags each finding with a corroboration
-   count and annotation.
+   count and annotation. On a tier collision the merged finding carries the
+   most-severe tier, with every model's original tier kept under `modelTiers`.
 
 5. **Fold annotations into your single verdict.** Report **one** verdict. List
    uncorroborated findings under a new `### Single-model findings` section
@@ -153,7 +167,7 @@ about your verdict.
    `single-model — extra scrutiny`; findings raised by two or more models carry
    `corroborated by N models`. Corroboration is **annotation only**: it never
    re-tiers a finding and never changes the verdict keyword — the tier table and
-   consult guard in `code-review/SKILL.md` are untouched.
+   consult guard in `skills/code-review/SKILL.md` are untouched.
 
 6. **Default-keep.** No finding is dropped on the basis of its corroboration
    count. A single-model finding stands with extra scrutiny; it is never
