@@ -102,6 +102,81 @@ Blocking-tier `issue:` finding, hand it to a fresh skeptic sub-agent via the
   unavailable — report findings as-is. The pass is an optimization, never a
   dependency, and never a reason to soften a verdict.
 
+## External reviewer corroboration (opt-in, config-gated)
+
+Corroboration is **opt-in and config-gated** — it runs only when
+`.claude-plugin/plugin.json` names providers under `externalReviewers`. When
+unconfigured, you behave **exactly as today**: a single-model review with the
+same output format, no new errors or warnings. This whole section is graceful
+degradation by construction — absent config or a missing CLI changes nothing
+about your verdict.
+
+1. **Probe availability.** Run the probe via Bash:
+
+   ```bash
+   node "${CLAUDE_PLUGIN_ROOT}/skills/code-review/external-reviewers.mjs"
+   ```
+
+   It prints the available provider names space-separated on one line (an
+   empty string when none), exit 0. **Empty output ⇒ behave exactly as
+   today** — skip the rest of this
+   section. The probe already excludes any provider that is missing,
+   unauthenticated, errored, or hung, so you never wait on a dead CLI.
+
+2. **Invoke available providers in parallel.** For each available provider,
+   invoke its CLI **in parallel** via Bash against the same `git diff` snapshot
+   you reviewed, holding it to the **same** fresh-context Conventional-Comments
+   + verdict-keyword contract Team reviewers already emit (see
+   `skills/code-review/SKILL.md`). `codex` and `gemini` are the corroborating
+   providers. `cursor` is **best-effort / degraded**: skip it unless a
+   documented headless invocation yields parseable Conventional-Comments output;
+   if it has no headless review mode, skip it silently.
+
+3. **Parse, discard non-conforming output.** Parse each provider's output into
+   findings (`file`, `line`, `claim`, `tier`). A provider whose output is not
+   parseable Conventional-Comments (no verdict keyword) is **discarded as
+   unparseable and logged degraded** for this round — it neither corroborates
+   nor blocks. Fail loud in the report, never in the gate.
+
+4. **Reconcile.** Feed your own findings plus each parsed provider's findings
+   into the reconciler — do NOT re-implement dedup in prose. Pipe a single
+   JSON blob to stdin of the shape the reconciler documents: one entry per
+   model under `byModel`, each a `{ model, findings }` list of
+   `{ file, line, claim, tier }` findings (`body` optional):
+
+   ```bash
+   echo '{
+     "byModel": [
+       { "model": "claude", "findings": [
+         { "file": "src/auth.ts", "line": 42, "claim": "token compared with ==", "tier": "Blocking" }
+       ] },
+       { "model": "codex", "findings": [
+         { "file": "src/auth.ts", "line": 42, "claim": "token compared with ==", "tier": "Blocking" }
+       ] }
+     ],
+     "totalModels": 2
+   }' | node "${CLAUDE_PLUGIN_ROOT}/skills/code-review/reconcile-findings.mjs"
+   ```
+
+   `totalModels` is **optional** (defaults to the number of distinct models
+   in `byModel`).
+
+   It dedupes by `file:line:claim` and tags each finding with a corroboration
+   count and annotation. On a tier collision the merged finding carries the
+   most-severe tier, with every model's original tier kept under `modelTiers`.
+
+5. **Fold annotations into your single verdict.** Report **one** verdict. List
+   uncorroborated findings under a new `### Single-model findings` section
+   (alongside `### Refuted by verification`), each tagged
+   `single-model — extra scrutiny`; findings raised by two or more models carry
+   `corroborated by N models`. Corroboration is **annotation only**: it never
+   re-tiers a finding and never changes the verdict keyword — the tier table and
+   consult guard in `skills/code-review/SKILL.md` are untouched.
+
+6. **Default-keep.** No finding is dropped on the basis of its corroboration
+   count. A single-model finding stands with extra scrutiny; it is never
+   auto-demoted or removed.
+
 ## Rules
 
 - Do NOT rewrite code. Your job is to identify problems, not to fix them.
