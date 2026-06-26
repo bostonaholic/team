@@ -108,6 +108,77 @@ testIfSelected(
   240_000,
 );
 
+// Behavioral coverage for the engineering-standards / solid-principles lenses
+// (simplicity, "implement directly, avoid unnecessary abstraction", deep
+// modules). Replaces the deleted methodology.test.ts prose pins that merely
+// grepped those skills for philosopher names + checklist items: here we drive a
+// review of an over-abstracted change and assert the reviewer FLAGS the
+// speculative generality, which is what those lenses are supposed to produce.
+testIfSelected(
+  "over-abstracted-helper",
+  async () => {
+    const fixture = loadFixture("code-reviewer", "over-abstracted-helper");
+    const workDir = mkdtempSync(join(tmpdir(), "code-reviewer-overabs-"));
+
+    try {
+      const prompt =
+        "You are reviewing a code change. Use Conventional Comments " +
+        "(`issue (blocking):`, `suggestion (non-blocking):`, `nitpick`). " +
+        "Review for correctness defects AND design quality — call out anything " +
+        "that harms maintainability, with the specific line and a one-line fix " +
+        "proposal.\n\n" +
+        fixture.body;
+
+      const result = await runAgentTest({
+        prompt,
+        workingDirectory: workDir,
+        maxTurns: 6,
+        timeout: 180_000,
+        testName: "over-abstracted-helper",
+      });
+
+      // Deterministic outcome: did the review name the over-abstraction?
+      const outcome = outcomeJudge(fixture.groundTruth, result.output);
+      // LLM judge: is the reasoning substantive (concrete line + fix)?
+      const review = await judgeReviewerOutput(result.output);
+
+      const passed =
+        result.exitReason === "success" &&
+        outcome.passes_minimum &&
+        review.reason_substance >= MIN_REASON_SUBSTANCE;
+
+      collector.addTest({
+        name: "over-abstracted-helper",
+        suite: "code-reviewer-e2e",
+        tier: "e2e",
+        passed,
+        duration_ms: result.duration,
+        cost_usd: result.costEstimate.estimatedCost,
+        transcript: result.transcript,
+        judge_scores: {
+          detection_rate: outcome.detection_rate,
+          reason_substance: review.reason_substance,
+        },
+        exit_reason: result.exitReason,
+        model: result.model,
+        first_response_ms: result.firstResponseMs,
+        max_inter_turn_ms: result.maxInterTurnMs,
+      });
+
+      expect(result.exitReason).toBe("success");
+      expect(outcome.detection_rate).toBeGreaterThanOrEqual(
+        fixture.groundTruth.minimum_detection,
+      );
+      expect(review.reason_substance).toBeGreaterThanOrEqual(
+        MIN_REASON_SUBSTANCE,
+      );
+    } finally {
+      rmSync(workDir, { recursive: true, force: true });
+    }
+  },
+  240_000,
+);
+
 afterAll(async () => {
   await collector.finalize();
   // A passing-but-3×-more-expensive run is a regression. Fail the run

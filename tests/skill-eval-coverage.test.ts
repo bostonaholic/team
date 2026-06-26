@@ -22,7 +22,7 @@
 // Each demoted skill must have:
 //   1. NO evals/fixtures/<skill>/ directory (demotion enforced, not accidental)
 //   2. NO tests/<skill>.evals.ts
-//   3. A sentinel comment in tests/protocol.test.ts documenting the demotion
+//   3. A sentinel comment in tests/wiring.test.ts documenting the demotion
 //      (line matching: // L2-demoted (heavy prior state): followed by the skill)
 
 import { describe, expect, test } from "bun:test";
@@ -393,8 +393,8 @@ describe("L2 demotion: team", () => {
     expect(existsSync(evalsFilePath("team"))).toBe(false);
   });
 
-  test("protocol.test.ts documents team as L2-demoted (heavy prior state)", () => {
-    const text = read(join(TESTS_ROOT, "protocol.test.ts"));
+  test("wiring.test.ts documents team as L2-demoted (heavy prior state)", () => {
+    const text = read(join(TESTS_ROOT, "wiring.test.ts"));
     // The implementer must add a comment line:
     // // L2-demoted (heavy prior state): team, team-worktree, team-pr, team-implement
     expect(/\/\/ L2-demoted \(heavy prior state\):[^\n]*\bteam\b/.test(text)).toBe(true);
@@ -410,8 +410,8 @@ describe("L2 demotion: team-worktree", () => {
     expect(existsSync(evalsFilePath("team-worktree"))).toBe(false);
   });
 
-  test("protocol.test.ts documents team-worktree as L2-demoted (heavy prior state)", () => {
-    const text = read(join(TESTS_ROOT, "protocol.test.ts"));
+  test("wiring.test.ts documents team-worktree as L2-demoted (heavy prior state)", () => {
+    const text = read(join(TESTS_ROOT, "wiring.test.ts"));
     expect(/\/\/ L2-demoted \(heavy prior state\):[^\n]*\bteam-worktree\b/.test(text)).toBe(true);
   });
 });
@@ -425,8 +425,8 @@ describe("L2 demotion: team-pr", () => {
     expect(existsSync(evalsFilePath("team-pr"))).toBe(false);
   });
 
-  test("protocol.test.ts documents team-pr as L2-demoted (heavy prior state)", () => {
-    const text = read(join(TESTS_ROOT, "protocol.test.ts"));
+  test("wiring.test.ts documents team-pr as L2-demoted (heavy prior state)", () => {
+    const text = read(join(TESTS_ROOT, "wiring.test.ts"));
     expect(/\/\/ L2-demoted \(heavy prior state\):[^\n]*\bteam-pr\b/.test(text)).toBe(true);
   });
 });
@@ -440,8 +440,8 @@ describe("L2 demotion: team-implement", () => {
     expect(existsSync(evalsFilePath("team-implement"))).toBe(false);
   });
 
-  test("protocol.test.ts documents team-implement as L2-demoted (heavy prior state)", () => {
-    const text = read(join(TESTS_ROOT, "protocol.test.ts"));
+  test("wiring.test.ts documents team-implement as L2-demoted (heavy prior state)", () => {
+    const text = read(join(TESTS_ROOT, "wiring.test.ts"));
     expect(/\/\/ L2-demoted \(heavy prior state\):[^\n]*\bteam-implement\b/.test(text)).toBe(true);
   });
 });
