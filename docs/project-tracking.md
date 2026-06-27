@@ -33,7 +33,7 @@ carry a few fields beyond title:
 | Field | Purpose |
 |-------|---------|
 | **Status** | Which kanban column the card is in (see below). |
-| **Priority** | `P0` (drop everything) … `P2` (eventually). |
+| **Priority** | `P0` (drop everything) … `P2` (eventually). **Every `bug` is `P0`** — see [Creating work](#creating-work). |
 | **Size** | Rough effort estimate. |
 | **Labels** | What kind of work this is and how it should be handled — see [Labels](#labels). |
 | **Linked pull requests** | The PR(s) that implement the card. |
@@ -62,6 +62,11 @@ or chore.
    *draft item* directly on the board (the "+ Add item" row). Convert it to a
    real issue before anyone starts work on it.
 
+> **Rule — every `bug` is `P0`.** When you file or triage a bug, set its
+> **Priority** to `P0`. Bugs take precedence over features and enhancements —
+> there is no lower-priority bug. (A defect that genuinely isn't worth dropping
+> other work for is usually an `enhancement`, not a `bug`.)
+
 ## Labels
 
 Labels classify *what a card is* and *how it should be handled* — the kanban
@@ -82,7 +87,7 @@ the board. If none of the three fits, the item is almost certainly a
 
 | Label | Definition | Assign when |
 |-------|------------|-------------|
-| `bug` | Something isn't working | Existing behavior is broken, incorrect, or crashes — a defect in shipped functionality. Reproduction steps belong in the issue. |
+| `bug` | Something isn't working | Existing behavior is broken, incorrect, or crashes — a defect in shipped functionality. Reproduction steps belong in the issue. **Always set Priority `P0`** (see [Creating work](#creating-work)). |
 | `enhancement` | New feature or request | New capability, or an improvement to existing behavior that works but should do more or do it better. **This is the "feature" label — there is no separate `feature` label.** |
 | `documentation` | Improvements or additions to documentation | The change is to docs only (`README`, `docs/`, `AGENTS.md`, code comments) with no behavior change. If code *and* docs change, use the code label (`bug`/`enhancement`), not this. |
 
