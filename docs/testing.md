@@ -77,6 +77,13 @@ graded checks on stochastic behavior.
    └───────────────────────────────────────────────────────────┘
 ```
 
+> **Outside these six layers sits the [Golden Master](../golden-master/RUNBOOK.md)** —
+> a manual, out-of-band run of the *whole* `/team` pipeline against a frozen
+> external app + frozen prompt, to track pipeline drift and compare models. It is
+> deliberately **not** an L1–L6 layer, **not** in `bun test`, and **not** in CI:
+> running it from inside this repo would let Team's own context poison a test meant
+> to mirror a real outside user. See [`golden-master/`](../golden-master/).
+
 ### L1 — Pure unit (the wide base)
 
 Pure functions: parsing, formatting, validation, version math, data transforms.
