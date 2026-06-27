@@ -3,8 +3,19 @@
 This directory holds the **frozen input** for the Team pipeline Golden Master — an
 out-of-band characterization run. We feed the *same* feature prompt to the full
 `/team` pipeline against a *frozen* external app and compare each run's output
-(effectiveness + efficiency metrics) against history, so we can see how changes to
-skills and agents move the result. See the epic: #132.
+(effectiveness + efficiency metrics) against history. See the epic: #132.
+
+The same frozen input serves **two** benchmarks:
+
+1. **Pipeline drift over time** — replay as our skills/agents change; attribute
+   differences to *our* changes.
+2. **Model / provider comparison** — replay on a new underlying model (a new
+   Claude, or GPT / Gemini / etc.) to benchmark *the model itself* through a
+   realistic full-pipeline task (#139).
+
+That is why the prompt is deliberately **provider-neutral** (it names no model and
+no vendor) and the seed app is vanilla — the exact same input is portable across
+any backend.
 
 > **Out of band, by design.** This is **not** part of the build, `bun test`, or
 > CI — running `/team` from inside this repo would let Team's own context poison
