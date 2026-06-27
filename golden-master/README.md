@@ -33,18 +33,22 @@ any backend.
 
 ## Freeze contract
 
+A Golden Master run has **two frozen halves**: this `prompt.md` and the Linkboard
+baseline tag **`golden-master-baseline`** (commit `2cfee1a`) that every run branches
+from. The input is **the prompt × that baseline** — keep both pinned.
+
 `prompt.md` is immutable: it is replayed verbatim across runs, so editing it
 invalidates every historical comparison. Its SHA-256 is pinned here as a
 tamper check:
 
 ```
-f6c46a2388dbfbda56b51c97e7a625e518186b8083ee2bc4afbde41fbbb165fe  golden-master/prompt.md
+8c5bb38e357103f783d2ad80dcc8fa551891a586356ab49b3dcebf378580fa4f  golden-master/prompt.md
 ```
 
 Verify from the repo root before a run:
 
 ```sh
-echo "f6c46a2388dbfbda56b51c97e7a625e518186b8083ee2bc4afbde41fbbb165fe  golden-master/prompt.md" | shasum -a 256 -c
+echo "8c5bb38e357103f783d2ad80dcc8fa551891a586356ab49b3dcebf378580fa4f  golden-master/prompt.md" | shasum -a 256 -c
 ```
 
 If this fails, the prompt was changed and the benchmark history is no longer
