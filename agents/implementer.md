@@ -78,6 +78,14 @@ Test suite has failing tests.
    contract — the implementation must satisfy them.
 3. Re-run the full test suite to confirm all tests pass.
 
+When a test, lint, or typecheck failure is **non-obvious** — the cause is not
+plain from the error and the first fix you reach for is a guess — Load
+`skills/systematic-debugging/SKILL.md` and walk the **Root Cause Analysis
+(5 Whys)** causal chain to the root before editing, so you fix the root cause
+rather than the symptom. Skip this for an **obvious** failure (a typo, a
+trivially-named assertion, a clear one-line fix) — drilling a one-line fix is
+wasted ceremony; the fast path stays intact.
+
 #### Code-review failure
 Code review found blocking quality issues (REQUEST CHANGES verdict).
 1. Read the reviewer's `issue:` comments.

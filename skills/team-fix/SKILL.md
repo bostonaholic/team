@@ -80,6 +80,10 @@ No Question. No Research. No Design. No Structure. No Plan. No human gate.
 Follow the test-driven-bug-fix methodology from
 `skills/test-driven-bug-fix/SKILL.md`. Read that skill before proceeding.
 
+When the failure is non-obvious, Load `skills/systematic-debugging/SKILL.md`
+and drill its **Root Cause Analysis (5 Whys)** causal chain to the root before
+proposing a fix.
+
 Mark each TodoWrite item `in_progress` when you begin and `completed`
 when it finishes.
 
