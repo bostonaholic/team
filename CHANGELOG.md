@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-06-27
+
 ### Added
 
 - **The bug-fixing surface now drills to the root cause with the 5 Whys technique before proposing a fix.** [`skills/systematic-debugging/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/systematic-debugging/SKILL.md) gains a **Root Cause Analysis (5 Whys)** subsection inside Phase 4 (CONCLUDE). The skill previously *named* the danger — "root cause, not proximate cause" — but offered no procedure for getting from the proximate cause to the true root, so an agent could land a fix that turned the red test green while leaving the underlying cause untouched. The new subsection teaches the technique as a first-class tool *within* the existing OBSERVE → HYPOTHESIZE → TEST → CONCLUDE flow: iterate "why?" from the proximate cause down the causal chain to a root cause you can actually change (anchoring every link in OBSERVE evidence, never speculation), branch when a link has more than one cause, recognize the technique's failure modes (stopping at the symptom, blaming a person instead of a process, fabricating a chain, single-track tunnel vision), know when to stop (the chain can be length 1 — "five is the technique's name, not its quota") or escalate when it will not converge, and tie the terminal "why?" back to the fix so it lands at the root link rather than the symptom. The change ripples to every consumer of the skill: [`agents/implementer.md`](https://github.com/bostonaholic/team/blob/main/agents/implementer.md) now loads `systematic-debugging` and walks the causal chain when a mid-slice test or lint failure is **non-obvious** — closing the highest-leverage gap, where the implementer previously guess-and-fixed by default — while the obvious-failure fast path is preserved; and [`skills/team-fix/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md) and [`skills/test-driven-bug-fix/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/test-driven-bug-fix/SKILL.md) point at the subsection on non-obvious failures. The methodology lives in exactly one file; every consumer references it by pointer, and `test-driven-bug-fix`'s existing mutation check verifies the fix actually landed at the root.
@@ -179,7 +181,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.13.2...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/bostonaholic/team/compare/v0.13.2...v0.14.0
 [0.13.2]: https://github.com/bostonaholic/team/compare/v0.13.1...v0.13.2
 [0.13.1]: https://github.com/bostonaholic/team/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/bostonaholic/team/compare/v0.12.0...v0.13.0
