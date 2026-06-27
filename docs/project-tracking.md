@@ -216,6 +216,23 @@ Both resolve every GitHub node ID at runtime, so they keep working if a field
 or option is recreated. They are dev-only helpers (under `.claude/`), not part
 of the distributed plugin.
 
+> **Moves are verified, not assumed.** `project-set-status.sh` does not trust
+> the edit's exit code. After it fires `gh project item-edit` (without
+> suppressing the command's output), it **re-reads the authoritative
+> project-side status and fails loudly if it does not match the column you
+> asked for** — printing `... (verified)` only when the read-back agrees. So a
+> zero exit from the script means the move genuinely landed, not just that the
+> mutation was accepted. This closes [#141](https://github.com/bostonaholic/team/issues/141),
+> where an edit reported success but the board appeared unchanged.
+>
+> **UI-refresh gotcha.** The GraphQL value is authoritative; an *already-open*
+> board tab is not. The Projects UI does not always live-update an open view, so
+> a move that the script reports as `(verified)` can still look stale in a tab
+> you left open — **hard-refresh the board** (or reopen the view) to see it.
+> Trust the script's verified read-back over a stale tab. (When you edit by
+> hand, never pipe `item-edit` through `tail`/`head`/`… | …` that swallows its
+> output — that masks a silent or partial write; let the script verify instead.)
+
 ## How it ties to the QRSPI pipeline
 
 A Team run (`/team`, or the individual `/team-*` phases) maps onto the board

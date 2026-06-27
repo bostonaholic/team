@@ -20,8 +20,11 @@
 #   Backlog | Ready | In progress | In review | Done
 #
 # Resolves the project, Status field, and target option IDs at runtime by name,
-# so it survives field/option recreation. Prints a confirmation to stderr;
-# stdout is left empty. Requires: gh (authenticated) and jq.
+# so it survives field/option recreation. After editing, it RE-READS the
+# authoritative project-side status and fails loudly if it does not match the
+# requested column — a successful exit from item-edit is not proof the move took
+# (bug #141). Prints a confirmation to stderr; stdout is left empty. Requires:
+# gh (authenticated) and jq.
 
 set -uo pipefail
 
@@ -59,12 +62,31 @@ EOF
 project_id="$(gh project view "$PROJECT_NUMBER" --owner "$OWNER" --format json --jq '.id')" \
   || die "failed to resolve project id"
 
-gh project item-edit \
+# Perform the edit. Capture its output instead of suppressing it, so a silent
+# or partial failure surfaces in the error rather than being masked (bug #141).
+edit_out="$(gh project item-edit \
   --project-id "$project_id" \
   --id "$item_id" \
   --field-id "$field_id" \
-  --single-select-option-id "$option_id" \
-  >/dev/null \
-  || die "item-edit failed"
+  --single-select-option-id "$option_id" 2>&1)" \
+  || die "item-edit failed: ${edit_out:-<no output>}"
 
-printf 'set %s -> "%s"\n' "$item_id" "$status" >&2
+# Verify the move actually took. A clean exit from item-edit is NOT proof: a
+# silent/partial write would otherwise pass unnoticed. Re-read the AUTHORITATIVE
+# project-side status and fail loudly if it does not match the requested column
+# (bug #141). LIMIT mirrors project-item-id.sh so a recent item past the default
+# first page is still found.
+LIMIT=10000
+items_json="$(gh project item-list "$PROJECT_NUMBER" --owner "$OWNER" --format json --limit "$LIMIT")" \
+  || die "failed to re-read project status for verification (is gh authenticated?)"
+actual="$(printf '%s' "$items_json" \
+  | jq -r --arg id "$item_id" '.items[] | select(.id == $id) | .status')"
+[ -n "$actual" ] \
+  || die "verification failed: item $item_id not found on project $PROJECT_NUMBER after edit"
+
+if [ "$(printf '%s' "$actual" | tr '[:upper:]' '[:lower:]')" \
+     != "$(printf '%s' "$status" | tr '[:upper:]' '[:lower:]')" ]; then
+  die "verification failed: requested \"$status\" but board reports \"$actual\" for $item_id — the move did not take. If the board UI looks stale, hard-refresh it (the value is authoritative here); otherwise the write did not land."
+fi
+
+printf 'set %s -> "%s" (verified)\n' "$item_id" "$status" >&2
