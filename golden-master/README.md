@@ -29,7 +29,7 @@ any backend.
 |------|---------|
 | `prompt.md` | The frozen canonical feature prompt (Save/Bookmark). **DO NOT EDIT.** |
 | `results/` | Per-run metric vectors — added by #136. |
-| `RUNBOOK.md` | Operator procedure for a run — added by #137. |
+| `RUNBOOK.md` | Operator procedure for a run + isolation rules. |
 
 ## Freeze contract
 
