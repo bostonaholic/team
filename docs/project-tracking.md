@@ -33,7 +33,7 @@ carry a few fields beyond title:
 | Field | Purpose |
 |-------|---------|
 | **Status** | Which kanban column the card is in (see below). |
-| **Priority** | `P0` (drop everything) … `P2` (eventually). **Every `bug` is `P0`** — see [Creating work](#creating-work). |
+| **Priority** | `P0` (drop everything) … `P2` (eventually). **Required on every card**; every `bug` is `P0` — see [Creating work](#creating-work). |
 | **Size** | Rough effort estimate. |
 | **Labels** | What kind of work this is and how it should be handled — see [Labels](#labels). |
 | **Linked pull requests** | The PR(s) that implement the card. |
@@ -56,11 +56,15 @@ or chore.
    gh issue edit <number> --repo bostonaholic/team \
      --add-project "🤖 Team"
    ```
-   Then set **Status**, **Priority**, **Size**, and its **type label** (see
-   [Labels](#labels)) from the board or the issue sidebar.
+   Then set **Status**, **Priority** (**required** — see below), **Size**, and its
+   **type label** (see [Labels](#labels)) from the board or the issue sidebar.
 3. **Quick capture** — for an idea you have not fully shaped yet, add a
    *draft item* directly on the board (the "+ Add item" row). Convert it to a
    real issue before anyone starts work on it.
+
+> **Rule — every issue carries a `Priority`.** A card is not fully created until it
+> has a `P0`/`P1`/`P2` set — an issue with no priority is untriaged. Set it when you
+> file the issue (or the moment you add it to the board); don't leave it blank.
 
 > **Rule — every `bug` is `P0`.** When you file or triage a bug, set its
 > **Priority** to `P0`. Bugs take precedence over features and enhancements —
