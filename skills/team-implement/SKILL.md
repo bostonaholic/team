@@ -181,18 +181,21 @@ At the review fan-out (step 5), before dispatching the reviewers:
    run only* (e.g. a `/team-implement` argument or "review this with codex and
    gemini too"), thread that set into the `code-reviewer` dispatch as an
    explicit override and **do not** persist it or prompt. It wins outright.
-2. **Otherwise, detect + check for a recorded decision.** Run:
+2. **Otherwise, detect + check for a recorded decision.** Run both deterministic
+   checks (each prints one line, exits 0):
 
    ```bash
    node "${CLAUDE_PLUGIN_ROOT}/skills/code-review/external-reviewers.mjs" --candidates
+   node "${CLAUDE_PLUGIN_ROOT}/skills/code-review/external-reviewers.mjs" --decided
    ```
 
-   It prints a JSON array of installed KNOWN_PROVIDERS (e.g. `["codex"]`),
-   ignoring config. Prompt **only when all three hold**: (i) `--candidates`
-   finds ≥1 installed external CLI, **and** (ii) `.claude/team.json` records
-   *no* decision (the `review.externalReviewers` key is absent — a present key,
-   even `[]`, is a recorded decision), **and** (iii) no per-run override was
-   given.
+   `--candidates` prints a JSON array of installed KNOWN_PROVIDERS (e.g.
+   `["codex"]`), ignoring config. `--decided` prints `decided` or `undecided`
+   for `.claude/team.json` — the tested core of this gate, so you never eyeball
+   raw JSON (a present `review.externalReviewers` key, even `[]`, is `decided`;
+   absent/malformed/missing file ⇒ `undecided`). Prompt **only when all three
+   hold**: (i) `--candidates` finds ≥1 installed external CLI, **and** (ii)
+   `--decided` prints `undecided`, **and** (iii) no per-run override was given.
 3. **Prompt once via `AskUserQuestion`.** Ask which detected providers to
    include in code review. On the user's choice, persist it so the prompt never
    fires again:

