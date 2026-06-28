@@ -4,7 +4,7 @@
  * Opt-in external-reviewer availability probe for the code-review lane.
  *
  * The IMPLEMENT-phase `code-reviewer` can corroborate its findings against
- * external review CLIs (codex, gemini, cursor) when `.claude-plugin/plugin.json`
+ * external review CLIs (codex, gemini) when `.claude-plugin/plugin.json`
  * names them under `externalReviewers`. Config *enables* a provider; this probe
  * *gates* it on the binary actually being installed and runnable. A provider
  * that is absent from config is never probed — config is the enable boundary,
@@ -34,9 +34,9 @@ import { pathToFileURL } from "node:url";
 
 /**
  * The external review providers Team knows how to invoke. Frozen single source
- * of truth: provider name === binary name for all three.
+ * of truth: provider name === binary name for both.
  */
-export const KNOWN_PROVIDERS = Object.freeze(["codex", "gemini", "cursor"]);
+export const KNOWN_PROVIDERS = Object.freeze(["codex", "gemini"]);
 
 /**
  * Normalize the `externalReviewers` config into a deduped list of known

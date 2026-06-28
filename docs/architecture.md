@@ -238,16 +238,12 @@ No human gate. The plan is mechanically derived from the structure.
    corroborate (but never replace) its own pass. This is gated by the
    user-facing `externalReviewers` array in the distributed
    `.claude-plugin/plugin.json`: it lists which providers to consult, drawn
-   from `"codex"`, `"gemini"`, and `"cursor"`. It is **opt-in** and
+   from `"codex"` and `"gemini"`. It is **opt-in** and
    **degrades gracefully** — left empty or omitted (the default), code review
    runs exactly as a single Claude model with no new errors or warnings. Each
    named provider's CLI must be **installed and authenticated** on the host;
    a missing, unauthenticated, or non-conforming provider is silently skipped
-   for that round. `cursor` is **best-effort**: the probe reports it as
-   available whenever its binary resolves on PATH and `cursor --version`
-   exits 0, but the `code-reviewer` (step 2 of its corroboration procedure)
-   still skips `cursor` at invocation unless a documented headless review
-   mode yields parseable Conventional-Comments output. Corroboration is
+   for that round. Corroboration is
    **annotation-only**: a finding
    raised by two or more models is tagged `corroborated by N models` and an
    uncorroborated one `single-model — extra scrutiny`, but the
@@ -623,7 +619,7 @@ by — external-reviewer corroboration**, an opt-in configured through the
 user-facing `externalReviewers` array in `.claude-plugin/plugin.json`.
 Where the skeptic pass tries to *refute* the reviewer's own Blocking
 findings, corroboration runs independent third-party CLIs
-(`"codex"`, `"gemini"`, `"cursor"`) over the same diff and tags each
+(`"codex"`, `"gemini"`) over the same diff and tags each
 finding with how many distinct models raised it. Both are optimizations,
 not dependencies: with `externalReviewers` empty or omitted (the
 default), and on any host where a named CLI is not installed and

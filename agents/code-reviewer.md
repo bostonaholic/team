@@ -128,9 +128,7 @@ about your verdict.
    you reviewed, holding it to the **same** fresh-context Conventional-Comments
    + verdict-keyword contract Team reviewers already emit (see
    `skills/code-review/SKILL.md`). `codex` and `gemini` are the corroborating
-   providers. `cursor` is **best-effort / degraded**: skip it unless a
-   documented headless invocation yields parseable Conventional-Comments output;
-   if it has no headless review mode, skip it silently.
+   providers.
 
 3. **Parse, discard non-conforming output.** Parse each provider's output into
    findings (`file`, `line`, `claim`, `tier`). A provider whose output is not

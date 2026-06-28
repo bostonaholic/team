@@ -31,9 +31,9 @@ async function load(): Promise<Record<string, unknown>> {
 }
 
 describe("KNOWN_PROVIDERS — frozen single source of truth", () => {
-  test("is the frozen array [codex, gemini, cursor]", async () => {
+  test("is the frozen array [codex, gemini]", async () => {
     const { KNOWN_PROVIDERS } = await load();
-    expect(KNOWN_PROVIDERS).toEqual(["codex", "gemini", "cursor"]);
+    expect(KNOWN_PROVIDERS).toEqual(["codex", "gemini"]);
     expect(Object.isFrozen(KNOWN_PROVIDERS)).toBe(true);
   });
 });
@@ -153,7 +153,6 @@ describe("availableReviewers — detection only gates named providers", () => {
     });
     expect(out).toEqual(["codex"]);
     expect(out).not.toContain("gemini");
-    expect(out).not.toContain("cursor");
   });
 
   test("returns only the named-and-available subset", async () => {
@@ -219,12 +218,6 @@ describe("code-reviewer.md wires in external-reviewer corroboration (L2 tripwire
     const text = flat(readOrEmpty(CODE_REVIEWER));
     expect(text).toContain("codex");
     expect(text).toContain("gemini");
-  });
-
-  test("marks cursor as best-effort / degraded", () => {
-    const text = flat(readOrEmpty(CODE_REVIEWER));
-    expect(text).toContain("cursor");
-    expect(/best-effort|degrad/i.test(text)).toBe(true);
   });
 
   test("states the single-model — extra scrutiny annotation", () => {
