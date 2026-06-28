@@ -136,6 +136,9 @@ Before any agent dispatch, decide where to work:
    tests.
 5. Dispatch 5 reviewers in parallel: `code-reviewer`,
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
+   Before dispatch, run the **external-reviewer on-ramp** below to resolve
+   whether `code-reviewer` should corroborate against external CLIs, and thread
+   the result (per-run override, if any) into its dispatch.
 6. **Aggregate gate** — sort every finding into a severity tier (see
    `skills/code-review/SKILL.md` → "Severity Tiers and the Auto-Fix Boundary"):
    - **Blocking** — `security-review` CRITICAL/HIGH, any `verification` failure,
@@ -161,6 +164,51 @@ Before any agent dispatch, decide where to work:
      `/team` seeded it): do **not** end the turn. Proceed directly to the
      PR phase (`skills/team-pr/SKILL.md`) in the same turn.
    - **Standalone**: suggest `/team-pr`.
+
+## External-reviewer on-ramp (orchestrator-only, at the review fan-out)
+
+Optional multi-model code-review corroboration is configured in the user's
+project file `.claude/team.json` (key `review.externalReviewers`), never in the
+plugin manifest. The effective reviewer set follows the precedence chain
+**per-run request ▸ `.claude/team.json` ▸ detect-and-prompt ▸ off**. The
+detect-and-prompt step is **yours** (the orchestrator's), because
+`AskUserQuestion` is orchestrator-only — the `code-reviewer` subagent must
+never call it.
+
+At the review fan-out (step 5), before dispatching the reviewers:
+
+1. **Honor a per-run override.** If the user requested a specific set for *this
+   run only* (e.g. a `/team-implement` argument or "review this with codex and
+   gemini too"), thread that set into the `code-reviewer` dispatch as an
+   explicit override and **do not** persist it or prompt. It wins outright.
+2. **Otherwise, detect + check for a recorded decision.** Run:
+
+   ```bash
+   node "${CLAUDE_PLUGIN_ROOT}/skills/code-review/external-reviewers.mjs" --candidates
+   ```
+
+   It prints a JSON array of installed KNOWN_PROVIDERS (e.g. `["codex"]`),
+   ignoring config. Prompt **only when all three hold**: (i) `--candidates`
+   finds ≥1 installed external CLI, **and** (ii) `.claude/team.json` records
+   *no* decision (the `review.externalReviewers` key is absent — a present key,
+   even `[]`, is a recorded decision), **and** (iii) no per-run override was
+   given.
+3. **Prompt once via `AskUserQuestion`.** Ask which detected providers to
+   include in code review. On the user's choice, persist it so the prompt never
+   fires again:
+
+   ```bash
+   node "${CLAUDE_PLUGIN_ROOT}/skills/code-review/external-reviewers.mjs" --set "codex,gemini"
+   # or, for "Claude-only, don't ask again":
+   node "${CLAUDE_PLUGIN_ROOT}/skills/code-review/external-reviewers.mjs" --set ""
+   ```
+
+   `--set ''` writes `[]` — an explicit Claude-only decision. A **recorded
+   decision is never re-prompted**; the prompt is a one-time on-ramp that then
+   goes implicit (the `code-reviewer` reads `.claude/team.json` on every
+   subsequent round).
+4. **Off.** Nothing requested, recorded, or detected ⇒ single-Claude review,
+   byte-for-byte as today.
 
 ## Quality Loop
 

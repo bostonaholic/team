@@ -104,31 +104,46 @@ Blocking-tier `issue:` finding, hand it to a fresh skeptic sub-agent via the
 
 ## External reviewer corroboration (opt-in, config-gated)
 
-Corroboration is **opt-in and config-gated** — it runs only when
-`.claude-plugin/plugin.json` names providers under `externalReviewers`. When
-unconfigured, you behave **exactly as today**: a single-model review with the
-same output format, no new errors or warnings. This whole section is graceful
-degradation by construction — absent config or a missing CLI changes nothing
-about your verdict.
+Corroboration is **opt-in**. Its source is the layered precedence chain
+**per-run request ▸ `.claude/team.json` ▸ off**:
 
-1. **Probe availability.** Run the probe via Bash:
+- If the orchestrator dispatched you with an **explicit per-run reviewer set**
+  (e.g. "review this with codex and gemini too"), use that set for this run
+  only — it overrides the file and is not persisted by you.
+- Otherwise read the persistent selection from the user's project file
+  `.claude/team.json` (key `review.externalReviewers`). The probe below reads
+  it for you.
+
+When neither supplies a provider, you behave **exactly as today**: a
+single-model review with the same output format, no new errors or warnings.
+This whole section is graceful degradation by construction — no selection or a
+missing CLI changes nothing about your verdict. (The detect-and-prompt on-ramp
+that *populates* `.claude/team.json` is an orchestrator step, not yours — you
+never call `AskUserQuestion`.)
+
+1. **Probe availability.** Run the probe via Bash (it reads `.claude/team.json`
+   in the repo under review):
 
    ```bash
    node "${CLAUDE_PLUGIN_ROOT}/skills/code-review/external-reviewers.mjs"
    ```
 
-   It prints the available provider names space-separated on one line (an
-   empty string when none), exit 0. **Empty output ⇒ behave exactly as
-   today** — skip the rest of this
-   section. The probe already excludes any provider that is missing,
-   unauthenticated, errored, or hung, so you never wait on a dead CLI.
+   It prints a JSON array of available reviewers as `{tool, model}` objects on
+   one line — e.g. `[{"tool":"codex","model":null}]` — or an empty array `[]`
+   when none, exit 0. **An empty array `[]` ⇒ behave exactly as today** — skip
+   the rest of this section. The probe already excludes any provider that is
+   missing, unauthenticated, errored, or hung, so you never wait on a dead CLI.
+   When the orchestrator gave you a per-run override instead, treat that set as
+   the available list (still confirm each binary is runnable before invoking).
 
 2. **Invoke available providers in parallel.** For each available provider,
    invoke its CLI **in parallel** via Bash against the same `git diff` snapshot
    you reviewed, holding it to the **same** fresh-context Conventional-Comments
    + verdict-keyword contract Team reviewers already emit (see
    `skills/code-review/SKILL.md`). `codex` and `gemini` are the corroborating
-   providers.
+   providers. When an entry carries a non-null `model`, pass it through to that
+   CLI's model flag (the exact flag per CLI remains a deferred open question —
+   resolve it against the installed CLI; default model when `model` is null).
 
 3. **Parse, discard non-conforming output.** Parse each provider's output into
    findings (`file`, `line`, `claim`, `tier`). A provider whose output is not

@@ -235,11 +235,25 @@ No human gate. The plan is mechanically derived from the structure.
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`. All
    five are Claude subagents. The `code-reviewer` can additionally consult
    **external reviewers** — independent third-party CLIs whose findings
-   corroborate (but never replace) its own pass. This is gated by the
-   user-facing `externalReviewers` array in the distributed
-   `.claude-plugin/plugin.json`: it lists which providers to consult, drawn
-   from `"codex"` and `"gemini"`. It is **opt-in** and
-   **degrades gracefully** — left empty or omitted (the default), code review
+   corroborate (but never replace) its own pass. The reviewer set is resolved
+   by a precedence chain — **per-run request ▸ `.claude/team.json` ▸
+   detect-and-prompt ▸ off** — drawing providers from `"codex"` and `"gemini"`:
+   - **Per-run request** — the user can ask for a specific set for *one run
+     only* (it overrides the file and is not persisted).
+   - **`.claude/team.json`** — a user-owned, per-project file (key
+     `review.externalReviewers`, entries are a name string or
+     `{ tool, model? }`), distinct from the plugin's distributed manifest.
+     Users `.gitignore` it for personal use or commit it to share with their
+     team. The key being **absent** is *undecided* (the prompt may fire); the
+     key being **present, even `[]`,** is a *recorded decision* (`[]` =
+     explicit Claude-only) and is never re-prompted.
+   - **Detect-and-prompt** — an orchestrator step (`AskUserQuestion` is
+     orchestrator-only). The first time an external CLI is detected installed
+     with no recorded decision and no per-run override, the orchestrator
+     prompts once and writes the choice back into `.claude/team.json`.
+   - **Off** — nothing requested, recorded, or detected ⇒ single-Claude review,
+     byte-for-byte as today.
+   It is **opt-in** and **degrades gracefully** — off by default, code review
    runs exactly as a single Claude model with no new errors or warnings. Each
    named provider's CLI must be **installed and authenticated** on the host;
    a missing, unauthenticated, or non-conforming provider is silently skipped
@@ -615,18 +629,20 @@ both governed by `skills/nested-agents/SKILL.md`:
   reviewers re-run), so the pass pays for itself.
 
 The `code-reviewer`'s skeptic pass is **complemented by — not replaced
-by — external-reviewer corroboration**, an opt-in configured through the
-user-facing `externalReviewers` array in `.claude-plugin/plugin.json`.
-Where the skeptic pass tries to *refute* the reviewer's own Blocking
-findings, corroboration runs independent third-party CLIs
+by — external-reviewer corroboration**, an opt-in selected through the
+precedence chain **per-run request ▸ the user-owned, per-project
+`.claude/team.json` (key `review.externalReviewers`) ▸ detect-and-prompt ▸
+off**. Config lives in the user's project file, **not** the plugin's
+distributed manifest. Where the skeptic pass tries to *refute* the reviewer's
+own Blocking findings, corroboration runs independent third-party CLIs
 (`"codex"`, `"gemini"`) over the same diff and tags each
 finding with how many distinct models raised it. Both are optimizations,
-not dependencies: with `externalReviewers` empty or omitted (the
+not dependencies: with nothing requested, recorded, or detected (the
 default), and on any host where a named CLI is not installed and
 authenticated, code review degrades to exactly a single-Claude pass.
 Corroboration is annotation-only — it never re-tiers a finding and never
-changes the verdict keyword the aggregate gate consumes. Enable
-`externalReviewers` only in environments with a trusted PATH — the
+changes the verdict keyword the aggregate gate consumes. Enable external
+reviewers only in environments with a trusted PATH — the
 availability probe resolves each provider's binary via PATH, so an
 attacker-controlled PATH could point a provider name at an arbitrary
 executable.

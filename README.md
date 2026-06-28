@@ -65,7 +65,7 @@ claude plugin add /path/to/team
 
 See [docs/architecture.md](docs/architecture.md) for the full architecture, the artifact frontmatter schema, and the phase-inference rules.
 
-Optional code-review corroboration is configured via the `externalReviewers` array in `.claude-plugin/plugin.json` — accepted values are `"codex"` and `"gemini"` (opt-in; empty by default). See [docs/architecture.md](docs/architecture.md) for the full behavior.
+Optional multi-model code-review corroboration is opt-in via a user-owned, per-project file `.claude/team.json` (under `review.externalReviewers`) — accepted providers are `"codex"` and `"gemini"`, each a name string or `{ "tool", "model" }`. You may also request a set for a single run, and the first time an external CLI is detected with no recorded decision, Team prompts once and records your choice. Precedence is **per-run request ▸ `.claude/team.json` ▸ detect-and-prompt ▸ off** (off by default). `.claude/team.json` is yours — gitignore it for personal use or commit it to share with your team. See [docs/architecture.md](docs/architecture.md) for the full behavior.
 
 ## Components
 

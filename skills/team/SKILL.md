@@ -147,6 +147,9 @@ loop:
        sort findings into severity tiers; auto-loop on any Blocking or
        Major finding (never consulting the user), tracking the round count
        in TodoWrite, capped at 5 rounds; consult only on Minor-and-below.
+       Before the fan-out, run the external-reviewer on-ramp
+       (`skills/team-implement/SKILL.md`): per-run request ▸ `.claude/team.json`
+       ▸ detect-and-prompt (`AskUserQuestion`, recorded via `--set`) ▸ off.
   8. Update TodoWrite — mark current phase `completed` and the next one
      `in_progress`.
   9. Goto loop.
