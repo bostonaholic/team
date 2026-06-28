@@ -76,8 +76,9 @@ A single canonical "core" of host-neutral definitions — the Markdown bodies an
 the Node hook logic — maintained once, plus **thin per-host binding shims** that
 translate the four blocking contracts into each host's idiom. Claude Code keeps
 its current `.claude-plugin/plugin.json` + `skills:` injection. A Gemini build
-emits `.gemini/` (settings.json hooks, `agents/*.md`, TOML commands). A Codex
-build emits `.codex/` (config.toml/hooks.json, `agents/*.md`, `.agents/skills/`).
+emits `.gemini/` (settings.json hooks, `agents/*.md`, `skills/*/SKILL.md`, TOML
+commands). A Codex build emits `.codex/` (config.toml/hooks.json, `agents/*.md`,
+`.agents/skills/`).
 The high-churn binding layer is isolated from the stable cores, so a host API
 change touches one shim, not 48 definition files.
 
@@ -126,8 +127,8 @@ Team primitive × host. Each cell: **native** (direct host equivalent),
 |----------------|-------------|------------|-----------|
 | Agent/skill **Markdown bodies** | native (loaded as-is) | native (loaded as-is) | native (system-prompt body) |
 | **Custom slash entry points** | native (SKILL.md auto-register) | native (TOML in `.gemini/commands/`) | native (built-ins + Skills; prompts deprecated→Skills) |
-| **On-demand SKILL.md injection** | native (`skills:` + auto-load) | **hard gap** — GEMINI.md is always-on, no description-matched on-demand library | native (`.agents/skills/SKILL.md`, description-matched implicit invocation) |
-| **Subagent dispatch (parallel)** | native (Agent/Task tool) | native (`.gemini/agents/*.md`, ~v0.38.1, parallel) | native (`spawn_agent`/`wait_agent`…, `features.multi_agent`) |
+| **On-demand SKILL.md injection** | native (`skills:` + auto-load) | native (`.gemini/skills/SKILL.md`, progressive disclosure via `activate_skill`) | native (`.agents/skills/SKILL.md`, description-matched implicit invocation) |
+| **Subagent dispatch (parallel)** | native (Agent/Task tool) | native (`.gemini/agents/*.md`, parallel) | native (`spawn_agent`/`wait_agent`…, `features.multi_agent`) |
 | **Nested subagents** | native (depth 2, ≤4, read-only) | workaround — parallel yes, but **subagents cannot spawn subagents** | workaround — `max_depth=1`; nesting capped one level |
 | **Structured agent→caller output** | native (final-text JSON envelope) | native at CLI (`--output-format json`/JSONL, shipped via [gemini-cli#8022](https://github.com/google-gemini/gemini-cli/issues/8022)); subagent-return boundary under-specified (unverified) | native + strongest (`--output-schema` JSON Schema); a silent-drop bug under tools ([codex#15451](https://github.com/openai/codex/issues/15451)) was fixed Apr 2026 |
 | `PreToolUse` hook | native | native (`BeforeTool`) | native (`PreToolUse`) |
@@ -138,53 +139,55 @@ Team primitive × host. Each cell: **native** (direct host equivalent),
 | **Plugin-root / project-dir env vars** | native (`${CLAUDE_PLUGIN_ROOT}`, `CLAUDE_PROJECT_DIR`) | workaround — no equivalent; pass paths via hook config / argv / stdin | workaround — no equivalent; resolve via `.codex/` trust + config |
 | **Always-on project context** | native (CLAUDE.md) | native (GEMINI.md) | native (AGENTS.md) |
 | **MCP tools** | native | native (stdio/SSE/HTTP, OAuth) | native (stdio/HTTP, OAuth, per-tool approval) |
-| **MCP prompts-as-slash-commands** | native | native (`/prompt-name --arg`) | **hard gap** — MCP prompts not documented; route via Skills |
-| **MCP resources** | native | native (`@server://path`) | **hard gap** — not documented |
+| **MCP prompts-as-slash-commands** | native | native (`/prompt-name --arg`) | **hard gap** — MCP prompts unsupported client-side; route via Skills |
+| **MCP resources** | native | native (`@server://path`) | native (`read_mcp_resource`/`list_mcp_resources`) |
 | **Manifest / binding format** | `.claude-plugin/plugin.json` | `.gemini/settings.json` + commands TOML | `config.toml`/`hooks.json` + `.codex/` |
 | **Per-project config (host-neutral)** | `.team/config.json` (plain JSON, read by portable core) | `.team/config.json` (same file, unchanged) | `.team/config.json` (same file, unchanged) |
 | **Abstract model tier → host model** | native (`model:` is a literal Claude model) | workaround — resolve tier via `.team/config.json` map | workaround — resolve tier via `.team/config.json` map |
 
 **Reading the matrix:** every row that Team's *behavior* depends on is **native
 or workaround on both hosts**. There is **no hook-event gap** — all four events
-map natively. The only **hard gaps** are: Gemini on-demand SKILL.md injection,
-and Codex MCP prompts/resources. Both are narrow and have documented detours
-(below).
+map natively, and on-demand skills, subagents, MCP tools, and MCP resources are
+native on all three hosts. The **one remaining hard gap** is narrow: Codex does
+not surface MCP **prompts** as slash commands (its MCP tools and resources are
+fine) — and it has a clean detour (route slash entry through Codex Skills, below).
 
-> The landscape is recent. As of mid-2026 both Gemini CLI and Codex CLI ship full
-> hooks systems, parallel subagents, custom slash commands, MCP, and structured
-> headless output. Earlier (2025) write-ups that treated these as hard gaps are
-> stale — but the features are young (see the recency risk in the gap analysis).
+> The landscape is recent — but not uniformly. As of mid-2026 both Gemini CLI and
+> Codex CLI ship full hooks systems, parallel subagents, custom slash commands,
+> on-demand skills, MCP, and structured headless output. Earlier (2025) write-ups
+> that treated these as hard gaps are stale. **Maturity differs:** Gemini's
+> extension surface has been stable since late 2025 (hooks ~Dec 2025, subagents
+> ~Aug 2025; latest v0.49.0), while Codex's hooks + multi-agent are younger (rolled
+> out Mar–May 2026 across v0.114–v0.129; latest v0.142.3) — see the recency risk in
+> the gap analysis.
 
 ## Gap analysis
 
-Three genuinely remaining gaps, each with the chosen treatment:
+After verifying every capability against the host repos (2026-06-27), the gap
+picture is narrower than the earlier draft assumed — **one hard gap, plus a
+cross-cutting recency caveat:**
 
-1. **Gemini has no on-demand skill-injection analog (hard gap).** GEMINI.md is
-   always-on and per-turn — it is the CLAUDE.md equivalent, not the SKILL.md
-   equivalent. Team's methodology skills (`product-thinking`,
-   `agent-open-questions`, `progress-tracking`, etc.) are loaded on-demand per
-   agent via `skills:`. **Workaround for #56:** fold each agent's required skills
-   into that agent's **system prompt** at build time (Gemini subagents carry
-   their own system prompt), or concatenate into a scoped GEMINI.md. This trades
-   on-demand economy for always-on inclusion; acceptable because Team already
-   knows statically which skills each agent preloads (the `skills:` frontmatter
-   lists them). **Asymmetry:** Codex has a true on-demand analog
-   (`.agents/skills/SKILL.md`, description-matched), so this gap is **Gemini-only**,
-   not shared — #57 ports skills natively.
+1. **Codex does not expose MCP *prompts* as slash commands (hard gap).** Codex MCP
+   supports tools **and resources** (`read_mcp_resource`/`list_mcp_resources`) but
+   **not** MCP prompts — so "MCP-prompts-as-slash-commands" works on Gemini and not
+   Codex. **Workaround for #57:** route every slash-style entry point through Codex
+   **Skills** (the documented successor to deprecated custom prompts), not MCP. This
+   is why the chosen strategy does **not** depend on MCP (decision 4).
 
-2. **Codex MCP carries tools only (hard gap for prompts/resources).** No
-   documented MCP prompts or resources. So "MCP-prompts-as-slash-commands" works
-   on Gemini but **not** Codex. **Workaround for #57:** route every slash-style
-   entry point through Codex **Skills** (the documented successor to deprecated
-   custom prompts), not MCP. This is why the chosen strategy does **not** depend
-   on MCP (decision 4).
+2. **Recency risk (cross-cutting, not a primitive gap) — Codex-weighted.** Gemini's
+   extension surface is mature (hooks ~Dec 2025 / v0.20–0.21, subagents ~Aug 2025,
+   latest v0.49.0) and is a low contract-churn risk. Codex's hooks + multi-agent are
+   younger — rolled out Mar–May 2026 across v0.114–v0.129 (latest v0.142.3) — so its
+   contracts are the ones to treat as **moving targets**. The shim layer (decision 1)
+   absorbs breaking changes in one place; the mitigation and version-pinning policy
+   are tracked in the [risk register](#risks).
 
-3. **Recency risk (cross-cutting, not a primitive gap).** Both hosts' hooks and
-   subagents shipped **Jan–Apr 2026** (Gemini hooks v0.26.0 / Jan 28; subagents
-   ~v0.38.1 / Apr 15; Codex hooks + multi-agent in v0.11x–v0.13x). They are
-   documented-stable but young — treat their contracts as **moving targets**. The
-   shim layer (decision 1) absorbs breaking changes in one place; the mitigation
-   and version-pinning policy are tracked in the [risk register](#risks).
+> **Correction (2026-06-27).** An earlier draft listed a second hard gap — *"Gemini
+> has no on-demand skill-injection analog."* Verification against the repo refuted
+> it: Gemini CLI ships a full Agent Skills system (`.gemini/skills/SKILL.md`,
+> progressive disclosure via the `activate_skill` tool), so Gemini ports skills
+> **natively**, exactly like Codex. The fold-into-system-prompt workaround that draft
+> proposed is no longer needed.
 
 ## Decisions made
 
@@ -196,7 +199,7 @@ Three genuinely remaining gaps, each with the chosen treatment:
    env resolution, and (d) the slash-entry registration. Shims may be generated or
    hand-written per host; either way they are small and isolated.
    - *Why:* the expensive, divergent, **high-churn** surface is exactly the
-     bindings (three different manifest formats, three hook schemas, young APIs),
+     bindings (three different manifest formats, three hook schemas, still-moving host APIs),
      while the **stable, valuable** surface — the 44 agent/skill bodies and 4 hook
      logic files — is *already portable*. The hybrid boundary lines up with the
      natural portable/non-portable seam, so it minimizes both duplication and
@@ -207,9 +210,9 @@ Three genuinely remaining gaps, each with the chosen treatment:
 
 2. **Rejected: Single source of truth + full transpile/build.** One canonical
    set; a build step emits a complete Claude plugin, Gemini extension, and Codex
-   package. *Why rejected:* it forces the build to fully model **three young,
-   divergent manifest/agent/command formats** whose APIs shipped Jan–Apr 2026 and
-   are still moving. The upfront modeling cost is high and the build itself
+   package. *Why rejected:* it forces the build to fully model **three divergent
+   manifest/agent/command formats**, the youngest of which (Codex's) are still
+   moving. The upfront modeling cost is high and the build itself
    becomes the highest-churn artifact — every host API change breaks the
    transpiler. The hybrid keeps the same DRY core *without* committing to a
    total-coverage transpiler; shims can stay hand-written where generation isn't
@@ -224,13 +227,13 @@ Three genuinely remaining gaps, each with the chosen treatment:
    hybrid, since the shim layer is where host idiom lives anyway.
 
 4. **MCP is documented as a bridge, not adopted as the strategy's mechanism.**
-   The matrix records MCP's reach — tools on both hosts; prompts-as-slash on
-   **Gemini only**, not Codex. But the chosen path is **native per-host bindings**;
+   The matrix records MCP's reach — tools and resources on both hosts; prompts-as-slash
+   on **Gemini only**, not Codex. But the chosen path is **native per-host bindings**;
    MCP is a **documented fallback** to revisit only if a native binding proves
-   insufficient. *Why:* Codex MCP is tools-only, so MCP can never be the *uniform*
-   layer — leaning on it would force a split path anyway while adding a server
-   dependency. Keeping it as fallback preserves the option without coupling the
-   strategy to it.
+   insufficient. *Why:* Codex MCP carries tools and resources but **not prompts**, so
+   MCP can never be the *uniform* slash-command layer — leaning on it would force a
+   split path anyway while adding a server dependency. Keeping it as fallback preserves
+   the option without coupling the strategy to it.
 
 5. **Parity target for #56/#57: full hook + subagent parity** (not MVP-first).
    Each epic targets all four hook events, parallel **and** nested subagents, and
@@ -259,6 +262,8 @@ Both epics build the **hybrid core + per-host shim** for their host, targeting
 
 - Bodies port as-is; agent frontmatter → `.gemini/agents/*.md` (structurally
   identical format).
+- Skills port **natively** to `.gemini/skills/SKILL.md` (progressive disclosure via
+  the `activate_skill` tool) — like Codex, no folding into system prompts needed.
 - Hooks: 4 `.mjs` logic files reused; shim adapts stdin/stdout to Gemini's schema
   (`hook_event_name`, `decision`, exit 2) and maps events
   `PreToolUse→BeforeTool`, `PostToolUse→AfterTool`, `SessionStart→SessionStart`,
@@ -270,8 +275,6 @@ Both epics build the **hybrid core + per-host shim** for their host, targeting
   concrete Gemini model IDs; the `model:` frontmatter is read as a tier key, not a
   literal model name.
 - **Known hazards (must track, not dodge):**
-  - On-demand SKILL.md is a **hard gap** — fold each agent's `skills:` set into
-    its system prompt or a scoped GEMINI.md at build time (gap 1).
   - Structured subagent-return boundary is **under-specified** in public docs.
     Gemini's CLI-level structured output shipped
     ([gemini-cli#8022](https://github.com/google-gemini/gemini-cli/issues/8022),
@@ -292,7 +295,7 @@ Both epics build the **hybrid core + per-host shim** for their host, targeting
 - Hooks: 4 `.mjs` reused; shim adapts to Codex `hooks.json`/`[hooks]` (schema
   mirrors Claude closely — `permissionDecision:"deny"`/exit 2). Events map nearly
   1:1 (`PreToolUse`/`PostToolUse`/`SessionStart`/`PreCompact`).
-- Slash entry points → Codex **Skills** (NOT MCP — gap 2).
+- Slash entry points → Codex **Skills** (NOT MCP — gap 1).
 - Env: resolve via `.codex/` trust + config.toml.
 - Config: model tiers resolve through `.team/config.json` — map Team's tiers to
   concrete Codex/GPT model IDs; the `model:` frontmatter is read as a tier key. The
@@ -306,8 +309,8 @@ Both epics build the **hybrid core + per-host shim** for their host, targeting
     2026** — silent `--output-schema` drop under active tools; resolved upstream
     (full detail in the [risk register](#risks)). Guard on a pre-fix Codex pin:
     validate output shape, fall back to text-envelope parse.
-  - MCP prompts/resources are a **hard gap** — keep all prompt/slash workflows on
-    Skills.
+  - MCP **prompts** are a **hard gap** (tools and resources are native) — keep all
+    prompt/slash workflows on Skills.
 
 ## Out of scope
 
@@ -331,9 +334,9 @@ handle.
 - **Boundary — zero portable change in a body:** a host with an identical body
   format (Gemini agents) needs no transform; the shim is pure binding. The
   strategy must not force a transpile pass where copy suffices.
-- **Boundary — a primitive with no host facility at all:** the two hard gaps
-  (Gemini on-demand skills, Codex MCP prompts) have explicit documented detours;
-  any *new* primitive Team adds must be matrix-checked before assuming it ports.
+- **Boundary — a primitive with no host facility at all:** the one hard gap
+  (Codex MCP prompts) has an explicit documented detour; any *new* primitive Team
+  adds must be matrix-checked before assuming it ports.
 - **Invalid — host manifest schema drift:** a host changes its hook stdin schema.
   Chosen behavior: the schema adapter lives in the shim only; the `.mjs` core is
   untouched. This is the central reason for the hybrid boundary.
@@ -378,10 +381,12 @@ handle.
 
 ## Risks
 
-- **Young-host-API risk (high).** Gemini/Codex hooks + subagents shipped
-  Jan–Apr 2026; contracts may break. Mitigation: bindings isolated in shims; pin
-  host versions; re-validate on upgrade. *(Upstream issue statuses below verified
-  against the host repos on 2026-06-25.)*
+- **Young-host-API risk — Codex-weighted (moderate).** Codex's hooks + multi-agent
+  rolled out Mar–May 2026 (v0.114–v0.129; latest v0.142.3) and its contracts may
+  still move; Gemini's surface has been stable since late 2025 (latest v0.49.0) and
+  is lower risk. Mitigation: bindings isolated in shims; pin host versions;
+  re-validate on upgrade. *(Capabilities verified against the host repos 2026-06-27;
+  issue statuses 2026-06-25.)*
 - **[codex#15250](https://github.com/openai/codex/issues/15250) — open
   (moderate).** Custom agents not always reachable from tool sessions — directly
   hits Team's tool-heavy dispatch. The one live host bug; tracked for #57.
@@ -393,8 +398,6 @@ handle.
   ([gemini-cli#8022](https://github.com/google-gemini/gemini-cli/issues/8022),
   completed Sep 2025). #56 must confirm the subagent-return boundary on the pinned
   version.
-- **Gemini on-demand-skill gap (moderate).** Always-on folding increases each
-  agent's context size vs. Claude's on-demand load; watch token budgets.
 - **Hidden Claude Code assumptions (low–moderate).** Some agent prose may assume
   Claude-specific tool names or behaviors not caught by the layer analysis; the
   port epics should audit bodies for host-specific references during structure.
