@@ -257,7 +257,13 @@ No human gate. The plan is mechanically derived from the structure.
    runs exactly as a single Claude model with no new errors or warnings. Each
    named provider's CLI must be **installed and authenticated** on the host;
    a missing, unauthenticated, or non-conforming provider is silently skipped
-   for that round. Corroboration is
+   for that round. Each provider is invoked through a documented, **read-only,
+   headless** command baked into `external-reviewers.mjs` — no runtime flag
+   discovery: `codex exec --sandbox read-only` and `gemini --approval-mode plan
+   --skip-trust`, each fed the `git diff` on stdin plus a review prompt, with
+   `-m <model>` appended only when a model is configured. The probe emits the
+   exact `invoke` argv per available provider so the agent runs precisely what
+   the tested module specifies. Corroboration is
    **annotation-only**: a finding
    raised by two or more models is tagged `corroborated by N models` and an
    uncorroborated one `single-model — extra scrutiny`, but the
@@ -635,8 +641,10 @@ precedence chain **per-run request ▸ the user-owned, per-project
 off**. Config lives in the user's project file, **not** the plugin's
 distributed manifest. Where the skeptic pass tries to *refute* the reviewer's
 own Blocking findings, corroboration runs independent third-party CLIs
-(`"codex"`, `"gemini"`) over the same diff and tags each
-finding with how many distinct models raised it. Both are optimizations,
+(`"codex"`, `"gemini"`) over the same diff — via pre-baked, read-only headless
+commands (`codex exec --sandbox read-only`, `gemini --approval-mode plan
+--skip-trust`), no runtime discovery — and tags each finding with how many
+distinct models raised it. Both are optimizations,
 not dependencies: with nothing requested, recorded, or detected (the
 default), and on any host where a named CLI is not installed and
 authenticated, code review degrades to exactly a single-Claude pass.

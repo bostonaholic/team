@@ -53,6 +53,100 @@ describe("KNOWN_PROVIDERS — frozen single source of truth", () => {
   });
 });
 
+describe("PROVIDER_INVOCATION — frozen exact-invocation contract", () => {
+  type Spec = {
+    binary: string;
+    baseArgs: string[];
+    modelFlag: string;
+    promptVia: string;
+  };
+  const map = async () =>
+    (await load()).PROVIDER_INVOCATION as { codex: Spec; gemini: Spec };
+
+  test("is deeply frozen", async () => {
+    const m = await map();
+    expect(Object.isFrozen(m)).toBe(true);
+    expect(Object.isFrozen(m.codex)).toBe(true);
+    expect(Object.isFrozen(m.codex.baseArgs)).toBe(true);
+    expect(Object.isFrozen(m.gemini)).toBe(true);
+    expect(Object.isFrozen(m.gemini.baseArgs)).toBe(true);
+  });
+
+  test("codex runs the non-interactive exec subcommand under read-only sandbox", async () => {
+    const m = await map();
+    expect(m.codex.binary).toBe("codex");
+    expect(m.codex.baseArgs).toEqual(["exec", "--sandbox", "read-only"]);
+    expect(m.codex.modelFlag).toBe("-m");
+    expect(m.codex.promptVia).toBe("arg");
+  });
+
+  test("gemini runs headless plan (read-only) mode with workspace trust skipped", async () => {
+    const m = await map();
+    expect(m.gemini.binary).toBe("gemini");
+    expect(m.gemini.baseArgs).toEqual(["--approval-mode", "plan", "--skip-trust"]);
+    expect(m.gemini.modelFlag).toBe("-m");
+    expect(m.gemini.promptVia).toBe("-p");
+  });
+
+  test("hardcodes no model version anywhere in the contract", async () => {
+    const m = await map();
+    const all = JSON.stringify(m);
+    // A bare version token (e.g. "gpt-5.3-codex", "gemini-3-pro") would be a
+    // staleness landmine; only the read-only flags and the `-m` selector live here.
+    expect(/gpt-|gemini-\d/.test(all)).toBe(false);
+  });
+});
+
+describe("buildInvocation — pure argv-prefix builder", () => {
+  const build = async () =>
+    (await load()).buildInvocation as (tool: string, model: string | null) => string[];
+
+  test("codex + model appends -m <model> after the read-only base args", async () => {
+    const fn = await build();
+    expect(typeof fn).toBe("function");
+    expect(fn("codex", "gpt-5.3-codex")).toEqual([
+      "codex",
+      "exec",
+      "--sandbox",
+      "read-only",
+      "-m",
+      "gpt-5.3-codex",
+    ]);
+  });
+
+  test("codex without a model omits -m (CLI default model)", async () => {
+    const fn = await build();
+    expect(fn("codex", null)).toEqual(["codex", "exec", "--sandbox", "read-only"]);
+  });
+
+  test("gemini + model appends -m <model> after the headless base args", async () => {
+    const fn = await build();
+    expect(fn("gemini", "gemini-3-pro")).toEqual([
+      "gemini",
+      "--approval-mode",
+      "plan",
+      "--skip-trust",
+      "-m",
+      "gemini-3-pro",
+    ]);
+  });
+
+  test("gemini without a model omits -m (CLI default model)", async () => {
+    const fn = await build();
+    expect(fn("gemini", null)).toEqual([
+      "gemini",
+      "--approval-mode",
+      "plan",
+      "--skip-trust",
+    ]);
+  });
+
+  test("throws on an unknown tool (fail fast, fail loud)", async () => {
+    const fn = await build();
+    expect(() => fn("bogus", null)).toThrow();
+  });
+});
+
 describe("parseTeamConfig — decided vs. undecided + normalization", () => {
   const parse = async () =>
     (await load()).parseTeamConfig as (
@@ -357,11 +451,23 @@ describe("external-reviewers.mjs CLI contract (L2)", () => {
     expect(existsSync(MODULE)).toBe(true);
   });
 
-  test("doc comment names .claude/team.json and the JSON {tool,model} stdout shape", () => {
+  test("doc comment names .claude/team.json and the JSON {tool,model,...} stdout shape", () => {
     const text = readOrEmpty(MODULE);
     expect(text).toContain(".claude/team.json");
     expect(/stdout/i.test(text)).toBe(true);
-    expect(/JSON array of .*tool.*model|\{tool,model\}/i.test(text)).toBe(true);
+    // The default mode prints a JSON array whose entries carry tool + model
+    // (now extended with invoke/promptVia); pin it via the worked example.
+    expect(text).toContain('"tool":"codex"');
+    expect(text).toContain('"model"');
+  });
+
+  test("default-mode doc comment documents the invoke argv prefix and promptVia fields", () => {
+    const text = readOrEmpty(MODULE);
+    expect(text).toContain("invoke");
+    expect(text).toContain("promptVia");
+    // The exact read-only flags must appear in the worked default-mode example.
+    expect(text).toContain("--sandbox");
+    expect(text).toContain("read-only");
   });
 
   test("doc comment documents the --candidates, --decided, and --set CLI modes", () => {
@@ -473,6 +579,21 @@ describe("code-reviewer.md wires in external-reviewer corroboration (L2 tripwire
     const text = flat(readOrEmpty(CODE_REVIEWER));
     expect(text).toContain("codex");
     expect(text).toContain("gemini");
+  });
+
+  test("bakes the EXACT read-only headless commands for codex and gemini", () => {
+    const text = flat(readOrEmpty(CODE_REVIEWER));
+    // codex: non-interactive exec subcommand under a read-only sandbox.
+    expect(text).toContain("codex exec");
+    expect(text).toContain("--sandbox read-only");
+    // gemini: headless plan (read-only) mode with workspace trust skipped.
+    expect(text).toContain("gemini");
+    expect(text).toContain("--approval-mode plan");
+    expect(text).toContain("--skip-trust");
+  });
+
+  test("no longer defers the model flag as an open question", () => {
+    expect(/deferred open question/i.test(readOrEmpty(CODE_REVIEWER))).toBe(false);
   });
 
   test("states the single-model — extra scrutiny annotation", () => {

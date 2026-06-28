@@ -35,11 +35,16 @@
  *
  * CLI modes:
  *   (default)        read `.claude/team.json` in cwd, probe, and print the
- *                    available reviewers as a JSON array of `{tool,model}` so
- *                    model passthrough is unambiguous — e.g.
- *                    `[{"tool":"codex","model":null}]`. An empty array `[]`
- *                    (nothing configured or nothing installed) is the
- *                    graceful-degradation path: "behave exactly as today."
+ *                    available reviewers as a JSON array. Each entry carries
+ *                    `tool`, `model`, the ready-to-run `invoke` argv prefix
+ *                    (from `buildInvocation` — binary + read-only base args +
+ *                    `-m <model>` when set), and `promptVia` (`"arg"` for codex,
+ *                    `"-p"` for gemini) so the agent runs EXACTLY what the probe
+ *                    emits without rediscovering flags — e.g.
+ *                    `[{"tool":"codex","model":null,"invoke":["codex","exec","--sandbox","read-only"],"promptVia":"arg"}]`.
+ *                    An empty array `[]` (nothing configured or nothing
+ *                    installed) is the graceful-degradation path: "behave
+ *                    exactly as today."
  *   --candidates     print the installed KNOWN_PROVIDERS as a JSON array of tool
  *                    names (ignoring config) — the orchestrator's detect step
  *                    feeds this into its prompt menu.
@@ -63,6 +68,7 @@
  */
 
 import { spawn } from "node:child_process";
+import { realpathSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -72,6 +78,71 @@ import { pathToFileURL } from "node:url";
  * of truth: provider name === binary name for both.
  */
 export const KNOWN_PROVIDERS = Object.freeze(["codex", "gemini"]);
+
+/**
+ * The EXACT, verified non-interactive invocation each provider's CLI takes —
+ * the single source of truth so the runtime never has to discover the flags.
+ * Both CLIs read the `git diff` on **stdin** and take a review-instruction
+ * prompt, run **read-only** (no edits), and are fully headless.
+ *
+ * Per tool:
+ *   - `binary`    — the executable name (=== the provider name).
+ *   - `baseArgs`  — the fixed, always-present args that pin the non-interactive
+ *                   read-only mode. codex: `exec --sandbox read-only`
+ *                   (the `exec` subcommand is non-interactive; `--sandbox
+ *                   read-only` forbids writes). gemini: `--approval-mode plan
+ *                   --skip-trust` (`--approval-mode plan` is the read-only mode;
+ *                   `--skip-trust` trusts the workspace so a headless run never
+ *                   hangs on a trust prompt).
+ *   - `modelFlag` — the flag that selects a model (`-m` for both); appended only
+ *                   when a non-null model is configured (else the CLI default).
+ *   - `promptVia` — how the review prompt is passed at runtime: `"arg"` for
+ *                   codex (a trailing positional arg), `"-p"` for gemini (after
+ *                   the `-p` flag). The diff is stdin for both.
+ *
+ * No model *version* is hardcoded here — models go stale; the model comes from
+ * config or the CLI default. Frozen (deeply) so it is a read-only contract.
+ */
+export const PROVIDER_INVOCATION = Object.freeze({
+  codex: Object.freeze({
+    binary: "codex",
+    baseArgs: Object.freeze(["exec", "--sandbox", "read-only"]),
+    modelFlag: "-m",
+    promptVia: "arg",
+  }),
+  gemini: Object.freeze({
+    binary: "gemini",
+    baseArgs: Object.freeze(["--approval-mode", "plan", "--skip-trust"]),
+    modelFlag: "-m",
+    promptVia: "-p",
+  }),
+});
+
+/**
+ * Build the argv **prefix** for a provider invocation — binary + fixed base
+ * args + `-m <model>` when `model` is a non-null string. This is everything
+ * EXCEPT the review prompt (the agent supplies it at runtime) and the piped
+ * diff (stdin). Pure and tested.
+ *
+ *   buildInvocation("codex", "gpt-5.3-codex")
+ *     → ["codex", "exec", "--sandbox", "read-only", "-m", "gpt-5.3-codex"]
+ *   buildInvocation("gemini", null)
+ *     → ["gemini", "--approval-mode", "plan", "--skip-trust"]
+ *
+ * Throws on an unknown tool (fail fast, fail loud) — callers pass only
+ * KNOWN_PROVIDERS entries from `parseTeamConfig`/`availableReviewers`.
+ */
+export function buildInvocation(tool, model) {
+  const spec = PROVIDER_INVOCATION[tool];
+  if (!spec) {
+    throw new Error(`unknown external reviewer tool: ${tool}`);
+  }
+  const prefix = [spec.binary, ...spec.baseArgs];
+  if (typeof model === "string") {
+    prefix.push(spec.modelFlag, model);
+  }
+  return prefix;
+}
 
 /**
  * Safe charset for a free-form `model` string. The `model` is passed through to
@@ -286,12 +357,21 @@ async function readTeamConfig(root) {
     .catch(() => ({}));
 }
 
-/** Default mode: print the available reviewers as a JSON array of {tool,model}. */
+/**
+ * Default mode: print the available reviewers as a JSON array. Each entry is
+ * enriched with the ready-to-run `invoke` argv prefix and `promptVia` so the
+ * agent runs exactly what the probe emits — no flag rediscovery at runtime.
+ */
 async function runDefault(root) {
   const config = await readTeamConfig(root);
   const { reviewers } = parseTeamConfig(config);
   const available = await availableReviewers(reviewers, PROBE_DEPS);
-  process.stdout.write(`${JSON.stringify(available)}\n`);
+  const enriched = available.map((r) => ({
+    ...r,
+    invoke: buildInvocation(r.tool, r.model),
+    promptVia: PROVIDER_INVOCATION[r.tool].promptVia,
+  }));
+  process.stdout.write(`${JSON.stringify(enriched)}\n`);
 }
 
 /** `--candidates`: print installed KNOWN_PROVIDERS as a JSON array of tool names. */
@@ -326,8 +406,14 @@ async function runSet(root, csv) {
 
 // CLI entry point — runs only when executed directly, not when imported by a
 // test (process.argv[1] is the test runner under `bun test`, so the import is
-// side-effect free).
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// side-effect free). `realpathSync` resolves a symlinked plugin install (e.g.
+// `~/.claude/plugins/<name>` → a worktree) so the invoked path matches the
+// symlink-resolved `import.meta.url`; without it the guard is false under a
+// symlink and the CLI silently no-ops (prints nothing, exits 0).
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
+) {
   // Config lives in the user's project, not the plugin install dir: resolve
   // from cwd (the repo under review), never CLAUDE_PLUGIN_ROOT.
   const root = process.cwd();

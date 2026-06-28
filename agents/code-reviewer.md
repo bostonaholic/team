@@ -128,22 +128,51 @@ never call `AskUserQuestion`.)
    node "${CLAUDE_PLUGIN_ROOT}/skills/code-review/external-reviewers.mjs"
    ```
 
-   It prints a JSON array of available reviewers as `{tool, model}` objects on
-   one line — e.g. `[{"tool":"codex","model":null}]` — or an empty array `[]`
-   when none, exit 0. **An empty array `[]` ⇒ behave exactly as today** — skip
-   the rest of this section. The probe already excludes any provider that is
-   missing, unauthenticated, errored, or hung, so you never wait on a dead CLI.
-   When the orchestrator gave you a per-run override instead, treat that set as
-   the available list (still confirm each binary is runnable before invoking).
+   It prints a JSON array of available reviewers on one line, one object per
+   provider carrying `tool`, `model`, a ready-to-run `invoke` argv prefix, and
+   `promptVia` — e.g.
+   `[{"tool":"codex","model":null,"invoke":["codex","exec","--sandbox","read-only"],"promptVia":"arg"}]`
+   — or an empty array `[]` when none, exit 0. **An empty array `[]` ⇒ behave
+   exactly as today** — skip the rest of this section. The probe already
+   excludes any provider that is missing, unauthenticated, errored, or hung, so
+   you never wait on a dead CLI. The `invoke` argv and `promptVia` field are the
+   single source of truth for *how* to run each provider — you do not rediscover
+   flags. When the orchestrator gave you a per-run override instead, treat that
+   set as the available list (still confirm each binary is runnable before
+   invoking).
 
-2. **Invoke available providers in parallel.** For each available provider,
-   invoke its CLI **in parallel** via Bash against the same `git diff` snapshot
-   you reviewed, holding it to the **same** fresh-context Conventional-Comments
-   + verdict-keyword contract Team reviewers already emit (see
-   `skills/code-review/SKILL.md`). `codex` and `gemini` are the corroborating
-   providers. When an entry carries a non-null `model`, pass it through to that
-   CLI's model flag (the exact flag per CLI remains a deferred open question —
-   resolve it against the installed CLI; default model when `model` is null).
+2. **Invoke available providers in parallel.** Run each provider's `invoke`
+   argv from the probe output **in parallel** via Bash, piping the same
+   `git diff <base>..HEAD` snapshot you reviewed to the CLI's **stdin** and
+   supplying a review prompt that holds it to the **same** fresh-context
+   Conventional-Comments + verdict-keyword contract Team reviewers already emit
+   (see `skills/code-review/SKILL.md` for the exact finding format) — each
+   finding carrying a `file:line` ref, then a final line with a verdict keyword
+   (`APPROVE` / `REQUEST CHANGES` / `COMMENT`) and **nothing else** (no
+   preamble). `codex` and `gemini` are the corroborating providers; both run
+   **read-only** and non-interactively. Capture stdout. The probe's `invoke`
+   already encodes the exact flags and `promptVia` says where the prompt goes
+   (positional for codex, via `-p` for gemini); the ready-to-run commands are:
+
+   - **codex** (`promptVia: "arg"` — prompt is a trailing positional argument):
+
+     ```bash
+     git diff <base>..HEAD | codex exec --sandbox read-only [-m <model>] "<REVIEW_PROMPT>"
+     ```
+
+   - **gemini** (`promptVia: "-p"` — prompt is passed via `-p`):
+
+     ```bash
+     git diff <base>..HEAD | gemini --approval-mode plan --skip-trust [-m <model>] -p "<REVIEW_PROMPT>"
+     ```
+
+   `codex exec` is the non-interactive subcommand and `--sandbox read-only`
+   forbids writes; gemini's `--approval-mode plan` is its read-only mode and
+   `--skip-trust` trusts the workspace so the headless run never hangs on a
+   trust prompt. Append `-m <model>` only when the entry's `model` is non-null;
+   omit it (CLI default model) when `model` is null. (codex also accepts
+   `--output-last-message <FILE>` to capture only the final message to a file,
+   but stdout is the primary path.)
 
 3. **Parse, discard non-conforming output.** Parse each provider's output into
    findings (`file`, `line`, `claim`, `tier`). A provider whose output is not
