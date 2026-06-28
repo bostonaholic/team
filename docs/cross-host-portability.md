@@ -17,6 +17,20 @@ nav_label: portability
 > execute against the matrix, gap analysis, and "what #56/#57 execute against"
 > section below.
 
+## Contents
+
+- [Current state](#current-state)
+- [Desired end state](#desired-end-state)
+- [Patterns to follow](#patterns-to-follow)
+- [The capability matrix](#the-capability-matrix)
+- [Gap analysis](#gap-analysis)
+- [Decisions made](#decisions-made)
+- [What #56 and #57 execute against](#what-56-and-57-execute-against)
+- [Out of scope](#out-of-scope)
+- [Edge cases](#edge-cases)
+- [Open questions (deferred to the port epics)](#open-questions-deferred-to-the-port-epics)
+- [Risks](#risks)
+
 ## Current state
 
 Team is a **Claude Code-native plugin**. It ships 13 agents (`agents/*.md`), 31
@@ -33,20 +47,28 @@ hook *logic* (Node stdlib only — `node:fs/promises`, `node:child_process`,
 `docs/plans/<id>/`; and the agent→orchestrator JSON-envelope convention. These
 layers move to any host unchanged.
 
-**Claude Code-specific contracts** are the portability-blocking surface:
-(1) the hook event names + stdin schema + stdout/stderr JSON contract
-(`tool_name`, `tool_input`, `cwd`; `hookSpecificOutput.{permissionDecision,
-additionalContext}`, `systemMessage`; exit-code semantics);
-(2) the `${CLAUDE_PLUGIN_ROOT}` / `CLAUDE_PROJECT_DIR` env vars baked into every
-hook command (`plugin.json:18,30,41,52`); (3) the Agent/Task tool dispatch +
-`SendMessage` resume + depth/parallel nesting semantics; and (4) SKILL.md
-slash-command auto-registration + `user-invocable`. Agent **frontmatter field
-semantics** (`name`/`model`/`tools`/`skills`/`permissionMode`) are also
-host-interpreted. Everything portable rides *on top of* these four non-portable
-bindings. In particular the `model:` field is a *Claude-specific model name*;
-making it portable means resolving it through host-neutral config rather than
-baking a literal into each definition (see `.team/config.json` under Desired end
-state).
+**Claude Code-specific contracts** are the portability-blocking surface — four
+non-portable bindings:
+
+1. **Hook event names + stdin/stdout JSON contract** — the stdin schema
+   (`tool_name`, `tool_input`, `cwd`), the stdout/stderr envelope
+   (`hookSpecificOutput.{permissionDecision, additionalContext}`, `systemMessage`),
+   and exit-code semantics.
+2. **Host path env vars** — `${CLAUDE_PLUGIN_ROOT}`, interpolated into every hook
+   command (`plugin.json:18,30,41,52`), and `CLAUDE_PROJECT_DIR`, read from the
+   environment inside the hook bodies (`pre-compact-anchor.mjs:27`,
+   `session-start-recover.mjs:31`, `post-write-validate.mjs:103`). The two use
+   different mechanisms — manifest interpolation vs. runtime env lookup.
+3. **Agent/Task tool dispatch** — plus `SendMessage` resume and depth/parallel
+   nesting semantics.
+4. **SKILL.md slash-command auto-registration** — plus `user-invocable`.
+
+Agent **frontmatter field semantics** (`name`/`model`/`tools`/`skills`/`permissionMode`)
+are also host-interpreted. Everything portable rides *on top of* these four
+non-portable bindings. In particular the `model:` field is a *Claude-specific
+model name*; making it portable means resolving it through host-neutral config
+rather than baking a literal into each definition (see `.team/config.json` under
+Desired end state).
 
 ## Desired end state
 
@@ -160,10 +182,9 @@ Three genuinely remaining gaps, each with the chosen treatment:
 3. **Recency risk (cross-cutting, not a primitive gap).** Both hosts' hooks and
    subagents shipped **Jan–Apr 2026** (Gemini hooks v0.26.0 / Jan 28; subagents
    ~v0.38.1 / Apr 15; Codex hooks + multi-agent in v0.11x–v0.13x). They are
-   documented-stable but young. Treat their contracts as **moving targets**: the
-   shim layer (decision 1) exists precisely to absorb breaking changes in one
-   place. The full-parity epics must pin host versions and re-validate on host
-   upgrades (risks below).
+   documented-stable but young — treat their contracts as **moving targets**. The
+   shim layer (decision 1) absorbs breaking changes in one place; the mitigation
+   and version-pinning policy are tracked in the [risk register](#risks).
 
 ## Decisions made
 
@@ -176,7 +197,7 @@ Three genuinely remaining gaps, each with the chosen treatment:
    hand-written per host; either way they are small and isolated.
    - *Why:* the expensive, divergent, **high-churn** surface is exactly the
      bindings (three different manifest formats, three hook schemas, young APIs),
-     while the **stable, valuable** surface — the 48 agent/skill bodies and 4 hook
+     while the **stable, valuable** surface — the 44 agent/skill bodies and 4 hook
      logic files — is *already portable*. The hybrid boundary lines up with the
      natural portable/non-portable seam, so it minimizes both duplication and
      churn-blast-radius.
@@ -218,22 +239,16 @@ Three genuinely remaining gaps, each with the chosen treatment:
    (risks + "what #56/#57 execute against" below) rather than deferring them by
    reducing scope.
 
-6. **Per-project configuration lives in a host-neutral `.team/config.json`.**
-   Each project Team is configured in carries a single `.team/config.json` at its
-   root — plain JSON, part of the portable core, read the same way on every host.
-   It holds the host-agnostic settings: the map from Team's abstract model tiers
-   (mechanical / judgment / complex) to the concrete model IDs of the active host,
-   host selection, per-host parallelism caps (e.g. Codex `agents.max_threads`), and
-   the multi-repo list.
+6. **Per-project configuration lives in a host-neutral `.team/config.json`** — the
+   artifact, the host-agnostic settings it holds (model-tier→host-model map, host
+   selection, per-host parallelism caps, multi-repo list), and its relationship to
+   the per-host manifests are specified under
+   [Desired end state](#desired-end-state).
    - *Why:* it pulls the one irreducibly host-varying value out of the portable
      definitions — the agent `model:` frontmatter is a Claude-specific model name,
      meaningless on Gemini/Codex — and puts it behind a single host-agnostic
-     indirection, so the 48 agent/skill bodies never carry a host-specific model
+     indirection, so the 44 agent/skill bodies never carry a host-specific model
      literal. The per-host shims *read* `.team/config.json`; they never restate it.
-   - *Relationship to the manifests:* it is the host-neutral counterpart to the
-     per-host manifests (`.claude-plugin/plugin.json` / `.gemini/settings.json` /
-     `config.toml`), which carry only bindings. Config is shared and identical;
-     bindings are host-specific and generated by the shim.
 
 ## What #56 and #57 execute against
 
@@ -288,10 +303,9 @@ Both epics build the **hybrid core + per-host shim** for their host, targeting
     parity must verify dispatch works in Team's tool-heavy flows and track the
     issue.
   - **[codex#15451](https://github.com/openai/codex/issues/15451) — fixed Apr
-    2026** — `--json`/`--output-schema` were silently dropped when tools/MCP are
-    active. Resolved upstream, so this bites only on a pre-Apr-2026 Codex pin;
-    until the certified version is confirmed, structured output should still guard
-    (validate output shape, fall back to text-envelope parse).
+    2026** — silent `--output-schema` drop under active tools; resolved upstream
+    (full detail in the [risk register](#risks)). Guard on a pre-fix Codex pin:
+    validate output shape, fall back to text-envelope parse.
   - MCP prompts/resources are a **hard gap** — keep all prompt/slash workflows on
     Skills.
 
@@ -384,3 +398,10 @@ handle.
 - **Hidden Claude Code assumptions (low–moderate).** Some agent prose may assume
   Claude-specific tool names or behaviors not caught by the layer analysis; the
   port epics should audit bodies for host-specific references during structure.
+
+## See also
+
+- **[Architecture](architecture.md)** — the full plugin design these primitives are drawn from.
+- **[#50](https://github.com/bostonaholic/team/issues/50)** — the source issue this study delivers.
+- **[#56 — Gemini port](https://github.com/bostonaholic/team/issues/56)** — the epic that executes this matrix for Gemini CLI.
+- **[#57 — Codex port](https://github.com/bostonaholic/team/issues/57)** — the epic that executes this matrix for Codex CLI.
