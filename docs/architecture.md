@@ -232,7 +232,46 @@ No human gate. The plan is mechanically derived from the structure.
 3. **Slice execution** — `implementer` works through the plan one slice
    at a time, committing each atomically.
 4. **Code review** — 5 reviewers in parallel: `code-reviewer`,
-   `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
+   `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`. All
+   five are Claude subagents. The `code-reviewer` can additionally consult
+   **external reviewers** — independent third-party CLIs whose findings
+   corroborate (but never replace) its own pass. The reviewer set is resolved
+   by a precedence chain — **per-run request ▸ `.claude/team.json` ▸
+   detect-and-prompt ▸ off** — drawing providers from `"codex"` and `"gemini"`:
+   - **Per-run request** — the user can ask for a specific set for *one run
+     only* (it overrides the file and is not persisted).
+   - **`.claude/team.json`** — a user-owned, per-project file (key
+     `review.externalReviewers`, entries are a name string or
+     `{ tool, model? }`), distinct from the plugin's distributed manifest.
+     Users `.gitignore` it for personal use or commit it to share with their
+     team. The key being **absent** is *undecided* (the prompt may fire); the
+     key being **present, even `[]`,** is a *recorded decision* (`[]` =
+     explicit Claude-only) and is never re-prompted.
+   - **Detect-and-prompt** — an orchestrator step (`AskUserQuestion` is
+     orchestrator-only). The first time an external CLI is detected installed
+     with no recorded decision and no per-run override, the orchestrator
+     prompts once and writes the choice back into `.claude/team.json`.
+   - **Off** — nothing requested, recorded, or detected ⇒ single-Claude review,
+     byte-for-byte as today.
+   It is **opt-in** and **degrades gracefully** — off by default, code review
+   runs exactly as a single Claude model with no new errors or warnings. Each
+   named provider's CLI must be **installed and authenticated** on the host;
+   a missing, unauthenticated, or non-conforming provider is silently skipped
+   for that round. Each provider is invoked through a documented, **read-only,
+   headless** command baked into `external-reviewers.mjs` — no runtime flag
+   discovery: `codex exec --sandbox read-only` and `gemini --approval-mode plan
+   --skip-trust`, each fed the `git diff` on stdin plus a review prompt, with
+   `-m <model>` appended only when a model is configured. The probe emits the
+   exact `invoke` argv per available provider so the agent runs precisely what
+   the tested module specifies. Corroboration is
+   **annotation-only**: a finding
+   raised by two or more models is tagged `corroborated by N models` and an
+   uncorroborated one `single-model — extra scrutiny`, but the
+   `code-reviewer` still emits **one** verdict, and corroboration never
+   re-tiers a finding or changes the verdict keyword the aggregate gate (step
+   5) consumes. External corroboration is **complementary to**, not a
+   replacement for, the `code-reviewer`'s skeptic pass (see
+   [10. Nested Sub-Agents](#10-nested-sub-agents)).
 5. **Aggregate gate** — orchestrator sorts every finding into a severity
    tier (**Blocking / Major / Minor-and-below**; see
    `skills/code-review/SKILL.md`). While any Blocking or Major finding
@@ -594,6 +633,27 @@ both governed by `skills/nested-agents/SKILL.md`:
   refutation the reviewer verifies itself. A false hard-gate finding
   costs an entire review round (implementer re-dispatch + all 5
   reviewers re-run), so the pass pays for itself.
+
+The `code-reviewer`'s skeptic pass is **complemented by — not replaced
+by — external-reviewer corroboration**, an opt-in selected through the
+precedence chain **per-run request ▸ the user-owned, per-project
+`.claude/team.json` (key `review.externalReviewers`) ▸ detect-and-prompt ▸
+off**. Config lives in the user's project file, **not** the plugin's
+distributed manifest. Where the skeptic pass tries to *refute* the reviewer's
+own Blocking findings, corroboration runs independent third-party CLIs
+(`"codex"`, `"gemini"`) over the same diff — via pre-baked, read-only headless
+commands (`codex exec --sandbox read-only`, `gemini --approval-mode plan
+--skip-trust`), no runtime discovery — and tags each finding with how many
+distinct models raised it. Both are optimizations,
+not dependencies: with nothing requested, recorded, or detected (the
+default), and on any host where a named CLI is not installed and
+authenticated, code review degrades to exactly a single-Claude pass.
+Corroboration is annotation-only — it never re-tiers a finding and never
+changes the verdict keyword the aggregate gate consumes. Enable external
+reviewers only in environments with a trusted PATH — the
+availability probe resolves each provider's binary via PATH, so an
+attacker-controlled PATH could point a provider name at an arbitrary
+executable.
 
 **Policy:**
 

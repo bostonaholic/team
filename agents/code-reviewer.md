@@ -102,6 +102,123 @@ Blocking-tier `issue:` finding, hand it to a fresh skeptic sub-agent via the
   unavailable — report findings as-is. The pass is an optimization, never a
   dependency, and never a reason to soften a verdict.
 
+## External reviewer corroboration (opt-in, config-gated)
+
+Corroboration is **opt-in**. Its source is the layered precedence chain
+**per-run request ▸ `.claude/team.json` ▸ off**:
+
+- If the orchestrator dispatched you with an **explicit per-run reviewer set**
+  (e.g. "review this with codex and gemini too"), use that set for this run
+  only — it overrides the file and is not persisted by you.
+- Otherwise read the persistent selection from the user's project file
+  `.claude/team.json` (key `review.externalReviewers`). The probe below reads
+  it for you.
+
+When neither supplies a provider, you behave **exactly as today**: a
+single-model review with the same output format, no new errors or warnings.
+This whole section is graceful degradation by construction — no selection or a
+missing CLI changes nothing about your verdict. (The detect-and-prompt on-ramp
+that *populates* `.claude/team.json` is an orchestrator step, not yours — you
+never call `AskUserQuestion`.)
+
+1. **Probe availability.** Run the probe via Bash (it reads `.claude/team.json`
+   in the repo under review):
+
+   ```bash
+   node "${CLAUDE_PLUGIN_ROOT}/skills/code-review/external-reviewers.mjs"
+   ```
+
+   It prints a JSON array of available reviewers on one line, one object per
+   provider carrying `tool`, `model`, a ready-to-run `invoke` argv prefix, and
+   `promptVia` — e.g.
+   `[{"tool":"codex","model":null,"invoke":["codex","exec","--sandbox","read-only"],"promptVia":"arg"}]`
+   — or an empty array `[]` when none, exit 0. **An empty array `[]` ⇒ behave
+   exactly as today** — skip the rest of this section. The probe already
+   excludes any provider that is missing, unauthenticated, errored, or hung, so
+   you never wait on a dead CLI. The `invoke` argv and `promptVia` field are the
+   single source of truth for *how* to run each provider — you do not rediscover
+   flags. When the orchestrator gave you a per-run override instead, treat that
+   set as the available list (still confirm each binary is runnable before
+   invoking).
+
+2. **Invoke available providers in parallel.** Run each provider's `invoke`
+   argv from the probe output **in parallel** via Bash, piping the same
+   `git diff <base>..HEAD` snapshot you reviewed to the CLI's **stdin** and
+   supplying a review prompt that holds it to the **same** fresh-context
+   Conventional-Comments + verdict-keyword contract Team reviewers already emit
+   (see `skills/code-review/SKILL.md` for the exact finding format) — each
+   finding carrying a `file:line` ref, then a final line with a verdict keyword
+   (`APPROVE` / `REQUEST CHANGES` / `COMMENT`) and **nothing else** (no
+   preamble). `codex` and `gemini` are the corroborating providers; both run
+   **read-only** and non-interactively. Capture stdout. The probe's `invoke`
+   already encodes the exact flags and `promptVia` says where the prompt goes
+   (positional for codex, via `-p` for gemini); the ready-to-run commands are:
+
+   - **codex** (`promptVia: "arg"` — prompt is a trailing positional argument):
+
+     ```bash
+     git diff <base>..HEAD | codex exec --sandbox read-only [-m <model>] "<REVIEW_PROMPT>"
+     ```
+
+   - **gemini** (`promptVia: "-p"` — prompt is passed via `-p`):
+
+     ```bash
+     git diff <base>..HEAD | gemini --approval-mode plan --skip-trust [-m <model>] -p "<REVIEW_PROMPT>"
+     ```
+
+   `codex exec` is the non-interactive subcommand and `--sandbox read-only`
+   forbids writes; gemini's `--approval-mode plan` is its read-only mode and
+   `--skip-trust` trusts the workspace so the headless run never hangs on a
+   trust prompt. Append `-m <model>` only when the entry's `model` is non-null;
+   omit it (CLI default model) when `model` is null. (codex also accepts
+   `--output-last-message <FILE>` to capture only the final message to a file,
+   but stdout is the primary path.)
+
+3. **Parse, discard non-conforming output.** Parse each provider's output into
+   findings (`file`, `line`, `claim`, `tier`). A provider whose output is not
+   parseable Conventional-Comments (no verdict keyword) is **discarded as
+   unparseable and logged degraded** for this round — it neither corroborates
+   nor blocks. Fail loud in the report, never in the gate.
+
+4. **Reconcile.** Feed your own findings plus each parsed provider's findings
+   into the reconciler — do NOT re-implement dedup in prose. Pipe a single
+   JSON blob to stdin of the shape the reconciler documents: one entry per
+   model under `byModel`, each a `{ model, findings }` list of
+   `{ file, line, claim, tier }` findings (`body` optional):
+
+   ```bash
+   echo '{
+     "byModel": [
+       { "model": "claude", "findings": [
+         { "file": "src/auth.ts", "line": 42, "claim": "token compared with ==", "tier": "Blocking" }
+       ] },
+       { "model": "codex", "findings": [
+         { "file": "src/auth.ts", "line": 42, "claim": "token compared with ==", "tier": "Blocking" }
+       ] }
+     ],
+     "totalModels": 2
+   }' | node "${CLAUDE_PLUGIN_ROOT}/skills/code-review/reconcile-findings.mjs"
+   ```
+
+   `totalModels` is **optional** (defaults to the number of distinct models
+   in `byModel`).
+
+   It dedupes by `file:line:claim` and tags each finding with a corroboration
+   count and annotation. On a tier collision the merged finding carries the
+   most-severe tier, with every model's original tier kept under `modelTiers`.
+
+5. **Fold annotations into your single verdict.** Report **one** verdict. List
+   uncorroborated findings under a new `### Single-model findings` section
+   (alongside `### Refuted by verification`), each tagged
+   `single-model — extra scrutiny`; findings raised by two or more models carry
+   `corroborated by N models`. Corroboration is **annotation only**: it never
+   re-tiers a finding and never changes the verdict keyword — the tier table and
+   consult guard in `skills/code-review/SKILL.md` are untouched.
+
+6. **Default-keep.** No finding is dropped on the basis of its corroboration
+   count. A single-model finding stands with extra scrutiny; it is never
+   auto-demoted or removed.
+
 ## Rules
 
 - Do NOT rewrite code. Your job is to identify problems, not to fix them.
