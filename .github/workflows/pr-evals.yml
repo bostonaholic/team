@@ -47,7 +47,7 @@ jobs:
           # as a name filter (matches nothing), not a path.
           - { name: code-reviewer, file: ./tests/code-reviewer.evals.ts }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0  # diff-based selection needs history back to the base ref
 
@@ -104,7 +104,7 @@ jobs:
       REPO: ${{ github.repository }}
       PR: ${{ github.event.pull_request.number }}
     steps:
-      - uses: actions/checkout@v6  # for scripts/eval-report.ts + its imports
+      - uses: actions/checkout@v7  # for scripts/eval-report.ts + its imports
 
       - uses: oven-sh/setup-bun@v2
         with:
