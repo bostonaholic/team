@@ -283,37 +283,42 @@ name.
 The principle: **complex work runs on the most capable available
 model; bounded judgment on `sonnet`; mechanical checks on `haiku`.**
 
-The most capable model is currently `opus` (Opus 4.8). Fable 5 was the
-intended complex-work model, but it is **temporarily suspended for all
-customers** under a U.S. government export-control directive (see
-[Anthropic's notice](https://www.anthropic.com/news/fable-mythos-access)).
-Until access is restored, complex work runs on `opus`, the documented
-fallback target for Fable and Anthropic's most capable Opus-tier model.
+The most capable model is `fable` (Fable 5). It was temporarily
+suspended for all customers under a U.S. government export-control
+directive (see
+[Anthropic's notice](https://www.anthropic.com/news/fable-mythos-access));
+during the suspension, complex work ran on `opus` (Opus 4.8), Fable's
+documented fallback target. Access has been restored, and the
+complex-work agents now run on `fable`.
 
-- **`opus` — complex work:** `researcher`, `design-author`,
-  `structure-planner`, `planner`, `test-architect`, `implementer`,
-  `code-reviewer`, and `security-reviewer`.
+- **`fable` — complex work:** `researcher`, `design-author`,
+  `structure-planner`, `planner`, `test-architect`, `implementer`, and
+  `code-reviewer`.
+- **`opus` — security review:** `security-reviewer` stays on `opus`
+  **permanently**, not as a fallback: Fable 5's cybersecurity safety
+  classifiers flag security-review content, and in non-interactive
+  subagent contexts a flagged request ends the turn with a refusal
+  instead of falling back.
 - **`sonnet` — bounded single-pass judgment:** `questioner`,
   `ux-reviewer`, `technical-writer`.
 - **`haiku` — mechanical checks:** `file-finder`, `verifier`.
 
 Notes:
 
-- **1M context window comes for free at the opus tier.** Opus 4.8
-  always runs with the 1M window on the Anthropic API, and
-  Max/Team/Enterprise plans include the 1M upgrade with the
-  subscription (Pro degrades gracefully to 200K) — so the opus agents
-  need no `[1m]` suffix. The sonnet agents stay at 200K (bounded
-  single-pass work, nowhere near the ceiling); haiku does not support
-  1M.
-- **When Fable access is restored**, flip the complex-work agents from
-  `opus` to `fable` — *except* `security-reviewer`, which stays on
-  `opus` permanently: Fable 5's cybersecurity safety classifiers flag
-  security-review content, and in non-interactive subagent contexts a
-  flagged request ends the turn with a refusal instead of falling
-  back. Fable requires Claude Code ≥ v2.1.170 and Fable access (not
-  available under zero data retention; pin `ANTHROPIC_DEFAULT_FABLE_MODEL`
-  on Bedrock/Vertex/Foundry).
+- **What the `fable` agents require of plugin users:** Claude Code
+  ≥ v2.1.170 and Fable access — Fable 5 is not available under zero
+  data retention (30-day retention is required), and on
+  Bedrock/Vertex/Foundry `ANTHROPIC_DEFAULT_FABLE_MODEL` must be
+  pinned. Users without access should override to `opus` (see the
+  override note below); `opus` remains the documented fallback tier
+  for every `fable` agent.
+- **1M context window comes for free at the fable and opus tiers.**
+  Fable 5's context window is 1M by default, and Opus 4.8 always runs
+  with the 1M window on the Anthropic API; Max/Team/Enterprise plans
+  include the 1M upgrade with the subscription (Pro degrades
+  gracefully to 200K) — so these agents need no `[1m]` suffix. The
+  sonnet agents stay at 200K (bounded single-pass work, nowhere near
+  the ceiling); haiku does not support 1M.
 - Users can override any agent's model with `CLAUDE_CODE_SUBAGENT_MODEL`
   (applies to all subagents), or copy an agent file into
   `.claude/agents/` with a different `model:`.
