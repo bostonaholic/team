@@ -2,7 +2,7 @@
 name: researcher
 description: Use when codebase facts need to be gathered before any design or implementation work. Reads code, traces dependencies, documents patterns. Receives only the path to questions.md, never the original task description.
 color: blue
-model: opus
+model: fable
 effort: high
 tools: Read, Grep, Glob, TodoWrite, Agent
 permissionMode: plan

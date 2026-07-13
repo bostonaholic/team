@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The complex-work agents now run on Claude Fable 5, Anthropic's most capable model.** With Fable access restored after the [June 2026 suspension](https://www.anthropic.com/news/fable-mythos-access), the seven complex-work agents — [`researcher`](https://github.com/bostonaholic/team/blob/main/agents/researcher.md), [`design-author`](https://github.com/bostonaholic/team/blob/main/agents/design-author.md), [`structure-planner`](https://github.com/bostonaholic/team/blob/main/agents/structure-planner.md), [`planner`](https://github.com/bostonaholic/team/blob/main/agents/planner.md), [`test-architect`](https://github.com/bostonaholic/team/blob/main/agents/test-architect.md), [`implementer`](https://github.com/bostonaholic/team/blob/main/agents/implementer.md), and [`code-reviewer`](https://github.com/bostonaholic/team/blob/main/agents/code-reviewer.md) — flip from `opus` to `fable`, executing the restoration plan the architecture doc has carried since the suspension. `security-reviewer` stays on `opus` permanently: Fable 5's cybersecurity safety classifiers flag security-review content, and in non-interactive subagent contexts a flagged request ends the turn with a refusal instead of falling back. **What this asks of you:** Claude Code ≥ v2.1.170 and Fable access (not available under zero data retention; pin `ANTHROPIC_DEFAULT_FABLE_MODEL` on Bedrock/Vertex/Foundry). No access? Override with `CLAUDE_CODE_SUBAGENT_MODEL=opus` or copy an agent file into `.claude/agents/` with `model: opus` — opus remains the documented fallback tier. See [docs/architecture.md → Model tiering](https://github.com/bostonaholic/team/blob/main/docs/architecture.md#model-tiering).
+
 ## [0.14.1] - 2026-07-13
 
 ### Changed

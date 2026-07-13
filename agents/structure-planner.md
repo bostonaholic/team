@@ -2,7 +2,7 @@
 name: structure-planner
 description: Use after the design is approved to break the work into vertical slices with verification checkpoints. Each slice is end-to-end (touches every layer needed to deliver one piece of functionality), independently testable, and atomically committable. Produces a ~2-page document that the planner and implementer consume; it advances autonomously to PLAN with no human gate.
 color: purple
-model: opus
+model: fable
 effort: xhigh
 tools: Read, Write, Edit, Grep, Glob, TodoWrite
 permissionMode: acceptEdits

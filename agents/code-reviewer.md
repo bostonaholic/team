@@ -2,7 +2,7 @@
 name: code-reviewer
 description: Use when an adversarial code review is needed after implementation. Reviews with fresh context and no shared conversation history to prevent self-evaluation bias. Produces a hard-gating verdict — REQUEST CHANGES blocks shipping. Example triggers — "review my changes", "code review the implementation", "check this PR for issues".
 color: orange
-model: opus
+model: fable
 effort: high
 tools: Read, Grep, Glob, Bash, TodoWrite, Agent
 permissionMode: plan
