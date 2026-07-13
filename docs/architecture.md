@@ -291,12 +291,11 @@ Until access is restored, complex work runs on `opus`, the documented
 fallback target for Fable and Anthropic's most capable Opus-tier model.
 
 - **`opus` — complex work:** `researcher`, `design-author`,
-  `structure-planner`, `planner`, `implementer`, `code-reviewer`, and
-  `security-reviewer`.
+  `structure-planner`, `planner`, `test-architect`, `implementer`,
+  `code-reviewer`, and `security-reviewer`.
 - **`sonnet` — bounded single-pass judgment:** `questioner`,
   `ux-reviewer`, `technical-writer`.
 - **`haiku` — mechanical checks:** `file-finder`, `verifier`.
-- **`inherit`:** `test-architect` follows the session model.
 
 Notes:
 
@@ -326,7 +325,9 @@ Notes:
 ### Effort tiering
 
 Effort tiering mirrors the model tiers: `low` (mechanical),
-`medium`/`high` (judgment), `xhigh` (human-gate artifact authors).
+`medium`/`high` (judgment), `xhigh` (strategic artifact authors —
+`design-author` and `structure-planner`, whose artifacts set the
+direction everything downstream inherits).
 Methodology skills carry no `effort` — they inherit from the loading
 agent.
 
