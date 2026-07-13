@@ -2,7 +2,7 @@
 name: test-architect
 description: Use after the worktree is prepared to write all failing acceptance tests from the structure. Tests form the immutable scope fence for implementation. Operates inside the implement phase as a sub-step before the implementer runs.
 color: green
-model: inherit
+model: opus
 effort: high
 tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite
 permissionMode: acceptEdits

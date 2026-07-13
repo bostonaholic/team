@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-07-13
+
+### Changed
+
+- **The test-architect now runs on the most capable available model (`opus`) instead of inheriting the session model.** The acceptance tests it writes are the immutable scope fence: they define *done* for the entire implement phase, gate an opus-tier implementer, and are never human-reviewed — yet [`agents/test-architect.md`](https://github.com/bostonaholic/team/blob/main/agents/test-architect.md) was the only pipeline agent with no model floor (`model: inherit`). A session running on a smaller model for cost would have had its scope fence authored by that weaker model while every downstream agent still burned opus tokens against it. The agent is now pinned to `opus`, joining the complex-work tier in [docs/architecture.md → Model tiering](https://github.com/bostonaholic/team/blob/main/docs/architecture.md#model-tiering).
+
 ## [0.14.0] - 2026-06-27
 
 ### Added
@@ -181,7 +187,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.14.1...HEAD
+[0.14.1]: https://github.com/bostonaholic/team/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/bostonaholic/team/compare/v0.13.2...v0.14.0
 [0.13.2]: https://github.com/bostonaholic/team/compare/v0.13.1...v0.13.2
 [0.13.1]: https://github.com/bostonaholic/team/compare/v0.13.0...v0.13.1
