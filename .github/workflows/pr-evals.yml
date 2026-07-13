@@ -111,7 +111,7 @@ jobs:
           bun-version: latest
 
       - name: Download eval result artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
           pattern: pr-evals-*
