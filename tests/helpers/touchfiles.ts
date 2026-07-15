@@ -14,6 +14,13 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/fixtures/code-reviewer/planted-null-deref/**",
     "evals/rubrics/code-reviewer.md",
   ],
+  "planted-time-bomb": [
+    "agents/code-reviewer.md",
+    "skills/code-review/**",
+    "tests/code-reviewer.evals.ts",
+    "evals/fixtures/code-reviewer/planted-time-bomb/**",
+    "evals/rubrics/code-reviewer.md",
+  ],
   "git-commit-conventional-subject": [
     "skills/git-commit/**",
     "tests/git-commit.evals.ts",
@@ -99,6 +106,7 @@ export const E2E_TIERS: Record<string, "gate" | "periodic"> = {
   // Note: gate-tier E2E tests would do offline assertions (e.g. against a
   // recorded transcript). Live-model fixtures are periodic.
   "planted-null-deref": "periodic",
+  "planted-time-bomb": "periodic",
   "git-commit-conventional-subject": "periodic",
   "changelog-keep-a-changelog-filter": "periodic",
   "team-question-neutral-questions": "periodic",

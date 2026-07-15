@@ -165,6 +165,12 @@ junk prose is not enough to pass. The skill evals mirror this: each runs
 generic `judgeQuality`) behind the deterministic check. Both scores are
 recorded in `judge_scores` on the result entry.
 
+A fixture case may also carry an additional deterministic gate beyond the two
+rubric criteria. Such a gate lives in the eval file's per-fixture options, not
+in `evals/rubrics/<agent>.md` — e.g. the planted-time-bomb case's
+blocking-label assertion (`requireBlockingLabel` in
+`tests/code-reviewer.evals.ts`).
+
 ## Run history & comparison
 
 Every run writes `<version>-<branch>-<tier>-<timestamp>.json` to
@@ -259,5 +265,11 @@ Both `periodic-evals.yml` and `pr-evals.yml` now carry live copies of this
 canonical trust `if:` expression. They must stay byte-identical, and the
 `TRUST_EXPR` tripwire in `tests/static-gate.test.ts` enforces that — any drift
 fails the free gate.
+
+**Adding a second fixture to an existing agent:** a single `<name>.evals.ts`
+can register multiple fixture cases through a shared parameterized helper —
+`registerPlantedBugEval` in `tests/code-reviewer.evals.ts` is the reference.
+Each case is independently diff-selected by fixture name, with its own
+`E2E_TOUCHFILES` and `E2E_TIERS` entries.
 
 Run `bun run eval:list` to see the registered tests and their tiers.

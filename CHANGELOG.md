@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-07-15
+
+### Added
+
+- **The code reviewer now blocks flaky-test red flags on first occurrence — including "time-bomb" tests that pass today and deterministically fail on a future date.** [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md) gains a **Flaky-test red flags (always blocking)** checklist: ten root-cause categories sourced from the flaky-test literature (Luo et al. FSE 2014; Fowler's *Eradicating Non-Determinism in Tests*; Google/Uber/GitHub engineering practice) — time/date dependence incl. time-bombs, fixed-sleep waits, concurrency interleaving, test-order dependence and shared state, unseeded randomness, real network calls, resource leaks and hard-coded ports, unordered-collection assumptions, exact float equality, and platform/environment assumptions — each with diff-visible signatures a reviewer can grep for, plus a fenced bad/good time-bomb example. Unlike the style flags' escalate-on-repetition rule, any test whose *outcome depends on* a nondeterministic input is an `issue (blocking)` on **first** occurrence — time-bombs are invisible to rerun-based flaky detection, so the diff is the only place to catch them. The [`agents/code-reviewer.md`](https://github.com/bostonaholic/team/blob/main/agents/code-reviewer.md) mirror names both severity regimes, and a new `planted-time-bomb` eval fixture (`tier: periodic`) behaviorally proves the reviewer detects the planted bug *and* labels it blocking. Pinned by L2 tripwires in [`tests/methodology.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/methodology.test.ts), including a byte-identical drift pin on the shared example pair.
+- **Test authors get the prevention side of the same contract.** [`skills/test-first-development/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/test-first-development/SKILL.md) "Test Style Rules" gains six deterministic-input subsections — *Control the clock*, *Seed all randomness*, *Tests own their state — any order, any host*, *Assert outcomes, not interleavings*, *Impose order before asserting it*, and *Hermetic boundaries* — with bad/good examples, so every reviewer-blocking category has matching author-side guidance before the test is ever written. [`agents/test-architect.md`](https://github.com/bostonaholic/team/blob/main/agents/test-architect.md)'s audit table gains a **Deterministic inputs** row.
+
+### Changed
+
+- **A single `sleep()` used for synchronization is now a blocking finding, not a suggestion.** Async wait is the most common flaky-test root cause (~45% in Luo et al.), so the flag relocated from the escalating style-flag list into the always-blocking flaky checklist in [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md) — a diff previously approved with a non-blocking suggestion will now loop the implementer until the sleep is replaced with a wait-for-condition primitive.
+
 ## [0.15.0] - 2026-07-13
 
 ### Changed
@@ -193,7 +204,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/bostonaholic/team/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/bostonaholic/team/compare/v0.14.1...v0.15.0
 [0.14.1]: https://github.com/bostonaholic/team/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/bostonaholic/team/compare/v0.13.2...v0.14.0

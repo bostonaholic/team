@@ -49,13 +49,17 @@ show. This isolation is intentional: it prevents self-evaluation bias.
      - ISP: does this interface force clients to depend on unused methods?
      - DIP: does business logic instantiate its own infrastructure dependencies?
    - **Test files** — Walk every changed `*test*` / `*spec*` /
-     `__tests__/*` file against the test-quality flags in
+     `__tests__/*` file against both severity regimes in
      `skills/code-review/SKILL.md` (Code Reviewer verdict section) and the
-     style rules in `skills/test-first-development/SKILL.md`. Flag
-     change-detector patterns, mock chains, full-equality assertions on
-     complex objects, `sleep()` for synchronization, logic in tests, and
-     method-named tests. A single occurrence is a `suggestion:`; multiple
-     occurrences across the diff become `issue:`.
+     style rules in `skills/test-first-development/SKILL.md`. Style flags
+     (change-detector patterns, mock chains, full-equality assertions on
+     complex objects, logic in tests, method-named tests) escalate: a
+     single occurrence is a `suggestion:`; multiple occurrences across the
+     diff become `issue:`. Flaky-test red flags (time/date dependence,
+     unseeded randomness, race-ordered assertions, `sleep()` for
+     synchronization, and the rest of the checklist in
+     `skills/code-review/SKILL.md`) are blocking `issue:` findings on
+     **first** occurrence.
 
 5. **Run tests.** Execute the project's test suite to verify tests pass. Report
    the command used and the result.

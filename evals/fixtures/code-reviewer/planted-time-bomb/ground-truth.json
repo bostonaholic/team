@@ -1,0 +1,13 @@
+{
+  "bugs": [
+    {
+      "id": "b1",
+      "category": "flaky-test-time-bomb",
+      "severity": "blocking",
+      "description": "The 'accepts a session that has not expired' test reads the real wall clock (new Date()) feeding the assertion and pins a hard-coded future expiry (2030-01-01); it is green today and turns permanently red once the clock crosses the literal. The clock must be frozen/injected and the expiry derived from it.",
+      "detection_hint": "time.?bomb|wall.?clock|real clock|system clock|future (?:date|expiry|expiration|timestamp)|2030-01-01|non.?deterministic|date\\.now|new date\\(\\).{0,120}assert"
+    }
+  ],
+  "minimum_detection": 1.0,
+  "max_false_positives": 1
+}

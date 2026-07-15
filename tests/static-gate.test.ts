@@ -9,7 +9,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import { loadFixture } from "./helpers/fixtures";
-import { E2E_TOUCHFILES } from "./helpers/touchfiles";
+import { E2E_TIERS, E2E_TOUCHFILES } from "./helpers/touchfiles";
 
 const FIXTURE_ROOT = join(process.cwd(), "evals", "fixtures");
 const RUBRIC_ROOT = join(process.cwd(), "evals", "rubrics");
@@ -95,6 +95,16 @@ describe("static gate: fixtures", () => {
       expect(globs).toContain(`evals/rubrics/${agent}.md`);
       expect(globs).toContain(`tests/${agent}.evals.ts`);
     }
+  });
+
+  test("planted-time-bomb is registered in the selection map with tier periodic", () => {
+    // Live-model fixture → periodic tier (docs/testing.md §4: it can be red
+    // for a non-bug reason, so it never gates). The enumeration tests above
+    // cover its schema/size/touchfile-glob listing once the fixture lands;
+    // this pins the tier, which skill-eval-coverage does not (it audits L5
+    // skills only, not the code-reviewer agent).
+    expect(Object.keys(E2E_TOUCHFILES)).toContain("planted-time-bomb");
+    expect(E2E_TIERS["planted-time-bomb"]).toBe("periodic");
   });
 });
 

@@ -166,6 +166,109 @@ Replace every fixed `sleep(N)` with a wait-for-condition primitive (exist,
 not-exist, wait-to-exist with timeout + interval). A fixed sleep both masks
 race-condition bugs and pads runtime when the system is fast.
 
+### Assert outcomes, not interleavings
+
+A test whose result depends on thread or promise scheduling passes only
+when the scheduler cooperates. Accept every valid interleaving, or make
+the interleaving deterministic.
+
+- `join()`/`await` every concurrent task before asserting — never assert
+  mid-flight.
+- Assert order-independent properties on concurrently produced results —
+  set membership or a sorted comparison, not `results[0] === "A"`.
+- Where ordering genuinely matters, impose it with latches/barriers
+  (`CountDownLatch`, chained promises) instead of relying on scheduler
+  luck.
+
+### Control the clock
+
+Never read the real wall clock in a test — inject or freeze it
+(`vi.setSystemTime`, fake timers, `Clock.fixed`, `freezegun`). Each
+sub-pattern below ships a time-bomb: a test that is green today and
+permanently red on some future date.
+
+- No assertion against "now": `new Date()`, `Date.now()`, `datetime.now()`
+  feeding an assertion.
+- No hard-coded future expiry: `expiresAt: "2030-01-01"`, cert `notAfter` —
+  generate expiring artifacts at setup, relative to the frozen clock.
+- No naive calendar arithmetic on "now": `addMonths` / `+1 day` assumes
+  month lengths, 24-hour days, and no DST; it fails on month-end, leap
+  day, and DST-transition days.
+- No TZ-naive date construction: `new Date("2023-08-31")` parses as UTC
+  midnight and shifts a day in negative-offset zones.
+
+Past or fixed date literals with an explicit timezone are the sanctioned
+form.
+
+**Bad:**
+```js
+// Bad — wall-clock read feeds the assertion; hard-coded future expiry.
+// Green today, permanently red once the clock crosses the literal.
+const token = { expiresAt: "2030-01-01" };
+expect(isValid(token, new Date())).toBe(true);
+```
+
+**Good:**
+```js
+// Good — frozen/injected clock; expiry derived from it.
+const now = new Date("2024-06-15T12:00:00Z");
+const token = issueToken({ now, ttlDays: 30 });
+expect(isValid(token, now)).toBe(true);
+```
+
+### Seed all randomness
+
+An unseeded RNG feeding an assertion is a defect, not a convenience —
+generated data can collide with the asserted value.
+
+- Seed every generator the test touches: `faker.seed(12345)`, a seeded
+  `Random(seed)` — never bare `Math.random()` or `uuid.v4()` in asserted
+  data.
+- Better: explicit fixed inputs. `createUser({ name: "Bob" })` cannot
+  collide; `createUser({ name: faker.person.firstName() })` can.
+
+### Tests own their state — any order, any host
+
+A test builds its own preconditions and tears down what it creates. A test
+that passes only in a specific order, or only after another test has run,
+is order-dependent — a leading flakiness cause.
+
+- No static or module-level mutable state shared across tests; reset
+  singletons and caches in `beforeEach`/`afterEach`.
+- Every DB row, file, cache entry, or env var a test creates gets a
+  teardown (prefer transaction rollback).
+- Never assert on state a different test produced. The suite must pass in
+  any order and on any host.
+
+### Impose order before asserting it
+
+Hash map/set iteration, `os.listdir`, and queries without `ORDER BY` have
+no defined order — a positional assertion on them is platform-dependent
+luck.
+
+- Add an explicit `ORDER BY` / `.order_by()` / sort before any positional
+  assertion (`results[0]`).
+- Or assert order-independently: set membership, unordered-elements
+  matchers.
+- Never compare an ordered structure against a set-backed result.
+
+### Hermetic boundaries
+
+The test must not depend on anything outside the process it controls.
+
+- No real network or external services — stub the boundary (`nock`,
+  `WireMock`, `msw`) and inject the client.
+- No hard-coded ports for embedded servers/DBs — dynamic allocation
+  (port `0`, TestContainers) plus guaranteed teardown; fixed ports collide
+  under parallel CI.
+- Guarantee teardown of every opened connection, file, or socket
+  (`try/finally`, `using`, `defer`, or the framework's fixture teardown) —
+  a leaked handle can fail a later test.
+- No locale/platform-format assertions without pinning — pass the locale
+  explicitly, use `path.join()` / `os.EOL`, set `TZ`/`LANG` in the harness.
+- No exact float equality — `toBeCloseTo(0.3)`, not `toBe(0.1 + 0.2)`;
+  compare with a tolerance.
+
 ### Fidelity ladder: real > fake > mock
 
 When a test needs a collaborator, prefer in this order:

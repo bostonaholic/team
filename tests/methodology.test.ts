@@ -462,4 +462,120 @@ describe("test-first-development lens (L2 content tripwire)", () => {
     expect(text).toContain("BEFORE any implementation code");
     expect(text).toContain("Confirm Tests Fail Correctly");
   });
+
+  test("Test Style Rules contains the six deterministic-input subsections", () => {
+    const text = read(SKILL_FILE);
+    expect(/^### Control the clock$/m.test(text)).toBe(true);
+    expect(/^### Seed all randomness$/m.test(text)).toBe(true);
+    expect(/^### Tests own their state — any order, any host$/m.test(text)).toBe(true);
+    expect(/^### Hermetic boundaries$/m.test(text)).toBe(true);
+    expect(/^### Assert outcomes, not interleavings$/m.test(text)).toBe(true);
+    expect(/^### Impose order before asserting it$/m.test(text)).toBe(true);
+  });
+
+  test("test-architect audit table has a Deterministic inputs row", () => {
+    const TEST_ARCHITECT = join(REPO_ROOT, "agents", "test-architect.md");
+    expect(read(TEST_ARCHITECT)).toContain("| Deterministic inputs |");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Flaky-test red flags — free L2 content tripwires (docs/testing.md §2).
+// The code-review skill carries an always-blocking checklist for tests whose
+// outcome depends on a nondeterministic input (time, randomness, ordering,
+// network...). Two severity regimes coexist in the skill: style flags escalate
+// suggestion→issue across multiple tests; flaky red flags are blocking on
+// FIRST occurrence. These tripwires pin that contract and the skill↔agent
+// mirror agreement (design decision 8,
+// docs/plans/2026-07-15-flaky-test-red-flags/design.md).
+// ---------------------------------------------------------------------------
+
+describe("code-review flaky-test red flags (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
+  const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
+
+  // Text between two markers; "" when either marker is missing. Callers guard
+  // the slice as non-empty so a missing section fails loud, never vacuously
+  // (pattern: tests/protocol.test.ts softSection guard).
+  function between(text: string, startMarker: string, endMarker: string): string {
+    const start = text.indexOf(startMarker);
+    if (start === -1) return "";
+    const end = text.indexOf(endMarker, start);
+    if (end === -1) return "";
+    return text.slice(start, end);
+  }
+
+  test("code-review skill contains the always-blocking flaky-test red-flag checklist keyed to outcome-dependence", () => {
+    const text = read(SKILL_FILE);
+    expect(text).toContain("**Flaky-test red flags (always blocking).**");
+    // Scope severity assertions to the checklist region so the `issue
+    // (blocking)` occurrences in Comment Types / the severity-tier table
+    // cannot satisfy them.
+    const flaky = between(text, "Flaky-test red flags", "### UX Reviewer");
+    expect(flaky.length).toBeGreaterThan(0);
+    expect(flaky).toContain("issue (blocking)");
+    // First-occurrence wording; tolerate bold (`**first** occurrence`).
+    expect(/first\*{0,2} occurrence/i.test(flaky)).toBe(true);
+    // Severity rule keyed to outcome-dependence — pin the phrase, not just
+    // the heading (design decision 2).
+    expect(/outcome depends on/i.test(flaky)).toBe(true);
+  });
+
+  test("sleep()-for-synchronization is relocated, not duplicated", () => {
+    const text = read(SKILL_FILE);
+    const styleFlags = between(text, "Test-quality flags.", "Flaky-test red flags");
+    const flaky = between(text, "Flaky-test red flags", "### UX Reviewer");
+    // Guard both slices non-empty so the absence assertion below can't pass
+    // vacuously against an empty string.
+    expect(styleFlags.length).toBeGreaterThan(0);
+    expect(flaky.length).toBeGreaterThan(0);
+    // Relocated out of the six-flag style list (design decision 3)...
+    expect(styleFlags).not.toContain("sleep()");
+    // ...into the always-blocking flaky list.
+    expect(flaky).toContain("sleep()");
+  });
+
+  test("code-reviewer agent mirrors the first-occurrence always-blocking rule", () => {
+    // The abbreviated mirror must state both severity regimes and defer the
+    // checklist body to the skill. It must do so WITHOUT the decorated
+    // `issue (blocking)` literal (forbidden in the agent by
+    // tests/architecture.test.ts), so this pins plain wording only.
+    const bullet = between(read(CODE_REVIEWER), "**Test files**", "5. **Run tests");
+    expect(bullet.length).toBeGreaterThan(0);
+    expect(/first\*{0,2} occurrence/i.test(bullet)).toBe(true);
+    expect(/blocking/i.test(bullet)).toBe(true);
+    expect(bullet).toContain("skills/code-review/SKILL.md");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Time-bomb example pair — free L2 drift tripwire (docs/testing.md §2,
+// collision/drift form). The fenced bad/good time-bomb example lives in two
+// skills (code-review carries a copy of test-first-development's canonical
+// pair, design decision 5). The copies are maintained by hand; this pin fails
+// the build the moment they drift.
+// ---------------------------------------------------------------------------
+
+describe("time-bomb example pair (L2 drift tripwire)", () => {
+  const CODE_REVIEW_SKILL = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
+  const TFD_SKILL = join(REPO_ROOT, "skills", "test-first-development", "SKILL.md");
+
+  // All ```js fences belonging to the time-bomb example: the bad block
+  // carries the future-expiry literal, the good block the issueToken call.
+  function timeBombFences(text: string): string[] {
+    const fences = text.match(/```js\n[\s\S]*?```/g) ?? [];
+    return fences.filter(
+      (fence) => fence.includes('expiresAt: "2030-01-01"') || fence.includes("issueToken"),
+    );
+  }
+
+  test("fenced bad/good pair is byte-identical across the two skills", () => {
+    const codeReviewPair = timeBombFences(read(CODE_REVIEW_SKILL));
+    const tfdPair = timeBombFences(read(TFD_SKILL));
+    // Fail-loud: extraction must find exactly the bad + good fence in each
+    // file — an empty or partial slice must never pass vacuously.
+    expect(codeReviewPair.length).toBe(2);
+    expect(tfdPair.length).toBe(2);
+    expect(codeReviewPair).toEqual(tfdPair);
+  });
 });

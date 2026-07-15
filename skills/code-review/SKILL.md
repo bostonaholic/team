@@ -121,12 +121,73 @@ they appear across multiple tests:
   real or fake equivalent
 - Full-equality assertions on complex objects when one field carries the
   contract
-- `sleep()` for synchronization
 - Logic in tests (`if`, loops, string-building) that can carry the same
   bug as the code
 - Tests named after methods (`testProcessOrder_2`) rather than behaviors
   (`refundsCardOnPartialFailure`)
 - DRY helpers that hide the asserted value
+
+**Flaky-test red flags (always blocking).** Distinct from the style flags
+above: any test in the diff whose *outcome depends on* a nondeterministic
+input is `issue (blocking)` on **first** occurrence — it routes to the
+Blocking tier and auto-loops the implementer. A single time-bomb ships a
+guaranteed future CI failure; flakiness erodes the "green means safe"
+signal. The rule keys to outcome-dependence, not token presence: a
+`Date.now()` in a log line does not flag; one feeding an assertion does.
+Outcome-dependence covers the whole suite, not only the offending test:
+state or resources left behind flag because a *later* test's outcome
+depends on them, even when the offending test's own result is deterministic.
+
+- **Time/date dependence, incl. time-bombs** — `new Date()`, `Date.now()`,
+  `datetime.now()` feeding an assertion; a future date literal in a fixture
+  (`expiresAt: "2030-01-01"`, cert `notAfter`); naive calendar arithmetic
+  on "now" (`addMonths`, month-end/DST/leap assumptions); TZ-naive date
+  construction. Past/fixed date literals with an explicit TZ do not flag.
+- **Fixed-sleep / timed waits** — `sleep()` for synchronization:
+  `Thread.sleep(ms)`, `setTimeout`-as-wait, `cy.wait(3000)`,
+  `page.waitForTimeout(...)`; a bounded wait whose success is asserted
+  (`assertTrue(latch.await(100, MS))` — a capped wait still flags).
+  Tests legitimately about time require a frozen/fake clock — a real
+  sleep to observe a delay still flags.
+- **Concurrency / race interleaving** — assertions assuming a completion
+  order across threads, `Promise.all`, or executors; shared state mutated
+  without synchronization; missing `join()`/`await` before asserting.
+  Order-independent assertions (`Set` comparison, sorted) do not flag.
+- **Test-order dependence & shared mutable state** — static/module-level
+  mutable state written by a test; state (DB row, file, env var) created
+  with no teardown; a test reading state another test produced.
+- **Unseeded randomness** — `Math.random()`, `uuid.v4()`, `faker.*` without
+  `faker.seed(n)` feeding an assertion. Seeded randomness does not flag.
+- **Real network / external services** — live URLs or SDK clients in a test
+  with no stub/interceptor at the boundary.
+- **Resource leaks & hard-coded ports** — a fixed port for an embedded
+  server/DB (collides under parallel CI); an opened connection, file, or
+  socket with no guaranteed teardown.
+- **Unordered-collection order assumptions** — positional assertions on
+  hash map/set iteration or on a query with no `ORDER BY`.
+- **Exact float equality** — `expect(0.1 + 0.2).toBe(0.3)`; require a
+  tolerance/epsilon comparison.
+- **Platform/environment dependence** — hard-coded path separators or line
+  endings; locale/TZ formatting asserted against a fixed string; CPU-count
+  or CI-parallelism assumptions.
+
+**Time-bomb example** (a rerun never exposes it — only the diff does):
+
+**Bad:**
+```js
+// Bad — wall-clock read feeds the assertion; hard-coded future expiry.
+// Green today, permanently red once the clock crosses the literal.
+const token = { expiresAt: "2030-01-01" };
+expect(isValid(token, new Date())).toBe(true);
+```
+
+**Good:**
+```js
+// Good — frozen/injected clock; expiry derived from it.
+const now = new Date("2024-06-15T12:00:00Z");
+const token = issueToken({ now, ttlDays: 30 });
+expect(isValid(token, now)).toBe(true);
+```
 
 ### UX Reviewer
 
