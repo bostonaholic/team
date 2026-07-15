@@ -82,6 +82,7 @@ the bar below is the audit checklist.
 | Narrow assertion | The assertion targets the specific field/effect under test. No full-equality on complex objects unless that IS the contract. |
 | Actionable failure | If the test fails, the failure message names the failing condition. `EXPECT_OK(...)` not `EXPECT_TRUE(...ok())`. |
 | No sleeps | No `sleep()` for synchronization. Use wait-for-condition primitives. |
+| Deterministic inputs | No wall-clock reads, unseeded randomness, order-dependent or shared-state assumptions, real network, hard-coded ports, or exact float equality feeding an assertion. Clock frozen/injected; RNG seeded. |
 | No test logic | No `if`, no loops, no string-building inside the test body. |
 | One scenario per test | The test verifies one behavior and runs independently in any order. |
 | DAMP setup | Setup the reader needs to understand the test lives in the test (or a helper that takes the asserted value as a parameter). |

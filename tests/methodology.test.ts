@@ -462,6 +462,19 @@ describe("test-first-development lens (L2 content tripwire)", () => {
     expect(text).toContain("BEFORE any implementation code");
     expect(text).toContain("Confirm Tests Fail Correctly");
   });
+
+  test("Test Style Rules contains the four deterministic-input subsections", () => {
+    const text = read(SKILL_FILE);
+    expect(/^### Control the clock$/m.test(text)).toBe(true);
+    expect(/^### Seed all randomness$/m.test(text)).toBe(true);
+    expect(/^### Tests own their state — any order, any host$/m.test(text)).toBe(true);
+    expect(/^### Hermetic boundaries$/m.test(text)).toBe(true);
+  });
+
+  test("test-architect audit table has a Deterministic inputs row", () => {
+    const TEST_ARCHITECT = join(REPO_ROOT, "agents", "test-architect.md");
+    expect(read(TEST_ARCHITECT)).toContain("| Deterministic inputs |");
+  });
 });
 
 // ---------------------------------------------------------------------------
