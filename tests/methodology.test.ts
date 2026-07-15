@@ -545,3 +545,35 @@ describe("code-review flaky-test red flags (L2 content tripwire)", () => {
     expect(bullet).toContain("skills/code-review/SKILL.md");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Time-bomb example pair — free L2 drift tripwire (docs/testing.md §2,
+// collision/drift form). The fenced bad/good time-bomb example lives in two
+// skills (code-review carries a copy of test-first-development's canonical
+// pair, design decision 5). The copies are maintained by hand; this pin fails
+// the build the moment they drift.
+// ---------------------------------------------------------------------------
+
+describe("time-bomb example pair (L2 drift tripwire)", () => {
+  const CODE_REVIEW_SKILL = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
+  const TFD_SKILL = join(REPO_ROOT, "skills", "test-first-development", "SKILL.md");
+
+  // All ```js fences belonging to the time-bomb example: the bad block
+  // carries the future-expiry literal, the good block the issueToken call.
+  function timeBombFences(text: string): string[] {
+    const fences = text.match(/```js\n[\s\S]*?```/g) ?? [];
+    return fences.filter(
+      (fence) => fence.includes('expiresAt: "2030-01-01"') || fence.includes("issueToken"),
+    );
+  }
+
+  test("fenced bad/good pair is byte-identical across the two skills", () => {
+    const codeReviewPair = timeBombFences(read(CODE_REVIEW_SKILL));
+    const tfdPair = timeBombFences(read(TFD_SKILL));
+    // Fail-loud: extraction must find exactly the bad + good fence in each
+    // file — an empty or partial slice must never pass vacuously.
+    expect(codeReviewPair.length).toBe(2);
+    expect(tfdPair.length).toBe(2);
+    expect(codeReviewPair).toEqual(tfdPair);
+  });
+});

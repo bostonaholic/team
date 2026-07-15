@@ -171,11 +171,16 @@ depends on them, even when the offending test's own result is deterministic.
   or CI-parallelism assumptions.
 
 **Time-bomb example** (a rerun never exposes it — only the diff does):
+
+**Bad:**
 ```js
 // Bad — wall-clock read feeds the assertion; hard-coded future expiry.
+// Green today, permanently red once the clock crosses the literal.
 const token = { expiresAt: "2030-01-01" };
 expect(isValid(token, new Date())).toBe(true);
 ```
+
+**Good:**
 ```js
 // Good — frozen/injected clock; expiry derived from it.
 const now = new Date("2024-06-15T12:00:00Z");

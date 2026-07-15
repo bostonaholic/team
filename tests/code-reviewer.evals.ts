@@ -42,10 +42,10 @@ const MIN_REASON_SUBSTANCE = 3;
 // Deterministic blocking-severity check: the Conventional Comments
 // `issue (blocking):` label, tolerating markdown bold markers and spacing
 // variance (`**issue (blocking):**`, `**issue (blocking)**:`,
-// `issue(blocking):`). Linear-time — every pair of adjacent quantifiers
-// matches disjoint characters (whitespace vs. literal `*`), so there is no
-// backtracking blowup on adversarial input.
-const BLOCKING_LABEL = /\bissue\s*\**\s*\(blocking\)\s*\**\s*:/i;
+// `issue(blocking):`). Linear-time — each decoration gap is a single
+// character class (`[\s*]*`), so no adjacent quantifiers compete over the
+// same characters and there is no backtracking blowup on adversarial input.
+const BLOCKING_LABEL = /\bissue[\s*]*\(blocking\)[\s*]*:/i;
 
 // Registers one planted-bug E2E eval. Every fixture runs the identical
 // pipeline — prompt scaffold, agent run, deterministic outcome judge, LLM

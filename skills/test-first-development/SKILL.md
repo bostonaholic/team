@@ -166,6 +166,20 @@ Replace every fixed `sleep(N)` with a wait-for-condition primitive (exist,
 not-exist, wait-to-exist with timeout + interval). A fixed sleep both masks
 race-condition bugs and pads runtime when the system is fast.
 
+### Assert outcomes, not interleavings
+
+A test whose result depends on thread or promise scheduling passes only
+when the scheduler cooperates. Accept every valid interleaving, or make
+the interleaving deterministic.
+
+- `join()`/`await` every concurrent task before asserting — never assert
+  mid-flight.
+- Assert order-independent properties on concurrently produced results —
+  set membership or a sorted comparison, not `results[0] === "A"`.
+- Where ordering genuinely matters, impose it with latches/barriers
+  (`CountDownLatch`, chained promises) instead of relying on scheduler
+  luck.
+
 ### Control the clock
 
 Never read the real wall clock in a test — inject or freeze it
@@ -186,12 +200,15 @@ permanently red on some future date.
 Past or fixed date literals with an explicit timezone are the sanctioned
 form.
 
+**Bad:**
 ```js
 // Bad — wall-clock read feeds the assertion; hard-coded future expiry.
 // Green today, permanently red once the clock crosses the literal.
 const token = { expiresAt: "2030-01-01" };
 expect(isValid(token, new Date())).toBe(true);
 ```
+
+**Good:**
 ```js
 // Good — frozen/injected clock; expiry derived from it.
 const now = new Date("2024-06-15T12:00:00Z");
@@ -222,6 +239,18 @@ is order-dependent — a leading flakiness cause.
   teardown (prefer transaction rollback).
 - Never assert on state a different test produced. The suite must pass in
   any order and on any host.
+
+### Impose order before asserting it
+
+Hash map/set iteration, `os.listdir`, and queries without `ORDER BY` have
+no defined order — a positional assertion on them is platform-dependent
+luck.
+
+- Add an explicit `ORDER BY` / `.order_by()` / sort before any positional
+  assertion (`results[0]`).
+- Or assert order-independently: set membership, unordered-elements
+  matchers.
+- Never compare an ordered structure against a set-backed result.
 
 ### Hermetic boundaries
 
