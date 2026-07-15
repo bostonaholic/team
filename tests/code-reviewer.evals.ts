@@ -39,143 +39,120 @@ const collector = new EvalCollector("e2e");
 // "mentioned the hint but the review is junk" failure mode.
 const MIN_REASON_SUBSTANCE = 3;
 
-testIfSelected(
-  "planted-null-deref",
-  async () => {
-    const fixture = loadFixture("code-reviewer", "planted-null-deref");
-    const workDir = mkdtempSync(join(tmpdir(), "code-reviewer-e2e-"));
+// Deterministic blocking-severity check: the Conventional Comments
+// `issue (blocking):` label, tolerating markdown bold markers and spacing
+// variance (`**issue (blocking):**`, `**issue (blocking)**:`,
+// `issue(blocking):`). Linear-time — every pair of adjacent quantifiers
+// matches disjoint characters (whitespace vs. literal `*`), so there is no
+// backtracking blowup on adversarial input.
+const BLOCKING_LABEL = /\bissue\s*\**\s*\(blocking\)\s*\**\s*:/i;
 
-    try {
-      const prompt =
-        "You are reviewing a code change. Use Conventional Comments " +
-        "(`issue (blocking):`, `suggestion (non-blocking):`, `nitpick`). " +
-        "Surface every correctness defect you can find with the specific " +
-        "line and a one-line fix proposal.\n\n" +
-        fixture.body;
+// Registers one planted-bug E2E eval. Every fixture runs the identical
+// pipeline — prompt scaffold, agent run, deterministic outcome judge, LLM
+// review judge, collector record, assertions — varying only in:
+//   fixtureName          the evals/fixtures/code-reviewer/<name>/ dir, also
+//                        the testIfSelected selection-map key
+//   defectClause         the defect-scope phrase spliced into the prompt
+//   requireBlockingLabel when the fixture's design promises the reviewer
+//                        flags the bug *as blocking*, additionally require
+//                        an `issue (blocking):` label in the output
+//                        (deterministic, no extra judge cost)
+function registerPlantedBugEval(options: {
+  fixtureName: string;
+  defectClause: string;
+  requireBlockingLabel?: boolean;
+}): void {
+  const { fixtureName, defectClause, requireBlockingLabel = false } = options;
 
-      const result = await runAgentTest({
-        prompt,
-        workingDirectory: workDir,
-        maxTurns: 6,
-        timeout: 180_000,
-        testName: "planted-null-deref",
-      });
+  testIfSelected(
+    fixtureName,
+    async () => {
+      const fixture = loadFixture("code-reviewer", fixtureName);
+      const workDir = mkdtempSync(join(tmpdir(), "code-reviewer-e2e-"));
 
-      // Tier 1 — outcome judge (deterministic): did the agent surface the
-      // planted bug? Computed from ground-truth.json, no model call.
-      const outcome = outcomeJudge(fixture.groundTruth, result.output);
+      try {
+        const prompt =
+          "You are reviewing a code change. Use Conventional Comments " +
+          "(`issue (blocking):`, `suggestion (non-blocking):`, `nitpick`). " +
+          `Surface every ${defectClause} defect you ` +
+          "can find with the specific line and a one-line fix proposal.\n\n" +
+          fixture.body;
 
-      // Tier 2 — LLM judge: is the review actually good (concrete line,
-      // named failure mode, root-cause fix)? Deterministic-first inside
-      // judgeReviewerOutput gates the model call on a Conventional Comment
-      // label being present.
-      const review = await judgeReviewerOutput(result.output);
+        const result = await runAgentTest({
+          prompt,
+          workingDirectory: workDir,
+          maxTurns: 6,
+          timeout: 180_000,
+          testName: fixtureName,
+        });
 
-      const passed =
-        result.exitReason === "success" &&
-        outcome.passes_minimum &&
-        review.reason_substance >= MIN_REASON_SUBSTANCE;
+        // Tier 1 — outcome judge (deterministic): did the agent surface the
+        // planted bug? Computed from ground-truth.json, no model call.
+        const outcome = outcomeJudge(fixture.groundTruth, result.output);
 
-      collector.addTest({
-        name: "planted-null-deref",
-        suite: "code-reviewer-e2e",
-        tier: "e2e",
-        passed,
-        duration_ms: result.duration,
-        cost_usd: result.costEstimate.estimatedCost,
-        transcript: result.transcript,
-        judge_scores: {
-          detection_rate: outcome.detection_rate,
-          reason_substance: review.reason_substance,
-        },
-        exit_reason: result.exitReason,
-        model: result.model,
-        first_response_ms: result.firstResponseMs,
-        max_inter_turn_ms: result.maxInterTurnMs,
-      });
+        // Tier 2 — LLM judge: is the review actually good (concrete line,
+        // named failure mode, root-cause fix)? Deterministic-first inside
+        // judgeReviewerOutput gates the model call on a Conventional Comment
+        // label being present.
+        const review = await judgeReviewerOutput(result.output);
 
-      expect(result.exitReason).toBe("success");
-      expect(outcome.detection_rate).toBeGreaterThanOrEqual(
-        fixture.groundTruth.minimum_detection,
-      );
-      expect(review.reason_substance).toBeGreaterThanOrEqual(
-        MIN_REASON_SUBSTANCE,
-      );
-    } finally {
-      rmSync(workDir, { recursive: true, force: true });
-    }
-  },
-  240_000,
-);
+        const blockingLabelOk =
+          !requireBlockingLabel || BLOCKING_LABEL.test(result.output);
 
-testIfSelected(
-  "planted-time-bomb",
-  async () => {
-    const fixture = loadFixture("code-reviewer", "planted-time-bomb");
-    const workDir = mkdtempSync(join(tmpdir(), "code-reviewer-e2e-"));
+        const passed =
+          result.exitReason === "success" &&
+          outcome.passes_minimum &&
+          blockingLabelOk &&
+          review.reason_substance >= MIN_REASON_SUBSTANCE;
 
-    try {
-      const prompt =
-        "You are reviewing a code change. Use Conventional Comments " +
-        "(`issue (blocking):`, `suggestion (non-blocking):`, `nitpick`). " +
-        "Surface every correctness AND test-quality/flakiness defect you " +
-        "can find with the specific line and a one-line fix proposal.\n\n" +
-        fixture.body;
+        collector.addTest({
+          name: fixtureName,
+          suite: "code-reviewer-e2e",
+          tier: "e2e",
+          passed,
+          duration_ms: result.duration,
+          cost_usd: result.costEstimate.estimatedCost,
+          transcript: result.transcript,
+          judge_scores: {
+            detection_rate: outcome.detection_rate,
+            reason_substance: review.reason_substance,
+          },
+          exit_reason: result.exitReason,
+          model: result.model,
+          first_response_ms: result.firstResponseMs,
+          max_inter_turn_ms: result.maxInterTurnMs,
+        });
 
-      const result = await runAgentTest({
-        prompt,
-        workingDirectory: workDir,
-        maxTurns: 6,
-        timeout: 180_000,
-        testName: "planted-time-bomb",
-      });
+        expect(result.exitReason).toBe("success");
+        expect(outcome.detection_rate).toBeGreaterThanOrEqual(
+          fixture.groundTruth.minimum_detection,
+        );
+        if (requireBlockingLabel) {
+          // Detection passed (asserted above); the design additionally
+          // promises the finding carries a blocking severity label.
+          expect(result.output).toMatch(BLOCKING_LABEL);
+        }
+        expect(review.reason_substance).toBeGreaterThanOrEqual(
+          MIN_REASON_SUBSTANCE,
+        );
+      } finally {
+        rmSync(workDir, { recursive: true, force: true });
+      }
+    },
+    240_000,
+  );
+}
 
-      // Tier 1 — outcome judge (deterministic): did the agent surface the
-      // planted time-bomb? Computed from ground-truth.json, no model call.
-      const outcome = outcomeJudge(fixture.groundTruth, result.output);
+registerPlantedBugEval({
+  fixtureName: "planted-null-deref",
+  defectClause: "correctness",
+});
 
-      // Tier 2 — LLM judge: is the review actually good (concrete line,
-      // named failure mode, root-cause fix)? Deterministic-first inside
-      // judgeReviewerOutput gates the model call on a Conventional Comment
-      // label being present.
-      const review = await judgeReviewerOutput(result.output);
-
-      const passed =
-        result.exitReason === "success" &&
-        outcome.passes_minimum &&
-        review.reason_substance >= MIN_REASON_SUBSTANCE;
-
-      collector.addTest({
-        name: "planted-time-bomb",
-        suite: "code-reviewer-e2e",
-        tier: "e2e",
-        passed,
-        duration_ms: result.duration,
-        cost_usd: result.costEstimate.estimatedCost,
-        transcript: result.transcript,
-        judge_scores: {
-          detection_rate: outcome.detection_rate,
-          reason_substance: review.reason_substance,
-        },
-        exit_reason: result.exitReason,
-        model: result.model,
-        first_response_ms: result.firstResponseMs,
-        max_inter_turn_ms: result.maxInterTurnMs,
-      });
-
-      expect(result.exitReason).toBe("success");
-      expect(outcome.detection_rate).toBeGreaterThanOrEqual(
-        fixture.groundTruth.minimum_detection,
-      );
-      expect(review.reason_substance).toBeGreaterThanOrEqual(
-        MIN_REASON_SUBSTANCE,
-      );
-    } finally {
-      rmSync(workDir, { recursive: true, force: true });
-    }
-  },
-  240_000,
-);
+registerPlantedBugEval({
+  fixtureName: "planted-time-bomb",
+  defectClause: "correctness AND test-quality/flakiness",
+  requireBlockingLabel: true,
+});
 
 afterAll(async () => {
   await collector.finalize();
