@@ -134,6 +134,9 @@ Blocking tier and auto-loops the implementer. A single time-bomb ships a
 guaranteed future CI failure; flakiness erodes the "green means safe"
 signal. The rule keys to outcome-dependence, not token presence: a
 `Date.now()` in a log line does not flag; one feeding an assertion does.
+Outcome-dependence covers the whole suite, not only the offending test:
+state or resources left behind flag because a *later* test's outcome
+depends on them, even when the offending test's own result is deterministic.
 
 - **Time/date dependence, incl. time-bombs** — `new Date()`, `Date.now()`,
   `datetime.now()` feeding an assertion; a future date literal in a fixture
@@ -172,7 +175,8 @@ signal. The rule keys to outcome-dependence, not token presence: a
 // Bad — wall-clock read feeds the assertion; hard-coded future expiry.
 const token = { expiresAt: "2030-01-01" };
 expect(isValid(token, new Date())).toBe(true);
-
+```
+```js
 // Good — frozen/injected clock; expiry derived from it.
 const now = new Date("2024-06-15T12:00:00Z");
 const token = issueToken({ now, ttlDays: 30 });

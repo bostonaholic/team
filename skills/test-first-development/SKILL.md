@@ -191,7 +191,8 @@ form.
 // Green today, permanently red once the clock crosses the literal.
 const token = { expiresAt: "2030-01-01" };
 expect(isValid(token, new Date())).toBe(true);
-
+```
+```js
 // Good — frozen/injected clock; expiry derived from it.
 const now = new Date("2024-06-15T12:00:00Z");
 const token = issueToken({ now, ttlDays: 30 });
