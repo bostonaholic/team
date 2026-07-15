@@ -145,7 +145,8 @@ depends on them, even when the offending test's own result is deterministic.
   construction. Past/fixed date literals with an explicit TZ do not flag.
 - **Fixed-sleep / timed waits** — `sleep()` for synchronization:
   `Thread.sleep(ms)`, `setTimeout`-as-wait, `cy.wait(3000)`,
-  `page.waitForTimeout(...)`; a bounded wait whose success is asserted.
+  `page.waitForTimeout(...)`; a bounded wait whose success is asserted
+  (`assertTrue(latch.await(100, MS))` — a capped wait still flags).
   Tests legitimately about time require a frozen/fake clock — a real
   sleep to observe a delay still flags.
 - **Concurrency / race interleaving** — assertions assuming a completion

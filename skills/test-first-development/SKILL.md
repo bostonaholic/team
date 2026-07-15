@@ -261,6 +261,9 @@ The test must not depend on anything outside the process it controls.
 - No hard-coded ports for embedded servers/DBs — dynamic allocation
   (port `0`, TestContainers) plus guaranteed teardown; fixed ports collide
   under parallel CI.
+- Guarantee teardown of every opened connection, file, or socket
+  (`try/finally`, `using`, `defer`, or the framework's fixture teardown) —
+  a leaked handle can fail a later test.
 - No locale/platform-format assertions without pinning — pass the locale
   explicitly, use `path.join()` / `os.EOL`, set `TZ`/`LANG` in the harness.
 - No exact float equality — `toBeCloseTo(0.3)`, not `toBe(0.1 + 0.2)`;
