@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-07-15
+
 ### Added
 
 - **The code reviewer now blocks flaky-test red flags on first occurrence — including "time-bomb" tests that pass today and deterministically fail on a future date.** [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md) gains a **Flaky-test red flags (always blocking)** checklist: ten root-cause categories sourced from the flaky-test literature (Luo et al. FSE 2014; Fowler's *Eradicating Non-Determinism in Tests*; Google/Uber/GitHub engineering practice) — time/date dependence incl. time-bombs, fixed-sleep waits, concurrency interleaving, test-order dependence and shared state, unseeded randomness, real network calls, resource leaks and hard-coded ports, unordered-collection assumptions, exact float equality, and platform/environment assumptions — each with diff-visible signatures a reviewer can grep for, plus a fenced bad/good time-bomb example. Unlike the style flags' escalate-on-repetition rule, any test whose *outcome depends on* a nondeterministic input is an `issue (blocking)` on **first** occurrence — time-bombs are invisible to rerun-based flaky detection, so the diff is the only place to catch them. The [`agents/code-reviewer.md`](https://github.com/bostonaholic/team/blob/main/agents/code-reviewer.md) mirror names both severity regimes, and a new `planted-time-bomb` eval fixture (`tier: periodic`) behaviorally proves the reviewer detects the planted bug *and* labels it blocking. Pinned by L2 tripwires in [`tests/methodology.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/methodology.test.ts), including a byte-identical drift pin on the shared example pair.
@@ -202,7 +204,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/bostonaholic/team/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/bostonaholic/team/compare/v0.14.1...v0.15.0
 [0.14.1]: https://github.com/bostonaholic/team/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/bostonaholic/team/compare/v0.13.2...v0.14.0
