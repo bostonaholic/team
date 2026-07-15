@@ -108,6 +108,75 @@ testIfSelected(
   240_000,
 );
 
+testIfSelected(
+  "planted-time-bomb",
+  async () => {
+    const fixture = loadFixture("code-reviewer", "planted-time-bomb");
+    const workDir = mkdtempSync(join(tmpdir(), "code-reviewer-e2e-"));
+
+    try {
+      const prompt =
+        "You are reviewing a code change. Use Conventional Comments " +
+        "(`issue (blocking):`, `suggestion (non-blocking):`, `nitpick`). " +
+        "Surface every correctness AND test-quality/flakiness defect you " +
+        "can find with the specific line and a one-line fix proposal.\n\n" +
+        fixture.body;
+
+      const result = await runAgentTest({
+        prompt,
+        workingDirectory: workDir,
+        maxTurns: 6,
+        timeout: 180_000,
+        testName: "planted-time-bomb",
+      });
+
+      // Tier 1 — outcome judge (deterministic): did the agent surface the
+      // planted time-bomb? Computed from ground-truth.json, no model call.
+      const outcome = outcomeJudge(fixture.groundTruth, result.output);
+
+      // Tier 2 — LLM judge: is the review actually good (concrete line,
+      // named failure mode, root-cause fix)? Deterministic-first inside
+      // judgeReviewerOutput gates the model call on a Conventional Comment
+      // label being present.
+      const review = await judgeReviewerOutput(result.output);
+
+      const passed =
+        result.exitReason === "success" &&
+        outcome.passes_minimum &&
+        review.reason_substance >= MIN_REASON_SUBSTANCE;
+
+      collector.addTest({
+        name: "planted-time-bomb",
+        suite: "code-reviewer-e2e",
+        tier: "e2e",
+        passed,
+        duration_ms: result.duration,
+        cost_usd: result.costEstimate.estimatedCost,
+        transcript: result.transcript,
+        judge_scores: {
+          detection_rate: outcome.detection_rate,
+          reason_substance: review.reason_substance,
+        },
+        exit_reason: result.exitReason,
+        model: result.model,
+        first_response_ms: result.firstResponseMs,
+        max_inter_turn_ms: result.maxInterTurnMs,
+      });
+
+      expect(result.exitReason).toBe("success");
+      expect(outcome.detection_rate).toBeGreaterThanOrEqual(
+        fixture.groundTruth.minimum_detection,
+      );
+      expect(review.reason_substance).toBeGreaterThanOrEqual(
+        MIN_REASON_SUBSTANCE,
+      );
+    } finally {
+      rmSync(workDir, { recursive: true, force: true });
+    }
+  },
+  240_000,
+);
+
 afterAll(async () => {
   await collector.finalize();
   // A passing-but-3×-more-expensive run is a regression. Fail the run
