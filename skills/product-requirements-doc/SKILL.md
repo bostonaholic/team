@@ -15,6 +15,10 @@ The goal is precision, not exhaustive documentation: clear scope, unambiguous
 acceptance criteria, and explicit boundaries that prevent scope creep when
 the design-author later turns the task into an approach.
 
+Write the prose this skill governs at a seventh-grade reading
+level — short sentences, common words, no unexplained jargon. Full
+methodology: `skills/writing-prose/SKILL.md`.
+
 ## When to Write a PRD
 
 The questioner produces a PRD (in addition to the standard `task.md`

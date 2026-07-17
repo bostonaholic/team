@@ -12,6 +12,10 @@ change in isolation. Every commit should be correct on its own — readable
 without surrounding context, reversible without side effects, and meaningful
 in the project history.
 
+Write the prose your commit bodies carry at a seventh-grade reading
+level — short sentences, common words, no unexplained jargon. Full
+methodology: `skills/writing-prose/SKILL.md`.
+
 ## The 50/72 Rule
 
 ### Subject Line (50 characters)

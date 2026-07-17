@@ -12,6 +12,10 @@ Adversarially review a design document with fresh context. This is an
 adds no gate to the orchestrator. Invoke it when you want an independent,
 fresh-context audit before you walk into the DESIGN human gate.
 
+Write the prose this skill governs at a seventh-grade reading
+level — short sentences, common words, no unexplained jargon. Full
+methodology: `skills/writing-prose/SKILL.md`.
+
 There is **no custom review agent**. This skill is self-contained: it
 carries the review brief inline and dispatches the built-in
 `general-purpose` subagent via the `Agent` tool. That subagent boots with
