@@ -179,6 +179,10 @@ Use Conventional Comments format for every finding. Every comment includes a
 the doc cites). The `code-review` skill defines the three comment types
 (issue, suggestion, nitpick) — use them.
 
+Write the prose your report carries at a seventh-grade reading
+level — short sentences, common words, no unexplained jargon. Full
+methodology: `skills/writing-prose/SKILL.md`.
+
 End with a verdict, using the same gate type as `code-reviewer`:
 
 - **APPROVE** — Document satisfies every section the methodology requires,
