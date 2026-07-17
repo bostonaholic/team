@@ -397,10 +397,11 @@ load manifest; an agent typically loads at most three.
 
 ### writing-prose
 
-- **Purpose:** Plain-language documentation quality.
+- **Purpose:** Plain-language prose quality for authoring and review.
 - **Loaded by:** technical-writer.
-- **Key behaviors:** Readable, plain prose aimed at someone who has not seen
-  the code — clarity over cleverness.
+- **Key behaviors:** A seventh-grade reading-level bar governs prose the
+  agent writes as well as prose it assesses — readable, plain language
+  aimed at someone who has not seen the code, clarity over cleverness.
 
 ### git-commit
 
@@ -464,7 +465,7 @@ entry-point section above rather than repeating them here.
 | `technical-design-doc` | planner | Plan |
 | `product-requirements-doc` | questioner | Question |
 | `product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
-| `writing-prose` | technical-writer | Implement (verify) |
+| `writing-prose` | technical-writer | Implement (verify) — bar for prose it writes and prose it assesses |
 | `git-commit` | team-pr | PR |
 | `changelog` | team, team-pr | PR |
 | `worktree-isolation` | orchestrator (team, team-worktree) | Worktree |

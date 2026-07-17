@@ -1,6 +1,6 @@
 ---
 name: writing-prose
-description: Clear documentation and readable explanation methodology — loaded by technical-writer agent to produce high-quality documentation assessments grounded in plain language and readability principles
+description: Clear documentation and readable explanation methodology — loaded by technical-writer agent to write prose and to assess documentation quality, grounded in plain language and readability principles
 user-invocable: false
 ---
 
@@ -8,8 +8,8 @@ user-invocable: false
 
 Documentation exists to transfer understanding. Every word that does not
 transfer understanding is a word that costs the reader without paying them.
-Apply these principles to assess documentation quality and identify where
-clarity, readability, or structure needs improvement.
+Apply these principles when writing prose and when assessing it — they govern
+the documentation you produce as well as the documentation you review.
 
 ## Core Principles
 
@@ -17,6 +17,9 @@ clarity, readability, or structure needs improvement.
 
 Write for the reader's comprehension, not the author's expertise.
 
+- **Write at a seventh-grade reading level.** Short sentences, common words,
+  no unexplained jargon. When a technical term is unavoidable, the "Define
+  terms at first use" bullet below covers it.
 - **Use familiar words.** "Use" not "utilize". "Start" not "initiate". "Show"
   not "demonstrate". When a shorter, common word exists, choose it.
 - **One idea per sentence.** Long sentences with multiple clauses force readers
@@ -108,9 +111,10 @@ Does the documentation cover everything the reader needs to succeed?
 
 Can a typical reader understand this in one pass?
 
-- **Grade level.** Technical documentation should target a reading level that
-  does not require re-reading for comprehension. Long sentences, rare words,
-  and deep nesting all increase cognitive load.
+- **Grade level.** Hold documentation to the same seventh-grade reading-level
+  bar that governs authoring: short sentences, common words, no unexplained
+  jargon. Long sentences, rare words, and deep nesting all increase cognitive
+  load.
 - **Consistent terminology.** If the same concept is called "user", "account",
   and "principal" in different parts of the documentation, readers will not
   know if these are synonyms. Pick one term and use it consistently.
