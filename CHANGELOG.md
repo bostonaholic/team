@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-07-17
+
 ### Added
 
 - **Agents now write all prose at a seventh-grade reading level — short sentences, common words, no unexplained jargon.** [`skills/writing-prose/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/writing-prose/SKILL.md) states the rule once, and it covers both the prose an agent writes and the prose it reviews. The seven other prose-governing skills — [`changelog`](https://github.com/bostonaholic/team/blob/main/skills/changelog/SKILL.md), [`documenting-decisions`](https://github.com/bostonaholic/team/blob/main/skills/documenting-decisions/SKILL.md), [`technical-design-doc`](https://github.com/bostonaholic/team/blob/main/skills/technical-design-doc/SKILL.md), [`product-requirements-doc`](https://github.com/bostonaholic/team/blob/main/skills/product-requirements-doc/SKILL.md), [`eng-design-doc-review`](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/SKILL.md), [`code-review`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md), and [`git-commit`](https://github.com/bostonaholic/team/blob/main/skills/git-commit/SKILL.md) — each point back to it. Fixed formats like 50-character commit subjects stay as they are.
@@ -208,7 +210,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/bostonaholic/team/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/bostonaholic/team/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/bostonaholic/team/compare/v0.14.1...v0.15.0
 [0.14.1]: https://github.com/bostonaholic/team/compare/v0.14.0...v0.14.1
