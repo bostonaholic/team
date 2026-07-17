@@ -10,6 +10,10 @@ agent that wrote the code) must never evaluate its own output. This separation
 prevents self-evaluation bias — the tendency to see what you intended to write
 rather than what you actually wrote.
 
+Write the prose your review comments carry at a seventh-grade reading
+level — short sentences, common words, no unexplained jargon. Full
+methodology: `skills/writing-prose/SKILL.md`.
+
 ## Generator-Evaluator Separation
 
 The cardinal rule: **Don't let the same model grade its own exam.**

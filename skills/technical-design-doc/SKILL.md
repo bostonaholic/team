@@ -12,6 +12,10 @@ feature needs a full TDD — apply this methodology when a feature is complex
 enough that undocumented architectural decisions would slow or block
 implementation.
 
+Write the prose this skill governs at a seventh-grade reading
+level — short sentences, common words, no unexplained jargon. Full
+methodology: `skills/writing-prose/SKILL.md`.
+
 ## When to Write a TDD
 
 Write a TDD when the feature:

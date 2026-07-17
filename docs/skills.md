@@ -220,6 +220,7 @@ argument shape.
   That subagent loads four methodology skills as its review criteria —
   `technical-design-doc`, `code-review`, `engineering-standards`, and
   `documenting-decisions` — making this an additional consumer of all four.
+  Points the report's prose at the seventh-grade bar in `writing-prose`.
 
 ## Standalone utilities
 
@@ -293,7 +294,8 @@ load manifest; an agent typically loads at most three.
   orchestrator never surfaces a Blocking or Major finding to the user and
   loops the implementer automatically until only Minor-and-below remains.
   Reclassifies `ux-reviewer` from a soft user-decides gate to an
-  auto-fixed Major.
+  auto-fixed Major. Points review-comment prose at the seventh-grade bar
+  in `writing-prose`.
 
 ### engineering-standards
 
@@ -363,7 +365,8 @@ load manifest; an agent typically loads at most three.
   no agent body carries an explicit `Load skills/documenting-decisions/SKILL.md`
   instruction and no agent declares it via `skills:` frontmatter).
 - **Key behaviors:** Capture the decision, its alternatives, and its
-  rationale so later readers understand the "why".
+  rationale so later readers understand the "why". Points ADR authors at
+  the seventh-grade prose bar in `writing-prose`.
 
 ### technical-design-doc
 
@@ -372,7 +375,8 @@ load manifest; an agent typically loads at most three.
   `planner` agent body loads `engineering-standards` explicitly but does not
   carry an explicit `Load skills/technical-design-doc/SKILL.md` instruction).
 - **Key behaviors:** Structures the design narrative — current state,
-  desired end state, patterns to follow, and trade-offs.
+  desired end state, patterns to follow, and trade-offs. Points design-doc
+  authors at the seventh-grade prose bar in `writing-prose`.
 
 ### product-requirements-doc
 
@@ -382,7 +386,8 @@ load manifest; an agent typically loads at most three.
   but does not carry an explicit `Load
   skills/product-requirements-doc/SKILL.md` instruction).
 - **Key behaviors:** Frames the problem, users, and success criteria when a
-  request warrants a PRD before design.
+  request warrants a PRD before design. Points PRD authors at the
+  seventh-grade prose bar in `writing-prose`.
 
 ### product-thinking
 
@@ -397,10 +402,11 @@ load manifest; an agent typically loads at most three.
 
 ### writing-prose
 
-- **Purpose:** Plain-language documentation quality.
+- **Purpose:** Plain-language prose quality for authoring and review.
 - **Loaded by:** technical-writer.
-- **Key behaviors:** Readable, plain prose aimed at someone who has not seen
-  the code — clarity over cleverness.
+- **Key behaviors:** A seventh-grade reading-level bar governs prose the
+  agent writes as well as prose it assesses — readable, plain language
+  aimed at someone who has not seen the code, clarity over cleverness.
 
 ### git-commit
 
@@ -408,14 +414,16 @@ load manifest; an agent typically loads at most three.
   and body rule, and atomic commits.
 - **Loaded by:** team-pr.
 - **Key behaviors:** One logical change per commit with a clear, scoped
-  message.
+  message. Points commit-body prose at the seventh-grade bar in
+  `writing-prose`.
 
 ### changelog
 
 - **Purpose:** Keep a Changelog methodology.
 - **Loaded by:** team, team-pr.
 - **Key behaviors:** Record user-facing changes under the standard
-  Added / Changed / Fixed headings before the PR opens.
+  Added / Changed / Fixed headings before the PR opens. Points entry
+  authors at the seventh-grade prose bar in `writing-prose`.
 
 ### worktree-isolation
 
@@ -464,7 +472,7 @@ entry-point section above rather than repeating them here.
 | `technical-design-doc` | planner | Plan |
 | `product-requirements-doc` | questioner | Question |
 | `product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
-| `writing-prose` | technical-writer | Implement (verify) |
+| `writing-prose` | technical-writer | Implement (verify) — bar for prose it writes and prose it assesses |
 | `git-commit` | team-pr | PR |
 | `changelog` | team, team-pr | PR |
 | `worktree-isolation` | orchestrator (team, team-worktree) | Worktree |

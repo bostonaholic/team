@@ -13,6 +13,10 @@ developers. Every entry should answer: "How does this affect me?"
 This methodology follows [Keep a Changelog](https://keepachangelog.com)
 conventions.
 
+Write the prose this skill governs at a seventh-grade reading
+level — short sentences, common words, no unexplained jargon. Full
+methodology: `skills/writing-prose/SKILL.md`.
+
 ## File Structure
 
 The changelog lives at `CHANGELOG.md` in the project root. If it does not
