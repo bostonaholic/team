@@ -89,14 +89,18 @@ server is up; you have not stopped it yet). Skip this entire section for
 API-only and Library projects.
 
 **UI-impact gate.** Capture only when both conditions hold: the project type
-is UI **and** the round's commits touch components, templates, pages, routes,
-or styles (check with `git diff` / `git log` over the round's commits). If
-either condition fails, create no `screenshots/` directory and no manifest —
-skip the rest of this section.
+is UI **and** the branch's full diff touches components, templates, pages,
+routes, or styles — check
+`git diff $(git merge-base <base-branch> HEAD)..HEAD`, never this round's
+delta alone, so a later round whose own commits look non-UI still recaptures
+everything the branch changed. If either condition fails, create no
+`screenshots/` directory and no manifest — skip the rest of this section.
 
 **Wipe and recapture.** Delete the contents of `<artifact-dir>/screenshots/`
 before capturing, so stale images from earlier rounds never reach the PR.
-`<artifact-dir>` is the `docs/plans/<id>/` path from your dispatch context.
+Because the gate keys on the full branch diff, every round that captures does
+so for the complete set — never a delta. `<artifact-dir>` is the
+`docs/plans/<id>/` path from your dispatch context.
 
 **Seed.** Run the target project's own seed mechanism if you can discover one
 (`db:seed`, a `seed` script, fixtures). If no seed exists or seeding fails,
@@ -109,6 +113,11 @@ attachment bound. Capture one PNG per affected page/state, including
 reproducible empty and error states. Name files
 `<NN>-<route-slug>-<state>.png`, zero-padded so listing order is stable, and
 write them to `<artifact-dir>/screenshots/`.
+
+**Data caution.** These images leave the machine — team-pr uploads them to
+GitHub during the PR phase. Do not capture routes or states that render
+secrets or real PII; prefer seeded or synthetic data. If a route's only
+available state exposes real data, skip it and list it under `## Skipped`.
 
 **Caps and skip statuses.**
 
@@ -124,14 +133,18 @@ write them to `<artifact-dir>/screenshots/`.
   "N additional states not captured" under `## Skipped`.
 
 **Manifest.** Write `<artifact-dir>/screenshots/manifest.md` via a Bash
-heredoc with exactly this frontmatter schema:
+heredoc with a **quoted delimiter** (`<<'EOF'`), so caption and `seed_note`
+text can never trigger `$()`/backtick expansion. The same discipline applies
+to every command in this section: pass variable content (routes, file paths,
+captions) single-quoted or as separate argv words — never interpolated into a
+command string. Frontmatter schema, exactly:
 
 ```yaml
 ---
 topic: <topic>        # verbatim from design.md, like every artifact
 date: <YYYY-MM-DD>
 phase: implement
-round: <n>            # review round from dispatch context; default 1
+round: <n>            # review round if the dispatch names one; otherwise 1
 status: captured | partial | skipped-server-start | skipped-no-tool
 seeded: true | false
 seed_note: <one line when seeding was absent or failed; omitted otherwise>

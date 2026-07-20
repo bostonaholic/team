@@ -237,29 +237,41 @@ The `## Screenshots` section is built from `$ARGUMENTS/screenshots/manifest.md`
 ## Screenshot Upload
 
 Screenshots render inline for any reviewer (including private repos) via
-GitHub's user-attachments pipeline. Sequencing is PR-first — three explicit
-steps, mirroring the Companion-PRs open-then-edit shape:
+GitHub's user-attachments pipeline. Run this procedure only when the manifest
+carries `## Captured` entries whose PNGs exist on disk — in every other case
+the rendering rules above already produced the final section (absent, or
+note-only) and there is nothing to upload. Sequencing is PR-first — three
+explicit steps, mirroring the Companion-PRs open-then-edit shape:
 
 1. **The draft PR already exists** (opened in Execution step 7). Its initial
-   body carries the `## Screenshots` section in the degraded local-path form
-   from the rendering rules above.
+   body carries whatever the rendering rules above produced — when this
+   procedure runs, that is the degraded local-path form of the
+   `## Screenshots` section.
 2. **Upload.** Session pre-check first — run
    `[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile/Default/Cookies" ]`.
    If the check fails, no authenticated browser session exists → skip the
    upload entirely, keep the degraded note, and append the one-time sign-in
-   instruction (launch the same Playwright persistent context headed, sign in
-   to github.com once — the sign-in itself stays manual). If it passes, run a
-   short Node script through Bash: `chromium.launchPersistentContext` on the
-   profile directory, headless; open the PR page; confirm the signed-in
-   marker (the `user-login` meta tag is present, no redirect to `/login`) —
-   logged out despite the cookie file means an expired session → the same
-   degraded path. For each manifest entry with an existing PNG under 10MB,
-   set the file on the markdown textarea's file input, wait for GitHub's
-   user-attachments pipeline to insert the
+   instruction to the **operator-facing completion report** — never to the PR
+   body, which keeps only the degraded note and local paths. The instruction:
+   create the profile directory with `chmod 700`, launch the same Playwright
+   persistent context headed on it, and sign in to github.com once — the
+   sign-in itself stays manual. That profile holds a full **unencrypted**
+   github.com web session; to revoke it, sign out of github.com inside that
+   profile or delete the directory. If the pre-check passes, run a short Node
+   script through Bash: `chromium.launchPersistentContext` on the profile
+   directory, headless; open the PR page; confirm the signed-in marker (the
+   `user-login` meta tag is present, no redirect to `/login`) — logged out
+   despite the cookie file means an expired session → the same degraded path.
+   For each manifest entry with an existing PNG under 10MB, set the file on
+   the markdown textarea's file input, wait for GitHub's user-attachments
+   pipeline to insert the
    `https://github.com/user-attachments/assets/<uuid>` URL into the textarea,
-   and record it; 60s bound per image (timeout → that image is a failure).
-   Oversize files (>10MB) are skipped at upload and noted. Do not submit any
-   comment — the textarea is only the upload vehicle.
+   record it, then clear the textarea before the next image so each URL is
+   unambiguously attributed to its manifest entry; 60s bound per image
+   (timeout → that image is a failure). Oversize files (>10MB) are skipped at
+   upload and noted. Pass file paths and captions to the script as argv (or
+   environment variables), never interpolated into a command string. Do not
+   submit any comment — the textarea is only the upload vehicle.
 3. **Body edit.** `gh pr edit --body` replaces the `## Screenshots` section
    wholesale — succeeded images render as `**<caption>** (<state>)` +
    `![<caption>](<url>)`; failures are listed by caption + local path in the
