@@ -141,7 +141,9 @@ One non-phase sibling output exists: `docs/plans/<id>/screenshots/` (PNGs
 plus `manifest.md`), written by ux-reviewer during IMPLEMENT for UI-touching
 changes and consumed by team-pr. Discovery keys only on the six `PHASE_FILES`
 names, so this directory is invisible to hooks and skills — IMPLEMENT still
-declares no phase artifact.
+declares no phase artifact. User-facing setup (the one-time GitHub sign-in
+that enables inline upload) is documented in the README's
+["Screenshots in PRs"](../README.md#screenshots-in-prs) section.
 
 ## 3. Pipeline (QRSPI)
 
@@ -266,10 +268,13 @@ items to the TodoWrite ledger.
 Update CHANGELOG.md (filter for user-facing commits since last release),
 push the branch and open a draft PR automatically (`gh pr create
 --draft` — the PR phase is not a human gate, so it needs no approval),
-and surface the tracking ticket (if `task.md` carries `ticketId`). The
-worktree stays in place after the PR opens — teardown is deferred until
-the PR merges or the user asks, so the branch remains available for
-iteration.
+and surface the tracking ticket (if `task.md` carries `ticketId`). When
+a capture manifest exists (`docs/plans/<id>/screenshots/`, see the
+artifact-layout note in section 2), the PR body also gets a
+`## Screenshots` section populated by uploading the PNGs through
+GitHub's user-attachments pipeline. The worktree stays in place after
+the PR opens — teardown is deferred until the PR merges or the user
+asks, so the branch remains available for iteration.
 
 ## 4. Agent Roster
 

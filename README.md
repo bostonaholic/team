@@ -55,6 +55,23 @@ leading WORKTREE phase. Invoked standalone, `/team-worktree` consumes
 Each downstream command takes the artifact directory `docs/plans/<id>/` as
 its argument.
 
+## Screenshots in PRs
+
+For UI-touching changes, the pipeline attaches visual evidence to the PR: the
+ux-reviewer captures screenshots of the affected pages during Implement, and
+`/team-pr` uploads them through GitHub's user-attachments pipeline so they
+render inline in a `## Screenshots` section of the PR body. Non-UI changes
+never get the section, and any capture or upload failure degrades to a
+visible note with local file paths — the PR always opens.
+
+Inline upload needs a one-time GitHub sign-in in a dedicated browser profile
+at `${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile/`: create the
+directory with `chmod 700`, launch that Playwright persistent context headed,
+and sign in to github.com once. The profile holds a full **unencrypted**
+github.com web session — to reset or revoke it, sign out of github.com inside
+that profile or delete the directory. Until you sign in, PRs carry local
+screenshot paths instead of inline images.
+
 ## Install
 
 ```
