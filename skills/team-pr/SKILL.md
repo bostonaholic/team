@@ -94,16 +94,22 @@ done
 3. **Resume path** — `$ARGUMENTS/task.md` exists: read `ticketId` from
    its frontmatter. Read `$ARGUMENTS/design.md` for the "why" behind the
    changes.
-4. **Standalone path** — no matching artifact directory:
+4. **Read the screenshot manifest** (resume mode only). Check for
+   `$ARGUMENTS/screenshots/manifest.md`, written by ux-reviewer during
+   Implement. If the manifest is absent, the PR body carries no
+   Screenshots section — non-UI changes are never forced to include one.
+   If present, parse its frontmatter and `## Captured` / `## Skipped`
+   body for the Screenshots section (see PR Body Template below).
+5. **Standalone path** — no matching artifact directory:
    - Verify the branch has commits ahead of the base, or uncommitted
      changes worth shipping. If neither, report "Nothing to ship." and
      stop. (Standalone mode is single-repo only.)
    - Skip aggregate-gate enforcement. Warn the user once that they are
      taking responsibility for correctness.
-5. **Update CHANGELOG.md** before committing (see Changelog Update below).
+6. **Update CHANGELOG.md** before committing (see Changelog Update below).
    In multi-repo mode, update each repo's `CHANGELOG.md` with the
    entries belonging to that repo's commits.
-6. **Open a draft PR automatically — do not stop to ask.** The PR phase
+7. **Open a draft PR automatically — do not stop to ask.** The PR phase
    is not a human gate; opening the PR requires no approval. Push the
    branch and open the PR as a **draft** (`gh pr create --draft`). Pass
    the body to `gh pr create`/`gh pr edit` via `--body-file` or a quoted
@@ -111,10 +117,10 @@ done
    uncommitted final changes (typically `CHANGELOG.md`) land as a single
    trailing ship commit before the push. In multi-repo mode this opens
    **one draft PR per repo with commits** and cross-links them.
-7. In multi-repo mode, push each repo's branch independently and open one
+8. In multi-repo mode, push each repo's branch independently and open one
    draft PR per repo. Cross-link the PRs in their bodies (see PR Body
    Template below).
-8. **Tracking ticket — link now, in-review when ready.** If `ticketId`
+9. **Tracking ticket — link now, in-review when ready.** If `ticketId`
    is non-null, apply the ticket-lifecycle rules in
    `skills/tracking-tickets/SKILL.md`: render the ticket link as the
    closing line the PR Body Template below ends with (that skill owns
@@ -124,12 +130,12 @@ done
    to in-review only once the PR is marked ready for review; the
    template owns where the footer goes). Best-effort; never block the
    pipeline. Surface the `ticketId` in the completion report.
-9. **Whenever you push to a PR, review and adjust its description.** Any
+10. **Whenever you push to a PR, review and adjust its description.** Any
    push that adds, removes, or changes commits on a PR's branch — the
    initial open *and* every follow-up push (review feedback, fixups,
    rebases) — must be followed by re-reading the current PR body against
    the now-pushed commits and updating it (`gh pr edit --body-file`, or
-   a quoted heredoc per step 6) so the Summary, Changes, and
+   a quoted heredoc per step 7) so the Summary, Changes, and
    How-to-Verify sections still match what the branch actually does.
    The footer survives every refresh too: when the
    body carries a closing line (the home repo's PR of a ticketed topic),
@@ -140,7 +146,7 @@ done
    likewise preserved on every refresh. Never leave a stale description
    after a push. In multi-repo mode, do this for each repo's PR whose
    branch you pushed.
-10. **Leave the worktree(s) in place.** Do not remove a worktree after
+11. **Leave the worktree(s) in place.** Do not remove a worktree after
    opening a PR — the user may need to iterate on the branch (push
    follow-up commits, address review feedback). Clean up only after the
    PR is merged or when the user explicitly asks, following the teardown
@@ -161,6 +167,10 @@ done
 
 ## Changes
 [Brief description, organized by component]
+
+## Screenshots
+[Conditional — rendered from the capture manifest per the rules below;
+omitted entirely when no manifest exists]
 
 ## How to Verify
 - [ ] [Automated verification command]
@@ -204,6 +214,25 @@ section once all URLs are known. This post-open edit appends the
 section *after* the closing line — "final line of the PR body" refers
 to creation-time authoring, so the appended `## Companion PRs` section
 following it is expected, not a violation.
+
+### Screenshots section rendering
+
+The `## Screenshots` section is built from `$ARGUMENTS/screenshots/manifest.md`
+(written by ux-reviewer during Implement):
+
+- **Manifest absent → omit the section entirely.** Non-UI changes are never
+  forced to include screenshots.
+- **Manifest `status` is any `skipped-*` value, or the manifest is malformed**
+  (unparseable frontmatter or body) → render a one-line capture-failure note
+  naming the reason, nothing more. Never block or delay the PR over
+  screenshots — the PR phase is not a human gate.
+- **Each `## Captured` entry whose PNG exists on disk** renders as
+  `**<caption>** (<state>)` followed by its local path. Entries whose PNG is
+  missing from disk are skipped and the discrepancy noted in the section.
+- **When upload is unavailable or fails**, the section renders the degraded
+  form: a "captured — upload failed or unavailable" note plus the local file
+  paths above. This degraded shape is the contract every upload-failure
+  branch falls back to.
 
 ## Changelog Update
 
