@@ -137,6 +137,12 @@ merge-base** with the default branch (`git log <merge-base>..<id>`
 non-empty); `plan.md` present with no commit means the run is still
 pre-IMPLEMENT.
 
+One non-phase sibling output exists: `docs/plans/<id>/screenshots/` (PNGs
+plus `manifest.md`), written by ux-reviewer during IMPLEMENT for UI-touching
+changes and consumed by team-pr. Discovery keys only on the six `PHASE_FILES`
+names, so this directory is invisible to hooks and skills — IMPLEMENT still
+declares no phase artifact.
+
 ## 3. Pipeline (QRSPI)
 
 The pipeline has eight phases. The orchestrator walks them in order;
