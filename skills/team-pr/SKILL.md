@@ -118,7 +118,9 @@ done
      any board automation moves it to its done state — when the PR merges.
      Render the link as the closing line the PR Body Template ends with
      (GitHub: `Closes #<n>` as the final line of the PR body); for another
-     tracker use its PR↔issue link. Interpret `ticketId` here, where it is
+     tracker use its PR↔issue link. In multi-repo mode this closing line
+     goes on the **home** repo's PR only — see the multi-repo rule below
+     the PR Body Template. Interpret `ticketId` here, where it is
      consumed:
      - A bare number → `Closes #<n>` (a GitHub issue in the origin repo).
      - Any other non-null value → `Closes <ticketId or issue-url>`. An
@@ -143,11 +145,14 @@ done
    rebases) — must be followed by re-reading the current PR body against
    the now-pushed commits and updating it (`gh pr edit --body`) so the
    Summary, Changes, and How-to-Verify sections still match what the
-   branch actually does. The closing line survives every refresh too:
+   branch actually does. The footer survives every refresh too: when the
+   body carries a closing line (the home repo's PR of a ticketed topic),
    each refresh re-emits **exactly one** closing line in footer position
-   — never duplicated, never dropped. Never leave a stale description
-   after a push. In multi-repo mode, do this for each repo's PR whose
-   branch you pushed.
+   — never duplicated, never dropped. A companion PR re-emits its
+   non-closing reference the same way, and a PR with no ticket has no
+   closing line to re-emit. Never leave a stale description after a
+   push. In multi-repo mode, do this for each repo's PR whose branch you
+   pushed.
 10. **Leave the worktree(s) in place.** Do not remove a worktree after
    opening a PR — the user may need to iterate on the branch (push
    follow-up commits, address review feedback). Clean up only after the
