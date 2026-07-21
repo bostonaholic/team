@@ -283,6 +283,8 @@ export async function runAgentTest(
     if (options.allowedTools && options.allowedTools.length > 0) {
       args.push("--allowed-tools", ...options.allowedTools);
     }
+    // Environment skills (built-in /review, …) can hijack the run.
+    args.push("--disallowed-tools", "Skill");
 
     const child = spawn("claude", args, {
       cwd: options.workingDirectory,
