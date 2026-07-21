@@ -93,7 +93,9 @@ is UI **and** the branch's full diff touches components, templates, pages,
 routes, or styles — check
 `git diff $(git merge-base <base-branch> HEAD)..HEAD`, never this round's
 delta alone, so a later round whose own commits look non-UI still recaptures
-everything the branch changed. If either condition fails, create no
+everything the branch changed. Resolve `<base-branch>` with
+`git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'`,
+falling back to `main`. If either condition fails, create no
 `screenshots/` directory and no manifest — skip the rest of this section.
 
 **Wipe and recapture.** Delete the contents of `<artifact-dir>/screenshots/`
