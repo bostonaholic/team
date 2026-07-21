@@ -660,3 +660,52 @@ describe("code-comment rules (L2 content tripwire)", () => {
     expect(codeQuality).toContain("engineering-standards/SKILL.md");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Comment red flags — free L2 content tripwires (docs/testing.md §2). The
+// code-review skill owns the split severity regime for comment violations:
+// ticket/issue IDs and plan/slice/phase markers in comments are mechanical,
+// judgment-free, and rot — blocking on FIRST occurrence (flaky-test
+// precedent); what-restating, wordiness, and commented-out code follow the
+// existing style-escalation regime. The code-reviewer agent mirrors the
+// check and defers severity definitions to the skill; pins on both sides
+// mean a one-sided edit fails CI.
+// ---------------------------------------------------------------------------
+
+describe("comment red flags (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
+  const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
+
+  test("code-review skill defines the Comment red flags split regime", () => {
+    const flags = sliceBetween(read(SKILL_FILE), "Comment red flags", "### UX Reviewer");
+    expect(flags.length).toBeGreaterThan(0);
+    // Mechanical references block on first occurrence; tolerate bold
+    // (`**first** occurrence`).
+    expect(/first\*{0,2} occurrence/i.test(flags)).toBe(true);
+    expect(/blocking/i.test(flags)).toBe(true);
+    expect(/ticket\/issue IDs/i.test(flags)).toBe(true);
+    expect(/plan\/slice\/phase markers/i.test(flags)).toBe(true);
+    // Style regime escalates: `suggestion:` once, `issue:` when repeated.
+    expect(flags).toContain("suggestion:");
+    expect(flags).toContain("issue:");
+    // Carve-outs: upstream-bug links where the link is the why, and
+    // ticket-like tokens outside comment syntax (string literals).
+    expect(/upstream/i.test(flags)).toBe(true);
+    expect(/string literals/i.test(flags)).toBe(true);
+  });
+
+  test("code-reviewer mirrors the comment-discipline check", () => {
+    const bullet = sliceBetween(
+      read(CODE_REVIEWER),
+      "**Comment discipline**",
+      "**Unnecessary complexity**",
+    );
+    expect(bullet.length).toBeGreaterThan(0);
+    expect(/first\*{0,2} occurrence/i.test(bullet)).toBe(true);
+    expect(/blocking/i.test(bullet)).toBe(true);
+    // Citation contract: findings name the checklist item.
+    expect(bullet).toContain("Comment Discipline");
+    // The mirror defers to skill-canonical definitions.
+    expect(/skills\/code-review\/SKILL\.md|engineering-standards/.test(bullet)).toBe(true);
+  });
+});

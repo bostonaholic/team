@@ -193,6 +193,28 @@ const token = issueToken({ now, ttlDays: 30 });
 expect(isValid(token, now)).toBe(true);
 ```
 
+**Comment red flags.** Check the in-source comments in every changed file
+against the Code Comments rules in `skills/engineering-standards/SKILL.md`.
+Findings cite the checklist item by name: `issue: Comment Discipline — ...`.
+Two severity regimes apply:
+
+- **Blocking on first occurrence:** ticket/issue IDs,
+  plan/slice/phase markers, or doc-section references in code comments.
+  The check is mechanical and judgment-free, and the references rot — the
+  tracker migrates, the plan is deleted, the section is renumbered, and
+  the comment becomes a lie.
+- **Style escalation:** comments restating WHAT the code does,
+  wordy/narrating comments, and commented-out code follow the same regime
+  as the test-quality style flags — `suggestion:` for a single occurrence,
+  `issue:` when repeated across the diff. A single what-comment never
+  blocks a round on its own.
+- **Not violations:** upstream-bug links where the link IS the why (a
+  workaround pointing at a public issue URL); ticket-like tokens outside
+  comment syntax — string literals, log messages, test fixture data (the
+  check reads comments only); doc comments on exported/public interfaces
+  per the ecosystem's convention. A diff with zero comments passes
+  trivially — never manufacture a finding.
+
 ### UX Reviewer
 
 - **APPROVE:** API/UX is intuitive, consistent with existing patterns.
