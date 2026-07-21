@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Pull requests now include inline UI screenshots when a run changes what the app renders.** During the implement phase, [`agents/ux-reviewer.md`](https://github.com/bostonaholic/team/blob/main/agents/ux-reviewer.md) captures one PNG per affected page or state — seeded with the target project's own seed mechanism, error states included — inside the boot-verify window it already owns, and writes a capture manifest alongside the run's planning artifacts. At the PR phase, [`skills/team-pr/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md) renders a conditional `## Screenshots` section and uploads each image through GitHub's own attachment pipeline (a Playwright-driven browser session), so the images render inline for every reviewer — private repos included. Non-UI changes are never forced to carry screenshots, screenshots are never committed to any branch, and when capture or upload cannot run, the section says why instead of blocking the PR. **What this asks of you:** a one-time GitHub sign-in in a dedicated browser profile — see [README → Screenshots in PRs](https://github.com/bostonaholic/team/blob/main/README.md#screenshots-in-prs).
+
 ## [0.21.0] - 2026-07-23
 
 ### Changed
