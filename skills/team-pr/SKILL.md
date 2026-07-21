@@ -116,9 +116,18 @@ done
    non-null:
    - **Link the PR to the ticket** so the tracker closes the ticket — and
      any board automation moves it to its done state — when the PR merges.
-     For GitHub, put `Closes #<n>` in the PR body; for another tracker use
-     its PR↔issue link. This link is what drives the eventual move to done
-     on merge, so the orchestrator never closes tickets by hand.
+     Render the link as the closing line the PR Body Template ends with
+     (GitHub: `Closes #<n>` as the final line of the PR body); for another
+     tracker use its PR↔issue link. Interpret `ticketId` here, where it is
+     consumed:
+     - A bare number → `Closes #<n>` (a GitHub issue in the origin repo).
+     - Any other non-null value → `Closes <ticketId or issue-url>`. An
+       unrecognized shape is emitted verbatim and noted in the completion
+       report — never block on it.
+     - Null, absent, empty, or whitespace-only → omit the closing line
+       entirely; no placeholder.
+     This link is what drives the eventual move to done on merge, so the
+     orchestrator never closes tickets by hand.
    - **Never move the ticket to in-review while the PR is a draft.** A
      draft is not under review, and this phase opens the PR as a draft —
      at open time the ticket keeps its in-progress state. Move the ticket
@@ -134,8 +143,11 @@ done
    rebases) — must be followed by re-reading the current PR body against
    the now-pushed commits and updating it (`gh pr edit --body`) so the
    Summary, Changes, and How-to-Verify sections still match what the
-   branch actually does. Never leave a stale description after a push. In
-   multi-repo mode, do this for each repo's PR whose branch you pushed.
+   branch actually does. The closing line survives every refresh too:
+   each refresh re-emits **exactly one** closing line in footer position
+   — never duplicated, never dropped. Never leave a stale description
+   after a push. In multi-repo mode, do this for each repo's PR whose
+   branch you pushed.
 10. **Leave the worktree(s) in place.** Do not remove a worktree after
    opening a PR — the user may need to iterate on the branch (push
    follow-up commits, address review feedback). Clean up only after the
@@ -170,7 +182,21 @@ done
 ## References
 - Design: $ARGUMENTS/design.md
 - Plan:   $ARGUMENTS/plan.md
+
+Closes #<n>
 ```
+
+The `Closes` line is a standalone footer — no heading — rendered as the
+final line of the PR body. It is conditional on `ticketId`: when
+`ticketId` is null, absent, or empty, omit the line entirely — no
+placeholder, no empty footer.
+
+**Placement rationale:** reviewers open a PR to read `## Summary`; the
+closing line is machine-facing metadata, so the narrative comes first
+and the footer comes last, mirroring the commit-footer convention in
+`skills/git-commit/SKILL.md`. GitHub parses closing keywords anywhere in
+the body, so the footer position costs nothing — and "last authored
+line" is deterministic to emit and trivial to verify.
 
 In multi-repo mode, append a `## Companion PRs` section to each PR
 listing the URLs of every other PR opened for the same topic, so a
