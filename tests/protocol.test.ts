@@ -719,6 +719,10 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     expect(template.indexOf("Closes")).toBeGreaterThan(
       template.indexOf("## References"),
     );
+    // And it is the FINAL line of the template — nothing may follow it.
+    // Without this, appending a section after the closing line would still
+    // pass the ordering check above.
+    expect(template.trimEnd().endsWith("Closes #<n>")).toBe(true);
     // Conditional on ticketId: omitted entirely when null/absent/empty —
     // no placeholder is ever rendered.
     const text = flat(read(TEAM_PR));
