@@ -202,7 +202,10 @@ Two severity regimes apply:
   plan/slice/phase markers, or doc-section references in code comments.
   The check is mechanical and judgment-free, and the references rot — the
   tracker migrates, the plan is deleted, the section is renumbered, and
-  the comment becomes a lie.
+  the comment becomes a lie. TODO/FIXME comments in delivered code join
+  this bucket for the same reason: equally mechanical to detect, and
+  hard-banned by the canonical standard — deferred work belongs in the
+  implementer's report, not the code.
 - **Style escalation:** comments restating WHAT the code does,
   wordy/narrating comments, and commented-out code follow the same regime
   as the test-quality style flags — `suggestion:` for a single occurrence,

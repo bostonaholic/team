@@ -79,9 +79,9 @@ intention-revealing code nor tests can carry the explanation.
 - **No commented-out code.** Version control remembers deleted code; a
   commented-out block only sows doubt about whether it is still needed.
   Delete it.
-- **No TODO comments in delivered code.** Deferred work goes in the
-  implementer's report, where it is visible and actionable -- not buried in
-  the source where it silently ages.
+- **No TODO or FIXME comments in delivered code.** Deferred work goes in
+  the implementer's report, where it is visible and actionable -- not
+  buried in the source where it silently ages.
 - **Doc comments on exported/public interfaces are exempt.** They follow
   the ecosystem's convention (JSDoc, docstrings, rustdoc) and define the
   abstraction (Ousterhout: interface comments describe what the caller

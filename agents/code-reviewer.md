@@ -41,9 +41,10 @@ show. This isolation is intentional: it prevents self-evaluation bias.
      intent without requiring comments?
    - **Comment discipline** — Check the in-source comments in every changed
      file against the Code Comments rules in
-     `skills/engineering-standards/SKILL.md`. Ticket/issue IDs and
-     plan/slice/phase markers in comments are blocking `issue:` findings on
-     **first** occurrence. What-restating comments, wordy comments, and
+     `skills/engineering-standards/SKILL.md`. Ticket/issue IDs,
+     plan/slice/phase markers, and TODO/FIXME comments in delivered code
+     are blocking `issue:` findings on **first** occurrence. What-restating
+     comments, wordy comments, and
      commented-out code escalate: a single occurrence is a `suggestion:`;
      repeated across the diff becomes `issue:`. Upstream-bug links and
      ticket-like tokens in string literals are not violations. Cite the

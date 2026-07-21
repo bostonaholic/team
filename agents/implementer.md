@@ -175,8 +175,8 @@ incorrect):
 - **Comment discipline.** Comments explain non-obvious WHY, never what the
   code does — a comment that feels necessary is a signal to rewrite the
   code first. No ticket/issue IDs, plan/slice/phase markers, or doc-section
-  references in comments — they rot. No commented-out code. No TODO
-  comments in delivered code — deferred work goes in your report. Doc
+  references in comments — they rot. No commented-out code. No TODO or
+  FIXME comments in delivered code — deferred work goes in your report. Doc
   comments on exported/public interfaces follow the ecosystem's convention
   and are exempt. The canonical rule set is the Code Comments section of
   `skills/engineering-standards/SKILL.md`.
