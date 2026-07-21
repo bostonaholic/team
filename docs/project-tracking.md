@@ -173,7 +173,7 @@ of the work.
 | **Bugs** | A **Backlog for `bug`-labeled issues only** — a convenience view so open bugs are easy to spot. Captured, not started, not committed to. Not a separate stage in the flow. | A `bug` issue is captured. Use this instead of **Backlog** so it shows in the bugs view; bugs are pulled **directly into In progress** from here — they are **not** promoted to **Ready**. |
 | **Ready** | Shaped and ready to be picked up. Has enough detail to start. **WIP-limited to 5.** | The work is well-understood and prioritized, and Ready has an open slot (see WIP limit below). |
 | **In progress** | Actively being worked on. | You start work — open a worktree, run `/team`, or begin coding. |
-| **In review** | Implementation complete; a PR is open and under review. | A pull request is opened for the card. |
+| **In review** | Implementation complete; a PR is ready and under review. | The card's pull request is **marked ready for review**. A **draft** PR does not move the card — it stays in **In progress** until the draft is marked ready. |
 | **Done** | Merged and complete. | The PR is merged. |
 
 > **The Bugs column.** `Bugs` is an entry bucket, not a stage — the same
@@ -195,8 +195,10 @@ of the work.
 > may carry their own limits under that model.)
 
 **Move the card as the work moves.** Pull a card into **In progress** when
-you start, not after — from `Ready` (non-bug work) or `Bugs` (bug work). When the
-PR opens, move it to **In review**. When the PR merges, move it to **Done**.
+you start, not after — from `Ready` (non-bug work) or `Bugs` (bug work). When
+the PR is marked ready for review, move the card to **In review** — opening a
+draft PR is not that moment; the card stays in **In progress** while the PR is
+a draft. When the PR merges, move it to **Done**.
 
 Dragging the card on the board UI is the simplest way. From the CLI, two small
 helper scripts in `.claude/scripts/` compose over a pipe — one resolves an
@@ -252,17 +254,22 @@ like this:
   Best-effort: if the card can't be resolved (no board item, free-form
   description), the run continues without it — the move never blocks the
   pipeline. You no longer need to pre-move the card by hand before launching.
-- **Opening the PR** → the card moves to **In review** **automatically**. The PR
-  phase (`/team-pr`, the `/team` PR gate, and `/team-fix` Ship) performs the
-  generic, best-effort "move to in-review" defined in those skills, and links
-  the PR to the issue (`Closes #<N>` in the PR body) so the issue closes on
-  merge. **This repo's concrete binding** is the same board scripts. For an
-  issue number `<N>`:
+- **Opening the PR** → the PR phase (`/team-pr`, the `/team` PR gate, and
+  `/team-fix` Ship) links the PR to the issue (`Closes #<N>` in the PR body)
+  so the issue closes on merge. The pipeline opens the PR as a **draft**, and
+  a draft is not under review, so **the card stays in In progress** — the
+  generic contract in those skills forbids the in-review move while the PR is
+  a draft.
+- **Marking the PR ready for review** → the card moves to **In review**. The
+  human marks the PR ready; the generic, best-effort "move to in-review"
+  defined in the PR-phase skills fires at this moment, never at draft-open.
+  **This repo's concrete binding** is the same board scripts. For an issue
+  number `<N>`:
   ```sh
   .claude/scripts/project-item-id.sh <N> | .claude/scripts/project-set-status.sh "In review"
   ```
   Best-effort: if the card can't be resolved, the run continues — the move never
-  blocks opening the PR.
+  blocks the PR.
 - **Merge** → the card moves to **Done** **automatically**. Because the PR
   carries `Closes #<N>`, merging it closes the issue, and the board's built-in
   "an item is closed → Done" automation moves the card. No manual move and no

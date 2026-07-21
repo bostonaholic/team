@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-07-21
+
+### Fixed
+
+- **Opening a draft PR no longer moves the tracking ticket to in-review.** The PR phase ([`skills/team-pr/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md), the [`/team`](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md) PR gate, and [`/team-fix`](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md) Ship) opens every PR as a draft, but then moved the ticket to the tracker's in-review state right away — so a Linear issue (or any tracker) read "In Review" against a PR nobody had been asked to review. The tracker contract now defers the in-review move until the PR is marked ready for review; the ticket stays in-progress while the PR is a draft. The PR↔ticket link (which drives close-on-merge) still happens at open time, and the contract stays tracker-agnostic, best-effort, and never blocking.
+
 ## [0.17.0] - 2026-07-17
 
 ### Added
@@ -210,7 +216,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.17.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.17.1...HEAD
+[0.17.1]: https://github.com/bostonaholic/team/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/bostonaholic/team/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/bostonaholic/team/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/bostonaholic/team/compare/v0.14.1...v0.15.0

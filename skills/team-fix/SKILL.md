@@ -98,14 +98,18 @@ assertion failure, not a crash. Do not proceed to the fix until confirmed.
 2. **Open a draft PR automatically — do not stop to ask.** If working on
    a branch, push it and open the PR as a **draft** (`gh pr create
    --draft`). If not on a branch, commit to the working branch.
-3. **Ticket → in-review.** If `ticketId` is non-null in `task.md`'s
-   frontmatter: **link the PR to the ticket** so the tracker closes it —
-   and any board automation moves it to its done state — when the PR merges
-   (GitHub: `Closes #<n>` in the PR body); then **move the ticket to the
-   tracker's in-review state**. Best-effort and tracker-agnostic — skip
-   silently if the project defines no tracker-move mechanism; never block.
-   Because the link auto-closes the ticket on merge, the orchestrator never
-   closes tickets by hand. Surface the `ticketId` in the completion report.
+3. **Ticket — link now, in-review when ready.** If `ticketId` is non-null
+   in `task.md`'s frontmatter: **link the PR to the ticket** so the
+   tracker closes it — and any board automation moves it to its done state
+   — when the PR merges (GitHub: `Closes #<n>` in the PR body). **Never
+   move the ticket to in-review while the PR is a draft** — a draft is not
+   under review, and Ship opens a draft PR, so the ticket keeps its
+   in-progress state at open time; move it to the tracker's in-review
+   state **only once the PR is marked ready for review**. Best-effort and
+   tracker-agnostic — skip silently if the project defines no tracker-move
+   mechanism; never block. Because the link auto-closes the ticket on
+   merge, the orchestrator never closes tickets by hand. Surface the
+   `ticketId` in the completion report.
 4. Mark all TodoWrite items complete.
 
 ## Aborting

@@ -606,22 +606,26 @@ describe("ticket pickup → in-progress", () => {
   });
 });
 
-// Regression: when the PR phase opens a pull request, the ticket must move to
-// the tracker's in-review state, and the PR must be linked to the ticket so the
-// tracker closes it (and any board automation moves it to its done state) on
-// merge. The PR phase previously only "surfaced the ticketId so the user can
-// close it" — no in-review move, no link. The fix carries the same generic,
-// best-effort runtime contract through every skill that opens a PR, while the
-// merge skill (shipit) stays board-agnostic. These tripwires pin the contract.
-describe("PR open → in-review → (merge) done", () => {
+// Regression: when the PR phase opens a pull request, the PR must be linked to
+// the ticket so the tracker closes it (and any board automation moves it to its
+// done state) on merge, and the ticket must move to the tracker's in-review
+// state — but only once the PR is marked ready for review. The pipeline opens
+// draft PRs, and a draft is not under review: the skills previously moved the
+// ticket to in-review immediately after the draft opened (observed as a Linear
+// issue reading "In Review" against a draft PR — #159). The fix carries the
+// same generic, best-effort runtime contract through every skill that opens a
+// PR, while the merge skill (shipit) stays board-agnostic. These tripwires pin
+// the contract, including its timing.
+describe("PR open (link) → ready for review (in-review) → (merge) done", () => {
   const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
   const TEAM_FIX = join(REPO_ROOT, "skills", "team-fix", "SKILL.md");
   const TEAM_PR = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
   const SHIPIT = join(REPO_ROOT, "skills", "shipit", "SKILL.md");
   const PROJECT_TRACKING = join(REPO_ROOT, "docs", "project-tracking.md");
 
-  // The generic runtime contract for the PR phase: move the ticket to
-  // in-review, link it so it auto-closes on merge, best-effort, never blocking,
+  // The generic runtime contract for the PR phase: link the PR at open so it
+  // auto-closes on merge, move the ticket to in-review only once the PR is
+  // ready for review (never while it is a draft), best-effort, never blocking,
   // and no board hardcoded into the distributed runtime.
   function assertInReviewContract(path: string) {
     const text = flat(read(path));
@@ -629,6 +633,16 @@ describe("PR open → in-review → (merge) done", () => {
     expect(/in-review/i.test(text)).toBe(true);
     // Links the PR to the ticket so it auto-closes on merge (drives "done").
     expect(/closes #|link the pr/i.test(text)).toBe(true);
+    // The move is gated on the PR being ready for review — a draft PR is not
+    // under review, so the ticket stays in-progress while the PR is a draft.
+    expect(
+      /never\s+move\s+the\s+ticket\s+to\s+in-review\s+while\s+the\s+pr\s+is\s+a\s+draft/i.test(
+        text,
+      ),
+    ).toBe(true);
+    expect(
+      /only\s+once\s+the\s+pr\s+is\s+marked\s+ready\s+for\s+review/i.test(text),
+    ).toBe(true);
     // Stays generic — best-effort and never blocks the pipeline.
     expect(/best-effort/i.test(text)).toBe(true);
     expect(/never block/i.test(text)).toBe(true);
@@ -637,15 +651,15 @@ describe("PR open → in-review → (merge) done", () => {
     expect(text).not.toContain("projects/5");
   }
 
-  test("team-pr: opening the PR moves the ticket to in-review and links it", () => {
+  test("team-pr: links the PR at open; in-review waits for ready-for-review", () => {
     assertInReviewContract(TEAM_PR);
   });
 
-  test("team: PR gate moves the ticket to in-review and links it", () => {
+  test("team: PR gate links the PR; in-review waits for ready-for-review", () => {
     assertInReviewContract(TEAM_SKILL);
   });
 
-  test("team-fix: Ship moves the ticket to in-review and links it", () => {
+  test("team-fix: Ship links the PR; in-review waits for ready-for-review", () => {
     assertInReviewContract(TEAM_FIX);
   });
 
@@ -663,6 +677,9 @@ describe("PR open → in-review → (merge) done", () => {
     const text = flat(read(PROJECT_TRACKING));
     // In-review binding: the board script with the "In review" column.
     expect(/"In review"/i.test(text)).toBe(true);
+    // The binding fires when the PR is marked ready for review, not when the
+    // draft opens — the card stays In progress while the PR is a draft.
+    expect(/marked\s+ready\s+for\s+review/i.test(text)).toBe(true);
     // Done is automated by the board's close-on-merge automation, driven by
     // the PR's Closes-link — not a manual move.
     expect(/closes #/i.test(text)).toBe(true);
