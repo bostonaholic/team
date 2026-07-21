@@ -28,17 +28,17 @@
     {
       "id": "n1",
       "description": "PAY-9310 appears inside a thrown error message string literal, not a comment — ticket-like tokens outside comment syntax are not violations.",
-      "false_positive_hint": "\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:.{0,200}?pay.?9310|pay.?9310.{0,200}?\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:"
+      "false_positive_hint": "\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:[^\n]{0,200}?pay.?9310|pay.?9310[^\n]{0,200}?\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:"
     },
     {
       "id": "n2",
       "description": "The normalizeHeaders workaround comment links the upstream node-fetch bug — the link IS the why, so it is exempt from the reference ban.",
-      "false_positive_hint": "\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:.{0,200}?(?:node.?fetch|1735|normalizeheaders)|(?:node.?fetch|1735|normalizeheaders).{0,200}?\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:"
+      "false_positive_hint": "\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:[^\n]{0,200}?(?:node.?fetch|1735|normalizeheaders)|(?:node.?fetch|1735|normalizeheaders)[^\n]{0,200}?\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:"
     },
     {
       "id": "n3",
       "description": "backoffSchedule is a comment-free clean function — a region with zero comments passes trivially; never manufacture a finding.",
-      "false_positive_hint": "\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:.{0,200}?backoffschedule|backoffschedule.{0,200}?\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:"
+      "false_positive_hint": "\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:[^\n]{0,200}?backoffschedule|backoffschedule[^\n]{0,200}?\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:"
     }
   ]
 }
