@@ -105,7 +105,9 @@ done
    entries belonging to that repo's commits.
 6. **Open a draft PR automatically — do not stop to ask.** The PR phase
    is not a human gate; opening the PR requires no approval. Push the
-   branch and open the PR as a **draft** (`gh pr create --draft`). Any
+   branch and open the PR as a **draft** (`gh pr create --draft`). Pass
+   the body to `gh pr create`/`gh pr edit` via `--body-file` or a quoted
+   heredoc — never interpolated into a double-quoted shell argument. Any
    uncommitted final changes (typically `CHANGELOG.md`) land as a single
    trailing ship commit before the push. In multi-repo mode this opens
    **one draft PR per repo with commits** and cross-links them.
@@ -123,9 +125,15 @@ done
      the PR Body Template. Interpret `ticketId` here, where it is
      consumed:
      - A bare number → `Closes #<n>` (a GitHub issue in the origin repo).
-     - Any other non-null value → `Closes <ticketId or issue-url>`. An
-       unrecognized shape is emitted verbatim and noted in the completion
-       report — never block on it.
+     - A qualified reference (`owner/repo#<n>`) or an issue URL →
+       `Closes` followed by that value substituted in — e.g.
+       `Closes https://github.com/owner/repo/issues/42`.
+     - Any other non-null shape still goes in verbatim as the footer
+       text (`Closes` plus the value), but note the unrecognized shape
+       in the completion report — never block on it. On GitHub such a
+       value (e.g. `Closes ENG-1234`) auto-closes nothing — the footer
+       is then a legible reference only, and the tracker-move step below
+       is what advances the ticket.
      - Null, absent, empty, or whitespace-only → omit the closing line
        entirely; no placeholder.
      This link is what drives the eventual move to done on merge, so the
@@ -143,16 +151,18 @@ done
    push that adds, removes, or changes commits on a PR's branch — the
    initial open *and* every follow-up push (review feedback, fixups,
    rebases) — must be followed by re-reading the current PR body against
-   the now-pushed commits and updating it (`gh pr edit --body`) so the
-   Summary, Changes, and How-to-Verify sections still match what the
-   branch actually does. The footer survives every refresh too: when the
+   the now-pushed commits and updating it (`gh pr edit --body-file`, or
+   a quoted heredoc per step 6) so the Summary, Changes, and
+   How-to-Verify sections still match what the branch actually does.
+   The footer survives every refresh too: when the
    body carries a closing line (the home repo's PR of a ticketed topic),
    each refresh re-emits **exactly one** closing line in footer position
    — never duplicated, never dropped. A companion PR re-emits its
    non-closing reference the same way, and a PR with no ticket has no
-   closing line to re-emit. Never leave a stale description after a
-   push. In multi-repo mode, do this for each repo's PR whose branch you
-   pushed.
+   closing line to re-emit; the post-open `## Companion PRs` section is
+   likewise preserved on every refresh. Never leave a stale description
+   after a push. In multi-repo mode, do this for each repo's PR whose
+   branch you pushed.
 10. **Leave the worktree(s) in place.** Do not remove a worktree after
    opening a PR — the user may need to iterate on the branch (push
    follow-up commits, address review feedback). Clean up only after the
@@ -193,8 +203,10 @@ Closes #<n>
 
 The `Closes` line is a standalone footer — no heading — rendered as the
 final line of the PR body. It is conditional on `ticketId`: when
-`ticketId` is null, absent, or empty, omit the line entirely — no
-placeholder, no empty footer.
+`ticketId` is null, absent, empty, or whitespace-only, omit the line
+entirely — no placeholder, no empty footer — and drop its preceding
+blank line with it, so the body ends at the last `## References` bullet
+with no trailing blank line.
 
 **Placement rationale:** reviewers open a PR to read `## Summary`; the
 closing line is machine-facing metadata, so the narrative comes first
@@ -207,10 +219,15 @@ In multi-repo mode, only the **home** repo's PR carries the closing
 keyword (`Closes #<n>`) — so the ticket closes exactly once, when the
 home PR merges. Companion PRs carry a **non-closing** reference to the
 issue in the same footer position, using the unambiguous qualified form
-(`owner/repo#<n>` or the issue URL). A bare `#<n>` is repo-scoped — in
-a companion repo it names a *different* issue — and even a qualified
-*closing* form would close the ticket on the first companion merge,
-before the full change set lands.
+(`owner/repo#<n>` or the issue URL) — for example:
+
+```
+Part of owner/repo#<n>
+```
+
+A bare `#<n>` is repo-scoped — in a companion repo it names a
+*different* issue — and even a qualified *closing* form would close the
+ticket on the first companion merge, before the full change set lands.
 
 In multi-repo mode, append a `## Companion PRs` section to each PR
 listing the URLs of every other PR opened for the same topic, so a
