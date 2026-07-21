@@ -4,7 +4,7 @@
 // under `bun test` with no env vars and no subprocess; they cost $0.
 
 import { test, expect, describe } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -288,6 +288,51 @@ describe("runAgentTest live-path API-key guard", () => {
       if (savedMock === undefined) delete process.env.EVALS_MOCK_AGENT;
       else process.env.EVALS_MOCK_AGENT = savedMock;
       if (savedKey !== undefined) process.env.EVALS_ANTHROPIC_API_KEY = savedKey;
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});
+
+// Environment skills (the CLI's built-in /review, …) can hijack the agent
+// under test away from the fixture, so live spawns must disallow the Skill
+// tool.
+describe("runAgentTest live-spawn tool restrictions", () => {
+  test("disallows the Skill tool so environment skills cannot hijack the run", async () => {
+    const tmp = mkdtempSync(join(tmpdir(), "session-runner-test-"));
+    // Hermetic fake `claude` on PATH that records its argv; drains stdin so
+    // the prompt write can't EPIPE.
+    const fakeBin = join(tmp, "bin");
+    mkdirSync(fakeBin);
+    const argvFile = join(tmp, "argv.txt");
+    writeFileSync(
+      join(fakeBin, "claude"),
+      `#!/bin/sh\nprintf '%s\\n' "$@" > "${argvFile}"\ncat > /dev/null\nexit 0\n`,
+      { mode: 0o755 },
+    );
+
+    const savedPath = process.env.PATH;
+    const savedMock = process.env.EVALS_MOCK_AGENT;
+    const savedKey = process.env.EVALS_ANTHROPIC_API_KEY;
+    process.env.PATH = `${fakeBin}:${savedPath ?? ""}`;
+    delete process.env.EVALS_MOCK_AGENT;
+    process.env.EVALS_ANTHROPIC_API_KEY = "test-key";
+    try {
+      await runAgentTest({
+        prompt: "Review x.ts.",
+        workingDirectory: tmp,
+        testName: "live-disallow-skill",
+        timeout: 5_000,
+      });
+      const argv = readFileSync(argvFile, "utf8").split("\n");
+      const flagIndex = argv.indexOf("--disallowed-tools");
+      expect(flagIndex).toBeGreaterThan(-1);
+      expect(argv[flagIndex + 1]).toBe("Skill");
+    } finally {
+      if (savedPath === undefined) delete process.env.PATH;
+      else process.env.PATH = savedPath;
+      if (savedMock !== undefined) process.env.EVALS_MOCK_AGENT = savedMock;
+      if (savedKey === undefined) delete process.env.EVALS_ANTHROPIC_API_KEY;
+      else process.env.EVALS_ANTHROPIC_API_KEY = savedKey;
       rmSync(tmp, { recursive: true, force: true });
     }
   });
