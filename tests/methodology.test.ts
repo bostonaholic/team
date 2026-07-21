@@ -96,7 +96,7 @@ describe("engineering-standards methodology", () => {
     }
   });
 
-  test("Quality Checklist pins all 13 item names, count-free role sections", () => {
+  test("pins every quality checklist item name, count-free role sections", () => {
     const text = read(SKILL_FILE);
     for (const item of [
       "Single Responsibility",
@@ -685,6 +685,15 @@ describe("comment red flags (L2 content tripwire)", () => {
     expect(/blocking/i.test(flags)).toBe(true);
     expect(/ticket\/issue IDs/i.test(flags)).toBe(true);
     expect(/plan\/slice\/phase markers/i.test(flags)).toBe(true);
+    // TODO/FIXME is hard-banned by the canonical standard, so it must sit
+    // in the blocking bucket — a demotion to style escalation fails here.
+    const blockingBucket = sliceBetween(
+      flags,
+      "Blocking on first occurrence",
+      "Style escalation",
+    );
+    expect(blockingBucket.length).toBeGreaterThan(0);
+    expect(/TODO\/FIXME/.test(blockingBucket)).toBe(true);
     // Style regime escalates: `suggestion:` once, `issue:` when repeated.
     expect(flags).toContain("suggestion:");
     expect(flags).toContain("issue:");
@@ -703,6 +712,12 @@ describe("comment red flags (L2 content tripwire)", () => {
     expect(bullet.length).toBeGreaterThan(0);
     expect(/first\*{0,2} occurrence/i.test(bullet)).toBe(true);
     expect(/blocking/i.test(bullet)).toBe(true);
+    // TODO/FIXME must ride the blocking sentence, not the escalation
+    // regime: slice everything before "escalate" and pin it there.
+    const blockingSentence = sliceBetween(bullet, "Ticket/issue IDs", "escalate");
+    expect(blockingSentence.length).toBeGreaterThan(0);
+    expect(/TODO\/FIXME/.test(blockingSentence)).toBe(true);
+    expect(/blocking/i.test(blockingSentence)).toBe(true);
     // Citation contract: findings name the checklist item.
     expect(bullet).toContain("Comment Discipline");
     // The mirror defers to skill-canonical definitions.
