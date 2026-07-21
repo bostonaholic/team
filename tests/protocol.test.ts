@@ -716,6 +716,9 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     // The closing line sits after the ## References bullets — the footer of
     // the authored body.
     expect(template).toContain("Closes");
+    // Guard the ordering comparison: without this, removing ## References
+    // would make indexOf return -1 and the check below pass vacuously.
+    expect(template).toContain("## References");
     expect(template.indexOf("Closes")).toBeGreaterThan(
       template.indexOf("## References"),
     );
