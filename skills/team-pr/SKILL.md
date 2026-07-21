@@ -233,10 +233,11 @@ The `## Screenshots` section is built from `$ARGUMENTS/screenshots/manifest.md`
   missing from disk are skipped and the discrepancy noted in the section.
 - **Manifest `status: partial`** → also append a one-line
   "N states skipped — see manifest" note to the section.
-- **When upload is unavailable or fails**, the section renders the degraded
-  form: a "captured — upload failed or unavailable" note plus the local file
-  paths above. This degraded shape is the contract every upload-failure
-  branch falls back to.
+- **Before upload runs (or when it is unavailable or fails)**, the section
+  renders the degraded form: a "captured — not yet uploaded" note (reworded
+  to "captured — upload failed or unavailable" if the upload is attempted
+  and fails) plus the local file paths above. This degraded shape is the
+  contract every upload-failure branch falls back to.
 
 ## Screenshot Upload
 
@@ -249,7 +250,7 @@ explicit steps, mirroring the Companion-PRs open-then-edit shape:
 
 1. **The draft PR already exists** (opened in Execution step 7). Its initial
    body carries whatever the rendering rules above produced — when this
-   procedure runs, that is the degraded local-path form of the
+   procedure runs, that is the "not yet uploaded" local-path form of the
    `## Screenshots` section.
 2. **Upload.** Session pre-check first — Chromium writes its cookie store
    in either of two layouts, so tolerate both:
