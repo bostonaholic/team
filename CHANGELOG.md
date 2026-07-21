@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Opening a draft PR no longer moves the tracking ticket to in-review.** The PR phase ([`skills/team-pr/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md), the [`/team`](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md) PR gate, and [`/team-fix`](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md) Ship) opens every PR as a draft, but then moved the ticket to the tracker's in-review state right away — so a Linear issue (or any tracker) read "In Review" against a PR nobody had been asked to review. The tracker contract now defers the in-review move until the PR is marked ready for review; the ticket stays in-progress while the PR is a draft. The PR↔ticket link (which drives close-on-merge) still happens at open time, and the contract stays tracker-agnostic, best-effort, and never blocking.
+
 ## [0.17.0] - 2026-07-17
 
 ### Added

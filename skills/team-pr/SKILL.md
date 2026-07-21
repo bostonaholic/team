@@ -112,15 +112,21 @@ done
 7. In multi-repo mode, push each repo's branch independently and open one
    draft PR per repo. Cross-link the PRs in their bodies (see PR Body
    Template below).
-8. **Tracking ticket → in-review.** If `ticketId` is non-null:
+8. **Tracking ticket — link now, in-review when ready.** If `ticketId` is
+   non-null:
    - **Link the PR to the ticket** so the tracker closes the ticket — and
      any board automation moves it to its done state — when the PR merges.
      For GitHub, put `Closes #<n>` in the PR body; for another tracker use
      its PR↔issue link. This link is what drives the eventual move to done
      on merge, so the orchestrator never closes tickets by hand.
-   - **Move the ticket to the tracker's in-review state.** Best-effort and
-     tracker-agnostic: if the project defines no tracker-move mechanism,
-     skip silently. Never block the pipeline on a tracker update.
+   - **Never move the ticket to in-review while the PR is a draft.** A
+     draft is not under review, and this phase opens the PR as a draft —
+     at open time the ticket keeps its in-progress state. Move the ticket
+     to the tracker's in-review state **only once the PR is marked ready
+     for review** (non-draft — on GitHub, `gh pr view --json isDraft`).
+     Best-effort and tracker-agnostic: if the project defines no
+     tracker-move mechanism, skip silently. Never block the pipeline on a
+     tracker update.
    - Surface the `ticketId` in the completion report.
 9. **Whenever you push to a PR, review and adjust its description.** Any
    push that adds, removes, or changes commits on a PR's branch — the

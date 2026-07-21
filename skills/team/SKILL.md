@@ -333,14 +333,18 @@ When the aggregate gate passes:
 3. In multi-repo mode this opens **one draft PR per repo with commits
    ahead**, and the PR bodies cross-link to each other so reviewers can
    see the full change set.
-4. **Ticket → in-review.** If `task.md` frontmatter has `ticketId` set:
-   **link the PR to the ticket** so the tracker closes it — and any board
-   automation moves it to its done state — when the PR merges (GitHub:
-   `Closes #<n>` in the PR body); then **move the ticket to the tracker's
-   in-review state**. Best-effort and tracker-agnostic — skip silently if
-   the project defines no tracker-move mechanism; never block the pipeline.
-   Because the link auto-closes the ticket on merge, the orchestrator never
-   closes tickets by hand. Surface the `ticketId` in the completion report.
+4. **Ticket — link now, in-review when ready.** If `task.md` frontmatter
+   has `ticketId` set: **link the PR to the ticket** so the tracker closes
+   it — and any board automation moves it to its done state — when the PR
+   merges (GitHub: `Closes #<n>` in the PR body). **Never move the ticket
+   to in-review while the PR is a draft** — a draft is not under review,
+   and this gate opens draft PRs, so the ticket keeps its in-progress
+   state at open time; move it to the tracker's in-review state **only
+   once the PR is marked ready for review**. Best-effort and
+   tracker-agnostic — skip silently if the project defines no tracker-move
+   mechanism; never block the pipeline. Because the link auto-closes the
+   ticket on merge, the orchestrator never closes tickets by hand. Surface
+   the `ticketId` in the completion report.
 5. Mark all TodoWrite items complete.
 6. **Leave the worktree(s) in place.** Do not remove a worktree when a
    PR is opened — the user may need to iterate on the branch (push
