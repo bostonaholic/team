@@ -163,7 +163,7 @@ Before considering any implementation complete, verify each item:
     debugging without rerunning. Avoid `assert(predicate)` when
     `assert_eq(actual, expected)` would print the values.
 13. **Comment Discipline** -- Comments are why-only, carry no ticket/plan
-    references, and no commented-out code remains.
+    references, and no TODO/FIXME or commented-out code remains.
 
 ## When Implementing
 
