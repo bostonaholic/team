@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Every PR opened for a ticketed topic now ends with a `Closes` line in one fixed spot — the final line of the PR body.** Before, the three PR-opening skills said to put `Closes #<n>` "in the PR body" without saying where, so the link landed in a different place on every run. Now the PR Body Template in [`skills/team-pr/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md) ends with the closing line, a placement rationale sits next to the template (narrative first; the footer mirrors the commit-trailer convention; GitHub parses closing keywords anywhere, so the footer costs nothing), and the [`/team`](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md) PR gate and [`/team-fix`](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md) Ship step state the same rule. The skills also spell out how `ticketId` renders — a bare number becomes `Closes #<n>`; a recognized qualified reference or issue URL substitutes in; a null, empty, or whitespace-only ticket omits the line entirely, no placeholder; a non-GitHub shape (like `ENG-1234`) is a legible reference that closes nothing, so the tracker-move step is what advances that ticket — and every refresh of the body re-emits exactly one closing line, never duplicated, never dropped. PR bodies are passed to `gh` via `--body-file` or a quoted heredoc, never interpolated into a shell string. Pinned by static tripwires in `tests/protocol.test.ts`.
+
+### Changed
+
+- **In multi-repo runs, only the home repo's PR closes the ticket.** A bare `#<n>` is repo-scoped — in a companion repo it names a different issue — and even a correctly-qualified closing reference would close the ticket when the first companion PR merged, before the whole change set landed. Companion PRs now carry a non-closing reference (`Part of owner/repo#<n>` or the issue URL) in the same footer spot; close-on-merge fires from the home repo's PR only.
+
 ## [0.17.1] - 2026-07-21
 
 ### Fixed
