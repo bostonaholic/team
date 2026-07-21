@@ -198,6 +198,15 @@ and the footer comes last, mirroring the commit-footer convention in
 the body, so the footer position costs nothing — and "last authored
 line" is deterministic to emit and trivial to verify.
 
+In multi-repo mode, only the **home** repo's PR carries the closing
+keyword (`Closes #<n>`) — so the ticket closes exactly once, when the
+home PR merges. Companion PRs carry a **non-closing** reference to the
+issue in the same footer position, using the unambiguous qualified form
+(`owner/repo#<n>` or the issue URL). A bare `#<n>` is repo-scoped — in
+a companion repo it names a *different* issue — and even a qualified
+*closing* form would close the ticket on the first companion merge,
+before the full change set lands.
+
 In multi-repo mode, append a `## Companion PRs` section to each PR
 listing the URLs of every other PR opened for the same topic, so a
 reviewer can navigate the full change set:
@@ -210,7 +219,10 @@ This change spans multiple repos. The companion PRs are:
 ```
 
 Open the PRs first to obtain URLs, then edit each PR's body to add the
-section once all URLs are known.
+section once all URLs are known. This post-open edit appends the
+section *after* the closing line — "final line of the PR body" refers
+to creation-time authoring, so the appended `## Companion PRs` section
+following it is expected, not a violation.
 
 ## Changelog Update
 
