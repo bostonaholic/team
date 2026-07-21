@@ -344,9 +344,9 @@ When the aggregate gate passes:
    Best-effort and tracker-agnostic — skip silently if the project defines
    no tracker-move mechanism; never block the pipeline.
    In multi-repo mode, only the **home** repo's PR carries the closing
-   keyword; companion PRs carry a non-closing qualified reference
-   (`owner/repo#<n>` or the issue URL) instead — see the multi-repo rule
-   in `skills/team-pr/SKILL.md`.
+   keyword (`Closes #<n>`); companion PRs carry a non-closing qualified
+   reference (`owner/repo#<n>` or the issue URL) instead — see the
+   multi-repo rule in `skills/team-pr/SKILL.md`.
    Because the link auto-closes the ticket on merge, the orchestrator never
    closes tickets by hand. Surface the `ticketId` in the completion report.
 5. Mark all TodoWrite items complete.
