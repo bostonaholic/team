@@ -52,11 +52,41 @@ Six foundational perspectives guide every design and implementation decision:
 - **Naming**: Use intention-revealing names that explain what and why, not how.
 - **Functions**: Keep them small, focused on a single responsibility, typically
   under 20 lines.
-- **Comments**: Write self-documenting code; use comments only for "why" not
-  "what".
+- **Comments**: Governed by the binding rule set in Code Comments below.
 - **Formatting**: Consistent indentation, logical grouping, vertical density
   that aids comprehension.
 - **Error Handling**: Fail fast, fail loud -- never silently swallow errors.
+
+### Code Comments
+
+Comments never explain WHAT the code does -- intention-revealing names and
+structure carry that. A comment is permitted only for non-obvious WHY (a
+constraint, a workaround, a surprising requirement), and only when neither
+intention-revealing code nor tests can carry the explanation.
+
+- **Rewrite first.** A comment that feels necessary is a signal to rewrite
+  the code until the comment is unnecessary (Fowler: comments are deodorant
+  for smelly code). Extract a well-named function or variable before
+  reaching for a comment.
+- **No ticket/issue IDs, plan/slice/phase markers, or
+  doc-section references in comments.** They rot: the tracker migrates,
+  the plan is deleted, the section is renumbered, and the comment becomes
+  a lie.
+  Exemption: an upstream-bug link where the link IS the why -- a workaround
+  pointing at a public issue URL stays true for exactly as long as the
+  workaround does. The ban targets internal trackers and pipeline
+  artifacts, not those links.
+- **No commented-out code.** Version control remembers deleted code; a
+  commented-out block only sows doubt about whether it is still needed.
+  Delete it.
+- **No TODO comments in delivered code.** Deferred work goes in the
+  implementer's report, where it is visible and actionable -- not buried in
+  the source where it silently ages.
+- **Doc comments on exported/public interfaces are exempt.** They follow
+  the ecosystem's convention (JSDoc, docstrings, rustdoc) and define the
+  abstraction (Ousterhout: interface comments describe what the caller
+  needs, not how the implementation works). The why-only rule governs
+  implementation comments.
 
 ### Reusability
 
@@ -132,6 +162,8 @@ Before considering any implementation complete, verify each item:
     failing condition with enough context that the next reader can start
     debugging without rerunning. Avoid `assert(predicate)` when
     `assert_eq(actual, expected)` would print the values.
+13. **Comment Discipline** -- Comments are why-only, carry no ticket/plan
+    references, and no commented-out code remains.
 
 ## When Implementing
 
@@ -139,8 +171,8 @@ Apply this methodology during code writing with these checkpoints:
 
 1. **Start with the Design-First Workflow.** Do not jump into code. Sketch
    interfaces and boundaries first, then implement incrementally.
-2. **Run the Quality Checklist before marking a step complete.** Each of the
-   9 items is a gate -- if any item fails, fix it before moving on.
+2. **Run the Quality Checklist before marking a step complete.** Every item
+   is a gate -- if any item fails, fix it before moving on.
 3. **Apply the Core Philosophy as a lens.** When making a design decision,
    ask: does this favor simplicity (Hickey)? Is it direct (Carmack)? Are
    failures isolated (Armstrong)? Is it readable (Knuth)? Does it honor
@@ -156,7 +188,7 @@ Apply this methodology during code writing with these checkpoints:
 Use this methodology as review criteria:
 
 1. **Evaluate each Quality Checklist item as a review check.** Walk through
-   all 9 items for every changed file. Flag violations by checklist item name
+   every item for every changed file. Flag violations by checklist item name
    (e.g., "issue: Clear Naming -- this variable name `d` does not reveal
    intent").
 2. **Check for Design-First evidence.** Is the code organized around clear
