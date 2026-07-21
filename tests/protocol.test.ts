@@ -767,8 +767,10 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     assertClosingFooterPlacement(TEAM_FIX);
   });
 
-  test("team-pr: multi-repo — only the home PR carries a closing keyword; companions use a non-closing qualified reference", () => {
-    const text = flat(read(TEAM_PR));
+  // Multi-repo home-only closing rule — deliberately duplicated prose in
+  // team-pr and team, independently tripwired so neither copy can drift.
+  function assertHomeOnlyClosingRule(path: string) {
+    const text = flat(read(path));
     // (a) the home repo's PR alone closes the ticket.
     expect(/home[^.]{0,250}closes #|closes #[^.]{0,250}home/i.test(text)).toBe(
       true,
@@ -778,5 +780,13 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     // different issue in a companion repo).
     expect(/non-closing/i.test(text)).toBe(true);
     expect(text).toContain("owner/repo#");
+  }
+
+  test("team-pr: multi-repo — only the home PR carries a closing keyword; companions use a non-closing qualified reference", () => {
+    assertHomeOnlyClosingRule(TEAM_PR);
+  });
+
+  test("team: PR gate carries the multi-repo home-only closing rule", () => {
+    assertHomeOnlyClosingRule(TEAM_SKILL);
   });
 });
