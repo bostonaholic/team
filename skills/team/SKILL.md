@@ -342,9 +342,13 @@ When the aggregate gate passes:
    keeps its in-progress state at open time; move it to the tracker's
    in-review state **only once the PR is marked ready for review**.
    Best-effort and tracker-agnostic — skip silently if the project defines
-   no tracker-move mechanism; never block the pipeline. Because the link
-   auto-closes the ticket on merge, the orchestrator never closes tickets
-   by hand. Surface the `ticketId` in the completion report.
+   no tracker-move mechanism; never block the pipeline.
+   In multi-repo mode, only the **home** repo's PR carries the closing
+   keyword; companion PRs carry a non-closing qualified reference
+   (`owner/repo#<n>` or the issue URL) instead — see the multi-repo rule
+   in `skills/team-pr/SKILL.md`.
+   Because the link auto-closes the ticket on merge, the orchestrator never
+   closes tickets by hand. Surface the `ticketId` in the completion report.
 5. Mark all TodoWrite items complete.
 6. **Leave the worktree(s) in place.** Do not remove a worktree when a
    PR is opened — the user may need to iterate on the branch (push
