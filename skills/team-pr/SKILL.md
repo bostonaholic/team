@@ -116,7 +116,9 @@ done
    heredoc — never interpolated into a double-quoted shell argument. Any
    uncommitted final changes (typically `CHANGELOG.md`) land as a single
    trailing ship commit before the push. In multi-repo mode this opens
-   **one draft PR per repo with commits** and cross-links them.
+   **one draft PR per repo with commits** and cross-links them. When a
+   capture manifest exists, the screenshot upload runs after the PR opens
+   (see Screenshot Upload below).
 8. In multi-repo mode, push each repo's branch independently and open one
    draft PR per repo. Cross-link the PRs in their bodies (see PR Body
    Template below).
@@ -229,6 +231,8 @@ The `## Screenshots` section is built from `$ARGUMENTS/screenshots/manifest.md`
 - **Each `## Captured` entry whose PNG exists on disk** renders as
   `**<caption>** (<state>)` followed by its local path. Entries whose PNG is
   missing from disk are skipped and the discrepancy noted in the section.
+- **Manifest `status: partial`** → also append a one-line
+  "N states skipped — see manifest" note to the section.
 - **When upload is unavailable or fails**, the section renders the degraded
   form: a "captured — upload failed or unavailable" note plus the local file
   paths above. This degraded shape is the contract every upload-failure
@@ -247,18 +251,30 @@ explicit steps, mirroring the Companion-PRs open-then-edit shape:
    body carries whatever the rendering rules above produced — when this
    procedure runs, that is the degraded local-path form of the
    `## Screenshots` section.
-2. **Upload.** Session pre-check first — run
-   `[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile/Default/Cookies" ]`.
+2. **Upload.** Session pre-check first — Chromium writes its cookie store
+   in either of two layouts, so tolerate both:
+   `P="${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile"; [ -f "$P/Default/Cookies" ] || [ -f "$P/Default/Network/Cookies" ]`.
    If the check fails, no authenticated browser session exists → skip the
    upload entirely, keep the degraded note, and append the one-time sign-in
    instruction to the **operator-facing completion report** — never to the PR
-   body, which keeps only the degraded note and local paths. The instruction:
-   create the profile directory with `chmod 700`, launch the same Playwright
-   persistent context headed on it, and sign in to github.com once — the
+   body, which keeps only the degraded note and local paths. The instruction
+   (keep it in sync with the README's "Screenshots in PRs" section):
+
+   ```sh
+   mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile"
+   chmod 700 "${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile"
+   npx playwright codegen \
+     --user-data-dir="${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile" \
+     https://github.com
+   ```
+
+   Sign in to github.com once in that headed window, then close it — the
    sign-in itself stays manual. That profile holds a full **unencrypted**
    github.com web session; to revoke it, sign out of github.com inside that
-   profile or delete the directory. If the pre-check passes, run a short Node
-   script through Bash: `chromium.launchPersistentContext` on the profile
+   profile or delete the directory. If the pre-check passes, `chmod 700` the
+   profile directory before use (idempotent — never rely on documentation
+   alone), then run a short Node script through Bash:
+   `chromium.launchPersistentContext` on the profile
    directory, headless; open the PR page; confirm the signed-in marker (the
    `user-login` meta tag is present, no redirect to `/login`) — logged out
    despite the cookie file means an expired session → the same degraded path.
@@ -319,4 +335,6 @@ only used if there are uncommitted final changes (e.g., changelog).
 
 ## Completion
 
-Report the outcome (draft PR URL and commit hash).
+Report the outcome (draft PR URL and commit hash). When the screenshot
+upload was skipped for lack of an authenticated session, the report also
+carries the one-time sign-in instruction (see Screenshot Upload step 2).

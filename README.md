@@ -21,7 +21,7 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 - **Structure** — Break the design into vertical slices with verification checkpoints. Produced autonomously; advances to Plan with no human gate.
 - **Plan** — Tactical implementation plan derived from the structure. Read by the implementer; not human-gated.
 - **Implement** — Test-first (test-architect writes failing tests, mechanical gate confirms) → slice execution (implementer commits each vertical slice atomically) → adversarial verification (5 parallel reviewers + typed failure-class retry loop, max 5 rounds).
-- **PR** — Update changelog, commit, open pull request, surface the tracking item.
+- **PR** — Update changelog, commit, open pull request with inline UI screenshots when applicable, surface the tracking item.
 
 ## Usage
 
@@ -65,12 +65,24 @@ never get the section, and any capture or upload failure degrades to a
 visible note with local file paths — the PR always opens.
 
 Inline upload needs a one-time GitHub sign-in in a dedicated browser profile
-at `${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile/`: create the
-directory with `chmod 700`, launch that Playwright persistent context headed,
-and sign in to github.com once. The profile holds a full **unencrypted**
-github.com web session — to reset or revoke it, sign out of github.com inside
-that profile or delete the directory. Until you sign in, PRs carry local
-screenshot paths instead of inline images.
+at `${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile/`. `gh auth login`
+is not enough — the CLI token is not a GitHub web session, and the
+user-attachments upload works through the browser. Run:
+
+```sh
+mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile"
+chmod 700 "${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile"
+npx playwright codegen \
+  --user-data-dir="${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile" \
+  https://github.com
+```
+
+This opens a headed (a visible browser window) Chromium bound to that
+profile: sign in to github.com once in that window, then close it. The
+profile holds a full **unencrypted** github.com web session — to reset or
+revoke it, sign out of github.com inside that profile or delete the
+directory. Until you sign in, PRs carry local screenshot paths instead of
+inline images.
 
 ## Install
 
