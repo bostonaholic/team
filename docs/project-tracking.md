@@ -255,11 +255,13 @@ like this:
   description), the run continues without it — the move never blocks the
   pipeline. You no longer need to pre-move the card by hand before launching.
 - **Opening the PR** → the PR phase (`/team-pr`, the `/team` PR gate, and
-  `/team-fix` Ship) links the PR to the issue (`Closes #<N>` in the PR body)
-  so the issue closes on merge. The pipeline opens the PR as a **draft**, and
-  a draft is not under review, so **the card stays in In progress** — the
-  generic contract in those skills forbids the in-review move while the PR is
-  a draft.
+  `/team-fix` Ship) links the PR to the issue (`Closes #<N>` as the final
+  line of the PR body) so the issue closes on merge. In a multi-repo run,
+  only the home repo's PR carries the closing keyword — companion PRs carry
+  a non-closing qualified reference (`owner/repo#<N>` or the issue URL). The
+  pipeline opens the PR as a **draft**, and a draft is not under review, so
+  **the card stays in In progress** — the generic contract in those skills
+  forbids the in-review move while the PR is a draft.
 - **Marking the PR ready for review** → the card moves to **In review**. The
   human marks the PR ready; the generic, best-effort "move to in-review"
   defined in the PR-phase skills fires at this moment, never at draft-open.
@@ -272,7 +274,9 @@ like this:
   blocks the PR.
 - **Merge** → the card moves to **Done** **automatically**. Because the PR
   carries `Closes #<N>`, merging it closes the issue, and the board's built-in
-  "an item is closed → Done" automation moves the card. No manual move and no
+  "an item is closed → Done" automation moves the card. In a multi-repo run,
+  close-on-merge fires from the home repo PR's merge specifically — companion
+  PRs carry no closing keyword. No manual move and no
   `/shipit` board logic is involved — `/shipit` stays tracker-agnostic. (A PR
   added to the board as its own item is likewise moved to **Done** by the
   built-in "pull request merged → Done" automation.)
