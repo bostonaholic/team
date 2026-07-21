@@ -21,6 +21,17 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/fixtures/code-reviewer/planted-time-bomb/**",
     "evals/rubrics/code-reviewer.md",
   ],
+  // engineering-standards owns the comment rule content, so a change to it
+  // can alter this fixture's outcome — it is a dep alongside the reviewer
+  // agent and the severity skill.
+  "planted-comment-violations": [
+    "agents/code-reviewer.md",
+    "skills/code-review/**",
+    "skills/engineering-standards/**",
+    "tests/code-reviewer.evals.ts",
+    "evals/fixtures/code-reviewer/planted-comment-violations/**",
+    "evals/rubrics/code-reviewer.md",
+  ],
   "git-commit-conventional-subject": [
     "skills/git-commit/**",
     "tests/git-commit.evals.ts",
@@ -107,6 +118,7 @@ export const E2E_TIERS: Record<string, "gate" | "periodic"> = {
   // recorded transcript). Live-model fixtures are periodic.
   "planted-null-deref": "periodic",
   "planted-time-bomb": "periodic",
+  "planted-comment-violations": "periodic",
   "git-commit-conventional-subject": "periodic",
   "changelog-keep-a-changelog-filter": "periodic",
   "team-question-neutral-questions": "periodic",

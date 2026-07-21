@@ -27,8 +27,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { EvalCollector, assertNoBudgetRegressions } from "./helpers/eval-store";
+import type { GroundTruthNonViolation } from "./helpers/fixtures";
 import { loadFixture } from "./helpers/fixtures";
-import { judgeReviewerOutput, outcomeJudge } from "./helpers/llm-judge";
+import { judgeReviewerOutput, matchesHint, outcomeJudge } from "./helpers/llm-judge";
 import { runAgentTest } from "./helpers/session-runner";
 import { testIfSelected } from "./helpers/touchfiles";
 
@@ -47,6 +48,19 @@ const MIN_REASON_SUBSTANCE = 3;
 // same characters and there is no backtracking blowup on adversarial input.
 const BLOCKING_LABEL = /\bissue[\s*]*\(blocking\)[\s*]*:/i;
 
+// Counts non-violation decoys the reviewer wrongly flagged. A decoy counts
+// only when its `false_positive_hint` matches the output — the hint pairs a
+// Conventional Comment label with the decoy's distinct token, so a reviewer
+// merely quoting the clean code does not count.
+function countFalsePositives(
+  nonViolations: GroundTruthNonViolation[],
+  output: string,
+): number {
+  return nonViolations.filter((entry) =>
+    matchesHint(output, entry.false_positive_hint),
+  ).length;
+}
+
 // Registers one planted-bug E2E eval. Every fixture runs the identical
 // pipeline — prompt scaffold, agent run, deterministic outcome judge, LLM
 // review judge, collector record, assertions — varying only in:
@@ -57,12 +71,25 @@ const BLOCKING_LABEL = /\bissue[\s*]*\(blocking\)[\s*]*:/i;
 //                        flags the bug *as blocking*, additionally require
 //                        an `issue (blocking):` label in the output
 //                        (deterministic, no extra judge cost)
+//   mustDetectBugIds     bug ids that must be individually detected
+//                        regardless of the fixture's minimum_detection
+//                        floor (the floor absorbs variance on the other
+//                        plants; these ids never ride it)
+//
+// When the fixture's ground truth carries `non_violations`, the run also
+// asserts the false-positive count stays within `max_false_positives`.
 function registerPlantedBugEval(options: {
   fixtureName: string;
   defectClause: string;
   requireBlockingLabel?: boolean;
+  mustDetectBugIds?: string[];
 }): void {
-  const { fixtureName, defectClause, requireBlockingLabel = false } = options;
+  const {
+    fixtureName,
+    defectClause,
+    requireBlockingLabel = false,
+    mustDetectBugIds = [],
+  } = options;
 
   testIfSelected(
     fixtureName,
@@ -99,10 +126,26 @@ function registerPlantedBugEval(options: {
         const blockingLabelOk =
           !requireBlockingLabel || BLOCKING_LABEL.test(result.output);
 
+        const mustDetectOk = mustDetectBugIds.every((bugId) =>
+          outcome.detected.includes(bugId),
+        );
+
+        const nonViolations = fixture.groundTruth.non_violations ?? [];
+        const falsePositiveCount = countFalsePositives(
+          nonViolations,
+          result.output,
+        );
+        const falsePositivesOk =
+          nonViolations.length === 0 ||
+          fixture.groundTruth.max_false_positives === undefined ||
+          falsePositiveCount <= fixture.groundTruth.max_false_positives;
+
         const passed =
           result.exitReason === "success" &&
           outcome.passes_minimum &&
           blockingLabelOk &&
+          mustDetectOk &&
+          falsePositivesOk &&
           review.reason_substance >= MIN_REASON_SUBSTANCE;
 
         collector.addTest({
@@ -127,6 +170,19 @@ function registerPlantedBugEval(options: {
         expect(outcome.detection_rate).toBeGreaterThanOrEqual(
           fixture.groundTruth.minimum_detection,
         );
+        // Pinned plants never ride the detection floor: each listed id
+        // must be individually detected.
+        for (const bugId of mustDetectBugIds) {
+          expect(outcome.detected).toContain(bugId);
+        }
+        if (
+          nonViolations.length > 0 &&
+          fixture.groundTruth.max_false_positives !== undefined
+        ) {
+          expect(falsePositiveCount).toBeLessThanOrEqual(
+            fixture.groundTruth.max_false_positives,
+          );
+        }
         if (requireBlockingLabel) {
           // Detection passed (asserted above); the design additionally
           // promises the finding carries a blocking severity label.
@@ -152,6 +208,13 @@ registerPlantedBugEval({
   fixtureName: "planted-time-bomb",
   defectClause: "correctness AND test-quality/flakiness",
   requireBlockingLabel: true,
+});
+
+registerPlantedBugEval({
+  fixtureName: "planted-comment-violations",
+  defectClause: "code-comment discipline",
+  requireBlockingLabel: true,
+  mustDetectBugIds: ["b1"],
 });
 
 afterAll(async () => {

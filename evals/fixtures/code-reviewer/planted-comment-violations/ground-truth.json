@@ -1,0 +1,44 @@
+{
+  "bugs": [
+    {
+      "id": "b1",
+      "category": "comment-ticket-plan-reference",
+      "severity": "blocking",
+      "description": "The `// ENG-2417: slice 2 of the retry plan` comment carries an internal ticket ID plus a plan/slice marker. Per Comment Discipline this is mechanical, judgment-free, and rots — a blocking finding on first occurrence.",
+      "detection_hint": "eng.?2417"
+    },
+    {
+      "id": "b2",
+      "category": "comment-restates-what",
+      "severity": "style",
+      "description": "The `// multiply the base delay by two to the power of the attempt number` comment restates the adjacent line instead of explaining a non-obvious why.",
+      "detection_hint": "multiply the base delay"
+    },
+    {
+      "id": "b3",
+      "category": "commented-out-code",
+      "severity": "style",
+      "description": "Three commented-out dead lines inside nextRetryDelayMs. Version control remembers deleted code; the block only sows doubt.",
+      "detection_hint": "commented.?out|dead (?:code|lines)"
+    }
+  ],
+  "minimum_detection": 0.66,
+  "max_false_positives": 1,
+  "non_violations": [
+    {
+      "id": "n1",
+      "description": "PAY-9310 appears inside a thrown error message string literal, not a comment — ticket-like tokens outside comment syntax are not violations.",
+      "false_positive_hint": "\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:.{0,200}?pay.?9310|pay.?9310.{0,200}?\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:"
+    },
+    {
+      "id": "n2",
+      "description": "The normalizeHeaders workaround comment links the upstream node-fetch bug — the link IS the why, so it is exempt from the reference ban.",
+      "false_positive_hint": "\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:.{0,200}?(?:node.?fetch|1735|normalizeheaders)|(?:node.?fetch|1735|normalizeheaders).{0,200}?\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:"
+    },
+    {
+      "id": "n3",
+      "description": "backoffSchedule is a comment-free clean function — a region with zero comments passes trivially; never manufacture a finding.",
+      "false_positive_hint": "\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:.{0,200}?backoffschedule|backoffschedule.{0,200}?\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:"
+    }
+  ]
+}
