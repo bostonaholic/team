@@ -109,5 +109,3 @@ Behavioral regression harness for pipeline agents — TypeScript + Bun. Harness 
 All work — features, bugs, chores — is tracked on the [GitHub Project board](https://github.com/users/bostonaholic/projects/5/views/1). It is the single source of truth: if work is not on the board, it is not tracked. Create a GitHub issue in `bostonaholic/team`, add it to the project, and move its card across the kanban (**Backlog → Ready → In progress → In review → Done**) as the work progresses. See [docs/project-tracking.md](docs/project-tracking.md) for the full workflow.
 
 **Every issue carries a `Priority`** (`P0`/`P1`/`P2`), set when it's created — an unprioritized issue is untriaged. **Every `bug` is `P0`** — bugs take precedence over features and enhancements. See [docs/project-tracking.md](docs/project-tracking.md#creating-work).
-
-> The GitHub Project replaces the previous **bd (beads)** tracker. The `.beads/` directory remains for historical reference but is no longer the front door for new work.

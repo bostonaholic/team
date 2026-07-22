@@ -3,10 +3,6 @@ name: team
 up:
   - claude-code
   - custom:
-      name: beads
-      met?: "which bd"
-      meet: "brew install beads"
-  - custom:
       name: playwright-cli
       met?: "npx --no-install playwright-cli --version 2>/dev/null"
       meet: "npm install -g @playwright/cli@latest && playwright-cli install --skills"
@@ -26,13 +22,6 @@ commands:
   uninstall:
     desc: "Unregister plugin and clean up cache"
     run: "script/dev-uninstall"
-  update:
-    desc: "Update all agent skills"
-    # TODO: `npx skills update` ignores project-level skills-lock.json
-    #   https://github.com/vercel-labs/skills/issues/775
-    #   https://github.com/vercel-labs/skills/issues/690
-    #   Workaround: reinstall from source until fix is merged.
-    run: "npx skills add steveyegge/beads --skill beads --agent claude-code pi -y"
   docs:
     desc: "Build and serve the docs site locally at http://localhost:4000"
     run: "cd docs && bundle config set --local path 'vendor/bundle' && bundle install && bundle exec jekyll serve --livereload"

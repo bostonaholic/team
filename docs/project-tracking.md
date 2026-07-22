@@ -19,9 +19,9 @@ This board is the **single source of truth** for what is planned, in
 flight, and done. Features, bugs, and chores all live here. If a piece of
 work is not on the board, it is not tracked.
 
-> **Note:** This board replaces the previous `bd` (beads) tracker. The
-> `.beads/` directory remains in the repo for historical reference, but new
-> work should be created and tracked on the GitHub Project, not in beads.
+> **Note:** This board replaces the previous `bd` (beads) tracker, which
+> has been removed from the repo. Historical beads issues are preserved in
+> git history (`.beads/issues.jsonl`).
 
 ## The board
 
