@@ -7,7 +7,7 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { buildReportBody, REPORT_MARKER } from "../scripts/eval-report";
+import { buildReportBody, parseHistory, REPORT_MARKER } from "../scripts/eval-report";
 import type { EvalResult, EvalTestEntry } from "./helpers/eval-store";
 
 function entry(over: Partial<EvalTestEntry> = {}): EvalTestEntry {
@@ -97,5 +97,71 @@ describe("buildReportBody", () => {
     ]) {
       expect(body.startsWith(REPORT_MARKER)).toBe(true);
     }
+  });
+});
+
+describe("buildReportBody run history (append across runs)", () => {
+  const meta = { sha: "abc1234def5678", runUrl: "https://github.com/o/r/actions/runs/1" };
+
+  test("first run: history table with one linked row and the run's cost as total", () => {
+    const body = buildReportBody([result()], meta);
+    expect(body).toContain("### Run history — **$0.02** total across 1 run");
+    expect(body).toContain("| 1 | [abc1234](https://github.com/o/r/actions/runs/1) | ✅ 1/1 | $0.02 |");
+  });
+
+  test("second run appends a row and sums the cumulative cost", () => {
+    const first = buildReportBody([result()], meta);
+    const second = buildReportBody(
+      [result({ tests: [entry({ name: "b", passed: false, exit_reason: "timeout", cost_usd: 0.03 })] })],
+      { previousBody: first, sha: "9876543fedcba", runUrl: "https://github.com/o/r/actions/runs/2" },
+    );
+    expect(second).toContain("### Run history — **$0.05** total across 2 runs");
+    expect(second).toContain("| 1 | [abc1234](https://github.com/o/r/actions/runs/1) | ✅ 1/1 | $0.02 |");
+    expect(second).toContain("| 2 | [9876543](https://github.com/o/r/actions/runs/2) | ❌ 0/1 | $0.03 |");
+    // Latest-run detail reflects only the new run, not the accumulated history.
+    expect(second).toContain(`${REPORT_MARKER}: ❌ FAIL`);
+    expect(second).toContain("**0/1** tests passed");
+  });
+
+  test("history round-trips through parseHistory", () => {
+    const first = buildReportBody([result()], meta);
+    const runs = parseHistory(first);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]).toMatchObject({ sha: meta.sha, passed: 1, total: 1, cost_usd: 0.02 });
+  });
+
+  test("old-format previous body (no history marker) starts a fresh history", () => {
+    const body = buildReportBody([result()], {
+      previousBody: `${REPORT_MARKER}: ✅ PASS\n\nold overwrite-style comment`,
+      ...meta,
+    });
+    expect(body).toContain("total across 1 run");
+  });
+
+  test("malformed embedded history is discarded, not fatal", () => {
+    const body = buildReportBody([result()], {
+      previousBody: "## PR Evals: ✅ PASS\n\n<!-- pr-evals-history:v1 {not json -->",
+      ...meta,
+    });
+    expect(body).toContain("total across 1 run");
+  });
+
+  test("no-evals run keeps prior history and total without adding a row", () => {
+    const first = buildReportBody([result()], meta);
+    const body = buildReportBody([], { previousBody: first, sha: "9876543", runUrl: "" });
+    expect(body).toContain(`${REPORT_MARKER}: ⚠️ No evals selected`);
+    expect(body).toContain("### Run history — **$0.02** total across 1 run");
+    expect(parseHistory(body)).toHaveLength(1);
+  });
+
+  test("no-evals run with no prior history renders no history section", () => {
+    const body = buildReportBody([], meta);
+    expect(body).not.toContain("### Run history");
+    expect(body).not.toContain("pr-evals-history");
+  });
+
+  test("missing sha/runUrl renders a plain placeholder row", () => {
+    const body = buildReportBody([result()]);
+    expect(body).toContain("| 1 | — | ✅ 1/1 | $0.02 |");
   });
 });

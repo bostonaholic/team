@@ -1,7 +1,8 @@
 # PR evals — diff-selected behavioral evals on pull requests, with a results comment.
 #
 # Run the evals relevant to a PR's diff, then upsert ONE comment summarizing
-# pass/fail and cost. Selection (which evals run)
+# pass/fail and cost. The comment accumulates a run-history table across pushes
+# (with a cumulative cost total) instead of overwriting. Selection (which evals run)
 # is decided by the harness from `git diff <base>...HEAD` against each eval's
 # touchfiles (tests/helpers/touchfiles.ts) — cost scales with the diff, NOT the
 # whole suite. The weekly full periodic run stays in periodic-evals.yml.
@@ -118,14 +119,27 @@ jobs:
           merge-multiple: true
 
       - name: Build and upsert results comment
+        env:
+          EVAL_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVAL_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
           mkdir -p artifacts
-          BODY="$(bun run scripts/eval-report.ts artifacts)"
           # Upsert: find our existing comment by the stable marker prefix and
           # PATCH it; otherwise create a new one. Keeps one comment per PR.
-          ID="$(gh api "repos/$REPO/issues/$PR/comments" \
+          # The existing body is fed back into the formatter so each run is
+          # APPENDED to the comment's run history (with a cumulative cost
+          # total) rather than overwriting the previous runs. --paginate so a
+          # comment pushed past page 1 on a busy PR isn't missed (a miss would
+          # create a duplicate and orphan the history).
+          ID="$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
             --jq '.[] | select(.body | startswith("## PR Evals")) | .id' | tail -1 || true)"
+          PREV_FILE=""
+          if [ -n "${ID:-}" ]; then
+            gh api "repos/$REPO/issues/comments/$ID" --jq .body > previous-body.md
+            PREV_FILE=previous-body.md
+          fi
+          BODY="$(bun run scripts/eval-report.ts artifacts "$PREV_FILE")"
           if [ -n "${ID:-}" ]; then
             gh api -X PATCH "repos/$REPO/issues/comments/$ID" -f body="$BODY" >/dev/null
             echo "Updated comment $ID"
