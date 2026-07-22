@@ -686,4 +686,107 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     expect(/\bDone\b/.test(text)).toBe(true);
     expect(/automatic/i.test(text)).toBe(true);
   });
+
+  // Issue #158: the ticket closing line must land in a deterministic position
+  // — the final line of the authored PR body — across all three PR-opening
+  // skills, with ticketId interpretation codified at the consumption site and
+  // multi-repo runs closing the ticket exactly once (home PR only). These
+  // tripwires pin the closing-footer contract on the skill source.
+
+  // The PR Body Template: the first fenced code block after the
+  // "## PR Body Template" heading in team-pr.
+  function prBodyTemplate(text: string): string {
+    const afterHeading = text.split("## PR Body Template")[1] ?? "";
+    return afterHeading.match(/```\n([\s\S]*?)```/)?.[1] ?? "";
+  }
+
+  // Canonical placement phrase — deliberately duplicated prose across the
+  // three PR-opening skills. One helper applied per file pins every copy
+  // against drift.
+  function assertClosingFooterPlacement(path: string) {
+    const text = flat(read(path));
+    expect(/as the final line of the PR body/i.test(text)).toBe(true);
+  }
+
+  test("team-pr: PR Body Template ends with the ticketId-conditional Closes footer", () => {
+    const template = prBodyTemplate(read(TEAM_PR));
+    // Fail loud if the template block vanished, so the position assertions
+    // below can't pass vacuously against an empty string.
+    expect(template.length).toBeGreaterThan(0);
+    // The closing line sits after the ## References bullets — the footer of
+    // the authored body.
+    expect(template).toContain("Closes");
+    // Guard the ordering comparison: without this, removing ## References
+    // would make indexOf return -1 and the check below pass vacuously.
+    expect(template).toContain("## References");
+    expect(template.indexOf("Closes")).toBeGreaterThan(
+      template.indexOf("## References"),
+    );
+    // And it is the FINAL line of the template — nothing may follow it.
+    // Without this, appending a section after the closing line would still
+    // pass the ordering check above.
+    expect(template.trimEnd().endsWith("Closes #<n>")).toBe(true);
+    // Conditional on ticketId: omitted entirely when null/absent/empty —
+    // no placeholder is ever rendered.
+    const text = flat(read(TEAM_PR));
+    expect(
+      /omit[^.]{0,200}(null|absent|empty)|(null|absent|empty)[^.]{0,200}omit/i.test(
+        text,
+      ),
+    ).toBe(true);
+    expect(/no placeholder/i.test(text)).toBe(true);
+  });
+
+  test("team-pr: placement rationale is documented alongside the template", () => {
+    expect(/placement rationale/i.test(flat(read(TEAM_PR)))).toBe(true);
+  });
+
+  test("team-pr: body refresh re-emits exactly one closing line", () => {
+    const text = flat(read(TEAM_PR));
+    // Step 9 lists the closing line among the refresh-surviving sections:
+    // every `gh pr edit --body` re-emits exactly one, never duplicated,
+    // never dropped.
+    expect(
+      /exactly one[^.]{0,200}closing line|closing line[^.]{0,200}exactly one/i.test(
+        text,
+      ),
+    ).toBe(true);
+    expect(/never duplicated/i.test(text)).toBe(true);
+    expect(/never dropped/i.test(text)).toBe(true);
+  });
+
+  test("team-pr: states the Closes footer placement (final line of the PR body)", () => {
+    assertClosingFooterPlacement(TEAM_PR);
+  });
+
+  test("team: PR gate states the Closes footer placement (final line of the PR body)", () => {
+    assertClosingFooterPlacement(TEAM_SKILL);
+  });
+
+  test("team-fix: Ship states the Closes footer placement (final line of the PR body)", () => {
+    assertClosingFooterPlacement(TEAM_FIX);
+  });
+
+  // Multi-repo home-only closing rule — deliberately duplicated prose in
+  // team-pr and team, independently tripwired so neither copy can drift.
+  function assertHomeOnlyClosingRule(path: string) {
+    const text = flat(read(path));
+    // (a) the home repo's PR alone closes the ticket.
+    expect(/home[^.]{0,250}closes #|closes #[^.]{0,250}home/i.test(text)).toBe(
+      true,
+    );
+    // (b) companion PRs reference the issue without a closing keyword, in the
+    // unambiguous qualified form (a bare #<n> is repo-scoped and would name a
+    // different issue in a companion repo).
+    expect(/non-closing/i.test(text)).toBe(true);
+    expect(text).toContain("owner/repo#");
+  }
+
+  test("team-pr: multi-repo — only the home PR carries a closing keyword; companions use a non-closing qualified reference", () => {
+    assertHomeOnlyClosingRule(TEAM_PR);
+  });
+
+  test("team: PR gate carries the multi-repo home-only closing rule", () => {
+    assertHomeOnlyClosingRule(TEAM_SKILL);
+  });
 });

@@ -105,7 +105,9 @@ done
    entries belonging to that repo's commits.
 6. **Open a draft PR automatically — do not stop to ask.** The PR phase
    is not a human gate; opening the PR requires no approval. Push the
-   branch and open the PR as a **draft** (`gh pr create --draft`). Any
+   branch and open the PR as a **draft** (`gh pr create --draft`). Pass
+   the body to `gh pr create`/`gh pr edit` via `--body-file` or a quoted
+   heredoc — never interpolated into a double-quoted shell argument. Any
    uncommitted final changes (typically `CHANGELOG.md`) land as a single
    trailing ship commit before the push. In multi-repo mode this opens
    **one draft PR per repo with commits** and cross-links them.
@@ -116,9 +118,26 @@ done
    non-null:
    - **Link the PR to the ticket** so the tracker closes the ticket — and
      any board automation moves it to its done state — when the PR merges.
-     For GitHub, put `Closes #<n>` in the PR body; for another tracker use
-     its PR↔issue link. This link is what drives the eventual move to done
-     on merge, so the orchestrator never closes tickets by hand.
+     Render the link as the closing line the PR Body Template ends with
+     (GitHub: `Closes #<n>` as the final line of the PR body); for another
+     tracker use its PR↔issue link. In multi-repo mode this closing line
+     goes on the **home** repo's PR only — see the multi-repo rule below
+     the PR Body Template. Interpret `ticketId` here, where it is
+     consumed:
+     - A bare number → `Closes #<n>` (a GitHub issue in the origin repo).
+     - A qualified reference (`owner/repo#<n>`) or an issue URL →
+       `Closes` followed by that value substituted in — e.g.
+       `Closes https://github.com/owner/repo/issues/42`.
+     - Any other non-null shape still goes in verbatim as the footer
+       text (`Closes` plus the value), but note the unrecognized shape
+       in the completion report — never block on it. On GitHub such a
+       value (e.g. `Closes ENG-1234`) auto-closes nothing — the footer
+       is then a legible reference only, and the tracker-move step below
+       is what advances the ticket.
+     - Null, absent, empty, or whitespace-only → omit the closing line
+       entirely; no placeholder.
+     This link is what drives the eventual move to done on merge, so the
+     orchestrator never closes tickets by hand.
    - **Never move the ticket to in-review while the PR is a draft.** A
      draft is not under review, and this phase opens the PR as a draft —
      at open time the ticket keeps its in-progress state. Move the ticket
@@ -132,10 +151,18 @@ done
    push that adds, removes, or changes commits on a PR's branch — the
    initial open *and* every follow-up push (review feedback, fixups,
    rebases) — must be followed by re-reading the current PR body against
-   the now-pushed commits and updating it (`gh pr edit --body`) so the
-   Summary, Changes, and How-to-Verify sections still match what the
-   branch actually does. Never leave a stale description after a push. In
-   multi-repo mode, do this for each repo's PR whose branch you pushed.
+   the now-pushed commits and updating it (`gh pr edit --body-file`, or
+   a quoted heredoc per step 6) so the Summary, Changes, and
+   How-to-Verify sections still match what the branch actually does.
+   The footer survives every refresh too: when the
+   body carries a closing line (the home repo's PR of a ticketed topic),
+   each refresh re-emits **exactly one** closing line in footer position
+   — never duplicated, never dropped. A companion PR re-emits its
+   non-closing reference the same way, and a PR with no ticket has no
+   closing line to re-emit; the post-open `## Companion PRs` section is
+   likewise preserved on every refresh. Never leave a stale description
+   after a push. In multi-repo mode, do this for each repo's PR whose
+   branch you pushed.
 10. **Leave the worktree(s) in place.** Do not remove a worktree after
    opening a PR — the user may need to iterate on the branch (push
    follow-up commits, address review feedback). Clean up only after the
@@ -170,7 +197,37 @@ done
 ## References
 - Design: $ARGUMENTS/design.md
 - Plan:   $ARGUMENTS/plan.md
+
+Closes #<n>
 ```
+
+The `Closes` line is a standalone footer — no heading — rendered as the
+final line of the PR body. It is conditional on `ticketId`: when
+`ticketId` is null, absent, empty, or whitespace-only, omit the line
+entirely — no placeholder, no empty footer — and drop its preceding
+blank line with it, so the body ends at the last `## References` bullet
+with no trailing blank line.
+
+**Placement rationale:** reviewers open a PR to read `## Summary`; the
+closing line is machine-facing metadata, so the narrative comes first
+and the footer comes last, mirroring the commit-footer convention in
+`skills/git-commit/SKILL.md`. GitHub parses closing keywords anywhere in
+the body, so the footer position costs nothing — and "last authored
+line" is deterministic to emit and trivial to verify.
+
+In multi-repo mode, only the **home** repo's PR carries the closing
+keyword (`Closes #<n>`) — so the ticket closes exactly once, when the
+home PR merges. Companion PRs carry a **non-closing** reference to the
+issue in the same footer position, using the unambiguous qualified form
+(`owner/repo#<n>` or the issue URL) — for example:
+
+```
+Part of owner/repo#<n>
+```
+
+A bare `#<n>` is repo-scoped — in a companion repo it names a
+*different* issue — and even a qualified *closing* form would close the
+ticket on the first companion merge, before the full change set lands.
 
 In multi-repo mode, append a `## Companion PRs` section to each PR
 listing the URLs of every other PR opened for the same topic, so a
@@ -184,7 +241,10 @@ This change spans multiple repos. The companion PRs are:
 ```
 
 Open the PRs first to obtain URLs, then edit each PR's body to add the
-section once all URLs are known.
+section once all URLs are known. This post-open edit appends the
+section *after* the closing line — "final line of the PR body" refers
+to creation-time authoring, so the appended `## Companion PRs` section
+following it is expected, not a violation.
 
 ## Changelog Update
 
