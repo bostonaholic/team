@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-07-22
+
 ### Added
 
 - **Code comments are now governed by a binding rule set at write time.** [`skills/engineering-standards/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/engineering-standards/SKILL.md) gains a **Code Comments** section: comments explain non-obvious WHY only, never WHAT the code does, and a comment that feels necessary is a signal to rewrite the code first. No ticket/issue IDs, plan/slice/phase markers, or doc-section references in comments (an upstream-bug link where the link IS the why stays allowed); no commented-out code; no TODO/FIXME in delivered code — deferred work goes in the implementer's report. Doc comments on exported/public interfaces keep following the ecosystem's convention. The Quality Checklist gains a **Comment Discipline** item, and [`agents/implementer.md`](https://github.com/bostonaholic/team/blob/main/agents/implementer.md) mirrors the rules.
@@ -232,7 +234,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.18.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.19.0...HEAD
+[0.19.0]: https://github.com/bostonaholic/team/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/bostonaholic/team/compare/v0.17.1...v0.18.0
 [0.17.1]: https://github.com/bostonaholic/team/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/bostonaholic/team/compare/v0.16.0...v0.17.0
