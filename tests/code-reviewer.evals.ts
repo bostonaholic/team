@@ -48,64 +48,46 @@ const MIN_REASON_SUBSTANCE = 3;
 // same characters and there is no backtracking blowup on adversarial input.
 const BLOCKING_LABEL = /\bissue[\s*]*\(blocking\)[\s*]*:/i;
 
-// Window size shared with the ground-truth false_positive_hint convention:
-// a label counts as "about" a token only within this many characters of it,
-// clipped to the enclosing paragraph.
-const LABEL_PROXIMITY_CHARS = 200;
+// Any Conventional Comment label, tolerant of markdown decoration — bold
+// (`**issue (blocking):**`), backticks, an optional (decoration) before the
+// colon. Used to split a review into finding blocks: each label occurrence
+// starts a new finding.
+const FINDING_LABEL =
+  /[`*]{0,2}\b(?:praise|nitpick|suggestion|issue|todo|question|thought|chore|note)\b[\s*]*(?:\([^)\n]{0,40}\))?[\s*`]*:/gi;
 
-// The paragraph-clipped window around one hint match: up to
-// LABEL_PROXIMITY_CHARS on each side, cut at blank lines so a label from an
-// unrelated finding two paragraphs away never counts.
-function paragraphWindow(
-  output: string,
-  matchIndex: number,
-  matchLength: number,
-): string {
-  const start = Math.max(0, matchIndex - LABEL_PROXIMITY_CHARS);
-  const end = Math.min(
-    output.length,
-    matchIndex + matchLength + LABEL_PROXIMITY_CHARS,
-  );
-  const before = output.slice(start, matchIndex);
-  const after = output.slice(matchIndex + matchLength, end);
-  const blankBefore = before.lastIndexOf("\n\n");
-  const blankAfter = after.indexOf("\n\n");
-  return (
-    (blankBefore === -1 ? before : before.slice(blankBefore + 2)) +
-    output.slice(matchIndex, matchIndex + matchLength) +
-    (blankAfter === -1 ? after : after.slice(0, blankAfter))
-  );
+interface FindingSegment {
+  label: string;
+  body: string;
 }
 
-// True when a blocking label sits near ANY match of the detection hint —
-// the same label-proximity technique the non_violations hints use, so a run
-// that flags a style plant as blocking while reporting the pinned plant as
-// a suggestion cannot pass. Mirrors matchesHint's regex-with-fallback
-// contract (case-insensitive regex, literal substring when invalid).
-function blockingLabelNearHint(output: string, detectionHint: string): boolean {
-  const windows: string[] = [];
-  try {
-    const hintRegex = new RegExp(detectionHint, "gis");
-    for (
-      let match = hintRegex.exec(output);
-      match !== null;
-      match = hintRegex.exec(output)
-    ) {
-      windows.push(paragraphWindow(output, match.index, match[0].length));
-      if (match[0].length === 0) hintRegex.lastIndex += 1;
-    }
-  } catch {
-    const haystack = output.toLowerCase();
-    const needle = detectionHint.toLowerCase();
-    for (
-      let index = haystack.indexOf(needle);
-      index !== -1;
-      index = haystack.indexOf(needle, index + 1)
-    ) {
-      windows.push(paragraphWindow(output, index, needle.length));
-    }
-  }
-  return windows.some((window) => BLOCKING_LABEL.test(window));
+// Splits reviewer output into finding blocks: a segment runs from its
+// Conventional Comment label to the next label (or end of output), so a
+// label owns everything inside its finding — prose, blank lines, and
+// fenced code quotes alike. A well-formatted review separates the label
+// line from its quoted code with blank lines, so any proximity heuristic
+// narrower than the whole finding fails correct reviews.
+function splitIntoFindingSegments(output: string): FindingSegment[] {
+  const matches = [...output.matchAll(FINDING_LABEL)];
+  return matches.map((match, position) => {
+    const start = match.index ?? 0;
+    const next = matches[position + 1];
+    const end = next === undefined ? output.length : (next.index ?? output.length);
+    return { label: match[0], body: output.slice(start, end) };
+  });
+}
+
+// True when some finding block whose label is `issue (blocking)` contains
+// a detection-hint match — the blocking label must be attached to THAT
+// finding, so a run that puts the blocking label on a different finding
+// while the pinned plant rides a `suggestion:` cannot pass. Hint matching
+// delegates to matchesHint (case-insensitive regex, literal-substring
+// fallback when the hint isn't valid regex).
+function blockingLabelOnHint(output: string, detectionHint: string): boolean {
+  return splitIntoFindingSegments(output).some(
+    (segment) =>
+      BLOCKING_LABEL.test(segment.label) &&
+      matchesHint(segment.body, detectionHint),
+  );
 }
 
 // Counts non-violation decoys the reviewer wrongly flagged. A decoy counts
@@ -135,12 +117,11 @@ function countFalsePositives(
 //                        regardless of the fixture's minimum_detection
 //                        floor (the floor absorbs variance on the other
 //                        plants; these ids never ride it)
-//   blockingLabelNearBugId
-//                        scopes requireBlockingLabel to one plant: the
-//                        blocking label must sit near a match of THAT
-//                        bug's detection hint, not merely anywhere in the
-//                        output — a blocking label on a style plant
-//                        cannot satisfy it
+//   blockingLabelOnBugId scopes requireBlockingLabel to one plant: some
+//                        `issue (blocking)` finding block must contain a
+//                        match of THAT bug's detection hint, not merely
+//                        anywhere in the output — a blocking label on a
+//                        different finding cannot satisfy it
 //
 // When the fixture's ground truth carries `non_violations`, the run also
 // asserts the false-positive count stays within `max_false_positives`.
@@ -149,14 +130,14 @@ function registerPlantedBugEval(options: {
   defectClause: string;
   requireBlockingLabel?: boolean;
   mustDetectBugIds?: string[];
-  blockingLabelNearBugId?: string;
+  blockingLabelOnBugId?: string;
 }): void {
   const {
     fixtureName,
     defectClause,
     requireBlockingLabel = false,
     mustDetectBugIds = [],
-    blockingLabelNearBugId,
+    blockingLabelOnBugId,
   } = options;
 
   testIfSelected(
@@ -192,17 +173,17 @@ function registerPlantedBugEval(options: {
         const review = await judgeReviewerOutput(result.output);
 
         const pinnedBugHint =
-          blockingLabelNearBugId === undefined
+          blockingLabelOnBugId === undefined
             ? undefined
             : fixture.groundTruth.bugs.find(
-                (bug) => bug.id === blockingLabelNearBugId,
+                (bug) => bug.id === blockingLabelOnBugId,
               )?.detection_hint;
 
         const blockingLabelOk =
           !requireBlockingLabel ||
           (pinnedBugHint === undefined
             ? BLOCKING_LABEL.test(result.output)
-            : blockingLabelNearHint(result.output, pinnedBugHint));
+            : blockingLabelOnHint(result.output, pinnedBugHint));
 
         const mustDetectOk = mustDetectBugIds.every((bugId) =>
           outcome.detected.includes(bugId),
@@ -264,14 +245,14 @@ function registerPlantedBugEval(options: {
         if (requireBlockingLabel) {
           // Detection passed (asserted above); the design additionally
           // promises the finding carries a blocking severity label.
-          if (blockingLabelNearBugId === undefined) {
+          if (blockingLabelOnBugId === undefined) {
             expect(result.output).toMatch(BLOCKING_LABEL);
           } else {
             // Fail loud on a wiring mistake: the pinned id must exist in
-            // the ground truth, and the label must sit near ITS finding.
+            // the ground truth, and the label must be on ITS finding.
             expect(pinnedBugHint).toBeDefined();
             expect(
-              blockingLabelNearHint(result.output, pinnedBugHint ?? ""),
+              blockingLabelOnHint(result.output, pinnedBugHint ?? ""),
             ).toBe(true);
           }
         }
@@ -302,7 +283,7 @@ registerPlantedBugEval({
   defectClause: "code-comment discipline",
   requireBlockingLabel: true,
   mustDetectBugIds: ["b1"],
-  blockingLabelNearBugId: "b1",
+  blockingLabelOnBugId: "b1",
 });
 
 afterAll(async () => {
