@@ -295,7 +295,11 @@ load manifest; an agent typically loads at most three.
   loops the implementer automatically until only Minor-and-below remains.
   Reclassifies `ux-reviewer` from a soft user-decides gate to an
   auto-fixed Major. Points review-comment prose at the seventh-grade bar
-  in `writing-prose`.
+  in `writing-prose`. Carries the Comment red flags check with its split
+  severity regime: ticket/plan references and TODO/FIXME comments in code
+  comments block on first occurrence, while what-restating comments,
+  wordy comments, and commented-out code escalate from `suggestion:` to
+  `issue:` when repeated across the diff.
 
 ### engineering-standards
 
@@ -303,7 +307,11 @@ load manifest; an agent typically loads at most three.
   quality checklist.
 - **Loaded by:** planner, implementer, code-reviewer (3).
 - **Key behaviors:** Anchors planning and implementation in a shared
-  standard so reviewers check against the same bar.
+  standard so reviewers check against the same bar. Owns the binding Code
+  Comments rule set (why-only comments, rewrite before commenting, no
+  ticket/plan references, no commented-out code, no TODO/FIXME in
+  delivered code, doc comments on public interfaces exempt) and the
+  Comment Discipline quality-checklist item that reviewer findings cite.
 
 ### test-first-development
 

@@ -39,6 +39,28 @@ function filterRows(text: string, key: string, exclude: RegExp): string {
     .join("\n");
 }
 
+// Text between two markers; "" when either marker is missing. Callers guard
+// the slice as non-empty so a missing section fails loud, never vacuously
+// (pattern: tests/protocol.test.ts softSection guard).
+function sliceBetween(text: string, startMarker: string, endMarker: string): string {
+  const start = text.indexOf(startMarker);
+  if (start === -1) return "";
+  const end = text.indexOf(endMarker, start + startMarker.length);
+  if (end === -1) return "";
+  return text.slice(start, end);
+}
+
+// Text from `heading` to the next heading line (`## ` or deeper); "" when the
+// heading is missing, so dependent assertions fail loud, never vacuously.
+function sectionFrom(text: string, heading: string): string {
+  const start = text.indexOf(heading);
+  if (start === -1) return "";
+  const afterHeading = start + heading.length;
+  const next = text.slice(afterHeading).search(/\n##/);
+  if (next === -1) return text.slice(start);
+  return text.slice(start, afterHeading + next);
+}
+
 // Find each line matching the pattern and emit it plus the next 4 lines,
 // concatenating each window. Scopes a directive assertion to the directive
 // block rather than the whole body.
@@ -74,7 +96,7 @@ describe("engineering-standards methodology", () => {
     }
   });
 
-  test("skill contains all 9 quality checklist items", () => {
+  test("pins every quality checklist item name, count-free role sections", () => {
     const text = read(SKILL_FILE);
     for (const item of [
       "Single Responsibility",
@@ -86,9 +108,17 @@ describe("engineering-standards methodology", () => {
       "Readability",
       "DRY",
       "Performance Awareness",
+      "Functional Core, Imperative Shell",
+      "No Primitive Obsession",
+      "Failures are actionable",
+      "Comment Discipline",
     ]) {
       expect(text).toContain(item);
     }
+    // The role sections ("When Implementing" / "When Reviewing") must stay
+    // count-free: a hard-coded item count drifts every time the checklist
+    // grows, so the stale "9 items" wording must be gone and never return.
+    expect(/\b9 items\b/.test(text)).toBe(false);
   });
 
   test("skill contains role-specific sections", () => {
@@ -577,5 +607,120 @@ describe("time-bomb example pair (L2 drift tripwire)", () => {
     expect(codeReviewPair.length).toBe(2);
     expect(tfdPair.length).toBe(2);
     expect(codeReviewPair).toEqual(tfdPair);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Code-comment rules — free L2 content tripwires (docs/testing.md §2).
+// engineering-standards is the single source of truth for the binding comment
+// rule set (why-only, rewrite-first, no ticket/pipeline references, no
+// commented-out code, no TODOs, doc-comment exemption); the implementer's
+// `## Code quality` block only mirrors it. Keyed-phrase pins on BOTH sides
+// mean a one-sided edit of either mirror fails CI.
+// ---------------------------------------------------------------------------
+
+describe("code-comment rules (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "engineering-standards", "SKILL.md");
+  const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
+
+  test("engineering-standards defines the Code Comments rule set", () => {
+    const section = sectionFrom(read(SKILL_FILE), "### Code Comments");
+    expect(section.length).toBeGreaterThan(0);
+    // Why-only rule: comments never explain WHAT, only non-obvious WHY.
+    expect(/non-obvious why/i.test(section)).toBe(true);
+    // Rewrite-first: a comment that feels necessary signals a rewrite.
+    expect(/rewrite/i.test(section)).toBe(true);
+    // Reference ban — internal trackers and pipeline artifacts rot.
+    expect(/ticket\/issue IDs/i.test(section)).toBe(true);
+    expect(/plan\/slice\/phase markers/i.test(section)).toBe(true);
+    expect(/doc-section references/i.test(section)).toBe(true);
+    // Upstream-bug-link exemption: the link IS the why.
+    expect(/upstream/i.test(section)).toBe(true);
+    // No commented-out code; no TODOs in delivered code.
+    expect(/commented-out code/i.test(section)).toBe(true);
+    expect(section).toContain("TODO");
+    // Doc comments on exported/public interfaces follow the ecosystem's
+    // convention and are exempt.
+    expect(/doc comments/i.test(section)).toBe(true);
+    expect(/exported\/public/i.test(section)).toBe(true);
+  });
+
+  test("implementer mirrors comment discipline in Code quality", () => {
+    const codeQuality = sliceBetween(
+      read(IMPLEMENTER),
+      "## Code quality",
+      "## Working with existing code",
+    );
+    expect(codeQuality.length).toBeGreaterThan(0);
+    expect(/why[- ]only|non-obvious why/i.test(codeQuality)).toBe(true);
+    expect(/ticket/i.test(codeQuality)).toBe(true);
+    expect(/plan\/slice\/phase/i.test(codeQuality)).toBe(true);
+    expect(/commented-out code/i.test(codeQuality)).toBe(true);
+    // The mirror summarizes and defers; the skill stays canonical.
+    expect(codeQuality).toContain("engineering-standards/SKILL.md");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Comment red flags — free L2 content tripwires (docs/testing.md §2). The
+// code-review skill owns the split severity regime for comment violations:
+// ticket/issue IDs and plan/slice/phase markers in comments are mechanical,
+// judgment-free, and rot — blocking on FIRST occurrence (flaky-test
+// precedent); what-restating, wordiness, and commented-out code follow the
+// existing style-escalation regime. The code-reviewer agent mirrors the
+// check and defers severity definitions to the skill; pins on both sides
+// mean a one-sided edit fails CI.
+// ---------------------------------------------------------------------------
+
+describe("comment red flags (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
+  const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
+
+  test("code-review skill defines the Comment red flags split regime", () => {
+    const flags = sliceBetween(read(SKILL_FILE), "Comment red flags", "### UX Reviewer");
+    expect(flags.length).toBeGreaterThan(0);
+    // Mechanical references block on first occurrence; tolerate bold
+    // (`**first** occurrence`).
+    expect(/first\*{0,2} occurrence/i.test(flags)).toBe(true);
+    expect(/blocking/i.test(flags)).toBe(true);
+    expect(/ticket\/issue IDs/i.test(flags)).toBe(true);
+    expect(/plan\/slice\/phase markers/i.test(flags)).toBe(true);
+    // TODO/FIXME is hard-banned by the canonical standard, so it must sit
+    // in the blocking bucket — a demotion to style escalation fails here.
+    const blockingBucket = sliceBetween(
+      flags,
+      "Blocking on first occurrence",
+      "Style escalation",
+    );
+    expect(blockingBucket.length).toBeGreaterThan(0);
+    expect(/TODO\/FIXME/.test(blockingBucket)).toBe(true);
+    // Style regime escalates: `suggestion:` once, `issue:` when repeated.
+    expect(flags).toContain("suggestion:");
+    expect(flags).toContain("issue:");
+    // Carve-outs: upstream-bug links where the link is the why, and
+    // ticket-like tokens outside comment syntax (string literals).
+    expect(/upstream/i.test(flags)).toBe(true);
+    expect(/string literals/i.test(flags)).toBe(true);
+  });
+
+  test("code-reviewer mirrors the comment-discipline check", () => {
+    const bullet = sliceBetween(
+      read(CODE_REVIEWER),
+      "**Comment discipline**",
+      "**Unnecessary complexity**",
+    );
+    expect(bullet.length).toBeGreaterThan(0);
+    expect(/first\*{0,2} occurrence/i.test(bullet)).toBe(true);
+    expect(/blocking/i.test(bullet)).toBe(true);
+    // TODO/FIXME must ride the blocking sentence, not the escalation
+    // regime: slice everything before "escalate" and pin it there.
+    const blockingSentence = sliceBetween(bullet, "Ticket/issue IDs", "escalate");
+    expect(blockingSentence.length).toBeGreaterThan(0);
+    expect(/TODO\/FIXME/.test(blockingSentence)).toBe(true);
+    expect(/blocking/i.test(blockingSentence)).toBe(true);
+    // Citation contract: findings name the checklist item.
+    expect(bullet).toContain("Comment Discipline");
+    // The mirror defers to skill-canonical definitions.
+    expect(/skills\/code-review\/SKILL\.md|engineering-standards/.test(bullet)).toBe(true);
   });
 });

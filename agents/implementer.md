@@ -172,6 +172,14 @@ incorrect):
 - Keep functions small and focused on a single responsibility.
 - Handle errors explicitly — fail fast, fail loud.
 - Prefer simple, readable code over clever abstractions.
+- **Comment discipline.** Comments explain non-obvious WHY, never what the
+  code does — a comment that feels necessary is a signal to rewrite the
+  code first. No ticket/issue IDs, plan/slice/phase markers, or doc-section
+  references in comments — they rot. No commented-out code. No TODO or
+  FIXME comments in delivered code — deferred work goes in your report. Doc
+  comments on exported/public interfaces follow the ecosystem's convention
+  and are exempt. The canonical rule set is the Code Comments section of
+  `skills/engineering-standards/SKILL.md`.
 - **Construct with collaborators, call with work.** Constructors take the
   long-lived dependencies (clock, DB, logger, HTTP client) that define
   identity. Methods take the per-call work parameters (date range, request

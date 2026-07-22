@@ -378,3 +378,118 @@ describe("static gate: rubrics", () => {
     });
   }
 });
+
+// The planted-comment-violations fixture is the behavioral proof that the
+// comment-discipline rules are enforced, not just written down. Its paid
+// assertions (detection floor, blocking label on the ticket-ref plant,
+// false-positive bound) live in tests/code-reviewer.evals.ts and run on the
+// periodic schedule. These free pins hold the fixture's contract — the
+// planted violations, the non-violation decoys, the selection-map wiring,
+// and the eval registration — so the fixture cannot silently go missing and
+// the generic enumeration above (which only sees fixtures that exist) cannot
+// be satisfied vacuously.
+describe("static gate: planted-comment-violations fixture", () => {
+  const FIXTURE_DIR = join(FIXTURE_ROOT, "code-reviewer", "planted-comment-violations");
+  const INPUT = join(FIXTURE_DIR, "input.md");
+  const GROUND_TRUTH = join(FIXTURE_DIR, "ground-truth.json");
+  const EVALS_FILE = join(TESTS_ROOT, "code-reviewer.evals.ts");
+  const FIXTURES_HELPER = join(TESTS_ROOT, "helpers", "fixtures.ts");
+
+  test("fixture input.md and ground-truth.json exist", () => {
+    expect(existsSync(INPUT)).toBe(true);
+    expect(existsSync(GROUND_TRUTH)).toBe(true);
+  });
+
+  test("frontmatter targets code-reviewer, periodic tier, with rule-source deps", () => {
+    // Existence guard first so a missing fixture fails as an assertion, not
+    // a loader throw.
+    expect(existsSync(INPUT)).toBe(true);
+    const fixture = loadFixture("code-reviewer", "planted-comment-violations", FIXTURE_ROOT);
+    expect(fixture.frontmatter.agent).toBe("code-reviewer");
+    // Live-model fixture — it can be red for a non-bug reason, so it never
+    // gates (docs/testing.md §4).
+    expect(fixture.frontmatter.tier).toBe("periodic");
+    // The rule content now affects the outcome, so engineering-standards is
+    // a dep alongside the reviewer agent and severity skill.
+    for (const dep of [
+      "agents/code-reviewer.md",
+      "skills/code-review/SKILL.md",
+      "skills/engineering-standards/SKILL.md",
+    ]) {
+      expect(fixture.frontmatter.deps).toContain(dep);
+    }
+  });
+
+  test("ground truth plants b1 (blocking) plus two style violations with per-bug hints", () => {
+    expect(existsSync(GROUND_TRUTH)).toBe(true);
+    const groundTruth = JSON.parse(readFileSync(GROUND_TRUTH, "utf8")) as {
+      bugs: { id: string; severity?: string; detection_hint?: string }[];
+      minimum_detection: number;
+      max_false_positives?: number;
+    };
+    expect(groundTruth.bugs.map((bug) => bug.id)).toEqual(["b1", "b2", "b3"]);
+    // b1 (ticket ref + plan marker) is the mechanical, first-occurrence
+    // blocking plant; b2/b3 (what-comment, commented-out code) are style.
+    const ticketRefPlant = groundTruth.bugs.find((bug) => bug.id === "b1");
+    expect(ticketRefPlant?.severity).toBe("blocking");
+    for (const bug of groundTruth.bugs) {
+      expect(typeof bug.detection_hint).toBe("string");
+      expect((bug.detection_hint ?? "").length).toBeGreaterThan(0);
+    }
+    // Below-100% floor absorbs model variance on the style plants; b1 is
+    // pinned individually by the eval registration, not by the floor.
+    expect(groundTruth.minimum_detection).toBeGreaterThan(0);
+    expect(groundTruth.minimum_detection).toBeLessThan(1);
+    expect(typeof groundTruth.max_false_positives).toBe("number");
+  });
+
+  test("ground truth bounds false positives with non_violations n1-n3", () => {
+    expect(existsSync(GROUND_TRUTH)).toBe(true);
+    const groundTruth = JSON.parse(readFileSync(GROUND_TRUTH, "utf8")) as {
+      non_violations?: { id: string; description?: string; false_positive_hint?: string }[];
+    };
+    const nonViolations = groundTruth.non_violations ?? [];
+    // n1 ticket-like token in a string literal, n2 upstream-bug-link
+    // why-comment, n3 comment-free clean region.
+    expect(nonViolations.map((entry) => entry.id)).toEqual(["n1", "n2", "n3"]);
+    for (const entry of nonViolations) {
+      expect(typeof entry.description).toBe("string");
+      expect(typeof entry.false_positive_hint).toBe("string");
+      expect((entry.false_positive_hint ?? "").length).toBeGreaterThan(0);
+    }
+  });
+
+  test("registered in the selection map with tier periodic and the rule-content globs", () => {
+    expect(Object.keys(E2E_TOUCHFILES)).toContain("planted-comment-violations");
+    const globs = E2E_TOUCHFILES["planted-comment-violations"] ?? [];
+    for (const glob of [
+      "agents/code-reviewer.md",
+      "skills/code-review/**",
+      "skills/engineering-standards/**",
+      "tests/code-reviewer.evals.ts",
+      "evals/fixtures/code-reviewer/planted-comment-violations/**",
+      "evals/rubrics/code-reviewer.md",
+    ]) {
+      expect(globs).toContain(glob);
+    }
+    expect(E2E_TIERS["planted-comment-violations"]).toBe("periodic");
+  });
+
+  test("eval registration pins b1 as must-detect with the blocking label and a false-positive bound", () => {
+    const evalsSource = readFileSync(EVALS_FILE, "utf8");
+    const start = evalsSource.indexOf('fixtureName: "planted-comment-violations"');
+    expect(start).toBeGreaterThan(-1);
+    const end = evalsSource.indexOf("});", start);
+    const registration = end === -1 ? "" : evalsSource.slice(start, end);
+    expect(registration.length).toBeGreaterThan(0);
+    // The ticket-ref plant must be individually detected and carry the
+    // deterministic blocking label, regardless of the detection floor.
+    expect(registration).toContain("requireBlockingLabel: true");
+    expect(registration).toContain("mustDetectBugIds");
+    expect(registration).toContain('"b1"');
+    // The false-positive bound rides the shared harness: the ground-truth
+    // typing and the eval assertions both know non_violations.
+    expect(readFileSync(FIXTURES_HELPER, "utf8")).toContain("non_violations");
+    expect(evalsSource).toContain("non_violations");
+  });
+});

@@ -13,10 +13,21 @@ export interface GroundTruthBug {
   detection_hint: string;
 }
 
+// A planted clean look-alike (e.g. a ticket-like token in a string literal).
+// `false_positive_hint` matches only a *finding about* the item — a
+// Conventional Comment label near the item's distinct token — so a reviewer
+// merely quoting the clean code does not count as a false positive.
+export interface GroundTruthNonViolation {
+  id: string;
+  description: string;
+  false_positive_hint: string;
+}
+
 export interface GroundTruth {
   bugs: GroundTruthBug[];
   minimum_detection: number;
   max_false_positives?: number;
+  non_violations?: GroundTruthNonViolation[];
 }
 
 export interface FixtureFrontmatter {

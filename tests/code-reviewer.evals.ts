@@ -27,8 +27,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { EvalCollector, assertNoBudgetRegressions } from "./helpers/eval-store";
+import type { GroundTruthNonViolation } from "./helpers/fixtures";
 import { loadFixture } from "./helpers/fixtures";
-import { judgeReviewerOutput, outcomeJudge } from "./helpers/llm-judge";
+import { judgeReviewerOutput, matchesHint, outcomeJudge } from "./helpers/llm-judge";
 import { runAgentTest } from "./helpers/session-runner";
 import { testIfSelected } from "./helpers/touchfiles";
 
@@ -47,6 +48,61 @@ const MIN_REASON_SUBSTANCE = 3;
 // same characters and there is no backtracking blowup on adversarial input.
 const BLOCKING_LABEL = /\bissue[\s*]*\(blocking\)[\s*]*:/i;
 
+// Any Conventional Comment label, tolerant of markdown decoration — bold
+// (`**issue (blocking):**`), backticks, an optional (decoration) before the
+// colon. Used to split a review into finding blocks: each label occurrence
+// starts a new finding.
+const FINDING_LABEL =
+  /[`*]{0,2}\b(?:praise|nitpick|suggestion|issue|todo|question|thought|chore|note)\b[\s*]*(?:\([^)\n]{0,40}\))?[\s*`]*:/gi;
+
+interface FindingSegment {
+  label: string;
+  body: string;
+}
+
+// Splits reviewer output into finding blocks: a segment runs from its
+// Conventional Comment label to the next label (or end of output), so a
+// label owns everything inside its finding — prose, blank lines, and
+// fenced code quotes alike. A well-formatted review separates the label
+// line from its quoted code with blank lines, so any proximity heuristic
+// narrower than the whole finding fails correct reviews.
+function splitIntoFindingSegments(output: string): FindingSegment[] {
+  const matches = [...output.matchAll(FINDING_LABEL)];
+  return matches.map((match, position) => {
+    const start = match.index ?? 0;
+    const next = matches[position + 1];
+    const end = next === undefined ? output.length : (next.index ?? output.length);
+    return { label: match[0], body: output.slice(start, end) };
+  });
+}
+
+// True when some finding block whose label is `issue (blocking)` contains
+// a detection-hint match — the blocking label must be attached to THAT
+// finding, so a run that puts the blocking label on a different finding
+// while the pinned plant rides a `suggestion:` cannot pass. Hint matching
+// delegates to matchesHint (case-insensitive regex, literal-substring
+// fallback when the hint isn't valid regex).
+function blockingLabelOnHint(output: string, detectionHint: string): boolean {
+  return splitIntoFindingSegments(output).some(
+    (segment) =>
+      BLOCKING_LABEL.test(segment.label) &&
+      matchesHint(segment.body, detectionHint),
+  );
+}
+
+// Counts non-violation decoys the reviewer wrongly flagged. A decoy counts
+// only when its `false_positive_hint` matches the output — the hint pairs a
+// Conventional Comment label with the decoy's distinct token, so a reviewer
+// merely quoting the clean code does not count.
+function countFalsePositives(
+  nonViolations: GroundTruthNonViolation[],
+  output: string,
+): number {
+  return nonViolations.filter((entry) =>
+    matchesHint(output, entry.false_positive_hint),
+  ).length;
+}
+
 // Registers one planted-bug E2E eval. Every fixture runs the identical
 // pipeline — prompt scaffold, agent run, deterministic outcome judge, LLM
 // review judge, collector record, assertions — varying only in:
@@ -57,12 +113,32 @@ const BLOCKING_LABEL = /\bissue[\s*]*\(blocking\)[\s*]*:/i;
 //                        flags the bug *as blocking*, additionally require
 //                        an `issue (blocking):` label in the output
 //                        (deterministic, no extra judge cost)
+//   mustDetectBugIds     bug ids that must be individually detected
+//                        regardless of the fixture's minimum_detection
+//                        floor (the floor absorbs variance on the other
+//                        plants; these ids never ride it)
+//   blockingLabelOnBugId scopes requireBlockingLabel to one plant: some
+//                        `issue (blocking)` finding block must contain a
+//                        match of THAT bug's detection hint, not merely
+//                        anywhere in the output — a blocking label on a
+//                        different finding cannot satisfy it
+//
+// When the fixture's ground truth carries `non_violations`, the run also
+// asserts the false-positive count stays within `max_false_positives`.
 function registerPlantedBugEval(options: {
   fixtureName: string;
   defectClause: string;
   requireBlockingLabel?: boolean;
+  mustDetectBugIds?: string[];
+  blockingLabelOnBugId?: string;
 }): void {
-  const { fixtureName, defectClause, requireBlockingLabel = false } = options;
+  const {
+    fixtureName,
+    defectClause,
+    requireBlockingLabel = false,
+    mustDetectBugIds = [],
+    blockingLabelOnBugId,
+  } = options;
 
   testIfSelected(
     fixtureName,
@@ -96,13 +172,39 @@ function registerPlantedBugEval(options: {
         // label being present.
         const review = await judgeReviewerOutput(result.output);
 
+        const pinnedBugHint =
+          blockingLabelOnBugId === undefined
+            ? undefined
+            : fixture.groundTruth.bugs.find(
+                (bug) => bug.id === blockingLabelOnBugId,
+              )?.detection_hint;
+
         const blockingLabelOk =
-          !requireBlockingLabel || BLOCKING_LABEL.test(result.output);
+          !requireBlockingLabel ||
+          (pinnedBugHint === undefined
+            ? BLOCKING_LABEL.test(result.output)
+            : blockingLabelOnHint(result.output, pinnedBugHint));
+
+        const mustDetectOk = mustDetectBugIds.every((bugId) =>
+          outcome.detected.includes(bugId),
+        );
+
+        const nonViolations = fixture.groundTruth.non_violations ?? [];
+        const falsePositiveCount = countFalsePositives(
+          nonViolations,
+          result.output,
+        );
+        const falsePositivesOk =
+          nonViolations.length === 0 ||
+          fixture.groundTruth.max_false_positives === undefined ||
+          falsePositiveCount <= fixture.groundTruth.max_false_positives;
 
         const passed =
           result.exitReason === "success" &&
           outcome.passes_minimum &&
           blockingLabelOk &&
+          mustDetectOk &&
+          falsePositivesOk &&
           review.reason_substance >= MIN_REASON_SUBSTANCE;
 
         collector.addTest({
@@ -127,10 +229,32 @@ function registerPlantedBugEval(options: {
         expect(outcome.detection_rate).toBeGreaterThanOrEqual(
           fixture.groundTruth.minimum_detection,
         );
+        // Pinned plants never ride the detection floor: each listed id
+        // must be individually detected.
+        for (const bugId of mustDetectBugIds) {
+          expect(outcome.detected).toContain(bugId);
+        }
+        if (
+          nonViolations.length > 0 &&
+          fixture.groundTruth.max_false_positives !== undefined
+        ) {
+          expect(falsePositiveCount).toBeLessThanOrEqual(
+            fixture.groundTruth.max_false_positives,
+          );
+        }
         if (requireBlockingLabel) {
           // Detection passed (asserted above); the design additionally
           // promises the finding carries a blocking severity label.
-          expect(result.output).toMatch(BLOCKING_LABEL);
+          if (blockingLabelOnBugId === undefined) {
+            expect(result.output).toMatch(BLOCKING_LABEL);
+          } else {
+            // Fail loud on a wiring mistake: the pinned id must exist in
+            // the ground truth, and the label must be on ITS finding.
+            expect(pinnedBugHint).toBeDefined();
+            expect(
+              blockingLabelOnHint(result.output, pinnedBugHint ?? ""),
+            ).toBe(true);
+          }
         }
         expect(review.reason_substance).toBeGreaterThanOrEqual(
           MIN_REASON_SUBSTANCE,
@@ -152,6 +276,14 @@ registerPlantedBugEval({
   fixtureName: "planted-time-bomb",
   defectClause: "correctness AND test-quality/flakiness",
   requireBlockingLabel: true,
+});
+
+registerPlantedBugEval({
+  fixtureName: "planted-comment-violations",
+  defectClause: "code-comment discipline",
+  requireBlockingLabel: true,
+  mustDetectBugIds: ["b1"],
+  blockingLabelOnBugId: "b1",
 });
 
 afterAll(async () => {

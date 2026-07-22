@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-07-22
+
+### Added
+
+- **Code comments are now governed by a binding rule set at write time.** [`skills/engineering-standards/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/engineering-standards/SKILL.md) gains a **Code Comments** section: comments explain non-obvious WHY only, never WHAT the code does, and a comment that feels necessary is a signal to rewrite the code first. No ticket/issue IDs, plan/slice/phase markers, or doc-section references in comments (an upstream-bug link where the link IS the why stays allowed); no commented-out code; no TODO/FIXME in delivered code — deferred work goes in the implementer's report. Doc comments on exported/public interfaces keep following the ecosystem's convention. The Quality Checklist gains a **Comment Discipline** item, and [`agents/implementer.md`](https://github.com/bostonaholic/team/blob/main/agents/implementer.md) mirrors the rules.
+- **The code reviewer now gates on comment discipline with a split severity regime.** [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md) adds a **Comment red flags** check: ticket/plan references and TODO/FIXME comments block on **first** occurrence (the check is mechanical and the references rot), while what-restating comments, wordy comments, and commented-out code escalate from `suggestion:` to `issue:` only when repeated across the diff. String literals, log messages, and upstream-bug links never flag, and a diff with zero comments passes trivially. [`agents/code-reviewer.md`](https://github.com/bostonaholic/team/blob/main/agents/code-reviewer.md) mirrors the check and cites the checklist item by name. Pinned by L2 tripwires in [`tests/methodology.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/methodology.test.ts).
+- **A new `planted-comment-violations` eval fixture (`tier: periodic`) behaviorally proves the gate fires.** The reviewer must flag a planted ticket-reference comment as blocking — with the blocking label on that finding, not merely anywhere in the output — catch the what-restating and commented-out plants, and stay quiet on the clean look-alikes: a ticket-like token in a string literal, an upstream-bug-link why-comment, and a comment-free function.
+
 ## [0.18.0] - 2026-07-22
 
 ### Added
@@ -226,7 +234,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.18.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.19.0...HEAD
+[0.19.0]: https://github.com/bostonaholic/team/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/bostonaholic/team/compare/v0.17.1...v0.18.0
 [0.17.1]: https://github.com/bostonaholic/team/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/bostonaholic/team/compare/v0.16.0...v0.17.0

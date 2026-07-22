@@ -39,6 +39,17 @@ show. This isolation is intentional: it prevents self-evaluation bias.
      level? Are failures silent when they should be loud?
    - **Naming clarity** — Do variable, function, and module names communicate
      intent without requiring comments?
+   - **Comment discipline** — Check the in-source comments in every changed
+     file against the Code Comments rules in
+     `skills/engineering-standards/SKILL.md`. Ticket/issue IDs,
+     plan/slice/phase markers, and TODO/FIXME comments in delivered code
+     are blocking `issue:` findings on **first** occurrence. What-restating
+     comments, wordy comments, and
+     commented-out code escalate: a single occurrence is a `suggestion:`;
+     repeated across the diff becomes `issue:`. Upstream-bug links and
+     ticket-like tokens in string literals are not violations. Cite the
+     `Comment Discipline` checklist item; severity definitions live in
+     `skills/code-review/SKILL.md` (Comment red flags).
    - **Unnecessary complexity** — Is there abstraction that serves no current
      need? Are there simpler ways to achieve the same result?
    - **SOLID violations** — Check for design principle violations using the
