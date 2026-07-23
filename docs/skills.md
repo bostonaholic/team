@@ -619,7 +619,7 @@ entry-point section above rather than repeating them here.
 | `team-implement` | orchestrator → implementer + reviewers | Implement |
 | `team-pr` | orchestrator | PR |
 | `team-fix` | user (direct invocation) | Compressed bug-fix flow (outside QRSPI) |
-| `eng-design-doc-review` | user (direct invocation); pipeline DESIGN gate (brief by reference) | Design review-gate brief + standalone audit; dispatches a read-only Explore subagent |
+| `eng-design-doc-review` | user (direct invocation); pipeline DESIGN review gate (brief by reference) | Design review-gate brief + standalone audit; dispatches a read-only Explore subagent |
 | `shipit` | user (direct invocation) | Standalone — land a reviewed PR (not a QRSPI phase) |
 | `qrspi-workflow` | orchestrator skills; questioner (schema) | All phases |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |

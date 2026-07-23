@@ -243,7 +243,7 @@ End with a verdict, using the same gate type as `code-reviewer`:
 Print the verdict and the count of issue / suggestion / nitpick findings.
 
 **A standalone run records no `design-review-<n>.md`** — only the
-pipeline's DESIGN gate writes the verdict artifact, and
+pipeline's DESIGN review gate writes the verdict artifact, and
 `/team-structure` requires a recorded passing verdict before it will
 slice a design.
 
