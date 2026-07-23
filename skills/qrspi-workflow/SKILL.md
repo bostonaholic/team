@@ -101,7 +101,8 @@ sub-phase and 5-reviewer adversarial verification with hard-gate retry loop.
 
 ### PR
 
-Open the pull request as a draft (no human gate — the orchestrator does
+Open the pull request as a draft (never waiting for approval — the
+orchestrator does
 not stop to ask), update the changelog, surface the tracking ticket.
 
 - **Artifact:** GitHub draft PR

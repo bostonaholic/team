@@ -15,14 +15,16 @@ below to `docs/plans/2026-06-03-token-bucket/task.md` and
 before you start. Read them and draft a `design.md`-style document in your
 response.
 
-The load-bearing properties: the design enumerates explicit Open Questions for
-the user, and copies the topic slug `token-bucket` verbatim from the seeded
+The load-bearing properties: the design carries a `## Decisions made` section
+recording its self-resolved choices marked as explicit assumptions, and copies
+the topic slug `token-bucket` verbatim from the seeded
 artifacts.
 
 Output, in your response, the `design.md` you would write — a frontmatter block
-with `topic: token-bucket`, the standard sections (Current state, Desired end
-state, Decisions made, Out of scope), and an `## Open Questions` section listing
-at least two explicit questions for the user. Do not write files; just output
+with `topic: token-bucket` and the standard sections (Current state, Desired
+end state, Decisions made, Out of scope), where `## Decisions made` records at
+least two self-resolved choices marked as assumptions with the rejected
+alternative. Do not write files; just output
 the design.
 
 ```markdown task.md

@@ -72,7 +72,7 @@ rationale). The router's responsibilities are:
 1. Create the home repo's worktree on branch `<id>` off `origin/HEAD`,
    and author `docs/plans/<id>/` **inside** it — no copy is ever needed
    because the artifact directory is born in the worktree. (Secondary
-   repos in multi-repo mode get their worktrees after the design gate,
+   repos in multi-repo mode get their worktrees after the design review,
    once `repos.md` confirms the repo set; same `<id>` branch in each.)
 2. After this phase, all downstream agent dispatches operate within the
    appropriate worktree (the home worktree by default; per-repo worktrees
