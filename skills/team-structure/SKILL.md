@@ -57,7 +57,11 @@ for dir in docs/plans/*/; do
     [ "$n" -gt "$rv_n" ] && { rv_n="$n"; rv="$r"; }
   done
   [ -n "$rv" ] || continue                              # no review → skip
-  grep -qE '^verdict:[[:space:]]*(APPROVE|COMMENT)[[:space:]]*$' "$rv" || continue
+  # Frontmatter-only verdict parse (mirrors the hooks): line 1 must be ---,
+  # the scan stops at the closing --- (60-line window), so a body line
+  # quoting "verdict: APPROVE" can never pass. Fail-closed.
+  awk 'NR==1 { if ($0 != "---") exit; next } /^---$/ { exit } NR > 60 { exit } { print }' "$rv" \
+    | grep -qE '^verdict:[[:space:]]*(APPROVE|COMMENT)[[:space:]]*$' || continue
   m=-1
   for p in $PHASE_FILES; do
     f="$dir$p.md"
@@ -91,7 +95,8 @@ done
 
 1. Use the directory resolved in `## Input`, then **verify the review
    gate**: the highest-`<n>` `$ARGUMENTS/design-review-<n>.md` must
-   carry `verdict: APPROVE` or `verdict: COMMENT` (the tier-2 filter
+   carry `verdict: APPROVE` or `verdict: COMMENT` **in its YAML
+   frontmatter** (the tier-2 filter
    already enforced this; re-check a tier-1 explicit path). If no review
    artifact exists, or the latest verdict is REQUEST CHANGES, **refuse**:
    report that the design has not passed review and suggest
