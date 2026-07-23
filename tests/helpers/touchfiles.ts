@@ -10,6 +10,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "planted-null-deref": [
     "agents/code-reviewer.md",
     "skills/code-review/**",
+    "skills/conventional-comments/**",
     "tests/code-reviewer.evals.ts",
     "evals/fixtures/code-reviewer/planted-null-deref/**",
     "evals/rubrics/code-reviewer.md",
@@ -17,6 +18,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "planted-time-bomb": [
     "agents/code-reviewer.md",
     "skills/code-review/**",
+    "skills/conventional-comments/**",
     "tests/code-reviewer.evals.ts",
     "evals/fixtures/code-reviewer/planted-time-bomb/**",
     "evals/rubrics/code-reviewer.md",
@@ -27,6 +29,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "planted-comment-violations": [
     "agents/code-reviewer.md",
     "skills/code-review/**",
+    "skills/conventional-comments/**",
     "skills/engineering-standards/**",
     "tests/code-reviewer.evals.ts",
     "evals/fixtures/code-reviewer/planted-comment-violations/**",

@@ -9,6 +9,7 @@ permissionMode: plan
 skills:
   - progress-tracking
   - code-review
+  - conventional-comments
   - writing-prose
 ---
 
@@ -22,8 +23,8 @@ incomplete. You produce a structured report — you do NOT rewrite documentation
 
 Load `skills/code-review/SKILL.md` (preloaded) for the full review
 methodology: generator-evaluator separation (fresh context, no shared
-history) with an **ADVISORY** gate type, Conventional Comments format, and
-the verdict aggregation rules.
+history) with an **ADVISORY** gate type and the verdict aggregation rules.
+Format findings per `skills/conventional-comments/SKILL.md` (preloaded).
 
 Your review procedure — the diff-to-docs review process (inventory, impact
 analysis, cross-reference) and the REQUIRED/RECOMMENDED doc-change

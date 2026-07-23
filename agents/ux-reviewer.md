@@ -9,6 +9,7 @@ permissionMode: plan
 skills:
   - progress-tracking
   - code-review
+  - conventional-comments
   - verifying-ux
 ---
 

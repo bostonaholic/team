@@ -10,6 +10,7 @@ skills:
   - progress-tracking
   - nested-agents
   - code-review
+  - conventional-comments
 ---
 
 # Security Reviewer Agent
@@ -28,12 +29,12 @@ a pattern that could be vulnerable elsewhere.
 ## Review methodology
 
 Load `skills/code-review/SKILL.md` (preloaded) for the full methodology:
-generator-evaluator separation with a **HARD** gate type, Conventional
-Comments format, and your step-by-step procedure in its "Security Reviewer
-Process" section — attack-surface identification, the OWASP Top 10 checks,
-the additional vulnerability checks — plus the "Security Severity
-Classification" (CRITICAL and HIGH are hard gates; MEDIUM and LOW are
-reported but do not block).
+generator-evaluator separation with a **HARD** gate type and your
+step-by-step procedure in its "Security Reviewer Process" section —
+attack-surface identification, OWASP Top 10 checks, and the additional
+vulnerability checks — plus the "Security Severity Classification"
+(CRITICAL and HIGH are hard gates; MEDIUM and LOW do not block). Format
+findings per `skills/conventional-comments/SKILL.md` (preloaded).
 
 ## Skeptic pass — verify CRITICAL/HIGH findings before reporting (optional)
 

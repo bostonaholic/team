@@ -4,6 +4,7 @@ tier: periodic
 deps:
   - agents/code-reviewer.md
   - skills/code-review/SKILL.md
+  - skills/conventional-comments/SKILL.md
 ---
 
 # Synthetic implementer artifact: session-token expiry check

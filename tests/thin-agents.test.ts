@@ -132,18 +132,18 @@ describe("thin agents: new skills carry the moved procedure content", () => {
 
 describe("thin agents: frontmatter skills preloads per agent", () => {
   const EXPECTED_PRELOADS: Record<string, string[]> = {
-    "code-reviewer": ["code-review", "nested-agents", "progress-tracking"],
+    "code-reviewer": ["code-review", "conventional-comments", "nested-agents", "progress-tracking"],
     "design-author": ["agent-open-questions", "authoring-designs", "product-thinking", "progress-tracking"],
     "file-finder": ["finding-files"],
     implementer: ["implementing-slices", "nested-agents", "progress-tracking"],
     planner: ["planning-implementation", "progress-tracking"],
     questioner: ["agent-open-questions", "decomposing-intent", "product-thinking", "progress-tracking"],
     researcher: ["nested-agents", "progress-tracking", "researching-codebases"],
-    "security-reviewer": ["code-review", "nested-agents", "progress-tracking"],
+    "security-reviewer": ["code-review", "conventional-comments", "nested-agents", "progress-tracking"],
     "structure-planner": ["product-thinking", "progress-tracking", "slicing-work"],
-    "technical-writer": ["code-review", "progress-tracking", "writing-prose"],
+    "technical-writer": ["code-review", "conventional-comments", "progress-tracking", "writing-prose"],
     "test-architect": ["progress-tracking", "test-first-development"],
-    "ux-reviewer": ["code-review", "progress-tracking", "verifying-ux"],
+    "ux-reviewer": ["code-review", "conventional-comments", "progress-tracking", "verifying-ux"],
     verifier: ["progress-tracking", "running-quality-checks"],
   };
 
@@ -247,34 +247,34 @@ describe("thin agents: haiku skills are self-contained", () => {
   }
 });
 
-describe("thin agents: documentation counts agree at 40 skills", () => {
+describe("thin agents: documentation counts agree at 41 skills", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
 
-  test("skills/ holds exactly 40 SKILL.md files", () => {
+  test("skills/ holds exactly 41 SKILL.md files", () => {
     const count = readdirSync(join(REPO_ROOT, "skills")).filter((name) =>
       existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")),
     ).length;
-    expect(count).toBe(40);
+    expect(count).toBe(41);
   });
 
-  test("AGENTS.md heading reads Skills (40)", () => {
-    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (40)");
+  test("AGENTS.md heading reads Skills (41)", () => {
+    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (41)");
   });
 
-  test("docs/skills.md description counts 40 skills", () => {
-    expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain("40 skills");
+  test("docs/skills.md description counts 41 skills", () => {
+    expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain("41 skills");
   });
 
-  test("docs/skills.md split sentence sums to 40", () => {
+  test("docs/skills.md split sentence sums to 41", () => {
     expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain(
-      "11 pipeline entry-point + 1 standalone utility + 28 methodology = 40",
+      "11 pipeline entry-point + 1 standalone utility + 29 methodology = 41",
     );
   });
 
-  test("docs/architecture.md counts all 40 skills and no stale 31", () => {
+  test("docs/architecture.md counts all 41 skills and no stale 31", () => {
     const content = read(ARCHITECTURE_MD);
-    expect(content).toContain("all 40 skills");
+    expect(content).toContain("all 41 skills");
     expect(content).not.toContain("31 skills");
   });
 

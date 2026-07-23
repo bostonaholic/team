@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 40 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 28 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 41 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 29 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -46,8 +46,8 @@ catalog into two flavors:
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
 standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 28 methodology =
-40**.
+split is **11 pipeline entry-point + 1 standalone utility + 29 methodology =
+41**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -251,7 +251,7 @@ phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 28 methodology skills carry no `argument-hint` and are never invoked
+The 29 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -352,12 +352,13 @@ replaces former inline body content 1:1, so it adds no net context (see
 
 ### code-review
 
-- **Purpose:** Generator-evaluator separation, Conventional Comments, and
-  the gate verdict vocabulary.
+- **Purpose:** Generator-evaluator separation and the gate verdict
+  vocabulary.
 - **Loaded by:** code-reviewer, security-reviewer, ux-reviewer,
   technical-writer (4).
 - **Key behaviors:** Defines how a reviewer reads with fresh eyes and
-  emits a structured verdict. Carries the authoritative severity-tier
+  emits a structured verdict. Findings use the format defined in
+  `conventional-comments`. Carries the authoritative severity-tier
   table (Blocking / Major / Minor-and-below) that maps every reviewer
   vocabulary onto one scale, plus the consult guard — the rule that the
   orchestrator never surfaces a Blocking or Major finding to the user and
@@ -373,6 +374,17 @@ replaces former inline body content 1:1, so it adds no net context (see
   verification and the per-file inspection checklist) and the Security
   Reviewer process (attack surface, OWASP Top 10 checks) with its
   CRITICAL/HIGH/MEDIUM/LOW severity classification.
+
+### conventional-comments
+
+- **Purpose:** The Conventional Comments format for review findings.
+- **Loaded by:** code-reviewer, security-reviewer, ux-reviewer,
+  technical-writer (4); the `eng-design-doc-review` subagent loads it for
+  its findings.
+- **Key behaviors:** Carries the label and decoration syntax, the
+  code-directed comment style (critique the code, not the coder), and the
+  three comment types — `issue`, `suggestion`, `nitpick` — with literal
+  examples. Every comment includes a specific `file:line` reference.
 
 ### engineering-standards
 
@@ -599,6 +611,7 @@ entry-point section above rather than repeating them here.
 | `qrspi-workflow` | orchestrator skills; questioner (schema) | All phases |
 | `agent-open-questions` | questioner, design-author | Question, Design (subagent → user via orchestrator) |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
+| `conventional-comments` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) — finding format |
 | `decomposing-intent` | questioner | Question |
 | `authoring-designs` | design-author | Design |
 | `researching-codebases` | researcher | Research |

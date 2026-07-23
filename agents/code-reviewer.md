@@ -10,6 +10,7 @@ skills:
   - progress-tracking
   - nested-agents
   - code-review
+  - conventional-comments
 ---
 
 # Code Reviewer Agent
@@ -28,11 +29,11 @@ else.
 ## Review methodology
 
 Load `skills/code-review/SKILL.md` (preloaded) for the full methodology:
-generator-evaluator separation with a **HARD** gate type, Conventional
-Comments format, the severity tiers, and your step-by-step procedure in its
-"Code Reviewer Inspection Process" section — done-criteria verification, the
-per-file inspection checklist, both test-file severity regimes, and the test
-run.
+generator-evaluator separation with a **HARD** gate type, the verdict
+criteria, and your step-by-step procedure in its "Code Reviewer Inspection
+Process" section — done-criteria verification, the per-file inspection
+checklist, both test-file severity regimes, and the test run. Format every
+finding per `skills/conventional-comments/SKILL.md` (preloaded).
 
 - Check in-source comments per the skill's Comment red flags; cite the
   `Comment Discipline` checklist item (canonical rule set: the Code
