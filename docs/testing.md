@@ -127,6 +127,41 @@ This layer is what lets a stochastic product stay correct cheaply: a huge
 fraction of "regressions" are really *contract violations*, and contracts are
 deterministic even when behavior isn't.
 
+**The line this layer must not cross — prose is not a contract.** A tripwire
+asserts a *structural or wiring* fact: a forbidden import, a tool grant, a
+routing rule, a reference target that must exist, two files that must stay in
+sync. It must **never** assert the *instruction prose* of a skill or agent —
+that its body contains a particular author's name, a slogan, or a verbatim
+heading. Pinning prose tests **word-presence, not behavior**: it breaks when you
+reword an instruction that still works, and it passes when the surrounding
+instructions rot, as long as the keyword survives. The judgment a skill's prose
+is *trying to produce* is non-deterministic; you test it by running the skill
+and grading the output (L5/L6), never by grepping its source.
+
+#### What a deterministic skill test actually is
+
+A skill is markdown instructions plus, usually, a thin deterministic code layer.
+Test each half where it lives — and note that none of the three halves is a grep
+of the skill's words:
+
+- **The deterministic half — extract it and unit-test the code.** The file I/O,
+  the git operations, the id/path derivation, the frontmatter parsing, the
+  gate-marker check: pull these out of the prose into a real script or function
+  and assert on inputs and outputs (L1/L3). If a skill *describes* a mechanical
+  step in prose, that step wants to be code so it can be pinned here.
+- **The wiring half — assert the contract (L2).** That an agent loads a skill,
+  that a tool is or isn't granted, that the registry and the agent files agree:
+  these are structural facts, and they belong here.
+- **The judgment half — run the skill and grade the output (L5/L6).** Whether
+  the skill makes the implementer write simpler code, or the questioner demand
+  evidence of real need, is behavior. Drive the consuming agent against a fixture
+  built to make that behavior observable, and grade it on a rubric. This is the
+  *only* honest test of a skill's judgment.
+
+The meta-tripwire `tests/no-prose-pins.test.ts` enforces this line: it freezes
+the set of test files allowed to assert on a skill/agent body and ratchets the
+known prose-pin offenders toward zero.
+
 ### L3 — In-process integration
 
 Real components wired together, but **no external surface**. Stand up an
