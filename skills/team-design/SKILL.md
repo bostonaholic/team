@@ -1,15 +1,15 @@
 ---
 name: team-design
-description: Align with the user on the approach before any code is written. The design-author MUST present open questions interactively before drafting the ~200-line design document, then an adversarial design review gates advancement. Trigger on "design this", "let's align on the approach", or "/team-design".
+description: Decide the approach before any code is written. The design-author drafts the ~200-line design document, resolving its own open questions autonomously as recorded assumptions, then an adversarial design review gates advancement. Trigger on "design this", "let's align on the approach", or "/team-design".
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
 
 # Team Design — Where Are We Going?
 
-Run the DESIGN phase. Get alignment on the approach here — before
-investing in detailed planning — and let the adversarial design review
-gate advancement.
+Run the DESIGN phase. The design-author decides the approach — recording
+every self-resolved choice as an auditable assumption — and the
+adversarial design review gates advancement. No mid-run prompt fires.
 
 ## Input
 
@@ -75,10 +75,12 @@ done
 
 1. Use the directory resolved in `## Input`.
 2. Dispatch `design-author`, which:
-   a. Presents 3–5 open design questions to the user via the built-in
-      `AskUserQuestion` tool (multi-choice with labeled trade-offs)
-   b. Waits for the user's structured answers
-   c. Writes `$ARGUMENTS/design.md` with frontmatter `revision: 0`
+   a. Resolves its own open questions autonomously, recording each in
+      `## Decisions made` marked as an assumption (see the agent file)
+   b. Writes `$ARGUMENTS/design.md` with frontmatter `revision: 0`
+
+   If `$ARGUMENTS/design.md` already exists, skip this dispatch and
+   resume at step 3 — never re-draft an existing design.
 3. **Design review gate.** Dispatch the adversarial design review (the
    `## Review brief` in `skills/eng-design-doc-review/SKILL.md`, run by
    a fresh-context `general-purpose` subagent each round) and write the

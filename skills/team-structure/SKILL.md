@@ -17,12 +17,15 @@ discovery block below resolves it.
 
 The `structure-planner` reads:
 
-- `$ARGUMENTS/design.md` (the reviewed design)
+- `$ARGUMENTS/design.md` (the reviewed design — the latest
+  `$ARGUMENTS/design-review-<n>.md` must carry a passing verdict)
 - `$ARGUMENTS/research.md`
 - `$ARGUMENTS/task.md` (for cross-reference; not for re-litigating intent)
 
 Resolve the artifact directory by running this self-contained block (one bash
-call — agent threads reset cwd between calls):
+call — agent threads reset cwd between calls). The predecessor filter requires
+a `design.md` whose latest `design-review-<n>.md` carries a passing verdict
+(APPROVE or COMMENT), so unreviewed or REQUEST-CHANGES candidates are skipped:
 
 ```sh
 # Three-tier artifact-directory discovery (archetype A).
@@ -43,6 +46,18 @@ for dir in docs/plans/*/; do
   name="$(basename "$dir")"
   printf '%s' "$name" | grep -qE "$ID_RE" || continue   # ID_RE filter
   [ -f "$dir$PRED" ] || continue                        # predecessor filter
+  # Review-gate filter: the highest-<n> design-review-<n>.md must carry a
+  # passing verdict (APPROVE or COMMENT) — mirrors the recovery hooks'
+  # fail-closed designReviewPassed check.
+  rv=""; rv_n=-1
+  for r in "$dir"design-review-*.md; do
+    [ -f "$r" ] || continue
+    n="$(basename "$r" .md)"; n="${n#design-review-}"
+    case "$n" in ''|*[!0-9]*) continue;; esac
+    [ "$n" -gt "$rv_n" ] && { rv_n="$n"; rv="$r"; }
+  done
+  [ -n "$rv" ] || continue                              # no review → skip
+  grep -qE '^verdict:[[:space:]]*(APPROVE|COMMENT)[[:space:]]*$' "$rv" || continue
   m=-1
   for p in $PHASE_FILES; do
     f="$dir$p.md"
@@ -57,15 +72,16 @@ done
 ```
 
 - **If the block printed a path**, use it as `$ARGUMENTS` for the rest of this
-  skill (tier 1 explicit arg, or tier 2 discovery).
+  skill (tier 1 explicit arg, or tier 2 discovery of a reviewed predecessor).
   When the path came from tier 2 (no explicit arg), announce the resolved
   directory to the user before proceeding, so an auto-picked topic is never
   silent.
-- **If the block printed nothing** (tier 3 — no directory holds
-  `design.md`), do not hard-error. Fire `AskUserQuestion` with a `Setup` header
+- **If the block printed nothing** (tier 3 — no directory holds a
+  `design.md` with a passing design review), do not hard-error. Fire
+  `AskUserQuestion` with a `Setup` header
   and labeled options:
-  - **Run the producer** — run `/team-design docs/plans/<id>/` to produce the
-    missing `design.md`.
+  - **Run the producer** — run `/team-design docs/plans/<id>/` to produce
+    and review `design.md`.
   - **Provide a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
 
@@ -73,7 +89,13 @@ done
 
 > Follow `skills/progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
 
-1. Use the directory resolved in `## Input`.
+1. Use the directory resolved in `## Input`, then **verify the review
+   gate**: the highest-`<n>` `$ARGUMENTS/design-review-<n>.md` must
+   carry `verdict: APPROVE` or `verdict: COMMENT` (the tier-2 filter
+   already enforced this; re-check a tier-1 explicit path). If no review
+   artifact exists, or the latest verdict is REQUEST CHANGES, **refuse**:
+   report that the design has not passed review and suggest
+   `/team-design $ARGUMENTS` — never slice an unreviewed design.
 2. Dispatch `structure-planner`, which writes `$ARGUMENTS/structure.md`
    with vertical slices. The artifact carries plain frontmatter
    (`topic`, `date`, `phase: structure`) — no approval fields, because
