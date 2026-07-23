@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 38 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 26 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 40 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 28 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -45,8 +45,8 @@ catalog into two flavors:
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
 standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 26 methodology =
-38**.
+split is **11 pipeline entry-point + 1 standalone utility + 28 methodology =
+40**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -250,7 +250,7 @@ phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 26 methodology skills carry no `argument-hint` and are never invoked
+The 28 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -319,6 +319,27 @@ load manifest; an agent typically loads at most three.
   mandatory interactive open-questions step (at most 4 sharp questions,
   answers land in `## Decisions made`), and the `design.md` document
   template with its six-category edge-case walk.
+
+### slicing-work
+
+- **Purpose:** Vertical-slice breakdown methodology for the Structure
+  phase.
+- **Loaded by:** structure-planner.
+- **Key behaviors:** Carries the vertical-slice rationale, the
+  `structure.md` document format, the slicing rules (every slice ends in a
+  passing test; 1–3 acceptance tests per slice; edge cases pulled from the
+  design; order by user value), and the slicing heuristics
+  (walking-skeleton first; migrations alone are never a slice).
+
+### planning-implementation
+
+- **Purpose:** Tactical planning methodology for the Plan phase.
+- **Loaded by:** planner.
+- **Key behaviors:** Carries the `plan.md` document template that expands
+  each vertical slice into file-level steps with acceptance-test mappings,
+  and the tactical rules (one slice at a time, reuse over reinvention,
+  under 300 lines, no implementation code, atomic slices, test coverage
+  matching the structure).
 
 ### code-review
 
@@ -552,6 +573,8 @@ entry-point section above rather than repeating them here.
 | `authoring-designs` | design-author | Design |
 | `researching-codebases` | researcher | Research |
 | `finding-files` | file-finder | Research |
+| `slicing-work` | structure-planner | Structure |
+| `planning-implementation` | planner | Plan |
 | `engineering-standards` | planner, implementer, code-reviewer | Plan, Implement |
 | `test-first-development` | test-architect, code-reviewer; orchestrator | Implement |
 | `test-driven-bug-fix` | team-fix | Bug-fix flow |
@@ -591,6 +614,7 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 | `verifying-ux` | `ux-reviewer` | Skill is the live-verification procedure; the agent is the tester that runs it. |
 | `authoring-designs` | `design-author` | Skill is the authoring procedure and template; the agent is the author that drafts the design. |
 | `finding-files` | `file-finder` | Skill is the search strategy; the agent is the locator that executes it. |
+| `planning-implementation` | `planner` | Skill is the plan template and tactical rules; the agent is the engineer that writes the plan. |
 | `team-design` | `design-author` | Skill drives the Design phase; the agent drafts the alignment doc. |
 | `technical-design-doc` | `technical-writer` | Both contain "technical" but differ: the skill is design-doc methodology; the agent writes documentation during verify. |
 | `eng-design-doc-review` | `design-author` | The review skill dispatches a `general-purpose` subagent, **not** the `design-author` agent — keeping the audit independent of the author. |

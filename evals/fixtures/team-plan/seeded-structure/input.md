@@ -3,6 +3,7 @@ agent: team-plan
 tier: periodic
 deps:
   - skills/team-plan/**
+  - skills/planning-implementation/**
   - agents/planner.md
 ---
 

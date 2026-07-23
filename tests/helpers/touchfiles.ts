@@ -89,6 +89,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   ],
   "team-structure-seeded-design": [
     "skills/team-structure/**",
+    "skills/slicing-work/**",
     "agents/structure-planner.md",
     "tests/helpers/seed.ts",
     "tests/team-structure.evals.ts",
@@ -97,6 +98,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   ],
   "team-plan-seeded-structure": [
     "skills/team-plan/**",
+    "skills/planning-implementation/**",
     "agents/planner.md",
     "tests/helpers/seed.ts",
     "tests/team-plan.evals.ts",
