@@ -3,7 +3,6 @@ agent: eng-design-doc-review
 tier: periodic
 deps:
   - skills/eng-design-doc-review/**
-  - skills/technical-design-doc/**
 ---
 
 # Adversarial design-doc review with a planted gap

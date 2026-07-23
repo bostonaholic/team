@@ -80,6 +80,15 @@ describe("skill architecture", () => {
     expect(/extraction threshold/i.test(read(ARCHITECTURE_MD))).toBe(true);
   });
 
+  test("extraction threshold pins the single-referencer rule (embed, don't extract)", () => {
+    const text = read(ARCHITECTURE_MD);
+    expect(text).toContain("exactly one other");
+    expect(/bundled reference file/i.test(text)).toBe(true);
+    // The old cohesion-only rule is gone: one referencer no longer justifies
+    // a standalone skill.
+    expect(text).not.toContain("regardless of consumer count");
+  });
+
   test("soft limit of 3 methodology skills documented in docs/architecture.md", () => {
     expect(/soft limit.*3|3 methodology skills/i.test(read(ARCHITECTURE_MD))).toBe(true);
   });

@@ -67,6 +67,13 @@ Then the body:
 
 Keep this under 80 lines. The point is intent, not exhaustive detail.
 
+When the feature request is vague or underspecified, spans multiple user
+stories, is cross-cutting, or replaces existing behavior, Load
+`skills/product-requirements-doc/SKILL.md` and produce
+`docs/plans/<id>/prd.md` alongside `task.md`, referencing the PRD's path
+from `task.md`. The full criteria live in that skill's "When to Write a
+PRD" section; for simple, well-scoped requests, skip the PRD.
+
 ## questions.md
 
 Write neutral research questions that, when answered factually, give the

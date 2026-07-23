@@ -373,15 +373,17 @@ describe("product-thinking methodology", () => {
 // ---------------------------------------------------------------------------
 
 describe("documenting-decisions lens (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "documenting-decisions", "SKILL.md");
+  // Embedded per the single-referencer rule: the content now lives as a
+  // bundled reference file inside its sole consumer, eng-design-doc-review.
+  const LENS_FILE = join(REPO_ROOT, "skills", "eng-design-doc-review", "documenting-decisions.md");
 
-  test("skill file exists with name: documenting-decisions", () => {
-    expect(existsSync(SKILL_FILE)).toBe(true);
-    expect(/^name:\s*documenting-decisions\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  test("bundled reference file exists (plain markdown, no skill frontmatter)", () => {
+    expect(existsSync(LENS_FILE)).toBe(true);
+    expect(/^---\n/.test(read(LENS_FILE))).toBe(false);
   });
 
   test("pins the ADR section contract (Context / Decision / Consequences)", () => {
-    const text = read(SKILL_FILE);
+    const text = read(LENS_FILE);
     expect(text).toContain("Architecture Decision Record");
     expect(/^## Context$/m.test(text)).toBe(true);
     expect(/^## Decision$/m.test(text)).toBe(true);
@@ -407,15 +409,17 @@ describe("product-requirements-doc lens (L2 content tripwire)", () => {
 });
 
 describe("technical-design-doc lens (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "technical-design-doc", "SKILL.md");
+  // Embedded per the single-referencer rule: the content now lives as a
+  // bundled reference file inside its sole consumer, eng-design-doc-review.
+  const LENS_FILE = join(REPO_ROOT, "skills", "eng-design-doc-review", "technical-design-doc.md");
 
-  test("skill file exists with name: technical-design-doc", () => {
-    expect(existsSync(SKILL_FILE)).toBe(true);
-    expect(/^name:\s*technical-design-doc\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  test("bundled reference file exists (plain markdown, no skill frontmatter)", () => {
+    expect(existsSync(LENS_FILE)).toBe(true);
+    expect(/^---\n/.test(read(LENS_FILE))).toBe(false);
   });
 
   test("pins the TDD section contract (goals/non-goals, trade-offs, edge cases, open questions)", () => {
-    const text = read(SKILL_FILE);
+    const text = read(LENS_FILE);
     expect(text).toContain("Goals and Non-Goals");
     expect(text).toContain("Trade-offs Considered");
     expect(text).toContain("Edge Cases and Failure Modes");
@@ -459,11 +463,13 @@ describe("systematic-debugging lens (L2 content tripwire)", () => {
 });
 
 describe("test-driven-bug-fix lens (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "test-driven-bug-fix", "SKILL.md");
+  // Embedded per the single-referencer rule: the methodology now lives as a
+  // section inside its sole consumer, team-fix.
+  const SKILL_FILE = join(REPO_ROOT, "skills", "team-fix", "SKILL.md");
 
-  test("skill file exists with name: test-driven-bug-fix", () => {
+  test("team-fix carries the embedded Test-Driven Bug Fix Methodology section", () => {
     expect(existsSync(SKILL_FILE)).toBe(true);
-    expect(/^name:\s*test-driven-bug-fix\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+    expect(/^## Test-Driven Bug Fix Methodology$/m.test(read(SKILL_FILE))).toBe(true);
   });
 
   test("pins write-a-failing-test-that-reproduces-the-bug-first ordering", () => {

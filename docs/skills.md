@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 40 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 28 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 36 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 24 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -46,8 +46,8 @@ catalog into two flavors:
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
 standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 28 methodology =
-40**.
+split is **11 pipeline entry-point + 1 standalone utility + 24 methodology =
+36**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -191,8 +191,10 @@ argument shape.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` — optional; resolves via the
   shared three-tier chain above.
 - **Phase:** PR (the pipeline's final phase).
-- **Key behaviors:** Loads `git-commit` for commit discipline and
-  `changelog` for the changelog update; adds a PR body from its template.
+- **Key behaviors:** Carries the commit-discipline methodology inline (its
+  `## Commit Message Conventions` section — conventional commits, the 50/72
+  rule, atomic commits) and loads `changelog` for the changelog update;
+  adds a PR body from its template.
   Leaves the worktree in place after opening the PR so you can iterate;
   teardown waits until the PR merges or you ask.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
@@ -205,8 +207,9 @@ argument shape.
 - **`$ARGUMENTS`:** `<ticket id, issue URL, or bug description>`.
 - **Phase:** Standalone fix flow (not a QRSPI phase). Runs the compressed
   pipeline `REPRODUCE → RED → GREEN → VERIFY → SHIP`.
-- **Key behaviors:** Loads `test-driven-bug-fix` for reproduce-first,
-  red-green discipline — a failing test that reproduces the bug, then the
+- **Key behaviors:** Carries the test-driven bug-fix methodology inline
+  (its `## Test-Driven Bug Fix Methodology` section) — reproduce-first,
+  red-green discipline: a failing test that reproduces the bug, then the
   fix that turns it green.
 
 ### eng-design-doc-review
@@ -218,10 +221,13 @@ argument shape.
 - **Phase:** Optional pre-gate audit (sits before the Design gate).
 - **Key behaviors:** Dispatches a `general-purpose` subagent (not the
   `design-author` agent) so the audit reads the design with fresh eyes.
-  That subagent loads four methodology skills as its review criteria —
-  `technical-design-doc`, `code-review`, `engineering-standards`, and
-  `documenting-decisions` — making this an additional consumer of all four.
-  Points the report's prose at the seventh-grade bar in `writing-prose`.
+  That subagent loads two methodology skills as its review criteria —
+  `code-review` and `engineering-standards` — making this an additional
+  consumer of both, and reads the skill's two bundled reference files
+  (`technical-design-doc.md` and `documenting-decisions.md`, which live in
+  `skills/eng-design-doc-review/` alongside the SKILL.md) for the TDD
+  section spec and the ADR-quality criteria. Points the report's prose at
+  the seventh-grade bar in `writing-prose`.
 
 ## Standalone utilities
 
@@ -251,7 +257,7 @@ phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 28 methodology skills carry no `argument-hint` and are never invoked
+The 24 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -388,13 +394,6 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Key behaviors:** Tests are written first and never edited to pass; the
   implementation must satisfy them as the contract.
 
-### test-driven-bug-fix
-
-- **Purpose:** Reproduce-first, red-green bug discipline.
-- **Loaded by:** team-fix.
-- **Key behaviors:** Write a failing test that reproduces the bug, then make
-  it green — no fix lands without a reproducing test.
-
 ### solid-principles
 
 - **Purpose:** The five object-oriented design principles.
@@ -475,36 +474,18 @@ replaces former inline body content 1:1, so it adds no net context (see
   findings, a claim about exploitability) to refute, with default-keep on
   anything short of a verified refutation.
 
-### documenting-decisions
-
-- **Purpose:** Creating and managing architecture decision records (ADRs).
-- **Loaded by:** planner, orchestrator (per the skill's own self-description;
-  no agent body carries an explicit `Load skills/documenting-decisions/SKILL.md`
-  instruction and no agent declares it via `skills:` frontmatter).
-- **Key behaviors:** Capture the decision, its alternatives, and its
-  rationale so later readers understand the "why". Points ADR authors at
-  the seventh-grade prose bar in `writing-prose`.
-
-### technical-design-doc
-
-- **Purpose:** Technical-design / architecture-doc methodology.
-- **Loaded by:** planner (per the skill's own self-description; the
-  `planner` agent body loads `engineering-standards` explicitly but does not
-  carry an explicit `Load skills/technical-design-doc/SKILL.md` instruction).
-- **Key behaviors:** Structures the design narrative — current state,
-  desired end state, patterns to follow, and trade-offs. Points design-doc
-  authors at the seventh-grade prose bar in `writing-prose`.
-
 ### product-requirements-doc
 
 - **Purpose:** Optional product-requirements-document methodology.
-- **Loaded by:** questioner (per the skill's own self-description; the
-  `questioner` agent body references `qrspi-workflow` for the artifact schema
-  but does not carry an explicit `Load
-  skills/product-requirements-doc/SKILL.md` instruction).
+- **Loaded by:** questioner (via `decomposing-intent`'s conditional load —
+  fired when the request is vague, multi-story, cross-cutting, or replaces
+  existing behavior) and design-author (via `authoring-designs`, when
+  `task.md` references a `prd.md`, per the skill's "Consuming a PRD
+  downstream" section).
 - **Key behaviors:** Frames the problem, users, and success criteria when a
-  request warrants a PRD before design. Points PRD authors at the
-  seventh-grade prose bar in `writing-prose`.
+  request warrants a PRD before design; the PRD lands at
+  `docs/plans/<id>/prd.md`, referenced from `task.md`. Points PRD authors
+  at the seventh-grade prose bar in `writing-prose`.
 
 ### product-thinking
 
@@ -537,15 +518,6 @@ replaces former inline body content 1:1, so it adds no net context (see
   libraries skip live testing), boot the application, verify routes and
   endpoints with real `curl` requests including error and edge cases, and
   always stop the server when done.
-
-### git-commit
-
-- **Purpose:** Commit discipline — conventional commits, the 50/72 subject
-  and body rule, and atomic commits.
-- **Loaded by:** team-pr.
-- **Key behaviors:** One logical change per commit with a clear, scoped
-  message. Points commit-body prose at the seventh-grade bar in
-  `writing-prose`.
 
 ### changelog
 
@@ -599,7 +571,6 @@ entry-point section above rather than repeating them here.
 | `planning-implementation` | planner | Plan |
 | `engineering-standards` | planner, implementer, code-reviewer | Plan, Implement |
 | `test-first-development` | test-architect, code-reviewer; orchestrator | Implement |
-| `test-driven-bug-fix` | team-fix | Bug-fix flow |
 | `solid-principles` | implementer, code-reviewer | Implement |
 | `refactoring-to-patterns` | implementer | Implement |
 | `implementing-slices` | implementer | Implement |
@@ -608,19 +579,17 @@ entry-point section above rather than repeating them here.
 | `systematic-debugging` | implementer (inline Load on non-obvious failures); other agents when debugging (advisory) | Implement; Any (debugging) |
 | `progress-tracking` | every multi-step agent (convention) | Any (multi-step procedure) |
 | `nested-agents` | researcher, implementer, code-reviewer, security-reviewer | Research, Implement (scouts + skeptic passes) |
-| `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
-| `technical-design-doc` | planner | Plan |
-| `product-requirements-doc` | questioner | Question |
+| `product-requirements-doc` | questioner (via `decomposing-intent`, conditional); design-author (via `authoring-designs`) | Question, Design |
 | `product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
 | `writing-prose` | technical-writer | Implement (verify) — bar for prose it writes and prose it assesses |
-| `git-commit` | team-pr | PR |
 | `changelog` | team, team-pr | PR |
 | `worktree-isolation` | orchestrator (team, team-worktree) | Worktree |
 
 The `general-purpose` subagent dispatched by `eng-design-doc-review` is an
-additional consumer of `technical-design-doc`, `code-review`,
-`engineering-standards`, and `documenting-decisions` — it loads all four as
-the criteria for the optional pre-Design audit.
+additional consumer of `code-review` and `engineering-standards` — it loads
+both as criteria for the optional pre-Design audit, alongside the skill's
+two bundled reference files (`technical-design-doc.md` and
+`documenting-decisions.md` in `skills/eng-design-doc-review/`).
 
 ## Name-collision pairs
 
@@ -639,7 +608,6 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 | `finding-files` | `file-finder` | Skill is the search strategy; the agent is the locator that executes it. |
 | `planning-implementation` | `planner` | Skill is the plan template and tactical rules; the agent is the engineer that writes the plan. |
 | `team-design` | `design-author` | Skill drives the Design phase; the agent drafts the alignment doc. |
-| `technical-design-doc` | `technical-writer` | Both contain "technical" but differ: the skill is design-doc methodology; the agent writes documentation during verify. |
 | `eng-design-doc-review` | `design-author` | The review skill dispatches a `general-purpose` subagent, **not** the `design-author` agent — keeping the audit independent of the author. |
 
 ## See also

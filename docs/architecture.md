@@ -443,7 +443,7 @@ cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. `code-review` is the only skill loaded as composed
 methodology that is also a user command.)
 
-For the full per-skill reference — all 40 skills, their arguments,
+For the full per-skill reference — all 36 skills, their arguments,
 consumers, and behaviors — see [skills.md](skills.md).
 
 ### Design Guidelines
@@ -456,13 +456,16 @@ consumers, and behaviors — see [skills.md](skills.md).
    procedure skill does not count toward the soft limit — it replaces
    former inline body content 1:1, so it adds no net context.
 
-2. **Extraction threshold:** Extract methodology to a separate skill
-   file when it forms a coherent, independently maintainable body of
-   knowledge — regardless of consumer count. Extraction is justified by
-   swappability, independent versioning, and file size (inlining would
-   meaningfully grow the consuming file). Do not require 2+ consumers
-   as a prerequisite. The threshold is about cohesion and
-   maintainability, not reuse count.
+2. **Extraction threshold:** A standalone skill must earn its
+   existence one of three ways: it has **2 or more consumers**, it is
+   an **agent's own procedure skill** (the thin-wrapper counterpart of
+   one agent), or it is an **entry point** (a slash command, whose
+   referencer is the user). Content referenced by exactly one other
+   skill lives inside that skill — inlined as a section, or as a
+   **bundled reference file** in the referencing skill's directory when
+   inlining would breach the 500-line cap. Cohesion alone does not
+   justify a standalone skill; a single-referencer skill is indirection
+   without reuse.
 
 ## 7. Hooks
 
@@ -659,7 +662,7 @@ children are confirmed, and the depth cap is stable.
 
 ## See also
 
-- **[Skills](skills.md)** — the full per-skill reference for all 40 skills.
+- **[Skills](skills.md)** — the full per-skill reference for all 36 skills.
 - **[Testing](testing.md)** — the six-layer test harness and which layer each check belongs at.
 - **[Vision](vision.md)** — the loop-driven end state this design builds toward.
 - **[Ethos](ethos.md)** — the principles behind the pipeline.

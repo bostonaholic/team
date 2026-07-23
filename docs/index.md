@@ -57,5 +57,5 @@ For a focused bug fix that skips the QRSPI ceremony:
 - **[Vision](vision.md)** — the loop-driven end state Team builds toward.
 - **[Ethos](ethos.md)** — the principles that make the autonomous middle trustworthy.
 - **[Architecture](architecture.md)** — full design, artifact frontmatter, phase-inference rules.
-- **[Skills](skills.md)** — all 40 skills, their arguments, consumers, and behaviors.
+- **[Skills](skills.md)** — all 36 skills, their arguments, consumers, and behaviors.
 - **[GitHub repository](https://github.com/bostonaholic/team)** — source, agents, skills.

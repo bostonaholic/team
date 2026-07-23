@@ -1,10 +1,17 @@
----
-name: technical-design-doc
-description: Technical design document methodology — loaded by the planner agent when producing implementation plans for features that warrant architecture documentation, trade-off analysis, and rollout planning
-user-invocable: false
----
-
 # Technical Design Document
+
+Bundled reference for the eng-design-doc-review skill: the spec a
+TDD/design doc must satisfy.
+
+Contents:
+
+- [When to Write a TDD](#when-to-write-a-tdd)
+- [TDD Structure](#tdd-structure) — Problem Statement, Goals and Non-Goals,
+  Background, Design (Data Model, API / Interface, Key Components,
+  Sequence / Flow, Edge Cases and Failure Modes), Trade-offs Considered,
+  Rollout Plan, Open Questions
+- [When the Planner Should Use This Methodology](#when-the-planner-should-use-this-methodology)
+- [Integration With the Standard Plan Format](#integration-with-the-standard-plan-format)
 
 A technical design document (TDD) captures the architecture, trade-offs, and
 rollout plan for a significant feature before implementation begins. Not every
@@ -12,7 +19,7 @@ feature needs a full TDD — apply this methodology when a feature is complex
 enough that undocumented architectural decisions would slow or block
 implementation.
 
-Write the prose this skill governs at a seventh-grade reading
+Write the prose this methodology governs at a seventh-grade reading
 level — short sentences, common words, no unexplained jargon. Full
 methodology: `skills/writing-prose/SKILL.md`.
 
