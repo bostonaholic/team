@@ -139,7 +139,7 @@ describe("thin agents: frontmatter skills preloads per agent", () => {
     planner: ["planning-implementation", "progress-tracking"],
     questioner: ["agent-open-questions", "decomposing-intent", "product-thinking", "progress-tracking"],
     researcher: ["nested-agents", "progress-tracking", "researching-codebases"],
-    "security-reviewer": ["code-review", "conventional-comments", "nested-agents", "progress-tracking"],
+    "security-reviewer": ["code-review", "conventional-comments", "nested-agents", "progress-tracking", "reviewing-security"],
     "structure-planner": ["product-thinking", "progress-tracking", "slicing-work"],
     "technical-writer": ["code-review", "conventional-comments", "progress-tracking", "writing-prose"],
     "test-architect": ["progress-tracking", "test-first-development"],
@@ -173,10 +173,15 @@ describe("thin agents: fold targets absorbed the moved methodology", () => {
     expect(readOrEmpty(skillPath("test-first-development"))).toContain("| Deterministic inputs |");
   });
 
-  test("code-review absorbs the security-reviewer severity methodology and stays under 500 lines", () => {
-    const content = readOrEmpty(skillPath("code-review"));
-    expect(content).toContain("OWASP");
-    expect(lineCount(content)).toBeLessThan(500);
+  test("reviewing-security carries the security methodology; code-review keeps the pointer and stays under 500 lines", () => {
+    // The security-reviewer methodology folded into code-review during the
+    // thin-agents refactor, then moved to its own just-in-time skill.
+    const reviewingSecurity = readOrEmpty(skillPath("reviewing-security"));
+    expect(reviewingSecurity).toContain("OWASP");
+    expect(reviewingSecurity).toContain("CRITICAL — Hard Gate");
+    const codeReview = readOrEmpty(skillPath("code-review"));
+    expect(codeReview).toContain("reviewing-security/SKILL.md");
+    expect(lineCount(codeReview)).toBeLessThan(500);
   });
 
   test("code-review absorbs the code-reviewer inspection checklist (off-by-one)", () => {
@@ -247,34 +252,34 @@ describe("thin agents: haiku skills are self-contained", () => {
   }
 });
 
-describe("thin agents: documentation counts agree at 42 skills", () => {
+describe("thin agents: documentation counts agree at 43 skills", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
 
-  test("skills/ holds exactly 42 SKILL.md files", () => {
+  test("skills/ holds exactly 43 SKILL.md files", () => {
     const count = readdirSync(join(REPO_ROOT, "skills")).filter((name) =>
       existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")),
     ).length;
-    expect(count).toBe(42);
+    expect(count).toBe(43);
   });
 
-  test("AGENTS.md heading reads Skills (42)", () => {
-    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (42)");
+  test("AGENTS.md heading reads Skills (43)", () => {
+    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (43)");
   });
 
-  test("docs/skills.md description counts 42 skills", () => {
-    expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain("42 skills");
+  test("docs/skills.md description counts 43 skills", () => {
+    expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain("43 skills");
   });
 
-  test("docs/skills.md split sentence sums to 42", () => {
+  test("docs/skills.md split sentence sums to 43", () => {
     expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain(
-      "11 pipeline entry-point + 1 standalone utility + 30 methodology = 42",
+      "11 pipeline entry-point + 1 standalone utility + 31 methodology = 43",
     );
   });
 
-  test("docs/architecture.md counts all 42 skills and no stale 31", () => {
+  test("docs/architecture.md counts all 43 skills and no stale 31", () => {
     const content = read(ARCHITECTURE_MD);
-    expect(content).toContain("all 42 skills");
+    expect(content).toContain("all 43 skills");
     expect(content).not.toContain("31 skills");
   });
 

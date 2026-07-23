@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 42 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 30 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 43 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 31 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -46,8 +46,8 @@ catalog into two flavors:
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
 standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 30 methodology =
-42**.
+split is **11 pipeline entry-point + 1 standalone utility + 31 methodology =
+43**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -251,7 +251,7 @@ phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 30 methodology skills carry no `argument-hint` and are never invoked
+The 31 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -365,11 +365,10 @@ replaces former inline body content 1:1, so it adds no net context (see
   severity regime: ticket/plan references and TODO/FIXME comments in code
   comments block on first occurrence, while what-restating comments,
   wordy comments, and commented-out code escalate from `suggestion:` to
-  `issue:` when repeated across the diff. Also carries the per-reviewer
-  procedures: the Code Reviewer inspection process (done-criteria
-  verification and the per-file inspection checklist) and the Security
-  Reviewer process (attack surface, OWASP Top 10 checks) with its
-  CRITICAL/HIGH/MEDIUM/LOW severity classification.
+  `issue:` when repeated across the diff. Also carries the Code Reviewer
+  inspection process (done-criteria verification and the per-file
+  inspection checklist); the security review methodology lives in
+  `reviewing-security`.
 
 ### conventional-comments
 
@@ -381,6 +380,18 @@ replaces former inline body content 1:1, so it adds no net context (see
   code-directed comment style (critique the code, not the coder), and the
   three comment types — `issue`, `suggestion`, `nitpick` — with literal
   examples. Every comment includes a specific `file:line` reference.
+
+### reviewing-security
+
+- **Purpose:** Security review methodology and the severity ladder.
+- **Loaded by:** security-reviewer.
+- **Key behaviors:** Carries the Security Reviewer process —
+  attack-surface identification, OWASP Top 10 checks, the additional
+  vulnerability checks (hardcoded secrets, command injection, path
+  traversal, unsafe regex, missing input validation), and the
+  search-beyond-the-diff rule — plus the CRITICAL/HIGH/MEDIUM/LOW
+  severity classification ladder (CRITICAL and HIGH are hard gates).
+  The PASS/FAIL verdict rule stays in `code-review`.
 
 ### review-severity-tiers
 
@@ -625,6 +636,7 @@ entry-point section above rather than repeating them here.
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
 | `conventional-comments` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) — finding format |
 | `review-severity-tiers` | orchestrator (team, team-implement, qrspi-workflow) | Implement (aggregate review gate) |
+| `reviewing-security` | security-reviewer | Implement (verify) |
 | `decomposing-intent` | questioner | Question |
 | `authoring-designs` | design-author | Design |
 | `researching-codebases` | researcher | Research |
@@ -666,6 +678,7 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 |---|---|---|
 | `team-research` | `researcher` | Skill dispatches the Research phase; the agent is the doer that runs the research. |
 | `code-review` | `code-reviewer` | Skill is the review methodology; the agent is the reviewer that applies it. |
+| `reviewing-security` | `security-reviewer` | Skill is the security review methodology and severity ladder; the agent is the reviewer that applies it. |
 | `team-question` | `questioner` | Skill drives the Question phase; the agent decomposes the intent. |
 | `implementing-slices` | `implementer` | Skill is the slice-execution procedure; the agent is the specialist that executes it. |
 | `verifying-ux` | `ux-reviewer` | Skill is the live-verification procedure; the agent is the tester that runs it. |
