@@ -218,7 +218,9 @@ When the `design-author` returns a draft:
    reviewer's findings verbatim. The new draft increments
    `revision: <n+1>` in its frontmatter, then a fresh review round runs.
    Cap at `revision: 5`; at cap, halt terminally and report the
-   unresolved findings — no PR.
+   unresolved findings — no PR. The halt message names the absolute
+   worktree-rooted `docs/plans/<id>/` path, so the human can open
+   `design.md` and the `design-review-<n>.md` records directly.
 6. On an **unparseable verdict or a reviewer crash** → re-dispatch the
    review once with the error; on second failure, halt loudly. Never
    advance on a missing verdict — fail closed.
@@ -294,7 +296,9 @@ returned:
    Blocking or Major finding is open — loop automatically (the no-consult
    rule).
 4. If at cap → **terminal halt**: report every unresolved finding with
-   its severity tier. No PR is opened, no consultation happens — the run
+   its severity tier, naming the absolute worktree-rooted
+   `docs/plans/<id>/` artifact path so the human can inspect the run's
+   record directly. No PR is opened, no consultation happens — the run
    ends there.
 5. Once Blocking and Major are clean → record any **Minor-and-below**
    findings for the PR body's `## Review notes` section, tagged by
@@ -330,7 +334,8 @@ When the aggregate gate passes:
    draft and move it to in-review only once the PR is marked ready for
    review, and never close the ticket by hand — the link auto-closes it
    on merge. Best-effort; never block the pipeline. Surface the
-   `ticketId` in the completion report.
+   `ticketId` in the completion report, alongside the draft PR URL and
+   the absolute worktree-rooted `docs/plans/<id>/` artifact path.
 5. Mark all TodoWrite items complete.
 6. **Leave the worktree(s) in place.** Do not remove a worktree when a
    PR is opened — the user may need to iterate on the branch (push

@@ -172,7 +172,10 @@ argument shape.
 - **Key behaviors:** Creates the branch and home worktree first, then
   authors `docs/plans/<id>/` inside it so implementation — and every prior
   phase's artifacts — never touch the main checkout. Loads
-  `worktree-isolation` for the single- and multi-repo topology.
+  `worktree-isolation` for the single- and multi-repo topology. The
+  confirm dialog fires only on standalone invocation — a full `/team` run
+  creates worktrees without pausing — and multi-repo creation refuses any
+  repo path outside the home repo's sibling set (realpath containment).
 
 ### team-implement
 
@@ -223,7 +226,8 @@ argument shape.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` — optional; resolves via the
   shared three-tier chain above.
 - **Phase:** Design (review-gate brief) + standalone audit.
-- **Key behaviors:** Dispatches a `general-purpose` subagent (not the
+- **Key behaviors:** Dispatches the built-in read-only `Explore` subagent
+  (not the
   `design-author` agent) so the audit reads the design with fresh eyes.
   That subagent loads four methodology skills as its review criteria —
   `technical-design-doc`, `code-review`, `engineering-standards`, and

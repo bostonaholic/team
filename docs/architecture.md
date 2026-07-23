@@ -175,7 +175,8 @@ dispatch (the main session does not `cd`).
 `<repo>/.claude/worktrees/<id>`.
 
 **Multi-repo:** `repos.md` is written autonomously by the questioner at
-QUESTION (one phase after WORKTREE), so only the home
+QUESTION, one phase after WORKTREE (or by the design-author at DESIGN
+when the questioner missed the multi-repo signals), so only the home
 worktree is created here. Secondary worktrees are created **after the
 design review**, one per listed repo — each repo path passing the
 containment check (realpath a direct child of the home repo's parent
@@ -476,7 +477,7 @@ cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. `code-review` is the only skill loaded as composed
 methodology that is also a user command.)
 
-For the full per-skill reference — all 47 skills, their arguments,
+For the full per-skill reference — all 46 skills, their arguments,
 consumers, and behaviors — see [skills.md](skills.md).
 
 ### Design Guidelines
@@ -694,7 +695,7 @@ children are confirmed, and the depth cap is stable.
 
 ## See also
 
-- **[Skills](skills.md)** — the full per-skill reference for all 47 skills.
+- **[Skills](skills.md)** — the full per-skill reference for all 46 skills.
 - **[Testing](testing.md)** — the six-layer test harness and which layer each check belongs at.
 - **[Vision](vision.md)** — the loop-driven end state this design builds toward.
 - **[Ethos](ethos.md)** — the principles behind the pipeline.
