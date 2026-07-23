@@ -351,11 +351,12 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Key behaviors:** Carries the gate-type table (HARD / AUTO-FIX /
   ADVISORY per reviewer) and the authoritative severity-tier table
   (Blocking / Major / Minor-and-below) that maps every reviewer
-  vocabulary onto one scale, plus the consult guard — the rule that the
-  orchestrator never surfaces a Blocking or Major finding to the user and
-  loops the implementer automatically until only Minor-and-below remains,
-  capped at 5 rounds. Classifies `ux-reviewer` REQUEST CHANGES as an
-  auto-fixed Major.
+  vocabulary onto one scale, plus the no-consult rule — findings are
+  never presented mid-run: the orchestrator loops the implementer
+  automatically on Blocking/Major and defers Minor-and-below to the PR
+  body's `## Review notes`, capped at 5 rounds (at the cap, terminal
+  halt). Classifies `ux-reviewer` REQUEST CHANGES as an auto-fixed
+  Major.
 
 ### engineering-standards
 

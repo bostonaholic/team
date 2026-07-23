@@ -227,8 +227,8 @@ End with a verdict, using the same gate type as `code-reviewer`:
   change to its headings, process, or verdict set as a pipeline change.
 - This skill is **read-only, structurally for writes**. The `Explore`
   subagent holds no Write/Edit tools, so it cannot modify `design.md`,
-  the artifact directory, or any verdict record. Its remaining tools
-  (e.g. Bash) are governed by the brief's read-only instruction — that
+  the artifact directory, or any verdict record. Any residual tools
+  are governed by the brief's read-only instruction — that
   residual is accepted: the reviewer's output never becomes state on
   its own — the *orchestrator*
   records the verdict to `design-review-<n>.md` when the pipeline gate

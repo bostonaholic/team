@@ -108,7 +108,7 @@ Per-phase additions:
 |-----------|-------------------------------------------------------------------------|
 | task      | `ticketId: <id>` (or `null`)                                            |
 | questions | (none)                                                                  |
-| prd       | (none — not human-gated; written conditionally by the questioner)      |
+| prd       | (none — not gated; written conditionally by the questioner)            |
 | repos     | (none — written conditionally in multi-repo mode)                       |
 | research  | (none)                                                                  |
 | design    | `revision: 0`                                                           |

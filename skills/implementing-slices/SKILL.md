@@ -1,12 +1,12 @@
 ---
 name: implementing-slices
-description: Slice-by-slice execution procedure for the implementer agent — dispatch modes (initial and review-fix), the slice-execution loop, TDD discipline, blocker handling, and the scope fence. Loaded when an approved implementation plan is executed or a hard-gate review failure needs fixing.
+description: Slice-by-slice execution procedure for the implementer agent — dispatch modes (initial and review-fix), the slice-execution loop, TDD discipline, blocker handling, and the scope fence. Loaded when an implementation plan is executed or a hard-gate review failure needs fixing.
 user-invocable: false
 ---
 
 # Implementing Slices
 
-The implementer's execution procedure: consume the approved plan, execute
+The implementer's execution procedure: consume the plan, execute
 one vertical slice at a time, and commit each slice atomically the moment
 its tests pass.
 
@@ -17,7 +17,7 @@ The orchestrator dispatches you with the artifact directory
 
 ### Initial dispatch (after the test-architect's failing tests are confirmed)
 
-1. **Read the approved plan** at `docs/plans/<id>/plan.md` to understand the
+1. **Read the plan** at `docs/plans/<id>/plan.md` to understand the
    slice list, file-level steps, and per-slice tests.
 2. **Read the structure** at `docs/plans/<id>/structure.md` to
    understand the order and verification checkpoints.

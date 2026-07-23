@@ -68,7 +68,7 @@ from `task.md`. The full criteria live in that skill's "When to Write a
 PRD" section; for simple, well-scoped requests, skip the PRD.
 
 Required frontmatter for `prd.md` (the PRD rides the autonomous Question
-phase — it is not human-gated, so it carries no `approved` or `revision`
+phase — it is not gated, so it carries no `approved` or `revision`
 fields):
 
 ```yaml
@@ -146,53 +146,32 @@ Watch for these signals in the description:
 - The user references repos by absolute paths or by names that do not
   exist as subdirectories of the current repo (run `ls` to confirm).
 
-If you suspect multi-repo, surface the question via the
-agent-open-questions envelope before writing any artifacts, per the
-protocol in `skills/agent-open-questions/SKILL.md`.
+If you suspect multi-repo, resolve the scope **autonomously** — never
+pause to ask. First **validate every candidate `<name>` against a
+strict allowlist**: the name must match `^[A-Za-z0-9._-]+$` and must
+not be exactly `.` or `..`. Anything else — path separators, absolute
+paths, traversal sequences, shell metacharacters such as `$()` or
+backticks — fails the allowlist and is unresolvable. When you run a
+command on a candidate, pass the name/path to the tool as a single
+argument (argv), never interpolated into a shell string. Then resolve
+each surviving candidate to a local path by checking the sibling
+directories of the home repo root: a repo named `<name>` is expected at
+`<root>/../<name>`. Confirm each candidate path is a git working tree
+with `git -C <path> rev-parse --git-dir`, and require its real path to
+be a **direct child of the home repo's parent directory**:
+`realpath "<root>/../<name>"` must equal
+`"$(dirname "$(realpath "<root>")")/<name>"`. A path that resolves
+anywhere else (e.g. through a symlink) is unresolvable.
 
-The envelope shape (single label-only question with header `Repos` and
-two options):
-
-```json
-{
-  "openQuestions": [
-    {
-      "question": "Does this topic span more than one repository?",
-      "header": "Repos",
-      "options": [
-        { "label": "Single repo (Recommended if unsure)", "description": "The work happens entirely in the current repo." },
-        { "label": "Multi-repo",                          "description": "The work spans the current repo and one or more others. If you pick this, the orchestrator will follow up with a plain-text question asking for each additional repo's slug and absolute path." }
-      ]
-    }
-  ]
-}
-```
-
-This is the **canonical worked example of the free-text escape hatch**
-documented in `skills/agent-open-questions/SKILL.md`: because the
-multi-choice prompt tool returns only the chosen `label` and not a
-free-text field, the **Multi-repo** option's `description` declares
-that the orchestrator will follow up with a plain-text question for
-repo paths and slugs.
-
-Path-and-slug collection is an **orchestrator responsibility**, not
-yours. If the user picks **Multi-repo**, the orchestrator asks a
-plain-text follow-up requesting one entry per line in the format
-`<slug>: <absolute-path>`, validates each path with `git -C <path>
-rev-parse --git-dir`, and `SendMessage`s the validated list (or any
-validation errors) back to you as the resume payload.
-
-On resume:
-
-- If the orchestrator returns **Single repo**, proceed in single-repo
-  mode and do not write `repos.md`.
-- If the orchestrator returns **Multi-repo** with a validated list of
-  `<slug>: <absolute-path>` pairs, write `repos.md` from that list per
-  the schema in `skills/artifact-frontmatter/SKILL.md`.
-- If the orchestrator returns validation errors instead, either
-  re-emit the envelope (e.g. ask the user to confirm Single vs Multi
-  again) or follow your existing error-handling guidance to surface the
-  blocker.
+- **Every candidate resolves** → write `repos.md` from the resolved
+  `<slug>: <absolute-path>` list per the schema in
+  `skills/artifact-frontmatter/SKILL.md`.
+- **Any candidate is unresolvable** (fails the allowlist, has no
+  sibling directory, is not a git working tree, or resolves outside the
+  home repo's parent directory) → proceed in single-repo mode, do not
+  write `repos.md`, and record the omission as an explicit assumption
+  in `task.md`'s `## Open assumptions` (name the repo you could not
+  resolve so the miss is auditable at PR review).
 
 ### Writing `repos.md`
 
@@ -216,18 +195,19 @@ job during the WORKTREE phase.
 
 ### Don't infer multi-repo
 
-If the description does not name additional repos and the user does not
-confirm them, stay in single-repo mode. Inventing extra repos would
-expand scope without consent. When in doubt, ask.
+If the description does not name additional repos, stay in single-repo
+mode. Inventing extra repos would expand scope without consent. When in
+doubt, stay single-repo and record the assumption in `task.md`.
 
 ## Process
 
 1. Read the user's description carefully. If it references existing code
    (file names, modules, error messages), grep/glob to confirm those exist.
 2. **Decide repo scope.** Look for the multi-repo signals above. If
-   present, surface the question via the agent-open-questions envelope
-   (the orchestrator will render it and, on **Multi-repo**, follow up
-   with a plain-text question for the additional repo paths).
+   present, resolve each candidate repo via the allowlist +
+   sibling-directory check and write `repos.md` when every candidate
+   resolves; otherwise stay single-repo and record the assumption in
+   `task.md`.
 3. Decide the topic slug (kebab-case, ~3 words).
 4. Identify the codebase scope: which directories or modules — and in
    multi-repo mode, which repos — will research touch? Confirm by

@@ -122,7 +122,7 @@ discipline:
 - `repos.md` (when present) switches the pipeline into multi-repo mode;
   its absence keeps single-repo mode — today's default.
 - `prd.md` (when present) rides the autonomous Question phase and is
-  not human-gated.
+  not gated.
 
 ## Research Isolation
 
