@@ -106,7 +106,8 @@ loop:
      - AGGREGATE (5 reviewers): dispatch in parallel, collect results,
        sort findings into severity tiers; auto-loop on any Blocking or
        Major finding (never consulting the user), tracking the round count
-       in TodoWrite, capped at 5 rounds; consult only on Minor-and-below.
+       in TodoWrite, capped at 5 rounds (at cap, terminal halt); record
+       Minor-and-below for the PR body's `## Review notes`.
   7. Update TodoWrite — mark current phase `completed` and the next one
      `in_progress`.
   8. Goto loop.
@@ -270,9 +271,12 @@ returned:
    implementer to fix, passing the typed failure class(es). After fixes, all
    5 reviewers re-run from scratch. **Never** stop to consult the user while a
    Blocking or Major finding is open — loop automatically (the consult guard).
-4. If at cap → escalate to the user with all unresolved findings.
-5. Once Blocking and Major are clean → if any **Minor-and-below** findings
-   remain, present them to the user, who decides; otherwise advance
+4. If at cap → **terminal halt**: report every unresolved finding with
+   its severity tier. No PR is opened, no consultation happens — the run
+   ends there.
+5. Once Blocking and Major are clean → record any **Minor-and-below**
+   findings for the PR body's `## Review notes` section, tagged by
+   source reviewer — never present them mid-run — and advance
    to PR **in the same turn** — do not summarize and end the turn. The
    run is complete only when the draft PR URL is reported.
 
@@ -334,9 +338,7 @@ When the aggregate gate passes:
 - There are **no mid-run human gates**. The design is gated by an
   adversarial design review; never present the structure or plan for
   approval. The structure and plan are autonomous tactical artifacts.
-- The phase loop pauses for the user only at (a) aggregate-cap
-  escalation and (b) Minor-findings
-  consultation. Everywhere else, advance phases
+- The phase loop never pauses mid-run. Advance phases
   within the same turn. In particular, IMPLEMENT → PR is not a stopping
   point — a turn that ends with review verdicts but no draft PR URL is
   a defect.

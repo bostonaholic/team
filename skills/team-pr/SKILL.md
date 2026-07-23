@@ -104,7 +104,7 @@ done
    In multi-repo mode, update each repo's `CHANGELOG.md` with the
    entries belonging to that repo's commits.
 6. **Open a draft PR automatically — do not stop to ask.** The PR phase
-   is not a human gate; opening the PR requires no approval. Push the
+   never waits for approval; opening the PR requires no approval. Push the
    branch and open the PR as a **draft** (`gh pr create --draft`). Pass
    the body to `gh pr create`/`gh pr edit` via `--body-file` or a quoted
    heredoc — never interpolated into a double-quoted shell argument. Any
@@ -166,12 +166,24 @@ done
 - [ ] [Automated verification command]
 - [ ] [Manual verification step]
 
+## Review notes
+[Conditional — deferred findings for the human's PR review; see below]
+
 ## References
 - Design: $ARGUMENTS/design.md
 - Plan:   $ARGUMENTS/plan.md
 
 Closes #<n>
 ```
+
+**`## Review notes` (conditional):** this section carries the findings
+deferred to the human's PR review — (a) every Minor-and-below finding
+from the final aggregate review round, tagged by source reviewer (e.g.
+`[code-reviewer]`, `[security-reviewer]`); (b) COMMENT findings from the
+latest `design-review-<n>.md`, tagged `design-review-<n>`; and (c) the
+loud unresolved-repo omission note from `design.md` `## Risks` (or
+`task.md`) when present. **Omit the section entirely when empty — never
+emit a bare heading.**
 
 The `Closes` line is a standalone footer — no heading — rendered as the
 final line of the PR body. Whether it renders at all (it is conditional
