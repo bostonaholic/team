@@ -143,7 +143,7 @@ describe("thin agents: frontmatter skills preloads per agent", () => {
     "structure-planner": ["product-thinking", "progress-tracking", "slicing-work"],
     "technical-writer": ["code-review", "conventional-comments", "progress-tracking", "reviewing-documentation", "writing-prose"],
     "test-architect": ["progress-tracking", "test-first-development"],
-    "ux-reviewer": ["code-review", "conventional-comments", "progress-tracking", "verifying-ux"],
+    "ux-reviewer": ["code-review", "progress-tracking", "verifying-ux"],
     verifier: ["progress-tracking", "running-quality-checks"],
   };
 

@@ -11,7 +11,7 @@ These rules govern every acceptance test written under
 hold changed test files to. Each rule catches a different class of
 test-suite decay.
 
-### Test behavior, not implementation
+## Test behavior, not implementation
 
 Tests assert externally observable outcomes. A refactor that preserves
 behavior must leave every acceptance test green. Tests that break on
@@ -26,7 +26,7 @@ refactor without proving the system works.
 - Interaction tests verify state-changing calls only; never assert on
   query-only calls.
 
-### Tests are DAMP, not DRY
+## Tests are DAMP, not DRY
 
 Test code is read far more than it is run. Inline the setup a reader needs to
 understand a failing test. Tolerate duplication; favor a linear
@@ -39,7 +39,7 @@ arrange-act-assert story.
 - Extract helpers only when the same setup appears across many tests AND the
   helper does not hide assertion-relevant inputs.
 
-### Narrow assertions
+## Narrow assertions
 
 Assert on the specific field the test cares about (`account.balance == 2000`),
 not full equality on a complex object. Reserve full-snapshot assertions for
@@ -50,7 +50,7 @@ Use subset matchers when available (`comparingExpectedFieldsOnly`,
 signal that the test toolkit is missing a matcher — propose one rather than
 blaming the test author.
 
-### Test failures must be actionable
+## Test failures must be actionable
 
 A failing test must be diagnosable from name + assertion output alone,
 without rerunning.
@@ -62,13 +62,13 @@ without rerunning.
 - Test names describe behavior, not method: `sendsEmailWhenBalanceIsLow`, not
   `testProcessTransaction_1`.
 
-### Wait for the condition; never sleep
+## Wait for the condition; never sleep
 
 Replace every fixed `sleep(N)` with a wait-for-condition primitive (exist,
 not-exist, wait-to-exist with timeout + interval). A fixed sleep both masks
 race-condition bugs and pads runtime when the system is fast.
 
-### Assert outcomes, not interleavings
+## Assert outcomes, not interleavings
 
 A test whose result depends on thread or promise scheduling passes only
 when the scheduler cooperates. Accept every valid interleaving, or make
@@ -82,7 +82,7 @@ the interleaving deterministic.
   (`CountDownLatch`, chained promises) instead of relying on scheduler
   luck.
 
-### Control the clock
+## Control the clock
 
 Never read the real wall clock in a test — inject or freeze it
 (`vi.setSystemTime`, fake timers, `Clock.fixed`, `freezegun`). Each
@@ -118,7 +118,7 @@ const token = issueToken({ now, ttlDays: 30 });
 expect(isValid(token, now)).toBe(true);
 ```
 
-### Seed all randomness
+## Seed all randomness
 
 An unseeded RNG feeding an assertion is a defect, not a convenience —
 generated data can collide with the asserted value.
@@ -129,7 +129,7 @@ generated data can collide with the asserted value.
 - Better: explicit fixed inputs. `createUser({ name: "Bob" })` cannot
   collide; `createUser({ name: faker.person.firstName() })` can.
 
-### Tests own their state — any order, any host
+## Tests own their state — any order, any host
 
 A test builds its own preconditions and tears down what it creates. A test
 that passes only in a specific order, or only after another test has run,
@@ -142,7 +142,7 @@ is order-dependent — a leading flakiness cause.
 - Never assert on state a different test produced. The suite must pass in
   any order and on any host.
 
-### Impose order before asserting it
+## Impose order before asserting it
 
 Hash map/set iteration, `os.listdir`, and queries without `ORDER BY` have
 no defined order — a positional assertion on them is platform-dependent
@@ -154,7 +154,7 @@ luck.
   matchers.
 - Never compare an ordered structure against a set-backed result.
 
-### Hermetic boundaries
+## Hermetic boundaries
 
 The test must not depend on anything outside the process it controls.
 
@@ -171,7 +171,7 @@ The test must not depend on anything outside the process it controls.
 - No exact float equality — `toBeCloseTo(0.3)`, not `toBe(0.1 + 0.2)`;
   compare with a tolerance.
 
-### Fidelity ladder: real > fake > mock
+## Fidelity ladder: real > fake > mock
 
 When a test needs a collaborator, prefer in this order:
 
@@ -184,26 +184,26 @@ When a test needs a collaborator, prefer in this order:
 Default-to-mocking collapses fidelity and produces mock chains that mirror
 production graphs without surfacing real bugs.
 
-### Don't mock types you don't own
+## Don't mock types you don't own
 
 If a vendor type needs to be substituted, wrap it behind your own interface
 and mock the wrapper. Upstream API changes then ripple through one boundary
 instead of through every test.
 
-### E2E reserved for critical user journeys
+## E2E reserved for critical user journeys
 
 End-to-end tests are expensive — budget about one engineer-week per quarter
 per E2E test to keep stable. Reserve them for a small list of user
 goal-plus-task workflows. Do not chase exhaustive E2E coverage.
 
-### Test workflows, not just features
+## Test workflows, not just features
 
 Features ship into a system; bugs live at the seams. When the design
 introduces a feature whose behavior overlaps an existing one, the
 acceptance-test list must include at least one cross-feature interaction
 test.
 
-### Audit checklist
+## Audit checklist
 
 Before confirming failures, audit each test against this bar. Every "NO" is
 an issue to fix. The rules above spell each check out in full; the bar below

@@ -9,7 +9,6 @@ permissionMode: plan
 skills:
   - progress-tracking
   - code-review
-  - conventional-comments
   - verifying-ux
 ---
 
@@ -25,12 +24,12 @@ be surfaced.
 ## Review methodology
 
 Load `skills/code-review/SKILL.md` (preloaded) for generator-evaluator
-separation (fresh context, no shared history) and verdict aggregation rules.
-This agent's REQUEST CHANGES findings auto-fix in the loop (a *major*); the
-tier map lives in `skills/review-severity-tiers/SKILL.md`, which the
-orchestrator applies. Use the Working/Broken/Could Improve
-report format defined below — not Conventional Comments, which does not fit
-live verification output.
+separation (fresh context, no shared history). This agent's REQUEST CHANGES
+findings auto-fix in the loop (a *major*); the severity and
+verdict-aggregation tier map lives in
+`skills/review-severity-tiers/SKILL.md`, which the orchestrator applies.
+Use the Working/Broken/Could Improve report format defined below — not
+Conventional Comments, which does not fit live verification output.
 
 Your verification procedure — project-type detection (UI, API-only, or
 library), the UI and API verification steps, and the cleanup rules (always

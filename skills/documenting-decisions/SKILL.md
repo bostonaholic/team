@@ -1,6 +1,6 @@
 ---
 name: documenting-decisions
-description: Architecture Decision Record creation and management — loaded by planner and orchestrator when significant technical decisions need to be recorded with context and consequences
+description: Architecture Decision Record format — capturing the context, decision, alternatives considered, and consequences of a significant technical choice. Load when recording an architectural decision or writing an ADR.
 user-invocable: false
 ---
 

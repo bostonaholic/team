@@ -387,9 +387,10 @@ replaces former inline body content 1:1, so it adds no net context (see
 ### conventional-comments
 
 - **Purpose:** The Conventional Comments format for review findings.
-- **Loaded by:** code-reviewer, security-reviewer, ux-reviewer,
-  technical-writer (4); the `eng-design-doc-review` subagent loads it for
-  its findings.
+- **Loaded by:** code-reviewer, security-reviewer, technical-writer (3);
+  the `eng-design-doc-review` subagent loads it for its findings. The
+  `ux-reviewer` does not preload it — its Working/Broken/Could Improve
+  report is not Conventional Comments.
 - **Key behaviors:** Carries the label and decoration syntax, the
   code-directed comment style (critique the code, not the coder), and the
   three comment types — `issue`, `suggestion`, `nitpick` — with literal
@@ -695,7 +696,7 @@ entry-point section above rather than repeating them here.
 | `artifact-frontmatter` | orchestrator skills; artifact authors (just-in-time via pointers) | All phases — artifact schema |
 | `agent-open-questions` | questioner, design-author | Question, Design (subagent → user via orchestrator) |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
-| `conventional-comments` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) — finding format |
+| `conventional-comments` | code-reviewer, security-reviewer, technical-writer | Implement (verify) — finding format |
 | `review-severity-tiers` | orchestrator (team, team-implement, qrspi-workflow) | Implement (aggregate review gate) |
 | `reviewing-security` | security-reviewer | Implement (verify) |
 | `decomposing-intent` | questioner | Question |

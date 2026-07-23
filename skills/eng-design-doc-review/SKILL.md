@@ -117,14 +117,15 @@ four methodology skills before you begin — they are your review criteria:
 - **technical-design-doc** — the spec a TDD/design doc must satisfy. Use it
   as a literal checklist against the artifact under review.
 - **code-review** — generator-evaluator separation and verdict criteria.
-  The same review discipline applies to prose artifacts as to code. Its
-  findings use the format in the `conventional-comments` skill — load that
-  too when you write your findings.
+  The same review discipline applies to prose artifacts as to code.
 - **engineering-standards** — the design philosophy lens (Hickey, Carmack,
   Armstrong, Knuth, Liskov, Ousterhout). Use the "When Reviewing" section as
   severity guidance.
 - **documenting-decisions** — ADR-quality criteria for evaluating how well
   each decision in the doc captures context, alternatives, and consequences.
+
+When you write your findings, also load the `conventional-comments` skill —
+it defines their format.
 
 ### Review process
 
