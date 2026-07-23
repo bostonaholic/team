@@ -424,8 +424,9 @@ replaces former inline body content 1:1, so it adds no net context (see
 ### systematic-debugging
 
 - **Purpose:** Evidence-first root-cause diagnosis.
-- **Loaded by:** the `implementer` body carries an inline **conditional**
-  `Load skills/systematic-debugging/SKILL.md` directive, fired only on a
+- **Loaded by:** the implementer's preloaded `implementing-slices` skill
+  carries an inline **conditional** `Load
+  skills/systematic-debugging/SKILL.md` directive, fired only on a
   **non-obvious** mid-slice failure (it drills the Root Cause Analysis (5
   Whys) chain before editing). For every other agent it remains
   **advisory** — no static `Load skills/<name>/SKILL.md` instruction names

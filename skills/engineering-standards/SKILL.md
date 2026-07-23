@@ -197,6 +197,8 @@ Apply this methodology during code writing with these checkpoints:
 9. **Targeted exception scopes only.** Wrap exactly the call that can
    throw; catch the specific exception subclass; rethrow with the original
    cause chained. Never `catch (Exception e)` around a large block.
+10. **Follow the project's existing code style, naming conventions, and
+    patterns.** Read neighboring files to calibrate if unsure.
 
 ## When Reviewing
 

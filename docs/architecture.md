@@ -414,8 +414,8 @@ through one of two mechanisms: a `skills:` YAML list in the agent's
 frontmatter (for example, `agents/design-author.md` declares
 `skills: [product-thinking, agent-open-questions, progress-tracking,
 authoring-designs]`), or an inline prose load instruction in the
-agent body (for example, `systematic-debugging` is loaded inline by the
-`implementer` on a non-obvious mid-slice failure).
+agent body (for example, `solid-principles` is loaded inline by the
+`implementer` body's Code quality section).
 
 Because they are reference material rather than user actions, methodology
 skills set `user-invocable: false` in their frontmatter. This keeps them
