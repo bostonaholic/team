@@ -322,7 +322,7 @@ describe("product-thinking methodology", () => {
   });
 
   test("design-author description frontmatter matches the self-answering wording", () => {
-    // Slice 2 (remove-human-gates): the open-questions-for-the-user and
+    // The open-questions-for-the-user and
     // MUST-present-interactively clauses are gone — the design author
     // resolves its own open questions and records each as an assumption.
     const expected =
@@ -349,7 +349,7 @@ describe("product-thinking methodology", () => {
   });
 
   test("structure-planner description frontmatter matches the design-review wording", () => {
-    // Slice 1 (remove-human-gates): the design is gated by an adversarial
+    // The design is gated by an adversarial
     // design review, not human approval.
     const expected =
       "description: Use after the design review passes to break the work into vertical slices with verification checkpoints. Each slice is end-to-end (touches every layer needed to deliver one piece of functionality), independently testable, and atomically committable. Produces a ~2-page document that the planner and implementer consume; it advances autonomously to PLAN with no approval gate.";
@@ -544,7 +544,6 @@ describe("test-first-development lens (L2 content tripwire)", () => {
 // carries only `revision` (no `approved`/`approved_at`), and the runtime
 // hooks infer phase from the `design-review-<n>.md` verdict artifact instead
 // of reading approval frontmatter.
-// (docs/plans/2026-07-22-remove-human-gates, slice 1)
 // ---------------------------------------------------------------------------
 
 describe("design-review gate replaces approval frontmatter (L2 tripwire)", () => {
