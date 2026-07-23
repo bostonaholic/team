@@ -270,3 +270,120 @@ the cap, escalate with the full unresolved-findings summary.
 Blocking and Major failures are never aggregated away and never surfaced for
 triage. A single CRITICAL security finding blocks shipping regardless of how
 many other reviewers approved.
+
+## Code Reviewer Inspection Process
+
+1. **Read the diff.** Run `git diff HEAD~1` (or the appropriate range) to see
+   what changed. If the scope is unclear, check `git log --oneline -10` first.
+
+2. **Understand the plan.** Look for issue references, commit messages, or a
+   plan file that describes the done criteria. If none exist, review based on
+   general correctness and quality.
+
+3. **Review against done criteria.** If a plan exists, verify every done
+   criterion is met by the implementation. Flag any that are missing or
+   incomplete.
+
+4. **Inspect the code.** For each changed file, check:
+   - **Correctness** — Does the logic do what it claims? Are there off-by-one
+     errors, missing null checks, or broken edge cases?
+   - **Maintainability** — Can a new developer understand this in 5 minutes?
+     Are names intention-revealing? Is the control flow obvious?
+   - **Error handling** — Are errors caught, surfaced, and handled at the right
+     level? Are failures silent when they should be loud?
+   - **Naming clarity** — Do variable, function, and module names communicate
+     intent without requiring comments?
+   - **Comment discipline** — Check the in-source comments in every changed
+     file per the Comment red flags check above (Code Reviewer verdict
+     section); cite the `Comment Discipline` checklist item.
+   - **Unnecessary complexity** — Is there abstraction that serves no current
+     need? Are there simpler ways to achieve the same result?
+   - **SOLID violations** — Check for design principle violations using the
+     methodology in `skills/solid-principles/SKILL.md`:
+     - SRP: does this unit have more than one reason to change?
+     - OCP: does adding new behavior require modifying this existing code?
+     - LSP: do subtypes honor the base type's full contract?
+     - ISP: does this interface force clients to depend on unused methods?
+     - DIP: does business logic instantiate its own infrastructure dependencies?
+   - **Test files** — Walk every changed `*test*` / `*spec*` /
+     `__tests__/*` file against both severity regimes above (Code Reviewer
+     verdict section) and the style rules in
+     `skills/test-first-development/SKILL.md`. Style flags escalate: a
+     single occurrence is a `suggestion:`; multiple occurrences across the
+     diff become `issue:`. Flaky-test red flags are blocking `issue:`
+     findings on **first** occurrence.
+
+5. **Run tests.** Execute the project's test suite to verify tests pass. Report
+   the command used and the result.
+
+## Security Reviewer Process
+
+1. **Read the diff.** Run `git diff HEAD~1` (or the appropriate range) to see
+   what changed.
+
+2. **Identify the attack surface.** Determine what the changed code touches:
+   user input, authentication, authorization, data storage, external services,
+   file system, command execution, serialization, or network communication.
+
+3. **Apply OWASP Top 10 checks** to every changed file:
+   - **Injection** — SQL, NoSQL, OS command, LDAP. Is user input interpolated
+     into queries or commands without parameterization?
+   - **Broken Authentication** — Weak password handling, missing rate limiting,
+     session fixation, credential exposure in logs.
+   - **Sensitive Data Exposure** — Secrets in code, PII in logs, missing
+     encryption, overly broad API responses.
+   - **XSS** — User input rendered without escaping in HTML, JavaScript, or
+     template contexts.
+   - **CSRF** — State-changing operations without token validation.
+   - **Insecure Deserialization** — Untrusted data passed to deserializers
+     without validation.
+   - **Missing Access Control** — Authorization checks absent or bypassable,
+     IDOR vulnerabilities, privilege escalation paths.
+   - **Security Misconfiguration** — Debug mode in production, overly
+     permissive CORS, missing security headers, default credentials.
+
+4. **Check for additional vulnerabilities:**
+   - **Hardcoded secrets** — API keys, passwords, tokens, connection strings
+     in source code or configuration committed to version control.
+   - **Command injection** — User input passed to shell execution, `exec`,
+     `spawn`, or `eval` without sanitization.
+   - **Path traversal** — User-controlled input used in file paths without
+     validation (e.g., `../../../etc/passwd`).
+   - **Unsafe regex** — Regular expressions vulnerable to ReDoS (catastrophic
+     backtracking with user-controlled input).
+   - **Missing input validation** — Data crossing system boundaries (HTTP
+     requests, file uploads, environment variables) without schema validation
+     or sanitization.
+
+5. **Search beyond the diff.** If the diff introduces a pattern that could be
+   vulnerable, grep the broader codebase for similar patterns.
+
+## Security Severity Classification
+
+### CRITICAL — Hard Gate
+
+The code MUST NOT ship with these findings. Examples:
+- Hardcoded secrets or credentials
+- SQL/command injection with user-controlled input
+- Authentication bypass
+- Missing authorization on sensitive endpoints
+
+### HIGH — Hard Gate
+
+The code MUST NOT ship with these findings. Examples:
+- XSS in user-facing output
+- CSRF on state-changing endpoints
+- Sensitive data in logs
+
+### MEDIUM
+
+Moderate risk, should be addressed soon. Examples:
+- Overly permissive CORS configuration
+- Missing rate limiting on auth endpoints
+- Weak cryptographic choices
+
+### LOW
+
+Minor risk or defense-in-depth improvement. Examples:
+- Missing security headers on non-sensitive endpoints
+- Informational leakage in error messages

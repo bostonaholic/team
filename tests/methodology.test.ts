@@ -565,16 +565,16 @@ describe("code-review flaky-test red flags (L2 content tripwire)", () => {
     expect(flaky).toContain("sleep()");
   });
 
-  test("code-reviewer agent mirrors the first-occurrence always-blocking rule", () => {
-    // The abbreviated mirror must state both severity regimes and defer the
-    // checklist body to the skill. It must do so WITHOUT the decorated
-    // `issue (blocking)` literal (forbidden in the agent by
-    // tests/architecture.test.ts), so this pins plain wording only.
-    const bullet = between(read(CODE_REVIEWER), "**Test files**", "5. **Run tests");
-    expect(bullet.length).toBeGreaterThan(0);
-    expect(/first\*{0,2} occurrence/i.test(bullet)).toBe(true);
-    expect(/blocking/i.test(bullet)).toBe(true);
-    expect(bullet).toContain("skills/code-review/SKILL.md");
+  test("code-reviewer defers the first-occurrence always-blocking rule to the skill", () => {
+    // The wrapper no longer mirrors the checklist body (thin-agents
+    // refactor); it keeps the first-occurrence rule wording and the pointer
+    // to the canonical skill. Plain wording only — the decorated
+    // `issue (blocking)` literal stays forbidden in the agent by
+    // tests/architecture.test.ts.
+    const text = read(CODE_REVIEWER);
+    expect(/first\*{0,2} occurrence/i.test(text)).toBe(true);
+    expect(/blocking/i.test(text)).toBe(true);
+    expect(text).toContain("skills/code-review/SKILL.md");
   });
 });
 
@@ -696,24 +696,16 @@ describe("comment red flags (L2 content tripwire)", () => {
     expect(/string literals/i.test(flags)).toBe(true);
   });
 
-  test("code-reviewer mirrors the comment-discipline check", () => {
-    const bullet = sliceBetween(
-      read(CODE_REVIEWER),
-      "**Comment discipline**",
-      "**Unnecessary complexity**",
-    );
-    expect(bullet.length).toBeGreaterThan(0);
-    expect(/first\*{0,2} occurrence/i.test(bullet)).toBe(true);
-    expect(/blocking/i.test(bullet)).toBe(true);
-    // TODO/FIXME must ride the blocking sentence, not the escalation
-    // regime: slice everything before "escalate" and pin it there.
-    const blockingSentence = sliceBetween(bullet, "Ticket/issue IDs", "escalate");
-    expect(blockingSentence.length).toBeGreaterThan(0);
-    expect(/TODO\/FIXME/.test(blockingSentence)).toBe(true);
-    expect(/blocking/i.test(blockingSentence)).toBe(true);
+  test("code-reviewer defers the comment-discipline check to the skill", () => {
+    // The wrapper no longer mirrors the split regime (thin-agents
+    // refactor); it keeps a one-line pointer that cites the checklist item
+    // and names the canonical skills. The phrase-level regime assertions
+    // live against the skill windows above.
+    const directive = grepA4(read(CODE_REVIEWER), /Comment red flags|Comment Discipline/);
+    expect(directive.length).toBeGreaterThan(0);
     // Citation contract: findings name the checklist item.
-    expect(bullet).toContain("Comment Discipline");
-    // The mirror defers to skill-canonical definitions.
-    expect(/skills\/code-review\/SKILL\.md|engineering-standards/.test(bullet)).toBe(true);
+    expect(directive).toContain("Comment Discipline");
+    // The pointer defers to skill-canonical definitions.
+    expect(/skills\/code-review\/SKILL\.md|engineering-standards/.test(directive)).toBe(true);
   });
 });

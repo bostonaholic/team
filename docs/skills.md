@@ -299,7 +299,11 @@ load manifest; an agent typically loads at most three.
   severity regime: ticket/plan references and TODO/FIXME comments in code
   comments block on first occurrence, while what-restating comments,
   wordy comments, and commented-out code escalate from `suggestion:` to
-  `issue:` when repeated across the diff.
+  `issue:` when repeated across the diff. Also carries the per-reviewer
+  procedures: the Code Reviewer inspection process (done-criteria
+  verification and the per-file inspection checklist) and the Security
+  Reviewer process (attack surface, OWASP Top 10 checks) with its
+  CRITICAL/HIGH/MEDIUM/LOW severity classification.
 
 ### engineering-standards
 

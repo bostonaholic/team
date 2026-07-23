@@ -92,6 +92,36 @@ your conclusion will anchor to it and verify nothing.
 
 ## Per-agent caps
 
+### Code reviewer and security reviewer — skeptic passes
+
+A false hard-gate finding costs an entire review round: an implementer
+re-dispatch plus a fresh run of all 5 reviewers. Before finalizing a
+hard-gate finding (a Blocking-tier `issue:` for the code-reviewer; a
+CRITICAL or HIGH finding for the security-reviewer), hand it to a fresh
+skeptic sub-agent via the `Agent` tool and try to get it refuted.
+
+- Dispatch one `general-purpose` sub-agent per hard-gate finding (at most
+  4 in flight; batch any overflow into one dispatch).
+- **State the claim neutrally** — file:line plus a falsifiable sentence.
+  Never include your verdict, severity, or reasoning. Template:
+
+  > Read <file> around line <n>. Claim: "<one-sentence falsifiable
+  > statement, e.g. `user` may be null on the early-return path>".
+  > Attempt to REFUTE this claim with concrete evidence (guards, callers,
+  > type definitions, tests). Reply REFUTED or CONFIRMED with file:line
+  > evidence, <= 10 lines. If your evidence is inconclusive, reply
+  > CONFIRMED. Do not write files or spawn agents.
+
+- **Default-keep.** Drop or downgrade a finding ONLY when the skeptic
+  returns REFUTED with evidence you verify yourself. Inconclusive means the
+  finding stands — severity is never softened on an uncertain skeptic
+  reply. The pass removes false positives; it must never remove a true
+  positive. List refuted findings under a `### Refuted by verification`
+  section of your report (auditable, not silently dropped).
+- Skip the pass when there are no hard-gate findings or the Agent tool is
+  unavailable — report findings as-is. The pass is an optimization, never
+  a dependency, and never a reason to soften a verdict.
+
 ### Implementer — read-only scouts
 
 Spawn a read-only scout when a slice touches a subsystem the plan does not
