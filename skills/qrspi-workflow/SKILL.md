@@ -304,7 +304,7 @@ Every artifact opens with YAML frontmatter. Common fields:
 ---
 topic: <kebab-case>
 date: 2026-04-30
-phase: design        # task | questions | prd | research | design | structure | plan
+phase: design        # task | questions | prd | repos | research | design | structure | plan
 ---
 ```
 
@@ -315,6 +315,7 @@ Per-phase additions:
 | task      | `ticketId: <id>` (or `null`)                                                       |
 | questions | (none)                                                                             |
 | prd       | (none — not human-gated; written conditionally by the questioner)                  |
+| repos     | (none — written conditionally in multi-repo mode)                                  |
 | research  | (none)                                                                             |
 | design    | `approved: false`, `approved_at: null`, `revision: 0`                              |
 | structure | (none — not human-gated; advances to PLAN once it exists)                          |

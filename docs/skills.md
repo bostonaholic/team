@@ -274,7 +274,7 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Loaded by:** orchestrator skills; questioner (for the artifact schema).
 - **Key behaviors:** The structural backbone of the pipeline: defines the
   phase sequence, the artifact/frontmatter schema (including the
-  `repos.md` schema), the gate mechanics (severity tiers and the consult
+  `prd.md` and `repos.md` schemas), the gate mechanics (severity tiers and the consult
   guard for the aggregate review gate), and an anti-patterns catalog.
 
 ### agent-open-questions

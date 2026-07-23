@@ -293,6 +293,28 @@ describe("multi-repo support", () => {
   });
 });
 
+describe("conditional PRD artifact", () => {
+  const QRSPI = join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md");
+  const DECOMPOSING_INTENT = join(REPO_ROOT, "skills", "decomposing-intent", "SKILL.md");
+  const QUESTIONER = join(REPO_ROOT, "agents", "questioner.md");
+
+  test("qrspi-workflow documents prd.md artifact + schema", () => {
+    const text = read(QRSPI);
+    expect(text).toContain("prd.md");
+    expect(text).toContain("phase: prd");
+  });
+
+  test("decomposing-intent carries the prd.md frontmatter contract", () => {
+    const text = read(DECOMPOSING_INTENT);
+    expect(text).toContain("prd.md");
+    expect(text).toContain("phase: prd");
+  });
+
+  test("questioner return payload includes prdPath", () => {
+    expect(read(QUESTIONER)).toContain("prdPath");
+  });
+});
+
 describe("implement-to-pr continuation", () => {
   const TEAM_IMPLEMENT = join(REPO_ROOT, "skills", "team-implement", "SKILL.md");
   const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");

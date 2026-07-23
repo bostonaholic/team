@@ -1,6 +1,6 @@
 ---
 name: questioner
-description: Use as the first agent of the QRSPI pipeline. Decomposes a user's task description into a full task record (task.md) and neutral research questions (questions.md), and — when the description names more than one repository — a repos.md listing the repos the topic touches. The researcher who reads questions.md should have no idea what feature is being built.
+description: Use as the first agent of the QRSPI pipeline. Decomposes a user's task description into a full task record (task.md) and neutral research questions (questions.md), plus conditional artifacts — a prd.md when the PRD criteria apply, and a repos.md listing the repos the topic touches when the description names more than one repository. The researcher who reads questions.md should have no idea what feature is being built.
 color: cyan
 model: sonnet
 effort: high
