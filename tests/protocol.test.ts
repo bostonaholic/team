@@ -46,7 +46,7 @@ describe("ask-user-question contract", () => {
   });
 
   test("design-author body carries no envelope protocol references", () => {
-    // Slice 2 inverse set: the design author resolves its own open
+    // Inverse set: the design author resolves its own open
     // questions — the envelope protocol must not reappear.
     const text = read(DESIGN_AUTHOR);
     expect(text).not.toContain("openQuestions");
@@ -81,7 +81,7 @@ describe("ask-user-question contract", () => {
   });
 
   test("team SKILL never prompts mid-run — no envelope or prompt-tool references", () => {
-    // Slice 2 inverse set: the phase loop has no mid-run pause of any kind,
+    // Inverse set: the phase loop has no mid-run pause of any kind,
     // so the orchestrator skill must reference neither the prompt tool nor
     // the retired envelope protocol.
     const text = read(TEAM_SKILL);
@@ -97,7 +97,7 @@ describe("ask-user-question contract", () => {
   });
 
   test("questioner body carries no envelope protocol references", () => {
-    // Slice 2 inverse set: multi-repo detection resolves autonomously —
+    // Inverse set: multi-repo detection resolves autonomously —
     // the envelope protocol must not reappear.
     const text = read(QUESTIONER);
     expect(text).not.toContain("openQuestions");
@@ -847,7 +847,7 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
 // `## Review brief` from eng-design-doc-review, by reference. Renaming that
 // heading or the verdict set would silently change pipeline behavior (design
 // risk: silent gate drift) — these pins fail the build the moment either
-// moves. (docs/plans/2026-07-22-remove-human-gates, slice 1)
+// moves.
 // ---------------------------------------------------------------------------
 
 describe("design-review gate brief (L2 drift tripwire)", () => {
@@ -874,7 +874,7 @@ describe("design-review gate brief (L2 drift tripwire)", () => {
 // Terminal review caps — free L2 content tripwire (docs/testing.md §2).
 // A review cap (aggregate rounds or design revisions) is terminal: the run
 // halts and reports every unresolved finding. It never consults the user
-// mid-run. (docs/plans/2026-07-22-remove-human-gates, slice 3)
+// mid-run.
 // ---------------------------------------------------------------------------
 
 describe("terminal review caps (L2 tripwire)", () => {
@@ -895,7 +895,6 @@ describe("terminal review caps (L2 tripwire)", () => {
 // COMMENT findings, tagged by source) land in the PR body's `## Review notes`
 // section for the human's PR review — they are never presented mid-run, and
 // the section is omitted entirely when empty.
-// (docs/plans/2026-07-22-remove-human-gates, slice 3)
 // ---------------------------------------------------------------------------
 
 describe("Minor findings defer to the PR body (L2 tripwire)", () => {
@@ -945,11 +944,13 @@ describe("Minor findings defer to the PR body (L2 tripwire)", () => {
 // docs/ethos.md keeps its deliberate human-gate counterweight line, and the
 // negation phrase "no mid-run human gates" is the one sanctioned wording that
 // contains the forbidden substring. CHANGELOG history is append-only and not
-// scanned. (docs/plans/2026-07-22-remove-human-gates, slice 4)
+// scanned.
 // ---------------------------------------------------------------------------
 
 describe("no mid-run human-gate claims (L2 forbidden-pattern sweep)", () => {
-  const FORBIDDEN = /human[ -]gate/i;
+  // Also catches the phrasing variants that survived the first sweep:
+  // "human approval gate", "human design gate", "human contract".
+  const FORBIDDEN = /human[ -]gate|human (approval|design) gate|human contract/i;
   const NEGATION = /no mid-run human gates/i;
   const ALLOWLIST = new Set(["docs/ethos.md"]);
 
