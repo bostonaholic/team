@@ -219,19 +219,30 @@ End with a verdict, using the same gate type as `code-reviewer`:
   review gate** (`skills/team/SKILL.md` and `/team-design` dispatch it
   by reference). Editing the brief changes pipeline behavior — treat any
   change to its headings, process, or verdict set as a pipeline change.
-- This skill is **read-only**. It dispatches a read-only review and
-  produces a report; it writes no artifacts and does not modify
-  `design.md` or the artifact directory. (When the pipeline gate runs
-  the brief, the *orchestrator* records the verdict to
-  `design-review-<n>.md` — not this skill.)
+- This skill is **read-only by instruction, not by enforcement**. The
+  `general-purpose` subagent holds full tools; the brief's read-only
+  constraint is procedural. That residual risk is accepted: the
+  reviewer's output never becomes state on its own — the *orchestrator*
+  records the verdict to `design-review-<n>.md` when the pipeline gate
+  runs the brief, and the recovery hooks fail closed on anything but a
+  recorded passing verdict. The skill itself writes no artifacts and
+  does not modify `design.md` or the artifact directory.
 - Standalone use blocks nothing: users may run `/team-design` or
   `/team-structure` without ever invoking this skill directly.
 
 ## Completion
 
 Print the verdict and the count of issue / suggestion / nitpick findings.
+
+**A standalone run records no `design-review-<n>.md`** — only the
+pipeline's DESIGN gate writes the verdict artifact, and
+`/team-structure` requires a recorded passing verdict before it will
+slice a design.
+
 If the verdict is APPROVE or COMMENT, tell the user:
-**"You can proceed to `/team-structure`."**
+**"To advance, run `/team-design docs/plans/<id>/` — with `design.md`
+already present it skips drafting and runs the review gate, recording
+the verdict artifact — then proceed to `/team-structure`."**
 If the verdict is REQUEST CHANGES, tell the user:
 **"Re-run `/team-design docs/plans/<id>/` with the findings above to
 re-dispatch `design-author` for a revision."**

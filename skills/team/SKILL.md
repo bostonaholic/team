@@ -194,7 +194,12 @@ When the `design-author` returns a draft:
    `subagent_type: general-purpose`, passing the `## Review brief` from
    `skills/eng-design-doc-review/SKILL.md` as the prompt (reference that
    skill's brief — never duplicate it here), with the artifact directory
-   substituted. Each round gets a fresh subagent context.
+   substituted. Each round gets a fresh subagent context. Note the
+   subagent holds full tools; the brief's read-only constraint is a
+   **procedural instruction, not a structural enforcement**. That
+   residual risk is accepted because the verdict artifact is written by
+   the orchestrator (step 3), never by the reviewer, and the recovery
+   hooks fail closed on anything but a recorded passing verdict.
 3. **Write the verdict artifact.** Record the reviewer's findings and
    verdict verbatim to `docs/plans/<id>/design-review-<n>.md` (`<n>`
    1-based per round) with frontmatter `topic`, `date`,
