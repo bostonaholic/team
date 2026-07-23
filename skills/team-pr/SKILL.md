@@ -143,17 +143,12 @@ done
 10. **Leave the worktree(s) in place.** Do not remove a worktree after
    opening a PR — the user may need to iterate on the branch (push
    follow-up commits, address review feedback). Clean up only after the
-   PR is merged or when the user explicitly asks. When that happens,
-   cherry-pick or rebase commits onto the target branch in that repo,
-   then let Claude Code (or `git -C <repo-path> worktree remove`) remove
-   the worktree; in multi-repo mode, run cleanup for every involved repo.
-   After removing the worktree, bring the repo's local default branch up
-   to date with the merge: `git -C <repo-root> pull --rebase origin
-   <base>` (rebase, never a merge commit — the project keeps linear
-   history). Do this for every involved repo in multi-repo mode. Finally,
-   delete the feature's local planning docs (`rm -rf docs/plans/<id>`,
-   verified untracked) as part of the same teardown — see
-   `worktree-isolation`.
+   PR is merged or when the user explicitly asks, following the teardown
+   procedure in `skills/worktree-isolation/SKILL.md` → "Ship (teardown)":
+   commit preservation, worktree and branch removal, the rebase-only
+   default-branch update, and deletion of the feature's untracked
+   `docs/plans/<id>` scratch dir. In multi-repo mode, run cleanup for
+   every involved repo.
 
 ## PR Body Template
 

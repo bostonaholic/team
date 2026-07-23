@@ -343,16 +343,12 @@ When the aggregate gate passes:
 6. **Leave the worktree(s) in place.** Do not remove a worktree when a
    PR is opened — the user may need to iterate on the branch (push
    follow-up commits, address review feedback). Clean up a worktree only
-   after its PR is merged or when the user explicitly asks. When cleanup
-   does happen, cherry-pick or rebase commits onto the target branch in
-   that repo, then let Claude Code or `git worktree remove` remove the
-   worktree. After removal, update the repo's local default branch with
-   the merge: `git -C <repo-root> pull --rebase origin <base>` (rebase,
-   never a merge commit — linear history is the rule). In multi-repo
-   mode, do this for every involved repo. As the last teardown step,
-   delete the feature's local planning docs (`rm -rf docs/plans/<id>`,
-   verified untracked) — the QRSPI scratch dir is removed alongside the
-   branch and worktree, not left behind.
+   after its PR is merged or when the user explicitly asks, following
+   the teardown procedure in `skills/worktree-isolation/SKILL.md` →
+   "Ship (teardown)": commit preservation, worktree and branch removal,
+   the rebase-only default-branch update, and deletion of the feature's
+   untracked `docs/plans/<id>` scratch dir. In multi-repo mode, run it
+   for every involved repo.
 
 ## Rules
 
