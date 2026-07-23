@@ -72,8 +72,8 @@ describe("agent-open-questions protocol", () => {
     expect(read(QRSPI_SKILL)).toContain("agent-open-questions");
   });
 
-  test("CLAUDE.md has '## Skills (32)' heading", () => {
-    expect(/^## Skills \(32\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md has '## Skills (33)' heading", () => {
+    expect(/^## Skills \(33\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 
   test("skills/shipit/SKILL.md exists as a runtime skill", () => {

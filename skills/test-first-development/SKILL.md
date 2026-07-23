@@ -301,6 +301,28 @@ introduces a feature whose behavior overlaps an existing one, the
 acceptance-test list must include at least one cross-feature interaction
 test.
 
+### Audit checklist
+
+Before confirming failures, audit each test against this bar. Every "NO" is
+an issue to fix. The rules above spell each check out in full; the bar below
+is the audit checklist.
+
+| Check | Pass criterion |
+|-------|----------------|
+| Behavior-named | Test name describes the behavior, not the method. `sendsEmailWhenBalanceIsLow`, not `testProcess_1`. |
+| Narrow assertion | The assertion targets the specific field/effect under test. No full-equality on complex objects unless that IS the contract. |
+| Actionable failure | If the test fails, the failure message names the failing condition. `EXPECT_OK(...)` not `EXPECT_TRUE(...ok())`. |
+| No sleeps | No `sleep()` for synchronization. Use wait-for-condition primitives. |
+| Deterministic inputs | No wall-clock reads, unseeded randomness, order-dependent or shared-state assumptions, race-interleaving assumptions, positional asserts on unordered collections, real network, hard-coded ports, or exact float equality feeding an assertion. Clock frozen/injected; RNG seeded. |
+| No test logic | No `if`, no loops, no string-building inside the test body. |
+| One scenario per test | The test verifies one behavior and runs independently in any order. |
+| DAMP setup | Setup the reader needs to understand the test lives in the test (or a helper that takes the asserted value as a parameter). |
+| Fidelity ladder | Real > fake > mock. No mocks where a fake is feasible. No mocks for types you don't own — wrap them. |
+
+When reporting issues, cite the failing check by name (e.g., "Test 7 fails
+the Narrow assertion bar — it asserts on the full order object when only
+`order.total` is the slice's contract").
+
 ## Completion Contract
 
 Implementation is done when:

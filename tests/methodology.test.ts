@@ -503,9 +503,8 @@ describe("test-first-development lens (L2 content tripwire)", () => {
     expect(/^### Impose order before asserting it$/m.test(text)).toBe(true);
   });
 
-  test("test-architect audit table has a Deterministic inputs row", () => {
-    const TEST_ARCHITECT = join(REPO_ROOT, "agents", "test-architect.md");
-    expect(read(TEST_ARCHITECT)).toContain("| Deterministic inputs |");
+  test("audit table has a Deterministic inputs row (moved from test-architect)", () => {
+    expect(read(SKILL_FILE)).toContain("| Deterministic inputs |");
   });
 });
 

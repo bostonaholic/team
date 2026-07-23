@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 32 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 20 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 33 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 21 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -45,8 +45,8 @@ catalog into two flavors:
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
 standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 20 methodology =
-32**.
+split is **11 pipeline entry-point + 1 standalone utility + 21 methodology =
+33**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -250,7 +250,7 @@ phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 20 methodology skills carry no `argument-hint` and are never invoked
+The 21 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -368,6 +368,18 @@ load manifest; an agent typically loads at most three.
   it; those agents load it on demand when an investigation begins.
 - **Key behaviors:** Gather evidence before theorizing, then isolate the
   root cause rather than patching symptoms.
+
+### running-quality-checks
+
+- **Purpose:** Mechanical verification procedure for the Implement phase's
+  verify gate.
+- **Loaded by:** verifier.
+- **Key behaviors:** Detect the checks the project configures (scripts,
+  Makefile targets, CI steps, tool config), run them fastest-first in speed
+  order (format, lint, typecheck, build, test), capture the exact command
+  and exit code as evidence, and derive a PASS/FAIL verdict. Deliberately
+  self-contained — the verifier runs on haiku, so the skill carries
+  everything inline with no cross-references.
 
 ### progress-tracking
 
@@ -490,6 +502,7 @@ entry-point section above rather than repeating them here.
 | `solid-principles` | implementer, code-reviewer | Implement |
 | `refactoring-to-patterns` | implementer | Implement |
 | `implementing-slices` | implementer | Implement |
+| `running-quality-checks` | verifier | Implement (verify) |
 | `systematic-debugging` | implementer (inline Load on non-obvious failures); other agents when debugging (advisory) | Implement; Any (debugging) |
 | `progress-tracking` | every multi-step agent (convention) | Any (multi-step procedure) |
 | `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
