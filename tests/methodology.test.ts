@@ -345,9 +345,11 @@ describe("product-thinking methodology", () => {
     expect(/no new gate|no gate|adds no/i.test(directive)).toBe(true);
   });
 
-  test("structure-planner description frontmatter is unchanged", () => {
+  test("structure-planner description frontmatter matches the design-review wording", () => {
+    // Slice 1 (remove-human-gates): the design is gated by an adversarial
+    // design review, not human approval.
     const expected =
-      "description: Use after the design is approved to break the work into vertical slices with verification checkpoints. Each slice is end-to-end (touches every layer needed to deliver one piece of functionality), independently testable, and atomically committable. Produces a ~2-page document that the planner and implementer consume; it advances autonomously to PLAN with no human gate.";
+      "description: Use after the design review passes to break the work into vertical slices with verification checkpoints. Each slice is end-to-end (touches every layer needed to deliver one piece of functionality), independently testable, and atomically committable. Produces a ~2-page document that the planner and implementer consume; it advances autonomously to PLAN with no approval gate.";
     expect(read(STRUCTURE_PLANNER)).toContain(expected);
   });
 
@@ -531,6 +533,38 @@ describe("test-first-development lens (L2 content tripwire)", () => {
   test("audit table (in test-style) has a Deterministic inputs row (moved from test-architect)", () => {
     expect(read(TEST_STYLE_FILE)).toContain("| Deterministic inputs |");
   });
+});
+
+// ---------------------------------------------------------------------------
+// Design-review gate replaces approval frontmatter — free L2 content
+// tripwires (docs/testing.md §2). The DESIGN human gate is retired: design.md
+// carries only `revision` (no `approved`/`approved_at`), and the runtime
+// hooks infer phase from the `design-review-<n>.md` verdict artifact instead
+// of reading approval frontmatter.
+// (docs/plans/2026-07-22-remove-human-gates, slice 1)
+// ---------------------------------------------------------------------------
+
+describe("design-review gate replaces approval frontmatter (L2 tripwire)", () => {
+  const DESIGN_AUTHOR = join(REPO_ROOT, "agents", "design-author.md");
+
+  test("design-author frontmatter template keeps revision and drops approved/approved_at", () => {
+    const text = read(DESIGN_AUTHOR);
+    // The revision counter survives — it counts review loops.
+    expect(text).toContain("revision: 0");
+    // No approval fields remain in the artifact template (the template's
+    // frontmatter lines sit at column 0 inside the fenced block).
+    expect(/^approved/m.test(text)).toBe(false);
+  });
+
+  for (const name of ["session-start-recover", "pre-compact-anchor"]) {
+    test(`hooks/${name}.mjs infers from design-review-<n>.md, not approved frontmatter`, () => {
+      const src = read(join(REPO_ROOT, "hooks", `${name}.mjs`));
+      // Phase inference reads the design-review verdict artifact...
+      expect(src).toContain("design-review-");
+      // ...and no approval-frontmatter read (or comment about one) remains.
+      expect(/approved/.test(src)).toBe(false);
+    });
+  }
 });
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 ---
 name: structure-planner
-description: Use after the design is approved to break the work into vertical slices with verification checkpoints. Each slice is end-to-end (touches every layer needed to deliver one piece of functionality), independently testable, and atomically committable. Produces a ~2-page document that the planner and implementer consume; it advances autonomously to PLAN with no human gate.
+description: Use after the design review passes to break the work into vertical slices with verification checkpoints. Each slice is end-to-end (touches every layer needed to deliver one piece of functionality), independently testable, and atomically committable. Produces a ~2-page document that the planner and implementer consume; it advances autonomously to PLAN with no approval gate.
 color: purple
 model: fable
 effort: xhigh
@@ -14,7 +14,7 @@ skills:
 
 # Structure Planner Agent
 
-You break the approved design into vertical slices. The planner that runs
+You break the reviewed design into vertical slices. The planner that runs
 after you will turn each slice into tactical implementation steps; the
 implementer that runs after that will execute each slice one at a time and
 commit when the slice's tests pass.
@@ -22,8 +22,8 @@ commit when the slice's tests pass.
 ## Inputs
 
 The orchestrator dispatches you with the artifact directory
-`docs/plans/<id>/`. For initial dispatch (after the design's frontmatter
-shows `approved: true`), you read `design.md` (the approved design),
+`docs/plans/<id>/`. For initial dispatch (after the design review
+passes), you read `design.md` (the reviewed design),
 `research.md` (codebase facts), `task.md` (the user's intent), and — when
 present — `repos.md` (repo scope). For re-dispatch (the design changed, or
 implementation surfaced a structure flaw), you read the previous
@@ -52,9 +52,10 @@ phase: structure
 ---
 ```
 
-Structure is **not human-gated** — it carries no `approved`/`approved_at`/
+Structure is **not gated** — it carries no `approved`/`approved_at`/
 `revision` fields. The orchestrator records the artifact and advances to
-PLAN automatically (design is the pipeline's only human gate).
+PLAN automatically (the design is gated by the adversarial design
+review, not by an approval field).
 
 The `topic` value MUST be copied verbatim from the predecessor
 `design.md`. Never re-derive, re-word, or combine it with the ticket
@@ -77,4 +78,4 @@ Aim for ~2 pages (≈100–200 lines, excluding frontmatter).
 
 When done, return a short summary to the orchestrator:
 `{structurePath, id, sliceCount: <number>}`. The orchestrator records
-the structure and advances to PLAN (no human gate).
+the structure and advances to PLAN (no approval gate).

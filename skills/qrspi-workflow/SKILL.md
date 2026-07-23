@@ -53,22 +53,24 @@ Explore the codebase to answer the questions. The researcher reads only
 
 ### DESIGN
 
-Align on approach with the user. The design author MUST present open
+Align on approach. The design author MUST present open
 questions to the user before writing the design document. The result is
-a ~200-line markdown artifact the human reviews carefully.
+a ~200-line markdown artifact audited by an adversarial design review.
 
-- **Artifact:** `docs/plans/<id>/design.md`
-- **Gate:** HARD — user must explicitly approve the design
+- **Artifact:** `docs/plans/<id>/design.md` (plus one
+  `docs/plans/<id>/design-review-<n>.md` per review round)
+- **Gate:** REVIEW — adversarial design review; APPROVE/COMMENT advance,
+  REQUEST CHANGES re-drafts (cap 5 → terminal halt)
 
 ### STRUCTURE
 
-Break the approved design into vertical slices with verification checkpoints.
+Break the reviewed design into vertical slices with verification checkpoints.
 Each slice is end-to-end and independently testable. The result is a ~2-page
 markdown artifact, produced autonomously.
 
 - **Artifact:** `docs/plans/<id>/structure.md`
 - **Gate:** NONE — autonomous; once `structure.md` exists the pipeline
-  advances to PLAN. Design is the only human gate.
+  advances to PLAN.
 
 ### PLAN
 
@@ -164,8 +166,8 @@ This enforces incremental verifiability over big-bang integration.
 Blocks phase transition. The pipeline cannot proceed until the gate condition
 is satisfied. No override allowed except by explicit user command.
 
-Examples: design approval, security review with critical findings, test
-failures.
+Examples: design review with a REQUEST CHANGES verdict, security review
+with critical findings, test failures.
 
 ### SOFT
 
@@ -195,10 +197,11 @@ session-scoped ledger that mirrors the phase table.
 ### Frontmatter schema (all artifacts)
 
 Every artifact opens with YAML frontmatter. The schema — common fields,
-the phase enum, the per-phase additions, and the approval
-check/flip/rejection mechanics — is canonical in
-`skills/artifact-frontmatter/SKILL.md`. Phase transitions verify
-approval by re-reading the gated artifact's frontmatter per that skill.
+the phase enum, the per-phase additions, and the design-review record
+mechanics — is canonical in
+`skills/artifact-frontmatter/SKILL.md`. The DESIGN → STRUCTURE
+transition verifies a passing `design-review-<n>.md` verdict per that
+skill.
 
 ### Phase inference from artifacts
 
@@ -210,8 +213,8 @@ The orchestrator infers the current phase by scanning what exists in
 | worktree exists for `<id>`, no `task.md` yet           | WORKTREE (next up)  |
 | `task.md` + `questions.md`                             | RESEARCH (next up)  |
 | `research.md`                                          | DESIGN (next up)    |
-| `design.md` (frontmatter `approved: false`)            | DESIGN (human gate) |
-| `design.md` (frontmatter `approved: true`)             | STRUCTURE (next up) |
+| `design.md` alone (no passing design review)           | DESIGN (review next)|
+| `design.md` + passing `design-review-<n>.md`           | STRUCTURE (next up) |
 | `structure.md`                                         | PLAN (next up)      |
 | `plan.md` + ≥1 commit on `<id>` since merge-base       | IMPLEMENT           |
 | `plan.md` (no commit on `<id>` yet)                    | PLAN (next up)      |
@@ -243,8 +246,8 @@ by scanning artifacts on entry.
 Every transition follows this sequence:
 
 1. **Verify artifacts** — confirm the required artifacts from the
-   current phase exist on disk, and for human-gated phases that the
-   artifact's frontmatter shows `approved: true`.
+   current phase exist on disk (for the DESIGN → STRUCTURE transition,
+   that includes a `design-review-<n>.md` with a passing verdict).
 2. **Update the ledger** — mark the current TodoWrite item complete and
    the next one `in_progress`.
 3. **Dispatch next agent(s)** — the phase table in `skills/team/SKILL.md`
