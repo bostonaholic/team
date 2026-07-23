@@ -108,7 +108,7 @@ areas, or when `repos.md` lists multiple repos.
 - **Caps:** at most 4 scouts, dispatched in parallel where independent; each
   instructed to return <= 30 lines of file:line findings and to spawn no
   further agents.
-- **Scouts are non-interactive.** They never emit open-questions envelopes.
+- **Scouts are non-interactive.** They never pause for user input.
   A scout's ambiguity becomes a bullet in your own `## Open Questions`
   section.
 - **You own the report.** Spot-verify scout file:line claims before

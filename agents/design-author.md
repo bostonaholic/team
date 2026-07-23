@@ -79,7 +79,8 @@ MUST be copied verbatim from the predecessor artifact (`research.md`, or
   (read `skills/product-thinking/SKILL.md` if it isn't already in context). Use
   its `## When Designing` section while writing `## Decisions made` and
   `## Out of scope`: prefer the thinnest design that delivers what real users
-  want, and surface where an assumption stands in for demand.
+  want, and surface where an assumption stands in for demand. Adds no gate
+  and requires no extra research.
 
 ## Output to orchestrator
 

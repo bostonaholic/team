@@ -878,7 +878,7 @@ describe("design-review gate brief (L2 drift tripwire)", () => {
 // ---------------------------------------------------------------------------
 
 describe("terminal review caps (L2 tripwire)", () => {
-  for (const name of ["team", "team-implement", "code-review"]) {
+  for (const name of ["team", "team-implement", "review-severity-tiers"]) {
     test(`${name} SKILL halts at cap instead of escalating to the user`, () => {
       const text = read(join(REPO_ROOT, "skills", name, "SKILL.md"));
       expect(text).not.toContain("escalate to the user");

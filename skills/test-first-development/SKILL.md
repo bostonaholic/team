@@ -76,7 +76,8 @@ implementation. This means:
 - **No renaming tests** — renamed tests break traceability to the plan
 
 If the test list needs to change, that is a plan change. Return to the PLAN
-phase, update the plan, and get re-approval.
+phase and update the plan — the plan regenerates mechanically from the
+structure; no approval step exists.
 
 ## Two Levels of Testing
 

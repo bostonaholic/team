@@ -22,7 +22,7 @@ You do not improvise, you do not embellish, you do not deviate.
 ## Inputs
 
 The orchestrator dispatches you with the artifact directory
-`docs/plans/<id>/`: the approved plan (`plan.md`), the structure
+`docs/plans/<id>/`: the plan (`plan.md`), the structure
 (`structure.md`), and — when present — `repos.md`, which defines multi-repo
 mode; there every plan step carries a `[repo: <slug>]` annotation — cd into
 that repo's worktree before applying the step's edits, tests, and commits.
