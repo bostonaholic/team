@@ -485,6 +485,28 @@ describe("test-driven-bug-fix lens (L2 content tripwire)", () => {
   });
 });
 
+describe("git-commit lens (L2 content tripwire)", () => {
+  // Embedded per the single-referencer rule: the conventions now live as a
+  // section inside their sole consumer, team-pr.
+  const SKILL_FILE = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
+
+  test("team-pr carries the embedded Commit Message Conventions section", () => {
+    expect(existsSync(SKILL_FILE)).toBe(true);
+    expect(/^## Commit Message Conventions$/m.test(read(SKILL_FILE))).toBe(true);
+  });
+
+  test("pins the 50/72, Conventional Commits, and atomic-commit contract", () => {
+    // Newline-anchored so the inline backticked mentions of the heading
+    // earlier in the file cannot satisfy the marker.
+    const section = sliceBetween(read(SKILL_FILE), "\n## Commit Message Conventions\n", "\n## Completion\n");
+    expect(section.length).toBeGreaterThan(0);
+    expect(section).toContain("The 50/72 Rule");
+    expect(section).toContain("Conventional Commits");
+    expect(section).toContain("BREAKING CHANGE:");
+    expect(section).toContain("Atomic Commits");
+  });
+});
+
 describe("test-first-development lens (L2 content tripwire)", () => {
   const SKILL_FILE = join(REPO_ROOT, "skills", "test-first-development", "SKILL.md");
 

@@ -211,9 +211,10 @@ with no trailing blank line.
 **Placement rationale:** reviewers open a PR to read `## Summary`; the
 closing line is machine-facing metadata, so the narrative comes first
 and the footer comes last, mirroring the commit-footer convention in
-the `## Commit Message Conventions` section below. GitHub parses closing keywords anywhere in
-the body, so the footer position costs nothing — and "last authored
-line" is deterministic to emit and trivial to verify.
+the `## Commit Message Conventions` section below. GitHub parses
+closing keywords anywhere in the body, so the footer position costs
+nothing — and "last authored line" is deterministic to emit and
+trivial to verify.
 
 In multi-repo mode, only the **home** repo's PR carries the closing
 keyword (`Closes #<n>`) — so the ticket closes exactly once, when the

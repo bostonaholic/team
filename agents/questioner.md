@@ -51,13 +51,14 @@ orchestrator returns.
 
 ## Outputs
 
-Write into `docs/plans/<id>/`: `task.md` (always), `questions.md` (always),
-and `repos.md` (only when the topic spans more than one repository). Each
-file MUST open with YAML frontmatter per the templates in the preloaded
-skill. The `topic` value must be identical across `task.md` and
-`questions.md` — it is the kebab portion of `<id>`, i.e. `<id>` minus the
-`<TICKET>-` or `<YYYY-MM-DD>-` prefix. Then return a structured result to
-the orchestrator:
+Write into `docs/plans/<id>/`: `task.md` (always), `questions.md`
+(always), `prd.md` (only when the PRD criteria in the preloaded skill
+apply), and `repos.md` (only when the topic spans more than one
+repository). Each file MUST open with YAML frontmatter per the templates
+in the preloaded skill. The `topic` value must be identical across
+`task.md` and `questions.md` — it is the kebab portion of `<id>`, i.e.
+`<id>` minus the `<TICKET>-` or `<YYYY-MM-DD>-` prefix. Then return a
+structured result to the orchestrator:
 
 ```json
 {

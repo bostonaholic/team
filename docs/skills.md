@@ -319,7 +319,9 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Key behaviors:** Carries the `task.md` and `questions.md` body
   templates, the topic-slug rules, the process steps, and the multi-repo
   detection flow (including the canonical `Repos` envelope worked example
-  and the `repos.md` schema pointer).
+  and the `repos.md` schema pointer). Conditionally loads
+  `product-requirements-doc` for vague, multi-story, cross-cutting, or
+  behavior-replacing requests, producing `prd.md` alongside `task.md`.
 
 ### authoring-designs
 
@@ -328,7 +330,10 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Key behaviors:** Carries the repo-scope confirmation flow, the
   mandatory interactive open-questions step (at most 4 sharp questions,
   answers land in `## Decisions made`), and the `design.md` document
-  template with its six-category edge-case walk.
+  template with its six-category edge-case walk. When `task.md`
+  references a `prd.md`, reads it first and honors its scope boundaries
+  and acceptance criteria per `product-requirements-doc`'s "Consuming a
+  PRD downstream" section.
 
 ### slicing-work
 
