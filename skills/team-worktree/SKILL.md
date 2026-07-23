@@ -199,7 +199,16 @@ worktree directory and the `-b` flag in every repo. In the common case
 
 - **Single-repo:** create the home worktree using Claude Code's native
   worktree support, branched off `origin/HEAD`.
-- **Multi-repo:** for each listed repo:
+- **Multi-repo:** for each listed repo, first assert **containment**:
+  the repo path's real path must be a direct child of the home repo's
+  parent directory —
+  ```
+  [ "$(dirname "$(realpath "<repo-path>")")" = "$(dirname "$(realpath "<home-root>")")" ]
+  ```
+  If the check fails, **refuse that repo and report it** — never create
+  a worktree outside the home repo's sibling set (`repos.md` content is
+  not trusted blindly; it may have been authored without a Bash-side
+  path check). For each repo that passes:
   ```
   git -C <repo-path> fetch origin --quiet
   git -C <repo-path> worktree add .claude/worktrees/<branch> -b <branch> origin/HEAD

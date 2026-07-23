@@ -39,7 +39,13 @@ When `docs/plans/<id>/repos.md` is **present**, the topic spans multiple
 repos. The router creates **one worktree per listed repo**, all sharing
 the same branch name `<id>`:
 
-- For each repo with absolute path `<repo-path>` in `repos.md`:
+- **Containment check first:** each `<repo-path>`'s `realpath` must
+  resolve to a direct child of the home repo's parent directory
+  (`dirname "$(realpath "<repo-path>")"` equals
+  `dirname "$(realpath "<home-root>")"`). A repo that fails is refused
+  and reported — `repos.md` content is not trusted blindly.
+- For each repo with absolute path `<repo-path>` in `repos.md` that
+  passes the containment check:
   - Worktree path: `<repo-path>/.claude/worktrees/<id>`
   - Branch: `<id>`, branched from that repo's `origin/HEAD`
   - Created via `git -C <repo-path> worktree add .claude/worktrees/<id> -b <id> origin/HEAD`
