@@ -87,43 +87,21 @@ loop:
      report a desync and suggest re-invoking the same /team-* command.
   4. Dispatch the agent(s) (parallel where the phase table marks them).
   5. Parse the subagent's final assistant text for an open-questions
-     envelope (see `skills/agent-open-questions/SKILL.md` — the
-     canonical contract):
-     a. Scan the Task tool result for fenced ```json blocks in order.
-        Per Decision 5 (first-block-wins), the FIRST block whose
-        top-level object contains an `openQuestions` array is the
-        envelope. Ignore other fenced JSON blocks (e.g. the
-        `{designPath, ...}` summary at the end of an artifact-complete
-        message) when an envelope is present.
-     b. If an envelope is present, call `AskUserQuestion` with the
-        parsed `openQuestions` array verbatim.
-        - **Size cap.** `AskUserQuestion` accepts 1–4 questions per
-          call. If the envelope carries more than 4, render only the
-          first 4 and `SendMessage` the subagent with a note that the
-          remainder must be re-emitted in a follow-up envelope or
-          deferred into the artifact (per the agent-open-questions
-          ≤ 4 cap).
-     c. Free-text escape hatch: if a chosen option's `description`
-        declares that the orchestrator must follow up with free-text
-        input (or the subagent's prompt explicitly requires it for that
-        branch), ask the user a plain-text follow-up question and
-        incorporate the response into the resume message. This is
-        necessary because `AskUserQuestion` returns only the chosen
-        `label` — no free-text field. The questioner's multi-repo flow
-        is the canonical worked example.
-     d. Resume the same subagent via the Task tool's
-        `SendMessage(to: <agentId>, message: <user selections verbatim,
-        plus any free-text follow-up response>)`. The subagent receives
-        the selections as a new user turn with its prior transcript
-        intact; this is NOT a fresh dispatch.
-     e. On malformed JSON or a missing `label`, follow the two-attempt
-        path: attempt 1 = `SendMessage` the subagent the exact parse
-        error and request a corrected envelope; attempt 2 failure =
-        write `docs/plans/<id>/dispatch-failure.md` with frontmatter
-        `phase: <current>, status: parse-failed`, mark the phase halted
-        in TodoWrite, and surface the artifact path to the user.
-     f. If no envelope is present, proceed to step 6.
-     g. **User cancels the `AskUserQuestion` prompt mid-flight.** Do
+     envelope and, when one is present, render it via `AskUserQuestion`
+     and resume the subagent. The full orchestrator-side protocol is
+     canonical in `skills/agent-open-questions/SKILL.md` — Decision 5
+     first-block-wins detection, the ≤ 4-question cap, the free-text
+     escape hatch, the `SendMessage(to: <agentId>, ...)` resume with the
+     prior transcript intact, and the two-attempt malformed-envelope
+     path ending in `docs/plans/<id>/dispatch-failure.md` plus a halted
+     phase in TodoWrite. Follow that skill rather than a restatement
+     here. Orchestrator-loop specifics:
+     a. If an envelope carries more than 4 questions, render only the
+        first 4 and `SendMessage` the subagent a note that the
+        remainder must be re-emitted in a follow-up envelope or
+        deferred into the artifact.
+     b. If no envelope is present, proceed to step 6.
+     c. **User cancels the `AskUserQuestion` prompt mid-flight.** Do
         NOT `SendMessage` the subagent (it remains paused awaiting a
         resume that will never come). Mark the current phase halted
         in TodoWrite, surface a "user cancelled at <phase>" message
@@ -367,9 +345,10 @@ When the aggregate gate passes:
   "Request changes"). **Subagents that need user input emit the
   `openQuestions` envelope per `skills/agent-open-questions/SKILL.md`;
   the orchestrator parses, renders the prompt via `AskUserQuestion`,
-  and resumes the subagent via `SendMessage`. The orchestrator-side
-  parse + render + resume sequence is documented in the phase loop
-  above (step 5).** Subagents must not call `AskUserQuestion` directly.
+  and resumes the subagent via `SendMessage` — that skill is the
+  canonical orchestrator-side parse + render + resume protocol, applied
+  in the phase loop above (step 5).** Subagents must not call
+  `AskUserQuestion` directly.
 - File artifacts in `docs/plans/<id>/` are the durable communication
   protocol. Always write phase findings to disk before advancing.
 - The only human gate is **design approval**. Never present the structure
