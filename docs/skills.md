@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 46 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 34 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 47 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -46,8 +46,8 @@ catalog into two flavors:
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
 standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 34 methodology =
-46**.
+split is **11 pipeline entry-point + 1 standalone utility + 35 methodology =
+47**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -251,7 +251,7 @@ phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 34 methodology skills carry no `argument-hint` and are never invoked
+The 35 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -596,8 +596,19 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Key behaviors:** A seventh-grade reading-level bar governs prose the
   agent writes as well as prose it assesses — readable, plain language
   aimed at someone who has not seen the code, clarity over cleverness.
-  Also carries the technical-writer's documentation-gap review process
-  (inventory, impact analysis, cross-reference) and the
+  The technical-writer's review procedure that applies this bar lives in
+  `reviewing-documentation`.
+
+### reviewing-documentation
+
+- **Purpose:** Documentation-gap review methodology and the
+  REQUIRED/RECOMMENDED doc-change classification.
+- **Loaded by:** technical-writer.
+- **Key behaviors:** Carries the technical-writer's review procedure —
+  applying the `writing-prose` principles to reviews (classify by impact,
+  name the failure mode, suggest the direction not the rewrite,
+  acknowledge what works), the documentation-gap review process
+  (inventory, impact analysis, cross-reference), and the
   REQUIRED/RECOMMENDED doc-change classification.
 
 ### verifying-ux
@@ -710,6 +721,7 @@ entry-point section above rather than repeating them here.
 | `product-requirements-doc` | questioner (via `decomposing-intent`, conditional); design-author (via `authoring-designs`) | Question, Design |
 | `product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
 | `writing-prose` | technical-writer | Implement (verify) — bar for prose it writes and prose it assesses |
+| `reviewing-documentation` | technical-writer | Implement (verify) — doc-gap review process + classification |
 | `git-commit` | team-pr; implementer (via `implementing-slices`) | PR; Implement (slice commits) |
 | `changelog` | team, team-pr | PR |
 | `tracking-tickets` | orchestrator (team, team-pr, team-fix — just-in-time via pointers) | Setup (ticket pickup); PR (ticket link + state) |
@@ -731,6 +743,7 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 | `team-research` | `researcher` | Skill dispatches the Research phase; the agent is the doer that runs the research. |
 | `code-review` | `code-reviewer` | Skill is the review methodology; the agent is the reviewer that applies it. |
 | `reviewing-security` | `security-reviewer` | Skill is the security review methodology and severity ladder; the agent is the reviewer that applies it. |
+| `reviewing-documentation` | `technical-writer` | Skill is the doc-gap review methodology and classification; the agent is the reviewer that applies it. |
 | `team-question` | `questioner` | Skill drives the Question phase; the agent decomposes the intent. |
 | `implementing-slices` | `implementer` | Skill is the slice-execution procedure; the agent is the specialist that executes it. |
 | `verifying-ux` | `ux-reviewer` | Skill is the live-verification procedure; the agent is the tester that runs it. |

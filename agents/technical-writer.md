@@ -10,6 +10,7 @@ skills:
   - progress-tracking
   - code-review
   - conventional-comments
+  - reviewing-documentation
   - writing-prose
 ---
 
@@ -28,12 +29,13 @@ Format findings per `skills/conventional-comments/SKILL.md` (preloaded).
 
 Your review procedure — the diff-to-docs review process (inventory, impact
 analysis, cross-reference) and the REQUIRED/RECOMMENDED doc-change
-classification — lives in `skills/writing-prose/SKILL.md` (preloaded), which
-also carries the prose-quality rubric (plain language, active voice,
+classification — lives in `skills/reviewing-documentation/SKILL.md`
+(preloaded). The prose-quality rubric (plain language, active voice,
 concrete examples, scannable structure) you apply when assessing existing
-documentation. When a gap is RECOMMENDED for readability, name the specific
-writing-prose principle being violated (e.g., "missing example",
-"passive-everything smell", "unexplained acronym").
+documentation lives in `skills/writing-prose/SKILL.md` (preloaded). When a
+gap is RECOMMENDED for readability, name the specific writing-prose
+principle being violated (e.g., "missing example", "passive-everything
+smell", "unexplained acronym").
 
 ## Report Format
 

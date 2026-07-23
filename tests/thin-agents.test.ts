@@ -141,7 +141,7 @@ describe("thin agents: frontmatter skills preloads per agent", () => {
     researcher: ["nested-agents", "progress-tracking", "researching-codebases"],
     "security-reviewer": ["code-review", "conventional-comments", "nested-agents", "progress-tracking", "reviewing-security"],
     "structure-planner": ["product-thinking", "progress-tracking", "slicing-work"],
-    "technical-writer": ["code-review", "conventional-comments", "progress-tracking", "writing-prose"],
+    "technical-writer": ["code-review", "conventional-comments", "progress-tracking", "reviewing-documentation", "writing-prose"],
     "test-architect": ["progress-tracking", "test-first-development"],
     "ux-reviewer": ["code-review", "conventional-comments", "progress-tracking", "verifying-ux"],
     verifier: ["progress-tracking", "running-quality-checks"],
@@ -191,10 +191,17 @@ describe("thin agents: fold targets absorbed the moved methodology", () => {
     expect(readOrEmpty(skillPath("code-review"))).toContain("off-by-one");
   });
 
-  test("writing-prose absorbs the technical-writer doc-change classification (REQUIRED/RECOMMENDED)", () => {
-    const content = readOrEmpty(skillPath("writing-prose"));
-    expect(content).toContain("REQUIRED");
-    expect(content).toContain("RECOMMENDED");
+  test("reviewing-documentation carries the technical-writer doc-change classification; writing-prose keeps the pointer", () => {
+    // The doc-change classification folded into writing-prose during the
+    // thin-agents refactor, then moved to the just-in-time
+    // reviewing-documentation skill (preloaded by technical-writer).
+    const reviewingDocumentation = readOrEmpty(skillPath("reviewing-documentation"));
+    expect(reviewingDocumentation).toContain("REQUIRED");
+    expect(reviewingDocumentation).toContain("RECOMMENDED");
+    expect(reviewingDocumentation).toContain("Documentation-Gap Review Process");
+    expect(readOrEmpty(skillPath("writing-prose"))).toContain(
+      "reviewing-documentation/SKILL.md",
+    );
   });
 
   test("nested-agents body carries the folded scout caps", () => {
@@ -255,34 +262,34 @@ describe("thin agents: haiku skills are self-contained", () => {
   }
 });
 
-describe("thin agents: documentation counts agree at 46 skills", () => {
+describe("thin agents: documentation counts agree at 47 skills", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
 
-  test("skills/ holds exactly 46 SKILL.md files", () => {
+  test("skills/ holds exactly 47 SKILL.md files", () => {
     const count = readdirSync(join(REPO_ROOT, "skills")).filter((name) =>
       existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")),
     ).length;
-    expect(count).toBe(46);
+    expect(count).toBe(47);
   });
 
-  test("AGENTS.md heading reads Skills (46)", () => {
-    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (46)");
+  test("AGENTS.md heading reads Skills (47)", () => {
+    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (47)");
   });
 
-  test("docs/skills.md description counts 46 skills", () => {
-    expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain("46 skills");
+  test("docs/skills.md description counts 47 skills", () => {
+    expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain("47 skills");
   });
 
-  test("docs/skills.md split sentence sums to 46", () => {
+  test("docs/skills.md split sentence sums to 47", () => {
     expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain(
-      "11 pipeline entry-point + 1 standalone utility + 34 methodology = 46",
+      "11 pipeline entry-point + 1 standalone utility + 35 methodology = 47",
     );
   });
 
-  test("docs/architecture.md counts all 46 skills and no stale 31", () => {
+  test("docs/architecture.md counts all 47 skills and no stale 31", () => {
     const content = read(ARCHITECTURE_MD);
-    expect(content).toContain("all 46 skills");
+    expect(content).toContain("all 47 skills");
     expect(content).not.toContain("31 skills");
   });
 
