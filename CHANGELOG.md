@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Design approval is now an adversarial agent review — the pipeline no longer pauses at DESIGN.** The DESIGN human gate is replaced by an automatic design-review gate: the orchestrator dispatches a fresh-context `general-purpose` subagent with the `## Review brief` from [`skills/eng-design-doc-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/SKILL.md) (by reference), writes each round's findings and verdict to `docs/plans/<id>/design-review-<n>.md` (frontmatter `verdict: APPROVE | REQUEST CHANGES | COMMENT`), and advances to STRUCTURE on APPROVE or COMMENT in the same turn. REQUEST CHANGES re-dispatches `design-author` with the findings verbatim (`revision: n+1`, cap 5 → terminal halt); an unparseable verdict or reviewer crash retries once, then halts — the gate fails closed. `design.md` frontmatter drops `approved`/`approved_at` (keeps `revision`), and the recovery hooks infer STRUCTURE from a passing `design-review-<n>.md` instead of approval frontmatter.
+
 ## [0.21.0] - 2026-07-23
 
 ### Changed

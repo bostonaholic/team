@@ -273,16 +273,16 @@ describe("multi-repo support", () => {
     expect(text).toContain("multi-repo mode");
   });
 
-  // Worktree-first: secondary worktrees are created AFTER the design gate
+  // Worktree-first: secondary worktrees are created AFTER the design review
   // (the home worktree is born at the leading WORKTREE phase). Assert the
-  // post-design-gate phrasing is co-located with the `## Worktrees` /
+  // post-design-review phrasing is co-located with the `## Worktrees` /
   // `repos.md` back-recording prose.
-  test("team SKILL creates secondary worktrees after the design gate", () => {
+  test("team SKILL creates secondary worktrees after the design review", () => {
     const text = flat(read(TEAM));
-    // A post-design-gate phrase appears within reach of the `## Worktrees`
+    // A post-design-review phrase appears within reach of the `## Worktrees`
     // back-recording of `repos.md`.
     expect(
-      /(after the design gate|post-design-gate)[^|]{0,400}(## Worktrees|repos\.md)|(## Worktrees|repos\.md)[^|]{0,400}(after the design gate|post-design-gate)/i.test(
+      /(after the design review|post-design-review)[^|]{0,400}(## Worktrees|repos\.md)|(## Worktrees|repos\.md)[^|]{0,400}(after the design review|post-design-review)/i.test(
         text,
       ),
     ).toBe(true);
@@ -532,15 +532,21 @@ describe("L2-demoted heavy-prior-state pipeline skills", () => {
     );
   });
 
-  test("team: design approval is the only human gate (structure is autonomous)", () => {
+  test("team: no mid-run human gates — an adversarial design review gates DESIGN", () => {
     const text = read(TEAM);
-    // Design is the sole human gate as of the structure-autonomy change.
-    expect(text).toContain("design is the only human gate");
-    expect(/### Human Gate \(design approval\)/.test(text)).toBe(true);
-    // Structure no longer gates — it advances autonomously.
-    expect(/### Structure \(no gate — autonomous\)/.test(text)).toBe(true);
-    // And the old structure human-gate section must be gone.
+    // The run has no mid-run human pause; the one human checkpoint is the
+    // PR review after the run completes.
+    expect(text).toContain("no mid-run human gates");
+    // DESIGN is gated by the adversarial design-review loop.
+    expect(/^### Design Review Gate \(design\)$/m.test(text)).toBe(true);
+    // The old human-gate sections must be gone — inverse set of the
+    // retired approval flow.
+    expect(/### Human Gate \(design approval\)/.test(text)).toBe(false);
     expect(/### Human Gate \(structure approval\)/.test(text)).toBe(false);
+    // No approval frontmatter marker remains anywhere in the skill.
+    expect(/^approved:/m.test(text)).toBe(false);
+    // Structure still advances autonomously.
+    expect(/### Structure \(no gate — autonomous\)/.test(text)).toBe(true);
   });
 
   test("team-worktree: reads repos.md and runs per-repo git worktree add", () => {
@@ -861,3 +867,33 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     assertHomeOnlyClosingPointer(TEAM_SKILL);
   });
 });
+// ---------------------------------------------------------------------------
+// Design-review gate brief — free L2 drift tripwire (docs/testing.md §2).
+// The DESIGN phase is gated by an adversarial design review: the orchestrator
+// dispatches a fresh-context `general-purpose` subagent with the
+// `## Review brief` from eng-design-doc-review, by reference. Renaming that
+// heading or the verdict set would silently change pipeline behavior (design
+// risk: silent gate drift) — these pins fail the build the moment either
+// moves. (docs/plans/2026-07-22-remove-human-gates, slice 1)
+// ---------------------------------------------------------------------------
+
+describe("design-review gate brief (L2 drift tripwire)", () => {
+  const ENG_REVIEW = join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md");
+  const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
+
+  test("eng-design-doc-review carries the ## Review brief heading verbatim", () => {
+    expect(/^## Review brief$/m.test(read(ENG_REVIEW))).toBe(true);
+  });
+
+  test("eng-design-doc-review pins the APPROVE / REQUEST CHANGES / COMMENT verdict set", () => {
+    const text = read(ENG_REVIEW);
+    expect(/^- \*\*APPROVE\*\*/m.test(text)).toBe(true);
+    expect(/^- \*\*REQUEST CHANGES\*\*/m.test(text)).toBe(true);
+    expect(/^- \*\*COMMENT\*\*/m.test(text)).toBe(true);
+  });
+
+  test("team SKILL dispatches the design review via the eng-design-doc-review brief", () => {
+    expect(read(TEAM_SKILL)).toContain("eng-design-doc-review");
+  });
+});
+
