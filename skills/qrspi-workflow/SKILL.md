@@ -301,7 +301,8 @@ advances autonomously, the reviewed design remains the contract behind it.
 
 Adding features, tests, or abstractions beyond what the structure specifies.
 The structure defines the scope fence. If scope needs to expand, update the
-structure (and, for a material change, return to the DESIGN gate) — do not
+structure (and, for a material change, return to DESIGN for a fresh
+design review) — do not
 silently add work.
 
 ### Backward Skipping

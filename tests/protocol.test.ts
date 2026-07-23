@@ -948,9 +948,12 @@ describe("Minor findings defer to the PR body (L2 tripwire)", () => {
 // ---------------------------------------------------------------------------
 
 describe("no mid-run human-gate claims (L2 forbidden-pattern sweep)", () => {
-  // Also catches the phrasing variants that survived the first sweep:
-  // "human approval gate", "human design gate", "human contract".
-  const FORBIDDEN = /human[ -]gate|human (approval|design) gate|human contract/i;
+  // Also catches the phrasing variants that survived earlier sweeps:
+  // "human approval gate", "human design gate", "human contract", and the
+  // retired "design gate"/"design-gate" (the sanctioned wordings —
+  // "design review", "design-review gate", "Design Review Gate" — do not
+  // match the pattern, so they need no allowlist).
+  const FORBIDDEN = /human[ -]gate|human (approval|design) gate|human contract|design[ -]gate/i;
   const NEGATION = /no mid-run human gates/i;
   const ALLOWLIST = new Set(["docs/ethos.md"]);
 
