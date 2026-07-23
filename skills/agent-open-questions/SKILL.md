@@ -151,6 +151,8 @@ Subagents MUST NOT include that key in their summary returns.
 
 ## Reference implementations
 
-- `agents/design-author.md` — DESIGN phase open questions.
-- `agents/questioner.md` — multi-repo disambiguation, including the
-  free-text escape hatch for path collection.
+- `skills/authoring-designs/SKILL.md` (loaded by `design-author`) — DESIGN
+  phase open questions.
+- `skills/decomposing-intent/SKILL.md` (loaded by `questioner`) — multi-repo
+  disambiguation; the canonical worked example of the free-text escape hatch
+  for path collection.

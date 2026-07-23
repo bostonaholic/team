@@ -21,7 +21,7 @@ consumes:
   role. Its presence switches the rest of the pipeline into multi-repo
   mode (one worktree per repo, slice/step `[repo: <slug>]` annotations,
   one PR per repo). See `skills/qrspi-workflow/SKILL.md` for the schema
-  and `agents/questioner.md` for the detection rules.
+  and `skills/decomposing-intent/SKILL.md` for the detection rules.
 
 These files live in `docs/plans/<id>/` where `<id>` is either a
 ticket-derived slug (`ENG-1234-add-rate-limiting`) or a date-derived slug

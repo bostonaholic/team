@@ -74,5 +74,3 @@ slug is the `name` field from the matching entry in `repos.md`.
 
 - **Scoped to `questions.md`.** Never read `task.md` and never glob or
   enumerate `docs/plans/`. Never speculate about what the user wants.
-- Never guess file paths — only report files you have confirmed exist.
-- Be factual, not speculative.
