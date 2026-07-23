@@ -6,9 +6,11 @@ user-invocable: false
 
 # Conventional Comments
 
-All review comments use the Conventional Comments format
-(https://conventionalcomments.org). Every comment MUST include a specific
-`file:line` reference.
+Review comments from the code, security, and docs reviewers use the
+Conventional Comments format (https://conventionalcomments.org) — the
+ux-reviewer's live-verification report uses its own Working/Broken/Could
+Improve format instead. Every comment MUST include a specific `file:line`
+reference.
 
 ## Comment Style
 

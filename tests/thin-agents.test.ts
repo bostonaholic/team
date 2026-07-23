@@ -331,6 +331,7 @@ describe("thin agents: eval diff-selection keeps firing on the new skills", () =
     "team-research-answers-seeded-questions": ["skills/researching-codebases/**", "skills/finding-files/**"],
     "team-structure-seeded-design": ["skills/slicing-work/**"],
     "team-plan-seeded-structure": ["skills/planning-implementation/**"],
+    "eng-design-doc-review-planted-missing-alternatives": ["skills/documenting-decisions/**", "skills/technical-design-doc/**"],
   };
 
   const FIXTURE_INPUTS: Record<string, string> = {
@@ -339,6 +340,7 @@ describe("thin agents: eval diff-selection keeps firing on the new skills", () =
     "team-research-answers-seeded-questions": "evals/fixtures/team-research/answers-seeded-questions/input.md",
     "team-structure-seeded-design": "evals/fixtures/team-structure/seeded-design/input.md",
     "team-plan-seeded-structure": "evals/fixtures/team-plan/seeded-structure/input.md",
+    "eng-design-doc-review-planted-missing-alternatives": "evals/fixtures/eng-design-doc-review/planted-missing-alternatives/input.md",
   };
 
   for (const [evalName, globs] of Object.entries(TOUCHFILE_ADDITIONS)) {
