@@ -372,8 +372,9 @@ replaces former inline body content 1:1, so it adds no net context (see
   technical-writer (4).
 - **Key behaviors:** Defines how a reviewer reads with fresh eyes and
   emits a structured verdict. Findings use the format defined in
-  `conventional-comments`; the gate-type and severity-tier map lives in
-  `review-severity-tiers`.
+  `conventional-comments` (except the ux-reviewer's, whose live-verification
+  report uses its own Working/Broken/Could Improve format); the gate-type and
+  severity-tier map lives in `review-severity-tiers`.
   Points review-comment prose at the seventh-grade bar
   in `writing-prose`. Carries the Comment red flags check with its split
   severity regime: ticket/plan references and TODO/FIXME comments in code

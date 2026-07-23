@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Generator-evaluator separation and review methodology — loaded by review agents to enforce fresh-context review discipline and gate verdicts; findings are formatted per the conventional-comments skill
+description: Generator-evaluator separation and review methodology — loaded by review agents to enforce fresh-context review discipline and gate verdicts; findings from the code, security, and docs reviewers are formatted per the conventional-comments skill
 ---
 
 # Code Review
@@ -30,9 +30,12 @@ independent subagents with no access to the orchestrator's conversation.
 
 ## Conventional Comments
 
-Every finding uses the Conventional Comments format — the label and
-decoration syntax, comment style, and the three comment types (issue,
-suggestion, nitpick) live in `skills/conventional-comments/SKILL.md`.
+Findings from the code, security, and docs reviewers use the Conventional
+Comments format — the label and decoration syntax, comment style, and the
+three comment types (issue, suggestion, nitpick) live in
+`skills/conventional-comments/SKILL.md`. The one exception is the
+ux-reviewer: its live-verification report uses its own
+Working/Broken/Could Improve format instead.
 
 ## Gate Types and Severity Tiers
 

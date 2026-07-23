@@ -60,6 +60,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "eng-design-doc-review-planted-missing-alternatives": [
     "skills/eng-design-doc-review/**",
     "skills/technical-design-doc/**",
+    "skills/documenting-decisions/**",
     "tests/eng-design-doc-review.evals.ts",
     "evals/fixtures/eng-design-doc-review/planted-missing-alternatives/**",
     "evals/rubrics/eng-design-doc-review.md",
