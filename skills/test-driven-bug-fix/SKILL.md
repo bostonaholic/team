@@ -1,6 +1,6 @@
 ---
 name: test-driven-bug-fix
-description: Test-driven bug fix methodology — loaded by the bug-fix pipeline to enforce reproduce-first, red-green discipline when fixing defects
+description: Test-driven bug-fix methodology — reproduce the defect first, write a failing test that captures it, then fix red-to-green. Load when fixing a bug, defect, or regression report.
 user-invocable: false
 ---
 

@@ -4,6 +4,7 @@ tier: periodic
 deps:
   - skills/team-fix/**
   - skills/test-driven-bug-fix/**
+  - skills/tracking-tickets/**
 ---
 
 # Self-contained task: plan a compressed bug fix, test-first

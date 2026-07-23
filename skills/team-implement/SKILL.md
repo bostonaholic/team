@@ -136,14 +136,11 @@ Before any agent dispatch, decide where to work:
    tests.
 5. Dispatch 5 reviewers in parallel: `code-reviewer`,
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
-6. **Aggregate gate** — sort every finding into a severity tier (see
-   `skills/code-review/SKILL.md` → "Severity Tiers and the Auto-Fix Boundary"):
-   - **Blocking** — `security-review` CRITICAL/HIGH, any `verification` failure,
-     `code-review` REQUEST CHANGES, any `issue (blocking)` comment.
-   - **Major** — `suggestion (non-blocking)`, security MEDIUM, ux-reviewer
-     REQUEST CHANGES.
-   - **Minor and below** — `nitpick (non-blocking)`, security LOW, doc gaps,
-     any COMMENT-level note.
+6. **Aggregate gate** — sort every finding into a severity tier —
+   **Blocking**, **Major**, or **Minor and below** — per the authoritative
+   table in `skills/review-severity-tiers/SKILL.md` ("Severity Tiers and
+   the Auto-Fix Boundary"). Consult that table rather than restating it
+   here.
 7. While any **Blocking or Major** finding remains:
    - Record the typed failure class(es) (security, lint, typecheck, build,
      test, review, suggestion, ux).

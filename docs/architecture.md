@@ -68,6 +68,11 @@ seeds and updates a TodoWrite ledger, and runs the human gates.
 
 ## 2. Artifact Layout & Frontmatter
 
+> **Runtime canon:** the schema below is carried for agents by
+> `skills/artifact-frontmatter/SKILL.md`; this section is the
+> doc-surface copy. The executable `ID_RE` / `PHASE_FILES` definitions
+> live in `hooks/session-start-recover.mjs`.
+
 All phase artifacts live in `docs/plans/<id>/`, where `<id>` is one of:
 
 - **Ticket-prefixed**: `<TICKET>-<kebab-topic>` (e.g.,
@@ -81,7 +86,7 @@ Every artifact opens with YAML frontmatter. Common fields:
 ---
 topic: <kebab-case>
 date: 2026-04-30
-phase: design        # task | questions | research | design | structure | plan
+phase: design        # task | questions | prd | repos | research | design | structure | plan
 ---
 ```
 
@@ -91,6 +96,8 @@ Per-phase additions:
 |-----------|-------------------------------------------------------------------------|
 | task      | `ticketId: <id>` (or `null`)                                            |
 | questions | (none)                                                                  |
+| prd       | (none — not human-gated; written conditionally by the questioner)      |
+| repos     | (none — written conditionally in multi-repo mode)                       |
 | research  | (none)                                                                  |
 | design    | `approved: false`, `approved_at: null`, `revision: 0`                   |
 | structure | (none — not human-gated; advances to PLAN once it exists)               |
@@ -235,7 +242,7 @@ No human gate. The plan is mechanically derived from the structure.
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
 5. **Aggregate gate** — orchestrator sorts every finding into a severity
    tier (**Blocking / Major / Minor-and-below**; see
-   `skills/code-review/SKILL.md`). While any Blocking or Major finding
+   `skills/review-severity-tiers/SKILL.md`). While any Blocking or Major finding
    remains, it dispatches the implementer to fix the typed failure
    class and re-runs all 5 reviewers — automatically, never consulting
    the user (the *consult guard*). Cap at 5 rounds; beyond that,
@@ -412,9 +419,10 @@ each block points at.
 Methodology skills carry no `argument-hint` and are loaded by agents
 through one of two mechanisms: a `skills:` YAML list in the agent's
 frontmatter (for example, `agents/design-author.md` declares
-`skills: [product-thinking]`), or an inline prose load instruction in the
-agent body (for example, `code-review` is loaded by the `code-reviewer`
-agent).
+`skills: [product-thinking, agent-open-questions, progress-tracking,
+authoring-designs]`), or an inline prose load instruction in the
+agent body (for example, `solid-principles` is loaded inline by the
+`implementer` body's Code quality section).
 
 Because they are reference material rather than user actions, methodology
 skills set `user-invocable: false` in their frontmatter. This keeps them
@@ -442,7 +450,7 @@ cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. `code-review` is the only skill loaded as composed
 methodology that is also a user command.)
 
-For the full per-skill reference — all 31 skills, their arguments,
+For the full per-skill reference — all 47 skills, their arguments,
 consumers, and behaviors — see [skills.md](skills.md).
 
 ### Design Guidelines
@@ -451,15 +459,20 @@ consumers, and behaviors — see [skills.md](skills.md).
    per agent invocation. At ~143 lines average per skill, 3 skills add
    ~430 lines (~6K-10K tokens, under 6% of 200K context). A fourth
    skill signals the agent's responsibility may be too broad. This is a
-   design convention, not a hard constraint.
+   design convention, not a hard constraint. An agent's own extracted
+   procedure skill does not count toward the soft limit — it replaces
+   former inline body content 1:1, so it adds no net context.
 
-2. **Extraction threshold:** Extract methodology to a separate skill
-   file when it forms a coherent, independently maintainable body of
-   knowledge — regardless of consumer count. Extraction is justified by
-   swappability, independent versioning, and file size (inlining would
-   meaningfully grow the consuming file). Do not require 2+ consumers
-   as a prerequisite. The threshold is about cohesion and
-   maintainability, not reuse count.
+2. **Extraction threshold — capability vs. fragment:** Content that is
+   an **independently useful capability** — coherent, self-contained,
+   and plausibly loaded on demand by the model or a future consumer —
+   earns its own skill **regardless of consumer count**. Claude Code
+   preloads only each skill's name and description; the body loads
+   just-in-time when invoked. An unused small skill therefore costs
+   almost nothing, while embedding its content into a consumer
+   forecloses just-in-time loading for everyone else. Content that is
+   only meaningful inside one consumer's procedure — a
+   **procedure fragment** — stays inline in that consumer.
 
 ## 7. Hooks
 
@@ -656,7 +669,7 @@ children are confirmed, and the depth cap is stable.
 
 ## See also
 
-- **[Skills](skills.md)** — the full per-skill reference for all 31 skills.
+- **[Skills](skills.md)** — the full per-skill reference for all 47 skills.
 - **[Testing](testing.md)** — the six-layer test harness and which layer each check belongs at.
 - **[Vision](vision.md)** — the loop-driven end state this design builds toward.
 - **[Ethos](ethos.md)** — the principles behind the pipeline.

@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 31 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 19 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 47 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -38,15 +38,16 @@ catalog into two flavors:
 - **Methodology skills omit `argument-hint`.** They are never invoked
   directly. Agents load them through one of two mechanisms: a `skills:`
   YAML list in the agent's frontmatter (e.g., `agents/design-author.md`
-  declares `skills: [product-thinking]`), or an inline prose load
+  declares `skills: [product-thinking, agent-open-questions,
+  progress-tracking, authoring-designs]`), or an inline prose load
   instruction in the agent body (e.g., `Load skills/<name>/SKILL.md for
   …`).
 
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
 standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 19 methodology =
-31**.
+split is **11 pipeline entry-point + 1 standalone utility + 35 methodology =
+47**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -250,22 +251,39 @@ phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 19 methodology skills carry no `argument-hint` and are never invoked
+The 35 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
 "Loaded by" line for each skill names its consumers from the per-agent
-load manifest; an agent typically loads at most three.
+load manifest; an agent typically loads at most three. An agent's own
+extracted procedure skill does not count toward that soft limit — it
+replaces former inline body content 1:1, so it adds no net context (see
+[architecture.md](architecture.md#design-guidelines)).
 
 ### qrspi-workflow
 
-- **Purpose:** Phase discipline plus the artifact and frontmatter
-  conventions every phase follows.
-- **Loaded by:** orchestrator skills; questioner (for the artifact schema).
+- **Purpose:** Phase discipline — the phase sequence, gates, and
+  anti-patterns every phase follows.
+- **Loaded by:** orchestrator skills.
 - **Key behaviors:** The structural backbone of the pipeline: defines the
-  phase sequence, the artifact/frontmatter schema (including the
-  `repos.md` schema), the gate mechanics (severity tiers and the consult
-  guard for the aggregate review gate), and an anti-patterns catalog.
+  phase sequence, the gate mechanics (severity tiers and the consult
+  guard for the aggregate review gate), the phase-inference table, and an
+  anti-patterns catalog. The artifact/frontmatter schema it once carried
+  is canonical in `artifact-frontmatter`; this skill keeps pointers.
+
+### artifact-frontmatter
+
+- **Purpose:** The artifact schema contract for `docs/plans/<id>/`.
+- **Loaded by:** orchestrator skills and artifact-authoring agents
+  just-in-time via pointers (qrspi-workflow, decomposing-intent, `team`);
+  no agent preloads it.
+- **Key behaviors:** Carries the artifact inventory and `<id>` forms, the
+  YAML frontmatter schema and phase enum, the `repos.md` and `prd.md`
+  schemas, the topic-consistency invariant, the `ticketId` scope rule,
+  and the approval check/flip/rejection mechanics. Defers to
+  `hooks/session-start-recover.mjs` as the executable canon for
+  `ID_RE`/`PHASE_FILES` rather than forking them.
 
 ### agent-open-questions
 
@@ -281,25 +299,131 @@ load manifest; an agent typically loads at most three.
   plain-text input, and defines the two-attempt malformed-envelope
   fallback.
 
+### researching-codebases
+
+- **Purpose:** Codebase research procedure for the Research phase.
+- **Loaded by:** researcher.
+- **Key behaviors:** Carries the investigation method (context, trace,
+  pattern recognition, constraint discovery) and the compressed
+  research-report output format with its 100-line budget (150 in
+  multi-repo mode). The isolation stance itself — questions.md only,
+  never task.md — stays in the researcher agent as identity.
+
+### finding-files
+
+- **Purpose:** File-location search strategy for the Research phase.
+- **Loaded by:** file-finder.
+- **Key behaviors:** Glob by naming convention, content search,
+  import/dependency tracing, directory exploration, and config/manifest
+  checks, scoped to the vocabulary in `questions.md`. Deliberately
+  self-contained — the file-finder runs on haiku, so the skill carries
+  everything inline with no cross-references.
+
+### decomposing-intent
+
+- **Purpose:** Artifact templates and decomposition procedure for the
+  Question phase.
+- **Loaded by:** questioner.
+- **Key behaviors:** Carries the `task.md` and `questions.md` body
+  templates, the topic-slug rules, the process steps, and the multi-repo
+  detection flow (including the canonical `Repos` envelope worked example
+  and the `repos.md` schema pointer). Conditionally loads
+  `product-requirements-doc` for vague, multi-story, cross-cutting, or
+  behavior-replacing requests, producing `prd.md` alongside `task.md`.
+
+### authoring-designs
+
+- **Purpose:** Design-document authoring procedure for the Design phase.
+- **Loaded by:** design-author.
+- **Key behaviors:** Carries the repo-scope confirmation flow, the
+  mandatory interactive open-questions step (at most 4 sharp questions,
+  answers land in `## Decisions made`), and the `design.md` document
+  template with its six-category edge-case walk. When `task.md`
+  references a `prd.md`, reads it first and honors its scope boundaries
+  and acceptance criteria per `product-requirements-doc`'s "Consuming a
+  PRD downstream" section.
+
+### slicing-work
+
+- **Purpose:** Vertical-slice breakdown methodology for the Structure
+  phase.
+- **Loaded by:** structure-planner.
+- **Key behaviors:** Carries the vertical-slice rationale, the
+  `structure.md` document format, the slicing rules (every slice ends in a
+  passing test; 1–3 acceptance tests per slice; edge cases pulled from the
+  design; order by user value), and the slicing heuristics
+  (walking-skeleton first; migrations alone are never a slice).
+
+### planning-implementation
+
+- **Purpose:** Tactical planning methodology for the Plan phase.
+- **Loaded by:** planner.
+- **Key behaviors:** Carries the `plan.md` document template that expands
+  each vertical slice into file-level steps with acceptance-test mappings,
+  and the tactical rules (one slice at a time, reuse over reinvention,
+  under 300 lines, no implementation code, atomic slices, test coverage
+  matching the structure).
+
 ### code-review
 
-- **Purpose:** Generator-evaluator separation, Conventional Comments, and
-  the gate verdict vocabulary.
+- **Purpose:** Generator-evaluator separation and the gate verdict
+  vocabulary.
 - **Loaded by:** code-reviewer, security-reviewer, ux-reviewer,
   technical-writer (4).
 - **Key behaviors:** Defines how a reviewer reads with fresh eyes and
-  emits a structured verdict. Carries the authoritative severity-tier
-  table (Blocking / Major / Minor-and-below) that maps every reviewer
-  vocabulary onto one scale, plus the consult guard — the rule that the
-  orchestrator never surfaces a Blocking or Major finding to the user and
-  loops the implementer automatically until only Minor-and-below remains.
-  Reclassifies `ux-reviewer` from a soft user-decides gate to an
-  auto-fixed Major. Points review-comment prose at the seventh-grade bar
+  emits a structured verdict. Findings use the format defined in
+  `conventional-comments` (except the ux-reviewer's, whose live-verification
+  report uses its own Working/Broken/Could Improve format); the gate-type and
+  severity-tier map lives in `review-severity-tiers`.
+  Points review-comment prose at the seventh-grade bar
   in `writing-prose`. Carries the Comment red flags check with its split
   severity regime: ticket/plan references and TODO/FIXME comments in code
   comments block on first occurrence, while what-restating comments,
   wordy comments, and commented-out code escalate from `suggestion:` to
-  `issue:` when repeated across the diff.
+  `issue:` when repeated across the diff. Also carries the Code Reviewer
+  inspection process (done-criteria verification and the per-file
+  inspection checklist); the security review methodology lives in
+  `reviewing-security`.
+
+### conventional-comments
+
+- **Purpose:** The Conventional Comments format for review findings.
+- **Loaded by:** code-reviewer, security-reviewer, technical-writer (3);
+  the `eng-design-doc-review` subagent loads it for its findings. The
+  `ux-reviewer` does not preload it — its Working/Broken/Could Improve
+  report is not Conventional Comments.
+- **Key behaviors:** Carries the label and decoration syntax, the
+  code-directed comment style (critique the code, not the coder), and the
+  three comment types — `issue`, `suggestion`, `nitpick` — with literal
+  examples. Every comment includes a specific `file:line` reference.
+
+### reviewing-security
+
+- **Purpose:** Security review methodology and the severity ladder.
+- **Loaded by:** security-reviewer.
+- **Key behaviors:** Carries the Security Reviewer process —
+  attack-surface identification, OWASP Top 10 checks, the additional
+  vulnerability checks (hardcoded secrets, command injection, path
+  traversal, unsafe regex, missing input validation), and the
+  search-beyond-the-diff rule — plus the CRITICAL/HIGH/MEDIUM/LOW
+  severity classification ladder (CRITICAL and HIGH are hard gates).
+  The PASS/FAIL verdict rule stays in `code-review`.
+
+### review-severity-tiers
+
+- **Purpose:** The authoritative severity-tier map for aggregating
+  reviewer verdicts.
+- **Loaded by:** the orchestrator (`team`, `team-implement`,
+  `qrspi-workflow` cross-reference it at the aggregate review gate); no
+  agent preloads it.
+- **Key behaviors:** Carries the gate-type table (HARD / AUTO-FIX /
+  ADVISORY per reviewer) and the authoritative severity-tier table
+  (Blocking / Major / Minor-and-below) that maps every reviewer
+  vocabulary onto one scale, plus the consult guard — the rule that the
+  orchestrator never surfaces a Blocking or Major finding to the user and
+  loops the implementer automatically until only Minor-and-below remains,
+  capped at 5 rounds. Classifies `ux-reviewer` REQUEST CHANGES as an
+  auto-fixed Major.
 
 ### engineering-standards
 
@@ -318,7 +442,23 @@ load manifest; an agent typically loads at most three.
 - **Purpose:** Treat acceptance tests as the immutable scope fence.
 - **Loaded by:** test-architect, code-reviewer; orchestrator.
 - **Key behaviors:** Tests are written first and never edited to pass; the
-  implementation must satisfy them as the contract.
+  implementation must satisfy them as the contract. The style rules every
+  acceptance test follows live in `test-style`.
+
+### test-style
+
+- **Purpose:** Test style rules and the flaky-test red-flag catalog.
+- **Loaded by:** test-architect and code-reviewer just-in-time, via
+  pointers from `test-first-development` and `code-review` (no agent
+  preloads it).
+- **Key behaviors:** Carries the full style-rule set —
+  behavior-not-implementation, DAMP setup, narrow assertions, actionable
+  failures, the deterministic-input rules (control the clock, seed all
+  randomness, own your state, impose order, hermetic boundaries), the
+  fidelity ladder — plus the audit checklist and the single copy of the
+  reviewer-facing flaky-test red-flag catalog with its canonical
+  time-bomb example pair. The always-blocking severity regime for flaky
+  flags stays in `code-review`.
 
 ### test-driven-bug-fix
 
@@ -342,17 +482,41 @@ load manifest; an agent typically loads at most three.
 - **Key behaviors:** Name the smell, apply the pattern in its own commit,
   and keep tests green at every step.
 
+### implementing-slices
+
+- **Purpose:** Slice-by-slice execution procedure for the Implement phase.
+- **Loaded by:** implementer.
+- **Key behaviors:** Defines the implementer's two dispatch modes (initial
+  and review-fix with typed failure classes), the slice-execution loop
+  (implement the steps, run the slice's acceptance tests, commit
+  atomically, report), TDD discipline within a slice, blocker handling,
+  and the scope fence (acceptance tests are immutable; no slices beyond
+  the plan).
+
 ### systematic-debugging
 
 - **Purpose:** Evidence-first root-cause diagnosis.
-- **Loaded by:** the `implementer` body carries an inline **conditional**
-  `Load skills/systematic-debugging/SKILL.md` directive, fired only on a
+- **Loaded by:** the implementer's preloaded `implementing-slices` skill
+  carries an inline **conditional** `Load
+  skills/systematic-debugging/SKILL.md` directive, fired only on a
   **non-obvious** mid-slice failure (it drills the Root Cause Analysis (5
   Whys) chain before editing). For every other agent it remains
   **advisory** — no static `Load skills/<name>/SKILL.md` instruction names
   it; those agents load it on demand when an investigation begins.
 - **Key behaviors:** Gather evidence before theorizing, then isolate the
   root cause rather than patching symptoms.
+
+### running-quality-checks
+
+- **Purpose:** Mechanical verification procedure for the Implement phase's
+  verify gate.
+- **Loaded by:** verifier.
+- **Key behaviors:** Detect the checks the project configures (scripts,
+  Makefile targets, CI steps, tool config), run them fastest-first in speed
+  order (format, lint, typecheck, build, test), capture the exact command
+  and exit code as evidence, and derive a PASS/FAIL verdict. Deliberately
+  self-contained — the verifier runs on haiku, so the skill carries
+  everything inline with no cross-references.
 
 ### progress-tracking
 
@@ -365,6 +529,23 @@ load manifest; an agent typically loads at most three.
   item per step before starting and mark each complete as you go. The
   orchestrator owns the phase ledger; an agent tracks its own sub-steps in
   its own context and never merges them up.
+
+### nested-agents
+
+- **Purpose:** Guardrails for the four `Agent`-tool holders that spawn
+  read-only nested sub-agents.
+- **Loaded by:** researcher, implementer, code-reviewer, security-reviewer
+  (4).
+- **Key behaviors:** Nesting is an optimization, never a dependency — if
+  the `Agent` tool is missing or a dispatch fails, the agent does the work
+  inline. Carries the fail-closed version gate (Claude Code ≥ 2.1.172),
+  the read-only default, the depth budget, and the per-agent caps: the
+  researcher fans out at most 4 isolation-preserving exploration scouts,
+  the implementer at most 2 read-only scouts, and the code-reviewer and
+  security-reviewer run the skeptic pass — every hard-gate finding is
+  handed to a fresh sub-agent as a neutral falsifiable claim (for security
+  findings, a claim about exploitability) to refute, with default-keep on
+  anything short of a verified refutation.
 
 ### documenting-decisions
 
@@ -389,13 +570,15 @@ load manifest; an agent typically loads at most three.
 ### product-requirements-doc
 
 - **Purpose:** Optional product-requirements-document methodology.
-- **Loaded by:** questioner (per the skill's own self-description; the
-  `questioner` agent body references `qrspi-workflow` for the artifact schema
-  but does not carry an explicit `Load
-  skills/product-requirements-doc/SKILL.md` instruction).
+- **Loaded by:** questioner (via `decomposing-intent`'s conditional load —
+  fired when the request is vague, multi-story, cross-cutting, or replaces
+  existing behavior) and design-author (via `authoring-designs`, when
+  `task.md` references a `prd.md`, per the skill's "Consuming a PRD
+  downstream" section).
 - **Key behaviors:** Frames the problem, users, and success criteria when a
-  request warrants a PRD before design. Points PRD authors at the
-  seventh-grade prose bar in `writing-prose`.
+  request warrants a PRD before design; the PRD lands at
+  `docs/plans/<id>/prd.md`, referenced from `task.md`. Points PRD authors
+  at the seventh-grade prose bar in `writing-prose`.
 
 ### product-thinking
 
@@ -415,12 +598,37 @@ load manifest; an agent typically loads at most three.
 - **Key behaviors:** A seventh-grade reading-level bar governs prose the
   agent writes as well as prose it assesses — readable, plain language
   aimed at someone who has not seen the code, clarity over cleverness.
+  The technical-writer's review procedure that applies this bar lives in
+  `reviewing-documentation`.
+
+### reviewing-documentation
+
+- **Purpose:** Documentation-gap review methodology and the
+  REQUIRED/RECOMMENDED doc-change classification.
+- **Loaded by:** technical-writer.
+- **Key behaviors:** Carries the technical-writer's review procedure —
+  applying the `writing-prose` principles to reviews (classify by impact,
+  name the failure mode, suggest the direction not the rewrite,
+  acknowledge what works), the documentation-gap review process
+  (inventory, impact analysis, cross-reference), and the
+  REQUIRED/RECOMMENDED doc-change classification.
+
+### verifying-ux
+
+- **Purpose:** Live application verification procedure for the Implement
+  phase's UX gate.
+- **Loaded by:** ux-reviewer.
+- **Key behaviors:** Detect the project type (UI, API-only, or library —
+  libraries skip live testing), boot the application, verify routes and
+  endpoints with real `curl` requests including error and edge cases, and
+  always stop the server when done.
 
 ### git-commit
 
 - **Purpose:** Commit discipline — conventional commits, the 50/72 subject
   and body rule, and atomic commits.
-- **Loaded by:** team-pr.
+- **Loaded by:** team-pr; implementer (via `implementing-slices`, at the
+  atomic slice-commit step).
 - **Key behaviors:** One logical change per commit with a clear, scoped
   message. Points commit-body prose at the seventh-grade bar in
   `writing-prose`.
@@ -432,6 +640,25 @@ load manifest; an agent typically loads at most three.
 - **Key behaviors:** Record user-facing changes under the standard
   Added / Changed / Fixed headings before the PR opens. Points entry
   authors at the seventh-grade prose bar in `writing-prose`.
+
+### tracking-tickets
+
+- **Purpose:** Ticket-lifecycle discipline for tracker-linked runs — the
+  in-progress / in-review timing, the conditional PR closing footer, and
+  the never-close-by-hand rule.
+- **Loaded by:** the PR-opening and pickup hosts just-in-time via
+  pointers (`team`, `team-pr`, `team-fix`); no agent preloads it.
+- **Key behaviors:** Every tracker interaction is best-effort,
+  tracker-agnostic, and never blocks the pipeline. A picked-up ticket
+  moves to in-progress as the run's first action. At PR open, the PR is
+  linked to the ticket via a `Closes` footer as the final line of the PR
+  body — conditional on `ticketId` (omitted when null, no placeholder),
+  with the interpretation rules codified at the consumption site and, in
+  multi-repo mode, the home repo's PR alone carrying the closing keyword
+  (companions get a non-closing qualified reference). The ticket moves
+  to in-review only once the PR is marked ready for review — never while
+  it is a draft — and is never closed by hand: the link auto-closes it
+  on merge.
 
 ### worktree-isolation
 
@@ -466,23 +693,40 @@ entry-point section above rather than repeating them here.
 | `team-fix` | user (direct invocation) | Compressed bug-fix flow (outside QRSPI) |
 | `eng-design-doc-review` | user (direct invocation) | Optional pre-Design audit; dispatches a general-purpose subagent |
 | `shipit` | user (direct invocation) | Standalone — land a reviewed PR (not a QRSPI phase) |
-| `qrspi-workflow` | orchestrator skills; questioner (schema) | All phases |
+| `qrspi-workflow` | orchestrator skills | All phases |
+| `artifact-frontmatter` | orchestrator skills; artifact authors (just-in-time via pointers) | All phases — artifact schema |
 | `agent-open-questions` | questioner, design-author | Question, Design (subagent → user via orchestrator) |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
+| `conventional-comments` | code-reviewer, security-reviewer, technical-writer | Implement (verify) — finding format |
+| `review-severity-tiers` | orchestrator (team, team-implement, qrspi-workflow) | Implement (aggregate review gate) |
+| `reviewing-security` | security-reviewer | Implement (verify) |
+| `decomposing-intent` | questioner | Question |
+| `authoring-designs` | design-author | Design |
+| `researching-codebases` | researcher | Research |
+| `finding-files` | file-finder | Research |
+| `slicing-work` | structure-planner | Structure |
+| `planning-implementation` | planner | Plan |
 | `engineering-standards` | planner, implementer, code-reviewer | Plan, Implement |
 | `test-first-development` | test-architect, code-reviewer; orchestrator | Implement |
+| `test-style` | test-architect, code-reviewer (just-in-time via pointers) | Implement |
 | `test-driven-bug-fix` | team-fix | Bug-fix flow |
 | `solid-principles` | implementer, code-reviewer | Implement |
 | `refactoring-to-patterns` | implementer | Implement |
+| `implementing-slices` | implementer | Implement |
+| `running-quality-checks` | verifier | Implement (verify) |
+| `verifying-ux` | ux-reviewer | Implement (verify) |
 | `systematic-debugging` | implementer (inline Load on non-obvious failures); other agents when debugging (advisory) | Implement; Any (debugging) |
 | `progress-tracking` | every multi-step agent (convention) | Any (multi-step procedure) |
+| `nested-agents` | researcher, implementer, code-reviewer, security-reviewer | Research, Implement (scouts + skeptic passes) |
 | `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
 | `technical-design-doc` | planner | Plan |
-| `product-requirements-doc` | questioner | Question |
+| `product-requirements-doc` | questioner (via `decomposing-intent`, conditional); design-author (via `authoring-designs`) | Question, Design |
 | `product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
 | `writing-prose` | technical-writer | Implement (verify) — bar for prose it writes and prose it assesses |
-| `git-commit` | team-pr | PR |
+| `reviewing-documentation` | technical-writer | Implement (verify) — doc-gap review process + classification |
+| `git-commit` | team-pr; implementer (via `implementing-slices`) | PR; Implement (slice commits) |
 | `changelog` | team, team-pr | PR |
+| `tracking-tickets` | orchestrator (team, team-pr, team-fix — just-in-time via pointers) | Setup (ticket pickup); PR (ticket link + state) |
 | `worktree-isolation` | orchestrator (team, team-worktree) | Worktree |
 
 The `general-purpose` subagent dispatched by `eng-design-doc-review` is an
@@ -500,7 +744,14 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 |---|---|---|
 | `team-research` | `researcher` | Skill dispatches the Research phase; the agent is the doer that runs the research. |
 | `code-review` | `code-reviewer` | Skill is the review methodology; the agent is the reviewer that applies it. |
+| `reviewing-security` | `security-reviewer` | Skill is the security review methodology and severity ladder; the agent is the reviewer that applies it. |
+| `reviewing-documentation` | `technical-writer` | Skill is the doc-gap review methodology and classification; the agent is the reviewer that applies it. |
 | `team-question` | `questioner` | Skill drives the Question phase; the agent decomposes the intent. |
+| `implementing-slices` | `implementer` | Skill is the slice-execution procedure; the agent is the specialist that executes it. |
+| `verifying-ux` | `ux-reviewer` | Skill is the live-verification procedure; the agent is the tester that runs it. |
+| `authoring-designs` | `design-author` | Skill is the authoring procedure and template; the agent is the author that drafts the design. |
+| `finding-files` | `file-finder` | Skill is the search strategy; the agent is the locator that executes it. |
+| `planning-implementation` | `planner` | Skill is the plan template and tactical rules; the agent is the engineer that writes the plan. |
 | `team-design` | `design-author` | Skill drives the Design phase; the agent drafts the alignment doc. |
 | `technical-design-doc` | `technical-writer` | Both contain "technical" but differ: the skill is design-doc methodology; the agent writes documentation during verify. |
 | `eng-design-doc-review` | `design-author` | The review skill dispatches a `general-purpose` subagent, **not** the `design-author` agent — keeping the audit independent of the author. |

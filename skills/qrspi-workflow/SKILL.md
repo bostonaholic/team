@@ -106,104 +106,19 @@ not stop to ask), update the changelog, surface the tracking ticket.
 
 ## Artifact Conventions
 
-All phase artifacts live under `docs/plans/<id>/`, where `<id>` is one of:
+All phase artifacts live under `docs/plans/<id>/`. The artifact schema
+is canonical in `skills/artifact-frontmatter/SKILL.md` — the `<id>`
+forms, the artifact inventory, the `repos.md` and `prd.md` schemas, the
+topic-consistency invariant, and the `ticketId` scope. Consult that
+skill rather than restating the schema here. What matters for phase
+discipline:
 
-- **Ticket-prefixed**: `<TICKET>-<kebab-topic>` (e.g.,
-  `ENG-1234-add-rate-limiting`)
-- **Date-prefixed**: `<YYYY-MM-DD>-<kebab-topic>` (e.g.,
-  `2026-05-01-add-rate-limiting`)
-
-| Artifact  | Path                              | Created By              | Required? |
-|-----------|-----------------------------------|-------------------------|-----------|
-| Task      | `docs/plans/<id>/task.md`         | questioner agent        | yes       |
-| Questions | `docs/plans/<id>/questions.md`    | questioner agent        | yes       |
-| Repos     | `docs/plans/<id>/repos.md`        | questioner / design-author | when topic spans repos |
-| Research  | `docs/plans/<id>/research.md`     | researcher agent        | yes       |
-| Design    | `docs/plans/<id>/design.md`       | design-author agent     | yes       |
-| Structure | `docs/plans/<id>/structure.md`    | structure-planner agent | yes       |
-| Plan      | `docs/plans/<id>/plan.md`         | planner agent           | yes       |
-
-The `<id>` slug should match across every artifact for the same feature.
-
-### Repos artifact (`repos.md`)
-
-When a topic touches **more than one repository**, the questioner or
-design-author writes `docs/plans/<id>/repos.md` to enumerate the repos
-involved. The presence of this file switches the pipeline into multi-repo
-mode (one worktree per listed repo, see
-`skills/worktree-isolation/SKILL.md`); the home worktree is created at the
-leading WORKTREE phase and secondary worktrees after the design gate. Its
-absence keeps the pipeline in single-repo mode — today's default.
-
-`repos.md` schema:
-
-```yaml
----
-topic: <kebab-case-topic>
-date: <YYYY-MM-DD>
-phase: repos
----
-
-# Repos: <topic>
-
-## Home repo
-- **name:** <short-slug>
-- **path:** <absolute-path>
-- **role:** One sentence describing what kind of work happens here.
-
-## Additional repos
-- **name:** <short-slug>
-  **path:** <absolute-path>
-  **role:** One sentence describing what kind of work happens here.
-- **name:** <short-slug>
-  **path:** <absolute-path>
-  **role:** ...
-
-## Worktrees
-<written by the orchestrator after the design gate; back-records the home worktree path created at the leading WORKTREE phase plus each secondary path>
-- home: <home-worktree-path>
-- <repo-name>: <repo-path>/.claude/worktrees/<id>
-- ...
-```
-
-Rules:
-
-- **Names are short slugs** (e.g. `frontend`, `api`, `shared-types`) used
-  in slice and plan annotations like `[repo: api]`. Names must be unique
-  across `repos.md`.
-- **Paths are absolute.** Each must be a git working tree.
-- **The home repo is the one the user invoked `/team` from.** Its
-  `docs/plans/<id>/` directory is the canonical artifact location;
-  other repos' worktrees do not carry duplicate artifacts.
-- **The `## Worktrees` section is written by the orchestrator** after the
-  design gate (back-recording the home worktree created at the leading
-  WORKTREE phase plus each secondary worktree), not by the questioner or
-  design-author. Until then, `repos.md` lists only the repos to be involved.
-
-### Topic consistency invariant
-
-Every artifact's `topic` frontmatter field MUST be identical across all
-artifacts in the same `docs/plans/<id>/` directory. The `topic` value
-is the kebab portion of `<id>` — i.e. `<id>` minus the `<TICKET>-` or
-`<YYYY-MM-DD>-` prefix:
-
-| `<id>`                                  | `topic`                       |
-|-----------------------------------------|-------------------------------|
-| `ENG-9876-cache-invalidation`           | `cache-invalidation`          |
-| `2026-05-01-add-rate-limiting`          | `add-rate-limiting`           |
-
-Never use the ticket id, the date, or a re-worded description as the
-topic. Downstream agents copy the topic verbatim from upstream
-artifacts; the questioner is the one place where it is chosen.
-
-### ticketId scope
-
-`ticketId` lives **only on `task.md`**. It does not appear on
-`questions.md`, `research.md`, `design.md`, `structure.md`, or
-`plan.md`. The rationale: the directory name `<id>` already encodes
-the ticket prefix, and `task.md` is the canonical intent record. Re-
-encoding `ticketId` on every artifact would be duplication that can
-drift out of sync with the directory name.
+- The `<id>` slug and the `topic` frontmatter field match across every
+  artifact for the same feature.
+- `repos.md` (when present) switches the pipeline into multi-repo mode;
+  its absence keeps single-repo mode — today's default.
+- `prd.md` (when present) rides the autonomous Question phase and is
+  not human-gated.
 
 ## Research Isolation
 
@@ -258,7 +173,7 @@ Informational gate. The pipeline presents findings to the user and may proceed
 at the user's judgment. The user is expected to read and acknowledge.
 
 Which review findings actually gate — and which auto-fix rather than wait on the
-user — is defined in exactly one place: `skills/code-review/SKILL.md` →
+user — is defined in exactly one place: `skills/review-severity-tiers/SKILL.md` →
 "Severity Tiers and the Auto-Fix Boundary". Only findings below the auto-fix
 boundary surface to the user as a SOFT acknowledgment; consult that table rather
 than restating it here.
@@ -279,39 +194,11 @@ session-scoped ledger that mirrors the phase table.
 
 ### Frontmatter schema (all artifacts)
 
-Every artifact opens with YAML frontmatter. Common fields:
-
-```yaml
----
-topic: <kebab-case>
-date: 2026-04-30
-phase: design        # task | questions | research | design | structure | plan
----
-```
-
-Per-phase additions:
-
-| Phase     | Extra frontmatter                                                                  |
-|-----------|------------------------------------------------------------------------------------|
-| task      | `ticketId: <id>` (or `null`)                                                       |
-| questions | (none)                                                                             |
-| research  | (none)                                                                             |
-| design    | `approved: false`, `approved_at: null`, `revision: 0`                              |
-| structure | (none — not human-gated; advances to PLAN once it exists)                          |
-| plan      | (none — derived mechanically from the structure)                                   |
-
-**Approval check** (used by downstream phase entry):
-
-```sh
-grep -qE '^approved:[[:space:]]*true[[:space:]]*$' <artifact>
-```
-
-**Approval flip** (orchestrator at human gate): edit the file in place
-to set `approved: true` and stamp `approved_at: <ISO-8601>`.
-
-**Rejection**: the agent re-drafts the artifact. The orchestrator
-increments `revision: <n+1>` in the new draft's frontmatter. Cap at 5;
-beyond that, escalate to the user for direction.
+Every artifact opens with YAML frontmatter. The schema — common fields,
+the phase enum, the per-phase additions, and the approval
+check/flip/rejection mechanics — is canonical in
+`skills/artifact-frontmatter/SKILL.md`. Phase transitions verify
+approval by re-reading the gated artifact's frontmatter per that skill.
 
 ### Phase inference from artifacts
 
@@ -365,7 +252,7 @@ Every transition follows this sequence:
 
 Never proceed to the next phase while a Blocking or Major finding remains —
 the implementer loops automatically and the user is never consulted about it
-(the consult guard; see `skills/code-review/SKILL.md`). Minor-and-below
+(the consult guard; see `skills/review-severity-tiers/SKILL.md`). Minor-and-below
 findings are presented to the user only once Blocking and Major are clean.
 
 ## Anti-Patterns

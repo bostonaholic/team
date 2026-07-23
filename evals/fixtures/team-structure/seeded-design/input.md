@@ -3,6 +3,7 @@ agent: team-structure
 tier: periodic
 deps:
   - skills/team-structure/**
+  - skills/slicing-work/**
   - agents/structure-planner.md
 ---
 

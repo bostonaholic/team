@@ -182,6 +182,23 @@ Apply this methodology during code writing with these checkpoints:
    concrete guidelines -- not aspirational goals.
 5. **Self-review is not optional.** Run the Quality Checklist as a literal
    checklist on every file you touch.
+6. **Construct with collaborators, call with work.** Constructors take the
+   long-lived dependencies (clock, DB, logger, HTTP client) that define
+   identity. Methods take the per-call work parameters (date range, request
+   body). Constructors do no work -- no I/O, no static lookups, no expensive
+   computation.
+7. **No mixed levels of abstraction in a function.** A function calls
+   functions one level below its own. If you find yourself doing high-level
+   orchestration and low-level byte-level work in the same function,
+   extract the low-level work into a helper named at the surrounding level.
+8. **No primitive obsession in new domain types.** When adding a new domain
+   concept (Money, Duration, OrderId, EmailAddress), give it a type. Long
+   parameter lists with related primitives signal a missing value object.
+9. **Targeted exception scopes only.** Wrap exactly the call that can
+   throw; catch the specific exception subclass; rethrow with the original
+   cause chained. Never `catch (Exception e)` around a large block.
+10. **Follow the project's existing code style, naming conventions, and
+    patterns.** Read neighboring files to calibrate if unsure.
 
 ## When Reviewing
 

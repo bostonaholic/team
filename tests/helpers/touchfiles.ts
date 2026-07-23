@@ -10,6 +10,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "planted-null-deref": [
     "agents/code-reviewer.md",
     "skills/code-review/**",
+    "skills/conventional-comments/**",
     "tests/code-reviewer.evals.ts",
     "evals/fixtures/code-reviewer/planted-null-deref/**",
     "evals/rubrics/code-reviewer.md",
@@ -17,6 +18,8 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "planted-time-bomb": [
     "agents/code-reviewer.md",
     "skills/code-review/**",
+    "skills/conventional-comments/**",
+    "skills/test-style/**",
     "tests/code-reviewer.evals.ts",
     "evals/fixtures/code-reviewer/planted-time-bomb/**",
     "evals/rubrics/code-reviewer.md",
@@ -27,6 +30,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "planted-comment-violations": [
     "agents/code-reviewer.md",
     "skills/code-review/**",
+    "skills/conventional-comments/**",
     "skills/engineering-standards/**",
     "tests/code-reviewer.evals.ts",
     "evals/fixtures/code-reviewer/planted-comment-violations/**",
@@ -46,6 +50,8 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   ],
   "team-question-neutral-questions": [
     "skills/team-question/**",
+    "skills/decomposing-intent/**",
+    "skills/artifact-frontmatter/**",
     "agents/questioner.md",
     "tests/team-question.evals.ts",
     "evals/fixtures/team-question/neutral-questions/**",
@@ -54,6 +60,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "eng-design-doc-review-planted-missing-alternatives": [
     "skills/eng-design-doc-review/**",
     "skills/technical-design-doc/**",
+    "skills/documenting-decisions/**",
     "tests/eng-design-doc-review.evals.ts",
     "evals/fixtures/eng-design-doc-review/planted-missing-alternatives/**",
     "evals/rubrics/eng-design-doc-review.md",
@@ -61,6 +68,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "team-fix-test-first-ordering": [
     "skills/team-fix/**",
     "skills/test-driven-bug-fix/**",
+    "skills/tracking-tickets/**",
     "tests/team-fix.evals.ts",
     "evals/fixtures/team-fix/test-first-ordering/**",
     "evals/rubrics/team-fix.md",
@@ -69,6 +77,8 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   // change to it could alter any of their outcomes, so each lists it as a dep.
   "team-research-answers-seeded-questions": [
     "skills/team-research/**",
+    "skills/researching-codebases/**",
+    "skills/finding-files/**",
     "agents/researcher.md",
     "tests/helpers/seed.ts",
     "tests/team-research.evals.ts",
@@ -77,6 +87,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   ],
   "team-design-seeded-research-and-task": [
     "skills/team-design/**",
+    "skills/authoring-designs/**",
     "agents/design-author.md",
     "tests/helpers/seed.ts",
     "tests/team-design.evals.ts",
@@ -85,6 +96,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   ],
   "team-structure-seeded-design": [
     "skills/team-structure/**",
+    "skills/slicing-work/**",
     "agents/structure-planner.md",
     "tests/helpers/seed.ts",
     "tests/team-structure.evals.ts",
@@ -93,6 +105,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   ],
   "team-plan-seeded-structure": [
     "skills/team-plan/**",
+    "skills/planning-implementation/**",
     "agents/planner.md",
     "tests/helpers/seed.ts",
     "tests/team-plan.evals.ts",

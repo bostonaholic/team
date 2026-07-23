@@ -39,10 +39,9 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
 3. **Move the ticket to in-progress.** If a `ticketId` or issue was
    resolved in steps 1–2, move that ticket to its tracker's in-progress
    state — this is the first action of the run, before any other work
-   begins. Best-effort and tracker-agnostic: if the project defines no
-   tracker-move mechanism (e.g. free-form text with no ticket, or a
-   tracker the environment can't reach), skip silently and continue.
-   Never block the pipeline on a tracker update.
+   begins. Best-effort per the ticket-lifecycle rules in
+   `skills/tracking-tickets/SKILL.md` — skip silently when no tracker
+   mechanism exists; never block the pipeline on a tracker update.
 4. **Derive `<id>`:**
    - With ticket: `<TICKET>-<kebab-topic>` (e.g., `ENG-1234-add-auth`)
    - Without ticket: `<YYYY-MM-DD>-<kebab-topic>` (e.g.,
@@ -88,43 +87,21 @@ loop:
      report a desync and suggest re-invoking the same /team-* command.
   4. Dispatch the agent(s) (parallel where the phase table marks them).
   5. Parse the subagent's final assistant text for an open-questions
-     envelope (see `skills/agent-open-questions/SKILL.md` — the
-     canonical contract):
-     a. Scan the Task tool result for fenced ```json blocks in order.
-        Per Decision 5 (first-block-wins), the FIRST block whose
-        top-level object contains an `openQuestions` array is the
-        envelope. Ignore other fenced JSON blocks (e.g. the
-        `{designPath, ...}` summary at the end of an artifact-complete
-        message) when an envelope is present.
-     b. If an envelope is present, call `AskUserQuestion` with the
-        parsed `openQuestions` array verbatim.
-        - **Size cap.** `AskUserQuestion` accepts 1–4 questions per
-          call. If the envelope carries more than 4, render only the
-          first 4 and `SendMessage` the subagent with a note that the
-          remainder must be re-emitted in a follow-up envelope or
-          deferred into the artifact (per the agent-open-questions
-          ≤ 4 cap).
-     c. Free-text escape hatch: if a chosen option's `description`
-        declares that the orchestrator must follow up with free-text
-        input (or the subagent's prompt explicitly requires it for that
-        branch), ask the user a plain-text follow-up question and
-        incorporate the response into the resume message. This is
-        necessary because `AskUserQuestion` returns only the chosen
-        `label` — no free-text field. The questioner's multi-repo flow
-        is the canonical worked example.
-     d. Resume the same subagent via the Task tool's
-        `SendMessage(to: <agentId>, message: <user selections verbatim,
-        plus any free-text follow-up response>)`. The subagent receives
-        the selections as a new user turn with its prior transcript
-        intact; this is NOT a fresh dispatch.
-     e. On malformed JSON or a missing `label`, follow the two-attempt
-        path: attempt 1 = `SendMessage` the subagent the exact parse
-        error and request a corrected envelope; attempt 2 failure =
-        write `docs/plans/<id>/dispatch-failure.md` with frontmatter
-        `phase: <current>, status: parse-failed`, mark the phase halted
-        in TodoWrite, and surface the artifact path to the user.
-     f. If no envelope is present, proceed to step 6.
-     g. **User cancels the `AskUserQuestion` prompt mid-flight.** Do
+     envelope and, when one is present, render it via `AskUserQuestion`
+     and resume the subagent. The full orchestrator-side protocol is
+     canonical in `skills/agent-open-questions/SKILL.md` — Decision 5
+     first-block-wins detection, the ≤ 4-question cap, the free-text
+     escape hatch, the `SendMessage(to: <agentId>, ...)` resume with the
+     prior transcript intact, and the two-attempt malformed-envelope
+     path ending in `docs/plans/<id>/dispatch-failure.md` plus a halted
+     phase in TodoWrite. Follow that skill rather than a restatement
+     here. Orchestrator-loop specifics:
+     a. If an envelope carries more than 4 questions, render only the
+        first 4 and `SendMessage` the subagent a note that the
+        remainder must be re-emitted in a follow-up envelope or
+        deferred into the artifact.
+     b. If no envelope is present, proceed to step 6.
+     c. **User cancels the `AskUserQuestion` prompt mid-flight.** Do
         NOT `SendMessage` the subagent (it remains paused awaiting a
         resume that will never come). Mark the current phase halted
         in TodoWrite, surface a "user cancelled at <phase>" message
@@ -134,7 +111,7 @@ loop:
         the orchestrator re-renders the prompt.
   6. Write each returned artifact to docs/plans/<id>/<name>.md
      with the YAML frontmatter the agent specifies (see the agent file
-     and skills/qrspi-workflow/SKILL.md).
+     and skills/artifact-frontmatter/SKILL.md).
   7. Run the gate for this phase:
      - HUMAN (design): present the artifact, wait for verdict.
        On approve, edit the artifact's frontmatter to set
@@ -294,13 +271,10 @@ When the 5 reviewers (security, docs, ux, code, verifier) have all
 returned:
 
 1. Collect all verdicts from the most recent round and sort every finding
-   into a severity tier (see `skills/code-review/SKILL.md` → "Severity Tiers
-   and the Auto-Fix Boundary"):
-   - **Blocking** — security CRITICAL/HIGH, any verification failure,
-     code-review REQUEST CHANGES, any `issue (blocking)` comment.
-   - **Major** — `suggestion (non-blocking)`, security MEDIUM, ux REQUEST CHANGES.
-   - **Minor and below** — `nitpick (non-blocking)`, security LOW, doc gaps,
-     COMMENT-level notes.
+   into a severity tier — **Blocking**, **Major**, or **Minor and below** —
+   per the authoritative table in `skills/review-severity-tiers/SKILL.md`
+   ("Severity Tiers and the Auto-Fix Boundary"). Consult that table rather
+   than restating it here.
 2. Track the round count by appending a TodoWrite item like
    "Review round 2" each retry. Cap at 5 rounds.
 3. While any **Blocking or Major** finding remains and under cap → dispatch
@@ -334,35 +308,25 @@ When the aggregate gate passes:
    ahead**, and the PR bodies cross-link to each other so reviewers can
    see the full change set.
 4. **Ticket — link now, in-review when ready.** If `task.md` frontmatter
-   has `ticketId` set: **link the PR to the ticket** so the tracker closes
-   it — and any board automation moves it to its done state — when the PR
-   merges (GitHub: `Closes #<n>` as the final line of the PR body).
-   In multi-repo mode, only the **home** repo's PR carries the closing
-   keyword (`Closes #<n>`); companion PRs carry a non-closing qualified
-   reference (`owner/repo#<n>` or the issue URL) instead — see the
-   multi-repo rule in `skills/team-pr/SKILL.md`.
-   **Never move the ticket to in-review while the PR is a draft** — a
-   draft is not under review, and this gate opens draft PRs, so the ticket
-   keeps its in-progress state at open time; move it to the tracker's
-   in-review state **only once the PR is marked ready for review**.
-   Best-effort and tracker-agnostic — skip silently if the project defines
-   no tracker-move mechanism; never block the pipeline.
-   Because the link auto-closes the ticket on merge, the orchestrator never
-   closes tickets by hand. Surface the `ticketId` in the completion report.
+   has `ticketId` set, apply the ticket-lifecycle rules in
+   `skills/tracking-tickets/SKILL.md`: link the PR to the ticket via the
+   conditional closing footer (in multi-repo mode the home repo's PR
+   alone carries the closing keyword; companions get a non-closing
+   qualified reference), keep the ticket in-progress while the PR is a
+   draft and move it to in-review only once the PR is marked ready for
+   review, and never close the ticket by hand — the link auto-closes it
+   on merge. Best-effort; never block the pipeline. Surface the
+   `ticketId` in the completion report.
 5. Mark all TodoWrite items complete.
 6. **Leave the worktree(s) in place.** Do not remove a worktree when a
    PR is opened — the user may need to iterate on the branch (push
    follow-up commits, address review feedback). Clean up a worktree only
-   after its PR is merged or when the user explicitly asks. When cleanup
-   does happen, cherry-pick or rebase commits onto the target branch in
-   that repo, then let Claude Code or `git worktree remove` remove the
-   worktree. After removal, update the repo's local default branch with
-   the merge: `git -C <repo-root> pull --rebase origin <base>` (rebase,
-   never a merge commit — linear history is the rule). In multi-repo
-   mode, do this for every involved repo. As the last teardown step,
-   delete the feature's local planning docs (`rm -rf docs/plans/<id>`,
-   verified untracked) — the QRSPI scratch dir is removed alongside the
-   branch and worktree, not left behind.
+   after its PR is merged or when the user explicitly asks, following
+   the teardown procedure in `skills/worktree-isolation/SKILL.md` →
+   "Ship (teardown)": commit preservation, worktree and branch removal,
+   the rebase-only default-branch update, and deletion of the feature's
+   untracked `docs/plans/<id>` scratch dir. In multi-repo mode, run it
+   for every involved repo.
 
 ## Rules
 
@@ -381,9 +345,10 @@ When the aggregate gate passes:
   "Request changes"). **Subagents that need user input emit the
   `openQuestions` envelope per `skills/agent-open-questions/SKILL.md`;
   the orchestrator parses, renders the prompt via `AskUserQuestion`,
-  and resumes the subagent via `SendMessage`. The orchestrator-side
-  parse + render + resume sequence is documented in the phase loop
-  above (step 5).** Subagents must not call `AskUserQuestion` directly.
+  and resumes the subagent via `SendMessage` — that skill is the
+  canonical orchestrator-side parse + render + resume protocol, applied
+  in the phase loop above (step 5).** Subagents must not call
+  `AskUserQuestion` directly.
 - File artifacts in `docs/plans/<id>/` are the durable communication
   protocol. Always write phase findings to disk before advancing.
 - The only human gate is **design approval**. Never present the structure
@@ -406,7 +371,7 @@ When the aggregate gate passes:
 ### Multi-repo topics
 
 A topic that touches more than one repository is recorded in
-`docs/plans/<id>/repos.md` (schema in `skills/qrspi-workflow/SKILL.md`).
+`docs/plans/<id>/repos.md` (schema in `skills/artifact-frontmatter/SKILL.md`).
 The questioner creates `repos.md` if the user's description names
 multiple repos; the design-author confirms or amends the list during
 the open-questions step. Once `repos.md` exists, every downstream phase
@@ -423,4 +388,5 @@ Human approval flips the `approved` field in the gated artifact's own
 YAML frontmatter from `false` to `true` and stamps an `approved_at`
 ISO-8601 timestamp. Downstream phases verify approval by re-reading the
 artifact (`grep -qE '^approved:[[:space:]]*true[[:space:]]*$' <artifact>`).
-See `skills/qrspi-workflow/SKILL.md` for the full frontmatter convention.
+See `skills/artifact-frontmatter/SKILL.md` for the full frontmatter
+convention.

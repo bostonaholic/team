@@ -89,3 +89,78 @@ your conclusion will anchor to it and verify nothing.
   findings").
 - You own everything you report. Spot-verify helper claims before including
   them; a helper's error in your output is your error.
+
+## Per-agent caps
+
+### `researcher` — exploration scouts
+
+Fan out read-only exploration when the questions cluster into independent
+areas, or when `repos.md` lists multiple repos.
+
+- **Scout types:** `team:file-finder` (locate files) or the built-in
+  `Explore` agent (read-only tracing). Nothing else.
+- **The isolation invariant extends downward.** A scout's prompt may contain
+  ONLY: question text copied verbatim from `questions.md`, the "Codebase
+  context" section, and repo slugs/paths from `repos.md`. Never add your own
+  framing, never mention `task.md`, never speculate about intent inside a
+  scout prompt. A scout that learns the goal is the same pipeline defect as
+  you learning it.
+- **When:** only if a cluster requires reading more material than you will
+  quote in your findings. For one or two pointed questions, read the files
+  yourself.
+- **Caps:** at most 4 scouts, dispatched in parallel where independent; each
+  instructed to return <= 30 lines of file:line findings and to spawn no
+  further agents.
+- **Scouts are non-interactive.** They never emit open-questions envelopes.
+  A scout's ambiguity becomes a bullet in your own `## Open Questions`
+  section.
+- **You own the report.** Spot-verify scout file:line claims before
+  including them. The 100-line report budget applies to the combined
+  output.
+
+### `code-reviewer` and `security-reviewer` — skeptic passes
+
+A false hard-gate finding costs an entire review round: an implementer
+re-dispatch plus a fresh run of all 5 reviewers. Before finalizing a
+hard-gate finding (a Blocking-tier `issue:` for the code-reviewer; a
+CRITICAL or HIGH finding for the security-reviewer), hand it to a fresh
+skeptic sub-agent via the `Agent` tool and try to get it refuted.
+
+- Dispatch one `general-purpose` sub-agent per hard-gate finding (at most
+  4 in flight; batch any overflow into one dispatch).
+- **State the claim neutrally** — file:line plus a falsifiable sentence;
+  for the security-reviewer, a falsifiable sentence about exploitability.
+  Never include your verdict, severity, or reasoning. Template:
+
+  > Read <file> around line <n>. Claim: "<one-sentence falsifiable
+  > statement, e.g. `user` may be null on the early-return path; or, for
+  > a security finding, user input from the `q` parameter reaches this
+  > SQL string without parameterization>". Attempt to REFUTE this claim
+  > with concrete evidence (guards, callers, sanitization, validation
+  > layers, type definitions, tests). Reply REFUTED or CONFIRMED with
+  > file:line evidence, <= 10 lines. If your evidence is inconclusive,
+  > reply CONFIRMED. Do not write files or spawn agents.
+
+- **Default-keep.** Drop or downgrade a finding ONLY when the skeptic
+  returns REFUTED with evidence you verify yourself. Inconclusive means the
+  finding stands — severity is never softened on an uncertain skeptic
+  reply. The pass removes false positives; it must never remove a true
+  positive. List refuted findings under a `### Refuted by verification`
+  section of your report (auditable, not silently dropped).
+- Skip the pass when there are no hard-gate findings or the Agent tool is
+  unavailable — report findings as-is. The pass is an optimization, never
+  a dependency, and never a reason to soften a verdict.
+
+### `implementer` — read-only scouts
+
+Spawn a read-only scout when a slice touches a subsystem the plan does not
+explain and mapping it yourself would mean reading more than ~3 files you
+will not edit. The scout absorbs the bulk reading and returns a short map,
+keeping your context lean across slices.
+
+- **Scout types:** the built-in `Explore` agent or `team:file-finder`.
+- **Caps:** at most 2 scouts in flight; each instructed to return <= 30
+  lines of file:line findings and to spawn no further agents.
+- **Scouts never write, edit, or commit.** All code, tests, and commits
+  remain yours. Never dispatch a sub-agent to implement a slice or to run
+  the fix loop.

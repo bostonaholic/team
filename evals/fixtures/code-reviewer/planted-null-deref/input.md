@@ -3,6 +3,7 @@ agent: code-reviewer
 tier: periodic
 deps:
   - agents/code-reviewer.md
+  - skills/conventional-comments/SKILL.md
 ---
 
 # Synthetic implementer artifact: user-profile renderer

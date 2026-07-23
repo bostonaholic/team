@@ -1,6 +1,6 @@
 ---
 name: git-commit
-description: Git commit discipline methodology — loaded by the ship phase to produce well-formed commits following conventional commits format, the 50/72 rule, and atomic commit principles
+description: Git commit discipline — the Conventional Commits subject format, the 50/72 rule, and atomic single-purpose commits. Load when writing a commit message, committing an implementation slice, or preparing commits for a pull request.
 user-invocable: false
 ---
 
