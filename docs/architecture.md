@@ -68,6 +68,11 @@ seeds and updates a TodoWrite ledger, and runs the human gates.
 
 ## 2. Artifact Layout & Frontmatter
 
+> **Runtime canon:** the schema below is carried for agents by
+> `skills/artifact-frontmatter/SKILL.md`; this section is the
+> doc-surface copy. The executable `ID_RE` / `PHASE_FILES` definitions
+> live in `hooks/session-start-recover.mjs`.
+
 All phase artifacts live in `docs/plans/<id>/`, where `<id>` is one of:
 
 - **Ticket-prefixed**: `<TICKET>-<kebab-topic>` (e.g.,
@@ -445,7 +450,7 @@ cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. `code-review` is the only skill loaded as composed
 methodology that is also a user command.)
 
-For the full per-skill reference — all 45 skills, their arguments,
+For the full per-skill reference — all 46 skills, their arguments,
 consumers, and behaviors — see [skills.md](skills.md).
 
 ### Design Guidelines
@@ -664,7 +669,7 @@ children are confirmed, and the depth cap is stable.
 
 ## See also
 
-- **[Skills](skills.md)** — the full per-skill reference for all 45 skills.
+- **[Skills](skills.md)** — the full per-skill reference for all 46 skills.
 - **[Testing](testing.md)** — the six-layer test harness and which layer each check belongs at.
 - **[Vision](vision.md)** — the loop-driven end state this design builds toward.
 - **[Ethos](ethos.md)** — the principles behind the pipeline.

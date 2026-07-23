@@ -72,8 +72,8 @@ describe("agent-open-questions protocol", () => {
     expect(read(QRSPI_SKILL)).toContain("agent-open-questions");
   });
 
-  test("CLAUDE.md has '## Skills (45)' heading", () => {
-    expect(/^## Skills \(45\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md has '## Skills (46)' heading", () => {
+    expect(/^## Skills \(46\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 
   test("skills/shipit/SKILL.md exists as a runtime skill", () => {
@@ -162,10 +162,13 @@ describe("multi-repo support", () => {
   const PLANNER = join(REPO_ROOT, "agents", "planner.md");
   const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
 
-  test("qrspi-workflow documents repos.md artifact + schema", () => {
+  test("artifact-frontmatter carries the repos.md schema; qrspi-workflow keeps the pointer", () => {
+    const schema = read(join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md"));
+    expect(schema).toContain("repos.md");
+    expect(schema).toContain("phase: repos");
     const text = read(QRSPI);
     expect(text).toContain("repos.md");
-    expect(text).toContain("phase: repos");
+    expect(text).toContain("artifact-frontmatter/SKILL.md");
   });
 
   test("worktree-isolation documents multi-repo topology", () => {
@@ -298,10 +301,13 @@ describe("conditional PRD artifact", () => {
   const DECOMPOSING_INTENT = join(REPO_ROOT, "skills", "decomposing-intent", "SKILL.md");
   const QUESTIONER = join(REPO_ROOT, "agents", "questioner.md");
 
-  test("qrspi-workflow documents prd.md artifact + schema", () => {
+  test("artifact-frontmatter carries the prd.md schema; qrspi-workflow keeps the pointer", () => {
+    const schema = read(join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md"));
+    expect(schema).toContain("prd.md");
+    expect(schema).toContain("phase: prd");
     const text = read(QRSPI);
     expect(text).toContain("prd.md");
-    expect(text).toContain("phase: prd");
+    expect(text).toContain("artifact-frontmatter/SKILL.md");
   });
 
   test("decomposing-intent carries the prd.md frontmatter contract", () => {
@@ -362,7 +368,6 @@ describe("topic consistency", () => {
   const PLANNER = join(REPO_ROOT, "agents", "planner.md");
   const TEAM_RESEARCH = join(REPO_ROOT, "skills", "team-research", "SKILL.md");
   const TEAM_FIX = join(REPO_ROOT, "skills", "team-fix", "SKILL.md");
-  const QRSPI = join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md");
 
   test("questioner requires identical topic across task.md and questions.md", () => {
     const text = flat(read(QUESTIONER));
@@ -390,8 +395,8 @@ describe("topic consistency", () => {
     expect(a || b).toBe(true);
   });
 
-  test("qrspi-workflow states topic-consistency invariant", () => {
-    const text = flat(read(QRSPI));
+  test("artifact-frontmatter states topic-consistency invariant", () => {
+    const text = flat(read(join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md")));
     expect(
       /topic[^.]{0,200}(must|should)[^.]{0,200}(identical|same|match)[^.]{0,200}(across|every|all)[^.]{0,200}artifact/i.test(
         text,
@@ -399,8 +404,8 @@ describe("topic consistency", () => {
     ).toBe(true);
   });
 
-  test("qrspi-workflow documents why ticketId lives only on task.md", () => {
-    const text = flat(read(QRSPI));
+  test("artifact-frontmatter documents why ticketId lives only on task.md", () => {
+    const text = flat(read(join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md")));
     expect(
       /ticketId[^.]{0,200}(only|just)[^.]{0,200}task\.md|task\.md[^.]{0,200}(canonical|sole|only)[^.]{0,200}ticketId|<id>[^.]{0,200}already[^.]{0,200}(encode|carry|contain)[^.]{0,200}ticket/i.test(
         text,

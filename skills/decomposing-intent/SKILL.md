@@ -14,17 +14,12 @@ repo scope in `repos.md` when the topic spans more than one repository.
 
 `topic` must be **identical across `task.md` and `questions.md`**. It is
 the kebab portion of `<id>` — i.e. `<id>` minus the `<TICKET>-` or
-`<YYYY-MM-DD>-` prefix the orchestrator added. Examples:
-
-| `<id>`                                  | `topic`                       |
-|-----------------------------------------|-------------------------------|
-| `ENG-9876-cache-invalidation`           | `cache-invalidation`          |
-| `2026-05-01-add-rate-limiting`          | `add-rate-limiting`           |
-
-Never use the ticket id, the date, or a re-worded form of the
-description as the topic. Never write a different topic in
-`questions.md` than the one in `task.md`. Downstream phases (research,
-design, structure, plan) inherit the same topic value.
+`<YYYY-MM-DD>-` prefix the orchestrator added. Never use the ticket id,
+the date, or a re-worded form of the description as the topic. Never
+write a different topic in `questions.md` than the one in `task.md`.
+Downstream phases (research, design, structure, plan) inherit the same
+topic value; the full invariant and worked examples live in
+`skills/artifact-frontmatter/SKILL.md`.
 
 ## task.md
 
@@ -39,10 +34,8 @@ ticketId: null               # set if a tracking ticket is tracking this work
 ---
 ```
 
-`ticketId` lives **only** on `task.md`. The directory name `<id>`
-already encodes the ticket prefix, and `task.md` is the canonical
-intent record — re-encoding `ticketId` on every artifact would be
-duplication. No other artifact carries `ticketId`.
+`ticketId` lives **only** on `task.md` — no other artifact carries it
+(rationale in `skills/artifact-frontmatter/SKILL.md`).
 
 Then the body:
 
@@ -195,7 +188,7 @@ On resume:
   mode and do not write `repos.md`.
 - If the orchestrator returns **Multi-repo** with a validated list of
   `<slug>: <absolute-path>` pairs, write `repos.md` from that list per
-  the schema in `skills/qrspi-workflow/SKILL.md`.
+  the schema in `skills/artifact-frontmatter/SKILL.md`.
 - If the orchestrator returns validation errors instead, either
   re-emit the envelope (e.g. ask the user to confirm Single vs Multi
   again) or follow your existing error-handling guidance to surface the
@@ -213,7 +206,7 @@ phase: repos
 ---
 ```
 
-Body — see the schema in `skills/qrspi-workflow/SKILL.md`. The home
+Body — see the schema in `skills/artifact-frontmatter/SKILL.md`. The home
 repo is whichever repo the orchestrator dispatched you in (the one
 holding `docs/plans/<id>/`); use its absolute path. Each additional
 repo gets a name slug (unique, kebab-case) and an absolute path.

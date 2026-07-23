@@ -4,6 +4,7 @@ tier: periodic
 deps:
   - skills/team-question/**
   - skills/decomposing-intent/**
+  - skills/artifact-frontmatter/**
   - agents/questioner.md
 ---
 

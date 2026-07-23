@@ -133,7 +133,7 @@ loop:
         the orchestrator re-renders the prompt.
   6. Write each returned artifact to docs/plans/<id>/<name>.md
      with the YAML frontmatter the agent specifies (see the agent file
-     and skills/qrspi-workflow/SKILL.md).
+     and skills/artifact-frontmatter/SKILL.md).
   7. Run the gate for this phase:
      - HUMAN (design): present the artifact, wait for verdict.
        On approve, edit the artifact's frontmatter to set
@@ -396,7 +396,7 @@ When the aggregate gate passes:
 ### Multi-repo topics
 
 A topic that touches more than one repository is recorded in
-`docs/plans/<id>/repos.md` (schema in `skills/qrspi-workflow/SKILL.md`).
+`docs/plans/<id>/repos.md` (schema in `skills/artifact-frontmatter/SKILL.md`).
 The questioner creates `repos.md` if the user's description names
 multiple repos; the design-author confirms or amends the list during
 the open-questions step. Once `repos.md` exists, every downstream phase
@@ -413,4 +413,5 @@ Human approval flips the `approved` field in the gated artifact's own
 YAML frontmatter from `false` to `true` and stamps an `approved_at`
 ISO-8601 timestamp. Downstream phases verify approval by re-reading the
 artifact (`grep -qE '^approved:[[:space:]]*true[[:space:]]*$' <artifact>`).
-See `skills/qrspi-workflow/SKILL.md` for the full frontmatter convention.
+See `skills/artifact-frontmatter/SKILL.md` for the full frontmatter
+convention.

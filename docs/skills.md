@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 45 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 33 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 46 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 34 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -46,8 +46,8 @@ catalog into two flavors:
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
 standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 33 methodology =
-45**.
+split is **11 pipeline entry-point + 1 standalone utility + 34 methodology =
+46**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -251,7 +251,7 @@ phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 33 methodology skills carry no `argument-hint` and are never invoked
+The 34 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -263,13 +263,27 @@ replaces former inline body content 1:1, so it adds no net context (see
 
 ### qrspi-workflow
 
-- **Purpose:** Phase discipline plus the artifact and frontmatter
-  conventions every phase follows.
-- **Loaded by:** orchestrator skills; questioner (for the artifact schema).
+- **Purpose:** Phase discipline — the phase sequence, gates, and
+  anti-patterns every phase follows.
+- **Loaded by:** orchestrator skills.
 - **Key behaviors:** The structural backbone of the pipeline: defines the
-  phase sequence, the artifact/frontmatter schema (including the
-  `prd.md` and `repos.md` schemas), the gate mechanics (severity tiers and the consult
-  guard for the aggregate review gate), and an anti-patterns catalog.
+  phase sequence, the gate mechanics (severity tiers and the consult
+  guard for the aggregate review gate), the phase-inference table, and an
+  anti-patterns catalog. The artifact/frontmatter schema it once carried
+  is canonical in `artifact-frontmatter`; this skill keeps pointers.
+
+### artifact-frontmatter
+
+- **Purpose:** The artifact schema contract for `docs/plans/<id>/`.
+- **Loaded by:** orchestrator skills and artifact-authoring agents
+  just-in-time via pointers (qrspi-workflow, decomposing-intent, `team`);
+  no agent preloads it.
+- **Key behaviors:** Carries the artifact inventory and `<id>` forms, the
+  YAML frontmatter schema and phase enum, the `repos.md` and `prd.md`
+  schemas, the topic-consistency invariant, the `ticketId` scope rule,
+  and the approval check/flip/rejection mechanics. Defers to
+  `hooks/session-start-recover.mjs` as the executable canon for
+  `ID_RE`/`PHASE_FILES` rather than forking them.
 
 ### agent-open-questions
 
@@ -666,7 +680,8 @@ entry-point section above rather than repeating them here.
 | `team-fix` | user (direct invocation) | Compressed bug-fix flow (outside QRSPI) |
 | `eng-design-doc-review` | user (direct invocation) | Optional pre-Design audit; dispatches a general-purpose subagent |
 | `shipit` | user (direct invocation) | Standalone — land a reviewed PR (not a QRSPI phase) |
-| `qrspi-workflow` | orchestrator skills; questioner (schema) | All phases |
+| `qrspi-workflow` | orchestrator skills | All phases |
+| `artifact-frontmatter` | orchestrator skills; artifact authors (just-in-time via pointers) | All phases — artifact schema |
 | `agent-open-questions` | questioner, design-author | Question, Design (subagent → user via orchestrator) |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
 | `conventional-comments` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) — finding format |

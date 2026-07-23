@@ -51,6 +51,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "team-question-neutral-questions": [
     "skills/team-question/**",
     "skills/decomposing-intent/**",
+    "skills/artifact-frontmatter/**",
     "agents/questioner.md",
     "tests/team-question.evals.ts",
     "evals/fixtures/team-question/neutral-questions/**",
