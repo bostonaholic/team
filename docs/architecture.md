@@ -174,10 +174,12 @@ dispatch (the main session does not `cd`).
 **Single-repo (default):** `repos.md` is absent. One home worktree at
 `<repo>/.claude/worktrees/<id>`.
 
-**Multi-repo:** `repos.md` does not exist yet at this phase (the repo set
-is confirmed during the design open-questions step), so only the home
+**Multi-repo:** `repos.md` is written autonomously by the questioner at
+QUESTION (one phase after WORKTREE), so only the home
 worktree is created here. Secondary worktrees are created **after the
-design gate**, one per listed repo:
+design review**, one per listed repo — each repo path passing the
+containment check (realpath a direct child of the home repo's parent
+directory) first:
 
 ```sh
 git -C <repo-path> worktree add .claude/worktrees/<id> -b <id> origin/HEAD
@@ -268,6 +270,13 @@ No gate. The plan is mechanically derived from the structure.
 
 The orchestrator tracks the round count by appending "Review round N"
 items to the TodoWrite ledger.
+
+**Recovery after a terminal halt** (either cap): a human addresses the
+unresolved findings by hand — editing the design or the code — and
+re-invokes the same `/team-*` command bare. The aggregate round counter
+is session-scoped (TodoWrite) and starts fresh on re-invocation; the
+design `revision` counter persists in `design.md` frontmatter and is
+hand-lowered when the revision budget should be restored.
 
 ### Phase 8: PR
 

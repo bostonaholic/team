@@ -274,8 +274,8 @@ replaces former inline body content 1:1, so it adds no net context (see
   anti-patterns every phase follows.
 - **Loaded by:** orchestrator skills.
 - **Key behaviors:** The structural backbone of the pipeline: defines the
-  phase sequence, the gate mechanics (severity tiers and the consult
-  guard for the aggregate review gate), the phase-inference table, and an
+  phase sequence, the gate mechanics (severity tiers and the no-consult
+  rule for the aggregate review gate), the phase-inference table, and an
   anti-patterns catalog. The artifact/frontmatter schema it once carried
   is canonical in `artifact-frontmatter`; this skill keeps pointers.
 

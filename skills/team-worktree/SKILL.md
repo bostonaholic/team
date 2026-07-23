@@ -146,13 +146,14 @@ for cleanup: `branch="$(printf '%s' "$id" | tr '/' '-')"`. Only the
 
 ### Confirm with the user (standalone invocation only)
 
-This dialog fires **only when a human invoked `/team-worktree`
-directly** — a setup-time prompt on direct invocation. Within a full
+**Standalone invocation only — in a full `/team` run, skip this dialog
+entirely and proceed straight to "Create the worktree(s)".** The dialog
+fires only when a human invoked `/team-worktree`
+directly — a setup-time prompt on direct invocation. Within a full
 `/team` run the orchestrator creates the worktrees **without a
 confirmation prompt** (the phase loop never pauses mid-run); the
 resolved repo set is recorded loudly in `design.md` and echoed in the
-PR body's `## Review notes`. In pipeline mode, skip this dialog and
-proceed straight to "Create the worktree(s)".
+PR body's `## Review notes`.
 
 Confirm only the repos that actually need a worktree created. If **no**
 repo needs creation (single-repo mode where the detect step skipped the
