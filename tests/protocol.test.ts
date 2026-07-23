@@ -11,69 +11,17 @@ function flat(text: string): string {
   return text.replace(/\n/g, " ");
 }
 
-describe("agent-open-questions protocol", () => {
-  const AOQ_SKILL = join(REPO_ROOT, "skills", "agent-open-questions", "SKILL.md");
-  const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
-  const QRSPI_SKILL = join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md");
+describe("runtime skill inventory", () => {
   const CLAUDE_MD = join(REPO_ROOT, "CLAUDE.md");
 
-  test("skills/agent-open-questions/SKILL.md exists", () => {
-    expect(existsSync(AOQ_SKILL)).toBe(true);
+  test("skills/agent-open-questions/ is deleted (agents self-answer)", () => {
+    // The openQuestions envelope protocol is removed: subagents resolve
+    // their own open questions and record each as an auditable assumption.
+    expect(existsSync(join(REPO_ROOT, "skills", "agent-open-questions", "SKILL.md"))).toBe(false);
   });
 
-  test("agent-open-questions frontmatter declares name: agent-open-questions", () => {
-    const fm = frontmatter(read(AOQ_SKILL));
-    expect(/^name:\s*agent-open-questions\s*$/m.test(fm)).toBe(true);
-  });
-
-  test("agent-open-questions frontmatter has a non-empty description", () => {
-    const fm = frontmatter(read(AOQ_SKILL));
-    expect(/^description:\s*\S/m.test(fm)).toBe(true);
-  });
-
-  test("agent-open-questions body references openQuestions", () => {
-    expect(read(AOQ_SKILL)).toContain("openQuestions");
-  });
-
-  test("agent-open-questions body references SendMessage", () => {
-    expect(read(AOQ_SKILL)).toContain("SendMessage");
-  });
-
-  test("agent-open-questions states first-block-wins near openQuestions", () => {
-    // Any-occurrence ±5-line window: "first" appears in some openQuestions
-    // window AND "block" appears in some window — not necessarily the same
-    // window. Two independent passes.
-    const lines = read(AOQ_SKILL).split("\n");
-    const matchIndices: number[] = [];
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      if (line !== undefined && /openQuestions/.test(line)) matchIndices.push(i);
-    }
-    const capped = matchIndices.slice(0, 50);
-    let windows = "";
-    for (const i of capped) {
-      const start = Math.max(0, i - 5);
-      const end = i + 5;
-      windows += lines.slice(start, end + 1).join("\n") + "\n";
-    }
-    expect(/first/i.test(windows)).toBe(true);
-    expect(/block/i.test(windows)).toBe(true);
-  });
-
-  test("skills/team/SKILL.md cross-links agent-open-questions", () => {
-    expect(read(TEAM_SKILL)).toContain("agent-open-questions");
-  });
-
-  test("skills/team/SKILL.md scopes AskUserQuestion 'from the orchestrator'", () => {
-    expect(read(TEAM_SKILL)).toContain("from the orchestrator");
-  });
-
-  test("skills/qrspi-workflow/SKILL.md cross-links agent-open-questions", () => {
-    expect(read(QRSPI_SKILL)).toContain("agent-open-questions");
-  });
-
-  test("CLAUDE.md has '## Skills (47)' heading", () => {
-    expect(/^## Skills \(47\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md has '## Skills (46)' heading", () => {
+    expect(/^## Skills \(46\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 
   test("skills/shipit/SKILL.md exists as a runtime skill", () => {
@@ -97,10 +45,12 @@ describe("ask-user-question contract", () => {
     expect(/^tools:.*\bAskUserQuestion\b/m.test(fm)).toBe(false);
   });
 
-  test("design-author body references openQuestions + agent-open-questions", () => {
+  test("design-author body carries no envelope protocol references", () => {
+    // Slice 2 inverse set: the design author resolves its own open
+    // questions — the envelope protocol must not reappear.
     const text = read(DESIGN_AUTHOR);
-    expect(text).toContain("openQuestions");
-    expect(text).toContain("agent-open-questions");
+    expect(text).not.toContain("openQuestions");
+    expect(text).not.toContain("agent-open-questions");
   });
 
   test("team-design SKILL references AskUserQuestion", () => {
@@ -130,8 +80,15 @@ describe("ask-user-question contract", () => {
     expect(text).not.toContain("Keep commits locally");
   });
 
-  test("team SKILL references AskUserQuestion at human gates", () => {
-    expect(read(TEAM_SKILL)).toContain("AskUserQuestion");
+  test("team SKILL never prompts mid-run — no envelope or prompt-tool references", () => {
+    // Slice 2 inverse set: the phase loop has no mid-run pause of any kind,
+    // so the orchestrator skill must reference neither the prompt tool nor
+    // the retired envelope protocol.
+    const text = read(TEAM_SKILL);
+    expect(text).not.toContain("AskUserQuestion");
+    expect(text).not.toContain("openQuestions");
+    expect(text).not.toContain("agent-open-questions");
+    expect(text).not.toContain("SendMessage");
   });
 
   test("questioner tools frontmatter excludes AskUserQuestion", () => {
@@ -139,10 +96,12 @@ describe("ask-user-question contract", () => {
     expect(/^tools:.*\bAskUserQuestion\b/m.test(fm)).toBe(false);
   });
 
-  test("questioner body references openQuestions + agent-open-questions", () => {
+  test("questioner body carries no envelope protocol references", () => {
+    // Slice 2 inverse set: multi-repo detection resolves autonomously —
+    // the envelope protocol must not reappear.
     const text = read(QUESTIONER);
-    expect(text).toContain("openQuestions");
-    expect(text).toContain("agent-open-questions");
+    expect(text).not.toContain("openQuestions");
+    expect(text).not.toContain("agent-open-questions");
   });
 });
 
@@ -203,18 +162,31 @@ describe("multi-repo support", () => {
     expect(text).toContain("non-default branch");
   });
 
-  test("questioner excludes AskUserQuestion + multi-repo detection uses openQuestions envelope", () => {
+  test("questioner excludes AskUserQuestion + detects multi-repo scope autonomously", () => {
     const text = read(QUESTIONER);
     const fm = frontmatter(text);
     expect(/^tools:.*\bAskUserQuestion\b/m.test(fm)).toBe(false);
     expect(text).toContain("Multi-repo detection");
-    expect(text).toContain("openQuestions");
-    expect(text).toContain("agent-open-questions");
-    expect(text).toContain("Repos");
+    // Candidate repos resolve via sibling directories of the home repo
+    // root; when in doubt the questioner stays single-repo and records the
+    // assumption — it never pauses to ask.
+    expect(/sibling/i.test(text)).toBe(true);
+    expect(text).toContain("single-repo");
   });
 
   test("design-author confirms repo scope before drafting", () => {
     expect(read(DESIGN_AUTHOR)).toContain("Confirm repo scope");
+  });
+
+  test("design-author resolves repo scope via sibling directories with a loud single-repo fallback", () => {
+    const text = flat(read(DESIGN_AUTHOR));
+    expect(/sibling/i.test(text)).toBe(true);
+    expect(text).toContain("single-repo");
+    // An unresolvable repo never expands scope silently — the omission is
+    // recorded loudly in the design's ## Risks section.
+    expect(
+      /unresolvable[^|]{0,300}## Risks|## Risks[^|]{0,300}unresolvable/i.test(text),
+    ).toBe(true);
   });
 
   test("researcher allowed to read repos.md (scope, not intent)", () => {

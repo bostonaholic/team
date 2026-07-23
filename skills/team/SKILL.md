@@ -89,33 +89,12 @@ loop:
      includes a `design-review-<n>.md` with a passing verdict). If missing,
      report a desync and suggest re-invoking the same /team-* command.
   4. Dispatch the agent(s) (parallel where the phase table marks them).
-  5. Parse the subagent's final assistant text for an open-questions
-     envelope and, when one is present, render it via `AskUserQuestion`
-     and resume the subagent. The full orchestrator-side protocol is
-     canonical in `skills/agent-open-questions/SKILL.md` — Decision 5
-     first-block-wins detection, the ≤ 4-question cap, the free-text
-     escape hatch, the `SendMessage(to: <agentId>, ...)` resume with the
-     prior transcript intact, and the two-attempt malformed-envelope
-     path ending in `docs/plans/<id>/dispatch-failure.md` plus a halted
-     phase in TodoWrite. Follow that skill rather than a restatement
-     here. Orchestrator-loop specifics:
-     a. If an envelope carries more than 4 questions, render only the
-        first 4 and `SendMessage` the subagent a note that the
-        remainder must be re-emitted in a follow-up envelope or
-        deferred into the artifact.
-     b. If no envelope is present, proceed to step 6.
-     c. **User cancels the `AskUserQuestion` prompt mid-flight.** Do
-        NOT `SendMessage` the subagent (it remains paused awaiting a
-        resume that will never come). Mark the current phase halted
-        in TodoWrite, surface a "user cancelled at <phase>" message
-        to the user, and stop the loop. The next `/team-*` invocation
-        re-enters the loop at the same phase: on resume detection the
-        subagent is re-dispatched fresh, re-emits the envelope, and
-        the orchestrator re-renders the prompt.
-  6. Write each returned artifact to docs/plans/<id>/<name>.md
+     Subagents never pause for user input — each resolves its own open
+     questions and records them as assumptions in its artifact.
+  5. Write each returned artifact to docs/plans/<id>/<name>.md
      with the YAML frontmatter the agent specifies (see the agent file
      and skills/artifact-frontmatter/SKILL.md).
-  7. Run the gate for this phase:
+  6. Run the gate for this phase:
      - REVIEW (design): dispatch the adversarial design review (see
        "Design Review Gate (design)" below); write the verdict to
        `design-review-<n>.md`. On APPROVE or COMMENT, advance. On
@@ -128,9 +107,9 @@ loop:
        sort findings into severity tiers; auto-loop on any Blocking or
        Major finding (never consulting the user), tracking the round count
        in TodoWrite, capped at 5 rounds; consult only on Minor-and-below.
-  8. Update TodoWrite — mark current phase `completed` and the next one
+  7. Update TodoWrite — mark current phase `completed` and the next one
      `in_progress`.
-  9. Goto loop.
+  8. Goto loop.
 ```
 
 ### Phase table
@@ -244,8 +223,8 @@ it now auto-advances. The artifact carries no `approved`/`approved_at`/
 
 The home worktree is born at the leading WORKTREE phase. Secondary worktrees
 (multi-repo mode) are created **after the design review**, because the set of
-repos a topic touches is only confirmed during the design open-questions step
-(`repos.md`). This is the documented asymmetry: the home worktree exists from
+repos a topic touches is only confirmed once the design lands (`repos.md`).
+This is the documented asymmetry: the home worktree exists from
 phase 1, while secondary repos lag until post-design-review.
 
 When the design review passes:
@@ -345,25 +324,18 @@ When the aggregate gate passes:
 - TodoWrite is the orchestrator's live coordination ledger. It is
   session-scoped and is rebuilt on entry to any `/team-*` command by
   scanning artifacts.
-- `AskUserQuestion` is the canonical Claude Code tool for any
-  multi-choice user prompt **from the orchestrator** —
-  worktree-vs-in-place. Free-text prompts
-  ("Do you approve?") are not the convention. Free-form text input
-  remains appropriate when the question genuinely has no enumerable
-  options. **Subagents that need user input emit the
-  `openQuestions` envelope per `skills/agent-open-questions/SKILL.md`;
-  the orchestrator parses, renders the prompt via `AskUserQuestion`,
-  and resumes the subagent via `SendMessage` — that skill is the
-  canonical orchestrator-side parse + render + resume protocol, applied
-  in the phase loop above (step 5).** Subagents must not call
-  `AskUserQuestion` directly.
+- **Subagents never pause for user input.** Each resolves its own open
+  questions autonomously — picking the option it would have recommended
+  — and records every such choice as an explicit assumption in its
+  artifact, so the guess stays auditable at PR review. No subagent
+  prompts the user, directly or through the orchestrator.
 - File artifacts in `docs/plans/<id>/` are the durable communication
   protocol. Always write phase findings to disk before advancing.
 - There are **no mid-run human gates**. The design is gated by an
   adversarial design review; never present the structure or plan for
   approval. The structure and plan are autonomous tactical artifacts.
-- The phase loop pauses for the user only at (a) `openQuestions`
-  envelopes, (b) aggregate-cap escalation, and (c) Minor-findings
+- The phase loop pauses for the user only at (a) aggregate-cap
+  escalation and (b) Minor-findings
   consultation. Everywhere else, advance phases
   within the same turn. In particular, IMPLEMENT → PR is not a stopping
   point — a turn that ends with review verdicts but no draft PR URL is
@@ -380,9 +352,10 @@ When the aggregate gate passes:
 
 A topic that touches more than one repository is recorded in
 `docs/plans/<id>/repos.md` (schema in `skills/artifact-frontmatter/SKILL.md`).
-The questioner creates `repos.md` if the user's description names
-multiple repos; the design-author confirms or amends the list during
-the open-questions step. Once `repos.md` exists, every downstream phase
+`repos.md` is confirmed autonomously: the questioner writes it when the
+description names multiple repos (resolving each to a sibling-directory
+path), and the design-author confirms or amends the list on research
+evidence. Once `repos.md` exists, every downstream phase
 respects it: research spans every listed repo, slices and plan steps
 carry `[repo: <name>]` annotations, secondary worktrees are created
 after the design review (the home worktree already exists from the leading

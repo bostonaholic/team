@@ -63,16 +63,13 @@ under `docs/plans/` — artifacts are written only by you or the orchestrator.
 You are at depth 2 of 5. Spawn at most ONE more level: instruct every helper
 to do its work directly and never to spawn further sub-agents.
 
-## Nested helpers are non-interactive — no envelopes
+## Nested helpers are non-interactive
 
-The open-questions envelope (`skills/agent-open-questions/SKILL.md`) works
-exactly one level deep: the orchestrator parses only ITS direct child's final
-message. An envelope emitted by your helper can never reach the user, so a
-helper must never emit `openQuestions` — it would stall awaiting a resume
-that cannot come. Never delegate question-asking downward. If a helper
-surfaces an ambiguity, absorb it and raise it through YOUR own channel: your
-own envelope (if your prompt has an interactive step) or your artifact's
-open-questions section.
+Helpers never pause for user input — nothing a helper emits can reach
+the user, and a helper that waits for an answer stalls forever. Never
+delegate question-asking downward. If a helper surfaces an ambiguity,
+absorb it and record it in YOUR own artifact's open-questions section
+(or resolve it yourself and record the assumption).
 
 ## Verification helpers get neutral claims
 

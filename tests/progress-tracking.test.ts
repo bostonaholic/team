@@ -134,26 +134,27 @@ describe("Slice 1: progress-tracking convention skill exists", () => {
   });
 });
 
-describe("skill count reconciliation (-> 47: Tier 2 JIT extractions (tracking-tickets, artifact-frontmatter, reviewing-documentation))", () => {
+describe("skill count reconciliation (-> 46: agent-open-questions removed from the 47-skill thin-agents baseline)", () => {
   const CLAUDE_MD = join(REPO_ROOT, "CLAUDE.md");
   const AGENTS_MD = join(REPO_ROOT, "AGENTS.md");
 
-  test("CLAUDE.md heading reads '## Skills (47)'", () => {
-    expect(/^## Skills \(47\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md heading reads '## Skills (46)'", () => {
+    expect(/^## Skills \(46\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 
-  test("AGENTS.md heading reads '## Skills (47)'", () => {
-    expect(/^## Skills \(47\)/m.test(read(AGENTS_MD))).toBe(true);
+  test("AGENTS.md heading reads '## Skills (46)'", () => {
+    expect(/^## Skills \(46\)/m.test(read(AGENTS_MD))).toBe(true);
   });
 
-  test("filesystem has exactly 47 SKILL.md files declaring a name:", () => {
-    // 31 baseline + 9 thin-agents + 4 Tier 1 JIT + 3 Tier 2 JIT = 47.
+  test("filesystem has exactly 46 SKILL.md files declaring a name:", () => {
+    // 47 thin-agents baseline minus agent-open-questions (envelope
+    // protocol retired — agents self-answer) = 46.
     const dirs = readdirSync(SKILLS_DIR, { withFileTypes: true })
       .filter((d) => d.isDirectory())
       .map((d) => join(SKILLS_DIR, d.name, "SKILL.md"))
       .filter((p) => existsSync(p));
     const withName = dirs.filter((p) => /^name:/m.test(read(p)));
-    expect(withName.length).toBe(47);
+    expect(withName.length).toBe(46);
   });
 });
 

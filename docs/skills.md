@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 47 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 46 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 34 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -38,7 +38,7 @@ catalog into two flavors:
 - **Methodology skills omit `argument-hint`.** They are never invoked
   directly. Agents load them through one of two mechanisms: a `skills:`
   YAML list in the agent's frontmatter (e.g., `agents/design-author.md`
-  declares `skills: [product-thinking, agent-open-questions,
+  declares `skills: [product-thinking,
   progress-tracking, authoring-designs]`), or an inline prose load
   instruction in the agent body (e.g., `Load skills/<name>/SKILL.md for
   …`).
@@ -46,8 +46,8 @@ catalog into two flavors:
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
 standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 35 methodology =
-47**.
+split is **11 pipeline entry-point + 1 standalone utility + 34 methodology =
+46**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -284,85 +284,6 @@ replaces former inline body content 1:1, so it adds no net context (see
   and the approval check/flip/rejection mechanics. Defers to
   `hooks/session-start-recover.mjs` as the executable canon for
   `ID_RE`/`PHASE_FILES` rather than forking them.
-
-### agent-open-questions
-
-- **Purpose:** Protocol a subagent uses to surface multi-choice open
-  questions to the user without calling `AskUserQuestion` itself.
-- **Loaded by:** questioner, design-author (2).
-- **Key behaviors:** The subagent emits a fenced `openQuestions` JSON
-  envelope as its final assistant message and STOPs; the orchestrator
-  parses it (Decision 5 first-block-wins), renders the prompt via
-  `AskUserQuestion`, and resumes the subagent via `SendMessage` with
-  the user's selections. Caps envelopes at 4 questions per call,
-  documents the free-text escape hatch for collecting additional
-  plain-text input, and defines the two-attempt malformed-envelope
-  fallback.
-
-### researching-codebases
-
-- **Purpose:** Codebase research procedure for the Research phase.
-- **Loaded by:** researcher.
-- **Key behaviors:** Carries the investigation method (context, trace,
-  pattern recognition, constraint discovery) and the compressed
-  research-report output format with its 100-line budget (150 in
-  multi-repo mode). The isolation stance itself — questions.md only,
-  never task.md — stays in the researcher agent as identity.
-
-### finding-files
-
-- **Purpose:** File-location search strategy for the Research phase.
-- **Loaded by:** file-finder.
-- **Key behaviors:** Glob by naming convention, content search,
-  import/dependency tracing, directory exploration, and config/manifest
-  checks, scoped to the vocabulary in `questions.md`. Deliberately
-  self-contained — the file-finder runs on haiku, so the skill carries
-  everything inline with no cross-references.
-
-### decomposing-intent
-
-- **Purpose:** Artifact templates and decomposition procedure for the
-  Question phase.
-- **Loaded by:** questioner.
-- **Key behaviors:** Carries the `task.md` and `questions.md` body
-  templates, the topic-slug rules, the process steps, and the multi-repo
-  detection flow (including the canonical `Repos` envelope worked example
-  and the `repos.md` schema pointer). Conditionally loads
-  `product-requirements-doc` for vague, multi-story, cross-cutting, or
-  behavior-replacing requests, producing `prd.md` alongside `task.md`.
-
-### authoring-designs
-
-- **Purpose:** Design-document authoring procedure for the Design phase.
-- **Loaded by:** design-author.
-- **Key behaviors:** Carries the repo-scope confirmation flow, the
-  mandatory interactive open-questions step (at most 4 sharp questions,
-  answers land in `## Decisions made`), and the `design.md` document
-  template with its six-category edge-case walk. When `task.md`
-  references a `prd.md`, reads it first and honors its scope boundaries
-  and acceptance criteria per `product-requirements-doc`'s "Consuming a
-  PRD downstream" section.
-
-### slicing-work
-
-- **Purpose:** Vertical-slice breakdown methodology for the Structure
-  phase.
-- **Loaded by:** structure-planner.
-- **Key behaviors:** Carries the vertical-slice rationale, the
-  `structure.md` document format, the slicing rules (every slice ends in a
-  passing test; 1–3 acceptance tests per slice; edge cases pulled from the
-  design; order by user value), and the slicing heuristics
-  (walking-skeleton first; migrations alone are never a slice).
-
-### planning-implementation
-
-- **Purpose:** Tactical planning methodology for the Plan phase.
-- **Loaded by:** planner.
-- **Key behaviors:** Carries the `plan.md` document template that expands
-  each vertical slice into file-level steps with acceptance-test mappings,
-  and the tactical rules (one slice at a time, reuse over reinvention,
-  under 300 lines, no implementation code, atomic slices, test coverage
-  matching the structure).
 
 ### code-review
 
@@ -693,9 +614,7 @@ entry-point section above rather than repeating them here.
 | `team-fix` | user (direct invocation) | Compressed bug-fix flow (outside QRSPI) |
 | `eng-design-doc-review` | user (direct invocation) | Optional pre-Design audit; dispatches a general-purpose subagent |
 | `shipit` | user (direct invocation) | Standalone — land a reviewed PR (not a QRSPI phase) |
-| `qrspi-workflow` | orchestrator skills | All phases |
-| `artifact-frontmatter` | orchestrator skills; artifact authors (just-in-time via pointers) | All phases — artifact schema |
-| `agent-open-questions` | questioner, design-author | Question, Design (subagent → user via orchestrator) |
+| `qrspi-workflow` | orchestrator skills; questioner (schema) | All phases |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
 | `conventional-comments` | code-reviewer, security-reviewer, technical-writer | Implement (verify) — finding format |
 | `review-severity-tiers` | orchestrator (team, team-implement, qrspi-workflow) | Implement (aggregate review gate) |

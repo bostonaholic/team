@@ -53,8 +53,9 @@ Explore the codebase to answer the questions. The researcher reads only
 
 ### DESIGN
 
-Align on approach. The design author MUST present open
-questions to the user before writing the design document. The result is
+Decide the approach. The design author resolves its own open questions
+autonomously and records each as an explicit assumption in the
+document. The result is
 a ~200-line markdown artifact audited by an adversarial design review.
 
 - **Artifact:** `docs/plans/<id>/design.md` (plus one
@@ -139,9 +140,8 @@ at the agent boundary:
    `task.md`; enforcement relies on the agent following its prompt.
 3. **Procedural** — if a researcher needs context the questions lack, it must
    surface that as an open question rather than guessing the intent.
-   The canonical mechanism for surfacing open questions interactively
-   from any subagent is `skills/agent-open-questions/SKILL.md` — emit
-   the envelope, let the orchestrator render and resume.
+   Researchers record missing context in their artifact's open-questions
+   section; they never pause the run to ask.
 
 A PreToolUse(Read) hook that blocks `*/task.md` reads from the research
 agents would convert step 2 from procedural to structural. Treat this as

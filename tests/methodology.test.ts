@@ -321,9 +321,12 @@ describe("product-thinking methodology", () => {
     expect(/no gate|adds no gate|no extra research|requires no/i.test(directive)).toBe(true);
   });
 
-  test("design-author description frontmatter is unchanged", () => {
+  test("design-author description frontmatter matches the self-answering wording", () => {
+    // Slice 2 (remove-human-gates): the open-questions-for-the-user and
+    // MUST-present-interactively clauses are gone — the design author
+    // resolves its own open questions and records each as an assumption.
     const expected =
-      'description: Use after research is complete to align with the user on the approach before any code is written. Drafts a ~200-line design document covering current state, desired end state, patterns to follow, decisions made, and explicit open questions for the user. MUST present the open questions interactively before producing the design — replaces the RPI "magic words" problem with structural interaction.';
+      "description: Use after research is complete to draft the approach before any code is written. Drafts a ~200-line design document covering current state, desired end state, patterns to follow, and decisions made. Resolves its own open questions autonomously, recording each as an explicit, auditable assumption in the design.";
     expect(read(DESIGN_AUTHOR)).toContain(expected);
   });
 
