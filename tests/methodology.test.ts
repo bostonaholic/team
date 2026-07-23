@@ -615,8 +615,7 @@ describe("time-bomb example pair (L2 drift tripwire)", () => {
 // engineering-standards is the single source of truth for the binding comment
 // rule set (why-only, rewrite-first, no ticket/pipeline references, no
 // commented-out code, no TODOs, doc-comment exemption); the implementer's
-// `## Code quality` block only mirrors it. Keyed-phrase pins on BOTH sides
-// mean a one-sided edit of either mirror fails CI.
+// `## Code quality` block defers to it with a one-line pointer.
 // ---------------------------------------------------------------------------
 
 describe("code-comment rules (L2 content tripwire)", () => {
@@ -645,19 +644,13 @@ describe("code-comment rules (L2 content tripwire)", () => {
     expect(/exported\/public/i.test(section)).toBe(true);
   });
 
-  test("implementer mirrors comment discipline in Code quality", () => {
-    const codeQuality = sliceBetween(
-      read(IMPLEMENTER),
-      "## Code quality",
-      "## Working with existing code",
-    );
-    expect(codeQuality.length).toBeGreaterThan(0);
-    expect(/why[- ]only|non-obvious why/i.test(codeQuality)).toBe(true);
-    expect(/ticket/i.test(codeQuality)).toBe(true);
-    expect(/plan\/slice\/phase/i.test(codeQuality)).toBe(true);
-    expect(/commented-out code/i.test(codeQuality)).toBe(true);
-    // The mirror summarizes and defers; the skill stays canonical.
-    expect(codeQuality).toContain("engineering-standards/SKILL.md");
+  test("implementer defers comment discipline to engineering-standards via a one-line pointer", () => {
+    // The wrapper no longer mirrors the rule set (thin-agents refactor);
+    // it keeps a one-line pointer naming the canonical skill next to the
+    // comment-discipline mention.
+    const directive = grepA4(read(IMPLEMENTER), /comment discipline/i);
+    expect(directive.length).toBeGreaterThan(0);
+    expect(directive).toContain("engineering-standards/SKILL.md");
   });
 });
 

@@ -89,3 +89,19 @@ your conclusion will anchor to it and verify nothing.
   findings").
 - You own everything you report. Spot-verify helper claims before including
   them; a helper's error in your output is your error.
+
+## Per-agent caps
+
+### Implementer — read-only scouts
+
+Spawn a read-only scout when a slice touches a subsystem the plan does not
+explain and mapping it yourself would mean reading more than ~3 files you
+will not edit. The scout absorbs the bulk reading and returns a short map,
+keeping your context lean across slices.
+
+- **Scout types:** the built-in `Explore` agent or `team:file-finder`.
+- **Caps:** at most 2 scouts in flight; each instructed to return <= 30
+  lines of file:line findings and to spawn no further agents.
+- **Scouts never write, edit, or commit.** All code, tests, and commits
+  remain yours. Never dispatch a sub-agent to implement a slice or to run
+  the fix loop.

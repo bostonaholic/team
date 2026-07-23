@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 31 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 19 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 32 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 20 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -45,8 +45,8 @@ catalog into two flavors:
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
 standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 19 methodology =
-31**.
+split is **11 pipeline entry-point + 1 standalone utility + 20 methodology =
+32**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -250,7 +250,7 @@ phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 19 methodology skills carry no `argument-hint` and are never invoked
+The 20 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -341,6 +341,17 @@ load manifest; an agent typically loads at most three.
 - **Loaded by:** implementer.
 - **Key behaviors:** Name the smell, apply the pattern in its own commit,
   and keep tests green at every step.
+
+### implementing-slices
+
+- **Purpose:** Slice-by-slice execution procedure for the Implement phase.
+- **Loaded by:** implementer.
+- **Key behaviors:** Defines the implementer's two dispatch modes (initial
+  and review-fix with typed failure classes), the slice-execution loop
+  (implement the steps, run the slice's acceptance tests, commit
+  atomically, report), TDD discipline within a slice, blocker handling,
+  and the scope fence (acceptance tests are immutable; no slices beyond
+  the plan).
 
 ### systematic-debugging
 
@@ -474,6 +485,7 @@ entry-point section above rather than repeating them here.
 | `test-driven-bug-fix` | team-fix | Bug-fix flow |
 | `solid-principles` | implementer, code-reviewer | Implement |
 | `refactoring-to-patterns` | implementer | Implement |
+| `implementing-slices` | implementer | Implement |
 | `systematic-debugging` | implementer (inline Load on non-obvious failures); other agents when debugging (advisory) | Implement; Any (debugging) |
 | `progress-tracking` | every multi-step agent (convention) | Any (multi-step procedure) |
 | `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
@@ -501,6 +513,7 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 | `team-research` | `researcher` | Skill dispatches the Research phase; the agent is the doer that runs the research. |
 | `code-review` | `code-reviewer` | Skill is the review methodology; the agent is the reviewer that applies it. |
 | `team-question` | `questioner` | Skill drives the Question phase; the agent decomposes the intent. |
+| `implementing-slices` | `implementer` | Skill is the slice-execution procedure; the agent is the specialist that executes it. |
 | `team-design` | `design-author` | Skill drives the Design phase; the agent drafts the alignment doc. |
 | `technical-design-doc` | `technical-writer` | Both contain "technical" but differ: the skill is design-doc methodology; the agent writes documentation during verify. |
 | `eng-design-doc-review` | `design-author` | The review skill dispatches a `general-purpose` subagent, **not** the `design-author` agent — keeping the audit independent of the author. |
