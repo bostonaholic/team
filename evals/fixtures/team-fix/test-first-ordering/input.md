@@ -3,6 +3,7 @@ agent: team-fix
 tier: periodic
 deps:
   - skills/team-fix/**
+  - skills/test-driven-bug-fix/**
 ---
 
 # Self-contained task: plan a compressed bug fix, test-first

@@ -123,8 +123,8 @@ that link, and so on, until the chain bottoms out at a cause you can change.
   real. Single-track tunnel vision ignores a branch that also contributed.
 - **Tie the terminal "why?" to the fix.** The fix belongs at the root link —
   the deepest controllable cause — not at any proximate link above it. The
-  mutation check in `skills/team-fix/SKILL.md` (revert one line, confirm the
-  test goes red) verifies the fix landed at the root and not on a symptom.
+  `test-driven-bug-fix` mutation check (revert one line, confirm the test goes
+  red) verifies the fix landed at the root and not on a symptom.
 - **When the chain will not converge, escalate.** If "why?" keeps returning
   answers outside your control — never reaching a cause you can change — stop
   drilling and hand off to `## Escalation Rules` below rather than looping.

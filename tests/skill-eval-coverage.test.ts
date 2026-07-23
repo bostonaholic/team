@@ -8,11 +8,6 @@
 //   git-commit, changelog, team-question, eng-design-doc-review, team-fix,
 //   team-research, team-design, team-structure, team-plan
 //
-// git-commit is no longer a standalone skill — its methodology is embedded
-// in team-pr's Commit Message Conventions section (single-referencer rule).
-// Its eval artifacts keep the git-commit name, but diff selection fires on
-// skills/team-pr/** (see the dedicated diff-selectability test below).
-//
 // L2-demoted skills (heavy-prior-state — 4 total):
 //   team, team-worktree, team-pr, team-implement
 //
@@ -42,9 +37,9 @@ const FIXTURE_ROOT = join(REPO_ROOT, "evals", "fixtures");
 const RUBRIC_ROOT = join(REPO_ROOT, "evals", "rubrics");
 const TESTS_ROOT = join(REPO_ROOT, "tests");
 
-// The L5-eligible skills whose methodology still lives at skills/<name>/.
-// (git-commit's eval remains but its content dep moved to skills/team-pr/**.)
+// The nine L5-eligible skills from structure.md triage.
 const L5_SKILLS = [
+  "git-commit",
   "changelog",
   "team-question",
   "eng-design-doc-review",
@@ -383,13 +378,6 @@ describe("L5 diff-selectability", () => {
       expect(matched).toBe(true);
     });
   }
-
-  test("git-commit eval diff-selects on skills/team-pr/** (embedded methodology)", () => {
-    const entry = E2E_TOUCHFILES["git-commit-conventional-subject"] ?? [];
-    expect(entry).toContain("skills/team-pr/**");
-    // The deleted skill dir must not linger as a dangling glob.
-    expect(entry.some((g) => g.startsWith("skills/git-commit/"))).toBe(false);
-  });
 });
 
 // ---------------------------------------------------------------------------

@@ -1,23 +1,16 @@
+---
+name: documenting-decisions
+description: Architecture Decision Record creation and management — loaded by planner and orchestrator when significant technical decisions need to be recorded with context and consequences
+user-invocable: false
+---
+
 # Documenting Decisions
-
-Bundled reference for the eng-design-doc-review skill: ADR-quality
-criteria for evaluating how well a decision captures context,
-alternatives, and consequences.
-
-Contents:
-
-- [ADR Format](#adr-format)
-- [File Convention](#file-convention)
-- [When to Write an ADR](#when-to-write-an-adr)
-- [When NOT to Write an ADR](#when-not-to-write-an-adr)
-- [ADR Statuses](#adr-statuses)
-- [Writing Guidance](#writing-guidance)
 
 Architecture Decision Records (ADRs) capture significant technical decisions
 with their context, rationale, and consequences. They are the institutional
 memory that explains WHY the codebase looks the way it does.
 
-Write the prose this methodology governs at a seventh-grade reading
+Write the prose this skill governs at a seventh-grade reading
 level — short sentences, common words, no unexplained jargon. Full
 methodology: `skills/writing-prose/SKILL.md`.
 

@@ -87,10 +87,7 @@ done
 1. Use the directory resolved in `## Input`.
 2. **Dispatch the review.** Call the `Agent` tool with
    `subagent_type: general-purpose` and pass the **Review brief** below as
-   the prompt, with `$ARGUMENTS` substituted for the artifact directory and
-   the absolute paths of this skill's two bundled reference files
-   (`technical-design-doc.md` and `documenting-decisions.md`, which sit in
-   this skill's base directory) substituted where the brief names them. Do
+   the prompt, with `$ARGUMENTS` substituted for the artifact directory. Do
    **not** define or reference a project agent — the built-in
    `general-purpose` type is the whole mechanism. Its clean context is what
    makes the review independent.
@@ -114,23 +111,19 @@ beyond what the document itself states. This isolation is intentional: it
 prevents self-evaluation bias. You are read-only — use `Read`, `Grep`, and
 `Glob` only; do not edit any file.
 
-**First, load your operating manual.** Use the `Skill` tool to load two
-methodology skills, and `Read` the two bundled reference files (the
-dispatcher substituted their absolute paths) — together they are your
-review criteria:
+**First, load your operating manual.** Use the `Skill` tool to load these
+four methodology skills before you begin — they are your review criteria:
 
-- **technical-design-doc.md** (bundled reference file — `Read` it) — the
-  spec a TDD/design doc must satisfy. Use it as a literal checklist against
-  the artifact under review.
-- **code-review** (Skill tool) — generator-evaluator separation,
-  Conventional Comments format, verdict criteria. The same review
-  discipline applies to prose artifacts as to code.
-- **engineering-standards** (Skill tool) — the design philosophy lens
-  (Hickey, Carmack, Armstrong, Knuth, Liskov, Ousterhout). Use the "When
-  Reviewing" section as severity guidance.
-- **documenting-decisions.md** (bundled reference file — `Read` it) —
-  ADR-quality criteria for evaluating how well each decision in the doc
-  captures context, alternatives, and consequences.
+- **technical-design-doc** — the spec a TDD/design doc must satisfy. Use it
+  as a literal checklist against the artifact under review.
+- **code-review** — generator-evaluator separation, Conventional Comments
+  format, verdict criteria. The same review discipline applies to prose
+  artifacts as to code.
+- **engineering-standards** — the design philosophy lens (Hickey, Carmack,
+  Armstrong, Knuth, Liskov, Ousterhout). Use the "When Reviewing" section as
+  severity guidance.
+- **documenting-decisions** — ADR-quality criteria for evaluating how well
+  each decision in the doc captures context, alternatives, and consequences.
 
 ### Review process
 
@@ -141,7 +134,7 @@ review criteria:
    when present — they ground the design in the work that produced it.
 
 2. **Evaluate structure against the TDD methodology.** Walk every section
-   the `technical-design-doc.md` reference prescribes (Problem, Goals/Non-Goals,
+   the `technical-design-doc` skill prescribes (Problem, Goals/Non-Goals,
    Background, Design, Trade-offs, Rollout, Edge Cases, Open Questions) and
    note any missing or thin sections. For `design.md` artifacts, walk the
    `design-author` template instead (Current state, Desired end state,
@@ -155,7 +148,7 @@ review criteria:
      benefit?
    - Could a future reader reconstruct *why* this was chosen, not just
      *what* was chosen?
-   Apply the `documenting-decisions.md` criteria — these are ADR-grade
+   Apply the `documenting-decisions` criteria — these are ADR-grade
    questions even when the doc is not a formal ADR.
 
 4. **Verify edge-case enumeration.** The design must walk boundary values,

@@ -32,10 +32,8 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/fixtures/code-reviewer/planted-comment-violations/**",
     "evals/rubrics/code-reviewer.md",
   ],
-  // The git-commit methodology is embedded in team-pr (Commit Message
-  // Conventions section), so team-pr's glob is the content dep.
   "git-commit-conventional-subject": [
-    "skills/team-pr/**",
+    "skills/git-commit/**",
     "tests/git-commit.evals.ts",
     "evals/fixtures/git-commit/conventional-subject/**",
     "evals/rubrics/git-commit.md",
@@ -54,18 +52,16 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/fixtures/team-question/neutral-questions/**",
     "evals/rubrics/team-question.md",
   ],
-  // skills/eng-design-doc-review/** also covers the bundled reference files
-  // (technical-design-doc.md, documenting-decisions.md) embedded there.
   "eng-design-doc-review-planted-missing-alternatives": [
     "skills/eng-design-doc-review/**",
+    "skills/technical-design-doc/**",
     "tests/eng-design-doc-review.evals.ts",
     "evals/fixtures/eng-design-doc-review/planted-missing-alternatives/**",
     "evals/rubrics/eng-design-doc-review.md",
   ],
-  // skills/team-fix/** also covers the embedded test-driven-bug-fix
-  // methodology section.
   "team-fix-test-first-ordering": [
     "skills/team-fix/**",
+    "skills/test-driven-bug-fix/**",
     "tests/team-fix.evals.ts",
     "evals/fixtures/team-fix/test-first-ordering/**",
     "evals/rubrics/team-fix.md",

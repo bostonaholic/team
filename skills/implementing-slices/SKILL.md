@@ -110,13 +110,16 @@ For each slice:
    slices' tests still pass, the slice is done. In multi-repo mode, run
    each test in the worktree where it lives (the test name in the plan
    carries a `<repo>:` prefix).
-4. **Commit atomically.** Single-repo: one commit per slice using the
-   slice's `Commit:` line as the subject, body referencing the design
-   and structure paths. Multi-repo: when the slice's `Repos:` field
-   names more than one repo, produce **one commit per repo** in their
-   respective worktrees, using each per-repo `Commit:` subject from the
-   plan. Each commit body references the same design/structure paths
-   and notes "part of slice <N>: <name>" so reviewers can correlate.
+4. **Commit atomically.** Apply the commit conventions in
+   `skills/git-commit/SKILL.md` (Conventional Commits, the 50/72 rule,
+   one logical change per commit). Single-repo: one commit per slice
+   using the slice's `Commit:` line as the subject, body referencing
+   the design and structure paths. Multi-repo: when the slice's
+   `Repos:` field names more than one repo, produce **one commit per
+   repo** in their respective worktrees, using each per-repo `Commit:`
+   subject from the plan. Each commit body references the same
+   design/structure paths and notes "part of slice <N>: <name>" so
+   reviewers can correlate.
 5. **Report the slice as complete** — return a brief summary to the
    orchestrator: `{slice: <name>, testsPassing: [list], commits: [
    {repo: <slug>, sha: <sha>}, ... ]}` (`commits` is a single-entry

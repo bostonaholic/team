@@ -247,56 +247,35 @@ describe("thin agents: haiku skills are self-contained", () => {
   }
 });
 
-describe("thin agents: documentation counts agree at 36 skills", () => {
-  // 40 post-refactor skills minus the 4 single-referencer skills embedded
-  // into their sole consumers (git-commit -> team-pr, test-driven-bug-fix
-  // -> team-fix, technical-design-doc + documenting-decisions ->
-  // eng-design-doc-review bundled reference files).
+describe("thin agents: documentation counts agree at 40 skills", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
 
-  test("skills/ holds exactly 36 SKILL.md files", () => {
+  test("skills/ holds exactly 40 SKILL.md files", () => {
     const count = readdirSync(join(REPO_ROOT, "skills")).filter((name) =>
       existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")),
     ).length;
-    expect(count).toBe(36);
+    expect(count).toBe(40);
   });
 
-  test("AGENTS.md heading reads Skills (36)", () => {
-    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (36)");
+  test("AGENTS.md heading reads Skills (40)", () => {
+    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (40)");
   });
 
-  test("docs/skills.md description counts 36 skills", () => {
-    expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain("36 skills");
+  test("docs/skills.md description counts 40 skills", () => {
+    expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain("40 skills");
   });
 
-  test("docs/skills.md split sentence sums to 36", () => {
+  test("docs/skills.md split sentence sums to 40", () => {
     expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain(
-      "11 pipeline entry-point + 1 standalone utility + 24 methodology = 36",
+      "11 pipeline entry-point + 1 standalone utility + 28 methodology = 40",
     );
   });
 
-  test("docs/architecture.md counts all 36 skills and no stale 31", () => {
+  test("docs/architecture.md counts all 40 skills and no stale 31", () => {
     const content = read(ARCHITECTURE_MD);
-    expect(content).toContain("all 36 skills");
+    expect(content).toContain("all 40 skills");
     expect(content).not.toContain("31 skills");
-  });
-
-  test("the four embedded single-referencer skill dirs are gone", () => {
-    for (const name of [
-      "git-commit",
-      "test-driven-bug-fix",
-      "technical-design-doc",
-      "documenting-decisions",
-    ]) {
-      expect(existsSync(join(REPO_ROOT, "skills", name))).toBe(false);
-    }
-  });
-
-  test("eng-design-doc-review carries the two bundled reference files", () => {
-    const dir = join(REPO_ROOT, "skills", "eng-design-doc-review");
-    expect(existsSync(join(dir, "technical-design-doc.md"))).toBe(true);
-    expect(existsSync(join(dir, "documenting-decisions.md"))).toBe(true);
   });
 
   test("docs/architecture.md exempts own-procedure skills from the 3-skill soft limit", () => {

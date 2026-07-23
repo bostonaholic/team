@@ -34,11 +34,9 @@ const ENTRY_POINT_SKILLS = [
   "eng-design-doc-review",
 ];
 
-// The 2 methodology procedure skills that must reference it (Slice 3).
-// test-driven-bug-fix was embedded into team-fix (single-referencer rule);
-// its reference line now lives in team-fix's embedded methodology section,
-// covered by the drift guard below.
+// The 3 methodology procedure skills that must reference it (Slice 3).
 const METHODOLOGY_SKILLS = [
+  "test-driven-bug-fix",
   "systematic-debugging",
   "test-first-development",
 ];
@@ -136,27 +134,26 @@ describe("Slice 1: progress-tracking convention skill exists", () => {
   });
 });
 
-describe("skill count reconciliation (-> 36: single-referencer skills embedded)", () => {
+describe("skill count reconciliation (-> 40: + slicing-work, planning-implementation)", () => {
   const CLAUDE_MD = join(REPO_ROOT, "CLAUDE.md");
   const AGENTS_MD = join(REPO_ROOT, "AGENTS.md");
 
-  test("CLAUDE.md heading reads '## Skills (36)'", () => {
-    expect(/^## Skills \(36\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md heading reads '## Skills (40)'", () => {
+    expect(/^## Skills \(40\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 
-  test("AGENTS.md heading reads '## Skills (36)'", () => {
-    expect(/^## Skills \(36\)/m.test(read(AGENTS_MD))).toBe(true);
+  test("AGENTS.md heading reads '## Skills (40)'", () => {
+    expect(/^## Skills \(40\)/m.test(read(AGENTS_MD))).toBe(true);
   });
 
-  test("filesystem has exactly 36 SKILL.md files declaring a name:", () => {
-    // 40 post-thin-agents skills - 4 single-referencer skills embedded into
-    // their sole consumers = 36.
+  test("filesystem has exactly 40 SKILL.md files declaring a name:", () => {
+    // 31 baseline skills + 9 new methodology skills = 40.
     const dirs = readdirSync(SKILLS_DIR, { withFileTypes: true })
       .filter((d) => d.isDirectory())
       .map((d) => join(SKILLS_DIR, d.name, "SKILL.md"))
       .filter((p) => existsSync(p));
     const withName = dirs.filter((p) => /^name:/m.test(read(p)));
-    expect(withName.length).toBe(36);
+    expect(withName.length).toBe(40);
   });
 });
 
@@ -178,9 +175,7 @@ describe("Slice 3: methodology procedure skills reference progress-tracking", ()
 
 describe("Slices 2-3: canonical reference sentence is byte-identical (drift guard)", () => {
   test("exactly one unique variant of the canonical sentence exists across all entry-point + methodology skills", () => {
-    // team-fix carries the embedded test-driven-bug-fix methodology, whose
-    // Four-Step Discipline keeps the canonical blockquote — scan it too.
-    const targets = [...ENTRY_POINT_SKILLS, ...METHODOLOGY_SKILLS, "team-fix"];
+    const targets = [...ENTRY_POINT_SKILLS, ...METHODOLOGY_SKILLS];
     const variants = new Set<string>();
     for (const name of targets) {
       const lines = read(skill(name)).split("\n");

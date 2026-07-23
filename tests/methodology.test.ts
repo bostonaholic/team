@@ -373,17 +373,15 @@ describe("product-thinking methodology", () => {
 // ---------------------------------------------------------------------------
 
 describe("documenting-decisions lens (L2 content tripwire)", () => {
-  // Embedded per the single-referencer rule: the content now lives as a
-  // bundled reference file inside its sole consumer, eng-design-doc-review.
-  const LENS_FILE = join(REPO_ROOT, "skills", "eng-design-doc-review", "documenting-decisions.md");
+  const SKILL_FILE = join(REPO_ROOT, "skills", "documenting-decisions", "SKILL.md");
 
-  test("bundled reference file exists (plain markdown, no skill frontmatter)", () => {
-    expect(existsSync(LENS_FILE)).toBe(true);
-    expect(/^---\n/.test(read(LENS_FILE))).toBe(false);
+  test("skill file exists with name: documenting-decisions", () => {
+    expect(existsSync(SKILL_FILE)).toBe(true);
+    expect(/^name:\s*documenting-decisions\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
   });
 
   test("pins the ADR section contract (Context / Decision / Consequences)", () => {
-    const text = read(LENS_FILE);
+    const text = read(SKILL_FILE);
     expect(text).toContain("Architecture Decision Record");
     expect(/^## Context$/m.test(text)).toBe(true);
     expect(/^## Decision$/m.test(text)).toBe(true);
@@ -409,17 +407,15 @@ describe("product-requirements-doc lens (L2 content tripwire)", () => {
 });
 
 describe("technical-design-doc lens (L2 content tripwire)", () => {
-  // Embedded per the single-referencer rule: the content now lives as a
-  // bundled reference file inside its sole consumer, eng-design-doc-review.
-  const LENS_FILE = join(REPO_ROOT, "skills", "eng-design-doc-review", "technical-design-doc.md");
+  const SKILL_FILE = join(REPO_ROOT, "skills", "technical-design-doc", "SKILL.md");
 
-  test("bundled reference file exists (plain markdown, no skill frontmatter)", () => {
-    expect(existsSync(LENS_FILE)).toBe(true);
-    expect(/^---\n/.test(read(LENS_FILE))).toBe(false);
+  test("skill file exists with name: technical-design-doc", () => {
+    expect(existsSync(SKILL_FILE)).toBe(true);
+    expect(/^name:\s*technical-design-doc\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
   });
 
   test("pins the TDD section contract (goals/non-goals, trade-offs, edge cases, open questions)", () => {
-    const text = read(LENS_FILE);
+    const text = read(SKILL_FILE);
     expect(text).toContain("Goals and Non-Goals");
     expect(text).toContain("Trade-offs Considered");
     expect(text).toContain("Edge Cases and Failure Modes");
@@ -463,13 +459,11 @@ describe("systematic-debugging lens (L2 content tripwire)", () => {
 });
 
 describe("test-driven-bug-fix lens (L2 content tripwire)", () => {
-  // Embedded per the single-referencer rule: the methodology now lives as a
-  // section inside its sole consumer, team-fix.
-  const SKILL_FILE = join(REPO_ROOT, "skills", "team-fix", "SKILL.md");
+  const SKILL_FILE = join(REPO_ROOT, "skills", "test-driven-bug-fix", "SKILL.md");
 
-  test("team-fix carries the embedded Test-Driven Bug Fix Methodology section", () => {
+  test("skill file exists with name: test-driven-bug-fix", () => {
     expect(existsSync(SKILL_FILE)).toBe(true);
-    expect(/^## Test-Driven Bug Fix Methodology$/m.test(read(SKILL_FILE))).toBe(true);
+    expect(/^name:\s*test-driven-bug-fix\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
   });
 
   test("pins write-a-failing-test-that-reproduces-the-bug-first ordering", () => {
@@ -486,24 +480,19 @@ describe("test-driven-bug-fix lens (L2 content tripwire)", () => {
 });
 
 describe("git-commit lens (L2 content tripwire)", () => {
-  // Embedded per the single-referencer rule: the conventions now live as a
-  // section inside their sole consumer, team-pr.
-  const SKILL_FILE = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
+  const SKILL_FILE = join(REPO_ROOT, "skills", "git-commit", "SKILL.md");
 
-  test("team-pr carries the embedded Commit Message Conventions section", () => {
+  test("skill file exists with name: git-commit", () => {
     expect(existsSync(SKILL_FILE)).toBe(true);
-    expect(/^## Commit Message Conventions$/m.test(read(SKILL_FILE))).toBe(true);
+    expect(/^name:\s*git-commit\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
   });
 
   test("pins the 50/72, Conventional Commits, and atomic-commit contract", () => {
-    // Newline-anchored so the inline backticked mentions of the heading
-    // earlier in the file cannot satisfy the marker.
-    const section = sliceBetween(read(SKILL_FILE), "\n## Commit Message Conventions\n", "\n## Completion\n");
-    expect(section.length).toBeGreaterThan(0);
-    expect(section).toContain("The 50/72 Rule");
-    expect(section).toContain("Conventional Commits");
-    expect(section).toContain("BREAKING CHANGE:");
-    expect(section).toContain("Atomic Commits");
+    const text = read(SKILL_FILE);
+    expect(text).toContain("The 50/72 Rule");
+    expect(text).toContain("Conventional Commits");
+    expect(text).toContain("BREAKING CHANGE:");
+    expect(text).toContain("Atomic Commits");
   });
 });
 

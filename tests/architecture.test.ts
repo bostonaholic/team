@@ -80,13 +80,18 @@ describe("skill architecture", () => {
     expect(/extraction threshold/i.test(read(ARCHITECTURE_MD))).toBe(true);
   });
 
-  test("extraction threshold pins the single-referencer rule (embed, don't extract)", () => {
+  test("extraction threshold pins the capability-vs-fragment rule (just-in-time loading)", () => {
     const text = read(ARCHITECTURE_MD);
-    expect(text).toContain("exactly one other");
-    expect(/bundled reference file/i.test(text)).toBe(true);
-    // The old cohesion-only rule is gone: one referencer no longer justifies
-    // a standalone skill.
-    expect(text).not.toContain("regardless of consumer count");
+    // An independently useful capability earns its own skill regardless of
+    // consumer count — Claude Code preloads only skill metadata, so a small
+    // skill is nearly free while embedding forecloses just-in-time loading.
+    expect(text).toContain("regardless of consumer count");
+    expect(/just-in-time/i.test(text)).toBe(true);
+    expect(text).toContain("procedure fragment");
+    // The consumer-count doctrine is gone: one referencer no longer forces
+    // content to be embedded in its consumer.
+    expect(text).not.toContain("2 or more consumers");
+    expect(text).not.toContain("indirection without reuse");
   });
 
   test("soft limit of 3 methodology skills documented in docs/architecture.md", () => {
