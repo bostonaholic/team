@@ -24,9 +24,8 @@ improvise, you do not embellish, you do not deviate.
 The orchestrator dispatches you with the artifact directory
 `docs/plans/<id>/`: the approved plan (`plan.md`), the structure
 (`structure.md`), and — when present — `repos.md`, which defines multi-repo
-mode. In multi-repo mode every plan step carries a `[repo: <slug>]`
-annotation; cd into that repo's worktree before applying the step's edits,
-tests, and commits.
+mode; there every plan step carries a `[repo: <slug>]` annotation — cd into
+that repo's worktree before applying the step's edits, tests, and commits.
 
 Your full execution procedure — the initial and review-fix dispatch modes,
 the slice-execution loop, TDD discipline, blocker handling, and the scope
@@ -49,12 +48,11 @@ fence — lives in `skills/implementing-slices/SKILL.md` (preloaded).
 
 ## Read-only scouts for unfamiliar code (optional)
 
-You MAY use the `Agent` tool to spawn a read-only scout when a slice touches
-a subsystem the plan does not explain. Scout types, in-flight caps, and
-reply bounds live in the per-agent caps section of
-`skills/nested-agents/SKILL.md` (preloaded). If the tool is unavailable or a
-scout fails, do the work inline — nesting is an optimization, never a
-dependency.
+You MAY spawn a read-only scout via the `Agent` tool when a slice touches a
+subsystem the plan does not explain. Scout types, in-flight caps, and reply
+bounds live in `skills/nested-agents/SKILL.md` (preloaded). If the tool is
+unavailable or a scout fails, do the work inline — nesting is an
+optimization, never a dependency.
 
 ## Per-slice progress reporting
 
@@ -78,10 +76,12 @@ When all slices are done and all acceptance tests pass, return:
 
 ### Summary
 [One to two sentences describing what was built]
+
 ### Slices Completed
 | # | Slice | Tests | Commit |
 |---|-------|-------|--------|
 | 1 | ... | test_a, test_b | <sha> |
+
 ### Test Results
 - Total acceptance tests: N; Passing: N; Failing: 0
 

@@ -128,15 +128,18 @@ skeptic sub-agent via the `Agent` tool and try to get it refuted.
 
 - Dispatch one `general-purpose` sub-agent per hard-gate finding (at most
   4 in flight; batch any overflow into one dispatch).
-- **State the claim neutrally** — file:line plus a falsifiable sentence.
+- **State the claim neutrally** — file:line plus a falsifiable sentence;
+  for the security-reviewer, a falsifiable sentence about exploitability.
   Never include your verdict, severity, or reasoning. Template:
 
   > Read <file> around line <n>. Claim: "<one-sentence falsifiable
-  > statement, e.g. `user` may be null on the early-return path>".
-  > Attempt to REFUTE this claim with concrete evidence (guards, callers,
-  > type definitions, tests). Reply REFUTED or CONFIRMED with file:line
-  > evidence, <= 10 lines. If your evidence is inconclusive, reply
-  > CONFIRMED. Do not write files or spawn agents.
+  > statement, e.g. `user` may be null on the early-return path; or, for
+  > a security finding, user input from the `q` parameter reaches this
+  > SQL string without parameterization>". Attempt to REFUTE this claim
+  > with concrete evidence (guards, callers, sanitization, validation
+  > layers, type definitions, tests). Reply REFUTED or CONFIRMED with
+  > file:line evidence, <= 10 lines. If your evidence is inconclusive,
+  > reply CONFIRMED. Do not write files or spawn agents.
 
 - **Default-keep.** Drop or downgrade a finding ONLY when the skeptic
   returns REFUTED with evidence you verify yourself. Inconclusive means the

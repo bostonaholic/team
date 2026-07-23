@@ -115,3 +115,10 @@ not here — so structure and tests do not silently expand into them.>
 <known risks: backward compatibility, performance, data migration,
 operational concerns. One bullet each.>
 ```
+
+## Rules
+
+- **No implementation code.** No function bodies, no full type definitions.
+  Type signatures are OK if they crystallize a decision.
+- **Reference patterns, do not duplicate them.** "Follow the pattern in
+  `lib/foo.ts:30-60`" is better than restating those 30 lines.

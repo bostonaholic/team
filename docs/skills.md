@@ -38,7 +38,8 @@ catalog into two flavors:
 - **Methodology skills omit `argument-hint`.** They are never invoked
   directly. Agents load them through one of two mechanisms: a `skills:`
   YAML list in the agent's frontmatter (e.g., `agents/design-author.md`
-  declares `skills: [product-thinking]`), or an inline prose load
+  declares `skills: [product-thinking, agent-open-questions,
+  progress-tracking, authoring-designs]`), or an inline prose load
   instruction in the agent body (e.g., `Load skills/<name>/SKILL.md for
   …`).
 
@@ -453,6 +454,23 @@ load manifest; an agent typically loads at most three.
   orchestrator owns the phase ledger; an agent tracks its own sub-steps in
   its own context and never merges them up.
 
+### nested-agents
+
+- **Purpose:** Guardrails for the four `Agent`-tool holders that spawn
+  read-only nested sub-agents.
+- **Loaded by:** researcher, implementer, code-reviewer, security-reviewer
+  (4).
+- **Key behaviors:** Nesting is an optimization, never a dependency — if
+  the `Agent` tool is missing or a dispatch fails, the agent does the work
+  inline. Carries the fail-closed version gate (Claude Code ≥ 2.1.172),
+  the read-only default, the depth budget, and the per-agent caps: the
+  researcher fans out at most 4 isolation-preserving exploration scouts,
+  the implementer at most 2 read-only scouts, and the code-reviewer and
+  security-reviewer run the skeptic pass — every hard-gate finding is
+  handed to a fresh sub-agent as a neutral falsifiable claim (for security
+  findings, a claim about exploitability) to refute, with default-keep on
+  anything short of a verified refutation.
+
 ### documenting-decisions
 
 - **Purpose:** Creating and managing architecture decision records (ADRs).
@@ -585,6 +603,7 @@ entry-point section above rather than repeating them here.
 | `verifying-ux` | ux-reviewer | Implement (verify) |
 | `systematic-debugging` | implementer (inline Load on non-obvious failures); other agents when debugging (advisory) | Implement; Any (debugging) |
 | `progress-tracking` | every multi-step agent (convention) | Any (multi-step procedure) |
+| `nested-agents` | researcher, implementer, code-reviewer, security-reviewer | Research, Implement (scouts + skeptic passes) |
 | `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
 | `technical-design-doc` | planner | Plan |
 | `product-requirements-doc` | questioner | Question |

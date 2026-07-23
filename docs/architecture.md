@@ -412,9 +412,10 @@ each block points at.
 Methodology skills carry no `argument-hint` and are loaded by agents
 through one of two mechanisms: a `skills:` YAML list in the agent's
 frontmatter (for example, `agents/design-author.md` declares
-`skills: [product-thinking]`), or an inline prose load instruction in the
-agent body (for example, `code-review` is loaded by the `code-reviewer`
-agent).
+`skills: [product-thinking, agent-open-questions, progress-tracking,
+authoring-designs]`), or an inline prose load instruction in the
+agent body (for example, `systematic-debugging` is loaded inline by the
+`implementer` on a non-obvious mid-slice failure).
 
 Because they are reference material rather than user actions, methodology
 skills set `user-invocable: false` in their frontmatter. This keeps them
