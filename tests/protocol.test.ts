@@ -869,3 +869,71 @@ describe("design-review gate brief (L2 drift tripwire)", () => {
   });
 });
 
+
+// ---------------------------------------------------------------------------
+// Terminal review caps — free L2 content tripwire (docs/testing.md §2).
+// A review cap (aggregate rounds or design revisions) is terminal: the run
+// halts and reports every unresolved finding. It never consults the user
+// mid-run. (docs/plans/2026-07-22-remove-human-gates, slice 3)
+// ---------------------------------------------------------------------------
+
+describe("terminal review caps (L2 tripwire)", () => {
+  for (const name of ["team", "team-implement", "code-review"]) {
+    test(`${name} SKILL halts at cap instead of escalating to the user`, () => {
+      const text = read(join(REPO_ROOT, "skills", name, "SKILL.md"));
+      expect(text).not.toContain("escalate to the user");
+      // Halt-and-report language: the halt names the unresolved findings.
+      expect(/halt/i.test(text)).toBe(true);
+      expect(/unresolved/i.test(text)).toBe(true);
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Minor-deferral — free L2 content tripwire (docs/testing.md §2). Once
+// Blocking/Major are clean, Minor-and-below findings (plus design-review
+// COMMENT findings, tagged by source) land in the PR body's `## Review notes`
+// section for the human's PR review — they are never presented mid-run, and
+// the section is omitted entirely when empty.
+// (docs/plans/2026-07-22-remove-human-gates, slice 3)
+// ---------------------------------------------------------------------------
+
+describe("Minor findings defer to the PR body (L2 tripwire)", () => {
+  const TEAM_PR = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
+  const TEAM_IMPL = join(REPO_ROOT, "skills", "team-implement", "SKILL.md");
+
+  // The PR Body Template: the first fenced code block after the
+  // "## PR Body Template" heading (pattern: the closing-footer describe).
+  function prBodyTemplate(text: string): string {
+    const afterHeading = text.split("## PR Body Template")[1] ?? "";
+    return afterHeading.match(/```\n([\s\S]*?)```/)?.[1] ?? "";
+  }
+
+  test("team-pr template carries ## Review notes between How to Verify and References", () => {
+    const template = prBodyTemplate(read(TEAM_PR));
+    // Fail loud if the template block vanished, so the position assertions
+    // below can't pass vacuously against an empty string.
+    expect(template.length).toBeGreaterThan(0);
+    expect(template).toContain("## Review notes");
+    expect(template).toContain("## How to Verify");
+    expect(template).toContain("## References");
+    expect(template.indexOf("## Review notes")).toBeGreaterThan(
+      template.indexOf("## How to Verify"),
+    );
+    expect(template.indexOf("## Review notes")).toBeLessThan(
+      template.indexOf("## References"),
+    );
+  });
+
+  test("team-pr omits the section when empty and tags design-review findings by source", () => {
+    const text = flat(read(TEAM_PR));
+    expect(/omit the section entirely when empty/i.test(text)).toBe(true);
+    expect(/never emit a bare heading/i.test(text)).toBe(true);
+    // Design-review COMMENT findings are tagged with their source artifact.
+    expect(text).toContain("design-review-");
+  });
+
+  test("team-implement records Minors for the PR body instead of presenting them", () => {
+    expect(read(TEAM_IMPL)).not.toContain("present them to the user");
+  });
+});
