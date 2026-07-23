@@ -235,7 +235,13 @@ When the design review passes:
    listed in that file, all on the same `<id>` branch. Otherwise you are in
    **single-repo mode** and nothing further is needed here (the home worktree
    already exists). See `skills/worktree-isolation/SKILL.md` for the topology
-   and `skills/team-worktree/SKILL.md` for the procedure.
+   and `skills/team-worktree/SKILL.md` for the procedure. Create the
+   worktrees **without a confirmation prompt** — the phase loop never
+   pauses mid-run; the "Confirm with the user" dialog in
+   `skills/team-worktree/SKILL.md` applies only to standalone human
+   invocation of `/team-worktree`. The resolved repo set is already
+   recorded loudly in `design.md` (`## Decisions made`/`## Risks`) and
+   echoed in the PR body's `## Review notes`.
 2. **Append a `## Worktrees` section to `repos.md`**, post-design-review,
    **back-recording the home worktree path** created at the leading WORKTREE
    phase plus each secondary repo's worktree path, so later `/team-*`
