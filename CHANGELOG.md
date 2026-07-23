@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-07-23
+
 ### Changed
 
 - **Four independently useful capabilities extracted into just-in-time skills.** Under the capability-vs-fragment doctrine, content the model can usefully load on demand earns its own skill: [`conventional-comments`](https://github.com/bostonaholic/team/blob/main/skills/conventional-comments/SKILL.md) (the review-finding format, preloaded by the `code-reviewer`, `security-reviewer`, and `technical-writer` agents; the `ux-reviewer`'s report format is not Conventional Comments), [`review-severity-tiers`](https://github.com/bostonaholic/team/blob/main/skills/review-severity-tiers/SKILL.md) (the orchestrator's gate-type and Blocking/Major/Minor tier map — `team`, `team-implement`, and `qrspi-workflow` now point at the one authoritative table instead of restating fragments of it), [`reviewing-security`](https://github.com/bostonaholic/team/blob/main/skills/reviewing-security/SKILL.md) (the security-reviewer's OWASP process and severity ladder, preloaded by that agent), and [`test-style`](https://github.com/bostonaholic/team/blob/main/skills/test-style/SKILL.md) (the test style rules, audit checklist, and the single deduplicated copy of the flaky-test red-flag catalog and time-bomb example that previously lived in both `code-review` and `test-first-development`). Each former host keeps a pointer where its section was. The skill catalog grows from 40 to 44.
@@ -243,7 +245,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.19.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.20.0...HEAD
+[0.20.0]: https://github.com/bostonaholic/team/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/bostonaholic/team/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/bostonaholic/team/compare/v0.17.1...v0.18.0
 [0.17.1]: https://github.com/bostonaholic/team/compare/v0.17.0...v0.17.1
