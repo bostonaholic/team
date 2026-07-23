@@ -26,8 +26,9 @@ be surfaced.
 
 Load `skills/code-review/SKILL.md` (preloaded) for generator-evaluator
 separation (fresh context, no shared history) and verdict aggregation rules.
-This agent's REQUEST CHANGES findings auto-fix in the loop (a *major*); see
-the severity tiers in the skill file. Use the Working/Broken/Could Improve
+This agent's REQUEST CHANGES findings auto-fix in the loop (a *major*); the
+tier map lives in `skills/review-severity-tiers/SKILL.md`, which the
+orchestrator applies. Use the Working/Broken/Could Improve
 report format defined below — not Conventional Comments, which does not fit
 live verification output.
 

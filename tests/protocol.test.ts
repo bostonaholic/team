@@ -72,8 +72,8 @@ describe("agent-open-questions protocol", () => {
     expect(read(QRSPI_SKILL)).toContain("agent-open-questions");
   });
 
-  test("CLAUDE.md has '## Skills (41)' heading", () => {
-    expect(/^## Skills \(41\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md has '## Skills (42)' heading", () => {
+    expect(/^## Skills \(42\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 
   test("skills/shipit/SKILL.md exists as a runtime skill", () => {
@@ -446,7 +446,7 @@ describe("topic consistency", () => {
 });
 
 // Regression guard for issue #68: qrspi-workflow's SOFT-gate examples must not
-// contradict the severity model in code-review/SKILL.md. PR #23 made
+// contradict the severity model in review-severity-tiers/SKILL.md. PR #23 made
 // code-reviewer REQUEST CHANGES Blocking (auto-fix) and ux-reviewer REQUEST
 // CHANGES Major (auto-fix), so neither can be a SOFT example. The severity
 // model lives in exactly one place — qrspi-workflow must cross-reference it,
@@ -478,22 +478,22 @@ describe("qrspi-workflow SOFT gate aligns with severity tiers (issue #68)", () =
     expect(/UX review feedback/i.test(soft)).toBe(false);
   });
 
-  test("SOFT section cross-references the code-review severity-tier table", () => {
+  test("SOFT section cross-references the review-severity-tiers table", () => {
     const soft = softSection(read(QRSPI));
     expect(soft.length).toBeGreaterThan(0);
-    expect(soft).toContain("code-review/SKILL.md");
+    expect(soft).toContain("review-severity-tiers/SKILL.md");
     expect(soft).toContain("Severity Tiers and the Auto-Fix Boundary");
   });
 
   // Drift guard: the SOFT section points at a heading by name. If that heading
-  // is renamed in code-review/SKILL.md, the cross-reference silently rots —
-  // fail the build here so the rename and the reference stay in sync.
-  test("the cross-referenced heading still exists in code-review/SKILL.md", () => {
-    const codeReview = read(
-      join(REPO_ROOT, "skills", "code-review", "SKILL.md"),
+  // is renamed in review-severity-tiers/SKILL.md, the cross-reference silently
+  // rots — fail the build here so the rename and the reference stay in sync.
+  test("the cross-referenced heading still exists in review-severity-tiers/SKILL.md", () => {
+    const severityTiers = read(
+      join(REPO_ROOT, "skills", "review-severity-tiers", "SKILL.md"),
     );
     expect(
-      /^#{1,4} Severity Tiers and the Auto-Fix Boundary$/m.test(codeReview),
+      /^#{1,4} Severity Tiers and the Auto-Fix Boundary$/m.test(severityTiers),
     ).toBe(true);
   });
 });

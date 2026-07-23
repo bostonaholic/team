@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 41 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 29 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 42 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 30 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -46,8 +46,8 @@ catalog into two flavors:
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
 standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 29 methodology =
-41**.
+split is **11 pipeline entry-point + 1 standalone utility + 30 methodology =
+42**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -251,7 +251,7 @@ phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 29 methodology skills carry no `argument-hint` and are never invoked
+The 30 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -358,13 +358,9 @@ replaces former inline body content 1:1, so it adds no net context (see
   technical-writer (4).
 - **Key behaviors:** Defines how a reviewer reads with fresh eyes and
   emits a structured verdict. Findings use the format defined in
-  `conventional-comments`. Carries the authoritative severity-tier
-  table (Blocking / Major / Minor-and-below) that maps every reviewer
-  vocabulary onto one scale, plus the consult guard — the rule that the
-  orchestrator never surfaces a Blocking or Major finding to the user and
-  loops the implementer automatically until only Minor-and-below remains.
-  Reclassifies `ux-reviewer` from a soft user-decides gate to an
-  auto-fixed Major. Points review-comment prose at the seventh-grade bar
+  `conventional-comments`; the gate-type and severity-tier map lives in
+  `review-severity-tiers`.
+  Points review-comment prose at the seventh-grade bar
   in `writing-prose`. Carries the Comment red flags check with its split
   severity regime: ticket/plan references and TODO/FIXME comments in code
   comments block on first occurrence, while what-restating comments,
@@ -385,6 +381,22 @@ replaces former inline body content 1:1, so it adds no net context (see
   code-directed comment style (critique the code, not the coder), and the
   three comment types — `issue`, `suggestion`, `nitpick` — with literal
   examples. Every comment includes a specific `file:line` reference.
+
+### review-severity-tiers
+
+- **Purpose:** The authoritative severity-tier map for aggregating
+  reviewer verdicts.
+- **Loaded by:** the orchestrator (`team`, `team-implement`,
+  `qrspi-workflow` cross-reference it at the aggregate review gate); no
+  agent preloads it.
+- **Key behaviors:** Carries the gate-type table (HARD / AUTO-FIX /
+  ADVISORY per reviewer) and the authoritative severity-tier table
+  (Blocking / Major / Minor-and-below) that maps every reviewer
+  vocabulary onto one scale, plus the consult guard — the rule that the
+  orchestrator never surfaces a Blocking or Major finding to the user and
+  loops the implementer automatically until only Minor-and-below remains,
+  capped at 5 rounds. Classifies `ux-reviewer` REQUEST CHANGES as an
+  auto-fixed Major.
 
 ### engineering-standards
 
@@ -612,6 +624,7 @@ entry-point section above rather than repeating them here.
 | `agent-open-questions` | questioner, design-author | Question, Design (subagent → user via orchestrator) |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
 | `conventional-comments` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) — finding format |
+| `review-severity-tiers` | orchestrator (team, team-implement, qrspi-workflow) | Implement (aggregate review gate) |
 | `decomposing-intent` | questioner | Question |
 | `authoring-designs` | design-author | Design |
 | `researching-codebases` | researcher | Research |

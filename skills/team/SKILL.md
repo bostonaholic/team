@@ -294,13 +294,10 @@ When the 5 reviewers (security, docs, ux, code, verifier) have all
 returned:
 
 1. Collect all verdicts from the most recent round and sort every finding
-   into a severity tier (see `skills/code-review/SKILL.md` → "Severity Tiers
-   and the Auto-Fix Boundary"):
-   - **Blocking** — security CRITICAL/HIGH, any verification failure,
-     code-review REQUEST CHANGES, any `issue (blocking)` comment.
-   - **Major** — `suggestion (non-blocking)`, security MEDIUM, ux REQUEST CHANGES.
-   - **Minor and below** — `nitpick (non-blocking)`, security LOW, doc gaps,
-     COMMENT-level notes.
+   into a severity tier — **Blocking**, **Major**, or **Minor and below** —
+   per the authoritative table in `skills/review-severity-tiers/SKILL.md`
+   ("Severity Tiers and the Auto-Fix Boundary"). Consult that table rather
+   than restating it here.
 2. Track the round count by appending a TodoWrite item like
    "Review round 2" each retry. Cap at 5 rounds.
 3. While any **Blocking or Major** finding remains and under cap → dispatch

@@ -237,7 +237,7 @@ No human gate. The plan is mechanically derived from the structure.
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
 5. **Aggregate gate** — orchestrator sorts every finding into a severity
    tier (**Blocking / Major / Minor-and-below**; see
-   `skills/code-review/SKILL.md`). While any Blocking or Major finding
+   `skills/review-severity-tiers/SKILL.md`). While any Blocking or Major finding
    remains, it dispatches the implementer to fix the typed failure
    class and re-runs all 5 reviewers — automatically, never consulting
    the user (the *consult guard*). Cap at 5 rounds; beyond that,
@@ -445,7 +445,7 @@ cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. `code-review` is the only skill loaded as composed
 methodology that is also a user command.)
 
-For the full per-skill reference — all 41 skills, their arguments,
+For the full per-skill reference — all 42 skills, their arguments,
 consumers, and behaviors — see [skills.md](skills.md).
 
 ### Design Guidelines
@@ -664,7 +664,7 @@ children are confirmed, and the depth cap is stable.
 
 ## See also
 
-- **[Skills](skills.md)** — the full per-skill reference for all 41 skills.
+- **[Skills](skills.md)** — the full per-skill reference for all 42 skills.
 - **[Testing](testing.md)** — the six-layer test harness and which layer each check belongs at.
 - **[Vision](vision.md)** — the loop-driven end state this design builds toward.
 - **[Ethos](ethos.md)** — the principles behind the pipeline.

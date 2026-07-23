@@ -277,7 +277,7 @@ Informational gate. The pipeline presents findings to the user and may proceed
 at the user's judgment. The user is expected to read and acknowledge.
 
 Which review findings actually gate — and which auto-fix rather than wait on the
-user — is defined in exactly one place: `skills/code-review/SKILL.md` →
+user — is defined in exactly one place: `skills/review-severity-tiers/SKILL.md` →
 "Severity Tiers and the Auto-Fix Boundary". Only findings below the auto-fix
 boundary surface to the user as a SOFT acknowledgment; consult that table rather
 than restating it here.
@@ -386,7 +386,7 @@ Every transition follows this sequence:
 
 Never proceed to the next phase while a Blocking or Major finding remains —
 the implementer loops automatically and the user is never consulted about it
-(the consult guard; see `skills/code-review/SKILL.md`). Minor-and-below
+(the consult guard; see `skills/review-severity-tiers/SKILL.md`). Minor-and-below
 findings are presented to the user only once Blocking and Major are clean.
 
 ## Anti-Patterns
