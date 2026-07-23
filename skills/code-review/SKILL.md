@@ -102,10 +102,12 @@ equality, and platform dependence — lives in `skills/test-style/SKILL.md`
 
 **Comment red flags.** Check the in-source comments in every changed file
 against the Code Comments rules in `skills/engineering-standards/SKILL.md`.
-Findings cite the checklist item by name: `issue: Comment Discipline — ...`.
+Findings cite the checklist item by name and carry the tier's decoration —
+a blocking-regime hit reads `issue (blocking): Comment Discipline — ...`.
 Two severity regimes apply:
 
-- **Blocking on first occurrence:** ticket/issue IDs,
+- **Blocking on first occurrence** — an `issue (blocking)` finding, like
+  the flaky-test red flags: ticket/issue IDs,
   plan/slice/phase markers, or doc-section references in code comments.
   The check is mechanical and judgment-free, and the references rot — the
   tracker migrates, the plan is deleted, the section is renumbered, and
