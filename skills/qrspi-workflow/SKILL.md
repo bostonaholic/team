@@ -117,6 +117,7 @@ All phase artifacts live under `docs/plans/<id>/`, where `<id>` is one of:
 |-----------|-----------------------------------|-------------------------|-----------|
 | Task      | `docs/plans/<id>/task.md`         | questioner agent        | yes       |
 | Questions | `docs/plans/<id>/questions.md`    | questioner agent        | yes       |
+| PRD       | `docs/plans/<id>/prd.md`          | questioner agent        | when PRD criteria apply |
 | Repos     | `docs/plans/<id>/repos.md`        | questioner / design-author | when topic spans repos |
 | Research  | `docs/plans/<id>/research.md`     | researcher agent        | yes       |
 | Design    | `docs/plans/<id>/design.md`       | design-author agent     | yes       |
@@ -179,6 +180,24 @@ Rules:
   design gate (back-recording the home worktree created at the leading
   WORKTREE phase plus each secondary worktree), not by the questioner or
   design-author. Until then, `repos.md` lists only the repos to be involved.
+
+### PRD artifact (`prd.md`)
+
+Written conditionally by the questioner when the PRD criteria in
+`skills/product-requirements-doc/SKILL.md` apply (vague, multi-story,
+cross-cutting, or behavior-replacing requests), and referenced from
+`task.md`. It rides the autonomous Question phase — not human-gated, so
+no `approved`/`revision` fields.
+
+`prd.md` frontmatter:
+
+```yaml
+---
+topic: <kebab-case-topic>
+date: <YYYY-MM-DD>
+phase: prd
+---
+```
 
 ### Topic consistency invariant
 
@@ -285,7 +304,7 @@ Every artifact opens with YAML frontmatter. Common fields:
 ---
 topic: <kebab-case>
 date: 2026-04-30
-phase: design        # task | questions | research | design | structure | plan
+phase: design        # task | questions | prd | research | design | structure | plan
 ---
 ```
 
@@ -295,6 +314,7 @@ Per-phase additions:
 |-----------|------------------------------------------------------------------------------------|
 | task      | `ticketId: <id>` (or `null`)                                                       |
 | questions | (none)                                                                             |
+| prd       | (none — not human-gated; written conditionally by the questioner)                  |
 | research  | (none)                                                                             |
 | design    | `approved: false`, `approved_at: null`, `revision: 0`                              |
 | structure | (none — not human-gated; advances to PLAN once it exists)                          |

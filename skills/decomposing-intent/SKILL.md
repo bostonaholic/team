@@ -74,6 +74,18 @@ stories, is cross-cutting, or replaces existing behavior, Load
 from `task.md`. The full criteria live in that skill's "When to Write a
 PRD" section; for simple, well-scoped requests, skip the PRD.
 
+Required frontmatter for `prd.md` (the PRD rides the autonomous Question
+phase — it is not human-gated, so it carries no `approved` or `revision`
+fields):
+
+```yaml
+---
+topic: <kebab-case-topic>
+date: <YYYY-MM-DD>
+phase: prd
+---
+```
+
 ## questions.md
 
 Write neutral research questions that, when answered factually, give the
@@ -233,5 +245,6 @@ expand scope without consent. When in doubt, ask.
    so research can answer it in the correct repo.
 6. Read the "Codebase context" section back: it should tell a stranger
    "what code exists here" without telling them "what we want to do with it".
-7. Write `task.md` and `questions.md`. In multi-repo mode also write
-   `repos.md`. Return the structured result.
+7. Write `task.md` and `questions.md`. When the PRD criteria apply, also
+   write `prd.md`. In multi-repo mode also write `repos.md`. Return the
+   structured result.
