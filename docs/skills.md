@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 33 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 21 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 34 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 22 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -45,8 +45,8 @@ catalog into two flavors:
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
 standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 21 methodology =
-33**.
+split is **11 pipeline entry-point + 1 standalone utility + 22 methodology =
+34**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -250,7 +250,7 @@ phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 21 methodology skills carry no `argument-hint` and are never invoked
+The 22 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -442,6 +442,19 @@ load manifest; an agent typically loads at most three.
 - **Key behaviors:** A seventh-grade reading-level bar governs prose the
   agent writes as well as prose it assesses — readable, plain language
   aimed at someone who has not seen the code, clarity over cleverness.
+  Also carries the technical-writer's documentation-gap review process
+  (inventory, impact analysis, cross-reference) and the
+  REQUIRED/RECOMMENDED doc-change classification.
+
+### verifying-ux
+
+- **Purpose:** Live application verification procedure for the Implement
+  phase's UX gate.
+- **Loaded by:** ux-reviewer.
+- **Key behaviors:** Detect the project type (UI, API-only, or library —
+  libraries skip live testing), boot the application, verify routes and
+  endpoints with real `curl` requests including error and edge cases, and
+  always stop the server when done.
 
 ### git-commit
 
@@ -503,6 +516,7 @@ entry-point section above rather than repeating them here.
 | `refactoring-to-patterns` | implementer | Implement |
 | `implementing-slices` | implementer | Implement |
 | `running-quality-checks` | verifier | Implement (verify) |
+| `verifying-ux` | ux-reviewer | Implement (verify) |
 | `systematic-debugging` | implementer (inline Load on non-obvious failures); other agents when debugging (advisory) | Implement; Any (debugging) |
 | `progress-tracking` | every multi-step agent (convention) | Any (multi-step procedure) |
 | `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
@@ -531,6 +545,7 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 | `code-review` | `code-reviewer` | Skill is the review methodology; the agent is the reviewer that applies it. |
 | `team-question` | `questioner` | Skill drives the Question phase; the agent decomposes the intent. |
 | `implementing-slices` | `implementer` | Skill is the slice-execution procedure; the agent is the specialist that executes it. |
+| `verifying-ux` | `ux-reviewer` | Skill is the live-verification procedure; the agent is the tester that runs it. |
 | `team-design` | `design-author` | Skill drives the Design phase; the agent drafts the alignment doc. |
 | `technical-design-doc` | `technical-writer` | Both contain "technical" but differ: the skill is design-doc methodology; the agent writes documentation during verify. |
 | `eng-design-doc-review` | `design-author` | The review skill dispatches a `general-purpose` subagent, **not** the `design-author` agent — keeping the audit independent of the author. |
