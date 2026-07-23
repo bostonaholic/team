@@ -8,11 +8,11 @@
       "detection_hint": "topic:\\s*token-bucket"
     },
     {
-      "id": "open-questions-section",
+      "id": "decisions-made-section",
       "category": "required-property",
       "severity": "high",
-      "description": "Required property: the design must enumerate explicit open questions for the user in an Open Questions section.",
-      "detection_hint": "#+\\s*open\\s+questions"
+      "description": "Required property: the design must record its self-resolved choices, marked as explicit assumptions, in a Decisions made section.",
+      "detection_hint": "#+\\s*decisions\\s+made"
     }
   ],
   "minimum_detection": 1.0,

@@ -46,7 +46,7 @@ Use `/team` (full QRSPI pipeline) when:
 REPRODUCE → RED (failing test) → GREEN (minimal fix) → VERIFY → SHIP
 ```
 
-No Question. No Research. No Design. No Structure. No Plan. No human gate.
+No Question. No Research. No Design. No Structure. No Plan. No approval gate.
 
 ## Setup
 

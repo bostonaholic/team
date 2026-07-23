@@ -17,9 +17,9 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 - **Worktree** — Orchestrator prepares an isolated git worktree first and authors `docs/plans/<id>/` inside it, keeping the home checkout's `git status` clean for the whole run.
 - **Question** — Decompose intent into a full task record (`task.md`) and neutral research questions (`questions.md`). The questioner is the only agent that ever sees the user's original description.
 - **Research** *(isolated)* — Parallel agents (file-finder + researcher) consume only `questions.md`. They never see the task. This structurally prevents opinion-bias in research findings.
-- **Design** *(human gate)* — Design author asks open questions interactively, then drafts a ~200-line alignment doc. Humans review here.
-- **Structure** — Break the design into vertical slices with verification checkpoints. Produced autonomously; advances to Plan with no human gate.
-- **Plan** — Tactical implementation plan derived from the structure. Read by the implementer; not human-gated.
+- **Design** *(design review)* — Design author drafts a ~200-line alignment doc, resolving its own open questions as recorded assumptions. An adversarial design review gates advancement.
+- **Structure** — Break the design into vertical slices with verification checkpoints. Produced autonomously; advances to Plan with no gate.
+- **Plan** — Tactical implementation plan derived from the structure. Read by the implementer; not gated.
 - **Implement** — Test-first (test-architect writes failing tests, mechanical gate confirms) → slice execution (implementer commits each vertical slice atomically) → adversarial verification (5 parallel reviewers + typed failure-class retry loop, max 5 rounds).
 - **PR** — Update changelog, commit, open pull request, surface the tracking item.
 
@@ -71,4 +71,4 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 - **47 entry-point + methodology skills** in `skills/` — slash commands, the standalone `/shipit` land utility, and shared methodologies
 - **4 hooks** in `hooks/` — safety guards and `docs/plans/`-aware compaction resilience
 - **1 registry** at `skills/team/registry.json` — phase-tagged inventory of the 13 agents
-- **State** lives in `docs/plans/<id>/*.md` — `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`; gated artifacts also carry `approved`, `approved_at`, `revision`). Live in-session coordination uses TodoWrite.
+- **State** lives in `docs/plans/<id>/*.md` — `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`; `design.md` also carries `revision`; review verdicts live in `design-review-<n>.md`). Live in-session coordination uses TodoWrite.

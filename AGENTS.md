@@ -6,7 +6,7 @@
 
 ## What This Is
 
-Team is a Claude Code plugin that orchestrates specialized agents to implement features end-to-end. The orchestrator (the main Claude Code session) walks a linear phase table, persisting state as artifact files in `docs/plans/<id>/` (per-id directory; with YAML frontmatter carrying phase, approval, and revision metadata) and coordinating live progress via TodoWrite. See [docs/architecture.md](docs/architecture.md) for the full design.
+Team is a Claude Code plugin that orchestrates specialized agents to implement features end-to-end. The orchestrator (the main Claude Code session) walks a linear phase table, persisting state as artifact files in `docs/plans/<id>/` (per-id directory; with YAML frontmatter carrying phase and revision metadata) and coordinating live progress via TodoWrite. See [docs/architecture.md](docs/architecture.md) for the full design.
 
 > **North star — read [docs/vision.md](docs/vision.md) and [docs/ethos.md](docs/ethos.md).** Team is a *loop-driven development system*: a human fills the Backlog and reviews finished work; everything in between (groom → start → implement → open PR) runs autonomously. The ethos explains *why* the autonomous middle can be trusted. Every agent should understand this end state — it is the target the whole project moves toward.
 
@@ -41,7 +41,7 @@ Agents are **decoupled microservices**. Each consumes a predecessor artifact on 
 WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → PR
 ```
 
-Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-PR). One human gate: **Design approval** (~200-line alignment doc). The Structure (~2-page vertical-slice breakdown) is produced autonomously and advances to Plan with no approval wait. Research is **isolated** — the researcher reads only `questions.md`, never `task.md` or the user's framing. The Plan is a tactical artifact for the implementer, not for human review. Implement is a sub-pipeline (test-first → slice execution → 5-reviewer adversarial verify with hard-gate retry loop). Everything outside the design gate is autonomous with mechanical gates.
+Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-PR). There are **no mid-run human gates**: the Design (~200-line alignment doc) is gated by an adversarial design review (verdicts recorded to `design-review-<n>.md`), and the human's checkpoint is the PR review at the end. The Structure (~2-page vertical-slice breakdown) is produced autonomously and advances to Plan with no approval wait. Research is **isolated** — the researcher reads only `questions.md`, never `task.md` or the user's framing. The Plan is a tactical artifact for the implementer, not for human review. Implement is a sub-pipeline (test-first → slice execution → 5-reviewer adversarial verify with hard-gate retry loop). The whole run is autonomous with mechanical gates.
 
 ## Entry Points
 
@@ -52,8 +52,8 @@ Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-
 | `/team-worktree` | Leading WORKTREE phase — create the home worktree (in a full run, automatic & first; standalone, consumes `plan.md` post-PLAN for manual recovery / multi-repo setup) |
 | `/team-question <desc>` | Decompose intent into task + questions + brief |
 | `/team-research` | Isolated codebase research (runs Question if missing) |
-| `/team-design` | Align with user on approach (human gate) |
-| `/eng-design-doc-review` | *(optional)* Adversarial fresh-context audit of `design.md` before the human gate |
+| `/team-design` | Draft the design; an adversarial design review gates advancement |
+| `/eng-design-doc-review` | Adversarial fresh-context audit of `design.md` — its Review brief doubles as the pipeline's design-review gate; standalone use remains |
 | `/team-structure` | Break design into vertical slices (autonomous) |
 | `/team-plan` | Tactical plan from the structure |
 | `/team-implement` | Test-first + slice execution + 5-reviewer verify |
@@ -90,7 +90,7 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands; `shipit` i
 
 ## State
 
-State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`; gated artifacts also carry `approved`, `approved_at`, `revision`). Live in-session coordination uses TodoWrite (session-scoped); any `/team-*` command rebuilds the ledger by scanning artifacts on entry. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
+State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`; `design.md` also carries `revision`; review verdicts live in `design-review-<n>.md`). Live in-session coordination uses TodoWrite (session-scoped); any `/team-*` command rebuilds the ledger by scanning artifacts on entry. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
 
 ## Learned Rules
 

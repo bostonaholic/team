@@ -26,9 +26,9 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 | **Worktree** | Orchestrator prepares an isolated git worktree first and authors `docs/plans/<id>/` inside it, so your home checkout stays clean for the whole run. |
 | **Question** | Decompose intent into `task.md` + neutral `questions.md`. The questioner is the only agent that ever sees your original description. |
 | **Research** *(isolated)* | Parallel agents (file-finder + researcher) consume only `questions.md`. They never see the task — structurally preventing opinion-bias. |
-| **Design** *(human gate)* | The design author runs an interactive interview, then drafts a ~200-line alignment doc. You review here. |
-| **Structure** | Break the design into vertical slices with verification checkpoints. ~2-page doc. Produced autonomously — advances to Plan with no human gate. |
-| **Plan** | Tactical implementation plan derived from the structure. Read by the implementer; not human-gated. |
+| **Design** *(design review)* | The design author drafts a ~200-line alignment doc, resolving its own open questions as recorded assumptions. An adversarial design review gates advancement. |
+| **Structure** | Break the design into vertical slices with verification checkpoints. ~2-page doc. Produced autonomously — advances to Plan with no gate. |
+| **Plan** | Tactical implementation plan derived from the structure. Read by the implementer; not gated. |
 | **Implement** | Test-first → slice execution → 5 parallel reviewers + typed retry loop. |
 | **PR** | Update changelog, commit, open pull request. |
 

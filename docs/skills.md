@@ -98,7 +98,8 @@ argument shape.
   Structure → Plan → Implement → PR).
 - **Key behaviors:** Walks a linear Phase Loop, dispatching the specialist
   agent(s) for each phase per its phase table, then running that phase's
-  gate before advancing. Enforces the single human gate (Design)
+  gate before advancing. Enforces the adversarial design-review gate
+  (Design)
   and the aggregate five-reviewer review gate during Implement — that
   aggregate gate sorts every finding into Blocking / Major / Minor-and-below
   tiers and auto-loops on any Blocking or Major (the consult guard: the
@@ -128,22 +129,25 @@ argument shape.
 
 ### team-design
 
-- **Purpose:** Align with you on the approach and draft the alignment doc.
+- **Purpose:** Draft the alignment doc and run the adversarial design
+  review that gates advancement.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` — optional; resolves via the
   shared three-tier chain above.
-- **Phase:** Design (human gate).
-- **Key behaviors:** Runs an interactive interview, then writes a ~200-line
-  `design.md`. This is the pipeline's only human approval gate.
+- **Phase:** Design (design review).
+- **Key behaviors:** Dispatches the design-author (which resolves its own
+  open questions as recorded assumptions) to write a ~200-line
+  `design.md`, then runs the adversarial design-review loop
+  (`design-review-<n>.md`, APPROVE/COMMENT advance, cap 5).
 
 ### team-structure
 
-- **Purpose:** Break the approved design into vertical slices with
+- **Purpose:** Break the reviewed design into vertical slices with
   per-slice verification checkpoints.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` — optional; resolves via the
   shared three-tier chain above.
-- **Phase:** Structure (autonomous — no human gate).
+- **Phase:** Structure (autonomous — no gate).
 - **Key behaviors:** Produces the ~2-page `structure.md`, then advances
-  to PLAN automatically. Design is the pipeline's only human gate.
+  to PLAN automatically.
 
 ### team-plan
 
@@ -605,7 +609,7 @@ entry-point section above rather than repeating them here.
 | `team` | orchestrator (runs the pipeline) | All phases |
 | `team-question` | orchestrator | Question |
 | `team-research` | orchestrator → researcher, file-finder | Research |
-| `team-design` | orchestrator → design-author | Design (human gate) |
+| `team-design` | orchestrator → design-author | Design (design review) |
 | `team-structure` | orchestrator → structure-planner | Structure (autonomous) |
 | `team-plan` | orchestrator → planner | Plan |
 | `team-worktree` | orchestrator | Worktree |

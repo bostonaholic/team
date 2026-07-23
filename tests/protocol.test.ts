@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
@@ -481,7 +481,7 @@ describe("qrspi-workflow SOFT gate aligns with severity tiers (issue #68)", () =
 // to drive at L5 — each needs heavy multi-phase prior state (the orchestrator
 // walks every phase and owns no single artifact; team-worktree produces git
 // side effects with no findings artifact; team-pr needs a fully implemented
-// branch plus a git remote; team-implement needs an approved structure + plan
+// branch plus a git remote; team-implement needs a structure + plan
 // + worktree + failing tests). Honestly seeding that state is too costly for a
 // behavioral guardrail, so they are demoted to free L2 wiring/content
 // tripwires (design option (b), Risk #2). The assertions below pin each one's
@@ -550,7 +550,7 @@ describe("L2-demoted heavy-prior-state pipeline skills", () => {
     expect(changelogIdx).toBeLessThan(prIdx);
   });
 
-  test("team-implement: requires an approved structure + plan + worktree", () => {
+  test("team-implement: requires a structure + plan + worktree", () => {
     const text = read(TEAM_IMPL);
     expect(text).toContain("structure.md");
     expect(text).toContain("plan.md");
@@ -839,6 +839,7 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     assertHomeOnlyClosingPointer(TEAM_SKILL);
   });
 });
+
 // ---------------------------------------------------------------------------
 // Design-review gate brief — free L2 drift tripwire (docs/testing.md §2).
 // The DESIGN phase is gated by an adversarial design review: the orchestrator
@@ -868,7 +869,6 @@ describe("design-review gate brief (L2 drift tripwire)", () => {
     expect(read(TEAM_SKILL)).toContain("eng-design-doc-review");
   });
 });
-
 
 // ---------------------------------------------------------------------------
 // Terminal review caps — free L2 content tripwire (docs/testing.md §2).
@@ -935,5 +935,59 @@ describe("Minor findings defer to the PR body (L2 tripwire)", () => {
 
   test("team-implement records Minors for the PR body instead of presenting them", () => {
     expect(read(TEAM_IMPL)).not.toContain("present them to the user");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// No mid-run human-gate claims — free L2 forbidden-pattern sweep
+// (docs/testing.md §2, forbidden-pattern form). The pipeline has no mid-run
+// human gates; no doc, skill, or agent prompt may claim one exists. Allowlist:
+// docs/ethos.md keeps its deliberate human-gate counterweight line, and the
+// negation phrase "no mid-run human gates" is the one sanctioned wording that
+// contains the forbidden substring. CHANGELOG history is append-only and not
+// scanned. (docs/plans/2026-07-22-remove-human-gates, slice 4)
+// ---------------------------------------------------------------------------
+
+describe("no mid-run human-gate claims (L2 forbidden-pattern sweep)", () => {
+  const FORBIDDEN = /human[ -]gate/i;
+  const NEGATION = /no mid-run human gates/i;
+  const ALLOWLIST = new Set(["docs/ethos.md"]);
+
+  // All .md files under `dir` (relative to REPO_ROOT), recursively, skipping
+  // docs/plans/ — pipeline state is never scanned.
+  function mdFilesUnder(dir: string): string[] {
+    const out: string[] = [];
+    for (const entry of readdirSync(join(REPO_ROOT, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) {
+        if (entry.name === "plans") continue;
+        out.push(...mdFilesUnder(rel));
+      } else if (entry.name.endsWith(".md")) {
+        out.push(rel);
+      }
+    }
+    return out;
+  }
+
+  test("'human gate' appears nowhere in docs, README, AGENTS, skills, or agents outside the allowlist", () => {
+    const files = [
+      ...mdFilesUnder("docs"),
+      ...mdFilesUnder("skills"),
+      ...mdFilesUnder("agents"),
+      "README.md",
+      "AGENTS.md",
+    ];
+    const offenders: string[] = [];
+    for (const rel of files) {
+      if (ALLOWLIST.has(rel)) continue;
+      const lines = read(join(REPO_ROOT, rel)).split("\n");
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i] ?? "";
+        if (FORBIDDEN.test(line) && !NEGATION.test(line)) {
+          offenders.push(`${rel}:${i + 1}`);
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
   });
 });

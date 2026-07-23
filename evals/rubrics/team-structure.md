@@ -4,7 +4,7 @@ agent: team-structure
 
 # team-structure rubric
 
-The STRUCTURE phase slices an approved `design.md` into vertical slices. The
+The STRUCTURE phase slices a reviewed `design.md` into vertical slices. The
 seeded design is written into the eval's working dir before the model spawns
 (seeding mechanism in `tests/team-structure.evals.ts`). The deterministic axis
 confirms topic reuse and the presence of verification-checkpoint language;
