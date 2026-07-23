@@ -81,16 +81,24 @@ done
 
    If `$ARGUMENTS/design.md` already exists, skip this dispatch and
    resume at step 3 — never re-draft an existing design.
-3. **Design review gate.** Dispatch the adversarial design review (the
+3. **Design review gate.** If the latest
+   `$ARGUMENTS/design-review-<n>.md` already carries a passing verdict
+   (APPROVE or COMMENT), skip straight to step 4 — never re-review a
+   passed design. Otherwise dispatch the adversarial design review (the
    `## Review brief` in `skills/eng-design-doc-review/SKILL.md`, run by
-   a fresh-context `general-purpose` subagent each round) and write the
-   findings + verdict to `$ARGUMENTS/design-review-<n>.md`:
+   a fresh-context read-only `Explore` subagent each round) and write
+   the findings + verdict to `$ARGUMENTS/design-review-<n>.md`, where
+   `<n>` is the highest existing `<n>` + 1 (1 when none exists) — never
+   overwrite an earlier verdict record:
    - **APPROVE or COMMENT** — the review passes; advance.
    - **REQUEST CHANGES** — re-dispatch `design-author` with the
      reviewer's findings verbatim. The agent re-drafts and increments
      `revision: <n+1>`, then a fresh review round runs. Cap at
      `revision: 5`; at cap, halt terminally and report the unresolved
-     findings.
+     findings. Recovery: a human revises `$ARGUMENTS/design.md` by
+     hand and re-invokes `/team-design` bare — the run resumes at this
+     gate. The `revision` counter persists in `design.md` frontmatter;
+     hand-lower it to restore the revision budget.
    - **Unparseable verdict or reviewer crash** — retry the review once
      with the error; on second failure, halt loudly. Fail closed —
      never advance on a missing verdict.

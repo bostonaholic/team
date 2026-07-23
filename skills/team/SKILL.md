@@ -189,21 +189,27 @@ from phase 1, keeping the home checkout's `git status` clean for the whole run.
 
 When the `design-author` returns a draft:
 
-1. Confirm `docs/plans/<id>/design.md` exists.
+1. Confirm `docs/plans/<id>/design.md` exists. If the latest
+   `design-review-<n>.md` already carries a passing verdict (APPROVE or
+   COMMENT), skip the review and advance to STRUCTURE — a resumed
+   session never re-reviews a passed design.
 2. **Dispatch the adversarial review.** Call the `Agent` tool with
-   `subagent_type: general-purpose`, passing the `## Review brief` from
+   `subagent_type: Explore` (the built-in read-only agent type), passing
+   the `## Review brief` from
    `skills/eng-design-doc-review/SKILL.md` as the prompt (reference that
    skill's brief — never duplicate it here), with the artifact directory
-   substituted. Each round gets a fresh subagent context. Note the
-   subagent holds full tools; the brief's read-only constraint is a
-   **procedural instruction, not a structural enforcement**. That
-   residual risk is accepted because the verdict artifact is written by
-   the orchestrator (step 3), never by the reviewer, and the recovery
-   hooks fail closed on anything but a recorded passing verdict.
+   substituted. Each round gets a fresh subagent context. `Explore`
+   holds no Write/Edit tools, so the reviewer **cannot** modify
+   `design.md` or forge a verdict artifact; the verdict is written by
+   the orchestrator alone (step 3), and the recovery hooks fail closed
+   on anything but a recorded passing verdict. If the environment lacks
+   the `Explore` agent type, treat the dispatch failure like a reviewer
+   crash (step 6) — never substitute a full-tool agent silently.
 3. **Write the verdict artifact.** Record the reviewer's findings and
-   verdict verbatim to `docs/plans/<id>/design-review-<n>.md` (`<n>`
-   1-based per round) with frontmatter `topic`, `date`,
-   `phase: design-review`, and
+   verdict verbatim to `docs/plans/<id>/design-review-<n>.md`, where
+   `<n>` is the highest existing `<n>` + 1 (1 when none exists) —
+   never overwrite an earlier round's record. Frontmatter: `topic`,
+   `date`, `phase: design-review`, and
    `verdict: <APPROVE|REQUEST CHANGES|COMMENT>` (convention in
    `skills/qrspi-workflow/SKILL.md`).
 4. On **APPROVE or COMMENT** → the review passes; advance to STRUCTURE

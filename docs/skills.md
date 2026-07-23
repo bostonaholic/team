@@ -681,7 +681,7 @@ entry-point section above rather than repeating them here.
 | `team-implement` | orchestrator → implementer + reviewers | Implement |
 | `team-pr` | orchestrator | PR |
 | `team-fix` | user (direct invocation) | Compressed bug-fix flow (outside QRSPI) |
-| `eng-design-doc-review` | user (direct invocation); pipeline DESIGN gate (brief by reference) | Design review-gate brief + standalone audit; dispatches a general-purpose subagent |
+| `eng-design-doc-review` | user (direct invocation); pipeline DESIGN gate (brief by reference) | Design review-gate brief + standalone audit; dispatches a read-only Explore subagent |
 | `shipit` | user (direct invocation) | Standalone — land a reviewed PR (not a QRSPI phase) |
 | `pr-open-comments` | user or model (direct invocation) | Standalone — triage unresolved PR review feedback (not a QRSPI phase) |
 | `pr-watch` | user or model (direct invocation) | Standalone — bounded PR review watch loop (not a QRSPI phase) |
@@ -719,10 +719,10 @@ entry-point section above rather than repeating them here.
 | `tracking-tickets` | orchestrator (team, team-pr, team-fix — just-in-time via pointers) | Setup (ticket pickup); PR (ticket link + state) |
 | `worktree-isolation` | orchestrator (team, team-worktree) | Worktree |
 
-The `general-purpose` subagent dispatched by `eng-design-doc-review` is an
+The read-only `Explore` subagent dispatched by `eng-design-doc-review` is an
 additional consumer of `technical-design-doc`, `code-review`,
 `engineering-standards`, and `documenting-decisions` — it loads all four as
-the criteria for the optional pre-Design audit.
+the criteria for the design review.
 
 ## Name-collision pairs
 
@@ -744,7 +744,7 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 | `planning-implementation` | `planner` | Skill is the plan template and tactical rules; the agent is the engineer that writes the plan. |
 | `team-design` | `design-author` | Skill drives the Design phase; the agent drafts the alignment doc. |
 | `technical-design-doc` | `technical-writer` | Both contain "technical" but differ: the skill is design-doc methodology; the agent writes documentation during verify. |
-| `eng-design-doc-review` | `design-author` | The review skill dispatches a `general-purpose` subagent, **not** the `design-author` agent — keeping the audit independent of the author. |
+| `eng-design-doc-review` | `design-author` | The review skill dispatches a read-only `Explore` subagent, **not** the `design-author` agent — keeping the audit independent of the author. |
 
 ## See also
 

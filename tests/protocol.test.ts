@@ -843,7 +843,7 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
 // ---------------------------------------------------------------------------
 // Design-review gate brief — free L2 drift tripwire (docs/testing.md §2).
 // The DESIGN phase is gated by an adversarial design review: the orchestrator
-// dispatches a fresh-context `general-purpose` subagent with the
+// dispatches a fresh-context read-only `Explore` subagent with the
 // `## Review brief` from eng-design-doc-review, by reference. Renaming that
 // heading or the verdict set would silently change pipeline behavior (design
 // risk: silent gate drift) — these pins fail the build the moment either
