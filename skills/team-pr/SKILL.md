@@ -114,39 +114,16 @@ done
 7. In multi-repo mode, push each repo's branch independently and open one
    draft PR per repo. Cross-link the PRs in their bodies (see PR Body
    Template below).
-8. **Tracking ticket — link now, in-review when ready.** If `ticketId` is
-   non-null:
-   - **Link the PR to the ticket** so the tracker closes the ticket — and
-     any board automation moves it to its done state — when the PR merges.
-     Render the link as the closing line the PR Body Template ends with
-     (GitHub: `Closes #<n>` as the final line of the PR body); for another
-     tracker use its PR↔issue link. In multi-repo mode this closing line
-     goes on the **home** repo's PR only — see the multi-repo rule below
-     the PR Body Template. Interpret `ticketId` here, where it is
-     consumed:
-     - A bare number → `Closes #<n>` (a GitHub issue in the origin repo).
-     - A qualified reference (`owner/repo#<n>`) or an issue URL →
-       `Closes` followed by that value substituted in — e.g.
-       `Closes https://github.com/owner/repo/issues/42`.
-     - Any other non-null shape still goes in verbatim as the footer
-       text (`Closes` plus the value), but note the unrecognized shape
-       in the completion report — never block on it. On GitHub such a
-       value (e.g. `Closes ENG-1234`) auto-closes nothing — the footer
-       is then a legible reference only, and the tracker-move step below
-       is what advances the ticket.
-     - Null, absent, empty, or whitespace-only → omit the closing line
-       entirely; no placeholder.
-     This link is what drives the eventual move to done on merge, so the
-     orchestrator never closes tickets by hand.
-   - **Never move the ticket to in-review while the PR is a draft.** A
-     draft is not under review, and this phase opens the PR as a draft —
-     at open time the ticket keeps its in-progress state. Move the ticket
-     to the tracker's in-review state **only once the PR is marked ready
-     for review** (non-draft — on GitHub, `gh pr view --json isDraft`).
-     Best-effort and tracker-agnostic: if the project defines no
-     tracker-move mechanism, skip silently. Never block the pipeline on a
-     tracker update.
-   - Surface the `ticketId` in the completion report.
+8. **Tracking ticket — link now, in-review when ready.** If `ticketId`
+   is non-null, apply the ticket-lifecycle rules in
+   `skills/tracking-tickets/SKILL.md`: render the ticket link as the
+   closing line the PR Body Template below ends with (that skill owns
+   the `ticketId` interpretation, the omit-when-null rule, the
+   multi-repo home-only closing rule, and the in-review timing — the
+   ticket keeps its in-progress state while the PR is a draft and moves
+   to in-review only once the PR is marked ready for review; the
+   template owns where the footer goes). Best-effort; never block the
+   pipeline. Surface the `ticketId` in the completion report.
 9. **Whenever you push to a PR, review and adjust its description.** Any
    push that adds, removes, or changes commits on a PR's branch — the
    initial open *and* every follow-up push (review feedback, fixups,
@@ -202,11 +179,12 @@ Closes #<n>
 ```
 
 The `Closes` line is a standalone footer — no heading — rendered as the
-final line of the PR body. It is conditional on `ticketId`: when
-`ticketId` is null, absent, empty, or whitespace-only, omit the line
-entirely — no placeholder, no empty footer — and drop its preceding
-blank line with it, so the body ends at the last `## References` bullet
-with no trailing blank line.
+final line of the PR body. Whether it renders at all (it is conditional
+on `ticketId`), how `ticketId` is interpreted, and the multi-repo
+home-only closing rule are canonical in
+`skills/tracking-tickets/SKILL.md`. When that skill says to omit the
+line, drop its preceding blank line with it, so the body ends at the
+last `## References` bullet with no trailing blank line.
 
 **Placement rationale:** reviewers open a PR to read `## Summary`; the
 closing line is machine-facing metadata, so the narrative comes first
@@ -214,20 +192,6 @@ and the footer comes last, mirroring the commit-footer convention in
 `skills/git-commit/SKILL.md`. GitHub parses closing keywords anywhere in
 the body, so the footer position costs nothing — and "last authored
 line" is deterministic to emit and trivial to verify.
-
-In multi-repo mode, only the **home** repo's PR carries the closing
-keyword (`Closes #<n>`) — so the ticket closes exactly once, when the
-home PR merges. Companion PRs carry a **non-closing** reference to the
-issue in the same footer position, using the unambiguous qualified form
-(`owner/repo#<n>` or the issue URL) — for example:
-
-```
-Part of owner/repo#<n>
-```
-
-A bare `#<n>` is repo-scoped — in a companion repo it names a
-*different* issue — and even a qualified *closing* form would close the
-ticket on the first companion merge, before the full change set lands.
 
 In multi-repo mode, append a `## Companion PRs` section to each PR
 listing the URLs of every other PR opened for the same topic, so a

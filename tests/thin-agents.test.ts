@@ -255,34 +255,34 @@ describe("thin agents: haiku skills are self-contained", () => {
   }
 });
 
-describe("thin agents: documentation counts agree at 44 skills", () => {
+describe("thin agents: documentation counts agree at 45 skills", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
 
-  test("skills/ holds exactly 44 SKILL.md files", () => {
+  test("skills/ holds exactly 45 SKILL.md files", () => {
     const count = readdirSync(join(REPO_ROOT, "skills")).filter((name) =>
       existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")),
     ).length;
-    expect(count).toBe(44);
+    expect(count).toBe(45);
   });
 
-  test("AGENTS.md heading reads Skills (44)", () => {
-    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (44)");
+  test("AGENTS.md heading reads Skills (45)", () => {
+    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (45)");
   });
 
-  test("docs/skills.md description counts 44 skills", () => {
-    expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain("44 skills");
+  test("docs/skills.md description counts 45 skills", () => {
+    expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain("45 skills");
   });
 
-  test("docs/skills.md split sentence sums to 44", () => {
+  test("docs/skills.md split sentence sums to 45", () => {
     expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain(
-      "11 pipeline entry-point + 1 standalone utility + 32 methodology = 44",
+      "11 pipeline entry-point + 1 standalone utility + 33 methodology = 45",
     );
   });
 
-  test("docs/architecture.md counts all 44 skills and no stale 31", () => {
+  test("docs/architecture.md counts all 45 skills and no stale 31", () => {
     const content = read(ARCHITECTURE_MD);
-    expect(content).toContain("all 44 skills");
+    expect(content).toContain("all 45 skills");
     expect(content).not.toContain("31 skills");
   });
 

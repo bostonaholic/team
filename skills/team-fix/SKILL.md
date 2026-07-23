@@ -57,10 +57,9 @@ No Question. No Research. No Design. No Structure. No Plan. No human gate.
 2. **Move the ticket to in-progress.** If the input resolved to a ticket id
    or issue, move that ticket to its tracker's in-progress state — this is
    the first action of the fix, before any other work begins. Best-effort
-   and tracker-agnostic: if the project defines no tracker-move mechanism
-   (e.g. a free-form bug description, or a tracker the environment can't
-   reach), skip silently and continue. Never block the pipeline on a tracker
-   update.
+   per the ticket-lifecycle rules in `skills/tracking-tickets/SKILL.md` —
+   skip silently when no tracker mechanism exists; never block the
+   pipeline on a tracker update.
 3. **Derive `<id>`** the same way `/team` does (ticket-prefixed or
    date-prefixed kebab slug). Create `docs/plans/<id>/`.
 4. Write a minimal `docs/plans/<id>/task.md` with the standard frontmatter
@@ -99,18 +98,13 @@ assertion failure, not a crash. Do not proceed to the fix until confirmed.
    a branch, push it and open the PR as a **draft** (`gh pr create
    --draft`). If not on a branch, commit to the working branch.
 3. **Ticket — link now, in-review when ready.** If `ticketId` is non-null
-   in `task.md`'s frontmatter: **link the PR to the ticket** so the
-   tracker closes it — and any board automation moves it to its done state
-   — when the PR merges. On GitHub, render the link as a `Closes #<n>`
-   footer, emitted as the final line of the PR body. **Never move the
-   ticket to in-review while the PR is a draft** — a draft is not under
-   review, and Ship opens a draft PR, so the ticket keeps its
-   in-progress state at open time; move it to the tracker's in-review
-   state **only once the PR is marked ready for review**.
-   Best-effort and tracker-agnostic — skip silently if the project defines
-   no tracker-move mechanism; never block. Because the link auto-closes the
-   ticket on merge, the orchestrator never closes tickets by hand. Surface
-   the `ticketId` in the completion report.
+   in `task.md`'s frontmatter, apply the ticket-lifecycle rules in
+   `skills/tracking-tickets/SKILL.md`: link the PR to the ticket via the
+   conditional closing footer, keep the ticket in-progress while the PR
+   is a draft and move it to in-review only once the PR is marked ready
+   for review, and never close the ticket by hand — the link auto-closes
+   it on merge. Best-effort; never block. Surface the `ticketId` in the
+   completion report.
 4. Mark all TodoWrite items complete.
 
 ## Aborting

@@ -66,6 +66,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "team-fix-test-first-ordering": [
     "skills/team-fix/**",
     "skills/test-driven-bug-fix/**",
+    "skills/tracking-tickets/**",
     "tests/team-fix.evals.ts",
     "evals/fixtures/team-fix/test-first-ordering/**",
     "evals/rubrics/team-fix.md",

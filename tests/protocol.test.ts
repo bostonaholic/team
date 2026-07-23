@@ -72,8 +72,8 @@ describe("agent-open-questions protocol", () => {
     expect(read(QRSPI_SKILL)).toContain("agent-open-questions");
   });
 
-  test("CLAUDE.md has '## Skills (44)' heading", () => {
-    expect(/^## Skills \(44\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md has '## Skills (45)' heading", () => {
+    expect(/^## Skills \(45\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 
   test("skills/shipit/SKILL.md exists as a runtime skill", () => {
@@ -586,12 +586,14 @@ describe("L2-demoted heavy-prior-state pipeline skills", () => {
 // Regression: a picked-up ticket must be moved to the tracker's in-progress
 // state as the first action of a run. The board-move was documented only as a
 // manual dev step, so the orchestrator never did it (issue surfaced on
-// `/team <issue-url>`). The fix is a generic, best-effort runtime step in both
-// the full pipeline and the bug-fix pipeline, plus a concrete dev binding in
-// the project-tracking doc. These tripwires pin the contract on the source.
+// `/team <issue-url>`). The generic, best-effort runtime contract is now
+// canonical in skills/tracking-tickets/SKILL.md (content pins there); the
+// full pipeline and the bug-fix pipeline keep short pointer steps (pointer
+// pins), plus a concrete dev binding in the project-tracking doc.
 describe("ticket pickup → in-progress", () => {
   const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
   const TEAM_FIX = join(REPO_ROOT, "skills", "team-fix", "SKILL.md");
+  const TRACKING_TICKETS = join(REPO_ROOT, "skills", "tracking-tickets", "SKILL.md");
   const PROJECT_TRACKING = join(REPO_ROOT, "docs", "project-tracking.md");
 
   // The generic runtime contract: tracker-agnostic, best-effort, skip-silently,
@@ -610,12 +612,27 @@ describe("ticket pickup → in-progress", () => {
     expect(text).not.toContain("projects/5");
   }
 
-  test("team: Setup moves a picked-up ticket to in-progress (generic)", () => {
-    assertInProgressContract(TEAM_SKILL);
+  // Pointer pin: the host names the pickup move and defers the rules to
+  // tracking-tickets rather than restating the full contract.
+  function assertInProgressPointer(path: string) {
+    const text = flat(read(path));
+    expect(/move the ticket to in-progress/i.test(text)).toBe(true);
+    expect(text).toContain("tracking-tickets/SKILL.md");
+    // Does not hardcode this repo's board into the distributed runtime.
+    expect(text).not.toContain("project-set-status");
+    expect(text).not.toContain("projects/5");
+  }
+
+  test("tracking-tickets: carries the canonical in-progress contract", () => {
+    assertInProgressContract(TRACKING_TICKETS);
   });
 
-  test("team-fix: Setup moves a picked-up ticket to in-progress (generic)", () => {
-    assertInProgressContract(TEAM_FIX);
+  test("team: Setup moves a picked-up ticket to in-progress (pointer to tracking-tickets)", () => {
+    assertInProgressPointer(TEAM_SKILL);
+  });
+
+  test("team-fix: Setup moves a picked-up ticket to in-progress (pointer to tracking-tickets)", () => {
+    assertInProgressPointer(TEAM_FIX);
   });
 
   test("project-tracking: binds the concrete in-progress mechanism for this repo", () => {
@@ -634,14 +651,16 @@ describe("ticket pickup → in-progress", () => {
 // state — but only once the PR is marked ready for review. The pipeline opens
 // draft PRs, and a draft is not under review: the skills previously moved the
 // ticket to in-review immediately after the draft opened (observed as a Linear
-// issue reading "In Review" against a draft PR — #159). The fix carries the
-// same generic, best-effort runtime contract through every skill that opens a
-// PR, while the merge skill (shipit) stays board-agnostic. These tripwires pin
-// the contract, including its timing.
+// issue reading "In Review" against a draft PR — #159). The generic,
+// best-effort runtime contract — including its timing — is now canonical in
+// skills/tracking-tickets/SKILL.md (content pins there); every skill that
+// opens a PR keeps a short pointer step (pointer pins), while the merge skill
+// (shipit) stays board-agnostic.
 describe("PR open (link) → ready for review (in-review) → (merge) done", () => {
   const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
   const TEAM_FIX = join(REPO_ROOT, "skills", "team-fix", "SKILL.md");
   const TEAM_PR = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
+  const TRACKING_TICKETS = join(REPO_ROOT, "skills", "tracking-tickets", "SKILL.md");
   const SHIPIT = join(REPO_ROOT, "skills", "shipit", "SKILL.md");
   const PROJECT_TRACKING = join(REPO_ROOT, "docs", "project-tracking.md");
 
@@ -673,16 +692,33 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     expect(text).not.toContain("projects/5");
   }
 
-  test("team-pr: links the PR at open; in-review waits for ready-for-review", () => {
-    assertInReviewContract(TEAM_PR);
+  // Pointer pin: the host names the link + in-review moments and defers the
+  // rules (interpretation, timing, multi-repo closing) to tracking-tickets.
+  function assertInReviewPointer(path: string) {
+    const text = flat(read(path));
+    expect(text).toContain("tracking-tickets/SKILL.md");
+    // Still names both tracker moments so the pointer step is discoverable.
+    expect(/in-review/i.test(text)).toBe(true);
+    expect(/closes #|link the pr|ticket link|closing footer/i.test(text)).toBe(true);
+    // Does not hardcode this repo's board into the distributed runtime.
+    expect(text).not.toContain("project-set-status");
+    expect(text).not.toContain("projects/5");
+  }
+
+  test("tracking-tickets: carries the canonical link → in-review → done contract", () => {
+    assertInReviewContract(TRACKING_TICKETS);
   });
 
-  test("team: PR gate links the PR; in-review waits for ready-for-review", () => {
-    assertInReviewContract(TEAM_SKILL);
+  test("team-pr: points at tracking-tickets for the ticket link + in-review timing", () => {
+    assertInReviewPointer(TEAM_PR);
   });
 
-  test("team-fix: Ship links the PR; in-review waits for ready-for-review", () => {
-    assertInReviewContract(TEAM_FIX);
+  test("team: PR gate points at tracking-tickets for the ticket link + in-review timing", () => {
+    assertInReviewPointer(TEAM_SKILL);
+  });
+
+  test("team-fix: Ship points at tracking-tickets for the ticket link + in-review timing", () => {
+    assertInReviewPointer(TEAM_FIX);
   });
 
   test("shipit: stays board-agnostic — done flows from the close-on-merge link", () => {
@@ -710,10 +746,11 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
   });
 
   // Issue #158: the ticket closing line must land in a deterministic position
-  // — the final line of the authored PR body — across all three PR-opening
-  // skills, with ticketId interpretation codified at the consumption site and
-  // multi-repo runs closing the ticket exactly once (home PR only). These
-  // tripwires pin the closing-footer contract on the skill source.
+  // — the final line of the authored PR body — with ticketId interpretation
+  // codified at the consumption site and multi-repo runs closing the ticket
+  // exactly once (home PR only). The closing-footer rules are canonical in
+  // skills/tracking-tickets/SKILL.md (content pins there); team-pr keeps the
+  // WHERE — the PR Body Template that ends with the footer — as host glue.
 
   // The PR Body Template: the first fenced code block after the
   // "## PR Body Template" heading in team-pr.
@@ -722,15 +759,14 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     return afterHeading.match(/```\n([\s\S]*?)```/)?.[1] ?? "";
   }
 
-  // Canonical placement phrase — deliberately duplicated prose across the
-  // three PR-opening skills. One helper applied per file pins every copy
-  // against drift.
+  // Canonical placement phrase — pinned on tracking-tickets (the rule owner)
+  // and on team-pr (whose PR Body Template renders the footer in place).
   function assertClosingFooterPlacement(path: string) {
     const text = flat(read(path));
     expect(/as the final line of the PR body/i.test(text)).toBe(true);
   }
 
-  test("team-pr: PR Body Template ends with the ticketId-conditional Closes footer", () => {
+  test("team-pr: PR Body Template ends with the Closes footer", () => {
     const template = prBodyTemplate(read(TEAM_PR));
     // Fail loud if the template block vanished, so the position assertions
     // below can't pass vacuously against an empty string.
@@ -748,9 +784,10 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     // Without this, appending a section after the closing line would still
     // pass the ordering check above.
     expect(template.trimEnd().endsWith("Closes #<n>")).toBe(true);
-    // Conditional on ticketId: omitted entirely when null/absent/empty —
-    // no placeholder is ever rendered.
-    const text = flat(read(TEAM_PR));
+  });
+
+  test("tracking-tickets: footer is ticketId-conditional — omitted when null, no placeholder", () => {
+    const text = flat(read(TRACKING_TICKETS));
     expect(
       /omit[^.]{0,200}(null|absent|empty)|(null|absent|empty)[^.]{0,200}omit/i.test(
         text,
@@ -777,20 +814,16 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     expect(/never dropped/i.test(text)).toBe(true);
   });
 
+  test("tracking-tickets: states the Closes footer placement (final line of the PR body)", () => {
+    assertClosingFooterPlacement(TRACKING_TICKETS);
+  });
+
   test("team-pr: states the Closes footer placement (final line of the PR body)", () => {
     assertClosingFooterPlacement(TEAM_PR);
   });
 
-  test("team: PR gate states the Closes footer placement (final line of the PR body)", () => {
-    assertClosingFooterPlacement(TEAM_SKILL);
-  });
-
-  test("team-fix: Ship states the Closes footer placement (final line of the PR body)", () => {
-    assertClosingFooterPlacement(TEAM_FIX);
-  });
-
-  // Multi-repo home-only closing rule — deliberately duplicated prose in
-  // team-pr and team, independently tripwired so neither copy can drift.
+  // Multi-repo home-only closing rule — canonical in tracking-tickets; the
+  // PR-opening hosts keep a one-clause gist plus the pointer.
   function assertHomeOnlyClosingRule(path: string) {
     const text = flat(read(path));
     // (a) the home repo's PR alone closes the ticket.
@@ -804,11 +837,22 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     expect(text).toContain("owner/repo#");
   }
 
-  test("team-pr: multi-repo — only the home PR carries a closing keyword; companions use a non-closing qualified reference", () => {
-    assertHomeOnlyClosingRule(TEAM_PR);
+  function assertHomeOnlyClosingPointer(path: string) {
+    const text = flat(read(path));
+    // Names the home-only rule and defers its detail to tracking-tickets.
+    expect(/home[^.]{0,250}closing/i.test(text)).toBe(true);
+    expect(text).toContain("tracking-tickets/SKILL.md");
+  }
+
+  test("tracking-tickets: multi-repo — only the home PR carries a closing keyword; companions use a non-closing qualified reference", () => {
+    assertHomeOnlyClosingRule(TRACKING_TICKETS);
   });
 
-  test("team: PR gate carries the multi-repo home-only closing rule", () => {
-    assertHomeOnlyClosingRule(TEAM_SKILL);
+  test("team-pr: points at tracking-tickets for the multi-repo home-only closing rule", () => {
+    assertHomeOnlyClosingPointer(TEAM_PR);
+  });
+
+  test("team: PR gate points at tracking-tickets for the multi-repo home-only closing rule", () => {
+    assertHomeOnlyClosingPointer(TEAM_SKILL);
   });
 });

@@ -67,7 +67,7 @@ Four agents (`researcher`, `implementer`, `code-reviewer`, `security-reviewer`) 
 
 **Invariant:** the agent inventory in `skills/team/registry.json` (which carries the `phase` mapping) and the files under `agents/` must always agree by name. When adding or renaming an agent, update both in the same commit. The dev hook `.claude/hooks/check-registry-sync.mjs` enforces this automatically.
 
-## Skills (44)
+## Skills (45)
 
 See `skills/*/SKILL.md`. Entry point skills double as slash commands; `shipit` is a standalone slash-command utility (land a reviewed PR) that is not a QRSPI phase. Methodology skills are loaded by agents. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
 

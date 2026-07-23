@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 44 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 32 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 45 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 33 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -46,8 +46,8 @@ catalog into two flavors:
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
 standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 32 methodology =
-44**.
+split is **11 pipeline entry-point + 1 standalone utility + 33 methodology =
+45**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -251,7 +251,7 @@ phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 32 methodology skills carry no `argument-hint` and are never invoked
+The 33 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -614,6 +614,25 @@ replaces former inline body content 1:1, so it adds no net context (see
   Added / Changed / Fixed headings before the PR opens. Points entry
   authors at the seventh-grade prose bar in `writing-prose`.
 
+### tracking-tickets
+
+- **Purpose:** Ticket-lifecycle discipline for tracker-linked runs — the
+  in-progress / in-review timing, the conditional PR closing footer, and
+  the never-close-by-hand rule.
+- **Loaded by:** the PR-opening and pickup hosts just-in-time via
+  pointers (`team`, `team-pr`, `team-fix`); no agent preloads it.
+- **Key behaviors:** Every tracker interaction is best-effort,
+  tracker-agnostic, and never blocks the pipeline. A picked-up ticket
+  moves to in-progress as the run's first action. At PR open, the PR is
+  linked to the ticket via a `Closes` footer as the final line of the PR
+  body — conditional on `ticketId` (omitted when null, no placeholder),
+  with the interpretation rules codified at the consumption site and, in
+  multi-repo mode, the home repo's PR alone carrying the closing keyword
+  (companions get a non-closing qualified reference). The ticket moves
+  to in-review only once the PR is marked ready for review — never while
+  it is a draft — and is never closed by hand: the link auto-closes it
+  on merge.
+
 ### worktree-isolation
 
 - **Purpose:** Worktree topology for single- and multi-repo work.
@@ -678,6 +697,7 @@ entry-point section above rather than repeating them here.
 | `writing-prose` | technical-writer | Implement (verify) — bar for prose it writes and prose it assesses |
 | `git-commit` | team-pr; implementer (via `implementing-slices`) | PR; Implement (slice commits) |
 | `changelog` | team, team-pr | PR |
+| `tracking-tickets` | orchestrator (team, team-pr, team-fix — just-in-time via pointers) | Setup (ticket pickup); PR (ticket link + state) |
 | `worktree-isolation` | orchestrator (team, team-worktree) | Worktree |
 
 The `general-purpose` subagent dispatched by `eng-design-doc-review` is an

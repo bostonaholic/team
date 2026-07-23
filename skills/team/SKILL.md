@@ -39,10 +39,9 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
 3. **Move the ticket to in-progress.** If a `ticketId` or issue was
    resolved in steps 1–2, move that ticket to its tracker's in-progress
    state — this is the first action of the run, before any other work
-   begins. Best-effort and tracker-agnostic: if the project defines no
-   tracker-move mechanism (e.g. free-form text with no ticket, or a
-   tracker the environment can't reach), skip silently and continue.
-   Never block the pipeline on a tracker update.
+   begins. Best-effort per the ticket-lifecycle rules in
+   `skills/tracking-tickets/SKILL.md` — skip silently when no tracker
+   mechanism exists; never block the pipeline on a tracker update.
 4. **Derive `<id>`:**
    - With ticket: `<TICKET>-<kebab-topic>` (e.g., `ENG-1234-add-auth`)
    - Without ticket: `<YYYY-MM-DD>-<kebab-topic>` (e.g.,
@@ -331,21 +330,15 @@ When the aggregate gate passes:
    ahead**, and the PR bodies cross-link to each other so reviewers can
    see the full change set.
 4. **Ticket — link now, in-review when ready.** If `task.md` frontmatter
-   has `ticketId` set: **link the PR to the ticket** so the tracker closes
-   it — and any board automation moves it to its done state — when the PR
-   merges (GitHub: `Closes #<n>` as the final line of the PR body).
-   In multi-repo mode, only the **home** repo's PR carries the closing
-   keyword (`Closes #<n>`); companion PRs carry a non-closing qualified
-   reference (`owner/repo#<n>` or the issue URL) instead — see the
-   multi-repo rule in `skills/team-pr/SKILL.md`.
-   **Never move the ticket to in-review while the PR is a draft** — a
-   draft is not under review, and this gate opens draft PRs, so the ticket
-   keeps its in-progress state at open time; move it to the tracker's
-   in-review state **only once the PR is marked ready for review**.
-   Best-effort and tracker-agnostic — skip silently if the project defines
-   no tracker-move mechanism; never block the pipeline.
-   Because the link auto-closes the ticket on merge, the orchestrator never
-   closes tickets by hand. Surface the `ticketId` in the completion report.
+   has `ticketId` set, apply the ticket-lifecycle rules in
+   `skills/tracking-tickets/SKILL.md`: link the PR to the ticket via the
+   conditional closing footer (in multi-repo mode the home repo's PR
+   alone carries the closing keyword; companions get a non-closing
+   qualified reference), keep the ticket in-progress while the PR is a
+   draft and move it to in-review only once the PR is marked ready for
+   review, and never close the ticket by hand — the link auto-closes it
+   on merge. Best-effort; never block the pipeline. Surface the
+   `ticketId` in the completion report.
 5. Mark all TodoWrite items complete.
 6. **Leave the worktree(s) in place.** Do not remove a worktree when a
    PR is opened — the user may need to iterate on the branch (push
