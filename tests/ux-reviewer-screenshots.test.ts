@@ -1,7 +1,8 @@
 // tests/ux-reviewer-screenshots.test.ts
 //
 // L2 tripwires (free, deterministic): fence the screenshot-capture contract in
-// the ux-reviewer RUNTIME agent prompt (agents/ux-reviewer.md), per
+// the ux-reviewer's RUNTIME methodology skill (skills/verifying-ux/SKILL.md —
+// the thin agent wrapper preloads it), per
 // docs/plans/2026-07-20-pr-ui-screenshots. ux-reviewer captures one PNG per
 // affected page/state during its existing boot-verify window and writes a
 // manifest to docs/plans/<id>/screenshots/manifest.md that team-pr consumes.
@@ -17,12 +18,13 @@ import { join } from "node:path";
 import { read } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
-// ux-reviewer is a RUNTIME agent — it lives under agents/ (distributed).
-const UX_REVIEWER = join(REPO_ROOT, "agents", "ux-reviewer.md");
+// The capture procedure lives in the RUNTIME methodology skill; the agent
+// file is a thin wrapper that preloads it (see tests/thin-agents.test.ts).
+const VERIFYING_UX = join(REPO_ROOT, "skills", "verifying-ux", "SKILL.md");
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
 function body(): string {
-  return existsSync(UX_REVIEWER) ? read(UX_REVIEWER) : "";
+  return existsSync(VERIFYING_UX) ? read(VERIFYING_UX) : "";
 }
 // Flatten newlines so multi-line prose can be matched in one regex.
 function flat(text: string): string {
