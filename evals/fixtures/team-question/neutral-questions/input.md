@@ -3,6 +3,7 @@ agent: team-question
 tier: periodic
 deps:
   - skills/team-question/**
+  - skills/decomposing-intent/**
   - agents/questioner.md
 ---
 

@@ -442,7 +442,7 @@ cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. `code-review` is the only skill loaded as composed
 methodology that is also a user command.)
 
-For the full per-skill reference — all 34 skills, their arguments,
+For the full per-skill reference — all 36 skills, their arguments,
 consumers, and behaviors — see [skills.md](skills.md).
 
 ### Design Guidelines
@@ -451,7 +451,9 @@ consumers, and behaviors — see [skills.md](skills.md).
    per agent invocation. At ~143 lines average per skill, 3 skills add
    ~430 lines (~6K-10K tokens, under 6% of 200K context). A fourth
    skill signals the agent's responsibility may be too broad. This is a
-   design convention, not a hard constraint.
+   design convention, not a hard constraint. An agent's own extracted
+   procedure skill does not count toward the soft limit — it replaces
+   former inline body content 1:1, so it adds no net context.
 
 2. **Extraction threshold:** Extract methodology to a separate skill
    file when it forms a coherent, independently maintainable body of
@@ -656,7 +658,7 @@ children are confirmed, and the depth cap is stable.
 
 ## See also
 
-- **[Skills](skills.md)** — the full per-skill reference for all 34 skills.
+- **[Skills](skills.md)** — the full per-skill reference for all 36 skills.
 - **[Testing](testing.md)** — the six-layer test harness and which layer each check belongs at.
 - **[Vision](vision.md)** — the loop-driven end state this design builds toward.
 - **[Ethos](ethos.md)** — the principles behind the pipeline.

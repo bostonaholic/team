@@ -134,26 +134,26 @@ describe("Slice 1: progress-tracking convention skill exists", () => {
   });
 });
 
-describe("skill count reconciliation (-> 34: + verifying-ux)", () => {
+describe("skill count reconciliation (-> 36: + decomposing-intent, authoring-designs)", () => {
   const CLAUDE_MD = join(REPO_ROOT, "CLAUDE.md");
   const AGENTS_MD = join(REPO_ROOT, "AGENTS.md");
 
-  test("CLAUDE.md heading reads '## Skills (34)'", () => {
-    expect(/^## Skills \(34\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md heading reads '## Skills (36)'", () => {
+    expect(/^## Skills \(36\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 
-  test("AGENTS.md heading reads '## Skills (34)'", () => {
-    expect(/^## Skills \(34\)/m.test(read(AGENTS_MD))).toBe(true);
+  test("AGENTS.md heading reads '## Skills (36)'", () => {
+    expect(/^## Skills \(36\)/m.test(read(AGENTS_MD))).toBe(true);
   });
 
-  test("filesystem has exactly 34 SKILL.md files declaring a name:", () => {
-    // 33 prior skills (incl. running-quality-checks) + verifying-ux = 34.
+  test("filesystem has exactly 36 SKILL.md files declaring a name:", () => {
+    // 34 prior skills + decomposing-intent + authoring-designs = 36.
     const dirs = readdirSync(SKILLS_DIR, { withFileTypes: true })
       .filter((d) => d.isDirectory())
       .map((d) => join(SKILLS_DIR, d.name, "SKILL.md"))
       .filter((p) => existsSync(p));
     const withName = dirs.filter((p) => /^name:/m.test(read(p)));
-    expect(withName.length).toBe(34);
+    expect(withName.length).toBe(36);
   });
 });
 

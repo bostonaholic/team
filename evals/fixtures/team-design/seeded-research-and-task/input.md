@@ -3,6 +3,7 @@ agent: team-design
 tier: periodic
 deps:
   - skills/team-design/**
+  - skills/authoring-designs/**
   - agents/design-author.md
 ---
 

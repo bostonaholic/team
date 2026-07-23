@@ -46,6 +46,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   ],
   "team-question-neutral-questions": [
     "skills/team-question/**",
+    "skills/decomposing-intent/**",
     "agents/questioner.md",
     "tests/team-question.evals.ts",
     "evals/fixtures/team-question/neutral-questions/**",
@@ -77,6 +78,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   ],
   "team-design-seeded-research-and-task": [
     "skills/team-design/**",
+    "skills/authoring-designs/**",
     "agents/design-author.md",
     "tests/helpers/seed.ts",
     "tests/team-design.evals.ts",
