@@ -150,7 +150,7 @@ Before any agent dispatch, decide where to work:
    - If round count ≥ 5: **halt** with a full unresolved-findings
      summary — terminal; no PR is opened.
    - **Never** stop to ask the user which Blocking or Major items to address —
-     this is the consult guard. A prompt that lists a blocking or major
+     this is the no-consult rule. A prompt that lists a blocking or major
      finding is a defect.
 8. **Once Blocking and Major are clean:** record any **Minor-and-below**
    findings for the PR body's `## Review notes` section, tagged by

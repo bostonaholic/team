@@ -66,6 +66,18 @@ seeds and updates a TodoWrite ledger, and runs the gates.
 - **Hooks enforce discipline mechanically.** LLMs forget instructions
   ~20% of the time; hooks are deterministic.
 
+**Trust boundary.** The single human checkpoint — the end-of-run PR
+review — is a *code* checkpoint, and it happens **after** the run has
+already executed. Local Bash execution (implementer, verifier, hooks),
+branch creation, pushes to remotes, and any multi-repo worktree effects
+all occur before a human sees the PR. The PR review contains the diff,
+the design's recorded assumptions, and the deferred `## Review notes`;
+it does **not** contain the run's local side effects. The pipeline also
+assumes that repository content the researcher reads is trusted — a
+repo that accepts untrusted contributions feeds untrusted text into
+agent context. Merging remains human-only: nothing in the pipeline
+marks a PR ready for review or merges it.
+
 ## 2. Artifact Layout & Frontmatter
 
 > **Runtime canon:** the schema below is carried for agents by
