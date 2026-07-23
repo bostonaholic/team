@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 36 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 24 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 38 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 26 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -45,8 +45,8 @@ catalog into two flavors:
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
 standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 24 methodology =
-36**.
+split is **11 pipeline entry-point + 1 standalone utility + 26 methodology =
+38**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -250,7 +250,7 @@ phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 24 methodology skills carry no `argument-hint` and are never invoked
+The 26 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -280,6 +280,26 @@ load manifest; an agent typically loads at most three.
   documents the free-text escape hatch for collecting additional
   plain-text input, and defines the two-attempt malformed-envelope
   fallback.
+
+### researching-codebases
+
+- **Purpose:** Codebase research procedure for the Research phase.
+- **Loaded by:** researcher.
+- **Key behaviors:** Carries the investigation method (context, trace,
+  pattern recognition, constraint discovery) and the compressed
+  research-report output format with its 100-line budget (150 in
+  multi-repo mode). The isolation stance itself — questions.md only,
+  never task.md — stays in the researcher agent as identity.
+
+### finding-files
+
+- **Purpose:** File-location search strategy for the Research phase.
+- **Loaded by:** file-finder.
+- **Key behaviors:** Glob by naming convention, content search,
+  import/dependency tracing, directory exploration, and config/manifest
+  checks, scoped to the vocabulary in `questions.md`. Deliberately
+  self-contained — the file-finder runs on haiku, so the skill carries
+  everything inline with no cross-references.
 
 ### decomposing-intent
 
@@ -530,6 +550,8 @@ entry-point section above rather than repeating them here.
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
 | `decomposing-intent` | questioner | Question |
 | `authoring-designs` | design-author | Design |
+| `researching-codebases` | researcher | Research |
+| `finding-files` | file-finder | Research |
 | `engineering-standards` | planner, implementer, code-reviewer | Plan, Implement |
 | `test-first-development` | test-architect, code-reviewer; orchestrator | Implement |
 | `test-driven-bug-fix` | team-fix | Bug-fix flow |
@@ -568,6 +590,7 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 | `implementing-slices` | `implementer` | Skill is the slice-execution procedure; the agent is the specialist that executes it. |
 | `verifying-ux` | `ux-reviewer` | Skill is the live-verification procedure; the agent is the tester that runs it. |
 | `authoring-designs` | `design-author` | Skill is the authoring procedure and template; the agent is the author that drafts the design. |
+| `finding-files` | `file-finder` | Skill is the search strategy; the agent is the locator that executes it. |
 | `team-design` | `design-author` | Skill drives the Design phase; the agent drafts the alignment doc. |
 | `technical-design-doc` | `technical-writer` | Both contain "technical" but differ: the skill is design-doc methodology; the agent writes documentation during verify. |
 | `eng-design-doc-review` | `design-author` | The review skill dispatches a `general-purpose` subagent, **not** the `design-author` agent — keeping the audit independent of the author. |

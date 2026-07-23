@@ -6,6 +6,8 @@ model: haiku
 effort: low
 tools: Read, Grep, Glob
 permissionMode: plan
+skills:
+  - finding-files
 ---
 
 # File Finder Agent
@@ -27,31 +29,12 @@ codebase under investigation, never the plan directory. Find files
 that match the codebase scope and vocabulary in `questions.md` — not
 files that match an inferred goal.
 
-## Search Strategy
+## Procedure
 
-Work through these strategies in order. Cast a wide net first, then narrow.
-In multi-repo mode (when `repos.md` is present), repeat each strategy
-inside every listed repo and report findings namespaced by the repo's
-slug name.
-
-1. **Glob by naming convention** — Search for files whose names match the
-   vocabulary terms in `questions.md` (e.g., `**/*auth*`, `**/*billing*`).
-   Try singular and plural forms. In multi-repo mode, run each glob
-   inside each repo's absolute path.
-
-2. **Content search** — Grep for vocabulary terms, function names, class
-   names, error messages. Try synonyms and related concepts.
-
-3. **Import/dependency tracing** — When you find a relevant file, read its
-   imports and follow the dependency chain. Also search for files that import
-   the relevant file (reverse dependencies). Cross-repo imports are
-   common in multi-repo topics — flag them in `## Notes`.
-
-4. **Directory exploration** — Read directory listings around discovered files
-   to find siblings (test files, config files, related modules).
-
-5. **Config and manifest files** — Check package manifests, build configs, and
-   entry points that may reference relevant modules.
+Your search strategy — glob by naming convention, content search,
+import/dependency tracing, directory exploration, and config/manifest
+checks, plus the search rules — lives in the preloaded finding-files
+skill.
 
 ## Output Format
 
@@ -89,12 +72,7 @@ slug is the `name` field from the matching entry in `repos.md`.
 
 ## Rules
 
-- **Scoped to `questions.md`.** Never read `task.md` and never glob or enumerate `docs/plans/`. Never speculate about what the user wants.
-- Search broadly. It is better to include a file that turns out to be
-  irrelevant than to miss one that matters.
-- Try at least three different search terms per concept before concluding
-  a search direction is exhausted.
+- **Scoped to `questions.md`.** Never read `task.md` and never glob or
+  enumerate `docs/plans/`. Never speculate about what the user wants.
 - Never guess file paths — only report files you have confirmed exist.
-- Keep descriptions to one line per file. Be factual, not speculative.
-- If the codebase is large, prioritize files closest to the scope named in
-  `questions.md` and note areas you did not search.
+- Be factual, not speculative.

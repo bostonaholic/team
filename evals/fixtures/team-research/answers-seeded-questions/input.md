@@ -3,6 +3,8 @@ agent: team-research
 tier: periodic
 deps:
   - skills/team-research/**
+  - skills/researching-codebases/**
+  - skills/finding-files/**
   - agents/researcher.md
 ---
 

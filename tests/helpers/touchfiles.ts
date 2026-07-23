@@ -70,6 +70,8 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   // change to it could alter any of their outcomes, so each lists it as a dep.
   "team-research-answers-seeded-questions": [
     "skills/team-research/**",
+    "skills/researching-codebases/**",
+    "skills/finding-files/**",
     "agents/researcher.md",
     "tests/helpers/seed.ts",
     "tests/team-research.evals.ts",

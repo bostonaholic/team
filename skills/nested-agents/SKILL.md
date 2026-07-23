@@ -92,7 +92,33 @@ your conclusion will anchor to it and verify nothing.
 
 ## Per-agent caps
 
-### Code reviewer and security reviewer — skeptic passes
+### `researcher` — exploration scouts
+
+Fan out read-only exploration when the questions cluster into independent
+areas, or when `repos.md` lists multiple repos.
+
+- **Scout types:** `team:file-finder` (locate files) or the built-in
+  `Explore` agent (read-only tracing). Nothing else.
+- **The isolation invariant extends downward.** A scout's prompt may contain
+  ONLY: question text copied verbatim from `questions.md`, the "Codebase
+  context" section, and repo slugs/paths from `repos.md`. Never add your own
+  framing, never mention `task.md`, never speculate about intent inside a
+  scout prompt. A scout that learns the goal is the same pipeline defect as
+  you learning it.
+- **When:** only if a cluster requires reading more material than you will
+  quote in your findings. For one or two pointed questions, read the files
+  yourself.
+- **Caps:** at most 4 scouts, dispatched in parallel where independent; each
+  instructed to return <= 30 lines of file:line findings and to spawn no
+  further agents.
+- **Scouts are non-interactive.** They never emit open-questions envelopes.
+  A scout's ambiguity becomes a bullet in your own `## Open Questions`
+  section.
+- **You own the report.** Spot-verify scout file:line claims before
+  including them. The 100-line report budget applies to the combined
+  output.
+
+### `code-reviewer` and `security-reviewer` — skeptic passes
 
 A false hard-gate finding costs an entire review round: an implementer
 re-dispatch plus a fresh run of all 5 reviewers. Before finalizing a
@@ -122,7 +148,7 @@ skeptic sub-agent via the `Agent` tool and try to get it refuted.
   unavailable — report findings as-is. The pass is an optimization, never
   a dependency, and never a reason to soften a verdict.
 
-### Implementer — read-only scouts
+### `implementer` — read-only scouts
 
 Spawn a read-only scout when a slice touches a subsystem the plan does not
 explain and mapping it yourself would mean reading more than ~3 files you
