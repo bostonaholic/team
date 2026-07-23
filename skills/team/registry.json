@@ -4,7 +4,7 @@
     {"name": "WORKTREE", "artifacts": []},
     {"name": "QUESTION", "artifacts": ["task.md", "questions.md"]},
     {"name": "RESEARCH", "artifacts": ["research.md"]},
-    {"name": "DESIGN", "artifacts": ["design.md"]},
+    {"name": "DESIGN", "artifacts": ["design.md", "design-review-<n>.md"]},
     {"name": "STRUCTURE", "artifacts": ["structure.md"]},
     {"name": "PLAN", "artifacts": ["plan.md"]},
     {"name": "IMPLEMENT", "artifacts": []},

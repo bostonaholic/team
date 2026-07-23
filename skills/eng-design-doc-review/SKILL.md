@@ -249,7 +249,9 @@ slice a design.
 
 If the verdict is APPROVE or COMMENT, tell the user:
 **"To advance, run `/team-design docs/plans/<id>/` — with `design.md`
-already present it skips drafting and runs the review gate, recording
+already present it skips drafting and runs the review gate (skipping
+even that when the latest recorded verdict already passes — no
+redundant re-review), recording
 the verdict artifact — then proceed to `/team-structure`."**
 If the verdict is REQUEST CHANGES, tell the user:
 **"Re-run `/team-design docs/plans/<id>/` with the findings above to
