@@ -115,9 +115,10 @@ state to detect: "a worktree exists for `<id>`, no `task.md` yet" ⇒
 WORKTREE. The phase becomes inferable from the moment the run begins
 rather than only appearing midway through the pipeline.
 
-For design-gate ergonomics, the orchestrator **prints the absolute
-worktree-rooted `design.md` path** when presenting the design, so the
-reviewer opens the file cleanly without hunting for the worktree — this
+For artifact ergonomics, the orchestrator **reports the absolute
+worktree-rooted `docs/plans/<id>/` path** — where `design.md` and the
+`design-review-<n>.md` verdict records live — so anyone auditing the
+run opens the artifacts cleanly without hunting for the worktree — this
 supersedes the old "review on the home tree" rationale.
 
 Together these make leading placement a deliberate, articulable choice.
