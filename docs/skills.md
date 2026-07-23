@@ -102,9 +102,10 @@ argument shape.
   (Design)
   and the aggregate five-reviewer review gate during Implement — that
   aggregate gate sorts every finding into Blocking / Major / Minor-and-below
-  tiers and auto-loops on any Blocking or Major (the consult guard: the
-  user is never asked about a Blocking or Major finding), surfacing only
-  the remaining Minor-and-below findings. Its body is organized as `## Input`,
+  tiers and auto-loops on any Blocking or Major (the no-consult rule: the
+  user is never asked about any finding mid-run), recording the remaining
+  Minor-and-below findings in the PR body's `## Review notes`. Its body is
+  organized as `## Input`,
   `## Setup`, `## The Phase Loop`, `## Gate Handling`, and `## Rules` —
   not the downstream Input / Execution / Completion template.
 
@@ -184,8 +185,9 @@ argument shape.
   verify sub-pipeline. The verify loop sorts findings into Blocking / Major
   / Minor-and-below tiers; while any Blocking or Major remains it
   re-dispatches the implementer automatically without consulting the user
-  (the consult guard), capped at 5 rounds. Only the Minor-and-below
-  findings are surfaced once Blocking and Major are clean.
+  (the no-consult rule), capped at 5 rounds — at the cap, terminal halt.
+  Minor-and-below findings are recorded in the PR body's `## Review notes`
+  once Blocking and Major are clean — never surfaced mid-run.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
   the missing upstream artifacts inline rather than hard-erroring.
 
@@ -215,11 +217,12 @@ argument shape.
 
 ### eng-design-doc-review
 
-- **Purpose:** Run an optional adversarial, fresh-context audit of
-  `design.md` before the human design gate.
+- **Purpose:** Adversarially audit `design.md` with fresh context. Its
+  `## Review brief` doubles as the pipeline's DESIGN review gate;
+  standalone invocation remains available.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` — optional; resolves via the
   shared three-tier chain above.
-- **Phase:** Optional pre-gate audit (sits before the Design gate).
+- **Phase:** Design (review-gate brief) + standalone audit.
 - **Key behaviors:** Dispatches a `general-purpose` subagent (not the
   `design-author` agent) so the audit reads the design with fresh eyes.
   That subagent loads four methodology skills as its review criteria —
@@ -616,7 +619,7 @@ entry-point section above rather than repeating them here.
 | `team-implement` | orchestrator → implementer + reviewers | Implement |
 | `team-pr` | orchestrator | PR |
 | `team-fix` | user (direct invocation) | Compressed bug-fix flow (outside QRSPI) |
-| `eng-design-doc-review` | user (direct invocation) | Optional pre-Design audit; dispatches a general-purpose subagent |
+| `eng-design-doc-review` | user (direct invocation); pipeline DESIGN gate (brief by reference) | Design review-gate brief + standalone audit; dispatches a general-purpose subagent |
 | `shipit` | user (direct invocation) | Standalone — land a reviewed PR (not a QRSPI phase) |
 | `qrspi-workflow` | orchestrator skills; questioner (schema) | All phases |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |

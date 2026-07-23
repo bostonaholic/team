@@ -76,11 +76,11 @@ markdown artifact, produced autonomously.
 ### PLAN
 
 Tactical implementation details for the agent. Read by the implementer.
-No human approval gate — the plan is mechanically derived from the
+No approval gate — the plan is mechanically derived from the
 structure.
 
 - **Artifact:** `docs/plans/<id>/plan.md`
-- **Gate:** SOFT — no human approval; design is the human contract
+- **Gate:** SOFT — no approval; the reviewed design is the contract
 
 ### IMPLEMENT
 
@@ -295,7 +295,7 @@ force vertical slicing — reject any structure that flattens into layers.
 The structure is the scope fence for implementation. Jumping from design
 straight to code skips the vertical-slice breakdown the planner and
 implementer rely on. Always produce the structure — even though it now
-advances autonomously, design remains the human contract behind it.
+advances autonomously, the reviewed design remains the contract behind it.
 
 ### Gold-Plating
 

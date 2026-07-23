@@ -281,7 +281,8 @@ returned:
 3. While any **Blocking or Major** finding remains and under cap → dispatch
    implementer to fix, passing the typed failure class(es). After fixes, all
    5 reviewers re-run from scratch. **Never** stop to consult the user while a
-   Blocking or Major finding is open — loop automatically (the consult guard).
+   Blocking or Major finding is open — loop automatically (the no-consult
+   rule).
 4. If at cap → **terminal halt**: report every unresolved finding with
    its severity tier. No PR is opened, no consultation happens — the run
    ends there.

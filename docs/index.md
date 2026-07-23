@@ -13,7 +13,7 @@ The autonomous engineering mesh for Claude Code.
 
 ## What is Team?
 
-Team orchestrates **13 specialized agents** — from isolated researchers to adversarial reviewers — that drive a feature through an 8-phase pipeline (QRSPI) and deliver a verified pull request. Agents are decoupled microservices: each consumes a predecessor artifact on disk, does its work, and writes its own artifact. The orchestrator (the main Claude Code session) walks a linear phase table and runs a single human approval gate (design).
+Team orchestrates **13 specialized agents** — from isolated researchers to adversarial reviewers — that drive a feature through an 8-phase pipeline (QRSPI) and deliver a verified pull request. Agents are decoupled microservices: each consumes a predecessor artifact on disk, does its work, and writes its own artifact. The orchestrator (the main Claude Code session) walks a linear phase table with no mid-run human gates — an adversarial design review gates the design, and the human reviews the finished PR.
 
 ## The Pipeline
 
