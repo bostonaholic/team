@@ -144,7 +144,15 @@ the branch name and the worktree directory name so the two stay in sync
 for cleanup: `branch="$(printf '%s' "$id" | tr '/' '-')"`. Only the
 `docs/plans/<id>/` artifact directory keeps the original `<id>`.
 
-### Confirm with the user
+### Confirm with the user (standalone invocation only)
+
+This dialog fires **only when a human invoked `/team-worktree`
+directly** — a setup-time prompt on direct invocation. Within a full
+`/team` run the orchestrator creates the worktrees **without a
+confirmation prompt** (the phase loop never pauses mid-run); the
+resolved repo set is recorded loudly in `design.md` and echoed in the
+PR body's `## Review notes`. In pipeline mode, skip this dialog and
+proceed straight to "Create the worktree(s)".
 
 Confirm only the repos that actually need a worktree created. If **no**
 repo needs creation (single-repo mode where the detect step skipped the
@@ -181,7 +189,8 @@ Use `AskUserQuestion` with a `Worktree` header and **Proceed** /
 
 ### Create the worktree(s)
 
-After the user confirms, create a worktree in each repo the detect step
+After the user confirms (standalone invocation) — or immediately, in
+pipeline mode — create a worktree in each repo the detect step
 did **not** skip:
 
 Use the slash-sanitized name (`<branch>`, derived above) for both the
