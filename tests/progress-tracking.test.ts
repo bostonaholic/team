@@ -147,7 +147,7 @@ describe("skill count reconciliation (-> 40: + slicing-work, planning-implementa
   });
 
   test("filesystem has exactly 40 SKILL.md files declaring a name:", () => {
-    // 38 prior skills + slicing-work + planning-implementation = 40.
+    // 31 baseline skills + 9 new methodology skills = 40.
     const dirs = readdirSync(SKILLS_DIR, { withFileTypes: true })
       .filter((d) => d.isDirectory())
       .map((d) => join(SKILLS_DIR, d.name, "SKILL.md"))

@@ -100,7 +100,7 @@ describe("thin agents: wrapper size band", () => {
   }
 });
 
-describe("thin agents: new methodology skills exist with the Decision 8 contract", () => {
+describe("thin agents: new methodology skills exist with the methodology-skill frontmatter contract", () => {
   for (const { skill } of NEW_SKILLS) {
     test(`skills/${skill}/SKILL.md exists`, () => {
       expect(existsSync(skillPath(skill))).toBe(true);

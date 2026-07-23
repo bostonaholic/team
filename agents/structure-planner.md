@@ -64,10 +64,8 @@ Aim for ~2 pages (≈100–200 lines, excluding frontmatter).
 
 ## Rules
 
-- **No implementation code.** Slice descriptions name files and behaviors,
-  not function bodies.
-- **Stay under ~200 lines.** If you need more, you have too many slices —
-  consolidate, or push some out of scope and re-approve the design.
+- **Follow the slicing rules** in `skills/slicing-work/SKILL.md` (preloaded)
+  — including its content and length constraints on the document itself.
 - **Apply the product-need lens** — preloaded via the `skills:` frontmatter
   (read `skills/product-thinking/SKILL.md` if it isn't already in context). Use
   its `## When Slicing` section while ordering the slices (in `## Slices` /

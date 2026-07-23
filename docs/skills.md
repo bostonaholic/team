@@ -256,7 +256,10 @@ directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
 "Loaded by" line for each skill names its consumers from the per-agent
-load manifest; an agent typically loads at most three.
+load manifest; an agent typically loads at most three. An agent's own
+extracted procedure skill does not count toward that soft limit — it
+replaces former inline body content 1:1, so it adds no net context (see
+[architecture.md](architecture.md#design-guidelines)).
 
 ### qrspi-workflow
 

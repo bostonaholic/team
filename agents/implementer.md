@@ -42,9 +42,6 @@ fence — lives in `skills/implementing-slices/SKILL.md` (preloaded).
 - When the plan requires modifying existing code, apply the refactoring
   methodology from `skills/refactoring-to-patterns/SKILL.md` — separate
   refactoring commits from feature work and keep tests green at every step.
-- When a mid-slice test, lint, or typecheck failure is non-obvious, Load
-  `skills/systematic-debugging/SKILL.md` and walk the causal chain to the
-  root before editing; skip it for an obvious one-line fix.
 
 ## Read-only scouts for unfamiliar code (optional)
 

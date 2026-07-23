@@ -65,5 +65,4 @@ UI | API | Library (not applicable)
 would expect]
 ```
 
-Keep curl commands and output in the report so findings are reproducible. If
-the server fails to start, report that as the primary finding and stop.
+Reporting and reproducibility rules live in `skills/verifying-ux/SKILL.md`.
