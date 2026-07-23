@@ -148,7 +148,10 @@ Before any agent dispatch, decide where to work:
    - If round count < 5: re-dispatch implementer with the typed class(es),
      then re-dispatch ALL 5 reviewers for a fresh review.
    - If round count ≥ 5: **halt** with a full unresolved-findings
-     summary — terminal; no PR is opened.
+     summary — terminal; no PR is opened. Recovery: a human fixes the
+     unresolved findings by hand and re-invokes `/team-implement` bare;
+     the round counter is session-scoped (TodoWrite) and starts fresh
+     on re-invocation.
    - **Never** stop to ask the user which Blocking or Major items to address —
      this is the no-consult rule. A prompt that lists a blocking or major
      finding is a defect.

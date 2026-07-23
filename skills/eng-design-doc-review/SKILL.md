@@ -1,6 +1,6 @@
 ---
 name: eng-design-doc-review
-description: Adversarially review a technical design document with fresh context. Dispatches the built-in `general-purpose` subagent (clean context, no shared history with the design-author) against `docs/plans/<id>/design.md` and presents its verdict — APPROVE, REQUEST CHANGES, or COMMENT. The Review brief doubles as the pipeline's DESIGN review gate; standalone use remains. Trigger on "review the design doc", "audit design.md", "is this design ready", or `/eng-design-doc-review`.
+description: Adversarially review a technical design document with fresh context. Dispatches the built-in read-only `Explore` subagent (clean context, no shared history with the design-author) against `docs/plans/<id>/design.md` and presents its verdict — APPROVE, REQUEST CHANGES, or COMMENT. The Review brief doubles as the pipeline's DESIGN review gate; standalone use remains. Trigger on "review the design doc", "audit design.md", "is this design ready", or `/eng-design-doc-review`.
 effort: high
 argument-hint: "[docs/plans/<id>/]"
 ---
@@ -18,11 +18,12 @@ level — short sentences, common words, no unexplained jargon. Full
 methodology: `skills/writing-prose/SKILL.md`.
 
 There is **no custom review agent**. This skill is self-contained: it
-carries the review brief inline and dispatches the built-in
-`general-purpose` subagent via the `Agent` tool. That subagent boots with
+carries the review brief inline and dispatches the built-in read-only
+`Explore` subagent via the `Agent` tool. That subagent boots with
 a **clean context** and no shared conversation history with the
 design-author — that isolation is the whole point. It prevents
-self-evaluation bias.
+self-evaluation bias. `Explore` holds no Write/Edit tools, so the
+reviewer structurally cannot modify the artifacts it judges.
 
 ## Input
 
@@ -87,11 +88,15 @@ done
 
 1. Use the directory resolved in `## Input`.
 2. **Dispatch the review.** Call the `Agent` tool with
-   `subagent_type: general-purpose` and pass the **Review brief** below as
+   `subagent_type: Explore` (the built-in read-only agent type) and pass
+   the **Review brief** below as
    the prompt, with `$ARGUMENTS` substituted for the artifact directory. Do
-   **not** define or reference a project agent — the built-in
-   `general-purpose` type is the whole mechanism. Its clean context is what
-   makes the review independent.
+   **not** define or reference a project agent — the built-in read-only
+   type is the whole mechanism. Its clean context is what
+   makes the review independent, and its lack of Write/Edit tools keeps
+   the reviewer structurally unable to touch the artifacts. If the
+   environment lacks the `Explore` agent type, report the dispatch
+   failure — never substitute a full-tool agent silently.
 3. **Present the verdict in full.** The subagent returns Conventional
    Comments findings (issue / suggestion / nitpick, each with a
    `file:line` reference) followed by one of APPROVE, REQUEST CHANGES, or
@@ -103,8 +108,9 @@ done
 
 ## Review brief
 
-> Pass everything in this section to the `general-purpose` subagent as its
-> prompt. It is written in the second person, addressed to that subagent.
+> Pass everything in this section to the read-only `Explore` subagent as
+> its prompt. It is written in the second person, addressed to that
+> subagent.
 
 You are reviewing a technical design document — `$ARGUMENTS/design.md`. You
 operate with **fresh context** and have no knowledge of the author's intent
@@ -142,7 +148,7 @@ it defines their format.
    note any missing or thin sections. For `design.md` artifacts, walk the
    `design-author` template instead (Current state, Desired end state,
    Patterns to follow, Decisions made, Out of scope, Edge cases, Open
-   questions, Risks).
+   questions (deferred), Risks).
 
 3. **Audit the decisions.** For each decision the document records:
    - Is the alternative considered named, or is it a single-option
@@ -219,10 +225,12 @@ End with a verdict, using the same gate type as `code-reviewer`:
   review gate** (`skills/team/SKILL.md` and `/team-design` dispatch it
   by reference). Editing the brief changes pipeline behavior — treat any
   change to its headings, process, or verdict set as a pipeline change.
-- This skill is **read-only by instruction, not by enforcement**. The
-  `general-purpose` subagent holds full tools; the brief's read-only
-  constraint is procedural. That residual risk is accepted: the
-  reviewer's output never becomes state on its own — the *orchestrator*
+- This skill is **read-only, structurally for writes**. The `Explore`
+  subagent holds no Write/Edit tools, so it cannot modify `design.md`,
+  the artifact directory, or any verdict record. Its remaining tools
+  (e.g. Bash) are governed by the brief's read-only instruction — that
+  residual is accepted: the reviewer's output never becomes state on
+  its own — the *orchestrator*
   records the verdict to `design-review-<n>.md` when the pipeline gate
   runs the brief, and the recovery hooks fail closed on anything but a
   recorded passing verdict. The skill itself writes no artifacts and

@@ -222,8 +222,9 @@ research artifact (with the required frontmatter).
 each as an auditable assumption)
 **Predecessor:** `research.md`
 **Artifact:** `docs/plans/<id>/design.md`
-**Gate:** REVIEW — the orchestrator dispatches a fresh-context
-`general-purpose` subagent with the `## Review brief` from
+**Gate:** REVIEW — the orchestrator dispatches a fresh-context,
+read-only `Explore` subagent (no Write/Edit tools — the reviewer cannot
+touch the artifacts it judges) with the `## Review brief` from
 `skills/eng-design-doc-review/SKILL.md` and records the verdict to
 `design-review-<n>.md`. APPROVE/COMMENT advance; on REQUEST CHANGES the
 agent re-drafts with the findings verbatim and increments `revision`
