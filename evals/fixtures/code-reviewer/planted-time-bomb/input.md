@@ -5,6 +5,7 @@ deps:
   - agents/code-reviewer.md
   - skills/code-review/SKILL.md
   - skills/conventional-comments/SKILL.md
+  - skills/test-style/SKILL.md
 ---
 
 # Synthetic implementer artifact: session-token expiry check

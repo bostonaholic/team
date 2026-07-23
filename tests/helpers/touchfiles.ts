@@ -19,6 +19,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "agents/code-reviewer.md",
     "skills/code-review/**",
     "skills/conventional-comments/**",
+    "skills/test-style/**",
     "tests/code-reviewer.evals.ts",
     "evals/fixtures/code-reviewer/planted-time-bomb/**",
     "evals/rubrics/code-reviewer.md",

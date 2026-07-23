@@ -40,7 +40,7 @@ finding per `skills/conventional-comments/SKILL.md` (preloaded).
   Comments section of `skills/engineering-standards/SKILL.md`).
 - Check design-principle violations with `skills/solid-principles/SKILL.md`.
 - Walk changed test files against the style rules in
-  `skills/test-first-development/SKILL.md`; flaky-test red flags are
+  `skills/test-style/SKILL.md`; flaky-test red flags are
   blocking on **first** occurrence.
 - Apply the "When Reviewing" section of
   `skills/engineering-standards/SKILL.md` as additional review criteria and

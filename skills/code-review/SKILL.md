@@ -64,7 +64,7 @@ guard, and the verdict-aggregation rules — lives in
 
 **Test-quality flags.** Test files are part of the diff. Walk every changed
 `*test*` / `*spec*` / `__tests__/*` file against the rules in
-`skills/test-first-development/SKILL.md` ("Test Style Rules"). The
+`skills/test-style/SKILL.md` ("Test Style Rules"). The
 following anti-patterns are `suggestion:` individually and `issue:` when
 they appear across multiple tests:
 
@@ -90,57 +90,12 @@ signal. The rule keys to outcome-dependence, not token presence: a
 Outcome-dependence covers the whole suite, not only the offending test:
 state or resources left behind flag because a *later* test's outcome
 depends on them, even when the offending test's own result is deterministic.
-
-- **Time/date dependence, incl. time-bombs** — `new Date()`, `Date.now()`,
-  `datetime.now()` feeding an assertion; a future date literal in a fixture
-  (`expiresAt: "2030-01-01"`, cert `notAfter`); naive calendar arithmetic
-  on "now" (`addMonths`, month-end/DST/leap assumptions); TZ-naive date
-  construction. Past/fixed date literals with an explicit TZ do not flag.
-- **Fixed-sleep / timed waits** — `sleep()` for synchronization:
-  `Thread.sleep(ms)`, `setTimeout`-as-wait, `cy.wait(3000)`,
-  `page.waitForTimeout(...)`; a bounded wait whose success is asserted
-  (`assertTrue(latch.await(100, MS))` — a capped wait still flags).
-  Tests legitimately about time require a frozen/fake clock — a real
-  sleep to observe a delay still flags.
-- **Concurrency / race interleaving** — assertions assuming a completion
-  order across threads, `Promise.all`, or executors; shared state mutated
-  without synchronization; missing `join()`/`await` before asserting.
-  Order-independent assertions (`Set` comparison, sorted) do not flag.
-- **Test-order dependence & shared mutable state** — static/module-level
-  mutable state written by a test; state (DB row, file, env var) created
-  with no teardown; a test reading state another test produced.
-- **Unseeded randomness** — `Math.random()`, `uuid.v4()`, `faker.*` without
-  `faker.seed(n)` feeding an assertion. Seeded randomness does not flag.
-- **Real network / external services** — live URLs or SDK clients in a test
-  with no stub/interceptor at the boundary.
-- **Resource leaks & hard-coded ports** — a fixed port for an embedded
-  server/DB (collides under parallel CI); an opened connection, file, or
-  socket with no guaranteed teardown.
-- **Unordered-collection order assumptions** — positional assertions on
-  hash map/set iteration or on a query with no `ORDER BY`.
-- **Exact float equality** — `expect(0.1 + 0.2).toBe(0.3)`; require a
-  tolerance/epsilon comparison.
-- **Platform/environment dependence** — hard-coded path separators or line
-  endings; locale/TZ formatting asserted against a fixed string; CPU-count
-  or CI-parallelism assumptions.
-
-**Time-bomb example** (a rerun never exposes it — only the diff does):
-
-**Bad:**
-```js
-// Bad — wall-clock read feeds the assertion; hard-coded future expiry.
-// Green today, permanently red once the clock crosses the literal.
-const token = { expiresAt: "2030-01-01" };
-expect(isValid(token, new Date())).toBe(true);
-```
-
-**Good:**
-```js
-// Good — frozen/injected clock; expiry derived from it.
-const now = new Date("2024-06-15T12:00:00Z");
-const token = issueToken({ now, ttlDays: 30 });
-expect(isValid(token, now)).toBe(true);
-```
+The full red-flag catalog — time/date dependence and time-bombs (with the
+canonical bad/good example pair), fixed sleeps, race interleavings,
+test-order dependence, unseeded randomness, real network, resource leaks
+and hard-coded ports, unordered-collection order assumptions, exact float
+equality, and platform dependence — lives in `skills/test-style/SKILL.md`
+("Flaky-test red flags (reviewer checklist)").
 
 **Comment red flags.** Check the in-source comments in every changed file
 against the Code Comments rules in `skills/engineering-standards/SKILL.md`.
@@ -216,7 +171,7 @@ Two severity regimes apply:
    - **Test files** — Walk every changed `*test*` / `*spec*` /
      `__tests__/*` file against both severity regimes above (Code Reviewer
      verdict section) and the style rules in
-     `skills/test-first-development/SKILL.md`. Style flags escalate: a
+     `skills/test-style/SKILL.md`. Style flags escalate: a
      single occurrence is a `suggestion:`; multiple occurrences across the
      diff become `issue:`. Flaky-test red flags are blocking `issue:`
      findings on **first** occurrence.

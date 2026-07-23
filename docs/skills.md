@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 43 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 31 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 44 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 32 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -46,8 +46,8 @@ catalog into two flavors:
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
 standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 31 methodology =
-43**.
+split is **11 pipeline entry-point + 1 standalone utility + 32 methodology =
+44**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -251,7 +251,7 @@ phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 31 methodology skills carry no `argument-hint` and are never invoked
+The 32 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -426,7 +426,23 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Purpose:** Treat acceptance tests as the immutable scope fence.
 - **Loaded by:** test-architect, code-reviewer; orchestrator.
 - **Key behaviors:** Tests are written first and never edited to pass; the
-  implementation must satisfy them as the contract.
+  implementation must satisfy them as the contract. The style rules every
+  acceptance test follows live in `test-style`.
+
+### test-style
+
+- **Purpose:** Test style rules and the flaky-test red-flag catalog.
+- **Loaded by:** test-architect and code-reviewer just-in-time, via
+  pointers from `test-first-development` and `code-review` (no agent
+  preloads it).
+- **Key behaviors:** Carries the full style-rule set —
+  behavior-not-implementation, DAMP setup, narrow assertions, actionable
+  failures, the deterministic-input rules (control the clock, seed all
+  randomness, own your state, impose order, hermetic boundaries), the
+  fidelity ladder — plus the audit checklist and the single copy of the
+  reviewer-facing flaky-test red-flag catalog with its canonical
+  time-bomb example pair. The always-blocking severity regime for flaky
+  flags stays in `code-review`.
 
 ### test-driven-bug-fix
 
@@ -645,6 +661,7 @@ entry-point section above rather than repeating them here.
 | `planning-implementation` | planner | Plan |
 | `engineering-standards` | planner, implementer, code-reviewer | Plan, Implement |
 | `test-first-development` | test-architect, code-reviewer; orchestrator | Implement |
+| `test-style` | test-architect, code-reviewer (just-in-time via pointers) | Implement |
 | `test-driven-bug-fix` | team-fix | Bug-fix flow |
 | `solid-principles` | implementer, code-reviewer | Implement |
 | `refactoring-to-patterns` | implementer | Implement |

@@ -35,8 +35,8 @@ Your full authoring process lives in `skills/test-first-development/SKILL.md`
 confirm each fails cleanly (an assertion failure, never an error), fix errors
 with obviously incomplete stubs only — never implementation code — and lock
 the list. Audit every test against the "Test Style Rules" and their
-"Audit checklist" in the same skill, and cite the failing check by name when
-reporting issues.
+"Audit checklist" in `skills/test-style/SKILL.md` (pointed to from the
+preloaded skill), and cite the failing check by name when reporting issues.
 
 Before writing any tests, read existing test files and match the project's
 test framework, file naming, directory structure, assertion style, and

@@ -510,8 +510,16 @@ describe("test-first-development lens (L2 content tripwire)", () => {
     expect(text).toContain("Confirm Tests Fail Correctly");
   });
 
-  test("Test Style Rules contains the six deterministic-input subsections", () => {
-    const text = read(SKILL_FILE);
+  // The Test Style Rules moved to their own just-in-time skill; TFD keeps a
+  // pointer. The content pins follow the moved content.
+  const TEST_STYLE_FILE = join(REPO_ROOT, "skills", "test-style", "SKILL.md");
+
+  test("test-first-development points at test-style for the style rules", () => {
+    expect(read(SKILL_FILE)).toContain("test-style/SKILL.md");
+  });
+
+  test("Test Style Rules (in test-style) contains the six deterministic-input subsections", () => {
+    const text = read(TEST_STYLE_FILE);
     expect(/^### Control the clock$/m.test(text)).toBe(true);
     expect(/^### Seed all randomness$/m.test(text)).toBe(true);
     expect(/^### Tests own their state — any order, any host$/m.test(text)).toBe(true);
@@ -520,8 +528,8 @@ describe("test-first-development lens (L2 content tripwire)", () => {
     expect(/^### Impose order before asserting it$/m.test(text)).toBe(true);
   });
 
-  test("audit table has a Deterministic inputs row (moved from test-architect)", () => {
-    expect(read(SKILL_FILE)).toContain("| Deterministic inputs |");
+  test("audit table (in test-style) has a Deterministic inputs row (moved from test-architect)", () => {
+    expect(read(TEST_STYLE_FILE)).toContain("| Deterministic inputs |");
   });
 });
 
@@ -551,12 +559,11 @@ describe("code-review flaky-test red flags (L2 content tripwire)", () => {
     return text.slice(start, end);
   }
 
-  test("code-review skill contains the always-blocking flaky-test red-flag checklist keyed to outcome-dependence", () => {
+  test("code-review skill keeps the always-blocking flaky-test severity rule keyed to outcome-dependence", () => {
     const text = read(SKILL_FILE);
     expect(text).toContain("**Flaky-test red flags (always blocking).**");
     // Scope severity assertions to the checklist region so the `issue
-    // (blocking)` occurrences in Comment Types / the severity-tier table
-    // cannot satisfy them.
+    // (blocking)` occurrences in Comment Types cannot satisfy them.
     const flaky = between(text, "Flaky-test red flags", "### UX Reviewer");
     expect(flaky.length).toBeGreaterThan(0);
     expect(flaky).toContain("issue (blocking)");
@@ -565,20 +572,29 @@ describe("code-review flaky-test red flags (L2 content tripwire)", () => {
     // Severity rule keyed to outcome-dependence — pin the phrase, not just
     // the heading (design decision 2).
     expect(/outcome depends on/i.test(flaky)).toBe(true);
+    // The red-flag catalog itself moved to test-style; the severity rule
+    // stays here with a pointer at the single catalog copy.
+    expect(flaky).toContain("test-style/SKILL.md");
   });
 
-  test("sleep()-for-synchronization is relocated, not duplicated", () => {
-    const text = read(SKILL_FILE);
-    const styleFlags = between(text, "Test-quality flags.", "Flaky-test red flags");
-    const flaky = between(text, "Flaky-test red flags", "### UX Reviewer");
-    // Guard both slices non-empty so the absence assertion below can't pass
+  test("the flaky red-flag catalog lives in test-style only, not duplicated in code-review", () => {
+    const TEST_STYLE = join(REPO_ROOT, "skills", "test-style", "SKILL.md");
+    const codeReview = read(SKILL_FILE);
+    const styleFlags = between(codeReview, "Test-quality flags.", "Flaky-test red flags");
+    const flaky = between(codeReview, "Flaky-test red flags", "### UX Reviewer");
+    // Guard both slices non-empty so the absence assertions below can't pass
     // vacuously against an empty string.
     expect(styleFlags.length).toBeGreaterThan(0);
     expect(flaky.length).toBeGreaterThan(0);
-    // Relocated out of the six-flag style list (design decision 3)...
+    // The six-flag style list never carries sleep() (design decision 3)...
     expect(styleFlags).not.toContain("sleep()");
-    // ...into the always-blocking flaky list.
-    expect(flaky).toContain("sleep()");
+    // ...and the catalog bullets no longer live in code-review at all.
+    expect(flaky).not.toContain("sleep()");
+    // The single catalog copy sits in test-style's reviewer checklist.
+    const testStyle = read(TEST_STYLE);
+    const checklistStart = testStyle.indexOf("## Flaky-test red flags (reviewer checklist)");
+    expect(checklistStart).toBeGreaterThan(-1);
+    expect(testStyle.slice(checklistStart)).toContain("sleep()");
   });
 
   test("code-reviewer defers the first-occurrence always-blocking rule to the skill", () => {
@@ -595,16 +611,18 @@ describe("code-review flaky-test red flags (L2 content tripwire)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Time-bomb example pair — free L2 drift tripwire (docs/testing.md §2,
-// collision/drift form). The fenced bad/good time-bomb example lives in two
-// skills (code-review carries a copy of test-first-development's canonical
-// pair, design decision 5). The copies are maintained by hand; this pin fails
-// the build the moment they drift.
+// Time-bomb example pair — free L2 content tripwire (docs/testing.md §2).
+// The fenced bad/good time-bomb example used to live in two hand-maintained
+// copies (code-review + test-first-development) under a byte-identity drift
+// guard. The test-style extraction collapsed it to ONE copy — a single copy
+// needs no drift guard, so this pin asserts single-copy residency plus the
+// pointers the former hosts keep.
 // ---------------------------------------------------------------------------
 
-describe("time-bomb example pair (L2 drift tripwire)", () => {
+describe("time-bomb example pair (single copy in test-style)", () => {
   const CODE_REVIEW_SKILL = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
   const TFD_SKILL = join(REPO_ROOT, "skills", "test-first-development", "SKILL.md");
+  const TEST_STYLE_SKILL = join(REPO_ROOT, "skills", "test-style", "SKILL.md");
 
   // All ```js fences belonging to the time-bomb example: the bad block
   // carries the future-expiry literal, the good block the issueToken call.
@@ -615,14 +633,15 @@ describe("time-bomb example pair (L2 drift tripwire)", () => {
     );
   }
 
-  test("fenced bad/good pair is byte-identical across the two skills", () => {
-    const codeReviewPair = timeBombFences(read(CODE_REVIEW_SKILL));
-    const tfdPair = timeBombFences(read(TFD_SKILL));
-    // Fail-loud: extraction must find exactly the bad + good fence in each
-    // file — an empty or partial slice must never pass vacuously.
-    expect(codeReviewPair.length).toBe(2);
-    expect(tfdPair.length).toBe(2);
-    expect(codeReviewPair).toEqual(tfdPair);
+  test("exactly one bad/good pair exists, in test-style", () => {
+    expect(timeBombFences(read(TEST_STYLE_SKILL)).length).toBe(2);
+    expect(timeBombFences(read(CODE_REVIEW_SKILL)).length).toBe(0);
+    expect(timeBombFences(read(TFD_SKILL)).length).toBe(0);
+  });
+
+  test("the former hosts point at test-style instead of carrying copies", () => {
+    expect(read(CODE_REVIEW_SKILL)).toContain("test-style/SKILL.md");
+    expect(read(TFD_SKILL)).toContain("test-style/SKILL.md");
   });
 });
 
