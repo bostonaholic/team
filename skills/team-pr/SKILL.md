@@ -240,4 +240,5 @@ only used if there are uncommitted final changes (e.g., changelog).
 
 Report the outcome (draft PR URL and commit hash).
 
-Next: run /pr-watch when the PR is ready for review.
+Next: say "the PR is ready for review" (or run /pr-watch with that
+wording) to arm the watch.

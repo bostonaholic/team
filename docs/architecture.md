@@ -263,7 +263,8 @@ push the branch and open a draft PR automatically (`gh pr create
 and surface the tracking ticket (if `task.md` carries `ticketId`). The
 worktree stays in place after the PR opens — teardown is deferred until
 the PR merges or the user asks, so the branch remains available for
-iteration.
+iteration. Completion points at the standalone `/pr-watch` utility for
+watching the PR once it is ready for review.
 
 ## 4. Agent Roster
 

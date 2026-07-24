@@ -48,7 +48,8 @@ the current branch (`gh pr view`). Refuse up front, before any other work:
   loudly — the user must see that the draft went public.
 - When the cue is ambiguous about readiness (for example, "watch the PR")
   and the PR is still a draft, watch the draft in place and say so —
-  never promote on an ambiguous cue.
+  never promote on an ambiguous cue. End the arm report with the
+  follow-up offer: say "the PR is ready for review" to promote it now.
 - If `gh pr ready` fails (for example, permissions), warn and keep
   watching — the promotion is not a precondition for the loop.
 - Apply the best-effort in-review ticket transition per
@@ -84,9 +85,11 @@ Each poll is one Bash call that combines:
   only; past 100 threads it paginates with `after:` cursors (see the
   pagination pitfall in `skills/pr-open-comments/SKILL.md`)
 - the latest review submission, in the same GraphQL call —
-  `reviews(last: 1) { nodes { submittedAt } }`. A COMMENT-type review
-  that carries only a body changes no other polled field, so this is the
-  only signal that detects it.
+  `reviews(last: 1) { nodes { author { login } state body submittedAt } }`.
+  A COMMENT-type review that carries only a body changes no other polled
+  field, so `submittedAt` is the only signal that detects it. The author,
+  state, and body feed the empty-body CHANGES_REQUESTED status line
+  without an extra fetch.
 - the issue-comment timestamps
 
 Print a one-line snapshot per poll so progress stays observable without
@@ -161,10 +164,10 @@ Then the loop re-arms until approval, merge, or timeout.
   present nothing.
 - If a CHANGES_REQUESTED review arrives with an empty body and no threads,
   there is no verifiable ask to triage. Emit a status line that names the
-  reviewer and the requested-changes state, treat it as a
-  needs-clarification carve-out, and stop the loop — suggest that the user
-  ask the reviewer what they want. Watching past it would hide a blocking
-  signal.
+  reviewer and the requested-changes state (both come from the poll's
+  review fields), treat it as a needs-clarification carve-out, and stop
+  the loop — suggest that the user ask the reviewer what they want.
+  Watching past it would hide a blocking signal.
 
 ### 6. Stop conditions
 

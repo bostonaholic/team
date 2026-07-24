@@ -195,7 +195,8 @@ argument shape.
 - **Key behaviors:** Loads `git-commit` for commit discipline and
   `changelog` for the changelog update; adds a PR body from its template.
   Leaves the worktree in place after opening the PR so you can iterate;
-  teardown waits until the PR merges or you ask.
+  teardown waits until the PR merges or you ask. Completion suggests
+  arming `/pr-watch` once the PR is ready for review.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
   the missing upstream artifacts inline rather than hard-erroring.
 
@@ -293,7 +294,9 @@ QRSPI phase — a self-contained action a user runs on demand.
   authorized mode. Stops on approval, merge, close, user interrupt,
   cycle-48 timeout, or 3 consecutive poll failures. On approval it runs a
   final triage pass and hands off with `Next: run /shipit` — it never
-  auto-runs `/shipit`.
+  auto-runs `/shipit`. Model-invocable — it promotes a draft only on an
+  unambiguous readiness cue and reports the promotion loudly, so
+  cue-based auto-invocation is safe.
 
 ## Methodology skills
 

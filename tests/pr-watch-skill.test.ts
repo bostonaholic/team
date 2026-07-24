@@ -150,6 +150,8 @@ describe("pr-watch skill: bounded cycle mechanics", () => {
   test("polls review submissions so a body-only COMMENT review still fires a change", () => {
     const t = body();
     expect(t).toContain("submittedAt");
+    expect(t).toContain("author { login }");
+    expect(t).toContain("state body submittedAt");
     expect(/COMMENT-type review/i.test(flat(t))).toBe(true);
   });
 });
