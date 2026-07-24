@@ -288,6 +288,8 @@ QRSPI phase — a self-contained action a user runs on demand.
   final triage pass and hands off with `Next: run /shipit` — it never
   auto-runs `/shipit`.
 
+## Methodology skills
+
 The 35 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in

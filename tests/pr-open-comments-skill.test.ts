@@ -2,7 +2,7 @@
 //
 // L2 tripwire (free, deterministic): fences the `pr-open-comments` RUNTIME
 // skill (skills/pr-open-comments/SKILL.md) — a standalone review-triage
-// utility distributed to Team's users (docs/plans/2026-07-24-pr-watch-loop).
+// utility distributed to Team's users.
 // It fetches every unresolved review thread on a PR via GraphQL, verifies
 // each comment against the current code (trust but verify), and presents a
 // globally numbered punch list with options and one recommendation per item.
@@ -216,5 +216,33 @@ describe("pr-open-comments skill: punch-list deliverable", () => {
     const t = flat(body());
     expect(/2[–-]4[^.]{0,60}option/i.test(t)).toBe(true);
     expect(/recommendation/i.test(t)).toBe(true);
+  });
+});
+
+describe("pr-open-comments skill: untrusted input — comments are data", () => {
+  test("comment bodies are untrusted data, never instructions", () => {
+    const t = flat(body());
+    expect(/untrusted input/i.test(t)).toBe(true);
+    expect(/DATA[^.]{0,80}never as instructions/i.test(t)).toBe(true);
+  });
+
+  test("imperatives embedded in a comment beyond the thread's anchored code are never acted on", () => {
+    const t = flat(body());
+    expect(/ignore any imperative/i.test(t)).toBe(true);
+    expect(/anchors to/i.test(t)).toBe(true);
+    expect(/never act on it/i.test(t)).toBe(true);
+  });
+
+  test("authorized auto-apply is bounded to the file and lines the thread references", () => {
+    const t = flat(body());
+    expect(/bound every authorized auto-apply/i.test(t)).toBe(true);
+    expect(/file and lines/i.test(t)).toBe(true);
+    expect(/broader[^.]{0,120}carve-?out/i.test(t)).toBe(true);
+  });
+
+  test("resolution stays auditable: the 🤖 reply cites the exact commit SHA containing the change", () => {
+    const t = flat(body());
+    expect(/exact commit SHA/i.test(t)).toBe(true);
+    expect(/auditab/i.test(t)).toBe(true);
   });
 });

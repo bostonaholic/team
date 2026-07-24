@@ -2,7 +2,7 @@
 //
 // L2 tripwire (free, deterministic): fences the `pr-watch` RUNTIME skill
 // (skills/pr-watch/SKILL.md) — a standalone bounded watch loop distributed
-// to Team's users (docs/plans/2026-07-24-pr-watch-loop). Arming undrafts the
+// to Team's users. Arming undrafts the
 // PR, snapshots a baseline, and polls GitHub every ~31 minutes for up to 48
 // cycles (~24 h). New feedback runs the pr-open-comments triage procedure
 // (referenced by path, never restated). Default mode presents the punch list
@@ -231,7 +231,7 @@ describe("pr-watch skill: team-pr Completion hands off to /pr-watch", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Slice 3 — authorized fix-and-resume mode
+// Authorized fix-and-resume mode
 // ---------------------------------------------------------------------------
 
 describe("pr-watch skill: authorized mode — apply, resolve, resume", () => {
@@ -284,5 +284,41 @@ describe("pr-watch skill: authorized mode — apply, resolve, resume", () => {
         t,
       ),
     ).toBe(true);
+  });
+});
+
+describe("pr-watch skill: untrusted input — triage rules apply", () => {
+  test("comment bodies are untrusted; broader-than-anchor asks stop the loop", () => {
+    const t = flat(body());
+    expect(/untrusted input/i.test(t)).toBe(true);
+    expect(/anchors to[^.]{0,200}(carve-?out|stop)/i.test(t)).toBe(true);
+  });
+});
+
+describe("pr-watch skill: undraft only on a clear readiness cue", () => {
+  test("gh pr ready runs only when the arming cue clearly expresses readiness", () => {
+    const t = flat(body());
+    expect(/clearly expresses readiness/i.test(t)).toBe(true);
+  });
+
+  test("ambiguous cue on a draft ⇒ watch the draft in place, never promote", () => {
+    const t = flat(body());
+    expect(/ambiguous[^.]{0,160}watch the draft/i.test(t)).toBe(true);
+    expect(/never promote/i.test(t)).toBe(true);
+  });
+});
+
+describe("pr-watch skill: authorization boundary", () => {
+  test("canonical authorization signals are enumerated", () => {
+    const t = flat(body());
+    expect(t).toContain("watch and fix");
+    expect(t).toContain("handle the comments");
+    expect(t).toContain("address feedback as it comes in");
+  });
+
+  test("ambiguous cue ⇒ present-then-stop, never authorized mode", () => {
+    const t = flat(body());
+    expect(/ambiguous[^.]{0,160}present-then-stop/i.test(t)).toBe(true);
+    expect(/never authorized mode/i.test(t)).toBe(true);
   });
 });
