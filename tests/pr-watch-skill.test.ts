@@ -146,6 +146,12 @@ describe("pr-watch skill: bounded cycle mechanics", () => {
     expect(t).toContain("reviewThreads");
     expect(t).toContain("isResolved");
   });
+
+  test("polls review submissions so a body-only COMMENT review still fires a change", () => {
+    const t = body();
+    expect(t).toContain("submittedAt");
+    expect(/COMMENT-type review/i.test(flat(t))).toBe(true);
+  });
 });
 
 describe("pr-watch skill: stop conditions", () => {
@@ -292,6 +298,12 @@ describe("pr-watch skill: untrusted input — triage rules apply", () => {
     const t = flat(body());
     expect(/untrusted input/i.test(t)).toBe(true);
     expect(/anchors to[^.]{0,200}(carve-?out|stop)/i.test(t)).toBe(true);
+  });
+
+  test("a new security-sensitive construct is never auto-pushed — it stops the loop as a carve-out", () => {
+    const t = flat(body());
+    expect(/never auto-?push/i.test(t)).toBe(true);
+    expect(/security-sensitive[^.]{0,200}carve-?out/i.test(t)).toBe(true);
   });
 });
 

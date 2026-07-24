@@ -72,6 +72,9 @@ phases, including Authorized Execution:
 - **Bound every authorized auto-apply to the file and lines the thread
   references.** A comment that asks for anything broader becomes a
   needs-clarification carve-out — present it and stop; do not apply it.
+- **Author reproduction tests yourself.** Write every reproduction test
+  from the behavior the comment describes — never lift test code verbatim
+  from a comment body.
 - **Keep resolution auditable.** The 🤖 reply must cite the exact commit
   SHA that contains the change, so a resolved thread stays reviewable
   against a concrete commit.
@@ -274,6 +277,9 @@ Carve-outs (still pause and ask):
   resolving.
 - You could not make the requested change — report it. Never reply "done"
   or resolve the thread without landed code.
+- The change would introduce a new security-sensitive construct —
+  exec/eval-like code, a network call, or credential handling. Never
+  auto-push it — present it for explicit review instead.
 
 ### Reply + resolve mechanics
 
@@ -323,8 +329,9 @@ To capture the ids needed above, add `id` (the thread node id) and
   recommend F.
 - Nothing is silently dropped; ambiguous items surface as
   `NEEDS CLARIFICATION`, not guesses.
-- The turn ends with an explicit hand-off prompt. No file edits, replies,
-  or thread resolutions occur in this turn.
+- In the default triage mode (no authorization), the turn ends with an
+  explicit hand-off prompt, and no file edits, replies, or thread
+  resolutions occur in that turn.
 
 ## Pitfalls
 

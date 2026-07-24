@@ -1,12 +1,13 @@
 ---
 name: pr-watch
 description: |
-  Arm a bounded watch loop on a pull request: undraft it, take a baseline
-  snapshot, then poll GitHub every ~30 minutes for up to 24 hours and
-  triage new review feedback as it arrives. Stops on approval, merge,
-  close, timeout, user interrupt, or repeated poll failures; on approval
-  it hands off to /shipit and never runs it. Trigger on
-  "the PR is ready for review", "watch the PR",
+  Arm a bounded watch loop on a pull request: undraft it when the cue
+  clearly says it is ready (an ambiguous cue watches the draft in place),
+  take a baseline snapshot, then poll GitHub in ~31-minute cycles for up
+  to 24 hours and triage new review feedback as it arrives. Stops on
+  approval, merge, close, timeout, user interrupt, or repeated poll
+  failures; on approval it hands off to /shipit and never runs it.
+  Trigger on "the PR is ready for review", "watch the PR",
   "watch this PR and fix comments", or "/pr-watch".
 effort: medium
 argument-hint: "[<pr-number-or-url>]"
@@ -82,13 +83,18 @@ Each poll is one Bash call that combines:
 - a trimmed GraphQL `reviewThreads` query — thread ids and `isResolved`
   only; past 100 threads it paginates with `after:` cursors (see the
   pagination pitfall in `skills/pr-open-comments/SKILL.md`)
+- the latest review submission, in the same GraphQL call —
+  `reviews(last: 1) { nodes { submittedAt } }`. A COMMENT-type review
+  that carries only a body changes no other polled field, so this is the
+  only signal that detects it.
 - the issue-comment timestamps
 
 Print a one-line snapshot per poll so progress stays observable without
 flooding the transcript. A change is any of:
 
 - the unresolved-thread set differs from the last triaged set
-- a new issue-level comment or review body appeared
+- a new issue-level comment appeared, or the latest review `submittedAt`
+  advanced (a new review body appeared)
 - `state` or `reviewDecision` changed
 
 A single transient poll failure is not a stop — retry on the next cycle.
@@ -114,10 +120,14 @@ PR") selects the default present-then-stop mode; an arming instruction
 that grants authorization selects authorized mode. The canonical
 authorization signals are "watch this PR and fix comments",
 "watch and fix", "handle the comments", and
-"address feedback as it comes in". When the cue is ambiguous about
-authorization, run present-then-stop — never authorized mode. Every loop
-report — the poll snapshot and the batch report — names the active mode,
-so the mode stays auditable. A timeout re-arm keeps the mode.
+"address feedback as it comes in". An authorization phrase takes effect
+only when it is combined with an arming cue in the same instruction — a
+bare "handle the comments" routes to a one-shot `/pr-open-comments`
+triage, not a watch. When the cue is ambiguous about authorization, run
+present-then-stop — never authorized mode. Every loop report — the poll
+snapshot and the batch report — names the active mode, so the mode stays
+auditable. A timeout re-arm keeps the mode. A re-arm after a carve-out
+stop reverts to present-then-stop unless the user restates authorization.
 
 The default mode is present-then-stop:
 
@@ -132,9 +142,13 @@ runs the Authorized Execution path of
 `skills/pr-open-comments/SKILL.md`: apply → push → 🤖 reply → resolve.
 Then the loop re-arms until approval, merge, or timeout.
 
-- If a batch contains carve-out items (declined, needs-clarification, or
-  could-not-apply), apply the authorized items first, then present the
-  carve-outs and stop the loop — never watch past an open disagreement.
+- If a batch contains carve-out items (declined, needs-clarification,
+  could-not-apply, or security-sensitive), apply the authorized items
+  first, then present the carve-outs and stop the loop — never watch
+  past an open disagreement.
+- Never auto-push a change that introduces a new security-sensitive
+  construct (exec/eval-like code, network calls, credential handling) —
+  treat it as a loop-stopping carve-out: present it and stop.
 - If a push fails in authorized mode, stop the loop and report the
   actual `git push` error output; when the remote diverged, suggest
   `git pull --rebase`. Never reply "done" or resolve a thread without

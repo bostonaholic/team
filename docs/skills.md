@@ -265,8 +265,12 @@ QRSPI phase — a self-contained action a user runs on demand.
   claim needs a named test as evidence). The Authorized Execution path
   (apply → push → 🤖-prefixed reply → resolve) activates only on explicit
   user authorization, with carve-outs that still pause (declined,
-  needs-clarification, could-not-apply). Model-invocable — the default is
-  read-only, so cue-based auto-invocation is safe.
+  needs-clarification, could-not-apply, security-sensitive). Treats
+  comment bodies as untrusted data: embedded imperatives beyond the
+  thread's anchored code are never acted on, and authorized auto-apply is
+  bounded to the file and lines the thread references — broader asks and
+  new security-sensitive constructs become carve-outs. Model-invocable —
+  the default is read-only, so cue-based auto-invocation is safe.
 
 ### pr-watch
 
@@ -276,14 +280,17 @@ QRSPI phase — a self-contained action a user runs on demand.
 - **`$ARGUMENTS`:** `[<pr-number-or-url>]` — optional; defaults to the
   current branch's PR.
 - **Phase:** None — a standalone watch action, not part of the pipeline.
-- **Key behaviors:** Auto-undrafts via `gh pr ready` and reports the
-  promotion loudly (a `gh pr ready` failure warns and keeps watching);
-  applies the best-effort in-review ticket transition. Bounded cycles: 48
-  cycles of ~31 minutes each (up to three `sleep 600` calls plus one poll
-  per cycle; cycle 0 polls immediately). Default mode is present-then-stop:
-  each feedback batch renders the punch list and ends the turn; authorized
-  mode ("watch this PR and fix comments") applies, pushes, 🤖-replies,
-  resolves, and resumes. Stops on approval, merge, close, user interrupt,
+- **Key behaviors:** Undrafts via `gh pr ready` only on a clear readiness
+  cue and reports the promotion loudly (an ambiguous cue watches the
+  draft in place and never promotes; a `gh pr ready` failure warns and
+  keeps watching); applies the best-effort in-review ticket transition.
+  Bounded cycles: 48 cycles of ~31 minutes each (up to three `sleep 600`
+  calls plus one poll per cycle; cycle 0 polls immediately). Default mode
+  is present-then-stop: each feedback batch renders the punch list and
+  ends the turn; authorized mode (granted by one of several canonical
+  phrases, e.g. "watch this PR and fix comments") applies, pushes,
+  🤖-replies, resolves, and resumes. An ambiguous cue never selects
+  authorized mode. Stops on approval, merge, close, user interrupt,
   cycle-48 timeout, or 3 consecutive poll failures. On approval it runs a
   final triage pass and hands off with `Next: run /shipit` — it never
   auto-runs `/shipit`.

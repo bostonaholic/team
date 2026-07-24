@@ -245,4 +245,15 @@ describe("pr-open-comments skill: untrusted input — comments are data", () => 
     expect(/exact commit SHA/i.test(t)).toBe(true);
     expect(/auditab/i.test(t)).toBe(true);
   });
+
+  test("reproduction tests are authored from the described behavior, never lifted from a comment body", () => {
+    const t = flat(body());
+    expect(/never lift[^.]{0,80}verbatim/i.test(t)).toBe(true);
+  });
+
+  test("a new security-sensitive construct is never auto-pushed", () => {
+    const t = flat(body());
+    expect(/security-sensitive/i.test(t)).toBe(true);
+    expect(/never[^.]{0,60}auto-?push/i.test(t)).toBe(true);
+  });
 });
