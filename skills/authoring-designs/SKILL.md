@@ -9,6 +9,10 @@ user-invocable: false
 The design-author's procedure: confirm repo scope, present open questions
 to the user before drafting, and write `design.md` from the template below.
 
+Write the prose in `design.md` in ASD-STE100 Simplified Technical
+English — short sentences, common words, one instruction per sentence,
+one meaning per word. Full methodology: `skills/writing-prose/SKILL.md`.
+
 If `task.md` references a `prd.md`, read it first and treat its scope
 boundaries and acceptance criteria per the "Consuming a PRD downstream"
 section of `skills/product-requirements-doc/SKILL.md`.

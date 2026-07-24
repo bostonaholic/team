@@ -10,9 +10,10 @@ Architecture Decision Records (ADRs) capture significant technical decisions
 with their context, rationale, and consequences. They are the institutional
 memory that explains WHY the codebase looks the way it does.
 
-Write the prose this skill governs at a seventh-grade reading
-level — short sentences, common words, no unexplained jargon. Full
-methodology: `skills/writing-prose/SKILL.md`.
+Write the prose this skill governs at a seventh-grade reading level
+and in ASD-STE100 Simplified Technical English — short sentences,
+common words, one instruction per sentence, no unexplained jargon.
+Full methodology: `skills/writing-prose/SKILL.md`.
 
 ## ADR Format
 

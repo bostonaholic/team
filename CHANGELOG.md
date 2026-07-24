@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Documentation-authoring skills now require ASD-STE100 Simplified Technical English.** [`skills/writing-prose/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/writing-prose/SKILL.md) gains a distilled STE rule set sourced from the Issue 9 specification, with a before/after example for each rule: sentence-length limits (20 words procedural, 25 descriptive), one instruction per sentence, imperative instructions, condition before command, simple tenses only, one meaning per word, three-word noun clusters, no omitted words or semicolons, and warnings before the step they protect. It also gains a word-substitution table tuned for software documentation (utilize→use, ensure/verify→make sure, perform/implement→do, however→but, should→must) and the restricted-meaning traps writers commonly hit (*check*, *follow*, *select* vs *set*, *since*, *or*, *monitor*). The doc-authoring skills — [`technical-design-doc`](https://github.com/bostonaholic/team/blob/main/skills/technical-design-doc/SKILL.md), [`documenting-decisions`](https://github.com/bostonaholic/team/blob/main/skills/documenting-decisions/SKILL.md), [`product-requirements-doc`](https://github.com/bostonaholic/team/blob/main/skills/product-requirements-doc/SKILL.md), and [`authoring-designs`](https://github.com/bostonaholic/team/blob/main/skills/authoring-designs/SKILL.md) — require STE in their prose pointers, and the documentation-quality rubric now gates on STE conformance.
+
 ## [0.20.0] - 2026-07-23
 
 ### Changed
