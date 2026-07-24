@@ -193,8 +193,12 @@ argument shape.
 - **Phase:** PR (the pipeline's final phase).
 - **Key behaviors:** Loads `git-commit` for commit discipline and
   `changelog` for the changelog update; adds a PR body from its template.
-  Leaves the worktree in place after opening the PR so you can iterate;
-  teardown waits until the PR merges or you ask.
+  Renders a conditional `## Screenshots` section from ux-reviewer's capture
+  manifest (`docs/plans/<id>/screenshots/manifest.md`) and uploads the PNGs
+  through GitHub's user-attachments pipeline so they render inline; any
+  capture or upload failure degrades to a visible note with local paths —
+  the PR always opens. Leaves the worktree in place after opening the PR so
+  you can iterate; teardown waits until the PR merges or you ask.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
   the missing upstream artifacts inline rather than hard-erroring.
 

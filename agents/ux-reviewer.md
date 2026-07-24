@@ -32,9 +32,11 @@ Use the Working/Broken/Could Improve report format defined below — not
 Conventional Comments, which does not fit live verification output.
 
 Your verification procedure — project-type detection (UI, API-only, or
-library), the UI and API verification steps, and the cleanup rules (always
-stop the server, never modify code, time-bound the run) — lives in
-`skills/verifying-ux/SKILL.md` (preloaded).
+library), the UI and API verification steps, screenshot capture for
+UI-impacting changes (one PNG per affected page/state plus a manifest under
+`docs/plans/<id>/screenshots/`, consumed by team-pr), and the cleanup rules
+(always stop the server, never modify code, never commit screenshots,
+time-bound the run) — lives in `skills/verifying-ux/SKILL.md` (preloaded).
 
 ## Report Format
 

@@ -94,27 +94,35 @@ done
 3. **Resume path** — `$ARGUMENTS/task.md` exists: read `ticketId` from
    its frontmatter. Read `$ARGUMENTS/design.md` for the "why" behind the
    changes.
-4. **Standalone path** — no matching artifact directory:
+4. **Read the screenshot manifest** (resume mode only). Check for
+   `$ARGUMENTS/screenshots/manifest.md`, written by ux-reviewer during
+   Implement. If the manifest is absent, the PR body carries no
+   Screenshots section — non-UI changes are never forced to include one.
+   If present, parse its frontmatter and `## Captured` / `## Skipped`
+   body for the Screenshots section (see PR Body Template below).
+5. **Standalone path** — no matching artifact directory:
    - Verify the branch has commits ahead of the base, or uncommitted
      changes worth shipping. If neither, report "Nothing to ship." and
      stop. (Standalone mode is single-repo only.)
    - Skip aggregate-gate enforcement. Warn the user once that they are
      taking responsibility for correctness.
-5. **Update CHANGELOG.md** before committing (see Changelog Update below).
+6. **Update CHANGELOG.md** before committing (see Changelog Update below).
    In multi-repo mode, update each repo's `CHANGELOG.md` with the
    entries belonging to that repo's commits.
-6. **Open a draft PR automatically — do not stop to ask.** The PR phase
+7. **Open a draft PR automatically — do not stop to ask.** The PR phase
    is not a human gate; opening the PR requires no approval. Push the
    branch and open the PR as a **draft** (`gh pr create --draft`). Pass
    the body to `gh pr create`/`gh pr edit` via `--body-file` or a quoted
    heredoc — never interpolated into a double-quoted shell argument. Any
    uncommitted final changes (typically `CHANGELOG.md`) land as a single
    trailing ship commit before the push. In multi-repo mode this opens
-   **one draft PR per repo with commits** and cross-links them.
-7. In multi-repo mode, push each repo's branch independently and open one
+   **one draft PR per repo with commits** and cross-links them. When a
+   capture manifest exists, the screenshot upload runs after the PR opens
+   (see Screenshot Upload below).
+8. In multi-repo mode, push each repo's branch independently and open one
    draft PR per repo. Cross-link the PRs in their bodies (see PR Body
    Template below).
-8. **Tracking ticket — link now, in-review when ready.** If `ticketId`
+9. **Tracking ticket — link now, in-review when ready.** If `ticketId`
    is non-null, apply the ticket-lifecycle rules in
    `skills/tracking-tickets/SKILL.md`: render the ticket link as the
    closing line the PR Body Template below ends with (that skill owns
@@ -124,12 +132,12 @@ done
    to in-review only once the PR is marked ready for review; the
    template owns where the footer goes). Best-effort; never block the
    pipeline. Surface the `ticketId` in the completion report.
-9. **Whenever you push to a PR, review and adjust its description.** Any
+10. **Whenever you push to a PR, review and adjust its description.** Any
    push that adds, removes, or changes commits on a PR's branch — the
    initial open *and* every follow-up push (review feedback, fixups,
    rebases) — must be followed by re-reading the current PR body against
    the now-pushed commits and updating it (`gh pr edit --body-file`, or
-   a quoted heredoc per step 6) so the Summary, Changes, and
+   a quoted heredoc per step 7) so the Summary, Changes, and
    How-to-Verify sections still match what the branch actually does.
    The footer survives every refresh too: when the
    body carries a closing line (the home repo's PR of a ticketed topic),
@@ -140,7 +148,7 @@ done
    likewise preserved on every refresh. Never leave a stale description
    after a push. In multi-repo mode, do this for each repo's PR whose
    branch you pushed.
-10. **Leave the worktree(s) in place.** Do not remove a worktree after
+11. **Leave the worktree(s) in place.** Do not remove a worktree after
    opening a PR — the user may need to iterate on the branch (push
    follow-up commits, address review feedback). Clean up only after the
    PR is merged or when the user explicitly asks, following the teardown
@@ -161,6 +169,10 @@ done
 
 ## Changes
 [Brief description, organized by component]
+
+## Screenshots
+[Conditional — rendered from the capture manifest per the rules below;
+omitted entirely when no manifest exists]
 
 ## How to Verify
 - [ ] [Automated verification command]
@@ -205,6 +217,92 @@ section *after* the closing line — "final line of the PR body" refers
 to creation-time authoring, so the appended `## Companion PRs` section
 following it is expected, not a violation.
 
+### Screenshots section rendering
+
+The `## Screenshots` section is built from `$ARGUMENTS/screenshots/manifest.md`
+(written by ux-reviewer during Implement):
+
+- **Manifest absent → omit the section entirely.** Non-UI changes are never
+  forced to include screenshots.
+- **Manifest `status` is any `skipped-*` value, or the manifest is malformed**
+  (unparseable frontmatter or body) → render a one-line capture-failure note
+  naming the reason, nothing more. Never block or delay the PR over
+  screenshots — the PR phase is not a human gate.
+- **Each `## Captured` entry whose PNG exists on disk** renders as
+  `**<caption>** (<state>)` followed by its local path. Entries whose PNG is
+  missing from disk are skipped and the discrepancy noted in the section.
+- **Manifest `status: partial`** → also append a one-line
+  "N states skipped — see manifest" note to the section.
+- **Before upload runs (or when it is unavailable or fails)**, the section
+  renders the degraded form: a "captured — not yet uploaded" note (reworded
+  to "captured — upload failed or unavailable" if the upload is attempted
+  and fails) plus the local file paths above. This degraded shape is the
+  contract every upload-failure branch falls back to.
+
+## Screenshot Upload
+
+Screenshots render inline for any reviewer (including private repos) via
+GitHub's user-attachments pipeline. Run this procedure only when the manifest
+carries `## Captured` entries whose PNGs exist on disk — in every other case
+the rendering rules above already produced the final section (absent, or
+note-only) and there is nothing to upload. Sequencing is PR-first — three
+explicit steps, mirroring the Companion-PRs open-then-edit shape:
+
+1. **The draft PR already exists** (opened in Execution step 7). Its initial
+   body carries whatever the rendering rules above produced — when this
+   procedure runs, that is the "not yet uploaded" local-path form of the
+   `## Screenshots` section.
+2. **Upload.** Session pre-check first — Chromium writes its cookie store
+   in either of two layouts, so tolerate both:
+   `P="${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile"; [ -f "$P/Default/Cookies" ] || [ -f "$P/Default/Network/Cookies" ]`.
+   If the check fails, no authenticated browser session exists → skip the
+   upload entirely, keep the degraded note, and append the one-time sign-in
+   instruction to the **operator-facing completion report** — never to the PR
+   body, which keeps only the degraded note and local paths. The instruction
+   (keep it in sync with the README's "Screenshots in PRs" section):
+
+   ```sh
+   mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile"
+   chmod 700 "${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile"
+   npx playwright codegen \
+     --user-data-dir="${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile" \
+     https://github.com
+   ```
+
+   Sign in to github.com once in that headed window, then close it — the
+   sign-in itself stays manual. That profile holds a full **unencrypted**
+   github.com web session; to revoke it, sign out of github.com inside that
+   profile or delete the directory. If the pre-check passes, `chmod 700` the
+   profile directory before use (idempotent — never rely on documentation
+   alone), then run a short Node script through Bash:
+   `chromium.launchPersistentContext` on the profile
+   directory, headless; open the PR page; confirm the signed-in marker (the
+   `user-login` meta tag is present, no redirect to `/login`) — logged out
+   despite the cookie file means an expired session → the same degraded path.
+   For each manifest entry with an existing PNG under 10MB, set the file on
+   the markdown textarea's file input, wait for GitHub's user-attachments
+   pipeline to insert the
+   `https://github.com/user-attachments/assets/<uuid>` URL into the textarea,
+   record it, then clear the textarea before the next image so each URL is
+   unambiguously attributed to its manifest entry; 60s bound per image
+   (timeout → that image is a failure). Oversize files (>10MB) are skipped at
+   upload and noted. Pass file paths and captions to the script as argv (or
+   environment variables), never interpolated into a command string. Do not
+   submit any comment — the textarea is only the upload vehicle.
+3. **Body edit.** `gh pr edit --body` replaces the `## Screenshots` section
+   wholesale — succeeded images render as `**<caption>** (<state>)` +
+   `![<caption>](<url>)`; failures are listed by caption + local path in the
+   same section (partial success → embed the succeeded URLs, list the rest as
+   failures). Re-running team-pr for the same id replaces the section
+   wholesale again; previously uploaded URLs remain valid.
+
+**Multi-repo:** upload once, on the home-repo PR; companion-PR bodies embed
+the same URLs — never re-upload per repo.
+
+**Failure posture:** every branch ends with an open PR and a visible note
+plus local paths — upload problems never block the PR, retry-loop, or prompt
+the user.
+
 ## Changelog Update
 
 Before creating the ship commit, update `CHANGELOG.md` per
@@ -238,4 +336,6 @@ only used if there are uncommitted final changes (e.g., changelog).
 
 ## Completion
 
-Report the outcome (draft PR URL and commit hash).
+Report the outcome (draft PR URL and commit hash). When the screenshot
+upload was skipped for lack of an authenticated session, the report also
+carries the one-time sign-in instruction (see Screenshot Upload step 2).
