@@ -4,7 +4,7 @@ agent: team-plan
 
 # team-plan rubric
 
-The PLAN phase expands an approved `structure.md` into a tactical plan. The
+The PLAN phase expands a `structure.md` into a tactical plan. The
 seeded structure is written into the eval's working dir before the model spawns
 (seeding mechanism in `tests/team-plan.evals.ts`). The deterministic axis
 confirms topic reuse and acceptance-test-mapping language; plan quality is the

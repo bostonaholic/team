@@ -1,13 +1,14 @@
 ---
 name: authoring-designs
-description: Design-document authoring procedure for the design-author agent — the repo-scope confirmation flow, the mandatory interactive open-questions step, and the design.md document template. Loaded when a design document is drafted or revised for the human gate.
+description: Design-document authoring procedure for the design-author agent — the repo-scope confirmation flow, the autonomous open-questions resolution rule, and the design.md document template. Loaded when a design document is drafted or revised for the adversarial design review.
 user-invocable: false
 ---
 
 # Authoring Designs
 
-The design-author's procedure: confirm repo scope, present open questions
-to the user before drafting, and write `design.md` from the template below.
+The design-author's procedure: confirm repo scope, resolve open questions
+autonomously as recorded assumptions, and write `design.md` from the
+template below.
 
 Write the prose in `design.md` in ASD-STE100 Simplified Technical
 English — short sentences, common words, one instruction per sentence,
@@ -27,54 +28,45 @@ and why.
 If `repos.md` is **absent**, scan `research.md` for signals that the
 work plausibly spans more than one repo (cross-service contracts,
 shared schemas, references to "the other repo"). When you see such
-signals, raise the question via the open-questions envelope in your
-interactive step (see below) — header `Repos`, options:
+signals, resolve each candidate repo autonomously via the sibling
+directories of the home repo root. First **validate every candidate
+`<name>` against a strict allowlist**: the name must match
+`^[A-Za-z0-9._-]+$` and must not be exactly `.` or `..`. Anything
+else — path separators, absolute paths, traversal sequences, shell
+metacharacters — fails the allowlist and is unresolvable. A surviving
+repo named `<name>` is expected at `<root>/../<name>`. Confirm the
+sibling path exists and is a git working tree (check for its `.git`
+entry — you have no Bash tool, so use Glob/Read; the questioner's check
+is `git -C <path> rev-parse --git-dir`). Never record a `repos.md` path
+outside the home repo's parent directory; if you cannot verify the
+resolved path is a direct child of that directory, treat the candidate
+as unresolvable.
 
-- **Single repo (Recommended unless clearly multi-repo)** — keep all
-  work in the current repo.
-- **Multi-repo** — list the additional repos; the user provides paths.
-
-If the user picks **Multi-repo**, write `docs/plans/<id>/repos.md`
-yourself (schema in `skills/qrspi-workflow/SKILL.md`) before continuing
-the design. If they pick **Single repo**, do not write `repos.md`.
+- **All candidates resolve** → write `docs/plans/<id>/repos.md`
+  yourself (schema in `skills/artifact-frontmatter/SKILL.md`) before
+  continuing the design.
+- **Any candidate is unresolvable** → proceed in single-repo mode and
+  record the omission **loudly** in `## Risks`: name the unresolvable
+  repo and the work that is therefore excluded from scope.
 
 Never silently expand scope across repos. The design either ships
-single-repo or it asks first.
+single-repo with the omission recorded, or lists only repos it actually
+resolved.
 
-## MANDATORY interactive step
+## Resolve open questions autonomously
 
-Before writing the design document, you MUST present open questions to the
-user and wait for answers. Do not draft the design first and then ask.
-Surface the questions via the envelope protocol in
-`skills/agent-open-questions/SKILL.md` — emit the `openQuestions` envelope,
-STOP, and wait for the orchestrator to resume you with the user's
-selections. **Do not write `design.md` on the envelope turn** — the
-artifact is written only on the post-resume turn, after the orchestrator
-has supplied the user's answers.
+You never pause for user input. When the task and research artifacts
+leave a genuine design choice open, resolve it yourself: pick the
+option you would have recommended, and record it in `## Decisions made`
+marked "Assumption — chosen without user review", naming the rejected
+alternative and the trade-off accepted. The human audits these
+assumptions at PR review — an unmarked guess is a defect.
 
-Present at most 4 sharp questions in a single envelope (the orchestrator's
-multi-choice prompt accepts 1–4 questions per call). If you have more
-than 4 open questions, either resolve some autonomously by reading more
-code, or batch the lowest-priority ones into a "deferred" list in the
-design.
+Park low-stakes items in `## Open questions (deferred)` rather than
+inflating the decision list; deferral is itself a recorded choice.
 
-Each question must be:
-
-- A complete sentence ending in a question mark.
-- Paired with a short `header` chip (≤ 12 chars) and 2–4 mutually
-  exclusive `options`. Each option carries a 1–5 word `label` and a
-  `description` that names the approach AND its trade-off.
-- If you have a recommended option, list it first and append
-  "(Recommended)" to its label per the tool's convention.
-
-After the orchestrator resumes you with the user's selections (a new user
-turn carrying the chosen labels verbatim), incorporate the answers into
-`## Decisions made` in the design. Reference each chosen option by its
-label so the trade-off the user accepted is auditable.
-
-On a revision dispatch, skip the envelope unless the user's feedback
-raises new ambiguities — in that case, emit a fresh envelope per the same
-protocol before re-drafting.
+On a revision dispatch, address the reviewer's findings verbatim in the
+re-draft, recording any newly resolved choice the same way.
 
 ## Design document structure
 
@@ -96,8 +88,8 @@ in the codebase so the implementer does not pick the wrong precedent.>
 
 ## Decisions made
 <numbered list of design decisions, each with: the decision, the alternative
-considered, why this was chosen. Reference user answers from the open-
-questions phase here.>
+considered, why this was chosen. Mark every self-resolved choice
+"Assumption — chosen without user review" here.>
 
 ## Out of scope
 <bulleted list of things this design explicitly does NOT do. Be specific —

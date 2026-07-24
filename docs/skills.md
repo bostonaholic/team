@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 47 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 46 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 34 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -38,7 +38,7 @@ catalog into two flavors:
 - **Methodology skills omit `argument-hint`.** They are never invoked
   directly. Agents load them through one of two mechanisms: a `skills:`
   YAML list in the agent's frontmatter (e.g., `agents/design-author.md`
-  declares `skills: [product-thinking, agent-open-questions,
+  declares `skills: [product-thinking,
   progress-tracking, authoring-designs]`), or an inline prose load
   instruction in the agent body (e.g., `Load skills/<name>/SKILL.md for
   …`).
@@ -46,8 +46,8 @@ catalog into two flavors:
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
 standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 35 methodology =
-47**.
+split is **11 pipeline entry-point + 1 standalone utility + 34 methodology =
+46**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -98,12 +98,14 @@ argument shape.
   Structure → Plan → Implement → PR).
 - **Key behaviors:** Walks a linear Phase Loop, dispatching the specialist
   agent(s) for each phase per its phase table, then running that phase's
-  gate before advancing. Enforces the single human gate (Design)
+  gate before advancing. Enforces the adversarial design-review gate
+  (Design)
   and the aggregate five-reviewer review gate during Implement — that
   aggregate gate sorts every finding into Blocking / Major / Minor-and-below
-  tiers and auto-loops on any Blocking or Major (the consult guard: the
-  user is never asked about a Blocking or Major finding), surfacing only
-  the remaining Minor-and-below findings. Its body is organized as `## Input`,
+  tiers and auto-loops on any Blocking or Major (the no-consult rule: the
+  user is never asked about any finding mid-run), recording the remaining
+  Minor-and-below findings in the PR body's `## Review notes`. Its body is
+  organized as `## Input`,
   `## Setup`, `## The Phase Loop`, `## Gate Handling`, and `## Rules` —
   not the downstream Input / Execution / Completion template.
 
@@ -128,22 +130,25 @@ argument shape.
 
 ### team-design
 
-- **Purpose:** Align with you on the approach and draft the alignment doc.
+- **Purpose:** Draft the alignment doc and run the adversarial design
+  review that gates advancement.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` — optional; resolves via the
   shared three-tier chain above.
-- **Phase:** Design (human gate).
-- **Key behaviors:** Runs an interactive interview, then writes a ~200-line
-  `design.md`. This is the pipeline's only human approval gate.
+- **Phase:** Design (design review).
+- **Key behaviors:** Dispatches the design-author (which resolves its own
+  open questions as recorded assumptions) to write a ~200-line
+  `design.md`, then runs the adversarial design-review loop
+  (`design-review-<n>.md`, APPROVE/COMMENT advance, cap 5).
 
 ### team-structure
 
-- **Purpose:** Break the approved design into vertical slices with
+- **Purpose:** Break the reviewed design into vertical slices with
   per-slice verification checkpoints.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` — optional; resolves via the
   shared three-tier chain above.
-- **Phase:** Structure (autonomous — no human gate).
+- **Phase:** Structure (autonomous — no gate).
 - **Key behaviors:** Produces the ~2-page `structure.md`, then advances
-  to PLAN automatically. Design is the pipeline's only human gate.
+  to PLAN automatically.
 
 ### team-plan
 
@@ -167,7 +172,10 @@ argument shape.
 - **Key behaviors:** Creates the branch and home worktree first, then
   authors `docs/plans/<id>/` inside it so implementation — and every prior
   phase's artifacts — never touch the main checkout. Loads
-  `worktree-isolation` for the single- and multi-repo topology.
+  `worktree-isolation` for the single- and multi-repo topology. The
+  confirm dialog fires only on standalone invocation — a full `/team` run
+  creates worktrees without pausing — and multi-repo creation refuses any
+  repo path outside the home repo's sibling set (realpath containment).
 
 ### team-implement
 
@@ -180,8 +188,9 @@ argument shape.
   verify sub-pipeline. The verify loop sorts findings into Blocking / Major
   / Minor-and-below tiers; while any Blocking or Major remains it
   re-dispatches the implementer automatically without consulting the user
-  (the consult guard), capped at 5 rounds. Only the Minor-and-below
-  findings are surfaced once Blocking and Major are clean.
+  (the no-consult rule), capped at 5 rounds — at the cap, terminal halt.
+  Minor-and-below findings are recorded in the PR body's `## Review notes`
+  once Blocking and Major are clean — never surfaced mid-run.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
   the missing upstream artifacts inline rather than hard-erroring.
 
@@ -211,12 +220,14 @@ argument shape.
 
 ### eng-design-doc-review
 
-- **Purpose:** Run an optional adversarial, fresh-context audit of
-  `design.md` before the human design gate.
+- **Purpose:** Adversarially audit `design.md` with fresh context. Its
+  `## Review brief` doubles as the pipeline's DESIGN review gate;
+  standalone invocation remains available.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` — optional; resolves via the
   shared three-tier chain above.
-- **Phase:** Optional pre-gate audit (sits before the Design gate).
-- **Key behaviors:** Dispatches a `general-purpose` subagent (not the
+- **Phase:** Design (review-gate brief) + standalone audit.
+- **Key behaviors:** Dispatches the built-in read-only `Explore` subagent
+  (not the
   `design-author` agent) so the audit reads the design with fresh eyes.
   That subagent loads four methodology skills as its review criteria —
   `technical-design-doc`, `code-review`, `engineering-standards`, and
@@ -251,7 +262,7 @@ phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 35 methodology skills carry no `argument-hint` and are never invoked
+The 34 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -267,8 +278,8 @@ replaces former inline body content 1:1, so it adds no net context (see
   anti-patterns every phase follows.
 - **Loaded by:** orchestrator skills.
 - **Key behaviors:** The structural backbone of the pipeline: defines the
-  phase sequence, the gate mechanics (severity tiers and the consult
-  guard for the aggregate review gate), the phase-inference table, and an
+  phase sequence, the gate mechanics (severity tiers and the no-consult
+  rule for the aggregate review gate), the phase-inference table, and an
   anti-patterns catalog. The artifact/frontmatter schema it once carried
   is canonical in `artifact-frontmatter`; this skill keeps pointers.
 
@@ -281,23 +292,10 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Key behaviors:** Carries the artifact inventory and `<id>` forms, the
   YAML frontmatter schema and phase enum, the `repos.md` and `prd.md`
   schemas, the topic-consistency invariant, the `ticketId` scope rule,
-  and the approval check/flip/rejection mechanics. Defers to
+  and the design-review record mechanics (`design-review-<n>.md`
+  verdicts). Defers to
   `hooks/session-start-recover.mjs` as the executable canon for
   `ID_RE`/`PHASE_FILES` rather than forking them.
-
-### agent-open-questions
-
-- **Purpose:** Protocol a subagent uses to surface multi-choice open
-  questions to the user without calling `AskUserQuestion` itself.
-- **Loaded by:** questioner, design-author (2).
-- **Key behaviors:** The subagent emits a fenced `openQuestions` JSON
-  envelope as its final assistant message and STOPs; the orchestrator
-  parses it (Decision 5 first-block-wins), renders the prompt via
-  `AskUserQuestion`, and resumes the subagent via `SendMessage` with
-  the user's selections. Caps envelopes at 4 questions per call,
-  documents the free-text escape hatch for collecting additional
-  plain-text input, and defines the two-attempt malformed-envelope
-  fallback.
 
 ### researching-codebases
 
@@ -326,8 +324,9 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Loaded by:** questioner.
 - **Key behaviors:** Carries the `task.md` and `questions.md` body
   templates, the topic-slug rules, the process steps, and the multi-repo
-  detection flow (including the canonical `Repos` envelope worked example
-  and the `repos.md` schema pointer). Conditionally loads
+  detection flow (autonomous allowlist + sibling-directory resolution
+  with realpath containment and the loud single-repo fallback, plus the
+  `repos.md` schema pointer). Conditionally loads
   `product-requirements-doc` for vague, multi-story, cross-cutting, or
   behavior-replacing requests, producing `prd.md` alongside `task.md`.
 
@@ -336,8 +335,9 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Purpose:** Design-document authoring procedure for the Design phase.
 - **Loaded by:** design-author.
 - **Key behaviors:** Carries the repo-scope confirmation flow, the
-  mandatory interactive open-questions step (at most 4 sharp questions,
-  answers land in `## Decisions made`), and the `design.md` document
+  autonomous open-questions resolution rule (self-resolved choices land
+  in `## Decisions made` marked "Assumption — chosen without user
+  review"), and the `design.md` document
   template with its six-category edge-case walk. When `task.md`
   references a `prd.md`, reads it first and honors its scope boundaries
   and acceptance criteria per `product-requirements-doc`'s "Consuming a
@@ -419,11 +419,12 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Key behaviors:** Carries the gate-type table (HARD / AUTO-FIX /
   ADVISORY per reviewer) and the authoritative severity-tier table
   (Blocking / Major / Minor-and-below) that maps every reviewer
-  vocabulary onto one scale, plus the consult guard — the rule that the
-  orchestrator never surfaces a Blocking or Major finding to the user and
-  loops the implementer automatically until only Minor-and-below remains,
-  capped at 5 rounds. Classifies `ux-reviewer` REQUEST CHANGES as an
-  auto-fixed Major.
+  vocabulary onto one scale, plus the no-consult rule — findings are
+  never presented mid-run: the orchestrator loops the implementer
+  automatically on Blocking/Major and defers Minor-and-below to the PR
+  body's `## Review notes`, capped at 5 rounds (at the cap, terminal
+  halt). Classifies `ux-reviewer` REQUEST CHANGES as an auto-fixed
+  Major.
 
 ### engineering-standards
 
@@ -684,18 +685,17 @@ entry-point section above rather than repeating them here.
 | `team` | orchestrator (runs the pipeline) | All phases |
 | `team-question` | orchestrator | Question |
 | `team-research` | orchestrator → researcher, file-finder | Research |
-| `team-design` | orchestrator → design-author | Design (human gate) |
+| `team-design` | orchestrator → design-author | Design (design review) |
 | `team-structure` | orchestrator → structure-planner | Structure (autonomous) |
 | `team-plan` | orchestrator → planner | Plan |
 | `team-worktree` | orchestrator | Worktree |
 | `team-implement` | orchestrator → implementer + reviewers | Implement |
 | `team-pr` | orchestrator | PR |
 | `team-fix` | user (direct invocation) | Compressed bug-fix flow (outside QRSPI) |
-| `eng-design-doc-review` | user (direct invocation) | Optional pre-Design audit; dispatches a general-purpose subagent |
+| `eng-design-doc-review` | user (direct invocation); pipeline DESIGN review gate (brief by reference) | Design review-gate brief + standalone audit; dispatches a read-only Explore subagent |
 | `shipit` | user (direct invocation) | Standalone — land a reviewed PR (not a QRSPI phase) |
 | `qrspi-workflow` | orchestrator skills | All phases |
 | `artifact-frontmatter` | orchestrator skills; artifact authors (just-in-time via pointers) | All phases — artifact schema |
-| `agent-open-questions` | questioner, design-author | Question, Design (subagent → user via orchestrator) |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
 | `conventional-comments` | code-reviewer, security-reviewer, technical-writer | Implement (verify) — finding format |
 | `review-severity-tiers` | orchestrator (team, team-implement, qrspi-workflow) | Implement (aggregate review gate) |
@@ -729,10 +729,10 @@ entry-point section above rather than repeating them here.
 | `tracking-tickets` | orchestrator (team, team-pr, team-fix — just-in-time via pointers) | Setup (ticket pickup); PR (ticket link + state) |
 | `worktree-isolation` | orchestrator (team, team-worktree) | Worktree |
 
-The `general-purpose` subagent dispatched by `eng-design-doc-review` is an
+The read-only `Explore` subagent dispatched by `eng-design-doc-review` is an
 additional consumer of `technical-design-doc`, `code-review`,
 `engineering-standards`, and `documenting-decisions` — it loads all four as
-the criteria for the optional pre-Design audit.
+the criteria for the design review.
 
 ## Name-collision pairs
 
@@ -754,7 +754,7 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 | `planning-implementation` | `planner` | Skill is the plan template and tactical rules; the agent is the engineer that writes the plan. |
 | `team-design` | `design-author` | Skill drives the Design phase; the agent drafts the alignment doc. |
 | `technical-design-doc` | `technical-writer` | Both contain "technical" but differ: the skill is design-doc methodology; the agent writes documentation during verify. |
-| `eng-design-doc-review` | `design-author` | The review skill dispatches a `general-purpose` subagent, **not** the `design-author` agent — keeping the audit independent of the author. |
+| `eng-design-doc-review` | `design-author` | The review skill dispatches a read-only `Explore` subagent, **not** the `design-author` agent — keeping the audit independent of the author. |
 
 ## See also
 

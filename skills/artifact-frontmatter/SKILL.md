@@ -1,6 +1,6 @@
 ---
 name: artifact-frontmatter
-description: The artifact schema contract for docs/plans/<id>/ — the artifact inventory, the YAML frontmatter schema and phase enum, the repos.md and prd.md schemas, the topic-consistency invariant, ticketId scope, and the approval check/flip/rejection mechanics. Load when authoring or validating a pipeline artifact's frontmatter, checking approval state, or writing repos.md or prd.md.
+description: The artifact schema contract for docs/plans/<id>/ — the artifact inventory, the YAML frontmatter schema and phase enum, the repos.md and prd.md schemas, the topic-consistency invariant, ticketId scope, and the design-review record mechanics. Load when authoring or validating a pipeline artifact's frontmatter, checking the design-review verdict, or writing repos.md or prd.md.
 user-invocable: false
 ---
 
@@ -8,7 +8,7 @@ user-invocable: false
 
 The single schema contract for the pipeline's durable state: every
 artifact under `docs/plans/<id>/`, its YAML frontmatter, and the
-approval mechanics that gate phase transitions. Phase discipline — what
+design-review record mechanics that gate the DESIGN transition. Phase discipline — what
 each phase does and when it advances — lives in
 `skills/qrspi-workflow/SKILL.md`; this skill owns the schema.
 
@@ -57,25 +57,28 @@ Per-phase additions:
 |-----------|------------------------------------------------------------------------------------|
 | task      | `ticketId: <id>` (or `null`)                                                       |
 | questions | (none)                                                                             |
-| prd       | (none — not human-gated; written conditionally by the questioner)                  |
+| prd       | (none — not gated; written conditionally by the questioner)                        |
 | repos     | (none — written conditionally in multi-repo mode)                                  |
 | research  | (none)                                                                             |
-| design    | `approved: false`, `approved_at: null`, `revision: 0`                              |
-| structure | (none — not human-gated; advances to PLAN once it exists)                          |
+| design    | `revision: 0`                                                                      |
+| structure | (none — not gated; advances to PLAN once it exists)                                |
 | plan      | (none — derived mechanically from the structure)                                   |
 
-**Approval check** (used by downstream phase entry):
+**Design-review record** (`design-review-<n>.md`): each review round the
+orchestrator writes `docs/plans/<id>/design-review-<n>.md` (`<n>` = the
+highest existing `<n>` + 1, or 1 when none exists) with frontmatter
+`topic`, `date`, `phase: design-review`, and
+`verdict: <APPROVE|REQUEST CHANGES|COMMENT>`. The body carries the
+reviewer's findings and verdict verbatim. The `verdict` field is the
+deterministic read for hooks and resume detection (it replaces the
+retired `^approved:` frontmatter grep). A design has **passed review**
+when the highest-`<n>` file carries APPROVE or COMMENT.
 
-```sh
-grep -qE '^approved:[[:space:]]*true[[:space:]]*$' <artifact>
-```
-
-**Approval flip** (orchestrator at human gate): edit the file in place
-to set `approved: true` and stamp `approved_at: <ISO-8601>`.
-
-**Rejection**: the agent re-drafts the artifact. The orchestrator
-increments `revision: <n+1>` in the new draft's frontmatter. Cap at 5;
-beyond that, escalate to the user for direction.
+**Review loop**: on REQUEST CHANGES, the orchestrator re-dispatches
+`design-author` with the reviewer's findings verbatim; the new draft
+increments `revision: <n+1>` in its frontmatter and a fresh review round
+runs. Cap at 5 revisions; at cap, the run halts terminally and reports
+the unresolved findings — no consultation, no PR.
 
 ## Topic consistency invariant
 
@@ -109,7 +112,7 @@ design-author writes `docs/plans/<id>/repos.md` to enumerate the repos
 involved. The presence of this file switches the pipeline into multi-repo
 mode (one worktree per listed repo, see
 `skills/worktree-isolation/SKILL.md`); the home worktree is created at the
-leading WORKTREE phase and secondary worktrees after the design gate. Its
+leading WORKTREE phase and secondary worktrees after the design review. Its
 absence keeps the pipeline in single-repo mode — today's default.
 
 `repos.md` schema:
@@ -137,7 +140,7 @@ phase: repos
   **role:** ...
 
 ## Worktrees
-<written by the orchestrator after the design gate; back-records the home worktree path created at the leading WORKTREE phase plus each secondary path>
+<written by the orchestrator after the design review; back-records the home worktree path created at the leading WORKTREE phase plus each secondary path>
 - home: <home-worktree-path>
 - <repo-name>: <repo-path>/.claude/worktrees/<id>
 - ...
@@ -153,7 +156,7 @@ Rules:
   `docs/plans/<id>/` directory is the canonical artifact location;
   other repos' worktrees do not carry duplicate artifacts.
 - **The `## Worktrees` section is written by the orchestrator** after the
-  design gate (back-recording the home worktree created at the leading
+  design review (back-recording the home worktree created at the leading
   WORKTREE phase plus each secondary worktree), not by the questioner or
   design-author. Until then, `repos.md` lists only the repos to be involved.
 
@@ -162,7 +165,7 @@ Rules:
 Written conditionally by the questioner when the PRD criteria in
 `skills/product-requirements-doc/SKILL.md` apply (vague, multi-story,
 cross-cutting, or behavior-replacing requests), and referenced from
-`task.md`. It rides the autonomous Question phase — not human-gated, so
+`task.md`. It rides the autonomous Question phase — not gated, so
 no `approved`/`revision` fields.
 
 `prd.md` frontmatter:

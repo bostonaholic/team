@@ -182,7 +182,21 @@ async function readFrontmatter(path) {
   } catch { return {}; }
 }
 
-const isTrue = (v) => v === "true" || v === true;
+// True when the latest design-review-<n>.md in `dir` carries a passing
+// verdict (APPROVE or COMMENT). No review artifact, or any read error,
+// returns false — the design review fails closed to DESIGN.
+async function designReviewPassed(dir) {
+  let entries;
+  try { entries = await readdir(dir); } catch { return false; }
+  let best = -1;
+  for (const name of entries) {
+    const m = name.match(/^design-review-(\d+)\.md$/);
+    if (m && Number(m[1]) > best) best = Number(m[1]);
+  }
+  if (best < 0) return false;
+  const verdict = (await readFrontmatter(join(dir, `design-review-${best}.md`))).verdict;
+  return verdict === "APPROVE" || verdict === "COMMENT";
+}
 
 // Infer the current phase from artifact presence + git signals. `rootDir` is
 // the home repo root (for git queries); `id` is the active topic; `hasWorktree`
@@ -199,7 +213,8 @@ async function inferPhase(dir, rootDir, id, hasWorktree) {
   }
   if (await has(p("structure"))) return "PLAN";   // structure is not gated; advances to PLAN
   if (await has(p("design"))) {
-    return isTrue((await readFrontmatter(p("design"))).approved) ? "STRUCTURE" : "DESIGN";
+    // design gates on the review verdict; without a passing one, DESIGN
+    return (await designReviewPassed(dir)) ? "STRUCTURE" : "DESIGN";
   }
   if (await has(p("research"))) return "DESIGN";
   if (await has(p("questions")) || await has(p("task"))) return "RESEARCH";

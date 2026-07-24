@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
@@ -11,69 +11,17 @@ function flat(text: string): string {
   return text.replace(/\n/g, " ");
 }
 
-describe("agent-open-questions protocol", () => {
-  const AOQ_SKILL = join(REPO_ROOT, "skills", "agent-open-questions", "SKILL.md");
-  const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
-  const QRSPI_SKILL = join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md");
+describe("runtime skill inventory", () => {
   const CLAUDE_MD = join(REPO_ROOT, "CLAUDE.md");
 
-  test("skills/agent-open-questions/SKILL.md exists", () => {
-    expect(existsSync(AOQ_SKILL)).toBe(true);
+  test("skills/agent-open-questions/ is deleted (agents self-answer)", () => {
+    // The openQuestions envelope protocol is removed: subagents resolve
+    // their own open questions and record each as an auditable assumption.
+    expect(existsSync(join(REPO_ROOT, "skills", "agent-open-questions", "SKILL.md"))).toBe(false);
   });
 
-  test("agent-open-questions frontmatter declares name: agent-open-questions", () => {
-    const fm = frontmatter(read(AOQ_SKILL));
-    expect(/^name:\s*agent-open-questions\s*$/m.test(fm)).toBe(true);
-  });
-
-  test("agent-open-questions frontmatter has a non-empty description", () => {
-    const fm = frontmatter(read(AOQ_SKILL));
-    expect(/^description:\s*\S/m.test(fm)).toBe(true);
-  });
-
-  test("agent-open-questions body references openQuestions", () => {
-    expect(read(AOQ_SKILL)).toContain("openQuestions");
-  });
-
-  test("agent-open-questions body references SendMessage", () => {
-    expect(read(AOQ_SKILL)).toContain("SendMessage");
-  });
-
-  test("agent-open-questions states first-block-wins near openQuestions", () => {
-    // Any-occurrence ±5-line window: "first" appears in some openQuestions
-    // window AND "block" appears in some window — not necessarily the same
-    // window. Two independent passes.
-    const lines = read(AOQ_SKILL).split("\n");
-    const matchIndices: number[] = [];
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      if (line !== undefined && /openQuestions/.test(line)) matchIndices.push(i);
-    }
-    const capped = matchIndices.slice(0, 50);
-    let windows = "";
-    for (const i of capped) {
-      const start = Math.max(0, i - 5);
-      const end = i + 5;
-      windows += lines.slice(start, end + 1).join("\n") + "\n";
-    }
-    expect(/first/i.test(windows)).toBe(true);
-    expect(/block/i.test(windows)).toBe(true);
-  });
-
-  test("skills/team/SKILL.md cross-links agent-open-questions", () => {
-    expect(read(TEAM_SKILL)).toContain("agent-open-questions");
-  });
-
-  test("skills/team/SKILL.md scopes AskUserQuestion 'from the orchestrator'", () => {
-    expect(read(TEAM_SKILL)).toContain("from the orchestrator");
-  });
-
-  test("skills/qrspi-workflow/SKILL.md cross-links agent-open-questions", () => {
-    expect(read(QRSPI_SKILL)).toContain("agent-open-questions");
-  });
-
-  test("CLAUDE.md has '## Skills (47)' heading", () => {
-    expect(/^## Skills \(47\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md has '## Skills (46)' heading", () => {
+    expect(/^## Skills \(46\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 
   test("skills/shipit/SKILL.md exists as a runtime skill", () => {
@@ -97,10 +45,12 @@ describe("ask-user-question contract", () => {
     expect(/^tools:.*\bAskUserQuestion\b/m.test(fm)).toBe(false);
   });
 
-  test("design-author body references openQuestions + agent-open-questions", () => {
+  test("design-author body carries no envelope protocol references", () => {
+    // Inverse set: the design author resolves its own open
+    // questions — the envelope protocol must not reappear.
     const text = read(DESIGN_AUTHOR);
-    expect(text).toContain("openQuestions");
-    expect(text).toContain("agent-open-questions");
+    expect(text).not.toContain("openQuestions");
+    expect(text).not.toContain("agent-open-questions");
   });
 
   test("team-design SKILL references AskUserQuestion", () => {
@@ -130,8 +80,15 @@ describe("ask-user-question contract", () => {
     expect(text).not.toContain("Keep commits locally");
   });
 
-  test("team SKILL references AskUserQuestion at human gates", () => {
-    expect(read(TEAM_SKILL)).toContain("AskUserQuestion");
+  test("team SKILL never prompts mid-run — no envelope or prompt-tool references", () => {
+    // Inverse set: the phase loop has no mid-run pause of any kind,
+    // so the orchestrator skill must reference neither the prompt tool nor
+    // the retired envelope protocol.
+    const text = read(TEAM_SKILL);
+    expect(text).not.toContain("AskUserQuestion");
+    expect(text).not.toContain("openQuestions");
+    expect(text).not.toContain("agent-open-questions");
+    expect(text).not.toContain("SendMessage");
   });
 
   test("questioner tools frontmatter excludes AskUserQuestion", () => {
@@ -139,10 +96,12 @@ describe("ask-user-question contract", () => {
     expect(/^tools:.*\bAskUserQuestion\b/m.test(fm)).toBe(false);
   });
 
-  test("questioner body references openQuestions + agent-open-questions", () => {
+  test("questioner body carries no envelope protocol references", () => {
+    // Inverse set: multi-repo detection resolves autonomously —
+    // the envelope protocol must not reappear.
     const text = read(QUESTIONER);
-    expect(text).toContain("openQuestions");
-    expect(text).toContain("agent-open-questions");
+    expect(text).not.toContain("openQuestions");
+    expect(text).not.toContain("agent-open-questions");
   });
 });
 
@@ -203,18 +162,31 @@ describe("multi-repo support", () => {
     expect(text).toContain("non-default branch");
   });
 
-  test("questioner excludes AskUserQuestion + multi-repo detection uses openQuestions envelope", () => {
+  test("questioner excludes AskUserQuestion + detects multi-repo scope autonomously", () => {
     const text = read(QUESTIONER);
     const fm = frontmatter(text);
     expect(/^tools:.*\bAskUserQuestion\b/m.test(fm)).toBe(false);
     expect(text).toContain("Multi-repo detection");
-    expect(text).toContain("openQuestions");
-    expect(text).toContain("agent-open-questions");
-    expect(text).toContain("Repos");
+    // Candidate repos resolve via sibling directories of the home repo
+    // root; when in doubt the questioner stays single-repo and records the
+    // assumption — it never pauses to ask.
+    expect(/sibling/i.test(text)).toBe(true);
+    expect(text).toContain("single-repo");
   });
 
   test("design-author confirms repo scope before drafting", () => {
     expect(read(DESIGN_AUTHOR)).toContain("Confirm repo scope");
+  });
+
+  test("design-author resolves repo scope via sibling directories with a loud single-repo fallback", () => {
+    const text = flat(read(DESIGN_AUTHOR));
+    expect(/sibling/i.test(text)).toBe(true);
+    expect(text).toContain("single-repo");
+    // An unresolvable repo never expands scope silently — the omission is
+    // recorded loudly in the design's ## Risks section.
+    expect(
+      /unresolvable[^|]{0,300}## Risks|## Risks[^|]{0,300}unresolvable/i.test(text),
+    ).toBe(true);
   });
 
   test("researcher allowed to read repos.md (scope, not intent)", () => {
@@ -273,16 +245,16 @@ describe("multi-repo support", () => {
     expect(text).toContain("multi-repo mode");
   });
 
-  // Worktree-first: secondary worktrees are created AFTER the design gate
+  // Worktree-first: secondary worktrees are created AFTER the design review
   // (the home worktree is born at the leading WORKTREE phase). Assert the
-  // post-design-gate phrasing is co-located with the `## Worktrees` /
+  // post-design-review phrasing is co-located with the `## Worktrees` /
   // `repos.md` back-recording prose.
-  test("team SKILL creates secondary worktrees after the design gate", () => {
+  test("team SKILL creates secondary worktrees after the design review", () => {
     const text = flat(read(TEAM));
-    // A post-design-gate phrase appears within reach of the `## Worktrees`
+    // A post-design-review phrase appears within reach of the `## Worktrees`
     // back-recording of `repos.md`.
     expect(
-      /(after the design gate|post-design-gate)[^|]{0,400}(## Worktrees|repos\.md)|(## Worktrees|repos\.md)[^|]{0,400}(after the design gate|post-design-gate)/i.test(
+      /(after the design review|post-design-review)[^|]{0,400}(## Worktrees|repos\.md)|(## Worktrees|repos\.md)[^|]{0,400}(after the design review|post-design-review)/i.test(
         text,
       ),
     ).toBe(true);
@@ -509,7 +481,7 @@ describe("qrspi-workflow SOFT gate aligns with severity tiers (issue #68)", () =
 // to drive at L5 — each needs heavy multi-phase prior state (the orchestrator
 // walks every phase and owns no single artifact; team-worktree produces git
 // side effects with no findings artifact; team-pr needs a fully implemented
-// branch plus a git remote; team-implement needs an approved structure + plan
+// branch plus a git remote; team-implement needs a structure + plan
 // + worktree + failing tests). Honestly seeding that state is too costly for a
 // behavioral guardrail, so they are demoted to free L2 wiring/content
 // tripwires (design option (b), Risk #2). The assertions below pin each one's
@@ -532,15 +504,21 @@ describe("L2-demoted heavy-prior-state pipeline skills", () => {
     );
   });
 
-  test("team: design approval is the only human gate (structure is autonomous)", () => {
+  test("team: no mid-run human gates — an adversarial design review gates DESIGN", () => {
     const text = read(TEAM);
-    // Design is the sole human gate as of the structure-autonomy change.
-    expect(text).toContain("design is the only human gate");
-    expect(/### Human Gate \(design approval\)/.test(text)).toBe(true);
-    // Structure no longer gates — it advances autonomously.
-    expect(/### Structure \(no gate — autonomous\)/.test(text)).toBe(true);
-    // And the old structure human-gate section must be gone.
+    // The run has no mid-run human pause; the one human checkpoint is the
+    // PR review after the run completes.
+    expect(text).toContain("no mid-run human gates");
+    // DESIGN is gated by the adversarial design-review loop.
+    expect(/^### Design Review Gate \(design\)$/m.test(text)).toBe(true);
+    // The old human-gate sections must be gone — inverse set of the
+    // retired approval flow.
+    expect(/### Human Gate \(design approval\)/.test(text)).toBe(false);
     expect(/### Human Gate \(structure approval\)/.test(text)).toBe(false);
+    // No approval frontmatter marker remains anywhere in the skill.
+    expect(/^approved:/m.test(text)).toBe(false);
+    // Structure still advances autonomously.
+    expect(/### Structure \(no gate — autonomous\)/.test(text)).toBe(true);
   });
 
   test("team-worktree: reads repos.md and runs per-repo git worktree add", () => {
@@ -572,7 +550,7 @@ describe("L2-demoted heavy-prior-state pipeline skills", () => {
     expect(changelogIdx).toBeLessThan(prIdx);
   });
 
-  test("team-implement: requires an approved structure + plan + worktree", () => {
+  test("team-implement: requires a structure + plan + worktree", () => {
     const text = read(TEAM_IMPL);
     expect(text).toContain("structure.md");
     expect(text).toContain("plan.md");
@@ -859,5 +837,161 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
 
   test("team: PR gate points at tracking-tickets for the multi-repo home-only closing rule", () => {
     assertHomeOnlyClosingPointer(TEAM_SKILL);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Design-review gate brief — free L2 drift tripwire (docs/testing.md §2).
+// The DESIGN phase is gated by an adversarial design review: the orchestrator
+// dispatches a fresh-context read-only `Explore` subagent with the
+// `## Review brief` from eng-design-doc-review, by reference. Renaming that
+// heading or the verdict set would silently change pipeline behavior (design
+// risk: silent gate drift) — these pins fail the build the moment either
+// moves.
+// ---------------------------------------------------------------------------
+
+describe("design-review gate brief (L2 drift tripwire)", () => {
+  const ENG_REVIEW = join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md");
+  const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
+
+  test("eng-design-doc-review carries the ## Review brief heading verbatim", () => {
+    expect(/^## Review brief$/m.test(read(ENG_REVIEW))).toBe(true);
+  });
+
+  test("eng-design-doc-review pins the APPROVE / REQUEST CHANGES / COMMENT verdict set", () => {
+    const text = read(ENG_REVIEW);
+    expect(/^- \*\*APPROVE\*\*/m.test(text)).toBe(true);
+    expect(/^- \*\*REQUEST CHANGES\*\*/m.test(text)).toBe(true);
+    expect(/^- \*\*COMMENT\*\*/m.test(text)).toBe(true);
+  });
+
+  test("team SKILL dispatches the design review via the eng-design-doc-review brief", () => {
+    expect(read(TEAM_SKILL)).toContain("eng-design-doc-review");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Terminal review caps — free L2 content tripwire (docs/testing.md §2).
+// A review cap (aggregate rounds or design revisions) is terminal: the run
+// halts and reports every unresolved finding. It never consults the user
+// mid-run.
+// ---------------------------------------------------------------------------
+
+describe("terminal review caps (L2 tripwire)", () => {
+  for (const name of ["team", "team-implement", "review-severity-tiers"]) {
+    test(`${name} SKILL halts at cap instead of escalating to the user`, () => {
+      const text = read(join(REPO_ROOT, "skills", name, "SKILL.md"));
+      expect(text).not.toContain("escalate to the user");
+      // Halt-and-report language: the halt names the unresolved findings.
+      expect(/halt/i.test(text)).toBe(true);
+      expect(/unresolved/i.test(text)).toBe(true);
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Minor-deferral — free L2 content tripwire (docs/testing.md §2). Once
+// Blocking/Major are clean, Minor-and-below findings (plus design-review
+// COMMENT findings, tagged by source) land in the PR body's `## Review notes`
+// section for the human's PR review — they are never presented mid-run, and
+// the section is omitted entirely when empty.
+// ---------------------------------------------------------------------------
+
+describe("Minor findings defer to the PR body (L2 tripwire)", () => {
+  const TEAM_PR = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
+  const TEAM_IMPL = join(REPO_ROOT, "skills", "team-implement", "SKILL.md");
+
+  // The PR Body Template: the first fenced code block after the
+  // "## PR Body Template" heading (pattern: the closing-footer describe).
+  function prBodyTemplate(text: string): string {
+    const afterHeading = text.split("## PR Body Template")[1] ?? "";
+    return afterHeading.match(/```\n([\s\S]*?)```/)?.[1] ?? "";
+  }
+
+  test("team-pr template carries ## Review notes between How to Verify and References", () => {
+    const template = prBodyTemplate(read(TEAM_PR));
+    // Fail loud if the template block vanished, so the position assertions
+    // below can't pass vacuously against an empty string.
+    expect(template.length).toBeGreaterThan(0);
+    expect(template).toContain("## Review notes");
+    expect(template).toContain("## How to Verify");
+    expect(template).toContain("## References");
+    expect(template.indexOf("## Review notes")).toBeGreaterThan(
+      template.indexOf("## How to Verify"),
+    );
+    expect(template.indexOf("## Review notes")).toBeLessThan(
+      template.indexOf("## References"),
+    );
+  });
+
+  test("team-pr omits the section when empty and tags design-review findings by source", () => {
+    const text = flat(read(TEAM_PR));
+    expect(/omit the section entirely when empty/i.test(text)).toBe(true);
+    expect(/never emit a bare heading/i.test(text)).toBe(true);
+    // Design-review COMMENT findings are tagged with their source artifact.
+    expect(text).toContain("design-review-");
+  });
+
+  test("team-implement records Minors for the PR body instead of presenting them", () => {
+    expect(read(TEAM_IMPL)).not.toContain("present them to the user");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// No mid-run human-gate claims — free L2 forbidden-pattern sweep
+// (docs/testing.md §2, forbidden-pattern form). The pipeline has no mid-run
+// human gates; no doc, skill, or agent prompt may claim one exists. Allowlist:
+// docs/ethos.md keeps its deliberate human-gate counterweight line, and the
+// negation phrase "no mid-run human gates" is the one sanctioned wording that
+// contains the forbidden substring. CHANGELOG history is append-only and not
+// scanned.
+// ---------------------------------------------------------------------------
+
+describe("no mid-run human-gate claims (L2 forbidden-pattern sweep)", () => {
+  // Also catches the phrasing variants that survived earlier sweeps:
+  // "human approval gate", "human design gate", "human contract", and the
+  // retired "design gate"/"design-gate" (the sanctioned wordings —
+  // "design review", "design-review gate", "Design Review Gate" — do not
+  // match the pattern, so they need no allowlist).
+  const FORBIDDEN = /human[ -]gate|human (approval|design) gate|human contract|design[ -]gate/i;
+  const NEGATION = /no mid-run human gates/i;
+  const ALLOWLIST = new Set(["docs/ethos.md"]);
+
+  // All .md files under `dir` (relative to REPO_ROOT), recursively, skipping
+  // docs/plans/ — pipeline state is never scanned.
+  function mdFilesUnder(dir: string): string[] {
+    const out: string[] = [];
+    for (const entry of readdirSync(join(REPO_ROOT, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) {
+        if (entry.name === "plans") continue;
+        out.push(...mdFilesUnder(rel));
+      } else if (entry.name.endsWith(".md")) {
+        out.push(rel);
+      }
+    }
+    return out;
+  }
+
+  test("'human gate' appears nowhere in docs, README, AGENTS, skills, or agents outside the allowlist", () => {
+    const files = [
+      ...mdFilesUnder("docs"),
+      ...mdFilesUnder("skills"),
+      ...mdFilesUnder("agents"),
+      "README.md",
+      "AGENTS.md",
+    ];
+    const offenders: string[] = [];
+    for (const rel of files) {
+      if (ALLOWLIST.has(rel)) continue;
+      const lines = read(join(REPO_ROOT, rel)).split("\n");
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i] ?? "";
+        if (FORBIDDEN.test(line) && !NEGATION.test(line)) {
+          offenders.push(`${rel}:${i + 1}`);
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
   });
 });

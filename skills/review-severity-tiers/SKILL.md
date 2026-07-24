@@ -1,6 +1,6 @@
 ---
 name: review-severity-tiers
-description: The authoritative severity-tier map for aggregating reviewer verdicts — gate types by reviewer, the Blocking/Major/Minor tiers with the auto-fix boundary, the consult guard, and the 5-round cap. Load when aggregating review findings, deciding a pipeline gate, or sorting a finding into a severity tier.
+description: The authoritative severity-tier map for aggregating reviewer verdicts — gate types by reviewer, the Blocking/Major/Minor tiers with the auto-fix boundary, the no-consult rule, and the 5-round terminal cap. Load when aggregating review findings, deciding a pipeline gate, or sorting a finding into a severity tier.
 user-invocable: false
 ---
 
@@ -29,14 +29,13 @@ in exactly one tier.
 |------|-----------------------|--------|
 | **Blocking** | `issue (blocking)`, code-reviewer REQUEST CHANGES, security CRITICAL/HIGH, any verifier failure | Auto-fixed in the loop. **Never** surfaced to the user. |
 | **Major** | `suggestion (non-blocking)`, security MEDIUM, ux-reviewer REQUEST CHANGES | Auto-fixed in the loop. **Never** surfaced to the user. |
-| **Minor and below** | `nitpick (non-blocking)`, security LOW, technical-writer GAPS, any COMMENT-level note | Surfaced to the user for a decision — but **only after** Blocking and Major are clean. |
+| **Minor and below** | `nitpick (non-blocking)`, security LOW, technical-writer GAPS, any COMMENT-level note | Recorded in the PR body's `## Review notes` — never presented mid-run. |
 
-**The consult guard (non-negotiable).** While *any* Blocking or Major finding
-remains unresolved, the orchestrator MUST NOT present findings to the user or
-ask which ones to address. It loops the implementer automatically. The user is
-consulted exclusively for the remaining Minor-and-below findings, and only once the loop
-has driven Blocking and Major to zero. A consult prompt that lists a blocking
-or major finding is a defect.
+**The no-consult rule (non-negotiable).** Findings are never presented to
+the user mid-run. Blocking and Major findings loop the implementer
+automatically until they are zero; Minor-and-below findings defer to the
+PR body's `## Review notes` (tagged by source reviewer) for the human's
+PR review. A mid-run prompt that lists any finding is a defect.
 
 ## Aggregating Verdicts
 
@@ -45,13 +44,13 @@ pipeline gate decision:
 
 1. If ANY Blocking or Major finding exists -> pipeline gate FAILS — loop back
    to IMPLEMENT automatically, with no consult.
-2. If only Minor-and-below findings remain -> pipeline gate is CONDITIONAL:
-   present them to the user, who decides. If none remain, proceed to
+2. If only Minor-and-below findings remain -> pipeline gate PASSES with
+   notes: record them for the PR body's `## Review notes` and proceed to
    SHIP.
 3. If no findings remain -> pipeline gate PASSES (proceed to SHIP).
 
 The loop continues until Blocking and Major are zero, capped at 5 rounds; at
-the cap, escalate with the full unresolved-findings summary.
+the cap, halt with the full unresolved-findings summary — terminal, no PR.
 
 Blocking and Major failures are never aggregated away and never surfaced for
 triage. A single CRITICAL security finding blocks shipping regardless of how

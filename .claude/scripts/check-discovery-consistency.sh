@@ -25,13 +25,15 @@ SKILLS="$ROOT/skills"
 
 # --- canonical fragments (the single source of truth) ------------------------
 # ID_RE + PHASE_FILES are byte-sourced from hooks/session-start-recover.mjs
-# (ported to POSIX ERE: \d -> [0-9]). The approval grep is from
-# skills/qrspi-workflow/SKILL.md:290. The root literal is docs/plans/.
-# Every archetype-A copy must embed these verbatim; drift here is the bug the
-# verbatim-identity check exists to catch.
+# (ported to POSIX ERE: \d -> [0-9]). The verdict grep pins team-structure's
+# review-gate filter (frontmatter-anchored; mirrors the hooks'
+# designReviewPassed). The retired approval grep must appear nowhere. The
+# root literal is docs/plans/. Every archetype-A copy must embed these
+# verbatim; drift here is the bug the verbatim-identity check exists to catch.
 CANON_ID_RE="ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*\$'"
 CANON_PHASE_FILES='PHASE_FILES="task questions research design structure plan"'
-CANON_APPROVAL_GREP="grep -qE '^approved:[[:space:]]*true[[:space:]]*\$'"
+CANON_VERDICT_GREP="grep -qE '^verdict:[[:space:]]*(APPROVE|COMMENT)[[:space:]]*\$'"
+RETIRED_APPROVAL_GREP="grep -qE '^approved:[[:space:]]*true[[:space:]]*\$'"
 CANON_ROOT_LITERAL='docs/plans/'
 MARKER='Three-tier artifact-directory discovery'
 
@@ -110,7 +112,7 @@ done
 
 # =============================================================================
 # VERBATIM-IDENTITY (slices 1-4): the load-bearing fragments are byte-identical
-# to canon in every copy. Approval grep present in team-structure ONLY.
+# to canon in every copy. Verdict grep present in team-structure ONLY.
 # =============================================================================
 i=0
 while [ "$i" -lt "${#A_SKILLS[@]}" ]; do
@@ -128,17 +130,28 @@ while [ "$i" -lt "${#A_SKILLS[@]}" ]; do
   i=$((i + 1))
 done
 
-# Approval grep: present verbatim in team-structure only, absent elsewhere.
+# Verdict grep: present verbatim in team-structure only, absent elsewhere.
 for skill in team-structure; do
   file="$SKILLS/$skill/SKILL.md"
-  [ -f "$file" ] && grep -qF "$CANON_APPROVAL_GREP" "$file" \
-    || fail "$skill approval grep" "verbatim approval grep in predecessor filter" "approval grep absent"
+  [ -f "$file" ] && grep -qF "$CANON_VERDICT_GREP" "$file" \
+    || fail "$skill verdict grep" "verbatim review-gate verdict grep in predecessor filter" "verdict grep absent"
 done
 for skill in team-research team-design team-plan team-worktree team-implement team-pr eng-design-doc-review; do
   file="$SKILLS/$skill/SKILL.md"
-  if [ -f "$file" ] && grep -qF "$CANON_APPROVAL_GREP" "$file"; then
-    fail "$skill approval grep" "no approval grep (non-gated skill)" "approval grep unexpectedly present"
+  if [ -f "$file" ] && grep -qF "$CANON_VERDICT_GREP" "$file"; then
+    fail "$skill verdict grep" "no verdict grep (non-gated skill)" "verdict grep unexpectedly present"
   fi
+done
+# Retired approval grep: absent from every archetype-A skill (the DESIGN
+# human gate is gone; design-review-<n>.md verdicts replaced it).
+i=0
+while [ "$i" -lt "${#A_SKILLS[@]}" ]; do
+  skill="${A_SKILLS[$i]}"
+  file="$SKILLS/$skill/SKILL.md"
+  if [ -f "$file" ] && grep -qF "$RETIRED_APPROVAL_GREP" "$file"; then
+    fail "$skill retired approval grep" "no ^approved: frontmatter grep remains" "retired approval grep unexpectedly present"
+  fi
+  i=$((i + 1))
 done
 
 # =============================================================================
@@ -221,8 +234,8 @@ fi
 \rm -f "$snippet"
 
 # =============================================================================
-# EXECUTABLE APPROVAL-GATE (slice 3): extract team-structure's block, run it
-# against approval fixtures. Created and torn down in this block.
+# EXECUTABLE REVIEW-GATE (slice 3): extract team-structure's block, run it
+# against design-review verdict fixtures. Created and torn down in this block.
 # =============================================================================
 structure_file="$SKILLS/team-structure/SKILL.md"
 snippet="$(mktemp)"
@@ -231,28 +244,58 @@ extract_sh_block "$structure_file" > "$snippet"
 if [ ! -s "$snippet" ]; then
   fail "team-structure executable" "extractable \`\`\`sh discovery block" "no discovery block found in team-structure (extraction empty)"
 else
-  # Fixture 1: newest dir's design.md is approved:false; older dir is approved:true.
-  # Expect the approved (older) dir to win; the unapproved newest is skipped.
+  # Fixture 1: newest dir's latest review is REQUEST CHANGES; older dir's
+  # latest review is COMMENT (passing). Expect the passing (older) dir to
+  # win; the failing newest is skipped.
   fx="$(mktemp -d)"
-  mkdir -p "$fx/docs/plans/2026-01-01-approved" "$fx/docs/plans/2026-01-02-pending"
-  printf -- '---\napproved: true\n---\n'  > "$fx/docs/plans/2026-01-01-approved/design.md"
-  printf -- '---\napproved: false\n---\n' > "$fx/docs/plans/2026-01-02-pending/design.md"
-  touch -t 202601010000 "$fx/docs/plans/2026-01-01-approved/design.md"
-  touch "$fx/docs/plans/2026-01-02-pending/design.md"   # newer mtime, but unapproved
+  mkdir -p "$fx/docs/plans/2026-01-01-passed" "$fx/docs/plans/2026-01-02-failed"
+  : > "$fx/docs/plans/2026-01-01-passed/design.md"
+  printf -- '---\nverdict: COMMENT\n---\n' > "$fx/docs/plans/2026-01-01-passed/design-review-1.md"
+  : > "$fx/docs/plans/2026-01-02-failed/design.md"
+  printf -- '---\nverdict: REQUEST CHANGES\n---\n' > "$fx/docs/plans/2026-01-02-failed/design-review-1.md"
+  touch -t 202601010000 "$fx/docs/plans/2026-01-01-passed/design.md"
+  touch "$fx/docs/plans/2026-01-02-failed/design.md"    # newer mtime, but failing verdict
   out="$(run_snippet "$snippet" "$fx" "")"
   case "$out" in
-    *2026-01-01-approved*) : ;;
-    *) fail "team-structure gate skip-unapproved" "resolves docs/plans/2026-01-01-approved/ (skips newer unapproved)" "got: '$out'" ;;
+    *2026-01-01-passed*) : ;;
+    *) fail "team-structure gate skip-failing" "resolves docs/plans/2026-01-01-passed/ (skips newer REQUEST CHANGES)" "got: '$out'" ;;
   esac
   \rm -rf "$fx"
 
-  # Fixture 2: the only candidate is unapproved -> prints nothing (tier 3).
+  # Fixture 2: highest-<n> rules — APPROVE at n=1 superseded by
+  # REQUEST CHANGES at n=2 -> prints nothing (tier 3).
   fx="$(mktemp -d)"
-  mkdir -p "$fx/docs/plans/2026-01-02-pending"
-  printf -- '---\napproved: false\n---\n' > "$fx/docs/plans/2026-01-02-pending/design.md"
+  mkdir -p "$fx/docs/plans/2026-01-02-superseded"
+  : > "$fx/docs/plans/2026-01-02-superseded/design.md"
+  printf -- '---\nverdict: APPROVE\n---\n'         > "$fx/docs/plans/2026-01-02-superseded/design-review-1.md"
+  printf -- '---\nverdict: REQUEST CHANGES\n---\n' > "$fx/docs/plans/2026-01-02-superseded/design-review-2.md"
   out="$(run_snippet "$snippet" "$fx" "")"
   if [ -n "$out" ]; then
-    fail "team-structure gate only-unapproved" "prints nothing (offers /team-design via AskUserQuestion)" "got: '$out'"
+    fail "team-structure gate highest-n" "prints nothing (latest round REQUEST CHANGES supersedes earlier APPROVE)" "got: '$out'"
+  fi
+  \rm -rf "$fx"
+
+  # Fixture 3: design.md with no design-review artifact at all -> prints
+  # nothing (unreviewed design; fail-closed).
+  fx="$(mktemp -d)"
+  mkdir -p "$fx/docs/plans/2026-01-02-unreviewed"
+  : > "$fx/docs/plans/2026-01-02-unreviewed/design.md"
+  out="$(run_snippet "$snippet" "$fx" "")"
+  if [ -n "$out" ]; then
+    fail "team-structure gate missing-review" "prints nothing (no design-review artifact -> unreviewed)" "got: '$out'"
+  fi
+  \rm -rf "$fx"
+
+  # Fixture 4: verdict only quoted in the BODY (frontmatter carries none)
+  # -> prints nothing; the parse is frontmatter-anchored.
+  fx="$(mktemp -d)"
+  mkdir -p "$fx/docs/plans/2026-01-02-bodyquote"
+  : > "$fx/docs/plans/2026-01-02-bodyquote/design.md"
+  printf -- '---\nphase: design-review\n---\nThe body hopes for:\nverdict: APPROVE\n' \
+    > "$fx/docs/plans/2026-01-02-bodyquote/design-review-1.md"
+  out="$(run_snippet "$snippet" "$fx" "")"
+  if [ -n "$out" ]; then
+    fail "team-structure gate body-quoted-verdict" "prints nothing (body-line verdict never passes the frontmatter parse)" "got: '$out'"
   fi
   \rm -rf "$fx"
 fi

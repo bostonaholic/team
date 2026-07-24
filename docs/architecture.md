@@ -34,13 +34,13 @@ Agents are **decoupled microservices**. Each agent consumes a predecessor
 artifact on disk, does work, and produces its own artifact under
 `docs/plans/<id>/`. The orchestrator is the main Claude Code session: it
 walks a linear phase table, dispatches the right specialist for each phase,
-seeds and updates a TodoWrite ledger, and runs the human gates.
+seeds and updates a TodoWrite ledger, and runs the gates.
 
 **Principles:**
 
 - **Files on disk are the durable record.** Every artifact under
   `docs/plans/<id>/` carries YAML frontmatter that describes its phase
-  and, for human-gated phases, the approval state. Phase progression is
+  and revision metadata. Phase progression is
   inferred by scanning artifacts.
 - **TodoWrite is the live coordination ledger.** It is session-scoped.
   Re-invoking any `/team-*` command rebuilds the ledger by scanning
@@ -57,14 +57,26 @@ seeds and updates a TodoWrite ledger, and runs the human gates.
   *structural* — the orchestrator only passes the `questions.md` path to
   the research agents; *procedural* — the research agents' system prompts
   forbid reading `task.md`.
-- **One human touchpoint.** Design approval (~200-line alignment doc).
-  Approval is recorded by flipping `approved: true` (and stamping
-  `approved_at`) in the design's own YAML frontmatter — the artifact is
-  self-describing. The Structure (~2-page vertical-slice breakdown) and
-  the Plan are not human-gated; they advance autonomously. Design is the
-  real contract.
+- **No mid-run human gates.** The design (~200-line alignment doc) is
+  gated by an adversarial design review: a fresh-context subagent audits
+  it and its verdict is recorded to `design-review-<n>.md` — the
+  artifacts are self-describing. The Structure (~2-page vertical-slice
+  breakdown) and the Plan are not gated; they advance autonomously. The
+  human's checkpoint is the PR review at the end.
 - **Hooks enforce discipline mechanically.** LLMs forget instructions
   ~20% of the time; hooks are deterministic.
+
+**Trust boundary.** The single human checkpoint — the end-of-run PR
+review — is a *code* checkpoint, and it happens **after** the run has
+already executed. Local Bash execution (implementer, verifier, hooks),
+branch creation, pushes to remotes, and any multi-repo worktree effects
+all occur before a human sees the PR. The PR review contains the diff,
+the design's recorded assumptions, and the deferred `## Review notes`;
+it does **not** contain the run's local side effects. The pipeline also
+assumes that repository content the researcher reads is trusted — a
+repo that accepts untrusted contributions feeds untrusted text into
+agent context. Merging remains human-only: nothing in the pipeline
+marks a PR ready for review or merges it.
 
 ## 2. Artifact Layout & Frontmatter
 
@@ -96,25 +108,25 @@ Per-phase additions:
 |-----------|-------------------------------------------------------------------------|
 | task      | `ticketId: <id>` (or `null`)                                            |
 | questions | (none)                                                                  |
-| prd       | (none — not human-gated; written conditionally by the questioner)      |
+| prd       | (none — not gated; written conditionally by the questioner)            |
 | repos     | (none — written conditionally in multi-repo mode)                       |
 | research  | (none)                                                                  |
-| design    | `approved: false`, `approved_at: null`, `revision: 0`                   |
-| structure | (none — not human-gated; advances to PLAN once it exists)               |
+| design    | `revision: 0`                                                           |
+| structure | (none — not gated; advances to PLAN once it exists)                     |
 | plan      | (none — derived mechanically from the structure)                        |
 
-**Approval check** (used by downstream phase entry):
+**Design-review record** (`design-review-<n>.md`): each review round the
+orchestrator writes `docs/plans/<id>/design-review-<n>.md` (`<n>` 1-based
+per round) with frontmatter `topic`, `date`, `phase: design-review`, and
+`verdict: <APPROVE|REQUEST CHANGES|COMMENT>`; the body carries the
+reviewer's findings verbatim. The `verdict` field is the deterministic
+read for hooks and resume detection. A design has passed review when the
+highest-`<n>` file carries APPROVE or COMMENT.
 
-```sh
-grep -qE '^approved:[[:space:]]*true[[:space:]]*$' <artifact>
-```
-
-**Approval flip** (orchestrator at human gate): edit the file in place to
-set `approved: true` and stamp `approved_at: <ISO-8601>`.
-
-**Rejection** (revision dispatch): the agent re-drafts the artifact. The
+**Review loop** (REQUEST CHANGES): the design-author re-drafts with the
+reviewer's findings verbatim. The
 orchestrator increments `revision: <n+1>` in the new draft's frontmatter.
-Cap at 5; beyond that, escalate to the user.
+Cap at 5; at the cap, terminal halt.
 
 **Phase inference** (orchestrator + hooks):
 
@@ -123,8 +135,8 @@ Cap at 5; beyond that, escalate to the user.
 | worktree exists for `<id>`, no `task.md` yet           | WORKTREE (next up)  |
 | `task.md` + `questions.md` only                        | RESEARCH (next up)  |
 | `research.md`                                          | DESIGN (next up)    |
-| `design.md` (frontmatter `approved: false`)            | DESIGN (human gate) |
-| `design.md` (frontmatter `approved: true`)             | STRUCTURE (next up) |
+| `design.md` alone (no passing design review)           | DESIGN (review next)|
+| `design.md` + passing `design-review-<n>.md`           | STRUCTURE (next up) |
 | `structure.md`                                         | PLAN (next up)      |
 | `plan.md` + ≥1 commit on `<id>` since merge-base       | IMPLEMENT           |
 | `plan.md` (no commit on `<id>` yet)                    | PLAN (next up)      |
@@ -162,10 +174,13 @@ dispatch (the main session does not `cd`).
 **Single-repo (default):** `repos.md` is absent. One home worktree at
 `<repo>/.claude/worktrees/<id>`.
 
-**Multi-repo:** `repos.md` does not exist yet at this phase (the repo set
-is confirmed during the design open-questions step), so only the home
+**Multi-repo:** `repos.md` is written autonomously by the questioner at
+QUESTION, one phase after WORKTREE (or by the design-author at DESIGN
+when the questioner missed the multi-repo signals), so only the home
 worktree is created here. Secondary worktrees are created **after the
-design gate**, one per listed repo:
+design review**, one per listed repo — each repo path passing the
+containment check (realpath a direct child of the home repo's parent
+directory) first:
 
 ```sh
 git -C <repo-path> worktree add .claude/worktrees/<id> -b <id> origin/HEAD
@@ -206,21 +221,25 @@ research artifact (with the required frontmatter).
 
 ### Phase 4: Design
 
-**Agent:** `design-author` (MUST ask open questions interactively before
-drafting)
+**Agent:** `design-author` (resolves its own open questions, recording
+each as an auditable assumption)
 **Predecessor:** `research.md`
 **Artifact:** `docs/plans/<id>/design.md`
-**Gate:** HUMAN — on approval the orchestrator edits `design.md`'s
-frontmatter to set `approved: true` and `approved_at: <ISO-8601>`; on
-rejection the agent re-drafts and increments `revision`.
+**Gate:** REVIEW — the orchestrator dispatches a fresh-context,
+read-only `Explore` subagent (no Write/Edit tools — the reviewer cannot
+touch the artifacts it judges) with the `## Review brief` from
+`skills/eng-design-doc-review/SKILL.md` and records the verdict to
+`design-review-<n>.md`. APPROVE/COMMENT advance; on REQUEST CHANGES the
+agent re-drafts with the findings verbatim and increments `revision`
+(cap 5 → terminal halt).
 
 ### Phase 5: Structure
 
 **Agent:** `structure-planner`
-**Predecessor:** `design.md` with frontmatter `approved: true`
+**Predecessor:** `design.md` + passing `design-review-<n>.md`
 **Artifact:** `docs/plans/<id>/structure.md`
 **Gate:** NONE — autonomous. Once `structure.md` exists the pipeline
-advances to PLAN; design is the only human gate.
+advances to PLAN.
 
 ### Phase 6: Plan
 
@@ -228,7 +247,7 @@ advances to PLAN; design is the only human gate.
 **Predecessor:** `structure.md`
 **Artifact:** `docs/plans/<id>/plan.md`
 
-No human gate. The plan is mechanically derived from the structure.
+No gate. The plan is mechanically derived from the structure.
 
 ### Phase 7: Implement
 
@@ -245,12 +264,20 @@ No human gate. The plan is mechanically derived from the structure.
    `skills/review-severity-tiers/SKILL.md`). While any Blocking or Major finding
    remains, it dispatches the implementer to fix the typed failure
    class and re-runs all 5 reviewers — automatically, never consulting
-   the user (the *consult guard*). Cap at 5 rounds; beyond that,
-   escalate. Once Blocking and Major are clean, any remaining
-   Minor-and-below findings are presented to the user, who decides.
+   the user (the *no-consult rule*). Cap at 5 rounds; at the cap,
+   terminal halt. Once Blocking and Major are clean, any remaining
+   Minor-and-below findings are recorded in the PR body's
+   `## Review notes` for the human's PR review.
 
 The orchestrator tracks the round count by appending "Review round N"
 items to the TodoWrite ledger.
+
+**Recovery after a terminal halt** (either cap): a human addresses the
+unresolved findings by hand — editing the design or the code — and
+re-invokes the same `/team-*` command bare. The aggregate round counter
+is session-scoped (TodoWrite) and starts fresh on re-invocation; the
+design `revision` counter persists in `design.md` frontmatter and is
+hand-lowered when the revision budget should be restored.
 
 ### Phase 8: PR
 
@@ -259,7 +286,7 @@ items to the TodoWrite ledger.
 
 Update CHANGELOG.md (filter for user-facing commits since last release),
 push the branch and open a draft PR automatically (`gh pr create
---draft` — the PR phase is not a human gate, so it needs no approval),
+--draft` — the PR phase never waits for approval),
 and surface the tracking ticket (if `task.md` carries `ticketId`). The
 worktree stays in place after the PR opens — teardown is deferred until
 the PR merges or the user asks, so the branch remains available for
@@ -360,8 +387,8 @@ loop:
   1. Inspect TodoWrite. If all phases completed → exit.
   2. Identify the in_progress phase. Look up agent(s) and predecessor
      artifact path(s) in the phase table.
-  3. Verify predecessors exist on disk and (for human-gated phases)
-     carry `approved: true` in frontmatter. If missing → desync;
+  3. Verify predecessors exist on disk (for STRUCTURE, that includes a
+     `design-review-<n>.md` with a passing verdict). If missing → desync;
      suggest re-invoking the bare /team-* command — its three-tier
      discovery resolves docs/plans/<id>/ without an explicit arg.
   4. Dispatch the agent(s) — pass them the artifact directory
@@ -395,8 +422,8 @@ newest-mtime convention discovery (filtering by `ID_RE` / `PHASE_FILES`,
 ported from `hooks/session-start-recover.mjs` as a POSIX ERE
 translation, and the skill's required predecessor artifact) →
 `AskUserQuestion` (called by the orchestrator/entry-point skill itself —
-not by a subagent; subagents use the `agent-open-questions` envelope
-protocol instead). Standalone modes still exist: a partial skill invoked
+never by a subagent; subagents never pause for user
+input). Standalone modes still exist: a partial skill invoked
 with no resolvable directory (or with a free-form description) bootstraps
 the missing upstream artifacts inline rather than hard-erroring.
 
@@ -419,7 +446,7 @@ each block points at.
 Methodology skills carry no `argument-hint` and are loaded by agents
 through one of two mechanisms: a `skills:` YAML list in the agent's
 frontmatter (for example, `agents/design-author.md` declares
-`skills: [product-thinking, agent-open-questions, progress-tracking,
+`skills: [product-thinking, progress-tracking,
 authoring-designs]`), or an inline prose load instruction in the
 agent body (for example, `solid-principles` is loaded inline by the
 `implementer` body's Code quality section).
@@ -450,7 +477,7 @@ cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. `code-review` is the only skill loaded as composed
 methodology that is also a user command.)
 
-For the full per-skill reference — all 47 skills, their arguments,
+For the full per-skill reference — all 46 skills, their arguments,
 consumers, and behaviors — see [skills.md](skills.md).
 
 ### Design Guidelines
@@ -503,7 +530,7 @@ Development scripts (`.claude/scripts/` — not distributed) house dev-only
 acceptance tooling run by plugin developers. `check-discovery-consistency.sh`
 is the committed consistency gate for the input-discovery feature: it asserts
 every archetype-A skill carries the discovery block, the load-bearing fragments
-(`ID_RE`, `PHASE_FILES`, approval grep, `docs/plans/` root) stay byte-identical
+(`ID_RE`, `PHASE_FILES`, `docs/plans/` root) stay byte-identical
 to canon, and the research-isolation invariant holds.
 
 ## 8. Behavioral Evals
@@ -562,7 +589,7 @@ model — see [Testing](testing.md) for where every check belongs.
 
 **Primary state:** the artifacts in `docs/plans/<id>/*.md`. Each
 artifact's YAML frontmatter is the source of truth for "did this phase
-finish?" and "was the human gate passed?"
+finish?" and "did the design review pass?"
 
 **Live coordination:** TodoWrite (session-scoped). The orchestrator
 seeds the ledger at the start of `/team`, marks each item `in_progress`
@@ -572,9 +599,9 @@ interrupted run can be resumed by re-invoking any of them bare — discovery
 auto-resolves the artifact directory (an explicit `docs/plans/<id>/` is still
 accepted).
 
-**Approval markers:** the gated artifact's own YAML frontmatter
-(`approved: true`, `approved_at: <ISO-8601>`) records human gate passes
-durably. The artifact is self-describing.
+**Design-review records:** `docs/plans/<id>/design-review-<n>.md`
+(frontmatter `verdict: <APPROVE|REQUEST CHANGES|COMMENT>`) records each
+review round durably. The artifacts are self-describing.
 
 **Compaction defense:** the PreCompact hook scans `docs/plans/<id>/`
 directories for the active topic and injects a 4-line anchor (phase,
@@ -621,8 +648,7 @@ both governed by `skills/nested-agents/SKILL.md`:
   pinned by `tests/nested-agents.test.ts` — any other agent gaining the
   tool must be a deliberate decision that updates the tripwire.
 - Nested helpers are read-only, never write under `docs/plans/`, and
-  never emit open-questions envelopes (the envelope protocol is one
-  level deep — see `skills/agent-open-questions/SKILL.md`).
+  never pause for user input (see `skills/nested-agents/SKILL.md`).
 - Depth budget: pipeline agents sit at depth 2 of 5 and may spawn at
   most one more level.
 - **Version-gated.** Nesting requires Claude Code >= 2.1.172. The
@@ -655,8 +681,8 @@ children are confirmed, and the depth cap is stable.
   (`{verdict: PASS | CONDITIONAL | ESCALATE, rounds, findings[]}`) for
   the orchestrator to render. This keeps up to 25 reviewer reports out
   of the orchestrator's long-lived context. Needs: a terminal-verdict
-  envelope protocol (sibling of agent-open-questions — the consult
-  guard means no mid-loop user interaction exists to forward), and
+  envelope protocol (the no-consult rule means no mid-loop user
+  interaction exists to forward), and
   per-round state artifacts (`docs/plans/<id>/review/round-<n>.md`)
   to replace live TodoWrite round visibility and survive coordinator
   death.
@@ -669,7 +695,7 @@ children are confirmed, and the depth cap is stable.
 
 ## See also
 
-- **[Skills](skills.md)** — the full per-skill reference for all 47 skills.
+- **[Skills](skills.md)** — the full per-skill reference for all 46 skills.
 - **[Testing](testing.md)** — the six-layer test harness and which layer each check belongs at.
 - **[Vision](vision.md)** — the loop-driven end state this design builds toward.
 - **[Ethos](ethos.md)** — the principles behind the pipeline.

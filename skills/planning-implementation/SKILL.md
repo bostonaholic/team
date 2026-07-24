@@ -18,7 +18,7 @@ The body of `plan.md`:
 
 ## Context
 
-Two to three sentences summarizing the change. Reference the approved
+Two to three sentences summarizing the change. Reference the
 structure by path. In multi-repo mode, list the repo slugs and their
 worktree paths (read from repos.md `## Worktrees` once the worktrees
 exist) so the implementer knows where to cd for each step.

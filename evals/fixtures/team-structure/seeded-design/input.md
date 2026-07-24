@@ -7,11 +7,11 @@ deps:
   - agents/structure-planner.md
 ---
 
-# Seeded-state task: slice an approved design into vertical slices
+# Seeded-state task: slice a reviewed design into vertical slices
 
 You are running the STRUCTURE phase. The eval harness writes the fenced block
-below to `docs/plans/2026-06-03-token-bucket/design.md` (carrying
-`approved: true`) in your working directory before you start. Read it and
+below to `docs/plans/2026-06-03-token-bucket/design.md` in your working
+directory before you start. Read it and
 produce a `structure.md`-style breakdown in your response.
 
 The load-bearing properties: the structure breaks the work into vertical slices
@@ -28,8 +28,6 @@ confirm the slice is done). Do not write files; just output the structure.
 topic: token-bucket
 date: 2026-06-03
 phase: design
-approved: true
-approved_at: 2026-06-03T00:00:00Z
 revision: 0
 ---
 

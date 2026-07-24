@@ -14,7 +14,7 @@ agents, and coordinating progress via TodoWrite.
 
 You hold no special state of your own. The durable record is the set of
 artifacts under `docs/plans/<id>/*.md` (each carrying YAML frontmatter
-that describes its phase, approval state, and revision count). Live
+that describes its phase and revision metadata). Live
 in-session coordination uses TodoWrite.
 
 ## Input
@@ -65,8 +65,11 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
    recovery hooks' worktree discovery.
 7. **Resume detection.** If artifacts already exist for `<id>` under the
    canonical artifact directory resolved in step 6, fast-forward the ledger by
-   marking completed any phases whose artifacts are present and (for
-   human-gated phases) carry `approved: true`. Then mark the first incomplete
+   marking completed any phases whose artifacts are present. DESIGN is
+   complete only when the latest `design-review-<n>.md` carries a passing
+   verdict (APPROVE or COMMENT); a `design.md` with no passing review
+   resumes **at the review step**, never a re-draft (any `approved` fields
+   left by older runs are ignored). Then mark the first incomplete
    phase `in_progress`. **Never re-dispatch a phase whose artifact already
    exists** — re-running QUESTION over an existing `task.md`, for example,
    would overwrite in-progress work (data loss).
@@ -82,51 +85,32 @@ loop:
   1. Inspect TodoWrite. If all phases are completed → exit.
   2. Identify the in_progress phase. Look it up in the phase table to
      get the expected agent(s) and predecessor artifact path(s).
-  3. Verify predecessor artifacts exist on disk and (for human-gated
-     phases) carry `approved: true` in their frontmatter. If missing,
+  3. Verify predecessor artifacts exist on disk (for STRUCTURE, that
+     includes a `design-review-<n>.md` with a passing verdict). If missing,
      report a desync and suggest re-invoking the same /team-* command.
   4. Dispatch the agent(s) (parallel where the phase table marks them).
-  5. Parse the subagent's final assistant text for an open-questions
-     envelope and, when one is present, render it via `AskUserQuestion`
-     and resume the subagent. The full orchestrator-side protocol is
-     canonical in `skills/agent-open-questions/SKILL.md` — Decision 5
-     first-block-wins detection, the ≤ 4-question cap, the free-text
-     escape hatch, the `SendMessage(to: <agentId>, ...)` resume with the
-     prior transcript intact, and the two-attempt malformed-envelope
-     path ending in `docs/plans/<id>/dispatch-failure.md` plus a halted
-     phase in TodoWrite. Follow that skill rather than a restatement
-     here. Orchestrator-loop specifics:
-     a. If an envelope carries more than 4 questions, render only the
-        first 4 and `SendMessage` the subagent a note that the
-        remainder must be re-emitted in a follow-up envelope or
-        deferred into the artifact.
-     b. If no envelope is present, proceed to step 6.
-     c. **User cancels the `AskUserQuestion` prompt mid-flight.** Do
-        NOT `SendMessage` the subagent (it remains paused awaiting a
-        resume that will never come). Mark the current phase halted
-        in TodoWrite, surface a "user cancelled at <phase>" message
-        to the user, and stop the loop. The next `/team-*` invocation
-        re-enters the loop at the same phase: on resume detection the
-        subagent is re-dispatched fresh, re-emits the envelope, and
-        the orchestrator re-renders the prompt.
-  6. Write each returned artifact to docs/plans/<id>/<name>.md
+     Subagents never pause for user input — each resolves its own open
+     questions and records them as assumptions in its artifact.
+  5. Write each returned artifact to docs/plans/<id>/<name>.md
      with the YAML frontmatter the agent specifies (see the agent file
      and skills/artifact-frontmatter/SKILL.md).
-  7. Run the gate for this phase:
-     - HUMAN (design): present the artifact, wait for verdict.
-       On approve, edit the artifact's frontmatter to set
-       `approved: true` and `approved_at: <ISO-8601>`. On reject,
-       increment `revision: <n+1>` on the new draft and re-dispatch.
+  6. Run the gate for this phase:
+     - REVIEW (design): dispatch the adversarial design review (see
+       "Design Review Gate (design)" below); write the verdict to
+       `design-review-<n>.md`. On APPROVE or COMMENT, advance. On
+       REQUEST CHANGES, re-dispatch design-author with the findings
+       verbatim and `revision: <n+1>`, capped at 5 → terminal halt.
      - MECHANICAL (tests-failing): run the suite; on assertion-only
        failure, advance.
      - ROUTER-EMIT (worktree, PR): perform the action.
      - AGGREGATE (5 reviewers): dispatch in parallel, collect results,
        sort findings into severity tiers; auto-loop on any Blocking or
        Major finding (never consulting the user), tracking the round count
-       in TodoWrite, capped at 5 rounds; consult only on Minor-and-below.
-  8. Update TodoWrite — mark current phase `completed` and the next one
+       in TodoWrite, capped at 5 rounds (at cap, terminal halt); record
+       Minor-and-below for the PR body's `## Review notes`.
+  7. Update TodoWrite — mark current phase `completed` and the next one
      `in_progress`.
-  9. Goto loop.
+  8. Goto loop.
 ```
 
 ### Phase table
@@ -136,8 +120,8 @@ loop:
 | WORKTREE   | (orchestrator-emit)                                     | (none — description in `$ARGUMENTS`)                            | QUESTION           |
 | QUESTION   | `questioner`                                            | worktree prepared (+ description in `$ARGUMENTS`)               | RESEARCH           |
 | RESEARCH   | `file-finder`, `researcher` (parallel, isolated)        | `docs/plans/<id>/questions.md`                                  | DESIGN             |
-| DESIGN     | `design-author` (→ human gate)                          | `docs/plans/<id>/research.md`                                   | STRUCTURE          |
-| STRUCTURE  | `structure-planner`                                     | `docs/plans/<id>/design.md` (frontmatter `approved: true`)      | PLAN               |
+| DESIGN     | `design-author` (→ design review)                       | `docs/plans/<id>/research.md`                                   | STRUCTURE          |
+| STRUCTURE  | `structure-planner`                                     | `docs/plans/<id>/design.md` + passing `design-review-<n>.md`    | PLAN               |
 | PLAN       | `planner`                                               | `docs/plans/<id>/structure.md`                                  | IMPLEMENT          |
 | IMPLEMENT  | `test-architect`, `implementer`, 5 reviewers (parallel) | `docs/plans/<id>/plan.md`                                       | PR                 |
 | PR         | (orchestrator-emit)                                     | aggregate gate passed                                           | SHIPPED            |
@@ -180,8 +164,8 @@ from phase 1, keeping the home checkout's `git status` clean for the whole run.
    Claude Code's native worktree support (single-repo block in
    `skills/team-worktree/SKILL.md` → "Create the worktree(s)"). Only the home
    repo gets a worktree at this phase; multi-repo secondary worktrees are
-   deferred until after the design gate (see "Orchestrator-Emit Gate
-   (post-design-gate secondary worktrees)" below). **If the run was started
+   deferred until after the design review (see "Orchestrator-Emit Gate
+   (post-design-review secondary worktrees)" below). **If the run was started
    from inside a linked worktree on a non-default branch, reuse it instead of
    creating a new one** (see "Detect existing worktree" in
    `skills/team-worktree/SKILL.md`); if that worktree is on the default branch,
@@ -201,52 +185,81 @@ from phase 1, keeping the home checkout's `git status` clean for the whole run.
    because worktree creation failed (mirror the best-effort fallback in
    `skills/worktree-isolation/SKILL.md` → "Fallback").
 
-### Human Gate (design approval)
+### Design Review Gate (design)
 
 When the `design-author` returns a draft:
 
-1. Confirm `docs/plans/<id>/design.md` exists with frontmatter
-   `approved: false` and `approved_at: null`.
-2. Present the design **in full** to the user, and **print the absolute
-   worktree-rooted `design.md` path** (the worktree path computed at the
-   leading WORKTREE phase joined with `docs/plans/<id>/design.md`) so the
-   reviewer can open the file cleanly without hunting for the worktree.
-3. Use `AskUserQuestion` to capture the verdict. Use a single question
-   with a `Decision` header and three options: **Approve**, **Request
-   changes**, **Reject**. Do not ask "Do you approve?" as free text —
-   `AskUserQuestion` is the canonical Claude Code tool for multi-choice
-   user prompts.
-4. If approved → edit the artifact's frontmatter to set `approved: true`
-   and `approved_at: <ISO-8601 timestamp>`.
-5. If request-changes → re-dispatch `design-author` with the user's
-   feedback. The new draft must increment `revision: <n+1>` in its
-   frontmatter. Cap at `revision: 5`.
+1. Confirm `docs/plans/<id>/design.md` exists. If the latest
+   `design-review-<n>.md` already carries a passing verdict (APPROVE or
+   COMMENT), skip the review and advance to STRUCTURE — a resumed
+   session never re-reviews a passed design.
+2. **Dispatch the adversarial review.** Call the `Agent` tool with
+   `subagent_type: Explore` (the built-in read-only agent type), passing
+   the `## Review brief` from
+   `skills/eng-design-doc-review/SKILL.md` as the prompt (reference that
+   skill's brief — never duplicate it here), with the artifact directory
+   substituted. Each round gets a fresh subagent context. `Explore`
+   holds no Write/Edit tools, so the reviewer **cannot** modify
+   `design.md` or forge a verdict artifact; the verdict is written by
+   the orchestrator alone (step 3), and the recovery hooks fail closed
+   on anything but a recorded passing verdict. If the environment lacks
+   the `Explore` agent type, treat the dispatch failure like a reviewer
+   crash (step 6) — never substitute a full-tool agent silently.
+3. **Write the verdict artifact.** Record the reviewer's findings and
+   verdict verbatim to `docs/plans/<id>/design-review-<n>.md`, where
+   `<n>` is the highest existing `<n>` + 1 (1 when none exists) —
+   never overwrite an earlier round's record. Frontmatter: `topic`,
+   `date`, `phase: design-review`, and
+   `verdict: <APPROVE|REQUEST CHANGES|COMMENT>` (convention in
+   `skills/qrspi-workflow/SKILL.md`).
+4. On **APPROVE or COMMENT** → the review passes; advance to STRUCTURE
+   in the same turn.
+5. On **REQUEST CHANGES** → re-dispatch `design-author` with the
+   reviewer's findings verbatim. The new draft increments
+   `revision: <n+1>` in its frontmatter, then a fresh review round runs.
+   Cap at `revision: 5`; at cap, halt terminally and report the
+   unresolved findings — no PR. The halt message names the absolute
+   worktree-rooted `docs/plans/<id>/` path, so the human can open
+   `design.md` and the `design-review-<n>.md` records directly.
+6. On an **unparseable verdict or a reviewer crash** → re-dispatch the
+   review once with the error; on second failure, halt loudly. Never
+   advance on a missing verdict — fail closed.
 
 ### Structure (no gate — autonomous)
 
 When the `structure-planner` returns `docs/plans/<id>/structure.md`,
 record it and advance to PLAN immediately. There is no approval wait —
-**design is the only human gate**. Structure was formerly human-gated; it
-now auto-advances. The artifact carries no `approved`/`approved_at`/
+nothing is presented for approval mid-run. Structure was formerly gated;
+it now auto-advances. The artifact carries no `approved`/`approved_at`/
 `revision` frontmatter.
 
-### Orchestrator-Emit Gate (post-design-gate secondary worktrees)
+### Orchestrator-Emit Gate (post-design-review secondary worktrees)
 
 The home worktree is born at the leading WORKTREE phase. Secondary worktrees
-(multi-repo mode) are created **after the design gate**, because the set of
-repos a topic touches is only confirmed during the design open-questions step
-(`repos.md`). This is the documented asymmetry: the home worktree exists from
-phase 1, while secondary repos lag until post-design-gate.
+(multi-repo mode) are created **after the design review**, because the set of
+repos a topic touches is only confirmed once the design lands (`repos.md`).
+This is the documented asymmetry: the home worktree exists from
+phase 1, while secondary repos lag until post-design-review.
 
-When the design gate passes:
+When the design review passes:
 
 1. **Detect mode.** If `docs/plans/<id>/repos.md` exists, you are in
    **multi-repo mode** — create one secondary worktree per additional repo
    listed in that file, all on the same `<id>` branch. Otherwise you are in
    **single-repo mode** and nothing further is needed here (the home worktree
    already exists). See `skills/worktree-isolation/SKILL.md` for the topology
-   and `skills/team-worktree/SKILL.md` for the procedure.
-2. **Append a `## Worktrees` section to `repos.md`**, post-design-gate,
+   and `skills/team-worktree/SKILL.md` for the procedure. Create the
+   worktrees **without a confirmation prompt** — the phase loop never
+   pauses mid-run; the "Confirm with the user" dialog in
+   `skills/team-worktree/SKILL.md` applies only to standalone human
+   invocation of `/team-worktree`. The resolved repo set is already
+   recorded loudly in `design.md` (`## Decisions made`/`## Risks`) and
+   echoed in the PR body's `## Review notes`. Before each
+   `git worktree add`, re-check **containment**: the repo path's
+   `realpath` must be a direct child of the home repo's parent
+   directory; refuse and report any repo that fails (`repos.md` may
+   have been authored without a Bash-side path check).
+2. **Append a `## Worktrees` section to `repos.md`**, post-design-review,
    **back-recording the home worktree path** created at the leading WORKTREE
    phase plus each secondary repo's worktree path, so later `/team-*`
    invocations can rediscover every worktree from that one file. The other
@@ -280,10 +293,16 @@ returned:
 3. While any **Blocking or Major** finding remains and under cap → dispatch
    implementer to fix, passing the typed failure class(es). After fixes, all
    5 reviewers re-run from scratch. **Never** stop to consult the user while a
-   Blocking or Major finding is open — loop automatically (the consult guard).
-4. If at cap → escalate to the user with all unresolved findings.
-5. Once Blocking and Major are clean → if any **Minor-and-below** findings
-   remain, present them to the user, who decides; otherwise advance
+   Blocking or Major finding is open — loop automatically (the no-consult
+   rule).
+4. If at cap → **terminal halt**: report every unresolved finding with
+   its severity tier, naming the absolute worktree-rooted
+   `docs/plans/<id>/` artifact path so the human can inspect the run's
+   record directly. No PR is opened, no consultation happens — the run
+   ends there.
+5. Once Blocking and Major are clean → record any **Minor-and-below**
+   findings for the PR body's `## Review notes` section, tagged by
+   source reviewer — never present them mid-run — and advance
    to PR **in the same turn** — do not summarize and end the turn. The
    run is complete only when the draft PR URL is reported.
 
@@ -300,8 +319,7 @@ When the aggregate gate passes:
    mode, update each repo's `CHANGELOG.md` with the entries belonging
    to that repo's commits.
 2. **Open a draft PR automatically — do not stop to ask.** The PR phase
-   is not a human gate (the only human gate is design approval), so
-   opening the PR needs no approval. Push the branch and
+   never waits for approval. Push the branch and
    open the PR as a **draft** (`gh pr create --draft`). See
    `skills/team-pr/SKILL.md` for the canonical procedure.
 3. In multi-repo mode this opens **one draft PR per repo with commits
@@ -316,7 +334,8 @@ When the aggregate gate passes:
    draft and move it to in-review only once the PR is marked ready for
    review, and never close the ticket by hand — the link auto-closes it
    on merge. Best-effort; never block the pipeline. Surface the
-   `ticketId` in the completion report.
+   `ticketId` in the completion report, alongside the draft PR URL and
+   the absolute worktree-rooted `docs/plans/<id>/` artifact path.
 5. Mark all TodoWrite items complete.
 6. **Leave the worktree(s) in place.** Do not remove a worktree when a
    PR is opened — the user may need to iterate on the branch (push
@@ -331,32 +350,22 @@ When the aggregate gate passes:
 ## Rules
 
 - Artifacts in `docs/plans/<id>/` are the single durable record of
-  pipeline state. Each artifact's YAML frontmatter describes its phase,
-  approval state, and revision count.
+  pipeline state. Each artifact's YAML frontmatter describes its phase
+  and revision metadata.
 - TodoWrite is the orchestrator's live coordination ledger. It is
   session-scoped and is rebuilt on entry to any `/team-*` command by
   scanning artifacts.
-- `AskUserQuestion` is the canonical Claude Code tool for any
-  multi-choice user prompt **from the orchestrator** — design
-  approval, worktree-vs-in-place. Free-text prompts
-  ("Do you approve?") are not the convention. Free-form text input
-  remains appropriate when the question genuinely has no enumerable
-  options (e.g. capturing the user's revision feedback after they pick
-  "Request changes"). **Subagents that need user input emit the
-  `openQuestions` envelope per `skills/agent-open-questions/SKILL.md`;
-  the orchestrator parses, renders the prompt via `AskUserQuestion`,
-  and resumes the subagent via `SendMessage` — that skill is the
-  canonical orchestrator-side parse + render + resume protocol, applied
-  in the phase loop above (step 5).** Subagents must not call
-  `AskUserQuestion` directly.
+- **Subagents never pause for user input.** Each resolves its own open
+  questions autonomously — picking the option it would have recommended
+  — and records every such choice as an explicit assumption in its
+  artifact, so the guess stays auditable at PR review. No subagent
+  prompts the user, directly or through the orchestrator.
 - File artifacts in `docs/plans/<id>/` are the durable communication
   protocol. Always write phase findings to disk before advancing.
-- The only human gate is **design approval**. Never present the structure
-  or the plan to the user for approval — design is the human contract; the
-  structure and plan are autonomous tactical artifacts.
-- The phase loop pauses for the user only at (a) the human gate (design
-  approval), (b) `openQuestions` envelopes, (c) aggregate-cap escalation,
-  and (d) Minor-findings consultation. Everywhere else, advance phases
+- There are **no mid-run human gates**. The design is gated by an
+  adversarial design review; never present the structure or plan for
+  approval. The structure and plan are autonomous tactical artifacts.
+- The phase loop never pauses mid-run. Advance phases
   within the same turn. In particular, IMPLEMENT → PR is not a stopping
   point — a turn that ends with review verdicts but no draft PR URL is
   a defect.
@@ -372,21 +381,25 @@ When the aggregate gate passes:
 
 A topic that touches more than one repository is recorded in
 `docs/plans/<id>/repos.md` (schema in `skills/artifact-frontmatter/SKILL.md`).
-The questioner creates `repos.md` if the user's description names
-multiple repos; the design-author confirms or amends the list during
-the open-questions step. Once `repos.md` exists, every downstream phase
+`repos.md` is confirmed autonomously: the questioner writes it when the
+description names multiple repos (resolving each to a sibling-directory
+path), and the design-author confirms or amends the list on research
+evidence. Once `repos.md` exists, every downstream phase
 respects it: research spans every listed repo, slices and plan steps
 carry `[repo: <name>]` annotations, secondary worktrees are created
-after the design gate (the home worktree already exists from the leading
+after the design review (the home worktree already exists from the leading
 WORKTREE phase), the implementer changes directory between them per
 step, and PR opens one PR per repo. When `repos.md` is absent, the
 pipeline runs in single-repo mode (today's default).
 
-### Approval marker convention
+### Design-review record convention
 
-Human approval flips the `approved` field in the gated artifact's own
-YAML frontmatter from `false` to `true` and stamps an `approved_at`
-ISO-8601 timestamp. Downstream phases verify approval by re-reading the
-artifact (`grep -qE '^approved:[[:space:]]*true[[:space:]]*$' <artifact>`).
+The durable record of design-review passage is
+`docs/plans/<id>/design-review-<n>.md` — one file per review round,
+with frontmatter `topic`, `date`, `phase: design-review`, and
+`verdict: <APPROVE|REQUEST CHANGES|COMMENT>`. A design has passed review
+when the highest-`<n>` file carries APPROVE or COMMENT. Downstream
+phases and the recovery hooks verify passage by reading that file —
+`design.md` itself carries no approval frontmatter.
 See `skills/artifact-frontmatter/SKILL.md` for the full frontmatter
 convention.

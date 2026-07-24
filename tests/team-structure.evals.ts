@@ -8,7 +8,7 @@
 // explicitly. Selection / tier gating goes through `testIfSelected`.
 //
 // Seeded-state mechanism (design Slice 4): the fixture input.md body embeds the
-// upstream artifact (an approved design.md) in a labeled fenced block. This
+// upstream artifact (a reviewed design.md) in a labeled fenced block. This
 // file parses it out of `fixture.body` and writes it into the mkdtempSync
 // workDir at docs/plans/<id>/design.md BEFORE calling runAgentTest — no harness
 // helper change. The deterministic axis confirms topic reuse + verification
@@ -54,7 +54,7 @@ testIfSelected(
       writeFileSync(seedPath, `${seed}\n`, "utf8");
 
       const prompt =
-        "You are running the STRUCTURE phase against the seeded approved " +
+        "You are running the STRUCTURE phase against the seeded " +
         `docs/plans/${TOPIC_ID}/design.md in your working directory. Read ` +
         "it, slice the work into vertical slices each with a verification " +
         "checkpoint, and reuse the topic slug.\n\n" +

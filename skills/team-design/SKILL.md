@@ -1,14 +1,15 @@
 ---
 name: team-design
-description: Align with the user on the approach before any code is written. The design-author MUST present open questions interactively before drafting the ~200-line design document, then a human gate captures approval. Trigger on "design this", "let's align on the approach", or "/team-design".
+description: Decide the approach before any code is written. The design-author drafts the ~200-line design document, resolving its own open questions autonomously as recorded assumptions, then an adversarial design review gates advancement. Trigger on "design this", "let's align on the approach", or "/team-design".
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
 
 # Team Design — Where Are We Going?
 
-Run the DESIGN phase. This is the pipeline's only human gate — get
-alignment here before investing in detailed planning.
+Run the DESIGN phase. The design-author decides the approach — recording
+every self-resolved choice as an auditable assumption — and the
+adversarial design review gates advancement. No mid-run prompt fires.
 
 ## Input
 
@@ -74,26 +75,35 @@ done
 
 1. Use the directory resolved in `## Input`.
 2. Dispatch `design-author`, which:
-   a. Presents 3–5 open design questions to the user via the built-in
-      `AskUserQuestion` tool (multi-choice with labeled trade-offs)
-   b. Waits for the user's structured answers
-   c. Writes `$ARGUMENTS/design.md` with frontmatter
-      `approved: false`, `approved_at: null`, `revision: 0`
-3. **Human gate.** Present the design **in full**, then use
-   `AskUserQuestion` to capture the verdict. Use a single question with a
-   `Decision` header and these options:
-   - **Approve** — design is ready; advance to STRUCTURE.
-   - **Request changes** — describe what to revise; re-dispatch
-     `design-author` with the user's feedback verbatim.
-   - **Reject** — abandon this design and start over.
+   a. Resolves its own open questions autonomously, recording each in
+      `## Decisions made` marked as an assumption (see the agent file)
+   b. Writes `$ARGUMENTS/design.md` with frontmatter `revision: 0`
 
-   - On Approve → edit `$ARGUMENTS/design.md` frontmatter to set
-     `approved: true` and `approved_at: <ISO-8601>`.
-   - On Request changes → re-dispatch `design-author` with the user's
-     feedback verbatim. The agent re-drafts and increments
-     `revision: <n+1>`. Cap at `revision: 5`; beyond that, escalate to
-     the user.
-4. **Stop once `$ARGUMENTS/design.md` carries `approved: true`.**
+   If `$ARGUMENTS/design.md` already exists, skip this dispatch and
+   resume at step 3 — never re-draft an existing design.
+3. **Design review gate.** If the latest
+   `$ARGUMENTS/design-review-<n>.md` already carries a passing verdict
+   (APPROVE or COMMENT), skip straight to step 4 — never re-review a
+   passed design. Otherwise dispatch the adversarial design review (the
+   `## Review brief` in `skills/eng-design-doc-review/SKILL.md`, run by
+   a fresh-context read-only `Explore` subagent each round) and write
+   the findings + verdict to `$ARGUMENTS/design-review-<n>.md`, where
+   `<n>` is the highest existing `<n>` + 1 (1 when none exists) — never
+   overwrite an earlier verdict record:
+   - **APPROVE or COMMENT** — the review passes; advance.
+   - **REQUEST CHANGES** — re-dispatch `design-author` with the
+     reviewer's findings verbatim. The agent re-drafts and increments
+     `revision: <n+1>`, then a fresh review round runs. Cap at
+     `revision: 5`; at cap, halt terminally and report the unresolved
+     findings. Recovery: a human revises `$ARGUMENTS/design.md` by
+     hand and re-invokes `/team-design` bare — the run resumes at this
+     gate. The `revision` counter persists in `design.md` frontmatter;
+     hand-lower it to restore the revision budget.
+   - **Unparseable verdict or reviewer crash** — retry the review once
+     with the error; on second failure, halt loudly. Fail closed —
+     never advance on a missing verdict.
+4. **Stop once `$ARGUMENTS/design.md` exists and the latest
+   `$ARGUMENTS/design-review-<n>.md` verdict is APPROVE or COMMENT.**
 
 ## Completion
 

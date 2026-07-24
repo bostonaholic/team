@@ -8,7 +8,6 @@ tools: Read, Write, Grep, Glob, Bash, TodoWrite
 permissionMode: acceptEdits
 skills:
   - product-thinking
-  - agent-open-questions
   - progress-tracking
   - decomposing-intent
 ---
@@ -40,14 +39,14 @@ paths and module names.
 ## Procedure
 
 Your artifact templates and decomposition procedure — the `task.md` and
-`questions.md` body templates, the topic-slug rules, the process steps, and
-the Multi-repo detection flow — live in
+`questions.md` body templates, the PRD criteria, the topic-slug rules, the
+process steps, and the Multi-repo detection flow — live in
 `skills/decomposing-intent/SKILL.md` (preloaded). When the description
-suggests the topic spans more than one repository, surface the `Repos`
-question via the `openQuestions` envelope per
-`skills/agent-open-questions/SKILL.md` (preloaded) before writing any
-artifacts, and write `repos.md` only from the validated list the
-orchestrator returns.
+suggests the topic spans more than one repository, resolve the scope
+**autonomously** per that flow — validated sibling directories of the home
+repo root, never a pause for user input; when in doubt stay single-repo
+and record the assumption in `task.md` — and write `repos.md` only from
+candidates that actually resolved.
 
 ## Outputs
 
