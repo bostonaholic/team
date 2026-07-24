@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 48 skills — 11 pipeline entry-point slash commands, 2 standalone utilities (shipit, pr-open-comments), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 49 skills — 11 pipeline entry-point slash commands, 3 standalone utilities (shipit, pr-open-comments, pr-watch), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -44,10 +44,11 @@ catalog into two flavors:
   …`).
 
 That `argument-hint` marker is the whole flavor distinction. Most
-`argument-hint` skills drive a QRSPI phase, but two — `shipit` and
-`pr-open-comments` — are standalone utilities (land a reviewed PR; triage
-its unresolved review feedback). Neither is a pipeline phase. The split is
-**11 pipeline entry-point + 2 standalone utility + 35 methodology = 48**.
+`argument-hint` skills drive a QRSPI phase, but three — `shipit`,
+`pr-open-comments`, and `pr-watch` — are standalone utilities (land a
+reviewed PR; triage its unresolved review feedback; watch it for new
+feedback). None is a pipeline phase. The split is
+**11 pipeline entry-point + 3 standalone utility + 35 methodology = 49**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -267,7 +268,25 @@ QRSPI phase — a self-contained action a user runs on demand.
   needs-clarification, could-not-apply). Model-invocable — the default is
   read-only, so cue-based auto-invocation is safe.
 
-## Methodology skills
+### pr-watch
+
+- **Purpose:** Arm a bounded watch loop on a pull request — undraft it,
+  take a baseline snapshot, then poll GitHub for new review feedback and
+  triage it via `pr-open-comments` as it arrives.
+- **`$ARGUMENTS`:** `[<pr-number-or-url>]` — optional; defaults to the
+  current branch's PR.
+- **Phase:** None — a standalone watch action, not part of the pipeline.
+- **Key behaviors:** Auto-undrafts via `gh pr ready` and reports the
+  promotion loudly (a `gh pr ready` failure warns and keeps watching);
+  applies the best-effort in-review ticket transition. Bounded cycles: 48
+  cycles of ~31 minutes each (up to three `sleep 600` calls plus one poll
+  per cycle; cycle 0 polls immediately). Default mode is present-then-stop:
+  each feedback batch renders the punch list and ends the turn; authorized
+  mode ("watch this PR and fix comments") applies, pushes, 🤖-replies,
+  resolves, and resumes. Stops on approval, merge, close, user interrupt,
+  cycle-48 timeout, or 3 consecutive poll failures. On approval it runs a
+  final triage pass and hands off with `Next: run /shipit` — it never
+  auto-runs `/shipit`.
 
 The 35 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
@@ -712,6 +731,7 @@ entry-point section above rather than repeating them here.
 | `eng-design-doc-review` | user (direct invocation) | Optional pre-Design audit; dispatches a general-purpose subagent |
 | `shipit` | user (direct invocation) | Standalone — land a reviewed PR (not a QRSPI phase) |
 | `pr-open-comments` | user or model (direct invocation) | Standalone — triage unresolved PR review feedback (not a QRSPI phase) |
+| `pr-watch` | user or model (direct invocation) | Standalone — bounded PR review watch loop (not a QRSPI phase) |
 | `qrspi-workflow` | orchestrator skills | All phases |
 | `artifact-frontmatter` | orchestrator skills; artifact authors (just-in-time via pointers) | All phases — artifact schema |
 | `agent-open-questions` | questioner, design-author | Question, Design (subagent → user via orchestrator) |

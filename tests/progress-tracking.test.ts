@@ -134,27 +134,27 @@ describe("Slice 1: progress-tracking convention skill exists", () => {
   });
 });
 
-describe("skill count reconciliation (-> 48: pr-open-comments standalone utility)", () => {
+describe("skill count reconciliation (-> 49: pr-open-comments + pr-watch standalone utilities)", () => {
   const CLAUDE_MD = join(REPO_ROOT, "CLAUDE.md");
   const AGENTS_MD = join(REPO_ROOT, "AGENTS.md");
 
-  test("CLAUDE.md heading reads '## Skills (48)'", () => {
-    expect(/^## Skills \(48\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md heading reads '## Skills (49)'", () => {
+    expect(/^## Skills \(49\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 
-  test("AGENTS.md heading reads '## Skills (48)'", () => {
-    expect(/^## Skills \(48\)/m.test(read(AGENTS_MD))).toBe(true);
+  test("AGENTS.md heading reads '## Skills (49)'", () => {
+    expect(/^## Skills \(49\)/m.test(read(AGENTS_MD))).toBe(true);
   });
 
-  test("filesystem has exactly 48 SKILL.md files declaring a name:", () => {
+  test("filesystem has exactly 49 SKILL.md files declaring a name:", () => {
     // 31 baseline + 9 thin-agents + 4 Tier 1 JIT + 3 Tier 2 JIT
-    // + 1 standalone utility (pr-open-comments) = 48.
+    // + 2 standalone utilities (pr-open-comments, pr-watch) = 49.
     const dirs = readdirSync(SKILLS_DIR, { withFileTypes: true })
       .filter((d) => d.isDirectory())
       .map((d) => join(SKILLS_DIR, d.name, "SKILL.md"))
       .filter((p) => existsSync(p));
     const withName = dirs.filter((p) => /^name:/m.test(read(p)));
-    expect(withName.length).toBe(48);
+    expect(withName.length).toBe(49);
   });
 });
 

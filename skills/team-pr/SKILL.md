@@ -239,3 +239,5 @@ only used if there are uncommitted final changes (e.g., changelog).
 ## Completion
 
 Report the outcome (draft PR URL and commit hash).
+
+Next: run /pr-watch when the PR is ready for review.
