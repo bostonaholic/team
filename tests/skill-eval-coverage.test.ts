@@ -24,6 +24,12 @@
 //   2. NO tests/<skill>.evals.ts
 //   3. A sentinel comment in tests/protocol.test.ts documenting the demotion
 //      (line matching: // L2-demoted (heavy prior state): followed by the skill)
+//
+// Executable utility skills covered at L2 via a dedicated tripwire, not L5
+// (heavy external state — an open PR, CI, the GitHub API — same reason
+// team-pr is demoted; no protocol.test.ts sentinel, that convention is for
+// the pipeline-skill demotions):
+//   shipit, pr-open-comments, pr-watch
 
 import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
@@ -465,5 +471,47 @@ describe("L2 coverage: shipit (executable utility, not L5)", () => {
 
   test("shipit is pinned by its dedicated L2 tripwire tests/shipit-skill.test.ts", () => {
     expect(existsSync(join(TESTS_ROOT, "shipit-skill.test.ts"))).toBe(true);
+  });
+});
+
+// `pr-open-comments` triages unresolved review threads on a live PR — heavy
+// external state (an open PR, review threads, the GitHub GraphQL API) that
+// cannot be honestly driven in a single offline `claude -p` eval, the same
+// reason `shipit` and `team-pr` are demoted. Its behavioral contract is
+// pinned by its dedicated L2 tripwire, tests/pr-open-comments-skill.test.ts,
+// not an L5 eval.
+
+describe("L2 coverage: pr-open-comments (executable utility, not L5)", () => {
+  test("pr-open-comments has no evals/fixtures/pr-open-comments/ directory (no L5 eval)", () => {
+    expect(existsSync(fixtureDir("pr-open-comments"))).toBe(false);
+  });
+
+  test("pr-open-comments has no tests/pr-open-comments.evals.ts file (no L5 eval)", () => {
+    expect(existsSync(evalsFilePath("pr-open-comments"))).toBe(false);
+  });
+
+  test("pr-open-comments is pinned by its dedicated L2 tripwire tests/pr-open-comments-skill.test.ts", () => {
+    expect(existsSync(join(TESTS_ROOT, "pr-open-comments-skill.test.ts"))).toBe(true);
+  });
+});
+
+// `pr-watch` polls a live PR for up to 24 hours and reacts to reviewer
+// activity — heavy external state (an open PR, CI, reviewers, wall-clock
+// time) that cannot be honestly driven in a single offline `claude -p` eval,
+// the same reason `shipit` and `team-pr` are demoted. Its behavioral contract
+// is pinned by its dedicated L2 tripwire, tests/pr-watch-skill.test.ts, not
+// an L5 eval.
+
+describe("L2 coverage: pr-watch (executable utility, not L5)", () => {
+  test("pr-watch has no evals/fixtures/pr-watch/ directory (no L5 eval)", () => {
+    expect(existsSync(fixtureDir("pr-watch"))).toBe(false);
+  });
+
+  test("pr-watch has no tests/pr-watch.evals.ts file (no L5 eval)", () => {
+    expect(existsSync(evalsFilePath("pr-watch"))).toBe(false);
+  });
+
+  test("pr-watch is pinned by its dedicated L2 tripwire tests/pr-watch-skill.test.ts", () => {
+    expect(existsSync(join(TESTS_ROOT, "pr-watch-skill.test.ts"))).toBe(true);
   });
 });

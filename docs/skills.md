@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 47 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 48 skills — 11 pipeline entry-point slash commands, 2 standalone utilities (shipit, pr-open-comments), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -44,10 +44,10 @@ catalog into two flavors:
   …`).
 
 That `argument-hint` marker is the whole flavor distinction. Most
-`argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
-standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 35 methodology =
-47**.
+`argument-hint` skills drive a QRSPI phase, but two — `shipit` and
+`pr-open-comments` — are standalone utilities (land a reviewed PR; triage
+its unresolved review feedback). Neither is a pipeline phase. The split is
+**11 pipeline entry-point + 2 standalone utility + 35 methodology = 48**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -225,8 +225,8 @@ argument shape.
 
 ## Standalone utilities
 
-Carries `argument-hint` (so it is a slash command) but is **not** a QRSPI
-phase — a self-contained action a user runs on demand.
+Each carries `argument-hint` (so it is a slash command) but is **not** a
+QRSPI phase — a self-contained action a user runs on demand.
 
 ### shipit
 
@@ -248,6 +248,24 @@ phase — a self-contained action a user runs on demand.
   changelog editing, or release work; those, if a project needs them, run in a
   separate step before `/shipit` (in this repo, the dev `version-bump` skill).
   `disable-model-invocation: true` — irreversible, so user-invoked only.
+
+### pr-open-comments
+
+- **Purpose:** Triage unresolved review feedback on a pull request — fetch
+  every unresolved review thread via GraphQL, verify each comment against
+  the current code, and present a globally numbered punch list with 2–4
+  tailored options and one recommendation per item.
+- **`$ARGUMENTS`:** `[<pr-number-or-url>]` — optional; defaults to the
+  current branch's PR.
+- **Phase:** None — a standalone triage action, not part of the pipeline.
+- **Key behaviors:** Present-then-stop by default — no edits, no replies,
+  no thread resolution; the turn ends with a hand-off prompt and the user
+  picks actions. Verifies every comment before classifying it (a behavioral
+  claim needs a named test as evidence). The Authorized Execution path
+  (apply → push → 🤖-prefixed reply → resolve) activates only on explicit
+  user authorization, with carve-outs that still pause (declined,
+  needs-clarification, could-not-apply). Model-invocable — the default is
+  read-only, so cue-based auto-invocation is safe.
 
 ## Methodology skills
 
@@ -693,6 +711,7 @@ entry-point section above rather than repeating them here.
 | `team-fix` | user (direct invocation) | Compressed bug-fix flow (outside QRSPI) |
 | `eng-design-doc-review` | user (direct invocation) | Optional pre-Design audit; dispatches a general-purpose subagent |
 | `shipit` | user (direct invocation) | Standalone — land a reviewed PR (not a QRSPI phase) |
+| `pr-open-comments` | user or model (direct invocation) | Standalone — triage unresolved PR review feedback (not a QRSPI phase) |
 | `qrspi-workflow` | orchestrator skills | All phases |
 | `artifact-frontmatter` | orchestrator skills; artifact authors (just-in-time via pointers) | All phases — artifact schema |
 | `agent-open-questions` | questioner, design-author | Question, Design (subagent → user via orchestrator) |

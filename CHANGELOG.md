@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **New standalone utility `/pr-open-comments` triages unresolved PR review feedback.** [`skills/pr-open-comments/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-open-comments/SKILL.md) fetches every unresolved review thread on a pull request via GraphQL, verifies each comment against the current code (a behavioral claim requires a named test as evidence), and presents a globally numbered punch list with 2–4 tailored options and one recommendation per item. By default it presents and stops — no edits, no replies, no thread resolution; explicit user authorization activates the apply → push → 🤖-prefixed reply → resolve path, with carve-outs (declined, needs-clarification, could-not-apply) that still pause for the user.
+
 ## [0.21.0] - 2026-07-23
 
 ### Changed
