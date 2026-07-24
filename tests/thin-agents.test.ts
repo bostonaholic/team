@@ -273,6 +273,17 @@ describe("thin agents: documentation counts agree at 46 skills", () => {
     expect(count).toBe(46);
   });
 
+  test("docs/skills.md documents every skill: ### entry count equals the on-disk count", () => {
+    // Every per-skill entry in docs/skills.md is an h3; nothing else in the
+    // file uses that level. A drift here means an entry was added or lost
+    // without the catalog (or the filesystem) following.
+    const entries = read(SKILLS_MD).match(/^### /gm) ?? [];
+    const count = readdirSync(join(REPO_ROOT, "skills")).filter((name) =>
+      existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")),
+    ).length;
+    expect(entries.length).toBe(count);
+  });
+
   test("AGENTS.md heading reads Skills (46)", () => {
     expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (46)");
   });

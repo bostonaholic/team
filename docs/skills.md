@@ -262,7 +262,7 @@ phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 35 methodology skills carry no `argument-hint` and are never invoked
+The 34 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -292,9 +292,77 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Key behaviors:** Carries the artifact inventory and `<id>` forms, the
   YAML frontmatter schema and phase enum, the `repos.md` and `prd.md`
   schemas, the topic-consistency invariant, the `ticketId` scope rule,
-  and the approval check/flip/rejection mechanics. Defers to
+  and the design-review record mechanics (`design-review-<n>.md`
+  verdicts). Defers to
   `hooks/session-start-recover.mjs` as the executable canon for
   `ID_RE`/`PHASE_FILES` rather than forking them.
+
+### researching-codebases
+
+- **Purpose:** Codebase research procedure for the Research phase.
+- **Loaded by:** researcher.
+- **Key behaviors:** Carries the investigation method (context, trace,
+  pattern recognition, constraint discovery) and the compressed
+  research-report output format with its 100-line budget (150 in
+  multi-repo mode). The isolation stance itself — questions.md only,
+  never task.md — stays in the researcher agent as identity.
+
+### finding-files
+
+- **Purpose:** File-location search strategy for the Research phase.
+- **Loaded by:** file-finder.
+- **Key behaviors:** Glob by naming convention, content search,
+  import/dependency tracing, directory exploration, and config/manifest
+  checks, scoped to the vocabulary in `questions.md`. Deliberately
+  self-contained — the file-finder runs on haiku, so the skill carries
+  everything inline with no cross-references.
+
+### decomposing-intent
+
+- **Purpose:** Artifact templates and decomposition procedure for the
+  Question phase.
+- **Loaded by:** questioner.
+- **Key behaviors:** Carries the `task.md` and `questions.md` body
+  templates, the topic-slug rules, the process steps, and the multi-repo
+  detection flow (autonomous allowlist + sibling-directory resolution
+  with realpath containment and the loud single-repo fallback, plus the
+  `repos.md` schema pointer). Conditionally loads
+  `product-requirements-doc` for vague, multi-story, cross-cutting, or
+  behavior-replacing requests, producing `prd.md` alongside `task.md`.
+
+### authoring-designs
+
+- **Purpose:** Design-document authoring procedure for the Design phase.
+- **Loaded by:** design-author.
+- **Key behaviors:** Carries the repo-scope confirmation flow, the
+  autonomous open-questions resolution rule (self-resolved choices land
+  in `## Decisions made` marked "Assumption — chosen without user
+  review"), and the `design.md` document
+  template with its six-category edge-case walk. When `task.md`
+  references a `prd.md`, reads it first and honors its scope boundaries
+  and acceptance criteria per `product-requirements-doc`'s "Consuming a
+  PRD downstream" section.
+
+### slicing-work
+
+- **Purpose:** Vertical-slice breakdown methodology for the Structure
+  phase.
+- **Loaded by:** structure-planner.
+- **Key behaviors:** Carries the vertical-slice rationale, the
+  `structure.md` document format, the slicing rules (every slice ends in a
+  passing test; 1–3 acceptance tests per slice; edge cases pulled from the
+  design; order by user value), and the slicing heuristics
+  (walking-skeleton first; migrations alone are never a slice).
+
+### planning-implementation
+
+- **Purpose:** Tactical planning methodology for the Plan phase.
+- **Loaded by:** planner.
+- **Key behaviors:** Carries the `plan.md` document template that expands
+  each vertical slice into file-level steps with acceptance-test mappings,
+  and the tactical rules (one slice at a time, reuse over reinvention,
+  under 300 lines, no implementation code, atomic slices, test coverage
+  matching the structure).
 
 ### code-review
 
@@ -626,7 +694,8 @@ entry-point section above rather than repeating them here.
 | `team-fix` | user (direct invocation) | Compressed bug-fix flow (outside QRSPI) |
 | `eng-design-doc-review` | user (direct invocation); pipeline DESIGN review gate (brief by reference) | Design review-gate brief + standalone audit; dispatches a read-only Explore subagent |
 | `shipit` | user (direct invocation) | Standalone — land a reviewed PR (not a QRSPI phase) |
-| `qrspi-workflow` | orchestrator skills; questioner (schema) | All phases |
+| `qrspi-workflow` | orchestrator skills | All phases |
+| `artifact-frontmatter` | orchestrator skills; artifact authors (just-in-time via pointers) | All phases — artifact schema |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
 | `conventional-comments` | code-reviewer, security-reviewer, technical-writer | Implement (verify) — finding format |
 | `review-severity-tiers` | orchestrator (team, team-implement, qrspi-workflow) | Implement (aggregate review gate) |

@@ -227,14 +227,13 @@ End with a verdict, using the same gate type as `code-reviewer`:
   change to its headings, process, or verdict set as a pipeline change.
 - This skill is **read-only, structurally for writes**. The `Explore`
   subagent holds no Write/Edit tools, so it cannot modify `design.md`,
-  the artifact directory, or any verdict record. Any residual tools
-  are governed by the brief's read-only instruction — that
-  residual is accepted: the reviewer's output never becomes state on
-  its own — the *orchestrator*
-  records the verdict to `design-review-<n>.md` when the pipeline gate
-  runs the brief, and the recovery hooks fail closed on anything but a
-  recorded passing verdict. The skill itself writes no artifacts and
-  does not modify `design.md` or the artifact directory.
+  the artifact directory, or any verdict record; any residual tools are
+  governed by the brief's read-only instruction, and that residual is
+  accepted. The reviewer's output never becomes state on its own — the
+  *orchestrator* records the verdict to `design-review-<n>.md` when the
+  pipeline gate runs the brief, and the recovery hooks fail closed on
+  anything but a recorded passing verdict. The skill itself writes no
+  artifacts.
 - Standalone use blocks nothing: users may run `/team-design` or
   `/team-structure` without ever invoking this skill directly.
 

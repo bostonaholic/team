@@ -446,7 +446,7 @@ each block points at.
 Methodology skills carry no `argument-hint` and are loaded by agents
 through one of two mechanisms: a `skills:` YAML list in the agent's
 frontmatter (for example, `agents/design-author.md` declares
-`skills: [product-thinking, agent-open-questions, progress-tracking,
+`skills: [product-thinking, progress-tracking,
 authoring-designs]`), or an inline prose load instruction in the
 agent body (for example, `solid-principles` is loaded inline by the
 `implementer` body's Code quality section).
