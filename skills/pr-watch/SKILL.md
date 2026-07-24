@@ -95,11 +95,32 @@ When a poll detects a change, load `skills/pr-open-comments/SKILL.md` and
 follow it. This skill never restates the triage steps — the fetch,
 verification, and punch-list format live there.
 
+The loop runs in one of two modes. The mode is granted per arming
+instruction and holds for the life of the watch: a plain arm ("watch the
+PR") selects the default present-then-stop mode; an arming instruction
+that grants authorization ("watch this PR and fix comments") selects
+authorized mode. Every loop report — the poll snapshot and the batch
+report — names the active mode, so the mode stays auditable. A timeout
+re-arm keeps the mode.
+
 The default mode is present-then-stop:
 
 - Present the punch list, then stop the turn — a turn must end to collect
   the user's per-item choices.
 - After the user's choices execute, offer to re-arm the watch.
+
+### Authorized mode — apply, resolve, resume
+
+When the arming instruction grants authorization, each feedback batch
+runs the Authorized Execution path of
+`skills/pr-open-comments/SKILL.md`: apply → push → 🤖 reply → resolve.
+Then the loop re-arms until approval, merge, or timeout.
+
+- If a batch contains carve-out items (declined, needs-clarification, or
+  could-not-apply), apply the authorized items first, then present the
+  carve-outs and stop the loop — never watch past an open disagreement.
+- If a push fails in authorized mode, stop the loop and report it. Never
+  reply "done" or resolve a thread without landed code.
 
 ### 5. Edge cases
 
@@ -146,6 +167,7 @@ Report:
 
 - the stop reason (approval, merge, close, user interrupt, cycle-48
   timeout, or 3 consecutive poll failures)
+- the active mode (present-then-stop or authorized)
 - the number of cycles consumed
 - the handoff — on approval, `Next: run /shipit when you want to land
   it.`; on timeout or after the user's choices execute, offer to re-arm
