@@ -249,7 +249,7 @@ The `## Screenshots` section is built from `$ARGUMENTS/screenshots/manifest.md`
 - **Manifest `status` is any `skipped-*` value, or the manifest is malformed**
   (unparseable frontmatter or body) → render a one-line capture-failure note
   naming the reason, nothing more. Never block or delay the PR over
-  screenshots — the PR phase is not a human gate.
+  screenshots — the PR phase never waits for approval.
 - **Each `## Captured` entry whose PNG exists on disk** renders as
   `**<caption>** (<state>)` followed by its local path. Entries whose PNG is
   missing from disk are skipped and the discrepancy noted in the section.

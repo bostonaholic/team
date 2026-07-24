@@ -76,8 +76,8 @@ describe("team-pr Screenshots section rendering (slice 2)", () => {
     const neverBlocks =
       /(never|do not|don't)[^.]{0,80}(block|delay)[^.]{0,80}(the )?(PR|pull request)/i.test(t);
     expect(neverBlocks).toBe(true);
-    const humanGateCitations = body().match(/not a human gate/gi) ?? [];
-    expect(humanGateCitations.length).toBeGreaterThanOrEqual(2);
+    const noWaitCitations = body().match(/never waits for approval/gi) ?? [];
+    expect(noWaitCitations.length).toBeGreaterThanOrEqual(2);
   });
 });
 

@@ -273,6 +273,17 @@ describe("thin agents: documentation counts agree at 48 skills", () => {
     expect(count).toBe(48);
   });
 
+  test("docs/skills.md documents every skill: ### entry count equals the on-disk count", () => {
+    // Every per-skill entry in docs/skills.md is an h3; nothing else in the
+    // file uses that level. A drift here means an entry was added or lost
+    // without the catalog (or the filesystem) following.
+    const entries = read(SKILLS_MD).match(/^### /gm) ?? [];
+    const count = readdirSync(join(REPO_ROOT, "skills")).filter((name) =>
+      existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")),
+    ).length;
+    expect(entries.length).toBe(count);
+  });
+
   test("AGENTS.md heading reads Skills (48)", () => {
     expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (48)");
   });
@@ -283,7 +294,7 @@ describe("thin agents: documentation counts agree at 48 skills", () => {
 
   test("docs/skills.md split sentence sums to 48", () => {
     expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain(
-      "11 pipeline entry-point + 1 standalone utility + 34 methodology = 48",
+      "11 pipeline entry-point + 3 standalone utility + 34 methodology = 48",
     );
   });
 
