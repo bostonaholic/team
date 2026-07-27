@@ -312,12 +312,15 @@ describe("static gate: PR evals workflow", () => {
     expect(/^\s*ANTHROPIC_API_KEY:/m.test(workflow)).toBe(true);
   });
 
-  test("lets the diff drive selection: no EVALS_ALL, no EVALS_TIER", () => {
-    // Setting either as an env key would override diff selection (run
-    // everything / filter to one tier), defeating cost-scales-with-the-diff.
-    // Match assignments only, so the explanatory comment doesn't trip this.
+  test("filters the PR run to the gate tier; selection stays diff-driven", () => {
+    // EVALS_TIER: gate drops every periodic (live-model, stochastic) fixture
+    // from the PR run, so a borderline grading can never redden the check.
+    // EVALS_ALL stays absent so the diff keeps driving selection within the
+    // gate tier — cost still scales with the change. Match assignments only
+    // (bare key at line start), so the explanatory comment doesn't trip this;
+    // the exact-value match also catches typos like `gates`.
+    expect(/^\s*EVALS_TIER:\s*gate\s*$/m.test(workflow)).toBe(true);
     expect(/^\s*EVALS_ALL:/m.test(workflow)).toBe(false);
-    expect(/^\s*EVALS_TIER:/m.test(workflow)).toBe(false);
   });
 
   test("report job can post PR comments (issues + pull-requests write)", () => {

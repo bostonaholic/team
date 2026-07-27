@@ -7,8 +7,9 @@
 # touchfiles (tests/helpers/touchfiles.ts) — cost scales with the diff, NOT the
 # whole suite. The weekly full periodic run stays in periodic-evals.yml.
 #
-# ADVISORY: includes stochastic periodic evals, so this is intentionally NOT a
-# required merge check (TESTING.md: stochastic checks must not gate merges).
+# ADVISORY: runs gate-tier fixtures only (EVALS_TIER: gate) — stochastic
+# periodic evals never run here, only in the weekly periodic-evals.yml. Still
+# intentionally NOT a required merge check: zero gate-tier fixtures exist today.
 #
 # SECURITY: same-repo PRs only, AND trusted authors only. Fork PRs lack the
 # EVALS_ANTHROPIC_API_KEY secret and a write token, so both jobs are guarded on
@@ -73,8 +74,9 @@ jobs:
           EVALS_ANTHROPIC_API_KEY: ${{ secrets.EVALS_ANTHROPIC_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.EVALS_ANTHROPIC_API_KEY }}
           EVALS: "1"
-          # NOT EVALS_ALL and NOT EVALS_TIER: let the diff drive selection across
-          # all tiers, so cost scales with the change.
+          # Diff drives selection (no EVALS_ALL — cost scales with the change),
+          # then the gate-tier filter drops periodic (stochastic) fixtures.
+          EVALS_TIER: gate
           EVALS_BASE: origin/${{ github.event.pull_request.base.ref }}
           SUITE_FILE: ${{ matrix.suite.file }}
         run: bun test "$SUITE_FILE"
