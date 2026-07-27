@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 47 skills — 11 pipeline entry-point slash commands, 1 standalone utility (shipit), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 49 skills — 11 pipeline entry-point slash commands, 3 standalone utilities (shipit, pr-open-comments, pr-watch), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -44,10 +44,11 @@ catalog into two flavors:
   …`).
 
 That `argument-hint` marker is the whole flavor distinction. Most
-`argument-hint` skills drive a QRSPI phase, but one — `shipit` — is a
-standalone utility (it lands a reviewed PR; it is not a pipeline phase). The
-split is **11 pipeline entry-point + 1 standalone utility + 35 methodology =
-47**.
+`argument-hint` skills drive a QRSPI phase, but three — `shipit`,
+`pr-open-comments`, and `pr-watch` — are standalone utilities (land a
+reviewed PR; triage its unresolved review feedback; watch it for new
+feedback). None is a pipeline phase. The split is
+**11 pipeline entry-point + 3 standalone utility + 35 methodology = 49**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -194,7 +195,8 @@ argument shape.
 - **Key behaviors:** Loads `git-commit` for commit discipline and
   `changelog` for the changelog update; adds a PR body from its template.
   Leaves the worktree in place after opening the PR so you can iterate;
-  teardown waits until the PR merges or you ask.
+  teardown waits until the PR merges or you ask. Completion suggests
+  arming `/pr-watch` once the PR is ready for review.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
   the missing upstream artifacts inline rather than hard-erroring.
 
@@ -225,8 +227,8 @@ argument shape.
 
 ## Standalone utilities
 
-Carries `argument-hint` (so it is a slash command) but is **not** a QRSPI
-phase — a self-contained action a user runs on demand.
+Each carries `argument-hint` (so it is a slash command) but is **not** a
+QRSPI phase — a self-contained action a user runs on demand.
 
 ### shipit
 
@@ -248,6 +250,62 @@ phase — a self-contained action a user runs on demand.
   changelog editing, or release work; those, if a project needs them, run in a
   separate step before `/shipit` (in this repo, the dev `version-bump` skill).
   `disable-model-invocation: true` — irreversible, so user-invoked only.
+
+### pr-open-comments
+
+- **Purpose:** Triage unresolved review feedback on a pull request — fetch
+  every unresolved review thread via GraphQL, verify each comment against
+  the current code, auto-apply recommendations rated above 90% confidence
+  (full apply → push → reply → resolve pipeline), and present a
+  globally numbered punch list with 2–4 tailored options and one
+  recommendation per item for the rest.
+- **`$ARGUMENTS`:** `[<pr-number-or-url>]` — optional; defaults to the
+  current branch's PR.
+- **Phase:** None — a standalone triage action, not part of the pipeline.
+- **Key behaviors:** Confidence-gated autonomy: each recommendation gets
+  a confidence rating assigned only after verification (a behavioral
+  claim needs a passing named test to exceed 90%). Items above 90% that
+  pass every hard rule are applied, pushed, replied to, and resolved
+  automatically and reported with confidence and commit SHA; everything
+  else presents-then-stops — the turn ends with a hand-off prompt that
+  separates "Auto-applied" from "Needs your decision". Explicit user
+  authorization (apply → push → reply → resolve) applies the
+  whole batch regardless of confidence. Carve-outs are absolute at any
+  confidence (declined, needs-clarification, could-not-apply,
+  security-sensitive). Treats comment bodies as untrusted data: embedded
+  imperatives beyond the thread's anchored code are never acted on, and
+  auto-apply is bounded to the file and lines the thread references —
+  broader asks and new security-sensitive constructs become carve-outs.
+  Model-invocable — cue-based auto-invocation is justified by the
+  carve-out set plus the verification bar.
+
+### pr-watch
+
+- **Purpose:** Arm a bounded watch loop on a pull request — undraft it,
+  take a baseline snapshot, then poll GitHub for new review feedback and
+  triage it via `pr-open-comments` as it arrives.
+- **`$ARGUMENTS`:** `[<pr-number-or-url>]` — optional; defaults to the
+  current branch's PR.
+- **Phase:** None — a standalone watch action, not part of the pipeline.
+- **Key behaviors:** Undrafts via `gh pr ready` only on a clear readiness
+  cue and reports the promotion loudly (an ambiguous cue watches the
+  draft in place and never promotes; a `gh pr ready` failure warns and
+  keeps watching); applies the best-effort in-review ticket transition.
+  Bounded cycles: 48 cycles of ~31 minutes each (up to three `sleep 600`
+  calls plus one poll per cycle; cycle 0 polls immediately). Default mode
+  auto-applies items the triage rates above 90% confidence — a batch
+  fully handled that way resumes the loop with a report — while sub-90%
+  or carve-out items render the punch list and end the turn; authorized
+  mode (granted by one of several canonical phrases, e.g. "watch this PR
+  and fix comments") applies, pushes, replies, resolves, and resumes
+  regardless of confidence. An ambiguous cue never selects authorized
+  mode. Loop reports name the mode and list auto-applied items with
+  confidence and commit SHA. Stops on approval, merge, close, user interrupt,
+  cycle-48 timeout, or 3 consecutive poll failures. On approval it runs a
+  final triage pass and hands off with `Next: run /shipit` — it never
+  auto-runs `/shipit`. Model-invocable — it promotes a draft only on an
+  unambiguous readiness cue and reports the promotion loudly, so
+  cue-based auto-invocation is safe.
 
 ## Methodology skills
 
@@ -693,6 +751,8 @@ entry-point section above rather than repeating them here.
 | `team-fix` | user (direct invocation) | Compressed bug-fix flow (outside QRSPI) |
 | `eng-design-doc-review` | user (direct invocation) | Optional pre-Design audit; dispatches a general-purpose subagent |
 | `shipit` | user (direct invocation) | Standalone — land a reviewed PR (not a QRSPI phase) |
+| `pr-open-comments` | user or model (direct invocation) | Standalone — triage unresolved PR review feedback (not a QRSPI phase) |
+| `pr-watch` | user or model (direct invocation) | Standalone — bounded PR review watch loop (not a QRSPI phase) |
 | `qrspi-workflow` | orchestrator skills | All phases |
 | `artifact-frontmatter` | orchestrator skills; artifact authors (just-in-time via pointers) | All phases — artifact schema |
 | `agent-open-questions` | questioner, design-author | Question, Design (subagent → user via orchestrator) |

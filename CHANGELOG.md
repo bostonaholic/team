@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-07-27
+
+### Added
+
+- **New standalone utility `/pr-open-comments` triages unresolved PR review feedback and auto-applies high-confidence fixes.** [`skills/pr-open-comments/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-open-comments/SKILL.md) fetches every unresolved review thread on a pull request via GraphQL, verifies each comment against the current code (a behavioral claim requires a named test as evidence), and rates confidence in one recommendation per item after verification. Items above 90% confidence that pass every hard rule are applied, pushed, replied to, and resolved automatically and reported with confidence and commit SHA; everything else lands on a globally numbered punch list with 2–4 tailored options that presents and stops. Explicit user authorization applies the whole batch regardless of confidence. Carve-outs (declined, needs-clarification, could-not-apply, security-sensitive) are absolute at any confidence.
+
+- **New standalone utility `/pr-watch` watches a pull request for review feedback.** Saying "the PR is ready for review" (or running [`/pr-watch`](https://github.com/bostonaholic/team/blob/main/skills/pr-watch/SKILL.md)) promotes the draft via `gh pr ready`, reports the promotion loudly, and arms a bounded watch: 48 cycles of ~31 minutes (~24 hours), polling PR state, review decision, and unresolved threads. New feedback runs the `/pr-open-comments` triage; a batch fully handled by the >90%-confidence auto-apply resumes the watch with a report, sub-90% or carve-out items present the punch list and stop the turn, and an authorized arming instruction ("watch this PR and fix comments") applies each batch regardless of confidence — stopping on any carve-out. Loop reports name the mode and list auto-applied items with confidence and commit SHA. The loop stops on approval, merge, close, user interrupt, timeout, or 3 consecutive poll failures; on approval it runs a final triage pass and hands off with `Next: run /shipit` — it never auto-runs `/shipit`.
+
 ## [0.21.0] - 2026-07-23
 
 ### Changed
@@ -251,7 +259,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.21.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.22.0...HEAD
+[0.22.0]: https://github.com/bostonaholic/team/compare/v0.21.0...v0.22.0
 [0.21.0]: https://github.com/bostonaholic/team/compare/v0.20.0...v0.21.0
 [0.20.0]: https://github.com/bostonaholic/team/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/bostonaholic/team/compare/v0.18.0...v0.19.0

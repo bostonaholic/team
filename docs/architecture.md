@@ -263,7 +263,8 @@ push the branch and open a draft PR automatically (`gh pr create
 and surface the tracking ticket (if `task.md` carries `ticketId`). The
 worktree stays in place after the PR opens — teardown is deferred until
 the PR merges or the user asks, so the branch remains available for
-iteration.
+iteration. Completion points at the standalone `/pr-watch` utility for
+watching the PR once it is ready for review.
 
 ## 4. Agent Roster
 
@@ -450,7 +451,7 @@ cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. `code-review` is the only skill loaded as composed
 methodology that is also a user command.)
 
-For the full per-skill reference — all 47 skills, their arguments,
+For the full per-skill reference — all 49 skills, their arguments,
 consumers, and behaviors — see [skills.md](skills.md).
 
 ### Design Guidelines
@@ -669,7 +670,7 @@ children are confirmed, and the depth cap is stable.
 
 ## See also
 
-- **[Skills](skills.md)** — the full per-skill reference for all 47 skills.
+- **[Skills](skills.md)** — the full per-skill reference for all 49 skills.
 - **[Testing](testing.md)** — the six-layer test harness and which layer each check belongs at.
 - **[Vision](vision.md)** — the loop-driven end state this design builds toward.
 - **[Ethos](ethos.md)** — the principles behind the pipeline.
