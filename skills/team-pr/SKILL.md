@@ -139,7 +139,17 @@ done
    the now-pushed commits and updating it (`gh pr edit --body-file`, or
    a quoted heredoc per step 7) so the Summary, Changes, and
    How-to-Verify sections still match what the branch actually does.
-   The footer survives every refresh too: when the
+   **Screenshots go stale the same way the prose does.** When the push
+   changed the UI, re-capture per `skills/verifying-ux/SKILL.md` →
+   "Screenshot Capture (UI projects)" (it wipes and recaptures), then
+   re-render and re-upload the `## Screenshots` section per the rules
+   below, so the embedded images show the UI the branch now produces.
+   When the push left the UI alone, the refresh carries the uploaded
+   `## Screenshots` section through verbatim: never dropped, never
+   re-uploaded — the asset URLs already in the body stay valid. A
+   re-capture that cannot run falls back to the degraded note the
+   rendering rules define; a screenshot problem never blocks or delays
+   the push. The footer survives every refresh too: when the
    body carries a closing line (the home repo's PR of a ticketed topic),
    each refresh re-emits **exactly one** closing line in footer position
    — never duplicated, never dropped. A companion PR re-emits its

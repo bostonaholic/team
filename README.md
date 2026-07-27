@@ -64,6 +64,11 @@ render inline in a `## Screenshots` section of the PR body. Non-UI changes
 never get the section, and any capture or upload failure degrades to a
 visible note with local file paths — the PR always opens.
 
+The images stay current the same way the description does. Every follow-up
+push refreshes both: a push that changes the UI re-captures and re-uploads
+the screenshots, and a push that leaves the UI alone keeps the ones already
+embedded.
+
 Inline upload needs a one-time GitHub sign-in in a dedicated browser profile
 at `${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile/`. `gh auth login`
 is not enough — the CLI token is not a GitHub web session, and the
