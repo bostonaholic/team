@@ -132,7 +132,8 @@ Two severity regimes apply:
 - **APPROVE:** API/UX is intuitive, consistent with existing patterns.
 - **REQUEST CHANGES:** Usability issues found. Treated as a *major* — auto-fixed
   in the loop, not surfaced to the user.
-- **COMMENT:** Minor ergonomic suggestions (minor-and-below — may be surfaced).
+- **COMMENT:** Minor ergonomic suggestions (minor-and-below — recorded in
+  the PR body's `## Review notes`, never presented mid-run).
 
 ### Technical Writer
 

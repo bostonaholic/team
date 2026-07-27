@@ -7,11 +7,11 @@ deps:
   - agents/planner.md
 ---
 
-# Seeded-state task: expand an approved structure into a tactical plan
+# Seeded-state task: expand a structure into a tactical plan
 
 You are running the PLAN phase. The eval harness writes the fenced block below
-to `docs/plans/2026-06-03-token-bucket/structure.md` (carrying
-`approved: true`) in your working directory before you start. Read it and
+to `docs/plans/2026-06-03-token-bucket/structure.md` in your working
+directory before you start. Read it and
 produce a `plan.md`-style tactical plan in your response.
 
 The load-bearing properties: the plan expands each structure slice into
@@ -28,9 +28,6 @@ not write files; just output the plan.
 topic: token-bucket
 date: 2026-06-03
 phase: structure
-approved: true
-approved_at: 2026-06-03T00:00:00Z
-revision: 0
 ---
 
 # Structure: token-bucket

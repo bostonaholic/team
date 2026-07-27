@@ -53,31 +53,34 @@ Explore the codebase to answer the questions. The researcher reads only
 
 ### DESIGN
 
-Align on approach with the user. The design author MUST present open
-questions to the user before writing the design document. The result is
-a ~200-line markdown artifact the human reviews carefully.
+Decide the approach. The design author resolves its own open questions
+autonomously and records each as an explicit assumption in the
+document. The result is
+a ~200-line markdown artifact audited by an adversarial design review.
 
-- **Artifact:** `docs/plans/<id>/design.md`
-- **Gate:** HARD — user must explicitly approve the design
+- **Artifact:** `docs/plans/<id>/design.md` (plus one
+  `docs/plans/<id>/design-review-<n>.md` per review round)
+- **Gate:** REVIEW — adversarial design review; APPROVE/COMMENT advance,
+  REQUEST CHANGES re-drafts (cap 5 → terminal halt)
 
 ### STRUCTURE
 
-Break the approved design into vertical slices with verification checkpoints.
+Break the reviewed design into vertical slices with verification checkpoints.
 Each slice is end-to-end and independently testable. The result is a ~2-page
 markdown artifact, produced autonomously.
 
 - **Artifact:** `docs/plans/<id>/structure.md`
 - **Gate:** NONE — autonomous; once `structure.md` exists the pipeline
-  advances to PLAN. Design is the only human gate.
+  advances to PLAN.
 
 ### PLAN
 
 Tactical implementation details for the agent. Read by the implementer.
-No human approval gate — the plan is mechanically derived from the
+No approval gate — the plan is mechanically derived from the
 structure.
 
 - **Artifact:** `docs/plans/<id>/plan.md`
-- **Gate:** SOFT — no human approval; design is the human contract
+- **Gate:** SOFT — no approval; the reviewed design is the contract
 
 ### IMPLEMENT
 
@@ -98,7 +101,8 @@ sub-phase and 5-reviewer adversarial verification with hard-gate retry loop.
 
 ### PR
 
-Open the pull request as a draft (no human gate — the orchestrator does
+Open the pull request as a draft (never waiting for approval — the
+orchestrator does
 not stop to ask), update the changelog, surface the tracking ticket.
 
 - **Artifact:** GitHub draft PR
@@ -118,7 +122,7 @@ discipline:
 - `repos.md` (when present) switches the pipeline into multi-repo mode;
   its absence keeps single-repo mode — today's default.
 - `prd.md` (when present) rides the autonomous Question phase and is
-  not human-gated.
+  not gated.
 
 ## Research Isolation
 
@@ -137,9 +141,8 @@ at the agent boundary:
    `task.md`; enforcement relies on the agent following its prompt.
 3. **Procedural** — if a researcher needs context the questions lack, it must
    surface that as an open question rather than guessing the intent.
-   The canonical mechanism for surfacing open questions interactively
-   from any subagent is `skills/agent-open-questions/SKILL.md` — emit
-   the envelope, let the orchestrator render and resume.
+   Researchers record missing context in their artifact's open-questions
+   section; they never pause the run to ask.
 
 A PreToolUse(Read) hook that blocks `*/task.md` reads from the research
 agents would convert step 2 from procedural to structural. Treat this as
@@ -164,18 +167,20 @@ This enforces incremental verifiability over big-bang integration.
 Blocks phase transition. The pipeline cannot proceed until the gate condition
 is satisfied. No override allowed except by explicit user command.
 
-Examples: design approval, security review with critical findings, test
-failures.
+Examples: design review with a REQUEST CHANGES verdict, security review
+with critical findings, test failures.
 
 ### SOFT
 
-Informational gate. The pipeline presents findings to the user and may proceed
-at the user's judgment. The user is expected to read and acknowledge.
+Informational gate. SOFT findings are recorded — they land in the PR
+body's `## Review notes` for the human's PR review — and are never
+acknowledged mid-run; the pipeline proceeds.
 
-Which review findings actually gate — and which auto-fix rather than wait on the
-user — is defined in exactly one place: `skills/review-severity-tiers/SKILL.md` →
+Which review findings actually gate — and which auto-fix rather than land
+as recorded notes — is defined in exactly one place:
+`skills/review-severity-tiers/SKILL.md` →
 "Severity Tiers and the Auto-Fix Boundary". Only findings below the auto-fix
-boundary surface to the user as a SOFT acknowledgment; consult that table rather
+boundary are recorded for the PR body; consult that table rather
 than restating it here.
 
 ### ADVISORY
@@ -195,10 +200,11 @@ session-scoped ledger that mirrors the phase table.
 ### Frontmatter schema (all artifacts)
 
 Every artifact opens with YAML frontmatter. The schema — common fields,
-the phase enum, the per-phase additions, and the approval
-check/flip/rejection mechanics — is canonical in
-`skills/artifact-frontmatter/SKILL.md`. Phase transitions verify
-approval by re-reading the gated artifact's frontmatter per that skill.
+the phase enum, the per-phase additions, and the design-review record
+mechanics — is canonical in
+`skills/artifact-frontmatter/SKILL.md`. The DESIGN → STRUCTURE
+transition verifies a passing `design-review-<n>.md` verdict per that
+skill.
 
 ### Phase inference from artifacts
 
@@ -210,8 +216,8 @@ The orchestrator infers the current phase by scanning what exists in
 | worktree exists for `<id>`, no `task.md` yet           | WORKTREE (next up)  |
 | `task.md` + `questions.md`                             | RESEARCH (next up)  |
 | `research.md`                                          | DESIGN (next up)    |
-| `design.md` (frontmatter `approved: false`)            | DESIGN (human gate) |
-| `design.md` (frontmatter `approved: true`)             | STRUCTURE (next up) |
+| `design.md` alone (no passing design review)           | DESIGN (review next)|
+| `design.md` + passing `design-review-<n>.md`           | STRUCTURE (next up) |
 | `structure.md`                                         | PLAN (next up)      |
 | `plan.md` + ≥1 commit on `<id>` since merge-base       | IMPLEMENT           |
 | `plan.md` (no commit on `<id>` yet)                    | PLAN (next up)      |
@@ -243,8 +249,8 @@ by scanning artifacts on entry.
 Every transition follows this sequence:
 
 1. **Verify artifacts** — confirm the required artifacts from the
-   current phase exist on disk, and for human-gated phases that the
-   artifact's frontmatter shows `approved: true`.
+   current phase exist on disk (for the DESIGN → STRUCTURE transition,
+   that includes a `design-review-<n>.md` with a passing verdict).
 2. **Update the ledger** — mark the current TodoWrite item complete and
    the next one `in_progress`.
 3. **Dispatch next agent(s)** — the phase table in `skills/team/SKILL.md`
@@ -252,8 +258,9 @@ Every transition follows this sequence:
 
 Never proceed to the next phase while a Blocking or Major finding remains —
 the implementer loops automatically and the user is never consulted about it
-(the consult guard; see `skills/review-severity-tiers/SKILL.md`). Minor-and-below
-findings are presented to the user only once Blocking and Major are clean.
+(the no-consult rule; see `skills/review-severity-tiers/SKILL.md`).
+Minor-and-below findings are recorded for the PR body's
+`## Review notes` — never presented mid-run.
 
 ## Anti-Patterns
 
@@ -288,13 +295,14 @@ force vertical slicing — reject any structure that flattens into layers.
 The structure is the scope fence for implementation. Jumping from design
 straight to code skips the vertical-slice breakdown the planner and
 implementer rely on. Always produce the structure — even though it now
-advances autonomously, design remains the human contract behind it.
+advances autonomously, the reviewed design remains the contract behind it.
 
 ### Gold-Plating
 
 Adding features, tests, or abstractions beyond what the structure specifies.
 The structure defines the scope fence. If scope needs to expand, update the
-structure (and, for a material change, return to the DESIGN gate) — do not
+structure (and, for a material change, return to DESIGN for a fresh
+design review) — do not
 silently add work.
 
 ### Backward Skipping

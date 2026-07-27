@@ -147,13 +147,17 @@ Before any agent dispatch, decide where to work:
    - Append `Review round <n+1>` to the TodoWrite ledger.
    - If round count < 5: re-dispatch implementer with the typed class(es),
      then re-dispatch ALL 5 reviewers for a fresh review.
-   - If round count ≥ 5: escalate with a full unresolved-findings summary.
+   - If round count ≥ 5: **halt** with a full unresolved-findings
+     summary — terminal; no PR is opened. Recovery: a human fixes the
+     unresolved findings by hand and re-invokes `/team-implement` bare;
+     the round counter is session-scoped (TodoWrite) and starts fresh
+     on re-invocation.
    - **Never** stop to ask the user which Blocking or Major items to address —
-     this is the consult guard. A prompt that lists a blocking or major
+     this is the no-consult rule. A prompt that lists a blocking or major
      finding is a defect.
-8. **Once Blocking and Major are clean:** if any **Minor-and-below** findings
-   remain, present them to the user and let them decide (auto-fix,
-   defer, or skip). Then:
+8. **Once Blocking and Major are clean:** record any **Minor-and-below**
+   findings for the PR body's `## Review notes` section, tagged by
+   source reviewer — never present them mid-run. Then:
    - **Full pipeline** (the TodoWrite ledger carries a `PR` phase item —
      `/team` seeded it): do **not** end the turn. Proceed directly to the
      PR phase (`skills/team-pr/SKILL.md`) in the same turn.

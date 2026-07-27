@@ -39,7 +39,13 @@ When `docs/plans/<id>/repos.md` is **present**, the topic spans multiple
 repos. The router creates **one worktree per listed repo**, all sharing
 the same branch name `<id>`:
 
-- For each repo with absolute path `<repo-path>` in `repos.md`:
+- **Containment check first:** each `<repo-path>`'s `realpath` must
+  resolve to a direct child of the home repo's parent directory
+  (`dirname "$(realpath "<repo-path>")"` equals
+  `dirname "$(realpath "<home-root>")"`). A repo that fails is refused
+  and reported — `repos.md` content is not trusted blindly.
+- For each repo with absolute path `<repo-path>` in `repos.md` that
+  passes the containment check:
   - Worktree path: `<repo-path>/.claude/worktrees/<id>`
   - Branch: `<id>`, branched from that repo's `origin/HEAD`
   - Created via `git -C <repo-path> worktree add .claude/worktrees/<id> -b <id> origin/HEAD`
@@ -72,7 +78,7 @@ rationale). The router's responsibilities are:
 1. Create the home repo's worktree on branch `<id>` off `origin/HEAD`,
    and author `docs/plans/<id>/` **inside** it — no copy is ever needed
    because the artifact directory is born in the worktree. (Secondary
-   repos in multi-repo mode get their worktrees after the design gate,
+   repos in multi-repo mode get their worktrees after the design review,
    once `repos.md` confirms the repo set; same `<id>` branch in each.)
 2. After this phase, all downstream agent dispatches operate within the
    appropriate worktree (the home worktree by default; per-repo worktrees
@@ -109,9 +115,10 @@ state to detect: "a worktree exists for `<id>`, no `task.md` yet" ⇒
 WORKTREE. The phase becomes inferable from the moment the run begins
 rather than only appearing midway through the pipeline.
 
-For design-gate ergonomics, the orchestrator **prints the absolute
-worktree-rooted `design.md` path** when presenting the design, so the
-reviewer opens the file cleanly without hunting for the worktree — this
+For artifact ergonomics, the orchestrator **reports the absolute
+worktree-rooted `docs/plans/<id>/` path** — where `design.md` and the
+`design-review-<n>.md` verdict records live — so anyone auditing the
+run opens the artifacts cleanly without hunting for the worktree — this
 supersedes the old "review on the home tree" rationale.
 
 Together these make leading placement a deliberate, articulable choice.

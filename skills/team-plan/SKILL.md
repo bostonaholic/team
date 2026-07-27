@@ -1,13 +1,13 @@
 ---
 name: team-plan
-description: Produce the tactical implementation plan from the structure. The plan is an autonomous artifact for the implementer — no human approval gate at this phase (design is the pipeline's only human gate). Trigger on "plan the implementation", "spell out the steps", or "/team-plan".
+description: Produce the tactical implementation plan from the structure. The plan is an autonomous artifact for the implementer — no approval gate at this phase (the design was already gated by the adversarial design review). Trigger on "plan the implementation", "spell out the steps", or "/team-plan".
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
 
 # Team Plan — Tactical Implementation Plan
 
-Run the PLAN phase. There is no human gate here; the plan is a tactical
+Run the PLAN phase. There is no gate here; the plan is a tactical
 artifact for the implementer, mechanically derived from the structure.
 
 ## Input
@@ -23,7 +23,7 @@ The `planner` reads:
 
 Resolve the artifact directory by running this self-contained block (one bash
 call — agent threads reset cwd between calls). The predecessor filter requires
-a `structure.md` (structure is not human-gated, so no approval check):
+a `structure.md` (structure is not gated, so no approval check):
 
 ```sh
 # Three-tier artifact-directory discovery (archetype A).

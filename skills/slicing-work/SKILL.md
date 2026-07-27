@@ -1,12 +1,12 @@
 ---
 name: slicing-work
-description: Vertical-slice breakdown methodology for the structure-planner agent — the rationale for vertical slices, the structure.md document format, the slicing rules, and the slicing heuristics. Loaded when an approved design is broken into independently testable slices.
+description: Vertical-slice breakdown methodology for the structure-planner agent — the rationale for vertical slices, the structure.md document format, the slicing rules, and the slicing heuristics. Loaded when a reviewed design is broken into independently testable slices.
 user-invocable: false
 ---
 
 # Slicing Work
 
-The structure-planner's methodology: break an approved design into vertical
+The structure-planner's methodology: break a reviewed design into vertical
 slices, each end-to-end, independently testable, and atomically committable.
 
 ## Why vertical slices
@@ -79,7 +79,7 @@ does not accidentally include it>
 - **No implementation code.** Slice descriptions name files and behaviors,
   not function bodies.
 - **Stay under ~200 lines.** If you need more, you have too many slices —
-  consolidate, or push some out of scope and re-approve the design.
+  consolidate, or push some out of scope and run a fresh design review.
 
 ## Heuristics for slicing
 

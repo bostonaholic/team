@@ -110,7 +110,7 @@ done
    In multi-repo mode, update each repo's `CHANGELOG.md` with the
    entries belonging to that repo's commits.
 7. **Open a draft PR automatically — do not stop to ask.** The PR phase
-   is not a human gate; opening the PR requires no approval. Push the
+   never waits for approval; opening the PR requires no approval. Push the
    branch and open the PR as a **draft** (`gh pr create --draft`). Pass
    the body to `gh pr create`/`gh pr edit` via `--body-file` or a quoted
    heredoc — never interpolated into a double-quoted shell argument. Any
@@ -188,12 +188,24 @@ omitted entirely when no manifest exists]
 - [ ] [Automated verification command]
 - [ ] [Manual verification step]
 
+## Review notes
+[Conditional — deferred findings for the human's PR review; see below]
+
 ## References
 - Design: $ARGUMENTS/design.md
 - Plan:   $ARGUMENTS/plan.md
 
 Closes #<n>
 ```
+
+**`## Review notes` (conditional):** this section carries the findings
+deferred to the human's PR review — (a) every Minor-and-below finding
+from the final aggregate review round, tagged by source reviewer (e.g.
+`[code-reviewer]`, `[security-reviewer]`); (b) COMMENT findings from the
+latest `design-review-<n>.md`, tagged `design-review-<n>`; and (c) the
+loud unresolved-repo omission note from `design.md` `## Risks` (or
+`task.md`) when present. **Omit the section entirely when empty — never
+emit a bare heading.**
 
 The `Closes` line is a standalone footer — no heading — rendered as the
 final line of the PR body. Whether it renders at all (it is conditional
@@ -237,7 +249,7 @@ The `## Screenshots` section is built from `$ARGUMENTS/screenshots/manifest.md`
 - **Manifest `status` is any `skipped-*` value, or the manifest is malformed**
   (unparseable frontmatter or body) → render a one-line capture-failure note
   naming the reason, nothing more. Never block or delay the PR over
-  screenshots — the PR phase is not a human gate.
+  screenshots — the PR phase never waits for approval.
 - **Each `## Captured` entry whose PNG exists on disk** renders as
   `**<caption>** (<state>)` followed by its local path. Entries whose PNG is
   missing from disk are skipped and the discrepancy noted in the section.

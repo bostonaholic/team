@@ -13,7 +13,6 @@ const REPO_ROOT = process.cwd();
 const AGENTS_DIR = join(REPO_ROOT, "agents");
 const NESTED_SKILL = join(REPO_ROOT, "skills", "nested-agents", "SKILL.md");
 const NESTED_VERSION_CHECK = join(REPO_ROOT, "skills", "nested-agents", "supports-nesting.mjs");
-const AOQ_SKILL = join(REPO_ROOT, "skills", "agent-open-questions", "SKILL.md");
 
 const agent = (name: string) => join(AGENTS_DIR, `${name}.md`);
 const readOrEmpty = (path: string): string => (existsSync(path) ? read(path) : "");
@@ -138,22 +137,6 @@ describe("nested-agents skill structure and load-bearing rules", () => {
     expect(/ONE more level/i.test(text)).toBe(true);
   });
 
-  test("body forbids nested helpers from emitting openQuestions envelopes", () => {
-    // Any-occurrence ±5-line window around openQuestions must carry a
-    // prohibition (never / must not).
-    const lines = readOrEmpty(NESTED_SKILL).split("\n");
-    let windows = "";
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      if (line !== undefined && /openQuestions/.test(line)) {
-        const start = Math.max(0, i - 5);
-        windows += lines.slice(start, i + 6).join("\n") + "\n";
-      }
-    }
-    expect(windows.length).toBeGreaterThan(0);
-    expect(/never|must not/i.test(windows)).toBe(true);
-  });
-
   test("body mandates graceful degradation (inline fallback)", () => {
     const text = flat(readOrEmpty(NESTED_SKILL));
     expect(text).toContain("do the work yourself inline");
@@ -258,18 +241,6 @@ describe("nested-agents version gate — skill contract (L2 tripwires)", () => {
   test("the read-only researcher gates on Agent-tool presence (no Bash to run the check)", () => {
     expect(/^tools:.*\bBash\b/m.test(frontmatter(read(agent("researcher"))))).toBe(false);
     expect(toolsLineHasAgent(read(agent("researcher")))).toBe(true);
-  });
-});
-
-describe("agent-open-questions skill forbids envelopes from nested helpers", () => {
-  test("contains a nested sub-agents prohibition section", () => {
-    expect(/^## Nested sub-agents/im.test(read(AOQ_SKILL))).toBe(true);
-  });
-
-  test("prohibition states MUST NOT emit and cross-links nested-agents", () => {
-    const text = read(AOQ_SKILL);
-    expect(text).toContain("MUST NOT emit");
-    expect(text).toContain("nested-agents");
   });
 });
 

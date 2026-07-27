@@ -65,10 +65,10 @@ In strict priority order (right to left):
 
 1. **In Progress → In Review — finish first.** If a pipeline run is complete,
    open its PR and move the card to In Review: get finished work in front of the
-   human and free the In Progress slot. The pipeline runs end to end *without*
-   the mid-pipeline human gate (structure already advances autonomously, and the
-   design approval will become autonomous too — self-approved after adversarial
-   agent review); the single human checkpoint moves to the **end** — the PR review.
+   human and free the In Progress slot. The pipeline runs end to end with
+   no mid-run human gates (structure advances autonomously, and design
+   approval is autonomous — self-approved after adversarial agent
+   review); the single human checkpoint is the **end** — the PR review.
 2. **Ready → In Progress — start only when nothing's waiting to finish.** When In
    Progress is below its WIP limit *and* no in-flight work can be pushed further
    right, pull the highest-priority Ready item and launch the Team pipeline for

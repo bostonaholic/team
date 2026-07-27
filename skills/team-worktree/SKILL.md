@@ -144,7 +144,16 @@ the branch name and the worktree directory name so the two stay in sync
 for cleanup: `branch="$(printf '%s' "$id" | tr '/' '-')"`. Only the
 `docs/plans/<id>/` artifact directory keeps the original `<id>`.
 
-### Confirm with the user
+### Confirm with the user (standalone invocation only)
+
+**Standalone invocation only — in a full `/team` run, skip this dialog
+entirely and proceed straight to "Create the worktree(s)".** The dialog
+fires only when a human invoked `/team-worktree`
+directly — a setup-time prompt on direct invocation. Within a full
+`/team` run the orchestrator creates the worktrees **without a
+confirmation prompt** (the phase loop never pauses mid-run); the
+resolved repo set is recorded loudly in `design.md` and echoed in the
+PR body's `## Review notes`.
 
 Confirm only the repos that actually need a worktree created. If **no**
 repo needs creation (single-repo mode where the detect step skipped the
@@ -181,7 +190,8 @@ Use `AskUserQuestion` with a `Worktree` header and **Proceed** /
 
 ### Create the worktree(s)
 
-After the user confirms, create a worktree in each repo the detect step
+After the user confirms (standalone invocation) — or immediately, in
+pipeline mode — create a worktree in each repo the detect step
 did **not** skip:
 
 Use the slash-sanitized name (`<branch>`, derived above) for both the
@@ -190,7 +200,16 @@ worktree directory and the `-b` flag in every repo. In the common case
 
 - **Single-repo:** create the home worktree using Claude Code's native
   worktree support, branched off `origin/HEAD`.
-- **Multi-repo:** for each listed repo:
+- **Multi-repo:** for each listed repo, first assert **containment**:
+  the repo path's real path must be a direct child of the home repo's
+  parent directory —
+  ```
+  [ "$(dirname "$(realpath "<repo-path>")")" = "$(dirname "$(realpath "<home-root>")")" ]
+  ```
+  If the check fails, **refuse that repo and report it** — never create
+  a worktree outside the home repo's sibling set (`repos.md` content is
+  not trusted blindly; it may have been authored without a Bash-side
+  path check). For each repo that passes:
   ```
   git -C <repo-path> fetch origin --quiet
   git -C <repo-path> worktree add .claude/worktrees/<branch> -b <branch> origin/HEAD

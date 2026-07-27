@@ -321,9 +321,12 @@ describe("product-thinking methodology", () => {
     expect(/no gate|adds no gate|no extra research|requires no/i.test(directive)).toBe(true);
   });
 
-  test("design-author description frontmatter is unchanged", () => {
+  test("design-author description frontmatter matches the self-answering wording", () => {
+    // The open-questions-for-the-user and
+    // MUST-present-interactively clauses are gone — the design author
+    // resolves its own open questions and records each as an assumption.
     const expected =
-      'description: Use after research is complete to align with the user on the approach before any code is written. Drafts a ~200-line design document covering current state, desired end state, patterns to follow, decisions made, and explicit open questions for the user. MUST present the open questions interactively before producing the design — replaces the RPI "magic words" problem with structural interaction.';
+      "description: Use after research is complete to draft the approach before any code is written. Drafts a ~200-line design document covering current state, desired end state, patterns to follow, and decisions made. Resolves its own open questions autonomously, recording each as an explicit, auditable assumption in the design.";
     expect(read(DESIGN_AUTHOR)).toContain(expected);
   });
 
@@ -345,9 +348,11 @@ describe("product-thinking methodology", () => {
     expect(/no new gate|no gate|adds no/i.test(directive)).toBe(true);
   });
 
-  test("structure-planner description frontmatter is unchanged", () => {
+  test("structure-planner description frontmatter matches the design-review wording", () => {
+    // The design is gated by an adversarial
+    // design review, not human approval.
     const expected =
-      "description: Use after the design is approved to break the work into vertical slices with verification checkpoints. Each slice is end-to-end (touches every layer needed to deliver one piece of functionality), independently testable, and atomically committable. Produces a ~2-page document that the planner and implementer consume; it advances autonomously to PLAN with no human gate.";
+      "description: Use after the design review passes to break the work into vertical slices with verification checkpoints. Each slice is end-to-end (touches every layer needed to deliver one piece of functionality), independently testable, and atomically committable. Produces a ~2-page document that the planner and implementer consume; it advances autonomously to PLAN with no approval gate.";
     expect(read(STRUCTURE_PLANNER)).toContain(expected);
   });
 
@@ -531,6 +536,37 @@ describe("test-first-development lens (L2 content tripwire)", () => {
   test("audit table (in test-style) has a Deterministic inputs row (moved from test-architect)", () => {
     expect(read(TEST_STYLE_FILE)).toContain("| Deterministic inputs |");
   });
+});
+
+// ---------------------------------------------------------------------------
+// Design-review gate replaces approval frontmatter — free L2 content
+// tripwires (docs/testing.md §2). The DESIGN human gate is retired: design.md
+// carries only `revision` (no `approved`/`approved_at`), and the runtime
+// hooks infer phase from the `design-review-<n>.md` verdict artifact instead
+// of reading approval frontmatter.
+// ---------------------------------------------------------------------------
+
+describe("design-review gate replaces approval frontmatter (L2 tripwire)", () => {
+  const DESIGN_AUTHOR = join(REPO_ROOT, "agents", "design-author.md");
+
+  test("design-author frontmatter template keeps revision and drops approved/approved_at", () => {
+    const text = read(DESIGN_AUTHOR);
+    // The revision counter survives — it counts review loops.
+    expect(text).toContain("revision: 0");
+    // No approval fields remain in the artifact template (the template's
+    // frontmatter lines sit at column 0 inside the fenced block).
+    expect(/^approved/m.test(text)).toBe(false);
+  });
+
+  for (const name of ["session-start-recover", "pre-compact-anchor"]) {
+    test(`hooks/${name}.mjs infers from design-review-<n>.md, not approved frontmatter`, () => {
+      const src = read(join(REPO_ROOT, "hooks", `${name}.mjs`));
+      // Phase inference reads the design-review verdict artifact...
+      expect(src).toContain("design-review-");
+      // ...and no approval-frontmatter read (or comment about one) remains.
+      expect(/approved/.test(src)).toBe(false);
+    });
+  }
 });
 
 // ---------------------------------------------------------------------------

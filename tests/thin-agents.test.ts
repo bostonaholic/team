@@ -133,11 +133,11 @@ describe("thin agents: new skills carry the moved procedure content", () => {
 describe("thin agents: frontmatter skills preloads per agent", () => {
   const EXPECTED_PRELOADS: Record<string, string[]> = {
     "code-reviewer": ["code-review", "conventional-comments", "nested-agents", "progress-tracking"],
-    "design-author": ["agent-open-questions", "authoring-designs", "product-thinking", "progress-tracking"],
+    "design-author": ["authoring-designs", "product-thinking", "progress-tracking"],
     "file-finder": ["finding-files"],
     implementer: ["implementing-slices", "nested-agents", "progress-tracking"],
     planner: ["planning-implementation", "progress-tracking"],
-    questioner: ["agent-open-questions", "decomposing-intent", "product-thinking", "progress-tracking"],
+    questioner: ["decomposing-intent", "product-thinking", "progress-tracking"],
     researcher: ["nested-agents", "progress-tracking", "researching-codebases"],
     "security-reviewer": ["code-review", "conventional-comments", "nested-agents", "progress-tracking", "reviewing-security"],
     "structure-planner": ["product-thinking", "progress-tracking", "slicing-work"],
@@ -262,34 +262,45 @@ describe("thin agents: haiku skills are self-contained", () => {
   }
 });
 
-describe("thin agents: documentation counts agree at 49 skills", () => {
+describe("thin agents: documentation counts agree at 48 skills", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
 
-  test("skills/ holds exactly 49 SKILL.md files", () => {
+  test("skills/ holds exactly 48 SKILL.md files", () => {
     const count = readdirSync(join(REPO_ROOT, "skills")).filter((name) =>
       existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")),
     ).length;
-    expect(count).toBe(49);
+    expect(count).toBe(48);
   });
 
-  test("AGENTS.md heading reads Skills (49)", () => {
-    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (49)");
+  test("docs/skills.md documents every skill: ### entry count equals the on-disk count", () => {
+    // Every per-skill entry in docs/skills.md is an h3; nothing else in the
+    // file uses that level. A drift here means an entry was added or lost
+    // without the catalog (or the filesystem) following.
+    const entries = read(SKILLS_MD).match(/^### /gm) ?? [];
+    const count = readdirSync(join(REPO_ROOT, "skills")).filter((name) =>
+      existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")),
+    ).length;
+    expect(entries.length).toBe(count);
   });
 
-  test("docs/skills.md description counts 49 skills", () => {
-    expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain("49 skills");
+  test("AGENTS.md heading reads Skills (48)", () => {
+    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (48)");
   });
 
-  test("docs/skills.md split sentence sums to 49", () => {
+  test("docs/skills.md description counts 48 skills", () => {
+    expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain("48 skills");
+  });
+
+  test("docs/skills.md split sentence sums to 48", () => {
     expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain(
-      "11 pipeline entry-point + 3 standalone utility + 35 methodology = 49",
+      "11 pipeline entry-point + 3 standalone utility + 34 methodology = 48",
     );
   });
 
-  test("docs/architecture.md counts all 49 skills and no stale 31", () => {
+  test("docs/architecture.md counts all 48 skills and no stale 31", () => {
     const content = read(ARCHITECTURE_MD);
-    expect(content).toContain("all 49 skills");
+    expect(content).toContain("all 48 skills");
     expect(content).not.toContain("31 skills");
   });
 
