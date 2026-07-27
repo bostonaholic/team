@@ -138,7 +138,7 @@ The default mode is present-then-stop with a confidence-gated fast path:
 
 - The triage rates each recommendation after verification. Items above
   90% confidence that pass every hard rule are applied, pushed,
-  🤖-replied, and resolved automatically by the triage skill.
+  replied to, and resolved automatically by the triage skill.
 - When every item in the batch auto-applied above 90% confidence, the
   loop resumes watching and reports what was done.
 - When any sub-90% or carve-out item remains, present the punch list,
@@ -149,7 +149,7 @@ The default mode is present-then-stop with a confidence-gated fast path:
 
 When the arming instruction grants authorization, each feedback batch
 runs the Authorized Execution path of
-`skills/pr-open-comments/SKILL.md`: apply → push → 🤖 reply → resolve.
+`skills/pr-open-comments/SKILL.md`: apply → push → reply → resolve.
 Then the loop re-arms until approval, merge, or timeout. Authorized mode
 is unchanged by the confidence gate — it applies every non-carve-out
 item regardless of confidence.

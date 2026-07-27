@@ -8,7 +8,7 @@
 // (referenced by path, never restated). Default mode auto-applies items the
 // triage rates above 90% confidence (a batch fully handled that way resumes
 // the loop) and presents-then-stops for the rest; authorized mode (granted
-// per arming instruction) applies, pushes, 🤖-replies, resolves, and resumes
+// per arming instruction) applies, pushes, replies, resolves, and resumes
 // regardless of confidence. Approval never auto-runs /shipit.
 //
 // Also pins the cross-file handoff: skills/team-pr/SKILL.md Completion points
@@ -249,10 +249,9 @@ describe("pr-watch skill: authorized mode — apply, resolve, resume", () => {
     expect(/arm(ing)?[^.]{0,160}(instruction|authoriz)|authoriz[^.]{0,160}arm/i.test(t)).toBe(true);
   });
 
-  test("an authorized batch runs apply → push → 🤖 reply → resolve, then resumes watching", () => {
+  test("an authorized batch runs apply → push → reply → resolve, then resumes watching", () => {
     const t = flat(body());
     expect(/appl(y|ies|ied)[^.]{0,120}push[^.]{0,120}repl(y|ies)[^.]{0,120}resolve/i.test(t)).toBe(true);
-    expect(t).toContain("🤖");
     expect(/(resume|re-?arm)[^.]{0,160}(watch|loop|until)/i.test(t)).toBe(true);
   });
 

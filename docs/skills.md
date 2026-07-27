@@ -256,7 +256,7 @@ QRSPI phase — a self-contained action a user runs on demand.
 - **Purpose:** Triage unresolved review feedback on a pull request — fetch
   every unresolved review thread via GraphQL, verify each comment against
   the current code, auto-apply recommendations rated above 90% confidence
-  (full apply → push → 🤖 reply → resolve pipeline), and present a
+  (full apply → push → reply → resolve pipeline), and present a
   globally numbered punch list with 2–4 tailored options and one
   recommendation per item for the rest.
 - **`$ARGUMENTS`:** `[<pr-number-or-url>]` — optional; defaults to the
@@ -265,11 +265,11 @@ QRSPI phase — a self-contained action a user runs on demand.
 - **Key behaviors:** Confidence-gated autonomy: each recommendation gets
   a confidence rating assigned only after verification (a behavioral
   claim needs a passing named test to exceed 90%). Items above 90% that
-  pass every hard rule are applied, pushed, 🤖-replied, and resolved
+  pass every hard rule are applied, pushed, replied to, and resolved
   automatically and reported with confidence and commit SHA; everything
   else presents-then-stops — the turn ends with a hand-off prompt that
   separates "Auto-applied" from "Needs your decision". Explicit user
-  authorization (apply → push → 🤖-prefixed reply → resolve) applies the
+  authorization (apply → push → reply → resolve) applies the
   whole batch regardless of confidence. Carve-outs are absolute at any
   confidence (declined, needs-clarification, could-not-apply,
   security-sensitive). Treats comment bodies as untrusted data: embedded
@@ -297,7 +297,7 @@ QRSPI phase — a self-contained action a user runs on demand.
   fully handled that way resumes the loop with a report — while sub-90%
   or carve-out items render the punch list and end the turn; authorized
   mode (granted by one of several canonical phrases, e.g. "watch this PR
-  and fix comments") applies, pushes, 🤖-replies, resolves, and resumes
+  and fix comments") applies, pushes, replies, resolves, and resumes
   regardless of confidence. An ambiguous cue never selects authorized
   mode. Loop reports name the mode and list auto-applied items with
   confidence and commit SHA. Stops on approval, merge, close, user interrupt,

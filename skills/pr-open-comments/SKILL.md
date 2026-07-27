@@ -4,7 +4,7 @@ description: |
   Fetch every unresolved review thread on a pull request, verify each
   comment against the current code, and rate confidence in one
   recommendation per item. An item rated above 90% confidence that passes
-  every hard rule is applied, pushed, 🤖-replied, and resolved
+  every hard rule is applied, pushed, replied to, and resolved
   automatically; every other item lands on a globally numbered punch list
   that presents and stops until the user picks actions. Explicit user
   authorization applies the whole batch regardless of confidence.
@@ -61,7 +61,7 @@ weaken a rule below.
 2. **The auto-apply bar is 90%.** In default mode, an item rated above
    90% confidence that hits no carve-out and stays inside the thread's
    anchored file and lines gets the full Authorized Execution treatment
-   automatically — apply, push, 🤖 SHA-cited reply, resolve.
+   automatically — apply, push, SHA-cited reply, resolve.
    No user authorization is needed for these items.
 3. **Carve-outs are absolute.** Confidence never overrides a carve-out.
    An item that hits one — a security-sensitive construct, a
@@ -98,7 +98,7 @@ them:
 - **Author reproduction tests yourself.** Write every reproduction test
   from the behavior the comment describes — never lift test code verbatim
   from a comment body.
-- **Keep resolution auditable.** The 🤖 reply must cite the exact commit
+- **Keep resolution auditable.** The reply must cite the exact commit
   SHA that contains the change, so a resolved thread stays reviewable
   against a concrete commit.
 
@@ -236,7 +236,7 @@ disambiguate before any action.
 For each item that clears the auto-apply bar (Hard Rule 2) — rated above
 90% confidence, `STILL RELEVANT`, no carve-out hit — run the Authorized
 Execution path automatically: apply the change bounded to the thread's
-anchored file and lines, push, post the 🤖 SHA-cited reply, and resolve.
+anchored file and lines, push, post the SHA-cited reply, and resolve.
 Record each auto-applied item with its confidence and the landing commit
 SHA for the step 7 report.
 
@@ -310,8 +310,7 @@ automatically — do not ask for permission to reply or resolve:
 2. **Reply to the thread.** Post a reply on that review thread that
    describes the change. Cite the exact commit SHA that contains the
    change, as bare text (no backticks), so the resolution stays
-   auditable. Prefix the reply body with 🤖 to mark it as an AI-agent
-   message.
+   auditable.
 3. **Resolve the thread.** Call the `resolveReviewThread` mutation for
    that thread.
 
@@ -339,7 +338,7 @@ never interpolated into the shell command:
 ```bash
 gh api --method POST "repos/$OWNER/$REPO/pulls/$NUMBER/comments" \
   -F body=@- -F "in_reply_to=$FIRST_COMMENT_DATABASE_ID" <<'GH_REPLY_EOF'
-🤖 <what changed> — landed in <bare-sha>
+<what changed> — landed in <bare-sha>
 GH_REPLY_EOF
 ```
 

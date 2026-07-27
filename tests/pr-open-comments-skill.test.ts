@@ -8,7 +8,7 @@
 // confidence in one recommendation per item after verification, and
 // presents a globally numbered punch list for everything below the bar.
 // Default mode auto-runs the full Authorized Execution path (apply → push
-// → 🤖 reply → resolve) for items above 90% confidence that pass every
+// → reply → resolve) for items above 90% confidence that pass every
 // hard rule; carve-outs are absolute at any confidence; explicit user
 // authorization applies the whole batch regardless of confidence.
 //
@@ -180,10 +180,6 @@ describe("pr-open-comments skill: Authorized Execution path", () => {
     expect(resolveIdx).toBeGreaterThan(replyIdx);
   });
 
-  test("replies carry the 🤖 AI-agent prefix", () => {
-    expect(body()).toContain("🤖");
-  });
-
   test("replies cite the commit SHA as bare text", () => {
     const t = flat(body());
     expect(/(commit )?SHA as bare text|bare[- ]text[^.]{0,40}SHA/i.test(t)).toBe(true);
@@ -279,7 +275,7 @@ describe("pr-open-comments skill: untrusted input — comments are data", () => 
     expect(/broader[^.]{0,120}carve-?out/i.test(t)).toBe(true);
   });
 
-  test("resolution stays auditable: the 🤖 reply cites the exact commit SHA containing the change", () => {
+  test("resolution stays auditable: the reply cites the exact commit SHA containing the change", () => {
     const t = flat(body());
     expect(/exact commit SHA/i.test(t)).toBe(true);
     expect(/auditab/i.test(t)).toBe(true);
