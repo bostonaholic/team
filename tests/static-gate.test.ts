@@ -312,12 +312,15 @@ describe("static gate: PR evals workflow", () => {
     expect(/^\s*ANTHROPIC_API_KEY:/m.test(workflow)).toBe(true);
   });
 
-  test("lets the diff drive selection: no EVALS_ALL, no EVALS_TIER", () => {
-    // Setting either as an env key would override diff selection (run
-    // everything / filter to one tier), defeating cost-scales-with-the-diff.
-    // Match assignments only, so the explanatory comment doesn't trip this.
+  test("filters the PR run to the gate tier; selection stays diff-driven", () => {
+    // EVALS_TIER: gate drops every periodic (live-model, stochastic) fixture
+    // from the PR run, so a borderline grading can never redden the check.
+    // EVALS_ALL stays absent so the diff keeps driving selection within the
+    // gate tier — cost still scales with the change. Match assignments only
+    // (bare key at line start), so the explanatory comment doesn't trip this;
+    // the exact-value match also catches typos like `gates`.
+    expect(/^\s*EVALS_TIER:\s*gate\s*$/m.test(workflow)).toBe(true);
     expect(/^\s*EVALS_ALL:/m.test(workflow)).toBe(false);
-    expect(/^\s*EVALS_TIER:/m.test(workflow)).toBe(false);
   });
 
   test("report job can post PR comments (issues + pull-requests write)", () => {
@@ -491,5 +494,92 @@ describe("static gate: planted-comment-violations fixture", () => {
     // typing and the eval assertions both know non_violations.
     expect(readFileSync(FIXTURES_HELPER, "utf8")).toContain("non_violations");
     expect(evalsSource).toContain("non_violations");
+  });
+});
+
+// Tier truth lives in two unsynchronized places — fixture frontmatter and the
+// E2E_TIERS map — and tier now decides whether a fixture can run on the PR
+// gate (pr-evals.yml sets EVALS_TIER: gate). These drift guards make any
+// mislabeling, desync, or orphaning fail `bun test` deterministically instead
+// of silently putting a stochastic probe back on the PR gate.
+describe("static gate: tier drift guards", () => {
+  test("every fixture's frontmatter tier matches its E2E_TIERS entry", () => {
+    const cases = enumerate();
+    expect(cases.length).toBeGreaterThan(0);
+
+    // Resolve each fixture's map key as `<agent>-<case>`, falling back to
+    // bare `<case>` (the code-reviewer convention). Collect all problems
+    // with labels so a failure names the offending fixture and key.
+    const unresolved: string[] = [];
+    const resolutions = new Map<string, string[]>();
+    const mismatches: {
+      fixture: string;
+      key: string;
+      frontmatterTier: string;
+      mapTier: string | undefined;
+    }[] = [];
+
+    for (const { agent, caseName } of cases) {
+      const fixtureId = `${agent}/${caseName}`;
+      const combined = `${agent}-${caseName}`;
+      const key =
+        combined in E2E_TIERS
+          ? combined
+          : caseName in E2E_TIERS
+            ? caseName
+            : null;
+      if (key === null) {
+        unresolved.push(fixtureId);
+        continue;
+      }
+      resolutions.set(key, [...(resolutions.get(key) ?? []), fixtureId]);
+      const fixture = loadFixture(agent, caseName, FIXTURE_ROOT);
+      if (fixture.frontmatter.tier !== E2E_TIERS[key]) {
+        mismatches.push({
+          fixture: fixtureId,
+          key,
+          frontmatterTier: fixture.frontmatter.tier,
+          mapTier: E2E_TIERS[key],
+        });
+      }
+    }
+
+    // Every fixture must resolve to exactly one key. Ambiguity (two fixtures
+    // resolving to the same key) fails here, before the tier comparison can
+    // compare the wrong fixture/entry pair.
+    expect(unresolved).toEqual([]);
+    const collisions = [...resolutions.entries()].filter(
+      ([, fixtures]) => fixtures.length > 1,
+    );
+    expect(collisions).toEqual([]);
+    expect(mismatches).toEqual([]);
+    // And the reverse direction: every E2E_TIERS entry must be claimed by a
+    // fixture, or its tier is constrained by no frontmatter at all.
+    expect([...resolutions.keys()].sort()).toEqual(
+      Object.keys(E2E_TIERS).sort(),
+    );
+  });
+
+  test("E2E_TOUCHFILES and E2E_TIERS hold exactly the same keys", () => {
+    // filterByTier silently drops a selected name absent from the tiers map
+    // (touchfiles.ts), which would make a gate fixture silently never run on
+    // PR. Sorted-keyset equality closes that hole in both directions.
+    const touchfileKeys = Object.keys(E2E_TOUCHFILES).sort();
+    const tierKeys = Object.keys(E2E_TIERS).sort();
+    expect(tierKeys).toEqual(touchfileKeys);
+  });
+
+  test("every E2E_TIERS entry is periodic until an offline gate runner exists", () => {
+    // docs/testing.md §4 — a test that can be red for a legitimate
+    // non-bug reason is periodic and never gates. Every current fixture
+    // drives a live model, so none qualifies as gate. Whoever lands the
+    // first offline (recorded-transcript) gate fixture updates this test
+    // deliberately, in the same reviewed edit that flips the fixture's tier
+    // in frontmatter and E2E_TIERS — the first `gate` label must not be a
+    // two-word frontmatter slip.
+    const nonPeriodic = Object.entries(E2E_TIERS).filter(
+      ([, tier]) => tier !== "periodic",
+    );
+    expect(nonPeriodic).toEqual([]);
   });
 });

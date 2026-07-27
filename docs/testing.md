@@ -234,6 +234,10 @@ trains everyone to ignore red. Gate on what's stable, monitor what's fuzzy.
 | **Cheap**     | gate, every PR              | periodic (or band-gated) |
 | **Expensive** | gate if rare; else periodic | periodic, scheduled      |
 
+> **Where Team stands today:** every eval fixture drives a live model, so all
+> are tiered periodic and none can gate. `pr-evals.yml` stays advisory until
+> someone authors the first offline deterministic fixture and tiers it `gate`.
+
 ---
 
 ## 5. Free vs. paid: the line that organizes everything
