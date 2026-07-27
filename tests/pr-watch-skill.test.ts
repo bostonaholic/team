@@ -314,7 +314,7 @@ describe("pr-watch skill: confidence-gated default mode", () => {
 
   test("explicit authorized mode is unchanged — applies non-carve-out items regardless of confidence", () => {
     const t = flat(body());
-    expect(/regardless of confidence/i.test(t)).toBe(true);
+    expect(/authorized mode[^.]{0,160}regardless of confidence/i.test(t)).toBe(true);
   });
 });
 

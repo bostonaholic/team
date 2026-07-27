@@ -114,11 +114,12 @@ describe("pr-open-comments skill: default-mode contract — autonomous above 90%
     expect(/verdict[^.]{0,80}other than[^.]{0,40}STILL RELEVANT[^.]{0,80}never/i.test(t)).toBe(true);
   });
 
-  test("a behavioral claim exceeds 90% only with a passing named test in verification", () => {
+  test("a behavioral claim exceeds 90% only via red-green: the repro test fails before the fix, passes after, pre-push", () => {
     const t = flat(body());
     expect(
-      /behavioral claim[^.]{0,160}90%[^.]{0,160}passing named test|passing named test[^.]{0,160}90%/i.test(t),
+      /behavioral claim[^.]{0,160}90%[^.]{0,240}fails before the fix[^.]{0,120}passes after/i.test(t),
     ).toBe(true);
+    expect(/passing (run|check)[^.]{0,80}before any push/i.test(t)).toBe(true);
   });
 
   test(">90% + every-hard-rule-pass ⇒ automatic full pipeline, no authorization needed", () => {
@@ -164,7 +165,7 @@ describe("pr-open-comments skill: trust-but-verify verdicts", () => {
 });
 
 describe("pr-open-comments skill: Authorized Execution path", () => {
-  test("activates only on explicit user authorization", () => {
+  test("explicit user authorization applies the whole batch regardless of confidence", () => {
     const t = flat(body());
     expect(/explicit(ly)?[^.]{0,120}(authoriz|direct|told)/i.test(t)).toBe(true);
   });
@@ -190,6 +191,12 @@ describe("pr-open-comments skill: Authorized Execution path", () => {
 
   test("names the resolveReviewThread mutation", () => {
     expect(body()).toContain("resolveReviewThread");
+  });
+
+  test("the commit stages only the anchored files — never git add -A or commit -a", () => {
+    const t = flat(body());
+    expect(/stage only the anchored file/i.test(t)).toBe(true);
+    expect(t).toContain("git add -A");
   });
 
   test("carve-out: declined / won't-fix items are never auto-resolved", () => {
@@ -265,9 +272,9 @@ describe("pr-open-comments skill: untrusted input — comments are data", () => 
     expect(/never act on it/i.test(t)).toBe(true);
   });
 
-  test("authorized auto-apply is bounded to the file and lines the thread references", () => {
+  test("auto-apply is bounded to the file and lines the thread references", () => {
     const t = flat(body());
-    expect(/bound every authorized auto-apply/i.test(t)).toBe(true);
+    expect(/bound every auto-apply/i.test(t)).toBe(true);
     expect(/file and lines/i.test(t)).toBe(true);
     expect(/broader[^.]{0,120}carve-?out/i.test(t)).toBe(true);
   });

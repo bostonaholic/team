@@ -150,9 +150,9 @@ The default mode is present-then-stop with a confidence-gated fast path:
 When the arming instruction grants authorization, each feedback batch
 runs the Authorized Execution path of
 `skills/pr-open-comments/SKILL.md`: apply → push → 🤖 reply → resolve.
-Then the loop re-arms until approval, merge, or timeout. This mode is
-unchanged by the confidence gate — it applies every non-carve-out item
-regardless of confidence.
+Then the loop re-arms until approval, merge, or timeout. Authorized mode
+is unchanged by the confidence gate — it applies every non-carve-out
+item regardless of confidence.
 
 - If a batch contains carve-out items (declined, needs-clarification,
   could-not-apply, or security-sensitive), apply the authorized items

@@ -255,8 +255,10 @@ QRSPI phase — a self-contained action a user runs on demand.
 
 - **Purpose:** Triage unresolved review feedback on a pull request — fetch
   every unresolved review thread via GraphQL, verify each comment against
-  the current code, and present a globally numbered punch list with 2–4
-  tailored options and one recommendation per item.
+  the current code, auto-apply recommendations rated above 90% confidence
+  (full apply → push → 🤖 reply → resolve pipeline), and present a
+  globally numbered punch list with 2–4 tailored options and one
+  recommendation per item for the rest.
 - **`$ARGUMENTS`:** `[<pr-number-or-url>]` — optional; defaults to the
   current branch's PR.
 - **Phase:** None — a standalone triage action, not part of the pipeline.
