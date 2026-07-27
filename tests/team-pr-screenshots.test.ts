@@ -81,6 +81,40 @@ describe("team-pr Screenshots section rendering (slice 2)", () => {
   });
 });
 
+describe("team-pr Screenshots refresh on every push", () => {
+  // The refresh-on-push rule already names Summary/Changes/How-to-Verify as
+  // sections that must track the branch, and the footer + `## Companion PRs`
+  // as sections that survive the rewrite. Screenshots need both halves:
+  // preserved when the push left the UI alone, re-rendered when it did not.
+  test("a UI-changing push re-captures and re-uploads the section", () => {
+    const t = flat(body());
+    const refresh = /screenshots?[^.]{0,400}(stale|re-?captur|re-?render|re-?upload)/i.test(t);
+    expect(refresh).toBe(true);
+    // Re-capture is ux-reviewer's procedure — referenced by path, not restated.
+    expect(body()).toContain("skills/verifying-ux/SKILL.md");
+  });
+
+  test("a push that leaves the UI alone preserves the uploaded section verbatim", () => {
+    const t = flat(body());
+    const preserved =
+      /(preserv|carr(y|ies)|survive)[^.]{0,200}screenshots?[^.]{0,120}(verbatim|unchanged|as-?is)/i.test(t) ||
+      /screenshots?[^.]{0,200}(preserved|survives?|carried)[^.]{0,120}(verbatim|unchanged|refresh)/i.test(t);
+    expect(preserved).toBe(true);
+    // Uploaded asset URLs stay valid — a no-UI-change refresh never re-uploads.
+    expect(/(never|no|not)[^.]{0,80}re-?upload/i.test(t)).toBe(true);
+  });
+
+  test("the refresh never drops the section and never blocks the push", () => {
+    const t = flat(body());
+    expect(/(never|not)[^.]{0,120}drop[^.]{0,120}screenshots?|screenshots?[^.]{0,120}never dropped/i.test(t)).toBe(
+      true,
+    );
+    // Degradation posture is the existing one: re-capture unavailable → the
+    // degraded note, never a blocked or delayed push.
+    expect(/degraded[^.]{0,200}(note|form)/i.test(t)).toBe(true);
+  });
+});
+
 describe("team-pr screenshot upload via user-attachments (slice 3)", () => {
   test("team-pr upload sequencing is PR-first", () => {
     // Ordering tripwire: the upload procedure must run (1) draft PR exists →
