@@ -41,19 +41,24 @@ const collector = new EvalCollector("e2e");
 const MIN_REASON_SUBSTANCE = 3;
 
 // Deterministic blocking-severity check: the Conventional Comments
-// `issue (blocking):` label, tolerating markdown bold markers and spacing
+// `issue (blocking):` label, tolerating markdown bold markers, spacing
 // variance (`**issue (blocking):**`, `**issue (blocking)**:`,
-// `issue(blocking):`). Linear-time — each decoration gap is a single
-// character class (`[\s*]*`), so no adjacent quantifiers compete over the
-// same characters and there is no backtracking blowup on adversarial input.
-const BLOCKING_LABEL = /\bissue[\s*]*\(blocking\)[\s*]*:/i;
+// `issue(blocking):`), and an em/en-dash separator in place of the colon
+// (`**issue (blocking) — file — title**`) — the severity claim is the
+// label, not its punctuation. Linear-time — each decoration gap is a
+// single character class (`[\s*]*`), so no adjacent quantifiers compete
+// over the same characters and there is no backtracking blowup on
+// adversarial input.
+const BLOCKING_LABEL = /\bissue[\s*]*\(blocking\)[\s*]*[:—–]/i;
 
 // Any Conventional Comment label, tolerant of markdown decoration — bold
 // (`**issue (blocking):**`), backticks, an optional (decoration) before the
-// colon. Used to split a review into finding blocks: each label occurrence
-// starts a new finding.
+// colon. An em/en dash may replace the colon only when the (decoration) is
+// present — a bare label word followed by a dash is ordinary prose, not a
+// finding. Used to split a review into finding blocks: each label
+// occurrence starts a new finding.
 const FINDING_LABEL =
-  /[`*]{0,2}\b(?:praise|nitpick|suggestion|issue|todo|question|thought|chore|note)\b[\s*]*(?:\([^)\n]{0,40}\))?[\s*`]*:/gi;
+  /[`*]{0,2}\b(?:praise|nitpick|suggestion|issue|todo|question|thought|chore|note)\b[\s*]*(?:(?:\([^)\n]{0,40}\))?[\s*`]*:|\([^)\n]{0,40}\)[\s*`]*[—–])/gi;
 
 interface FindingSegment {
   label: string;
