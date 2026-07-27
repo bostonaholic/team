@@ -4,10 +4,13 @@
 // skill (skills/pr-open-comments/SKILL.md) — a standalone review-triage
 // utility distributed to Team's users.
 // It fetches every unresolved review thread on a PR via GraphQL, verifies
-// each comment against the current code (trust but verify), and presents a
-// globally numbered punch list with options and one recommendation per item.
-// Default mode is present-then-stop; the Authorized Execution path (push →
-// 🤖 reply → resolve) activates only on explicit user authorization.
+// each comment against the current code (trust but verify), rates
+// confidence in one recommendation per item after verification, and
+// presents a globally numbered punch list for everything below the bar.
+// Default mode auto-runs the full Authorized Execution path (apply → push
+// → 🤖 reply → resolve) for items above 90% confidence that pass every
+// hard rule; carve-outs are absolute at any confidence; explicit user
+// authorization applies the whole batch regardless of confidence.
 //
 // Every assertion is guarded so a not-yet-existing skill file yields a failed
 // expect(), never an uncaught ENOENT — the mechanical gate rejects crashes,
@@ -98,21 +101,43 @@ describe("pr-open-comments skill: unresolved-thread fetch mechanics", () => {
   });
 });
 
-describe("pr-open-comments skill: present-then-stop Hard Rules", () => {
-  test("Hard Rule: no edits to the working tree during triage", () => {
-    expect(/no edits/i.test(flat(body()))).toBe(true);
-  });
-
-  test("Hard Rule: no replies posted during triage", () => {
-    expect(/no replies/i.test(flat(body()))).toBe(true);
-  });
-
-  test("Hard Rule: no thread resolution during triage", () => {
-    expect(/no resolution/i.test(flat(body()))).toBe(true);
-  });
-
-  test("Hard Rule: present the punch list, then stop and wait for the user", () => {
+describe("pr-open-comments skill: default-mode contract — autonomous above 90%, present-then-stop below", () => {
+  test("confidence is assigned only after verification", () => {
     const t = flat(body());
+    expect(
+      /confidence[^.]{0,120}only after[^.]{0,80}(verif|verdict)|verification precedes confidence/i.test(t),
+    ).toBe(true);
+  });
+
+  test("a verdict other than STILL RELEVANT can never reach the auto-apply bar", () => {
+    const t = flat(body());
+    expect(/verdict[^.]{0,80}other than[^.]{0,40}STILL RELEVANT[^.]{0,80}never/i.test(t)).toBe(true);
+  });
+
+  test("a behavioral claim exceeds 90% only with a passing named test in verification", () => {
+    const t = flat(body());
+    expect(
+      /behavioral claim[^.]{0,160}90%[^.]{0,160}passing named test|passing named test[^.]{0,160}90%/i.test(t),
+    ).toBe(true);
+  });
+
+  test(">90% + every-hard-rule-pass ⇒ automatic full pipeline, no authorization needed", () => {
+    const t = flat(body());
+    expect(/90%[^.]{0,240}apply[^.]{0,80}push[^.]{0,80}repl(y|ies)[^.]{0,80}resolve/i.test(t)).toBe(true);
+    expect(/no user authorization[^.]{0,60}(needed|required)/i.test(t)).toBe(true);
+  });
+
+  test("carve-outs are absolute — never auto-applied at any confidence", () => {
+    const t = flat(body());
+    expect(/confidence never overrides[^.]{0,40}carve-?out/i.test(t)).toBe(true);
+    expect(/presented, never auto-?applied/i.test(t)).toBe(true);
+  });
+
+  test("sub-90% items present, then stop — no edits, replies, or resolution for them", () => {
+    const t = flat(body());
+    expect(/no edits/i.test(t)).toBe(true);
+    expect(/no replies/i.test(t)).toBe(true);
+    expect(/no resolution/i.test(t)).toBe(true);
     expect(/present,?\s*then stop/i.test(t)).toBe(true);
   });
 });
@@ -216,6 +241,13 @@ describe("pr-open-comments skill: punch-list deliverable", () => {
     const t = flat(body());
     expect(/2[–-]4[^.]{0,60}option/i.test(t)).toBe(true);
     expect(/recommendation/i.test(t)).toBe(true);
+  });
+
+  test("the report separates Auto-applied (confidence + SHA) from Needs your decision", () => {
+    const t = body();
+    expect(t).toContain("Auto-applied");
+    expect(t).toContain("Needs your decision");
+    expect(/confidence[^.]{0,120}commit SHA/i.test(flat(t))).toBe(true);
   });
 });
 

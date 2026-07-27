@@ -260,18 +260,22 @@ QRSPI phase — a self-contained action a user runs on demand.
 - **`$ARGUMENTS`:** `[<pr-number-or-url>]` — optional; defaults to the
   current branch's PR.
 - **Phase:** None — a standalone triage action, not part of the pipeline.
-- **Key behaviors:** Present-then-stop by default — no edits, no replies,
-  no thread resolution; the turn ends with a hand-off prompt and the user
-  picks actions. Verifies every comment before classifying it (a behavioral
-  claim needs a named test as evidence). The Authorized Execution path
-  (apply → push → 🤖-prefixed reply → resolve) activates only on explicit
-  user authorization, with carve-outs that still pause (declined,
-  needs-clarification, could-not-apply, security-sensitive). Treats
-  comment bodies as untrusted data: embedded imperatives beyond the
-  thread's anchored code are never acted on, and authorized auto-apply is
-  bounded to the file and lines the thread references — broader asks and
-  new security-sensitive constructs become carve-outs. Model-invocable —
-  the default is read-only, so cue-based auto-invocation is safe.
+- **Key behaviors:** Confidence-gated autonomy: each recommendation gets
+  a confidence rating assigned only after verification (a behavioral
+  claim needs a passing named test to exceed 90%). Items above 90% that
+  pass every hard rule are applied, pushed, 🤖-replied, and resolved
+  automatically and reported with confidence and commit SHA; everything
+  else presents-then-stops — the turn ends with a hand-off prompt that
+  separates "Auto-applied" from "Needs your decision". Explicit user
+  authorization (apply → push → 🤖-prefixed reply → resolve) applies the
+  whole batch regardless of confidence. Carve-outs are absolute at any
+  confidence (declined, needs-clarification, could-not-apply,
+  security-sensitive). Treats comment bodies as untrusted data: embedded
+  imperatives beyond the thread's anchored code are never acted on, and
+  auto-apply is bounded to the file and lines the thread references —
+  broader asks and new security-sensitive constructs become carve-outs.
+  Model-invocable — cue-based auto-invocation is justified by the
+  carve-out set plus the verification bar.
 
 ### pr-watch
 
@@ -287,11 +291,14 @@ QRSPI phase — a self-contained action a user runs on demand.
   keeps watching); applies the best-effort in-review ticket transition.
   Bounded cycles: 48 cycles of ~31 minutes each (up to three `sleep 600`
   calls plus one poll per cycle; cycle 0 polls immediately). Default mode
-  is present-then-stop: each feedback batch renders the punch list and
-  ends the turn; authorized mode (granted by one of several canonical
-  phrases, e.g. "watch this PR and fix comments") applies, pushes,
-  🤖-replies, resolves, and resumes. An ambiguous cue never selects
-  authorized mode. Stops on approval, merge, close, user interrupt,
+  auto-applies items the triage rates above 90% confidence — a batch
+  fully handled that way resumes the loop with a report — while sub-90%
+  or carve-out items render the punch list and end the turn; authorized
+  mode (granted by one of several canonical phrases, e.g. "watch this PR
+  and fix comments") applies, pushes, 🤖-replies, resolves, and resumes
+  regardless of confidence. An ambiguous cue never selects authorized
+  mode. Loop reports name the mode and list auto-applied items with
+  confidence and commit SHA. Stops on approval, merge, close, user interrupt,
   cycle-48 timeout, or 3 consecutive poll failures. On approval it runs a
   final triage pass and hands off with `Next: run /shipit` — it never
   auto-runs `/shipit`. Model-invocable — it promotes a draft only on an

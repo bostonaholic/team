@@ -5,10 +5,11 @@
 // to Team's users. Arming undrafts the
 // PR, snapshots a baseline, and polls GitHub every ~31 minutes for up to 48
 // cycles (~24 h). New feedback runs the pr-open-comments triage procedure
-// (referenced by path, never restated). Default mode presents the punch list
-// and stops the turn; authorized mode (granted per arming instruction)
-// applies, pushes, 🤖-replies, resolves, and resumes. Approval never
-// auto-runs /shipit.
+// (referenced by path, never restated). Default mode auto-applies items the
+// triage rates above 90% confidence (a batch fully handled that way resumes
+// the loop) and presents-then-stops for the rest; authorized mode (granted
+// per arming instruction) applies, pushes, 🤖-replies, resolves, and resumes
+// regardless of confidence. Approval never auto-runs /shipit.
 //
 // Also pins the cross-file handoff: skills/team-pr/SKILL.md Completion points
 // at /pr-watch.
@@ -292,6 +293,28 @@ describe("pr-watch skill: authorized mode — apply, resolve, resume", () => {
         t,
       ),
     ).toBe(true);
+  });
+});
+
+describe("pr-watch skill: confidence-gated default mode", () => {
+  test("a batch fully auto-applied above 90% lets the loop resume with a report", () => {
+    const t = flat(body());
+    expect(/90% confidence[^.]{0,240}(resume|re-?arm)/i.test(t)).toBe(true);
+  });
+
+  test("any sub-90% or carve-out item ⇒ present the punch list and stop the turn", () => {
+    const t = flat(body());
+    expect(/(sub-?90%|below 90%)[^.]{0,240}(present|stop)/i.test(t)).toBe(true);
+  });
+
+  test("loop reports list auto-applied items with confidence and commit SHA", () => {
+    const t = flat(body());
+    expect(/auto-appl[^.]{0,160}confidence[^.]{0,120}(commit SHA|SHA)/i.test(t)).toBe(true);
+  });
+
+  test("explicit authorized mode is unchanged — applies non-carve-out items regardless of confidence", () => {
+    const t = flat(body());
+    expect(/regardless of confidence/i.test(t)).toBe(true);
   });
 });
 

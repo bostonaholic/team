@@ -128,22 +128,31 @@ only when it is combined with an arming cue in the same instruction — a
 bare "handle the comments" routes to a one-shot `/pr-open-comments`
 triage, not a watch. When the cue is ambiguous about authorization, run
 present-then-stop — never authorized mode. Every loop report — the poll
-snapshot and the batch report — names the active mode, so the mode stays
-auditable. A timeout re-arm keeps the mode. A re-arm after a carve-out
-stop reverts to present-then-stop unless the user restates authorization.
+snapshot and the batch report — names the active mode and lists any
+auto-applied items with their confidence and landing commit SHA, so the
+loop stays auditable. A timeout re-arm keeps the mode. A re-arm after a
+carve-out stop reverts to present-then-stop unless the user restates
+authorization.
 
-The default mode is present-then-stop:
+The default mode is present-then-stop with a confidence-gated fast path:
 
-- Present the punch list, then stop the turn — a turn must end to collect
-  the user's per-item choices.
-- After the user's choices execute, offer to re-arm the watch.
+- The triage rates each recommendation after verification. Items above
+  90% confidence that pass every hard rule are applied, pushed,
+  🤖-replied, and resolved automatically by the triage skill.
+- When every item in the batch auto-applied above 90% confidence, the
+  loop resumes watching and reports what was done.
+- When any sub-90% or carve-out item remains, present the punch list,
+  then stop the turn — a turn must end to collect the user's per-item
+  choices. After the user's choices execute, offer to re-arm the watch.
 
 ### Authorized mode — apply, resolve, resume
 
 When the arming instruction grants authorization, each feedback batch
 runs the Authorized Execution path of
 `skills/pr-open-comments/SKILL.md`: apply → push → 🤖 reply → resolve.
-Then the loop re-arms until approval, merge, or timeout.
+Then the loop re-arms until approval, merge, or timeout. This mode is
+unchanged by the confidence gate — it applies every non-carve-out item
+regardless of confidence.
 
 - If a batch contains carve-out items (declined, needs-clarification,
   could-not-apply, or security-sensitive), apply the authorized items
