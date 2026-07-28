@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **New standalone utility `/pr-approve-watch` approves a pull request you are reviewing once the author resolves your review threads.** [`skills/pr-approve-watch/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-approve-watch/SKILL.md) is the reviewer-side mirror of `/pr-watch`: after you post review comments, arming it polls GitHub in ~31-minute cycles for up to 48 cycles (~24 hours), watching every review thread you opened — the gate is GraphQL `isResolved` state only, never comment text, and threads from your own pending review are excluded until submitted. When every tracked thread is resolved it casts one attributed `gh pr review --approve` citing the head commit SHA and the resolved-thread count, then stops. The approval is its only write — it never resolves threads, replies, edits code, or merges. It refuses self-approval and zero-thread arms, and stops on approval cast, merge/close, user interrupt, timeout, 3 consecutive poll failures, or a tracked set that empties mid-watch. Model invocation is disabled: an approval can transitively trigger an auto-merge, so only a deliberate human invocation arms it.
+
 ## [0.28.0] - 2026-07-30
 
 ### Added
