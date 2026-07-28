@@ -279,6 +279,14 @@ describe("pr-approve-watch skill: approve step", () => {
   test("a pending-review rejection maps to: submit (or delete) your pending review, then re-arm", () => {
     expect(body()).toContain("submit (or delete) your pending review, then re-arm");
   });
+
+  test("the approve command passes $PR_URL bound from the canonical url, never a literal placeholder", () => {
+    const t = body();
+    // Guard: an empty body must fail, not vacuously pass the absence check.
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).toContain('gh pr review --approve "$PR_URL"');
+    expect(t).not.toContain('"<canonical-pr-url>"');
+  });
 });
 
 describe("pr-approve-watch skill: auto-merge paths", () => {
@@ -292,6 +300,20 @@ describe("pr-approve-watch skill: auto-merge paths", () => {
     const t = flat(body());
     expect(/immediate path/i.test(t)).toBe(true);
     expect(/explicit confirmation/i.test(t)).toBe(true);
+  });
+
+  test("step 6 names the immediate-path confirmation as conditional on auto-merge at arm", () => {
+    expect(
+      /already\s+granted\s+when\s+auto-merge\s+was\s+enabled\s+at\s+arm,\s+and\s+no\s+confirmation\s+exists\s+otherwise/i.test(
+        flat(body()),
+      ),
+    ).toBe(true);
+  });
+
+  test("the auto-merge reading is disclosed as GitHub-native only (third-party merge automation undetected)", () => {
+    const t = flat(body());
+    expect(/GitHub'?s\s+native\s+auto-merge\s+only/i.test(t)).toBe(true);
+    expect(t).toContain("Mergify");
   });
 });
 
@@ -479,6 +501,43 @@ describe("pr-approve-watch skill: a granted confirmation triggers a fresh pre-ca
     expect(/newly\s+triggers\s+requires\s+its\s+own\s+confirmation/i.test(flat(body()))).toBe(true);
   });
 
+  test("a re-trigger with values the granted confirmation did not cover counts as newly triggered", () => {
+    expect(
+      /re-triggers\s+with\s+values\s+different\s+from\s+those\s+the\s+granted\s+confirmation\s+covered\s+counts\s+as\s+newly\s+triggered/i.test(
+        flat(body()),
+      ),
+    ).toBe(true);
+  });
+
+  test("a same-values re-trigger stays covered — an unchanged drift never re-asks", () => {
+    expect(/unchanged\s+drift\s+never\s+re-asks/i.test(flat(body()))).toBe(true);
+  });
+
+  test("a fresh poll failing the approval condition: loop path resumes polling, immediate path stops (no silent watch)", () => {
+    const t = flat(body());
+    expect(/on\s+the\s+loop\s+path,\s+resume\s+polling/i.test(t)).toBe(true);
+    expect(
+      /reopened\s+gate\s+under\s+the\s+\*\*confirmation\s+declined\*\*\s+stop/i.test(t),
+    ).toBe(true);
+    expect(/none\s+is\s+silently\s+started/i.test(t)).toBe(true);
+  });
+
+  test("a failed approval condition consumes no round of the confirmation cap", () => {
+    expect(
+      /neither\s+outcome\s+consumes\s+a\s+confirmation\s+round[^.]{0,80}counts\s+confirmations\s+asked/i.test(
+        flat(body()),
+      ),
+    ).toBe(true);
+  });
+
+  test("stop 7 names its no-decline sub-cases and adjusts their reporting", () => {
+    const t = flat(body());
+    expect(
+      /confirmation-churn\s+cap\s+and\s+the\s+immediate\s+path'?s\s+reopened\s+gate/i.test(t),
+    ).toBe(true);
+    expect(/nothing\s+was\s+declined/i.test(t)).toBe(true);
+  });
+
   test("the confirm-then-re-poll loop is bounded and churn maps to the confirmation-declined stop", () => {
     const t = flat(body());
     expect(/confirm-then-re-poll\s+loop\s+is\s+bounded/i.test(t)).toBe(true);
@@ -518,10 +577,18 @@ describe("pr-approve-watch skill: argument validation before shell interpolation
     expect(body()).toContain("^[0-9]+$");
   });
 
-  test("a PR URL must match the pinned github.com pull-URL pattern (GitHub identifier charset)", () => {
+  test("a PR URL must match the pinned github.com pull-URL pattern (GitHub identifier charset, capture-grouped)", () => {
     expect(body()).toContain(
-      String.raw`^https://github\.com/[A-Za-z0-9._-]{1,39}/[A-Za-z0-9._-]{1,100}/pull/[0-9]+$`,
+      String.raw`^https://github\.com/([A-Za-z0-9._-]{1,39})/([A-Za-z0-9._-]{1,100})/pull/([0-9]+)$`,
     );
+  });
+
+  test("the capture-group binding is shown as a runnable command (BASH_REMATCH)", () => {
+    const t = body();
+    expect(t).toContain('[[ "$ARGUMENTS" =~ $PR_URL_PATTERN ]]');
+    expect(t).toContain('ARG_OWNER="${BASH_REMATCH[1]}"');
+    expect(t).toContain('ARG_REPO="${BASH_REMATCH[2]}"');
+    expect(t).toContain('ARG_NUMBER="${BASH_REMATCH[3]}"');
   });
 
   test("the permissive [^/]+ owner/repo charset is gone from the accepted pattern", () => {
@@ -577,6 +644,18 @@ describe("pr-approve-watch skill: untrusted-input surface", () => {
     // Guard: an empty body must fail, not vacuously pass the absence check.
     expect(t.length).toBeGreaterThan(0);
     expect(t).not.toContain("isOutdated");
+  });
+});
+
+describe("pr-approve-watch skill: GraphQL variable flags are literal-string safe", () => {
+  test("owner and repo pass with -f (always literal); only the Int number uses typed -F", () => {
+    const t = body();
+    // Guard: an empty body must fail, not vacuously pass the absence check.
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).toContain('gh api graphql -f owner="$OWNER" -f repo="$REPO" -F number="$NUMBER"');
+    // `gh api -F` reads a value's leading `@` as a file reference — strings never use it.
+    expect(t).not.toContain('-F owner=');
+    expect(t).not.toContain('-F repo=');
   });
 });
 

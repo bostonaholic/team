@@ -363,10 +363,17 @@ QRSPI phase — a self-contained action a user runs on demand.
   auto-merge is enabled at arm, explicit confirmation is required on both
   paths: the immediate path (gate already satisfied at arm) confirms
   before casting, and the loop path confirms before arming the unattended
-  watch — a "no" refuses to arm. Before casting, merge-safety checks read
+  watch — a "no" refuses to arm. The auto-merge reading covers
+  GitHub-native auto-merge only — repo automation that merges on approval
+  (Mergify, a merge bot, an approval-triggered workflow) is not detected,
+  and auto-merge off is no assurance against it. Before casting,
+  merge-safety checks read
   the final poll's values, never the arm-time reading: any head drift
   (with or without auto-merge) requires explicit confirmation, with both
-  SHAs named in the approval body and completion report; auto-merge that
+  SHAs named in the approval body and completion report; a tracked count
+  that changed between arm and approval without ever going empty likewise
+  names both counts in the approval body and completion report;
+  auto-merge that
   turned on mid-watch (no arm-time confirmation) requires confirmation
   even without drift; a granted confirmation triggers a fresh poll and
   re-check before casting (bounded, so confirmation churn stops the run

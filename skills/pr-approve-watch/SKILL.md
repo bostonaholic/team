@@ -69,14 +69,20 @@ point their inputs exist.
 
 - Validate `$ARGUMENTS` before the value reaches any shell command:
   accept only a bare PR number matching `^[0-9]+$` or a PR URL matching
-  `^https://github\.com/[A-Za-z0-9._-]{1,39}/[A-Za-z0-9._-]{1,100}/pull/[0-9]+$`
-  — GitHub's identifier charset, never `[^/]+`, which admits `$`,
-  backticks, parentheses, and spaces. Anything else is malformed —
-  report it and refuse; never guess. Even a validated value never
-  appears in a shell word (double quotes do not stop `$(...)` command
-  substitution): the arm call binds `$ARG_OWNER`, `$ARG_REPO`, and
-  `$ARG_NUMBER` from the match's capture groups, and the argument string
-  itself reaches no command.
+  the capture-grouped pattern below — GitHub's identifier charset, never
+  `[^/]+`, which admits `$`, backticks, parentheses, and spaces.
+  Anything else is malformed — report it and refuse; never guess. Even a
+  validated value never appears in a shell word (double quotes do not
+  stop `$(...)` command substitution): bind `$ARG_OWNER`, `$ARG_REPO`,
+  and `$ARG_NUMBER` from the match's three capture groups — owner, repo,
+  number, in that order — and the argument string itself reaches no
+  command:
+
+  ```bash
+  PR_URL_PATTERN='^https://github\.com/([A-Za-z0-9._-]{1,39})/([A-Za-z0-9._-]{1,100})/pull/([0-9]+)$'
+  [[ "$ARGUMENTS" =~ $PR_URL_PATTERN ]] || { echo "malformed PR argument" >&2; exit 1; }
+  ARG_OWNER="${BASH_REMATCH[1]}"; ARG_REPO="${BASH_REMATCH[2]}"; ARG_NUMBER="${BASH_REMATCH[3]}"
+  ```
 - If no PR resolves from the argument or the current branch, fail fast
   with a clear message.
 - With a bare PR number and no local checkout there is no repo context to
@@ -126,10 +132,11 @@ state) so a compaction cannot silently erase step 6's baselines.
 Parse `owner` and `repo` from the canonical `url` field — a PR URL path
 is always `github.com/<base-owner>/<base-repo>/pull/<n>`, so this yields
 the **base repo**, the repo the review threads live on and the repo the
-approval must target. `$OWNER`, `$REPO`, and `$NUMBER` in every later
-snippet (the pending-review check below and the step-4 poll) are
-assigned from this canonical output, never re-derived from the raw
-argument. Never resolve the repo from head-repository fields:
+approval must target. `$OWNER`, `$REPO`, `$NUMBER`, and `$PR_URL` in
+every later snippet (the pending-review check below, the step-4 poll,
+and step 6's approve call — `$PR_URL` is the canonical `url` value
+itself) are assigned from this canonical output, never re-derived from
+the raw argument. Never resolve the repo from head-repository fields:
 on a fork PR those name the contributor's fork, and polling the fork
 returns no threads.
 
@@ -162,7 +169,7 @@ Refusals and arm-report notes (the thread-dependent checks read cycle
   select `state` only, never bodies):
 
   ```bash
-  gh api graphql -F owner="$OWNER" -F repo="$REPO" -F number="$NUMBER" -f query='
+  gh api graphql -f owner="$OWNER" -f repo="$REPO" -F number="$NUMBER" -f query='
   query($owner: String!, $repo: String!, $number: Int!) {
     repository(owner: $owner, name: $repo) {
       pullRequest(number: $number) {
@@ -207,7 +214,9 @@ Refusals and arm-report notes (the thread-dependent checks read cycle
 
 ### 2. Tracked set and gate
 
-Per poll, fetch all review threads and partition them client-side:
+Per poll, fetch all review threads — via the step-4 poll query, whose
+selection set carries every field this partition reads — and partition
+them client-side:
 
 - The **tracked set** is every review thread — resolved or not — whose
   first comment's author login equals the viewer's login AND whose first
@@ -253,7 +262,7 @@ review threads with the fields the partition in step 2 needs — thread
 tracked-set membership and PENDING exclusion:
 
 ```bash
-gh api graphql -F owner="$OWNER" -F repo="$REPO" -F number="$NUMBER" -f query='
+gh api graphql -f owner="$OWNER" -f repo="$REPO" -F number="$NUMBER" -f query='
 query($owner: String!, $repo: String!, $number: Int!) {
   repository(owner: $owner, name: $repo) {
     pullRequest(number: $number) {
@@ -276,6 +285,11 @@ query($owner: String!, $repo: String!, $number: Int!) {
   }
 }'
 ```
+
+The string variables pass with `-f`, which always sends a literal —
+`gh api -F` reads a value's leading `@` as a file reference; `number`
+alone keeps `-F`, which parses the typed `Int!` (the pending-review
+check in step 1 uses the same flags for the same reason).
 
 Recompute `autoMergeEnabled` from `autoMergeRequest` on every poll —
 anyone with write access can enable auto-merge mid-watch, and step 6's
@@ -322,18 +336,23 @@ name:
   withdrawn comment neither blocks the approval nor is required for it.
 - **Confirmation declined** — a "no" (or no answer) to the immediate
   path's confirmation or to any of step 6's pre-cast confirmations stops
-  the run without approving. Report which confirmation was declined and
-  that approving by hand remains available — never cast anyway, and
-  never downgrade the decline into a silent skip. (A "no" to the
-  loop-path confirmation at arm is a refusal to arm, not a stop — that
-  loop never started.)
+  the run without approving. Step 6's two no-cast outcomes that decline
+  nothing — the confirmation-churn cap and the immediate path's reopened
+  gate — also stop here. Report which confirmation was declined (for the
+  churn and reopened-gate cases, nothing was declined — report what
+  happened instead) and that approving by hand remains available — never
+  cast anyway, and never downgrade the decline into a silent skip. (A
+  "no" to the loop-path confirmation at arm is a refusal to arm, not a
+  stop — that loop never started.)
 
 ### 6. Approve
 
 When the approval condition holds (on the loop path, or on the
-immediate path after its arm-time confirmation), run the pre-cast
-merge-safety checks. They read the **final poll's** values — the most
-recent run of the step-4 query, under step 4's live re-read rule. Each
+immediate path — where the pre-cast confirmation was already granted
+when auto-merge was enabled at arm, and no confirmation exists
+otherwise), run the pre-cast merge-safety checks. They read the
+**final poll's** values — the most recent run of the step-4 query,
+under step 4's live re-read rule. Each
 triggered check requires an explicit confirmation before casting; a
 declined confirmation is the **confirmation declined** stop — stop
 without approving and report which check was declined.
@@ -368,17 +387,28 @@ granted confirmation — one of these checks' or the immediate path's —
 re-run the step-4 poll (it becomes the final poll) and re-evaluate the
 step-2 approval condition and every check above against it before
 casting. A check the fresh poll newly triggers requires its own
-confirmation. The confirm-then-re-poll loop is bounded: when three
+confirmation — and a check that re-triggers with values different from
+those the granted confirmation covered counts as newly triggered: a
+drift confirmed at head B never covers a cast at head C. A re-trigger
+on the same values stays covered, so an unchanged drift never re-asks
+and a drifted head stays approvable. When the fresh poll fails the
+step-2 approval condition itself (a thread reopened during the wait),
+never cast: on the loop path, resume polling — the gate has not
+cleared; on the immediate path, there is no loop to resume and none is
+silently started — stop and report the reopened gate under the
+**confirmation declined** stop, offering to re-arm. Neither outcome
+consumes a confirmation round — the cap counts confirmations asked.
+The confirm-then-re-poll loop is bounded: when three
 consecutive re-polls each trigger a new confirmation, stop without
 approving and report the churn under the **confirmation declined** stop
 instead of asking a fourth time — re-arming remains available.
 
-Cast one approval against the same canonical URL, passing the body on
-stdin (`--body-file -` with a quoted heredoc) so the body text is never
-interpolated into the shell command:
+Cast one approval against `$PR_URL` — the canonical URL bound in
+step 1 — passing the body on stdin (`--body-file -` with a quoted
+heredoc) so the body text is never interpolated into the shell command:
 
 ```bash
-gh pr review --approve "<canonical-pr-url>" --body-file - <<'GH_APPROVE_EOF'
+gh pr review --approve "$PR_URL" --body-file - <<'GH_APPROVE_EOF'
 Approved automatically by /pr-approve-watch: all <N> review threads opened by @<viewer> are resolved. Head commit at approval time: <approval-head-SHA>. Armed at head commit: <arm-head-SHA>.
 GH_APPROVE_EOF
 ```
