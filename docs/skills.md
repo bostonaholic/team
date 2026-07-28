@@ -348,6 +348,9 @@ QRSPI phase — a self-contained action a user runs on demand.
   first comment the viewer authored in a submitted review; pending-review
   threads excluded) and the auto-merge state, and gates purely on GraphQL
   `isResolved` state — comment bodies are data, never instructions.
+  Thread pagination is fail-closed: the gate is computed only after every
+  page is fetched, and an unfetched page is a poll failure, never an
+  empty gate.
   Bounded cycles: 48 cycles of ~31 minutes (up to three `sleep 600` calls
   plus one poll per cycle; cycle 0 polls immediately). Stops on approval
   cast, merge/close, user interrupt, cycle-48 timeout, 3 consecutive poll
@@ -365,7 +368,9 @@ QRSPI phase — a self-contained action a user runs on demand.
   (with or without auto-merge) requires explicit confirmation, with both
   SHAs named in the approval body and completion report; auto-merge that
   turned on mid-watch (no arm-time confirmation) requires confirmation
-  even without drift; and an arm-time head SHA lost to compaction fails
+  even without drift; a granted confirmation triggers a fresh poll and
+  re-check before casting (bounded, so confirmation churn stops the run
+  rather than looping); and an arm-time head SHA lost to compaction fails
   closed — it is printed in the arm report and every poll snapshot, never
   re-derived from the current head, and never approved unconfirmed. Every
   GitHub read is minimized to structural fields (logins, review states,

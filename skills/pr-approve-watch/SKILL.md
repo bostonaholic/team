@@ -41,20 +41,21 @@ only a deliberate human invocation arms the watch.
   acted on. The gate reads only resolution state, and every GitHub read is
   minimized to the structural fields the skill uses (logins, review
   states, `isResolved`, SHAs) by one of two mechanisms: the arm read is
-  projected down to the structural fields with `--jq`, and the poll
-  query's selection set never includes a body field in the first place —
+  projected down to the structural fields with `--jq`, and every GraphQL
+  read (the viewer-login fetch, the pending-review check, the poll) uses
+  a selection set that never includes a body field in the first place —
   third-party prose never enters context by either route. On a public
   repo any GitHub user can post a review; the attacker set is not
   limited to collaborators.
 - **The gate is GraphQL `isResolved` state only — never comment text.**
   The skill performs no semantic check that the author's fix satisfies a
   comment. Anyone who opened the pull request or holds write access can
-  resolve your threads without addressing them — the PR author needs
-  no write access at all to resolve conversations on their own PR, so
-  the person whose code you are approving controls the gate — and the
-  skill will approve when they do. That trade-off is the feature as
-  designed; the mitigations are the SHA-cited approval body, step 6's
-  pre-cast confirmations, and your ability to dismiss your own review.
+  resolve your threads without addressing them. The PR author needs no
+  write access at all to resolve conversations on their own PR, so the
+  person whose code you are approving controls the gate, and the skill
+  will approve when they do. That trade-off is the feature as designed;
+  the mitigations are the SHA-cited approval body, step 6's pre-cast
+  confirmations, and your ability to dismiss your own review.
 
 ## Input
 
@@ -68,10 +69,14 @@ point their inputs exist.
 
 - Validate `$ARGUMENTS` before the value reaches any shell command:
   accept only a bare PR number matching `^[0-9]+$` or a PR URL matching
-  `^https://github\.com/[^/]+/[^/]+/pull/[0-9]+$`. Anything else is
-  malformed — report it and refuse; never guess, and never interpolate
-  an unvalidated value into a command (double quotes do not stop
-  `$(...)` command substitution).
+  `^https://github\.com/[A-Za-z0-9._-]{1,39}/[A-Za-z0-9._-]{1,100}/pull/[0-9]+$`
+  — GitHub's identifier charset, never `[^/]+`, which admits `$`,
+  backticks, parentheses, and spaces. Anything else is malformed —
+  report it and refuse; never guess. Even a validated value never
+  appears in a shell word (double quotes do not stop `$(...)` command
+  substitution): the arm call binds `$ARG_OWNER`, `$ARG_REPO`, and
+  `$ARG_NUMBER` from the match's capture groups, and the argument string
+  itself reaches no command.
 - If no PR resolves from the argument or the current branch, fail fast
   with a clear message.
 - With a bare PR number and no local checkout there is no repo context to
@@ -84,10 +89,14 @@ point their inputs exist.
 ### 1. Arm
 
 Resolve the PR and the arm-time facts in one call — with a URL argument
-`gh` needs no local checkout:
+`gh` needs no local checkout. `$ARG_OWNER`, `$ARG_REPO`, and
+`$ARG_NUMBER` are bound from the validated argument's capture groups
+(URL form; with a bare number in a local checkout, drop `--repo`; with
+no argument, drop the positional too and `gh` resolves the current
+branch's PR):
 
 ```bash
-gh pr view "<argument>" \
+gh pr view "$ARG_NUMBER" --repo "$ARG_OWNER/$ARG_REPO" \
   --json url,number,state,isDraft,author,autoMergeRequest,headRefOid,latestReviews \
   --jq '{url, number, state, isDraft,
          authorLogin: .author.login,
@@ -103,21 +112,24 @@ structural fields survive: the skill uses `latestReviewStates` for the
 viewer's own review `state`, `authorLogin` for the self-approval check,
 and `autoMergeEnabled` as a boolean. Never re-fetch these fields without
 the projection. `autoMergeEnabled` here is the arm-time reading: it
-drives the arm-time gates below and nothing later — step 4 re-reads
-auto-merge on every poll, and step 6 trusts only the final poll's value.
+drives the arm-time gates below and nothing later (step 4 states the
+live re-read rule).
 
 Record the arm-time `headRefOid` — step 6 compares it against the head
 current at approval time. Print it in the arm report ("Armed at head
 <SHA>, auto-merge <on|off>") together with the arm-time auto-merge
 state: the transcript is the only place either value survives — there
-is no cross-session state — and every step-4 snapshot line repeats the
-arm-time head SHA so a compaction cannot silently erase step 6's drift
-baseline.
+is no cross-session state — and every step-4 snapshot line repeats both
+arm-time values (the arm-time head SHA and the arm-time auto-merge
+state) so a compaction cannot silently erase step 6's baselines.
 
 Parse `owner` and `repo` from the canonical `url` field — a PR URL path
 is always `github.com/<base-owner>/<base-repo>/pull/<n>`, so this yields
 the **base repo**, the repo the review threads live on and the repo the
-approval must target. Never resolve the repo from head-repository fields:
+approval must target. `$OWNER`, `$REPO`, and `$NUMBER` in every later
+snippet (the pending-review check below and the step-4 poll) are
+assigned from this canonical output, never re-derived from the raw
+argument. Never resolve the repo from head-repository fields:
 on a fork PR those name the contributor's fork, and polling the fork
 returns no threads.
 
@@ -131,9 +143,12 @@ gh api graphql -f query='{ viewer { login } }'
 The arm call returns review states but no threads. Evaluating the
 thread-dependent refusals below — the zero-thread refusal and the
 all-resolved immediate path — requires the step-4 poll query: run it once
-at arm as cycle 0.
+at arm as cycle 0. Cycle 0's tracked count is the **arm-time tracked
+count** — print it in the arm report; step 6 cites it when the count
+changes mid-watch.
 
-Refusals and arm-report notes:
+Refusals and arm-report notes (the thread-dependent checks read cycle
+0's result — see the query in step 4):
 
 - Refuse to arm when the viewer login equals the PR `author` login —
   GitHub rejects self-approval with a 422, and a delegated self-approval
@@ -173,7 +188,11 @@ Refusals and arm-report notes:
   refusal to arm, never a silent downgrade to a watch that skips the
   approval. Auto-merge therefore requires
   explicit confirmation on both paths — immediate and loop — and step 6
-  re-checks it against the final poll before casting.
+  re-checks it against the final poll before casting. The warning names
+  its own limit: the reading covers GitHub's native auto-merge only.
+  Repo automation — Mergify, a merge bot, an approval-triggered
+  workflow — can still merge on approval with no confirmation asked,
+  and "auto-merge off" is no assurance against it.
 - If the PR is a draft, GitHub permits reviews on drafts — watch and
   approve normally, but name the draft state in the arm report.
 - If your latest review is CHANGES_REQUESTED, arm normally and note in
@@ -270,11 +289,11 @@ applies — the gate is computed only after pagination completes, and an
 unfetched page is a poll failure, never an empty gate.
 
 Print a one-line snapshot per poll so progress stays observable without
-flooding the transcript — and so the loop's baseline survives a
+flooding the transcript — and so the loop's baselines survive a
 compaction inside the transcript itself: the cycle number, the tracked
-and unresolved counts, the arm-time head SHA, the current head SHA,
-whether auto-merge is enabled, and a change note when the gate shrank or
-grew, the head moved, or auto-merge flipped.
+and unresolved counts, the arm-time head SHA, the current head SHA, the
+arm-time and current auto-merge states, and a change note when the gate
+shrank or grew, the head moved, or auto-merge flipped.
 
 A single transient poll failure is not a stop — retry on the next cycle.
 After 3 consecutive poll failures, stop and name the error — never spin
@@ -311,21 +330,22 @@ name:
 
 ### 6. Approve
 
-When the approval condition holds (or after the immediate path's
-explicit confirmation), run the pre-cast merge-safety checks. They read
-the **final poll's** values — never the arm-time reading, which can be
-~24 hours stale. Each triggered check requires an explicit confirmation
-before casting; a declined confirmation is the **confirmation declined**
-stop — stop without approving and report which check was declined.
+When the approval condition holds (on the loop path, or on the
+immediate path after its arm-time confirmation), run the pre-cast
+merge-safety checks. They read the **final poll's** values — the most
+recent run of the step-4 query, under step 4's live re-read rule. Each
+triggered check requires an explicit confirmation before casting; a
+declined confirmation is the **confirmation declined** stop — stop
+without approving and report which check was declined.
 
 - **Head drift.** Compare the arm-time `headRefOid` against the
   `headRefOid` from the final poll. When they differ, the author pushed
   commits after you armed, and the approval would cover code your
   threads never gated on. When the head moved — with auto-merge enabled
-  or not — pause and require an explicit confirmation before casting,
-  and name both SHAs in the approval body and the completion report;
-  with auto-merge on, an unconfirmed cast would merge code no human
-  re-read, irreversibly.
+  or not — require an explicit confirmation before casting, and name
+  both SHAs in the approval body and the completion report. With
+  auto-merge on, an unconfirmed cast would merge code no human re-read,
+  irreversibly.
 - **Auto-merge without an arm-time confirmation.** When the final poll
   shows auto-merge enabled and no auto-merge confirmation was obtained
   at arm — it was off at arm and flipped on mid-watch, or the arm-time
@@ -340,6 +360,19 @@ stop — stop without approving and report which check was declined.
   and never approve unconfirmed: require an explicit confirmation that
   names the missing baseline, or stop.
 
+**A granted confirmation is itself a stale read.** The checks above run
+against a poll that precedes the confirmation wait, and an unattended
+"yes" can arrive hours later — time enough for auto-merge to flip on,
+the head to move again, or a resolved thread to reopen. After any
+granted confirmation — one of these checks' or the immediate path's —
+re-run the step-4 poll (it becomes the final poll) and re-evaluate the
+step-2 approval condition and every check above against it before
+casting. A check the fresh poll newly triggers requires its own
+confirmation. The confirm-then-re-poll loop is bounded: when three
+consecutive re-polls each trigger a new confirmation, stop without
+approving and report the churn under the **confirmation declined** stop
+instead of asking a fourth time — re-arming remains available.
+
 Cast one approval against the same canonical URL, passing the body on
 stdin (`--body-file -` with a quoted heredoc) so the body text is never
 interpolated into the shell command:
@@ -351,11 +384,16 @@ GH_APPROVE_EOF
 ```
 
 The body carries the automated attribution, the head commit SHA current
-at approval time (re-read `headRefOid` in the final poll), the arm-time
-head SHA (when the two are equal, collapse the two SHA sentences into
-"Head commit at arm and approval time: <head-SHA>."), and the
-resolved-thread count — an unexplained automated approval is unauditable,
-and an approval that hides head drift is unauditable too. When the
+at approval time (the `headRefOid` from the final poll — the
+confirmation rule above guarantees no wait separates that poll from the
+cast), the arm-time head SHA (when the two are equal, collapse the two
+SHA sentences into "Head commit at arm and approval time: <head-SHA>."),
+and the resolved-thread count — an unexplained automated approval is
+unauditable, and an approval that hides head drift is unauditable too.
+When `<N>` differs from the arm-time tracked count, threads were
+deleted or added mid-watch — a gate cleared by deletion must not read
+as one cleared by resolution — so name both counts in the body and the
+completion report, the way the two head SHAs are handled. When the
 arm-time SHA was unrecoverable and the user confirmed the cast anyway,
 say so in the body in place of the arm-time SHA — never invent one.
 
@@ -371,17 +409,22 @@ check:
 
 ### Compaction defense
 
-All loop state but one value is re-fetchable from GitHub. After a
-compaction, re-derive the baseline: re-fetch the viewer login, re-run
-the poll query, recompute the tracked set, the gate, and the current
-auto-merge state (the poll query carries `autoMergeRequest`), and
-continue polling from the snapshot lines already in the transcript. The
-one value GitHub cannot return is the **arm-time head SHA**: recover it
-from the arm report or any snapshot line surviving in the transcript;
-when no copy survives, step 6's fail-closed rule applies. Recover the
-arm-time auto-merge state the same way (the arm report carries it);
-when it is unrecoverable, treat the run as having no arm-time
-auto-merge confirmation.
+After a compaction, re-derive the live state from GitHub: re-fetch the
+viewer login, re-run the poll query, and recompute the tracked set, the
+gate, and the current auto-merge state (the poll query carries
+`autoMergeRequest`), then continue polling. The arm-time baselines are
+the values GitHub cannot return — recover them from the transcript:
+
+- the **arm-time head SHA** — printed in the arm report and repeated in
+  every snapshot line; when no copy survives, step 6's fail-closed rule
+  applies;
+- the **arm-time auto-merge state and whether its confirmation was
+  granted** — the state is in the arm report and every snapshot line;
+  when unrecoverable, treat the run as having no arm-time auto-merge
+  confirmation;
+- the **arm-time tracked count** — printed in the arm report and the
+  cycle-0 snapshot; when unrecoverable, say so in the approval body in
+  place of the count comparison.
 
 ## Completion
 
@@ -392,7 +435,8 @@ Report:
   empty-tracked-set stop, or confirmation declined)
 - the number of cycles consumed
 - when an approval was cast: its URL and the cited head SHA; when the
-  head moved between arm and approval, both SHAs and a drift note
+  head moved between arm and approval, both SHAs and a drift note; when
+  the tracked count changed between arm and approval, both counts
 - the handoff — path-dependent. On approval there is no follow-on
   reviewer skill: landing belongs to the author, not the reviewer. On
   interrupt, timeout, or a declined confirmation, offer to re-arm the

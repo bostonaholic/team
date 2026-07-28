@@ -438,16 +438,60 @@ describe("pr-approve-watch skill: drift baseline survives compaction (fail close
     ).toBe(true);
   });
 
-  test("compaction defense names the arm-time head SHA as the one value GitHub cannot return", () => {
-    expect(
-      /one\s+value\s+GitHub\s+cannot\s+return[^.]{0,60}arm-time\s+head\s+SHA/i.test(flat(body())),
-    ).toBe(true);
+  test("compaction defense names the arm-time baselines as the values GitHub cannot return", () => {
+    const t = flat(body());
+    expect(/arm-time\s+baselines\s+are\s+the\s+values\s+GitHub\s+cannot\s+return/i.test(t)).toBe(
+      true,
+    );
+    // All three transcript-only baselines are enumerated.
+    expect(t).toContain("arm-time head SHA");
+    expect(t).toContain("arm-time auto-merge state");
+    expect(t).toContain("arm-time tracked count");
+  });
+
+  test("every snapshot line repeats the arm-time auto-merge state", () => {
+    expect(/arm-time\s+and\s+current\s+auto-merge\s+states/i.test(flat(body()))).toBe(true);
   });
 
   test("an unrecoverable arm SHA is never re-derived from the current head and never approved unconfirmed", () => {
     const t = flat(body());
     expect(/never\s+re-derive\s+it\s+from\s+the\s+current\s+head/i.test(t)).toBe(true);
     expect(/never\s+approve\s+unconfirmed/i.test(t)).toBe(true);
+  });
+});
+
+describe("pr-approve-watch skill: a granted confirmation triggers a fresh pre-cast poll", () => {
+  test("after any granted confirmation the step-4 poll is re-run before casting", () => {
+    expect(
+      /after\s+any\s+granted\s+confirmation[^.]{0,120}re-run\s+the\s+step-4\s+poll/i.test(
+        flat(body()),
+      ),
+    ).toBe(true);
+  });
+
+  test("the fresh poll re-evaluates the approval condition and every merge-safety check", () => {
+    expect(
+      /re-evaluate\s+the\s+step-2\s+approval\s+condition\s+and\s+every\s+check/i.test(flat(body())),
+    ).toBe(true);
+  });
+
+  test("a check the fresh poll newly triggers requires its own confirmation", () => {
+    expect(/newly\s+triggers\s+requires\s+its\s+own\s+confirmation/i.test(flat(body()))).toBe(true);
+  });
+
+  test("the confirm-then-re-poll loop is bounded and churn maps to the confirmation-declined stop", () => {
+    const t = flat(body());
+    expect(/confirm-then-re-poll\s+loop\s+is\s+bounded/i.test(t)).toBe(true);
+    expect(/instead\s+of\s+asking\s+a\s+fourth\s+time/i.test(t)).toBe(true);
+    expect(
+      /report\s+the\s+churn\s+under\s+the\s+\*\*confirmation\s+declined\*\*\s+stop/i.test(t),
+    ).toBe(true);
+  });
+
+  test("the approval-time SHA comes from the final poll, with no confirmation wait before the cast", () => {
+    expect(
+      /guarantees\s+no\s+wait\s+separates\s+that\s+poll\s+from\s+the\s+cast/i.test(flat(body())),
+    ).toBe(true);
   });
 });
 
@@ -474,12 +518,42 @@ describe("pr-approve-watch skill: argument validation before shell interpolation
     expect(body()).toContain("^[0-9]+$");
   });
 
-  test("a PR URL must match the pinned github.com pull-URL pattern", () => {
-    expect(body()).toContain(String.raw`^https://github\.com/[^/]+/[^/]+/pull/[0-9]+$`);
+  test("a PR URL must match the pinned github.com pull-URL pattern (GitHub identifier charset)", () => {
+    expect(body()).toContain(
+      String.raw`^https://github\.com/[A-Za-z0-9._-]{1,39}/[A-Za-z0-9._-]{1,100}/pull/[0-9]+$`,
+    );
+  });
+
+  test("the permissive [^/]+ owner/repo charset is gone from the accepted pattern", () => {
+    const t = body();
+    // Guard: an empty body must fail, not vacuously pass the absence check.
+    expect(t.length).toBeGreaterThan(0);
+    // `[^/]+` excludes only the slash, so `$(...)` passes validation and
+    // bash expands it inside a double-quoted shell word.
+    expect(t).not.toContain(String.raw`[^/]+/[^/]+/pull`);
   });
 
   test("validation happens before the value reaches any shell command", () => {
     expect(/before\s+the\s+value\s+reaches\s+any\s+shell\s+command/i.test(flat(body()))).toBe(true);
+  });
+
+  test("the raw argument never appears in a shell word — the arm call binds capture groups", () => {
+    const t = body();
+    // Guard: an empty body must fail, not vacuously pass the absence check.
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).not.toContain('gh pr view "<argument>"');
+    expect(t).toContain('gh pr view "$ARG_NUMBER" --repo "$ARG_OWNER/$ARG_REPO"');
+    expect(/binds?\s+`\$ARG_OWNER`,\s+`\$ARG_REPO`,\s+and\s+`\$ARG_NUMBER`/i.test(flat(t))).toBe(
+      true,
+    );
+  });
+
+  test("$OWNER/$REPO/$NUMBER in the GraphQL snippets are assigned from the canonical url output", () => {
+    expect(
+      /assigned\s+from\s+this\s+canonical\s+output,\s+never\s+re-derived\s+from\s+the\s+raw\s+argument/i.test(
+        flat(body()),
+      ),
+    ).toBe(true);
   });
 });
 
