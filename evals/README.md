@@ -214,8 +214,9 @@ Two workflows run the evals:
   `periodic-evals.yml`. It upserts one `## PR Evals` comment on the PR with a
   per-suite pass/fail table and cost. The comment body is produced by
   `scripts/eval-report.ts` (pure + unit-tested in `tests/eval-report.test.ts`).
-  It is **advisory** (not a required merge check) while zero gate-tier fixtures
-  exist, and runs on **same-repo PRs only** (fork PRs lack the
+  It is **advisory** — the gate tier is empty by decision, with offline
+  replay coverage in the free suite instead — and runs on **same-repo PRs
+  only** (fork PRs lack the
   `EVALS_ANTHROPIC_API_KEY` secret and a write token). When the diff selects
   nothing — today's steady state — the comment says so.
 - **`.github/workflows/periodic-evals.yml`** runs the full periodic tier

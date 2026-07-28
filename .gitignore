@@ -33,5 +33,9 @@ docs/vendor/
 # Eval run results (generated locally; CI uploads them as artifacts)
 evals/results/
 
+# Local secrets (repo-root .env holds API keys)
+.env
+.env.*
+
 # Bun / npm dependencies
 node_modules/

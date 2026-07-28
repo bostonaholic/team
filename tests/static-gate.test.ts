@@ -569,7 +569,7 @@ describe("static gate: tier drift guards", () => {
     expect(tierKeys).toEqual(touchfileKeys);
   });
 
-  test("every E2E_TIERS entry is periodic until an offline gate runner exists", () => {
+  test("every E2E_TIERS entry stays periodic — the gate slot is empty by decision", () => {
     // docs/testing.md §4 — a test that can be red for a legitimate
     // non-bug reason is periodic and never gates. Every current fixture
     // drives a live model, so none qualifies as gate, and the slot stays
