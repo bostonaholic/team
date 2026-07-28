@@ -1,9 +1,11 @@
 # Harness checks — runs on every PR to main.
 #
 # Validates the eval harness itself: unit tests for the TS helpers
-# (parsers, storage, selection, judging) plus schema validation of every
-# fixture and rubric on disk. No model calls, no EVALS_ANTHROPIC_API_KEY,
-# completes in well under 5 seconds.
+# (parsers, storage, selection, judging), schema validation of every
+# fixture and rubric on disk, and an offline subprocess replay of the
+# code-reviewer scoring pipeline (tests/code-reviewer-replay.test.ts).
+# No model calls, no EVALS_ANTHROPIC_API_KEY; the free suite runs in
+# about seven seconds.
 #
 # Live agent runs against the model live in periodic-evals.yml.
 name: Harness checks
@@ -36,6 +38,15 @@ jobs:
     # allowlist into a live job-level `if:` (wrapped event-aware with
     # startsWith(github.event_name, 'pull_request')) — copy that form when
     # adding the paid step here.
+    #
+    # The offline replay test (tests/code-reviewer-replay.test.ts) spawns
+    # child `bun test` runs that would reach a `claude` spawn only if their
+    # mock seam broke. Two guards fail first: the agent seam in
+    # tests/helpers/session-runner.ts throws "refusing live spawn", and the
+    # judge seam in tests/helpers/llm-judge.ts throws
+    # "EVALS_ANTHROPIC_API_KEY is required for the LLM-judge tier". So the
+    # step consumes no secret, spawns no `claude`, and stays inside the
+    # free contract above.
     steps:
       - uses: actions/checkout@v7
         with:
