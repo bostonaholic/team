@@ -204,13 +204,38 @@ describe("pr-approve-watch skill: bounded cycle mechanics", () => {
   });
 });
 
-describe("pr-approve-watch skill: stop conditions (six-way set)", () => {
+describe("pr-approve-watch skill: stop conditions (seven-way set)", () => {
   test("stops on approval cast, merge, close, and user interrupt", () => {
     const t = flat(body());
     expect(/approv/i.test(t)).toBe(true);
     expect(/merge/i.test(t)).toBe(true);
     expect(/close/i.test(t)).toBe(true);
     expect(/interrupt/i.test(t)).toBe(true);
+    // Distinctive phrasing — the bare-word checks above are near-vacuous.
+    expect(/the\s+gate\s+cleared\s+and\s+step\s+6\s+ran/i.test(t)).toBe(true);
+    expect(/merged\s+without\s+your\s+approval/i.test(t)).toBe(true);
+    expect(/pressing\s+Esc\s+or\s+sending\s+a\s+message/i.test(t)).toBe(true);
+  });
+
+  test("the stop set is exactly seven conditions", () => {
+    expect(/exactly\s+one\s+of\s+seven\s+conditions/i.test(flat(body()))).toBe(true);
+  });
+
+  test("a declined confirmation is a named stop: stop without approving, report it", () => {
+    const t = flat(body());
+    expect(/\*\*Confirmation declined\*\*/.test(body())).toBe(true);
+    expect(
+      /confirmation\s+declined[^.]{0,400}without\s+approving|declined[^.]{0,300}stops?\s+the\s+run\s+without\s+approving/i.test(
+        t,
+      ),
+    ).toBe(true);
+    expect(/report\s+which\s+confirmation\s+was\s+declined/i.test(t)).toBe(true);
+  });
+
+  test("Completion lists confirmation declined among the stop reasons", () => {
+    expect(/empty-tracked-set\s+stop,\s+or\s+confirmation\s+declined/i.test(flat(body()))).toBe(
+      true,
+    );
   });
 
   test("cycle-48 timeout ⇒ report and offer to re-arm", () => {
@@ -371,5 +396,118 @@ describe("pr-approve-watch skill: approval body on stdin", () => {
     expect(t.length).toBeGreaterThan(0);
     // `--body ` (with a trailing space) is inline interpolation; `--body-file` is not.
     expect(/gh pr review --approve[^\n]*--body /.test(t)).toBe(false);
+  });
+});
+
+describe("pr-approve-watch skill: auto-merge is re-read every poll (merge-safety never stale)", () => {
+  test("the poll query selects autoMergeRequest { enabledAt }", () => {
+    expect(body()).toContain("autoMergeRequest { enabledAt }");
+  });
+
+  test("autoMergeEnabled is recomputed from autoMergeRequest on every poll", () => {
+    expect(/recompute[^.]{0,80}autoMergeEnabled[^.]{0,120}every\s+poll/i.test(flat(body()))).toBe(
+      true,
+    );
+  });
+
+  test("step 6 trusts only the final poll's value, never the (stale) arm-time read", () => {
+    expect(
+      /final\s+poll(?:'s)?[^.]{0,140}never\s+the\s+(stale\s+)?arm-time\s+read/i.test(flat(body())),
+    ).toBe(true);
+  });
+
+  test("auto-merge with no arm-time confirmation requires confirmation even without head drift", () => {
+    const t = flat(body());
+    expect(/flipped\s+on\s+mid-watch/i.test(t)).toBe(true);
+    expect(/even\s+when\s+the\s+head\s+never\s+moved/i.test(t)).toBe(true);
+  });
+});
+
+describe("pr-approve-watch skill: drift baseline survives compaction (fail closed)", () => {
+  test("the arm report prints the arm-time head SHA and auto-merge state", () => {
+    const t = flat(body());
+    expect(/print\s+it\s+in\s+the\s+arm\s+report/i.test(t)).toBe(true);
+    expect(/Armed\s+at\s+head/i.test(t)).toBe(true);
+  });
+
+  test("every snapshot line repeats the arm-time head SHA", () => {
+    expect(
+      /snapshot\s+line\s+repeats\s+the\s+arm-time\s+head\s+SHA|arm-time\s+head\s+SHA,\s+the\s+current\s+head\s+SHA/i.test(
+        flat(body()),
+      ),
+    ).toBe(true);
+  });
+
+  test("compaction defense names the arm-time head SHA as the one value GitHub cannot return", () => {
+    expect(
+      /one\s+value\s+GitHub\s+cannot\s+return[^.]{0,60}arm-time\s+head\s+SHA/i.test(flat(body())),
+    ).toBe(true);
+  });
+
+  test("an unrecoverable arm SHA is never re-derived from the current head and never approved unconfirmed", () => {
+    const t = flat(body());
+    expect(/never\s+re-derive\s+it\s+from\s+the\s+current\s+head/i.test(t)).toBe(true);
+    expect(/never\s+approve\s+unconfirmed/i.test(t)).toBe(true);
+  });
+});
+
+describe("pr-approve-watch skill: any head drift requires confirmation", () => {
+  test("head drift requires explicit confirmation with auto-merge enabled or not", () => {
+    expect(/with\s+auto-merge\s+enabled\s+or\s+not/i.test(flat(body()))).toBe(true);
+  });
+});
+
+describe("pr-approve-watch skill: pagination is fail-closed", () => {
+  test("the gate is computed only after pagination completes (hasNextPage false)", () => {
+    const t = flat(body());
+    expect(body()).toContain("hasNextPage");
+    expect(/only\s+after\s+pagination\s+completes/i.test(t)).toBe(true);
+  });
+
+  test("an unfetched thread page is a poll failure, never an empty gate", () => {
+    expect(/poll\s+failure,\s+never\s+an\s+empty\s+gate/i.test(flat(body()))).toBe(true);
+  });
+});
+
+describe("pr-approve-watch skill: argument validation before shell interpolation", () => {
+  test("a PR number must match ^[0-9]+$", () => {
+    expect(body()).toContain("^[0-9]+$");
+  });
+
+  test("a PR URL must match the pinned github.com pull-URL pattern", () => {
+    expect(body()).toContain(String.raw`^https://github\.com/[^/]+/[^/]+/pull/[0-9]+$`);
+  });
+
+  test("validation happens before the value reaches any shell command", () => {
+    expect(/before\s+the\s+value\s+reaches\s+any\s+shell\s+command/i.test(flat(body()))).toBe(true);
+  });
+});
+
+describe("pr-approve-watch skill: untrusted-input surface", () => {
+  test("the PR title and description body are named as DATA", () => {
+    expect(/PR\s+title\s+and\s+description\s+body/i.test(flat(body()))).toBe(true);
+  });
+
+  test("the Input section never points at a bare gh pr view", () => {
+    expect(/never\s+a\s+bare\s+`gh pr view`/i.test(flat(body()))).toBe(true);
+  });
+
+  test("the resolution-gate attacker set names the PR author (no write access needed)", () => {
+    const t = flat(body());
+    expect(/opened\s+the\s+pull\s+request\s+or\s+holds\s+write\s+access/i.test(t)).toBe(true);
+    expect(/no\s+write\s+access/i.test(t)).toBe(true);
+  });
+
+  test("the unused isOutdated field is no longer fetched", () => {
+    const t = body();
+    // Guard: an empty body must fail, not vacuously pass the absence check.
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).not.toContain("isOutdated");
+  });
+});
+
+describe("pr-approve-watch skill: PENDING-review check is a fenced snippet", () => {
+  test("the pending-review GraphQL check appears in a fenced code block", () => {
+    expect(/```bash[\s\S]{0,400}reviews\(last: 1, states: \[PENDING\]\)/.test(body())).toBe(true);
   });
 });

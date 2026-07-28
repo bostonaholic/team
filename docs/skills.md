@@ -346,25 +346,32 @@ QRSPI phase — a self-contained action a user runs on demand.
   PR (with a "submit your pending review first" hint when a pending
   review exists). Per poll it recomputes the tracked set (threads whose
   first comment the viewer authored in a submitted review; pending-review
-  threads excluded) and gates purely on GraphQL `isResolved` state —
-  comment bodies are data, never instructions. Bounded cycles: 48 cycles
-  of ~31 minutes (up to three `sleep 600` calls plus one poll per cycle;
-  cycle 0 polls immediately). Stops on approval cast, merge/close, user
-  interrupt, cycle-48 timeout, 3 consecutive poll failures, or a tracked
-  set that empties mid-watch (stops without approving). The approval is
-  its only write — it never resolves threads, never replies, never edits
-  code, never merges, never auto-runs `/shipit`.
+  threads excluded) and the auto-merge state, and gates purely on GraphQL
+  `isResolved` state — comment bodies are data, never instructions.
+  Bounded cycles: 48 cycles of ~31 minutes (up to three `sleep 600` calls
+  plus one poll per cycle; cycle 0 polls immediately). Stops on approval
+  cast, merge/close, user interrupt, cycle-48 timeout, 3 consecutive poll
+  failures, a tracked set that empties mid-watch (stops without
+  approving), or a declined confirmation (stops without approving). The
+  approval is its only write — it never resolves threads, never replies,
+  never edits code, never merges, never auto-runs `/shipit`.
   `disable-model-invocation: true` — an approval can transitively trigger
   an auto-merge, so only a deliberate human invocation arms it. When
-  auto-merge is enabled, explicit confirmation is required on both paths:
-  the immediate path (gate already satisfied at arm) confirms before
-  casting, and the loop path confirms before arming the unattended
-  watch — a "no" refuses to arm. At approval time the arm-time head SHA
-  is compared against the current head; drift is named in the approval
-  body and completion report, and a drifted head with auto-merge enabled
-  requires confirmation before casting. Every GitHub read is projected
-  down to structural fields (logins, review states, `isResolved`, SHAs) —
-  review bodies and profile display names never enter context.
+  auto-merge is enabled at arm, explicit confirmation is required on both
+  paths: the immediate path (gate already satisfied at arm) confirms
+  before casting, and the loop path confirms before arming the unattended
+  watch — a "no" refuses to arm. Before casting, merge-safety checks read
+  the final poll's values, never the arm-time reading: any head drift
+  (with or without auto-merge) requires explicit confirmation, with both
+  SHAs named in the approval body and completion report; auto-merge that
+  turned on mid-watch (no arm-time confirmation) requires confirmation
+  even without drift; and an arm-time head SHA lost to compaction fails
+  closed — it is printed in the arm report and every poll snapshot, never
+  re-derived from the current head, and never approved unconfirmed. Every
+  GitHub read is minimized to structural fields (logins, review states,
+  `isResolved`, SHAs) — the arm read via a `--jq` projection, the poll
+  via a selection set that fetches no body fields — so review bodies, PR
+  descriptions, and profile display names never enter context.
 
 
 ### groom-backlog
