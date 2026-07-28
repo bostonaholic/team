@@ -25,6 +25,9 @@ jobs:
   harness-checks:
     name: Validate harness + fixtures
     runs-on: ubuntu-latest
+    # Hard stop well above the ~7s normal runtime; the replay test spawns
+    # child processes, so a hung child must not burn runner minutes.
+    timeout-minutes: 10
     permissions:
       contents: read
     # Author gate contract (issue #51): the steps below are free (no secret,
@@ -32,8 +35,8 @@ jobs:
     # free CI. But any step that consumes a secret or spawns `claude` MUST
     # carry this trust `if:`:
     #   contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
-    # When PR #32's "Run gate-tier evals" step attaches paid execution here,
-    # it inherits this gate so untrusted PR authors never spend tokens.
+    # Any future step that attaches paid execution here inherits this gate,
+    # so untrusted PR authors never spend tokens.
     # Canonical in-use example: periodic-evals.yml wires exactly this
     # allowlist into a live job-level `if:` (wrapped event-aware with
     # startsWith(github.event_name, 'pull_request')) — copy that form when
@@ -55,6 +58,10 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
+          # The offline replay tests key on bun's human-readable per-test
+          # reporter lines ("(pass) <name>" / "(fail) <name>"). A bun
+          # release that reformats those lines turns them red — loud,
+          # never false-green. Check that coupling when changing this.
           bun-version: latest
 
       - name: Install dependencies

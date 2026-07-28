@@ -179,8 +179,8 @@ describe("static gate: author gate", () => {
     : "";
 
   test("trust expression documented as the contract at the future paid seam in harness-checks.yml", () => {
-    // harness-checks.yml is the PR-triggered workflow where paid execution
-    // attaches next (#32's mocked gate-eval step). Today the canonical trust
+    // harness-checks.yml is the PR-triggered workflow where any future
+    // paid execution would attach. Today the canonical trust
     // expression lives ONLY inside the contract comment block on the
     // harness-checks job — NOT as a live `if:`. The free `bun test` job stays
     // ungated by design (fork authors keep free CI). When a paid step attaches

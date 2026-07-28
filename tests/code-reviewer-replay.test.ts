@@ -1,36 +1,40 @@
 // tests/code-reviewer-replay.test.ts
 //
-// L3 subprocess replay (docs/testing.md §2: spawn the program, capture
-// stdout / files written / exit code; §5: L1–L4 run in the free suite, so
-// this runs on every PR for every author, including forks). Each scenario
+// L3 subprocess replay per docs/testing.md: spawn the program, capture
+// stdout / files written / exit code. L1–L4 run in the free suite, so
+// this runs on every PR for every author, including forks. Each scenario
 // spawns `bun test ./tests/code-reviewer.evals.ts` against a committed
 // NDJSON transcript, exercising the scoring composition in that file —
 // BLOCKING_LABEL, FINDING_LABEL, splitIntoFindingSegments,
 // blockingLabelOnHint, countFalsePositives, and the pass predicate — which
 // no other free test executes.
 //
-// Key-free by construction: the child env is built explicitly (never
-// spread from process.env) and carries no ANTHROPIC_API_KEY /
-// EVALS_ANTHROPIC_API_KEY. Two guards backstop a broken mock seam before
-// any metered call:
-//   - agent seam: session-runner.ts:264-270 throws "refusing live spawn"
-//     when EVALS_MOCK_AGENT is unset and no key exists;
-//   - judge seam: getClient (tests/helpers/llm-judge.ts:47-49) throws
+// Key-free: the child env is built explicitly (never spread from
+// process.env) with both API key vars pinned to "". The empty strings are
+// load-bearing — bun auto-loads a `.env` from the child's cwd and fills
+// only UNSET vars, so an omitted key would be silently supplied by a
+// repo-root `.env` while an explicit "" blocks it. Two guards backstop a
+// broken mock seam before any metered call:
+//   - agent seam: the live-path guard in tests/helpers/session-runner.ts
+//     throws "refusing live spawn" when EVALS_MOCK_AGENT is unset and no
+//     key exists;
+//   - judge seam: getClient in tests/helpers/llm-judge.ts throws
 //     "EVALS_ANTHROPIC_API_KEY is required for the LLM-judge tier".
 //
 // Child-env notes:
 //   - EVALS_TIER stays unset: filterByTier passes everything through when
-//     unset (touchfiles.ts:295); EVALS_TIER=gate would deselect the
-//     periodic fixture and register test.skip — a false green.
-//   - EVALS_FAKE_CHANGED_FILES pins selection to exactly one eval
-//     (touchfiles.ts:169-170); the mock seams stay process-global.
+//     EVALS_TIER is unset; EVALS_TIER=gate would deselect the periodic
+//     fixture and register test.skip — a false green.
+//   - EVALS_FAKE_CHANGED_FILES pins selection to exactly one eval via the
+//     fake-diff override in getChangedFiles; the mock seams stay
+//     process-global.
 //   - EVALS_RESULTS_ROOT points at a per-run temp dir so the child never
 //     writes evals/results/. Budget regression cannot fire: the fresh root
 //     has no prior run, and replayed tool/turn counts sit under the
-//     minPriorTools/minPriorTurns floors (eval-store.ts:365-511).
+//     minPriorTools/minPriorTurns floors in findBudgetRegressions.
 //
-// False-green guard: zero selection registers test.skip and ALSO exits 0
-// (touchfiles.ts:337-345), so no scenario asserts exit code alone. With an
+// False-green guard: zero selection makes testIfSelected register
+// test.skip and ALSO exit 0, so no scenario asserts exit code alone. With an
 // explicit ./-prefixed path argument, piped (non-TTY) bun 1.3.14 prints a
 // per-test result line for every test — "(pass) <name>" / "(fail) <name>"
 // / "(skip) <name>" — so each scenario pins the marker + case name, which
@@ -73,6 +77,10 @@ function runReplay(transcriptPath: string): {
         env: {
           PATH: process.env.PATH ?? "",
           HOME: process.env.HOME ?? "",
+          // Explicit "" so a repo-root .env cannot fill these in the child
+          // (bun's .env autoload fills only unset vars).
+          ANTHROPIC_API_KEY: "",
+          EVALS_ANTHROPIC_API_KEY: "",
           EVALS_MOCK_AGENT: transcriptPath,
           EVALS_MOCK_JUDGE: JUDGE_VERDICT,
           EVALS_FAKE_CHANGED_FILES:
@@ -114,8 +122,8 @@ describe("code-reviewer scoring pipeline offline replay", () => {
       // Red for the RIGHT reason: the transcript detects all three plants
       // (passing the detection assertions) but parks `issue (blocking):`
       // on the b2 finding, so the child must fail at exactly the
-      // blocking-label-placement expect (code-reviewer.evals.ts:258-261) —
-      // bun's code frame for that failing expect names blockingLabelOnHint.
+      // blocking-label-placement expect in registerPlantedBugEval — bun's
+      // code frame for that failing expect names blockingLabelOnHint.
       // An unrelated crash, a key-guard throw, or a zero-selection skip
       // cannot satisfy all three assertions.
       expect(result.output).toContain("(fail) planted-comment-violations");

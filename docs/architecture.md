@@ -573,7 +573,7 @@ env-var knobs, and the rerun-on-base blame protocol.
 
 **CI wiring.** Two GitHub Actions workflows in `.github/workflows/`:
 `harness-checks.yml` runs the offline harness validation on every PR
-(no secrets, ~5s); `periodic-evals.yml` runs the live-agent regression
+(no secrets, ~7s); `periodic-evals.yml` runs the live-agent regression
 check on a weekly cron (Monday 06:00 UTC) with `EVALS_ANTHROPIC_API_KEY`.
 That key is an **environment secret** scoped to the `evals` GitHub
 Environment — a one-time Settings → Environments setup (create the `evals`
