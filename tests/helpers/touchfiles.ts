@@ -127,8 +127,9 @@ export const GLOBAL_TOUCHFILES: string[] = [
 ];
 
 export const E2E_TIERS: Record<string, "gate" | "periodic"> = {
-  // Note: gate-tier E2E tests would do offline assertions (e.g. against a
-  // recorded transcript). Live-model fixtures are periodic.
+  // Live-model fixtures are periodic, and the gate slot stays empty by
+  // decision — offline replay coverage lives in the free suite
+  // (tests/code-reviewer-replay.test.ts), not behind a gate tier.
   "planted-null-deref": "periodic",
   "planted-time-bomb": "periodic",
   "planted-comment-violations": "periodic",

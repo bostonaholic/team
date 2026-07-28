@@ -45,7 +45,7 @@ async function getClient(): Promise<AnthropicLike> {
   // (the agent under test spawns its own `claude` and would inherit a bare
   // ANTHROPIC_API_KEY). We hand this key to the SDK client explicitly below.
   const apiKey = process.env.EVALS_ANTHROPIC_API_KEY;
-  if (apiKey === undefined || apiKey === "") {
+  if (apiKey === undefined || apiKey.trim() === "") {
     throw new Error("EVALS_ANTHROPIC_API_KEY is required for the LLM-judge tier");
   }
   const mod = await import("@anthropic-ai/sdk");

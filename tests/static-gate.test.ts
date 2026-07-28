@@ -179,8 +179,8 @@ describe("static gate: author gate", () => {
     : "";
 
   test("trust expression documented as the contract at the future paid seam in harness-checks.yml", () => {
-    // harness-checks.yml is the PR-triggered workflow where paid execution
-    // attaches next (#32's mocked gate-eval step). Today the canonical trust
+    // harness-checks.yml is the PR-triggered workflow where any future
+    // paid execution would attach. Today the canonical trust
     // expression lives ONLY inside the contract comment block on the
     // harness-checks job — NOT as a live `if:`. The free `bun test` job stays
     // ungated by design (fork authors keep free CI). When a paid step attaches
@@ -569,14 +569,14 @@ describe("static gate: tier drift guards", () => {
     expect(tierKeys).toEqual(touchfileKeys);
   });
 
-  test("every E2E_TIERS entry is periodic until an offline gate runner exists", () => {
+  test("every E2E_TIERS entry stays periodic — the gate slot is empty by decision", () => {
     // docs/testing.md §4 — a test that can be red for a legitimate
     // non-bug reason is periodic and never gates. Every current fixture
-    // drives a live model, so none qualifies as gate. Whoever lands the
-    // first offline (recorded-transcript) gate fixture updates this test
-    // deliberately, in the same reviewed edit that flips the fixture's tier
-    // in frontmatter and E2E_TIERS — the first `gate` label must not be a
-    // two-word frontmatter slip.
+    // drives a live model, so none qualifies as gate, and the slot stays
+    // empty by decision: offline replay coverage lives in the free suite
+    // (tests/code-reviewer-replay.test.ts) instead. Any future flip to
+    // `gate` remains a deliberate edit to this test, the fixture's
+    // frontmatter, and E2E_TIERS — never a two-word frontmatter slip.
     const nonPeriodic = Object.entries(E2E_TIERS).filter(
       ([, tier]) => tier !== "periodic",
     );

@@ -137,6 +137,21 @@ describe("judgeReviewerOutput deterministic gate", () => {
     expect(out.reason_substance).toBe(5);
   });
 
+  test("rejects a whitespace-only key before constructing the SDK client", async () => {
+    const prev = process.env.EVALS_ANTHROPIC_API_KEY;
+    process.env.EVALS_ANTHROPIC_API_KEY = "   ";
+    try {
+      await expect(
+        judgeReviewerOutput(
+          "issue (blocking): null deref on line 42; add a null check before the access.",
+        ),
+      ).rejects.toThrow(/EVALS_ANTHROPIC_API_KEY is required/);
+    } finally {
+      if (prev === undefined) delete process.env.EVALS_ANTHROPIC_API_KEY;
+      else process.env.EVALS_ANTHROPIC_API_KEY = prev;
+    }
+  });
+
   test("clamps out-of-range LLM scores", async () => {
     _setClientForTests({
       messages: {

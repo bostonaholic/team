@@ -79,8 +79,18 @@ escape hatch for full scheduled/manual sweeps.
 
 When this key is absent, empty, or whitespace-only and `EVALS_MOCK_AGENT` is
 unset, the live path now **throws immediately** ("refusing live spawn") rather
-than spawning `claude` and failing later at CLI auth. Set `EVALS_MOCK_AGENT` to
-replay a fixture without a key.
+than spawning `claude` and failing later at CLI auth. The judge seam has the
+same backstop: without `EVALS_MOCK_JUDGE`, `getClient` in
+`tests/helpers/llm-judge.ts` throws "EVALS_ANTHROPIC_API_KEY is required for
+the LLM-judge tier" before any metered call. Set `EVALS_MOCK_AGENT` to replay
+a fixture without a key.
+
+Both mock seams have an in-repo consumer: `tests/code-reviewer-replay.test.ts`
+replays committed transcripts through the code-reviewer eval offline and
+key-free, on every PR for every author, including forks. Its transcripts live
+in `tests/fixtures/code-reviewer-replay/` — deliberately outside
+`evals/fixtures/`, so they are plain test data, not eval fixtures, and none of
+the fixture contract below applies to them.
 
 In CI the key is an **`evals` environment secret** (not a plain repo secret),
 reachable only by the job declaring `environment: evals`. Token-consuming
@@ -204,8 +214,9 @@ Two workflows run the evals:
   `periodic-evals.yml`. It upserts one `## PR Evals` comment on the PR with a
   per-suite pass/fail table and cost. The comment body is produced by
   `scripts/eval-report.ts` (pure + unit-tested in `tests/eval-report.test.ts`).
-  It is **advisory** (not a required merge check) while zero gate-tier fixtures
-  exist, and runs on **same-repo PRs only** (fork PRs lack the
+  It is **advisory** — the gate tier is empty by decision, with offline
+  replay coverage in the free suite instead — and runs on **same-repo PRs
+  only** (fork PRs lack the
   `EVALS_ANTHROPIC_API_KEY` secret and a write token). When the diff selects
   nothing — today's steady state — the comment says so.
 - **`.github/workflows/periodic-evals.yml`** runs the full periodic tier
