@@ -29,7 +29,7 @@
 // (heavy external state — an open PR, CI, the GitHub API — same reason
 // team-pr is demoted; no protocol.test.ts sentinel, that convention is for
 // the pipeline-skill demotions):
-//   shipit, pr-open-comments, pr-watch, groom-backlog
+//   shipit, pr-open-comments, pr-watch, pr-approve-watch, groom-backlog
 
 import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
@@ -513,6 +513,28 @@ describe("L2 coverage: pr-watch (executable utility, not L5)", () => {
 
   test("pr-watch is pinned by its dedicated L2 tripwire tests/pr-watch-skill.test.ts", () => {
     expect(existsSync(join(TESTS_ROOT, "pr-watch-skill.test.ts"))).toBe(true);
+  });
+});
+
+// `pr-approve-watch` polls a live PR for up to 24 hours and waits on another
+// user's thread-resolution activity — heavy external state (an open PR,
+// another user resolving threads, wall-clock time) that cannot be honestly
+// driven in a single offline `claude -p` eval, the same reason `pr-watch`,
+// `shipit`, and `team-pr` are demoted. Its behavioral contract is pinned by
+// its dedicated L2 tripwire, tests/pr-approve-watch-skill.test.ts, not an L5
+// eval.
+
+describe("L2 coverage: pr-approve-watch (executable utility, not L5)", () => {
+  test("pr-approve-watch has no evals/fixtures/pr-approve-watch/ directory (no L5 eval)", () => {
+    expect(existsSync(fixtureDir("pr-approve-watch"))).toBe(false);
+  });
+
+  test("pr-approve-watch has no tests/pr-approve-watch.evals.ts file (no L5 eval)", () => {
+    expect(existsSync(evalsFilePath("pr-approve-watch"))).toBe(false);
+  });
+
+  test("pr-approve-watch is pinned by its dedicated L2 tripwire tests/pr-approve-watch-skill.test.ts", () => {
+    expect(existsSync(join(TESTS_ROOT, "pr-approve-watch-skill.test.ts"))).toBe(true);
   });
 });
 

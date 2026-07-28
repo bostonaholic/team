@@ -311,15 +311,15 @@ describe("thin agents: documentation counts agree at 51 skills", () => {
   // Previously unpinned count locations — they drifted silently before, so
   // each gains a pin, and docs/skills.md gains a stale-guard on the old
   // methodology count (catches its description sentence going stale).
-  test("README.md counts 50 entry-point + methodology skills", () => {
+  test("README.md counts 51 entry-point + methodology skills", () => {
     expect(read(join(REPO_ROOT, "README.md")).replace(/\s+/g, " ")).toContain(
-      "50 entry-point + methodology skills",
+      "51 entry-point + methodology skills",
     );
   });
 
-  test("docs/index.md counts all 50 skills", () => {
+  test("docs/index.md counts all 51 skills", () => {
     expect(read(join(REPO_ROOT, "docs", "index.md")).replace(/\s+/g, " ")).toContain(
-      "all 50 skills",
+      "all 51 skills",
     );
   });
 
