@@ -260,3 +260,121 @@ identification, the OWASP Top 10 checks, the extra vulnerability checks, and
 the CRITICAL/HIGH/MEDIUM/LOW severity classification ladder. The PASS/FAIL
 verdict rule stays here (Verdict Criteria, "Security Reviewer" above): any
 CRITICAL or HIGH finding is FAIL, no override.
+
+## External reviewer corroboration (opt-out)
+
+Multi-model corroboration runs **by default** — every code review attempts the
+known external reviewers (`codex`, `gemini`) alongside your own Claude pass,
+uses whichever are available, and **reports the rest as skipped**. It is
+**opt-out**: a user disables it by saying so in the prompt, and the orchestrator
+threads that instruction into your dispatch.
+
+- If the orchestrator dispatched you with a **per-run opt-out** (e.g. "review
+  without external models" / "Claude-only" / "skip gemini"), do not attempt the
+  named providers — or none at all, for a full opt-out — and note the opt-out
+  in your report.
+- Otherwise attempt every provider the probe reports available.
+
+Attempting an external CLI sends the diff to a third-party service (OpenAI for
+codex, Google for gemini). That is the documented default; a user who does not
+want it opts out in the prompt.
+
+1. **Probe availability.** Run the probe via Bash:
+
+   ```bash
+   node "${CLAUDE_PLUGIN_ROOT}/skills/code-review/external-reviewers.mjs"
+   ```
+
+   It prints a JSON object on one line —
+   `{"available":[{"tool":"codex","invoke":["codex","exec","--sandbox","read-only"],"promptVia":"arg"}],"unavailable":["gemini"]}`.
+   `available` entries carry a ready-to-run `invoke` argv prefix and `promptVia`
+   (the single source of truth for *how* to run each provider — you do not
+   rediscover flags); the probe already excludes any provider that is missing,
+   unauthenticated, errored, or hung, so you never wait on a dead CLI.
+   **`unavailable` names the providers you must report as attempted-but-skipped**
+   (step 6). When both lists are empty — or the user opted out — you behave
+   exactly as a single-Claude review.
+
+2. **Invoke available providers in parallel.** Run each provider's `invoke`
+   argv from the probe output **in parallel** via Bash, piping the same
+   `git diff <base>..HEAD` snapshot you reviewed to the CLI's **stdin** and
+   supplying a review prompt that holds it to the **same** fresh-context
+   Conventional-Comments + verdict-keyword contract Team reviewers already emit
+   (see `skills/conventional-comments/SKILL.md` for the exact finding format) — each
+   finding carrying a `file:line` ref, then a final line with a verdict keyword
+   (`APPROVE` / `REQUEST CHANGES` / `COMMENT`) and **nothing else** (no
+   preamble). `codex` and `gemini` are the corroborating providers; both run
+   **read-only** and non-interactively. Capture stdout. The probe's `invoke`
+   already encodes the exact flags and `promptVia` says where the prompt goes
+   (positional for codex, via `-p` for gemini); the ready-to-run commands are:
+
+   - **codex** (`promptVia: "arg"` — prompt is a trailing positional argument):
+
+     ```bash
+     git diff <base>..HEAD | codex exec --sandbox read-only "<REVIEW_PROMPT>"
+     ```
+
+   - **gemini** (`promptVia: "-p"` — prompt is passed via `-p`):
+
+     ```bash
+     git diff <base>..HEAD | gemini --approval-mode plan --skip-trust -p "<REVIEW_PROMPT>"
+     ```
+
+   `codex exec` is the non-interactive subcommand and `--sandbox read-only`
+   forbids writes; gemini's `--approval-mode plan` is its read-only mode and
+   `--skip-trust` trusts the workspace so the headless run never hangs on a
+   trust prompt. Each provider uses its own default model. (codex also accepts
+   `--output-last-message <FILE>` to capture only the final message to a file,
+   but stdout is the primary path.)
+
+3. **Parse, discard non-conforming output.** Parse each provider's output into
+   findings (`file`, `line`, `claim`, `tier`). A provider whose output is not
+   parseable Conventional-Comments (no verdict keyword) is **discarded as
+   unparseable and logged degraded** for this round — it neither corroborates
+   nor blocks. Fail loud in the report, never in the gate.
+
+4. **Reconcile.** Feed your own findings plus each parsed provider's findings
+   into the reconciler — do NOT re-implement dedup in prose. Pipe a single
+   JSON blob to stdin of the shape the reconciler documents: one entry per
+   model under `byModel`, each a `{ model, findings }` list of
+   `{ file, line, claim, tier }` findings (`body` optional):
+
+   ```bash
+   echo '{
+     "byModel": [
+       { "model": "claude", "findings": [
+         { "file": "src/auth.ts", "line": 42, "claim": "token compared with ==", "tier": "Blocking" }
+       ] },
+       { "model": "codex", "findings": [
+         { "file": "src/auth.ts", "line": 42, "claim": "token compared with ==", "tier": "Blocking" }
+       ] }
+     ],
+     "totalModels": 2
+   }' | node "${CLAUDE_PLUGIN_ROOT}/skills/code-review/reconcile-findings.mjs"
+   ```
+
+   `totalModels` is **optional** (defaults to the number of distinct models
+   in `byModel`).
+
+   It dedupes by `file:line:claim` and tags each finding with a corroboration
+   count and annotation. On a tier collision the merged finding carries the
+   most-severe tier, with every model's original tier kept under `modelTiers`.
+
+5. **Fold annotations into your single verdict.** Report **one** verdict. List
+   uncorroborated findings under a new `### Single-model findings` section
+   (alongside `### Refuted by verification`), each tagged
+   `single-model — extra scrutiny`; findings raised by two or more models carry
+   `corroborated by N models`. Corroboration is **annotation only**: it never
+   re-tiers a finding and never changes the verdict keyword — the severity tiers
+   in `skills/review-severity-tiers/SKILL.md` are untouched.
+
+6. **Report the models consulted, and any skipped.** State which models
+   actually ran, and for each provider in the probe's `unavailable` list (or one
+   the user opted out of) record a line like
+   `attempted codex — unavailable (not installed / not authenticated), skipped`.
+   The user must be able to see which models were and were not consulted; a
+   skipped provider never blocks or fails the review.
+
+7. **Default-keep.** No finding is dropped on the basis of its corroboration
+   count. A single-model finding stands with extra scrutiny; it is never
+   auto-demoted or removed.

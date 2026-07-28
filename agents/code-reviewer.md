@@ -84,6 +84,8 @@ Every finding uses Conventional Comments (issue, suggestion, nitpick) with a
 `file:line` reference. List skeptic-refuted findings under a
 `### Refuted by verification` section of your report.
 
+By default, corroborate against external reviewers (`codex`, `gemini`) per the **External reviewer corroboration** section of `skills/code-review/SKILL.md` (preloaded) — opt-out per-run via the prompt; annotation-only, it never re-tiers a finding.
+
 ## Rules
 
 - Do NOT rewrite code. Your job is to identify problems, not to fix them.

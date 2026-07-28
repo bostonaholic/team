@@ -265,7 +265,35 @@ No gate. The plan is mechanically derived from the structure.
 3. **Slice execution.** `implementer` works through the plan one slice
    at a time, committing each atomically.
 4. **Code review.** 5 reviewers in parallel: `code-reviewer`,
-   `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
+   `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`. All
+   five are Claude subagents. The `code-reviewer` can additionally consult
+   **external reviewers** — independent third-party CLIs whose findings
+   corroborate (but never replace) its own pass. Multi-model corroboration is
+   **opt-out**: every code review attempts the known external providers
+   (`"codex"`, `"gemini"`) alongside the Claude pass, uses whichever are
+   available, and **reports the rest as skipped**. A user turns it off (all, or
+   specific providers) by saying so in the prompt; the orchestrator threads that
+   per-run opt-out into the `code-reviewer` dispatch. Each provider's CLI must be
+   **installed and authenticated** on the host — a missing, unauthenticated, or
+   non-conforming provider is skipped and reported (attempted-but-unavailable),
+   never a hard failure. Attempting a provider sends the diff to a third-party
+   service (OpenAI for codex, Google for gemini); this is the documented
+   default, and a user who does not want it opts out in the prompt. Each provider
+   is invoked through a documented, **read-only, headless** command baked into
+   `external-reviewers.mjs` — no runtime flag discovery:
+   `codex exec --sandbox read-only` and `gemini --approval-mode plan
+   --skip-trust`, each fed the `git diff` on stdin plus a review prompt (models
+   default to each CLI's own default). The probe emits the
+   exact `invoke` argv per available provider so the agent runs precisely what
+   the tested module specifies. Corroboration is
+   **annotation-only**: a finding
+   raised by two or more models is tagged `corroborated by N models` and an
+   uncorroborated one `single-model — extra scrutiny`, but the
+   `code-reviewer` still emits **one** verdict, and corroboration never
+   re-tiers a finding or changes the verdict keyword the aggregate gate (step
+   5) consumes. External corroboration is **complementary to**, not a
+   replacement for, the `code-reviewer`'s skeptic pass (see
+   [10. Nested Sub-Agents](#10-nested-sub-agents)).
 5. **Aggregate gate.** The orchestrator sorts every finding into a
    severity tier: **Blocking, Major, or Minor-and-below**. See
    `skills/review-severity-tiers/SKILL.md`. While any Blocking or Major
@@ -716,6 +744,28 @@ both governed by `skills/nested-agents/SKILL.md`:
   evidence-backed refutation the reviewer verifies itself. A false
   hard-gate finding costs an entire review round (implementer re-dispatch
   + all 5 reviewers re-run), so the pass pays for itself.
+
+The `code-reviewer`'s skeptic pass is **complemented by — not replaced
+by — external-reviewer corroboration**, which runs **by default** (opt-out):
+every review attempts `"codex"` and `"gemini"`, uses whichever are available,
+and reports the rest as skipped. A user turns it off (all, or specific
+providers) per-run in the prompt; the orchestrator threads that into the
+dispatch. Where the skeptic pass tries to *refute* the reviewer's
+own Blocking findings, corroboration runs independent third-party CLIs
+(`"codex"`, `"gemini"`) over the same diff — via pre-baked, read-only headless
+commands (`codex exec --sandbox read-only`, `gemini --approval-mode plan
+--skip-trust`), no runtime discovery — and tags each finding with how many
+distinct models raised it. Both are optimizations,
+not dependencies: on any host where a named CLI is not installed and
+authenticated, that provider is skipped and reported, and code review degrades
+to exactly a single-Claude pass.
+Corroboration is annotation-only — it never re-tiers a finding and never
+changes the verdict keyword the aggregate gate consumes. Note that attempting a
+provider sends the diff to a third-party service, and run external
+reviewers only in environments with a trusted PATH — the
+availability probe resolves each provider's binary via PATH, so an
+attacker-controlled PATH could point a provider name at an arbitrary
+executable.
 
 **Policy:**
 
