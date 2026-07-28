@@ -79,8 +79,18 @@ escape hatch for full scheduled/manual sweeps.
 
 When this key is absent, empty, or whitespace-only and `EVALS_MOCK_AGENT` is
 unset, the live path now **throws immediately** ("refusing live spawn") rather
-than spawning `claude` and failing later at CLI auth. Set `EVALS_MOCK_AGENT` to
-replay a fixture without a key.
+than spawning `claude` and failing later at CLI auth. The judge seam has the
+same backstop: without `EVALS_MOCK_JUDGE`, `getClient` in
+`tests/helpers/llm-judge.ts` throws "EVALS_ANTHROPIC_API_KEY is required for
+the LLM-judge tier" before any metered call. Set `EVALS_MOCK_AGENT` to replay
+a fixture without a key.
+
+Both mock seams have an in-repo consumer: `tests/code-reviewer-replay.test.ts`
+replays committed transcripts through the code-reviewer eval offline and
+key-free, on every PR for every author, including forks. Its transcripts live
+in `tests/fixtures/code-reviewer-replay/` — deliberately outside
+`evals/fixtures/`, so they are plain test data, not eval fixtures, and none of
+the fixture contract below applies to them.
 
 In CI the key is an **`evals` environment secret** (not a plain repo secret),
 reachable only by the job declaring `environment: evals`. Token-consuming

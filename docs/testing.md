@@ -235,8 +235,12 @@ trains everyone to ignore red. Gate on what's stable, monitor what's fuzzy.
 | **Expensive** | gate if rare; else periodic | periodic, scheduled      |
 
 > **Where Team stands today:** every eval fixture drives a live model, so all
-> are tiered periodic and none can gate. `pr-evals.yml` stays advisory until
-> someone authors the first offline deterministic fixture and tiers it `gate`.
+> are tiered periodic and none can gate — and the gate slot stays empty on
+> purpose. A gate-tier check must both need paid infrastructure and be
+> deterministic, which the matrix above makes rare. The deterministic scoring
+> signal lives in the free suite instead: `tests/code-reviewer-replay.test.ts`
+> replays the code-reviewer eval offline at L3, on every PR for every author,
+> including forks.
 
 ---
 

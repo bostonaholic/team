@@ -103,4 +103,25 @@ describe("code-reviewer scoring pipeline offline replay", () => {
     },
     SCENARIO_TIMEOUT_MS,
   );
+
+  test(
+    "reddens on a transcript whose blocking label rides the wrong finding",
+    () => {
+      const result = runReplay(
+        join(TRANSCRIPT_DIR, "red-blocking-label-elsewhere.ndjson"),
+      );
+
+      // Red for the RIGHT reason: the transcript detects all three plants
+      // (passing the detection assertions) but parks `issue (blocking):`
+      // on the b2 finding, so the child must fail at exactly the
+      // blocking-label-placement expect (code-reviewer.evals.ts:258-261) —
+      // bun's code frame for that failing expect names blockingLabelOnHint.
+      // An unrelated crash, a key-guard throw, or a zero-selection skip
+      // cannot satisfy all three assertions.
+      expect(result.output).toContain("(fail) planted-comment-violations");
+      expect(result.output).toContain("blockingLabelOnHint");
+      expect(result.status).not.toBe(0);
+    },
+    SCENARIO_TIMEOUT_MS,
+  );
 });
