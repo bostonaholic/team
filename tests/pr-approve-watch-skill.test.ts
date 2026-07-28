@@ -290,3 +290,86 @@ describe("pr-approve-watch skill: hard rules", () => {
     expect(/(never|not)[^.]{0,80}(auto[- ]?)?runs?[^.]{0,40}\/shipit/i.test(flat(body()))).toBe(true);
   });
 });
+
+describe("pr-approve-watch skill: prompt-injection guards (projected reads)", () => {
+  test("the arm-time gh pr view call carries a --jq projection", () => {
+    const t = body();
+    // Guard: an empty body must fail, not vacuously pass.
+    expect(t.length).toBeGreaterThan(0);
+    expect(/gh pr view[\s\S]{0,240}--jq/.test(t)).toBe(true);
+  });
+
+  test("latestReviews is projected to login + state only — review bodies never enter context", () => {
+    const t = body();
+    expect(t).toContain(
+      "latestReviewStates: [.latestReviews[] | {login: .author.login, state}]",
+    );
+  });
+
+  test("hard rule names review submission bodies and profile display names as DATA", () => {
+    const t = flat(body());
+    expect(/review submission bodies/i.test(t)).toBe(true);
+    expect(/profile display names/i.test(t)).toBe(true);
+  });
+
+  test("reads are projected down to structural fields — no false 'reads resolution state, not text' assurance", () => {
+    const t = flat(body());
+    expect(/projected down to[^.]{0,80}structural\s+fields/i.test(t)).toBe(true);
+    expect(t).not.toContain("The skill reads resolution state, not text");
+  });
+
+  test("PENDING-review detection carries a pagination boundary: reviews(last: 1, states: [PENDING])", () => {
+    expect(body()).toContain("reviews(last: 1, states: [PENDING])");
+  });
+});
+
+describe("pr-approve-watch skill: auto-merge confirmation on both paths", () => {
+  test("auto-merge requires explicit confirmation on both paths — immediate and loop", () => {
+    const t = flat(body());
+    expect(/explicit confirmation on both paths/i.test(t)).toBe(true);
+  });
+
+  test("loop path: a 'no' at arm is a refusal to arm, never a silent downgrade", () => {
+    const t = flat(body());
+    expect(/refus(al|es?) to arm/i.test(t)).toBe(true);
+    expect(/never a silent downgrade/i.test(t)).toBe(true);
+  });
+});
+
+describe("pr-approve-watch skill: head-SHA drift check at approval", () => {
+  test("the arm-time headRefOid is recorded at arm", () => {
+    expect(/record the arm-time[^.]{0,40}headRefOid/i.test(flat(body()))).toBe(true);
+  });
+
+  test("approval compares the arm-time headRefOid against the head from the final poll", () => {
+    expect(/compare the arm-time[^.]{0,40}headRefOid/i.test(flat(body()))).toBe(true);
+  });
+
+  test("approval body names both SHAs (arm-time and approval-time)", () => {
+    const t = body();
+    expect(t).toContain("<approval-head-SHA>");
+    expect(t).toContain("<arm-head-SHA>");
+  });
+
+  test("a drifted head with auto-merge enabled requires confirmation before casting", () => {
+    expect(
+      /moved[^.]{0,120}auto-?merge[^.]{0,160}confirmation before casting/i.test(flat(body())),
+    ).toBe(true);
+  });
+});
+
+describe("pr-approve-watch skill: approval body on stdin", () => {
+  test("the approval body is passed via --body-file - with a quoted heredoc", () => {
+    const t = body();
+    expect(t).toContain("--body-file -");
+    expect(t).toContain("<<'GH_APPROVE_EOF'");
+  });
+
+  test("the approve command never interpolates the body into the shell command", () => {
+    const t = body();
+    // Guard: an empty body must fail, not vacuously pass the absence check.
+    expect(t.length).toBeGreaterThan(0);
+    // `--body ` (with a trailing space) is inline interpolation; `--body-file` is not.
+    expect(/gh pr review --approve[^\n]*--body /.test(t)).toBe(false);
+  });
+});

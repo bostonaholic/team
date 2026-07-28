@@ -355,10 +355,16 @@ QRSPI phase — a self-contained action a user runs on demand.
   its only write — it never resolves threads, never replies, never edits
   code, never merges, never auto-runs `/shipit`.
   `disable-model-invocation: true` — an approval can transitively trigger
-  an auto-merge, so only a deliberate human invocation arms it; on the
-  loop path an enabled auto-merge draws a loud warning, and on the
-  immediate path (gate already satisfied at arm) it requires explicit
-  confirmation before casting.
+  an auto-merge, so only a deliberate human invocation arms it. When
+  auto-merge is enabled, explicit confirmation is required on both paths:
+  the immediate path (gate already satisfied at arm) confirms before
+  casting, and the loop path confirms before arming the unattended
+  watch — a "no" refuses to arm. At approval time the arm-time head SHA
+  is compared against the current head; drift is named in the approval
+  body and completion report, and a drifted head with auto-merge enabled
+  requires confirmation before casting. Every GitHub read is projected
+  down to structural fields (logins, review states, `isResolved`, SHAs) —
+  review bodies and profile display names never enter context.
 
 
 ### groom-backlog
