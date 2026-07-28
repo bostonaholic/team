@@ -9,7 +9,7 @@ nav_label: home
 
 # Team
 
-The autonomous engineering mesh for Claude Code.
+Autonomous feature delivery for Claude Code.
 
 ## What is Team?
 
