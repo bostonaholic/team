@@ -189,7 +189,11 @@ of the work.
 > one out**, not exceeding the cap: pick what is genuinely most important and move
 > the displaced card back to `Backlog`. (GitHub Projects' column limits are a
 > view-level UI setting and aren't reliably exposed via the API — treat this
-> number as the source of truth and keep the board UI limit in sync. This is the
+> number as the source of truth and keep the board UI limit in sync. The
+> [`/groom-backlog`](skills.md#groom-backlog) skill consumes it: its promotion
+> mode carries the same `5` as this repo's worked example and swaps a card out
+> rather than exceeding the cap, so a change here has to change there too. This
+> is the
 > WIP-limited-kanban discipline the loop-driven controller in
 > [#90](https://github.com/bostonaholic/team/issues/90) builds on; other columns
 > may carry their own limits under that model.)
@@ -240,6 +244,13 @@ of the distributed plugin.
 A Team run (`/team`, or the individual `/team-*` phases) maps onto the board
 like this:
 
+- **Shaping work, before any run** → [`/groom-backlog`](skills.md#groom-backlog)
+  is the one board-touching command that is not a pipeline phase. Its
+  board-level pass places, prioritizes, and fixes hygiene across the whole
+  board, and its promotion mode moves a single card from **Backlog** to
+  **Ready** once that item meets the ready-to-work standard. Both halves plan
+  and wait for your approval — nothing moves before you answer — and neither
+  ever starts a run.
 - **Picking up work** → the card moves to **In progress** **automatically** as
   the first action of the run, from whichever entry column it sits in (**Ready**,
   **Backlog**, or **Bugs**). When `/team` or `/team-fix`

@@ -76,7 +76,10 @@ In strict priority order (right to left):
 3. **Backlog → Ready — groom last.** When Ready is below its WIP limit, a grooming
    agent picks the most important Backlog item, verifies and rewrites it to a
    ready-to-work standard, and promotes it — refilling the queue only once the
-   line downstream is flowing.
+   line downstream is flowing. This step is the one the loop already has a
+   concrete implementation of: [`/groom-backlog`](skills.md#groom-backlog)
+   grooms the board and promotes a single item today, run by a human rather
+   than by a controller.
 
 The board is the single source of truth. Each cycle the loop reads it, finds the
 rightmost action that advances work, executes that one action, and repeats —
@@ -95,8 +98,12 @@ and leaving the mechanical flow to the machine.
 
 The loop is assembled from capabilities the pipeline already has — isolated
 worktrees, adversarial review, durable artifacts — plus a control loop over the
-board. See [Ethos](ethos.md) for the principles that make the autonomous
-middle trustworthy.
+board. The first of the loop's own steps to land as a capability is grooming:
+[`/groom-backlog`](skills.md#groom-backlog) does the `Backlog → Ready` work a
+grooming agent would do, still asking a human to approve each plan. The
+controller that decides *when* to run it is what remains. See
+[Ethos](ethos.md) for the principles that make the autonomous middle
+trustworthy.
 
 ## See also
 
