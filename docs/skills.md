@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 49 skills — 11 pipeline entry-point slash commands, 3 standalone utilities (shipit, pr-open-comments, pr-watch), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 50 skills — 11 pipeline entry-point slash commands, 4 standalone utilities (shipit, pr-open-comments, pr-watch, groom-backlog), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -44,11 +44,12 @@ catalog into two flavors:
   …`).
 
 That `argument-hint` marker is the whole flavor distinction. Most
-`argument-hint` skills drive a QRSPI phase, but three — `shipit`,
-`pr-open-comments`, and `pr-watch` — are standalone utilities (land a
-reviewed PR; triage its unresolved review feedback; watch it for new
-feedback). None is a pipeline phase. The split is
-**11 pipeline entry-point + 3 standalone utility + 35 methodology = 49**.
+`argument-hint` skills drive a QRSPI phase, but four — `shipit`,
+`pr-open-comments`, `pr-watch`, and `groom-backlog` — are standalone
+utilities (land a reviewed PR; triage its unresolved review feedback; watch
+it for new feedback; groom a project backlog). None is a pipeline phase. The
+split is
+**11 pipeline entry-point + 4 standalone utility + 35 methodology = 50**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -325,6 +326,39 @@ QRSPI phase — a self-contained action a user runs on demand.
   auto-runs `/shipit`. Model-invocable — it promotes a draft only on an
   unambiguous readiness cue and reports the promotion loudly, so
   cue-based auto-invocation is safe.
+
+### groom-backlog
+
+- **Purpose:** Groom a project backlog in an issue tracker — load the whole
+  board in bulk, compute a gap inventory, cluster open issues by outcome,
+  place each cluster under a grouping construct whose description states a
+  verifiable property, fix triage/priority/label/state hygiene, and report
+  what was deliberately left alone.
+- **`$ARGUMENTS`:** `[<project-number-or-url>]` — optional; with no argument
+  it discovers the visible projects and uses the only one, stopping and
+  listing them if more than one is visible.
+- **Phase:** None — a standalone grooming action, not part of the pipeline.
+- **Key behaviors:** Tracker-agnostic method with GitHub Projects v2 as the
+  worked example and a vocabulary map (grouping construct / column /
+  priority / iteration) for Linear and Jira; their recipes ship under an
+  explicit **Unverified** heading with a mandatory `--help` preflight before
+  any mutation. Loads once in bulk into a run-scoped temp cache, passes an
+  explicit `--limit`, and asserts `totalCount` equals the number fetched — a
+  shortfall stops the run rather than grooming a partial board. Comment
+  threads load with the issues, and issue bodies and comments are treated as
+  untrusted data: an embedded imperative is reported as content, never
+  executed. Plans, asks, waits, then executes: the plan file is written
+  before the four consequential questions are asked, each carrying exactly
+  one recommendation, and nothing on the tracker changes before the user
+  answers. On approval it executes in dependency order, re-reads each item
+  before writing it, and verifies every step by re-querying the tracker
+  rather than by memory. Eight hard rules hold in every mode (decision and
+  spike tickets stay open; label writes are additive; a split ticket's
+  original description is never rewritten; no priority, assignee, or state
+  change on someone else's in-flight work).
+  Model-invocable — the read-and-plan phase mutates nothing and execution
+  requires the user's answer, so those two guards make cue-based
+  auto-invocation safe.
 
 ## Methodology skills
 
@@ -777,6 +811,7 @@ entry-point section above rather than repeating them here.
 | `shipit` | user or model (direct invocation, on explicit ship intent) | Standalone — land a reviewed PR (not a QRSPI phase) |
 | `pr-open-comments` | user or model (direct invocation) | Standalone — triage unresolved PR review feedback (not a QRSPI phase) |
 | `pr-watch` | user or model (direct invocation) | Standalone — bounded PR review watch loop (not a QRSPI phase) |
+| `groom-backlog` | user or model (direct invocation) | Standalone — groom a project backlog (not a QRSPI phase) |
 | `qrspi-workflow` | orchestrator skills | All phases |
 | `artifact-frontmatter` | orchestrator skills; artifact authors (just-in-time via pointers) | All phases — artifact schema |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |

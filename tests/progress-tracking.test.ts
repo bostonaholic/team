@@ -134,27 +134,28 @@ describe("Slice 1: progress-tracking convention skill exists", () => {
   });
 });
 
-describe("skill count reconciliation (-> 49: systems-thinking added to the 48-skill baseline)", () => {
+describe("skill count reconciliation (-> 50: groom-backlog added to the 49-skill baseline)", () => {
   const CLAUDE_MD = join(REPO_ROOT, "CLAUDE.md");
   const AGENTS_MD = join(REPO_ROOT, "AGENTS.md");
 
-  test("CLAUDE.md heading reads '## Skills (49)'", () => {
-    expect(/^## Skills \(49\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md heading reads '## Skills (50)'", () => {
+    expect(/^## Skills \(50\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 
-  test("AGENTS.md heading reads '## Skills (49)'", () => {
-    expect(/^## Skills \(49\)/m.test(read(AGENTS_MD))).toBe(true);
+  test("AGENTS.md heading reads '## Skills (50)'", () => {
+    expect(/^## Skills \(50\)/m.test(read(AGENTS_MD))).toBe(true);
   });
 
-  test("filesystem has exactly 49 SKILL.md files declaring a name:", () => {
-    // 48-skill baseline (thin-agents + Tier 1/2 JIT + 3 standalone utilities,
-    // minus agent-open-questions) plus systems-thinking (system-fit lens) = 49.
+  test("filesystem has exactly 50 SKILL.md files declaring a name:", () => {
+    // 49-skill baseline (11 pipeline entry points + 4 standalone utilities —
+    // shipit, pr-open-comments, pr-watch, groom-backlog — plus 35 methodology
+    // skills) where groom-backlog is the addition that took the count to 50.
     const dirs = readdirSync(SKILLS_DIR, { withFileTypes: true })
       .filter((d) => d.isDirectory())
       .map((d) => join(SKILLS_DIR, d.name, "SKILL.md"))
       .filter((p) => existsSync(p));
     const withName = dirs.filter((p) => /^name:/m.test(read(p)));
-    expect(withName.length).toBe(49);
+    expect(withName.length).toBe(50);
   });
 });
 

@@ -20,8 +20,8 @@ describe("runtime skill inventory", () => {
     expect(existsSync(join(REPO_ROOT, "skills", "agent-open-questions", "SKILL.md"))).toBe(false);
   });
 
-  test("CLAUDE.md has '## Skills (49)' heading", () => {
-    expect(/^## Skills \(49\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md has '## Skills (50)' heading", () => {
+    expect(/^## Skills \(50\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 
   test("skills/shipit/SKILL.md exists as a runtime skill", () => {
