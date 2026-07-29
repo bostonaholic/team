@@ -42,6 +42,8 @@ fence — lives in `skills/implementing-slices/SKILL.md` (preloaded).
 - When the plan requires modifying existing code, apply the refactoring
   methodology from `skills/refactoring-to-patterns/SKILL.md` — separate
   refactoring commits from feature work and keep tests green at every step.
+- Per `skills/systems-thinking/SKILL.md` (`## When Implementing`): search for
+  an existing implementation before adding one; update every affected caller.
 
 ## Read-only scouts for unfamiliar code (optional)
 

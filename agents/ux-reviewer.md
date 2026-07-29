@@ -38,6 +38,9 @@ UI-impacting changes (one PNG per affected page/state plus a manifest under
 (always stop the server, never modify code, never commit screenshots,
 time-bound the run) — lives in `skills/verifying-ux/SKILL.md` (preloaded).
 
+Per `## When Reviewing` of `skills/systems-thinking/SKILL.md`, verify the
+adjacent flows that share the changed components, not only the changed screen.
+
 ## Report Format
 
 ```
