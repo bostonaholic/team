@@ -67,6 +67,39 @@ describe("shipit skill: it is a runtime skill, project-agnostic", () => {
   });
 });
 
+// The merge is irreversible and NO frontmatter flag fences it any more, so the
+// three prose guards that replaced `disable-model-invocation: true` are now
+// load-bearing. Each gets its own tripwire — a guard nothing asserts is a guard
+// the next edit silently deletes.
+describe("shipit skill: model-invocable, scoped to explicit ship intent", () => {
+  test("description scopes invocation to explicit ship intent + names the trigger phrases", () => {
+    const f = flat(fm());
+    expect(f.length).toBeGreaterThan(0);
+    // \s+ throughout: flat() turns the folded YAML description's line breaks
+    // into runs of whitespace, so single-space literals do not match.
+    expect(/(invoke|use|fire)[^.]{0,40}only[^.]{0,60}explicit\s+ship\s+intent/i.test(f)).toBe(true);
+    expect(/"ship it"/i.test(f)).toBe(true);
+    expect(/"land the PR"/i.test(f)).toBe(true);
+    expect(f).toContain("/shipit");
+  });
+
+  test("pins the prohibition: an approved / green PR is NOT ship intent", () => {
+    // The failure mode the removed flag used to make impossible: the model
+    // reads "approved and green" as permission to land.
+    const t = flat(body());
+    expect(/never infer ship intent[^.]{0,80}approved/i.test(t)).toBe(true);
+    expect(/(approved|green)[^.]{0,80}(is\s*\*?not\*?|never)[^.]{0,40}ship intent/i.test(t)).toBe(true);
+  });
+
+  test("pins the prohibition: --yes is the caller's to pass, never self-supplied", () => {
+    // Without this, a model could self-classify as a "non-interactive caller",
+    // pass --yes, and skip the only human checkpoint on an irreversible merge.
+    const t = flat(body());
+    expect(/--yes[^.]{0,120}(never yours to add|caller'?s to pass)/i.test(t)).toBe(true);
+    expect(/running as an agent does not make you a non-interactive caller/i.test(t)).toBe(true);
+  });
+});
+
 describe("shipit skill: PR discovery + refuse branches", () => {
   test("discovers the open PR via gh pr view with a base-branch fallback", () => {
     const t = flat(body());

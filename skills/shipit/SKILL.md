@@ -137,10 +137,12 @@ again, and merges. It is safe to re-run.
 
 ### 4. Pre-merge confirmation
 
-`gh pr merge` is irreversible. For a human operator, **ask for an explicit
-confirmation** before merging — "about to merge PR #N into `<base>` — proceed?" —
-and only merge on a yes. A non-interactive caller passes `--yes` to skip this
-prompt; the prompt wraps the scriptable core, it does not live inside it.
+`gh pr merge` is irreversible. **Ask for an explicit confirmation** before
+merging — "about to merge PR #N into `<base>` — proceed?" — and only merge on a
+yes. `--yes` skips this prompt, but it is **the caller's to pass, never yours to
+add**: it means the invoker already authorized the merge. Running as an agent
+does not make you a non-interactive caller — when `--yes` is absent, ask.
+The prompt wraps the scriptable core, it does not live inside it.
 
 ### 5. Rebase if behind the base, then merge
 
