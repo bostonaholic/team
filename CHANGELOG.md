@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-07-29
+
+### Added
+
+- **`/groom-backlog` turns an unruly project backlog into placed, prioritized, ready-to-pull work — and never touches the tracker until you say so.** A new standalone utility, [`skills/groom-backlog/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/groom-backlog/SKILL.md), grooms a backlog in two composable halves. The board-level pass loads the whole board in bulk (asserting that everything paginated actually arrived, so a partial board stops the run instead of being groomed), computes a gap inventory rather than eyeballing one, clusters open issues by outcome, places each cluster under a grouping construct whose description states something you can mark true or false, fixes triage/priority/label/state hygiene, and reports what it deliberately left alone. Per-item promotion takes one issue to a ready-to-work standard — verify against the real code, rewrite for the audience the tracker serves, set a priority, then move the card — refusing a `bug` (the `Bugs` column is already its ready-to-pull state) and swapping a card back to `Backlog` rather than exceeding the `Ready` work-in-progress limit. Both halves plan, ask the consequential questions with one recommendation each, and wait for your approval: nothing on the tracker changes before you answer, and after approval every write is verified by re-querying the tracker rather than by memory. Tracker-derived prose is treated as untrusted data in every mode and never interpolated into a shell argument. The method is tracker-agnostic with a vocabulary map for GitHub Projects v2, Linear, and Jira; the GitHub recipes are concrete, and the Linear and Jira ones ship under an explicit **Unverified** heading with a mandatory `--help` preflight. This is the first concrete implementation of the `Backlog → Ready` step in [`docs/vision.md`](https://github.com/bostonaholic/team/blob/main/docs/vision.md). The skill catalog grows from 49 to 50, and the standalone utilities from three to four ([`docs/skills.md`](https://github.com/bostonaholic/team/blob/main/docs/skills.md)).
+
 ## [0.26.1] - 2026-07-29
 
 ### Fixed
@@ -291,7 +297,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.26.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.27.0...HEAD
+[0.27.0]: https://github.com/bostonaholic/team/compare/v0.26.1...v0.27.0
 [0.26.1]: https://github.com/bostonaholic/team/compare/v0.26.0...v0.26.1
 [0.26.0]: https://github.com/bostonaholic/team/compare/v0.25.0...v0.26.0
 [0.25.0]: https://github.com/bostonaholic/team/compare/v0.24.0...v0.25.0

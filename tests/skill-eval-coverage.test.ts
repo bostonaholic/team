@@ -29,7 +29,7 @@
 // (heavy external state — an open PR, CI, the GitHub API — same reason
 // team-pr is demoted; no protocol.test.ts sentinel, that convention is for
 // the pipeline-skill demotions):
-//   shipit, pr-open-comments, pr-watch
+//   shipit, pr-open-comments, pr-watch, groom-backlog
 
 import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
@@ -513,5 +513,26 @@ describe("L2 coverage: pr-watch (executable utility, not L5)", () => {
 
   test("pr-watch is pinned by its dedicated L2 tripwire tests/pr-watch-skill.test.ts", () => {
     expect(existsSync(join(TESTS_ROOT, "pr-watch-skill.test.ts"))).toBe(true);
+  });
+});
+
+// `groom-backlog` grooms a project backlog on a live tracker — heavy external
+// state (a project board, its issues and comment threads, the GitHub API) that
+// it also mutates, the same reason `shipit`, `pr-open-comments`, and `pr-watch`
+// are demoted. It cannot be honestly driven in a single offline `claude -p`
+// eval. Its behavioral contract is pinned by its dedicated L2 tripwire,
+// tests/groom-backlog-skill.test.ts, not an L5 eval.
+
+describe("L2 coverage: groom-backlog (executable utility, not L5)", () => {
+  test("groom-backlog has no evals/fixtures/groom-backlog/ directory (no L5 eval)", () => {
+    expect(existsSync(fixtureDir("groom-backlog"))).toBe(false);
+  });
+
+  test("groom-backlog has no tests/groom-backlog.evals.ts file (no L5 eval)", () => {
+    expect(existsSync(evalsFilePath("groom-backlog"))).toBe(false);
+  });
+
+  test("groom-backlog is pinned by its dedicated L2 tripwire tests/groom-backlog-skill.test.ts", () => {
+    expect(existsSync(join(TESTS_ROOT, "groom-backlog-skill.test.ts"))).toBe(true);
   });
 });

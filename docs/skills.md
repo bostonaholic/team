@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 49 skills — 11 pipeline entry-point slash commands, 3 standalone utilities (shipit, pr-open-comments, pr-watch), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 50 skills — 11 pipeline entry-point slash commands, 4 standalone utilities (shipit, pr-open-comments, pr-watch, groom-backlog), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -44,11 +44,12 @@ catalog into two flavors:
   …`).
 
 That `argument-hint` marker is the whole flavor distinction. Most
-`argument-hint` skills drive a QRSPI phase, but three — `shipit`,
-`pr-open-comments`, and `pr-watch` — are standalone utilities (land a
-reviewed PR; triage its unresolved review feedback; watch it for new
-feedback). None is a pipeline phase. The split is
-**11 pipeline entry-point + 3 standalone utility + 35 methodology = 49**.
+`argument-hint` skills drive a QRSPI phase, but four — `shipit`,
+`pr-open-comments`, `pr-watch`, and `groom-backlog` — are standalone
+utilities (land a reviewed PR; triage its unresolved review feedback; watch
+it for new feedback; groom a project backlog). None is a pipeline phase. The
+split is **11 pipeline entry-point + 4 standalone utility + 35 methodology
+= 50**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -325,6 +326,54 @@ QRSPI phase — a self-contained action a user runs on demand.
   auto-runs `/shipit`. Model-invocable — it promotes a draft only on an
   unambiguous readiness cue and reports the promotion loudly, so
   cue-based auto-invocation is safe.
+
+### groom-backlog
+
+- **Purpose:** Groom a project backlog in an issue tracker — load the whole
+  board in bulk, compute a gap inventory, cluster open issues by outcome,
+  place each cluster under a grouping construct whose description states a
+  verifiable property, fix triage/priority/label/state hygiene, and report
+  what was deliberately left alone.
+- **`$ARGUMENTS`:** `[<project-number-or-url>] [--promote <issue-number>]` —
+  both optional. With no board reference it discovers the visible projects and
+  uses the only one, stopping and listing them if more than one is visible.
+  `--promote` selects promotion mode, which brings one item to the
+  ready-to-work standard and moves its card. Without it the skill runs the
+  board-level pass.
+- **Phase:** None — a standalone grooming action, not part of the pipeline.
+- **Key behaviors:** Tracker-agnostic method, with GitHub Projects v2 as the
+  worked example and a vocabulary map (grouping construct / column / priority /
+  iteration) for Linear and Jira. Those two recipes ship under an explicit
+  **Unverified** heading with a mandatory `--help` preflight before any
+  mutation. Loads once in bulk into a run-scoped temp cache, passing an
+  explicit `--limit`. Each cached query then gets the completeness check its
+  own payload shape supports, so a shortfall stops the run rather than
+  grooming a partial board. Comment threads load with the issues, capped at
+  one page of 100 per issue, and every thread that hit the cap is named in
+  the report. Issue bodies, titles, and comments are untrusted data — a hard
+  rule in every mode, promotion included. An embedded imperative is reported
+  as content, never executed. Tracker-derived prose never reaches a shell
+  argument: bodies travel by file or on stdin. Plans, asks, waits, then
+  executes. The plan file is written before the questions are asked. There is
+  one question per mutation class the plan contains, each carrying exactly one
+  recommendation, and filing a new issue always needs its own answer. Nothing
+  on the tracker changes before the user answers. On approval it executes in
+  dependency order, re-reads each item before writing it, and verifies every
+  step by re-querying the tracker rather than by memory. Ten hard rules hold
+  in every mode. Decision and spike tickets stay open. Label writes are
+  additive. A split ticket's original description is never rewritten.
+  Priority, assignee, and state are left alone on someone else's in-flight
+  work. Promotion mode skips the eight board steps for a narrow single-issue
+  load, then brings that item to the ready-to-work standard — verify,
+  rewrite, prioritize, then move the card. It refuses a `bug` outright,
+  because `Bugs` is already its ready-to-pull state. It swaps a card back to
+  `Backlog` rather than exceeding the `Ready` WIP limit of 5, the number
+  [project-tracking.md](project-tracking.md) owns, and reports a pre-existing
+  breach instead of adding to it. The board pass ends by naming the item most
+  worth promoting and printing that command. It never performs the promotion
+  itself. Model-invocable — the read-and-plan phase mutates nothing and
+  execution requires the user's answer, so those two guards make cue-based
+  auto-invocation safe.
 
 ## Methodology skills
 
@@ -777,6 +826,7 @@ entry-point section above rather than repeating them here.
 | `shipit` | user or model (direct invocation, on explicit ship intent) | Standalone — land a reviewed PR (not a QRSPI phase) |
 | `pr-open-comments` | user or model (direct invocation) | Standalone — triage unresolved PR review feedback (not a QRSPI phase) |
 | `pr-watch` | user or model (direct invocation) | Standalone — bounded PR review watch loop (not a QRSPI phase) |
+| `groom-backlog` | user or model (direct invocation) | Standalone — groom a project backlog (not a QRSPI phase) |
 | `qrspi-workflow` | orchestrator skills | All phases |
 | `artifact-frontmatter` | orchestrator skills; artifact authors (just-in-time via pointers) | All phases — artifact schema |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
