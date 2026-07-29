@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **A reporting agent dispatched in the background can now hand its report back.** `code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer` and `verifier` gain `SendMessage` in their `tools:` frontmatter. A reporting agent's entire output is its report, but a background subagent's plain text never reaches the orchestrator — so without a messaging tool the agent finished, went idle, and its findings were unrecoverable. `permissionMode: plan` denies these agents `Write`, so there was no file fallback either, and a review could silently lose a gate while appearing to run. `tests/protocol.test.ts` pins the tool on all five.
+
 ## [0.26.0] - 2026-07-29
 
 ### Added

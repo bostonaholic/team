@@ -4,7 +4,7 @@ description: Use when live application verification is needed after implementati
 color: pink
 model: sonnet
 effort: medium
-tools: Read, Grep, Glob, Bash, TodoWrite
+tools: Read, Grep, Glob, Bash, TodoWrite, SendMessage
 permissionMode: plan
 skills:
   - progress-tracking

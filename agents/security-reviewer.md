@@ -4,7 +4,7 @@ description: Use when a security review is needed after implementation. Applies 
 color: red
 model: opus
 effort: high
-tools: Read, Grep, Glob, Bash, TodoWrite, Agent
+tools: Read, Grep, Glob, Bash, TodoWrite, Agent, SendMessage
 permissionMode: plan
 skills:
   - progress-tracking
