@@ -6,11 +6,11 @@ description: |
   the PR title (which may carry a version) lands as the commit subject.
   Handles a PR that has fallen behind its base (rebase + force-with-lease) and
   surfaces branch-protection rejections verbatim. Project-agnostic — it knows
-  nothing about how any project versions itself. Use ONLY when the user
-  explicitly says "ship it", "land the PR", "land this", or runs "/shipit";
-  never auto-fire it — it merges, which is irreversible.
+  nothing about how any project versions itself. Invoke ONLY on explicit ship
+  intent — the user says "ship it", "land the PR", "land this", or runs
+  "/shipit". Landing merges, which is irreversible: never infer ship intent
+  from a PR merely being approved, green, or finished.
 effort: medium
-disable-model-invocation: true
 argument-hint: "[<pr-number>] [--yes]"
 ---
 
@@ -30,9 +30,17 @@ version at land time, that happens in a separate project-specific step *before*
 [docs/versioning.md](../../docs/versioning.md)); `shipit` only cares that the
 branch is ready to land.
 
-`gh pr merge` is irreversible, so this skill is **user-invocable only**
-(`disable-model-invocation: true`): a human runs it deliberately; the model
-never auto-fires it.
+`gh pr merge` is irreversible, so three things guard it — none of them a
+frontmatter flag:
+
+1. **Explicit ship intent.** The skill fires only on a direct "ship it" / "land
+   the PR" / `/shipit`. An approved, green, or finished-looking PR is *not*
+   ship intent — the user decides when to land.
+2. **The pre-merge confirmation** (step 4), which the model never skips on its
+   own initiative: `--yes` belongs to a caller that already carries the user's
+   authorization to merge.
+3. **CI green** (step 3), which gates the merge mechanically — a red or timed
+   out check stops the land before `gh pr merge` ever runs.
 
 ## Input acquisition
 

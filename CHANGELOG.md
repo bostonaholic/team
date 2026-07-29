@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`/shipit` is now model-invocable — saying "ship it" lands the PR without you typing the slash command.** [`skills/shipit/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/shipit/SKILL.md) drops `disable-model-invocation: true`, so the skill no longer shows as user-only in `/skills` and Claude can reach it directly. The merge is still irreversible, so three guards replace the flag: the skill fires **only on explicit ship intent** ("ship it", "land the PR", "land this", `/shipit`) and never on a PR merely being approved, green, or finished; the interactive pre-merge confirmation stands, and the model never supplies `--yes` on its own initiative (that flag belongs to a caller already carrying your authorization to merge); and the bounded CI-green wait still gates the merge mechanically, so a red or timed-out check stops the land before `gh pr merge` runs. [`/pr-watch`](https://github.com/bostonaholic/team/blob/main/skills/pr-watch/SKILL.md) is unchanged — on approval it still hands off with `Next: run /shipit` and never auto-runs it, so an unattended watch loop cannot merge on your behalf.
+
 ## [0.24.0] - 2026-07-27
 
 ### Changed

@@ -44,10 +44,14 @@ describe("shipit skill: it is a runtime skill, project-agnostic", () => {
     expect(/^name:\s*shipit\s*$/m.test(fm())).toBe(true);
   });
 
-  test("frontmatter carries disable-model-invocation: true (never auto-merge)", () => {
-    // shipit is irreversible (it merges) → user-invocable only, so the model
-    // can never auto-trigger a merge.
-    expect(/^disable-model-invocation:\s*true\s*$/m.test(fm())).toBe(true);
+  test("frontmatter does NOT set disable-model-invocation (model-invocable by design)", () => {
+    // shipit is irreversible (it merges), but the guard is explicit ship
+    // intent + the pre-merge confirmation + CI-green gating, not a hard flag —
+    // so the model can reach it when the user asks it to land the PR.
+    const f = fm();
+    // Guard: an empty frontmatter must fail, not vacuously pass the absence check.
+    expect(f.length).toBeGreaterThan(0);
+    expect(/^disable-model-invocation:/m.test(f)).toBe(false);
   });
 
   test("carries NO Team-version-specific logic (it is generic)", () => {
