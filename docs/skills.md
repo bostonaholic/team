@@ -334,9 +334,11 @@ QRSPI phase — a self-contained action a user runs on demand.
   place each cluster under a grouping construct whose description states a
   verifiable property, fix triage/priority/label/state hygiene, and report
   what was deliberately left alone.
-- **`$ARGUMENTS`:** `[<project-number-or-url>]` — optional; with no argument
-  it discovers the visible projects and uses the only one, stopping and
-  listing them if more than one is visible.
+- **`$ARGUMENTS`:** `[<project-number-or-url>] [--promote <issue-number>]` —
+  both optional. With no board reference it discovers the visible projects and
+  uses the only one, stopping and listing them if more than one is visible.
+  `--promote` selects promotion mode (bring one item to the ready-to-work
+  standard and move its card); without it the skill runs the board-level pass.
 - **Phase:** None — a standalone grooming action, not part of the pipeline.
 - **Key behaviors:** Tracker-agnostic method with GitHub Projects v2 as the
   worked example and a vocabulary map (grouping construct / column /
@@ -355,7 +357,14 @@ QRSPI phase — a self-contained action a user runs on demand.
   rather than by memory. Eight hard rules hold in every mode (decision and
   spike tickets stay open; label writes are additive; a split ticket's
   original description is never rewritten; no priority, assignee, or state
-  change on someone else's in-flight work).
+  change on someone else's in-flight work). Promotion mode skips the eight
+  board steps for a narrow single-issue load, brings that item to the
+  ready-to-work standard (verify, rewrite, prioritize, then move the card),
+  refuses a `bug` outright because `Bugs` is already its ready-to-pull state,
+  and swaps a card back to `Backlog` rather than exceeding the `Ready` WIP
+  limit of 5 — reporting a pre-existing breach instead of adding to it. The
+  board pass ends by naming the item most worth promoting and printing that
+  command; it never performs the promotion itself.
   Model-invocable — the read-and-plan phase mutates nothing and execution
   requires the user's answer, so those two guards make cue-based
   auto-invocation safe.

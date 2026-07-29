@@ -54,6 +54,18 @@ function shipitPointer(): string {
   return `${lines[start]}\n${lines[start + 1]}`;
 }
 
+// Byte offsets [start, end) of a `## ` section, so one section's position can
+// be compared against another's and a substring can be proved to fall inside
+// one. Missing heading → [-1, -1] so ordering assertions fail, never throw.
+function sectionSpan(heading: string): [number, number] {
+  const text = body();
+  const start = text.indexOf(`${heading}\n`);
+  if (start < 0) return [-1, -1];
+  const rest = text.slice(start + heading.length);
+  const end = rest.indexOf("\n## ");
+  return [start, end < 0 ? text.length : start + heading.length + end];
+}
+
 // The slice of the skill from a `## ` heading up to the next `## ` heading.
 // Missing heading → "" so scoped assertions fail, never throw.
 function section(heading: string): string {
@@ -230,6 +242,85 @@ describe("groom-backlog skill: all eight hard rules present", () => {
   test("rule 8 — a target date in the past is worse than no date", () => {
     const t = flat(body());
     expect(/date in the past is worse than no date/i.test(t)).toBe(true);
+  });
+});
+
+describe("groom-backlog skill: promotion contract", () => {
+  test("a bug is never promoted and its card never moves", () => {
+    const t = flat(body());
+    expect(/never promoted to `?Ready`?/i.test(t)).toBe(true);
+    // `Bugs` is already the ready-to-pull state for a bug, so there is nothing
+    // to promote it into (docs/project-tracking.md).
+    expect(/ready-to-pull state/i.test(t)).toBe(true);
+    expect(/the card never moves|never moves? the card/i.test(t)).toBe(true);
+  });
+
+  test("Ready at exactly 5 swaps a card back to Backlog and never exceeds the cap", () => {
+    const t = flat(body());
+    expect(/limited to 5|capped at 5/i.test(t)).toBe(true);
+    expect(/swap(ping|s)? a card back to `?Backlog`?/i.test(t)).toBe(true);
+    expect(/never exceed(ing|s)? the cap/i.test(t)).toBe(true);
+  });
+
+  test("a Ready already above the cap is reported as a pre-existing breach, not added to", () => {
+    const t = flat(body());
+    expect(/pre-existing breach/i.test(t)).toBe(true);
+    expect(/add nothing/i.test(t)).toBe(true);
+  });
+
+  test("promotion mode skips the eight board steps and does the narrow load instead", () => {
+    const t = flat(body());
+    expect(/skips?[^.]{0,80}steps 1[–-]8/i.test(t)).toBe(true);
+    expect(/narrow load/i.test(t)).toBe(true);
+  });
+});
+
+describe("groom-backlog skill: mode dispatch and the extraction seam", () => {
+  // Decision 11: half two is loadable methodology. It states its own inputs and
+  // its own standard, so a future grooming agent can load the section verbatim.
+  const UPWARD_REFERENCES = ["$ARGUMENTS", "--promote", "cluster", "board-level pass"];
+
+  test("the promotion standard makes no upward reference", () => {
+    const promotion = section("## The promotion standard");
+    // Guard: a missing section must fail, not vacuously pass the absence checks.
+    expect(promotion.length).toBeGreaterThan(0);
+    for (const reference of UPWARD_REFERENCES) {
+      expect(promotion).not.toContain(reference);
+    }
+  });
+
+  test("the promotion standard sits below both sections that reach it", () => {
+    const [promotionStart] = sectionSpan("## The promotion standard");
+    const [inputStart] = sectionSpan("## Input");
+    const [passStart] = sectionSpan("## The board-level pass");
+    expect(inputStart).toBeGreaterThan(-1);
+    expect(passStart).toBeGreaterThan(-1);
+    expect(promotionStart).toBeGreaterThan(inputStart);
+    expect(promotionStart).toBeGreaterThan(passStart);
+  });
+
+  test("## Input is the only section that reads $ARGUMENTS", () => {
+    const text = body();
+    const [inputStart, inputEnd] = sectionSpan("## Input");
+    expect(inputStart).toBeGreaterThan(-1);
+    expect(inputEnd).toBeGreaterThan(inputStart);
+    let index = text.indexOf("$ARGUMENTS");
+    // Guard: an absent token must fail, not vacuously pass the loop below.
+    expect(index).toBeGreaterThan(-1);
+    while (index >= 0) {
+      expect(index).toBeGreaterThanOrEqual(inputStart);
+      expect(index).toBeLessThan(inputEnd);
+      index = text.indexOf("$ARGUMENTS", index + 1);
+    }
+  });
+
+  test("a missing, non-numeric, or repeated --promote value stops before any read", () => {
+    const t = flat(body());
+    expect(
+      /missing, non-numeric, or (repeated|given more than once)[^.]{0,60}stops? before any read/i.test(
+        t,
+      ),
+    ).toBe(true);
   });
 });
 

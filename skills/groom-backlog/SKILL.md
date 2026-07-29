@@ -12,7 +12,7 @@ description: |
   backlog", "shape the backlog", "place these issues under milestones", or
   "/groom-backlog".
 effort: high
-argument-hint: "[<project-number-or-url>]"
+argument-hint: "[<project-number-or-url>] [--promote <issue-number>]"
 ---
 
 # groom-backlog — plan, ask, wait, then execute
@@ -47,17 +47,34 @@ worked example throughout.
 
 ## Input
 
-`$ARGUMENTS` is one of:
+`$ARGUMENTS` carries an optional board reference and an optional mode flag:
 
 - A project number (`5`) — resolved against the authenticated user's projects.
 - A full project URL (`https://github.com/users/<owner>/projects/5`).
-- Nothing — discover the visible projects. Exactly one means use it; more than
+- Neither — discover the visible projects. Exactly one means use it; more than
   one means stop and list them rather than guessing which board to groom.
+- `--promote <issue-number>` — selects promotion mode.
 
 This section is the only place `$ARGUMENTS` is read. A malformed, non-numeric,
 or unresolvable project reference stops before any read: report what was passed,
 name the discovery command (`gh project list --owner "@me"`), and do not guess.
 One board per run — never groom two.
+
+The flag chooses the mode:
+
+- **`--promote` present → promotion mode**, whatever else was passed. A
+  positional board reference then only scopes which board the issue must be on.
+  Promotion mode skips the whole board pass — steps 1–8 do not run — and does
+  the narrow load in `## The promotion standard` instead: one issue with its
+  body and comments, its grouping construct, and the target column's current
+  contents. It reaches the same approval checkpoint by a shorter path, because a
+  one-card action should not pay for three bulk queries or route the user through
+  four board-level questions they did not ask.
+- **`--promote` absent → board mode**, which runs steps 1–8 below.
+
+A `--promote` value that is missing, non-numeric, or repeated stops before any
+read. An issue number that is not on the board stops non-zero without guessing,
+the way `.claude/scripts/project-item-id.sh` does.
 
 ## The board-level pass
 
@@ -230,6 +247,60 @@ their own body, tickets whose acceptance criteria permit closing as accepted
 risk, and priority mismatches on other people's in-flight work. Name the
 pre-existing breaches the pass refused to paper over. State that the run cache
 is disposable, with its absolute path.
+
+Close the report by naming the one item most worth promoting — the
+highest-ranked non-`bug` `Backlog` item the pass leaves behind, chosen the way
+the loop ranks it ("the most important Backlog item") — and print the follow-up
+command ready to paste:
+
+```
+Next: /groom-backlog --promote <n>
+```
+
+The candidate is never a `bug`, because a `bug` is refused on arrival and the
+report would otherwise print a command this skill immediately rejects. **The
+board pass offers a promotion; it never performs one.**
+
+## The promotion standard
+
+Bring one item to the ready-to-work standard, then move it. This section is
+self-contained method: it states its own inputs, its own standard, and its own
+stopping point, so it can be loaded on its own.
+
+**Inputs.** One issue identified by number, on a named board. Load narrowly: the
+issue with its body and every comment on it, the grouping construct it belongs
+to, and the current contents of the target column (needed for the column's
+work-in-progress limit). Nothing else.
+
+**The standard.** An item is ready to work when it states the problem, the
+outcome someone could verify, and acceptance criteria that do not require
+reading the author's mind. Bringing it there is four moves, in order:
+
+1. **Verify against the real code and the real tracker.** A description written
+   months ago can name code that no longer exists. Check before rewriting, and
+   fold in whatever the comment thread decided that the body never absorbed.
+2. **Rewrite to the standard** — problem, verifiable outcome, acceptance
+   criteria — for the audience the tracker serves. Technical detail moves to an
+   implementation-notes section rather than being deleted.
+3. **Set a priority.** An unprioritized item is untriaged. Treat a priority
+   field of `0` as unset on any tracker where `0` means unset, never as urgent.
+4. **Move the card** into the ready column, last, so the item is already ready
+   when it lands there.
+
+**The column rules, with this repo's board as the worked example rather than
+universal law.** The ready column is work-in-progress limited to 5. Promoting
+into a full column means swapping a card back to `Backlog` and never exceeding
+the cap: pick what is genuinely most important and move the displaced card back.
+A column already above 5 before the run is a **pre-existing breach** — report
+it, propose demotions, and add nothing. An issue labelled `bug` is **never
+promoted to `Ready`**: it stops before any write with the explanation that the
+`Bugs` column is already its ready-to-pull state, and the card never moves.
+Never add a status-like label; the board's status field owns progress.
+
+**The stopping point.** Present the proposed rewrite, the priority, and the card
+move as a plan, with one recommendation each, and then wait. Nothing changes
+before the user answers. After the answer, execute in that order, re-read each
+value from the tracker to verify it landed, and report what was left alone.
 
 ## Tracker recipes
 
