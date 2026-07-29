@@ -192,11 +192,11 @@ of the work.
 > number as the source of truth and keep the board UI limit in sync. The
 > [`/groom-backlog`](skills.md#groom-backlog) skill consumes it: its promotion
 > mode carries the same `5` as this repo's worked example and swaps a card out
-> rather than exceeding the cap, so a change here has to change there too. This
-> is the
-> WIP-limited-kanban discipline the loop-driven controller in
-> [#90](https://github.com/bostonaholic/team/issues/90) builds on; other columns
-> may carry their own limits under that model.)
+> rather than exceeding the cap, so a change here has to change there too — a
+> tripwire in `tests/groom-backlog-skill.test.ts` pins the two numerals
+> together. This is the WIP-limited-kanban discipline the loop-driven controller
+> in [#90](https://github.com/bostonaholic/team/issues/90) builds on; other
+> columns may carry their own limits under that model.)
 
 **Move the card as the work moves.** Pull a card into **In progress** when
 you start, not after — from `Ready` (non-bug work) or `Bugs` (bug work). When

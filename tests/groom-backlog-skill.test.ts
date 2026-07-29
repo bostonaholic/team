@@ -28,6 +28,12 @@ const REPO_ROOT = process.cwd();
 const SKILL = join(REPO_ROOT, "skills", "groom-backlog", "SKILL.md");
 // The canonical standalone-utility progress-tracking pointer lives here.
 const SHIPIT_SKILL = join(REPO_ROOT, "skills", "shipit", "SKILL.md");
+// The board doc is the stated source of truth for the `Ready` WIP limit.
+const PROJECT_TRACKING = join(REPO_ROOT, "docs", "project-tracking.md");
+// Ceiling on the skill's length. A skill this long stops being loadable, and
+// nothing else in the suite caps it: groom-backlog is deliberately outside the
+// NEW_SKILLS list whose 500-line cap tests/thin-agents.test.ts enforces.
+const LINE_CEILING = 450;
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
 function body(): string {
@@ -77,15 +83,20 @@ function sectionSpan(heading: string): [number, number] {
   return [start, end < 0 ? text.length : start + heading.length + end];
 }
 
-// The slice of the skill from a `## ` heading up to the next `## ` heading.
-// Missing heading → "" so scoped assertions fail, never throw.
+// The slice of the skill from a `## ` heading up to the next `## ` heading,
+// derived from sectionSpan so the two cannot drift apart. Missing heading → ""
+// so scoped assertions fail, never throw.
 function section(heading: string): string {
-  const text = body();
-  const start = text.indexOf(`${heading}\n`);
+  const [start, end] = sectionSpan(heading);
   if (start < 0) return "";
-  const rest = text.slice(start + heading.length);
-  const end = rest.indexOf("\n## ");
-  return end < 0 ? rest : rest.slice(0, end);
+  return body().slice(start + heading.length, end);
+}
+
+// The `Ready` WIP limit, read out of the board doc that declares itself the
+// source of truth. Missing file or pattern → "" so assertions fail, never throw.
+function readyWipLimit(): string {
+  if (!existsSync(PROJECT_TRACKING)) return "";
+  return read(PROJECT_TRACKING).match(/capped at \*\*(\d+)\*\* cards/)?.[1] ?? "";
 }
 
 describe("groom-backlog skill: frontmatter", () => {
@@ -116,6 +127,15 @@ describe("groom-backlog skill: frontmatter", () => {
     // Guard: an empty frontmatter must fail, not vacuously pass the absence check.
     expect(f.length).toBeGreaterThan(0);
     expect(/^disable-model-invocation:/m.test(f)).toBe(false);
+  });
+});
+
+describe("groom-backlog skill: length budget", () => {
+  test(`the skill body stays at or under ${LINE_CEILING} lines`, () => {
+    const lines = body().split("\n").length - 1;
+    // Guard: a missing file yields 0 and must fail, not vacuously pass.
+    expect(lines).toBeGreaterThan(0);
+    expect(lines).toBeLessThanOrEqual(LINE_CEILING);
   });
 });
 
@@ -379,6 +399,17 @@ describe("groom-backlog skill: promotion contract", () => {
     expect(/limited to 5|capped at 5/i.test(t)).toBe(true);
     expect(/swap(ping|s)? a card back to `?Backlog`?/i.test(t)).toBe(true);
     expect(/never exceed(ing|s)? the cap/i.test(t)).toBe(true);
+  });
+
+  // The cap is duplicated: docs/project-tracking.md declares it and the skill
+  // quotes it as its worked example. Derive the numeral from the doc so a change
+  // there fails here rather than leaving the skill promoting into a stale cap.
+  test("the promotion cap is the same numeral docs/project-tracking.md declares", () => {
+    const limit = readyWipLimit();
+    expect(limit.length).toBeGreaterThan(0);
+    const promotion = flat(section("## The promotion standard"));
+    expect(promotion).toContain(`limited to ${limit}`);
+    expect(promotion).toContain(`above ${limit}`);
   });
 
   test("a Ready already above the cap is reported as a pre-existing breach, not added to", () => {
