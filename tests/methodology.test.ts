@@ -505,6 +505,29 @@ describe("systems-thinking lens (L2 content tripwire)", () => {
       expect(/affected caller/i.test(window)).toBe(true);
     });
   });
+
+  describe("slice 4: upstream preloads — researcher, structure-planner, planner", () => {
+    const UPSTREAM_AGENTS: { agent: string; heading: string }[] = [
+      { agent: "researcher", heading: "## When Researching" },
+      { agent: "structure-planner", heading: "## When Slicing" },
+      { agent: "planner", heading: "## When Planning" },
+    ];
+
+    for (const { agent, heading } of UPSTREAM_AGENTS) {
+      test(`${agent} frontmatter has a skills: block listing systems-thinking`, () => {
+        const fm = frontmatter(read(join(REPO_ROOT, "agents", `${agent}.md`)));
+        expect(/^skills:/m.test(fm)).toBe(true);
+        expect(/systems-thinking|team:systems-thinking/.test(fm)).toBe(true);
+      });
+
+      test(`${agent} directive names the systems-thinking skill file adjacent to its ${heading} cite`, () => {
+        const window = citationWindow(join(REPO_ROOT, "agents", `${agent}.md`));
+        expect(window).toContain(SKILL_PATH);
+        expect(window).toContain(heading);
+        expect(readOrEmpty(SKILL_FILE)).toContain(heading);
+      });
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------

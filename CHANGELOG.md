@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Every judgment phase now reasons about the system around a change, not only the diff in front of it.** A new methodology skill, [`skills/systems-thinking/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/systems-thinking/SKILL.md), carries a system-fit reasoning lens — blast radius over diff radius, callers and siblings first, conventions are contracts, leave the system consistent — with per-phase guidance for research, design, slicing, planning, implementation, and review. Research reports map the callers, consumers, siblings, and conventions of each component they answer about (as facts, never inferred intent); designs document adjacent components and name the surfaces that must change together, and the adversarial design review asks whether each decision names its blast radius; slices include every co-changing surface; plans enumerate every call site of a changed contract as explicit steps; the implementer searches for an existing implementation before adding one and updates every affected caller; and code reviews gain a named `System Fit` checklist item ([`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md)) that flags diverging siblings, un-updated callers or consumers outside the diff, and broken conventions — the ux-reviewer likewise verifies adjacent flows that share the changed components. Like `product-thinking`, it is a lens, not a gate: on a greenfield or single-file target, "none found" is a complete answer, and manufactured findings are forbidden. The skill catalog grows from 48 to 49.
+
 ## [0.25.0] - 2026-07-29
 
 ### Changed

@@ -9,6 +9,7 @@ permissionMode: acceptEdits
 skills:
   - product-thinking
   - progress-tracking
+  - systems-thinking
   - slicing-work
 ---
 
@@ -73,6 +74,11 @@ Aim for ~2 pages (≈100–200 lines, excluding frontmatter).
   `## Out of structure`): ensure slice 1 ships something a real person wants,
   not infrastructure, and cut scope to the smallest wanted thing. Adds no new
   gate.
+- **Apply the systems-thinking lens** — preloaded via the `skills:`
+  frontmatter (read `skills/systems-thinking/SKILL.md` if it isn't already
+  in context). Use its `## When Slicing` section: a slice's scope includes
+  every co-changing surface, and no slice knowingly leaves a caller or
+  sibling broken. Adds no new gate.
 
 ## Output to orchestrator
 
