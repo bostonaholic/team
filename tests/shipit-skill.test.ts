@@ -44,10 +44,14 @@ describe("shipit skill: it is a runtime skill, project-agnostic", () => {
     expect(/^name:\s*shipit\s*$/m.test(fm())).toBe(true);
   });
 
-  test("frontmatter carries disable-model-invocation: true (never auto-merge)", () => {
-    // shipit is irreversible (it merges) → user-invocable only, so the model
-    // can never auto-trigger a merge.
-    expect(/^disable-model-invocation:\s*true\s*$/m.test(fm())).toBe(true);
+  test("frontmatter does NOT set disable-model-invocation (model-invocable by design)", () => {
+    // shipit is irreversible (it merges), but the guard is explicit ship
+    // intent + the pre-merge confirmation + CI-green gating, not a hard flag —
+    // so the model can reach it when the user asks it to land the PR.
+    const f = fm();
+    // Guard: an empty frontmatter must fail, not vacuously pass the absence check.
+    expect(f.length).toBeGreaterThan(0);
+    expect(/^disable-model-invocation:/m.test(f)).toBe(false);
   });
 
   test("carries NO Team-version-specific logic (it is generic)", () => {
@@ -60,6 +64,39 @@ describe("shipit skill: it is a runtime skill, project-agnostic", () => {
     expect(t).not.toContain("[Unreleased]");
     expect(/chore\(version\)/.test(t)).toBe(false);
     expect(/four version strings/i.test(t)).toBe(false);
+  });
+});
+
+// The merge is irreversible and NO frontmatter flag fences it any more, so the
+// three prose guards that replaced `disable-model-invocation: true` are now
+// load-bearing. Each gets its own tripwire — a guard nothing asserts is a guard
+// the next edit silently deletes.
+describe("shipit skill: model-invocable, scoped to explicit ship intent", () => {
+  test("description scopes invocation to explicit ship intent + names the trigger phrases", () => {
+    const f = flat(fm());
+    expect(f.length).toBeGreaterThan(0);
+    // \s+ throughout: flat() turns the folded YAML description's line breaks
+    // into runs of whitespace, so single-space literals do not match.
+    expect(/(invoke|use|fire)[^.]{0,40}only[^.]{0,60}explicit\s+ship\s+intent/i.test(f)).toBe(true);
+    expect(/"ship it"/i.test(f)).toBe(true);
+    expect(/"land the PR"/i.test(f)).toBe(true);
+    expect(f).toContain("/shipit");
+  });
+
+  test("pins the prohibition: an approved / green PR is NOT ship intent", () => {
+    // The failure mode the removed flag used to make impossible: the model
+    // reads "approved and green" as permission to land.
+    const t = flat(body());
+    expect(/never infer ship intent[^.]{0,80}approved/i.test(t)).toBe(true);
+    expect(/(approved|green)[^.]{0,80}(is\s*\*?not\*?|never)[^.]{0,40}ship intent/i.test(t)).toBe(true);
+  });
+
+  test("pins the prohibition: --yes is the caller's to pass, never self-supplied", () => {
+    // Without this, a model could self-classify as a "non-interactive caller",
+    // pass --yes, and skip the only human checkpoint on an irreversible merge.
+    const t = flat(body());
+    expect(/--yes[^.]{0,120}(never yours to add|caller'?s to pass)/i.test(t)).toBe(true);
+    expect(/running as an agent does not make you a non-interactive caller/i.test(t)).toBe(true);
   });
 });
 

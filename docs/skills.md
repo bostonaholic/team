@@ -264,7 +264,11 @@ QRSPI phase — a self-contained action a user runs on demand.
   **Project-agnostic** — it does no versioning,
   changelog editing, or release work; those, if a project needs them, run in a
   separate step before `/shipit` (in this repo, the dev `version-bump` skill).
-  `disable-model-invocation: true` — irreversible, so user-invoked only.
+  Model-invocable — but the merge is irreversible, so three guards replace the
+  former hard flag: it fires only on explicit ship intent ("ship it", "land the
+  PR", `/shipit`) and never on a PR merely being approved or green; the
+  pre-merge confirmation stands unless the caller already carries the user's
+  authorization (`--yes`); and the CI-green wait gates the merge mechanically.
 
 ### pr-open-comments
 
@@ -755,7 +759,7 @@ entry-point section above rather than repeating them here.
 | `team-pr` | orchestrator | PR |
 | `team-fix` | user (direct invocation) | Compressed bug-fix flow (outside QRSPI) |
 | `eng-design-doc-review` | user (direct invocation); pipeline DESIGN review gate (brief by reference) | Design review-gate brief + standalone audit; dispatches a read-only Explore subagent |
-| `shipit` | user (direct invocation) | Standalone — land a reviewed PR (not a QRSPI phase) |
+| `shipit` | user or model (direct invocation, on explicit ship intent) | Standalone — land a reviewed PR (not a QRSPI phase) |
 | `pr-open-comments` | user or model (direct invocation) | Standalone — triage unresolved PR review feedback (not a QRSPI phase) |
 | `pr-watch` | user or model (direct invocation) | Standalone — bounded PR review watch loop (not a QRSPI phase) |
 | `qrspi-workflow` | orchestrator skills | All phases |
