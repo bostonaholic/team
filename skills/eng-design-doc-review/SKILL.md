@@ -157,6 +157,8 @@ it defines their format.
      benefit?
    - Could a future reader reconstruct *why* this was chosen, not just
      *what* was chosen?
+   - Does the decision name its blast radius — the callers, siblings, and
+     co-changing surfaces that must move with it?
    Apply the `documenting-decisions` criteria — these are ADR-grade
    questions even when the doc is not a formal ADR.
 

@@ -75,7 +75,9 @@ re-draft, recording any newly resolved choice the same way.
 
 ## Current state
 <2-4 paragraphs describing how the relevant subsystem works today, citing
-specific files and functions from research.md>
+specific files and functions from research.md — including the
+adjacent components (callers, consumers, and sibling implementations), not
+only the component being changed>
 
 ## Desired end state
 <2-4 paragraphs describing how it will work after this change, with the
@@ -88,7 +90,8 @@ in the codebase so the implementer does not pick the wrong precedent.>
 
 ## Decisions made
 <numbered list of design decisions, each with: the decision, the alternative
-considered, why this was chosen. Mark every self-resolved choice
+considered, why this was chosen. Name the surfaces that must change together
+(callers, siblings, config, docs). Mark every self-resolved choice
 "Assumption — chosen without user review" here.>
 
 ## Out of scope
@@ -122,3 +125,7 @@ operational concerns. One bullet each.>
   Type signatures are OK if they crystallize a decision.
 - **Reference patterns, do not duplicate them.** "Follow the pattern in
   `lib/foo.ts:30-60`" is better than restating those 30 lines.
+- **Apply the systems-thinking lens** — read `skills/systems-thinking/SKILL.md`
+  if it isn't already in context and use its `## When Designing` section:
+  document adjacent components in `## Current state` and name the surfaces
+  that must change together in `## Decisions made`. Adds no new gate.

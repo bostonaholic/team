@@ -459,6 +459,35 @@ describe("systems-thinking lens (L2 content tripwire)", () => {
     });
   });
 
+  describe("slice 2: designs name their blast radius and the gate audits it", () => {
+    const AUTHORING_DESIGNS = join(REPO_ROOT, "skills", "authoring-designs", "SKILL.md");
+    const ENG_DESIGN_REVIEW = join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md");
+
+    test("authoring-designs rules bullet names skills/systems-thinking/SKILL.md adjacent to its ## When Designing cite", () => {
+      // design-author.md:80 already cites product-thinking's same-named
+      // ## When Designing — the skill-file path is what disambiguates.
+      const window = grepA4(read(AUTHORING_DESIGNS), /systems-thinking/);
+      expect(window).toContain(SKILL_PATH);
+      expect(window).toContain("## When Designing");
+      expect(readOrEmpty(SKILL_FILE)).toContain("## When Designing");
+    });
+
+    test("authoring-designs template requires adjacent components in Current state and co-changing surfaces in Decisions made", () => {
+      const text = read(AUTHORING_DESIGNS);
+      expect(/adjacent components/i.test(text)).toBe(true);
+      expect(/change together/i.test(text)).toBe(true);
+    });
+
+    test("eng-design-doc-review step 3 carries the blast-radius question", () => {
+      const step3 = sliceBetween(
+        read(ENG_DESIGN_REVIEW),
+        "**Audit the decisions.**",
+        "**Verify edge-case enumeration.**",
+      );
+      expect(step3.length).toBeGreaterThan(0);
+      expect(/blast radius/i.test(step3)).toBe(true);
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
