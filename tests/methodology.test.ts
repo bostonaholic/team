@@ -368,6 +368,100 @@ describe("product-thinking methodology", () => {
 });
 
 // ---------------------------------------------------------------------------
+// systems-thinking lens — free L2 content tripwires (docs/testing.md §2).
+// The 49th methodology skill carries the system-fit reasoning lens once;
+// eight judgment surfaces cite it. Four cited heading names collide with
+// existing skills (## When Designing / ## When Slicing in product-thinking,
+// ## When Implementing / ## When Reviewing in engineering-standards), so
+// bare heading resolution would pass a broken citation. Every citation
+// tripwire therefore asserts PATH-adjacency: the grepA4 window around each
+// `systems-thinking` mention must carry BOTH the skill file path
+// skills/systems-thinking/SKILL.md AND the cited ## When ... heading, and
+// the heading must resolve in the skill itself.
+// ---------------------------------------------------------------------------
+
+describe("systems-thinking lens (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "systems-thinking", "SKILL.md");
+  const SKILL_PATH = "skills/systems-thinking/SKILL.md";
+
+  // Missing-file reads return "" so pre-implementation checks fail as
+  // assertions (expected "" to contain ...), never as ENOENT crashes
+  // (pattern: tests/thin-agents.test.ts readOrEmpty).
+  function readOrEmpty(path: string): string {
+    return existsSync(path) ? read(path) : "";
+  }
+
+  // The path-adjacency window: every line mentioning systems-thinking in an
+  // agent body (frontmatter stripped — the skills: preload line must not
+  // satisfy a body-citation check) plus the next 4 lines.
+  function citationWindow(agentFile: string): string {
+    return grepA4(body(readOrEmpty(agentFile)), /systems-thinking/);
+  }
+
+  describe("slice 1: the lens exists and reviewers enforce System Fit", () => {
+    const CODE_REVIEW_SKILL = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
+    const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
+    const UX_REVIEWER = join(REPO_ROOT, "agents", "ux-reviewer.md");
+
+    test("systems-thinking skeleton carries the four lenses, the six When sections, and Lens Not Dogma", () => {
+      const text = readOrEmpty(SKILL_FILE);
+      expect(text.length).toBeGreaterThan(0);
+      // The eight H2 headings, verbatim and in order — the only H2s.
+      const expectedH2 = [
+        "## Core Lenses",
+        "## When Researching",
+        "## When Designing",
+        "## When Slicing",
+        "## When Planning",
+        "## When Implementing",
+        "## When Reviewing",
+        "## Lens, Not Dogma",
+      ].join("\n");
+      const actualH2 = (text.match(/^## .*$/gm) ?? []).join("\n");
+      expect(actualH2).toBe(expectedH2);
+      // The four named lenses, bold.
+      expect(text).toContain("**Blast radius over diff radius**");
+      expect(text).toContain("**Callers and siblings first**");
+      expect(text).toContain("**Conventions are contracts**");
+      expect(text).toContain("**Leave the system consistent**");
+      // Greenfield/single-file edge case: "none found" is a complete
+      // answer; manufactured findings are forbidden.
+      const closer = sectionFrom(text, "## Lens, Not Dogma");
+      expect(closer.length).toBeGreaterThan(0);
+      expect(/none found/i.test(closer)).toBe(true);
+      expect(/complete answer/i.test(closer)).toBe(true);
+      // <= 175-line soft norm (count newlines, not lines).
+      expect(text.split("\n").length - 1).toBeLessThanOrEqual(175);
+    });
+
+    test("code-review step 4 carries the System fit item", () => {
+      // The bold checklist item asks the three system-fit questions:
+      // sibling divergence, callers/consumers outside the diff, and the
+      // conventions established elsewhere.
+      const window = grepA4(read(CODE_REVIEW_SKILL), /\*\*System fit\*\*/);
+      expect(window.length).toBeGreaterThan(0);
+      expect(/sibling/i.test(window)).toBe(true);
+      expect(/caller|consumer/i.test(window)).toBe(true);
+      expect(/convention/i.test(window)).toBe(true);
+    });
+
+    test("code-reviewer and ux-reviewer directives name the systems-thinking skill file adjacent to their ## When Reviewing cite", () => {
+      const codeReviewerWindow = citationWindow(CODE_REVIEWER);
+      expect(codeReviewerWindow).toContain(SKILL_PATH);
+      expect(codeReviewerWindow).toContain("## When Reviewing");
+      // code-reviewer's bullet cites the checklist item by name.
+      expect(codeReviewerWindow).toContain("System Fit");
+      const uxReviewerWindow = citationWindow(UX_REVIEWER);
+      expect(uxReviewerWindow).toContain(SKILL_PATH);
+      expect(uxReviewerWindow).toContain("## When Reviewing");
+      // The cited heading resolves in the skill itself.
+      expect(readOrEmpty(SKILL_FILE)).toContain("## When Reviewing");
+    });
+  });
+
+});
+
+// ---------------------------------------------------------------------------
 // Zero-coverage methodology lenses — free L2 content tripwires (TESTING.md
 // §2). These lenses have no L5 behavioral output and gained no L5 eval in
 // Slices 1–4, so a content tripwire pins each lens's load-bearing

@@ -167,6 +167,10 @@ Two severity regimes apply:
      section); cite the `Comment Discipline` checklist item.
    - **Unnecessary complexity** — Is there abstraction that serves no current
      need? Are there simpler ways to achieve the same result?
+   - **System fit** — Does a sibling implementation now diverge? Does a
+     caller or consumer outside the diff need updating? Does the change
+     follow the conventions established elsewhere in the codebase (cite the
+     convention)? Findings cite the `System Fit` checklist item by name.
    - **SOLID violations** — Check for design principle violations using the
      methodology in `skills/solid-principles/SKILL.md`:
      - SRP: does this unit have more than one reason to change?

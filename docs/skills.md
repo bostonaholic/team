@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 48 skills — 11 pipeline entry-point slash commands, 3 standalone utilities (shipit, pr-open-comments, pr-watch), and 34 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 49 skills — 11 pipeline entry-point slash commands, 3 standalone utilities (shipit, pr-open-comments, pr-watch), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -48,7 +48,7 @@ That `argument-hint` marker is the whole flavor distinction. Most
 `pr-open-comments`, and `pr-watch` — are standalone utilities (land a
 reviewed PR; triage its unresolved review feedback; watch it for new
 feedback). None is a pipeline phase. The split is
-**11 pipeline entry-point + 3 standalone utility + 34 methodology = 48**.
+**11 pipeline entry-point + 3 standalone utility + 35 methodology = 49**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -328,7 +328,7 @@ QRSPI phase — a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 34 methodology skills carry no `argument-hint` and are never invoked
+The 35 methodology skills carry no `argument-hint` and are never invoked
 directly. Agents load them through one of two mechanisms: a `skills:` YAML
 list in the agent's frontmatter, or an inline prose load instruction in
 the agent body (see the "Two flavors of skill" section above). The
@@ -658,6 +658,21 @@ replaces former inline body content 1:1, so it adds no net context (see
   thing people want, named user, talk-to-users mindset) shape the
   pre-implementation phases.
 
+### systems-thinking
+
+- **Purpose:** System-fit reasoning lens — weighs a change's blast radius
+  (callers, consumers, sibling implementations, conventions) rather than
+  only the diff in front of it.
+- **Loaded by:** researcher, structure-planner, planner (frontmatter);
+  implementer, code-reviewer, ux-reviewer (inline); cited by
+  authoring-designs, code-review, and eng-design-doc-review.
+- **Key behaviors:** A reasoning lens, not a gate — produces no artifact
+  of its own and blocks nothing. Four lenses (blast radius over diff
+  radius, callers and siblings first, conventions are contracts, leave
+  the system consistent) shape per-phase `## When ...` guidance; reviews
+  cite the `System Fit` checklist item by name; on greenfield targets
+  "none found" is a complete answer.
+
 ### writing-prose
 
 - **Purpose:** Plain-language prose quality for authoring and review.
@@ -790,6 +805,7 @@ entry-point section above rather than repeating them here.
 | `technical-design-doc` | planner | Plan |
 | `product-requirements-doc` | questioner (via `decomposing-intent`, conditional); design-author (via `authoring-designs`) | Question, Design |
 | `product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
+| `systems-thinking` | researcher, structure-planner, planner (frontmatter); implementer, code-reviewer, ux-reviewer (inline); authoring-designs, code-review, eng-design-doc-review (citing skills) | Research, Design, Structure, Plan, Implement (incl. verify) |
 | `writing-prose` | technical-writer | Implement (verify) — bar for prose it writes and prose it assesses |
 | `reviewing-documentation` | technical-writer | Implement (verify) — doc-gap review process + classification |
 | `git-commit` | team-pr; implementer (via `implementing-slices`) | PR; Implement (slice commits) |

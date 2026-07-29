@@ -45,6 +45,9 @@ finding per `skills/conventional-comments/SKILL.md` (preloaded).
 - Apply the "When Reviewing" section of
   `skills/engineering-standards/SKILL.md` as additional review criteria and
   cite checklist item names in findings.
+- Apply the `System Fit` item per `skills/systems-thinking/SKILL.md`
+  (`## When Reviewing`): diverging siblings, un-updated callers or consumers
+  outside the diff, broken conventions — cite `System Fit` by name.
 
 ## Skeptic pass — verify Blocking findings before reporting (optional)
 
