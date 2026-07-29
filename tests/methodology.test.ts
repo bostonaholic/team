@@ -488,6 +488,23 @@ describe("systems-thinking lens (L2 content tripwire)", () => {
       expect(/blast radius/i.test(step3)).toBe(true);
     });
   });
+
+  describe("slice 3: implementer execution discipline", () => {
+    const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
+
+    test("implementer directive names the systems-thinking skill file adjacent to its ## When Implementing cite", () => {
+      const window = citationWindow(IMPLEMENTER);
+      expect(window).toContain(SKILL_PATH);
+      expect(window).toContain("## When Implementing");
+      expect(readOrEmpty(SKILL_FILE)).toContain("## When Implementing");
+    });
+
+    test("implementer directive requires searching for an existing implementation and updating affected callers", () => {
+      const window = citationWindow(IMPLEMENTER);
+      expect(/existing implementation/i.test(window)).toBe(true);
+      expect(/affected caller/i.test(window)).toBe(true);
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
