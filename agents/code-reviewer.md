@@ -4,7 +4,7 @@ description: Use when an adversarial code review is needed after implementation.
 color: orange
 model: fable
 effort: high
-tools: Read, Grep, Glob, Bash, TodoWrite, Agent
+tools: Read, Grep, Glob, Bash, TodoWrite, Agent, SendMessage
 permissionMode: plan
 skills:
   - progress-tracking

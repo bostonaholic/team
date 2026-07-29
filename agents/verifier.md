@@ -4,7 +4,7 @@ description: Use when comprehensive verification checks need to run before compl
 color: yellow
 model: haiku
 effort: low
-tools: Read, Grep, Glob, Bash, TodoWrite
+tools: Read, Grep, Glob, Bash, TodoWrite, SendMessage
 permissionMode: plan
 skills:
   - progress-tracking

@@ -4,7 +4,7 @@ description: Use after implementation to review whether project documentation ne
 color: cyan
 model: sonnet
 effort: medium
-tools: Read, Grep, Glob, Bash, TodoWrite
+tools: Read, Grep, Glob, Bash, TodoWrite, SendMessage
 permissionMode: plan
 skills:
   - progress-tracking

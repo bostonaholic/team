@@ -105,6 +105,27 @@ describe("ask-user-question contract", () => {
   });
 });
 
+describe("reporting agents can reach the orchestrator", () => {
+  // A reporting agent's whole output is its report. Dispatched in the
+  // background, its plain text never reaches the orchestrator, so without
+  // SendMessage the report is unrecoverable — the agent goes idle and the
+  // review silently loses a gate.
+  const REPORTING_AGENTS = [
+    "code-reviewer",
+    "security-reviewer",
+    "technical-writer",
+    "ux-reviewer",
+    "verifier",
+  ];
+
+  for (const agent of REPORTING_AGENTS) {
+    test(`${agent} tools frontmatter includes SendMessage`, () => {
+      const fm = frontmatter(read(join(REPO_ROOT, "agents", `${agent}.md`)));
+      expect(/^tools:.*\bSendMessage\b/m.test(fm)).toBe(true);
+    });
+  }
+});
+
 describe("multi-repo support", () => {
   const QRSPI = join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md");
   const WORKTREE_ISO = join(REPO_ROOT, "skills", "worktree-isolation", "SKILL.md");
