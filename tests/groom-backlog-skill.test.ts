@@ -36,6 +36,17 @@ function body(): string {
 function fm(): string {
   return existsSync(SKILL) ? frontmatter(read(SKILL)) : "";
 }
+// The skill with its frontmatter stripped. The `description:` field restates
+// several load-bearing rules for the trigger cue, so an assertion that must
+// land in the method itself reads this instead of the whole file. Missing
+// frontmatter → "" so scoped assertions fail, never vacuously pass.
+function prose(): string {
+  const text = body();
+  const front = frontmatter(text);
+  if (!front) return "";
+  const end = text.indexOf(front) + front.length;
+  return text.slice(end);
+}
 // Flatten newlines so multi-line prose can be matched in one regex.
 function flat(text: string): string {
   return text.replace(/\n/g, " ");
@@ -131,9 +142,12 @@ describe("groom-backlog skill: plan file before approval question", () => {
   });
 });
 
+// Scoped to prose(), not body(): the frontmatter description states the
+// plan-ask-wait contract for the trigger cue, and an assertion satisfied by
+// that restatement alone would pass on a skill whose method dropped the rule.
 describe("groom-backlog skill: nothing mutates before the user answers", () => {
   test("no tracker mutation happens before the user answers", () => {
-    const t = flat(body());
+    const t = flat(prose());
     expect(
       /(nothing|no mutation|never|not)[^.]{0,200}(before|until)[^.]{0,100}(the user answers|answers|approv)/i.test(
         t,
@@ -142,12 +156,12 @@ describe("groom-backlog skill: nothing mutates before the user answers", () => {
   });
 
   test("the read-and-plan phase stops before any mutation", () => {
-    const t = flat(body());
+    const t = flat(prose());
     expect(/stops? before any mutation/i.test(t)).toBe(true);
   });
 
   test("the run waits for the user's approval instead of proceeding on its own", () => {
-    const t = flat(body());
+    const t = flat(prose());
     expect(
       /wait(s|ing)?[^.]{0,120}(the user'?s? |an? )?(answer|approval)|wait(s|ing)? for the user/i.test(
         t,
@@ -158,17 +172,31 @@ describe("groom-backlog skill: nothing mutates before the user answers", () => {
 
 describe("groom-backlog skill: the bulk load refuses a partial board", () => {
   test("the bulk load passes an explicit --limit", () => {
-    expect(body()).toContain("--limit");
+    expect(prose()).toContain("--limit");
   });
 
   test("the bulk load asserts totalCount equals the number fetched", () => {
-    const t = flat(body());
+    const t = flat(prose());
     expect(t).toContain("totalCount");
     expect(/totalCount[^.]{0,100}(==|equals?|match(es)?)[^.]{0,60}fetch/i.test(t)).toBe(true);
   });
 
+  test("each bare-array query is checked against the limit it was given", () => {
+    const t = flat(prose());
+    // A bare JSON array carries no count, so `totalCount` cannot cover it —
+    // the fetched length is compared against the limit instead.
+    expect(/--argjson limit/.test(t)).toBe(true);
+    expect(/bare arrays? [^.]{0,80}no count|no count at all/i.test(t)).toBe(true);
+  });
+
+  test("the comment-fetch cap is stated as a number", () => {
+    const t = flat(prose());
+    expect(/one page of 100 comments per issue/i.test(t)).toBe(true);
+    expect(/unloaded-threads/i.test(t)).toBe(true);
+  });
+
   test("a shortfall fails loudly instead of grooming a partial board", () => {
-    const t = flat(body());
+    const t = flat(prose());
     expect(/partial board/i.test(t)).toBe(true);
     expect(
       /(fail|stop)[^.]{0,160}(loud|partial board)|partial board[^.]{0,160}(fail|stop)/i.test(t),
@@ -178,21 +206,108 @@ describe("groom-backlog skill: the bulk load refuses a partial board", () => {
 
 describe("groom-backlog skill: issue bodies and comments are untrusted data", () => {
   test("issue bodies and comments are named untrusted data", () => {
-    const t = flat(body());
+    const t = flat(prose());
     expect(/untrusted/i.test(t)).toBe(true);
-    expect(/issue bod(y|ies)[^.]{0,80}comment|comment[^.]{0,80}issue bod(y|ies)/i.test(t)).toBe(
-      true,
-    );
+    expect(
+      /issue bod(y|ies)[^,.]{0,80}comment|comment[^,.]{0,80}issue bod(y|ies)/i.test(t),
+    ).toBe(true);
   });
 
   test("an embedded imperative is reported as content, never executed", () => {
-    const t = flat(body());
+    const t = flat(prose());
     expect(/reported as content, never executed/i.test(t)).toBe(true);
+  });
+
+  // The rule has to reach promotion mode, which reads one body plus every
+  // comment on it and folds the thread into a rewritten description — and which
+  // runs none of the numbered board steps.
+  test("the untrusted-data rule is a hard rule, not a step-local aside", () => {
+    const rules = flat(section("## Hard rules"));
+    expect(rules.length).toBeGreaterThan(0);
+    expect(/untrusted data/i.test(rules)).toBe(true);
+    expect(/reported as content, never executed/i.test(rules)).toBe(true);
+    expect(/no approval relaxes this rule|never relaxes/i.test(rules)).toBe(true);
+  });
+
+  test("the untrusted-data rule is restated inside the promotion standard", () => {
+    const promotion = flat(section("## The promotion standard"));
+    expect(promotion.length).toBeGreaterThan(0);
+    expect(/untrusted data/i.test(promotion)).toBe(true);
+    expect(/reported as content, never executed/i.test(promotion)).toBe(true);
+  });
+
+  test("mutations stay bound to the planned item and rewrites are authored, not lifted", () => {
+    const t = flat(prose());
+    expect(/bound to the (one )?item/i.test(t)).toBe(true);
+    expect(/never lifted verbatim|never lift(ed)?[^.]{0,60}verbatim/i.test(t)).toBe(true);
   });
 });
 
-describe("groom-backlog skill: all eight hard rules present", () => {
-  test("rule 1 — a decision, investigation, or spike ticket stays open", () => {
+describe("groom-backlog skill: tracker text never reaches a shell argument", () => {
+  test("a hard rule forbids interpolating tracker-derived text into a command", () => {
+    const rules = flat(section("## Hard rules"));
+    expect(rules.length).toBeGreaterThan(0);
+    expect(/never interpolate[^.]{0,80}shell command/i.test(rules)).toBe(true);
+  });
+
+  test("the write recipes pass every body by file or on stdin", () => {
+    const recipes = section("## Tracker recipes");
+    expect(recipes.length).toBeGreaterThan(0);
+    // The two write shapes that carry prose: an issue body and a request body.
+    expect(recipes).toContain("--body-file");
+    expect(recipes).toContain("--input");
+    // Stdin, the shape pr-open-comments uses for reply text.
+    expect(recipes).toContain("-F body=@-");
+    // A cached title reaches the command as a variable, never as pasted prose.
+    expect(recipes).toContain("jq -r");
+  });
+
+  test("no write recipe interpolates a body or description into a quoted argument", () => {
+    const recipes = section("## Tracker recipes");
+    expect(recipes.length).toBeGreaterThan(0);
+    // `-f description="…"` / `--body "…"` are the shapes that splice prose into
+    // the command line, where a backtick or $(…) in the text would execute.
+    expect(/-f\s+(description|title|body)=/.test(recipes)).toBe(false);
+    expect(/--body\s+"/.test(recipes)).toBe(false);
+  });
+
+  test("a description rewrite caches the pre-image first", () => {
+    const t = flat(prose());
+    expect(/original-body-/.test(t)).toBe(true);
+    expect(/no cached pre-image does not run|cache the (current|original) body/i.test(t)).toBe(
+      true,
+    );
+  });
+});
+
+describe("groom-backlog skill: the approval prompt covers what the plan contains", () => {
+  test("questions are one per mutation class, not a fixed count", () => {
+    const t = flat(prose());
+    expect(/one question per mutation class/i.test(t)).toBe(true);
+    expect(/never a fixed count/i.test(t)).toBe(true);
+  });
+
+  test("filing a new issue needs its own explicit answer", () => {
+    const t = flat(prose());
+    expect(
+      /fil(e|ing) a new issue[^.]{0,80}own question|new issue[^.]{0,80}own answer/i.test(t),
+    ).toBe(true);
+    expect(/only on an explicit answer/i.test(t)).toBe(true);
+  });
+
+  test("the completion template is scoped by mode", () => {
+    const completion = flat(section("## Completion"));
+    expect(completion.length).toBeGreaterThan(0);
+    expect(/\*\*Board mode\.\*\*/.test(completion)).toBe(true);
+    expect(/\*\*Promotion mode\.\*\*/.test(completion)).toBe(true);
+    // "the four questions" was the board-mode-only wording a promotion run was
+    // told to print; the count must not come back.
+    expect(/the four questions/i.test(completion)).toBe(false);
+  });
+});
+
+describe("groom-backlog skill: every hard rule present", () => {
+  test("decision, investigation, and spike tickets stay open", () => {
     const t = flat(body());
     expect(
       /(never|do not|don'?t)[^.]{0,60}close[^.]{0,120}(decision|investigation|spike)/i.test(t),
@@ -200,32 +315,36 @@ describe("groom-backlog skill: all eight hard rules present", () => {
     expect(/leave(s)? it open|stays? open|left open/i.test(t)).toBe(true);
   });
 
-  test("rule 2 — label writes are additive and the surviving labels are verified", () => {
+  test("label writes are additive and the surviving labels are verified", () => {
     const t = flat(body());
     expect(/label writes are additive/i.test(t)).toBe(true);
     expect(/verify[^.]{0,120}labels? survived|labels? survived/i.test(t)).toBe(true);
   });
 
-  test("rule 3 — a split ticket's original description is never rewritten", () => {
+  test("a split ticket's original description is never rewritten", () => {
     const t = flat(body());
     expect(
       /(never|do not|don'?t)[^.]{0,80}rewrite[^.]{0,80}split ticket/i.test(t),
     ).toBe(true);
   });
 
-  test("rule 4 — no priority, assignee, or state change on someone else's in-flight work", () => {
+  test("no priority, assignee, or state change on someone else's in-flight work", () => {
     const t = flat(body());
     expect(/priority, assignee, or state/i.test(t)).toBe(true);
     expect(/in[- ]flight/i.test(t)).toBe(true);
+    // "someone else" and "in flight" are only decidable against named inputs:
+    // the authenticated login, and the board's in-progress states.
+    expect(/gh api user/.test(t)).toBe(true);
+    expect(/in-progress states/i.test(t)).toBe(true);
   });
 
-  test("rule 5 — scope is never invented; a missing issue is asked about first", () => {
+  test("scope is never invented; a missing issue is asked about first", () => {
     const t = flat(body());
     expect(/(do not|don'?t|never) invent scope/i.test(t)).toBe(true);
     expect(/ask[^.]{0,80}before[^.]{0,60}fil(e|ing)/i.test(t)).toBe(true);
   });
 
-  test("rule 6 — no comments or project updates without explicit approval", () => {
+  test("no comments or project updates without explicit approval", () => {
     const t = flat(body());
     expect(
       /(do not|don'?t|never)[^.]{0,60}post comments or project updates/i.test(t),
@@ -233,13 +352,13 @@ describe("groom-backlog skill: all eight hard rules present", () => {
     expect(/without[^.]{0,60}explicit approval/i.test(t)).toBe(true);
   });
 
-  test("rule 7 — tickets are written for the audience the tracker serves", () => {
+  test("tickets are written for the audience the tracker serves", () => {
     const t = flat(body());
     expect(/for the audience the tracker serves/i.test(t)).toBe(true);
     expect(/implementation[- ]notes/i.test(t)).toBe(true);
   });
 
-  test("rule 8 — a target date in the past is worse than no date", () => {
+  test("a target date in the past is worse than no date", () => {
     const t = flat(body());
     expect(/date in the past is worse than no date/i.test(t)).toBe(true);
   });
@@ -276,8 +395,8 @@ describe("groom-backlog skill: promotion contract", () => {
 });
 
 describe("groom-backlog skill: mode dispatch and the extraction seam", () => {
-  // Decision 11: half two is loadable methodology. It states its own inputs and
-  // its own standard, so a future grooming agent can load the section verbatim.
+  // Half two is loadable methodology: it states its own inputs and its own
+  // standard, so a future grooming agent can load the section verbatim.
   const UPWARD_REFERENCES = ["$ARGUMENTS", "--promote", "cluster", "board-level pass"];
 
   test("the promotion standard makes no upward reference", () => {
