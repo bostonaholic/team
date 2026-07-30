@@ -332,8 +332,9 @@ QRSPI phase — a self-contained action a user runs on demand.
 - **Purpose:** Groom a project backlog in an issue tracker — load the whole
   board in bulk, compute a gap inventory, cluster open issues by outcome,
   place each cluster under a grouping construct whose description states a
-  verifiable property, fix triage/priority/label/state hygiene, and report
-  what was deliberately left alone.
+  verifiable property, find the dependencies between tickets and propose the
+  missing links, fix triage/priority/label/state hygiene, and report what was
+  deliberately left alone.
 - **`$ARGUMENTS`:** `[<project-number-or-url>] [--promote <issue-number>]` —
   both optional. With no board reference it discovers the visible projects and
   uses the only one, stopping and listing them if more than one is visible.
@@ -343,14 +344,17 @@ QRSPI phase — a self-contained action a user runs on demand.
 - **Phase:** None — a standalone grooming action, not part of the pipeline.
 - **Key behaviors:** Tracker-agnostic method, with GitHub Projects v2 as the
   worked example and a vocabulary map (grouping construct / column / priority /
-  iteration) for Linear and Jira. Those two recipes ship under an explicit
+  iteration / dependency link / decomposition link) for Linear and Jira. Those two recipes ship under an explicit
   **Unverified** heading with a mandatory `--help` preflight before any
   mutation. Loads once in bulk into a run-scoped temp cache, passing an
   explicit `--limit`. Each cached query then gets the completeness check its
   own payload shape supports, so a shortfall stops the run rather than
   grooming a partial board. Comment threads load with the issues, capped at
   one page of 100 per issue, and every thread that hit the cap is named in
-  the report. Issue bodies, titles, and comments are untrusted data — a hard
+  the report. Declared dependency and decomposition links ride that same bulk
+  query rather than a per-issue call, and a link connection that came back
+  short is recorded and reported — an unseen blocker reads as an unblocked
+  issue. Issue bodies, titles, and comments are untrusted data — a hard
   rule in every mode, promotion included. An embedded imperative is reported
   as content, never executed. Tracker-derived prose never reaches a shell
   argument: bodies travel by file or on stdin. Plans, asks, waits, then
@@ -359,13 +363,20 @@ QRSPI phase — a self-contained action a user runs on demand.
   recommendation, and filing a new issue always needs its own answer. Nothing
   on the tracker changes before the user answers. On approval it executes in
   dependency order, re-reads each item before writing it, and verifies every
-  step by re-querying the tracker rather than by memory. Ten hard rules hold
-  in every mode. Decision and spike tickets stay open. Label writes are
+  step by re-querying the tracker rather than by memory. Dependency analysis
+  reads the links the tracker already records and infers the ones only the
+  prose admits — sequencing phrases in bodies and comments, and one issue
+  introducing the artifact another consumes. Every inferred link is a proposal
+  needing its own answer, direction is fixed by which issue cannot be
+  *finished* until the other lands, and a proposed edge that would close a
+  cycle is reported rather than filed. Eleven hard rules hold in every mode. Decision and spike tickets stay open. Label writes are
   additive. A split ticket's original description is never rewritten.
   Priority, assignee, and state are left alone on someone else's in-flight
-  work. Promotion mode skips the eight board steps for a narrow single-issue
+  work. Promotion mode skips the nine board steps for a narrow single-issue
   load, then brings that item to the ready-to-work standard — verify,
-  rewrite, prioritize, then move the card. It refuses a `bug` outright,
+  rewrite, prioritize, then move the card. An open blocker, declared or found
+  in the thread, drops the card move and nothing else: a blocked ticket is
+  still worth clarifying while it waits. It refuses a `bug` outright,
   because `Bugs` is already its ready-to-pull state. It swaps a card back to
   `Backlog` rather than exceeding the `Ready` WIP limit of 5, the number
   [project-tracking.md](project-tracking.md) owns, and reports a pre-existing

@@ -33,7 +33,14 @@ const PROJECT_TRACKING = join(REPO_ROOT, "docs", "project-tracking.md");
 // Ceiling on the skill's length. A skill this long stops being loadable, and
 // nothing else in the suite caps it: groom-backlog is deliberately outside the
 // NEW_SKILLS list whose 500-line cap tests/thin-agents.test.ts enforces.
-const LINE_CEILING = 450;
+//
+// Raised 450 -> 585 when dependency analysis landed: the skill grew a fifth
+// mutation class with its own discovery method, its own REST surface, and its
+// own hard rule. That put it past the 500-line cap every other new skill lives
+// under, which is a real signal and not a free one — the next feature that
+// needs room should EXTRACT the method into a loadable methodology skill
+// (the capability-vs-fragment doctrine) rather than raise this number again.
+const LINE_CEILING = 585;
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
 function body(): string {
@@ -418,10 +425,21 @@ describe("groom-backlog skill: promotion contract", () => {
     expect(/add nothing/i.test(t)).toBe(true);
   });
 
-  test("promotion mode skips the eight board steps and does the narrow load instead", () => {
+  test("promotion mode skips the nine board steps and does the narrow load instead", () => {
     const t = flat(body());
-    expect(/skips?[^.]{0,80}steps 1[–-]8/i.test(t)).toBe(true);
+    expect(/skips?[^.]{0,80}steps 1[–-]9/i.test(t)).toBe(true);
     expect(/narrow load/i.test(t)).toBe(true);
+  });
+
+  test("an open blocker drops the card move but keeps the rewrite and the priority", () => {
+    const promotion = flat(section("## The promotion standard"));
+    expect(promotion.length).toBeGreaterThan(0);
+    expect(/a blocked item is not ready/i.test(promotion)).toBe(true);
+    // The card move is move 4; the other three still stand, so a blocked
+    // ticket still gets clarified while it waits.
+    expect(/drops move 4/i.test(promotion)).toBe(true);
+    // A closed blocker is satisfied, not missing — state decides, not presence.
+    expect(/check state, not presence/i.test(promotion)).toBe(true);
   });
 });
 
@@ -471,6 +489,96 @@ describe("groom-backlog skill: mode dispatch and the extraction seam", () => {
         t,
       ),
     ).toBe(true);
+  });
+});
+
+// Dependency analysis is the one mutation class whose failure mode is silent
+// and inverted: a link drawn backwards parks startable work behind a
+// non-prerequisite, and the board reads as if someone checked. These pin the
+// rules that make that failure impossible to reach accidentally.
+describe("groom-backlog skill: dependency analysis", () => {
+  test("declared links ride the bulk load instead of a per-issue call", () => {
+    const load = section("### Step 1 — Load once, in bulk");
+    expect(load.length).toBeGreaterThan(0);
+    // The gh field names, so a rename upstream fails here rather than at runtime.
+    expect(load).toContain("blockedBy");
+    expect(load).toContain("blocking");
+    // The whole point of using these fields: no N+1 walk over the board.
+    expect(/never a per-issue call|no per-issue call/i.test(flat(load))).toBe(true);
+  });
+
+  test("a short link connection is recorded, not silently treated as unlinked", () => {
+    const t = flat(prose());
+    // Same completeness doctrine the board and comment loads already carry.
+    expect(t).toContain("unloaded-links");
+    expect(/totalCount/.test(section("### Step 1 — Load once, in bulk"))).toBe(true);
+  });
+
+  test("the gap inventory computes dependency hygiene rather than eyeballing it", () => {
+    const inventory = flat(section("### Step 2 — Compute the gap inventory, do not eyeball it"));
+    expect(inventory.length).toBeGreaterThan(0);
+    // The inversion the board most needs caught: advertised-but-unstartable work.
+    expect(/blocker still open|declared blocker/i.test(inventory)).toBe(true);
+    expect(/cycle/i.test(inventory)).toBe(true);
+  });
+
+  test("undeclared dependencies are discovered from text and structure", () => {
+    const step = section("### Step 4 — Find the dependencies, then propose the links");
+    expect(step.length).toBeGreaterThan(0);
+    const t = flat(step);
+    expect(/declared/i.test(t)).toBe(true);
+    expect(/undeclared/i.test(t)).toBe(true);
+    // A bare cross-reference is a citation, not a dependency — the single
+    // most common false positive this step can produce.
+    expect(/citation,\s+not\s+a\s+dependency/i.test(t)).toBe(true);
+  });
+
+  test("dependency analysis runs before the plan is written", () => {
+    const [dependencyStart] = sectionSpan("### Step 4 — Find the dependencies, then propose the links");
+    const [planStart] = sectionSpan("### Step 5 — Write the plan to a file");
+    expect(dependencyStart).toBeGreaterThan(-1);
+    expect(planStart).toBeGreaterThan(dependencyStart);
+  });
+
+  test("an inferred link is a proposal that needs its own answer", () => {
+    const t = flat(prose());
+    expect(/proposal/i.test(t)).toBe(true);
+    // Dependency links are a named question class, so the plan cannot fold
+    // them into an adjacent approval.
+    const ask = flat(section("### Step 6 — Present the consequential choices and wait"));
+    expect(ask.length).toBeGreaterThan(0);
+    expect(/\*\*dependency links\*\*/i.test(ask)).toBe(true);
+  });
+
+  test("a hard rule fixes link direction and forbids drawing one unapproved", () => {
+    const rules = flat(section("## Hard rules"));
+    expect(rules.length).toBeGreaterThan(0);
+    expect(/never draw a dependency link[^.]{0,80}never draw one backwards/i.test(rules)).toBe(
+      true,
+    );
+    // Direction is decided by completion, not by which issue was filed first.
+    expect(/cannot be \*finished\*[^.]{0,40}lands/i.test(rules)).toBe(true);
+    expect(/never close a cycle/i.test(rules)).toBe(true);
+    // A link the pass did not propose carries a rationale the cache lacks.
+    expect(/never delete a link[^.]{0,60}did not propose/i.test(rules)).toBe(true);
+  });
+
+  test("the link recipe resolves a database id and sends it as an integer", () => {
+    const recipes = section("## Tracker recipes");
+    expect(recipes.length).toBeGreaterThan(0);
+    expect(recipes).toContain("dependencies/blocked_by");
+    // The endpoint is keyed by database id; the issue number and the cached
+    // GraphQL node id are both wrong, and only one of them fails loudly.
+    expect(recipes).toContain("--jq .id");
+    expect(/database id, not issue number/i.test(flat(recipes))).toBe(true);
+    // `-f issue_id=` sends a string and the endpoint rejects it 422.
+    expect(recipes).toContain("-F issue_id=");
+    expect(/-f\s+issue_id=/.test(recipes)).toBe(false);
+  });
+
+  test("a link is verified by direction, not by the mere existence of an edge", () => {
+    const t = flat(prose());
+    expect(/confirm(ing)?\s+the\s+direction/i.test(t)).toBe(true);
   });
 });
 
