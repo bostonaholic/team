@@ -22,16 +22,16 @@ nav_label: vision
 
 ## The one-sentence vision
 
-**A human keeps the [board](https://github.com/users/bostonaholic/projects/5)
-fed and reviews finished work; everything in between runs itself.**
+**A human keeps the board fed and reviews finished work; everything in between
+runs itself.**
 
 ## What the human does
 
 In the end state, a human is responsible for exactly **two** things:
 
 1. **Fill the Backlog.** Identify new features, bugs, and chores and drop them
-   into the **Backlog** column as GitHub issues. This is the creative,
-   judgment-heavy work of deciding *what should exist*.
+   into the **Backlog** column. This is the creative, judgment-heavy work of
+   deciding *what should exist*.
 2. **Review what is finished.** Inspect items in the **In Review** column —
    read the PR, accept or request changes, and merge. This is the quality gate
    on *what gets shipped*.
@@ -66,20 +66,16 @@ In strict priority order (right to left):
 1. **In Progress → In Review — finish first.** If a pipeline run is complete,
    open its PR and move the card to In Review: get finished work in front of the
    human and free the In Progress slot. The pipeline runs end to end with
-   no mid-run human gates (structure advances autonomously, and design
-   approval is autonomous — self-approved after adversarial agent
-   review); the single human checkpoint is the **end** — the PR review.
+   no mid-run human gates; the single human checkpoint is the **end** — the PR
+   review.
 2. **Ready → In Progress — start only when nothing's waiting to finish.** When In
    Progress is below its WIP limit *and* no in-flight work can be pushed further
    right, pull the highest-priority Ready item and launch the Team pipeline for
-   it in an isolated worktree.
+   it.
 3. **Backlog → Ready — groom last.** When Ready is below its WIP limit, a grooming
    agent picks the most important Backlog item, verifies and rewrites it to a
    ready-to-work standard, and promotes it — refilling the queue only once the
-   line downstream is flowing. This step is the one the loop already has a
-   concrete implementation of: [`/groom-backlog`](skills.md#groom-backlog)
-   grooms the board and promotes a single item today, run by a human rather
-   than by a controller.
+   line downstream is flowing.
 
 The board is the single source of truth. Each cycle the loop reads it, finds the
 rightmost action that advances work, executes that one action, and repeats —
@@ -87,8 +83,8 @@ rightmost action that advances work, executes that one action, and repeats —
 
 ## Why this is the goal
 
-Team already automates the *inside* of a single feature (the QRSPI pipeline).
-The remaining human overhead is the *orchestration between* features: grooming,
+Team already automates the *inside* of a single feature. The remaining
+human overhead is the *orchestration between* features: grooming,
 prioritizing, starting runs, and shepherding cards across the board. Loop-driven
 development automates that orchestration too, collapsing the human's role to the
 two decisions only a human should own — **what to build** and **what to ship** —
@@ -97,7 +93,7 @@ and leaving the mechanical flow to the machine.
 ## How we get there
 
 The loop is assembled from capabilities the pipeline already has — isolated
-worktrees, adversarial review, durable artifacts — plus a control loop over the
+runs, adversarial review, durable artifacts — plus a control loop over the
 board. The first of the loop's own steps to land as a capability is grooming:
 [`/groom-backlog`](skills.md#groom-backlog) does the `Backlog → Ready` work a
 grooming agent would do, still asking a human to approve each plan. The
