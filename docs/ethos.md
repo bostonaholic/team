@@ -72,12 +72,11 @@ principle is to make the *ends* the only place a human is needed.
 ## 2. Files Are the Contract
 
 The conversation is ephemeral; the artifact on disk is durable. Every phase
-writes a file under `docs/plans/<id>/` with frontmatter that declares what it is
-and whether its gate passed. Agents communicate **through these files**, never
-through shared chat memory.
+writes a file that declares what it is and whether its gate passed. Agents
+communicate **through these files**, never through shared chat memory.
 
-This is what lets a run survive compaction, a crash, a new session, or a handoff
-to a different agent — the state lives on disk, not in a context window. The file
+This is what lets a run survive a truncated context, a crash, a new session, or a
+handoff to a different agent — the state lives on disk, not in memory. The file
 is the value passed between steps, and it is immutable history once written.
 *(Hickey: prefer durable, inspectable data over hidden mutable state. The
 artifact is the value.)*
@@ -90,9 +89,9 @@ artifact is the value.)*
 ## 3. Mechanical Gates Over Good Intentions
 
 LLMs forget instructions roughly one time in five. So where a rule **must** hold,
-we do not ask the model to remember it — we enforce it with a deterministic hook,
-a grep, a script, a CI check. Discipline that depends on the model behaving is
-not discipline; it is hope.
+we do not ask the model to remember it — we enforce it with a deterministic check
+that runs whether or not the model cooperates. Discipline that depends on the
+model behaving is not discipline; it is hope.
 
 The corollary is layering: push every check to the cheapest, most deterministic
 layer that can catch it. A test at the wrong layer is worse than no test — it is
@@ -100,7 +99,7 @@ slow, flaky, or costs money to learn nothing. *(See [the testing guide](testing.
 Detect errors early, surface them loudly, never mask them silently.
 
 **Anti-patterns:**
-- "The agent's prompt says not to do X." (Add a hook that makes X impossible.)
+- "The agent's prompt says not to do X." (Add a check that makes X impossible.)
 - A check that only passes when the model happens to be well-behaved.
 - An expensive LLM judge for something a regex could decide.
 
