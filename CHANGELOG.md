@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-07-30
+
+### Added
+
+- **New standalone utility `/pr-approve-watch` approves a pull request you are reviewing once the author resolves your review threads.** [`skills/pr-approve-watch/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-approve-watch/SKILL.md) is the reviewer-side mirror of `/pr-watch`: after you post review comments, arming it polls GitHub in ~31-minute cycles for up to 48 cycles (~24 hours), watching every review thread you opened — the gate is GraphQL `isResolved` state only, never comment text, and threads from your own pending review are excluded until submitted. When every tracked thread is resolved it casts one attributed `gh pr review --approve` citing the head commit SHA and the resolved-thread count, then stops. Before casting, merge-safety checks read the final poll's values, never the arm-time reading: any head drift between arm and approval requires explicit confirmation (with or without auto-merge) and names both SHAs; a tracked-thread count that changed between arm and approval without ever emptying names both counts in the approval body and completion report; auto-merge state is re-read every poll, so auto-merge that turns on mid-watch requires confirmation even without drift; a granted confirmation triggers a fresh poll and re-check before casting, so an answer given hours later cannot approve stale state; and an arm-time head SHA lost to compaction fails closed rather than approving unconfirmed. The PR argument is validated against GitHub's identifier charset and never interpolated raw into a shell command. The approval is its only write — it never resolves threads, replies, edits code, or merges. It refuses self-approval and zero-thread arms, and stops on approval cast, merge/close, user interrupt, timeout, 3 consecutive poll failures, a tracked set that empties mid-watch, or a declined confirmation (which never casts). Every GitHub read is minimized to structural fields — PR descriptions, review bodies, and profile display names never enter context. Model invocation is disabled: an approval can transitively trigger an auto-merge, so only a deliberate human invocation arms it, and when auto-merge is enabled at arm, explicit confirmation is required on both paths — the loop path confirms before arming the unattended watch, the immediate path before casting. The auto-merge reading covers GitHub-native auto-merge only — repo automation that merges on approval (Mergify, a merge bot, an approval-triggered workflow) is not detected. The skill catalog grows from 50 to 51, and the standalone utilities from four to five ([`docs/skills.md`](https://github.com/bostonaholic/team/blob/main/docs/skills.md)).
+
 ## [0.28.0] - 2026-07-30
 
 ### Added
@@ -303,7 +309,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.28.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.29.0...HEAD
+[0.29.0]: https://github.com/bostonaholic/team/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/bostonaholic/team/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/bostonaholic/team/compare/v0.26.1...v0.27.0
 [0.26.1]: https://github.com/bostonaholic/team/compare/v0.26.0...v0.26.1

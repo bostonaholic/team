@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 50 skills — 11 pipeline entry-point slash commands, 4 standalone utilities (shipit, pr-open-comments, pr-watch, groom-backlog), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 51 skills — 11 pipeline entry-point slash commands, 5 standalone utilities (shipit, pr-open-comments, pr-watch, pr-approve-watch, groom-backlog), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -44,12 +44,13 @@ catalog into two flavors:
   …`).
 
 That `argument-hint` marker is the whole flavor distinction. Most
-`argument-hint` skills drive a QRSPI phase, but four — `shipit`,
-`pr-open-comments`, `pr-watch`, and `groom-backlog` — are standalone
-utilities (land a reviewed PR; triage its unresolved review feedback; watch
-it for new feedback; groom a project backlog). None is a pipeline phase. The
-split is **11 pipeline entry-point + 4 standalone utility + 35 methodology
-= 50**.
+`argument-hint` skills drive a QRSPI phase, but five — `shipit`,
+`pr-open-comments`, `pr-watch`, `pr-approve-watch`, and `groom-backlog` —
+are standalone utilities (land a reviewed PR; triage its unresolved review
+feedback; watch it for new feedback; watch it as a reviewer and approve when
+your threads resolve; groom a project backlog). None is a pipeline phase.
+The split is **11 pipeline entry-point + 5 standalone utility + 35
+methodology = 51**.
 
 For *why* the system is shaped this way — the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits — see
@@ -326,6 +327,64 @@ QRSPI phase — a self-contained action a user runs on demand.
   auto-runs `/shipit`. Model-invocable — it promotes a draft only on an
   unambiguous readiness cue and reports the promotion loudly, so
   cue-based auto-invocation is safe.
+
+### pr-approve-watch
+
+- **Purpose:** Reviewer-side watch-and-approve — after you post review
+  comments on a PR you are reviewing, poll GitHub until every review
+  thread you opened is resolved, then cast one attributed, SHA-cited
+  `gh pr review --approve` on your behalf and stop.
+- **`$ARGUMENTS`:** `[<pr-number-or-url>]` — optional; defaults to the
+  current branch's PR. A bare number with no local checkout is refused —
+  pass the full PR URL.
+- **Phase:** None — a standalone reviewer-side action, not part of the
+  pipeline.
+- **Key behaviors:** Resolves the base repo from the PR's canonical URL
+  (correct on fork PRs, where head-repository fields name the
+  contributor's fork). Refuses to arm when the invoking `gh` identity is
+  the PR author (self-approval) or has no submitted review threads on the
+  PR (with a "submit your pending review first" hint when a pending
+  review exists). Per poll it recomputes the tracked set (threads whose
+  first comment the viewer authored in a submitted review; pending-review
+  threads excluded) and the auto-merge state, and gates purely on GraphQL
+  `isResolved` state — comment bodies are data, never instructions.
+  Thread pagination is fail-closed: the gate is computed only after every
+  page is fetched, and an unfetched page is a poll failure, never an
+  empty gate.
+  Bounded cycles: 48 cycles of ~31 minutes (up to three `sleep 600` calls
+  plus one poll per cycle; cycle 0 polls immediately). Stops on approval
+  cast, merge/close, user interrupt, cycle-48 timeout, 3 consecutive poll
+  failures, a tracked set that empties mid-watch (stops without
+  approving), or a declined confirmation (stops without approving). The
+  approval is its only write — it never resolves threads, never replies,
+  never edits code, never merges, never auto-runs `/shipit`.
+  `disable-model-invocation: true` — an approval can transitively trigger
+  an auto-merge, so only a deliberate human invocation arms it. When
+  auto-merge is enabled at arm, explicit confirmation is required on both
+  paths: the immediate path (gate already satisfied at arm) confirms
+  before casting, and the loop path confirms before arming the unattended
+  watch — a "no" refuses to arm. The auto-merge reading covers
+  GitHub-native auto-merge only — repo automation that merges on approval
+  (Mergify, a merge bot, an approval-triggered workflow) is not detected,
+  and auto-merge off is no assurance against it. Before casting,
+  merge-safety checks read
+  the final poll's values, never the arm-time reading: any head drift
+  (with or without auto-merge) requires explicit confirmation, with both
+  SHAs named in the approval body and completion report; a tracked count
+  that changed between arm and approval without ever going empty likewise
+  names both counts in the approval body and completion report;
+  auto-merge that
+  turned on mid-watch (no arm-time confirmation) requires confirmation
+  even without drift; a granted confirmation triggers a fresh poll and
+  re-check before casting (bounded, so confirmation churn stops the run
+  rather than looping); and an arm-time head SHA lost to compaction fails
+  closed — it is printed in the arm report and every poll snapshot, never
+  re-derived from the current head, and never approved unconfirmed. Every
+  GitHub read is minimized to structural fields (logins, review states,
+  `isResolved`, SHAs) — the arm read via a `--jq` projection, the poll
+  via a selection set that fetches no body fields — so review bodies, PR
+  descriptions, and profile display names never enter context.
+
 
 ### groom-backlog
 
@@ -837,6 +896,7 @@ entry-point section above rather than repeating them here.
 | `shipit` | user or model (direct invocation, on explicit ship intent) | Standalone — land a reviewed PR (not a QRSPI phase) |
 | `pr-open-comments` | user or model (direct invocation) | Standalone — triage unresolved PR review feedback (not a QRSPI phase) |
 | `pr-watch` | user or model (direct invocation) | Standalone — bounded PR review watch loop (not a QRSPI phase) |
+| `pr-approve-watch` | user (direct invocation) | Standalone — reviewer-side watch-and-approve (not a QRSPI phase) |
 | `groom-backlog` | user or model (direct invocation) | Standalone — groom a project backlog (not a QRSPI phase) |
 | `qrspi-workflow` | orchestrator skills | All phases |
 | `artifact-frontmatter` | orchestrator skills; artifact authors (just-in-time via pointers) | All phases — artifact schema |
