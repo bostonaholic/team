@@ -577,18 +577,34 @@ describe("pr-approve-watch skill: argument validation before shell interpolation
     expect(body()).toContain("^[0-9]+$");
   });
 
-  test("a PR URL must match the pinned github.com pull-URL pattern (GitHub identifier charset, capture-grouped)", () => {
+  test("a PR URL must match the pinned github.com pull-URL pattern (GitHub identifier charset)", () => {
     expect(body()).toContain(
-      String.raw`^https://github\.com/([A-Za-z0-9._-]{1,39})/([A-Za-z0-9._-]{1,100})/pull/([0-9]+)$`,
+      String.raw`^https://github\.com/[A-Za-z0-9._-]{1,39}/[A-Za-z0-9._-]{1,100}/pull/[0-9]+$`,
     );
   });
 
-  test("the capture-group binding is shown as a runnable command (BASH_REMATCH)", () => {
+  test("the owner/repo/number binding is shown as a runnable command using parameter expansion", () => {
     const t = body();
     expect(t).toContain('[[ "$ARGUMENTS" =~ $PR_URL_PATTERN ]]');
-    expect(t).toContain('ARG_OWNER="${BASH_REMATCH[1]}"');
-    expect(t).toContain('ARG_REPO="${BASH_REMATCH[2]}"');
-    expect(t).toContain('ARG_NUMBER="${BASH_REMATCH[3]}"');
+    expect(t).toContain('REST="${ARGUMENTS#https://github.com/}"');
+    expect(t).toContain('ARG_OWNER="${REST%%/*}"');
+    expect(t).toContain('ARG_REPO="${REST%%/*}"');
+    expect(t).toContain('ARG_NUMBER="${ARGUMENTS##*/}"');
+  });
+
+  test("the bare-PR-number branch binds $ARG_NUMBER instead of being refused as malformed", () => {
+    const t = body();
+    expect(t).toContain('*[!0-9]*) ARG_NUMBER=\'\'');
+    expect(t).toContain('ARG_NUMBER="$ARGUMENTS"');
+  });
+
+  test("$BASH_REMATCH is never used — zsh matches but leaves it unset, silently binding empty values", () => {
+    const t = body();
+    // Guard: an empty body must fail, not vacuously pass the absence check.
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).not.toContain("${BASH_REMATCH[");
+    // The hazard must stay documented so the binding is not "simplified" back.
+    expect(/zsh[^.]{0,80}leaves\s+`\$BASH_REMATCH`\s+unset/i.test(flat(t))).toBe(true);
   });
 
   test("the permissive [^/]+ owner/repo charset is gone from the accepted pattern", () => {

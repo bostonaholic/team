@@ -69,19 +69,35 @@ point their inputs exist.
 
 - Validate `$ARGUMENTS` before the value reaches any shell command:
   accept only a bare PR number matching `^[0-9]+$` or a PR URL matching
-  the capture-grouped pattern below — GitHub's identifier charset, never
-  `[^/]+`, which admits `$`, backticks, parentheses, and spaces.
-  Anything else is malformed — report it and refuse; never guess. Even a
-  validated value never appears in a shell word (double quotes do not
-  stop `$(...)` command substitution): bind `$ARG_OWNER`, `$ARG_REPO`,
-  and `$ARG_NUMBER` from the match's three capture groups — owner, repo,
-  number, in that order — and the argument string itself reaches no
-  command:
+  the pattern below — GitHub's identifier charset, never `[^/]+`, which
+  admits `$`, backticks, parentheses, and spaces. Anything else is
+  malformed — report it and refuse; never guess. Even a validated value
+  never appears in a shell word (double quotes do not stop `$(...)`
+  command substitution): bind `$ARG_OWNER`, `$ARG_REPO`, and
+  `$ARG_NUMBER` by splitting the matched URL with parameter expansion —
+  owner, repo, number, in that order — and the argument string itself
+  reaches no command. Split with parameter expansion rather than
+  `$BASH_REMATCH`, which is bash-only: zsh (the default macOS shell)
+  matches the same pattern but leaves `$BASH_REMATCH` unset, so a
+  capture-group binding silently yields empty values while the `||`
+  refusal never fires. Every bound value is a substring of a string that
+  already matched the anchored charset, so the split adds no new
+  affordance:
 
   ```bash
-  PR_URL_PATTERN='^https://github\.com/([A-Za-z0-9._-]{1,39})/([A-Za-z0-9._-]{1,100})/pull/([0-9]+)$'
-  [[ "$ARGUMENTS" =~ $PR_URL_PATTERN ]] || { echo "malformed PR argument" >&2; exit 1; }
-  ARG_OWNER="${BASH_REMATCH[1]}"; ARG_REPO="${BASH_REMATCH[2]}"; ARG_NUMBER="${BASH_REMATCH[3]}"
+  PR_URL_PATTERN='^https://github\.com/[A-Za-z0-9._-]{1,39}/[A-Za-z0-9._-]{1,100}/pull/[0-9]+$'
+  case "$ARGUMENTS" in
+    ''|*[!0-9]*) ARG_NUMBER='' ;;               # not a bare PR number
+    *)           ARG_NUMBER="$ARGUMENTS" ;;     # bare number — repo comes from the checkout
+  esac
+  if [ -z "$ARG_NUMBER" ]; then
+    [[ "$ARGUMENTS" =~ $PR_URL_PATTERN ]] || { echo "malformed PR argument" >&2; exit 1; }
+    REST="${ARGUMENTS#https://github.com/}"
+    ARG_OWNER="${REST%%/*}"
+    REST="${REST#*/}"
+    ARG_REPO="${REST%%/*}"
+    ARG_NUMBER="${ARGUMENTS##*/}"
+  fi
   ```
 - If no PR resolves from the argument or the current branch, fail fast
   with a clear message.
@@ -96,8 +112,9 @@ point their inputs exist.
 
 Resolve the PR and the arm-time facts in one call — with a URL argument
 `gh` needs no local checkout. `$ARG_OWNER`, `$ARG_REPO`, and
-`$ARG_NUMBER` are bound from the validated argument's capture groups
-(URL form; with a bare number in a local checkout, drop `--repo`; with
+`$ARG_NUMBER` are bound from the validated argument by the parameter
+expansion above (URL form; with a bare number in a local checkout, both
+`$ARG_OWNER` and `$ARG_REPO` are empty — drop `--repo`; with
 no argument, drop the positional too and `gh` resolves the current
 branch's PR):
 
