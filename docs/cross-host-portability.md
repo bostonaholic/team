@@ -33,7 +33,7 @@ nav_label: portability
 
 ## Current state
 
-Team is a **Claude Code-native plugin**. It ships 13 agents (`agents/*.md`), 31
+Team is a **Claude Code-native plugin**. It ships 13 agents (`agents/*.md`), 51
 skills (`skills/*/SKILL.md` + `registry.json`), and 4 hooks (`hooks/*.mjs`),
 registered through `.claude-plugin/plugin.json`. The orchestrator walks the
 QRSPI phase table (`skills/team/SKILL.md`), persisting state as artifact files
@@ -80,7 +80,7 @@ emits `.gemini/` (settings.json hooks, `agents/*.md`, `skills/*/SKILL.md`, TOML
 commands). A Codex build emits `.codex/` (config.toml/hooks.json, `agents/*.md`,
 `.agents/skills/`).
 The high-churn binding layer is isolated from the stable cores, so a host API
-change touches one shim, not 48 definition files.
+change touches one shim, not 68 definition files.
 
 **Per-project configuration is host-neutral.** Each project Team is configured in
 carries one **`.team/config.json`** at its root — plain JSON, part of the portable
@@ -200,7 +200,7 @@ cross-cutting recency caveat:**
    hand-written per host; either way they are small and isolated.
    - *Why:* the expensive, divergent, **high-churn** surface is exactly the
      bindings (three different manifest formats, three hook schemas, still-moving host APIs),
-     while the **stable, valuable** surface — the 44 agent/skill bodies and 4 hook
+     while the **stable, valuable** surface — the 64 agent/skill bodies and 4 hook
      logic files — is *already portable*. The hybrid boundary lines up with the
      natural portable/non-portable seam, so it minimizes both duplication and
      churn-blast-radius.
@@ -220,7 +220,7 @@ cross-cutting recency caveat:**
    superset of this option's value with less risk.)
 
 3. **Rejected: Per-host maintained adapters (parallel hand-maintained trees).**
-   *Why rejected:* 3× maintenance across 13 agents + 31 skills + 4 hooks, and
+   *Why rejected:* 3× maintenance across 13 agents + 51 skills + 4 hooks, and
    **guaranteed drift** — a fix to an agent body would have to be hand-applied
    three times. It throws away the fact that the bodies are *already portable*.
    Its only advantage (each host fully idiomatic) is largely preserved by the
@@ -250,7 +250,7 @@ cross-cutting recency caveat:**
    - *Why:* it pulls the one irreducibly host-varying value out of the portable
      definitions — the agent `model:` frontmatter is a Claude-specific model name,
      meaningless on Gemini/Codex — and puts it behind a single host-agnostic
-     indirection, so the 44 agent/skill bodies never carry a host-specific model
+     indirection, so the 64 agent/skill bodies never carry a host-specific model
      literal. The per-host shims *read* `.team/config.json`; they never restate it.
 
 ## What #56 and #57 execute against
