@@ -1,6 +1,6 @@
 ---
 title: Architecture
-description: "Team plugin architecture — agents as microservices, the QRSPI pipeline, artifact frontmatter, and phase-inference rules."
+description: "Team plugin architecture: agents as microservices, the QRSPI pipeline, artifact frontmatter, and phase-inference rules."
 audience: [user, developer]
 nav_order: 4
 nav_label: architecture
@@ -9,7 +9,7 @@ nav_label: architecture
 # Team Architecture
 
 > **A deep dive into how Team is built.** Skim it for the mental model, or read
-> it in full to contribute — the high-level pipeline overview lives on the
+> it in full to contribute. The high-level pipeline overview lives on the
 > [home page](index.md).
 >
 > **Source of truth:** the artifacts in `docs/plans/<id>/*.md` and the
@@ -17,18 +17,18 @@ nav_label: architecture
 
 ## Contents
 
-- [1. Design Philosophy](#1-design-philosophy)
-- [2. Artifact Layout & Frontmatter](#2-artifact-layout--frontmatter)
+- [1. Design philosophy](#1-design-philosophy)
+- [2. Artifact layout & frontmatter](#2-artifact-layout--frontmatter)
 - [3. Pipeline (QRSPI)](#3-pipeline-qrspi)
-- [4. Agent Roster](#4-agent-roster)
-- [5. Phase-Table Orchestrator](#5-phase-table-orchestrator)
+- [4. Agent roster](#4-agent-roster)
+- [5. Phase-table orchestrator](#5-phase-table-orchestrator)
 - [6. Skills](#6-skills)
 - [7. Hooks](#7-hooks)
-- [8. Behavioral Evals](#8-behavioral-evals)
-- [9. State Management](#9-state-management)
-- [10. Nested Sub-Agents](#10-nested-sub-agents)
+- [8. Behavioral evals](#8-behavioral-evals)
+- [9. State management](#9-state-management)
+- [10. Nested sub-agents](#10-nested-sub-agents)
 
-## 1. Design Philosophy
+## 1. Design philosophy
 
 Agents are **decoupled microservices**. Each agent consumes a predecessor
 artifact on disk, does work, and produces its own artifact under
@@ -53,32 +53,32 @@ seeds and updates a TodoWrite ledger, and runs the gates.
   files in `docs/plans/<id>/`. These survive context-window compaction,
   can be re-read by any agent in any session, and live in git history.
 - **Research isolation.** The researcher and file-finder never receive
-  the user's original task description. Enforcement is two-layer:
-  *structural* — the orchestrator only passes the `questions.md` path to
-  the research agents; *procedural* — the research agents' system prompts
+  the user's original task description. Enforcement is two-layer.
+  *Structural*: the orchestrator only passes the `questions.md` path to
+  the research agents. *Procedural*: the research agents' system prompts
   forbid reading `task.md`.
 - **No mid-run human gates.** The design (~200-line alignment doc) is
   gated by an adversarial design review: a fresh-context subagent audits
-  it and its verdict is recorded to `design-review-<n>.md` — the
+  it and its verdict is recorded to `design-review-<n>.md`, so the
   artifacts are self-describing. The Structure (~2-page vertical-slice
   breakdown) and the Plan are not gated; they advance autonomously. The
   human's checkpoint is the PR review at the end.
 - **Hooks enforce discipline mechanically.** LLMs forget instructions
   ~20% of the time; hooks are deterministic.
 
-**Trust boundary.** The single human checkpoint — the end-of-run PR
-review — is a *code* checkpoint, and it happens **after** the run has
+**Trust boundary.** The single human checkpoint, the end-of-run PR
+review, is a *code* checkpoint, and it happens **after** the run has
 already executed. Local Bash execution (implementer, verifier, hooks),
 branch creation, pushes to remotes, and any multi-repo worktree effects
 all occur before a human sees the PR. The PR review contains the diff,
 the design's recorded assumptions, and the deferred `## Review notes`;
 it does **not** contain the run's local side effects. The pipeline also
-assumes that repository content the researcher reads is trusted — a
+assumes that repository content the researcher reads is trusted: a
 repo that accepts untrusted contributions feeds untrusted text into
 agent context. Merging remains human-only: nothing in the pipeline
 marks a PR ready for review or merges it.
 
-## 2. Artifact Layout & Frontmatter
+## 2. Artifact layout & frontmatter
 
 > **Runtime canon:** the schema below is carried for agents by
 > `skills/artifact-frontmatter/SKILL.md`; this section is the
@@ -108,12 +108,12 @@ Per-phase additions:
 |-----------|-------------------------------------------------------------------------|
 | task      | `ticketId: <id>` (or `null`)                                            |
 | questions | (none)                                                                  |
-| prd       | (none — not gated; written conditionally by the questioner)            |
-| repos     | (none — written conditionally in multi-repo mode)                       |
+| prd       | (none; not gated, written conditionally by the questioner)              |
+| repos     | (none; written conditionally in multi-repo mode)                        |
 | research  | (none)                                                                  |
 | design    | `revision: 0`                                                           |
-| structure | (none — not gated; advances to PLAN once it exists)                     |
-| plan      | (none — derived mechanically from the structure)                        |
+| structure | (none; not gated, advances to PLAN once it exists)                      |
+| plan      | (none; derived mechanically from the structure)                         |
 
 **Design-review record** (`design-review-<n>.md`): each review round the
 orchestrator writes `docs/plans/<id>/design-review-<n>.md` (`<n>` 1-based
@@ -152,7 +152,7 @@ pre-IMPLEMENT.
 One non-phase sibling output exists: `docs/plans/<id>/screenshots/` (PNGs
 plus `manifest.md`), written by ux-reviewer during IMPLEMENT for UI-touching
 changes and consumed by team-pr. Discovery keys only on the six `PHASE_FILES`
-names, so this directory is invisible to hooks and skills — IMPLEMENT still
+names, so this directory is invisible to hooks and skills, and IMPLEMENT still
 declares no phase artifact. User-facing setup (the one-time GitHub sign-in
 that enables inline upload) is documented in the README's
 ["Screenshots in PRs"](../README.md#screenshots-in-prs) section.
@@ -169,7 +169,7 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 ### Phase 1: Worktree
 
 **Action:** orchestrator-emit (the leading phase)
-**Predecessor:** (none — description in `$ARGUMENTS`)
+**Predecessor:** (none; description in `$ARGUMENTS`)
 
 Before QUESTION, the orchestrator creates the home worktree on branch
 `<id>` off `origin/HEAD` using Claude Code's native worktree support, and
@@ -186,7 +186,7 @@ dispatch (the main session does not `cd`).
 QUESTION, one phase after WORKTREE (or by the design-author at DESIGN
 when the questioner missed the multi-repo signals), so only the home
 worktree is created here. Secondary worktrees are created **after the
-design review**, one per listed repo — each repo path passing the
+design review**, one per listed repo, and each repo path must pass the
 containment check (realpath a direct child of the home repo's parent
 directory) first:
 
@@ -203,7 +203,7 @@ repos' worktrees do not duplicate the artifacts. See
 
 **Fallback:** if home-worktree creation fails (shallow clone, certain CI
 systems, permissions), the orchestrator reports it and falls back to
-in-place for the entire run — `docs/plans/<id>/` lives at the home-repo
+in-place for the entire run: `docs/plans/<id>/` lives at the home-repo
 root and the threaded path is the home-repo root.
 
 ### Phase 2: Question
@@ -233,8 +233,8 @@ research artifact (with the required frontmatter).
 each as an auditable assumption)
 **Predecessor:** `research.md`
 **Artifact:** `docs/plans/<id>/design.md`
-**Gate:** REVIEW — the orchestrator dispatches a fresh-context,
-read-only `Explore` subagent (no Write/Edit tools — the reviewer cannot
+**Gate:** REVIEW. The orchestrator dispatches a fresh-context,
+read-only `Explore` subagent (no Write/Edit tools, so the reviewer cannot
 touch the artifacts it judges) with the `## Review brief` from
 `skills/eng-design-doc-review/SKILL.md` and records the verdict to
 `design-review-<n>.md`. APPROVE/COMMENT advance; on REQUEST CHANGES the
@@ -246,7 +246,7 @@ agent re-drafts with the findings verbatim and increments `revision`
 **Agent:** `structure-planner`
 **Predecessor:** `design.md` + passing `design-review-<n>.md`
 **Artifact:** `docs/plans/<id>/structure.md`
-**Gate:** NONE — autonomous. Once `structure.md` exists the pipeline
+**Gate:** NONE (autonomous). Once `structure.md` exists the pipeline
 advances to PLAN.
 
 ### Phase 6: Plan
@@ -260,18 +260,18 @@ No gate. The plan is mechanically derived from the structure.
 ### Phase 7: Implement
 
 **Sub-pipeline:**
-1. **Test-first** — `test-architect` writes failing acceptance tests.
-2. **Mechanical gate** — orchestrator runs the suite; all tests must
+1. **Test-first.** `test-architect` writes failing acceptance tests.
+2. **Mechanical gate.** The orchestrator runs the suite; all tests must
    fail with assertion errors, not crashes.
-3. **Slice execution** — `implementer` works through the plan one slice
+3. **Slice execution.** `implementer` works through the plan one slice
    at a time, committing each atomically.
-4. **Code review** — 5 reviewers in parallel: `code-reviewer`,
+4. **Code review.** 5 reviewers in parallel: `code-reviewer`,
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
-5. **Aggregate gate** — orchestrator sorts every finding into a severity
+5. **Aggregate gate.** The orchestrator sorts every finding into a severity
    tier (**Blocking / Major / Minor-and-below**; see
    `skills/review-severity-tiers/SKILL.md`). While any Blocking or Major finding
    remains, it dispatches the implementer to fix the typed failure
-   class and re-runs all 5 reviewers — automatically, never consulting
+   class and re-runs all 5 reviewers automatically, never consulting
    the user (the *no-consult rule*). Cap at 5 rounds; at the cap,
    terminal halt. Once Blocking and Major are clean, any remaining
    Minor-and-below findings are recorded in the PR body's
@@ -281,7 +281,7 @@ The orchestrator tracks the round count by appending "Review round N"
 items to the TodoWrite ledger.
 
 **Recovery after a terminal halt** (either cap): a human addresses the
-unresolved findings by hand — editing the design or the code — and
+unresolved findings by hand (editing the design or the code) and
 re-invokes the same `/team-*` command bare. The aggregate round counter
 is session-scoped (TodoWrite) and starts fresh on re-invocation; the
 design `revision` counter persists in `design.md` frontmatter and is
@@ -294,18 +294,18 @@ hand-lowered when the revision budget should be restored.
 
 Update CHANGELOG.md (filter for user-facing commits since last release),
 push the branch and open a draft PR automatically (`gh pr create
---draft` — the PR phase never waits for approval),
+--draft`; the PR phase never waits for approval),
 and surface the tracking ticket (if `task.md` carries `ticketId`). When
 a capture manifest exists (`docs/plans/<id>/screenshots/`, see the
 artifact-layout note in section 2), the PR body also gets a
 `## Screenshots` section populated by uploading the PNGs through
 GitHub's user-attachments pipeline. The worktree stays in place after
-the PR opens — teardown is deferred until the PR merges or the user
+the PR opens. Teardown is deferred until the PR merges or the user
 asks, so the branch remains available for iteration. Completion points
 at the standalone `/pr-watch` utility for watching the PR once it is
 ready for review.
 
-## 4. Agent Roster
+## 4. Agent roster
 
 13 specialist agents, organized by phase:
 
@@ -338,22 +338,22 @@ during the suspension, complex work ran on `opus` (Opus 4.8), Fable's
 documented fallback target. Access has been restored, and the
 complex-work agents now run on `fable`.
 
-- **`fable` — complex work:** `researcher`, `design-author`,
+- **`fable` (complex work):** `researcher`, `design-author`,
   `structure-planner`, `planner`, `test-architect`, `implementer`, and
   `code-reviewer`.
-- **`opus` — security review:** `security-reviewer` stays on `opus`
+- **`opus` (security review):** `security-reviewer` stays on `opus`
   **permanently**, not as a fallback: Fable 5's cybersecurity safety
   classifiers flag security-review content, and in non-interactive
   subagent contexts a flagged request ends the turn with a refusal
   instead of falling back.
-- **`sonnet` — bounded single-pass judgment:** `questioner`,
+- **`sonnet` (bounded single-pass judgment):** `questioner`,
   `ux-reviewer`, `technical-writer`.
-- **`haiku` — mechanical checks:** `file-finder`, `verifier`.
+- **`haiku` (mechanical checks):** `file-finder`, `verifier`.
 
 Notes:
 
 - **What the `fable` agents require of plugin users:** Claude Code
-  ≥ v2.1.170 and Fable access — Fable 5 is not available under zero
+  ≥ v2.1.170 and Fable access. Fable 5 is not available under zero
   data retention (30-day retention is required), and on
   Bedrock/Vertex/Foundry `ANTHROPIC_DEFAULT_FABLE_MODEL` must be
   pinned. Users without access should override to `opus` (see the
@@ -363,27 +363,27 @@ Notes:
   Fable 5's context window is 1M by default, and Opus 4.8 always runs
   with the 1M window on the Anthropic API; Max/Team/Enterprise plans
   include the 1M upgrade with the subscription (Pro degrades
-  gracefully to 200K) — so these agents need no `[1m]` suffix. The
+  gracefully to 200K), so these agents need no `[1m]` suffix. The
   sonnet agents stay at 200K (bounded single-pass work, nowhere near
   the ceiling); haiku does not support 1M.
 - Users can override any agent's model with `CLAUDE_CODE_SUBAGENT_MODEL`
   (applies to all subagents), or copy an agent file into
   `.claude/agents/` with a different `model:`.
 
-- Four agents — `researcher`, `implementer`, `code-reviewer`,
-  `security-reviewer` — additionally hold the `Agent` tool and may spawn
-  read-only nested sub-agents. See [10. Nested Sub-Agents](#10-nested-sub-agents).
+- Four agents (`researcher`, `implementer`, `code-reviewer`,
+  `security-reviewer`) additionally hold the `Agent` tool and may spawn
+  read-only nested sub-agents. See [10. Nested sub-agents](#10-nested-sub-agents).
 
 ### Effort tiering
 
 Effort tiering mirrors the model tiers: `low` (mechanical),
-`medium`/`high` (judgment), `xhigh` (strategic artifact authors —
+`medium`/`high` (judgment), `xhigh` (strategic artifact authors:
 `design-author` and `structure-planner`, whose artifacts set the
 direction everything downstream inherits).
-Methodology skills carry no `effort` — they inherit from the loading
+Methodology skills carry no `effort`; they inherit from the loading
 agent.
 
-## 5. Phase-Table Orchestrator
+## 5. Phase-table orchestrator
 
 The orchestrator (the main Claude Code session) drives `/team` by
 walking the phase table in `skills/team/SKILL.md`. Pseudocode:
@@ -425,29 +425,29 @@ frontmatter (Claude Code [skills frontmatter](https://code.claude.com/docs/en/sk
 that documents the expected `$ARGUMENTS` shape.
 
 Each downstream skill (`team-research` and beyond) treats `$ARGUMENTS` as
-an artifact directory — typically the path printed by the previous
+an artifact directory, typically the path printed by the previous
 phase's completion message. For the 8 directory-consuming skills
 (`team-research`, `team-design`, `team-structure`, `team-plan`,
 `team-worktree`, `team-implement`, `team-pr`, `eng-design-doc-review`)
 the `docs/plans/<id>/` argument is **optional**: each resolves the
-directory through a three-tier chain — explicit `$ARGUMENTS` →
+directory through a three-tier chain: explicit `$ARGUMENTS` →
 newest-mtime convention discovery (filtering by `ID_RE` / `PHASE_FILES`,
 ported from `hooks/session-start-recover.mjs` as a POSIX ERE
 translation, and the skill's required predecessor artifact) →
-`AskUserQuestion` (called by the orchestrator/entry-point skill itself —
+`AskUserQuestion` (called by the orchestrator/entry-point skill itself,
 never by a subagent; subagents never pause for user
 input). Standalone modes still exist: a partial skill invoked
 with no resolvable directory (or with a free-form description) bootstraps
 the missing upstream artifacts inline rather than hard-erroring.
 
-**Discovery duplication — design rationale.** Each archetype-A skill
+**Discovery duplication: design rationale.** Each archetype-A skill
 embeds the three-tier resolver as a single self-contained bash block
 rather than calling a shared script. Agent threads reset their cwd
 between Bash calls, so the block cannot rely on any shared shell state
 and must stand alone in one invocation. The ~6 load-bearing lines
 (`ID_RE`, `PHASE_FILES`, root literal, predecessor filter) are therefore
 duplicated verbatim across the 8 directory-consuming skills by deliberate
-decision — no shared runtime helper was added, and the
+decision. No shared runtime helper was added, and the
 `check-discovery-consistency.sh` gate enforces byte-identity so the
 copies cannot drift. A shared `discover-topic.sh` that could also dedup
 the two hooks' `findActiveTopic` is a recorded future consolidation; it
@@ -468,7 +468,7 @@ Because they are reference material rather than user actions, methodology
 skills set `user-invocable: false` in their frontmatter. This keeps them
 out of the `/` slash-command menu (a `/qrspi-workflow` command is
 meaningless to a user) while leaving them fully loadable by their two
-mechanisms above — neither the `skills:` preload nor a by-path load is
+mechanisms above. Neither the `skills:` preload nor a by-path load is
 affected by the field, which governs only menu visibility. The model can
 still auto-load a methodology skill when relevant, so `disable-model-invocation`
 is deliberately **not** set. When adding a new methodology skill, set
@@ -484,39 +484,39 @@ by the `code-reviewer`, `security-reviewer`, `ux-reviewer`, and
 plausibly run it directly, even if agents also compose it.
 
 (This is separate from the entry-point skills, which are user-invocable by
-definition. Some of those — e.g. `team-worktree`, `team-pr` — are also
+definition. Some of those, e.g. `team-worktree` and `team-pr`, are also
 *referenced by path* from `team/SKILL.md`, but those are procedural
 cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. `code-review` is the only skill loaded as composed
 methodology that is also a user command.)
 
-For the full per-skill reference — all 51 skills, their arguments,
-consumers, and behaviors — see [skills.md](skills.md).
+For the full per-skill reference (all 51 skills, their arguments,
+consumers, and behaviors), see [skills.md](skills.md).
 
-### Design Guidelines
+### Design guidelines
 
 1. **Methodology skill load limit:** Soft limit of 3 methodology skills
    per agent invocation. At ~143 lines average per skill, 3 skills add
    ~430 lines (~6K-10K tokens, under 6% of 200K context). A fourth
    skill signals the agent's responsibility may be too broad. This is a
    design convention, not a hard constraint. An agent's own extracted
-   procedure skill does not count toward the soft limit — it replaces
+   procedure skill does not count toward the soft limit: it replaces
    former inline body content 1:1, so it adds no net context.
 
-2. **Extraction threshold — capability vs. fragment:** Content that is
-   an **independently useful capability** — coherent, self-contained,
-   and plausibly loaded on demand by the model or a future consumer —
+2. **Extraction threshold: capability vs. fragment.** Content that is
+   an **independently useful capability** (coherent, self-contained,
+   and plausibly loaded on demand by the model or a future consumer)
    earns its own skill **regardless of consumer count**. Claude Code
    preloads only each skill's name and description; the body loads
    just-in-time when invoked. An unused small skill therefore costs
    almost nothing, while embedding its content into a consumer
    forecloses just-in-time loading for everyone else. Content that is
-   only meaningful inside one consumer's procedure — a
-   **procedure fragment** — stays inline in that consumer.
+   only meaningful inside one consumer's procedure, a
+   **procedure fragment**, stays inline in that consumer.
 
 ## 7. Hooks
 
-Runtime hooks (`hooks/` — distributed with the plugin):
+Runtime hooks (`hooks/`, distributed with the plugin):
 
 | Hook                       | Event                    | Purpose                                                    |
 |----------------------------|--------------------------|------------------------------------------------------------|
@@ -533,34 +533,34 @@ context message naming the phase, `<id>`, and the suggested next
 `/team-*` command. Both are stateless, exit 0 on any error, and return
 within the 5000ms hook budget.
 
-Development hook (`.claude/hooks/` — not distributed):
+Development hook (`.claude/hooks/`, not distributed):
 
 | Hook                     | Event                    | Purpose                                                              |
 |--------------------------|--------------------------|----------------------------------------------------------------------|
 | `check-registry-sync.mjs`| PostToolUse(Write\|Edit) | Verify the agents/ directory and registry.json agree by agent name   |
 
-Development scripts (`.claude/scripts/` — not distributed) house dev-only
+Development scripts (`.claude/scripts/`, not distributed) house dev-only
 acceptance tooling run by plugin developers. `check-discovery-consistency.sh`
 is the committed consistency gate for the input-discovery feature: it asserts
 every archetype-A skill carries the discovery block, the load-bearing fragments
 (`ID_RE`, `PHASE_FILES`, `docs/plans/` root) stay byte-identical
 to canon, and the research-isolation invariant holds.
 
-## 8. Behavioral Evals
+## 8. Behavioral evals
 
 The behavioral regression harness defends pipeline agents against silent
 behavior drift across model upgrades. The implementation is TypeScript +
 Bun: harness code in `tests/`, fixtures/rubrics/results in `evals/`.
-Plugin-developer tooling — not distributed with the plugin. Three tiers:
+Plugin-developer tooling, not distributed with the plugin. Three tiers:
 
-- **Gate** (free) — `bun test`. Static schema validation on every
+- **Gate** (free): `bun test`. Static schema validation on every
   fixture and rubric plus unit tests for the harness helpers. No model
   calls, no `EVALS_ANTHROPIC_API_KEY`. Runs in CI on every PR.
-- **E2E** (paid) — `bun run test:evals` (needs `EVALS_ANTHROPIC_API_KEY`). Spawns `claude -p --output-format
+- **E2E** (paid): `bun run test:evals` (needs `EVALS_ANTHROPIC_API_KEY`). Spawns `claude -p --output-format
   stream-json` against a fixture, parses the NDJSON transcript, persists
   a per-case result JSON with timing axes (`firstResponseMs`,
   `maxInterTurnMs`).
-- **LLM-judge** (paid) — deterministic-first regex / ground-truth checks
+- **LLM-judge** (paid): deterministic-first regex / ground-truth checks
   run cheap and gate the LLM call. Haiku for narrow rubrics, Sonnet for
   nuanced ones. Untrusted agent output is wrapped in
   `<<<UNTRUSTED_OUTPUT>>>` delimiters before reaching the judge.
@@ -576,29 +576,29 @@ env-var knobs, and the rerun-on-base blame protocol.
 (no secrets, ~7s); `periodic-evals.yml` runs the live-agent regression
 check on a weekly cron (Monday 06:00 UTC) with `EVALS_ANTHROPIC_API_KEY`.
 That key is an **environment secret** scoped to the `evals` GitHub
-Environment — a one-time Settings → Environments setup (create the `evals`
+Environment, a one-time Settings → Environments setup (create the `evals`
 environment, attach the secret, optionally set required reviewers / a
 main-only branch restriction). If the PR-eval workflow (`pr-evals.yml`) is
 active, the `evals` environment must **not** restrict deployment branches to
-`main` — PR head/merge refs are not `main`, so a main-only policy blocks the
+`main`. PR head/merge refs are not `main`, so a main-only policy blocks the
 secret on PRs and every gated eval fails at the deploy gate. Remove it via
 Settings → Environments → evals → Deployment branches → "No restriction", or
 `gh api -X DELETE repos/bostonaholic/team/environments/evals/deployment-branch-policies/<id>`.
 The job declares `environment: evals` and
 **fails closed** if the environment is absent: the secret simply resolves
 to empty, so no token spend leaks. `pull_request_target` is hard-banned for
-this and any secret-consuming / `claude`-spawning job — it runs in
+this and any secret-consuming / `claude`-spawning job, because it runs in
 base-repo context with secrets available, a base-repo-context exfiltration
-vector — and the ban is enforced by a static tripwire in
+vector. The ban is enforced by a static tripwire in
 `tests/static-gate.test.ts`. Live jobs that run on `pull_request` events
 additionally gate on PR-author trust: only OWNER/MEMBER/COLLABORATOR authors
 may spend tokens, so untrusted PRs (forks, Dependabot, first-time
 contributors) never trigger paid execution.
 
 These three tiers are the paid frontier of Team's broader six-layer testing
-model — see [Testing](testing.md) for where every check belongs.
+model. See [Testing](testing.md) for where every check belongs.
 
-## 9. State Management
+## 9. State management
 
 **Primary state:** the artifacts in `docs/plans/<id>/*.md`. Each
 artifact's YAML frontmatter is the source of truth for "did this phase
@@ -608,7 +608,7 @@ finish?" and "did the design review pass?"
 seeds the ledger at the start of `/team`, marks each item `in_progress`
 when dispatching, and `completed` when the artifact lands. Any `/team-*`
 command rebuilds the ledger by scanning artifacts on entry, so an
-interrupted run can be resumed by re-invoking any of them bare — discovery
+interrupted run can be resumed by re-invoking any of them bare: discovery
 auto-resolves the artifact directory (an explicit `docs/plans/<id>/` is still
 accepted).
 
@@ -622,18 +622,18 @@ directories for the active topic and injects a 4-line anchor (phase,
 the same for new sessions.
 
 **Artifact persistence:** during a run, files in `docs/plans/<id>/` live on
-disk in the worktree's working tree and **the pipeline never commits them** —
-that discipline is what lets the commit-based IMPLEMENT signal (≥1 commit on
+disk in the worktree's working tree and **the pipeline never commits them**.
+That discipline is what lets the commit-based IMPLEMENT signal (≥1 commit on
 `<id>` since the default-branch merge-base) distinguish "implementation has
 begun" from "artifacts merely exist": any commit on `<id>` is therefore a
 code/slice commit, never an artifact commit. (A finished plan directory may
-later be committed in its feature PR — that is outside the run.) Persistence
+later be committed in its feature PR, which is outside the run.) Persistence
 across sessions, compaction events, and context resets comes from the
 worktree's files surviving, not from git history. They remain the durable
 communication protocol between agents and the source of truth for "did phase
 N finish?"
 
-## 10. Nested Sub-Agents
+## 10. Nested sub-agents
 
 Claude Code v2.1.172 lets sub-agents spawn their own sub-agents (up to
 5 levels deep). The plugin uses this capability in exactly two patterns,
@@ -643,12 +643,12 @@ both governed by `skills/nested-agents/SKILL.md`:
   `Explore` / `team:file-finder` helpers that absorb bulk reading the
   parent would otherwise hold in its own context without ever
   referencing it again. The researcher's scouts inherit the research
-  isolation invariant — scout prompts are built only from verbatim
+  isolation invariant: scout prompts are built only from verbatim
   `questions.md` text and `repos.md` paths.
 - **Skeptic verification** (`code-reviewer`, `security-reviewer`): each
   hard-gate finding (Blocking / CRITICAL / HIGH) is handed to a fresh
-  `general-purpose` sub-agent as a neutral, falsifiable claim — never
-  the reviewer's verdict or severity — with instructions to refute it.
+  `general-purpose` sub-agent as a neutral, falsifiable claim (never
+  the reviewer's verdict or severity) with instructions to refute it.
   Default-keep: a finding is dropped only on an evidence-backed
   refutation the reviewer verifies itself. A false hard-gate finding
   costs an entire review round (implementer re-dispatch + all 5
@@ -658,23 +658,23 @@ both governed by `skills/nested-agents/SKILL.md`:
 
 - The `Agent` tool is granted to exactly four agents: `researcher`,
   `implementer`, `code-reviewer`, `security-reviewer`. The allowlist is
-  pinned by `tests/nested-agents.test.ts` — any other agent gaining the
+  pinned by `tests/nested-agents.test.ts`, so any other agent gaining the
   tool must be a deliberate decision that updates the tripwire.
 - Nested helpers are read-only, never write under `docs/plans/`, and
   never pause for user input (see `skills/nested-agents/SKILL.md`).
 - Depth budget: pipeline agents sit at depth 2 of 5 and may spawn at
   most one more level.
 - **Version-gated.** Nesting requires Claude Code >= 2.1.172. The
-  universal gate is `Agent`-tool presence — the platform withholds the
+  universal gate is `Agent`-tool presence: the platform withholds the
   tool from sub-agents below that floor, so an agent that lacks `Agent`
-  (or any read-only agent like `researcher` that has no `Bash`) simply
-  works inline. Agents that also hold `Bash` additionally run the bundled
+  (or any read-only agent like `researcher` that has no `Bash`) works
+  inline. Agents that also hold `Bash` additionally run the bundled
   deterministic check `skills/nested-agents/supports-nesting.mjs
   "$(claude --version)"` (pure comparison core unit-tested at L1; skill
   contract and version floor pinned by `tests/nested-agents.test.ts`).
-  The check is fail-closed — an older release, unrecognizable version
+  The check is fail-closed: an older release, unrecognizable version
   output, or an environment where it cannot run all resolve to
-  "unsupported," routing the agent to its inline path.
+  "unsupported," which routes the agent to its inline path.
 - **Optimization, never a dependency.** Every nested-dispatch section is
   optional with a mandatory inline fallback. On Claude Code versions
   without nesting, the plugin degrades to exactly its previous behavior.
@@ -684,7 +684,7 @@ both governed by `skills/nested-agents/SKILL.md`:
 ### Future work (ship-later)
 
 Recorded here so the next capability step is deliberate, not improvised.
-Prerequisite for all items: nesting survives 2–3 Claude Code releases
+Prerequisite for all items: nesting survives 2-3 Claude Code releases
 without breaking changes, parallel dispatch semantics for nested
 children are confirmed, and the depth cap is stable.
 
@@ -708,8 +708,8 @@ children are confirmed, and the depth cap is stable.
 
 ## See also
 
-- **[Skills](skills.md)** — the full per-skill reference for all 51 skills.
-- **[Testing](testing.md)** — the six-layer test harness and which layer each check belongs at.
-- **[Vision](vision.md)** — the loop-driven end state this design builds toward.
-- **[Ethos](ethos.md)** — the principles behind the pipeline.
-- **[Overview](index.md)** — the landing page and pipeline overview.
+- **[Skills](skills.md)**: the full per-skill reference for all 51 skills.
+- **[Testing](testing.md)**: the six-layer test harness and which layer each check belongs at.
+- **[Vision](vision.md)**: the loop-driven end state this design builds toward.
+- **[Ethos](ethos.md)**: the principles behind the pipeline.
+- **[Overview](index.md)**: the landing page and pipeline overview.

@@ -1,6 +1,6 @@
 ---
 title: Project Tracking
-description: "How work on the Team plugin is tracked — the GitHub Project board is the single source of truth for features, bugs, and chores, moved across a Backlog → Ready → In progress → In review → Done kanban."
+description: "How work on the Team plugin is tracked. The GitHub Project board is the single source of truth for features, bugs, and chores, moved across a Backlog → Ready → In progress → In review → Done kanban."
 audience: [developer]
 nav_order: 7
 nav_label: project-tracking
@@ -9,11 +9,11 @@ nav_label: project-tracking
 # Project Tracking
 
 > **Audience:** Plugin maintainers and contributors. End users do not need
-> this — it describes how work on the Team plugin *itself* is tracked.
+> this. It describes how work on the Team plugin *itself* is tracked.
 
 All work on the Team plugin is tracked on a single GitHub Project board:
 
-**→ [🤖 Team — Project Board](https://github.com/users/bostonaholic/projects/5/views/1)**
+**→ [🤖 Team Project Board](https://github.com/users/bostonaholic/projects/5/views/1)**
 
 This board is the **single source of truth** for what is planned, in
 flight, and done. Features, bugs, and chores all live here. If a piece of
@@ -33,14 +33,14 @@ carry a few fields beyond title:
 | Field | Purpose |
 |-------|---------|
 | **Status** | Which kanban column the card is in (see below). |
-| **Priority** | `P0` (drop everything) … `P2` (eventually). **Required on every card**; every `bug` is `P0` — see [Creating work](#creating-work). |
+| **Priority** | `P0` (drop everything) … `P2` (eventually). **Required on every card**; every `bug` is `P0` (see [Creating work](#creating-work)). |
 | **Size** | Rough effort estimate. |
-| **Labels** | What kind of work this is and how it should be handled — see [Labels](#labels). |
+| **Labels** | What kind of work this is and how it should be handled (see [Labels](#labels)). |
 | **Linked pull requests** | The PR(s) that implement the card. |
 
 ## Creating work
 
-Create a card for every distinct piece of work — one card per feature, bug,
+Create a card for every distinct piece of work: one card per feature, bug,
 or chore.
 
 1. **Open an issue** in `bostonaholic/team` describing the work. Use a clear,
@@ -56,24 +56,24 @@ or chore.
    gh issue edit <number> --repo bostonaholic/team \
      --add-project "🤖 Team"
    ```
-   Then set **Status**, **Priority** (**required** — see below), **Size**, and its
+   Then set **Status**, **Priority** (**required**, see below), **Size**, and its
    **type label** (see [Labels](#labels)) from the board or the issue sidebar.
-3. **Quick capture** — for an idea you have not fully shaped yet, add a
+3. **Quick capture.** For an idea you have not fully shaped yet, add a
    *draft item* directly on the board (the "+ Add item" row). Convert it to a
    real issue before anyone starts work on it.
 
-> **Rule — every issue carries a `Priority`.** A card is not fully created until it
-> has a `P0`/`P1`/`P2` set — an issue with no priority is untriaged. Set it when you
-> file the issue (or the moment you add it to the board); don't leave it blank.
+> **Rule: every issue carries a `Priority`.** A card is not fully created until it
+> has a `P0`/`P1`/`P2` set, and an issue with no priority is untriaged. Set it when
+> you file the issue (or the moment you add it to the board); don't leave it blank.
 
-> **Rule — every `bug` is `P0`.** When you file or triage a bug, set its
-> **Priority** to `P0`. Bugs take precedence over features and enhancements —
+> **Rule: every `bug` is `P0`.** When you file or triage a bug, set its
+> **Priority** to `P0`. Bugs take precedence over features and enhancements;
 > there is no lower-priority bug. (A defect that genuinely isn't worth dropping
 > other work for is usually an `enhancement`, not a `bug`.)
 
 ## Labels
 
-Labels classify *what a card is* and *how it should be handled* — the kanban
+Labels classify *what a card is* and *how it should be handled*. The kanban
 column already tracks *where it is*, so labels never duplicate status. Reuse
 the existing labels; do not invent new ones casually.
 
@@ -83,7 +83,7 @@ follows to decide whether the label applies. They fall into four groups: pick
 **exactly one Type label** for every issue, then add other labels only when
 their "Assign when" rule is satisfied.
 
-### Type — what the work is (assign exactly one)
+### Type: what the work is (assign exactly one)
 
 Every issue gets exactly one type label. This is the primary axis for filtering
 the board. If none of the three fits, the item is almost certainly a
@@ -91,39 +91,39 @@ the board. If none of the three fits, the item is almost certainly a
 
 | Label | Definition | Assign when |
 |-------|------------|-------------|
-| `bug` | Something isn't working | Existing behavior is broken, incorrect, or crashes — a defect in shipped functionality. Reproduction steps belong in the issue. **Always set Priority `P0`** (see [Creating work](#creating-work)). |
-| `enhancement` | New feature or request | New capability, or an improvement to existing behavior that works but should do more or do it better. **This is the "feature" label — there is no separate `feature` label.** |
+| `bug` | Something isn't working | Existing behavior is broken, incorrect, or crashes: a defect in shipped functionality. Reproduction steps belong in the issue. **Always set Priority `P0`** (see [Creating work](#creating-work)). |
+| `enhancement` | New feature or request | New capability, or an improvement to existing behavior that works but should do more or do it better. **This is the "feature" label; there is no separate `feature` label.** |
 | `documentation` | Improvements or additions to documentation | The change is to docs only (`README`, `docs/`, `AGENTS.md`, code comments) with no behavior change. If code *and* docs change, use the code label (`bug`/`enhancement`), not this. |
 
-### Resolution — why a card was closed (assign only while closing)
+### Resolution: why a card was closed (assign only while closing)
 
 These are *close reasons*, not work to be done. Assign one **at the moment you
 close the issue**; never leave a resolution label on an open card. They do not
-replace the Type label — an invalid bug keeps `bug` and gains `invalid`.
+replace the Type label: an invalid bug keeps `bug` and gains `invalid`.
 
 | Label | Definition | Assign when |
 |-------|------------|-------------|
 | `duplicate` | This issue or pull request already exists | Closing because the same item is already tracked elsewhere. Link the original in a comment. |
-| `invalid` | This doesn't seem right | Closing because the report doesn't hold up — not reproducible, misfiled, or out of scope for this repo. |
+| `invalid` | This doesn't seem right | Closing because the report doesn't hold up: not reproducible, misfiled, or out of scope for this repo. |
 | `wontfix` | This will not be worked on | Closing by deliberate decision not to act, even though the item may be valid. State the reasoning in a comment. |
 
-### Discussion — not committed work
+### Discussion: not committed work
 
 | Label | Definition | Assign when |
 |-------|------------|-------------|
 | `question` | Further information is requested | The item is a request for information or a discussion, not a unit of work. Keep it in **Backlog** (or close once answered); never pull a `question` into *In progress*. Drop it once it converts into a `bug`/`enhancement`. |
 
-### Contributor signals — additive, layered on a Type label
+### Contributor signals: additive, layered on a Type label
 
 These help humans find work; they never replace a Type label and an agent
 rarely needs to apply them on its own.
 
 | Label | Definition | Assign when |
 |-------|------------|-------------|
-| `good first issue` | Good for newcomers | The work is self-contained, well-scoped, and needs little repo context — a safe entry point for a first-time contributor. |
+| `good first issue` | Good for newcomers | The work is self-contained, well-scoped, and needs little repo context: a safe entry point for a first-time contributor. |
 | `help wanted` | Extra attention is needed | Maintainers are explicitly inviting someone else to pick this up. |
 
-### Area — mostly automated
+### Area: mostly automated
 
 These mark *what part of the codebase* a change touches. Dependabot applies
 them automatically to the PRs it opens; an agent should hand-apply one only
@@ -136,21 +136,21 @@ when a PR genuinely fits the area and the bot missed it.
 
 ### Decision procedure for an agent
 
-1. **Pick the one Type label** — `bug` if existing behavior is broken,
-   `enhancement` if it's new/better capability, `documentation` if it's docs
+1. **Pick the one Type label.** Use `bug` if existing behavior is broken,
+   `enhancement` if it's new or better capability, `documentation` if it's docs
    only. Can't pick one? It's a `question`.
 2. **Stop there for a normal open issue.** Type label (or `question`) is
    usually the whole answer.
-3. **Add `good first issue` / `help wanted`** only if that signal is true — and
+3. **Add `good first issue` / `help wanted`** only if that signal is true, and
    only on top of a Type label, never instead of one.
 4. **Add an Area label** (`dependencies` / `ruby`) only for a PR that fits it
    and only if automation missed it.
 5. **Add a Resolution label** (`duplicate` / `invalid` / `wontfix`) *only* in
    the same action that closes the issue, with a one-line reason in a comment.
-6. **Never** add a status-like label (no "wip", "in review", "blocked") — the
+6. **Never** add a status-like label (no "wip", "in review", "blocked"); the
    board's **Status** field owns progress. And never invent a label that isn't
-   in the tables above; if one is genuinely missing, raise it with the
-   maintainer first — label sprawl makes the board harder to filter, not
+   in the tables above. If one is genuinely missing, raise it with the
+   maintainer first, because label sprawl makes the board harder to filter, not
    easier.
 
 ```sh
@@ -170,43 +170,43 @@ of the work.
 | Column | Meaning | Move here when… |
 |--------|---------|-----------------|
 | **Backlog** | Captured but not started. Not yet committed to. | The card is created. |
-| **Bugs** | A **Backlog for `bug`-labeled issues only** — a convenience view so open bugs are easy to spot. Captured, not started, not committed to. Not a separate stage in the flow. | A `bug` issue is captured. Use this instead of **Backlog** so it shows in the bugs view; bugs are pulled **directly into In progress** from here — they are **not** promoted to **Ready**. |
+| **Bugs** | A **Backlog for `bug`-labeled issues only**, a convenience view so open bugs are easy to spot. Captured, not started, not committed to. Not a separate stage in the flow. | A `bug` issue is captured. Use this instead of **Backlog** so it shows in the bugs view; bugs are pulled **directly into In progress** from here and are **not** promoted to **Ready**. |
 | **Ready** | Shaped and ready to be picked up. Has enough detail to start. **WIP-limited to 5.** | The work is well-understood and prioritized, and Ready has an open slot (see WIP limit below). |
-| **In progress** | Actively being worked on. | You start work — open a worktree, run `/team`, or begin coding. |
-| **In review** | Implementation complete; a PR is ready and under review. | The card's pull request is **marked ready for review**. A **draft** PR does not move the card — it stays in **In progress** until the draft is marked ready. |
+| **In progress** | Actively being worked on. | You start work: open a worktree, run `/team`, or begin coding. |
+| **In review** | Implementation complete; a PR is ready and under review. | The card's pull request is **marked ready for review**. A **draft** PR does not move the card. It stays in **In progress** until the draft is marked ready. |
 | **Done** | Merged and complete. | The PR is merged. |
 
-> **The Bugs column.** `Bugs` is an entry bucket, not a stage — the same
+> **The Bugs column.** `Bugs` is an entry bucket, not a stage: the same
 > captured-but-not-started state as `Backlog`, reserved for `bug` issues so they
 > are easy to find at a glance. **Bug issues stay in `Bugs` and are pulled
 > directly into `In progress`; they are not promoted to `Ready`.** Grooming
-> therefore leaves bugs in `Bugs` (it does not move them to `Ready`) — the `Bugs`
-> column *is* their ready-to-pull state. Promotion to `Ready` is for non-bug
-> `Backlog` items only.
+> therefore leaves bugs in `Bugs` (it does not move them to `Ready`), because the
+> `Bugs` column *is* their ready-to-pull state. Promotion to `Ready` is for
+> non-bug `Backlog` items only.
 
 > **WIP limit on `Ready`.** The `Ready` column is capped at **5** cards (a
 > work-in-progress limit). When it is full, promoting a new card means **swapping
 > one out**, not exceeding the cap: pick what is genuinely most important and move
 > the displaced card back to `Backlog`. (GitHub Projects' column limits are a
-> view-level UI setting and aren't reliably exposed via the API — treat this
+> view-level UI setting and aren't reliably exposed via the API, so treat this
 > number as the source of truth and keep the board UI limit in sync. The
 > [`/groom-backlog`](skills.md#groom-backlog) skill consumes it: its promotion
 > mode carries the same `5` as this repo's worked example and swaps a card out
-> rather than exceeding the cap, so a change here has to change there too — a
+> rather than exceeding the cap, so a change here has to change there too. A
 > tripwire in `tests/groom-backlog-skill.test.ts` pins the two numerals
 > together. This is the WIP-limited-kanban discipline the loop-driven controller
 > in [#90](https://github.com/bostonaholic/team/issues/90) builds on; other
 > columns may carry their own limits under that model.)
 
 **Move the card as the work moves.** Pull a card into **In progress** when
-you start, not after — from `Ready` (non-bug work) or `Bugs` (bug work). When
-the PR is marked ready for review, move the card to **In review** — opening a
+you start, not after, from `Ready` (non-bug work) or `Bugs` (bug work). When
+the PR is marked ready for review, move the card to **In review**. Opening a
 draft PR is not that moment; the card stays in **In progress** while the PR is
 a draft. When the PR merges, move it to **Done**.
 
 Dragging the card on the board UI is the simplest way. From the CLI, two small
-helper scripts in `.claude/scripts/` compose over a pipe — one resolves an
-issue number to its board item ID, the other sets a Status column by name:
+helper scripts in `.claude/scripts/` compose over a pipe: one resolves an
+issue number to its board item ID, and the other sets a Status column by name:
 
 ```sh
 # Move issue #42's card to "In review":
@@ -226,18 +226,19 @@ of the distributed plugin.
 > the edit's exit code. After it fires `gh project item-edit` (without
 > suppressing the command's output), it **re-reads the authoritative
 > project-side status and fails loudly if it does not match the column you
-> asked for** — printing `... (verified)` only when the read-back agrees. So a
-> zero exit from the script means the move genuinely landed, not just that the
+> asked for**, printing `... (verified)` only when the read-back agrees. So a
+> zero exit from the script means the move genuinely landed, not merely that the
 > mutation was accepted. This closes [#141](https://github.com/bostonaholic/team/issues/141),
 > where an edit reported success but the board appeared unchanged.
 >
 > **UI-refresh gotcha.** The GraphQL value is authoritative; an *already-open*
 > board tab is not. The Projects UI does not always live-update an open view, so
 > a move that the script reports as `(verified)` can still look stale in a tab
-> you left open — **hard-refresh the board** (or reopen the view) to see it.
+> you left open. **Hard-refresh the board** (or reopen the view) to see it.
 > Trust the script's verified read-back over a stale tab. (When you edit by
 > hand, never pipe `item-edit` through `tail`/`head`/`… | …` that swallows its
-> output — that masks a silent or partial write; let the script verify instead.)
+> output, because that masks a silent or partial write; let the script verify
+> instead.)
 
 ## How it ties to the QRSPI pipeline
 
@@ -249,7 +250,7 @@ like this:
   board-level pass places, prioritizes, and fixes hygiene across the whole
   board, and its promotion mode moves a single card from **Backlog** to
   **Ready** once that item meets the ready-to-work standard. Both halves plan
-  and wait for your approval — nothing moves before you answer — and neither
+  and wait for your approval (nothing moves before you answer), and neither
   ever starts a run.
 - **Picking up work** → the card moves to **In progress** **automatically** as
   the first action of the run, from whichever entry column it sits in (**Ready**,
@@ -263,15 +264,15 @@ like this:
   .claude/scripts/project-item-id.sh <N> | .claude/scripts/project-set-status.sh "In progress"
   ```
   Best-effort: if the card can't be resolved (no board item, free-form
-  description), the run continues without it — the move never blocks the
+  description), the run continues without it, because the move never blocks the
   pipeline. You no longer need to pre-move the card by hand before launching.
 - **Opening the PR** → the PR phase (`/team-pr`, the `/team` PR gate, and
   `/team-fix` Ship) links the PR to the issue (`Closes #<N>` as the final
   line of the PR body) so the issue closes on merge. In a multi-repo run,
-  only the home repo's PR carries the closing keyword — companion PRs carry
+  only the home repo's PR carries the closing keyword; companion PRs carry
   a non-closing qualified reference (`owner/repo#<N>` or the issue URL). The
   pipeline opens the PR as a **draft**, and a draft is not under review, so
-  **the card stays in In progress** — the generic contract in those skills
+  **the card stays in In progress**. The generic contract in those skills
   forbids the in-review move while the PR is a draft.
 - **Marking the PR ready for review** → the card moves to **In review**. The
   human marks the PR ready; the generic, best-effort "move to in-review"
@@ -281,25 +282,25 @@ like this:
   ```sh
   .claude/scripts/project-item-id.sh <N> | .claude/scripts/project-set-status.sh "In review"
   ```
-  Best-effort: if the card can't be resolved, the run continues — the move never
-  blocks the PR.
+  Best-effort: if the card can't be resolved, the run continues, because the
+  move never blocks the PR.
 - **Merge** → the card moves to **Done** **automatically**. Because the PR
   carries `Closes #<N>`, merging it closes the issue, and the board's built-in
   "an item is closed → Done" automation moves the card. In a multi-repo run,
-  close-on-merge fires from the home repo PR's merge specifically — companion
+  close-on-merge fires from the home repo PR's merge specifically; companion
   PRs carry no closing keyword. No manual move and no
-  `/shipit` board logic is involved — `/shipit` stays tracker-agnostic. (A PR
-  added to the board as its own item is likewise moved to **Done** by the
+  `/shipit` board logic is involved, because `/shipit` stays tracker-agnostic.
+  (A PR added to the board as its own item is likewise moved to **Done** by the
   built-in "pull request merged → Done" automation.)
 
 The pipeline persists its own intermediate state as artifacts in
-`docs/plans/<id>/` and tracks live in-session progress with TodoWrite — see
-[Architecture § State Management](architecture.md#9-state-management). Those
+`docs/plans/<id>/` and tracks live in-session progress with TodoWrite (see
+[Architecture § State Management](architecture.md#9-state-management)). Those
 are *execution* state; the board is *work* state. The board answers "what are
 we doing and where is it?"; the artifacts answer "how is this specific feature
 being built?"
 
 ## Read next
 
-- **[Overview](index.md)** — what Team is and how the pipeline runs.
-- **[Architecture](architecture.md)** — full design and artifact conventions.
+- **[Overview](index.md)**: what Team is and how the pipeline runs.
+- **[Architecture](architecture.md)**: full design and artifact conventions.
