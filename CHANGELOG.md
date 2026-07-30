@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-07-30
+
+### Added
+
+- **`/groom-backlog` now works out which tickets block which, and draws the links you approve.** Grooming previously named "dependency links" as the last thing it would execute, but nothing upstream ever produced one: the load did not fetch links, the gap inventory did not check them, and promotion would happily move a card to `Ready` that nobody could start. [`skills/groom-backlog/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/groom-backlog/SKILL.md) gains a dependency-analysis step that reads both kinds of dependency: the ones the tracker already records — now riding the existing bulk query rather than a per-issue call, so they cost nothing — and the ones only the prose admits, recovered from sequencing phrases in bodies and comment threads ("after X lands", "blocked on", "prerequisite") and from one ticket introducing the schema, interface, or endpoint another consumes. Findings feed the gap inventory (work advertised as ready behind an open blocker, cycles, links pointing at closed issues, blockers off the board), inform placement, and reach the plan as their own approval class: every inferred link is a proposal, presented with both endpoints and the direction spelled out, drawn only on an explicit answer. The method deliberately under-links — a preferred order is not a dependency, because a board where everything is blocked says as much as one where nothing is. An eleventh hard rule fixes direction by a single question (which issue cannot be *finished* until the other lands?), forbids closing a cycle, and forbids deleting a link the run did not propose. Promotion mode now refuses to move a blocked card while still landing the rewrite and the priority, since a blocked ticket is worth clarifying while it waits. The GitHub recipes carry the one trap the API hides: dependency writes are keyed by **database id, not issue number**, and the two are both integers, so a number passed as an id silently links the wrong issue.
+
 ## [0.27.0] - 2026-07-29
 
 ### Added
@@ -297,7 +303,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.27.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.28.0...HEAD
+[0.28.0]: https://github.com/bostonaholic/team/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/bostonaholic/team/compare/v0.26.1...v0.27.0
 [0.26.1]: https://github.com/bostonaholic/team/compare/v0.26.0...v0.26.1
 [0.26.0]: https://github.com/bostonaholic/team/compare/v0.25.0...v0.26.0
