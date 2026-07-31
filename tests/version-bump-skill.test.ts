@@ -58,9 +58,10 @@ describe("version-bump skill: the Team-version mechanics live here", () => {
     expect(t).toContain("next-version.sh");
   });
 
-  test("bumps the four version strings across the three files", () => {
+  test("bumps the five version strings across the four files", () => {
     expect(t).toContain(".claude-plugin/plugin.json");
     expect(t).toContain(".claude-plugin/marketplace.json");
+    expect(t).toContain(".codex-plugin/plugin.json");
     expect(t).toContain("package.json");
   });
 

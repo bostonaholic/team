@@ -90,8 +90,8 @@ inline images.
 
 ## Install
 
-Team is a Claude Code plugin, and Codex CLI reads the same
-`.claude-plugin/` manifests — so one repo installs on both. Pick your host.
+Team ships a native manifest for each host it supports, so one repo installs
+on all of them. Pick yours.
 
 <details>
 <summary><strong>Claude Code</strong></summary>
@@ -113,8 +113,9 @@ codex plugin marketplace add /path/to/team
 codex plugin add team@team-dev
 ```
 
-Codex discovers `.claude-plugin/plugin.json` natively and takes `skills/`
-as the plugin's skill root, so nothing needs building or converting.
+Team ships `.codex-plugin/plugin.json` and `.agents/plugins/marketplace.json`
+— the manifests Codex looks for first — and takes `skills/` as the plugin's
+skill root, so nothing needs building or converting.
 
 Two differences worth knowing. Skills arrive **namespaced** — ask for
 `team:shipit`, not `shipit`. And Codex budgets its skill catalog, so with

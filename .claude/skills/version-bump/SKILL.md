@@ -3,7 +3,7 @@ name: version-bump
 description: |
   Version the Team plugin at land time (DEV-internal, not distributed): decide
   the SemVer level, compute the next free version against current `main`, update
-  all four version strings, cut the `[Unreleased]` changelog body into a dated
+  all five version strings, cut the `[Unreleased]` changelog body into a dated
   `## [X.Y.Z]` section, run the land-time consistency assertion, and commit
   `chore(version): X.Y.Z`. This is the Team-internal bumper; the generic runtime
   `/shipit` skill then pushes, waits for CI, and squash-merges. Use when landing
@@ -26,7 +26,7 @@ both automatically when the PR merges. Full policy:
 Landing a Team PR is two steps, in order:
 
 1. **Bump (this skill).** Run `version-bump` against current `main`. It picks the
-   level, assigns the next free version, and bumps the four version strings. It
+   level, assigns the next free version, and bumps the five version strings. It
    cuts the `[Unreleased]` changelog into a dated `## [X.Y.Z]` section, runs the
    land-time consistency assertion, and commits `chore(version): X.Y.Z`.
 2. **Land (the generic `/shipit` skill).** Run the distributed runtime
@@ -120,23 +120,29 @@ and landing is serialized, so `bump(main, level)` is always free. A concurrent
 race is handled by `/shipit` (rebase + recompute) and `release-on-merge.yml`'s
 duplicate-tag backstop.
 
-### 3. Bump all four version strings
+### 3. Bump all five version strings
 
-The version lives in **four places across three files**:
+The version lives in **five places across four files**:
 
 | File | Occurrences |
 |------|-------------|
 | `.claude-plugin/plugin.json` | 1 (`version`) |
 | `.claude-plugin/marketplace.json` | 2 (`metadata.version` **and** `plugins[0].version`) |
+| `.codex-plugin/plugin.json` | 1 (`version`) |
 | `package.json` | 1 (`version`) |
 
-Edit all three files, then prove it:
+Codex reads `.codex-plugin/plugin.json` in preference to the Claude manifest,
+and shows the version it finds there. A stale one makes the same release look
+like two different versions depending on the host.
+
+Edit all four files, then prove it:
 
 ```bash
-grep -rn '"version"' package.json .claude-plugin/plugin.json .claude-plugin/marketplace.json
+grep -rn '"version"' package.json .claude-plugin/plugin.json \
+  .claude-plugin/marketplace.json .codex-plugin/plugin.json
 ```
 
-All four lines must show the **new** version. Zero may still show the old one.
+All five lines must show the **new** version. Zero may still show the old one.
 
 ### 4. Cut the changelog section
 
@@ -176,10 +182,11 @@ the in-tree replacement for the retired `version-gate.yml`:
 
 ```bash
 bun test tests/version-consistency.test.ts
-node -e "['.claude-plugin/plugin.json','.claude-plugin/marketplace.json','package.json'].forEach(f=>JSON.parse(require('fs').readFileSync(f)));console.log('JSON OK')"
+node -e "['.claude-plugin/plugin.json','.claude-plugin/marketplace.json','.codex-plugin/plugin.json','.agents/plugins/marketplace.json','package.json'].forEach(f=>JSON.parse(require('fs').readFileSync(f)));console.log('JSON OK')"
 ```
 
-The tripwire asserts strict semver and that all four strings agree. Additionally
+The tripwire asserts strict semver, that all five strings agree, and that the
+host manifests agree on the plugin and marketplace names. Additionally
 assert inline the released-section + footer-compare-link invariants (these hold
 only after the cut, so they live here, not in the tripwire):
 
@@ -202,7 +209,8 @@ If any check fails, **stop before committing** and fix the cut.
 Commit the bump as its own commit in the PR branch, for clean reverts:
 
 ```bash
-git add .claude-plugin/plugin.json .claude-plugin/marketplace.json package.json CHANGELOG.md
+git add .claude-plugin/plugin.json .claude-plugin/marketplace.json \
+  .codex-plugin/plugin.json package.json CHANGELOG.md
 git commit -m "chore(version): X.Y.Z"
 ```
 

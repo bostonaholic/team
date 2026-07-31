@@ -27,18 +27,45 @@ const marketplace = JSON.parse(
   readFileSync(join(ROOT, ".claude-plugin", "marketplace.json"), "utf8"),
 );
 const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
+const codexPlugin = JSON.parse(
+  readFileSync(join(ROOT, ".codex-plugin", "plugin.json"), "utf8"),
+);
+const codexMarketplace = JSON.parse(
+  readFileSync(join(ROOT, ".agents", "plugins", "marketplace.json"), "utf8"),
+);
 
 const version: string = plugin.version;
 
-describe("version consistency: the four version strings", () => {
+describe("version consistency: the five version strings", () => {
   test("plugin.json version is strict 3-part semver", () => {
     expect(version).toMatch(SEMVER_RE);
   });
 
-  test("all four version strings agree", () => {
+  test("all five version strings agree", () => {
     expect(marketplace.metadata.version).toBe(version);
     expect(marketplace.plugins[0].version).toBe(version);
     expect(pkg.version).toBe(version);
+    expect(codexPlugin.version).toBe(version);
+  });
+});
+
+// Each host reads its own manifest — Codex prefers .codex-plugin/ and
+// .agents/plugins/ over .claude-plugin/. If the names drift, the two hosts
+// disagree about what the plugin is called, and the Codex skill namespace
+// (which comes from the plugin manifest's `name`) silently diverges from the
+// documented `team:<skill>`. Nothing else catches that.
+describe("manifest consistency: hosts agree on names", () => {
+  test("plugin name matches across host manifests", () => {
+    expect(codexPlugin.name).toBe(plugin.name);
+  });
+
+  test("marketplace name matches across host manifests", () => {
+    expect(codexMarketplace.name).toBe(marketplace.name);
+  });
+
+  test("the marketplace's plugin entry matches the plugin manifest", () => {
+    expect(codexMarketplace.plugins[0].name).toBe(plugin.name);
+    expect(marketplace.plugins[0].name).toBe(plugin.name);
   });
 });
 
