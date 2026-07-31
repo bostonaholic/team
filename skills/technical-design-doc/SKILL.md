@@ -7,7 +7,7 @@ user-invocable: false
 # Technical Design Document
 
 A technical design document (TDD) captures the architecture, trade-offs, and
-rollout plan for a significant feature before implementation begins. Not every
+rollout plan for a important feature before implementation begins. Not every
 feature needs a full TDD — apply this methodology when a feature is complex
 enough that undocumented architectural decisions would slow or block
 implementation.
@@ -28,7 +28,7 @@ Write a TDD when the feature:
 - **Touches multiple subsystems** and requires coordination across components
 - **Has a non-trivial rollout** (schema migration, backward compatibility
   requirements, phased rollout, feature flag)
-- **Has significant performance or security implications** that need
+- **Has important performance or security implications** that need
   deliberate design
 
 When in doubt: if the plan would benefit from having the architectural
@@ -47,7 +47,7 @@ it need to be solved now? This grounds every subsequent decision in context.
 possible. This section defines scope.
 
 **Non-Goals:** What the feature explicitly does NOT do. Non-goals are as
-important as goals — they prevent scope creep and answer "why didn't you
+important as goals — they prevent scope creep and answer "why did not you
 also do X?" questions in advance.
 
 ### Background
@@ -141,7 +141,7 @@ should include who must answer it and when.
 
 The planner agent loads this methodology when:
 
-1. The research artifact identifies multiple valid approaches or significant
+1. The research artifact identifies multiple valid approaches or important
    architectural decisions.
 2. The feature introduces new patterns or touches multiple subsystems.
 3. The plan artifact warrants richer documentation than the standard plan

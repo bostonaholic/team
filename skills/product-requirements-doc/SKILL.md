@@ -130,7 +130,7 @@ become the source of vertical-slice acceptance tests.
 ## Rules
 
 - **PRDs describe behavior, not implementation.** The PRD tells the design
-  author *what* users need; the design tells the implementer *how* to build it.
+  author *what* users need. The design tells the implementer *how* to build it.
 - **Every acceptance criterion must be testable.** If you cannot write a
   test for it, it is not an acceptance criterion — it is an aspiration.
 - **Scope boundaries are commitments.** Out-of-scope means out-of-scope

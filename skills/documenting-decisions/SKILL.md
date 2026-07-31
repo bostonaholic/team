@@ -6,7 +6,7 @@ user-invocable: false
 
 # Documenting Decisions
 
-Architecture Decision Records (ADRs) capture significant technical decisions
+Architecture Decision Records (ADRs) capture important technical decisions
 with their context, rationale, and consequences. They are the institutional
 memory that explains WHY the codebase looks the way it does.
 
@@ -65,9 +65,9 @@ Write an ADR when the decision:
 
 - **Chooses between alternatives** — You evaluated multiple options and picked
   one. The rejected alternatives and the reasons for rejection are valuable
-  context for future developers who will wonder "why didn't we just..."
+  context for future developers who will wonder "why did not we just..."
 
-- **Involves significant trade-offs** — The decision sacrifices something
+- **Involves important trade-offs** — The decision sacrifices something
   (performance, simplicity, flexibility) to gain something else. Record what
   was traded and why.
 

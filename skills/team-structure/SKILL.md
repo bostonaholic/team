@@ -20,7 +20,7 @@ The `structure-planner` reads:
 - `$ARGUMENTS/design.md` (the reviewed design — the latest
   `$ARGUMENTS/design-review-<n>.md` must carry a passing verdict)
 - `$ARGUMENTS/research.md`
-- `$ARGUMENTS/task.md` (for cross-reference; not for re-litigating intent)
+- `$ARGUMENTS/task.md` (for cross-reference, not for re-litigating intent)
 
 Resolve the artifact directory by running this self-contained block (one bash
 call — agent threads reset cwd between calls). The predecessor filter requires
@@ -86,7 +86,7 @@ done
   and labeled options:
   - **Run the producer** — run `/team-design docs/plans/<id>/` to produce
     and review `design.md`.
-  - **Provide a path** — the user supplies the `docs/plans/<id>/` directory
+  - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
 
 ## Execution
@@ -97,7 +97,7 @@ done
    gate**: the highest-`<n>` `$ARGUMENTS/design-review-<n>.md` must
    carry `verdict: APPROVE` or `verdict: COMMENT` **in its YAML
    frontmatter** (the tier-2 filter
-   already enforced this; re-check a tier-1 explicit path). If no review
+   already enforced this. Re-check a tier-1 explicit path). If no review
    artifact exists, or the latest verdict is REQUEST CHANGES, **refuse**:
    report that the design has not passed review and suggest
    `/team-design $ARGUMENTS` — never slice an unreviewed design.
@@ -107,7 +107,7 @@ done
    structure is not gated.
 3. **No gate. Nothing is presented for approval mid-run.** Within a full
    `/team` run the orchestrator advances
-   to PLAN automatically; run standalone, this skill stops after writing the
+   to PLAN automatically. Run standalone, this skill stops after writing the
    structure and reports the next command.
 4. **Stop once `$ARGUMENTS/structure.md` exists.**
 

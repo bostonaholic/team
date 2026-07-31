@@ -15,11 +15,11 @@ scope so that the work is something real people actually want.
 Four lenses sharpen every framing, design, and slicing decision:
 
 - **Demand evidence over assertion**: Ask what signal says a real person wants
-  this — not whether it is technically possible or interesting to build. A
+  this — not if it is technically possible or interesting to build. A
   clever capability nobody asked for is still waste.
 - **Smallest thing people want**: Prefer the thinnest version that delivers
   real value, and resist speculative scope and gold-plating. Extra surface
-  area is cost you pay before you have learned whether anyone wants it.
+  area is cost you pay before you have learned if anyone wants it.
 - **Build for someone specific, not nobody**: Name the actual user a change
   serves. A feature with no identifiable user is a red flag to surface, not a
   detail to gloss over.
@@ -68,7 +68,7 @@ Questions to apply while ordering slices:
 
 ## Lens, Not Dogma
 
-This lens informs judgment; it never blocks the pipeline. Do not manufacture
+This lens informs judgment. It never blocks the pipeline. Do not manufacture
 user-research ceremony where the user's stated intent already answers "who
 wants this." On an empty or trivial task, the right move is to apply judgment
 and ask nothing extra. The point is to keep "do real people want this?" in

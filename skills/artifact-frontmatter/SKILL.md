@@ -10,7 +10,7 @@ The single schema contract for the pipeline's durable state: every
 artifact under `docs/plans/<id>/`, its YAML frontmatter, and the
 design-review record mechanics that gate the DESIGN transition. Phase discipline — what
 each phase does and when it advances — lives in
-`skills/qrspi-workflow/SKILL.md`; this skill owns the schema.
+`skills/qrspi-workflow/SKILL.md`. This skill owns the schema.
 
 ## Artifact inventory
 
@@ -23,7 +23,7 @@ All phase artifacts live under `docs/plans/<id>/`, where `<id>` is one of:
 
 The executable definitions of the `<id>` pattern (`ID_RE`) and the
 phase-file list (`PHASE_FILES`) live in
-`hooks/session-start-recover.mjs` — that hook is the canon; reference
+`hooks/session-start-recover.mjs` — that hook is the canon. Reference
 it rather than forking the pattern here.
 
 | Artifact  | Path                              | Created By              | Required? |
@@ -57,11 +57,11 @@ Per-phase additions:
 |-----------|------------------------------------------------------------------------------------|
 | task      | `ticketId: <id>` (or `null`)                                                       |
 | questions | (none)                                                                             |
-| prd       | (none — not gated; written conditionally by the questioner)                        |
+| prd       | (none — not gated, written conditionally by the questioner)                        |
 | repos     | (none — written conditionally in multi-repo mode)                                  |
 | research  | (none)                                                                             |
 | design    | `revision: 0`                                                                      |
-| structure | (none — not gated; advances to PLAN once it exists)                                |
+| structure | (none — not gated, advances to PLAN once it exists)                                |
 | plan      | (none — derived mechanically from the structure)                                   |
 
 **Design-review record** (`design-review-<n>.md`): each review round the
@@ -75,9 +75,9 @@ retired `^approved:` frontmatter grep). A design has **passed review**
 when the highest-`<n>` file carries APPROVE or COMMENT.
 
 **Review loop**: on REQUEST CHANGES, the orchestrator re-dispatches
-`design-author` with the reviewer's findings verbatim; the new draft
+`design-author` with the reviewer's findings verbatim. The new draft
 increments `revision: <n+1>` in its frontmatter and a fresh review round
-runs. Cap at 5 revisions; at cap, the run halts terminally and reports
+runs. Cap at 5 revisions. At cap, the run halts terminally and reports
 the unresolved findings — no consultation, no PR.
 
 ## Topic consistency invariant
@@ -94,7 +94,7 @@ is the kebab portion of `<id>` — i.e. `<id>` minus the `<TICKET>-` or
 
 Never use the ticket id, the date, or a re-worded description as the
 topic. Downstream agents copy the topic verbatim from upstream
-artifacts; the questioner is the one place where it is chosen.
+artifacts. The questioner is the one place where it is chosen.
 
 ## ticketId scope
 
@@ -111,7 +111,7 @@ When a topic touches **more than one repository**, the questioner or
 design-author writes `docs/plans/<id>/repos.md` to enumerate the repos
 involved. The presence of this file switches the pipeline into multi-repo
 mode (one worktree per listed repo, see
-`skills/worktree-isolation/SKILL.md`); the home worktree is created at the
+`skills/worktree-isolation/SKILL.md`). The home worktree is created at the
 leading WORKTREE phase and secondary worktrees after the design review. Its
 absence keeps the pipeline in single-repo mode — today's default.
 
@@ -153,8 +153,8 @@ Rules:
   across `repos.md`.
 - **Paths are absolute.** Each must be a git working tree.
 - **The home repo is the one the user invoked `/team` from.** Its
-  `docs/plans/<id>/` directory is the canonical artifact location;
-  other repos' worktrees do not carry duplicate artifacts.
+  `docs/plans/<id>/` directory is the canonical artifact location.
+  Other repos' worktrees do not carry duplicate artifacts.
 - **The `## Worktrees` section is written by the orchestrator** after the
   design review (back-recording the home worktree created at the leading
   WORKTREE phase plus each secondary worktree), not by the questioner or

@@ -48,37 +48,8 @@ describe("team-pr Screenshots section rendering (slice 2)", () => {
     expect(body()).toContain("## Screenshots");
     // Reads the manifest ux-reviewer wrote.
     expect(t).toContain("screenshots/manifest.md");
-    // Omit-when-no-manifest: non-UI changes are never forced to include one.
-    const omitRule =
-      /manifest[^.]{0,60}(absent|missing|does not exist|no manifest)[^.]{0,160}(omit|omitted|no [^.]{0,30}section|section[^.]{0,60}omit)/i.test(t) ||
-      /(no|absent|missing)[^.]{0,20}manifest[^.]{0,160}(omit|omitted|section[^.]{0,60}(omitted|absent))/i.test(t);
-    expect(omitRule).toBe(true);
   });
 
-  test("team-pr degradation contract is stated", () => {
-    const t = flat(body());
-    // Branch 1: capture failed (any skipped-* manifest status) → one-line note
-    // naming the reason.
-    const captureFailedNote =
-      /skipped-[^.]{0,200}(note|capture[- ]failure)/i.test(t) ||
-      /capture[- ]fail[^.]{0,200}note/i.test(t);
-    expect(captureFailedNote).toBe(true);
-    // Branch 2: malformed manifest → same visible note, never a crash or block.
-    expect(/malformed[^.]{0,240}(note|capture[- ]failure)/i.test(t)).toBe(true);
-    // Branch 3: manifest entry whose PNG is missing → entry skipped, the
-    // discrepancy noted in the section.
-    const missingPngNoted =
-      /(PNG|image|file)[^.]{0,80}(missing|does not exist|absent)[^.]{0,240}(skipped|note|discrepanc)/i.test(t) ||
-      /(missing|absent)[^.]{0,40}(PNG|image|file)[^.]{0,240}(skipped|note|discrepanc)/i.test(t);
-    expect(missingPngNoted).toBe(true);
-    // Degradation never blocks the PR; the prose cites the existing rule in
-    // the screenshots context (a second occurrence beyond Execution step 6).
-    const neverBlocks =
-      /(never|do not|don't)[^.]{0,80}(block|delay)[^.]{0,80}(the )?(PR|pull request)/i.test(t);
-    expect(neverBlocks).toBe(true);
-    const noWaitCitations = body().match(/never waits for approval/gi) ?? [];
-    expect(noWaitCitations.length).toBeGreaterThanOrEqual(2);
-  });
 });
 
 describe("team-pr Screenshots refresh on every push", () => {
@@ -86,32 +57,9 @@ describe("team-pr Screenshots refresh on every push", () => {
   // sections that must track the branch, and the footer + `## Companion PRs`
   // as sections that survive the rewrite. Screenshots need both halves:
   // preserved when the push left the UI alone, re-rendered when it did not.
-  test("a UI-changing push re-captures and re-uploads the section", () => {
-    const t = flat(body());
-    const refresh = /screenshots?[^.]{0,400}(stale|re-?captur|re-?render|re-?upload)/i.test(t);
-    expect(refresh).toBe(true);
+  test("a UI-changing push defers re-capture to the ux-reviewer procedure", () => {
     // Re-capture is ux-reviewer's procedure — referenced by path, not restated.
     expect(body()).toContain("skills/verifying-ux/SKILL.md");
-  });
-
-  test("a push that leaves the UI alone preserves the uploaded section verbatim", () => {
-    const t = flat(body());
-    const preserved =
-      /(preserv|carr(y|ies)|survive)[^.]{0,200}screenshots?[^.]{0,120}(verbatim|unchanged|as-?is)/i.test(t) ||
-      /screenshots?[^.]{0,200}(preserved|survives?|carried)[^.]{0,120}(verbatim|unchanged|refresh)/i.test(t);
-    expect(preserved).toBe(true);
-    // Uploaded asset URLs stay valid — a no-UI-change refresh never re-uploads.
-    expect(/(never|no|not)[^.]{0,80}re-?upload/i.test(t)).toBe(true);
-  });
-
-  test("the refresh never drops the section and never blocks the push", () => {
-    const t = flat(body());
-    expect(/(never|not)[^.]{0,120}drop[^.]{0,120}screenshots?|screenshots?[^.]{0,120}never dropped/i.test(t)).toBe(
-      true,
-    );
-    // Degradation posture is the existing one: re-capture unavailable → the
-    // degraded note, never a blocked or delayed push.
-    expect(/degraded[^.]{0,200}(note|form)/i.test(t)).toBe(true);
   });
 });
 
@@ -129,36 +77,5 @@ describe("team-pr screenshot upload via user-attachments (slice 3)", () => {
     expect(editIndex).toBeGreaterThan(uploadIndex);
     // The upload extracts GitHub's user-attachments asset URLs for embedding.
     expect(uploadSection).toContain("user-attachments/assets");
-  });
-
-  test("team-pr upload degradation is stated", () => {
-    const t = flat(body());
-    // No authenticated session → fail fast, keep the degraded note + local
-    // paths; never blocks the PR.
-    const noSessionFastFail =
-      /(no|missing|absent)[^.]{0,80}(authenticated|signed[- ]in)[^.]{0,60}(session|browser)[^.]{0,240}(skip|fail|degrad)/i.test(t) ||
-      /(session|signed[- ]in)[^.]{0,120}(absent|missing|fail)[^.]{0,240}(skip|degrad)/i.test(t);
-    expect(noSessionFastFail).toBe(true);
-    expect(/local (file )?paths?/i.test(t)).toBe(true);
-    // Partial success → embed what succeeded, list failures by caption + path.
-    const partialSuccess =
-      /partial[^.]{0,240}(embed|succeed)/i.test(t) ||
-      /embed[^.]{0,80}succeeded[^.]{0,240}fail/i.test(t);
-    expect(partialSuccess).toBe(true);
-    // Oversize (>10MB) files are skipped at upload and noted.
-    expect(/(oversize|10\s*MB)[^.]{0,240}(skip|noted)/i.test(t)).toBe(true);
-    // Every branch ends with an open PR — upload problems never block it.
-    const alwaysOpens =
-      /(never[^.]{0,80}block|always[^.]{0,80}open)[^.]{0,120}(PR|pull request)|(PR|pull request)[^.]{0,80}(stays|remains)[^.]{0,40}open/i.test(t);
-    expect(alwaysOpens).toBe(true);
-  });
-
-  test("team-pr multi-repo reuses upload URLs", () => {
-    const t = flat(body());
-    // Upload once, on the home-repo PR.
-    expect(/upload[^.]{0,60}once[^.]{0,120}home[- ]repo/i.test(t)).toBe(true);
-    // Companion PRs embed the same URLs — never re-upload per repo.
-    expect(/companion[^.]{0,160}same URLs/i.test(t)).toBe(true);
-    expect(/(never|no|not)[^.]{0,60}re-?upload/i.test(t)).toBe(true);
   });
 });

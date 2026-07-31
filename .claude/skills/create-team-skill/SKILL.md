@@ -12,7 +12,7 @@ description: |
 
 # Creating a new Team skill
 
-This is the dev-workspace guide for authoring a skill in this plugin; follow it so a
+This is the dev-workspace guide for authoring a skill in this plugin. Follow it so a
 new skill matches the conventions the existing skills already use. A skill is a
 document the agent reads, not a function it calls. Before writing one, make three
 decisions in order. Each has a wrong-by-default failure mode, so decide deliberately
@@ -20,17 +20,17 @@ rather than copying another skill's wiring.
 
 1. **Invocation** — is this an entry point (user/model triggers it) or a building
     block (another skill composes it)? This defines what the skill *is*.
-2. **Input** — how does it get the thing it operates on? Discover it; don't demand it.
+2. **Input** — how does it get the thing it operates on? Discover it. Do not demand it.
 3. **Context** — how does it stay inside the window while it runs? Offload, delegate,
     search.
 
 ## Shared convention: the artifacts directory
 
 Every skill that hands off uses one durable, repo-local directory for what it would
-otherwise "keep in the conversation" — inputs passed between skills, checkpoints,
-findings. In this repo that directory is **`docs/plans/<id>/`**, where `<id>` is
+otherwise "keep in the conversation". That covers inputs passed between skills,
+checkpoints, and findings. In this repo that directory is **`docs/plans/<id>/`**, where `<id>` is
 `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. This guide calls it `<ARTIFACTS>`.
-Producers write there; consumers discover and read from there. The agreement matters
+Producers write there. Consumers discover and read from there. The agreement matters
 more than the path: every handoff uses the same convention so skills stay decoupled.
 
 ---
@@ -48,8 +48,8 @@ into exactly one of three buckets, then carry the verdict into the frontmatter:
 | Bucket | What it means | Frontmatter | Examples |
 |--------|---------------|-------------|----------|
 | **Both** (default for anything a user might run) | A user triggers it by intent **and** the model/another skill may pull it in | leave `user-invocable` unset (default) | `team`, `team-*`, `code-review` |
-| **User-invocable only** | A user must trigger it explicitly; the model must NOT auto-fire it | `disable-model-invocation: true` | irreversible actions: deploy, force-push, destructive cleanup |
-| **Model-invocable only** (pure building block) | Reference material loaded by agents / read by path; a `/<skill>` command is meaningless to users | `user-invocable: false` | every pure methodology skill (`qrspi-workflow`, `solid-principles`, …) |
+| **User-invocable only** | A user must trigger it explicitly. The model must NOT auto-fire it | `disable-model-invocation: true` | irreversible actions: deploy, force-push, destructive cleanup |
+| **Model-invocable only** (pure building block) | Reference material loaded by agents / read by path. A `/<skill>` command is meaningless to users | `user-invocable: false` | every pure methodology skill (`qrspi-workflow`, `solid-principles`, …) |
 
 Decide with these tests, in order:
 
@@ -59,11 +59,11 @@ Decide with these tests, in order:
    agent reads — with no standalone "do this now" meaning for a user? →
    **Model-invocable only**.
 3. **Would a user plausibly type `/<skill>` to run it as an action**, even if agents
-   also compose it? → **Both** (the default; don't over-restrict).
+   also compose it? → **Both** (the default, do not over-restrict).
 
 **If you cannot place the skill in one bucket with high confidence, STOP and ask the
-user** via `AskUserQuestion` (header `Invocation`) with the three buckets as options —
-state your leaning and why, and let them confirm. Do not silently guess; the wrong
+user** through `AskUserQuestion` (header `Invocation`), with the three buckets as
+options. State your leaning and why, and let them confirm. Do not silently guess. The wrong
 choice either clutters the menu or hides a command users expect. Once decided, wire the
 surface(s) per §1A / §1B below and set the frontmatter from the table above.
 
@@ -91,16 +91,17 @@ surface(s) per §1A / §1B below and set the frontmatter from the table above.
 ### §1B — Wire it as a building block
 
 Composability is never declared — any skill file can be composed. What you choose is
-HOW a parent pulls it in, by whether the parent needs coordination or isolation:
+HOW a parent pulls it in, by if the parent needs coordination or isolation:
 
 - **(a) Inline** — parent reads this skill's file and follows it. For sequential work
   the parent coordinates and weaves into one result. Parent instruction reads:
   > "Follow <child>/SKILL.md — all sections, full depth. Skip: <list>."
   Author this child with clearly-headed, independently-runnable sections (parents skip
-  by header), and don't assume you own the whole conversation.
+  by header), and do not assume you own the whole conversation.
 
-- **(b) Subagent** — parent spawns a fresh-context agent to run this. For unbiased
-  perspective (adversarial review) or parallelism (N variants/specialists at once).
+- **(b) Subagent** — the parent spawns a fresh-context agent to run this. Use it for
+  an unbiased perspective, such as adversarial review, or for parallelism, such as N
+  variants or specialists at once.
   Parent instruction reads:
   > "Dispatch as a subagent (fresh context). Launch all N in one message. Return the
   >  conclusion only."
@@ -114,21 +115,21 @@ HOW a parent pulls it in, by whether the parent needs coordination or isolation:
 **Hide it from the slash menu.** A pure building block is reference material, not a
 user action, so a `/<skill>` command for it is meaningless. Set `user-invocable: false`
 in its frontmatter to keep it out of the `/` menu. The field governs *menu visibility
-only* — it does not affect read-and-follow or subagent composition (those reach the file
+only*. It does not affect read-and-follow or subagent composition (those reach the file
 directly), and the model can still auto-load it when relevant. In this repo every
-pure methodology skill sets this; entry-point skills leave it unset so they register as
-slash commands. (A skill wired as *both* surfaces stays user-invocable — don't set it;
+pure methodology skill sets this. Entry-point skills leave it unset so they register as
+slash commands. (A skill wired as *both* surfaces stays user-invocable — do not set it.
 `code-review` is the repo's standing example: it is loaded as composed methodology by
-the review agents yet is also a direct user action ("review this diff"). It's the only
+the review agents yet is also a direct user action ("review this diff"). It is the only
 methodology skill kept user-invocable.)
 
 ### Invocation invariants
-- Never compose via the skill-invocation tool. Composition = read-and-follow OR subagent.
+- Never compose through the skill-invocation tool. Composition = read-and-follow OR subagent.
 - Heavy or adversarial sub-work → subagent (keeps the parent lean and unbiased).
   Sequential/coordinated sub-work → inline.
-- A skill can serve both surfaces; just make its description trigger correctly AND its
+- A skill can serve both surfaces. Just make its description trigger correctly AND its
   sections survive being inlined/subagented.
-- Don't auto-trigger irreversible skills.
+- Do not auto-trigger irreversible skills.
 - Pure building block → `user-invocable: false` (out of the slash menu, still loadable).
 
 ---
@@ -146,8 +147,8 @@ the archetype that matches the input type. Default to §2A for documents.
 | A problem the user must describe / scope | **§2D — ask-first** |
 
 ### §2A — Convention-based document discovery (archetype A)
-The skill takes an OPTIONAL artifact-directory arg and DISCOVERS it when omitted —
-discovery is the front door, the arg only an override. Declare the hint in frontmatter
+The skill takes an OPTIONAL artifact-directory arg and DISCOVERS it when omitted.
+Discovery is the front door, and the arg is only an override. Declare the hint in frontmatter
 and read `$ARGUMENTS`:
 ```yaml
 argument-hint: "[docs/plans/<id>/]"
@@ -157,7 +158,7 @@ Resolve the directory with the canonical **three-tier** block:
 2. **Discover** — newest-mtime dir under `docs/plans/` that matches `ID_RE` and holds
    this skill's predecessor artifact (filter by `ID_RE` / `PHASE_FILES`). Announce the
    auto-picked directory before proceeding — never pick a topic silently.
-3. **None found** — fall to the empty case below; do not error.
+3. **None found** — fall to the empty case below. Do not error.
 
 Do NOT hand-roll this block. Copy it **verbatim** from an existing archetype-A skill
 (e.g. `skills/team-research/SKILL.md`) — the dev gate
@@ -165,14 +166,14 @@ Do NOT hand-roll this block. Copy it **verbatim** from an existing archetype-A s
 archetype-A skill, so any variant fails the suite. Run it as a single bash call (an
 agent thread resets cwd between calls).
 
-- If a directory resolves: read the predecessor artifact from it; treat it as source of
+- If a directory resolves: read the predecessor artifact from it. Treat it as source of
   truth for problem, constraints, approach.
 - Empty case (REQUIRED): do NOT error. Fire `AskUserQuestion` (header `Setup`) with two
-  labeled options — **Run the producer** (`/team-<producer>` to create the missing
-  artifact) or **Provide a path** (the user supplies `docs/plans/<id>/`).
+  labeled options. **Run the producer** runs `/team-<producer>` to create the missing
+  artifact. **Give a path** lets the user supply `docs/plans/<id>/`.
 
 ### §2B — Branch-diff detection (code review)
-No argument. Detect the base branch via a fallback chain, then diff:
+No argument. Detect the base branch through a fallback chain, then diff:
 ```bash
 BASE=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null)
 [ -z "$BASE" ] && BASE=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
@@ -183,20 +184,20 @@ Never hardcode the base branch without the chain above it.
 
 ### §2C — Positional args + flags (scalars only)
 Reserve arguments for scalars, never documents. Parse with sensible defaults
-(`/skill 7d` → default `7d`; `/skill <url> --quick`); auto-discover when a flag is
-omitted; always state the default you chose.
+(`/skill 7d` → default `7d`, `/skill <url> --quick`). Auto-discover when a flag is
+omitted. Always state the default you chose.
 
 ### §2D — Ask-first
 Start from what the user already typed. Auto-discover repo context (search, diff,
-README). Ask ONE question at a time, only for genuine gaps. Don't interrogate when the
+README). Ask ONE question at a time, only for genuine gaps. Do not interrogate when the
 answer is already on disk. (In this repo, `/team-question` is the ask-first producer
 that seeds `docs/plans/<id>/` for the archetype-A consumers downstream.)
 
 ### Input invariants
-- Discover before you demand; a question is the fallback, not the front door (except §2D).
+- Discover before you demand. A question is the fallback, not the front door (except §2D).
 - The empty/not-found path uses `AskUserQuestion` to offer a producer or ask for a
   path — it never throws.
-- Each shell block is its own process — recompute derived vars; don't rely on persistence.
+- Each shell block is its own process — recompute derived vars. Do not rely on persistence.
 - An argument carries a scalar (URL/window/ID) or an OPTIONAL artifact-dir path that
   discovery resolves when omitted — never the document's contents.
 
@@ -204,7 +205,7 @@ that seeds `docs/plans/<id>/` for the archetype-A consumers downstream.)
 
 ## Part 3 — Context discipline
 
-There are two token economies; treat them oppositely.
+There are two token economies. Treat them oppositely.
 
 1. **The payload** (these instructions, the skill text) is cached and amortized. Do NOT
     compress it for size's sake — completeness here is cheap. A long, complete skill
@@ -215,8 +216,8 @@ There are two token economies; treat them oppositely.
 
 Be generous with the payload, ruthless with the working set. Execution rules, in order:
 
-1. **Offload state to disk.** Write decisions, plans, and findings to `<ARTIFACTS>/*.md`;
-    read back on demand instead of keeping them resident. When a long task risks losing
+1. **Offload state to disk.** Write decisions, plans, and findings to `<ARTIFACTS>/*.md`.
+    Read back on demand instead of keeping them resident. When a long task risks losing
     state, checkpoint to `<ARTIFACTS>/checkpoint-<timestamp>.md` (branch, done, decisions,
     remaining, open questions) — append-only, never overwrite. A fresh window resumes
     from the file, not from replayed history.
@@ -224,10 +225,10 @@ Be generous with the payload, ruthless with the working set. Execution rules, in
     variants, adversarial review) goes to a subagent that burns ITS window and returns
     only the conclusion. Launch independent subagents in parallel (one message). Once you
     delegate a search, don't also run it yourself.
-3. **Search, don't read whole files.** For where/what/which questions, use semantic search
+3. **Search, do not read whole files.** For where/what/which questions, use semantic search
     if available, else targeted grep/glob; pull excerpts and line ranges. Don't `cat` a
-    large file to "see what's there." Don't re-read a file you just edited to confirm it.
-4. **Reference, don't copy.** When building inputs for a sub-task or test, extract the
+    large file to "see what's there." Don't re-read a file you just edited to make sure it.
+4. **Reference, do not copy.** When building inputs for a sub-task or test, extract the
     relevant lines — never paste a 1000+ line file. Large irrelevant context causes
     timeouts and multi-x slowdowns, not just cost.
 
@@ -242,7 +243,7 @@ Gate yourself before acting:
   `<ARTIFACTS>` and re-reading on demand.
 - Pasting large files into sub-task prompts or fixtures.
 - Doing a broad multi-file sweep inline when a subagent could return just the answer.
-- Compressing your own instructions to "save tokens" — that's the cached payload, not
+- Compressing your own instructions to "save tokens" — that is the cached payload, not
   where the cost is.
 
 ---
@@ -250,25 +251,25 @@ Gate yourself before acting:
 ## Acceptance checklist (verify before the skill is done)
 
 Invocation
-- [ ] Invocation surface decided — **both** / **user-invocable only** / **model-invocable only** — with high confidence; if not, asked the user via `AskUserQuestion`.
-- [ ] Frontmatter matches the verdict: both → neither flag; user-only → `disable-model-invocation: true`; model-only → `user-invocable: false`.
+- [ ] Invocation surface decided — **both** / **user-invocable only** / **model-invocable only** — with high confidence. If not, asked the user through `AskUserQuestion`.
+- [ ] Frontmatter matches the verdict: both → neither flag. User-only → `disable-model-invocation: true`. Model-only → `user-invocable: false`.
 - [ ] Only the intended path(s) wired (entry point §1A, building block §1B, or both).
-- [ ] Entry point: description has WHAT + explicit trigger intents/phrases; added to routing map.
+- [ ] Entry point: description has WHAT + explicit trigger intents/phrases. Added to routing map.
 - [ ] Building block: chose inline (sequential) vs subagent (isolated/parallel) deliberately.
 - [ ] If subagented: self-contained, returns a conclusion not a transcript. If inlined: headed, independently-runnable sections.
-- [ ] No skill invokes another via the skill-invocation tool.
+- [ ] No skill invokes another through the skill-invocation tool.
 
 Input
 - [ ] Correct archetype chosen (default §2A for documents).
-- [ ] Archetype-A: `argument-hint` declared; discovery block copied verbatim from an
+- [ ] Archetype-A: `argument-hint` declared. Discovery block copied verbatim from an
       existing skill (e.g. team-research), not hand-rolled — the dev consistency gate enforces byte-identity.
-- [ ] Discovery runs before any question (except §2D); an auto-picked topic is announced.
-- [ ] Empty/not-found path uses `AskUserQuestion` (run producer / provide path) — never throws.
-- [ ] Base branch (if used) via the fallback chain, no bare `main`. Args carry a scalar
+- [ ] Discovery runs before any question (except §2D). An auto-picked topic is announced.
+- [ ] Empty/not-found path uses `AskUserQuestion` (run producer / give path) — never throws.
+- [ ] Base branch (if used) through the fallback chain, no bare `main`. Args carry a scalar
       or optional artifact-dir path, never document contents.
 
 Context
-- [ ] State offloaded to `<ARTIFACTS>`; long tasks checkpoint.
-- [ ] Heavy/broad reading delegated to subagents; conclusions returned, not transcripts.
-- [ ] Searches/excerpts over whole-file reads; no copying large files into sub-tasks.
-- [ ] Payload left complete (not compressed for size); working set kept lean.
+- [ ] State offloaded to `<ARTIFACTS>`. Long tasks checkpoint.
+- [ ] Heavy/broad reading delegated to subagents. Conclusions returned, not transcripts.
+- [ ] Searches/excerpts over whole-file reads. No copying large files into sub-tasks.
+- [ ] Payload left complete (not compressed for size). Working set kept lean.

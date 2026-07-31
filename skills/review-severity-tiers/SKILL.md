@@ -13,7 +13,7 @@ user-invocable: false
 | `security-reviewer` | HARD | Yes — critical or high findings are non-negotiable |
 | `verifier` | HARD | Yes — tests must pass, build must succeed |
 | `code-reviewer` | HARD | Yes — blocking issues must be resolved |
-| `ux-reviewer` | AUTO-FIX | REQUEST CHANGES is auto-applied in the loop (a *major*); only COMMENT notes may reach you |
+| `ux-reviewer` | AUTO-FIX | REQUEST CHANGES is auto-applied in the loop (a *major*). Only COMMENT notes may reach you |
 | `technical-writer` | ADVISORY | No — findings recorded, pipeline proceeds |
 
 ## Severity Tiers and the Auto-Fix Boundary
@@ -33,7 +33,7 @@ in exactly one tier.
 
 **The no-consult rule (non-negotiable).** Findings are never presented to
 the user mid-run. Blocking and Major findings loop the implementer
-automatically until they are zero; Minor-and-below findings defer to the
+automatically until they are zero. Minor-and-below findings defer to the
 PR body's `## Review notes` (tagged by source reviewer) for the human's
 PR review. A mid-run prompt that lists any finding is a defect.
 
@@ -49,7 +49,7 @@ pipeline gate decision:
    SHIP.
 3. If no findings remain -> pipeline gate PASSES (proceed to SHIP).
 
-The loop continues until Blocking and Major are zero, capped at 5 rounds; at
+The loop continues until Blocking and Major are zero, capped at 5 rounds. At
 the cap, halt with the full unresolved-findings summary — terminal, no PR.
 
 Blocking and Major failures are never aggregated away and never surfaced for

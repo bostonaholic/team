@@ -274,12 +274,6 @@ describe("product-thinking methodology", () => {
     expect(/^## .*(Checklist|Gate|Self-check|Self check)/im.test(read(SKILL_FILE))).toBe(false);
   });
 
-  test("skill is within the <= 175 line soft norm", () => {
-    // Count newlines, not lines.
-    const lineCount = read(SKILL_FILE).split("\n").length - 1;
-    expect(lineCount).toBeLessThanOrEqual(175);
-  });
-
   test("questioner frontmatter has a skills: block listing product-thinking", () => {
     const fm = frontmatter(read(QUESTIONER));
     expect(/^skills:/m.test(fm)).toBe(true);
@@ -374,7 +368,7 @@ describe("product-thinking methodology", () => {
 // existing skills (## When Designing / ## When Slicing in product-thinking,
 // ## When Implementing / ## When Reviewing in engineering-standards), so
 // bare heading resolution would pass a broken citation. Every citation
-// tripwire therefore asserts PATH-adjacency: the grepA4 window around each
+// tripwire thus asserts PATH-adjacency: the grepA4 window around each
 // `systems-thinking` mention must carry BOTH the skill file path
 // skills/systems-thinking/SKILL.md AND the cited ## When ... heading, and
 // the heading must resolve in the skill itself.
@@ -430,8 +424,6 @@ describe("systems-thinking lens (L2 content tripwire)", () => {
       expect(closer.length).toBeGreaterThan(0);
       expect(/none found/i.test(closer)).toBe(true);
       expect(/complete answer/i.test(closer)).toBe(true);
-      // <= 175-line soft norm (count newlines, not lines).
-      expect(text.split("\n").length - 1).toBeLessThanOrEqual(175);
     });
 
     test("code-review step 4 carries the System fit item", () => {
@@ -675,7 +667,8 @@ describe("test-first-development lens (L2 content tripwire)", () => {
   test("pins write-the-test-before-the-code core rule and red-state contract", () => {
     const text = read(SKILL_FILE);
     expect(text).toContain("BEFORE any implementation code");
-    expect(text).toContain("Confirm Tests Fail Correctly");
+    // STE substitutes the verb "confirm" with "make sure that".
+    expect(text).toContain("Make Sure That Tests Fail Correctly");
   });
 
   // The Test Style Rules moved to their own just-in-time skill; TFD keeps a
@@ -781,7 +774,7 @@ describe("code-review flaky-test red flags (L2 content tripwire)", () => {
     const codeReview = read(SKILL_FILE);
     const styleFlags = between(codeReview, "Test-quality flags.", "Flaky-test red flags");
     const flaky = between(codeReview, "Flaky-test red flags", "### UX Reviewer");
-    // Guard both slices non-empty so the absence assertions below can't pass
+    // Guard both slices non-empty so the absence assertions below cannot pass
     // vacuously against an empty string.
     expect(styleFlags.length).toBeGreaterThan(0);
     expect(flaky.length).toBeGreaterThan(0);

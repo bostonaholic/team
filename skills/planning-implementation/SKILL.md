@@ -71,7 +71,7 @@ context referenced in the body)
 
 1. **One slice at a time.** Steps within a slice may parallelize, but slices
    themselves are sequential. The implementer commits each slice atomically.
-2. **Reuse, don't reinvent.** Reference existing functions, utilities, and
+2. **Reuse, do not reinvent.** Reference existing functions, utilities, and
    patterns from research.md.
 3. **Stay under 300 lines.** The plan must be scannable in one sitting.
 4. **No implementation code.** Describe *what* to build and *where*. Leave

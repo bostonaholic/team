@@ -19,13 +19,13 @@
 //     throws "refusing live spawn" when EVALS_MOCK_AGENT is unset and no
 //     key exists;
 //   - judge seam: getClient in tests/helpers/llm-judge.ts throws
-//     "EVALS_ANTHROPIC_API_KEY is required for the LLM-judge tier".
+//     "EVALS_ANTHROPIC_API_KEY is necessary for the LLM-judge tier".
 //
 // Child-env notes:
 //   - EVALS_TIER stays unset: filterByTier passes everything through when
 //     EVALS_TIER is unset; EVALS_TIER=gate would deselect the periodic
 //     fixture and register test.skip — a false green.
-//   - EVALS_FAKE_CHANGED_FILES pins selection to exactly one eval via the
+//   - EVALS_FAKE_CHANGED_FILES pins selection to exactly one eval through the
 //     fake-diff override in getChangedFiles; the mock seams stay
 //     process-global.
 //   - EVALS_RESULTS_ROOT points at a per-run temp dir so the child never

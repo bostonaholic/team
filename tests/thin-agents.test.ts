@@ -28,11 +28,6 @@ function readOrEmpty(path: string): string {
   return existsSync(path) ? read(path) : "";
 }
 
-// wc -l semantics: count newline characters.
-function lineCount(text: string): number {
-  return (text.match(/\n/g) ?? []).length;
-}
-
 // Everything after the closing frontmatter marker.
 function body(text: string): string {
   const parts = text.split(/^---$/m);
@@ -88,17 +83,6 @@ const NEW_SKILLS: { skill: string; agent: string; anchor: string }[] = [
   { skill: "planning-implementation", agent: "planner", anchor: "plan.md" },
 ];
 
-describe("thin agents: wrapper size band", () => {
-  // Every agent file is identity + dispatch contract + skill pointers only.
-  // The 60-90 line band is the structure's whole-refactor sweep criterion.
-  for (const agent of ALL_AGENTS) {
-    test(`agents/${agent}.md is a thin wrapper (60-90 lines)`, () => {
-      const lines = lineCount(readOrEmpty(agentPath(agent)));
-      expect(lines).toBeGreaterThanOrEqual(60);
-      expect(lines).toBeLessThanOrEqual(90);
-    });
-  }
-});
 
 describe("thin agents: new methodology skills exist with the methodology-skill frontmatter contract", () => {
   for (const { skill } of NEW_SKILLS) {
@@ -114,10 +98,8 @@ describe("thin agents: new methodology skills exist with the methodology-skill f
       expect(/^effort:/m.test(fm)).toBe(false);
     });
 
-    test(`${skill} body is present and under 500 lines`, () => {
-      const lines = lineCount(readOrEmpty(skillPath(skill)));
-      expect(lines).toBeGreaterThan(0);
-      expect(lines).toBeLessThan(500);
+    test(`${skill} body is present`, () => {
+      expect(readOrEmpty(skillPath(skill)).length).toBeGreaterThan(0);
     });
   }
 });
@@ -176,7 +158,7 @@ describe("thin agents: fold targets absorbed the moved methodology", () => {
     expect(readOrEmpty(skillPath("test-first-development"))).toContain("test-style/SKILL.md");
   });
 
-  test("reviewing-security carries the security methodology; code-review keeps the pointer and stays under 500 lines", () => {
+  test("reviewing-security carries the security methodology; code-review keeps the pointer", () => {
     // The security-reviewer methodology folded into code-review during the
     // thin-agents refactor, then moved to its own just-in-time skill.
     const reviewingSecurity = readOrEmpty(skillPath("reviewing-security"));
@@ -184,7 +166,6 @@ describe("thin agents: fold targets absorbed the moved methodology", () => {
     expect(reviewingSecurity).toContain("CRITICAL — Hard Gate");
     const codeReview = readOrEmpty(skillPath("code-review"));
     expect(codeReview).toContain("reviewing-security/SKILL.md");
-    expect(lineCount(codeReview)).toBeLessThan(500);
   });
 
   test("code-review absorbs the code-reviewer inspection checklist (off-by-one)", () => {

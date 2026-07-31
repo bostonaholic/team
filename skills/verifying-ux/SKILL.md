@@ -7,7 +7,7 @@ user-invocable: false
 # Verifying UX
 
 The ux-reviewer's procedure: boot the application, interact with it as a
-real user would, and evaluate whether the experience works correctly.
+real user would, and evaluate if the experience works correctly.
 
 ## Detection
 
@@ -22,7 +22,7 @@ First, determine the project type by inspecting configuration files:
 
 ## UI Project Verification
 
-1. **Start the dev server.** Find the appropriate start command from
+1. **Start the dev server.** Find the applicable start command from
    `package.json` scripts, `Makefile`, or equivalent. Run it in the background.
    Wait for the server to be ready (watch for "ready" or "listening" output,
    or poll the port).
@@ -45,7 +45,7 @@ First, determine the project type by inspecting configuration files:
 
 ## API Project Verification
 
-1. **Start the server.** Find and run the appropriate start command in the
+1. **Start the server.** Find and run the applicable start command in the
    background. Wait for it to be ready.
 
 2. **Send real HTTP requests** with `curl` to the endpoints affected by the
@@ -58,14 +58,14 @@ First, determine the project type by inspecting configuration files:
 3. **Check edge cases:**
    - Empty request bodies where a body is expected
    - Malformed input
-   - Missing required parameters
+   - Missing necessary parameters
 
 4. **Stop the server** when verification is complete.
 
 ## Screenshot Capture (UI projects)
 
 Runs as step 5 of UI Project Verification, inside the server lifecycle (the
-server is up; you have not stopped it yet). Skip this entire section for
+server is up. You have not stopped it yet). Skip this entire section for
 API-only and Library projects.
 
 **UI-impact gate.** Capture only when both conditions hold: the project type
@@ -98,7 +98,7 @@ write them to `<artifact-dir>/screenshots/`.
 
 **Data caution.** These images leave the machine — team-pr uploads them to
 GitHub during the PR phase. Do not capture routes or states that render
-secrets or real PII; prefer seeded or synthetic data. If a route's only
+secrets or real PII. Prefer seeded or synthetic data. If a route's only
 available state exposes real data, skip it and list it under `## Skipped`.
 
 **Caps and skip statuses.**
@@ -112,9 +112,9 @@ available state exposes real data, skip it and list it under `## Skipped`.
 - Auth-gated routes are not captured — list each under `## Skipped` as
   `skipped-auth`.
 - More affected states than the cap allows → add the line
-  "N additional states not captured" under `## Skipped`.
+  "N more states not captured" under `## Skipped`.
 
-**Manifest.** Write `<artifact-dir>/screenshots/manifest.md` via a Bash
+**Manifest.** Write `<artifact-dir>/screenshots/manifest.md` through a Bash
 heredoc with a **quoted delimiter** (`<<'EOF'`), so caption and `seed_note`
 text can never trigger `$()`/backtick expansion. The same discipline applies
 to every command in this section: pass variable content (routes, file paths,
@@ -137,13 +137,13 @@ Body: a `## Captured` section with one `### <NN>-<route-slug>-<state>.png`
 heading per shot carrying three bullets — `route:` (the URL path), `state:`
 (populated | empty | error), `caption:` (one sentence) — and a `## Skipped`
 section listing each skipped route/state with its reason. `status: captured`
-means every planned shot is present; `partial` means some were skipped.
+means every planned shot is present. `partial` means some were skipped.
 
 ## Rules
 
 - ALWAYS stop the dev server when you are done, even if verification fails.
-  Use process IDs or `kill` to ensure cleanup.
-- Do NOT modify any code. You are a tester, not a fixer.
+  Use process IDs or `kill` to make sure that cleanup happens.
+- Do NOT change any code. You are a tester, not a fixer.
 - Do NOT test functionality unrelated to the recent implementation.
 - If the server fails to start, report that as the primary finding and stop.
 - Never commit screenshots to any branch or worktree — they are local scratch

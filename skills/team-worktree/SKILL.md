@@ -65,14 +65,14 @@ done
   options:
   - **Run the producer** — run `/team-plan docs/plans/<id>/` to produce the
     missing `plan.md`.
-  - **Provide a path** — the user supplies the `docs/plans/<id>/` directory
+  - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
 
 ## Detect mode
 
 1. Use the directory resolved in `## Input`.
 2. **Read `$ARGUMENTS/repos.md`** if present:
-   - Parse the home repo path and the list of additional repos (each with
+   - Parse the home repo path and the list of more repos (each with
      `path:` and `name:` fields). See `skills/qrspi-workflow/SKILL.md`
      for the schema.
    - This puts you in **multi-repo mode**.
@@ -81,11 +81,10 @@ done
 
 ## Detect existing worktree
 
-**Never create a nested worktree.** For each target repo, determine
-whether the current checkout is a **linked worktree** — any working
-tree other than the repository's main working tree, wherever it lives
-on disk. In the main working tree the git dir and the common git dir
-are the same path; in a linked worktree they differ:
+**Never create a nested worktree.** For each target repo, determine if the
+current checkout is a **linked worktree**. That is any working tree other
+than the repository's main working tree, wherever it lives on disk. In the main working tree the git dir and the common git dir
+are the same path. In a linked worktree they differ:
 
 ```sh
 [ "$(git -C <repo-path> rev-parse --path-format=absolute --git-dir)" != \
@@ -105,7 +104,7 @@ Compare against the repo's default branch
 
 - **Non-default branch** → **skip worktree creation for this repo.**
   Announce once: "Already in worktree `<path>` on branch `<branch>` —
-  skipping worktree creation, continuing in place." Treat the current
+  skipping worktree creation, continuing in place." Then treat the current
   checkout as this repo's worktree for the rest of the pipeline. Work
   continues on the current branch — no `<id>` branch is created.
 - **Default branch** → report and stop. Implementing directly on the
@@ -118,7 +117,7 @@ If the checkout is **not** a linked worktree, this repo proceeds through
 the normal creation flow below.
 
 In multi-repo mode, this check applies to **every** listed repo, not
-just the home repo. Skipped repos reuse their current checkout; the
+just the home repo. Skipped repos reuse their current checkout. The
 remaining repos still get fresh `<id>`-branch worktrees.
 
 ## Execution
@@ -130,13 +129,13 @@ remaining repos still get fresh `<id>`-branch worktrees.
 - `<id>` = `basename "$ARGUMENTS"`
 - Branch name = `<id>` (in every involved repo)
 - Worktree path per repo = `<repo-path>/.claude/worktrees/<id>` (per
-  Claude Code's native worktree convention; see
+  Claude Code's native worktree convention. See
   `skills/worktree-isolation/SKILL.md`)
 
 **Branch names must never contain a slash (`/`).** Use `-` as the only
 delimiter. A `/` in a branch name creates a nested ref path in
-`.git/refs/heads/` that collides with Claude Code's `.claude/worktrees/`
-directory convention and breaks worktree cleanup. The `<id>` produced by
+`.git/refs/heads/`. That path collides with Claude Code's
+`.claude/worktrees/` directory convention and breaks worktree cleanup. The `<id>` produced by
 the questioner is already slash-free, but if `basename "$ARGUMENTS"` ever
 yields a name containing `/` (e.g. a ticket prefix like `TEAM/123`),
 replace every `/` with `-` first and use that sanitized name as **both**
@@ -151,14 +150,14 @@ entirely and proceed straight to "Create the worktree(s)".** The dialog
 fires only when a human invoked `/team-worktree`
 directly — a setup-time prompt on direct invocation. Within a full
 `/team` run the orchestrator creates the worktrees **without a
-confirmation prompt** (the phase loop never pauses mid-run); the
+confirmation prompt** (the phase loop never pauses mid-run). The
 resolved repo set is recorded loudly in `design.md` and echoed in the
 PR body's `## Review notes`.
 
-Confirm only the repos that actually need a worktree created. If **no**
+Create a worktree only for the repos that actually need one. If **no**
 repo needs creation (single-repo mode where the detect step skipped the
 home repo), skip this dialog entirely — the reuse announcement above is
-sufficient; proceed to Completion.
+sufficient. Proceed to Completion.
 
 Single-repo:
 ```
@@ -206,10 +205,10 @@ worktree directory and the `-b` flag in every repo. In the common case
   ```
   [ "$(dirname "$(realpath "<repo-path>")")" = "$(dirname "$(realpath "<home-root>")")" ]
   ```
-  If the check fails, **refuse that repo and report it** — never create
-  a worktree outside the home repo's sibling set (`repos.md` content is
-  not trusted blindly; it may have been authored without a Bash-side
-  path check). For each repo that passes:
+  If the check fails, **refuse that repo and report it**. Never create a
+  worktree outside the home repo's sibling set. Do not trust `repos.md`
+  content blindly, because someone can author it with no Bash-side path
+  check. For each repo that passes:
   ```
   git -C <repo-path> fetch origin --quiet
   git -C <repo-path> worktree add .claude/worktrees/<branch> -b <branch> origin/HEAD
@@ -245,7 +244,7 @@ Report the worktree paths and tell the user:
 
 - Single-repo: **"Next: cd <home-worktree> and run `/team-implement docs/plans/<id>/`"**
 - Home repo skipped (already in its worktree): **"Next: run
-  `/team-implement docs/plans/<id>/`"** — no `cd` needed; work continues
+  `/team-implement docs/plans/<id>/`"** — no `cd` needed. Work continues
   in the current checkout on the current branch.
 - Multi-repo: **"Next: cd <home-worktree> and run `/team-implement
   docs/plans/<id>/`. The implementer will navigate between the

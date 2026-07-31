@@ -16,14 +16,14 @@
 // The body builder is a pure function (buildReportBody) so it is unit-tested
 // for free in tests/eval-report.test.ts. The CLI wrapper only reads files and
 // always exits 0 — formatting must never fail the workflow. The run-evals job
-// owns the real pass/fail signal via its own check status.
+// owns the real pass/fail signal through its own check status.
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import type { EvalResult, EvalTestEntry } from "../tests/helpers/eval-store";
 
-// The marker prefix the workflow greps for when deciding whether to update an
+// The marker prefix the workflow greps for when deciding if to update an
 // existing comment or create a new one. MUST stay stable and in sync with the
 // upsert logic in .github/workflows/pr-evals.yml (locked by a tripwire test).
 export const REPORT_MARKER = "## PR Evals";

@@ -13,8 +13,8 @@
 // spawns the model.
 //
 // git-commit emits a text artifact (a commit message), not a findings list, so
-// the deterministic axis (`outcomeJudge`) scores *required properties* — the
-// Conventional-Commit subject shape — via the fixture's `detection_hint`
+// the deterministic axis (`outcomeJudge`) scores *necessary properties* — the
+// Conventional-Commit subject shape — through the fixture's `detection_hint`
 // regex, and the gated LLM judge grades message quality (mood, no trailing
 // period, why-not-what body). Periodic tier: the quality axis has model-output
 // variance (design Edge case — stochastic eval is periodic, not gate).
@@ -60,13 +60,13 @@ testIfSelected(
       });
 
       // Tier 1 — outcome judge (deterministic): does the output carry a
-      // Conventional-Commit subject of the required shape? Computed from
+      // Conventional-Commit subject of the necessary shape? Computed from
       // ground-truth.json, no model call.
       const outcome = outcomeJudge(fixture.groundTruth, result.output);
 
       // Tier 2 — LLM judge (gated): only spend on the model when the
       // deterministic shape check passed. Grades imperative mood, no trailing
-      // period, why-not-what body via the generic 1-5 quality rubric.
+      // period, why-not-what body through the generic 1-5 quality rubric.
       let messageQuality = 1;
       if (outcome.passes_minimum) {
         const quality = await judgeQuality(result.output);

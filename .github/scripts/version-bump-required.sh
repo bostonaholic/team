@@ -24,13 +24,13 @@
 # "Bumped" is measured against the MERGE-BASE (fork point), not the live base tip
 # — "did THIS branch move plugin.json's version relative to where it forked?"
 # (the #104 lesson, shared with pr-title-version.sh). A bump-less PR behind a
-# version-bumped main therefore reads as "no bump", not a false positive.
+# version-bumped main thus reads as "no bump", not a false positive.
 #
 # Inputs (env):
 #   HEAD_SHA — the PR head commit (github.event.pull_request.head.sha)
 #   BASE_SHA — the base branch commit (github.event.pull_request.base.sha)
 #
-# Reads .claude-plugin/plugin.json's version at the relevant commits via
+# Reads .claude-plugin/plugin.json's version at the relevant commits through
 # `git show`, so the repository must be checked out with enough history to
 # resolve both SHAs and their merge-base.
 #

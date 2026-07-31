@@ -17,7 +17,7 @@ on:
 
 concurrency:
   # Key on the PR number (never the attacker-controlled branch name) so a
-  # crafted head_ref can't collide with or cancel another PR's group.
+  # crafted head_ref cannot collide with or cancel another PR's group.
   group: harness-checks-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 

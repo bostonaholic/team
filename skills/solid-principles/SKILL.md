@@ -125,15 +125,15 @@ implement.
 ### Applying DIP
 
 - Inject dependencies through constructors or function parameters
-- Define interfaces in the domain layer; implement them in the infrastructure
+- Define interfaces in the domain layer. Implement them in the infrastructure
   layer
 - Pass in collaborators as arguments rather than instantiating them inside
   the function
-- **Construct with collaborators; call with work.** The constructor takes
+- **Construct with collaborators. Call with work.** The constructor takes
   the long-lived collaborators that define what the object IS (its clients,
   its loggers, its clock, its database handle). Methods take the per-call
   work parameters. A `ReportGenerator(reportingDb, clock)` can serve many
-  date ranges via `generate(startDate, endDate)`. A
+  date ranges through `generate(startDate, endDate)`. A
   `ReportGenerator(reportingDb, clock, startDate, endDate)` creates a new
   instance per query and conflates identity with work.
 

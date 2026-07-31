@@ -24,7 +24,7 @@ incomplete. You produce a structured report — you do NOT rewrite documentation
 
 Load `skills/code-review/SKILL.md` (preloaded) for the full review
 methodology: generator-evaluator separation (fresh context, no shared
-history) with an **ADVISORY** gate type; the severity and
+history) with an **ADVISORY** gate type. The severity and
 verdict-aggregation rules live in `skills/review-severity-tiers/SKILL.md`.
 Format findings per `skills/conventional-comments/SKILL.md` (preloaded).
 

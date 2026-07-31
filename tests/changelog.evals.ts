@@ -9,7 +9,7 @@
 // `testIfSelected`.
 //
 // changelog emits a text artifact (Keep-a-Changelog markdown), not a findings
-// list, so the deterministic axis (`outcomeJudge`) scores *required
+// list, so the deterministic axis (`outcomeJudge`) scores *necessary
 // properties* — the `### Added` / `### Fixed` section headings — and the gated
 // LLM judge grades the harder filtering / user-facing-language property.
 // Periodic tier: filtering is judgment-laden with model-output variance.
@@ -51,7 +51,7 @@ testIfSelected(
         testName: "changelog-keep-a-changelog-filter",
       });
 
-      // Tier 1a — outcome judge (deterministic): are the required `### Added` /
+      // Tier 1a — outcome judge (deterministic): are the necessary `### Added` /
       // `### Fixed` section headings present? Computed from ground-truth.json,
       // no model call.
       const outcome = outcomeJudge(fixture.groundTruth, result.output);

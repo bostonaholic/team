@@ -46,9 +46,9 @@ the current branch (`gh pr view`). Refuse up front, before any other work:
   "the PR is ready for review", or `/pr-watch` invoked with that stated
   intent. On such a cue, run `gh pr ready` and report the promotion
   loudly — the user must see that the draft went public.
-- When the cue is ambiguous about readiness (for example, "watch the PR")
-  and the PR is still a draft, watch the draft in place and say so —
-  never promote on an ambiguous cue. End the arm report with the
+- When the cue is ambiguous about readiness, such as "watch the PR", and
+  the PR is still a draft, watch the draft in place and say so.
+  Never promote on an ambiguous cue. End the arm report with the
   follow-up offer: say "the PR is ready for review" to promote it now.
 - If `gh pr ready` fails (for example, permissions), warn and keep
   watching — the promotion is not a precondition for the loop.
@@ -82,7 +82,7 @@ Each poll is one Bash call that combines:
 
 - `gh pr view --json state,reviewDecision,isDraft`
 - a trimmed GraphQL `reviewThreads` query — thread ids and `isResolved`
-  only; past 100 threads it paginates with `after:` cursors (see the
+  only. Past 100 threads it paginates with `after:` cursors (see the
   pagination pitfall in `skills/pr-open-comments/SKILL.md`)
 - the latest review submission, in the same GraphQL call —
   `reviews(last: 1) { nodes { author { login } state body submittedAt } }`.
@@ -102,7 +102,7 @@ flooding the transcript. A change is any of:
 
 A single transient poll failure is not a stop — retry on the next cycle.
 After 3 consecutive poll failures, stop and name the error — never spin
-silently. An expired `gh` token surfaces through this path; when the
+silently. An expired `gh` token surfaces through this path. When the
 error is an authentication failure, suggest `gh auth login` or
 `gh auth refresh`.
 
@@ -118,8 +118,8 @@ actions beyond the code its thread anchors to becomes a
 needs-clarification carve-out and stops the loop.
 
 The loop runs in one of two modes. The mode is granted per arming
-instruction and holds for the life of the watch: a plain arm ("watch the
-PR") selects the default present-then-stop mode; an arming instruction
+instruction and holds for the life of the watch. A plain arm, "watch the
+PR", selects the default present-then-stop mode. An arming instruction
 that grants authorization selects authorized mode. The canonical
 authorization signals are "watch this PR and fix comments",
 "watch and fix", "handle the comments", and
@@ -141,9 +141,8 @@ The default mode is present-then-stop with a confidence-gated fast path:
   replied to, and resolved automatically by the triage skill.
 - When every item in the batch auto-applied above 90% confidence, the
   loop resumes watching and reports what was done.
-- When any sub-90% or carve-out item remains, present the punch list,
-  then stop the turn — a turn must end to collect the user's per-item
-  choices. After the user's choices execute, offer to re-arm the watch.
+- When any sub-90% or carve-out item remains, present the punch list, then
+  stop the turn. A turn must end to collect the user's per-item choices. After the user's choices run, offer to re-arm the watch.
 
 ### Authorized mode — apply, resolve, resume
 
@@ -154,15 +153,15 @@ Then the loop re-arms until approval, merge, or timeout. Authorized mode
 is unchanged by the confidence gate — it applies every non-carve-out
 item regardless of confidence.
 
-- If a batch contains carve-out items (declined, needs-clarification,
-  could-not-apply, or security-sensitive), apply the authorized items
-  first, then present the carve-outs and stop the loop — never watch
-  past an open disagreement.
+- If a batch contains carve-out items, apply the authorized items first.
+  Then present the carve-outs and stop the loop. The carve-outs are
+  declined, needs-clarification, could-not-apply, and security-sensitive.
+  Never watch past an open disagreement.
 - Never auto-push a change that introduces a new security-sensitive
   construct (exec/eval-like code, network calls, credential handling) —
   treat it as a loop-stopping carve-out: present it and stop.
 - If a push fails in authorized mode, stop the loop and report the
-  actual `git push` error output; when the remote diverged, suggest
+  actual `git push` error output. When the remote diverged, suggest
   `git pull --rebase`. Never reply "done" or resolve a thread without
   landed code.
 
@@ -173,9 +172,9 @@ item regardless of confidence.
   present nothing.
 - If a CHANGES_REQUESTED review arrives with an empty body and no threads,
   there is no verifiable ask to triage. Emit a status line that names the
-  reviewer and the requested-changes state (both come from the poll's
-  review fields), treat it as a needs-clarification carve-out, and stop
-  the loop — suggest that the user ask the reviewer what they want.
+  reviewer and the requested-changes state, then treat it as a
+  needs-clarification carve-out and stop the loop. Suggest that the user
+  ask the reviewer what they want.
   Watching past it would hide a blocking signal.
 
 ### 6. Stop conditions
@@ -183,8 +182,8 @@ item regardless of confidence.
 The loop stops on:
 
 - **Approval** — run the hand-off in step 7.
-- **Merge or close** — the PR reached a terminal state; report it.
-- **User interrupt** — the escape hatch; the user can stop the watch at
+- **Merge or close** — the PR reached a terminal state. Report it.
+- **User interrupt** — the escape hatch. The user can stop the watch at
   any time. Pressing Esc or sending a message stops the loop between
   Bash calls.
 - **Cycle-48 timeout** — report the timeout and offer to re-arm.
@@ -215,5 +214,5 @@ Report:
 - the active mode (present-then-stop or authorized)
 - the number of cycles consumed
 - the handoff — on approval, `Next: run /shipit when you want to land
-  it.`; on timeout or after the user's choices execute, offer to re-arm
+  it.`. On timeout or after the user's choices run, offer to re-arm
   the watch.

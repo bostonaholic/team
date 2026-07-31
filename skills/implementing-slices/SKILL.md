@@ -6,7 +6,7 @@ user-invocable: false
 
 # Implementing Slices
 
-The implementer's execution procedure: consume the plan, execute
+The implementer's execution procedure: consume the plan, work through
 one vertical slice at a time, and commit each slice atomically the moment
 its tests pass.
 
@@ -47,27 +47,27 @@ Security vulnerabilities (CRITICAL or HIGH severity) were found.
 Format or lint checks failed.
 1. Read the linter error output and failing rules.
 2. Fix each violation — auto-fixable issues first (`--fix`), then manual fixes.
-3. Re-run the format/lint check to confirm it passes.
+3. Re-run the format/lint check to make sure it passes.
 
 #### Typecheck failure
 Type checking failed (e.g., `tsc --noEmit`).
 1. Read the type errors — file paths, line numbers, error codes.
 2. Fix each type error — add missing types, fix mismatched signatures, resolve
    import issues.
-3. Re-run the type checker to confirm it passes.
+3. Re-run the type checker to make sure it passes.
 
 #### Build failure
 Production build failed.
 1. Read the build error output.
 2. Fix the build errors — missing dependencies, broken imports, config issues.
-3. Re-run the build command to confirm it succeeds.
+3. Re-run the build command to make sure it succeeds.
 
 #### Test failure
 Test suite has failing tests.
 1. Read the failing test names and assertion output.
 2. Fix the code (not the tests) to make failing tests pass. Tests are the
    contract — the implementation must satisfy them.
-3. Re-run the full test suite to confirm all tests pass.
+3. Re-run the full test suite to make sure all tests pass.
 
 When a test, lint, or typecheck failure is **non-obvious** — the cause is not
 plain from the error and the first fix you reach for is a guess — Load
@@ -75,7 +75,7 @@ plain from the error and the first fix you reach for is a guess — Load
 (5 Whys)** causal chain to the root before editing, so you fix the root cause
 rather than the symptom. Skip this for an **obvious** failure (a typo, a
 trivially-named assertion, a clear one-line fix) — drilling a one-line fix is
-wasted ceremony; the fast path stays intact.
+wasted ceremony. The fast path stays intact.
 
 #### Code-review failure
 Code review found blocking quality issues (REQUEST CHANGES verdict).
@@ -86,7 +86,7 @@ Code review found blocking quality issues (REQUEST CHANGES verdict).
 
 ### Common to all fix dispatches
 
-- **Re-run the full test suite** after fixes to ensure nothing regressed.
+- **Re-run the full test suite** after fixes to make sure that nothing regressed.
 - **Report which findings were fixed** and what changed.
 - If multiple failure types were reported in the same round, address all of
    them before reporting completion.
@@ -101,9 +101,9 @@ For each slice:
 1. **Read the slice spec** — the plan lists its acceptance tests, the
    file-level steps, and (multi-repo) the slice's `Repos:` field.
 2. **Implement the steps within the slice** in the order given. Steps marked
-   `[parallel]` may be done in any order; `[sequential]` steps depend on
+   `[parallel]` may be done in any order. `[sequential]` steps depend on
    prior steps in the slice. In multi-repo mode, each step carries
-   `[repo: <slug>]`; cd into that repo's worktree before applying the
+   `[repo: <slug>]`. Cd into that repo's worktree before applying the
    step. Cross-repo steps within one slice are routine — switch
    directories as needed.
 3. **Run the slice's acceptance tests.** When they all pass and prior
@@ -136,7 +136,7 @@ orchestrator (paths, slice list, final test status).
   dependency but do not preempt that slice.
 - Do not optimize or refactor until the slice's tests pass.
 - If you find yourself writing code that no test exercises, stop and check
-  whether you are on scope.
+  if you are on scope.
 
 ## Handle blockers
 
@@ -145,13 +145,13 @@ incorrect):
 
 1. **Document the blocker** — what is blocked, why, and what would unblock it.
 2. **Continue with the next unblocked slice** if the structure allows it.
-   Many slices depend on prior slices; respect those dependencies.
+   Many slices depend on prior slices. Respect those dependencies.
 3. **Return to blocked slices** after completing unblocked work, in case the
    blocker has been resolved.
 
 ## Scope fence
 
-- **Do NOT modify acceptance tests.** They are immutable. If a test seems
+- **Do NOT change acceptance tests.** They are immutable. If a test seems
   wrong, document your concern but implement to make it pass as written.
 - **Do NOT add slices beyond the plan.** If you see a missing slice, document
   it but do not implement it.

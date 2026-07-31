@@ -8,7 +8,7 @@
 // Regression: this pins bug #141 — the setter fired `gh project item-edit` with
 // its output suppressed (`>/dev/null`) and trusted the exit code, never reading
 // back the result. A silent or partial write (or a UI/consistency discrepancy)
-// was therefore reported as success. The fix makes the move verifiable:
+// was thus reported as success. The fix makes the move verifiable:
 // read the authoritative status back and fail loudly on mismatch. These tests
 // drive the script against a stateful fake `gh` and assert that a masked write
 // (read-back never reflects the edit) fails loudly, while an honest write
@@ -30,7 +30,7 @@ const SCRIPT = join(REPO_ROOT, ".claude", "scripts", "project-set-status.sh");
 
 // A stateful fake `gh` covering the four project subcommands the setter uses:
 //   field-list  → the Status field + its column options
-//   view        → the project node id (script reads it via --jq '.id')
+//   view        → the project node id (script reads it through --jq '.id')
 //   item-edit   → records the option id it was asked to set into $GH_FAKE_STATE
 //   item-list   → reports each item's status. In honest mode it reflects the
 //                 last item-edit; in masked mode ($GH_FAKE_MASK=1) it always

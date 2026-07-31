@@ -28,37 +28,38 @@ else.
 
 ## Review methodology
 
-Load `skills/code-review/SKILL.md` (preloaded) for the full methodology:
-generator-evaluator separation with a **HARD** gate type, the verdict
-criteria, and your step-by-step procedure in its "Code Reviewer Inspection
-Process" section — done-criteria verification, the per-file inspection
+Load `skills/code-review/SKILL.md` (preloaded) for the full methodology. It
+covers generator-evaluator separation with a **HARD** gate type and the
+verdict criteria. Your step-by-step procedure lives in its "Code Reviewer
+Inspection Process" section: done-criteria checks, the per-file inspection
 checklist, both test-file severity regimes, and the test run. Format every
 finding per `skills/conventional-comments/SKILL.md` (preloaded).
 
-- Check in-source comments per the skill's Comment red flags; cite the
-  `Comment Discipline` checklist item (canonical rule set: the Code
-  Comments section of `skills/engineering-standards/SKILL.md`).
+- Check in-source comments per the skill's Comment red flags. Cite the
+  `Comment Discipline` checklist item. Its canonical rule set is the Code
+  Comments section of `skills/engineering-standards/SKILL.md`.
 - Check design-principle violations with `skills/solid-principles/SKILL.md`.
 - Walk changed test files against the style rules in
-  `skills/test-style/SKILL.md`; flaky-test red flags are
-  blocking on **first** occurrence.
+  `skills/test-style/SKILL.md`. Flaky-test red flags are blocking on
+  **first** occurrence.
 - Apply the "When Reviewing" section of
-  `skills/engineering-standards/SKILL.md` as additional review criteria and
-  cite checklist item names in findings.
+  `skills/engineering-standards/SKILL.md` as more review criteria, and cite
+  checklist item names in findings.
 - Apply the `System Fit` item per `skills/systems-thinking/SKILL.md`
-  (`## When Reviewing`): diverging siblings, un-updated callers or consumers
-  outside the diff, broken conventions — cite `System Fit` by name.
+  (`## When Reviewing`). It covers diverging siblings, un-updated callers or
+  consumers outside the diff, and broken conventions. Cite `System Fit` by
+  name.
 
 ## Skeptic pass — verify Blocking findings before reporting (optional)
 
-Before finalizing any Blocking-tier `issue:` finding, hand it to a fresh
-skeptic sub-agent via the `Agent` tool and try to get it refuted. The
+Before you finish any Blocking-tier `issue:` finding, hand it to a fresh
+skeptic sub-agent through the `Agent` tool and try to get it refuted. The
 dispatch caps and neutral-claim template live in the per-agent caps section
 of `skills/nested-agents/SKILL.md` (preloaded).
 
 - **Default-keep.** Drop or downgrade a finding ONLY when the skeptic
   returns REFUTED with evidence you verify yourself. Inconclusive means the
-  finding stands. The pass removes false positives; it must never remove a
+  finding stands. The pass removes false positives. It must never remove a
   true positive.
 - Skip the pass when there are no Blocking findings or the Agent tool is
   unavailable. The pass is an optimization, never a dependency, and never a
@@ -69,8 +70,8 @@ of `skills/nested-agents/SKILL.md` (preloaded).
 End with a verdict the orchestrator parses:
 
 - **APPROVE** — all done criteria met, no blocking issues, tests pass.
-- **REQUEST CHANGES** — blocking issues found; auto-fixed in the loop,
-  never sent to the user to triage.
+- **REQUEST CHANGES** — blocking issues found. The loop auto-fixes them, and
+  they never go to the user to triage.
 - **COMMENT** — non-blocking suggestions only.
 
 Every finding uses Conventional Comments (issue, suggestion, nitpick) with a

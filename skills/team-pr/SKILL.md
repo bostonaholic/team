@@ -9,7 +9,7 @@ argument-hint: "[docs/plans/<id>/]"
 
 Run the PR phase. Two modes:
 
-- **Resume mode** — Implement passed the aggregate gate; the topic
+- **Resume mode** — Implement passed the aggregate gate. The topic
   branch has slice commits ready. `$ARGUMENTS/task.md` and
   `$ARGUMENTS/design.md` exist.
 - **Standalone mode** — no matching artifact directory, but the working
@@ -63,14 +63,15 @@ done
 # Tier 3 — none found: print nothing → fall to AskUserQuestion (prose below).
 ```
 
-- **If the block printed a path**, use it as `$ARGUMENTS` for the resume path
-  (tier 1 explicit arg, or tier 2 discovery of a directory holding `design.md`).
-  When the path came from tier 2 (no explicit arg), announce the resolved
-  directory to the user before proceeding, so an auto-picked topic is never
+- **If the block printed a path**, use it as `$ARGUMENTS` for the resume
+  path. That is tier 1 explicit arg, or tier 2 discovery of a directory
+  holding `design.md`. When the path came from tier 2, with no explicit arg,
+  announce the resolved directory to the user first, so an auto-picked topic
+  is never
   silent.
 - **If the block printed nothing** (tier 3 — no matching directory), do not
-  hard-error. The working tree may still have commits to ship: fall through to
-  the **Standalone path** in `## Execution`, which detects the base branch
+  hard-error. The working tree can still have commits to ship. Fall through
+  to the **Standalone path** in `## Execution`. It detects the base branch
   (archetype B) and stops with "Nothing to ship." only when there is nothing
   ahead of the base.
 
@@ -82,7 +83,7 @@ done
    - Read `$ARGUMENTS/repos.md` if present. When present, you are in
      **multi-repo mode** — read the `## Worktrees` section to get each
      repo's worktree path.
-   - For each involved worktree (single-repo: just the current one;
+   - For each involved worktree (single-repo: just the current one,
      multi-repo: every repo's worktree from `repos.md`), check whether
      it has commits ahead of its base branch. Skip any with no commits.
 2. **Detect the base branch (per repo):**
@@ -110,9 +111,9 @@ done
    In multi-repo mode, update each repo's `CHANGELOG.md` with the
    entries belonging to that repo's commits.
 7. **Open a draft PR automatically — do not stop to ask.** The PR phase
-   never waits for approval; opening the PR requires no approval. Push the
+   never waits for approval. Opening the PR requires no approval. Push the
    branch and open the PR as a **draft** (`gh pr create --draft`). Pass
-   the body to `gh pr create`/`gh pr edit` via `--body-file` or a quoted
+   the body to `gh pr create`/`gh pr edit` through `--body-file` or a quoted
    heredoc — never interpolated into a double-quoted shell argument. Any
    uncommitted final changes (typically `CHANGELOG.md`) land as a single
    trailing ship commit before the push. In multi-repo mode this opens
@@ -124,37 +125,38 @@ done
    Template below).
 9. **Tracking ticket — link now, in-review when ready.** If `ticketId`
    is non-null, apply the ticket-lifecycle rules in
-   `skills/tracking-tickets/SKILL.md`: render the ticket link as the
-   closing line the PR Body Template below ends with (that skill owns
-   the `ticketId` interpretation, the omit-when-null rule, the
-   multi-repo home-only closing rule, and the in-review timing — the
-   ticket keeps its in-progress state while the PR is a draft and moves
-   to in-review only once the PR is marked ready for review; the
-   template owns where the footer goes). Best-effort; never block the
+   `skills/tracking-tickets/SKILL.md`. Render the ticket link as the closing
+   line that the PR Body Template below ends with. That skill owns
+   the `ticketId` interpretation, the omit-when-null rule, the multi-repo
+   home-only closing rule, and the in-review timing. The ticket keeps its
+   in-progress state while the PR is a draft. It moves to in-review only once
+   the PR is marked ready for review. The
+   template owns where the footer goes). Best-effort. Never block the
    pipeline. Surface the `ticketId` in the completion report.
-10. **Whenever you push to a PR, review and adjust its description.** Any
-   push that adds, removes, or changes commits on a PR's branch — the
-   initial open *and* every follow-up push (review feedback, fixups,
-   rebases) — must be followed by re-reading the current PR body against
+10. **Whenever you push to a PR, review and adjust its description.** This
+   applies to any push that adds, removes, or changes commits on a PR's
+   branch. It covers the initial open *and* every follow-up push, such as
+   review feedback, fixups, and rebases. After each one, re-read the body
+   against
    the now-pushed commits and updating it (`gh pr edit --body-file`, or
    a quoted heredoc per step 7) so the Summary, Changes, and
    How-to-Verify sections still match what the branch actually does.
    **Screenshots go stale the same way the prose does.** When the push
    changed the UI, re-capture per `skills/verifying-ux/SKILL.md` →
-   "Screenshot Capture (UI projects)" (it wipes and recaptures), then
-   re-render and re-upload the `## Screenshots` section per the rules
+   "Screenshot Capture (UI projects)". It wipes and recaptures. Then
+   re-render and re-upload the `## Screenshots` section, per the rules
    below, so the embedded images show the UI the branch now produces.
    When the push left the UI alone, the refresh carries the uploaded
    `## Screenshots` section through verbatim: never dropped, never
    re-uploaded — the asset URLs already in the body stay valid. A
    re-capture that cannot run falls back to the degraded note the
-   rendering rules define; a screenshot problem never blocks or delays
+   rendering rules define. A screenshot problem never blocks or delays
    the push. The footer survives every refresh too: when the
    body carries a closing line (the home repo's PR of a ticketed topic),
    each refresh re-emits **exactly one** closing line in footer position
    — never duplicated, never dropped. A companion PR re-emits its
    non-closing reference the same way, and a PR with no ticket has no
-   closing line to re-emit; the post-open `## Companion PRs` section is
+   closing line to re-emit. The post-open `## Companion PRs` section is
    likewise preserved on every refresh. Never leave a stale description
    after a push. In multi-repo mode, do this for each repo's PR whose
    branch you pushed.
@@ -199,32 +201,32 @@ Closes #<n>
 ```
 
 **`## Review notes` (conditional):** this section carries the findings
-deferred to the human's PR review — (a) every Minor-and-below finding
-from the final aggregate review round, tagged by source reviewer (e.g.
-`[code-reviewer]`, `[security-reviewer]`); (b) COMMENT findings from the
-latest `design-review-<n>.md`, tagged `design-review-<n>`; and (c) the
+deferred to the human's PR review. (a) Every Minor-and-below finding from
+the final aggregate review round, tagged by source reviewer, such as
+`[code-reviewer]` or `[security-reviewer]`. (b) COMMENT findings from the
+latest `design-review-<n>.md`, tagged `design-review-<n>`. And (c) the
 loud unresolved-repo omission note from `design.md` `## Risks` (or
 `task.md`) when present. **Omit the section entirely when empty — never
 emit a bare heading.**
 
-The `Closes` line is a standalone footer — no heading — rendered as the
-final line of the PR body. Whether it renders at all (it is conditional
-on `ticketId`), how `ticketId` is interpreted, and the multi-repo
-home-only closing rule are canonical in
+The `Closes` line is a standalone footer, with no heading, rendered as the
+final line of the PR body. Three things are canonical elsewhere: if it
+renders at all (conditional on `ticketId`), how `ticketId` is interpreted,
+and the multi-repo home-only closing rule. They live in
 `skills/tracking-tickets/SKILL.md`. When that skill says to omit the
 line, drop its preceding blank line with it, so the body ends at the
 last `## References` bullet with no trailing blank line.
 
-**Placement rationale:** reviewers open a PR to read `## Summary`; the
-closing line is machine-facing metadata, so the narrative comes first
-and the footer comes last, mirroring the commit-footer convention in
+**Placement rationale:** reviewers open a PR to read `## Summary`. The
+closing line is machine-facing metadata, so the narrative comes first and
+the footer comes last. This mirrors the commit-footer convention in
 `skills/git-commit/SKILL.md`. GitHub parses closing keywords anywhere in
-the body, so the footer position costs nothing — and "last authored
-line" is deterministic to emit and trivial to verify.
+the body, so the footer position costs nothing. "Last authored line" is
+deterministic to emit and trivial to verify.
 
-In multi-repo mode, append a `## Companion PRs` section to each PR
-listing the URLs of every other PR opened for the same topic, so a
-reviewer can navigate the full change set:
+In multi-repo mode, append a `## Companion PRs` section to each PR. It
+lists the URLs of every other PR opened for the same topic, so a reviewer
+can navigate the full change set:
 
 ```
 ## Companion PRs
@@ -233,10 +235,10 @@ This change spans multiple repos. The companion PRs are:
 - [<repo-name>] <pr-url>
 ```
 
-Open the PRs first to obtain URLs, then edit each PR's body to add the
-section once all URLs are known. This post-open edit appends the
-section *after* the closing line — "final line of the PR body" refers
-to creation-time authoring, so the appended `## Companion PRs` section
+Open the PRs first to get URLs. Then edit each PR's body to add the
+section, once all URLs are known. This post-open edit appends the section
+*after* the closing line. "Final line of the PR body" refers to
+creation-time authoring, so the appended `## Companion PRs` section
 following it is expected, not a violation.
 
 ### Screenshots section rendering
@@ -246,32 +248,32 @@ The `## Screenshots` section is built from `$ARGUMENTS/screenshots/manifest.md`
 
 - **Manifest absent → omit the section entirely.** Non-UI changes are never
   forced to include screenshots.
-- **Manifest `status` is any `skipped-*` value, or the manifest is malformed**
-  (unparseable frontmatter or body) → render a one-line capture-failure note
-  naming the reason, nothing more. Never block or delay the PR over
-  screenshots — the PR phase never waits for approval.
+- **Manifest `status` is any `skipped-*` value, or the manifest is
+  malformed**, with unparseable frontmatter or body → render a one-line
+  capture-failure note naming the reason, nothing more. Never block or delay
+  the PR over screenshots. The PR phase never waits for approval.
 - **Each `## Captured` entry whose PNG exists on disk** renders as
   `**<caption>** (<state>)` followed by its local path. Entries whose PNG is
   missing from disk are skipped and the discrepancy noted in the section.
 - **Manifest `status: partial`** → also append a one-line
   "N states skipped — see manifest" note to the section.
-- **Before upload runs (or when it is unavailable or fails)**, the section
-  renders the degraded form: a "captured — not yet uploaded" note (reworded
-  to "captured — upload failed or unavailable" if the upload is attempted
-  and fails) plus the local file paths above. This degraded shape is the
+- **Before upload runs, or when it is unavailable or fails**, the section
+  renders the degraded form. That is a "captured — not yet uploaded" note
+  plus the local file paths above. The note reads "captured — upload failed
+  or unavailable" when the upload is attempted and fails. This degraded shape is the
   contract every upload-failure branch falls back to.
 
 ## Screenshot Upload
 
-Screenshots render inline for any reviewer (including private repos) via
+Screenshots render inline for any reviewer, private repos included, through
 GitHub's user-attachments pipeline. Run this procedure only when the manifest
-carries `## Captured` entries whose PNGs exist on disk — in every other case
+carries `## Captured` entries whose PNGs exist on disk. In every other case
 the rendering rules above already produced the final section (absent, or
 note-only) and there is nothing to upload. Sequencing is PR-first — three
 explicit steps, mirroring the Companion-PRs open-then-edit shape:
 
-1. **The draft PR already exists** (opened in Execution step 7). Its initial
-   body carries whatever the rendering rules above produced — when this
+1. **The draft PR already exists**, opened in Execution step 7. Its initial
+   body carries whatever the rendering rules above produced. When this
    procedure runs, that is the "not yet uploaded" local-path form of the
    `## Screenshots` section.
 2. **Upload.** Session pre-check first — Chromium writes its cookie store
@@ -291,14 +293,14 @@ explicit steps, mirroring the Companion-PRs open-then-edit shape:
      https://github.com
    ```
 
-   Sign in to github.com once in that headed window, then close it — the
+   Sign in to github.com once in that headed window, then close it. The
    sign-in itself stays manual. That profile holds a full **unencrypted**
-   github.com web session; to revoke it, sign out of github.com inside that
+   github.com web session. To revoke it, sign out of github.com inside that
    profile or delete the directory. If the pre-check passes, `chmod 700` the
    profile directory before use (idempotent — never rely on documentation
    alone), then run a short Node script through Bash:
    `chromium.launchPersistentContext` on the profile
-   directory, headless; open the PR page; confirm the signed-in marker (the
+   directory, headless. Open the PR page. Confirm the signed-in marker (the
    `user-login` meta tag is present, no redirect to `/login`) — logged out
    despite the cookie file means an expired session → the same degraded path.
    For each manifest entry with an existing PNG under 10MB, set the file on
@@ -306,24 +308,24 @@ explicit steps, mirroring the Companion-PRs open-then-edit shape:
    pipeline to insert the
    `https://github.com/user-attachments/assets/<uuid>` URL into the textarea,
    record it, then clear the textarea before the next image so each URL is
-   unambiguously attributed to its manifest entry; 60s bound per image
+   unambiguously attributed to its manifest entry. 60s bound per image
    (timeout → that image is a failure). Oversize files (>10MB) are skipped at
    upload and noted. Pass file paths and captions to the script as argv (or
    environment variables), never interpolated into a command string. Do not
    submit any comment — the textarea is only the upload vehicle.
 3. **Body edit.** `gh pr edit --body` replaces the `## Screenshots` section
    wholesale — succeeded images render as `**<caption>** (<state>)` +
-   `![<caption>](<url>)`; failures are listed by caption + local path in the
+   `![<caption>](<url>)`. Failures are listed by caption + local path in the
    same section (partial success → embed the succeeded URLs, list the rest as
    failures). Re-running team-pr for the same id replaces the section
-   wholesale again; previously uploaded URLs remain valid.
+   wholesale again. Previously uploaded URLs remain valid.
 
-**Multi-repo:** upload once, on the home-repo PR; companion-PR bodies embed
+**Multi-repo:** upload once, on the home-repo PR. Companion-PR bodies embed
 the same URLs — never re-upload per repo.
 
-**Failure posture:** every branch ends with an open PR and a visible note
-plus local paths — upload problems never block the PR, retry-loop, or prompt
-the user.
+**Failure posture:** every branch ends with an open PR, a visible note, and
+local paths. Upload problems never block the PR, retry-loop, or prompt the
+user.
 
 ## Changelog Update
 

@@ -208,9 +208,9 @@ describe("Slice 4: existing seeders cross-reference progress-tracking", () => {
     expect(read(skill("team-fix"))).toContain("Seed the TodoWrite ledger");
   });
 
-  test("team-implement seed wording is unchanged ('Coordinate progress via TodoWrite. Seed:')", () => {
+  test("team-implement seed wording is unchanged ('Coordinate progress through TodoWrite. Seed:')", () => {
     expect(read(skill("team-implement"))).toContain(
-      "Coordinate progress via TodoWrite. Seed:",
+      "Coordinate progress through TodoWrite. Seed:",
     );
   });
 });

@@ -9,7 +9,7 @@
 //
 // Tier / diff gating: each test is registered through `testIfSelected`,
 // which consults the selector (EVALS_TIER + diff-based selection, with
-// EVALS_ALL=1 forcing everything). A test that isn't selected is registered
+// EVALS_ALL=1 forcing everything). A test that is not selected is registered
 // as `test.skip` and never spawns the model.
 //
 // Run paths:
@@ -86,7 +86,7 @@ function splitIntoFindingSegments(output: string): FindingSegment[] {
 // finding, so a run that puts the blocking label on a different finding
 // while the pinned plant rides a `suggestion:` cannot pass. Hint matching
 // delegates to matchesHint (case-insensitive regex, literal-substring
-// fallback when the hint isn't valid regex).
+// fallback when the hint is not valid regex).
 function blockingLabelOnHint(output: string, detectionHint: string): boolean {
   return splitIntoFindingSegments(output).some(
     (segment) =>
@@ -294,6 +294,6 @@ registerPlantedBugEval({
 afterAll(async () => {
   await collector.finalize();
   // A passing-but-3×-more-expensive run is a regression. Fail the run
-  // (and therefore CI) on any budget regression vs. the previous run.
+  // (and thus CI) on any budget regression vs. the previous run.
   assertNoBudgetRegressions(collector);
 });

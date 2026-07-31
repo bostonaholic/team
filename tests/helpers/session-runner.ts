@@ -143,7 +143,7 @@ export function extractToolCallsAndUsage(events: unknown[]): DerivedFromEvents {
     }
 
     // tool_result events carry the tool's output; pair with the most recent
-    // tool_use that hasn't been resolved.
+    // tool_use that has not been resolved.
     if (ev.type === "user" && typeof ev.message === "object" && ev.message !== null) {
       const message = ev.message as Record<string, unknown>;
       const content = message.content;
@@ -155,7 +155,7 @@ export function extractToolCallsAndUsage(events: unknown[]): DerivedFromEvents {
             const output = typeof it.content === "string"
               ? it.content
               : JSON.stringify(it.content ?? "");
-            // Attach to the last tool call that hasn't been resolved.
+            // Attach to the last tool call that has not been resolved.
             for (let i = toolCalls.length - 1; i >= 0; i--) {
               const tc = toolCalls[i];
               if (tc && tc.output === "") {
@@ -291,7 +291,7 @@ export async function runAgentTest(
       stdio: ["pipe", "pipe", "pipe"],
     });
 
-    // Pipe the prompt via stdin.
+    // Pipe the prompt through stdin.
     if (child.stdin) {
       child.stdin.write(readFileSync(promptPath));
       child.stdin.end();

@@ -10,7 +10,7 @@
  * work when the floor is not met.
  *
  * The pure comparison core (`parseVersion`, `meetsMinimum`) is unit-tested at
- * L1; the CLI below is what a pipeline agent runs via Bash:
+ * L1; the CLI below is what a pipeline agent runs through Bash:
  *
  *     node "${CLAUDE_PLUGIN_ROOT}/skills/nested-agents/supports-nesting.mjs" "$(claude --version)"
  *

@@ -13,9 +13,9 @@ This is Team's blueprint for testing a product that mixes ordinary software with
 shape applies to anything whose output you can only judge by quality (a
 recommender, a search ranker, a generative pipeline, a heuristic planner).
 
-Team's harness is TypeScript on **Bun** (`bun test`); the non-deterministic
-component under test is driven through the **`claude`** CLI, and diff-based
-selection compares against **`origin/main`**. Those are Team's concrete choices.
+Team's harness is TypeScript on **Bun** (`bun test`). The **`claude`** CLI
+drives the non-deterministic component under test. Diff-based selection compares
+against **`origin/main`**. Those are Team's concrete choices.
 Nothing in the design below assumes a particular framework, language, or model
 vendor.
 
@@ -30,14 +30,14 @@ same input always yields the same pass/fail.
 That assumption breaks the moment part of your system is a model. The "function
 under test" is now a probability distribution. Run the same prompt twice and you
 may get different words, a different number of findings, a different tool call.
-You cannot `assertEqual` your way through it, and you cannot block a merge on a
+You cannot `assertEqual` your way through it. You also cannot block a merge on a
 check that is red 8% of the time for no reason.
 
 So this harness keeps the pyramid's scope axis **and adds a second axis:
 determinism and cost.** Every test lives at a coordinate of *(scope,
-determinism)*. The whole design is the discipline of **pushing each check as far
-down and as far toward "deterministic" as it will go**, because the cheapest,
-most reliable place to catch a given bug is almost never an expensive model eval.
+determinism)*. The whole design is one discipline: **push each check as far down
+and as far toward "deterministic" as it will go**. The cheapest, most reliable
+place to catch a given bug is almost never an expensive model eval.
 
 ```text
   determinism →  HIGH (deterministic, free, fast)        LOW (stochastic, paid, slow)
@@ -78,11 +78,12 @@ graded checks on stochastic behavior.
 ```
 
 > **Outside these six layers sits the [Golden Master](../golden-master/RUNBOOK.md)**:
-> a manual, out-of-band run of the *whole* `/team` pipeline against a frozen
-> external app + frozen prompt, to track pipeline drift and compare models. It is
-> deliberately **not** an L1-L6 layer, **not** in `bun test`, and **not** in CI:
-> running it from inside this repo would let Team's own context poison a test meant
-> to mirror a real outside user. See [`golden-master/`](../golden-master/).
+> a manual, out-of-band run of the *whole* `/team` pipeline. It runs against a
+> frozen external app and a frozen prompt. It tracks pipeline drift and compares
+> models. It is deliberately **not** an L1-L6 layer, **not** in `bun test`, and
+> **not** in CI. A run from inside this repo would let Team's own context poison
+> a test that must mirror a real outside user. See
+> [`golden-master/`](../golden-master/).
 
 ### L1: Pure unit (the wide base)
 
@@ -101,31 +102,70 @@ These tests do not run behavior. They **read your own source or config and
 assert a contract with a pattern match.** They are executable architecture
 documentation.
 
-Every load-bearing rule in your codebase ("never import X from Y," "all writes
-must route through this helper," "this name must not collide with a reserved
-word," "importing this module must have no side effects") gets a test that
-**fails the build when someone violates it**, in milliseconds, without executing
-anything.
+Every load-bearing rule in your codebase gets a test that **fails the build when
+someone breaks it**, in milliseconds, and without execution of anything.
+Example rules are "never import X from Y" and "all writes must route through
+this helper". Two more are "this name must not collide with a reserved word"
+and "an import of this module must have no side effects".
 
 Canonical forms:
 
-- **Forbidden-pattern tripwire.** Fail if a banned call reappears
-  (`grep` for the dangerous API; assert zero matches outside an allowlist).
-- **Required-routing tripwire.** Fail if a sensitive operation isn't funneled
+- **Forbidden-pattern tripwire.** Fail if a banned call reappears. Use `grep`
+  for the dangerous API. Assert zero matches outside an allowlist.
+- **Required-routing tripwire.** Fail if a sensitive operation does not go
   through its safe wrapper.
 - **No-side-effect tripwire.** Spawn a subprocess, import the module, assert it
   bound no port / wrote no file / registered no handler.
 - **Ordering tripwire.** Parse a file, assert call A precedes call B (e.g. a
   scan must run before the thing it protects).
 - **Collision / drift tripwire.** Assert generated artifacts are fresh, names
-  don't shadow reserved ones, enums in two files stay in sync.
+  do not shadow reserved ones, and enums in two files stay in sync.
 
 **Discipline:** when you write a comment that says "NEVER do X here," write the
 tripwire in the same change. A constraint without a test is a suggestion.
 
+#### A tripwire asserts a contract, never a wording
+
+Much of this repo is prose that a model reads: skill bodies, agent prompts,
+docs. That makes it tempting to assert on the words. Do not. A tripwire must
+break only when the contract breaks.
+
+**Assert these.** They are what a machine reads, so a change to one is a real
+change:
+
+- Frontmatter keys and values (`name:`, `model:`, `tools:`, `effort:`).
+- Commands, flags, GraphQL fields, shell patterns, and template strings the
+  prompt tells the model to emit.
+- File paths and cross-references. A renamed target must fail the build.
+- Section headings, and the order of two sections.
+- Numeric constants that bound behavior (`sleep 600`, `timeout 1800`).
+- The **absence** of a forbidden identifier or a forbidden claim. A negative
+  sweep never breaks under a rewrite, because a rewrite does not add back the
+  thing you banned.
+
+**Never assert these.** They break on every honest edit and hold the prose
+still:
+
+- That a sentence uses particular words. A regex such as
+  `/never\s+approve\s+unconfirmed/` pins one phrasing of a rule, not the rule.
+- That two words appear near each other. Proximity spans (`[^.]{0,240}`,
+  `.{0,250}`) test if an author put two ideas in one sentence. That is a
+  style question, not a contract.
+- How long a file is. A line ceiling measures nothing about correctness, and it
+  turns every later edit into a budget negotiation.
+
+The test is simple: **if a rewrite that preserves the meaning turns the test
+red, the test was measuring the wording.** Delete it, or find the identifier
+underneath it and assert that instead. A wording pin gives false confidence in
+both directions. It fails when nothing broke, and it passes when an author
+keeps the sentence but guts the logic around it.
+
+Behavior that only prose can carry belongs at L5 or L6, where a model judges
+if the instruction still lands. Do not simulate that at L2 with a regex.
+
 This layer is what lets a stochastic product stay correct cheaply: a huge
-fraction of "regressions" are really *contract violations*, and contracts are
-deterministic even when behavior isn't.
+fraction of "regressions" are really *contract violations*. Contracts stay
+deterministic even when behavior does not.
 
 ### L3: In-process integration
 
@@ -162,13 +202,13 @@ driven three common ways, each with a different observation surface:
 
 | Runner style | Mechanism | Observes | Use when |
 | --- | --- | --- | --- |
-| **Stream runner** | invoke `claude`, parse streamed events | tool calls, tokens, cost | most behavioral E2E; stateless and repeatable |
-| **PTY runner** | drive a real terminal | the **rendered UI** (interactive prompts, cursor, redraws) | testing UI the event stream can't see |
+| **Stream runner** | invoke `claude`, parse streamed events | tool calls, tokens, cost | most behavioral E2E. It is stateless and repeatable. |
+| **PTY runner** | drive a real terminal | the **rendered UI**: interactive prompts, cursor, and redraws | testing UI that the event stream cannot see |
 | **SDK runner** | call the model SDK directly | raw API events | A/B-ing system prompts / config with low overhead |
 
 Three runners exist because **some behavior only exists on one surface**, not
 for redundancy. An interactive confirmation rendered to a TTY does not appear in
-a JSON event stream; test the surface the user actually experiences.
+a JSON event stream. Test the surface the user actually experiences.
 
 ### L6: Quality evals (model-as-judge)
 
@@ -178,11 +218,11 @@ first**. Keep it cheap and honest:
 
 - **Use a cheaper model as the judge** than the one being judged where you can.
 - **Cascade.** Gate the expensive judge behind cheap deterministic checks. Only
-  pay for a model call when a regex/heuristic says it's warranted.
-- **Score on a rubric (1 to N), pass on a floor or a band, never on exact match.**
-  "Detection rate ≥ ground-truth floor and false positives ≤ ceiling." "Count
-  within ±2 of the seeded number." Bands are how you absorb non-determinism
-  without flakiness.
+  pay for a model call when a regex or heuristic shows the need.
+- **Score on a rubric (1 to N). Pass on a floor or a band, never on exact
+  match.** One example is "detection rate ≥ ground-truth floor and false
+  positives ≤ ceiling". Another is "count within ±2 of the seeded number".
+  Bands are how you absorb non-determinism without flakiness.
 - **Persist scores across runs** so you can see quality drift, not only today's
   pass/fail.
 
@@ -197,9 +237,9 @@ A paid suite cannot run every test on every change. Make selection automatic:
 2. The runner diffs the branch against `origin/main` and **runs only the tests
    whose dependencies changed.**
 3. A small set of **global touchfiles** triggers *everything* when touched: the
-   shared runner, the result store, and **the selection map itself.** (If editing
-   the selector didn't re-run everything, you could silently deselect a test by
-   editing one line. Close that hole.)
+   shared runner, the result store, and **the selection map itself.** If a
+   change to the selector did not re-run everything, a one-line edit could
+   deselect a test in silence. Close that hole.
 4. An **escape hatch** (`RUN_ALL=1` or equivalent) forces the full suite for
    releases and scheduled runs.
 
@@ -224,18 +264,18 @@ The classification rule is a single question:
 > external service, a subjective threshold)?
 > **Yes → periodic. No → gate.**
 
-You can never gate CI on a check that is sometimes-red-for-no-reason; doing so
-trains everyone to ignore red. Gate on what's stable, monitor what's fuzzy.
+You can never gate CI on a check that is sometimes red for no reason. That
+trains everyone to ignore red. Gate on what is stable. Monitor what is fuzzy.
 
 **Two-axis matrix in practice:**
 
 |               | Deterministic               | Non-deterministic        |
 |---------------|-----------------------------|--------------------------|
 | **Cheap**     | gate, every PR              | periodic (or band-gated) |
-| **Expensive** | gate if rare; else periodic | periodic, scheduled      |
+| **Expensive** | gate if rare, else periodic | periodic, scheduled      |
 
-> **Where Team stands today:** every eval fixture drives a live model, so all
-> are tiered periodic and none can gate, and the gate slot stays empty on
+> **Where Team stands today:** every eval fixture drives a live model. All of
+> them are thus tiered periodic, and none can gate. The gate slot stays empty on
 > purpose. A gate-tier check must both need paid infrastructure and be
 > deterministic, which the matrix above makes rare. The deterministic scoring
 > signal lives in the free suite instead: `tests/code-reviewer-replay.test.ts`
@@ -254,21 +294,21 @@ Draw one hard line between **free** (no model, no metered API, no money) and
   cheap enough that *not* running it is never tempting.
 - A separate command runs the **paid tiers** (L5-L6), diff-selected, before
   shipping and in CI.
-- CI runs the **gate** subset of paid tests and blocks merge; a scheduled job
+- CI runs the **gate** subset of paid tests and blocks merge. A scheduled job
   runs the **periodic** subset and reports.
 
 Keep the free suite genuinely free. One stray metered call buried in a "unit"
 test poisons the whole base. A tripwire that greps tests for forbidden paid
-calls (`grep` for the model CLI / SDK import in the free test roots) is a good
-L2 guard for exactly this.
+calls is a good L2 guard for exactly this. It greps for the model CLI or the SDK
+import in the free test roots.
 
 Token-consuming CI jobs are additionally restricted to trusted PR authors
-(OWNER/MEMBER/COLLABORATOR); untrusted PRs (forks, Dependabot, first-time
-contributors) skip them. This is a security control against token-spend
-griefing, not merely a cost optimization. It is also forward-proofing: the
-`periodic-evals.yml` gate is dormant until a `pull_request` trigger is added,
-while `harness-checks.yml` carries the trust expression as a documented-only
-contract for the same reason, so the control is already in place the moment a
+(OWNER, MEMBER, or COLLABORATOR). Untrusted PRs skip them: forks, Dependabot,
+and first-time contributors. This is a security control against token-spend
+griefing, not only a cost optimization. It is also forward-proofing. The
+`periodic-evals.yml` gate stays dormant until someone adds a `pull_request`
+trigger. `harness-checks.yml` carries the trust expression as a documented-only
+contract for the same reason. The control is thus already in place the moment a
 paid step attaches.
 
 ---
@@ -283,11 +323,12 @@ Once the harness has structure, protect the structure itself:
 - **Selection integrity.** The diff-selection map parses, has no dangling
   entries, and every declared test exists.
 - **Shard/parallel integrity.** If you shard the free suite across CI workers,
-  test that the sharding is stable and total (every file lands in exactly one
-  shard).
-- **Portability detection.** If you support multiple OSes, scan tests for
-  platform-fragile patterns (hardcoded `/tmp`, POSIX-only shells, path
-  separators) and curate a known-safe subset for the other platform's CI.
+  test that the sharding is stable and total. Every file must land in exactly
+  one shard.
+- **Portability detection.** If you support several operating systems, scan
+  tests for platform-fragile patterns: a hardcoded `/tmp`, POSIX-only shells,
+  and path separators. Then curate a known-safe subset for the other
+  platform's CI.
 
 Meta-tests are themselves L2 tripwires pointed at your own test directory.
 
@@ -297,13 +338,13 @@ Meta-tests are themselves L2 tripwires pointed at your own test directory.
 
 Treat money like latency: a budget you architect against, not an afterthought:
 
-- **Diff-based selection** (§3): don't run what couldn't have changed.
+- **Diff-based selection** (§3): do not run what could not have changed.
 - **Tiering** (§4): expensive runs go off the critical path.
 - **Judge cascades** (§2, L6): pay for a model only after cheap checks justify it.
 - **Cheaper judge than generator**: grade with a smaller model where viable.
 - **Fixture replay**: for an expensive deterministic check, record the costly
-  call once into a committed fixture and replay it; re-record only when the
-  inputs that define it change (guard that with a tripwire on the input files).
+  call once into a committed fixture and replay it. Re-record it only when the
+  inputs that define it change. Guard that with a tripwire on the input files.
 - **Persist and compare**: store every paid run's cost and scores so regressions
   in *spend* are as visible as regressions in *quality*.
 
@@ -317,21 +358,21 @@ The goal is a paid suite that costs a few dollars per change set, not hundreds.
   determinism (a fake CLI on `PATH`, a stub upstream server, scripted child
   processes). Real heavy dependencies only when the integration *is* the subject.
 - **Refactor toward testability at the lowest layer.** Every pure function you
-  extract is a behavior you can pin in L1 instead of paying for in L5.
+  extract is a behavior you can pin in L1 instead of pay for in L5.
 - **A constraint that matters gets a tripwire.** L2 is where architecture
   decisions become enforceable. Write the tripwire with the rule.
 - **Pin every fixed bug with a regression test named for it.** One file per bug,
   named `regression-<id>-<slug>`, asserting the specific fix. They cost nothing
   and never let the same bug back in.
 - **Floors and bands, not exact match, for anything stochastic.** Determinism
-  where you can engineer it; tolerance where you can't.
+  where you can engineer it. Tolerance where you cannot.
 - **Observation surface dictates the tool.** Test what the user actually sees.
 - **No "pre-existing failure" without proof.** Before blaming a flake on
   something other than your change, reproduce it on the base branch. Stochastic
-  systems have invisible couplings; "not my change" is a claim that needs a
+  systems have invisible couplings. "Not my change" is a claim that needs a
   receipt.
-- **Don't chase a coverage or lint number.** Accept a "worse" pattern when it's
-  the correct engineering choice; fix patterns that are genuinely bugs. The
+- **Do not chase a coverage or lint number.** Accept a "worse" pattern when it
+  is the correct engineering choice. Fix patterns that are genuinely bugs. The
   number is a smell test, not a target.
 
 ---
@@ -341,22 +382,21 @@ The goal is a paid suite that costs a few dollars per change set, not hundreds.
 A pragmatic order of operations:
 
 1. **Draw the free/paid line.** Make `bun test` run only free tiers.
-   Get L1 (pure unit) populated first, because it's the cheapest coverage you'll
-   ever buy.
+   Populate L1 (pure unit) first. It is the cheapest coverage you will ever buy.
 2. **Add tripwires (L2) for your top 10 "NEVER do X" rules.** Highest leverage
    per line of test you will write. Each is a few minutes and prevents a class of
    regression forever.
 3. **Stand up in-process integration (L3)** with a fixture server/handler so you
    can test real dispatch without the network.
 4. **Add real-dependency E2E (L4)** only for the lifecycle/concurrency cases that
-   demand it. Accelerate timers via env.
-5. **If you have a model in the loop, build one behavioral runner (L5)** for the
-   surface you care about most, and write **deterministic guardrails first**,
-   because they're the ones you can gate on.
+   demand it. Accelerate timers through env knobs.
+5. **If you have a model in the loop, build one behavioral runner (L5)** for
+   the surface you care about most. Write **deterministic guardrails first**,
+   because they are the ones you can gate on.
 6. **Add diff-based selection and the gate/periodic split** as soon as the paid
    suite costs enough to notice. Wire CI to run gate-on-PR, periodic-on-schedule.
 7. **Add model-as-judge evals (L6) last,** with cascades and band-based passing,
-   for the genuinely subjective quality you can't pin any other way.
+   for the genuinely subjective quality you cannot pin any other way.
 8. **Add meta-tests** once the structure is worth protecting.
 
 You do not need all six layers on day one. You need the **free/paid line**, a
@@ -373,10 +413,10 @@ as the stochastic surface of your product grows.
   live-model behavioral → model-as-judge.
 - **Tripwires (L2)** are the multiplier: assert contracts on the source, fail in
   milliseconds, no execution. Write one with every "NEVER" rule.
-- **Determinism decides the gate; cost decides the cadence.** Only deterministic
+- **Determinism decides the gate. Cost decides the cadence.** Only deterministic
   checks block merges. Stochastic checks run on a schedule and pass on bands.
-- **Diff-based selection** runs only what a change could break; global touchfiles
-  (including the selector itself) re-run everything.
+- **Diff-based selection** runs only what a change could break. Global
+  touchfiles, including the selector itself, re-run everything.
 - **Cost is architecture:** selection, tiering, judge cascades, cheaper judges,
   fixture replay, persisted spend.
 - **Pick the runner by observation surface.** Test what the user sees.
@@ -453,7 +493,7 @@ flowchart TD
 
 ## Appendix B: CI skeleton
 
-Drop-in scaffolding. It is intentionally vendor-neutral pseudo-config; adapt the
+Drop-in scaffolding. It is deliberately vendor-neutral pseudo-config. Adapt the
 runner, CI platform, and secret names to your stack. Bracketed tokens are
 placeholders.
 
@@ -489,7 +529,7 @@ placeholders.
 
 ### B.2 Diff-based selection (sketch)
 
-The data structure every paid test reads to decide whether to run.
+The data structure every paid test reads to decide if it runs.
 
 ```ts
 // scripts/touchfiles.ts (or .py/.go — same shape in any language)
@@ -535,8 +575,8 @@ describe.if(selected)("feature-a guardrail", () => { /* ... */ });
 
 ### B.3 Pull-request workflow (gate)
 
-Runs on every PR. Blocks merge. Generic GitHub-Actions-style YAML; map to your
-CI of choice.
+Runs on every PR. Blocks merge. The YAML below is generic GitHub-Actions style.
+Map it to your CI of choice.
 
 ```yaml
 name: ci
@@ -614,10 +654,10 @@ jobs:
 
 ### B.5 Branch-protection checklist
 
-- [ ] `free-tests` required: fast, deterministic, no secrets.
-- [ ] `lint-and-meta` required: tripwires and selection integrity.
-- [ ] `gate-evals` required: deterministic model guardrails only.
-- [ ] `periodic-evals` **not** required: scheduled, reports, never blocks.
+- [ ] `free-tests` is necessary: fast, deterministic, no secrets.
+- [ ] `lint-and-meta` is necessary: tripwires and selection integrity.
+- [ ] `gate-evals` is necessary: deterministic model guardrails only.
+- [ ] `periodic-evals` is **not** necessary: scheduled, reports, never blocks.
 - [ ] Secrets exposed **only** to gate/periodic jobs, never to the free suite.
-- [ ] Fork PRs: decide deliberately whether they receive model secrets (default:
-      no; run free + meta only, or re-target the branch to a trusted remote).
+- [ ] Fork PRs: decide deliberately if they receive model secrets. The default
+      is no. Run free and meta only, or re-target the branch to a trusted remote.

@@ -5,7 +5,7 @@
 #   - Major version bumps still get an individual PR for human review.
 #   - The repo's safely-merge-dependabots / rebase-dependabots skills handle
 #     the actual merge cadence; Dependabot's job here is just to surface
-#     what's available.
+#     what is available.
 version: 2
 updates:
   # package.json + bun.lock — TS + Bun harness deps (@anthropic-ai/sdk, bun-types, typescript).

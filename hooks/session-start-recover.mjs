@@ -73,7 +73,7 @@ function homeBranch(rootDir, id) {
 // origin/HEAD's symbolic target; falls back to the first of origin/main,
 // origin/master, main, master that resolves. When none of those exist (a repo
 // whose default is e.g. develop/trunk with no origin/HEAD), falls back to the
-// home checkout's branch (name-agnostic, via homeBranch), then to the
+// home checkout's branch (name-agnostic, through homeBranch), then to the
 // configured init.defaultBranch. Returns null if nothing resolves.
 function defaultBranch(rootDir, id) {
   const tryRev = (ref) => {

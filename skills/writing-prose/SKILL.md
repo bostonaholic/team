@@ -35,7 +35,7 @@ Write for the reader's comprehension, not the author's expertise.
 Technical documentation must follow ASD-STE100 Simplified Technical English
 (STE). STE removes ambiguity for every reader, including readers whose first
 language is not English. The plain-language principles above are the
-foundation; STE adds mechanical rules. Each rule below shows the rejected
+foundation. STE adds mechanical rules. Each rule below shows the rejected
 form (Non-STE) and the fix (STE).
 
 - **Keep sentences short.** No more than 20 words in an instruction, no more
@@ -168,9 +168,9 @@ is responsible and makes sentences longer.
 | An error will be thrown if the value is null | The function throws if the value is null |
 | It is recommended that you | We recommend you |
 
-**When passive is acceptable:** When the actor is unknown, irrelevant, or
-deliberately omitted (e.g., "The request was rejected" when the actor is the
-system and that is obvious from context).
+**When passive is acceptable:** when the actor is unknown, irrelevant, or
+deliberately omitted. An example is "The request was rejected", where the
+actor is the system and context makes that obvious.
 
 ### Concrete Over Abstract
 
@@ -220,8 +220,8 @@ documentation because it actively misleads.
 - **Check against current behavior.** Does the documented behavior match what
   the system actually does?
 - **Flag version drift.** If documentation references a version that is no
-  longer current, flag it even if the behavior has not changed — the version
-  reference creates unnecessary doubt.
+  longer current, flag it even when the behavior has not changed. The stale
+  version reference creates unnecessary doubt.
 
 ### Completeness
 
@@ -242,11 +242,11 @@ Can a typical reader understand this in one pass?
   bar that governs authoring: short sentences, common words, no unexplained
   jargon. Long sentences, rare words, and deep nesting all increase cognitive
   load.
-- **STE conformance.** Check prose against the ASD-STE100 rules above:
-  sentence-length limits, one instruction per sentence, imperative
-  instructions, simple tenses, one meaning per word, noun clusters of three
-  words or fewer, and the word substitutions in the STE table (utilize,
-  ensure, perform, however, should).
+- **STE conformance.** Check prose against the ASD-STE100 rules above. Those
+  rules cover sentence-length limits, one instruction per sentence,
+  imperative instructions, and simple tenses. They also cover one meaning per
+  word and noun clusters of three words or fewer. Last, they cover the word
+  substitutions in the STE table (utilize, ensure, perform, however, should).
 - **Consistent terminology.** If the same concept is called "user", "account",
   and "principal" in different parts of the documentation, readers will not
   know if these are synonyms. Pick one term and use it consistently.
@@ -269,9 +269,10 @@ These patterns reliably indicate documentation that needs improvement:
 
 ## Reviewing Documentation
 
-The technical-writer's review methodology — applying these principles to
-reviews, the documentation-gap review process (inventory, impact
-analysis, cross-reference), and the REQUIRED/RECOMMENDED doc-change
-classification — lives in `skills/reviewing-documentation/SKILL.md`.
+The technical-writer's review methodology lives in
+`skills/reviewing-documentation/SKILL.md`. It applies these principles to
+reviews. It carries the documentation-gap review process (inventory, impact
+analysis, and cross-reference) and the REQUIRED/RECOMMENDED doc-change
+classification.
 This skill stays the authoring bar: the prose you write, and the rubric
 that review methodology applies when it assesses prose.

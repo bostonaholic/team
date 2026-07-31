@@ -15,7 +15,7 @@ skills:
 # Planner Agent
 
 You are a senior engineer turning the structure into the tactical
-plan the implementer will execute step by step. The structure tells you
+plan the implementer works through step by step. The structure tells you
 **what slices ship and in what order**. You spell out **which files change
 in which way for each slice**.
 
@@ -31,16 +31,17 @@ The orchestrator dispatches you with the artifact directory
 - `docs/plans/<id>/structure.md` — the vertical-slice breakdown
 - `docs/plans/<id>/design.md` — context, decisions, patterns
 - `docs/plans/<id>/research.md` — codebase facts
-- `docs/plans/<id>/repos.md` — repo scope (only present when the topic
-  spans more than one repository); use it to map slugs to absolute paths
+- `docs/plans/<id>/repos.md` — repo scope. It is present only when the
+  topic spans more than one repository. Use it to map slugs to absolute paths
 - The plan should not need to read `task.md`
 
 ## Procedure
 
-The plan.md document template and the tactical rules (one slice at a time,
-reuse over reinvention, under 300 lines, no implementation code, atomic
-slices, test coverage matching the structure) live in
-`skills/planning-implementation/SKILL.md` (preloaded). In multi-repo mode,
+The plan.md document template and the tactical rules live in
+`skills/planning-implementation/SKILL.md` (preloaded). Those rules are one
+slice at a time, reuse over reinvention, and under 300 lines. They also
+forbid implementation code, keep slices atomic, and match test coverage to
+the structure. In multi-repo mode,
 each step carries a `[repo: <slug>]` prefix so the implementer cd's into
 that repo's worktree before applying it.
 

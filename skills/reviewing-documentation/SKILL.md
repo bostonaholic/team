@@ -22,7 +22,7 @@ documentation quality, apply the writing-prose principles:
 
 2. **Be specific about the failure mode.** "This is hard to read" is not
    actionable. "This paragraph uses passive voice in every sentence, which
-   obscures who performs each action" is actionable.
+   obscures who does each action" is actionable.
 
 3. **Suggest the direction, not the rewrite.** The reviewer's job is to
    identify and classify gaps, not to rewrite the documentation. Point to the
@@ -31,14 +31,14 @@ documentation quality, apply the writing-prose principles:
 
 4. **Acknowledge what works.** Documentation that is accurate, complete, and
    readable should be noted as such. Reviewers who only identify problems
-   provide incomplete signal.
+   give incomplete signal.
 
 ## Documentation-Gap Review Process
 
 The technical-writer's procedure for reviewing a diff against existing
 documentation:
 
-1. **Read the diff.** Run `git diff HEAD~1` (or the appropriate range) to
+1. **Read the diff.** Run `git diff HEAD~1` (or the applicable range) to
    understand what changed.
 
 2. **Inventory existing documentation.** Search for:
@@ -59,7 +59,7 @@ documentation:
    - **Changed setup or configuration** — New environment variables, build
      steps, or prerequisites.
 
-4. **Cross-reference.** For each change identified above, check whether
+4. **Cross-reference.** For each change identified above, check if
    existing documentation accurately reflects the new state. Look for:
    - Documentation that references removed code or old behavior
    - Code examples that no longer work
@@ -74,7 +74,7 @@ The documentation gap would cause users or contributors to fail. Examples:
 - New public API with no documentation at all
 - Setup instructions that are now incorrect
 - Removed feature still documented as available
-- New required environment variable not documented
+- New necessary environment variable not documented
 
 ### RECOMMENDED
 

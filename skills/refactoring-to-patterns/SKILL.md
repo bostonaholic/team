@@ -26,8 +26,8 @@ Do NOT refactor when:
 - The tests are failing. Fix failing tests first.
 - The code is working well and no change is imminent. Refactoring for its own
   sake is waste.
-- You are under a deadline to deliver a feature. Note the smell for later;
-  do not block the feature.
+- You are under a deadline to deliver a feature. Note the smell for later.
+  Do not block the feature.
 
 ## Code Smells and Their Refactorings
 
@@ -55,7 +55,7 @@ bug in the pattern must be fixed in every copy.
   shared behavior into a new class both can use.
 - **Pull Up Method** — Move a method common to several subclasses into the
   base class.
-- **Form Template Method** — If two methods perform similar steps in similar
+- **Form Template Method** — If two methods do similar steps in similar
   order, extract the skeleton into a template method and override the
   varying parts.
 
@@ -65,8 +65,8 @@ bug in the pattern must be fixed in every copy.
 variables, many methods, or methods that use only a subset of variables.
 
 **Refactorings:**
-- **Extract Class** — Identify a cohesive subset of fields and methods;
-  move them to a new class and compose.
+- **Extract Class** — Identify a cohesive subset of fields and methods.
+  Move them to a new class and compose.
 - **Extract Subclass** — If the class behaves differently under certain
   conditions, extract a subclass for each behavioral variant.
 - **Extract Interface** — Define an interface for the subset of methods
@@ -87,9 +87,9 @@ and hard to remember.
 
 ### Divergent Change
 
-**Smell:** A single class changes for multiple different reasons — every
-time X happens you change one set of methods, every time Y happens you
-change a different set. This is SRP violation made visible.
+**Smell:** A single class changes for several different reasons. Every time
+X happens you change one set of methods. Every time Y happens you change a
+different set. This is SRP violation made visible.
 
 **Refactorings:**
 - **Extract Class** — Split the class along the lines of each reason to
@@ -147,9 +147,10 @@ time a new variant is added. Frequently accompanies Primitive Obsession.
 
 ### Mixed Levels of Abstraction
 
-**Smell:** A single function alternates between high-level orchestration
-("save the order, charge the card, send the receipt") and low-level
-primitives ("for each line, format the price as fixed-width 8 chars").
+**Smell:** A single function alternates between high-level orchestration and
+low-level primitives. One reads "save the order, charge the card, send the
+receipt". The other reads "for each line, format the price as fixed-width 8
+chars".
 Readers must repeatedly swap mental contexts. Often a sign of an
 unextracted helper.
 
@@ -157,7 +158,7 @@ unextracted helper.
 - **Extract Method** — pull the low-level primitive into a function named
   at the surrounding level's abstraction.
 - **Rule of thumb:** a function should call functions one level of
-  abstraction below its own; never two or more levels at once.
+  abstraction below its own. Never two or more levels at once.
 
 ### Middle Man
 
@@ -171,30 +172,31 @@ the middle man adds no value.
 
 ### Constructor Doing Work
 
-**Smell:** A class instantiates its dependencies inside methods
-(`new HttpClient()` inside `fetchUser()`), takes per-call work parameters
-in the constructor (`new ReportGenerator(2024, 1, 1, 2024, 12, 31)`), or
-does I/O / static lookups in the constructor. No seam exists for tests to
+**Smell:** A class does any of three things. It instantiates its
+dependencies inside methods, as `new HttpClient()` inside `fetchUser()`. It
+takes per-call work parameters in the constructor, as
+`new ReportGenerator(2024, 1, 1, 2024, 12, 31)`. Or it does I/O or static
+lookups in the constructor. No seam exists for tests to
 substitute collaborators.
 
 **Refactorings:**
 - **Construct with collaborators, call with work.** Move long-lived
   dependencies (HTTP client, DB, clock, logger) to the constructor
-  signature. Inject them; do not `new` them inside.
+  signature. Inject them. Do not `new` them inside.
 - **Move per-call work parameters to method signatures.** Date ranges,
   query strings, and request bodies belong on the method, not the
   constructor.
 - **Constructors do no work.** No I/O, no XML parsing, no static lookups,
   no expensive computation. Just assign collaborators and return.
 
-This creates a seam: production wires real collaborators through DI;
-tests substitute fakes or stubs at construction.
+This creates a seam: production wires real collaborators through DI.
+Tests substitute fakes or stubs at construction.
 
 ## Safe Refactoring Procedure
 
 Every refactoring step must follow this sequence:
 
-1. **Ensure tests pass** before starting. If tests fail, stop — do not
+1. **Make sure that tests pass** before starting. If tests fail, stop — do not
    refactor broken code.
 2. **Make the smallest possible structural change.** One refactoring at a
    time.

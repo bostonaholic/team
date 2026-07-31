@@ -15,23 +15,23 @@ rules and keep only their own procedural glue.
 
 Every tracker interaction below is best-effort and tracker-agnostic: if
 the project defines no tracker-move mechanism (e.g. a free-form
-description with no ticket, or a tracker the environment can't reach),
+description with no ticket, or a tracker the environment cannot reach),
 skip silently and continue. Never block the pipeline on a tracker
 update.
 
 ## Pickup: move the ticket to in-progress
 
-When a run resolves its input to a ticket id or issue, move that ticket
-to its tracker's in-progress state — this is the first action of the
-run, before any other work begins.
+When a run resolves its input to a ticket id or issue, move that ticket to
+its tracker's in-progress state. This is the first action of the run, before
+any other work begins.
 
 ## PR open: link the PR to the ticket
 
 When the PR phase opens a pull request and `task.md`'s frontmatter has
-`ticketId` set, **link the PR to the ticket** so the tracker closes the
-ticket — and any board automation moves it to its done state — when the
-PR merges. On GitHub, render the link as a closing line emitted **as
-the final line of the PR body** (`Closes #<n>`); for another tracker
+`ticketId` set, **link the PR to the ticket**. The tracker then closes the
+ticket when the PR merges, and any board automation moves it to its done
+state. On GitHub, render the link as a closing line emitted **as
+the final line of the PR body** (`Closes #<n>`). For another tracker
 use its PR↔issue link mechanism.
 
 ### Interpreting `ticketId`
@@ -42,20 +42,20 @@ use its PR↔issue link mechanism.
 - A qualified reference (`owner/repo#<n>`) or an issue URL → `Closes`
   followed by that value substituted in — e.g.
   `Closes https://github.com/owner/repo/issues/42`.
-- Any other non-null shape still goes in verbatim as the footer text
-  (`Closes` plus the value), but note the unrecognized shape in the
-  completion report — never block on it. On GitHub such a value (e.g.
+- Any other non-null shape still goes in verbatim as the footer text, as
+  `Closes` plus the value. Note the unrecognized shape in the completion
+  report, and never block on it. On GitHub such a value (e.g.
   `Closes ENG-1234`) auto-closes nothing — the footer is then a legible
   reference only, and the tracker-move rules on this page are what
   advance the ticket.
 - Null, absent, empty, or whitespace-only → omit the closing line
-  entirely; no placeholder, no empty footer.
+  entirely. No placeholder, no empty footer.
 
 ### Multi-repo: the home PR alone closes the ticket
 
-In multi-repo mode, only the **home** repo's PR carries the closing
-keyword (`Closes #<n>`) — so the ticket closes exactly once, when the
-home PR merges. Companion PRs carry a **non-closing** reference to the
+In multi-repo mode, only the **home** repo's PR carries the closing keyword
+(`Closes #<n>`). The ticket then closes exactly once, when the home PR
+merges. Companion PRs carry a **non-closing** reference to the
 issue in the same footer position, using the unambiguous qualified form
 (`owner/repo#<n>` or the issue URL) — for example:
 

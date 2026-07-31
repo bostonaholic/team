@@ -65,7 +65,7 @@ done
   options:
   - **Run the producer** — run `/team-question <description>` to produce the
     missing `questions.md`.
-  - **Provide a path** — the user supplies the `docs/plans/<id>/` directory
+  - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
 
 ## Execution
@@ -79,7 +79,7 @@ done
    where) without leaking intent. Do **not** pass the original
    description, `task.md`, or any framing.
 3. Combine their returned content into a single `research.md` written to
-   `$ARGUMENTS/research.md` with the required frontmatter (see the
+   `$ARGUMENTS/research.md` with the necessary frontmatter (see the
    researcher agent for the schema). The `topic` value MUST be read
    from `$ARGUMENTS/questions.md`'s frontmatter and copied verbatim —
    never improvised, never combined with the ticket id. In multi-repo
