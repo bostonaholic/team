@@ -351,10 +351,11 @@ describe("pr-cleanup skill: input gates are byte-exact and mechanical", () => {
   test("$DEFAULT is inside Hard Rule 11's re-derivation set", () => {
     // An unset $DEFAULT empties step 2's protected-name pattern, leaving
     // the default branch deletable while master/develop/release still
-    // appear to guard it. The rule must name the variable, not just
-    // $PRIMARY_ROOT and $REPO.
+    // appear to guard it. Pin the enumeration itself, not a bare mention:
+    // the rule explains $DEFAULT in prose too, so a substring check stays
+    // green when the variable is dropped from the re-derivation list.
     const s = sliceBetween("11. **No destructive command", "## Untrusted input");
-    expect(s).toContain("$DEFAULT");
+    expect(s).toContain("`$PRIMARY_ROOT`, `$REPO`, or `$DEFAULT` re-derives");
   });
 
   test("step 2 guards $DEFAULT before the lowering, outside any $( )", () => {
