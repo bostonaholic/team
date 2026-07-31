@@ -7,10 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-07-31
+
 ### Added
 
 - **Team installs on Codex CLI.** The repo now ships native Codex manifests — `.codex-plugin/plugin.json` and `.agents/plugins/marketplace.json` — so `codex plugin marketplace add <repo>` followed by `codex plugin add team@team-dev` installs all 51 skills, with no build step or conversion. Codex reads those two paths in preference to the `.claude-plugin/` equivalents, which stay exactly as they are for Claude Code. Skills arrive namespaced (`team:shipit`, not `shipit`), and the `/team-*` pipeline entry points load but cannot dispatch Claude Code agents there, so the standalone utilities are what work today. `README.md` carries per-host install instructions.
-- **`dev install` now covers every supported harness, and `dev install codex` targets one.** Both hosts install a copy, so a checkout edit needs a reinstall to show up. `script/dev-install` dispatches to a per-harness script, so `dev install` sets up Claude Code and Codex together and `dev install claude` or `dev install codex` does just one. The Codex half symlinks the checkout's `skills/` into `~/.agents/skills/team`, which Codex scans natively and follows through. The Claude Code trick of swapping the plugin cache for a symlink is deliberately **not** ported: on Codex it makes the plugin report `not installed` and empties the skill catalog.
+- **`dev install` now covers every supported harness, and `dev install codex` targets one.** Both hosts install a copy, so a checkout edit needs a reinstall to show up. `script/dev-install` dispatches to a per-harness script, so `dev install` sets up Claude Code and Codex together and `dev install claude` or `dev install codex` does just one. The Codex half symlinks the checkout's `skills/` into `~/.agents/skills/team`, which Codex scans natively and follows through. The Claude Code trick of swapping the plugin cache for a symlink is deliberately **not** ported: on Codex it makes the plugin report `not installed` and empties the skill catalog. Stacking a development install on top of a native plugin install is refused rather than allowed to double every skill in the catalog.
+
+### Security
+
+- **`pr-approve-watch` loses its human-only guard on Codex, and the install instructions now say so.** On Claude Code the skill carries `disable-model-invocation`, so only a person can arm it — its approval can transitively merge a pull request that has auto-merge enabled. Codex does not implement that key, and skills bypass its trust gate, so on Codex the model can invoke the skill in any session with no prompt. The skill's own description says it is user-only, but that sentence falls past the point where Codex truncates a long description, so it cannot be relied on. [`README.md`](https://github.com/bostonaholic/team/blob/main/README.md) states the gap at the point of install and gives the command to remove the skill for anyone who wants the guard back.
 
 ## [0.30.0] - 2026-07-31
 
@@ -343,7 +349,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.30.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.31.0...HEAD
+[0.31.0]: https://github.com/bostonaholic/team/compare/v0.30.0...v0.31.0
 [0.30.0]: https://github.com/bostonaholic/team/compare/v0.29.2...v0.30.0
 [0.29.2]: https://github.com/bostonaholic/team/compare/v0.29.1...v0.29.2
 [0.29.1]: https://github.com/bostonaholic/team/compare/v0.29.0...v0.29.1
