@@ -1,0 +1,14 @@
+{
+  "name": "team-dev",
+  "interface": {
+    "displayName": "Team"
+  },
+  "plugins": [
+    {
+      "name": "team",
+      "source": "./",
+      "description": "Orchestrates specialized agents to autonomously implement entire features end-to-end",
+      "category": "engineering"
+    }
+  ]
+}

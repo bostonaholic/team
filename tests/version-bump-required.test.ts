@@ -163,6 +163,34 @@ describe.if(HAS_JQ)("version-bump-required.sh: the runtime-vs-dev bump invariant
     expect(run(dir, { HEAD_SHA: headSha, BASE_SHA: baseSha }).status).not.toBe(0);
   });
 
+  // The other hosts' manifests ship to end users too, so they carry the same
+  // rule as .claude-plugin/: content is runtime, a bare version edit is not.
+  test(".codex-plugin content change WITHOUT a bump → violation (non-zero)", () => {
+    const { dir, headSha, baseSha } = scenario({
+      forkVersion: "0.13.1",
+      branchEdits: (d) =>
+        writeFile(
+          d,
+          ".codex-plugin/plugin.json",
+          JSON.stringify({ name: "team", version: "0.13.1" }, null, 2) + "\n",
+        ),
+    });
+    expect(run(dir, { HEAD_SHA: headSha, BASE_SHA: baseSha }).status).not.toBe(0);
+  });
+
+  test(".agents/plugins content change WITHOUT a bump → violation (non-zero)", () => {
+    const { dir, headSha, baseSha } = scenario({
+      forkVersion: "0.13.1",
+      branchEdits: (d) =>
+        writeFile(
+          d,
+          ".agents/plugins/marketplace.json",
+          JSON.stringify({ name: "team-dev", plugins: [] }, null, 2) + "\n",
+        ),
+    });
+    expect(run(dir, { HEAD_SHA: headSha, BASE_SHA: baseSha }).status).not.toBe(0);
+  });
+
   // docs-only change with no bump is fine (docs/ is contributor-facing).
   test("docs-only change, no bump → ok (exit 0)", () => {
     const { dir, headSha, baseSha } = scenario({

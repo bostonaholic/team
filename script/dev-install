@@ -1,34 +1,43 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PLUGIN_VERSION=$(node -p "require('${PLUGIN_ROOT}/.claude-plugin/plugin.json').version")
-CACHE_PATH="${HOME}/.claude/plugins/cache/team-dev/team/${PLUGIN_VERSION}"
+# Dev install, across the harnesses Team supports.
+#
+#   script/dev-install          every harness
+#   script/dev-install codex    just that one
+#
+# Each harness has its own script beside this one, because each host installs
+# a plugin its own way. Adding a harness means adding `dev-install-<name>` and
+# `dev-uninstall-<name>`, then listing it below.
 
-if [ -z "$PLUGIN_VERSION" ]; then
-  echo "Error: could not read version from plugin.json" >&2
+HARNESSES=(claude codex)
+HERE="$(cd "$(dirname "$0")" && pwd)"
+
+case "${1:-}" in
+  "")
+    targets=("${HARNESSES[@]}")
+    ;;
+  *)
+    for known in "${HARNESSES[@]}"; do
+      [ "$1" = "$known" ] && targets=("$1") && break
+    done
+    if [ -z "${targets+x}" ]; then
+      echo "Error: unknown harness '$1'. Known: ${HARNESSES[*]}" >&2
+      exit 1
+    fi
+    ;;
+esac
+
+failed=()
+for harness in "${targets[@]}"; do
+  # One harness failing must not strand the others — report at the end.
+  if ! "${HERE}/dev-install-${harness}"; then
+    failed+=("$harness")
+  fi
+  echo
+done
+
+if [ ${#failed[@]} -gt 0 ]; then
+  echo "Error: install failed for: ${failed[*]}" >&2
   exit 1
 fi
-
-# Already linked — nothing to do
-if [ -L "$CACHE_PATH" ] && [ "$(readlink "$CACHE_PATH")" = "$PLUGIN_ROOT" ]; then
-  echo "Team plugin already installed (dev)."
-  exit 0
-fi
-
-echo "Installing Team plugin (dev)..."
-echo "  Source: ${PLUGIN_ROOT}"
-echo
-
-claude plugin marketplace add "$PLUGIN_ROOT" --scope user 2>&1
-claude plugin install team@team-dev --scope user 2>&1 || true
-
-# Replace the cached copy with a symlink to the source
-if [ -d "$CACHE_PATH" ] && [ ! -L "$CACHE_PATH" ]; then
-  rm -rf "$CACHE_PATH"
-  ln -s "$PLUGIN_ROOT" "$CACHE_PATH"
-  echo "  Linked: ${CACHE_PATH} → ${PLUGIN_ROOT}"
-fi
-
-echo
-echo "Done. Restart Claude Code to load the plugin."

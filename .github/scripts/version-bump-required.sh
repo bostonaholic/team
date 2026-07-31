@@ -44,6 +44,11 @@ PLUGIN_JSON='.claude-plugin/plugin.json'
 # Distributed-plugin directories whose ANY change is a runtime change.
 RUNTIME_DIRS=(agents skills hooks)
 
+# Host manifest directories. Each host reads its own: Claude Code takes
+# .claude-plugin/, Codex prefers .codex-plugin/ and .agents/plugins/ over it.
+# All ship to end users, so content changes here are runtime changes.
+MANIFEST_DIRS=('.claude-plugin' '.codex-plugin' '.agents/plugins')
+
 die() { printf '::error::%s\n' "$1" >&2; exit 1; }
 
 : "${HEAD_SHA:?HEAD_SHA required}"
@@ -81,11 +86,11 @@ runtime_changed=false
 if grep -qE "^($(IFS='|'; echo "${RUNTIME_DIRS[*]}"))/" <<<"$changed_files"; then
   runtime_changed=true
 fi
-# .claude-plugin/ — runtime only if a non-version line changed (a bare version
-# edit is the bump, not content). Strip diff file headers (+++/---), keep added/
-# removed lines, drop any line that touches the `"version"` field.
-if ! $runtime_changed && grep -qE '^\.claude-plugin/' <<<"$changed_files"; then
-  content=$(git diff "$MERGE_BASE" "$HEAD_SHA" -- .claude-plugin/ \
+# Host manifest dirs — runtime only if a non-version line changed (a bare
+# version edit is the bump, not content). Strip diff file headers (+++/---),
+# keep added/removed lines, drop any line that touches the `"version"` field.
+if ! $runtime_changed && grep -qE "^($(IFS='|'; echo "${MANIFEST_DIRS[*]}"))/" <<<"$changed_files"; then
+  content=$(git diff "$MERGE_BASE" "$HEAD_SHA" -- "${MANIFEST_DIRS[@]/%//}" \
     | grep -E '^[+-]' \
     | grep -vE '^[+-]{3} ' \
     | grep -vE '"version"[[:space:]]*:' || true)

@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Mirrors script/dev-install for Codex CLI. Symlinks this checkout's
+# skills/ into Codex's user-scope skill root, so edits are live.
+#
+# Codex follows directory symlinks when it scans, and canonicalizes each
+# skill back to this checkout — so it finds .claude-plugin/plugin.json
+# above them and names them `team:<name>`.
+#
+# Never touch Codex's plugin cache. Replacing that cached copy with a
+# symlink — the trick script/dev-install uses for Claude Code — makes
+# Codex report the plugin `not installed` and empties the catalog.
+
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SKILLS_SRC="${PLUGIN_ROOT}/skills"
+TARGET="${HOME}/.agents/skills/team"
+
+if [ ! -d "$SKILLS_SRC" ]; then
+  echo "Error: no skills/ directory at ${PLUGIN_ROOT}" >&2
+  exit 1
+fi
+
+# Refuse to stack this on top of a native plugin install. Codex would then find
+# the same 51 skills under two roots and render every one twice, which doubles
+# the catalog, worsens description truncation, and leaves the source ambiguous.
+# A registered-but-uninstalled marketplace row reads `not installed` and is
+# fine; only an installed row collides.
+if command -v codex >/dev/null 2>&1; then
+  plugin_list=$(codex plugin list 2>&1) || plugin_list=""
+  while IFS= read -r line; do
+    case "$line" in
+      *team@*)
+        case "$line" in
+          *"not installed"*) ;;
+          *)
+            echo "Error: a Codex plugin install of Team is already present:" >&2
+            echo "  ${line}" >&2
+            echo "Installing the dev symlink too would load every skill twice." >&2
+            echo "Remove one first, e.g. codex plugin remove team@<marketplace>" >&2
+            exit 1
+            ;;
+        esac
+        ;;
+    esac
+  done <<<"$plugin_list"
+fi
+
+# Already linked — nothing to do
+if [ -L "$TARGET" ] && [ "$(readlink "$TARGET")" = "$SKILLS_SRC" ]; then
+  echo "Team skills already installed for Codex (dev)."
+  exit 0
+fi
+
+# The parent can be a user-owned checkout (a dotfiles repo, say), so
+# refuse anything this script did not create rather than replacing it.
+if [ -e "$TARGET" ] && [ ! -L "$TARGET" ]; then
+  echo "Error: ${TARGET} exists and is not a symlink. Move it, then re-run." >&2
+  exit 1
+fi
+
+echo "Installing Team skills for Codex (dev)..."
+echo "  Source: ${SKILLS_SRC}"
+echo
+
+mkdir -p "$(dirname "$TARGET")"
+ln -sfn "$SKILLS_SRC" "$TARGET"
+echo "  Linked: ${TARGET} → ${SKILLS_SRC}"
+echo "  Note: pr-approve-watch is model-invocable on Codex, which ignores"
+echo "        disable-model-invocation. Its approval can merge a PR."
+
+echo
+echo "Done. Codex loads the skills at the next thread start."

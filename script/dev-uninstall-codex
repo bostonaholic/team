@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Mirrors script/dev-uninstall for Codex CLI.
+#
+# Removes only the symlink script/codex-dev-install created. Its parent
+# directories can be user-owned — `~/.agents/skills` is often a checkout of
+# a dotfiles repo — so unlike script/dev-uninstall, which owns its whole
+# cache path, this one never removes a parent.
+
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SKILLS_SRC="${PLUGIN_ROOT}/skills"
+TARGET="${HOME}/.agents/skills/team"
+
+echo "Uninstalling Team skills for Codex (dev)..."
+echo
+
+if [ ! -L "$TARGET" ] && [ ! -e "$TARGET" ]; then
+  echo "  Nothing to do: ${TARGET} does not exist."
+  exit 0
+fi
+
+if [ ! -L "$TARGET" ]; then
+  echo "Error: ${TARGET} is not a symlink — this script did not create it." >&2
+  echo "Nothing was removed. Move it by hand if you meant to." >&2
+  exit 1
+fi
+
+LINKED_TO="$(readlink "$TARGET")"
+rm "$TARGET"
+echo "  Removed: ${TARGET} → ${LINKED_TO}"
+if [ "$LINKED_TO" != "$SKILLS_SRC" ]; then
+  echo "  Note: that link pointed at another checkout, not ${SKILLS_SRC}."
+fi
+
+echo
+echo "Done. Codex drops the skills at the next thread start."

@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+PLUGIN_VERSION=$(node -p "require('${PLUGIN_ROOT}/.claude-plugin/plugin.json').version")
+CACHE_PATH="${HOME}/.claude/plugins/cache/team-dev/team/${PLUGIN_VERSION}"
+
+if [ -z "$PLUGIN_VERSION" ]; then
+  echo "Error: could not read version from plugin.json" >&2
+  exit 1
+fi
+
+# Already linked — nothing to do
+if [ -L "$CACHE_PATH" ] && [ "$(readlink "$CACHE_PATH")" = "$PLUGIN_ROOT" ]; then
+  echo "Team plugin already installed (dev)."
+  exit 0
+fi
+
+echo "Installing Team plugin (dev)..."
+echo "  Source: ${PLUGIN_ROOT}"
+echo
+
+claude plugin marketplace add "$PLUGIN_ROOT" --scope user 2>&1
+claude plugin install team@team-dev --scope user 2>&1 || true
+
+# Replace the cached copy with a symlink to the source
+if [ -d "$CACHE_PATH" ] && [ ! -L "$CACHE_PATH" ]; then
+  rm -rf "$CACHE_PATH"
+  ln -s "$PLUGIN_ROOT" "$CACHE_PATH"
+  echo "  Linked: ${CACHE_PATH} → ${PLUGIN_ROOT}"
+fi
+
+echo
+echo "Done. Restart Claude Code to load the plugin."

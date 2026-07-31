@@ -56,14 +56,14 @@ describe("shipit skill: it is a runtime skill, project-agnostic", () => {
 
   test("carries NO Team-version-specific logic (it is generic)", () => {
     // The land skill must not bump versions, edit the changelog, or know about
-    // Team's four version strings — that is the dev version-bump skill's job.
+    // Team's version strings — that is the dev version-bump skill's job.
     const t = body();
     expect(t).not.toContain("next-version.sh");
     expect(t).not.toContain("plugin.json");
     expect(t).not.toContain("marketplace.json");
     expect(t).not.toContain("[Unreleased]");
     expect(/chore\(version\)/.test(t)).toBe(false);
-    expect(/four version strings/i.test(t)).toBe(false);
+    expect(/(four|five) version strings/i.test(t)).toBe(false);
   });
 });
 
