@@ -12,7 +12,8 @@ Codex CLI reads Claude Code's plugin manifest natively. It discovers
 `.claude-plugin/plugin.json` and loads the `skills/` tree directly. No
 build step is necessary for skills. Two install shapes exist: the native
 plugin for end users, and a symlink script pair for maintainers. All
-facts on this page were verified on `codex-cli 0.145.0` on 2026-07-30.
+facts on this page were verified on `codex-cli 0.145.0`, on 2026-07-30
+unless a later date is cited inline.
 
 **Always type the qualified name.** Codex prefixes each skill with the
 plugin name, so the skills surface as `team:<name>` — `team:shipit`,
@@ -84,8 +85,9 @@ the key, which would silently downgrade a hard guard to prose — at user
 scope, in every session, with no trust prompt. The host cannot honor
 the guard, so the safe projection is not to install the skill.
 
-A user who understands the exposure can link it manually. Run this from
-the checkout root:
+A user who understands the exposure can link it manually. The target
+directory must already exist — run `script/codex-dev-install` once to
+create it. Then run this from the checkout root:
 
 ```bash
 ln -s "$PWD/skills/pr-approve-watch" ~/.agents/skills/team/pr-approve-watch
@@ -149,9 +151,10 @@ the source root the script echoes on every run, plus
 
 ## The catalog budget, bounded both ways
 
-Codex caps the injected catalog with an either/or rule: 2% of the model
-context window in tokens when the window is known, or 8,000 characters
-when it is not. The 16 linked descriptions inject 5,701 characters —
+Codex caps the injected catalog with an either/or rule. The cap is 2%
+of the model context window in tokens when the window is known. When
+the window is unknown, the cap is 8,000 characters.
+The 16 linked descriptions inject 5,701 characters —
 2,299 characters of headroom on the 8,000-character arm. The token arm
 fits at a context window of at least ~71,300 tokens. Below that floor,
 truncation returns.
@@ -177,7 +180,7 @@ As of 2026-07-30, 21 of the 51 skill bodies hold Claude Code-specific
 references: 16 entry points (host-specific by construction) and 5
 methodology skills. This sixteen is not the linked set — it counts
 `pr-approve-watch` and not `code-review`. `CLAUDE_PLUGIN_ROOT` appears in exactly one body,
-`skills/nested-agents/SKILL.md:35`. These bodies load on Codex, but
+`skills/nested-agents/SKILL.md`. These bodies load on Codex, but
 their host-specific instructions (tool names, `/slash` syntax, Claude
 Code version pins) do not apply there. A 52nd skill makes these counts
 historical, not wrong.
