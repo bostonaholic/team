@@ -5,14 +5,24 @@ set -euo pipefail
 # root: one link per skill under <root>/team/, where <root> is the resolved
 # physical path of ~/.agents/skills. Live-editable; re-run to refresh.
 #
+# Two frontmatter keys exclude a skill from linking:
+# - `user-invocable: false` — not an entry point.
+# - `disable-model-invocation: true` — Codex ignores this key, so a skill
+#   that relies on it as a hard guard (pr-approve-watch: an approval can
+#   transitively trigger an irreversible auto-merge) must not be installed
+#   on this host. See docs/codex.md for the manual opt-in.
+#
 # Never touches Codex's plugin cache directory. Replacing that cached copy
 # with a symlink — the script/dev-install trick for Claude Code — makes
 # Codex report the plugin `not installed` and drops the catalog to zero
 # skills (docs/plans/57-codex-skills-install/research.md, run 3).
 #
-# Self-check semantics: mismatch fails, truncation reports.
+# Self-check semantics: mismatch fails (links stay installed — run
+# script/codex-dev-uninstall to remove them), truncation reports.
 
-PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# Physical path: the Codex catalog cites the canonicalized SKILL.md path for
+# every entry, and the self-check anchors on that path.
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
 
 # --- Preflight: codex must be on PATH, before any filesystem change
 if ! command -v codex >/dev/null 2>&1; then
@@ -23,7 +33,14 @@ fi
 # --- Coexistence guard: abort only on an *installed* team@ plugin.
 # A bare marketplace registration prints `team@...  not installed` and must
 # proceed — `codex plugin remove team` could never clear it.
-PLUGIN_LIST="$(codex plugin list 2>&1 || true)"
+# Fail closed: a failing `codex plugin list` proves nothing about collisions,
+# and an unverified ambiguity must not pass the guard (design decision 5).
+if ! PLUGIN_LIST="$(codex plugin list 2>&1)"; then
+  echo "Error: 'codex plugin list' failed — cannot verify that no installed" >&2
+  echo "team@ plugin collides with these links. Output:" >&2
+  printf '%s\n' "$PLUGIN_LIST" | sed 's/^/  /' >&2
+  exit 1
+fi
 while IFS= read -r line; do
   case "$line" in
     team@*)
@@ -105,8 +122,8 @@ elif [ -e "$TEAM_DIR" ]; then
   exit 1
 fi
 
-# --- Link creation: one link per skill whose frontmatter lacks
-# `user-invocable: false`, re-derived on every run.
+# --- Link creation: one link per skill whose frontmatter carries neither
+# exclusion key (see header), re-derived on every run.
 echo "Installing Team skills for Codex CLI (dev)..."
 echo "  Source: ${PLUGIN_ROOT}"
 
@@ -119,6 +136,13 @@ for skill_md in "$PLUGIN_ROOT"/skills/*/SKILL.md; do
   if grep -Eq '^user-invocable:[[:space:]]*false' "$skill_md"; then
     continue
   fi
+  # Codex ignores `disable-model-invocation`, silently downgrading a hard
+  # guard to prose. The safe projection is not to install the skill.
+  if grep -Eq '^disable-model-invocation:[[:space:]]*true' "$skill_md"; then
+    echo "  Skipping ${skill_name}: relies on disable-model-invocation," \
+      "which Codex ignores (see docs/codex.md)"
+    continue
+  fi
   ln -s "$skill_dir" "${TEAM_DIR}/${skill_name}"
   LINKED_NAMES="${LINKED_NAMES}team:${skill_name}"$'\n'
   LINK_COUNT=$((LINK_COUNT + 1))
@@ -126,7 +150,7 @@ done
 
 if [ "$LINK_COUNT" -eq 0 ]; then
   rmdir "$TEAM_DIR" 2>/dev/null || true
-  echo "Error: zero skills passed the user-invocable filter — broken filter." >&2
+  echo "Error: zero skills passed the frontmatter filter — broken filter." >&2
   exit 1
 fi
 
@@ -138,7 +162,15 @@ echo "Running self-check (mismatch fails, truncation reports)..."
 DEBUG_OUT="$(codex debug prompt-input 2>&1 || true)"
 
 EXPECTED_SET="$(printf '%s' "$LINKED_NAMES" | sort -u)"
-CATALOG_SET="$(printf '%s\n' "$DEBUG_OUT" | grep -oE 'team:[A-Za-z0-9_-]+' | sort -u || true)"
+# Anchor extraction on the cited source path: the catalog canonicalizes each
+# entry to <checkout>/skills/<name>/SKILL.md, so only entries served from
+# this checkout count. A bare `team:` grep would also match a co-tenant
+# description that merely contains the string, failing the install for a
+# non-bug reason.
+CATALOG_SET="$(printf '%s\n' "$DEBUG_OUT" \
+  | grep -oE "\(file: ${PLUGIN_ROOT}/skills/[A-Za-z0-9_-]+/SKILL\.md\)" \
+  | sed -E 's|.*/([A-Za-z0-9_-]+)/SKILL\.md\)$|team:\1|' \
+  | sort -u || true)"
 
 if [ "$CATALOG_SET" != "$EXPECTED_SET" ]; then
   echo "Error: self-check MISMATCH — links created vs. Codex catalog." >&2
@@ -146,6 +178,8 @@ if [ "$CATALOG_SET" != "$EXPECTED_SET" ]; then
   printf '%s\n' "$EXPECTED_SET" | sed 's/^/  /' >&2
   echo "Catalog:" >&2
   printf '%s\n' "$CATALOG_SET" | sed 's/^/  /' >&2
+  echo "The links under ${TEAM_DIR} remain installed and Codex will serve" >&2
+  echo "them. Run script/codex-dev-uninstall to remove them." >&2
   exit 1
 fi
 

@@ -18,7 +18,10 @@ if [ ! -d "$TARGET_ROOT" ]; then
   exit 0
 fi
 
-# Operate on the physical path (the root may be a symlink into a dotfiles repo)
+# Operate on the physical path (the root may be a symlink into a dotfiles
+# repo), but keep the pre-resolution path: parent cleanup must never reach
+# through the symlink — the resolved parents belong to the user, not to us.
+LOGICAL_ROOT="$TARGET_ROOT"
 TARGET_ROOT="$(cd "$TARGET_ROOT" && pwd -P)"
 TEAM_DIR="${TARGET_ROOT}/team"
 
@@ -52,8 +55,11 @@ else
   echo "  Already absent: ${TEAM_DIR}"
 fi
 
-# Remove now-empty parents; silence otherwise (mirrors script/dev-uninstall)
-rmdir "$TARGET_ROOT" 2>/dev/null || true
-rmdir "$(dirname "$TARGET_ROOT")" 2>/dev/null || true
+# Remove now-empty parents at the pre-resolution path only; silence
+# otherwise (mirrors script/dev-uninstall). When the root is a symlink,
+# `rmdir` fails on it and both the link and its target survive — this
+# script never created them.
+rmdir "$LOGICAL_ROOT" 2>/dev/null || true
+rmdir "$(dirname "$LOGICAL_ROOT")" 2>/dev/null || true
 
 echo "Done."

@@ -48,18 +48,47 @@ trigger phrases. Three named losses matter most:
 
 `team:pr-approve-watch` fails twice on this shape. Codex ignores
 `disable-model-invocation`, so the skill is implicitly invocable, *and*
-its caution is truncated. Both protections fail together.
+its caution is truncated. Both protections fail together. The dev
+script shape below refuses to install this skill for exactly this
+reason.
 
 ## Shape 2: dev script pair (maintainers)
 
 `script/codex-dev-install` and `script/codex-dev-uninstall` (`dev.yml`:
 `codex-install` / `codex-uninstall`). The installer creates one symlink
-per user-invocable skill — each skill whose frontmatter lacks
-`user-invocable: false` — under `team/` in the resolved physical path of
-`~/.agents/skills`. The set is re-derived on every run (17 skills as of
-2026-07-30). The links point into the checkout, so edits are live. The
-filtered set fits the catalog budget whole: zero truncation, safety
-clauses intact.
+per skill under `team/` in the resolved physical path of
+`~/.agents/skills`, skipping any skill whose frontmatter sets
+`user-invocable: false` or `disable-model-invocation: true`. The set is
+re-derived on every run (16 skills as of 2026-07-30). The links point
+into the checkout, so edits are live. The linked set fits the catalog
+budget whole — zero truncation — and the one skill whose safety depends
+on a key Codex ignores is excluded outright (next section).
+
+Discoverable is not functional: eleven of the 16 links are pipeline
+entry points whose procedures dispatch Claude Code agents, and Codex
+cannot run those agents. On Codex the bodies load and read, but they
+cannot execute the pipeline they describe. The near-term value is the
+five functional skills — the four standalone utilities that install
+here plus `team:code-review`.
+
+### Excluded: `team:pr-approve-watch`
+
+The installer never links `team:pr-approve-watch`. That skill sets
+`disable-model-invocation: true` for a reason: on a PR with auto-merge
+enabled, an approval can transitively trigger an irreversible merge, so
+only a deliberate human invocation should arm the watch. Codex ignores
+the key, which would silently downgrade a hard guard to prose — at user
+scope, in every session, with no trust prompt. The host cannot honor
+the guard, so the safe projection is not to install the skill.
+
+A user who understands the exposure can link it manually:
+
+```bash
+ln -s "$(pwd)/skills/pr-approve-watch" ~/.agents/skills/team/pr-approve-watch
+```
+
+A re-run of `codex-dev-install` rebuilds `team/` from the filter and
+drops the manual link, so re-add it after each install.
 
 ### Never port the `dev-install` cache swap
 
@@ -79,12 +108,16 @@ script shape, not the plugin shape.
 ### Self-check: mismatch fails, truncation reports
 
 After linking, the installer runs `codex debug prompt-input` (no API
-call, no authentication) and compares the `team:` catalog entries
-against the links it created. A link-vs-catalog mismatch fails: the
-script exits non-zero and prints both sets. A truncation warning
-reports: the script prints it loudly and exits 0, because the budget is
-global and co-tenant skills can cause the warning through no fault of
-Team's set.
+call, no authentication) and compares the catalog entries whose cited
+source path lives in this checkout against the links it created — the
+path anchor keeps a co-tenant description that merely contains a
+`team:<word>` string from polluting the comparison. A link-vs-catalog
+mismatch fails: the script exits non-zero and prints both sets. The
+links remain installed after a mismatch — the script does not roll
+back — so run `script/codex-dev-uninstall` to remove them. A truncation
+warning reports: the script prints it loudly and exits 0, because the
+budget is global and co-tenant skills can cause the warning through no
+fault of Team's set.
 
 ### Cross-worktree hazard
 
@@ -98,16 +131,16 @@ the source root the script echoes on every run, plus
 
 Codex caps the injected catalog with an either/or rule: 2% of the model
 context window in tokens when the window is known, or 8,000 characters
-when it is not. The 17 linked descriptions inject 6,275 characters —
-1,725 characters of headroom on the 8,000-character arm. The token arm
-fits at a context window of at least ~78,450 tokens. Below that floor,
+when it is not. The 16 linked descriptions inject 5,701 characters —
+2,299 characters of headroom on the 8,000-character arm. The token arm
+fits at a context window of at least ~71,300 tokens. Below that floor,
 truncation returns.
 
-The filter buys most of that fit. The six functional skills alone (the
-five standalone utilities plus `team:code-review`) total 3,404
-description characters, a floor near ~42,550 tokens. The eleven pipeline
-entry-point links add 2,871 characters (~46% of 6,275) and roughly
-double the floor. The budget is also global, not per-plugin: the
+The filter buys most of that fit. The five functional skills alone (the
+four standalone utilities that install here plus `team:code-review`)
+total 2,830 description characters, a floor near ~35,400 tokens. The
+eleven pipeline entry-point links add 2,871 characters (~50% of 5,701)
+and roughly double the floor. The budget is also global, not per-plugin: the
 research machine carries 35 co-tenant skills in an 86-entry catalog, and
 every co-tenant description charges the same budget.
 

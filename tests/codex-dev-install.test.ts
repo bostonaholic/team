@@ -61,8 +61,9 @@ function newTempDir(prefix: string): string {
 // passes and the run reaches the delete guard under test. Anything else
 // (e.g. `debug prompt-input`) exits 0 with no output — if a buggy script got
 // past the guard, its self-check would then fail, and the file-intact
-// assertion below would catch the destruction.
-function makeStubCodexDir(): string {
+// assertion below would catch the destruction. With `pluginListFails`,
+// `plugin list` instead exits 1, to drive the guard's fail-closed path.
+function makeStubCodexDir(pluginListFails = false): string {
   const dir = newTempDir("codex-stub");
   const stub = join(dir, "codex");
   writeFileSync(
@@ -70,7 +71,9 @@ function makeStubCodexDir(): string {
     [
       "#!/usr/bin/env bash",
       'if [ "${1:-}" = "plugin" ] && [ "${2:-}" = "list" ]; then',
-      '  echo "No marketplace plugins found."',
+      ...(pluginListFails
+        ? ['  echo "error: unknown subcommand" >&2', "  exit 1"]
+        : ['  echo "No marketplace plugins found."']),
       "fi",
       "exit 0",
       "",
@@ -78,6 +81,22 @@ function makeStubCodexDir(): string {
   );
   chmodSync(stub, 0o755);
   return dir;
+}
+
+// The link set the installer must produce, re-derived from the live skills
+// tree (never a hard-coded count): every skill whose frontmatter carries
+// neither `user-invocable: false` nor `disable-model-invocation: true` —
+// Codex ignores the latter key, so relying on it must exclude the skill.
+function expectedLinkedSkills(): string[] {
+  return readdirSync(join(REPO_ROOT, "skills")).filter((name) => {
+    const md = join(REPO_ROOT, "skills", name, "SKILL.md");
+    if (!existsSync(md)) return false;
+    const text = readFileSync(md, "utf8");
+    return (
+      !/^user-invocable:\s*false/m.test(text) &&
+      !/^disable-model-invocation:\s*true/m.test(text)
+    );
+  });
 }
 
 // Spawn a codex-dev-* script with an isolated HOME and the stub codex first
@@ -138,6 +157,44 @@ describe("slice 1: codex-dev-install", () => {
       foreignContent,
     );
   });
+
+  // The frontmatter filter, derived mechanically from the live skills tree.
+  // A skill relying on `disable-model-invocation: true` (a hard guard Codex
+  // ignores) must never be linked. The stub codex returns an empty catalog,
+  // so the self-check mismatches — and per the documented semantics the run
+  // exits non-zero with the links left installed.
+  test("L3 filter: links exactly the Codex-safe set; mismatch leaves links", () => {
+    const home = newTempDir("codex-home");
+    const stubDir = makeStubCodexDir();
+
+    const r = runScript(INSTALL_SCRIPT, {
+      HOME: home,
+      PATH: `${stubDir}:${process.env.PATH}`,
+    });
+
+    const teamDir = join(home, ".agents", "skills", "team");
+    const linked = readdirSync(teamDir).sort();
+    expect(linked).toEqual(expectedLinkedSkills().sort());
+    expect(linked).not.toContain("pr-approve-watch");
+    expect(r.status).toBeGreaterThan(0); // self-check mismatch on empty stub
+    expect(r.output).toContain("codex-dev-uninstall"); // points at the remedy
+  });
+
+  // Fail closed (design decision 5): when `codex plugin list` itself fails,
+  // the coexistence guard proves nothing and must abort before any
+  // filesystem change — never silently pass on empty output.
+  test("L3 guard: failing `codex plugin list` aborts before linking", () => {
+    const home = newTempDir("codex-home");
+    const stubDir = makeStubCodexDir(true);
+
+    const r = runScript(INSTALL_SCRIPT, {
+      HOME: home,
+      PATH: `${stubDir}:${process.env.PATH}`,
+    });
+
+    expect(r.status).toBeGreaterThan(0);
+    expect(existsSync(join(home, ".agents"))).toBe(false);
+  });
 });
 
 describe("slice 2: codex-dev-uninstall", () => {
@@ -164,6 +221,34 @@ describe("slice 2: codex-dev-uninstall", () => {
 
     const r2 = runScript(UNINSTALL_SCRIPT, env);
     expect(r2.status).toBe(0);
+  });
+
+  // Ownership boundary at a symlinked root — the stated target scenario:
+  // `~/.agents/skills` points into a dotfiles repo. Parent cleanup must not
+  // reach through the symlink; the resolved parents belong to the user.
+  // Round-trip: after uninstall the root symlink still resolves, so a
+  // re-install cannot hit the dangling-symlink abort.
+  test("L3: symlinked root — parents survive, symlink still resolves", () => {
+    const home = newTempDir("codex-home");
+    const dotfiles = newTempDir("dotfiles");
+    const realSkills = join(dotfiles, "agents", "skills");
+    const teamDir = join(realSkills, "team");
+    mkdirSync(teamDir, { recursive: true });
+    mkdirSync(join(home, ".agents"), { recursive: true });
+    symlinkSync(realSkills, join(home, ".agents", "skills"));
+    symlinkSync(newTempDir("skill-target"), join(teamDir, "alpha"));
+
+    const r = runScript(UNINSTALL_SCRIPT, {
+      HOME: home,
+      PATH: process.env.PATH ?? "",
+    });
+
+    expect(r.status).toBe(0);
+    expect(existsSync(teamDir)).toBe(false); // team/ links removed
+    expect(existsSync(realSkills)).toBe(true); // dotfiles dirs survive
+    expect(existsSync(join(dotfiles, "agents"))).toBe(true);
+    // existsSync resolves symlinks: true means the root is not dangling.
+    expect(existsSync(join(home, ".agents", "skills"))).toBe(true);
   });
 
   // The same delete guard as the installer: user data the script did not
