@@ -81,10 +81,9 @@ binding shims sit on top. Each shim translates the four blocking contracts into
 its host's idiom. Claude Code keeps its current `.claude-plugin/plugin.json` and
 `skills:` injection. A Gemini build emits `.gemini/` with settings.json hooks,
 `agents/*.md`, `skills/*/SKILL.md`, and TOML commands. A Codex build emits
-`.codex/` with config.toml or hooks.json, `agents/*.md`, and `.agents/skills/`
-(correction, 2026-07-30: no build step is needed for skills — Codex natively
-discovers `.claude-plugin/plugin.json` and loads `skills/` directly; see
-[docs/codex.md](codex.md)).
+`.codex/` with config.toml or hooks.json and `agents/*.md`. Skills need no build
+step on Codex, which discovers `.claude-plugin/plugin.json` and loads `skills/`
+directly (see [docs/codex.md](codex.md)).
 The high-churn binding layer stays isolated from the stable cores. A host API
 change thus touches one shim, not 68 definition files.
 
@@ -377,10 +376,9 @@ handle.
 - **Authorization: Codex `.codex/` trust gate.** Project-local hooks and agents
   load only when the directory is trusted. Behavior: the port's install docs must
   state the trust requirement. An untrusted directory skips hooks without warning.
-  (Addition, 2026-07-30: skills bypass the trust gate entirely — Codex gates
-  "project-local config, hooks, and exec policies" (`config/src/loader/mod.rs:912`)
-  and skills are absent from that set, so a user-scope skill install is exposed
-  to every session with no prompt.)
+  Skills bypass the gate entirely. Codex gates "project-local config, hooks, and
+  exec policies" (`config/src/loader/mod.rs:912`) and skills are absent from that
+  set, so a user-scope skill install is exposed to every session with no prompt.
 - **Resource limit: Codex `agents.max_threads=6`, Gemini parallel cap.** Team's
   5-reviewer parallel dispatch must fit each host's thread ceiling. Behavior: cap
   or batch reviewer dispatch per host.
