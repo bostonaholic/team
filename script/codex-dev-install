@@ -129,22 +129,70 @@ fi
 echo "Installing Team skills for Codex CLI (dev)..."
 echo "  Source: ${PLUGIN_ROOT}"
 
+# Extract a top-level key's value from $frontmatter. The key may be bare
+# or quoted; the last occurrence wins (as a YAML parser would take it);
+# the value is whitespace-trimmed with one layer of quotes stripped.
+# Returns non-zero when the key is absent, so callers can tell "absent"
+# from "present with an empty value".
+fm_value() {
+  local key="$1" line value
+  line="$(printf '%s\n' "$frontmatter" \
+    | grep -E "^[\"']?${key}[\"']?[[:space:]]*:" | tail -n 1 || true)"
+  [ -n "$line" ] || return 1
+  value="${line#*:}"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  value="${value#[\"\']}"
+  value="${value%[\"\']}"
+  printf '%s' "$value"
+}
+
 mkdir -p "$TEAM_DIR"
 LINKED_NAMES=""
 LINK_COUNT=0
 for skill_md in "$PLUGIN_ROOT"/skills/*/SKILL.md; do
   skill_dir="$(dirname "$skill_md")"
   skill_name="$(basename "$skill_dir")"
-  # Only the leading frontmatter block (between the first two --- lines)
-  # decides the filter: a skill body may legitimately quote either key at
-  # column 0 (say, a fenced example documenting it), and a body match must
-  # never drop a skill.
-  frontmatter="$(awk 'NR == 1 { if ($0 != "---") exit; next }
-                      /^---$/ { exit }
-                      { print }' "$skill_md")"
-  if printf '%s\n' "$frontmatter" \
-    | grep -Eq '^user-invocable[[:space:]]*:[[:space:]]*false'; then
-    continue
+  # Only the leading frontmatter block decides the filter: a skill body
+  # may legitimately quote either key at column 0 (say, a fenced example
+  # documenting it), and a body match must never drop a skill. The scan
+  # tolerates CRLF endings and leading blank lines, and tracks quoted
+  # scalars so a `---` inside a quoted value does not end the block
+  # early. When no leading `---` exists it scans the whole file instead:
+  # over-exclusion is the safe failure, never a silently-empty block.
+  frontmatter="$(awk '
+    { sub(/\r$/, "") }
+    state == 0 {
+      if ($0 ~ /^[[:space:]]*$/) next
+      if ($0 == "---") { state = 1; next }
+      state = 2
+    }
+    state == 2 { print; next }
+    quote != "" {
+      print
+      if (gsub(quote, quote) % 2 == 1) quote = ""
+      next
+    }
+    $0 == "---" { exit }
+    {
+      print
+      if (match($0, /:[[:space:]]*"/)) {
+        rest = substr($0, RSTART + RLENGTH)
+        if (gsub(/"/, "\"", rest) % 2 == 0) quote = "\""
+      } else if (match($0, ":[[:space:]]*\047")) {
+        rest = substr($0, RSTART + RLENGTH)
+        if (gsub("\047", "\047", rest) % 2 == 0) quote = "\047"
+      }
+    }' "$skill_md")"
+  # `user-invocable` false forms mark a non-entry-point: skip it. An
+  # unrecognized value falls through and links — over-linking is mere
+  # catalog noise, the safe direction for this key.
+  if ui_value="$(fm_value user-invocable)"; then
+    case "$ui_value" in
+      false | False | FALSE | no | No | NO | off | Off | OFF)
+        continue
+        ;;
+    esac
   fi
   # Codex ignores `disable-model-invocation`, silently downgrading a hard
   # guard to prose. The safe projection is not to install the skill. Fail
@@ -152,14 +200,7 @@ for skill_md in "$PLUGIN_ROOT"/skills/*/SKILL.md; do
   # !!bool true), and linking on a misread guard is the unsafe direction —
   # so the key's presence excludes the skill unless its value is a
   # recognized falsey form.
-  dmi_line="$(printf '%s\n' "$frontmatter" \
-    | grep -E '^disable-model-invocation[[:space:]]*:' | head -n 1 || true)"
-  if [ -n "$dmi_line" ]; then
-    dmi_value="${dmi_line#*:}"
-    dmi_value="${dmi_value#"${dmi_value%%[![:space:]]*}"}"
-    dmi_value="${dmi_value%"${dmi_value##*[![:space:]]}"}"
-    dmi_value="${dmi_value#[\"\']}"
-    dmi_value="${dmi_value%[\"\']}"
+  if dmi_value="$(fm_value disable-model-invocation)"; then
     case "$dmi_value" in
       false | False | FALSE | no | No | NO | off | Off | OFF) ;;
       *)
@@ -182,7 +223,8 @@ fi
 
 echo "  Linked: ${LINK_COUNT} skills into ${TEAM_DIR}"
 
-# --- Self-check against the real catalog: mismatch fails, truncation reports.
+# --- Self-check against the real catalog: any mismatch fails, and budget
+# truncation surfaces as a mismatch too (see the header note).
 # `codex debug prompt-input` renders the injected catalog with no API call.
 echo "Running self-check (any mismatch fails)..."
 DEBUG_OUT="$(codex debug prompt-input 2>&1 || true)"

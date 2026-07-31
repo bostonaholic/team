@@ -86,9 +86,16 @@ function makeStubCodexDir(pluginListFails = false): string {
 // hand-authored skills/ tree. The script derives its skill source from its
 // own location, so running the copy exercises the real filter against
 // fixtures whose expected outcome is written by hand — an oracle
-// independent of the script's own parsing.
+// independent of the script's own parsing. `raw` bypasses the frontmatter
+// template for fixtures that malform the file itself (CRLF endings, a
+// leading blank line, missing delimiters).
 function makeFixtureCheckout(
-  skills: Array<{ name: string; frontmatter: string; body?: string }>,
+  skills: Array<{
+    name: string;
+    frontmatter?: string;
+    body?: string;
+    raw?: string;
+  }>,
 ): string {
   const root = newTempDir("fixture-checkout");
   mkdirSync(join(root, "script"), { recursive: true });
@@ -100,7 +107,7 @@ function makeFixtureCheckout(
     mkdirSync(dir, { recursive: true });
     writeFileSync(
       join(dir, "SKILL.md"),
-      `---\n${skill.frontmatter}\n---\n${skill.body ?? "Body.\n"}`,
+      skill.raw ?? `---\n${skill.frontmatter}\n---\n${skill.body ?? "Body.\n"}`,
     );
   }
   return root;
@@ -191,7 +198,11 @@ describe("codex-dev-install", () => {
   // Fail closed on every YAML spelling of the guard: the filter must treat
   // `disable-model-invocation` as set unless its value is a recognized
   // falsey form. A skill body quoting either key at column 0 must never
-  // filter — only the frontmatter block decides.
+  // filter — only the frontmatter block decides. The frontmatter scan must
+  // fail safe on malformed files too: CRLF endings, a leading blank line,
+  // a `---` inside a quoted value, a duplicate key (last wins, as YAML), a
+  // quoted key, and a file with no delimiters at all (whole-file fallback;
+  // over-exclusion is the safe failure) must never fail open into a link.
   test("L3 filter: fixture tree — guard spellings never link, bodies never filter", () => {
     const mustNotLink = [
       { name: "guard-plain", frontmatter: "disable-model-invocation: true" },
@@ -207,13 +218,57 @@ describe("codex-dev-install", () => {
       },
       { name: "guard-spaced", frontmatter: "disable-model-invocation : true" },
       { name: "guard-bare", frontmatter: "disable-model-invocation:" },
+      {
+        name: "guard-quoted-key",
+        frontmatter: '"disable-model-invocation": true',
+      },
+      {
+        name: "guard-dup-last-true",
+        frontmatter:
+          "disable-model-invocation: false\ndisable-model-invocation: true",
+      },
+      {
+        name: "guard-crlf",
+        raw: "---\r\ndisable-model-invocation: true\r\n---\r\nBody.\r\n",
+      },
+      {
+        name: "guard-blank-lead",
+        raw: "\n---\ndisable-model-invocation: true\n---\nBody.\n",
+      },
+      {
+        name: "guard-quoted-dashes",
+        raw: [
+          "---",
+          'description: "one',
+          "---",
+          'two"',
+          "disable-model-invocation: true",
+          "---",
+          "Body.",
+          "",
+        ].join("\n"),
+      },
+      {
+        name: "guard-no-delimiters",
+        raw: "No frontmatter at all.\ndisable-model-invocation: true\nBody.\n",
+      },
       { name: "not-invocable", frontmatter: "user-invocable: false" },
+      {
+        name: "not-invocable-quoted",
+        frontmatter: 'user-invocable: "false"',
+      },
+      { name: "not-invocable-upper", frontmatter: "user-invocable: FALSE" },
     ];
     const mustLink = [
       { name: "plain", frontmatter: "description: a plain skill" },
       {
         name: "guard-off",
         frontmatter: "disable-model-invocation: false",
+      },
+      {
+        name: "guard-dup-last-false",
+        frontmatter:
+          "disable-model-invocation: true\ndisable-model-invocation: false",
       },
       {
         name: "body-mention",
