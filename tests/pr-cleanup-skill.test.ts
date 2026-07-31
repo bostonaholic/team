@@ -306,8 +306,11 @@ describe("pr-cleanup skill: input gates are byte-exact and mechanical", () => {
     // The bracket expression is collation-dependent: in a UTF-8 locale it
     // accepts multibyte characters, so the allowlist is byte-exact only
     // under the C locale.
+    // Pin the executable assignment adjacent to the allowlist, not the
+    // prose that explains it — the section names LC_ALL=C in both places,
+    // so a bare substring check survives deleting the runnable line.
     const s = sliceBetween("## Input", "## Hard Rules");
-    expect(s).toContain("LC_ALL=C");
+    expect(s).toContain('LC_ALL=C\n  case "$BRANCH" in');
   });
 
   test("the PR-number gate is a runnable digits-only case", () => {
