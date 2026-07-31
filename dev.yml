@@ -25,6 +25,9 @@ commands:
   codex-install:
     desc: "Symlink user-invocable skills into ~/.agents/skills for Codex CLI"
     run: "script/codex-dev-install"
+  codex-uninstall:
+    desc: "Remove the Codex CLI skill symlinks and clean up empty parents"
+    run: "script/codex-dev-uninstall"
   docs:
     desc: "Build and serve the docs site locally at http://localhost:4000"
     run: "cd docs && bundle config set --local path 'vendor/bundle' && bundle install && bundle exec jekyll serve --livereload"

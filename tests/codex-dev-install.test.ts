@@ -27,11 +27,13 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import {
   chmodSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -40,6 +42,7 @@ import { join } from "node:path";
 const REPO_ROOT = join(import.meta.dir, "..");
 const SCRIPT_DIR = join(REPO_ROOT, "script");
 const INSTALL_SCRIPT = join(SCRIPT_DIR, "codex-dev-install");
+const UNINSTALL_SCRIPT = join(SCRIPT_DIR, "codex-dev-uninstall");
 
 // Hermetic temp dirs keyed by pid (docs/testing.md L1 rule), cleaned up after.
 const fixtures: string[] = [];
@@ -127,6 +130,54 @@ describe("slice 1: codex-dev-install", () => {
     const r = runScript(INSTALL_SCRIPT, {
       HOME: home,
       PATH: `${stubDir}:${process.env.PATH}`,
+    });
+
+    expect(r.output).toContain("foreign.txt");
+    expect(r.status).toBeGreaterThan(0);
+    expect(readFileSync(join(teamDir, "foreign.txt"), "utf8")).toBe(
+      foreignContent,
+    );
+  });
+});
+
+describe("slice 2: codex-dev-uninstall", () => {
+  // The uninstaller needs no codex on PATH (it never invokes it), so these
+  // tests pass the real PATH through unchanged.
+
+  // Mirror cleanup (plan assumption P5): remove the symlink tree, then each
+  // now-empty parent; a second run finds nothing and still exits 0.
+  test("L3: uninstall removes symlink tree and empty parents; idempotent", () => {
+    const home = newTempDir("codex-home");
+    const skillsDir = join(home, ".agents", "skills");
+    const teamDir = join(skillsDir, "team");
+    mkdirSync(teamDir, { recursive: true });
+    const target = newTempDir("skill-target");
+    symlinkSync(target, join(teamDir, "alpha"));
+    symlinkSync(target, join(teamDir, "beta"));
+
+    const env = { HOME: home, PATH: process.env.PATH ?? "" };
+    const r1 = runScript(UNINSTALL_SCRIPT, env);
+    expect(r1.status).toBe(0);
+    expect(existsSync(teamDir)).toBe(false);
+    expect(existsSync(skillsDir)).toBe(false);
+    expect(existsSync(join(home, ".agents"))).toBe(false);
+
+    const r2 = runScript(UNINSTALL_SCRIPT, env);
+    expect(r2.status).toBe(0);
+  });
+
+  // The same delete guard as the installer: user data the script did not
+  // create is never removed — fail loud, leave the file intact.
+  test("L3: foreign regular file in team/ aborts, file intact", () => {
+    const home = newTempDir("codex-home");
+    const teamDir = join(home, ".agents", "skills", "team");
+    mkdirSync(teamDir, { recursive: true });
+    const foreignContent = "user data not created by codex-dev-install\n";
+    writeFileSync(join(teamDir, "foreign.txt"), foreignContent);
+
+    const r = runScript(UNINSTALL_SCRIPT, {
+      HOME: home,
+      PATH: process.env.PATH ?? "",
     });
 
     expect(r.output).toContain("foreign.txt");

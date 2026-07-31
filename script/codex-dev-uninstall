@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Remove the Codex CLI skill symlinks that script/codex-dev-install created
+# under <root>/team/, where <root> is the resolved physical path of
+# ~/.agents/skills. Deletes only symlink entries — a foreign non-symlink
+# entry aborts with nothing deleted. Idempotent: absent state exits 0.
+
+TARGET_ROOT="${HOME}/.agents/skills"
+
+# Absent or dangling root — nothing to do
+if [ -L "$TARGET_ROOT" ] && [ ! -e "$TARGET_ROOT" ]; then
+  echo "Nothing to do: ${TARGET_ROOT} is a dangling symlink."
+  exit 0
+fi
+if [ ! -d "$TARGET_ROOT" ]; then
+  echo "Nothing to do: ${TARGET_ROOT} does not exist."
+  exit 0
+fi
+
+# Operate on the physical path (the root may be a symlink into a dotfiles repo)
+TARGET_ROOT="$(cd "$TARGET_ROOT" && pwd -P)"
+TEAM_DIR="${TARGET_ROOT}/team"
+
+echo "Uninstalling Team skills for Codex CLI (dev)..."
+
+if [ -L "$TEAM_DIR" ]; then
+  # A single symlink (e.g. a manual whole-tree link). Removing the link
+  # itself destroys no data.
+  rm "$TEAM_DIR"
+  echo "  Removed symlink: ${TEAM_DIR}"
+elif [ -d "$TEAM_DIR" ]; then
+  shopt -s nullglob dotglob
+  for entry in "$TEAM_DIR"/*; do
+    if [ ! -L "$entry" ]; then
+      echo "Error: refusing to delete non-symlink entry: ${entry}" >&2
+      echo "  This entry was not created by codex-dev-install. Nothing was deleted." >&2
+      exit 1
+    fi
+  done
+  REMOVED=0
+  for entry in "$TEAM_DIR"/*; do
+    rm "$entry"
+    REMOVED=$((REMOVED + 1))
+  done
+  rmdir "$TEAM_DIR"
+  echo "  Removed: ${REMOVED} skill links and ${TEAM_DIR}"
+elif [ -e "$TEAM_DIR" ]; then
+  echo "Error: refusing to delete non-symlink entry: ${TEAM_DIR}" >&2
+  exit 1
+else
+  echo "  Already absent: ${TEAM_DIR}"
+fi
+
+# Remove now-empty parents; silence otherwise (mirrors script/dev-uninstall)
+rmdir "$TARGET_ROOT" 2>/dev/null || true
+rmdir "$(dirname "$TARGET_ROOT")" 2>/dev/null || true
+
+echo "Done."
