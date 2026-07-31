@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Worktree teardown no longer reports success while leaving the directory behind.** `git worktree remove` exits 0 and deletes gitignored files, so teardown treated a successful removal as the end of the story. It is not: a long-lived process still anchored to the old absolute path — an editor language server booting the app per workspace, a hook writing per-session state — re-creates the directory by `mkdir -p` seconds to hours *after* the command returns, holding nothing but regenerable cache. Because recreation lands after the removal, a check inside the same command cannot catch it, and the leftovers accumulate silently under `.claude/worktrees/`. [`skills/worktree-isolation/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/worktree-isolation/SKILL.md) → "Ship (teardown)" gains a post-removal assertion on the removed path, and a residue sweep as teardown's final action that also catches sibling directories under `.claude/worktrees/` which `git worktree list` no longer knows about. The sweep deletes only pure regenerable residue — no `.git` entry, and no files outside `tmp/`, `.omc/`, and the already-disposable `docs/plans/` — so anything holding real work stays on disk and is reported with the files it holds, and a worktree still listed by git is never a candidate. Teardown now says which directories it swept, or that it found none. [`tests/worktree-teardown-sweep.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/worktree-teardown-sweep.test.ts) pins the behavior at L3 by extracting the documented snippet from the skill and running it against hermetic temp repos, so the documented command and the tested command cannot drift.
+
 ## [0.31.0] - 2026-07-31
 
 ### Added
@@ -18,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`pr-approve-watch` loses its human-only guard on Codex, and the install instructions now say so.** On Claude Code the skill carries `disable-model-invocation`, so only a person can arm it — its approval can transitively merge a pull request that has auto-merge enabled. Codex does not implement that key, and skills bypass its trust gate, so on Codex the model can invoke the skill in any session with no prompt. The skill's own description says it is user-only, but that sentence falls past the point where Codex truncates a long description, so it cannot be relied on. [`README.md`](https://github.com/bostonaholic/team/blob/main/README.md) states the gap at the point of install and gives the command to remove the skill for anyone who wants the guard back.
 
+||||||| Stash base
 ## [0.30.0] - 2026-07-31
 
 ### Changed
