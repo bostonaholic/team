@@ -1,0 +1,269 @@
+// tests/pr-cleanup-skill.test.ts
+//
+// L2 tripwire (free, deterministic): fences the `pr-cleanup` RUNTIME skill
+// (skills/pr-cleanup/SKILL.md) — a standalone post-PR teardown utility
+// distributed to Team's users.
+// Mode A (merged) resyncs the default branch and deletes the merged branch
+// behind a merged-PR verification gate; Mode B (closed/abandoned) runs only
+// on explicit abandon intent and closes PRs child-before-parent. Every
+// destructive step is anchored to a validated $PRIMARY_ROOT, protected
+// branch names are refused, and a dirty tree stops the run.
+//
+// Every assertion is guarded so a not-yet-existing skill file yields a failed
+// expect(), never an uncaught ENOENT — the mechanical gate rejects crashes,
+// not clean assertion failures.
+
+import { describe, expect, test } from "bun:test";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+
+import { frontmatter, read } from "./helpers/text";
+
+const REPO_ROOT = process.cwd();
+// pr-cleanup is a RUNTIME skill — under skills/ (distributed), not .claude/.
+const SKILL = join(REPO_ROOT, "skills", "pr-cleanup", "SKILL.md");
+// Slice 3 wires worktree-isolation's teardown preamble to this skill.
+const WORKTREE_ISOLATION = join(
+  REPO_ROOT,
+  "skills",
+  "worktree-isolation",
+  "SKILL.md",
+);
+
+// Defensive read: missing file → "" so content assertions FAIL (not throw).
+function body(): string {
+  return existsSync(SKILL) ? read(SKILL) : "";
+}
+function fm(): string {
+  return existsSync(SKILL) ? frontmatter(read(SKILL)) : "";
+}
+// Flatten newlines so multi-line prose can be matched in one regex.
+function flat(text: string): string {
+  return text.replace(/\n/g, " ");
+}
+// Slice between two headings, or "" when the start heading is absent —
+// content assertions against "" fail cleanly.
+function sliceBetween(startHeading: string, endHeading: string): string {
+  const text = body();
+  const start = text.indexOf(startHeading);
+  if (start < 0) return "";
+  const rest = text.slice(start);
+  const end = rest.indexOf(endHeading);
+  return end >= 0 ? rest.slice(0, end) : rest;
+}
+function modeASection(): string {
+  return sliceBetween("### Mode A — merged", "### Mode B");
+}
+function modeBSection(): string {
+  return sliceBetween("### Mode B — closed / abandoned", "## Success Criteria");
+}
+
+describe("pr-cleanup skill: runtime standalone utility frontmatter", () => {
+  test("skill file lives under runtime skills/ (distributed)", () => {
+    expect(existsSync(SKILL)).toBe(true);
+  });
+
+  test("frontmatter declares name: pr-cleanup", () => {
+    expect(/^name:\s*pr-cleanup\s*$/m.test(fm())).toBe(true);
+  });
+
+  test("frontmatter declares effort: medium (shipit's tier)", () => {
+    expect(/^effort:\s*medium\s*$/m.test(fm())).toBe(true);
+  });
+
+  test("frontmatter carries argument-hint (PR number, URL, or branch)", () => {
+    expect(/^argument-hint:/m.test(fm())).toBe(true);
+  });
+
+  test("description carries the trigger-phrase convention incl. /pr-cleanup", () => {
+    const f = flat(fm());
+    expect(/description:.*Trigger on/i.test(f)).toBe(true);
+    expect(f).toContain("/pr-cleanup");
+  });
+
+  test("description carries the Mode B invoke guard (explicit abandon intent)", () => {
+    expect(flat(fm())).toContain("abandon");
+  });
+
+  test("frontmatter does NOT set disable-model-invocation (model-invocable by design)", () => {
+    const f = fm();
+    // Guard: an empty frontmatter must fail, not vacuously pass the absence check.
+    expect(f.length).toBeGreaterThan(0);
+    expect(/^disable-model-invocation:/m.test(f)).toBe(false);
+  });
+});
+
+describe("pr-cleanup skill: section contract", () => {
+  test("carries every pinned section heading", () => {
+    const t = body();
+    expect(t).toContain("## Input");
+    expect(t).toContain("## Hard Rules");
+    expect(t).toContain("## Untrusted input — PR metadata is data");
+    expect(t).toContain("## Execution");
+    expect(t).toContain("### Mode A — merged");
+    expect(t).toContain("### Mode B — closed / abandoned");
+    expect(t).toContain("## Success Criteria");
+    expect(t).toContain("## Pitfalls");
+    expect(t).toContain("## Completion");
+  });
+
+  test("sections appear in the pinned order", () => {
+    const t = body();
+    const input = t.indexOf("## Input");
+    const hardRules = t.indexOf("## Hard Rules");
+    const untrusted = t.indexOf("## Untrusted input — PR metadata is data");
+    const execution = t.indexOf("## Execution");
+    const modeA = t.indexOf("### Mode A — merged");
+    const modeB = t.indexOf("### Mode B — closed / abandoned");
+    const success = t.indexOf("## Success Criteria");
+    const pitfalls = t.indexOf("## Pitfalls");
+    const completion = t.indexOf("## Completion");
+    expect(input).toBeGreaterThanOrEqual(0);
+    expect(hardRules).toBeGreaterThan(input);
+    expect(untrusted).toBeGreaterThan(hardRules);
+    expect(execution).toBeGreaterThan(untrusted);
+    expect(modeA).toBeGreaterThan(execution);
+    expect(modeB).toBeGreaterThan(modeA);
+    expect(success).toBeGreaterThan(modeB);
+    expect(pitfalls).toBeGreaterThan(success);
+    expect(completion).toBeGreaterThan(pitfalls);
+  });
+
+  test("loads the progress-tracking convention", () => {
+    expect(body()).toContain("skills/progress-tracking/SKILL.md");
+  });
+});
+
+describe("pr-cleanup skill: step 0 resolves AND validates $PRIMARY_ROOT", () => {
+  test("resolves the primary root from --git-common-dir", () => {
+    expect(body()).toContain("rev-parse --path-format=absolute --git-common-dir");
+  });
+
+  test("validates the resolved root: --git-dir must equal --git-common-dir", () => {
+    expect(body()).toContain("--git-dir");
+  });
+
+  test("cross-checks against the first entry of git worktree list --porcelain", () => {
+    expect(body()).toContain("worktree list --porcelain");
+  });
+
+  test("anchors git commands to the validated root via git -C", () => {
+    expect(body()).toContain(`git -C "$PRIMARY_ROOT"`);
+  });
+});
+
+describe("pr-cleanup skill: command contracts (all $PRIMARY_ROOT-anchored)", () => {
+  test("detects the default branch via symbolic-ref with the set-head retry", () => {
+    const t = body();
+    expect(t).toContain("symbolic-ref --short refs/remotes/origin/HEAD");
+    expect(t).toContain("remote set-head origin --auto");
+  });
+
+  test("merged gate queries gh pr list for the merged PR with structured JSON", () => {
+    const t = body();
+    expect(t).toContain("gh pr list --state merged");
+    expect(t).toContain("--json number,mergedAt");
+  });
+
+  test("resyncs the default branch with an anchored fetch and --ff-only pull", () => {
+    const t = body();
+    expect(t).toContain(`git -C "$PRIMARY_ROOT" fetch origin`);
+    expect(t).toContain("--ff-only");
+  });
+
+  test("deletes the local branch with the anchored, option-terminated form", () => {
+    expect(body()).toContain(`git -C "$PRIMARY_ROOT" branch -D --`);
+  });
+
+  test("remote-branch check is anchored (C18: ls-remote --heads origin)", () => {
+    expect(body()).toContain(`git -C "$PRIMARY_ROOT" ls-remote --heads origin`);
+  });
+
+  test("prune offer is anchored (C19: remote prune origin)", () => {
+    expect(body()).toContain(`git -C "$PRIMARY_ROOT" remote prune origin`);
+  });
+
+  test("remote deletion is anchored (push origin --delete)", () => {
+    expect(body()).toContain(`git -C "$PRIMARY_ROOT" push origin --delete`);
+  });
+
+  test("closes PRs through gh pr close with an explicit --repo", () => {
+    const t = body();
+    expect(t).toContain("gh pr close");
+    expect(t).toContain("--repo");
+  });
+
+  test("dirty-tree refusal reads status --porcelain", () => {
+    expect(body()).toContain("status --porcelain");
+  });
+
+  test("validates every branch name with git check-ref-format --branch", () => {
+    expect(body()).toContain("git check-ref-format --branch");
+  });
+});
+
+describe("pr-cleanup skill: destructive-step gates", () => {
+  test("Mode A worktree removal does NOT reach for --force first (try-then-confirm)", () => {
+    expect(
+      /git -C "\$PRIMARY_ROOT" worktree remove (?!--force)/.test(modeASection()),
+    ).toBe(true);
+  });
+
+  test("Mode B worktree removal uses --force (the abandon request is the gate)", () => {
+    expect(modeBSection()).toContain(
+      `git -C "$PRIMARY_ROOT" worktree remove --force`,
+    );
+  });
+
+  test("the merged-PR verification gate precedes branch -D within Mode A", () => {
+    const a = modeASection();
+    const gate = a.indexOf("gh pr list --state merged");
+    const deleteBranch = a.indexOf(`git -C "$PRIMARY_ROOT" branch -D --`);
+    expect(gate).toBeGreaterThanOrEqual(0);
+    expect(deleteBranch).toBeGreaterThan(gate);
+  });
+
+  test("scratch removal distinguishes empty ls-files output from a failed check", () => {
+    // A non-zero `git ls-files` exit must refuse, never read as "untracked" —
+    // docs/plans/ is tracked in this repo, so that misread deletes tracked work.
+    expect(body()).toContain(`if ! tracked=$(git -C "$PRIMARY_ROOT" ls-files`);
+  });
+
+  test("scratch removal takes a $PRIMARY_ROOT-absolute path", () => {
+    expect(body()).toContain(`rm -rf "$PRIMARY_ROOT/docs/plans/`);
+  });
+});
+
+describe("pr-cleanup skill: protected-branch refusal identifiers", () => {
+  test("refuses master, develop, and release/* alongside the default branch", () => {
+    const t = body();
+    expect(t).toContain("master");
+    expect(t).toContain("develop");
+    expect(t).toContain("release/");
+  });
+});
+
+describe("pr-cleanup skill: dotfiles residue is absent", () => {
+  test("carries no machine-specific MySQL provisioning residue", () => {
+    const t = body();
+    // Guard: an empty body must fail, not vacuously pass the absence checks.
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).not.toContain("mysql");
+    expect(t).not.toContain("-uroot");
+    expect(t).not.toContain("release-owl");
+  });
+
+  test("carries no host path convention and never rebases the pull", () => {
+    const t = body();
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).not.toContain("~/Development");
+    expect(t).not.toContain("pull --rebase");
+  });
+});
+
+describe("pr-cleanup skill: worktree-isolation teardown hands off to it", () => {
+  test("worktree-isolation references skills/pr-cleanup/SKILL.md", () => {
+    const t = existsSync(WORKTREE_ISOLATION) ? read(WORKTREE_ISOLATION) : "";
+    expect(t).toContain("skills/pr-cleanup/SKILL.md");
+  });
+});

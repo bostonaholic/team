@@ -29,7 +29,8 @@
 // (heavy external state — an open PR, CI, the GitHub API — same reason
 // team-pr is demoted; no protocol.test.ts sentinel, that convention is for
 // the pipeline-skill demotions):
-//   shipit, pr-open-comments, pr-watch, pr-approve-watch, groom-backlog
+//   shipit, pr-open-comments, pr-watch, pr-approve-watch, groom-backlog,
+//   pr-cleanup, pr-verify
 
 import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
@@ -556,5 +557,48 @@ describe("L2 coverage: groom-backlog (executable utility, not L5)", () => {
 
   test("groom-backlog is pinned by its dedicated L2 tripwire tests/groom-backlog-skill.test.ts", () => {
     expect(existsSync(join(TESTS_ROOT, "groom-backlog-skill.test.ts"))).toBe(true);
+  });
+});
+
+// `pr-cleanup` tears down local and remote branch state after a PR is merged
+// or abandoned — heavy external state (a merged/closed PR, remote branches,
+// linked worktrees, the GitHub API) that it also mutates destructively, the
+// same reason `shipit` and `team-pr` are demoted. It cannot be honestly
+// driven in a single offline `claude -p` eval. Its behavioral contract is
+// pinned by its dedicated L2 tripwire, tests/pr-cleanup-skill.test.ts, not an
+// L5 eval.
+
+describe("L2 coverage: pr-cleanup (executable utility, not L5)", () => {
+  test("pr-cleanup has no evals/fixtures/pr-cleanup/ directory (no L5 eval)", () => {
+    expect(existsSync(fixtureDir("pr-cleanup"))).toBe(false);
+  });
+
+  test("pr-cleanup has no tests/pr-cleanup.evals.ts file (no L5 eval)", () => {
+    expect(existsSync(evalsFilePath("pr-cleanup"))).toBe(false);
+  });
+
+  test("pr-cleanup is pinned by its dedicated L2 tripwire tests/pr-cleanup-skill.test.ts", () => {
+    expect(existsSync(join(TESTS_ROOT, "pr-cleanup-skill.test.ts"))).toBe(true);
+  });
+});
+
+// `pr-verify` verifies a PR's test plan against a live PR — heavy external
+// state (an open PR, its diff and checks, the GitHub API) that cannot be
+// honestly driven in a single offline `claude -p` eval, the same reason
+// `shipit`, `pr-open-comments`, and `team-pr` are demoted. Its behavioral
+// contract is pinned by its dedicated L2 tripwire,
+// tests/pr-verify-skill.test.ts, not an L5 eval.
+
+describe("L2 coverage: pr-verify (executable utility, not L5)", () => {
+  test("pr-verify has no evals/fixtures/pr-verify/ directory (no L5 eval)", () => {
+    expect(existsSync(fixtureDir("pr-verify"))).toBe(false);
+  });
+
+  test("pr-verify has no tests/pr-verify.evals.ts file (no L5 eval)", () => {
+    expect(existsSync(evalsFilePath("pr-verify"))).toBe(false);
+  });
+
+  test("pr-verify is pinned by its dedicated L2 tripwire tests/pr-verify-skill.test.ts", () => {
+    expect(existsSync(join(TESTS_ROOT, "pr-verify-skill.test.ts"))).toBe(true);
   });
 });

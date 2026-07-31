@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`/pr-cleanup` tears down branch state after a PR is finished.** Merged mode verifies the PR actually merged before any `git branch -D`, removes the branch's worktree (asking before any forced removal), resyncs the default branch with `--ff-only`, and deletes the local branch. Abandoned mode — which runs only on an explicit request to abandon the work — closes the PR(s) child-before-parent, then deletes the worktree, the local and remote branches, and the feature's planning scratch. It refuses protected branch names and dirty trees, and it anchors every command to the validated primary clone, so running it from inside the worktree it is about to remove is safe. [`skills/pr-cleanup/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-cleanup/SKILL.md)
+
 ## [0.31.1] - 2026-07-31
 
 ### Fixed

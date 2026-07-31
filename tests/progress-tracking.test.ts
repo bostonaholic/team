@@ -134,29 +134,29 @@ describe("Slice 1: progress-tracking convention skill exists", () => {
   });
 });
 
-describe("skill count reconciliation (-> 51: pr-approve-watch added to the 50-skill baseline)", () => {
+describe("skill count reconciliation (-> 52: pr-cleanup added to the 51-skill baseline)", () => {
   const CLAUDE_MD = join(REPO_ROOT, "CLAUDE.md");
   const AGENTS_MD = join(REPO_ROOT, "AGENTS.md");
 
-  test("CLAUDE.md heading reads '## Skills (51)'", () => {
-    expect(/^## Skills \(51\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md heading reads '## Skills (52)'", () => {
+    expect(/^## Skills \(52\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 
-  test("AGENTS.md heading reads '## Skills (51)'", () => {
-    expect(/^## Skills \(51\)/m.test(read(AGENTS_MD))).toBe(true);
+  test("AGENTS.md heading reads '## Skills (52)'", () => {
+    expect(/^## Skills \(52\)/m.test(read(AGENTS_MD))).toBe(true);
   });
 
-  test("filesystem has exactly 51 SKILL.md files declaring a name:", () => {
-    // 50-skill baseline (11 pipeline entry points + 4 standalone utilities —
-    // shipit, pr-open-comments, pr-watch, groom-backlog — plus 35 methodology
-    // skills) plus pr-approve-watch (the reviewer-side standalone
-    // watch-and-approve utility), which takes the count to 51.
+  test("filesystem has exactly 52 SKILL.md files declaring a name:", () => {
+    // 51-skill baseline (11 pipeline entry points + 5 standalone utilities —
+    // shipit, pr-open-comments, pr-watch, pr-approve-watch, groom-backlog —
+    // plus 35 methodology skills) plus pr-cleanup (the standalone post-PR
+    // teardown utility), which takes the count to 52.
     const dirs = readdirSync(SKILLS_DIR, { withFileTypes: true })
       .filter((d) => d.isDirectory())
       .map((d) => join(SKILLS_DIR, d.name, "SKILL.md"))
       .filter((p) => existsSync(p));
     const withName = dirs.filter((p) => /^name:/m.test(read(p)));
-    expect(withName.length).toBe(51);
+    expect(withName.length).toBe(52);
   });
 });
 
