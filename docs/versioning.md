@@ -44,7 +44,8 @@ number is thus always free. The serialization *is* the collision defense.
 
 The version, changelog, and release exist for **plugin end users**, so a bump is
 warranted **only when a PR changes the distributed plugin**: `agents/`,
-`skills/`, `hooks/`, or `.claude-plugin/` *content* (the
+`skills/`, `hooks/`, or host manifest *content* — `.claude-plugin/`,
+`.codex-plugin/`, `.agents/plugins/` — (the
 [Runtime vs. development](../AGENTS.md) split). Contributor-facing and
 plugin-developer infrastructure (`.github/`, `.claude/`, `docs/`, `tests/`,
 `evals/`, and build tooling) **never bumps**, whatever its conventional-commit
@@ -124,10 +125,11 @@ different versions depending on which host a user installed from.
 One grep proves consistency:
 
 ```sh
-grep -rn '"version"' package.json .claude-plugin/plugin.json .claude-plugin/marketplace.json
+grep -rn '"version"' package.json .claude-plugin/plugin.json \
+  .claude-plugin/marketplace.json .codex-plugin/plugin.json
 ```
 
-All four lines must show the same version. `tests/version-consistency.test.ts`
+All five lines must show the same version. `tests/version-consistency.test.ts`
 enforces this on every `bun test` run.
 
 ## Picking the next version

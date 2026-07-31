@@ -21,6 +21,7 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import {
+  chmodSync,
   existsSync,
   lstatSync,
   mkdirSync,
@@ -45,11 +46,31 @@ function newHome(): string {
   return dir;
 }
 
+/**
+ * Put a fake `codex` first on PATH that prints `output` for any invocation.
+ * The scripts shell out to `codex plugin list`; the real binary is not the
+ * subject here, so it is stubbed at the boundary. Returns the dir to prepend.
+ */
+function stubCodex(home: string, output: string): string {
+  const binDir = join(home, "stub-bin");
+  mkdirSync(binDir, { recursive: true });
+  const stub = join(binDir, "codex");
+  writeFileSync(stub, `#!/usr/bin/env bash\nprintf '%b\\n' "${output}"\n`);
+  chmodSync(stub, 0o755);
+  return binDir;
+}
+
 /** Run a script with an isolated HOME. Never touches the real one. */
-function run(script: string, home: string) {
+function run(script: string, home: string, pathPrefix?: string) {
   const result = spawnSync("bash", [script], {
     encoding: "utf8",
-    env: { ...process.env, HOME: home },
+    env: {
+      ...process.env,
+      HOME: home,
+      ...(pathPrefix
+        ? { PATH: `${pathPrefix}:${process.env.PATH ?? ""}` }
+        : {}),
+    },
   });
   return {
     status: result.status ?? -1,
@@ -90,6 +111,37 @@ describe("dev install: codex harness", () => {
     const { output } = run(INSTALL, newHome());
     expect(output).toContain("pr-approve-watch");
     expect(output).toContain("disable-model-invocation");
+  });
+
+  // Stacking the dev symlink on a native plugin install makes Codex find the
+  // same 51 skills under two roots and render every one twice — a doubled
+  // catalog, worse truncation, and an ambiguous source. The guard reads the
+  // STATUS column, so a registered-but-uninstalled marketplace row is fine.
+  test("install aborts when a Codex plugin install is already present", () => {
+    const home = newHome();
+    const stub = stubCodex(
+      home,
+      "PLUGIN         STATUS              VERSION  PATH\\nteam@team-dev  installed, enabled  0.29.1   /somewhere",
+    );
+
+    const { status, output } = run(INSTALL, home, stub);
+
+    expect(status).not.toBe(0);
+    expect(output).toContain("already present");
+    expect(existsSync(teamLink(home))).toBe(false);
+  });
+
+  test("install proceeds past a registered-but-uninstalled plugin row", () => {
+    const home = newHome();
+    const stub = stubCodex(
+      home,
+      "PLUGIN         STATUS         VERSION  PATH\\nteam@team-dev  not installed           /somewhere",
+    );
+
+    const { status } = run(INSTALL, home, stub);
+
+    expect(status).toBe(0);
+    expect(lstatSync(teamLink(home)).isSymbolicLink()).toBe(true);
   });
 
   test("install is idempotent", () => {

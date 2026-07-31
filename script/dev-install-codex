@@ -21,6 +21,31 @@ if [ ! -d "$SKILLS_SRC" ]; then
   exit 1
 fi
 
+# Refuse to stack this on top of a native plugin install. Codex would then find
+# the same 51 skills under two roots and render every one twice, which doubles
+# the catalog, worsens description truncation, and leaves the source ambiguous.
+# A registered-but-uninstalled marketplace row reads `not installed` and is
+# fine; only an installed row collides.
+if command -v codex >/dev/null 2>&1; then
+  plugin_list=$(codex plugin list 2>&1) || plugin_list=""
+  while IFS= read -r line; do
+    case "$line" in
+      *team@*)
+        case "$line" in
+          *"not installed"*) ;;
+          *)
+            echo "Error: a Codex plugin install of Team is already present:" >&2
+            echo "  ${line}" >&2
+            echo "Installing the dev symlink too would load every skill twice." >&2
+            echo "Remove one first, e.g. codex plugin remove team@<marketplace>" >&2
+            exit 1
+            ;;
+        esac
+        ;;
+    esac
+  done <<<"$plugin_list"
+fi
+
 # Already linked — nothing to do
 if [ -L "$TARGET" ] && [ "$(readlink "$TARGET")" = "$SKILLS_SRC" ]; then
   echo "Team skills already installed for Codex (dev)."

@@ -122,6 +122,20 @@ Two differences worth knowing. Skills arrive **namespaced** — ask for
 all 51 skills present it shortens the longer descriptions; the skills still
 load and still work.
 
+> **`team:pr-approve-watch` loses a safety guard on Codex.** On Claude Code
+> that skill sets `disable-model-invocation`, so only a person can start it —
+> its approval can transitively merge a PR that has auto-merge enabled.
+> **Codex ignores that key**, so the model can invoke it, in every session,
+> with no prompt: skills bypass Codex's trust gate. The skill's own
+> description says it is user-only, but that sentence is past the point where
+> Codex truncates. To keep the guard, remove the skill after installing:
+>
+> ```bash
+> rm -rf "$CODEX_HOME/plugins/cache"/*/team/*/skills/pr-approve-watch
+> ```
+>
+> Re-running `codex plugin add` restores it.
+
 The `/team-*` pipeline commands load on Codex but cannot dispatch Claude
 Code agents there, so they will not run the pipeline. The standalone
 utilities — `team:shipit`, `team:pr-watch`, `team:pr-open-comments`,

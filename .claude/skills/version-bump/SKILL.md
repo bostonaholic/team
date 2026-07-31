@@ -56,9 +56,11 @@ not move the version, no matter what conventional-commit type it carries.
 
 Using the **Runtime vs. Development** split in `CLAUDE.md`:
 
-- **Runtime (bump-worthy):** `agents/`, `skills/`, `hooks/`, and
-  `.claude-plugin/` *content* (a real change to the manifest, not the bare
-  `"version"` field).
+- **Runtime (bump-worthy):** `agents/`, `skills/`, `hooks/`, and host manifest
+  *content* — `.claude-plugin/`, `.codex-plugin/`, `.agents/plugins/` — meaning
+  a real change to a manifest, not the bare `"version"` field. Every host's
+  manifest ships to that host's end users, so a Codex-only manifest change is
+  as much a runtime change as a Claude Code one.
 - **Development (never bumps):** `.github/`, `.claude/`, `docs/`, `tests/`,
   `evals/`, `package.json`/`bun.lock` tooling — everything that only validates or
   builds the plugin.
