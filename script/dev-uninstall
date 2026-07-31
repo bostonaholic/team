@@ -1,22 +1,39 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PLUGIN_VERSION=$(node -p "require('${PLUGIN_ROOT}/.claude-plugin/plugin.json').version")
-CACHE_PATH="${HOME}/.claude/plugins/cache/team-dev/team/${PLUGIN_VERSION}"
+# Dev uninstall, across the harnesses Team supports. Mirrors script/dev-install.
+#
+#   script/dev-uninstall          every harness
+#   script/dev-uninstall codex    just that one
 
-echo "Uninstalling Team plugin (dev)..."
-echo
+HARNESSES=(claude codex)
+HERE="$(cd "$(dirname "$0")" && pwd)"
 
-claude plugin uninstall team@team-dev 2>&1 || true
-claude plugin marketplace remove team-dev 2>&1 || true
+case "${1:-}" in
+  "")
+    targets=("${HARNESSES[@]}")
+    ;;
+  *)
+    for known in "${HARNESSES[@]}"; do
+      [ "$1" = "$known" ] && targets=("$1") && break
+    done
+    if [ -z "${targets+x}" ]; then
+      echo "Error: unknown harness '$1'. Known: ${HARNESSES[*]}" >&2
+      exit 1
+    fi
+    ;;
+esac
 
-# Clean up the symlink left in the cache
-if [ -L "$CACHE_PATH" ]; then
-  rm "$CACHE_PATH"
-  rmdir "${HOME}/.claude/plugins/cache/team-dev/team" 2>/dev/null || true
-  rmdir "${HOME}/.claude/plugins/cache/team-dev" 2>/dev/null || true
+failed=()
+for harness in "${targets[@]}"; do
+  # Keep going: a harness that is already absent must not block the rest.
+  if ! "${HERE}/dev-uninstall-${harness}"; then
+    failed+=("$harness")
+  fi
+  echo
+done
+
+if [ ${#failed[@]} -gt 0 ]; then
+  echo "Error: uninstall failed for: ${failed[*]}" >&2
+  exit 1
 fi
-
-echo
-echo "Done. Restart Claude Code to unload the plugin."

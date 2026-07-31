@@ -1,11 +1,11 @@
-// tests/codex-dev-install.test.ts
+// tests/dev-install-codex.test.ts
 //
-// Acceptance tests for the Codex CLI dev install pair,
-// `script/codex-dev-install` and `script/codex-dev-uninstall`.
+// Acceptance tests for the Codex half of the dev install,
+// `script/dev-install-codex` and `script/dev-uninstall-codex`.
 //
 // Two layers:
 //
-// - L2 forbidden-pattern tripwire: the codex-dev-* scripts must NEVER
+// - L2 forbidden-pattern tripwire: the Codex scripts must NEVER
 //   reference Codex's `plugins/cache` path. The Claude Code dev-install
 //   trick — replacing the plugin cache dir with a symlink to the checkout —
 //   makes Codex report the plugin `not installed` and drops the catalog to
@@ -34,8 +34,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const REPO_ROOT = join(import.meta.dir, "..");
-const INSTALL = join(REPO_ROOT, "script", "codex-dev-install");
-const UNINSTALL = join(REPO_ROOT, "script", "codex-dev-uninstall");
+const INSTALL = join(REPO_ROOT, "script", "dev-install-codex");
+const UNINSTALL = join(REPO_ROOT, "script", "dev-uninstall-codex");
 
 const tempDirs: string[] = [];
 
@@ -63,7 +63,7 @@ afterAll(() => {
   for (const dir of tempDirs) rmSync(dir, { force: true, recursive: true });
 });
 
-describe("codex-dev scripts", () => {
+describe("dev install: codex harness", () => {
   test("L2 tripwire: never reference Codex's plugin cache", () => {
     const scripts = [INSTALL, UNINSTALL].filter((path) => existsSync(path));
     // Guard against a vacuous pass if the scripts are ever renamed.

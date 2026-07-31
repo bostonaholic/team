@@ -129,23 +129,6 @@ utilities — `team:shipit`, `team:pr-watch`, `team:pr-open-comments`,
 
 </details>
 
-<details>
-<summary><strong>Working on Team itself</strong></summary>
-
-Both hosts install a *copy*, so edits to your checkout do not show up until
-you reinstall. For live edits, use the dev scripts:
-
-```bash
-dev install          # Claude Code
-dev codex-install    # Codex CLI
-```
-
-Each links your checkout into the host's own location, so a skill edit
-lands on the next session with no reinstall. `dev uninstall` and
-`dev codex-uninstall` undo them.
-
-</details>
-
 ## Architecture
 
 See [docs/architecture.md](docs/architecture.md) for the full architecture, the artifact frontmatter schema, and the phase-inference rules.
