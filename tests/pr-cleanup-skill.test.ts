@@ -337,6 +337,28 @@ describe("pr-cleanup skill: input gates are byte-exact and mechanical", () => {
   test("the PR-number gate is a runnable digits-only case", () => {
     expect(body()).toContain("''|*[!0-9]*");
   });
+
+  test("$DEFAULT is inside Hard Rule 11's re-derivation set", () => {
+    // An unset $DEFAULT empties step 2's protected-name pattern, leaving
+    // the default branch deletable while master/develop/release still
+    // appear to guard it. The rule must name the variable, not just
+    // $PRIMARY_ROOT and $REPO.
+    const s = sliceBetween("11. **No destructive command", "## Untrusted input");
+    expect(s).toContain("$DEFAULT");
+  });
+
+  test("step 2 guards $DEFAULT before the lowering, outside any $( )", () => {
+    // Placement is the contract: a ${VAR:?} inside a command substitution
+    // aborts only the subshell, so the parent reaches the pattern with an
+    // empty value. The guard must be a standalone statement ahead of it.
+    const s = sliceBetween("### Step 2", "### Step 3");
+    const guard = s.indexOf(': "${DEFAULT:?');
+    const lowering = s.indexOf("DEFAULT_LOWER=");
+    expect(guard).toBeGreaterThanOrEqual(0);
+    expect(lowering).toBeGreaterThan(guard);
+    // And the lowering itself must not re-nest a :? inside $( ).
+    expect(/DEFAULT_LOWER="\$\([^)]*:\?/.test(s)).toBe(false);
+  });
 });
 
 describe("pr-cleanup skill: external names are shell-gated, not just ref-gated", () => {
