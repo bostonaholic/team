@@ -174,7 +174,7 @@ Two severity regimes apply:
   A pre-existing TODO or FIXME — one already in the file before this
   diff — is not the diff's violation. The blocking TODO/FIXME entry
   covers comments the diff introduces. When the change resolves the
-  TODO's subject, delete the comment as obsolete; when the change does
+  TODO's subject, delete the comment as obsolete. When the change does
   not touch it, leave it alone and raise no finding.
 
 ### UX Reviewer

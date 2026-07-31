@@ -82,12 +82,12 @@ explanation.
   workaround does. The ban targets internal trackers and pipeline
   artifacts, not those links.
 - **No process narration.** Describe the code as it exists now. Do not
-  write dates, corrections, changelog entries, or historical narration. Never describe the
-  edit that produced the code. Never mention the user, the prompt, review
-  feedback, ticket discussion, or agent instructions. Marker phrases such
-  as "Previously", "Originally", "As of", "Correction", "Temporary fix
-  from", and "This was changed because" are detection hints, not the rule
-  itself.
+  write dates, corrections, changelog entries, or historical narration.
+  Never describe the edit that produced the code. Never mention the user,
+  the prompt, review feedback, ticket discussion, or agent instructions.
+  Marker phrases such as "Previously", "Originally", "As of",
+  "Correction", "Temporary fix from", and "This was changed because" are
+  detection hints, not the rule itself.
 - **Document non-obvious constraints and deliberate oddities.** This is
   the permitted comment class: API limits, compatibility, security
   assumptions, performance, ordering, concurrency, and framework
@@ -95,8 +95,8 @@ explanation.
   or simplifying the code.
 - **Local, concise, precise, verified.** Place a comment next to the code
   it explains. Use the minimum text. Name the exact condition, risk, or
-  dependency -- never "handle edge case". Document only behavior you have
-  verified. Refer to symbols and stable identifiers, never to
+  dependency -- never "handle edge case". Document only verified
+  behavior. Refer to symbols and stable identifiers, never to
   line numbers or file layout.
 - **No duplicated documentation.** Do not repeat what types, tests,
   names, and public docs already carry. Link an external spec only when
