@@ -172,11 +172,14 @@ describe("codex-dev-install", () => {
 
   // The frontmatter filter against the live skills tree, asserted pointwise
   // (a re-derived expected set would restate the script's own parsing and
-  // prove nothing). A skill relying on `disable-model-invocation` — a hard
-  // guard Codex ignores — must never be linked. The stub codex returns an
-  // empty catalog, so the self-check mismatches — and per the documented
+  // prove nothing). `pr-approve-watch` MUST link: the user explicitly
+  // accepted (2026-07-31) that Codex ignores its
+  // `disable-model-invocation: true` guard and chose to install it like
+  // any other user-invocable skill — a change that silently reintroduces
+  // the old exclusion must fail here. The stub codex returns an empty
+  // catalog, so the self-check mismatches — and per the documented
   // semantics the run exits non-zero with the links left installed.
-  test("L3 filter: live tree links entry points, never the guard-reliant skill", () => {
+  test("L3 filter: live tree links every user-invocable skill, including pr-approve-watch", () => {
     const home = newTempDir("codex-home");
     const stubDir = makeStubCodexDir();
 
@@ -189,107 +192,24 @@ describe("codex-dev-install", () => {
     const linked = readdirSync(teamDir);
     expect(linked).toContain("shipit");
     expect(linked).toContain("code-review");
-    expect(linked).not.toContain("pr-approve-watch"); // guard-reliant
+    expect(linked).toContain("pr-approve-watch"); // installed by explicit user decision
     expect(linked).not.toContain("git-commit"); // user-invocable: false
     expect(r.status).toBeGreaterThan(0); // self-check mismatch on empty stub
     expect(r.output).toContain("codex-dev-uninstall"); // points at the remedy
   });
 
-  // Fail closed on every YAML spelling of the guard: `disable-model-
-  // invocation` links only when absent, or when every occurrence
-  // normalizes to a recognized falsey token inside a well-formed
-  // frontmatter block. Any non-falsey occurrence anywhere excludes —
-  // position never matters, so a duplicate with one truthy value, an
-  // over-scan that pulls a falsey body line into the region, a
-  // mismatched quote pair, and a file with no delimiters at all must
-  // never fail open into a link. A skill body quoting either key at
+  // The `user-invocable` filter — the only exclusion. A recognized falsey
+  // value at column 0 skips (last occurrence wins, as a YAML parser reads
+  // a duplicate); anything else links. A skill body quoting the key at
   // column 0 must never filter a *well-formed* skill — only the
-  // frontmatter block decides. The scan must fail safe on malformed
-  // files too: CRLF endings, a leading blank line, a `---` inside a
-  // quoted value, a quoted key. And a skill dropped for any reason
-  // other than a well-formed authored `user-invocable: false` must be
-  // dropped LOUDLY (a per-skill Skipping line), never silently.
-  test("L3 filter: fixture tree — guard spellings never link, bodies never filter", () => {
+  // frontmatter block decides. `disable-model-invocation` must NOT
+  // filter: Codex ignores the key, and the user explicitly accepted
+  // installing the one skill that sets it (see docs/codex.md). And a
+  // skill dropped for any reason other than a well-formed authored
+  // `user-invocable: false` must be dropped LOUDLY (a per-skill
+  // Skipping line), never silently.
+  test("L3 filter: fixture tree — user-invocable is the only exclusion, bodies never filter", () => {
     const mustNotLink = [
-      { name: "guard-plain", frontmatter: "disable-model-invocation: true" },
-      { name: "guard-quoted", frontmatter: 'disable-model-invocation: "true"' },
-      { name: "guard-single", frontmatter: "disable-model-invocation: 'true'" },
-      { name: "guard-capital", frontmatter: "disable-model-invocation: True" },
-      { name: "guard-upper", frontmatter: "disable-model-invocation: TRUE" },
-      { name: "guard-yes", frontmatter: "disable-model-invocation: yes" },
-      { name: "guard-on", frontmatter: "disable-model-invocation: on" },
-      {
-        name: "guard-tagged",
-        frontmatter: "disable-model-invocation: !!bool true",
-      },
-      { name: "guard-spaced", frontmatter: "disable-model-invocation : true" },
-      { name: "guard-bare", frontmatter: "disable-model-invocation:" },
-      {
-        name: "guard-quoted-key",
-        frontmatter: '"disable-model-invocation": true',
-      },
-      {
-        name: "guard-dup-last-true",
-        frontmatter:
-          "disable-model-invocation: false\ndisable-model-invocation: true",
-      },
-      {
-        // Any truthy occurrence excludes, even when a later falsey one
-        // would win under YAML's last-wins reading: a duplicated guard
-        // key is ambiguous, and ambiguity fails closed.
-        name: "guard-dup-true-then-false",
-        frontmatter:
-          "disable-model-invocation: true\ndisable-model-invocation: false",
-      },
-      {
-        // Quotes are stripped only as a MATCHED pair: `"false'` must not
-        // reduce to a falsey token.
-        name: "guard-mismatched-quotes",
-        frontmatter: "disable-model-invocation: \"false'",
-      },
-      {
-        name: "guard-crlf",
-        raw: "---\r\ndisable-model-invocation: true\r\n---\r\nBody.\r\n",
-      },
-      {
-        name: "guard-blank-lead",
-        raw: "\n---\ndisable-model-invocation: true\n---\nBody.\n",
-      },
-      {
-        name: "guard-quoted-dashes",
-        raw: [
-          "---",
-          'description: "one',
-          "---",
-          'two"',
-          "disable-model-invocation: true",
-          "---",
-          "Body.",
-          "",
-        ].join("\n"),
-      },
-      {
-        // The round-4 security repro: an unmatched quote inside a
-        // description block over-scans past the closing `---`, pulling a
-        // FALSEY body occurrence into the region after the real truthy
-        // guard. Last-wins would fail open here; any-truthy-excludes
-        // must not.
-        name: "guard-overscan-falsey-body",
-        raw: [
-          "---",
-          "description: |",
-          '  Watches for the trigger word: "approve in review threads.',
-          "disable-model-invocation: true",
-          "---",
-          "Body prose.",
-          "disable-model-invocation: false",
-          "",
-        ].join("\n"),
-      },
-      {
-        name: "guard-no-delimiters",
-        raw: "No frontmatter at all.\ndisable-model-invocation: true\nBody.\n",
-      },
       { name: "not-invocable", frontmatter: "user-invocable: false" },
       {
         name: "not-invocable-quoted",
@@ -313,29 +233,20 @@ describe("codex-dev-install", () => {
     const mustLink = [
       { name: "plain", frontmatter: "description: a plain skill" },
       {
-        name: "guard-off",
-        frontmatter: "disable-model-invocation: false",
-      },
-      {
-        // A trailing comment on a falsey guard still reads as falsey.
-        name: "guard-off-comment",
-        frontmatter: "disable-model-invocation: false # opted out",
-      },
-      {
-        // Duplicates are ambiguous only when they disagree: every
-        // occurrence falsey is an unambiguous opt-out.
-        name: "guard-dup-all-falsey",
-        frontmatter:
-          "disable-model-invocation: false\ndisable-model-invocation: no",
+        // Pins the reversal of the old guard-key exclusion: a skill
+        // setting `disable-model-invocation: true` links like any other.
+        // Codex ignores the key, and the user accepted that exposure
+        // explicitly rather than exclude the skill (docs/codex.md).
+        name: "guard-key-set",
+        frontmatter: "disable-model-invocation: true",
       },
       {
         name: "body-mention",
-        frontmatter: "description: documents the keys",
+        frontmatter: "description: documents the key",
         body: [
-          "A fenced example documenting both keys:",
+          "A fenced example documenting the key:",
           "```yaml",
           "user-invocable: false",
-          "disable-model-invocation: true",
           "```",
           "",
         ].join("\n"),
@@ -357,7 +268,6 @@ describe("codex-dev-install", () => {
     // Loud-drop contract: a skill dropped for any reason other than a
     // well-formed authored `user-invocable: false` names itself.
     expect(r.output).toContain("Skipping not-invocable-no-delimiters");
-    expect(r.output).toContain("Skipping guard-overscan-falsey-body");
     // The one silent drop: well-formed authored user-invocable: false.
     expect(r.output).not.toContain("Skipping not-invocable-comment");
     expect(r.output).not.toContain("Skipping not-invocable-quoted");
