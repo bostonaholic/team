@@ -248,7 +248,7 @@ function pathBasename(p: string): string {
 
 /** Throw if the collector recorded budget regressions during finalize().
  *  Call this from an eval file's afterAll so a ≥2× efficiency regression
- *  fails the run (and therefore CI), not just prints to stderr. No-op when
+ *  fails the run (and thus CI), not just prints to stderr. No-op when
  *  there was no prior run to compare against. */
 export function assertNoBudgetRegressions(collector: EvalCollector): void {
   const regressions = collector.budgetRegressions;

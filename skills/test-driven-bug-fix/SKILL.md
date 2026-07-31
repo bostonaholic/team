@@ -6,9 +6,10 @@ user-invocable: false
 
 # Test-Driven Bug Fix
 
-A bug without a failing test is an unverified assumption. A bug fixed without
-a failing test may be fixed correctly this time, but has no protection against
-regression. The test-driven bug fix discipline ensures that every fix is:
+A bug without a failing test is an unverified assumption. A bug fixed
+without a failing test may be fixed correctly this time, but has no
+protection against regression. The test-driven bug fix discipline makes sure
+that that every fix is:
 
 1. **Reproduced** — the bug is confirmed to exist before any code changes
 2. **Pinned** — a failing test locks in the expected correct behavior
@@ -22,19 +23,19 @@ Before reproducing, classify the failure into one of four buckets:
 | Bucket | Symptom | Action |
 |--------|---------|--------|
 | **Product** | Real defect in the code under test | Continue with the four-step discipline below |
-| **Test impl** | Test wrong; behavior correct | File a separate test-fix; do NOT change production code to satisfy a bad test |
-| **Infra** | CI environment, DB, network, container | Fix the env; do not encode the env-fix as a test |
-| **Tooling** | Test runner / build system | Fix the tool; the bug is not in the product |
+| **Test impl** | Test wrong. Behavior correct | File a separate test-fix. Do NOT change production code to satisfy a bad test |
+| **Infra** | CI environment, DB, network, container | Fix the env. Do not encode the env-fix as a test |
+| **Tooling** | Test runner / build system | Fix the tool. The bug is not in the product |
 
 Intermittent failures are not a fifth bucket — they belong in one of the
 four above. Quarantining a test as "flaky" without classifying the failure
 hides the very intermittent product bug that the test surfaced. The
-conditions that make a test flaky are frequently the conditions that
-trigger the bug. Reproduce deterministically before fixing — see
+conditions that make a test flaky are frequently the conditions that trigger
+the bug. Reproduce deterministically before fixing — see
 `skills/systematic-debugging/SKILL.md`. When the failure is non-obvious,
-drill the causal chain to its root first via the **Root Cause Analysis
-(5 Whys)** subsection of `skills/systematic-debugging/SKILL.md` before
-proposing a fix.
+drill the causal chain to its root first through the
+**Root Cause Analysis (5 Whys)** subsection of
+`skills/systematic-debugging/SKILL.md` before proposing a fix.
 
 ## The Four-Step Discipline
 
@@ -45,7 +46,7 @@ proposing a fix.
 Before writing any code, reproduce the bug. Understanding exactly when and
 why the bug occurs is the prerequisite for everything that follows.
 
-- Run the failing scenario manually or via existing tests
+- Run the failing scenario manually or through existing tests
 - Identify the exact inputs that trigger the bug
 - Understand what the system does (actual behavior) versus what it should
   do (expected behavior)
@@ -100,8 +101,8 @@ After the fix:
    now fails that passed before, the fix introduced a regression — undo and
    investigate.
 
-2. **Re-run the reproduction case.** Confirm that the original bug no longer
-   occurs with the original inputs.
+2. **Re-run the reproduction case.** Make sure that the original bug no
+   longer occurs with the original inputs.
 
 3. **Check for related instances.** If the root cause is a pattern (e.g.,
    missing null check), search the codebase for the same pattern. File issues

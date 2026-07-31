@@ -19,9 +19,9 @@ read as collaborative or hostile depending on phrasing:
 
 | Avoid (person-directed) | Prefer (code-directed) |
 |-------------------------|------------------------|
-| "Your approach is adding unnecessary complexity." | "The complexity this adds isn't worth the result." |
-| "You're not handling the null case." | "The null case isn't handled here." |
-| "This doesn't make any sense." | "I can't follow what this branch is doing — clarify?" |
+| "Your approach is adding unnecessary complexity." | "The complexity this adds is not worth the result." |
+| "You are not handling the null case." | "The null case is not handled here." |
+| "This does not make any sense." | "I cannot follow what this branch is doing — clarify?" |
 
 - Explain *why* the change is requested. A finding without a reason loses
   the rationale for the next reader of the diff.

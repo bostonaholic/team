@@ -176,7 +176,7 @@ describe("runAgentTest live-path API-key guard", () => {
     const tmp = mkdtempSync(join(tmpdir(), "session-runner-test-"));
     // Hermetic fake `claude` on PATH: if the guard is missing or misplaced,
     // runAgentTest spawns this stub — never the real CLI, no auth, no
-    // tokens. The stub drains stdin (so the prompt write can't EPIPE) and
+    // tokens. The stub drains stdin (so the prompt write cannot EPIPE) and
     // drops a sentinel file proving a spawn happened.
     const fakeBin = join(tmp, "bin");
     mkdirSync(fakeBin);
@@ -300,7 +300,7 @@ describe("runAgentTest live-spawn tool restrictions", () => {
   test("disallows the Skill tool so environment skills cannot hijack the run", async () => {
     const tmp = mkdtempSync(join(tmpdir(), "session-runner-test-"));
     // Hermetic fake `claude` on PATH that records its argv; drains stdin so
-    // the prompt write can't EPIPE.
+    // the prompt write cannot EPIPE.
     const fakeBin = join(tmp, "bin");
     mkdirSync(fakeBin);
     const argvFile = join(tmp, "argv.txt");

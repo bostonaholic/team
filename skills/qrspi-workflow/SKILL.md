@@ -18,10 +18,10 @@ WORKTREE -> QUESTION -> RESEARCH -> DESIGN -> STRUCTURE -> PLAN -> IMPLEMENT -> 
 
 ### WORKTREE
 
-The **leading** phase. Before QUESTION, the router creates the home worktree
-on branch `<id>` off `origin/HEAD` and authors `docs/plans/<id>/` inside it,
-so the home checkout's `git status` stays clean for the whole run. No agent;
-purely a router responsibility.
+The **leading** phase. Before QUESTION, the router creates the home
+worktree on branch `<id>` off `origin/HEAD`. It authors `docs/plans/<id>/`
+inside that worktree, so the home checkout's `git status` stays clean for
+the whole run. No agent. Purely a router responsibility.
 
 For the rationale behind the leading placement, see the "Why first"
 subsection in `skills/worktree-isolation/SKILL.md`.
@@ -33,7 +33,7 @@ subsection in `skills/worktree-isolation/SKILL.md`.
 ### QUESTION
 
 Decompose the user's intent into neutral research questions. Capture the
-full task for the human; phrase questions so a stranger can answer them
+full task for the human. Phrase questions so a stranger can answer them
 without knowing the goal.
 
 - **Artifacts:**
@@ -60,7 +60,7 @@ a ~200-line markdown artifact audited by an adversarial design review.
 
 - **Artifact:** `docs/plans/<id>/design.md` (plus one
   `docs/plans/<id>/design-review-<n>.md` per review round)
-- **Gate:** REVIEW — adversarial design review; APPROVE/COMMENT advance,
+- **Gate:** REVIEW — adversarial design review. APPROVE/COMMENT advance,
   REQUEST CHANGES re-drafts (cap 5 → terminal halt)
 
 ### STRUCTURE
@@ -70,7 +70,7 @@ Each slice is end-to-end and independently testable. The result is a ~2-page
 markdown artifact, produced autonomously.
 
 - **Artifact:** `docs/plans/<id>/structure.md`
-- **Gate:** NONE — autonomous; once `structure.md` exists the pipeline
+- **Gate:** NONE — autonomous. Once `structure.md` exists the pipeline
   advances to PLAN.
 
 ### PLAN
@@ -80,7 +80,7 @@ No approval gate — the plan is mechanically derived from the
 structure.
 
 - **Artifact:** `docs/plans/<id>/plan.md`
-- **Gate:** SOFT — no approval; the reviewed design is the contract
+- **Gate:** SOFT — no approval. The reviewed design is the contract
 
 ### IMPLEMENT
 
@@ -101,26 +101,25 @@ sub-phase and 5-reviewer adversarial verification with hard-gate retry loop.
 
 ### PR
 
-Open the pull request as a draft (never waiting for approval — the
-orchestrator does
-not stop to ask), update the changelog, surface the tracking ticket.
+Open the pull request as a draft. It never waits for approval, and the
+orchestrator does not stop to ask. Update the changelog, then surface the
+tracking ticket.
 
 - **Artifact:** GitHub draft PR
 - **Gate:** Terminal — orchestrator records the PR URL or final commit, then closes the topic's TodoWrite ledger.
 
 ## Artifact Conventions
 
-All phase artifacts live under `docs/plans/<id>/`. The artifact schema
-is canonical in `skills/artifact-frontmatter/SKILL.md` — the `<id>`
+All phase artifacts live under `docs/plans/<id>/`. The artifact schema is
+canonical in `skills/artifact-frontmatter/SKILL.md`. It carries the `<id>`
 forms, the artifact inventory, the `repos.md` and `prd.md` schemas, the
-topic-consistency invariant, and the `ticketId` scope. Consult that
-skill rather than restating the schema here. What matters for phase
-discipline:
+topic-consistency invariant, and the `ticketId` scope. Consult that skill
+rather than restating the schema here. What matters for phase discipline:
 
 - The `<id>` slug and the `topic` frontmatter field match across every
   artifact for the same feature.
-- `repos.md` (when present) switches the pipeline into multi-repo mode;
-  its absence keeps single-repo mode — today's default.
+- `repos.md` (when present) switches the pipeline into multi-repo mode. Its
+  absence keeps single-repo mode — today's default.
 - `prd.md` (when present) rides the autonomous Question phase and is
   not gated.
 
@@ -138,11 +137,11 @@ at the agent boundary:
 2. **Procedural** — the `researcher` and `file-finder` agent system prompts
    forbid reading `task.md`. Both have `Read`/`Grep`/`Glob` tools with
    `permissionMode: plan`, so nothing mechanically stops a `Read` of
-   `task.md`; enforcement relies on the agent following its prompt.
-3. **Procedural** — if a researcher needs context the questions lack, it must
-   surface that as an open question rather than guessing the intent.
+   `task.md`. Enforcement relies on the agent following its prompt.
+3. **Procedural** — if a researcher needs context the questions lack, it
+   must surface that as an open question rather than guessing the intent.
    Researchers record missing context in their artifact's open-questions
-   section; they never pause the run to ask.
+   section. They never pause the run to ask.
 
 A PreToolUse(Read) hook that blocks `*/task.md` reads from the research
 agents would convert step 2 from procedural to structural. Treat this as
@@ -172,16 +171,15 @@ with critical findings, test failures.
 
 ### SOFT
 
-Informational gate. SOFT findings are recorded — they land in the PR
-body's `## Review notes` for the human's PR review — and are never
-acknowledged mid-run; the pipeline proceeds.
+Informational gate. SOFT findings are recorded — they land in the PR body's
+`## Review notes` for the human's PR review — and are never acknowledged
+mid-run. The pipeline proceeds.
 
 Which review findings actually gate — and which auto-fix rather than land
 as recorded notes — is defined in exactly one place:
-`skills/review-severity-tiers/SKILL.md` →
-"Severity Tiers and the Auto-Fix Boundary". Only findings below the auto-fix
-boundary are recorded for the PR body; consult that table rather
-than restating it here.
+`skills/review-severity-tiers/SKILL.md` → "Severity Tiers and the Auto-Fix
+Boundary". Only findings below the auto-fix boundary are recorded for the
+PR body. Consult that table rather than restating it here.
 
 ### ADVISORY
 
@@ -194,7 +192,7 @@ Examples: documentation gap analysis, style suggestions.
 
 Pipeline state is reconstructed by scanning artifacts in
 `docs/plans/<id>/*.md` and reading their YAML frontmatter. The orchestrator
-(the main Claude Code session) tracks in-flight work via TodoWrite — a
+(the main Claude Code session) tracks in-flight work through TodoWrite — a
 session-scoped ledger that mirrors the phase table.
 
 ### Frontmatter schema (all artifacts)
@@ -235,32 +233,32 @@ present with no commit means the run is still pre-IMPLEMENT.
 Verifier passed: latest review artifact in `docs/plans/<id>/review-<n>.md`
 shows aggregate gate clean.
 
-### Orchestrator coordination via TodoWrite
+### Orchestrator coordination through TodoWrite
 
-When the orchestrator (the main Claude Code session) drives a `/team` or
+When the orchestrator, the main Claude Code session, drives a `/team` or
 `/team-*` skill, it MUST seed a TodoWrite ledger that mirrors the phase
-table for the topic, then mark each item `in_progress` as it dispatches
-the matching agent and `completed` when the artifact lands. TodoWrite is
-session-scoped — re-invoking any `/team-*` command rebuilds the todos
-by scanning artifacts on entry.
+table for the topic. It then marks each item `in_progress` as it dispatches
+the matching agent, and `completed` when the artifact lands. TodoWrite is
+session-scoped — re-invoking any `/team-*` command rebuilds the todos by
+scanning artifacts on entry.
 
 ### Phase Transition Protocol
 
 Every transition follows this sequence:
 
-1. **Verify artifacts** — confirm the required artifacts from the
-   current phase exist on disk (for the DESIGN → STRUCTURE transition,
-   that includes a `design-review-<n>.md` with a passing verdict).
+1. **Verify artifacts** — make sure that the necessary artifacts from the
+   current phase exist on disk. For the DESIGN → STRUCTURE transition, that
+   includes a `design-review-<n>.md` with a passing verdict.
 2. **Update the ledger** — mark the current TodoWrite item complete and
    the next one `in_progress`.
 3. **Dispatch next agent(s)** — the phase table in `skills/team/SKILL.md`
    names the agent(s) to dispatch for the new phase.
 
-Never proceed to the next phase while a Blocking or Major finding remains —
-the implementer loops automatically and the user is never consulted about it
-(the no-consult rule; see `skills/review-severity-tiers/SKILL.md`).
-Minor-and-below findings are recorded for the PR body's
-`## Review notes` — never presented mid-run.
+Never proceed to the next phase while a Blocking or Major finding remains.
+The implementer loops automatically, and the user is never consulted about
+it. That is the no-consult rule. See
+`skills/review-severity-tiers/SKILL.md`. Minor-and-below findings are
+recorded for the PR body's `## Review notes` — never presented mid-run.
 
 ## Anti-Patterns
 
@@ -299,11 +297,10 @@ advances autonomously, the reviewed design remains the contract behind it.
 
 ### Gold-Plating
 
-Adding features, tests, or abstractions beyond what the structure specifies.
-The structure defines the scope fence. If scope needs to expand, update the
-structure (and, for a material change, return to DESIGN for a fresh
-design review) — do not
-silently add work.
+Adding features, tests, or abstractions beyond what the structure
+specifies. The structure defines the scope fence. If scope must expand,
+update the structure. For a material change, return to DESIGN for a fresh
+design review. Do not silently add work.
 
 ### Backward Skipping
 

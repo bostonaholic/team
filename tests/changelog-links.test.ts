@@ -50,7 +50,7 @@ describe("changelog: [Unreleased] links are absolute (release-notes-safe)", () =
   });
 
   // Guards the guard: prove the matcher actually rejects a relative target,
-  // so a future refactor can't silently turn this tripwire into a no-op.
+  // so a future refactor cannot silently turn this tripwire into a no-op.
   test("the absolute-URL matcher rejects a relative path", () => {
     expect(ABSOLUTE.test("docs/versioning.md")).toBe(false);
     expect(ABSOLUTE.test("./guide.md")).toBe(false);

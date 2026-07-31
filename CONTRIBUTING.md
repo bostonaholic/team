@@ -31,8 +31,8 @@ Team produces a **distributed plugin**, so two contexts coexist:
 - **Development** (`.claude/`) is our own workspace tooling (dev hooks, scripts,
   settings). Never distributed.
 
-Rule of thumb: if it validates that the plugin is *built correctly*, it's a dev
-concern (`.claude/`); if it runs *as part of the plugin's functionality*, it's
+Rule of thumb: if it validates that the plugin is *built correctly*, it is a dev
+concern (`.claude/`). If it runs *as part of the plugin's functionality*, it is
 runtime. See [AGENTS.md](AGENTS.md) for the full project router.
 
 ## How work is tracked
@@ -53,14 +53,14 @@ label taxonomy.
 ## Making a change
 
 1. **Branch off the latest `main`.** Keep history linear: never commit directly
-   to `main`, and never create merge commits (rebase, don't merge).
+   to `main`, and never create merge commits (rebase, do not merge).
 2. **Follow the testing discipline.** Read [Testing](docs/testing.md) first, then
    push every check to the cheapest, most deterministic layer that can catch it.
-   - `bun test`: the free static gate. Runs on every commit; no model, no money.
+   - `bun test`: the free static gate. Runs on every commit. No model, no money.
    - `bun run test:evals`: the paid behavioral + LLM-judge tiers
      (needs `EVALS_ANTHROPIC_API_KEY`).
 3. **Keep the agent registry in sync.** When you add or rename an agent, update
-   both `agents/*.md` and `skills/team/registry.json` in the same commit; the
+   both `agents/*.md` and `skills/team/registry.json` in the same commit. The
    dev hook `.claude/hooks/check-registry-sync.mjs` enforces this.
 4. **Write [Conventional Commits](https://www.conventionalcommits.org):**
    `type(scope): subject`, imperative mood, following the 50/72 rule.

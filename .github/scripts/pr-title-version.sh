@@ -12,7 +12,7 @@
 #   BASE_SHA       — the base branch commit (github.event.pull_request.base.sha)
 #   CURRENT_TITLE  — the PR's current title (attacker-influenced; env-only)
 #
-# Reads `.claude-plugin/plugin.json`'s version at the relevant commits via
+# Reads `.claude-plugin/plugin.json`'s version at the relevant commits through
 # `git show`, so the repository must be checked out with enough history to
 # resolve both SHAs.
 #

@@ -25,7 +25,7 @@
 //   3. A sentinel comment in tests/protocol.test.ts documenting the demotion
 //      (line matching: // L2-demoted (heavy prior state): followed by the skill)
 //
-// Executable utility skills covered at L2 via a dedicated tripwire, not L5
+// Executable utility skills covered at L2 through a dedicated tripwire, not L5
 // (heavy external state — an open PR, CI, the GitHub API — same reason
 // team-pr is demoted; no protocol.test.ts sentinel, that convention is for
 // the pipeline-skill demotions):

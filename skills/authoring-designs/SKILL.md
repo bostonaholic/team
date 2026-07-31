@@ -26,28 +26,28 @@ scope — note in `## Decisions made` which repos each decision touches
 and why.
 
 If `repos.md` is **absent**, scan `research.md` for signals that the
-work plausibly spans more than one repo (cross-service contracts,
-shared schemas, references to "the other repo"). When you see such
-signals, resolve each candidate repo autonomously via the sibling
-directories of the home repo root. First **validate every candidate
-`<name>` against a strict allowlist**: the name must match
-`^[A-Za-z0-9._-]+$` and must not be exactly `.` or `..`. Anything
-else — path separators, absolute paths, traversal sequences, shell
-metacharacters — fails the allowlist and is unresolvable. A surviving
-repo named `<name>` is expected at `<root>/../<name>`. Confirm the
-sibling path exists and is a git working tree (check for its `.git`
-entry — you have no Bash tool, so use Glob/Read; the questioner's check
-is `git -C <path> rev-parse --git-dir`). Never record a `repos.md` path
-outside the home repo's parent directory; if you cannot verify the
-resolved path is a direct child of that directory, treat the candidate
-as unresolvable.
+work plausibly spans more than one repo (cross-service contracts, shared
+schemas, references to "the other repo"). When you see such signals,
+resolve each candidate repo autonomously through the sibling directories
+of the home repo root. First
+**validate every candidate `<name>` against a strict allowlist**: the
+name must match `^[A-Za-z0-9._-]+$` and must not be exactly `.` or `..`.
+Anything else — path separators, absolute paths, traversal sequences,
+shell metacharacters — fails the allowlist and is unresolvable. A
+surviving repo named `<name>` is expected at `<root>/../<name>`. Make
+sure that the sibling path exists and is a git working tree (check for
+its `.git` entry — you have no Bash tool, so use Glob/Read. The
+questioner's check is `git -C <path> rev-parse --git-dir`). Never record
+a `repos.md` path outside the home repo's parent directory. If you
+cannot verify the resolved path is a direct child of that directory,
+treat the candidate as unresolvable.
 
 - **All candidates resolve** → write `docs/plans/<id>/repos.md`
   yourself (schema in `skills/artifact-frontmatter/SKILL.md`) before
   continuing the design.
 - **Any candidate is unresolvable** → proceed in single-repo mode and
   record the omission **loudly** in `## Risks`: name the unresolvable
-  repo and the work that is therefore excluded from scope.
+  repo and the work that is thus excluded from scope.
 
 Never silently expand scope across repos. The design either ships
 single-repo with the omission recorded, or lists only repos it actually
@@ -63,7 +63,7 @@ alternative and the trade-off accepted. The human audits these
 assumptions at PR review — an unmarked guess is a defect.
 
 Park low-stakes items in `## Open questions (deferred)` rather than
-inflating the decision list; deferral is itself a recorded choice.
+inflating the decision list. Deferral is itself a recorded choice.
 
 On a revision dispatch, address the reviewer's findings verbatim in the
 re-draft, recording any newly resolved choice the same way.
@@ -125,7 +125,8 @@ operational concerns. One bullet each.>
   Type signatures are OK if they crystallize a decision.
 - **Reference patterns, do not duplicate them.** "Follow the pattern in
   `lib/foo.ts:30-60`" is better than restating those 30 lines.
-- **Apply the systems-thinking lens** — read `skills/systems-thinking/SKILL.md`
-  if it isn't already in context and use its `## When Designing` section:
-  document adjacent components in `## Current state` and name the surfaces
-  that must change together in `## Decisions made`. Adds no new gate.
+- **Apply the systems-thinking lens** — read
+  `skills/systems-thinking/SKILL.md` if it is not already in context and
+  use its `## When Designing` section: document adjacent components in
+  `## Current state` and name the surfaces that must change together in
+  `## Decisions made`. Adds no new gate.

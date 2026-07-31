@@ -6,9 +6,9 @@ user-invocable: false
 
 # Clean Code Methodology
 
-A design and implementation methodology that combines the wisdom of legendary
-programmers with concrete standards for writing code that is readable,
-maintainable, and built to last.
+A design and implementation methodology. It combines the wisdom of legendary
+programmers with concrete standards for code that is readable, maintainable,
+and built to last.
 
 ## Core Philosophy
 
@@ -19,12 +19,13 @@ Six foundational perspectives guide every design and implementation decision:
 - **John Carmack**: Implement features directly, avoiding unnecessary
   abstraction. Maintain clear strategies to measure and reason about
   performance.
-- **Joe Armstrong**: Isolate failures through rigorous error handling. Ensure
-  faults in one module do not propagate to others.
+- **Joe Armstrong**: Isolate failures through rigorous error handling. Make
+  sure that faults in one module do not propagate to others.
 - **Donald Knuth**: Prioritize readable, maintainable code above all else.
   Choose clarity before cleverness.
-- **Barbara Liskov**: Respect interface contracts and ensure substitutability.
-  See `skills/solid-principles/SKILL.md` for full LSP treatment and depth.
+- **Barbara Liskov**: Respect interface contracts and make sure that
+  substitutability. See `skills/solid-principles/SKILL.md` for full LSP
+  treatment and depth.
 - **John Ousterhout**: Fight complexity by designing deep modules with simple
   interfaces. Pull complexity downward into implementations rather than
   exposing it to callers.
@@ -38,7 +39,7 @@ Six foundational perspectives guide every design and implementation decision:
 
 ## Implementation Standards
 
-### DRY (Don't Repeat Yourself)
+### DRY (Do not Repeat Yourself)
 
 - Extract repeated logic into well-named functions or modules.
 - Apply the **Rule of Three**: tolerate duplication the second time, extract
@@ -59,10 +60,11 @@ Six foundational perspectives guide every design and implementation decision:
 
 ### Code Comments
 
-Comments never explain WHAT the code does -- intention-revealing names and
-structure carry that. A comment is permitted only for non-obvious WHY (a
-constraint, a workaround, a surprising requirement), and only when neither
-intention-revealing code nor tests can carry the explanation.
+Comments never explain WHAT the code does. Intention-revealing names and
+structure carry that. A comment is permitted only for a non-obvious WHY,
+such as a constraint, a workaround, or a surprising requirement. It is
+permitted only when neither intention-revealing code nor tests can carry the
+explanation.
 
 - **Rewrite first.** A comment that feels necessary is a signal to rewrite
   the code until the comment is unnecessary (Fowler: comments are deodorant
@@ -76,9 +78,9 @@ intention-revealing code nor tests can carry the explanation.
   pointing at a public issue URL stays true for exactly as long as the
   workaround does. The ban targets internal trackers and pipeline
   artifacts, not those links.
-- **No commented-out code.** Version control remembers deleted code; a
-  commented-out block only sows doubt about whether it is still needed.
-  Delete it.
+- **No commented-out code.** Version control remembers deleted code. A
+  commented-out block only makes readers ask if it is still needed. Delete
+  it.
 - **No TODO or FIXME comments in delivered code.** Deferred work goes in
   the implementer's report, where it is visible and actionable -- not
   buried in the source where it silently ages.
@@ -109,16 +111,16 @@ intention-revealing code nor tests can carry the explanation.
 - Design for dependency injection from the start.
 - Separate pure logic from side effects (I/O, database, network).
 - Create seams in the code where test doubles can be inserted.
-- Ensure each function can be tested in isolation with clear input/output
-  contracts.
+- Make sure that each function can be tested in isolation with clear
+  input/output contracts.
 
 ## Design-First Workflow
 
 Follow these five steps for every non-trivial implementation:
 
-1. **Understand Requirements**: Before writing code, clarify the exact
+1. **Understand Requirements**: Before you write code, clarify the exact
    requirements, edge cases, and constraints. Edge case enumeration is
-   mandatory, not aspirational — walk boundary values (empty/zero/max),
+   mandatory, not aspirational. Walk boundary values (empty, zero, max),
    invalid inputs, failure paths (timeouts, partial writes), concurrency,
    authorization edges, and resource limits before implementation. Ask
    questions if anything is ambiguous.
@@ -145,7 +147,7 @@ Before considering any implementation complete, verify each item:
 1. **Single Responsibility** -- Each function and module does one thing well.
 2. **Clear Naming** -- Names reveal intent without requiring comments.
 3. **No Magic Numbers** -- All constants are named and explained.
-4. **Explicit Error Handling** -- Error cases are handled; no silent failures.
+4. **Explicit Error Handling** -- Error cases are handled. No silent failures.
 5. **Low Coupling** -- Minimal dependencies between modules.
 6. **Testability** -- Code can be tested without complex setup.
 7. **Readability** -- A new developer could understand this in 5 minutes.
@@ -153,8 +155,8 @@ Before considering any implementation complete, verify each item:
 9. **Performance Awareness** -- No unnecessary computation or memory
    allocation, but no premature optimization either.
 10. **Functional Core, Imperative Shell** -- Pure functions hold business
-    logic; a thin shell handles I/O. Pure logic is unit-testable in
-    isolation; the shell is swap-and-test as a thin integration layer.
+    logic. A thin shell handles I/O. Pure logic is unit-testable in
+    isolation. The shell is swap-and-test as a thin integration layer.
 11. **No Primitive Obsession** -- Domain concepts (Money, Duration,
     EmailAddress, OrderId) carry a type, not a raw `string`/`int`. Long
     parameter lists with related primitives signal a missing value object.
@@ -188,15 +190,15 @@ Apply this methodology during code writing with these checkpoints:
    body). Constructors do no work -- no I/O, no static lookups, no expensive
    computation.
 7. **No mixed levels of abstraction in a function.** A function calls
-   functions one level below its own. If you find yourself doing high-level
-   orchestration and low-level byte-level work in the same function,
-   extract the low-level work into a helper named at the surrounding level.
+   functions one level below its own. If one function does both high-level
+   orchestration and low-level byte work, extract the low-level work into a
+   helper named at the surrounding level.
 8. **No primitive obsession in new domain types.** When adding a new domain
    concept (Money, Duration, OrderId, EmailAddress), give it a type. Long
    parameter lists with related primitives signal a missing value object.
-9. **Targeted exception scopes only.** Wrap exactly the call that can
-   throw; catch the specific exception subclass; rethrow with the original
-   cause chained. Never `catch (Exception e)` around a large block.
+9. **Targeted exception scopes only.** Wrap exactly the call that can throw.
+   Catch the specific exception subclass. Rethrow with the original cause
+   chained. Never `catch (Exception e)` around a large block.
 10. **Follow the project's existing code style, naming conventions, and
     patterns.** Read neighboring files to calibrate if unsure.
 

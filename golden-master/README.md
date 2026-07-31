@@ -2,25 +2,26 @@
 
 This directory holds the **frozen input** for the Team pipeline Golden Master, an
 out-of-band characterization run. We feed the *same* feature prompt to the full
-`/team` pipeline against a *frozen* external app and compare each run's output
-(effectiveness + efficiency metrics) against history. See the epic: #132.
+`/team` pipeline against a *frozen* external app. We then compare each run's
+output against history, on effectiveness and efficiency metrics. See the epic:
+#132.
 
 The same frozen input serves **two** benchmarks:
 
-1. **Pipeline drift over time.** Replay as our skills/agents change; attribute
-   differences to *our* changes.
-2. **Model / provider comparison.** Replay on a new underlying model (a new
-   Claude, or GPT / Gemini / etc.) to benchmark *the model itself* through a
-   realistic full-pipeline task (#139).
+1. **Pipeline drift over time.** Replay the prompt as our skills and agents
+   change. Attribute the differences to *our* changes.
+2. **Model / provider comparison.** Replay the prompt on a new underlying model,
+   such as a new Claude, GPT, or Gemini. This benchmarks *the model itself*
+   through a realistic full-pipeline task (#139).
 
-That is why the prompt is deliberately **provider-neutral** (it names no model and
-no vendor) and the seed app is vanilla: the exact same input is portable across
-any backend.
+The prompt is thus deliberately **provider-neutral**, and it names no model and
+no vendor. The seed app is vanilla. The exact same input is portable across any
+backend.
 
 > **Out of band, by design.** This is **not** part of the build, `bun test`, or
-> CI, because running `/team` from inside this repo would let Team's own context
-> poison what is meant to be a real-world test. The seed app (Linkboard) lives in
-> a **separate, isolated repository**; only the prompt, the per-run results, and
+> CI. A `/team` run from inside this repo would let Team's own context poison
+> what must be a real-world test. The seed app (Linkboard) lives in a
+> **separate, isolated repository**. Only the prompt, the per-run results, and
 > the runbook live here.
 
 ## Contents
@@ -37,21 +38,21 @@ A Golden Master run has **two frozen halves**: this `prompt.md` and the Linkboar
 baseline tag **`golden-master-baseline`** (commit `2cfee1a`) that every run branches
 from. The input is **the prompt × that baseline**, so keep both pinned.
 
-`prompt.md` is immutable: it is replayed verbatim across runs, so editing it
-invalidates every historical comparison. Its SHA-256 is pinned here as a
-tamper check:
+`prompt.md` is immutable. Each run replays it verbatim. A change to it
+invalidates every historical comparison. Its SHA-256 is pinned here as a tamper
+check:
 
 ```
 8c5bb38e357103f783d2ad80dcc8fa551891a586356ab49b3dcebf378580fa4f  golden-master/prompt.md
 ```
 
-Verify from the repo root before a run:
+Before a run, make sure that the prompt is unchanged:
 
 ```sh
 echo "8c5bb38e357103f783d2ad80dcc8fa551891a586356ab49b3dcebf378580fa4f  golden-master/prompt.md" | shasum -a 256 -c
 ```
 
-If this fails, the prompt was changed and the benchmark history is no longer
-comparable. This check is run **manually as part of the runbook (#137)**, and it
-is deliberately *not* wired into CI, consistent with the out-of-band design
-above.
+If this fails, the prompt was changed. The benchmark history is then no longer
+comparable. An operator runs this check
+**manually as part of the runbook (#137)**. It is deliberately *not* wired into
+CI, which agrees with the out-of-band design above.

@@ -18,7 +18,7 @@ discovery block below resolves it.
 
 The `design-author` reads:
 
-- `$ARGUMENTS/task.md` — what we're building (intent)
+- `$ARGUMENTS/task.md` — what we are building (intent)
 - `$ARGUMENTS/questions.md` — the questions that drove research
 - `$ARGUMENTS/research.md` — what exists (facts)
 
@@ -66,7 +66,7 @@ done
   options:
   - **Run the producer** — run `/team-research docs/plans/<id>/` to produce the
     missing `research.md`.
-  - **Provide a path** — the user supplies the `docs/plans/<id>/` directory
+  - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
 
 ## Execution
@@ -90,7 +90,7 @@ done
    the findings + verdict to `$ARGUMENTS/design-review-<n>.md`, where
    `<n>` is the highest existing `<n>` + 1 (1 when none exists) — never
    overwrite an earlier verdict record:
-   - **APPROVE or COMMENT** — the review passes; advance.
+   - **APPROVE or COMMENT** — the review passes. Advance.
    - **REQUEST CHANGES** — re-dispatch `design-author` with the
      reviewer's findings verbatim. The agent re-drafts and increments
      `revision: <n+1>`, then a fresh review round runs. Cap at

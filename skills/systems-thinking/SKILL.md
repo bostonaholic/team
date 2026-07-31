@@ -6,11 +6,11 @@ user-invocable: false
 
 # Systems Thinking
 
-A reasoning lens, not a gate. It produces no artifact of its own and blocks
-nothing. It shapes how the judgment agents reason about the system around a
-change — the callers, consumers, sibling implementations, and conventions
-that live outside the diff — so that locally correct work also fits the
-whole.
+A reasoning lens, not a gate. It produces no artifact of its own and
+blocks nothing. It shapes how the judgment agents reason about the system
+around a change. That system is the callers, consumers, sibling
+implementations, and conventions that live outside the diff. Locally
+correct work then also fits the whole.
 
 ## Core Lenses
 
@@ -18,8 +18,8 @@ Four lenses sharpen every research answer, design decision, slice boundary,
 plan step, edit, and review finding:
 
 - **Blast radius over diff radius**: The lines you change are rarely the
-  whole change. Ask what else the system expects to move when this moves —
-  callers, config, docs, tests, sibling implementations — and treat that
+  whole change. Ask what else the system expects to move when this moves:
+  callers, config, docs, tests, and sibling implementations. Treat that
   set as the real scope of the work.
 - **Callers and siblings first**: Before judging or changing a component,
   find who calls it, who consumes its output, and which sibling
@@ -29,9 +29,9 @@ plan step, edit, and review finding:
   codebase — naming, error handling, file layout, idioms — are implicit
   contracts with every reader and every future change. Diverging from one
   is a decision to surface and justify, never a silent default.
-- **Leave the system consistent**: After the change, every sibling should
-  still agree, every caller should still work, and every convention should
-  still hold — or the divergence is named and deliberate.
+- **Leave the system consistent**: After the change, every sibling must
+  still agree, every caller must still work, and every convention must
+  still hold. Otherwise the divergence is named and deliberate.
 
 ## When Researching
 
@@ -67,11 +67,11 @@ Questions to apply while writing a design's `## Current state` and
 Questions to apply while drawing slice boundaries:
 
 - **Does the slice include every co-changing surface?** A slice's scope is
-  its blast radius, not its diff — the callers, siblings, docs, and config
+  its blast radius, not its diff. The callers, siblings, docs, and config
   that must move together belong in the same slice.
 - **Does any slice knowingly leave a caller or sibling broken?** No slice
-  ships a state where a neighbor of something it touched no longer works;
-  re-draw the boundary rather than defer the breakage.
+  ships a state where a neighbor of something it touched no longer works.
+  Re-draw the boundary rather than defer the breakage.
 
 ## When Planning
 
@@ -92,7 +92,7 @@ Discipline to apply before and during each slice:
   implementation before adding one — extending or reusing the sibling
   beats writing a divergent twin.
 - **Which callers does this edit affect?** Update every affected caller in
-  the same slice; a locally green diff that breaks a neighbor is not done.
+  the same slice. A locally green diff that breaks a neighbor is not done.
 - **Does the edit match the local idiom?** Follow the conventions of the
   surrounding code, even where a different style would also work.
 
@@ -112,8 +112,8 @@ The questions behind the `System Fit` checklist item in
 
 ## Lens, Not Dogma
 
-This lens informs judgment; it never blocks the pipeline. On a greenfield or
-single-file target there may be no callers, siblings, or conventions to
-map — "none found" is a complete answer, and manufacturing findings to
-satisfy the lens is forbidden. The point is to keep "does this fit the
-system around it?" in view — not to add ritual.
+This lens informs judgment. It never blocks the pipeline. On a greenfield
+or single-file target there can be no callers, siblings, or conventions to
+map. There, "none found" is a complete answer. Never manufacture findings
+to satisfy the lens. The point is to keep "does this fit the system around
+it?" in view — not to add ritual.

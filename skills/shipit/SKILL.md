@@ -19,15 +19,15 @@ argument-hint: "[<pr-number>] [--yes]"
 > Follow `skills/progress-tracking/SKILL.md`: this procedure has more than two steps —
 > seed one todo item per step below before starting and mark each complete as you go.
 
-`shipit` lands a pull request that has already passed review: it pushes any
-unpushed local commits, waits for CI to go green, and squash-merges so the PR
-title lands as the commit subject on the base branch (if a project puts a
-version in the title, that version then shows up in `git log`). It
-**finalizes an existing open PR** — it never opens one. It is generic: it does
-no versioning, changelog editing, or release work. If a project assigns a
+`shipit` lands a pull request that already passed review. It pushes any unpushed
+local commits, waits for CI to go green, and squash-merges. The PR title then
+lands as the commit subject on the base branch. If a project puts a version in
+the title, that version shows up in `git log`. It
+**finalizes an existing open PR**, and never opens one. It is generic, and it
+does no versioning, changelog editing, or release work. If a project assigns a
 version at land time, that happens in a separate project-specific step *before*
 `/shipit` (in this repo, the dev `version-bump` skill — see
-[docs/versioning.md](../../docs/versioning.md)); `shipit` only cares that the
+[docs/versioning.md](../../docs/versioning.md)). `shipit` only cares that the
 branch is ready to land.
 
 `gh pr merge` is irreversible, so three things guard it — none of them a
@@ -45,8 +45,8 @@ frontmatter flag:
 ## Input acquisition
 
 `shipit` lands the open PR for the **current branch**. Discover it with
-`gh pr view --json baseRefName,number,state,title` and a base-branch fallback;
-never hardcode the base branch. The `title` is captured here because step 5
+`gh pr view --json baseRefName,number,state,title` and a base-branch fallback.
+Never hardcode the base branch. The `title` is captured here because step 5
 lands it as the squash commit subject. Run this in one bash call (an agent
 thread resets cwd between calls):
 
@@ -75,17 +75,17 @@ The steps below are the **scriptable core**. The one interactive confirmation
 
 ### 1. Pre-flight merge-button check
 
-Before relying on `--squash`, read the repo's merge strategy and report whether
+Before relying on `--squash`, read the repo's merge strategy and report if
 squash merges are enabled. This is a **read-only** check, not enforcement:
 
 ```bash
 gh repo view --json mergeCommitAllowed,rebaseMergeAllowed,squashMergeAllowed
 ```
 
-Stop and report **only** if `squashMergeAllowed` is `false` — squash-merge is
-how the PR title (and any version it carries) lands as the commit subject, and
-it keeps linear history (a squash commit is a normal commit, not a merge
-commit), so it is the only acceptable strategy here. If squash merging is
+Stop and report **only** if `squashMergeAllowed` is `false`. Squash-merge is how
+the PR title, and any version it carries, lands as the commit subject. It also
+keeps linear history, because a squash commit is a normal commit and not a merge
+commit. It is thus the only acceptable strategy here. If squash merging is
 available, proceed regardless of which other methods (`mergeCommitAllowed`,
 `rebaseMergeAllowed`) are enabled.
 
@@ -98,8 +98,9 @@ project-specific land-time commit). Push them so CI runs against what will land:
 git push
 ```
 
-If the local branch and remote have diverged because the branch was rebased
-locally, see the force-with-lease guidance in step 5 — never a bare `--force`.
+If the local branch and remote diverged because someone rebased the branch
+locally, see the force-with-lease guidance in step 5. Never use a bare
+`--force`.
 
 ### 3. Wait for CI
 
@@ -116,20 +117,20 @@ timeout 1800 gh pr checks <pr-number> --watch --fail-fast --interval 30
 status=$?
 ```
 
-`--fail-fast` returns non-zero the moment any check fails; `timeout` kills the
-watch and returns **124** when the 30-min cap is hit. Map the exit code to one of
-three outcomes:
+`--fail-fast` returns non-zero the moment any check fails. `timeout` kills the
+watch and returns **124** when the 30-min cap is hit. Map the exit code to one
+of three outcomes:
 
 - **`status` is 0** (all required checks passed) → continue to the merge. (Add
-  `--required` to gate on required checks only; the default here gates on **all**
-  checks so a failing optional check still halts the land — the conservative
-  choice for an irreversible merge.)
+  `--required` to gate on required checks only. The default here gates on
+  **all** checks so a failing optional check still halts the land — the
+  conservative choice for an irreversible merge.)
 - **`status` is non-zero and not 124** (a check failed) → **stop before merge**.
   Run `gh pr checks <pr-number>` to print the failing check, and report it by
   name. Leave the branch in place — the user fixes CI and re-runs `/shipit`. Do
   **not** merge.
-- **`status` is 124** (the 30-min cap was hit and CI never went green) → stop and
-  report "CI wait timed out"; do not merge.
+- **`status` is 124** (the 30-min cap was hit and CI never went green) → stop
+  and report "CI wait timed out". Do not merge.
 
 **Re-entry after a CI fix:** when re-running `/shipit` after fixing CI, the
 commits are already on the branch — `shipit` simply pushes any new ones, waits
@@ -146,19 +147,19 @@ The prompt wraps the scriptable core, it does not live inside it.
 
 ### 5. Rebase if behind the base, then merge
 
-**PR behind its base.** Before merging, check whether the base branch advanced
-since CI last ran. If the PR is **behind `<base>`**, bring it up to date:
+**PR behind its base.** Before merging, check if the base branch advanced since
+CI last ran. If the PR is **behind `<base>`**, bring it up to date:
 
 1. Rebase the branch onto the latest `<base>`.
-2. `git push --force-with-lease` the rebased branch — the force is required
-   because the rebase rewrote history; `--force-with-lease` refuses if the remote
-   moved underneath you (**never a bare `--force`**).
+2. `git push --force-with-lease` the rebased branch — the force is necessary
+   because the rebase rewrote history. `--force-with-lease` refuses if the
+   remote moved underneath you (**never a bare `--force`**).
 3. Re-run the CI wait (step 3) against the rebased tree before merging.
 
-**Merge with `gh pr merge --squash`** (named explicitly — squash lands the PR
-title as the commit subject while keeping linear history, so it is the only
-acceptable merge strategy here). Build the subject explicitly from the PR title
-captured during discovery and append `(#<number>)` so every landed commit shows
+**Merge with `gh pr merge --squash`**, named explicitly. Squash lands the PR
+title as the commit subject and keeps linear history, so it is the only
+acceptable merge strategy here. Build the subject explicitly from the PR title
+captured during discovery. Append `(#<number>)`, so every landed commit shows
 both the title (with any version it carries) and the PR number — exactly the
 `git log` shape the operator sees. Passing `--subject` is deliberate: it
 guarantees the PR title regardless of the repo's "default squash commit message"
@@ -174,16 +175,17 @@ The squash body defaults to the concatenated commit messages — leave it as-is
 unless the operator asks otherwise.
 
 - On a **branch-protection rejection**, surface GitHub's rejection message
-  **verbatim** to the user; **never force** the merge.
+  **verbatim** to the user. **never force** the merge.
 
 ## Completion
 
-Report the merge result (or the failing-check / timeout / branch-protection
-reason if it stopped short). If the project publishes a release on merge, that
-runs asynchronously after the merge — point the operator at `gh run watch` (or
-`gh run list`) so they can observe it rather than assuming it is already done.
+Report the merge result. If it stopped short, report the reason: a failing
+check, a timeout, or branch protection. If the project publishes a release on
+merge, that runs asynchronously after the merge. Point the operator at
+`gh run watch`, or `gh run list`, so they can observe it rather than assume it
+is already done.
 
 `shipit` touches no tracker or board — it stays generic. If the PR links a
 ticket (e.g. `Closes #<n>`), the tracker closes that ticket when the merge
-lands, and any board automation moves it to its done state on its own; that is
-a property of the link the PR phase added, not an action `shipit` performs.
+lands, and any board automation moves it to its done state on its own. That is a
+property of the link the PR phase added, not an action `shipit` performs.

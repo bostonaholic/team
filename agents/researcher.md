@@ -26,10 +26,10 @@ You do **not** know what is being built. The orchestrator passes you the
 path: `docs/plans/<id>/questions.md`. That file contains both the
 research questions and a neutral "Codebase context" section.
 
-You **MAY** also read `docs/plans/<id>/repos.md` if it exists. It lists
-the repos the topic touches (with absolute paths and short slug names)
-but does not state the goal — it carries scope, not intent. Use it to
-know where to look for each question.
+You **MAY** also read `docs/plans/<id>/repos.md` if it exists. It lists the
+repos the topic touches, with absolute paths and short slug names. It does
+not state the goal, because it carries scope, not intent. Use it to know
+where to look for each question.
 
 You **MUST NOT** read `docs/plans/<id>/task.md`, even if it exists in
 the same directory. You **MUST NOT** infer or guess at the user's
@@ -39,9 +39,9 @@ and answer the literal question.
 ## Procedure
 
 Your investigation method and the research-report output format live in
-`skills/researching-codebases/SKILL.md` (preloaded): trace execution paths
-from entry point to data layer, recognize patterns, discover constraints,
-and report compressed findings under the 100-line budget (150 in
+`skills/researching-codebases/SKILL.md` (preloaded). Trace execution paths
+from entry point to data layer. Recognize patterns and discover
+constraints. Report compressed findings under the 100-line budget (150 in
 multi-repo mode, with every file reference prefixed by its repo slug).
 
 ## Nested exploration scouts (optional)
@@ -64,7 +64,7 @@ unavailable, answer every question yourself with Read/Grep/Glob.
   under-specified, return it in your `## Open Questions` section rather
   than guessing.
 - Return your findings to the orchestrator, which writes them to
-  `docs/plans/<id>/research.md` and prepends the required YAML frontmatter
+  `docs/plans/<id>/research.md` and prepends the necessary YAML frontmatter
   (`topic`, `date`, `phase: research`). The `topic` value MUST be copied
   verbatim from `questions.md`'s frontmatter — never improvised, never
   combined with the ticket id. Do not attempt to write files yourself.

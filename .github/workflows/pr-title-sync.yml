@@ -21,10 +21,10 @@
 # entire pull_request_target attack surface; a fork PR's title is fixed by a
 # maintainer manually.
 #
-# SECURITY: the PR title is attacker-influenced content — it enters only via
+# SECURITY: the PR title is attacker-influenced content — it enters only through
 # `env:` and is referenced as a quoted "$VAR", never inlined as a `${{ }}`
 # expression in `run:`. It is also never echoed (Actions parses
-# ::workflow-commands:: from stdout); the computed title is captured via command
+# ::workflow-commands:: from stdout); the computed title is captured through command
 # substitution and passed to `gh pr edit --title`, never printed. The version is
 # regex-validated before use. Loop safety: the rewrite fires an `edited` event,
 # which re-enters this job, computes an identical title, and exits at the

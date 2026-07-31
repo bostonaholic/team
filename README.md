@@ -1,6 +1,6 @@
 # Team
 
-A Claude Code plugin that orchestrates specialized agents to autonomously implement entire features end-to-end, driven by the **QRSPI** workflow. The orchestrator is the main Claude Code session; it persists pipeline state as artifacts in `docs/plans/` and tracks live progress with TodoWrite.
+A Claude Code plugin that orchestrates specialized agents to autonomously implement entire features end-to-end, driven by the **QRSPI** workflow. The orchestrator is the main Claude Code session. It persists pipeline state as artifacts in `docs/plans/` and tracks live progress with TodoWrite.
 
 **Documentation:** [team.bostonaholic.dev](https://team.bostonaholic.dev)
 
@@ -18,9 +18,9 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 - **Question.** Decompose intent into a full task record (`task.md`) and neutral research questions (`questions.md`). The questioner is the only agent that ever sees the user's original description.
 - **Research** *(isolated)*. Parallel agents (file-finder + researcher) consume only `questions.md`. They never see the task. This structurally prevents opinion-bias in research findings.
 - **Design** *(design review)*. Design author drafts a ~200-line alignment doc, resolving its own open questions as recorded assumptions. An adversarial design review gates advancement.
-- **Structure.** Break the design into vertical slices with verification checkpoints. Produced autonomously; advances to Plan with no gate.
-- **Plan.** Tactical implementation plan derived from the structure. Read by the implementer; not gated.
-- **Implement.** Test-first (test-architect writes failing tests, mechanical gate confirms) → slice execution (implementer commits each vertical slice atomically) → adversarial verification (5 parallel reviewers + typed failure-class retry loop, max 5 rounds).
+- **Structure.** Break the design into vertical slices with verification checkpoints. Produced autonomously. Advances to Plan with no gate.
+- **Plan.** Tactical implementation plan derived from the structure. Read by the implementer. Not gated.
+- **Implement.** Test-first, where test-architect writes failing tests and a mechanical gate checks them. Then slice execution, where implementer commits each vertical slice atomically. Then adversarial verification, with 5 parallel reviewers and a typed failure-class retry loop, capped at 5 rounds.
 - **PR.** Update changelog, commit, open pull request with inline UI screenshots when applicable, surface the tracking item.
 
 ## Usage
@@ -48,21 +48,20 @@ Or run individual phases:
 /team-pr docs/plans/<id>/
 ```
 
-In a full `/team` run the home worktree is created automatically at the
-leading WORKTREE phase. Invoked standalone, `/team-worktree` consumes
-`plan.md` (post-PLAN); use it for manual recovery or multi-repo setup.
+In a full `/team` run the home worktree is created automatically at the leading WORKTREE phase.
+Invoked standalone, `/team-worktree` consumes `plan.md` (post-PLAN). Use it for manual recovery
+or multi-repo setup.
 
 Each downstream command takes the artifact directory `docs/plans/<id>/` as
 its argument.
 
 ## Screenshots in PRs
 
-For UI-touching changes, the pipeline attaches visual evidence to the PR: the
-ux-reviewer captures screenshots of the affected pages during Implement, and
-`/team-pr` uploads them through GitHub's user-attachments pipeline so they
-render inline in a `## Screenshots` section of the PR body. Non-UI changes
-never get the section, and any capture or upload failure degrades to a
-visible note with local file paths, so the PR always opens.
+For UI-touching changes, the pipeline attaches visual evidence to the PR. The ux-reviewer
+captures screenshots of the affected pages during Implement. `/team-pr` then uploads them
+through GitHub's user-attachments pipeline, so they render inline in a `## Screenshots` section
+of the PR body. Non-UI changes never get the section. Any capture or upload failure degrades to
+a visible note with local file paths, so the PR always opens.
 
 The images stay current the same way the description does. Every follow-up
 push refreshes both: a push that changes the UI re-captures and re-uploads
@@ -105,4 +104,4 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 - **51 entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch`, `/pr-approve-watch`, and `/groom-backlog` utilities, and shared methodologies
 - **4 hooks** in `hooks/`: safety guards and `docs/plans/`-aware compaction resilience
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
-- **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`; `design.md` also carries `revision`; review verdicts live in `design-review-<n>.md`). Live in-session coordination uses TodoWrite.
+- **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `design.md` also carries `revision`, and review verdicts live in `design-review-<n>.md`. Live in-session coordination uses TodoWrite.

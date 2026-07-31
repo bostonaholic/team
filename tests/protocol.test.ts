@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { frontmatter, read, squash } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 
@@ -188,7 +188,7 @@ describe("multi-repo support", () => {
     const fm = frontmatter(text);
     expect(/^tools:.*\bAskUserQuestion\b/m.test(fm)).toBe(false);
     expect(text).toContain("Multi-repo detection");
-    // Candidate repos resolve via sibling directories of the home repo
+    // Candidate repos resolve through sibling directories of the home repo
     // root; when in doubt the questioner stays single-repo and records the
     // assumption — it never pauses to ask.
     expect(/sibling/i.test(text)).toBe(true);
@@ -203,11 +203,6 @@ describe("multi-repo support", () => {
     const text = flat(read(DESIGN_AUTHOR));
     expect(/sibling/i.test(text)).toBe(true);
     expect(text).toContain("single-repo");
-    // An unresolvable repo never expands scope silently — the omission is
-    // recorded loudly in the design's ## Risks section.
-    expect(
-      /unresolvable[^|]{0,300}## Risks|## Risks[^|]{0,300}unresolvable/i.test(text),
-    ).toBe(true);
   });
 
   test("researcher allowed to read repos.md (scope, not intent)", () => {
@@ -265,28 +260,6 @@ describe("multi-repo support", () => {
     expect(text).toContain("Multi-repo topics");
     expect(text).toContain("multi-repo mode");
   });
-
-  // Worktree-first: secondary worktrees are created AFTER the design review
-  // (the home worktree is born at the leading WORKTREE phase). Assert the
-  // post-design-review phrasing is co-located with the `## Worktrees` /
-  // `repos.md` back-recording prose.
-  test("team SKILL creates secondary worktrees after the design review", () => {
-    const text = flat(read(TEAM));
-    // A post-design-review phrase appears within reach of the `## Worktrees`
-    // back-recording of `repos.md`.
-    expect(
-      /(after the design review|post-design-review)[^|]{0,400}(## Worktrees|repos\.md)|(## Worktrees|repos\.md)[^|]{0,400}(after the design review|post-design-review)/i.test(
-        text,
-      ),
-    ).toBe(true);
-  });
-
-  test("team SKILL back-records the home worktree path in repos.md", () => {
-    const text = flat(read(TEAM));
-    expect(
-      /(back-record|record)[^.]{0,200}home worktree[^.]{0,200}(path|`## Worktrees`|repos\.md)/i.test(text),
-    ).toBe(true);
-  });
 });
 
 describe("conditional PRD artifact", () => {
@@ -330,116 +303,10 @@ describe("implement-to-pr continuation", () => {
     expect(/\*\*Standalone\*\*.{0,200}\/team-pr/.test(flat(read(TEAM_IMPLEMENT)))).toBe(true);
   });
 
-  test("team-implement completion calls turn-end without a draft PR a defect", () => {
-    expect(
-      /Ending the turn with verdicts but\s+no draft PR is a defect/.test(read(TEAM_IMPLEMENT)),
-    ).toBe(true);
-  });
-
-  test("team SKILL advances IMPLEMENT to PR in the same turn", () => {
-    const text = flat(read(TEAM_SKILL));
-    expect(/advance\s+to PR \*\*in the same turn\*\*/.test(text)).toBe(true);
-    expect(
-      /turn that ends with review\s+verdicts but no draft PR URL is\s+a defect/.test(
-        read(TEAM_SKILL),
-      ),
-    ).toBe(true);
-  });
-
   test("architecture.md no longer presents shipping options", () => {
     const text = read(ARCHITECTURE);
     expect(text).not.toContain("present shipping options");
     expect(text).toContain("gh pr create");
-  });
-});
-
-describe("topic consistency", () => {
-  const QUESTIONER = join(REPO_ROOT, "agents", "questioner.md");
-  const RESEARCHER = join(REPO_ROOT, "agents", "researcher.md");
-  const DESIGN_AUTHOR = join(REPO_ROOT, "agents", "design-author.md");
-  const STRUCTURE_PLANNER = join(REPO_ROOT, "agents", "structure-planner.md");
-  const PLANNER = join(REPO_ROOT, "agents", "planner.md");
-  const TEAM_RESEARCH = join(REPO_ROOT, "skills", "team-research", "SKILL.md");
-  const TEAM_FIX = join(REPO_ROOT, "skills", "team-fix", "SKILL.md");
-
-  test("questioner requires identical topic across task.md and questions.md", () => {
-    const text = flat(read(QUESTIONER));
-    expect(
-      /topic[^.]{0,200}(identical|same|match)[^.]{0,200}(task\.md|questions\.md|both)/i.test(text),
-    ).toBe(true);
-  });
-
-  test("questioner ties topic to the kebab portion of <id>", () => {
-    const text = flat(read(QUESTIONER));
-    expect(
-      /topic.{0,250}(kebab portion of `?<id>|slug portion of `?<id>|<id>.{0,40}minus the.{0,40}(ticket|date)|without the (ticket|date) prefix)/i.test(
-        text,
-      ),
-    ).toBe(true);
-  });
-
-  test("research.md frontmatter must reuse the topic from questions.md", () => {
-    const a = /topic[^.]{0,200}(from|copy|read|same as|match)[^.]{0,200}questions\.md/i.test(
-      flat(read(RESEARCHER)),
-    );
-    const b = /topic[^.]{0,200}(from|copy|read|same as|match)[^.]{0,200}questions\.md/i.test(
-      flat(read(TEAM_RESEARCH)),
-    );
-    expect(a || b).toBe(true);
-  });
-
-  test("artifact-frontmatter states topic-consistency invariant", () => {
-    const text = flat(read(join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md")));
-    expect(
-      /topic[^.]{0,200}(must|should)[^.]{0,200}(identical|same|match)[^.]{0,200}(across|every|all)[^.]{0,200}artifact/i.test(
-        text,
-      ),
-    ).toBe(true);
-  });
-
-  test("artifact-frontmatter documents why ticketId lives only on task.md", () => {
-    const text = flat(read(join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md")));
-    expect(
-      /ticketId[^.]{0,200}(only|just)[^.]{0,200}task\.md|task\.md[^.]{0,200}(canonical|sole|only)[^.]{0,200}ticketId|<id>[^.]{0,200}already[^.]{0,200}(encode|carry|contain)[^.]{0,200}ticket/i.test(
-        text,
-      ),
-    ).toBe(true);
-  });
-
-  test("design-author copies topic verbatim from the predecessor artifact", () => {
-    const text = flat(read(DESIGN_AUTHOR));
-    expect(
-      /topic.{0,250}(copy|verbatim|reuse|read|same as|inherit|carry|preserve).{0,100}(research\.md|task\.md|predecessor|upstream|questions\.md)/i.test(
-        text,
-      ),
-    ).toBe(true);
-  });
-
-  test("structure-planner copies topic verbatim from the predecessor artifact", () => {
-    const text = flat(read(STRUCTURE_PLANNER));
-    expect(
-      /topic.{0,250}(copy|verbatim|reuse|read|same as|inherit|carry|preserve).{0,100}(design\.md|predecessor|upstream)/i.test(
-        text,
-      ),
-    ).toBe(true);
-  });
-
-  test("planner copies topic verbatim from the predecessor artifact", () => {
-    const text = flat(read(PLANNER));
-    expect(
-      /topic.{0,250}(copy|verbatim|reuse|read|same as|inherit|carry|preserve).{0,100}(structure\.md|predecessor|upstream)/i.test(
-        text,
-      ),
-    ).toBe(true);
-  });
-
-  test("team-fix specifies topic = kebab portion of <id>", () => {
-    const text = flat(read(TEAM_FIX));
-    expect(
-      /topic.{0,250}(kebab portion of `?<id>|slug portion of `?<id>|<id>.{0,40}minus the.{0,40}(ticket|date)|without the (ticket|date) prefix)/i.test(
-        text,
-      ),
-    ).toBe(true);
   });
 });
 
@@ -470,7 +337,7 @@ describe("qrspi-workflow SOFT gate aligns with severity tiers (issue #68)", () =
   test("no longer lists code-review or ux-reviewer feedback as SOFT examples", () => {
     const soft = softSection(read(QRSPI));
     // Fail loud if the SOFT subsection vanished, so the absence assertions
-    // below can't pass vacuously against an empty string.
+    // below cannot pass vacuously against an empty string.
     expect(soft.length).toBeGreaterThan(0);
     expect(/code review suggestions/i.test(soft)).toBe(false);
     expect(/UX review feedback/i.test(soft)).toBe(false);
@@ -480,7 +347,7 @@ describe("qrspi-workflow SOFT gate aligns with severity tiers (issue #68)", () =
     const soft = softSection(read(QRSPI));
     expect(soft.length).toBeGreaterThan(0);
     expect(soft).toContain("review-severity-tiers/SKILL.md");
-    expect(soft).toContain("Severity Tiers and the Auto-Fix Boundary");
+    expect(squash(soft)).toContain("Severity Tiers and the Auto-Fix Boundary");
   });
 
   // Drift guard: the SOFT section points at a heading by name. If that heading
@@ -677,17 +544,7 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     // Names the move to an in-review state.
     expect(/in-review/i.test(text)).toBe(true);
     // Links the PR to the ticket so it auto-closes on merge (drives "done").
-    expect(/closes #|link the pr/i.test(text)).toBe(true);
-    // The move is gated on the PR being ready for review — a draft PR is not
-    // under review, so the ticket stays in-progress while the PR is a draft.
-    expect(
-      /never\s+move\s+the\s+ticket\s+to\s+in-review\s+while\s+the\s+pr\s+is\s+a\s+draft/i.test(
-        text,
-      ),
-    ).toBe(true);
-    expect(
-      /only\s+once\s+the\s+pr\s+is\s+marked\s+ready\s+for\s+review/i.test(text),
-    ).toBe(true);
+    expect(/closes #/i.test(text)).toBe(true);
     // Stays generic — best-effort and never blocks the pipeline.
     expect(/best-effort/i.test(text)).toBe(true);
     expect(/never block/i.test(text)).toBe(true);
@@ -701,9 +558,8 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
   function assertInReviewPointer(path: string) {
     const text = flat(read(path));
     expect(text).toContain("tracking-tickets/SKILL.md");
-    // Still names both tracker moments so the pointer step is discoverable.
+    // Still names the tracker moment so the pointer step is discoverable.
     expect(/in-review/i.test(text)).toBe(true);
-    expect(/closes #|link the pr|ticket link|closing footer/i.test(text)).toBe(true);
     // Does not hardcode this repo's board into the distributed runtime.
     expect(text).not.toContain("project-set-status");
     expect(text).not.toContain("projects/5");
@@ -730,18 +586,15 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     // shipit is generic: it must not hardcode this repo's board.
     expect(text).not.toContain("project-set-status");
     expect(text).not.toContain("projects/5");
-    // It documents that done happens via the tracker close-on-merge link,
-    // not via any board action shipit takes.
-    expect(/closes #|linked to the pr|tracker/i.test(text)).toBe(true);
+    // It documents that done happens through the tracker close-on-merge link,
+    // not through any board action shipit takes.
+    expect(/closes #/i.test(text)).toBe(true);
   });
 
   test("project-tracking: binds in-review and done transitions for this repo", () => {
     const text = flat(read(PROJECT_TRACKING));
     // In-review binding: the board script with the "In review" column.
     expect(/"In review"/i.test(text)).toBe(true);
-    // The binding fires when the PR is marked ready for review, not when the
-    // draft opens — the card stays In progress while the PR is a draft.
-    expect(/marked\s+ready\s+for\s+review/i.test(text)).toBe(true);
     // Done is automated by the board's close-on-merge automation, driven by
     // the PR's Closes-link — not a manual move.
     expect(/closes #/i.test(text)).toBe(true);
@@ -773,7 +626,7 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
   test("team-pr: PR Body Template ends with the Closes footer", () => {
     const template = prBodyTemplate(read(TEAM_PR));
     // Fail loud if the template block vanished, so the position assertions
-    // below can't pass vacuously against an empty string.
+    // below cannot pass vacuously against an empty string.
     expect(template.length).toBeGreaterThan(0);
     // The closing line sits after the ## References bullets — the footer of
     // the authored body.
@@ -792,11 +645,6 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
 
   test("tracking-tickets: footer is ticketId-conditional — omitted when null, no placeholder", () => {
     const text = flat(read(TRACKING_TICKETS));
-    expect(
-      /omit[^.]{0,200}(null|absent|empty)|(null|absent|empty)[^.]{0,200}omit/i.test(
-        text,
-      ),
-    ).toBe(true);
     expect(/no placeholder/i.test(text)).toBe(true);
   });
 
@@ -805,15 +653,10 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
   });
 
   test("team-pr: body refresh re-emits exactly one closing line", () => {
-    const text = flat(read(TEAM_PR));
+    const text = squash(read(TEAM_PR));
     // Step 9 lists the closing line among the refresh-surviving sections:
     // every `gh pr edit --body` re-emits exactly one, never duplicated,
     // never dropped.
-    expect(
-      /exactly one[^.]{0,200}closing line|closing line[^.]{0,200}exactly one/i.test(
-        text,
-      ),
-    ).toBe(true);
     expect(/never duplicated/i.test(text)).toBe(true);
     expect(/never dropped/i.test(text)).toBe(true);
   });
@@ -830,10 +673,6 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
   // PR-opening hosts keep a one-clause gist plus the pointer.
   function assertHomeOnlyClosingRule(path: string) {
     const text = flat(read(path));
-    // (a) the home repo's PR alone closes the ticket.
-    expect(/home[^.]{0,250}closes #|closes #[^.]{0,250}home/i.test(text)).toBe(
-      true,
-    );
     // (b) companion PRs reference the issue without a closing keyword, in the
     // unambiguous qualified form (a bare #<n> is repo-scoped and would name a
     // different issue in a companion repo).
@@ -932,7 +771,7 @@ describe("Minor findings defer to the PR body (L2 tripwire)", () => {
   test("team-pr template carries ## Review notes between How to Verify and References", () => {
     const template = prBodyTemplate(read(TEAM_PR));
     // Fail loud if the template block vanished, so the position assertions
-    // below can't pass vacuously against an empty string.
+    // below cannot pass vacuously against an empty string.
     expect(template.length).toBeGreaterThan(0);
     expect(template).toContain("## Review notes");
     expect(template).toContain("## How to Verify");

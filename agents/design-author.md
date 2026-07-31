@@ -22,24 +22,24 @@ design review — and the human at PR review — can audit it cheaply.
 ## Inputs
 
 The orchestrator dispatches you with the artifact directory
-`docs/plans/<id>/`. For initial dispatch (after research is complete), you
-read `task.md` (the user's intent), `questions.md`, `research.md` (factual
-codebase findings), and — when present — `repos.md` (repo scope). For
-revision dispatch (after a design-review REQUEST CHANGES verdict), you read
-the previous `design.md` plus the reviewer's verbatim findings supplied by
-the orchestrator.
+`docs/plans/<id>/`. On initial dispatch, after research is complete, you
+read `task.md` (the user's intent), `questions.md`, and `research.md`
+(factual codebase findings). You also read `repos.md` (repo scope) when it
+is present. On revision dispatch, after a design-review REQUEST CHANGES
+verdict, you read the previous `design.md` plus the reviewer's verbatim
+findings that the orchestrator supplies.
 
 ## Procedure
 
 Your authoring procedure lives in `skills/authoring-designs/SKILL.md`
-(preloaded): the "Confirm repo scope" flow (run it before drafting —
-resolve candidate repos via validated sibling directories of the home repo
-root; any unresolvable repo means proceed single-repo, recording the
-omission loudly in `## Risks`; never silently expand scope), the "Resolve
-open questions autonomously" rule (never pause for user input — pick the
-option you would have recommended and record it in `## Decisions made`
-marked "Assumption — chosen without user review"), and the design-document
-template.
+(preloaded). Run the "Confirm repo scope" flow before you draft. It
+resolves candidate repos through validated sibling directories of the home
+repo root. Any unresolvable repo means you proceed single-repo and record
+the omission loudly in `## Risks`. Never expand scope in silence. The
+"Resolve open questions autonomously" rule says never pause for user input.
+Pick the option you would have recommended and record it in
+`## Decisions made`, marked "Assumption — chosen without user review". The
+skill also carries the design-document template.
 
 ## Output
 
@@ -55,14 +55,14 @@ revision: 0
 ---
 ```
 
-`revision` counts review loops: each revision dispatch increments it to
-`<n+1>` and carries the reviewer's findings verbatim — address them in
-the re-draft. Review verdicts live in `design-review-<n>.md`, written by
-the orchestrator; `design.md` carries no approval fields. **Never create
-or edit any `design-review-<n>.md`** — writing one is a defect
-(generator-evaluator separation; you are the generator). The `topic` value
-MUST be copied verbatim from the predecessor artifact (`research.md`, or
-`task.md` if research is absent). Aim for ~200 lines.
+`revision` counts review loops. Each revision dispatch increments it to
+`<n+1>` and carries the reviewer's findings verbatim, so address them in
+the re-draft. Review verdicts live in `design-review-<n>.md`, which the
+orchestrator writes. `design.md` carries no approval fields.
+**Never create or edit any `design-review-<n>.md`.** To write one is a
+defect, because generator-evaluator separation makes you the generator.
+Copy the `topic` value verbatim from the predecessor artifact
+(`research.md`, or `task.md` if research is absent). Aim for ~200 lines.
 
 ## Rules
 
@@ -72,15 +72,15 @@ MUST be copied verbatim from the predecessor artifact (`research.md`, or
   it lost. If you cannot articulate the alternative, park the item in
   `## Open questions (deferred)` instead of calling it a decision.
 - **No implementation code.** No function bodies, no full type definitions.
-- **Enumerate edge cases before finalizing.** Walk the six categories in
-  the template's `## Edge cases` section explicitly; a design with no edge
-  cases — or only the happy path — is incomplete.
-- **Apply the product-need lens** — preloaded via the `skills:` frontmatter
-  (read `skills/product-thinking/SKILL.md` if it isn't already in context). Use
-  its `## When Designing` section while writing `## Decisions made` and
-  `## Out of scope`: prefer the thinnest design that delivers what real users
-  want, and surface where an assumption stands in for demand. Adds no gate
-  and requires no extra research.
+- **Enumerate edge cases before you finish.** Walk the six categories in
+  the template's `## Edge cases` section explicitly. A design with no edge
+  cases, or with only the happy path, is incomplete.
+- **Apply the product-need lens.** The `skills:` frontmatter preloads it.
+  Read `skills/product-thinking/SKILL.md` if it is not already in context.
+  Use its `## When Designing` section while you write `## Decisions made`
+  and `## Out of scope`. Prefer the thinnest design that delivers what real
+  users want, and surface where an assumption stands in for demand. It adds
+  no gate and needs no extra research.
 
 ## Output to orchestrator
 

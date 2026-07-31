@@ -16,11 +16,11 @@ consumes:
   `file-finder` — they only see `questions.md`.
 - `questions.md` — neutral research questions phrased without intent. The
   only file `researcher` and `file-finder` ever read.
-- `prd.md` — written **only when the request is vague, multi-story,
-  cross-cutting, or replaces existing behavior** (criteria in
-  `skills/product-requirements-doc/SKILL.md`, loaded conditionally via
-  `skills/decomposing-intent/SKILL.md`). Referenced from `task.md`;
-  read downstream by `design-author`.
+- `prd.md` — written
+  **only when the request is vague, multi-story, cross-cutting, or replaces existing behavior**
+  (criteria in `skills/product-requirements-doc/SKILL.md`, loaded
+  conditionally through `skills/decomposing-intent/SKILL.md`). Referenced
+  from `task.md`. read downstream by `design-author`.
 - `repos.md` — written **only when the topic spans more than one
   repository**. Lists each involved repo's slug, absolute path, and
   role. Its presence switches the rest of the pipeline into multi-repo
@@ -38,17 +38,18 @@ ticket-derived slug (`ENG-1234-add-rate-limiting`) or a date-derived slug
 
 - A ticket identifier (e.g. `ENG-1234`) — recorded as `ticketId` on
   `task.md`'s frontmatter. The orchestrator does not call any ticketing
-  system; the ID is stored for the user's reference.
+  system. The ID is stored for the user's reference.
 - An issue URL (e.g. `https://github.com/org/repo/issues/42`) — fetched
   with `gh issue view` (or equivalent) to extract the title and body
   before decomposition.
 - Free-form text — treated directly as the feature/task description.
 
-When `$ARGUMENTS` is empty, **discover, don't demand**: ground in repo context
-before asking. Read recent `git log` activity and the repo's `README` /
-`CLAUDE.md` to propose a likely topic, then use `AskUserQuestion` with labeled
-options to fill any genuine gap in intent. Never bare-stop with a plain
-"describe it" demand when context is already available.
+When `$ARGUMENTS` is empty, **discover, do not demand**: ground in repo
+context before asking. Read recent `git log` activity and the repo's
+`README` / `CLAUDE.md` to propose a likely topic, then use
+`AskUserQuestion` with labeled options to fill any genuine gap in intent.
+Never bare-stop with a plain "describe it" demand when context is already
+available.
 
 ## Execution
 
@@ -71,16 +72,16 @@ options to fill any genuine gap in intent. Never bare-stop with a plain
      description.
 3. **Create `docs/plans/<id>/`** if it does not exist.
 4. **Resume detection.** If `docs/plans/<id>/task.md` already exists,
-   re-read it instead of overwriting; if `questions.md` is missing, the
+   re-read it instead of overwriting. If `questions.md` is missing, the
    questioner only writes `questions.md`.
 5. Dispatch the `questioner` agent with the full description and the
    target directory `docs/plans/<id>/`. The agent writes `task.md` and
    `questions.md`, plus `prd.md` when the request meets the PRD criteria
-   and `repos.md` when it confirms with the user that the topic spans
+   and `repos.md` when it makes sure with the user that the topic spans
    multiple repos.
 6. **Stop once `task.md` and `questions.md` exist on disk** — do not
-   continue to RESEARCH. (`prd.md` and/or `repos.md` may also exist;
-   neither changes the stop condition.)
+   continue to RESEARCH. (`prd.md` or `repos.md` can also exist, neither
+   changes the stop condition.)
 
 ## When to use
 

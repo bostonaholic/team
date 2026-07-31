@@ -9,11 +9,11 @@ nav_label: skills
 # Team Skills
 
 > **The features you use.** Every entry-point skill is a slash command you can
-> run (`/team`, `/team-fix`, …); the methodology skills are the internal
+> run (`/team`, `/team-fix`, …). The methodology skills are the internal
 > building blocks the agents load to do their work.
 >
 > **Source of truth:** the skill bodies themselves, `skills/*/SKILL.md`.
-> This page is a hand-maintained reference; when it disagrees with a
+> This page is a hand-maintained reference. When it disagrees with a
 > `SKILL.md`, the `SKILL.md` wins.
 
 ## Contents
@@ -33,7 +33,7 @@ Markdown body. A single frontmatter field, `argument-hint`, sorts the
 catalog into two flavors:
 
 - **Entry-point skills carry `argument-hint`.** Claude Code registers them
-  as slash commands (`/team`, `/team-research`, and so on); the
+  as slash commands (`/team`, `/team-research`, and so on). The
   `argument-hint` documents what to pass as `$ARGUMENTS`.
 - **Methodology skills omit `argument-hint`.** They are never invoked
   directly. Agents load them through one of two mechanisms: a `skills:`
@@ -46,31 +46,32 @@ catalog into two flavors:
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but five (`shipit`,
 `pr-open-comments`, `pr-watch`, `pr-approve-watch`, and `groom-backlog`)
-are standalone utilities (land a reviewed PR; triage its unresolved review
-feedback; watch it for new feedback; watch it as a reviewer and approve when
-your threads resolve; groom a project backlog). None is a pipeline phase.
-The split is **11 pipeline entry-point + 5 standalone utility + 35
-methodology = 51**.
+are standalone utilities. They land a reviewed PR, triage its unresolved
+review feedback, and watch it for new feedback. They also watch it as a
+reviewer, approve when your threads resolve, and groom a project backlog.
+None is a pipeline phase. The split is
+**11 pipeline entry-point + 5 standalone utility + 35 methodology = 51**.
 
 For *why* the system is shaped this way (the three-tier argument-discovery
-design, the discovery-duplication rationale, and the skill load limits), see
-[architecture.md §6](architecture.md#6-skills). The architecture page
-explains the design; the full per-skill enumeration now lives here.
+design, the discovery-duplication rationale, and the skill load limits),
+see [architecture.md §6](architecture.md#6-skills). The architecture page
+explains the design. The full per-skill enumeration now lives here.
 
 ## Entry-point skills
 
 Each entry-point skill either kicks off a full run (`team`, `team-fix`) or
-drives one phase of the QRSPI pipeline (Worktree, Question, Research,
-Design, Structure, Plan, Implement, PR). What ties most of them together
-is a shared argument-resolution chain and a common body template.
+drives one phase of the QRSPI pipeline. The phases are Worktree, Question,
+Research, Design, Structure, Plan, Implement, and PR. What ties most of
+them together is a shared argument-resolution chain and a common body
+template.
 
 The **downstream phase skills**, `team-question` through `team-pr`, plus
-the optional `eng-design-doc-review`, share a consistent body template: an
-`## Input` section describing `$ARGUMENTS`, an `## Execution` section of
-numbered steps, and a `## Completion` section listing what to report plus
-the `Next: run /team-…` handoff to the next phase. The `team` orchestrator
-does not follow that template; it walks a Phase Loop instead (see its entry
-below).
+the optional `eng-design-doc-review`, share a consistent body template. It
+holds an `## Input` section that describes `$ARGUMENTS` and an
+`## Execution` section of numbered steps. It ends with a `## Completion`
+section that lists what to report, plus the `Next: run /team-…` handoff to
+the next phase. The `team` orchestrator does not follow that template. It
+walks a Phase Loop instead (see its entry below).
 
 **Shared argument resolution (three-tier discovery).** Eight of these
 skills consume an artifact directory rather than a free-form description:
@@ -87,7 +88,7 @@ through the same three-tier chain:
 3. **Tier 3: `AskUserQuestion`.** If discovery is ambiguous, the skill
    asks you which topic to operate on.
 
-The entries below say "resolves `$ARGUMENTS` via the shared three-tier
+The entries below say "resolves `$ARGUMENTS` through the shared three-tier
 chain above" instead of repeating these tiers. The two skills that take a
 free-form description (`team`, `team-question`, `team-fix`) state their own
 argument shape.
@@ -118,15 +119,15 @@ argument shape.
   question set, producing `task.md` and `questions.md`.
 - **`$ARGUMENTS`:** `<ticket id, issue URL, or task description>`.
 - **Phase:** Question (the pipeline's first phase).
-- **Key behaviors:** The only step that sees your original description; it
-  emits the neutral `questions.md` so the downstream research sees only
-  the questions, not your task framing.
+- **Key behaviors:** The only step that sees your original description. It
+  emits the neutral `questions.md` so the downstream research sees only the
+  questions, not your task framing.
 
 ### team-research
 
 - **Purpose:** Run isolated codebase research against the neutral question set.
-- **`$ARGUMENTS`:** `[docs/plans/<id>/]`: optional; resolves via the
-  shared three-tier chain above.
+- **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
+  the shared three-tier chain above.
 - **Phase:** Research (isolated).
 - **Key behaviors:** Reads only `questions.md`, never the task, so the
   research carries no opinion-bias. Writes `research.md`.
@@ -135,20 +136,20 @@ argument shape.
 
 - **Purpose:** Draft the alignment doc and run the adversarial design
   review that gates advancement.
-- **`$ARGUMENTS`:** `[docs/plans/<id>/]`: optional; resolves via the
-  shared three-tier chain above.
+- **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
+  the shared three-tier chain above.
 - **Phase:** Design (design review).
-- **Key behaviors:** Dispatches the design-author (which resolves its own
-  open questions as recorded assumptions) to write a ~200-line
-  `design.md`, then runs the adversarial design-review loop
-  (`design-review-<n>.md`, APPROVE/COMMENT advance, cap 5).
+- **Key behaviors:** Dispatches the design-author to write a ~200-line
+  `design.md`. The design-author resolves its own open questions as
+  recorded assumptions. The skill then runs the adversarial design-review
+  loop (`design-review-<n>.md`, where APPROVE and COMMENT advance, cap 5).
 
 ### team-structure
 
 - **Purpose:** Break the reviewed design into vertical slices with
   per-slice verification checkpoints.
-- **`$ARGUMENTS`:** `[docs/plans/<id>/]`: optional; resolves via the
-  shared three-tier chain above.
+- **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
+  the shared three-tier chain above.
 - **Phase:** Structure (autonomous, no gate).
 - **Key behaviors:** Produces the ~2-page `structure.md`, then advances
   to PLAN automatically.
@@ -157,8 +158,8 @@ argument shape.
 
 - **Purpose:** Turn the structure into a tactical, file-level
   implementation plan.
-- **`$ARGUMENTS`:** `[docs/plans/<id>/]`: optional; resolves via the
-  shared three-tier chain above.
+- **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
+  the shared three-tier chain above.
 - **Phase:** Plan.
 - **Key behaviors:** Writes `plan.md` for the implementer. The plan is a
   tactical artifact, not a human-reviewed gate.
@@ -166,32 +167,33 @@ argument shape.
 ### team-worktree
 
 - **Purpose:** Prepare an isolated git worktree. In a full `/team` run this
-  is the **leading** phase, running before QUESTION so `docs/plans/<id>/` is
-  authored inside the worktree and the home checkout's `git status` stays
-  clean for the whole run.
-- **`$ARGUMENTS`:** `[docs/plans/<id>/]`: optional; resolves via the
-  shared three-tier chain above.
+  is the **leading** phase, and it runs before QUESTION. `docs/plans/<id>/`
+  is thus authored inside the worktree, and the home checkout's
+  `git status` stays clean for the whole run.
+- **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
+  the shared three-tier chain above.
 - **Phase:** Worktree (the first phase).
 - **Key behaviors:** Creates the branch and home worktree first, then
   authors `docs/plans/<id>/` inside it so implementation, and every prior
   phase's artifacts, never touch the main checkout. Loads
   `worktree-isolation` for the single- and multi-repo topology. The
-  confirm dialog fires only on standalone invocation (a full `/team` run
-  creates worktrees without pausing), and multi-repo creation refuses any
-  repo path outside the home repo's sibling set (realpath containment).
+  confirmation dialog fires only on standalone invocation, because a full
+  `/team` run creates worktrees without a pause. Multi-repo creation
+  refuses any repo path outside the home repo's sibling set (realpath
+  containment).
 
 ### team-implement
 
-- **Purpose:** Implement the plan: write tests first, execute slice by
-  slice, then run the adversarial reviewer loop.
-- **`$ARGUMENTS`:** `[docs/plans/<id>/]`: optional; resolves via the
-  shared three-tier chain above.
+- **Purpose:** Implement the plan. Write tests first, work slice by slice,
+  then run the adversarial reviewer loop.
+- **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
+  the shared three-tier chain above.
 - **Phase:** Implement.
 - **Key behaviors:** Runs the test-first → slice-execution → five-reviewer
   verify sub-pipeline. The verify loop sorts findings into Blocking / Major
-  / Minor-and-below tiers; while any Blocking or Major remains it
+  / Minor-and-below tiers. While any Blocking or Major remains it
   re-dispatches the implementer automatically without consulting the user
-  (the no-consult rule), capped at 5 rounds; at the cap, terminal halt.
+  (the no-consult rule), capped at 5 rounds. At the cap, terminal halt.
   Minor-and-below findings are recorded in the PR body's `## Review notes`
   once Blocking and Major are clean, and never surfaced mid-run.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
@@ -200,18 +202,18 @@ argument shape.
 ### team-pr
 
 - **Purpose:** Update the changelog, commit, and open the pull request.
-- **`$ARGUMENTS`:** `[docs/plans/<id>/]`: optional; resolves via the
-  shared three-tier chain above.
+- **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
+  the shared three-tier chain above.
 - **Phase:** PR (the pipeline's final phase).
 - **Key behaviors:** Loads `git-commit` for commit discipline and
-  `changelog` for the changelog update; adds a PR body from its template.
+  `changelog` for the changelog update. Adds a PR body from its template.
   Renders a conditional `## Screenshots` section from ux-reviewer's capture
   manifest (`docs/plans/<id>/screenshots/manifest.md`) and uploads the PNGs
-  through GitHub's user-attachments pipeline so they render inline; any
-  capture or upload failure degrades to a visible note with local paths, and
-  the PR always opens. Leaves the worktree in place after opening the PR so
-  you can iterate; teardown waits until the PR merges or you ask. Completion
-  suggests arming `/pr-watch` once the PR is ready for review.
+  through GitHub's user-attachments pipeline so they render inline. Any
+  capture or upload failure degrades to a visible note with local paths,
+  and the PR always opens. Leaves the worktree in place after opening the
+  PR so you can iterate. Teardown waits until the PR merges or you ask.
+  Completion suggests arming `/pr-watch` once the PR is ready for review.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
   the missing upstream artifacts inline rather than hard-erroring.
 
@@ -229,17 +231,16 @@ argument shape.
 ### eng-design-doc-review
 
 - **Purpose:** Adversarially audit `design.md` with fresh context. Its
-  `## Review brief` doubles as the pipeline's DESIGN review gate;
-  standalone invocation remains available.
-- **`$ARGUMENTS`:** `[docs/plans/<id>/]`: optional; resolves via the
-  shared three-tier chain above.
+  `## Review brief` doubles as the pipeline's DESIGN review gate.
+  Standalone invocation remains available.
+- **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
+  the shared three-tier chain above.
 - **Phase:** Design (review-gate brief) + standalone audit.
 - **Key behaviors:** Dispatches the built-in read-only `Explore` subagent
-  (not the
-  `design-author` agent) so the audit reads the design with fresh eyes.
-  That subagent loads four methodology skills as its review criteria
+  (not the `design-author` agent) so the audit reads the design with fresh
+  eyes. That subagent loads four methodology skills as its review criteria
   (`technical-design-doc`, `code-review`, `engineering-standards`, and
-  `documenting-decisions`), making this an additional consumer of all four.
+  `documenting-decisions`), which makes this one more consumer of all four.
   Points the report's prose at the seventh-grade bar in `writing-prose`.
 
 ## Standalone utilities
@@ -251,149 +252,150 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 - **Purpose:** Land a reviewed pull request: push unpushed commits, wait for
   CI to go green, then squash-merge (the PR title becomes the commit subject).
-- **`$ARGUMENTS`:** `[<pr-number>] [--yes]`: optional PR number override;
-  `--yes` skips the interactive pre-merge confirmation for non-interactive
-  callers.
+- **`$ARGUMENTS`:** `[<pr-number>] [--yes]` is an optional PR number
+  override. `--yes` skips the interactive pre-merge confirmation for
+  non-interactive callers.
 - **Phase:** None. A standalone land action, not part of the pipeline.
-- **Key behaviors:** Discovers the open PR for the current branch via the §2B
-  fallback chain (refuses if there is none, or if it is already merged/closed);
-  pushes any unpushed commits; waits for CI with a mechanically bounded poll
-  (`timeout 1800 gh pr checks --watch --fail-fast --interval 30`); handles a PR
-  that has fallen behind its base (rebase + `--force-with-lease`, never a bare
-  `--force`) and surfaces branch-protection rejections verbatim; merges with
-  `gh pr merge --squash`, building the commit subject from the PR title plus
-  `(#<number>)` so any version in the title lands in `git log`.
-  **Project-agnostic**: it does no versioning,
-  changelog editing, or release work; those, if a project needs them, run in a
-  separate step before `/shipit` (in this repo, the dev `version-bump` skill).
-  Model-invocable, but the merge is irreversible, so three guards replace the
-  former hard flag: it fires only on explicit ship intent ("ship it", "land the
-  PR", `/shipit`) and never on a PR merely being approved or green; the
-  pre-merge confirmation stands unless the caller already carries the user's
-  authorization (`--yes`); and the CI-green wait gates the merge mechanically.
+- **Key behaviors:** Discovers the open PR for the current branch through
+  the §2B fallback chain (refuses if there is none, or if it is already
+  merged/closed). Pushes any unpushed commits. Waits for CI with a
+  mechanically bounded poll
+  (`timeout 1800 gh pr checks --watch --fail-fast --interval 30`). Handles
+  a PR that has fallen behind its base (rebase + `--force-with-lease`,
+  never a bare `--force`) and surfaces branch-protection rejections
+  verbatim. It merges with `gh pr merge --squash`, building the commit
+  subject from the PR title plus `(#<number>)` so any version in the title
+  lands in `git log`. **Project-agnostic**: it does no versioning,
+  changelog editing, or release work. Those, if a project needs them, run
+  in a separate step before `/shipit` (in this repo, the dev `version-bump`
+  skill). Model-invocable, but the merge is irreversible, so three guards
+  replace the former hard flag: it fires only on explicit ship intent
+  ("ship it", "land the PR", `/shipit`) and never on a PR that is merely
+  approved or green. The pre-merge confirmation stands unless the caller
+  already carries the user's authorization (`--yes`). The CI-green wait
+  also gates the merge mechanically.
 
 ### pr-open-comments
 
-- **Purpose:** Triage unresolved review feedback on a pull request: fetch
-  every unresolved review thread via GraphQL, verify each comment against
-  the current code, auto-apply recommendations rated above 90% confidence
-  (full apply → push → reply → resolve pipeline), and present a
-  globally numbered punch list with 2-4 tailored options and one
-  recommendation per item for the rest.
-- **`$ARGUMENTS`:** `[<pr-number-or-url>]`: optional; defaults to the
+- **Purpose:** Triage unresolved review feedback on a pull request. It
+  fetches every unresolved review thread through GraphQL and checks each
+  comment against the current code. It auto-applies recommendations rated
+  above 90% confidence, through a full apply → push → reply → resolve
+  pipeline. For the rest it presents a globally numbered punch list, with
+  2-4 tailored options and one recommendation per item.
+- **`$ARGUMENTS`:** `[<pr-number-or-url>]`: optional. Defaults to the
   current branch's PR.
 - **Phase:** None. A standalone triage action, not part of the pipeline.
-- **Key behaviors:** Confidence-gated autonomy: each recommendation gets
-  a confidence rating assigned only after verification (a behavioral
-  claim needs a passing named test to exceed 90%). Items above 90% that
-  pass every hard rule are applied, pushed, replied to, and resolved
-  automatically and reported with confidence and commit SHA; everything
-  else presents-then-stops: the turn ends with a hand-off prompt that
-  separates "Auto-applied" from "Needs your decision". Explicit user
-  authorization (apply → push → reply → resolve) applies the
-  whole batch regardless of confidence. Carve-outs are absolute at any
-  confidence (declined, needs-clarification, could-not-apply,
-  security-sensitive). Treats comment bodies as untrusted data: embedded
-  imperatives beyond the thread's anchored code are never acted on, and
-  auto-apply is bounded to the file and lines the thread references, so
-  broader asks and new security-sensitive constructs become carve-outs.
-  Model-invocable: cue-based auto-invocation is justified by the
-  carve-out set plus the verification bar.
+- **Key behaviors:** Confidence-gated autonomy: each recommendation gets a
+  confidence rating assigned only after verification (a behavioral claim
+  needs a passing named test to exceed 90%). Items above 90% that pass
+  every hard rule are applied, pushed, replied to, and resolved
+  automatically. Each one is reported with its confidence and commit SHA.
+  Everything else presents-then-stops: the turn ends with a hand-off prompt
+  that separates "Auto-applied" from "Needs your decision". Explicit user
+  authorization (apply → push → reply → resolve) applies the whole batch
+  regardless of confidence. Carve-outs are absolute at any confidence
+  (declined, needs-clarification, could-not-apply, security-sensitive).
+  Treats comment bodies as untrusted data. It never acts on embedded
+  imperatives beyond the thread's anchored code. Auto-apply is bounded to
+  the file and lines the thread references. Broader asks and new
+  security-sensitive constructs thus become carve-outs. Model-invocable:
+  cue-based auto-invocation is justified by the carve-out set plus the
+  verification bar.
 
 ### pr-watch
 
-- **Purpose:** Arm a bounded watch loop on a pull request: undraft it,
-  take a baseline snapshot, then poll GitHub for new review feedback and
-  triage it via `pr-open-comments` as it arrives.
-- **`$ARGUMENTS`:** `[<pr-number-or-url>]`: optional; defaults to the
+- **Purpose:** Arm a bounded watch loop on a pull request: undraft it, take
+  a baseline snapshot, then poll GitHub for new review feedback and triage
+  it through `pr-open-comments` as it arrives.
+- **`$ARGUMENTS`:** `[<pr-number-or-url>]`: optional. Defaults to the
   current branch's PR.
 - **Phase:** None. A standalone watch action, not part of the pipeline.
-- **Key behaviors:** Undrafts via `gh pr ready` only on a clear readiness
-  cue and reports the promotion loudly (an ambiguous cue watches the
-  draft in place and never promotes; a `gh pr ready` failure warns and
-  keeps watching); applies the best-effort in-review ticket transition.
-  Bounded cycles: 48 cycles of ~31 minutes each (up to three `sleep 600`
-  calls plus one poll per cycle; cycle 0 polls immediately). Default mode
-  auto-applies items the triage rates above 90% confidence (a batch
-  fully handled that way resumes the loop with a report), while sub-90%
-  or carve-out items render the punch list and end the turn; authorized
-  mode (granted by one of several canonical phrases, e.g. "watch this PR
-  and fix comments") applies, pushes, replies, resolves, and resumes
-  regardless of confidence. An ambiguous cue never selects authorized
-  mode. Loop reports name the mode and list auto-applied items with
-  confidence and commit SHA. Stops on approval, merge, close, user interrupt,
-  cycle-48 timeout, or 3 consecutive poll failures. On approval it runs a
-  final triage pass and hands off with `Next: run /shipit`; it never
-  auto-runs `/shipit`. Model-invocable: it promotes a draft only on an
-  unambiguous readiness cue and reports the promotion loudly, so
-  cue-based auto-invocation is safe.
+- **Key behaviors:** Undrafts through `gh pr ready` only on a clear
+  readiness cue, and reports the promotion loudly. An ambiguous cue watches
+  the draft in place and never promotes. A `gh pr ready` failure warns and
+  keeps watching. It applies the best-effort in-review ticket transition.
+  Bounded cycles: 48 cycles of ~31 minutes each. Each cycle makes up to
+  three `sleep 600` calls plus one poll, and cycle 0 polls immediately.
+  Default mode auto-applies items the triage rates above 90% confidence. A
+  batch fully handled that way resumes the loop with a report. Sub-90% or
+  carve-out items render the punch list and end the turn. Authorized mode
+  (granted by one of several canonical phrases, e.g. "watch this PR and fix
+  comments") applies, pushes, replies, resolves, and resumes regardless of
+  confidence. An ambiguous cue never selects authorized mode. Loop reports
+  name the mode and list auto-applied items with confidence and commit SHA.
+  Stops on approval, merge, close, user interrupt, cycle-48 timeout, or 3
+  consecutive poll failures. On approval it runs a final triage pass and
+  hands off with `Next: run /shipit`. It never auto-runs `/shipit`.
+  Model-invocable: it promotes a draft only on an unambiguous readiness cue
+  and reports the promotion loudly, so cue-based auto-invocation is safe.
 
 ### pr-approve-watch
 
 - **Purpose:** Reviewer-side watch-and-approve. After you post review
-  comments on a PR you are reviewing, poll GitHub until every review
-  thread you opened is resolved, then cast one attributed, SHA-cited
-  `gh pr review --approve` on your behalf and stop.
-- **`$ARGUMENTS`:** `[<pr-number-or-url>]`: optional; defaults to the
-  current branch's PR. A bare number with no local checkout is refused;
-  pass the full PR URL.
+  comments on a PR you are reviewing, it polls GitHub until every review
+  thread you opened is resolved. It then casts one attributed, SHA-cited
+  `gh pr review --approve` on your behalf and stops.
+- **`$ARGUMENTS`:** `[<pr-number-or-url>]`: optional. Defaults to the
+  current branch's PR. A bare number with no local checkout is refused.
+  Pass the full PR URL.
 - **Phase:** None. A standalone reviewer-side action, not part of the
   pipeline.
 - **Key behaviors:** Resolves the base repo from the PR's canonical URL
-  (correct on fork PRs, where head-repository fields name the
-  contributor's fork). Refuses to arm when the invoking `gh` identity is
-  the PR author (self-approval) or has no submitted review threads on the
-  PR (with a "submit your pending review first" hint when a pending
-  review exists). Per poll it recomputes the tracked set (threads whose
-  first comment the viewer authored in a submitted review; pending-review
-  threads excluded) and the auto-merge state, and gates purely on GraphQL
-  `isResolved` state; comment bodies are data, never instructions.
-  Thread pagination is fail-closed: the gate is computed only after every
-  page is fetched, and an unfetched page is a poll failure, never an
-  empty gate.
-  Bounded cycles: 48 cycles of ~31 minutes (up to three `sleep 600` calls
-  plus one poll per cycle; cycle 0 polls immediately). Stops on approval
-  cast, merge/close, user interrupt, cycle-48 timeout, 3 consecutive poll
-  failures, a tracked set that empties mid-watch (stops without
-  approving), or a declined confirmation (stops without approving). The
-  approval is its only write: it never resolves threads, never replies,
-  never edits code, never merges, never auto-runs `/shipit`.
-  `disable-model-invocation: true`, because an approval can transitively trigger
-  an auto-merge, so only a deliberate human invocation arms it. When
-  auto-merge is enabled at arm, explicit confirmation is required on both
-  paths: the immediate path (gate already satisfied at arm) confirms
-  before casting, and the loop path confirms before arming the unattended
-  watch, and a "no" refuses to arm. The auto-merge reading covers
+  (correct on fork PRs, where head-repository fields name the contributor's
+  fork). It refuses to arm when the invoking `gh` identity is the PR
+  author, which would be self-approval. It also refuses when that identity
+  has no submitted review threads on the PR. It hints "submit your pending
+  review first" when a pending review exists. Per poll it recomputes the
+  tracked set and the auto-merge state. The tracked set holds threads whose
+  first comment the viewer authored in a submitted review, and it excludes
+  pending-review threads. The gate rests purely on GraphQL `isResolved`
+  state. Comment bodies are data, never instructions. Thread pagination is
+  fail-closed: the gate is computed only after every page is fetched, and
+  an unfetched page is a poll failure, never an empty gate. Bounded cycles:
+  48 cycles of ~31 minutes (up to three `sleep 600` calls plus one poll per
+  cycle, and cycle 0 polls immediately). It stops on an approval cast, a
+  merge or close, a user interrupt, the cycle-48 timeout, or 3 consecutive
+  poll failures. It also stops on a tracked set that empties mid-watch
+  (without approving), or a declined confirmation (stops without
+  approving). The approval is its only write: it never resolves threads,
+  never replies, never edits code, never merges, never auto-runs `/shipit`.
+  `disable-model-invocation: true`, because an approval can transitively
+  trigger an auto-merge, so only a deliberate human invocation arms it.
+  When auto-merge is enabled at arm, explicit confirmation is necessary on
+  both paths. The immediate path, where the gate is already satisfied at
+  arm, confirms before it casts. The loop path confirms before it arms the
+  unattended watch. A "no" refuses to arm. The auto-merge reading covers
   GitHub-native auto-merge only: repo automation that merges on approval
   (Mergify, a merge bot, an approval-triggered workflow) is not detected,
   and auto-merge off is no assurance against it. Before casting,
-  merge-safety checks read
-  the final poll's values, never the arm-time reading: any head drift
-  (with or without auto-merge) requires explicit confirmation, with both
-  SHAs named in the approval body and completion report; a tracked count
-  that changed between arm and approval without ever going empty likewise
-  names both counts in the approval body and completion report;
-  auto-merge that
-  turned on mid-watch (no arm-time confirmation) requires confirmation
-  even without drift; a granted confirmation triggers a fresh poll and
-  re-check before casting (bounded, so confirmation churn stops the run
-  rather than looping); and an arm-time head SHA lost to compaction fails
-  closed: it is printed in the arm report and every poll snapshot, never
-  re-derived from the current head, and never approved unconfirmed. Every
-  GitHub read is minimized to structural fields (logins, review states,
-  `isResolved`, SHAs): the arm read via a `--jq` projection, the poll
-  via a selection set that fetches no body fields, so review bodies, PR
-  descriptions, and profile display names never enter context.
+  merge-safety checks read the final poll's values, never the arm-time
+  reading: any head drift (with or without auto-merge) requires explicit
+  confirmation, with both SHAs named in the approval body and completion
+  report. A tracked count that changed between arm and approval without
+  ever going empty likewise names both counts in the approval body and
+  completion report. auto-merge that turned on mid-watch (no arm-time
+  confirmation) requires confirmation even without drift. A granted
+  confirmation triggers a fresh poll and re-check before casting (bounded,
+  so confirmation churn stops the run rather than looping). An arm-time
+  head SHA lost to compaction also fails closed: it is printed in the arm
+  report and every poll snapshot, never re-derived from the current head,
+  and never approved unconfirmed. Every GitHub read is minimized to
+  structural fields (logins, review states, `isResolved`, SHAs). The arm
+  read goes through a `--jq` projection. The poll goes through a selection
+  set that fetches no body fields. Review bodies, PR descriptions, and
+  profile display names thus never enter context.
 
 
 ### groom-backlog
 
-- **Purpose:** Groom a project backlog in an issue tracker: load the whole
-  board in bulk, compute a gap inventory, cluster open issues by outcome,
-  place each cluster under a grouping construct whose description states a
-  verifiable property, find the dependencies between tickets and propose the
-  missing links, fix triage/priority/label/state hygiene, and report what was
-  deliberately left alone.
+- **Purpose:** Groom a project backlog in an issue tracker. It loads the
+  whole board in bulk, computes a gap inventory, and clusters open issues
+  by outcome. It places each cluster under a grouping construct whose
+  description states a verifiable property. It finds the dependencies
+  between tickets and proposes the missing links. It fixes triage,
+  priority, label, and state hygiene, then reports what it deliberately
+  left alone.
 - **`$ARGUMENTS`:** `[<project-number-or-url>] [--promote <issue-number>]`:
   both optional. With no board reference it discovers the visible projects and
   uses the only one, stopping and listing them if more than one is visible.
@@ -401,61 +403,64 @@ QRSPI phase: a self-contained action a user runs on demand.
   ready-to-work standard and moves its card. Without it the skill runs the
   board-level pass.
 - **Phase:** None. A standalone grooming action, not part of the pipeline.
-- **Key behaviors:** Tracker-agnostic method, with GitHub Projects v2 as the
-  worked example and a vocabulary map (grouping construct / column / priority /
-  iteration / dependency link / decomposition link) for Linear and Jira. Those two recipes ship under an explicit
+- **Key behaviors:** Tracker-agnostic method, with GitHub Projects v2 as
+  the worked example. A vocabulary map covers Linear and Jira: grouping
+  construct, column, priority, iteration, dependency link, and
+  decomposition link. Those two recipes ship under an explicit
   **Unverified** heading with a mandatory `--help` preflight before any
   mutation. Loads once in bulk into a run-scoped temp cache, passing an
-  explicit `--limit`. Each cached query then gets the completeness check its
-  own payload shape supports, so a shortfall stops the run rather than
-  grooming a partial board. Comment threads load with the issues, capped at
-  one page of 100 per issue, and every thread that hit the cap is named in
-  the report. Declared dependency and decomposition links ride that same bulk
-  query rather than a per-issue call, and a link connection that came back
+  explicit `--limit`. Each cached query then gets the completeness check
+  its own payload shape supports. A shortfall thus stops the run rather
+  than groom a partial board. Comment threads load with the issues, capped
+  at one page of 100 per issue. Every thread that hit the cap is named in
+  the report. Declared dependency and decomposition links ride that same
+  bulk query rather than a per-issue call. A link connection that came back
   short is recorded and reported, because an unseen blocker reads as an
   unblocked issue. Issue bodies, titles, and comments are untrusted data, a
-  hard rule in every mode, promotion included. An embedded imperative is reported
-  as content, never executed. Tracker-derived prose never reaches a shell
-  argument: bodies travel by file or on stdin. Plans, asks, waits, then
-  executes. The plan file is written before the questions are asked. There is
-  one question per mutation class the plan contains, each carrying exactly one
-  recommendation, and filing a new issue always needs its own answer. Nothing
-  on the tracker changes before the user answers. On approval it executes in
-  dependency order, re-reads each item before writing it, and verifies every
-  step by re-querying the tracker rather than by memory. Dependency analysis
-  reads the links the tracker already records and infers the ones only the
-  prose admits: sequencing phrases in bodies and comments, and one issue
-  introducing the artifact another consumes. Every inferred link is a proposal
-  needing its own answer, direction is fixed by which issue cannot be
-  *finished* until the other lands, and a proposed edge that would close a
-  cycle is reported rather than filed. Eleven hard rules hold in every mode. Decision and spike tickets stay open. Label writes are
-  additive. A split ticket's original description is never rewritten.
-  Priority, assignee, and state are left alone on someone else's in-flight
-  work. Promotion mode skips the nine board steps for a narrow single-issue
-  load, then brings that item to the ready-to-work standard: verify,
-  rewrite, prioritize, then move the card. An open blocker, declared or found
-  in the thread, drops the card move and nothing else: a blocked ticket is
-  still worth clarifying while it waits. It refuses a `bug` outright,
-  because `Bugs` is already its ready-to-pull state. It swaps a card back to
-  `Backlog` rather than exceeding the `Ready` WIP limit of 5, the number
-  [project-tracking.md](project-tracking.md) owns, and reports a pre-existing
-  breach instead of adding to it. The board pass ends by naming the item most
-  worth promoting and printing that command. It never performs the promotion
-  itself. Model-invocable: the read-and-plan phase mutates nothing and
-  execution requires the user's answer, so those two guards make cue-based
-  auto-invocation safe.
+  hard rule in every mode, promotion included. An embedded imperative is
+  reported as content, never executed. Tracker-derived prose never reaches
+  a shell argument: bodies travel by file or on stdin. Plans, asks, waits,
+  then executes. The plan file is written before the questions are asked.
+  There is one question per mutation class the plan contains, each carrying
+  exactly one recommendation, and filing a new issue always needs its own
+  answer. Nothing on the tracker changes before the user answers. On
+  approval it executes in dependency order, re-reads each item before
+  writing it, and verifies every step by re-querying the tracker rather
+  than by memory. Dependency analysis reads the links the tracker already
+  records and infers the ones only the prose admits: sequencing phrases in
+  bodies and comments, and one issue introducing the artifact another
+  consumes. Every inferred link is a proposal needing its own answer,
+  direction is fixed by which issue cannot be *finished* until the other
+  lands, and a proposed edge that would close a cycle is reported rather
+  than filed. Eleven hard rules hold in every mode. Decision and spike
+  tickets stay open. Label writes are additive. A split ticket's original
+  description is never rewritten. Priority, assignee, and state are left
+  alone on someone else's in-flight work. Promotion mode skips the nine
+  board steps for a narrow single-issue load. It then brings that item to
+  the ready-to-work standard: check it, rewrite it, prioritize it, then
+  move the card. An open blocker, declared or found in the thread, drops
+  the card move and nothing else: a blocked ticket is still worth
+  clarifying while it waits. It refuses a `bug` outright, because `Bugs` is
+  already its ready-to-pull state. It swaps a card back to `Backlog` rather
+  than exceed the `Ready` WIP limit of 5, the number that
+  [project-tracking.md](project-tracking.md) owns. It reports a
+  pre-existing breach instead of an addition to it. The board pass ends by
+  naming the item most worth promoting and printing that command. It never
+  performs the promotion itself. Model-invocable: the read-and-plan phase
+  mutates nothing and execution requires the user's answer, so those two
+  guards make cue-based auto-invocation safe.
 
 ## Methodology skills
 
 The 35 methodology skills carry no `argument-hint` and are never invoked
-directly. Agents load them through one of two mechanisms: a `skills:` YAML
-list in the agent's frontmatter, or an inline prose load instruction in
-the agent body (see the "Two flavors of skill" section above). The
-"Loaded by" line for each skill names its consumers from the per-agent
-load manifest; an agent typically loads at most three. An agent's own
-extracted procedure skill does not count toward that soft limit: it
-replaces former inline body content 1:1, so it adds no net context (see
-[architecture.md](architecture.md#design-guidelines)).
+directly. Agents load them through one of two mechanisms. The first is a
+`skills:` YAML list in the agent's frontmatter. The second is an inline
+prose load instruction in the agent body. See the "Two flavors of skill"
+section above. The "Loaded by" line for each skill names its consumers from
+the per-agent load manifest. An agent typically loads at most three. An
+agent's own extracted procedure skill does not count toward that soft
+limit: it replaces former inline body content 1:1, so it adds no net
+context (see [architecture.md](architecture.md#design-guidelines)).
 
 ### qrspi-workflow
 
@@ -465,20 +470,20 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Key behaviors:** The structural backbone of the pipeline: defines the
   phase sequence, the gate mechanics (severity tiers and the no-consult
   rule for the aggregate review gate), the phase-inference table, and an
-  anti-patterns catalog. The artifact/frontmatter schema it once carried
-  is canonical in `artifact-frontmatter`; this skill keeps pointers.
+  anti-patterns catalog. The artifact/frontmatter schema it once carried is
+  canonical in `artifact-frontmatter`. This skill keeps pointers.
 
 ### artifact-frontmatter
 
 - **Purpose:** The artifact schema contract for `docs/plans/<id>/`.
 - **Loaded by:** orchestrator skills and artifact-authoring agents
-  just-in-time via pointers (qrspi-workflow, decomposing-intent, `team`);
-  no agent preloads it.
-- **Key behaviors:** Carries the artifact inventory and `<id>` forms, the
-  YAML frontmatter schema and phase enum, the `repos.md` and `prd.md`
-  schemas, the topic-consistency invariant, the `ticketId` scope rule,
-  and the design-review record mechanics (`design-review-<n>.md`
-  verdicts). Defers to
+  just-in-time through pointers (qrspi-workflow, decomposing-intent,
+  `team`). No agent preloads it.
+- **Key behaviors:** Carries the artifact inventory and `<id>` forms, plus
+  the YAML frontmatter schema and phase enum. It also carries the
+  `repos.md` and `prd.md` schemas, the topic-consistency invariant, the
+  `ticketId` scope rule, and the design-review record mechanics
+  (`design-review-<n>.md` verdicts). Defers to
   `hooks/session-start-recover.mjs` as the executable canon for
   `ID_RE`/`PHASE_FILES` rather than forking them.
 
@@ -508,10 +513,10 @@ replaces former inline body content 1:1, so it adds no net context (see
   Question phase.
 - **Loaded by:** questioner.
 - **Key behaviors:** Carries the `task.md` and `questions.md` body
-  templates, the topic-slug rules, the process steps, and the multi-repo
-  detection flow (autonomous allowlist + sibling-directory resolution
-  with realpath containment and the loud single-repo fallback, plus the
-  `repos.md` schema pointer). Conditionally loads
+  templates, the topic-slug rules, and the process steps. It also carries
+  the multi-repo detection flow: an autonomous allowlist, sibling-directory
+  resolution with realpath containment, the loud single-repo fallback, and
+  the `repos.md` schema pointer. Conditionally loads
   `product-requirements-doc` for vague, multi-story, cross-cutting, or
   behavior-replacing requests, producing `prd.md` alongside `task.md`.
 
@@ -519,35 +524,35 @@ replaces former inline body content 1:1, so it adds no net context (see
 
 - **Purpose:** Design-document authoring procedure for the Design phase.
 - **Loaded by:** design-author.
-- **Key behaviors:** Carries the repo-scope confirmation flow, the
-  autonomous open-questions resolution rule (self-resolved choices land
-  in `## Decisions made` marked "Assumption — chosen without user
-  review"), and the `design.md` document
-  template with its six-category edge-case walk. When `task.md`
-  references a `prd.md`, reads it first and honors its scope boundaries
-  and acceptance criteria per `product-requirements-doc`'s "Consuming a
-  PRD downstream" section.
+- **Key behaviors:** Carries the repo-scope confirmation flow and the
+  autonomous open-questions resolution rule. Self-resolved choices land in
+  `## Decisions made`, marked "Assumption — chosen without user review". It
+  also carries the `design.md` document template with its six-category
+  edge-case walk. When `task.md` references a `prd.md`, reads it first and
+  honors its scope boundaries and acceptance criteria per
+  `product-requirements-doc`'s "Consuming a PRD downstream" section.
 
 ### slicing-work
 
 - **Purpose:** Vertical-slice breakdown methodology for the Structure
   phase.
 - **Loaded by:** structure-planner.
-- **Key behaviors:** Carries the vertical-slice rationale, the
-  `structure.md` document format, the slicing rules (every slice ends in a
-  passing test; 1-3 acceptance tests per slice; edge cases pulled from the
-  design; order by user value), and the slicing heuristics
-  (walking-skeleton first; migrations alone are never a slice).
+- **Key behaviors:** Carries the vertical-slice rationale and the
+  `structure.md` document format. Its slicing rules are that every slice
+  ends in a passing test and holds 1-3 acceptance tests. Edge cases come
+  from the design, and slices order by user value. The skill also carries
+  the slicing heuristics: walking-skeleton first, and migrations alone are
+  never a slice.
 
 ### planning-implementation
 
 - **Purpose:** Tactical planning methodology for the Plan phase.
 - **Loaded by:** planner.
 - **Key behaviors:** Carries the `plan.md` document template that expands
-  each vertical slice into file-level steps with acceptance-test mappings,
-  and the tactical rules (one slice at a time, reuse over reinvention,
-  under 300 lines, no implementation code, atomic slices, test coverage
-  matching the structure).
+  each vertical slice into file-level steps with acceptance-test mappings.
+  Its tactical rules are one slice at a time, reuse over reinvention, and
+  under 300 lines. It also forbids implementation code, keeps slices
+  atomic, and matches test coverage to the structure.
 
 ### code-review
 
@@ -555,61 +560,61 @@ replaces former inline body content 1:1, so it adds no net context (see
   vocabulary.
 - **Loaded by:** code-reviewer, security-reviewer, ux-reviewer,
   technical-writer (4).
-- **Key behaviors:** Defines how a reviewer reads with fresh eyes and
-  emits a structured verdict. Findings use the format defined in
-  `conventional-comments` (except the ux-reviewer's, whose live-verification
-  report uses its own Working/Broken/Could Improve format); the gate-type and
-  severity-tier map lives in `review-severity-tiers`.
-  Points review-comment prose at the seventh-grade bar
-  in `writing-prose`. Carries the Comment red flags check with its split
-  severity regime: ticket/plan references and TODO/FIXME comments in code
-  comments block on first occurrence, while what-restating comments,
-  wordy comments, and commented-out code escalate from `suggestion:` to
-  `issue:` when repeated across the diff. Also carries the Code Reviewer
-  inspection process (done-criteria verification and the per-file
-  inspection checklist); the security review methodology lives in
+- **Key behaviors:** Defines how a reviewer reads with fresh eyes and emits
+  a structured verdict. Findings use the format defined in
+  `conventional-comments`. The ux-reviewer is the exception: its
+  live-verification report uses its own Working/Broken/Could Improve
+  format. The gate-type and severity-tier map lives in
+  `review-severity-tiers`. Points review-comment prose at the seventh-grade
+  bar in `writing-prose`. Carries the Comment red flags check with its
+  split severity regime. Ticket or plan references and TODO or FIXME
+  comments in code comments block on first occurrence. What-restating
+  comments, wordy comments, and commented-out code escalate from
+  `suggestion:` to `issue:` when repeated across the diff. Also carries the
+  Code Reviewer inspection process (done-criteria verification and the
+  per-file inspection checklist). The security review methodology lives in
   `reviewing-security`.
 
 ### conventional-comments
 
 - **Purpose:** The Conventional Comments format for review findings.
-- **Loaded by:** code-reviewer, security-reviewer, technical-writer (3);
-  the `eng-design-doc-review` subagent loads it for its findings. The
+- **Loaded by:** code-reviewer, security-reviewer, and technical-writer
+  (3), the `eng-design-doc-review` subagent loads it for its findings. The
   `ux-reviewer` does not preload it: its Working/Broken/Could Improve
   report is not Conventional Comments.
-- **Key behaviors:** Carries the label and decoration syntax, the
-  code-directed comment style (critique the code, not the coder), and the
-  three comment types (`issue`, `suggestion`, `nitpick`) with literal
-  examples. Every comment includes a specific `file:line` reference.
+- **Key behaviors:** Carries the label and decoration syntax and the
+  code-directed comment style, which critiques the code and not the coder.
+  It also carries the three comment types (`issue`, `suggestion`, and
+  `nitpick`) with literal examples. Every comment includes a specific
+  `file:line` reference.
 
 ### reviewing-security
 
 - **Purpose:** Security review methodology and the severity ladder.
 - **Loaded by:** security-reviewer.
-- **Key behaviors:** Carries the Security Reviewer process:
-  attack-surface identification, OWASP Top 10 checks, the additional
-  vulnerability checks (hardcoded secrets, command injection, path
-  traversal, unsafe regex, missing input validation), and the
-  search-beyond-the-diff rule, plus the CRITICAL/HIGH/MEDIUM/LOW
-  severity classification ladder (CRITICAL and HIGH are hard gates).
-  The PASS/FAIL verdict rule stays in `code-review`.
+- **Key behaviors:** Carries the Security Reviewer process: attack-surface
+  identification and OWASP Top 10 checks. The extra vulnerability checks
+  cover hardcoded secrets, command injection, path traversal, unsafe regex,
+  and missing input validation. It also carries the search-beyond-the-diff
+  rule and the CRITICAL/HIGH/MEDIUM/LOW severity classification ladder, in
+  which CRITICAL and HIGH are hard gates. The PASS/FAIL verdict rule stays
+  in `code-review`.
 
 ### review-severity-tiers
 
 - **Purpose:** The authoritative severity-tier map for aggregating
   reviewer verdicts.
 - **Loaded by:** the orchestrator (`team`, `team-implement`,
-  `qrspi-workflow` cross-reference it at the aggregate review gate); no
+  `qrspi-workflow` cross-reference it at the aggregate review gate). No
   agent preloads it.
-- **Key behaviors:** Carries the gate-type table (HARD / AUTO-FIX /
-  ADVISORY per reviewer) and the authoritative severity-tier table
-  (Blocking / Major / Minor-and-below) that maps every reviewer
-  vocabulary onto one scale, plus the no-consult rule. Findings are
-  never presented mid-run: the orchestrator loops the implementer
-  automatically on Blocking/Major and defers Minor-and-below to the PR
-  body's `## Review notes`, capped at 5 rounds (at the cap, terminal
-  halt). Classifies `ux-reviewer` REQUEST CHANGES as an auto-fixed
-  Major.
+- **Key behaviors:** Carries the gate-type table (HARD, AUTO-FIX, or
+  ADVISORY per reviewer) and the no-consult rule. It also carries the
+  authoritative severity-tier table (Blocking, Major, or Minor-and-below),
+  which maps every reviewer vocabulary onto one scale. Findings are never
+  presented mid-run: the orchestrator loops the implementer automatically
+  on Blocking/Major and defers Minor-and-below to the PR body's
+  `## Review notes`, capped at 5 rounds (at the cap, terminal halt).
+  Classifies `ux-reviewer` REQUEST CHANGES as an auto-fixed Major.
 
 ### engineering-standards
 
@@ -617,34 +622,35 @@ replaces former inline body content 1:1, so it adds no net context (see
   quality checklist.
 - **Loaded by:** planner, implementer, code-reviewer (3).
 - **Key behaviors:** Anchors planning and implementation in a shared
-  standard so reviewers check against the same bar. Owns the binding Code
-  Comments rule set (why-only comments, rewrite before commenting, no
-  ticket/plan references, no commented-out code, no TODO/FIXME in
-  delivered code, doc comments on public interfaces exempt) and the
-  Comment Discipline quality-checklist item that reviewer findings cite.
+  standard so reviewers check against the same bar. It owns the binding
+  Code Comments rule set: why-only comments, a rewrite before a comment, no
+  ticket or plan references, no commented-out code, and no TODO or FIXME in
+  delivered code. Doc comments on public interfaces are exempt. It also
+  owns the Comment Discipline quality-checklist item that reviewer findings
+  cite.
 
 ### test-first-development
 
 - **Purpose:** Treat acceptance tests as the immutable scope fence.
-- **Loaded by:** test-architect, code-reviewer; orchestrator.
-- **Key behaviors:** Tests are written first and never edited to pass; the
+- **Loaded by:** test-architect, code-reviewer, and the orchestrator.
+- **Key behaviors:** Tests are written first and never edited to pass. The
   implementation must satisfy them as the contract. The style rules every
   acceptance test follows live in `test-style`.
 
 ### test-style
 
 - **Purpose:** Test style rules and the flaky-test red-flag catalog.
-- **Loaded by:** test-architect and code-reviewer just-in-time, via
+- **Loaded by:** test-architect and code-reviewer just-in-time, through
   pointers from `test-first-development` and `code-review` (no agent
   preloads it).
 - **Key behaviors:** Carries the full style-rule set:
-  behavior-not-implementation, DAMP setup, narrow assertions, actionable
-  failures, the deterministic-input rules (control the clock, seed all
-  randomness, own your state, impose order, hermetic boundaries), the
-  fidelity ladder, plus the audit checklist and the single copy of the
-  reviewer-facing flaky-test red-flag catalog with its canonical
-  time-bomb example pair. The always-blocking severity regime for flaky
-  flags stays in `code-review`.
+  behavior-not-implementation, DAMP setup, narrow assertions, and
+  actionable failures. It also carries the deterministic-input rules
+  (control the clock, seed all randomness, own your state, impose order,
+  and keep hermetic boundaries) and the fidelity ladder. It holds the audit
+  checklist too, plus the single copy of the reviewer-facing flaky-test
+  red-flag catalog with its canonical time-bomb example pair. The
+  always-blocking severity regime for flaky flags stays in `code-review`.
 
 ### test-driven-bug-fix
 
@@ -672,23 +678,23 @@ replaces former inline body content 1:1, so it adds no net context (see
 
 - **Purpose:** Slice-by-slice execution procedure for the Implement phase.
 - **Loaded by:** implementer.
-- **Key behaviors:** Defines the implementer's two dispatch modes (initial
-  and review-fix with typed failure classes), the slice-execution loop
-  (implement the steps, run the slice's acceptance tests, commit
-  atomically, report), TDD discipline within a slice, blocker handling,
-  and the scope fence (acceptance tests are immutable; no slices beyond
-  the plan).
+- **Key behaviors:** Defines the implementer's two dispatch modes: initial,
+  and review-fix with typed failure classes. It defines the slice-execution
+  loop, in which the implementer implements the steps, runs the slice's
+  acceptance tests, commits atomically, and reports. It also defines TDD
+  discipline within a slice, blocker handling, and the scope fence.
+  Acceptance tests are immutable, and no slices go beyond the plan.
 
 ### systematic-debugging
 
 - **Purpose:** Evidence-first root-cause diagnosis.
 - **Loaded by:** the implementer's preloaded `implementing-slices` skill
-  carries an inline **conditional** `Load
-  skills/systematic-debugging/SKILL.md` directive, fired only on a
+  carries an inline **conditional**
+  `Load skills/systematic-debugging/SKILL.md` directive, fired only on a
   **non-obvious** mid-slice failure (it drills the Root Cause Analysis (5
   Whys) chain before editing). For every other agent it remains
   **advisory**: no static `Load skills/<name>/SKILL.md` instruction names
-  it; those agents load it on demand when an investigation begins.
+  it. Those agents load it on demand when an investigation begins.
 - **Key behaviors:** Gather evidence before theorizing, then isolate the
   root cause rather than patching symptoms.
 
@@ -697,12 +703,12 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Purpose:** Mechanical verification procedure for the Implement phase's
   verify gate.
 - **Loaded by:** verifier.
-- **Key behaviors:** Detect the checks the project configures (scripts,
-  Makefile targets, CI steps, tool config), run them fastest-first in speed
-  order (format, lint, typecheck, build, test), capture the exact command
-  and exit code as evidence, and derive a PASS/FAIL verdict. Deliberately
-  self-contained: the verifier runs on haiku, so the skill carries
-  everything inline with no cross-references.
+- **Key behaviors:** Detect the checks the project configures in scripts,
+  Makefile targets, CI steps, and tool config. Run them fastest-first in
+  speed order: format, lint, typecheck, build, then test. Capture the exact
+  command and exit code as evidence, then derive a PASS/FAIL verdict. The
+  skill is deliberately self-contained. The verifier runs on haiku, so the
+  skill carries everything inline with no cross-references.
 
 ### progress-tracking
 
@@ -713,7 +719,7 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Key behaviors:** A convention, not a gate: it produces no artifact and
   blocks nothing. When a procedure has two or more steps, seed one todo
   item per step before starting and mark each complete as you go. The
-  orchestrator owns the phase ledger; an agent tracks its own sub-steps in
+  orchestrator owns the phase ledger. An agent tracks its own sub-steps in
   its own context and never merges them up.
 
 ### nested-agents
@@ -722,23 +728,25 @@ replaces former inline body content 1:1, so it adds no net context (see
   read-only nested sub-agents.
 - **Loaded by:** researcher, implementer, code-reviewer, security-reviewer
   (4).
-- **Key behaviors:** Nesting is an optimization, never a dependency: if
-  the `Agent` tool is missing or a dispatch fails, the agent does the work
-  inline. Carries the fail-closed version gate (Claude Code ≥ 2.1.172),
-  the read-only default, the depth budget, and the per-agent caps: the
-  researcher fans out at most 4 isolation-preserving exploration scouts,
-  the implementer at most 2 read-only scouts, and the code-reviewer and
-  security-reviewer run the skeptic pass, in which every hard-gate finding is
-  handed to a fresh sub-agent as a neutral falsifiable claim (for security
-  findings, a claim about exploitability) to refute, with default-keep on
-  anything short of a verified refutation.
+- **Key behaviors:** Nesting is an optimization, never a dependency: if the
+  `Agent` tool is missing or a dispatch fails, the agent does the work
+  inline. Carries the fail-closed version gate (Claude Code ≥ 2.1.172), the
+  read-only default, and the depth budget. The per-agent caps follow. The
+  researcher fans out at most 4 isolation-preserving exploration scouts.
+  The implementer fans out at most 2 read-only scouts. The code-reviewer
+  and security-reviewer run the skeptic pass. In that pass, a fresh
+  sub-agent receives every hard-gate finding to refute, as a neutral
+  falsifiable claim. For a security finding, the claim is about
+  exploitability. Default-keep holds on anything short of a verified
+  refutation.
 
 ### documenting-decisions
 
 - **Purpose:** Creating and managing architecture decision records (ADRs).
-- **Loaded by:** planner, orchestrator (per the skill's own self-description;
-  no agent body carries an explicit `Load skills/documenting-decisions/SKILL.md`
-  instruction and no agent declares it via `skills:` frontmatter).
+- **Loaded by:** planner and orchestrator (per the skill's own
+  self-description. no agent body carries an explicit
+  `Load skills/documenting-decisions/SKILL.md` instruction and no agent
+  declares it through `skills:` frontmatter).
 - **Key behaviors:** Capture the decision, its alternatives, and its
   rationale so later readers understand the "why". Points ADR authors at
   the seventh-grade prose bar in `writing-prose`.
@@ -746,9 +754,10 @@ replaces former inline body content 1:1, so it adds no net context (see
 ### technical-design-doc
 
 - **Purpose:** Technical-design / architecture-doc methodology.
-- **Loaded by:** planner (per the skill's own self-description; the
-  `planner` agent body loads `engineering-standards` explicitly but does not
-  carry an explicit `Load skills/technical-design-doc/SKILL.md` instruction).
+- **Loaded by:** planner (per the skill's own self-description. The
+  `planner` agent body loads `engineering-standards` explicitly but does
+  not carry an explicit `Load skills/technical-design-doc/SKILL.md`
+  instruction).
 - **Key behaviors:** Structures the design narrative: current state,
   desired end state, patterns to follow, and trade-offs. Points design-doc
   authors at the seventh-grade prose bar in `writing-prose`.
@@ -756,13 +765,13 @@ replaces former inline body content 1:1, so it adds no net context (see
 ### product-requirements-doc
 
 - **Purpose:** Optional product-requirements-document methodology.
-- **Loaded by:** questioner (via `decomposing-intent`'s conditional load,
-  fired when the request is vague, multi-story, cross-cutting, or replaces
-  existing behavior) and design-author (via `authoring-designs`, when
-  `task.md` references a `prd.md`, per the skill's "Consuming a PRD
-  downstream" section).
+- **Loaded by:** questioner, through `decomposing-intent`'s conditional
+  load, which fires when the request is vague, multi-story, cross-cutting,
+  or replaces existing behavior. Also design-author, through
+  `authoring-designs`, when `task.md` references a `prd.md`, per the
+  skill's "Consuming a PRD downstream" section.
 - **Key behaviors:** Frames the problem, users, and success criteria when a
-  request warrants a PRD before design; the PRD lands at
+  request warrants a PRD before design. The PRD lands at
   `docs/plans/<id>/prd.md`, referenced from `task.md`. Points PRD authors
   at the seventh-grade prose bar in `writing-prose`.
 
@@ -782,15 +791,15 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Purpose:** System-fit reasoning lens that weighs a change's blast radius
   (callers, consumers, sibling implementations, conventions) rather than
   only the diff in front of it.
-- **Loaded by:** researcher, structure-planner, planner (frontmatter);
-  implementer, code-reviewer, ux-reviewer (inline); cited by
+- **Loaded by:** researcher, structure-planner, and planner (frontmatter).
+  implementer, code-reviewer, ux-reviewer (inline). Cited by
   authoring-designs, code-review, and eng-design-doc-review.
 - **Key behaviors:** A reasoning lens, not a gate: it produces no artifact
   of its own and blocks nothing. Four lenses (blast radius over diff
-  radius, callers and siblings first, conventions are contracts, leave
-  the system consistent) shape per-phase `## When ...` guidance; reviews
-  cite the `System Fit` checklist item by name; on greenfield targets
-  "none found" is a complete answer.
+  radius, callers and siblings first, conventions are contracts, leave the
+  system consistent) shape per-phase `## When ...` guidance. Reviews cite
+  the `System Fit` checklist item by name. On greenfield targets "none
+  found" is a complete answer.
 
 ### writing-prose
 
@@ -807,29 +816,29 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Purpose:** Documentation-gap review methodology and the
   REQUIRED/RECOMMENDED doc-change classification.
 - **Loaded by:** technical-writer.
-- **Key behaviors:** Carries the technical-writer's review procedure:
-  applying the `writing-prose` principles to reviews (classify by impact,
-  name the failure mode, suggest the direction not the rewrite,
-  acknowledge what works), the documentation-gap review process
-  (inventory, impact analysis, cross-reference), and the
-  REQUIRED/RECOMMENDED doc-change classification.
+- **Key behaviors:** Carries the technical-writer's review procedure: it
+  applies the `writing-prose` principles to reviews. Those are to classify
+  by impact, name the failure mode, suggest the direction and not the
+  rewrite, and acknowledge what works. It also carries the
+  documentation-gap review process (inventory, impact analysis, and
+  cross-reference) and the REQUIRED/RECOMMENDED doc-change classification.
 
 ### verifying-ux
 
 - **Purpose:** Live application verification procedure for the Implement
   phase's UX gate.
 - **Loaded by:** ux-reviewer.
-- **Key behaviors:** Detect the project type (UI, API-only, or library,
-  where libraries skip live testing), boot the application, verify routes and
-  endpoints with real `curl` requests including error and edge cases, and
-  always stop the server when done.
+- **Key behaviors:** Detect the project type: UI, API-only, or library.
+  Libraries skip live testing. Boot the application, then check routes and
+  endpoints with real `curl` requests, including error and edge cases.
+  Always stop the server when done.
 
 ### git-commit
 
 - **Purpose:** Commit discipline: conventional commits, the 50/72 subject
   and body rule, and atomic commits.
-- **Loaded by:** team-pr; implementer (via `implementing-slices`, at the
-  atomic slice-commit step).
+- **Loaded by:** team-pr, and implementer (through `implementing-slices`,
+  at the atomic slice-commit step).
 - **Key behaviors:** One logical change per commit with a clear, scoped
   message. Points commit-body prose at the seventh-grade bar in
   `writing-prose`.
@@ -847,28 +856,28 @@ replaces former inline body content 1:1, so it adds no net context (see
 - **Purpose:** Ticket-lifecycle discipline for tracker-linked runs: the
   in-progress / in-review timing, the conditional PR closing footer, and
   the never-close-by-hand rule.
-- **Loaded by:** the PR-opening and pickup hosts just-in-time via
-  pointers (`team`, `team-pr`, `team-fix`); no agent preloads it.
+- **Loaded by:** the PR-opening and pickup hosts just-in-time through
+  pointers (`team`, `team-pr`, `team-fix`). No agent preloads it.
 - **Key behaviors:** Every tracker interaction is best-effort,
-  tracker-agnostic, and never blocks the pipeline. A picked-up ticket
-  moves to in-progress as the run's first action. At PR open, the PR is
-  linked to the ticket via a `Closes` footer as the final line of the PR
-  body, conditional on `ticketId` (omitted when null, no placeholder),
-  with the interpretation rules codified at the consumption site and, in
-  multi-repo mode, the home repo's PR alone carrying the closing keyword
-  (companions get a non-closing qualified reference). The ticket moves
-  to in-review only once the PR is marked ready for review, never while
-  it is a draft, and is never closed by hand: the link auto-closes it
-  on merge.
+  tracker-agnostic, and never blocks the pipeline. A picked-up ticket moves
+  to in-progress as the run's first action. At PR open, a `Closes` footer
+  links the PR to the ticket as the final line of the PR body. The footer
+  is conditional on `ticketId`, and it is omitted when null, with no
+  placeholder. The interpretation rules are codified at the consumption
+  site. In multi-repo mode, only the home repo's PR carries the closing
+  keyword, and companions get a non-closing qualified reference. The ticket
+  moves to in-review only after someone marks the PR ready for review,
+  never while it is a draft. No one closes the ticket by hand, because the
+  link auto-closes it on merge.
 
 ### worktree-isolation
 
 - **Purpose:** Worktree topology for single- and multi-repo work.
 - **Loaded by:** orchestrator (team, team-worktree).
-- **Key behaviors:** Set up isolated worktrees so implementation never
-  touches the main checkout, and tear them down only after the PR merges
-  or on explicit request, so a branch stays available for iteration while
-  its PR is open.
+- **Key behaviors:** Set up isolated worktrees, so implementation never
+  touches the main checkout. Tear them down only after the PR merges, or on
+  explicit request. A branch thus stays available for iteration while its
+  PR is open.
 
 ## Skill ↔ agent ↔ phase
 
@@ -876,7 +885,7 @@ This table ties each skill to the agents or orchestrator skills that load
 it and the phase where that happens. The `Invoked / loaded by` column
 carries two meanings depending on the row: for **entry-point skills** it
 names who *invokes* the skill (you directly, or the orchestrator running a
-phase); for **methodology skills** it names the agent(s) that *load* the
+phase). For **methodology skills** it names the agent(s) that *load* the
 skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see the
 entry-point section above rather than repeating them here.
 
@@ -892,14 +901,14 @@ entry-point section above rather than repeating them here.
 | `team-implement` | orchestrator → implementer + reviewers | Implement |
 | `team-pr` | orchestrator | PR |
 | `team-fix` | user (direct invocation) | Compressed bug-fix flow (outside QRSPI) |
-| `eng-design-doc-review` | user (direct invocation); pipeline DESIGN review gate (brief by reference) | Design review-gate brief + standalone audit; dispatches a read-only Explore subagent |
+| `eng-design-doc-review` | user (direct invocation). Pipeline DESIGN review gate (brief by reference) | Design review-gate brief + standalone audit. Dispatches a read-only Explore subagent |
 | `shipit` | user or model (direct invocation, on explicit ship intent) | Standalone: land a reviewed PR (not a QRSPI phase) |
 | `pr-open-comments` | user or model (direct invocation) | Standalone: triage unresolved PR review feedback (not a QRSPI phase) |
 | `pr-watch` | user or model (direct invocation) | Standalone: bounded PR review watch loop (not a QRSPI phase) |
 | `pr-approve-watch` | user (direct invocation) | Standalone: reviewer-side watch-and-approve (not a QRSPI phase) |
 | `groom-backlog` | user or model (direct invocation) | Standalone: groom a project backlog (not a QRSPI phase) |
 | `qrspi-workflow` | orchestrator skills | All phases |
-| `artifact-frontmatter` | orchestrator skills; artifact authors (just-in-time via pointers) | All phases: artifact schema |
+| `artifact-frontmatter` | orchestrator skills. Artifact authors (just-in-time through pointers) | All phases: artifact schema |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
 | `conventional-comments` | code-reviewer, security-reviewer, technical-writer | Implement (verify): finding format |
 | `review-severity-tiers` | orchestrator (team, team-implement, qrspi-workflow) | Implement (aggregate review gate) |
@@ -911,31 +920,31 @@ entry-point section above rather than repeating them here.
 | `slicing-work` | structure-planner | Structure |
 | `planning-implementation` | planner | Plan |
 | `engineering-standards` | planner, implementer, code-reviewer | Plan, Implement |
-| `test-first-development` | test-architect, code-reviewer; orchestrator | Implement |
-| `test-style` | test-architect, code-reviewer (just-in-time via pointers) | Implement |
+| `test-first-development` | test-architect, code-reviewer. Orchestrator | Implement |
+| `test-style` | test-architect, code-reviewer (just-in-time through pointers) | Implement |
 | `test-driven-bug-fix` | team-fix | Bug-fix flow |
 | `solid-principles` | implementer, code-reviewer | Implement |
 | `refactoring-to-patterns` | implementer | Implement |
 | `implementing-slices` | implementer | Implement |
 | `running-quality-checks` | verifier | Implement (verify) |
 | `verifying-ux` | ux-reviewer | Implement (verify) |
-| `systematic-debugging` | implementer (inline Load on non-obvious failures); other agents when debugging (advisory) | Implement; Any (debugging) |
+| `systematic-debugging` | implementer (inline Load on non-obvious failures). Other agents when debugging (advisory) | Implement, and Any (debugging) |
 | `progress-tracking` | every multi-step agent (convention) | Any (multi-step procedure) |
 | `nested-agents` | researcher, implementer, code-reviewer, security-reviewer | Research, Implement (scouts + skeptic passes) |
 | `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
 | `technical-design-doc` | planner | Plan |
-| `product-requirements-doc` | questioner (via `decomposing-intent`, conditional); design-author (via `authoring-designs`) | Question, Design |
+| `product-requirements-doc` | questioner (through `decomposing-intent`, conditional). Design-author (through `authoring-designs`) | Question, Design |
 | `product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
-| `systems-thinking` | researcher, structure-planner, planner (frontmatter); implementer, code-reviewer, ux-reviewer (inline); authoring-designs, code-review, eng-design-doc-review (citing skills) | Research, Design, Structure, Plan, Implement (incl. verify) |
+| `systems-thinking` | researcher, structure-planner, planner (frontmatter). Implementer, code-reviewer, ux-reviewer (inline). Authoring-designs, code-review, eng-design-doc-review (citing skills) | Research, Design, Structure, Plan, Implement (incl. verify) |
 | `writing-prose` | technical-writer | Implement (verify): bar for prose it writes and prose it assesses |
 | `reviewing-documentation` | technical-writer | Implement (verify): doc-gap review process + classification |
-| `git-commit` | team-pr; implementer (via `implementing-slices`) | PR; Implement (slice commits) |
+| `git-commit` | team-pr. Implementer (through `implementing-slices`) | PR, and Implement (slice commits) |
 | `changelog` | team, team-pr | PR |
-| `tracking-tickets` | orchestrator (team, team-pr, team-fix, just-in-time via pointers) | Setup (ticket pickup); PR (ticket link + state) |
+| `tracking-tickets` | orchestrator (team, team-pr, team-fix, just-in-time through pointers) | Setup (ticket pickup), and PR (ticket link + state) |
 | `worktree-isolation` | orchestrator (team, team-worktree) | Worktree |
 
-The read-only `Explore` subagent dispatched by `eng-design-doc-review` is an
-additional consumer of `technical-design-doc`, `code-review`,
+The read-only `Explore` subagent dispatched by `eng-design-doc-review` is
+an one more consumer of `technical-design-doc`, `code-review`,
 `engineering-standards`, and `documenting-decisions`. It loads all four as
 the criteria for the design review.
 
@@ -947,18 +956,18 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 
 | Skill | Agent | How they differ |
 |---|---|---|
-| `team-research` | `researcher` | Skill dispatches the Research phase; the agent is the doer that runs the research. |
-| `code-review` | `code-reviewer` | Skill is the review methodology; the agent is the reviewer that applies it. |
-| `reviewing-security` | `security-reviewer` | Skill is the security review methodology and severity ladder; the agent is the reviewer that applies it. |
-| `reviewing-documentation` | `technical-writer` | Skill is the doc-gap review methodology and classification; the agent is the reviewer that applies it. |
-| `team-question` | `questioner` | Skill drives the Question phase; the agent decomposes the intent. |
-| `implementing-slices` | `implementer` | Skill is the slice-execution procedure; the agent is the specialist that executes it. |
-| `verifying-ux` | `ux-reviewer` | Skill is the live-verification procedure; the agent is the tester that runs it. |
-| `authoring-designs` | `design-author` | Skill is the authoring procedure and template; the agent is the author that drafts the design. |
-| `finding-files` | `file-finder` | Skill is the search strategy; the agent is the locator that executes it. |
-| `planning-implementation` | `planner` | Skill is the plan template and tactical rules; the agent is the engineer that writes the plan. |
-| `team-design` | `design-author` | Skill drives the Design phase; the agent drafts the alignment doc. |
-| `technical-design-doc` | `technical-writer` | Both contain "technical" but differ: the skill is design-doc methodology; the agent writes documentation during verify. |
+| `team-research` | `researcher` | Skill dispatches the Research phase. The agent is the doer that runs the research. |
+| `code-review` | `code-reviewer` | Skill is the review methodology. The agent is the reviewer that applies it. |
+| `reviewing-security` | `security-reviewer` | Skill is the security review methodology and severity ladder. The agent is the reviewer that applies it. |
+| `reviewing-documentation` | `technical-writer` | Skill is the doc-gap review methodology and classification. The agent is the reviewer that applies it. |
+| `team-question` | `questioner` | Skill drives the Question phase. The agent decomposes the intent. |
+| `implementing-slices` | `implementer` | Skill is the slice-execution procedure. The agent is the specialist that executes it. |
+| `verifying-ux` | `ux-reviewer` | Skill is the live-verification procedure. The agent is the tester that runs it. |
+| `authoring-designs` | `design-author` | Skill is the authoring procedure and template. The agent is the author that drafts the design. |
+| `finding-files` | `file-finder` | Skill is the search strategy. The agent is the locator that executes it. |
+| `planning-implementation` | `planner` | Skill is the plan template and tactical rules. The agent is the engineer that writes the plan. |
+| `team-design` | `design-author` | Skill drives the Design phase. The agent drafts the alignment doc. |
+| `technical-design-doc` | `technical-writer` | Both contain "technical" but differ: the skill is design-doc methodology. The agent writes documentation during verify. |
 | `eng-design-doc-review` | `design-author` | The review skill dispatches a read-only `Explore` subagent, **not** the `design-author` agent, which keeps the audit independent of the author. |
 
 ## See also

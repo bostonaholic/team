@@ -1,7 +1,7 @@
 // tests/helpers/llm-judge.test.ts
 //
 // Tests for the deterministic-first paths and the JSON extractor. No real
-// SDK calls — judges-that-call-LLMs aren't exercised here. Run free.
+// SDK calls — judges-that-call-LLMs are not exercised here. Run free.
 
 import { afterEach, describe, expect, test } from "bun:test";
 

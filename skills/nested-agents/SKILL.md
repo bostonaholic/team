@@ -7,7 +7,7 @@ user-invocable: false
 # Nested Sub-Agents — Guardrails
 
 You are a Team pipeline agent that has been granted the `Agent` tool. The
-orchestrator (the main session) dispatched you; you may dispatch helpers one
+orchestrator (the main session) dispatched you. You may dispatch helpers one
 level further down. These rules are non-negotiable.
 
 ## Optimization, never a dependency
@@ -27,29 +27,29 @@ nesting is unavailable — do the work yourself inline per the rule above. This
 gate needs no command and holds for every agent, including read-only ones that
 have no `Bash` tool.
 
-When you also hold the `Bash` tool, additionally confirm the running version
-with the bundled deterministic check — it pins the exact floor rather than
-trusting tool presence alone:
+When you also hold the `Bash` tool, make sure of the running version with
+the bundled deterministic check. It pins the exact floor, rather than trust
+tool presence alone:
 
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/skills/nested-agents/supports-nesting.mjs" "$(claude --version)"
 ```
 
 It prints `supported` and exits `0` at or above the floor, or `unsupported`
-and exits non-zero otherwise. The check is **fail-closed**: an older release,
-unrecognizable version output, or an environment where you cannot run the
-check all count as `unsupported`. On any non-zero result — i.e. whenever the
-version is less than 2.1.172 or undeterminable — **do not spawn helpers; do
-the work yourself inline.** Run the gate once; a `supported` result holds for
-the rest of your turn.
+and exits non-zero otherwise. The check is **fail-closed**: an older
+release, unrecognizable version output, or an environment where you cannot
+run the check all count as `unsupported`. On any non-zero result — i.e.
+whenever the version is less than 2.1.172 or undeterminable —
+**do not spawn helpers. Do the work yourself inline.** Run the gate once. A
+`supported` result holds for the rest of your turn.
 
 ## When to spawn vs. do it yourself (context economy)
 
 Spawn a helper only when the side-quest would flood your context with
-material you will not reference again — bulk file reading, tracing an
-unfamiliar subsystem, verifying a claim against many call sites. If a handful
-of targeted Reads or Greps answers the question, do it yourself; a sub-agent
-that saves no context is pure overhead.
+material you will not reference again. Examples are bulk file reading, a
+trace through an unfamiliar subsystem, and a claim checked against many call
+sites. If a handful of targeted Reads or Greps answers the question, do it
+yourself. A sub-agent that saves no context is pure overhead.
 
 ## Read-only by default
 
@@ -73,19 +73,19 @@ absorb it and record it in YOUR own artifact's open-questions section
 
 ## Verification helpers get neutral claims
 
-When using a helper to check your own finding, state the claim as a neutral,
-falsifiable sentence with its `file:line` — never your verdict, severity, or
-reasoning. Ask the helper to refute it with evidence. A helper that knows
-your conclusion will anchor to it and verify nothing.
+When you use a helper to check your own finding, state the claim as a
+neutral, falsifiable sentence with its `file:line`. Never give your verdict,
+severity, or reasoning. Ask the helper to refute it with evidence. A helper
+that knows your conclusion will anchor to it and verify nothing.
 
 ## Caps and ownership
 
-- At most **4 helpers** in flight at once; prefer parallel dispatch of
+- At most **4 helpers** in flight at once. Prefer parallel dispatch of
   independent helpers in a single message.
 - Bound every helper's reply (e.g. "return <= 30 lines of file:line
   findings").
 - You own everything you report. Spot-verify helper claims before including
-  them; a helper's error in your output is your error.
+  them. A helper's error in your output is your error.
 
 ## Per-agent caps
 
@@ -105,7 +105,7 @@ areas, or when `repos.md` lists multiple repos.
 - **When:** only if a cluster requires reading more material than you will
   quote in your findings. For one or two pointed questions, read the files
   yourself.
-- **Caps:** at most 4 scouts, dispatched in parallel where independent; each
+- **Caps:** at most 4 scouts, dispatched in parallel where independent. Each
   instructed to return <= 30 lines of file:line findings and to spawn no
   further agents.
 - **Scouts are non-interactive.** They never pause for user input.
@@ -118,19 +118,19 @@ areas, or when `repos.md` lists multiple repos.
 ### `code-reviewer` and `security-reviewer` — skeptic passes
 
 A false hard-gate finding costs an entire review round: an implementer
-re-dispatch plus a fresh run of all 5 reviewers. Before finalizing a
-hard-gate finding (a Blocking-tier `issue:` for the code-reviewer; a
-CRITICAL or HIGH finding for the security-reviewer), hand it to a fresh
-skeptic sub-agent via the `Agent` tool and try to get it refuted.
+re-dispatch plus a fresh run of all 5 reviewers. A hard-gate finding is a
+Blocking-tier `issue:` for the code-reviewer, or a CRITICAL or HIGH finding
+for the security-reviewer. Before you finish one, hand it to a fresh skeptic
+sub-agent through the `Agent` tool and try to get it refuted.
 
-- Dispatch one `general-purpose` sub-agent per hard-gate finding (at most
-  4 in flight; batch any overflow into one dispatch).
-- **State the claim neutrally** — file:line plus a falsifiable sentence;
-  for the security-reviewer, a falsifiable sentence about exploitability.
-  Never include your verdict, severity, or reasoning. Template:
+- Dispatch one `general-purpose` sub-agent per hard-gate finding (at most 4
+  in flight. Batch any overflow into one dispatch).
+- **State the claim neutrally** — file:line plus a falsifiable sentence. for
+  the security-reviewer, a falsifiable sentence about exploitability. Never
+  include your verdict, severity, or reasoning. Template:
 
   > Read <file> around line <n>. Claim: "<one-sentence falsifiable
-  > statement, e.g. `user` may be null on the early-return path; or, for
+  > statement, e.g. `user` may be null on the early-return path. Or, for
   > a security finding, user input from the `q` parameter reaches this
   > SQL string without parameterization>". Attempt to REFUTE this claim
   > with concrete evidence (guards, callers, sanitization, validation
@@ -140,10 +140,10 @@ skeptic sub-agent via the `Agent` tool and try to get it refuted.
 
 - **Default-keep.** Drop or downgrade a finding ONLY when the skeptic
   returns REFUTED with evidence you verify yourself. Inconclusive means the
-  finding stands — severity is never softened on an uncertain skeptic
-  reply. The pass removes false positives; it must never remove a true
-  positive. List refuted findings under a `### Refuted by verification`
-  section of your report (auditable, not silently dropped).
+  finding stands — severity is never softened on an uncertain skeptic reply.
+  The pass removes false positives. It must never remove a true positive.
+  List refuted findings under a `### Refuted by verification` section of
+  your report (auditable, not silently dropped).
 - Skip the pass when there are no hard-gate findings or the Agent tool is
   unavailable — report findings as-is. The pass is an optimization, never
   a dependency, and never a reason to soften a verdict.
@@ -151,12 +151,12 @@ skeptic sub-agent via the `Agent` tool and try to get it refuted.
 ### `implementer` — read-only scouts
 
 Spawn a read-only scout when a slice touches a subsystem the plan does not
-explain and mapping it yourself would mean reading more than ~3 files you
+explain, and a map of it yourself would mean you read more than ~3 files you
 will not edit. The scout absorbs the bulk reading and returns a short map,
 keeping your context lean across slices.
 
 - **Scout types:** the built-in `Explore` agent or `team:file-finder`.
-- **Caps:** at most 2 scouts in flight; each instructed to return <= 30
+- **Caps:** at most 2 scouts in flight. Each instructed to return <= 30
   lines of file:line findings and to spawn no further agents.
 - **Scouts never write, edit, or commit.** All code, tests, and commits
   remain yours. Never dispatch a sub-agent to implement a slice or to run

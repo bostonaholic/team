@@ -133,7 +133,7 @@ When the ship phase runs, before committing:
    commit message in plain language if the commit message is technical.
    The entry should complete the sentence: "Users can now..." or "We fixed..."
 
-4. **Add entries under `[Unreleased]`** in the appropriate section.
+4. **Add entries under `[Unreleased]`** in the applicable section.
 
 5. **Sort within sections:** most impactful changes first.
 

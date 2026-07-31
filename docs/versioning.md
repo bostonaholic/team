@@ -1,6 +1,6 @@
 ---
 title: Versioning
-description: "Land-time versioning for the Team plugin. A drafted PR carries no version and accumulates changelog bullets under [Unreleased]; at land time the dev version-bump skill assigns the version against current main, cuts the changelog section, sets the title, and runs the land-time consistency assertion, then the generic runtime /shipit skill pushes, waits for CI, and squash-merges. CI auto-publishes the release on merge."
+description: "Land-time versioning for the Team plugin. A drafted PR carries no version. It accumulates changelog bullets under [Unreleased]. At land time the dev version-bump skill assigns the version, cuts the changelog section, sets the title, and runs the consistency assertion. The runtime /shipit skill then pushes, waits for CI, and squash-merges. CI publishes the release on merge."
 audience: [developer]
 nav_order: 6
 nav_label: versioning
@@ -16,29 +16,29 @@ Team assigns the version at **land time**, not per PR. A drafted PR carries no
 version, no `vX.Y.Z` title, and no released changelog section. It accumulates
 bullets under `[Unreleased]`. Landing a Team PR is **two steps**:
 
-1. **Bump.** The **dev** `version-bump` skill (`.claude/skills/version-bump/SKILL.md`)
-   is Team's internal bumper. Run against current `main`, it assigns the next
-   version, bumps the four version strings, cuts the `[Unreleased]` body into a
-   dated `## [X.Y.Z]` section, sets the PR title, runs the land-time consistency
-   assertion, and commits `chore(version): X.Y.Z`.
+1. **Bump.** The **dev** `version-bump` skill
+   (`.claude/skills/version-bump/SKILL.md`) is Team's internal bumper. Run it
+   against current `main`. It assigns the next version, bumps the four version
+   strings, and cuts the `[Unreleased]` body into a dated `## [X.Y.Z]` section.
+   It then sets the PR title, runs the land-time consistency assertion, and
+   commits `chore(version): X.Y.Z`.
 2. **Land.** The **generic, distributed** runtime `/shipit` skill
-   (`skills/shipit/SKILL.md`) pushes the branch, waits for CI, and squash-merges.
-   `shipit` is project-agnostic: it does no versioning or changelog work. It is
-   shipped to Team's *users* as a general "land a reviewed PR" utility; Team's
-   own version logic stays in `version-bump`.
+   (`skills/shipit/SKILL.md`) pushes the branch, waits for CI, and
+   squash-merges. `shipit` is project-agnostic: it does no versioning or
+   changelog work. Team ships it to *users* as a general "land a reviewed PR"
+   utility. Team's own version logic stays in `version-bump`.
 
-There is no batch release step; the merge *is* the release. CI tags and
+There is no batch release step. The merge *is* the release. CI tags and
 publishes automatically.
 
 ## Why land time
 
 When every open PR claims its own version up front, parallel PRs contend for the
 same number. Every rebase forces a re-bump, and the gate blocks honest work that
-hasn't picked a free slot. Assigning the version at land time removes the
-contention entirely: a PR is a diff plus `[Unreleased]` bullets until the moment
-it lands. Because `version-bump` runs only at land and one PR lands at a time,
-the assigned number is always free. The serialization *is* the collision
-defense.
+has not picked a free slot. Land-time assignment removes the contention
+entirely. A PR is a diff plus `[Unreleased]` bullets until the moment it lands.
+`version-bump` runs only at land, and one PR lands at a time. The assigned
+number is thus always free. The serialization *is* the collision defense.
 
 ## Only runtime changes bump (the runtime-vs-dev gate)
 
@@ -47,18 +47,18 @@ warranted **only when a PR changes the distributed plugin**: `agents/`,
 `skills/`, `hooks/`, or `.claude-plugin/` *content* (the
 [Runtime vs. development](../AGENTS.md) split). Contributor-facing and
 plugin-developer infrastructure (`.github/`, `.claude/`, `docs/`, `tests/`,
-`evals/`, and build tooling) **never bumps**, regardless of its
-conventional-commit type. A `ci:`/`docs:`/`test:`/`chore:` PR that ships no
-runtime change lands with **no bump, no changelog cut, and a plain conventional
-title** (precedent: `710d44c` CI, `7d2e218` docs, `0821129` evals `feat:`).
+`evals/`, and build tooling) **never bumps**, whatever its conventional-commit
+type. A `ci:`/`docs:`/`test:`/`chore:` PR that ships no runtime change lands
+with **no bump, no changelog cut, and a plain conventional title** (precedent:
+`710d44c` CI, `7d2e218` docs, `0821129` evals `feat:`).
 
-This is the first thing `version-bump` checks (its **step 0**) and is enforced
-deterministically in CI by `.github/scripts/version-bump-required.sh` (pinned by
-`tests/version-bump-required.test.ts`): a dev-only diff that bumped, or a runtime
-diff that did not, **fails the PR**. It measures "did this branch bump?" against
-the merge-base (fork point), so a bump-less PR behind a version-bumped `main`
-reads correctly as "no bump" (the same branch-relative measure as
-[PR title sync](#pr-title)).
+`version-bump` checks this first, as its **step 0**. CI enforces it
+deterministically through `.github/scripts/version-bump-required.sh`, which
+`tests/version-bump-required.test.ts` pins. A dev-only diff that bumped
+**fails the PR**. A runtime diff that did not bump also fails it. The script
+measures "did this branch bump?" against the merge-base, which is the fork
+point. A bump-less PR behind a version-bumped `main` thus reads correctly as "no
+bump". [PR title sync](#pr-title) uses the same branch-relative measure.
 
 > **Regression #120.** `version-bump` once treated *every* PR as bump-worthy and
 > bumped #118 (a `.github/`-only CI fix) `0.13.1 → 0.13.2`, cutting a changelog
@@ -89,16 +89,16 @@ Then run `/shipit` to push, wait for CI, and squash-merge.
 ## Land-time consistency assertion
 
 This is the in-tree replacement for the per-PR CI gate that used to enforce a
-bump on every PR. Because the version is assigned only at land time, the
-released-changelog invariants hold only **after** `version-bump` cuts the
-section, so `version-bump` re-runs them itself rather than CI checking them on
-every push. The assertion runs **after the changelog cut and before the commit**
-(fail fast and loud; never commit an invalid tree) and checks:
+bump on every PR. The version is assigned only at land time. The
+released-changelog invariants thus hold only **after** `version-bump` cuts the
+section. `version-bump` re-runs them itself, and CI does not check them on every
+push. The assertion runs **after the changelog cut and before the commit**. It
+fails fast and loud, and it never commits an invalid tree. It checks that:
 
-- `tests/version-consistency.test.ts` passes (strict semver + the four strings
-  agree);
-- the dated `## [X.Y.Z] - YYYY-MM-DD` released section exists;
-- the footer carries a `[X.Y.Z]: …compare/…` link and the `[Unreleased]` footer
+- `tests/version-consistency.test.ts` passes (strict semver, and the four
+  strings agree).
+- The dated `## [X.Y.Z] - YYYY-MM-DD` released section exists.
+- The footer carries a `[X.Y.Z]: …compare/…` link. The `[Unreleased]` footer
   compares from `vX.Y.Z...HEAD`.
 
 If any check fails, `version-bump` stops before committing. Nothing is
@@ -112,7 +112,7 @@ mistake in this repo's history.
 
 | File | Occurrences |
 |------|-------------|
-| `.claude-plugin/plugin.json` | 1 (`version`): **canonical; CI reads this one** |
+| `.claude-plugin/plugin.json` | 1 (`version`): **canonical. CI reads this one.** |
 | `.claude-plugin/marketplace.json` | 2 (`metadata.version` **and** `plugins[0].version`) |
 | `package.json` | 1 (`version`) |
 
@@ -133,24 +133,28 @@ enforces this on every `bun test` run.
 .claude/scripts/next-version.sh <major|minor|patch>
 ```
 
-It prints `bump(<default branch>'s version, level)`, a **deterministic** pure
-function of the base version and the level, with **no open-PR scan**. The base
-is read from the remote's default branch, resolved via `origin/HEAD` (so
-`main`, `master`, or any other default branch works; it is not hardcoded). Under the
-land-time model the version is assigned against current `main` and landing is
-serialized (one PR at a time), so `bump(main, level)` is always free; the
-collision defenses are serialization, `shipit`'s rebase-and-recompute on a
-concurrent race, and `release-on-merge.yml`'s duplicate-tag rejection. (Set
-`BASE_VERSION=x.y.z` to override the base the script reads; its tests use this.)
+It prints `bump(<default branch>'s version, level)`. This is a **deterministic**
+pure function of the base version and the level, with **no open-PR scan**. The
+script reads the base from the remote's default branch and resolves it through
+`origin/HEAD`. `main`, `master`, or any other default branch works, because the
+name is not hardcoded.
 
-> Earlier revisions walked past any version *claimed by another open PR* (via
-> the GitHub API). That was the retired per-PR model's mechanism; it made the
-> output depend on whatever PRs were open and **skipped free versions** a stale
-> PR happened to claim. It is gone, and `tests/next-version.test.ts` locks it out.
+Under the land-time model the version is assigned against current `main`, and
+landing is serialized to one PR at a time. `bump(main, level)` is thus always
+free. Three defenses cover a collision: serialization, `shipit`'s
+rebase-and-recompute on a concurrent race, and `release-on-merge.yml`'s
+duplicate-tag rejection. Set `BASE_VERSION=x.y.z` to override the base the
+script reads. Its tests use this override.
+
+> Earlier revisions walked past any version *claimed by another open PR*,
+> through the GitHub API. That was the retired per-PR model's mechanism. It made
+> the output depend on whatever PRs were open, and it **skipped free versions**
+> that a stale PR happened to claim. It is gone, and
+> `tests/next-version.test.ts` locks it out.
 
 ## Changelog: accumulate under `[Unreleased]`, cut at land time
 
-`[Unreleased]` accumulates bullets while the PR is in flight; the dated section
+`[Unreleased]` accumulates bullets while the PR is in flight. The dated section
 is cut only when the PR lands.
 
 - **While drafting** (`team-pr`): add this PR's user-facing bullets under
@@ -164,11 +168,12 @@ is cut only when the PR lands.
      - `[Unreleased]` compare base → `vX.Y.Z...HEAD`
      - Add `[X.Y.Z]: https://github.com/bostonaholic/team/compare/v<prev>...vX.Y.Z`
 
-The dated section becomes the GitHub release notes verbatim (see below), so
-write it for a reader deciding whether to upgrade. **Empty `[Unreleased]` at
-land:** `version-bump` derives at least one bullet from the PR's commits, else
-stops and asks for an entry. It never cuts an empty section
-(`release-on-merge.yml` errors on empty release notes).
+The dated section becomes the GitHub release notes verbatim (see below). Write
+it for a reader who must decide if they upgrade.
+**Empty `[Unreleased]` at land:** `version-bump` derives at least one bullet
+from the PR's commits. If it cannot, it stops and asks for an entry. It never
+cuts an empty section, because `release-on-merge.yml` errors on empty release
+notes.
 
 ## PR title
 
@@ -180,12 +185,12 @@ bumps at land time:
 vX.Y.Z <type>: <subject>
 ```
 
-e.g. `v0.6.0 feat: add the shipit land skill`. The `PR title sync` workflow
-rewrites a drifted title only when the branch bumped the version forward of its
-fork point. It reads the version at the PR head and compares it against the
-merge-base, not the live base tip, so a bump-less PR no-ops no matter how far
-`main` has advanced since the branch forked (#104). It is a backstop, not the
-mechanism.
+An example is `v0.6.0 feat: add the shipit land skill`. The `PR title sync`
+workflow rewrites a drifted title only when the branch bumped the version
+forward of its fork point. It reads the version at the PR head and compares it
+against the merge-base, not the live base tip. A bump-less PR thus no-ops, no
+matter how far `main` advanced after the branch forked (#104). The workflow is a
+backstop, not the mechanism.
 
 ## What CI enforces, and where
 
@@ -194,10 +199,10 @@ can catch it:
 
 | Check | Layer | Where |
 |-------|-------|-------|
-| Runtime-vs-dev bump invariant: a runtime diff must bump; a dev-only diff must not (branch-relative to the fork point) | CI (needs PR context) + L3/L4 git-fixture test (free) | `.github/scripts/version-bump-required.sh`, `tests/version-bump-required.test.ts` |
-| Four version strings agree; strict semver (holds on every commit, drafted or landed) | L2 tripwire (free, every `bun test`) | `tests/version-consistency.test.ts` |
-| Released-section + footer-compare-link invariants hold for the assigned version, run after the changelog cut and before the commit | Land-time assertion (`version-bump`) | `.claude/skills/version-bump/SKILL.md` |
-| Title prefix matches the version, only when the branch bumped the version forward of its merge-base/fork point (after `version-bump` bumps); no-op otherwise | CI (needs PR context) | `.github/workflows/pr-title-sync.yml` |
+| Runtime-vs-dev bump invariant. A runtime diff must bump. A dev-only diff must not. The measure is relative to the fork point. | CI (needs PR context) + L3/L4 git-fixture test (free) | `.github/scripts/version-bump-required.sh`, `tests/version-bump-required.test.ts` |
+| Four version strings agree, on strict semver. This holds on every commit, drafted or landed. | L2 tripwire (free, every `bun test`) | `tests/version-consistency.test.ts` |
+| Released-section and footer-compare-link invariants hold for the assigned version. It runs after the changelog cut and before the commit. | Land-time assertion (`version-bump`) | `.claude/skills/version-bump/SKILL.md` |
+| Title prefix matches the version. It applies only when the branch bumped the version forward of its fork point, after `version-bump` bumps. It no-ops otherwise. | CI (needs PR context) | `.github/workflows/pr-title-sync.yml` |
 | Tag + GitHub release on merge | CI (needs write perms) | `.github/workflows/release-on-merge.yml` |
 
 The land-time assertion row is the in-tree replacement for the per-PR CI gate
@@ -235,10 +240,10 @@ version was already assigned, and a second bump would create a redundant commit.
 `git add` the fix, `git commit --amend --no-edit`, re-point the tag with
 `git tag -f -a vX.Y.Z -m "Release vX.Y.Z"`, then
 `git push --force-with-lease origin main && git push --force origin vX.Y.Z`.
-Safe only if no commits landed after the broken one, so confirm `origin/main`
-still equals your pre-amend commit first. (This should be near-impossible: the
-bun test and `version-bump`'s land-time assertion both check string agreement
-before the merge.)
+This is safe only if no commits landed after the broken one. First make sure
+that `origin/main` still equals your pre-amend commit. This case is
+near-impossible. The `bun test` run and `version-bump`'s land-time assertion
+both check string agreement before the merge.
 
 ### The release workflow failed after merge
 

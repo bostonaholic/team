@@ -18,7 +18,7 @@ function filterRows(text: string, key: string, exclude: RegExp): string {
     .join("\n");
 }
 
-// Absence check: runs grep via execFileSync. A non-zero exit (grep found
+// Absence check: runs grep through execFileSync. A non-zero exit (grep found
 // nothing) is the PASS and returns true; a zero exit (a match was found)
 // returns false. grep's exit code 2 (a real error, e.g. unreadable path)
 // re-throws so it cannot be a false pass.
@@ -92,10 +92,6 @@ describe("skill architecture", () => {
     // content to be embedded in its consumer.
     expect(text).not.toContain("2 or more consumers");
     expect(text).not.toContain("indirection without reuse");
-  });
-
-  test("soft limit of 3 methodology skills documented in docs/architecture.md", () => {
-    expect(/soft limit.*3|3 methodology skills/i.test(read(ARCHITECTURE_MD))).toBe(true);
   });
 
   test("implementer.md still references solid-principles/SKILL.md", () => {

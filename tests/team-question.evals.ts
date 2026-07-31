@@ -11,7 +11,7 @@
 // layers: a deterministic no-leak guard pins the SPECIFIC forbidden feature
 // tokens (the questions must never name "rate limiting", "429", etc. — ported
 // from #32's questioner/no-intent-leak idea), while the gated LLM judge grades
-// neutrality more broadly (a fuzzy negative property a regex can't fully
+// neutrality more broadly (a fuzzy negative property a regex cannot fully
 // capture). `outcomeJudge` first confirms questions were emitted at all.
 // Periodic tier: the neutrality axis is a judgment with model-output variance.
 

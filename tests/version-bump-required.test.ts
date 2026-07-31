@@ -74,7 +74,7 @@ function newRepo(): string {
 }
 
 // Build a repo forked at `forkVersion`, advance main by `mainBumps`, then lay the
-// branch's own edits via `branchEdits(dir)` (which mutates files + may bump).
+// branch's own edits through `branchEdits(dir)` (which mutates files + may bump).
 function scenario(opts: {
   forkVersion: string;
   mainBumps?: string[];

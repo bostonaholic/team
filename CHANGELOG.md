@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.1] - 2026-07-31
+
+### Changed
+
+- **Every skill, agent prompt, and reference document now follows Simplified Technical English (ASD-STE100), the standard [`skills/writing-prose/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/writing-prose/SKILL.md) has always specified.** The rules were written down but never applied to the corpus. This sweep applies them: sentences over 25 words are split, prose semicolons become two sentences, contractions are expanded, and the substitution table is applied outside a frozen list of domain terms (phase names, agent names, skill slugs, verdict vocabulary, and `should` vs. `must`, which carries normative weight STE would flatten). Instructions to a model are now shorter and more literal, which is what the standard is for. `docs/vision.md` and `docs/ethos.md` are deliberately exempt: they argue a position rather than describe a procedure, and STE was designed for maintenance manuals. `skills/writing-prose/SKILL.md` keeps its own non-conforming examples, since it teaches the contrast.
+
+### Removed
+
+- **Tests that pinned the exact wording of a prompt, rather than a contract it must satisfy, are gone.** The static gate had accumulated assertions that a skill body contained a particular English sentence, that two words sat within 240 characters of each other, or that a file stayed under a line ceiling. None of them tested behavior: they failed when an author reworded a rule that still held, and passed when an author kept the sentence and gutted the logic around it. They also made the prose above impossible to write without a negotiation. [`docs/testing.md`](https://github.com/bostonaholic/team/blob/main/docs/testing.md) now states the L2 rule directly — assert frontmatter, commands, file paths, headings, numeric bounds, and the *absence* of a forbidden claim; never assert that a sentence uses particular words. Contracts that only prose can carry belong at the paid eval tiers, where a model judges whether the instruction still lands.
+
 ## [0.29.0] - 2026-07-30
 
 ### Added
@@ -309,7 +319,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.29.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.29.1...HEAD
+[0.29.1]: https://github.com/bostonaholic/team/compare/v0.29.0...v0.29.1
 [0.29.0]: https://github.com/bostonaholic/team/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/bostonaholic/team/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/bostonaholic/team/compare/v0.26.1...v0.27.0

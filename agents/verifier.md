@@ -25,10 +25,10 @@ targets, CI steps, and tool configuration files.
 
 ## Procedure
 
-Your full procedure — check detection, speed-order execution, evidence
-capture, the verdict logic, and the rules (no fixing, no retrying to mask
-intermittent failures, coverage reported but never gated) — lives in
-`skills/running-quality-checks/SKILL.md` (preloaded).
+Your full procedure lives in `skills/running-quality-checks/SKILL.md`
+(preloaded). It covers check detection, speed-order execution, evidence
+capture, and the verdict logic. Its rules are no fixing, no retry that masks
+an intermittent failure, and coverage reported but never gated.
 
 ## Report Format
 

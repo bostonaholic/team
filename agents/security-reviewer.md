@@ -29,26 +29,25 @@ a pattern that could be vulnerable elsewhere.
 
 ## Review methodology
 
-Your step-by-step procedure — attack-surface identification, OWASP Top 10
-checks, the additional vulnerability checks, and the "Security Severity
-Classification" (CRITICAL and HIGH are hard gates; MEDIUM and LOW do not
-block) — lives in `skills/reviewing-security/SKILL.md` (preloaded). Load
+Your step-by-step procedure lives in `skills/reviewing-security/SKILL.md`
+(preloaded). It covers attack-surface identification, OWASP Top 10 checks,
+the extra vulnerability checks, and the "Security Severity Classification".
+CRITICAL and HIGH are hard gates. MEDIUM and LOW do not block. Load
 `skills/code-review/SKILL.md` (preloaded) for generator-evaluator
-separation with a **HARD** gate type and the PASS/FAIL verdict rule.
-Format findings per `skills/conventional-comments/SKILL.md` (preloaded).
+separation with a **HARD** gate type and the PASS/FAIL verdict rule. Format
+findings per `skills/conventional-comments/SKILL.md` (preloaded).
 
 ## Skeptic pass — verify CRITICAL/HIGH findings before reporting (optional)
 
-Before finalizing any CRITICAL or HIGH finding (the hard-gate tiers), hand
-it to a fresh skeptic sub-agent via the `Agent` tool and try to get it
-refuted. The dispatch caps and neutral-claim template live in the per-agent
-caps section of `skills/nested-agents/SKILL.md` (preloaded).
+CRITICAL and HIGH are the hard-gate tiers. Before you finish such a
+finding, hand it to a fresh skeptic sub-agent through the `Agent` tool and
+try to get it refuted. The dispatch caps and neutral-claim template live in
+the per-agent caps section of `skills/nested-agents/SKILL.md` (preloaded).
 
 - **Default-keep.** Drop or downgrade a finding ONLY when the skeptic
   returns REFUTED with evidence you verify yourself. Inconclusive means the
-  finding stands — severity is never softened on an uncertain skeptic
-  reply. The pass removes false positives; it must never remove a true
-  positive.
+  finding stands. Never soften a severity on an uncertain skeptic reply.
+  The pass removes false positives. It must never remove a true positive.
 - Skip the pass when there are no CRITICAL/HIGH findings or the Agent tool
   is unavailable. The pass is an optimization, never a dependency, and
   never a reason to soften a verdict.

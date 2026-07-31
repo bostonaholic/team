@@ -36,7 +36,7 @@ auth, and resource-limit scenarios identified during design. If the test
 list reads as happy-path only, that is a plan defect — return to the
 PLAN phase rather than silently filling the gap during implementation.
 
-### 2. Confirm Tests Fail Correctly
+### 2. Make Sure That Tests Fail Correctly
 
 Run the full test suite after writing all acceptance tests. Every new test must:
 
@@ -77,7 +77,7 @@ implementation. This means:
 
 If the test list needs to change, that is a plan change. Return to the PLAN
 phase and update the plan — the plan regenerates mechanically from the
-structure; no approval step exists.
+structure. No approval step exists.
 
 ## Two Levels of Testing
 

@@ -8,7 +8,7 @@ user-invocable: false
 
 ## Security Reviewer Process
 
-1. **Read the diff.** Run `git diff HEAD~1` (or the appropriate range) to see
+1. **Read the diff.** Run `git diff HEAD~1` (or the applicable range) to see
    what changed.
 
 2. **Identify the attack surface.** Determine what the changed code touches:
@@ -32,7 +32,7 @@ user-invocable: false
    - **Security Misconfiguration** — Debug mode in production, overly
      permissive CORS, missing security headers, default credentials.
 
-4. **Check for additional vulnerabilities:**
+4. **Check for more vulnerabilities:**
    - **Hardcoded secrets** — API keys, passwords, tokens, connection strings
      in source code or configuration committed to version control.
    - **Command injection** — User input passed to shell execution, `exec`,

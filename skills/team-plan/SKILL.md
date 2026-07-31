@@ -7,8 +7,8 @@ argument-hint: "[docs/plans/<id>/]"
 
 # Team Plan — Tactical Implementation Plan
 
-Run the PLAN phase. There is no gate here; the plan is a tactical
-artifact for the implementer, mechanically derived from the structure.
+Run the PLAN phase. There is no gate here. The plan is a tactical artifact
+for the implementer, mechanically derived from the structure.
 
 ## Input
 
@@ -67,7 +67,7 @@ done
   header and labeled options:
   - **Run the producer** — run `/team-structure docs/plans/<id>/` to produce
     `structure.md`.
-  - **Provide a path** — the user supplies the `docs/plans/<id>/` directory
+  - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
 
 ## Execution

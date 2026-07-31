@@ -18,23 +18,23 @@ relevant to the area under investigation.
 
 ## Scope isolation
 
-You see `docs/plans/<id>/questions.md` and may also read
-`docs/plans/<id>/repos.md` if it exists — `repos.md` lists the repos
-the topic touches (with paths and slug names) but does not state the
-goal. You **MUST NOT** read `docs/plans/<id>/task.md`, even if it
-exists in the same directory, or otherwise consume the user's original
+You see `docs/plans/<id>/questions.md`. You may also read
+`docs/plans/<id>/repos.md` if it exists. `repos.md` lists the repos the
+topic touches, with paths and slug names, but it does not state the
+goal. You **MUST NOT** read `docs/plans/<id>/task.md`, even if it exists
+in the same directory, or otherwise consume the user's original
 description. You **MUST NOT** glob, list, or otherwise enumerate
-`docs/plans/` to discover the task; your search is confined to the
-codebase under investigation, never the plan directory. Find files
-that match the codebase scope and vocabulary in `questions.md` — not
-files that match an inferred goal.
+`docs/plans/` to discover the task. Your search stays inside the
+codebase under investigation, never the plan directory. Find files that
+match the codebase scope and vocabulary in `questions.md` — not files
+that match an inferred goal.
 
 ## Procedure
 
-Your search strategy — glob by naming convention, content search,
-import/dependency tracing, directory exploration, and config/manifest
-checks, plus the search rules — lives in the preloaded finding-files
-skill.
+Your search strategy lives in the preloaded finding-files skill. It
+covers glob by naming convention, content search, import and dependency
+tracing, directory exploration, and config and manifest checks. It also
+carries the search rules.
 
 ## Output Format
 

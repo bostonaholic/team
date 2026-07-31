@@ -136,7 +136,7 @@ export interface OutcomeScore {
 
 // A fixture's `detection_hint` is treated as a case-insensitive regex (per
 // the rubric's documented contract), with a literal-substring fallback when
-// the string isn't valid regex. This lets a hint match real reviewer
+// the string is not valid regex. This lets a hint match real reviewer
 // phrasing ("null dereference", "user could be null", "missing null check")
 // instead of one brittle literal that a model rarely emits verbatim.
 export function matchesHint(output: string, hint: string): boolean {

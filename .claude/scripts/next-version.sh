@@ -6,7 +6,7 @@
 # stdout and nothing else (so it pipes cleanly).
 #
 # DETERMINISTIC: the output is a pure function of (base version, level). The
-# base is read from the remote's default branch — resolved via origin/HEAD, so
+# base is read from the remote's default branch — resolved through origin/HEAD, so
 # main/master/whatever all work, never hardcoded — or taken verbatim from
 # $BASE_VERSION when set (used by tests, and by callers that already know the
 # base they intend to land onto).
@@ -18,7 +18,7 @@
 # by shipit (rebase onto new main + recompute the bump) and backstopped by
 # release-on-merge.yml's duplicate-tag rejection.
 #
-# NOTE: earlier revisions walked past versions "claimed" by other open PRs via
+# NOTE: earlier revisions walked past versions "claimed" by other open PRs through
 # the GitHub API. That was the per-PR model's mechanism. It is deliberately
 # removed: it made the output depend on whatever PRs happened to be open, which
 # (a) was non-deterministic and untestable, and (b) skipped perfectly free
@@ -49,7 +49,7 @@ case "$level" in
 esac
 
 # Base version: $BASE_VERSION override (deterministic / testable), else read it
-# from the remote's default branch — resolved via origin/HEAD, never hardcoded.
+# from the remote's default branch — resolved through origin/HEAD, never hardcoded.
 if [ -n "${BASE_VERSION:-}" ]; then
   base="$BASE_VERSION"
 else

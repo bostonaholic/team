@@ -39,7 +39,7 @@ The body answers questions the diff cannot answer.
 - **Separate from subject with a blank line.** This is how git distinguishes
   subject from body.
 - **Wrap at 72 characters.** Many tools display git output in 80-column
-  terminals; leaving 8 characters of margin prevents ugly wrapping.
+  terminals. Leaving 8 characters of margin prevents ugly wrapping.
 - **Explain motivation.** Why was this change necessary? What problem does
   it solve? What would happen if this commit did not exist?
 - **Note non-obvious consequences.** If this commit changes behavior that
@@ -124,9 +124,9 @@ principles:
    represents the complete feature, not a log of how it was built. Write the
    subject as the feature's user-visible effect.
 
-2. **List significant changes in the body.** If the feature touched multiple
+2. **List important changes in the body.** If the feature touched multiple
    files or subsystems, enumerate them briefly. The PR description can go
-   deeper; the commit body should orient future `git log` readers.
+   deeper. The commit body should orient future `git log` readers.
 
 3. **Reference the issue or plan.** If there is an issue number or plan
    document, cite it: `Closes #42` or `Implements docs/plans/2026-01-15-auth-plan.md`.

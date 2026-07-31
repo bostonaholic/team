@@ -284,7 +284,7 @@ export function selectTests(
 }
 
 // ---------------------------------------------------------------------------
-// EVALS_TIER filter — applied AFTER selection. Tests whose tier doesn't
+// EVALS_TIER filter — applied AFTER selection. Tests whose tier does not
 // match the env filter are dropped from the selected set.
 // ---------------------------------------------------------------------------
 

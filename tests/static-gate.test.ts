@@ -185,7 +185,7 @@ describe("static gate: author gate", () => {
     // harness-checks job — NOT as a live `if:`. The free `bun test` job stays
     // ungated by design (fork authors keep free CI). When a paid step attaches
     // here it inherits this documented contract as its live `if:`. This
-    // tripwire pins the contract text so the comment can't be deleted.
+    // tripwire pins the contract text so the comment cannot be deleted.
     expect(harnessWorkflow).toContain(TRUST_EXPR);
   });
 
@@ -256,7 +256,7 @@ describe("static gate: evals environment backstop", () => {
     // The hard ban must be stated in the workflow: token/secret-consuming
     // jobs MUST NOT trigger on pull_request_target (base-repo context with
     // secrets — exfiltration vector). Anchor on the ban phrasing plus a
-    // comment line so an incidental mention can't satisfy this.
+    // comment line so an incidental mention cannot satisfy this.
     expect(evalsWorkflow).toContain("MUST NOT trigger on");
     expect(/^\s*#.*pull_request_target/m.test(evalsWorkflow)).toBe(true);
   });
@@ -317,7 +317,7 @@ describe("static gate: PR evals workflow", () => {
     // from the PR run, so a borderline grading can never redden the check.
     // EVALS_ALL stays absent so the diff keeps driving selection within the
     // gate tier — cost still scales with the change. Match assignments only
-    // (bare key at line start), so the explanatory comment doesn't trip this;
+    // (bare key at line start), so the explanatory comment does not trip this;
     // the exact-value match also catches typos like `gates`.
     expect(/^\s*EVALS_TIER:\s*gate\s*$/m.test(workflow)).toBe(true);
     expect(/^\s*EVALS_ALL:/m.test(workflow)).toBe(false);
@@ -498,7 +498,7 @@ describe("static gate: planted-comment-violations fixture", () => {
 });
 
 // Tier truth lives in two unsynchronized places — fixture frontmatter and the
-// E2E_TIERS map — and tier now decides whether a fixture can run on the PR
+// E2E_TIERS map — and tier now decides if a fixture can run on the PR
 // gate (pr-evals.yml sets EVALS_TIER: gate). These drift guards make any
 // mislabeling, desync, or orphaning fail `bun test` deterministically instead
 // of silently putting a stochastic probe back on the PR gate.
