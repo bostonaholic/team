@@ -82,7 +82,7 @@ explanation.
   workaround does. The ban targets internal trackers and pipeline
   artifacts, not those links.
 - **No process narration.** Describe the code as it exists now. Do not
-  write dates, corrections, or historical narration. Never describe the
+  write dates, corrections, changelog entries, or historical narration. Never describe the
   edit that produced the code. Never mention the user, the prompt, review
   feedback, ticket discussion, or agent instructions. Marker phrases such
   as "Previously", "Originally", "As of", "Correction", "Temporary fix

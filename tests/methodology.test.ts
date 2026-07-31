@@ -944,6 +944,8 @@ describe("comment red flags (L2 content tripwire)", () => {
     const styleBucket = sliceBetween(flags, "Style escalation", "Not violations");
     expect(styleBucket.length).toBeGreaterThan(0);
     expect(/process narration/i.test(styleBucket)).toBe(true);
+    // Absence pin: the blocking bucket never gains the narration class.
+    expect(/process narration/i.test(blockingBucket)).toBe(false);
     // Residency: the constraint-gated missing-why carve-out lives in the
     // Not-violations list (marker to end of slice — its own sub-slice, never
     // shared with Style escalation).
@@ -951,6 +953,9 @@ describe("comment red flags (L2 content tripwire)", () => {
     const notViolations = notViolationsStart === -1 ? "" : flags.slice(notViolationsStart);
     expect(notViolations.length).toBeGreaterThan(0);
     expect(/missing-why/i.test(notViolations)).toBe(true);
+    // Absence pin: missing-why never moves into Style escalation — that
+    // move would break the never-escalates cap.
+    expect(/missing-why/i.test(styleBucket)).toBe(false);
   });
 
   test("code-reviewer defers the comment-discipline check to the skill", () => {
