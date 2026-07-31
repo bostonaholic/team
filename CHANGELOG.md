@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.2] - 2026-07-31
+
 ### Added
 
 - **The rule that a reviewer cannot edit is now a test, not a convention.** Every reviewer agent already shipped with read-only tool grants and `permissionMode: plan`, and every producer already shipped with `Write`. Nothing asserted it, so a new reviewer added with `Write` in its `tools:` line would have passed CI and quietly gained the power to fix the defect it found and then approve its own fix — generator and evaluator collapsed into one role, which is the single failure the whole review layer exists to prevent. [`tests/protocol.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/protocol.test.ts) gains an L2 frontmatter tripwire over both halves of the split: the five reviewers hold no `Write`, `Edit`, or `NotebookEdit` and carry `permissionMode: plan`, and the six producers hold `Write` and appear in neither list. It asserts frontmatter and a numeric bound, which is what [`docs/testing.md`](https://github.com/bostonaholic/team/blob/main/docs/testing.md) puts on the "assert these" list, so it survives any rewrite of the surrounding prose. `researcher` and `file-finder` are deliberately outside both sets: they are read-only for research isolation, and read-only does not by itself mean reviewer.
@@ -329,7 +331,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.29.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.29.2...HEAD
+[0.29.2]: https://github.com/bostonaholic/team/compare/v0.29.1...v0.29.2
 [0.29.1]: https://github.com/bostonaholic/team/compare/v0.29.0...v0.29.1
 [0.29.0]: https://github.com/bostonaholic/team/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/bostonaholic/team/compare/v0.27.0...v0.28.0
