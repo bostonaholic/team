@@ -186,6 +186,16 @@ describe("pr-verify skill: verdict and confidence vocabulary", () => {
     expect(s).toContain("NEEDS ATTENTION");
     expect(s).toContain("NOT READY");
   });
+
+  test("FAIL precedence is colocated with the thresholds, not only in Success Criteria", () => {
+    // A FAIL item plus a PARTIAL/LOW item matches two thresholds; the
+    // tie-break must sit next to the thresholds the agent reads at
+    // verdict time. Both strings are unique to step 4 — Success Criteria
+    // words its copy differently, so this pin dies with the colocation.
+    const s = step4Section();
+    expect(s).toContain("no item is FAIL");
+    expect(s).toContain("FAIL always wins");
+  });
 });
 
 describe("pr-verify skill: per-item strategy classification", () => {

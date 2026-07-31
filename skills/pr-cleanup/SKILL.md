@@ -39,7 +39,9 @@ modes:
 - A PR number (digits only) — resolve its head branch via `gh`.
 - A full PR URL — same resolution.
 - A branch name.
-- Nothing — default to the current branch.
+- Nothing — default to the branch checked out in the invoking directory
+  (step 0 captures it as `$INVOKE_BRANCH` before commands are anchored to
+  the primary clone).
 
 Refusals, before anything else runs:
 
@@ -52,7 +54,7 @@ Refusals, before anything else runs:
 
   ```sh
   case "$NUMBER" in
-    ''|*[!0-9]*) echo "refusing: PR number must be digits only" >&2; exit 1 ;;
+    ''|*[!0-9]*) echo "refusing: PR number must be digits only — re-run with the PR's numeric ID or its full URL" >&2; exit 1 ;;
   esac
   ```
 
@@ -107,7 +109,8 @@ Refusals, before anything else runs:
    `git -C "$PRIMARY_ROOT"` (including the remote-branch check and the
    prune offer), every `gh` command passes `--repo "$REPO"` (derived in
    step 0 — never `gh`'s cwd-based auto-detection), and non-git
-   destructive commands take `$PRIMARY_ROOT`-absolute paths.
+   destructive commands take `$PRIMARY_ROOT`-absolute paths. The end of
+   step 0 enumerates the only three unanchored exceptions.
 10. **Protected names match case-insensitively, and `-D` requires an
     exact-case local branch.** On a case-insensitive filesystem `Main` IS
     `main`: a candidate whose lowercased form matches the default branch,
@@ -151,6 +154,8 @@ the primary clone first, before any destructive action. The whole
 resolve-validate-derive sequence is one runnable block:
 
 ```sh
+INVOKE_DIR="$(pwd -P)"
+INVOKE_BRANCH="$(git branch --show-current)"
 COMMON_DIR="$(git rev-parse --path-format=absolute --git-common-dir)"
 [ -n "$COMMON_DIR" ] || { echo "refusing: cannot resolve the git dir" >&2; exit 1; }
 PRIMARY_ROOT="$(dirname "$COMMON_DIR")"
@@ -162,6 +167,15 @@ PRIMARY_ROOT="$(dirname "$COMMON_DIR")"
 REPO="$(cd "$PRIMARY_ROOT" && gh repo view --json nameWithOwner --jq .nameWithOwner)"
 [ -n "$REPO" ] || { echo "refusing: cannot resolve <owner>/<repo> — run 'gh auth status', fix what it reports, and re-run" >&2; exit 1; }
 ```
+
+The first two captures are deliberately unanchored — they run against the
+invoking directory, before the anchoring rule takes effect.
+`$INVOKE_BRANCH` is the branch checked out where the command was run;
+step 2's no-argument fallback consumes it. `$INVOKE_DIR` records where the
+run started, so a worktree-removal step can tell that the invocation cwd
+is inside the worktree about to be removed. Anchoring either capture would
+read the primary clone's checkout — typically the default branch — and
+resolve the wrong target.
 
 Capture the `rev-parse` output and test it before `dirname` runs —
 `dirname ""` prints `.` and exits 0, which would mask a failed resolution
@@ -195,10 +209,13 @@ run its destructive command with an empty expansion. The `${VAR:?}`
 guards at the destructive sinks are the backstop, not the mechanism.
 
 From here on the anchoring rule (Hard Rule 9) applies: every git command is
-`git -C "$PRIMARY_ROOT"`. Exactly two other anchors exist: step 3's
-dirty-tree check inside a still-present linked worktree
-(`git -C <worktree-path> status --porcelain`) and step A2's inspection of
-what blocks a removal (`git -C <worktree-path> status --short`). The
+`git -C "$PRIMARY_ROOT"`. Exactly three other anchors exist: step 0's
+invoking-branch capture above (`git branch --show-current` against the
+invoking directory — the anchored form would name the primary clone's
+checkout, not the cleanup target), step 3's dirty-tree check inside a
+still-present linked worktree
+(`git -C "$WORKTREE_PATH" status --porcelain`), and step A2's inspection of
+what blocks a removal (`git -C "$WORKTREE_PATH" status --short`). The
 bash call that removes a worktree first runs `cd "$PRIMARY_ROOT"`, so no
 later command depends on a working directory that no longer exists.
 
@@ -217,8 +234,20 @@ Run, in order, the first that succeeds — the result is `$DEFAULT`:
 ### Step 2 — resolve targets, refuse protected names
 
 If `$ARGUMENTS` named a PR, resolve its head branch from the `gh` JSON.
-Otherwise use the argument as the branch name, or fall back to the current
-branch. Detect a stack from `gh` base-branch chains: a PR whose base branch
+Otherwise use the argument as the branch name, or — with no argument —
+fall back to `$INVOKE_BRANCH`, the branch step 0 captured from the
+invoking directory. Never resolve the fallback through the anchored clone:
+`branch --show-current` run against `$PRIMARY_ROOT` names the primary
+clone's checkout (typically `$DEFAULT`), so a no-argument run from inside
+a worktree — the common topology right after `/shipit` — would trip the
+protected-name refusal below, or worse, target whatever branch the primary
+clone happens to hold. However resolved, the name flows through the Input
+allowlist, the protected-name refusal below, and the exact-case existence
+check before any deletion. Once the invoking worktree is removed (Mode A
+step 2 onward) the capture no longer names the target, so a later
+invocation re-sets `$BRANCH` to the already-validated name — safe to set
+literally, because the byte-exact allowlist proved it free of shell
+metacharacters. Detect a stack from `gh` base-branch chains: a PR whose base branch
 is another open PR's head belongs to a stack, and the whole chain becomes
 the target set, child before parent. When a stack tool manages the branch
 (for example Graphite), prefer that tool's delete command so its metadata
@@ -239,15 +268,23 @@ LOWER="$(printf '%s' "$BRANCH" | tr '[:upper:]' '[:lower:]')"
 DEFAULT_LOWER="$(printf '%s' "$DEFAULT" | tr '[:upper:]' '[:lower:]')"
 case "$LOWER" in
   "$DEFAULT_LOWER"|master|develop|release/*)
-    echo "refusing: '$BRANCH' matches the protected name '$LOWER'" >&2; exit 1 ;;
+    echo "refusing: '$BRANCH' matches the protected name '$LOWER' — name the feature branch or its PR explicitly" >&2; exit 1 ;;
 esac
 ```
+
+This refusal is intentional: protected branches are never cleanup
+targets. When it fires, re-run with the feature branch or its PR named
+explicitly; on a no-argument run it means the invoking checkout itself is
+a protected branch, not the branch to clean up.
 
 ### Step 3 — refuse a dirty tree
 
 Run `git -C "$PRIMARY_ROOT" status --porcelain` — and when the target
-branch lives in a linked worktree, `git -C <worktree-path> status
---porcelain` there too. Untracked generated reports are disposable in
+branch lives in a linked worktree, run
+`git -C "$WORKTREE_PATH" status --porcelain` there too, deriving
+`$WORKTREE_PATH` with the `worktree list --porcelain` awk shown in Mode A
+step 2 (Mode B step 2 uses the same derivation) — never invent another
+lookup. Untracked generated reports are disposable in
 Mode B only; tracked modifications always stop the run. Surface them — do
 not discard work.
 
@@ -281,13 +318,18 @@ not discard work.
    ```sh
    [ "$(git -C "$PRIMARY_ROOT" rev-parse "refs/heads/$BRANCH")" = "$HEAD_OID" ] &&
      git -C "$PRIMARY_ROOT" merge-base --is-ancestor "$MERGE_OID" "origin/$DEFAULT" ||
-     { echo "warn: '$BRANCH' does not match the merged PR, or the merge is not in origin/$DEFAULT" >&2; }
+     { echo "gate failed: '$BRANCH' does not match the merged PR, or the merge is not in origin/$DEFAULT" >&2; exit 1; }
    ```
 
    Containment is checked on the **merge commit**, not the branch tip — a
    squash merge rewrites the history, so the branch tip is never an
-   ancestor of the default branch. Either check failing downgrades to the
-   warn-and-confirm path above, never to silent deletion.
+   ancestor of the default branch. Either check failing halts the block
+   with `exit 1` — never a warning to continue past. On that non-zero
+   exit, STOP: report which check failed, ask the user whether to delete
+   anyway, and wait for the answer before running any later step. Only
+   the user's explicit delete-anyway confirmation (Hard Rule 1) re-enters
+   the flow, and the completion report must state that the gate was
+   overridden.
 
 2. **Remove the branch's worktree, try-then-confirm.** Detect it and
    capture its path in the same invocation as the removal:
@@ -302,12 +344,12 @@ not discard work.
 
    ```sh
    cd "$PRIMARY_ROOT"
-   git -C "$PRIMARY_ROOT" worktree remove "$WORKTREE_PATH"
+   git -C "${PRIMARY_ROOT:?}" worktree remove "${WORKTREE_PATH:?}"
    ```
 
    No force on the first attempt: a merged branch's worktree can hold real
    local files (`.env` copies, uncommitted scratch). If git refuses, show
-   what blocks it (`git -C <worktree-path> status --short`) and ask for
+   what blocks it (`git -C "$WORKTREE_PATH" status --short`) and ask for
    confirmation before retrying with `--force` appended. Never
    `git checkout` inside a linked worktree — checking out the default
    there fails when the primary clone holds it.
@@ -330,8 +372,8 @@ not discard work.
 
    ```sh
    git -C "$PRIMARY_ROOT" for-each-ref --format='%(refname:short)' refs/heads |
-     grep -qxF -- "$BRANCH" || { echo "refusing: no local branch named exactly '$BRANCH'" >&2; exit 1; }
-   git -C "$PRIMARY_ROOT" branch -D -- "$BRANCH"
+     grep -qxF -- "$BRANCH" || { echo "refusing: no local branch named exactly '$BRANCH' — already deleted (done, not an error) or cased differently; check 'git branch --list'" >&2; exit 1; }
+   git -C "${PRIMARY_ROOT:?}" branch -D -- "${BRANCH:?}"
    ```
 
 5. **Shared tail.** Remote deletion is usually automatic on merge; check
@@ -372,7 +414,7 @@ order child before parent throughout.
 
    ```sh
    cd "$PRIMARY_ROOT"
-   git -C "$PRIMARY_ROOT" worktree remove --force "$WORKTREE_PATH"
+   git -C "${PRIMARY_ROOT:?}" worktree remove --force "${WORKTREE_PATH:?}"
    ```
 
    `--force` is unconfirmed here: untracked scratch is expected in an
@@ -388,14 +430,14 @@ order child before parent throughout.
 
    ```sh
    git -C "$PRIMARY_ROOT" for-each-ref --format='%(refname:short)' refs/heads |
-     grep -qxF -- "$BRANCH" || { echo "refusing: no local branch named exactly '$BRANCH'" >&2; exit 1; }
-   git -C "$PRIMARY_ROOT" branch -D -- "$BRANCH"
+     grep -qxF -- "$BRANCH" || { echo "refusing: no local branch named exactly '$BRANCH' — already deleted (done, not an error) or cased differently; check 'git branch --list'" >&2; exit 1; }
+   git -C "${PRIMARY_ROOT:?}" branch -D -- "${BRANCH:?}"
    ```
 
 4. **Delete remote branches:**
 
    ```sh
-   git -C "$PRIMARY_ROOT" push origin --delete -- "$BRANCH" [<branch>...]
+   git -C "${PRIMARY_ROOT:?}" push origin --delete -- "${BRANCH:?}" [<branch>...]
    ```
 
 5. **External-state ask.** Whenever a worktree was removed, ask one

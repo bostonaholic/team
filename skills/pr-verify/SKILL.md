@@ -157,8 +157,9 @@ Final verdict:
 - **READY** — all items PASS with HIGH or MEDIUM confidence, no FAIL
   items.
 - **NEEDS ATTENTION** — one or more items are PARTIAL or have LOW
-  confidence.
-- **NOT READY** — one or more items FAIL.
+  confidence, and no item is FAIL.
+- **NOT READY** — one or more items FAIL. FAIL always wins: a single
+  FAIL item forces NOT READY even when other items are PARTIAL or LOW.
 
 ### Step 5 — follow-ups
 

@@ -180,7 +180,7 @@ describe("pr-cleanup skill: command contracts (all $PRIMARY_ROOT-anchored)", () 
   });
 
   test("deletes the local branch with the anchored, option-terminated form", () => {
-    expect(body()).toContain(`git -C "$PRIMARY_ROOT" branch -D --`);
+    expect(body()).toContain(`git -C "\${PRIMARY_ROOT:?}" branch -D --`);
   });
 
   test("remote-branch check is anchored (ls-remote --heads origin)", () => {
@@ -192,7 +192,7 @@ describe("pr-cleanup skill: command contracts (all $PRIMARY_ROOT-anchored)", () 
   });
 
   test("remote deletion is anchored (push origin --delete)", () => {
-    expect(body()).toContain(`git -C "$PRIMARY_ROOT" push origin --delete`);
+    expect(body()).toContain(`git -C "\${PRIMARY_ROOT:?}" push origin --delete`);
   });
 
   test("closes PRs through gh pr close with an explicit --repo", () => {
@@ -205,6 +205,14 @@ describe("pr-cleanup skill: command contracts (all $PRIMARY_ROOT-anchored)", () 
     expect(body()).toContain("status --porcelain");
   });
 
+  test("step 3's worktree dirty check reuses the derived $WORKTREE_PATH", () => {
+    // The only $WORKTREE_PATH derivation lives in the Mode A/B removal
+    // steps; step 3 must point at it rather than invent its own lookup.
+    const s = sliceBetween("### Step 3", "### Mode A");
+    expect(s).toContain(`git -C "$WORKTREE_PATH" status --porcelain`);
+    expect(s).toContain("worktree list --porcelain");
+  });
+
   test("validates every branch name with git check-ref-format --branch", () => {
     expect(body()).toContain("git check-ref-format --branch");
   });
@@ -213,20 +221,22 @@ describe("pr-cleanup skill: command contracts (all $PRIMARY_ROOT-anchored)", () 
 describe("pr-cleanup skill: destructive-step gates", () => {
   test("Mode A worktree removal does NOT reach for --force first (try-then-confirm)", () => {
     expect(
-      /git -C "\$PRIMARY_ROOT" worktree remove (?!--force)/.test(modeASection()),
+      /git -C "\$\{PRIMARY_ROOT:\?\}" worktree remove (?!--force)/.test(
+        modeASection(),
+      ),
     ).toBe(true);
   });
 
   test("Mode B worktree removal uses --force (the abandon request is the gate)", () => {
     expect(modeBSection()).toContain(
-      `git -C "$PRIMARY_ROOT" worktree remove --force`,
+      `git -C "\${PRIMARY_ROOT:?}" worktree remove --force`,
     );
   });
 
   test("the merged-PR verification gate precedes branch -D within Mode A", () => {
     const a = modeASection();
     const gate = a.indexOf("gh pr list --state merged");
-    const deleteBranch = a.indexOf(`git -C "$PRIMARY_ROOT" branch -D --`);
+    const deleteBranch = a.indexOf(`git -C "\${PRIMARY_ROOT:?}" branch -D --`);
     expect(gate).toBeGreaterThanOrEqual(0);
     expect(deleteBranch).toBeGreaterThan(gate);
   });
@@ -279,7 +289,7 @@ describe("pr-cleanup skill: branch -D requires an exact-case local branch", () =
         "for-each-ref --format='%(refname:short)' refs/heads",
       );
       const exactMatch = section.indexOf("grep -qxF -- ");
-      const deleteBranch = section.indexOf(`branch -D -- "$BRANCH"`);
+      const deleteBranch = section.indexOf(`branch -D -- "\${BRANCH:?}"`);
       expect(forEachRef).toBeGreaterThanOrEqual(0);
       expect(exactMatch).toBeGreaterThan(forEachRef);
       expect(deleteBranch).toBeGreaterThan(exactMatch);
@@ -295,9 +305,20 @@ describe("pr-cleanup skill: merged gate checks identity and containment", () => 
   test("verifies containment via merge-base --is-ancestor before branch -D", () => {
     const a = modeASection();
     const containment = a.indexOf("merge-base --is-ancestor");
-    const deleteBranch = a.indexOf(`branch -D -- "$BRANCH"`);
+    const deleteBranch = a.indexOf(`branch -D -- "\${BRANCH:?}"`);
     expect(containment).toBeGreaterThanOrEqual(0);
     expect(deleteBranch).toBeGreaterThan(containment);
+  });
+
+  test("the identity/containment gate halts with exit 1, never a warn-and-continue", () => {
+    // The executable adjacency is the contract: the containment command's
+    // failure branch must reach `exit 1` in the same fenced block. A bare
+    // warn (the round-3 form) exits 0 and gives the agent nothing to stop on.
+    expect(
+      /merge-base --is-ancestor "\$MERGE_OID" "origin\/\$DEFAULT" \|\|\n[^\n]*exit 1/.test(
+        modeASection(),
+      ),
+    ).toBe(true);
   });
 });
 
@@ -347,7 +368,7 @@ describe("pr-cleanup skill: step 0 hardening contracts", () => {
 
 describe("pr-cleanup skill: option terminators at every branch-name sink", () => {
   test("both branch -D call sites take -- before the name", () => {
-    const hits = body().match(/branch -D -- "\$BRANCH"/g) ?? [];
+    const hits = body().match(/branch -D -- "\$\{BRANCH:\?\}"/g) ?? [];
     expect(hits.length).toBe(2);
   });
 
@@ -356,7 +377,64 @@ describe("pr-cleanup skill: option terminators at every branch-name sink", () =>
   });
 
   test("the remote deletion takes -- before the name", () => {
-    expect(body()).toContain(`push origin --delete -- "$BRANCH"`);
+    expect(body()).toContain(`push origin --delete -- "\${BRANCH:?}"`);
+  });
+});
+
+describe("pr-cleanup skill: ${VAR:?} backstop at every destructive sink (Hard Rule 11)", () => {
+  // `git -C ""` silently degrades to the current directory, and an
+  // existence check run against the wrong repo green-lights the delete —
+  // so every destructive expansion must abort when the variable is unset.
+  test("all five git sinks anchor with ${PRIMARY_ROOT:?}", () => {
+    const hits = body().match(/git -C "\$\{PRIMARY_ROOT:\?\}"/g) ?? [];
+    expect(hits.length).toBe(5);
+  });
+
+  test("both worktree removals take ${WORKTREE_PATH:?} as the operand", () => {
+    const hits = body().match(/worktree remove (?:--force )?"\$\{WORKTREE_PATH:\?\}"/g) ?? [];
+    expect(hits.length).toBe(2);
+  });
+
+  test("both branch deletions and the remote deletion take ${BRANCH:?}", () => {
+    const hits = body().match(/"\$\{BRANCH:\?\}"/g) ?? [];
+    expect(hits.length).toBe(3);
+  });
+});
+
+describe("pr-cleanup skill: step 0 captures the invocation context pre-anchoring", () => {
+  test("step 0 captures the invoking branch and directory as runnable lines", () => {
+    const s = sliceBetween("### Step 0", "### Step 1");
+    expect(s).toContain(`INVOKE_BRANCH="$(git branch --show-current)"`);
+    expect(s).toContain(`INVOKE_DIR="$(pwd -P)"`);
+  });
+
+  test("the capture precedes the $PRIMARY_ROOT resolution in the step 0 block", () => {
+    // Order matters: once commands anchor to $PRIMARY_ROOT, branch
+    // resolution names the primary clone's checkout (typically the
+    // default branch), not the branch being cleaned up.
+    const s = sliceBetween("### Step 0", "### Step 1");
+    const capture = s.indexOf(`INVOKE_BRANCH="$(git branch --show-current)"`);
+    const resolve = s.indexOf("COMMON_DIR=");
+    expect(capture).toBeGreaterThanOrEqual(0);
+    expect(resolve).toBeGreaterThan(capture);
+  });
+
+  test("step 0 enumerates the capture among exactly three anchoring exceptions", () => {
+    const s = sliceBetween("### Step 0", "### Step 1");
+    expect(s).toContain("Exactly three other anchors exist");
+    expect(flat(s)).toMatch(/three other anchors exist:[^.]*invoking-branch capture/);
+  });
+
+  test("step 2's no-argument fallback consumes the step 0 capture", () => {
+    const s = sliceBetween("### Step 2", "### Step 3");
+    expect(s).toContain("$INVOKE_BRANCH");
+  });
+
+  test("step 2 never resolves the fallback via the anchored clone", () => {
+    const s = sliceBetween("### Step 2", "### Step 3");
+    // Guard: an empty slice must fail, not vacuously pass the absence check.
+    expect(s.length).toBeGreaterThan(0);
+    expect(s).not.toContain(`git -C "$PRIMARY_ROOT" branch --show-current`);
   });
 });
 

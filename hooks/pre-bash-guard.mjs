@@ -15,6 +15,13 @@ const DANGEROUS_PATTERNS = [
     reason: "Blocked: recursive forced deletion of root or home directory",
   },
   {
+    // Both flags (r AND f) must be present; the operand starts with an
+    // (optionally double-quoted) variable expansion — the form the teardown
+    // skills emit, which the absolute-path pattern above never matches.
+    pattern: /rm\s+(?=(-\w+\s+)*-\w*r)(?=(-\w+\s+)*-\w*f)(-\w+\s+)+"?\$/,
+    reason: "Blocked: recursive forced deletion of a variable-expanded path",
+  },
+  {
     pattern: /DROP\s+(TABLE|DATABASE)/i,
     reason: "Blocked: SQL DROP TABLE/DATABASE is destructive",
   },
@@ -26,16 +33,21 @@ const DANGEROUS_PATTERNS = [
     pattern: /git\s+reset\s+--hard/,
     reason: "Blocked: git reset --hard discards uncommitted work",
   },
+  // The optional -C group in the three git patterns below tolerates a
+  // quoted path — \S+ alone cannot span a repo path containing a space,
+  // and a failed optional group would silently void the whole guard.
   {
-    pattern: /git\s+(-C\s+\S+\s+)?branch\s+.*-D\b/,
+    pattern:
+      /git\s+(-C\s+(?:"[^"]*"|'[^']*'|\S+)\s+)?branch\s+.*(-D\b|--delete\s+.*--force|--force\s+.*--delete)/,
     reason: "Blocked: git branch -D force-deletes a branch",
   },
   {
-    pattern: /git\s+(-C\s+\S+\s+)?push\s+.*--delete/,
+    pattern: /git\s+(-C\s+(?:"[^"]*"|'[^']*'|\S+)\s+)?push\s+.*--delete/,
     reason: "Blocked: git push --delete removes a remote branch",
   },
   {
-    pattern: /git\s+(-C\s+\S+\s+)?worktree\s+remove\s+.*--force/,
+    pattern:
+      /git\s+(-C\s+(?:"[^"]*"|'[^']*'|\S+)\s+)?worktree\s+remove\s+.*--force/,
     reason: "Blocked: git worktree remove --force discards untracked files in the worktree",
   },
   {
