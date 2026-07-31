@@ -34,6 +34,13 @@ function fm(): string {
 function flat(text: string): string {
   return text.replace(/\n/g, " ");
 }
+// The Completion section, or "" when absent — content assertions against ""
+// fail cleanly.
+function completionSection(): string {
+  const text = body();
+  const start = text.indexOf("## Completion");
+  return start >= 0 ? text.slice(start) : "";
+}
 
 describe("shipit skill: it is a runtime skill, project-agnostic", () => {
   test("skill file lives under runtime skills/ (distributed)", () => {
@@ -120,5 +127,11 @@ describe("shipit skill: push, wait for CI, merge", () => {
     const t = flat(body());
     expect(/--json[^.]{0,80}title/i.test(t)).toBe(true);
     expect(body()).toContain("--subject");
+  });
+});
+
+describe("shipit skill: post-merge handoff", () => {
+  test("the Completion report hands off to /pr-cleanup", () => {
+    expect(completionSection()).toContain("/pr-cleanup");
   });
 });

@@ -183,7 +183,8 @@ Report the merge result. If it stopped short, report the reason: a failing
 check, a timeout, or branch protection. If the project publishes a release on
 merge, that runs asynchronously after the merge. Point the operator at
 `gh run watch`, or `gh run list`, so they can observe it rather than assume it
-is already done.
+is already done. End with the handoff: `Next: run /pr-cleanup to resync the
+default branch and delete the merged branch.`
 
 `shipit` touches no tracker or board — it stays generic. If the PR links a
 ticket (e.g. `Closes #<n>`), the tracker closes that ticket when the merge
