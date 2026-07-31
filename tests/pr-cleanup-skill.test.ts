@@ -179,6 +179,10 @@ describe("pr-cleanup skill: command contracts (all $PRIMARY_ROOT-anchored)", () 
     expect(t).toContain("--ff-only");
   });
 
+  test("the resync checkout guards $DEFAULT (unset would checkout nothing loudly, not main)", () => {
+    expect(body()).toContain('checkout "${DEFAULT:?}"');
+  });
+
   test("deletes the local branch with the anchored, option-terminated form", () => {
     expect(body()).toContain(`git -C "\${PRIMARY_ROOT:?}" branch -D --`);
   });
@@ -195,10 +199,10 @@ describe("pr-cleanup skill: command contracts (all $PRIMARY_ROOT-anchored)", () 
     expect(body()).toContain(`git -C "\${PRIMARY_ROOT:?}" push origin --delete`);
   });
 
-  test("closes PRs through gh pr close with an explicit --repo", () => {
-    const t = body();
-    expect(t).toContain("gh pr close");
-    expect(t).toContain("--repo");
+  test("closes PRs through gh pr close with guarded --repo and number", () => {
+    // The close is a remote mutation: unset $REPO or $NUMBER must abort
+    // the invocation, never fall back to gh's cwd/branch auto-detection.
+    expect(body()).toContain('gh pr close --repo "${REPO:?}" -- "${NUMBER:?}"');
   });
 
   test("dirty-tree refusal reads status --porcelain", () => {
@@ -315,10 +319,16 @@ describe("pr-cleanup skill: merged gate checks identity and containment", () => 
     // failure branch must reach `exit 1` in the same fenced block. A bare
     // warn (the round-3 form) exits 0 and gives the agent nothing to stop on.
     expect(
-      /merge-base --is-ancestor "\$MERGE_OID" "origin\/\$DEFAULT" \|\|\n[^\n]*exit 1/.test(
+      /merge-base --is-ancestor "\$\{MERGE_OID:\?\}" "origin\/\$\{DEFAULT:\?\}" \|\|\n[^\n]*exit 1/.test(
         modeASection(),
       ),
     ).toBe(true);
+  });
+
+  test("gate inputs are :?-guarded so an unset OID aborts instead of comparing empty", () => {
+    const a = modeASection();
+    expect(a).toContain('= "${HEAD_OID:?}" ]');
+    expect(a).toContain('--is-ancestor "${MERGE_OID:?}"');
   });
 });
 
@@ -358,6 +368,26 @@ describe("pr-cleanup skill: input gates are byte-exact and mechanical", () => {
     expect(lowering).toBeGreaterThan(guard);
     // And the lowering itself must not re-nest a :? inside $( ).
     expect(/DEFAULT_LOWER="\$\([^)]*:\?/.test(s)).toBe(false);
+  });
+});
+
+describe("pr-cleanup skill: untrusted-input enumeration is exhaustive", () => {
+  test("names every gh JSON field the gates consume, incl. the merge-gate trio", () => {
+    // The section claims ONLY these fields gate actions — an enumeration
+    // that omits fields the gate reads understates the trust surface.
+    const s = sliceBetween("## Untrusted input", "## Execution");
+    for (const field of [
+      "state",
+      "mergedAt",
+      "number",
+      "baseRefName",
+      "headRefName",
+      "headRepositoryOwner",
+      "headRefOid",
+      "mergeCommit.oid",
+    ]) {
+      expect(s).toContain(field);
+    }
   });
 });
 
@@ -441,10 +471,13 @@ describe("pr-cleanup skill: step 0 captures the invocation context pre-anchoring
     expect(resolve).toBeGreaterThan(capture);
   });
 
-  test("step 0 enumerates the capture among exactly three anchoring exceptions", () => {
+  test("step 0 enumerates the capture among exactly four anchoring exceptions", () => {
+    // Four: the invoking-branch capture, check-ref-format (a pure
+    // ref-syntax check), step 3's dirty check, step A2's inspection.
     const s = sliceBetween("### Step 0", "### Step 1");
-    expect(s).toContain("Exactly three other anchors exist");
-    expect(flat(s)).toMatch(/three other anchors exist:[^.]*invoking-branch capture/);
+    expect(s).toContain("Exactly four other anchors exist");
+    expect(flat(s)).toMatch(/four other anchors exist:[^.]*invoking-branch capture/);
+    expect(flat(s)).toMatch(/four other anchors exist:.*check-ref-format/);
   });
 
   test("step 2's no-argument fallback consumes the step 0 capture", () => {

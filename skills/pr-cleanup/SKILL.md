@@ -347,8 +347,8 @@ not discard work.
    the SAME invocation:
 
    ```sh
-   [ "$(git -C "$PRIMARY_ROOT" rev-parse "refs/heads/$BRANCH")" = "$HEAD_OID" ] &&
-     git -C "$PRIMARY_ROOT" merge-base --is-ancestor "$MERGE_OID" "origin/${DEFAULT:?}" ||
+   [ "$(git -C "$PRIMARY_ROOT" rev-parse "refs/heads/$BRANCH")" = "${HEAD_OID:?}" ] &&
+     git -C "$PRIMARY_ROOT" merge-base --is-ancestor "${MERGE_OID:?}" "origin/${DEFAULT:?}" ||
      { echo "gate failed: '$BRANCH' does not match the merged PR, or the merge is not in origin/$DEFAULT" >&2; exit 1; }
    ```
 
