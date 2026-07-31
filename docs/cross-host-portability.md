@@ -33,7 +33,7 @@ nav_label: portability
 
 ## Current state
 
-Team is a Claude Code-native plugin. It ships 13 agents (`agents/*.md`), 52 skills
+Team is a Claude Code-native plugin. It ships 13 agents (`agents/*.md`), 53 skills
 (`skills/*/SKILL.md` + `registry.json`), and 4 hooks (`hooks/*.mjs`). They
 register through `.claude-plugin/plugin.json`. The orchestrator walks the QRSPI
 phase table (`skills/team/SKILL.md`). It persists state as artifact files under
@@ -235,7 +235,7 @@ cross-cutting recency caveat:
    this option's value with less risk.
 
 3. **Rejected: per-host maintained adapters (parallel hand-maintained trees).**
-   *Why rejected:* it costs 3× the maintenance across 13 agents, 52 skills, and 4
+   *Why rejected:* it costs 3× the maintenance across 13 agents, 53 skills, and 4
    hooks. It also guarantees drift, because someone must apply a fix to an agent
    body three times by hand. It throws away the fact that the bodies are *already
    portable*. The hybrid keeps most of its only advantage, a fully idiomatic host,

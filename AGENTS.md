@@ -70,9 +70,9 @@ Four agents (`researcher`, `implementer`, `code-reviewer`, `security-reviewer`) 
 
 **Invariant (checks and balances):** producers write, reviewers judge, and no agent does both. A reviewer (`code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`) holds no `Write`/`Edit` tool and carries `permissionMode: plan`. A reviewer that can edit can fix what it found and then approve its own fix, which collapses the generator and the evaluator into one role. `tests/protocol.test.ts` enforces both halves. See [docs/architecture.md](docs/architecture.md#checks-and-balances).
 
-## Skills (52)
+## Skills (53)
 
-See `skills/*/SKILL.md`. Entry point skills double as slash commands. Six of them are standalone slash-command utilities that are not QRSPI phases. `shipit` lands a reviewed PR. `pr-open-comments` triages unresolved PR review feedback. `pr-watch` is a bounded PR review watch loop. `pr-approve-watch` is the reviewer-side watch-and-approve. `groom-backlog` grooms a project backlog with a board-level pass plus per-item promotion. `pr-cleanup` tears down local and remote branch state after a PR is merged or abandoned. Methodology skills are loaded by agents. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
+See `skills/*/SKILL.md`. Entry point skills double as slash commands. Seven of them are standalone slash-command utilities that are not QRSPI phases. `shipit` lands a reviewed PR. `pr-open-comments` triages unresolved PR review feedback. `pr-watch` is a bounded PR review watch loop. `pr-approve-watch` is the reviewer-side watch-and-approve. `groom-backlog` grooms a project backlog with a board-level pass plus per-item promotion. `pr-cleanup` tears down local and remote branch state after a PR is merged or abandoned. `pr-verify` verifies a PR's test plan with evidence-rated verdicts. Methodology skills are loaded by agents. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
 
 ## Hooks
 
