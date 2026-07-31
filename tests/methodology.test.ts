@@ -869,24 +869,13 @@ describe("code-comment rules (L2 content tripwire)", () => {
     // convention and are exempt.
     expect(/doc comments/i.test(section)).toBe(true);
     expect(/exported\/public/i.test(section)).toBe(true);
-    // 18-rule expansion — one identifier pin per new bullet (identifiers,
-    // never wording: docs/testing.md).
-    // No process narration: timeless text, no edit/conversation references.
-    expect(/process narration/i.test(section)).toBe(true);
-    // Permitted class: non-obvious constraints and deliberate oddities.
-    expect(/deliberate oddities/i.test(section)).toBe(true);
-    // No duplicated documentation — types, tests, names, docs carry it.
-    expect(/duplicated documentation/i.test(section)).toBe(true);
-    // Fragile-reference token from the locality/precision bullet.
-    expect(/line numbers/i.test(section)).toBe(true);
-    // Maintenance bullet: obsolete comments go in the same diff.
-    expect(/obsolete/i.test(section)).toBe(true);
-    // Closing label — a bold line, not a heading, so it stays inside the
-    // sectionFrom slice window.
-    expect(section).toContain("Decision Test");
     // Scope pointer: in-source comments here; review findings belong to
-    // conventional-comments.
+    // conventional-comments. A cross-reference, so a rename fails the build.
     expect(section).toContain("skills/conventional-comments/SKILL.md");
+    // Whether the expanded rule set actually changes what a reviewer flags
+    // is behavior, not wording — it lives in the planted-comment-*
+    // code-reviewer evals, per docs/testing.md ("behavior that only prose
+    // can carry belongs at L5 or L6").
   });
 
   test("implementer defers comment discipline to engineering-standards via a one-line pointer", () => {
@@ -939,23 +928,12 @@ describe("comment red flags (L2 content tripwire)", () => {
     // ticket-like tokens outside comment syntax (string literals).
     expect(/upstream/i.test(flags)).toBe(true);
     expect(/string literals/i.test(flags)).toBe(true);
-    // Residency: process narration is a judgment class, so it lives in the
-    // Style-escalation bucket — a promotion to blocking fails here.
-    const styleBucket = sliceBetween(flags, "Style escalation", "Not violations");
-    expect(styleBucket.length).toBeGreaterThan(0);
-    expect(/process narration/i.test(styleBucket)).toBe(true);
-    // Absence pin: the blocking bucket never gains the narration class.
-    expect(/process narration/i.test(blockingBucket)).toBe(false);
-    // Residency: the constraint-gated missing-why carve-out lives in the
-    // Not-violations list (marker to end of slice — its own sub-slice, never
-    // shared with Style escalation).
-    const notViolationsStart = flags.indexOf("Not violations");
-    const notViolations = notViolationsStart === -1 ? "" : flags.slice(notViolationsStart);
-    expect(notViolations.length).toBeGreaterThan(0);
-    expect(/missing-why/i.test(notViolations)).toBe(true);
-    // Absence pin: missing-why never moves into Style escalation — that
-    // move would break the never-escalates cap.
-    expect(/missing-why/i.test(styleBucket)).toBe(false);
+    // Which severity bucket a judgment class lands in is behavior a model
+    // has to act on, not a string in this file. The planted-comment-*
+    // code-reviewer evals assert it by running the reviewer: every plant in
+    // planted-comment-process-narration is style-tier, so that fixture
+    // deliberately does not require a blocking label, while
+    // planted-comment-violations pins the blocking label onto b1.
   });
 
   test("code-reviewer defers the comment-discipline check to the skill", () => {

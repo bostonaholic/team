@@ -50,6 +50,13 @@ export interface RunAgentTestOptions {
   timeout?: number;
   testName?: string;
   model?: string;
+  // The agent-under-test's real rule text. Build it with `loadSkillContext`
+  // so the run observes the repo's skill files rather than a bare model.
+  systemPromptAppend?: string;
+  // Tools to deny on top of `Skill`. A skill body that tells the reviewer to
+  // run the suite makes it reach for Bash; in `-p` mode that permission
+  // request has no one to answer it and the run hangs to the timeout.
+  disallowedTools?: string[];
 }
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
@@ -284,7 +291,14 @@ export async function runAgentTest(
       args.push("--allowed-tools", ...options.allowedTools);
     }
     // Environment skills (built-in /review, …) can hijack the run.
-    args.push("--disallowed-tools", "Skill");
+    args.push("--disallowed-tools", "Skill", ...(options.disallowedTools ?? []));
+    // The agent under test runs in an empty temp cwd, so its own instruction
+    // text and preloaded skills must be injected here. Without this the run
+    // exercises a bare model plus the inline prompt, and no change to a
+    // skill file can move the result.
+    if (options.systemPromptAppend !== undefined && options.systemPromptAppend !== "") {
+      args.push("--append-system-prompt", options.systemPromptAppend);
+    }
 
     const child = spawn("claude", args, {
       cwd: options.workingDirectory,

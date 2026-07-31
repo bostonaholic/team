@@ -1,0 +1,58 @@
+{
+  "bugs": [
+    {
+      "id": "b1",
+      "category": "comment-process-narration",
+      "severity": "style",
+      "description": "The `// Previously this used a fixed window; changed to a token bucket after the review pointed out the burst behavior.` comment narrates the edit history and the review that produced the code. A comment describes the code as it exists now.",
+      "detection_hint": "previously this used|process narration|edit narration|historical narration|narrates the (?:edit|change|history)"
+    },
+    {
+      "id": "b2",
+      "category": "comment-conversation-reference",
+      "severity": "style",
+      "description": "The `// Per the reviewer's request, the burst multiplier stays configurable.` comment refers to the review conversation that produced the code. It carries no meaning outside the run that wrote it.",
+      "detection_hint": "per the reviewer|conversation reference|references the review|reviewer's request"
+    },
+    {
+      "id": "b3",
+      "category": "comment-stale",
+      "severity": "style",
+      "description": "The `// Refills the bucket every 30 seconds.` comment contradicts the code: REFILL_INTERVAL_MS is 15_000. A misleading comment is worse than no comment; the change updates or deletes it.",
+      "detection_hint": "every 30 seconds|stale comment|obsolete comment|comment[^.]{0,60}(?:contradict|no longer|out of date)|15_?000"
+    },
+    {
+      "id": "b4",
+      "category": "comment-vague",
+      "severity": "style",
+      "description": "The `// handle edge case` comment names no condition, risk, or dependency. Precise language names the exact case — here, a cost above the bucket's capacity.",
+      "detection_hint": "handle edge case|vague"
+    },
+    {
+      "id": "b5",
+      "category": "comment-fragile-reference",
+      "severity": "style",
+      "description": "The `// Mirrors the guard in the function two above.` comment refers to a file position that any reordering breaks. A comment names symbols, never positions.",
+      "detection_hint": "two above|fragile|positional reference|refers to (?:a )?(?:file )?position"
+    }
+  ],
+  "minimum_detection": 0.6,
+  "max_false_positives": 1,
+  "non_violations": [
+    {
+      "id": "n1",
+      "description": "The sweep() comment documents an ordering guarantee and the consequence of violating it — the permitted why-comment class, not a violation.",
+      "false_positive_hint": "\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:[^\n]{0,200}?evict before refill|evict before refill[^\n]{0,200}?\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:"
+    },
+    {
+      "id": "n2",
+      "description": "The bucketKeyForUser comment says 'user' in the domain sense (an end user of the product). The conversation-reference rule keys to the run that produced the code, never to vocabulary.",
+      "false_positive_hint": "\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:[^\n]{0,200}?bucketkeyforuser|bucketkeyforuser[^\n]{0,200}?\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:"
+    },
+    {
+      "id": "n3",
+      "description": "The acquireToken doc comment documents a public contract's failure mode and the caller's obligation. Doc comments on exported interfaces are exempt, and this one does not merely restate the signature.",
+      "false_positive_hint": "\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:[^\n]{0,200}?acquiretoken|acquiretoken[^\n]{0,200}?\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:"
+    }
+  ]
+}

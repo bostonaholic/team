@@ -36,6 +36,15 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/fixtures/code-reviewer/planted-comment-violations/**",
     "evals/rubrics/code-reviewer.md",
   ],
+  "planted-comment-process-narration": [
+    "agents/code-reviewer.md",
+    "skills/code-review/**",
+    "skills/conventional-comments/**",
+    "skills/engineering-standards/**",
+    "tests/code-reviewer.evals.ts",
+    "evals/fixtures/code-reviewer/planted-comment-process-narration/**",
+    "evals/rubrics/code-reviewer.md",
+  ],
   "git-commit-conventional-subject": [
     "skills/git-commit/**",
     "tests/git-commit.evals.ts",
@@ -133,6 +142,7 @@ export const E2E_TIERS: Record<string, "gate" | "periodic"> = {
   "planted-null-deref": "periodic",
   "planted-time-bomb": "periodic",
   "planted-comment-violations": "periodic",
+  "planted-comment-process-narration": "periodic",
   "git-commit-conventional-subject": "periodic",
   "changelog-keep-a-changelog-filter": "periodic",
   "team-question-neutral-questions": "periodic",

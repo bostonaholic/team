@@ -123,6 +123,35 @@ function validateGroundTruth(value: unknown): GroundTruth {
   return v as unknown as GroundTruth;
 }
 
+// Concatenates the named skills' real SKILL.md bodies for injection as the
+// agent-under-test's system prompt.
+//
+// The eval harness spawns `claude -p` in an empty temp dir with the `Skill`
+// tool disallowed, so nothing in this repo reaches the agent on its own.
+// Without this, a fixture whose `deps` name a skill file cannot observe a
+// change to that file: the eval scores the same against any version of the
+// skill, including one where the rule under test does not exist.
+//
+// Skills only, never the agent's own body. An agent file carries a procedural
+// scope ("your input is the diff on the current branch", "run the test
+// suite") that assumes a real checkout. Injected into an empty temp dir, it
+// sends the run hunting for a repo until it times out. The rules live in the
+// skills; the fixture supplies the diff inline.
+//
+// Callers name the skills explicitly rather than reading the agent's
+// `skills:` frontmatter, so that what a fixture exercises stays visible at
+// the call site and matches the globs in that fixture's touchfiles entry.
+export function loadSkillContext(skills: string[], repoRoot?: string): string {
+  const root = repoRoot ?? process.cwd();
+  if (skills.length === 0) throw new Error("loadSkillContext: no skills named");
+  return skills
+    .map((name) => {
+      const text = readFileSync(join(root, "skills", name, "SKILL.md"), "utf8");
+      return `# Skill: ${name}\n\n${text.trim()}`;
+    })
+    .join("\n\n---\n\n");
+}
+
 export function loadFixture(agent: string, caseName: string, fixtureRoot?: string): Fixture {
   const root = fixtureRoot ?? join(process.cwd(), "evals", "fixtures");
   const inputPath = join(root, agent, caseName, "input.md");

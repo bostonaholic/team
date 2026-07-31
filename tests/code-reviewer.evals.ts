@@ -28,7 +28,7 @@ import { join } from "node:path";
 
 import { EvalCollector, assertNoBudgetRegressions } from "./helpers/eval-store";
 import type { GroundTruthNonViolation } from "./helpers/fixtures";
-import { loadFixture } from "./helpers/fixtures";
+import { loadFixture, loadSkillContext } from "./helpers/fixtures";
 import { judgeReviewerOutput, matchesHint, outcomeJudge } from "./helpers/llm-judge";
 import { runAgentTest } from "./helpers/session-runner";
 import { testIfSelected } from "./helpers/touchfiles";
@@ -163,8 +163,25 @@ function registerPlantedBugEval(options: {
           prompt,
           workingDirectory: workDir,
           maxTurns: 6,
-          timeout: 180_000,
+          // Injecting the real skill text lengthens every run: the reviewer
+          // now works a full methodology rather than answering from the
+          // inline prompt alone. 180s clipped completing runs.
+          timeout: 300_000,
           testName: fixtureName,
+          // The reviewer's real rule text. `code-review` owns the severity
+          // regime, `conventional-comments` the finding format, and
+          // `engineering-standards` the canonical Code Comments rule set the
+          // planted-comment-* fixtures exercise. These three are the globs in
+          // every code-reviewer touchfiles entry.
+          systemPromptAppend: loadSkillContext([
+            "code-review",
+            "conventional-comments",
+            "engineering-standards",
+          ]),
+          // The fixture supplies the whole change inline, and the temp cwd is
+          // empty. Every tool below would either hang on a permission prompt
+          // or act on a repo that is not there.
+          disallowedTools: ["Bash", "Write", "Edit", "Task", "WebFetch", "WebSearch"],
         });
 
         // Tier 1 — outcome judge (deterministic): did the agent surface the
@@ -268,7 +285,7 @@ function registerPlantedBugEval(options: {
         rmSync(workDir, { recursive: true, force: true });
       }
     },
-    240_000,
+    420_000,
   );
 }
 
@@ -289,6 +306,26 @@ registerPlantedBugEval({
   requireBlockingLabel: true,
   mustDetectBugIds: ["b1"],
   blockingLabelOnBugId: "b1",
+});
+
+// The judgment classes the 18-rule set added. Every plant is style-tier, so
+// no blocking label is required — a blocking label here would itself be a
+// regression against the severity routing.
+//
+// Known limitation: this fixture measures behavior, not attribution. Run
+// against `origin/main`'s skill text — where none of these rules exist — it
+// still scores detection 1.0 with the same blocking-label count, because a
+// competent reviewer flags an edit-narrating comment or a stale comment on
+// ordinary judgment. So it proves the reviewer finds these violations; it
+// does not prove the rule text is what makes it. Discriminating plants have
+// to invert baseline behavior rather than agree with it — a pre-existing
+// TODO the diff never touches (the carve-out says raise no finding, baseline
+// flags it), or a clean function whose missing why-comment the constraint
+// gate withholds.
+registerPlantedBugEval({
+  fixtureName: "planted-comment-process-narration",
+  defectClause: "code-comment discipline",
+  mustDetectBugIds: ["b1"],
 });
 
 afterAll(async () => {
