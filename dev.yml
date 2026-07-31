@@ -22,6 +22,9 @@ commands:
   uninstall:
     desc: "Unregister plugin and clean up cache"
     run: "script/dev-uninstall"
+  codex-install:
+    desc: "Symlink user-invocable skills into ~/.agents/skills for Codex CLI"
+    run: "script/codex-dev-install"
   docs:
     desc: "Build and serve the docs site locally at http://localhost:4000"
     run: "cd docs && bundle config set --local path 'vendor/bundle' && bundle install && bundle exec jekyll serve --livereload"

@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Symlink Team's user-invocable skills into Codex CLI's user-scope skill
+# root: one link per skill under <root>/team/, where <root> is the resolved
+# physical path of ~/.agents/skills. Live-editable; re-run to refresh.
+#
+# Never touches Codex's plugin cache directory. Replacing that cached copy
+# with a symlink — the script/dev-install trick for Claude Code — makes
+# Codex report the plugin `not installed` and drops the catalog to zero
+# skills (docs/plans/57-codex-skills-install/research.md, run 3).
+#
+# Self-check semantics: mismatch fails, truncation reports.
+
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+# --- Preflight: codex must be on PATH, before any filesystem change
+if ! command -v codex >/dev/null 2>&1; then
+  echo "Error: codex not found on PATH. Install Codex CLI first." >&2
+  exit 1
+fi
+
+# --- Coexistence guard: abort only on an *installed* team@ plugin.
+# A bare marketplace registration prints `team@...  not installed` and must
+# proceed — `codex plugin remove team` could never clear it.
+PLUGIN_LIST="$(codex plugin list 2>&1 || true)"
+while IFS= read -r line; do
+  case "$line" in
+    team@*)
+      if [[ "$line" != *"not installed"* ]]; then
+        echo "Error: an installed Codex plugin would collide with these links:" >&2
+        echo "  ${line}" >&2
+        echo "Remove it first: codex plugin remove team" >&2
+        exit 1
+      fi
+      ;;
+  esac
+done <<<"$PLUGIN_LIST"
+
+# --- Root handling: create, resolve, verify, announce — then write
+TARGET_ROOT="${HOME}/.agents/skills"
+
+if [ -L "$TARGET_ROOT" ] && [ ! -e "$TARGET_ROOT" ]; then
+  echo "Error: ${TARGET_ROOT} is a dangling symlink. Fix or remove it first." >&2
+  exit 1
+fi
+if [ ! -e "$TARGET_ROOT" ]; then
+  mkdir -p "$TARGET_ROOT"
+fi
+if [ ! -d "$TARGET_ROOT" ]; then
+  echo "Error: ${TARGET_ROOT} exists but is not a directory." >&2
+  exit 1
+fi
+
+# Operate on the physical path (the root may be a symlink into a dotfiles repo)
+TARGET_ROOT="$(cd "$TARGET_ROOT" && pwd -P)"
+
+if [ ! -w "$TARGET_ROOT" ]; then
+  echo "Error: ${TARGET_ROOT} is not writable." >&2
+  exit 1
+fi
+
+if git -C "$TARGET_ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "WARNING: ${TARGET_ROOT} is inside a git work tree."
+  echo "  This script creates symlinks under ${TARGET_ROOT}/team/."
+  echo "  Consider adding agents/skills/team/ to that repository's gitignore."
+fi
+
+TEAM_DIR="${TARGET_ROOT}/team"
+
+# --- Delete guard + rebuild: the script owns team/, but refuses to delete
+# anything it did not create. Every abort fires before the first deletion.
+shopt -s nullglob dotglob
+if [ -L "$TEAM_DIR" ]; then
+  # A single symlink (e.g. a manual whole-tree link). Removing the link
+  # itself destroys no data.
+  echo "  Replacing existing symlink: ${TEAM_DIR} -> $(readlink "$TEAM_DIR")"
+  rm "$TEAM_DIR"
+elif [ -d "$TEAM_DIR" ]; then
+  for entry in "$TEAM_DIR"/*; do
+    if [ ! -L "$entry" ]; then
+      echo "Error: refusing to delete non-symlink entry: ${entry}" >&2
+      echo "  ${TEAM_DIR} is script-owned, but this entry was not created by" >&2
+      echo "  codex-dev-install. Nothing was deleted. Move the entry, then re-run." >&2
+      exit 1
+    fi
+  done
+  OLD_ROOT=""
+  for entry in "$TEAM_DIR"/*; do
+    entry_root="$(dirname "$(dirname "$(readlink "$entry")")")"
+    if [ "$entry_root" != "$PLUGIN_ROOT" ]; then
+      OLD_ROOT="$entry_root"
+    fi
+  done
+  if [ -n "$OLD_ROOT" ]; then
+    echo "NOTICE: replacing links that resolve to a DIFFERENT checkout root."
+    echo "  old: ${OLD_ROOT}"
+    echo "  new: ${PLUGIN_ROOT}"
+    echo "  Codex will now serve skills from the new root (last writer wins)."
+  fi
+  rm -f "$TEAM_DIR"/*
+  rmdir "$TEAM_DIR"
+elif [ -e "$TEAM_DIR" ]; then
+  echo "Error: ${TEAM_DIR} exists but is not a directory or symlink." >&2
+  exit 1
+fi
+
+# --- Link creation: one link per skill whose frontmatter lacks
+# `user-invocable: false`, re-derived on every run.
+echo "Installing Team skills for Codex CLI (dev)..."
+echo "  Source: ${PLUGIN_ROOT}"
+
+mkdir -p "$TEAM_DIR"
+LINKED_NAMES=""
+LINK_COUNT=0
+for skill_md in "$PLUGIN_ROOT"/skills/*/SKILL.md; do
+  skill_dir="$(dirname "$skill_md")"
+  skill_name="$(basename "$skill_dir")"
+  if grep -Eq '^user-invocable:[[:space:]]*false' "$skill_md"; then
+    continue
+  fi
+  ln -s "$skill_dir" "${TEAM_DIR}/${skill_name}"
+  LINKED_NAMES="${LINKED_NAMES}team:${skill_name}"$'\n'
+  LINK_COUNT=$((LINK_COUNT + 1))
+done
+
+if [ "$LINK_COUNT" -eq 0 ]; then
+  rmdir "$TEAM_DIR" 2>/dev/null || true
+  echo "Error: zero skills passed the user-invocable filter — broken filter." >&2
+  exit 1
+fi
+
+echo "  Linked: ${LINK_COUNT} skills into ${TEAM_DIR}"
+
+# --- Self-check against the real catalog: mismatch fails, truncation reports.
+# `codex debug prompt-input` renders the injected catalog with no API call.
+echo "Running self-check (mismatch fails, truncation reports)..."
+DEBUG_OUT="$(codex debug prompt-input 2>&1 || true)"
+
+EXPECTED_SET="$(printf '%s' "$LINKED_NAMES" | sort -u)"
+CATALOG_SET="$(printf '%s\n' "$DEBUG_OUT" | grep -oE 'team:[A-Za-z0-9_-]+' | sort -u || true)"
+
+if [ "$CATALOG_SET" != "$EXPECTED_SET" ]; then
+  echo "Error: self-check MISMATCH — links created vs. Codex catalog." >&2
+  echo "Linked (${LINK_COUNT}):" >&2
+  printf '%s\n' "$EXPECTED_SET" | sed 's/^/  /' >&2
+  echo "Catalog:" >&2
+  printf '%s\n' "$CATALOG_SET" | sed 's/^/  /' >&2
+  exit 1
+fi
+
+if printf '%s\n' "$DEBUG_OUT" | grep -qi 'truncat'; then
+  echo "WARNING: Codex reported truncation in the skill catalog (report-only):"
+  printf '%s\n' "$DEBUG_OUT" | grep -i 'truncat' | sed 's/^/  /'
+fi
+
+echo
+echo "Done. Codex sessions pick up the catalog at next thread start."
