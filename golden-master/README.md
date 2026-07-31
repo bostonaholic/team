@@ -39,8 +39,8 @@ baseline tag **`golden-master-baseline`** (commit `2cfee1a`) that every run bran
 from. The input is **the prompt × that baseline**, so keep both pinned.
 
 `prompt.md` is immutable. Each run replays it verbatim. A change to it
-invalidates every historical comparison. Its SHA-256 is pinned here as a
-tamper check:
+invalidates every historical comparison. Its SHA-256 is pinned here as a tamper
+check:
 
 ```
 8c5bb38e357103f783d2ad80dcc8fa551891a586356ab49b3dcebf378580fa4f  golden-master/prompt.md
@@ -53,6 +53,6 @@ echo "8c5bb38e357103f783d2ad80dcc8fa551891a586356ab49b3dcebf378580fa4f  golden-m
 ```
 
 If this fails, the prompt was changed. The benchmark history is then no longer
-comparable. An operator runs this check **manually as part of the runbook
-(#137)**. It is deliberately *not* wired into CI, which agrees with the
-out-of-band design above.
+comparable. An operator runs this check
+**manually as part of the runbook (#137)**. It is deliberately *not* wired into
+CI, which agrees with the out-of-band design above.

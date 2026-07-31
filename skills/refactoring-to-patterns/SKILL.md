@@ -65,8 +65,8 @@ bug in the pattern must be fixed in every copy.
 variables, many methods, or methods that use only a subset of variables.
 
 **Refactorings:**
-- **Extract Class** — Identify a cohesive subset of fields and methods.
-  Move them to a new class and compose.
+- **Extract Class** — Identify a cohesive subset of fields and methods. Move
+  them to a new class and compose.
 - **Extract Subclass** — If the class behaves differently under certain
   conditions, extract a subclass for each behavioral variant.
 - **Extract Interface** — Define an interface for the subset of methods
@@ -150,8 +150,7 @@ time a new variant is added. Frequently accompanies Primitive Obsession.
 **Smell:** A single function alternates between high-level orchestration and
 low-level primitives. One reads "save the order, charge the card, send the
 receipt". The other reads "for each line, format the price as fixed-width 8
-chars".
-Readers must repeatedly swap mental contexts. Often a sign of an
+chars". Readers must repeatedly swap mental contexts. Often a sign of an
 unextracted helper.
 
 **Refactorings:**
@@ -176,8 +175,8 @@ the middle man adds no value.
 dependencies inside methods, as `new HttpClient()` inside `fetchUser()`. It
 takes per-call work parameters in the constructor, as
 `new ReportGenerator(2024, 1, 1, 2024, 12, 31)`. Or it does I/O or static
-lookups in the constructor. No seam exists for tests to
-substitute collaborators.
+lookups in the constructor. No seam exists for tests to substitute
+collaborators.
 
 **Refactorings:**
 - **Construct with collaborators, call with work.** Move long-lived
@@ -189,15 +188,15 @@ substitute collaborators.
 - **Constructors do no work.** No I/O, no XML parsing, no static lookups,
   no expensive computation. Just assign collaborators and return.
 
-This creates a seam: production wires real collaborators through DI.
-Tests substitute fakes or stubs at construction.
+This creates a seam: production wires real collaborators through DI. Tests
+substitute fakes or stubs at construction.
 
 ## Safe Refactoring Procedure
 
 Every refactoring step must follow this sequence:
 
-1. **Make sure that tests pass** before starting. If tests fail, stop — do not
-   refactor broken code.
+1. **Make sure that tests pass** before starting. If tests fail, stop — do
+   not refactor broken code.
 2. **Make the smallest possible structural change.** One refactoring at a
    time.
 3. **Run tests after each change.** If tests break, undo the change

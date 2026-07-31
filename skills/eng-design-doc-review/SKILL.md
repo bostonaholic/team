@@ -19,11 +19,11 @@ methodology: `skills/writing-prose/SKILL.md`.
 
 There is **no custom review agent**. This skill is self-contained: it
 carries the review brief inline and dispatches the built-in read-only
-`Explore` subagent through the `Agent` tool. That subagent boots with
-a **clean context** and no shared conversation history with the
-design-author — that isolation is the whole point. It prevents
-self-evaluation bias. `Explore` holds no Write/Edit tools, so the
-reviewer structurally cannot change the artifacts it judges.
+`Explore` subagent through the `Agent` tool. That subagent boots with a
+**clean context** and no shared conversation history with the design-author
+— that isolation is the whole point. It prevents self-evaluation bias.
+`Explore` holds no Write/Edit tools, so the reviewer structurally cannot
+change the artifacts it judges.
 
 ## Input
 
@@ -90,21 +90,20 @@ done
 2. **Dispatch the review.** Call the `Agent` tool with
    `subagent_type: Explore`, the built-in read-only agent type. Pass the
    **Review brief** below as the prompt, with `$ARGUMENTS` substituted for
-   the artifact directory. Do
-   **not** define or reference a project agent — the built-in read-only
-   type is the whole mechanism. Its clean context is what
-   makes the review independent, and its lack of Write/Edit tools keeps
-   the reviewer structurally unable to touch the artifacts. If the
-   environment lacks the `Explore` agent type, report the dispatch
-   failure — never substitute a full-tool agent silently.
+   the artifact directory. Do **not** define or reference a project agent —
+   the built-in read-only type is the whole mechanism. Its clean context is
+   what makes the review independent, and its lack of Write/Edit tools
+   keeps the reviewer structurally unable to touch the artifacts. If the
+   environment lacks the `Explore` agent type, report the dispatch failure
+   — never substitute a full-tool agent silently.
 3. **Present the verdict in full.** The subagent returns Conventional
    Comments findings (issue / suggestion / nitpick, each with a
    `file:line` reference) followed by one of APPROVE, REQUEST CHANGES, or
    COMMENT. Relay it verbatim — the subagent's output is not shown to the
    user directly.
-4. **Do not auto-revise.** This skill does not loop the design-author.
-   On REQUEST CHANGES, surface the findings and let the user decide
-   if to re-enter `/team-design` with that feedback.
+4. **Do not auto-revise.** This skill does not loop the design-author. On
+   REQUEST CHANGES, surface the findings and let the user decide if to
+   re-enter `/team-design` with that feedback.
 
 ## Review brief
 
@@ -145,10 +144,10 @@ it defines their format.
 2. **Evaluate structure against the TDD methodology.** Walk every section
    the `technical-design-doc` skill prescribes: Problem, Goals and
    Non-Goals, Background, Design, Trade-offs, Rollout, Edge Cases, and Open
-   Questions. Note any missing or thin sections. For `design.md` artifacts, walk the
-   `design-author` template instead (Current state, Desired end state,
-   Patterns to follow, Decisions made, Out of scope, Edge cases, Open
-   questions (deferred), Risks).
+   Questions. Note any missing or thin sections. For `design.md` artifacts,
+   walk the `design-author` template instead (Current state, Desired end
+   state, Patterns to follow, Decisions made, Out of scope, Edge cases,
+   Open questions (deferred), Risks).
 
 3. **Audit the decisions.** For each decision the document records:
    - Is the alternative considered named, or is it a single-option
@@ -168,11 +167,11 @@ it defines their format.
    path — is incomplete. Edge cases deliberately deferred must appear in
    "Out of scope" or "Non-Goals", not be silently omitted.
 
-5. **Check specificity.** Cite-by-file-and-line beats hand-waving. Flag
-   any "the auth module" where `services/auth/SessionManager.ts:88` was
+5. **Check specificity.** Cite-by-file-and-line beats hand-waving. Flag any
+   "the auth module" where `services/auth/SessionManager.ts:88` was
    possible. Spot-check a few claims against the referenced files. If a
-   citation does not exist, or does not say what the doc
-   claims, that is a blocking issue.
+   citation does not exist, or does not say what the doc claims, that is a
+   blocking issue.
 
 6. **Apply the engineering-standards lens.** Walk the Core Philosophy
    (Hickey/Carmack/Armstrong/Knuth/Liskov/Ousterhout) and the design-first
@@ -228,14 +227,13 @@ End with a verdict, using the same gate type as `code-reviewer`:
   by reference). Editing the brief changes pipeline behavior — treat any
   change to its headings, process, or verdict set as a pipeline change.
 - This skill is **read-only, structurally for writes**. The `Explore`
-  subagent holds no Write/Edit tools, so it cannot change `design.md`,
-  the artifact directory, or any verdict record. Any residual tools are
+  subagent holds no Write/Edit tools, so it cannot change `design.md`, the
+  artifact directory, or any verdict record. Any residual tools are
   governed by the brief's read-only instruction, and that residual is
   accepted. The reviewer's output never becomes state on its own — the
   *orchestrator* records the verdict to `design-review-<n>.md` when the
   pipeline gate runs the brief. The recovery hooks fail closed on anything
-  but a recorded passing verdict. The skill itself writes no
-  artifacts.
+  but a recorded passing verdict. The skill itself writes no artifacts.
 - Standalone use blocks nothing: users may run `/team-design` or
   `/team-structure` without ever invoking this skill directly.
 
@@ -243,10 +241,9 @@ End with a verdict, using the same gate type as `code-reviewer`:
 
 Print the verdict and the count of issue / suggestion / nitpick findings.
 
-**A standalone run records no `design-review-<n>.md`.** Only the
-pipeline's DESIGN review gate writes the verdict artifact.
-`/team-structure` needs a recorded passing verdict before it slices a
-design.
+**A standalone run records no `design-review-<n>.md`.** Only the pipeline's
+DESIGN review gate writes the verdict artifact. `/team-structure` needs a
+recorded passing verdict before it slices a design.
 
 If the verdict is APPROVE or COMMENT, tell the user:
 **"To advance, run `/team-design docs/plans/<id>/` — with `design.md`

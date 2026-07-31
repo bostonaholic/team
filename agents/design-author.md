@@ -58,11 +58,11 @@ revision: 0
 `revision` counts review loops. Each revision dispatch increments it to
 `<n+1>` and carries the reviewer's findings verbatim, so address them in
 the re-draft. Review verdicts live in `design-review-<n>.md`, which the
-orchestrator writes. `design.md` carries no approval fields. **Never create
-or edit any `design-review-<n>.md`.** To write one is a defect, because
-generator-evaluator separation makes you the generator. Copy the `topic`
-value verbatim from the predecessor artifact (`research.md`, or `task.md`
-if research is absent). Aim for ~200 lines.
+orchestrator writes. `design.md` carries no approval fields.
+**Never create or edit any `design-review-<n>.md`.** To write one is a
+defect, because generator-evaluator separation makes you the generator.
+Copy the `topic` value verbatim from the predecessor artifact
+(`research.md`, or `task.md` if research is absent). Aim for ~200 lines.
 
 ## Rules
 

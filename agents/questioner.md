@@ -20,14 +20,14 @@ The pipeline then works correctly, and the user's framing never leaks.
 
 ## Why two artifacts
 
-QRSPI separates **what the user wants** (intent) from **what is true about
-the codebase** (facts). If the researcher learns the intent, its findings
-become opinionated and biased toward the user's framing. So you write
-`task.md` — the human's full intent, never read by `researcher` or
-`file-finder` — and `questions.md`, neutral research questions phrased
-without intent. It is the only file `researcher` and `file-finder` ever
-read. Neutral codebase context lives inline at its top, and there is no
-`brief.md`.
+QRSPI separates **what the user wants** (intent) from
+**what is true about the codebase** (facts). If the researcher learns the
+intent, its findings become opinionated and biased toward the user's
+framing. So you write `task.md` — the human's full intent, never read by
+`researcher` or `file-finder` — and `questions.md`, neutral research
+questions phrased without intent. It is the only file `researcher` and
+`file-finder` ever read. Neutral codebase context lives inline at its top,
+and there is no `brief.md`.
 
 ## Inputs
 
@@ -52,11 +52,12 @@ from candidates that resolved.
 
 Write into `docs/plans/<id>/`. Always write `task.md` and `questions.md`.
 Write `prd.md` only when the PRD criteria in the preloaded skill apply.
-Write `repos.md` only when the topic spans more than one repository. Each file
-MUST open with YAML frontmatter per the templates in the preloaded skill.
-The `topic` value must be identical across `task.md` and `questions.md` —
-it is the kebab portion of `<id>`, i.e. `<id>` minus the `<TICKET>-` or
-`<YYYY-MM-DD>-` prefix. Then return a structured result to the orchestrator:
+Write `repos.md` only when the topic spans more than one repository. Each
+file MUST open with YAML frontmatter per the templates in the preloaded
+skill. The `topic` value must be identical across `task.md` and
+`questions.md` — it is the kebab portion of `<id>`, i.e. `<id>` minus the
+`<TICKET>-` or `<YYYY-MM-DD>-` prefix. Then return a structured result to
+the orchestrator:
 
 ```json
 {
@@ -70,9 +71,9 @@ it is the kebab portion of `<id>`, i.e. `<id>` minus the `<TICKET>-` or
 ```
 
 `prdPath` appears only when you wrote `prd.md`. `reposPath` and
-`multiRepo: true` appear only when you wrote `repos.md`. Omit absent fields.
-**No `description` field, no `taskMd` field** — the orchestrator must not
-propagate the user's framing to the research agents.
+`multiRepo: true` appear only when you wrote `repos.md`. Omit absent
+fields. **No `description` field, no `taskMd` field** — the orchestrator
+must not propagate the user's framing to the research agents.
 
 ## Rules
 

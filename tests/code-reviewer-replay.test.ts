@@ -19,7 +19,7 @@
 //     throws "refusing live spawn" when EVALS_MOCK_AGENT is unset and no
 //     key exists;
 //   - judge seam: getClient in tests/helpers/llm-judge.ts throws
-//     "EVALS_ANTHROPIC_API_KEY is necessary for the LLM-judge tier".
+//     "EVALS_ANTHROPIC_API_KEY is required for the LLM-judge tier".
 //
 // Child-env notes:
 //   - EVALS_TIER stays unset: filterByTier passes everything through when

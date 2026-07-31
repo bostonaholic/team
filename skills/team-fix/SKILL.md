@@ -19,11 +19,11 @@ discipline without the full QRSPI ceremony.
 - An issue URL — fetched through `gh issue view` to extract title and body.
 - Free-form text — treated as the bug description.
 
-When `$ARGUMENTS` is empty, **discover, do not demand**: ground in repo context
-before asking. Read recent `git log` activity and the repo's `README` /
-`CLAUDE.md` to surface the likely failing area, then use `AskUserQuestion` with
-labeled options to fill any genuine gap. Never bare-stop with a plain "describe
-the bug" demand when context is available.
+When `$ARGUMENTS` is empty, **discover, do not demand**: ground in repo
+context before asking. Read recent `git log` activity and the repo's
+`README` / `CLAUDE.md` to surface the likely failing area, then use
+`AskUserQuestion` with labeled options to fill any genuine gap. Never
+bare-stop with a plain "describe the bug" demand when context is available.
 
 ## When to Use
 
@@ -52,14 +52,14 @@ No Question. No Research. No Design. No Structure. No Plan. No approval gate.
 
 1. **Resolve the input** to a bug description first. On empty `$ARGUMENTS`,
    ground in repo context, then ask only for genuine gaps, per the
-   **"discover, do not demand"** rule in `## Input`. A ticket id or issue URL is
-   resolved as `## Input` describes (`gh issue view` for URLs).
+   **"discover, do not demand"** rule in `## Input`. A ticket id or issue
+   URL is resolved as `## Input` describes (`gh issue view` for URLs).
 2. **Move the ticket to in-progress.** If the input resolved to a ticket id
    or issue, move that ticket to its tracker's in-progress state — this is
    the first action of the fix, before any other work begins. Best-effort
    per the ticket-lifecycle rules in `skills/tracking-tickets/SKILL.md` —
-   skip silently when no tracker mechanism exists. Never block the
-   pipeline on a tracker update.
+   skip silently when no tracker mechanism exists. Never block the pipeline
+   on a tracker update.
 3. **Derive `<id>`** the same way `/team` does (ticket-prefixed or
    date-prefixed kebab slug). Create `docs/plans/<id>/`.
 4. Write a minimal `docs/plans/<id>/task.md` with the standard frontmatter
@@ -97,14 +97,14 @@ assertion failure, not a crash. Do not proceed to the fix until confirmed.
 2. **Open a draft PR automatically — do not stop to ask.** If working on
    a branch, push it and open the PR as a **draft** (`gh pr create
    --draft`). If not on a branch, commit to the working branch.
-3. **Ticket — link now, in-review when ready.** If `ticketId` is non-null
-   in `task.md`'s frontmatter, apply the ticket-lifecycle rules in
+3. **Ticket — link now, in-review when ready.** If `ticketId` is non-null in
+   `task.md`'s frontmatter, apply the ticket-lifecycle rules in
    `skills/tracking-tickets/SKILL.md`: link the PR to the ticket through the
-   conditional closing footer, keep the ticket in-progress while the PR
-   is a draft and move it to in-review only once the PR is marked ready
-   for review, and never close the ticket by hand — the link auto-closes
-   it on merge. Best-effort. Never block. Surface the `ticketId` in the
-   completion report.
+   conditional closing footer, keep the ticket in-progress while the PR is a
+   draft and move it to in-review only once the PR is marked ready for
+   review, and never close the ticket by hand — the link auto-closes it on
+   merge. Best-effort. Never block. Surface the `ticketId` in the completion
+   report.
 4. Mark all TodoWrite items complete.
 
 ## Aborting

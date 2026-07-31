@@ -129,11 +129,11 @@ implement.
   layer
 - Pass in collaborators as arguments rather than instantiating them inside
   the function
-- **Construct with collaborators. Call with work.** The constructor takes
-  the long-lived collaborators that define what the object IS (its clients,
-  its loggers, its clock, its database handle). Methods take the per-call
-  work parameters. A `ReportGenerator(reportingDb, clock)` can serve many
-  date ranges through `generate(startDate, endDate)`. A
+- **Construct with collaborators. Call with work.** The constructor takes the
+  long-lived collaborators that define what the object IS (its clients, its
+  loggers, its clock, its database handle). Methods take the per-call work
+  parameters. A `ReportGenerator(reportingDb, clock)` can serve many date
+  ranges through `generate(startDate, endDate)`. A
   `ReportGenerator(reportingDb, clock, startDate, endDate)` creates a new
   instance per query and conflates identity with work.
 

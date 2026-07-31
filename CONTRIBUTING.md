@@ -31,8 +31,8 @@ Team produces a **distributed plugin**, so two contexts coexist:
 - **Development** (`.claude/`) is our own workspace tooling (dev hooks, scripts,
   settings). Never distributed.
 
-Rule of thumb: if it validates that the plugin is *built correctly*, it is a
-dev concern (`.claude/`). If it runs *as part of the plugin's functionality*, it is
+Rule of thumb: if it validates that the plugin is *built correctly*, it is a dev
+concern (`.claude/`). If it runs *as part of the plugin's functionality*, it is
 runtime. See [AGENTS.md](AGENTS.md) for the full project router.
 
 ## How work is tracked

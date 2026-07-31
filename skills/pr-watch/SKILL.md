@@ -47,9 +47,9 @@ the current branch (`gh pr view`). Refuse up front, before any other work:
   intent. On such a cue, run `gh pr ready` and report the promotion
   loudly — the user must see that the draft went public.
 - When the cue is ambiguous about readiness, such as "watch the PR", and
-  the PR is still a draft, watch the draft in place and say so.
-  Never promote on an ambiguous cue. End the arm report with the
-  follow-up offer: say "the PR is ready for review" to promote it now.
+  the PR is still a draft, watch the draft in place and say so. Never
+  promote on an ambiguous cue. End the arm report with the follow-up
+  offer: say "the PR is ready for review" to promote it now.
 - If `gh pr ready` fails (for example, permissions), warn and keep
   watching — the promotion is not a precondition for the loop.
 - Apply the best-effort in-review ticket transition per
@@ -121,18 +121,17 @@ The loop runs in one of two modes. The mode is granted per arming
 instruction and holds for the life of the watch. A plain arm, "watch the
 PR", selects the default present-then-stop mode. An arming instruction
 that grants authorization selects authorized mode. The canonical
-authorization signals are "watch this PR and fix comments",
-"watch and fix", "handle the comments", and
-"address feedback as it comes in". An authorization phrase takes effect
-only when it is combined with an arming cue in the same instruction — a
-bare "handle the comments" routes to a one-shot `/pr-open-comments`
-triage, not a watch. When the cue is ambiguous about authorization, run
-present-then-stop — never authorized mode. Every loop report — the poll
-snapshot and the batch report — names the active mode and lists any
-auto-applied items with their confidence and landing commit SHA, so the
-loop stays auditable. A timeout re-arm keeps the mode. A re-arm after a
-carve-out stop reverts to present-then-stop unless the user restates
-authorization.
+authorization signals are "watch this PR and fix comments", "watch and
+fix", "handle the comments", and "address feedback as it comes in". An
+authorization phrase takes effect only when it is combined with an
+arming cue in the same instruction — a bare "handle the comments" routes
+to a one-shot `/pr-open-comments` triage, not a watch. When the cue is
+ambiguous about authorization, run present-then-stop — never authorized
+mode. Every loop report — the poll snapshot and the batch report — names
+the active mode and lists any auto-applied items with their confidence
+and landing commit SHA, so the loop stays auditable. A timeout re-arm
+keeps the mode. A re-arm after a carve-out stop reverts to
+present-then-stop unless the user restates authorization.
 
 The default mode is present-then-stop with a confidence-gated fast path:
 
@@ -141,8 +140,9 @@ The default mode is present-then-stop with a confidence-gated fast path:
   replied to, and resolved automatically by the triage skill.
 - When every item in the batch auto-applied above 90% confidence, the
   loop resumes watching and reports what was done.
-- When any sub-90% or carve-out item remains, present the punch list, then
-  stop the turn. A turn must end to collect the user's per-item choices. After the user's choices run, offer to re-arm the watch.
+- When any sub-90% or carve-out item remains, present the punch list,
+  then stop the turn. A turn must end to collect the user's per-item
+  choices. After the user's choices run, offer to re-arm the watch.
 
 ### Authorized mode — apply, resolve, resume
 
@@ -155,8 +155,8 @@ item regardless of confidence.
 
 - If a batch contains carve-out items, apply the authorized items first.
   Then present the carve-outs and stop the loop. The carve-outs are
-  declined, needs-clarification, could-not-apply, and security-sensitive.
-  Never watch past an open disagreement.
+  declined, needs-clarification, could-not-apply, and
+  security-sensitive. Never watch past an open disagreement.
 - Never auto-push a change that introduces a new security-sensitive
   construct (exec/eval-like code, network calls, credential handling) —
   treat it as a loop-stopping carve-out: present it and stop.
@@ -170,12 +170,12 @@ item regardless of confidence.
 - If a wake finds zero unresolved threads and no other change (for
   example, a reviewer resolved their own thread), re-arm silently and
   present nothing.
-- If a CHANGES_REQUESTED review arrives with an empty body and no threads,
-  there is no verifiable ask to triage. Emit a status line that names the
-  reviewer and the requested-changes state, then treat it as a
+- If a CHANGES_REQUESTED review arrives with an empty body and no
+  threads, there is no verifiable ask to triage. Emit a status line that
+  names the reviewer and the requested-changes state, then treat it as a
   needs-clarification carve-out and stop the loop. Suggest that the user
-  ask the reviewer what they want.
-  Watching past it would hide a blocking signal.
+  ask the reviewer what they want. Watching past it would hide a
+  blocking signal.
 
 ### 6. Stop conditions
 
@@ -213,6 +213,6 @@ Report:
   timeout, or 3 consecutive poll failures)
 - the active mode (present-then-stop or authorized)
 - the number of cycles consumed
-- the handoff — on approval, `Next: run /shipit when you want to land
-  it.`. On timeout or after the user's choices run, offer to re-arm
-  the watch.
+- the handoff — on approval,
+  `Next: run /shipit when you want to land it.`. On timeout or after the
+  user's choices run, offer to re-arm the watch.

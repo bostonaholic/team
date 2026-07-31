@@ -46,9 +46,9 @@ The **file extension** enforces the gate and paid split. Runtime flags and
 | `*.evals.ts` | NOT auto-discovered. You must target it explicitly. | $$ | `bun run test:evals` |
 
 Bun's default test discovery matches `*.test.{ts,tsx,js,jsx}`. Files named
-`*.evals.ts` fall outside that pattern. `bun test` with no arguments thus never
-loads them. The output shows no skipped tests, and no model calls occur. The
-paid suite runs only when you give it an explicit path:
+`*.evals.ts` fall outside that pattern. `bun test` with no arguments thus
+never loads them. The output shows no skipped tests, and no model calls occur.
+The paid suite runs only when you give it an explicit path:
 
 - `bun run test:evals` loads every `./tests/*.evals.ts`. It runs only the
   diff-selected tests.
@@ -79,25 +79,26 @@ scheduled or manual sweeps.
 | `EVALS_MOCK_JUDGE` | JSON file replayed instead of calling the LLM judge | unset |
 | `EVALS_ANTHROPIC_API_KEY` | Anthropic API key for the judge (paid tiers). The name is namespaced, so an ambient Claude Code session does not pick it up automatically. This includes the spawned agent under test. The harness passes the key explicitly to the judge's Anthropic SDK client. | n/a |
 
-The live path **throws immediately** with "refusing live spawn" when this key is
-absent, empty, or whitespace-only and `EVALS_MOCK_AGENT` is unset. It does not
-spawn `claude` and fail later at CLI auth. The judge seam has the same backstop.
-Without `EVALS_MOCK_JUDGE`, `getClient` in `tests/helpers/llm-judge.ts` throws
-"EVALS_ANTHROPIC_API_KEY is required for the LLM-judge tier" before any metered
-call. Set `EVALS_MOCK_AGENT` to replay a fixture without a key.
+The live path **throws immediately** with "refusing live spawn" when this key
+is absent, empty, or whitespace-only and `EVALS_MOCK_AGENT` is unset. It does
+not spawn `claude` and fail later at CLI auth. The judge seam has the same
+backstop. Without `EVALS_MOCK_JUDGE`, `getClient` in
+`tests/helpers/llm-judge.ts` throws "EVALS_ANTHROPIC_API_KEY is required for
+the LLM-judge tier" before any metered call. Set `EVALS_MOCK_AGENT` to replay
+a fixture without a key.
 
 Both mock seams have an in-repo consumer. `tests/code-reviewer-replay.test.ts`
 replays committed transcripts through the code-reviewer eval offline and
-key-free. It runs on every PR for every author, including forks. Its transcripts
-live in `tests/fixtures/code-reviewer-replay/`, deliberately outside
-`evals/fixtures/`. They are thus plain test data, not eval fixtures, and none of
-the fixture contract below applies to them.
+key-free. It runs on every PR for every author, including forks. Its
+transcripts live in `tests/fixtures/code-reviewer-replay/`, deliberately
+outside `evals/fixtures/`. They are thus plain test data, not eval fixtures,
+and none of the fixture contract below applies to them.
 
 In CI the key is an **`evals` environment secret**, not a plain repo secret.
 Only the job that declares `environment: evals` can reach it. Token-consuming
 jobs also **skip for PR authors who are not OWNER/MEMBER/COLLABORATOR**. Fork
-PRs, Dependabot (`CONTRIBUTOR`), and first-time contributors skip by design. No
-tokens are spent on their PRs.
+PRs, Dependabot (`CONTRIBUTOR`), and first-time contributors skip by design.
+No tokens are spent on their PRs.
 
 ## Fixture format
 
@@ -113,20 +114,20 @@ deps:                    # REQUIRED, non-empty. Diff-matching globs;
 synthetic task body for the agent
 ```
 
-All three frontmatter fields (`agent`, `tier`, `deps`) are necessary. The loader
-validates them at load time. The `agent` field names the **agent or skill under
-test**. It MUST equal the fixture's parent-directory name. For example, a
-fixture under `evals/fixtures/git-commit/` declares `agent: git-commit`. `deps`
-must list at least one glob. An empty or missing `deps` would make the fixture
-invisible to diff selection. The loader thus rejects it, rather than let it
-never run without warning.
+All three frontmatter fields (`agent`, `tier`, `deps`) are necessary. The
+loader validates them at load time. The `agent` field names the
+**agent or skill under test**. It MUST equal the fixture's parent-directory
+name. For example, a fixture under `evals/fixtures/git-commit/` declares
+`agent: git-commit`. `deps` must list at least one glob. An empty or missing
+`deps` would make the fixture invisible to diff selection. The loader thus
+rejects it, rather than let it never run without warning.
 
 Some skills output prose rather than a findings list, such as `git-commit` and
 `changelog`. For those, `bugs[]` entries express *required-property* hints
 rather than a planted defect. A hint is a regex that the output MUST contain,
 such as a section heading or a subject shape. The subjective half of the
-property, such as mood, filtering, and ordering, moves into an `llm`-kind rubric
-criterion.
+property, such as mood, filtering, and ordering, moves into an `llm`-kind
+rubric criterion.
 
 `evals/fixtures/<agent>/<case>/ground-truth.json`:
 
@@ -161,8 +162,8 @@ agent: code-reviewer
 2. Reasoning quality (kind: llm). 1-5 scale: ...
 ```
 
-The `agent` frontmatter field names the agent or skill under test. It equals the
-rubric filename stem, so `evals/rubrics/git-commit.md` declares
+The `agent` frontmatter field names the agent or skill under test. It equals
+the rubric filename stem, so `evals/rubrics/git-commit.md` declares
 `agent: git-commit`. `deterministic` criteria run first with regex and
 ground-truth counts. The harness calls the LLM only when an `llm` criterion is
 present and the structural gates passed. Narrow rubrics use Haiku. Nuanced
@@ -175,12 +176,13 @@ deterministic-first cascade. The template `tests/code-reviewer.evals.ts` calls
 the harness detects the bug *and* `reason_substance >= 3`. A hint mentioned in
 junk prose is not enough to pass. The skill evals mirror this design. Each one
 runs `outcomeJudge` first. Each one gates an `llm` judge behind that
-deterministic check, either `judgeReviewerOutput` or the generic `judgeQuality`.
-The harness records both scores in `judge_scores` on the result entry.
+deterministic check, either `judgeReviewerOutput` or the generic
+`judgeQuality`. The harness records both scores in `judge_scores` on the
+result entry.
 
-A fixture case can also carry one more deterministic gate beyond the two rubric
-criteria. Such a gate lives in the eval file's per-fixture options, not in
-`evals/rubrics/<agent>.md`. The planted-time-bomb case's blocking-label
+A fixture case can also carry one more deterministic gate beyond the two
+rubric criteria. Such a gate lives in the eval file's per-fixture options, not
+in `evals/rubrics/<agent>.md`. The planted-time-bomb case's blocking-label
 assertion is one example (`requireBlockingLabel` in
 `tests/code-reviewer.evals.ts`).
 
@@ -198,10 +200,10 @@ run on the same branch and tier. It prints a comparison to stderr:
 
 Budget regressions do more than print. The eval file's `afterAll` calls
 `assertNoBudgetRegressions(collector)`, which throws after `finalize()` writes
-the result. A throw in `afterAll` fails the bun run. A run that passes but costs
-three times as much thus fails CI. The floor (`minPriorTools` and
-`minPriorTurns` = 3) suppresses noise from tiny baselines. A move from 1 to 3 is
-not a regression.
+the result. A throw in `afterAll` fails the bun run. A run that passes but
+costs three times as much thus fails CI. The floor (`minPriorTools` and
+`minPriorTurns` = 3) suppresses noise from tiny baselines. A move from 1 to 3
+is not a regression.
 
 To compare by hand, run
 `bun run eval:compare evals/results/<a>.json evals/results/<b>.json`. It exits
@@ -212,25 +214,26 @@ non-zero on a budget regression or a verdict regression.
 Two workflows run the evals:
 
 - **`.github/workflows/pr-evals.yml`** runs on every pull request. It runs the
-  evals that the diff selects. It compares `git diff <base>...HEAD` against each
-  eval's touchfiles, with no `EVALS_ALL`, so the cost scales with the change. It
-  filters to the **gate tier** (`EVALS_TIER: gate`). Periodic evals run only in
-  the weekly `periodic-evals.yml`. The workflow upserts one `## PR Evals`
-  comment on the PR with a per-suite pass/fail table and the cost.
-  `scripts/eval-report.ts` produces the comment body. That script is pure, and
-  `tests/eval-report.test.ts` unit-tests it. The workflow is **advisory**,
-  because the gate tier is empty by decision and the free suite carries offline
-  replay coverage instead. It runs on **same-repo PRs only**, because fork PRs
-  have no `EVALS_ANTHROPIC_API_KEY` secret and no write token. When the diff
-  selects nothing, which is today's steady state, the comment says so.
+  evals that the diff selects. It compares `git diff <base>...HEAD` against
+  each eval's touchfiles, with no `EVALS_ALL`, so the cost scales with the
+  change. It filters to the **gate tier** (`EVALS_TIER: gate`). Periodic evals
+  run only in the weekly `periodic-evals.yml`. The workflow upserts one
+  `## PR Evals` comment on the PR with a per-suite pass/fail table and the
+  cost. `scripts/eval-report.ts` produces the comment body. That script is
+  pure, and `tests/eval-report.test.ts` unit-tests it. The workflow is
+  **advisory**, because the gate tier is empty by decision and the free suite
+  carries offline replay coverage instead. It runs on **same-repo PRs only**,
+  because fork PRs have no `EVALS_ANTHROPIC_API_KEY` secret and no write
+  token. When the diff selects nothing, which is today's steady state, the
+  comment says so.
 - **`.github/workflows/periodic-evals.yml`** runs the full periodic tier
-  weekly, at 06:00 UTC on Monday, and on manual dispatch. It uploads the results
-  as artifacts.
+  weekly, at 06:00 UTC on Monday, and on manual dispatch. It uploads the
+  results as artifacts.
 
 ## Blame protocol
 
-When an eval fails on your branch, run it again on the base before you blame the
-branch:
+When an eval fails on your branch, run it again on the base before you blame
+the branch:
 
 ```
 git checkout origin/main && bun test ./tests/<failing-eval>.evals.ts
@@ -242,29 +245,31 @@ If it fails there too, the regression is older than your change.
 ## Adding an eval (agent or skill)
 
 The steps are identical for a pipeline agent and for an executable skill.
-`<name>` is the agent or skill name. It must match the fixture parent-directory
-name, the rubric filename stem, and the `agent:` frontmatter field throughout.
+`<name>` is the agent or skill name. It must match the fixture
+parent-directory name, the rubric filename stem, and the `agent:` frontmatter
+field throughout.
 
-1. Write `evals/fixtures/<name>/<case>/input.md` and `ground-truth.json`. For a
-   prose-output skill, `bugs[]` holds required-property hints rather than
+1. Write `evals/fixtures/<name>/<case>/input.md` and `ground-truth.json`. For
+   a prose-output skill, `bugs[]` holds required-property hints rather than
    planted defects. See Fixture format above.
 2. Write `evals/rubrics/<name>.md`.
 3. Add an entry to `E2E_TOUCHFILES` and `E2E_TIERS` in
    `tests/helpers/touchfiles.ts`. The touchfile globs include the source the
    eval depends on (`skills/<name>/**` or `agents/<name>.md`, plus any
    methodology skill or shared helper it uses).
-4. Write `tests/<name>.evals.ts` on the model of `tests/code-reviewer.evals.ts`.
-   Use the `.evals.ts` suffix, not `.test.ts`, so that `bun test` does not pick
-   it up. Register the test through `testIfSelected(name, ...)`, so that tier
-   and diff selection apply. A skill that needs upstream pipeline state seeds
-   that state from the fixture body with `extractSeed`. See the seeded-state
-   evals. It writes the state into the working directory before `runAgentTest`.
+4. Write `tests/<name>.evals.ts` on the model of
+   `tests/code-reviewer.evals.ts`. Use the `.evals.ts` suffix, not `.test.ts`,
+   so that `bun test` does not pick it up. Register the test through
+   `testIfSelected(name, ...)`, so that tier and diff selection apply. A skill
+   that needs upstream pipeline state seeds that state from the fixture body
+   with `extractSeed`. See the seeded-state evals. It writes the state into
+   the working directory before `runAgentTest`.
 5. Add the eval file, fixture directory, and rubric to that test's
    `E2E_TOUCHFILES` entry. The free gate enforces this, so that fixture and
    rubric edits cannot be diff-selected out.
 6. Run `bun test`. It makes sure that the gate validates the new schemas.
-   `skill-eval-coverage.test.ts` also enforces that every covered skill has all
-   four artifacts.
+   `skill-eval-coverage.test.ts` also enforces that every covered skill has
+   all four artifacts.
 7. Run `bun test ./tests/<name>.evals.ts` end-to-end. It needs
    `EVALS_ANTHROPIC_API_KEY`.
 
@@ -273,8 +278,9 @@ on a `pull_request` event MUST carry the canonical trust `if:`. This keeps
 untrusted authors from spending tokens. Copy the expression from the live
 job-level `if:` on the `periodic-evals` job in
 `.github/workflows/periodic-evals.yml`. That job is the authoritative,
-event-aware copy source (`!startsWith(github.event_name, 'pull_request') ||
-contains(...)`). The contract comment on the `harness-checks` job in
+event-aware copy source
+(`!startsWith(github.event_name, 'pull_request') || contains(...)`). The
+contract comment on the `harness-checks` job in
 `.github/workflows/harness-checks.yml` carries the same expression for
 reference. Copy the live `if:`, which is the canonical form.
 

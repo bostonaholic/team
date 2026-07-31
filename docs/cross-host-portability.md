@@ -33,12 +33,12 @@ nav_label: portability
 
 ## Current state
 
-Team is a Claude Code-native plugin. It ships 13 agents (`agents/*.md`), 51
-skills (`skills/*/SKILL.md` + `registry.json`), and 4 hooks (`hooks/*.mjs`).
-They register through `.claude-plugin/plugin.json`. The orchestrator walks the
-QRSPI phase table (`skills/team/SKILL.md`). It persists state as artifact files
-under `docs/plans/<id>/`. It coordinates agents through the Task tool and
-`SendMessage` resume.
+Team is a Claude Code-native plugin. It ships 13 agents (`agents/*.md`), 51 skills
+(`skills/*/SKILL.md` + `registry.json`), and 4 hooks (`hooks/*.mjs`). They
+register through `.claude-plugin/plugin.json`. The orchestrator walks the QRSPI
+phase table (`skills/team/SKILL.md`). It persists state as artifact files under
+`docs/plans/<id>/`. It coordinates agents through the Task tool and `SendMessage`
+resume.
 
 The portability surface splits cleanly. Four layers are already host-neutral:
 
@@ -70,26 +70,25 @@ There are four non-portable bindings:
 The host also interprets the agent frontmatter field semantics: `name`, `model`,
 `tools`, `skills`, and `permissionMode`. Everything portable rides *on top of*
 these four non-portable bindings. The `model:` field is a *Claude-specific model
-name*. To make it portable, resolve it through host-neutral config. Do not bake
-a literal into each definition. See `.team/config.json` under Desired end state.
+name*. To make it portable, resolve it through host-neutral config. Do not bake a
+literal into each definition. See `.team/config.json` under Desired end state.
 
 ## Desired end state
 
 The end state is a single canonical "core" of host-neutral definitions, which
-means the Markdown bodies and the Node hook logic, maintained once. Thin
-per-host binding shims sit on top. Each shim translates the four blocking
-contracts into its host's idiom. Claude Code keeps its current
-`.claude-plugin/plugin.json` and `skills:` injection. A Gemini build emits
-`.gemini/` with settings.json hooks, `agents/*.md`, `skills/*/SKILL.md`, and
-TOML commands. A Codex build emits `.codex/` with config.toml or hooks.json,
-`agents/*.md`, and `.agents/skills/`. The high-churn binding layer stays
-isolated from the stable cores. A host API change thus touches one shim, not 68
-definition files.
+means the Markdown bodies and the Node hook logic, maintained once. Thin per-host
+binding shims sit on top. Each shim translates the four blocking contracts into
+its host's idiom. Claude Code keeps its current `.claude-plugin/plugin.json` and
+`skills:` injection. A Gemini build emits `.gemini/` with settings.json hooks,
+`agents/*.md`, `skills/*/SKILL.md`, and TOML commands. A Codex build emits
+`.codex/` with config.toml or hooks.json, `agents/*.md`, and `.agents/skills/`.
+The high-churn binding layer stays isolated from the stable cores. A host API
+change thus touches one shim, not 68 definition files.
 
-Per-project configuration is host-neutral. Each project that uses Team carries
-one `.team/config.json` at its root. It is plain JSON, part of the portable
-core, and identical on every host. It declares the settings that would otherwise
-leak host specifics into the definitions:
+Per-project configuration is host-neutral. Each project that uses Team carries one
+`.team/config.json` at its root. It is plain JSON, part of the portable core, and
+identical on every host. It declares the settings that would otherwise leak host
+specifics into the definitions:
 
 - The map from Team's abstract model tiers to the active host's concrete model
   IDs. The agent `model:` frontmatter becomes a *tier key*, not a literal Claude
@@ -121,9 +120,8 @@ parallel and nested subagents, and structured returns.
   are the binding. The shim layer mirrors this seam.
 - **Agent definition format is already near-universal.** Claude `agents/*.md`,
   which is Markdown with YAML frontmatter, is structurally identical to Gemini
-  `.gemini/agents/*.md`. Codex uses TOML agent roles, but the *system-prompt
-  body* is the same prose. The body ports. The frontmatter and TOML binding does
-  not.
+  `.gemini/agents/*.md`. Codex uses TOML agent roles, but the *system-prompt body*
+  is the same prose. The body ports. The frontmatter and TOML binding does not.
 - **The JSON-envelope convention is host-agnostic by construction**
   (`skills/agent-open-questions/SKILL.md`). It layers on whatever result channel
   the host gives: final-text on Claude and Gemini, `--output-schema` on Codex.
@@ -159,10 +157,10 @@ facility, so the design must work around it.
 
 Reading the matrix: every row that Team's *behavior* depends on is native or
 workaround on both hosts. There is no hook-event gap. All four events map
-natively, and on-demand skills, subagents, MCP tools, and MCP resources are
-native on all three hosts. The one remaining hard gap is narrow. Codex does not
-surface MCP **prompts** as slash commands. Its MCP tools and resources are fine.
-It also has a clean detour: route slash entry through Codex Skills, below.
+natively, and on-demand skills, subagents, MCP tools, and MCP resources are native
+on all three hosts. The one remaining hard gap is narrow. Codex does not surface
+MCP **prompts** as slash commands. Its MCP tools and resources are fine. It also
+has a clean detour: route slash entry through Codex Skills, below.
 
 > The landscape is recent, though not uniformly so. As of mid-2026 both Gemini
 > CLI and Codex CLI ship a full hooks system. Both also ship parallel subagents,
@@ -179,23 +177,22 @@ After verifying every capability against the host repos (2026-06-27), the gap
 picture is narrower than the earlier draft assumed. One hard gap remains, plus a
 cross-cutting recency caveat:
 
-1. **Codex does not expose MCP *prompts* as slash commands (hard gap).** Codex
-   MCP supports tools and resources (`read_mcp_resource` and
-   `list_mcp_resources`). It does not support MCP prompts.
-   "MCP-prompts-as-slash-commands" thus works on Gemini and not on Codex. The
-   workaround for #57 is to route every slash-style entry point through Codex
-   Skills, the documented successor to deprecated custom prompts, and not
-   through MCP. This is
-   why the chosen strategy does not depend on MCP (decision 4).
+1. **Codex does not expose MCP *prompts* as slash commands (hard gap).** Codex MCP
+   supports tools and resources (`read_mcp_resource` and `list_mcp_resources`). It
+   does not support MCP prompts. "MCP-prompts-as-slash-commands" thus works on
+   Gemini and not on Codex. The workaround for #57 is to route every slash-style
+   entry point through Codex Skills, the documented successor to deprecated custom
+   prompts, and not through MCP. This is why the chosen strategy does not depend
+   on MCP (decision 4).
 
 2. **Recency risk, Codex-weighted.** This is cross-cutting rather than a primitive
    gap. Gemini's extension surface is mature (hooks around December 2025 in
    v0.20-0.21, subagents around August 2025, latest v0.49.0) and is a low
-   contract-churn risk. Codex's hooks and multi-agent are younger. They rolled
-   out from March to May 2026 across v0.114-v0.129 (latest v0.142.3). Treat its
-   contracts as moving targets. The shim layer (decision 1) absorbs breaking changes
-   in one place. The mitigation and version-pinning policy are tracked in the
-   [risk register](#risks).
+   contract-churn risk. Codex's hooks and multi-agent are younger. They rolled out
+   from March to May 2026 across v0.114-v0.129 (latest v0.142.3). Treat its
+   contracts as moving targets. The shim layer (decision 1) absorbs breaking
+   changes in one place. The mitigation and version-pinning policy are tracked in
+   the [risk register](#risks).
 
 > **Correction (2026-06-27).** An earlier draft listed a second hard gap: *"Gemini
 > has no on-demand skill-injection analog."* Verification against the repo refuted
@@ -210,11 +207,10 @@ cross-cutting recency caveat:
    per-host binding shims. The canonical core is the portable layer, maintained
    once. That layer holds the Markdown bodies, the Node hook logic, the artifact
    I/O, and the envelope convention. Per host, a thin shim gives only the four
-   blocking bindings:
-   (a) the manifest and config format.
-   (b) the hook stdin and stdout schema adapter.
-   (c) the plugin-root and project-dir env resolution.
-   (d) the slash-entry registration. Each host can generate its shims or hand-write them. Either way they are small and isolated.
+   blocking bindings: (a) the manifest and config format. (b) the hook stdin and
+   stdout schema adapter. (c) the plugin-root and project-dir env resolution. (d)
+   the slash-entry registration. Each host can generate its shims or hand-write
+   them. Either way they are small and isolated.
    - *Why:* the expensive, divergent, high-churn surface is exactly the bindings
      (three different manifest formats, three hook schemas, still-moving host
      APIs), while the stable, valuable surface, the 64 agent/skill bodies and 4
@@ -237,11 +233,11 @@ cross-cutting recency caveat:
    this option's value with less risk.
 
 3. **Rejected: per-host maintained adapters (parallel hand-maintained trees).**
-   *Why rejected:* it costs 3× the maintenance across 13 agents, 51 skills, and
-   4 hooks. It also guarantees drift, because someone must apply a fix to an
-   agent body three times by hand. It throws away the fact that the bodies are *already portable*.
-   The hybrid keeps most of its only advantage, a fully idiomatic host, because
-   host idiom lives in the shim layer anyway.
+   *Why rejected:* it costs 3× the maintenance across 13 agents, 51 skills, and 4
+   hooks. It also guarantees drift, because someone must apply a fix to an agent
+   body three times by hand. It throws away the fact that the bodies are *already
+   portable*. The hybrid keeps most of its only advantage, a fully idiomatic host,
+   because host idiom lives in the shim layer anyway.
 
 4. **MCP is documented as a bridge, not adopted as the strategy's mechanism.**
    The matrix records MCP's reach: tools and resources on both hosts,
@@ -280,16 +276,16 @@ full parity. Each starts from the matrix and works around the named gaps.
 
 - Bodies port as-is. Agent frontmatter → `.gemini/agents/*.md` (structurally
   identical format).
-- Skills port natively to `.gemini/skills/SKILL.md` (progressive disclosure through
-  the `activate_skill` tool). As with Codex, no folding into system prompts is
-  needed.
-- Hooks: reuse the 4 `.mjs` logic files. The shim adapts stdin/stdout to Gemini's schema
-  (`hook_event_name`, `decision`, exit 2) and maps events
+- Skills port natively to `.gemini/skills/SKILL.md` (progressive disclosure
+  through the `activate_skill` tool). As with Codex, no folding into system
+  prompts is needed.
+- Hooks: reuse the 4 `.mjs` logic files. The shim adapts stdin/stdout to Gemini's
+  schema (`hook_event_name`, `decision`, exit 2) and maps events
   `PreToolUse→BeforeTool`, `PostToolUse→AfterTool`, `SessionStart→SessionStart`,
   `PreCompact→PreCompress`. Register in `.gemini/settings.json`.
 - Slash entry points → TOML in `.gemini/commands/`.
-- Env: replace `${CLAUDE_PLUGIN_ROOT}`/`CLAUDE_PROJECT_DIR` with paths passed through
-  hook config/argv.
+- Env: replace `${CLAUDE_PLUGIN_ROOT}`/`CLAUDE_PROJECT_DIR` with paths passed
+  through hook config/argv.
 - Config: model tiers resolve through `.team/config.json`. Map Team's tiers to
   concrete Gemini model IDs. Read the `model:` frontmatter as a tier key, not as a
   literal model name.
@@ -312,14 +308,15 @@ full parity. Each starts from the matrix and works around the named gaps.
   system-prompt body.
 - Skills port natively to `.agents/skills/SKILL.md` (description-matched implicit
   invocation). No Gemini-style folding needed.
-- Hooks: reuse the 4 `.mjs` files. The shim adapts to Codex `hooks.json`/`[hooks]`, whose
-  schema mirrors Claude closely (`permissionDecision:"deny"`/exit 2). Events map
-  nearly 1:1 (`PreToolUse`/`PostToolUse`/`SessionStart`/`PreCompact`).
+- Hooks: reuse the 4 `.mjs` files. The shim adapts to Codex
+  `hooks.json`/`[hooks]`, whose schema mirrors Claude closely
+  (`permissionDecision:"deny"`/exit 2). Events map nearly 1:1
+  (`PreToolUse`/`PostToolUse`/`SessionStart`/`PreCompact`).
 - Slash entry points → Codex Skills, not MCP (gap 1).
 - Env: resolve through `.codex/` trust + config.toml.
 - Config: model tiers resolve through `.team/config.json`. Map Team's tiers to
-  concrete Codex or GPT model IDs. Read the `model:` frontmatter as a tier key. The
-  per-host parallelism cap (`agents.max_threads=6`) also comes from config.
+  concrete Codex or GPT model IDs. Read the `model:` frontmatter as a tier key.
+  The per-host parallelism cap (`agents.max_threads=6`) also comes from config.
 - **Known hazards to track:**
   - **[codex#15250](https://github.com/openai/codex/issues/15250) (open).** Custom
     agents are not always reachable from tool-backed sessions. Full subagent parity
@@ -333,8 +330,8 @@ full parity. Each starts from the matrix and works around the named gaps.
 
 ## Out of scope
 
-- **Writing any of the port code.** #56 and #57 own the implementation. This is the
-  study they build against.
+- **Writing any of the port code.** #56 and #57 own the implementation. This is
+  the study they build against.
 - **Building the shim generator and build tooling.** Each epic chooses if it
   generates the shims or hand-writes them (decision 1 permits both).
 - **Porting the dev-only tree** (`.claude/`, `tests/`, `evals/`, `docs/`,
@@ -383,19 +380,19 @@ handle.
 
 ## Open questions (deferred to the port epics)
 
-- **Shim generation vs. hand-authoring, per host.** Decision 1 permits both.
-  which to use is a per-epic structure-phase choice for #56/#57.
+- **Shim generation vs. hand-authoring, per host.** Decision 1 permits both. which
+  to use is a per-epic structure-phase choice for #56/#57.
 - **Host version pinning policy.** Which exact Gemini/Codex versions each port
   certifies against (recency risk) is an implementation detail for the port epics.
-- **Posture on the one open host issue
-  ([codex#15250](https://github.com/openai/codex/issues/15250)).** The port epics make the maintenance-posture call: upstream a fix,
-  or only design around it. The other two cited issues,
+- **Posture on the one open host issue ([codex#15250](https://github.com/openai/codex/issues/15250)).**
+  The port epics make the maintenance-posture call: upstream a fix, or only design
+  around it. The other two cited issues,
   [gemini-cli#8022](https://github.com/google-gemini/gemini-cli/issues/8022) and
-  [codex#15451](https://github.com/openai/codex/issues/15451), are already resolved
-  upstream.
+  [codex#15451](https://github.com/openai/codex/issues/15451), are already
+  resolved upstream.
 - **The full `.team/config.json` schema.** Decision 6 fixes its purpose and core
-  fields: model-tier map, host, parallelism caps, and repos. The exhaustive schema,
-  defaults, and validation are for the port epics to pin.
+  fields: model-tier map, host, parallelism caps, and repos. The exhaustive
+  schema, defaults, and validation are for the port epics to pin.
 
 ## Risks
 
@@ -413,11 +410,11 @@ handle.
   low).** Silent `--output-schema` drop under active tools, resolved upstream. It
   is a risk only on a pre-fix Codex pin, covered by shape validation plus a text
   fallback.
-- **Gemini structured subagent return (unverified, low to moderate).** There is
-  no backing issue. CLI structured output shipped
+- **Gemini structured subagent return (unverified, low to moderate).** There is no
+  backing issue. CLI structured output shipped
   ([gemini-cli#8022](https://github.com/google-gemini/gemini-cli/issues/8022),
-  completed September 2025). #56 must make sure that the subagent-return boundary works on the
-  pinned version.
+  completed September 2025). #56 must make sure that the subagent-return boundary
+  works on the pinned version.
 - **Hidden Claude Code assumptions (low to moderate).** Some agent prose may
   assume Claude-specific tool names or behaviors that the layer analysis did not
   catch. The port epics should audit bodies for host-specific references during

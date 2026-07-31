@@ -26,21 +26,21 @@ both automatically when the PR merges. Full policy:
 Landing a Team PR is two steps, in order:
 
 1. **Bump (this skill).** Run `version-bump` against current `main`. It picks the
-   level, assigns the next free version, and bumps the four version strings. It cuts
-   the `[Unreleased]` changelog into a dated `## [X.Y.Z]` section, runs the land-time
-   consistency assertion, and commits `chore(version): X.Y.Z`.
+   level, assigns the next free version, and bumps the four version strings. It
+   cuts the `[Unreleased]` changelog into a dated `## [X.Y.Z]` section, runs the
+   land-time consistency assertion, and commits `chore(version): X.Y.Z`.
 2. **Land (the generic `/shipit` skill).** Run the distributed runtime
-   [`/shipit`](../../../skills/shipit/SKILL.md) skill to push the branch, wait for
-   CI, and squash-merge. `shipit` is project-agnostic — it does no versioning.
-   This skill is the Team-internal bumper it composes with.
+   [`/shipit`](../../../skills/shipit/SKILL.md) skill to push the branch, wait
+   for CI, and squash-merge. `shipit` is project-agnostic — it does no
+   versioning. This skill is the Team-internal bumper it composes with.
 
 Run this skill **before** `/shipit`, against the version of `main` you intend to
 land onto.
 
-**The bump is conditional, not universal.** Step 0 below decides if this PR warrants
-a bump at all. Only PRs that change the **distributed plugin** bump. A dev-only PR
-(CI, docs, tests, evals, `.claude/` tooling) lands with no bump and no changelog cut.
-Run step 0, see it say "no bump", and go straight to `/shipit`
+**The bump is conditional, not universal.** Step 0 below decides if this PR
+warrants a bump at all. Only PRs that change the **distributed plugin** bump. A
+dev-only PR (CI, docs, tests, evals, `.claude/` tooling) lands with no bump and
+no changelog cut. Run step 0, see it say "no bump", and go straight to `/shipit`
 with the plain conventional title.
 
 ## Steps
@@ -78,10 +78,10 @@ git diff origin/main...HEAD --name-only
   `/shipit`.
 - **Runtime files changed → continue to step 1.**
 
-This is a hard gate, not a judgment call. The same check runs deterministically in
-CI, through `.github/scripts/version-bump-required.sh`, which
-`tests/version-bump-required.test.ts` pins. It **fails the PR** if a dev-only diff
-bumped, or a runtime diff did not.
+This is a hard gate, not a judgment call. The same check runs deterministically
+in CI, through `.github/scripts/version-bump-required.sh`, which
+`tests/version-bump-required.test.ts` pins. It **fails the PR** if a dev-only
+diff bumped, or a runtime diff did not.
 
 ### 1. Decide the bump level
 
@@ -100,8 +100,8 @@ Pick the highest-impact **runtime** change in the PR:
 - **minor** — new backward-compatible capability (`feat:`).
 - **patch** — everything else (`fix:`, `docs:`, `chore:`, `refactor:`, `test:`, `ci:`).
 
-The conventional-commit type only picks the *level*. It never overrides step 0.
-A `ci:`/`test:`/`docs:`/`chore:` commit that ships **no runtime change** never
+The conventional-commit type only picks the *level*. It never overrides step 0. A
+`ci:`/`test:`/`docs:`/`chore:` commit that ships **no runtime change** never
 reaches this table — it already stopped at step 0 with no bump.
 
 State the chosen level and the reasoning. If genuinely ambiguous, ask.
@@ -112,13 +112,13 @@ State the chosen level and the reasoning. If genuinely ambiguous, ask.
 bash .claude/scripts/next-version.sh <level>
 ```
 
-This prints `bump(<default branch>'s version, level)` — **deterministic**, a
-pure function of the base and the level, with no open-PR scan. The base is read
-from the remote's default branch (resolved through `origin/HEAD`, not a hardcoded
-`main`). Under the land-time
-model the version is assigned against current `main` and landing is serialized,
-so `bump(main, level)` is always free. A concurrent race is handled by `/shipit`
-(rebase + recompute) and `release-on-merge.yml`'s duplicate-tag backstop.
+This prints `bump(<default branch>'s version, level)` — **deterministic**, a pure
+function of the base and the level, with no open-PR scan. The base is read from
+the remote's default branch (resolved through `origin/HEAD`, not a hardcoded
+`main`). Under the land-time model the version is assigned against current `main`
+and landing is serialized, so `bump(main, level)` is always free. A concurrent
+race is handled by `/shipit` (rebase + recompute) and `release-on-merge.yml`'s
+duplicate-tag backstop.
 
 ### 3. Bump all four version strings
 
@@ -140,10 +140,10 @@ All four lines must show the **new** version. Zero may still show the old one.
 
 ### 4. Cut the changelog section
 
-This **moves** the accumulated `[Unreleased]` body into a new dated section. It is
-the inverse of `release-on-merge.yml`'s `awk` extraction, because you write the
-section the release workflow later reads. In `CHANGELOG.md` (Keep a Changelog format,
-entry style per `skills/changelog/SKILL.md`):
+This **moves** the accumulated `[Unreleased]` body into a new dated section. It
+is the inverse of `release-on-merge.yml`'s `awk` extraction, because you write
+the section the release workflow later reads. In `CHANGELOG.md` (Keep a Changelog
+format, entry style per `skills/changelog/SKILL.md`):
 
 - Move the entire `[Unreleased]` body into a new `## [X.Y.Z] - YYYY-MM-DD`
   (today's date) section inserted directly **below** `## [Unreleased]`. Leave
@@ -153,19 +153,19 @@ entry style per `skills/changelog/SKILL.md`):
   - Add `[X.Y.Z]: https://github.com/bostonaholic/team/compare/v<prev>...vX.Y.Z`
 
 This section becomes the GitHub release notes verbatim — write it for a reader
-deciding if to upgrade. Any links must be **absolute URLs**: relative paths
-(e.g. `docs/versioning.md`) render as dead links on the release page (see
+deciding if the upgrade is worth it. Any links must be **absolute URLs**: relative paths (e.g.
+`docs/versioning.md`) render as dead links on the release page (see
 `skills/changelog/SKILL.md`).
 
-**Empty-`[Unreleased]` edge case.** A PR that reached this step passed step 0, so it
-*did* change runtime files. An empty `[Unreleased]` on it means nobody wrote the
-user-facing bullet. **Derive at least one bullet from
-the PR's runtime commits** (`feat:`/`fix:`/`perf:`/`security:` per
-`skills/changelog/SKILL.md` style). Never write an empty section
-(`release-on-merge.yml` errors on empty release notes).
+**Empty-`[Unreleased]` edge case.** A PR that reached this step passed step 0, so
+it *did* change runtime files. An empty `[Unreleased]` on it means nobody wrote
+the user-facing bullet.
+**Derive at least one bullet from the PR's runtime commits**
+(`feat:`/`fix:`/`perf:`/`security:` per `skills/changelog/SKILL.md` style). Never
+write an empty section (`release-on-merge.yml` errors on empty release notes).
 
-Empty `[Unreleased]` **and** no runtime change is not this case. That PR must have
-stopped at **step 0**, with no bump and no changelog cut. Do not invent a
+Empty `[Unreleased]` **and** no runtime change is not this case. That PR must
+have stopped at **step 0**, with no bump and no changelog cut. Do not invent a
 bullet to justify a bump that step 0 already declined. Go back and land plain.
 
 ### 5. Land-time consistency assertion

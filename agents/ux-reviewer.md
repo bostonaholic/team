@@ -27,17 +27,17 @@ Load `skills/code-review/SKILL.md` (preloaded) for generator-evaluator
 separation (fresh context, no shared history). This agent's REQUEST CHANGES
 findings auto-fix in the loop as a *major*. The severity and
 verdict-aggregation tier map lives in
-`skills/review-severity-tiers/SKILL.md`, which the orchestrator applies.
-Use the Working/Broken/Could Improve report format defined below — not
+`skills/review-severity-tiers/SKILL.md`, which the orchestrator applies. Use
+the Working/Broken/Could Improve report format defined below — not
 Conventional Comments, which does not fit live verification output.
 
 Your verification procedure lives in `skills/verifying-ux/SKILL.md`
 (preloaded). It covers project-type detection (UI, API-only, or library) and
 the UI and API verification steps. It covers screenshot capture for
 UI-impacting changes: one PNG per affected page or state, plus a manifest
-under `docs/plans/<id>/screenshots/` that team-pr consumes. Its cleanup
-rules are to always stop the server, never change code, never commit
-screenshots, and time-bound the run.
+under `docs/plans/<id>/screenshots/` that team-pr consumes. Its cleanup rules
+are to always stop the server, never change code, never commit screenshots,
+and time-bound the run.
 
 Per `## When Reviewing` of `skills/systems-thinking/SKILL.md`, verify the
 adjacent flows that share the changed components, not only the changed screen.

@@ -19,12 +19,13 @@ Six foundational perspectives guide every design and implementation decision:
 - **John Carmack**: Implement features directly, avoiding unnecessary
   abstraction. Maintain clear strategies to measure and reason about
   performance.
-- **Joe Armstrong**: Isolate failures through rigorous error handling. Make sure that
-  faults in one module do not propagate to others.
+- **Joe Armstrong**: Isolate failures through rigorous error handling. Make
+  sure that faults in one module do not propagate to others.
 - **Donald Knuth**: Prioritize readable, maintainable code above all else.
   Choose clarity before cleverness.
-- **Barbara Liskov**: Respect interface contracts and make sure that substitutability.
-  See `skills/solid-principles/SKILL.md` for full LSP treatment and depth.
+- **Barbara Liskov**: Respect interface contracts and make sure that
+  substitutability. See `skills/solid-principles/SKILL.md` for full LSP
+  treatment and depth.
 - **John Ousterhout**: Fight complexity by designing deep modules with simple
   interfaces. Pull complexity downward into implementations rather than
   exposing it to callers.
@@ -60,9 +61,9 @@ Six foundational perspectives guide every design and implementation decision:
 ### Code Comments
 
 Comments never explain WHAT the code does. Intention-revealing names and
-structure carry that. A comment is permitted only for a non-obvious WHY, such
-as a constraint, a workaround, or a surprising requirement. It is permitted
-only when neither intention-revealing code nor tests can carry the
+structure carry that. A comment is permitted only for a non-obvious WHY,
+such as a constraint, a workaround, or a surprising requirement. It is
+permitted only when neither intention-revealing code nor tests can carry the
 explanation.
 
 - **Rewrite first.** A comment that feels necessary is a signal to rewrite
@@ -78,8 +79,8 @@ explanation.
   workaround does. The ban targets internal trackers and pipeline
   artifacts, not those links.
 - **No commented-out code.** Version control remembers deleted code. A
-  commented-out block only makes readers ask if it is still needed.
-  Delete it.
+  commented-out block only makes readers ask if it is still needed. Delete
+  it.
 - **No TODO or FIXME comments in delivered code.** Deferred work goes in
   the implementer's report, where it is visible and actionable -- not
   buried in the source where it silently ages.
@@ -110,8 +111,8 @@ explanation.
 - Design for dependency injection from the start.
 - Separate pure logic from side effects (I/O, database, network).
 - Create seams in the code where test doubles can be inserted.
-- Make sure that each function can be tested in isolation with clear input/output
-  contracts.
+- Make sure that each function can be tested in isolation with clear
+  input/output contracts.
 
 ## Design-First Workflow
 
@@ -195,9 +196,9 @@ Apply this methodology during code writing with these checkpoints:
 8. **No primitive obsession in new domain types.** When adding a new domain
    concept (Money, Duration, OrderId, EmailAddress), give it a type. Long
    parameter lists with related primitives signal a missing value object.
-9. **Targeted exception scopes only.** Wrap exactly the call that can
-   throw. Catch the specific exception subclass. Rethrow with the original
-   cause chained. Never `catch (Exception e)` around a large block.
+9. **Targeted exception scopes only.** Wrap exactly the call that can throw.
+   Catch the specific exception subclass. Rethrow with the original cause
+   chained. Never `catch (Exception e)` around a large block.
 10. **Follow the project's existing code style, naming conventions, and
     patterns.** Read neighboring files to calibrate if unsure.
 

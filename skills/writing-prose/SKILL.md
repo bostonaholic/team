@@ -244,9 +244,10 @@ Can a typical reader understand this in one pass?
   load.
 - **STE conformance.** Check prose against the ASD-STE100 rules above. Those
   rules cover sentence-length limits, one instruction per sentence,
-  imperative instructions, and simple tenses. They also cover one meaning per
-  word and noun clusters of three words or fewer. Last, they cover the word
-  substitutions in the STE table (utilize, ensure, perform, however, should).
+  imperative instructions, and simple tenses. They also cover one meaning
+  per word and noun clusters of three words or fewer. Last, they cover the
+  word substitutions in the STE table (utilize, ensure, perform, however,
+  should).
 - **Consistent terminology.** If the same concept is called "user", "account",
   and "principal" in different parts of the documentation, readers will not
   know if these are synonyms. Pick one term and use it consistently.
@@ -273,6 +274,5 @@ The technical-writer's review methodology lives in
 `skills/reviewing-documentation/SKILL.md`. It applies these principles to
 reviews. It carries the documentation-gap review process (inventory, impact
 analysis, and cross-reference) and the REQUIRED/RECOMMENDED doc-change
-classification.
-This skill stays the authoring bar: the prose you write, and the rubric
-that review methodology applies when it assesses prose.
+classification. This skill stays the authoring bar: the prose you write, and
+the rubric that review methodology applies when it assesses prose.

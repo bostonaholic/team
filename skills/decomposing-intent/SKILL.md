@@ -7,8 +7,9 @@ user-invocable: false
 # Decomposing Intent
 
 The questioner's templates and procedure. Capture the user's intent in
-`task.md`, and write neutral research questions in `questions.md`. Record
-repo scope in `repos.md` when the topic spans more than one repository.
+`task.md`, and write neutral research questions in `questions.md`.
+Record repo scope in `repos.md` when the topic spans more than one
+repository.
 
 ## The `topic` field
 
@@ -60,12 +61,12 @@ Then the body:
 
 Keep this under 80 lines. The point is intent, not exhaustive detail.
 
-Load `skills/product-requirements-doc/SKILL.md` when the feature request is
-vague or underspecified, spans multiple user stories, is cross-cutting, or
-replaces existing behavior. Produce `docs/plans/<id>/prd.md` alongside
-`task.md`, and reference the PRD's path
-from `task.md`. The full criteria live in that skill's "When to Write a
-PRD" section. For simple, well-scoped requests, skip the PRD.
+Load `skills/product-requirements-doc/SKILL.md` when the feature request
+is vague or underspecified, spans multiple user stories, is
+cross-cutting, or replaces existing behavior. Produce
+`docs/plans/<id>/prd.md` alongside `task.md`, and reference the PRD's
+path from `task.md`. The full criteria live in that skill's "When to
+Write a PRD" section. For simple, well-scoped requests, skip the PRD.
 
 Required frontmatter for `prd.md` (the PRD rides the autonomous Question
 phase — it is not gated, so it carries no `approved` or `revision`
@@ -132,8 +133,8 @@ must NOT state the goal or desired outcome.
 
 A topic can legitimately span more than one repository. Examples are
 frontend and backend, an API and a shared SDK, and a service and its
-infrastructure repo. In that case you must record the repos, so the rest of
-the pipeline can run worktrees, slices, plan steps, and PRs in each.
+infrastructure repo. In that case you must record the repos, so the rest
+of the pipeline can run worktrees, slices, plan steps, and PRs in each.
 
 ### When to suspect a multi-repo topic
 
@@ -146,19 +147,20 @@ Watch for these signals in the description:
 - The user references repos by absolute paths or by names that do not
   exist as subdirectories of the current repo (run `ls` to make sure).
 
-If you suspect multi-repo, resolve the scope **autonomously**. Never pause
-to ask. First **validate every candidate `<name>` against a strict
-allowlist**. The name must match `^[A-Za-z0-9._-]+$`, and it must not be
-exactly `.` or `..`. Anything else — path separators, absolute
-paths, traversal sequences, shell metacharacters such as `$()` or
-backticks — fails the allowlist and is unresolvable. When you run a
-command on a candidate, pass the name/path to the tool as a single
-argument (argv), never interpolated into a shell string. Then resolve
-each surviving candidate to a local path by checking the sibling
-directories of the home repo root: a repo named `<name>` is expected at
-`<root>/../<name>`. Make sure that each candidate path is a git working tree
-with `git -C <path> rev-parse --git-dir`, and require its real path to
-be a **direct child of the home repo's parent directory**:
+If you suspect multi-repo, resolve the scope **autonomously**. Never
+pause to ask. First
+**validate every candidate `<name>` against a strict allowlist**. The
+name must match `^[A-Za-z0-9._-]+$`, and it must not be exactly `.` or
+`..`. Anything else — path separators, absolute paths, traversal
+sequences, shell metacharacters such as `$()` or backticks — fails the
+allowlist and is unresolvable. When you run a command on a candidate,
+pass the name/path to the tool as a single argument (argv), never
+interpolated into a shell string. Then resolve each surviving candidate
+to a local path by checking the sibling directories of the home repo
+root: a repo named `<name>` is expected at `<root>/../<name>`. Make sure
+that each candidate path is a git working tree with
+`git -C <path> rev-parse --git-dir`, and require its real path to be a
+**direct child of the home repo's parent directory**:
 `realpath "<root>/../<name>"` must equal
 `"$(dirname "$(realpath "<root>")")/<name>"`. A path that resolves
 anywhere else (e.g. through a symlink) is unresolvable.
@@ -166,13 +168,13 @@ anywhere else (e.g. through a symlink) is unresolvable.
 - **Every candidate resolves** → write `repos.md` from the resolved
   `<slug>: <absolute-path>` list per the schema in
   `skills/artifact-frontmatter/SKILL.md`.
-- **Any candidate is unresolvable** → proceed in single-repo mode, do not
-  write `repos.md`, and record the omission as an explicit assumption.
-  Unresolvable means it fails the allowlist, has no sibling directory, is
-  not a git working tree, or resolves outside the home repo's parent
-  directory. Record it
-  in `task.md`'s `## Open assumptions` (name the repo you could not
-  resolve so the miss is auditable at PR review).
+- **Any candidate is unresolvable** → proceed in single-repo mode, do
+  not write `repos.md`, and record the omission as an explicit
+  assumption. Unresolvable means it fails the allowlist, has no sibling
+  directory, is not a git working tree, or resolves outside the home
+  repo's parent directory. Record it in `task.md`'s
+  `## Open assumptions` (name the repo you could not resolve so the miss
+  is auditable at PR review).
 
 ### Writing `repos.md`
 
@@ -186,24 +188,25 @@ phase: repos
 ---
 ```
 
-Body — see the schema in `skills/artifact-frontmatter/SKILL.md`. The home
-repo is whichever repo the orchestrator dispatched you in (the one
-holding `docs/plans/<id>/`). Use its absolute path. Each more
-repo gets a name slug (unique, kebab-case) and an absolute path.
+Body — see the schema in `skills/artifact-frontmatter/SKILL.md`. The
+home repo is whichever repo the orchestrator dispatched you in (the one
+holding `docs/plans/<id>/`). Use its absolute path. Each more repo gets
+a name slug (unique, kebab-case) and an absolute path.
 
 Do not yet write the `## Worktrees` section — that is the orchestrator's
 job during the WORKTREE phase.
 
 ### Do not infer multi-repo
 
-If the description does not name more repos, stay in single-repo
-mode. Inventing extra repos would expand scope without consent. When in
-doubt, stay single-repo and record the assumption in `task.md`.
+If the description does not name more repos, stay in single-repo mode.
+Inventing extra repos would expand scope without consent. When in doubt,
+stay single-repo and record the assumption in `task.md`.
 
 ## Process
 
 1. Read the user's description carefully. If it references existing code
-   (file names, modules, error messages), grep/glob to make sure those exist.
+   (file names, modules, error messages), grep/glob to make sure those
+   exist.
 2. **Decide repo scope.** Look for the multi-repo signals above. If
    present, resolve each candidate repo through the allowlist +
    sibling-directory check and write `repos.md` when every candidate
@@ -211,8 +214,8 @@ doubt, stay single-repo and record the assumption in `task.md`.
    `task.md`.
 3. Decide the topic slug (kebab-case, ~3 words).
 4. Identify the codebase scope: which directories or modules — and in
-   multi-repo mode, which repos — will research touch? Make sure of this by
-   listing them.
+   multi-repo mode, which repos — will research touch? Make sure of this
+   by listing them.
 5. Draft questions. For each, ask: "If a stranger answered this without
    knowing the goal, would the answer still be useful?" If no, rewrite.
    In multi-repo mode, scope each question to "in repo `<name>`, ..."

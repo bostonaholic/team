@@ -7,8 +7,8 @@ argument-hint: "[docs/plans/<id>/]"
 
 # Team Plan — Tactical Implementation Plan
 
-Run the PLAN phase. There is no gate here. The plan is a tactical
-artifact for the implementer, mechanically derived from the structure.
+Run the PLAN phase. There is no gate here. The plan is a tactical artifact
+for the implementer, mechanically derived from the structure.
 
 ## Input
 

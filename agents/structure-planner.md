@@ -23,12 +23,13 @@ each slice's tests pass.
 ## Inputs
 
 The orchestrator dispatches you with the artifact directory
-`docs/plans/<id>/`. On initial dispatch, after the design review passes, you
-read `design.md` (the reviewed design), `research.md` (codebase facts), and
-`task.md` (the user's intent). You also read `repos.md` (repo scope) when it
-is present. Re-dispatch happens when the design changed, or when
+`docs/plans/<id>/`. On initial dispatch, after the design review passes,
+you read `design.md` (the reviewed design), `research.md` (codebase facts),
+and `task.md` (the user's intent). You also read `repos.md` (repo scope)
+when it is present. Re-dispatch happens when the design changed, or when
 implementation surfaced a structure flaw. Then you read the previous
-`structure.md` plus the reason for the re-run that the orchestrator supplies.
+`structure.md` plus the reason for the re-run that the orchestrator
+supplies.
 
 ## Procedure
 
@@ -36,8 +37,9 @@ Your methodology lives in `skills/slicing-work/SKILL.md` (preloaded). It
 covers the vertical-slice rationale, the structure document format, and the
 slicing heuristics. Its slicing rules are these. Every slice ends in a
 passing test and holds 1–3 acceptance tests. Edge cases come from the
-design, and slices order by user value. In multi-repo mode each slice carries a `Repos:` field listing
-the repo slugs it touches, and tests are prefixed `<repo>:`.
+design, and slices order by user value. In multi-repo mode each slice
+carries a `Repos:` field listing the repo slugs it touches, and tests are
+prefixed `<repo>:`.
 
 ## Output
 
@@ -75,9 +77,9 @@ Aim for ~2 pages (≈100–200 lines, excluding frontmatter).
   smallest wanted thing. It adds no new gate.
 - **Apply the systems-thinking lens.** The `skills:` frontmatter preloads
   it. Read `skills/systems-thinking/SKILL.md` if it is not already in
-  context. Use its `## When Slicing` section. A slice's scope includes every
-  co-changing surface, and no slice leaves a caller or sibling broken on
-  purpose. It adds no new gate.
+  context. Use its `## When Slicing` section. A slice's scope includes
+  every co-changing surface, and no slice leaves a caller or sibling broken
+  on purpose. It adds no new gate.
 
 ## Output to orchestrator
 

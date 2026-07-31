@@ -21,18 +21,18 @@ update.
 
 ## Pickup: move the ticket to in-progress
 
-When a run resolves its input to a ticket id or issue, move that ticket to
-its tracker's in-progress state. This is the first action of the run, before
-any other work begins.
+When a run resolves its input to a ticket id or issue, move that ticket
+to its tracker's in-progress state. This is the first action of the run,
+before any other work begins.
 
 ## PR open: link the PR to the ticket
 
 When the PR phase opens a pull request and `task.md`'s frontmatter has
-`ticketId` set, **link the PR to the ticket**. The tracker then closes the
-ticket when the PR merges, and any board automation moves it to its done
-state. On GitHub, render the link as a closing line emitted **as
-the final line of the PR body** (`Closes #<n>`). For another tracker
-use its PR↔issue link mechanism.
+`ticketId` set, **link the PR to the ticket**. The tracker then closes
+the ticket when the PR merges, and any board automation moves it to its
+done state. On GitHub, render the link as a closing line emitted
+**as the final line of the PR body** (`Closes #<n>`). For another
+tracker use its PR↔issue link mechanism.
 
 ### Interpreting `ticketId`
 
@@ -53,9 +53,9 @@ use its PR↔issue link mechanism.
 
 ### Multi-repo: the home PR alone closes the ticket
 
-In multi-repo mode, only the **home** repo's PR carries the closing keyword
-(`Closes #<n>`). The ticket then closes exactly once, when the home PR
-merges. Companion PRs carry a **non-closing** reference to the
+In multi-repo mode, only the **home** repo's PR carries the closing
+keyword (`Closes #<n>`). The ticket then closes exactly once, when the
+home PR merges. Companion PRs carry a **non-closing** reference to the
 issue in the same footer position, using the unambiguous qualified form
 (`owner/repo#<n>` or the issue URL) — for example:
 

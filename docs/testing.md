@@ -15,9 +15,8 @@ recommender, a search ranker, a generative pipeline, a heuristic planner).
 
 Team's harness is TypeScript on **Bun** (`bun test`). The **`claude`** CLI
 drives the non-deterministic component under test. Diff-based selection compares
-against **`origin/main`**. Those are Team's concrete choices.
-Nothing in the design below assumes a particular framework, language, or model
-vendor.
+against **`origin/main`**. Those are Team's concrete choices. Nothing in the
+design below assumes a particular framework, language, or model vendor.
 
 ---
 
@@ -33,11 +32,12 @@ may get different words, a different number of findings, a different tool call.
 You cannot `assertEqual` your way through it. You also cannot block a merge on a
 check that is red 8% of the time for no reason.
 
-So this harness keeps the pyramid's scope axis **and adds a second axis:
-determinism and cost.** Every test lives at a coordinate of *(scope,
-determinism)*. The whole design is one discipline: **push each check as far down
-and as far toward "deterministic" as it will go**. The cheapest, most reliable
-place to catch a given bug is almost never an expensive model eval.
+So this harness keeps the pyramid's scope axis
+**and adds a second axis: determinism and cost.** Every test lives at a
+coordinate of *(scope, determinism)*. The whole design is one discipline:
+**push each check as far down and as far toward "deterministic" as it will go**.
+The cheapest, most reliable place to catch a given bug is almost never an
+expensive model eval.
 
 ```text
   determinism →  HIGH (deterministic, free, fast)        LOW (stochastic, paid, slow)
@@ -102,11 +102,11 @@ These tests do not run behavior. They **read your own source or config and
 assert a contract with a pattern match.** They are executable architecture
 documentation.
 
-Every load-bearing rule in your codebase gets a test that **fails the build when
-someone breaks it**, in milliseconds, and without execution of anything.
-Example rules are "never import X from Y" and "all writes must route through
-this helper". Two more are "this name must not collide with a reserved word"
-and "an import of this module must have no side effects".
+Every load-bearing rule in your codebase gets a test that
+**fails the build when someone breaks it**, in milliseconds, and without
+execution of anything. Example rules are "never import X from Y" and "all writes
+must route through this helper". Two more are "this name must not collide with a
+reserved word" and "an import of this module must have no side effects".
 
 Canonical forms:
 
@@ -118,8 +118,8 @@ Canonical forms:
   bound no port / wrote no file / registered no handler.
 - **Ordering tripwire.** Parse a file, assert call A precedes call B (e.g. a
   scan must run before the thing it protects).
-- **Collision / drift tripwire.** Assert generated artifacts are fresh, names
-  do not shadow reserved ones, and enums in two files stay in sync.
+- **Collision / drift tripwire.** Assert generated artifacts are fresh, names do
+  not shadow reserved ones, and enums in two files stay in sync.
 
 **Discipline:** when you write a comment that says "NEVER do X here," write the
 tripwire in the same change. A constraint without a test is a suggestion.
@@ -149,19 +149,20 @@ still:
 - That a sentence uses particular words. A regex such as
   `/never\s+approve\s+unconfirmed/` pins one phrasing of a rule, not the rule.
 - That two words appear near each other. Proximity spans (`[^.]{0,240}`,
-  `.{0,250}`) test if an author put two ideas in one sentence. That is a
-  style question, not a contract.
+  `.{0,250}`) test if an author put two ideas in one sentence. That is a style
+  question, not a contract.
 - How long a file is. A line ceiling measures nothing about correctness, and it
   turns every later edit into a budget negotiation.
 
-The test is simple: **if a rewrite that preserves the meaning turns the test
-red, the test was measuring the wording.** Delete it, or find the identifier
-underneath it and assert that instead. A wording pin gives false confidence in
-both directions. It fails when nothing broke, and it passes when an author
-keeps the sentence but guts the logic around it.
+The test is simple:
+**if a rewrite that preserves the meaning turns the test red, the test was measuring the wording.**
+Delete it, or find the identifier underneath it and assert that instead. A
+wording pin gives false confidence in both directions. It fails when nothing
+broke, and it passes when an author keeps the sentence but guts the logic around
+it.
 
-Behavior that only prose can carry belongs at L5 or L6, where a model judges
-if the instruction still lands. Do not simulate that at L2 with a regex.
+Behavior that only prose can carry belongs at L5 or L6, where a model judges if
+the instruction still lands. Do not simulate that at L2 with a regex.
 
 This layer is what lets a stochastic product stay correct cheaply: a huge
 fraction of "regressions" are really *contract violations*. Contracts stay
@@ -219,10 +220,10 @@ first**. Keep it cheap and honest:
 - **Use a cheaper model as the judge** than the one being judged where you can.
 - **Cascade.** Gate the expensive judge behind cheap deterministic checks. Only
   pay for a model call when a regex or heuristic shows the need.
-- **Score on a rubric (1 to N). Pass on a floor or a band, never on exact
-  match.** One example is "detection rate ≥ ground-truth floor and false
-  positives ≤ ceiling". Another is "count within ±2 of the seeded number".
-  Bands are how you absorb non-determinism without flakiness.
+- **Score on a rubric (1 to N). Pass on a floor or a band, never on exact match.**
+  One example is "detection rate ≥ ground-truth floor and false positives ≤
+  ceiling". Another is "count within ±2 of the seeded number". Bands are how you
+  absorb non-determinism without flakiness.
 - **Persist scores across runs** so you can see quality drift, not only today's
   pass/fail.
 
@@ -327,8 +328,8 @@ Once the harness has structure, protect the structure itself:
   one shard.
 - **Portability detection.** If you support several operating systems, scan
   tests for platform-fragile patterns: a hardcoded `/tmp`, POSIX-only shells,
-  and path separators. Then curate a known-safe subset for the other
-  platform's CI.
+  and path separators. Then curate a known-safe subset for the other platform's
+  CI.
 
 Meta-tests are themselves L2 tripwires pointed at your own test directory.
 
@@ -381,17 +382,17 @@ The goal is a paid suite that costs a few dollars per change set, not hundreds.
 
 A pragmatic order of operations:
 
-1. **Draw the free/paid line.** Make `bun test` run only free tiers.
-   Populate L1 (pure unit) first. It is the cheapest coverage you will ever buy.
+1. **Draw the free/paid line.** Make `bun test` run only free tiers. Populate L1
+   (pure unit) first. It is the cheapest coverage you will ever buy.
 2. **Add tripwires (L2) for your top 10 "NEVER do X" rules.** Highest leverage
    per line of test you will write. Each is a few minutes and prevents a class of
    regression forever.
 3. **Stand up in-process integration (L3)** with a fixture server/handler so you
    can test real dispatch without the network.
-4. **Add real-dependency E2E (L4)** only for the lifecycle/concurrency cases that
-   demand it. Accelerate timers through env knobs.
-5. **If you have a model in the loop, build one behavioral runner (L5)** for
-   the surface you care about most. Write **deterministic guardrails first**,
+4. **Add real-dependency E2E (L4)** only for the lifecycle/concurrency cases
+   that demand it. Accelerate timers through env knobs.
+5. **If you have a model in the loop, build one behavioral runner (L5)** for the
+   surface you care about most. Write **deterministic guardrails first**,
    because they are the ones you can gate on.
 6. **Add diff-based selection and the gate/periodic split** as soon as the paid
    suite costs enough to notice. Wire CI to run gate-on-PR, periodic-on-schedule.
@@ -660,4 +661,5 @@ jobs:
 - [ ] `periodic-evals` is **not** necessary: scheduled, reports, never blocks.
 - [ ] Secrets exposed **only** to gate/periodic jobs, never to the free suite.
 - [ ] Fork PRs: decide deliberately if they receive model secrets. The default
-      is no. Run free and meta only, or re-target the branch to a trusted remote.
+      is no. Run free and meta only, or re-target the branch to a trusted
+      remote.

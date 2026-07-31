@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { frontmatter, read, squash } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 
@@ -904,7 +904,7 @@ describe("comment red flags (L2 content tripwire)", () => {
     expect(/first\*{0,2} occurrence/i.test(flags)).toBe(true);
     expect(/blocking/i.test(flags)).toBe(true);
     expect(/ticket\/issue IDs/i.test(flags)).toBe(true);
-    expect(/plan\/slice\/phase markers/i.test(flags)).toBe(true);
+    expect(/plan\/slice\/phase markers/i.test(squash(flags))).toBe(true);
     // TODO/FIXME is hard-banned by the canonical standard, so it must sit
     // in the blocking bucket — a demotion to style escalation fails here.
     const blockingBucket = sliceBetween(

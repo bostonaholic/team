@@ -6,9 +6,10 @@ user-invocable: false
 
 # Test-Driven Bug Fix
 
-A bug without a failing test is an unverified assumption. A bug fixed without
-a failing test may be fixed correctly this time, but has no protection against
-regression. The test-driven bug fix discipline makes sure that that every fix is:
+A bug without a failing test is an unverified assumption. A bug fixed
+without a failing test may be fixed correctly this time, but has no
+protection against regression. The test-driven bug fix discipline makes sure
+that that every fix is:
 
 1. **Reproduced** — the bug is confirmed to exist before any code changes
 2. **Pinned** — a failing test locks in the expected correct behavior
@@ -29,12 +30,12 @@ Before reproducing, classify the failure into one of four buckets:
 Intermittent failures are not a fifth bucket — they belong in one of the
 four above. Quarantining a test as "flaky" without classifying the failure
 hides the very intermittent product bug that the test surfaced. The
-conditions that make a test flaky are frequently the conditions that
-trigger the bug. Reproduce deterministically before fixing — see
+conditions that make a test flaky are frequently the conditions that trigger
+the bug. Reproduce deterministically before fixing — see
 `skills/systematic-debugging/SKILL.md`. When the failure is non-obvious,
-drill the causal chain to its root first through the **Root Cause Analysis
-(5 Whys)** subsection of `skills/systematic-debugging/SKILL.md` before
-proposing a fix.
+drill the causal chain to its root first through the
+**Root Cause Analysis (5 Whys)** subsection of
+`skills/systematic-debugging/SKILL.md` before proposing a fix.
 
 ## The Four-Step Discipline
 
@@ -100,8 +101,8 @@ After the fix:
    now fails that passed before, the fix introduced a regression — undo and
    investigate.
 
-2. **Re-run the reproduction case.** Make sure that the original bug no longer
-   occurs with the original inputs.
+2. **Re-run the reproduction case.** Make sure that the original bug no
+   longer occurs with the original inputs.
 
 3. **Check for related instances.** If the root cause is a pattern (e.g.,
    missing null check), search the codebase for the same pattern. File issues

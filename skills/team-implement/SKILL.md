@@ -24,9 +24,9 @@ The agents read:
 - `$ARGUMENTS/plan.md` — file-level steps and per-slice tests
 - `$ARGUMENTS/structure.md` — slice ordering and verification checkpoints
 - `$ARGUMENTS/design.md` — context for what each test should assert
-- `$ARGUMENTS/repos.md` — repo scope (only present when the topic spans
-  more than one repository). The implementer cd's between worktrees as
-  the plan steps require
+- `$ARGUMENTS/repos.md` — repo scope (only present when the topic spans more
+  than one repository). The implementer cd's between worktrees as the plan
+  steps require
 - `$ARGUMENTS/task.md` — intent (for the implementer when in standalone mode)
 
 Resolve the artifact directory by running this self-contained block (one bash
@@ -88,24 +88,25 @@ directory (from **Describe the task**) names a `docs/plans/<id>/` that lacks
 If `$ARGUMENTS/plan.md` does not exist in it, run `test-architect` →
 `implementer` → reviewers from `$ARGUMENTS/task.md` alone.
 
-Coordinate progress through TodoWrite. Seed: `Test-architect → Mechanical
-gate → Implementer (per slice) → Review round 1`.
-See `skills/progress-tracking/SKILL.md` for the per-step tracking convention agents follow within each phase.
+Coordinate progress through TodoWrite. Seed:
+`Test-architect → Mechanical gate → Implementer (per slice) → Review round 1`.
+See `skills/progress-tracking/SKILL.md` for the per-step tracking convention
+agents follow within each phase.
 
 ## Worktree Check
 
 Before any agent dispatch, decide where to work:
 
 1. **Read `$ARGUMENTS/repos.md` if present.** When present, you are in
-   multi-repo mode. Make sure that a worktree exists in **every** listed repo
-   (read the `## Worktrees` section). If any are missing, tell the
-   user to run `/team-worktree [docs/plans/<id>/]` (the path is
-   optional — discovery resolves it) and stop.
+   multi-repo mode. Make sure that a worktree exists in **every** listed
+   repo (read the `## Worktrees` section). If any are missing, tell the user
+   to run `/team-worktree [docs/plans/<id>/]` (the path is optional —
+   discovery resolves it) and stop.
 2. Run `git rev-parse --absolute-git-dir`. If the path contains
-   `/worktrees/`, you are already inside a Claude Code worktree —
-   proceed in place. In multi-repo mode this should be the home repo's
-   worktree. The implementer cd's into the other repos' worktrees as
-   the plan steps require.
+   `/worktrees/`, you are already inside a Claude Code worktree — proceed in
+   place. In multi-repo mode this should be the home repo's worktree. The
+   implementer cd's into the other repos' worktrees as the plan steps
+   require.
 3. If you are in the main working tree, use `AskUserQuestion` to ask
    where to run the implementation. Use a single question with a
    `Worktree` header and these options:

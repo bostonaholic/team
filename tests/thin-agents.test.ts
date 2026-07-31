@@ -9,7 +9,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { frontmatter, read, squash } from "./helpers/text";
 import { E2E_TOUCHFILES } from "./helpers/touchfiles";
 
 const REPO_ROOT = process.cwd();
@@ -311,7 +311,7 @@ describe("thin agents: documentation counts agree at 51 skills", () => {
   });
 
   test("docs/architecture.md exempts own-procedure skills from the 3-skill soft limit", () => {
-    const content = read(ARCHITECTURE_MD);
+    const content = squash(read(ARCHITECTURE_MD));
     expect(content).toMatch(/procedure skill/i);
     expect(content).toMatch(/does not count/i);
   });

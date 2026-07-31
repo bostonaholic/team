@@ -12,11 +12,11 @@ description: |
 
 # Creating a new Team skill
 
-This is the dev-workspace guide for authoring a skill in this plugin. Follow it so a
-new skill matches the conventions the existing skills already use. A skill is a
-document the agent reads, not a function it calls. Before writing one, make three
-decisions in order. Each has a wrong-by-default failure mode, so decide deliberately
-rather than copying another skill's wiring.
+This is the dev-workspace guide for authoring a skill in this plugin. Follow it so a new
+skill matches the conventions the existing skills already use. A skill is a document the
+agent reads, not a function it calls. Before writing one, make three decisions in order.
+Each has a wrong-by-default failure mode, so decide deliberately rather than copying
+another skill's wiring.
 
 1. **Invocation** — is this an entry point (user/model triggers it) or a building
     block (another skill composes it)? This defines what the skill *is*.
@@ -28,10 +28,11 @@ rather than copying another skill's wiring.
 
 Every skill that hands off uses one durable, repo-local directory for what it would
 otherwise "keep in the conversation". That covers inputs passed between skills,
-checkpoints, and findings. In this repo that directory is **`docs/plans/<id>/`**, where `<id>` is
-`<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. This guide calls it `<ARTIFACTS>`.
-Producers write there. Consumers discover and read from there. The agreement matters
-more than the path: every handoff uses the same convention so skills stay decoupled.
+checkpoints, and findings. In this repo that directory is **`docs/plans/<id>/`**, where
+`<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. This guide calls it
+`<ARTIFACTS>`. Producers write there. Consumers discover and read from there. The
+agreement matters more than the path: every handoff uses the same convention so skills
+stay decoupled.
 
 ---
 
@@ -58,13 +59,13 @@ Decide with these tests, in order:
 2. **Is it purely reference material** — methodology, conventions, a protocol another
    agent reads — with no standalone "do this now" meaning for a user? →
    **Model-invocable only**.
-3. **Would a user plausibly type `/<skill>` to run it as an action**, even if agents
-   also compose it? → **Both** (the default, do not over-restrict).
+3. **Would a user plausibly type `/<skill>` to run it as an action**, even if agents also
+   compose it? → **Both** (the default, do not over-restrict).
 
-**If you cannot place the skill in one bucket with high confidence, STOP and ask the
-user** through `AskUserQuestion` (header `Invocation`), with the three buckets as
-options. State your leaning and why, and let them confirm. Do not silently guess. The wrong
-choice either clutters the menu or hides a command users expect. Once decided, wire the
+**If you cannot place the skill in one bucket with high confidence, STOP and ask the user**
+through `AskUserQuestion` (header `Invocation`), with the three buckets as options. State
+your leaning and why, and let them confirm. Do not silently guess. The wrong choice
+either clutters the menu or hides a command users expect. Once decided, wire the
 surface(s) per §1A / §1B below and set the frontmatter from the table above.
 
 ### §1A — Wire it as an entry point
@@ -90,19 +91,18 @@ surface(s) per §1A / §1B below and set the frontmatter from the table above.
 
 ### §1B — Wire it as a building block
 
-Composability is never declared — any skill file can be composed. What you choose is
-HOW a parent pulls it in, by if the parent needs coordination or isolation:
+Composability is never declared — any skill file can be composed. What you choose is HOW
+a parent pulls it in, by if the parent needs coordination or isolation:
 
 - **(a) Inline** — parent reads this skill's file and follows it. For sequential work
   the parent coordinates and weaves into one result. Parent instruction reads:
-  > "Follow <child>/SKILL.md — all sections, full depth. Skip: <list>."
-  Author this child with clearly-headed, independently-runnable sections (parents skip
-  by header), and do not assume you own the whole conversation.
+  > "Follow <child>/SKILL.md — all sections, full depth. Skip: <list>." Author this child
+  with clearly-headed, independently-runnable sections (parents skip by header), and do
+  not assume you own the whole conversation.
 
-- **(b) Subagent** — the parent spawns a fresh-context agent to run this. Use it for
-  an unbiased perspective, such as adversarial review, or for parallelism, such as N
-  variants or specialists at once.
-  Parent instruction reads:
+- **(b) Subagent** — the parent spawns a fresh-context agent to run this. Use it for an
+  unbiased perspective, such as adversarial review, or for parallelism, such as N
+  variants or specialists at once. Parent instruction reads:
   > "Dispatch as a subagent (fresh context). Launch all N in one message. Return the
   >  conclusion only."
   Author this child to be self-contained (it gets a clean window — say what to read up
@@ -112,16 +112,16 @@ HOW a parent pulls it in, by if the parent needs coordination or isolation:
   > "No <artifact> found. A) run /<child> now  B) skip and proceed."
   If accepted, the parent inlines it (mechanism a).
 
-**Hide it from the slash menu.** A pure building block is reference material, not a
-user action, so a `/<skill>` command for it is meaningless. Set `user-invocable: false`
-in its frontmatter to keep it out of the `/` menu. The field governs *menu visibility
-only*. It does not affect read-and-follow or subagent composition (those reach the file
-directly), and the model can still auto-load it when relevant. In this repo every
-pure methodology skill sets this. Entry-point skills leave it unset so they register as
-slash commands. (A skill wired as *both* surfaces stays user-invocable — do not set it.
-`code-review` is the repo's standing example: it is loaded as composed methodology by
-the review agents yet is also a direct user action ("review this diff"). It is the only
-methodology skill kept user-invocable.)
+**Hide it from the slash menu.** A pure building block is reference material, not a user
+action, so a `/<skill>` command for it is meaningless. Set `user-invocable: false` in its
+frontmatter to keep it out of the `/` menu. The field governs *menu visibility only*. It
+does not affect read-and-follow or subagent composition (those reach the file directly),
+and the model can still auto-load it when relevant. In this repo every pure methodology
+skill sets this. Entry-point skills leave it unset so they register as slash commands. (A
+skill wired as *both* surfaces stays user-invocable — do not set it. `code-review` is the
+repo's standing example: it is loaded as composed methodology by the review agents yet is
+also a direct user action ("review this diff"). It is the only methodology skill kept
+user-invocable.)
 
 ### Invocation invariants
 - Never compose through the skill-invocation tool. Composition = read-and-follow OR subagent.
@@ -148,8 +148,8 @@ the archetype that matches the input type. Default to §2A for documents.
 
 ### §2A — Convention-based document discovery (archetype A)
 The skill takes an OPTIONAL artifact-directory arg and DISCOVERS it when omitted.
-Discovery is the front door, and the arg is only an override. Declare the hint in frontmatter
-and read `$ARGUMENTS`:
+Discovery is the front door, and the arg is only an override. Declare the hint in
+frontmatter and read `$ARGUMENTS`:
 ```yaml
 argument-hint: "[docs/plans/<id>/]"
 ```
@@ -183,15 +183,15 @@ git diff "origin/$BASE"...HEAD
 Never hardcode the base branch without the chain above it.
 
 ### §2C — Positional args + flags (scalars only)
-Reserve arguments for scalars, never documents. Parse with sensible defaults
-(`/skill 7d` → default `7d`, `/skill <url> --quick`). Auto-discover when a flag is
-omitted. Always state the default you chose.
+Reserve arguments for scalars, never documents. Parse with sensible defaults (`/skill 7d`
+→ default `7d`, `/skill <url> --quick`). Auto-discover when a flag is omitted. Always
+state the default you chose.
 
 ### §2D — Ask-first
 Start from what the user already typed. Auto-discover repo context (search, diff,
 README). Ask ONE question at a time, only for genuine gaps. Do not interrogate when the
-answer is already on disk. (In this repo, `/team-question` is the ask-first producer
-that seeds `docs/plans/<id>/` for the archetype-A consumers downstream.)
+answer is already on disk. (In this repo, `/team-question` is the ask-first producer that
+seeds `docs/plans/<id>/` for the archetype-A consumers downstream.)
 
 ### Input invariants
 - Discover before you demand. A question is the fallback, not the front door (except §2D).
@@ -218,16 +218,17 @@ Be generous with the payload, ruthless with the working set. Execution rules, in
 
 1. **Offload state to disk.** Write decisions, plans, and findings to `<ARTIFACTS>/*.md`.
     Read back on demand instead of keeping them resident. When a long task risks losing
-    state, checkpoint to `<ARTIFACTS>/checkpoint-<timestamp>.md` (branch, done, decisions,
-    remaining, open questions) — append-only, never overwrite. A fresh window resumes
-    from the file, not from replayed history.
+    state, checkpoint to `<ARTIFACTS>/checkpoint-<timestamp>.md` (branch, done,
+    decisions, remaining, open questions) — append-only, never overwrite. A fresh window
+    resumes from the file, not from replayed history.
 2. **Delegate heavy reading to subagents.** Broad fan-out (sweeping many files, comparing
     variants, adversarial review) goes to a subagent that burns ITS window and returns
     only the conclusion. Launch independent subagents in parallel (one message). Once you
     delegate a search, don't also run it yourself.
-3. **Search, do not read whole files.** For where/what/which questions, use semantic search
-    if available, else targeted grep/glob; pull excerpts and line ranges. Don't `cat` a
-    large file to "see what's there." Don't re-read a file you just edited to make sure it.
+3. **Search, do not read whole files.** For where/what/which questions, use semantic
+    search if available, else targeted grep/glob; pull excerpts and line ranges. Don't
+    `cat` a large file to "see what's there." Don't re-read a file you just edited to
+    make sure it.
 4. **Reference, do not copy.** When building inputs for a sub-task or test, extract the
     relevant lines — never paste a 1000+ line file. Large irrelevant context causes
     timeouts and multi-x slowdowns, not just cost.
@@ -262,11 +263,12 @@ Invocation
 Input
 - [ ] Correct archetype chosen (default §2A for documents).
 - [ ] Archetype-A: `argument-hint` declared. Discovery block copied verbatim from an
-      existing skill (e.g. team-research), not hand-rolled — the dev consistency gate enforces byte-identity.
+      existing skill (e.g. team-research), not hand-rolled — the dev consistency gate
+      enforces byte-identity.
 - [ ] Discovery runs before any question (except §2D). An auto-picked topic is announced.
 - [ ] Empty/not-found path uses `AskUserQuestion` (run producer / give path) — never throws.
-- [ ] Base branch (if used) through the fallback chain, no bare `main`. Args carry a scalar
-      or optional artifact-dir path, never document contents.
+- [ ] Base branch (if used) through the fallback chain, no bare `main`. Args carry a
+      scalar or optional artifact-dir path, never document contents.
 
 Context
 - [ ] State offloaded to `<ARTIFACTS>`. Long tasks checkpoint.

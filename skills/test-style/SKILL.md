@@ -28,8 +28,8 @@ refactor without proving the system works.
 
 ## Tests are DAMP, not DRY
 
-Test code is read far more than it is run. Inline the setup a reader needs to
-understand a failing test. Tolerate duplication. Favor a linear
+Test code is read far more than it is run. Inline the setup a reader needs
+to understand a failing test. Tolerate duplication. Favor a linear
 arrange-act-assert story.
 
 - Pass the asserted value through helpers: `create_account(BALANCE)`, not
@@ -94,8 +94,8 @@ permanently red on some future date.
 - No hard-coded future expiry: `expiresAt: "2030-01-01"`, cert `notAfter` —
   generate expiring artifacts at setup, relative to the frozen clock.
 - No naive calendar arithmetic on "now": `addMonths` / `+1 day` assumes
-  month lengths, 24-hour days, and no DST. It fails on month-end, leap
-  day, and DST-transition days.
+  month lengths, 24-hour days, and no DST. It fails on month-end, leap day,
+  and DST-transition days.
 - No TZ-naive date construction: `new Date("2023-08-31")` parses as UTC
   midnight and shifts a day in negative-offset zones.
 
@@ -160,9 +160,9 @@ The test must not depend on anything outside the process it controls.
 
 - No real network or external services — stub the boundary (`nock`,
   `WireMock`, `msw`) and inject the client.
-- No hard-coded ports for embedded servers/DBs — dynamic allocation
-  (port `0`, TestContainers) plus guaranteed teardown. Fixed ports collide
-  under parallel CI.
+- No hard-coded ports for embedded servers/DBs — dynamic allocation (port
+  `0`, TestContainers) plus guaranteed teardown. Fixed ports collide under
+  parallel CI.
 - Guarantee teardown of every opened connection, file, or socket. Use
   `try/finally`, `using`, `defer`, or the framework's fixture teardown. A
   leaked handle can fail a later test.
@@ -206,8 +206,8 @@ test.
 ## Audit checklist
 
 Before confirming failures, audit each test against this bar. Every "NO" is
-an issue to fix. The rules above spell each check out in full. The bar below
-is the audit checklist.
+an issue to fix. The rules above spell each check out in full. The bar
+below is the audit checklist.
 
 | Check | Pass criterion |
 |-------|----------------|
@@ -240,9 +240,9 @@ flags"). A time-bomb example pair lives under "Control the clock" above.
 - **Fixed-sleep / timed waits** — `sleep()` for synchronization:
   `Thread.sleep(ms)`, `setTimeout`-as-wait, `cy.wait(3000)`,
   `page.waitForTimeout(...)`. A bounded wait whose success is asserted
-  (`assertTrue(latch.await(100, MS))` — a capped wait still flags).
-  Tests legitimately about time require a frozen/fake clock — a real
-  sleep to observe a delay still flags.
+  (`assertTrue(latch.await(100, MS))` — a capped wait still flags). Tests
+  legitimately about time require a frozen/fake clock — a real sleep to
+  observe a delay still flags.
 - **Concurrency / race interleaving** — assertions assuming a completion
   order across threads, `Promise.all`, or executors. Shared state mutated
   without synchronization. Missing `join()`/`await` before asserting.

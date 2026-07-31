@@ -13,15 +13,14 @@ Autonomous feature delivery for Claude Code.
 
 ## What is Team?
 
-Team orchestrates 13 specialized agents. They range from isolated researchers to
-adversarial reviewers. Together they drive a feature through an 8-phase pipeline
-(QRSPI) and deliver a verified pull request.
+Team orchestrates 13 specialized agents. They range from isolated researchers to adversarial
+reviewers. Together they drive a feature through an 8-phase pipeline (QRSPI) and deliver a
+verified pull request.
 
-Agents are decoupled microservices. Each one consumes a predecessor artifact on
-disk, does its work, and writes its own artifact. The orchestrator is the main
-Claude Code session. It walks a linear phase table with no mid-run human gates.
-An adversarial design review gates the design, and the human reviews the
-finished PR.
+Agents are decoupled microservices. Each one consumes a predecessor artifact on disk, does its
+work, and writes its own artifact. The orchestrator is the main Claude Code session. It walks a
+linear phase table with no mid-run human gates. An adversarial design review gates the design,
+and the human reviews the finished PR.
 
 ## The pipeline
 

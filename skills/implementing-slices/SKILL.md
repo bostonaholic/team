@@ -6,9 +6,9 @@ user-invocable: false
 
 # Implementing Slices
 
-The implementer's execution procedure: consume the plan, work through
-one vertical slice at a time, and commit each slice atomically the moment
-its tests pass.
+The implementer's execution procedure: consume the plan, work through one
+vertical slice at a time, and commit each slice atomically the moment its
+tests pass.
 
 ## Dispatch modes
 
@@ -69,13 +69,13 @@ Test suite has failing tests.
    contract — the implementation must satisfy them.
 3. Re-run the full test suite to make sure all tests pass.
 
-When a test, lint, or typecheck failure is **non-obvious** — the cause is not
-plain from the error and the first fix you reach for is a guess — Load
-`skills/systematic-debugging/SKILL.md` and walk the **Root Cause Analysis
-(5 Whys)** causal chain to the root before editing, so you fix the root cause
-rather than the symptom. Skip this for an **obvious** failure (a typo, a
-trivially-named assertion, a clear one-line fix) — drilling a one-line fix is
-wasted ceremony. The fast path stays intact.
+When a test, lint, or typecheck failure is **non-obvious** — the cause is
+not plain from the error and the first fix you reach for is a guess — Load
+`skills/systematic-debugging/SKILL.md` and walk the
+**Root Cause Analysis (5 Whys)** causal chain to the root before editing, so
+you fix the root cause rather than the symptom. Skip this for an **obvious**
+failure (a typo, a trivially-named assertion, a clear one-line fix) —
+drilling a one-line fix is wasted ceremony. The fast path stays intact.
 
 #### Code-review failure
 Code review found blocking quality issues (REQUEST CHANGES verdict).
@@ -103,9 +103,9 @@ For each slice:
 2. **Implement the steps within the slice** in the order given. Steps marked
    `[parallel]` may be done in any order. `[sequential]` steps depend on
    prior steps in the slice. In multi-repo mode, each step carries
-   `[repo: <slug>]`. Cd into that repo's worktree before applying the
-   step. Cross-repo steps within one slice are routine — switch
-   directories as needed.
+   `[repo: <slug>]`. Cd into that repo's worktree before applying the step.
+   Cross-repo steps within one slice are routine — switch directories as
+   needed.
 3. **Run the slice's acceptance tests.** When they all pass and prior
    slices' tests still pass, the slice is done. In multi-repo mode, run
    each test in the worktree where it lives (the test name in the plan

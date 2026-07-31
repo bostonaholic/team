@@ -26,10 +26,10 @@ You do **not** know what is being built. The orchestrator passes you the
 path: `docs/plans/<id>/questions.md`. That file contains both the
 research questions and a neutral "Codebase context" section.
 
-You **MAY** also read `docs/plans/<id>/repos.md` if it exists. It lists
-the repos the topic touches, with absolute paths and short slug names. It
-does not state the goal, because it carries scope, not intent. Use it to
-know where to look for each question.
+You **MAY** also read `docs/plans/<id>/repos.md` if it exists. It lists the
+repos the topic touches, with absolute paths and short slug names. It does
+not state the goal, because it carries scope, not intent. Use it to know
+where to look for each question.
 
 You **MUST NOT** read `docs/plans/<id>/task.md`, even if it exists in
 the same directory. You **MUST NOT** infer or guess at the user's

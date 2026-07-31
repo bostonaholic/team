@@ -48,21 +48,20 @@ Or run individual phases:
 /team-pr docs/plans/<id>/
 ```
 
-In a full `/team` run the home worktree is created automatically at the
-leading WORKTREE phase. Invoked standalone, `/team-worktree` consumes
-`plan.md` (post-PLAN). Use it for manual recovery or multi-repo setup.
+In a full `/team` run the home worktree is created automatically at the leading WORKTREE phase.
+Invoked standalone, `/team-worktree` consumes `plan.md` (post-PLAN). Use it for manual recovery
+or multi-repo setup.
 
 Each downstream command takes the artifact directory `docs/plans/<id>/` as
 its argument.
 
 ## Screenshots in PRs
 
-For UI-touching changes, the pipeline attaches visual evidence to the PR. The
-ux-reviewer captures screenshots of the affected pages during Implement.
-`/team-pr` then uploads them through GitHub's user-attachments pipeline, so
-they render inline in a `## Screenshots` section of the PR body. Non-UI
-changes never get the section. Any capture or upload failure degrades to a
-visible note with local file paths, so the PR always opens.
+For UI-touching changes, the pipeline attaches visual evidence to the PR. The ux-reviewer
+captures screenshots of the affected pages during Implement. `/team-pr` then uploads them
+through GitHub's user-attachments pipeline, so they render inline in a `## Screenshots` section
+of the PR body. Non-UI changes never get the section. Any capture or upload failure degrades to
+a visible note with local file paths, so the PR always opens.
 
 The images stay current the same way the description does. Every follow-up
 push refreshes both: a push that changes the UI re-captures and re-uploads

@@ -8,8 +8,8 @@ user-invocable: false
 
 The single schema contract for the pipeline's durable state: every
 artifact under `docs/plans/<id>/`, its YAML frontmatter, and the
-design-review record mechanics that gate the DESIGN transition. Phase discipline — what
-each phase does and when it advances — lives in
+design-review record mechanics that gate the DESIGN transition. Phase
+discipline — what each phase does and when it advances — lives in
 `skills/qrspi-workflow/SKILL.md`. This skill owns the schema.
 
 ## Artifact inventory
@@ -22,9 +22,9 @@ All phase artifacts live under `docs/plans/<id>/`, where `<id>` is one of:
   `2026-05-01-add-rate-limiting`)
 
 The executable definitions of the `<id>` pattern (`ID_RE`) and the
-phase-file list (`PHASE_FILES`) live in
-`hooks/session-start-recover.mjs` — that hook is the canon. Reference
-it rather than forking the pattern here.
+phase-file list (`PHASE_FILES`) live in `hooks/session-start-recover.mjs`
+— that hook is the canon. Reference it rather than forking the pattern
+here.
 
 | Artifact  | Path                              | Created By              | Required? |
 |-----------|-----------------------------------|-------------------------|-----------|
@@ -93,8 +93,8 @@ is the kebab portion of `<id>` — i.e. `<id>` minus the `<TICKET>-` or
 | `2026-05-01-add-rate-limiting`          | `add-rate-limiting`           |
 
 Never use the ticket id, the date, or a re-worded description as the
-topic. Downstream agents copy the topic verbatim from upstream
-artifacts. The questioner is the one place where it is chosen.
+topic. Downstream agents copy the topic verbatim from upstream artifacts.
+The questioner is the one place where it is chosen.
 
 ## ticketId scope
 
@@ -111,9 +111,10 @@ When a topic touches **more than one repository**, the questioner or
 design-author writes `docs/plans/<id>/repos.md` to enumerate the repos
 involved. The presence of this file switches the pipeline into multi-repo
 mode (one worktree per listed repo, see
-`skills/worktree-isolation/SKILL.md`). The home worktree is created at the
-leading WORKTREE phase and secondary worktrees after the design review. Its
-absence keeps the pipeline in single-repo mode — today's default.
+`skills/worktree-isolation/SKILL.md`). The home worktree is created at
+the leading WORKTREE phase and secondary worktrees after the design
+review. Its absence keeps the pipeline in single-repo mode — today's
+default.
 
 `repos.md` schema:
 
@@ -153,8 +154,8 @@ Rules:
   across `repos.md`.
 - **Paths are absolute.** Each must be a git working tree.
 - **The home repo is the one the user invoked `/team` from.** Its
-  `docs/plans/<id>/` directory is the canonical artifact location.
-  Other repos' worktrees do not carry duplicate artifacts.
+  `docs/plans/<id>/` directory is the canonical artifact location. Other
+  repos' worktrees do not carry duplicate artifacts.
 - **The `## Worktrees` section is written by the orchestrator** after the
   design review (back-recording the home worktree created at the leading
   WORKTREE phase plus each secondary worktree), not by the questioner or

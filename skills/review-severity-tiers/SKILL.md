@@ -31,11 +31,11 @@ in exactly one tier.
 | **Major** | `suggestion (non-blocking)`, security MEDIUM, ux-reviewer REQUEST CHANGES | Auto-fixed in the loop. **Never** surfaced to the user. |
 | **Minor and below** | `nitpick (non-blocking)`, security LOW, technical-writer GAPS, any COMMENT-level note | Recorded in the PR body's `## Review notes` — never presented mid-run. |
 
-**The no-consult rule (non-negotiable).** Findings are never presented to
-the user mid-run. Blocking and Major findings loop the implementer
-automatically until they are zero. Minor-and-below findings defer to the
-PR body's `## Review notes` (tagged by source reviewer) for the human's
-PR review. A mid-run prompt that lists any finding is a defect.
+**The no-consult rule (non-negotiable).** Findings are never presented to the
+user mid-run. Blocking and Major findings loop the implementer automatically
+until they are zero. Minor-and-below findings defer to the PR body's
+`## Review notes` (tagged by source reviewer) for the human's PR review. A
+mid-run prompt that lists any finding is a defect.
 
 ## Aggregating Verdicts
 

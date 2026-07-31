@@ -99,9 +99,10 @@ the board. If none of the three fits, the item is almost certainly a
 
 ### Resolution: why a card was closed (assign only while closing)
 
-These are *close reasons*, not work to do. Assign one **at the moment you close
-the issue**. Never leave a resolution label on an open card. They do not replace
-the Type label. An invalid bug keeps `bug` and gains `invalid`.
+These are *close reasons*, not work to do. Assign one
+**at the moment you close the issue**. Never leave a resolution label on an
+open card. They do not replace the Type label. An invalid bug keeps `bug` and
+gains `invalid`.
 
 | Label | Definition | Assign when |
 |-------|------------|-------------|
@@ -127,9 +128,9 @@ rarely needs to apply them on its own.
 
 ### Area: mostly automated
 
-These mark *what part of the codebase* a change touches. Dependabot applies them
-automatically to the PRs it opens. Apply one by hand only when a PR genuinely
-fits the area and the bot missed it.
+These mark *what part of the codebase* a change touches. Dependabot applies
+them automatically to the PRs it opens. Apply one by hand only when a PR
+genuinely fits the area and the bot missed it.
 
 | Label | Definition | Assign when |
 |-------|------------|-------------|
@@ -202,9 +203,9 @@ of the work.
 
 **Move the card as the work moves.** Pull a card into **In progress** when you
 start, not after. Pull it from `Ready` for non-bug work, or from `Bugs` for bug
-work. When someone marks the PR ready for review, move the card to **In
-review**. A draft PR opened is not that moment. The card stays in **In
-progress** while the PR is a draft. When the PR merges, move the card to
+work. When someone marks the PR ready for review, move the card to
+**In review**. A draft PR opened is not that moment. The card stays in
+**In progress** while the PR is a draft. When the PR merges, move the card to
 **Done**.
 
 The simplest way is to drag the card on the board UI. From the CLI, two small
@@ -217,13 +218,13 @@ number to its board item ID. The other sets a Status column by name:
 ```
 
 `project-item-id.sh <issue-number>` prints the board item ID to stdout. It
-prints nothing else, so it pipes cleanly. `project-set-status.sh <status>
-[item-id]` takes the column name and reads the item ID from stdin or from a
-second argument. The column name is case-insensitive: `Backlog`, `Bugs`,
-`Ready`, `In progress`, `In review`, or `Done`. Both scripts resolve every
-GitHub node ID at runtime, so they continue to work if someone recreates a
-field or an option. They are dev-only helpers under `.claude/`. They are not
-part of the distributed plugin.
+prints nothing else, so it pipes cleanly.
+`project-set-status.sh <status> [item-id]` takes the column name and reads the
+item ID from stdin or from a second argument. The column name is
+case-insensitive: `Backlog`, `Bugs`, `Ready`, `In progress`, `In review`, or
+`Done`. Both scripts resolve every GitHub node ID at runtime, so they continue
+to work if someone recreates a field or an option. They are dev-only helpers
+under `.claude/`. They are not part of the distributed plugin.
 
 > **The script checks each move. It does not assume it.**
 > `project-set-status.sh` does not trust the edit's exit code. It fires `gh
@@ -233,8 +234,7 @@ part of the distributed plugin.
 > only when the read-back agrees. A zero exit from the script thus means the
 > move genuinely landed, not only that GitHub accepted the mutation. This closes
 > [#141](https://github.com/bostonaholic/team/issues/141), where an edit
-> reported success but the board looked unchanged.
->
+> reported success but the board looked unchanged. >
 > **UI-refresh trap.** The GraphQL value is authoritative. An *already-open*
 > board tab is not. The Projects UI does not always live-update an open view. A
 > move that the script reports as `(verified)` can thus look stale in a tab you
@@ -249,13 +249,13 @@ part of the distributed plugin.
 A Team run (`/team`, or the individual `/team-*` phases) maps onto the board
 like this:
 
-- **Shaping work, before any run** → [`/groom-backlog`](skills.md#groom-backlog)
-  is the one board-touching command that is not a pipeline phase. Its
-  board-level pass places and prioritizes items, and it fixes hygiene across the
-  whole board. Its promotion mode moves a single card from **Backlog** to
-  **Ready** after that item meets the ready-to-work standard. Both halves plan
-  and wait for your approval. Nothing moves before you answer. Neither half ever
-  starts a run.
+- **Shaping work, before any run** →
+  [`/groom-backlog`](skills.md#groom-backlog) is the one board-touching command
+  that is not a pipeline phase. Its board-level pass places and prioritizes
+  items, and it fixes hygiene across the whole board. Its promotion mode moves
+  a single card from **Backlog** to **Ready** after that item meets the
+  ready-to-work standard. Both halves plan and wait for your approval. Nothing
+  moves before you answer. Neither half ever starts a run.
 - **Picking up work** → the card moves to **In progress** **automatically** as
   the first action of the run. It moves from whichever entry column holds it:
   **Ready**, **Backlog**, or **Bugs**. Give `/team` or `/team-fix` a ticket id
@@ -268,16 +268,17 @@ like this:
   ```
   The move is best-effort. If the script cannot resolve the card, because there
   is no board item or the description is free-form, the run continues without
-  it. The move never blocks the pipeline. You no longer need to move the card by
-  hand before you launch.
+  it. The move never blocks the pipeline. You no longer need to move the card
+  by hand before you launch.
 - **Opening the PR** → the PR phase links the PR to the issue. This covers
   `/team-pr`, the `/team` PR gate, and `/team-fix` Ship. The link is
   `Closes #<N>` as the final line of the PR body, so the issue closes on merge.
   In a multi-repo run, only the home repo's PR carries the closing keyword.
-  Companion PRs carry a non-closing qualified reference, either `owner/repo#<N>`
-  or the issue URL. The pipeline opens the PR as a **draft**. A draft is not
-  under review, so **the card stays in In progress**. The generic contract in
-  those skills forbids the in-review move while the PR is a draft.
+  Companion PRs carry a non-closing qualified reference, either
+  `owner/repo#<N>` or the issue URL. The pipeline opens the PR as a **draft**.
+  A draft is not under review, so **the card stays in In progress**. The
+  generic contract in those skills forbids the in-review move while the PR is a
+  draft.
 - **Marking the PR ready for review** → the card moves to **In review**. The
   human marks the PR ready. The generic, best-effort "move to in-review" that
   the PR-phase skills define fires at this moment, never when someone opens the
@@ -289,13 +290,13 @@ like this:
   The move is best-effort. If the script cannot resolve the card, the run
   continues. The move never blocks the PR.
 - **Merge** → the card moves to **Done** **automatically**. The PR carries
-  `Closes #<N>`, so the merge closes the issue. The board's built-in "an item is
-  closed → Done" automation then moves the card. In a multi-repo run,
-  close-on-merge fires from the home repo PR's merge specifically. Companion PRs
-  carry no closing keyword. No manual move and no `/shipit` board logic applies,
-  because `/shipit` stays tracker-agnostic. The built-in "pull request merged →
-  Done" automation also moves a PR that someone added to the board as its own
-  item.
+  `Closes #<N>`, so the merge closes the issue. The board's built-in "an item
+  is closed → Done" automation then moves the card. In a multi-repo run,
+  close-on-merge fires from the home repo PR's merge specifically. Companion
+  PRs carry no closing keyword. No manual move and no `/shipit` board logic
+  applies, because `/shipit` stays tracker-agnostic. The built-in "pull request
+  merged → Done" automation also moves a PR that someone added to the board as
+  its own item.
 
 The pipeline persists its own intermediate state as artifacts in
 `docs/plans/<id>/`. It tracks live in-session progress with TodoWrite. See

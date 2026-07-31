@@ -34,8 +34,8 @@ Findings from the code, security, and docs reviewers use the Conventional
 Comments format. The label and decoration syntax, the comment style, and the
 three comment types (issue, suggestion, nitpick) live in
 `skills/conventional-comments/SKILL.md`. The one exception is the
-ux-reviewer: its live-verification report uses its own
-Working/Broken/Could Improve format instead.
+ux-reviewer: its live-verification report uses its own Working/Broken/Could
+Improve format instead.
 
 ## Gate Types and Severity Tiers
 
@@ -86,17 +86,17 @@ they appear across multiple tests:
 **Flaky-test red flags (always blocking).** These are distinct from the
 style flags above. Any test in the diff whose *outcome depends on* a
 nondeterministic input is `issue (blocking)` on **first** occurrence. It
-routes to the Blocking tier and auto-loops the implementer. A single time-bomb ships a
-guaranteed future CI failure. Flakiness erodes the "green means safe"
-signal. The rule keys to outcome-dependence, not token presence: a
-`Date.now()` in a log line does not flag. One feeding an assertion does.
+routes to the Blocking tier and auto-loops the implementer. A single
+time-bomb ships a guaranteed future CI failure. Flakiness erodes the "green
+means safe" signal. The rule keys to outcome-dependence, not token presence:
+a `Date.now()` in a log line does not flag. One feeding an assertion does.
 Outcome-dependence covers the whole suite, not only the offending test:
-state or resources left behind flag because a *later* test's outcome
-depends on them, even when the offending test's own result is deterministic.
-The full red-flag catalog — time/date dependence and time-bombs (with the
+state or resources left behind flag because a *later* test's outcome depends
+on them, even when the offending test's own result is deterministic. The
+full red-flag catalog — time/date dependence and time-bombs (with the
 canonical bad/good example pair), fixed sleeps, race interleavings,
-test-order dependence, unseeded randomness, real network, resource leaks
-and hard-coded ports, unordered-collection order assumptions, exact float
+test-order dependence, unseeded randomness, real network, resource leaks and
+hard-coded ports, unordered-collection order assumptions, exact float
 equality, and platform dependence — lives in `skills/test-style/SKILL.md`
 ("Flaky-test red flags (reviewer checklist)").
 
@@ -106,15 +106,15 @@ Findings cite the checklist item by name and carry the tier's decoration —
 a blocking-regime hit reads `issue (blocking): Comment Discipline — ...`.
 Two severity regimes apply:
 
-- **Blocking on first occurrence** — an `issue (blocking)` finding, like
-  the flaky-test red flags. It covers ticket/issue IDs,
-  plan/slice/phase markers, and doc-section references in code comments.
-  The check is mechanical and judgment-free, and the references rot — the
-  tracker migrates, the plan is deleted, the section is renumbered, and
-  the comment becomes a lie. TODO/FIXME comments in delivered code join
-  this bucket for the same reason: equally mechanical to detect, and
-  hard-banned by the canonical standard — deferred work belongs in the
-  implementer's report, not the code.
+- **Blocking on first occurrence** — an `issue (blocking)` finding, like the
+  flaky-test red flags. It covers ticket/issue IDs, plan/slice/phase
+  markers, and doc-section references in code comments. The check is
+  mechanical and judgment-free, and the references rot — the tracker
+  migrates, the plan is deleted, the section is renumbered, and the comment
+  becomes a lie. TODO/FIXME comments in delivered code join this bucket for
+  the same reason: equally mechanical to detect, and hard-banned by the
+  canonical standard — deferred work belongs in the implementer's report,
+  not the code.
 - **Style escalation:** comments that restate WHAT the code does, wordy or
   narrating comments, and commented-out code obey the same regime as the
   test-quality style flags. That is `suggestion:` for a single occurrence,
@@ -123,9 +123,9 @@ Two severity regimes apply:
 - **Not violations:** upstream-bug links where the link IS the why (a
   workaround pointing at a public issue URL). Ticket-like tokens outside
   comment syntax — string literals, log messages, test fixture data (the
-  check reads comments only). Doc comments on exported/public interfaces
-  per the ecosystem's convention. A diff with zero comments passes
-  trivially — never manufacture a finding.
+  check reads comments only). Doc comments on exported/public interfaces per
+  the ecosystem's convention. A diff with zero comments passes trivially —
+  never manufacture a finding.
 
 ### UX Reviewer
 
@@ -143,7 +143,8 @@ Two severity regimes apply:
 ## Code Reviewer Inspection Process
 
 1. **Read the diff.** Run `git diff HEAD~1` (or the applicable range) to see
-   what changed. If the scope is unclear, check `git log --oneline -10` first.
+   what changed. If the scope is unclear, check `git log --oneline -10`
+   first.
 
 2. **Understand the plan.** Look for issue references, commit messages, or a
    plan file that describes the done criteria. If none exist, review based on
@@ -194,6 +195,6 @@ Two severity regimes apply:
 The security reviewer's step-by-step process lives in
 `skills/reviewing-security/SKILL.md`. That skill carries attack-surface
 identification, the OWASP Top 10 checks, the extra vulnerability checks, and
-the CRITICAL/HIGH/MEDIUM/LOW severity classification ladder. The PASS/FAIL verdict rule
-stays here (Verdict Criteria, "Security Reviewer" above): any CRITICAL or
-HIGH finding is FAIL, no override.
+the CRITICAL/HIGH/MEDIUM/LOW severity classification ladder. The PASS/FAIL
+verdict rule stays here (Verdict Criteria, "Security Reviewer" above): any
+CRITICAL or HIGH finding is FAIL, no override.

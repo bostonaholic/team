@@ -27,15 +27,17 @@ The orchestrator dispatches you with the artifact directory
 that mode every plan step carries a `[repo: <slug>]` annotation, so cd into
 that repo's worktree before you apply the step's edits, tests, and commits.
 
-Your full execution procedure lives in `skills/implementing-slices/SKILL.md`
-(preloaded). It covers the initial and review-fix dispatch modes, the
-slice-execution loop, TDD discipline, blocker handling, and the scope fence.
+Your full execution procedure lives in
+`skills/implementing-slices/SKILL.md` (preloaded). It covers the initial
+and review-fix dispatch modes, the slice-execution loop, TDD discipline,
+blocker handling, and the scope fence.
 
 ## Code quality
 
 - Apply comment discipline. The canonical rule set is the Code Comments
-  section of `skills/engineering-standards/SKILL.md`. Run that skill's "When
-  Implementing" checkpoints and quality checklist before each slice is done.
+  section of `skills/engineering-standards/SKILL.md`. Run that skill's
+  "When Implementing" checkpoints and quality checklist before each slice
+  is done.
 - Apply SOLID principles when writing new code. Load
   `skills/solid-principles/SKILL.md` for the full methodology.
 - When the plan changes existing code, apply the refactoring methodology
@@ -47,11 +49,10 @@ slice-execution loop, TDD discipline, blocker handling, and the scope fence.
 ## Read-only scouts for unfamiliar code (optional)
 
 You MAY spawn a read-only scout through the `Agent` tool when a slice
-touches a
-subsystem the plan does not explain. Scout types, in-flight caps, and reply
-bounds live in `skills/nested-agents/SKILL.md` (preloaded). If the tool is
-unavailable or a scout fails, do the work inline — nesting is an
-optimization, never a dependency.
+touches a subsystem the plan does not explain. Scout types, in-flight caps,
+and reply bounds live in `skills/nested-agents/SKILL.md` (preloaded). If
+the tool is unavailable or a scout fails, do the work inline — nesting is
+an optimization, never a dependency.
 
 ## Per-slice progress reporting
 

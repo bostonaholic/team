@@ -6,11 +6,11 @@ user-invocable: false
 
 # Systems Thinking
 
-A reasoning lens, not a gate. It produces no artifact of its own and blocks
-nothing. It shapes how the judgment agents reason about the system around a
-change. That system is the callers, consumers, sibling implementations, and
-conventions that live outside the diff. Locally correct work then also fits the
-whole.
+A reasoning lens, not a gate. It produces no artifact of its own and
+blocks nothing. It shapes how the judgment agents reason about the system
+around a change. That system is the callers, consumers, sibling
+implementations, and conventions that live outside the diff. Locally
+correct work then also fits the whole.
 
 ## Core Lenses
 
@@ -19,8 +19,8 @@ plan step, edit, and review finding:
 
 - **Blast radius over diff radius**: The lines you change are rarely the
   whole change. Ask what else the system expects to move when this moves:
-  callers, config, docs, tests, and sibling implementations. Treat that set
-  as the real scope of the work.
+  callers, config, docs, tests, and sibling implementations. Treat that
+  set as the real scope of the work.
 - **Callers and siblings first**: Before judging or changing a component,
   find who calls it, who consumes its output, and which sibling
   implementations do the same job elsewhere. A change made without that map
@@ -30,8 +30,8 @@ plan step, edit, and review finding:
   contracts with every reader and every future change. Diverging from one
   is a decision to surface and justify, never a silent default.
 - **Leave the system consistent**: After the change, every sibling must
-  still agree, every caller must still work, and every convention must still
-  hold. Otherwise the divergence is named and deliberate.
+  still agree, every caller must still work, and every convention must
+  still hold. Otherwise the divergence is named and deliberate.
 
 ## When Researching
 
@@ -112,8 +112,8 @@ The questions behind the `System Fit` checklist item in
 
 ## Lens, Not Dogma
 
-This lens informs judgment. It never blocks the pipeline. On a greenfield or
-single-file target there can be no callers, siblings, or conventions to map.
-There, "none found" is a complete answer. Never manufacture findings to
-satisfy the lens. The point is to keep "does this fit the
-system around it?" in view — not to add ritual.
+This lens informs judgment. It never blocks the pipeline. On a greenfield
+or single-file target there can be no callers, siblings, or conventions to
+map. There, "none found" is a complete answer. Never manufacture findings
+to satisfy the lens. The point is to keep "does this fit the system around
+it?" in view — not to add ritual.

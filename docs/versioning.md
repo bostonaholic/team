@@ -16,16 +16,17 @@ Team assigns the version at **land time**, not per PR. A drafted PR carries no
 version, no `vX.Y.Z` title, and no released changelog section. It accumulates
 bullets under `[Unreleased]`. Landing a Team PR is **two steps**:
 
-1. **Bump.** The **dev** `version-bump` skill (`.claude/skills/version-bump/SKILL.md`)
-   is Team's internal bumper. Run it against current `main`. It assigns the next
-   version, bumps the four version strings, and cuts the `[Unreleased]` body into
-   a dated `## [X.Y.Z]` section. It then sets the PR title, runs the land-time
-   consistency assertion, and commits `chore(version): X.Y.Z`.
+1. **Bump.** The **dev** `version-bump` skill
+   (`.claude/skills/version-bump/SKILL.md`) is Team's internal bumper. Run it
+   against current `main`. It assigns the next version, bumps the four version
+   strings, and cuts the `[Unreleased]` body into a dated `## [X.Y.Z]` section.
+   It then sets the PR title, runs the land-time consistency assertion, and
+   commits `chore(version): X.Y.Z`.
 2. **Land.** The **generic, distributed** runtime `/shipit` skill
-   (`skills/shipit/SKILL.md`) pushes the branch, waits for CI, and squash-merges.
-   `shipit` is project-agnostic: it does no versioning or changelog work. Team
-   ships it to *users* as a general "land a reviewed PR" utility. Team's own
-   version logic stays in `version-bump`.
+   (`skills/shipit/SKILL.md`) pushes the branch, waits for CI, and
+   squash-merges. `shipit` is project-agnostic: it does no versioning or
+   changelog work. Team ships it to *users* as a general "land a reviewed PR"
+   utility. Team's own version logic stays in `version-bump`.
 
 There is no batch release step. The merge *is* the release. CI tags and
 publishes automatically.
@@ -53,10 +54,10 @@ with **no bump, no changelog cut, and a plain conventional title** (precedent:
 
 `version-bump` checks this first, as its **step 0**. CI enforces it
 deterministically through `.github/scripts/version-bump-required.sh`, which
-`tests/version-bump-required.test.ts` pins. A dev-only diff that bumped **fails
-the PR**. A runtime diff that did not bump also fails it. The script measures
-"did this branch bump?" against the merge-base, which is the fork point. A
-bump-less PR behind a version-bumped `main` thus reads correctly as "no
+`tests/version-bump-required.test.ts` pins. A dev-only diff that bumped
+**fails the PR**. A runtime diff that did not bump also fails it. The script
+measures "did this branch bump?" against the merge-base, which is the fork
+point. A bump-less PR behind a version-bumped `main` thus reads correctly as "no
 bump". [PR title sync](#pr-title) uses the same branch-relative measure.
 
 > **Regression #120.** `version-bump` once treated *every* PR as bump-worthy and
@@ -89,11 +90,10 @@ Then run `/shipit` to push, wait for CI, and squash-merge.
 
 This is the in-tree replacement for the per-PR CI gate that used to enforce a
 bump on every PR. The version is assigned only at land time. The
-released-changelog invariants thus hold only **after** `version-bump` cuts
-the section. `version-bump` re-runs them itself, and CI does not check them on
-every push. The assertion runs **after the changelog cut and before the
-commit**. It fails fast and loud, and it never commits an invalid tree. It
-checks that:
+released-changelog invariants thus hold only **after** `version-bump` cuts the
+section. `version-bump` re-runs them itself, and CI does not check them on every
+push. The assertion runs **after the changelog cut and before the commit**. It
+fails fast and loud, and it never commits an invalid tree. It checks that:
 
 - `tests/version-consistency.test.ts` passes (strict semver, and the four
   strings agree).
@@ -133,15 +133,15 @@ enforces this on every `bun test` run.
 .claude/scripts/next-version.sh <major|minor|patch>
 ```
 
-It prints `bump(<default branch>'s version, level)`. This is a
-**deterministic** pure function of the base version and the level, with **no
-open-PR scan**. The script reads the base from the remote's default branch and
-resolves it through `origin/HEAD`. `main`, `master`, or any other default branch
-works, because the name is not hardcoded.
+It prints `bump(<default branch>'s version, level)`. This is a **deterministic**
+pure function of the base version and the level, with **no open-PR scan**. The
+script reads the base from the remote's default branch and resolves it through
+`origin/HEAD`. `main`, `master`, or any other default branch works, because the
+name is not hardcoded.
 
 Under the land-time model the version is assigned against current `main`, and
-landing is serialized to one PR at a time. `bump(main, level)` is thus
-always free. Three defenses cover a collision: serialization, `shipit`'s
+landing is serialized to one PR at a time. `bump(main, level)` is thus always
+free. Three defenses cover a collision: serialization, `shipit`'s
 rebase-and-recompute on a concurrent race, and `release-on-merge.yml`'s
 duplicate-tag rejection. Set `BASE_VERSION=x.y.z` to override the base the
 script reads. Its tests use this override.
@@ -169,10 +169,11 @@ is cut only when the PR lands.
      - Add `[X.Y.Z]: https://github.com/bostonaholic/team/compare/v<prev>...vX.Y.Z`
 
 The dated section becomes the GitHub release notes verbatim (see below). Write
-it for a reader who must decide if they upgrade. **Empty `[Unreleased]` at
-land:** `version-bump` derives at least one bullet from the PR's commits. If it
-cannot, it stops and asks for an entry. It never cuts an empty section, because
-`release-on-merge.yml` errors on empty release notes.
+it for a reader who must decide if they upgrade.
+**Empty `[Unreleased]` at land:** `version-bump` derives at least one bullet
+from the PR's commits. If it cannot, it stops and asks for an entry. It never
+cuts an empty section, because `release-on-merge.yml` errors on empty release
+notes.
 
 ## PR title
 

@@ -32,8 +32,8 @@ without warning:
 2. **The seed repo carries no Team context.** Linkboard is a separate repo with
    no Team `CLAUDE.md`, skills, or plugin source. Do not add any.
 3. **Never edit the frozen prompt.** Copy it verbatim. First make sure that its
-   SHA-256 is correct (step 0). A one-character change forks the benchmark into
-   a different benchmark.
+   SHA-256 is correct (step 0). A one-character change forks the benchmark into a
+   different benchmark.
 4. **Always start from the baseline tag**, on a fresh branch, never from a moved
    `main`. The baseline tag never moves.
 5. **Do not coach the pipeline.** Submit the prompt verbatim and approve only the
@@ -130,8 +130,8 @@ summary. The vector records these fields as a minimum:
   `golden-master/results/<date>-<model>.json`. **Observation data only**: it
   never runs in the build and never touches Linkboard.
 - Run the compare (#135, when it lands). It grades against the baseline with
-  **effectiveness floors**: tests ≥ floor, 0 regressions, and judge or reviewer
-  ≥ floor. It also grades with **efficiency bands**: tokens, cost, time, slices,
+  **effectiveness floors**: tests ≥ floor, 0 regressions, and judge or reviewer ≥
+  floor. It also grades with **efficiency bands**: tokens, cost, time, slices,
   and retries within ±band. It reports drift **temporally** and **head-to-head**
   across models (#139).
 - Commit the results through the normal Team PR flow.
@@ -178,9 +178,9 @@ summary. The vector records these fields as a minimum:
 
 - The **procedure + isolation rules** above are complete and usable now for the
   manual parts of a run.
-- The **metrics extractor** (#136) and the **compare / report** (#135) that
-  steps 4 and 6 name are **not yet built**. Until they land, capture and compare
-  by hand with the shapes above.
+- The **metrics extractor** (#136) and the **compare / report** (#135) that steps
+  4 and 6 name are **not yet built**. Until they land, capture and compare by
+  hand with the shapes above.
 - The **first end-to-end dry run** is the remaining item on #137. It is recorded
   as the first stored baseline. It depends on that tooling, or on a deliberate
   hand-recorded first pass.

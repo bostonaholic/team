@@ -16,11 +16,11 @@ consumes:
   `file-finder` — they only see `questions.md`.
 - `questions.md` — neutral research questions phrased without intent. The
   only file `researcher` and `file-finder` ever read.
-- `prd.md` — written **only when the request is vague, multi-story,
-  cross-cutting, or replaces existing behavior** (criteria in
-  `skills/product-requirements-doc/SKILL.md`, loaded conditionally through
-  `skills/decomposing-intent/SKILL.md`). Referenced from `task.md`.
-  read downstream by `design-author`.
+- `prd.md` — written
+  **only when the request is vague, multi-story, cross-cutting, or replaces existing behavior**
+  (criteria in `skills/product-requirements-doc/SKILL.md`, loaded
+  conditionally through `skills/decomposing-intent/SKILL.md`). Referenced
+  from `task.md`. read downstream by `design-author`.
 - `repos.md` — written **only when the topic spans more than one
   repository**. Lists each involved repo's slug, absolute path, and
   role. Its presence switches the rest of the pipeline into multi-repo
@@ -44,11 +44,12 @@ ticket-derived slug (`ENG-1234-add-rate-limiting`) or a date-derived slug
   before decomposition.
 - Free-form text — treated directly as the feature/task description.
 
-When `$ARGUMENTS` is empty, **discover, do not demand**: ground in repo context
-before asking. Read recent `git log` activity and the repo's `README` /
-`CLAUDE.md` to propose a likely topic, then use `AskUserQuestion` with labeled
-options to fill any genuine gap in intent. Never bare-stop with a plain
-"describe it" demand when context is already available.
+When `$ARGUMENTS` is empty, **discover, do not demand**: ground in repo
+context before asking. Read recent `git log` activity and the repo's
+`README` / `CLAUDE.md` to propose a likely topic, then use
+`AskUserQuestion` with labeled options to fill any genuine gap in intent.
+Never bare-stop with a plain "describe it" demand when context is already
+available.
 
 ## Execution
 
@@ -79,8 +80,8 @@ options to fill any genuine gap in intent. Never bare-stop with a plain
    and `repos.md` when it makes sure with the user that the topic spans
    multiple repos.
 6. **Stop once `task.md` and `questions.md` exist on disk** — do not
-   continue to RESEARCH. (`prd.md` or `repos.md` can also exist,
-   neither changes the stop condition.)
+   continue to RESEARCH. (`prd.md` or `repos.md` can also exist, neither
+   changes the stop condition.)
 
 ## When to use
 

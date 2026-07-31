@@ -93,22 +93,21 @@ done
 
 > Follow `skills/progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
 
-1. Use the directory resolved in `## Input`, then **verify the review
-   gate**: the highest-`<n>` `$ARGUMENTS/design-review-<n>.md` must
-   carry `verdict: APPROVE` or `verdict: COMMENT` **in its YAML
-   frontmatter** (the tier-2 filter
-   already enforced this. Re-check a tier-1 explicit path). If no review
-   artifact exists, or the latest verdict is REQUEST CHANGES, **refuse**:
-   report that the design has not passed review and suggest
+1. Use the directory resolved in `## Input`, then **verify the review gate**:
+   the highest-`<n>` `$ARGUMENTS/design-review-<n>.md` must carry
+   `verdict: APPROVE` or `verdict: COMMENT` **in its YAML frontmatter** (the
+   tier-2 filter already enforced this. Re-check a tier-1 explicit path). If
+   no review artifact exists, or the latest verdict is REQUEST CHANGES,
+   **refuse**: report that the design has not passed review and suggest
    `/team-design $ARGUMENTS` — never slice an unreviewed design.
 2. Dispatch `structure-planner`, which writes `$ARGUMENTS/structure.md`
    with vertical slices. The artifact carries plain frontmatter
    (`topic`, `date`, `phase: structure`) — no approval fields, because
    structure is not gated.
 3. **No gate. Nothing is presented for approval mid-run.** Within a full
-   `/team` run the orchestrator advances
-   to PLAN automatically. Run standalone, this skill stops after writing the
-   structure and reports the next command.
+   `/team` run the orchestrator advances to PLAN automatically. Run
+   standalone, this skill stops after writing the structure and reports the
+   next command.
 4. **Stop once `$ARGUMENTS/structure.md` exists.**
 
 ## Completion

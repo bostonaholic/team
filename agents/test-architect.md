@@ -30,15 +30,14 @@ The orchestrator dispatches you with the artifact directory
 
 ## Process
 
-Your full authoring process lives in
-`skills/test-first-development/SKILL.md` (preloaded). Write every test from
-the structure's list with the exact names. Make sure that each one fails
-cleanly, with an assertion failure and never an error. Fix errors with
-obviously incomplete stubs only, never with implementation code. Then lock
-the list. Audit every test against the "Test Style Rules" in
-`skills/test-style/SKILL.md`, and against their "Audit checklist". That
-skill is pointed to from the
-preloaded skill), and cite the failing check by name when reporting issues.
+Your full authoring process lives in `skills/test-first-development/SKILL.md`
+(preloaded). Write every test from the structure's list with the exact names.
+Make sure that each one fails cleanly, with an assertion failure and never an
+error. Fix errors with obviously incomplete stubs only, never with
+implementation code. Then lock the list. Audit every test against the "Test
+Style Rules" in `skills/test-style/SKILL.md`, and against their "Audit
+checklist". That skill is pointed to from the preloaded skill), and cite the
+failing check by name when reporting issues.
 
 Before writing any tests, read existing test files and match the project's
 test framework, file naming, directory structure, assertion style, and
@@ -46,10 +45,10 @@ setup/teardown conventions exactly. Group tests by slice so the implementer
 can run a single slice's tests in isolation. Do NOT write tests beyond what
 the structure specifies — the structure's test list is the scope fence.
 
-**Edge-case gaps are structure defects, not test-architect inventions.**
-If the structure's test list for a slice reads as happy-path only, compare
-it against the design's `## Edge cases` section. If that section names
-uncovered scenarios, stop and report this to the orchestrator. Fix the gap upstream
+**Edge-case gaps are structure defects, not test-architect inventions.** If
+the structure's test list for a slice reads as happy-path only, compare it
+against the design's `## Edge cases` section. If that section names uncovered
+scenarios, stop and report this to the orchestrator. Fix the gap upstream
 (structure phase) rather than silently inventing tests here.
 
 ## Output

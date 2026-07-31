@@ -83,22 +83,21 @@ rationale). The router's responsibilities are:
 2. After this phase, all downstream agent dispatches operate within the
    applicable worktree. That is the home worktree by default, or a
    per-repo worktree when a slice or step carries a `[repo: <name>]`
-   annotation. The
-   durable inter-agent protocol is the artifact files under the home
-   worktree's `docs/plans/<id>/` directory. Live coordination uses
-   TodoWrite (session-scoped).
+   annotation. The durable inter-agent protocol is the artifact files
+   under the home worktree's `docs/plans/<id>/` directory. Live
+   coordination uses TodoWrite (session-scoped).
 
 ### Reusing an existing worktree
 
-A **linked worktree** is any working tree other than the repository's main
-working tree. Detect it by the checkout's git dir differing from its common
-git dir. If the session already runs inside one on a **non-default branch**,
-the WORKTREE phase reuses it rather than create a new one. There is no new
-branch and no artifact copy, and work continues in place on the current
-branch. If that worktree is checked out on the default
-branch (main/master), the phase refuses and stops — implementing
-directly on the default branch is never acceptable, and nesting
-worktrees is not supported. See "Detect existing worktree" in
+A **linked worktree** is any working tree other than the repository's
+main working tree. Detect it by the checkout's git dir differing from its
+common git dir. If the session already runs inside one on a
+**non-default branch**, the WORKTREE phase reuses it rather than create a
+new one. There is no new branch and no artifact copy, and work continues
+in place on the current branch. If that worktree is checked out on the
+default branch (main/master), the phase refuses and stops — implementing
+directly on the default branch is never acceptable, and nesting worktrees
+is not supported. See "Detect existing worktree" in
 `skills/team-worktree/SKILL.md` for the procedure.
 
 ### Why first
@@ -116,11 +115,12 @@ state to detect: "a worktree exists for `<id>`, no `task.md` yet" ⇒
 WORKTREE. The phase becomes inferable from the moment the run begins
 rather than only appearing midway through the pipeline.
 
-For artifact ergonomics, the orchestrator **reports the absolute
-worktree-rooted `docs/plans/<id>/` path**. That is where `design.md` and the
-`design-review-<n>.md` verdict records live. Anyone who audits the run then
-opens the artifacts cleanly, with no hunt for the worktree. This
-supersedes the old "review on the home tree" rationale.
+For artifact ergonomics, the orchestrator
+**reports the absolute worktree-rooted `docs/plans/<id>/` path**. That is
+where `design.md` and the `design-review-<n>.md` verdict records live.
+Anyone who audits the run then opens the artifacts cleanly, with no hunt
+for the worktree. This supersedes the old "review on the home tree"
+rationale.
 
 Together these make leading placement a deliberate, articulable choice.
 
@@ -142,8 +142,8 @@ remove it. The same holds when commits are kept locally without a PR.
 
 When teardown is warranted (post-merge or on explicit request):
 
-1. For each worktree with commits ahead of its base branch, cherry-pick or
-   rebase those commits onto the target branch in that repo. Then let
+1. For each worktree with commits ahead of its base branch, cherry-pick
+   or rebase those commits onto the target branch in that repo. Then let
    Claude Code, or `git worktree remove`, remove the worktree.
 2. Empty worktrees clean up automatically.
 3. If manual cleanup is needed: `git -C <repo-path> worktree remove
@@ -161,9 +161,9 @@ When teardown is warranted (post-merge or on explicit request):
 
 ## Gitignored Files
 
-Git worktrees are fresh checkouts — they do not include untracked files like
-`.env` or `.env.local`. To copy these automatically, add a `.worktreeinclude`
-file to the project root using `.gitignore` syntax:
+Git worktrees are fresh checkouts — they do not include untracked files
+like `.env` or `.env.local`. To copy these automatically, add a
+`.worktreeinclude` file to the project root using `.gitignore` syntax:
 
 ```
 .env

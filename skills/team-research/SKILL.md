@@ -80,10 +80,10 @@ done
    description, `task.md`, or any framing.
 3. Combine their returned content into a single `research.md` written to
    `$ARGUMENTS/research.md` with the necessary frontmatter (see the
-   researcher agent for the schema). The `topic` value MUST be read
-   from `$ARGUMENTS/questions.md`'s frontmatter and copied verbatim —
-   never improvised, never combined with the ticket id. In multi-repo
-   mode, preserve the repo-slug prefix on every file reference (e.g.
+   researcher agent for the schema). The `topic` value MUST be read from
+   `$ARGUMENTS/questions.md`'s frontmatter and copied verbatim — never
+   improvised, never combined with the ticket id. In multi-repo mode,
+   preserve the repo-slug prefix on every file reference (e.g.
    `frontend:src/App.tsx:42`).
 4. **Stop once `$ARGUMENTS/research.md` exists** — do not continue to
    DESIGN.

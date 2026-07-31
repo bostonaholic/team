@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { frontmatter, read, squash } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 
@@ -347,7 +347,7 @@ describe("qrspi-workflow SOFT gate aligns with severity tiers (issue #68)", () =
     const soft = softSection(read(QRSPI));
     expect(soft.length).toBeGreaterThan(0);
     expect(soft).toContain("review-severity-tiers/SKILL.md");
-    expect(soft).toContain("Severity Tiers and the Auto-Fix Boundary");
+    expect(squash(soft)).toContain("Severity Tiers and the Auto-Fix Boundary");
   });
 
   // Drift guard: the SOFT section points at a heading by name. If that heading
@@ -653,7 +653,7 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
   });
 
   test("team-pr: body refresh re-emits exactly one closing line", () => {
-    const text = flat(read(TEAM_PR));
+    const text = squash(read(TEAM_PR));
     // Step 9 lists the closing line among the refresh-surviving sections:
     // every `gh pr edit --body` re-emits exactly one, never duplicated,
     // never dropped.

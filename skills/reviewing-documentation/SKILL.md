@@ -59,8 +59,8 @@ documentation:
    - **Changed setup or configuration** — New environment variables, build
      steps, or prerequisites.
 
-4. **Cross-reference.** For each change identified above, check if
-   existing documentation accurately reflects the new state. Look for:
+4. **Cross-reference.** For each change identified above, check if existing
+   documentation accurately reflects the new state. Look for:
    - Documentation that references removed code or old behavior
    - Code examples that no longer work
    - Setup instructions that are now incomplete

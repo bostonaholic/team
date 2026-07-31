@@ -63,9 +63,10 @@ start at `0001`.
 
 Write an ADR when the decision:
 
-- **Chooses between alternatives** — You evaluated multiple options and picked
-  one. The rejected alternatives and the reasons for rejection are valuable
-  context for future developers who will wonder "why did not we just..."
+- **Chooses between alternatives** — You evaluated multiple options and
+  picked one. The rejected alternatives and the reasons for rejection are
+  valuable context for future developers who will wonder "why did not we
+  just..."
 
 - **Involves important trade-offs** — The decision sacrifices something
   (performance, simplicity, flexibility) to gain something else. Record what

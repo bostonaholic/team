@@ -32,12 +32,12 @@ picture of what is happening.
   just before? Check git log, deployment history, and dependency updates.
 - **Treat intermittency as evidence, not noise.** A test that fails 1 in 10
   runs is not "flaky". It reports a real condition that most invocations do
-  not hit: timing, ordering, resource contention, or hidden global state.
-  The conditions that make a test intermittent are frequently the conditions
-  that make the product intermittently misbehave in production. Record the
-  failure rate (e.g., 3/30 runs), the variance across environments (local vs
-  CI), what is concurrent/asynchronous/stateful in the path, and any shared
-  state (`/tmp`, env vars, singletons, DB rows).
+  not hit: timing, ordering, resource contention, or hidden global state. The
+  conditions that make a test intermittent are frequently the conditions that
+  make the product intermittently misbehave in production. Record the failure
+  rate (e.g., 3/30 runs), the variance across environments (local vs CI), what
+  is concurrent/asynchronous/stateful in the path, and any shared state
+  (`/tmp`, env vars, singletons, DB rows).
 
 Do not hypothesize during OBSERVE. Just collect.
 
@@ -73,8 +73,8 @@ elimination, not confirmation.
 - **When you have a working baseline and a failing tip, bisect.** Do not
   reason from first principles about which of 40 commits broke it —
   `git bisect` is faster and more reliable. Each step discriminates half the
-  commit range. The same logic applies to config changes, dependency
-  versions, and feature-flag rollouts.
+  commit range. The same logic applies to config changes, dependency versions,
+  and feature-flag rollouts.
 
 ### Phase 4: CONCLUDE
 
@@ -104,8 +104,9 @@ that link, and so on, until the chain bottoms out at a cause you can change.
   this environment." Each "why?" turns a symptom into the next, deeper cause.
 - **Anchor every link in OBSERVE evidence.** Each answer must rest on a fact
   gathered in Phase 1, such as a log line, a stack frame, or a git change.
-  Never use a plausible-sounding guess. If you cannot point to evidence for a link, you have
-  left the chain. Go back to OBSERVE and collect more, do not invent the link.
+  Never use a plausible-sounding guess. If you cannot point to evidence for a
+  link, you have left the chain. Go back to OBSERVE and collect more, do not
+  invent the link.
 - **Branch when a link has multiple causes.** If one "why?" has two or more
   contributing answers, drill each branch separately. The root is reached only
   when **every** branch bottoms out at a cause you can change.
@@ -113,9 +114,9 @@ that link, and so on, until the chain bottoms out at a cause you can change.
   your control to fix and one more "why?" would leave that control (e.g. a
   third-party default, a platform constraint, a human decision). Do not keep
   asking past that boundary — that is how you end up blaming the universe.
-- **The chain can be length 1.** Some bugs are one "why?" from their root. Stop
-  when you reach a controllable cause. Do not manufacture five questions to hit
-  a number. Five is the technique's name, not its quota.
+- **The chain can be length 1.** Some bugs are one "why?" from their root.
+  Stop when you reach a controllable cause. Do not manufacture five questions
+  to hit a number. Five is the technique's name, not its quota.
 - **Failure modes to avoid.** Stopping too early leaves you fixing a symptom.
   Going too far blames a person instead of a process, or blames the universe —
   fix the process the person operated, not the person. Fabricating a chain
@@ -126,8 +127,8 @@ that link, and so on, until the chain bottoms out at a cause you can change.
   `test-driven-bug-fix` mutation check (revert one line, confirm the test goes
   red) verifies the fix landed at the root and not on a symptom.
 - **When the chain will not converge, escalate.** If "why?" keeps returning
-  answers outside your control, and never reaches a cause you can change,
-  stop drilling. Hand off to `## Escalation Rules` below rather than loop.
+  answers outside your control, and never reaches a cause you can change, stop
+  drilling. Hand off to `## Escalation Rules` below rather than loop.
 
 ## Escalation Rules
 
@@ -157,5 +158,5 @@ When escalating, give:
 3. What you tested and eliminated (experiments)
 4. What you believe the remaining possibilities are (next steps)
 
-Never escalate with "I do not know what is wrong." Always escalate with
-"Here is what I have ruled out, and here is where I think the answer lies."
+Never escalate with "I do not know what is wrong." Always escalate with "Here
+is what I have ruled out, and here is where I think the answer lies."

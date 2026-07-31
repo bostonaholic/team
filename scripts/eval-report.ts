@@ -23,8 +23,8 @@ import { join } from "node:path";
 
 import type { EvalResult, EvalTestEntry } from "../tests/helpers/eval-store";
 
-// The marker prefix the workflow greps for when deciding if to update an
-// existing comment or create a new one. MUST stay stable and in sync with the
+// The marker prefix the workflow greps for when it decides between an update
+// to an existing comment and a new one. MUST stay stable and in sync with the
 // upsert logic in .github/workflows/pr-evals.yml (locked by a tripwire test).
 export const REPORT_MARKER = "## PR Evals";
 

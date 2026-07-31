@@ -23,9 +23,9 @@ First, determine the project type by inspecting configuration files:
 ## UI Project Verification
 
 1. **Start the dev server.** Find the applicable start command from
-   `package.json` scripts, `Makefile`, or equivalent. Run it in the background.
-   Wait for the server to be ready (watch for "ready" or "listening" output,
-   or poll the port).
+   `package.json` scripts, `Makefile`, or equivalent. Run it in the
+   background. Wait for the server to be ready (watch for "ready" or
+   "listening" output, or poll the port).
 
 2. **Verify the home route.** Use `curl` to fetch the main page. Check that:
    - The response status is 200
@@ -111,15 +111,15 @@ available state exposes real data, skip it and list it under `## Skipped`.
 - Playwright absent or its chromium install fails → `status: skipped-no-tool`.
 - Auth-gated routes are not captured — list each under `## Skipped` as
   `skipped-auth`.
-- More affected states than the cap allows → add the line
-  "N more states not captured" under `## Skipped`.
+- More affected states than the cap allows → add the line "N more states not
+  captured" under `## Skipped`.
 
 **Manifest.** Write `<artifact-dir>/screenshots/manifest.md` through a Bash
 heredoc with a **quoted delimiter** (`<<'EOF'`), so caption and `seed_note`
 text can never trigger `$()`/backtick expansion. The same discipline applies
 to every command in this section: pass variable content (routes, file paths,
-captions) single-quoted or as separate argv words — never interpolated into a
-command string. Frontmatter schema, exactly:
+captions) single-quoted or as separate argv words — never interpolated into
+a command string. Frontmatter schema, exactly:
 
 ```yaml
 ---
