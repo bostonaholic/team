@@ -60,6 +60,9 @@ Six foundational perspectives guide every design and implementation decision:
 
 ### Code Comments
 
+These rules govern comments inside source files, not review findings,
+which use `skills/conventional-comments/SKILL.md`.
+
 Comments never explain WHAT the code does. Intention-revealing names and
 structure carry that. A comment is permitted only for a non-obvious WHY,
 such as a constraint, a workaround, or a surprising requirement. It is
@@ -78,17 +81,50 @@ explanation.
   pointing at a public issue URL stays true for exactly as long as the
   workaround does. The ban targets internal trackers and pipeline
   artifacts, not those links.
+- **No process narration.** Describe the code as it exists now. Do not
+  write dates, corrections, changelog entries, or historical narration.
+  Never describe the edit that produced the code. Never mention the user,
+  the prompt, review feedback, ticket discussion, or agent instructions.
+  Marker phrases such as "Previously", "Originally", "As of",
+  "Correction", "Temporary fix from", and "This was changed because" are
+  detection hints, not the rule itself.
+- **Document non-obvious constraints and deliberate oddities.** This is
+  the permitted comment class: API limits, compatibility, security
+  assumptions, performance, ordering, concurrency, and framework
+  surprises. For a deliberate oddity, state the consequence of removing
+  or simplifying the code.
+- **Local, concise, precise, verified.** Place a comment next to the code
+  it explains. Use the minimum text. Name the exact condition, risk, or
+  dependency -- never "handle edge case". Document only verified
+  behavior. Refer to symbols and stable identifiers, never to
+  line numbers or file layout.
+- **No duplicated documentation.** Do not repeat what types, tests,
+  names, and public docs already carry. Link an external spec only when
+  the code implements a precise external contract.
 - **No commented-out code.** Version control remembers deleted code. A
   commented-out block only makes readers ask if it is still needed. Delete
   it.
 - **No TODO or FIXME comments in delivered code.** Deferred work goes in
   the implementer's report, where it is visible and actionable -- not
-  buried in the source where it silently ages.
+  buried in the source where it silently ages. Even a TODO that meets
+  every actionability bar does not ship. The pipeline routes deferred
+  work to the implementer's report and the tracker. That channel does not
+  age in source.
+- **Maintain: remove obsolete comments, preserve repo style.** A change
+  that invalidates a comment updates or deletes it in the same diff.
+  Comment style follows the repo's existing convention.
 - **Doc comments on exported/public interfaces are exempt.** They follow
   the ecosystem's convention (JSDoc, docstrings, rustdoc) and define the
   abstraction (Ousterhout: interface comments describe what the caller
   needs, not how the implementation works). The why-only rule governs
-  implementation comments.
+  implementation comments. Doc comments are for public contracts only. A
+  doc comment that merely repeats the signature is a what-comment, not an
+  exempt doc comment.
+
+**Decision Test.** Before you keep a comment, ask four questions. Does it
+explain why? Would code or tests carry it better? Is it true after this
+change, with no reference to the process? Will it still be true when the
+surrounding code changes?
 
 ### Reusability
 
@@ -164,8 +200,9 @@ Before considering any implementation complete, verify each item:
     failing condition with enough context that the next reader can start
     debugging without rerunning. Avoid `assert(predicate)` when
     `assert_eq(actual, expected)` would print the values.
-13. **Comment Discipline** -- Comments are why-only, carry no ticket/plan
-    references, and no TODO/FIXME or commented-out code remains.
+13. **Comment Discipline** -- Comments are why-only, timeless, and
+    process-free. They are precise, and they carry no ticket/plan
+    references. No TODO/FIXME comments and no commented-out code remain.
 
 ## When Implementing
 

@@ -869,6 +869,13 @@ describe("code-comment rules (L2 content tripwire)", () => {
     // convention and are exempt.
     expect(/doc comments/i.test(section)).toBe(true);
     expect(/exported\/public/i.test(section)).toBe(true);
+    // Scope pointer: in-source comments here; review findings belong to
+    // conventional-comments. A cross-reference, so a rename fails the build.
+    expect(section).toContain("skills/conventional-comments/SKILL.md");
+    // Whether the expanded rule set actually changes what a reviewer flags
+    // is behavior, not wording — it lives in the planted-comment-*
+    // code-reviewer evals, per docs/testing.md ("behavior that only prose
+    // can carry belongs at L5 or L6").
   });
 
   test("implementer defers comment discipline to engineering-standards via a one-line pointer", () => {
@@ -921,6 +928,12 @@ describe("comment red flags (L2 content tripwire)", () => {
     // ticket-like tokens outside comment syntax (string literals).
     expect(/upstream/i.test(flags)).toBe(true);
     expect(/string literals/i.test(flags)).toBe(true);
+    // Which severity bucket a judgment class lands in is behavior a model
+    // has to act on, not a string in this file. The planted-comment-*
+    // code-reviewer evals assert it by running the reviewer: every plant in
+    // planted-comment-process-narration is style-tier, so that fixture
+    // deliberately does not require a blocking label, while
+    // planted-comment-violations pins the blocking label onto b1.
   });
 
   test("code-reviewer defers the comment-discipline check to the skill", () => {

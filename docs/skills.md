@@ -570,7 +570,14 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   split severity regime. Ticket or plan references and TODO or FIXME
   comments in code comments block on first occurrence. What-restating
   comments, wordy comments, and commented-out code escalate from
-  `suggestion:` to `issue:` when repeated across the diff. Also carries the
+  `suggestion:` to `issue:` when repeated across the diff. The same style
+  tier covers the judgment classes. These are process narration, comments
+  far from the code they explain, and vague or speculative comments. They
+  also include duplicated documentation, fragile positional references,
+  stale comments, style divergence, and signature-restating doc comments.
+  A constraint-gated
+  missing-why finding is capped at `suggestion (non-blocking)` and never
+  forces a REQUEST CHANGES verdict. Also carries the
   Code Reviewer inspection process (done-criteria verification and the
   per-file inspection checklist). The security review methodology lives in
   `reviewing-security`.
@@ -623,11 +630,15 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Loaded by:** planner, implementer, code-reviewer (3).
 - **Key behaviors:** Anchors planning and implementation in a shared
   standard so reviewers check against the same bar. It owns the binding
-  Code Comments rule set: why-only comments, a rewrite before a comment, no
-  ticket or plan references, no commented-out code, and no TODO or FIXME in
-  delivered code. Doc comments on public interfaces are exempt. It also
-  owns the Comment Discipline quality-checklist item that reviewer findings
-  cite.
+  Code Comments rule set. Comments are why-only, timeless, and
+  process-free, with a rewrite before a comment, and they document
+  non-obvious constraints and deliberate oddities with locality and
+  precision. The bans cover duplicated documentation, ticket or plan
+  references, TODO or FIXME in delivered code, and commented-out code.
+  Maintenance: obsolete comments are removed in the same diff, and repo
+  comment style is preserved. A four-question Decision Test closes the
+  set. Doc comments on public interfaces are exempt. It also owns the
+  Comment Discipline quality-checklist item that reviewer findings cite.
 
 ### test-first-development
 

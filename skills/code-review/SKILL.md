@@ -135,13 +135,48 @@ Two severity regimes apply:
   narrating comments, and commented-out code obey the same regime as the
   test-quality style flags. That is `suggestion:` for a single occurrence,
   and `issue:` when repeated across the diff. A single what-comment never
-  blocks a round on its own.
+  blocks a round on its own. The same regime covers the judgment classes
+  from the expanded canonical set. Flag process narration — historical,
+  edit, or conversation narration. Flag comments far from the code they
+  explain. Flag vague language ("handle edge case"). Flag speculation or
+  an invented motive. Flag duplication of what types, tests, names, or
+  docs already carry. Flag fragile positional references — line numbers
+  or file layout. Flag comment style that diverges from the repo
+  convention. Flag doc comments that restate a signature or sit on
+  internal implementation. Flag a stale comment the diff leaves
+  contradicting the changed code. Discriminant for that mismatch: when
+  the changed code meets the plan's done criteria, the stale comment is
+  the finding. When the code diverges from the done criteria, raise
+  Correctness instead. With no plan, default to the comment as the
+  finding.
 - **Not violations:** upstream-bug links where the link IS the why (a
   workaround pointing at a public issue URL). Ticket-like tokens outside
   comment syntax — string literals, log messages, test fixture data (the
   check reads comments only). Doc comments on exported/public interfaces per
   the ecosystem's convention. A diff with zero comments passes trivially —
   never manufacture a finding.
+
+  The comment-text checks read comments only. A diff with zero comments
+  passes them trivially — never manufacture a comment-text finding. A
+  missing-why finding is separate and narrow. Raise it only when both
+  conditions hold. First, the diff introduces or rewrites code whose
+  behavior is shaped by a constraint in the Document non-obvious
+  constraints list, or by a deliberate oddity. Second, you can name the
+  exact constraint and the consequence of removing or simplifying the
+  code. It is a
+  `suggestion (non-blocking): Comment Discipline` finding. It never
+  carries the `issue (blocking)` decoration, never forces a REQUEST
+  CHANGES verdict, and never escalates on repetition. The absence of
+  comments is never by itself evidence. When in doubt, stay silent. A
+  missing doc comment on a new public contract is not licensed by this
+  gate. That half is enforced at authoring time by the canonical
+  standard, not by the reviewer.
+
+  A pre-existing TODO or FIXME — one already in the file before this
+  diff — is not the diff's violation. The blocking TODO/FIXME entry
+  covers comments the diff introduces. When the change resolves the
+  TODO's subject, delete the comment as obsolete. When the change does
+  not touch it, leave it alone and raise no finding.
 
 ### UX Reviewer
 
