@@ -869,6 +869,24 @@ describe("code-comment rules (L2 content tripwire)", () => {
     // convention and are exempt.
     expect(/doc comments/i.test(section)).toBe(true);
     expect(/exported\/public/i.test(section)).toBe(true);
+    // 18-rule expansion — one identifier pin per new bullet (identifiers,
+    // never wording: docs/testing.md).
+    // No process narration: timeless text, no edit/conversation references.
+    expect(/process narration/i.test(section)).toBe(true);
+    // Permitted class: non-obvious constraints and deliberate oddities.
+    expect(/deliberate oddities/i.test(section)).toBe(true);
+    // No duplicated documentation — types, tests, names, docs carry it.
+    expect(/duplicated documentation/i.test(section)).toBe(true);
+    // Fragile-reference token from the locality/precision bullet.
+    expect(/line numbers/i.test(section)).toBe(true);
+    // Maintenance bullet: obsolete comments go in the same diff.
+    expect(/obsolete/i.test(section)).toBe(true);
+    // Closing label — a bold line, not a heading, so it stays inside the
+    // sectionFrom slice window.
+    expect(section).toContain("Decision Test");
+    // Scope pointer: in-source comments here; review findings belong to
+    // conventional-comments.
+    expect(section).toContain("skills/conventional-comments/SKILL.md");
   });
 
   test("implementer defers comment discipline to engineering-standards via a one-line pointer", () => {

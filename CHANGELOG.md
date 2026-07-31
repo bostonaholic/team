@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Every agent that writes code now authors in-source comments under the merged 18-rule Code Comments standard.** The canonical rule set in [`skills/engineering-standards/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/engineering-standards/SKILL.md) expands from five rules to the full merged set: a scope sentence separating in-source comments from review findings, no process narration (timeless text — never the edit, the prompt, or the conversation that produced the code), documentation of non-obvious constraints and deliberate oddities, locality/precision/verified-behavior rules, no duplicated documentation, obsolete-comment removal in the same diff with repo comment style preserved, and a closing four-question Decision Test. The hard TODO/FIXME ban supersedes the supplied actionable-TODO rule: even a TODO that meets every actionability bar does not ship — deferred work routes to the implementer's report and the tracker.
+
 ## [0.29.2] - 2026-07-31
 
 ### Added

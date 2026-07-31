@@ -623,11 +623,15 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Loaded by:** planner, implementer, code-reviewer (3).
 - **Key behaviors:** Anchors planning and implementation in a shared
   standard so reviewers check against the same bar. It owns the binding
-  Code Comments rule set: why-only comments, a rewrite before a comment, no
-  ticket or plan references, no commented-out code, and no TODO or FIXME in
-  delivered code. Doc comments on public interfaces are exempt. It also
-  owns the Comment Discipline quality-checklist item that reviewer findings
-  cite.
+  Code Comments rule set: why-only comments, a rewrite before a comment,
+  timeless and process-free text (no process narration), documentation of
+  non-obvious constraints and deliberate oddities, locality and precision,
+  no duplicated documentation, no ticket or plan references, no TODO or
+  FIXME in delivered code, no commented-out code, and maintenance
+  (obsolete comments leave in the same diff, repo comment style is
+  preserved). A four-question Decision Test closes the set. Doc comments
+  on public interfaces are exempt. It also owns the Comment Discipline
+  quality-checklist item that reviewer findings cite.
 
 ### test-first-development
 
