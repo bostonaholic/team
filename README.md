@@ -1,6 +1,8 @@
 # Team
 
-A Claude Code plugin that orchestrates specialized agents to autonomously implement entire features end-to-end, driven by the **QRSPI** workflow. The orchestrator is the main Claude Code session. It persists pipeline state as artifacts in `docs/plans/` and tracks live progress with TodoWrite.
+A plugin that orchestrates specialized agents to autonomously implement entire features end-to-end, driven by the **QRSPI** workflow. The orchestrator is the main Claude Code session. It persists pipeline state as artifacts in `docs/plans/` and tracks live progress with TodoWrite.
+
+Team installs on Claude Code and on Codex CLI. The full pipeline needs Claude Code, because that is the host that dispatches the agents. The standalone utilities work on both.
 
 **Documentation:** [team.bostonaholic.dev](https://team.bostonaholic.dev)
 
