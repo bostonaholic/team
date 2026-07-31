@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.2] - 2026-07-31
+
+### Added
+
+- **The rule that a reviewer cannot edit is now a test, not a convention.** Every reviewer agent already shipped with read-only tool grants and `permissionMode: plan`, and every producer already shipped with `Write`. Nothing asserted it, so a new reviewer added with `Write` in its `tools:` line would have passed CI and quietly gained the power to fix the defect it found and then approve its own fix — generator and evaluator collapsed into one role, which is the single failure the whole review layer exists to prevent. [`tests/protocol.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/protocol.test.ts) gains an L2 frontmatter tripwire over both halves of the split: the five reviewers hold no `Write`, `Edit`, or `NotebookEdit` and carry `permissionMode: plan`, and the six producers hold `Write` and appear in neither list. It asserts frontmatter and a numeric bound, which is what [`docs/testing.md`](https://github.com/bostonaholic/team/blob/main/docs/testing.md) puts on the "assert these" list, so it survives any rewrite of the surrounding prose. `researcher` and `file-finder` are deliberately outside both sets: they are read-only for research isolation, and read-only does not by itself mean reviewer.
+
+### Changed
+
+- **Team's separation of powers is now written down as checks and balances, because the balances were the undocumented half.** The ethos argued that Team "separates who builds from who judges" and stopped there, which describes the separation but none of the constraints that keep either side from acting alone. All of them already existed in the code and none were named together: reviewers hold a veto but no authorship, producers hold authorship but cast no verdict, the veto is bounded at 5 rounds before it halts to a human, the skeptic pass that can refute a blocking finding is default-keep so it removes false positives only, the no-consult rule denies the orchestrator the exit of escalating a blocking finding mid-run, and a mechanical gate can fail a step every agent in the run believes is fine. [`docs/ethos.md`](https://github.com/bostonaholic/team/blob/main/docs/ethos.md) collects them under principle 4 and names what they guard against — concentrated power, meaning a single agent whose mistake nothing else is positioned to catch — along with what each one costs. [`docs/architecture.md`](https://github.com/bostonaholic/team/blob/main/docs/architecture.md#checks-and-balances) carries the producer/reviewer split as a table of tool grants and permission modes, and states that frontmatter is what enforces it. [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md) tells reviewers the same thing from the inside: you hold no write tool, report the defect and never fix it, and your veto is bounded so do not hold the line on a finding you cannot support. [`AGENTS.md`](https://github.com/bostonaholic/team/blob/main/AGENTS.md) records it as a second agent-roster invariant next to the registry-sync one.
+
+- **The code reviewer is told plainly that it does get the intent.** Its prompt opened by claiming it had "no knowledge of the implementer's intent beyond what the code and commit history show," and then five lines later handed it the plan and the done criteria. [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md) has always been the accurate description — reviewers read the diff and the plan, form their own understanding of intent from artifacts, and check every done criterion — but a reviewer that took its own opening line literally would skip the done-criteria check and grade the diff in a vacuum, which cannot distinguish a correct implementation from a correct implementation of the wrong thing. [`agents/code-reviewer.md`](https://github.com/bostonaholic/team/blob/main/agents/code-reviewer.md) now separates the two halves: what the isolation withholds is the conversation where the code was written and the author's account of its own work, and what it grants is every artifact written upstream, before the code existed, by a different agent. That ordering is the reason the grant is safe, so the prompt says it. [`docs/ethos.md`](https://github.com/bostonaholic/team/blob/main/docs/ethos.md) stops listing reviewer isolation and researcher isolation as one undifferentiated series — they are not the same mechanism at the same strength, since the researcher genuinely never sees `task.md` while a reviewer reads the spec on purpose — and names the distinction the principle actually turns on: a spec is a fixed target, an author explaining why the code is already right is a moving one.
+
 ## [0.29.1] - 2026-07-31
 
 ### Changed
@@ -319,7 +331,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.29.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.29.2...HEAD
+[0.29.2]: https://github.com/bostonaholic/team/compare/v0.29.1...v0.29.2
 [0.29.1]: https://github.com/bostonaholic/team/compare/v0.29.0...v0.29.1
 [0.29.0]: https://github.com/bostonaholic/team/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/bostonaholic/team/compare/v0.27.0...v0.28.0

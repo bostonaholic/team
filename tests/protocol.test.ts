@@ -855,3 +855,57 @@ describe("no mid-run human-gate claims (L2 forbidden-pattern sweep)", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+describe("checks and balances", () => {
+  // Separation of powers is enforced by frontmatter, not by prose: a reviewer
+  // that could edit could fix what it found and then approve its own fix,
+  // which collapses generator and evaluator into one role. A producer holds
+  // Write but casts no verdict. Neither role can close a review cycle alone.
+  const REVIEWERS = [
+    "code-reviewer",
+    "security-reviewer",
+    "technical-writer",
+    "ux-reviewer",
+    "verifier",
+  ];
+
+  const PRODUCERS = [
+    "questioner",
+    "design-author",
+    "structure-planner",
+    "planner",
+    "test-architect",
+    "implementer",
+  ];
+
+  for (const agent of REVIEWERS) {
+    test(`${agent} holds no write tool`, () => {
+      const fm = frontmatter(read(join(REPO_ROOT, "agents", `${agent}.md`)));
+      const tools = /^tools:(.*)$/m.exec(fm)?.[1] ?? "";
+      expect(/\bWrite\b/.test(tools)).toBe(false);
+      expect(/\bEdit\b/.test(tools)).toBe(false);
+      expect(/\bNotebookEdit\b/.test(tools)).toBe(false);
+    });
+
+    test(`${agent} runs in plan permission mode`, () => {
+      const fm = frontmatter(read(join(REPO_ROOT, "agents", `${agent}.md`)));
+      expect(/^permissionMode:\s*plan\s*$/m.test(fm)).toBe(true);
+    });
+  }
+
+  for (const agent of PRODUCERS) {
+    test(`${agent} holds a write tool and is not a reviewer`, () => {
+      const fm = frontmatter(read(join(REPO_ROOT, "agents", `${agent}.md`)));
+      const tools = /^tools:(.*)$/m.exec(fm)?.[1] ?? "";
+      expect(/\bWrite\b/.test(tools)).toBe(true);
+      expect(REVIEWERS).not.toContain(agent);
+    });
+  }
+
+  test("the review loop cap is bounded and stated as a number", () => {
+    // An unbounded veto is its own failure mode: a check that can never be
+    // satisfied must hand the work to a human, not spin.
+    const tiers = read(join(REPO_ROOT, "skills", "review-severity-tiers", "SKILL.md"));
+    expect(/\b5 rounds\b/.test(tiers)).toBe(true);
+  });
+});

@@ -67,6 +67,8 @@ Four agents (`researcher`, `implementer`, `code-reviewer`, `security-reviewer`) 
 
 **Invariant:** the agent inventory in `skills/team/registry.json` (which carries the `phase` mapping) and the files under `agents/` must always agree by name. When adding or renaming an agent, update both in the same commit. The dev hook `.claude/hooks/check-registry-sync.mjs` enforces this automatically.
 
+**Invariant (checks and balances):** producers write, reviewers judge, and no agent does both. A reviewer (`code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`) holds no `Write`/`Edit` tool and carries `permissionMode: plan`. A reviewer that can edit can fix what it found and then approve its own fix, which collapses the generator and the evaluator into one role. `tests/protocol.test.ts` enforces both halves. See [docs/architecture.md](docs/architecture.md#checks-and-balances).
+
 ## Skills (51)
 
 See `skills/*/SKILL.md`. Entry point skills double as slash commands. Five of them are standalone slash-command utilities that are not QRSPI phases. `shipit` lands a reviewed PR. `pr-open-comments` triages unresolved PR review feedback. `pr-watch` is a bounded PR review watch loop. `pr-approve-watch` is the reviewer-side watch-and-approve. `groom-backlog` grooms a project backlog with a board-level pass plus per-item promotion. Methodology skills are loaded by agents. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
