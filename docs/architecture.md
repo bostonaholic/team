@@ -324,6 +324,39 @@ The dev hook `.claude/hooks/check-registry-sync.mjs` validates that
 the inventory in registry.json and the files under `agents/` agree by
 name.
 
+### Checks and balances
+
+The roster splits into two roles with deliberately non-overlapping powers.
+**Producers** write artifacts and code. **Reviewers** cast verdicts. No agent
+holds both powers, and neither role can complete a review cycle alone.
+
+| Role | Agents | Tools | `permissionMode` | Power |
+|------|--------|-------|------------------|-------|
+| Producer | `questioner`, `design-author`, `structure-planner`, `planner`, `test-architect`, `implementer` | include `Write`/`Edit` | `acceptEdits` | Changes the tree. Casts no verdict. |
+| Reviewer | `code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier` | read-only | `plan` | Blocks the line. Changes nothing. |
+
+**This is enforced by frontmatter, not by prompt text.** A reviewer that could
+edit could fix the defect it found and then approve its own fix, which collapses
+the generator and the evaluator into one role. Read-only tool grants plus
+`permissionMode: plan` make that impossible at the harness layer.
+`tests/protocol.test.ts` pins both halves as an L2 tripwire, so a new reviewer
+that ships with `Write` fails CI.
+
+`researcher` and `file-finder` are also read-only, for a different reason:
+research isolation (see [Phase 3](#phase-3-research)). Read-only does not by
+itself mean reviewer.
+
+Three more balances bound the checks themselves:
+
+- **The veto is bounded.** The review loop is capped at 5 rounds, then halts to a
+  human with the unresolved findings. See
+  `skills/review-severity-tiers/SKILL.md`.
+- **The check has a check.** The optional skeptic pass is default-keep. An
+  inconclusive refutation leaves the finding standing, so the pass removes false
+  positives only.
+- **The orchestrator cannot punt.** The no-consult rule forbids escalation of a
+  Blocking or Major finding to the user mid-run.
+
 ### Model tiering
 
 The principle:

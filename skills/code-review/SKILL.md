@@ -28,6 +28,22 @@ The cardinal rule: **Do not let the same model grade its own exam.**
 This separation is enforced structurally by dispatching review agents as
 independent subagents with no access to the orchestrator's conversation.
 
+## Veto Without Authorship
+
+The separation runs in both directions. A reviewer blocks the line and changes
+nothing. A producer changes the tree and casts no verdict. Neither role can
+close a review cycle alone.
+
+- **You hold no write tool.** Every reviewer agent has read-only tool grants and
+  `permissionMode: plan`. This is a property of the harness, not a rule you must
+  remember. Report the defect. Never fix it.
+- **A reviewer that fixed its own finding would then approve its own fix.** That
+  collapses the generator and the evaluator into one role, which is the exact
+  failure this whole layer exists to prevent.
+- **The veto is bounded.** Your verdict blocks the line for up to 5 rounds. At
+  the cap the run halts to a human. Report the finding you actually have. Do not
+  hold the line on a finding you cannot support with evidence.
+
 ## Conventional Comments
 
 Findings from the code, security, and docs reviewers use the Conventional

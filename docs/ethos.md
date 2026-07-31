@@ -107,18 +107,56 @@ loudly, never mask them silently.
 ## 4. Adversarial by design
 
 A generator must not grade its own work. Team deliberately separates who builds
-from who judges: reviewers get fresh context and no shared history with the
-implementer; the researcher never sees the original task description, so it
-cannot rationalize toward a wanted answer; review verdicts hard-gate, so a
-blocking finding stops the line.
+from who judges. Reviewers get fresh context and no shared history with the
+implementer: they read the diff and the upstream spec, never the implementer's
+account of its own work — so intent reaches them through artifacts written
+before the code existed, not through the author's defense of it. The researcher
+goes further and never sees the original task description at all, so it cannot
+rationalize toward a wanted answer. Review verdicts hard-gate, so a blocking
+finding stops the line.
+
+Note what reviewer isolation is *not*. A reviewer that could not see the intent
+could not tell a correct implementation from a correct implementation of the
+wrong thing, which is why the done-criteria check is the first thing it does.
+What the isolation withholds is narration. A spec is a fixed target; an author
+explaining why the code is already right is a moving one.
 
 The system is built to catch itself being wrong, because a *confident* wrong
 answer is the most expensive kind. This is the generation-verification loop, but
 with the verifier structurally unable to collude with the generator.
 
+### Checks and balances
+
+Separating the powers is only half of it. Separation says the builder does not
+judge. Balance says no role holds enough power to finish alone, and every check
+is itself checked.
+
+- **Veto without authorship.** Reviewers block but cannot edit — their tool
+  grants are read-only and they run in `plan` mode, so the constraint is a
+  property of the harness rather than a promise in a prompt. Producers change
+  code but cast no verdict. Neither role can close a review cycle by itself.
+- **Bounded veto.** The review loop is capped at five rounds, then halts to a
+  human. A check that cannot be satisfied must hand the work back, not grind. An
+  unbounded veto is its own failure mode.
+- **A check on the check.** The skeptic pass that tries to refute a blocking
+  finding is default-keep: inconclusive means the finding stands. A refuter can
+  remove a false positive and never a true one.
+- **The orchestrator cannot punt.** The no-consult rule forbids escalating a
+  blocking finding to the human mid-run. The one role positioned to dodge the
+  loop by asking permission is denied that exit.
+- **The deterministic layer outranks the model.** A mechanical gate can fail a
+  step that every agent in the run believes is fine.
+
+What these guard against is concentrated power — not malice, but a single agent
+whose mistake nothing else in the system is positioned to catch. Every one of
+them costs something: a round trip, a retry, a halt a human has to pick up. That
+is the price of a middle that runs unattended.
+
 **Anti-patterns:**
 - Letting the implementer review its own implementation.
 - A reviewer that read the conversation where the code was written.
+- Withholding the spec from a reviewer, then asking it to judge correctness in a
+  vacuum. Isolation from narration, not from intent.
 - Treating model confidence as correctness. Agreement is a signal, not a proof.
 
 ## 5. Deep agents, narrow seams
@@ -144,7 +182,8 @@ other four are how the middle earns that trust.
 
 - **Files are the contract** makes the work durable.
 - **Mechanical gates** make the rules hold without supervision.
-- **Adversarial by design** makes the system catch its own mistakes.
+- **Adversarial by design** makes the system catch its own mistakes, and keeps
+  any one agent from being the last word.
 - **Deep agents, narrow seams** keep failures local and the whole thing legible.
 
 Take any one away and autonomy stops being safe: without durable files it
