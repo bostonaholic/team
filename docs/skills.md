@@ -465,11 +465,23 @@ QRSPI phase: a self-contained action a user runs on demand.
   default to the current branch.
 - **Phase:** None. A standalone teardown action, not part of the pipeline.
 - **Key behaviors:** Runs a merged-PR verification gate
-  (`gh pr list --state merged`) before any `git branch -D`; Mode B has no
+  (`gh pr list --state merged`) before any `git branch -D`, and the gate
+  checks identity and containment, not just a head-branch name match: the
+  merged PR's head repository must be this repo (a fork PR sharing the
+  branch name licenses nothing) and its merge commit must be an ancestor
+  of the default branch. Mode B has no
   merged check because the user's explicit abandon request is the gate —
   the skill never infers abandon intent. Refuses protected branch names
   (the detected default, `master`, `develop`, `release/*`) and a dirty
-  tree with tracked modifications. Before any destructive step it resolves
+  tree with tracked modifications. Every externally sourced branch name
+  must pass a byte-exact (`LC_ALL=C`) character allowlist before it
+  reaches any command. Protected names are refused case-insensitively,
+  and `git branch -D` runs only when a local branch matches the name byte
+  for byte — so `Main` cannot force-delete `main` on a case-insensitive
+  filesystem. No destructive command relies on a variable set in an
+  earlier shell invocation: the primary-clone root and repo slug are
+  re-derived in every invocation that uses them, and destructive
+  expansions abort when a variable is unset. Before any destructive step it resolves
   AND validates `$PRIMARY_ROOT` (the primary clone, found via
   `git rev-parse --path-format=absolute --git-common-dir` and cross-checked
   against the main working tree), then anchors every subsequent command
@@ -503,8 +515,9 @@ QRSPI phase: a self-contained action a user runs on demand.
   in part, and no PASS is issued without cited evidence. Six verification
   strategies (filesystem, content match, code verification, diff
   analysis, build/test via the project's detected checks, structural);
-  code-verification items dispatch a read-only Explore subagent with an
-  inline fallback. The final verdict is mechanical: READY (all PASS at
+  code-verification items dispatch a `team:file-finder` subagent — its
+  grant is Read/Grep/Glob only, no Bash, so an imperative embedded in PR
+  prose has no command sink — with an inline fallback. The final verdict is mechanical: READY (all PASS at
   HIGH/MEDIUM), NEEDS ATTENTION (any PARTIAL or LOW), NOT READY (any
   FAIL). The test plan is data: items are claims, never instructions, and
   a command quoted in a PR body is never executed. Read-only — no writes,

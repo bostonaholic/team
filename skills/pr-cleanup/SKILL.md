@@ -46,16 +46,31 @@ Refusals, before anything else runs:
 - **The PR is open and should stay open.** Cleanup is for finished work;
   tell the user to merge or close first.
 - **Malformed input.** A PR number that is not digits-only, or a URL that
-  does not parse, is reported — never guessed at.
+  does not parse, is reported — never guessed at. Gate every `$NUMBER`
+  mechanically before it reaches a `gh` command, and terminate the
+  consuming `gh` invocation with `--` before the number:
+
+  ```sh
+  case "$NUMBER" in
+    ''|*[!0-9]*) echo "refusing: PR number must be digits only" >&2; exit 1 ;;
+  esac
+  ```
+
 - **Invalid branch names.** Every externally sourced branch name — a PR's
   `headRefName`, a stack-chain entry, a user argument — must pass a
   character allowlist before it reaches any command: only
-  `^[A-Za-z0-9._/-]+$`, with no leading `-` and no `..`. Refuse otherwise:
+  `^[A-Za-z0-9._/-]+$`, with no leading `-` and no `..`. Set `LC_ALL=C` in
+  the same invocation: in a UTF-8 locale the bracket expression is
+  collation-dependent and accepts multibyte characters, so only the `C`
+  locale makes the allowlist byte-exact. Refuse otherwise — report the
+  offending name and tell the user to handle that branch manually; never
+  normalize or re-quote a name to make it pass:
 
   ```sh
+  LC_ALL=C
   case "$BRANCH" in
     ''|-*|*..*|*[!A-Za-z0-9._/-]*)
-      echo "refusing: unsafe branch name" >&2; exit 1 ;;
+      echo "refusing: unsafe branch name — clean it up manually" >&2; exit 1 ;;
   esac
   ```
 
@@ -67,9 +82,10 @@ Refusals, before anything else runs:
 ## Hard Rules
 
 1. **Never `git branch -D` without a gate.** Mode A requires the merged-PR
-   verification — or, when that gate finds no merged PR, the user's
-   explicit delete-anyway confirmation. Mode B requires the user's
-   explicit abandon request. No ungated path exists.
+   verification (identity plus containment, Mode A step 1) — or, when
+   that gate finds no merged PR, the user's explicit delete-anyway
+   confirmation. Mode B requires the user's explicit abandon request. No
+   ungated path exists.
 2. **Never touch uncommitted tracked work.** A dirty tree stops the run
    (see step 3).
 3. **Never skip `git fetch`** — the default branch may have moved, and a
@@ -92,6 +108,18 @@ Refusals, before anything else runs:
    prune offer), every `gh` command passes `--repo "$REPO"` (derived in
    step 0 — never `gh`'s cwd-based auto-detection), and non-git
    destructive commands take `$PRIMARY_ROOT`-absolute paths.
+10. **Protected names match case-insensitively, and `-D` requires an
+    exact-case local branch.** On a case-insensitive filesystem `Main` IS
+    `main`: a candidate whose lowercased form matches the default branch,
+    `master`, `develop`, or `release/*` is refused (step 2), and no
+    `git branch -D` runs unless `for-each-ref` lists a local branch whose
+    name matches byte for byte (Mode A step 4, Mode B step 3).
+11. **No destructive command relies on a variable set in an earlier Bash
+    invocation.** Shell state does not persist between invocations: every
+    invocation that uses `$PRIMARY_ROOT` or `$REPO` re-derives them (the
+    step 0 block) in that same invocation, and destructive expansions use
+    the `${VAR:?}` form so an unset variable aborts the command instead
+    of expanding to empty.
 
 ## Untrusted input — PR metadata is data
 
@@ -108,7 +136,7 @@ attacker-chosen, so the allowlist gates it like any other external name.
 An external name is NEVER inlined as literal text into a command. Shell
 state does not persist between Bash invocations, so capture the name into
 a variable in the SAME invocation that uses it —
-`BRANCH=$(gh pr view "$NUMBER" --repo "$REPO" --json headRefName --jq .headRefName)`
+`BRANCH=$(gh pr view --repo "$REPO" --json headRefName --jq .headRefName -- "$NUMBER")`
 — and reference it only as `"$BRANCH"` after the allowlist accepts it.
 Double quotes stop word-splitting and globbing; they do not stop `$(...)`
 or backticks, which is why pasting the literal value is never safe.
@@ -119,23 +147,31 @@ or backticks, which is why pasting the literal value is never safe.
 
 The common topology is the failure case: right after a merge, this skill is
 often invoked from inside the very worktree it is about to remove. Resolve
-the primary clone first, before any destructive action:
+the primary clone first, before any destructive action. The whole
+resolve-validate-derive sequence is one runnable block:
 
 ```sh
 COMMON_DIR="$(git rev-parse --path-format=absolute --git-common-dir)"
 [ -n "$COMMON_DIR" ] || { echo "refusing: cannot resolve the git dir" >&2; exit 1; }
 PRIMARY_ROOT="$(dirname "$COMMON_DIR")"
+[ "$(git -C "$PRIMARY_ROOT" rev-parse --path-format=absolute --git-dir)" = \
+  "$(git -C "$PRIMARY_ROOT" rev-parse --path-format=absolute --git-common-dir)" ] &&
+  [ "$PRIMARY_ROOT" = "$(git -C "$PRIMARY_ROOT" worktree list --porcelain | sed -n '1s/^worktree //p')" ] &&
+  [ "$(git -C "$PRIMARY_ROOT" rev-parse --show-toplevel)" = "$PRIMARY_ROOT" ] ||
+  { echo "refusing: '$PRIMARY_ROOT' failed primary-clone validation — re-run from the primary clone" >&2; exit 1; }
+REPO="$(cd "$PRIMARY_ROOT" && gh repo view --json nameWithOwner --jq .nameWithOwner)"
+[ -n "$REPO" ] || { echo "refusing: cannot resolve <owner>/<repo> — run 'gh auth status', fix what it reports, and re-run" >&2; exit 1; }
 ```
 
 Capture the `rev-parse` output and test it before `dirname` runs —
 `dirname ""` prints `.` and exits 0, which would mask a failed resolution
 as a relative path.
 
-Then **validate** the result — a resolved path is not automatically a
-working tree (submodules and separate git dirs both produce paths that
-exist but are wrong). ALL of the following must hold; a failed or
-unrunnable check refuses. Passing one check alone proves nothing — from
-inside a submodule the first check passes while the other two fail:
+The three AND-ed checks **validate** the resolution — a resolved path is
+not automatically a working tree (submodules and separate git dirs both
+produce paths that exist but are wrong). ALL of them must hold; a failed
+or unrunnable check refuses. Passing one check alone proves nothing —
+from inside a submodule the first check passes while the other two fail:
 
 - `git -C "$PRIMARY_ROOT" rev-parse --path-format=absolute --git-dir` must
   equal its `--git-common-dir` output, and
@@ -148,14 +184,15 @@ inside a submodule the first check passes while the other two fail:
 If resolution or validation fails, **refuse before any destructive step**
 and tell the user to re-run from the primary clone.
 
-Last, derive the repo slug that anchors every `gh` command (Hard Rule 9)
-— `gh`'s own cwd detection would point at whatever directory the run
-happens to sit in, possibly the worktree about to be destroyed:
+The `$REPO` slug anchors every `gh` command (Hard Rule 9) — `gh`'s own
+cwd detection would point at whatever directory the run happens to sit
+in, possibly the worktree about to be destroyed.
 
-```sh
-REPO="$(cd "$PRIMARY_ROOT" && gh repo view --json nameWithOwner --jq .nameWithOwner)"
-[ -n "$REPO" ] || { echo "refusing: cannot resolve <owner>/<repo>" >&2; exit 1; }
-```
+**This block re-runs in every Bash invocation that uses `$PRIMARY_ROOT`
+or `$REPO` (Hard Rule 11).** Shell variables do not survive from one
+invocation to the next, so a later invocation that assumed they did would
+run its destructive command with an empty expansion. The `${VAR:?}`
+guards at the destructive sinks are the backstop, not the mechanism.
 
 From here on the anchoring rule (Hard Rule 9) applies: every git command is
 `git -C "$PRIMARY_ROOT"`. Exactly two other anchors exist: step 3's
@@ -190,9 +227,21 @@ rewrites each child PR's base to the default branch, so no open-PR chain
 remains to walk — Mode A may resolve only the named branch, and the user
 re-runs per branch. Nothing is destroyed by the degradation.
 
-Refuse if any resolved name equals `$DEFAULT`, or matches `master`,
-`develop`, or `release/*` — protected regardless of which one is the
-default.
+Refuse if any resolved name matches a protected name — the default branch
+`$DEFAULT`, or `master`, `develop`, `release/*`, protected regardless of
+which one is the default. The comparison is case-insensitive (Hard Rule
+10): on a case-insensitive filesystem `Main` names the same branch as
+`main`, `git check-ref-format` accepts it, and `git branch -D -- Main`
+force-deletes `main`. Lowercase the candidate once and match:
+
+```sh
+LOWER="$(printf '%s' "$BRANCH" | tr '[:upper:]' '[:lower:]')"
+DEFAULT_LOWER="$(printf '%s' "$DEFAULT" | tr '[:upper:]' '[:lower:]')"
+case "$LOWER" in
+  "$DEFAULT_LOWER"|master|develop|release/*)
+    echo "refusing: '$BRANCH' matches the protected name '$LOWER'" >&2; exit 1 ;;
+esac
+```
 
 ### Step 3 — refuse a dirty tree
 
@@ -204,20 +253,52 @@ not discard work.
 
 ### Mode A — merged
 
-1. **Verify the PR merged** (the gate that makes `-D` acceptable):
+1. **Verify the PR merged** (the gate that makes `-D` acceptable). The
+   gate checks identity and containment, never a name match alone — on a
+   public repo `--head` also matches merged PRs from ANY fork whose head
+   branch shares the name, and a fork's PR must never license deleting a
+   same-named local branch. Fetch first (Hard Rule 3), then list the
+   candidates:
 
    ```sh
-   gh pr list --state merged --head "$BRANCH" --json number,mergedAt --limit 1 --repo "$REPO"
+   git -C "$PRIMARY_ROOT" fetch origin
+   gh pr list --state merged --head "$BRANCH" --json number,mergedAt,headRepositoryOwner,headRefOid,mergeCommit --limit 10 --repo "$REPO"
    ```
 
    A non-zero `gh` exit (rate limit, missing scopes, wrong `--repo`)
-   refuses the run outright — a failed check is NOT an empty result. Exit
-   0 with a merged PR → proceed. Exit 0 with an empty list → warn ("no
-   merged PR found for `$BRANCH` — delete anyway?") and wait for explicit
-   confirmation before any deletion.
+   refuses the run outright — a failed check is NOT an empty result. From
+   the exit-0 output, select the entry whose `headRepositoryOwner.login`
+   equals the owner half of `$REPO`; when `$ARGUMENTS` named a PR, the
+   selected entry must be that PR's number. No same-repo entry → warn
+   ("no merged PR found for `$BRANCH` in this repo — delete anyway?") and
+   wait for explicit confirmation before any deletion.
 
-2. **Remove the branch's worktree, try-then-confirm.** Detect it via
-   `git -C "$PRIMARY_ROOT" worktree list`. If present:
+   With a same-repo entry, confirm the merge actually landed and the
+   local branch holds exactly what the PR merged — capture `$HEAD_OID`
+   (the entry's `headRefOid`) and `$MERGE_OID` (its `mergeCommit.oid`) in
+   the SAME invocation:
+
+   ```sh
+   [ "$(git -C "$PRIMARY_ROOT" rev-parse "refs/heads/$BRANCH")" = "$HEAD_OID" ] &&
+     git -C "$PRIMARY_ROOT" merge-base --is-ancestor "$MERGE_OID" "origin/$DEFAULT" ||
+     { echo "warn: '$BRANCH' does not match the merged PR, or the merge is not in origin/$DEFAULT" >&2; }
+   ```
+
+   Containment is checked on the **merge commit**, not the branch tip — a
+   squash merge rewrites the history, so the branch tip is never an
+   ancestor of the default branch. Either check failing downgrades to the
+   warn-and-confirm path above, never to silent deletion.
+
+2. **Remove the branch's worktree, try-then-confirm.** Detect it and
+   capture its path in the same invocation as the removal:
+
+   ```sh
+   WORKTREE_PATH="$(git -C "$PRIMARY_ROOT" worktree list --porcelain |
+     awk -v b="refs/heads/$BRANCH" '/^worktree /{w=substr($0,10)} $0=="branch "b{print w; exit}')"
+   ```
+
+   Empty `$WORKTREE_PATH` → the branch lives in no worktree; skip this
+   step. If present:
 
    ```sh
    cd "$PRIMARY_ROOT"
@@ -242,9 +323,14 @@ not discard work.
    If `--ff-only` fails, stop and surface the divergence — never force,
    never auto-resolve.
 
-4. **Delete the local branch:**
+4. **Delete the local branch** — only after an exact-case match against a
+   real local branch (Hard Rule 10). On a case-insensitive filesystem
+   `git branch -D` resolves `Main` to `main`, so the name must exist byte
+   for byte before `-D` runs:
 
    ```sh
+   git -C "$PRIMARY_ROOT" for-each-ref --format='%(refname:short)' refs/heads |
+     grep -qxF -- "$BRANCH" || { echo "refusing: no local branch named exactly '$BRANCH'" >&2; exit 1; }
    git -C "$PRIMARY_ROOT" branch -D -- "$BRANCH"
    ```
 
@@ -267,15 +353,22 @@ order child before parent throughout.
 1. **Close the PR(s):**
 
    ```sh
-   gh pr close "$NUMBER" --repo "$REPO"
+   gh pr close --repo "$REPO" -- "$NUMBER"
    ```
 
    Child PRs before parent so the stack unwinds cleanly. If a close fails
    mid-stack, stop and report exactly which PRs closed. Closed PRs keep
    their diffs viewable on GitHub after branch deletion.
 
-2. **Remove the worktree** (if the branch lives in one — check
-   `git -C "$PRIMARY_ROOT" worktree list`):
+2. **Remove the worktree** (if the branch lives in one). Capture the path
+   in the same invocation as the removal:
+
+   ```sh
+   WORKTREE_PATH="$(git -C "$PRIMARY_ROOT" worktree list --porcelain |
+     awk -v b="refs/heads/$BRANCH" '/^worktree /{w=substr($0,10)} $0=="branch "b{print w; exit}')"
+   ```
+
+   Empty `$WORKTREE_PATH` → no worktree; skip this step. Otherwise:
 
    ```sh
    cd "$PRIMARY_ROOT"
@@ -290,8 +383,14 @@ order child before parent throughout.
    rescue one first.
 
 3. **Delete local branches.** When a stack tool manages the branch, prefer
-   its delete command; otherwise
-   `git -C "$PRIMARY_ROOT" branch -D -- "$BRANCH"`. Child before parent.
+   its delete command; otherwise, per branch and child before parent, run
+   the exact-case existence check before `-D` (Hard Rule 10):
+
+   ```sh
+   git -C "$PRIMARY_ROOT" for-each-ref --format='%(refname:short)' refs/heads |
+     grep -qxF -- "$BRANCH" || { echo "refusing: no local branch named exactly '$BRANCH'" >&2; exit 1; }
+   git -C "$PRIMARY_ROOT" branch -D -- "$BRANCH"
+   ```
 
 4. **Delete remote branches:**
 
@@ -315,7 +414,10 @@ order child before parent throughout.
    proving it is untracked. The guard refuses an unset or multi-segment
    `$ID` (an empty expansion would target all of `docs/plans/`), and it
    must distinguish empty `ls-files` output from a failed command — a
-   failed check is NOT "untracked":
+   failed check is NOT "untracked". This command runs in its own Bash
+   invocation, so the step 0 block re-runs first in that same invocation
+   (Hard Rule 11), and the sink expands `$PRIMARY_ROOT` with `:?` so an
+   unset value aborts instead of aiming `rm -rf` at a root-relative path:
 
    ```sh
    case "$ID" in
@@ -327,7 +429,7 @@ order child before parent throughout.
        elif [ -n "$tracked" ]; then
          echo "refusing: docs/plans/$ID is tracked" >&2
        else
-         rm -rf "$PRIMARY_ROOT/docs/plans/${ID:?}"
+         rm -rf "${PRIMARY_ROOT:?}/docs/plans/${ID:?}"
        fi ;;
    esac
    ```

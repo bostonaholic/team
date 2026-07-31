@@ -232,6 +232,20 @@ describe("pr-verify skill: hard rules", () => {
   });
 });
 
+describe("pr-verify skill: code-verification dispatch target holds no Bash", () => {
+  test("dispatches code-verification items to team:file-finder", () => {
+    expect(body()).toContain("team:file-finder");
+  });
+
+  test("no Explore dispatch remains (Explore holds Bash)", () => {
+    // Attacker-authored test-plan prose reaches the dispatched subagent;
+    // a Bash-holding target gives an embedded imperative a command sink.
+    const t = body();
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).not.toContain("Explore");
+  });
+});
+
 describe("pr-verify skill: read-only — no writes, no pushes", () => {
   test("never pushes and never forces", () => {
     const t = body();

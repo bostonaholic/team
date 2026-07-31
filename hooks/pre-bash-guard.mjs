@@ -27,6 +27,18 @@ const DANGEROUS_PATTERNS = [
     reason: "Blocked: git reset --hard discards uncommitted work",
   },
   {
+    pattern: /git\s+(-C\s+\S+\s+)?branch\s+.*-D\b/,
+    reason: "Blocked: git branch -D force-deletes a branch",
+  },
+  {
+    pattern: /git\s+(-C\s+\S+\s+)?push\s+.*--delete/,
+    reason: "Blocked: git push --delete removes a remote branch",
+  },
+  {
+    pattern: /git\s+(-C\s+\S+\s+)?worktree\s+remove\s+.*--force/,
+    reason: "Blocked: git worktree remove --force discards untracked files in the worktree",
+  },
+  {
     pattern: /chmod\s+777/,
     reason: "Blocked: chmod 777 sets overly permissive file permissions",
   },

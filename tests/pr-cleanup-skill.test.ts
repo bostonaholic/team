@@ -143,7 +143,10 @@ describe("pr-cleanup skill: step 0 resolves AND validates $PRIMARY_ROOT", () => 
   });
 
   test("validates the resolved root: --git-dir must equal --git-common-dir", () => {
-    expect(body()).toContain("--git-dir");
+    // Scoped to step 0 so the contract is the anchoring block itself,
+    // not an incidental mention elsewhere in the body.
+    const s = sliceBetween("### Step 0", "### Step 1");
+    expect(s).toContain("--git-dir");
   });
 
   test("cross-checks against the first entry of git worktree list --porcelain", () => {
@@ -165,7 +168,9 @@ describe("pr-cleanup skill: command contracts (all $PRIMARY_ROOT-anchored)", () 
   test("merged gate queries gh pr list for the merged PR with structured JSON", () => {
     const t = body();
     expect(t).toContain("gh pr list --state merged");
-    expect(t).toContain("--json number,mergedAt");
+    expect(t).toContain(
+      "--json number,mergedAt,headRepositoryOwner,headRefOid,mergeCommit",
+    );
   });
 
   test("resyncs the default branch with an anchored fetch and --ff-only pull", () => {
@@ -232,8 +237,11 @@ describe("pr-cleanup skill: destructive-step gates", () => {
     expect(body()).toContain(`if ! tracked=$(git -C "$PRIMARY_ROOT" ls-files`);
   });
 
-  test("scratch removal takes a $PRIMARY_ROOT-absolute path", () => {
-    expect(body()).toContain(`rm -rf "$PRIMARY_ROOT/docs/plans/`);
+  test("scratch removal takes a $PRIMARY_ROOT-absolute path that aborts when unset", () => {
+    // ${PRIMARY_ROOT:?} — the sink runs in its own Bash invocation, where
+    // an unset variable would otherwise expand rm -rf to a root-relative
+    // path the pre-bash-guard hook does not match.
+    expect(body()).toContain('rm -rf "${PRIMARY_ROOT:?}/docs/plans/${ID:?}"');
   });
 
   test("scratch removal refuses an unset or multi-segment $ID", () => {
@@ -253,6 +261,57 @@ describe("pr-cleanup skill: protected-branch refusal identifiers", () => {
     expect(s).toContain("master");
     expect(s).toContain("develop");
     expect(s).toContain("release/");
+  });
+
+  test("the protected-name guard lowercases the candidate before matching", () => {
+    // Without case folding, `Main` passes the string comparison and
+    // `git branch -D -- Main` force-deletes `main` on a case-insensitive
+    // filesystem.
+    const s = sliceBetween("### Step 2", "### Step 3");
+    expect(s).toContain("tr '[:upper:]' '[:lower:]'");
+  });
+});
+
+describe("pr-cleanup skill: branch -D requires an exact-case local branch", () => {
+  test("the for-each-ref + grep -qxF existence check precedes each branch -D", () => {
+    for (const section of [modeASection(), modeBSection()]) {
+      const forEachRef = section.indexOf(
+        "for-each-ref --format='%(refname:short)' refs/heads",
+      );
+      const exactMatch = section.indexOf("grep -qxF -- ");
+      const deleteBranch = section.indexOf(`branch -D -- "$BRANCH"`);
+      expect(forEachRef).toBeGreaterThanOrEqual(0);
+      expect(exactMatch).toBeGreaterThan(forEachRef);
+      expect(deleteBranch).toBeGreaterThan(exactMatch);
+    }
+  });
+});
+
+describe("pr-cleanup skill: merged gate checks identity and containment", () => {
+  test("selects the merged PR by head-repository identity, not name alone", () => {
+    expect(modeASection()).toContain("headRepositoryOwner");
+  });
+
+  test("verifies containment via merge-base --is-ancestor before branch -D", () => {
+    const a = modeASection();
+    const containment = a.indexOf("merge-base --is-ancestor");
+    const deleteBranch = a.indexOf(`branch -D -- "$BRANCH"`);
+    expect(containment).toBeGreaterThanOrEqual(0);
+    expect(deleteBranch).toBeGreaterThan(containment);
+  });
+});
+
+describe("pr-cleanup skill: input gates are byte-exact and mechanical", () => {
+  test("the branch-name allowlist pins LC_ALL=C", () => {
+    // The bracket expression is collation-dependent: in a UTF-8 locale it
+    // accepts multibyte characters, so the allowlist is byte-exact only
+    // under the C locale.
+    const s = sliceBetween("## Input", "## Hard Rules");
+    expect(s).toContain("LC_ALL=C");
+  });
+
+  test("the PR-number gate is a runnable digits-only case", () => {
+    expect(body()).toContain("''|*[!0-9]*");
   });
 });
 
