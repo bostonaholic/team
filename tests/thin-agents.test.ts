@@ -285,7 +285,7 @@ describe("thin agents: documentation counts agree at 53 skills", () => {
     // Stale-guard: the count appears twice in this doc; a half-swept second
     // occurrence passes a bare toContain, so forbid the old value outright
     // (no-stale-31 precedent).
-    expect(content).not.toContain("all 52 skills");
+    expect(content).not.toContain("all 51 skills");
     expect(content).not.toContain("31 skills");
   });
 
