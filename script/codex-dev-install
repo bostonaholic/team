@@ -7,7 +7,7 @@ set -euo pipefail
 #
 # Two frontmatter keys exclude a skill from linking:
 # - `user-invocable: false` — not an entry point.
-# - `disable-model-invocation: true` — Codex ignores this key, so a skill
+# - `disable-model-invocation` — Codex ignores this key, so a skill
 #   that relies on it as a hard guard (pr-approve-watch: an approval can
 #   transitively trigger an irreversible auto-merge) must not be installed
 #   on this host. See docs/codex.md for the manual opt-in.
@@ -15,10 +15,12 @@ set -euo pipefail
 # Never touches Codex's plugin cache directory. Replacing that cached copy
 # with a symlink — the script/dev-install trick for Claude Code — makes
 # Codex report the plugin `not installed` and drops the catalog to zero
-# skills (docs/plans/57-codex-skills-install/research.md, run 3).
+# skills.
 #
-# Self-check semantics: mismatch fails (links stay installed — run
-# script/codex-dev-uninstall to remove them), truncation reports.
+# Self-check semantics: any mismatch fails (links stay installed — run
+# script/codex-dev-uninstall to remove them). An over-budget catalog is
+# compressed by Codex, which abbreviates every cited path, so budget
+# truncation surfaces as a mismatch too.
 
 # Physical path: the Codex catalog cites the canonicalized SKILL.md path for
 # every entry, and the self-check anchors on that path.
@@ -34,7 +36,7 @@ fi
 # A bare marketplace registration prints `team@...  not installed` and must
 # proceed — `codex plugin remove team` could never clear it.
 # Fail closed: a failing `codex plugin list` proves nothing about collisions,
-# and an unverified ambiguity must not pass the guard (design decision 5).
+# and an unverified ambiguity must not pass the guard.
 if ! PLUGIN_LIST="$(codex plugin list 2>&1)"; then
   echo "Error: 'codex plugin list' failed — cannot verify that no installed" >&2
   echo "team@ plugin collides with these links. Output:" >&2
@@ -133,15 +135,39 @@ LINK_COUNT=0
 for skill_md in "$PLUGIN_ROOT"/skills/*/SKILL.md; do
   skill_dir="$(dirname "$skill_md")"
   skill_name="$(basename "$skill_dir")"
-  if grep -Eq '^user-invocable:[[:space:]]*false' "$skill_md"; then
+  # Only the leading frontmatter block (between the first two --- lines)
+  # decides the filter: a skill body may legitimately quote either key at
+  # column 0 (say, a fenced example documenting it), and a body match must
+  # never drop a skill.
+  frontmatter="$(awk 'NR == 1 { if ($0 != "---") exit; next }
+                      /^---$/ { exit }
+                      { print }' "$skill_md")"
+  if printf '%s\n' "$frontmatter" \
+    | grep -Eq '^user-invocable[[:space:]]*:[[:space:]]*false'; then
     continue
   fi
   # Codex ignores `disable-model-invocation`, silently downgrading a hard
-  # guard to prose. The safe projection is not to install the skill.
-  if grep -Eq '^disable-model-invocation:[[:space:]]*true' "$skill_md"; then
-    echo "  Skipping ${skill_name}: relies on disable-model-invocation," \
-      "which Codex ignores (see docs/codex.md)"
-    continue
+  # guard to prose. The safe projection is not to install the skill. Fail
+  # closed: YAML admits many truthy spellings ("true", True, yes, on,
+  # !!bool true), and linking on a misread guard is the unsafe direction —
+  # so the key's presence excludes the skill unless its value is a
+  # recognized falsey form.
+  dmi_line="$(printf '%s\n' "$frontmatter" \
+    | grep -E '^disable-model-invocation[[:space:]]*:' | head -n 1 || true)"
+  if [ -n "$dmi_line" ]; then
+    dmi_value="${dmi_line#*:}"
+    dmi_value="${dmi_value#"${dmi_value%%[![:space:]]*}"}"
+    dmi_value="${dmi_value%"${dmi_value##*[![:space:]]}"}"
+    dmi_value="${dmi_value#[\"\']}"
+    dmi_value="${dmi_value%[\"\']}"
+    case "$dmi_value" in
+      false | False | FALSE | no | No | NO | off | Off | OFF) ;;
+      *)
+        echo "  Skipping ${skill_name}: sets disable-model-invocation," \
+          "which Codex ignores (see docs/codex.md)"
+        continue
+        ;;
+    esac
   fi
   ln -s "$skill_dir" "${TEAM_DIR}/${skill_name}"
   LINKED_NAMES="${LINKED_NAMES}team:${skill_name}"$'\n'
@@ -158,7 +184,7 @@ echo "  Linked: ${LINK_COUNT} skills into ${TEAM_DIR}"
 
 # --- Self-check against the real catalog: mismatch fails, truncation reports.
 # `codex debug prompt-input` renders the injected catalog with no API call.
-echo "Running self-check (mismatch fails, truncation reports)..."
+echo "Running self-check (any mismatch fails)..."
 DEBUG_OUT="$(codex debug prompt-input 2>&1 || true)"
 
 EXPECTED_SET="$(printf '%s' "$LINKED_NAMES" | sort -u)"
@@ -166,10 +192,14 @@ EXPECTED_SET="$(printf '%s' "$LINKED_NAMES" | sort -u)"
 # entry to <checkout>/skills/<name>/SKILL.md, so only entries served from
 # this checkout count. A bare `team:` grep would also match a co-tenant
 # description that merely contains the string, failing the install for a
-# non-bug reason.
+# non-bug reason. The checkout prefix is matched as a literal string
+# (awk index, not a regex), so no path character needs escaping.
 CATALOG_SET="$(printf '%s\n' "$DEBUG_OUT" \
-  | grep -oE "\(file: ${PLUGIN_ROOT}/skills/[A-Za-z0-9_-]+/SKILL\.md\)" \
-  | sed -E 's|.*/([A-Za-z0-9_-]+)/SKILL\.md\)$|team:\1|' \
+  | grep -oE '\(file: [^)]+/SKILL\.md\)' \
+  | sed -E 's/^\(file: (.*)\)$/\1/' \
+  | ROOT_PREFIX="${PLUGIN_ROOT}/skills/" \
+    awk 'index($0, ENVIRON["ROOT_PREFIX"]) == 1' \
+  | sed -E 's|.*/([A-Za-z0-9_-]+)/SKILL\.md$|team:\1|' \
   | sort -u || true)"
 
 if [ "$CATALOG_SET" != "$EXPECTED_SET" ]; then
@@ -178,14 +208,17 @@ if [ "$CATALOG_SET" != "$EXPECTED_SET" ]; then
   printf '%s\n' "$EXPECTED_SET" | sed 's/^/  /' >&2
   echo "Catalog:" >&2
   printf '%s\n' "$CATALOG_SET" | sed 's/^/  /' >&2
+  # An over-budget catalog cites abbreviated paths against a "Skill roots"
+  # alias table, which the full-path anchor cannot match. Codex emits no
+  # warning text for this, so the compressed rendering is the only signal.
+  if printf '%s\n' "$DEBUG_OUT" | grep -q 'Skill roots'; then
+    echo "Note: the catalog is over budget. Codex compressed it, citing" >&2
+    echo "abbreviated paths against a skill-roots table. The linked set" >&2
+    echo "plus co-tenant skills no longer fits the budget whole." >&2
+  fi
   echo "The links under ${TEAM_DIR} remain installed and Codex will serve" >&2
   echo "them. Run script/codex-dev-uninstall to remove them." >&2
   exit 1
-fi
-
-if printf '%s\n' "$DEBUG_OUT" | grep -qi 'truncat'; then
-  echo "WARNING: Codex reported truncation in the skill catalog (report-only):"
-  printf '%s\n' "$DEBUG_OUT" | grep -i 'truncat' | sed 's/^/  /'
 fi
 
 echo

@@ -1,33 +1,32 @@
 // tests/codex-dev-install.test.ts
 //
 // Acceptance tests for the Codex CLI dev install pair,
-// `script/codex-dev-install` and `script/codex-dev-uninstall`
-// (docs/plans/57-codex-skills-install/). One file spans slices 1-2 (A3):
-// slice 1 owns the install tests below; slice 2 appends the uninstall tests.
+// `script/codex-dev-install` and `script/codex-dev-uninstall`.
 //
-// Two layers per docs/testing.md:
+// Two layers:
 //
-// - L2 forbidden-pattern tripwire (§2 L2, :124-125): the codex-dev-* scripts
-//   must NEVER reference Codex's `plugins/cache` path. The Claude Code
-//   dev-install trick — replacing the plugin cache dir with a symlink to the
-//   checkout — makes Codex report the plugin `not installed` and drops the
-//   catalog to zero skills (research run 3). Porting it would silently break
-//   the install. Written in the same change as the scripts.
+// - L2 forbidden-pattern tripwire: the codex-dev-* scripts must NEVER
+//   reference Codex's `plugins/cache` path. The Claude Code dev-install
+//   trick — replacing the plugin cache dir with a symlink to the checkout —
+//   makes Codex report the plugin `not installed` and drops the catalog to
+//   zero skills. Porting it would silently break the install.
 //
-// - L3 subprocess-snapshot (§2 L3, :171-178; fake CLI on PATH per :358-360):
-//   the install script must refuse to delete any non-symlink entry under its
-//   script-owned `team/` directory. The real target resolves into a
-//   git-tracked dotfiles repo, so the guard is what makes user-data
-//   destruction impossible. Per plan assumption P1 the script derives its
-//   target root from `${HOME}/.agents/skills`, so tests isolate with
-//   HOME=<tempdir>. No test drives or mocks the real `codex` catalog
-//   (design decision 7) — the catalog self-check stays script-side.
+// - L3 subprocess-snapshot with a fake `codex` on PATH: the install script
+//   must refuse to delete any non-symlink entry under its script-owned
+//   `team/` directory. The real target can resolve into a git-tracked
+//   dotfiles repo, so that guard is what makes user-data destruction
+//   impossible. Both scripts derive their target root from
+//   `${HOME}/.agents/skills`, so every test isolates with HOME=<tempdir>.
+//   No test drives or mocks the real `codex` catalog — the catalog
+//   self-check stays script-side.
 
 import { afterAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import {
   chmodSync,
+  copyFileSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -44,7 +43,7 @@ const SCRIPT_DIR = join(REPO_ROOT, "script");
 const INSTALL_SCRIPT = join(SCRIPT_DIR, "codex-dev-install");
 const UNINSTALL_SCRIPT = join(SCRIPT_DIR, "codex-dev-uninstall");
 
-// Hermetic temp dirs keyed by pid (docs/testing.md L1 rule), cleaned up after.
+// Hermetic temp dirs keyed by pid, cleaned up after.
 const fixtures: string[] = [];
 afterAll(() => {
   for (const dir of fixtures) rmSync(dir, { recursive: true, force: true });
@@ -56,13 +55,13 @@ function newTempDir(prefix: string): string {
   return dir;
 }
 
-// A fake `codex` on PATH (docs/testing.md:358-360 — stub the boundary, never
-// the subject). `plugin list` reports a clean slate so the coexistence guard
-// passes and the run reaches the delete guard under test. Anything else
-// (e.g. `debug prompt-input`) exits 0 with no output — if a buggy script got
-// past the guard, its self-check would then fail, and the file-intact
-// assertion below would catch the destruction. With `pluginListFails`,
-// `plugin list` instead exits 1, to drive the guard's fail-closed path.
+// A fake `codex` on PATH — stub the boundary, never the subject. `plugin
+// list` reports a clean slate so the coexistence guard passes and the run
+// reaches the filter and delete guard under test. Anything else (e.g.
+// `debug prompt-input`) exits 0 with no output — if a buggy script got past
+// the guard, its self-check would then fail, and the file-intact assertion
+// below would catch the destruction. With `pluginListFails`, `plugin list`
+// instead exits 1, to drive the guard's fail-closed path.
 function makeStubCodexDir(pluginListFails = false): string {
   const dir = newTempDir("codex-stub");
   const stub = join(dir, "codex");
@@ -83,20 +82,28 @@ function makeStubCodexDir(pluginListFails = false): string {
   return dir;
 }
 
-// The link set the installer must produce, re-derived from the live skills
-// tree (never a hard-coded count): every skill whose frontmatter carries
-// neither `user-invocable: false` nor `disable-model-invocation: true` —
-// Codex ignores the latter key, so relying on it must exclude the skill.
-function expectedLinkedSkills(): string[] {
-  return readdirSync(join(REPO_ROOT, "skills")).filter((name) => {
-    const md = join(REPO_ROOT, "skills", name, "SKILL.md");
-    if (!existsSync(md)) return false;
-    const text = readFileSync(md, "utf8");
-    return (
-      !/^user-invocable:\s*false/m.test(text) &&
-      !/^disable-model-invocation:\s*true/m.test(text)
+// A synthetic checkout: the real install script copied under script/, plus a
+// hand-authored skills/ tree. The script derives its skill source from its
+// own location, so running the copy exercises the real filter against
+// fixtures whose expected outcome is written by hand — an oracle
+// independent of the script's own parsing.
+function makeFixtureCheckout(
+  skills: Array<{ name: string; frontmatter: string; body?: string }>,
+): string {
+  const root = newTempDir("fixture-checkout");
+  mkdirSync(join(root, "script"), { recursive: true });
+  const script = join(root, "script", "codex-dev-install");
+  copyFileSync(INSTALL_SCRIPT, script);
+  chmodSync(script, 0o755);
+  for (const skill of skills) {
+    const dir = join(root, "skills", skill.name);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
+      join(dir, "SKILL.md"),
+      `---\n${skill.frontmatter}\n---\n${skill.body ?? "Body.\n"}`,
     );
-  });
+  }
+  return root;
 }
 
 // Spawn a codex-dev-* script with an isolated HOME and the stub codex first
@@ -116,10 +123,9 @@ function runScript(script: string, env: { HOME: string; PATH: string }) {
   };
 }
 
-describe("slice 1: codex-dev-install", () => {
-  // The "never port the cache symlink swap" rule (design decision 7;
-  // docs/testing.md forbidden-pattern tripwire). Scans every codex-dev-*
-  // script — slice 2's uninstaller is covered by the same glob with no edit.
+describe("codex-dev-install", () => {
+  // The "never port the cache symlink swap" rule. Scans every codex-dev-*
+  // script — the uninstaller is covered by the same glob with no edit.
   test("L2 tripwire: codex-dev-* scripts never reference plugins/cache", () => {
     const scripts = readdirSync(SCRIPT_DIR)
       .filter((name) => name.startsWith("codex-dev-"))
@@ -134,10 +140,9 @@ describe("slice 1: codex-dev-install", () => {
     expect(combined).not.toContain("plugins/cache");
   });
 
-  // The delete guard (design edge case "first-run collision"): a foreign
-  // regular file inside the script-owned team/ directory must abort the run
-  // — non-zero exit, entry named, nothing deleted. The script must never
-  // destroy user data it did not create.
+  // The delete guard: a foreign regular file inside the script-owned team/
+  // directory must abort the run — non-zero exit, entry named, nothing
+  // deleted. The script must never destroy user data it did not create.
   test("L3 delete guard: non-symlink entry in team/ aborts, file intact", () => {
     const home = newTempDir("codex-home");
     const teamDir = join(home, ".agents", "skills", "team");
@@ -158,12 +163,13 @@ describe("slice 1: codex-dev-install", () => {
     );
   });
 
-  // The frontmatter filter, derived mechanically from the live skills tree.
-  // A skill relying on `disable-model-invocation: true` (a hard guard Codex
-  // ignores) must never be linked. The stub codex returns an empty catalog,
-  // so the self-check mismatches — and per the documented semantics the run
-  // exits non-zero with the links left installed.
-  test("L3 filter: links exactly the Codex-safe set; mismatch leaves links", () => {
+  // The frontmatter filter against the live skills tree, asserted pointwise
+  // (a re-derived expected set would restate the script's own parsing and
+  // prove nothing). A skill relying on `disable-model-invocation` — a hard
+  // guard Codex ignores — must never be linked. The stub codex returns an
+  // empty catalog, so the self-check mismatches — and per the documented
+  // semantics the run exits non-zero with the links left installed.
+  test("L3 filter: live tree links entry points, never the guard-reliant skill", () => {
     const home = newTempDir("codex-home");
     const stubDir = makeStubCodexDir();
 
@@ -173,16 +179,73 @@ describe("slice 1: codex-dev-install", () => {
     });
 
     const teamDir = join(home, ".agents", "skills", "team");
-    const linked = readdirSync(teamDir).sort();
-    expect(linked).toEqual(expectedLinkedSkills().sort());
-    expect(linked).not.toContain("pr-approve-watch");
+    const linked = readdirSync(teamDir);
+    expect(linked).toContain("shipit");
+    expect(linked).toContain("code-review");
+    expect(linked).not.toContain("pr-approve-watch"); // guard-reliant
+    expect(linked).not.toContain("git-commit"); // user-invocable: false
     expect(r.status).toBeGreaterThan(0); // self-check mismatch on empty stub
     expect(r.output).toContain("codex-dev-uninstall"); // points at the remedy
   });
 
-  // Fail closed (design decision 5): when `codex plugin list` itself fails,
-  // the coexistence guard proves nothing and must abort before any
-  // filesystem change — never silently pass on empty output.
+  // Fail closed on every YAML spelling of the guard: the filter must treat
+  // `disable-model-invocation` as set unless its value is a recognized
+  // falsey form. A skill body quoting either key at column 0 must never
+  // filter — only the frontmatter block decides.
+  test("L3 filter: fixture tree — guard spellings never link, bodies never filter", () => {
+    const mustNotLink = [
+      { name: "guard-plain", frontmatter: "disable-model-invocation: true" },
+      { name: "guard-quoted", frontmatter: 'disable-model-invocation: "true"' },
+      { name: "guard-single", frontmatter: "disable-model-invocation: 'true'" },
+      { name: "guard-capital", frontmatter: "disable-model-invocation: True" },
+      { name: "guard-upper", frontmatter: "disable-model-invocation: TRUE" },
+      { name: "guard-yes", frontmatter: "disable-model-invocation: yes" },
+      { name: "guard-on", frontmatter: "disable-model-invocation: on" },
+      {
+        name: "guard-tagged",
+        frontmatter: "disable-model-invocation: !!bool true",
+      },
+      { name: "guard-spaced", frontmatter: "disable-model-invocation : true" },
+      { name: "guard-bare", frontmatter: "disable-model-invocation:" },
+      { name: "not-invocable", frontmatter: "user-invocable: false" },
+    ];
+    const mustLink = [
+      { name: "plain", frontmatter: "description: a plain skill" },
+      {
+        name: "guard-off",
+        frontmatter: "disable-model-invocation: false",
+      },
+      {
+        name: "body-mention",
+        frontmatter: "description: documents the keys",
+        body: [
+          "A fenced example documenting both keys:",
+          "```yaml",
+          "user-invocable: false",
+          "disable-model-invocation: true",
+          "```",
+          "",
+        ].join("\n"),
+      },
+    ];
+    const checkout = makeFixtureCheckout([...mustNotLink, ...mustLink]);
+    const home = newTempDir("codex-home");
+    const stubDir = makeStubCodexDir();
+
+    const r = runScript(join(checkout, "script", "codex-dev-install"), {
+      HOME: home,
+      PATH: `${stubDir}:${process.env.PATH}`,
+    });
+
+    const teamDir = join(home, ".agents", "skills", "team");
+    const linked = readdirSync(teamDir).sort();
+    expect(linked).toEqual(mustLink.map((s) => s.name).sort());
+    expect(r.status).toBeGreaterThan(0); // self-check mismatch on empty stub
+  });
+
+  // Fail closed: when `codex plugin list` itself fails, the coexistence
+  // guard proves nothing and must abort before any filesystem change —
+  // never silently pass on empty output.
   test("L3 guard: failing `codex plugin list` aborts before linking", () => {
     const home = newTempDir("codex-home");
     const stubDir = makeStubCodexDir(true);
@@ -197,12 +260,12 @@ describe("slice 1: codex-dev-install", () => {
   });
 });
 
-describe("slice 2: codex-dev-uninstall", () => {
+describe("codex-dev-uninstall", () => {
   // The uninstaller needs no codex on PATH (it never invokes it), so these
   // tests pass the real PATH through unchanged.
 
-  // Mirror cleanup (plan assumption P5): remove the symlink tree, then each
-  // now-empty parent; a second run finds nothing and still exits 0.
+  // Mirror cleanup: remove the symlink tree, then each now-empty parent; a
+  // second run finds nothing and still exits 0.
   test("L3: uninstall removes symlink tree and empty parents; idempotent", () => {
     const home = newTempDir("codex-home");
     const skillsDir = join(home, ".agents", "skills");
@@ -249,6 +312,29 @@ describe("slice 2: codex-dev-uninstall", () => {
     expect(existsSync(join(dotfiles, "agents"))).toBe(true);
     // existsSync resolves symlinks: true means the root is not dangling.
     expect(existsSync(join(home, ".agents", "skills"))).toBe(true);
+  });
+
+  // Same ownership boundary one level up: with `~/.agents` itself the
+  // symlink and `skills/` a real directory inside its target, parent
+  // cleanup must not reach through and remove the user's real directory.
+  test("L3: symlink at ~/.agents — cleanup never reaches through", () => {
+    const home = newTempDir("codex-home");
+    const dotfiles = newTempDir("dotfiles");
+    const realAgents = join(dotfiles, "agents");
+    const teamDir = join(realAgents, "skills", "team");
+    mkdirSync(teamDir, { recursive: true });
+    symlinkSync(realAgents, join(home, ".agents"));
+    symlinkSync(newTempDir("skill-target"), join(teamDir, "alpha"));
+
+    const r = runScript(UNINSTALL_SCRIPT, {
+      HOME: home,
+      PATH: process.env.PATH ?? "",
+    });
+
+    expect(r.status).toBe(0);
+    expect(existsSync(teamDir)).toBe(false); // team/ links removed
+    expect(existsSync(join(realAgents, "skills"))).toBe(true); // real dir survives
+    expect(lstatSync(join(home, ".agents")).isSymbolicLink()).toBe(true);
   });
 
   // The same delete guard as the installer: user data the script did not

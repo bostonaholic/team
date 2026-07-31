@@ -56,10 +56,14 @@ else
 fi
 
 # Remove now-empty parents at the pre-resolution path only; silence
-# otherwise (mirrors script/dev-uninstall). When the root is a symlink,
-# `rmdir` fails on it and both the link and its target survive — this
-# script never created them.
-rmdir "$LOGICAL_ROOT" 2>/dev/null || true
-rmdir "$(dirname "$LOGICAL_ROOT")" 2>/dev/null || true
+# otherwise (mirrors script/dev-uninstall). `rmdir` on a symlink always
+# fails, so a symlink at the skills level survives with its target. A
+# symlink one level up (~/.agents itself) needs the explicit guard below:
+# the skills path would resolve THROUGH it into a directory the user owns,
+# and `rmdir` would delete that directory.
+if [ ! -L "$(dirname "$LOGICAL_ROOT")" ]; then
+  rmdir "$LOGICAL_ROOT" 2>/dev/null || true
+  rmdir "$(dirname "$LOGICAL_ROOT")" 2>/dev/null || true
+fi
 
 echo "Done."
