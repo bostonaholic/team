@@ -195,14 +195,20 @@ describe("codex-dev-install", () => {
     expect(r.output).toContain("codex-dev-uninstall"); // points at the remedy
   });
 
-  // Fail closed on every YAML spelling of the guard: the filter must treat
-  // `disable-model-invocation` as set unless its value is a recognized
-  // falsey form. A skill body quoting either key at column 0 must never
-  // filter — only the frontmatter block decides. The frontmatter scan must
-  // fail safe on malformed files too: CRLF endings, a leading blank line,
-  // a `---` inside a quoted value, a duplicate key (last wins, as YAML), a
-  // quoted key, and a file with no delimiters at all (whole-file fallback;
-  // over-exclusion is the safe failure) must never fail open into a link.
+  // Fail closed on every YAML spelling of the guard: `disable-model-
+  // invocation` links only when absent, or when every occurrence
+  // normalizes to a recognized falsey token inside a well-formed
+  // frontmatter block. Any non-falsey occurrence anywhere excludes —
+  // position never matters, so a duplicate with one truthy value, an
+  // over-scan that pulls a falsey body line into the region, a
+  // mismatched quote pair, and a file with no delimiters at all must
+  // never fail open into a link. A skill body quoting either key at
+  // column 0 must never filter a *well-formed* skill — only the
+  // frontmatter block decides. The scan must fail safe on malformed
+  // files too: CRLF endings, a leading blank line, a `---` inside a
+  // quoted value, a quoted key. And a skill dropped for any reason
+  // other than a well-formed authored `user-invocable: false` must be
+  // dropped LOUDLY (a per-skill Skipping line), never silently.
   test("L3 filter: fixture tree — guard spellings never link, bodies never filter", () => {
     const mustNotLink = [
       { name: "guard-plain", frontmatter: "disable-model-invocation: true" },
@@ -228,6 +234,20 @@ describe("codex-dev-install", () => {
           "disable-model-invocation: false\ndisable-model-invocation: true",
       },
       {
+        // Any truthy occurrence excludes, even when a later falsey one
+        // would win under YAML's last-wins reading: a duplicated guard
+        // key is ambiguous, and ambiguity fails closed.
+        name: "guard-dup-true-then-false",
+        frontmatter:
+          "disable-model-invocation: true\ndisable-model-invocation: false",
+      },
+      {
+        // Quotes are stripped only as a MATCHED pair: `"false'` must not
+        // reduce to a falsey token.
+        name: "guard-mismatched-quotes",
+        frontmatter: "disable-model-invocation: \"false'",
+      },
+      {
         name: "guard-crlf",
         raw: "---\r\ndisable-model-invocation: true\r\n---\r\nBody.\r\n",
       },
@@ -249,6 +269,24 @@ describe("codex-dev-install", () => {
         ].join("\n"),
       },
       {
+        // The round-4 security repro: an unmatched quote inside a
+        // description block over-scans past the closing `---`, pulling a
+        // FALSEY body occurrence into the region after the real truthy
+        // guard. Last-wins would fail open here; any-truthy-excludes
+        // must not.
+        name: "guard-overscan-falsey-body",
+        raw: [
+          "---",
+          "description: |",
+          '  Watches for the trigger word: "approve in review threads.',
+          "disable-model-invocation: true",
+          "---",
+          "Body prose.",
+          "disable-model-invocation: false",
+          "",
+        ].join("\n"),
+      },
+      {
         name: "guard-no-delimiters",
         raw: "No frontmatter at all.\ndisable-model-invocation: true\nBody.\n",
       },
@@ -258,6 +296,19 @@ describe("codex-dev-install", () => {
         frontmatter: 'user-invocable: "false"',
       },
       { name: "not-invocable-upper", frontmatter: "user-invocable: FALSE" },
+      {
+        // A trailing YAML comment must not defeat classification: this
+        // reads as false to any YAML parser and must skip.
+        name: "not-invocable-comment",
+        frontmatter: "user-invocable: false # not an entry point",
+      },
+      {
+        // A delimiter-less file whose body carries the key at column 0:
+        // the whole-file fallback drops it — but LOUDLY (asserted on
+        // output below), never as a silent disappearance.
+        name: "not-invocable-no-delimiters",
+        raw: "No delimiters here.\nuser-invocable: false\nBody.\n",
+      },
     ];
     const mustLink = [
       { name: "plain", frontmatter: "description: a plain skill" },
@@ -266,9 +317,16 @@ describe("codex-dev-install", () => {
         frontmatter: "disable-model-invocation: false",
       },
       {
-        name: "guard-dup-last-false",
+        // A trailing comment on a falsey guard still reads as falsey.
+        name: "guard-off-comment",
+        frontmatter: "disable-model-invocation: false # opted out",
+      },
+      {
+        // Duplicates are ambiguous only when they disagree: every
+        // occurrence falsey is an unambiguous opt-out.
+        name: "guard-dup-all-falsey",
         frontmatter:
-          "disable-model-invocation: true\ndisable-model-invocation: false",
+          "disable-model-invocation: false\ndisable-model-invocation: no",
       },
       {
         name: "body-mention",
@@ -296,6 +354,13 @@ describe("codex-dev-install", () => {
     const linked = readdirSync(teamDir).sort();
     expect(linked).toEqual(mustLink.map((s) => s.name).sort());
     expect(r.status).toBeGreaterThan(0); // self-check mismatch on empty stub
+    // Loud-drop contract: a skill dropped for any reason other than a
+    // well-formed authored `user-invocable: false` names itself.
+    expect(r.output).toContain("Skipping not-invocable-no-delimiters");
+    expect(r.output).toContain("Skipping guard-overscan-falsey-body");
+    // The one silent drop: well-formed authored user-invocable: false.
+    expect(r.output).not.toContain("Skipping not-invocable-comment");
+    expect(r.output).not.toContain("Skipping not-invocable-quoted");
   });
 
   // Fail closed: when `codex plugin list` itself fails, the coexistence

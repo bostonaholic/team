@@ -10,7 +10,10 @@ set -euo pipefail
 # - `disable-model-invocation` — Codex ignores this key, so a skill
 #   that relies on it as a hard guard (pr-approve-watch: an approval can
 #   transitively trigger an irreversible auto-merge) must not be installed
-#   on this host. See docs/codex.md for the manual opt-in.
+#   on this host. Fail-closed by construction: the key's presence excludes
+#   the skill unless every occurrence is a recognized falsey token inside
+#   a well-formed frontmatter block. See docs/codex.md for the manual
+#   opt-in.
 #
 # Never touches Codex's plugin cache directory. Replacing that cached copy
 # with a symlink — the script/dev-install trick for Claude Code — makes
@@ -106,7 +109,13 @@ elif [ -d "$TEAM_DIR" ]; then
   done
   OLD_ROOT=""
   for entry in "$TEAM_DIR"/*; do
-    entry_root="$(dirname "$(dirname "$(readlink "$entry")")")"
+    # A relative symlink target resolves against the link's own directory.
+    entry_target="$(readlink "$entry")"
+    case "$entry_target" in
+      /*) ;;
+      *) entry_target="${TEAM_DIR}/${entry_target}" ;;
+    esac
+    entry_root="$(dirname "$(dirname "$entry_target")")"
     if [ "$entry_root" != "$PLUGIN_ROOT" ]; then
       OLD_ROOT="$entry_root"
     fi
@@ -129,22 +138,71 @@ fi
 echo "Installing Team skills for Codex CLI (dev)..."
 echo "  Source: ${PLUGIN_ROOT}"
 
-# Extract a top-level key's value from $frontmatter. The key may be bare
-# or quoted; the last occurrence wins (as a YAML parser would take it);
-# the value is whitespace-trimmed with one layer of quotes stripped.
-# Returns non-zero when the key is absent, so callers can tell "absent"
-# from "present with an empty value".
-fm_value() {
-  local key="$1" line value
-  line="$(printf '%s\n' "$frontmatter" \
-    | grep -E "^[\"']?${key}[\"']?[[:space:]]*:" | tail -n 1 || true)"
-  [ -n "$line" ] || return 1
-  value="${line#*:}"
+# The two filter keys are classified asymmetrically, on purpose:
+#
+# - `disable-model-invocation` protects a hard guard Codex would silently
+#   ignore, so its handling is fail-closed BY CONSTRUCTION: the skill
+#   links only when the key is absent, or when the frontmatter block is
+#   well formed AND every occurrence of the key — at any indentation, at
+#   any position — normalizes to a recognized falsey token. Anything
+#   else (unparseable file, unmatched quote, duplicate with a non-falsey
+#   value, unrecognized spelling) excludes.
+# - `user-invocable` merely marks non-entry-points. Over-linking is
+#   catalog noise, not a safety issue, so it stays permissive: the last
+#   column-0 occurrence wins (as a YAML parser reads a duplicate), a
+#   recognized falsey value skips, and anything else links. The column-0
+#   anchor cannot see a uniformly indented top-level mapping (YAML
+#   allows one); that corner is accepted — the guard key does not share
+#   it, because its match takes any indentation.
+
+# Normalize one raw scalar (everything after the key's colon): strip a
+# trailing `#` comment, trim whitespace, and remove one MATCHED pair of
+# surrounding quotes. An unmatched or mismatched quote survives
+# normalization, so it can never classify as falsey.
+normalize_value() {
+  local value="$1"
+  value="${value%%[[:space:]]\#*}"
   value="${value#"${value%%[![:space:]]*}"}"
   value="${value%"${value##*[![:space:]]}"}"
-  value="${value#[\"\']}"
-  value="${value%[\"\']}"
+  case "$value" in
+    \#*) value="" ;;
+  esac
+  if [ "${#value}" -ge 2 ]; then
+    case "$value" in
+      \"*\" | \'*\') value="${value:1:${#value}-2}" ;;
+    esac
+  fi
   printf '%s' "$value"
+}
+
+# The explicit falsey allowlist. Everything unrecognized is non-falsey.
+is_falsey() {
+  case "$(normalize_value "$1")" in
+    false | False | FALSE | no | No | NO | off | Off | OFF) return 0 ;;
+  esac
+  return 1
+}
+
+# Key matching against $frontmatter. `key_present` answers presence;
+# `key_values` prints every occurrence's raw post-colon value, one per
+# line. The key may be bare or quoted. Anchor `top` matches column 0
+# only; `anywhere` also matches indented occurrences.
+key_pattern() {
+  local key="$1" anchor="$2" prefix="^"
+  if [ "$anchor" = "anywhere" ]; then
+    prefix="^[[:space:]]*"
+  fi
+  printf '%s' "${prefix}[\"']?${key}[\"']?[[:space:]]*:"
+}
+
+key_present() {
+  printf '%s\n' "$frontmatter" | grep -qE "$(key_pattern "$1" "$2")"
+}
+
+key_values() {
+  printf '%s\n' "$frontmatter" \
+    | grep -E "$(key_pattern "$1" "$2")" \
+    | sed 's/^[^:]*://' || true
 }
 
 mkdir -p "$TEAM_DIR"
@@ -153,29 +211,32 @@ LINK_COUNT=0
 for skill_md in "$PLUGIN_ROOT"/skills/*/SKILL.md; do
   skill_dir="$(dirname "$skill_md")"
   skill_name="$(basename "$skill_dir")"
-  # Only the leading frontmatter block decides the filter: a skill body
-  # may legitimately quote either key at column 0 (say, a fenced example
-  # documenting it), and a body match must never drop a skill. The scan
-  # tolerates CRLF endings and leading blank lines, and tracks quoted
-  # scalars so a `---` inside a quoted value does not end the block
-  # early. When no leading `---` exists it scans the whole file instead:
-  # over-exclusion is the safe failure, never a silently-empty block.
-  frontmatter="$(awk '
+  # Only a well-formed leading frontmatter block decides the filter: a
+  # skill body may legitimately quote either key at column 0 (say, a
+  # fenced example documenting it), and a body match must never drop a
+  # well-formed skill. The scan tolerates CRLF endings and leading blank
+  # lines, and tracks quoted scalars so a `---` inside a quoted value
+  # does not end the block early. Its first output line reports the
+  # block's shape — `ok` (properly closed), `missing` (no leading `---`;
+  # the whole file is scanned instead), or `unclosed` (never closed; the
+  # rest of the file is scanned) — so the filters below can fail closed
+  # when the scanned region is not trustworthy frontmatter.
+  scan="$(awk '
     { sub(/\r$/, "") }
     state == 0 {
       if ($0 ~ /^[[:space:]]*$/) next
       if ($0 == "---") { state = 1; next }
       state = 2
     }
-    state == 2 { print; next }
+    state == 2 { lines[++n] = $0; next }
     quote != "" {
-      print
+      lines[++n] = $0
       if (gsub(quote, quote) % 2 == 1) quote = ""
       next
     }
-    $0 == "---" { exit }
+    $0 == "---" { closed = 1; exit }
     {
-      print
+      lines[++n] = $0
       if (match($0, /:[[:space:]]*"/)) {
         rest = substr($0, RSTART + RLENGTH)
         if (gsub(/"/, "\"", rest) % 2 == 0) quote = "\""
@@ -183,32 +244,56 @@ for skill_md in "$PLUGIN_ROOT"/skills/*/SKILL.md; do
         rest = substr($0, RSTART + RLENGTH)
         if (gsub("\047", "\047", rest) % 2 == 0) quote = "\047"
       }
+    }
+    END {
+      if (state == 2) print "missing"
+      else if (closed) print "ok"
+      else if (state == 1) print "unclosed"
+      else print "ok"
+      for (i = 1; i <= n; i++) print lines[i]
     }' "$skill_md")"
-  # `user-invocable` false forms mark a non-entry-point: skip it. An
-  # unrecognized value falls through and links — over-linking is mere
-  # catalog noise, the safe direction for this key.
-  if ui_value="$(fm_value user-invocable)"; then
-    case "$ui_value" in
-      false | False | FALSE | no | No | NO | off | Off | OFF)
-        continue
-        ;;
-    esac
+  fm_status="${scan%%$'\n'*}"
+  frontmatter=""
+  case "$scan" in
+    *$'\n'*) frontmatter="${scan#*$'\n'}" ;;
+  esac
+  # `user-invocable` — the permissive filter (see the classification
+  # comment above). A skip from a well-formed block is the authored
+  # non-entry-point case and stays silent; any other drop is loud, so a
+  # skill can never vanish from the catalog without a trace.
+  if key_present user-invocable top; then
+    ui_last="$(key_values user-invocable top | tail -n 1)"
+    if is_falsey "$ui_last"; then
+      if [ "$fm_status" != "ok" ]; then
+        echo "  Skipping ${skill_name}: user-invocable: false matched, but" \
+          "the frontmatter block is malformed (${fm_status} delimiters) —" \
+          "verify the file"
+      fi
+      continue
+    fi
   fi
-  # Codex ignores `disable-model-invocation`, silently downgrading a hard
-  # guard to prose. The safe projection is not to install the skill. Fail
-  # closed: YAML admits many truthy spellings ("true", True, yes, on,
-  # !!bool true), and linking on a misread guard is the unsafe direction —
-  # so the key's presence excludes the skill unless its value is a
-  # recognized falsey form.
-  if dmi_value="$(fm_value disable-model-invocation)"; then
-    case "$dmi_value" in
-      false | False | FALSE | no | No | NO | off | Off | OFF) ;;
-      *)
-        echo "  Skipping ${skill_name}: sets disable-model-invocation," \
-          "which Codex ignores (see docs/codex.md)"
-        continue
-        ;;
-    esac
+  # `disable-model-invocation` — the fail-closed filter (see the
+  # classification comment above). Codex ignores this key, silently
+  # downgrading a hard guard to prose, so the only safe projection of an
+  # unverified guard is to not install the skill.
+  guard_reason=""
+  if key_present disable-model-invocation anywhere; then
+    if [ "$fm_status" != "ok" ]; then
+      guard_reason="mentions disable-model-invocation and the frontmatter \
+block is malformed (${fm_status} delimiters) — failing closed"
+    else
+      while IFS= read -r raw_value; do
+        if ! is_falsey "$raw_value"; then
+          guard_reason="sets disable-model-invocation, which Codex ignores \
+(see docs/codex.md)"
+          break
+        fi
+      done <<<"$(key_values disable-model-invocation anywhere)"
+    fi
+  fi
+  if [ -n "$guard_reason" ]; then
+    echo "  Skipping ${skill_name}: ${guard_reason}"
+    continue
   fi
   ln -s "$skill_dir" "${TEAM_DIR}/${skill_name}"
   LINKED_NAMES="${LINKED_NAMES}team:${skill_name}"$'\n'
