@@ -70,3 +70,35 @@ jobs:
 
           gh release create "v$V" --repo "$GITHUB_REPOSITORY" --title "v$V" --notes-file notes.md
           echo "Published release v$V."
+
+  repo-description:
+    name: Repo description matches the plugin description
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # The plugin description is asserted across every manifest by
+      # tests/version-consistency.test.ts. The GitHub repo description is the
+      # one copy no test can reach, so it is checked here, after merge.
+      #
+      # This reports rather than syncs: PATCH /repos/{owner}/{repo} needs admin
+      # rights, and GITHUB_TOKEN has no permission scope that grants them. A
+      # true auto-sync would need a PAT secret. The fix is one command, printed
+      # below on failure.
+      - name: Compare repo description to plugin.json
+        run: |
+          set -euo pipefail
+          WANT=$(jq -r .description .claude-plugin/plugin.json)
+          HAVE=$(gh api "repos/$GITHUB_REPOSITORY" --jq '.description // ""')
+          if [ "$WANT" = "$HAVE" ]; then
+            echo "OK: repo description matches plugin.json."
+            exit 0
+          fi
+          echo "::error::repo description does not match .claude-plugin/plugin.json"
+          echo "  plugin.json: $WANT"
+          echo "  repo:        $HAVE"
+          echo "Fix with:"
+          echo "  gh api -X PATCH repos/$GITHUB_REPOSITORY -f description=\"\$(jq -r .description .claude-plugin/plugin.json)\""
+          exit 1

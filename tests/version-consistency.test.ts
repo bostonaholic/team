@@ -69,6 +69,27 @@ describe("manifest consistency: hosts agree on names", () => {
   });
 });
 
+// One description, everywhere a user can read it. Each host renders its own
+// manifest in its own plugin listing, so a drifted string means the same
+// release describes itself differently depending on where it was installed
+// from. `release-on-merge.yml` extends the same check to the GitHub repo
+// description, which no test can reach.
+describe("manifest consistency: one description", () => {
+  const description: string = plugin.description;
+
+  test("the description is non-empty", () => {
+    expect(description.length).toBeGreaterThan(0);
+  });
+
+  test("every manifest and package.json carries the same description", () => {
+    expect(marketplace.metadata.description).toBe(description);
+    expect(marketplace.plugins[0].description).toBe(description);
+    expect(codexPlugin.description).toBe(description);
+    expect(codexMarketplace.plugins[0].description).toBe(description);
+    expect(pkg.description).toBe(description);
+  });
+});
+
 describe("version consistency: drift guard (land-time model)", () => {
   // Lock the rewrite: the dropped released-changelog invariants must not creep
   // back into this tripwire. They live with `version-bump`'s land-time assertion

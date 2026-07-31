@@ -1,7 +1,7 @@
 {
   "name": "team",
   "version": "0.30.0",
-  "description": "Drive a feature from idea to PR with a team of Claude Code agents.",
+  "description": "Orchestrates specialized agents to autonomously implement entire features end-to-end",
   "license": "MIT",
   "type": "module",
   "engines": {
