@@ -158,17 +158,18 @@ Two severity regimes apply:
 
   The comment-text checks read comments only. A diff with zero comments
   passes them trivially — never manufacture a comment-text finding. A
-  missing-why finding is separate and narrow. Raise it only when the diff
-  introduces or rewrites code whose behavior is shaped by a constraint in
-  the Document non-obvious constraints list, or by a deliberate oddity,
-  AND you can name the exact constraint and the consequence of removing
-  or simplifying the code. It is a
+  missing-why finding is separate and narrow. Raise it only when both
+  conditions hold. First, the diff introduces or rewrites code whose
+  behavior is shaped by a constraint in the Document non-obvious
+  constraints list, or by a deliberate oddity. Second, you can name the
+  exact constraint and the consequence of removing or simplifying the
+  code. It is a
   `suggestion (non-blocking): Comment Discipline` finding. It never
   carries the `issue (blocking)` decoration, never forces a REQUEST
   CHANGES verdict, and never escalates on repetition. The absence of
   comments is never by itself evidence. When in doubt, stay silent. A
   missing doc comment on a new public contract is not licensed by this
-  gate — that half is enforced at authoring time by the canonical
+  gate. That half is enforced at authoring time by the canonical
   standard, not by the reviewer.
 
   A pre-existing TODO or FIXME — one already in the file before this

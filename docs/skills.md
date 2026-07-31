@@ -571,10 +571,11 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   comments in code comments block on first occurrence. What-restating
   comments, wordy comments, and commented-out code escalate from
   `suggestion:` to `issue:` when repeated across the diff. The same style
-  tier covers the judgment classes: process narration, comments far from
-  the code they explain, vague or speculative comments, duplicated
-  documentation, fragile positional references, stale comments, style
-  divergence, and signature-restating doc comments. A constraint-gated
+  tier covers the judgment classes. These are process narration, comments
+  far from the code they explain, and vague or speculative comments. They
+  also include duplicated documentation, fragile positional references,
+  stale comments, style divergence, and signature-restating doc comments.
+  A constraint-gated
   missing-why finding is capped at `suggestion (non-blocking)` and never
   forces a REQUEST CHANGES verdict. Also carries the
   Code Reviewer inspection process (done-criteria verification and the
