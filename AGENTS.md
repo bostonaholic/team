@@ -28,7 +28,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 | Work tracking | [GitHub Project board](https://github.com/users/bostonaholic/projects/5/views/1) | Plugin developers |
 | Behavioral regression harness | `tests/`, `evals/` | Plugin developers |
 | Versioning & release automation | [docs/versioning.md](docs/versioning.md), `.claude/skills/version-bump/`, `.claude/scripts/next-version.sh`, `.github/workflows/` | Plugin developers |
-| Codex CLI skills install | [docs/codex.md](docs/codex.md), `script/codex-dev-install`/`codex-dev-uninstall` | Codex users & plugin developers |
+| Codex CLI skills install | `script/codex-dev-install`/`codex-dev-uninstall` | Codex users & plugin developers |
 
 **Rule of thumb:** If it validates that the plugin is *built correctly*, it is a dev concern (`.claude/`). If it runs *as part of the plugin's functionality*, it is runtime (`hooks/`).
 

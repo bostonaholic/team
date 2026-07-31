@@ -11,9 +11,8 @@ set -euo pipefail
 # `disable-model-invocation` is deliberately NOT a filter here. Codex
 # ignores the key, so `pr-approve-watch` is model-invocable on this host
 # even though its approval action can transitively trigger an
-# irreversible auto-merge. The user accepted that exposure explicitly
-# (2026-07-31) and chose to install the skill like any other. See the
-# disclosure in docs/codex.md before reintroducing any filter on it.
+# irreversible auto-merge. That exposure is accepted: the skill installs
+# like any other, and the install run says so on stdout.
 #
 # Never touches Codex's plugin cache directory. Replacing that cached copy
 # with a symlink — the script/dev-install trick for Claude Code — makes
@@ -269,6 +268,8 @@ if [ "$LINK_COUNT" -eq 0 ]; then
 fi
 
 echo "  Linked: ${LINK_COUNT} skills into ${TEAM_DIR}"
+echo "  NOTE: pr-approve-watch is model-invocable on Codex, which ignores" \
+     "disable-model-invocation. Its approval can transitively merge a PR."
 
 # --- Self-check against the real catalog: any mismatch fails, and budget
 # truncation surfaces as a mismatch too (see the header note).

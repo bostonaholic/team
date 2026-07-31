@@ -83,7 +83,7 @@ its host's idiom. Claude Code keeps its current `.claude-plugin/plugin.json` and
 `agents/*.md`, `skills/*/SKILL.md`, and TOML commands. A Codex build emits
 `.codex/` with config.toml or hooks.json and `agents/*.md`. Skills need no build
 step on Codex, which discovers `.claude-plugin/plugin.json` and loads `skills/`
-directly (see [docs/codex.md](codex.md)).
+directly.
 The high-churn binding layer stays isolated from the stable cores. A host API
 change thus touches one shim, not 68 definition files.
 

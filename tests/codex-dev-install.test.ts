@@ -203,8 +203,8 @@ describe("codex-dev-install", () => {
   // a duplicate); anything else links. A skill body quoting the key at
   // column 0 must never filter a *well-formed* skill — only the
   // frontmatter block decides. `disable-model-invocation` must NOT
-  // filter: Codex ignores the key, and the user explicitly accepted
-  // installing the one skill that sets it (see docs/codex.md). And a
+  // filter: Codex ignores the key, so the one skill that sets it
+  // installs like any other and the run says so on stdout. And a
   // skill dropped for any reason other than a well-formed authored
   // `user-invocable: false` must be dropped LOUDLY (a per-skill
   // Skipping line), never silently.
@@ -235,8 +235,8 @@ describe("codex-dev-install", () => {
       {
         // Pins the reversal of the old guard-key exclusion: a skill
         // setting `disable-model-invocation: true` links like any other.
-        // Codex ignores the key, and the user accepted that exposure
-        // explicitly rather than exclude the skill (docs/codex.md).
+        // Codex ignores the key, so excluding the skill would buy
+        // nothing; the exposure is accepted and announced instead.
         name: "guard-key-set",
         frontmatter: "disable-model-invocation: true",
       },
