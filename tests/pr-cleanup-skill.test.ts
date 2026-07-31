@@ -22,7 +22,8 @@ import { frontmatter, read } from "./helpers/text";
 const REPO_ROOT = process.cwd();
 // pr-cleanup is a RUNTIME skill — under skills/ (distributed), not .claude/.
 const SKILL = join(REPO_ROOT, "skills", "pr-cleanup", "SKILL.md");
-// Slice 3 wires worktree-isolation's teardown preamble to this skill.
+// worktree-isolation's teardown hands off to pr-cleanup; the cross-reference
+// is pinned below so a rename of either side fails the build.
 const WORKTREE_ISOLATION = join(
   REPO_ROOT,
   "skills",
@@ -81,8 +82,10 @@ describe("pr-cleanup skill: runtime standalone utility frontmatter", () => {
     expect(f).toContain("/pr-cleanup");
   });
 
-  test("description carries the Mode B invoke guard (explicit abandon intent)", () => {
-    expect(flat(fm())).toContain("abandon");
+  test("description carries the Mode B invoke guard (quoted abandon trigger cue)", () => {
+    // The quoted user cue is a template string the description tells the
+    // model to match on — a contract, unlike the surrounding prose.
+    expect(flat(fm())).toContain(`"abandon this"`);
   });
 
   test("frontmatter does NOT set disable-model-invocation (model-invocable by design)", () => {
@@ -175,11 +178,11 @@ describe("pr-cleanup skill: command contracts (all $PRIMARY_ROOT-anchored)", () 
     expect(body()).toContain(`git -C "$PRIMARY_ROOT" branch -D --`);
   });
 
-  test("remote-branch check is anchored (C18: ls-remote --heads origin)", () => {
+  test("remote-branch check is anchored (ls-remote --heads origin)", () => {
     expect(body()).toContain(`git -C "$PRIMARY_ROOT" ls-remote --heads origin`);
   });
 
-  test("prune offer is anchored (C19: remote prune origin)", () => {
+  test("prune offer is anchored (remote prune origin)", () => {
     expect(body()).toContain(`git -C "$PRIMARY_ROOT" remote prune origin`);
   });
 
@@ -232,14 +235,66 @@ describe("pr-cleanup skill: destructive-step gates", () => {
   test("scratch removal takes a $PRIMARY_ROOT-absolute path", () => {
     expect(body()).toContain(`rm -rf "$PRIMARY_ROOT/docs/plans/`);
   });
+
+  test("scratch removal refuses an unset or multi-segment $ID", () => {
+    const t = body();
+    // The single-segment allowlist (no /, no leading . or -) plus the
+    // hard-stop expansion: an empty $ID must never target all of docs/plans/.
+    expect(t).toContain("''|-*|.*|*[!A-Za-z0-9._-]*");
+    expect(t).toContain("${ID:?}");
+  });
 });
 
 describe("pr-cleanup skill: protected-branch refusal identifiers", () => {
   test("refuses master, develop, and release/* alongside the default branch", () => {
+    // Sliced to Step 2 so the assertion cannot be satisfied by `master`
+    // appearing elsewhere (e.g. the step 1 offline fallback).
+    const s = sliceBetween("### Step 2", "### Step 3");
+    expect(s).toContain("master");
+    expect(s).toContain("develop");
+    expect(s).toContain("release/");
+  });
+});
+
+describe("pr-cleanup skill: external names are shell-gated, not just ref-gated", () => {
+  test("pins the character allowlist over every externally sourced name", () => {
+    expect(body()).toContain("''|-*|*..*|*[!A-Za-z0-9._/-]*");
+  });
+
+  test("external names are captured into a variable, never inlined literally", () => {
+    expect(body()).toContain("--json headRefName --jq .headRefName");
+  });
+});
+
+describe("pr-cleanup skill: step 0 hardening contracts", () => {
+  test("resolution failure is detectable before dirname runs", () => {
+    expect(body()).toContain(`[ -n "$COMMON_DIR" ]`);
+  });
+
+  test("validation additionally requires show-toplevel equality", () => {
+    const s = sliceBetween("### Step 0", "### Step 1");
+    expect(s).toContain("rev-parse --show-toplevel");
+  });
+
+  test("derives $REPO for gh anchoring instead of cwd auto-detection", () => {
     const t = body();
-    expect(t).toContain("master");
-    expect(t).toContain("develop");
-    expect(t).toContain("release/");
+    expect(t).toContain("gh repo view --json nameWithOwner");
+    expect(t).toContain(`--repo "$REPO"`);
+  });
+});
+
+describe("pr-cleanup skill: option terminators at every branch-name sink", () => {
+  test("both branch -D call sites take -- before the name", () => {
+    const hits = body().match(/branch -D -- "\$BRANCH"/g) ?? [];
+    expect(hits.length).toBe(2);
+  });
+
+  test("the remote-branch check takes -- before the name", () => {
+    expect(body()).toContain(`ls-remote --heads origin -- "$BRANCH"`);
+  });
+
+  test("the remote deletion takes -- before the name", () => {
+    expect(body()).toContain(`push origin --delete -- "$BRANCH"`);
   });
 });
 

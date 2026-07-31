@@ -148,8 +148,13 @@ describe("pr-verify skill: test-plan extraction", () => {
     expect(body()).toContain("nothing to verify");
   });
 
-  test("accepts a pasted description as the third input path", () => {
-    expect(body()).toContain("pasted");
+  test("the ## Input section lists exactly three input paths", () => {
+    // Structural pin: three bolded bullet items (PR number/URL, current
+    // branch's PR, pasted description) — wording-free, so a rewrite that
+    // keeps all three paths stays green and dropping one goes red.
+    const inputSection = sliceBetween("## Input", "\n## ");
+    const bullets = inputSection.match(/^- \*\*/gm) ?? [];
+    expect(bullets.length).toBe(3);
   });
 });
 
