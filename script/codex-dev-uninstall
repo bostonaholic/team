@@ -1,69 +1,37 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Remove the Codex CLI skill symlinks that script/codex-dev-install created
-# under <root>/team/, where <root> is the resolved physical path of
-# ~/.agents/skills. Deletes only symlink entries — a foreign non-symlink
-# entry aborts with nothing deleted. Idempotent: absent state exits 0.
+# Mirrors script/dev-uninstall for Codex CLI.
+#
+# Removes only the symlink script/codex-dev-install created. Its parent
+# directories can be user-owned — `~/.agents/skills` is often a checkout of
+# a dotfiles repo — so unlike script/dev-uninstall, which owns its whole
+# cache path, this one never removes a parent.
 
-TARGET_ROOT="${HOME}/.agents/skills"
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SKILLS_SRC="${PLUGIN_ROOT}/skills"
+TARGET="${HOME}/.agents/skills/team"
 
-# Absent or dangling root — nothing to do
-if [ -L "$TARGET_ROOT" ] && [ ! -e "$TARGET_ROOT" ]; then
-  echo "Nothing to do: ${TARGET_ROOT} is a dangling symlink."
+echo "Uninstalling Team skills for Codex (dev)..."
+echo
+
+if [ ! -L "$TARGET" ] && [ ! -e "$TARGET" ]; then
+  echo "  Nothing to do: ${TARGET} does not exist."
   exit 0
 fi
-if [ ! -d "$TARGET_ROOT" ]; then
-  echo "Nothing to do: ${TARGET_ROOT} does not exist."
-  exit 0
-fi
 
-# Operate on the physical path (the root may be a symlink into a dotfiles
-# repo), but keep the pre-resolution path: parent cleanup must never reach
-# through the symlink — the resolved parents belong to the user, not to us.
-LOGICAL_ROOT="$TARGET_ROOT"
-TARGET_ROOT="$(cd "$TARGET_ROOT" && pwd -P)"
-TEAM_DIR="${TARGET_ROOT}/team"
-
-echo "Uninstalling Team skills for Codex CLI (dev)..."
-
-if [ -L "$TEAM_DIR" ]; then
-  # A single symlink (e.g. a manual whole-tree link). Removing the link
-  # itself destroys no data.
-  rm "$TEAM_DIR"
-  echo "  Removed symlink: ${TEAM_DIR}"
-elif [ -d "$TEAM_DIR" ]; then
-  shopt -s nullglob dotglob
-  for entry in "$TEAM_DIR"/*; do
-    if [ ! -L "$entry" ]; then
-      echo "Error: refusing to delete non-symlink entry: ${entry}" >&2
-      echo "  This entry was not created by codex-dev-install. Nothing was deleted." >&2
-      exit 1
-    fi
-  done
-  REMOVED=0
-  for entry in "$TEAM_DIR"/*; do
-    rm "$entry"
-    REMOVED=$((REMOVED + 1))
-  done
-  rmdir "$TEAM_DIR"
-  echo "  Removed: ${REMOVED} skill links and ${TEAM_DIR}"
-elif [ -e "$TEAM_DIR" ]; then
-  echo "Error: refusing to delete non-symlink entry: ${TEAM_DIR}" >&2
+if [ ! -L "$TARGET" ]; then
+  echo "Error: ${TARGET} is not a symlink — this script did not create it." >&2
+  echo "Nothing was removed. Move it by hand if you meant to." >&2
   exit 1
-else
-  echo "  Already absent: ${TEAM_DIR}"
 fi
 
-# Remove now-empty parents at the pre-resolution path only; silence
-# otherwise (mirrors script/dev-uninstall). `rmdir` on a symlink always
-# fails, so a symlink at the skills level survives with its target. A
-# symlink one level up (~/.agents itself) needs the explicit guard below:
-# the skills path would resolve THROUGH it into a directory the user owns,
-# and `rmdir` would delete that directory.
-if [ ! -L "$(dirname "$LOGICAL_ROOT")" ]; then
-  rmdir "$LOGICAL_ROOT" 2>/dev/null || true
-  rmdir "$(dirname "$LOGICAL_ROOT")" 2>/dev/null || true
+LINKED_TO="$(readlink "$TARGET")"
+rm "$TARGET"
+echo "  Removed: ${TARGET} → ${LINKED_TO}"
+if [ "$LINKED_TO" != "$SKILLS_SRC" ]; then
+  echo "  Note: that link pointed at another checkout, not ${SKILLS_SRC}."
 fi
 
-echo "Done."
+echo
+echo "Done. Codex drops the skills at the next thread start."

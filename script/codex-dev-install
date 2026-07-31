@@ -1,315 +1,48 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Symlink Team's user-invocable skills into Codex CLI's user-scope skill
-# root: one link per skill under <root>/team/, where <root> is the resolved
-# physical path of ~/.agents/skills. Live-editable; re-run to refresh.
+# Mirrors script/dev-install for Codex CLI. Symlinks this checkout's
+# skills/ into Codex's user-scope skill root, so edits are live.
 #
-# One frontmatter key excludes a skill from linking:
-# - `user-invocable: false` — not an entry point.
+# Codex follows directory symlinks when it scans, and canonicalizes each
+# skill back to this checkout — so it finds .claude-plugin/plugin.json
+# above them and names them `team:<name>`.
 #
-# `disable-model-invocation` is deliberately NOT a filter here. Codex
-# ignores the key, so `pr-approve-watch` is model-invocable on this host
-# even though its approval action can transitively trigger an
-# irreversible auto-merge. That exposure is accepted: the skill installs
-# like any other, and the install run says so on stdout.
-#
-# Never touches Codex's plugin cache directory. Replacing that cached copy
-# with a symlink — the script/dev-install trick for Claude Code — makes
-# Codex report the plugin `not installed` and drops the catalog to zero
-# skills.
-#
-# Self-check semantics: any mismatch fails (links stay installed — run
-# script/codex-dev-uninstall to remove them). An over-budget catalog is
-# compressed by Codex, which abbreviates every cited path, so budget
-# truncation surfaces as a mismatch too.
+# Never touch Codex's plugin cache. Replacing that cached copy with a
+# symlink — the trick script/dev-install uses for Claude Code — makes
+# Codex report the plugin `not installed` and empties the catalog.
 
-# Physical path: the Codex catalog cites the canonicalized SKILL.md path for
-# every entry, and the self-check anchors on that path.
-PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SKILLS_SRC="${PLUGIN_ROOT}/skills"
+TARGET="${HOME}/.agents/skills/team"
 
-# --- Preflight: codex must be on PATH, before any filesystem change
-if ! command -v codex >/dev/null 2>&1; then
-  echo "Error: codex not found on PATH. Install Codex CLI first." >&2
+if [ ! -d "$SKILLS_SRC" ]; then
+  echo "Error: no skills/ directory at ${PLUGIN_ROOT}" >&2
   exit 1
 fi
 
-# --- Coexistence guard: abort only on an *installed* team@ plugin.
-# A bare marketplace registration prints `team@...  not installed` and must
-# proceed — `codex plugin remove team` could never clear it.
-# Fail closed: a failing `codex plugin list` proves nothing about collisions,
-# and an unverified ambiguity must not pass the guard.
-if ! PLUGIN_LIST="$(codex plugin list 2>&1)"; then
-  echo "Error: 'codex plugin list' failed — cannot verify that no installed" >&2
-  echo "team@ plugin collides with these links. Output:" >&2
-  printf '%s\n' "$PLUGIN_LIST" | sed 's/^/  /' >&2
-  exit 1
+# Already linked — nothing to do
+if [ -L "$TARGET" ] && [ "$(readlink "$TARGET")" = "$SKILLS_SRC" ]; then
+  echo "Team skills already installed for Codex (dev)."
+  exit 0
 fi
-while IFS= read -r line; do
-  case "$line" in
-    team@*)
-      if [[ "$line" != *"not installed"* ]]; then
-        echo "Error: an installed Codex plugin would collide with these links:" >&2
-        echo "  ${line}" >&2
-        echo "Remove it first: codex plugin remove team" >&2
-        exit 1
-      fi
-      ;;
-  esac
-done <<<"$PLUGIN_LIST"
 
-# --- Root handling: create, resolve, verify, announce — then write
-TARGET_ROOT="${HOME}/.agents/skills"
-
-if [ -L "$TARGET_ROOT" ] && [ ! -e "$TARGET_ROOT" ]; then
-  echo "Error: ${TARGET_ROOT} is a dangling symlink. Fix or remove it first." >&2
-  exit 1
-fi
-if [ ! -e "$TARGET_ROOT" ]; then
-  mkdir -p "$TARGET_ROOT"
-fi
-if [ ! -d "$TARGET_ROOT" ]; then
-  echo "Error: ${TARGET_ROOT} exists but is not a directory." >&2
+# The parent can be a user-owned checkout (a dotfiles repo, say), so
+# refuse anything this script did not create rather than replacing it.
+if [ -e "$TARGET" ] && [ ! -L "$TARGET" ]; then
+  echo "Error: ${TARGET} exists and is not a symlink. Move it, then re-run." >&2
   exit 1
 fi
 
-# Operate on the physical path (the root may be a symlink into a dotfiles repo)
-TARGET_ROOT="$(cd "$TARGET_ROOT" && pwd -P)"
+echo "Installing Team skills for Codex (dev)..."
+echo "  Source: ${SKILLS_SRC}"
+echo
 
-if [ ! -w "$TARGET_ROOT" ]; then
-  echo "Error: ${TARGET_ROOT} is not writable." >&2
-  exit 1
-fi
-
-if git -C "$TARGET_ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  echo "WARNING: ${TARGET_ROOT} is inside a git work tree."
-  echo "  This script creates symlinks under ${TARGET_ROOT}/team/."
-  echo "  Consider adding agents/skills/team/ to that repository's gitignore."
-fi
-
-TEAM_DIR="${TARGET_ROOT}/team"
-
-# --- Delete guard + rebuild: the script owns team/, but refuses to delete
-# anything it did not create. Every abort fires before the first deletion.
-shopt -s nullglob dotglob
-if [ -L "$TEAM_DIR" ]; then
-  # A single symlink (e.g. a manual whole-tree link). Removing the link
-  # itself destroys no data.
-  echo "  Replacing existing symlink: ${TEAM_DIR} -> $(readlink "$TEAM_DIR")"
-  rm "$TEAM_DIR"
-elif [ -d "$TEAM_DIR" ]; then
-  for entry in "$TEAM_DIR"/*; do
-    if [ ! -L "$entry" ]; then
-      echo "Error: refusing to delete non-symlink entry: ${entry}" >&2
-      echo "  ${TEAM_DIR} is script-owned, but this entry was not created by" >&2
-      echo "  codex-dev-install. Nothing was deleted. Move the entry, then re-run." >&2
-      exit 1
-    fi
-  done
-  OLD_ROOT=""
-  for entry in "$TEAM_DIR"/*; do
-    # A relative symlink target resolves against the link's own directory.
-    entry_target="$(readlink "$entry")"
-    case "$entry_target" in
-      /*) ;;
-      *) entry_target="${TEAM_DIR}/${entry_target}" ;;
-    esac
-    entry_root="$(dirname "$(dirname "$entry_target")")"
-    if [ "$entry_root" != "$PLUGIN_ROOT" ]; then
-      OLD_ROOT="$entry_root"
-    fi
-  done
-  if [ -n "$OLD_ROOT" ]; then
-    echo "NOTICE: replacing links that resolve to a DIFFERENT checkout root."
-    echo "  old: ${OLD_ROOT}"
-    echo "  new: ${PLUGIN_ROOT}"
-    echo "  Codex will now serve skills from the new root (last writer wins)."
-  fi
-  rm -f "$TEAM_DIR"/*
-  rmdir "$TEAM_DIR"
-elif [ -e "$TEAM_DIR" ]; then
-  echo "Error: ${TEAM_DIR} exists but is not a directory or symlink." >&2
-  exit 1
-fi
-
-# --- Link creation: one link per skill whose frontmatter does not carry
-# the exclusion key (see header), re-derived on every run.
-echo "Installing Team skills for Codex CLI (dev)..."
-echo "  Source: ${PLUGIN_ROOT}"
-
-# `user-invocable` merely marks non-entry-points. Over-linking is
-# catalog noise, not a safety issue, so the filter stays permissive: the
-# last column-0 occurrence wins (as a YAML parser reads a duplicate), a
-# recognized falsey value skips, and anything else links. The column-0
-# anchor cannot see a uniformly indented top-level mapping (YAML allows
-# one); that corner is accepted.
-
-# Normalize one raw scalar (everything after the key's colon): strip a
-# trailing `#` comment, trim whitespace, and remove one MATCHED pair of
-# surrounding quotes. An unmatched or mismatched quote survives
-# normalization, so it can never classify as falsey.
-normalize_value() {
-  local value="$1"
-  value="${value%%[[:space:]]\#*}"
-  value="${value#"${value%%[![:space:]]*}"}"
-  value="${value%"${value##*[![:space:]]}"}"
-  case "$value" in
-    \#*) value="" ;;
-  esac
-  if [ "${#value}" -ge 2 ]; then
-    case "$value" in
-      \"*\" | \'*\') value="${value:1:${#value}-2}" ;;
-    esac
-  fi
-  printf '%s' "$value"
-}
-
-# The explicit falsey allowlist. Everything unrecognized is non-falsey.
-is_falsey() {
-  case "$(normalize_value "$1")" in
-    false | False | FALSE | no | No | NO | off | Off | OFF) return 0 ;;
-  esac
-  return 1
-}
-
-# Key matching against $frontmatter. `key_present` answers presence;
-# `key_values` prints every occurrence's raw post-colon value, one per
-# line. The key may be bare or quoted; only column-0 occurrences match.
-key_pattern() {
-  printf '%s' "^[\"']?${1}[\"']?[[:space:]]*:"
-}
-
-key_present() {
-  printf '%s\n' "$frontmatter" | grep -qE "$(key_pattern "$1")"
-}
-
-key_values() {
-  printf '%s\n' "$frontmatter" \
-    | grep -E "$(key_pattern "$1")" \
-    | sed 's/^[^:]*://' || true
-}
-
-mkdir -p "$TEAM_DIR"
-LINKED_NAMES=""
-LINK_COUNT=0
-for skill_md in "$PLUGIN_ROOT"/skills/*/SKILL.md; do
-  skill_dir="$(dirname "$skill_md")"
-  skill_name="$(basename "$skill_dir")"
-  # Only a well-formed leading frontmatter block decides the filter: a
-  # skill body may legitimately quote the key at column 0 (say, a
-  # fenced example documenting it), and a body match must never drop a
-  # well-formed skill. The scan tolerates CRLF endings and leading blank
-  # lines, and tracks quoted scalars so a `---` inside a quoted value
-  # does not end the block early. Its first output line reports the
-  # block's shape — `ok` (properly closed), `missing` (no leading `---`;
-  # the whole file is scanned instead), or `unclosed` (never closed; the
-  # rest of the file is scanned) — so the filter below can flag a drop
-  # loudly when the scanned region is not trustworthy frontmatter.
-  scan="$(awk '
-    { sub(/\r$/, "") }
-    state == 0 {
-      if ($0 ~ /^[[:space:]]*$/) next
-      if ($0 == "---") { state = 1; next }
-      state = 2
-    }
-    state == 2 { lines[++n] = $0; next }
-    quote != "" {
-      lines[++n] = $0
-      if (gsub(quote, quote) % 2 == 1) quote = ""
-      next
-    }
-    $0 == "---" { closed = 1; exit }
-    {
-      lines[++n] = $0
-      if (match($0, /:[[:space:]]*"/)) {
-        rest = substr($0, RSTART + RLENGTH)
-        if (gsub(/"/, "\"", rest) % 2 == 0) quote = "\""
-      } else if (match($0, ":[[:space:]]*\047")) {
-        rest = substr($0, RSTART + RLENGTH)
-        if (gsub("\047", "\047", rest) % 2 == 0) quote = "\047"
-      }
-    }
-    END {
-      if (state == 2) print "missing"
-      else if (closed) print "ok"
-      else if (state == 1) print "unclosed"
-      else print "ok"
-      for (i = 1; i <= n; i++) print lines[i]
-    }' "$skill_md")"
-  fm_status="${scan%%$'\n'*}"
-  frontmatter=""
-  case "$scan" in
-    *$'\n'*) frontmatter="${scan#*$'\n'}" ;;
-  esac
-  # `user-invocable` — the permissive filter (see the comment above the
-  # loop). A skip from a well-formed block is the authored
-  # non-entry-point case and stays silent; any other drop is loud, so a
-  # skill can never vanish from the catalog without a trace.
-  if key_present user-invocable; then
-    ui_last="$(key_values user-invocable | tail -n 1)"
-    if is_falsey "$ui_last"; then
-      if [ "$fm_status" != "ok" ]; then
-        echo "  Skipping ${skill_name}: user-invocable: false matched, but" \
-          "the frontmatter block is malformed (${fm_status} delimiters) —" \
-          "verify the file"
-      fi
-      continue
-    fi
-  fi
-  ln -s "$skill_dir" "${TEAM_DIR}/${skill_name}"
-  LINKED_NAMES="${LINKED_NAMES}team:${skill_name}"$'\n'
-  LINK_COUNT=$((LINK_COUNT + 1))
-done
-
-if [ "$LINK_COUNT" -eq 0 ]; then
-  rmdir "$TEAM_DIR" 2>/dev/null || true
-  echo "Error: zero skills passed the frontmatter filter — broken filter." >&2
-  exit 1
-fi
-
-echo "  Linked: ${LINK_COUNT} skills into ${TEAM_DIR}"
-echo "  NOTE: pr-approve-watch is model-invocable on Codex, which ignores" \
-     "disable-model-invocation. Its approval can transitively merge a PR."
-
-# --- Self-check against the real catalog: any mismatch fails, and budget
-# truncation surfaces as a mismatch too (see the header note).
-# `codex debug prompt-input` renders the injected catalog with no API call.
-echo "Running self-check (any mismatch fails)..."
-DEBUG_OUT="$(codex debug prompt-input 2>&1 || true)"
-
-EXPECTED_SET="$(printf '%s' "$LINKED_NAMES" | sort -u)"
-# Anchor extraction on the cited source path: the catalog canonicalizes each
-# entry to <checkout>/skills/<name>/SKILL.md, so only entries served from
-# this checkout count. A bare `team:` grep would also match a co-tenant
-# description that merely contains the string, failing the install for a
-# non-bug reason. The checkout prefix is matched as a literal string
-# (awk index, not a regex), so no path character needs escaping.
-CATALOG_SET="$(printf '%s\n' "$DEBUG_OUT" \
-  | grep -oE '\(file: [^)]+/SKILL\.md\)' \
-  | sed -E 's/^\(file: (.*)\)$/\1/' \
-  | ROOT_PREFIX="${PLUGIN_ROOT}/skills/" \
-    awk 'index($0, ENVIRON["ROOT_PREFIX"]) == 1' \
-  | sed -E 's|.*/([A-Za-z0-9_-]+)/SKILL\.md$|team:\1|' \
-  | sort -u || true)"
-
-if [ "$CATALOG_SET" != "$EXPECTED_SET" ]; then
-  echo "Error: self-check MISMATCH — links created vs. Codex catalog." >&2
-  echo "Linked (${LINK_COUNT}):" >&2
-  printf '%s\n' "$EXPECTED_SET" | sed 's/^/  /' >&2
-  echo "Catalog:" >&2
-  printf '%s\n' "$CATALOG_SET" | sed 's/^/  /' >&2
-  # An over-budget catalog cites abbreviated paths against a "Skill roots"
-  # alias table, which the full-path anchor cannot match. Codex emits no
-  # warning text for this, so the compressed rendering is the only signal.
-  if printf '%s\n' "$DEBUG_OUT" | grep -q 'Skill roots'; then
-    echo "Note: the catalog is over budget. Codex compressed it, citing" >&2
-    echo "abbreviated paths against a skill-roots table. The linked set" >&2
-    echo "plus co-tenant skills no longer fits the budget whole." >&2
-  fi
-  echo "The links under ${TEAM_DIR} remain installed and Codex will serve" >&2
-  echo "them. Run script/codex-dev-uninstall to remove them." >&2
-  exit 1
-fi
+mkdir -p "$(dirname "$TARGET")"
+ln -sfn "$SKILLS_SRC" "$TARGET"
+echo "  Linked: ${TARGET} → ${SKILLS_SRC}"
+echo "  Note: pr-approve-watch is model-invocable on Codex, which ignores"
+echo "        disable-model-invocation. Its approval can merge a PR."
 
 echo
-echo "Done. Codex sessions pick up the catalog at next thread start."
+echo "Done. Codex loads the skills at the next thread start."

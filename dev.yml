@@ -23,10 +23,10 @@ commands:
     desc: "Unregister plugin and clean up cache"
     run: "script/dev-uninstall"
   codex-install:
-    desc: "Symlink the user-invocable Team skills into ~/.agents/skills for Codex CLI"
+    desc: "Symlink this checkout's skills into ~/.agents/skills for Codex CLI"
     run: "script/codex-dev-install"
   codex-uninstall:
-    desc: "Remove the Codex CLI skill symlinks and clean up empty parents"
+    desc: "Remove the Codex CLI skills symlink"
     run: "script/codex-dev-uninstall"
   docs:
     desc: "Build and serve the docs site locally at http://localhost:4000"

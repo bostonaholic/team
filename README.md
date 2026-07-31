@@ -90,9 +90,60 @@ inline images.
 
 ## Install
 
-```
+Team is a Claude Code plugin, and Codex CLI reads the same
+`.claude-plugin/` manifests — so one repo installs on both. Pick your host.
+
+<details>
+<summary><strong>Claude Code</strong></summary>
+
+```bash
 claude plugin add /path/to/team
 ```
+
+That is the whole install. Skills register as slash commands (`/team`,
+`/shipit`), and agents and hooks load with them.
+
+</details>
+
+<details>
+<summary><strong>Codex CLI</strong></summary>
+
+```bash
+codex plugin marketplace add /path/to/team
+codex plugin add team@team-dev
+```
+
+Codex discovers `.claude-plugin/plugin.json` natively and takes `skills/`
+as the plugin's skill root, so nothing needs building or converting.
+
+Two differences worth knowing. Skills arrive **namespaced** — ask for
+`team:shipit`, not `shipit`. And Codex budgets its skill catalog, so with
+all 51 skills present it shortens the longer descriptions; the skills still
+load and still work.
+
+The `/team-*` pipeline commands load on Codex but cannot dispatch Claude
+Code agents there, so they will not run the pipeline. The standalone
+utilities — `team:shipit`, `team:pr-watch`, `team:pr-open-comments`,
+`team:groom-backlog`, `team:code-review` — work as they do on Claude Code.
+
+</details>
+
+<details>
+<summary><strong>Working on Team itself</strong></summary>
+
+Both hosts install a *copy*, so edits to your checkout do not show up until
+you reinstall. For live edits, use the dev scripts:
+
+```bash
+dev install          # Claude Code
+dev codex-install    # Codex CLI
+```
+
+Each links your checkout into the host's own location, so a skill edit
+lands on the next session with no reinstall. `dev uninstall` and
+`dev codex-uninstall` undo them.
+
+</details>
 
 ## Architecture
 
