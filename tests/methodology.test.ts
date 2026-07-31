@@ -939,6 +939,18 @@ describe("comment red flags (L2 content tripwire)", () => {
     // ticket-like tokens outside comment syntax (string literals).
     expect(/upstream/i.test(flags)).toBe(true);
     expect(/string literals/i.test(flags)).toBe(true);
+    // Residency: process narration is a judgment class, so it lives in the
+    // Style-escalation bucket — a promotion to blocking fails here.
+    const styleBucket = sliceBetween(flags, "Style escalation", "Not violations");
+    expect(styleBucket.length).toBeGreaterThan(0);
+    expect(/process narration/i.test(styleBucket)).toBe(true);
+    // Residency: the constraint-gated missing-why carve-out lives in the
+    // Not-violations list (marker to end of slice — its own sub-slice, never
+    // shared with Style escalation).
+    const notViolationsStart = flags.indexOf("Not violations");
+    const notViolations = notViolationsStart === -1 ? "" : flags.slice(notViolationsStart);
+    expect(notViolations.length).toBeGreaterThan(0);
+    expect(/missing-why/i.test(notViolations)).toBe(true);
   });
 
   test("code-reviewer defers the comment-discipline check to the skill", () => {
