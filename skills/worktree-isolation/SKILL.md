@@ -148,16 +148,53 @@ When teardown is warranted (post-merge or on explicit request):
 2. Empty worktrees clean up automatically.
 3. If manual cleanup is needed: `git -C <repo-path> worktree remove
    <worktree-path>` and `git -C <repo-path> branch -D <id>`.
-4. After the worktree is gone, update the repo's local default branch
+4. **Assert the path is actually gone.** `git worktree remove` exits 0 and
+   does delete gitignored files, but a long-lived process still anchored to
+   the old absolute path — an editor language server, a hook writing
+   per-session state — can `mkdir -p` it straight back. Re-check the path,
+   and delete a reappeared one only when it is
+   `<repo-root>/.claude/worktrees/<name>`: never a path still listed by
+   `git worktree list`, and never a primary clone.
+5. After the worktree is gone, update the repo's local default branch
    with the merge: `git -C <repo-path> pull --rebase origin <base>`.
    Always rebase — never a merge commit — so history stays linear.
-5. Remove the feature's local planning docs: `rm -rf docs/plans/<id>`.
+6. Remove the feature's local planning docs: `rm -rf docs/plans/<id>`.
    These are untracked QRSPI scratch that only existed to drive the work
    to a merged PR. Deleting them is part of teardown, alongside the
    branch and worktree. Verify the directory is untracked first
    (`git ls-files docs/plans/<id>` returns nothing) and remove only that
    feature's `<id>` directory — never sibling dirs for other in-flight
    work.
+7. **Sweep residue as the final action.** Recreation lands *after* the
+   removal command returns — seconds to hours later — so a check inside
+   that same command cannot catch it, and the sweep is not redundant with
+   step 4. It re-checks the removed path plus every sibling under
+   `.claude/worktrees/` that `git worktree list` no longer knows about. A
+   directory is deleted only when it is pure regenerable residue: no
+   `.git` entry, and no files outside `tmp/`, `.omc/`, and `docs/plans/`.
+
+   ```sh
+   root="$(git -C <repo-path> rev-parse --show-toplevel)"
+   live="$(git -C "$root" worktree list --porcelain | sed -n 's/^worktree //p')"
+   for dir in "$root"/.claude/worktrees/*; do
+     [ -d "$dir" ] || continue
+     printf '%s\n' "$live" | grep -qxF "$dir" && continue
+     if [ -e "$dir/.git" ]; then
+       echo "kept (still a checkout): $dir"; continue
+     fi
+     extra="$(find "$dir" -type f \
+       -not -path "$dir/tmp/*" -not -path "$dir/.omc/*" -not -path "$dir/docs/plans/*")"
+     if [ -n "$extra" ]; then
+       printf 'kept (holds unexpected files): %s\n%s\n' "$dir" "$extra"
+     else
+       rm -rf "$dir" && echo "swept: $dir"
+     fi
+   done
+   ```
+
+   Report the outcome either way: name each swept directory, or say no
+   residue was found. A kept directory is surfaced to the user with the
+   files it holds — never deleted silently, never left unreported.
 
 ## Gitignored Files
 
