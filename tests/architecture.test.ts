@@ -299,6 +299,12 @@ describe("user-invocable trigger phrases", () => {
       // one "phrase" and pass with zero real trigger phrases. A quote that
       // opens but never closes on the line is an unsupported style — throw
       // rather than scan text that YAML would parse differently.
+      // The other block indicators are unused here. Returned as-is they
+      // would become the whole "description", so the skill lists as an
+      // offender for the wrong reason. Throw with the real cause instead.
+      if (/^[|>][0-9+-]*$/.test(inline)) {
+        throw new Error(`unsupported description scalar style: ${inline}`);
+      }
       const quote = inline[0];
       if (quote === '"' || quote === "'") {
         if (inline.length < 2 || !inline.endsWith(quote)) {

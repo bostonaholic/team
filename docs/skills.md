@@ -648,7 +648,9 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Loaded by:** code-reviewer, security-reviewer, ux-reviewer,
   technical-writer (4).
 - **Key behaviors:** Defines how a reviewer reads with fresh eyes and emits
-  a structured verdict. Findings use the format defined in
+  a structured verdict. Invoked directly, it dispatches the `code-reviewer`
+  agent rather than reviewing inline — the main session holds the
+  conversation history the skill forbids. Findings use the format defined in
   `conventional-comments`. The ux-reviewer is the exception: its
   live-verification report uses its own Working/Broken/Could Improve
   format. The gate-type and severity-tier map lives in

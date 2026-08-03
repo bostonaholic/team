@@ -909,3 +909,22 @@ describe("checks and balances", () => {
     expect(/\b5 rounds\b/.test(tiers)).toBe(true);
   });
 });
+
+describe("code-review direct invocation preserves separation", () => {
+  // code-review is the one methodology skill a user can invoke. The main
+  // session holds the history the skill forbids, so the standalone path must
+  // hand off rather than review in place. Without this, the separation that
+  // the frontmatter enforces for the pipeline has no counterpart on the path
+  // a natural-language phrase reaches.
+  const CODE_REVIEW = read(join(REPO_ROOT, "skills", "code-review", "SKILL.md"));
+
+  test("the skill states the direct-invocation path", () => {
+    expect(CODE_REVIEW).toContain("## When Invoked Directly");
+  });
+
+  test("the direct path dispatches instead of reviewing inline", () => {
+    const text = flat(CODE_REVIEW);
+    expect(text).toContain("Do not review inline");
+    expect(/Dispatch the\s+`code-reviewer` agent/.test(text)).toBe(true);
+  });
+});
