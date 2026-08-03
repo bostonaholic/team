@@ -148,7 +148,9 @@ describe("engineering-standards methodology", () => {
   });
 
   test("skills.md code-review row unchanged", () => {
-    const row = filterRows(read(SKILLS_MD), "`code-review`", /^#|^>|SKILL\.md|\/\/|event/);
+    // Key on the table-row delimiter so prose mentions of the skill name
+    // elsewhere in the doc cannot crowd the row out of the 5-line window.
+    const row = filterRows(read(SKILLS_MD), "| `code-review` |", /^#|^>|SKILL\.md|\/\/|event/);
     for (const agent of ["code-reviewer", "security-reviewer", "ux-reviewer", "technical-writer"]) {
       expect(row).toContain(agent);
     }

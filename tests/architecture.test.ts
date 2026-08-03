@@ -70,7 +70,9 @@ describe("skill architecture", () => {
   });
 
   test("code-review row in docs/skills.md names all 4 consumer agents", () => {
-    const row = filterRows(read(SKILLS_MD), "`code-review`", /^#|^>|SKILL\.md|\/\/|event/);
+    // Key on the table-row delimiter so prose mentions of the skill name
+    // elsewhere in the doc cannot crowd the row out of the 5-line window.
+    const row = filterRows(read(SKILLS_MD), "| `code-review` |", /^#|^>|SKILL\.md|\/\/|event/);
     for (const agent of ["code-reviewer", "security-reviewer", "ux-reviewer", "technical-writer"]) {
       expect(row).toContain(agent);
     }
@@ -291,7 +293,24 @@ describe("user-invocable trigger phrases", () => {
     const start = lines.findIndex((line) => line.startsWith("description:"));
     if (start === -1) return "";
     const inline = lines[start].slice("description:".length).trim();
-    if (inline !== "" && inline !== "|") return inline;
+    if (inline !== "" && inline !== "|") {
+      // A fully-quoted inline scalar must be unwrapped: returned verbatim,
+      // its surrounding quotes would make matchAll treat the whole value as
+      // one "phrase" and pass with zero real trigger phrases. A quote that
+      // opens but never closes on the line is an unsupported style — throw
+      // rather than scan text that YAML would parse differently.
+      const quote = inline[0];
+      if (quote === '"' || quote === "'") {
+        if (inline.length < 2 || !inline.endsWith(quote)) {
+          throw new Error(`unsupported description scalar style: ${inline}`);
+        }
+        const body = inline.slice(1, -1);
+        return quote === '"'
+          ? body.replace(/\\"/g, '"')
+          : body.replace(/''/g, "'");
+      }
+      return inline;
+    }
     const block: string[] = [];
     for (let i = start + 1; i < lines.length; i++) {
       if (!/^\s+\S/.test(lines[i])) break;
