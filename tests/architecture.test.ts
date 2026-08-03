@@ -70,7 +70,9 @@ describe("skill architecture", () => {
   });
 
   test("code-review row in docs/skills.md names all 4 consumer agents", () => {
-    const row = filterRows(read(SKILLS_MD), "`code-review`", /^#|^>|SKILL\.md|\/\/|event/);
+    // Key on the table-row delimiter so prose mentions of the skill name
+    // elsewhere in the doc cannot crowd the row out of the 5-line window.
+    const row = filterRows(read(SKILLS_MD), "| `code-review` |", /^#|^>|SKILL\.md|\/\/|event/);
     for (const agent of ["code-reviewer", "security-reviewer", "ux-reviewer", "technical-writer"]) {
       expect(row).toContain(agent);
     }
@@ -276,6 +278,86 @@ describe("effort tiering", () => {
         expect(/^effort:/m.test(fm)).toBe(false);
       }
     }
+  });
+});
+
+describe("user-invocable trigger phrases", () => {
+  // Extract the description field's text only from a frontmatter slice,
+  // handling both YAML styles in use: single-line scalar
+  // (`description: <text>`) and block scalar (`description: |` followed by
+  // indented lines until the first non-indented line). Scoping to the
+  // description prevents a false positive on the quoted `argument-hint`
+  // value elsewhere in the frontmatter.
+  function descriptionText(fm: string): string {
+    const lines = fm.split("\n");
+    const start = lines.findIndex((line) => line.startsWith("description:"));
+    if (start === -1) return "";
+    const inline = (lines[start] ?? "").slice("description:".length).trim();
+    if (inline !== "" && inline !== "|") {
+      // A fully-quoted inline scalar must be unwrapped: returned verbatim,
+      // its surrounding quotes would make matchAll treat the whole value as
+      // one "phrase" and pass with zero real trigger phrases. A quote that
+      // opens but never closes on the line is an unsupported style — throw
+      // rather than scan text that YAML would parse differently.
+      const quote = inline[0];
+      if (quote === '"' || quote === "'") {
+        if (inline.length < 2 || !inline.endsWith(quote)) {
+          throw new Error(`unsupported description scalar style: ${inline}`);
+        }
+        const body = inline.slice(1, -1);
+        return quote === '"'
+          ? body.replace(/\\"/g, '"')
+          : body.replace(/''/g, "'");
+      }
+      return inline;
+    }
+    const block: string[] = [];
+    for (let i = start + 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (line === undefined || !/^\s+\S/.test(line)) break;
+      block.push(line.trim());
+    }
+    return block.join(" ");
+  }
+
+  // Every skills/*/SKILL.md that does not set `user-invocable: false` is a
+  // user-facing entry point and must carry routing triggers in its
+  // description. Offenders are collected and asserted empty so a single run
+  // names every non-conforming skill.
+  function userInvocableSkills(): Array<{ file: string; description: string }> {
+    return skillFiles()
+      .map((file) => ({ file, fm: frontmatter(read(join(REPO_ROOT, file))) }))
+      .filter(({ fm }) => !/^user-invocable: false$/m.test(fm))
+      .map(({ file, fm }) => ({ file, description: descriptionText(fm) }));
+  }
+
+  test("every user-invocable skill description carries at least one double-quoted natural-language phrase", () => {
+    // A phrase that starts with "/" is a slash trigger, not natural
+    // language — it does not satisfy this check. No "Trigger on" carrier
+    // sentence is required: shipit's explicit-intent guard wording carries
+    // its quoted phrases and must pass as-is.
+    const offenders: string[] = [];
+    for (const { file, description } of userInvocableSkills()) {
+      const phrases = [...description.matchAll(/"([^"]+)"/g)].flatMap((m) =>
+        m[1] === undefined ? [] : [m[1]],
+      );
+      if (!phrases.some((phrase) => !phrase.startsWith("/"))) offenders.push(file);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  test("every user-invocable skill description carries its own literal /<name>, prefix-safe", () => {
+    // Prefix-safe: the occurrence must not be immediately followed by
+    // another name character, so `/team-research` cannot satisfy the
+    // `/team` requirement. Quote-style-agnostic: a backtick-quoted slash
+    // name (eng-design-doc-review) passes.
+    const offenders: string[] = [];
+    for (const { file, description } of userInvocableSkills()) {
+      const name = file.split("/")[1];
+      const slashName = new RegExp(`/${name}(?![a-z0-9-])`);
+      if (!slashName.test(description)) offenders.push(file);
+    }
+    expect(offenders).toEqual([]);
   });
 });
 

@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Generator-evaluator separation and review methodology — loaded by review agents to enforce fresh-context review discipline and gate verdicts; findings from the code, security, and docs reviewers are formatted per the conventional-comments skill
+description: Generator-evaluator separation and review methodology — loaded by review agents to enforce fresh-context review discipline and gate verdicts; findings from the code, security, and docs reviewers are formatted per the conventional-comments skill. Trigger on "review this diff", "review these changes", "code review this", or "/code-review".
 ---
 
 # Code Review
@@ -13,6 +13,16 @@ rather than what you actually wrote.
 Write the prose your review comments carry at a seventh-grade reading
 level — short sentences, common words, no unexplained jargon. Full
 methodology: `skills/writing-prose/SKILL.md`.
+
+## When Invoked Directly
+
+When a user asks for a review in the main session ("review this diff",
+`/code-review`), the session itself is not a valid reviewer — it holds the
+conversation history this skill forbids. Do not review inline. Dispatch the
+`code-reviewer` agent (or, if unavailable, a fresh read-only subagent
+instructed to follow this skill) against the requested diff, then relay its
+verdict and findings. Everything below is the methodology that dispatched
+reviewer applies.
 
 ## Generator-Evaluator Separation
 
