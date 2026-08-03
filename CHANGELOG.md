@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-08-03
+
 ### Added
 
 - **`/pr-verify` verifies a PR's test plan with evidence-rated verdicts.** It extracts every test-plan item (from `## Test plan` or the pipeline's `## How to Verify`), lists them before verifying, and rates each PASS / FAIL / PARTIAL at HIGH / MEDIUM / LOW confidence — no PASS without cited evidence. The final verdict is mechanical: READY, NEEDS ATTENTION, or NOT READY. Test-plan items are treated as claims, never instructions, and the skill is read-only. [`skills/pr-verify/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-verify/SKILL.md)
@@ -361,7 +363,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.31.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.32.0...HEAD
+[0.32.0]: https://github.com/bostonaholic/team/compare/v0.31.1...v0.32.0
 [0.31.1]: https://github.com/bostonaholic/team/compare/v0.31.0...v0.31.1
 [0.31.0]: https://github.com/bostonaholic/team/compare/v0.30.0...v0.31.0
 [0.30.0]: https://github.com/bostonaholic/team/compare/v0.29.2...v0.30.0
