@@ -600,13 +600,13 @@ describe("writing-prose lens (L2 content tripwire)", () => {
     expect(text).toContain("Plain Language");
   });
 
-  // Slice 1: mechanical ban rules.
+  // Mechanical ban rules.
   test("pins the delete-list section heading (Words and phrases to delete)", () => {
     const text = read(SKILL_FILE);
     expect(text).toContain("Words and phrases to delete");
   });
 
-  // Slice 2: the strict / STE-flavored mode split.
+  // The strict / STE-flavored mode split.
   test("pins the Two modes section heading", () => {
     const text = read(SKILL_FILE);
     expect(text).toContain("Two modes");
@@ -619,7 +619,7 @@ describe("writing-prose lens (L2 content tripwire)", () => {
     expect(description).toContain("STE-flavored");
   });
 
-  // Slice 3: the pre-return self-lint checklist.
+  // The pre-return self-lint checklist.
   test("pins the Self-lint section heading", () => {
     const text = read(SKILL_FILE);
     expect(text).toContain("Self-lint");
