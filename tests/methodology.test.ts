@@ -606,6 +606,19 @@ describe("writing-prose lens (L2 content tripwire)", () => {
     expect(text).toContain("Words and phrases to delete");
   });
 
+  // Slice 2: the strict / STE-flavored mode split.
+  test("pins the Two modes section heading", () => {
+    const text = read(SKILL_FILE);
+    expect(text).toContain("Two modes");
+  });
+
+  test("frontmatter description names both modes (strict and STE-flavored)", () => {
+    const fm = frontmatter(read(SKILL_FILE));
+    const description = fm.split("\n").find((line) => line.startsWith("description:")) ?? "";
+    expect(description).toContain("strict");
+    expect(description).toContain("STE-flavored");
+  });
+
 });
 
 describe("systematic-debugging lens (L2 content tripwire)", () => {

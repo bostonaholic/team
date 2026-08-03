@@ -1,6 +1,6 @@
 ---
 name: writing-prose
-description: Clear documentation and readable explanation methodology — loaded by technical-writer agent to write prose and to assess documentation quality, grounded in plain language, readability principles, and ASD-STE100 Simplified Technical English
+description: Clear documentation and readable explanation methodology — loaded by writing agents to write prose and to assess documentation quality, grounded in plain language, readability principles, and ASD-STE100 Simplified Technical English in two modes, strict for instruction text and STE-flavored for descriptive prose
 user-invocable: false
 ---
 
@@ -39,6 +39,35 @@ Technical documentation must follow ASD-STE100 Simplified Technical English
 language is not English. The plain-language principles above are the
 foundation. STE adds mechanical rules. Each rule below shows the rejected
 form (Non-STE) and the fix (STE).
+
+### Two modes
+
+The rules run in one of two modes. The mode follows the text type, not the
+document. One document can hold both.
+
+- **Strict** governs instruction text: numbered steps, warnings, error
+  messages, runbook commands.
+- **STE-flavored** governs descriptive prose: design documents, ADRs, PRDs,
+  changelog entries, commit bodies, review comments.
+
+The modes differ in three ways only:
+
+- **Sentence cap.** No more than 20 words in strict mode. No more than 25
+  words in STE-flavored mode.
+- **Form.** Strict requires the imperative, one instruction per sentence,
+  and the condition before the command. STE-flavored permits declarative
+  paragraphs.
+- **Conditional mood.** Strict bans "would", "could", and "might" — a step
+  is a command or a condition. STE-flavored permits "would" and "could"
+  only to state a real alternative or consequence, never as a hedge.
+  "Might" is banned in both modes: for a real possibility write "can", the
+  same mapping the table below gives "may". Otherwise delete the hedge.
+
+Every ban list, the substitution table, and the self-lint apply identically
+in both modes. When a consuming skill's format rule conflicts with a prose
+rule (git-commit's 50-character subject, changelog's headings), the
+consuming skill's format rule wins. This skill governs sentence-level prose
+only.
 
 - **Keep sentences short.** No more than 20 words in an instruction, no more
   than 25 words in a description. A number, an abbreviation, quoted text, or
@@ -292,7 +321,8 @@ Can a typical reader understand this in one pass?
   imperative instructions, and simple tenses. They also cover one meaning
   per word and noun clusters of three words or fewer. Last, they cover the
   word substitutions in the STE table (utilize, ensure, perform, however,
-  should).
+  should). Hold instruction text to strict mode and descriptive prose to
+  STE-flavored mode.
 - **Consistent terminology.** If the same concept is called "user", "account",
   and "principal" in different parts of the documentation, readers will not
   know if these are synonyms. Pick one term and use it consistently.
