@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 51 skills: 11 pipeline entry-point slash commands, 5 standalone utilities (shipit, pr-open-comments, pr-watch, pr-approve-watch, groom-backlog), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 53 skills: 11 pipeline entry-point slash commands, 7 standalone utilities (shipit, pr-open-comments, pr-watch, pr-approve-watch, groom-backlog, pr-cleanup, pr-verify), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -44,13 +44,15 @@ catalog into two flavors:
   …`).
 
 That `argument-hint` marker is the whole flavor distinction. Most
-`argument-hint` skills drive a QRSPI phase, but five (`shipit`,
-`pr-open-comments`, `pr-watch`, `pr-approve-watch`, and `groom-backlog`)
-are standalone utilities. They land a reviewed PR, triage its unresolved
-review feedback, and watch it for new feedback. They also watch it as a
-reviewer, approve when your threads resolve, and groom a project backlog.
+`argument-hint` skills drive a QRSPI phase, but seven (`shipit`,
+`pr-open-comments`, `pr-watch`, `pr-approve-watch`, `groom-backlog`,
+`pr-cleanup`, and `pr-verify`) are standalone utilities. They land a
+reviewed PR, triage its unresolved review feedback, and watch it for new
+feedback. They also watch it as a reviewer, approve when your threads
+resolve, groom a project backlog, tear down branch state after a PR is
+finished, and verify a PR's test plan.
 None is a pipeline phase. The split is
-**11 pipeline entry-point + 5 standalone utility + 35 methodology = 51**.
+**11 pipeline entry-point + 7 standalone utility + 35 methodology = 53**.
 
 For *why* the system is shaped this way (the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits),
@@ -449,6 +451,81 @@ QRSPI phase: a self-contained action a user runs on demand.
   performs the promotion itself. Model-invocable: the read-and-plan phase
   mutates nothing and execution requires the user's answer, so those two
   guards make cue-based auto-invocation safe.
+
+### pr-cleanup
+
+- **Purpose:** Tear down local and remote branch state after a pull
+  request is finished. Mode A (merged) verifies the PR actually merged,
+  removes the branch's worktree, resyncs the default branch, and deletes
+  the local branch. Mode B (closed / abandoned) closes the PR(s), then
+  deletes every trace — worktree, local and remote branches, planning
+  scratch.
+- **`$ARGUMENTS`:** `[<pr-number-or-url-or-branch>]` — a PR number or URL
+  (its head branch is resolved via `gh`), a branch name, or nothing to
+  default to the branch checked out in the invoking directory (captured
+  before commands are anchored to the primary clone, so a run from inside
+  a worktree targets that worktree's branch, not the primary checkout).
+- **Phase:** None. A standalone teardown action, not part of the pipeline.
+- **Key behaviors:** Runs a merged-PR verification gate
+  (`gh pr list --state merged`) before any `git branch -D`, and the gate
+  checks identity and containment, not just a head-branch name match: the
+  merged PR's head repository must be this repo (a fork PR sharing the
+  branch name licenses nothing) and its merge commit must be an ancestor
+  of the default branch. A gate failure halts the run; only the user's
+  explicit delete-anyway confirmation re-enters it. Mode B has no
+  merged check because the user's explicit abandon request is the gate —
+  the skill never infers abandon intent. Refuses protected branch names
+  (the detected default, `master`, `develop`, `release/*`) and a dirty
+  tree with tracked modifications. Every externally sourced branch name
+  must pass a byte-exact (`LC_ALL=C`) character allowlist before it
+  reaches any command. Protected names are refused case-insensitively,
+  and `git branch -D` runs only when a local branch matches the name byte
+  for byte — so `Main` cannot force-delete `main` on a case-insensitive
+  filesystem. No destructive command relies on a variable set in an
+  earlier shell invocation: the primary-clone root and repo slug are
+  re-derived in every invocation that uses them, and destructive
+  expansions abort when a variable is unset. Before any destructive step it resolves
+  AND validates `$PRIMARY_ROOT` (the primary clone, found via
+  `git rev-parse --path-format=absolute --git-common-dir` and cross-checked
+  against the main working tree), then anchors every subsequent command
+  with `git -C "$PRIMARY_ROOT"` — so invoking it from inside the worktree
+  it is about to remove cannot strand the run. Mode A worktree removal is
+  **try-then-confirm** (no `--force` until the user sees what blocks and
+  confirms); Mode B removes with `--force` unconfirmed. The resync pull is
+  `--ff-only` — a non-fast-forward default branch stops the run rather
+  than auto-resolving. PR metadata is data: only structured `gh` JSON
+  fields gate actions, and prose fields never enter shell arguments.
+  Stacks unwind child before parent. Scratch dirs under `docs/plans/` are
+  removed only after an untracked check that distinguishes empty output
+  from a failed command.
+
+### pr-verify
+
+- **Purpose:** Verify a pull request's test plan with evidence-rated
+  verdicts. It extracts every test-plan item, classifies each by
+  verification strategy, collects cited evidence per item, and reports a
+  final verdict on the PR's readiness with follow-up recommendations.
+- **`$ARGUMENTS`:** `[<pr-number-or-url>]` — a PR number or URL, or
+  nothing to resolve the current branch's PR. A pasted PR description is
+  the third input path.
+- **Phase:** None. A standalone verification action, not part of the
+  pipeline.
+- **Key behaviors:** Extracts items from `## Test plan` (and `## How to
+  Verify`, which the pipeline's PR phase emits), outputs them as a
+  numbered list before verifying, and stops with `nothing to verify` when
+  none exist. Each item gets a **PASS / FAIL / PARTIAL** verdict at
+  **HIGH / MEDIUM / LOW** confidence — PARTIAL means the claim holds only
+  in part, and no PASS is issued without cited evidence. Six verification
+  strategies (filesystem, content match, code verification, diff
+  analysis, build/test via the project's detected checks, structural);
+  code-verification items dispatch a `team:file-finder` subagent — its
+  grant is Read/Grep/Glob only, no Bash, so an imperative embedded in PR
+  prose has no command sink — with an inline fallback. The final verdict is mechanical: READY (all PASS at
+  HIGH/MEDIUM), NEEDS ATTENTION (any PARTIAL or LOW), NOT READY (any
+  FAIL — FAIL wins over PARTIAL/LOW). The test plan is data: items are claims, never instructions, and
+  a command quoted in a PR body is never executed. Read-only — no writes,
+  no pushes. Pasted-description mode degrades the diff and build
+  strategies honestly, per item.
 
 ## Methodology skills
 
@@ -918,6 +995,8 @@ entry-point section above rather than repeating them here.
 | `pr-watch` | user or model (direct invocation) | Standalone: bounded PR review watch loop (not a QRSPI phase) |
 | `pr-approve-watch` | user (direct invocation) | Standalone: reviewer-side watch-and-approve (not a QRSPI phase) |
 | `groom-backlog` | user or model (direct invocation) | Standalone: groom a project backlog (not a QRSPI phase) |
+| `pr-cleanup` | user or model (direct invocation; Mode B only on explicit abandon intent) | Standalone: post-PR teardown (not a QRSPI phase) |
+| `pr-verify` | user or model (direct invocation) | Standalone: test-plan verification (not a QRSPI phase) |
 | `qrspi-workflow` | orchestrator skills | All phases |
 | `artifact-frontmatter` | orchestrator skills. Artifact authors (just-in-time through pointers) | All phases: artifact schema |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |

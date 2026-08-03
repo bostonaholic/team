@@ -140,6 +140,11 @@ iterate on the branch (push follow-up commits, address review feedback).
 Keep the worktree until the PR is merged or the user explicitly asks to
 remove it. The same holds when commits are kept locally without a PR.
 
+The user-invoked, PR-aware teardown — with a merged-PR gate,
+protected-branch refusals, and remote-branch deletion — is `/pr-cleanup`
+(`skills/pr-cleanup/SKILL.md`); the numbered steps below remain the
+orchestrator's in-pipeline teardown.
+
 When teardown is warranted (post-merge or on explicit request):
 
 1. For each worktree with commits ahead of its base branch, cherry-pick

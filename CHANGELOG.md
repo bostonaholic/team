@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-08-03
+
+### Added
+
+- **`/pr-verify` verifies a PR's test plan with evidence-rated verdicts.** It extracts every test-plan item (from `## Test plan` or the pipeline's `## How to Verify`), lists them before verifying, and rates each PASS / FAIL / PARTIAL at HIGH / MEDIUM / LOW confidence — no PASS without cited evidence. The final verdict is mechanical: READY, NEEDS ATTENTION, or NOT READY. Test-plan items are treated as claims, never instructions, and the skill is read-only. [`skills/pr-verify/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-verify/SKILL.md)
+- **`/pr-cleanup` tears down branch state after a PR is finished.** Merged mode verifies the PR actually merged before any `git branch -D`, removes the branch's worktree (asking before any forced removal), resyncs the default branch with `--ff-only`, and deletes the local branch. Abandoned mode — which runs only on an explicit request to abandon the work — closes the PR(s) child-before-parent, then deletes the worktree, the local and remote branches, and the feature's planning scratch. It refuses protected branch names and dirty trees, and it anchors every command to the validated primary clone, so running it from inside the worktree it is about to remove is safe. Deletion cannot be pointed at the wrong target: a merged PR from a fork that happens to reuse your branch's name licenses nothing, a name that differs from a protected branch only by letter case is refused instead of force-deleting the real default branch on a case-insensitive disk, text taken from a PR can never smuggle a command into the shell, and an unset variable aborts the scratch-directory removal instead of widening it. [`skills/pr-cleanup/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-cleanup/SKILL.md)
+- **The Bash guard hook now asks before the teardown deletions.** `git branch -D`, `git push --delete`, and `git worktree remove --force` prompt for confirmation before they run, so a mis-generated deletion surfaces to the user instead of executing silently. [`hooks/pre-bash-guard.mjs`](https://github.com/bostonaholic/team/blob/main/hooks/pre-bash-guard.mjs)
+
 ## [0.31.1] - 2026-07-31
 
 ### Fixed
@@ -24,7 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`pr-approve-watch` loses its human-only guard on Codex, and the install instructions now say so.** On Claude Code the skill carries `disable-model-invocation`, so only a person can arm it — its approval can transitively merge a pull request that has auto-merge enabled. Codex does not implement that key, and skills bypass its trust gate, so on Codex the model can invoke the skill in any session with no prompt. The skill's own description says it is user-only, but that sentence falls past the point where Codex truncates a long description, so it cannot be relied on. [`README.md`](https://github.com/bostonaholic/team/blob/main/README.md) states the gap at the point of install and gives the command to remove the skill for anyone who wants the guard back.
 
-||||||| Stash base
 ## [0.30.0] - 2026-07-31
 
 ### Changed
@@ -356,7 +363,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.31.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.32.0...HEAD
+[0.32.0]: https://github.com/bostonaholic/team/compare/v0.31.1...v0.32.0
 [0.31.1]: https://github.com/bostonaholic/team/compare/v0.31.0...v0.31.1
 [0.31.0]: https://github.com/bostonaholic/team/compare/v0.30.0...v0.31.0
 [0.30.0]: https://github.com/bostonaholic/team/compare/v0.29.2...v0.30.0
