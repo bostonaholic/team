@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **The prose canon now carries the STE writing kit's mechanical ban rules, two named modes, and a pre-return self-lint.** `writing-prose` gains a delete-list (marketing adjectives, modal hedges, filler — deleted, never replaced), fifteen new substitution rows plus two extended in place, a stacked-auxiliaries rule, an American-spelling bullet, and an empty-closer smell row — every consumer that already points at the skill inherits them with no edit of its own. A "Two modes" section names the split the skill only implied: strict governs instruction text and STE-flavored governs descriptive prose, with exactly three deltas (sentence cap, form, conditional mood) and every ban list shared. A nine-item "Self-lint" checklist runs before any governed text is final, the `design-author` agent now preloads the full skill, and the nine consumer blurbs across eight skills collapse into one canonical variant that names STE-flavored mode and points at the self-lint. [`skills/writing-prose/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/writing-prose/SKILL.md), [`agents/design-author.md`](https://github.com/bostonaholic/team/blob/main/agents/design-author.md)
+
 ## [0.33.2] - 2026-08-04
 
 ### Fixed

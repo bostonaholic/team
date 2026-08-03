@@ -13,9 +13,10 @@ developers. Every entry should answer: "How does this affect me?"
 This methodology follows [Keep a Changelog](https://keepachangelog.com)
 conventions.
 
-Write the prose this skill governs at a seventh-grade reading
-level — short sentences, common words, no unexplained jargon. Full
-methodology: `skills/writing-prose/SKILL.md`.
+Write the prose this skill governs at a seventh-grade reading level, in
+STE-flavored mode — short sentences, common words, no unexplained jargon.
+Before you finalize prose this skill governs, run the `## Self-lint` in
+that file. Full methodology: `skills/writing-prose/SKILL.md`.
 
 ## File Structure
 
