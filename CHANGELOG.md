@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.1] - 2026-08-03
+
+### Fixed
+
+- **`/team-fix` no longer commits and pushes a fix to your default branch.** The bug-fix pipeline had no branch or worktree step at all, and its Ship step authorized pushing from whatever branch you happened to be on — so running it from a clone sitting on `main` (the state Team's own conventions produce) committed the `test:` and `fix:` commits to `main` and pushed them, opening no PR at all. `/team-fix` now leads with a WORKTREE phase, mirroring `/team`: a documented shell block resolves the default branch and refuses it, a non-default branch is reused in place, and otherwise the run isolates into a `<id>` worktree. Isolation stays best-effort — a worktree that cannot be created (shallow clone, restrictive CI) degrades to a plain `<id>` branch — but the branch itself is not optional, and a run that cannot get off the default branch aborts before it writes anything. Ship re-asserts the gate before it pushes, so the commits stay local and recoverable rather than landing on a branch you cannot rewrite. Pinned by a tripwire that extracts the documented gate block and runs it against real repos, so the documented command and the tested command cannot drift. [`skills/team-fix/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md)
+
 ## [0.33.0] - 2026-08-03
 
 ### Added
@@ -369,7 +375,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.33.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.33.1...HEAD
+[0.33.1]: https://github.com/bostonaholic/team/compare/v0.33.0...v0.33.1
 [0.33.0]: https://github.com/bostonaholic/team/compare/v0.32.0...v0.33.0
 [0.32.0]: https://github.com/bostonaholic/team/compare/v0.31.1...v0.32.0
 [0.31.1]: https://github.com/bostonaholic/team/compare/v0.31.0...v0.31.1

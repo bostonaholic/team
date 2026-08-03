@@ -228,10 +228,15 @@ argument shape.
   ceremony.
 - **`$ARGUMENTS`:** `<ticket id, issue URL, or bug description>`.
 - **Phase:** Standalone fix flow (not a QRSPI phase). Runs the compressed
-  pipeline `REPRODUCE → RED → GREEN → VERIFY → SHIP`.
+  pipeline `WORKTREE → REPRODUCE → RED → GREEN → VERIFY → SHIP`.
 - **Key behaviors:** Loads `test-driven-bug-fix` for reproduce-first,
   red-green discipline: a failing test that reproduces the bug, then the
-  fix that turns it green.
+  fix that turns it green. The leading WORKTREE phase is the pipeline's one
+  hard gate: a documented branch-gate block resolves the default branch and
+  the fix never commits to it. A non-default branch is reused in place;
+  otherwise the run isolates into a `<id>` worktree, and a worktree that
+  cannot be created degrades to a plain `<id>` branch rather than to the
+  default branch. Ship re-asserts the gate before it pushes.
 
 ### eng-design-doc-review
 
