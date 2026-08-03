@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-08-03
+
 ### Added
 
 - **Natural-language phrases now route to the two skills that were slash-only.** Saying "run the bug-fix pipeline" or "team-fix this bug" routes to `/team-fix`, and "review this diff", "review these changes", or "code review this" routes to `/code-review` — no need to know the slash command. Because `/team-fix` moves the tracker ticket, commits, pushes, and opens a draft PR, it fires only on explicit pipeline intent — a plain "fix this bug" still means an inline fix, never the pipeline. A direct `/code-review` dispatches the fresh-context `code-reviewer` agent instead of reviewing inline, so the review keeps the clean context the methodology requires. A deterministic test pins the trigger convention across all user-invocable skills, so no future entry point regresses to slash-only. [`skills/team-fix/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md), [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md)
@@ -367,7 +369,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.32.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.33.0...HEAD
+[0.33.0]: https://github.com/bostonaholic/team/compare/v0.32.0...v0.33.0
 [0.32.0]: https://github.com/bostonaholic/team/compare/v0.31.1...v0.32.0
 [0.31.1]: https://github.com/bostonaholic/team/compare/v0.31.0...v0.31.1
 [0.31.0]: https://github.com/bostonaholic/team/compare/v0.30.0...v0.31.0
