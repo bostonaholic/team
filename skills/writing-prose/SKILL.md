@@ -1,6 +1,6 @@
 ---
 name: writing-prose
-description: Clear documentation and readable explanation methodology — loaded by writing agents to write prose and to assess documentation quality, grounded in plain language, readability principles, and ASD-STE100 Simplified Technical English in two modes, strict for instruction text and STE-flavored for descriptive prose
+description: Prose quality methodology for writing and assessing documentation. Grounded in plain language and ASD-STE100 Simplified Technical English in two modes — strict for instruction text, STE-flavored for descriptive prose.
 user-invocable: false
 ---
 
@@ -37,10 +37,9 @@ Write for the reader's comprehension, not the author's expertise.
 Technical documentation must follow ASD-STE100 Simplified Technical English
 (STE). STE removes ambiguity for every reader, including readers whose first
 language is not English. The plain-language principles above are the
-foundation. STE adds mechanical rules. Each rule below shows the rejected
-form (Non-STE) and the fix (STE).
+foundation. STE adds mechanical rules.
 
-### Two modes
+#### Two modes
 
 The rules run in one of two modes. The mode follows the text type, not the
 document. One document can hold both.
@@ -63,11 +62,17 @@ The modes differ in three ways only:
   "Might" is banned in both modes: for a real possibility write "can", the
   same mapping the table below gives "may". Otherwise delete the hedge.
 
-Every ban list, the substitution table, and the self-lint apply identically
-in both modes. When a consuming skill's format rule conflicts with a prose
-rule (git-commit's 50-character subject, changelog's headings), the
-consuming skill's format rule wins. This skill governs sentence-level prose
-only.
+Three rule bullets below restate the strict Form delta: the imperative,
+one instruction per sentence, and the condition before the command. They
+bind instruction text only. Every other rule, every ban list, the
+substitution table, and the self-lint apply identically in both modes.
+When a consuming skill's format rule conflicts with a prose rule
+(git-commit's 50-character subject, changelog's headings), the consuming
+skill's format rule wins. This skill governs sentence-level prose only.
+
+#### The mechanical rules
+
+Each rule below shows the rejected form (Non-STE) and the fix (STE).
 
 - **Keep sentences short.** No more than 20 words in an instruction, no more
   than 25 words in a description. A number, an abbreviation, quoted text, or
@@ -292,13 +297,14 @@ names one defect. Fix every hit before the text is final.
 4. **Passive with a known actor** — make it active. Name the actor as the
    subject.
 5. **Hidden action** — an "-ing" main verb, a nominalization ("perform an
-   analysis"), a phrasal verb ("spin up"), or stacked auxiliaries. Write one
-   plain verb.
+   analysis"), a phrasal verb the substitution table maps ("spin up"), or
+   stacked auxiliaries. Write one plain verb.
 6. **Two names for one thing** — pick one name and use it everywhere.
 7. **Banned word** — a delete-list word or a substitution-table word. Delete
    the first kind. Replace the second.
-8. **Conditional-mood hedge** — "would" or "could" as a hedge, or any
-   "might". State the fact, or write "can" for a real possibility.
+8. **Conditional mood** — in strict mode, any "would", "could", or "might".
+   In STE-flavored mode, "would" or "could" as a hedge, or any "might".
+   State the fact, or write "can" for a real possibility.
 9. **Empty closer** — a closing sentence that states no measurable property
    ("provides a solid foundation for..."). Delete it.
 
@@ -349,7 +355,11 @@ Can a typical reader understand this in one pass?
   per word and noun clusters of three words or fewer. Last, they cover the
   word substitutions in the STE table (utilize, ensure, perform, however,
   should). Hold instruction text to strict mode and descriptive prose to
-  STE-flavored mode.
+  STE-flavored mode. The `Two modes` section above defines which text type
+  takes which mode. Apply the mode per sentence, not per document. A
+  rationale paragraph can embed one imperative instruction: hold that
+  instruction to strict mode and the surrounding sentences to STE-flavored
+  mode.
 - **Consistent terminology.** If the same concept is called "user", "account",
   and "principal" in different parts of the documentation, readers will not
   know if these are synonyms. Pick one term and use it consistently.
