@@ -82,13 +82,16 @@ surface(s) per §1A / §1B below and set the frontmatter from the table above.
     repo that's the Entry Points table in `AGENTS.md`: `- <user intent> → invoke
     /<skill>`. This is guidance the agent reads, not a code gate, so keep it in sync
     with the description.
-3. **To make it user-explicit-ONLY:** replace the plain `Trigger on` carrier with
-    shipit-style explicit-intent guard wording, and leave the skill off the routing
-    map. The description still carries the quoted phrases and the `/<name>` — the
-    trigger test has no opt-out. If your host honors a hard opt-out flag (e.g.
-    `disable-model-invocation`), set it — but on hosts that ignore it, the description is
-    the only control. Use this for irreversible skills (deploy, force-push, destructive
-    cleanup) so they require an explicit ask.
+3. **Side-effecting or irreversible skills MUST guard.** If the skill commits, pushes,
+    opens a PR, moves a ticket, merges, deploys, or deletes, replace the plain
+    `Trigger on` carrier with shipit-style explicit-intent guard wording ("Invoke ONLY
+    on explicit … intent — … never infer …"), and leave the skill off the routing map.
+    The description still carries the quoted phrases and the `/<name>` — the trigger
+    test has no opt-out, but it checks phrase presence only: no test checks the guard
+    wording, so it is YOUR responsibility, and its absence on a side-effecting skill
+    is a review-blocking defect. If your host honors a hard opt-out flag (e.g.
+    `disable-model-invocation`), set it — but on hosts that ignore it, the description
+    is the only control.
 
 ### §1B — Wire it as a building block
 

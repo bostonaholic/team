@@ -510,12 +510,18 @@ not on `argument-hint`, which `docs/skills.md` uses to sort skill
 *flavor*. A skill that does not set `user-invocable: false` must state,
 in its description, at least one double-quoted natural-language phrase
 (one that does not start with `/`) plus its own literal `/<name>`,
-normally as a final `Trigger on "…", "…", or "/<name>".` sentence. An
-irreversible action may use shipit-style explicit-intent guard wording
-instead of the plain carrier, but it still carries the quoted phrases
-and the slash name. A deterministic test in `tests/architecture.test.ts`
-enforces the invariant with no opt-out; the slash-name check is
-prefix-safe, so `/team-research` cannot satisfy the `/team` requirement.
+normally as a final `Trigger on "…", "…", or "/<name>".` sentence. A
+**side-effecting or irreversible** entry-point skill — one that commits,
+pushes, opens a PR, moves a ticket, merges, deploys, or deletes — MUST
+replace the plain carrier with shipit-style explicit-intent guard wording
+("Invoke ONLY on explicit … intent — … never infer …"), still carrying
+the quoted phrases and the slash name, and should set
+`disable-model-invocation` where the host honors it. A deterministic test
+in `tests/architecture.test.ts` enforces the phrase invariant with no
+opt-out; the slash-name check is prefix-safe, so `/team-research` cannot
+satisfy the `/team` requirement. The guard wording is NOT
+machine-checked — it is the author's and reviewer's responsibility, and
+its absence on a side-effecting skill is a review-blocking defect.
 
 Among methodology skills, `code-review` is the only one kept
 user-invocable. It is a building block: the `code-reviewer`,
