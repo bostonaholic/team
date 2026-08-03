@@ -292,7 +292,7 @@ describe("user-invocable trigger phrases", () => {
     const lines = fm.split("\n");
     const start = lines.findIndex((line) => line.startsWith("description:"));
     if (start === -1) return "";
-    const inline = lines[start].slice("description:".length).trim();
+    const inline = (lines[start] ?? "").slice("description:".length).trim();
     if (inline !== "" && inline !== "|") {
       // A fully-quoted inline scalar must be unwrapped: returned verbatim,
       // its surrounding quotes would make matchAll treat the whole value as
@@ -313,8 +313,9 @@ describe("user-invocable trigger phrases", () => {
     }
     const block: string[] = [];
     for (let i = start + 1; i < lines.length; i++) {
-      if (!/^\s+\S/.test(lines[i])) break;
-      block.push(lines[i].trim());
+      const line = lines[i];
+      if (line === undefined || !/^\s+\S/.test(line)) break;
+      block.push(line.trim());
     }
     return block.join(" ");
   }
@@ -337,7 +338,9 @@ describe("user-invocable trigger phrases", () => {
     // its quoted phrases and must pass as-is.
     const offenders: string[] = [];
     for (const { file, description } of userInvocableSkills()) {
-      const phrases = [...description.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+      const phrases = [...description.matchAll(/"([^"]+)"/g)].flatMap((m) =>
+        m[1] === undefined ? [] : [m[1]],
+      );
       if (!phrases.some((phrase) => !phrase.startsWith("/"))) offenders.push(file);
     }
     expect(offenders).toEqual([]);
