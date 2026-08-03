@@ -15,8 +15,8 @@ you want an independent, fresh-context audit of a design document.
 
 Write the prose this skill governs at a seventh-grade reading level, in
 STE-flavored mode — short sentences, common words, no unexplained jargon.
-Before you finalize prose this skill governs, run the `## Self-lint` in
-that file. Full methodology: `skills/writing-prose/SKILL.md`.
+Full methodology: `skills/writing-prose/SKILL.md`. Before you finalize
+prose this skill governs, run the `## Self-lint` in that file.
 
 There is **no custom review agent**. This skill is self-contained: it
 carries the review brief inline and dispatches the built-in read-only
@@ -192,8 +192,8 @@ three comment types (issue, suggestion, nitpick) — load and use it.
 
 Write the prose this skill governs at a seventh-grade reading level, in
 STE-flavored mode — short sentences, common words, no unexplained jargon.
-Before you finalize prose this skill governs, run the `## Self-lint` in
-that file. Full methodology: `skills/writing-prose/SKILL.md`.
+Full methodology: `skills/writing-prose/SKILL.md`. Before you finalize
+prose this skill governs, run the `## Self-lint` in that file.
 
 End with a verdict, using the same gate type as `code-reviewer`:
 

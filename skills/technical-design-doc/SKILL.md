@@ -14,8 +14,8 @@ implementation.
 
 Write the prose this skill governs at a seventh-grade reading level, in
 STE-flavored mode — short sentences, common words, no unexplained jargon.
-Before you finalize prose this skill governs, run the `## Self-lint` in
-that file. Full methodology: `skills/writing-prose/SKILL.md`.
+Full methodology: `skills/writing-prose/SKILL.md`. Before you finalize
+prose this skill governs, run the `## Self-lint` in that file.
 
 ## When to Write a TDD
 
