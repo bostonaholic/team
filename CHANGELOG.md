@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Natural-language phrases now route to the two skills that were slash-only.** Saying "fix this bug", "squash this bug", or "quick bug fix" routes to `/team-fix`, and "review this diff", "review these changes", or "code review this" routes to `/code-review` — no need to know the slash command. A deterministic test pins the trigger convention across all user-invocable skills, so no future entry point regresses to slash-only. [`skills/team-fix/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md), [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md)
+- **Natural-language phrases now route to the two skills that were slash-only.** Saying "run the bug-fix pipeline" or "team-fix this bug" routes to `/team-fix`, and "review this diff", "review these changes", or "code review this" routes to `/code-review` — no need to know the slash command. Because `/team-fix` moves the tracker ticket, commits, pushes, and opens a draft PR, it fires only on explicit pipeline intent — a plain "fix this bug" still means an inline fix, never the pipeline. A direct `/code-review` dispatches the fresh-context `code-reviewer` agent instead of reviewing inline, so the review keeps the clean context the methodology requires. A deterministic test pins the trigger convention across all user-invocable skills, so no future entry point regresses to slash-only. [`skills/team-fix/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md), [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md)
 
 ## [0.32.0] - 2026-08-03
 

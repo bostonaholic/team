@@ -36,7 +36,10 @@ catalog into two flavors:
   as slash commands (`/team`, `/team-research`, and so on). The
   `argument-hint` documents what to pass as `$ARGUMENTS`.
 - **Methodology skills omit `argument-hint`.** They are never invoked
-  directly. Agents load them through one of two mechanisms: a `skills:`
+  directly — with one exception, `code-review`, which stays user-invocable
+  as a standalone review command (see
+  [Methodology skills](#methodology-skills)). Agents load them through one
+  of two mechanisms: a `skills:`
   YAML list in the agent's frontmatter (e.g., `agents/design-author.md`
   declares `skills: [product-thinking,
   progress-tracking, authoring-designs]`), or an inline prose load
@@ -529,8 +532,15 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 35 methodology skills carry no `argument-hint` and are never invoked
-directly. Agents load them through one of two mechanisms. The first is a
+The 35 methodology skills carry no `argument-hint` and, with one
+exception, are never invoked directly. The exception is `code-review`: it
+is a meaningful standalone user action ("review this diff",
+`/code-review`) as well as a building block, so it does not set
+`user-invocable: false` — and when invoked directly it dispatches the
+`code-reviewer` agent rather than reviewing inline, preserving the
+fresh-context separation it mandates (see
+[architecture.md](architecture.md#methodology-skills-loaded-by-agents-not-directly-invoked)).
+Agents load them through one of two mechanisms. The first is a
 `skills:` YAML list in the agent's frontmatter. The second is an inline
 prose load instruction in the agent body. See the "Two flavors of skill"
 section above. The "Loaded by" line for each skill names its consumers from
@@ -988,7 +998,7 @@ entry-point section above rather than repeating them here.
 | `team-worktree` | orchestrator | Worktree |
 | `team-implement` | orchestrator → implementer + reviewers | Implement |
 | `team-pr` | orchestrator | PR |
-| `team-fix` | user (direct invocation) | Compressed bug-fix flow (outside QRSPI) |
+| `team-fix` | user or model (direct invocation, on explicit pipeline intent) | Compressed bug-fix flow (outside QRSPI) |
 | `eng-design-doc-review` | user (direct invocation). Pipeline DESIGN review gate (brief by reference) | Design review-gate brief + standalone audit. Dispatches a read-only Explore subagent |
 | `shipit` | user or model (direct invocation, on explicit ship intent) | Standalone: land a reviewed PR (not a QRSPI phase) |
 | `pr-open-comments` | user or model (direct invocation) | Standalone: triage unresolved PR review feedback (not a QRSPI phase) |
