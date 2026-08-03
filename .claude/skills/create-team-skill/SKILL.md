@@ -5,9 +5,9 @@ description: |
   the existing skills already use. Establishes the three decisions every skill must
   make before any prose is written: how it is invoked (entry point vs building block),
   how it acquires its input, and how it manages the context window.
-  Proactively invoke this skill (do NOT hand-write a SKILL.md directly) when the user
-  asks to "create a skill", "add a new skill", "scaffold a skill", "write a SKILL.md",
-  or describes new skill functionality they want to build.
+  Do NOT hand-write a SKILL.md directly. Trigger on "create a skill",
+  "add a new skill", "scaffold a skill", "write a SKILL.md", or a description of
+  new skill functionality the user wants to build.
 ---
 
 # Creating a new Team skill
@@ -70,21 +70,22 @@ surface(s) per §1A / §1B below and set the frontmatter from the table above.
 
 ### §1A — Wire it as an entry point
 
-1. **Write the description as a router.** Lead with WHAT it does, then name the user
-    intents and phrases that should fire it:
+1. **Write the description as a router.** Lead with WHAT it does, then end with the
+    trigger sentence naming the phrases and the slash name that should fire it:
     ```yaml
     description: |
       <one line: what this does>.
-      Proactively invoke this skill (do NOT answer directly) when the user
-      <intent A>, <intent B>, or says "<phrase>", "<phrase>".
+      Trigger on "<phrase>", "<phrase>", or "/<name>".
     ```
     Specific intents + example phrases = reliable triggering. Vague text = mis-routing.
 2. **Add one line to the routing map** in your standing agent instructions — in this
     repo that's the Entry Points table in `AGENTS.md`: `- <user intent> → invoke
     /<skill>`. This is guidance the agent reads, not a code gate, so keep it in sync
     with the description.
-3. **To make it user-explicit-ONLY:** omit the proactive-invoke language and leave it
-    off the routing map. If your host honors a hard opt-out flag (e.g.
+3. **To make it user-explicit-ONLY:** replace the plain `Trigger on` carrier with
+    shipit-style explicit-intent guard wording, and leave the skill off the routing
+    map. The description still carries the quoted phrases and the `/<name>` — the
+    trigger test has no opt-out. If your host honors a hard opt-out flag (e.g.
     `disable-model-invocation`), set it — but on hosts that ignore it, the description is
     the only control. Use this for irreversible skills (deploy, force-push, destructive
     cleanup) so they require an explicit ask.

@@ -505,6 +505,18 @@ auto-load a methodology skill when relevant, so
 new methodology skill, set `user-invocable: false`. When you add a new
 entry-point skill, leave it unset, so it registers as a slash command.
 
+The trigger-phrase convention keys on the `user-invocable` field —
+not on `argument-hint`, which `docs/skills.md` uses to sort skill
+*flavor*. A skill that does not set `user-invocable: false` must state,
+in its description, at least one double-quoted natural-language phrase
+(one that does not start with `/`) plus its own literal `/<name>`,
+normally as a final `Trigger on "…", "…", or "/<name>".` sentence. An
+irreversible action may use shipit-style explicit-intent guard wording
+instead of the plain carrier, but it still carries the quoted phrases
+and the slash name. A deterministic test in `tests/architecture.test.ts`
+enforces the invariant with no opt-out; the slash-name check is
+prefix-safe, so `/team-research` cannot satisfy the `/team` requirement.
+
 Among methodology skills, `code-review` is the only one kept
 user-invocable. It is a building block: the `code-reviewer`,
 `security-reviewer`, `ux-reviewer`, and `technical-writer` agents load it
