@@ -85,8 +85,10 @@ surface(s) per §1A / §1B below and set the frontmatter from the table above.
 3. **Side-effecting or irreversible skills MUST guard.** If the skill commits, pushes,
     opens a PR, moves a ticket, merges, deploys, or deletes, replace the plain
     `Trigger on` carrier with shipit-style explicit-intent guard wording ("Invoke ONLY
-    on explicit … intent — … never infer …"), and leave the skill off the routing map.
-    The description still carries the quoted phrases and the `/<name>` — the trigger
+    on explicit … intent — … never infer …"). Word its routing-map line with that same
+    explicit intent, so the map never invites the skill on a plain request — `team-fix`
+    is listed as a command but reached only on stated pipeline intent, never on "fix
+    this bug". The description still carries the quoted phrases and the `/<name>` — the trigger
     test has no opt-out, but it checks phrase presence only: no test checks the guard
     wording, so it is YOUR responsibility, and its absence on a side-effecting skill
     is a review-blocking defect. If your host honors a hard opt-out flag (e.g.

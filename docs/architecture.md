@@ -516,7 +516,9 @@ pushes, opens a PR, moves a ticket, merges, deploys, or deletes — MUST
 replace the plain carrier with shipit-style explicit-intent guard wording
 ("Invoke ONLY on explicit … intent — … never infer …"), still carrying
 the quoted phrases and the slash name, and should set
-`disable-model-invocation` where the host honors it. A deterministic test
+`disable-model-invocation` where the host honors it. Such a skill stays
+listed as a command, but its routing-map line in `AGENTS.md` states the
+explicit intent, so the map never invites it on a plain request. A deterministic test
 in `tests/architecture.test.ts` enforces the phrase invariant with no
 opt-out; the slash-name check is prefix-safe, so `/team-research` cannot
 satisfy the `/team` requirement. The guard wording is NOT
