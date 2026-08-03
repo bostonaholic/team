@@ -10,6 +10,7 @@ skills:
   - product-thinking
   - progress-tracking
   - authoring-designs
+  - writing-prose
 ---
 
 # Design Author Agent

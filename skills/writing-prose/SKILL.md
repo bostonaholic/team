@@ -280,6 +280,33 @@ need, then read that section carefully.
   not inline prose. This signals "copy this exactly" and enables syntax
   highlighting.
 
+## Self-lint
+
+Run this checklist on any governed text before you finalize it. Each item
+names one defect. Fix every hit before the text is final.
+
+1. **Over-cap sentence** — a sentence over the mode's cap (20 words strict,
+   25 STE-flavored). Split it.
+2. **Semicolon** — replace it with a period and write two sentences.
+3. **Contraction** — expand it ("do not", never "don't").
+4. **Passive with a known actor** — make it active. Name the actor as the
+   subject.
+5. **Hidden action** — an "-ing" main verb, a nominalization ("perform an
+   analysis"), a phrasal verb ("spin up"), or stacked auxiliaries. Write one
+   plain verb.
+6. **Two names for one thing** — pick one name and use it everywhere.
+7. **Banned word** — a delete-list word or a substitution-table word. Delete
+   the first kind. Replace the second.
+8. **Conditional-mood hedge** — "would" or "could" as a hedge, or any
+   "might". State the fact, or write "can" for a real possibility.
+9. **Empty closer** — a closing sentence that states no measurable property
+   ("provides a solid foundation for..."). Delete it.
+
+The self-lint applies to the text an author returns, never to quoted
+counter-examples — this file's own Non-STE examples break the rules on
+purpose. If a reviewer cites an item and the author disputes it, the
+conventional-comments framework carries the disagreement.
+
 ## Assessing Documentation Quality
 
 When reviewing documentation, evaluate each piece against these dimensions:

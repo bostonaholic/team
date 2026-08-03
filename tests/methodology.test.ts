@@ -619,6 +619,11 @@ describe("writing-prose lens (L2 content tripwire)", () => {
     expect(description).toContain("STE-flavored");
   });
 
+  // Slice 3: the pre-return self-lint checklist.
+  test("pins the Self-lint section heading", () => {
+    const text = read(SKILL_FILE);
+    expect(text).toContain("Self-lint");
+  });
 });
 
 describe("systematic-debugging lens (L2 content tripwire)", () => {
