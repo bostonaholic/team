@@ -279,6 +279,66 @@ describe("effort tiering", () => {
   });
 });
 
+describe("user-invocable trigger phrases", () => {
+  // Extract the description field's text only from a frontmatter slice,
+  // handling both YAML styles in use: single-line scalar
+  // (`description: <text>`) and block scalar (`description: |` followed by
+  // indented lines until the first non-indented line). Scoping to the
+  // description prevents a false positive on the quoted `argument-hint`
+  // value elsewhere in the frontmatter.
+  function descriptionText(fm: string): string {
+    const lines = fm.split("\n");
+    const start = lines.findIndex((line) => line.startsWith("description:"));
+    if (start === -1) return "";
+    const inline = lines[start].slice("description:".length).trim();
+    if (inline !== "" && inline !== "|") return inline;
+    const block: string[] = [];
+    for (let i = start + 1; i < lines.length; i++) {
+      if (!/^\s+\S/.test(lines[i])) break;
+      block.push(lines[i].trim());
+    }
+    return block.join(" ");
+  }
+
+  // Every skills/*/SKILL.md that does not set `user-invocable: false` is a
+  // user-facing entry point and must carry routing triggers in its
+  // description. Offenders are collected and asserted empty so a single run
+  // names every non-conforming skill.
+  function userInvocableSkills(): Array<{ file: string; description: string }> {
+    return skillFiles()
+      .map((file) => ({ file, fm: frontmatter(read(join(REPO_ROOT, file))) }))
+      .filter(({ fm }) => !/^user-invocable: false$/m.test(fm))
+      .map(({ file, fm }) => ({ file, description: descriptionText(fm) }));
+  }
+
+  test("every user-invocable skill description carries at least one double-quoted natural-language phrase", () => {
+    // A phrase that starts with "/" is a slash trigger, not natural
+    // language — it does not satisfy this check. No "Trigger on" carrier
+    // sentence is required: shipit's explicit-intent guard wording carries
+    // its quoted phrases and must pass as-is.
+    const offenders: string[] = [];
+    for (const { file, description } of userInvocableSkills()) {
+      const phrases = [...description.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+      if (!phrases.some((phrase) => !phrase.startsWith("/"))) offenders.push(file);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  test("every user-invocable skill description carries its own literal /<name>, prefix-safe", () => {
+    // Prefix-safe: the occurrence must not be immediately followed by
+    // another name character, so `/team-research` cannot satisfy the
+    // `/team` requirement. Quote-style-agnostic: a backtick-quoted slash
+    // name (eng-design-doc-review) passes.
+    const offenders: string[] = [];
+    for (const { file, description } of userInvocableSkills()) {
+      const name = file.split("/")[1];
+      const slashName = new RegExp(`/${name}(?![a-z0-9-])`);
+      if (!slashName.test(description)) offenders.push(file);
+    }
+    expect(offenders).toEqual([]);
+  });
+});
+
 describe("worktree-first pipeline", () => {
   // ---- Slice 4: phase-diagram sweep (6 files) -------------------------------
   // Each file carries a phase-diagram string. After the sweep, every one must

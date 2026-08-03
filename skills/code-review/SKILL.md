@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Generator-evaluator separation and review methodology — loaded by review agents to enforce fresh-context review discipline and gate verdicts; findings from the code, security, and docs reviewers are formatted per the conventional-comments skill
+description: Generator-evaluator separation and review methodology — loaded by review agents to enforce fresh-context review discipline and gate verdicts; findings from the code, security, and docs reviewers are formatted per the conventional-comments skill. Trigger on "review this diff", "review these changes", "code review this", or "/code-review".
 ---
 
 # Code Review

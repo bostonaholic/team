@@ -1,6 +1,6 @@
 ---
 name: team-fix
-description: Compressed bug-fix pipeline — reproduce, write failing test, minimal fix, verify. Skips Question/Research/Design/Structure/Plan phases. Trigger on "/team-fix <bug description>".
+description: Compressed bug-fix pipeline — reproduce, write failing test, minimal fix, verify. Skips Question/Research/Design/Structure/Plan phases. Trigger on "fix this bug", "squash this bug", "quick bug fix", or "/team-fix <bug description>".
 effort: high
 argument-hint: "<ticket id, issue URL, or bug description>"
 ---
