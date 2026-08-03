@@ -599,6 +599,13 @@ describe("writing-prose lens (L2 content tripwire)", () => {
     expect(text).toContain("Active Voice");
     expect(text).toContain("Plain Language");
   });
+
+  // Slice 1: mechanical ban rules.
+  test("pins the delete-list section heading (Words and phrases to delete)", () => {
+    const text = read(SKILL_FILE);
+    expect(text).toContain("Words and phrases to delete");
+  });
+
 });
 
 describe("systematic-debugging lens (L2 content tripwire)", () => {

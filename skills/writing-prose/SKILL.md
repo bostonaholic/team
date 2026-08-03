@@ -29,6 +29,8 @@ Write for the reader's comprehension, not the author's expertise.
   knows what you know.
 - **Avoid nominalizations.** "Make a decision" → "decide". "Provide an
   explanation" → "explain". Nominalizations hide the actor and the action.
+- **Use American spelling.** Write "color", not "colour", and "analyze",
+  not "analyse". One spelling standard gives each word one form.
 
 ### Simplified Technical English (ASD-STE100)
 
@@ -66,6 +68,10 @@ form (Non-STE) and the fix (STE).
   - Non-STE: *When you are doing this procedure, obey the safety
     precautions.* → STE: *When you do this procedure, obey the safety
     precautions.*
+- **Do not stack auxiliaries.** A chain of helper verbs hides the action.
+  Write one main verb.
+  - Non-STE: *It is important to note that this may help to improve X.* →
+    STE: *This improves X.*
 - **Use the active voice** (see Active Voice below). In description, passive
   is permitted only when the agent is unknown. Convert a passive by naming
   the agent as the subject, switching to the imperative, or using "you".
@@ -110,7 +116,7 @@ software documentation:
 | utilize | use |
 | ensure, verify, confirm | make sure that |
 | perform, execute, carry out, implement | do |
-| initiate | start |
+| initiate, begin, commence | start |
 | terminate | stop |
 | prior to | before |
 | via | through |
@@ -131,7 +137,22 @@ software documentation:
 | trigger | cause, start |
 | persist (of an error) | continue |
 | modify | change |
-| obtain | get |
+| obtain, acquire | get |
+| leverage | use |
+| facilitate | help |
+| demonstrate | show |
+| additionally, furthermore, moreover | also |
+| comprehensive | complete |
+| numerous, myriad | many |
+| regarding, concerning | about |
+| whilst | while |
+| amongst | among |
+| spin up | start |
+| reach out | contact |
+| dive into | examine |
+| kick off | start |
+| tear down | remove |
+| ramp up | increase |
 
 Examples from the STE dictionary itself:
 
@@ -156,6 +177,30 @@ Restricted meanings that writers commonly get wrong:
   the seal stays bonded. If it does not, a leak can occur."
 - *monitor* means to check something over a period of time for change — not
   a generic "watch" or "track".
+
+#### Words and phrases to delete
+
+These words and phrases add no meaning. Delete them. Do not replace them.
+
+- **Marketing adjectives:** seamless, robust, powerful, cutting-edge,
+  effortless, world-class, next-generation, revolutionary, battle-tested,
+  enterprise-grade.
+- **Modal hedges:** "it is important to note", "it should be noted", "it is
+  worth noting", "please note that", "as mentioned above".
+- **Filler:** "in order to", "a variety of", "in the event that", "due to
+  the fact that", "aforementioned", "henceforth".
+
+A delete-list word survives in three places only:
+
+- Verbatim quotes and cited external text. To quote is to report, not to
+  author.
+- Code, identifiers, and proper nouns (`spin_up()`, "Leverage API").
+- Established terms of art, where the substitute changes the technical
+  meaning ("robust statistics").
+
+Evaluative prose gets no exemption. Delete the adjective and state the
+measurable property instead: "the error handling is robust" becomes "the
+error handling retries twice, then surfaces the error".
 
 ### Active Voice
 
@@ -267,6 +312,7 @@ These patterns reliably indicate documentation that needs improvement:
 | Version-specific without version | "As of the latest release..." | "As of v2.3..." |
 | "Simply" or "just" | "Simply run the migration" | Remove — implies ease the reader may not feel |
 | Unexplained acronym | "Configure the IAM role for RBAC" | "Configure the IAM (Identity and Access Management) role for RBAC (Role-Based Access Control)" |
+| Empty closer | "provides a solid foundation for..." | Delete, or state the measurable property |
 
 ## Reviewing Documentation
 
