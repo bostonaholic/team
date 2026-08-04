@@ -183,8 +183,23 @@ Report the merge result. If it stopped short, report the reason: a failing
 check, a timeout, or branch protection. If the project publishes a release on
 merge, that runs asynchronously after the merge. Point the operator at
 `gh run watch`, or `gh run list`, so they can observe it rather than assume it
-is already done. End with the handoff: `Next: run /pr-cleanup to resync the
-default branch and delete the merged branch.`
+is already done.
+
+**On a merge that landed, run `/pr-cleanup`. Do not stop to recommend it.**
+The merge already happened. A resync of the default branch and a delete of
+the merged branch carry no decision. `/pr-cleanup` **Mode A** verifies the
+merged PR first, by identity and by containment, before it deletes anything.
+A handoff line here costs the operator a second command for no decision.
+
+Two limits hold, and both are load-bearing:
+
+- **Only a landed merge reaches cleanup.** A run that stopped at a failing
+  check, at the CI timeout, or at a branch-protection rejection merged
+  nothing. No merged branch exists to remove. `/pr-cleanup` must not run.
+- **Only Mode A is reachable this way.** Mode B (closed / abandoned) deletes
+  remote branches, worktrees, and planning scratch by force. An explicit
+  abandon request is its only gate. It stays user-triggered, and this
+  chaining never reaches it.
 
 `shipit` touches no tracker or board — it stays generic. If the PR links a
 ticket (e.g. `Closes #<n>`), the tracker closes that ticket when the merge

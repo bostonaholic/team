@@ -7,12 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`/shipit` no longer stops after a merge to tell you to go clean up.** Its Completion step ended with a handoff line — `Next: run /pr-cleanup` — so every landed PR left the default branch unsynced and the merged branch alive until someone typed a second command. Nothing in that step is a decision: the merge already happened, and `/pr-cleanup`'s Mode A gates itself on merged-PR verification (identity plus containment) before it deletes anything. `/shipit` now runs cleanup on a merge that landed. Two limits hold: a run that stopped at a failing check, the CI timeout, or a branch-protection rejection merged nothing and reaches no cleanup, and only Mode A is reachable this way — Mode B (closed / abandoned) force-deletes remote branches and worktrees on the strength of an explicit abandon request, so it stays user-triggered. [`skills/shipit/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/shipit/SKILL.md)
+
 ## [0.34.0] - 2026-08-04
 
 ### Added
 
 - **The prose canon now carries mechanical ban rules, two named modes, and a pre-return self-lint.** `writing-prose` gains a delete-list of marketing adjectives, modal hedges, and filler — words you delete, never replace. It adds fifteen substitution rows, extends two in place, and adds a stacked-auxiliaries rule, an American-spelling bullet, and an empty-closer smell row. Every consumer that already points at the skill inherits them with no edit of its own. A "Two modes" section names the split the skill only implied: strict governs instruction text, STE-flavored governs descriptive prose. The modes differ in exactly three deltas (sentence cap, form, conditional mood) and share every ban list. A nine-item "Self-lint" checklist runs before any governed text is final. The delete-list idea, the mode split, and the self-lint structure come from the ["cure for AI slop" writing kit](https://github.com/woosal1337/blog/tree/main/videos/ep01-the-cure-for-ai-slop). The kit carries the MIT License, © 2026 Ege Çelebi. The skill restates the ideas in its own words. The `design-author` agent now preloads the full skill. The nine consumer blurbs across eight skills collapse into one canonical variant that names STE-flavored mode and points at the self-lint. A bundled scorer, `skills/writing-prose/ste-lint.mjs`, reports violations of the mechanical rules per 100 words. It runs on Node, gates nothing, and exists to compare prose against a recorded baseline. It works the same on Claude Code and Codex, because the documented command names the skill's own directory instead of a host-only variable. [`skills/writing-prose/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/writing-prose/SKILL.md), [`agents/design-author.md`](https://github.com/bostonaholic/team/blob/main/agents/design-author.md)
-
 ## [0.33.2] - 2026-08-04
 
 ### Fixed
