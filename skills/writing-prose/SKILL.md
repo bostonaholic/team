@@ -39,6 +39,12 @@ Technical documentation must follow ASD-STE100 Simplified Technical English
 language is not English. The plain-language principles above are the
 foundation. STE adds mechanical rules.
 
+The delete-list idea, the two-mode split, and the self-lint structure come
+from the "cure for AI slop" writing kit at
+<https://github.com/woosal1337/blog/tree/main/videos/ep01-the-cure-for-ai-slop>.
+That repository declares no license for its content, so this file restates
+the ideas in its own words.
+
 #### Two modes
 
 The rules run in one of two modes. The mode follows the text type, not the
@@ -104,8 +110,8 @@ Each rule below shows the rejected form (Non-STE) and the fix (STE).
     precautions.*
 - **Do not stack auxiliaries.** A chain of helper verbs hides the action.
   Write one main verb.
-  - Non-STE: *It is important to note that this may help to improve X.* →
-    STE: *This improves X.*
+  - Non-STE: *It would seem that the cache may serve to reduce the load
+    time.* → STE: *The cache reduces the load time.*
 - **Use the active voice** (see Active Voice below). In description, passive
   is permitted only when the agent is unknown. Convert a passive by naming
   the agent as the subject, switching to the imperative, or using "you".
@@ -216,9 +222,10 @@ Restricted meanings that writers commonly get wrong:
 
 These words and phrases add no meaning. Delete them. Do not replace them.
 
-- **Marketing adjectives:** seamless, robust, powerful, cutting-edge,
-  effortless, world-class, next-generation, revolutionary, battle-tested,
-  enterprise-grade.
+- **Marketing adjectives (alphabetical):** battle-tested, best-in-class,
+  blazing-fast, cutting-edge, disruptive, effortless, enterprise-grade,
+  game-changing, next-generation, powerful, revolutionary, robust,
+  seamless, state-of-the-art, world-class.
 - **Modal hedges:** "it is important to note", "it should be noted", "it is
   worth noting", "please note that", "as mentioned above".
 - **Filler:** "in order to", "a variety of", "in the event that", "due to
@@ -296,8 +303,8 @@ names one defect. Fix every hit before the text is final.
 3. **Contraction** — expand it ("do not", never "don't").
 4. **Passive with a known actor** — make it active. Name the actor as the
    subject.
-5. **Hidden action** — an "-ing" main verb, a nominalization ("perform an
-   analysis"), a phrasal verb the substitution table maps ("spin up"), or
+5. **Hidden action** — an "-ing" main verb, a nominalization ("make an
+   assessment"), a phrasal verb the substitution table maps ("spin up"), or
    stacked auxiliaries. Write one plain verb.
 6. **Two names for one thing** — pick one name and use it everywhere.
 7. **Banned word** — a delete-list word or a substitution-table word. Delete
