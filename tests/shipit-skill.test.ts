@@ -130,8 +130,39 @@ describe("shipit skill: push, wait for CI, merge", () => {
   });
 });
 
-describe("shipit skill: post-merge handoff", () => {
-  test("the Completion report hands off to /pr-cleanup", () => {
+describe("shipit skill: post-merge cleanup", () => {
+  test("the Completion report names /pr-cleanup", () => {
     expect(completionSection()).toContain("/pr-cleanup");
+  });
+
+  // A merged PR leaves the default branch unsynced and the branch undeleted.
+  // Nothing about that is a decision — the merge already happened, and
+  // /pr-cleanup's Mode A gates itself on merged-PR verification. Telling the
+  // operator to go run it re-inserts a human gate the pipeline is designed
+  // not to have, and because this is the RUNTIME skill, every caller inherits
+  // the stop. Completion must run cleanup, not recommend it.
+  test("Completion instructs running /pr-cleanup, not recommending it", () => {
+    const c = flat(completionSection());
+    // Negative sweep: the passive framings. A meaning-preserving rewrite never
+    // reintroduces a phrasing the contract bans, so this cannot pin wording.
+    expect(/end with the handoff/i.test(c)).toBe(false);
+    expect(/Next:\s*run \/pr-cleanup/i.test(c)).toBe(false);
+  });
+
+  // NOT asserted here: that cleanup is *conditioned* on the merge succeeding.
+  // That is prose semantics, and the only L2 shape available for it is a
+  // proximity span between "/pr-cleanup" and "merged" — which docs/testing.md
+  // bans outright ("Proximity spans test if an author put two ideas in one
+  // sentence. That is a style question, not a contract"). It also failed to
+  // discriminate: the span matched the buggy text too, so it would have
+  // passed while the bug shipped. Conditional-on-success belongs at L5/L6,
+  // where a model can judge whether the instruction lands.
+
+  // Mode B force-deletes remote branches and worktrees on the strength of an
+  // explicit abandon request. It must never be reachable by automatic chaining.
+  test("only Mode A is auto-reachable; Mode B stays user-triggered", () => {
+    const c = flat(completionSection());
+    expect(/Mode A/.test(c)).toBe(true);
+    expect(/Mode B/.test(c)).toBe(true);
   });
 });
