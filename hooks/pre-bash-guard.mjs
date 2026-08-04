@@ -79,6 +79,10 @@ async function readStdin() {
 function askUser(reason) {
   const payload = JSON.stringify({
     hookSpecificOutput: {
+      // Required by Claude Code's hook output schema. Without it the whole
+      // payload fails validation and the decision is DISCARDED — the guard
+      // fails open and the dangerous command runs unprompted.
+      hookEventName: "PreToolUse",
       permissionDecision: "ask",
     },
     systemMessage: `⚠️ Dangerous command detected: ${reason}`,
