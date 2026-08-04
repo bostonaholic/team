@@ -490,8 +490,10 @@ Methodology skills carry no `argument-hint`. Agents load them through one
 of two mechanisms. The first is a `skills:` YAML list in the agent's
 frontmatter. For example, `agents/design-author.md` declares
 `skills: [product-thinking, progress-tracking, authoring-designs,
-writing-prose]`. The
-second is an inline prose load instruction in the agent body. For
+writing-prose]`. Those four names are three countable skills under the
+load limit in the Design guidelines below: `authoring-designs` is
+design-author's own extracted procedure skill, which that limit exempts.
+The second is an inline prose load instruction in the agent body. For
 example, the `implementer` body's Code quality section loads
 `solid-principles` inline.
 
@@ -554,8 +556,8 @@ consumers, and behaviors), see [skills.md](skills.md).
 ### Design guidelines
 
 1. **Methodology skill load limit:** Soft limit of 3 methodology skills
-   per agent invocation. At ~143 lines average per skill, 3 skills add
-   ~430 lines (~6K-10K tokens, under 6% of 200K context). A fourth skill
+   per agent invocation. A skill averages roughly 190 lines, so 3 skills
+   add roughly 570 lines (~10K tokens, about 5% of 200K context). A fourth skill
    signals that the agent's responsibility can be too broad. This is a
    design convention, not a hard constraint. An agent's own extracted
    procedure skill does not count toward the soft limit: it replaces
@@ -602,7 +604,11 @@ acceptance tooling run by plugin developers. `check-discovery-consistency.sh`
 is the committed consistency gate for the input-discovery feature: it asserts
 every archetype-A skill carries the discovery block, the load-bearing fragments
 (`ID_RE`, `PHASE_FILES`, `docs/plans/` root) stay byte-identical
-to canon, and the research-isolation invariant holds.
+to canon, and the research-isolation invariant holds. `ste-lint.py` scores
+prose against the mechanical rules in `skills/writing-prose/SKILL.md`, as
+violations per 100 words. It is unwired and gates nothing — run it by hand
+with `python3 .claude/scripts/ste-lint.py [--breakdown] [--cap 25] <file>`
+to compare prose against a recorded baseline.
 
 ## 8. Behavioral evals
 
