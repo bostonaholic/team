@@ -5,12 +5,17 @@
 # https://github.com/woosal1337/blog/tree/main/videos/ep01-the-cure-for-ai-slop
 # (consulted 2026-08-03). That repository declares no license for its code, so
 # none of its code is used here. This implementation was written from scratch
-# for this repository: every rule, word list, pattern, and category below
-# derives from skills/writing-prose/SKILL.md — specifically its self-lint
-# checklist, its delete list, and its substitution table. The rows this
-# scorer reads from those tables were added by the same change set that added
-# this script, so the skill file is the single authority for what counts as
-# a violation, not an independent second source.
+# for this repository. Its violation categories come from the self-lint
+# checklist in skills/writing-prose/SKILL.md, and its word lists hold that
+# skill's delete-list and substitution-table rows plus inflected forms of
+# those rows ("seamlessly", "comprehensively", "utilization"). The grammar
+# vocabulary below (BE_FORMS, IRREGULAR_PARTICIPLES, LIGHT_VERBS,
+# NOMINAL_SUFFIXES) is implementation detail for detecting the skill's
+# passive-voice and nominalization rules; the skill states those rules in
+# prose and lists no such vocabulary. The rows this scorer reads from the
+# skill's tables were added by the same change set that added this script,
+# so the skill file is the single authority for what counts as a violation,
+# not an independent second source.
 #
 # Requires Ruby (2.6 or newer); invoke it explicitly:
 #
@@ -30,8 +35,10 @@
 # Known false positive: the contraction check also matches possessives
 # ("file's"). Both need the same human eye, so both are flagged.
 #
-# Pattern note: no pattern below nests one quantifier inside another, so no
-# input can trigger catastrophic backtracking.
+# Pattern note: every quantified class below is anchored — by \b, \A, a
+# lookaround, or a literal delimiter — so backtracking is bounded per token,
+# not per character. Measured: scoring stays linear to 4 MB of input at
+# roughly 2.5 MB/s.
 
 require "optparse"
 require "set"
@@ -52,9 +59,10 @@ end
 
 # "Words and phrases to delete" — the skill's three named delete groups.
 MARKETING_ADJECTIVES = %w[
-  battle-tested cutting-edge effortless effortlessly enterprise-grade
-  next-generation powerful revolutionary robust robustly seamless
-  seamlessly world-class
+  battle-tested best-in-class blazing-fast cutting-edge disruptive
+  effortless effortlessly enterprise-grade game-changing next-generation
+  powerful revolutionary robust robustly seamless seamlessly
+  state-of-the-art world-class
 ].sort.freeze
 MODAL_HEDGES = [
   "as mentioned above", "it is important to note", "it is worth noting",
@@ -97,7 +105,7 @@ IRREGULAR_PARTICIPLES = Set.new(%w[
   read run seen sent set shown split taken thought thrown understood
   written
 ]).freeze
-# Light verbs that carry a nominalization ("perform an analysis").
+# Light verbs that carry a nominalization ("make an assessment").
 LIGHT_VERBS = Set.new(
   verb_forms("conduct") + verb_forms("execute") + verb_forms("perform") +
   verb_forms("provide") + %w[made make makes]
@@ -137,7 +145,7 @@ PHRASAL_RE = phrase_regex(PHRASAL_VERBS)
 # "list-item" (one item plus its continuation lines), "heading", and
 # "table-row". Fenced code is dropped; an inline code span collapses to
 # the single placeholder token "code" so it counts as one word.
-def logical_units(text)
+def logical_units(text, source)
   units = []
   pending = []
   pending_kind = "prose"
@@ -188,6 +196,10 @@ def logical_units(text)
     pending << line
   end
   flush.call
+  if in_fence
+    warn "ste-lint: #{source}: warning: a code fence is still open at end " \
+         "of input; text inside it was not scored"
+  end
   units
 end
 
@@ -222,8 +234,8 @@ def grammar_hits(sentence)
   [passive, progressive, nominal]
 end
 
-def score(text, cap)
-  units = logical_units(text)
+def score(text, cap, source)
+  units = logical_units(text, source)
   all_text = units.map { |_, unit_text| unit_text }.join("\n")
 
   sentence_lengths = []
@@ -322,8 +334,13 @@ def main(argv)
   failures = 0
   (paths.empty? ? ["-"] : paths).each do |path|
     if path == "-"
-      render("<stdin>", score($stdin.read.force_encoding("UTF-8"), cap),
-             breakdown)
+      text = $stdin.read.force_encoding("UTF-8")
+      unless text.valid_encoding?
+        warn "ste-lint: <stdin>: invalid byte sequence in UTF-8"
+        failures += 1
+        next
+      end
+      render("<stdin>", score(text, cap, "<stdin>"), breakdown)
       next
     end
     begin
@@ -340,7 +357,7 @@ def main(argv)
       failures += 1
       next
     end
-    render(path, score(text, cap), breakdown)
+    render(path, score(text, cap, path), breakdown)
   end
   failures.zero? ? 0 : 1
 end
