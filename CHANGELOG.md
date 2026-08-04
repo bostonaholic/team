@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.2] - 2026-08-04
+
 ### Fixed
 
 - **The dangerous-command guard was failing open — it detected destructive commands and let them run anyway.** `pre-bash-guard` emitted its `permissionDecision: "ask"` inside a payload missing `hookEventName`, which Claude Code's hook output schema requires. The harness rejected the whole payload as malformed and discarded the decision, so commands the guard matched — `rm -rf /`, `git push --force`, `git reset --hard`, `mkfs`, a fork bomb — executed with no prompt. The guard has been silently ineffective for every install, and its own test suite stayed green throughout, because the hook did emit the decision; only the envelope around it was invalid. The payload now names its event, so matched commands prompt as intended. Two checks pin it: the hook's tests assert the envelope on every guarded command rather than the decision alone, and a tripwire fails the build if any hook writes a `hookSpecificOutput` payload to stdout without naming its event. [`hooks/pre-bash-guard.mjs`](https://github.com/bostonaholic/team/blob/main/hooks/pre-bash-guard.mjs)
@@ -379,7 +381,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.33.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.33.2...HEAD
+[0.33.2]: https://github.com/bostonaholic/team/compare/v0.33.1...v0.33.2
 [0.33.1]: https://github.com/bostonaholic/team/compare/v0.33.0...v0.33.1
 [0.33.0]: https://github.com/bostonaholic/team/compare/v0.32.0...v0.33.0
 [0.32.0]: https://github.com/bostonaholic/team/compare/v0.31.1...v0.32.0
