@@ -42,8 +42,8 @@ foundation. STE adds mechanical rules.
 The delete-list idea, the two-mode split, and the self-lint structure come
 from the "cure for AI slop" writing kit at
 <https://github.com/woosal1337/blog/tree/main/videos/ep01-the-cure-for-ai-slop>.
-That repository declares no license for its content, so this file restates
-the ideas in its own words.
+The kit carries the MIT License, © 2026 Ege Çelebi. This file restates the
+ideas in its own words.
 
 #### Two modes
 

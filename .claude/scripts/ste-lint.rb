@@ -3,12 +3,13 @@
 # Credit: the approach — a small mechanical scorer that reports prose
 # violations per 100 words — comes from the "cure for AI slop" writing kit at
 # https://github.com/woosal1337/blog/tree/main/videos/ep01-the-cure-for-ai-slop
-# (consulted 2026-08-03). That repository declares no license for its code, so
-# none of its code is used here. This implementation was written from scratch
-# for this repository. Its violation categories come from the self-lint
-# checklist in skills/writing-prose/SKILL.md, and its word lists hold that
-# skill's delete-list and substitution-table rows plus inflected forms of
-# those rows ("seamlessly", "comprehensively", "utilization"). The grammar
+# (consulted 2026-08-03). The kit carries the MIT License, Copyright (c) 2026
+# Ege Çelebi. None of its code is used here: this implementation was written
+# from scratch for this repository. Its violation categories come from the
+# self-lint checklist in skills/writing-prose/SKILL.md, and its word lists
+# hold that skill's delete-list rows and a curated subset of its
+# substitution-table rows, plus inflected forms of those rows ("seamlessly",
+# "comprehensively", "utilization"). The grammar
 # vocabulary below (BE_FORMS, IRREGULAR_PARTICIPLES, LIGHT_VERBS,
 # NOMINAL_SUFFIXES) is implementation detail for detecting the skill's
 # passive-voice and nominalization rules; the skill states those rules in
@@ -37,8 +38,7 @@
 #
 # Pattern note: every quantified class below is anchored — by \b, \A, a
 # lookaround, or a literal delimiter — so backtracking is bounded per token,
-# not per character. Measured: scoring stays linear to 4 MB of input at
-# roughly 2.5 MB/s.
+# not per character. Measured: scoring stays linear to 4 MB of input.
 
 require "optparse"
 require "set"
