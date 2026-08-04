@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // ste-lint: score prose drift against the writing-prose skill.
 //
 // Credit: the approach — a small mechanical scorer that reports prose
@@ -37,10 +38,17 @@
 // Known false positive: the contraction check also matches possessives
 // ("file's"). Both need the same human eye, so both are flagged.
 //
-// Pattern note: every quantified class below is anchored — by \b, ^, a
-// lookaround, or a literal delimiter — so backtracking is bounded per token,
-// not per character. Measured under Node 22: scoring stays linear to 4 MB
-// of input.
+// Pattern note: `$` does NOT bound backtracking. A `[…]+$` class retries at
+// every position of a long interior run and unwinds the whole run each time,
+// which is quadratic in the run's length — the reason `trimEnds` below scans
+// indices instead. Read that trap as the standing rule for this file: when a
+// quantifier needs a boundary, use \b, ^, a lookaround, or a literal
+// delimiter, and never lean on `$`. No quantifier here nests another.
+//
+// Measured under Node 22 after the index-scan fix: linear to 64 MB of
+// ordinary prose, and flat in the length of an interior whitespace or pipe
+// run (500k interior spaces score in 0.06s; the same input took over two
+// minutes against the `[…]+$` form).
 
 import { readFileSync } from "node:fs";
 
@@ -142,10 +150,33 @@ const FILLER_RE = phraseRegex(FILLER);
 const SUBSTITUTION_RE = phraseRegex(SUBSTITUTION_WORDS);
 const PHRASAL_RE = phraseRegex(PHRASAL_VERBS);
 
-// ASCII-whitespace strip, so parsing does not swallow exotic Unicode spaces
-// that markdown treats as content.
+// Trim a run of matching characters off both ends by scanning indices.
+//
+// A `[…]+$` regex is the obvious spelling and the wrong one: it retries at
+// every position of a long internal run, consumes to the run's end, fails the
+// anchor, and backtracks through every length. That is quadratic in the run's
+// length. Index scanning is linear and cannot backtrack.
+function trimEnds(text, matches) {
+  let start = 0;
+  let end = text.length;
+  while (start < end && matches(text.charCodeAt(start))) start += 1;
+  while (end > start && matches(text.charCodeAt(end - 1))) end -= 1;
+  return text.slice(start, end);
+}
+
+// Space, NUL, and the \t \n \v \f \r block at 0x09-0x0d. ASCII only, so
+// parsing does not swallow exotic Unicode spaces that markdown treats as
+// content.
+function isAsciiSpace(code) {
+  return code === 0x20 || (code >= 0x09 && code <= 0x0d) || code === 0x00;
+}
+
+function isPipe(code) {
+  return code === 0x7c;
+}
+
 function strip(text) {
-  return text.replace(/^[ \t\n\v\f\r\0]+/, "").replace(/[ \t\n\v\f\r\0]+$/, "");
+  return trimEnds(text, isAsciiSpace);
 }
 
 // Reflow markdown into [kind, text] units.
@@ -190,7 +221,7 @@ function logicalUnits(text, source) {
     }
     if (line.startsWith("|")) {
       flush();
-      units.push(["table-row", line.replace(/^\|+|\|+$/g, "").replaceAll("|", " ")]);
+      units.push(["table-row", trimEnds(line, isPipe).replaceAll("|", " ")]);
       pendingKind = "prose";
       continue;
     }
@@ -445,8 +476,14 @@ function main(argv) {
     let text;
     try {
       text = decoder.decode(buffer);
-    } catch {
-      process.stderr.write(`ste-lint: ${name}: invalid byte sequence in UTF-8\n`);
+    } catch (error) {
+      // fatal:true throws TypeError for bad bytes. Anything else is a
+      // different failure — a file past V8's max string length, say — and
+      // must not be reported as an encoding problem.
+      const reason = error instanceof TypeError
+        ? "invalid byte sequence in UTF-8"
+        : error.message;
+      process.stderr.write(`ste-lint: ${name}: ${reason}\n`);
       failures += 1;
       continue;
     }
