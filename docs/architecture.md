@@ -604,10 +604,10 @@ acceptance tooling run by plugin developers. `check-discovery-consistency.sh`
 is the committed consistency gate for the input-discovery feature: it asserts
 every archetype-A skill carries the discovery block, the load-bearing fragments
 (`ID_RE`, `PHASE_FILES`, `docs/plans/` root) stay byte-identical
-to canon, and the research-isolation invariant holds. `ste-lint.py` scores
+to canon, and the research-isolation invariant holds. `ste-lint.rb` scores
 prose against the mechanical rules in `skills/writing-prose/SKILL.md`, as
 violations per 100 words. It is unwired and gates nothing — run it by hand
-with `python3 .claude/scripts/ste-lint.py [--breakdown] [--cap 25] <file>`
+with `ruby .claude/scripts/ste-lint.rb [--breakdown] [--cap 25] <file>`
 to compare prose against a recorded baseline.
 
 ## 8. Behavioral evals
