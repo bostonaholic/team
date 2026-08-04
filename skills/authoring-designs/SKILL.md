@@ -13,7 +13,7 @@ template below.
 Write the prose this skill governs at a seventh-grade reading level, in
 STE-flavored mode — short sentences, common words, no unexplained jargon.
 Full methodology: `skills/writing-prose/SKILL.md`. Before you finalize
-prose this skill governs, run the `## Self-lint` in that file.
+prose this skill governs, apply the `## Self-lint` checklist in that file.
 
 If `task.md` references a `prd.md`, read it first and treat its scope
 boundaries and acceptance criteria per the "Consuming a PRD downstream"
