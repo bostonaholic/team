@@ -919,7 +919,9 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   form, conditional mood) and every ban list shared. A delete-list names
   words to remove, never replace: marketing adjectives, modal hedges,
   filler. A `## Self-lint` checklist runs on any governed text before it
-  is final. The technical-writer's review procedure that applies this
+  is final. A bundled scorer, `ste-lint.mjs`, sits next to the skill file
+  and reports violations of the mechanical rules per 100 words. It gates
+  nothing. The technical-writer's review procedure that applies this
   bar lives in `reviewing-documentation`.
 
 ### reviewing-documentation

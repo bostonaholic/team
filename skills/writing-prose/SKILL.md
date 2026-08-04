@@ -320,6 +320,21 @@ counter-examples — this file's own Non-STE examples break the rules on
 purpose. If a reviewer cites an item and the author disputes it, the
 conventional-comments framework carries the disagreement.
 
+## Mechanical score
+
+A bundled script scores prose against the mechanical rules in this file, as
+violations per 100 words:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/writing-prose/ste-lint.mjs" --breakdown --cap 25 <file>
+```
+
+The default cap of 20 words scores instruction text (strict mode). Pass
+`--cap 25` to score descriptive prose at the STE-flavored cap. The score is
+a drift signal, not a gate. Nothing runs the script automatically. The
+`## Self-lint` checklist above remains the check you run before governed
+text is final.
+
 ## Assessing Documentation Quality
 
 When reviewing documentation, evaluate each piece against these dimensions:
