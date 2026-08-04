@@ -350,8 +350,8 @@ Can a typical reader understand this in one pass?
   jargon. Long sentences, rare words, and deep nesting all increase cognitive
   load.
 - **STE conformance.** Check prose against the ASD-STE100 rules above. Those
-  rules cover sentence-length limits, one instruction per sentence,
-  imperative instructions, and simple tenses. They also cover one meaning
+  rules cover the sentence caps (20 words strict, 25 STE-flavored), one
+  instruction per sentence, imperative instructions, and simple tenses. They also cover one meaning
   per word and noun clusters of three words or fewer. Last, they cover the
   word substitutions in the STE table (utilize, ensure, perform, however,
   should). Hold instruction text to strict mode and descriptive prose to
