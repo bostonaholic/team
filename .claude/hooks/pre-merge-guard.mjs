@@ -11,7 +11,9 @@
  *
  * Failure direction: fail open only before jurisdiction is decided
  * (unparseable stdin, a command the tokenizer cannot parse confidently, no
- * `gh pr merge` simple command). Once in jurisdiction, every failure —
+ * `gh pr merge` simple command) — and only through those decided paths: a
+ * crash anywhere, including inside the tokenizer, denies. Once in
+ * jurisdiction, every failure —
  * gh error, fetch failure, behind-base head, deadline expiry, script verdict —
  * denies. Deny goes through two independent channels: the `deny` permission
  * payload on stdout and exit 2 with the same text on stderr, so a schema
@@ -937,16 +939,20 @@ async function main() {
   const command = input?.tool_input?.command;
   if (typeof command !== "string") process.exit(0);
 
-  const commands = tokenize(command);
-  if (commands === null) process.exit(0);
-
-  const mergeCommandList = findMergeCommands(commands);
-  if (mergeCommandList.length === 0) process.exit(0);
-
-  // In jurisdiction from here: an unexpected crash must deny, not fall
-  // through as a fail-open exit 1 (the c945395 class). The whole command is
-  // allowed only when every merge command in it passes or is out of scope.
+  // Any crash from here denies, never falls through as a fail-open exit 1
+  // (the c945395 class). That covers the tokenizer too: its span scanners
+  // recurse with the nesting depth, so adversarially deep nesting can blow
+  // the stack (RangeError), and a crash — unlike the tokenizer's null, which
+  // is reserved for input bash itself refuses — says nothing about what bash
+  // would run. The whole command is allowed only when every merge command in
+  // it passes or is out of scope.
   try {
+    const commands = tokenize(command);
+    if (commands === null) process.exit(0);
+
+    const mergeCommandList = findMergeCommands(commands);
+    if (mergeCommandList.length === 0) process.exit(0);
+
     for (const mergeWords of mergeCommandList) gate(mergeWords);
   } catch (error) {
     deny(`pre-merge guard error: ${error?.message ?? String(error)}`);

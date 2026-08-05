@@ -264,6 +264,21 @@ describe("slice 1: the guard denies a violating merge at the merge attempt", () 
     expect(r.stdout ?? "").toBe("");
   });
 
+  test("denies on a tokenizer crash instead of failing open", () => {
+    // The span scanners recurse with the nesting depth, so adversarially
+    // deep "$("$("$(… nesting blows the stack (RangeError). A crash says
+    // nothing about what bash would run — unlike the tokenizer's null,
+    // reserved for input bash itself refuses — so it must deny, never ride
+    // the fail-open exit. Loud stubs: the deny happens before any external
+    // call.
+    const r = runHook(
+      `gh pr merge 5 --subject ${'"$('.repeat(200_000)}`,
+      loudStubs(),
+    );
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain("pre-merge guard error");
+  });
+
   test("denies on a behind-base head", () => {
     // The up-to-date precondition fails before the script runs — a rebase can
     // change both verdict inputs, so a behind-base head yields no verdict.
