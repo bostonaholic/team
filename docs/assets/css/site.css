@@ -373,7 +373,7 @@ body.home main>h1::after {
   content: "█";
   margin-left: 2px;
   color: var(--muted);
-  animation: blink 1.1s steps(1) 1.6s infinite;
+  animation: blink 1.1s steps(1) infinite;
 }
 
 /* --- focus-visible (sharp outline) --------------------------------------- */
