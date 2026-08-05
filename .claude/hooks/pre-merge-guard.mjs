@@ -117,8 +117,9 @@ function tokenize(command) {
     }
   };
 
-  // Read a quoted/escaped word fragment used as a heredoc terminator.
-  const readHeredocTerminator = () => {
+  // Read a quoted/escaped word used as a heredoc terminator or a
+  // here-string operand.
+  const readRedirectionWord = () => {
     let terminator = "";
     let sawAny = false;
     while (i < length) {
@@ -246,7 +247,18 @@ function tokenize(command) {
       i = lineEnd === -1 ? length : lineEnd;
       continue;
     }
-    if (ch === "<" && command[i + 1] === "<" && command[i + 2] !== "<") {
+    if (ch === "<" && command[i + 1] === "<" && command[i + 2] === "<") {
+      // Here-string: consume all three `<` and discard the operand as data —
+      // leaving any `<` behind would push a phantom heredoc whose missing
+      // terminator fails the whole parse open.
+      endWord();
+      i += 3;
+      while (command[i] === " " || command[i] === "\t") i += 1;
+      const operand = readRedirectionWord();
+      if (operand === null) return null;
+      continue;
+    }
+    if (ch === "<" && command[i + 1] === "<") {
       endWord();
       i += 2;
       let stripTabs = false;
@@ -255,7 +267,7 @@ function tokenize(command) {
         i += 1;
       }
       while (command[i] === " " || command[i] === "\t") i += 1;
-      const terminator = readHeredocTerminator();
+      const terminator = readRedirectionWord();
       if (terminator === null) return null;
       pendingHeredocs.push({ terminator, stripTabs });
       continue;
@@ -298,8 +310,11 @@ function basename(word) {
 // discarding leading NAME=value assignment words — are exactly `gh pr merge`
 // (the first may be a path whose basename is gh). Leading shell reserved
 // words and grouping openers are deliberately NOT discarded (err narrow):
-// `if …; then gh pr merge; fi`, `{ gh pr merge; }` stay out.
-function findMergeCommand(commands) {
+// `if …; then gh pr merge; fi`, `{ gh pr merge; }` stay out. Every match is
+// collected: a compound command is gated on ALL of its merge commands, so an
+// out-of-scope first merge can never allow a later one.
+function findMergeCommands(commands) {
+  const matches = [];
   for (const words of commands) {
     let start = 0;
     while (start < words.length && isAssignmentWord(words[start])) start += 1;
@@ -310,10 +325,10 @@ function findMergeCommand(commands) {
       rest[1] === "pr" &&
       rest[2] === "merge"
     ) {
-      return rest;
+      matches.push(rest);
     }
   }
-  return null;
+  return matches;
 }
 
 // gh pr merge flags that consume the following word — without this list a
@@ -373,7 +388,11 @@ function normalizeRepoTarget(value) {
   if (value.includes("://") || /^[^@]+@[^:]+:/.test(value)) {
     return repoSlugFromUrl(value);
   }
-  return value.trim().replace(/\/+$/, "").toLowerCase();
+  // gh accepts `[HOST/]OWNER/REPO` — reduce to the last two path segments so
+  // a host-qualified value still names this repo instead of reading foreign.
+  const segments = value.trim().replace(/\/+$/, "").split("/").filter(Boolean);
+  if (segments.length < 2) return null;
+  return segments.slice(-2).join("/").toLowerCase();
 }
 
 // --- The invariant run ------------------------------------------------------
@@ -413,6 +432,9 @@ function withRecoveryRoute(verdict) {
   return verdict;
 }
 
+// Gate one merge command: return to allow it (or to skip it as out of
+// scope), deny() to block. Allow must never exit the process — a compound
+// command can carry further merge commands that still need gating.
 function gate(mergeWords) {
   const { repoFlag, selector } = parseMergeArgs(mergeWords);
 
@@ -426,8 +448,12 @@ function gate(mergeWords) {
         "pre-merge guard: could not derive the home repo from the origin remote",
       );
     }
+    const target = normalizeRepoTarget(repoFlag);
+    if (target === null) {
+      deny(`pre-merge guard: could not parse the --repo target: ${repoFlag}`);
+    }
     // The invariant binds this repo only — a foreign-repo merge passes.
-    if (normalizeRepoTarget(repoFlag) !== home) process.exit(0);
+    if (target !== home) return;
   }
 
   const view = run("gh", [
@@ -462,7 +488,7 @@ function gate(mergeWords) {
   const defaultBranch = resolveDefaultBranch();
   // The invariant gates merges into the default branch only (the old
   // workflow's trigger scope) — any other base passes.
-  if (baseRefName !== defaultBranch) process.exit(0);
+  if (baseRefName !== defaultBranch) return;
 
   const fetchBase = run("git", ["fetch", "origin", defaultBranch]);
   if (!succeeded(fetchBase)) {
@@ -530,7 +556,7 @@ function gate(mergeWords) {
   });
   if (succeeded(verdict) && (verdict.stdout ?? "").startsWith("OK:")) {
     // Allow silently (pre-bash-guard.mjs precedent: no output on allow).
-    process.exit(0);
+    return;
   }
   const text =
     `${verdict.stdout ?? ""}${verdict.stderr ?? ""}`.trim() ||
@@ -561,13 +587,14 @@ async function main() {
   const commands = tokenize(command);
   if (commands === null) process.exit(0);
 
-  const mergeWords = findMergeCommand(commands);
-  if (mergeWords === null) process.exit(0);
+  const mergeCommandList = findMergeCommands(commands);
+  if (mergeCommandList.length === 0) process.exit(0);
 
   // In jurisdiction from here: an unexpected crash must deny, not fall
-  // through as a fail-open exit 1 (the c945395 class).
+  // through as a fail-open exit 1 (the c945395 class). The whole command is
+  // allowed only when every merge command in it passes or is out of scope.
   try {
-    gate(mergeWords);
+    for (const mergeWords of mergeCommandList) gate(mergeWords);
   } catch (error) {
     deny(`pre-merge guard error: ${error?.message ?? String(error)}`);
   }

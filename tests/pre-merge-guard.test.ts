@@ -338,6 +338,8 @@ describe("slice 2: out of jurisdiction — never gated, proven by loud stubs", (
     `grep gh pr merge`,
     // Heredoc bodies are data, never split into commands.
     `cat <<'EOF'\ngh pr merge 5\nEOF`,
+    // A here-string operand is data, never a word.
+    `grep merge <<<"gh pr merge 5"`,
     // Indirection is never unwrapped.
     `bash -c "gh pr merge 5"`,
     `env gh pr merge`,
@@ -375,6 +377,16 @@ describe.if(HAS_JQ)("slice 2: in jurisdiction — every simple command is tested
     `yes | gh pr merge`,
     // Leading NAME=value assignment words are discarded before matching.
     `GH_TOKEN=x gh pr merge`,
+    // A `<<<` here-string is not a heredoc: the operand is consumed as data
+    // and the merge command after it still engages.
+    `jq -e .ok <<<"$json" && gh pr merge 5`,
+    // Every merge command in a compound command is gated: a foreign-repo
+    // first merge is out of scope but never allows the home-repo second one.
+    `gh pr merge 5 --repo other/repo && gh pr merge 6`,
+    // gh documents `--repo [HOST/]OWNER/REPO`: a host-qualified value still
+    // names this repo and must engage, not read as foreign.
+    `gh pr merge 5 --repo github.com/bostonaholic/team`,
+    `gh pr merge 5 --repo=github.com/bostonaholic/team`,
   ];
 
   for (const command of inShapes) {
