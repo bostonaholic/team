@@ -1,0 +1,13 @@
+{
+  "bugs": [
+    {
+      "id": "a1",
+      "category": "over-abstraction",
+      "severity": "medium",
+      "description": "Four classes (strategy interface, concrete strategy, registry, factory) and a facade wrap a one-line string reversal with a single caller and a single strategy. This is speculative generality / unnecessary abstraction — the simplicity and 'implement directly, avoid unnecessary abstraction' principles say to collapse it to a small function until a second strategy actually exists (YAGNI).",
+      "detection_hint": "over-?engineer|over-?abstract|unnecessary\\s+(abstraction|complexity|indirection|layer|class)|speculative general|overkill|needless\\w*|YAGNI|simplif|single (small )?function|just (be )?a function|too many (layers|classes)|collapse|premature (abstraction|generaliz)"
+    }
+  ],
+  "minimum_detection": 1.0,
+  "max_false_positives": 2
+}

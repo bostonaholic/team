@@ -152,8 +152,10 @@ of the skill's words:
   *only* honest test of a skill's judgment.
 
 The meta-tripwire `tests/no-prose-pins.test.ts` enforces this line: it freezes
-the set of test files allowed to assert on a skill/agent body and ratchets the
-known prose-pin offenders toward zero.
+the set of test files allowed to assert on a skill/agent body, so a new prose
+pin can't slip in. The wiring/config invariants that legitimately read a skill
+body live in `tests/wiring.test.ts`; a skill's judgment is covered by the
+consuming-agent evals, never by a prose grep.
 
 ### L3 — In-process integration
 

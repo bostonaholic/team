@@ -17,8 +17,8 @@ tests/
     seed.test.ts        # free; L1 unit tests for extractSeed
   static-gate.test.ts        # free; auto-discovered by `bun test`
   skill-eval-coverage.test.ts # free; meta-test — every covered skill has its 4 artifacts
-  methodology.test.ts        # free; L2 content tripwires (incl. zero-coverage lenses)
-  protocol.test.ts           # free; L2 wiring tripwires (incl. L2-demoted pipeline skills)
+  wiring.test.ts             # free; L2 wiring/config invariants (frontmatter grants, load links, L2-demoted pipeline skills)
+  no-prose-pins.test.ts      # free; meta-tripwire — forbids grepping skill PROSE (TESTING.md §2)
   code-reviewer.evals.ts     # paid; .evals.ts suffix is OUTSIDE auto-discovery
   <skill>.evals.ts           # paid; one per covered skill (9 skills + code-reviewer)
 

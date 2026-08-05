@@ -36,8 +36,10 @@ import { read } from "./helpers/text";
 const TESTS_DIR = join(process.cwd(), "tests");
 
 // A test file "asserts on skill/agent markdown" when it builds a path constant
-// referencing the skills/ or agents/ trees. (This regex does not match its own
-// definition: after the opening quote comes "(", not a tree name.)
+// referencing the skills/ or agents/ trees, e.g. join(REPO_ROOT, "skills", ...).
+// This is the prose-pin surface; a comment that merely mentions SKILL.md, or a
+// git fixture that writes a "skills/foo/SKILL.md" string, does not trip it. (The
+// regex does not match its own definition: after the opening quote comes "(".)
 const SKILL_AGENT_REF = /"(skills|agents)"/;
 
 // Content matchers applied to file text. Deliberately broad — a ratchet cares
@@ -62,30 +64,30 @@ function bodyAssertionCount(file: string): number {
   return (source(file).match(BODY_ASSERTION) ?? []).length;
 }
 
-// The frozen membership set: every test file currently permitted to assert on a
-// skill/agent markdown body. Keep this in sync deliberately — adding an entry is
+// The frozen membership set: every test file permitted to assert on a
+// skill/agent markdown body. wiring.test.ts is the sanctioned home for those
+// invariants (Workstream C deleted the prose-pin files methodology.test.ts and
+// protocol.test.ts and moved their wiring keepers there). Adding a new entry is
 // the review checkpoint for "is this wiring, or a prose pin?".
 const ALLOWED = new Set<string>([
   "architecture.test.ts",
-  "methodology.test.ts", // legacy prose-pin debt — Workstream C drives to 0
+  "discover-topic.test.ts", // bash<->JS drift tripwire (wiring); lands with the discovery PR
   "nested-agents.test.ts",
   "no-prose-pins.test.ts", // this file (defensive; not actually a member)
   "progress-tracking.test.ts",
-  "protocol.test.ts", // legacy prose-pin debt — Workstream C drives to 0
   "shipit-skill.test.ts",
   "version-bump-skill.test.ts",
+  "wiring.test.ts", // the wiring/config invariant home
   "worktree-detection.test.ts",
 ]);
 
-// Per-file ceilings on skill/agent-body content assertions. Frozen at today's
-// values to prevent growth; methodology + protocol carry the documented target
-// of 0 (Workstream C). Counts measured by BODY_ASSERTION above.
+// Per-file ceilings on skill/agent-body content assertions, frozen to prevent
+// growth (push new assertions into wiring.test.ts, not back across the suite).
+// wiring.test.ts is intentionally unceilinged — it is the destination.
 const CEILING: Record<string, number> = {
   "architecture.test.ts": 22,
-  "methodology.test.ts": 44, // TARGET 0 (Workstream C)
   "nested-agents.test.ts": 16,
   "progress-tracking.test.ts": 12,
-  "protocol.test.ts": 79, // TARGET 0 (Workstream C)
   "shipit-skill.test.ts": 11,
   "version-bump-skill.test.ts": 5,
 };
