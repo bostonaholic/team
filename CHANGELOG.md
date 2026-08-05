@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The nested-agents version check no longer depends on a Claude-only variable.** The documented command interpolated the Claude Code plugin-root variable, which no other host sets — on those hosts the command died with a raw Node module-resolution trace. It now uses the same host-neutral `<skill-dir>` placeholder as the writing-prose skill: substitute the skill's own directory and the check runs on any host. [`skills/nested-agents/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/nested-agents/SKILL.md)
 - **The Codex removal command for `pr-approve-watch` now fails loudly instead of silently doing nothing.** The README told Codex users to remove the skill with a command that expanded `$CODEX_HOME` directly. That variable is usually unset — Codex falls back to `~/.codex` — so the command matched nothing, exited 0, and the safety guard the user believed removed stayed installed. The snippet now defaults to `~/.codex`, prints each directory it removes, and reports to stderr when nothing is installed. [`README.md`](https://github.com/bostonaholic/team/blob/main/README.md)
 - **The worktree-isolation residue sweep aborts if its target variable is unset.** Its `rm -rf` now uses the `${dir:?}` unset-abort form the repo's other teardown commands already use, so an empty expansion can no longer aim the deletion at the wrong path. [`skills/worktree-isolation/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/worktree-isolation/SKILL.md)
 

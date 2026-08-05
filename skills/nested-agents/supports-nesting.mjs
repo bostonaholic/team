@@ -12,7 +12,12 @@
  * The pure comparison core (`parseVersion`, `meetsMinimum`) is unit-tested at
  * L1; the CLI below is what a pipeline agent runs through Bash:
  *
- *     node "${CLAUDE_PLUGIN_ROOT}/skills/nested-agents/supports-nesting.mjs" "$(claude --version)"
+ *     node "<skill-dir>/supports-nesting.mjs" "$(claude --version)"
+ *
+ * `<skill-dir>` is the absolute path of the directory that holds this file.
+ * On Claude Code, the host's plugin-root variable holds its parent. This
+ * script reads no environment variable, so it runs the same from any
+ * install path.
  *
  * It prints `supported` (exit 0) or `unsupported` (exit 1). Fail-closed:
  * anything that does not provably parse to a version >= MIN_VERSION — an

@@ -32,8 +32,14 @@ the bundled deterministic check. It pins the exact floor, rather than trust
 tool presence alone:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/nested-agents/supports-nesting.mjs" "$(claude --version)"
+node "<skill-dir>/supports-nesting.mjs" "$(claude --version)"
 ```
+
+Replace `<skill-dir>` with the absolute path of the directory that holds
+this file. On Claude Code, the host's plugin-root variable holds the parent
+of this path: the skill directory is `skills/nested-agents` under it. The
+script reads no environment variable, so it runs the same from any install
+path.
 
 It prints `supported` and exits `0` at or above the floor, or `unsupported`
 and exits non-zero otherwise. The check is **fail-closed**: an older
