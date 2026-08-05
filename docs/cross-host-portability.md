@@ -147,8 +147,10 @@ parallel and nested subagents, and structured returns.
   holds each manifest dir to its own host's prefix, allowlists the hook env
   identifiers, and gates frontmatter keys and the README's
   `disable-model-invocation` caveat path. `tests/destructive-command-guards.test.ts`
-  requires the unset-abort `${VAR:?}` form on every documented `rm -rf`
-  operand expansion.
+  requires the unset-abort `${VAR:?}` form on every variable expansion among
+  a documented recursive-force `rm`'s operands, whatever the flag spelling;
+  a `$(command)` substitution operand is outside the parser's contract and
+  stays uncaught.
 
 ## The capability matrix
 
@@ -244,7 +246,7 @@ cross-cutting recency caveat:
    them. Either way they are small and isolated.
    - *Why:* the expensive, divergent, high-churn surface is exactly the bindings
      (three different manifest formats, three hook schemas, still-moving host
-     APIs), while the stable, valuable surface, the 64 agent/skill bodies and 4
+     APIs), while the stable, valuable surface, the 66 agent/skill bodies and 3
      hook logic files, is *already portable*. The hybrid boundary lines up with the
      natural portable/non-portable seam, so it minimizes both duplication and the
      blast radius of churn.
@@ -294,7 +296,7 @@ cross-cutting recency caveat:
    - *Why:* it pulls the one irreducibly host-varying value out of the portable
      definitions, since the agent `model:` frontmatter is a Claude-specific model
      name and meaningless on Gemini or Codex, and puts it behind a single
-     host-agnostic indirection, so the 64 agent/skill bodies never carry a
+     host-agnostic indirection, so the 66 agent/skill bodies never carry a
      host-specific model literal. The per-host shims *read* `.team/config.json`;
      they never restate it.
 
@@ -310,7 +312,7 @@ full parity. Each starts from the matrix and works around the named gaps.
 - Skills port natively to `.gemini/skills/SKILL.md` (progressive disclosure
   through the `activate_skill` tool). As with Codex, no folding into system
   prompts is needed.
-- Hooks: reuse the 4 `.mjs` logic files. The shim adapts stdin/stdout to Gemini's
+- Hooks: reuse the 3 `.mjs` logic files. The shim adapts stdin/stdout to Gemini's
   schema (`hook_event_name`, `decision`, exit 2) and maps events
   `PreToolUse→BeforeTool`, `PostToolUse→AfterTool`, `SessionStart→SessionStart`,
   `PreCompact→PreCompress`. Register in `.gemini/settings.json`.
@@ -339,7 +341,7 @@ full parity. Each starts from the matrix and works around the named gaps.
   system-prompt body.
 - Skills port natively to `.agents/skills/SKILL.md` (description-matched implicit
   invocation). No Gemini-style folding needed.
-- Hooks: reuse the 4 `.mjs` files. The shim adapts to Codex
+- Hooks: reuse the 3 `.mjs` files. The shim adapts to Codex
   `hooks.json`/`[hooks]`, whose schema mirrors Claude closely
   (`permissionDecision:"deny"`/exit 2). Events map nearly 1:1
   (`PreToolUse`/`PostToolUse`/`SessionStart`/`PreCompact`).
