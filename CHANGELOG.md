@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-08-05
+
 ### Removed
 
 - **The `pre-bash-guard` hook.** Installing Team registered a `PreToolUse(Bash)` hook that ran a regex list over every Bash command in the session, in every repository, whether or not a pipeline was running. It never earned that reach. A payload bug fixed in 0.33.2 meant the guard detected destructive commands and then let them run for the four months it had shipped, and no install reported a gap, because Claude Code's own permission prompts already cover the same commands. Once repaired, what it added was false positives: `git push --force-with-lease` matched the force-push pattern, which is the exact form `/shipit` emits when a PR falls behind its base, and the substring patterns matched read-only commands that only mention a keyword, so `grep -r "DROP TABLE" db/migrate/` and `git log --grep=mkfs` both prompted. Destructive commands now prompt through the host permission system alone. The teardown deletions `/pr-cleanup` generates keep their in-skill guards, which are the checks that were doing the real work there: the merged-PR verification, the branch-name allowlist, and the `${PRIMARY_ROOT:?}` hard stop. The `hook-output-schema` tripwire stays and still covers the next hook that writes a decision to stdout. [`.claude-plugin/plugin.json`](https://github.com/bostonaholic/team/blob/main/.claude-plugin/plugin.json)
@@ -396,7 +398,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.34.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.35.0...HEAD
+[0.35.0]: https://github.com/bostonaholic/team/compare/v0.34.1...v0.35.0
 [0.34.1]: https://github.com/bostonaholic/team/compare/v0.34.0...v0.34.1
 [0.34.0]: https://github.com/bostonaholic/team/compare/v0.33.2...v0.34.0
 [0.33.2]: https://github.com/bostonaholic/team/compare/v0.33.1...v0.33.2
