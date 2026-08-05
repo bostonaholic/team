@@ -1,12 +1,27 @@
 import { describe, expect, test } from "bun:test";
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
 
 import {
   agentFiles,
   allowlistVerdict,
   collectMatches,
+  runtimeHookFiles,
   skillTreeFiles,
   type AllowlistEntry,
 } from "./helpers/scan";
+
+const REPO_ROOT = process.cwd();
+
+function filesUnder(relativeDir: string): string[] {
+  const collected: string[] = [];
+  for (const entry of readdirSync(join(REPO_ROOT, relativeDir), { withFileTypes: true })) {
+    const relativePath = join(relativeDir, entry.name);
+    if (entry.isDirectory()) collected.push(...filesUnder(relativePath));
+    else collected.push(relativePath);
+  }
+  return collected.sort();
+}
 
 // The distributed surface (docs/cross-host-portability.md) must carry no
 // host-prefixed identifier outside a deliberate allowlist entry: only the
@@ -52,5 +67,63 @@ describe("check (a): host-binding identifier sweep over agents/ and skills/", ()
   test("no host-prefixed identifier outside the allowlist", () => {
     const matches = collectMatches(HOST_IDENTIFIER_PATTERN, sweptFiles());
     expect(allowlistVerdict(matches, ALLOWLIST)).toEqual([]);
+  });
+});
+
+describe("check (b): each manifest dir carries only its own host's prefix", () => {
+  // A manifest is a host-owned schema file, so a prefix *class* is permitted
+  // rather than exact identifiers — enumerating those would pin the host's
+  // schema and churn with every host release. `.agents/plugins` maps to null
+  // deliberately: `.agents/` is the host-neutral AGENTS.md convention name,
+  // a future host may read that path, and the stricter rule costs nothing
+  // today. A new host's manifest dir is one entry.
+  const MANIFEST_DIR_PREFIX: Record<string, string | null> = {
+    ".claude-plugin": "CLAUDE",
+    ".codex-plugin": "CODEX",
+    ".agents/plugins": null,
+  };
+
+  test("enumeration covers the Claude Code manifest", () => {
+    expect(filesUnder(".claude-plugin")).toContain(join(".claude-plugin", "plugin.json"));
+  });
+
+  test("detection pin: the collector finds plugin.json's 3 permitted CLAUDE_ uses", () => {
+    const matches = collectMatches(HOST_IDENTIFIER_PATTERN, filesUnder(".claude-plugin"));
+    const pluginJsonMatches = matches.filter(
+      (match) => match.path === join(".claude-plugin", "plugin.json"),
+    );
+    expect(pluginJsonMatches).toHaveLength(3);
+    expect(pluginJsonMatches.every((match) => match.text.startsWith("CLAUDE_"))).toBe(true);
+  });
+
+  test("no manifest dir carries another host's prefix", () => {
+    for (const [manifestDir, permittedPrefix] of Object.entries(MANIFEST_DIR_PREFIX)) {
+      const matches = collectMatches(HOST_IDENTIFIER_PATTERN, filesUnder(manifestDir));
+      const offending = matches.filter(
+        (match) => permittedPrefix === null || !match.text.startsWith(`${permittedPrefix}_`),
+      );
+      expect(offending).toEqual([]);
+    }
+  });
+});
+
+describe("check (c): hooks may read no host env identifier beyond the allowlist", () => {
+  // Hooks are shared runtime logic, unlike the host-owned manifests above:
+  // every new host identifier that enters them is a portability liability,
+  // so each one costs a deliberate edit to this exact-identifier set.
+  const PERMITTED_HOOK_IDENTIFIERS = new Set(["CLAUDE_PROJECT_DIR"]);
+
+  test("enumeration covers the runtime hooks", () => {
+    expect(runtimeHookFiles()).toContain(join("hooks", "post-write-validate.mjs"));
+  });
+
+  test("detection pin: the collector finds all 3 CLAUDE_PROJECT_DIR uses", () => {
+    const matches = collectMatches(HOST_IDENTIFIER_PATTERN, runtimeHookFiles());
+    expect(matches.filter((match) => match.text === "CLAUDE_PROJECT_DIR")).toHaveLength(3);
+  });
+
+  test("the matched identifier set equals exactly the allowlist", () => {
+    const matches = collectMatches(HOST_IDENTIFIER_PATTERN, runtimeHookFiles());
+    expect(new Set(matches.map((match) => match.text))).toEqual(PERMITTED_HOOK_IDENTIFIERS);
   });
 });
