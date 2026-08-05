@@ -70,9 +70,11 @@ bump". [PR title sync](#pr-title) uses the same branch-relative measure.
 > a wrapped invocation (`bash -c`, `eval`, `env`, `xargs`,
 > `gh api …/merge`, or any other wrapper command — `command`, `nohup`,
 > `nice`, `timeout`, `stdbuf`, … — only the `time`, `exec`, and `!`
-> prefixes are stripped), a brace-expanded spelling (`gh pr {merge,}`), a
+> prefixes are stripped), a never-expanded spelling (brace expansion
+> `gh pr {merge,}`, parameter expansion `A=merge; gh pr $A`), a
 > merge inside a shell grouping, conditional, or `case` construct
-> (`if …; then gh pr merge; fi`, `{ gh pr merge; }`, `( gh pr merge )` —
+> (`if …; then gh pr merge; fi`, `{ gh pr merge; }`, `( gh pr merge )`,
+> `case x in *) gh pr merge;; esac` —
 > ordinary shell syntax, no indirection tool needed), or
 > a harness that does not load these hooks bypasses it entirely — and unlike
 > the deleted CI check, no red signal appears when that happens. The guard

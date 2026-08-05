@@ -75,10 +75,11 @@ The quick look is orientation only — it never decides the exit. The decision
 comes from **the invariant run**, the same invocation contract the pre-merge
 guard enforces at merge time:
 
-1. Resolve the default branch through `origin/HEAD`, falling back to asking
-   GitHub (`gh repo view`) — the same order the pre-merge guard uses, and
-   never a guessed `main`, which could measure against the wrong base. If
-   both fail, stop: no verdict.
+1. Resolve the default branch by asking GitHub (`gh repo view`), falling
+   back to the local `origin/HEAD` ref — the same order the pre-merge guard
+   uses: GitHub is authoritative, and the local ref goes stale on an
+   upstream default-branch rename. Never a guessed `main`, which could
+   measure against the wrong base. If both fail, stop: no verdict.
 2. `git fetch origin <default>` — the fetch must succeed. Never degrade to a
    stale base for a verdict.
 3. Up-to-date precondition: the fetched `origin/<default>` tip must be an
@@ -91,8 +92,8 @@ guard enforces at merge time:
    pair to the fork point itself).
 
 ```bash
-DEFAULT=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|^refs/remotes/origin/||')
-DEFAULT=${DEFAULT:-$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name 2>/dev/null)}
+DEFAULT=$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name 2>/dev/null)
+DEFAULT=${DEFAULT:-$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|^refs/remotes/origin/||')}
 [ -n "$DEFAULT" ] || { echo "cannot resolve the default branch — no verdict"; exit 1; }
 git fetch origin "$DEFAULT" || { echo "fetch failed — no verdict"; exit 1; }
 git merge-base --is-ancestor "refs/remotes/origin/$DEFAULT" HEAD \
@@ -106,8 +107,12 @@ HEAD_SHA=$(git rev-parse HEAD) BASE_SHA=$(git rev-parse "refs/remotes/origin/$DE
 - Exit 0, stdout starting `OK: runtime_changed=false bumped=false` → dev-only
   and final. **DO NOT BUMP.** Skip every step below. Leave the version
   untouched, do **not** cut the changelog, and land with the plain
-  conventional title (`<type>: <subject>`). Precedent: `710d44c` (CI),
-  `7d2e218` (docs), `0821129` (evals `feat:`) all landed plain. Then go
+  conventional title (`<type>: <subject>`). On a re-entry whose PR title
+  still carries a stale `vX.Y.Z` prefix from an earlier bump, strip it now
+  (`gh pr edit --title`) — the title backstop never strips a stale prefix,
+  and this is the one step-8 action a no-bump exit still owes (the wrongful-
+  bump recovery in docs/versioning.md lands here). Precedent: `710d44c`
+  (CI), `7d2e218` (docs), `0821129` (evals `feat:`) all landed plain. Then go
   straight to `/shipit`. This exit **requires** that OK line — the quick look
   alone never authorizes it.
 - Exit 0, stdout starting `OK: runtime_changed=true bumped=true` → already
