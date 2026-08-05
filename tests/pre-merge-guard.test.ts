@@ -211,6 +211,33 @@ describe("slice 1: the guard denies a violating merge at the merge attempt", () 
     expect(registered).toBe(true);
   });
 
+  test("the registered command executes and allows a benign command", () => {
+    // The registration pin above checks only the string. A moved hook file, a
+    // syntax error, or a broken $CLAUDE_PROJECT_DIR resolution would make the
+    // registered command itself fail — a failure mode the harness degrades to
+    // a permit — so run it exactly as Claude Code would and require a clean
+    // silent allow.
+    const settings = JSON.parse(readFileSync(SETTINGS, "utf-8"));
+    const entries: any[] = settings?.hooks?.PreToolUse ?? [];
+    const registeredCommand = entries
+      .flatMap((entry) => entry?.hooks ?? [])
+      .map((hook: any) => hook?.command)
+      .find(
+        (command: any) =>
+          typeof command === "string" && command.includes("pre-merge-guard.mjs"),
+      );
+    expect(registeredCommand).toBeDefined();
+    const r = spawnSync("bash", ["-c", registeredCommand as string], {
+      cwd: REPO_ROOT,
+      encoding: "utf-8",
+      input: JSON.stringify({ tool_name: "Bash", tool_input: { command: "ls" } }),
+      env: { ...process.env, CLAUDE_PROJECT_DIR: REPO_ROOT },
+      timeout: 4000,
+    });
+    expect(r.status).toBe(0);
+    expect(r.stdout).toBe("");
+  });
+
   test("fails open on garbage stdin", () => {
     // Jurisdiction is decided only on a parsed command: before it is
     // decided, the hook cannot see a command and must not block anything.
@@ -237,6 +264,8 @@ describe("slice 1: the guard denies a violating merge at the merge attempt", () 
   test("denies when gh pr view fails", () => {
     const r = runHook("gh pr merge 5 --squash", scriptedStubs({ gh: "fail" }));
     expect(r.status).toBe(2);
+    // Every in-jurisdiction deny carries a labeled recovery route.
+    expect(r.stderr).toContain("Recovery:");
   });
 
   test("denies when the fetch fails", () => {
@@ -245,6 +274,7 @@ describe("slice 1: the guard denies a violating merge at the merge attempt", () 
     // warn-and-continue fetch fallback.
     const r = runHook("gh pr merge 5 --squash", scriptedStubs({ fetchExit: 1 }));
     expect(r.status).toBe(2);
+    expect(r.stderr).toContain("Recovery:");
   });
 
   test("denies on budget expiry", () => {
@@ -255,6 +285,19 @@ describe("slice 1: the guard denies a violating merge at the merge attempt", () 
       PRE_MERGE_GUARD_DEADLINE_MS: "200",
     });
     expect(r.status).toBe(2);
+  });
+
+  test("denies when the budget is exhausted before the first external call", () => {
+    // Exercises run()'s pre-exhaustion branch (the hang test above rides the
+    // per-call timeout kill instead): a 1ms budget expires while the hook
+    // reads its megabyte of stdin, so gate() finds nothing left before it
+    // spawns anything — the loud stubs prove no external call happens.
+    const bulk = "x".repeat(2_000_000);
+    const r = runHook(`gh pr merge 5 --squash # ${bulk}`, loudStubs(), {
+      PRE_MERGE_GUARD_DEADLINE_MS: "1",
+    });
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain("budget expired");
   });
 
   test("passes through a foreign --repo merge silently", () => {

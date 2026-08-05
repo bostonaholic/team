@@ -604,7 +604,8 @@ function gate(mergeWords) {
   if (!succeeded(view)) {
     deny(
       `${describeFailure("gh pr view", view)}\n` +
-        "If this merge targets another repo's PR, pass --repo explicitly.",
+        "If this merge targets another repo's PR, pass --repo explicitly. " +
+        "Recovery: check network and gh auth (gh auth status), then re-run /shipit.",
     );
   }
 
@@ -626,7 +627,10 @@ function gate(mergeWords) {
     typeof baseRefName !== "string"
   ) {
     deny(
-      `pre-merge guard: unexpected gh pr view output: ${view.stdout.trim()}`,
+      "pre-merge guard: unexpected gh pr view output (expected an integer " +
+        "number, a 40-hex-char headRefOid, and a string baseRefName): " +
+        `${view.stdout.trim()}\n` +
+        "Recovery: check gh (gh --version, gh auth status), then re-run /shipit.",
     );
   }
 
@@ -637,7 +641,10 @@ function gate(mergeWords) {
 
   const fetchBase = run("git", ["fetch", "origin", defaultBranch]);
   if (!succeeded(fetchBase)) {
-    deny(describeFailure(`git fetch origin ${defaultBranch}`, fetchBase));
+    deny(
+      `${describeFailure(`git fetch origin ${defaultBranch}`, fetchBase)}\n` +
+        "Recovery: check network and git credentials, then re-run /shipit.",
+    );
   }
 
   // GitHub publishes every PR head under refs/pull/<n>/head on the base repo,
@@ -645,7 +652,8 @@ function gate(mergeWords) {
   const fetchHead = run("git", ["fetch", "origin", `refs/pull/${number}/head`]);
   if (!succeeded(fetchHead)) {
     deny(
-      describeFailure(`git fetch origin refs/pull/${number}/head`, fetchHead),
+      `${describeFailure(`git fetch origin refs/pull/${number}/head`, fetchHead)}\n` +
+        "Recovery: check network and git credentials, then re-run /shipit.",
     );
   }
 
