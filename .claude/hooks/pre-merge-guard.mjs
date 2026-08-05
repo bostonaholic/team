@@ -648,6 +648,13 @@ function parseMergeArgs(mergeWords) {
   let selector;
   for (let i = 3; i < mergeWords.length; i += 1) {
     const word = mergeWords[i];
+    // A bare grouping paren rides along as its own word (`(cd x && gh pr
+    // merge)` ends with a `)` word). It is shell syntax, not an argument —
+    // reading it as the selector makes gh pr view fail with a misleading
+    // network/auth diagnosis. Skipped only here, never in findMergeCommands,
+    // where discarding it would widen jurisdiction past the narrow-side
+    // `( gh pr merge )` grouping ruling.
+    if (word === "(" || word === ")") continue;
     if (word.startsWith("--")) {
       if (word.startsWith("--repo=")) {
         repoFlag = word.slice("--repo=".length);

@@ -118,6 +118,9 @@ function scriptedStubs(opts: {
       : gh === "fail"
         ? `printf 'GraphQL: Could not resolve to a PullRequest\\n' >&2; exit 1`
         : `if [ "\${1:-}" = "pr" ] && [ "\${2:-}" = "view" ]; then
+  case "\${3:-}" in
+    "("|")") printf 'LOUD STUB: grouping paren read as the PR selector\\n' >&2; exit 99 ;;
+  esac
   printf '%s\\n' '{"number":5,"headRefOid":"${HEAD_OID}","baseRefName":"main"}'
   exit 0
 fi
@@ -606,6 +609,11 @@ describe.if(HAS_JQ)("slice 2: in jurisdiction — every simple command is tested
     // bash keeps a lone trailing backslash as a literal redirection target
     // (a file named "\") and runs the merge.
     `gh pr merge 5 > \\`,
+    // A subshell whose LAST command is the merge: the trailing `)` rides
+    // along as a word — it must neither widen jurisdiction (the leading-`(`
+    // command stays out) nor be read as the PR selector (the scripted stub's
+    // gh loud-fails on a paren selector).
+    `(cd /tmp && gh pr merge)`,
     // A glued fd digit is part of the operator, never a stray word that
     // breaks the first-words rule.
     `gh 2<<EOF pr merge --squash`,
