@@ -315,6 +315,14 @@ function tokenize(command) {
         sawAny = true;
         continue;
       }
+      if (c === "$" && command[i + 1] === '"') {
+        // $"…" is quoting-wise a plain "…", here as in word position:
+        // reading the $ literally mangles a heredoc terminator (<<$"EOF"
+        // must terminate on EOF, not $EOF), and a never-matched terminator
+        // swallows the rest of the input as body.
+        i += 1;
+        continue;
+      }
       if (c === '"') {
         const body = readDoubleQuoteBody(command, i);
         if (body === null) return null;

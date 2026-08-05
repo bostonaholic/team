@@ -620,6 +620,11 @@ describe.if(HAS_JQ)("jurisdiction spec: in — every simple command is gated", (
     `echo $'a\\'b' ; gh pr merge --squash`,
     // $"…" is the locale-translated string — quoting-wise a plain "…".
     `gh pr merge 5 --squash --subject $"hello"`,
+    // …including as a heredoc terminator: <<$"EOF" terminates on EOF, so
+    // the body must not swallow a merge on a later line (or the input's
+    // end when the merge precedes the heredoc).
+    `cat <<$"EOF"\nEOF\ngh pr merge 5`,
+    `gh pr merge 5 --squash <<$"EOF"\nEOF`,
     // $(…) inside "…" nests full quoting: the '\'' idiom inside a command
     // substitution inside a double-quoted subject must not flip parity.
     `gh pr merge 5 --squash --subject "$(jq -r .title <<<'{"title":"don'\\''t"}') (#5)"`,
