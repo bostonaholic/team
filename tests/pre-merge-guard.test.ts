@@ -504,9 +504,11 @@ describe("jurisdiction spec: out — never gated, proven by loud stubs", () => {
     // ANSI-C quoted text is data: one word, never a command.
     `echo $'gh pr merge'`,
     `git commit -m $'fix: don\\'t gate gh pr merge'`,
-    // Tokenization failure → not engaged (fail open): bash refuses the
-    // unbalanced quote.
-    `echo "gh pr merge`,
+    // Tokenization failure with NO merge letters in the raw text → not
+    // engaged: the fail-closed flip below denies a parse failure only when
+    // the text could spell a merge, so ordinary broken commands stay silent.
+    `echo "unterminated`,
+    `for f in *.log; do echo "$f`,
     // A started heredoc consumes the rest of the input as its body — the
     // merge text is data, never a command (bash warns about the missing
     // terminator but runs only `cat`).
@@ -518,6 +520,42 @@ describe("jurisdiction spec: out — never gated, proven by loud stubs", () => {
       const r = runHook(command, loudStubs());
       expect(r.status).toBe(0);
       expect(r.stdout).toBe("");
+    });
+  }
+});
+
+describe("parse failures fail closed when the raw text could spell a merge", () => {
+  // The round-5 Blocking class: bash executes a multi-line input one
+  // complete command at a time, so a merge on an earlier line has ALREADY
+  // RUN by the time a later line hits the syntax error that nulls the
+  // parse. A null therefore denies whenever the raw text — stripped of
+  // quoting characters, so no literal spelling slips through — contains
+  // `merge`. Loud stubs: the deny must land before any external call.
+  const unparseableMergeShapes = [
+    // The reproducer: the documented land-path merge verbatim on line 1,
+    // an unterminated quote on line 2.
+    `gh pr merge 5 --squash --subject "$TITLE (#5)"\necho "done`,
+    // The merge on line 2 of 3.
+    `echo start\ngh pr merge 5 --squash\necho "done`,
+    // Every unterminated-context flavor after an already-run merge line.
+    `gh pr merge 5 --squash\necho 'oops`,
+    `gh pr merge 5 --squash\necho $(oops`,
+    `gh pr merge 5 --squash\necho $'oops`,
+    // Was a permitted out-shape before the fail-closed flip: single-line
+    // input bash refuses outright, so denying it blocks nothing runnable —
+    // the acceptable cost of closing the multi-line class above.
+    `echo "gh pr merge`,
+    // A quote-interleaved spelling still contains the merge letters after
+    // the quoting strip — the prefilter has no permit path for it.
+    `gh pr mer\\ge 5\necho "done`,
+  ];
+
+  for (const command of unparseableMergeShapes) {
+    test(`denies: ${command.replace(/\n/g, "\\n")}`, () => {
+      const r = runHook(command, loudStubs());
+      expect(r.status).toBe(2);
+      expect(r.stderr).toContain("could not parse");
+      expect(r.stderr).toContain("Recovery:");
     });
   }
 });

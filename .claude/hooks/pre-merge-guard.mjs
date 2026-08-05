@@ -10,10 +10,13 @@
  * merge unless the script exits 0 printing an `OK:` line.
  *
  * Failure direction: fail open only before jurisdiction is decided
- * (unparseable stdin, a command the tokenizer cannot parse confidently, no
- * `gh pr merge` simple command) — and only through those decided paths: a
- * crash anywhere, including inside the tokenizer, denies. Once in
- * jurisdiction, every failure —
+ * (unparseable stdin, a parsed command with no `gh pr merge` simple
+ * command). A command the tokenizer cannot parse fails CLOSED whenever its
+ * raw text could spell `merge` — bash executes a multi-line input one
+ * complete command at a time, so an earlier-line merge has already run by
+ * the time a later line hits the syntax error — and open only when no
+ * literal merge can be present. A crash anywhere, including inside the
+ * tokenizer, denies. Once in jurisdiction, every failure —
  * gh error, fetch failure, behind-base head, deadline expiry, script verdict —
  * denies. Deny goes through two independent channels: the `deny` permission
  * payload on stdout and exit 2 with the same text on stderr, so a schema
@@ -949,13 +952,35 @@ async function main() {
   // Any crash from here denies, never falls through as a fail-open exit 1
   // (the c945395 class). That covers the tokenizer too: its span scanners
   // recurse with the nesting depth, so adversarially deep nesting can blow
-  // the stack (RangeError), and a crash — unlike the tokenizer's null, which
-  // is reserved for input bash itself refuses — says nothing about what bash
-  // would run. The whole command is allowed only when every merge command in
-  // it passes or is out of scope.
+  // the stack (RangeError), and a crash says nothing about what bash would
+  // run. The whole command is allowed only when every merge command in it
+  // passes or is out of scope.
   try {
     const commands = tokenize(command);
-    if (commands === null) process.exit(0);
+    if (commands === null) {
+      // Fail closed on a parse failure that could hide a merge. Five review
+      // rounds each found a fresh input the tokenizer nulls on but bash
+      // (partially) executes — most simply, a multi-line input whose merge
+      // line has already run when a later line hits the syntax error. A null
+      // says "unparseable", never "harmless", so the safe verdict is deny.
+      // The raw-text prefilter keeps everyday unparseable-but-mergeless
+      // commands silent: a literal `gh pr merge` needs the letters m-e-r-g-e
+      // in the raw text, interleaved at most with quoting characters
+      // (mer\ge, mer"g"e, mer``ge), so stripping those before matching
+      // leaves no permit path for any literal spelling. Expansion-derived
+      // spellings ($A, {merge,}, $'\x…') dodge this filter, but they equally
+      // dodge the tokenizer on input that parses — the same accepted residue
+      // class either way (see the tokenize contract).
+      if (!command.replace(/[\\'"`]/g, "").includes("merge")) process.exit(0);
+      deny(
+        "pre-merge guard: could not parse this command, and its text may " +
+          "spell `gh pr merge`. Bash runs each complete earlier line before " +
+          "a later syntax error, so an unparseable command is denied rather " +
+          "than risk an unchecked merge slipping through. Recovery: fix the " +
+          "shell syntax, or re-run the merge alone as a plain " +
+          "`gh pr merge <number> --squash …` command.",
+      );
+    }
 
     const mergeCommandList = findMergeCommands(commands);
     if (mergeCommandList.length === 0) process.exit(0);
