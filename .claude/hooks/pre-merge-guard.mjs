@@ -230,34 +230,41 @@ function readDoubleQuoteBody(command, openIndex) {
 }
 
 // Tokenize into simple commands (word lists) under bash's lexing rules, or
-// null when the command cannot be parsed confidently — jurisdiction is
-// decided only on a parsed command, so a null fails open.
+// null when the command cannot be parsed confidently. A null claims
+// NOTHING about what bash would run — bash executes a multi-line input one
+// complete command at a time, so a merge on an earlier line has already
+// run when a later line hits the syntax error. main() therefore turns a
+// null into a DENY whenever the raw text could spell `merge` through
+// quoting characters, and into a permit only when it cannot: no literal
+// spelling of a merge has a fail-open path through this tokenizer,
+// parseable or not.
 //
 // The single structural invariant (bash's own rule): the metacharacters
 // space, tab, newline, |, &, ;, (, ), <, > ALWAYS end a word when unquoted.
 // Every branch below is one of two kinds — a quoted/expansion span consumed
-// as data (quotes, escapes, $'…', $"…", $(…), ((…)), <(…), heredoc bodies,
-// here-string operands, redirection targets: data never creates or hides a
-// word boundary), or a metacharacter handler that first ends the current
-// word. A commit message or grep that mentions the phrase never engages,
-// while the documented land-path merge parses and engages whatever quoting
-// its --subject text needs.
+// as data (quotes, escapes, $'…', $"…", $(…), `…`, ((…)), <(…), heredoc
+// bodies, here-string operands, redirection targets: data never creates or
+// hides a word boundary), or a metacharacter handler that first ends the
+// current word. A commit message or grep that mentions the phrase never
+// engages, while the documented land-path merge parses and engages whatever
+// quoting its --subject text needs. Bash tolerates and RUNS an unterminated
+// heredoc and a trailing backslash, so those parse the way bash reads them
+// instead of nulling: data must stay data (a heredoc-body merge never
+// engages) and a runnable merge must gate, not bounce off the deny above.
 //
-// null is legitimate ONLY where bash itself refuses to execute the input
-// (an unbalanced quote or paren span, a redirection with no target): bash
-// tolerates and RUNS an unterminated heredoc and a trailing backslash, so
-// those parse the way bash reads them instead of bailing. Named residue
-// that survives this contract, reachable only through deliberately evasive
-// spellings (the same class as the indirection list below):
-//   - the $(…) scanner counts parens without parsing comments or case
-//     patterns inside the substitution, so a `)` in either ends the span
-//     early and can cascade to null;
+// Named residue that survives this contract — exactly these, all of the
+// same never-expanded class, and all equally invisible to main()'s
+// raw-text prefilter because the literal letters `merge` appear only after
+// an expansion the guard never performs:
+//   - parameter expansion (`A=merge; gh pr $A` keeps the literal word
+//     "$A", never "merge");
+//   - brace expansion (`gh pr {merge,}` reads as one word);
 //   - $'…' word CONTENT keeps numeric escapes undecoded ($'\x67h' reads as
 //     "x67h", never "gh");
-//   - brace expansion is not performed (`gh pr {merge,}` reads as one
-//     word);
-//   - parameter expansion is not performed (`A=merge; gh pr $A` keeps the
-//     literal word "$A", never "merge").
+//   - a substitution BODY is never parsed: a merge inside `…` or $(…) is
+//     unseen, and a `)` in a comment or case pattern inside $(…) ends the
+//     span early, misreading the words after it (when that cascades to
+//     null, a merge-bearing text now denies instead of permitting).
 // Indirection (bash -c, eval, env, xargs, command substitution, wrapper
 // commands beyond time/exec/!) is never unwrapped — accepted over-narrow
 // residue, named in docs/versioning.md.
