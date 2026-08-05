@@ -50,7 +50,7 @@ load and still work.
 >
 > ```bash
 > CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-> found="$(find "$CODEX_HOME/plugins/cache" -type d -path "*/team/*/skills/pr-approve-watch" 2>/dev/null)"
+> found="$(find "$CODEX_HOME/plugins/cache" -type d -path "*/team/*/skills/pr-approve-watch" 2>/dev/null || true)"
 > if [ -z "$found" ]; then
 >   echo "pr-approve-watch: nothing installed under $CODEX_HOME/plugins/cache" >&2
 > else

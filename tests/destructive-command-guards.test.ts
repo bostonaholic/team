@@ -43,6 +43,17 @@ function unguardedRmMatches(): GrepMatch[] {
 }
 
 describe("destructive-command guard: documented rm -rf operands", () => {
+  // The content pins below read the pinned files directly, so this file-list
+  // assertion is what ties them to the sweep: if the enumerator stops
+  // covering a pinned site, the pins would otherwise stay green while the
+  // real verdict path scans nothing.
+  test("the sweep's file list covers every pinned site", () => {
+    const files = scannedFiles();
+    expect(files).toContain("README.md");
+    expect(files).toContain(join("skills", "worktree-isolation", "SKILL.md"));
+    expect(files).toContain(join("skills", "pr-cleanup", "SKILL.md"));
+  });
+
   // Content pins, not file-list pins: a healthy file list proves nothing if
   // the extractor stops finding code at these sites. Each pin holds one of
   // the fence forms the guarded sites actually use.
