@@ -85,7 +85,7 @@ export function collectMatches(pattern: string, files: string[]): GrepMatch[] {
   if (files.length === 0) return [];
   let output: string;
   try {
-    output = execFileSync("grep", ["-onHE", pattern, ...files], {
+    output = execFileSync("grep", ["-onHE", "-e", pattern, "--", ...files], {
       cwd: REPO_ROOT,
       stdio: "pipe",
     }).toString();
@@ -201,70 +201,107 @@ function stripUnquotedComment(text: string): string {
   return text;
 }
 
-// Every `$` variable expansion among an `rm -rf` command's operands must use
-// the unset-abort `${VAR:?}` form. The operand segment ends at the first
-// unquoted `&&`/`||`/`;`/`|` — an expansion past that boundary belongs to the
-// next command and is not `rm`'s operand. `$` inside single quotes never
-// expands, so single-quoted spans are opaque; `$(...)` command substitution
-// is not a variable expansion. Returns the offending expansions verbatim.
+// The operand segment: everything from the end of the rm word to the first
+// unquoted command boundary (`&&`/`||`/`;`/`|`) — an expansion past that
+// boundary belongs to the next command and is not `rm`'s operand.
+function operandSegment(text: string, start: number): string {
+  let inSingle = false;
+  let inDouble = false;
+  for (let index = start; index < text.length; index++) {
+    const char = text[index];
+    if (char === "\\" && !inSingle) {
+      index++;
+      continue;
+    }
+    if (char === "'" && !inDouble) inSingle = !inSingle;
+    else if (char === '"' && !inSingle) inDouble = !inDouble;
+    else if (!inSingle && !inDouble && (char === "&" || char === "|" || char === ";")) {
+      return text.slice(start, index);
+    }
+  }
+  return text.slice(start);
+}
+
+// Recursive-force flag detection over whitespace tokens: short clusters in
+// any order or grouping (`-rf`, `-fr`, `-Rf`, split `-r -f`) plus the long
+// options.
+function hasRecursiveForceFlags(segment: string): boolean {
+  let recursive = false;
+  let force = false;
+  for (const token of segment.trim().split(/\s+/)) {
+    if (token === "--recursive") recursive = true;
+    else if (token === "--force") force = true;
+    else if (/^-[A-Za-z]+$/.test(token)) {
+      if (/[rR]/.test(token)) recursive = true;
+      if (token.includes("f")) force = true;
+    }
+  }
+  return recursive && force;
+}
+
+// Every `$` variable expansion among a recursive-force `rm` command's
+// operands must use the unset-abort `${VAR:?}` form. Detection covers every
+// flag spelling and a `\rm` alias bypass, because a one-character respelling
+// must not switch the gate off. `$` inside single quotes never expands, so
+// single-quoted spans are opaque; `$(...)` command substitution is not a
+// variable expansion. Returns the offending expansions verbatim.
 export function unguardedRmExpansions(commandText: string): string[] {
   const text = stripUnquotedComment(commandText);
   const violations: string[] = [];
-  let searchFrom = 0;
-  for (;;) {
-    const rmIndex = text.indexOf("rm -rf", searchFrom);
-    if (rmIndex === -1) break;
-    searchFrom = rmIndex + "rm -rf".length;
-    const preceding = rmIndex === 0 ? " " : (text[rmIndex - 1] ?? " ");
-    if (!/[\s;|&(`]/.test(preceding)) continue; // substring of a longer word
+  for (const rmWord of text.matchAll(/(?:^|[\s;|&(`])\\?rm(?![\w-])/g)) {
+    const segment = operandSegment(text, (rmWord.index ?? 0) + rmWord[0].length);
+    if (!hasRecursiveForceFlags(segment)) continue;
+    violations.push(...unguardedExpansionsIn(segment));
+  }
+  return violations;
+}
 
-    let inSingle = false;
-    let inDouble = false;
-    for (let index = searchFrom; index < text.length; index++) {
-      const char = text[index];
-      if (char === "\\" && !inSingle) {
-        index++;
-        continue;
-      }
-      if (char === "'" && !inDouble) {
-        inSingle = !inSingle;
-        continue;
-      }
-      if (char === '"' && !inSingle) {
-        inDouble = !inDouble;
-        continue;
-      }
-      if (!inSingle && !inDouble && (char === "&" || char === "|" || char === ";")) {
-        break; // end of rm's operand segment
-      }
-      if (char !== "$" || inSingle) continue;
+// The `$` scan inside one operand segment, quote- and escape-aware.
+function unguardedExpansionsIn(segment: string): string[] {
+  const violations: string[] = [];
+  let inSingle = false;
+  let inDouble = false;
+  for (let index = 0; index < segment.length; index++) {
+    const char = segment[index];
+    if (char === "\\" && !inSingle) {
+      index++;
+      continue;
+    }
+    if (char === "'" && !inDouble) {
+      inSingle = !inSingle;
+      continue;
+    }
+    if (char === '"' && !inSingle) {
+      inDouble = !inDouble;
+      continue;
+    }
+    if (char !== "$" || inSingle) continue;
 
-      const rest = text.slice(index + 1);
-      if (rest.startsWith("(")) {
-        // command substitution: skip to its closing paren, tracking nesting
-        let depth = 0;
-        let cursor = index + 1;
-        for (; cursor < text.length; cursor++) {
-          if (text[cursor] === "(") depth++;
-          else if (text[cursor] === ")" && --depth === 0) break;
-        }
-        index = cursor;
-        continue;
+    const rest = segment.slice(index + 1);
+    if (rest.startsWith("(")) {
+      // command substitution: skip to its closing paren, tracking nesting
+      let depth = 0;
+      let cursor = index + 1;
+      for (; cursor < segment.length; cursor++) {
+        if (segment[cursor] === "(") depth++;
+        else if (segment[cursor] === ")" && --depth === 0) break;
       }
-      const braced = rest.match(/^\{([^}]*)\}/);
-      if (braced) {
-        const inner = braced[1] ?? "";
-        if (!/^[A-Za-z_][A-Za-z0-9_]*:\?/.test(inner) && !/^[0-9]+:\?/.test(inner)) {
-          violations.push("${" + inner + "}");
-        }
-        index += braced[0].length;
-        continue;
+      index = cursor;
+      continue;
+    }
+    const braced = rest.match(/^\{([^}]*)\}/);
+    if (braced) {
+      const inner = braced[1] ?? "";
+      if (!/^[A-Za-z_][A-Za-z0-9_]*:\?/.test(inner) && !/^[0-9]+:\?/.test(inner)) {
+        violations.push("${" + inner + "}");
       }
-      const bare = rest.match(/^[A-Za-z_][A-Za-z0-9_]*|^[0-9]/);
-      if (bare) {
-        violations.push(`$${bare[0]}`);
-        index += bare[0].length;
-      }
+      index += braced[0].length;
+      continue;
+    }
+    const bare = rest.match(/^[A-Za-z_][A-Za-z0-9_]*|^[0-9]/);
+    if (bare) {
+      violations.push(`$${bare[0]}`);
+      index += bare[0].length;
     }
   }
   return violations;

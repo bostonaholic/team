@@ -127,6 +127,22 @@ describe("unguardedRmExpansions (operand parser)", () => {
     expect(unguardedRmExpansions('rm -rf "$dir"')).toEqual(["$dir"]);
   });
 
+  test("every recursive-force flag spelling is detected", () => {
+    expect(unguardedRmExpansions('rm -fr "$dir"')).toEqual(["$dir"]);
+    expect(unguardedRmExpansions('rm -Rf "$dir"')).toEqual(["$dir"]);
+    expect(unguardedRmExpansions('rm -r -f "$dir"')).toEqual(["$dir"]);
+    expect(unguardedRmExpansions('rm --recursive --force "$dir"')).toEqual(["$dir"]);
+  });
+
+  test("a backslash-alias rm (\\rm) is still detected", () => {
+    expect(unguardedRmExpansions('\\rm -rf "$dir"')).toEqual(["$dir"]);
+  });
+
+  test("an rm without both recursive and force flags is out of scope", () => {
+    expect(unguardedRmExpansions('rm -f "$file"')).toEqual([]);
+    expect(unguardedRmExpansions('rm -r "$dir"')).toEqual([]);
+  });
+
   test("a braced expansion without :? fails", () => {
     expect(unguardedRmExpansions('rm -rf "${dir}"')).toEqual(["${dir}"]);
   });

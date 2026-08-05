@@ -6,6 +6,7 @@ import {
   agentFiles,
   allowlistVerdict,
   collectMatches,
+  extractCodeSpans,
   runtimeHookFiles,
   skillFiles,
   skillTreeFiles,
@@ -40,9 +41,9 @@ describe("check (a): host-binding identifier sweep over agents/ and skills/", ()
   // each documentation-about site is an explicit (path, exact count) entry,
   // and the non-zero counts double as the sweep's positive detection signal.
   const ALLOWLIST: AllowlistEntry[] = [
-    // The "what <skill-dir> resolves to on Claude Code" sentence (line 333).
+    // The sentence explaining what <skill-dir> resolves to on Claude Code.
     { path: "skills/writing-prose/SKILL.md", count: 1 },
-    // The same fact in the bundled script's header comment (line 27).
+    // The same what-<skill-dir>-resolves-to fact in the script's header comment.
     { path: "skills/writing-prose/ste-lint.mjs", count: 1 },
   ];
 
@@ -160,11 +161,15 @@ describe("check (d): README names the removal path of every model-invocation-dis
     expect(modelInvocationDisabledSkills()).toContain("pr-approve-watch");
   });
 
-  test("README contains the literal skills/<name> for each detected skill", () => {
-    const readme = read(join(REPO_ROOT, "README.md"));
-    for (const skillName of modelInvocationDisabledSkills()) {
-      expect(readme).toContain(`skills/${skillName}`);
-    }
+  test("README carries the literal skills/<name> inside a code span for each detected skill", () => {
+    // A code span, not prose: the removal path must stay copyable, and
+    // fences and inline spans are a syntactic boundary the extractor
+    // already draws.
+    const readmeSpans = extractCodeSpans(read(join(REPO_ROOT, "README.md")));
+    const missing = modelInvocationDisabledSkills().filter(
+      (skillName) => !readmeSpans.some((span) => span.text.includes(`skills/${skillName}`)),
+    );
+    expect(missing).toEqual([]);
   });
 });
 
