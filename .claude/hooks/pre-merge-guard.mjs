@@ -84,19 +84,204 @@ function deny(text) {
 
 // --- Jurisdiction -----------------------------------------------------------
 
-// Tokenize into simple commands (word lists), or null when the command cannot
-// be parsed confidently — jurisdiction is decided only on a parsed command,
-// so a null fails open. This slice-1 core bails on quotes, escapes, and
-// heredocs; the quoting-aware tokenizer (slice 2) replaces the bail with real
-// parsing so the documented land-path merge (which quotes its --subject)
-// still engages.
+// Tokenize into simple commands (word lists) under shell quoting rules, or
+// null when the command cannot be parsed confidently — jurisdiction is
+// decided only on a parsed command, so a null fails open. Quoted text,
+// backslash escapes, and heredoc bodies are data: they never create word or
+// command boundaries, so a commit message or grep that mentions the phrase
+// never engages, while the documented land-path merge (which quotes its
+// --subject) still parses and engages. Indirection (bash -c, eval, env,
+// xargs, command substitution) is never unwrapped — accepted over-narrow
+// residue.
 function tokenize(command) {
-  if (/['"\\]|<</.test(command)) return null;
   const commands = [];
-  for (const segment of command.split(/\n|&&|\|\||[;|&]/)) {
-    const words = segment.split(/[ \t]+/).filter(Boolean);
-    if (words.length > 0) commands.push(words);
+  let words = [];
+  let word = "";
+  let wordStarted = false;
+  const pendingHeredocs = [];
+  let i = 0;
+  const length = command.length;
+
+  const endWord = () => {
+    if (wordStarted) {
+      words.push(word);
+      word = "";
+      wordStarted = false;
+    }
+  };
+  const endCommand = () => {
+    endWord();
+    if (words.length > 0) {
+      commands.push(words);
+      words = [];
+    }
+  };
+
+  // Read a quoted/escaped word fragment used as a heredoc terminator.
+  const readHeredocTerminator = () => {
+    let terminator = "";
+    let sawAny = false;
+    while (i < length) {
+      const c = command[i];
+      if (c === "'") {
+        const close = command.indexOf("'", i + 1);
+        if (close === -1) return null;
+        terminator += command.slice(i + 1, close);
+        i = close + 1;
+        sawAny = true;
+        continue;
+      }
+      if (c === '"') {
+        i += 1;
+        let closed = false;
+        while (i < length) {
+          if (command[i] === '"') {
+            closed = true;
+            i += 1;
+            break;
+          }
+          if (command[i] === "\\" && i + 1 < length) {
+            terminator += command[i + 1];
+            i += 2;
+            continue;
+          }
+          terminator += command[i];
+          i += 1;
+        }
+        if (!closed) return null;
+        sawAny = true;
+        continue;
+      }
+      if (c === "\\") {
+        if (i + 1 >= length) return null;
+        terminator += command[i + 1];
+        i += 2;
+        sawAny = true;
+        continue;
+      }
+      if (" \t\n;|&<>".includes(c)) break;
+      terminator += c;
+      i += 1;
+      sawAny = true;
+    }
+    return sawAny ? terminator : null;
+  };
+
+  while (i < length) {
+    const ch = command[i];
+
+    if (ch === "'") {
+      const close = command.indexOf("'", i + 1);
+      if (close === -1) return null; // unbalanced quote
+      word += command.slice(i + 1, close);
+      wordStarted = true;
+      i = close + 1;
+      continue;
+    }
+    if (ch === '"') {
+      i += 1;
+      let closed = false;
+      while (i < length) {
+        const c = command[i];
+        if (c === '"') {
+          closed = true;
+          i += 1;
+          break;
+        }
+        if (c === "\\" && i + 1 < length) {
+          word += command[i + 1];
+          i += 2;
+          continue;
+        }
+        word += c;
+        i += 1;
+      }
+      if (!closed) return null; // unbalanced quote
+      wordStarted = true;
+      continue;
+    }
+    if (ch === "\\") {
+      if (i + 1 >= length) return null;
+      if (command[i + 1] === "\n") {
+        i += 2; // line continuation: no word break, no command break
+        continue;
+      }
+      word += command[i + 1];
+      wordStarted = true;
+      i += 2;
+      continue;
+    }
+    if (ch === "\n") {
+      endCommand();
+      i += 1;
+      // Heredoc bodies are data: consume lines up to each terminator without
+      // ever splitting them into commands.
+      while (pendingHeredocs.length > 0) {
+        const { terminator, stripTabs } = pendingHeredocs.shift();
+        let found = false;
+        while (i <= length) {
+          let lineEnd = command.indexOf("\n", i);
+          const atEnd = lineEnd === -1;
+          if (atEnd) lineEnd = length;
+          let line = command.slice(i, lineEnd);
+          if (stripTabs) line = line.replace(/^\t+/, "");
+          i = atEnd ? length + 1 : lineEnd + 1;
+          if (line === terminator) {
+            found = true;
+            break;
+          }
+          if (atEnd) break;
+        }
+        if (!found) return null; // heredoc missing its terminator
+      }
+      continue;
+    }
+    if (ch === " " || ch === "\t") {
+      endWord();
+      i += 1;
+      continue;
+    }
+    if (ch === "#" && !wordStarted) {
+      const lineEnd = command.indexOf("\n", i);
+      i = lineEnd === -1 ? length : lineEnd;
+      continue;
+    }
+    if (ch === "<" && command[i + 1] === "<" && command[i + 2] !== "<") {
+      endWord();
+      i += 2;
+      let stripTabs = false;
+      if (command[i] === "-") {
+        stripTabs = true;
+        i += 1;
+      }
+      while (command[i] === " " || command[i] === "\t") i += 1;
+      const terminator = readHeredocTerminator();
+      if (terminator === null) return null;
+      pendingHeredocs.push({ terminator, stripTabs });
+      continue;
+    }
+    if (ch === "&" && command[i + 1] === "&") {
+      endCommand();
+      i += 2;
+      continue;
+    }
+    if (ch === "|" && command[i + 1] === "|") {
+      endCommand();
+      i += 2;
+      continue;
+    }
+    if (ch === ";" || ch === "|" || ch === "&") {
+      endCommand();
+      i += 1;
+      continue;
+    }
+    word += ch;
+    wordStarted = true;
+    i += 1;
   }
+
+  if (pendingHeredocs.length > 0) return null; // heredoc body never started
+  endCommand();
   return commands;
 }
 
