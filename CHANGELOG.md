@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.1] - 2026-08-05
+
 ### Changed
 
 - **The plugin's homepage link now points at the documentation site.** Both host manifests advertised `https://github.com/bostonaholic/team`, so a user who followed the homepage link from a plugin listing landed on the source tree and had to find the docs from there. Team publishes a documentation site at [https://team.bostonaholic.dev](https://team.bostonaholic.dev), and that is what the link now opens: `homepage` in the Claude Code manifest, and `interface.websiteURL` in the Codex manifest. The repository is still one click away from the site. [`.claude-plugin/plugin.json`](https://github.com/bostonaholic/team/blob/main/.claude-plugin/plugin.json), [`.codex-plugin/plugin.json`](https://github.com/bostonaholic/team/blob/main/.codex-plugin/plugin.json)
@@ -402,7 +404,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.35.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.35.1...HEAD
+[0.35.1]: https://github.com/bostonaholic/team/compare/v0.35.0...v0.35.1
 [0.35.0]: https://github.com/bostonaholic/team/compare/v0.34.1...v0.35.0
 [0.34.1]: https://github.com/bostonaholic/team/compare/v0.34.0...v0.34.1
 [0.34.0]: https://github.com/bostonaholic/team/compare/v0.33.2...v0.34.0
