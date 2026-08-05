@@ -325,6 +325,18 @@ function tokenize(command) {
       i += 2;
       continue;
     }
+    if (
+      ch === "&" &&
+      (command[i + 1] === ">" || /[<>]$/.test(word))
+    ) {
+      // Redirection syntax (`&>out`, `&>>out`, `2>&1`, `>&2`), not a control
+      // operator: splitting here would strand the merge words behind a stray
+      // fd digit. Keep it in the word for the redirection strip to discard.
+      word += ch;
+      wordStarted = true;
+      i += 1;
+      continue;
+    }
     if (ch === ";" || ch === "|" || ch === "&") {
       endCommand();
       i += 1;
@@ -350,11 +362,30 @@ function basename(word) {
   return segments[segments.length - 1];
 }
 
+const REDIRECTION_OPERATOR = /^(\d*(>>|>&|<>|<&|>|<)|&>>?)/;
+
+// bash allows redirections between any words of a simple command, not only
+// leading ones — `gh 2>/dev/null pr merge` still runs the merge.
+function stripRedirections(words) {
+  const stripped = [];
+  for (let i = 0; i < words.length; i += 1) {
+    const operator = words[i].match(REDIRECTION_OPERATOR);
+    if (operator) {
+      // A bare operator's target rides in the next word.
+      if (operator[0].length === words[i].length) i += 1;
+      continue;
+    }
+    stripped.push(words[i]);
+  }
+  return stripped;
+}
+
 // In jurisdiction iff some simple command's first three words — after
-// discarding leading NAME=value assignment words, a leading `time` prefix,
-// and leading redirection words (`>out`, `2>/dev/null`, `< input`) — are
-// exactly `gh pr merge` (the first may be a path whose basename is gh).
-// Leading shell reserved words other than `time` and grouping openers are
+// discarding leading NAME=value assignment words, the pure prefixes `time`
+// (and its `-p`/`--` flags), `!`, and `exec` (and its `-c`/`-l`/`-a NAME`
+// flags), and redirection words anywhere in the command — are exactly
+// `gh pr merge` (the first may be a path whose basename is gh). Leading
+// shell reserved words other than those prefixes and grouping openers are
 // deliberately NOT discarded (err narrow): `if …; then gh pr merge; fi`,
 // `{ gh pr merge; }` stay out. Every match is collected: a compound command
 // is gated on ALL of its merge commands, so an out-of-scope first merge can
@@ -365,19 +396,30 @@ function findMergeCommands(commands) {
     let start = 0;
     while (start < words.length) {
       const word = words[start];
-      if (isAssignmentWord(word) || word === "time") {
+      if (isAssignmentWord(word) || word === "!") {
         start += 1;
         continue;
       }
-      const redirection = word.match(/^\d*[<>]{1,2}/);
-      if (redirection) {
-        // A bare operator's target rides in the next word.
-        start += redirection[0].length === word.length ? 2 : 1;
+      if (word === "time") {
+        start += 1;
+        while (words[start] === "-p" || words[start] === "--") start += 1;
+        continue;
+      }
+      if (word === "exec") {
+        start += 1;
+        while (start < words.length && words[start].startsWith("-")) {
+          const flagWord = words[start];
+          start += 1;
+          if (flagWord === "--") break;
+          // `-a NAME` binds the next word as argv0, so the command being
+          // exec'd is the word after NAME.
+          if (flagWord.includes("a")) start += 1;
+        }
         continue;
       }
       break;
     }
-    const rest = words.slice(start);
+    const rest = stripRedirections(words.slice(start));
     if (
       rest.length >= 3 &&
       basename(rest[0]) === "gh" &&
@@ -466,6 +508,9 @@ function normalizeRepoTarget(value) {
   }
   // gh accepts `[HOST/]OWNER/REPO` — reduce to the last two path segments so
   // a host-qualified value still names this repo instead of reading foreign.
+  // The host is dropped even when it is a genuinely foreign GHE host carrying
+  // the same owner/repo slug: that value reads as home and gets gated — a
+  // false deny on the narrow side, never a bypass.
   const segments = value.trim().replace(/\/+$/, "").split("/").filter(Boolean);
   if (segments.length < 2) return null;
   return segments.slice(-2).join("/").toLowerCase();

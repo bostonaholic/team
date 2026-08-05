@@ -420,10 +420,20 @@ describe.if(HAS_JQ)("slice 2: in jurisdiction — every simple command is tested
     `gh pr merge 5 -R=bostonaholic/team`,
     `gh pr merge 5 -dRbostonaholic/team`,
     `gh pr merge 5 -dR=bostonaholic/team`,
-    // A leading `time` prefix or redirection word still runs the merge.
+    // A leading `time` prefix or redirection word still runs the merge, and
+    // bash allows a redirection between ANY words of a simple command.
     `time gh pr merge 5`,
+    `time -p gh pr merge`,
     `>merge.log gh pr merge 5`,
     `2>/dev/null gh pr merge 5`,
+    `2>&1 gh pr merge 5`,
+    `gh 2>/dev/null pr merge`,
+    // The pure prefixes `!` and `exec` leave the merge words intact and bash
+    // runs them — unlike grouping openers, which stay out (resolved
+    // narrow-side, see the out-shapes above).
+    `! gh pr merge 5`,
+    `exec gh pr merge 5`,
+    `exec -a argv0name gh pr merge 5`,
     // The tokenizer used to bail to null on these, but bash warns and RUNS
     // the merge — and the arithmetic-shift shape is fully valid, with no
     // warning at all. A parse bail must never fail open on a command the
