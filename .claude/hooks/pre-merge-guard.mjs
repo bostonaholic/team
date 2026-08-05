@@ -98,34 +98,142 @@ function deny(text) {
 
 // --- Jurisdiction -----------------------------------------------------------
 
-// Tokenize into simple commands (word lists) under shell quoting rules, or
+// Quote-context scanners. Each takes the index of its opening delimiter and
+// returns the index just past the closing one, or null when the context never
+// closes — a bash syntax error, so a null there fails open only on input the
+// shell refuses to run.
+
+function scanSingleQuote(command, openIndex) {
+  const close = command.indexOf("'", openIndex + 1);
+  return close === -1 ? null : close + 1;
+}
+
+// $'…' — ANSI-C quoting: backslash escapes ANY next character, so \' is a
+// literal apostrophe, never a closer. Reading it as a plain single quote
+// flips quote parity and fails the parse open on a command bash executes.
+function scanAnsiCQuote(command, openIndex) {
+  let i = openIndex + 1;
+  while (i < command.length) {
+    const c = command[i];
+    if (c === "\\") {
+      i += 2;
+      continue;
+    }
+    if (c === "'") return i + 1;
+    i += 1;
+  }
+  return null;
+}
+
+// A balanced-paren span — $(…), <(…), >(…), NAME=(…), ((…)) — honoring the
+// quote contexts inside it, where a `)` is data. Comments and case patterns
+// inside a substitution are NOT parsed (see the tokenize contract below).
+function scanParenSpan(command, openIndex) {
+  let depth = 1;
+  let i = openIndex + 1;
+  while (i < command.length && depth > 0) {
+    const c = command[i];
+    if (c === "\\") {
+      i += 2;
+      continue;
+    }
+    if (c === "'") {
+      const end = scanSingleQuote(command, i);
+      if (end === null) return null;
+      i = end;
+      continue;
+    }
+    if (c === "$" && command[i + 1] === "'") {
+      const end = scanAnsiCQuote(command, i + 1);
+      if (end === null) return null;
+      i = end;
+      continue;
+    }
+    if (c === '"') {
+      const end = scanDoubleQuoteSpan(command, i);
+      if (end === null) return null;
+      i = end;
+      continue;
+    }
+    if (c === "(") depth += 1;
+    else if (c === ")") depth -= 1;
+    i += 1;
+  }
+  return depth === 0 ? i : null;
+}
+
+function scanDoubleQuoteSpan(command, openIndex) {
+  let i = openIndex + 1;
+  while (i < command.length) {
+    const c = command[i];
+    if (c === '"') return i + 1;
+    if (c === "\\" && i + 1 < command.length) {
+      i += 2;
+      continue;
+    }
+    // Inside "…", $(…) opens a full command context where quotes nest — a
+    // " or ' inside the substitution must not close or flip this string
+    // (the `"$(… '…'\''…' …)"` land-path subject shape).
+    if (c === "$" && command[i + 1] === "(") {
+      const end = scanParenSpan(command, i + 1);
+      if (end === null) return null;
+      i = end;
+      continue;
+    }
+    i += 1;
+  }
+  return null;
+}
+
+// Tokenize into simple commands (word lists) under bash's lexing rules, or
 // null when the command cannot be parsed confidently — jurisdiction is
-// decided only on a parsed command, so a null fails open. That makes null
-// legitimate ONLY where bash itself refuses to execute the input (unbalanced
-// quotes, unbalanced arithmetic): bash tolerates and RUNS an unterminated
-// heredoc, a trailing backslash, and `<<` inside `$((…))`/`((…))`, so those
-// shapes must parse the way bash reads them instead of bailing. Quoted text,
-// backslash escapes, and heredoc bodies are data: they never create word or
-// command boundaries, so a commit message or grep that mentions the phrase
-// never engages, while the documented land-path merge (which quotes its
-// --subject) still parses and engages. Indirection (bash -c, eval, env,
-// xargs, command substitution) is never unwrapped — accepted over-narrow
-// residue.
+// decided only on a parsed command, so a null fails open.
+//
+// The single structural invariant (bash's own rule): the metacharacters
+// space, tab, newline, |, &, ;, (, ), <, > ALWAYS end a word when unquoted.
+// Every branch below is one of two kinds — a quoted/expansion span consumed
+// as data (quotes, escapes, $'…', $"…", $(…), ((…)), <(…), heredoc bodies,
+// here-string operands, redirection targets: data never creates or hides a
+// word boundary), or a metacharacter handler that first ends the current
+// word. A commit message or grep that mentions the phrase never engages,
+// while the documented land-path merge parses and engages whatever quoting
+// its --subject text needs.
+//
+// null is legitimate ONLY where bash itself refuses to execute the input
+// (an unbalanced quote or paren span, a redirection with no target): bash
+// tolerates and RUNS an unterminated heredoc and a trailing backslash, so
+// those parse the way bash reads them instead of bailing. Named residue
+// that survives this contract, reachable only through deliberately evasive
+// spellings (the same class as the indirection list below):
+//   - the $(…) scanner counts parens without parsing comments or case
+//     patterns inside the substitution, so a `)` in either ends the span
+//     early and can cascade to null;
+//   - $'…' word CONTENT keeps numeric escapes undecoded ($'\x67h' reads as
+//     "x67h", never "gh");
+//   - brace expansion is not performed (`gh pr {merge,}` reads as one
+//     word).
+// Indirection (bash -c, eval, env, xargs, command substitution, wrapper
+// commands beyond time/exec/!) is never unwrapped — accepted over-narrow
+// residue, named in docs/versioning.md.
 function tokenize(command) {
   const commands = [];
   let words = [];
   let word = "";
   let wordStarted = false;
+  // Whether quoted or escaped text contributed to the current word: bash
+  // folds a glued digit into a redirection operator as its fd number ONLY
+  // when the digit is unquoted (`"2">x` redirects fd 1, not fd 2), and
+  // NAME=(…) is an array assignment only when NAME= is unquoted.
+  let wordHadQuoting = false;
   const pendingHeredocs = [];
   let i = 0;
   const length = command.length;
 
   const endWord = () => {
-    if (wordStarted) {
-      words.push(word);
-      word = "";
-      wordStarted = false;
-    }
+    if (wordStarted) words.push(word);
+    word = "";
+    wordStarted = false;
+    wordHadQuoting = false;
   };
   const endCommand = () => {
     endWord();
@@ -134,19 +242,30 @@ function tokenize(command) {
       words = [];
     }
   };
+  const skipBlanks = () => {
+    while (command[i] === " " || command[i] === "\t") i += 1;
+  };
 
-  // Read a quoted/escaped word used as a heredoc terminator or a
-  // here-string operand.
+  // Read a quoted/escaped word used as a heredoc terminator, a here-string
+  // operand, or a redirection target.
   const readRedirectionWord = () => {
-    let terminator = "";
+    let value = "";
     let sawAny = false;
     while (i < length) {
       const c = command[i];
       if (c === "'") {
-        const close = command.indexOf("'", i + 1);
-        if (close === -1) return null;
-        terminator += command.slice(i + 1, close);
-        i = close + 1;
+        const end = scanSingleQuote(command, i);
+        if (end === null) return null;
+        value += command.slice(i + 1, end - 1);
+        i = end;
+        sawAny = true;
+        continue;
+      }
+      if (c === "$" && command[i + 1] === "'") {
+        const end = scanAnsiCQuote(command, i + 1);
+        if (end === null) return null;
+        value += command.slice(i + 2, end - 1).replace(/\\(.)/g, "$1");
+        i = end;
         sawAny = true;
         continue;
       }
@@ -160,11 +279,11 @@ function tokenize(command) {
             break;
           }
           if (command[i] === "\\" && i + 1 < length) {
-            terminator += command[i + 1];
+            value += command[i + 1];
             i += 2;
             continue;
           }
-          terminator += command[i];
+          value += command[i];
           i += 1;
         }
         if (!closed) return null;
@@ -177,28 +296,30 @@ function tokenize(command) {
           i += 1;
           continue;
         }
-        terminator += command[i + 1];
+        value += command[i + 1];
         i += 2;
         sawAny = true;
         continue;
       }
-      if (" \t\n;|&<>".includes(c)) break;
-      terminator += c;
+      if (" \t\n;|&<>()".includes(c)) break;
+      value += c;
       i += 1;
       sawAny = true;
     }
-    return sawAny ? terminator : null;
+    return sawAny ? value : null;
   };
 
   while (i < length) {
     const ch = command[i];
+    const next = command[i + 1];
 
     if (ch === "'") {
-      const close = command.indexOf("'", i + 1);
-      if (close === -1) return null; // unbalanced quote
-      word += command.slice(i + 1, close);
+      const end = scanSingleQuote(command, i);
+      if (end === null) return null; // unbalanced quote
+      word += command.slice(i + 1, end - 1);
       wordStarted = true;
-      i = close + 1;
+      wordHadQuoting = true;
+      i = end;
       continue;
     }
     if (ch === '"') {
@@ -216,11 +337,21 @@ function tokenize(command) {
           i += 2;
           continue;
         }
+        // $(…) nests full quoting inside "…" — scan it as a span so an
+        // inner " or ' never closes or flips this string.
+        if (c === "$" && command[i + 1] === "(") {
+          const end = scanParenSpan(command, i + 1);
+          if (end === null) return null;
+          word += command.slice(i, end);
+          i = end;
+          continue;
+        }
         word += c;
         i += 1;
       }
       if (!closed) return null; // unbalanced quote
       wordStarted = true;
+      wordHadQuoting = true;
       continue;
     }
     if (ch === "\\") {
@@ -230,13 +361,73 @@ function tokenize(command) {
         i += 1;
         continue;
       }
-      if (command[i + 1] === "\n") {
+      if (next === "\n") {
         i += 2; // line continuation: no word break, no command break
         continue;
       }
-      word += command[i + 1];
+      word += next;
       wordStarted = true;
+      wordHadQuoting = true;
       i += 2;
+      continue;
+    }
+    if (ch === "$" && next === "'") {
+      const end = scanAnsiCQuote(command, i + 1);
+      if (end === null) return null; // unterminated $'…' — bash refuses
+      word += command.slice(i + 2, end - 1).replace(/\\(.)/g, "$1");
+      wordStarted = true;
+      wordHadQuoting = true;
+      i = end;
+      continue;
+    }
+    if (ch === "$" && next === '"') {
+      // $"…" is the locale-translated string: quoting-wise identical to "…".
+      i += 1;
+      continue;
+    }
+    if (ch === "$" && next === "(") {
+      // Command substitution (or $((…)) arithmetic — the paren scan covers
+      // both) is data: never unwrapped, never a boundary.
+      const end = scanParenSpan(command, i + 1);
+      if (end === null) return null; // unterminated $(… — bash refuses
+      word += command.slice(i, end);
+      wordStarted = true;
+      i = end;
+      continue;
+    }
+    if (
+      ch === "(" &&
+      wordStarted &&
+      !wordHadQuoting &&
+      /^[A-Za-z_][A-Za-z0-9_]*\+?=$/.test(word)
+    ) {
+      // NAME=(…) / NAME+=(…) array assignment: the one place bash lexes an
+      // unquoted `(` into a word. Without this the assignment splits, and
+      // the words after it stop reading as an assignment-prefixed command.
+      const end = scanParenSpan(command, i);
+      if (end === null) return null; // unbalanced — bash refuses
+      word += command.slice(i, end);
+      i = end;
+      continue;
+    }
+    if (ch === "(" && next === "(") {
+      // An arithmetic span — `(( 1 << 2 ))` — is data: `<<` inside it is a
+      // shift, never a heredoc opener, and bash runs whatever follows.
+      const end = scanParenSpan(command, i);
+      if (end === null) return null; // unbalanced — bash refuses
+      word += command.slice(i, end);
+      wordStarted = true;
+      i = end;
+      continue;
+    }
+    if (ch === "(" || ch === ")") {
+      // A grouping paren becomes its own word, never discarded: a subshell
+      // merge `( gh pr merge )` stays out of jurisdiction (the narrow-side
+      // grouping ruling), and a case-pattern `)` never bails the parse to
+      // null on input bash runs.
+      endWord();
+      words.push(ch);
+      i += 1;
       continue;
     }
     if (ch === "\n") {
@@ -271,73 +462,80 @@ function tokenize(command) {
       i = lineEnd === -1 ? length : lineEnd;
       continue;
     }
-    if (ch === "(" && command[i + 1] === "(") {
-      // An arithmetic span — `(( 1 << 2 ))` or `$((…))` — is data: `<<`
-      // inside it is a shift, never a heredoc opener, and bash runs whatever
-      // follows the span. Consume to the matching `))` on paren depth. An
-      // unbalanced span is a bash syntax error (nothing runs), so null stays
-      // fail-open-safe there.
-      let depth = 2;
-      let spanEnd = i + 2;
-      while (spanEnd < length && depth > 0) {
-        if (command[spanEnd] === "(") depth += 1;
-        else if (command[spanEnd] === ")") depth -= 1;
-        spanEnd += 1;
+    if (ch === "<" || ch === ">") {
+      if (next === "(") {
+        // Process substitution is a WORD (it expands to a /dev/fd path and
+        // glues to adjacent word text), never a redirection.
+        const end = scanParenSpan(command, i + 1);
+        if (end === null) return null; // unbalanced — bash refuses
+        word += command.slice(i, end);
+        wordStarted = true;
+        i = end;
+        continue;
       }
-      if (depth > 0) return null;
-      word += command.slice(i, spanEnd);
-      wordStarted = true;
-      i = spanEnd;
-      continue;
-    }
-    if (ch === "<" && command[i + 1] === "<" && command[i + 2] === "<") {
-      // Here-string: consume all three `<` and discard the operand as data —
-      // leaving any `<` behind would push a phantom heredoc whose missing
-      // terminator fails the whole parse open.
-      endWord();
-      i += 3;
-      while (command[i] === " " || command[i] === "\t") i += 1;
-      const operand = readRedirectionWord();
-      if (operand === null) return null;
-      continue;
-    }
-    if (ch === "<" && command[i + 1] === "<") {
-      endWord();
-      i += 2;
-      let stripTabs = false;
-      if (command[i] === "-") {
-        stripTabs = true;
-        i += 1;
+      // Bash folds a glued, unquoted, all-digit word into the operator as
+      // its fd number (`2>/dev/null`, `gh 2<<EOF pr merge`); any other
+      // in-progress word is complete — `merge>log` still merges.
+      if (wordStarted && !wordHadQuoting && /^\d+$/.test(word)) {
+        word = "";
+        wordStarted = false;
+      } else {
+        endWord();
       }
-      while (command[i] === " " || command[i] === "\t") i += 1;
-      const terminator = readRedirectionWord();
-      if (terminator === null) return null;
-      pendingHeredocs.push({ terminator, stripTabs });
-      continue;
-    }
-    if (ch === "&" && command[i + 1] === "&") {
-      endCommand();
-      i += 2;
-      continue;
-    }
-    if (ch === "|" && command[i + 1] === "|") {
-      endCommand();
-      i += 2;
-      continue;
-    }
-    if (
-      ch === "&" &&
-      (command[i + 1] === ">" || /[<>]$/.test(word))
-    ) {
-      // Redirection syntax (`&>out`, `&>>out`, `2>&1`, `>&2`), not a control
-      // operator: splitting here would strand the merge words behind a stray
-      // fd digit. Keep it in the word for the redirection strip to discard.
-      word += ch;
-      wordStarted = true;
+      if (ch === "<" && next === "<" && command[i + 2] === "<") {
+        // Here-string: the operand is data — leaving any `<` behind would
+        // push a phantom heredoc whose missing terminator fails the whole
+        // parse open.
+        i += 3;
+        skipBlanks();
+        if (readRedirectionWord() === null) return null;
+        continue;
+      }
+      if (ch === "<" && next === "<") {
+        i += 2;
+        let stripTabs = false;
+        if (command[i] === "-") {
+          stripTabs = true;
+          i += 1;
+        }
+        skipBlanks();
+        const terminator = readRedirectionWord();
+        if (terminator === null) return null;
+        pendingHeredocs.push({ terminator, stripTabs });
+        continue;
+      }
+      // Plain redirection: consume the operator (>> >& >| <& <>) and
+      // discard its target word. A missing target is a bash syntax error,
+      // so null stays fail-open-safe.
       i += 1;
+      if (ch === ">" && (command[i] === ">" || command[i] === "|")) i += 1;
+      else if (command[i] === "&") i += 1;
+      else if (ch === "<" && command[i] === ">") i += 1;
+      skipBlanks();
+      if (readRedirectionWord() === null) return null;
       continue;
     }
-    if (ch === ";" || ch === "|" || ch === "&") {
+    if (ch === "&") {
+      if (next === ">") {
+        // &>out / &>>out — redirection, not a control operator: the merge
+        // words before it are a complete simple command that still runs.
+        endWord();
+        i += 2;
+        if (command[i] === ">") i += 1;
+        skipBlanks();
+        if (readRedirectionWord() === null) return null;
+        continue;
+      }
+      endCommand();
+      i += next === "&" ? 2 : 1;
+      continue;
+    }
+    if (ch === "|") {
+      endCommand();
+      i += next === "|" || next === "&" ? 2 : 1;
+      continue;
+    }
+    if (ch === ";") {
       endCommand();
       i += 1;
       continue;
@@ -354,7 +552,7 @@ function tokenize(command) {
 }
 
 function isAssignmentWord(word) {
-  return /^[A-Za-z_][A-Za-z0-9_]*=/.test(word);
+  return /^[A-Za-z_][A-Za-z0-9_]*\+?=/.test(word);
 }
 
 function basename(word) {
@@ -362,34 +560,21 @@ function basename(word) {
   return segments[segments.length - 1];
 }
 
-const REDIRECTION_OPERATOR = /^(\d*(>>|>&|<>|<&|>|<)|&>>?)/;
-
-// bash allows redirections between any words of a simple command, not only
-// leading ones — `gh 2>/dev/null pr merge` still runs the merge.
-function stripRedirections(words) {
-  const stripped = [];
-  for (let i = 0; i < words.length; i += 1) {
-    const operator = words[i].match(REDIRECTION_OPERATOR);
-    if (operator) {
-      // A bare operator's target rides in the next word.
-      if (operator[0].length === words[i].length) i += 1;
-      continue;
-    }
-    stripped.push(words[i]);
-  }
-  return stripped;
-}
-
 // In jurisdiction iff some simple command's first three words — after
-// discarding leading NAME=value assignment words, the pure prefixes `time`
-// (and its `-p`/`--` flags), `!`, and `exec` (and its `-c`/`-l`/`-a NAME`
-// flags), and redirection words anywhere in the command — are exactly
-// `gh pr merge` (the first may be a path whose basename is gh). Leading
-// shell reserved words other than those prefixes and grouping openers are
-// deliberately NOT discarded (err narrow): `if …; then gh pr merge; fi`,
-// `{ gh pr merge; }` stay out. Every match is collected: a compound command
-// is gated on ALL of its merge commands, so an out-of-scope first merge can
-// never allow a later one.
+// discarding leading assignment words (NAME=value, NAME+=value, and the
+// NAME=(array) form the tokenizer folds into one word) and the pure
+// prefixes `time` (matched on its basename so `/usr/bin/time` counts, its
+// `-p`/`--` flags stripped), `!`, and `exec` (and its `-c`/`-l`/`-a NAME`
+// flags) — are exactly `gh pr merge` (the first may be a path whose
+// basename is gh). Redirections never appear here: the tokenizer consumes
+// each operator and its target. Leading shell reserved words other than
+// those prefixes, grouping openers, and other wrapper commands (command,
+// nohup, nice, timeout, stdbuf, env) are deliberately NOT discarded (err
+// narrow): `if …; then gh pr merge; fi`, `{ gh pr merge; }`, and
+// `nohup gh pr merge` stay out — named residue in docs/versioning.md.
+// Every match is collected: a compound command is gated on ALL of its
+// merge commands, so an out-of-scope first merge can never allow a later
+// one.
 function findMergeCommands(commands) {
   const matches = [];
   for (const words of commands) {
@@ -400,7 +585,7 @@ function findMergeCommands(commands) {
         start += 1;
         continue;
       }
-      if (word === "time") {
+      if (basename(word) === "time") {
         start += 1;
         while (words[start] === "-p" || words[start] === "--") start += 1;
         continue;
@@ -419,7 +604,7 @@ function findMergeCommands(commands) {
       }
       break;
     }
-    const rest = stripRedirections(words.slice(start));
+    const rest = words.slice(start);
     if (
       rest.length >= 3 &&
       basename(rest[0]) === "gh" &&

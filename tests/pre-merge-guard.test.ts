@@ -424,6 +424,19 @@ describe("slice 2: out of jurisdiction — never gated, proven by loud stubs", (
     `if gh pr checks; then gh pr merge 5; fi`,
     `{ gh pr merge; }`,
     `( gh pr merge )`,
+    // Wrapper commands beyond time/exec/! are NOT stripped (narrow-side
+    // ruling) — documented residue in docs/versioning.md's scope caveat.
+    `command gh pr merge 5`,
+    `nohup gh pr merge 5`,
+    `nice gh pr merge 5`,
+    `timeout 60 gh pr merge 5`,
+    `stdbuf -o0 gh pr merge 5`,
+    // Brace expansion is not performed — documented residue.
+    `gh pr {merge,}`,
+    `gh pr merge{,}`,
+    // ANSI-C quoted text is data: one word, never a command.
+    `echo $'gh pr merge'`,
+    `git commit -m $'fix: don\\'t gate gh pr merge'`,
     // Tokenization failure → not engaged (fail open).
     `echo "gh pr merge`,
     `cat <<EOF\ngh pr merge 5`,
@@ -487,6 +500,39 @@ describe.if(HAS_JQ)("slice 2: in jurisdiction — every simple command is tested
     `(( 1 << 2 ))\ngh pr merge 5`,
     `gh pr merge 5 \\`,
     `echo a<<b; gh pr merge 5`,
+    // ANSI-C quoting: \' inside $'…' is a literal apostrophe, never a
+    // closer. Treating it as a plain quote flips parity, bails the parse to
+    // null, and fails open on a merge bash executes — exactly the land
+    // path's --subject shape when a PR title carries an apostrophe.
+    `gh pr merge 5 --squash --subject $'v1 fix: don\\'t break (#1)'`,
+    `gh pr merge 5 --squash --body $'x\\'y' --subject "t"`,
+    `echo $'a\\'b' ; gh pr merge --squash`,
+    // $"…" is the locale-translated string — quoting-wise a plain "…".
+    `gh pr merge 5 --squash --subject $"hello"`,
+    // $(…) inside "…" nests full quoting: the '\'' idiom inside a command
+    // substitution inside a double-quoted subject must not flip parity.
+    `gh pr merge 5 --squash --subject "$(jq -r .title <<<'{"title":"don'\\''t"}') (#5)"`,
+    // Bash's metacharacter rule: an unquoted < or > ALWAYS ends a word, even
+    // glued to one of the first three command words.
+    `gh pr merge>merge.log 5`,
+    `gh>merge.log pr merge 5`,
+    `gh pr>merge.log merge 5`,
+    `gh pr merge&>merge.log`,
+    `gh pr merge</dev/null`,
+    `gh pr merge >|merge.log`,
+    `gh pr merge 5 >merge.log 2>&1`,
+    // A glued fd digit is part of the operator, never a stray word that
+    // breaks the first-words rule.
+    `gh 2<<EOF pr merge --squash`,
+    `gh pr 2<<EOF merge --squash`,
+    `2<<EOF gh pr merge --squash`,
+    `gh 3<<<x pr merge --squash`,
+    // `time` matches on its basename, like gh itself.
+    `/usr/bin/time gh pr merge 5`,
+    // Array-assignment prefixes are single assignment words, so the merge
+    // words after them still read as the command.
+    `FOO=(a b) gh pr merge 5`,
+    `FOO+=(a b) gh pr merge 5`,
   ];
 
   for (const command of inShapes) {
