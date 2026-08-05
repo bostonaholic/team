@@ -711,6 +711,7 @@ const VALUE_SHORT_FLAGS = new Set(["t", "b", "F", "A", "R"]);
 function parseMergeArgs(mergeWords) {
   let repoFlag;
   let selector;
+  let helpRequested = false;
   for (let i = 3; i < mergeWords.length; i += 1) {
     const word = mergeWords[i];
     // A bare grouping paren rides along as its own word (`(cd x && gh pr
@@ -721,6 +722,14 @@ function parseMergeArgs(mergeWords) {
     // `( gh pr merge )` grouping ruling.
     if (word === "(" || word === ")") continue;
     if (word.startsWith("--")) {
+      // cobra's help flag prints help and never merges, so gating it is a
+      // pure false deny. Reached only in FLAG position: a --help consumed
+      // as a value below (`--subject --help` merges with that subject)
+      // never lands here.
+      if (word === "--help") {
+        helpRequested = true;
+        continue;
+      }
       if (word.startsWith("--repo=")) {
         repoFlag = word.slice("--repo=".length);
         continue;
@@ -738,6 +747,13 @@ function parseMergeArgs(mergeWords) {
       // whose value is the rest of the word — after an optional `=`, so
       // `-R=x/y` and `-Rx/y` name the same repo — or the next word.
       for (let j = 1; j < word.length; j += 1) {
+        // An `h` among the booleans is cobra's help shorthand (-h, -dh); an
+        // `h` after a value flag is that flag's value (-th is --subject h)
+        // and the break below keeps it out of here.
+        if (word[j] === "h") {
+          helpRequested = true;
+          continue;
+        }
         if (!VALUE_SHORT_FLAGS.has(word[j])) continue;
         let value = word.slice(j + 1);
         if (value.startsWith("=")) value = value.slice(1);
@@ -753,7 +769,7 @@ function parseMergeArgs(mergeWords) {
     if (word.startsWith("-")) continue;
     if (selector === undefined) selector = word;
   }
-  return { repoFlag, selector };
+  return { repoFlag, selector, helpRequested };
 }
 
 // --- Repo scoping -----------------------------------------------------------
@@ -844,7 +860,10 @@ function withRecoveryRoute(verdict) {
 // scope), deny() to block. Allow must never exit the process — a compound
 // command can carry further merge commands that still need gating.
 function gate(mergeWords) {
-  const { repoFlag, selector } = parseMergeArgs(mergeWords);
+  const { repoFlag, selector, helpRequested } = parseMergeArgs(mergeWords);
+
+  // A help invocation merges nothing — skip it before any external call.
+  if (helpRequested) return;
 
   if (repoFlag !== undefined) {
     const homeResult = run("git", ["remote", "get-url", "origin"]);

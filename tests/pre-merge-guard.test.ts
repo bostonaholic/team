@@ -484,6 +484,11 @@ describe("jurisdiction spec: out — never gated, proven by loud stubs", () => {
     `gh -R other/repo pr merge`,
     // Not the `gh pr merge` command.
     `gh api repos/o/r/pulls/5/merge`,
+    // cobra's help flag (long, short, and clustered with a boolean) prints
+    // help and never merges — gating it is a pure false deny.
+    `gh pr merge --help`,
+    `gh pr merge -h`,
+    `gh pr merge -dh 5`,
     // Leading reserved words and grouping openers are NOT discarded
     // (resolved narrow-side).
     `if gh pr checks; then gh pr merge 5; fi`,
@@ -682,6 +687,11 @@ describe.if(HAS_JQ)("jurisdiction spec: in — every simple command is gated", (
     `gh 3<<<x pr merge --squash`,
     // `time` matches on its basename, like gh itself.
     `/usr/bin/time gh pr merge 5`,
+    // A --help consumed as a flag VALUE still merges: pflag reads it as the
+    // subject here, so a naive any-word help scan would fail open. Same for
+    // an `h` after a value flag in a cluster (-th is --subject h).
+    `gh pr merge 5 --squash --subject --help`,
+    `gh pr merge -th`,
     // Array-assignment prefixes are single assignment words, so the merge
     // words after them still read as the command.
     `FOO=(a b) gh pr merge 5`,
