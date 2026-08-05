@@ -704,16 +704,11 @@ function normalizeRepoTarget(value) {
 // --- The invariant run ------------------------------------------------------
 
 function resolveDefaultBranch() {
-  const result = run("git", ["symbolic-ref", "refs/remotes/origin/HEAD"]);
-  if (succeeded(result)) {
-    const ref = result.stdout.trim();
-    const prefix = "refs/remotes/origin/";
-    if (ref.startsWith(prefix) && ref.length > prefix.length) {
-      return ref.slice(prefix.length);
-    }
-  }
-  // origin/HEAD can be unset (fresh clones, worktrees). Ask GitHub instead of
-  // guessing `main`: a wrong guess lands on the ALLOW side of the base check.
+  // GitHub is authoritative: the base check compares this against
+  // baseRefName, which also comes from GitHub, and the local origin/HEAD
+  // ref goes stale on an upstream default-branch rename — a wrong guess
+  // lands on the ALLOW side of the base check. The local ref is only the
+  // fallback for when gh cannot answer.
   const view = run("gh", [
     "repo",
     "view",
@@ -726,9 +721,17 @@ function resolveDefaultBranch() {
     const name = view.stdout.trim();
     if (name !== "") return name;
   }
+  const result = run("git", ["symbolic-ref", "refs/remotes/origin/HEAD"]);
+  if (succeeded(result)) {
+    const ref = result.stdout.trim();
+    const prefix = "refs/remotes/origin/";
+    if (ref.startsWith(prefix) && ref.length > prefix.length) {
+      return ref.slice(prefix.length);
+    }
+  }
   deny(
-    "pre-merge guard: could not resolve the default branch (origin/HEAD is " +
-      "unset and gh repo view failed). Recovery: run " +
+    "pre-merge guard: could not resolve the default branch (gh repo view " +
+      "failed and origin/HEAD is unset). Recovery: run " +
       "`git remote set-head origin --auto`, then re-run /shipit.",
   );
 }

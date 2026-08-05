@@ -18,7 +18,8 @@
 // invariant run makes:
 //
 //   gh pr view --json number,headRefOid,baseRefName   (PR selector)
-//   git symbolic-ref refs/remotes/origin/HEAD          (default-branch resolve)
+//   gh repo view --json defaultBranchRef               (default-branch resolve)
+//   git symbolic-ref refs/remotes/origin/HEAD          (default-branch fallback)
 //   git remote get-url origin                          (home-repo derivation)
 //   git fetch origin <default> / refs/pull/<n>/head    (must succeed)
 //   git rev-parse ...                                  (origin tip / head oid)
@@ -92,6 +93,8 @@ function scriptedStubs(opts: {
   fetchExit?: number; // exit status of both fetches (0 = success)
   ancestorExit?: number; // merge-base --is-ancestor (0 = head is up to date)
   gh?: "ok" | "fail" | "hang";
+  repoView?: "ok" | "fail"; // gh repo view (the default-branch resolve)
+  symbolicRefName?: string; // the LOCAL origin/HEAD branch name (can be stale)
 }): string {
   const {
     headVersion = "0.33.2",
@@ -100,9 +103,15 @@ function scriptedStubs(opts: {
     fetchExit = 0,
     ancestorExit = 0,
     gh = "ok",
+    repoView = "ok",
+    symbolicRefName = "main",
   } = opts;
   const dir = newStubDir();
 
+  const repoViewArm =
+    repoView === "ok"
+      ? `printf 'main\\n'; exit 0`
+      : `printf 'no network\\n' >&2; exit 1`;
   const ghBody =
     gh === "hang"
       ? `sleep 30`
@@ -112,6 +121,9 @@ function scriptedStubs(opts: {
   printf '%s\\n' '{"number":5,"headRefOid":"${HEAD_OID}","baseRefName":"main"}'
   exit 0
 fi
+if [ "\${1:-}" = "repo" ] && [ "\${2:-}" = "view" ]; then
+  ${repoViewArm}
+fi
 ${LOUD_GH}`;
   writeStub(dir, "gh", ghBody);
 
@@ -120,7 +132,7 @@ ${LOUD_GH}`;
     "git",
     `cmd="\${1:-}"; shift || true
 case "$cmd" in
-  symbolic-ref) printf 'refs/remotes/origin/main\\n' ;;
+  symbolic-ref) printf 'refs/remotes/origin/${symbolicRefName}\\n' ;;
   remote) printf '${HOME_REMOTE_URL}\\n' ;;
   fetch) exit ${fetchExit} ;;
   rev-parse)
@@ -375,6 +387,37 @@ describe.if(HAS_JQ)("slice 1: verdict mapping through the real script", () => {
     );
     expect(r.status).toBe(0);
     expect(r.stdout).toBe("");
+  });
+
+  test("resolves the default branch from GitHub, not a stale origin/HEAD", () => {
+    // An upstream default-branch rename leaves the local origin/HEAD ref
+    // pointing at the old name; trusting it makes baseRefName read as
+    // non-default and lands on the ALLOW side. GitHub is authoritative.
+    const r = runHook(
+      "gh pr merge 5 --squash",
+      scriptedStubs({
+        headVersion: "0.34.0",
+        baseVersion: "0.33.2",
+        changedFiles: "docs/notes.md",
+        symbolicRefName: "renamed-away-from-main",
+      }),
+    );
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain("must land with no bump");
+  });
+
+  test("falls back to the local origin/HEAD when gh repo view fails", () => {
+    const r = runHook(
+      "gh pr merge 5 --squash",
+      scriptedStubs({
+        headVersion: "0.34.0",
+        baseVersion: "0.33.2",
+        changedFiles: "docs/notes.md",
+        repoView: "fail",
+      }),
+    );
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain("must land with no bump");
   });
 
   test("denies on the missing-bump verdict", () => {
