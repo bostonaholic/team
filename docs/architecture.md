@@ -592,11 +592,12 @@ emit a short context message that names the phase, `<id>`, and the
 suggested next `/team-*` command. Both are stateless, exit 0 on any
 error, and return within the 5000ms hook budget.
 
-Development hook (`.claude/hooks/`, not distributed):
+Development hooks (`.claude/hooks/`, not distributed):
 
 | Hook                     | Event                    | Purpose                                                              |
 |--------------------------|--------------------------|----------------------------------------------------------------------|
 | `check-registry-sync.mjs`| PostToolUse(Write\|Edit) | Verify the agents/ directory and registry.json agree by agent name   |
+| `pre-merge-guard.mjs`    | PreToolUse(Bash)         | Deny `gh pr merge` when the version-bump invariant fails             |
 
 Development scripts (`.claude/scripts/`, not distributed) house dev-only
 acceptance tooling run by plugin developers. `check-discovery-consistency.sh`

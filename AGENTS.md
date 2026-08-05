@@ -23,6 +23,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 | Pipeline agents, skills, hooks | `agents/`, `skills/`, `hooks/` | End users |
 | Plugin manifests | `.claude-plugin/` (Claude Code), `.codex-plugin/` + `.agents/plugins/` (Codex) | End users |
 | Registry sync validation | `.claude/hooks/check-registry-sync.mjs` | Plugin developers |
+| Pre-merge version gate | `.claude/hooks/pre-merge-guard.mjs` | Plugin developers |
 | Dev acceptance scripts | `.claude/scripts/` | Plugin developers |
 | Dev settings/hooks | `.claude/settings.json` | Plugin developers |
 | Work tracking | [GitHub Project board](https://github.com/users/bostonaholic/projects/5/views/1) | Plugin developers |
@@ -89,6 +90,7 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Seven of t
 | Hook | Event | Purpose |
 |------|-------|---------|
 | `check-registry-sync.mjs` | PostToolUse(Write\|Edit) | Cross-check agent frontmatter against registry.json |
+| `pre-merge-guard.mjs` | PreToolUse(Bash) | Deny `gh pr merge` when the version-bump invariant fails |
 
 ## State
 
@@ -99,7 +101,7 @@ State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKE
 - **No `commands/` directory.** Skills are the only entry point mechanism. They auto-register as slash commands.
 - **No project-scoped memory.** Do not save memories to `~/.claude/projects/*/memory/`. All project knowledge belongs in this file or docs linked from here. This file is checked into git and travels with the project.
 - **Todo-first progress tracking.** Any agent or skill that executes a multi-step numbered procedure seeds one TodoWrite item per step before starting and marks each complete as it goes. See `skills/progress-tracking/SKILL.md` for the convention and ledger-ownership rules.
-- **Team versions itself at land time through the dev `version-bump` skill, then lands through the generic `/shipit`.** A drafted PR carries no version and accumulates user-facing bullets under `## [Unreleased]`. **The bump is conditional on a runtime change, not universal:** only a PR that changes the **distributed plugin** (per the runtime-vs-development split above) bumps; a dev-only PR (CI, docs, tests, evals, `.claude/` tooling) lands with no bump, no changelog cut, and a plain conventional title. The deterministic gate `.github/scripts/version-bump-required.sh` (pinned by `tests/version-bump-required.test.ts`) fails CI on either violation. Full land-time procedure: `.claude/skills/version-bump/SKILL.md` (Team's internal bumper) and `skills/shipit/SKILL.md` (project-agnostic, does no versioning). See [docs/versioning.md](docs/versioning.md).
+- **Team versions itself at land time through the dev `version-bump` skill, then lands through the generic `/shipit`.** A drafted PR carries no version and accumulates user-facing bullets under `## [Unreleased]`. **The bump is conditional on a runtime change, not universal:** only a PR that changes the **distributed plugin** (per the runtime-vs-development split above) bumps; a dev-only PR (CI, docs, tests, evals, `.claude/` tooling) lands with no bump, no changelog cut, and a plain conventional title. The deterministic gate `.github/scripts/version-bump-required.sh` (pinned by `tests/version-bump-required.test.ts`) runs early in `version-bump`, and the pre-merge dev hook (`.claude/hooks/pre-merge-guard.mjs`) denies the merge command on either violation. Full land-time procedure: `.claude/skills/version-bump/SKILL.md` (Team's internal bumper) and `skills/shipit/SKILL.md` (project-agnostic, does no versioning). See [docs/versioning.md](docs/versioning.md).
 - **Read docs/testing.md before writing any test.** Before adding or modifying ANY test (unit, tripwire, eval, fixture, or rubric), read [docs/testing.md](docs/testing.md) end to end and understand it. It decides *which layer* a check belongs at, so push every check as far down and as deterministic as it goes. It also decides if the check is free (`*.test.ts`) or paid (`*.evals.ts`), and if it gates or runs periodically. A test written at the wrong layer is worse than no test: it is slow, flaky, or costs money to learn nothing. No exceptions: this applies to agents, skills, and humans alike.
 
 ## Behavioral evals
