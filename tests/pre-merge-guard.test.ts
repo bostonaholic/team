@@ -469,6 +469,7 @@ describe("slice 2: out of jurisdiction — never gated, proven by loud stubs", (
     `if gh pr checks; then gh pr merge 5; fi`,
     `{ gh pr merge; }`,
     `( gh pr merge )`,
+    `case x in *) gh pr merge;; esac`,
     // Wrapper commands beyond time/exec/! are NOT stripped (narrow-side
     // ruling) — documented residue in docs/versioning.md's scope caveat.
     `command gh pr merge 5`,
@@ -479,6 +480,9 @@ describe("slice 2: out of jurisdiction — never gated, proven by loud stubs", (
     // Brace expansion is not performed — documented residue.
     `gh pr {merge,}`,
     `gh pr merge{,}`,
+    // Parameter expansion is not performed — documented residue, same
+    // never-expanded class as brace expansion.
+    `A=merge; gh pr $A`,
     // ANSI-C quoted text is data: one word, never a command.
     `echo $'gh pr merge'`,
     `git commit -m $'fix: don\\'t gate gh pr merge'`,
@@ -566,6 +570,27 @@ describe.if(HAS_JQ)("slice 2: in jurisdiction — every simple command is tested
     `gh pr merge</dev/null`,
     `gh pr merge >|merge.log`,
     `gh pr merge 5 >merge.log 2>&1`,
+    // A process substitution as the redirection TARGET: bash runs the merge
+    // with its output piped into the substitution, so a "no target" null
+    // here would fail open — the only no-wrapper tail shape that did.
+    `gh pr merge 5 --squash > >(tee merge.log)`,
+    `gh pr merge 5 --squash 2> >(tee merge.log >&2)`,
+    `gh pr merge 5 --squash &> >(cat)`,
+    `gh pr merge 5 --squash < <(true)`,
+    // $(…) nests full quoting inside a double-quoted redirection target or
+    // here-string operand — the same shared-scanner rule as word position,
+    // so the inner " must not close the string and cascade to null.
+    `gh pr merge 5 >"$(echo 'a"b')"`,
+    `true <<<"$(echo 'a"b')" && gh pr merge 5`,
+    // An unquoted $(…) as the redirection target is one word to bash: a
+    // metacharacter break at its `(` would scatter grouping words into the
+    // first-words window and fail open when the redirection precedes
+    // `merge`.
+    `gh pr 2>$(echo log) merge 5 --squash`,
+    `>$(echo log) gh pr merge 5 --squash`,
+    // bash keeps a lone trailing backslash as a literal redirection target
+    // (a file named "\") and runs the merge.
+    `gh pr merge 5 > \\`,
     // A glued fd digit is part of the operator, never a stray word that
     // breaks the first-words rule.
     `gh 2<<EOF pr merge --squash`,

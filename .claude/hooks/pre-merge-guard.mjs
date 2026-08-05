@@ -150,9 +150,9 @@ function scanParenSpan(command, openIndex) {
       continue;
     }
     if (c === '"') {
-      const end = scanDoubleQuoteSpan(command, i);
-      if (end === null) return null;
-      i = end;
+      const body = readDoubleQuoteBody(command, i);
+      if (body === null) return null;
+      i = body.end;
       continue;
     }
     if (c === "(") depth += 1;
@@ -162,12 +162,20 @@ function scanParenSpan(command, openIndex) {
   return depth === 0 ? i : null;
 }
 
-function scanDoubleQuoteSpan(command, openIndex) {
+// The ONE double-quote scanner. Every "…" in the input — a word, a
+// redirection target, a heredoc terminator, a string inside a paren span —
+// goes through here: a second inline scanner is how the same defect (an
+// inner quote closing the string) reappears one layer down. Returns the
+// index just past the closing quote plus the word contribution, or null
+// when the string never closes (a bash syntax error).
+function readDoubleQuoteBody(command, openIndex) {
+  let text = "";
   let i = openIndex + 1;
   while (i < command.length) {
     const c = command[i];
-    if (c === '"') return i + 1;
+    if (c === '"') return { end: i + 1, text };
     if (c === "\\" && i + 1 < command.length) {
+      text += command[i + 1];
       i += 2;
       continue;
     }
@@ -177,9 +185,11 @@ function scanDoubleQuoteSpan(command, openIndex) {
     if (c === "$" && command[i + 1] === "(") {
       const end = scanParenSpan(command, i + 1);
       if (end === null) return null;
+      text += command.slice(i, end);
       i = end;
       continue;
     }
+    text += c;
     i += 1;
   }
   return null;
@@ -211,7 +221,9 @@ function scanDoubleQuoteSpan(command, openIndex) {
 //   - $'…' word CONTENT keeps numeric escapes undecoded ($'\x67h' reads as
 //     "x67h", never "gh");
 //   - brace expansion is not performed (`gh pr {merge,}` reads as one
-//     word).
+//     word);
+//   - parameter expansion is not performed (`A=merge; gh pr $A` keeps the
+//     literal word "$A", never "merge").
 // Indirection (bash -c, eval, env, xargs, command substitution, wrapper
 // commands beyond time/exec/!) is never unwrapped — accepted over-narrow
 // residue, named in docs/versioning.md.
@@ -270,34 +282,50 @@ function tokenize(command) {
         continue;
       }
       if (c === '"') {
-        i += 1;
-        let closed = false;
-        while (i < length) {
-          if (command[i] === '"') {
-            closed = true;
-            i += 1;
-            break;
-          }
-          if (command[i] === "\\" && i + 1 < length) {
-            value += command[i + 1];
-            i += 2;
-            continue;
-          }
-          value += command[i];
-          i += 1;
-        }
-        if (!closed) return null;
+        const body = readDoubleQuoteBody(command, i);
+        if (body === null) return null;
+        value += body.text;
+        i = body.end;
         sawAny = true;
         continue;
       }
       if (c === "\\") {
         if (i + 1 >= length) {
-          // bash drops a backslash at end-of-input and proceeds.
+          // bash keeps a lone backslash at end-of-input as a literal word
+          // character: `gh pr merge > \` redirects to a file named "\" and
+          // RUNS the merge, so an empty-target null here would fail open.
+          value += c;
           i += 1;
+          sawAny = true;
           continue;
         }
         value += command[i + 1];
         i += 2;
+        sawAny = true;
+        continue;
+      }
+      // An unquoted command substitution is one word to bash
+      // (`2>$(echo log)` redirects to the file the substitution names, and
+      // the command RUNS), so it is consumed as a span exactly like the
+      // word-position branch — never a metacharacter break at its `(`,
+      // which would scatter grouping words into the first-words window.
+      if (c === "$" && command[i + 1] === "(") {
+        const end = scanParenSpan(command, i + 1);
+        if (end === null) return null;
+        value += command.slice(i, end);
+        i = end;
+        sawAny = true;
+        continue;
+      }
+      // A process substitution glues into the surrounding word wherever it
+      // appears (`> >(tee log)` redirects into it and the command RUNS), so
+      // it is consumed as a span exactly like the word-position branch —
+      // never a metacharacter break that reads as "no target".
+      if ((c === "<" || c === ">") && command[i + 1] === "(") {
+        const end = scanParenSpan(command, i + 1);
+        if (end === null) return null;
+        value += command.slice(i, end);
+        i = end;
         sawAny = true;
         continue;
       }
@@ -323,41 +351,21 @@ function tokenize(command) {
       continue;
     }
     if (ch === '"') {
-      i += 1;
-      let closed = false;
-      while (i < length) {
-        const c = command[i];
-        if (c === '"') {
-          closed = true;
-          i += 1;
-          break;
-        }
-        if (c === "\\" && i + 1 < length) {
-          word += command[i + 1];
-          i += 2;
-          continue;
-        }
-        // $(…) nests full quoting inside "…" — scan it as a span so an
-        // inner " or ' never closes or flips this string.
-        if (c === "$" && command[i + 1] === "(") {
-          const end = scanParenSpan(command, i + 1);
-          if (end === null) return null;
-          word += command.slice(i, end);
-          i = end;
-          continue;
-        }
-        word += c;
-        i += 1;
-      }
-      if (!closed) return null; // unbalanced quote
+      const body = readDoubleQuoteBody(command, i);
+      if (body === null) return null; // unbalanced quote
+      word += body.text;
       wordStarted = true;
       wordHadQuoting = true;
+      i = body.end;
       continue;
     }
     if (ch === "\\") {
       if (i + 1 >= length) {
-        // bash drops a backslash at end-of-input and runs the command, so a
+        // bash keeps a lone backslash at end-of-input as a literal word
+        // character and runs the command (`echo a \` prints "a \"), so a
         // null here would fail open on a command the shell executes.
+        word += ch;
+        wordStarted = true;
         i += 1;
         continue;
       }
