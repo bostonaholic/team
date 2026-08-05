@@ -63,7 +63,7 @@ There are four non-portable bindings:
    (`hookSpecificOutput.{permissionDecision, additionalContext}`, `systemMessage`),
    and exit-code semantics.
 2. **Host path env vars.** `${CLAUDE_PLUGIN_ROOT}`, interpolated into every hook
-   command (`plugin.json:18,30,41,52`), and `CLAUDE_PROJECT_DIR`, read from the
+   command (`plugin.json:18,29,40`), and `CLAUDE_PROJECT_DIR`, read from the
    environment inside the hook bodies (`pre-compact-anchor.mjs:27`,
    `session-start-recover.mjs:31`, `post-write-validate.mjs:103`). The two use
    different mechanisms: manifest interpolation and runtime env lookup.
@@ -126,10 +126,10 @@ parallel and nested subagents, and structured returns.
   empty and the path resolves to `/skills/...`. Document the command with a
   `<skill-dir>` placeholder the caller substitutes, the pattern Codex's own
   bundled skills use, and keep the script free of relative imports and
-  environment reads so it runs from any install path (`ste-lint.mjs` does both).
-  `skills/nested-agents/SKILL.md:35` still interpolates the variable directly.
-  That command is Claude-Code-only today, because the pipeline agents it serves
-  cannot dispatch on Codex.
+  environment reads so it runs from any install path (both bundled scripts do).
+  `skills/nested-agents/SKILL.md` now documents its version-gate command with
+  the same placeholder. That command is Claude-Code-only today, because the
+  pipeline agents it serves cannot dispatch on Codex.
 - **Hooks already isolate portable logic from host contract.** Each `.mjs` reads
   stdin, does Node-only work, then writes a host-shaped JSON result
   (`session-start-recover.mjs:236-244`, `post-write-validate.mjs:29-37`). The scan
@@ -142,6 +142,13 @@ parallel and nested subagents, and structured returns.
 - **The JSON-envelope convention is host-agnostic by construction**
   (`skills/agent-open-questions/SKILL.md`). It layers on whatever result channel
   the host gives: final-text on Claude and Gemini, `--output-schema` on Codex.
+- **The invariant is enforced by tripwires.** `tests/cross-host-portability.test.ts`
+  sweeps `agents/` and the `skills/` tree for host-prefixed identifiers,
+  holds each manifest dir to its own host's prefix, allowlists the hook env
+  identifiers, and gates frontmatter keys and the README's
+  `disable-model-invocation` caveat path. `tests/destructive-command-guards.test.ts`
+  requires the unset-abort `${VAR:?}` form on every documented `rm -rf`
+  operand expansion.
 
 ## The capability matrix
 
