@@ -42,7 +42,8 @@ catalog into two flavors:
   of two mechanisms: a `skills:`
   YAML list in the agent's frontmatter (e.g., `agents/design-author.md`
   declares `skills: [product-thinking,
-  progress-tracking, authoring-designs]`), or an inline prose load
+  progress-tracking, authoring-designs, writing-prose]`), or an inline
+  prose load
   instruction in the agent body (e.g., `Load skills/<name>/SKILL.md for
   …`).
 
@@ -909,12 +910,19 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 ### writing-prose
 
 - **Purpose:** Plain-language prose quality for authoring and review.
-- **Loaded by:** technical-writer.
+- **Loaded by:** technical-writer, design-author.
 - **Key behaviors:** A seventh-grade reading-level bar governs prose the
   agent writes as well as prose it assesses: readable, plain language
   aimed at someone who has not seen the code, clarity over cleverness.
-  The technical-writer's review procedure that applies this bar lives in
-  `reviewing-documentation`.
+  ASD-STE100 rules run in two modes — strict for instruction text,
+  STE-flavored for descriptive prose — with three deltas (sentence cap,
+  form, conditional mood) and every ban list shared. A delete-list names
+  words to remove, never replace: marketing adjectives, modal hedges,
+  filler. A `## Self-lint` checklist runs on any governed text before it
+  is final. A bundled scorer, `ste-lint.mjs`, sits next to the skill file
+  and reports violations of the mechanical rules per 100 words. It gates
+  nothing. The technical-writer's review procedure that applies this
+  bar lives in `reviewing-documentation`.
 
 ### reviewing-documentation
 
@@ -1043,7 +1051,7 @@ entry-point section above rather than repeating them here.
 | `product-requirements-doc` | questioner (through `decomposing-intent`, conditional). Design-author (through `authoring-designs`) | Question, Design |
 | `product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
 | `systems-thinking` | researcher, structure-planner, planner (frontmatter). Implementer, code-reviewer, ux-reviewer (inline). Authoring-designs, code-review, eng-design-doc-review (citing skills) | Research, Design, Structure, Plan, Implement (incl. verify) |
-| `writing-prose` | technical-writer | Implement (verify): bar for prose it writes and prose it assesses |
+| `writing-prose` | technical-writer, design-author | Design (authoring bar), and Implement (verify): bar for prose it writes and prose it assesses |
 | `reviewing-documentation` | technical-writer | Implement (verify): doc-gap review process + classification |
 | `git-commit` | team-pr. Implementer (through `implementing-slices`) | PR, and Implement (slice commits) |
 | `changelog` | team, team-pr | PR |

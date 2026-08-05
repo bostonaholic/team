@@ -12,9 +12,10 @@ change in isolation. Every commit should be correct on its own — readable
 without surrounding context, reversible without side effects, and meaningful
 in the project history.
 
-Write the prose your commit bodies carry at a seventh-grade reading
-level — short sentences, common words, no unexplained jargon. Full
-methodology: `skills/writing-prose/SKILL.md`.
+Write the prose this skill governs at a seventh-grade reading level, in
+STE-flavored mode — short sentences, common words, no unexplained jargon.
+Full methodology: `skills/writing-prose/SKILL.md`. Before you finalize
+prose this skill governs, apply the `## Self-lint` checklist in that file.
 
 ## The 50/72 Rule
 

@@ -10,9 +10,10 @@ The design-author's procedure: confirm repo scope, resolve open questions
 autonomously as recorded assumptions, and write `design.md` from the
 template below.
 
-Write the prose in `design.md` in ASD-STE100 Simplified Technical
-English — short sentences, common words, one instruction per sentence,
-one meaning per word. Full methodology: `skills/writing-prose/SKILL.md`.
+Write the prose this skill governs at a seventh-grade reading level, in
+STE-flavored mode — short sentences, common words, no unexplained jargon.
+Full methodology: `skills/writing-prose/SKILL.md`. Before you finalize
+prose this skill governs, apply the `## Self-lint` checklist in that file.
 
 If `task.md` references a `prd.md`, read it first and treat its scope
 boundaries and acceptance criteria per the "Consuming a PRD downstream"

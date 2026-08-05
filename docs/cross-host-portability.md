@@ -112,9 +112,20 @@ parallel and nested subagents, and structured returns.
 
 - **Runtime vs. development split** (`CLAUDE.md`, `docs/architecture.md`). Only
   the distributed set ports: `agents/`, `skills/*/SKILL.md` + `registry.json` +
-  `supports-nesting.mjs`, `hooks/*.mjs`, `.claude-plugin/`. The entire `.claude/`
+  the bundled skill scripts (`supports-nesting.mjs`, `ste-lint.mjs`),
+  `hooks/*.mjs`, `.claude-plugin/`. The entire `.claude/`
   tree, `tests/`, `evals/`, `docs/`, `.github/` never ship and are out of every
   port's scope.
+- **A bundled skill script names its own directory, never a host variable.**
+  `${CLAUDE_PLUGIN_ROOT}` exists on Claude Code alone, so a SKILL.md that
+  interpolates it into a runnable command breaks on Codex, where the value is
+  empty and the path resolves to `/skills/...`. Document the command with a
+  `<skill-dir>` placeholder the caller substitutes, the pattern Codex's own
+  bundled skills use, and keep the script free of relative imports and
+  environment reads so it runs from any install path (`ste-lint.mjs` does both).
+  `skills/nested-agents/SKILL.md:35` still interpolates the variable directly.
+  That command is Claude-Code-only today, because the pipeline agents it serves
+  cannot dispatch on Codex.
 - **Hooks already isolate portable logic from host contract.** Each `.mjs` reads
   stdin, does Node-only work, then writes a host-shaped JSON result
   (`pre-bash-guard.mjs:55-64`, `post-write-validate.mjs:29-37`). The scan and git

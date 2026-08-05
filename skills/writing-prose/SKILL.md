@@ -1,6 +1,6 @@
 ---
 name: writing-prose
-description: Clear documentation and readable explanation methodology — loaded by technical-writer agent to write prose and to assess documentation quality, grounded in plain language, readability principles, and ASD-STE100 Simplified Technical English
+description: Prose quality methodology for writing and assessing documentation. Grounded in plain language and ASD-STE100 Simplified Technical English in two modes — strict for instruction text, STE-flavored for descriptive prose.
 user-invocable: false
 ---
 
@@ -29,14 +29,56 @@ Write for the reader's comprehension, not the author's expertise.
   knows what you know.
 - **Avoid nominalizations.** "Make a decision" → "decide". "Provide an
   explanation" → "explain". Nominalizations hide the actor and the action.
+- **Use American spelling.** Write "color", not "colour", and "analyze",
+  not "analyse". One spelling standard gives each word one form.
 
 ### Simplified Technical English (ASD-STE100)
 
 Technical documentation must follow ASD-STE100 Simplified Technical English
 (STE). STE removes ambiguity for every reader, including readers whose first
 language is not English. The plain-language principles above are the
-foundation. STE adds mechanical rules. Each rule below shows the rejected
-form (Non-STE) and the fix (STE).
+foundation. STE adds mechanical rules.
+
+The delete-list idea, the two-mode split, and the self-lint structure come
+from the "cure for AI slop" writing kit at
+<https://github.com/woosal1337/blog/tree/main/videos/ep01-the-cure-for-ai-slop>.
+The kit carries the MIT License, © 2026 Ege Çelebi. This file restates the
+ideas in its own words.
+
+#### Two modes
+
+The rules run in one of two modes. The mode follows the text type, not the
+document. One document can hold both.
+
+- **Strict** governs instruction text: numbered steps, warnings, error
+  messages, runbook commands.
+- **STE-flavored** governs descriptive prose: design documents, ADRs, PRDs,
+  changelog entries, commit bodies, review comments.
+
+The modes differ in three ways only:
+
+- **Sentence cap.** No more than 20 words in strict mode. No more than 25
+  words in STE-flavored mode.
+- **Form.** Strict requires the imperative, one instruction per sentence,
+  and the condition before the command. STE-flavored permits declarative
+  paragraphs.
+- **Conditional mood.** Strict bans "would", "could", and "might" — a step
+  is a command or a condition. STE-flavored permits "would" and "could"
+  only to state a real alternative or consequence, never as a hedge.
+  "Might" is banned in both modes: for a real possibility write "can", the
+  same mapping the table below gives "may". Otherwise delete the hedge.
+
+Three rule bullets below restate the strict Form delta: the imperative,
+one instruction per sentence, and the condition before the command. They
+bind instruction text only. Every other rule, every ban list, the
+substitution table, and the self-lint apply identically in both modes.
+When a consuming skill's format rule conflicts with a prose rule
+(git-commit's 50-character subject, changelog's headings), the consuming
+skill's format rule wins. This skill governs sentence-level prose only.
+
+#### The mechanical rules
+
+Each rule below shows the rejected form (Non-STE) and the fix (STE).
 
 - **Keep sentences short.** No more than 20 words in an instruction, no more
   than 25 words in a description. A number, an abbreviation, quoted text, or
@@ -66,6 +108,10 @@ form (Non-STE) and the fix (STE).
   - Non-STE: *When you are doing this procedure, obey the safety
     precautions.* → STE: *When you do this procedure, obey the safety
     precautions.*
+- **Do not stack auxiliaries.** A chain of helper verbs hides the action.
+  Write one main verb.
+  - Non-STE: *It would seem that the cache may serve to reduce the load
+    time.* → STE: *The cache reduces the load time.*
 - **Use the active voice** (see Active Voice below). In description, passive
   is permitted only when the agent is unknown. Convert a passive by naming
   the agent as the subject, switching to the imperative, or using "you".
@@ -110,7 +156,7 @@ software documentation:
 | utilize | use |
 | ensure, verify, confirm | make sure that |
 | perform, execute, carry out, implement | do |
-| initiate | start |
+| initiate, begin, commence | start |
 | terminate | stop |
 | prior to | before |
 | via | through |
@@ -131,7 +177,22 @@ software documentation:
 | trigger | cause, start |
 | persist (of an error) | continue |
 | modify | change |
-| obtain | get |
+| obtain, acquire | get |
+| leverage | use |
+| facilitate | help |
+| demonstrate | show |
+| additionally, furthermore, moreover | also |
+| comprehensive | complete |
+| numerous, myriad | many |
+| regarding, concerning | about |
+| whilst | while |
+| amongst | among |
+| spin up | start |
+| reach out | contact |
+| dive into | examine |
+| kick off | start |
+| tear down | remove |
+| ramp up | increase |
 
 Examples from the STE dictionary itself:
 
@@ -156,6 +217,31 @@ Restricted meanings that writers commonly get wrong:
   the seal stays bonded. If it does not, a leak can occur."
 - *monitor* means to check something over a period of time for change — not
   a generic "watch" or "track".
+
+#### Words and phrases to delete
+
+These words and phrases add no meaning. Delete them. Do not replace them.
+
+- **Marketing adjectives (alphabetical):** battle-tested, best-in-class,
+  blazing-fast, cutting-edge, disruptive, effortless, enterprise-grade,
+  game-changing, next-generation, powerful, revolutionary, robust,
+  seamless, state-of-the-art, world-class.
+- **Modal hedges:** "it is important to note", "it should be noted", "it is
+  worth noting", "please note that", "as mentioned above".
+- **Filler:** "in order to", "a variety of", "in the event that", "due to
+  the fact that", "aforementioned", "henceforth".
+
+A delete-list word survives in three places only:
+
+- Verbatim quotes and cited external text. To quote is to report, not to
+  author.
+- Code, identifiers, and proper nouns (`spin_up()`, "Leverage API").
+- Established terms of art, where the substitute changes the technical
+  meaning ("robust statistics").
+
+Evaluative prose gets no exemption. Delete the adjective and state the
+measurable property instead: "the error handling is robust" becomes "the
+error handling retries twice, then surfaces the error".
 
 ### Active Voice
 
@@ -206,6 +292,56 @@ need, then read that section carefully.
   not inline prose. This signals "copy this exactly" and enables syntax
   highlighting.
 
+## Self-lint
+
+Run this checklist on any governed text before you finalize it. Each item
+names one defect. Fix every hit before the text is final.
+
+1. **Over-cap sentence** — a sentence over the mode's cap (20 words strict,
+   25 STE-flavored). Split it.
+2. **Semicolon** — replace it with a period and write two sentences.
+3. **Contraction** — expand it ("do not", never "don't").
+4. **Passive with a known actor** — make it active. Name the actor as the
+   subject.
+5. **Hidden action** — an "-ing" main verb, a nominalization ("make an
+   assessment"), a phrasal verb the substitution table maps ("spin up"), or
+   stacked auxiliaries. Write one plain verb.
+6. **Two names for one thing** — pick one name and use it everywhere.
+7. **Banned word** — a delete-list word or a substitution-table word. Delete
+   the first kind. Replace the second.
+8. **Conditional mood** — in strict mode, any "would", "could", or "might".
+   In STE-flavored mode, "would" or "could" as a hedge, or any "might".
+   State the fact, or write "can" for a real possibility.
+9. **Empty closer** — a closing sentence that states no measurable property
+   ("provides a solid foundation for..."). Delete it.
+
+The self-lint applies to the text an author returns, never to quoted
+counter-examples — this file's own Non-STE examples break the rules on
+purpose. If a reviewer cites an item and the author disputes it, the
+conventional-comments framework carries the disagreement.
+
+## Mechanical score
+
+A bundled script scores prose against the mechanical rules in this file, as
+violations per 100 words. The script sits next to this file:
+
+```bash
+node "<skill-dir>/ste-lint.mjs" --breakdown --cap 25 "<file>"
+```
+
+Replace `<skill-dir>` with the absolute path of the directory that holds this
+file. On Claude Code that path is `${CLAUDE_PLUGIN_ROOT}/skills/writing-prose`,
+and the host sets that variable only for a skill loaded from an installed
+plugin. Codex sets no equivalent variable, so give the literal directory
+there. The script itself reads no environment variable. It reads only the
+paths you pass to it, so it runs the same way on every host.
+
+The default cap of 20 words scores instruction text (strict mode). Pass
+`--cap 25` to score descriptive prose at the STE-flavored cap. The score is
+a drift signal, not a gate. Nothing runs the script automatically. The
+`## Self-lint` checklist above remains the check you run before governed
+text is final.
+
 ## Assessing Documentation Quality
 
 When reviewing documentation, evaluate each piece against these dimensions:
@@ -243,11 +379,16 @@ Can a typical reader understand this in one pass?
   jargon. Long sentences, rare words, and deep nesting all increase cognitive
   load.
 - **STE conformance.** Check prose against the ASD-STE100 rules above. Those
-  rules cover sentence-length limits, one instruction per sentence,
-  imperative instructions, and simple tenses. They also cover one meaning
+  rules cover the sentence caps (20 words strict, 25 STE-flavored), one
+  instruction per sentence, imperative instructions, and simple tenses. They also cover one meaning
   per word and noun clusters of three words or fewer. Last, they cover the
   word substitutions in the STE table (utilize, ensure, perform, however,
-  should).
+  should). Hold instruction text to strict mode and descriptive prose to
+  STE-flavored mode. The `Two modes` section above defines which text type
+  takes which mode. Apply the mode per sentence, not per document. A
+  rationale paragraph can embed one imperative instruction: hold that
+  instruction to strict mode and the surrounding sentences to STE-flavored
+  mode.
 - **Consistent terminology.** If the same concept is called "user", "account",
   and "principal" in different parts of the documentation, readers will not
   know if these are synonyms. Pick one term and use it consistently.
@@ -267,6 +408,7 @@ These patterns reliably indicate documentation that needs improvement:
 | Version-specific without version | "As of the latest release..." | "As of v2.3..." |
 | "Simply" or "just" | "Simply run the migration" | Remove — implies ease the reader may not feel |
 | Unexplained acronym | "Configure the IAM role for RBAC" | "Configure the IAM (Identity and Access Management) role for RBAC (Role-Based Access Control)" |
+| Empty closer | "provides a solid foundation for..." | Delete, or state the measurable property |
 
 ## Reviewing Documentation
 

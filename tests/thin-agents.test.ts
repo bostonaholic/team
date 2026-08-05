@@ -115,7 +115,7 @@ describe("thin agents: new skills carry the moved procedure content", () => {
 describe("thin agents: frontmatter skills preloads per agent", () => {
   const EXPECTED_PRELOADS: Record<string, string[]> = {
     "code-reviewer": ["code-review", "conventional-comments", "nested-agents", "progress-tracking"],
-    "design-author": ["authoring-designs", "product-thinking", "progress-tracking"],
+    "design-author": ["authoring-designs", "product-thinking", "progress-tracking", "writing-prose"],
     "file-finder": ["finding-files"],
     implementer: ["implementing-slices", "nested-agents", "progress-tracking"],
     planner: ["planning-implementation", "progress-tracking", "systems-thinking"],
