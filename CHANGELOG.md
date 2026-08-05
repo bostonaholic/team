@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.1] - 2026-08-05
+
 ### Fixed
 
 - **`/shipit` no longer stops after a merge to tell you to go clean up.** Its Completion step ended with a handoff line — `Next: run /pr-cleanup` — so every landed PR left the default branch unsynced and the merged branch alive until someone typed a second command. Nothing in that step is a decision: the merge already happened, and `/pr-cleanup`'s Mode A gates itself on merged-PR verification (identity plus containment) before it deletes anything. `/shipit` now runs cleanup on a merge that landed. Two limits hold: a run that stopped at a failing check, the CI timeout, or a branch-protection rejection merged nothing and reaches no cleanup, and only Mode A is reachable this way — Mode B (closed / abandoned) force-deletes remote branches and worktrees on the strength of an explicit abandon request, so it stays user-triggered. [`skills/shipit/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/shipit/SKILL.md)
@@ -390,7 +392,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.34.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.34.1...HEAD
+[0.34.1]: https://github.com/bostonaholic/team/compare/v0.34.0...v0.34.1
 [0.34.0]: https://github.com/bostonaholic/team/compare/v0.33.2...v0.34.0
 [0.33.2]: https://github.com/bostonaholic/team/compare/v0.33.1...v0.33.2
 [0.33.1]: https://github.com/bostonaholic/team/compare/v0.33.0...v0.33.1
