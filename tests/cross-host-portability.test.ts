@@ -7,9 +7,11 @@ import {
   allowlistVerdict,
   collectMatches,
   runtimeHookFiles,
+  skillFiles,
   skillTreeFiles,
   type AllowlistEntry,
 } from "./helpers/scan";
+import { frontmatter, read } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 
@@ -125,5 +127,98 @@ describe("check (c): hooks may read no host env identifier beyond the allowlist"
   test("the matched identifier set equals exactly the allowlist", () => {
     const matches = collectMatches(HOST_IDENTIFIER_PATTERN, runtimeHookFiles());
     expect(new Set(matches.map((match) => match.text))).toEqual(PERMITTED_HOOK_IDENTIFIERS);
+  });
+});
+
+// Frontmatter keys anchor at column 0: eight skills carry `description: |`
+// block scalars whose indented body lines contain colons, and a parser that
+// trims leading whitespace before matching `<key>:` would read those body
+// lines as keys and fail a legitimate file.
+function frontmatterKeys(markdown: string): string[] {
+  return frontmatter(markdown)
+    .split("\n")
+    .flatMap((line) => {
+      const key = line.match(/^([A-Za-z][A-Za-z0-9_-]*):/);
+      return key ? [key[1] ?? ""] : [];
+    });
+}
+
+describe("check (d): README names the removal path of every model-invocation-disabled skill", () => {
+  // Codex ignores `disable-model-invocation`, which silently re-arms a skill
+  // its author locked to human invocation. The README documents that caveat
+  // with a copyable removal path, and this check forces the caveat to track
+  // the key: the literal `skills/<name>` must stay in README.md — a
+  // rewording that hides the path behind a variable or broader glob goes
+  // red, and that is the contract.
+  function modelInvocationDisabledSkills(): string[] {
+    return skillFiles()
+      .filter((file) => frontmatterKeys(read(join(REPO_ROOT, file))).includes("disable-model-invocation"))
+      .map((file) => file.split("/")[1] ?? "");
+  }
+
+  test("detection pin: pr-approve-watch carries the key today", () => {
+    expect(modelInvocationDisabledSkills()).toContain("pr-approve-watch");
+  });
+
+  test("README contains the literal skills/<name> for each detected skill", () => {
+    const readme = read(join(REPO_ROOT, "README.md"));
+    for (const skillName of modelInvocationDisabledSkills()) {
+      expect(readme).toContain(`skills/${skillName}`);
+    }
+  });
+});
+
+describe("check (e): frontmatter keys stay inside the classified allowlists", () => {
+  // A new frontmatter key arriving unclassified is the class that cost
+  // pr-approve-watch its Codex guard: some host silently ignores the key and
+  // the behavior it carried is gone. A legitimate new key hits red CI until
+  // its one allowlist line is added — the review-visible diff is the point.
+  const SKILL_KEYS = new Set([
+    "name",
+    "description",
+    "user-invocable",
+    "argument-hint",
+    "effort",
+    "disable-model-invocation",
+  ]);
+  const AGENT_KEYS = new Set([
+    "name",
+    "description",
+    "model",
+    "effort",
+    "tools",
+    "skills",
+    "permissionMode",
+    "color",
+  ]);
+
+  test("enumeration covers agents and skill bodies", () => {
+    expect(agentFiles()).toContain("agents/researcher.md");
+    expect(skillFiles()).toContain("skills/team/SKILL.md");
+  });
+
+  test("parser pin: the full key set is recovered from the block-scalar hard case", () => {
+    const keys = frontmatterKeys(read(join(REPO_ROOT, "skills", "pr-approve-watch", "SKILL.md")));
+    expect(keys.sort()).toEqual(
+      ["name", "description", "effort", "argument-hint", "disable-model-invocation"].sort(),
+    );
+  });
+
+  test("every skill frontmatter key is classified", () => {
+    for (const file of skillFiles()) {
+      const unclassified = frontmatterKeys(read(join(REPO_ROOT, file))).filter(
+        (key) => !SKILL_KEYS.has(key),
+      );
+      expect({ file, unclassified }).toEqual({ file, unclassified: [] });
+    }
+  });
+
+  test("every agent frontmatter key is classified", () => {
+    for (const file of agentFiles()) {
+      const unclassified = frontmatterKeys(read(join(REPO_ROOT, file))).filter(
+        (key) => !AGENT_KEYS.has(key),
+      );
+      expect({ file, unclassified }).toEqual({ file, unclassified: [] });
+    }
   });
 });
