@@ -555,6 +555,14 @@ describe("parse failures fail closed when the raw text could spell a merge", () 
     // A quote-interleaved spelling still contains the merge letters after
     // the quoting strip — the prefilter has no permit path for it.
     `gh pr mer\\ge 5\necho "done`,
+    // Every remaining character bash can splice into the middle of a word
+    // without changing it. Each of these ran a real merge under the earlier
+    // `[\\'"\`]` strip class, which left the `$` and the line continuation
+    // in place and so broke the letter run.
+    `gh pr mer$''ge 5 --squash\necho "done`,
+    `gh pr mer$""ge 5 --squash\necho "done`,
+    `gh pr mer$'g'e 5 --squash\necho "done`,
+    `gh pr mer\\\nge 5 --squash\necho "done`,
   ];
 
   for (const command of unparseableMergeShapes) {

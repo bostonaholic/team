@@ -105,8 +105,11 @@ function deny(text) {
 
 // Quote-context scanners. Each takes the index of its opening delimiter and
 // returns the index just past the closing one, or null when the context never
-// closes — a bash syntax error, so a null there fails open only on input the
-// shell refuses to run.
+// closes — a bash syntax error. main() denies on a null whose text could spell
+// a merge, so a scanner that nulls on input bash actually runs costs a false
+// deny rather than a bypass. Reading a context as the WRONG kind is the
+// dangerous direction: that can flip quote parity and mis-split words without
+// ever nulling, which is a silent bypass.
 
 function scanSingleQuote(command, openIndex) {
   const close = command.indexOf("'", openIndex + 1);
@@ -114,8 +117,9 @@ function scanSingleQuote(command, openIndex) {
 }
 
 // $'…' — ANSI-C quoting: backslash escapes ANY next character, so \' is a
-// literal apostrophe, never a closer. Reading it as a plain single quote
-// flips quote parity and fails the parse open on a command bash executes.
+// literal apostrophe, never a closer. Reading it as a plain single quote flips
+// quote parity on a command bash executes, which mis-splits every word after
+// it.
 function scanAnsiCQuote(command, openIndex) {
   let i = openIndex + 1;
   while (i < command.length) {
@@ -235,9 +239,10 @@ function readDoubleQuoteBody(command, openIndex) {
 // complete command at a time, so a merge on an earlier line has already
 // run when a later line hits the syntax error. main() therefore turns a
 // null into a DENY whenever the raw text could spell `merge` through
-// quoting characters, and into a permit only when it cannot: no literal
-// spelling of a merge has a fail-open path through this tokenizer,
-// parseable or not.
+// quoting and splicing characters, and into a permit only when it cannot.
+// A merge spelled with nothing but those characters therefore has no
+// fail-open path, parseable or not. The never-expanded residue below is
+// the exception, and it is the same on both paths.
 //
 // The single structural invariant (bash's own rule): the metacharacters
 // space, tab, newline, |, &, ;, (, ), <, > ALWAYS end a word when unquoted.
@@ -264,7 +269,11 @@ function readDoubleQuoteBody(command, openIndex) {
 //   - a substitution BODY is never parsed: a merge inside `…` or $(…) is
 //     unseen, and a `)` in a comment or case pattern inside $(…) ends the
 //     span early, misreading the words after it (when that cascades to
-//     null, a merge-bearing text now denies instead of permitting).
+//     null, a merge-bearing text now denies instead of permitting);
+//   - an EMPTY substitution glued into a word (`gh pr mer``ge`, mer$(:)ge)
+//     expands away in bash but reads here as a span between two word
+//     fragments, so the word is never the literal "merge". This one parses,
+//     so the raw-text prefilter never sees it.
 // Indirection (bash -c, eval, env, xargs, command substitution, wrapper
 // commands beyond time/exec/!) is never unwrapped — accepted over-narrow
 // residue, named in docs/versioning.md.
@@ -342,7 +351,8 @@ function tokenize(command) {
         if (i + 1 >= length) {
           // bash keeps a lone backslash at end-of-input as a literal word
           // character: `gh pr merge > \` redirects to a file named "\" and
-          // RUNS the merge, so an empty-target null here would fail open.
+          // RUNS the merge, so an empty-target null here would deny a real
+          // merge instead of gating it.
           value += c;
           i += 1;
           sawAny = true;
@@ -412,7 +422,7 @@ function tokenize(command) {
       if (i + 1 >= length) {
         // bash keeps a lone backslash at end-of-input as a literal word
         // character and runs the command (`echo a \` prints "a \"), so a
-        // null here would fail open on a command the shell executes.
+        // null here would falsely deny a command the shell executes.
         word += ch;
         wordStarted = true;
         i += 1;
@@ -505,7 +515,7 @@ function tokenize(command) {
       // ever splitting them into commands. A body whose terminator never
       // appears runs to end-of-input — bash warns ("here-document delimited
       // by end-of-file") but EXECUTES the commands already parsed, so bailing
-      // to null here would fail open on a command the shell runs.
+      // to null here would deny on any body that merely mentions a merge.
       while (pendingHeredocs.length > 0) {
         const { terminator, stripTabs } = pendingHeredocs.shift();
         while (i <= length) {
@@ -573,8 +583,8 @@ function tokenize(command) {
         continue;
       }
       // Plain redirection: consume the operator (>> >& >| <& <>) and
-      // discard its target word. A missing target is a bash syntax error,
-      // so null stays fail-open-safe.
+      // discard its target word. A missing target is a bash syntax error, so
+      // nothing runnable is lost when that nulls.
       i += 1;
       if (ch === ">" && (command[i] === ">" || command[i] === "|")) i += 1;
       else if (command[i] === "&") i += 1;
@@ -1052,14 +1062,19 @@ async function main() {
       // line has already run when a later line hits the syntax error. A null
       // says "unparseable", never "harmless", so the safe verdict is deny.
       // The raw-text prefilter keeps everyday unparseable-but-mergeless
-      // commands silent: a literal `gh pr merge` needs the letters m-e-r-g-e
-      // in the raw text, interleaved at most with quoting characters
-      // (mer\ge, mer"g"e, mer``ge), so stripping those before matching
-      // leaves no permit path for any literal spelling. Expansion-derived
-      // spellings ($A, {merge,}, $'\x…') dodge this filter, but they equally
-      // dodge the tokenizer on input that parses — the same accepted residue
-      // class either way (see the tokenize contract).
-      if (!command.replace(/[\\'"`]/g, "").includes("merge")) process.exit(0);
+      // commands silent. Everything bash can splice into the middle of a
+      // word without changing it is stripped first, so the letters m-e-r-g-e
+      // stay adjacent however the word is spelled: a line continuation
+      // (mer\<newline>ge), then the quoting and expansion-introducing
+      // characters (mer\ge, mer"g"e, mer$''ge, mer$'g'e). What survives is
+      // the never-expanded class the tokenizer also cannot see through —
+      // parameter and brace expansion, numeric escapes, substitution bodies
+      // — which dodges this filter and the parseable path alike (see the
+      // tokenize contract).
+      const spliceFree = command
+        .replace(/\\\n/g, "")
+        .replace(/[\\'"`$]/g, "");
+      if (!spliceFree.includes("merge")) process.exit(0);
       deny(
         "pre-merge guard: could not parse this command, and its text may " +
           "spell `gh pr merge`. Bash runs each complete earlier line before " +

@@ -81,10 +81,11 @@ bump". [PR title sync](#pr-title) uses the same branch-relative measure.
 > a harness that does not load these hooks bypasses it entirely — and unlike
 > the deleted CI check, no red signal appears when that happens. A command
 > the guard cannot parse is not among these routes: it is denied outright
-> whenever its raw text, stripped of quoting characters, contains `merge`
+> whenever its raw text, stripped of the characters bash can splice into a
+> word (quotes, escapes, line continuations, `$`), contains `merge`
 > (fail-closed — bash may already have run an earlier line when a later
-> line fails), and passed through only when no literal merge can be
-> present. The guard
+> line fails), and passed through only when the letters cannot be reached
+> without one of the expansions listed above. The guard
 > also evaluates from the repo root while the gated command runs in the
 > session's working directory, so a selector-less `gh pr merge` issued after
 > `cd`-ing to another checkout is judged against *this* checkout's PR
