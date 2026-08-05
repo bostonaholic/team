@@ -149,6 +149,8 @@ inline images.
 
 See [docs/architecture.md](docs/architecture.md) for the full architecture, the artifact frontmatter schema, and the phase-inference rules.
 
+Multi-model code-review corroboration is **on by default (opt-out)**: every code review attempts `"codex"` and `"gemini"` alongside the Claude pass, uses whichever are installed and authenticated, and **reports the rest as skipped**. Turn it off (all, or a specific provider) by saying so in your prompt (e.g. "review without external models" / "skip gemini") — the orchestrator threads that per-run opt-out into the review. Each provider is invoked through a documented, read-only headless command (`codex exec --sandbox read-only`, `gemini --approval-mode plan --skip-trust`) baked into the plugin — the diff on stdin, a review prompt, no edits and no runtime flag discovery. Note that attempting a provider sends your diff to a third-party service (OpenAI, Google), including in unattended runs; opt out in the prompt if you don't want that. See [docs/architecture.md](docs/architecture.md) for the full behavior.
+
 ## Components
 
 - **13 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
