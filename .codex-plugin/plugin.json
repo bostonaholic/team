@@ -1,6 +1,6 @@
 {
   "name": "team",
-  "version": "0.35.0",
+  "version": "0.35.1",
   "description": "Orchestrates specialized agents to autonomously implement entire features end-to-end",
   "keywords": [
     "agents",
@@ -14,6 +14,6 @@
     "shortDescription": "Autonomous feature pipeline: question, research, design, plan, implement, PR.",
     "developerName": "Matthew Boston",
     "category": "engineering",
-    "websiteURL": "https://github.com/bostonaholic/team"
+    "websiteURL": "https://team.bostonaholic.dev"
   }
 }
