@@ -68,9 +68,15 @@ bump". [PR title sync](#pr-title) uses the same branch-relative measure.
 > tool call inside a Claude Code session that loaded this repo's
 > `.claude/settings.json`. A GitHub-UI merge, a merge run in a raw terminal,
 > a wrapped invocation (`bash -c`, `eval`, `env`, `xargs`,
-> `gh api …/merge`), or a harness that does not load these hooks bypasses it
-> entirely — and unlike the deleted CI check, no red signal appears when
-> that happens.
+> `gh api …/merge`), a merge inside a shell grouping or conditional
+> construct (`if …; then gh pr merge; fi`, `{ gh pr merge; }`,
+> `( gh pr merge )` — ordinary shell syntax, no indirection tool needed), or
+> a harness that does not load these hooks bypasses it entirely — and unlike
+> the deleted CI check, no red signal appears when that happens. The guard
+> also evaluates from the repo root while the gated command runs in the
+> session's working directory, so a selector-less `gh pr merge` issued after
+> `cd`-ing to another checkout is judged against *this* checkout's PR
+> context — typically a false deny.
 
 > **Regression #120.** `version-bump` once treated *every* PR as bump-worthy and
 > bumped #118 (a `.github/`-only CI fix) `0.13.1 → 0.13.2`, cutting a changelog

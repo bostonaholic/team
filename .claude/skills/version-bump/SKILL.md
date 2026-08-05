@@ -75,7 +75,10 @@ The quick look is orientation only — it never decides the exit. The decision
 comes from **the invariant run**, the same invocation contract the pre-merge
 guard enforces at merge time:
 
-1. Resolve the default branch through `origin/HEAD`, falling back to `main`.
+1. Resolve the default branch through `origin/HEAD`, falling back to asking
+   GitHub (`gh repo view`) — the same order the pre-merge guard uses, and
+   never a guessed `main`, which could measure against the wrong base. If
+   both fail, stop: no verdict.
 2. `git fetch origin <default>` — the fetch must succeed. Never degrade to a
    stale base for a verdict.
 3. Up-to-date precondition: the fetched `origin/<default>` tip must be an
@@ -89,7 +92,8 @@ guard enforces at merge time:
 
 ```bash
 DEFAULT=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|^refs/remotes/origin/||')
-DEFAULT=${DEFAULT:-main}
+DEFAULT=${DEFAULT:-$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name 2>/dev/null)}
+[ -n "$DEFAULT" ] || { echo "cannot resolve the default branch — no verdict"; exit 1; }
 git fetch origin "$DEFAULT" || { echo "fetch failed — no verdict"; exit 1; }
 git merge-base --is-ancestor "refs/remotes/origin/$DEFAULT" HEAD \
   || { echo "behind base — rebase onto origin/$DEFAULT, re-enter step 0"; exit 1; }
