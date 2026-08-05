@@ -284,7 +284,12 @@ QRSPI phase: a self-contained action a user runs on demand.
   ("ship it", "land the PR", `/shipit`) and never on a PR that is merely
   approved or green. The pre-merge confirmation stands unless the caller
   already carries the user's authorization (`--yes`). The CI-green wait
-  also gates the merge mechanically.
+  also gates the merge mechanically. On a merge that **landed**, it runs
+  `/pr-cleanup` rather than recommending it — resyncing the default branch
+  and deleting the merged branch carry no decision, and Mode A gates itself
+  on merged-PR verification. A run that stopped short (failing check, CI
+  timeout, branch protection) merged nothing and reaches no cleanup, and
+  `/pr-cleanup` Mode B (closed / abandoned) stays user-triggered.
 
 ### pr-open-comments
 
