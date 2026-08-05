@@ -203,7 +203,7 @@ function violationStubs(): string {
   });
 }
 
-describe("slice 1: the guard denies a violating merge at the merge attempt", () => {
+describe("failure directions: deny in jurisdiction, fail open only before it", () => {
   test("parses with node --check", () => {
     expect(() =>
       execFileSync("node", ["--check", HOOK], { cwd: REPO_ROOT, stdio: "pipe" }),
@@ -374,7 +374,7 @@ describe("slice 1: the guard denies a violating merge at the merge attempt", () 
   }
 });
 
-describe.if(HAS_JQ)("slice 1: verdict mapping through the real script", () => {
+describe.if(HAS_JQ)("verdict mapping through the real script", () => {
   test("denies a violating merge with the full envelope", () => {
     // The c945395-class pin: envelope, not only decision. Dual deny channel —
     // exit 2 + stderr for the blocking path, the deny payload for the
@@ -457,12 +457,12 @@ describe.if(HAS_JQ)("slice 1: verdict mapping through the real script", () => {
   });
 });
 
-// Slice 2's fixture tables ARE the jurisdiction spec: the in/out lists below
-// are the executable rendering of the quoting-aware first-words rule,
-// including the ruling that leading reserved words and grouping openers are
-// NOT discarded.
+// The fixture tables below ARE the jurisdiction spec: the in/out lists are
+// the executable rendering of the quoting-aware first-words rule, including
+// the ruling that leading reserved words and grouping openers are NOT
+// discarded.
 
-describe("slice 2: out of jurisdiction — never gated, proven by loud stubs", () => {
+describe("jurisdiction spec: out — never gated, proven by loud stubs", () => {
   const outShapes = [
     // Quoted data; the only simple command starts with `git`.
     `git commit -m "feat(hooks): gate gh pr merge"`,
@@ -504,8 +504,12 @@ describe("slice 2: out of jurisdiction — never gated, proven by loud stubs", (
     // ANSI-C quoted text is data: one word, never a command.
     `echo $'gh pr merge'`,
     `git commit -m $'fix: don\\'t gate gh pr merge'`,
-    // Tokenization failure → not engaged (fail open).
+    // Tokenization failure → not engaged (fail open): bash refuses the
+    // unbalanced quote.
     `echo "gh pr merge`,
+    // A started heredoc consumes the rest of the input as its body — the
+    // merge text is data, never a command (bash warns about the missing
+    // terminator but runs only `cat`).
     `cat <<EOF\ngh pr merge 5`,
   ];
 
@@ -518,7 +522,7 @@ describe("slice 2: out of jurisdiction — never gated, proven by loud stubs", (
   }
 });
 
-describe.if(HAS_JQ)("slice 2: in jurisdiction — every simple command is tested", () => {
+describe.if(HAS_JQ)("jurisdiction spec: in — every simple command is gated", () => {
   const inShapes = [
     `gh pr merge`,
     `gh pr checks && gh pr merge 5`,
