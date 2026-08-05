@@ -360,43 +360,55 @@ function findMergeCommands(commands) {
   return matches;
 }
 
-// gh pr merge flags that consume the following word — without this list a
-// flag value would be misread as the PR selector.
-const VALUE_FLAGS = new Set([
-  "-t",
+// gh pr merge long flags that consume the following word — without this list
+// a flag value would be misread as the PR selector.
+const LONG_VALUE_FLAGS = new Set([
   "--subject",
-  "-b",
   "--body",
-  "-F",
   "--body-file",
-  "-A",
   "--author-email",
   "--match-head-commit",
-  "-R",
   "--repo",
 ]);
+
+// gh pr merge short flags that take a value. Inside a pflag cluster
+// (`-dRowner/repo`) the first of these ends the cluster: the rest of the word
+// is its value.
+const VALUE_SHORT_FLAGS = new Set(["t", "b", "F", "A", "R"]);
 
 function parseMergeArgs(mergeWords) {
   let repoFlag;
   let selector;
   for (let i = 3; i < mergeWords.length; i += 1) {
     const word = mergeWords[i];
-    if (word === "--repo" || word === "-R") {
-      repoFlag = mergeWords[i + 1];
-      i += 1;
+    if (word.startsWith("--")) {
+      if (word.startsWith("--repo=")) {
+        repoFlag = word.slice("--repo=".length);
+        continue;
+      }
+      if (word === "--repo") {
+        repoFlag = mergeWords[i + 1];
+        i += 1;
+        continue;
+      }
+      if (LONG_VALUE_FLAGS.has(word)) i += 1;
       continue;
     }
-    if (word.startsWith("--repo=")) {
-      repoFlag = word.slice("--repo=".length);
-      continue;
-    }
-    // The combined short-flag form: `-Rowner/repo` in one word.
-    if (word.startsWith("-R") && word.length > 2) {
-      repoFlag = word.slice(2);
-      continue;
-    }
-    if (VALUE_FLAGS.has(word)) {
-      i += 1;
+    if (word.startsWith("-") && word.length > 1) {
+      // A pflag short-flag cluster: boolean flags may precede one value flag,
+      // whose value is the rest of the word — after an optional `=`, so
+      // `-R=x/y` and `-Rx/y` name the same repo — or the next word.
+      for (let j = 1; j < word.length; j += 1) {
+        if (!VALUE_SHORT_FLAGS.has(word[j])) continue;
+        let value = word.slice(j + 1);
+        if (value.startsWith("=")) value = value.slice(1);
+        if (value === "") {
+          value = mergeWords[i + 1];
+          i += 1;
+        }
+        if (word[j] === "R") repoFlag = value;
+        break;
+      }
       continue;
     }
     if (word.startsWith("-")) continue;

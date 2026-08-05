@@ -273,18 +273,30 @@ describe("slice 1: the guard denies a violating merge at the merge attempt", () 
     expect(r.stdout).toBe("");
   });
 
-  test("passes through a foreign combined-short-flag -Rother/repo merge silently", () => {
-    const dir = newStubDir();
-    writeStub(dir, "gh", LOUD_GH);
-    writeStub(
-      dir,
-      "git",
-      `if [ "\${1:-}" = "remote" ]; then printf '${HOME_REMOTE_URL}\\n'; exit 0; fi\n${LOUD_GIT}`,
-    );
-    const r = runHook("gh pr merge 5 -Rother/repo --squash", dir);
-    expect(r.status).toBe(0);
-    expect(r.stdout).toBe("");
-  });
+  // pflag accepts a short flag's value after `=` and after boolean flags in
+  // the same cluster — every spelling of a foreign repo must read as foreign
+  // (never `-R=x/y` as the mangled slug `=x/y`, never `-dRx/y` as no flag).
+  const foreignRepoSpellings = [
+    "gh pr merge 5 -Rother/repo --squash",
+    "gh pr merge 5 -R=other/repo --squash",
+    "gh pr merge 5 -dRother/repo",
+    "gh pr merge 5 -dR=other/repo",
+  ];
+
+  for (const command of foreignRepoSpellings) {
+    test(`passes through a foreign short-flag merge silently: ${command}`, () => {
+      const dir = newStubDir();
+      writeStub(dir, "gh", LOUD_GH);
+      writeStub(
+        dir,
+        "git",
+        `if [ "\${1:-}" = "remote" ]; then printf '${HOME_REMOTE_URL}\\n'; exit 0; fi\n${LOUD_GIT}`,
+      );
+      const r = runHook(command, dir);
+      expect(r.status).toBe(0);
+      expect(r.stdout).toBe("");
+    });
+  }
 });
 
 describe.if(HAS_JQ)("slice 1: verdict mapping through the real script", () => {
@@ -402,8 +414,12 @@ describe.if(HAS_JQ)("slice 2: in jurisdiction — every simple command is tested
     // names this repo and must engage, not read as foreign.
     `gh pr merge 5 --repo github.com/bostonaholic/team`,
     `gh pr merge 5 --repo=github.com/bostonaholic/team`,
-    // The combined short-flag form carries the repo in the same word.
+    // The combined short-flag form carries the repo in the same word — pflag
+    // also accepts it after `=` and after boolean flags in the same cluster.
     `gh pr merge 5 -Rbostonaholic/team`,
+    `gh pr merge 5 -R=bostonaholic/team`,
+    `gh pr merge 5 -dRbostonaholic/team`,
+    `gh pr merge 5 -dR=bostonaholic/team`,
     // A leading `time` prefix or redirection word still runs the merge.
     `time gh pr merge 5`,
     `>merge.log gh pr merge 5`,
