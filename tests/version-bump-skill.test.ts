@@ -76,6 +76,79 @@ describe("version-bump skill: the Team-version mechanics live here", () => {
   });
 });
 
+describe("version-bump skill: step 0's no-bump exit requires the script OK (#120)", () => {
+  // The `git diff` quick look is orientation only; the exit itself is gated on
+  // the script's dev-only+no-bump signal (Decision 7), so a missed runtime
+  // file stops at step 0 instead of surfacing as a merge-time deny.
+  const lines = body().split("\n");
+  const step0Idx = lines.findIndex((line) => /^#{2,4}\s*0\.\s/.test(line));
+  const step1Idx = lines.findIndex((line) => /^#{2,4}\s*1\.\s/.test(line));
+  const step0Body =
+    step0Idx >= 0 && step1Idx > step0Idx ? lines.slice(step0Idx, step1Idx).join("\n") : "";
+
+  test("step 0's no-bump exit anchors on `OK: runtime_changed=false bumped=false`", () => {
+    expect(step0Idx).toBeGreaterThanOrEqual(0);
+    expect(step0Body).toContain("OK: runtime_changed=false bumped=false");
+  });
+});
+
+describe("version-bump skill: ordering — commit, THEN assert the invariant, THEN title", () => {
+  // The invariant assertion must run after the chore(version) commit (so it
+  // measures the tip that will land) and before the title edit — the first
+  // remote change (Decision 8). Asserting first keeps a failure's recovery
+  // purely local: drop the commit, undo the cut, nothing has left the machine.
+  const t = body();
+  const commitIdx = lineIndex(t, /^#{2,4}\s*\d+\.\s*commit/i);
+  const invariantIdx = lineIndex(t, /^#{2,4}\s*\d+\.\s*assert the bump invariant/i);
+  const titleIdx = lineIndex(t, /^#{2,4}\s*\d+\.\s*title the pr/i);
+
+  test("an 'Assert the bump invariant' step heading is present", () => {
+    expect(invariantIdx).toBeGreaterThanOrEqual(0);
+  });
+
+  test("the invariant assertion appears AFTER the chore(version) commit step", () => {
+    expect(commitIdx).toBeGreaterThanOrEqual(0);
+    expect(invariantIdx).toBeGreaterThan(commitIdx);
+  });
+
+  test("the invariant assertion appears BEFORE the title step", () => {
+    expect(titleIdx).toBeGreaterThanOrEqual(0);
+    expect(invariantIdx).toBeGreaterThanOrEqual(0);
+    expect(invariantIdx).toBeLessThan(titleIdx);
+  });
+});
+
+describe("version-bump skill ↔ version-bump-required.sh: shared signal anchors (Decision 11c)", () => {
+  // Coupling tripwire, honest limits accepted: the skill reads the script's
+  // outcomes by exact output match, so the script's format literal and die
+  // sentences (the script is read-only, never edited) and the skill's anchors
+  // are pinned together. What this cannot guarantee: interpolated VALUES — a
+  // `1`/`0` drift passes it and orphans the skill's anchors; the early runs
+  // then stop by default-deny (never a wrong continue).
+  const SCRIPT = join(REPO_ROOT, ".github", "scripts", "version-bump-required.sh");
+  const script = existsSync(SCRIPT) ? read(SCRIPT) : "";
+  const skill = body();
+
+  test("script emits the OK printf literal `OK: runtime_changed=%s bumped=%s (%s -> %s)`", () => {
+    expect(script).toContain("OK: runtime_changed=%s bumped=%s (%s -> %s)");
+  });
+
+  test("script carries the two verdict sentences", () => {
+    expect(script).toContain("Run version-bump.");
+    expect(script).toContain("must land with no bump");
+  });
+
+  test("skill anchors both full OK signals", () => {
+    expect(skill).toContain("OK: runtime_changed=false bumped=false");
+    expect(skill).toContain("OK: runtime_changed=true bumped=true");
+  });
+
+  test("skill carries the same two verdict sentences", () => {
+    expect(skill).toContain("Run version-bump.");
+    expect(skill).toContain("must land with no bump");
+  });
+});
+
 describe("version-bump skill: ordering — cut BEFORE the land-time assertion", () => {
   // The released-section + footer-link invariants can only be validated after
   // the cut has written them, so the consistency assertion must follow the cut.
