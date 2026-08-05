@@ -100,7 +100,11 @@ function deny(text) {
 
 // Tokenize into simple commands (word lists) under shell quoting rules, or
 // null when the command cannot be parsed confidently — jurisdiction is
-// decided only on a parsed command, so a null fails open. Quoted text,
+// decided only on a parsed command, so a null fails open. That makes null
+// legitimate ONLY where bash itself refuses to execute the input (unbalanced
+// quotes, unbalanced arithmetic): bash tolerates and RUNS an unterminated
+// heredoc, a trailing backslash, and `<<` inside `$((…))`/`((…))`, so those
+// shapes must parse the way bash reads them instead of bailing. Quoted text,
 // backslash escapes, and heredoc bodies are data: they never create word or
 // command boundaries, so a commit message or grep that mentions the phrase
 // never engages, while the documented land-path merge (which quotes its
@@ -168,7 +172,11 @@ function tokenize(command) {
         continue;
       }
       if (c === "\\") {
-        if (i + 1 >= length) return null;
+        if (i + 1 >= length) {
+          // bash drops a backslash at end-of-input and proceeds.
+          i += 1;
+          continue;
+        }
         terminator += command[i + 1];
         i += 2;
         sawAny = true;
@@ -216,7 +224,12 @@ function tokenize(command) {
       continue;
     }
     if (ch === "\\") {
-      if (i + 1 >= length) return null;
+      if (i + 1 >= length) {
+        // bash drops a backslash at end-of-input and runs the command, so a
+        // null here would fail open on a command the shell executes.
+        i += 1;
+        continue;
+      }
       if (command[i + 1] === "\n") {
         i += 2; // line continuation: no word break, no command break
         continue;
@@ -230,10 +243,12 @@ function tokenize(command) {
       endCommand();
       i += 1;
       // Heredoc bodies are data: consume lines up to each terminator without
-      // ever splitting them into commands.
+      // ever splitting them into commands. A body whose terminator never
+      // appears runs to end-of-input — bash warns ("here-document delimited
+      // by end-of-file") but EXECUTES the commands already parsed, so bailing
+      // to null here would fail open on a command the shell runs.
       while (pendingHeredocs.length > 0) {
         const { terminator, stripTabs } = pendingHeredocs.shift();
-        let found = false;
         while (i <= length) {
           let lineEnd = command.indexOf("\n", i);
           const atEnd = lineEnd === -1;
@@ -241,13 +256,8 @@ function tokenize(command) {
           let line = command.slice(i, lineEnd);
           if (stripTabs) line = line.replace(/^\t+/, "");
           i = atEnd ? length + 1 : lineEnd + 1;
-          if (line === terminator) {
-            found = true;
-            break;
-          }
-          if (atEnd) break;
+          if (line === terminator || atEnd) break;
         }
-        if (!found) return null; // heredoc missing its terminator
       }
       continue;
     }
@@ -259,6 +269,25 @@ function tokenize(command) {
     if (ch === "#" && !wordStarted) {
       const lineEnd = command.indexOf("\n", i);
       i = lineEnd === -1 ? length : lineEnd;
+      continue;
+    }
+    if (ch === "(" && command[i + 1] === "(") {
+      // An arithmetic span — `(( 1 << 2 ))` or `$((…))` — is data: `<<`
+      // inside it is a shift, never a heredoc opener, and bash runs whatever
+      // follows the span. Consume to the matching `))` on paren depth. An
+      // unbalanced span is a bash syntax error (nothing runs), so null stays
+      // fail-open-safe there.
+      let depth = 2;
+      let spanEnd = i + 2;
+      while (spanEnd < length && depth > 0) {
+        if (command[spanEnd] === "(") depth += 1;
+        else if (command[spanEnd] === ")") depth -= 1;
+        spanEnd += 1;
+      }
+      if (depth > 0) return null;
+      word += command.slice(i, spanEnd);
+      wordStarted = true;
+      i = spanEnd;
       continue;
     }
     if (ch === "<" && command[i + 1] === "<" && command[i + 2] === "<") {
@@ -306,7 +335,8 @@ function tokenize(command) {
     i += 1;
   }
 
-  if (pendingHeredocs.length > 0) return null; // heredoc body never started
+  // A heredoc whose body never started (no newline before end-of-input) is an
+  // empty body to bash: it warns and executes, so the parsed commands stand.
   endCommand();
   return commands;
 }

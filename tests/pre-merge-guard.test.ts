@@ -424,10 +424,20 @@ describe.if(HAS_JQ)("slice 2: in jurisdiction — every simple command is tested
     `time gh pr merge 5`,
     `>merge.log gh pr merge 5`,
     `2>/dev/null gh pr merge 5`,
+    // The tokenizer used to bail to null on these, but bash warns and RUNS
+    // the merge — and the arithmetic-shift shape is fully valid, with no
+    // warning at all. A parse bail must never fail open on a command the
+    // shell executes.
+    `gh pr merge 5 --squash <<EOF`,
+    `gh pr merge 5 && cat <<EOF`,
+    `(( 1 << 2 )) && gh pr merge 5`,
+    `(( 1 << 2 ))\ngh pr merge 5`,
+    `gh pr merge 5 \\`,
+    `echo a<<b; gh pr merge 5`,
   ];
 
   for (const command of inShapes) {
-    test(`engages and denies under a violation verdict: ${command}`, () => {
+    test(`engages and denies under a violation verdict: ${command.replace(/\n/g, "\\n")}`, () => {
       const r = runHook(command, violationStubs());
       expect(r.status).toBe(2);
       expect(r.stderr).toContain("must land with no bump");
