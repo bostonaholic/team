@@ -302,9 +302,11 @@ describe("slice 1: the guard denies a violating merge at the merge attempt", () 
   test("denies when the budget is exhausted before the first external call", () => {
     // Exercises run()'s pre-exhaustion branch (the hang test above rides the
     // per-call timeout kill instead): a 1ms budget expires while the hook
-    // reads its megabyte of stdin, so gate() finds nothing left before it
-    // spawns anything — the loud stubs prove no external call happens.
-    const bulk = "x".repeat(2_000_000);
+    // reads 20MB of stdin, so gate() finds nothing left before it spawns
+    // anything — the loud stubs prove no external call happens. The payload
+    // is sized an order of magnitude past what today's hardware reads in
+    // 1ms, so the race stays unambiguous as hardware speeds up.
+    const bulk = "x".repeat(20_000_000);
     const r = runHook(`gh pr merge 5 --squash # ${bulk}`, loudStubs(), {
       PRE_MERGE_GUARD_DEADLINE_MS: "1",
     });
