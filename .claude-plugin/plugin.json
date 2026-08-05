@@ -6,7 +6,7 @@
     "name": "Matthew Boston",
     "url": "https://matthewboston.com"
   },
-  "homepage": "https://github.com/bostonaholic/team",
+  "homepage": "https://team.bostonaholic.dev",
   "license": "MIT",
   "hooks": {
     "PostToolUse": [
