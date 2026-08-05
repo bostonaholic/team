@@ -78,8 +78,8 @@ describe("version-bump skill: the Team-version mechanics live here", () => {
 
 describe("version-bump skill: step 0's no-bump exit requires the script OK (#120)", () => {
   // The `git diff` quick look is orientation only; the exit itself is gated on
-  // the script's dev-only+no-bump signal (Decision 7), so a missed runtime
-  // file stops at step 0 instead of surfacing as a merge-time deny.
+  // the script's dev-only+no-bump signal, so a missed runtime file stops at
+  // step 0 instead of surfacing as a merge-time deny.
   const lines = body().split("\n");
   const step0Idx = lines.findIndex((line) => /^#{2,4}\s*0\.\s/.test(line));
   const step1Idx = lines.findIndex((line) => /^#{2,4}\s*1\.\s/.test(line));
@@ -95,8 +95,8 @@ describe("version-bump skill: step 0's no-bump exit requires the script OK (#120
 describe("version-bump skill: ordering — commit, THEN assert the invariant, THEN title", () => {
   // The invariant assertion must run after the chore(version) commit (so it
   // measures the tip that will land) and before the title edit — the first
-  // remote change (Decision 8). Asserting first keeps a failure's recovery
-  // purely local: drop the commit, undo the cut, nothing has left the machine.
+  // remote change. Asserting first keeps a failure's recovery purely local:
+  // drop the commit, undo the cut, nothing has left the machine.
   const t = body();
   const commitIdx = lineIndex(t, /^#{2,4}\s*\d+\.\s*commit/i);
   const invariantIdx = lineIndex(t, /^#{2,4}\s*\d+\.\s*assert the bump invariant/i);
@@ -118,7 +118,7 @@ describe("version-bump skill: ordering — commit, THEN assert the invariant, TH
   });
 });
 
-describe("version-bump skill ↔ version-bump-required.sh: shared signal anchors (Decision 11c)", () => {
+describe("version-bump skill ↔ version-bump-required.sh: shared signal anchors", () => {
   // Coupling tripwire, honest limits accepted: the skill reads the script's
   // outcomes by exact output match, so the script's format literal and die
   // sentences (the script is read-only, never edited) and the skill's anchors

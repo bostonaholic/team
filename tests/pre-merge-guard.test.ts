@@ -9,14 +9,13 @@
 // .claude/hooks/ for it; the pins below cover the deny-specific fields and the
 // exit status, which no sweep checks.
 //
-// The deterministic seam (design Open questions, resolved here): a hermetic
-// temp dir is prepended to PATH carrying stub `gh` and `git` executables
-// scripted per fixture. The hook's external boundary (gh pr view, the fetches,
-// rev-parse, merge-base) resolves to the stubs, while
-// .github/scripts/version-bump-required.sh runs for REAL against the stubbed
-// git — so every verdict sentence asserted below is the script's own output,
-// never a re-typed copy. The stubs answer exactly the calls the invariant run
-// names (design "Desired end state"):
+// The deterministic seam: a hermetic temp dir is prepended to PATH carrying
+// stub `gh` and `git` executables scripted per fixture. The hook's external
+// boundary (gh pr view, the fetches, rev-parse, merge-base) resolves to the
+// stubs, while .github/scripts/version-bump-required.sh runs for REAL against
+// the stubbed git — so every verdict sentence asserted below is the script's
+// own output, never a re-typed copy. The stubs answer exactly the calls the
+// invariant run makes:
 //
 //   gh pr view --json number,headRefOid,baseRefName   (PR selector)
 //   git symbolic-ref refs/remotes/origin/HEAD          (default-branch resolve)
@@ -213,8 +212,8 @@ describe("slice 1: the guard denies a violating merge at the merge attempt", () 
   });
 
   test("fails open on garbage stdin", () => {
-    // Jurisdiction is decided only on a parsed command (Decision 5): before it
-    // is decided, the hook cannot see a command and must not block anything.
+    // Jurisdiction is decided only on a parsed command: before it is
+    // decided, the hook cannot see a command and must not block anything.
     const r = spawnSync("node", [HOOK], {
       cwd: REPO_ROOT,
       encoding: "utf-8",
@@ -242,7 +241,8 @@ describe("slice 1: the guard denies a violating merge at the merge attempt", () 
 
   test("denies when the fetch fails", () => {
     // Degrading is acceptable for a version compute, not for a verdict — the
-    // fetch must succeed (a deliberate deviation from next-version.sh:62-63).
+    // fetch must succeed, a deliberate deviation from next-version.sh's
+    // warn-and-continue fetch fallback.
     const r = runHook("gh pr merge 5 --squash", scriptedStubs({ fetchExit: 1 }));
     expect(r.status).toBe(2);
   });
@@ -289,10 +289,10 @@ describe("slice 1: the guard denies a violating merge at the merge attempt", () 
 
 describe.if(HAS_JQ)("slice 1: verdict mapping through the real script", () => {
   test("denies a violating merge with the full envelope", () => {
-    // The c945395-class pin: envelope, not only decision. Dual deny channel
-    // (Decision 6) — exit 2 + stderr for the blocking path, the deny payload
-    // for the permission path. The deny text is the only text the denied
-    // session is guaranteed to read, so it must carry the recovery route.
+    // The c945395-class pin: envelope, not only decision. Dual deny channel —
+    // exit 2 + stderr for the blocking path, the deny payload for the
+    // permission path. The deny text is the only text the denied session is
+    // guaranteed to read, so it must carry the recovery route.
     const r = runHook("gh pr merge 5 --squash", violationStubs());
     expect(r.status).toBe(2);
     expect(r.stderr).toContain("must land with no bump");
@@ -308,7 +308,8 @@ describe.if(HAS_JQ)("slice 1: verdict mapping through the real script", () => {
   test("allows silently on an OK verdict", () => {
     // Dev-only diff, no bump → the script prints
     // `OK: runtime_changed=false bumped=false (…)` and exits 0 — the hook
-    // allows with no output at all (pre-bash-guard.mjs:116-117 precedent).
+    // allows with no output at all (pre-bash-guard.mjs's silent-allow
+    // precedent).
     const r = runHook(
       "gh pr merge 5 --squash",
       scriptedStubs({
@@ -338,10 +339,10 @@ describe.if(HAS_JQ)("slice 1: verdict mapping through the real script", () => {
   });
 });
 
-// Slice 2's fixture tables ARE the jurisdiction spec (Decision 11b): the
-// in/out lists below are the executable rendering of Decision 3's
-// quoting-aware first-words rule, including the review-4 errata ruling that
-// leading reserved words and grouping openers are NOT discarded.
+// Slice 2's fixture tables ARE the jurisdiction spec: the in/out lists below
+// are the executable rendering of the quoting-aware first-words rule,
+// including the ruling that leading reserved words and grouping openers are
+// NOT discarded.
 
 describe("slice 2: out of jurisdiction — never gated, proven by loud stubs", () => {
   const outShapes = [
@@ -364,7 +365,7 @@ describe("slice 2: out of jurisdiction — never gated, proven by loud stubs", (
     // Not the `gh pr merge` command.
     `gh api repos/o/r/pulls/5/merge`,
     // Leading reserved words and grouping openers are NOT discarded
-    // (errata ruling, review-4 finding 1, resolved narrow-side).
+    // (resolved narrow-side).
     `if gh pr checks; then gh pr merge 5; fi`,
     `{ gh pr merge; }`,
     `( gh pr merge )`,
