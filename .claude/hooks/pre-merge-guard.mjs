@@ -130,6 +130,26 @@ function scanAnsiCQuote(command, openIndex) {
   return null;
 }
 
+// `…` command substitution: bash scans to the first backslash-unescaped
+// closing backtick and re-lexes the body as its own context, so quotes
+// inside the body never open or close anything in the surrounding text —
+// reading them there flips quote parity on valid input. The span is
+// consumed as data; the body is never parsed (the same indirection residue
+// as $(…)).
+function scanBacktickSpan(command, openIndex) {
+  let i = openIndex + 1;
+  while (i < command.length) {
+    const c = command[i];
+    if (c === "\\") {
+      i += 2;
+      continue;
+    }
+    if (c === "`") return i + 1;
+    i += 1;
+  }
+  return null;
+}
+
 // A balanced-paren span — $(…), <(…), >(…), NAME=(…), ((…)) — honoring the
 // quote contexts inside it, where a `)` is data. Comments and case patterns
 // inside a substitution are NOT parsed (see the tokenize contract below).
@@ -189,6 +209,15 @@ function readDoubleQuoteBody(command, openIndex) {
     // (the `"$(… '…'\''…' …)"` land-path subject shape).
     if (c === "$" && command[i + 1] === "(") {
       const end = scanParenSpan(command, i + 1);
+      if (end === null) return null;
+      text += command.slice(i, end);
+      i = end;
+      continue;
+    }
+    // Backticks nest a substitution inside "…" exactly like $(…): bash
+    // re-lexes the body, so a " inside it must not close this string.
+    if (c === "`") {
+      const end = scanBacktickSpan(command, i);
       if (end === null) return null;
       text += command.slice(i, end);
       i = end;
@@ -408,6 +437,17 @@ function tokenize(command) {
       i = end;
       continue;
     }
+    if (ch === "`") {
+      // Backtick command substitution is data, exactly like $(…) — leaving
+      // it to the fallthrough would read a # inside the body as an
+      // outer-line comment and swallow the commands after the span.
+      const end = scanBacktickSpan(command, i);
+      if (end === null) return null; // unterminated `… — bash refuses
+      word += command.slice(i, end);
+      wordStarted = true;
+      i = end;
+      continue;
+    }
     if (
       ch === "(" &&
       wordStarted &&
@@ -575,8 +615,9 @@ function basename(word) {
 
 // In jurisdiction iff some simple command's first three words — after
 // discarding leading assignment words (NAME=value, NAME+=value, and the
-// NAME=(array) form the tokenizer folds into one word) and the pure
-// prefixes `time` (matched on its basename so `/usr/bin/time` counts, its
+// NAME=(array) form the tokenizer folds into one word), leading words that
+// are entirely a command substitution (see below), and the pure prefixes
+// `time` (matched on its basename so `/usr/bin/time` counts, its
 // `-p`/`--` flags stripped), `!`, and `exec` (and its `-c`/`-l`/`-a NAME`
 // flags) — are exactly `gh pr merge` (the first may be a path whose
 // basename is gh). Redirections never appear here: the tokenizer consumes
@@ -595,6 +636,19 @@ function findMergeCommands(commands) {
     while (start < words.length) {
       const word = words[start];
       if (isAssignmentWord(word) || word === "!") {
+        start += 1;
+        continue;
+      }
+      if (
+        (word.startsWith("`") && word.endsWith("`") && word.length >= 2) ||
+        (word.startsWith("$(") && word.endsWith(")"))
+      ) {
+        // A leading word that is entirely a command substitution expands
+        // BEFORE command lookup, and an empty expansion leaves the following
+        // words as the command (`` `true` gh pr merge `` runs the merge).
+        // The expansion is unknowable here, so discard the word and err
+        // toward gating: a non-empty expansion at worst yields a false deny
+        // on the narrow side, never a bypass.
         start += 1;
         continue;
       }

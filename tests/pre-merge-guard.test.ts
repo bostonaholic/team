@@ -473,8 +473,10 @@ describe("jurisdiction spec: out — never gated, proven by loud stubs", () => {
     `cat <<'EOF'\ngh pr merge 5\nEOF`,
     // A here-string operand is data, never a word.
     `grep merge <<<"gh pr merge 5"`,
-    // Indirection is never unwrapped.
+    // Indirection is never unwrapped — a substitution body included: the
+    // only simple command here is `echo <span>`.
     `bash -c "gh pr merge 5"`,
+    `echo \`gh pr merge 5\``,
     `env gh pr merge`,
     `eval "gh pr merge"`,
     `xargs gh pr merge`,
@@ -621,6 +623,17 @@ describe.if(HAS_JQ)("jurisdiction spec: in — every simple command is gated", (
     // $(…) inside "…" nests full quoting: the '\'' idiom inside a command
     // substitution inside a double-quoted subject must not flip parity.
     `gh pr merge 5 --squash --subject "$(jq -r .title <<<'{"title":"don'\\''t"}') (#5)"`,
+    // Backticks inside "…" are a substitution bash re-lexes: a " inside the
+    // body must not close the subject string (round-5 Major, shape 1).
+    `gh pr merge 5 --squash --subject "\`echo hi | tr -d '"'\` (#5)"`,
+    // A leading substitution-only word can expand to nothing, leaving the
+    // merge words as the command — discarded like an assignment word, so
+    // the merge still gates (round-5 Major, shape 2, both spellings).
+    `\`true\` gh pr merge 5`,
+    `$(true) gh pr merge 5`,
+    // A # inside a backtick span is body data, never an outer-line comment
+    // that would swallow the merge after the span (round-5 Major, shape 3).
+    `echo \`foo # \` ; gh pr merge 5`,
     // Bash's metacharacter rule: an unquoted < or > ALWAYS ends a word, even
     // glued to one of the first three command words.
     `gh pr merge>merge.log 5`,
