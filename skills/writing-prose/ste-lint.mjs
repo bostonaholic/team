@@ -19,10 +19,15 @@
 // so the skill file is the single authority for what counts as a violation,
 // not an independent second source.
 //
-// Runs on Node, which every Claude Code install already has; invoke it
-// explicitly:
+// Runs on Node, which every supported host install already has. Invoke it
+// explicitly, from the directory this file sits in:
 //
-//     node "${CLAUDE_PLUGIN_ROOT}/skills/writing-prose/ste-lint.mjs" [--breakdown] [--cap N] [path ...]
+//     node "<skill-dir>/ste-lint.mjs" [--breakdown] [--cap N] [path ...]
+//
+// `<skill-dir>` is `${CLAUDE_PLUGIN_ROOT}/skills/writing-prose` on Claude
+// Code. Codex sets no plugin-root variable, so pass the literal directory
+// there. This file reads no environment variable and holds no relative
+// import, so it runs unchanged from whatever path a host installs it to.
 //
 // With no paths, or with the path "-", text is read from stdin. The default
 // sentence cap is 20 words (strict mode in the skill); pass --cap 25 to score

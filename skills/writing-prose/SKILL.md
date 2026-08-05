@@ -323,11 +323,18 @@ conventional-comments framework carries the disagreement.
 ## Mechanical score
 
 A bundled script scores prose against the mechanical rules in this file, as
-violations per 100 words:
+violations per 100 words. The script sits next to this file:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/writing-prose/ste-lint.mjs" --breakdown --cap 25 <file>
+node "<skill-dir>/ste-lint.mjs" --breakdown --cap 25 "<file>"
 ```
+
+Replace `<skill-dir>` with the absolute path of the directory that holds this
+file. On Claude Code that path is `${CLAUDE_PLUGIN_ROOT}/skills/writing-prose`,
+and the host sets that variable only for a skill loaded from an installed
+plugin. Codex sets no equivalent variable, so give the literal directory
+there. The script itself reads no environment variable. It reads only the
+paths you pass to it, so it runs the same way on every host.
 
 The default cap of 20 words scores instruction text (strict mode). Pass
 `--cap 25` to score descriptive prose at the STE-flavored cap. The score is
