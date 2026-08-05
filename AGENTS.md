@@ -90,7 +90,7 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Seven of t
 | Hook | Event | Purpose |
 |------|-------|---------|
 | `check-registry-sync.mjs` | PostToolUse(Write\|Edit) | Cross-check agent frontmatter against registry.json |
-| `pre-merge-guard.mjs` | PreToolUse(Bash) | Deny `gh pr merge` when the version-bump invariant fails |
+| `pre-merge-guard.mjs` | PreToolUse(Bash) | Deny `gh pr merge` when the version-bump invariant fails. Gates only a literal `gh pr merge` Bash tool call in a session that loaded `.claude/settings.json` — UI, raw-terminal, and wrapped merges bypass it (see [docs/versioning.md](docs/versioning.md)) |
 
 ## State
 

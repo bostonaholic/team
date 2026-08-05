@@ -64,6 +64,14 @@ dev-only diff that bumped, or a runtime diff that did not. The script measures
 bump-less PR behind a version-bumped `main` thus reads correctly as "no
 bump". [PR title sync](#pr-title) uses the same branch-relative measure.
 
+> **Scope caveat.** The guard engages only on a literal `gh pr merge` Bash
+> tool call inside a Claude Code session that loaded this repo's
+> `.claude/settings.json`. A GitHub-UI merge, a merge run in a raw terminal,
+> a wrapped invocation (`bash -c`, `eval`, `env`, `xargs`,
+> `gh api …/merge`), or a harness that does not load these hooks bypasses it
+> entirely — and unlike the deleted CI check, no red signal appears when
+> that happens.
+
 > **Regression #120.** `version-bump` once treated *every* PR as bump-worthy and
 > bumped #118 (a `.github/`-only CI fix) `0.13.1 → 0.13.2`, cutting a changelog
 > section. The gate above removes the judgment call.
@@ -266,6 +274,14 @@ A denial loop is reachable here, and it is expected, not a bug: `/shipit`
 step 5 rebases and re-runs the 30-minute CI wait, and if `main` advances
 during that wait, the guard's up-to-date precondition denies again. Landing is
 serialized to one PR at a time, so the loop is rare in practice.
+
+### The pre-merge guard denied the merge (missing or wrongful bump)
+
+The plain denial: a runtime PR that never bumped, or a dev-only PR still
+carrying a stray bump. Run `version-bump` normally — its step 0 re-runs the
+same script and says which case this is: continue into the bump steps for a
+missing bump, or drop the `chore(version)` commit and undo the changelog cut
+for a wrongful one. Then re-run `/shipit`.
 
 ### A version string was missed and the tag is already pushed
 
