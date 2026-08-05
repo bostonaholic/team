@@ -68,9 +68,12 @@ bump". [PR title sync](#pr-title) uses the same branch-relative measure.
 > tool call inside a Claude Code session that loaded this repo's
 > `.claude/settings.json`. A GitHub-UI merge, a merge run in a raw terminal,
 > a wrapped invocation (`bash -c`, `eval`, `env`, `xargs`,
-> `gh api …/merge`), a merge inside a shell grouping or conditional
-> construct (`if …; then gh pr merge; fi`, `{ gh pr merge; }`,
-> `( gh pr merge )` — ordinary shell syntax, no indirection tool needed), or
+> `gh api …/merge`, or any other wrapper command — `command`, `nohup`,
+> `nice`, `timeout`, `stdbuf`, … — only the `time`, `exec`, and `!`
+> prefixes are stripped), a brace-expanded spelling (`gh pr {merge,}`), a
+> merge inside a shell grouping, conditional, or `case` construct
+> (`if …; then gh pr merge; fi`, `{ gh pr merge; }`, `( gh pr merge )` —
+> ordinary shell syntax, no indirection tool needed), or
 > a harness that does not load these hooks bypasses it entirely — and unlike
 > the deleted CI check, no red signal appears when that happens. The guard
 > also evaluates from the repo root while the gated command runs in the
@@ -287,7 +290,10 @@ The plain denial: a runtime PR that never bumped, or a dev-only PR still
 carrying a stray bump. Run `version-bump` normally — its step 0 re-runs the
 same script and says which case this is: continue into the bump steps for a
 missing bump, or drop the `chore(version)` commit and undo the changelog cut
-for a wrongful one. Then re-run `/shipit`.
+for a wrongful one — and in the wrongful case also re-title: a re-entry that
+ends at "no bump" must strip the stale `vX.Y.Z` prefix back to the plain
+conventional title itself, because the title backstop never strips a stale
+prefix (`version-bump`'s step 8 names this). Then re-run `/shipit`.
 
 ### A version string was missed and the tag is already pushed
 
