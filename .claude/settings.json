@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/pre-merge-guard.mjs",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre-merge-guard.mjs",
             "timeout": 60000
           }
         ]

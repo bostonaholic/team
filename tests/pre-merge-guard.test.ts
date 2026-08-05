@@ -29,7 +29,8 @@
 //   git diff --name-only ...                           (the script's file list)
 //
 // Timer knob per docs/testing.md: PRE_MERGE_GUARD_DEADLINE_MS shrinks the
-// in-hook per-call deadline so the hang fixture denies in milliseconds.
+// in-hook shared external-call budget so the hang fixture denies in
+// milliseconds. The knob only shrinks — the hook clamps it to its default.
 
 import { afterAll, describe, expect, test } from "bun:test";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -246,10 +247,10 @@ describe("slice 1: the guard denies a violating merge at the merge attempt", () 
     expect(r.status).toBe(2);
   });
 
-  test("denies on deadline expiry", () => {
-    // The stub gh hangs far past the env-shrunk per-call deadline. A slow
-    // network and a failing network must land on the same side of the gate
-    // (Decision 5): expiry is an in-jurisdiction failure that denies.
+  test("denies on budget expiry", () => {
+    // The stub gh hangs far past the env-shrunk external-call budget. A slow
+    // network and a failing network must land on the same side of the gate:
+    // expiry is an in-jurisdiction failure that denies.
     const r = runHook("gh pr merge 5 --squash", scriptedStubs({ gh: "hang" }), {
       PRE_MERGE_GUARD_DEADLINE_MS: "200",
     });
@@ -268,6 +269,19 @@ describe("slice 1: the guard denies a violating merge at the merge attempt", () 
       `if [ "\${1:-}" = "remote" ]; then printf '${HOME_REMOTE_URL}\\n'; exit 0; fi\n${LOUD_GIT}`,
     );
     const r = runHook("gh pr merge 5 --repo other/repo --squash", dir);
+    expect(r.status).toBe(0);
+    expect(r.stdout).toBe("");
+  });
+
+  test("passes through a foreign combined-short-flag -Rother/repo merge silently", () => {
+    const dir = newStubDir();
+    writeStub(dir, "gh", LOUD_GH);
+    writeStub(
+      dir,
+      "git",
+      `if [ "\${1:-}" = "remote" ]; then printf '${HOME_REMOTE_URL}\\n'; exit 0; fi\n${LOUD_GIT}`,
+    );
+    const r = runHook("gh pr merge 5 -Rother/repo --squash", dir);
     expect(r.status).toBe(0);
     expect(r.stdout).toBe("");
   });
@@ -387,6 +401,12 @@ describe.if(HAS_JQ)("slice 2: in jurisdiction — every simple command is tested
     // names this repo and must engage, not read as foreign.
     `gh pr merge 5 --repo github.com/bostonaholic/team`,
     `gh pr merge 5 --repo=github.com/bostonaholic/team`,
+    // The combined short-flag form carries the repo in the same word.
+    `gh pr merge 5 -Rbostonaholic/team`,
+    // A leading `time` prefix or redirection word still runs the merge.
+    `time gh pr merge 5`,
+    `>merge.log gh pr merge 5`,
+    `2>/dev/null gh pr merge 5`,
   ];
 
   for (const command of inShapes) {

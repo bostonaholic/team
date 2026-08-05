@@ -88,7 +88,7 @@ guard enforces at merge time:
    pair to the fork point itself).
 
 ```bash
-DEFAULT=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|.*/||')
+DEFAULT=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|^refs/remotes/origin/||')
 DEFAULT=${DEFAULT:-main}
 git fetch origin "$DEFAULT" || { echo "fetch failed — no verdict"; exit 1; }
 git merge-base --is-ancestor "refs/remotes/origin/$DEFAULT" HEAD \

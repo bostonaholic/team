@@ -31,23 +31,37 @@ const INVARIANT_SCRIPT = join(
   "version-bump-required.sh",
 );
 
-// Each external call (gh pr view, the fetches, the script run) gets its own
-// deadline so a hanging network call denies instead of riding the registered
-// hook timeout into a harness kill (which would fail open). The env override
-// exists for tests only (timer-knob rule, docs/testing.md).
-const DEFAULT_DEADLINE_MS = 10_000;
+// All external calls (gh, the fetches, the script run) share ONE overall
+// budget, kept below the registered hook timeout (.claude/settings.json) so a
+// slow chain of calls denies here instead of riding the registered timeout
+// into a harness kill (which would fail open). Per-call deadlines cannot give
+// that guarantee: their worst case sums past any registered timeout. The env
+// override exists for tests only (timer-knob rule, docs/testing.md) and is
+// clamped so it can only shrink the budget, never widen it.
+const DEFAULT_BUDGET_MS = 45_000;
 
-function deadlineMs() {
+function initialBudgetMs() {
   const raw = Number.parseInt(process.env.PRE_MERGE_GUARD_DEADLINE_MS ?? "", 10);
-  return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_DEADLINE_MS;
+  return Number.isFinite(raw) && raw > 0
+    ? Math.min(raw, DEFAULT_BUDGET_MS)
+    : DEFAULT_BUDGET_MS;
 }
 
+const budgetExpiresAtMs = Date.now() + initialBudgetMs();
+
 function run(executable, args, extraEnv = {}) {
+  const remainingMs = budgetExpiresAtMs - Date.now();
+  if (remainingMs <= 0) {
+    deny(
+      "pre-merge guard: the external-call budget expired before the verdict. " +
+        "Recovery: check network and gh auth, then re-run /shipit.",
+    );
+  }
   return spawnSync(executable, args, {
     cwd: REPO_ROOT,
     encoding: "utf-8",
     env: { ...process.env, ...extraEnv },
-    timeout: deadlineMs(),
+    timeout: remainingMs,
   });
 }
 
@@ -307,17 +321,32 @@ function basename(word) {
 }
 
 // In jurisdiction iff some simple command's first three words — after
-// discarding leading NAME=value assignment words — are exactly `gh pr merge`
-// (the first may be a path whose basename is gh). Leading shell reserved
-// words and grouping openers are deliberately NOT discarded (err narrow):
-// `if …; then gh pr merge; fi`, `{ gh pr merge; }` stay out. Every match is
-// collected: a compound command is gated on ALL of its merge commands, so an
-// out-of-scope first merge can never allow a later one.
+// discarding leading NAME=value assignment words, a leading `time` prefix,
+// and leading redirection words (`>out`, `2>/dev/null`, `< input`) — are
+// exactly `gh pr merge` (the first may be a path whose basename is gh).
+// Leading shell reserved words other than `time` and grouping openers are
+// deliberately NOT discarded (err narrow): `if …; then gh pr merge; fi`,
+// `{ gh pr merge; }` stay out. Every match is collected: a compound command
+// is gated on ALL of its merge commands, so an out-of-scope first merge can
+// never allow a later one.
 function findMergeCommands(commands) {
   const matches = [];
   for (const words of commands) {
     let start = 0;
-    while (start < words.length && isAssignmentWord(words[start])) start += 1;
+    while (start < words.length) {
+      const word = words[start];
+      if (isAssignmentWord(word) || word === "time") {
+        start += 1;
+        continue;
+      }
+      const redirection = word.match(/^\d*[<>]{1,2}/);
+      if (redirection) {
+        // A bare operator's target rides in the next word.
+        start += redirection[0].length === word.length ? 2 : 1;
+        continue;
+      }
+      break;
+    }
     const rest = words.slice(start);
     if (
       rest.length >= 3 &&
@@ -359,6 +388,11 @@ function parseMergeArgs(mergeWords) {
     }
     if (word.startsWith("--repo=")) {
       repoFlag = word.slice("--repo=".length);
+      continue;
+    }
+    // The combined short-flag form: `-Rowner/repo` in one word.
+    if (word.startsWith("-R") && word.length > 2) {
+      repoFlag = word.slice(2);
       continue;
     }
     if (VALUE_FLAGS.has(word)) {
@@ -406,8 +440,25 @@ function resolveDefaultBranch() {
       return ref.slice(prefix.length);
     }
   }
-  // origin/HEAD is unset in fresh clones and worktrees (next-version.sh:59-61).
-  return "main";
+  // origin/HEAD can be unset (fresh clones, worktrees). Ask GitHub instead of
+  // guessing `main`: a wrong guess lands on the ALLOW side of the base check.
+  const view = run("gh", [
+    "repo",
+    "view",
+    "--json",
+    "defaultBranchRef",
+    "--jq",
+    ".defaultBranchRef.name",
+  ]);
+  if (succeeded(view)) {
+    const name = view.stdout.trim();
+    if (name !== "") return name;
+  }
+  deny(
+    "pre-merge guard: could not resolve the default branch (origin/HEAD is " +
+      "unset and gh repo view failed). Recovery: run " +
+      "`git remote set-head origin --auto`, then re-run /shipit.",
+  );
 }
 
 // Recovery routes keyed on the script verdict. At merge time there is no
@@ -463,7 +514,12 @@ function gate(mergeWords) {
     "--json",
     "number,headRefOid,baseRefName",
   ]);
-  if (!succeeded(view)) deny(describeFailure("gh pr view", view));
+  if (!succeeded(view)) {
+    deny(
+      `${describeFailure("gh pr view", view)}\n` +
+        "If this merge targets another repo's PR, pass --repo explicitly.",
+    );
+  }
 
   let pr;
   try {
@@ -474,10 +530,12 @@ function gate(mergeWords) {
   const number = pr?.number;
   const headRefOid = pr?.headRefOid;
   const baseRefName = pr?.baseRefName;
+  // The full-oid shape check keeps headRefOid from ever reaching git as an
+  // option-shaped or ref-expression argument.
   if (
     !Number.isInteger(number) ||
     typeof headRefOid !== "string" ||
-    headRefOid === "" ||
+    !/^[0-9a-f]{40}$/.test(headRefOid) ||
     typeof baseRefName !== "string"
   ) {
     deny(
@@ -546,7 +604,11 @@ function gate(mergeWords) {
   }
 
   if (!existsSync(INVARIANT_SCRIPT)) {
-    deny(`pre-merge guard: missing ${INVARIANT_SCRIPT}`);
+    deny(
+      `pre-merge guard: missing ${INVARIANT_SCRIPT}. Recovery: restore it ` +
+        `(git checkout origin/${defaultBranch} -- .github/scripts/version-bump-required.sh), ` +
+        "then re-run /shipit.",
+    );
   }
   // BASE_SHA is the base TIP, never a pre-computed merge-base: the script
   // reduces the pair to the fork point itself, exactly as CI did.
