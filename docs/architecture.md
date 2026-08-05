@@ -580,7 +580,6 @@ Runtime hooks (`hooks/`, distributed with the plugin):
 
 | Hook                       | Event                    | Purpose                                                    |
 |----------------------------|--------------------------|------------------------------------------------------------|
-| `pre-bash-guard.mjs`       | PreToolUse(Bash)         | Block dangerous shell commands                             |
 | `pre-compact-anchor.mjs`   | PreCompact               | Scan docs/plans/<id>/ for active topic. Inject a 4-line anchor. |
 | `session-start-recover.mjs`| SessionStart             | Scan docs/plans/<id>/ for active topic. Emit a recovery notice. |
 | `post-write-validate.mjs`  | PostToolUse(Write\|Edit) | Structural validation of plugin component files            |

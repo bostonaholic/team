@@ -254,7 +254,7 @@ describe("pr-cleanup skill: destructive-step gates", () => {
   test("scratch removal takes a $PRIMARY_ROOT-absolute path that aborts when unset", () => {
     // ${PRIMARY_ROOT:?} — the sink runs in its own Bash invocation, where
     // an unset variable would otherwise expand rm -rf to a root-relative
-    // path the pre-bash-guard hook does not match.
+    // path, deleting whatever docs/plans/<id> resolves to from the cwd.
     expect(body()).toContain('rm -rf "${PRIMARY_ROOT:?}/docs/plans/${ID:?}"');
   });
 
