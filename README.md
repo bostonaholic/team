@@ -153,6 +153,6 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 
 - **13 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
 - **53 entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch`, `/pr-approve-watch`, `/groom-backlog`, `/pr-cleanup`, and `/pr-verify` utilities, and shared methodologies
-- **4 hooks** in `hooks/`: safety guards and `docs/plans/`-aware compaction resilience
+- **3 hooks** in `hooks/`: `docs/plans/`-aware compaction resilience and plugin-file validation
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
 - **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `design.md` also carries `revision`, and review verdicts live in `design-review-<n>.md`. Live in-session coordination uses TodoWrite.

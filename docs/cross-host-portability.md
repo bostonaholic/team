@@ -34,7 +34,7 @@ nav_label: portability
 ## Current state
 
 Team is a Claude Code-native plugin. It ships 13 agents (`agents/*.md`), 53 skills
-(`skills/*/SKILL.md` + `registry.json`), and 4 hooks (`hooks/*.mjs`). They
+(`skills/*/SKILL.md` + `registry.json`), and 3 hooks (`hooks/*.mjs`). They
 register through `.claude-plugin/plugin.json`. The orchestrator walks the QRSPI
 phase table (`skills/team/SKILL.md`). It persists state as artifact files under
 `docs/plans/<id>/`. It coordinates agents through the Task tool and `SendMessage`
@@ -128,9 +128,9 @@ parallel and nested subagents, and structured returns.
   cannot dispatch on Codex.
 - **Hooks already isolate portable logic from host contract.** Each `.mjs` reads
   stdin, does Node-only work, then writes a host-shaped JSON result
-  (`pre-bash-guard.mjs:55-64`, `post-write-validate.mjs:29-37`). The scan and git
-  logic is the reusable core. Only the stdin field names and the stdout envelope
-  are the binding. The shim layer mirrors this seam.
+  (`session-start-recover.mjs:236-244`, `post-write-validate.mjs:29-37`). The scan
+  and git logic is the reusable core. Only the stdin field names and the result
+  envelope are the binding. The shim layer mirrors this seam.
 - **Agent definition format is already near-universal.** Claude `agents/*.md`,
   which is Markdown with YAML frontmatter, is structurally identical to Gemini
   `.gemini/agents/*.md`. Codex uses TOML agent roles, but the *system-prompt body*
