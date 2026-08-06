@@ -1,7 +1,8 @@
-// tests/pr-watch-skill.test.ts
+// tests/pr-watch-as-author-skill.test.ts
 //
-// L2 tripwire (free, deterministic): fences the `pr-watch` RUNTIME skill
-// (skills/pr-watch/SKILL.md) — a standalone bounded watch loop distributed
+// L2 tripwire (free, deterministic): fences the `pr-watch-as-author` RUNTIME
+// skill (skills/pr-watch-as-author/SKILL.md) — a standalone bounded watch
+// loop distributed
 // to Team's users. Arming undrafts the
 // PR, snapshots a baseline, and polls GitHub every ~31 minutes for up to 48
 // cycles (~24 h). New feedback runs the pr-open-comments triage procedure
@@ -12,7 +13,7 @@
 // regardless of confidence. Approval never auto-runs /shipit.
 //
 // Also pins the cross-file handoff: skills/team-pr/SKILL.md Completion points
-// at /pr-watch.
+// at /pr-watch-as-author.
 //
 // Every assertion is guarded so a not-yet-existing skill file yields a failed
 // expect(), never an uncaught ENOENT — the mechanical gate rejects crashes,
@@ -25,8 +26,8 @@ import { join } from "node:path";
 import { frontmatter, read } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
-// pr-watch is a RUNTIME skill — under skills/ (distributed), not .claude/.
-const SKILL = join(REPO_ROOT, "skills", "pr-watch", "SKILL.md");
+// pr-watch-as-author is a RUNTIME skill — under skills/ (distributed), not .claude/.
+const SKILL = join(REPO_ROOT, "skills", "pr-watch-as-author", "SKILL.md");
 const TEAM_PR_SKILL = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
@@ -44,20 +45,21 @@ function flat(text: string): string {
   return text.replace(/\n/g, " ");
 }
 
-describe("pr-watch skill: runtime standalone utility frontmatter", () => {
+describe("pr-watch-as-author skill: runtime standalone utility frontmatter", () => {
   test("skill file lives under runtime skills/ (distributed)", () => {
     expect(existsSync(SKILL)).toBe(true);
   });
 
-  test("frontmatter declares name: pr-watch", () => {
-    expect(/^name:\s*pr-watch\s*$/m.test(fm())).toBe(true);
+  test("frontmatter declares name: pr-watch-as-author", () => {
+    expect(/^name:\s*pr-watch-as-author\s*$/m.test(fm())).toBe(true);
   });
 
-  test("description carries trigger phrases incl. \"ready for review\" and /pr-watch", () => {
+  test("description carries trigger phrases incl. \"ready for review\" and /pr-watch-as-author", () => {
     const f = flat(fm());
     expect(/description:.*Trigger on/i.test(f)).toBe(true);
     expect(/ready for review/i.test(f)).toBe(true);
-    expect(f).toContain("/pr-watch");
+    // Pin the FULL literal — a bare prefix of the name would false-pass.
+    expect(f).toContain("/pr-watch-as-author");
   });
 
   test("frontmatter carries argument-hint (PR number or URL)", () => {
@@ -76,7 +78,7 @@ describe("pr-watch skill: runtime standalone utility frontmatter", () => {
   });
 });
 
-describe("pr-watch skill: arm sequence — loud undraft + best-effort tickets", () => {
+describe("pr-watch-as-author skill: arm sequence — loud undraft + best-effort tickets", () => {
   test("a draft PR is promoted via gh pr ready and the promotion is reported loudly", () => {
     const t = flat(body());
     expect(t).toContain("gh pr ready");
@@ -88,7 +90,7 @@ describe("pr-watch skill: arm sequence — loud undraft + best-effort tickets", 
   });
 });
 
-describe("pr-watch skill: bounded cycle mechanics", () => {
+describe("pr-watch-as-author skill: bounded cycle mechanics", () => {
   test("sleeps in bounded chunks: the literal sleep 600 appears", () => {
     expect(body()).toContain("sleep 600");
   });
@@ -108,20 +110,20 @@ describe("pr-watch skill: bounded cycle mechanics", () => {
   });
 });
 
-describe("pr-watch skill: approval never auto-runs /shipit", () => {
+describe("pr-watch-as-author skill: approval never auto-runs /shipit", () => {
   test("hands off with Next: run /shipit — the user lands the PR", () => {
     expect(body()).toContain("Next: run /shipit");
   });
 });
 
-describe("pr-watch skill: pinned edge cases", () => {
+describe("pr-watch-as-author skill: pinned edge cases", () => {
   test("empty-body CHANGES_REQUESTED with no threads ⇒ status line, then stop", () => {
     const t = flat(body());
     expect(t).toContain("CHANGES_REQUESTED");
   });
 });
 
-describe("pr-watch skill: triage contract is referenced, never restated", () => {
+describe("pr-watch-as-author skill: triage contract is referenced, never restated", () => {
   test("references the triage procedure by path", () => {
     expect(body()).toContain("skills/pr-open-comments/SKILL.md");
   });
@@ -135,11 +137,11 @@ describe("pr-watch skill: triage contract is referenced, never restated", () => 
   });
 });
 
-describe("pr-watch skill: team-pr Completion hands off to /pr-watch", () => {
-  test("skills/team-pr/SKILL.md Completion contains the /pr-watch pointer", () => {
+describe("pr-watch-as-author skill: team-pr Completion hands off to /pr-watch-as-author", () => {
+  test("skills/team-pr/SKILL.md Completion contains the /pr-watch-as-author pointer", () => {
     const t = teamPrBody();
     const completionIdx = t.indexOf("## Completion");
-    const pointerIdx = t.indexOf("/pr-watch");
+    const pointerIdx = t.indexOf("/pr-watch-as-author");
     expect(completionIdx).toBeGreaterThanOrEqual(0);
     expect(pointerIdx).toBeGreaterThan(completionIdx);
   });

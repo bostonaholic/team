@@ -66,8 +66,8 @@ echo
 mkdir -p "$(dirname "$TARGET")"
 ln -sfn "$SKILLS_SRC" "$TARGET"
 echo "  Linked: ${TARGET} → ${SKILLS_SRC}"
-echo "  Note: pr-approve-watch is model-invocable on Codex, which ignores"
-echo "        disable-model-invocation. Its approval can merge a PR."
+echo "  Note: pr-watch-as-reviewer is model-invocable on Codex, which"
+echo "        ignores disable-model-invocation. Its approval can merge a PR."
 
 echo
 echo "Done. Codex loads the skills at the next thread start."

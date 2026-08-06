@@ -1,27 +1,28 @@
 ---
-name: pr-approve-watch
+name: pr-watch-as-reviewer
 description: |
-  Arm a reviewer-side bounded watch loop on a pull request you are
-  reviewing: poll GitHub in ~31-minute cycles for up to 24 hours until
-  every review thread you opened is resolved, then cast one attributed,
-  SHA-cited approval on your behalf and stop. The approval is the only
-  write action — it never resolves threads, never replies, never edits
-  code, never merges. Trigger on "approve the PR when my comments are
-  resolved", "watch and approve", or "/pr-approve-watch" — user-invoked
-  only; model invocation is disabled because an approval can
-  transitively trigger an auto-merge.
+  Watch a pull request you are reviewing until your threads resolve,
+  then approve once: poll GitHub in ~31-minute cycles for up to 24
+  hours until every review thread you opened is resolved, then cast
+  one attributed, SHA-cited approval and stop. The approval is the
+  only write action — it never resolves threads, never replies, never
+  edits code, never merges. Trigger on "approve the PR when my
+  comments are resolved", "watch and approve", or
+  "/pr-watch-as-reviewer" — user-invoked only; model invocation is
+  disabled because an approval can transitively trigger an auto-merge.
 effort: medium
 argument-hint: "[<pr-number-or-url>]"
 disable-model-invocation: true
 ---
 
-# pr-approve-watch — reviewer-side watch-and-approve loop
+# pr-watch-as-reviewer — reviewer-side watch-and-approve loop
 
 > Follow `skills/progress-tracking/SKILL.md`: when this procedure has two or
 > more steps, seed one todo item per step before starting and mark each
 > complete as you go.
 
-`pr-approve-watch` is the reviewer-side mirror of `pr-watch`. You post
+`pr-watch-as-reviewer` is the reviewer-side mirror of
+`pr-watch-as-author`. You post
 review comments on a PR you are reviewing, then arm the skill. It polls
 until every review thread you opened is resolved. It then casts
 `gh pr review --approve` on your behalf and stops. Model invocation is
@@ -428,7 +429,7 @@ body text is never interpolated into the shell command:
 
 ```bash
 gh pr review --approve "$PR_URL" --body-file - <<'GH_APPROVE_EOF'
-Approved automatically by /pr-approve-watch: all <N> review threads opened by @<viewer> are resolved. Head commit at approval time: <approval-head-SHA>. Armed at head commit: <arm-head-SHA>.
+Approved automatically by /pr-watch-as-reviewer: all <N> review threads opened by @<viewer> are resolved. Head commit at approval time: <approval-head-SHA>. Armed at head commit: <arm-head-SHA>.
 GH_APPROVE_EOF
 ```
 

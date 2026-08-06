@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 53 skills: 11 pipeline entry-point slash commands, 7 standalone utilities (shipit, pr-open-comments, pr-watch, pr-approve-watch, groom-backlog, pr-cleanup, pr-verify), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 53 skills: 11 pipeline entry-point slash commands, 7 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -49,7 +49,7 @@ catalog into two flavors:
 
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but seven (`shipit`,
-`pr-open-comments`, `pr-watch`, `pr-approve-watch`, `groom-backlog`,
+`pr-open-comments`, `pr-watch-as-author`, `pr-watch-as-reviewer`, `groom-backlog`,
 `pr-cleanup`, and `pr-verify`) are standalone utilities. They land a
 reviewed PR, triage its unresolved review feedback, and watch it for new
 feedback. They also watch it as a reviewer, approve when your threads
@@ -219,7 +219,8 @@ argument shape.
   capture or upload failure degrades to a visible note with local paths,
   and the PR always opens. Leaves the worktree in place after opening the
   PR so you can iterate. Teardown waits until the PR merges or you ask.
-  Completion suggests arming `/pr-watch` once the PR is ready for review.
+  Completion suggests arming `/pr-watch-as-author` once the PR is ready
+  for review.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
   the missing upstream artifacts inline rather than hard-erroring.
 
@@ -319,7 +320,7 @@ QRSPI phase: a self-contained action a user runs on demand.
   cue-based auto-invocation is justified by the carve-out set plus the
   verification bar.
 
-### pr-watch
+### pr-watch-as-author
 
 - **Purpose:** Arm a bounded watch loop on a pull request: undraft it, take
   a baseline snapshot, then poll GitHub for new review feedback and triage
@@ -346,7 +347,7 @@ QRSPI phase: a self-contained action a user runs on demand.
   Model-invocable: it promotes a draft only on an unambiguous readiness cue
   and reports the promotion loudly, so cue-based auto-invocation is safe.
 
-### pr-approve-watch
+### pr-watch-as-reviewer
 
 - **Purpose:** Reviewer-side watch-and-approve. After you post review
   comments on a PR you are reviewing, it polls GitHub until every review
@@ -1022,8 +1023,8 @@ entry-point section above rather than repeating them here.
 | `eng-design-doc-review` | user (direct invocation). Pipeline DESIGN review gate (brief by reference) | Design review-gate brief + standalone audit. Dispatches a read-only Explore subagent |
 | `shipit` | user or model (direct invocation, on explicit ship intent) | Standalone: land a reviewed PR (not a QRSPI phase) |
 | `pr-open-comments` | user or model (direct invocation) | Standalone: triage unresolved PR review feedback (not a QRSPI phase) |
-| `pr-watch` | user or model (direct invocation) | Standalone: bounded PR review watch loop (not a QRSPI phase) |
-| `pr-approve-watch` | user (direct invocation) | Standalone: reviewer-side watch-and-approve (not a QRSPI phase) |
+| `pr-watch-as-author` | user or model (direct invocation) | Standalone: bounded PR review watch loop (not a QRSPI phase) |
+| `pr-watch-as-reviewer` | user (direct invocation) | Standalone: reviewer-side watch-and-approve (not a QRSPI phase) |
 | `groom-backlog` | user or model (direct invocation) | Standalone: groom a project backlog (not a QRSPI phase) |
 | `pr-cleanup` | user or model (direct invocation; Mode B only on explicit abandon intent) | Standalone: post-PR teardown (not a QRSPI phase) |
 | `pr-verify` | user or model (direct invocation) | Standalone: test-plan verification (not a QRSPI phase) |
