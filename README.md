@@ -49,7 +49,15 @@ load and still work.
 > Codex truncates. To keep the guard, remove the skill after installing:
 >
 > ```bash
-> rm -rf "$CODEX_HOME/plugins/cache"/*/team/*/skills/pr-approve-watch
+> CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+> found="$(find "$CODEX_HOME/plugins/cache" -type d -path "*/team/*/skills/pr-approve-watch" 2>/dev/null || true)"
+> if [ -z "$found" ]; then
+>   echo "pr-approve-watch: nothing installed under $CODEX_HOME/plugins/cache" >&2
+> else
+>   printf '%s\n' "$found" | while IFS= read -r dir; do
+>     rm -rf "${dir:?}" && echo "removed: $dir"
+>   done
+> fi
 > ```
 >
 > Re-running `codex plugin add` restores it.
