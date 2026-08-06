@@ -14,6 +14,17 @@
 #
 # Exit 0 = invariant holds. Non-zero (+ ::error::) = violation.
 #
+# The invariant is a MERGE precondition, not a "do it now" instruction. Team
+# assigns the version at land time, so `runtime changed + no bump` is the
+# EXPECTED state for a runtime PR's whole review lifetime — from the moment the
+# draft opens to the moment version-bump runs immediately before /shipit. The
+# verdict is therefore phrased as a condition on merging ("cannot merge until
+# version-bump runs at land time"), never as a bare imperative: an agent that
+# runs this script mid-review must read exit 1 as "this branch owes a bump
+# before it can merge", not as "bump now". Bumping early is itself a defect —
+# the number is computed against the base tip and goes stale as soon as another
+# PR lands, at which point the pre-merge guard denies the merge (PR #208).
+#
 # "Runtime" is the Runtime-vs-Development split in CLAUDE.md: the distributed
 # plugin is agents/, skills/, hooks/, and .claude-plugin/ *content*. A change
 # under .claude-plugin/ counts as runtime only when a non-version line changed —
@@ -97,9 +108,10 @@ if ! $runtime_changed && grep -qE "^($(IFS='|'; echo "${MANIFEST_DIRS[*]}"))/" <
   [ -n "$content" ] && runtime_changed=true
 fi
 
-# Enforce the invariant.
+# Enforce the invariant. The runtime-no-bump verdict states a merge
+# precondition, never "bump now" — see the timing note in the header.
 if $runtime_changed && ! $bumped; then
-  die "runtime files changed (distributed plugin) but the version was not bumped: $BASE_V -> $HEAD_V. Run version-bump."
+  die "runtime files changed (distributed plugin) but the version was not bumped: $BASE_V -> $HEAD_V — this branch cannot merge until version-bump runs at land time. Before land time this exit is the expected state, not something to remediate."
 fi
 if ! $runtime_changed && $bumped; then
   die "version bumped ($BASE_V -> $HEAD_V) but no runtime files changed — a dev-only PR must land with no bump (see docs/versioning.md, #120)."

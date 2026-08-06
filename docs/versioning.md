@@ -40,6 +40,26 @@ entirely. A PR is a diff plus `[Unreleased]` bullets until the moment it lands.
 `version-bump` runs only at land, and one PR lands at a time. The assigned
 number is thus always free. The serialization *is* the collision defense.
 
+### When "land time" is, exactly
+
+**The step immediately before the merge command** — not "when the work is
+done". Opening the draft PR, passing review, and going green are all *before*
+land time. A runtime PR therefore sits unbumped for its entire review
+lifetime, on purpose, and `.github/scripts/version-bump-required.sh` exits 1
+for all of it. **That exit 1 is the expected state, not a defect to
+remediate:** it states a precondition for *merging*, which is why the only
+thing that enforces it is the pre-merge guard, at the merge attempt.
+
+Bumping earlier is a defect in its own right, independent of the rule.
+`next-version.sh` computes `bump(main, level)`, so a number assigned at
+PR-open time is valid only against the `main` of that moment; the next PR to
+land makes it stale, and the pre-merge guard then denies the merge until
+someone recomputes it. This is what happened on PR #208, which opened as
+`v0.36.0 …` with a cut changelog section and had to be reverted by hand.
+`version-bump` accordingly fires only on **explicit land intent** — see its
+[land-intent precondition](../.claude/skills/version-bump/SKILL.md) — and the
+`/team` pipeline's PR gate forbids versioning outright.
+
 ## Only runtime changes bump (the runtime-vs-dev gate)
 
 The version, changelog, and release exist for **plugin end users**, so a bump is
