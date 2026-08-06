@@ -1018,7 +1018,7 @@ function gate(mergeWords) {
     BASE_SHA: baseTipOid,
   });
   if (succeeded(verdict) && (verdict.stdout ?? "").startsWith("OK:")) {
-    // Allow silently (pre-bash-guard.mjs precedent: no output on allow).
+    // Allow silently (check-registry-sync.mjs precedent: no output on allow).
     return;
   }
   const text =

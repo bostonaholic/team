@@ -395,7 +395,7 @@ describe.if(HAS_JQ)("verdict mapping through the real script", () => {
   test("allows silently on an OK verdict", () => {
     // Dev-only diff, no bump → the script prints
     // `OK: runtime_changed=false bumped=false (…)` and exits 0 — the hook
-    // allows with no output at all (pre-bash-guard.mjs's silent-allow
+    // allows with no output at all (check-registry-sync.mjs's silent-allow
     // precedent).
     const r = runHook(
       "gh pr merge 5 --squash",
