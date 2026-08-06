@@ -320,6 +320,40 @@ pre code {
   padding: 0;
 }
 
+/* --- mermaid diagrams ----------------------------------------------------- */
+/* assets/js/mermaid.js swaps each ```mermaid block for one of these figures.
+   Until it does — and if it never does, because the CDN is blocked — the block
+   stays on the page as a plain <pre>, styled above. */
+.mermaid-figure {
+  margin: 1em 0;
+  padding: 1rem;
+  overflow-x: auto;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+}
+
+/* A graph too wide for the 800px prose column breaks out of it and centers on
+   the viewport, so more is visible before the reader scrolls sideways. Both the
+   class and --diagram-width (the diagram's natural width) are set by mermaid.js
+   after render: a diagram that already fits the column never breaks out, and
+   one that does grows only as far as it actually needs. */
+.mermaid-figure.is-wide {
+  --breakout: min(
+    96vw,
+    1600px,
+    calc(var(--diagram-width, 1600px) + 2rem + 2px)
+  );
+
+  width: var(--breakout);
+  margin-left: calc((100% - var(--breakout)) / 2);
+}
+
+/* Diagrams render at natural size (see useMaxWidth in mermaid.js) and the
+   figure scrolls, so labels stay legible on a narrow screen. */
+.mermaid-figure svg {
+  height: auto;
+}
+
 /* --- tables (thin borders, header tint, no zebra) ------------------------ */
 table {
   width: 100%;

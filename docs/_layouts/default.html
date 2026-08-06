@@ -46,5 +46,9 @@
     <main class="container">{{ content }}</main>
     {% include footer.html %}
     <script src="{{ '/assets/js/theme-toggle.js' | relative_url }}" defer></script>
+    {%- comment -%} Renders ```mermaid fenced blocks client-side (Jekyll ships
+    them as plain code). The script no-ops on a page with no diagram, so the
+    mermaid bundle is fetched only where one exists. {%- endcomment -%}
+    <script src="{{ '/assets/js/mermaid.js' | relative_url }}" defer></script>
   </body>
 </html>

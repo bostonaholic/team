@@ -166,6 +166,70 @@ phase needs the prior phase's artifact on disk.
 WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → PR → SHIPPED
 ```
 
+### End-to-end flow
+
+The autonomous run ends at the draft PR. Everything past it is the human
+checkpoint: the human marks the PR ready, and the watch and resolution
+utilities carry it to a merge. Those utilities are standalone slash
+commands, not QRSPI phases — the orchestrator points at them and stops.
+Solid arrows are automatic. Dotted arrows need an explicit human
+instruction.
+
+```mermaid
+flowchart TD
+    DESC["Feature description<br/><i>ticket · issue URL<br/>free-form text</i>"] --> WT
+
+    subgraph AUTO["Autonomous run · no mid-run human gates"]
+        direction TB
+        WT["1 · WORKTREE<br/>orchestrator-emit<br/><i>branch + docs/plans/id/</i>"] --> Q
+        Q["2 · QUESTION<br/>questioner<br/><i>task.md · questions.md</i>"] --> R
+        R["3 · RESEARCH<br/>file-finder + researcher<br/>in parallel<br/><i>isolated: questions.md only</i>"] --> D
+        D["4 · DESIGN<br/>design-author<br/><i>design.md</i>"] --> DR
+        DR{"REVIEW gate<br/>read-only Explore subagent<br/><i>design-review-n.md</i>"}
+        DR -->|"REQUEST CHANGES<br/>redraft at revision n+1"| D
+        DR -->|"APPROVE or COMMENT"| S
+        S["5 · STRUCTURE<br/>structure-planner<br/><i>structure.md · no gate</i>"] --> P
+        P["6 · PLAN<br/>planner<br/><i>plan.md · no gate</i>"] --> TA
+        TA["7 · IMPLEMENT · test-first<br/>test-architect writes failing tests"] --> MG
+        MG{"MECHANICAL gate<br/>do all tests fail<br/>on assertions?"}
+        MG -->|"no · crashes or errors"| TA
+        MG -->|"yes"| IMP
+        IMP["implementer<br/><i>one vertical slice per commit</i>"] --> REV
+        REV["5 reviewers in parallel<br/>code · security · docs<br/>ux · verifier"] --> AG
+        AG{"AGGREGATE gate<br/>any Blocking<br/>or Major finding?"}
+        AG -->|"yes · fix the typed<br/>failure class"| IMP
+        AG -->|"clean"| PRP
+        PRP["8 · PR<br/>changelog · push<br/>gh pr create --draft"]
+    end
+
+    DR -.->|"revision cap 5"| HALT["Terminal halt<br/><i>no PR · the human takes over</i>"]
+    AG -.->|"round cap 5"| HALT
+
+    PRP --> DRAFT
+
+    subgraph HUMAN["Human checkpoint · PR review and resolution watching"]
+        direction TB
+        DRAFT["Draft PR open<br/><i>worktree stays in place</i>"]
+        DRAFT -.->|"/pr-verify · read-only"| PV["Test-plan verification<br/><i>READY · NEEDS ATTENTION · NOT READY</i>"]
+        DRAFT -.->|"the PR is ready for review"| WATCH
+        WATCH["/pr-watch-as-author<br/>undraft · baseline<br/>poll ~31 min for up to 24 h"] --> NEW
+        NEW{"poll result"}
+        NEW -->|"new feedback"| TRIAGE
+        TRIAGE["/pr-open-comments<br/>verify each unresolved thread<br/>against current code<br/>rate confidence"] --> CONF
+        CONF{"above 90% and<br/>passes every hard rule?"}
+        CONF -->|"yes"| APPLY["Apply · push · reply · resolve"]
+        CONF -->|"no"| PUNCH["Numbered punch list<br/><i>presents and stops for the user</i>"]
+        APPLY --> WATCH
+        PUNCH -.->|"user picks actions"| WATCH
+        NEW -->|"timeout · close<br/>repeated poll failures"| STOP["Watch stops<br/><i>reports and exits</i>"]
+        RW["Reviewer's own session<br/>/pr-watch-as-reviewer<br/><i>polls until their threads<br/>resolve, then approves once</i>"] -.-> NEW
+        NEW -->|"approved"| HANDOFF["Hands off to /shipit<br/><i>the watch never runs it</i>"]
+        HANDOFF -.->|"explicit ship intent"| SHIP
+        SHIP["/shipit<br/>push · wait for CI · squash-merge"] --> CLEANA["/pr-cleanup Mode A<br/>remove worktree<br/>resync default · delete branch"]
+        DRAFT -.->|"explicit abandon intent"| CLEANB["/pr-cleanup Mode B<br/>close the PR · delete every trace"]
+    end
+```
+
 ### Phase 1: Worktree
 
 **Action:** orchestrator-emit (the leading phase) **Predecessor:** none.
@@ -552,6 +616,136 @@ methodology that is also a user command.)
 
 For the full per-skill reference (all 53 skills, their arguments,
 consumers, and behaviors), see [skills.md](skills.md).
+
+### Skill interaction graph
+
+Every edge below is a reference one skill body makes to another skill —
+either loading it as methodology or handing off to it as the next action.
+Two things are deliberately left out. `progress-tracking` is referenced by
+nearly every multi-step skill, so drawing those ~20 edges would bury the
+rest of the graph. And a skill reached only through an agent's `skills:`
+frontmatter (`finding-files`, `researching-codebases`, `slicing-work`,
+`planning-implementation`, `implementing-slices`, `refactoring-to-patterns`,
+`product-thinking`) has no skill-to-skill edge to draw — the
+skill ↔ agent ↔ phase table in [skills.md](skills.md#skill--agent--phase)
+is the authority for those.
+
+```mermaid
+flowchart TB
+    subgraph ENTRY["Entry points · QRSPI phases"]
+        direction TB
+        TEAM["team"]
+        TQ["team-question"]
+        TR["team-research"]
+        TD["team-design"]
+        TS["team-structure"]
+        TP["team-plan"]
+        TI["team-implement"]
+        TPR["team-pr"]
+        TW["team-worktree"]
+        TF["team-fix"]
+        EDR["eng-design-doc-review"]
+    end
+
+    subgraph UTIL["Standalone utilities · post-PR and backlog"]
+        direction TB
+        WA["pr-watch-as-author"]
+        WR["pr-watch-as-reviewer"]
+        POC["pr-open-comments"]
+        SHIP["shipit"]
+        PCL["pr-cleanup"]
+        PV["pr-verify"]
+        GB["groom-backlog"]
+    end
+
+    subgraph PROTO["Protocol · artifacts and state"]
+        direction TB
+        QRSPI["qrspi-workflow"]
+        AFM["artifact-frontmatter"]
+        WI["worktree-isolation"]
+        TT["tracking-tickets"]
+    end
+
+    subgraph AUTHOR["Authoring · design and prose"]
+        direction TB
+        AD["authoring-designs"]
+        PRD["product-requirements-doc"]
+        DI["decomposing-intent"]
+        TDD["technical-design-doc"]
+        DD["documenting-decisions"]
+        WP["writing-prose"]
+        CL["changelog"]
+        GC["git-commit"]
+        ST["systems-thinking"]
+    end
+
+    subgraph REVIEW["Review · verdicts and standards"]
+        direction TB
+        CR["code-review"]
+        CC["conventional-comments"]
+        RST["review-severity-tiers"]
+        RS["reviewing-security"]
+        RD["reviewing-documentation"]
+        ES["engineering-standards"]
+        SP["solid-principles"]
+        VUX["verifying-ux"]
+        RQC["running-quality-checks"]
+        NA["nested-agents"]
+    end
+
+    subgraph TESTS["Testing and debugging"]
+        direction TB
+        TFD["test-first-development"]
+        TSTY["test-style"]
+        TDBF["test-driven-bug-fix"]
+        SD["systematic-debugging"]
+    end
+
+    TEAM --> TW & TPR & QRSPI & AFM & RST & CL & TT & WI & EDR
+    TQ --> DI & PRD & QRSPI
+    TD --> EDR
+    TI --> RST & TPR
+    TPR --> CL & GC & TT & VUX & WI
+    TW --> QRSPI & WI
+    TF --> TW & TDBF & SD & TT & WI
+    EDR --> TEAM & WP
+
+    TPR -.->|"points at, does not run"| WA
+    WA --> POC & TT
+    WA -.->|"hands off on approval"| SHIP
+    WR --> POC
+    SHIP -->|"on a merge that landed"| PCL
+    PV --> NA & RQC
+    WI --> PCL & TW
+
+    QRSPI --> AFM & RST & TEAM & WI
+    AFM --> QRSPI & PRD & WI
+    DI --> AFM & PRD
+    AD --> AFM & PRD & ST & WP
+    ST --> CR
+    CR --> CC & ES & RST & RS & SP & TSTY & WP
+    ES --> CC & SP
+    TSTY --> CR & TFD
+    TFD --> TSTY
+    TDBF --> SD
+    CL --> WP
+    GC --> WP
+    DD --> WP
+    PRD --> WP
+    TDD --> WP
+    RD --> WP
+    WP --> RD
+```
+
+Reading the graph: `team` is the hub for the whole run, `writing-prose` is
+the sink every authoring skill drains into, and `code-review` is the hub of
+the review cluster. The one true cycle is `writing-prose ↔
+reviewing-documentation` — the bar for prose Team writes is the same bar it
+holds other prose to. Four nodes are drawn with no edges at all:
+`team-research`, `team-structure`, and `team-plan` reference nothing but
+`progress-tracking` (their methodology reaches them through the dispatched
+agent's frontmatter), and `groom-backlog` is a user action on the tracker,
+upstream of any pipeline run.
 
 ### Design guidelines
 
