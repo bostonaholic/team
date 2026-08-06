@@ -271,3 +271,34 @@ describe("pr-watch-as-reviewer skill: PENDING-review check is a fenced snippet",
     expect(/```bash[\s\S]{0,400}reviews\(last: 1, states: \[PENDING\]\)/.test(body())).toBe(true);
   });
 });
+
+describe("pr-watch-as-reviewer skill: README Codex removal command targets the guarded skill", () => {
+  // Codex ignores disable-model-invocation, so the README tells Codex users
+  // to remove this skill after installing. A rename or move of the skill
+  // must fail the build until the README's removal path moves with it.
+  const README = join(REPO_ROOT, "README.md");
+
+  // Defensive read: missing file → "" so assertions FAIL (not throw).
+  function readmeBody(): string {
+    return existsSync(README) ? read(README) : "";
+  }
+
+  test("the rm -rf path names exactly one skill, it exists, and its SKILL.md disables model invocation", () => {
+    const readme = readmeBody();
+    // Guard: a missing README must fail cleanly, not vacuously pass.
+    expect(readme.length).toBeGreaterThan(0);
+
+    // Extract the trailing skills/<name> path component from rm -rf lines
+    // only — the path shape, never the surrounding prose, so a README
+    // rewrite that keeps the path correct stays green.
+    const removals = [...readme.matchAll(/rm -rf .*\/skills\/([A-Za-z0-9._-]+)/g)];
+    expect(removals.length).toBe(1);
+
+    const targetName = removals[0]?.[1] ?? "";
+    const targetSkill = join(REPO_ROOT, "skills", targetName, "SKILL.md");
+    expect(existsSync(targetSkill)).toBe(true);
+
+    const targetFrontmatter = existsSync(targetSkill) ? frontmatter(read(targetSkill)) : "";
+    expect(/^disable-model-invocation:\s*true\s*$/m.test(targetFrontmatter)).toBe(true);
+  });
+});
