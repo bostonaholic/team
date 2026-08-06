@@ -73,7 +73,7 @@ Four agents (`researcher`, `implementer`, `code-reviewer`, `security-reviewer`) 
 
 ## Skills (53)
 
-See `skills/*/SKILL.md`. Entry point skills double as slash commands. Seven of them are standalone slash-command utilities that are not QRSPI phases. `shipit` lands a reviewed PR. `pr-open-comments` triages unresolved PR review feedback. `pr-watch` is a bounded PR review watch loop. `pr-approve-watch` is the reviewer-side watch-and-approve. `groom-backlog` grooms a project backlog with a board-level pass plus per-item promotion. `pr-cleanup` tears down local and remote branch state after a PR is merged or abandoned. `pr-verify` verifies a PR's test plan with evidence-rated verdicts. Methodology skills are loaded by agents. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
+See `skills/*/SKILL.md`. Entry point skills double as slash commands. Seven of them are standalone slash-command utilities that are not QRSPI phases. `shipit` lands a reviewed PR. `pr-open-comments` triages unresolved PR review feedback. `pr-watch-as-author` is a bounded PR review watch loop. `pr-watch-as-reviewer` is the reviewer-side watch-and-approve. `groom-backlog` grooms a project backlog with a board-level pass plus per-item promotion. `pr-cleanup` tears down local and remote branch state after a PR is merged or abandoned. `pr-verify` verifies a PR's test plan with evidence-rated verdicts. Methodology skills are loaded by agents. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
 
 ## Hooks
 

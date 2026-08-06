@@ -363,5 +363,5 @@ Report the outcome (draft PR URL and commit hash). When the screenshot
 upload was skipped for lack of an authenticated session, the report also
 carries the one-time sign-in instruction (see Screenshot Upload step 2).
 
-Next: say "the PR is ready for review" (or run /pr-watch with that
-wording) to arm the watch.
+Next: say "the PR is ready for review" (or run /pr-watch-as-author with
+that wording) to arm the watch.

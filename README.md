@@ -40,7 +40,7 @@ Two differences worth knowing. Skills arrive **namespaced** — ask for
 all 53 skills present it shortens the longer descriptions; the skills still
 load and still work.
 
-> **`team:pr-approve-watch` loses a safety guard on Codex.** On Claude Code
+> **`team:pr-watch-as-reviewer` loses a safety guard on Codex.** On Claude Code
 > that skill sets `disable-model-invocation`, so only a person can start it —
 > its approval can transitively merge a PR that has auto-merge enabled.
 > **Codex ignores that key**, so the model can invoke it, in every session,
@@ -49,14 +49,14 @@ load and still work.
 > Codex truncates. To keep the guard, remove the skill after installing:
 >
 > ```bash
-> rm -rf "$CODEX_HOME/plugins/cache"/*/team/*/skills/pr-approve-watch
+> rm -rf "$CODEX_HOME/plugins/cache"/*/team/*/skills/pr-watch-as-reviewer
 > ```
 >
 > Re-running `codex plugin add` restores it.
 
 The `/team-*` pipeline commands load on Codex but cannot dispatch Claude
 Code agents there, so they will not run the pipeline. The standalone
-utilities — `team:shipit`, `team:pr-watch`, `team:pr-open-comments`,
+utilities — `team:shipit`, `team:pr-watch-as-author`, `team:pr-open-comments`,
 `team:groom-backlog`, `team:code-review` — work as they do on Claude Code.
 
 </details>
@@ -152,7 +152,7 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 ## Components
 
 - **13 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
-- **53 entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch`, `/pr-approve-watch`, `/groom-backlog`, `/pr-cleanup`, and `/pr-verify` utilities, and shared methodologies
+- **53 entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch-as-author`, `/pr-watch-as-reviewer`, `/groom-backlog`, `/pr-cleanup`, and `/pr-verify` utilities, and shared methodologies
 - **3 hooks** in `hooks/`: `docs/plans/`-aware compaction resilience and plugin-file validation
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
 - **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `design.md` also carries `revision`, and review verdicts live in `design-review-<n>.md`. Live in-session coordination uses TodoWrite.

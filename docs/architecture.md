@@ -301,8 +301,8 @@ artifact-layout note in section 2), the PR body also gets a
 user-attachments pipeline. The worktree stays in place after the PR
 opens. Teardown is deferred until the PR merges or the user asks, so the
 branch remains available for iteration. Completion points at the
-standalone `/pr-watch` utility for watching the PR once it is ready for
-review.
+standalone `/pr-watch-as-author` utility for watching the PR once it is
+ready for review.
 
 ## 4. Agent roster
 

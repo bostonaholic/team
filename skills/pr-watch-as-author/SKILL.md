@@ -1,24 +1,24 @@
 ---
-name: pr-watch
+name: pr-watch-as-author
 description: |
-  Arm a bounded watch loop on a pull request: undraft it when the cue
-  clearly says it is ready (an ambiguous cue watches the draft in place),
-  take a baseline snapshot, then poll GitHub in ~31-minute cycles for up
-  to 24 hours and triage new review feedback as it arrives. Stops on
+  Watch your own pull request for review feedback: undraft it when the
+  cue clearly says it is ready (an ambiguous cue watches the draft),
+  take a baseline snapshot, then poll GitHub in ~31-minute cycles for
+  up to 24 hours and triage new feedback as it arrives. Stops on
   approval, merge, close, timeout, user interrupt, or repeated poll
   failures; on approval it hands off to /shipit and never runs it.
   Trigger on "the PR is ready for review", "watch the PR",
-  "watch this PR and fix comments", or "/pr-watch".
+  "watch this PR and fix comments", or "/pr-watch-as-author".
 effort: medium
 argument-hint: "[<pr-number-or-url>]"
 ---
 
-# pr-watch — bounded PR review watch loop
+# pr-watch-as-author — bounded PR review watch loop
 
 > Follow `skills/progress-tracking/SKILL.md`: this procedure has more than two steps —
 > seed one todo item per step below before starting and mark each complete as you go.
 
-`pr-watch` closes the gap between "PR open" and "ship it". It promotes the
+`pr-watch-as-author` closes the gap between "PR open" and "ship it". It promotes the
 PR out of draft, takes a baseline snapshot, and polls GitHub on a bounded
 cycle. When new review feedback arrives, it runs the triage procedure in
 `skills/pr-open-comments/SKILL.md`. The session stays dedicated to the
@@ -43,8 +43,8 @@ the current branch (`gh pr view`). Refuse up front, before any other work:
 ### 1. Arm
 
 - Promote a draft only when the arming cue clearly expresses readiness —
-  "the PR is ready for review", or `/pr-watch` invoked with that stated
-  intent. On such a cue, run `gh pr ready` and report the promotion
+  "the PR is ready for review", or `/pr-watch-as-author` invoked with
+  that stated intent. On such a cue, run `gh pr ready` and report the promotion
   loudly — the user must see that the draft went public.
 - When the cue is ambiguous about readiness, such as "watch the PR", and
   the PR is still a draft, watch the draft in place and say so. Never

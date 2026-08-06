@@ -9,7 +9,7 @@
 //
 // L2 and not L5: grooming drives a live tracker over the network and mutates
 // shared state — the same heavy external state that keeps `shipit`,
-// `pr-open-comments`, and `pr-watch` off L5. It cannot be honestly driven in
+// `pr-open-comments`, and `pr-watch-as-author` off L5. It cannot be honestly driven in
 // one offline `claude -p` run, so its load-bearing rules are pinned here as
 // prose assertions, where they cost milliseconds and nothing.
 //

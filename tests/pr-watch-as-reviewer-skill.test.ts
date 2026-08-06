@@ -1,7 +1,7 @@
-// tests/pr-approve-watch-skill.test.ts
+// tests/pr-watch-as-reviewer-skill.test.ts
 //
-// L2 tripwire (free, deterministic): fences the `pr-approve-watch` RUNTIME
-// skill (skills/pr-approve-watch/SKILL.md) — the reviewer-side standalone
+// L2 tripwire (free, deterministic): fences the `pr-watch-as-reviewer` RUNTIME
+// skill (skills/pr-watch-as-reviewer/SKILL.md) — the reviewer-side standalone
 // watch-and-approve utility distributed to Team's users. Arming resolves the
 // base repo from the canonical PR URL (never head-repository fields), fetches
 // the viewer login once, refuses self-approval and zero-thread arms, then
@@ -25,8 +25,8 @@ import { join } from "node:path";
 import { frontmatter, read } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
-// pr-approve-watch is a RUNTIME skill — under skills/ (distributed), not .claude/.
-const SKILL = join(REPO_ROOT, "skills", "pr-approve-watch", "SKILL.md");
+// pr-watch-as-reviewer is a RUNTIME skill — under skills/ (distributed), not .claude/.
+const SKILL = join(REPO_ROOT, "skills", "pr-watch-as-reviewer", "SKILL.md");
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
 function body(): string {
@@ -40,19 +40,20 @@ function flat(text: string): string {
   return text.replace(/\n/g, " ");
 }
 
-describe("pr-approve-watch skill: runtime standalone utility frontmatter", () => {
+describe("pr-watch-as-reviewer skill: runtime standalone utility frontmatter", () => {
   test("skill file lives under runtime skills/ (distributed)", () => {
     expect(existsSync(SKILL)).toBe(true);
   });
 
-  test("frontmatter declares name: pr-approve-watch", () => {
-    expect(/^name:\s*pr-approve-watch\s*$/m.test(fm())).toBe(true);
+  test("frontmatter declares name: pr-watch-as-reviewer", () => {
+    expect(/^name:\s*pr-watch-as-reviewer\s*$/m.test(fm())).toBe(true);
   });
 
-  test("description carries trigger phrases incl. the literal /pr-approve-watch", () => {
+  test("description carries trigger phrases incl. the literal /pr-watch-as-reviewer", () => {
     const f = flat(fm());
     expect(/description:.*Trigger on/i.test(f)).toBe(true);
-    expect(f).toContain("/pr-approve-watch");
+    // Pin the FULL literal — a bare prefix of the name would false-pass.
+    expect(f).toContain("/pr-watch-as-reviewer");
   });
 
   test("frontmatter carries argument-hint (PR number or URL)", () => {
@@ -71,7 +72,7 @@ describe("pr-approve-watch skill: runtime standalone utility frontmatter", () =>
   });
 });
 
-describe("pr-approve-watch skill: base-repo resolution from the canonical URL", () => {
+describe("pr-watch-as-reviewer skill: base-repo resolution from the canonical URL", () => {
   test("arm resolves the PR with gh pr view --json url,number", () => {
     const t = body();
     expect(t).toContain("gh pr view");
@@ -86,13 +87,13 @@ describe("pr-approve-watch skill: base-repo resolution from the canonical URL", 
   });
 });
 
-describe("pr-approve-watch skill: tracked set and gate", () => {
+describe("pr-watch-as-reviewer skill: tracked set and gate", () => {
   test("the arm query fetches viewer { login }", () => {
     expect(body()).toContain("viewer { login }");
   });
 });
 
-describe("pr-approve-watch skill: bounded cycle mechanics", () => {
+describe("pr-watch-as-reviewer skill: bounded cycle mechanics", () => {
   test("sleeps in bounded chunks: the literal sleep 600 appears", () => {
     expect(body()).toContain("sleep 600");
   });
@@ -114,7 +115,7 @@ describe("pr-approve-watch skill: bounded cycle mechanics", () => {
   });
 });
 
-describe("pr-approve-watch skill: approve step", () => {
+describe("pr-watch-as-reviewer skill: approve step", () => {
   test("the approval is cast with gh pr review --approve", () => {
     expect(body()).toContain("gh pr review --approve");
   });
@@ -128,7 +129,7 @@ describe("pr-approve-watch skill: approve step", () => {
   });
 });
 
-describe("pr-approve-watch skill: prompt-injection guards (projected reads)", () => {
+describe("pr-watch-as-reviewer skill: prompt-injection guards (projected reads)", () => {
   test("the arm-time gh pr view call carries a --jq projection", () => {
     const t = body();
     // Guard: an empty body must fail, not vacuously pass.
@@ -148,15 +149,24 @@ describe("pr-approve-watch skill: prompt-injection guards (projected reads)", ()
   });
 });
 
-describe("pr-approve-watch skill: head-SHA drift check at approval", () => {
+describe("pr-watch-as-reviewer skill: head-SHA drift check at approval", () => {
   test("approval body names both SHAs (arm-time and approval-time)", () => {
     const t = body();
     expect(t).toContain("<approval-head-SHA>");
     expect(t).toContain("<arm-head-SHA>");
   });
+
+  test("approval-body template attributes the cast to /pr-watch-as-reviewer (full literal)", () => {
+    const t = body();
+    // Guard: an empty body must fail, not vacuously pass.
+    expect(t.length).toBeGreaterThan(0);
+    // Pin the FULL literal in the approval template — a bare prefix of the
+    // name would false-pass.
+    expect(t).toContain("Approved automatically by /pr-watch-as-reviewer");
+  });
 });
 
-describe("pr-approve-watch skill: approval body on stdin", () => {
+describe("pr-watch-as-reviewer skill: approval body on stdin", () => {
   test("the approval body is passed via --body-file - with a quoted heredoc", () => {
     const t = body();
     expect(t).toContain("--body-file -");
@@ -172,19 +182,19 @@ describe("pr-approve-watch skill: approval body on stdin", () => {
   });
 });
 
-describe("pr-approve-watch skill: auto-merge is re-read every poll (merge-safety never stale)", () => {
+describe("pr-watch-as-reviewer skill: auto-merge is re-read every poll (merge-safety never stale)", () => {
   test("the poll query selects autoMergeRequest { enabledAt }", () => {
     expect(body()).toContain("autoMergeRequest { enabledAt }");
   });
 });
 
-describe("pr-approve-watch skill: pagination is fail-closed", () => {
+describe("pr-watch-as-reviewer skill: pagination is fail-closed", () => {
   test("the thread query carries the hasNextPage pagination boundary", () => {
     expect(body()).toContain("hasNextPage");
   });
 });
 
-describe("pr-approve-watch skill: argument validation before shell interpolation", () => {
+describe("pr-watch-as-reviewer skill: argument validation before shell interpolation", () => {
   test("a PR number must match ^[0-9]+$", () => {
     expect(body()).toContain("^[0-9]+$");
   });
@@ -235,7 +245,7 @@ describe("pr-approve-watch skill: argument validation before shell interpolation
   });
 });
 
-describe("pr-approve-watch skill: untrusted-input surface", () => {
+describe("pr-watch-as-reviewer skill: untrusted-input surface", () => {
   test("the unused isOutdated field is no longer fetched", () => {
     const t = body();
     // Guard: an empty body must fail, not vacuously pass the absence check.
@@ -244,7 +254,7 @@ describe("pr-approve-watch skill: untrusted-input surface", () => {
   });
 });
 
-describe("pr-approve-watch skill: GraphQL variable flags are literal-string safe", () => {
+describe("pr-watch-as-reviewer skill: GraphQL variable flags are literal-string safe", () => {
   test("owner and repo pass with -f (always literal); only the Int number uses typed -F", () => {
     const t = body();
     // Guard: an empty body must fail, not vacuously pass the absence check.
@@ -256,7 +266,7 @@ describe("pr-approve-watch skill: GraphQL variable flags are literal-string safe
   });
 });
 
-describe("pr-approve-watch skill: PENDING-review check is a fenced snippet", () => {
+describe("pr-watch-as-reviewer skill: PENDING-review check is a fenced snippet", () => {
   test("the pending-review GraphQL check appears in a fenced code block", () => {
     expect(/```bash[\s\S]{0,400}reviews\(last: 1, states: \[PENDING\]\)/.test(body())).toBe(true);
   });

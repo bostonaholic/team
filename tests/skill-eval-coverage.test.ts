@@ -29,8 +29,8 @@
 // (heavy external state — an open PR, CI, the GitHub API — same reason
 // team-pr is demoted; no protocol.test.ts sentinel, that convention is for
 // the pipeline-skill demotions):
-//   shipit, pr-open-comments, pr-watch, pr-approve-watch, groom-backlog,
-//   pr-cleanup, pr-verify
+//   shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer,
+//   groom-backlog, pr-cleanup, pr-verify
 
 import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
@@ -496,52 +496,52 @@ describe("L2 coverage: pr-open-comments (executable utility, not L5)", () => {
   });
 });
 
-// `pr-watch` polls a live PR for up to 24 hours and reacts to reviewer
-// activity — heavy external state (an open PR, CI, reviewers, wall-clock
-// time) that cannot be honestly driven in a single offline `claude -p` eval,
-// the same reason `shipit` and `team-pr` are demoted. Its behavioral contract
-// is pinned by its dedicated L2 tripwire, tests/pr-watch-skill.test.ts, not
-// an L5 eval.
+// `pr-watch-as-author` polls a live PR for up to 24 hours and reacts to
+// reviewer activity — heavy external state (an open PR, CI, reviewers,
+// wall-clock time) that cannot be honestly driven in a single offline
+// `claude -p` eval, the same reason `shipit` and `team-pr` are demoted. Its
+// behavioral contract is pinned by its dedicated L2 tripwire,
+// tests/pr-watch-as-author-skill.test.ts, not an L5 eval.
 
-describe("L2 coverage: pr-watch (executable utility, not L5)", () => {
-  test("pr-watch has no evals/fixtures/pr-watch/ directory (no L5 eval)", () => {
-    expect(existsSync(fixtureDir("pr-watch"))).toBe(false);
+describe("L2 coverage: pr-watch-as-author (executable utility, not L5)", () => {
+  test("pr-watch-as-author has no evals/fixtures/pr-watch-as-author/ directory (no L5 eval)", () => {
+    expect(existsSync(fixtureDir("pr-watch-as-author"))).toBe(false);
   });
 
-  test("pr-watch has no tests/pr-watch.evals.ts file (no L5 eval)", () => {
-    expect(existsSync(evalsFilePath("pr-watch"))).toBe(false);
+  test("pr-watch-as-author has no tests/pr-watch-as-author.evals.ts file (no L5 eval)", () => {
+    expect(existsSync(evalsFilePath("pr-watch-as-author"))).toBe(false);
   });
 
-  test("pr-watch is pinned by its dedicated L2 tripwire tests/pr-watch-skill.test.ts", () => {
-    expect(existsSync(join(TESTS_ROOT, "pr-watch-skill.test.ts"))).toBe(true);
+  test("pr-watch-as-author is pinned by its dedicated L2 tripwire tests/pr-watch-as-author-skill.test.ts", () => {
+    expect(existsSync(join(TESTS_ROOT, "pr-watch-as-author-skill.test.ts"))).toBe(true);
   });
 });
 
-// `pr-approve-watch` polls a live PR for up to 24 hours and waits on another
-// user's thread-resolution activity — heavy external state (an open PR,
-// another user resolving threads, wall-clock time) that cannot be honestly
-// driven in a single offline `claude -p` eval, the same reason `pr-watch`,
-// `shipit`, and `team-pr` are demoted. Its behavioral contract is pinned by
-// its dedicated L2 tripwire, tests/pr-approve-watch-skill.test.ts, not an L5
-// eval.
+// `pr-watch-as-reviewer` polls a live PR for up to 24 hours and waits on
+// another user's thread-resolution activity — heavy external state (an open
+// PR, another user resolving threads, wall-clock time) that cannot be
+// honestly driven in a single offline `claude -p` eval, the same reason
+// `pr-watch-as-author`, `shipit`, and `team-pr` are demoted. Its behavioral
+// contract is pinned by its dedicated L2 tripwire,
+// tests/pr-watch-as-reviewer-skill.test.ts, not an L5 eval.
 
-describe("L2 coverage: pr-approve-watch (executable utility, not L5)", () => {
-  test("pr-approve-watch has no evals/fixtures/pr-approve-watch/ directory (no L5 eval)", () => {
-    expect(existsSync(fixtureDir("pr-approve-watch"))).toBe(false);
+describe("L2 coverage: pr-watch-as-reviewer (executable utility, not L5)", () => {
+  test("pr-watch-as-reviewer has no evals/fixtures/pr-watch-as-reviewer/ directory (no L5 eval)", () => {
+    expect(existsSync(fixtureDir("pr-watch-as-reviewer"))).toBe(false);
   });
 
-  test("pr-approve-watch has no tests/pr-approve-watch.evals.ts file (no L5 eval)", () => {
-    expect(existsSync(evalsFilePath("pr-approve-watch"))).toBe(false);
+  test("pr-watch-as-reviewer has no tests/pr-watch-as-reviewer.evals.ts file (no L5 eval)", () => {
+    expect(existsSync(evalsFilePath("pr-watch-as-reviewer"))).toBe(false);
   });
 
-  test("pr-approve-watch is pinned by its dedicated L2 tripwire tests/pr-approve-watch-skill.test.ts", () => {
-    expect(existsSync(join(TESTS_ROOT, "pr-approve-watch-skill.test.ts"))).toBe(true);
+  test("pr-watch-as-reviewer is pinned by its dedicated L2 tripwire tests/pr-watch-as-reviewer-skill.test.ts", () => {
+    expect(existsSync(join(TESTS_ROOT, "pr-watch-as-reviewer-skill.test.ts"))).toBe(true);
   });
 });
 
 // `groom-backlog` grooms a project backlog on a live tracker — heavy external
 // state (a project board, its issues and comment threads, the GitHub API) that
-// it also mutates, the same reason `shipit`, `pr-open-comments`, and `pr-watch`
+// it also mutates, the same reason `shipit`, `pr-open-comments`, and `pr-watch-as-author`
 // are demoted. It cannot be honestly driven in a single offline `claude -p`
 // eval. Its behavioral contract is pinned by its dedicated L2 tripwire,
 // tests/groom-backlog-skill.test.ts, not an L5 eval.

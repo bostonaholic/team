@@ -105,11 +105,11 @@ describe("dev install: codex harness", () => {
   });
 
   test("install announces that Codex ignores disable-model-invocation", () => {
-    // pr-approve-watch installs like any other skill here, so the run has to
-    // say that its approval can merge a PR — the guard it relies on is
+    // pr-watch-as-reviewer installs like any other skill here, so the run has
+    // to say that its approval can merge a PR — the guard it relies on is
     // honored by Claude Code and ignored by Codex.
     const { output } = run(INSTALL, newHome());
-    expect(output).toContain("pr-approve-watch");
+    expect(output).toContain("pr-watch-as-reviewer");
     expect(output).toContain("disable-model-invocation");
   });
 

@@ -148,7 +148,7 @@ describe("skill count reconciliation (-> 53: pr-verify added to the 52-skill bas
 
   test("filesystem has exactly 53 SKILL.md files declaring a name:", () => {
     // 52-skill baseline (11 pipeline entry points + 6 standalone utilities —
-    // shipit, pr-open-comments, pr-watch, pr-approve-watch, groom-backlog,
+    // shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog,
     // pr-cleanup — plus 35 methodology skills) plus pr-verify (the standalone
     // test-plan verification utility), which takes the count to 53.
     const dirs = readdirSync(SKILLS_DIR, { withFileTypes: true })
