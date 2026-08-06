@@ -94,29 +94,14 @@ describe("ci workflows: pr-title-version.sh decides by merge-base, not base tip 
   });
 });
 
-describe("ci workflows: runtime-vs-dev bump gate is wired on PRs (#120)", () => {
-  const text = readIf(VERSION_BUMP_CHECK);
-
-  test("version-bump-check.yml exists", () => {
-    expect(existsSync(VERSION_BUMP_CHECK)).toBe(true);
-  });
-
-  test("runs on pull_request to main", () => {
-    expect(/pull_request:/.test(text)).toBe(true);
-    expect(/branches:\s*\[main\]/.test(text)).toBe(true);
-  });
-
-  test("delegates the decision to version-bump-required.sh", () => {
-    expect(text).toContain(".github/scripts/version-bump-required.sh");
-  });
-
-  test("checks out full history so merge-base resolves", () => {
-    expect(/fetch-depth:\s*0/.test(text)).toBe(true);
-  });
-
-  test("passes the head and base SHAs the script reads", () => {
-    expect(text).toContain("github.event.pull_request.head.sha");
-    expect(text).toContain("github.event.pull_request.base.sha");
+describe("ci workflows: the always-red runtime-vs-dev bump check is retired (#120)", () => {
+  test("version-bump-check.yml no longer exists", () => {
+    // Team assigns the version at land time, so the workflow was structurally
+    // red for the whole review lifetime of every runtime PR. The invariant is
+    // now enforced at the merge attempt by the pre-merge dev hook
+    // (.claude/hooks/pre-merge-guard.mjs) plus early fail-fast runs inside the
+    // dev version-bump skill — no workflow replaces it (binding user ruling).
+    expect(existsSync(VERSION_BUMP_CHECK)).toBe(false);
   });
 });
 

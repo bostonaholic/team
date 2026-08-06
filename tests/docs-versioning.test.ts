@@ -100,3 +100,26 @@ describe("doc drift guard: no in-tree doc points at version-gate.yml (Slice 4)",
     });
   }
 });
+
+describe("doc drift guard: no in-tree doc points at version-bump-check.yml (#120 retirement)", () => {
+  // The always-red workflow is deleted; the pre-merge dev hook plus
+  // version-bump's early runs enforce the invariant now. Retired-check history
+  // in docs/versioning.md is written as a paraphrase that never names the
+  // file, so no carve-out is needed there — CHANGELOG.md stays excluded, as
+  // above, because it legitimately records history. The name survives only in
+  // the deletion pin's comment (tests/ci-workflows.test.ts) and git history.
+  const VB_SKILL = join(REPO_ROOT, ".claude", "skills", "version-bump", "SKILL.md");
+  const docs: [string, string][] = [
+    ["docs/versioning.md", readIf(VERSIONING_DOC)],
+    ["CLAUDE.md", readIf(CLAUDE_MD)],
+    ["README.md", readIf(README_MD)],
+    ["AGENTS.md", readIf(AGENTS_MD)],
+    [".claude/skills/version-bump/SKILL.md", readIf(VB_SKILL)],
+  ];
+
+  for (const [name, text] of docs) {
+    test(`${name} does not reference version-bump-check.yml`, () => {
+      expect(text).not.toContain("version-bump-check.yml");
+    });
+  }
+});

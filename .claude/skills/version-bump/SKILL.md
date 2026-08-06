@@ -65,25 +65,76 @@ Using the **Runtime vs. Development** split in `CLAUDE.md`:
   `evals/`, `package.json`/`bun.lock` tooling — everything that only validates or
   builds the plugin.
 
-Check what this PR actually changed:
+Take a quick orientation look at what this PR actually changed:
 
 ```bash
-.github/scripts/version-bump-required.sh   # HEAD_SHA/BASE_SHA from the PR; deterministic gate
-# or, locally, just look:
 git diff origin/main...HEAD --name-only
 ```
 
-- **No runtime files changed → DO NOT BUMP.** Skip every step below. Leave the
-  version untouched, do **not** cut the changelog, and land with the plain
-  conventional title (`<type>: <subject>`). Precedent: `710d44c` (CI), `7d2e218`
-  (docs), `0821129` (evals `feat:`) all landed plain. Then go straight to
-  `/shipit`.
-- **Runtime files changed → continue to step 1.**
+The quick look is orientation only — it never decides the exit. The decision
+comes from **the invariant run**, the same invocation contract the pre-merge
+guard enforces at merge time:
 
-This is a hard gate, not a judgment call. The same check runs deterministically
-in CI, through `.github/scripts/version-bump-required.sh`, which
-`tests/version-bump-required.test.ts` pins. It **fails the PR** if a dev-only
-diff bumped, or a runtime diff did not.
+1. Resolve the default branch by asking GitHub (`gh repo view`), falling
+   back to the local `origin/HEAD` ref — the same order the pre-merge guard
+   uses: GitHub is authoritative, and the local ref goes stale on an
+   upstream default-branch rename. Never a guessed `main`, which could
+   measure against the wrong base. If both fail, stop: no verdict.
+2. `git fetch origin <default>` — the fetch must succeed. Never degrade to a
+   stale base for a verdict.
+3. Up-to-date precondition: the fetched `origin/<default>` tip must be an
+   ancestor of the branch tip. If the branch is behind, **stop**: rebase onto
+   `origin/<default>` and re-enter step 0 — a rebase can change both verdict
+   inputs.
+4. Run the script with `HEAD_SHA` = the local branch tip and `BASE_SHA` = the
+   fetched `origin/<default>` **tip** — the tip, never a pre-computed
+   merge-base, and never a hand-rolled two-dot diff (the script reduces the
+   pair to the fork point itself).
+
+```bash
+DEFAULT=$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name 2>/dev/null)
+DEFAULT=${DEFAULT:-$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|^refs/remotes/origin/||')}
+[ -n "$DEFAULT" ] || { echo "cannot resolve the default branch — no verdict"; exit 1; }
+git fetch origin "$DEFAULT" || { echo "fetch failed — no verdict"; exit 1; }
+git merge-base --is-ancestor "refs/remotes/origin/$DEFAULT" HEAD \
+  || { echo "behind base — rebase onto origin/$DEFAULT, re-enter step 0"; exit 1; }
+HEAD_SHA=$(git rev-parse HEAD) BASE_SHA=$(git rev-parse "refs/remotes/origin/$DEFAULT") \
+  .github/scripts/version-bump-required.sh
+```
+
+**Read the outcome by exact output match — the signal rule, default-deny:**
+
+- Exit 0, stdout starting `OK: runtime_changed=false bumped=false` → dev-only
+  and final. **DO NOT BUMP.** Skip every step below. Leave the version
+  untouched, do **not** cut the changelog, and land with the plain
+  conventional title (`<type>: <subject>`). On a re-entry whose PR title
+  still carries a stale `vX.Y.Z` prefix from an earlier bump, strip it now
+  (`gh pr edit --title`) — the title backstop never strips a stale prefix,
+  and this is the one step-8 action a no-bump exit still owes (the wrongful-
+  bump recovery in docs/versioning.md lands here). Precedent: `710d44c`
+  (CI), `7d2e218` (docs), `0821129` (evals `feat:`) all landed plain. Then go
+  straight to `/shipit`. This exit **requires** that OK line — the quick look
+  alone never authorizes it.
+- Exit 0, stdout starting `OK: runtime_changed=true bumped=true` → already
+  bumped (a recovery re-entry). Never re-bump — proceed to `/shipit`.
+- Exit 1, verdict ending `Run version-bump.` → bump warranted.
+  - On a branch with **no** `chore(version)` commit: **continue to step 1**.
+    This is the only exit-1 signal that ever means continue.
+  - On a branch **already carrying** a `chore(version)` commit: the bump went
+    stale (a rebase moved the fork point). Stop — drop the bump commit, undo
+    the changelog cut, reset the title, and re-enter step 0.
+- Exit 1, verdict containing `must land with no bump` → wrongful bump. Stop —
+  drop the commit, undo the cut, and re-run step 0.
+- **Anything else** — a non-semver version, a merge-base or diff failure, or
+  unrecognized output — stops in both directions. Surface the message
+  verbatim. A hard script error never means "keep going".
+
+This is a hard gate, not a judgment call. The check runs early here (this step
+and step 7, while recovery is still purely local) and is enforced mechanically
+at merge time by the dev pre-merge guard
+(`.claude/hooks/pre-merge-guard.mjs`), which denies a `gh pr merge` on either
+violation: a dev-only diff that bumped, or a runtime diff that did not. The
+script itself stays pinned by `tests/version-bump-required.test.ts`.
 
 ### 1. Decide the bump level
 
@@ -119,8 +170,9 @@ function of the base and the level, with no open-PR scan. The base is read from
 the remote's default branch (resolved through `origin/HEAD`, not a hardcoded
 `main`). Under the land-time model the version is assigned against current `main`
 and landing is serialized, so `bump(main, level)` is always free. A concurrent
-race is handled by `/shipit` (rebase + recompute) and `release-on-merge.yml`'s
-duplicate-tag backstop.
+race resolves at merge time: `/shipit` rebases the branch, the pre-merge guard
+denies the now-stale bump, and the recovery (step 0's stale-bump signal)
+recomputes. `release-on-merge.yml`'s duplicate-tag rejection backstops the rest.
 
 ### 3. Bump all five version strings
 
@@ -216,11 +268,27 @@ git add .claude-plugin/plugin.json .claude-plugin/marketplace.json \
 git commit -m "chore(version): X.Y.Z"
 ```
 
-### 7. Title the PR
+### 7. Assert the bump invariant
+
+Re-run the invariant run from step 0 — the head is now the branch tip carrying
+the `chore(version)` commit. Require exit 0 with stdout starting
+`OK: runtime_changed=true bumped=true`.
+
+This runs **before any remote change** (the title edit in step 8 is remote).
+On any other outcome, stop: drop the `chore(version)` commit, undo the
+changelog cut, and land plain — nothing has left the machine, so the recovery
+is purely local.
+
+### 8. Title the PR
 
 `vX.Y.Z <type>: <subject>` — e.g. `v0.6.0 feat: add the shipit land skill`. Set
 it on the existing PR (`gh pr edit --title`). The `PR title sync` workflow
 corrects drift, but it is a backstop — do not rely on it.
+
+A re-entry path that runs after a title already exists must reset it: the
+stale-bump recovery re-titles with the recomputed version, and a re-entry that
+ends at "no bump" strips the `vX.Y.Z` prefix explicitly — the title backstop
+never strips a stale prefix.
 
 Then run `/shipit` (step 2 of the dev land process) to push, wait for CI, and
 squash-merge.

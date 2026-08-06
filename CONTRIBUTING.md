@@ -79,6 +79,9 @@ label taxonomy.
      `[Unreleased]` changelog into a dated section, and commits `chore(version)`.
   2. **`/shipit`** pushes, waits for CI, and squash-merges. `release-on-merge`
      then tags and publishes the release automatically.
+- A pre-merge dev hook re-runs the bump check at the merge attempt and denies
+  `gh pr merge` itself — even run by hand — when the bump is missing,
+  wrongful, or stale. See [Recovery](docs/versioning.md#recovery).
 
 ## Conventions in brief
 

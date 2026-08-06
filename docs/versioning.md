@@ -53,13 +53,43 @@ type. A `ci:`/`docs:`/`test:`/`chore:` PR that ships no runtime change lands
 with **no bump, no changelog cut, and a plain conventional title** (precedent:
 `710d44c` CI, `7d2e218` docs, `0821129` evals `feat:`).
 
-`version-bump` checks this first, as its **step 0**. CI enforces it
-deterministically through `.github/scripts/version-bump-required.sh`, which
-`tests/version-bump-required.test.ts` pins. A dev-only diff that bumped
-**fails the PR**. A runtime diff that did not bump also fails it. The script
-measures "did this branch bump?" against the merge-base, which is the fork
-point. A bump-less PR behind a version-bumped `main` thus reads correctly as "no
+`version-bump` runs the check early, in its **step 0** and again right after
+the bump commit, through `.github/scripts/version-bump-required.sh`, which
+`tests/version-bump-required.test.ts` pins. CI does not enforce the invariant.
+Enforcement is mechanical at the merge attempt: the pre-merge dev hook
+(`.claude/hooks/pre-merge-guard.mjs`) runs the same script against the PR's
+remote head and **denies a violating `gh pr merge`** on either violation — a
+dev-only diff that bumped, or a runtime diff that did not. The script measures
+"did this branch bump?" against the merge-base, which is the fork point. A
+bump-less PR behind a version-bumped `main` thus reads correctly as "no
 bump". [PR title sync](#pr-title) uses the same branch-relative measure.
+
+> **Scope caveat.** The guard engages only on a literal `gh pr merge` Bash
+> tool call inside a Claude Code session that loaded this repo's
+> `.claude/settings.json`. A GitHub-UI merge, a merge run in a raw terminal,
+> a wrapped invocation (`bash -c`, `eval`, `env`, `xargs`,
+> `gh api …/merge`, a merge inside a `$(…)` or backtick substitution body,
+> or any other wrapper command — `command`, `nohup`,
+> `nice`, `timeout`, `stdbuf`, … — only the `time`, `exec`, and `!`
+> prefixes are stripped), a never-expanded spelling (brace expansion
+> `gh pr {merge,}`, parameter expansion `A=merge; gh pr $A`, ANSI-C numeric
+> escapes `$'\x67h'`), a
+> merge inside a shell grouping, conditional, or `case` construct
+> (`if …; then gh pr merge; fi`, `{ gh pr merge; }`, `( gh pr merge )`,
+> `case x in *) gh pr merge;; esac` —
+> ordinary shell syntax, no indirection tool needed), or
+> a harness that does not load these hooks bypasses it entirely — and unlike
+> the deleted CI check, no red signal appears when that happens. A command
+> the guard cannot parse is not among these routes: it is denied outright
+> whenever its raw text, stripped of the characters bash can splice into a
+> word (quotes, escapes, line continuations, `$`), contains `merge`
+> (fail-closed — bash may already have run an earlier line when a later
+> line fails), and passed through only when the letters cannot be reached
+> without one of the expansions listed above. The guard
+> also evaluates from the repo root while the gated command runs in the
+> session's working directory, so a selector-less `gh pr merge` issued after
+> `cd`-ing to another checkout is judged against *this* checkout's PR
+> context — typically a false deny.
 
 > **Regression #120.** `version-bump` once treated *every* PR as bump-worthy and
 > bumped #118 (a `.github/`-only CI fix) `0.13.1 → 0.13.2`, cutting a changelog
@@ -206,7 +236,7 @@ can catch it:
 
 | Check | Layer | Where |
 |-------|-------|-------|
-| Runtime-vs-dev bump invariant. A runtime diff must bump. A dev-only diff must not. The measure is relative to the fork point. | CI (needs PR context) + L3/L4 git-fixture test (free) | `.github/scripts/version-bump-required.sh`, `tests/version-bump-required.test.ts` |
+| Runtime-vs-dev bump invariant. A runtime diff must bump. A dev-only diff must not. The measure is relative to the fork point. | Pre-merge dev hook + L3/L4 git-fixture test (free) | `.github/scripts/version-bump-required.sh`, `tests/version-bump-required.test.ts` |
 | Five version strings agree, on strict semver, and the host manifests agree on the plugin and marketplace names. This holds on every commit, drafted or landed. | L2 tripwire (free, every `bun test`) | `tests/version-consistency.test.ts` |
 | Released-section and footer-compare-link invariants hold for the assigned version. It runs after the changelog cut and before the commit. | Land-time assertion (`version-bump`) | `.claude/skills/version-bump/SKILL.md` |
 | Title prefix matches the version. It applies only when the branch bumped the version forward of its fork point, after `version-bump` bumps. It no-ops otherwise. | CI (needs PR context) | `.github/workflows/pr-title-sync.yml` |
@@ -216,6 +246,13 @@ The land-time assertion row is the in-tree replacement for the per-PR CI gate
 that used to enforce a bump on every PR. See
 [Land-time consistency assertion](#land-time-consistency-assertion) for what it
 checks and when.
+
+The bump-invariant row similarly replaced a per-PR CI check. Because the
+version is assigned only at land time, that check was structurally red for a
+runtime PR's whole review lifetime, so it was retired with no replacement
+workflow: the pre-merge dev hook (`.claude/hooks/pre-merge-guard.mjs`) now
+denies a violating merge at the merge attempt, and `version-bump` runs the
+script early, while recovery is still local.
 
 ## Release on merge
 
@@ -241,6 +278,32 @@ The `chore(version)` bump commit is **already on the branch** (committed by
 (push the fix to the same branch), then re-run `/shipit`: it pushes any
 new commits, waits again, and merges. Do **not** re-run `version-bump`. The
 version was already assigned, and a second bump would create a redundant commit.
+
+### The pre-merge guard denied the merge (stale bump after a rebase)
+
+`/shipit`'s step 5 rebases a behind-base branch, and the rebase moves the fork
+point — a valid bump can go stale (the branch bumped `0.13.1 → 0.13.2` while
+`main` advanced to `0.14.0`). At the merge attempt the guard re-runs the
+invariant against the rebased head and denies. This is the **one exception**
+to "Do not re-run `version-bump`" above: drop the `chore(version)` commit,
+undo the changelog cut, re-run `version-bump` from step 0 (it recomputes
+against the new base), re-title, and re-run `/shipit`.
+
+A denial loop is reachable here, and it is expected, not a bug: `/shipit`
+step 5 rebases and re-runs the 30-minute CI wait, and if `main` advances
+during that wait, the guard's up-to-date precondition denies again. Landing is
+serialized to one PR at a time, so the loop is rare in practice.
+
+### The pre-merge guard denied the merge (missing or wrongful bump)
+
+The plain denial: a runtime PR that never bumped, or a dev-only PR still
+carrying a stray bump. Run `version-bump` normally — its step 0 re-runs the
+same script and says which case this is: continue into the bump steps for a
+missing bump, or drop the `chore(version)` commit and undo the changelog cut
+for a wrongful one — and in the wrongful case also re-title: a re-entry that
+ends at "no bump" must strip the stale `vX.Y.Z` prefix back to the plain
+conventional title itself, because the title backstop never strips a stale
+prefix (`version-bump`'s step 8 names this). Then re-run `/shipit`.
 
 ### A version string was missed and the tag is already pushed
 
