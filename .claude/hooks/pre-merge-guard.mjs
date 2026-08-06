@@ -852,8 +852,10 @@ function resolveDefaultBranch() {
 }
 
 // Recovery routes keyed on the script verdict. At merge time there is no
-// "continue" arm: a "Run version-bump." verdict means the bump is missing or
-// went stale (e.g. a /shipit step-5 rebase moved the fork point).
+// "continue" arm: the "cannot merge until version-bump runs at land time"
+// verdict means the bump is missing or went stale (e.g. a /shipit step-5
+// rebase moved the fork point). That verdict is only actionable HERE, at the
+// merge attempt — earlier in the PR's life it is the expected state.
 function withRecoveryRoute(verdict) {
   if (verdict.includes("must land with no bump")) {
     return (
@@ -862,7 +864,7 @@ function withRecoveryRoute(verdict) {
       "land plain, then re-run /shipit."
     );
   }
-  if (verdict.includes("Run version-bump.")) {
+  if (verdict.includes("cannot merge until version-bump runs at land time")) {
     return (
       `${verdict}\n` +
       "At merge time this means the bump is missing or stale. Recovery: drop " +

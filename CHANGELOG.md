@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The `/team` pipeline no longer assigns a version when it opens the draft PR.** Its PR gate told the orchestrator to update `CHANGELOG.md` and open the PR, and said nothing about versioning — so an orchestrator that had just produced a user-facing change filled the gap itself, bumped every version string, cut the accumulated `[Unreleased]` bullets into a dated release section, and put the version in the PR title. That is wrong twice over. A drafted PR is supposed to carry no version, and a version chosen at PR-open time is computed against the base branch as it stands right then, so the next PR to land makes it stale and the merge is refused until someone recomputes it. The gate now forbids versioning at that point outright and names `## [Unreleased]` as where the bullet goes, so a run ends with a draft PR whose title and version strings are untouched. [`skills/team/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md)
+
 ## [0.36.0] - 2026-08-06
 
 ### Changed

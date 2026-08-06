@@ -6,8 +6,12 @@ description: |
   all five version strings, cut the `[Unreleased]` changelog body into a dated
   `## [X.Y.Z]` section, run the land-time consistency assertion, and commit
   `chore(version): X.Y.Z`. This is the Team-internal bumper; the generic runtime
-  `/shipit` skill then pushes, waits for CI, and squash-merges. Use when landing
-  a Team PR, or when the user asks to "bump the version" or "version this PR".
+  `/shipit` skill then pushes, waits for CI, and squash-merges. Invoke ONLY on
+  explicit land intent — the user says "ship it", "land the PR", "bump the
+  version", "version this PR", or a `/shipit` is already in flight. Never infer
+  land intent from work merely being finished, reviewed, green, or ready to open
+  a draft PR: a drafted PR carries no version, and a bump made before land time
+  is stale by the time the PR merges.
 ---
 
 # Version Bump — version a Team PR at land time
@@ -37,6 +41,35 @@ Landing a Team PR is two steps, in order:
 Run this skill **before** `/shipit`, against the version of `main` you intend to
 land onto.
 
+## Precondition — explicit land intent
+
+Everything below is irreversible-ish work on a shared number: it rewrites five
+version strings, moves the `[Unreleased]` changelog body into a dated section,
+retitles the PR, and commits. All of it is computed against **the base
+branch's tip at this moment**, so a bump made any earlier than the land is
+stale the moment another PR merges — and the pre-merge guard then denies the
+merge until someone recomputes it. Deferring to land time is what keeps the
+number correct.
+
+**This skill fires only on explicit land intent**, meaning one of:
+
+- The user asked to land: "ship it", "land the PR", "land this", `/shipit`.
+- The user asked for the bump itself: "bump the version", "version this PR".
+- A `/shipit` run is already in flight and reached its versioning step.
+
+**Never infer land intent.** None of the following is a cue to bump:
+
+- The work is finished, the review passed, or CI is green.
+- A draft PR is about to be opened, or was just opened. A drafted PR carries
+  **no** version by design — the bullet goes under `## [Unreleased]` and
+  nothing else moves.
+- The invariant script exited 1. That exit states a precondition for
+  *merging*, and it is the expected state for a runtime PR's whole review
+  lifetime. It is not a request to bump now.
+
+With no land intent, **stop and say so.** Report that the branch will need a
+bump before it can merge, and wait for the user. Do not bump "to be helpful".
+
 **The bump is conditional, not universal.** Step 0 below decides if this PR
 warrants a bump at all. Only PRs that change the **distributed plugin** bump. A
 dev-only PR (CI, docs, tests, evals, `.claude/` tooling) lands with no bump and
@@ -48,6 +81,9 @@ with the plain conventional title.
 ### 0. Runtime-vs-dev gate — does this PR warrant a bump at all?
 
 **Run this before everything else. Most steps below only apply if it says yes.**
+It answers *does this PR warrant a bump*, never *is now the right time* — the
+land-intent precondition above already settled the timing, and a yes here does
+not reopen it.
 
 The version, changelog, and GitHub release exist for **plugin end users** —
 people who install Team and run `/team`. They are driven *only* by changes to the
@@ -117,7 +153,10 @@ HEAD_SHA=$(git rev-parse HEAD) BASE_SHA=$(git rev-parse "refs/remotes/origin/$DE
   alone never authorizes it.
 - Exit 0, stdout starting `OK: runtime_changed=true bumped=true` → already
   bumped (a recovery re-entry). Never re-bump — proceed to `/shipit`.
-- Exit 1, verdict ending `Run version-bump.` → bump warranted.
+- Exit 1, verdict containing `cannot merge until version-bump runs at land time`
+  → bump warranted. Reaching this line means the land-intent precondition
+  already passed, which is the only reason the verdict is actionable here;
+  read outside a land it states a merge precondition and nothing more.
   - On a branch with **no** `chore(version)` commit: **continue to step 1**.
     This is the only exit-1 signal that ever means continue.
   - On a branch **already carrying** a `chore(version)` commit: the bump went

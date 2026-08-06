@@ -134,7 +134,7 @@ describe("version-bump skill ↔ version-bump-required.sh: shared signal anchors
   });
 
   test("script carries the two verdict sentences", () => {
-    expect(script).toContain("Run version-bump.");
+    expect(script).toContain("cannot merge until version-bump runs at land time");
     expect(script).toContain("must land with no bump");
   });
 
@@ -144,7 +144,7 @@ describe("version-bump skill ↔ version-bump-required.sh: shared signal anchors
   });
 
   test("skill carries the same two verdict sentences", () => {
-    expect(skill).toContain("Run version-bump.");
+    expect(skill).toContain("cannot merge until version-bump runs at land time");
     expect(skill).toContain("must land with no bump");
   });
 });

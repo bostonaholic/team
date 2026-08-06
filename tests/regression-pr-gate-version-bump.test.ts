@@ -16,7 +16,7 @@
 //      identifier, so this can only go red on a real regression.
 //   2. TEMPLATE STRING — the section heading the gate tells the model to write
 //      the bullet under (`## [Unreleased]`).
-//   3. ORDERING — in the dev bumper, the ship-intent precondition must precede
+//   3. ORDERING — in the dev bumper, the land-intent precondition must precede
 //      the runtime-vs-dev gate, because a bump that is mistimed is wrong no
 //      matter how the runtime-vs-dev question resolves.
 //
@@ -91,17 +91,17 @@ describe("regression #208: the /team PR phase never bumps the version", () => {
 describe("regression #208: the dev bumper gates on timing before runtime-vs-dev", () => {
   const text = body(VERSION_BUMP_SKILL);
   // Step headings are stable structure (docs/testing.md blesses "section
-  // headings, and the order of two sections"). The ship-intent gate is the
+  // headings, and the order of two sections"). The land-intent gate is the
   // unnumbered precondition heading; the runtime-vs-dev gate is a numbered step.
   const lines = text.split("\n");
   const intentIdx = lines.findIndex((line) =>
-    /^#{2,4}\s.*\bship intent\b/i.test(line),
+    /^#{2,4}\s.*\bland intent\b/i.test(line),
   );
   const runtimeGateIdx = lines.findIndex((line) =>
     /^#{2,4}\s*\d+\.\s*runtime-vs-dev gate/i.test(line),
   );
 
-  test("a ship-intent precondition heading is present", () => {
+  test("a land-intent precondition heading is present", () => {
     expect(intentIdx).toBeGreaterThanOrEqual(0);
   });
 
@@ -109,7 +109,7 @@ describe("regression #208: the dev bumper gates on timing before runtime-vs-dev"
     expect(runtimeGateIdx).toBeGreaterThanOrEqual(0);
   });
 
-  test("the ship-intent gate precedes the runtime-vs-dev gate", () => {
+  test("the land-intent gate precedes the runtime-vs-dev gate", () => {
     // Compared as a pair so a missing heading (-1) cannot satisfy the ordering
     // vacuously — both indices must be real and in order.
     expect({ ordered: intentIdx >= 0 && intentIdx < runtimeGateIdx }).toEqual({

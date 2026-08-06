@@ -441,9 +441,10 @@ describe.if(HAS_JQ)("verdict mapping through the real script", () => {
   });
 
   test("denies on the missing-bump verdict", () => {
-    // Runtime diff, no bump → the verdict ending "Run version-bump." — the
-    // only place that verdict means "continue" is version-bump's step 0; at
-    // merge time there is no continue arm, so it denies.
+    // Runtime diff, no bump → the "cannot merge until version-bump runs at
+    // land time" verdict. That verdict is a merge precondition everywhere
+    // else; the merge attempt is where it finally binds, so it denies. The
+    // only place it means "continue" is version-bump's step 0.
     const r = runHook(
       "gh pr merge 5 --squash",
       scriptedStubs({
@@ -453,7 +454,7 @@ describe.if(HAS_JQ)("verdict mapping through the real script", () => {
       }),
     );
     expect(r.status).toBe(2);
-    expect(r.stderr).toContain("Run version-bump.");
+    expect(r.stderr).toContain("cannot merge until version-bump runs at land time");
   });
 });
 
