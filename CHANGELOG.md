@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.0] - 2026-08-06
+
 ### Changed
 
 - **The two PR watch skills now say whose PR they watch: `pr-watch` is renamed `pr-watch-as-author`, and `pr-approve-watch` is renamed `pr-watch-as-reviewer`.** Neither watch loop changes behavior. The old names are gone with no alias — `/pr-watch` and `/pr-approve-watch` no longer resolve; arm the loops with [`/pr-watch-as-author`](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md) and [`/pr-watch-as-reviewer`](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md) instead. Codex users who ran the [`README.md`](https://github.com/bostonaholic/team/blob/main/README.md) removal guard to keep the reviewer-side skill user-only must re-run it against `skills/pr-watch-as-reviewer` after upgrading — the old command now matches nothing, so the renamed skill comes back model-invocable until it is removed again.
@@ -408,7 +410,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.35.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.36.0...HEAD
+[0.36.0]: https://github.com/bostonaholic/team/compare/v0.35.1...v0.36.0
 [0.35.1]: https://github.com/bostonaholic/team/compare/v0.35.0...v0.35.1
 [0.35.0]: https://github.com/bostonaholic/team/compare/v0.34.1...v0.35.0
 [0.34.1]: https://github.com/bostonaholic/team/compare/v0.34.0...v0.34.1

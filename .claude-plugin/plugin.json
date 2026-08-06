@@ -1,6 +1,6 @@
 {
   "name": "team",
-  "version": "0.35.1",
+  "version": "0.36.0",
   "description": "Orchestrates specialized agents to autonomously implement entire features end-to-end",
   "author": {
     "name": "Matthew Boston",
