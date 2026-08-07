@@ -37,22 +37,26 @@ skill root, so nothing needs building or converting.
 
 Two differences worth knowing. Skills arrive **namespaced** — ask for
 `team:shipit`, not `shipit`. And Codex budgets its skill catalog, so with
-all 53 skills present it shortens the longer descriptions; the skills still
+all 54 skills present it shortens the longer descriptions; the skills still
 load and still work.
 
-> **`team:pr-watch-as-reviewer` loses a safety guard on Codex.** On Claude Code
-> that skill sets `disable-model-invocation`, so only a person can start it —
-> its approval can transitively merge a PR that has auto-merge enabled.
-> **Codex ignores that key**, so the model can invoke it, in every session,
-> with no prompt: skills bypass Codex's trust gate. The skill's own
-> description says it is user-only, but that sentence is past the point where
-> Codex truncates. To keep the guard, remove the skill after installing:
+> **Two skills lose a safety guard on Codex.** On Claude Code
+> `team:pr-watch-as-reviewer` and `team:pr-rebase` both set
+> `disable-model-invocation`, so only a person can start them — the first
+> casts an approval that can transitively merge a PR with auto-merge
+> enabled, and the second force-pushes a rewritten branch over published
+> history. **Codex ignores that key**, so the model can invoke either one,
+> in every session, with no prompt: skills bypass Codex's trust gate. Each
+> skill's own description says it is user-only, but that sentence is past
+> the point where Codex truncates. To keep the guards, remove the skills
+> after installing:
 >
 > ```bash
 > rm -rf "$CODEX_HOME/plugins/cache"/*/team/*/skills/pr-watch-as-reviewer
+> rm -rf "$CODEX_HOME/plugins/cache"/*/team/*/skills/pr-rebase
 > ```
 >
-> Re-running `codex plugin add` restores it.
+> Re-running `codex plugin add` restores them.
 
 The `/team-*` pipeline commands load on Codex but cannot dispatch Claude
 Code agents there, so they will not run the pipeline. The standalone
@@ -152,7 +156,7 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 ## Components
 
 - **13 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
-- **53 entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch-as-author`, `/pr-watch-as-reviewer`, `/groom-backlog`, `/pr-cleanup`, and `/pr-verify` utilities, and shared methodologies
+- **54 entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch-as-author`, `/pr-watch-as-reviewer`, `/groom-backlog`, `/pr-cleanup`, `/pr-verify`, and `/pr-rebase` utilities, and shared methodologies
 - **3 hooks** in `hooks/`: `docs/plans/`-aware compaction resilience and plugin-file validation
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
 - **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `design.md` also carries `revision`, and review verdicts live in `design-review-<n>.md`. Live in-session coordination uses TodoWrite.

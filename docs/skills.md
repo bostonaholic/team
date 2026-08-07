@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 53 skills: 11 pipeline entry-point slash commands, 7 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 54 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -48,15 +48,16 @@ catalog into two flavors:
   …`).
 
 That `argument-hint` marker is the whole flavor distinction. Most
-`argument-hint` skills drive a QRSPI phase, but seven (`shipit`,
+`argument-hint` skills drive a QRSPI phase, but eight (`shipit`,
 `pr-open-comments`, `pr-watch-as-author`, `pr-watch-as-reviewer`, `groom-backlog`,
-`pr-cleanup`, and `pr-verify`) are standalone utilities. They land a
+`pr-cleanup`, `pr-verify`, and `pr-rebase`) are standalone utilities. They land a
 reviewed PR, triage its unresolved review feedback, and watch it for new
 feedback. They also watch it as a reviewer, approve when your threads
 resolve, groom a project backlog, tear down branch state after a PR is
-finished, and verify a PR's test plan.
+finished, verify a PR's test plan, and rebase a branch onto its base
+without changing what it does.
 None is a pipeline phase. The split is
-**11 pipeline entry-point + 7 standalone utility + 35 methodology = 53**.
+**11 pipeline entry-point + 8 standalone utility + 35 methodology = 54**.
 
 For *why* the system is shaped this way (the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits),
@@ -541,6 +542,48 @@ QRSPI phase: a self-contained action a user runs on demand.
   a command quoted in a PR body is never executed. Read-only — no writes,
   no pushes. Pasted-description mode degrades the diff and build
   strategies honestly, per item.
+
+### pr-rebase
+
+- **Purpose:** Bring a feature branch up to date with its base without
+  changing what the branch does. It captures a pre-rebase check baseline,
+  rebases onto the latest base, resolves each conflict from both sides'
+  intent, re-runs the same checks, and force-pushes only when nothing
+  regressed.
+- **`$ARGUMENTS`:** `[<pr-number-or-url>] [--yes]` — the PR reference is
+  optional and only resolves the base branch; the rebased branch is always
+  the current checkout. `--yes` skips the pre-push confirmation for a
+  caller that already carries the user's authorization.
+- **Phase:** None. A standalone branch-maintenance action, not part of the
+  pipeline.
+- **Key behaviors:** **User-invocable only** — it sets
+  `disable-model-invocation: true`, because the push rewrites published
+  history and no later verification can undo that for a teammate who has
+  the branch. The base branch comes from the §2B fallback chain
+  (`gh pr view` → `origin/HEAD` → `main`), never a hardcoded `main`, and
+  every externally sourced branch name passes a character allowlist. It
+  refuses a dirty tree, a detached HEAD, an in-progress
+  rebase/merge/cherry-pick, a protected branch as the rebase target, and a
+  branch someone else has pushed to. Before touching anything it records
+  the recovery anchor (`git reset --hard <ORIG_SHA>`) and runs the
+  project's detected checks (via `running-quality-checks`) as the
+  **baseline**; a check that could not execute is `UNKNOWN` and is barred
+  from counting as post-rebase evidence. Conflicts are resolved by
+  reconstructing both sides' intent from history — the skill flags the
+  rebase inversion (`--ours` is the base, `--theirs` is your commit),
+  forbids wholesale side-picking and `git rebase --skip`, regenerates
+  generated files instead of picking one, delegates a large conflicted
+  file to a read-only subagent, and escalates a genuinely undecidable hunk
+  through `AskUserQuestion` without aborting the rebase. Every resolution
+  is written to `docs/plans/<id>/rebase-<n>.md` (append-only local
+  scratch). Verification re-runs the identical checks and compares at the
+  level of individual test names: PASS→FAIL is a regression and **hard
+  stops before the push**; FAIL→FAIL is pre-existing and does not block.
+  The push is
+  `--force-with-lease=<branch>:<pre-fetch-sha> --force-if-includes`, never
+  a bare `--force` and never an implicit lease — the skill's own `git
+  fetch` advances the remote-tracking ref an implicit lease would read.
+  It does not wait for CI and does not merge; `/shipit` lands the PR.
 
 ## Methodology skills
 

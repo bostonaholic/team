@@ -30,7 +30,7 @@
 // team-pr is demoted; no protocol.test.ts sentinel, that convention is for
 // the pipeline-skill demotions):
 //   shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer,
-//   groom-backlog, pr-cleanup, pr-verify
+//   groom-backlog, pr-cleanup, pr-verify, pr-rebase
 
 import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
