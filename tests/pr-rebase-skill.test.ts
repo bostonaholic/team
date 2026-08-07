@@ -4,13 +4,17 @@
 // (skills/pr-rebase/SKILL.md) — a standalone "bring the branch up to date
 // without changing its behavior" action distributed to Team's users.
 //
-// The skill's whole value is a chain of guards around two irreversible-ish
-// acts (a history rewrite and a force-push). Each assertion below pins one
-// link of that chain: the user-only invocation flag, the baseline-then-
-// compare gate, the conflict-resolution rules, and the exact push form.
-// Per docs/testing.md §2, these assert CONTRACTS — frontmatter keys, the
-// commands and flags the skill tells the model to emit, and section
-// headings — never wording.
+// The skill's whole value is a chain of guards around two irreversible acts
+// (a history rewrite and a force-push). Each assertion below pins one link
+// of that chain.
+//
+// These assert CONTRACTS, never wording: frontmatter keys, the commands and
+// flags the skill tells the model to emit, the ORDER of two commands, the
+// section headings, and forbidden command forms. A documentation rewrite
+// that keeps the commands correct must stay green — so nothing here matches
+// a sentence. The forbidden-command checks scan fenced code lines only,
+// because every one of those strings legitimately appears in prose that
+// forbids it.
 //
 // Every assertion is guarded so a not-yet-existing skill file yields a
 // failed expect(), never an uncaught ENOENT — the mechanical gate rejects
@@ -33,19 +37,24 @@ function body(): string {
 function fm(): string {
   return existsSync(PR_REBASE_SKILL) ? frontmatter(read(PR_REBASE_SKILL)) : "";
 }
-// Collapse whitespace runs so prose wrapped across indented lines can be
-// matched by a single-space regex.
-function flat(text: string): string {
-  return text.replace(/\s+/g, " ");
+
+/** Every line inside a fenced code block — what the model is told to RUN. */
+function fencedLines(): string[] {
+  const out: string[] = [];
+  let inFence = false;
+  for (const line of body().split("\n")) {
+    if (/^\s*```/.test(line)) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) out.push(line);
+  }
+  return out;
 }
-// A named section's text, or "" when absent — assertions against "" fail cleanly.
-function section(heading: string): string {
-  const text = body();
-  const start = text.indexOf(heading);
-  if (start < 0) return "";
-  const rest = text.slice(start + heading.length);
-  const next = rest.search(/\n## /);
-  return next < 0 ? rest : rest.slice(0, next);
+
+/** Index of the first fenced line matching `re`, or -1. Used for ordering. */
+function fencedIndex(re: RegExp): number {
+  return fencedLines().findIndex((line) => re.test(line));
 }
 
 describe("pr-rebase skill: frontmatter and invocation surface", () => {
@@ -60,46 +69,62 @@ describe("pr-rebase skill: frontmatter and invocation surface", () => {
   test("frontmatter sets disable-model-invocation: true (user-invocable only)", () => {
     // The push rewrites published history and no later verification undoes
     // that for a teammate holding the branch, so only a deliberate human
-    // invocation starts the run (architecture.md: a side-effecting skill
-    // "should set disable-model-invocation where the host honors it").
+    // invocation starts the run.
     const f = fm();
     expect(f.length).toBeGreaterThan(0);
     expect(/^disable-model-invocation:\s*true\s*$/m.test(f)).toBe(true);
   });
 
-  test("frontmatter declares argument-hint (registers as a slash command)", () => {
-    expect(/^argument-hint:/m.test(fm())).toBe(true);
+  test("argument-hint declares both the PR selector and --yes", () => {
+    const f = fm();
+    expect(/^argument-hint:.*pr-number/m.test(f)).toBe(true);
+    expect(/^argument-hint:.*--yes/m.test(f)).toBe(true);
   });
 
-  test("description carries explicit-intent guard wording plus trigger phrases", () => {
-    // Side-effecting skills replace the plain "Trigger on" carrier with
-    // shipit-style guard wording, while still naming the phrases and the
-    // literal slash name (architecture.md, methodology-skills section).
-    const f = flat(fm());
+  test("description carries the guard carrier, a quoted phrase, and the slash name", () => {
+    // The guard carrier string and the phrase-plus-slash-name shape are the
+    // documented routing contract for a side-effecting entry point
+    // (architecture.md). The specific phrases are free to change.
+    const f = fm().replace(/\s+/g, " ");
     expect(f.length).toBeGreaterThan(0);
-    expect(/Invoke ONLY on explicit/.test(f)).toBe(true);
-    expect(/never infer/i.test(f)).toBe(true);
-    expect(/"rebase onto main"/.test(f)).toBe(true);
+    expect(f).toContain("Invoke ONLY on explicit");
+    expect(/"[^"]+"/.test(f)).toBe(true);
     expect(f).toContain("/pr-rebase");
   });
 
   test("references the progress-tracking convention", () => {
     expect(body()).toContain("skills/progress-tracking/SKILL.md");
   });
+
+  test("section headings appear in the documented order", () => {
+    const t = body();
+    const order = ["## Input", "## Hard rules", "## Execution", "## Completion"];
+    const positions = order.map((heading) => t.indexOf(heading));
+    for (const position of positions) expect(position).toBeGreaterThan(-1);
+    expect(positions).toEqual([...positions].sort((a, b) => a - b));
+  });
 });
 
 describe("pr-rebase skill: base-branch discovery is a chain, never a bare main", () => {
   test("resolves the base through gh -> origin/HEAD -> main", () => {
-    const t = flat(body());
-    expect(t).toContain("gh pr view --json baseRefName");
-    expect(t).toContain("git symbolic-ref refs/remotes/origin/HEAD");
-    expect(/BASE=main/.test(t)).toBe(true);
+    const lines = fencedLines().join("\n");
+    expect(lines).toContain("gh pr view");
+    expect(lines).toContain("--json baseRefName");
+    expect(lines).toContain("git symbolic-ref refs/remotes/origin/HEAD");
+    expect(lines).toContain("BASE=main");
+  });
+
+  test("the base-resolving gh call forwards the PR selector", () => {
+    // Without the selector, an explicit PR argument is silently ignored and
+    // the base comes from the CURRENT branch's PR instead.
+    const ghLine = fencedLines().find(
+      (line) => line.includes("gh pr view") && line.includes("baseRefName"),
+    );
+    expect(ghLine).toBeDefined();
+    expect(ghLine ?? "").toContain('${PR:+"$PR"}');
   });
 
   test("externally sourced branch names pass a character allowlist", () => {
-    // A PR's baseRefName is attacker-chosen on a public repo; the allowlist
-    // (and LC_ALL=C, without which the bracket expression is collation-
-    // dependent) is what makes it safe to place in a command.
     const t = body();
     expect(t).toContain("LC_ALL=C");
     expect(t).toContain("[!A-Za-z0-9._/-]");
@@ -111,60 +136,75 @@ describe("pr-rebase skill: base-branch discovery is a chain, never a bare main",
   });
 });
 
+describe("pr-rebase skill: the two remotes are resolved separately", () => {
+  test("derives the push remote from the branch's upstream", () => {
+    const lines = fencedLines().join("\n");
+    expect(lines).toContain("@{upstream}");
+    expect(lines).toContain("PUSH_REMOTE=");
+    expect(lines).toContain("BASE_REMOTE=");
+  });
+
+  test("cross-checks the push target against the PR's head repository", () => {
+    expect(fencedLines().join("\n")).toContain("headRepositoryOwner");
+  });
+
+  test("the rebase and merge-base target BASE_REMOTE, never a hardcoded origin", () => {
+    const rebaseLine = fencedLines().find((line) => /^\s*git rebase\s+"/.test(line));
+    expect(rebaseLine).toBeDefined();
+    expect(rebaseLine ?? "").toContain("${BASE_REMOTE:?}");
+    expect(fencedLines().join("\n")).toContain(
+      'MERGE_BASE="$(git merge-base HEAD "${BASE_REMOTE:?}/${BASE:?}")"',
+    );
+  });
+});
+
 describe("pr-rebase skill: pre-rebase refusals", () => {
-  const hardRules = () => section("## Hard rules");
-  const refusals = () => body();
-
-  test("refuses a dirty tree via git status --porcelain", () => {
-    expect(refusals()).toContain("git status --porcelain");
-  });
-
-  test("refuses a detached HEAD", () => {
-    expect(/detached HEAD/.test(refusals())).toBe(true);
-  });
-
-  test("refuses an operation already in progress", () => {
-    const t = refusals();
+  test("detects a dirty tree, an in-progress operation, and a detached HEAD", () => {
+    const t = body();
+    expect(t).toContain("git status --porcelain");
     expect(t).toContain("git rebase --show-current-patch");
     expect(t).toContain("MERGE_HEAD");
     expect(t).toContain("CHERRY_PICK_HEAD");
+    expect(t).toContain("git branch --show-current");
   });
 
-  test("refuses a protected branch as the rebase target, matched case-insensitively", () => {
+  test("matches protected branch names case-insensitively", () => {
     const t = body();
     expect(t).toContain("release/*");
     expect(t).toContain("tr '[:upper:]' '[:lower:]'");
   });
-
-  test("hard rules forbid rebasing a protected branch and assuming main", () => {
-    const rules = hardRules();
-    expect(rules.length).toBeGreaterThan(0);
-    expect(/Never rebase a protected branch/.test(rules)).toBe(true);
-    expect(/Never assume the base is `main`/.test(rules)).toBe(true);
-  });
 });
 
 describe("pr-rebase skill: the baseline gate", () => {
-  test("captures the recovery anchor before anything is rewritten", () => {
-    const t = flat(body());
-    expect(t).toContain("ORIG_SHA");
-    expect(t).toContain("git reset --hard");
+  test("captures the recovery anchor and the pre-fetch remote tip", () => {
+    const lines = fencedLines().join("\n");
+    expect(lines).toContain('ORIG_SHA="$(git rev-parse HEAD)"');
+    expect(lines).toContain("REMOTE_SHA_BEFORE=");
+    // The recovery command is quoted inline, not fenced — it is what the
+    // skill reports to the user, not a step it runs.
+    expect(body()).toContain("git reset --hard");
   });
 
-  test("captures the pre-fetch remote tip as the explicit lease value", () => {
-    // Captured BEFORE step 3's fetch — that ordering is the whole reason the
-    // lease is trustworthy, so the variable name is pinned.
-    expect(body()).toContain("REMOTE_SHA_BEFORE");
+  test("the lease ref is read from PUSH_REMOTE, not origin", () => {
+    const leaseLine = fencedLines().find((line) =>
+      line.includes("REMOTE_SHA_BEFORE="),
+    );
+    expect(leaseLine).toBeDefined();
+    expect(leaseLine ?? "").toContain("${PUSH_REMOTE:?}");
+  });
+
+  test("the baseline is captured BEFORE the fetch", () => {
+    // Ordering tripwire: a baseline taken after the fetch measures a tree
+    // that already moved, and the lease value would be worthless.
+    const anchor = fencedIndex(/ORIG_SHA="\$\(git rev-parse HEAD\)"/);
+    const fetch = fencedIndex(/^\s*git fetch /);
+    expect(anchor).toBeGreaterThan(-1);
+    expect(fetch).toBeGreaterThan(-1);
+    expect(anchor).toBeLessThan(fetch);
   });
 
   test("runs the project's detected checks via running-quality-checks", () => {
     expect(body()).toContain("skills/running-quality-checks/SKILL.md");
-  });
-
-  test("classifies an unrunnable check UNKNOWN and bars it as evidence", () => {
-    const t = flat(body());
-    expect(t).toContain("UNKNOWN");
-    expect(/no baseline proves nothing after/i.test(t)).toBe(true);
   });
 
   test("offloads the baseline and resolutions to docs/plans/<id>/rebase-<n>.md", () => {
@@ -175,68 +215,104 @@ describe("pr-rebase skill: the baseline gate", () => {
   });
 });
 
-describe("pr-rebase skill: conflict resolution rules", () => {
-  test("names the rebase ours/theirs inversion explicitly", () => {
-    // The single most common way a rebase silently discards the author's
-    // work. The three stage reads are the check that survives the confusion.
-    const t = flat(body());
-    expect(/`--ours` is the upstream base and `--theirs` is your own commit/.test(t)).toBe(
-      true,
-    );
+describe("pr-rebase skill: conflict resolution", () => {
+  test("reads all three merge stages", () => {
+    // The stage reads are what survive the rebase ours/theirs inversion —
+    // they name the sides positionally instead of by the flag names.
+    const t = body();
     expect(t).toContain('git show ":1:<path>"');
     expect(t).toContain('git show ":2:<path>"');
     expect(t).toContain('git show ":3:<path>"');
   });
 
-  test("forbids git rebase --skip", () => {
-    expect(/Never `git rebase --skip`/.test(body())).toBe(true);
+  test("bounds both sides' history with MERGE_BASE", () => {
+    const lines = fencedLines().join("\n");
+    expect(lines).toContain("git log --oneline");
+    expect(lines).toContain("${MERGE_BASE:?}");
   });
 
-  test("forbids wholesale side-picking and routes generated files to regeneration", () => {
-    const t = flat(body());
-    expect(/Never resolve a conflict by picking a side wholesale/.test(t)).toBe(true);
-    expect(/regenerat/i.test(t)).toBe(true);
+  test("escalates through AskUserQuestion", () => {
+    expect(body()).toContain("AskUserQuestion");
   });
 
-  test("escalates an undecidable hunk through AskUserQuestion without aborting", () => {
-    const t = flat(body());
-    expect(t).toContain("AskUserQuestion");
-    expect(/Do \*\*not\*\* abort the whole rebase over one hunk/.test(t)).toBe(true);
+  test("continues the rebase with a non-interactive editor", () => {
+    // Without GIT_EDITOR, `git rebase --continue` dies with "Terminal is
+    // dumb, but EDITOR unset" in a non-interactive shell and strands the
+    // rebase mid-flight.
+    const continueLine = fencedLines().find((line) =>
+      line.includes("git rebase --continue"),
+    );
+    expect(continueLine).toBeDefined();
+    expect(continueLine ?? "").toContain("GIT_EDITOR=true");
   });
 
-  test("delegates a large conflicted file to a read-only subagent", () => {
-    expect(/subagent/.test(body())).toBe(true);
+  test("the marker check runs before git add, which runs before --continue", () => {
+    // Ordering tripwire: `git diff --cached --check` ahead of `git add`
+    // inspects an empty staged diff and passes vacuously.
+    const grep = fencedIndex(/git grep .*<\{7\}/);
+    const add = fencedIndex(/^\s*git add -- "<path>"/);
+    const check = fencedIndex(/git diff --cached --check/);
+    const cont = fencedIndex(/git rebase --continue/);
+    for (const index of [grep, add, check, cont]) expect(index).toBeGreaterThan(-1);
+    expect(grep).toBeLessThan(add);
+    expect(add).toBeLessThan(check);
+    expect(check).toBeLessThan(cont);
+  });
+});
+
+describe("pr-rebase skill: forbidden command forms never appear as instructions", () => {
+  // Forbidden-pattern tripwires over FENCED LINES only. Each of these strings
+  // appears in prose that forbids it, which is correct and must stay allowed;
+  // what must never happen is one showing up as a command to run.
+
+  test("no fenced line runs git rebase --skip", () => {
+    expect(fencedLines().filter((line) => /git rebase --skip/.test(line))).toEqual([]);
   });
 
-  test("proves no conflict markers survive before continuing", () => {
-    const t = body();
-    expect(t).toContain("git diff --cached --check");
-    expect(t).toContain("git rebase --continue");
+  test("no fenced line runs git checkout --ours/--theirs", () => {
+    expect(
+      fencedLines().filter((line) => /git checkout --(ours|theirs)/.test(line)),
+    ).toEqual([]);
+  });
+
+  test("no fenced line runs a force-push without a lease", () => {
+    const bare = fencedLines().filter(
+      (line) =>
+        /git push/.test(line) &&
+        /--force\b/.test(line) &&
+        !/--force-with-lease/.test(line) &&
+        !/--force-if-includes/.test(line),
+    );
+    expect(bare).toEqual([]);
+  });
+
+  test("no fenced line merges the PR (landing belongs to /shipit)", () => {
+    expect(fencedLines().filter((line) => /gh pr merge/.test(line))).toEqual([]);
+    expect(body()).toContain("/shipit");
   });
 });
 
 describe("pr-rebase skill: the verification gate", () => {
-  test("compares AFTER against BASELINE and names PASS->FAIL a regression", () => {
-    const t = flat(body());
-    expect(t).toContain("BASELINE");
-    expect(/regression/i.test(t)).toBe(true);
+  test("the comparison table enumerates all three baseline states", () => {
+    const t = body();
+    expect(t).toContain("| BASELINE | AFTER | Verdict |");
+    expect(t).toContain("UNKNOWN");
   });
 
-  test("compares at the level of individual test names, not suite exit status", () => {
-    expect(/individual test names/.test(flat(body()))).toBe(true);
+  test("range-diff is available as a failure diagnostic", () => {
+    expect(body()).toContain("git range-diff");
   });
 
-  test("a regression hard-stops before the push", () => {
-    const rules = section("## Hard rules");
-    expect(rules.length).toBeGreaterThan(0);
-    expect(/Never push without the verification gate/.test(rules)).toBe(true);
-    expect(/no ungated path to the remote/i.test(flat(rules))).toBe(true);
-  });
-
-  test("offers range-diff only as a failure diagnostic, not a required step", () => {
-    const t = flat(body());
-    expect(t).toContain("git range-diff");
-    expect(/diagnostic to reach for on failure, not a required step/.test(t)).toBe(true);
+  test("verification is ordered after the rebase and before the push", () => {
+    const t = body();
+    const rebaseStep = t.indexOf("### Step 4");
+    const verifyStep = t.indexOf("### Step 6");
+    const pushStep = t.indexOf("### Step 7");
+    for (const position of [rebaseStep, verifyStep, pushStep]) {
+      expect(position).toBeGreaterThan(-1);
+    }
+    expect(rebaseStep).toBeLessThan(verifyStep);
+    expect(verifyStep).toBeLessThan(pushStep);
   });
 });
 
@@ -250,40 +326,15 @@ describe("pr-rebase skill: the push form", () => {
     expect(t).toContain("--force-if-includes");
   });
 
-  test("forbids a bare git push --force", () => {
-    const t = flat(body());
-    expect(/Never a bare `git push --force`/.test(t)).toBe(true);
-    expect(/Never retry with a bare `--force`/.test(t)).toBe(true);
+  test("the push targets PUSH_REMOTE, and so does the never-pushed fallback", () => {
+    const pushLines = fencedLines().filter((line) => /^\s*git push/.test(line));
+    expect(pushLines.length).toBeGreaterThan(0);
+    for (const line of pushLines) expect(line).toContain("${PUSH_REMOTE:?}");
   });
 
-  test("requires a pre-push confirmation that --yes is the caller's to pass", () => {
-    const t = flat(body());
-    expect(/explicit confirmation/.test(t)).toBe(true);
-    expect(/the caller's to pass/.test(t)).toBe(true);
-  });
-
-  test("degrades to a plain push when the branch was never pushed", () => {
-    expect(body()).toContain('git push -u origin "${BRANCH:?}"');
-  });
-
-  test("surfaces a rejection verbatim", () => {
-    expect(/verbatim/.test(body())).toBe(true);
-  });
-});
-
-describe("pr-rebase skill: scope fence", () => {
-  test("does not merge, and hands landing to /shipit", () => {
-    const t = flat(body());
-    expect(t).not.toContain("gh pr merge");
-    expect(t).toContain("/shipit");
-  });
-
-  test("destructive sinks re-derive their variables and use the ${VAR:?} form", () => {
-    const rules = section("## Hard rules");
-    expect(rules.length).toBeGreaterThan(0);
-    expect(/No destructive command relies on a variable set in an earlier Bash/.test(rules)).toBe(
-      true,
-    );
-    expect(rules).toContain("${VAR:?}");
+  test("every push expands its variables with the abort-on-unset form", () => {
+    for (const line of fencedLines().filter((l) => /^\s*git push/.test(l))) {
+      expect(line).toContain("${BRANCH:?}");
+    }
   });
 });

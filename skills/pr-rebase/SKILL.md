@@ -56,10 +56,17 @@ that after the fact. Only a deliberate human invocation starts the run.
   an agent does not make you a non-interactive caller.
 
 **The base branch is discovered, never assumed.** Resolve it through the
-fallback chain, in one bash call (an agent thread resets cwd between calls):
+fallback chain, in one bash call (an agent thread resets cwd between calls).
+**When `$ARGUMENTS` supplied a PR, that selector is passed to `gh pr view`** —
+omitting it silently resolves the *current branch's* PR instead, so a run
+invoked with an explicit PR would measure against the wrong base:
 
 ```bash
-BASE=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null)
+# PR="" when no PR argument was given; digits-only or a full URL otherwise.
+case "$PR" in
+  ''|*[!0-9]*) [ -n "$PR" ] && case "$PR" in https://*) : ;; *) echo "refusing: PR must be digits-only or a full URL" >&2; exit 1 ;; esac ;;
+esac
+BASE=$(gh pr view ${PR:+"$PR"} --json baseRefName -q .baseRefName 2>/dev/null)
 [ -z "$BASE" ] && BASE=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
 [ -z "$BASE" ] && BASE=main
 git rev-parse --abbrev-ref HEAD
@@ -67,7 +74,9 @@ git rev-parse --abbrev-ref HEAD
 
 A `gh` failure (unauthenticated, no PR, offline) is not an error here — the
 chain degrades to `origin/HEAD` and then to `main`. Report which tier
-supplied the base.
+supplied the base. A PR selector that *was* supplied but resolves nothing is
+a refusal, not a silent fall to tier 2: the user named a PR that does not
+exist, and guessing a base from the current branch would hide that.
 
 **Every externally sourced branch name** — a PR's `baseRefName` or
 `headRefName`, a user argument — passes a character allowlist before it
@@ -105,10 +114,13 @@ claims which side is correct.
    ungated path to the remote.
 2. **Never a bare `git push --force`.** The push is
    `--force-with-lease=<branch>:<pre-fetch-sha>` plus `--force-if-includes`,
-   or it does not happen. A plain `--force-with-lease` is **not** sufficient
-   here: this skill runs `git fetch` in step 4, which advances the
-   remote-tracking ref the implicit lease reads, so the lease would happily
-   clobber a teammate's push that we fetched but never integrated.
+   aimed at `$PUSH_REMOTE`, or it does not happen. A plain
+   `--force-with-lease` is **not** sufficient here: this skill runs
+   `git fetch` in step 3, which advances the remote-tracking ref the implicit
+   lease reads, so the lease would happily clobber a teammate's push that we
+   fetched but never integrated. Nor is a hardcoded `origin` sufficient: the
+   remote comes from the branch's own upstream (step 0), because on a fork PR
+   `origin` can be the upstream repository.
 3. **Never `git rebase --skip`.** It drops the conflicting commit entirely.
    A conflict is resolved or the rebase is aborted; it is never skipped.
 4. **Never resolve a conflict by picking a side wholesale** unless one
@@ -125,11 +137,13 @@ claims which side is correct.
    `git reset --hard <sha>` has failed even if the rebase succeeded.
 9. **A check with no baseline proves nothing after.** A check that could not
    run before the rebase is reported `UNKNOWN`, never counted as evidence
-   that behavior was preserved (step 2).
+   that behavior was preserved (step 2). When *every* check is `UNKNOWN`, the
+   run verified nothing at all: the push still requires a confirmation that
+   names the absent evidence, and `--yes` does not skip it (step 7).
 10. **No destructive command relies on a variable set in an earlier Bash
     invocation.** Shell state does not persist between invocations: the push
-    and any `git reset --hard` re-derive `$BRANCH`, `$BASE`, and
-    `$ORIG_SHA` in the same invocation (re-reading the rebase log from step
+    and any `git reset --hard` re-derive `$BRANCH`, `$BASE`, `$PUSH_REMOTE`,
+    and `$ORIG_SHA` in the same invocation (re-reading the rebase log from step
     2 when needed) and expand them as `${VAR:?}` so an unset variable aborts
     instead of expanding to empty.
 
@@ -152,6 +166,43 @@ An empty `$REPO` is tolerated (offline, or no GitHub remote): the run
 degrades to a local rebase and stops before the push with that stated. Every
 `gh` command that does run passes `--repo "$REPO"` rather than relying on
 cwd detection.
+
+**Resolve the two remotes separately. They are not always the same one, and
+assuming `origin` for both silently pushes a fork PR's branch at upstream —
+or at a same-named branch in the wrong repository.**
+
+```sh
+# Where this branch's commits belong: its configured upstream, not a guess.
+UPSTREAM_REF="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null)"
+PUSH_REMOTE="${UPSTREAM_REF%%/*}"
+[ -n "$UPSTREAM_REF" ] || PUSH_REMOTE="$(git config --get remote.pushDefault || echo origin)"
+# Where the base branch lives.
+BASE_REMOTE=origin
+```
+
+- **`$PUSH_REMOTE`** is where the rebased branch is force-pushed (step 7) and
+  the remote whose tip the lease is taken against (step 2). On a clone of
+  your own fork it is `origin`; on a clone of upstream with a fork added as a
+  second remote it is that second remote, and hardcoding `origin` would aim
+  the force-push at the upstream repository.
+- **`$BASE_REMOTE`** is where the base branch is fetched from (step 3). When
+  the two differ, confirm the base actually exists there
+  (`git rev-parse --verify "refs/remotes/$BASE_REMOTE/$BASE"`) and refuse if
+  it does not, rather than rebasing onto a stale local ref.
+
+**Cross-check the push target against the PR** whenever a PR resolved. The
+PR's head is the authority on which repository the branch belongs to:
+
+```sh
+HEAD_OWNER="$(gh pr view ${PR:+"$PR"} --repo "$REPO" --json headRepositoryOwner --jq .headRepositoryOwner.login 2>/dev/null)"
+PUSH_URL="$(git remote get-url "$PUSH_REMOTE" 2>/dev/null)"
+```
+
+If `$HEAD_OWNER` is non-empty and does not appear in `$PUSH_URL`, **stop**:
+the branch's upstream is not the repository the PR reads from, so a
+force-push would rewrite a branch the PR does not track and leave the PR
+itself unchanged. Report both values and let the user point the branch at
+the right remote.
 
 ### Step 1 — refuse the states a rebase must not start from
 
@@ -193,8 +244,12 @@ All of these are refusals, checked before anything is rewritten:
 
    ```sh
    ORIG_SHA="$(git rev-parse HEAD)"
-   REMOTE_SHA_BEFORE="$(git rev-parse "origin/$BRANCH" 2>/dev/null)"   # empty = never pushed
+   REMOTE_SHA_BEFORE="$(git rev-parse "${PUSH_REMOTE:?}/$BRANCH" 2>/dev/null)"   # empty = never pushed
    ```
+
+   The lease is taken against `$PUSH_REMOTE` — the remote the branch is
+   actually pushed to (step 0) — because a lease measured against a
+   different remote's same-named branch authorizes nothing meaningful.
 
    The merge base is deliberately *not* captured here — it is computed
    after the fetch (step 3), against the base as it actually stands.
@@ -236,10 +291,11 @@ All of these are refusals, checked before anything is rewritten:
 ### Step 3 — fetch and decide whether there is anything to do
 
 ```sh
-git fetch origin
-MERGE_BASE="$(git merge-base HEAD "origin/${BASE:?}")"   # against the base as it now stands
-git rev-list --count "HEAD..origin/${BASE:?}"    # commits the branch is behind by
-git rev-list --count "origin/${BASE:?}..HEAD"    # commits the branch is ahead by
+git fetch "${BASE_REMOTE:?}"
+[ "${PUSH_REMOTE:?}" = "${BASE_REMOTE:?}" ] || git fetch "${PUSH_REMOTE:?}"   # refresh the lease ref too
+MERGE_BASE="$(git merge-base HEAD "${BASE_REMOTE:?}/${BASE:?}")"   # against the base as it now stands
+git rev-list --count "HEAD..${BASE_REMOTE:?}/${BASE:?}"    # commits the branch is behind by
+git rev-list --count "${BASE_REMOTE:?}/${BASE:?}..HEAD"    # commits the branch is ahead by
 ```
 
 Append `$MERGE_BASE` to the rebase log — step 5 reads it back to bound both
@@ -258,12 +314,12 @@ sides' history.
 ### Step 4 — rebase
 
 ```sh
-git rebase "origin/${BASE:?}"
+git rebase "${BASE_REMOTE:?}/${BASE:?}"
 ```
 
 If the branch contains merge commits
-(`git rev-list --merges --count "origin/$BASE..HEAD"` is non-zero), use
-`git rebase --rebase-merges "origin/$BASE"` instead — a plain rebase
+(`git rev-list --merges --count "$BASE_REMOTE/$BASE..HEAD"` is non-zero), use
+`git rebase --rebase-merges "$BASE_REMOTE/$BASE"` instead — a plain rebase
 flattens the topology and can silently drop a merge's second parent.
 
 A clean rebase goes straight to step 6. A conflict enters step 5.
@@ -290,7 +346,7 @@ For each conflict:
 1. **Reconstruct both intents** from history, not from the hunk alone:
 
    ```sh
-   git log --oneline "${MERGE_BASE:?}..origin/${BASE:?}" -- "<path>"   # what the base did
+   git log --oneline "${MERGE_BASE:?}..${BASE_REMOTE:?}/${BASE:?}" -- "<path>"   # what the base did
    git log --oneline "${MERGE_BASE:?}..${ORIG_SHA:?}"    -- "<path>"   # what your branch did
    ```
 
@@ -332,8 +388,16 @@ For each conflict:
    git grep -nE '^(<{7}|={7}|>{7})( |$)' -- "<path>" && { echo "refusing: conflict markers remain" >&2; exit 1; }
    git add -- "<path>"
    git diff --cached --check
-   git rebase --continue
+   GIT_EDITOR=true git rebase --continue
    ```
+
+   `GIT_EDITOR=true` is required, not decorative. With staged changes,
+   `git rebase --continue` opens the editor to confirm the commit message;
+   in a non-interactive shell with no `EDITOR` configured git aborts with
+   `Terminal is dumb, but EDITOR unset` and the rebase is left mid-flight.
+   `true` accepts the existing message unchanged, which is what preserving
+   the replayed commit calls for. The same applies to any other rebase
+   command this skill runs that can reach an editor.
 
    The grep runs against the working tree **before** the `git add`, so a
    marker never reaches the index; `git diff --cached --check` then
@@ -365,6 +429,11 @@ reports them, not just the suite's exit status. A suite that failed before
 and after can easily be failing for a different reason now, and a
 suite-level comparison calls that clean.
 
+**When every row is UNKNOWN, say so in those words.** Zero regressions out
+of zero comparisons is not a clean verification, and reporting it as one is
+the most misleading thing this skill could do. Carry the no-evidence state
+into step 7, where it forces a confirmation `--yes` cannot skip.
+
 **Any regression is a hard stop.** Do not push. Report which check and which
 named tests went from green to red, then offer the two real options: revisit
 the resolution that caused it (the rebase log names each one), or
@@ -372,7 +441,7 @@ the resolution that caused it (the rebase log names each one), or
 the outcome to the rebase log either way.
 
 When a regression's cause is not obvious from the log,
-`git range-diff "${MERGE_BASE:?}..${ORIG_SHA:?}" "origin/${BASE:?}..HEAD"`
+`git range-diff "${MERGE_BASE:?}..${ORIG_SHA:?}" "${BASE_REMOTE:?}/${BASE:?}..HEAD"`
 shows what each commit's content gained or lost in the replay — it is the
 fastest way to find a resolution that quietly dropped a hunk. It is a
 diagnostic to reach for on failure, not a required step.
@@ -382,12 +451,24 @@ diagnostic to reach for on failure, not a required step.
 Reached only with no regression and no unresolved escalation.
 
 **Ask for an explicit confirmation** before pushing — "rebased `<branch>`
-from `<ORIG_SHA>` onto `origin/<base>` at `<new-sha>`; `<n>` conflicts
-resolved; checks match baseline — force-push?" — and push only on a yes.
-`--yes` skips this prompt and is the caller's to pass (see Input).
+from `<ORIG_SHA>` onto `<BASE_REMOTE>/<base>` at `<new-sha>`; `<n>` conflicts
+resolved; checks match baseline; pushing to `<PUSH_REMOTE>` — force-push?" —
+and push only on a yes. `--yes` skips this prompt and is the caller's to
+pass (see Input), with one exception below.
+
+**The no-evidence case overrides `--yes`.** When *every* configured check
+came back `UNKNOWN` — or the project configures no checks at all — the
+comparison in step 6 had nothing to compare, so the run has produced **zero
+evidence** that behavior was preserved. The skill's premise is unmet. Ask
+regardless of `--yes`, and say exactly that: "no check produced a usable
+baseline, so nothing verified that this rebase preserved behavior —
+force-push anyway?" Never render this case as "checks match baseline";
+they did not match, they were absent. A repo with no checks is legitimate,
+which is why this is a confirmation and not a refusal — but the user
+confirms an unverified push knowing it is unverified.
 
 ```sh
-git push --force-with-lease="${BRANCH:?}:${REMOTE_SHA_BEFORE:?}" --force-if-includes origin "${BRANCH:?}"
+git push --force-with-lease="${BRANCH:?}:${REMOTE_SHA_BEFORE:?}" --force-if-includes "${PUSH_REMOTE:?}" "${BRANCH:?}"
 ```
 
 The explicit lease value is the remote tip captured in step 2, **before**
@@ -396,10 +477,13 @@ the step 3 fetch. That is the whole point: an implicit
 already advanced, so it would authorize clobbering a push we fetched and
 never integrated. `--force-if-includes` (git ≥ 2.30) additionally requires
 that the remote tip be reachable from our reflog. Both, together, or no push
-(Hard Rule 2).
+(Hard Rule 2). The target is `$PUSH_REMOTE` from step 0, never a hardcoded
+`origin` — on a fork PR whose branch tracks a second remote, `origin` is the
+upstream repository, and pushing there rewrites a branch the PR does not
+track while leaving the PR itself unchanged.
 
 - **The branch was never pushed** (`$REMOTE_SHA_BEFORE` is empty): no force
-  is involved — `git push -u origin "${BRANCH:?}"`.
+  is involved — `git push -u "${PUSH_REMOTE:?}" "${BRANCH:?}"`.
 - **The push is rejected** (stale lease, branch protection): surface git's
   rejection **verbatim** and stop. Never retry with a bare `--force`. A
   stale lease means the remote moved during the run — re-run the skill from
@@ -407,7 +491,7 @@ that the remote tip be reachable from our reflog. Both, together, or no push
 
 ## Success criteria
 
-- The branch is replayed on `origin/<base>` with every commit intact —
+- The branch is replayed on `<BASE_REMOTE>/<base>` with every commit intact —
   none skipped, none emptied without saying so.
 - Every conflict resolution is recorded in `docs/plans/<ID>/rebase-<n>.md`
   with both sides' intent and the reasoning.
