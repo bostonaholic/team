@@ -66,17 +66,27 @@ invoked with an explicit PR would measure against the wrong base:
 case "$PR" in
   ''|*[!0-9]*) [ -n "$PR" ] && case "$PR" in https://*) : ;; *) echo "refusing: PR must be digits-only or a full URL" >&2; exit 1 ;; esac ;;
 esac
-BASE=$(gh pr view ${PR:+"$PR"} --json baseRefName -q .baseRefName 2>/dev/null)
-[ -z "$BASE" ] && BASE=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
-[ -z "$BASE" ] && BASE=main
+if [ -n "$PR" ]; then
+  # An explicitly named PR is authoritative: it resolves the base or the run stops.
+  BASE=$(gh pr view "$PR" --json baseRefName -q .baseRefName) \
+    || { echo "refusing: cannot resolve PR '$PR' — check the number/URL and 'gh auth status'" >&2; exit 1; }
+  [ -n "$BASE" ] || { echo "refusing: PR '$PR' returned no base branch" >&2; exit 1; }
+else
+  BASE=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null)
+  [ -z "$BASE" ] && BASE=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+  [ -z "$BASE" ] && BASE=main
+fi
 git rev-parse --abbrev-ref HEAD
 ```
 
-A `gh` failure (unauthenticated, no PR, offline) is not an error here — the
-chain degrades to `origin/HEAD` and then to `main`. Report which tier
-supplied the base. A PR selector that *was* supplied but resolves nothing is
-a refusal, not a silent fall to tier 2: the user named a PR that does not
-exist, and guessing a base from the current branch would hide that.
+**The fallback chain exists only for the no-PR case.** With no argument, a
+`gh` failure (unauthenticated, no PR for this branch, offline) is not an
+error — the chain degrades to `origin/HEAD` and then to `main`, and the run
+reports which tier supplied the base. With a PR named explicitly, there is
+no degradation: the lookup succeeds or the run refuses. Falling through
+would silently rebase onto `main` while the user believes the run is
+tracking the PR they named — and on a PR whose base is a stack parent or a
+release branch, that quietly rewrites the branch onto the wrong history.
 
 **Every externally sourced branch name** — a PR's `baseRefName` or
 `headRefName`, a user argument — passes a character allowlist before it
@@ -171,24 +181,52 @@ cwd detection.
 assuming `origin` for both silently pushes a fork PR's branch at upstream —
 or at a same-named branch in the wrong repository.**
 
+**Follow git's own push-remote precedence, in this exact order.** Anything
+else computes a remote git itself would not push to, which desynchronizes
+the lease from the push target:
+
 ```sh
-# Where this branch's commits belong: its configured upstream, not a guess.
-UPSTREAM_REF="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null)"
-PUSH_REMOTE="${UPSTREAM_REF%%/*}"
-[ -n "$UPSTREAM_REF" ] || PUSH_REMOTE="$(git config --get remote.pushDefault || echo origin)"
-# Where the base branch lives.
-BASE_REMOTE=origin
+PUSH_REMOTE="$(git config --get "branch.$BRANCH.pushRemote" \
+  || git config --get remote.pushDefault \
+  || git config --get "branch.$BRANCH.remote" \
+  || echo origin)"
+```
+
+`branch.<name>.pushRemote` beats `remote.pushDefault`, which beats the
+branch's fetch remote (`branch.<name>.remote`, what `@{upstream}` reports),
+which falls back to `origin`. Reading `@{upstream}` *first* inverts the top
+two: on a triangular setup — fetch from upstream, push to a fork — the
+upstream ref names `origin`, so the force-push lands in the upstream
+repository, which is the exact failure the two-remote split exists to
+prevent. Deriving the remote from `git config` also avoids splitting
+`@{upstream}`'s output on `/`, which is ambiguous for a slashed branch name.
+
+**The base remote is resolved from the PR, not assumed to be `origin`.** On
+a clone of your own fork, `origin` *is* the fork, and the fork's copy of the
+base branch is stale by however long since it was last synced — rebasing
+onto it replays your work on old history and produces a diff full of
+changes you did not make:
+
+```sh
+BASE_OWNER="$(gh pr view ${PR:+"$PR"} --repo "$REPO" --json baseRepository \
+  --jq '.baseRepository.owner.login + "/" + .baseRepository.name' 2>/dev/null)"
+# Pick the remote whose URL names that repository.
+BASE_REMOTE="$(git remote | while read -r r; do
+  case "$(git remote get-url "$r")" in *"$BASE_OWNER"*) echo "$r"; break ;; esac
+done)"
+[ -n "$BASE_REMOTE" ] || BASE_REMOTE=origin
 ```
 
 - **`$PUSH_REMOTE`** is where the rebased branch is force-pushed (step 7) and
-  the remote whose tip the lease is taken against (step 2). On a clone of
-  your own fork it is `origin`; on a clone of upstream with a fork added as a
-  second remote it is that second remote, and hardcoding `origin` would aim
-  the force-push at the upstream repository.
-- **`$BASE_REMOTE`** is where the base branch is fetched from (step 3). When
-  the two differ, confirm the base actually exists there
-  (`git rev-parse --verify "refs/remotes/$BASE_REMOTE/$BASE"`) and refuse if
-  it does not, rather than rebasing onto a stale local ref.
+  the remote whose tip the lease is taken against (step 2).
+- **`$BASE_REMOTE`** is where the base branch is fetched from (step 3).
+  When no PR resolved, it falls back to `origin` — say so in the report, and
+  when the repo has more than one remote, name which one was used so a
+  fork-clone user can catch a wrong pick before the rebase runs.
+- **Whichever way it resolved**, confirm the base actually exists there
+  (`git rev-parse --verify "refs/remotes/$BASE_REMOTE/$BASE"`) after the
+  step 3 fetch, and refuse if it does not rather than rebasing onto a stale
+  or missing ref.
 
 **Cross-check the push target against the PR** whenever a PR resolved. The
 PR's head is the authority on which repository the branch belongs to:
@@ -326,22 +364,57 @@ A clean rebase goes straight to step 6. A conflict enters step 5.
 
 ### Step 5 — resolve conflicts from both sides' intent
 
-Repeat per conflicted step of the rebase, for each path in
-`git diff --name-only --diff-filter=U`.
+A rebase stops once per conflicted *commit*, and that stop can carry
+**several** conflicted paths. The loop below therefore resolves **every**
+path the stop produced, and only then continues the rebase — a
+`git rebase --continue` issued after the first path fails with unmerged
+files still in the index, or, worse, continues with paths silently
+unstaged. Resolve all, then continue once (step 5.7).
+
+List what this stop actually produced:
+
+```sh
+git diff --name-only --diff-filter=U
+```
 
 **Read the inversion carefully. During a rebase, `--ours` is the upstream
 base and `--theirs` is your own commit being replayed.** This is backwards
 from a merge, and reversing it is the single most common way a rebase
-silently discards the author's work. Address the three stages explicitly
-rather than trusting the words:
+silently discards the author's work. Address the stages positionally rather
+than trusting the flag names.
+
+**Do not assume all three stages exist.** `git show :1:` fails outright on an
+add/add conflict, and one of `:2:`/`:3:` is absent on every modify/delete.
+Ask the index which stages are present, then branch on the answer:
 
 ```sh
-git show ":1:<path>"   # merge base — the common ancestor
+git ls-files -u -- "<path>" | awk '{print $3}' | sort -u   # prints the stage numbers present
+```
+
+| Stages present | Conflict type | What it means |
+|----------------|---------------|---------------|
+| 1, 2, 3 | content | Both sides edited a common ancestor. The normal case. |
+| 2, 3 (no 1) | add/add | Both sides created the file independently. There is no ancestor to diff against — reconcile the two files directly. |
+| 1, 2 (no 3) | modify/delete | The base kept it; **your commit deleted it**. |
+| 1, 3 (no 2) | delete/modify | **The base deleted it**; your commit kept editing it. |
+
+Read only the stages the table says exist:
+
+```sh
+git show ":1:<path>"   # merge base — the common ancestor (absent on add/add)
 git show ":2:<path>"   # "ours"   = the BASE branch's version
 git show ":3:<path>"   # "theirs" = YOUR commit's version
 ```
 
-For each conflict:
+**A modify/delete is a decision, not a merge.** No text reconciles "exists"
+with "does not exist", so never resolve one by defaulting to whichever side
+is convenient. Reconstruct why the deletion happened (step 5.1's `git log`,
+which reports deletions with `--diff-filter=D`); if the history does not
+settle it, escalate it as step 5.4 describes. `git rm -- "<path>"` records
+the delete and `git add -- "<path>"` records the keep; either way it is a
+recorded resolution like any other.
+
+For each conflicted path:
 
 1. **Reconstruct both intents** from history, not from the hunk alone:
 
@@ -382,14 +455,35 @@ For each conflict:
    resolved autonomously or escalated. This is the artifact a reviewer reads
    when the rebased diff looks surprising.
 
-6. **Prove no markers survive**, then continue:
+6. **Prove no markers survive in THIS path**, then stage it — still inside
+   the per-path loop, with no `--continue` yet:
 
    ```sh
    git grep -nE '^(<{7}|={7}|>{7})( |$)' -- "<path>" && { echo "refusing: conflict markers remain" >&2; exit 1; }
    git add -- "<path>"
    git diff --cached --check
+   ```
+
+   The grep runs against the working tree **before** the `git add`, so a
+   marker never reaches the index; `git diff --cached --check` then inspects
+   what was actually staged. Order matters — run `--check` first and it
+   examines an empty staged diff and passes vacuously. The two are
+   complementary: `--check` catches the markers git recognizes, the grep
+   catches the ones inside strings and comments that it does not.
+
+Then, **once per rebase stop, after every path above is resolved**:
+
+7. **Confirm nothing is left unmerged, and continue:**
+
+   ```sh
+   [ -z "$(git diff --name-only --diff-filter=U)" ] \
+     || { echo "refusing: unmerged paths remain — resolve them before continuing" >&2; exit 1; }
    GIT_EDITOR=true git rebase --continue
    ```
+
+   The emptiness check is the loop's exit condition, and it is what makes
+   the multi-path case correct: it fails loudly if any path from this stop
+   was missed, instead of letting `--continue` do it.
 
    `GIT_EDITOR=true` is required, not decorative. With staged changes,
    `git rebase --continue` opens the editor to confirm the commit message;
@@ -399,12 +493,8 @@ For each conflict:
    the replayed commit calls for. The same applies to any other rebase
    command this skill runs that can reach an editor.
 
-   The grep runs against the working tree **before** the `git add`, so a
-   marker never reaches the index; `git diff --cached --check` then
-   inspects what was actually staged. Order matters — run `--check` first
-   and it examines an empty staged diff and passes vacuously. The two are
-   complementary: `--check` catches the markers git recognizes, the grep
-   catches the ones inside strings and comments that it does not.
+   A rebase with several conflicting commits stops again after this. Each
+   stop re-enters step 5 from the top with its own path list.
 
 **To abandon mid-rebase**, `git rebase --abort` restores the pre-rebase
 state exactly. Never `git rebase --skip` (Hard Rule 3).

@@ -81,13 +81,13 @@ describe("pr-rebase skill: frontmatter and invocation surface", () => {
     expect(/^argument-hint:.*--yes/m.test(f)).toBe(true);
   });
 
-  test("description carries the guard carrier, a quoted phrase, and the slash name", () => {
-    // The guard carrier string and the phrase-plus-slash-name shape are the
-    // documented routing contract for a side-effecting entry point
-    // (architecture.md). The specific phrases are free to change.
+  test("description carries a quoted trigger phrase and the slash name", () => {
+    // The phrase-plus-slash-name shape IS machine-checked (architecture.md
+    // and tests/architecture.test.ts). The explicit-intent guard wording is
+    // deliberately NOT machine-checked there — it is the author's and
+    // reviewer's responsibility — so nothing here pins that sentence.
     const f = fm().replace(/\s+/g, " ");
     expect(f.length).toBeGreaterThan(0);
-    expect(f).toContain("Invoke ONLY on explicit");
     expect(/"[^"]+"/.test(f)).toBe(true);
     expect(f).toContain("/pr-rebase");
   });
@@ -114,14 +114,23 @@ describe("pr-rebase skill: base-branch discovery is a chain, never a bare main",
     expect(lines).toContain("BASE=main");
   });
 
-  test("the base-resolving gh call forwards the PR selector", () => {
-    // Without the selector, an explicit PR argument is silently ignored and
-    // the base comes from the CURRENT branch's PR instead.
-    const ghLine = fencedLines().find(
-      (line) => line.includes("gh pr view") && line.includes("baseRefName"),
+  test("an explicitly named PR is looked up with the selector and never falls through", () => {
+    // Two failure modes this pins: omitting the selector resolves the CURRENT
+    // branch's PR instead, and a failed explicit lookup degrading to the
+    // origin/HEAD -> main chain silently rebases onto the wrong base.
+    const lines = fencedLines();
+    const explicit = lines.findIndex((line) =>
+      /gh pr view "\$PR".*baseRefName/.test(line),
     );
-    expect(ghLine).toBeDefined();
-    expect(ghLine ?? "").toContain('${PR:+"$PR"}');
+    expect(explicit).toBeGreaterThan(-1);
+
+    // The refusal must sit between the explicit lookup and the fallback chain.
+    const refusal = lines.findIndex(
+      (line, index) => index >= explicit && /exit 1/.test(line),
+    );
+    const fallback = lines.findIndex((line) => /BASE=main/.test(line));
+    expect(refusal).toBeGreaterThan(-1);
+    expect(refusal).toBeLessThan(fallback);
   });
 
   test("externally sourced branch names pass a character allowlist", () => {
@@ -137,11 +146,32 @@ describe("pr-rebase skill: base-branch discovery is a chain, never a bare main",
 });
 
 describe("pr-rebase skill: the two remotes are resolved separately", () => {
-  test("derives the push remote from the branch's upstream", () => {
+  test("push-remote resolution follows git's precedence, in git's order", () => {
+    // Ordering tripwire. git resolves branch.<name>.pushRemote before
+    // remote.pushDefault before branch.<name>.remote before origin. Reading
+    // the branch's fetch remote first inverts the top two, which on a
+    // triangular fetch-upstream/push-fork setup aims the force-push at
+    // upstream — the exact bug the two-remote split exists to prevent.
     const lines = fencedLines().join("\n");
-    expect(lines).toContain("@{upstream}");
     expect(lines).toContain("PUSH_REMOTE=");
     expect(lines).toContain("BASE_REMOTE=");
+
+    const order = [
+      lines.indexOf("pushRemote"),
+      lines.indexOf("remote.pushDefault"),
+      lines.indexOf(".remote"),
+    ];
+    for (const position of order) expect(position).toBeGreaterThan(-1);
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+  });
+
+  test("the base remote is resolved from the PR, not fixed to origin", () => {
+    // On a clone of your own fork, origin IS the fork and its copy of the
+    // base branch is stale — rebasing onto it replays your work on old
+    // history.
+    const lines = fencedLines().join("\n");
+    expect(lines).toContain("baseRepository");
+    expect(lines).toContain("git remote get-url");
   });
 
   test("cross-checks the push target against the PR's head repository", () => {
