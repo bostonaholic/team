@@ -30,7 +30,7 @@
 // team-pr is demoted; no protocol.test.ts sentinel, that convention is for
 // the pipeline-skill demotions):
 //   shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer,
-//   groom-backlog, pr-cleanup, pr-verify
+//   groom-backlog, pr-cleanup, pr-verify, pr-rebase
 
 import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
@@ -601,4 +601,51 @@ describe("L2 coverage: pr-verify (executable utility, not L5)", () => {
   test("pr-verify is pinned by its dedicated L2 tripwire tests/pr-verify-skill.test.ts", () => {
     expect(existsSync(join(TESTS_ROOT, "pr-verify-skill.test.ts"))).toBe(true);
   });
+});
+
+// `pr-rebase` rebases a branch against a live base and force-pushes — heavy
+// external state (remotes, a PR, the project's own check suite) that it also
+// mutates destructively, the same reason `pr-cleanup` and `shipit` are
+// demoted. Its behavioral contract is pinned by its dedicated L2 tripwire,
+// tests/pr-rebase-skill.test.ts, not an L5 eval.
+
+describe("L2 coverage: pr-rebase (executable utility, not L5)", () => {
+  test("pr-rebase has no evals/fixtures/pr-rebase/ directory (no L5 eval)", () => {
+    expect(existsSync(fixtureDir("pr-rebase"))).toBe(false);
+  });
+
+  test("pr-rebase has no tests/pr-rebase.evals.ts file (no L5 eval)", () => {
+    expect(existsSync(evalsFilePath("pr-rebase"))).toBe(false);
+  });
+
+  test("pr-rebase is pinned by its dedicated L2 tripwire tests/pr-rebase-skill.test.ts", () => {
+    expect(existsSync(join(TESTS_ROOT, "pr-rebase-skill.test.ts"))).toBe(true);
+  });
+});
+
+// List-driven sweep over every executable utility skill. The per-skill blocks
+// above each carry that skill's own demotion rationale; this one carries the
+// invariant, so a utility added to the header list in future cannot be
+// "documented as covered" without the tripwire that actually covers it —
+// the gap this sweep was added to close.
+const UTILITY_SKILLS = [
+  "shipit",
+  "pr-open-comments",
+  "pr-watch-as-author",
+  "pr-watch-as-reviewer",
+  "groom-backlog",
+  "pr-cleanup",
+  "pr-verify",
+  "pr-rebase",
+] as const;
+
+describe("L2 coverage: every executable utility skill is actually pinned", () => {
+  for (const skill of UTILITY_SKILLS) {
+    test(`${skill} has a SKILL.md and a matching L2 tripwire, and no L5 eval`, () => {
+      expect(existsSync(join(REPO_ROOT, "skills", skill, "SKILL.md"))).toBe(true);
+      expect(existsSync(join(TESTS_ROOT, `${skill}-skill.test.ts`))).toBe(true);
+      expect(existsSync(fixtureDir(skill))).toBe(false);
+      expect(existsSync(evalsFilePath(skill))).toBe(false);
+    });
+  }
 });

@@ -105,16 +105,18 @@ describe("dev install: codex harness", () => {
   });
 
   test("install announces that Codex ignores disable-model-invocation", () => {
-    // pr-watch-as-reviewer installs like any other skill here, so the run has
-    // to say that its approval can merge a PR — the guard it relies on is
-    // honored by Claude Code and ignored by Codex.
+    // Both user-only skills install like any other skill here, so the run has
+    // to name them — the guard they rely on is honored by Claude Code and
+    // ignored by Codex. pr-watch-as-reviewer's approval can merge a PR;
+    // pr-rebase force-pushes a rewritten branch.
     const { output } = run(INSTALL, newHome());
     expect(output).toContain("pr-watch-as-reviewer");
+    expect(output).toContain("pr-rebase");
     expect(output).toContain("disable-model-invocation");
   });
 
   // Stacking the dev symlink on a native plugin install makes Codex find the
-  // same 53 skills under two roots and render every one twice — a doubled
+  // same 54 skills under two roots and render every one twice — a doubled
   // catalog, worse truncation, and an ambiguous source. The guard reads the
   // STATUS column, so a registered-but-uninstalled marketplace row is fine.
   test("install aborts when a Codex plugin install is already present", () => {

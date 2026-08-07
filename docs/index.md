@@ -64,6 +64,6 @@ For a focused bug fix that skips the QRSPI ceremony:
 - **[Vision](vision.md)**: the loop-driven end state Team builds toward.
 - **[Ethos](ethos.md)**: the principles that make the autonomous middle trustworthy.
 - **[Architecture](architecture.md)**: full design, artifact frontmatter, phase-inference rules.
-- **[Skills](skills.md)**: all 53 skills, their arguments, consumers, and behaviors.
+- **[Skills](skills.md)**: all 54 skills, their arguments, consumers, and behaviors.
 - **[Cross-host portability](cross-host-portability.md)**: the capability matrix for Gemini CLI and Codex CLI, and the chosen portability strategy.
 - **[GitHub repository](https://github.com/bostonaholic/team)**: source, agents, skills.

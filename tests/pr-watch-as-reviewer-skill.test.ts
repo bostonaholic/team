@@ -19,7 +19,7 @@
 // not clean assertion failures.
 
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
@@ -283,22 +283,60 @@ describe("pr-watch-as-reviewer skill: README Codex removal command targets the g
     return existsSync(README) ? read(README) : "";
   }
 
-  test("the rm -rf path names exactly one skill, it exists, and its SKILL.md disables model invocation", () => {
+  // Every rm -rf target must be a real skill that actually sets the flag —
+  // a rename or move must fail the build until the README path moves with it.
+  function removalTargets(readme: string): string[] {
+    // Match the path shape only, never the surrounding prose, so a README
+    // rewrite that keeps the paths correct stays green.
+    return [...readme.matchAll(/rm -rf .*\/skills\/([A-Za-z0-9._-]+)/g)].map(
+      (m) => m[1] ?? "",
+    );
+  }
+
+  // Skills on disk that disable model invocation — the set the README owes
+  // Codex users a removal line for.
+  function guardedSkills(): string[] {
+    const skillsRoot = join(REPO_ROOT, "skills");
+    return readdirSync(skillsRoot, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name)
+      .filter((name) => {
+        const file = join(skillsRoot, name, "SKILL.md");
+        if (!existsSync(file)) return false;
+        return /^disable-model-invocation:\s*true\s*$/m.test(
+          frontmatter(read(file)),
+        );
+      })
+      .sort();
+  }
+
+  test("every rm -rf path names a skill that exists and disables model invocation", () => {
     const readme = readmeBody();
     // Guard: a missing README must fail cleanly, not vacuously pass.
     expect(readme.length).toBeGreaterThan(0);
 
-    // Extract the trailing skills/<name> path component from rm -rf lines
-    // only — the path shape, never the surrounding prose, so a README
-    // rewrite that keeps the path correct stays green.
-    const removals = [...readme.matchAll(/rm -rf .*\/skills\/([A-Za-z0-9._-]+)/g)];
-    expect(removals.length).toBe(1);
+    const targets = removalTargets(readme);
+    expect(targets.length).toBeGreaterThan(0);
 
-    const targetName = removals[0]?.[1] ?? "";
-    const targetSkill = join(REPO_ROOT, "skills", targetName, "SKILL.md");
-    expect(existsSync(targetSkill)).toBe(true);
+    for (const targetName of targets) {
+      const targetSkill = join(REPO_ROOT, "skills", targetName, "SKILL.md");
+      expect(existsSync(targetSkill)).toBe(true);
 
-    const targetFrontmatter = existsSync(targetSkill) ? frontmatter(read(targetSkill)) : "";
-    expect(/^disable-model-invocation:\s*true\s*$/m.test(targetFrontmatter)).toBe(true);
+      const targetFrontmatter = existsSync(targetSkill)
+        ? frontmatter(read(targetSkill))
+        : "";
+      expect(/^disable-model-invocation:\s*true\s*$/m.test(targetFrontmatter)).toBe(
+        true,
+      );
+    }
+  });
+
+  test("the removal list covers every skill that disables model invocation", () => {
+    // The dangerous direction: a NEW user-only skill ships, Codex ignores its
+    // flag, and the README never tells anyone to remove it. Set equality
+    // catches that as well as a stale line for a deleted skill.
+    const readme = readmeBody();
+    expect(readme.length).toBeGreaterThan(0);
+    expect([...new Set(removalTargets(readme))].sort()).toEqual(guardedSkills());
   });
 });
