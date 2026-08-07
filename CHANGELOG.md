@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-08-07
+
 ### Added
 
 - **`/pr-rebase`, a standalone skill that brings a branch up to date with its base without changing what the branch does.** Rebasing a stale feature branch is where behavior quietly disappears: a conflict gets resolved by picking a side, the suite is red for reasons nobody classifies, and a force-push makes it permanent. The skill puts a baseline around the whole thing. It records the recovery sha and runs the project's detected checks *before* the rebase, so a post-rebase failure can be sorted into regression, pre-existing, or fixed-by-the-base — a check that could not run at all is marked UNKNOWN and never counts as evidence that behavior survived. Conflicts are resolved from both sides' intent reconstructed out of history, with the reasoning appended to a local `docs/plans/<id>/rebase-<n>.md`; wholesale side-picking and `git rebase --skip` are refused, generated files are regenerated rather than picked, and a genuinely undecidable hunk escalates to the user without aborting the rebase. Any check that passed before and fails after stops the run with the branch still recoverable. The push is `--force-with-lease=<branch>:<pre-fetch-sha> --force-if-includes` — an implicit lease is unsafe here precisely because the skill's own `git fetch` advances the remote-tracking ref that an implicit lease reads. It is user-invocable only (`disable-model-invocation: true`), and it neither waits for CI nor merges; `/shipit` still lands the PR. [`skills/pr-rebase/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-rebase/SKILL.md)
@@ -420,7 +422,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.36.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.37.0...HEAD
+[0.37.0]: https://github.com/bostonaholic/team/compare/v0.36.1...v0.37.0
 [0.36.1]: https://github.com/bostonaholic/team/compare/v0.36.0...v0.36.1
 [0.36.0]: https://github.com/bostonaholic/team/compare/v0.35.1...v0.36.0
 [0.35.1]: https://github.com/bostonaholic/team/compare/v0.35.0...v0.35.1
