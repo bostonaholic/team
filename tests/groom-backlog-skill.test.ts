@@ -108,6 +108,22 @@ function readyWipLimit(): string {
   return read(PROJECT_TRACKING).match(/capped at \*\*(\d+)\*\* cards/)?.[1] ?? "";
 }
 
+// The resolution-label names, read out of the `### Resolution` table of the
+// board doc — derived like the WIP numeral above, never hardcoded, so a label
+// rename there fails here rather than leaving the skill's recipe applying a
+// label that no longer exists. Missing file, heading, or rows → [] so the
+// length assertion fails, never throws.
+function resolutionLabels(): string[] {
+  if (!existsSync(PROJECT_TRACKING)) return [];
+  const text = read(PROJECT_TRACKING);
+  const start = text.indexOf("### Resolution");
+  if (start < 0) return [];
+  const rest = text.slice(start);
+  const end = rest.indexOf("\n### ");
+  const resolution = end < 0 ? rest : rest.slice(0, end);
+  return [...resolution.matchAll(/^\|\s*`([a-z]+)`\s*\|/gm)].map((m) => m[1]);
+}
+
 describe("groom-backlog skill: frontmatter", () => {
   test("skill file lives under runtime skills/ (distributed)", () => {
     expect(existsSync(SKILL)).toBe(true);
@@ -372,5 +388,65 @@ describe("groom-backlog skill: claim verification and ranking", () => {
       expect(promotion).toContain(token);
     }
     expect(promotion).toContain("smaller verified scope");
+  });
+});
+
+// Slice 2: evidence-backed closure proposals. Closing an issue is the one
+// destructive mutation grooming can propose. These pin its recipe shape
+// (evidence by file, additive label, close reason), its own mutation-class
+// question, its slot in the execute order, and the decision-ticket carve-out.
+describe("groom-backlog skill: evidence-backed closure proposals", () => {
+  test("the closure recipe closes with a reason and travels by file", () => {
+    const recipes = section("## Tracker recipes");
+    // Guard: a missing section must fail, not vacuously pass the absence check.
+    expect(recipes.length).toBeGreaterThan(0);
+    expect(recipes).toContain("gh issue close");
+    // "not planned", never "completed" — the premise died, no work was delivered.
+    expect(recipes).toContain('--reason "not planned"');
+    // The evidence comment travels whole by file; the mandatory pre-close
+    // re-read is cached like the rewrite pre-image.
+    expect(recipes).toContain("closure-evidence-");
+    expect(recipes).toContain("pre-close-");
+    // `--comment` is the prose-in-argument shape the shell-safety hard rule forbids.
+    expect(recipes).not.toContain("--comment");
+  });
+
+  test("closures are their own mutation class and execute after new issues, before links", () => {
+    // A named question class, like **dependency links**, so approving an
+    // adjacent class can never carry a closure.
+    const ask = flat(stepSection("### Step 8 — Present the consequential choices and wait"));
+    expect(ask.length).toBeGreaterThan(0);
+    expect(/\*\*closures\*\*/i.test(ask)).toBe(true);
+    // The fixed execute order: a link touching a just-closed endpoint must
+    // die at the endpoint re-read, so closures land before links are drawn.
+    const execute = flat(stepSection("### Step 9 — Execute in dependency order"));
+    expect(execute.length).toBeGreaterThan(0);
+    const newIssues = execute.indexOf("new issues");
+    const closures = execute.indexOf("closures");
+    const links = execute.indexOf("dependency links");
+    // Each `greater than` also proves presence: -1 never beats a real index.
+    expect(newIssues).toBeGreaterThan(-1);
+    expect(closures).toBeGreaterThan(newIssues);
+    expect(links).toBeGreaterThan(closures);
+  });
+
+  test("the carve-out and the doc-derived resolution labels are pinned", () => {
+    // A decision, investigation, or spike ticket is never a closure candidate:
+    // its deliverable is a recorded decision, not a code state.
+    const verify = flat(stepSection("### Step 3 — Verify claims against the code"));
+    // Guard: a missing step must fail, not vacuously pass the token checks.
+    expect(verify.length).toBeGreaterThan(0);
+    expect(verify).toContain("decision");
+    expect(verify).toContain("investigation");
+    expect(verify).toContain("spike");
+    // The recipe applies one of the board doc's own resolution labels.
+    const labels = resolutionLabels();
+    // Guard: a failed derivation must fail here, not vacuously pass the loop.
+    expect(labels.length).toBe(3);
+    const recipes = section("## Tracker recipes");
+    expect(recipes.length).toBeGreaterThan(0);
+    for (const label of labels) {
+      expect(recipes).toContain(label);
+    }
   });
 });

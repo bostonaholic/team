@@ -442,7 +442,12 @@ QRSPI phase: a self-contained action a user runs on demand.
   with dated evidence and one of three outcomes recorded per issue. The
   verified candidates are then ranked by a stated four-tier heuristic,
   smaller verified scope breaking ties, so the promotion pick rests on
-  checked premises. Plans, asks, waits,
+  checked premises. An issue whose premise evaporated becomes a closure
+  proposal behind its own question. An approved closure posts the dated
+  evidence as a comment, adds a resolution label additively, and closes
+  with reason "not planned". Decision, investigation, and spike tickets
+  are carved out: the evidence attaches as a comment and the ticket stays
+  open. Plans, asks, waits,
   then executes. The plan file is written before the questions are asked.
   There is one question per mutation class the plan contains, each carrying
   exactly one recommendation, and filing a new issue always needs its own
