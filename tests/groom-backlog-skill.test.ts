@@ -3,9 +3,12 @@
 // L2 tripwire (free, deterministic): fences the `groom-backlog` RUNTIME skill
 // (skills/groom-backlog/SKILL.md) — the fourth standalone utility distributed
 // to Team's users. It grooms a project backlog: it loads the whole board in
-// bulk, computes a gap inventory, clusters open issues by outcome, writes a
-// plan file, asks the consequential questions with a recommendation each, and
-// stops. Nothing on the tracker changes before the user answers.
+// bulk, computes a gap inventory, verifies each candidate's claims against the
+// code and the tracker, ranks the verified candidates by a four-tier
+// heuristic, proposes evidence-backed closures for evaporated premises,
+// clusters open issues by outcome, writes a plan file, asks the consequential
+// questions with a recommendation each, and stops. Nothing on the tracker
+// changes before the user answers, and each closure needs its own answer.
 //
 // L2 and not L5: grooming drives a live tracker over the network and mutates
 // shared state — the same heavy external state that keeps `shipit`,
@@ -433,6 +436,35 @@ describe("groom-backlog skill: evidence-backed closure proposals", () => {
     expect(newIssues).toBeGreaterThan(-1);
     expect(closures).toBeGreaterThan(newIssues);
     expect(links).toBeGreaterThan(closures);
+  });
+
+  test("both closure verdicts bind code-level claims to a verified checkout", () => {
+    // The command that establishes the working tree is a checkout of the
+    // issue's repository. Without it, an unrelated checkout reads every cited
+    // path as absent, and "premise evaporated" comes for free. Pinned in both
+    // copies, like the outcome tokens, so a drift between them fails here.
+    const CHECKOUT_COMMAND = "gh repo view --json nameWithOwner --jq .nameWithOwner";
+    const verify = flat(stepSection("### Step 3 — Verify claims against the code"));
+    // Guard: a missing step must fail, not vacuously pass the token checks.
+    expect(verify.length).toBeGreaterThan(0);
+    expect(verify).toContain(CHECKOUT_COMMAND);
+    const promotion = flat(section("## The promotion standard"));
+    expect(promotion.length).toBeGreaterThan(0);
+    expect(promotion).toContain(CHECKOUT_COMMAND);
+  });
+
+  test("a leading-dash value is guarded with a -- terminator in both copies", () => {
+    // A jq -r-filled variable defeats re-parsing but not option injection: a
+    // value that starts with `-` reads as an option in the receiving program.
+    // The backticked bare `--` token is the terminator; the write-shape flags
+    // (`--body-file`, `--input`) never match it.
+    const verify = stepSection("### Step 3 — Verify claims against the code");
+    // Guard: a missing step must fail, not vacuously pass the token checks.
+    expect(verify.length).toBeGreaterThan(0);
+    expect(/`--`/.test(verify)).toBe(true);
+    const rules = section("## Hard rules");
+    expect(rules.length).toBeGreaterThan(0);
+    expect(/`--`/.test(rules)).toBe(true);
   });
 
   test("the carve-out and the doc-derived resolution labels are pinned", () => {
