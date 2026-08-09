@@ -408,12 +408,14 @@ QRSPI phase: a self-contained action a user runs on demand.
 ### groom-backlog
 
 - **Purpose:** Groom a project backlog in an issue tracker. It loads the
-  whole board in bulk, computes a gap inventory, and clusters open issues
-  by outcome. It places each cluster under a grouping construct whose
-  description states a verifiable property. It finds the dependencies
-  between tickets and proposes the missing links. It fixes triage,
-  priority, label, and state hygiene, then reports what it deliberately
-  left alone.
+  whole board in bulk, computes a gap inventory, verifies each candidate
+  issue's factual claims, ranks the verified candidates, proposes an
+  evidence-backed closure for an issue whose premise evaporated, and
+  clusters open issues by outcome. It places each cluster under a grouping
+  construct whose description states a verifiable property. It finds the
+  dependencies between tickets and proposes the missing links. It fixes
+  triage, priority, label, and state hygiene, then reports what it
+  deliberately left alone.
 - **`$ARGUMENTS`:** `[<project-number-or-url>] [--promote <issue-number>]`:
   both optional. With no board reference it discovers the visible projects and
   uses the only one, stopping and listing them if more than one is visible.

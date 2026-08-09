@@ -337,7 +337,7 @@ describe("groom-backlog skill: sanctioned vocabulary", () => {
   });
 });
 
-// Slice 1: verify claims and rank before proposing. The three-outcome
+// Verify claims and rank before proposing. The three-outcome
 // verification vocabulary and the four-tier ranking heuristic are duplicated
 // across board mode (Steps 3–4) and the self-contained promotion standard, so
 // both copies are pinned here — the WIP-numeral precedent for a duplicated
@@ -396,7 +396,7 @@ describe("groom-backlog skill: claim verification and ranking", () => {
   });
 });
 
-// Slice 2: evidence-backed closure proposals. Closing an issue is the one
+// Evidence-backed closure proposals. Closing an issue is the one
 // destructive mutation grooming can propose. These pin its recipe shape
 // (evidence by file, additive label, close reason), its own mutation-class
 // question, its slot in the execute order, and the decision-ticket carve-out.
