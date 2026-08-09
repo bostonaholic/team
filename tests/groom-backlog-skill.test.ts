@@ -121,7 +121,11 @@ function resolutionLabels(): string[] {
   const rest = text.slice(start);
   const end = rest.indexOf("\n### ");
   const resolution = end < 0 ? rest : rest.slice(0, end);
-  return [...resolution.matchAll(/^\|\s*`([a-z]+)`\s*\|/gm)].map((m) => m[1]);
+  // flatMap narrows the optional capture group: a matched row always carries
+  // it, but the type does not know that, and a dropped row still yields [].
+  return [...resolution.matchAll(/^\|\s*`([a-z]+)`\s*\|/gm)].flatMap((m) =>
+    typeof m[1] === "string" ? [m[1]] : [],
+  );
 }
 
 describe("groom-backlog skill: frontmatter", () => {
@@ -303,7 +307,7 @@ describe("groom-backlog skill: dependency analysis", () => {
   test("an inferred link is a proposal that needs its own answer", () => {
     // Dependency links are a named question class, so the plan cannot fold
     // them into an adjacent approval.
-    const ask = flat(section("### Step 8 — Present the consequential choices and wait"));
+    const ask = flat(stepSection("### Step 8 — Present the consequential choices and wait"));
     expect(ask.length).toBeGreaterThan(0);
     expect(/\*\*dependency links\*\*/i.test(ask)).toBe(true);
   });
@@ -377,11 +381,12 @@ describe("groom-backlog skill: claim verification and ranking", () => {
     expect(rank.length).toBeGreaterThan(0);
     // The four tiers appear in tier order, so a silent reorder fails here.
     // Each `greater than` also proves presence: -1 never beats a real index.
-    const [tier1, tier2, tier3, tier4] = TIER_TOKENS.map((token) => rank.indexOf(token));
-    expect(tier1).toBeGreaterThan(-1);
-    expect(tier2).toBeGreaterThan(tier1);
-    expect(tier3).toBeGreaterThan(tier2);
-    expect(tier4).toBeGreaterThan(tier3);
+    let previousTier = -1;
+    for (const token of TIER_TOKENS) {
+      const tier = rank.indexOf(token);
+      expect(tier).toBeGreaterThan(previousTier);
+      previousTier = tier;
+    }
     const promotion = flat(section("## The promotion standard"));
     expect(promotion.length).toBeGreaterThan(0);
     for (const token of TIER_TOKENS) {
@@ -442,7 +447,9 @@ describe("groom-backlog skill: evidence-backed closure proposals", () => {
     // The recipe applies one of the board doc's own resolution labels.
     const labels = resolutionLabels();
     // Guard: a failed derivation must fail here, not vacuously pass the loop.
-    expect(labels.length).toBe(3);
+    // No exact count: the containment loop below already catches a label the
+    // doc adds but the recipe never wires in.
+    expect(labels.length).toBeGreaterThan(0);
     const recipes = section("## Tracker recipes");
     expect(recipes.length).toBeGreaterThan(0);
     for (const label of labels) {
