@@ -95,6 +95,50 @@ what they can now do, what changed, what was fixed.
 The bad entries describe implementation details. They tell developers what
 changed in the code, not users what changed in their experience.
 
+## Finding the Baseline
+
+Before any commit is classified, find the **baseline** — the point in history
+the last release was cut from. Every commit after it is a candidate.
+
+1. **Read `CHANGELOG.md` and find the most recent *versioned* heading.** That
+   is the first `## [X.Y.Z] - YYYY-MM-DD` below `## [Unreleased]`. Its version
+   is the baseline version.
+
+2. **Resolve that version to a commit.** Try the tag first:
+
+   ```bash
+   git rev-parse -q --verify "v<X.Y.Z>^{commit}" \
+     || git rev-parse -q --verify "<X.Y.Z>^{commit}"
+   ```
+
+   The `^{commit}` suffix matters. An annotated tag resolves to the tag object
+   without it, not to the commit the tag points at.
+
+   **A project that ships without tags is normal, not an error.** When neither
+   name resolves, find the release commit by its subject. The version string is
+   in that subject whatever the project's convention:
+
+   ```bash
+   git log --oneline --grep="<X.Y.Z>" -1
+   ```
+
+   Release subjects differ by project — `v0.37.0 feat(scope): …` for a
+   version-prefixed squash merge, `chore(release): 0.37.0` elsewhere. Match on
+   the version string. Never assume a fixed prefix.
+
+3. **List the candidates:**
+
+   ```bash
+   git log --oneline <baseline>..HEAD
+   ```
+
+4. **Read any commit you cannot classify from its subject.** `git show --stat
+   <hash>` gives the blast radius, `git show <hash>` the change itself. Classify
+   an ambiguous commit from its diff. Do not guess from the subject.
+
+If `CHANGELOG.md` holds no versioned heading yet, the first release is not cut.
+The baseline is then the root commit, and every commit is a candidate.
+
 ## Filtering Commits for Changelog Entries
 
 When generating changelog entries from commit history, apply this filter:
@@ -125,21 +169,30 @@ When generating changelog entries from commit history, apply this filter:
 
 When the ship phase runs, before committing:
 
-1. **Scan commits since the last changelog entry.** Use `git log` to find
-   commits since the last version tag or the last changelog update.
+1. **Find the baseline and list the commits after it.** Follow
+   [Finding the Baseline](#finding-the-baseline) above.
 
 2. **Filter to user-facing commits** using the Include/Exclude rules above.
 
-3. **Translate each included commit to a user-facing bullet.** Rewrite the
+3. **Drop what `[Unreleased]` already says.** Read the existing `[Unreleased]`
+   section before you write anything, and skip every commit already covered
+   there. A second run over a current changelog must change nothing.
+
+4. **Translate each included commit to a user-facing bullet.** Rewrite the
    commit message in plain language if the commit message is technical.
    The entry should complete the sentence: "Users can now..." or "We fixed..."
 
-4. **Add entries under `[Unreleased]`** in the applicable section.
+5. **Add entries under `[Unreleased]`** in the applicable section.
 
-5. **Sort within sections:** most impactful changes first.
+6. **Sort within sections:** most impactful changes first.
 
-6. **Include the changelog update in the ship commit.** The `CHANGELOG.md`
+7. **Include the changelog update in the ship commit.** The `CHANGELOG.md`
    change should be part of the same commit as the code changes it documents.
+
+8. **Report what happened.** If no commit survived the filter, say so and leave
+   `CHANGELOG.md` untouched. A release with no user-facing change is a correct
+   outcome, not a failure — do not pad `[Unreleased]` to have something to show.
+   Otherwise, show the entries you wrote.
 
 ### Example Transformation
 
@@ -173,6 +226,9 @@ commits are rewritten in user-facing language.
   notice the change in behavior, it does not go in the changelog.
 - **One entry per user-visible change.** Multiple commits that implement a
   single feature produce one entry.
+- **Never duplicate an entry.** Check `[Unreleased]` before you add to it. This
+  skill runs more than once against the same branch, so it must be safe to
+  repeat: the second run over an unchanged branch writes nothing.
 - **Write in past tense.** "Added X" not "Add X". The changelog records what
   happened.
 - **Keep entries short.** One to two sentences maximum. Link to documentation

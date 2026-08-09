@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The changelog skill now finds its own baseline, and running it twice no longer writes the same entry twice.** It knew which commits to keep but not where to start counting: "scan commits since the last changelog entry" left the starting point to be guessed, and a project whose releases are not git-tagged had nothing to resolve. The skill now reads the most recent versioned heading out of `CHANGELOG.md`, resolves that version to a commit by tag *or*, when no tag exists, by matching the version string inside the release commit's subject — matching the string rather than a fixed prefix, so a version-prefixed squash merge and a `chore(release):` commit both resolve. A commit too ambiguous to classify from its subject is now read from its diff instead of guessed. Two gaps close alongside it: the skill reads the existing `[Unreleased]` section before writing and skips anything already covered there, so a second run over an unchanged branch writes nothing; and a filter pass that keeps no commit now says so and leaves the file untouched, rather than treating an empty result as something to pad. [`skills/changelog/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/changelog/SKILL.md)
+
 ## [0.37.0] - 2026-08-07
 
 ### Added
