@@ -87,6 +87,20 @@ function section(heading: string): string {
   return body().slice(start + heading.length, end);
 }
 
+// The slice of the skill from a `### Step` heading up to the next `###` or
+// `## ` heading — the step itself, unlike section(), whose span from a `###`
+// heading runs to the next `## ` and would let a later step's prose satisfy a
+// token pinned to this one. Missing heading → "" so scoped assertions fail,
+// never throw.
+function stepSection(heading: string): string {
+  const text = body();
+  const start = text.indexOf(`${heading}\n`);
+  if (start < 0) return "";
+  const rest = text.slice(start + heading.length);
+  const end = rest.search(/\n##+ /);
+  return end < 0 ? rest : rest.slice(0, end);
+}
+
 // The `Ready` WIP limit, read out of the board doc that declares itself the
 // source of truth. Missing file or pattern → "" so assertions fail, never throw.
 function readyWipLimit(): string {
@@ -264,8 +278,8 @@ describe("groom-backlog skill: dependency analysis", () => {
   });
 
   test("dependency analysis runs before the plan is written", () => {
-    const [dependencyStart] = sectionSpan("### Step 4 — Find the dependencies, then propose the links");
-    const [planStart] = sectionSpan("### Step 5 — Write the plan to a file");
+    const [dependencyStart] = sectionSpan("### Step 6 — Find the dependencies, then propose the links");
+    const [planStart] = sectionSpan("### Step 7 — Write the plan to a file");
     expect(dependencyStart).toBeGreaterThan(-1);
     expect(planStart).toBeGreaterThan(dependencyStart);
   });
@@ -273,7 +287,7 @@ describe("groom-backlog skill: dependency analysis", () => {
   test("an inferred link is a proposal that needs its own answer", () => {
     // Dependency links are a named question class, so the plan cannot fold
     // them into an adjacent approval.
-    const ask = flat(section("### Step 6 — Present the consequential choices and wait"));
+    const ask = flat(section("### Step 8 — Present the consequential choices and wait"));
     expect(ask.length).toBeGreaterThan(0);
     expect(/\*\*dependency links\*\*/i.test(ask)).toBe(true);
   });
@@ -300,5 +314,63 @@ describe("groom-backlog skill: sanctioned vocabulary", () => {
     expect(
       /human[ -]gate|human (approval|design) gate|human contract|design[ -]gate/i.test(t),
     ).toBe(false);
+  });
+});
+
+// Slice 1: verify claims and rank before proposing. The three-outcome
+// verification vocabulary and the four-tier ranking heuristic are duplicated
+// across board mode (Steps 3–4) and the self-contained promotion standard, so
+// both copies are pinned here — the WIP-numeral precedent for a duplicated
+// value — and a drift between them fails the build.
+describe("groom-backlog skill: claim verification and ranking", () => {
+  // The inter-slice contract: closure prose reuses these tokens verbatim.
+  const OUTCOME_TOKENS = ["**claims hold**", "**partially stale**", "**premise evaporated**"];
+  // Short bold names, one per tier, identical in both copies. None may carry
+  // a substring the promotion seam forbids ("cluster" included).
+  const TIER_TOKENS = [
+    "**shipped-behavior contradictions**",
+    "**harness reliability**",
+    "**high-leverage improvements**",
+    "**strategic unblockers**",
+  ];
+
+  test("verification outcomes are pinned in both modes", () => {
+    const verify = flat(stepSection("### Step 3 — Verify claims against the code"));
+    // Guard: a missing step must fail, not vacuously pass the token checks.
+    expect(verify.length).toBeGreaterThan(0);
+    const promotion = flat(section("## The promotion standard"));
+    expect(promotion.length).toBeGreaterThan(0);
+    for (const token of OUTCOME_TOKENS) {
+      expect(verify).toContain(token);
+      expect(promotion).toContain(token);
+    }
+    // The verdict file: one dated-evidence block per issue, cited by the plan.
+    expect(verify).toContain("verification.md");
+  });
+
+  test("verification runs before clustering", () => {
+    const [verifyStart] = sectionSpan("### Step 3 — Verify claims against the code");
+    const [clusterStart] = sectionSpan("### Step 5 — Cluster by outcome, not by component");
+    expect(verifyStart).toBeGreaterThan(-1);
+    expect(clusterStart).toBeGreaterThan(verifyStart);
+  });
+
+  test("ranking tiers are pinned in both copies", () => {
+    const rank = flat(stepSection("### Step 4 — Rank the verified candidates"));
+    // Guard: a missing step must fail, not vacuously pass the token checks.
+    expect(rank.length).toBeGreaterThan(0);
+    // The four tiers appear in tier order, so a silent reorder fails here.
+    // Each `greater than` also proves presence: -1 never beats a real index.
+    const [tier1, tier2, tier3, tier4] = TIER_TOKENS.map((token) => rank.indexOf(token));
+    expect(tier1).toBeGreaterThan(-1);
+    expect(tier2).toBeGreaterThan(tier1);
+    expect(tier3).toBeGreaterThan(tier2);
+    expect(tier4).toBeGreaterThan(tier3);
+    const promotion = flat(section("## The promotion standard"));
+    expect(promotion.length).toBeGreaterThan(0);
+    for (const token of TIER_TOKENS) {
+      expect(promotion).toContain(token);
+    }
+    expect(promotion).toContain("smaller verified scope");
   });
 });
