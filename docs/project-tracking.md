@@ -102,7 +102,8 @@ the board. If none of the three fits, the item is almost certainly a
 These are *close reasons*, not work to do. Assign one
 **at the moment you close the issue**. Never leave a resolution label on an
 open card. They do not replace the Type label. An invalid bug keeps `bug` and
-gains `invalid`.
+gains `invalid`. On a card that reached **Done** without a merged PR, the
+resolution label is what distinguishes it from merged work.
 
 | Label | Definition | Assign when |
 |-------|------------|-------------|
@@ -176,7 +177,7 @@ of the work.
 | **Ready** | Shaped and ready for someone to pick up. It has enough detail to start. **WIP-limited to 5.** | The work is well-understood and prioritized, and Ready has an open slot (see the WIP limit below). |
 | **In progress** | Someone is working on it now. | You start work. You open a worktree, run `/team`, or begin to code. |
 | **In review** | Implementation is complete. A PR is ready and under review. | Someone **marks the card's pull request ready for review**. A **draft** PR does not move the card. The card stays in **In progress** until someone marks the draft ready. |
-| **Done** | Merged and complete. | The PR is merged. |
+| **Done** | Merged and complete. An issue closed without a merged PR also lands here, through the issue-close automation. | The PR is merged, or the issue is closed without one (the issue-close automation moves the card). |
 
 > **The Bugs column.** `Bugs` is an entry bucket, not a stage. It holds the same
 > captured-but-not-started state as `Backlog`, reserved for `bug` issues so they

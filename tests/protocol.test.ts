@@ -29,6 +29,17 @@ describe("runtime skill inventory", () => {
     // not .claude/. (docs/plans/2026-06-15-version-at-land-time)
     expect(existsSync(join(REPO_ROOT, "skills", "shipit", "SKILL.md"))).toBe(true);
   });
+
+  test("AGENTS.md and CLAUDE.md carry byte-identical router content", () => {
+    // Two host-specific names, one router. Today CLAUDE.md is a symlink to
+    // AGENTS.md, which makes this trivially true; the pin exists so replacing
+    // the link with a diverging copy splits what agents read by host and
+    // fails here instead of silently.
+    const agents = read(join(REPO_ROOT, "AGENTS.md"));
+    // Guard: an empty file must fail, not vacuously equal another empty file.
+    expect(agents.length).toBeGreaterThan(0);
+    expect(read(join(REPO_ROOT, "CLAUDE.md"))).toBe(agents);
+  });
 });
 
 describe("ask-user-question contract", () => {
