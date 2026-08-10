@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **A skeptic pass can no longer refute a rule violation by pointing at more of the same violation.** The pass exists to kill false positives before they cost a review round; it killed a true positive instead. Two things caused it. The neutrality rule told the reviewer to strip its reasoning from the claim, which also stripped the *rule being cited* — so "this comment carries a plan/slice marker, which `engineering-standards` bans" reached the skeptic as "this comment references a plan phase", an observation any skeptic finds true and unremarkable. And the admissible-evidence list was entirely code-shaped (guards, callers, sanitization, type definitions, tests), so no project rule was ever in scope. The skeptic did what it was told, found the pattern on the default branch, and refuted on precedent. A later round raised the same finding and confirmed it. Now a rule-violation claim carries the rule and points the skeptic at the file stating it, and precedent is explicitly not a refutation: a pattern's presence on the default branch says it shipped, not that it is permitted. Only two things refute such a claim — the rule does not say what the claim says, or the code falls under an exemption the rule itself states. [`skills/systems-thinking/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/systems-thinking/SKILL.md) asked the opposite question unqualified and now defers where a written rule speaks. [`skills/nested-agents/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/nested-agents/SKILL.md)
+
 ## [0.40.0] - 2026-08-10
 
 ### Added

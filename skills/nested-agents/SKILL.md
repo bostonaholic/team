@@ -138,6 +138,40 @@ sub-agent through the `Agent` tool and try to get it refuted.
   > file:line evidence, <= 10 lines. If your evidence is inconclusive,
   > reply CONFIRMED. Do not write files or spawn agents.
 
+- **A rule-violation claim carries the rule.** Withholding your verdict and
+  severity is right — those are conclusions the skeptic must reach on its own.
+  The rule you are citing is neither. It is the thing that makes the claim
+  falsifiable at all, and a claim stripped of it becomes a different, weaker
+  claim that the skeptic will answer correctly and uselessly. "This comment
+  carries a plan/slice marker, which `engineering-standards` bans" is
+  checkable. "This comment references a plan phase" is just an observation,
+  and any skeptic will find that observation true and unremarkable. Name the
+  skill and the rule, never your judgment of how bad it is:
+
+  > Read <file> around line <n>. Claim: "<what is there> violates <rule>,
+  > stated in `skills/<skill>/SKILL.md`". Read that rule, then attempt to
+  > REFUTE the claim: does the rule say what the claim says, and does this
+  > code fall outside it — through a stated exemption, or because the rule
+  > does not reach this case? Reply REFUTED or CONFIRMED with file:line
+  > evidence, <= 10 lines. If your evidence is inconclusive, reply
+  > CONFIRMED. Do not write files or spawn agents.
+
+- **A stated rule outranks observed precedent.** The same pattern existing
+  elsewhere in the tree does not refute a rule-violation claim. Precedent
+  records what someone did; a rule records what is permitted, and the gap
+  between them is exactly the debt a rule exists to stop growing. A skeptic
+  that answers "this already appears on the default branch" has found more
+  instances of the violation, not a defence of it. Only two things refute
+  such a claim: the rule does not say what the claim says, or the code falls
+  under an exemption the rule itself states. Where a repo convention and a
+  written rule genuinely conflict, that is a finding for the report, not a
+  refutation to act on alone.
+
+  This cuts against the system-fit lens in `skills/systems-thinking/SKILL.md`,
+  which asks whether a change follows the conventions established elsewhere.
+  Both hold, in this order: follow convention where no rule speaks, and follow
+  the rule where one does.
+
 - **Default-keep.** Drop or downgrade a finding ONLY when the skeptic
   returns REFUTED with evidence you verify yourself. Inconclusive means the
   finding stands — severity is never softened on an uncertain skeptic reply.
