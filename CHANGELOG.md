@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.1] - 2026-08-10
+
 ### Fixed
 
 - **A review finding that calls itself non-blocking no longer costs a full re-review round.** The severity table priced `suggestion (non-blocking)` and security MEDIUM as **Major**, and every Major triggers the whole loop again: the implementer runs, then all five reviewers re-run from scratch. Prose review turns up some of both on nearly every pass, so the gate could only clear once five independent reviewers returned *zero* non-blocking findings — not a reachable state, and runs burned their 5-round cap discovering it. The table also contradicted the reviewers themselves: [`agents/security-reviewer.md`](https://github.com/bostonaholic/team/blob/main/agents/security-reviewer.md) and [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md) both say MEDIUM does not block, so a reviewer reporting MEDIUMs candidly was silently buying rounds. **Major** now holds only `ux-reviewer` REQUEST CHANGES; `suggestion (non-blocking)`, security MEDIUM, and technical-writer REQUIRED (previously unmapped, and escalated by at least one orchestrator) all land in Minor, which is the human's queue at PR review rather than a wastebasket. A tripwire now fails the build if the three files ever disagree about MEDIUM again. [`skills/review-severity-tiers/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/review-severity-tiers/SKILL.md)
@@ -444,7 +446,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.39.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.39.1...HEAD
+[0.39.1]: https://github.com/bostonaholic/team/compare/v0.39.0...v0.39.1
 [0.39.0]: https://github.com/bostonaholic/team/compare/v0.38.0...v0.39.0
 [0.38.0]: https://github.com/bostonaholic/team/compare/v0.37.0...v0.38.0
 [0.37.0]: https://github.com/bostonaholic/team/compare/v0.36.1...v0.37.0
