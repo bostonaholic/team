@@ -976,3 +976,42 @@ describe("code-review direct invocation preserves separation", () => {
     expect(/Dispatch the\s+`code-reviewer` agent/.test(text)).toBe(true);
   });
 });
+
+// The orchestrator persists what a return-only agent returns, so a lost
+// result costs a full re-dispatch for those and nothing for the agents that
+// write their own artifacts. The asymmetry decides how a dispatch must be
+// shaped, and it was undocumented — the two kinds are named nowhere else.
+describe("phase agents split into self-writing and return-only", () => {
+  const TEAM = read(join(REPO_ROOT, "skills", "team", "SKILL.md"));
+
+  test("the orchestrator states where each kind's output lives", () => {
+    // Guard: a missing file must fail, not vacuously pass the checks below.
+    expect(TEAM.length).toBeGreaterThan(0);
+    expect(TEAM).toContain("## Where a phase agent's output lives");
+    for (const agent of ["questioner", "researcher", "file-finder"]) {
+      expect(TEAM).toContain(agent);
+    }
+  });
+
+  test("return-only agents genuinely hold no write tool", () => {
+    // The doc claims researcher and file-finder cannot persist their own
+    // output. If that ever stops being true the guidance is wrong, not stale.
+    for (const agent of ["researcher", "file-finder"]) {
+      const fm = frontmatter(read(join(REPO_ROOT, "agents", `${agent}.md`)));
+      expect(fm.length).toBeGreaterThan(0);
+      const tools = /^tools:(.*)$/m.exec(fm)?.[1] ?? "";
+      expect(tools.length).toBeGreaterThan(0);
+      expect(/\bWrite\b/.test(tools)).toBe(false);
+      expect(/\bEdit\b/.test(tools)).toBe(false);
+    }
+  });
+
+  test("self-writing agents genuinely hold a write tool", () => {
+    for (const agent of ["questioner", "design-author", "structure-planner", "planner"]) {
+      const fm = frontmatter(read(join(REPO_ROOT, "agents", `${agent}.md`)));
+      expect(fm.length).toBeGreaterThan(0);
+      const tools = /^tools:(.*)$/m.exec(fm)?.[1] ?? "";
+      expect(/\bWrite\b/.test(tools)).toBe(true);
+    }
+  });
+});

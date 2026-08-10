@@ -92,6 +92,10 @@ loop:
   4. Dispatch the agent(s) (parallel where the phase table marks them).
      Subagents never pause for user input — each resolves its own open
      questions and records them as assumptions in its artifact.
+     Dispatch so the agent's result comes back to you **in full**. Some
+     dispatch modes return only a truncated notice and hold the body
+     elsewhere; that loses a return-only agent's entire output (see
+     "Where a phase agent's output lives" below).
   5. Write each returned artifact to docs/plans/<id>/<name>.md
      with the YAML frontmatter the agent specifies (see the agent file
      and skills/artifact-frontmatter/SKILL.md).
@@ -151,6 +155,29 @@ When dispatching `file-finder` and `researcher`, pass them only the path
 `docs/plans/<id>/questions.md`. They are forbidden from reading `task.md`
 and the orchestrator must not give the original description in their
 context.
+
+## Where a phase agent's output lives
+
+Phase agents split into two kinds, and the split decides what a lost result
+costs:
+
+| Kind | Agents | Output lands |
+|------|--------|--------------|
+| **Self-writing** | `questioner`, `design-author`, `structure-planner`, `planner` | on disk, in `docs/plans/<id>/` |
+| **Return-only** | `researcher`, `file-finder` | in the returned text, nowhere else |
+
+The return-only agents hold no `Write` tool by design — that is what keeps
+research isolated (`agents/researcher.md`: "Do not attempt to write files
+yourself"). The orchestrator persists what they return.
+
+So a lost result is cheap for the first kind and total for the second. A
+self-writing agent's work survives on disk and can be read back; a return-only
+agent's work exists solely in the reply, so losing it means dispatching the
+whole agent again. **Dispatch every phase agent so its full result returns to
+you.** If a result arrives truncated, or as a notification stub with the body
+held elsewhere, re-dispatch rather than working from the preview. A summary of
+a research report is not a research report, and DESIGN downstream cannot tell
+the difference until it is already reasoning from a gap.
 
 ## Gate Handling
 
