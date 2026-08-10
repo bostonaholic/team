@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.2] - 2026-08-10
+
 ### Fixed
 
 - **The test-first mechanical gate now runs the project's static checks, not just the suite.** It confirmed that every new test failed with an assertion rather than a crash, and advanced — but many runners transpile without type-checking, so a type error sits invisible behind a green suite. The first actor to notice was the `verifier`, one of the five reviewers, which means a broken type check cost a full review round plus a fix round to learn something `tsc --noEmit` answers in seconds. The gate is now two conditions: assertion-shaped test failures **and** every detected static check passing, reusing the detection order already in [`skills/running-quality-checks/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/running-quality-checks/SKILL.md). `test-architect` reports a `Static checks pass: YES/NO` line beside its failure table, and a failing check routes back to it rather than downstream. This closes a gap the test-first step was actively creating: it directs the author to write type stubs that are "obviously incomplete," which is exactly the state a type checker rejects. The compressed [`/team-fix`](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md) pipeline carried the identical test-only gate and gets the same fix. [`skills/team/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md), [`skills/team-implement/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-implement/SKILL.md), [`skills/test-first-development/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/test-first-development/SKILL.md)
@@ -450,7 +452,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.39.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.39.2...HEAD
+[0.39.2]: https://github.com/bostonaholic/team/compare/v0.39.1...v0.39.2
 [0.39.1]: https://github.com/bostonaholic/team/compare/v0.39.0...v0.39.1
 [0.39.0]: https://github.com/bostonaholic/team/compare/v0.38.0...v0.39.0
 [0.38.0]: https://github.com/bostonaholic/team/compare/v0.37.0...v0.38.0
