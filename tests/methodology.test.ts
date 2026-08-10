@@ -719,6 +719,40 @@ describe("test-first-development lens (L2 content tripwire)", () => {
   test("audit table (in test-style) has a Deterministic inputs row (moved from test-architect)", () => {
     expect(read(TEST_STYLE_FILE)).toContain("| Deterministic inputs |");
   });
+
+  // A green suite does not imply a green type checker: many runners transpile
+  // without type-checking, and test-first deliberately writes incomplete
+  // stubs. Without a static check here the first actor to notice is the
+  // verifier — one of the five reviewers — which costs a whole review round.
+  // Pinned everywhere the gate is stated, so the three copies cannot drift.
+  const GATE_FILES: Array<[string, string]> = [
+    ["team", join(REPO_ROOT, "skills", "team", "SKILL.md")],
+    ["team-implement", join(REPO_ROOT, "skills", "team-implement", "SKILL.md")],
+    ["team-fix", join(REPO_ROOT, "skills", "team-fix", "SKILL.md")],
+  ];
+
+  for (const [label, file] of GATE_FILES) {
+    test(`${label}'s mechanical gate requires a static check, not only tests`, () => {
+      const text = squash(read(file));
+      // Guard: a missing file must fail, not vacuously pass the checks below.
+      expect(text.length).toBeGreaterThan(0);
+      expect(/mechanical gate/i.test(text)).toBe(true);
+      expect(/static check/i.test(text)).toBe(true);
+      expect(/typecheck/i.test(text)).toBe(true);
+    });
+  }
+
+  test("test-first-development requires static checks before handoff", () => {
+    const text = squash(read(SKILL_FILE));
+    expect(text.length).toBeGreaterThan(0);
+    expect(/static check/i.test(text)).toBe(true);
+  });
+
+  test("the test-architect report carries a static-check line", () => {
+    const text = squash(read(join(REPO_ROOT, "agents", "test-architect.md")));
+    expect(text.length).toBeGreaterThan(0);
+    expect(text).toContain("Static checks pass");
+  });
 });
 
 // ---------------------------------------------------------------------------

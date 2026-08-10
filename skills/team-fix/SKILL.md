@@ -166,7 +166,10 @@ Mark each TodoWrite item `in_progress` when you begin and `completed`
 when it finishes.
 
 **Mechanical gate between Red and Green:** the new test must fail with an
-assertion failure, not a crash. Do not proceed to the fix until confirmed.
+assertion failure, not a crash, and the project's static checks (typecheck,
+lint, build) must pass. Do not proceed to the fix until both are confirmed. A
+runner that executes tests without type-checking them leaves a red type checker
+behind a green suite.
 
 ## Ship
 

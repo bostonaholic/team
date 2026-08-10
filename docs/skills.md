@@ -801,8 +801,10 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Purpose:** Treat acceptance tests as the immutable scope fence.
 - **Loaded by:** test-architect, code-reviewer, and the orchestrator.
 - **Key behaviors:** Tests are written first and never edited to pass. The
-  implementation must satisfy them as the contract. The style rules every
-  acceptance test follows live in `test-style`.
+  implementation must satisfy them as the contract. Every new test must fail
+  with an assertion, never an error, and the project's static checks must pass
+  before handoff — a green suite does not imply a green type checker. The style
+  rules every acceptance test follows live in `test-style`.
 
 ### test-style
 
