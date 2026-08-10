@@ -1015,3 +1015,25 @@ describe("phase agents split into self-writing and return-only", () => {
     }
   });
 });
+
+// An unreachable ssh-agent breaks the push at the PR phase and stalls every
+// scratch-repo test while global commit.gpgsign is true. Read once at the
+// start, it names a cause; discovered later, it looks like a regression in
+// the branch. The checks are read-only and never block the run.
+describe("the worktree phase preflights the environment", () => {
+  const TEAM = read(join(REPO_ROOT, "skills", "team", "SKILL.md"));
+
+  test("it reads the three signals that predict a later failure", () => {
+    // Guard: a missing file must fail, not vacuously pass the checks below.
+    expect(TEAM.length).toBeGreaterThan(0);
+    for (const probe of ["ssh-add -l", "gh auth status", "commit.gpgsign"]) {
+      expect(TEAM).toContain(probe);
+    }
+  });
+
+  test("the preflight is explicitly non-blocking", () => {
+    // A preflight that can halt a run is a gate, and this one must not be:
+    // a cold credential is worth naming, never worth stopping for.
+    expect(/blocks the run/i.test(squash(TEAM))).toBe(true);
+  });
+});
