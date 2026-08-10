@@ -168,18 +168,34 @@ it defines their format.
    path — is incomplete. Edge cases deliberately deferred must appear in
    "Out of scope" or "Non-Goals", not be silently omitted.
 
-5. **Check specificity.** Cite-by-file-and-line beats hand-waving. Flag any
+5. **Check every rule reaches every surface it must.** Skip this step when
+   the design defines one path in. When it defines more than one — two entry
+   modes, a section that claims to be loadable on its own, a split across
+   turns — take each rule or safeguard the design introduces and ask which
+   surfaces state it. A design can satisfy step 4 *per surface in isolation*
+   while the surfaces disagree with each other, so the categories above will
+   not catch this.
+
+   An omission is a finding unless the design says why it is deliberate.
+   Judge a `no` on its reasoning, not its presence: a safeguard that is
+   genuinely unnecessary on one path is fine, and one that is merely absent
+   there is the defect. Read a self-contained section **alone**, as its
+   readers will, rather than inferring what it inherits from the rest of the
+   document — self-containment is a claim the section makes, and this step is
+   where it gets tested.
+
+6. **Check specificity.** Cite-by-file-and-line beats hand-waving. Flag any
    "the auth module" where `services/auth/SessionManager.ts:88` was
    possible. Spot-check a few claims against the referenced files. If a
    citation does not exist, or does not say what the doc claims, that is a
    blocking issue.
 
-6. **Apply the engineering-standards lens.** Walk the Core Philosophy
+7. **Apply the engineering-standards lens.** Walk the Core Philosophy
    (Hickey/Carmack/Armstrong/Knuth/Liskov/Ousterhout) and the design-first
    workflow. Higher severity for failure-isolation or contract violations.
    Lower for stylistic concerns.
 
-7. **Check scope discipline.** Does the design stay within the repos and
+8. **Check scope discipline.** Does the design stay within the repos and
    subsystems implied by the predecessor artifacts? Flag scope creep
    (especially silent multi-repo expansion) as a blocking issue.
 
@@ -202,7 +218,8 @@ End with a verdict, using the same gate type as `code-reviewer`:
   enumerated, citations are accurate. No blocking issues.
 - **REQUEST CHANGES** — Blocking issues found (missing necessary section,
   unjustified decision, absent edge-case enumeration, false or unverifiable
-  citation, silent scope expansion). The author must revise before the
+  citation, silent scope expansion, a rule that reaches one surface and not
+  another with no reason given). The author must revise before the
   design can advance.
 - **COMMENT** — Non-blocking suggestions and nitpicks only. Document is
   acceptable but could be improved.

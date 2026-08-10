@@ -112,6 +112,26 @@ Walk these categories explicitly so none gets skipped:
 Edge cases that are intentionally deferred belong in `## Out of scope`,
 not here — so structure and tests do not silently expand into them.>
 
+## Surfaces
+<Include this section ONLY when the design defines more than one way in:
+two entry modes, a self-contained path that can be loaded alone, a split
+across turns, or any procedure a reader can arrive at without reading the
+rest. A single-path design omits the section entirely.
+
+List the surfaces, then give one row per rule or safeguard the design
+introduces, marking which surfaces it reaches:
+
+| Safeguard | Mode A | Mode B | ... |
+|-----------|--------|--------|-----|
+| <rule>    | yes    | yes    |     |
+| <rule>    | yes    | no — <why not> | |
+
+Every `no` states its reason. An omission with no reason is the defect this
+section exists to surface: a rule stated once, in the surface its author
+happened to be editing, while a reader arriving through the other one is
+governed by nothing. Where a surface claims to be self-contained, that claim
+is itself a safeguard — say what makes it true.>
+
 ## Open questions (deferred)
 <low-priority questions parked for the structure or implement phase>
 

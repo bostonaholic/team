@@ -216,6 +216,15 @@ Two severity regimes apply:
    criterion is met by the implementation. Flag any that are missing or
    incomplete.
 
+   **Then check each rule the diff introduces reaches every surface it must.**
+   When the changed code or prose has more than one way in — two entry modes,
+   a path documented as usable on its own, a split across turns or processes —
+   a new rule or safeguard added to one of them is not added to the others by
+   implication. Take each rule the diff adds and name where it now holds.
+   A rule present in one surface and silently absent from a sibling is a
+   finding, and a stated reason for the absence answers it. Read a
+   self-contained path **alone**, the way its callers arrive at it.
+
 4. **Inspect the code.** For each changed file, check:
    - **Correctness** — Does the logic do what it claims? Are there off-by-one
      errors, missing null checks, or broken edge cases?
