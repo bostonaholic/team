@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.0] - 2026-08-10
+
+### Added
+
+- **The orchestrator now states where each phase agent's output actually lives, and dispatches accordingly.** Phase agents split two ways: `questioner`, `design-author`, `structure-planner`, and `planner` write their artifacts to `docs/plans/<id>/` themselves, while `researcher` and `file-finder` hold no `Write` tool — by design, since that is what keeps research isolated — and return text the orchestrator persists. Nothing connected those two facts, so nothing said what a lost result costs: for a self-writing agent, nothing (the work is on disk); for a return-only agent, everything (the reply *was* the artifact). An orchestrator that dispatched research in a mode returning only a truncated preview therefore had to re-run both agents from scratch. The phase loop now requires a dispatch whose full result returns inline, and says to re-dispatch rather than work from a preview — a summary of a research report is not a research report, and DESIGN cannot tell the difference until it is already reasoning from a gap. A tripwire pins that the return-only agents really do lack `Write`, so the guidance fails loudly rather than going stale. [`skills/team/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md)
+
 ## [0.39.2] - 2026-08-10
 
 ### Fixed
@@ -452,7 +458,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.39.2...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.40.0...HEAD
+[0.40.0]: https://github.com/bostonaholic/team/compare/v0.39.2...v0.40.0
 [0.39.2]: https://github.com/bostonaholic/team/compare/v0.39.1...v0.39.2
 [0.39.1]: https://github.com/bostonaholic/team/compare/v0.39.0...v0.39.1
 [0.39.0]: https://github.com/bostonaholic/team/compare/v0.38.0...v0.39.0
