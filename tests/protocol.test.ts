@@ -919,6 +919,43 @@ describe("checks and balances", () => {
     const tiers = read(join(REPO_ROOT, "skills", "review-severity-tiers", "SKILL.md"));
     expect(/\b5 rounds\b/.test(tiers)).toBe(true);
   });
+
+  // Every auto-fix tier costs a full re-review: implementer, then all five
+  // reviewers again. A finding whose own label says non-blocking must not
+  // carry that price, or the loop only ends when five reviewers return zero
+  // non-blocking findings — not a reachable state on prose.
+  const TIER_ROW = (tier: string): string => {
+    const tiers = read(join(REPO_ROOT, "skills", "review-severity-tiers", "SKILL.md"));
+    return (
+      tiers.split("\n").find((line) => line.startsWith(`| **${tier}**`)) ?? ""
+    );
+  };
+
+  for (const token of ["suggestion (non-blocking)", "security MEDIUM"]) {
+    test(`${token} is priced as Minor, not as an auto-fixed round`, () => {
+      const major = TIER_ROW("Major");
+      const minor = TIER_ROW("Minor and below");
+      // Guard: a missing or renamed row must fail, not vacuously pass below.
+      expect(major.length).toBeGreaterThan(0);
+      expect(minor.length).toBeGreaterThan(0);
+      expect(minor).toContain(token);
+      expect(major).not.toContain(token);
+    });
+  }
+
+  test("security-reviewer and code-review agree MEDIUM does not block", () => {
+    // Three files describe this one boundary. When the tier table auto-fixed
+    // MEDIUM while these two called it non-blocking, the reviewer reported
+    // MEDIUMs candidly and each one silently bought a round.
+    const agent = read(join(REPO_ROOT, "agents", "security-reviewer.md"));
+    const review = read(join(REPO_ROOT, "skills", "code-review", "SKILL.md"));
+    expect(agent.length).toBeGreaterThan(0);
+    expect(review.length).toBeGreaterThan(0);
+    expect(/MEDIUM and LOW do not block/.test(agent)).toBe(true);
+    expect(/MEDIUM\/LOW findings are reported but\s+do not block/.test(review)).toBe(true);
+    // And the tier table must not contradict them.
+    expect(TIER_ROW("Major")).not.toContain("MEDIUM");
+  });
 });
 
 describe("code-review direct invocation preserves separation", () => {
