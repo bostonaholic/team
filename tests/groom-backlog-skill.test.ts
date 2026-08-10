@@ -395,6 +395,10 @@ describe("groom-backlog skill: claim verification and ranking", () => {
     for (const token of TIER_TOKENS) {
       expect(promotion).toContain(token);
     }
+    // The tiebreaker is pinned in both copies too — this block exists so a
+    // drift between them fails the build, and a board-only rephrase would
+    // otherwise pass unnoticed.
+    expect(rank).toContain("smaller verified scope");
     expect(promotion).toContain("smaller verified scope");
   });
 });
@@ -443,14 +447,49 @@ describe("groom-backlog skill: evidence-backed closure proposals", () => {
     // issue's repository. Without it, an unrelated checkout reads every cited
     // path as absent, and "premise evaporated" comes for free. Pinned in both
     // copies, like the outcome tokens, so a drift between them fails here.
-    const CHECKOUT_COMMAND = "gh repo view --json nameWithOwner --jq .nameWithOwner";
+    // The tree is established from git, never from `gh`: `gh repo view` answers
+    // for a resolved remote, so with GH_REPO set it reports that value from any
+    // directory and cannot say where you are. Pinned in both copies, like the
+    // outcome tokens, so a drift between them fails here.
+    const CHECKOUT_COMMANDS = ["git rev-parse --show-toplevel", "git remote get-url"];
     const verify = flat(stepSection("### Step 3 — Verify claims against the code"));
     // Guard: a missing step must fail, not vacuously pass the token checks.
     expect(verify.length).toBeGreaterThan(0);
-    expect(verify).toContain(CHECKOUT_COMMAND);
     const promotion = flat(section("## The promotion standard"));
     expect(promotion.length).toBeGreaterThan(0);
-    expect(promotion).toContain(CHECKOUT_COMMAND);
+    for (const command of CHECKOUT_COMMANDS) {
+      expect(verify).toContain(command);
+      expect(promotion).toContain(command);
+    }
+    // `gh repo view` must not come back as the mechanism in either copy.
+    expect(verify).not.toContain("gh repo view --json nameWithOwner");
+    expect(promotion).not.toContain("gh repo view --json nameWithOwner");
+  });
+
+  test("a comment landing since the cache skips a closure in both copies", () => {
+    // Hours pass between the ask turn and the execute turn, and a maintainer's
+    // objection arrives as a comment. The skip is unconditional in both copies:
+    // it does not ask whether the verdict rested on comment text.
+    const execute = flat(stepSection("### Step 9 — Execute in dependency order"));
+    // Guard: a missing step must fail, not vacuously pass the token checks.
+    expect(execute.length).toBeGreaterThan(0);
+    expect(execute).toContain("any comment landed since the cache");
+    // The word that makes it a contract rather than a case: re-narrowing the
+    // condition would have to delete this to stay coherent.
+    expect(execute).toContain("unconditional");
+    const promotion = flat(section("## The promotion standard"));
+    expect(promotion.length).toBeGreaterThan(0);
+    expect(promotion).toContain("a new comment");
+  });
+
+  test("a blocker number from tracker text is matched against the board", () => {
+    // An undeclared blocker's number comes out of a comment. An issue reference
+    // is not prose, so the shell-safety hard rule does not reach it, and the
+    // number lands in an API path.
+    const recipes = section("## Tracker recipes");
+    // Guard: a missing section must fail, not vacuously pass the token checks.
+    expect(recipes.length).toBeGreaterThan(0);
+    expect(recipes).toContain("$RUN_DIR/issues.json");
   });
 
   test("a leading-dash value is guarded with a -- terminator in both copies", () => {
