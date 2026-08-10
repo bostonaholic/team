@@ -141,7 +141,8 @@ change:
 - Numeric constants that bound behavior (`sleep 600`, `timeout 1800`).
 - The **absence** of a forbidden identifier or a forbidden claim. A negative
   sweep never breaks under a rewrite, because a rewrite does not add back the
-  thing you banned.
+  thing you banned. It can, however, pass for the wrong reason — see
+  *Prove a negative check can find a positive* below.
 
 **Never assert these.** They break on every honest edit and hold the prose
 still:
@@ -167,6 +168,52 @@ the instruction still lands. Do not simulate that at L2 with a regex.
 This layer is what lets a stochastic product stay correct cheaply: a huge
 fraction of "regressions" are really *contract violations*. Contracts stay
 deterministic even when behavior does not.
+
+#### Prove a negative check can find a positive
+
+A check that finds nothing has told you one of two things, and it does not say
+which: the thing is absent, or **the check cannot see it**. Treat the second as
+the default until you rule it out. Before you trust a clean result, point the
+same check at something you know is there and watch it fire. That is the whole
+discipline, and it costs one extra command.
+
+Two ways a check goes blind, both of which have shipped false confidence here:
+
+- **The haystack is empty or mis-scoped.** A section extractor that returns `""`
+  on a renamed heading makes every `not.toContain` under it pass. So does a
+  section whose bounds run to the wrong terminator, silently pulling in a later
+  section's prose or excluding the lines you meant to check. This is why every
+  absence assertion in this repo is preceded by a length guard:
+
+  ```ts
+  const promotion = section("## The promotion standard");
+  // Guard: a missing section must fail, not vacuously pass the absence checks.
+  expect(promotion.length).toBeGreaterThan(0);
+  for (const reference of UPWARD_REFERENCES) {
+    expect(promotion).not.toContain(reference);
+  }
+  ```
+
+  The guard is not ceremony. Without it, renaming a heading turns a real
+  tripwire into a permanently green no-op, and nothing announces that.
+
+- **The pattern cannot match the file's own line breaks.** This repo hard-wraps
+  prose, so a phrase that reads as one sentence is often two lines with
+  indentation between the halves. A single-line regex, or a `grep` for
+  `"skips the nine board steps"`, sweeps right past it and reports clean. Use
+  the `flat()` helper in the test suite, which flattens newlines before
+  matching, and squash the whitespace if the pattern crosses an indent.
+
+The same rule governs the shell commands you run while verifying a change by
+hand, not just committed tests. `git grep` for a phrase that is line-wrapped, or
+a `diff` of two `grep -n` outputs where a line-number shift reads as a content
+change, will both tell you everything is fine. Run the positive control first
+and you find out in seconds; skip it and you report a green check that was never
+looking.
+
+This is the same instinct as **No "pre-existing failure" without proof** in the
+cross-cutting principles: a clean result is a claim, and a claim needs a
+receipt.
 
 ### L3: In-process integration
 
@@ -372,6 +419,10 @@ The goal is a paid suite that costs a few dollars per change set, not hundreds.
   something other than your change, reproduce it on the base branch. Stochastic
   systems have invisible couplings. "Not my change" is a claim that needs a
   receipt.
+- **No clean result from an unproven check.** Its sibling, one layer down: a
+  check that finds nothing has not distinguished *absent* from *blind*. Point it
+  at a known positive first. See *Prove a negative check can find a positive*
+  under L2.
 - **Do not chase a coverage or lint number.** Accept a "worse" pattern when it
   is the correct engineering choice. Fix patterns that are genuinely bugs. The
   number is a smell test, not a target.
