@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.0] - 2026-08-10
+
 ### Added
 
 - **`/groom-backlog` now checks an issue's claims against the code before it ranks anything, and states the ranking it uses.** A backlog rots: files move, PRs land, repros stop reproducing. The skill loaded the whole board and reasoned about hygiene, but it never asked whether what an issue *says* is still true, so a stale ticket could be placed, rewritten, and promoted on the strength of a claim that died months ago. A new step verifies each candidate — named paths still exist, quoted lines still match, cited PRs and commits landed, cited counts still hold — and sorts every issue into **claims hold**, **partially stale**, or **premise evaporated**. Verification never executes a command quoted from an issue, and tracker prose never enters a shell command in either direction: not as the command, not as an argument. A second new step states the ranking that was previously left implicit — **shipped-behavior contradictions**, then **harness reliability**, then **high-leverage improvements**, then **strategic unblockers**, with smaller verified scope breaking ties. `bug`-labelled items stay outside the ranked pool, because this project's board keeps them in their own column and grooming leaves them there. Both behaviors reach board mode and the per-item promotion path. [`skills/groom-backlog/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/groom-backlog/SKILL.md)
@@ -438,7 +440,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.38.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.39.0...HEAD
+[0.39.0]: https://github.com/bostonaholic/team/compare/v0.38.0...v0.39.0
 [0.38.0]: https://github.com/bostonaholic/team/compare/v0.37.0...v0.38.0
 [0.37.0]: https://github.com/bostonaholic/team/compare/v0.36.1...v0.37.0
 [0.36.1]: https://github.com/bostonaholic/team/compare/v0.36.0...v0.36.1
