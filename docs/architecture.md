@@ -260,8 +260,10 @@ No gate. The plan is mechanically derived from the structure.
 
 **Sub-pipeline:**
 1. **Test-first.** `test-architect` writes failing acceptance tests.
-2. **Mechanical gate.** The orchestrator runs the suite. All tests must
-   fail with assertion errors, not crashes.
+2. **Mechanical gate.** The orchestrator runs the suite and the project's
+   static checks. All tests must fail with assertion errors, not crashes,
+   and every static check must pass — a runner that transpiles without
+   type-checking leaves a red type checker behind a green suite.
 3. **Slice execution.** `implementer` works through the plan one slice
    at a time, committing each atomically.
 4. **Code review.** 5 reviewers in parallel: `code-reviewer`,

@@ -48,6 +48,13 @@ Run the full test suite after writing all acceptance tests. Every new test must:
 A test that errors is not a failing test — it is a broken test. The
 distinction matters.
 
+**Then run the project's static checks and make them pass.** A green suite is
+not the same as sound code. Many runners transpile without type-checking, so a
+type error sits invisible behind passing tests. Step 3 below has you write type
+stubs that are deliberately incomplete, which is precisely the state a type
+checker rejects — so check it here, where the fix is one file away, rather than
+leaving it for a reviewer. Report the result alongside the failure table.
+
 ### 3. Fix Errors, Not Failures
 
 When a test errors instead of fails:

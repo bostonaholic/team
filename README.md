@@ -113,7 +113,7 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 - **Design** *(design review)*. Design author drafts a ~200-line alignment doc, resolving its own open questions as recorded assumptions. An adversarial design review gates advancement.
 - **Structure.** Break the design into vertical slices with verification checkpoints. Produced autonomously. Advances to Plan with no gate.
 - **Plan.** Tactical implementation plan derived from the structure. Read by the implementer. Not gated.
-- **Implement.** Test-first, where test-architect writes failing tests and a mechanical gate checks them. Then slice execution, where implementer commits each vertical slice atomically. Then adversarial verification, with 5 parallel reviewers and a typed failure-class retry loop, capped at 5 rounds.
+- **Implement.** Test-first, where test-architect writes failing tests and a mechanical gate checks them and the project's static checks. Then slice execution, where implementer commits each vertical slice atomically. Then adversarial verification, with 5 parallel reviewers and a typed failure-class retry loop, capped at 5 rounds.
 - **PR.** Update changelog, commit, open pull request with inline UI screenshots when applicable, surface the tracking item.
 
 ## Screenshots in PRs

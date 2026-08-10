@@ -72,7 +72,18 @@ After all tests are written and confirmed failing, report:
 - [Any fixtures, stubs, or config changes made]
 
 ### All tests fail cleanly: YES/NO
+
+### Static checks pass: YES/NO
+| Check | Command | Result |
+|-------|---------|--------|
+| Typecheck | `<detected command>` | PASS |
 ```
 
 If any test cannot be made to fail cleanly, explain why and flag it for the
 orchestrator.
+
+Static checks are a separate line because a green suite does not imply they
+pass — many runners execute tests without type-checking them, so a type error
+hides behind a passing test. The stubs you write are deliberately incomplete,
+which is the state a type checker rejects. Report `NO` and fix it before
+handing off; the mechanical gate blocks on this line.

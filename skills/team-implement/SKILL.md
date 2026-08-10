@@ -131,7 +131,13 @@ Before any agent dispatch, decide where to work:
    mode it derives acceptance criteria from `$ARGUMENTS/task.md` instead
    of `structure.md`.
 3. **Mechanical gate** — confirm all tests fail with assertion errors
-   (not crashes). On crash, fix test infrastructure before proceeding.
+   (not crashes), **and** that every static check the project defines
+   passes (typecheck, lint, format, build — detected as
+   `skills/running-quality-checks/SKILL.md` detects them). On crash, fix
+   test infrastructure before proceeding. On a failing static check, send it
+   back to the `test-architect`: a runner that executes tests without
+   type-checking them leaves a red type checker behind a green suite, and
+   the next actor to notice is the `verifier`, a full review round later.
 4. Dispatch `implementer` → executes slices with per-slice commits. In
    standalone mode it works from `$ARGUMENTS/task.md` and the failing
    tests.

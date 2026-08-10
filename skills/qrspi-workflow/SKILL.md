@@ -89,7 +89,8 @@ sub-phase and 5-reviewer adversarial verification with hard-gate retry loop.
 
 - **Sub-phases:**
   1. Test-first — `test-architect` writes failing acceptance tests
-  2. Mechanical gate — all tests fail with assertion errors (not crashes)
+  2. Mechanical gate — all tests fail with assertion errors (not crashes),
+     and every static check the project defines passes
   3. Slice execution — `implementer` works through vertical slices, commits
      each slice when its tests pass
   4. Code review — 5 parallel reviewers (code, security, docs, ux,
