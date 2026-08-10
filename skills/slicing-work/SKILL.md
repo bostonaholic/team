@@ -99,3 +99,19 @@ does not accidentally include it>
 - **Multi-repo: contract-first when ordering matters.** If repo A's
   consumer depends on repo B's contract, the slice that defines the
   contract goes first, and the slice that consumes it cites it.
+- **A slice carrying a destructive, irreversible, or externally-visible
+  mutation may deserve its own PR.** Slices decide what commits atomically;
+  this asks a separate question the structure is the last place to ask it:
+  what ships together. Where one slice introduces a first — a delete, a
+  public write, a credential, an outbound message, anything a person cannot
+  quietly take back — and the others do not, their review costs differ by an
+  order of magnitude. The dangerous one earns rounds of adversarial
+  attention, and everything bundled with it waits through every round. Split
+  them and the cheap work lands while the expensive work is still being
+  argued about.
+
+  This is a judgment call, not a rule, and the cost runs both ways: two PRs
+  mean two reviews, two land-time bumps, and a dependency between them if the
+  safe work builds on the dangerous work. Weigh it and **state the call in
+  `## Cross-slice concerns` either way**, so the planner and the human both
+  know it was decided rather than overlooked.
