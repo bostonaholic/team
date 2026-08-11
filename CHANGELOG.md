@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.1] - 2026-08-11
+
+### Fixed
+
+- **Cleaning up a merged branch left its commits on disk, and every check agreed the repo was clean.** When a pull request merges, GitHub deletes the head branch on its own server. Your clone keeps its own pointer to that branch, and git counts every commit the pointer reaches as still in use. So the cleanup ran, reported success, and freed nothing. What made this hard to catch is that the obvious checks agreed with it: `git fsck` found nothing stray, and `git gc --prune=now` deleted nothing. Neither was broken — the commits really were still in use, so a repo in this state looks exactly like a clean one, and "nothing stray" reads as "already done". The cleanup skill listed `git remote prune origin` under optional tidying. It is the step that makes the branch deletion take effect, and it now runs whenever the branch is gone from the remote. The two commands that actually free the disk space are written up on their own and still ask first, because they erase the recovery record for **every** commit no branch points at — a bad rebase, an abandoned experiment — not only the branch being cleaned up. Order is called out too: collect garbage before pruning the pointer and git sees a branch still in use and does nothing. Applied across 48 real clones, the corrected order freed 3.58 GB and removed 2,305 dead pointers that the old procedure would have left in place. [`skills/pr-cleanup/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-cleanup/SKILL.md), [`skills/worktree-isolation/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/worktree-isolation/SKILL.md)
+
 ## [0.43.0] - 2026-08-11
 
 ### Added
@@ -482,7 +488,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.43.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.43.1...HEAD
+[0.43.1]: https://github.com/bostonaholic/team/compare/v0.43.0...v0.43.1
 [0.43.0]: https://github.com/bostonaholic/team/compare/v0.42.0...v0.43.0
 [0.42.0]: https://github.com/bostonaholic/team/compare/v0.41.0...v0.42.0
 [0.41.0]: https://github.com/bostonaholic/team/compare/v0.40.1...v0.41.0
