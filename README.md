@@ -83,8 +83,12 @@ directory, so an edit to a `SKILL.md` in your checkout is live in the next
 `agy` session.
 
 It links **every user-invocable skill except the two guarded ones**. The
-methodology skills only an agent loads are left out, because this install links
-no agents and they would give you nothing to type.
+methodology skills only an agent loads — the ones that set `user-invocable:
+false` — are left out, because this install links no agents and they would give
+you nothing to type. (The [skills page](https://team.bostonaholic.dev/skills)
+counts one more methodology skill than that, because it counts by the absence of
+an `argument-hint`. The difference is `/code-review`, which is a command you can
+type, so it installs here.)
 
 > **Two skills are held back rather than installed.** `pr-watch-as-reviewer`
 > and `pr-rebase` both set `disable-model-invocation`, so on Claude Code only a
@@ -92,8 +96,9 @@ no agents and they would give you nothing to type.
 > merge a PR with auto-merge enabled, and the second force-pushes a rewritten
 > branch over published history. **Antigravity has no trust gate and no
 > activation prompt**, so anything installed here is model-invocable in every
-> session, with nothing to fall back on. Neither one is installed, and no flag
-> turns them on.
+> session, with nothing to fall back on. Neither one is installed, no flag turns
+> them on, and a link an earlier run left behind — from before a skill gained
+> its guard — is taken away by the next run.
 
 Nine of the installed commands load and then find no agent to dispatch, because
 this install links skills only: `/team`, `/team-question`, `/team-research`,
@@ -112,8 +117,9 @@ plugin install of Team, which would load every skill twice.
 Three shadowing cases no install-time scan can see, by nature rather than by
 choice: `agy`'s built-in skills live inside the binary; skills loaded from a
 plugin under `~/.gemini/config/plugins/` sit outside everything these scripts
-read; and workspace-scope skills under a project's `.agents/skills/` outrank the
-global directory, and no global install can enumerate every future workspace.
+read; and a project's own `.agents/skills/` may outrank the global directory —
+that last one is read from the Gemini-family docs rather than measured here, and
+either way no global install can enumerate every future workspace.
 
 The install writes only to a path that is free or already holds this checkout's
 own link. A directory, a file, or another checkout's symlink on a target path
@@ -125,9 +131,18 @@ checkout and re-running inside a worktree aborts by design. Run
 `script/dev-uninstall antigravity` from the checkout the abort names, then
 re-run.
 
-The uninstall removes only the links this checkout owns, selected by where each
-link points rather than by its name, and never removes a parent directory. Skill
-folders of your own in that directory are left alone.
+Each run reconciles the whole set rather than only adding to it. A skill that
+stops being installable — it gains a guard, or stops being user-invocable —
+loses the link an earlier run gave it, so pulling and re-running is enough to
+bring the directory back in line. The run then reports what sits at each held-back
+skill's path, so a link left there by something else is visible rather than
+implied.
+
+The uninstall removes only the links this checkout owns, and never removes a
+parent directory. It selects by where each link points rather than by its name,
+so any symlink resolving into this checkout's `skills/` is swept whatever it is
+called, and everything else — your own skill folders, and links pointing
+anywhere else — is left alone.
 
 </details>
 

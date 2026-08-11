@@ -1,6 +1,6 @@
 ---
 title: Cross-host portability
-description: "A capability matrix mapping Team's Claude Code plugin primitives onto Gemini CLI and Codex CLI, and the chosen hybrid portability strategy."
+description: "A capability matrix mapping Team's Claude Code plugin primitives onto Gemini CLI and Codex CLI, the chosen hybrid portability strategy, and the measured Antigravity CLI facts behind Team's dev install for that host."
 audience: [developer]
 nav_order: 9
 nav_label: portability
@@ -9,14 +9,17 @@ nav_label: portability
 # Cross-host portability
 
 > **What this is.** A portability study. It shows how Team's Claude Code plugin
-> primitives map onto Gemini CLI and Codex CLI. It also gives the strategy we
-> chose to support all three hosts. It is a decision document, not a code change.
-> The source issue is [#50](https://github.com/bostonaholic/team/issues/50). Two
-> epics consume it: the [#56](https://github.com/bostonaholic/team/issues/56)
-> Gemini port and the [#57](https://github.com/bostonaholic/team/issues/57) Codex
-> port. They build against the matrix, the gap analysis, and the "what #56/#57
-> build against" section below. A later section records the measured Antigravity
-> CLI facts, which Team's dev-install-only support for that host rests on.
+> primitives map onto Gemini CLI and Codex CLI, and gives the strategy we chose
+> to support those two alongside Claude Code. A fourth host, Antigravity CLI, is
+> measured in [its own section](#measured-antigravity-cli) rather than scored in
+> the matrix: Team ships a dev install for it and nothing distributed, so the
+> facts that install rests on are what this page owes a reader. It is a decision
+> document, not a code change. The source issue is
+> [#50](https://github.com/bostonaholic/team/issues/50). Two epics consume it:
+> the [#56](https://github.com/bostonaholic/team/issues/56) Gemini port and the
+> [#57](https://github.com/bostonaholic/team/issues/57) Codex port. They build
+> against the matrix, the gap analysis, and the "what #56/#57 build against"
+> section below.
 
 ## Contents
 
@@ -389,16 +392,21 @@ docs cannot be checked later.
 **Three name collisions no install-time scan can detect.** With no namespace, a
 duplicate skill name resolves by precedence and shadows silently. Team's install
 scans the global skill directory and warns on what it can see there. Three cases
-stay outside any such scan, by nature rather than by choice:
+stay outside any such scan, by nature rather than by choice. The first two were
+observed; the third is the one claim in this section that is read rather than
+measured, and it is marked as such:
 
 - Built-in skills live inside the `agy` binary, so no disk scan can enumerate
   them.
 - Skills loaded from a plugin under `~/.gemini/config/plugins/` are outside
   everything the install reads, deliberately: that root is the `agy plugin
   import` cache, and Team neither reads nor writes it.
-- Workspace-scope skills under a project's `.agents/skills/` outrank the global
-  scope by the documented Gemini-family precedence, and no global install can
-  enumerate every future workspace.
+- Workspace-scope skills under a project's `.agents/skills/` **may** outrank the
+  global scope. That one is **inferred, not measured**: it comes from the
+  documented Gemini-family precedence, it was never probed, and the nearest
+  measurement points the other way, since about fifty skills in `~/.agents/skills/`
+  were invisible to `agy`. Either way, no global install can enumerate every
+  future workspace.
 
 **Scope.** Antigravity is dev-install-only and skill-level only. Nothing
 distributed ships for it, no plugin manifest exists for it, and full parity —
@@ -415,8 +423,11 @@ agents, hooks, commands, rules — stays with
   `.github/`), which is never distributed and never ported.
 - **Adopting MCP as a transport.** Documented as fallback only (decision 4).
 - **Reduced-MVP parity.** Explicitly rejected: full parity is the target.
-- **A fifth host.** Only Claude Code, Gemini CLI, Codex CLI, and Antigravity CLI
-  are in the matrix.
+- **A fifth host.** Claude Code, Gemini CLI, Codex CLI, and Antigravity CLI are
+  the four this study covers. Only the first three are scored in the matrix;
+  Antigravity is measured in its own section instead, because what is known about
+  it comes from probing one version rather than from a primitive-by-primitive
+  read.
 - **Guaranteeing host API stability.** The young-API recency risk is surfaced and
   assigned to the shim layer plus version pinning, not eliminated.
 
