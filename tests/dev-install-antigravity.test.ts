@@ -3,7 +3,7 @@
 // Acceptance tests for the Antigravity half of the dev install,
 // `script/dev-install-antigravity` and `script/dev-uninstall-antigravity`.
 //
-// Two layers (docs/testing.md §2):
+// Two layers:
 //
 // - L2 static tripwires. Read the source and assert a contract, in
 //   milliseconds, executing nothing. Four of them: the harness list must not
@@ -86,8 +86,8 @@ const HARNESS_DISPLAY_NAMES: Record<string, string> = {
   antigravity: "Antigravity CLI",
 };
 
-// The nine installed skills that load and then find no agent to dispatch
-// (design.md decision 13). The README section owes a reader all nine by name.
+// The nine installed skills that load and then find no agent to dispatch.
+// The README section owes a reader all nine by name.
 const AGENT_DEPENDENT_COMMANDS = [
   "team",
   "team-question",
@@ -422,10 +422,10 @@ describe("dev install: antigravity harness", () => {
     });
 
     test("the exclusion set is exactly the two guarded skills", () => {
-      // A deliberate change detector, not a non-empty assertion (design.md,
-      // "Boundary, nothing excluded"). Removing the guard on purpose means
-      // editing this list in the same commit, and that edit is the audit
-      // trail. A rename or a reshaped value fails here with no such edit.
+      // A deliberate change detector, not a non-empty assertion. Removing the
+      // guard on purpose means editing this list in the same commit, and that
+      // edit is the audit trail. A rename or a reshaped value fails here with
+      // no such edit.
       expect(guardedSkills()).toEqual(["pr-rebase", "pr-watch-as-reviewer"]);
     });
 
@@ -435,8 +435,8 @@ describe("dev install: antigravity harness", () => {
       expect(scripts.length).toBe(2);
       // `~/.gemini/config/plugins/` is Antigravity's global plugin root and
       // the cache path `agy plugin import` owns. Reading or writing it is out
-      // of scope by decision 8, and touching it would put Team's skills under
-      // two roots with no namespace to tell them apart.
+      // of scope, and touching it would put Team's skills under two roots with
+      // no namespace to tell them apart.
       expect(readIfExists(INSTALL)).not.toContain(".gemini/config/plugins");
       expect(readIfExists(UNINSTALL)).not.toContain(".gemini/config/plugins");
     });
@@ -470,9 +470,8 @@ describe("dev install: antigravity harness", () => {
 
     test("the README Antigravity section carries the commands, paths, and names", () => {
       const section = squash(antigravitySection(readIfExists(README)));
-      // Guard: a missing section must fail, not vacuously pass every
-      // absence check below (docs/testing.md, "Prove a negative check can
-      // find a positive").
+      // Guard: a missing section must fail, not vacuously pass every absence
+      // check below. A negative check has to be able to find a positive.
       expect(section.length).toBeGreaterThan(0);
 
       // The scripts are the only supported install and uninstall.
@@ -623,7 +622,7 @@ describe("dev install: antigravity harness", () => {
 
     test("install exits 1 naming the file and value on a quoted guard value", () => {
       // `disable-model-invocation: "true"` read as a plain string would
-      // install the very skill the guard holds back (decision 5).
+      // install the very skill the guard holds back.
       const checkout = syntheticCheckout({
         "alpha/SKILL.md": skillMd("alpha"),
         "quoted/SKILL.md": skillMd("quoted", [
@@ -680,8 +679,8 @@ describe("dev install: antigravity harness", () => {
     });
 
     test("pass 2 fails open on a user-invocable value it cannot read", () => {
-      // Deliberate asymmetry with pass 3 (decision 5): the worst case here is
-      // one extra catalog entry, not a hazardous skill, so only pass 3 aborts.
+      // Deliberate asymmetry with pass 3: the worst case here is one extra
+      // catalog entry, not a hazardous skill, so only pass 3 aborts.
       const checkout = syntheticCheckout({
         "alpha/SKILL.md": skillMd("alpha"),
         "unreadable/SKILL.md": skillMd("unreadable", [
@@ -1043,7 +1042,7 @@ describe("dev install: antigravity harness", () => {
       const home = newHome();
       ensureTargetDir(home);
       // Named nothing like its target, and the target no longer exists —
-      // selection is by link text alone (decision 14).
+      // selection is by link text alone.
       symlinkSync(
         join(SKILLS_ROOT, "deleted-skill"),
         targetPath(home, "zz-orphan"),
