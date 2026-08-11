@@ -408,12 +408,11 @@ if [ ${#guarded[@]} -gt 0 ]; then
   for name in "${guarded[@]}"; do
     path="${TARGET_DIR}/${name}"
     if [ -L "$path" ]; then
-      echo "          ${name} — a symlink is there, pointing at $(readlink "$path")."
-      echo "                    It is not this checkout's, so this install left it alone."
+      echo "          ${name} — ${path} is a symlink to $(readlink "$path")"
     elif [ -d "$path" ]; then
-      echo "          ${name} — a directory is there, which this install did not create."
+      echo "          ${name} — ${path} is a directory"
     elif [ -e "$path" ]; then
-      echo "          ${name} — a file is there, which this install did not create."
+      echo "          ${name} — ${path} is a file"
     else
       echo "          ${name} — nothing at ${path}"
     fi
