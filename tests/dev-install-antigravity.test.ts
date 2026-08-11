@@ -1214,6 +1214,10 @@ describe("dev install: antigravity harness", () => {
       expect(output).toContain("Left in place:");
       expect(output).toContain(join(owner.root, "skills", "alpha"));
       expect(output).not.toContain("relative");
+      // The install says this about the same state, and a developer chasing a
+      // leftover link needs the same detail from either script: the checkout it
+      // names is gone, so no uninstall run from anywhere will clear it.
+      expect(output).toContain("no longer exists");
     });
 
     test("uninstall names an unresolvable relative link as relative", () => {

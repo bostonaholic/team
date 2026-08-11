@@ -110,8 +110,14 @@ for entry in "$TARGET_DIR"/*; do
   if [ -z "$parent" ]; then
     echo "  Left in place: ${entry} -> ${text} (a relative link whose directory is gone, so no checkout can claim it)"
     kept=$((kept + 1))
-  elif [ "$parent" != "$SKILLS_PHYS" ]; then
+  elif [ "$parent" != "$SKILLS_PHYS" ] && [ -d "$parent" ]; then
     echo "  Left in place: ${entry} -> ${text} (points outside ${SKILLS_PHYS})"
+    kept=$((kept + 1))
+  elif [ "$parent" != "$SKILLS_PHYS" ]; then
+    # The install says this about the same state. A developer chasing a leftover
+    # link needs to know the checkout it names is gone, not merely that it is
+    # someone else's: no uninstall run from anywhere will clear this one.
+    echo "  Left in place: ${entry} -> ${text} (points into ${parent}, which no longer exists)"
     kept=$((kept + 1))
   elif rm "$entry"; then
     echo "  Removed: ${entry} -> ${text}"
