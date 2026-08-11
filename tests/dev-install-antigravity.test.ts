@@ -79,7 +79,7 @@ const DOCS_INDEX = join(REPO_ROOT, "docs", "index.md");
 const SAFE_PATH = "/usr/bin:/bin:/usr/sbin:/sbin";
 
 // Harness name → the display name the docs matrix must use for it. A harness
-// with no entry here fails the slice-3 tripwire until someone maps it.
+// with no entry here fails the docs-matrix tripwire until someone maps it.
 const HARNESS_DISPLAY_NAMES: Record<string, string> = {
   claude: "Claude Code",
   codex: "Codex CLI",
@@ -393,11 +393,7 @@ function bulletsContaining(text: string, needle: string): string[] {
 }
 
 describe("dev install: antigravity harness", () => {
-  // =========================================================================
-  // Slice 1
-  // =========================================================================
-
-  describe("slice 1 / L2 tripwires: harness registration, pinned exclusion set, forbidden paths, README section contract", () => {
+  describe("L2 tripwires: harness registration, pinned exclusion set, forbidden paths, README section contract", () => {
     test("every harness registration surface lists the same harnesses", () => {
       const fromInstall = harnessesIn(readIfExists(DEV_INSTALL));
       const fromUninstall = harnessesIn(readIfExists(DEV_UNINSTALL));
@@ -502,7 +498,7 @@ describe("dev install: antigravity harness", () => {
     });
   });
 
-  describe("slice 1 / L3: install links exactly the user-invocable unguarded skills, names every skip with its reason, and re-runs idempotently", () => {
+  describe("L3: install links exactly the user-invocable unguarded skills, names every skip with its reason, and re-runs idempotently", () => {
     test("install links exactly the user-invocable unguarded skills", () => {
       const home = newHome();
       const installable = installableSkills();
@@ -807,7 +803,7 @@ describe("dev install: antigravity harness", () => {
     });
   });
 
-  describe("slice 1 / L3: install writes nothing on an occupied target path or an unreadable guard value, and uninstall removes only what this checkout owns", () => {
+  describe("L3: install writes nothing on an occupied target path or an unreadable guard value, and uninstall removes only what this checkout owns", () => {
     // Any installable skill works; the pre-check is per path, so one occupied
     // path aborts the whole run.
     const OCCUPIED = "groom-backlog";
@@ -1109,11 +1105,7 @@ describe("dev install: antigravity harness", () => {
     });
   });
 
-  // =========================================================================
-  // Slice 2
-  // =========================================================================
-
-  describe("slice 2 / L3: install warns on a sibling entry whose frontmatter name matches a Team skill, links anyway at exit 0, and reports no collision for its own links on a re-run", () => {
+  describe("L3: install warns on a sibling entry whose frontmatter name matches a Team skill, links anyway at exit 0, and reports no collision for its own links on a re-run", () => {
     test("install warns naming both the sibling directory and the shadowed Team skill", () => {
       expect(installableSkills()).toContain("shipit");
       const home = newHome();
@@ -1165,7 +1157,7 @@ describe("dev install: antigravity harness", () => {
     });
   });
 
-  describe("slice 2 / L3: install aborts on an installed team@ plugin row and proceeds when agy is absent or erroring", () => {
+  describe("L3: install aborts on an installed team@ plugin row and proceeds when agy is absent or erroring", () => {
     test("install aborts on an installed team@ plugin row", () => {
       const home = newHome();
       const stub = stubAgy(
@@ -1220,11 +1212,7 @@ describe("dev install: antigravity harness", () => {
     });
   });
 
-  // =========================================================================
-  // Slice 3
-  // =========================================================================
-
-  describe("slice 3 / L2: every harness in script/dev-install's HARNESSES reaches the docs matrix surfaces (docs/index.md portability line, docs/cross-host-portability.md scope line)", () => {
+  describe("L2: every harness in script/dev-install's HARNESSES reaches the docs matrix surfaces (docs/index.md portability line, docs/cross-host-portability.md scope line)", () => {
     test("every harness has a docs display name", () => {
       const harnesses = harnessesIn(readIfExists(DEV_INSTALL));
       expect(harnesses.length).toBeGreaterThan(0);
