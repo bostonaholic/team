@@ -158,6 +158,34 @@ if [ ${#survivors[@]} -eq 0 ]; then
   exit 1
 fi
 
+# Refuse to stack this on a native plugin install of Team. This host applies no
+# namespace, so the same skills reached through two roots shadow each other
+# instead of erroring, and a doubled catalog is a silent failure. A
+# registered-but-uninstalled row reads `not installed` and is fine; only an
+# installed row collides. Nothing supported can install Team as an `agy` plugin
+# today, so this is a backstop against a hand-made plugin root. An absent or
+# erroring `agy` is not a reason to stop: a dev install must work before the
+# host is installed.
+if command -v agy >/dev/null 2>&1; then
+  plugin_list="$(agy plugin list 2>&1)" || plugin_list=""
+  while IFS= read -r line; do
+    case "$line" in
+      *team@*)
+        case "$line" in
+          *"not installed"*) ;;
+          *)
+            echo "Error: an Antigravity plugin install of Team is already present:" >&2
+            echo "  ${line}" >&2
+            echo "Adding these symlinks too would load every skill twice." >&2
+            echo "Remove one first, e.g. agy plugin remove team@<marketplace>" >&2
+            exit 1
+            ;;
+        esac
+        ;;
+    esac
+  done <<<"$plugin_list"
+fi
+
 # Every target path is read before anything is written, and one path this
 # checkout does not own aborts the whole run. A partial install is worse than
 # none, and a clobbered link could never be restored: the uninstall selects by
@@ -198,6 +226,58 @@ echo "Installing Team skills for Antigravity (dev)..."
 echo "  Source: ${SKILLS_SRC}"
 echo "  Target: ${TARGET_DIR}"
 echo
+
+# The catalog names Team is about to claim, parallel to `survivors` by index.
+# A name comes from frontmatter, never from the directory, so the two lists can
+# differ and the collision scan below needs both.
+survivor_names=()
+for name in "${survivors[@]}"; do
+  value=""
+  status=0
+  value="$(frontmatter_value name "${SKILLS_SRC}/${name}/SKILL.md")" || status=$?
+  [ "$status" -eq 0 ] || value=""
+  survivor_names+=("$value")
+done
+
+# Warn when a sibling entry already claims one of those names. A directory named
+# `my-ship/` carrying `name: shipit` shadows Team's shipit silently, because the
+# host resolves a duplicate name by precedence rather than reporting it. This
+# only warns: Team's link is still created, and which one wins is the host's
+# call. Entries this checkout already owns are skipped, or a re-run would report
+# every one of Team's own links as a collision, each name matching by
+# construction.
+if [ -d "$TARGET_DIR" ]; then
+  for entry in "$TARGET_DIR"/*; do
+    [ -e "$entry" ] || [ -L "$entry" ] || continue
+
+    if [ -L "$entry" ]; then
+      parent="$(link_target_parent "$(link_target_path "$entry")")"
+      [ "$parent" != "$SKILLS_PHYS" ] || continue
+    fi
+
+    sibling_file="${entry}/SKILL.md"
+    [ -f "$sibling_file" ] || continue
+
+    # A sibling with no SKILL.md or no `name:` claims no catalog name, so it is
+    # neither a collision nor an error.
+    sibling_name=""
+    status=0
+    sibling_name="$(frontmatter_value name "$sibling_file")" || status=$?
+    if [ "$status" -ne 0 ] || [ -z "$sibling_name" ]; then
+      continue
+    fi
+
+    index=0
+    while [ "$index" -lt ${#survivors[@]} ]; do
+      if [ -n "${survivor_names[$index]}" ] &&
+        [ "${survivor_names[$index]}" = "$sibling_name" ]; then
+        echo "  Warning: ${entry} already claims the catalog name '${sibling_name}', which Team's ${survivors[$index]} skill also uses."
+        echo "           Antigravity picks one by precedence, so the other will not be reachable."
+      fi
+      index=$((index + 1))
+    done
+  done
+fi
 
 mkdir -p "$TARGET_DIR"
 

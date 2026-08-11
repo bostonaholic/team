@@ -104,7 +104,10 @@ this install links skills only: `/team`, `/team-question`, `/team-research`,
 Skills arrive under **bare names** — ask for `shipit`, not `team:shipit`. The
 catalog name comes from each skill's own frontmatter, so this host gives Team no
 namespace, and a same-named skill in a higher-precedence location shadows
-Team's silently.
+Team's silently. The install warns when a skill elsewhere in the global skill
+directory already claims a Team skill's name, and links anyway: the host decides
+which of the two wins. It also refuses to run at all on top of a native `agy`
+plugin install of Team, which would load every skill twice.
 
 Three shadowing cases no install-time scan can see, by nature rather than by
 choice: `agy`'s built-in skills live inside the binary; skills loaded from a
