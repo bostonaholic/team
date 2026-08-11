@@ -1010,3 +1010,35 @@ describe("comment red flags (L2 content tripwire)", () => {
     expect(/skills\/code-review\/SKILL\.md|engineering-standards/.test(directive)).toBe(true);
   });
 });
+
+// A skeptic pass exists to kill false positives before they cost a round. It
+// killed a true positive instead: the neutrality rule stripped the cited rule
+// out of the claim, so the skeptic found the pattern on the default branch and
+// refuted on precedent. Both halves are pinned — the claim carries its rule,
+// and precedent does not outrank one.
+describe("skeptic passes weigh a stated rule above precedent (L2 tripwire)", () => {
+  const NESTED = read(join(REPO_ROOT, "skills", "nested-agents", "SKILL.md"));
+  const SYSTEMS = read(join(REPO_ROOT, "skills", "systems-thinking", "SKILL.md"));
+
+  test("a rule-violation claim carries the rule it cites", () => {
+    // Guard: a missing file must fail, not vacuously pass the checks below.
+    expect(NESTED.length).toBeGreaterThan(0);
+    const text = squash(NESTED);
+    expect(/rule-violation claim carries the rule/i.test(text)).toBe(true);
+    // The claim template must point the skeptic at the rule's own file.
+    expect(text).toContain("skills/<skill>/SKILL.md");
+  });
+
+  test("nested-agents states that a rule outranks precedent", () => {
+    const text = squash(NESTED);
+    expect(/stated rule outranks observed precedent/i.test(text)).toBe(true);
+    expect(text).toContain("systems-thinking/SKILL.md");
+  });
+
+  test("systems-thinking defers to a written rule where one speaks", () => {
+    expect(SYSTEMS.length).toBeGreaterThan(0);
+    const text = squash(SYSTEMS);
+    expect(/conventions established elsewhere/i.test(text)).toBe(true);
+    expect(/where no written\s+rule speaks|no written rule speaks/i.test(text)).toBe(true);
+  });
+});
