@@ -6,13 +6,14 @@
 // Two layers:
 //
 // - L2 static tripwires. Read the source and assert a contract, in
-//   milliseconds, executing nothing. Four of them: the harness list must not
-//   drift across its registration surfaces, the exclusion set stays pinned to
-//   the two guarded skills, neither script may ever name this host's plugin
-//   root `~/.gemini/config/plugins/`, and the README section must carry the
-//   commands and names a reader needs. Every one of the four guards against a
-//   vacuous pass, because an extractor that finds nothing makes each
-//   assertion under it green while looking at nothing.
+//   milliseconds, executing nothing: the harness list must not drift across
+//   its registration surfaces, the exclusion set stays pinned to the two
+//   guarded skills, neither script may name this host's plugin root
+//   `~/.gemini/config/plugins/` or reach for a path tool macOS bash 3.2 lacks,
+//   the path helpers the two scripts share must stay byte-identical, and the
+//   README section must carry the commands and names a reader needs. Every one
+//   guards against a vacuous pass, because an extractor that finds nothing
+//   makes each assertion under it green while looking at nothing.
 //
 // - L3 subprocess snapshots. Spawn the real bash scripts with an isolated
 //   HOME in a tmpdir, then read exit status, output, and symlink state
@@ -370,6 +371,20 @@ function subcommandBlocks(yaml: string): string[][] {
   return blocks;
 }
 
+/**
+ * The text of a top-level bash function, from its `name() {` line through the
+ * closing `}` in column 0. Leading comments are excluded on purpose: the two
+ * scripts explain the same helper differently, and it is the code that must
+ * agree.
+ */
+function bashFunction(scriptText: string, name: string): string {
+  const start = scriptText.indexOf(`\n${name}() {\n`);
+  if (start === -1) return "";
+  const end = scriptText.indexOf("\n}\n", start);
+  if (end === -1) return "";
+  return scriptText.slice(start + 1, end + 2);
+}
+
 /** The body of the README `<details>` block whose summary names Antigravity. */
 function antigravitySection(readme: string): string {
   for (const block of readme.split("<details>").slice(1)) {
@@ -462,6 +477,31 @@ describe("dev install: antigravity harness", () => {
         }
       }
       expect(found).toEqual([]);
+    });
+
+    test("the path helpers the two scripts share are byte-identical", () => {
+      // Duplicated verbatim rather than sourced from a shared file, so each
+      // script stays a single file a reader can follow end to end. The install
+      // then states that its ownership rule "is also the uninstall's sweep
+      // criterion read forward, which is what keeps the two scripts agreeing" —
+      // a claim only this test makes true. Desynchronizing them means one script
+      // attributes a link to a checkout the other one will not.
+      const installText = readIfExists(INSTALL);
+      const uninstallText = readIfExists(UNINSTALL);
+
+      for (const name of [
+        "link_target_path",
+        "link_target_parent",
+        "link_text_parent",
+        "link_owner_dir",
+      ]) {
+        const fromInstall = bashFunction(installText, name);
+        const fromUninstall = bashFunction(uninstallText, name);
+        // Guard: an extractor that found neither would compare "" to "".
+        expect(fromInstall.length).toBeGreaterThan(0);
+        expect(fromUninstall.length).toBeGreaterThan(0);
+        expect(fromUninstall).toBe(fromInstall);
+      }
     });
 
     test("the README Antigravity section carries the commands, paths, and names", () => {
