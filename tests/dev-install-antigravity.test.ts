@@ -31,11 +31,12 @@
 // override ships.
 //
 // Output contract the assertions below read, so the scripts must emit it:
-// `Linked:` for each link created, `Removed:` for each link removed,
-// `Warning:` for a name collision and for nothing else (so a clean run can
-// assert none), `Error:` on an abort, and `Nothing to do` when uninstall finds
-// no target directory. Every skip prints the skill name and the frontmatter
-// key that caused it on one line.
+// `Linked:` for each link created, `Removed:` for each link removed — by the
+// uninstall's sweep and by the install reconciling a name that stopped being
+// installable — `Warning:` for a name collision and for nothing else (so a
+// clean run can assert none), `Error:` on an abort, and `Nothing to do` when
+// uninstall finds no target directory. Every skip prints the skill name and the
+// frontmatter key that caused it on one line.
 
 import { afterAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
@@ -716,6 +717,97 @@ describe("dev install: antigravity harness", () => {
     });
   });
 
+  describe("slice 1 / L3: a re-run reconciles a skill that stopped being installable, and the guarded note reports what each path holds", () => {
+    /** A checkout with two plain skills, installed once into a fresh HOME. */
+    function installedPair() {
+      const checkout = syntheticCheckout({
+        "alpha/SKILL.md": skillMd("alpha"),
+        "beta/SKILL.md": skillMd("beta"),
+      });
+      const home = newHome();
+      expect(run(checkout.install, home).status).toBe(0);
+      expect(linkNames(home)).toEqual(["alpha", "beta"]);
+      return { checkout, home };
+    }
+
+    function rewriteSkill(checkout: Checkout, name: string, keys: string[]) {
+      writeFileSync(
+        join(checkout.root, "skills", name, "SKILL.md"),
+        skillMd(name, keys),
+      );
+    }
+
+    test("a skill that gains the model-invocation guard loses its link on the next run", () => {
+      // The upgrade path, and the reason the install reconciles instead of only
+      // adding: on a host with no trust gate, a link left behind keeps a
+      // model-invocable skill live in every session. `git pull` plus a re-run
+      // is the whole trigger, and it must need no developer action.
+      const { checkout, home } = installedPair();
+      rewriteSkill(checkout, "beta", ["disable-model-invocation: true"]);
+
+      const { status, output } = run(checkout.install, home);
+
+      expect(status).toBe(0);
+      expect(linkNames(home)).toEqual(["alpha"]);
+      expect(entryNames(home)).toEqual(["alpha"]);
+      expect(output).toContain("Removed:");
+      expect(output).toContain(targetPath(home, "beta"));
+    });
+
+    test("the guarded note reports the observed path state, never the run's intent", () => {
+      const { checkout, home } = installedPair();
+      rewriteSkill(checkout, "beta", ["disable-model-invocation: true"]);
+
+      const noteLines = linesNaming(run(checkout.install, home).output, "beta");
+
+      // A note that stated intent could say "not installed" about a link that is
+      // still on disk. Every line about a held-back skill names the path.
+      expect(noteLines.length).toBeGreaterThan(0);
+      expect(noteLines.join("\n")).toContain(targetPath(home, "beta"));
+      expect(noteLines.join("\n")).not.toContain("not installed");
+    });
+
+    test("a skill that gains user-invocable: false loses its link on the next run", () => {
+      const { checkout, home } = installedPair();
+      rewriteSkill(checkout, "beta", ["user-invocable: false"]);
+
+      const { status } = run(checkout.install, home);
+
+      expect(status).toBe(0);
+      expect(entryNames(home)).toEqual(["alpha"]);
+    });
+
+    test("reconciliation removes only this checkout's own link at an excluded name", () => {
+      const { checkout, home } = installedPair();
+      rewriteSkill(checkout, "beta", ["disable-model-invocation: true"]);
+      // The user's own folder at the same name is not this install's to touch,
+      // and the guard on beta is no license to remove it.
+      rmSync(targetPath(home, "beta"));
+      const own = targetPath(home, "beta");
+      mkdirSync(own, { recursive: true });
+      writeFileSync(join(own, "SKILL.md"), skillMd("my-own-thing"));
+
+      const { status, output } = run(checkout.install, home);
+
+      expect(status).toBe(0);
+      expect(readIfExists(join(own, "SKILL.md"))).toContain("name: my-own-thing");
+      expect(linesNaming(output, "beta").join("\n")).toContain("directory");
+    });
+
+    test("a re-run distinguishes itself from a fresh install in its counts", () => {
+      // A developer cannot tell a no-op from real work if both runs print the
+      // same bytes.
+      const { checkout, home } = installedPair();
+      const first = run(checkout.install, newHome()).output;
+
+      const second = run(checkout.install, home).output;
+
+      expect(first).toContain("2 newly linked");
+      expect(second).toContain("0 newly linked");
+      expect(second).toContain("2 already linked");
+    });
+  });
+
   describe("slice 1 / L3: install writes nothing on an occupied target path or an unreadable guard value, and uninstall removes only what this checkout owns", () => {
     // Any installable skill works; the pre-check is per path, so one occupied
     // path aborts the whole run.
@@ -823,6 +915,50 @@ describe("dev install: antigravity harness", () => {
       expect(status).toBe(1);
       expect(output).toContain(targetPath(home, OCCUPIED));
       expect(output).toContain("../../nowhere/skills/x");
+      expect(output).toContain("relative");
+      expect(entryNames(home)).not.toContain("shipit");
+    });
+
+    test("install names the missing directory when an absolute link's checkout is gone", () => {
+      // Removing a worktree you installed from is the ordinary way to reach
+      // this, since Team's own pipeline works inside `.claude/worktrees/`. The
+      // link text is absolute and names a real path, so calling it relative and
+      // unresolvable would send the reader looking for the wrong thing.
+      expect(installableSkills()).toContain(OCCUPIED);
+      const home = newHome();
+      ensureTargetDir(home);
+      const goneSkills = join(home, "gone-worktree", "skills");
+      const goneTarget = join(goneSkills, OCCUPIED);
+      symlinkSync(goneTarget, targetPath(home, OCCUPIED));
+
+      const { status, output } = run(INSTALL, home);
+
+      expect(status).toBe(1);
+      expect(output).toContain(goneSkills);
+      expect(output).not.toContain("relative");
+      // The advice must not stop at "run the uninstall from the owning
+      // checkout": that checkout is what went missing.
+      expect(output).toContain("removing that link");
+      expect(entryNames(home)).not.toContain("shipit");
+    });
+
+    test("install names the mismatch when a link points into this checkout under another skill's name", () => {
+      expect(installableSkills()).toContain(OCCUPIED);
+      const home = newHome();
+      ensureTargetDir(home);
+      const otherSkill = installableSkills().filter(
+        (name) => name !== OCCUPIED,
+      )[0] as string;
+      symlinkSync(join(SKILLS_ROOT, otherSkill), targetPath(home, OCCUPIED));
+
+      const { status, output } = run(INSTALL, home);
+
+      expect(status).toBe(1);
+      // The path displayed is this checkout's own, so "a symlink this checkout
+      // does not own" would contradict what the same line prints.
+      const reason = linesNaming(output, otherSkill).join("\n");
+      expect(reason).toContain(OCCUPIED);
+      expect(reason).not.toContain("does not own");
       expect(entryNames(home)).not.toContain("shipit");
     });
 
@@ -918,6 +1054,59 @@ describe("dev install: antigravity harness", () => {
       expect(status).toBe(0);
       expect(output).toContain("Removed:");
       expect(entryNames(home)).not.toContain("zz-orphan");
+    });
+
+    test("uninstall sweeps its own links after this checkout's skills/ is gone", () => {
+      // A checkout whose skills/ has been deleted still owns links that point
+      // into it, and nothing else can attribute them. Both sides of the
+      // ownership comparison fall back to the lexical path, so the link text
+      // naming this checkout is enough.
+      const checkout = syntheticCheckout({
+        "alpha/SKILL.md": skillMd("alpha"),
+        "beta/SKILL.md": skillMd("beta"),
+      });
+      const home = newHome();
+      expect(run(checkout.install, home).status).toBe(0);
+      rmSync(join(checkout.root, "skills"), { force: true, recursive: true });
+
+      const { status, output } = run(checkout.uninstall, home);
+
+      expect(status).toBe(0);
+      expect(output).toContain("Removed:");
+      expect(entryNames(home)).toEqual([]);
+      expect(existsSync(targetDir(home))).toBe(true);
+    });
+
+    test("uninstall leaves a link naming another checkout whose skills/ is gone", () => {
+      const owner = syntheticCheckout({ "alpha/SKILL.md": skillMd("alpha") });
+      const sweeper = syntheticCheckout({ "alpha/SKILL.md": skillMd("alpha") });
+      const home = newHome();
+      expect(run(owner.install, home).status).toBe(0);
+      rmSync(join(owner.root, "skills"), { force: true, recursive: true });
+
+      const { status, output } = run(sweeper.uninstall, home);
+
+      // Attributable now, and attributable to someone else: the lexical
+      // fallback must not widen the sweep past this checkout's own links.
+      expect(status).toBe(0);
+      expect(entryNames(home)).toEqual(["alpha"]);
+      expect(output).toContain("Left in place:");
+      expect(output).toContain(join(owner.root, "skills", "alpha"));
+      expect(output).not.toContain("relative");
+    });
+
+    test("uninstall names an unresolvable relative link as relative", () => {
+      const home = newHome();
+      ensureTargetDir(home);
+      symlinkSync("../../nowhere/skills/x", targetPath(home, "zz-relative"));
+
+      const { status, output } = run(UNINSTALL, home);
+
+      expect(status).toBe(0);
+      expect(entryNames(home)).toEqual(["zz-relative"]);
+      expect(linesNaming(output, "zz-relative").join("\n")).toContain(
+        "relative",
+      );
     });
   });
 

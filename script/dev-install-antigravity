@@ -3,7 +3,10 @@ set -euo pipefail
 
 # Mirrors script/dev-install for Antigravity CLI (`agy`). Links one symlink per
 # user-invocable, unguarded skill into this host's global skill scope, so an
-# edit to a SKILL.md is live in the next session.
+# edit to a SKILL.md is live in the next session. Each run reconciles the whole
+# set rather than only adding to it: a skill that stops being installable loses
+# the link an earlier run gave it, so no developer action stands between a
+# filter change and the state on disk.
 #
 # The catalog name comes from each skill's frontmatter `name:`, never from the
 # link name, so this host gives Team no namespace at all: `shipit`, not
@@ -67,6 +70,7 @@ frontmatter_value() {
 # A symlink's target as an absolute path, joining a relative link text onto the
 # directory that holds the link. The target need not exist.
 link_target_path() {
+  local link_text
   link_text="$(readlink "$1")"
   case "$link_text" in
     /*) printf '%s\n' "$link_text" ;;
@@ -77,9 +81,32 @@ link_target_path() {
 # The physical directory holding a target path, or "" when that directory is
 # itself gone. Canonicalizing the *parent* rather than the target is what keeps
 # a link whose leaf has been deleted attributable to the checkout that made it.
-# An empty result means the link cannot be attributed to anyone.
 link_target_parent() {
   (cd "$(dirname "$1")" 2>/dev/null && pwd -P) || printf '%s' ""
+}
+
+# The lexical parent named by a symlink's own text, used when that directory no
+# longer exists so nothing can be canonicalized. Absolute text names its
+# directory outright, so a link still says which checkout wrote it after that
+# checkout's skills/ is gone. Relative text yields "" instead: reducing it needs
+# the very directory that went missing, and guessing at ownership on a path
+# under $HOME is worse than one printed line.
+link_text_parent() {
+  local link_text
+  link_text="$(readlink "$1")"
+  case "$link_text" in
+    /*) dirname "$link_text" ;;
+    *) printf '%s' "" ;;
+  esac
+}
+
+# The directory a symlink is attributable to, resolved where it still exists and
+# lexical where it does not. "" means no checkout can claim the link.
+link_owner_dir() {
+  local owner
+  owner="$(link_target_parent "$(link_target_path "$1")")"
+  [ -n "$owner" ] || owner="$(link_text_parent "$1")"
+  printf '%s\n' "$owner"
 }
 
 # Pass 1: every direct child of skills/ that owns a SKILL.md. A directory
@@ -96,12 +123,18 @@ if [ ${#candidates[@]} -eq 0 ]; then
   exit 1
 fi
 
-# Pass 2: drop `user-invocable: false`. Those are methodology skills an agent
-# loads, and this install links no agents, so they serve nobody on this host.
-# A value this cannot read fails open: the worst case is one extra catalog
-# entry, not a hazardous skill, so only pass 3 aborts.
+# Pass 2: drop `user-invocable: false`. Those are the methodology skills an
+# agent loads — this key defines that set here, not the argument-hint count
+# docs/skills.md uses — and this install links no agents, so they serve nobody
+# on this host. A value this cannot read fails open: the worst case is one extra
+# catalog entry, not a hazardous skill, so only pass 3 aborts.
+#
+# `excluded` collects the bare name behind every skip, in both passes. A skip is
+# not only something to print: a name this run rejects may still hold a link an
+# earlier run wrote, and the reconciliation below is what takes it away.
 invocable=()
 skipped=()
+excluded=()
 for name in "${candidates[@]}"; do
   file="${SKILLS_SRC}/${name}/SKILL.md"
   value=""
@@ -109,6 +142,7 @@ for name in "${candidates[@]}"; do
   value="$(frontmatter_value user-invocable "$file")" || status=$?
   if [ "$status" -eq 0 ] && [ "$value" = "false" ]; then
     skipped+=("${name} (user-invocable: false)")
+    excluded+=("$name")
   else
     invocable+=("$name")
   fi
@@ -135,6 +169,7 @@ if [ ${#invocable[@]} -gt 0 ]; then
     elif [ "$value" = "true" ]; then
       guarded+=("$name")
       skipped+=("${name} (disable-model-invocation: true)")
+      excluded+=("$name")
     elif [ "$value" = "false" ]; then
       survivors+=("$name")
     else
@@ -191,19 +226,26 @@ fi
 # none, and a clobbered link could never be restored: the uninstall selects by
 # link target, so the target it would need is exactly what got overwritten.
 blocked=()
+orphaned=0
 for name in "${survivors[@]}"; do
   path="${TARGET_DIR}/${name}"
   if [ -L "$path" ]; then
     text="$(readlink "$path")"
     target="$(link_target_path "$path")"
-    parent="$(link_target_parent "$target")"
-    if [ -n "$parent" ] && [ "$parent" = "$SKILLS_PHYS" ] &&
-      [ "$(basename "$target")" = "$name" ] && [ -e "$target" ]; then
-      : # Already this checkout's own link, so re-linking it below is a no-op.
+    leaf="$(basename "$target")"
+    parent="$(link_owner_dir "$path")"
+    if [ "$parent" = "$SKILLS_PHYS" ] && [ "$leaf" = "$name" ]; then
+      : # Already this checkout's own link, so the write below is a no-op.
+    elif [ "$parent" = "$SKILLS_PHYS" ]; then
+      blocked+=("${path} -> ${text} (a link into this checkout's skills/, but to ${leaf} rather than ${name})")
     elif [ -z "$parent" ]; then
-      blocked+=("${path} -> ${text} (a relative symlink that cannot be resolved)")
+      orphaned=1
+      blocked+=("${path} -> ${text} (a relative link whose directory is gone, so no checkout can claim it)")
+    elif [ -d "$parent" ]; then
+      blocked+=("${path} -> ${text} (a symlink into a directory outside this checkout)")
     else
-      blocked+=("${path} -> ${text} (a symlink this checkout does not own)")
+      orphaned=1
+      blocked+=("${path} -> ${text} (a symlink into ${parent}, which no longer exists)")
     fi
   elif [ -d "$path" ]; then
     blocked+=("${path} (a directory)")
@@ -219,7 +261,35 @@ if [ ${#blocked[@]} -gt 0 ]; then
   done
   echo "Run 'script/dev-uninstall antigravity' from the checkout each link resolves into," >&2
   echo "or move what sits there out of the way, then re-run." >&2
+  if [ "$orphaned" -eq 1 ]; then
+    echo "A link whose own directory is gone has no checkout left to run that from," >&2
+    echo "so removing that link is the only way to clear its path." >&2
+  fi
   exit 1
+fi
+
+# The install converges rather than only adds. A skill that has *become*
+# uninstallable since the last run still holds this checkout's link, and nothing
+# else on this host would ever take it away. The guarded set is what makes this a
+# safety matter rather than tidiness: this host has no trust gate, so a link left
+# behind keeps a model-invocable skill live in every session, and the note this
+# script prints at the end would be describing a skill that is installed.
+#
+# Only a name still on disk can be reconciled here, because this loop iterates
+# the names the passes above rejected. A renamed or deleted skill leaves no such
+# name, so its orphan link stays the uninstall's job — that sweep selects by
+# where a link points and so needs no current name at all.
+stale=()
+if [ ${#excluded[@]} -gt 0 ]; then
+  for name in "${excluded[@]}"; do
+    path="${TARGET_DIR}/${name}"
+    [ -L "$path" ] || continue
+    target="$(link_target_path "$path")"
+    if [ "$(link_owner_dir "$path")" = "$SKILLS_PHYS" ] &&
+      [ "$(basename "$target")" = "$name" ]; then
+      stale+=("$name")
+    fi
+  done
 fi
 
 echo "Installing Team skills for Antigravity (dev)..."
@@ -251,15 +321,17 @@ if [ -d "$TARGET_DIR" ]; then
     [ -e "$entry" ] || [ -L "$entry" ] || continue
 
     if [ -L "$entry" ]; then
-      parent="$(link_target_parent "$(link_target_path "$entry")")"
-      [ "$parent" != "$SKILLS_PHYS" ] || continue
+      [ "$(link_owner_dir "$entry")" != "$SKILLS_PHYS" ] || continue
     fi
 
     sibling_file="${entry}/SKILL.md"
     [ -f "$sibling_file" ] || continue
 
-    # A sibling with no SKILL.md or no `name:` claims no catalog name, so it is
-    # neither a collision nor an error.
+    # A sibling with no SKILL.md is not a skill. One with no `name:` takes its
+    # folder name on this host, and a folder named like one of Team's links was
+    # already refused above as an occupied path — so what is left can only
+    # shadow a Team skill whose catalog name matches its own directory name,
+    # which every skill in this corpus does.
     sibling_name=""
     status=0
     sibling_name="$(frontmatter_value name "$sibling_file")" || status=$?
@@ -281,11 +353,31 @@ fi
 
 mkdir -p "$TARGET_DIR"
 
-linked=0
+# Reconcile before linking, so a name that changed sides is gone from the
+# directory before the current set is written into it.
+removed=0
+if [ ${#stale[@]} -gt 0 ]; then
+  for name in "${stale[@]}"; do
+    rm "${TARGET_DIR}/${name}"
+    echo "  Removed: ${TARGET_DIR}/${name} (this checkout's link to a skill that no longer installs here)"
+    removed=$((removed + 1))
+  done
+fi
+
+created=0
+already=0
 for name in "${survivors[@]}"; do
-  ln -sfn "${SKILLS_SRC}/${name}" "${TARGET_DIR}/${name}"
-  echo "  Linked: ${TARGET_DIR}/${name} -> ${SKILLS_SRC}/${name}"
-  linked=$((linked + 1))
+  path="${TARGET_DIR}/${name}"
+  # The pre-check aborted on every symlink at a survivor path except this
+  # checkout's own, so a link still standing here is already the one to write.
+  # Counting the two cases apart is what tells a no-op re-run from real work.
+  if [ -L "$path" ]; then
+    already=$((already + 1))
+    continue
+  fi
+  ln -sfn "${SKILLS_SRC}/${name}" "$path"
+  echo "  Linked: ${path} -> ${SKILLS_SRC}/${name}"
+  created=$((created + 1))
 done
 
 if [ ${#skipped[@]} -gt 0 ]; then
@@ -295,15 +387,31 @@ if [ ${#skipped[@]} -gt 0 ]; then
   done
 fi
 
+summary="${created} newly linked, ${already} already linked"
+[ "$removed" -eq 0 ] || summary="${summary}, ${removed} removed"
 echo
-echo "  ${linked} linked, ${#skipped[@]} skipped, of ${#candidates[@]} skills on disk."
+echo "  ${summary}, ${#skipped[@]} skipped, of ${#candidates[@]} skills on disk."
 
+# Every line below reports what is on disk after this run, never what this run
+# meant to do. A note that stated intent could say a skill is not installed while
+# a link to it sits right there, which is the one thing this note must never do.
 if [ ${#guarded[@]} -gt 0 ]; then
   echo "  Note: Antigravity has no trust gate and no activation prompt, so every"
   echo "        installed skill is model-invocable in every session. These set"
-  echo "        disable-model-invocation and are held back for that reason:"
+  echo "        disable-model-invocation, so this install links none of them."
+  echo "        What each one's path holds now:"
   for name in "${guarded[@]}"; do
-    echo "          ${name} — not installed"
+    path="${TARGET_DIR}/${name}"
+    if [ -L "$path" ]; then
+      echo "          ${name} — a symlink is there, pointing at $(readlink "$path")."
+      echo "                    It is not this checkout's, so this install left it alone."
+    elif [ -d "$path" ]; then
+      echo "          ${name} — a directory is there, which this install did not create."
+    elif [ -e "$path" ]; then
+      echo "          ${name} — a file is there, which this install did not create."
+    else
+      echo "          ${name} — nothing at ${path}"
+    fi
   done
 fi
 

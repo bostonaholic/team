@@ -14,13 +14,14 @@ set -euo pipefail
 # Parent directories are never removed. ~/.gemini and ~/.gemini/config hold
 # this host's own configuration, and the skill directory is shared.
 #
-# The exit status departs from script/dev-uninstall-codex:23-27 on purpose.
-# That script removes one named target, so a foreign entry there means the user
-# asked for something impossible. This one sweeps a shared directory by
-# ownership, and a sweep that removed everything it owns has done its whole
-# job. Exiting non-zero on a foreign entry would make a bare
-# `script/dev-uninstall` fail forever (script/dev-uninstall:36-39) because a
-# user's own skill folder happens to sit beside Team's links.
+# The exit status departs from script/dev-uninstall-codex on purpose. That
+# script removes one named target and exits non-zero when something foreign sits
+# there, because the user asked for something impossible. This one sweeps a
+# shared directory by ownership, and a sweep that removed everything it owns has
+# done its whole job. Exiting non-zero on a foreign entry would make a bare
+# `script/dev-uninstall`, which runs every harness and fails if any one of them
+# fails, fail forever because a user's own skill folder happens to sit beside
+# Team's links.
 #
 # macOS ships bash 3.2: no `readlink -f`, no `realpath`, no `mapfile`. Paths
 # resolve with `cd` + `pwd -P` on both sides of the ownership comparison.
@@ -30,12 +31,16 @@ SKILLS_SRC="${PLUGIN_ROOT}/skills"
 TARGET_DIR="${HOME}/.gemini/config/skills"
 
 # A checkout whose skills/ is already gone still owns links that point into it,
-# so fall back to the lexical path rather than failing.
+# so fall back to the lexical path rather than failing. link_owner_dir below
+# falls back the same way, which is what keeps this side of the comparison
+# reachable: canonicalizing only one side of a missing directory would compare a
+# lexical path against nothing.
 SKILLS_PHYS="$(cd "$SKILLS_SRC" 2>/dev/null && pwd -P)" || SKILLS_PHYS="$SKILLS_SRC"
 
 # A symlink's target as an absolute path, joining a relative link text onto the
 # directory that holds the link. The target need not exist.
 link_target_path() {
+  local link_text
   link_text="$(readlink "$1")"
   case "$link_text" in
     /*) printf '%s\n' "$link_text" ;;
@@ -46,9 +51,32 @@ link_target_path() {
 # The physical directory holding a target path, or "" when that directory is
 # itself gone. Canonicalizing the *parent* rather than the target is what keeps
 # a link whose leaf has been deleted attributable to the checkout that made it.
-# An empty result means the link cannot be attributed to anyone, so it stays.
 link_target_parent() {
   (cd "$(dirname "$1")" 2>/dev/null && pwd -P) || printf '%s' ""
+}
+
+# The lexical parent named by a symlink's own text, used when that directory no
+# longer exists so nothing can be canonicalized. Absolute text names its
+# directory outright, so a link still says which checkout wrote it after that
+# checkout's skills/ is gone. Relative text yields "" instead: reducing it needs
+# the very directory that went missing, and guessing at ownership on a delete
+# under $HOME is worse than one printed line.
+link_text_parent() {
+  local link_text
+  link_text="$(readlink "$1")"
+  case "$link_text" in
+    /*) dirname "$link_text" ;;
+    *) printf '%s' "" ;;
+  esac
+}
+
+# The directory a symlink is attributable to, resolved where it still exists and
+# lexical where it does not. "" means no checkout can claim the link, so it stays.
+link_owner_dir() {
+  local owner
+  owner="$(link_target_parent "$(link_target_path "$1")")"
+  [ -n "$owner" ] || owner="$(link_text_parent "$1")"
+  printf '%s\n' "$owner"
 }
 
 echo "Uninstalling Team skills for Antigravity (dev)..."
@@ -77,10 +105,10 @@ for entry in "$TARGET_DIR"/*; do
   fi
 
   text="$(readlink "$entry")"
-  parent="$(link_target_parent "$(link_target_path "$entry")")"
+  parent="$(link_owner_dir "$entry")"
 
   if [ -z "$parent" ]; then
-    echo "  Left in place: ${entry} -> ${text} (a relative symlink that cannot be resolved)"
+    echo "  Left in place: ${entry} -> ${text} (a relative link whose directory is gone, so no checkout can claim it)"
     kept=$((kept + 1))
   elif [ "$parent" != "$SKILLS_PHYS" ]; then
     echo "  Left in place: ${entry} -> ${text} (points outside ${SKILLS_PHYS})"
