@@ -1080,3 +1080,25 @@ describe("cross-surface parity is checked (L2 tripwire)", () => {
     expect(/reaches every surface/i.test(squash(CODE_REVIEW))).toBe(true);
   });
 });
+
+// Slices decide what commits atomically. What ships together is a separate
+// question, and the structure is the last place to ask it: a slice carrying
+// the first irreversible mutation earns rounds of adversarial review, and
+// anything bundled with it waits through every one of them.
+describe("slicing asks whether a slice deserves its own PR (L2 tripwire)", () => {
+  const SLICING = read(join(REPO_ROOT, "skills", "slicing-work", "SKILL.md"));
+
+  test("the heuristic names the irreversible-mutation case", () => {
+    // Guard: a missing file must fail, not vacuously pass the checks below.
+    expect(SLICING.length).toBeGreaterThan(0);
+    const text = squash(SLICING);
+    expect(/its own PR/i.test(text)).toBe(true);
+    expect(/irreversible/i.test(text)).toBe(true);
+  });
+
+  test("the call is recorded in the structure either way", () => {
+    // A judgment left unstated is indistinguishable from one never made.
+    const text = squash(SLICING);
+    expect(text).toContain("## Cross-slice concerns");
+  });
+});
