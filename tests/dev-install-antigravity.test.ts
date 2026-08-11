@@ -710,9 +710,59 @@ describe("dev install: antigravity harness", () => {
       expect(status).toBe(0);
       expect(linkNames(home)).toEqual(["documenter"]);
     });
+
+    test("install exits 1 naming the file when the frontmatter keys are indented", () => {
+      // YAML permits an indented root mapping, so this document really does set
+      // the guard — Ruby's Psych parses it as `disable-model-invocation: true`.
+      // A reader that called the key absent here would link the one skill the
+      // guard holds back, which is the only reshaped-frontmatter case that could
+      // fail open rather than loud.
+      const checkout = syntheticCheckout({
+        "alpha/SKILL.md": skillMd("alpha"),
+        "indented/SKILL.md":
+          "---\n name: indented\n disable-model-invocation: true\n---\n\nBody.\n",
+      });
+      const home = newHome();
+
+      const { status, output } = run(checkout.install, home);
+
+      expect(status).toBe(1);
+      expect(output).toContain(
+        join(checkout.root, "skills", "indented", "SKILL.md"),
+      );
+      expect(existsSync(join(home, ".gemini"))).toBe(false);
+    });
+
+    test("a block scalar whose lines read like the guard keys does not filter a skill", () => {
+      // The other half of the indentation rule, and the reason it may not
+      // simply match a key at any indentation: a `description: |` body is
+      // indented too, and `skills/pr-rebase/SKILL.md` carries one. Matching
+      // there would filter skills on words inside a description.
+      const checkout = syntheticCheckout({
+        "alpha/SKILL.md": skillMd("alpha"),
+        "described/SKILL.md": [
+          "---",
+          "name: described",
+          "description: |",
+          "  What this skill does, at length.",
+          "  disable-model-invocation: true",
+          "  user-invocable: false",
+          "---",
+          "",
+          "Body.",
+          "",
+        ].join("\n"),
+      });
+      const home = newHome();
+
+      const { status } = run(checkout.install, home);
+
+      expect(status).toBe(0);
+      expect(linkNames(home)).toEqual(["alpha", "described"]);
+    });
   });
 
-  describe("slice 1 / L3: a re-run reconciles a skill that stopped being installable, and the guarded note reports what each path holds", () => {
+  describe("L3: a re-run reconciles a skill that stopped being installable, and the guarded note reports what each path holds", () => {
     /** A checkout with two plain skills, installed once into a fresh HOME. */
     function installedPair() {
       const checkout = syntheticCheckout({

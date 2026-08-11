@@ -46,12 +46,28 @@ SKILLS_PHYS="$(cd "$SKILLS_SRC" && pwd -P)"
 # whole-file grep misclassifies.
 #
 # Prints the raw value and exits 0 when the key is inside that block, exits 1
-# when the block is there without the key, and exits 2 when the file has no
-# leading `---` block at all. Pass 3 treats those two absences differently.
+# when the block is there without the key, exits 2 when the file has no leading
+# `---` block at all, and exits 3 when that block's own keys are indented. Pass
+# 3 treats each of those differently.
+#
+# A key is read at column 0 only. YAML permits an indented root mapping, so
+# ` disable-model-invocation: true` sets the guard while sitting one space in,
+# and a reader that called the key absent there would fail open on the one key
+# whose absence installs a skill. Widening the match to any indentation is worse
+# than the hole it closes: the continuation lines of a block scalar are indented
+# too, so `description: |` prose that merely mentions a key would start filtering
+# skills on words. So the *shape* is rejected instead of guessed at. The block's
+# first non-blank line decides: indented there means an indented root mapping,
+# and this reader interprets none of it.
 frontmatter_value() {
   awk -v key="$1" '
     NR == 1 { if ($0 != "---") { noblock = 1; exit } ; next }
     $0 == "---" { exit }
+    !seen && $0 ~ /^[ \t]*$/ { next }
+    !seen {
+      seen = 1
+      if ($0 ~ /^[ \t]/) { indented = 1; exit }
+    }
     index($0, key ":") == 1 {
       value = substr($0, length(key) + 2)
       sub(/^[ \t]+/, "", value)
@@ -62,6 +78,7 @@ frontmatter_value() {
     }
     END {
       if (noblock || NR == 0) exit 2
+      if (indented) exit 3
       if (!found) exit 1
     }
   ' "$2"
@@ -160,10 +177,12 @@ for name in "${candidates[@]}"; do
 done
 
 # Pass 3: `disable-model-invocation`. `true` holds a skill back, `false` and an
-# absent key install it, and anything else stops the whole run with the file
-# and the value named — a quoted `"true"` read as a plain string would install
-# the very skill the guard holds back. Pass-2 survivors only: a file that can
-# never become a link can never be the hazard.
+# absent key install it, and anything else — an unreadable value, or a
+# frontmatter shape the reader above will not interpret — stops the whole run
+# with the file named. A quoted `"true"` read as a plain string, or an indented
+# key read as no key, would each install the very skill the guard holds back.
+# Pass-2 survivors only: a file that can never become a link can never be the
+# hazard.
 survivors=()
 guarded=()
 unreadable=()
@@ -175,6 +194,8 @@ if [ ${#invocable[@]} -gt 0 ]; then
     value="$(frontmatter_value disable-model-invocation "$file")" || status=$?
     if [ "$status" -eq 2 ]; then
       unreadable+=("${file}: no leading --- frontmatter block")
+    elif [ "$status" -eq 3 ]; then
+      unreadable+=("${file}: the frontmatter block's keys are indented, so no top-level key can be read")
     elif [ "$status" -eq 1 ]; then
       survivors+=("$name")
     elif [ "$value" = "true" ]; then
@@ -194,7 +215,7 @@ if [ ${#unreadable[@]} -gt 0 ]; then
   for line in "${unreadable[@]}"; do
     echo "  ${line}" >&2
   done
-  echo "Set the key to true or false, then re-run." >&2
+  echo "Give the key an unquoted true or false at the top level of the block, then re-run." >&2
   exit 1
 fi
 
