@@ -162,7 +162,13 @@ When teardown is warranted (post-merge or on explicit request):
    `git worktree list`, and never a primary clone.
 5. After the worktree is gone, update the repo's local default branch
    with the merge: `git -C <repo-path> pull --rebase origin <base>`.
-   Always rebase — never a merge commit — so history stays linear.
+   Always rebase — never a merge commit — so history stays linear. When
+   the merge also deleted the branch on origin, follow with
+   `git -C <repo-path> remote prune origin`: that deletion is
+   server-side, so the local `refs/remotes/origin/<id>` survives and keeps
+   every commit on the branch reachable — `git branch -D` in step 3 frees
+   nothing while it stands. `skills/pr-cleanup/SKILL.md` Mode A step 6
+   covers this and the space-reclaim sequence that follows it.
 6. Remove the feature's local planning docs: `rm -rf docs/plans/<id>`.
    These are untracked QRSPI scratch that only existed to drive the work
    to a merged PR. Deleting them is part of teardown, alongside the

@@ -413,8 +413,44 @@ not discard work.
    deletion if it does. Then run the external-state ask and the scratch
    removal exactly as Mode B steps 5 and 6 describe them.
 
-6. **Optional tidy:** offer `git -C "$PRIMARY_ROOT" remote prune origin`
-   to drop stale remote-tracking refs. Run only on confirmation.
+6. **Sever the stale tracking ref, and offer to reclaim the space.**
+   Deleting a branch does not release its commits. When GitHub deletes the
+   head branch on merge — or `gh pr close --delete-branch` deletes it
+   through the API — the deletion happens server-side, and the local
+   `refs/remotes/origin/$BRANCH` survives. That ref keeps every commit on
+   the branch **reachable**, so the repo looks clean while still pinning
+   the objects: `git fsck` reports zero unreachable, and
+   `git gc --prune=now` collects nothing, because from git's view nothing
+   is garbage yet. Pruning the tracking ref is what turns those commits
+   into garbage:
+
+   ```sh
+   git -C "$PRIMARY_ROOT" remote prune origin
+   ```
+
+   Run this whenever the remote branch is gone — `ls-remote` in step 5
+   already answered that. `git fetch --prune` does the same thing.
+
+   Reclaiming the disk space needs two more commands, and they are
+   **destructive well beyond this branch**:
+
+   ```sh
+   git -C "$PRIMARY_ROOT" reflog expire --expire-unreachable=now --all
+   git -C "$PRIMARY_ROOT" gc --prune=now
+   ```
+
+   The reflog expiry drops every repository-wide reflog entry pointing at
+   an unreachable commit, so anything not reachable from a branch, tag,
+   stash, or worktree HEAD becomes unrecoverable — a botched rebase's
+   pre-rebase state, an abandoned experiment, a detached HEAD. Commits and
+   uncommitted work still referenced by a live ref are untouched. Offer
+   these two only when reclaiming space is the actual goal, and run them
+   only on explicit confirmation; cleaning up one merged branch never
+   requires them.
+
+   Order is load-bearing. Run `gc` before the prune and it sees a
+   reachable branch and no-ops, leaving the objects exactly where they
+   were — a cleanup that reports success and frees nothing.
 
 ### Mode B — closed / abandoned
 
@@ -471,6 +507,17 @@ order child before parent throughout.
    git -C "${PRIMARY_ROOT:?}" push origin --delete -- "${BRANCH:?}" [<branch>...]
    ```
 
+   `push --delete` removes the local `refs/remotes/origin/$BRANCH` along
+   with the remote branch, so nothing further is needed on the happy path.
+   It is a different story when the branch was already deleted
+   server-side — `gh pr close --delete-branch`, or someone clicking the
+   button in the GitHub UI. The push then fails with "remote ref does not
+   exist" and the stale local tracking ref is left behind, still holding
+   the whole branch reachable. Run
+   `git -C "$PRIMARY_ROOT" remote prune origin` to sever it; Mode A step 6
+   explains why that matters and what the full space-reclaim sequence
+   costs.
+
 5. **External-state ask.** Whenever a worktree was removed, ask one
    question: does this repo provision per-worktree external state (for
    example a test database named after the worktree)? If the user names a
@@ -516,6 +563,8 @@ order child before parent throughout.
   the default branch is fast-forwarded to the merge.
 - Mode B: every targeted PR is closed, and every trace — worktree, local
   and remote branches, scratch — is gone.
+- No stale `refs/remotes/origin/$BRANCH` is left behind for a branch that
+  no longer exists on origin.
 - Nothing protected, tracked, or unconfirmed was deleted.
 
 ## Pitfalls
@@ -528,6 +577,14 @@ order child before parent throughout.
   rejection verbatim; never force.
 - **Fetch before the gate.** A just-merged PR is invisible to the merged
   check until `git fetch` runs (Hard Rule 3).
+- **A deleted branch is not a released branch.** Every branch deleted
+  server-side leaves `refs/remotes/origin/<branch>` behind in the local
+  clone, and that ref keeps the branch's whole history reachable. The
+  usual diagnostics agree that nothing is wrong — `git fsck` finds zero
+  unreachable objects, `git gc` frees nothing — because the objects are
+  genuinely still referenced. Do not read that as "already clean";
+  `git remote prune origin` is what severs the ref, and only afterward do
+  the objects become collectable (Mode A step 6).
 
 ## Completion
 
