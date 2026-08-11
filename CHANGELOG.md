@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.0] - 2026-08-11
+
+### Added
+
+- **The pipeline reads three environment signals before it starts, and reports them instead of stopping.** An unreachable `ssh-agent`, a missing `gh` login, and a global `commit.gpgsign` that scratch repositories inherit each predict a specific failure hours later — a push that fails at the PR phase after all the work is done, or a test suite that stalls signing throwaway commits until they time out, turning a one-minute run into ten and failing in places unrelated to the diff. Read at the start, those are one line of context. Discovered at the end, they look like a regression in the branch, and get reported as one. The checks are read-only, take a second, and **never block the run** — a cold credential is worth naming, never worth stopping for. [`skills/team/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md)
+
 ## [0.41.0] - 2026-08-11
 
 ### Added
@@ -470,7 +476,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.41.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.42.0...HEAD
+[0.42.0]: https://github.com/bostonaholic/team/compare/v0.41.0...v0.42.0
 [0.41.0]: https://github.com/bostonaholic/team/compare/v0.40.1...v0.41.0
 [0.40.1]: https://github.com/bostonaholic/team/compare/v0.40.0...v0.40.1
 [0.40.0]: https://github.com/bostonaholic/team/compare/v0.39.2...v0.40.0

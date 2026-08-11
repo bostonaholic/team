@@ -189,6 +189,33 @@ so a `/team` run authors `docs/plans/<id>/` inside an isolated worktree on
 branch `<id>` from phase 1. The home checkout's `git status` thus stays
 clean for the whole run.
 
+0. **Preflight the environment, then continue regardless.** Run these three
+   read-only checks once and report what they say. **None of them blocks the
+   run** — the pipeline never stops because a credential is cold.
+
+   ```bash
+   ssh-add -l >/dev/null 2>&1 && echo "ssh-agent: keys loaded" || echo "ssh-agent: UNREACHABLE"
+   gh auth status >/dev/null 2>&1 && echo "gh auth: ok" || echo "gh auth: NOT LOGGED IN"
+   echo "global commit.gpgsign: $(git config --global --get commit.gpgsign || echo unset)"
+   ```
+
+   Each answer predicts a specific failure hours later, and knowing it up
+   front is the difference between naming a cause and hunting one:
+
+   - **An unreachable `ssh-agent`** breaks the push at the PR phase, and
+     breaks any test that commits to a scratch repository while global
+     `commit.gpgsign` is `true` — those inherit the setting, try to sign, and
+     stall until they time out. A suite that normally runs in a minute takes
+     ten and fails in places unrelated to the diff.
+   - **A missing `gh` login** breaks the PR phase only, at the very end,
+     after all the work is done.
+
+   Report the readings plainly and move on. When a later failure matches one
+   of them, say so instead of diagnosing the symptom: a suite that fails only
+   under the developer's own git config is an environment reading, not a
+   regression in the branch, and reporting it as the latter sends someone
+   after a bug that is not there.
+
 1. **Create the home worktree** on branch `<id>` off `origin/HEAD`, with
    Claude Code's native worktree support. See the single-repo block in
    `skills/team-worktree/SKILL.md` → "Create the worktree(s)". Only the
