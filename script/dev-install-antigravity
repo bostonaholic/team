@@ -109,6 +109,17 @@ link_owner_dir() {
   printf '%s\n' "$owner"
 }
 
+# Is the path in $1 this checkout's own link for the skill named in $2? This is
+# the single ownership question the whole script turns on: the pre-check treats
+# such a path as free to write, the reconciliation treats it as this checkout's
+# to remove, and the collision scan skips it. It is also the uninstall's sweep
+# criterion read forward, which is what keeps the two scripts agreeing.
+owns_link() {
+  [ -L "$1" ] || return 1
+  [ "$(link_owner_dir "$1")" = "$SKILLS_PHYS" ] || return 1
+  [ "$(basename "$(link_target_path "$1")")" = "$2" ]
+}
+
 # Pass 1: every direct child of skills/ that owns a SKILL.md. A directory
 # without one is not a skill, and is not an error either.
 candidates=()
@@ -231,10 +242,9 @@ for name in "${survivors[@]}"; do
   path="${TARGET_DIR}/${name}"
   if [ -L "$path" ]; then
     text="$(readlink "$path")"
-    target="$(link_target_path "$path")"
-    leaf="$(basename "$target")"
+    leaf="$(basename "$(link_target_path "$path")")"
     parent="$(link_owner_dir "$path")"
-    if [ "$parent" = "$SKILLS_PHYS" ] && [ "$leaf" = "$name" ]; then
+    if owns_link "$path" "$name"; then
       : # Already this checkout's own link, so the write below is a no-op.
     elif [ "$parent" = "$SKILLS_PHYS" ]; then
       blocked+=("${path} -> ${text} (a link into this checkout's skills/, but to ${leaf} rather than ${name})")
@@ -282,13 +292,8 @@ fi
 stale=()
 if [ ${#excluded[@]} -gt 0 ]; then
   for name in "${excluded[@]}"; do
-    path="${TARGET_DIR}/${name}"
-    [ -L "$path" ] || continue
-    target="$(link_target_path "$path")"
-    if [ "$(link_owner_dir "$path")" = "$SKILLS_PHYS" ] &&
-      [ "$(basename "$target")" = "$name" ]; then
-      stale+=("$name")
-    fi
+    owns_link "${TARGET_DIR}/${name}" "$name" || continue
+    stale+=("$name")
   done
 fi
 
