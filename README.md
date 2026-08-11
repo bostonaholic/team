@@ -85,9 +85,9 @@ directory, so an edit to a `SKILL.md` in your checkout is live in the next
 It links **every user-invocable skill except the two guarded ones**. The
 methodology skills only an agent loads — the ones that set `user-invocable:
 false` — are left out, because this install links no agents and they would give
-you nothing to type. (The [skills page](https://team.bostonaholic.dev/skills)
-counts one more methodology skill than that, because it counts by the absence of
-an `argument-hint`. The difference is `/code-review`, which is a command you can
+you nothing to type. (The [skills page](docs/skills.md) counts one more
+methodology skill than that, because it counts by the absence of an
+`argument-hint`. The difference is `/code-review`, which is a command you can
 type, so it installs here.)
 
 > **Two skills are held back rather than installed.** `pr-watch-as-reviewer`
