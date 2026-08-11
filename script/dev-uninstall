@@ -6,7 +6,7 @@ set -euo pipefail
 #   script/dev-uninstall          every harness
 #   script/dev-uninstall codex    just that one
 
-HARNESSES=(claude codex)
+HARNESSES=(claude codex antigravity)
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
 case "${1:-}" in

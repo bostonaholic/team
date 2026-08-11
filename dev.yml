@@ -22,12 +22,14 @@ commands:
     subcommands:
       claude: "script/dev-install claude"
       codex: "script/dev-install codex"
+      antigravity: "script/dev-install antigravity"
   uninstall:
     run: "script/dev-uninstall"
     desc: "Uninstall this checkout from every supported harness"
     subcommands:
       claude: "script/dev-uninstall claude"
       codex: "script/dev-uninstall codex"
+      antigravity: "script/dev-uninstall antigravity"
   docs:
     desc: "Build and serve the docs site locally at http://localhost:4000"
     run: "cd docs && bundle config set --local path 'vendor/bundle' && bundle install && bundle exec jekyll serve --livereload"

@@ -1,0 +1,231 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Mirrors script/dev-install for Antigravity CLI (`agy`). Links one symlink per
+# user-invocable, unguarded skill into this host's global skill scope, so an
+# edit to a SKILL.md is live in the next session.
+#
+# The catalog name comes from each skill's frontmatter `name:`, never from the
+# link name, so this host gives Team no namespace at all: `shipit`, not
+# `team:shipit`. Team's bare names therefore share one flat directory with the
+# user's own skills. That is why every target path is read before anything is
+# written, and why the uninstall selects by link target rather than by name.
+#
+# Team's own pipeline works in .claude/worktrees/<topic>/, so a checkout and
+# one of its worktrees are two checkouts competing for the same names.
+# Installing from one and re-running from the other aborts by design; the abort
+# names the checkout that owns the links, and running
+# `script/dev-uninstall antigravity` from there clears them.
+#
+# This host's global *plugin* root — the cache `agy plugin import` owns — is
+# out of reach on purpose, and no path below names it. Writing there would put
+# Team's skills under two roots with no namespace to tell them apart, and
+# reading it is out of scope: a name collision under that root is one of the
+# cases README.md documents as undetectable.
+#
+# macOS ships bash 3.2, which has no `readlink -f`, no `realpath`, and no
+# `mapfile`. Paths resolve with `cd` + `pwd -P` on both sides of every
+# comparison, so a symlinked path component cannot make an ownership test lie.
+
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
+SKILLS_SRC="${PLUGIN_ROOT}/skills"
+TARGET_DIR="${HOME}/.gemini/config/skills"
+
+if [ ! -d "$SKILLS_SRC" ]; then
+  echo "Error: no skills/ directory at ${PLUGIN_ROOT}" >&2
+  exit 1
+fi
+
+SKILLS_PHYS="$(cd "$SKILLS_SRC" && pwd -P)"
+
+# Read one top-level key out of the leading `---` block of a file. Both keys
+# this script filters on also appear in skill bodies and in README prose, so a
+# whole-file grep misclassifies.
+#
+# Prints the raw value and exits 0 when the key is inside that block, exits 1
+# when the block is there without the key, and exits 2 when the file has no
+# leading `---` block at all. Pass 3 treats those two absences differently.
+frontmatter_value() {
+  awk -v key="$1" '
+    NR == 1 { if ($0 != "---") { noblock = 1; exit } ; next }
+    $0 == "---" { exit }
+    index($0, key ":") == 1 {
+      value = substr($0, length(key) + 2)
+      sub(/^[ \t]+/, "", value)
+      sub(/[ \t]+$/, "", value)
+      print value
+      found = 1
+      exit
+    }
+    END {
+      if (noblock || NR == 0) exit 2
+      if (!found) exit 1
+    }
+  ' "$2"
+}
+
+# A symlink's target as an absolute path, joining a relative link text onto the
+# directory that holds the link. The target need not exist.
+link_target_path() {
+  link_text="$(readlink "$1")"
+  case "$link_text" in
+    /*) printf '%s\n' "$link_text" ;;
+    *) printf '%s\n' "$(dirname "$1")/${link_text}" ;;
+  esac
+}
+
+# The physical directory holding a target path, or "" when that directory is
+# itself gone. Canonicalizing the *parent* rather than the target is what keeps
+# a link whose leaf has been deleted attributable to the checkout that made it.
+# An empty result means the link cannot be attributed to anyone.
+link_target_parent() {
+  (cd "$(dirname "$1")" 2>/dev/null && pwd -P) || printf '%s' ""
+}
+
+# Pass 1: every direct child of skills/ that owns a SKILL.md. A directory
+# without one is not a skill, and is not an error either.
+candidates=()
+for entry in "$SKILLS_SRC"/*; do
+  [ -d "$entry" ] || continue
+  [ -f "${entry}/SKILL.md" ] || continue
+  candidates+=("$(basename "$entry")")
+done
+
+if [ ${#candidates[@]} -eq 0 ]; then
+  echo "Error: no skill directory under ${SKILLS_SRC} owns a SKILL.md" >&2
+  exit 1
+fi
+
+# Pass 2: drop `user-invocable: false`. Those are methodology skills an agent
+# loads, and this install links no agents, so they serve nobody on this host.
+# A value this cannot read fails open: the worst case is one extra catalog
+# entry, not a hazardous skill, so only pass 3 aborts.
+invocable=()
+skipped=()
+for name in "${candidates[@]}"; do
+  file="${SKILLS_SRC}/${name}/SKILL.md"
+  value=""
+  status=0
+  value="$(frontmatter_value user-invocable "$file")" || status=$?
+  if [ "$status" -eq 0 ] && [ "$value" = "false" ]; then
+    skipped+=("${name} (user-invocable: false)")
+  else
+    invocable+=("$name")
+  fi
+done
+
+# Pass 3: `disable-model-invocation`. `true` holds a skill back, `false` and an
+# absent key install it, and anything else stops the whole run with the file
+# and the value named — a quoted `"true"` read as a plain string would install
+# the very skill the guard holds back. Pass-2 survivors only: a file that can
+# never become a link can never be the hazard.
+survivors=()
+guarded=()
+unreadable=()
+if [ ${#invocable[@]} -gt 0 ]; then
+  for name in "${invocable[@]}"; do
+    file="${SKILLS_SRC}/${name}/SKILL.md"
+    value=""
+    status=0
+    value="$(frontmatter_value disable-model-invocation "$file")" || status=$?
+    if [ "$status" -eq 2 ]; then
+      unreadable+=("${file}: no leading --- frontmatter block")
+    elif [ "$status" -eq 1 ]; then
+      survivors+=("$name")
+    elif [ "$value" = "true" ]; then
+      guarded+=("$name")
+      skipped+=("${name} (disable-model-invocation: true)")
+    elif [ "$value" = "false" ]; then
+      survivors+=("$name")
+    else
+      unreadable+=("${file}: disable-model-invocation: ${value}")
+    fi
+  done
+fi
+
+if [ ${#unreadable[@]} -gt 0 ]; then
+  echo "Error: a disable-model-invocation value could not be read, so no link was written:" >&2
+  for line in "${unreadable[@]}"; do
+    echo "  ${line}" >&2
+  done
+  echo "Set the key to true or false, then re-run." >&2
+  exit 1
+fi
+
+if [ ${#survivors[@]} -eq 0 ]; then
+  # A zero-link success would read as an install that worked.
+  echo "Error: every skill under ${SKILLS_SRC} was filtered out, so there is nothing to install." >&2
+  exit 1
+fi
+
+# Every target path is read before anything is written, and one path this
+# checkout does not own aborts the whole run. A partial install is worse than
+# none, and a clobbered link could never be restored: the uninstall selects by
+# link target, so the target it would need is exactly what got overwritten.
+blocked=()
+for name in "${survivors[@]}"; do
+  path="${TARGET_DIR}/${name}"
+  if [ -L "$path" ]; then
+    text="$(readlink "$path")"
+    target="$(link_target_path "$path")"
+    parent="$(link_target_parent "$target")"
+    if [ -n "$parent" ] && [ "$parent" = "$SKILLS_PHYS" ] &&
+      [ "$(basename "$target")" = "$name" ] && [ -e "$target" ]; then
+      : # Already this checkout's own link, so re-linking it below is a no-op.
+    elif [ -z "$parent" ]; then
+      blocked+=("${path} -> ${text} (a relative symlink that cannot be resolved)")
+    else
+      blocked+=("${path} -> ${text} (a symlink this checkout does not own)")
+    fi
+  elif [ -d "$path" ]; then
+    blocked+=("${path} (a directory)")
+  elif [ -e "$path" ]; then
+    blocked+=("${path} (a regular file)")
+  fi
+done
+
+if [ ${#blocked[@]} -gt 0 ]; then
+  echo "Error: these target paths are not this checkout's to write, so nothing was created:" >&2
+  for line in "${blocked[@]}"; do
+    echo "  ${line}" >&2
+  done
+  echo "Run 'script/dev-uninstall antigravity' from the checkout each link resolves into," >&2
+  echo "or move what sits there out of the way, then re-run." >&2
+  exit 1
+fi
+
+echo "Installing Team skills for Antigravity (dev)..."
+echo "  Source: ${SKILLS_SRC}"
+echo "  Target: ${TARGET_DIR}"
+echo
+
+mkdir -p "$TARGET_DIR"
+
+linked=0
+for name in "${survivors[@]}"; do
+  ln -sfn "${SKILLS_SRC}/${name}" "${TARGET_DIR}/${name}"
+  echo "  Linked: ${TARGET_DIR}/${name} -> ${SKILLS_SRC}/${name}"
+  linked=$((linked + 1))
+done
+
+if [ ${#skipped[@]} -gt 0 ]; then
+  echo
+  for line in "${skipped[@]}"; do
+    echo "  Skipped: ${line}"
+  done
+fi
+
+echo
+echo "  ${linked} linked, ${#skipped[@]} skipped, of ${#candidates[@]} skills on disk."
+
+if [ ${#guarded[@]} -gt 0 ]; then
+  echo "  Note: Antigravity has no trust gate and no activation prompt, so every"
+  echo "        installed skill is model-invocable in every session. These set"
+  echo "        disable-model-invocation and are held back for that reason:"
+  for name in "${guarded[@]}"; do
+    echo "          ${name} — not installed"
+  done
+fi
+
+echo
+echo "Done. Antigravity loads the skills at the next session start."

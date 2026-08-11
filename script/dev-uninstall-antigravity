@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Mirrors script/dev-uninstall for Antigravity CLI (`agy`).
+#
+# One criterion governs the whole sweep: remove every symlink directly under
+# ~/.gemini/config/skills whose target resolves into this checkout's skills/,
+# and remove nothing else. Selection is by link target, never by name, because
+# this host applies no namespace — a bare `shipit` in that directory can just
+# as easily be a folder the user wrote, and a name scan would delete it. The
+# same criterion sweeps a stale link whose skill was renamed or removed, since
+# the link text still resolves into this checkout.
+#
+# Parent directories are never removed. ~/.gemini and ~/.gemini/config hold
+# this host's own configuration, and the skill directory is shared.
+#
+# The exit status departs from script/dev-uninstall-codex:23-27 on purpose.
+# That script removes one named target, so a foreign entry there means the user
+# asked for something impossible. This one sweeps a shared directory by
+# ownership, and a sweep that removed everything it owns has done its whole
+# job. Exiting non-zero on a foreign entry would make a bare
+# `script/dev-uninstall` fail forever (script/dev-uninstall:36-39) because a
+# user's own skill folder happens to sit beside Team's links.
+#
+# macOS ships bash 3.2: no `readlink -f`, no `realpath`, no `mapfile`. Paths
+# resolve with `cd` + `pwd -P` on both sides of the ownership comparison.
+
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
+SKILLS_SRC="${PLUGIN_ROOT}/skills"
+TARGET_DIR="${HOME}/.gemini/config/skills"
+
+# A checkout whose skills/ is already gone still owns links that point into it,
+# so fall back to the lexical path rather than failing.
+SKILLS_PHYS="$(cd "$SKILLS_SRC" 2>/dev/null && pwd -P)" || SKILLS_PHYS="$SKILLS_SRC"
+
+# A symlink's target as an absolute path, joining a relative link text onto the
+# directory that holds the link. The target need not exist.
+link_target_path() {
+  link_text="$(readlink "$1")"
+  case "$link_text" in
+    /*) printf '%s\n' "$link_text" ;;
+    *) printf '%s\n' "$(dirname "$1")/${link_text}" ;;
+  esac
+}
+
+# The physical directory holding a target path, or "" when that directory is
+# itself gone. Canonicalizing the *parent* rather than the target is what keeps
+# a link whose leaf has been deleted attributable to the checkout that made it.
+# An empty result means the link cannot be attributed to anyone, so it stays.
+link_target_parent() {
+  (cd "$(dirname "$1")" 2>/dev/null && pwd -P) || printf '%s' ""
+}
+
+echo "Uninstalling Team skills for Antigravity (dev)..."
+echo "  Source: ${SKILLS_PHYS}"
+echo "  Target: ${TARGET_DIR}"
+echo
+
+if [ ! -d "$TARGET_DIR" ]; then
+  echo "  Nothing to do: no ${TARGET_DIR} to sweep."
+  exit 0
+fi
+
+removed=0
+kept=0
+failed=0
+
+for entry in "$TARGET_DIR"/*; do
+  # -e is false for a dangling symlink, and an unexpanded glob satisfies
+  # neither test, which is how an empty directory falls through.
+  [ -e "$entry" ] || [ -L "$entry" ] || continue
+
+  if [ ! -L "$entry" ]; then
+    echo "  Left in place: ${entry} (not a symlink, so not this checkout's to remove)"
+    kept=$((kept + 1))
+    continue
+  fi
+
+  text="$(readlink "$entry")"
+  parent="$(link_target_parent "$(link_target_path "$entry")")"
+
+  if [ -z "$parent" ]; then
+    echo "  Left in place: ${entry} -> ${text} (a relative symlink that cannot be resolved)"
+    kept=$((kept + 1))
+  elif [ "$parent" != "$SKILLS_PHYS" ]; then
+    echo "  Left in place: ${entry} -> ${text} (points outside ${SKILLS_PHYS})"
+    kept=$((kept + 1))
+  elif rm "$entry"; then
+    echo "  Removed: ${entry} -> ${text}"
+    removed=$((removed + 1))
+  else
+    echo "Error: could not remove ${entry}" >&2
+    failed=$((failed + 1))
+  fi
+done
+
+echo
+echo "  ${removed} removed, ${kept} left in place."
+
+if [ "$failed" -gt 0 ]; then
+  echo "Error: ${failed} link(s) this checkout owns could not be removed." >&2
+  exit 1
+fi
+
+echo
+echo "Done. Antigravity drops the skills at the next session start."
