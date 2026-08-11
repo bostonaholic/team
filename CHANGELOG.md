@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.0] - 2026-08-11
+
 ### Added
 
 - **Slicing now asks whether a slice deserves its own pull request, not just its own commit.** Those are different questions, and only the first was ever asked. When one slice introduces a first — a delete, a public write, an outbound message, anything a person cannot quietly take back — it earns rounds of adversarial review that the others do not, and everything bundled with it waits through every round. In the run that prompted this, two of three behaviors passed review unchanged from the first round and still sat through four, because the third was a destructive mutation being argued about. The heuristic is a judgment call rather than a rule, and it names the cost of splitting too — two reviews, two land-time bumps, and a dependency if the safe work builds on the dangerous work — but the call now gets **stated in `## Cross-slice concerns` either way**, so a judgment left unmade is distinguishable from one left unwritten. [`skills/slicing-work/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/slicing-work/SKILL.md)
@@ -480,7 +482,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.42.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.43.0...HEAD
+[0.43.0]: https://github.com/bostonaholic/team/compare/v0.42.0...v0.43.0
 [0.42.0]: https://github.com/bostonaholic/team/compare/v0.41.0...v0.42.0
 [0.41.0]: https://github.com/bostonaholic/team/compare/v0.40.1...v0.41.0
 [0.40.1]: https://github.com/bostonaholic/team/compare/v0.40.0...v0.40.1
