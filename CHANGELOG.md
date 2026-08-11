@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Team's slash commands now run on Antigravity CLI, from a checkout.** `script/dev-install antigravity` links every user-invocable skill into Antigravity's global skill directory, and an edit to a skill is live in the next session, the same way the Codex dev install already works. Two things about this host shaped the install. It takes a skill's name from the skill itself rather than from where the file sits, so Team gets no `team:` prefix and its names share one directory with whatever else you keep there — the install reads that directory first, warns when something already claims a name Team uses, and refuses outright to overwrite anything it did not create, because the uninstall could never put it back. And it has no trust gate, so anything installed can be started by the model in any session: the two skills that are user-only by design, one of which can cast a PR approval and one of which force-pushes a rewritten branch, are not installed at all and no flag turns them on. Nine of the commands that do install will load and then stop, because they need to dispatch an agent and this install links skills only; they are named in the README so the limit is discoverable before you type one. Nothing is distributed for this host yet, and full parity is tracked separately. [`README.md`](https://github.com/bostonaholic/team/blob/main/README.md), [`docs/cross-host-portability.md`](https://github.com/bostonaholic/team/blob/main/docs/cross-host-portability.md)
+
 ## [0.44.0] - 2026-08-12
 
 ### Fixed

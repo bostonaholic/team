@@ -15,7 +15,8 @@ nav_label: portability
 > epics consume it: the [#56](https://github.com/bostonaholic/team/issues/56)
 > Gemini port and the [#57](https://github.com/bostonaholic/team/issues/57) Codex
 > port. They build against the matrix, the gap analysis, and the "what #56/#57
-> build against" section below.
+> build against" section below. A later section records the measured Antigravity
+> CLI facts, which Team's dev-install-only support for that host rests on.
 
 ## Contents
 
@@ -26,6 +27,7 @@ nav_label: portability
 - [Gap analysis](#gap-analysis)
 - [Decisions made](#decisions-made)
 - [What #56 and #57 build against](#what-56-and-57-build-against)
+- [Measured: Antigravity CLI](#measured-antigravity-cli)
 - [Out of scope](#out-of-scope)
 - [Edge cases](#edge-cases)
 - [Open questions (deferred to the port epics)](#open-questions-deferred-to-the-port-epics)
@@ -341,6 +343,68 @@ full parity. Each starts from the matrix and works around the named gaps.
   - MCP prompts are a hard gap (tools and resources are native), so keep all
     prompt/slash workflows on Skills.
 
+## Measured: Antigravity CLI
+
+Everything below was measured against `agy` 1.1.12 on macOS, not read from
+documentation. It is recorded here because Team now ships a dev install for this
+host (`script/dev-install antigravity`), and because a study that only cites
+docs cannot be checked later.
+
+**Discovery.**
+
+- `plugin.json` has to sit at the plugin root, and `skills/`, `agents/`,
+  `commands/`, `mcpServers/`, and `hooks/` all resolve beside that manifest. So
+  Team's existing `.claude-plugin/` and `.codex-plugin/` manifests both validate
+  and then discover nothing.
+- Given a root manifest, `agy` processed all 54 skills and all 13 agents.
+- Skill discovery descends the tree but stops at any directory that owns a
+  `SKILL.md`, so a skill cannot nest another skill.
+- A symlinked skill folder is followed at plugin scope **and** at global scope.
+  One link under the global scope put a skill in the agent's own skill list,
+  which is the measurement Team's dev install rests on.
+- `hooks/` is not discovered: this host registers hooks through a root
+  `hooks.json`. `agents/` is discovered, and discovery is not dispatch — whether
+  `agy` can dispatch an agent, and whether a structured return survives, is
+  unmeasured.
+
+**Paths and naming.**
+
+- The global skill scope is `~/.gemini/config/skills/`. The global plugin root is
+  `~/.gemini/config/plugins/`.
+- The catalog name comes from a skill's frontmatter `name:`, never from the
+  directory or link name. A link named `team-probe-gitcommit` was reported as
+  `git-commit`. So this host applies **no `team:` prefix** and gives Team no
+  namespace at all, unlike Codex.
+- Gemini CLI's documented `~/.agents/skills/` alias is invisible to Antigravity.
+  About fifty unrelated skills sat there on the probe machine and none appeared.
+  Gemini CLI itself was not installed, so every Gemini CLI claim in this document
+  stays documentation-only.
+- `agy plugin import` copies rather than links, and it failed on a Team checkout,
+  on the `.git` fsmonitor socket.
+- From inside a Team checkout, `agy plugin list` printed "No imported plugins."
+  and only the two built-in skills reached the agent's list. Plugin discovery
+  keys on a `plugin.json` marker, so Codex's `.agents/plugins/marketplace.json`
+  is not read as a workspace plugin and no collision exists between the two.
+
+**Three name collisions no install-time scan can detect.** With no namespace, a
+duplicate skill name resolves by precedence and shadows silently. Team's install
+scans the global skill directory and warns on what it can see there. Three cases
+stay outside any such scan, by nature rather than by choice:
+
+- Built-in skills live inside the `agy` binary, so no disk scan can enumerate
+  them.
+- Skills loaded from a plugin under `~/.gemini/config/plugins/` are outside
+  everything the install reads, deliberately: that root is the `agy plugin
+  import` cache, and Team neither reads nor writes it.
+- Workspace-scope skills under a project's `.agents/skills/` outrank the global
+  scope by the documented Gemini-family precedence, and no global install can
+  enumerate every future workspace.
+
+**Scope.** Antigravity is dev-install-only and skill-level only. Nothing
+distributed ships for it, no plugin manifest exists for it, and full parity —
+agents, hooks, commands, rules — stays with
+[#56](https://github.com/bostonaholic/team/issues/56).
+
 ## Out of scope
 
 - **Writing any of the port code.** #56 and #57 own the implementation. This is
@@ -351,7 +415,8 @@ full parity. Each starts from the matrix and works around the named gaps.
   `.github/`), which is never distributed and never ported.
 - **Adopting MCP as a transport.** Documented as fallback only (decision 4).
 - **Reduced-MVP parity.** Explicitly rejected: full parity is the target.
-- **A fourth host.** Only Claude Code, Gemini CLI, Codex CLI are in the matrix.
+- **A fifth host.** Only Claude Code, Gemini CLI, Codex CLI, and Antigravity CLI
+  are in the matrix.
 - **Guaranteeing host API stability.** The young-API recency risk is surfaced and
   assigned to the shim layer plus version pinning, not eliminated.
 
