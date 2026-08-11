@@ -285,11 +285,42 @@ for name in "${survivors[@]}"; do
   fi
 done
 
-if [ ${#blocked[@]} -gt 0 ]; then
-  echo "Error: these target paths are not this checkout's to write, so nothing was created:" >&2
-  for line in "${blocked[@]}"; do
-    echo "  ${line}" >&2
+# A guarded name is read too, for the opposite question: not whether this run may
+# write there, but whether it can take away what is already there. The
+# reconciliation below removes only this checkout's own link, so a link another
+# checkout wrote before the guard existed would survive every run of this script
+# and keep a model-invocable skill live in every session — the exact state the
+# guard exists to prevent, on a host with no trust gate to fall back on. Team's
+# pipeline works inside .claude/worktrees/, so two checkouts racing for one name
+# is the ordinary case here, not a contrived one.
+#
+# Only a live symlink counts. A dangling one loads nothing, and a directory is
+# content no install of this script could have written, so neither is a guarded
+# skill this run left reachable. The end-of-run note reports both.
+guarded_kept_live=()
+if [ ${#guarded[@]} -gt 0 ]; then
+  for name in "${guarded[@]}"; do
+    path="${TARGET_DIR}/${name}"
+    [ -L "$path" ] || continue
+    owns_link "$path" "$name" && continue
+    [ -f "${path}/SKILL.md" ] || continue
+    guarded_kept_live+=("${path} -> $(readlink "$path") (a symlink this checkout cannot remove, so ${name} loads in every session)")
   done
+fi
+
+if [ ${#blocked[@]} -gt 0 ] || [ ${#guarded_kept_live[@]} -gt 0 ]; then
+  if [ ${#blocked[@]} -gt 0 ]; then
+    echo "Error: these target paths are not this checkout's to write, so nothing was created:" >&2
+    for line in "${blocked[@]}"; do
+      echo "  ${line}" >&2
+    done
+  fi
+  if [ ${#guarded_kept_live[@]} -gt 0 ]; then
+    echo "Error: these skills set disable-model-invocation, but a link this checkout does not own keeps them installed:" >&2
+    for line in "${guarded_kept_live[@]}"; do
+      echo "  ${line}" >&2
+    done
+  fi
   echo "Run 'script/dev-uninstall antigravity' from the checkout each link resolves into," >&2
   echo "or move what sits there out of the way, then re-run." >&2
   if [ "$orphaned" -eq 1 ]; then
@@ -397,7 +428,11 @@ for name in "${survivors[@]}"; do
   # The pre-check aborted on every symlink at a survivor path except this
   # checkout's own, so a link still standing here is already the one to write.
   # Counting the two cases apart is what tells a no-op re-run from real work.
-  if [ -L "$path" ]; then
+  # Asking the ownership question again rather than testing for a symlink is what
+  # keeps a link swapped in since that check from being counted as work already
+  # done; the write below then puts the right link there. The window between the
+  # two reads cannot be closed, and stays accepted.
+  if owns_link "$path" "$name"; then
     already=$((already + 1))
     continue
   fi

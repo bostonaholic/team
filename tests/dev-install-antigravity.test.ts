@@ -839,6 +839,82 @@ describe("dev install: antigravity harness", () => {
       expect(linesNaming(output, "beta").join("\n")).toContain("directory");
     });
 
+    test("reconciliation leaves another checkout's link at a name that stopped being user-invocable", () => {
+      // The ownership rule on its own terms. The sibling test above uses a
+      // directory, which `rm` refuses anyway, so a build that dropped the
+      // ownership check would still pass it. A symlink is removable, so only
+      // the check itself keeps this one on disk.
+      const { checkout, home } = installedPair();
+      rewriteSkill(checkout, "beta", ["user-invocable: false"]);
+      const other = syntheticCheckout({ "beta/SKILL.md": skillMd("beta") });
+      const foreignTarget = join(other.root, "skills", "beta");
+      rmSync(targetPath(home, "beta"));
+      symlinkSync(foreignTarget, targetPath(home, "beta"));
+
+      const { status } = run(checkout.install, home);
+
+      // Exit 0, unlike the guarded case below: a methodology skill nobody can
+      // invoke by name is tidiness, and the abort is reserved for the set whose
+      // whole point is that it must not be reachable.
+      expect(status).toBe(0);
+      expect(linkTextOf(targetPath(home, "beta"))).toBe(foreignTarget);
+    });
+
+    test("install exits 1 when another checkout's link keeps a guarded skill installed", () => {
+      // Reconciliation removes only this checkout's own links, so a link
+      // another checkout wrote before the guard existed would outlive every
+      // run — leaving a model-invocable skill live in every session on a host
+      // with no trust gate. Two checkouts is the ordinary case here: Team's own
+      // pipeline works inside `.claude/worktrees/`.
+      const other = syntheticCheckout({ "beta/SKILL.md": skillMd("beta") });
+      const checkout = syntheticCheckout({
+        "alpha/SKILL.md": skillMd("alpha"),
+        "beta/SKILL.md": skillMd("beta", ["disable-model-invocation: true"]),
+      });
+      const home = newHome();
+      ensureTargetDir(home);
+      const foreignTarget = join(other.root, "skills", "beta");
+      symlinkSync(foreignTarget, targetPath(home, "beta"));
+
+      const { status, output } = run(checkout.install, home);
+
+      expect(status).toBe(1);
+      expect(output).toContain(targetPath(home, "beta"));
+      expect(output).toContain(foreignTarget);
+      // The same remediation a foreign link at an installable name already
+      // prints, because it is the same act that clears it.
+      expect(output).toContain("script/dev-uninstall antigravity");
+      // Never clobbered, and nothing else written: the abort is a stop, not a
+      // takeover of a path this checkout does not own.
+      expect(linkTextOf(targetPath(home, "beta"))).toBe(foreignTarget);
+      expect(entryNames(home)).toEqual(["beta"]);
+    });
+
+    test("a dangling link at a guarded name is reported rather than an abort", () => {
+      // The boundary of the rule above. This link resolves to nothing, so it
+      // holds no skill open, and the note at the end of the run says what sits
+      // there. Aborting on it would block the install over a state with no
+      // consequence.
+      const checkout = syntheticCheckout({
+        "alpha/SKILL.md": skillMd("alpha"),
+        "beta/SKILL.md": skillMd("beta", ["disable-model-invocation: true"]),
+      });
+      const home = newHome();
+      ensureTargetDir(home);
+      symlinkSync(
+        join(home, "gone-checkout", "skills", "beta"),
+        targetPath(home, "beta"),
+      );
+
+      const { status, output } = run(checkout.install, home);
+
+      expect(status).toBe(0);
+      expect(linkNames(home)).toContain("alpha");
+      expect(linesNaming(output, "beta").join("\n")).toContain(
+        targetPath(home, "beta"),
+      );
+    });
+
     test("a re-run distinguishes itself from a fresh install in its counts", () => {
       // A developer cannot tell a no-op from real work if both runs print the
       // same bytes.
