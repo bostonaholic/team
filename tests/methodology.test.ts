@@ -1042,3 +1042,41 @@ describe("skeptic passes weigh a stated rule above precedent (L2 tripwire)", () 
     expect(/where no written\s+rule speaks|no written rule speaks/i.test(text)).toBe(true);
   });
 });
+
+// A design with two entry modes can satisfy the six edge-case categories
+// per mode in isolation while the modes disagree with each other. Nothing
+// asked for the surface x safeguard matrix, so three consecutive review
+// rounds each found one more asymmetry, one instance at a time.
+describe("cross-surface parity is checked (L2 tripwire)", () => {
+  const AUTHORING = read(join(REPO_ROOT, "skills", "authoring-designs", "SKILL.md"));
+  const REVIEW = read(join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md"));
+  const CODE_REVIEW = read(join(REPO_ROOT, "skills", "code-review", "SKILL.md"));
+
+  test("the design template asks for a surfaces section", () => {
+    // Guard: a missing file must fail, not vacuously pass the checks below.
+    expect(AUTHORING.length).toBeGreaterThan(0);
+    expect(AUTHORING).toContain("## Surfaces");
+  });
+
+  test("the review brief has a step for it, and a verdict trigger", () => {
+    expect(REVIEW.length).toBeGreaterThan(0);
+    const text = squash(REVIEW);
+    expect(/reaches every surface/i.test(text)).toBe(true);
+    // Without a named blocking trigger the finding rests on judgment alone.
+    expect(/one surface and not\s*another/i.test(text)).toBe(true);
+  });
+
+  test("the review-process steps stay uniquely numbered after the insert", () => {
+    // The new step renumbered its successors; a duplicate number is the
+    // classic casualty of that edit.
+    const process = REVIEW.slice(REVIEW.indexOf("### Review process"));
+    const numbers = [...process.matchAll(/^(\d+)\. \*\*/gm)].map((m) => Number(m[1]));
+    expect(numbers.length).toBeGreaterThan(0);
+    expect(new Set(numbers).size).toBe(numbers.length);
+  });
+
+  test("code-review applies the same check to a diff", () => {
+    expect(CODE_REVIEW.length).toBeGreaterThan(0);
+    expect(/reaches every surface/i.test(squash(CODE_REVIEW))).toBe(true);
+  });
+});

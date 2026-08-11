@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.0] - 2026-08-11
+
+### Added
+
+- **A design that defines more than one way in must now say which of its rules reach which path, and the review checks it.** The edge-case walk covers six categories — boundary values, invalid inputs, failure paths, concurrency, authorization, resource limits — and a design with two entry modes can satisfy all six *per mode in isolation* while the modes disagree with each other. Nothing asked for the cross-mode view, so a safeguard stated in the surface its author happened to be editing left a reader arriving through the other one governed by nothing. With fresh-context reviewers who keep no memory of prior rounds, the asymmetry surfaced one instance per round: three consecutive rounds, each finding one more. `design.md` now carries a `## Surfaces` matrix when it has more than one path in — one row per safeguard, every `no` stating its reason — and the review brief gains a step that reads a self-contained section **alone**, the way its readers will, rather than inferring what it inherits. An unexplained asymmetry is now a named REQUEST CHANGES trigger rather than a judgment call with no criterion behind it. [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md) applies the same check to a diff, since a clean design can still land a rule in one surface only. [`skills/authoring-designs/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/authoring-designs/SKILL.md), [`skills/eng-design-doc-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/SKILL.md)
+
 ## [0.40.1] - 2026-08-10
 
 ### Fixed
@@ -464,7 +470,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.40.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.41.0...HEAD
+[0.41.0]: https://github.com/bostonaholic/team/compare/v0.40.1...v0.41.0
 [0.40.1]: https://github.com/bostonaholic/team/compare/v0.40.0...v0.40.1
 [0.40.0]: https://github.com/bostonaholic/team/compare/v0.39.2...v0.40.0
 [0.39.2]: https://github.com/bostonaholic/team/compare/v0.39.1...v0.39.2
