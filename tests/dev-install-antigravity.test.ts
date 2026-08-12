@@ -20,6 +20,15 @@
 //   through `lstat`/`readlink`. Nothing is written outside that tmpdir, and
 //   nothing is ever written under the real `$HOME`.
 //
+// One L3 check is differential rather than a snapshot: the script's verdict on
+// every skill in the corpus is compared against an independent YAML parse of the
+// same frontmatter (Bun's parser, which shares no code with the awk reader in the
+// script). Every expectation about which skills install is derived from that
+// parse for the same reason. A pattern match written beside the reader ends up
+// exactly as strict as the reader, so it agrees with the reader's holes, and a
+// guard the reader mis-reads as absent would then install a skill while every
+// assertion nodded along.
+//
 // NOTHING HERE DRIVES THE REAL `agy` BINARY. It is installed (1.1.12) on the
 // machine this was written on, so `run()` *replaces* PATH with SAFE_PATH
 // instead of prepending to the inherited one: the live host is out of reach by
@@ -41,6 +50,7 @@
 // reader will not interpret prints a `Fix:` line under each named file, naming
 // the edit that file's own shape needs.
 
+import { YAML } from "bun";
 import { afterAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import {
@@ -200,6 +210,22 @@ function run(script: string, home: string, options: RunOptions = {}) {
   };
 }
 
+/**
+ * Assert an exit status and carry the script's own output into the failure
+ * message when it does not match. A bare status comparison fails with `1 !== 0`
+ * and nothing about why, which is the difference between a failure someone can
+ * diagnose from the CI log and one they can only try to reproduce.
+ */
+function expectStatus(
+  result: { status: number; output: string },
+  expected: number,
+) {
+  expect({
+    status: result.status,
+    output: result.status === expected ? "" : result.output,
+  }).toEqual({ status: expected, output: "" });
+}
+
 /** Does `agy` resolve under this PATH? The absent-binary case must prove not. */
 function agyResolvesUnder(path: string): boolean {
   const probe = spawnSync("bash", ["-c", "command -v agy"], {
@@ -270,21 +296,41 @@ function skillDirsOnDisk(): string[] {
     .sort();
 }
 
-function frontmatterOf(name: string): string {
-  return frontmatter(readIfExists(join(SKILLS_ROOT, name, "SKILL.md")));
+/**
+ * A skill's frontmatter as an independent YAML parse — Bun's own parser, which
+ * shares no code and no blind spot with the awk reader inside the script. Every
+ * expectation about which skills install is derived from this rather than from a
+ * pattern match, because a pattern match written beside the reader tends to be
+ * exactly as strict as the reader and so agrees with its holes. `null` means the
+ * frontmatter is missing or is not a mapping, which no assertion may read as
+ * "the guard is unset".
+ */
+function parsedFrontmatterOf(name: string): Record<string, unknown> | null {
+  const block = frontmatter(readIfExists(join(SKILLS_ROOT, name, "SKILL.md")));
+  if (block.trim() === "") return null;
+  let parsed: unknown;
+  try {
+    parsed = YAML.parse(block);
+  } catch {
+    return null;
+  }
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    return null;
+  }
+  return parsed as Record<string, unknown>;
 }
 
-/** Skills pass 2 drops: `user-invocable: false`. */
+/** Skills pass 2 drops: `user-invocable` parses as the boolean false. */
 function nonInvocableSkills(): string[] {
-  return skillDirsOnDisk().filter((name) =>
-    /^user-invocable:\s*false\s*$/m.test(frontmatterOf(name)),
+  return skillDirsOnDisk().filter(
+    (name) => parsedFrontmatterOf(name)?.["user-invocable"] === false,
   );
 }
 
-/** Skills pass 3 drops: `disable-model-invocation: true`. */
+/** Skills pass 3 drops: `disable-model-invocation` parses as the boolean true. */
 function guardedSkills(): string[] {
-  return skillDirsOnDisk().filter((name) =>
-    /^disable-model-invocation:\s*true\s*$/m.test(frontmatterOf(name)),
+  return skillDirsOnDisk().filter(
+    (name) => parsedFrontmatterOf(name)?.["disable-model-invocation"] === true,
   );
 }
 
@@ -292,6 +338,66 @@ function guardedSkills(): string[] {
 function installableSkills(): string[] {
   const dropped = new Set([...nonInvocableSkills(), ...guardedSkills()]);
   return skillDirsOnDisk().filter((name) => !dropped.has(name));
+}
+
+/**
+ * One verdict per skill, in the vocabulary both sides of the cross-check below
+ * speak: what the run did with it, or what the YAML says it must do.
+ */
+type Verdict =
+  | "installed"
+  | "skipped: user-invocable"
+  | "skipped: disable-model-invocation"
+  | "gone, with no skip line to say why"
+  | "frontmatter that does not parse as a mapping";
+
+/** Skill name → the frontmatter key each `Skipped:` line blames. */
+function skipReasons(output: string): Record<string, string> {
+  const reasons: Record<string, string> = {};
+  for (const line of output.split("\n")) {
+    const match = /^\s*Skipped:\s+(\S+)\s+\(([a-z-]+):/.exec(line);
+    if (match) reasons[match[1] ?? ""] = match[2] ?? "";
+  }
+  return reasons;
+}
+
+/** What the script did with each skill, read off the disk and its own output. */
+function shellVerdicts(home: string, output: string): Record<string, Verdict> {
+  const reasons = skipReasons(output);
+  const verdicts: Record<string, Verdict> = {};
+  for (const name of skillDirsOnDisk()) {
+    if (linkStateOf(targetPath(home, name)) === "symlink") {
+      verdicts[name] = "installed";
+    } else if (reasons[name] === "user-invocable") {
+      verdicts[name] = "skipped: user-invocable";
+    } else if (reasons[name] === "disable-model-invocation") {
+      verdicts[name] = "skipped: disable-model-invocation";
+    } else {
+      verdicts[name] = "gone, with no skip line to say why";
+    }
+  }
+  return verdicts;
+}
+
+/**
+ * What an independent YAML parse says must happen to each skill. Pass order is
+ * the script's: a skill nobody can invoke by name never reaches the guard.
+ */
+function parsedVerdicts(): Record<string, Verdict> {
+  const verdicts: Record<string, Verdict> = {};
+  for (const name of skillDirsOnDisk()) {
+    const parsed = parsedFrontmatterOf(name);
+    if (parsed === null) {
+      verdicts[name] = "frontmatter that does not parse as a mapping";
+    } else if (parsed["user-invocable"] === false) {
+      verdicts[name] = "skipped: user-invocable";
+    } else if (parsed["disable-model-invocation"] === true) {
+      verdicts[name] = "skipped: disable-model-invocation";
+    } else {
+      verdicts[name] = "installed";
+    }
+  }
+  return verdicts;
 }
 
 // ---------------------------------------------------------------------------
@@ -801,10 +907,11 @@ describe("dev install: antigravity harness", () => {
 
     test("install exits 1 naming the file when the frontmatter keys are indented", () => {
       // YAML permits an indented root mapping, so this document really does set
-      // the guard — Ruby's Psych parses it as `disable-model-invocation: true`.
+      // the guard — every parser reads it as `disable-model-invocation: true`.
       // A reader that called the key absent here would link the one skill the
-      // guard holds back, which is the only reshaped-frontmatter case that could
-      // fail open rather than loud.
+      // guard holds back. The shapes describe below covers the rest of that
+      // family; this one keeps its own test because its remedy is the only one
+      // that survives editing the guard line itself.
       const checkout = syntheticCheckout({
         "alpha/SKILL.md": skillMd("alpha"),
         "indented/SKILL.md":
@@ -852,6 +959,149 @@ describe("dev install: antigravity harness", () => {
 
       expect(status).toBe(0);
       expect(linkNames(home)).toEqual(["alpha", "described"]);
+    });
+  });
+
+  describe("L3: every YAML shape that sets the guard is refused rather than read as absent, and the script's verdict on the real corpus matches an independent parse", () => {
+    // Each entry is a whole SKILL.md whose frontmatter sets
+    // `disable-model-invocation: true` in a shape the script's line-oriented
+    // reader does not match. Every one of them is a real guard — the first
+    // assertion in each test parses it and says so — so a reader that answered
+    // "absent" would link a skill that can rewrite published history or cast an
+    // approval that merges a PR, model-invocable in every session on a host with
+    // no confirmation gate. Refusing loudly is the only other acceptable answer.
+    const GUARD_SHAPES: { label: string; file: string; remedy: string }[] = [
+      {
+        label: "a space before the colon",
+        file: "---\nname: shaped\ndisable-model-invocation : true\n---\n\nBody.\n",
+        remedy: "write the key bare at the start of its line",
+      },
+      {
+        label: "a tab before the colon",
+        file: "---\nname: shaped\ndisable-model-invocation\t: true\n---\n\nBody.\n",
+        remedy: "write the key bare at the start of its line",
+      },
+      {
+        label: "a double-quoted key",
+        file: '---\nname: shaped\n"disable-model-invocation": true\n---\n\nBody.\n',
+        remedy: "write the key bare at the start of its line",
+      },
+      {
+        label: "a single-quoted key",
+        file: "---\nname: shaped\n'disable-model-invocation': true\n---\n\nBody.\n",
+        remedy: "write the key bare at the start of its line",
+      },
+      {
+        label: "a root flow mapping",
+        file: "---\n{name: shaped, disable-model-invocation: true}\n---\n\nBody.\n",
+        remedy: "rewrite that block as one key per line",
+      },
+      {
+        label: "a merge key injecting it from an anchor",
+        file: [
+          "---",
+          "name: shaped",
+          "defaults: &defaults",
+          "  disable-model-invocation: true",
+          "<<: *defaults",
+          "---",
+          "",
+          "Body.",
+          "",
+        ].join("\n"),
+        remedy: "delete the merge key",
+      },
+    ];
+
+    // Every remedy the abort can print. Each shape must draw its own and none of
+    // the others: a developer sent to unquote a value in a file whose whole block
+    // is a flow mapping edits something already correct and re-runs into the same
+    // abort, and one remedy printed under all of them would satisfy a bare
+    // "contains" check while saying nothing.
+    const ALL_REMEDIES = [
+      "write the key bare at the start of its line",
+      "rewrite that block as one key per line",
+      "delete the merge key",
+      "move every key in that block to column 0",
+      "give the key an unquoted true or false",
+      "add a --- line as the file's first line",
+    ];
+
+    /** The guard value an independent YAML parse finds in a file's frontmatter. */
+    function parsedGuardOf(file: string): unknown {
+      let parsed: unknown;
+      try {
+        parsed = YAML.parse(frontmatter(file));
+      } catch {
+        return "frontmatter that does not parse";
+      }
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+        return "frontmatter that is not a mapping";
+      }
+      return (parsed as Record<string, unknown>)["disable-model-invocation"];
+    }
+
+    for (const shape of GUARD_SHAPES) {
+      test(`install refuses a guard written as ${shape.label}`, () => {
+        // The fixture is a real guard, not a strawman: an independent parser
+        // reads the boolean true out of it. Without this the test could pin the
+        // reader's behavior on a document that sets nothing.
+        expect(parsedGuardOf(shape.file)).toBe(true);
+
+        const checkout = syntheticCheckout({
+          "alpha/SKILL.md": skillMd("alpha"),
+          "shaped/SKILL.md": shape.file,
+        });
+        const home = newHome();
+
+        const { status, output } = run(checkout.install, home);
+
+        expect(status).toBe(1);
+        expect(output).toContain(
+          join(checkout.root, "skills", "shaped", "SKILL.md"),
+        );
+        expect(output).toContain(shape.remedy);
+        const strayRemedies = ALL_REMEDIES.filter(
+          (remedy) => remedy !== shape.remedy && output.includes(remedy),
+        );
+        expect(strayRemedies).toEqual([]);
+        // `alpha` is installable, so the run had work it would have done: the
+        // abort stopped before any of it, rather than there being none.
+        expect(existsSync(join(home, ".gemini"))).toBe(false);
+      });
+    }
+
+    test("the script's verdict on every skill in the corpus matches an independent YAML parse", () => {
+      // The durable half. Per-shape tests pin the shapes someone thought of; this
+      // one compares the shell reader against a parser that shares none of its
+      // code, over every skill on disk, so a *future* skill authored in any shape
+      // the reader mis-reads fails here instead of being linked in silence. It is
+      // the only check that closes the gap the pinned exclusion set cannot: a
+      // pattern match written beside the reader is at best exactly as strict as
+      // the reader, so it agrees with the reader's holes.
+      const home = newHome();
+      const result = run(INSTALL, home);
+
+      // A refusal is a fine answer to a shape the reader will not interpret, but
+      // never over this corpus: everything here is authored in the one shape the
+      // reader reads, and an abort would leave every verdict below unwritten.
+      expectStatus(result, 0);
+
+      const names = skillDirsOnDisk();
+      const fromScript = shellVerdicts(home, result.output);
+      const fromParse = parsedVerdicts();
+
+      // Guards. An empty corpus, or one where every skill draws the same verdict,
+      // would make the comparison below agree about nothing.
+      expect(names.length).toBeGreaterThan(0);
+      expect(Object.keys(fromScript).sort()).toEqual(names);
+      expect([...new Set(Object.values(fromParse))].sort()).toEqual([
+        "installed",
+        "skipped: disable-model-invocation",
+        "skipped: user-invocable",
+      ]);
+
+      expect(fromScript).toEqual(fromParse);
     });
   });
 

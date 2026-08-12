@@ -45,27 +45,39 @@ SKILLS_PHYS="$(cd "$SKILLS_SRC" && pwd -P)"
 # this script filters on also appear in skill bodies and in README prose, so a
 # whole-file grep misclassifies.
 #
-# Prints the raw value and exits 0 when the key is inside that block, exits 1
-# when the block is there without the key, exits 2 when the file has no leading
-# `---` block at all, and exits 3 when that block's own keys are indented. Pass
-# 3 treats each of those differently.
+# Prints the raw value and exits 0 when the key is read. Every other exit is a
+# distinct shape, because pass 3 owes each one a different edit:
 #
-# A key is read at column 0 only. YAML permits an indented root mapping, so
-# ` disable-model-invocation: true` sets the guard while sitting one space in,
-# and a reader that called the key absent there would fail open on the one key
-# whose absence installs a skill. Widening the match to any indentation is worse
+#   1  the block is there and holds no such key
+#   2  the file has no leading `---` block at all
+#   3  that block's own keys are indented
+#   4  that block is a `{ }` flow mapping
+#   5  that block carries a `<<` merge key
+#   6  a line names this key in a form this reader will not interpret
+#
+# This reader matches one exact shape — the bare key at column 0 with the colon
+# right after it — and refuses every near miss rather than calling it absent.
+# YAML accepts far more than that shape, and each of the others sets the key just
+# as well: an indented root mapping, `key : true`, `"key": true`, a root flow
+# mapping, a `<<` merge that injects the key from an anchor. Reading any of them
+# as *absent* would fail open on the one key whose absence installs a skill, on a
+# host with no trust gate to fall back on. Widening the match instead is worse
 # than the hole it closes: the continuation lines of a block scalar are indented
 # too, so `description: |` prose that merely mentions a key would start filtering
-# skills on words. So the *shape* is rejected instead of guessed at. The block's
-# first non-blank line decides: indented there means an indented root mapping,
-# and this reader interprets none of it.
+# skills on words. So the *shape* is rejected, never guessed at, and statuses 3-6
+# are all the same answer — this file has to be authored in the one shape — said
+# precisely enough for the abort to name the edit.
 frontmatter_value() {
   awk -v key="$1" '
     NR == 1 { if ($0 != "---") { noblock = 1; exit } ; next }
     $0 == "---" { exit }
+    # Anywhere in the block: an anchor merged in here can carry keys no line
+    # below names, so nothing read line by line can be trusted.
+    /<<[ \t]*:/ { merge = 1; exit }
     !seen && $0 ~ /^[ \t]*$/ { next }
     !seen {
       seen = 1
+      if ($0 ~ /^[ \t]*\{/) { flow = 1; exit }
       if ($0 ~ /^[ \t]/) { indented = 1; exit }
     }
     index($0, key ":") == 1 {
@@ -76,9 +88,24 @@ frontmatter_value() {
       found = 1
       exit
     }
+    # The near misses, tested after the exact shape above so a well-formed line
+    # is read rather than refused: whitespace before the colon, or quotes around
+    # the key. Column 0 only, so an indented block scalar mentioning the key
+    # still reaches nothing here.
+    /^[^ \t]/ && index($0, ":") > 1 {
+      candidate = substr($0, 1, index($0, ":") - 1)
+      sub(/[ \t]+$/, "", candidate)
+      if (candidate == key || candidate == "\"" key "\"" || candidate == "\047" key "\047") {
+        keylike = 1
+        exit
+      }
+    }
     END {
       if (noblock || NR == 0) exit 2
       if (indented) exit 3
+      if (flow) exit 4
+      if (merge) exit 5
+      if (keylike) exit 6
       if (!found) exit 1
     }
   ' "$2"
@@ -184,7 +211,7 @@ done
 # Pass-2 survivors only: a file that can never become a link can never be the
 # hazard.
 #
-# Three shapes reach this abort and each needs a different edit, so the remedy
+# Every shape that reaches this abort needs a different edit, so the remedy
 # travels with its own diagnosis in `unreadable_fix` rather than as one trailer
 # under all of them: a file with no frontmatter block has no key to unquote, and
 # an indented block stays indented after its value is fixed. Keeping the pair
@@ -206,6 +233,15 @@ if [ ${#invocable[@]} -gt 0 ]; then
     elif [ "$status" -eq 3 ]; then
       unreadable+=("${file}: the frontmatter block's keys are indented, so no top-level key can be read")
       unreadable_fix+=("move every key in that block to column 0")
+    elif [ "$status" -eq 4 ]; then
+      unreadable+=("${file}: the frontmatter block is a { } flow mapping, so it has no line to read a key from")
+      unreadable_fix+=("rewrite that block as one key per line")
+    elif [ "$status" -eq 5 ]; then
+      unreadable+=("${file}: the frontmatter block carries a << merge key, so it can set keys no line in it names")
+      unreadable_fix+=("delete the merge key and spell every key out in that block")
+    elif [ "$status" -eq 6 ]; then
+      unreadable+=("${file}: a disable-model-invocation key that is quoted, or held away from its colon")
+      unreadable_fix+=("write the key bare at the start of its line with the colon right after it")
     elif [ "$status" -eq 1 ]; then
       survivors+=("$name")
     elif [ "$value" = "true" ]; then
