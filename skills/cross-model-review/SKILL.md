@@ -31,9 +31,11 @@ No match → no external call, and nothing to report. Most reviews end here.
 
 The pass runs only when the file `.team/cross-model-review` exists at the
 repo root. The marker is the user's standing consent for a diff to leave the
-machine and reach an external vendor. `detect` checks the marker **before**
-any binary lookup: no marker → no diff leaves the machine, and the script
-makes no claim about what sits on `PATH`.
+machine and reach an external vendor. Both verbs check the marker **before**
+anything else: `detect` checks it before any binary lookup — no marker → no
+diff leaves the machine, and the script makes no claim about what sits on
+`PATH` — and `run` refuses with a non-zero exit before any child process
+spawns.
 
 ## When the marker is absent
 
@@ -58,6 +60,12 @@ dropped inside the prompt — *before* the single call. One attempt per CLI
 per round: `run` rejects an over-cap prompt with a usage error before any
 child process spawns, and you never send-then-resend.
 
+Gemini takes the prompt as a single `-p` argument, and Linux caps one argv
+string at `MAX_ARG_STRLEN` (~128 KiB) — the same order as
+`PROMPT_CAP_BYTES` — so a near-cap prompt can fail to exec there for gemini
+specifically. That failure reads as an ordinary skip (a spawn error), never
+a hang.
+
 ## Invocation
 
 Build the prompt from `prompt-template.md` (in this skill's directory) plus
@@ -77,10 +85,11 @@ node <skill-dir>/external-review.mjs run <cli> <repo-root>
 The script pins the argv — codex runs `exec` in its read-only sandbox with
 the prompt on stdin; gemini runs in plan approval mode with the prompt as
 the `-p` value. Never invoke the vendor CLIs directly, and never pass extra
-flags. On any failure — marker absent at `detect` time, binary missing,
-timeout, non-zero exit — the script prints a skip with the reason. Report
-the skip in your disposition block and move on. **Never soften a verdict
-because the pass was unavailable.**
+flags. A missing consent marker is a refusal, not a skip: both verbs check
+it first, and `run` exits non-zero before any child process spawns. On any
+other failure — binary missing, timeout, non-zero exit — the script prints
+a skip with the reason. Report the skip in your disposition block and move
+on. **Never soften a verdict because the pass was unavailable.**
 
 ## Disposition
 

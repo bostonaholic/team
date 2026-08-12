@@ -8,15 +8,17 @@
  *     node <skill-dir>/external-review.mjs detect <repo-root>
  *     node <skill-dir>/external-review.mjs run <cli> <repo-root> [timeout-ms]
  *
- * `detect` reports per-CLI availability. The consent marker
- * `.team/cross-model-review` is checked before any binary lookup: without it
+ * Both verbs check the consent marker `.team/cross-model-review` before
+ * anything else. `detect` reports per-CLI availability: without the marker
  * the answer is unavailable and no binary claim is made, so a repo that never
- * opted in never even learns what sits on PATH. `run` reads the review prompt
- * from stdin and invokes the named CLI with a pinned read-only argv — codex
- * gets the prompt on stdin (then EOF, which defeats the stdin-block hang),
- * gemini gets it as the `-p` value. Guard failures (unknown CLI, prompt over
- * the cap) are usage errors that exit before any child process spawns, so a
- * rejected attempt consumes nothing.
+ * opted in never even learns what sits on PATH. `run` refuses with a non-zero
+ * exit before any child process spawns when the marker is absent. With
+ * consent, `run` reads the review prompt from stdin and invokes the named CLI
+ * with a pinned read-only argv — codex gets the prompt on stdin (then EOF,
+ * which defeats the stdin-block hang), gemini gets it as the `-p` value.
+ * Guard failures (unknown CLI, prompt over the cap) are usage errors that
+ * also exit before any child process spawns, so a rejected attempt consumes
+ * nothing. The child gets an allowlisted environment, never the parent's.
  *
  * The trailing [timeout-ms] argument exists for the accelerated-timeout test
  * only; the skill's documented invocation never passes it. No environment
@@ -43,6 +45,47 @@ export const OUTPUT_CAP_BYTES = 32 * 1024;
 
 /** Consent marker, relative to the repo root. Checked before anything else. */
 export const MARKER_RELATIVE_PATH = join(".team", "cross-model-review");
+
+/**
+ * Ceiling on stderr retained for a skip reason. Stderr is diagnostic noise,
+ * not the review, so it gets a much smaller cap than stdout.
+ */
+const STDERR_CAP_BYTES = 4 * 1024;
+
+/**
+ * The only environment variables a vendor CLI child receives. PATH/HOME/
+ * TMPDIR/TERM and the locale pair keep the CLI functional (both read their
+ * config and cached auth under HOME); the vendor variables are each CLI's
+ * own credentials. Everything else — ANTHROPIC_API_KEY, GH_TOKEN, cloud
+ * creds — stays with the parent: a review subprocess has no business
+ * holding credentials for services it does not call.
+ */
+const ENV_ALLOWLIST = [
+  "PATH",
+  "HOME",
+  "TMPDIR",
+  "TERM",
+  "LANG",
+  "LC_ALL",
+  // codex
+  "OPENAI_API_KEY",
+  "CODEX_HOME",
+  // gemini
+  "GEMINI_API_KEY",
+  "GOOGLE_API_KEY",
+  "GOOGLE_APPLICATION_CREDENTIALS",
+  "GOOGLE_CLOUD_PROJECT",
+  "GOOGLE_CLOUD_LOCATION",
+  "GOOGLE_GENAI_USE_VERTEXAI",
+];
+
+function childEnv() {
+  const env = {};
+  for (const key of ENV_ALLOWLIST) {
+    if (process.env[key] !== undefined) env[key] = process.env[key];
+  }
+  return env;
+}
 
 /**
  * The pinned read-only argv per supported CLI. Codex reads the prompt from
@@ -74,7 +117,11 @@ export function promptWithinCap(prompt) {
 export function truncateOutput(text) {
   const bytes = Buffer.from(text, "utf8");
   if (bytes.length <= OUTPUT_CAP_BYTES) return text;
-  const head = bytes.subarray(0, OUTPUT_CAP_BYTES).toString("utf8");
+  // Back off past any UTF-8 continuation bytes so the cut never splits a
+  // multibyte character into a replacement-character tail.
+  let end = OUTPUT_CAP_BYTES;
+  while (end > 0 && (bytes[end] & 0xc0) === 0x80) end -= 1;
+  const head = bytes.subarray(0, end).toString("utf8");
   return `${head}\n[output truncated at ${OUTPUT_CAP_BYTES} bytes]`;
 }
 
@@ -96,15 +143,22 @@ function findOnPath(name) {
   return null;
 }
 
-function detect(repoRoot) {
+/**
+ * Shared consent preflight for both verbs: `detect` answers unavailable
+ * without it, `run` refuses pre-spawn without it. Any read error counts as
+ * absent — fail closed.
+ */
+function markerPresent(repoRoot) {
   const marker = join(repoRoot, MARKER_RELATIVE_PATH);
-  let markerPresent = false;
   try {
-    markerPresent = existsSync(marker) && statSync(marker).isFile();
+    return existsSync(marker) && statSync(marker).isFile();
   } catch {
-    markerPresent = false;
+    return false;
   }
-  if (!markerPresent) {
+}
+
+function detect(repoRoot) {
+  if (!markerPresent(repoRoot)) {
     // Fail-closed and marker-first: no consent means no binary lookup and no
     // binary claim of any kind.
     for (const cli of SUPPORTED_CLIS) {
@@ -146,10 +200,39 @@ function usage(message) {
   return 2;
 }
 
+/**
+ * Retain stream chunks only up to capBytes; everything past the cap is read
+ * and dropped, so a runaway child can neither grow memory nor block on a
+ * full pipe.
+ */
+function boundedCollector(capBytes) {
+  const chunks = [];
+  let retained = 0;
+  return {
+    push(chunk) {
+      if (retained >= capBytes) return;
+      const kept =
+        chunk.length <= capBytes - retained ? chunk : chunk.subarray(0, capBytes - retained);
+      chunks.push(kept);
+      retained += kept.length;
+    },
+    text() {
+      return Buffer.concat(chunks).toString("utf8");
+    },
+  };
+}
+
 async function run(cli, repoRoot, timeoutMs) {
-  // Both guards exit before any spawn: a rejected attempt consumes nothing.
+  // All three guards exit before any spawn: a rejected attempt consumes
+  // nothing, and no diff ever leaves the machine without standing consent.
   if (!SUPPORTED_CLIS.includes(cli)) {
     return usage(`unknown CLI "${cli}"`);
+  }
+  if (!markerPresent(repoRoot)) {
+    process.stderr.write(
+      `consent marker ${MARKER_RELATIVE_PATH} absent under ${repoRoot}: refusing to run\n`,
+    );
+    return 3;
   }
   const prompt = await readStdin();
   if (!promptWithinCap(prompt)) {
@@ -157,14 +240,27 @@ async function run(cli, repoRoot, timeoutMs) {
   }
 
   const { command, args } = buildArgv(cli, prompt);
+  // Resolve here and spawn the absolute path, so what runs is exactly what
+  // this process saw — never a second PATH walk at spawn time.
+  const resolved = findOnPath(command);
+  if (resolved === null) {
+    process.stdout.write(`skip: ${cli} not found on PATH\n`);
+    return 0;
+  }
   return new Promise((resolvePromise) => {
-    const child = spawn(command, args, {
+    const child = spawn(resolved, args, {
       cwd: repoRoot,
       stdio: ["pipe", "pipe", "pipe"],
+      env: childEnv(),
+      // Own process group, so the timeout kill can reach grandchildren.
+      detached: true,
     });
 
-    const stdoutChunks = [];
-    const stderrChunks = [];
+    // Retain one byte past the stdout cap so truncateOutput can tell an
+    // exactly-at-cap output (passes untouched) from an over-cap one (gets
+    // the truncation marker).
+    const stdoutCollector = boundedCollector(OUTPUT_CAP_BYTES + 1);
+    const stderrCollector = boundedCollector(STDERR_CAP_BYTES);
     let settled = false;
     const settle = (report) => {
       if (settled) return;
@@ -178,14 +274,19 @@ async function run(cli, repoRoot, timeoutMs) {
     // shell can leave a grandchild holding the stdio pipes open, which would
     // delay close (and the skip report) until that grandchild exits.
     const timer = setTimeout(() => {
-      child.kill("SIGKILL");
+      try {
+        // Negative PID: kill the whole process group, grandchildren included.
+        process.kill(-child.pid, "SIGKILL");
+      } catch {
+        child.kill("SIGKILL");
+      }
       settle(() => {
         process.stdout.write(`skip: ${cli} timed out after ${timeoutMs} ms\n`);
       });
     }, timeoutMs);
 
-    child.stdout.on("data", (chunk) => stdoutChunks.push(chunk));
-    child.stderr.on("data", (chunk) => stderrChunks.push(chunk));
+    child.stdout.on("data", (chunk) => stdoutCollector.push(chunk));
+    child.stderr.on("data", (chunk) => stderrCollector.push(chunk));
 
     child.on("error", (error) => {
       settle(() => {
@@ -196,15 +297,14 @@ async function run(cli, repoRoot, timeoutMs) {
     child.on("close", (code) => {
       settle(() => {
         if (code !== 0) {
-          const reason = Buffer.concat(stderrChunks).toString("utf8").trim();
+          const reason = stderrCollector.text().trim();
           process.stdout.write(
             `skip: ${cli} exited with code ${code}${reason ? `: ${reason}` : ""}\n`,
           );
           return;
         }
         // Only stdout is the review; gemini writes progress noise to stderr.
-        const output = Buffer.concat(stdoutChunks).toString("utf8");
-        process.stdout.write(truncateOutput(output));
+        process.stdout.write(truncateOutput(stdoutCollector.text()));
       });
     });
 

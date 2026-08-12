@@ -1,14 +1,10 @@
-// Acceptance fence for the multi-model adversarial review pass
-// (docs/plans/2026-08-12-multi-model-adversarial-review/plan.md).
-//
-// Slice 1 — opt-in cross-vendor pass on the code-reviewer: the bundled
-//   skills/cross-model-review/external-review.mjs script (L1 pure core +
-//   L3 subprocess with fake CLIs on a controlled PATH), the no-bypass
-//   sweep, and the skill/agent/docs wiring tripwires.
-// Slice 2 — per-round disposition record: the orchestrator appends each
-//   round's `### Cross-model disposition` block to cross-model-notes.md
-//   and the terminal halt names the file (L2 contract tripwires).
-// Slice 3 — PR review notes carry every round exactly once (L2).
+// Acceptance fence for the opt-in cross-vendor review pass. It covers the
+// bundled skills/cross-model-review/external-review.mjs runner (L1 pure
+// core + L3 subprocess against fake CLIs on a controlled PATH), the
+// no-bypass sweep, the skill/agent/docs wiring tripwires, the
+// orchestrator's per-round disposition persistence to cross-model-notes.md
+// (including the terminal halt naming the file), and the PR review-notes
+// copy rules that keep every round appearing exactly once.
 //
 // Free tier per docs/testing.md: no model call, no metered API. Fake CLIs
 // are bash stubs in a mkdtemp bin dir; the child PATH is fully controlled.
@@ -31,8 +27,8 @@ import { frontmatter, read, squash } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 
-// The cross-slice literals. Slice 1 produces them; slices 2-3 consume them,
-// so every drift tripwire below reuses these constants.
+// Literals shared between the script, the skills, and the docs. Every
+// drift tripwire below reuses these constants.
 const DISPOSITION_HEADING = "### Cross-model disposition";
 const MARKER_PATH = ".team/cross-model-review";
 const NOTES_FILENAME = "cross-model-notes.md";
@@ -48,6 +44,7 @@ const SKILL_MD = join(SKILL_DIR, "SKILL.md");
 const SCRIPT = join(SKILL_DIR, "external-review.mjs");
 const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
 const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
+const TEAM_IMPLEMENT_SKILL = join(REPO_ROOT, "skills", "team-implement", "SKILL.md");
 const TEAM_PR_SKILL = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
 const ARTIFACT_SKILL = join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md");
 const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
@@ -110,13 +107,13 @@ function makeRepo(withMarker: boolean): string {
 
 function runScript(
   args: string[],
-  options: { binDir?: string; input?: string } = {},
+  options: { binDir?: string; input?: string; extraEnv?: Record<string, string> } = {},
 ): { status: number | null; stdout: string; stderr: string; combined: string } {
   const path = options.binDir ? `${options.binDir}:${SYSTEM_PATH}` : SYSTEM_PATH;
   const result = spawnSync(NODE, [SCRIPT, ...args], {
     encoding: "utf8",
     input: options.input,
-    env: { ...process.env, PATH: path },
+    env: { ...process.env, ...options.extraEnv, PATH: path },
     timeout: 10_000,
   });
   const stdout = result.stdout ?? "";
@@ -136,10 +133,10 @@ echo "fake findings"
 `;
 
 // ---------------------------------------------------------------------------
-// Slice 1 — external-review.mjs pure core (L1)
+// external-review.mjs pure core (L1)
 // ---------------------------------------------------------------------------
 
-describe("slice 1 — external-review.mjs pure core (L1)", () => {
+describe("external-review.mjs pure core (L1)", () => {
   test("exports the three named cap constants: TIMEOUT_MS 120 s, PROMPT_CAP_BYTES 128 KB, OUTPUT_CAP_BYTES 32 KB", () => {
     expect(mod.TIMEOUT_MS).toBe(EXPECTED_TIMEOUT_MS);
     expect(mod.PROMPT_CAP_BYTES).toBe(EXPECTED_PROMPT_CAP_BYTES);
@@ -186,10 +183,10 @@ describe("slice 1 — external-review.mjs pure core (L1)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Slice 1 — detect: fail-closed, marker-first (L3)
+// detect: fail-closed, marker-first (L3)
 // ---------------------------------------------------------------------------
 
-describe("slice 1 — detect is fail-closed and marker-first (L3)", () => {
+describe("detect is fail-closed and marker-first (L3)", () => {
   test("no marker → unavailable naming the marker path, with no binary claim even when a fake codex sits on PATH", () => {
     expect(existsSync(SCRIPT)).toBe(true);
     // Positive control: the availability matcher can see a positive claim.
@@ -227,10 +224,10 @@ describe("slice 1 — detect is fail-closed and marker-first (L3)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Slice 1 — run: pre-spawn rejections, truncation, timeout, skip (L3)
+// run: pre-spawn refusals, truncation, timeout, skip (L3)
 // ---------------------------------------------------------------------------
 
-describe("slice 1 — run guards and skip paths (L3)", () => {
+describe("run guards and skip paths (L3)", () => {
   test("run rejects an unknown CLI name with a usage error and non-zero exit before any spawn", () => {
     expect(existsSync(SCRIPT)).toBe(true);
     const bin = makeBin({ codex: RECORDING_FAKE });
@@ -251,6 +248,51 @@ describe("slice 1 — run guards and skip paths (L3)", () => {
     expect(r.status).not.toBe(0);
     expect(r.combined).toMatch(/usage/i);
     expect(existsSync(join(bin, "ran"))).toBe(false);
+  });
+
+  test("run refuses without the consent marker: non-zero exit and no spawn, even with a CLI on PATH", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+    const bin = makeBin({ codex: RECORDING_FAKE });
+    const repo = makeRepo(/* withMarker */ false);
+    const r = runScript(["run", "codex", repo], { binDir: bin, input: "prompt" });
+    expect(r.status).not.toBe(0);
+    expect(r.combined).toContain(MARKER_PATH);
+    // The recording fake proves no child process ever ran.
+    expect(existsSync(join(bin, "ran"))).toBe(false);
+  });
+
+  test("run spawns the CLI with an env allowlist: an unrelated credential variable never reaches the child", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+    const bin = makeBin({
+      codex: `#!/bin/bash
+cat >/dev/null
+echo "canary=[\${CROSS_MODEL_TEST_CANARY:-unset}]"
+`,
+    });
+    const repo = makeRepo(true);
+    const r = runScript(["run", "codex", repo], {
+      binDir: bin,
+      input: "prompt",
+      extraEnv: { CROSS_MODEL_TEST_CANARY: "leaked-credential" },
+    });
+    expect(r.stdout).toContain("canary=[unset]");
+    expect(r.combined).not.toContain("leaked-credential");
+  });
+
+  test("run caps the stderr carried into a skip reason instead of concatenating it whole", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+    const bin = makeBin({
+      codex: `#!/bin/bash
+cat >/dev/null
+head -c 100000 /dev/zero | tr '\\0' e >&2
+exit 7
+`,
+    });
+    const repo = makeRepo(true);
+    const r = runScript(["run", "codex", repo], { binDir: bin, input: "prompt" });
+    expect(r.combined).toMatch(/skip/i);
+    expect(r.combined).toContain("7");
+    expect(Buffer.byteLength(r.stdout, "utf8")).toBeLessThanOrEqual(8 * 1024);
   });
 
   test("run truncates child stdout at OUTPUT_CAP_BYTES with a truncation marker, dropping the tail", () => {
@@ -308,7 +350,7 @@ exit 7
 });
 
 // ---------------------------------------------------------------------------
-// Slice 1 — no-bypass sweep (L2)
+// no-bypass sweep (L2)
 // ---------------------------------------------------------------------------
 
 function filesUnder(dir: string): string[] {
@@ -322,8 +364,8 @@ function filesUnder(dir: string): string[] {
   return out;
 }
 
-describe("slice 1 — no approval-bypass flag anywhere in skills/cross-model-review/ (L2)", () => {
-  const FORBIDDEN = ["--yolo", "--full-auto", "-s workspace-write", "${CLAUDE_PLUGIN_ROOT}"];
+describe("no approval-bypass flag anywhere in skills/cross-model-review/ (L2)", () => {
+  const FORBIDDEN = ["--yolo", "--full-auto", "workspace-write", "${CLAUDE_PLUGIN_ROOT}"];
 
   for (const token of FORBIDDEN) {
     test(`zero matches for ${token}`, () => {
@@ -342,10 +384,10 @@ describe("slice 1 — no approval-bypass flag anywhere in skills/cross-model-rev
 });
 
 // ---------------------------------------------------------------------------
-// Slice 1 — wiring tripwires (L2)
+// wiring tripwires (L2)
 // ---------------------------------------------------------------------------
 
-describe("slice 1 — skill and agent wiring (L2)", () => {
+describe("skill and agent wiring (L2)", () => {
   test("code-reviewer frontmatter preloads cross-model-review", () => {
     expect(frontmatter(read(CODE_REVIEWER))).toMatch(/^\s*-\s+cross-model-review\s*$/m);
   });
@@ -392,7 +434,7 @@ describe("slice 1 — skill and agent wiring (L2)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Slice 2 — orchestrator appends the per-round disposition record (L2)
+// Orchestrators append the per-round disposition record (L2)
 // ---------------------------------------------------------------------------
 
 // Window a section from its heading line to the next heading of the same or
@@ -409,7 +451,7 @@ function aggregateGate(): string {
   return windowSection(read(TEAM_SKILL), /^### Aggregate Gate/, /^#{1,3} /);
 }
 
-describe("slice 2 — orchestrator contract in skills/team/SKILL.md (L2)", () => {
+describe("orchestrator contract in skills/team/SKILL.md (L2)", () => {
   test("the Aggregate Gate names the disposition heading and the notes file", () => {
     const gate = aggregateGate();
     // Guard: a renamed section must fail, not vacuously pass.
@@ -432,10 +474,31 @@ describe("slice 2 — orchestrator contract in skills/team/SKILL.md (L2)", () =>
   test("the disposition heading is byte-identical between producer and orchestrator skills", () => {
     expect(readOrEmpty(SKILL_MD)).toContain(DISPOSITION_HEADING);
     expect(read(TEAM_SKILL)).toContain(DISPOSITION_HEADING);
+    expect(read(TEAM_IMPLEMENT_SKILL)).toContain(DISPOSITION_HEADING);
   });
 });
 
-describe("slice 2 — artifact schema in skills/artifact-frontmatter/SKILL.md (L2)", () => {
+describe("orchestrator contract in skills/team-implement/SKILL.md (L2)", () => {
+  // team-implement carries its own complete aggregate-gate procedure, so it
+  // needs the same persistence rules as skills/team/SKILL.md — a standalone
+  // /team-implement run must not silently drop the disposition record.
+  test("the execution steps name the disposition heading and the notes file", () => {
+    const text = read(TEAM_IMPLEMENT_SKILL);
+    expect(text).toContain(DISPOSITION_HEADING);
+    expect(text).toContain(NOTES_FILENAME);
+  });
+
+  test("the terminal-halt step names the notes file beside the unresolved findings", () => {
+    const lines = read(TEAM_IMPLEMENT_SKILL).split("\n");
+    const start = lines.findIndex((line) => /round count ≥ 5.*halt/i.test(line));
+    expect(start).toBeGreaterThanOrEqual(0);
+    const end = lines.findIndex((line, i) => i > start && /^\s*-\s|^\d+\.\s/.test(line));
+    const step = lines.slice(start, end === -1 ? undefined : end).join("\n");
+    expect(step).toContain(NOTES_FILENAME);
+  });
+});
+
+describe("artifact schema in skills/artifact-frontmatter/SKILL.md (L2)", () => {
   test("documents cross-model-notes.md with phase: cross-model-review", () => {
     const text = read(ARTIFACT_SKILL);
     expect(text).toContain(NOTES_FILENAME);
@@ -453,7 +516,7 @@ describe("slice 2 — artifact schema in skills/artifact-frontmatter/SKILL.md (L
 });
 
 // ---------------------------------------------------------------------------
-// Slice 3 — PR review notes carry every round exactly once (L2)
+// PR review notes carry every round exactly once (L2)
 // ---------------------------------------------------------------------------
 
 function reviewNotesSpec(): string {
@@ -461,7 +524,7 @@ function reviewNotesSpec(): string {
   return paragraphs.find((p) => p.includes("`## Review notes` (conditional)")) ?? "";
 }
 
-describe("slice 3 — PR contract in skills/team-pr/SKILL.md (L2)", () => {
+describe("PR contract in skills/team-pr/SKILL.md (L2)", () => {
   test("the Review notes spec names cross-model-notes.md as a source", () => {
     const spec = reviewNotesSpec();
     // Guard: a reworded anchor must fail, not vacuously pass.
@@ -483,8 +546,8 @@ describe("slice 3 — PR contract in skills/team-pr/SKILL.md (L2)", () => {
     expect(spec).toMatch(/replac|exclud/i);
   });
 
-  test("the literal notes filename agrees across team, team-pr, and artifact-frontmatter skills", () => {
-    for (const path of [TEAM_SKILL, TEAM_PR_SKILL, ARTIFACT_SKILL]) {
+  test("the literal notes filename agrees across team, team-implement, team-pr, and artifact-frontmatter skills", () => {
+    for (const path of [TEAM_SKILL, TEAM_IMPLEMENT_SKILL, TEAM_PR_SKILL, ARTIFACT_SKILL]) {
       expect(read(path)).toContain(NOTES_FILENAME);
     }
   });
