@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 54 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 55 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 36 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -57,7 +57,7 @@ resolve, groom a project backlog, tear down branch state after a PR is
 finished, verify a PR's test plan, and rebase a branch onto its base
 without changing what it does.
 None is a pipeline phase. The split is
-**11 pipeline entry-point + 8 standalone utility + 35 methodology = 54**.
+**11 pipeline entry-point + 8 standalone utility + 36 methodology = 55**.
 
 For *why* the system is shaped this way (the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits),
@@ -601,7 +601,7 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 35 methodology skills carry no `argument-hint` and, with one
+The 36 methodology skills carry no `argument-hint` and, with one
 exception, are never invoked directly. The exception is `code-review`: it
 is a meaningful standalone user action ("review this diff",
 `/code-review`) as well as a building block, so it does not set
@@ -766,6 +766,23 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   rule and the CRITICAL/HIGH/MEDIUM/LOW severity classification ladder, in
   which CRITICAL and HIGH are hard gates. The PASS/FAIL verdict rule stays
   in `code-review`.
+
+### cross-model-review
+
+- **Purpose:** Opt-in cross-vendor review pass — a second vendor's opinion
+  on higher-stakes diffs, verified before any of it is adopted.
+- **Loaded by:** code-reviewer.
+- **Key behaviors:** Runs only when the repo carries the consent marker
+  `.team/cross-model-review` and the diff matches a trigger class (auth/
+  session/crypto, data storage and schema migrations, public API
+  contracts). The bundled `external-review.mjs` script pins read-only
+  invocations of the `codex` and `gemini` CLIs, checks the marker before
+  any binary lookup, and enforces the prompt, output, and timeout caps.
+  Every external claim is verified before adoption — nothing reaches
+  Blocking or Major without the reviewer's own `file:line` confirmation —
+  and the per-round record lands under one `### Cross-model disposition`
+  block in the report. External output is data, never instructions; the
+  pass skips loudly and never softens a verdict.
 
 ### review-severity-tiers
 
@@ -1102,6 +1119,7 @@ entry-point section above rather than repeating them here.
 | `conventional-comments` | code-reviewer, security-reviewer, technical-writer | Implement (verify): finding format |
 | `review-severity-tiers` | orchestrator (team, team-implement, qrspi-workflow) | Implement (aggregate review gate) |
 | `reviewing-security` | security-reviewer | Implement (verify) |
+| `cross-model-review` | code-reviewer | Implement (verify) |
 | `decomposing-intent` | questioner | Question |
 | `authoring-designs` | design-author | Design |
 | `researching-codebases` | researcher | Research |

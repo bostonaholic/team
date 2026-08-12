@@ -344,6 +344,15 @@ the generator and the evaluator into one role. Read-only tool grants plus
 `tests/protocol.test.ts` pins both halves as an L2 tripwire, so a new reviewer
 that ships with `Write` fails CI.
 
+One path steps outside that enforcement: the `code-reviewer`'s opt-in
+cross-model pass (`skills/cross-model-review/SKILL.md`) shells out to
+external vendor CLIs, and an external process is beyond the harness's tool
+grants. On that path the reviewer invariant is **trusted and contained, not
+enforced** — containment is the pinned read-only argv the bundled script
+hardcodes, the no-bypass-flag tripwire in `tests/cross-model-review.test.ts`,
+the consent-marker + trigger gate that keeps the pass off by default, and
+the PR diff surfacing any unexpected write.
+
 `researcher` and `file-finder` are also read-only, for a different reason:
 research isolation (see [Phase 3](#phase-3-research)). Read-only does not by
 itself mean reviewer.
@@ -559,7 +568,7 @@ cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. `code-review` is the only skill loaded as composed
 methodology that is also a user command.)
 
-For the full per-skill reference (all 54 skills, their arguments,
+For the full per-skill reference (all 55 skills, their arguments,
 consumers, and behaviors), see [skills.md](skills.md).
 
 ### Design guidelines
@@ -571,6 +580,10 @@ consumers, and behaviors), see [skills.md](skills.md).
    design convention, not a hard constraint. An agent's own extracted
    procedure skill does not count toward the soft limit: it replaces
    former inline body content 1:1, so it adds no net context.
+   `code-reviewer` preloads `cross-model-review` as a deliberate fifth
+   methodology skill — a stated deviation, not an oversight to fix back:
+   the opt-in cross-vendor pass belongs to the code review and nowhere
+   else, and inlining it would bloat the agent body it was extracted from.
 
 2. **Extraction threshold: capability against fragment.** Content that is
    an **independently useful capability** earns its own skill
@@ -790,7 +803,7 @@ children are confirmed, and the depth cap is stable.
 
 ## See also
 
-- **[Skills](skills.md)**: the full per-skill reference for all 54 skills.
+- **[Skills](skills.md)**: the full per-skill reference for all 55 skills.
 - **[Testing](testing.md)**: the six-layer test harness and which layer each check belongs at.
 - **[Vision](vision.md)**: the loop-driven end state this design builds toward.
 - **[Ethos](ethos.md)**: the principles behind the pipeline.

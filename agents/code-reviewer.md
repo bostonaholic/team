@@ -11,6 +11,7 @@ skills:
   - nested-agents
   - code-review
   - conventional-comments
+  - cross-model-review
 ---
 
 # Code Reviewer Agent
@@ -70,6 +71,16 @@ of `skills/nested-agents/SKILL.md` (preloaded).
 - Skip the pass when there are no Blocking findings or the Agent tool is
   unavailable. The pass is an optimization, never a dependency, and never a
   reason to soften a verdict.
+
+## Cross-model review pass (optional)
+
+When the diff is higher-stakes and the repo has opted in, run the
+cross-vendor pass per `skills/cross-model-review/SKILL.md` (preloaded). That
+skill carries the whole procedure: the opt-in marker and trigger-class gate,
+the bundled read-only script, verify-before-adopt disposition, and the
+`### Cross-model disposition` block in your report. Skip loudly on any
+failure — the pass is an optimization, never a dependency, and never a
+reason to soften a verdict.
 
 ## Verdict
 
