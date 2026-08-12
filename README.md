@@ -98,7 +98,9 @@ type, so it installs here.)
 > activation prompt**, so anything installed here is model-invocable in every
 > session, with nothing to fall back on. Neither one is installed, no flag turns
 > them on, and a link an earlier run left behind — from before a skill gained
-> its guard — is taken away by the next run.
+> its guard — is taken away by the next run. A live link at one of those two
+> paths that this checkout cannot remove stops the install instead of being
+> reported, since finishing the run would leave the skill loadable.
 
 Nine of the installed commands load and then find no agent to dispatch, because
 this install links skills only: `/team`, `/team-question`, `/team-research`,
@@ -134,9 +136,14 @@ re-run.
 Each run reconciles the whole set rather than only adding to it. A skill that
 stops being installable — it gains a guard, or stops being user-invocable —
 loses the link an earlier run gave it, so pulling and re-running is enough to
-bring the directory back in line. The run then reports what sits at each held-back
-skill's path, so a link left there by something else is visible rather than
-implied.
+bring the directory back in line. Reconciling reaches only this checkout's own
+links, so a **live symlink this checkout cannot remove at a held-back skill's
+path stops the whole install**: that skill would otherwise stay loadable in every
+session, and no run of this script could take it away. The abort names the path
+and what it points at. Where it points into another checkout of Team, running
+`script/dev-uninstall antigravity` there clears it; otherwise move what sits at
+the path out of the way. A dangling link, a directory, or a file at one of those
+paths loads nothing, so the run only reports what it found there.
 
 The uninstall removes only the links this checkout owns, and never removes a
 parent directory. It selects by where each link points rather than by its name,
