@@ -51,7 +51,13 @@
 // the edit that file's own shape needs.
 
 import { YAML } from "bun";
-import { afterAll, describe, expect, test } from "bun:test";
+import {
+  afterAll,
+  describe,
+  expect,
+  setDefaultTimeout,
+  test,
+} from "bun:test";
 import { spawnSync } from "node:child_process";
 import {
   chmodSync,
@@ -90,6 +96,16 @@ const DOCS_INDEX = join(REPO_ROOT, "docs", "index.md");
 // A PATH with no `agy` on it, and none of the machine's own bin dirs. Every
 // run uses it so the real host binary can never be reached.
 const SAFE_PATH = "/usr/bin:/bin:/usr/sbin:/sbin";
+
+// The scripts answer every ownership question by forking — `readlink`,
+// `dirname`, `basename`, and a `cd` + `pwd -P` subshell, per entry, per pass —
+// because macOS bash 3.2 has no path tool that would answer it in-process. Two
+// runs over the 54-skill corpus therefore measure ~4s on an idle machine, close
+// enough to bun's 5s default that a machine under load crosses it and the
+// heaviest tests here fail as timeouts rather than on anything they assert. The
+// budget is declared once for the file: every test in it either drives a real
+// script or reads source, so none of them wants the default.
+setDefaultTimeout(30_000);
 
 // Harness name → the display name the docs matrix must use for it. A harness
 // with no entry here fails the docs-matrix tripwire until someone maps it.
@@ -726,12 +742,12 @@ describe("dev install: antigravity harness", () => {
 
     test("install re-runs idempotently", () => {
       const home = newHome();
-      expect(run(INSTALL, home).status).toBe(0);
+      expectStatus(run(INSTALL, home), 0);
       const first = linkNames(home);
 
       const second = run(INSTALL, home);
 
-      expect(second.status).toBe(0);
+      expectStatus(second, 0);
       expect(linkNames(home)).toEqual(first);
       expect(linkNames(home)).toEqual(installableSkills());
     });
@@ -1729,11 +1745,13 @@ describe("dev install: antigravity harness", () => {
 
     test("a re-run over this checkout's own links reports no collision", () => {
       const home = newHome();
-      expect(run(INSTALL, home).status).toBe(0);
+      expectStatus(run(INSTALL, home), 0);
 
       const second = run(INSTALL, home);
 
-      expect(second.status).toBe(0);
+      // Through expectStatus, so an unexpected abort here arrives with the
+      // script's own stderr rather than as a bare `1 !== 0`.
+      expectStatus(second, 0);
       // Without the own-links skip every one of Team's links reports as a
       // collision, because each `name:` matches by construction. The test
       // above is this negative check's positive control: it proves a
