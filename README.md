@@ -2,15 +2,14 @@
 
 A plugin that orchestrates specialized agents to autonomously implement entire features end-to-end, driven by the **QRSPI** workflow. The orchestrator is the main Claude Code session. It persists pipeline state as artifacts in `docs/plans/` and tracks live progress with TodoWrite.
 
-Team installs on Claude Code and on Codex CLI. The full pipeline needs Claude Code, because that is the host that dispatches the agents. The standalone utilities work on both. Antigravity CLI is dev-install-only: its skills come from a checkout of Team through `script/dev-install antigravity`, and nothing distributed ships for it.
+Team installs on Claude Code, on Codex CLI, and on Antigravity CLI. The full pipeline needs Claude Code, because that is the host that dispatches the agents. The standalone utilities work on all three.
 
 **Documentation:** [team.bostonaholic.dev](https://team.bostonaholic.dev)
 
 ## Install
 
-Team ships a native manifest for Claude Code and for Codex CLI, so one repo
-installs on both. Pick yours. Antigravity CLI has no manifest of its own, so
-its entry below installs from a checkout instead.
+Team ships a native manifest for Claude Code and for Codex CLI, and Antigravity
+CLI reads the Claude Code one, so one repo installs on all three. Pick yours.
 
 <details>
 <summary><strong>Claude Code</strong></summary>
@@ -67,100 +66,55 @@ utilities — `team:shipit`, `team:pr-watch-as-author`, `team:pr-open-comments`,
 </details>
 
 <details>
-<summary><strong>Antigravity CLI</strong> (dev install only)</summary>
+<summary><strong>Antigravity CLI</strong></summary>
 
-Nothing distributed ships for this host, so the install needs a checkout of
-Team:
+```bash
+agy plugin install https://github.com/bostonaholic/team
+```
+
+Antigravity reads Team's Claude Code manifest directly, so nothing separate
+ships for it: the install clones the repo, recognizes `.claude-plugin/`, and
+copies all 54 skills and all 13 agents into `~/.gemini/config/plugins/team/`.
+`agy plugin list` shows it afterwards, and `agy plugin uninstall team` removes
+it. Measured against `agy` 1.1.12.
+
+Two differences worth knowing. Skills arrive under **bare names** — ask for
+`shipit`, not `team:shipit` — because this host takes each skill's catalog name
+from its own frontmatter rather than from where the file sits. And the install
+copies rather than links, so pulling a new version of Team means installing
+again.
+
+Unlike Codex, **Antigravity honors `disable-model-invocation`**, so
+`pr-watch-as-reviewer` and `pr-rebase` keep the guard that makes them
+user-only, and nothing needs removing after installing. Measured: with the
+plugin installed, neither one appears in the model's own list of available
+skills, while the other 52 do.
+
+The 13 agents are installed, but whether this host dispatches them the way
+Claude Code does is untested, so the `/team-*` pipeline commands are not
+claimed to run here yet. Full parity is tracked in
+[#56](https://github.com/bostonaholic/team/issues/56). The standalone
+utilities — `shipit`, `pr-watch-as-author`, `pr-open-comments`,
+`groom-backlog`, `code-review` — need no agent and work as they do on Claude
+Code.
+
+**Developing Team itself?** The native install copies, so a checkout's edits
+never reach it. This links them instead:
 
 ```bash
 script/dev-install antigravity
 script/dev-uninstall antigravity
 ```
 
-Those two are the only supported way in and out. The install creates one
-symlink per skill under `~/.gemini/config/skills/`, this host's global skill
-directory, so an edit to a `SKILL.md` in your checkout is live in the next
-`agy` session.
-
-It links **every user-invocable skill except the two guarded ones**. The
-methodology skills only an agent loads — the ones that set `user-invocable:
-false` — are left out, because this install links no agents and they would give
-you nothing to type. (The [skills page](docs/skills.md) counts one more
-methodology skill than that, because it counts by the absence of an
-`argument-hint`. The difference is `/code-review`, which is a command you can
-type, so it installs here.)
-
-> **Two skills are held back rather than installed.** `pr-watch-as-reviewer`
-> and `pr-rebase` both set `disable-model-invocation`, so on Claude Code only a
-> person can start them — the first casts an approval that can transitively
-> merge a PR with auto-merge enabled, and the second force-pushes a rewritten
-> branch over published history. **Antigravity has no trust gate and no
-> activation prompt**, so anything installed here is model-invocable in every
-> session, with nothing to fall back on. Neither one is installed, no flag turns
-> them on, and a link an earlier run left behind — from before a skill gained
-> its guard — is taken away by the next run. Anything else at one of those
-> two paths that holds a loadable skill — another checkout's link, or a
-> directory of your own carrying a `SKILL.md` — stops the install instead of
-> being reported, since finishing the run would leave a skill loadable there.
-
-Nine of the installed commands load and then find no agent to dispatch, because
-this install links skills only: `/team`, `/team-question`, `/team-research`,
-`/team-design`, `/team-structure`, `/team-plan`, `/team-implement`,
-`/eng-design-doc-review`, and `/code-review`. Full parity is tracked in
-[#56](https://github.com/bostonaholic/team/issues/56).
-
-Skills arrive under **bare names** — ask for `shipit`, not `team:shipit`. The
-catalog name comes from each skill's own frontmatter, so this host gives Team no
-namespace, and a same-named skill in a higher-precedence location shadows
-Team's silently. The install warns when a skill elsewhere in the global skill
-directory already claims a Team skill's name, and links anyway: the host decides
-which of the two wins. It also refuses to run at all on top of a native `agy`
-plugin install of Team, which would load every skill twice.
-
-Three shadowing cases no install-time scan can see, by nature rather than by
-choice: `agy`'s built-in skills live inside the binary; skills loaded from a
-plugin under `~/.gemini/config/plugins/` sit outside everything these scripts
-read; and a project's own `.agents/skills/` may outrank the global directory —
-that last one is read from the Gemini-family docs rather than measured here, and
-either way no global install can enumerate every future workspace.
-
-The install writes only to a path that is free or already holds this checkout's
-own link. A directory, a file, or another checkout's symlink on a target path
-aborts the whole run and names what is there. Nothing is overwritten, because
-the uninstall could never put it back. Two checkouts of Team are the usual way
-to reach that abort, and a worktree counts as a second checkout: Team's own
-pipeline works in `.claude/worktrees/<topic>/`, so installing from the main
-checkout and re-running inside a worktree aborts by design. Where the abort
-names another checkout of Team, running `script/dev-uninstall antigravity` there
-clears it. A directory or a file names no checkout, and the uninstall passes
-over anything that is not a symlink, so move what sits at the path out of the
-way instead. Then re-run.
-
-Each run reconciles the whole set rather than only adding to it. A skill that
-stops being installable — it gains a guard, or stops being user-invocable —
-loses the link an earlier run gave it, so pulling and re-running is enough to
-bring the directory back in line. Reconciling reaches only this checkout's own
-links, so **anything at a held-back skill's path that holds a loadable skill and
-that this checkout cannot remove stops the whole install**: that skill would
-otherwise stay loadable in every session, and no run of this script could take
-it away. That covers a symlink another checkout wrote and a directory of your
-own carrying a `SKILL.md` alike — skill discovery on this host stops at any
-directory that owns a `SKILL.md`, so such a directory is a skill exactly as a
-link to one is. The abort names the path, what sits there, and the skill that
-loads, which comes from its frontmatter rather than from the path. That last
-part is also why a link at *any* name resolving to one of the held-back skills
-stops the install: a link you called `handy-rebase` pointing at `pr-rebase`
-loads `pr-rebase`, and this install can only take away a link at the name it
-would write. Where a link points into another checkout of Team, running
-`script/dev-uninstall antigravity` there clears it; otherwise move what sits at
-the path out of the way. A dangling link or a plain file loads nothing, so the
-run only reports what it found at those.
-
-The uninstall removes only the links this checkout owns, and never removes a
-parent directory. It selects by where each link points rather than by its name,
-so any symlink resolving into this checkout's `skills/` is swept whatever it is
-called, and everything else — your own skill folders, and links pointing
-anywhere else — is left alone.
+That builds a plugin root at `~/.gemini/config/plugins/team/` whose `skills/`
+and `agents/` are symlinks into your checkout, so an edit to a `SKILL.md` is
+live in the next `agy` session. It writes a minimal `plugin.json` of its own,
+because this host resolves `skills/` and `agents/` relative to the manifest and
+Team's manifests sit in `.claude-plugin/` with no skills beside them. Nothing
+it did not create is ever replaced: a native install, another checkout's links,
+or anything else at that path stops the run and is named, since the uninstall
+could not put it back. The uninstall removes only the two links and the
+manifest it wrote, and leaves the host's own config tree alone.
 
 </details>
 
