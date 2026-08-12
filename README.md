@@ -31,25 +31,16 @@ codex plugin marketplace add /path/to/team
 codex plugin add team@team-dev
 ```
 
-Team ships `.codex-plugin/plugin.json` and `.agents/plugins/marketplace.json`
-— the manifests Codex looks for first — and takes `skills/` as the plugin's
-skill root, so nothing needs building or converting.
+Skills arrive **namespaced** — ask for `team:shipit`, not `shipit`. Codex budgets
+its skill catalog, so it shortens the longest descriptions; the skills still
+work. The `/team-*` pipeline commands load but cannot dispatch Claude Code
+agents, so they will not run the pipeline. The standalone utilities do.
 
-Two differences worth knowing. Skills arrive **namespaced** — ask for
-`team:shipit`, not `shipit`. And Codex budgets its skill catalog, so with
-all 54 skills present it shortens the longer descriptions; the skills still
-load and still work.
-
-> **Two skills lose a safety guard on Codex.** On Claude Code
-> `team:pr-watch-as-reviewer` and `team:pr-rebase` both set
-> `disable-model-invocation`, so only a person can start them — the first
-> casts an approval that can transitively merge a PR with auto-merge
-> enabled, and the second force-pushes a rewritten branch over published
-> history. **Codex ignores that key**, so the model can invoke either one,
-> in every session, with no prompt: skills bypass Codex's trust gate. Each
-> skill's own description says it is user-only, but that sentence is past
-> the point where Codex truncates. To keep the guards, remove the skills
-> after installing:
+> **Two skills lose a safety guard here.** `team:pr-watch-as-reviewer` casts an
+> approval that can transitively merge a PR, and `team:pr-rebase` force-pushes a
+> rewritten branch over published history. Both set `disable-model-invocation`
+> so only a person can start them, and **Codex ignores that key**. To keep the
+> guards:
 >
 > ```bash
 > rm -rf "$CODEX_HOME/plugins/cache"/*/team/*/skills/pr-watch-as-reviewer
@@ -57,11 +48,6 @@ load and still work.
 > ```
 >
 > Re-running `codex plugin add` restores them.
-
-The `/team-*` pipeline commands load on Codex but cannot dispatch Claude
-Code agents there, so they will not run the pipeline. The standalone
-utilities — `team:shipit`, `team:pr-watch-as-author`, `team:pr-open-comments`,
-`team:groom-backlog`, `team:code-review` — work as they do on Claude Code.
 
 </details>
 
@@ -72,44 +58,23 @@ utilities — `team:shipit`, `team:pr-watch-as-author`, `team:pr-open-comments`,
 agy plugin install /path/to/team
 ```
 
-Team ships `plugin.json` at the repo root — this host's own plugin marker, with
-`skills/` and `agents/` beside it where Antigravity resolves them — so it
-installs Team as a native Antigravity plugin, not as an imported Claude Code
-one. `agy plugin list` shows it afterwards, and `agy plugin uninstall team`
-removes it. All 54 skills and all 13 agents install. Measured against `agy`
-1.1.12.
+Team ships `plugin.json` at the repo root, which is this host's plugin marker,
+so it installs as a native Antigravity plugin — all 54 skills and all 13 agents.
+`agy plugin uninstall team` removes it.
 
-Two differences worth knowing. Skills arrive under **bare names** — ask for
-`shipit`, not `team:shipit` — because this host takes each skill's catalog name
-from its own frontmatter rather than from where the file sits. And the install
-copies the checkout, so pulling a new version of Team means installing again.
+Skills arrive under **bare names** — ask for `shipit`, not `team:shipit`. The
+install copies the checkout, so upgrading means installing again. Unlike Codex,
+this host honors `disable-model-invocation`, so nothing needs removing
+afterward. The `/team-*` pipeline commands install but are not claimed to run
+here yet, because agent dispatch on this host is untested
+([#56](https://github.com/bostonaholic/team/issues/56)).
 
-Unlike Codex, **Antigravity honors `disable-model-invocation`**, so
-`pr-watch-as-reviewer` and `pr-rebase` keep the guard that makes them
-user-only, and nothing needs removing after installing. Measured: with the
-plugin installed, neither one appears in the model's own list of available
-skills, while the other 52 do.
-
-The 13 agents install, but whether this host dispatches them the way Claude
-Code does is untested, so the `/team-*` pipeline commands are not claimed to run
-here yet. Full parity is tracked in
-[#56](https://github.com/bostonaholic/team/issues/56). The standalone
-utilities — `shipit`, `pr-watch-as-author`, `pr-open-comments`,
-`groom-backlog`, `code-review` — need no agent and work as they do on Claude
-Code.
-
-**Developing Team itself?** The install copies, so a checkout's edits never
-reach it. This links them instead:
+Developing Team itself? The install copies, so link your checkout instead:
 
 ```bash
 script/dev-install antigravity
 script/dev-uninstall antigravity
 ```
-
-That points `~/.gemini/config/plugins/team` at your checkout with one symlink,
-so an edit to a `SKILL.md` is live in the next `agy` session. It replaces
-nothing it did not create: a native install of Team, or another checkout's link,
-stops the run and is named, since the uninstall could not put it back.
 
 </details>
 
