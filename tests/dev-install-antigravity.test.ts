@@ -1170,11 +1170,15 @@ describe("dev install: antigravity harness", () => {
       expect(entryNames(home)).toEqual(["alpha"]);
     });
 
-    test("reconciliation removes only this checkout's own link at an excluded name", () => {
+    test("a directory owning a SKILL.md at a guarded name stops the run, untouched", () => {
       const { checkout, home } = installedPair();
       rewriteSkill(checkout, "beta", ["disable-model-invocation: true"]);
-      // The user's own folder at the same name is not this install's to touch,
-      // and the guard on beta is no license to remove it.
+      // Two rules meet here. The directory is not this install's to touch, and
+      // the guard on beta is no license to remove it — so it must survive. And
+      // discovery on this host stops at any directory that owns a SKILL.md, so
+      // that directory *is* a skill at a path whose whole point is that nothing
+      // loads there. This script can no more remove it than it can remove a
+      // foreign link, so it stops and says what sits there.
       rmSync(targetPath(home, "beta"));
       const own = targetPath(home, "beta");
       mkdirSync(own, { recursive: true });
@@ -1182,9 +1186,22 @@ describe("dev install: antigravity harness", () => {
 
       const { status, output } = run(checkout.install, home);
 
-      expect(status).toBe(0);
+      expect(status).toBe(1);
       expect(readIfExists(join(own, "SKILL.md"))).toContain("name: my-own-thing");
-      expect(linesNaming(output, "beta").join("\n")).toContain("directory");
+      expect(output).toContain(own);
+      expect(output).toContain("directory");
+      // The host reads the catalog name from frontmatter, so this directory
+      // loads as `my-own-thing`. Naming the path's own name would tell the
+      // developer to look for a skill no session will list.
+      expect(output).toContain("my-own-thing loads in every session");
+      // The same conditional remedy the foreign-link case prints: there is no
+      // checkout to run an uninstall from, so the fallback clause has to be
+      // there.
+      expect(output).toContain("move what");
+      // Neither entry moved: alpha's link was already there from the first run,
+      // and this run wrote nothing at all.
+      expect(entryNames(home)).toEqual(["alpha", "beta"]);
+      expect(linkNames(home)).toEqual(["alpha"]);
     });
 
     test("reconciliation leaves another checkout's link at a name that stopped being user-invocable", () => {
@@ -1234,6 +1251,30 @@ describe("dev install: antigravity harness", () => {
       expect(output).toContain("script/dev-uninstall antigravity");
       // Never clobbered, and nothing else written: the abort is a stop, not a
       // takeover of a path this checkout does not own.
+      expect(linkTextOf(targetPath(home, "beta"))).toBe(foreignTarget);
+      expect(entryNames(home)).toEqual(["beta"]);
+    });
+
+    test("the guarded abort names the skill that loads, not the path it sits at", () => {
+      // The link name is not the catalog name on this host: a link at `beta`
+      // pointing at another checkout's `gamma` loads gamma. Stopping is right
+      // either way, but naming beta sends the developer looking for a skill no
+      // session will list, and leaves the one that does load unnamed.
+      const other = syntheticCheckout({ "gamma/SKILL.md": skillMd("gamma") });
+      const checkout = syntheticCheckout({
+        "alpha/SKILL.md": skillMd("alpha"),
+        "beta/SKILL.md": skillMd("beta", ["disable-model-invocation: true"]),
+      });
+      const home = newHome();
+      ensureTargetDir(home);
+      const foreignTarget = join(other.root, "skills", "gamma");
+      symlinkSync(foreignTarget, targetPath(home, "beta"));
+
+      const { status, output } = run(checkout.install, home);
+
+      expect(status).toBe(1);
+      expect(output).toContain("gamma loads in every session");
+      expect(output).not.toContain("beta loads in every session");
       expect(linkTextOf(targetPath(home, "beta"))).toBe(foreignTarget);
       expect(entryNames(home)).toEqual(["beta"]);
     });

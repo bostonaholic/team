@@ -164,6 +164,28 @@ owns_link() {
   [ "$(basename "$(link_target_path "$1")")" = "$2" ]
 }
 
+# The catalog name the skill at $1 loads under. This host reads it from the
+# SKILL.md's own frontmatter and never from the path, so a link at one name
+# pointing at a directory that carries another is reported under that other name
+# — the one a session can actually invoke. The leaf of what the path resolves to
+# is the fallback, for a skill that names itself nothing. Callers check that
+# ${1}/SKILL.md is there first.
+loaded_name() {
+  local resolved status value
+  if [ -L "$1" ]; then
+    resolved="$(link_target_path "$1")"
+  else
+    resolved="$1"
+  fi
+  status=0
+  value="$(frontmatter_value name "${1}/SKILL.md")" || status=$?
+  if [ "$status" -ne 0 ] || [ -z "$value" ]; then
+    basename "$resolved"
+  else
+    printf '%s\n' "$value"
+  fi
+}
+
 # Pass 1: every direct child of skills/ that owns a SKILL.md. A directory
 # without one is not a skill, and is not an error either.
 candidates=()
@@ -343,17 +365,23 @@ done
 # pipeline works inside .claude/worktrees/, so two checkouts racing for one name
 # is the ordinary case here, not a contrived one.
 #
-# Only a live symlink counts. A dangling one loads nothing, and a directory is
-# content no install of this script could have written, so neither is a guarded
-# skill this run left reachable. The end-of-run note reports both.
+# The question is whether the path holds a loadable skill, by any means. Skill
+# discovery here stops at any directory that owns a SKILL.md and follows a
+# symlink at global scope, so a real directory at one of these paths is as
+# loadable as a link, and this script can remove neither: a directory is content
+# no install of this script could have written. A dangling link and a plain file
+# own no SKILL.md and load nothing, so those two are left to the end-of-run note.
 guarded_kept_live=()
 if [ ${#guarded[@]} -gt 0 ]; then
   for name in "${guarded[@]}"; do
     path="${TARGET_DIR}/${name}"
-    [ -L "$path" ] || continue
-    owns_link "$path" "$name" && continue
     [ -f "${path}/SKILL.md" ] || continue
-    guarded_kept_live+=("${path} -> $(readlink "$path") (a symlink this checkout cannot remove, so ${name} loads in every session)")
+    if [ -L "$path" ]; then
+      owns_link "$path" "$name" && continue
+      guarded_kept_live+=("${path} -> $(readlink "$path") (a symlink this checkout cannot remove, so $(loaded_name "$path") loads in every session)")
+    else
+      guarded_kept_live+=("${path} (a directory that owns a SKILL.md, so $(loaded_name "$path") loads in every session)")
+    fi
   done
 fi
 
@@ -365,7 +393,7 @@ if [ ${#blocked[@]} -gt 0 ] || [ ${#guarded_kept_live[@]} -gt 0 ]; then
     done
   fi
   if [ ${#guarded_kept_live[@]} -gt 0 ]; then
-    echo "Error: these skills set disable-model-invocation, but a link this checkout does not own keeps them installed:" >&2
+    echo "Error: these skills set disable-model-invocation, but something this checkout cannot remove keeps a skill loadable at their paths:" >&2
     for line in "${guarded_kept_live[@]}"; do
       echo "  ${line}" >&2
     done
