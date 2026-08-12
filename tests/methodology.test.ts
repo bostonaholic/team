@@ -595,9 +595,12 @@ describe("writing-prose lens (L2 content tripwire)", () => {
 
   test("pins the prose-quality directives (one idea per sentence, active voice)", () => {
     const text = read(SKILL_FILE);
+    // Pin the directives, not their heading capitalization: the active-voice
+    // rule folded into the STE mechanical-rule list, so a `## Active Voice`
+    // heading is no longer the shape it takes.
     expect(text).toContain("One idea per sentence");
-    expect(text).toContain("Active Voice");
-    expect(text).toContain("Plain Language");
+    expect(/active voice/i.test(text)).toBe(true);
+    expect(/plain language/i.test(text)).toBe(true);
   });
 
   // Mechanical ban rules.
@@ -911,7 +914,7 @@ describe("code-comment rules (L2 content tripwire)", () => {
   const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
 
   test("engineering-standards defines the Code Comments rule set", () => {
-    const section = sectionFrom(read(SKILL_FILE), "### Code Comments");
+    const section = sectionFrom(read(SKILL_FILE), "## Code Comments");
     expect(section.length).toBeGreaterThan(0);
     // Why-only rule: comments never explain WHAT, only non-obvious WHY.
     expect(/non-obvious why/i.test(section)).toBe(true);

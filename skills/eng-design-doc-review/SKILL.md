@@ -204,12 +204,9 @@ it defines their format.
 Use Conventional Comments format for every finding. Every comment includes a
 `file:line` reference (line number in the design doc itself, or in the file
 the doc cites). The `conventional-comments` skill defines the format and the
-three comment types (issue, suggestion, nitpick) — load and use it.
-
-Write the prose this skill governs at a seventh-grade reading level, in
-STE-flavored mode — short sentences, common words, no unexplained jargon.
-Full methodology: `skills/writing-prose/SKILL.md`. Before you finalize
-prose this skill governs, apply the `## Self-lint` checklist in that file.
+three comment types (issue, suggestion, nitpick) — load and use it. Write
+your findings to the prose bar in `skills/writing-prose/SKILL.md`, applying
+its `## Self-lint` checklist before you finalize.
 
 End with a verdict, using the same gate type as `code-reviewer`:
 

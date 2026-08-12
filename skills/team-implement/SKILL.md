@@ -180,8 +180,8 @@ test-architect → mechanical gate → implementer → 5 reviewers → aggregate
                                                               verification clean
 ```
 
-Maximum 5 rounds. Each round is a complete re-review with fresh context —
-reviewers do not remember previous rounds.
+Each round is a complete re-review with fresh context — reviewers do not
+remember previous rounds.
 
 ## Standalone Mode Tradeoffs
 

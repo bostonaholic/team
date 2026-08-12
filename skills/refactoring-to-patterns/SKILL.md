@@ -6,217 +6,72 @@ user-invocable: false
 
 # Refactoring to Patterns
 
-Refactoring is the process of changing the internal structure of code without
-changing its observable behavior. Every refactoring step must leave all tests
-passing. Never refactor while also adding features — separate the two activities.
+Change internal structure without changing observable behavior. Every step
+leaves all tests passing. **Never refactor while also adding features** —
+separate the two activities into separate commits.
 
-## When to Refactor
+## When to refactor
 
-Refactor when you need to:
+- **Before making a change that the current structure makes hard.** Two small
+  moves beat one large dangerous move.
+- **On the third duplication.** Rule of Three: tolerate it the second time.
+- **Before debugging code you cannot understand.** Clarify, then fix.
 
-- **Make a change easier before making it.** If the code is hard to change,
-  refactor first, then change. Two small moves beat one large dangerous move.
-- **Remove duplication discovered during implementation.** The Rule of Three:
-  tolerate duplicate code the second time, refactor the third time.
-- **Improve clarity before debugging.** Code you cannot understand, you cannot
-  fix reliably. Clarify first, then fix.
+Do **not** refactor when tests are failing (fix them first), when the code
+works and no change is imminent, or when a deadline is live — note the smell
+and move on.
 
-Do NOT refactor when:
+## Smell → refactoring
 
-- The tests are failing. Fix failing tests first.
-- The code is working well and no change is imminent. Refactoring for its own
-  sake is waste.
-- You are under a deadline to deliver a feature. Note the smell for later.
-  Do not block the feature.
+| Smell | Reach for |
+|-------|-----------|
+| Long Method | Extract Method; Replace Temp with Query; Decompose Conditional |
+| Duplicate Code | Extract Method; Extract Class; Pull Up Method; Form Template Method |
+| Large Class | Extract Class; Extract Subclass; Extract Interface |
+| Long Parameter List | Introduce Parameter Object; Preserve Whole Object |
+| Divergent Change (one class, several reasons to change) | Extract Class along each reason |
+| Shotgun Surgery (one change, many classes) | Move Method / Move Field; Inline Class |
+| Feature Envy (method more interested in another class's data) | Move Method |
+| Primitive Obsession | Replace Data Value with Object; Replace Type Code with Class or Subclasses |
+| Conditional Complexity | Replace Conditional with Polymorphism; Introduce Null Object; Decompose Conditional |
+| Middle Man (half its methods just forward) | Remove Middle Man; Inline Method |
 
-## Code Smells and Their Refactorings
+Two smells carry rules the catalog above does not make obvious:
 
-### Long Method
+**Mixed levels of abstraction.** A function that alternates between
+high-level orchestration ("save the order, charge the card, send the
+receipt") and low-level primitives ("format the price as fixed-width 8
+chars") forces readers to swap mental contexts. Extract the low-level work
+into a helper named at the surrounding level. **A function calls functions one
+level of abstraction below its own — never two or more at once.**
 
-**Smell:** A function that is too long to understand in one reading (~30+ lines
-is a guideline, not a rule — some 10-line functions are too long).
+**Constructor doing work.** Any of three shapes: instantiating dependencies
+inside methods (`new HttpClient()` inside `fetchUser()`), taking per-call work
+parameters in the constructor (`new ReportGenerator(2024, 1, 1, 2024, 12,
+31)`), or doing I/O and static lookups in the constructor. All three leave no
+seam for tests to substitute collaborators. The fix is one rule:
+**construct with collaborators, call with work.** Long-lived dependencies
+(HTTP client, DB, clock, logger) are injected through the constructor;
+per-call parameters (date ranges, query strings, request bodies) go on the
+method; constructors assign and return, doing no work at all. Production wires
+real collaborators; tests substitute fakes at construction.
 
-**Refactorings:**
-- **Extract Method** — Pull a cohesive block of code into its own named
-  function. The new name documents intent.
-- **Replace Temp with Query** — Extract a temporary variable's computation
-  into a method so the name explains what is computed.
-- **Decompose Conditional** — Extract complex condition predicates and their
-  branches into named methods.
+## Safe refactoring procedure
 
-### Duplicate Code
-
-**Smell:** The same structure appears in two or more places. The danger: a
-bug in the pattern must be fixed in every copy.
-
-**Refactorings:**
-- **Extract Method** — Pull the duplicate logic into a shared function.
-- **Extract Class** — If duplicates appear across classes, extract the
-  shared behavior into a new class both can use.
-- **Pull Up Method** — Move a method common to several subclasses into the
-  base class.
-- **Form Template Method** — If two methods do similar steps in similar
-  order, extract the skeleton into a template method and override the
-  varying parts.
-
-### Large Class
-
-**Smell:** A class has too many responsibilities, indicated by many instance
-variables, many methods, or methods that use only a subset of variables.
-
-**Refactorings:**
-- **Extract Class** — Identify a cohesive subset of fields and methods. Move
-  them to a new class and compose.
-- **Extract Subclass** — If the class behaves differently under certain
-  conditions, extract a subclass for each behavioral variant.
-- **Extract Interface** — Define an interface for the subset of methods
-  that callers actually need.
-
-### Long Parameter List
-
-**Smell:** A function with four or more parameters is hard to call correctly
-and hard to remember.
-
-**Refactorings:**
-- **Introduce Parameter Object** — Replace a cluster of parameters that
-  always travel together with a single object.
-- **Preserve Whole Object** — Pass the object itself instead of extracting
-  multiple values from it before calling.
-- **Replace Parameter with Method** — If one parameter can be derived by
-  calling a method on another, remove it and call the method inside.
-
-### Divergent Change
-
-**Smell:** A single class changes for several different reasons. Every time
-X happens you change one set of methods. Every time Y happens you change a
-different set. This is SRP violation made visible.
-
-**Refactorings:**
-- **Extract Class** — Split the class along the lines of each reason to
-  change.
-
-### Shotgun Surgery
-
-**Smell:** One logical change requires small edits to many different classes.
-The opposite of Divergent Change: behavior that should be together is spread
-apart.
-
-**Refactorings:**
-- **Move Method / Move Field** — Pull scattered pieces toward a cohesive
-  home.
-- **Inline Class** — If two small classes are always changed together, merge
-  them.
-
-### Feature Envy
-
-**Smell:** A method that seems more interested in another class's data than
-its own — it uses getters to pull out data and compute something.
-
-**Refactorings:**
-- **Move Method** — Move the envious method to the class it envies. The
-  data and the behavior belong together.
-- **Extract Method** — If only part of the method has feature envy, extract
-  that part and move it.
-
-### Primitive Obsession
-
-**Smell:** Using primitives (strings, integers, booleans) to represent
-domain concepts — phone numbers as strings, money as floats, status as
-magic string constants.
-
-**Refactorings:**
-- **Replace Data Value with Object** — Create a class for the concept so it
-  carries validation, formatting, and behavior.
-- **Replace Type Code with Class** — Replace magic constants with a type
-  that the compiler can check.
-- **Replace Type Code with Subclasses** — When behavior varies by type,
-  use polymorphism instead of a type field.
-
-### Conditional Complexity
-
-**Smell:** Complex chains of `if/else` or `switch` that must be updated every
-time a new variant is added. Frequently accompanies Primitive Obsession.
-
-**Refactorings:**
-- **Replace Conditional with Polymorphism** — Each branch becomes an
-  override in a subclass or strategy.
-- **Introduce Null Object** — Replace checks for null with a null object
-  that does nothing (or the right default thing).
-- **Decompose Conditional** — Extract the condition and its branches into
-  named methods so the intent is readable.
-
-### Mixed Levels of Abstraction
-
-**Smell:** A single function alternates between high-level orchestration and
-low-level primitives. One reads "save the order, charge the card, send the
-receipt". The other reads "for each line, format the price as fixed-width 8
-chars". Readers must repeatedly swap mental contexts. Often a sign of an
-unextracted helper.
-
-**Refactorings:**
-- **Extract Method** — pull the low-level primitive into a function named
-  at the surrounding level's abstraction.
-- **Rule of thumb:** a function should call functions one level of
-  abstraction below its own. Never two or more levels at once.
-
-### Middle Man
-
-**Smell:** A class that delegates most of its methods to another class. If
-half or more of a class's public methods just forward to another class,
-the middle man adds no value.
-
-**Refactorings:**
-- **Remove Middle Man** — Let callers call the delegated class directly.
-- **Inline Method** — If a method just calls another, inline the delegation.
-
-### Constructor Doing Work
-
-**Smell:** A class does any of three things. It instantiates its
-dependencies inside methods, as `new HttpClient()` inside `fetchUser()`. It
-takes per-call work parameters in the constructor, as
-`new ReportGenerator(2024, 1, 1, 2024, 12, 31)`. Or it does I/O or static
-lookups in the constructor. No seam exists for tests to substitute
-collaborators.
-
-**Refactorings:**
-- **Construct with collaborators, call with work.** Move long-lived
-  dependencies (HTTP client, DB, clock, logger) to the constructor
-  signature. Inject them. Do not `new` them inside.
-- **Move per-call work parameters to method signatures.** Date ranges,
-  query strings, and request bodies belong on the method, not the
-  constructor.
-- **Constructors do no work.** No I/O, no XML parsing, no static lookups,
-  no expensive computation. Just assign collaborators and return.
-
-This creates a seam: production wires real collaborators through DI. Tests
-substitute fakes or stubs at construction.
-
-## Safe Refactoring Procedure
-
-Every refactoring step must follow this sequence:
-
-1. **Make sure that tests pass** before starting. If tests fail, stop — do
-   not refactor broken code.
-2. **Make the smallest possible structural change.** One refactoring at a
-   time.
-3. **Run tests after each change.** If tests break, undo the change
-   immediately. Do not proceed with broken tests.
+1. **Confirm tests pass** before starting. Failing tests stop the refactor.
+2. **Make the smallest possible structural change.** One refactoring at a time.
+3. **Run tests after each change.** On a break, undo immediately — never
+   proceed with broken tests.
 4. **Commit when tests pass.** Each passing checkpoint is a safe point.
 5. **Repeat** until the code is in the desired shape.
 
-## Applying This in the Implementer Role
+## In the implementer role
 
-When working with existing code during implementation:
-
-1. **Read the code before changing it.** Identify smells before writing.
-2. **Separate refactoring from feature work.** If a refactoring is needed
-   to make the feature easier to add, do the refactoring in its own commit
-   first, then add the feature.
-3. **Refactor only what you touch.** Do not opportunistically refactor
-   distant code unrelated to the current task — that is scope creep.
-4. **Name the smell and the refactoring in the commit.** "refactor: extract
-   user validation into UserValidator (Long Method)" tells reviewers exactly
-   what happened and why.
-5. **When in doubt, leave it.** An imperfect but working refactoring that
-   breaks tests is worse than the smell it was trying to fix. Only refactor
-   when you are confident the transformation is safe.
+- **Read the code before changing it.** Identify smells before writing.
+- **Refactor in its own commit, first** — then add the feature.
+- **Refactor only what you touch.** Opportunistic refactoring of distant code
+  is scope creep.
+- **Name the smell and the refactoring in the commit.**
+  `refactor: extract user validation into UserValidator (Long Method)`.
+- **When in doubt, leave it.** A refactoring that breaks tests is worse than
+  the smell it was trying to fix.

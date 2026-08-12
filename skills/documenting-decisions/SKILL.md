@@ -98,34 +98,14 @@ Do not write an ADR when:
 
 ## ADR Statuses
 
-### Proposed
-
-The decision has been written but not yet accepted. It is open for discussion
-and may be modified.
-
-### Accepted
-
-The decision has been agreed upon and is in effect. The codebase should
-conform to this decision.
-
-### Deprecated
-
-The decision is no longer relevant — the feature or system it pertains to has
-been removed. The ADR remains for historical context.
-
-### Superseded
-
-A newer decision has replaced this one. The ADR must include a reference to
-its successor:
-
-```markdown
-## Status
-
-Superseded by [0007](0007-new-approach-to-state.md)
-```
-
-The successor ADR should reference what it supersedes in its Context section
-to maintain the decision trail.
+- **Proposed** — written, not yet accepted; open for discussion.
+- **Accepted** — in effect; the codebase should conform.
+- **Deprecated** — no longer relevant (the system it covers is gone). The ADR
+  stays for historical context.
+- **Superseded** — replaced by a newer decision. The ADR must name its
+  successor (`Superseded by [0007](0007-new-approach-to-state.md)`), and the
+  successor references what it supersedes in its Context section, so the
+  decision trail stays walkable in both directions.
 
 ## Writing Guidance
 

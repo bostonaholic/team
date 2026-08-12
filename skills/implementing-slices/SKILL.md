@@ -43,31 +43,13 @@ Security vulnerabilities (CRITICAL or HIGH severity) were found.
    secrets, add auth checks, escape output, etc.
 3. Do not weaken the fix. The security reviewer will re-check with fresh eyes.
 
-#### Lint / format failure
-Format or lint checks failed.
-1. Read the linter error output and failing rules.
-2. Fix each violation — auto-fixable issues first (`--fix`), then manual fixes.
-3. Re-run the format/lint check to make sure it passes.
-
-#### Typecheck failure
-Type checking failed (e.g., `tsc --noEmit`).
-1. Read the type errors — file paths, line numbers, error codes.
-2. Fix each type error — add missing types, fix mismatched signatures, resolve
-   import issues.
-3. Re-run the type checker to make sure it passes.
-
-#### Build failure
-Production build failed.
-1. Read the build error output.
-2. Fix the build errors — missing dependencies, broken imports, config issues.
-3. Re-run the build command to make sure it succeeds.
+#### Lint / format, typecheck, and build failures
+Read the tool's output, fix each violation, and re-run that same check until
+it passes. Auto-fixable lint issues go through `--fix` first.
 
 #### Test failure
-Test suite has failing tests.
-1. Read the failing test names and assertion output.
-2. Fix the code (not the tests) to make failing tests pass. Tests are the
-   contract — the implementation must satisfy them.
-3. Re-run the full test suite to make sure all tests pass.
+Fix **the code, not the tests**. Tests are the contract — the implementation
+must satisfy them as written. Re-run the full suite.
 
 When a test, lint, or typecheck failure is **non-obvious** — the cause is
 not plain from the error and the first fix you reach for is a guess — Load

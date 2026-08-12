@@ -137,25 +137,11 @@ Unresolved decisions that must be answered before implementation begins.
 List them explicitly so they are not silently assumed. Each open question
 should include who must answer it and when.
 
-## When the Planner Should Use This Methodology
-
-The planner agent loads this methodology when:
-
-1. The research artifact identifies multiple valid approaches or important
-   architectural decisions.
-2. The feature introduces new patterns or touches multiple subsystems.
-3. The plan artifact warrants richer documentation than the standard plan
-   format provides.
-
-In these cases, the planner produces an enhanced plan that includes TDD
-sections (trade-offs, data model, rollout) alongside the standard phases,
-steps, and done criteria.
-
-For smaller features, the standard plan format is sufficient — do not add
-TDD sections for their own sake. A well-structured plan without TDD overhead
-is better than an incomplete TDD that delays implementation.
-
 ## Integration With the Standard Plan Format
+
+For smaller features the standard plan format is sufficient — do not add TDD
+sections for their own sake. A well-structured plan without TDD overhead beats
+an incomplete TDD that delays implementation.
 
 When producing an enhanced plan, add TDD sections after the Context section
 and before the Steps section:

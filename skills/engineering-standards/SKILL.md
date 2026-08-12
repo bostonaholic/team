@@ -6,255 +6,151 @@ user-invocable: false
 
 # Clean Code Methodology
 
-A design and implementation methodology. It combines the wisdom of legendary
-programmers with concrete standards for code that is readable, maintainable,
-and built to last.
+The design and implementation bar for the planner, implementer, and
+code-reviewer.
 
 ## Core Philosophy
 
-Six foundational perspectives guide every design and implementation decision:
+Six lenses, applied as severity guidance when a decision is contested:
 
-- **Rich Hickey**: Favor simple, immutable data structures and pure functions
-  without side effects. Complexity is the root of most software problems.
-- **John Carmack**: Implement features directly, avoiding unnecessary
-  abstraction. Maintain clear strategies to measure and reason about
-  performance.
-- **Joe Armstrong**: Isolate failures through rigorous error handling. Make
-  sure that faults in one module do not propagate to others.
-- **Donald Knuth**: Prioritize readable, maintainable code above all else.
-  Choose clarity before cleverness.
-- **Barbara Liskov**: Respect interface contracts and make sure that
-  substitutability. See `skills/solid-principles/SKILL.md` for full LSP
-  treatment and depth.
-- **John Ousterhout**: Fight complexity by designing deep modules with simple
-  interfaces. Pull complexity downward into implementations rather than
-  exposing it to callers.
-- **Cost-benefit, not religion**: Every test, abstraction, and interface
-  has an ongoing cost — maintenance, runtime, false-positive triage,
-  cognitive load. A test that catches no real bug and slows the build is
-  a liability, not an asset. The same applies to abstractions — premature
-  DRY couples behaviors that need to evolve independently. Apply the Rule
-  of Three: tolerate duplication the second time, extract on the third
-  occurrence.
+- **Hickey** — simple, immutable data and pure functions.
+- **Carmack** — implement directly; keep a way to measure performance.
+- **Armstrong** — isolate failures so one module's fault does not propagate.
+- **Knuth** — clarity before cleverness.
+- **Liskov** — honor interface contracts (`skills/solid-principles/SKILL.md`
+  carries LSP and SRP in full).
+- **Ousterhout** — deep modules, simple interfaces; pull complexity downward.
 
-## Implementation Standards
+**Cost-benefit, not religion.** Every test, abstraction, and interface has an
+ongoing cost: maintenance, runtime, false-positive triage, cognitive load. A
+test that catches no real bug and slows the build is a liability. Premature
+DRY couples behaviors that need to evolve independently. Apply the **Rule of
+Three**: tolerate duplication the second time, extract on the third.
 
-### DRY (Do not Repeat Yourself)
+## Code Comments
 
-- Extract repeated logic into well-named functions or modules.
-- Apply the **Rule of Three**: tolerate duplication the second time, extract
-  the third time.
-- Use configuration and parameterization over duplication.
-- Balance DRY with readability -- sometimes a small amount of duplication is
-  clearer than a complex abstraction.
-
-### Clean Code Principles
-
-- **Naming**: Use intention-revealing names that explain what and why, not how.
-- **Functions**: Keep them small, focused on a single responsibility, typically
-  under 20 lines.
-- **Comments**: Governed by the binding rule set in Code Comments below.
-- **Formatting**: Consistent indentation, logical grouping, vertical density
-  that aids comprehension.
-- **Error Handling**: Fail fast, fail loud -- never silently swallow errors.
-
-### Code Comments
-
-These rules govern comments inside source files, not review findings,
-which use `skills/conventional-comments/SKILL.md`.
+These rules govern comments inside source files, not review findings, which
+use `skills/conventional-comments/SKILL.md`.
 
 Comments never explain WHAT the code does. Intention-revealing names and
-structure carry that. A comment is permitted only for a non-obvious WHY,
-such as a constraint, a workaround, or a surprising requirement. It is
-permitted only when neither intention-revealing code nor tests can carry the
-explanation.
+structure carry that. A comment is permitted only for a non-obvious WHY, such
+as a constraint, a workaround, or a surprising requirement, and only when
+neither intention-revealing code nor tests can carry the explanation.
 
-- **Rewrite first.** A comment that feels necessary is a signal to rewrite
-  the code until the comment is unnecessary (Fowler: comments are deodorant
-  for smelly code). Extract a well-named function or variable before
-  reaching for a comment.
-- **No ticket/issue IDs, plan/slice/phase markers, or
-  doc-section references in comments.** They rot: the tracker migrates,
-  the plan is deleted, the section is renumbered, and the comment becomes
-  a lie.
-  Exemption: an upstream-bug link where the link IS the why -- a workaround
+- **Rewrite first.** A comment that feels necessary is a signal to rewrite the
+  code until the comment is unnecessary. Extract a well-named function or
+  variable before reaching for a comment.
+- **No ticket/issue IDs, plan/slice/phase markers, or doc-section references
+  in comments.** They rot: the tracker migrates, the plan is deleted, the
+  section is renumbered, and the comment becomes a lie.
+  Exemption: an upstream-bug link where the link IS the why — a workaround
   pointing at a public issue URL stays true for exactly as long as the
-  workaround does. The ban targets internal trackers and pipeline
-  artifacts, not those links.
-- **No process narration.** Describe the code as it exists now. Do not
-  write dates, corrections, changelog entries, or historical narration.
-  Never describe the edit that produced the code. Never mention the user,
-  the prompt, review feedback, ticket discussion, or agent instructions.
-  Marker phrases such as "Previously", "Originally", "As of",
-  "Correction", "Temporary fix from", and "This was changed because" are
-  detection hints, not the rule itself.
-- **Document non-obvious constraints and deliberate oddities.** This is
-  the permitted comment class: API limits, compatibility, security
-  assumptions, performance, ordering, concurrency, and framework
-  surprises. For a deliberate oddity, state the consequence of removing
-  or simplifying the code.
-- **Local, concise, precise, verified.** Place a comment next to the code
-  it explains. Use the minimum text. Name the exact condition, risk, or
-  dependency -- never "handle edge case". Document only verified
-  behavior. Refer to symbols and stable identifiers, never to
-  line numbers or file layout.
-- **No duplicated documentation.** Do not repeat what types, tests,
-  names, and public docs already carry. Link an external spec only when
-  the code implements a precise external contract.
-- **No commented-out code.** Version control remembers deleted code. A
-  commented-out block only makes readers ask if it is still needed. Delete
-  it.
-- **No TODO or FIXME comments in delivered code.** Deferred work goes in
-  the implementer's report, where it is visible and actionable -- not
-  buried in the source where it silently ages. Even a TODO that meets
-  every actionability bar does not ship. The pipeline routes deferred
-  work to the implementer's report and the tracker. That channel does not
-  age in source.
-- **Maintain: remove obsolete comments, preserve repo style.** A change
-  that invalidates a comment updates or deletes it in the same diff.
-  Comment style follows the repo's existing convention.
-- **Doc comments on exported/public interfaces are exempt.** They follow
-  the ecosystem's convention (JSDoc, docstrings, rustdoc) and define the
-  abstraction (Ousterhout: interface comments describe what the caller
-  needs, not how the implementation works). The why-only rule governs
-  implementation comments. Doc comments are for public contracts only. A
-  doc comment that merely repeats the signature is a what-comment, not an
-  exempt doc comment.
+  workaround does. The ban targets internal trackers and pipeline artifacts,
+  not those links.
+- **No process narration.** Describe the code as it exists now. No dates,
+  corrections, changelog entries, or historical narration. Never describe the
+  edit that produced the code. Never mention the user, the prompt, review
+  feedback, ticket discussion, or agent instructions. Marker phrases such as
+  "Previously", "Originally", "As of", "Correction", "Temporary fix from", and
+  "This was changed because" are detection hints, not the rule itself.
+- **Document non-obvious constraints and deliberate oddities.** This is the
+  permitted comment class: API limits, compatibility, security assumptions,
+  performance, ordering, concurrency, and framework surprises. For a
+  deliberate oddity, state the consequence of removing or simplifying the code.
+- **Local, concise, precise, verified.** Place a comment next to the code it
+  explains. Name the exact condition, risk, or dependency — never "handle edge
+  case". Document only verified behavior. Refer to symbols and stable
+  identifiers, never to line numbers or file layout.
+- **No duplicated documentation.** Do not repeat what types, tests, names, and
+  public docs already carry. Link an external spec only when the code
+  implements a precise external contract.
+- **No commented-out code.** Version control remembers deleted code.
+- **No TODO or FIXME comments in delivered code.** Deferred work goes in the
+  implementer's report, where it is visible and actionable — not buried in the
+  source where it silently ages. Even a TODO that meets every actionability
+  bar does not ship.
+- **Maintain: remove obsolete comments, preserve repo style.** A change that
+  invalidates a comment updates or deletes it in the same diff.
+- **Doc comments on exported/public interfaces are exempt.** They follow the
+  ecosystem's convention (JSDoc, docstrings, rustdoc) and define the
+  abstraction. The why-only rule governs implementation comments. A doc
+  comment that merely repeats the signature is a what-comment, not an exempt
+  doc comment.
 
-**Decision Test.** Before you keep a comment, ask four questions. Does it
-explain why? Would code or tests carry it better? Is it true after this
-change, with no reference to the process? Will it still be true when the
-surrounding code changes?
-
-### Reusability
-
-- Design with clear interfaces and minimal dependencies.
-- Favor composition over inheritance.
-- Create modules that can be used independently of the larger system.
-- Parameterize behavior rather than hardcoding specifics.
-
-### Maintainability
-
-- Write code that your future self (or a colleague) can understand at 3 AM
-  during an incident.
-- Keep cognitive load low -- simple control flow, obvious data transformations.
-- Apply single responsibility at every level. See
-  `skills/solid-principles/SKILL.md` for full SRP depth.
-- Structure code so changes are localized, not scattered across files.
-
-### Testability
-
-- Design for dependency injection from the start.
-- Separate pure logic from side effects (I/O, database, network).
-- Create seams in the code where test doubles can be inserted.
-- Make sure that each function can be tested in isolation with clear
-  input/output contracts.
+**Decision Test.** Before you keep a comment: does it explain why? Would code
+or tests carry it better? Is it true after this change, with no reference to
+the process? Will it still be true when the surrounding code changes?
 
 ## Design-First Workflow
 
-Follow these five steps for every non-trivial implementation:
-
-1. **Understand Requirements**: Before you write code, clarify the exact
-   requirements, edge cases, and constraints. Edge case enumeration is
-   mandatory, not aspirational. Walk boundary values (empty, zero, max),
-   invalid inputs, failure paths (timeouts, partial writes), concurrency,
-   authorization edges, and resource limits before implementation. Ask
-   questions if anything is ambiguous.
-
-2. **Design First**: Sketch the interfaces, data structures, and module
-   boundaries before implementation. Think about how components will
-   communicate and where the seams are.
-
-3. **Implement Incrementally**: Build in small, verifiable steps. Each step
-   should leave the codebase in a working state. Commit at each checkpoint.
-
-4. **Self-Review**: Before presenting code, run the quality checklist below.
-   Look for unnecessary complexity, potential bugs, naming that could be
-   clearer, and duplication that should be extracted.
-
-5. **Explain Decisions**: When presenting code, explain key design decisions
-   and trade-offs made. Document non-obvious choices so future readers
-   understand the reasoning.
+1. **Understand Requirements.** Clarify requirements, edge cases, and
+   constraints first. Edge case enumeration is mandatory, not aspirational:
+   walk boundary values (empty, zero, max), invalid inputs, failure paths
+   (timeouts, partial writes), concurrency, authorization edges, and resource
+   limits before implementation.
+2. **Design First.** Sketch interfaces, data structures, and module boundaries
+   before implementation. Decide where the seams are.
+3. **Implement Incrementally.** Small verifiable steps, each leaving the
+   codebase working. Commit at each checkpoint.
+4. **Self-Review.** Run the Quality Checklist below as a literal checklist on
+   every file you touch.
+5. **Explain Decisions.** State key design decisions and trade-offs. Document
+   non-obvious choices.
 
 ## Quality Checklist
 
-Before considering any implementation complete, verify each item:
+Every item is a gate. If one fails, fix it before moving on.
 
-1. **Single Responsibility** -- Each function and module does one thing well.
-2. **Clear Naming** -- Names reveal intent without requiring comments.
-3. **No Magic Numbers** -- All constants are named and explained.
-4. **Explicit Error Handling** -- Error cases are handled. No silent failures.
-5. **Low Coupling** -- Minimal dependencies between modules.
-6. **Testability** -- Code can be tested without complex setup.
-7. **Readability** -- A new developer could understand this in 5 minutes.
-8. **DRY** -- No unnecessary duplication (Rule of Three applied).
-9. **Performance Awareness** -- No unnecessary computation or memory
-   allocation, but no premature optimization either.
-10. **Functional Core, Imperative Shell** -- Pure functions hold business
-    logic. A thin shell handles I/O. Pure logic is unit-testable in
-    isolation. The shell is swap-and-test as a thin integration layer.
-11. **No Primitive Obsession** -- Domain concepts (Money, Duration,
+1. **Single Responsibility** — each function and module does one thing.
+2. **Clear Naming** — names reveal intent without requiring comments.
+3. **No Magic Numbers** — constants are named.
+4. **Explicit Error Handling** — no silent failures.
+5. **Low Coupling** — minimal dependencies between modules.
+6. **Testability** — testable without complex setup; pure logic separated from
+   I/O, with seams for test doubles.
+7. **Readability** — a new developer understands it in 5 minutes.
+8. **DRY** — no unnecessary duplication (Rule of Three applied).
+9. **Performance Awareness** — no unnecessary computation, no premature
+   optimization.
+10. **Functional Core, Imperative Shell** — pure functions hold business
+    logic; a thin shell handles I/O.
+11. **No Primitive Obsession** — domain concepts (Money, Duration,
     EmailAddress, OrderId) carry a type, not a raw `string`/`int`. Long
     parameter lists with related primitives signal a missing value object.
-12. **Failures are actionable** -- Errors and test failures name the
-    failing condition with enough context that the next reader can start
-    debugging without rerunning. Avoid `assert(predicate)` when
-    `assert_eq(actual, expected)` would print the values.
-13. **Comment Discipline** -- Comments are why-only, timeless, and
-    process-free. They are precise, and they carry no ticket/plan
-    references. No TODO/FIXME comments and no commented-out code remain.
+12. **Failures are actionable** — errors and test failures name the failing
+    condition with enough context to start debugging without rerunning. Avoid
+    `assert(predicate)` when `assert_eq(actual, expected)` would print values.
+13. **Comment Discipline** — why-only, timeless, process-free, no
+    ticket/plan references, no TODO/FIXME, no commented-out code.
 
 ## When Implementing
 
-Apply this methodology during code writing with these checkpoints:
+The Design-First Workflow and Quality Checklist above are the procedure. These
+are the calls they do not make for you:
 
-1. **Start with the Design-First Workflow.** Do not jump into code. Sketch
-   interfaces and boundaries first, then implement incrementally.
-2. **Run the Quality Checklist before marking a step complete.** Every item
-   is a gate -- if any item fails, fix it before moving on.
-3. **Apply the Core Philosophy as a lens.** When making a design decision,
-   ask: does this favor simplicity (Hickey)? Is it direct (Carmack)? Are
-   failures isolated (Armstrong)? Is it readable (Knuth)? Does it honor
-   contracts (Liskov)? Is the interface simple (Ousterhout)?
-4. **Follow Implementation Standards for the details.** Use the DRY, naming,
-   function size, reusability, maintainability, and testability standards as
-   concrete guidelines -- not aspirational goals.
-5. **Self-review is not optional.** Run the Quality Checklist as a literal
-   checklist on every file you touch.
-6. **Construct with collaborators, call with work.** Constructors take the
-   long-lived dependencies (clock, DB, logger, HTTP client) that define
-   identity. Methods take the per-call work parameters (date range, request
-   body). Constructors do no work -- no I/O, no static lookups, no expensive
-   computation.
-7. **No mixed levels of abstraction in a function.** A function calls
-   functions one level below its own. If one function does both high-level
-   orchestration and low-level byte work, extract the low-level work into a
-   helper named at the surrounding level.
-8. **No primitive obsession in new domain types.** When adding a new domain
-   concept (Money, Duration, OrderId, EmailAddress), give it a type. Long
-   parameter lists with related primitives signal a missing value object.
-9. **Targeted exception scopes only.** Wrap exactly the call that can throw.
-   Catch the specific exception subclass. Rethrow with the original cause
-   chained. Never `catch (Exception e)` around a large block.
-10. **Follow the project's existing code style, naming conventions, and
-    patterns.** Read neighboring files to calibrate if unsure.
+- **Construct with collaborators, call with work.** Constructors take
+  long-lived dependencies (clock, DB, logger, HTTP client) that define
+  identity. Methods take per-call work parameters (date range, request body).
+  Constructors do no work — no I/O, no static lookups, no expensive
+  computation.
+- **No mixed levels of abstraction in a function.** A function calls functions
+  one level below its own. If one function does both high-level orchestration
+  and low-level byte work, extract the low-level work into a helper named at
+  the surrounding level.
+- **Targeted exception scopes only.** Wrap exactly the call that can throw.
+  Catch the specific exception subclass. Rethrow with the original cause
+  chained. Never `catch (Exception e)` around a large block.
+- **Follow the project's existing style, naming conventions, and patterns.**
+  Read neighboring files to calibrate if unsure.
 
 ## When Reviewing
 
-Use this methodology as review criteria:
-
-1. **Evaluate each Quality Checklist item as a review check.** Walk through
-   every item for every changed file. Flag violations by checklist item name
-   (e.g., "issue: Clear Naming -- this variable name `d` does not reveal
-   intent").
-2. **Check for Design-First evidence.** Is the code organized around clear
-   interfaces and boundaries, or does it look like it was written stream-of-
-   consciousness? Lack of structure suggests the Design-First step was skipped.
-3. **Apply the Core Philosophy as severity guidance.** Violations of failure
-   isolation (Armstrong) or interface contracts (Liskov) are higher severity
-   than formatting issues (Knuth).
-4. **Cross-reference with Implementation Standards.** Check function size
-   (~20 line guideline), DRY compliance (Rule of Three), composition over
-   inheritance, and testability seams.
-5. **Cite the specific checklist item in every finding.** This makes findings
-   actionable and traceable to a concrete standard.
+- **Walk every Quality Checklist item for every changed file**, and cite the
+  item by name in each finding (`issue: Clear Naming — the variable `d` does
+  not reveal intent`). A finding with no checklist item is not actionable.
+- **Check for Design-First evidence.** Code organized around clear interfaces
+  and boundaries, or stream-of-consciousness? Lack of structure suggests the
+  Design-First step was skipped.
+- **Severity follows the Core Philosophy lenses.** Violations of failure
+  isolation (Armstrong) or interface contracts (Liskov) outrank formatting
+  (Knuth).

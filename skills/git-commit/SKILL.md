@@ -153,11 +153,9 @@ Closes #127
 
 ## Common Commit Mistakes
 
-| Mistake | Example | Fix |
-|---------|---------|-----|
-| Vague subject | "Fix stuff" | "Fix token expiry check in session middleware" |
-| Past tense | "Added config option" | "Add config option" |
-| No body when needed | Commits a complex change with only a subject | Add body explaining why |
-| WIP commit in history | "WIP: still debugging" | Squash into a meaningful commit before shipping |
-| Multiple unrelated changes | "Fix bug, add feature, update deps" | Split into three commits |
-| Trailing period | "Fix null dereference." | "Fix null dereference" |
+Two mistakes the rules above do not catch on their own:
+
+- **No body when one is needed.** A complex change committed with only a
+  subject leaves the *why* nowhere. Add the body.
+- **A WIP commit left in history** ("WIP: still debugging"). Squash it into a
+  meaningful commit before shipping.
