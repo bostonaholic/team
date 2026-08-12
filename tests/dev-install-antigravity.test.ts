@@ -30,13 +30,13 @@
 // Why this file is a fraction of its former size. The install used to filter the
 // skill corpus and link it one skill at a time into the host's flat global skill
 // directory, so it carried a frontmatter reader, an exclusion set, and a
-// collision scanner, and most of the tests here interrogated those. Measured
-// against agy 1.1.12: the host takes a root `plugin.json` as its plugin marker,
-// resolves `skills/` and `agents/` beside it, follows a symlinked plugin root,
-// and honors `disable-model-invocation` itself. So Team ships that manifest, the
-// install is one link, and there is no filtering left to test. Whether `agy`
-// discovers a linked plugin is a live-host question and stays a manual PR
-// test-plan step.
+// collision scanner, and most of the tests here interrogated those. None of it is
+// needed: the host takes a root `plugin.json` as its plugin marker, resolves
+// `skills/` and `agents/` beside it, follows a symlinked plugin root, and honors
+// `disable-model-invocation` itself. So Team ships that manifest, the install is
+// one link, and there is no filtering left to test. Whether `agy` discovers a
+// linked plugin can only be checked against the live host, so it stays a manual
+// PR test-plan step.
 //
 // Output contract the assertions below read, so the scripts must emit it:
 // `Linked:` for the link created, `Removed:` for the link removed, `Note:` when
@@ -392,7 +392,7 @@ describe("dev install: antigravity harness", () => {
       expect(section).toContain("agy plugin install");
       expect(section).toContain("script/dev-install antigravity");
 
-      // Claims the measurements disproved. Each was in an earlier revision.
+      // Claims that turned out to be false. Each was in an earlier revision.
       expect(section).not.toContain("dev-install-only");
       expect(section).not.toContain("nothing distributed ships");
     });

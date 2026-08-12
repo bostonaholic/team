@@ -9,10 +9,10 @@ set -euo pipefail
 # checkout is already a valid Antigravity plugin root and one link is the whole
 # install — no manifest is generated and no per-skill link is written.
 #
-# Measured against agy 1.1.12: discovery follows a symlinked plugin root, and the
-# host honors disable-model-invocation, so pr-rebase and pr-watch-as-reviewer
-# stay out of the model's reach on their own. Nothing is withheld here, unlike
-# the Codex install, whose host ignores that key.
+# Discovery follows a symlinked plugin root, and this host honors
+# disable-model-invocation, so pr-rebase and pr-watch-as-reviewer stay out of the
+# model's reach on their own. Nothing is withheld here, unlike the Codex install,
+# whose host ignores that key.
 
 PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TARGET="${HOME}/.gemini/config/plugins/team"

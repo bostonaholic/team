@@ -172,14 +172,11 @@ facility, so the design must work around it.
 | Per-project config (host-neutral) | `.team/config.json` (plain JSON, read by portable core) | `.team/config.json` (same file, unchanged) | `.team/config.json` (same file, unchanged) |
 | Abstract model tier → host model | native (`model:` is a literal Claude model) | workaround: resolve tier through `.team/config.json` map | workaround: resolve tier through `.team/config.json` map |
 
-Antigravity CLI is not a fourth column, and the reason is evidence rather than
-importance. The two hosts scored here are scored from their documentation, which
-covers every row. Antigravity's rows would come from probing the binary, and only
-about a third of these primitives have been probed — hooks, manifest layout,
-skill and agent discovery, naming — while the rest, including the whole MCP
-group and the hook JSON contract, have not. A column that reported "unmeasured"
-for two thirds of its cells would look scored without being scored. What has been
-run is in [its own section](#antigravity-cli), and the gap is named in
+Antigravity CLI is not a fourth column. Only some of these rows are settled for
+it — manifest layout, skill and agent discovery, naming, hooks — while the MCP
+group and the hook JSON contract are not, and a column that said "unknown" two
+thirds of the way down would look scored without being scored. What is settled
+is in [its own section](#antigravity-cli); the rest sits in
 [open questions](#open-questions-deferred-to-the-port-epics).
 
 Reading the matrix: every row that Team's *behavior* depends on is native or
@@ -357,12 +354,9 @@ full parity. Each starts from the matrix and works around the named gaps.
 
 ## Antigravity CLI
 
-This section is sourced differently from the two above it, which is the only
-thing that sets it apart. Every Gemini CLI and Codex CLI claim on this page comes
-from vendor docs and host repos read on 2026-06-27, because neither binary is
-installed on the machine this was written on. `agy` 1.1.12 is, so everything
-below was produced by running it. Where a claim here is inferred rather than
-observed, it says so.
+Everything here is from `agy` 1.1.12 on macOS. The Gemini CLI and Codex CLI
+sections come from vendor docs and host repos read on 2026-06-27, since neither
+binary is installed here.
 
 **This host installs Team natively, through its own manifest.** Team ships
 `plugin.json` at the repo root, which is Antigravity's plugin marker, with
@@ -381,13 +375,10 @@ relies on. The manifest also cannot move into a directory of its own the way
 of the manifest — which is why Team carries a sixth version string at the repo
 root.
 
-An earlier revision of this page concluded the opposite, and the reason is worth
-recording. `agy plugin import <local path>` was probed against the main checkout
-and failed while copying `.git/fsmonitor--daemon.ipc`, a socket. That failure is
-a property of the path given, not of the mechanism: from a worktree, whose `.git`
-is a file, the same command succeeds, and installing from a URL clones fresh so
-the socket never exists. The git-URL form was never probed, and a single local
-failure was generalized into "nothing distributed ships."
+**A local install can fail on a git fsmonitor socket.** The install copies the
+whole tree, `.git` included, so a checkout with a running fsmonitor daemon fails
+on `.git/fsmonitor--daemon.ipc`. A worktree is unaffected, because its `.git` is
+a file, and installing from a URL clones fresh so the socket never exists.
 
 **Discovery.**
 
@@ -405,13 +396,13 @@ failure was generalized into "nothing distributed ships."
   link at `~/.gemini/config/plugins/team` pointing at a checkout put 52 Team
   skills in the agent's own skill list, with no entry in `import_manifest.json`.
   Team's dev install is that one link. A directory holding a hand-written
-  `plugin.json` beside symlinked `skills/` and `agents/` was measured to work
-  too; linking the root is preferred because the checkout already carries the
-  manifest, so nothing has to be generated or kept in sync.
+  `plugin.json` beside symlinked `skills/` and `agents/` works too; linking the
+  root is preferred because the checkout already carries the manifest, so nothing
+  has to be generated or kept in sync.
 - `hooks/` is not discovered: this host registers hooks through a root
   `hooks.json`. `agents/` is discovered, and discovery is not dispatch — whether
-  `agy` can dispatch an agent, and whether a structured return survives, is
-  still unmeasured, and it is the reason Team claims no pipeline support here.
+  `agy` can dispatch an agent, and whether a structured return survives, has not
+  been tested, which is why Team claims no pipeline support here.
 
 **`disable-model-invocation` is honored.** With the plugin installed, the agent
 listed 52 of the 54 skills. The two missing ones were exactly `pr-rebase` and
@@ -445,10 +436,9 @@ longer scans for that: it writes into its own plugin directory rather than into
 the shared global skill directory, so it has nothing to warn about and no
 authority over which copy wins. Built-in skills live inside the `agy` binary, so
 no disk scan could enumerate them anyway. Whether a project's `.agents/skills/`
-outranks the global scope is **inferred, not measured** — it comes from the
-documented Gemini-family precedence, it was never probed, and the nearest
-measurement points the other way, since about fifty skills in `~/.agents/skills/`
-were invisible to `agy`.
+outranks the global scope **has not been confirmed** — it comes from the
+documented Gemini-family precedence, and the nearest evidence points the other
+way, since about fifty skills in `~/.agents/skills/` were invisible to `agy`.
 
 **Scope.** Antigravity installs every skill and every agent, and the dev install
 keeps a checkout's edits live. What is unproven is dispatch: the pipeline
@@ -467,9 +457,8 @@ with [#56](https://github.com/bostonaholic/team/issues/56).
 - **Reduced-MVP parity.** Explicitly rejected: full parity is the target.
 - **A fifth host.** Claude Code, Gemini CLI, Codex CLI, and Antigravity CLI are
   the four this study covers. Only the first three are scored in the matrix;
-  Antigravity is measured in its own section instead, because what is known about
-  it comes from probing one version rather than from a primitive-by-primitive
-  read.
+  Antigravity has its own section instead, because what is known about it covers
+  one version rather than every primitive.
 - **Guaranteeing host API stability.** The young-API recency risk is surfaced and
   assigned to the shim layer plus version pinning, not eliminated.
 
