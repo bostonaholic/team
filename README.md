@@ -43,8 +43,17 @@ agents, so they will not run the pipeline. The standalone utilities do.
 > guards:
 >
 > ```bash
-> rm -rf "$CODEX_HOME/plugins/cache"/*/team/*/skills/pr-watch-as-reviewer
-> rm -rf "$CODEX_HOME/plugins/cache"/*/team/*/skills/pr-rebase
+> CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+> for pattern in "*/team/*/skills/pr-watch-as-reviewer" "*/team/*/skills/pr-rebase"; do
+>   found="$(find "$CODEX_HOME/plugins/cache" -type d -path "$pattern" 2>/dev/null || true)"
+>   if [ -z "$found" ]; then
+>     echo "$pattern: nothing installed under $CODEX_HOME/plugins/cache" >&2
+>   else
+>     printf '%s\n' "$found" | while IFS= read -r dir; do
+>       rm -rf "${dir:?}" && echo "removed: $dir"
+>     done
+>   fi
+> done
 > ```
 >
 > Re-running `codex plugin add` restores them.

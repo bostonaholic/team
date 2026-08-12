@@ -1,8 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 
+import { agentFiles, grepAbsent, runtimeHookFiles, skillFiles } from "./helpers/scan";
 import { frontmatter, read } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
@@ -16,21 +17,6 @@ function filterRows(text: string, key: string, exclude: RegExp): string {
     .filter((line) => !exclude.test(line))
     .slice(0, 5)
     .join("\n");
-}
-
-// Absence check: runs grep through execFileSync. A non-zero exit (grep found
-// nothing) is the PASS and returns true; a zero exit (a match was found)
-// returns false. grep's exit code 2 (a real error, e.g. unreadable path)
-// re-throws so it cannot be a false pass.
-function grepAbsent(args: string[]): boolean {
-  try {
-    execFileSync("grep", args, { cwd: REPO_ROOT, stdio: "pipe" });
-    return false; // exit 0: a match was found
-  } catch (err: unknown) {
-    const status = (err as { status?: number }).status;
-    if (status === 1) return true; // exit 1: no match -> absence holds
-    throw err; // exit 2 or spawn failure: surface loudly
-  }
 }
 
 describe("skill architecture", () => {
@@ -199,7 +185,7 @@ describe("simplify orchestration scope fence", () => {
   });
 
   test("no hook imports homedir from node:os", () => {
-    expect(grepAbsent(["-E", "\\bhomedir\\b", ...hookFiles()])).toBe(true);
+    expect(grepAbsent(["-E", "\\bhomedir\\b", ...runtimeHookFiles()])).toBe(true);
   });
 
   test("no agent frontmatter contains consumes:", () => {
@@ -504,26 +490,3 @@ describe("pipeline scratch is never tracked", () => {
     expect(tracked.trim()).toBe("");
   });
 });
-
-// Resolve `agents/*.md` and `hooks/*.mjs` globs, returning repo-relative paths
-// so grep receives the same file list a shell glob would expand to.
-function agentFiles(): string[] {
-  return readdirSync(join(REPO_ROOT, "agents"))
-    .filter((n) => n.endsWith(".md"))
-    .sort()
-    .map((n) => join("agents", n));
-}
-
-function skillFiles(): string[] {
-  return readdirSync(join(REPO_ROOT, "skills"))
-    .sort()
-    .map((n) => join("skills", n, "SKILL.md"))
-    .filter((p) => existsSync(join(REPO_ROOT, p)));
-}
-
-function hookFiles(): string[] {
-  return readdirSync(join(REPO_ROOT, "hooks"))
-    .filter((n) => n.endsWith(".mjs"))
-    .sort()
-    .map((n) => join("hooks", n));
-}

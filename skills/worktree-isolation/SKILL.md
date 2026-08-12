@@ -198,7 +198,7 @@ When teardown is warranted (post-merge or on explicit request):
      if [ -n "$extra" ]; then
        printf 'kept (holds unexpected files): %s\n%s\n' "$dir" "$extra"
      else
-       rm -rf "$dir" && echo "swept: $dir"
+       rm -rf "${dir:?}" && echo "swept: $dir"
      fi
    done
    ```
