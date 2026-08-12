@@ -7,6 +7,9 @@
 # Team pipeline state
 .team/
 
+# Pipeline artifacts — per-run scratch, and excluded from the docs site
+docs/plans/
+
 # Beads / Dolt files (added by bd init)
 # NOTE: do NOT add a blanket `.beads/` ignore — bd's own .beads/.gitignore
 # tracks issues.jsonl + config while ignoring the Dolt runtime. Ignoring all of
