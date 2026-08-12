@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { readdirSync } from "node:fs";
+import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import {
@@ -79,15 +79,29 @@ describe("check (b): each manifest dir carries only its own host's prefix", () =
   // schema and churn with every host release. `.agents/plugins` maps to null
   // deliberately: `.agents/` is the host-neutral AGENTS.md convention name,
   // a future host may read that path, and the stricter rule costs nothing
-  // today. A new host's manifest dir is one entry.
-  const MANIFEST_DIR_PREFIX: Record<string, string | null> = {
+  // today. A new host's manifest is one entry.
+  //
+  // The root `plugin.json` is Antigravity's marker and also maps to null:
+  // that host resolves `skills/` and `agents/` as siblings of the manifest
+  // rather than through an env variable, so it has no prefix of its own to
+  // permit, and a prefix from any other host landing there is a violation.
+  // An entry may name a directory or a single file — Antigravity's marker
+  // sits at the repo root, so a directory-only map would leave the newest
+  // distributed manifest unswept.
+  const MANIFEST_PREFIX: Record<string, string | null> = {
     ".claude-plugin": "CLAUDE",
     ".codex-plugin": "CODEX",
     ".agents/plugins": null,
+    "plugin.json": null,
   };
 
-  test("enumeration covers the Claude Code manifest", () => {
-    expect(filesUnder(".claude-plugin")).toContain(join(".claude-plugin", "plugin.json"));
+  function manifestFiles(entry: string): string[] {
+    return statSync(join(REPO_ROOT, entry)).isDirectory() ? filesUnder(entry) : [entry];
+  }
+
+  test("enumeration covers every host's manifest", () => {
+    expect(manifestFiles(".claude-plugin")).toContain(join(".claude-plugin", "plugin.json"));
+    expect(manifestFiles("plugin.json")).toEqual(["plugin.json"]);
   });
 
   test("detection pin: the collector finds plugin.json's 3 permitted CLAUDE_ uses", () => {
@@ -99,9 +113,9 @@ describe("check (b): each manifest dir carries only its own host's prefix", () =
     expect(pluginJsonMatches.every((match) => match.text.startsWith("CLAUDE_"))).toBe(true);
   });
 
-  test("no manifest dir carries another host's prefix", () => {
-    for (const [manifestDir, permittedPrefix] of Object.entries(MANIFEST_DIR_PREFIX)) {
-      const matches = collectMatches(HOST_IDENTIFIER_PATTERN, filesUnder(manifestDir));
+  test("no manifest carries another host's prefix", () => {
+    for (const [manifestEntry, permittedPrefix] of Object.entries(MANIFEST_PREFIX)) {
+      const matches = collectMatches(HOST_IDENTIFIER_PATTERN, manifestFiles(manifestEntry));
       const offending = matches.filter(
         (match) => permittedPrefix === null || !match.text.startsWith(`${permittedPrefix}_`),
       );
@@ -157,8 +171,11 @@ describe("check (d): README names the removal path of every model-invocation-dis
       .map((file) => file.split("/")[1] ?? "");
   }
 
-  test("detection pin: pr-approve-watch carries the key today", () => {
-    expect(modelInvocationDisabledSkills()).toContain("pr-approve-watch");
+  test("detection pin: the guarded skills carry the key today", () => {
+    expect(modelInvocationDisabledSkills().sort()).toEqual([
+      "pr-rebase",
+      "pr-watch-as-reviewer",
+    ]);
   });
 
   test("README carries the literal skills/<name> inside a code span for each detected skill", () => {
@@ -175,7 +192,7 @@ describe("check (d): README names the removal path of every model-invocation-dis
 
 describe("check (e): frontmatter keys stay inside the classified allowlists", () => {
   // A new frontmatter key arriving unclassified is the class that cost
-  // pr-approve-watch its Codex guard: some host silently ignores the key and
+  // pr-watch-as-reviewer its Codex guard: some host silently ignores the key and
   // the behavior it carried is gone. A legitimate new key hits red CI until
   // its one allowlist line is added — the review-visible diff is the point.
   const SKILL_KEYS = new Set([
@@ -203,7 +220,7 @@ describe("check (e): frontmatter keys stay inside the classified allowlists", ()
   });
 
   test("parser pin: the full key set is recovered from the block-scalar hard case", () => {
-    const keys = frontmatterKeys(read(join(REPO_ROOT, "skills", "pr-approve-watch", "SKILL.md")));
+    const keys = frontmatterKeys(read(join(REPO_ROOT, "skills", "pr-watch-as-reviewer", "SKILL.md")));
     expect(keys.sort()).toEqual(
       ["name", "description", "effort", "argument-hint", "disable-model-invocation"].sort(),
     );

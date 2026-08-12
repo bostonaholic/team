@@ -287,10 +287,14 @@ describe("pr-watch-as-reviewer skill: README Codex removal command targets the g
   // a rename or move must fail the build until the README path moves with it.
   function removalTargets(readme: string): string[] {
     // Match the path shape only, never the surrounding prose, so a README
-    // rewrite that keeps the paths correct stays green.
-    return [...readme.matchAll(/rm -rf .*\/skills\/([A-Za-z0-9._-]+)/g)].map(
-      (m) => m[1] ?? "",
-    );
+    // rewrite that keeps the paths correct stays green. The skill name lives
+    // in the quoted find pattern rather than on the `rm -rf` line: the
+    // deletion operand is a `${dir:?}` guarded variable, because an operand
+    // interpolating an unset host variable is what made the old one-liner
+    // expand to a path that matched nothing and exit 0.
+    return [
+      ...readme.matchAll(/"\*\/team\/\*\/skills\/([A-Za-z0-9._-]+)"/g),
+    ].map((m) => m[1] ?? "");
   }
 
   // Skills on disk that disable model invocation — the set the README owes

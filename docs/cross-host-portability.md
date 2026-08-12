@@ -144,7 +144,10 @@ parallel and nested subagents, and structured returns.
   the host gives: final-text on Claude and Gemini, `--output-schema` on Codex.
 - **The invariant is enforced by tripwires.** `tests/cross-host-portability.test.ts`
   sweeps `agents/` and the `skills/` tree for host-prefixed identifiers,
-  holds each manifest dir to its own host's prefix, allowlists the hook env
+  holds each host manifest to its own host's prefix — including the root
+  `plugin.json`, which permits none, since Antigravity resolves its
+  components as siblings of the manifest rather than through an env
+  variable — allowlists the hook env
   identifiers, and gates frontmatter keys and the README's
   `disable-model-invocation` caveat path. `tests/destructive-command-guards.test.ts`
   requires the unset-abort `${VAR:?}` form on every variable expansion among
