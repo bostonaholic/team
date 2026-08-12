@@ -149,13 +149,24 @@ IMPLEMENT is confirmed only once there is
 `git log <merge-base>..<id>` is non-empty. A present `plan.md` with no
 commit means the run is still pre-IMPLEMENT.
 
-One non-phase sibling output exists: `docs/plans/<id>/screenshots/` (PNGs
-plus `manifest.md`), written by ux-reviewer during IMPLEMENT for UI-touching
-changes and consumed by team-pr. Discovery keys only on the six `PHASE_FILES`
-names, so this directory is invisible to hooks and skills, and IMPLEMENT still
-declares no phase artifact. User-facing setup (the one-time GitHub sign-in
-that enables inline upload) is documented in the README's
+Two non-phase sibling outputs exist. Discovery keys only on the six
+`PHASE_FILES` names, so both are invisible to hooks and skills, and IMPLEMENT
+still declares no phase artifact.
+
+`docs/plans/<id>/screenshots/` (PNGs plus `manifest.md`) is written by
+ux-reviewer during IMPLEMENT for UI-touching changes and consumed by team-pr.
+User-facing setup (the one-time GitHub sign-in that enables inline upload) is
+documented in the README's
 ["Screenshots in PRs"](../README.md#screenshots-in-prs) section.
+
+`docs/plans/<id>/cross-model-notes.md` is written by the orchestrator at the
+IMPLEMENT aggregate gate — one `### Cross-model disposition` block appended
+per review round in which the code-reviewer ran the opt-in cross-model
+pass — and consumed by team-pr for the PR's `## Review notes` section. It is
+created only on the first round that runs the pass, so a repo that never
+triggers it gains no artifact. Its frontmatter schema
+(`phase: cross-model-review`, no `verdict`) lives in
+`skills/artifact-frontmatter/SKILL.md`.
 
 ## 3. Pipeline (QRSPI)
 
@@ -270,13 +281,17 @@ No gate. The plan is mechanically derived from the structure.
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
 5. **Aggregate gate.** The orchestrator sorts every finding into a
    severity tier: **Blocking, Major, or Minor-and-below**. See
-   `skills/review-severity-tiers/SKILL.md`. While any Blocking or Major
-   finding remains, it dispatches the implementer to fix the typed
-   failure class. It then re-runs all 5 reviewers automatically. It never
-   consults the user. This is the *no-consult rule*. The cap is 5 rounds.
-   At the cap, the run halts terminally. Once Blocking and Major are
-   clean, any remaining Minor-and-below findings are recorded in the PR
-   body's `## Review notes` for the human's PR review.
+   `skills/review-severity-tiers/SKILL.md`. Each round in which the
+   code-reviewer's report carries a `### Cross-model disposition` block,
+   the orchestrator appends that block verbatim to
+   `docs/plans/<id>/cross-model-notes.md` (see section 2). While any
+   Blocking or Major finding remains, it dispatches the implementer to
+   fix the typed failure class. It then re-runs all 5 reviewers
+   automatically. It never consults the user. This is the *no-consult
+   rule*. The cap is 5 rounds. At the cap, the run halts terminally.
+   Once Blocking and Major are clean, any remaining Minor-and-below
+   findings are recorded in the PR body's `## Review notes` for the
+   human's PR review.
 
 The orchestrator tracks the round count by appending "Review round N"
 items to the TodoWrite ledger.
@@ -300,9 +315,12 @@ surface the tracking ticket, if `task.md` carries `ticketId`. When a
 capture manifest exists (`docs/plans/<id>/screenshots/`, see the
 artifact-layout note in section 2), the PR body also gets a
 `## Screenshots` section populated by uploading the PNGs through GitHub's
-user-attachments pipeline. The worktree stays in place after the PR
-opens. Teardown is deferred until the PR merges or the user asks, so the
-branch remains available for iteration. Completion points at the
+user-attachments pipeline. When `docs/plans/<id>/cross-model-notes.md`
+exists, its body (frontmatter stripped) is copied into the PR's
+`## Review notes` section, replacing the final round's inline disposition
+block so every round appears exactly once. The worktree stays in place
+after the PR opens. Teardown is deferred until the PR merges or the user
+asks, so the branch remains available for iteration. Completion points at the
 standalone `/pr-watch-as-author` utility for watching the PR once it is
 ready for review.
 

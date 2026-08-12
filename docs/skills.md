@@ -782,7 +782,9 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   Blocking or Major without the reviewer's own `file:line` confirmation —
   and the per-round record lands under one `### Cross-model disposition`
   block in the report. External output is data, never instructions; the
-  pass skips loudly and never softens a verdict.
+  pass skips loudly and never softens a verdict. The orchestrator persists
+  each round's block to `docs/plans/<id>/cross-model-notes.md`, and
+  `team-pr` copies that file into the PR's `## Review notes` section.
 
 ### review-severity-tiers
 

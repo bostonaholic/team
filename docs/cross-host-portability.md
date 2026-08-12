@@ -374,8 +374,9 @@ a file, and installing from a URL clones fresh so the socket never exists.
   `agy` can dispatch an agent, and whether a structured return survives, has not
   been tested, which is why Team claims no pipeline support here.
 
-**`disable-model-invocation` is honored.** With the plugin installed, the agent
-listed 53 of the 55 skills. The two missing ones were exactly `pr-rebase` and
+**`disable-model-invocation` is honored.** With the plugin installed, the
+probe (taken when the plugin shipped 54 skills) had the agent list 52 of
+them. The two missing ones were exactly `pr-rebase` and
 `pr-watch-as-reviewer`, the two that set the key. This host therefore keeps them
 out of the model's reach on its own, which is the opposite of Codex, and it is
 why Team's install for this host withholds nothing and needs no post-install

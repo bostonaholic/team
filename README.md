@@ -162,6 +162,28 @@ revoke it, sign out of github.com inside that profile or delete the
 directory. Until you sign in, PRs carry local screenshot paths instead of
 inline images.
 
+## Cross-model review (opt-in)
+
+For higher-stakes diffs, the code-reviewer can get a second opinion from
+another vendor's model: it sends the diff to the `codex` and `gemini` CLIs
+in pinned read-only mode, verifies every claim that comes back before
+adopting any of it, and records each round's disposition to
+`docs/plans/<id>/cross-model-notes.md`, which `/team-pr` surfaces in the
+PR's `## Review notes` section. The pass triggers only when the diff
+touches auth/session/crypto code, data storage or schema migrations, or
+public API contracts.
+
+It is off by default because **diff content leaves the machine** and
+reaches an external vendor's CLI. Opt in per repo by creating the consent
+marker:
+
+```sh
+mkdir -p .team && touch .team/cross-model-review
+```
+
+Without the marker, no diff is ever sent — both script verbs refuse before
+any vendor binary is even looked up.
+
 ## Architecture
 
 See [docs/architecture.md](docs/architecture.md) for the full architecture, the artifact frontmatter schema, and the phase-inference rules.
@@ -172,4 +194,4 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 - **55 entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch-as-author`, `/pr-watch-as-reviewer`, `/groom-backlog`, `/pr-cleanup`, `/pr-verify`, and `/pr-rebase` utilities, and shared methodologies
 - **3 hooks** in `hooks/`: `docs/plans/`-aware compaction resilience and plugin-file validation
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
-- **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `design.md` also carries `revision`, and review verdicts live in `design-review-<n>.md`. Live in-session coordination uses TodoWrite.
+- **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions (when the opt-in pass ran) in `cross-model-notes.md`. Live in-session coordination uses TodoWrite.
