@@ -37,7 +37,9 @@
 // installable — `Warning:` for a name collision and for nothing else (so a
 // clean run can assert none), `Error:` on an abort, and `Nothing to do` when
 // uninstall finds no target directory. Every skip prints the skill name and the
-// frontmatter key that caused it on one line.
+// frontmatter key that caused it on one line. An abort over frontmatter the
+// reader will not interpret prints a `Fix:` line under each named file, naming
+// the edit that file's own shape needs.
 
 import { afterAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
@@ -674,6 +676,12 @@ describe("dev install: antigravity harness", () => {
         join(checkout.root, "skills", "quoted", "SKILL.md"),
       );
       expect(output).toContain('"true"');
+      // The remedy is per shape, and this is the only shape an unquoting fixes.
+      // A remedy that named a shape this file does not have would send a
+      // developer to edit something already correct.
+      expect(output).toContain("unquoted true or false");
+      expect(output).not.toContain("column 0");
+      expect(output).not.toContain("first line");
       expect(existsSync(join(home, ".gemini"))).toBe(false);
     });
 
@@ -690,6 +698,11 @@ describe("dev install: antigravity harness", () => {
       expect(output).toContain(
         join(checkout.root, "skills", "bare", "SKILL.md"),
       );
+      // There is no block here to put a key at the top level of, so the fix is
+      // to add one. Telling this developer to unquote a value names an edit
+      // that cannot be made and leaves the real one unsaid.
+      expect(output).toContain("first line");
+      expect(output).not.toContain("unquoted true or false");
       expect(existsSync(join(home, ".gemini"))).toBe(false);
     });
 
@@ -770,6 +783,11 @@ describe("dev install: antigravity harness", () => {
       expect(output).toContain(
         join(checkout.root, "skills", "indented", "SKILL.md"),
       );
+      // The whole block is indented, so quoting or deleting the one guard line
+      // leaves the same abort waiting on the next run. Only un-indenting clears
+      // it, and the remedy has to say so.
+      expect(output).toContain("column 0");
+      expect(output).not.toContain("unquoted true or false");
       expect(existsSync(join(home, ".gemini"))).toBe(false);
     });
 

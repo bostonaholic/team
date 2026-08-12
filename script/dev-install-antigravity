@@ -183,9 +183,17 @@ done
 # key read as no key, would each install the very skill the guard holds back.
 # Pass-2 survivors only: a file that can never become a link can never be the
 # hazard.
+#
+# Three shapes reach this abort and each needs a different edit, so the remedy
+# travels with its own diagnosis in `unreadable_fix` rather than as one trailer
+# under all of them: a file with no frontmatter block has no key to unquote, and
+# an indented block stays indented after its value is fixed. Keeping the pair
+# parallel by index also keeps the report in file order, so a run over several
+# broken files reads top to bottom.
 survivors=()
 guarded=()
 unreadable=()
+unreadable_fix=()
 if [ ${#invocable[@]} -gt 0 ]; then
   for name in "${invocable[@]}"; do
     file="${SKILLS_SRC}/${name}/SKILL.md"
@@ -194,8 +202,10 @@ if [ ${#invocable[@]} -gt 0 ]; then
     value="$(frontmatter_value disable-model-invocation "$file")" || status=$?
     if [ "$status" -eq 2 ]; then
       unreadable+=("${file}: no leading --- frontmatter block")
+      unreadable_fix+=("add a --- line as the file's first line, and a closing --- after the keys")
     elif [ "$status" -eq 3 ]; then
       unreadable+=("${file}: the frontmatter block's keys are indented, so no top-level key can be read")
+      unreadable_fix+=("move every key in that block to column 0")
     elif [ "$status" -eq 1 ]; then
       survivors+=("$name")
     elif [ "$value" = "true" ]; then
@@ -206,16 +216,19 @@ if [ ${#invocable[@]} -gt 0 ]; then
       survivors+=("$name")
     else
       unreadable+=("${file}: disable-model-invocation: ${value}")
+      unreadable_fix+=("give the key an unquoted true or false")
     fi
   done
 fi
 
 if [ ${#unreadable[@]} -gt 0 ]; then
   echo "Error: a disable-model-invocation value could not be read, so no link was written:" >&2
-  for line in "${unreadable[@]}"; do
-    echo "  ${line}" >&2
+  index=0
+  while [ "$index" -lt ${#unreadable[@]} ]; do
+    echo "  ${unreadable[$index]}" >&2
+    echo "    Fix: ${unreadable_fix[$index]}, then re-run." >&2
+    index=$((index + 1))
   done
-  echo "Give the key an unquoted true or false at the top level of the block, then re-run." >&2
   exit 1
 fi
 
