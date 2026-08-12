@@ -80,6 +80,18 @@ increments `revision: <n+1>` in its frontmatter and a fresh review round
 runs. Cap at 5 revisions. At cap, the run halts terminally and reports
 the unresolved findings — no consultation, no PR.
 
+**Cross-model notes record** (`cross-model-notes.md`): orchestrator-written
+and append-only — one `### Cross-model disposition` block per review round,
+in round order, copied verbatim from the code-reviewer's report. The
+orchestrator creates the file only on the first round that runs the
+cross-model pass, so a repo that never triggers it gains no artifact.
+Frontmatter: `topic` (copied verbatim), `date`, and
+`phase: cross-model-review`, following the `phase: design-review` precedent
+for orchestrator-written records outside the phase-artifact enum. There is
+**no `verdict` field** — the block is Minor-tier by construction and never
+gates. The code-reviewer never reads the file back as prior state; it
+exists for the human.
+
 ## Topic consistency invariant
 
 Every artifact's `topic` frontmatter field MUST be identical across all

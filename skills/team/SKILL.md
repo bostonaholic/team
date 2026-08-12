@@ -357,19 +357,28 @@ returned:
    the authoritative table in `skills/review-severity-tiers/SKILL.md`
    ("Severity Tiers and the Auto-Fix Boundary"). Consult that table rather
    than restating it here.
-2. Track the round count by appending a TodoWrite item like
+2. Persist the cross-model record. When the code-reviewer's report
+   contains a `### Cross-model disposition` section, append that section
+   verbatim as one block, in round order, to
+   `docs/plans/<id>/cross-model-notes.md`. The orchestrator is the single
+   writer of that file. Create it on the first append with frontmatter
+   `topic` (copied verbatim), `date`, and `phase: cross-model-review`
+   (schema in `skills/artifact-frontmatter/SKILL.md`).
+3. Track the round count by appending a TodoWrite item like
    "Review round 2" each retry. Cap at 5 rounds.
-3. While any **Blocking or Major** finding remains and under cap → dispatch
+4. While any **Blocking or Major** finding remains and under cap → dispatch
    implementer to fix, passing the typed failure class(es). After fixes, all
    5 reviewers re-run from scratch. **Never** stop to consult the user while a
    Blocking or Major finding is open — loop automatically (the no-consult
    rule).
-4. If at cap → **terminal halt**: report every unresolved finding with
+5. If at cap → **terminal halt**: report every unresolved finding with
    its severity tier, naming the absolute worktree-rooted
    `docs/plans/<id>/` artifact path so the human can inspect the run's
-   record directly. No PR is opened, no consultation happens — the run
-   ends there.
-5. Once Blocking and Major are clean → record any **Minor-and-below**
+   record directly. When `cross-model-notes.md` exists, name it beside
+   the unresolved findings and the artifact path, so every round's
+   external-review disposition stays visible at the halt. No PR is
+   opened, no consultation happens — the run ends there.
+6. Once Blocking and Major are clean → record any **Minor-and-below**
    findings for the PR body's `## Review notes` section, tagged by source
    reviewer. Never present them mid-run, and advance to PR
    **in the same turn**. Do not summarize and end the turn. The run is
