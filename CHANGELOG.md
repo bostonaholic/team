@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.0] - 2026-08-12
+
 ### Fixed
 
 - **`/shipit` stopped halfway through landing a PR to ask permission it had already been given.** Step 4 of the skill was a pre-merge confirmation: after pushing and waiting out CI, the run asked "about to merge PR #N into `<base>` — proceed?" and merged only on a yes. The problem is what reaches that prompt. `/shipit` fires only on explicit ship intent — the user typed `/shipit`, or said "ship it" or "land the PR" — so the answer to "shall I merge this?" was in the request that started the run. The prompt re-requested authorization the invocation carried, and because this is the distributed runtime skill, every caller that chains into it inherited the stop: an approved PR would sit unmerged waiting on a question already answered. A `--yes` flag existed to bypass it, which meant the documented way to make the skill do its job was to pass a flag saying you meant what you said. The confirmation step and the now-dead `--yes` are both gone, and the Land sequence is four steps that run start to finish with no prompt in the middle. Two guards still stand in front of an irreversible merge, and neither one is a question: **explicit ship intent** scopes the invocation, so a PR merely being approved, green, or finished never starts a land, and the **bounded CI-green wait** halts mechanically before `gh pr merge` on a red or timed-out check. The skill now states the rule positively rather than only omitting the prompt, because a model reading a land procedure will otherwise reinsert a confirmation on its own instinct. Pinned by three L2 tripwires in [`tests/shipit-skill.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/shipit-skill.test.ts): `argument-hint` offers no `--yes`, no `--yes` survives anywhere in the skill, and exactly one numbered step heading sits between the CI gate and the merge command — a structural count that fires on *any* step re-inserted there, whatever it is titled. [`skills/shipit/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/shipit/SKILL.md)
@@ -498,7 +500,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.43.2...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.44.0...HEAD
+[0.44.0]: https://github.com/bostonaholic/team/compare/v0.43.2...v0.44.0
 [0.43.2]: https://github.com/bostonaholic/team/compare/v0.43.1...v0.43.2
 [0.43.1]: https://github.com/bostonaholic/team/compare/v0.43.0...v0.43.1
 [0.43.0]: https://github.com/bostonaholic/team/compare/v0.42.0...v0.43.0
