@@ -107,13 +107,7 @@ areas, or when `repos.md` lists multiple repos.
   yourself.
 - **Caps:** at most 4 scouts, dispatched in parallel where independent. Each
   instructed to return <= 30 lines of file:line findings and to spawn no
-  further agents.
-- **Scouts are non-interactive.** They never pause for user input.
-  A scout's ambiguity becomes a bullet in your own `## Open Questions`
-  section.
-- **You own the report.** Spot-verify scout file:line claims before
-  including them. The 100-line report budget applies to the combined
-  output.
+  further agents. Your 100-line report budget applies to the combined output.
 
 ### `code-reviewer` and `security-reviewer` — skeptic passes
 

@@ -98,37 +98,27 @@ To get from a proximate cause to a root cause, drill the causal chain. Take the
 proximate cause and ask "why?" — the answer is the next link. Ask "why?" of
 that link, and so on, until the chain bottoms out at a cause you can change.
 
-- **Drill from proximate to root.** Start at the symptom and ask "why?"
-  repeatedly: "the variable is null" → why? → "the loader returned early" →
-  why? → "the config flag was unset" → why? → "the flag defaults to off in
-  this environment." Each "why?" turns a symptom into the next, deeper cause.
-- **Anchor every link in OBSERVE evidence.** Each answer must rest on a fact
-  gathered in Phase 1, such as a log line, a stack frame, or a git change.
-  Never use a plausible-sounding guess. If you cannot point to evidence for a
-  link, you have left the chain. Go back to OBSERVE and collect more, do not
-  invent the link.
-- **Branch when a link has multiple causes.** If one "why?" has two or more
-  contributing answers, drill each branch separately. The root is reached only
-  when **every** branch bottoms out at a cause you can change.
-- **Stop at a cause you can change.** Stop when the answer is something within
-  your control to fix and one more "why?" would leave that control (e.g. a
-  third-party default, a platform constraint, a human decision). Do not keep
-  asking past that boundary — that is how you end up blaming the universe.
-- **The chain can be length 1.** Some bugs are one "why?" from their root.
-  Stop when you reach a controllable cause. Do not manufacture five questions
-  to hit a number. Five is the technique's name, not its quota.
-- **Failure modes to avoid.** Stopping too early leaves you fixing a symptom.
-  Going too far blames a person instead of a process, or blames the universe —
-  fix the process the person operated, not the person. Fabricating a chain
-  without evidence (see "Anchor every link" above) invents a root that is not
-  real. Single-track tunnel vision ignores a branch that also contributed.
-- **Tie the terminal "why?" to the fix.** The fix belongs at the root link —
-  the deepest controllable cause — not at any proximate link above it. The
-  `test-driven-bug-fix` mutation check (revert one line, confirm the test goes
-  red) verifies the fix landed at the root and not on a symptom.
-- **When the chain will not converge, escalate.** If "why?" keeps returning
-  answers outside your control, and never reaches a cause you can change, stop
-  drilling. Hand off to `## Escalation Rules` below rather than loop.
+Ask "why?" of the proximate cause, then of each answer: "the variable is
+null" → "the loader returned early" → "the config flag was unset" → "the flag
+defaults to off in this environment."
+
+- **Anchor every link in OBSERVE evidence** — a log line, a stack frame, a git
+  change. If you cannot point to evidence for a link, you have left the chain:
+  go back to OBSERVE rather than invent it.
+- **Branch when a link has multiple causes.** The root is reached only when
+  **every** branch bottoms out at a cause you can change.
+- **Stop at a cause you can change** — one more "why?" would leave your
+  control (a third-party default, a platform constraint, a human decision).
+  Past that boundary you are blaming the universe.
+- **The chain can be length 1.** Five is the technique's name, not its quota.
+  Never manufacture questions to hit a number.
+- **Fix at the root link**, not at a proximate link above it. The
+  `test-driven-bug-fix` mutation check — revert one line, confirm the test
+  goes red — verifies the fix landed at the root and not on a symptom.
+- **Blame the process, not the person**, when the chain reaches a human
+  decision.
+- **When the chain will not converge, escalate** per `## Escalation Rules`
+  below rather than loop.
 
 ## Escalation Rules
 

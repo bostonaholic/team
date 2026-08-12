@@ -167,45 +167,24 @@ When generating changelog entries from commit history, apply this filter:
 
 ## Applying This in the Ship Phase
 
-When the ship phase runs, before committing:
+Before committing: find the baseline, list the commits after it, apply the
+filter, then write. Three steps carry rules the sections above do not:
 
-1. **Find the baseline and list the commits after it.** Follow
-   [Finding the Baseline](#finding-the-baseline) above.
+1. **Drop what `[Unreleased]` already says.** Read the existing section before
+   you write anything and skip every commit already covered. A second run over
+   a current changelog must change nothing.
+2. **Sort within sections:** most impactful first. Include the `CHANGELOG.md`
+   change in the same commit as the code it documents.
+3. **Report what happened.** If no commit survived the filter, say so and
+   leave `CHANGELOG.md` untouched. A release with no user-facing change is a
+   correct outcome, not a failure — never pad `[Unreleased]` to have something
+   to show.
 
-2. **Filter to user-facing commits** using the Include/Exclude rules above.
-
-3. **Drop what `[Unreleased]` already says.** Read the existing `[Unreleased]`
-   section before you write anything, and skip every commit already covered
-   there. A second run over a current changelog must change nothing.
-
-4. **Translate each included commit to a user-facing bullet.** Rewrite the
-   commit message in plain language if the commit message is technical.
-   The entry should complete the sentence: "Users can now..." or "We fixed..."
-
-5. **Add entries under `[Unreleased]`** in the applicable section.
-
-6. **Sort within sections:** most impactful changes first.
-
-7. **Include the changelog update in the ship commit.** The `CHANGELOG.md`
-   change should be part of the same commit as the code changes it documents.
-
-8. **Report what happened.** If no commit survived the filter, say so and leave
-   `CHANGELOG.md` untouched. A release with no user-facing change is a correct
-   outcome, not a failure — do not pad `[Unreleased]` to have something to show.
-   Otherwise, show the entries you wrote.
-
-### Example Transformation
-
-Given these commits:
-```
-feat(auth): add OAuth2 login with GitHub provider
-fix: resolve token expiry causing premature logout
-chore: update eslint to v9
-test: add unit tests for session middleware
-refactor: extract token validation to shared utility
-```
-
-The changelog entry would be:
+Worked example. Given `feat(auth): add OAuth2 login with GitHub provider`,
+`fix: resolve token expiry causing premature logout`, `chore: update eslint to
+v9`, `test: add unit tests for session middleware`, and `refactor: extract
+token validation to shared utility`, the `chore`, `test`, and `refactor`
+commits are excluded and the rest are rewritten user-facing:
 
 ```markdown
 ## [Unreleased]
@@ -216,9 +195,6 @@ The changelog entry would be:
 ### Fixed
 - Token expiry check that caused sessions to expire prematurely
 ```
-
-`chore`, `test`, and `refactor` commits are excluded. The `feat` and `fix`
-commits are rewritten in user-facing language.
 
 ## Rules
 

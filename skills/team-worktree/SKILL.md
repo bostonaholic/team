@@ -231,12 +231,8 @@ reads to relocate the worktrees.
 - ...
 ```
 
-## Why isolate
-
-Implementation work touches the working tree. A worktree per repo gives
-the implementer a clean checkout per topic in every involved repo, so
-concurrent pipelines do not interfere. For trivial single-file changes,
-in-place implementation is allowed — no worktree needed.
+For trivial single-file changes, in-place implementation is allowed — no
+worktree needed.
 
 ## Completion
 
