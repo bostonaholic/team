@@ -478,6 +478,33 @@ describe("worktree-first pipeline", () => {
   });
 });
 
+// Pipeline artifacts under docs/plans/<id>/ are per-run scratch: a topic's
+// task.md/design.md/plan.md describe one run's state, not the plugin. Tracking
+// them puts one contributor's in-flight run in everyone's clone, and the site
+// already excludes them (docs/_config.yml `exclude: plans`, and pages.yml skips
+// docs/plans/** as a trigger path), so a tracked one ships nowhere and only
+// creates merge conflicts between concurrent runs.
+describe("pipeline scratch is never tracked", () => {
+  test(".gitignore ignores docs/plans/", () => {
+    const ignore = read(join(REPO_ROOT, ".gitignore"));
+    // Guard: an unreadable/empty .gitignore must fail, not vacuously pass.
+    expect(ignore.length).toBeGreaterThan(0);
+    expect(/^docs\/plans\/$/m.test(ignore)).toBe(true);
+  });
+
+  // The .gitignore rule alone is not the invariant: git keeps tracking a file
+  // that was already in the index, and `git add -f` bypasses the rule outright.
+  // Ask the index directly. A spawn failure throws rather than reading as
+  // "nothing tracked", so a broken check cannot pass for the wrong reason.
+  test("no path under docs/plans/ is in the git index", () => {
+    const tracked = execFileSync("git", ["ls-files", "--", "docs/plans"], {
+      cwd: REPO_ROOT,
+      encoding: "utf8",
+    });
+    expect(tracked.trim()).toBe("");
+  });
+});
+
 // Resolve `agents/*.md` and `hooks/*.mjs` globs, returning repo-relative paths
 // so grep receives the same file list a shell glob would expand to.
 function agentFiles(): string[] {
