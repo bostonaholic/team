@@ -41,6 +41,10 @@ function completionSection(): string {
   const start = text.indexOf("## Completion");
   return start >= 0 ? text.slice(start) : "";
 }
+// The value of the argument-hint frontmatter line, or "" when absent.
+function argumentHint(): string {
+  return /^argument-hint:.*$/m.exec(fm())?.[0] ?? "";
+}
 
 describe("shipit skill: it is a runtime skill, project-agnostic", () => {
   test("skill file lives under runtime skills/ (distributed)", () => {
@@ -53,8 +57,8 @@ describe("shipit skill: it is a runtime skill, project-agnostic", () => {
 
   test("frontmatter does NOT set disable-model-invocation (model-invocable by design)", () => {
     // shipit is irreversible (it merges), but the guard is explicit ship
-    // intent + the pre-merge confirmation + CI-green gating, not a hard flag —
-    // so the model can reach it when the user asks it to land the PR.
+    // intent + CI-green gating, not a hard flag — so the model can reach it
+    // when the user asks it to land the PR.
     const f = fm();
     // Guard: an empty frontmatter must fail, not vacuously pass the absence check.
     expect(f.length).toBeGreaterThan(0);
@@ -127,6 +131,48 @@ describe("shipit skill: push, wait for CI, merge", () => {
     const t = flat(body());
     expect(/--json[^.]{0,80}title/i.test(t)).toBe(true);
     expect(body()).toContain("--subject");
+  });
+});
+
+// The invocation IS the authorization: `/shipit` fires only on explicit ship
+// intent, so a second ask before `gh pr merge` re-requests permission the user
+// already granted. Because this is the RUNTIME skill, every caller that chains
+// into it inherits that stop. Two guards remain and both are mechanical:
+// explicit ship intent scopes the invocation, and the CI-green wait halts the
+// land before `gh pr merge` runs.
+describe("shipit skill: the merge is not gated on a human confirmation", () => {
+  test("argument-hint offers no --yes (there is no prompt left to skip)", () => {
+    // Guard: a missing argument-hint must fail, not vacuously pass the absence
+    // check below. The flag existed only to bypass the confirmation.
+    const hint = argumentHint();
+    expect(hint.length).toBeGreaterThan(0);
+    expect(hint).toContain("pr-number");
+    expect(hint).not.toContain("--yes");
+  });
+
+  test("no --yes escape hatch anywhere in the skill", () => {
+    const t = body();
+    // Guard: a missing file reads as "" and would vacuously pass.
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).not.toContain("--yes");
+  });
+
+  // A structural check, not a wording pin: it counts numbered step headings
+  // between the CI gate and the merge command, so it fires on ANY step
+  // re-inserted there regardless of what that step is titled. Exactly one
+  // heading may appear — the merge step's own — because the CI-wait step's
+  // body continues past its fenced command.
+  test("no numbered step sits between the CI-green gate and the merge", () => {
+    const t = body();
+    const ciGate = t.indexOf("timeout 1800 gh pr checks");
+    const merge = t.indexOf("gh pr merge <pr-number>");
+    // Guards: both anchors must exist, in this order, or the slice below is
+    // meaningless and the heading count would pass for the wrong reason.
+    expect(ciGate).toBeGreaterThan(-1);
+    expect(merge).toBeGreaterThan(ciGate);
+    const between = t.slice(ciGate, merge);
+    const steps = [...between.matchAll(/^###\s+\d+\./gm)];
+    expect(steps.length).toBe(1);
   });
 });
 
