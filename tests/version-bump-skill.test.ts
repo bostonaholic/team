@@ -149,6 +149,78 @@ describe("version-bump skill ↔ version-bump-required.sh: shared signal anchors
   });
 });
 
+// Regression: PR #228 changed observable behavior (it removed the `--yes`
+// argument and the pre-merge confirmation) under a `fix:` subject. The old
+// three-bullet level table keyed off the conventional-commit TYPE, so the patch
+// row matched on `fix:`, the major row matched on the removed argument, and
+// minor — the correct answer — was not reachable at all. The run stopped and
+// asked a human for a level that should have been mechanical.
+//
+// The rule now keys off what SemVer keys off: public surface and backward
+// compatibility, with the pre-1.0 scope stated. These assertions pin the spec
+// identifiers that carry the rule, not the sentences that explain it.
+describe("version-bump skill: the level rule is SemVer-grounded and pre-1.0 aware", () => {
+  test("cites the SemVer 2.0.0 spec by URL", () => {
+    const t = body();
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).toContain("https://semver.org/spec/v2.0.0.html");
+  });
+
+  test("records the `x > 0` precondition that scopes spec items 6-8", () => {
+    // The load-bearing fact. MAJOR/MINOR/PATCH are each scoped `x > 0`, so none
+    // of those MUST rules binds while Team is at 0.y.z — which is why the table
+    // needed a stated local convention rather than a bare SemVer reference.
+    const t = body();
+    expect(t.length).toBeGreaterThan(0);
+    expect(/x > 0/i.test(t)).toBe(true);
+  });
+
+  test("names the major-version-zero clause and the 1.0.0 boundary", () => {
+    const t = body();
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).toContain("0.y.z");
+    expect(t).toContain("1.0.0");
+  });
+
+  // Negative sweeps on the three claims that produced the wrong level. A
+  // meaning-preserving rewrite never adds a banned claim back, so these cannot
+  // pin wording — and each one fired against the pre-fix table.
+  test("patch is no longer keyed off the `fix:` commit type", () => {
+    const t = body();
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).not.toContain("everything else (`fix:`");
+  });
+
+  test("minor is no longer keyed off the `feat:` commit type", () => {
+    const t = body();
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).not.toContain("new backward-compatible capability (`feat:`)");
+  });
+
+  test("a breaking change is no longer routed to major", () => {
+    const t = body();
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).not.toContain("breaking change to the plugin's contract");
+  });
+});
+
+// Two files state the level rule. A fix applied to only one leaves the other
+// teaching the defect to the next reader.
+describe("version-bump ↔ docs/versioning.md: the level rule agrees on both surfaces", () => {
+  const DOC = join(REPO_ROOT, "docs", "versioning.md");
+  const doc = existsSync(DOC) ? read(DOC) : "";
+
+  test("docs/versioning.md states the pre-1.0 scope", () => {
+    expect(doc.length).toBeGreaterThan(0);
+    expect(doc).toContain("0.y.z");
+  });
+
+  test("docs/versioning.md no longer compresses the rule to `breaking → major`", () => {
+    expect(doc.length).toBeGreaterThan(0);
+    expect(doc).not.toContain("breaking → major");
+  });
+});
+
 describe("version-bump skill: ordering — cut BEFORE the land-time assertion", () => {
   // The released-section + footer-link invariants can only be validated after
   // the cut has written them, so the consistency assertion must follow the cut.

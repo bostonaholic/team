@@ -186,17 +186,78 @@ git log origin/main..HEAD --oneline
 git diff origin/main...HEAD --stat
 ```
 
-Pick the highest-impact **runtime** change in the PR:
+#### What SemVer actually says
 
-- **major** — breaking change to the plugin's contract (commands, artifact formats, hook behavior).
-- **minor** — new backward-compatible capability (`feat:`).
-- **patch** — everything else (`fix:`, `docs:`, `chore:`, `refactor:`, `test:`, `ci:`).
+[SemVer 2.0.0](https://semver.org/spec/v2.0.0.html), quoted verbatim. Note the
+scope column — **items 6, 7, and 8 each carry an `x > 0` precondition:**
 
-The conventional-commit type only picks the *level*. It never overrides step 0. A
-`ci:`/`test:`/`docs:`/`chore:` commit that ships **no runtime change** never
-reaches this table — it already stopped at step 0 with no bump.
+| Item | Normative rule | Scope |
+|------|----------------|-------|
+| 6 | PATCH "MUST be incremented if only backward compatible bug fixes are introduced. A bug fix is defined as an internal change that fixes incorrect behavior." | `x.y.Z \| x > 0` |
+| 7 | MINOR "MUST be incremented if new, backward compatible functionality is introduced to the public API." | `x.Y.z \| x > 0` |
+| 8 | MAJOR "MUST be incremented if any backward incompatible changes are introduced to the public API." | `X.y.z \| X > 0` |
 
-State the chosen level and the reasoning. If genuinely ambiguous, ask.
+Team's version starts `0.`, so **not one of those three rules binds.** Item 4
+governs instead: "Major version zero (`0.y.z`) is for initial development.
+Anything MAY change at any time. The public API SHOULD NOT be considered
+stable." The spec assigns **no level at all** pre-1.0, which is why the rule
+below is Team's own convention — chosen so it keeps meaning the same thing once
+1.0.0 arrives. Item 5: "Version 1.0.0 defines the public API."
+
+#### The decision
+
+Ask these in order. **The first yes wins.** Judge the *change*, never the
+commit subject:
+
+1. **Can a plugin user observe the difference?** → **minor**
+
+   A user installs Team and runs its commands. Anything that changes what they
+   type, what they get back, or what the plugin does on their behalf is
+   observable: a command's name or arguments (`argument-hint`), documented
+   behavior, whether a step prompts them, an artifact's format or frontmatter
+   schema, hook behavior, an agent's model or tool access. New capability and
+   changed capability both land here.
+
+2. **Otherwise** → **patch**
+
+   Internal-only and backward compatible: prose that clarifies without changing
+   an instruction, a comment, restructuring that preserves behavior. This is
+   item 6's definition — "an internal change that fixes incorrect behavior" —
+   and it requires *both* qualifiers, not just a `fix:` subject.
+
+   **Expect patch to be rare.** Team ships prose that a model reads, so a
+   runtime edit usually changes what the plugin does, and question 1 catches it.
+   That is the intended consequence of this rule, not evidence it is
+   miscalibrated — do not widen patch to make the cadence feel familiar.
+
+**`major` is unreachable while the version starts `0.`** Item 8 is scoped
+`X > 0`, and 1.0.0 is the release that "defines the public API" (item 5). A
+breaking change pre-1.0 is a **minor**, not a major: bumping to 1.0.0 to
+describe one broken interface would commit the whole plugin to API stability,
+which is a far larger claim than the change makes. If a change looks like it
+warrants major, that is a signal to **ask whether it is time to declare 1.0.0**
+— a deliberate decision, never a side effect of this skill.
+
+#### The commit type is not the input
+
+A conventional-commit type describes the author's intent, not the blast radius,
+so it never decides the level. A `fix:` that changes observable behavior is a
+**minor**; a `feat:` confined to internals is a **patch**. Step 0 has already
+settled *whether* to bump, so a `ci:`/`test:`/`docs:`/`chore:` commit shipping
+no runtime change never reaches this decision at all.
+
+**Worked example — [PR #228](https://github.com/bostonaholic/team/pull/228),
+which this rule exists to get right.** `fix(shipit): merge without stopping for
+approval` removed the `--yes` argument and removed the pre-merge confirmation.
+Question 1: a user who typed `/shipit` stopped being asked to confirm, and a
+documented argument disappeared — observable. **minor** (0.43.2 → 0.44.0). The
+`fix:` subject is irrelevant, and the removed argument does not make it a major
+while Team is pre-1.0.
+
+State the chosen level and which question decided it. Both levels are reachable
+from any commit type, so a level that needed a judgment call is a signal the
+observability question above was not actually answered — answer it rather than
+asking the user.
 
 ### 2. Compute the next version
 

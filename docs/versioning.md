@@ -123,10 +123,9 @@ intend to land:
 0. **Runtime-vs-dev gate.** If the PR changes no runtime files, stop here: no
    bump, no changelog cut, plain title. Go straight to `/shipit`. Only a
    runtime change continues to the steps below.
-1. Decides the bump level from the PR's **runtime** commits (3-part
-   [SemVer](https://semver.org): breaking → major, `feat:` → minor, everything
-   else → patch). The commit type only picks the *level* once step 0 has
-   established that a bump is warranted at all.
+1. Decides the bump level from what the PR's **runtime** change does, not from
+   its commit type (see [Choosing the level](#choosing-the-level)): observable
+   to a plugin user → minor, internal-only and backward compatible → patch.
 2. Computes the next free version (`next-version.sh`).
 3. Bumps the five version strings.
 4. **Cuts the changelog section**: moves the `[Unreleased]` body into a dated
@@ -136,6 +135,36 @@ intend to land:
 6. Commits the bump (`chore(version): X.Y.Z`) and sets the PR title.
 
 Then run `/shipit` to push, wait for CI, and squash-merge.
+
+## Choosing the level
+
+Team is pre-1.0, and that changes which SemVer rules apply.
+[SemVer 2.0.0](https://semver.org/spec/v2.0.0.html) scopes its MAJOR, MINOR, and
+PATCH rules (items 8, 7, 6) to `x > 0`. Team's version starts `0.`, so none of
+them binds. Item 4 governs: "Major version zero (`0.y.z`) is for initial
+development. Anything MAY change at any time. The public API SHOULD NOT be
+considered stable." The spec assigns no level pre-1.0, so the convention below
+is Team's, written to keep meaning the same thing after 1.0.0.
+
+| Level | When | Reachable pre-1.0 |
+|-------|------|-------------------|
+| **minor** | A plugin user can observe the difference: a command's name or arguments, documented behavior, an artifact format, hook behavior, an agent's model or tools. New *and* changed capability both. | yes |
+| **patch** | Internal-only and backward compatible — item 6's "internal change that fixes incorrect behavior", which needs both qualifiers. | yes |
+| **major** | Never, while the version starts `0.`. Item 8 is scoped `X > 0`, and 1.0.0 "defines the public API" (item 5). | **no** |
+
+Two consequences worth stating, because both were previously decided wrong:
+
+- **A breaking change pre-1.0 is a minor, not a major.** Bumping to 1.0.0 to
+  describe one broken interface commits the whole plugin to API stability.
+  Declaring 1.0.0 is a deliberate decision, never a side effect of a bump.
+- **The commit type is not the input.** It describes intent, not blast radius. A
+  `fix:` that changes observable behavior is a minor; a `feat:` confined to
+  internals is a patch. [PR #228](https://github.com/bostonaholic/team/pull/228)
+  is the worked example: a `fix:` that removed the `/shipit` `--yes` argument and
+  its confirmation prompt landed as **0.44.0**.
+
+The full decision procedure, with the spec quoted verbatim, is step 1 of
+[`.claude/skills/version-bump/SKILL.md`](https://github.com/bostonaholic/team/blob/main/.claude/skills/version-bump/SKILL.md).
 
 ## Land-time consistency assertion
 
