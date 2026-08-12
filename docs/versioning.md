@@ -77,9 +77,14 @@ with **no bump, no changelog cut, and a plain conventional title** (precedent:
 the bump commit, through `.github/scripts/version-bump-required.sh`, which
 `tests/version-bump-required.test.ts` pins. CI does not enforce the invariant.
 Enforcement is mechanical at the merge attempt: the pre-merge dev hook
-(`.claude/hooks/pre-merge-guard.mjs`) runs the same script against the PR's
+(`.claude/hooks/pre-merge-guard.mjs`) runs the script against the PR's
 remote head and **denies a violating `gh pr merge`** on either violation — a
-dev-only diff that bumped, or a runtime diff that did not. The script measures
+dev-only diff that bumped, or a runtime diff that did not. It reads the script
+**out of the PR head commit**, not from the working tree, because the script is
+itself the definition of "runtime file": a PR that widens that definition has to
+be judged by the definition it lands. A fork head is the exception. Its script
+is unreviewed code, so a fork whose copy differs from the local one is denied
+rather than executed. The script measures
 "did this branch bump?" against the merge-base, which is the fork point. A
 bump-less PR behind a version-bumped `main` thus reads correctly as "no
 bump". [PR title sync](#pr-title) uses the same branch-relative measure.
@@ -353,6 +358,19 @@ for a wrongful one — and in the wrongful case also re-title: a re-entry that
 ends at "no bump" must strip the stale `vX.Y.Z` prefix back to the plain
 conventional title itself, because the title backstop never strips a stale
 prefix (`version-bump`'s step 8 names this). Then re-run `/shipit`.
+
+### The pre-merge guard denied the merge (no verdict available)
+
+Two denials say the guard could not render a verdict at all, so neither is about
+the bump:
+
+- **The head carries no `.github/scripts/version-bump-required.sh`.** Restore it
+  on the branch (`git checkout origin/<default> -- <path>`), push, and re-run
+  `/shipit`.
+- **A fork head's copy of that script differs from the local one.** The guard
+  will not execute a gate script it has not reviewed. Read the head's copy
+  (`git show <head>:<path>`), and once you trust it, land the PR deliberately
+  outside the guard (the scope caveat above lists the routes).
 
 ### A version string was missed and the tag is already pushed
 

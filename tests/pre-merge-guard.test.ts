@@ -17,7 +17,7 @@
 // own output, never a re-typed copy. The stubs answer exactly the calls the
 // invariant run makes:
 //
-//   gh pr view --json number,headRefOid,baseRefName   (PR selector)
+//   gh pr view --json number,headRefOid,…,isCrossRepository  (PR selector)
 //   gh repo view --json defaultBranchRef               (default-branch resolve)
 //   git symbolic-ref refs/remotes/origin/HEAD          (default-branch fallback)
 //   git remote get-url origin                          (home-repo derivation)
@@ -25,6 +25,7 @@
 //   git rev-parse ...                                  (origin tip / head oid)
 //   git merge-base --is-ancestor <base tip> <head>     (up-to-date precondition)
 //   git merge-base <head> <base tip>                   (the script's fork point)
+//   git show <head>:.github/scripts/…required.sh       (the gate script itself)
 //   git show <ref>:.claude-plugin/plugin.json          (the script's versions)
 //   git diff --name-only ...                           (the script's file list)
 //
@@ -34,13 +35,30 @@
 
 import { afterAll, describe, expect, test } from "bun:test";
 import { execFileSync, spawnSync } from "node:child_process";
-import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const REPO_ROOT = process.cwd();
 const HOOK = join(REPO_ROOT, ".claude", "hooks", "pre-merge-guard.mjs");
 const SETTINGS = join(REPO_ROOT, ".claude", "settings.json");
+// This checkout's committed gate script. The hook reads its copy out of the PR
+// head commit instead (#232), so the stub seam serves this file's content as
+// what the head carries — every verdict below is still the real script's own.
+const REAL_SCRIPT = join(
+  REPO_ROOT,
+  ".github",
+  "scripts",
+  "version-bump-required.sh",
+);
 
 // The verdict fixtures run the real version-bump-required.sh, which needs jq —
 // same gating convention as tests/version-bump-required.test.ts.
@@ -95,6 +113,12 @@ function scriptedStubs(opts: {
   gh?: "ok" | "fail" | "hang";
   repoView?: "ok" | "fail"; // gh repo view (the default-branch resolve)
   symbolicRefName?: string; // the LOCAL origin/HEAD branch name (can be stale)
+  isFork?: boolean; // gh pr view's isCrossRepository
+  // Which gate script the PR head carries. "same" is this checkout's committed
+  // copy. "extendedRuntime" is that copy with docs/ added to RUNTIME_DIRS — a
+  // faithful stand-in for a PR that widens the runtime definition, which is the
+  // shape that exposed #232. "missing" is a head with no script at all.
+  headScript?: "same" | "extendedRuntime" | "missing";
 }): string {
   const {
     headVersion = "0.33.2",
@@ -105,8 +129,34 @@ function scriptedStubs(opts: {
     gh = "ok",
     repoView = "ok",
     symbolicRefName = "main",
+    isFork = false,
+    headScript = "same",
   } = opts;
   const dir = newStubDir();
+
+  // What `git show <head>:.github/scripts/version-bump-required.sh` answers.
+  let showScriptArm = `cat '${REAL_SCRIPT}'`;
+  if (headScript === "missing") {
+    showScriptArm = `printf 'fatal: path does not exist in HEAD\\n' >&2; exit 128`;
+  } else if (headScript === "extendedRuntime") {
+    const original = readFileSync(REAL_SCRIPT, "utf-8");
+    const patched = original.replace(
+      "RUNTIME_DIRS=(agents skills hooks)",
+      "RUNTIME_DIRS=(agents skills hooks docs)",
+    );
+    // Anti-vacuity (docs/testing.md): a renamed array would leave the fixture
+    // identical to the committed script, and the test would then pass by
+    // measuring nothing.
+    if (patched === original) {
+      throw new Error(
+        "fixture is inert: RUNTIME_DIRS=(agents skills hooks) not found in " +
+          REAL_SCRIPT,
+      );
+    }
+    const path = join(dir, "head-gate-script.sh");
+    writeFileSync(path, patched);
+    showScriptArm = `cat '${path}'`;
+  }
 
   const repoViewArm =
     repoView === "ok"
@@ -121,7 +171,7 @@ function scriptedStubs(opts: {
   case "\${3:-}" in
     "("|")") printf 'LOUD STUB: grouping paren read as the PR selector\\n' >&2; exit 99 ;;
   esac
-  printf '%s\\n' '{"number":5,"headRefOid":"${HEAD_OID}","baseRefName":"main"}'
+  printf '%s\\n' '{"number":5,"headRefOid":"${HEAD_OID}","baseRefName":"main","isCrossRepository":${isFork}}'
   exit 0
 fi
 if [ "\${1:-}" = "repo" ] && [ "\${2:-}" = "view" ]; then
@@ -148,6 +198,7 @@ case "$cmd" in
     printf '${MERGE_BASE_OID}\\n' ;;
   show)
     case "\${1:-}" in
+      *:.github/scripts/version-bump-required.sh) ${showScriptArm} ;;
       ${HEAD_OID}:*) printf '{"version":"${headVersion}"}\\n' ;;
       *) printf '{"version":"${baseVersion}"}\\n' ;;
     esac ;;
@@ -455,6 +506,108 @@ describe.if(HAS_JQ)("verdict mapping through the real script", () => {
     );
     expect(r.status).toBe(2);
     expect(r.stderr).toContain("cannot merge until version-bump runs at land time");
+  });
+});
+
+// Regression pin for #232, kept beside the seam it needs rather than in its own
+// tests/regression-*.ts file: reproducing the bug takes the whole scripted
+// gh/git harness above, and a second copy of that harness is a worse bug risk
+// than a misplaced file.
+//
+// The defect: the hook resolved the gate script from its own file location, so
+// under the mandated <repo>/.claude/worktrees/ layout it read the OUTER main
+// checkout's copy. The gate script *is* the definition of "runtime file", so a
+// PR that widens that definition was judged by the definition it replaces and
+// denied on an obsolete verdict.
+describe.if(HAS_JQ)("the gate script is read from the PR head (#232)", () => {
+  // The inputs both tests below share: a bumped version and a docs-only diff.
+  // Under this checkout's script that is the "dev-only PR must land with no
+  // bump" violation; under a head that counts docs/ as runtime it is the happy
+  // path. Same merge, two definitions — which is the whole bug.
+  const WIDENED_RUNTIME = {
+    headVersion: "0.34.0",
+    baseVersion: "0.33.2",
+    changedFiles: "docs/notes.md",
+  } as const;
+
+  test("this checkout's copy would deny the same merge", () => {
+    // The control. Without it, the allow below could pass because the fixture
+    // is benign rather than because the head's definition won.
+    const r = runHook("gh pr merge 5 --squash", scriptedStubs(WIDENED_RUNTIME));
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain("must land with no bump");
+  });
+
+  test("allows when the head's copy counts the change as runtime", () => {
+    const r = runHook(
+      "gh pr merge 5 --squash",
+      scriptedStubs({ ...WIDENED_RUNTIME, headScript: "extendedRuntime" }),
+    );
+    expect(r.status).toBe(0);
+    expect(r.stdout).toBe("");
+  });
+
+  test("denies when the head carries no gate script", () => {
+    // Fail closed: no script at the head means no verdict, and a merge without
+    // a verdict is exactly what the guard exists to stop.
+    const r = runHook(
+      "gh pr merge 5 --squash",
+      scriptedStubs({ ...WIDENED_RUNTIME, headScript: "missing" }),
+    );
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain(".github/scripts/version-bump-required.sh");
+    expect(r.stderr).toContain("Recovery:");
+  });
+
+  test("still renders a verdict for a fork head with a matching script", () => {
+    // The fork branch must not degrade into a blanket deny: an identical script
+    // is this checkout's own content, so the invariant is enforced as usual.
+    const r = runHook(
+      "gh pr merge 5 --squash",
+      scriptedStubs({ ...WIDENED_RUNTIME, isFork: true }),
+    );
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain("must land with no bump");
+  });
+
+  test("refuses to execute a fork head's divergent script", () => {
+    // A fork's script is unreviewed code. Running it would let a PR author
+    // choose the verdict on their own merge and run arbitrary bash locally, so
+    // the guard denies with the diff route instead — and the head's verdict
+    // (which would have been an allow) never appears.
+    const r = runHook(
+      "gh pr merge 5 --squash",
+      scriptedStubs({
+        ...WIDENED_RUNTIME,
+        isFork: true,
+        headScript: "extendedRuntime",
+      }),
+    );
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain("comes from a fork");
+    expect(r.stderr).toContain("git show");
+    expect(r.stdout).not.toBe("");
+  });
+
+  test("leaves no extracted script behind, on allow or on deny", () => {
+    // The hook exits through process.exit, so `finally` never runs — every exit
+    // path has to clear the temp dir itself or the guard litters tmp on each
+    // denied merge.
+    const leaked = () =>
+      readdirSync(tmpdir())
+        .filter((entry) => entry.startsWith("pre-merge-guard-gate-"))
+        .sort();
+    // Compared against a baseline rather than against []: a leak left by an
+    // older build would otherwise pin this test red for reasons this run did
+    // not cause. What matters is that neither exit path adds to the set.
+    const before = leaked();
+    runHook(
+      "gh pr merge 5 --squash",
+      scriptedStubs({ ...WIDENED_RUNTIME, headScript: "extendedRuntime" }),
+    );
+    expect(leaked()).toEqual(before);
+    runHook("gh pr merge 5 --squash", scriptedStubs(WIDENED_RUNTIME));
+    expect(leaked()).toEqual(before);
   });
 });
 
