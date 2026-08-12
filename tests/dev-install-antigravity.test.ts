@@ -118,11 +118,19 @@ function readIfExists(path: string): string {
   return existsSync(path) ? readFileSync(path, "utf8") : "";
 }
 
-function isSymlink(path: string): boolean {
+/**
+ * A path is a symlink, is something else, or could not be read at all. The
+ * third case must stay distinct from the second: `linkNames` is built on this,
+ * so folding a failed `lstat` into "not a symlink" would turn every negative
+ * assertion about the target directory into a pass.
+ */
+type LinkState = "symlink" | "other" | "unreadable";
+
+function linkStateOf(path: string): LinkState {
   try {
-    return lstatSync(path).isSymbolicLink();
+    return lstatSync(path).isSymbolicLink() ? "symlink" : "other";
   } catch {
-    return false;
+    return "unreadable";
   }
 }
 
@@ -222,9 +230,18 @@ function entryNames(home: string): string[] {
   return readdirSync(dir).sort();
 }
 
-/** Only the symlinks directly under the target dir. */
+/**
+ * Only the symlinks directly under the target dir. An entry `readdir` listed
+ * but `lstat` cannot read is carried through under a name no assertion expects,
+ * so it fails whichever list comparison reads it instead of vanishing.
+ */
 function linkNames(home: string): string[] {
-  return entryNames(home).filter((name) => isSymlink(targetPath(home, name)));
+  return entryNames(home)
+    .map((name) => ({ name, state: linkStateOf(targetPath(home, name)) }))
+    .filter(({ state }) => state !== "other")
+    .map(({ name, state }) =>
+      state === "symlink" ? name : `${name} (lstat failed)`,
+    );
 }
 
 /** Output lines that name `skill` as a whole token. */
@@ -519,9 +536,11 @@ describe("dev install: antigravity harness", () => {
 
       // The two guarded skills are named as NOT installed, and every
       // agent-dependent command is named so the limitation is discoverable.
-      const unnamedGuarded = guardedSkills().filter(
-        (name) => !section.includes(name),
-      );
+      const guarded = guardedSkills();
+      // Guarded locally as well as by the pinned set above: an empty guarded
+      // list would make the filter below find nothing and agree with itself.
+      expect(guarded.length).toBeGreaterThan(0);
+      const unnamedGuarded = guarded.filter((name) => !section.includes(name));
       expect(unnamedGuarded).toEqual([]);
 
       // The slash-command form on its own: `/team` must appear as itself, not
@@ -562,14 +581,20 @@ describe("dev install: antigravity harness", () => {
 
       // Nothing filtered out may leave any entry behind, link or otherwise.
       const present = entryNames(home);
-      const leaked = [...nonInvocableSkills(), ...guardedSkills()].filter(
-        (name) => present.includes(name),
-      );
+      const dropped = [...nonInvocableSkills(), ...guardedSkills()];
+      // Guard: with nothing dropped there is nothing that could leak, and the
+      // assertion below would hold no matter what the install wrote.
+      expect(dropped.length).toBeGreaterThan(0);
+      const leaked = dropped.filter((name) => present.includes(name));
       expect(leaked).toEqual([]);
     });
 
     test("install names every skip with the frontmatter key that caused it", () => {
-      const { output } = run(INSTALL, newHome());
+      const { status, output } = run(INSTALL, newHome());
+
+      // A run that aborted would print no skips at all, and every filter below
+      // would then be reading the output of a failure.
+      expect(status).toBe(0);
 
       const droppedByPass2 = nonInvocableSkills();
       const droppedByPass3 = guardedSkills();
@@ -620,9 +645,15 @@ describe("dev install: antigravity harness", () => {
       const checkout = syntheticCheckout({});
       const home = newHome();
 
-      const { status } = run(checkout.install, home);
+      const { status, output } = run(checkout.install, home);
 
       expect(status).toBe(1);
+      // Two exit-1 paths name this same directory — no directory under it owns
+      // a SKILL.md, and every skill under it was filtered out — so the error
+      // has to say which one, or an empty skills/ is indistinguishable from a
+      // corpus the filters emptied.
+      expect(output).toContain(join(checkout.root, "skills"));
+      expect(output).toContain("owns a SKILL.md");
       expect(existsSync(join(home, ".gemini"))).toBe(false);
     });
 
@@ -651,10 +682,14 @@ describe("dev install: antigravity harness", () => {
       });
       const home = newHome();
 
-      const { status } = run(checkout.install, home);
+      const { status, output } = run(checkout.install, home);
 
       // A zero-link success would read as an install that worked.
       expect(status).toBe(1);
+      // The other half of the pair above: this corpus has skills, and the
+      // filters took all of them.
+      expect(output).toContain(join(checkout.root, "skills"));
+      expect(output).toContain("filtered out");
       expect(existsSync(join(home, ".gemini"))).toBe(false);
     });
 
@@ -861,13 +896,18 @@ describe("dev install: antigravity harness", () => {
       const { checkout, home } = installedPair();
       rewriteSkill(checkout, "beta", ["disable-model-invocation: true"]);
 
-      const noteLines = linesNaming(run(checkout.install, home).output, "beta");
+      const { status, output } = run(checkout.install, home);
+      const noteLines = linesNaming(output, "beta");
 
-      // A note that stated intent could say "not installed" about a link that is
-      // still on disk. Every line about a held-back skill names the path.
+      // This run removed beta's link, so the only true thing to say about that
+      // path is that nothing is there now. A note stating intent — "not
+      // installed", "held back" — reads the same whether the link went away or
+      // not, so the positive form is what has to be asserted.
+      expect(status).toBe(0);
       expect(noteLines.length).toBeGreaterThan(0);
-      expect(noteLines.join("\n")).toContain(targetPath(home, "beta"));
-      expect(noteLines.join("\n")).not.toContain("not installed");
+      expect(noteLines.join("\n")).toContain(
+        `nothing at ${targetPath(home, "beta")}`,
+      );
     });
 
     test("a skill that gains user-invocable: false loses its link on the next run", () => {
@@ -977,19 +1017,32 @@ describe("dev install: antigravity harness", () => {
       // A developer cannot tell a no-op from real work if both runs print the
       // same bytes.
       const { checkout, home } = installedPair();
-      const first = run(checkout.install, newHome()).output;
+      const first = run(checkout.install, newHome());
 
-      const second = run(checkout.install, home).output;
+      const second = run(checkout.install, home);
 
-      expect(first).toContain("2 newly linked");
-      expect(second).toContain("0 newly linked");
-      expect(second).toContain("2 already linked");
+      expect(first.status).toBe(0);
+      expect(second.status).toBe(0);
+      expect(first.output).toContain("2 newly linked");
+      expect(second.output).toContain("0 newly linked");
+      expect(second.output).toContain("2 already linked");
+      // The counts describe the disk, so read the disk too: "already linked"
+      // must mean the two links are still there and still point where they did.
+      expect(linkNames(home)).toEqual(["alpha", "beta"]);
+      expect(linkTextOf(targetPath(home, "alpha"))).toBe(
+        join(checkout.root, "skills", "alpha"),
+      );
     });
   });
 
   describe("L3: install writes nothing on an occupied target path or an unreadable guard value, and uninstall removes only what this checkout owns", () => {
     // Any installable skill works; the pre-check is per path, so one occupied
     // path aborts the whole run.
+    //
+    // Every abort below proves "nothing was written" by asserting the occupied
+    // path is the *only* entry, never by asserting some other skill is absent:
+    // `entryNames` yields [] for a missing directory, so an absence check reads
+    // the same on an empty directory, a partial install, and a clean abort.
     const OCCUPIED = "groom-backlog";
 
     test("install exits 1 when a directory occupies a target path", () => {
@@ -1004,7 +1057,7 @@ describe("dev install: antigravity harness", () => {
       expect(status).toBe(1);
       expect(output).toContain(occupied);
       expect(linkNames(home)).toEqual([]);
-      expect(entryNames(home)).not.toContain("shipit");
+      expect(entryNames(home)).toEqual([OCCUPIED]);
       expect(readIfExists(join(occupied, "SKILL.md"))).toContain(
         "name: my-own-thing",
       );
@@ -1022,7 +1075,7 @@ describe("dev install: antigravity harness", () => {
       expect(status).toBe(1);
       expect(output).toContain(occupied);
       expect(readFileSync(occupied, "utf8")).toBe("not ours\n");
-      expect(entryNames(home)).not.toContain("shipit");
+      expect(entryNames(home)).toEqual([OCCUPIED]);
     });
 
     test("install exits 1 when a target path holds another checkout's link", () => {
@@ -1040,10 +1093,14 @@ describe("dev install: antigravity harness", () => {
       expect(status).toBe(1);
       expect(output).toContain(targetPath(home, OCCUPIED));
       expect(output).toContain(foreignTarget);
+      // The diagnosis for a link resolving somewhere else entirely. It is also
+      // the positive control for the mismatch test below, which asserts this
+      // same phrase is absent when the link resolves into this checkout.
+      expect(output).toContain("outside this checkout");
       // Never clobbered: no test separates another checkout's link from the
       // user's own, and uninstall could not restore either one.
       expect(linkTextOf(targetPath(home, OCCUPIED))).toBe(foreignTarget);
-      expect(entryNames(home)).not.toContain("shipit");
+      expect(entryNames(home)).toEqual([OCCUPIED]);
     });
 
     test("install exits 1 when a target path holds a link into the user's own skill folder", () => {
@@ -1061,7 +1118,7 @@ describe("dev install: antigravity harness", () => {
       expect(output).toContain(targetPath(home, OCCUPIED));
       expect(output).toContain(userSkill);
       expect(linkTextOf(targetPath(home, OCCUPIED))).toBe(userSkill);
-      expect(entryNames(home)).not.toContain("shipit");
+      expect(entryNames(home)).toEqual([OCCUPIED]);
     });
 
     test("install exits 1 when a target path holds a dangling absolute link", () => {
@@ -1080,7 +1137,7 @@ describe("dev install: antigravity harness", () => {
       expect(status).toBe(1);
       expect(output).toContain(targetPath(home, OCCUPIED));
       expect(output).toContain(dangling);
-      expect(entryNames(home)).not.toContain("shipit");
+      expect(entryNames(home)).toEqual([OCCUPIED]);
     });
 
     test("install exits 1 when a target path holds an unresolvable relative link", () => {
@@ -1095,7 +1152,7 @@ describe("dev install: antigravity harness", () => {
       expect(output).toContain(targetPath(home, OCCUPIED));
       expect(output).toContain("../../nowhere/skills/x");
       expect(output).toContain("relative");
-      expect(entryNames(home)).not.toContain("shipit");
+      expect(entryNames(home)).toEqual([OCCUPIED]);
     });
 
     test("install names the missing directory when an absolute link's checkout is gone", () => {
@@ -1118,27 +1175,35 @@ describe("dev install: antigravity harness", () => {
       // The advice must not stop at "run the uninstall from the owning
       // checkout": that checkout is what went missing.
       expect(output).toContain("removing that link");
-      expect(entryNames(home)).not.toContain("shipit");
+      expect(entryNames(home)).toEqual([OCCUPIED]);
     });
 
     test("install names the mismatch when a link points into this checkout under another skill's name", () => {
       expect(installableSkills()).toContain(OCCUPIED);
       const home = newHome();
       ensureTargetDir(home);
-      const otherSkill = installableSkills().filter(
+      const otherSkills = installableSkills().filter(
         (name) => name !== OCCUPIED,
-      )[0] as string;
+      );
+      // A one-skill corpus would leave this undefined and make `join` throw,
+      // and a thrown test is a broken test rather than a failing one.
+      expect(otherSkills.length).toBeGreaterThan(0);
+      const otherSkill = otherSkills[0] ?? "";
       symlinkSync(join(SKILLS_ROOT, otherSkill), targetPath(home, OCCUPIED));
 
       const { status, output } = run(INSTALL, home);
 
       expect(status).toBe(1);
-      // The path displayed is this checkout's own, so "a symlink this checkout
-      // does not own" would contradict what the same line prints.
+      // Both skills are named, because the point of the line is the mismatch
+      // between the path and what it resolves to.
       const reason = linesNaming(output, otherSkill).join("\n");
       expect(reason).toContain(OCCUPIED);
-      expect(reason).not.toContain("does not own");
-      expect(entryNames(home)).not.toContain("shipit");
+      expect(reason).toContain(`rather than ${OCCUPIED}`);
+      // The link resolves into this very checkout, so the diagnosis a link
+      // pointing elsewhere gets would contradict the path on the same line. The
+      // foreign-link test above is this check's positive control.
+      expect(reason).not.toContain("outside this checkout");
+      expect(entryNames(home)).toEqual([OCCUPIED]);
     });
 
     test("a second checkout's install aborts naming the owning checkout and the uninstall command", () => {
@@ -1232,7 +1297,8 @@ describe("dev install: antigravity harness", () => {
 
       expect(status).toBe(0);
       expect(output).toContain("Removed:");
-      expect(entryNames(home)).not.toContain("zz-orphan");
+      // The orphan was the only entry, so the sweep emptied the directory.
+      expect(entryNames(home)).toEqual([]);
     });
 
     test("uninstall sweeps its own links after this checkout's skills/ is gone", () => {
@@ -1325,6 +1391,11 @@ describe("dev install: antigravity harness", () => {
       // above is this negative check's positive control: it proves a
       // `Warning:` line can be produced at all.
       expect(warningLines(second.output)).toEqual([]);
+      // A run that scanned nothing, or printed nothing, would satisfy the line
+      // above too. This one reached the collision scan and left the links it
+      // found in place.
+      expect(second.output).toContain("already linked");
+      expect(linkNames(home)).toEqual(installableSkills());
     });
 
     test("a sibling with no SKILL.md and one with no name key are neither a collision nor an error", () => {
