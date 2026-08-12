@@ -385,6 +385,39 @@ if [ ${#guarded[@]} -gt 0 ]; then
   done
 fi
 
+# Is $1 one of the names this run held back for disable-model-invocation?
+is_guarded() {
+  local candidate
+  [ ${#guarded[@]} -gt 0 ] || return 1
+  for candidate in "${guarded[@]}"; do
+    [ "$candidate" = "$1" ] && return 0
+  done
+  return 1
+}
+
+# The same hazard reached by a different path: a link at some *other* name whose
+# target is one of this checkout's held-back skills. Names are no protection here,
+# because the catalog name comes from the target's frontmatter — `handy-rebase ->
+# skills/pr-rebase` loads pr-rebase — so a scan that only reads the guarded names
+# never looks at it, and the collision scan below passes over it too, skipping
+# every link that resolves into this checkout. Only a hand-made link reaches this
+# state, and the uninstall does sweep it, but the install cannot: it removes a
+# link only at the name it would write.
+#
+# The loop above owns every path named after a guarded skill, so those are skipped
+# here rather than reported twice.
+if [ ${#guarded[@]} -gt 0 ] && [ -d "$TARGET_DIR" ]; then
+  for entry in "$TARGET_DIR"/*; do
+    [ -L "$entry" ] || continue
+    is_guarded "$(basename "$entry")" && continue
+    [ "$(link_owner_dir "$entry")" = "$SKILLS_PHYS" ] || continue
+    leaf="$(basename "$(link_target_path "$entry")")"
+    is_guarded "$leaf" || continue
+    [ -f "${entry}/SKILL.md" ] || continue
+    guarded_kept_live+=("${entry} -> $(readlink "$entry") (a link into this checkout's held-back ${leaf}, so $(loaded_name "$entry") loads in every session)")
+  done
+fi
+
 if [ ${#blocked[@]} -gt 0 ] || [ ${#guarded_kept_live[@]} -gt 0 ]; then
   if [ ${#blocked[@]} -gt 0 ]; then
     echo "Error: these target paths are not this checkout's to write, so nothing was created:" >&2
@@ -393,7 +426,7 @@ if [ ${#blocked[@]} -gt 0 ] || [ ${#guarded_kept_live[@]} -gt 0 ]; then
     done
   fi
   if [ ${#guarded_kept_live[@]} -gt 0 ]; then
-    echo "Error: these skills set disable-model-invocation, but something this checkout cannot remove keeps a skill loadable at their paths:" >&2
+    echo "Error: these skills set disable-model-invocation, but something this checkout cannot remove keeps a skill loadable:" >&2
     for line in "${guarded_kept_live[@]}"; do
       echo "  ${line}" >&2
     done

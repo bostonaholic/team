@@ -1279,6 +1279,32 @@ describe("dev install: antigravity harness", () => {
       expect(entryNames(home)).toEqual(["beta"]);
     });
 
+    test("install exits 1 on a link at any other name into a guarded skill", () => {
+      // Names protect nothing on this host: the catalog name comes from the
+      // target's frontmatter, so a link called anything at all loads the guarded
+      // skill it points at. The guarded-path scan does not look here, and the
+      // collision scan skips every link resolving into this checkout — which is
+      // exactly where this one points — so before this check the run finished at
+      // exit 0 without ever mentioning it.
+      const checkout = syntheticCheckout({
+        "alpha/SKILL.md": skillMd("alpha"),
+        "beta/SKILL.md": skillMd("beta", ["disable-model-invocation: true"]),
+      });
+      const home = newHome();
+      ensureTargetDir(home);
+      const guardedSource = join(checkout.root, "skills", "beta");
+      symlinkSync(guardedSource, targetPath(home, "handy-beta"));
+
+      const { status, output } = run(checkout.install, home);
+
+      expect(status).toBe(1);
+      expect(output).toContain(targetPath(home, "handy-beta"));
+      expect(output).toContain(guardedSource);
+      expect(output).toContain("beta loads in every session");
+      // A stop, not a partial install: alpha was installable and got no link.
+      expect(entryNames(home)).toEqual(["handy-beta"]);
+    });
+
     test("a dangling link at a guarded name is reported rather than an abort", () => {
       // The boundary of the rule above. This link resolves to nothing, so it
       // holds no skill open, and the note at the end of the run says what sits
