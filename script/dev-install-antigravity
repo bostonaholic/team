@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Mirrors script/dev-install for Antigravity CLI. Symlinks this checkout into
+# Antigravity's global plugin directory, so edits are live.
+#
+# Team ships plugin.json at the repo root, which is this host's own plugin
+# marker, with skills/ and agents/ beside it where the host resolves them. So the
+# checkout is already a valid Antigravity plugin root and one link is the whole
+# install — no manifest is generated and no per-skill link is written.
+#
+# Discovery follows a symlinked plugin root, and this host honors
+# disable-model-invocation, so pr-rebase and pr-watch-as-reviewer stay out of the
+# model's reach on their own. Nothing is withheld here, unlike the Codex install,
+# whose host ignores that key.
+
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+TARGET="${HOME}/.gemini/config/plugins/team"
+
+for component in plugin.json skills agents; do
+  if [ ! -e "${PLUGIN_ROOT}/${component}" ]; then
+    echo "Error: no ${component} at ${PLUGIN_ROOT}" >&2
+    exit 1
+  fi
+done
+
+# Already linked — nothing to do
+if [ -L "$TARGET" ] && [ "$(readlink "$TARGET")" = "$PLUGIN_ROOT" ]; then
+  echo "Team already installed for Antigravity (dev)."
+  exit 0
+fi
+
+# A native `agy plugin install` writes a real directory at this same path, and
+# another checkout's dev install writes a link to itself. Neither is replaced,
+# because the uninstall could not put it back.
+if [ -L "$TARGET" ]; then
+  echo "Error: ${TARGET} already links a different checkout:" >&2
+  echo "  $(readlink "$TARGET")" >&2
+  echo "Run script/dev-uninstall antigravity from that checkout first." >&2
+  exit 1
+fi
+
+if [ -e "$TARGET" ]; then
+  echo "Error: ${TARGET} exists and is not a symlink." >&2
+  echo "It looks like a native install. Remove it with: agy plugin uninstall team" >&2
+  exit 1
+fi
+
+echo "Installing Team for Antigravity (dev)..."
+echo "  Source: ${PLUGIN_ROOT}"
+echo
+
+mkdir -p "$(dirname "$TARGET")"
+ln -sfn "$PLUGIN_ROOT" "$TARGET"
+echo "  Linked: ${TARGET} → ${PLUGIN_ROOT}"
+
+echo
+echo "Done. Antigravity loads the skills and agents at the next session start."

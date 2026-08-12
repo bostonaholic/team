@@ -18,7 +18,7 @@ bullets under `[Unreleased]`. Landing a Team PR is **two steps**:
 
 1. **Bump.** The **dev** `version-bump` skill
    (`.claude/skills/version-bump/SKILL.md`) is Team's internal bumper. Run it
-   against current `main`. It assigns the next version, bumps the five version
+   against current `main`. It assigns the next version, bumps the six version
    strings, and cuts the `[Unreleased]` body into a dated `## [X.Y.Z]` section.
    It then sets the PR title, runs the land-time consistency assertion, and
    commits `chore(version): X.Y.Z`.
@@ -132,7 +132,7 @@ intend to land:
    its commit type (see [Choosing the level](#choosing-the-level)): observable
    to a plugin user → minor, internal-only and backward compatible → patch.
 2. Computes the next free version (`next-version.sh`).
-3. Bumps the five version strings.
+3. Bumps the six version strings.
 4. **Cuts the changelog section**: moves the `[Unreleased]` body into a dated
    `## [X.Y.Z]` section and re-points the footer.
 5. Runs the **land-time consistency assertion**, after the cut and before the
@@ -180,7 +180,7 @@ section. `version-bump` re-runs them itself, and CI does not check them on every
 push. The assertion runs **after the changelog cut and before the commit**. It
 fails fast and loud, and it never commits an invalid tree. It checks that:
 
-- `tests/version-consistency.test.ts` passes (strict semver, and the four
+- `tests/version-consistency.test.ts` passes (strict semver, and the six
   strings agree).
 - The dated `## [X.Y.Z] - YYYY-MM-DD` released section exists.
 - The footer carries a `[X.Y.Z]: …compare/…` link. The `[Unreleased]` footer
@@ -189,9 +189,9 @@ fails fast and loud, and it never commits an invalid tree. It checks that:
 If any check fails, `version-bump` stops before committing. Nothing is
 committed, pushed, or merged. See `.claude/skills/version-bump/SKILL.md` step 5.
 
-## The five version strings
+## The six version strings
 
-The version lives in **five places across four files**. Forgetting one ships
+The version lives in **six places across five files**. Forgetting one ships
 an internally inconsistent tree, and this is the single most common versioning
 mistake in this repo's history.
 
@@ -201,19 +201,22 @@ mistake in this repo's history.
 | `.claude-plugin/marketplace.json` | 2 (`metadata.version` **and** `plugins[0].version`) |
 | `.codex-plugin/plugin.json` | 1 (`version`): what Codex reports |
 | `package.json` | 1 (`version`) |
+| `plugin.json` (repo root) | 1 (`version`): what Antigravity reports |
 
 Each host reads its own manifest. Codex prefers `.codex-plugin/plugin.json`
 over the Claude one, so a stale version there makes one release look like two
-different versions depending on which host a user installed from.
+different versions depending on which host a user installed from. Antigravity
+reads the root `plugin.json`; that one cannot move into a directory of its own,
+because the host resolves `skills/` and `agents/` as siblings of the manifest.
 
 One grep proves consistency:
 
 ```sh
-grep -rn '"version"' package.json .claude-plugin/plugin.json \
+grep -rn '"version"' package.json plugin.json .claude-plugin/plugin.json \
   .claude-plugin/marketplace.json .codex-plugin/plugin.json
 ```
 
-All five lines must show the same version. `tests/version-consistency.test.ts`
+All six lines must show the same version. `tests/version-consistency.test.ts`
 enforces this on every `bun test` run.
 
 ## Picking the next version
@@ -291,7 +294,7 @@ can catch it:
 | Check | Layer | Where |
 |-------|-------|-------|
 | Runtime-vs-dev bump invariant. A runtime diff must bump. A dev-only diff must not. The measure is relative to the fork point. | Pre-merge dev hook + L3/L4 git-fixture test (free) | `.github/scripts/version-bump-required.sh`, `tests/version-bump-required.test.ts` |
-| Five version strings agree, on strict semver, and the host manifests agree on the plugin and marketplace names. This holds on every commit, drafted or landed. | L2 tripwire (free, every `bun test`) | `tests/version-consistency.test.ts` |
+| Six version strings agree, on strict semver, and the host manifests agree on the plugin and marketplace names. This holds on every commit, drafted or landed. | L2 tripwire (free, every `bun test`) | `tests/version-consistency.test.ts` |
 | Released-section and footer-compare-link invariants hold for the assigned version. It runs after the changelog cut and before the commit. | Land-time assertion (`version-bump`) | `.claude/skills/version-bump/SKILL.md` |
 | Title prefix matches the version. It applies only when the branch bumped the version forward of its fork point, after `version-bump` bumps. It no-ops otherwise. | CI (needs PR context) | `.github/workflows/pr-title-sync.yml` |
 | Tag + GitHub release on merge | CI (needs write perms) | `.github/workflows/release-on-merge.yml` |

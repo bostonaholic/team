@@ -10,7 +10,7 @@ set -euo pipefail
 # a plugin its own way. Adding a harness means adding `dev-install-<name>` and
 # `dev-uninstall-<name>`, then listing it below.
 
-HARNESSES=(claude codex)
+HARNESSES=(claude codex antigravity)
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
 case "${1:-}" in

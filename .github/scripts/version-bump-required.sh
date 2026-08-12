@@ -60,6 +60,12 @@ RUNTIME_DIRS=(agents skills hooks)
 # All ship to end users, so content changes here are runtime changes.
 MANIFEST_DIRS=('.claude-plugin' '.codex-plugin' '.agents/plugins')
 
+# Antigravity's manifest cannot live in a directory of its own: that host
+# resolves skills/ and agents/ as siblings of the manifest, so its marker sits at
+# the repo root. It ships to end users like the others, so it is classified with
+# them rather than with the dev tooling it happens to sit beside.
+ROOT_MANIFEST='plugin.json'
+
 die() { printf '::error::%s\n' "$1" >&2; exit 1; }
 
 : "${HEAD_SHA:?HEAD_SHA required}"
@@ -100,8 +106,9 @@ fi
 # Host manifest dirs — runtime only if a non-version line changed (a bare
 # version edit is the bump, not content). Strip diff file headers (+++/---),
 # keep added/removed lines, drop any line that touches the `"version"` field.
-if ! $runtime_changed && grep -qE "^($(IFS='|'; echo "${MANIFEST_DIRS[*]}"))/" <<<"$changed_files"; then
-  content=$(git diff "$MERGE_BASE" "$HEAD_SHA" -- "${MANIFEST_DIRS[@]/%//}" \
+if ! $runtime_changed && { grep -qE "^($(IFS='|'; echo "${MANIFEST_DIRS[*]}"))/" <<<"$changed_files" \
+  || grep -qxF "$ROOT_MANIFEST" <<<"$changed_files"; }; then
+  content=$(git diff "$MERGE_BASE" "$HEAD_SHA" -- "${MANIFEST_DIRS[@]/%//}" "$ROOT_MANIFEST" \
     | grep -E '^[+-]' \
     | grep -vE '^[+-]{3} ' \
     | grep -vE '"version"[[:space:]]*:' || true)

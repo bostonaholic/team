@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.45.0] - 2026-08-12
+
+### Added
+
+- **Team installs on Antigravity CLI, through a manifest of its own.** `agy plugin install /path/to/team` — the same local-checkout form the Claude Code and Codex installs use — copies all 54 skills and all 13 agents into the host's plugin directory. Team now ships `plugin.json` at the repo root, which is this host's plugin marker; it sits at the root rather than in a directory beside `.claude-plugin/` and `.codex-plugin/` because Antigravity resolves `skills/` and `agents/` as siblings of the manifest. Without it the host still installs Team, by recognizing `.claude-plugin/` and importing it as a Claude Code plugin, but that makes one host's support contingent on another's manifest, so Team declares its own. The root manifest carries a sixth version string, and the land-time bump, the consistency tripwire, and the runtime-vs-dev gate all know about it. Two host facts worth knowing. Skills arrive under **bare names** — ask for `shipit`, not `team:shipit` — because this host reads a skill's catalog name from its own frontmatter. And unlike Codex, **Antigravity honors `disable-model-invocation`**: with the plugin installed the agent lists 52 of the 54 skills, and the two it omits are exactly the two that set the key, so the skill that casts a PR approval and the one that force-pushes a rewritten branch stay user-only with nothing to remove afterward. What is still unproven is dispatch, so the `/team-*` pipeline commands install but are not claimed to run there yet. For developing Team itself, `script/dev-install antigravity` points the host's plugin directory at a checkout with one symlink, so an edit is live in the next session; it replaces nothing it did not create, because its uninstall could not put it back. [`plugin.json`](https://github.com/bostonaholic/team/blob/main/plugin.json), [`README.md`](https://github.com/bostonaholic/team/blob/main/README.md), [`docs/cross-host-portability.md`](https://github.com/bostonaholic/team/blob/main/docs/cross-host-portability.md)
+
 ## [0.44.0] - 2026-08-12
 
 ### Fixed
@@ -500,7 +506,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.44.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.45.0...HEAD
+[0.45.0]: https://github.com/bostonaholic/team/compare/v0.44.0...v0.45.0
 [0.44.0]: https://github.com/bostonaholic/team/compare/v0.43.2...v0.44.0
 [0.43.2]: https://github.com/bostonaholic/team/compare/v0.43.1...v0.43.2
 [0.43.1]: https://github.com/bostonaholic/team/compare/v0.43.0...v0.43.1

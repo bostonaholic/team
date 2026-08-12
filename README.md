@@ -2,14 +2,14 @@
 
 A plugin that orchestrates specialized agents to autonomously implement entire features end-to-end, driven by the **QRSPI** workflow. The orchestrator is the main Claude Code session. It persists pipeline state as artifacts in `docs/plans/` and tracks live progress with TodoWrite.
 
-Team installs on Claude Code and on Codex CLI. The full pipeline needs Claude Code, because that is the host that dispatches the agents. The standalone utilities work on both.
+Team installs on Claude Code, on Codex CLI, and on Antigravity CLI. The full pipeline needs Claude Code, because that is the host that dispatches the agents. The standalone utilities work on all three.
 
 **Documentation:** [team.bostonaholic.dev](https://team.bostonaholic.dev)
 
 ## Install
 
-Team ships a native manifest for each host it supports, so one repo installs
-on all of them. Pick yours.
+Team ships a native manifest for each host, so one repo installs on all three
+from a local checkout. Pick yours.
 
 <details>
 <summary><strong>Claude Code</strong></summary>
@@ -31,25 +31,16 @@ codex plugin marketplace add /path/to/team
 codex plugin add team@team-dev
 ```
 
-Team ships `.codex-plugin/plugin.json` and `.agents/plugins/marketplace.json`
-— the manifests Codex looks for first — and takes `skills/` as the plugin's
-skill root, so nothing needs building or converting.
+Skills arrive **namespaced** — ask for `team:shipit`, not `shipit`. Codex budgets
+its skill catalog, so it shortens the longest descriptions; the skills still
+work. The `/team-*` pipeline commands load but cannot dispatch Claude Code
+agents, so they will not run the pipeline. The standalone utilities do.
 
-Two differences worth knowing. Skills arrive **namespaced** — ask for
-`team:shipit`, not `shipit`. And Codex budgets its skill catalog, so with
-all 54 skills present it shortens the longer descriptions; the skills still
-load and still work.
-
-> **Two skills lose a safety guard on Codex.** On Claude Code
-> `team:pr-watch-as-reviewer` and `team:pr-rebase` both set
-> `disable-model-invocation`, so only a person can start them — the first
-> casts an approval that can transitively merge a PR with auto-merge
-> enabled, and the second force-pushes a rewritten branch over published
-> history. **Codex ignores that key**, so the model can invoke either one,
-> in every session, with no prompt: skills bypass Codex's trust gate. Each
-> skill's own description says it is user-only, but that sentence is past
-> the point where Codex truncates. To keep the guards, remove the skills
-> after installing:
+> **Two skills lose a safety guard here.** `team:pr-watch-as-reviewer` casts an
+> approval that can transitively merge a PR, and `team:pr-rebase` force-pushes a
+> rewritten branch over published history. Both set `disable-model-invocation`
+> so only a person can start them, and **Codex ignores that key**. To keep the
+> guards:
 >
 > ```bash
 > rm -rf "$CODEX_HOME/plugins/cache"/*/team/*/skills/pr-watch-as-reviewer
@@ -58,10 +49,32 @@ load and still work.
 >
 > Re-running `codex plugin add` restores them.
 
-The `/team-*` pipeline commands load on Codex but cannot dispatch Claude
-Code agents there, so they will not run the pipeline. The standalone
-utilities — `team:shipit`, `team:pr-watch-as-author`, `team:pr-open-comments`,
-`team:groom-backlog`, `team:code-review` — work as they do on Claude Code.
+</details>
+
+<details>
+<summary><strong>Antigravity CLI</strong></summary>
+
+```bash
+agy plugin install /path/to/team
+```
+
+Team ships `plugin.json` at the repo root, which is this host's plugin marker,
+so it installs as a native Antigravity plugin — all 54 skills and all 13 agents.
+`agy plugin uninstall team` removes it.
+
+Skills arrive under **bare names** — ask for `shipit`, not `team:shipit`. The
+install copies the checkout, so upgrading means installing again. Unlike Codex,
+this host honors `disable-model-invocation`, so nothing needs removing
+afterward. The `/team-*` pipeline commands install but are not claimed to run
+here yet, because agent dispatch on this host is untested
+([#56](https://github.com/bostonaholic/team/issues/56)).
+
+Developing Team itself? The install copies, so link your checkout instead:
+
+```bash
+script/dev-install antigravity
+script/dev-uninstall antigravity
+```
 
 </details>
 

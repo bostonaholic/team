@@ -3,7 +3,7 @@ name: version-bump
 description: |
   Version the Team plugin at land time (DEV-internal, not distributed): decide
   the SemVer level, compute the next free version against current `main`, update
-  all five version strings, cut the `[Unreleased]` changelog body into a dated
+  all six version strings, cut the `[Unreleased]` changelog body into a dated
   `## [X.Y.Z]` section, run the land-time consistency assertion, and commit
   `chore(version): X.Y.Z`. This is the Team-internal bumper; the generic runtime
   `/shipit` skill then pushes, waits for CI, and squash-merges. Invoke ONLY on
@@ -30,7 +30,7 @@ both automatically when the PR merges. Full policy:
 Landing a Team PR is two steps, in order:
 
 1. **Bump (this skill).** Run `version-bump` against current `main`. It picks the
-   level, assigns the next free version, and bumps the five version strings. It
+   level, assigns the next free version, and bumps the six version strings. It
    cuts the `[Unreleased]` changelog into a dated `## [X.Y.Z]` section, runs the
    land-time consistency assertion, and commits `chore(version): X.Y.Z`.
 2. **Land (the generic `/shipit` skill).** Run the distributed runtime
@@ -43,7 +43,7 @@ land onto.
 
 ## Precondition — explicit land intent
 
-Everything below is irreversible-ish work on a shared number: it rewrites five
+Everything below is irreversible-ish work on a shared number: it rewrites six
 version strings, moves the `[Unreleased]` changelog body into a dated section,
 retitles the PR, and commits. All of it is computed against **the base
 branch's tip at this moment**, so a bump made any earlier than the land is
@@ -274,9 +274,9 @@ race resolves at merge time: `/shipit` rebases the branch, the pre-merge guard
 denies the now-stale bump, and the recovery (step 0's stale-bump signal)
 recomputes. `release-on-merge.yml`'s duplicate-tag rejection backstops the rest.
 
-### 3. Bump all five version strings
+### 3. Bump all six version strings
 
-The version lives in **five places across four files**:
+The version lives in **six places across five files**:
 
 | File | Occurrences |
 |------|-------------|
@@ -284,19 +284,22 @@ The version lives in **five places across four files**:
 | `.claude-plugin/marketplace.json` | 2 (`metadata.version` **and** `plugins[0].version`) |
 | `.codex-plugin/plugin.json` | 1 (`version`) |
 | `package.json` | 1 (`version`) |
+| `plugin.json` (repo root) | 1 (`version`): what Antigravity reports |
 
 Codex reads `.codex-plugin/plugin.json` in preference to the Claude manifest,
 and shows the version it finds there. A stale one makes the same release look
-like two different versions depending on the host.
+like two different versions depending on the host. Antigravity reads the root
+`plugin.json`, which sits at the root rather than in a directory of its own
+because that host resolves `skills/` and `agents/` as siblings of its manifest.
 
-Edit all four files, then prove it:
+Edit all five files, then prove it:
 
 ```bash
-grep -rn '"version"' package.json .claude-plugin/plugin.json \
+grep -rn '"version"' package.json plugin.json .claude-plugin/plugin.json \
   .claude-plugin/marketplace.json .codex-plugin/plugin.json
 ```
 
-All five lines must show the **new** version. Zero may still show the old one.
+All six lines must show the **new** version. Zero may still show the old one.
 
 ### 4. Cut the changelog section
 
@@ -336,10 +339,10 @@ the in-tree replacement for the retired `version-gate.yml`:
 
 ```bash
 bun test tests/version-consistency.test.ts
-node -e "['.claude-plugin/plugin.json','.claude-plugin/marketplace.json','.codex-plugin/plugin.json','.agents/plugins/marketplace.json','package.json'].forEach(f=>JSON.parse(require('fs').readFileSync(f)));console.log('JSON OK')"
+node -e "['.claude-plugin/plugin.json','.claude-plugin/marketplace.json','.codex-plugin/plugin.json','.agents/plugins/marketplace.json','plugin.json','package.json'].forEach(f=>JSON.parse(require('fs').readFileSync(f)));console.log('JSON OK')"
 ```
 
-The tripwire asserts strict semver, that all five strings agree, and that the
+The tripwire asserts strict semver, that all six strings agree, and that the
 host manifests agree on the plugin and marketplace names. Additionally
 assert inline the released-section + footer-compare-link invariants (these hold
 only after the cut, so they live here, not in the tripwire):
@@ -364,7 +367,7 @@ Commit the bump as its own commit in the PR branch, for clean reverts:
 
 ```bash
 git add .claude-plugin/plugin.json .claude-plugin/marketplace.json \
-  .codex-plugin/plugin.json package.json CHANGELOG.md
+  .codex-plugin/plugin.json plugin.json package.json CHANGELOG.md
 git commit -m "chore(version): X.Y.Z"
 ```
 
