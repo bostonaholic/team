@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.2] - 2026-08-12
+
+### Changed
+
+- **Sixteen skills got smaller without losing a rule.** Every skill an agent loads spends context that the actual work then cannot use, and a long skill is not automatically a thorough one — past a point the extra words are the model's own general knowledge, read back to it. Three things came out. Explanations of what a capable model already knows: the Fowler smell catalog, the SOLID walkthroughs, the plain-language and active-voice primers, the "read the error, fix it, re-run" fix dispatches. Restatement inside a single file: `engineering-standards` stated its quality checklist three times over, and `code-review` restated in full the comment rules it already names another skill as owning. And prose about decisions already made, including a note describing a hook that was never built. What survived is the half a model does not arrive already knowing — mixed levels of abstraction, constructors that do work, the dependency smells that hide inside a signature, fix-the-code-not-the-tests. The skills that carry irreversible operations were left alone entirely: `pr-rebase`, `pr-cleanup`, `pr-open-comments`, `pr-verify`, both PR watch skills, `shipit`, and `groom-backlog` are unchanged, because their length is git and tracker safety detail rather than padding. Net effect on a `/team` run: the same rules, roughly 800 fewer lines of them. [`skills/engineering-standards/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/engineering-standards/SKILL.md), [`skills/writing-prose/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/writing-prose/SKILL.md), [`skills/qrspi-workflow/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/qrspi-workflow/SKILL.md), [`skills/refactoring-to-patterns/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/refactoring-to-patterns/SKILL.md), [`skills/solid-principles/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/solid-principles/SKILL.md), [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md)
+
 ## [0.43.1] - 2026-08-11
 
 ### Fixed
@@ -488,7 +494,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.43.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.43.2...HEAD
+[0.43.2]: https://github.com/bostonaholic/team/compare/v0.43.1...v0.43.2
 [0.43.1]: https://github.com/bostonaholic/team/compare/v0.43.0...v0.43.1
 [0.43.0]: https://github.com/bostonaholic/team/compare/v0.42.0...v0.43.0
 [0.42.0]: https://github.com/bostonaholic/team/compare/v0.41.0...v0.42.0
