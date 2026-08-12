@@ -334,8 +334,13 @@ if [ ${#blocked[@]} -gt 0 ] || [ ${#guarded_kept_live[@]} -gt 0 ]; then
       echo "  ${line}" >&2
     done
   fi
-  echo "Run 'script/dev-uninstall antigravity' from the checkout each link resolves into," >&2
-  echo "or move what sits there out of the way, then re-run." >&2
+  # A link at a *guarded* name need not point into a checkout of Team at all —
+  # any hand-made link to a live skill directory reaches this abort — so the
+  # uninstall clause is stated as the conditional it is. The second clause always
+  # applies, and is what a reader falls back to.
+  echo "Where a link resolves into another checkout of Team, run" >&2
+  echo "'script/dev-uninstall antigravity' from that checkout. Otherwise move what" >&2
+  echo "sits at the path out of the way. Then re-run." >&2
   if [ "$orphaned" -eq 1 ]; then
     echo "A link whose own directory is gone has no checkout left to run that from," >&2
     echo "so removing that link is the only way to clear its path." >&2
