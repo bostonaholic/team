@@ -128,8 +128,14 @@ for entry in "$TARGET_DIR"/*; do
   fi
 done
 
+# Every entry examined lands in exactly one of the three counts. Leaving the
+# failures out made a run that could not remove the one link it owns print
+# "0 removed, 0 left in place", which reads as a directory holding nothing.
+summary="${removed} removed, ${kept} left in place"
+[ "$failed" -eq 0 ] || summary="${summary}, ${failed} that could not be removed"
+
 echo
-echo "  ${removed} removed, ${kept} left in place."
+echo "  ${summary}."
 
 if [ "$failed" -gt 0 ]; then
   echo "Error: ${failed} link(s) this checkout owns could not be removed." >&2

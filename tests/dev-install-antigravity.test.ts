@@ -1557,6 +1557,37 @@ describe("dev install: antigravity harness", () => {
       expect(existsSync(join(home, ".gemini"))).toBe(true);
     });
 
+    test("uninstall counts the links it could not remove in its totals", () => {
+      // A write-protected target directory is the only way to fail `rm` on a
+      // link the sweep owns. Without the third count the run printed "0 removed,
+      // 0 left in place" — indistinguishable from a directory that held nothing
+      // — while exiting 1 over links that are all still there.
+      const home = newHome();
+      expect(run(INSTALL, home).status).toBe(0);
+      const owned = installableSkills().length;
+      expect(owned).toBeGreaterThan(0);
+      chmodSync(targetDir(home), 0o500);
+
+      let result: { status: number; output: string };
+      try {
+        result = run(UNINSTALL, home);
+      } finally {
+        // Restored whatever happened, or afterAll cannot clean the tmpdir up.
+        chmodSync(targetDir(home), 0o700);
+      }
+
+      expect(result.status).toBe(1);
+      const totals = result.output
+        .split("\n")
+        .filter((line) => line.includes("left in place"));
+      // Guard: the summary line must exist, or the assertion below reads "".
+      expect(totals.length).toBe(1);
+      expect(totals[0]).toContain(`${owned} that could not be removed`);
+      // The counts describe the disk: nothing was removed, so everything is
+      // still there.
+      expect(linkNames(home)).toEqual(installableSkills());
+    });
+
     test("uninstall exits 0 when the target directory does not exist", () => {
       const home = newHome();
 
