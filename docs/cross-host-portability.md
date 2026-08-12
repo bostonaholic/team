@@ -1,6 +1,6 @@
 ---
 title: Cross-host portability
-description: "A capability matrix mapping Team's Claude Code plugin primitives onto Gemini CLI and Codex CLI, the chosen hybrid portability strategy, and the measured host facts for Antigravity CLI."
+description: "A capability matrix mapping Team's Claude Code plugin primitives onto the other hosts it runs on — Gemini CLI, Codex CLI, and Antigravity CLI — and the portability strategy chosen for them."
 audience: [developer]
 nav_order: 9
 nav_label: portability
@@ -10,11 +10,10 @@ nav_label: portability
 
 > **What this is.** A portability study. It shows how Team's Claude Code plugin
 > primitives map onto Gemini CLI and Codex CLI, and gives the strategy we chose
-> to support those two alongside Claude Code. A fourth host, Antigravity CLI, is
-> measured in [its own section](#measured-antigravity-cli) rather than scored in
-> the matrix: it installs Team by reading the Claude Code manifest, so it needed
-> no strategy of its own, and what this page owes a reader is the host facts
-> instead. It is a decision document, not a code change. The source issue is
+> to support those two alongside Claude Code. Team also runs on
+> [Antigravity CLI](#antigravity-cli), which needed no porting strategy: it
+> installs Team from a local checkout through a manifest of its own, like the
+> other hosts. It is a decision document, not a code change. The source issue is
 > [#50](https://github.com/bostonaholic/team/issues/50). Two epics consume it:
 > the [#56](https://github.com/bostonaholic/team/issues/56) Gemini port and the
 > [#57](https://github.com/bostonaholic/team/issues/57) Codex port. They build
@@ -30,7 +29,7 @@ nav_label: portability
 - [Gap analysis](#gap-analysis)
 - [Decisions made](#decisions-made)
 - [What #56 and #57 build against](#what-56-and-57-build-against)
-- [Measured: Antigravity CLI](#measured-antigravity-cli)
+- [Antigravity CLI](#antigravity-cli)
 - [Out of scope](#out-of-scope)
 - [Edge cases](#edge-cases)
 - [Open questions (deferred to the port epics)](#open-questions-deferred-to-the-port-epics)
@@ -172,6 +171,16 @@ facility, so the design must work around it.
 | Manifest / binding format | `.claude-plugin/plugin.json` | `.gemini/settings.json` + commands TOML | `config.toml`/`hooks.json` + `.codex/` |
 | Per-project config (host-neutral) | `.team/config.json` (plain JSON, read by portable core) | `.team/config.json` (same file, unchanged) | `.team/config.json` (same file, unchanged) |
 | Abstract model tier → host model | native (`model:` is a literal Claude model) | workaround: resolve tier through `.team/config.json` map | workaround: resolve tier through `.team/config.json` map |
+
+Antigravity CLI is not a fourth column, and the reason is evidence rather than
+importance. The two hosts scored here are scored from their documentation, which
+covers every row. Antigravity's rows would come from probing the binary, and only
+about a third of these primitives have been probed — hooks, manifest layout,
+skill and agent discovery, naming — while the rest, including the whole MCP
+group and the hook JSON contract, have not. A column that reported "unmeasured"
+for two thirds of its cells would look scored without being scored. What has been
+run is in [its own section](#antigravity-cli), and the gap is named in
+[open questions](#open-questions-deferred-to-the-port-epics).
 
 Reading the matrix: every row that Team's *behavior* depends on is native or
 workaround on both hosts. There is no hook-event gap. All four events map
@@ -346,18 +355,31 @@ full parity. Each starts from the matrix and works around the named gaps.
   - MCP prompts are a hard gap (tools and resources are native), so keep all
     prompt/slash workflows on Skills.
 
-## Measured: Antigravity CLI
+## Antigravity CLI
 
-Everything below was measured against `agy` 1.1.12 on macOS, not read from
-documentation. It is recorded here because Team installs on this host, and
-because a study that only cites docs cannot be checked later.
+This section is sourced differently from the two above it, which is the only
+thing that sets it apart. Every Gemini CLI and Codex CLI claim on this page comes
+from vendor docs and host repos read on 2026-06-27, because neither binary is
+installed on the machine this was written on. `agy` 1.1.12 is, so everything
+below was produced by running it. Where a claim here is inferred rather than
+observed, it says so.
 
-**This host installs Team natively.** `agy plugin install <repo-url>` clones the
-repo, recognizes `.claude-plugin/` — `import_manifest.json` records the source as
-`claude-code` — and copies all 54 skills and all 13 agents into
-`~/.gemini/config/plugins/team/`, writing its own minimal `plugin.json` there.
-So Antigravity consumes Team's existing Claude Code manifest and needs no
-manifest of its own.
+**This host installs Team natively, through its own manifest.** Team ships
+`plugin.json` at the repo root, which is Antigravity's plugin marker, with
+`skills/` and `agents/` beside it where this host resolves components.
+`agy plugin install /path/to/team` then copies all 54 skills and all 13 agents
+into `~/.gemini/config/plugins/team/`, and `import_manifest.json` records the
+source as **`antigravity`** — its native path, the same local-checkout form the
+Claude Code and Codex installs use.
+
+The root manifest is what buys that. Without it, this host falls back to
+recognizing `.claude-plugin/` and records the source as `claude-code`, importing
+Team as a Claude Code plugin. That fallback works, but it makes Team's presence
+here contingent on another host's manifest, and it is not the path this project
+relies on. The manifest also cannot move into a directory of its own the way
+`.claude-plugin/` and `.codex-plugin/` do, because components resolve as siblings
+of the manifest — which is why Team carries a sixth version string at the repo
+root.
 
 An earlier revision of this page concluded the opposite, and the reason is worth
 recording. `agy plugin import <local path>` was probed against the main checkout
@@ -371,16 +393,21 @@ failure was generalized into "nothing distributed ships."
 
 - `plugin.json` has to sit at the plugin root, and `skills/`, `agents/`,
   `commands/`, `mcpServers/`, and `hooks/` all resolve beside that manifest. So
-  Team's existing `.claude-plugin/` and `.codex-plugin/` manifests both validate
-  and then discover nothing, and a manifest cannot redirect its component paths.
+  `.claude-plugin/` and `.codex-plugin/` both validate and then discover nothing,
+  and a manifest cannot redirect its component paths. That is why Team's
+  Antigravity manifest is at the repo root rather than in a directory beside the
+  other two.
 - Given a root manifest, `agy` processed all 54 skills and all 13 agents.
 - Skill discovery descends the tree but stops at any directory that owns a
   `SKILL.md`, so a skill cannot nest another skill.
 - A symlinked skill folder is followed at plugin scope **and** at global scope.
-- **A hand-built plugin root is discovered with no registration step.** A
-  directory holding a generated `plugin.json` plus `skills/` and `agents/`
-  symlinked into a checkout put 52 Team skills in the agent's own skill list,
-  with no entry in `import_manifest.json`. Team's dev install rests on this.
+- **A symlinked plugin root is discovered with no registration step.** A single
+  link at `~/.gemini/config/plugins/team` pointing at a checkout put 52 Team
+  skills in the agent's own skill list, with no entry in `import_manifest.json`.
+  Team's dev install is that one link. A directory holding a hand-written
+  `plugin.json` beside symlinked `skills/` and `agents/` was measured to work
+  too; linking the root is preferred because the checkout already carries the
+  manifest, so nothing has to be generated or kept in sync.
 - `hooks/` is not discovered: this host registers hooks through a root
   `hooks.json`. `agents/` is discovered, and discovery is not dispatch — whether
   `agy` can dispatch an agent, and whether a structured return survives, is

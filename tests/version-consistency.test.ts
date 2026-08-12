@@ -1,8 +1,8 @@
 // tests/version-consistency.test.ts
 //
 // L2 tripwire: the land-time versioning contract (docs/versioning.md).
-// The version string lives in four places across three files; on any honest
-// feature branch those four must always agree and be strict semver. Free,
+// The version string lives in six places across five files; on any honest
+// feature branch those six must always agree and be strict semver. Free,
 // deterministic — the invariant that holds at every commit, not just at land.
 //
 // The released-changelog invariants (a dated `## [X.Y.Z]` section, the footer
@@ -33,19 +33,26 @@ const codexPlugin = JSON.parse(
 const codexMarketplace = JSON.parse(
   readFileSync(join(ROOT, ".agents", "plugins", "marketplace.json"), "utf8"),
 );
+// Antigravity resolves skills/ and agents/ as siblings of its manifest, so its
+// marker cannot sit in a directory of its own like the other hosts'. That puts a
+// sixth version string at the repo root.
+const antigravityPlugin = JSON.parse(
+  readFileSync(join(ROOT, "plugin.json"), "utf8"),
+);
 
 const version: string = plugin.version;
 
-describe("version consistency: the five version strings", () => {
+describe("version consistency: the six version strings", () => {
   test("plugin.json version is strict 3-part semver", () => {
     expect(version).toMatch(SEMVER_RE);
   });
 
-  test("all five version strings agree", () => {
+  test("all six version strings agree", () => {
     expect(marketplace.metadata.version).toBe(version);
     expect(marketplace.plugins[0].version).toBe(version);
     expect(pkg.version).toBe(version);
     expect(codexPlugin.version).toBe(version);
+    expect(antigravityPlugin.version).toBe(version);
   });
 });
 

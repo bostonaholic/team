@@ -3,70 +3,34 @@ set -euo pipefail
 
 # Mirrors script/dev-uninstall for Antigravity CLI.
 #
-# Removes only what script/dev-install-antigravity created: the generated
-# plugin.json and the two symlinks beside it. Anything else at that path means
-# something other than this script owns it — a native `agy plugin install`
-# writes real directories there — so nothing is removed and the path is named.
-#
-# The parent directories are the host's own config tree and are left alone, the
-# same way the Codex uninstall never removes ~/.agents/skills.
+# Removes only the symlink script/dev-install-antigravity created. A native
+# `agy plugin install` writes a real directory at the same path, so anything that
+# is not a symlink is left alone and named — `agy plugin uninstall team` owns
+# that one. The parent is the host's own config tree and is never removed.
 
 PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SKILLS_SRC="${PLUGIN_ROOT}/skills"
 TARGET="${HOME}/.gemini/config/plugins/team"
 
 echo "Uninstalling Team for Antigravity (dev)..."
 echo
 
-if [ ! -e "$TARGET" ] && [ ! -L "$TARGET" ]; then
+if [ ! -L "$TARGET" ] && [ ! -e "$TARGET" ]; then
   echo "  Nothing to do: ${TARGET} does not exist."
   exit 0
 fi
 
-if [ -L "$TARGET" ] || [ ! -d "$TARGET" ]; then
-  echo "Error: ${TARGET} is not a directory — this script did not create it." >&2
-  echo "Nothing was removed. Move it by hand if you meant to." >&2
-  exit 1
-fi
-
-if [ ! -L "${TARGET}/skills" ] && [ ! -L "${TARGET}/agents" ]; then
-  echo "Error: ${TARGET} holds no symlinks this script created." >&2
-  if [ -d "${TARGET}/skills" ] || [ -d "${TARGET}/agents" ]; then
-    echo "It holds real directories, so it looks like a native install." >&2
-    echo "Remove that with: agy plugin uninstall team" >&2
-  fi
+if [ ! -L "$TARGET" ]; then
+  echo "Error: ${TARGET} is not a symlink — this script did not create it." >&2
+  echo "It looks like a native install. Remove it with: agy plugin uninstall team" >&2
   echo "Nothing was removed." >&2
   exit 1
 fi
 
-LINKED_ELSEWHERE=""
-for name in skills agents; do
-  link="${TARGET}/${name}"
-  if [ -L "$link" ]; then
-    LINKED_TO="$(readlink "$link")"
-    rm "$link"
-    echo "  Removed: ${link} → ${LINKED_TO}"
-    if [ "$name" = "skills" ] && [ "$LINKED_TO" != "$SKILLS_SRC" ]; then
-      LINKED_ELSEWHERE="$LINKED_TO"
-    fi
-  fi
-done
-
-if [ -f "${TARGET}/plugin.json" ] && [ ! -L "${TARGET}/plugin.json" ]; then
-  rm "${TARGET}/plugin.json"
-  echo "  Removed: ${TARGET}/plugin.json"
-fi
-
-# rmdir rather than rm -rf: it refuses on anything left behind instead of
-# deleting a file this script never wrote.
-if rmdir "$TARGET" 2>/dev/null; then
-  echo "  Removed: ${TARGET}"
-else
-  echo "  Left in place: ${TARGET} still holds files this script did not write."
-fi
-
-if [ -n "$LINKED_ELSEWHERE" ]; then
-  echo "  Note: those links pointed at another checkout, not ${SKILLS_SRC}."
+LINKED_TO="$(readlink "$TARGET")"
+rm "$TARGET"
+echo "  Removed: ${TARGET} → ${LINKED_TO}"
+if [ "$LINKED_TO" != "$PLUGIN_ROOT" ]; then
+  echo "  Note: that link pointed at another checkout, not ${PLUGIN_ROOT}."
 fi
 
 echo

@@ -1,16 +1,18 @@
 // tests/dev-install-antigravity.test.ts
 //
 // Acceptance tests for the Antigravity half of the dev install,
-// `script/dev-install-antigravity` and `script/dev-uninstall-antigravity`.
+// `script/dev-install-antigravity` and `script/dev-uninstall-antigravity`, plus
+// the root `plugin.json` that makes this host install Team through its own
+// native plugin path.
 //
 // Two layers:
 //
 // - L2 static tripwires. Read the source and assert a contract, in
 //   milliseconds, executing nothing: the harness list must not drift across its
-//   registration surfaces, both scripts must address this host's plugin root
-//   rather than its flat global skill directory, the install must link agents as
-//   well as skills, neither may depend on the `agy` binary or on a path tool
-//   macOS bash 3.2 lacks, and the README must carry the native install command.
+//   registration surfaces, the repo must carry this host's native manifest with
+//   `skills/` and `agents/` beside it, the install must be one symlink to the
+//   checkout root, neither script may depend on the `agy` binary or on a path
+//   tool macOS bash 3.2 lacks, and the README must carry the install command.
 //   Every extractor guards against a vacuous pass, because one that finds
 //   nothing makes each assertion under it green while looking at nothing.
 //
@@ -25,19 +27,22 @@
 // construction rather than by luck. The scripts no longer shell out to `agy` at
 // all, and one tripwire below pins that.
 //
-// Why this file is a fraction of its former size: the install used to filter the
-// skill corpus, so it carried a frontmatter reader and an exclusion set, and
-// most of the tests here interrogated those. Measured against agy 1.1.12, the
-// host namespaces skills under the plugin directory and honors
-// `disable-model-invocation` itself, so there is no filtering left to test.
-// Whether `agy` discovers a linked skill is a live-host question and stays a
-// manual PR test-plan step.
+// Why this file is a fraction of its former size. The install used to filter the
+// skill corpus and link it one skill at a time into the host's flat global skill
+// directory, so it carried a frontmatter reader, an exclusion set, and a
+// collision scanner, and most of the tests here interrogated those. Measured
+// against agy 1.1.12: the host takes a root `plugin.json` as its plugin marker,
+// resolves `skills/` and `agents/` beside it, follows a symlinked plugin root,
+// and honors `disable-model-invocation` itself. So Team ships that manifest, the
+// install is one link, and there is no filtering left to test. Whether `agy`
+// discovers a linked plugin is a live-host question and stays a manual PR
+// test-plan step.
 //
 // Output contract the assertions below read, so the scripts must emit it:
-// `Wrote:` for the generated manifest, `Linked:` for each link created,
-// `Removed:` for each path removed, `Left in place:` when the uninstall finds
-// files it did not write, `Error:` on an abort, and `Nothing to do` when the
-// uninstall finds no target directory.
+// `Linked:` for the link created, `Removed:` for the link removed, `Note:` when
+// a removed link pointed at another checkout, `Error:` on an abort, `already
+// installed` when there is nothing to do, and `Nothing to do` when the uninstall
+// finds no target.
 
 import {
   afterAll,
@@ -71,6 +76,7 @@ import { squash } from "./helpers/text";
 const REPO_ROOT = realpathSync(join(import.meta.dir, ".."));
 const SKILLS_ROOT = join(REPO_ROOT, "skills");
 const AGENTS_ROOT = join(REPO_ROOT, "agents");
+const ROOT_MANIFEST = join(REPO_ROOT, "plugin.json");
 const INSTALL = join(REPO_ROOT, "script", "dev-install-antigravity");
 const UNINSTALL = join(REPO_ROOT, "script", "dev-uninstall-antigravity");
 const DEV_INSTALL = join(REPO_ROOT, "script", "dev-install");
@@ -201,6 +207,17 @@ function seedNativeInstall(home: string): string {
   return root;
 }
 
+/** Build a second checkout whose dev install already owns the target. */
+function seedOtherCheckout(home: string): string {
+  const other = join(home, "other-checkout");
+  mkdirSync(join(other, "skills"), { recursive: true });
+  mkdirSync(join(other, "agents"), { recursive: true });
+  writeFileSync(join(other, "plugin.json"), '{"name":"team"}\n');
+  mkdirSync(join(home, ".gemini/config/plugins"), { recursive: true });
+  symlinkSync(other, pluginRoot(home));
+  return other;
+}
+
 // ---------------------------------------------------------------------------
 // Source extractors
 // ---------------------------------------------------------------------------
@@ -263,9 +280,8 @@ function codeOf(scriptText: string): string {
 
 /** Lines that execute the `agy` binary, as opposed to naming it in prose. */
 function agyInvocations(scriptText: string): string[] {
-  return scriptText
+  return codeOf(scriptText)
     .split("\n")
-    .filter((line) => !line.trim().startsWith("#"))
     .filter((line) => /(^|[^"'\w])agy\b/.test(line))
     .filter((line) => !/^\s*echo\b/.test(line.trim()));
 }
@@ -278,7 +294,20 @@ const BOTH_SCRIPTS: Array<[string, string]> = [
 ];
 
 describe("dev install: antigravity harness", () => {
-  describe("L2 tripwires: registration, target path, host independence, README contract", () => {
+  describe("L2 tripwires: the native manifest, registration, one-link install, README contract", () => {
+    test("the repo ships this host's own plugin manifest at the root", () => {
+      // This is what makes `agy plugin install <path>` take its native path
+      // rather than importing Team as a Claude Code plugin. The manifest cannot
+      // move into a directory of its own: the host resolves components as
+      // siblings of the manifest, so it has to sit beside skills/ and agents/.
+      const manifest = readIfExists(ROOT_MANIFEST);
+      expect(manifest.length).toBeGreaterThan(0);
+      const parsed = JSON.parse(manifest);
+      expect(parsed.name).toBe("team");
+      expect(existsSync(SKILLS_ROOT)).toBe(true);
+      expect(existsSync(AGENTS_ROOT)).toBe(true);
+    });
+
     test("every harness registration surface lists the same harnesses", () => {
       const fromInstall = harnessesIn(readIfExists(DEV_INSTALL));
       const fromUninstall = harnessesIn(readIfExists(DEV_UNINSTALL));
@@ -312,17 +341,18 @@ describe("dev install: antigravity harness", () => {
       }
     });
 
-    test("the install links agents as well as skills", () => {
-      // The agents half is the reason a dev install can run the pipeline at
-      // all on this host. Dropping it would still leave 54 working skills, so
-      // no other assertion here would notice.
-      expect(INSTALL_SRC).toContain('AGENTS_SRC="${PLUGIN_ROOT}/agents"');
-      const linkLines = INSTALL_SRC.split("\n").filter((line) =>
-        line.trim().startsWith("ln -sfn"),
-      );
-      expect(linkLines).toHaveLength(2);
-      expect(linkLines.join("\n")).toContain("$SKILLS_SRC");
-      expect(linkLines.join("\n")).toContain("$AGENTS_SRC");
+    test("the install is a single link to the checkout root", () => {
+      // Linking the root, rather than skills/ and agents/ separately, is what
+      // keeps the dev install and the native install the same shape: both hand
+      // the host one plugin root that already carries a manifest.
+      const linkLines = codeOf(INSTALL_SRC)
+        .split("\n")
+        .filter((line) => line.trim().startsWith("ln -s"));
+      expect(linkLines).toHaveLength(1);
+      expect(linkLines[0]).toContain("$PLUGIN_ROOT");
+      expect(linkLines[0]).toContain("$TARGET");
+      // No manifest is generated: the checkout's own is the one that ships.
+      expect(codeOf(INSTALL_SRC)).not.toMatch(/>\s*"?\$\{?MANIFEST/);
     });
 
     test("neither script executes the agy binary", () => {
@@ -346,26 +376,23 @@ describe("dev install: antigravity harness", () => {
     });
 
     test("neither script contains a recursive delete", () => {
-      // Everything these scripts remove, they wrote: two symlinks, one
-      // generated manifest, and a directory removed with `rmdir`, which
-      // refuses rather than recursing. Comments are stripped first, since the
-      // uninstall explains itself by naming the flag it does not use.
+      // Each removes exactly one symlink, which it created. Comments are
+      // stripped first, since a script may name a flag it does not use.
       for (const [name, src] of BOTH_SCRIPTS) {
         expect(codeOf(src), name).not.toMatch(/rm\s+-[a-z]*r/);
       }
-      expect(UNINSTALL_SRC).toContain('rmdir "$TARGET"');
     });
 
-    test("the README documents the native install and claims no dev-only limit", () => {
+    test("the README documents the install and claims no dev-only limit", () => {
       const section = squash(antigravitySection(readIfExists(README)));
       expect(section.length).toBeGreaterThan(0);
 
-      // The native path is the one an end user needs, so it must be present
-      // and must be a command they can copy.
+      // The install command an end user needs, in the local-checkout form the
+      // other two hosts' sections use.
       expect(section).toContain("agy plugin install");
       expect(section).toContain("script/dev-install antigravity");
 
-      // Claims the measurements disproved. Each was in the shipped revision.
+      // Claims the measurements disproved. Each was in an earlier revision.
       expect(section).not.toContain("dev-install-only");
       expect(section).not.toContain("nothing distributed ships");
     });
@@ -381,49 +408,43 @@ describe("dev install: antigravity harness", () => {
   });
 
   describe("L3: install", () => {
-    test("a fresh install writes a manifest and two links into the plugin root", () => {
+    test("a fresh install links the checkout into the plugin directory", () => {
       const home = newHome();
       const result = run(INSTALL, home);
       expectStatus(result, 0);
 
-      const root = pluginRoot(home);
-      expect(readIfExists(join(root, "plugin.json"))).toBe('{\n  "name": "team"\n}\n');
-      expect(linkStateOf(join(root, "skills"))).toBe("symlink");
-      expect(linkStateOf(join(root, "agents"))).toBe("symlink");
-      expect(linkTextOf(join(root, "skills"))).toBe(SKILLS_ROOT);
-      expect(linkTextOf(join(root, "agents"))).toBe(AGENTS_ROOT);
+      expect(linkStateOf(pluginRoot(home))).toBe("symlink");
+      expect(linkTextOf(pluginRoot(home))).toBe(REPO_ROOT);
       expect(result.output).toContain("Linked:");
-      expect(result.output).toContain("Wrote:");
     });
 
-    test("the whole corpus is reachable through the links, unfiltered", () => {
+    test("the whole corpus and the manifest are reachable through the link", () => {
       const home = newHome();
       expectStatus(run(INSTALL, home), 0);
 
-      // Read through the installed links, and compare against the checkout.
+      // Read through the installed link, and compare against the checkout.
       // This is the assertion that would fail if a filter ever came back.
       const root = pluginRoot(home);
+      expect(JSON.parse(readIfExists(join(root, "plugin.json"))).name).toBe("team");
       const installedSkills = entriesOf(join(root, "skills"));
-      const installedAgents = entriesOf(join(root, "agents"));
       expect(installedSkills.length).toBeGreaterThan(0);
       expect(installedSkills).toEqual(entriesOf(SKILLS_ROOT));
-      expect(installedAgents).toEqual(entriesOf(AGENTS_ROOT));
+      expect(entriesOf(join(root, "agents"))).toEqual(entriesOf(AGENTS_ROOT));
 
-      // The two skills the shipped revision withheld. The host keeps them out
-      // of the model's reach itself, so the install ships them.
+      // The two skills an earlier revision withheld. The host keeps them out of
+      // the model's reach itself, so the install ships them.
       expect(installedSkills).toContain("pr-rebase");
       expect(installedSkills).toContain("pr-watch-as-reviewer");
     });
 
-    test("a re-run repairs a manifest deleted by hand", () => {
+    test("a re-run is idempotent", () => {
       const home = newHome();
       expectStatus(run(INSTALL, home), 0);
-      rmSync(join(pluginRoot(home), "plugin.json"));
 
-      expectStatus(run(INSTALL, home), 0);
-      expect(readIfExists(join(pluginRoot(home), "plugin.json"))).toContain(
-        '"name": "team"',
-      );
+      const again = run(INSTALL, home);
+      expectStatus(again, 0);
+      expect(again.output).toContain("already installed");
+      expect(linkTextOf(pluginRoot(home))).toBe(REPO_ROOT);
     });
 
     test("a native install is refused and left byte-identical", () => {
@@ -434,67 +455,33 @@ describe("dev install: antigravity harness", () => {
       const result = run(INSTALL, home);
       expectStatus(result, 1);
       expect(result.output).toContain("agy plugin uninstall team");
-      // The real directories are still real, and the manifest is untouched.
-      expect(linkStateOf(join(root, "skills"))).toBe("other");
+      // The real directory is still real, and the manifest is untouched.
+      expect(linkStateOf(root)).toBe("other");
       expect(readIfExists(join(root, "plugin.json"))).toBe(before);
     });
 
-    test("a symlinked plugin root is refused and left in place", () => {
+    test("another checkout's link is refused, and that checkout is named", () => {
       const home = newHome();
-      const elsewhere = join(home, "elsewhere");
-      mkdirSync(elsewhere, { recursive: true });
-      mkdirSync(join(home, ".gemini/config/plugins"), { recursive: true });
-      symlinkSync(elsewhere, pluginRoot(home));
+      const other = seedOtherCheckout(home);
 
       const result = run(INSTALL, home);
       expectStatus(result, 1);
-      expect(result.output).toContain("is a symlink");
-      expect(linkStateOf(pluginRoot(home))).toBe("symlink");
-      expect(linkTextOf(pluginRoot(home))).toBe(elsewhere);
-    });
-
-    test("a directory holding someone else's files is refused, and they survive", () => {
-      const home = newHome();
-      const root = pluginRoot(home);
-      mkdirSync(root, { recursive: true });
-      writeFileSync(join(root, "notes.txt"), "keep me\n");
-
-      const result = run(INSTALL, home);
-      expectStatus(result, 1);
-      expect(result.output).toContain("this script did not create it");
-      expect(readIfExists(join(root, "notes.txt"))).toBe("keep me\n");
-      // Nothing was added beside it.
-      expect(entriesOf(root)).toEqual(["notes.txt"]);
-    });
-
-    test("another checkout's links are refused, and that checkout is named", () => {
-      const home = newHome();
-      const root = pluginRoot(home);
-      const other = join(home, "other-checkout");
-      mkdirSync(join(other, "skills"), { recursive: true });
-      mkdirSync(join(other, "agents"), { recursive: true });
-      mkdirSync(root, { recursive: true });
-      symlinkSync(join(other, "skills"), join(root, "skills"));
-      symlinkSync(join(other, "agents"), join(root, "agents"));
-
-      const result = run(INSTALL, home);
-      expectStatus(result, 1);
-      expect(result.output).toContain(join(other, "skills"));
+      expect(result.output).toContain(other);
       expect(result.output).toContain("dev-uninstall antigravity");
-      // The other checkout's links are still the ones installed.
-      expect(linkTextOf(join(root, "skills"))).toBe(join(other, "skills"));
+      // The other checkout's link is still the one installed.
+      expect(linkTextOf(pluginRoot(home))).toBe(other);
     });
   });
 
   describe("L3: uninstall", () => {
-    test("it removes exactly what the install created", () => {
+    test("it removes the link it created and leaves the host's tree alone", () => {
       const home = newHome();
       expectStatus(run(INSTALL, home), 0);
 
       const result = run(UNINSTALL, home);
       expectStatus(result, 0);
-      expect(existsSync(pluginRoot(home))).toBe(false);
-      // The host's own config tree is never removed, only Team's plugin root.
+      expect(result.output).toContain("Removed:");
+      expect(linkStateOf(pluginRoot(home))).toBe("unreadable");
       expect(existsSync(join(home, ".gemini/config/plugins"))).toBe(true);
     });
 
@@ -515,17 +502,18 @@ describe("dev install: antigravity harness", () => {
       expect(entriesOf(root)).toEqual(["agents", "plugin.json", "skills"]);
     });
 
-    test("files it did not write are left in place and reported", () => {
+    test("removing another checkout's link says so", () => {
+      // The sweep is by link, not by which checkout wrote it, so this one is
+      // removed — but silently removing another checkout's install would leave
+      // someone guessing why their skills vanished.
       const home = newHome();
-      expectStatus(run(INSTALL, home), 0);
-      writeFileSync(join(pluginRoot(home), "notes.txt"), "keep me\n");
+      const other = seedOtherCheckout(home);
 
       const result = run(UNINSTALL, home);
       expectStatus(result, 0);
-      expect(result.output).toContain("Left in place");
-      // Its own links are gone; the stranger's file is not.
-      expect(linkStateOf(join(pluginRoot(home), "skills"))).toBe("unreadable");
-      expect(readIfExists(join(pluginRoot(home), "notes.txt"))).toBe("keep me\n");
+      expect(result.output).toContain("another checkout");
+      expect(result.output).toContain(other);
+      expect(linkStateOf(pluginRoot(home))).toBe("unreadable");
     });
   });
 
@@ -533,10 +521,10 @@ describe("dev install: antigravity harness", () => {
     test("script/dev-install antigravity installs, and dev-uninstall removes", () => {
       const home = newHome();
       expectStatus(run(DEV_INSTALL, home, ["antigravity"]), 0);
-      expect(linkStateOf(join(pluginRoot(home), "skills"))).toBe("symlink");
+      expect(linkTextOf(pluginRoot(home))).toBe(REPO_ROOT);
 
       expectStatus(run(DEV_UNINSTALL, home, ["antigravity"]), 0);
-      expect(existsSync(pluginRoot(home))).toBe(false);
+      expect(linkStateOf(pluginRoot(home))).toBe("unreadable");
     });
   });
 });

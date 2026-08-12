@@ -8,8 +8,8 @@ Team installs on Claude Code, on Codex CLI, and on Antigravity CLI. The full pip
 
 ## Install
 
-Team ships a native manifest for Claude Code and for Codex CLI, and Antigravity
-CLI reads the Claude Code one, so one repo installs on all three. Pick yours.
+Team ships a native manifest for each host, so one repo installs on all three
+from a local checkout. Pick yours.
 
 <details>
 <summary><strong>Claude Code</strong></summary>
@@ -69,20 +69,20 @@ utilities — `team:shipit`, `team:pr-watch-as-author`, `team:pr-open-comments`,
 <summary><strong>Antigravity CLI</strong></summary>
 
 ```bash
-agy plugin install https://github.com/bostonaholic/team
+agy plugin install /path/to/team
 ```
 
-Antigravity reads Team's Claude Code manifest directly, so nothing separate
-ships for it: the install clones the repo, recognizes `.claude-plugin/`, and
-copies all 54 skills and all 13 agents into `~/.gemini/config/plugins/team/`.
-`agy plugin list` shows it afterwards, and `agy plugin uninstall team` removes
-it. Measured against `agy` 1.1.12.
+Team ships `plugin.json` at the repo root — this host's own plugin marker, with
+`skills/` and `agents/` beside it where Antigravity resolves them — so it
+installs Team as a native Antigravity plugin, not as an imported Claude Code
+one. `agy plugin list` shows it afterwards, and `agy plugin uninstall team`
+removes it. All 54 skills and all 13 agents install. Measured against `agy`
+1.1.12.
 
 Two differences worth knowing. Skills arrive under **bare names** — ask for
 `shipit`, not `team:shipit` — because this host takes each skill's catalog name
 from its own frontmatter rather than from where the file sits. And the install
-copies rather than links, so pulling a new version of Team means installing
-again.
+copies the checkout, so pulling a new version of Team means installing again.
 
 Unlike Codex, **Antigravity honors `disable-model-invocation`**, so
 `pr-watch-as-reviewer` and `pr-rebase` keep the guard that makes them
@@ -90,31 +90,26 @@ user-only, and nothing needs removing after installing. Measured: with the
 plugin installed, neither one appears in the model's own list of available
 skills, while the other 52 do.
 
-The 13 agents are installed, but whether this host dispatches them the way
-Claude Code does is untested, so the `/team-*` pipeline commands are not
-claimed to run here yet. Full parity is tracked in
+The 13 agents install, but whether this host dispatches them the way Claude
+Code does is untested, so the `/team-*` pipeline commands are not claimed to run
+here yet. Full parity is tracked in
 [#56](https://github.com/bostonaholic/team/issues/56). The standalone
 utilities — `shipit`, `pr-watch-as-author`, `pr-open-comments`,
 `groom-backlog`, `code-review` — need no agent and work as they do on Claude
 Code.
 
-**Developing Team itself?** The native install copies, so a checkout's edits
-never reach it. This links them instead:
+**Developing Team itself?** The install copies, so a checkout's edits never
+reach it. This links them instead:
 
 ```bash
 script/dev-install antigravity
 script/dev-uninstall antigravity
 ```
 
-That builds a plugin root at `~/.gemini/config/plugins/team/` whose `skills/`
-and `agents/` are symlinks into your checkout, so an edit to a `SKILL.md` is
-live in the next `agy` session. It writes a minimal `plugin.json` of its own,
-because this host resolves `skills/` and `agents/` relative to the manifest and
-Team's manifests sit in `.claude-plugin/` with no skills beside them. Nothing
-it did not create is ever replaced: a native install, another checkout's links,
-or anything else at that path stops the run and is named, since the uninstall
-could not put it back. The uninstall removes only the two links and the
-manifest it wrote, and leaves the host's own config tree alone.
+That points `~/.gemini/config/plugins/team` at your checkout with one symlink,
+so an edit to a `SKILL.md` is live in the next `agy` session. It replaces
+nothing it did not create: a native install of Team, or another checkout's link,
+stops the run and is named, since the uninstall could not put it back.
 
 </details>
 

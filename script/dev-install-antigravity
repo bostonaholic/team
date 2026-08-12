@@ -1,93 +1,58 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Mirrors script/dev-install for Antigravity CLI. Builds a plugin root under
-# Antigravity's global plugin directory whose skills/ and agents/ are symlinks
-# into this checkout, so an edit is live at the next session start.
+# Mirrors script/dev-install for Antigravity CLI. Symlinks this checkout into
+# Antigravity's global plugin directory, so edits are live.
 #
-# An end user needs none of this. `agy plugin install <repo-url>` installs Team
-# natively, copying every skill and agent. This script exists for the one thing
-# that install cannot do: it copies, so a checkout's edits never reach it.
+# Team ships plugin.json at the repo root, which is this host's own plugin
+# marker, with skills/ and agents/ beside it where the host resolves them. So the
+# checkout is already a valid Antigravity plugin root and one link is the whole
+# install — no manifest is generated and no per-skill link is written.
 #
-# Antigravity keys discovery on a plugin.json marker at a plugin root, and
-# resolves skills/ and agents/ relative to that manifest rather than to the repo
-# root. Team's own manifests live in .claude-plugin/ and .codex-plugin/ with no
-# skills beside them, so neither can serve as that marker and this script
-# generates a minimal one.
-#
-# Measured against agy 1.1.12: discovery follows these symlinks, and the host
-# honors disable-model-invocation — pr-rebase and pr-watch-as-reviewer stay out
-# of the model's reach on their own. So this links the whole tree and withholds
-# nothing, unlike the Codex install, whose host ignores that key.
+# Measured against agy 1.1.12: discovery follows a symlinked plugin root, and the
+# host honors disable-model-invocation, so pr-rebase and pr-watch-as-reviewer
+# stay out of the model's reach on their own. Nothing is withheld here, unlike
+# the Codex install, whose host ignores that key.
 
 PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SKILLS_SRC="${PLUGIN_ROOT}/skills"
-AGENTS_SRC="${PLUGIN_ROOT}/agents"
 TARGET="${HOME}/.gemini/config/plugins/team"
-MANIFEST="${TARGET}/plugin.json"
 
-for src in "$SKILLS_SRC" "$AGENTS_SRC"; do
-  if [ ! -d "$src" ]; then
-    echo "Error: no $(basename "$src")/ directory at ${PLUGIN_ROOT}" >&2
+for component in plugin.json skills agents; do
+  if [ ! -e "${PLUGIN_ROOT}/${component}" ]; then
+    echo "Error: no ${component} at ${PLUGIN_ROOT}" >&2
     exit 1
   fi
 done
 
-# Nothing this script did not create is ever replaced, because the uninstall
-# could not put it back. A native `agy plugin install` writes a real skills/
-# directory at this same path, so that collision is caught here too rather than
-# by a separate probe of the host binary.
+# Already linked — nothing to do
+if [ -L "$TARGET" ] && [ "$(readlink "$TARGET")" = "$PLUGIN_ROOT" ]; then
+  echo "Team already installed for Antigravity (dev)."
+  exit 0
+fi
+
+# A native `agy plugin install` writes a real directory at this same path, and
+# another checkout's dev install writes a link to itself. Neither is replaced,
+# because the uninstall could not put it back.
 if [ -L "$TARGET" ]; then
-  echo "Error: ${TARGET} is a symlink, which this script never creates." >&2
-  echo "Move it, then re-run." >&2
+  echo "Error: ${TARGET} already links a different checkout:" >&2
+  echo "  $(readlink "$TARGET")" >&2
+  echo "Run script/dev-uninstall antigravity from that checkout first." >&2
   exit 1
 fi
 
 if [ -e "$TARGET" ]; then
-  if [ ! -d "$TARGET" ]; then
-    echo "Error: ${TARGET} exists and is not a directory." >&2
-    echo "Move it, then re-run." >&2
-    exit 1
-  fi
-
-  # This checkout's own install falls through and rewrites the same manifest and
-  # links rather than exiting early, so a re-run repairs a partial install — a
-  # manifest deleted by hand, or a link left behind by an interrupted run.
-  if [ -L "${TARGET}/skills" ] && [ -L "${TARGET}/agents" ]; then
-    LINKED_SKILLS="$(readlink "${TARGET}/skills")"
-    if [ "$LINKED_SKILLS" != "$SKILLS_SRC" ]; then
-      echo "Error: ${TARGET} already links a different checkout:" >&2
-      echo "  ${LINKED_SKILLS}" >&2
-      echo "Run script/dev-uninstall antigravity from that checkout first." >&2
-      exit 1
-    fi
-  else
-    echo "Error: ${TARGET} exists and this script did not create it." >&2
-    if [ -d "${TARGET}/skills" ] || [ -d "${TARGET}/agents" ]; then
-      echo "It holds real directories, so it looks like a native install." >&2
-      echo "Remove that first: agy plugin uninstall team" >&2
-    else
-      echo "Move it, then re-run." >&2
-    fi
-    exit 1
-  fi
+  echo "Error: ${TARGET} exists and is not a symlink." >&2
+  echo "It looks like a native install. Remove it with: agy plugin uninstall team" >&2
+  exit 1
 fi
 
 echo "Installing Team for Antigravity (dev)..."
 echo "  Source: ${PLUGIN_ROOT}"
 echo
 
-mkdir -p "$TARGET"
-
-# Antigravity's own installer writes exactly this one field, so match it rather
-# than inventing a richer manifest the host has not been measured to read.
-printf '{\n  "name": "team"\n}\n' >"$MANIFEST"
-echo "  Wrote:  ${MANIFEST}"
-
-ln -sfn "$SKILLS_SRC" "${TARGET}/skills"
-echo "  Linked: ${TARGET}/skills → ${SKILLS_SRC}"
-ln -sfn "$AGENTS_SRC" "${TARGET}/agents"
-echo "  Linked: ${TARGET}/agents → ${AGENTS_SRC}"
+mkdir -p "$(dirname "$TARGET")"
+ln -sfn "$PLUGIN_ROOT" "$TARGET"
+echo "  Linked: ${TARGET} → ${PLUGIN_ROOT}"
 
 echo
 echo "Done. Antigravity loads the skills and agents at the next session start."

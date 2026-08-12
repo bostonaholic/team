@@ -58,11 +58,15 @@ describe("version-bump skill: the Team-version mechanics live here", () => {
     expect(t).toContain("next-version.sh");
   });
 
-  test("bumps the five version strings across the four files", () => {
+  test("bumps the six version strings across the five files", () => {
     expect(t).toContain(".claude-plugin/plugin.json");
     expect(t).toContain(".claude-plugin/marketplace.json");
     expect(t).toContain(".codex-plugin/plugin.json");
     expect(t).toContain("package.json");
+    // Antigravity's manifest sits at the repo root, so it cannot be matched by
+    // a directory prefix like the other three. Anchor it to the `git add` line
+    // that stages the bump, which no other file path would satisfy.
+    expect(t).toMatch(/git add[^`]*\bplugin\.json\b[^`]*package\.json/);
   });
 
   test("cuts the [Unreleased] changelog into a dated section + footer", () => {

@@ -78,11 +78,16 @@ function newRepo(): string {
 function scenario(opts: {
   forkVersion: string;
   mainBumps?: string[];
+  // Seeds a file into the fork commit, so a branch edit to it is a modification
+  // rather than an addition. A version-only diff needs a prior version to differ
+  // from, which an added file cannot have.
+  forkEdits?: (dir: string) => void;
   branchEdits: (dir: string) => void;
 }) {
   const dir = newRepo();
   writePlugin(dir, opts.forkVersion);
   writeFile(dir, "README.md", "# fork\n");
+  opts.forkEdits?.(dir);
   commit(dir, `chore: fork at ${opts.forkVersion}`);
   const forkSha = git(dir, "rev-parse", "HEAD");
   git(dir, "branch", "feature", forkSha);
@@ -189,6 +194,47 @@ describe.if(HAS_JQ)("version-bump-required.sh: the runtime-vs-dev bump invariant
         ),
     });
     expect(run(dir, { HEAD_SHA: headSha, BASE_SHA: baseSha }).status).not.toBe(0);
+  });
+
+  // Antigravity's manifest is the one that sits at the repo root, among dev
+  // files, so a directory prefix cannot classify it. It ships to end users all
+  // the same, and a root file that is NOT a manifest must stay dev-only — the
+  // pair below is what separates "matched the manifest" from "matched the root".
+  test("root plugin.json content change WITHOUT a bump → violation (non-zero)", () => {
+    const { dir, headSha, baseSha } = scenario({
+      forkVersion: "0.13.1",
+      branchEdits: (d) =>
+        writeFile(
+          d,
+          "plugin.json",
+          JSON.stringify(
+            { name: "team", version: "0.13.1", description: "A new user-facing description" },
+            null,
+            2,
+          ) + "\n",
+        ),
+    });
+    expect(run(dir, { HEAD_SHA: headSha, BASE_SHA: baseSha }).status).not.toBe(0);
+  });
+
+  test("root plugin.json version-only edit is not a content change → ok (exit 0)", () => {
+    // A bare version edit is the bump itself, never the thing that justifies it.
+    const { dir, headSha, baseSha } = scenario({
+      forkVersion: "0.13.1",
+      forkEdits: (d) =>
+        writeFile(
+          d,
+          "plugin.json",
+          JSON.stringify({ name: "team", version: "0.13.1" }, null, 2) + "\n",
+        ),
+      branchEdits: (d) =>
+        writeFile(
+          d,
+          "plugin.json",
+          JSON.stringify({ name: "team", version: "0.13.2" }, null, 2) + "\n",
+        ),
+    });
+    expect(run(dir, { HEAD_SHA: headSha, BASE_SHA: baseSha }).status).toBe(0);
   });
 
   // docs-only change with no bump is fine (docs/ is contributor-facing).
