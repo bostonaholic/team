@@ -265,9 +265,7 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 - **Purpose:** Land a reviewed pull request: push unpushed commits, wait for
   CI to go green, then squash-merge (the PR title becomes the commit subject).
-- **`$ARGUMENTS`:** `[<pr-number>] [--yes]` is an optional PR number
-  override. `--yes` skips the interactive pre-merge confirmation for
-  non-interactive callers.
+- **`$ARGUMENTS`:** `[<pr-number>]` is an optional PR number override.
 - **Phase:** None. A standalone land action, not part of the pipeline.
 - **Key behaviors:** Discovers the open PR for the current branch through
   the §2B fallback chain (refuses if there is none, or if it is already
@@ -281,12 +279,14 @@ QRSPI phase: a self-contained action a user runs on demand.
   lands in `git log`. **Project-agnostic**: it does no versioning,
   changelog editing, or release work. Those, if a project needs them, run
   in a separate step before `/shipit` (in this repo, the dev `version-bump`
-  skill). Model-invocable, but the merge is irreversible, so three guards
+  skill). Model-invocable, but the merge is irreversible, so two guards
   replace the former hard flag: it fires only on explicit ship intent
   ("ship it", "land the PR", `/shipit`) and never on a PR that is merely
-  approved or green. The pre-merge confirmation stands unless the caller
-  already carries the user's authorization (`--yes`). The CI-green wait
-  also gates the merge mechanically. On a merge that **landed**, it runs
+  approved or green, and the CI-green wait gates the merge mechanically.
+  Neither guard is a question put to the user mid-run — **it does not stop
+  to confirm the merge**, because ship intent already carried the
+  authorization and every caller chaining into `/shipit` would inherit the
+  stop. On a merge that **landed**, it runs
   `/pr-cleanup` rather than recommending it — resyncing the default branch
   and deleting the merged branch carry no decision, and Mode A gates itself
   on merged-PR verification. A run that stopped short (failing check, CI

@@ -11,7 +11,7 @@ description: |
   "/shipit". Landing merges, which is irreversible: never infer ship intent
   from a PR merely being approved, green, or finished.
 effort: medium
-argument-hint: "[<pr-number>] [--yes]"
+argument-hint: "[<pr-number>]"
 ---
 
 # shipit — land a reviewed PR
@@ -30,23 +30,27 @@ version at land time, that happens in a separate project-specific step *before*
 [docs/versioning.md](../../docs/versioning.md)). `shipit` only cares that the
 branch is ready to land.
 
-`gh pr merge` is irreversible, so three things guard it — none of them a
-frontmatter flag:
+`gh pr merge` is irreversible, so two things guard it — neither of them a
+frontmatter flag, and neither of them a question put to the user mid-run:
 
 1. **Explicit ship intent.** The skill fires only on a direct "ship it" / "land
    the PR" / `/shipit`. An approved, green, or finished-looking PR is *not*
    ship intent — the user decides when to land.
-2. **The pre-merge confirmation** (step 4), which the model never skips on its
-   own initiative: `--yes` belongs to a caller that already carries the user's
-   authorization to merge.
-3. **CI green** (step 3), which gates the merge mechanically — a red or timed
+2. **CI green** (step 3), which gates the merge mechanically — a red or timed
    out check stops the land before `gh pr merge` ever runs.
+
+**Do not ask the user to confirm the merge.** Ship intent already carried the
+authorization to merge, so a confirmation re-requests permission the invocation
+granted, and every caller that chains into `/shipit` inherits the stop. Once
+step 3 reports green, merge. The guard against merging the wrong thing is
+refusing to start without ship intent, not stopping halfway through a land the
+user asked for.
 
 ## Input acquisition
 
 `shipit` lands the open PR for the **current branch**. Discover it with
 `gh pr view --json baseRefName,number,state,title` and a base-branch fallback.
-Never hardcode the base branch. The `title` is captured here because step 5
+Never hardcode the base branch. The `title` is captured here because step 4
 lands it as the squash commit subject. Run this in one bash call (an agent
 thread resets cwd between calls):
 
@@ -69,9 +73,9 @@ echo "BASE: $BASE"
 
 ## Land sequence
 
-The steps below are the **scriptable core**. The one interactive confirmation
-(the pre-merge confirm in step 4) **wraps** it: a non-interactive caller passes
-`--yes` to skip the prompt, leaving a pure push → wait → merge sequence.
+The steps below are the whole sequence, and they are **scriptable end to end**:
+a pure push → wait → merge with no prompt in the middle. Nothing here waits on a
+human.
 
 ### 1. Pre-flight merge-button check
 
@@ -99,7 +103,7 @@ git push
 ```
 
 If the local branch and remote diverged because someone rebased the branch
-locally, see the force-with-lease guidance in step 5. Never use a bare
+locally, see the force-with-lease guidance in step 4. Never use a bare
 `--force`.
 
 ### 3. Wait for CI
@@ -136,16 +140,7 @@ of three outcomes:
 commits are already on the branch — `shipit` simply pushes any new ones, waits
 again, and merges. It is safe to re-run.
 
-### 4. Pre-merge confirmation
-
-`gh pr merge` is irreversible. **Ask for an explicit confirmation** before
-merging — "about to merge PR #N into `<base>` — proceed?" — and only merge on a
-yes. `--yes` skips this prompt, but it is **the caller's to pass, never yours to
-add**: it means the invoker already authorized the merge. Running as an agent
-does not make you a non-interactive caller — when `--yes` is absent, ask.
-The prompt wraps the scriptable core, it does not live inside it.
-
-### 5. Rebase if behind the base, then merge
+### 4. Rebase if behind the base, then merge
 
 **PR behind its base.** Before merging, check if the base branch advanced since
 CI last ran. If the PR is **behind `<base>`**, bring it up to date:
