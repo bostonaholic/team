@@ -9,6 +9,18 @@
  * actually merge (the PR's remote head vs the fetched base tip) and denies the
  * merge unless the script exits 0 printing an `OK:` line.
  *
+ * The script is read out of the PR HEAD COMMIT, never from this checkout's
+ * working tree (#232). The script IS the definition of "runtime file", so a PR
+ * that extends that definition must be judged by the definition it lands, not
+ * by the one it replaces. This file's own location is no guide to that: hooks
+ * resolve through $CLAUDE_PROJECT_DIR, and worktrees live under
+ * <repo>/.claude/worktrees/, so the path above routinely lands in the OUTER
+ * main checkout while the branch being merged sits in a worktree. Reading from
+ * the commit removes the coupling entirely. A fork head is the exception —
+ * running its script would execute unreviewed code locally, which this repo
+ * already refuses for fork PRs (docs/testing.md §5) — so a fork whose script
+ * differs from this checkout's denies instead.
+ *
  * Failure direction: fail open only before jurisdiction is decided
  * (unparseable stdin, a parsed command with no `gh pr merge` simple
  * command). A command the tokenizer cannot parse fails CLOSED whenever its
@@ -24,17 +36,22 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const INVARIANT_SCRIPT = join(
-  REPO_ROOT,
-  ".github",
-  "scripts",
-  "version-bump-required.sh",
-);
+// Repo-relative, because the script is read out of a commit. The absolute path
+// below is used only to compare against a fork head's copy.
+const INVARIANT_SCRIPT_PATH = ".github/scripts/version-bump-required.sh";
+const INVARIANT_SCRIPT = join(REPO_ROOT, ...INVARIANT_SCRIPT_PATH.split("/"));
 
 // All external calls (gh, the fetches, the script run) share ONE overall
 // budget, kept below the registered hook timeout (.claude/settings.json) so a
@@ -82,11 +99,28 @@ function describeFailure(what, result) {
   return `pre-merge guard: ${what} failed (exit ${result.status})${stderr ? `: ${stderr}` : ""}`;
 }
 
+// The extracted gate script lives in a temp dir for the length of one run.
+// deny() exits the process, so `finally` never runs — every exit path clears it
+// explicitly instead, or the guard litters tmp on each denied merge.
+let scratchDir = null;
+
+function clearScratch() {
+  if (scratchDir === null) return;
+  const dir = scratchDir;
+  scratchDir = null;
+  try {
+    rmSync(dir, { recursive: true, force: true });
+  } catch {
+    // A leftover temp dir is not worth failing a verdict over.
+  }
+}
+
 // Dual deny channel: the permission payload denies the tool call, and exit 2
 // is a blocking error whose stderr Claude Code feeds back to the model. The
 // deny text is the only text the denied session is guaranteed to read, so it
 // must carry the recovery route itself.
 function deny(text) {
+  clearScratch();
   process.stdout.write(
     JSON.stringify({
       hookSpecificOutput: {
@@ -907,7 +941,7 @@ function gate(mergeWords) {
     "view",
     ...(selector !== undefined ? [selector] : []),
     "--json",
-    "number,headRefOid,baseRefName",
+    "number,headRefOid,baseRefName,isCrossRepository",
   ]);
   if (!succeeded(view)) {
     deny(
@@ -926,17 +960,20 @@ function gate(mergeWords) {
   const number = pr?.number;
   const headRefOid = pr?.headRefOid;
   const baseRefName = pr?.baseRefName;
+  const isCrossRepository = pr?.isCrossRepository;
   // The full-oid shape check keeps headRefOid from ever reaching git as an
   // option-shaped or ref-expression argument.
   if (
     !Number.isInteger(number) ||
     typeof headRefOid !== "string" ||
     !/^[0-9a-f]{40}$/.test(headRefOid) ||
-    typeof baseRefName !== "string"
+    typeof baseRefName !== "string" ||
+    typeof isCrossRepository !== "boolean"
   ) {
     deny(
       "pre-merge guard: unexpected gh pr view output (expected an integer " +
-        "number, a 40-hex-char headRefOid, and a string baseRefName): " +
+        "number, a 40-hex-char headRefOid, a string baseRefName, and a " +
+        "boolean isCrossRepository): " +
         `${view.stdout.trim()}\n` +
         "Recovery: check gh (gh --version, gh auth status), then re-run /shipit.",
     );
@@ -1006,21 +1043,55 @@ function gate(mergeWords) {
     );
   }
 
-  if (!existsSync(INVARIANT_SCRIPT)) {
+  // The gate script as of the PR head, which is the definition of "runtime
+  // file" that this merge lands (#232). A head that carries no script yields no
+  // verdict.
+  const headScript = run("git", [
+    "show",
+    `${headRefOid}:${INVARIANT_SCRIPT_PATH}`,
+  ]);
+  if (!succeeded(headScript) || (headScript.stdout ?? "") === "") {
     deny(
-      `pre-merge guard: missing ${INVARIANT_SCRIPT}. Recovery: restore it ` +
-        `(git checkout origin/${defaultBranch} -- .github/scripts/version-bump-required.sh), ` +
-        "then re-run /shipit.",
+      `pre-merge guard: the PR head carries no ${INVARIANT_SCRIPT_PATH}. ` +
+        "Recovery: restore it on the branch " +
+        `(git checkout origin/${defaultBranch} -- ${INVARIANT_SCRIPT_PATH}), ` +
+        "push, then re-run /shipit.",
     );
   }
+
+  // A fork head's script is unreviewed code, and this repo withholds trust from
+  // fork PRs by policy (docs/testing.md §5), so it is never executed. An
+  // identical copy is this checkout's own content and runs normally; a divergent
+  // one denies and hands the operator the diff.
+  if (isCrossRepository) {
+    const local = existsSync(INVARIANT_SCRIPT)
+      ? readFileSync(INVARIANT_SCRIPT, "utf-8")
+      : null;
+    if (local !== headScript.stdout) {
+      deny(
+        `pre-merge guard: PR #${number} comes from a fork and its ` +
+          `${INVARIANT_SCRIPT_PATH} differs from this checkout's. The guard ` +
+          "does not execute a gate script it has not reviewed, so it cannot " +
+          "render a verdict. Recovery: read the head's copy " +
+          `(git show ${headRefOid}:${INVARIANT_SCRIPT_PATH}), and land the PR ` +
+          "deliberately outside this guard once you trust it.",
+      );
+    }
+  }
+
+  scratchDir = mkdtempSync(join(tmpdir(), "pre-merge-guard-gate-"));
+  const scriptPath = join(scratchDir, "version-bump-required.sh");
+  writeFileSync(scriptPath, headScript.stdout);
+
   // BASE_SHA is the base TIP, never a pre-computed merge-base: the script
   // reduces the pair to the fork point itself, exactly as CI did.
-  const verdict = run("bash", [INVARIANT_SCRIPT], {
+  const verdict = run("bash", [scriptPath], {
     HEAD_SHA: headRefOid,
     BASE_SHA: baseTipOid,
   });
   if (succeeded(verdict) && (verdict.stdout ?? "").startsWith("OK:")) {
     // Allow silently (check-registry-sync.mjs precedent: no output on allow).
+    clearScratch();
     return;
   }
   const text =
