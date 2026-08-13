@@ -73,7 +73,9 @@ of `skills/nested-agents/SKILL.md` (preloaded).
 
 ## Verdict
 
-End with a verdict the orchestrator parses:
+Structure the whole report per the `## Report Format` section of
+`skills/code-review/SKILL.md` (preloaded): the verdict line leads the
+report. The orchestrator parses it as one of:
 
 - **APPROVE** — all done criteria met, no blocking issues, tests pass.
 - **REQUEST CHANGES** — blocking issues found. The loop auto-fixes them, and

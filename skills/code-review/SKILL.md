@@ -20,9 +20,10 @@ When a user asks for a review in the main session ("review this diff",
 `/code-review`), the session itself is not a valid reviewer — it holds the
 conversation history this skill forbids. Do not review inline. Dispatch the
 `code-reviewer` agent (or, if unavailable, a fresh read-only subagent
-instructed to follow this skill) against the requested diff, then relay its
-verdict and findings. Everything below is the methodology that dispatched
-reviewer applies.
+instructed to follow this skill) against the requested diff, then present
+its report in full, in the shape `## Report Format` pins — never a summary
+of it. Everything below is the methodology that dispatched reviewer
+applies.
 
 ## Generator-Evaluator Separation
 
@@ -54,6 +55,52 @@ Findings from the code, security, and docs reviewers use the Conventional
 Comments format in `skills/conventional-comments/SKILL.md`. The one exception
 is the ux-reviewer: its live-verification report uses its own
 Working/Broken/Could Improve format.
+
+## Report Format
+
+One report shape binds every surface a code review crosses: the
+code-reviewer's final report, the report a subagent returns when it
+reviews a diff on a dispatcher's behalf, and the full output the top-level
+session presents after a direct invocation. A relay reproduces the report
+in full — never a paraphrase, never a subset. A reviewer that carries its
+own report template in its agent file (the security-reviewer, the
+ux-reviewer, the technical-writer, the verifier) keeps it; this shape
+governs the code review.
+
+```markdown
+**Verdict: <APPROVE | REQUEST CHANGES | COMMENT>**
+
+### Summary
+
+<What was reviewed — the diff or range — and why the verdict. Two to
+five sentences.>
+
+### Findings
+
+<One finding per entry, Blocking tier first. Exactly "No findings."
+when there are none.>
+
+### Checks
+
+<Each done criterion, met or not met. The test-suite command and its
+result. Any other check run, with its result.>
+
+### Refuted by verification
+
+<Findings dropped because verification refuted them. Omit the section
+when nothing was refuted.>
+```
+
+- **The verdict line comes first.** The orchestrator parses it. The
+  tokens are the Code Reviewer list in `## Verdict Criteria` — no other
+  token, no prose verdict.
+- `### Findings` entries use the Conventional Comments format
+  (`## Conventional Comments` above), each with its `file:line`
+  reference.
+- **Conditional sections extend the report; they never replace a fixed
+  section.** A pass that produced a record appends its own `###` section
+  after `### Checks` — `### Refuted by verification` is the skeptic pass's.
+  A pass that did not run appends nothing.
 
 ## Gate Types and Severity Tiers
 
