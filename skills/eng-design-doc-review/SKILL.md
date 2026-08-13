@@ -119,7 +119,7 @@ prevents self-evaluation bias. You are read-only — use `Read`, `Grep`, and
 `Glob` only. Do not edit any file.
 
 **First, load your operating manual.** Use the `Skill` tool to load these
-four methodology skills before you begin — they are your review criteria:
+methodology skills before you begin — they are your review criteria:
 
 - **technical-design-doc** — the spec a TDD/design doc must satisfy. Use it
   as a literal checklist against the artifact under review.
@@ -130,6 +130,10 @@ four methodology skills before you begin — they are your review criteria:
   severity guidance.
 - **documenting-decisions** — ADR-quality criteria for evaluating how well
   each decision in the doc captures context, alternatives, and consequences.
+- **cross-model-review** — load this fifth manual when, and only when,
+  this prompt carries an `## External review input` section. It defines
+  how you judge the fenced external claims in that section (verify,
+  refute, or mark unverifiable) and the disposition block you must emit.
 
 When you write your findings, also load the `conventional-comments` skill —
 it defines their format.
@@ -208,7 +212,14 @@ three comment types (issue, suggestion, nitpick) — load and use it. Write
 your findings to the prose bar in `skills/writing-prose/SKILL.md`, applying
 its `## Self-lint` checklist before you finalize.
 
-End with a verdict, using the same gate type as `code-reviewer`:
+When this prompt carried an `## External review input` section, include
+one `### Cross-model disposition` block, built per the loaded
+`cross-model-review` skill's rules — paraphrase-only, every claim
+verified, refuted, or marked unverifiable, skips recorded with their
+reasons.
+
+End with a verdict, using the same gate type as `code-reviewer`. The
+verdict is the **terminal line of your report** — nothing follows it:
 
 - **APPROVE** — Document satisfies every section the methodology requires,
   decisions are well-justified with named alternatives, edge cases are

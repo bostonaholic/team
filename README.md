@@ -164,14 +164,18 @@ inline images.
 
 ## Cross-model review (opt-in)
 
-For higher-stakes diffs, the code-reviewer can get a second opinion from
-another vendor's model: it sends the diff to the `codex` and `gemini` CLIs
-in pinned read-only mode, verifies every claim that comes back before
-adopting any of it, and records each round's disposition to
+Team can get a second opinion from another vendor's model at two gates,
+sending the payload to the `codex` and `gemini` CLIs in pinned read-only
+mode, verifying every claim that comes back before adopting any of it,
+and recording each round's disposition to
 `docs/plans/<id>/cross-model-notes.md`, which `/team-pr` surfaces in the
-PR's `## Review notes` section. The pass triggers only when the diff
-touches auth/session/crypto code, data storage or schema migrations, or
-public API contracts.
+PR's `## Review notes` section. The payload is a diff or a design
+document. On the code path, the code-reviewer sends the diff, and only
+when it touches auth/session/crypto code, data storage or schema
+migrations, or public API contracts. On the design path, the orchestrator
+sends the design document on **every** design-review round — up to ~10
+vendor calls per topic at the revision cap — with no trigger gate beyond
+the consent marker.
 
 It is off by default because **diff content leaves the machine** and
 reaches an external vendor's CLI. Opt in per repo by creating the consent

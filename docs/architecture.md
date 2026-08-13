@@ -363,14 +363,17 @@ the generator and the evaluator into one role. Read-only tool grants plus
 `tests/protocol.test.ts` pins both halves as an L2 tripwire, so a new reviewer
 that ships with `Write` fails CI.
 
-One path steps outside that enforcement: the `code-reviewer`'s opt-in
-cross-model pass (`skills/cross-model-review/SKILL.md`) shells out to
-external vendor CLIs, and an external process is beyond the harness's tool
-grants. On that path the reviewer invariant is **trusted and contained, not
+One path steps outside that enforcement: the opt-in cross-model pass
+(`skills/cross-model-review/SKILL.md`) shells out to external vendor CLIs
+— the `code-reviewer` on the code path, the orchestrator on the design
+path — and an external process is beyond the harness's tool grants. On
+that path the reviewer invariant is **trusted and contained, not
 enforced** — containment is the pinned read-only argv the bundled script
 hardcodes, the no-bypass-flag tripwire in `tests/cross-model-review.test.ts`,
-the consent-marker + trigger gate that keeps the pass off by default, and
-the PR diff surfacing any unexpected write.
+the double gate that keeps the pass off by default (consent marker +
+trigger classes on the code path; consent marker + the
+`TEAM_DISABLE_CROSS_MODEL` kill-switch on the design path), and the PR
+diff surfacing any unexpected write.
 
 `researcher` and `file-finder` are also read-only, for a different reason:
 research isolation (see [Phase 3](#phase-3-research)). Read-only does not by

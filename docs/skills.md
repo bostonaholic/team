@@ -770,14 +770,21 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 ### cross-model-review
 
 - **Purpose:** Opt-in cross-vendor review pass — a second vendor's opinion
-  on higher-stakes diffs, verified before any of it is adopted.
-- **Loaded by:** code-reviewer.
+  on higher-stakes diffs and on design documents, verified before any of
+  it is adopted.
+- **Loaded by:** code-reviewer; the design-review brief in
+  `eng-design-doc-review` loads it conditionally when its prompt carries
+  an `## External review input` section.
 - **Key behaviors:** Runs only when the repo carries the consent marker
-  `.team/cross-model-review` and the diff matches a trigger class (auth/
-  session/crypto, data storage and schema migrations, public API
-  contracts). The bundled `external-review.mjs` script pins read-only
-  invocations of the `codex` and `gemini` CLIs, checks the marker before
-  any binary lookup, and enforces the prompt, output, and timeout caps.
+  `.team/cross-model-review`. On the code path the diff must also match a
+  trigger class (auth/session/crypto, data storage and schema migrations,
+  public API contracts); on the design path the orchestrator runs the
+  pass every design-review round, no trigger classes. A machine-wide
+  `TEAM_DISABLE_CROSS_MODEL` kill-switch, checked before the marker,
+  hard-disables both paths. The bundled `external-review.mjs` script pins
+  read-only invocations of the `codex` and `gemini` CLIs, checks the
+  marker before any binary lookup, and enforces the prompt, output, and
+  timeout caps.
   Every external claim is verified before adoption — nothing reaches
   Blocking or Major without the reviewer's own `file:line` confirmation —
   and the per-round record lands under one `### Cross-model disposition`
