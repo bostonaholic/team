@@ -575,7 +575,18 @@ function filesUnder(dir: string): string[] {
 }
 
 describe("no approval-bypass flag anywhere in skills/cross-model-review/ (L2)", () => {
-  const FORBIDDEN = ["--yolo", "--full-auto", "workspace-write", "${CLAUDE_PLUGIN_ROOT}"];
+  // The bare "yolo" token subsumes --yolo and any yolo=true config spelling.
+  const FORBIDDEN = [
+    "yolo",
+    "--full-auto",
+    "workspace-write",
+    "danger-full-access",
+    "--dangerously-bypass-approvals-and-sandbox",
+    "--dangerously-bypass-hook-trust",
+    "--approve-for-me",
+    "disk-full-read-access",
+    "${CLAUDE_PLUGIN_ROOT}",
+  ];
 
   for (const token of FORBIDDEN) {
     test(`zero matches for ${token}`, () => {
