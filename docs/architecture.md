@@ -598,10 +598,10 @@ consumers, and behaviors), see [skills.md](skills.md).
    design convention, not a hard constraint. An agent's own extracted
    procedure skill does not count toward the soft limit: it replaces
    former inline body content 1:1, so it adds no net context.
-   `code-reviewer` preloads `cross-model-review` as a deliberate fifth
-   methodology skill — a stated deviation, not an oversight to fix back:
-   the opt-in cross-vendor pass belongs to the code review and nowhere
-   else, and inlining it would bloat the agent body it was extracted from.
+   `code-reviewer` preloads `cross-model-review` beyond the soft limit —
+   a stated deviation, not an oversight to fix back: the opt-in
+   cross-vendor pass belongs to the code review and nowhere else, and
+   inlining it would bloat the agent body it was extracted from.
 
 2. **Extraction threshold: capability against fragment.** Content that is
    an **independently useful capability** earns its own skill
