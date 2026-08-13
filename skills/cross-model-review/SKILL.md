@@ -35,7 +35,9 @@ per-CLI lines.
 Three named constants bound every invocation. They live in
 `external-review.mjs` as the single source of truth:
 
-- `TIMEOUT_MS` — 120 s in-process timeout per CLI call.
+- `TIMEOUT_MS` — 600 s (10 minutes) in-process timeout per CLI call. It
+  exists to reap a hung CLI, not to budget a working one: a real review
+  of a large diff takes many minutes.
 - `PROMPT_CAP_BYTES` — 128 KB ceiling on the prompt.
 - `OUTPUT_CAP_BYTES` — 32 KB ceiling on the output read back.
 
@@ -95,6 +97,12 @@ The script pins the argv — codex runs `exec` with
 the invoking user's permissions. codex reads the prompt
 on stdin; agy takes it as the `-p` value. Never invoke the vendor
 CLIs directly, and never pass extra flags.
+
+A real vendor review takes many minutes. **Run each `run` call in the
+background** and read its output when the task completes — a foreground
+shell's default timeout (often two minutes) would kill the call long
+before the runner's own `TIMEOUT_MS` budget, and that harness kill
+surfaces as a tool error rather than the runner's one-line skip.
 
 Because codex and agy can write, check the tree after the pass: run
 `git status` (and `git diff` on anything unexpected) and treat any

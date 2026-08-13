@@ -50,8 +50,13 @@ import { accessSync, constants, realpathSync, statSync } from "node:fs";
 import { delimiter, isAbsolute, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-/** In-process kill timer for a hung CLI (macOS ships no `timeout` binary). */
-export const TIMEOUT_MS = 120_000;
+/**
+ * In-process kill timer for a hung CLI (macOS ships no `timeout` binary).
+ * Generous by design: a real cross-vendor review of a large diff takes
+ * many minutes, so the timer exists to reap a *hung* CLI (agy's headless
+ * mode has documented hang bugs), never to budget a working one.
+ */
+export const TIMEOUT_MS = 600_000;
 
 /** Hard ceiling on the prompt sent to an external vendor: 128 KB. */
 export const PROMPT_CAP_BYTES = 128 * 1024;

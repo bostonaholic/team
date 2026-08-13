@@ -46,8 +46,8 @@ const KILL_SWITCH_VAR = "TEAM_DISABLE_CROSS_MODEL";
 // an h4 — a heading inside the wrap would leak into the PR body's outline.
 const ROUND_LABEL = "> **Design round <n>**";
 
-// Named caps: 120 s, 128 KB, 32 KB.
-const EXPECTED_TIMEOUT_MS = 120_000;
+// Named caps: 600 s, 128 KB, 32 KB.
+const EXPECTED_TIMEOUT_MS = 600_000;
 const EXPECTED_PROMPT_CAP_BYTES = 131_072;
 const EXPECTED_OUTPUT_CAP_BYTES = 32_768;
 
@@ -159,7 +159,7 @@ echo "fake findings"
 // ---------------------------------------------------------------------------
 
 describe("external-review.mjs pure core (L1)", () => {
-  test("exports the three named cap constants: TIMEOUT_MS 120 s, PROMPT_CAP_BYTES 128 KB, OUTPUT_CAP_BYTES 32 KB", () => {
+  test("exports the three named cap constants: TIMEOUT_MS 600 s, PROMPT_CAP_BYTES 128 KB, OUTPUT_CAP_BYTES 32 KB", () => {
     expect(mod.TIMEOUT_MS).toBe(EXPECTED_TIMEOUT_MS);
     expect(mod.PROMPT_CAP_BYTES).toBe(EXPECTED_PROMPT_CAP_BYTES);
     expect(mod.OUTPUT_CAP_BYTES).toBe(EXPECTED_OUTPUT_CAP_BYTES);
