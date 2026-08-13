@@ -72,6 +72,18 @@ readable by other local users on a shared machine. `gemini -p` is the CLI's
 only documented non-interactive prompt delivery, so this exposure is a
 known cost of the gemini leg; the consent marker is consent to it too.
 
+## Child environment and PATH vetting
+
+The child never receives the parent's environment. The script hands each
+CLI a small allowlist — `PATH`, `HOME`, `TMPDIR`, `TERM`, and the locale
+pair, plus that vendor's own credential block (`OPENAI_API_KEY` and
+`CODEX_HOME` for codex; the `GEMINI_*`/`GOOGLE_*` variables for gemini) —
+and never the other vendor's. Everything else (`ANTHROPIC_API_KEY`,
+`GH_TOKEN`, cloud credentials) stays with the parent. Binary lookup vets
+absolute `PATH` entries only: a relative entry (`.`, `relbin`) is skipped,
+and the vetted absolute path is what spawns — never a second `PATH` walk
+at spawn time.
+
 ## Invocation
 
 Build the prompt from `prompt-template.md` (in this skill's directory) plus
@@ -125,7 +137,11 @@ the sibling of your `### Refuted by verification` section:
 
 One block per round, one subsection per CLI, covering: adopted claims (with
 their tiers), refuted claims (with the `file:line` you checked),
-unverifiable claims, and skips with their reasons. Adopted findings
+unverifiable claims, and skips with their reasons. A clean pass — the CLI
+exits 0 with empty stdout, or output carrying no claims — is still a
+record: the block says "no findings from `<cli>`". Agreement is
+corroborating signal only, never a pass, and it never relaxes your own
+verdict. Adopted findings
 elsewhere in your report stay tagged bare `[code-reviewer]` per convention,
 with `via <cli>` in the finding text. The block itself is Minor-tier by
 construction — a record, not a verdict — so it can never cross the auto-fix
