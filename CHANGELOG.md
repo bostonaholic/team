@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Cross-model adversarial review, opt-in.** The `code-reviewer` can now get a second and third opinion from a different vendor's model: a new `cross-model-review` methodology skill drives a bundled runner (`skills/cross-model-review/external-review.mjs`) that invokes the `codex` and `gemini` CLIs read-only on higher-stakes diffs (auth/session/crypto, data storage and schema, public API contracts). Different models fail differently — a finding two vendors reach independently is worth more than one reached confidently ([why models debating catch more bugs](https://milvus.io/blog/ai-code-review-gets-better-when-models-debate-claude-vs-gemini-vs-codex-vs-qwen-vs-minimax.md)). Nothing runs unless the repo opts in by creating `.team/cross-model-review` (kept untracked), and the pass degrades loudly, never blocks: an absent binary, expired login, timeout, or oversized diff becomes a named skip in the review. External claims are verified against the code before they can gate — the reviewer adopts, refutes, or downgrades each one, and every round's disposition is persisted to `docs/plans/<id>/cross-model-notes.md` and surfaced in the PR's `## Review notes`, so a refuted cross-vendor claim always reaches a human. The vendor child runs in an empty scratch directory with a per-vendor credential allowlist, pinned read-only flags, and bounded output. [`skills/cross-model-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/cross-model-review/SKILL.md), [`README.md`](https://github.com/bostonaholic/team/blob/main/README.md)
+
 ## [0.49.0] - 2026-08-13
 
 ### Fixed

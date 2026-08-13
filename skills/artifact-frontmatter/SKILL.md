@@ -82,7 +82,9 @@ the unresolved findings — no consultation, no PR.
 
 **Cross-model notes record** (`cross-model-notes.md`): orchestrator-written
 and append-only — one `### Cross-model disposition` block per review round,
-in round order, copied verbatim from the code-reviewer's report. The
+in round order, copied from the code-reviewer's report altered only by
+the blockquote wrap (every line prefixed with `>`, per the appending
+skill's procedure), so the file always holds already-blockquoted content. The
 orchestrator creates the file only on the first round that runs the
 cross-model pass, so a repo that never triggers it gains no artifact.
 Frontmatter: `topic` (copied verbatim), `date`, and

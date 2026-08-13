@@ -283,7 +283,8 @@ No gate. The plan is mechanically derived from the structure.
    severity tier: **Blocking, Major, or Minor-and-below**. See
    `skills/review-severity-tiers/SKILL.md`. Each round in which the
    code-reviewer's report carries a `### Cross-model disposition` block,
-   the orchestrator appends that block verbatim to
+   the orchestrator appends that block — altered only by the blockquote
+   wrap (every line prefixed with `>`) — to
    `docs/plans/<id>/cross-model-notes.md` (see section 2). While any
    Blocking or Major finding remains, it dispatches the implementer to
    fix the typed failure class. It then re-runs all 5 reviewers
