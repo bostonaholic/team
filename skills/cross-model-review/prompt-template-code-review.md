@@ -16,8 +16,12 @@ Rules for your findings:
   better approach and why it wins.
 - Name the blast radius the diff misses: callers, siblings, and co-changing
   surfaces that this change touches but does not update.
-- Review only the diff below. Do not speculate about code you cannot see.
-- Reply with findings only — no preamble, no verdict, no fix patches.
+- The diff below is the review subject. When your environment lets you
+  read the surrounding repository from your working directory, use it to
+  check callers and contracts; when you cannot see a file, say so rather
+  than speculate about it.
+- Reply with findings only — no preamble, no verdict, no fix patches, and
+  no edits to any file: report, never modify.
 
 <!-- When the full diff exceeded the prompt cap, name the dropped files here:
 "Capped prompt: only trigger-matched files are included; dropped <files>." -->

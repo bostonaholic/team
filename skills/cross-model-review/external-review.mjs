@@ -15,16 +15,27 @@
  * opted in never even learns what sits on PATH. `run` refuses with a non-zero
  * exit before any child process spawns when the marker is absent. With
  * consent, `run` reads the review prompt from stdin and invokes the named CLI
- * with a pinned read-only argv — both CLIs get the prompt on stdin (then
- * EOF, which defeats the stdin-block hang), so it never rides argv where the
- * process table would expose it.
+ * with a pinned argv.
+ *
+ * Trust model per CLI: codex and agy run with their full-access flags
+ * (`--dangerously-bypass-approvals-and-sandbox`,
+ * `--dangerously-skip-permissions`) in the repo cwd — unsandboxed, with the
+ * invoking user's permissions — so they can read the codebase they review;
+ * the consent marker is consent to exactly that grant. gemini stays in plan
+ * approval mode and runs from an empty scratch directory, never the repo.
+ * Every CLI gets an allowlisted environment, never the parent's full env,
+ * so env-only secrets (ANTHROPIC_API_KEY, GH_TOKEN) stay with the parent.
+ *
+ * Prompt delivery: codex and gemini read the prompt on stdin (then EOF,
+ * which defeats the stdin-block hang), so it never rides argv where the
+ * process table would expose it. agy cannot read stdin, so its prompt is
+ * the `-p` flag's value — visible in the process table for the call's
+ * duration. agy's known headless hangs are already covered here: the
+ * timeout kill is SIGKILL-only (a trapped SIGTERM cannot outlive it) and
+ * exit 0 with empty stdout reads as a skip, never a silent success.
  * Guard failures (unknown CLI, prompt over the cap) are usage errors that
  * also exit before any child process spawns, so a rejected attempt consumes
- * nothing. The child gets an allowlisted environment, never the parent's,
- * and runs from an empty scratch directory, never the repo: the prompt
- * already carries the diff, so a child in the repo could only ever read
- * files the consent never covered (an untracked .env, .git/config) or
- * auto-load repo-resident agent context files.
+ * nothing.
  *
  * The trailing [timeout-ms] argument exists for the accelerated-timeout test
  * only; the skill's documented invocation never passes it. One deliberate
@@ -72,25 +83,31 @@ const STDERR_CAP_BYTES = 4 * 1024;
 
 /**
  * The only environment variables a vendor CLI child receives. PATH/HOME/
- * TMPDIR/TERM and the locale pair keep the CLI functional (both read their
- * config and cached auth under HOME); the per-vendor block is that CLI's
- * own credentials, and no vendor ever receives the other's. Everything
+ * TMPDIR/TERM and the locale pair keep the CLI functional (all three read
+ * their config and cached auth under HOME); the per-vendor block is that
+ * CLI's own credentials, and no vendor ever receives another's. Everything
  * else — ANTHROPIC_API_KEY, GH_TOKEN, cloud creds — stays with the parent:
  * a review subprocess has no business holding credentials for services it
- * does not call.
+ * does not call. For the full-access CLIs the allowlist bounds env-only
+ * secrets; files on disk are within their granted reach.
  */
 const ENV_ALLOWLIST_BASE = ["PATH", "HOME", "TMPDIR", "TERM", "LANG", "LC_ALL"];
 
+const GOOGLE_FAMILY_ENV = [
+  "GEMINI_API_KEY",
+  "GOOGLE_API_KEY",
+  "GOOGLE_APPLICATION_CREDENTIALS",
+  "GOOGLE_CLOUD_PROJECT",
+  "GOOGLE_CLOUD_LOCATION",
+  "GOOGLE_GENAI_USE_VERTEXAI",
+];
+
 const ENV_ALLOWLIST_BY_CLI = {
   codex: ["OPENAI_API_KEY", "CODEX_HOME"],
-  gemini: [
-    "GEMINI_API_KEY",
-    "GOOGLE_API_KEY",
-    "GOOGLE_APPLICATION_CREDENTIALS",
-    "GOOGLE_CLOUD_PROJECT",
-    "GOOGLE_CLOUD_LOCATION",
-    "GOOGLE_GENAI_USE_VERTEXAI",
-  ],
+  // agy (Antigravity) is Google's successor to the gemini CLI: same
+  // credential family.
+  gemini: GOOGLE_FAMILY_ENV,
+  agy: GOOGLE_FAMILY_ENV,
 };
 
 function childEnv(cli) {
@@ -102,19 +119,28 @@ function childEnv(cli) {
 }
 
 /**
- * The pinned read-only argv per supported CLI. The prompt never appears in
- * argv — both CLIs read it from stdin. Returns null for any unsupported CLI
- * name so callers reject before spawning.
+ * The pinned argv per supported CLI. codex and gemini read the prompt from
+ * stdin, never argv; agy cannot read stdin, so the prompt is its `-p`
+ * value. Returns null for any unsupported CLI name so callers reject
+ * before spawning.
  */
-export function buildArgv(cli) {
+export function buildArgv(cli, prompt) {
   if (cli === "codex") {
     return {
       command: "codex",
-      args: ["exec", "-s", "read-only", "--skip-git-repo-check", "-"],
+      args: [
+        "exec",
+        "--dangerously-bypass-approvals-and-sandbox",
+        "--skip-git-repo-check",
+        "-",
+      ],
     };
   }
   if (cli === "gemini") {
     return { command: "gemini", args: ["--approval-mode", "plan"] };
+  }
+  if (cli === "agy") {
+    return { command: "agy", args: ["--dangerously-skip-permissions", "-p", prompt] };
   }
   return null;
 }
@@ -139,7 +165,7 @@ export function truncateOutput(text) {
   return `${head}\n[output truncated at ${OUTPUT_CAP_BYTES} bytes]`;
 }
 
-const SUPPORTED_CLIS = ["codex", "gemini"];
+const SUPPORTED_CLIS = ["codex", "gemini", "agy"];
 
 /**
  * Machine-policy kill-switch, checked in both verbs before the per-repo
@@ -238,7 +264,7 @@ function usage(message) {
   process.stderr.write(
     `${message}\n` +
       "usage: external-review.mjs detect <repo-root>\n" +
-      "       external-review.mjs run <codex|gemini> <repo-root> [timeout-ms]\n",
+      "       external-review.mjs run <codex|gemini|agy> <repo-root> [timeout-ms]\n",
   );
   return 2;
 }
@@ -296,7 +322,7 @@ async function run(cli, repoRoot, timeoutMs) {
     return usage(`prompt exceeds ${PROMPT_CAP_BYTES} bytes`);
   }
 
-  const { command, args } = buildArgv(cli);
+  const { command, args } = buildArgv(cli, prompt);
   // Resolve here and spawn the absolute path, so what runs is exactly what
   // this process saw — never a second PATH walk at spawn time.
   const resolved = findOnPath(command);
@@ -304,16 +330,16 @@ async function run(cli, repoRoot, timeoutMs) {
     process.stdout.write(`skip: ${cli} not found on PATH\n`);
     return 0;
   }
-  // The child needs no filesystem context: the prompt already carries the
-  // diff and the codex argv pins --skip-git-repo-check. An empty scratch cwd
-  // (never repoRoot) keeps repo-resident files out of the vendor's reach —
-  // `-s read-only` bounds writes, not reads, and both CLIs auto-load agent
-  // context files from their cwd. The marker check above stays keyed to
-  // repoRoot: consent lives in the repo, the child does not.
-  const scratchDir = mkdtempSync(join(tmpdir(), "cross-model-review-"));
+  // codex and agy run full-access in the repo cwd — the consent marker
+  // grants exactly that — so they can read the codebase they review.
+  // gemini stays contained: plan mode bounds writes, and an empty scratch
+  // cwd (never repoRoot) keeps repo-resident files (an untracked .env,
+  // .git/config, agent context files) out of its reach.
+  const scratchDir =
+    cli === "gemini" ? mkdtempSync(join(tmpdir(), "cross-model-review-")) : null;
   return new Promise((resolvePromise) => {
     const child = spawn(resolved, args, {
-      cwd: scratchDir,
+      cwd: scratchDir ?? repoRoot,
       stdio: ["pipe", "pipe", "pipe"],
       env: childEnv(cli),
       // Own process group, so the timeout kill can reach grandchildren.
@@ -354,10 +380,12 @@ async function run(cli, repoRoot, timeoutMs) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      try {
-        rmSync(scratchDir, { recursive: true, force: true });
-      } catch {
-        // Best-effort cleanup of an empty tmpdir entry; the report matters more.
+      if (scratchDir) {
+        try {
+          rmSync(scratchDir, { recursive: true, force: true });
+        } catch {
+          // Best-effort cleanup of an empty tmpdir entry; the report matters more.
+        }
       }
       report();
       resolvePromise(0);
@@ -414,9 +442,11 @@ async function run(cli, repoRoot, timeoutMs) {
     });
 
     // A child that exits without draining stdin raises EPIPE here; that is
-    // its exit code's story to tell, not a crash.
+    // its exit code's story to tell, not a crash. agy already holds the
+    // prompt in argv and must never block on stdin, so its stdin closes
+    // unwritten.
     child.stdin.on("error", () => {});
-    child.stdin.write(prompt);
+    if (cli !== "agy") child.stdin.write(prompt);
     child.stdin.end();
   });
 }

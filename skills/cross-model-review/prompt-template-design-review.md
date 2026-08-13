@@ -20,9 +20,12 @@ Rules for your findings:
 - You may add at most one line noting agreement with a concern you expect
   any reviewer to reach independently; it will be adopted as corroboration
   capped at `nitpick (non-blocking)`.
-- Review only the material below. Do not speculate about code or documents
-  you cannot see.
-- Reply with findings only — no preamble, no verdict, no fix patches.
+- The material below is the review subject. When your environment lets
+  you read the repository from your working directory, use it to check the
+  design's claims against the code; when you cannot see a file, say so
+  rather than speculate about it.
+- Reply with findings only — no preamble, no verdict, no fix patches, and
+  no edits to any file: report, never modify.
 
 Design under review:
 

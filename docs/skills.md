@@ -777,9 +777,9 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 
 ### cross-model-review
 
-- **Purpose:** Opt-in cross-vendor review pass — a second vendor's opinion
-  on higher-stakes diffs and on design documents, verified before any of
-  it is adopted.
+- **Purpose:** Opt-in cross-vendor review pass — second opinions from the
+  codex, gemini, and agy CLIs on higher-stakes diffs and on design
+  documents, verified before any of it is adopted.
 - **Loaded by:** code-reviewer; the orchestrator or invoking session
   (`team`, `team-design`, `eng-design-doc-review`) runs its
   `## Design-review pass` procedure directly; and the design-review brief
@@ -792,9 +792,12 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   pass every design-review round, no trigger classes. A machine-wide
   `TEAM_DISABLE_CROSS_MODEL` kill-switch, checked before the marker,
   hard-disables both paths. The bundled `external-review.mjs` script pins
-  read-only invocations of the `codex` and `gemini` CLIs, checks the
-  marker before any binary lookup, and enforces the prompt, output, and
-  timeout caps.
+  each CLI's argv — full-access `codex` and `agy` in the repo cwd,
+  plan-mode `gemini` in a scratch cwd — checks the
+  marker before any binary lookup, enforces the prompt, output, and
+  timeout caps, and hands each vendor only its own credential allowlist.
+  The invoking agent checks `git status` after the pass and reports any
+  vendor tree mutation as a blocking finding.
   Every external claim is verified before adoption — nothing reaches
   Blocking or Major without the reviewer's own `file:line` confirmation —
   and the per-round record lands under one `### Cross-model disposition`

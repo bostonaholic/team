@@ -372,14 +372,20 @@ One path steps outside that enforcement: the opt-in cross-model pass
 (`skills/cross-model-review/SKILL.md`) shells out to external vendor CLIs
 — the `code-reviewer` on the code path, the orchestrator on the design
 path — and an external process is beyond the harness's tool grants. On
-that path the reviewer invariant is **trusted and contained, not
-enforced** — containment is the pinned read-only argv the bundled script
-hardcodes, the no-bypass-flag tripwire in `tests/cross-model-review.test.ts`,
-the gates that keep the pass off by default — the consent marker on both
-paths, plus trigger classes on the code path; default-off on the design
-path is carried by the marker alone, while the machine-wide
+that path the reviewer invariant is **trusted, not enforced**: by the
+marker's explicit grant, `codex` and `agy` run with their full-access
+flags in the repo cwd — unsandboxed, with the invoking user's permissions
+— while `gemini` stays in plan mode in an empty scratch directory. What
+bounds the path is the pinned argv the bundled script hardcodes (the
+unsanctioned-flag tripwire in `tests/cross-model-review.test.ts` keeps
+gemini's bypass spellings and every other escalation out), the per-vendor
+env allowlist, the gates that keep the pass off by default — the consent
+marker on both paths, plus trigger classes on the code path; default-off
+on the design path is carried by the marker alone, while the machine-wide
 `TEAM_DISABLE_CROSS_MODEL` kill-switch governs both paths equally and is
-unset by default — and the PR diff surfacing any unexpected write.
+unset by default — the untrusted-output rules on everything a vendor
+returns, and the post-pass `git status` check that reports any vendor
+write as a blocking finding.
 
 `researcher` and `file-finder` are also read-only, for a different reason:
 research isolation (see [Phase 3](#phase-3-research)). Read-only does not by
