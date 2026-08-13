@@ -92,11 +92,14 @@ done
    `.team/cross-model-review`. Run the runner's `detect` verb, then
    `run` per ready CLI; a missing runner is
    `skip: cross-model runner not found` per CLI. Fence each CLI's raw
-   output as a `DATA` block at capture time, append one
-   `## External review input` section holding the fenced blocks to the
-   review brief, and append each call's result line plus fenced raw
-   output to `$ARGUMENTS/cross-model-raw.md` (created on first use; a
-   zero-call round appends nothing). Any skip continues with the
+   output as a `DATA` block at capture time (fence longer than any
+   backtick run in the output, per that section), append one
+   `## External review input` section — opening with the
+   untrusted-content line that section specifies — holding the fenced
+   blocks to the review brief, and append the round's transcript to
+   `$ARGUMENTS/cross-model-raw.md` in the result-line format that
+   section pins (created on first use; a zero-call round appends
+   nothing). Any skip continues with the
    reviewer alone — the pass never blocks the gate. Then dispatch the
    adversarial design review (the
    `## Review brief` in `skills/eng-design-doc-review/SKILL.md`, run by

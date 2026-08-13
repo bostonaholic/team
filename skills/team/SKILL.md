@@ -258,19 +258,17 @@ When the `design-author` returns a draft:
    the runner's `detect` verb, then `run` per ready CLI; a missing runner
    is `skip: cross-model runner not found` per CLI, an over-cap prompt
    (after dropping the `task.md` excerpt once) is `skip: prompt over cap`.
-   Fence each CLI's raw output as a `DATA` block at capture time, and
-   append one `## External review input` section holding the fenced
+   Fence each CLI's raw output as a `DATA` block at capture time, with a
+   fence longer than any backtick run in the output, per that section.
+   Append one `## External review input` section — opening with the
+   untrusted-content line that section specifies — holding the fenced
    blocks to the review brief before dispatching it. Zero ready CLIs →
    pass the skip lines to the reviewer the same way. Any skip continues
    with the reviewer alone — the pass never blocks the gate. At capture
-   time, also append the round's raw transcript to
-   `docs/plans/<id>/cross-model-raw.md` (created on first use, with
-   frontmatter per `skills/artifact-frontmatter/SKILL.md`): one result
-   line per call — `round <n> <cli>: skip — <reason>` or
-   `round <n> <cli>: output, <bytes> bytes` — followed by that call's
-   fenced raw output. A round that makes zero calls appends nothing, and
-   a run that never calls creates no raw file. The file is never read
-   back as state.
+   time, also append the round's transcript to
+   `docs/plans/<id>/cross-model-raw.md` in the result-line format that
+   section pins (created on first use; a zero-call round appends
+   nothing; never read back as state).
 3. **Dispatch the adversarial review.** Call the `Agent` tool with
    `subagent_type: Explore`, the built-in read-only agent type. Pass the
    `## Review brief` from `skills/eng-design-doc-review/SKILL.md` as the

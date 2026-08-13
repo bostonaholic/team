@@ -266,7 +266,7 @@ function boundedCollector(capBytes) {
 }
 
 async function run(cli, repoRoot, timeoutMs) {
-  // All three guards exit before any spawn: a rejected attempt consumes
+  // All four guards exit before any spawn: a rejected attempt consumes
   // nothing, and no diff ever leaves the machine without standing consent.
   if (!SUPPORTED_CLIS.includes(cli)) {
     return usage(`unknown CLI "${cli}"`);
@@ -382,7 +382,10 @@ async function run(cli, repoRoot, timeoutMs) {
       childExited = true;
       settle(() => {
         if (code !== 0) {
-          const reason = stderrCollector.text().trim();
+          // Collapse interior newlines and CRs to spaces: the caller
+          // contract says a skip is exactly one line, and a multi-line
+          // vendor stderr (an auth stack trace) must not break it.
+          const reason = stderrCollector.text().trim().replace(/[\r\n]+\s*/g, " ");
           // The fence keeps vendor stderr reading as quoted diagnostics,
           // never as the runner's own protocol lines.
           process.stdout.write(

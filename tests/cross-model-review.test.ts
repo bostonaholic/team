@@ -527,6 +527,30 @@ cat
     expect(r.stdout).toContain("stdin-received: prompt-sentinel-on-stdin");
   });
 
+  test("run collapses a multi-line vendor stderr into a single-line skip", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+    const bin = makeBin({
+      codex: `#!/bin/bash
+cat >/dev/null
+echo "auth error: token expired" >&2
+echo "  at vendor.stack.frame.two" >&2
+echo "  at vendor.stack.frame.three" >&2
+exit 1
+`,
+    });
+    const repo = makeRepo(true);
+    const r = runScript(["run", "codex", repo], { binDir: bin, input: "prompt" });
+    // The caller contract says a skip is exactly one line starting
+    // "skip: " — a vendor stack trace on stderr must not break it.
+    const lines = r.stdout.trimEnd().split("\n");
+    expect(lines.length).toBe(1);
+    expect(lines[0]!.startsWith("skip: codex")).toBe(true);
+    // Positive control: the collapse kept the stderr content, first line
+    // and last, so the single line is a fold, not a truncation.
+    expect(lines[0]).toContain("auth error: token expired");
+    expect(lines[0]).toContain("vendor.stack.frame.three");
+  });
+
   test("run reads exit 0 with empty stdout as a produced-no-output skip", () => {
     expect(existsSync(SCRIPT)).toBe(true);
     const bin = makeBin({
@@ -876,6 +900,40 @@ describe("TEAM_DISABLE_CROSS_MODEL kill-switch", () => {
     expect(existsSync(join(bin, "ran"))).toBe(false);
   });
 
+  test("run with the marker absent and the kill-switch set exits 4, not the marker refusal's 3", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+    const bin = makeBin({ codex: RECORDING_FAKE });
+    const repo = makeRepo(/* withMarker */ false);
+    const r = runScript(["run", "codex", repo], {
+      binDir: bin,
+      input: "prompt",
+      extraEnv: { [KILL_SWITCH_VAR]: "1" },
+    });
+    // Machine policy outranks the per-repo marker: with both gates shut,
+    // the kill-switch refusal (4) wins over the marker refusal (3).
+    expect(r.status).toBe(4);
+    expect(r.stderr).toContain(KILL_SWITCH_VAR);
+    expect(existsSync(join(bin, "ran"))).toBe(false);
+  });
+
+  test("detect with the marker absent and the kill-switch set reports disabled, never marker-absent", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+    const bin = makeBin({ codex: RECORDING_FAKE, gemini: RECORDING_FAKE });
+    const repo = makeRepo(/* withMarker */ false);
+    const r = runScript(["detect", repo], {
+      binDir: bin,
+      extraEnv: { [KILL_SWITCH_VAR]: "1" },
+    });
+    expect(r.status).toBe(0);
+    expect(r.stdout).toContain(`codex: unavailable (disabled by ${KILL_SWITCH_VAR})`);
+    expect(r.stdout).toContain(`gemini: unavailable (disabled by ${KILL_SWITCH_VAR})`);
+    // The marker-absent wording appearing here would mean the marker check
+    // ran first (the no-marker detect test above is the positive control
+    // that the wording exists and names this path).
+    expect(r.combined).not.toContain(MARKER_PATH);
+    expect(r.combined).not.toMatch(CLAIMS_READY);
+  });
+
   test("skill names the kill-switch variable in the marker-absent section", () => {
     const section = windowSection(
       readOrEmpty(SKILL_MD),
@@ -983,6 +1041,38 @@ describe("design-review gate wiring (L2)", () => {
     // The single home also carries the runner-not-found fallback the
     // referencing surfaces rely on.
     expect(readOrEmpty(SKILL_MD)).toContain("skip: cross-model runner not found");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// untrusted-output containment rules (L2)
+// ---------------------------------------------------------------------------
+
+describe("untrusted-output containment rules (L2)", () => {
+  test("the design-review pass states the fence-length containment rule", () => {
+    const section = windowSection(readOrEmpty(SKILL_MD), /^## Design-review pass/, /^## /);
+    // Guard: a renamed section must fail, not vacuously pass.
+    expect(section.length).toBeGreaterThan(0);
+    // Positive control: the matcher sees the phrase it hunts.
+    expect(
+      squash("a fence strictly longer than the\nlongest backtick run in the output"),
+    ).toContain("longest backtick run");
+    // A vendor line of backticks must never close the DATA fence early:
+    // the fence length is chosen against the captured output.
+    expect(squash(section)).toContain("longest backtick run");
+  });
+
+  test("the untrusted-output section binds the write sink to the Write tool or a quoted heredoc", () => {
+    const section = windowSection(readOrEmpty(SKILL_MD), /^## Untrusted output/, /^## /);
+    // Guard: a renamed section must fail, not vacuously pass.
+    expect(section.length).toBeGreaterThan(0);
+    const flattened = squash(section);
+    // Raw vendor bytes reach disk only through a sink that cannot
+    // evaluate them: interpolation into a shell command would execute
+    // an embedded $(…) with the orchestrator's permissions.
+    expect(flattened).toContain("Write tool");
+    expect(flattened).toMatch(/heredoc/i);
+    expect(flattened).toMatch(/never interpolated/i);
   });
 });
 

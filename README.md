@@ -177,8 +177,8 @@ sends the design document on **every** design-review round — up to ~10
 vendor calls per topic at the revision cap — with no trigger gate beyond
 the consent marker.
 
-It is off by default because **diff content leaves the machine** and
-reaches an external vendor's CLI. Opt in per repo by creating the consent
+It is off by default because **diff or design-document content leaves the
+machine** and reaches an external vendor's CLI. Opt in per repo by creating the consent
 marker:
 
 ```sh
@@ -190,8 +190,8 @@ Keep the marker untracked — committed, it stops being your consent and
 becomes standing consent for every clone of the repo. The `.gitignore`
 line keeps it local to the machine that opted in.
 
-Without the marker, no diff is ever sent — both script verbs refuse before
-any vendor binary is even looked up. Above the per-repo marker sits a
+Without the marker, no diff or design document is ever sent — both script
+verbs refuse before any vendor binary is even looked up. Above the per-repo marker sits a
 machine-wide kill-switch: set `TEAM_DISABLE_CROSS_MODEL` to any non-empty
 value and every cross-model call is disabled on that machine, regardless
 of any repo's opt-in.

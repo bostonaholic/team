@@ -375,10 +375,11 @@ path — and an external process is beyond the harness's tool grants. On
 that path the reviewer invariant is **trusted and contained, not
 enforced** — containment is the pinned read-only argv the bundled script
 hardcodes, the no-bypass-flag tripwire in `tests/cross-model-review.test.ts`,
-the double gate that keeps the pass off by default (consent marker +
-trigger classes on the code path; consent marker + the
-`TEAM_DISABLE_CROSS_MODEL` kill-switch on the design path), and the PR
-diff surfacing any unexpected write.
+the gates that keep the pass off by default — the consent marker on both
+paths, plus trigger classes on the code path; default-off on the design
+path is carried by the marker alone, while the machine-wide
+`TEAM_DISABLE_CROSS_MODEL` kill-switch governs both paths equally and is
+unset by default — and the PR diff surfacing any unexpected write.
 
 `researcher` and `file-finder` are also read-only, for a different reason:
 research isolation (see [Phase 3](#phase-3-research)). Read-only does not by

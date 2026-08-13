@@ -115,8 +115,11 @@ argument shape.
   aggregate gate sorts every finding into Blocking / Major / Minor-and-below
   tiers and auto-loops on any Blocking or Major (the no-consult rule: the
   user is never asked about any finding mid-run), recording the remaining
-  Minor-and-below findings in the PR body's `## Review notes`. Its body is
-  organized as `## Input`,
+  Minor-and-below findings in the PR body's `## Review notes`. With the
+  `.team/cross-model-review` opt-in marker, the cross-model pass runs
+  before every design-review round (no trigger classes on the design
+  path), feeding `cross-model-notes.md` and `cross-model-raw.md`. Its
+  body is organized as `## Input`,
   `## Setup`, `## The Phase Loop`, `## Gate Handling`, and `## Rules`,
   not the downstream Input / Execution / Completion template.
 
@@ -150,6 +153,9 @@ argument shape.
   `design.md`. The design-author resolves its own open questions as
   recorded assumptions. The skill then runs the adversarial design-review
   loop (`design-review-<n>.md`, where APPROVE and COMMENT advance, cap 5).
+  With the `.team/cross-model-review` opt-in marker, the cross-model pass
+  runs before every design-review round (no trigger classes on the design
+  path), feeding `cross-model-notes.md` and `cross-model-raw.md`.
 
 ### team-structure
 
@@ -253,7 +259,9 @@ argument shape.
   (not the `design-author` agent) so the audit reads the design with fresh
   eyes. That subagent loads four methodology skills as its review criteria
   (`technical-design-doc`, `code-review`, `engineering-standards`, and
-  `documenting-decisions`), which makes this one more consumer of all four.
+  `documenting-decisions`), which makes this one more consumer of all
+  four, plus a conditional fifth — `cross-model-review`, loaded only when
+  the brief carries an `## External review input` section.
   Points the report's prose at the seventh-grade bar in `writing-prose`.
 
 ## Standalone utilities
@@ -772,9 +780,11 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Purpose:** Opt-in cross-vendor review pass — a second vendor's opinion
   on higher-stakes diffs and on design documents, verified before any of
   it is adopted.
-- **Loaded by:** code-reviewer; the design-review brief in
-  `eng-design-doc-review` loads it conditionally when its prompt carries
-  an `## External review input` section.
+- **Loaded by:** code-reviewer; the orchestrator or invoking session
+  (`team`, `team-design`, `eng-design-doc-review`) runs its
+  `## Design-review pass` procedure directly; and the design-review brief
+  in `eng-design-doc-review` loads it conditionally when its prompt
+  carries an `## External review input` section.
 - **Key behaviors:** Runs only when the repo carries the consent marker
   `.team/cross-model-review`. On the code path the diff must also match a
   trigger class (auth/session/crypto, data storage and schema migrations,
