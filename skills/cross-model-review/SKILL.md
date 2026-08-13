@@ -31,7 +31,9 @@ No match → no external call, and nothing to report. Most reviews end here.
 
 The pass runs only when the file `.team/cross-model-review` exists at the
 repo root. The marker is the user's standing consent for a diff to leave the
-machine and reach an external vendor. Both verbs check the marker **before**
+machine and reach an external vendor. It must stay untracked (the opt-in
+adds a `.team/.gitignore` line for it): committed, one person's opt-in
+would become standing consent for every clone of the repo. Both verbs check the marker **before**
 anything else: `detect` checks it before any binary lookup — no marker → no
 diff leaves the machine, and the script makes no claim about what sits on
 `PATH` — and `run` refuses with a non-zero exit before any child process

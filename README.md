@@ -179,7 +179,12 @@ marker:
 
 ```sh
 mkdir -p .team && touch .team/cross-model-review
+echo cross-model-review >> .team/.gitignore
 ```
+
+Keep the marker untracked — committed, it stops being your consent and
+becomes standing consent for every clone of the repo. The `.gitignore`
+line keeps it local to the machine that opted in.
 
 Without the marker, no diff is ever sent — both script verbs refuse before
 any vendor binary is even looked up.
