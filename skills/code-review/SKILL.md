@@ -157,46 +157,45 @@ regimes apply:
 - **PASS:** Documentation is adequate for the changes made.
 - **GAPS:** Documentation gaps identified. Recorded for future work.
 
-## Code Reviewer Inspection Process
+## Code Reviewer Inspection Contract
 
-1. **Read the diff.** `git diff HEAD~1` (or the applicable range). If the
-   scope is unclear, check `git log --oneline -10` first.
+Your input is the diff on the current branch (`git diff HEAD~1`, or the
+range the orchestrator names; `git log --oneline -10` when the scope is
+unclear) and the done criteria in whatever plan file, issue references, or
+commit messages the branch carries. When no criteria exist, review on
+general correctness and quality. Order the work however you judge best.
+Three obligations are non-negotiable:
 
-2. **Understand the plan.** Look for issue references, commit messages, or a
-   plan file describing the done criteria. If none exist, review on general
-   correctness and quality.
+- **Verify every done criterion is met.** Flag any that are missing or
+  incomplete.
+- **Run the project's test suite.** Report the command used and the result.
+- **Check each rule the diff introduces reaches every surface it must.**
+  When the changed code or prose has more than one way in — two entry modes,
+  a path documented as usable on its own, a split across turns or processes —
+  a new rule added to one is not added to the others by implication. Take
+  each rule the diff adds and name where it now holds. A rule present in one
+  surface and silently absent from a sibling is a finding; a stated reason
+  for the absence answers it. Read a self-contained path **alone**, the way
+  its callers arrive at it.
 
-3. **Review against done criteria.** Verify every done criterion is met. Flag
-   any that are missing or incomplete.
+**Coverage checklist** — every changed file is checked against every item;
+no order implied:
 
-   **Then check each rule the diff introduces reaches every surface it must.**
-   When the changed code or prose has more than one way in — two entry modes,
-   a path documented as usable on its own, a split across turns or processes —
-   a new rule added to one is not added to the others by implication. Take
-   each rule the diff adds and name where it now holds. A rule present in one
-   surface and silently absent from a sibling is a finding; a stated reason
-   for the absence answers it. Read a self-contained path **alone**, the way
-   its callers arrive at it.
-
-4. **Inspect the code.** For each changed file, check:
-   - **Correctness** — off-by-one errors, missing null checks, broken edge
-     cases. Does the logic do what it claims?
-   - **Maintainability** — intention-revealing names, obvious control flow.
-   - **Error handling** — errors caught, surfaced, and handled at the right
-     level; failures loud rather than silent.
-   - **Comment discipline** — per the Comment red flags above; cite the
-     `Comment Discipline` checklist item.
-   - **Unnecessary complexity** — abstraction serving no current need.
-   - **System fit** — does a sibling implementation now diverge? Does a caller
-     outside the diff need updating? Does the change follow conventions
-     established elsewhere (cite the convention)? Findings cite the
-     `System Fit` checklist item.
-   - **SOLID violations** — per `skills/solid-principles/SKILL.md`.
-   - **Test files** — per both severity regimes above and
-     `skills/test-style/SKILL.md`.
-
-5. **Run tests.** Execute the project's test suite. Report the command used
-   and the result.
+- **Correctness** — off-by-one errors, missing null checks, broken edge
+  cases. Does the logic do what it claims?
+- **Maintainability** — intention-revealing names, obvious control flow.
+- **Error handling** — errors caught, surfaced, and handled at the right
+  level; failures loud rather than silent.
+- **Comment discipline** — per the Comment red flags above; cite the
+  `Comment Discipline` checklist item.
+- **Unnecessary complexity** — abstraction serving no current need.
+- **System fit** — does a sibling implementation now diverge? Does a caller
+  outside the diff need updating? Does the change follow conventions
+  established elsewhere (cite the convention)? Findings cite the
+  `System Fit` checklist item.
+- **SOLID violations** — per `skills/solid-principles/SKILL.md`.
+- **Test files** — per both severity regimes above and
+  `skills/test-style/SKILL.md`.
 
 ## Security Review
 

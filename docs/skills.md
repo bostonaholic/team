@@ -643,12 +643,13 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 
 ### researching-codebases
 
-- **Purpose:** Codebase research procedure for the Research phase.
+- **Purpose:** Codebase research contract for the Research phase.
 - **Loaded by:** researcher.
-- **Key behaviors:** Carries the investigation method (context, trace,
-  pattern recognition, constraint discovery) and the compressed
-  research-report output format with its 100-line budget (150 in
-  multi-repo mode). The isolation stance itself (questions.md only,
+- **Key behaviors:** Carries the investigation contract (every claim
+  cites code read in this run; cross-repo contracts are findings) and
+  the compressed research-report output format with its 100-line budget
+  (150 in multi-repo mode). How to investigate is left to the model.
+  The isolation stance itself (questions.md only,
   never task.md) stays in the researcher agent as identity.
 
 ### finding-files
@@ -734,9 +735,10 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   A constraint-gated
   missing-why finding is capped at `suggestion (non-blocking)` and never
   forces a REQUEST CHANGES verdict. Also carries the
-  Code Reviewer inspection process (done-criteria verification and the
-  per-file inspection checklist). The security review methodology lives in
-  `reviewing-security`.
+  Code Reviewer inspection contract (the non-negotiable obligations —
+  done-criteria verification, the test run, the every-surface check — and
+  the unordered per-file coverage checklist). The security review
+  methodology lives in `reviewing-security`.
 
 ### conventional-comments
 
@@ -887,9 +889,11 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   security-reviewer, ux-reviewer, technical-writer, researcher, verifier).
 - **Key behaviors:** A convention, not a gate: it produces no artifact and
   blocks nothing. When a procedure has two or more steps, seed one todo
-  item per step before starting and mark each complete as you go. The
-  orchestrator owns the phase ledger. An agent tracks its own sub-steps in
-  its own context and never merges them up.
+  item per step before starting and mark each complete as you go. A
+  goals-and-constraints procedure seeds one item per natural unit of work
+  (a slice, a question, a finding), never one per sentence of guidance.
+  The orchestrator owns the phase ledger. An agent tracks its own
+  sub-steps in its own context and never merges them up.
 
 ### nested-agents
 
@@ -902,12 +906,17 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   inline. Carries the fail-closed version gate (Claude Code ≥ 2.1.172), the
   read-only default, and the depth budget. The per-agent caps follow. The
   researcher fans out at most 4 isolation-preserving exploration scouts.
-  The implementer fans out at most 2 read-only scouts. The code-reviewer
+  The implementer fans out at most 2 read-only scouts, overlapping the
+  next slice's scouting with the current slice's work. Scouts are
+  long-lived: a follow-up question inside a live scout's territory goes
+  to that scout over `SendMessage` instead of a cold respawn, under the
+  same caps and isolation invariant. The code-reviewer
   and security-reviewer run the skeptic pass. In that pass, a fresh
   sub-agent receives every hard-gate finding to refute, as a neutral
   falsifiable claim. For a security finding, the claim is about
-  exploitability. Default-keep holds on anything short of a verified
-  refutation.
+  exploitability. Skeptics are deliberately one-shot — never a follow-up —
+  so each claim meets genuinely fresh context. Default-keep holds on
+  anything short of a verified refutation.
 
 ### documenting-decisions
 

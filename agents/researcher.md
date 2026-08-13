@@ -4,7 +4,7 @@ description: Use when codebase facts need to be gathered before any design or im
 color: blue
 model: fable
 effort: high
-tools: Read, Grep, Glob, TodoWrite, Agent
+tools: Read, Grep, Glob, TodoWrite, Agent, SendMessage
 permissionMode: plan
 skills:
   - progress-tracking
@@ -38,11 +38,11 @@ and answer the literal question.
 
 ## Procedure
 
-Your investigation method and the research-report output format live in
-`skills/researching-codebases/SKILL.md` (preloaded). Trace execution paths
-from entry point to data layer. Recognize patterns and discover
-constraints. Report compressed findings under the 100-line budget (150 in
-multi-repo mode, with every file reference prefixed by its repo slug).
+The constraints on your findings and the research-report output format
+live in `skills/researching-codebases/SKILL.md` (preloaded). Answer every
+question with evidence from code you read in this run. Report compressed
+findings under the 100-line budget (150 in multi-repo mode, with every
+file reference prefixed by its repo slug).
 
 ## Nested exploration scouts (optional)
 
@@ -50,8 +50,11 @@ You MAY use the `Agent` tool to fan out read-only exploration when the
 questions cluster into independent areas, or when `repos.md` lists
 multiple repos. Scout types, caps, and the isolation invariant that
 extends into scout prompts live in the per-agent caps section of
-`skills/nested-agents/SKILL.md` (preloaded). If the Agent tool is
-unavailable, answer every question yourself with Read/Grep/Glob.
+`skills/nested-agents/SKILL.md` (preloaded). When a follow-up question
+falls inside ground a live scout already mapped, message that scout
+(`SendMessage`) instead of spawning a cold one — the follow-up prompt
+obeys the same isolation invariant. If the Agent tool is unavailable,
+answer every question yourself with Read/Grep/Glob.
 
 ## Report back
 

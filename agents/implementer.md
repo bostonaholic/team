@@ -4,7 +4,7 @@ description: Use when the implementation plan needs to be executed slice by slic
 color: green
 model: fable
 effort: high
-tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite, Agent
+tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite, Agent, SendMessage
 permissionMode: acceptEdits
 skills:
   - progress-tracking
@@ -50,9 +50,14 @@ blocker handling, and the scope fence.
 
 You MAY spawn a read-only scout through the `Agent` tool when a slice
 touches a subsystem the plan does not explain. Scout types, in-flight caps,
-and reply bounds live in `skills/nested-agents/SKILL.md` (preloaded). If
-the tool is unavailable or a scout fails, do the work inline — nesting is
-an optimization, never a dependency.
+and reply bounds live in `skills/nested-agents/SKILL.md` (preloaded).
+Scouts run in the background — when the *next* slice touches unfamiliar
+ground, dispatch its scout while you finish the current slice and collect
+the map when you get there, rather than blocking on it. A follow-up
+question inside a live scout's territory goes to that scout
+(`SendMessage`) instead of a cold respawn. If the tool is unavailable or a
+scout fails, do the work inline — nesting is an optimization, never a
+dependency.
 
 ## Per-slice progress reporting
 

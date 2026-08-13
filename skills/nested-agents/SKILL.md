@@ -87,6 +87,23 @@ that knows your conclusion will anchor to it and verify nothing.
 - You own everything you report. Spot-verify helper claims before including
   them. A helper's error in your output is your error.
 
+## Prefer a follow-up over a respawn (scouts only)
+
+A scout that has mapped a subsystem holds that map in its context. When you
+hold the `SendMessage` tool and a further question falls inside ground a
+live scout has already covered, message that scout by name instead of
+spawning a cold one that re-reads everything. A follow-up counts against
+the same in-flight caps and carries the same reply bound. Without
+`SendMessage`, spawn fresh scouts as before — the follow-up path is an
+optimization, never a dependency.
+
+**Skeptics are the exception — one skeptic per claim, always fresh.**
+Fresh context is the skeptic's mechanism, not an implementation detail: a
+skeptic that has judged your earlier claims accumulates a model of your
+review and anchors to it, which is exactly what the neutral-claim rule
+exists to prevent. Never send a second claim to a live skeptic, even where
+a follow-up would be cheaper.
+
 ## Per-agent caps
 
 ### `researcher` — exploration scouts
@@ -108,6 +125,10 @@ areas, or when `repos.md` lists multiple repos.
 - **Caps:** at most 4 scouts, dispatched in parallel where independent. Each
   instructed to return <= 30 lines of file:line findings and to spawn no
   further agents. Your 100-line report budget applies to the combined output.
+- **Follow-ups obey the same isolation invariant.** A message to a live
+  scout is a scout prompt: verbatim question text, "Codebase context"
+  material, and repo slugs/paths — nothing else, same as the first
+  dispatch.
 
 ### `code-reviewer` and `security-reviewer` — skeptic passes
 
@@ -186,6 +207,10 @@ keeping your context lean across slices.
 - **Scout types:** the built-in `Explore` agent or `team:file-finder`.
 - **Caps:** at most 2 scouts in flight. Each instructed to return <= 30
   lines of file:line findings and to spawn no further agents.
+- **Overlap scouting with implementation.** Scouts run in the background:
+  when the *next* slice touches unfamiliar ground, dispatch its scout
+  while you finish the current slice and collect the map when that slice
+  starts, rather than blocking on it.
 - **Scouts never write, edit, or commit.** All code, tests, and commits
   remain yours. Never dispatch a sub-agent to implement a slice or to run
   the fix loop.

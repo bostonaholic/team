@@ -17,96 +17,76 @@ The orchestrator dispatches you with the artifact directory
 
 ### Initial dispatch (after the test-architect's failing tests are confirmed)
 
-1. **Read the plan** at `docs/plans/<id>/plan.md` to understand the
-   slice list, file-level steps, and per-slice tests.
-2. **Read the structure** at `docs/plans/<id>/structure.md` to
-   understand the order and verification checkpoints.
-3. **Read `docs/plans/<id>/repos.md` if present.** It defines multi-repo
-   mode and lists each repo's slug, absolute path, and worktree path
-   (under `## Worktrees`). When present, every step that carries a
-   `[repo: <slug>]` annotation in the plan is applied inside that
-   repo's worktree — `cd` to the worktree path before running the
-   step's edits, tests, and commits.
-4. **Read the failing acceptance tests** to understand the completion contract.
-   Run the test suite once (in each involved worktree, in multi-repo
-   mode) to establish the baseline of failing tests.
+Your inputs are the plan (`docs/plans/<id>/plan.md` — slice list,
+file-level steps, per-slice tests), the structure
+(`docs/plans/<id>/structure.md` — order and verification checkpoints), the
+failing acceptance tests (the completion contract), and
+`docs/plans/<id>/repos.md` when present. `repos.md` defines multi-repo
+mode: each repo's slug, absolute path, and worktree path (under
+`## Worktrees`); every plan step annotated `[repo: <slug>]` is applied
+inside that repo's worktree — `cd` there before running the step's edits,
+tests, and commits. Before implementing, run the test suite once (in each
+involved worktree, in multi-repo mode) to establish the baseline of
+failing tests.
 
 ### Review-fix dispatch (after a hard-gate failure)
 
 When dispatched after the aggregate gate fails, you are in a **fix loop**.
-The orchestrator passes you a typed failure class telling you what to fix:
+The orchestrator passes you a typed failure class and the reviewers'
+findings. Fix what the findings name, under these constraints:
 
-#### Security failure
-Security vulnerabilities (CRITICAL or HIGH severity) were found.
-1. Read the security reviewer's findings the orchestrator passed in.
-2. Fix each vulnerability directly — parameterize queries, remove hardcoded
-   secrets, add auth checks, escape output, etc.
-3. Do not weaken the fix. The security reviewer will re-check with fresh eyes.
+- **Security findings: never weaken the fix.** Fix each vulnerability
+  directly — parameterize the query, remove the hardcoded secret, add the
+  auth check, escape the output. The security reviewer re-checks with
+  fresh eyes.
+- **Test failures: fix the code, not the tests.** Tests are the
+  contract — the implementation must satisfy them as written.
+- **Code-review findings: do not argue with the review.** Fix what each
+  `issue:` comment names.
+- **Lint / format, typecheck, and build failures:** re-run the same check
+  until it passes. Auto-fixable lint issues go through `--fix` first.
+- When a failure is **non-obvious** — the cause is not plain from the
+  error and the first fix you reach for is a guess — load
+  `skills/systematic-debugging/SKILL.md` and walk the
+  **Root Cause Analysis (5 Whys)** causal chain to the root before
+  editing, so you fix the root cause rather than the symptom. Skip this
+  for an **obvious** failure (a typo, a trivially-named assertion, a
+  clear one-line fix) — drilling a one-line fix is wasted ceremony. The
+  fast path stays intact.
 
-#### Lint / format, typecheck, and build failures
-Read the tool's output, fix each violation, and re-run that same check until
-it passes. Auto-fixable lint issues go through `--fix` first.
-
-#### Test failure
-Fix **the code, not the tests**. Tests are the contract — the implementation
-must satisfy them as written. Re-run the full suite.
-
-When a test, lint, or typecheck failure is **non-obvious** — the cause is
-not plain from the error and the first fix you reach for is a guess — Load
-`skills/systematic-debugging/SKILL.md` and walk the
-**Root Cause Analysis (5 Whys)** causal chain to the root before editing, so
-you fix the root cause rather than the symptom. Skip this for an **obvious**
-failure (a typo, a trivially-named assertion, a clear one-line fix) —
-drilling a one-line fix is wasted ceremony. The fast path stays intact.
-
-#### Code-review failure
-Code review found blocking quality issues (REQUEST CHANGES verdict).
-1. Read the reviewer's `issue:` comments.
-2. Fix each blocking issue — correctness bugs, missing error handling,
-   naming problems, unnecessary complexity, SOLID violations.
-3. Do not argue with the review — fix the code.
-
-### Common to all fix dispatches
-
-- **Re-run the full test suite** after fixes to make sure that nothing regressed.
-- **Report which findings were fixed** and what changed.
-- If multiple failure types were reported in the same round, address all of
-   them before reporting completion.
-- The orchestrator will re-dispatch ALL 5 reviewers to verify your fixes.
+After fixing: re-run the full test suite so nothing regressed, address
+every failure type reported in the round before reporting completion, and
+report which findings were fixed and what changed. The orchestrator will
+re-dispatch ALL 5 reviewers to verify your fixes.
 
 ## Slice-by-slice execution
 
-Execute the plan one slice at a time, in the order the plan specifies.
+Execute the plan one slice at a time, in the order the plan specifies. A
+slice is done when its acceptance tests pass and prior slices' tests still
+pass; commit it atomically at that moment, report it, and move on. The
+contract per slice:
 
-For each slice:
-
-1. **Read the slice spec** — the plan lists its acceptance tests, the
-   file-level steps, and (multi-repo) the slice's `Repos:` field.
-2. **Implement the steps within the slice** in the order given. Steps marked
-   `[parallel]` may be done in any order. `[sequential]` steps depend on
-   prior steps in the slice. In multi-repo mode, each step carries
-   `[repo: <slug>]`. Cd into that repo's worktree before applying the step.
-   Cross-repo steps within one slice are routine — switch directories as
-   needed.
-3. **Run the slice's acceptance tests.** When they all pass and prior
-   slices' tests still pass, the slice is done. In multi-repo mode, run
-   each test in the worktree where it lives (the test name in the plan
-   carries a `<repo>:` prefix).
-4. **Commit atomically.** Apply the commit conventions in
-   `skills/git-commit/SKILL.md` (Conventional Commits, the 50/72 rule,
-   one logical change per commit). Single-repo: one commit per slice
-   using the slice's `Commit:` line as the subject, body referencing
-   the design and structure paths. Multi-repo: when the slice's
-   `Repos:` field names more than one repo, produce **one commit per
-   repo** in their respective worktrees, using each per-repo `Commit:`
-   subject from the plan. Each commit body references the same
-   design/structure paths and notes "part of slice <N>: <name>" so
-   reviewers can correlate.
-5. **Report the slice as complete** — return a brief summary to the
-   orchestrator: `{slice: <name>, testsPassing: [list], commits: [
-   {repo: <slug>, sha: <sha>}, ... ]}` (`commits` is a single-entry
-   list in single-repo mode).
-6. **Move to the next slice.**
+- **Steps.** The plan lists each slice's file-level steps. `[sequential]`
+  steps depend on prior steps in the slice; `[parallel]` steps may be done
+  in any order. In multi-repo mode each step carries `[repo: <slug>]` —
+  cd into that repo's worktree before applying it. Cross-repo steps
+  within one slice are routine — switch directories as needed.
+- **Tests.** In multi-repo mode, run each acceptance test in the worktree
+  where it lives (the test name in the plan carries a `<repo>:` prefix).
+- **Commits.** Apply the commit conventions in
+  `skills/git-commit/SKILL.md` (Conventional Commits, the 50/72 rule,
+  one logical change per commit). Single-repo: one commit per slice
+  using the slice's `Commit:` line as the subject, body referencing
+  the design and structure paths. Multi-repo: when the slice's
+  `Repos:` field names more than one repo, produce **one commit per
+  repo** in their respective worktrees, using each per-repo `Commit:`
+  subject from the plan. Each commit body references the same
+  design/structure paths and notes "part of slice <N>: <name>" so
+  reviewers can correlate.
+- **Report.** Return a brief summary to the orchestrator per slice:
+  `{slice: <name>, testsPassing: [list], commits: [
+  {repo: <slug>, sha: <sha>}, ... ]}` (`commits` is a single-entry
+  list in single-repo mode).
 
 When all slices are done, return a final implementation summary to the
 orchestrator (paths, slice list, final test status).

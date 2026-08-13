@@ -715,14 +715,22 @@ both governed by `skills/nested-agents/SKILL.md`:
 - **Context-economy scouts** (`researcher`, `implementer`): read-only
   `Explore` / `team:file-finder` helpers that absorb bulk reading the
   parent would otherwise hold in its own context without ever
-  referencing it again. The researcher's scouts inherit the research
-  isolation invariant: scout prompts are built only from verbatim
-  `questions.md` text and `repos.md` paths.
+  referencing it again. Scouts are long-lived: both agents hold
+  `SendMessage`, so a follow-up question inside a live scout's territory
+  goes to that scout (warm context) rather than to a cold respawn, and
+  the implementer dispatches the next slice's scout in the background
+  while finishing the current slice. The researcher's scouts inherit the
+  research isolation invariant: scout prompts — first dispatch and
+  follow-up alike — are built only from verbatim `questions.md` text and
+  `repos.md` paths.
 - **Skeptic verification** (`code-reviewer`, `security-reviewer`): each
   hard-gate finding (Blocking, CRITICAL, or HIGH) goes to a fresh
   `general-purpose` sub-agent as a neutral, falsifiable claim, with
   instructions to refute it. The claim never carries the reviewer's
-  verdict or severity. Default-keep: a finding is dropped only on an
+  verdict or severity. Skeptics are deliberately one-shot — never a
+  follow-up to a live skeptic — because a skeptic that has judged
+  earlier claims accumulates a model of the review and anchors to it.
+  Default-keep: a finding is dropped only on an
   evidence-backed refutation the reviewer verifies itself. A false
   hard-gate finding costs an entire review round (implementer re-dispatch
   + all 5 reviewers re-run), so the pass pays for itself.
