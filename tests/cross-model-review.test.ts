@@ -124,8 +124,9 @@ function runScript(
   return { status: result.status, stdout, stderr, combined: stdout + stderr };
 }
 
-// Matches a positive availability claim without matching "unavailable".
-const CLAIMS_AVAILABLE = /(?<!un)available/i;
+// Matches the script's positive availability token ("codex: ready");
+// no negative line ("unavailable (...)") ever carries it.
+const CLAIMS_READY = /\bready\b/i;
 
 // A recording fake writes a sibling `ran` file when executed, so a test can
 // prove the script never spawned it (env-free: it locates itself via $0).
@@ -190,18 +191,31 @@ describe("external-review.mjs pure core (L1)", () => {
 // ---------------------------------------------------------------------------
 
 describe("detect is fail-closed and marker-first (L3)", () => {
-  test("no marker → unavailable naming the marker path, with no binary claim even when a fake codex sits on PATH", () => {
+  test("no marker → unavailable naming the marker path, with no ready claim even when a fake codex sits on PATH", () => {
     expect(existsSync(SCRIPT)).toBe(true);
-    // Positive control: the availability matcher can see a positive claim.
-    expect("codex: available").toMatch(CLAIMS_AVAILABLE);
-    expect("codex: unavailable").not.toMatch(CLAIMS_AVAILABLE);
+    // Positive control: the matcher sees the script's real positive token
+    // (asserted end-to-end by the marker-present test below).
+    expect("codex: ready").toMatch(CLAIMS_READY);
+    expect("codex: unavailable (binary not found on PATH)").not.toMatch(CLAIMS_READY);
 
     const bin = makeBin({ codex: RECORDING_FAKE });
     const repo = makeRepo(/* withMarker */ false);
     const r = runScript(["detect", repo], { binDir: bin });
     expect(r.combined).toContain(MARKER_PATH);
     expect(r.combined).toMatch(/unavailable/i);
-    expect(r.combined).not.toMatch(CLAIMS_AVAILABLE);
+    expect(r.combined).not.toMatch(CLAIMS_READY);
+  });
+
+  test("marker present + fake binaries on PATH → per-CLI ready, and detect spawns nothing", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+    const bin = makeBin({ codex: RECORDING_FAKE, gemini: RECORDING_FAKE });
+    const repo = makeRepo(/* withMarker */ true);
+    const r = runScript(["detect", repo], { binDir: bin });
+    expect(r.status).toBe(0);
+    expect(r.stdout).toContain("codex: ready");
+    expect(r.stdout).toContain("gemini: ready");
+    // detect only vets PATH; the recording fake proves it never spawned.
+    expect(existsSync(join(bin, "ran"))).toBe(false);
   });
 
   test("marker present + missing binaries → per-CLI unavailable", () => {
@@ -212,7 +226,7 @@ describe("detect is fail-closed and marker-first (L3)", () => {
     expect(r.combined).toContain("codex");
     expect(r.combined).toContain("gemini");
     expect(r.combined).toMatch(/unavailable/i);
-    expect(r.combined).not.toMatch(CLAIMS_AVAILABLE);
+    expect(r.combined).not.toMatch(CLAIMS_READY);
   });
 
   test("lookup error (nonexistent repo root) → unavailable, never a crash claim of availability", () => {
@@ -222,7 +236,7 @@ describe("detect is fail-closed and marker-first (L3)", () => {
       binDir: bin,
     });
     expect(r.combined).toMatch(/unavailable/i);
-    expect(r.combined).not.toMatch(CLAIMS_AVAILABLE);
+    expect(r.combined).not.toMatch(CLAIMS_READY);
   });
 });
 
