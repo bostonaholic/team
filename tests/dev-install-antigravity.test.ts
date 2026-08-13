@@ -87,6 +87,11 @@ const README = join(REPO_ROOT, "README.md");
 // The plugin root this host scans, and the flat global skill directory an
 // earlier revision of this install wrote into. The second must stay unused:
 // skills there are un-namespaced and carry no agents.
+//
+// The `.gemini` spelling is Antigravity CLI's own config root, not a stale
+// reference to a retired host. Nothing here drives the real `agy` binary, so
+// a rename applied to these constants and the scripts together would keep
+// this suite green while breaking every dev install. Never rename it.
 const PLUGIN_SUBPATH = ".gemini/config/plugins/team";
 const FLAT_SKILLS_SUBPATH = ".gemini/config/skills";
 

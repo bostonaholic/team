@@ -15,6 +15,10 @@ set -euo pipefail
 # whose host ignores that key.
 
 PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# The `.gemini` spelling below is correct: it is Antigravity CLI's own global
+# config root, where this host reads plugins. Never rename it — no test drives
+# the real `agy` binary, so a rename would pass CI while silently breaking
+# every dev install.
 TARGET="${HOME}/.gemini/config/plugins/team"
 
 for component in plugin.json skills agents; do
