@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.46.0] - 2026-08-13
+
 ### Changed
 
 - **The fable agents' procedures now state goals and constraints instead of walking steps.** Step-by-step scaffolding written for prior models reduces Fable's output quality: the model follows the walk instead of exercising judgment, and steps like "read the diff" or "move to the next slice" spend instruction budget stating what a capable model does unprompted. Three methodology skills were de-prescribed — the researcher's five-step investigation method is now an evidence contract (every claim cites code read in this run; the output format already defines complete findings), the code reviewer's numbered inspection process is now three non-negotiable obligations plus an unordered coverage checklist, and the implementer's slice loop and fix-loop sub-procedures collapse into the constraints that were load-bearing all along (slices are sequential and commit atomically on green; fix the code, not the tests; never weaken a security fix). Every parsed contract survives unchanged: report formats, verdict tokens, line budgets, scope fences, isolation rules, and the pinned checklist items (`System fit`, the comment and flaky-test red-flag regimes) are all still there — what changed is that the prose no longer prescribes the order of the work. The progress-tracking convention gained a matching granularity rule: a goals-and-constraints procedure seeds one todo per natural unit of work (a slice, a question, a finding), never one per sentence of guidance. [`skills/researching-codebases/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/researching-codebases/SKILL.md), [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md), [`skills/implementing-slices/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/implementing-slices/SKILL.md), [`skills/progress-tracking/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/progress-tracking/SKILL.md)
@@ -511,7 +513,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.45.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.46.0...HEAD
+[0.46.0]: https://github.com/bostonaholic/team/compare/v0.45.0...v0.46.0
 [0.45.0]: https://github.com/bostonaholic/team/compare/v0.44.0...v0.45.0
 [0.44.0]: https://github.com/bostonaholic/team/compare/v0.43.2...v0.44.0
 [0.43.2]: https://github.com/bostonaholic/team/compare/v0.43.1...v0.43.2
