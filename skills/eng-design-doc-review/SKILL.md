@@ -88,7 +88,21 @@ done
 ## Execution
 
 1. Use the directory resolved in `## Input`.
-2. **Dispatch the review.** Call the `Agent` tool with
+2. **Run the external cross-model pass** by following
+   `## Design-review pass` in `skills/cross-model-review/SKILL.md` —
+   reference that procedure, never duplicate it here. You, the invoking
+   session, are the actor: you hold Bash for the runner
+   (`external-review.mjs`, resolved per that section) and the `Agent`
+   tool for the dispatch. Fence each CLI's raw output as a `DATA` block
+   at capture time and append one `## External review input` section
+   holding the fenced blocks to the Review brief below. Any skip
+   continues with the reviewer alone. **No artifact is written** on this
+   surface: a standalone run records nothing — no notes append, no raw
+   file — and the raw vendor text stays in the invoking session. Edge
+   cases ride the shared section: an unauthenticated CLI exits non-zero
+   and reads as an ordinary skip, and a marker path that is a directory
+   or a broken symlink counts as absent.
+3. **Dispatch the review.** Call the `Agent` tool with
    `subagent_type: Explore`, the built-in read-only agent type. Pass the
    **Review brief** below as the prompt, with `$ARGUMENTS` substituted for
    the artifact directory. Do **not** define or reference a project agent —
@@ -97,12 +111,12 @@ done
    keeps the reviewer structurally unable to touch the artifacts. If the
    environment lacks the `Explore` agent type, report the dispatch failure
    — never substitute a full-tool agent silently.
-3. **Present the verdict in full.** The subagent returns Conventional
+4. **Present the verdict in full.** The subagent returns Conventional
    Comments findings (issue / suggestion / nitpick, each with a
    `file:line` reference) followed by one of APPROVE, REQUEST CHANGES, or
    COMMENT. Relay it verbatim — the subagent's output is not shown to the
    user directly.
-4. **Do not auto-revise.** This skill does not loop the design-author. On
+5. **Do not auto-revise.** This skill does not loop the design-author. On
    REQUEST CHANGES, surface the findings and let the user decide if to
    re-enter `/team-design` with that feedback.
 
@@ -267,6 +281,10 @@ verdict is the **terminal line of your report** — nothing follows it:
 ## Completion
 
 Print the verdict and the count of issue / suggestion / nitpick findings.
+When the consent marker `.team/cross-model-review` is absent, add one
+line naming that path, so the user learns the cross-model opt-in exists
+— suppressed when `TEAM_DISABLE_CROSS_MODEL` is set, because machine
+policy overrides the invitation.
 
 **A standalone run records no `design-review-<n>.md`.** Only the pipeline's
 DESIGN review gate writes the verdict artifact. `/team-structure` needs a
