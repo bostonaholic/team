@@ -14,8 +14,9 @@
  * opted in never even learns what sits on PATH. `run` refuses with a non-zero
  * exit before any child process spawns when the marker is absent. With
  * consent, `run` reads the review prompt from stdin and invokes the named CLI
- * with a pinned read-only argv — codex gets the prompt on stdin (then EOF,
- * which defeats the stdin-block hang), gemini gets it as the `-p` value.
+ * with a pinned read-only argv — both CLIs get the prompt on stdin (then
+ * EOF, which defeats the stdin-block hang), so it never rides argv where the
+ * process table would expose it.
  * Guard failures (unknown CLI, prompt over the cap) are usage errors that
  * also exit before any child process spawns, so a rejected attempt consumes
  * nothing. The child gets an allowlisted environment, never the parent's,
@@ -97,11 +98,11 @@ function childEnv(cli) {
 }
 
 /**
- * The pinned read-only argv per supported CLI. Codex reads the prompt from
- * stdin (`-`); gemini takes it as the `-p` value. Returns null for any
- * unsupported CLI name so callers reject before spawning.
+ * The pinned read-only argv per supported CLI. The prompt never appears in
+ * argv — both CLIs read it from stdin. Returns null for any unsupported CLI
+ * name so callers reject before spawning.
  */
-export function buildArgv(cli, prompt) {
+export function buildArgv(cli) {
   if (cli === "codex") {
     return {
       command: "codex",
@@ -109,7 +110,7 @@ export function buildArgv(cli, prompt) {
     };
   }
   if (cli === "gemini") {
-    return { command: "gemini", args: ["--approval-mode", "plan", "-p", prompt] };
+    return { command: "gemini", args: ["--approval-mode", "plan"] };
   }
   return null;
 }
@@ -256,7 +257,7 @@ async function run(cli, repoRoot, timeoutMs) {
     return usage(`prompt exceeds ${PROMPT_CAP_BYTES} bytes`);
   }
 
-  const { command, args } = buildArgv(cli, prompt);
+  const { command, args } = buildArgv(cli);
   // Resolve here and spawn the absolute path, so what runs is exactly what
   // this process saw — never a second PATH walk at spawn time.
   const resolved = findOnPath(command);
@@ -361,14 +362,20 @@ async function run(cli, repoRoot, timeoutMs) {
           return;
         }
         // Only stdout is the review; gemini writes progress noise to stderr.
-        process.stdout.write(truncateOutput(stdoutCollector.text()));
+        const output = stdoutCollector.text();
+        if (output.trim() === "") {
+          // Silence from a healthy CLI must never read as agreement.
+          process.stdout.write(`skip: ${cli} produced no output\n`);
+          return;
+        }
+        process.stdout.write(truncateOutput(output));
       });
     });
 
     // A child that exits without draining stdin raises EPIPE here; that is
     // its exit code's story to tell, not a crash.
     child.stdin.on("error", () => {});
-    if (cli === "codex") child.stdin.write(prompt);
+    child.stdin.write(prompt);
     child.stdin.end();
   });
 }

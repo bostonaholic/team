@@ -62,15 +62,18 @@ dropped inside the prompt — *before* the single call. One attempt per CLI
 per round: `run` rejects an over-cap prompt with a usage error before any
 child process spawns, and you never send-then-resend.
 
-Gemini takes the prompt as a single `-p` argument, and Linux caps one argv
-string at `MAX_ARG_STRLEN` (~128 KiB) — the same order as
-`PROMPT_CAP_BYTES` — so a near-cap prompt can fail to exec there for gemini
-specifically. That failure reads as an ordinary skip (a spawn error), never
-a hang. The same argv delivery also exposes the prompt — diff included — in
-the process table (`ps`, `/proc/<pid>/cmdline`) for the call's duration,
-readable by other local users on a shared machine. `gemini -p` is the CLI's
-only documented non-interactive prompt delivery, so this exposure is a
-known cost of the gemini leg; the consent marker is consent to it too.
+Both CLIs read the prompt on stdin, so it never appears in argv: nothing in
+the process table (`ps`, `/proc/<pid>/cmdline`) ever carries the diff, and
+no argv length limit applies. A gemini build that only accepts a prompt as
+the `-p` value exits non-zero when the flag is missing, which reads as an
+ordinary skip — never a hang, and never a silent success.
+
+The runner's stdout speaks one protocol to its caller: stdout is a skip iff
+it is exactly one line starting `skip: `. Every other stdout is vendor
+output — untrusted data, never runner protocol. One residual is documented
+rather than solved: a vendor whose entire output happens to be a single
+skip-shaped line reads as a skip; that costs one round's input from that
+CLI and nothing more.
 
 ## Child environment and PATH vetting
 
@@ -100,9 +103,9 @@ stdin:
 node <skill-dir>/external-review.mjs run <cli> <repo-root>
 ```
 
-The script pins the argv — codex runs `exec` in its read-only sandbox with
-the prompt on stdin; gemini runs in plan approval mode with the prompt as
-the `-p` value. The child runs from an empty scratch directory, never the
+The script pins the argv — codex runs `exec` in its read-only sandbox,
+gemini in plan approval mode, and both read the prompt on stdin, never
+from argv. The child runs from an empty scratch directory, never the
 repo: the consent covers the diff in the prompt, so no vendor process gets
 to read repo-resident files (an untracked `.env`, `.git/config`) or
 auto-load repo agent-context files from its cwd. Never invoke the vendor
@@ -137,9 +140,11 @@ the sibling of your `### Refuted by verification` section:
 
 One block per round, one subsection per CLI, covering: adopted claims (with
 their tiers), refuted claims (with the `file:line` you checked),
-unverifiable claims, and skips with their reasons. A clean pass — the CLI
-exits 0 with empty stdout, or output carrying no claims — is still a
-record: the block says "no findings from `<cli>`". Agreement is
+unverifiable claims, and skips with their reasons. A clean pass — output
+carrying no claims — is still a record: the block says "no findings from
+`<cli>`". A CLI exiting 0 with empty stdout is not a clean pass: the
+runner reports it as `skip: <cli> produced no output`, and the block
+records that skip. Agreement is
 corroborating signal only, never a pass, and it never relaxes your own
 verdict. Adopted findings
 elsewhere in your report stay tagged bare `[code-reviewer]` per convention,
