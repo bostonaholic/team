@@ -1,6 +1,6 @@
 ---
 title: Cross-host portability
-description: "A capability matrix mapping Team's Claude Code plugin primitives onto the other hosts it runs on — Gemini CLI, Codex CLI, and Antigravity CLI — and the portability strategy chosen for them."
+description: "A capability matrix mapping Team's Claude Code plugin primitives onto the other hosts it runs on — Codex CLI and Antigravity CLI — and the portability strategy chosen for them."
 audience: [developer]
 nav_order: 9
 nav_label: portability
@@ -9,16 +9,25 @@ nav_label: portability
 # Cross-host portability
 
 > **What this is.** A portability study. It shows how Team's Claude Code plugin
-> primitives map onto Gemini CLI and Codex CLI, and gives the strategy we chose
-> to support those two alongside Claude Code. Team also runs on
+> primitives map onto Codex CLI, and gives the strategy we chose to support
+> that host alongside Claude Code. Team also runs on
 > [Antigravity CLI](#antigravity-cli), which needed no porting strategy: it
 > installs Team from a local checkout through a manifest of its own, like the
 > other hosts. It is a decision document, not a code change. The source issue is
 > [#50](https://github.com/bostonaholic/team/issues/50). Two epics consume it:
-> the [#56](https://github.com/bostonaholic/team/issues/56) Gemini port and the
-> [#57](https://github.com/bostonaholic/team/issues/57) Codex port. They build
-> against the matrix, the gap analysis, and the "what #56/#57 build against"
-> section below.
+> the [#57](https://github.com/bostonaholic/team/issues/57) Codex port, which
+> builds against the matrix, the gap analysis, and the "what #57 builds
+> against" section below, and the
+> [#56](https://github.com/bostonaholic/team/issues/56) Antigravity backend,
+> which builds against the Antigravity CLI host facts.
+
+> **Deprecated host (2026-08-13).** An earlier revision of this study scored a
+> third host and handed it a port epic of its own. That Gemini CLI port was
+> scored on 2026-06-27 and then dropped in favor of Antigravity CLI, which
+> ships today. The port epic,
+> [#56](https://github.com/bostonaholic/team/issues/56), was retargeted at the
+> Antigravity CLI as an alternate model backend rather than closed. The matrix
+> below scores the surviving hosts only.
 
 ## Contents
 
@@ -28,11 +37,11 @@ nav_label: portability
 - [The capability matrix](#the-capability-matrix)
 - [Gap analysis](#gap-analysis)
 - [Decisions made](#decisions-made)
-- [What #56 and #57 build against](#what-56-and-57-build-against)
+- [What #57 builds against](#what-57-builds-against)
 - [Antigravity CLI](#antigravity-cli)
 - [Out of scope](#out-of-scope)
 - [Edge cases](#edge-cases)
-- [Open questions (deferred to the port epics)](#open-questions-deferred-to-the-port-epics)
+- [Open questions (deferred to the port epic)](#open-questions-deferred-to-the-port-epic)
 - [Risks](#risks)
 
 ## Current state
@@ -83,11 +92,11 @@ The end state is a single canonical "core" of host-neutral definitions, which
 means the Markdown bodies and the Node hook logic, maintained once. Thin per-host
 binding shims sit on top. Each shim translates the four blocking contracts into
 its host's idiom. Claude Code keeps its current `.claude-plugin/plugin.json` and
-`skills:` injection. A Gemini build emits `.gemini/` with settings.json hooks,
-`agents/*.md`, `skills/*/SKILL.md`, and TOML commands. A Codex build emits
-`.codex/` with config.toml or hooks.json and `agents/*.md`. Skills need no build
-step on Codex, which discovers `.claude-plugin/plugin.json` and loads `skills/`
-directly.
+`skills:` injection. Antigravity CLI's shim already ships: the root
+`plugin.json` manifest, which the host resolves with `skills/` and `agents/`
+beside it. A Codex build emits `.codex/` with config.toml or hooks.json and
+`agents/*.md`. Skills need no build step on Codex, which discovers
+`.claude-plugin/plugin.json` and loads `skills/` directly.
 The high-churn binding layer stays isolated from the stable cores. A host API
 change thus touches one shim, not 68 definition files.
 
@@ -108,9 +117,9 @@ host-neutral counterpart to the per-host manifests. Those manifests carry only
 bindings. `.team/config.json` carries the host-agnostic project config.
 
 This document does not build that end state. It is the strategy and capability
-matrix that lets epics #56 and #57 build it. Each epic targets **full parity**
-against named, tracked host risks. Full parity means all four hook events,
-parallel and nested subagents, and structured returns.
+matrix that lets epic #57 build it. The epic targets **full parity** against
+named, tracked host risks. Full parity means all four hook events, parallel and
+nested subagents, and structured returns.
 
 ## Patterns to follow
 
@@ -136,12 +145,12 @@ parallel and nested subagents, and structured returns.
   and git logic is the reusable core. Only the stdin field names and the result
   envelope are the binding. The shim layer mirrors this seam.
 - **Agent definition format is already near-universal.** Claude `agents/*.md`,
-  which is Markdown with YAML frontmatter, is structurally identical to Gemini
-  `.gemini/agents/*.md`. Codex uses TOML agent roles, but the *system-prompt body*
-  is the same prose. The body ports. The frontmatter and TOML binding does not.
+  which is Markdown with YAML frontmatter, carries the same *system-prompt body*
+  Codex reads through its TOML agent roles. The body ports. The frontmatter and
+  TOML binding does not.
 - **The JSON-envelope convention is host-agnostic by construction**
   (`skills/agent-open-questions/SKILL.md`). It layers on whatever result channel
-  the host gives: final-text on Claude and Gemini, `--output-schema` on Codex.
+  the host gives: final-text on Claude, `--output-schema` on Codex.
 
 ## The capability matrix
 
@@ -150,50 +159,48 @@ three values. **native** means a direct host equivalent. **workaround** means a
 documented alternate mechanism reaches it. **hard gap** means the host has no
 facility, so the design must work around it.
 
-| Team primitive | Claude Code | Gemini CLI | Codex CLI |
-|----------------|-------------|------------|-----------|
-| Agent/skill Markdown bodies | native (loaded as-is) | native (loaded as-is) | native (system-prompt body) |
-| Custom slash entry points | native (SKILL.md auto-register) | native (TOML in `.gemini/commands/`) | native (built-ins and Skills. Prompts are deprecated in favor of Skills.) |
-| On-demand SKILL.md injection | native (`skills:` + auto-load) | native (`.gemini/skills/SKILL.md`, progressive disclosure through `activate_skill`) | native (`.agents/skills/SKILL.md`, description-matched implicit invocation) |
-| Subagent dispatch (parallel) | native (Agent/Task tool) | native (`.gemini/agents/*.md`, parallel) | native (`spawn_agent`/`wait_agent`…, `features.multi_agent`) |
-| Nested subagents | native (depth 2, ≤4, read-only) | workaround: parallel yes, but subagents cannot spawn subagents | workaround: `max_depth=1`, nesting capped one level |
-| Structured agent→caller output | native (final-text JSON envelope) | native at CLI (`--output-format json`/JSONL, shipped through [gemini-cli#8022](https://github.com/google-gemini/gemini-cli/issues/8022)). The subagent-return boundary is under-specified and unverified. | native and strongest (`--output-schema` JSON Schema). A silent-drop bug under tools ([codex#15451](https://github.com/openai/codex/issues/15451)) was fixed April 2026 |
-| `PreToolUse` hook | native | native (`BeforeTool`) | native (`PreToolUse`) |
-| `PostToolUse` hook | native | native (`AfterTool`) | native (`PostToolUse`) |
-| `SessionStart` hook | native | native (`SessionStart`) | native (`SessionStart`) |
-| `PreCompact` hook | native | native (`PreCompress`) | native (`PreCompact`, + `PostCompact`) |
-| Hook stdin/stdout JSON contract | native (Claude schema) | workaround: own schema (`hook_event_name`, `decision`, exit 2), fields remap | workaround: own schema, mirrors Claude closely (`permissionDecision:"deny"`/exit 2) |
-| Plugin-root / project-dir env vars | native (`${CLAUDE_PLUGIN_ROOT}`, `CLAUDE_PROJECT_DIR`) | workaround: no equivalent, so pass paths through hook config, argv, or stdin | workaround: no equivalent, so resolve through `.codex/` trust + config |
-| Always-on project context | native (CLAUDE.md) | native (GEMINI.md) | native (AGENTS.md) |
-| MCP tools | native | native (stdio/SSE/HTTP, OAuth) | native (stdio/HTTP, OAuth, per-tool approval) |
-| MCP prompts-as-slash-commands | native | native (`/prompt-name --arg`) | **hard gap**: MCP prompts unsupported client-side, so route through Skills |
-| MCP resources | native | native (`@server://path`) | native (`read_mcp_resource`/`list_mcp_resources`) |
-| Manifest / binding format | `.claude-plugin/plugin.json` | `.gemini/settings.json` + commands TOML | `config.toml`/`hooks.json` + `.codex/` |
-| Per-project config (host-neutral) | `.team/config.json` (plain JSON, read by portable core) | `.team/config.json` (same file, unchanged) | `.team/config.json` (same file, unchanged) |
-| Abstract model tier → host model | native (`model:` is a literal Claude model) | workaround: resolve tier through `.team/config.json` map | workaround: resolve tier through `.team/config.json` map |
+| Team primitive | Claude Code | Codex CLI |
+|----------------|-------------|-----------|
+| Agent/skill Markdown bodies | native (loaded as-is) | native (system-prompt body) |
+| Custom slash entry points | native (SKILL.md auto-register) | native (built-ins and Skills. Prompts are deprecated in favor of Skills.) |
+| On-demand SKILL.md injection | native (`skills:` + auto-load) | native (`.agents/skills/SKILL.md`, description-matched implicit invocation) |
+| Subagent dispatch (parallel) | native (Agent/Task tool) | native (`spawn_agent`/`wait_agent`…, `features.multi_agent`) |
+| Nested subagents | native (depth 2, ≤4, read-only) | workaround: `max_depth=1`, nesting capped one level |
+| Structured agent→caller output | native (final-text JSON envelope) | native and strongest (`--output-schema` JSON Schema). A silent-drop bug under tools ([codex#15451](https://github.com/openai/codex/issues/15451)) was fixed April 2026 |
+| `PreToolUse` hook | native | native (`PreToolUse`) |
+| `PostToolUse` hook | native | native (`PostToolUse`) |
+| `SessionStart` hook | native | native (`SessionStart`) |
+| `PreCompact` hook | native | native (`PreCompact`, + `PostCompact`) |
+| Hook stdin/stdout JSON contract | native (Claude schema) | workaround: own schema, mirrors Claude closely (`permissionDecision:"deny"`/exit 2) |
+| Plugin-root / project-dir env vars | native (`${CLAUDE_PLUGIN_ROOT}`, `CLAUDE_PROJECT_DIR`) | workaround: no equivalent, so resolve through `.codex/` trust + config |
+| Always-on project context | native (CLAUDE.md) | native (AGENTS.md) |
+| MCP tools | native | native (stdio/HTTP, OAuth, per-tool approval) |
+| MCP prompts-as-slash-commands | native | **hard gap**: MCP prompts unsupported client-side, so route through Skills |
+| MCP resources | native | native (`read_mcp_resource`/`list_mcp_resources`) |
+| Manifest / binding format | `.claude-plugin/plugin.json` | `config.toml`/`hooks.json` + `.codex/` |
+| Per-project config (host-neutral) | `.team/config.json` (plain JSON, read by portable core) | `.team/config.json` (same file, unchanged) |
+| Abstract model tier → host model | native (`model:` is a literal Claude model) | workaround: resolve tier through `.team/config.json` map |
 
-Antigravity CLI is not a fourth column. Only some of these rows are settled for
+Antigravity CLI is not a third column. Only some of these rows are settled for
 it — manifest layout, skill and agent discovery, naming, hooks — while the MCP
 group and the hook JSON contract are not, and a column that said "unknown" two
 thirds of the way down would look scored without being scored. What is settled
 is in [its own section](#antigravity-cli); the rest sits in
-[open questions](#open-questions-deferred-to-the-port-epics).
+[open questions](#open-questions-deferred-to-the-port-epic).
 
 Reading the matrix: every row that Team's *behavior* depends on is native or
-workaround on both hosts. There is no hook-event gap. All four events map
-natively, and on-demand skills, subagents, MCP tools, and MCP resources are native
-on all three hosts. The one remaining hard gap is narrow. Codex does not surface
-MCP **prompts** as slash commands. Its MCP tools and resources are fine. It also
-has a clean detour: route slash entry through Codex Skills, below.
+workaround on Codex CLI. There is no hook-event gap. All four events map
+natively, and on-demand skills, subagents, MCP tools, and MCP resources are
+native. The one remaining hard gap is narrow. Codex does not surface MCP
+**prompts** as slash commands. Its MCP tools and resources are fine. It also has
+a clean detour: route slash entry through Codex Skills, below.
 
-> The landscape is recent, though not uniformly so. As of mid-2026 both Gemini
-> CLI and Codex CLI ship a full hooks system. Both also ship parallel subagents,
-> custom slash commands, on-demand skills, MCP, and structured headless output. Earlier (2025)
-> write-ups that treated these as hard gaps are stale. Maturity differs. Gemini's
-> extension surface has been stable since late 2025 (hooks around December 2025,
-> subagents around August 2025, latest v0.49.0). Meanwhile Codex's hooks and
-> multi-agent are younger, rolled out March to May 2026 across v0.114-v0.129
-> (latest v0.142.3). See the recency risk in the gap analysis.
+> The landscape is recent. As of mid-2026 Codex CLI ships a full hooks system,
+> parallel subagents, custom slash commands, on-demand skills, MCP, and
+> structured headless output. Earlier (2025) write-ups that treated these as
+> hard gaps are stale. Codex's hooks and multi-agent are young, rolled out March
+> to May 2026 across v0.114-v0.129 (latest v0.142.3). See the recency risk in
+> the gap analysis.
 
 ## Gap analysis
 
@@ -203,27 +210,18 @@ cross-cutting recency caveat:
 
 1. **Codex does not expose MCP *prompts* as slash commands (hard gap).** Codex MCP
    supports tools and resources (`read_mcp_resource` and `list_mcp_resources`). It
-   does not support MCP prompts. "MCP-prompts-as-slash-commands" thus works on
-   Gemini and not on Codex. The workaround for #57 is to route every slash-style
-   entry point through Codex Skills, the documented successor to deprecated custom
+   does not support MCP prompts. "MCP-prompts-as-slash-commands" thus does not
+   work on Codex. The workaround for #57 is to route every slash-style entry
+   point through Codex Skills, the documented successor to deprecated custom
    prompts, and not through MCP. This is why the chosen strategy does not depend
    on MCP (decision 4).
 
-2. **Recency risk, Codex-weighted.** This is cross-cutting rather than a primitive
-   gap. Gemini's extension surface is mature (hooks around December 2025 in
-   v0.20-0.21, subagents around August 2025, latest v0.49.0) and is a low
-   contract-churn risk. Codex's hooks and multi-agent are younger. They rolled out
-   from March to May 2026 across v0.114-v0.129 (latest v0.142.3). Treat its
-   contracts as moving targets. The shim layer (decision 1) absorbs breaking
-   changes in one place. The mitigation and version-pinning policy are tracked in
-   the [risk register](#risks).
-
-> **Correction (2026-06-27).** An earlier draft listed a second hard gap: *"Gemini
-> has no on-demand skill-injection analog."* Verification against the repo refuted
-> it. Gemini CLI ships a full Agent Skills system (`.gemini/skills/SKILL.md`,
-> progressive disclosure through the `activate_skill` tool), so Gemini ports skills
-> natively, exactly like Codex. The fold-into-system-prompt workaround that draft
-> proposed is no longer needed.
+2. **Recency risk.** This is cross-cutting rather than a primitive gap. Codex's
+   hooks and multi-agent are young. They rolled out from March to May 2026
+   across v0.114-v0.129 (latest v0.142.3). Treat its contracts as moving
+   targets. The shim layer (decision 1) absorbs breaking changes in one place.
+   The mitigation and version-pinning policy are tracked in the
+   [risk register](#risks).
 
 ## Decisions made
 
@@ -236,48 +234,50 @@ cross-cutting recency caveat:
    the slash-entry registration. Each host can generate its shims or hand-write
    them. Either way they are small and isolated.
    - *Why:* the expensive, divergent, high-churn surface is exactly the bindings
-     (three different manifest formats, three hook schemas, still-moving host
-     APIs), while the stable, valuable surface, the 64 agent/skill bodies and 4
-     hook logic files, is *already portable*. The hybrid boundary lines up with the
+     (three manifest formats ship today — Claude Code's, Codex's, and
+     Antigravity's — atop per-host hook schemas and still-moving host APIs),
+     while the stable, valuable surface, the 64 agent/skill bodies and 4 hook
+     logic files, is *already portable*. The hybrid boundary lines up with the
      natural portable/non-portable seam, so it minimizes both duplication and the
      blast radius of churn.
-   - *Serves whom:* Team's maintainer and the #56/#57 port-epic implementers. They
-     edit behavior once and re-bind per host, instead of maintaining three drifting
-     copies.
+   - *Serves whom:* Team's maintainer and the #56/#57 epic implementers. They
+     edit behavior once and re-bind per host, instead of maintaining a drifting
+     copy per host.
 
 2. **Rejected: single source of truth plus a full transpile/build.** One canonical
-   set. A build step emits a complete Claude plugin, Gemini extension, and Codex
-   package. *Why rejected:* it forces the build to fully model three divergent
-   manifest/agent/command formats, the youngest of which (Codex's) are still
-   moving. The upfront modeling cost is high and the build itself becomes the
-   highest-churn artifact, since every host API change breaks the transpiler. The
-   hybrid keeps the same DRY core *without* committing to a total-coverage
-   transpiler. Shims can stay hand-written where generation does not pay. The
-   hybrid can generate shims later where it pays, making it a strict superset of
-   this option's value with less risk.
+   set. A build step emits a complete package per host. *Why rejected:* it forces
+   the build to fully model three divergent manifest/agent/command formats —
+   Claude Code's, Codex's, and Antigravity's — the youngest of which (Codex's)
+   are still moving. The upfront modeling cost is high and the build itself
+   becomes the highest-churn artifact, since every host API change breaks the
+   transpiler. The hybrid keeps the same DRY core *without* committing to a
+   total-coverage transpiler. Shims can stay hand-written where generation does
+   not pay. The hybrid can generate shims later where it pays, making it a strict
+   superset of this option's value with less risk.
 
 3. **Rejected: per-host maintained adapters (parallel hand-maintained trees).**
    *Why rejected:* it costs 3× the maintenance across 13 agents, 54 skills, and 4
-   hooks. It also guarantees drift, because someone must apply a fix to an agent
+   hooks, one tree per shipped host — Claude Code, Codex CLI, and Antigravity
+   CLI. It also guarantees drift, because someone must apply a fix to an agent
    body three times by hand. It throws away the fact that the bodies are *already
    portable*. The hybrid keeps most of its only advantage, a fully idiomatic host,
    because host idiom lives in the shim layer anyway.
 
 4. **MCP is documented as a bridge, not adopted as the strategy's mechanism.**
-   The matrix records MCP's reach: tools and resources on both hosts,
-   prompts-as-slash on Gemini only and not Codex. But the chosen path is native
-   per-host bindings, and MCP is a documented fallback to revisit only if a native
-   binding proves insufficient. *Why:* Codex MCP carries tools and resources but
-   not prompts, so MCP can never be the *uniform* slash-command layer. Leaning on
-   it would force a split path anyway while adding a server dependency. Keeping it
-   as fallback preserves the option without coupling the strategy to it.
+   The matrix records MCP's reach on Codex: tools and resources, but not
+   prompts-as-slash. The chosen path is native per-host bindings, and MCP is a
+   documented fallback to revisit only if a native binding proves insufficient.
+   *Why:* Codex MCP carries tools and resources but not prompts, so MCP can
+   never be the *uniform* slash-command layer. Leaning on it would force a split
+   path anyway while adding a server dependency. Keeping it as fallback preserves
+   the option without coupling the strategy to it.
 
-5. **Parity target for #56/#57: full hook and subagent parity**, not MVP-first.
-   Each epic targets all four hook events, parallel **and** nested subagents, and
+5. **Parity target for #57: full hook and subagent parity**, not MVP-first.
+   The epic targets all four hook events, parallel **and** nested subagents, and
    structured returns before it declares the work done. This raises the bar
    against the young-API and open-bug risk. The design thus confronts those risks
    directly rather than defer them by a cut in scope. See the risks and "what
-   #56/#57 build against" below.
+   #57 builds against" below.
 
 6. **Per-project configuration lives in a host-neutral `.team/config.json`.** The
    [Desired end state](#desired-end-state) specifies the artifact and its
@@ -286,52 +286,22 @@ cross-cutting recency caveat:
    per-host parallelism caps, and the multi-repo list.
    - *Why:* it pulls the one irreducibly host-varying value out of the portable
      definitions, since the agent `model:` frontmatter is a Claude-specific model
-     name and meaningless on Gemini or Codex, and puts it behind a single
-     host-agnostic indirection, so the 64 agent/skill bodies never carry a
-     host-specific model literal. The per-host shims *read* `.team/config.json`;
-     they never restate it.
+     name and meaningless on Codex, and puts it behind a single host-agnostic
+     indirection, so the 64 agent/skill bodies never carry a host-specific model
+     literal. The per-host shims *read* `.team/config.json`; they never restate
+     it.
 
-## What #56 and #57 build against
+## What #57 builds against
 
-Both epics build the hybrid core plus a per-host shim for their host, targeting
-full parity. Each starts from the matrix and works around the named gaps.
-
-### #56. Gemini port
-
-- Bodies port as-is. Agent frontmatter → `.gemini/agents/*.md` (structurally
-  identical format).
-- Skills port natively to `.gemini/skills/SKILL.md` (progressive disclosure
-  through the `activate_skill` tool). As with Codex, no folding into system
-  prompts is needed.
-- Hooks: reuse the 4 `.mjs` logic files. The shim adapts stdin/stdout to Gemini's
-  schema (`hook_event_name`, `decision`, exit 2) and maps events
-  `PreToolUse→BeforeTool`, `PostToolUse→AfterTool`, `SessionStart→SessionStart`,
-  `PreCompact→PreCompress`. Register in `.gemini/settings.json`.
-- Slash entry points → TOML in `.gemini/commands/`.
-- Env: replace `${CLAUDE_PLUGIN_ROOT}`/`CLAUDE_PROJECT_DIR` with paths passed
-  through hook config/argv.
-- Config: model tiers resolve through `.team/config.json`. Map Team's tiers to
-  concrete Gemini model IDs. Read the `model:` frontmatter as a tier key, not as a
-  literal model name.
-- **Known hazards to track:**
-  - The structured subagent-return boundary is under-specified in public docs.
-    Gemini's CLI-level structured output shipped
-    ([gemini-cli#8022](https://github.com/google-gemini/gemini-cli/issues/8022),
-    completed September 2025), but whether a *subagent* can return structured JSON
-    to its orchestrator is unconfirmed (no tracking issue). The envelope convention
-    works regardless (parse fenced JSON from text); full-parity structured returns
-    must validate this path on the pinned Gemini version.
-  - Nested subagents: Gemini subagents cannot spawn subagents. Full nesting parity
-    (Claude's depth-2) requires the orchestrator to flatten or sequence what Team
-    currently nests. Track it as a parity item rather than letting it drop
-    silently.
+The epic builds the hybrid core plus a per-host shim for its host, targeting
+full parity. It starts from the matrix and works around the named gaps.
 
 ### #57. Codex port
 
 - Bodies port as-is. Agent roles → TOML in `.codex/agents/` with the same
   system-prompt body.
 - Skills port natively to `.agents/skills/SKILL.md` (description-matched implicit
-  invocation). No Gemini-style folding needed.
+  invocation).
 - Hooks: reuse the 4 `.mjs` files. The shim adapts to Codex
   `hooks.json`/`[hooks]`, whose schema mirrors Claude closely
   (`permissionDecision:"deny"`/exit 2). Events map nearly 1:1
@@ -354,9 +324,9 @@ full parity. Each starts from the matrix and works around the named gaps.
 
 ## Antigravity CLI
 
-Everything here is from `agy` 1.1.12 on macOS. The Gemini CLI and Codex CLI
-sections come from vendor docs and host repos read on 2026-06-27, since neither
-binary is installed here.
+Everything here is from `agy` 1.1.12 on macOS. The Codex CLI section comes from
+vendor docs and host repos read on 2026-06-27, since that binary is not
+installed here.
 
 **This host installs Team natively, through its own manifest.** Team ships
 `plugin.json` at the repo root, which is Antigravity's plugin marker, with
@@ -415,16 +385,17 @@ removal step.
 
 - The global plugin root is `~/.gemini/config/plugins/`. The global skill scope
   is `~/.gemini/config/skills/`; Team writes to neither by hand except through
-  its dev install, which owns one directory under the former.
+  its dev install, which owns one directory under the former. `~/.gemini/` is
+  this host's own config root, so that spelling is the host's fact, not a
+  leftover to rename.
 - The catalog name comes from a skill's frontmatter `name:`, never from the
   directory or link name. A link named `team-probe-gitcommit` was reported as
   `git-commit`. So this host applies **no `team:` prefix** and gives Team no
   namespace at the skill level, unlike Codex — even though the files themselves
   sit namespaced under a plugin directory.
-- Gemini CLI's documented `~/.agents/skills/` alias is invisible to Antigravity.
-  About fifty unrelated skills sat there on the probe machine and none appeared.
-  Gemini CLI itself was not installed, so every Gemini CLI claim in this document
-  stays documentation-only.
+- The `~/.agents/skills/` directory is invisible to `agy`. About fifty
+  unrelated skills sat there on the probe machine and none appeared in the
+  agent's list.
 - From inside a Team checkout, `agy plugin list` printed "No imported plugins."
   and only the two built-in skills reached the agent's list. Plugin discovery
   keys on a `plugin.json` marker, so Codex's `.agents/plugins/marketplace.json`
@@ -436,95 +407,87 @@ longer scans for that: it writes into its own plugin directory rather than into
 the shared global skill directory, so it has nothing to warn about and no
 authority over which copy wins. Built-in skills live inside the `agy` binary, so
 no disk scan could enumerate them anyway. Whether a project's `.agents/skills/`
-outranks the global scope **has not been confirmed** — it comes from the
-documented Gemini-family precedence, and the nearest evidence points the other
-way, since about fifty skills in `~/.agents/skills/` were invisible to `agy`.
+outranks the global scope **has not been confirmed** — the nearest evidence
+points the other way, since about fifty skills in `~/.agents/skills/` were
+invisible to `agy`.
 
 **Scope.** Antigravity installs every skill and every agent, and the dev install
 keeps a checkout's edits live. What is unproven is dispatch: the pipeline
-commands install but are not claimed to run, and hooks, commands, and rules stay
-with [#56](https://github.com/bostonaholic/team/issues/56).
+commands install but are not claimed to run, and hooks, commands, and rules
+remain unported on this host. That work stays with
+[#56](https://github.com/bostonaholic/team/issues/56).
 
 ## Out of scope
 
 - **Writing any of the port code.** #56 and #57 own the implementation. This is
   the study they build against.
-- **Building the shim generator and build tooling.** Each epic chooses if it
+- **Building the shim generator and build tooling.** The epic chooses if it
   generates the shims or hand-writes them (decision 1 permits both).
 - **Porting the dev-only tree** (`.claude/`, `tests/`, `evals/`, `docs/`,
   `.github/`), which is never distributed and never ported.
 - **Adopting MCP as a transport.** Documented as fallback only (decision 4).
 - **Reduced-MVP parity.** Explicitly rejected: full parity is the target.
-- **A fifth host.** Claude Code, Gemini CLI, Codex CLI, and Antigravity CLI are
-  the four this study covers. Only the first three are scored in the matrix;
-  Antigravity has its own section instead, because what is known about it covers
-  one version rather than every primitive.
+- **A fourth host.** Claude Code, Codex CLI, and Antigravity CLI are the three
+  this study covers. Only the first two are scored in the matrix; Antigravity
+  has its own section instead, because what is known about it covers one version
+  rather than every primitive.
 - **Guaranteeing host API stability.** The young-API recency risk is surfaced and
   assigned to the shim layer plus version pinning, not eliminated.
 
 ## Edge cases
 
-These are the boundary conditions the *strategy and the downstream epics* must
+These are the boundary conditions the *strategy and the downstream epic* must
 handle.
 
 - **Boundary: zero portable change in a body.** A host with an identical body
-  format, such as Gemini agents, needs no transform. The shim is pure binding. The
-  strategy must not force a transpile pass where copy suffices.
+  format needs no transform. The shim is pure binding. The strategy must not
+  force a transpile pass where copy suffices.
 - **Boundary: a primitive with no host facility at all.** The one hard gap (Codex
   MCP prompts) has an explicit documented detour. Any *new* primitive Team adds
   must be matrix-checked before assuming it ports.
 - **Invalid: host manifest schema drift.** A host changes its hook stdin schema.
   Chosen behavior: the schema adapter lives in the shim only. The `.mjs` core is
   untouched. This is the central reason for the hybrid boundary.
-- **Failure: Gemini structured subagent return (unconfirmed).** If a subagent
-  cannot return structured JSON, the envelope arrives as text. Behavior: parse
-  fenced JSON from text (the convention already does this). This is not a tracked
-  bug, since CLI structured output shipped
-  ([gemini-cli#8022](https://github.com/google-gemini/gemini-cli/issues/8022)).
-  Only the subagent boundary is unverified.
 - **Failure: Codex pre-April-2026 silent schema drop.** On a Codex build before
   the [codex#15451](https://github.com/openai/codex/issues/15451) fix,
   `--output-schema` is ignored under active tools. Behavior: validate the returned
   shape and fall back to text-envelope parsing. It is fixed on current Codex, so
   this is a version-pin caveat.
-- **Concurrency: nested-subagent depth mismatch.** Gemini (no nesting) and Codex
-  (`max_depth=1`) cannot match Claude's depth-2. Behavior: the orchestrator
-  flattens or sequences nested work per host. This is a parity item rather than a
-  silent capability drop.
+- **Concurrency: nested-subagent depth mismatch.** Codex (`max_depth=1`) cannot
+  match Claude's depth-2. Behavior: the orchestrator flattens or sequences nested
+  work per host. This is a parity item rather than a silent capability drop.
 - **Authorization: Codex `.codex/` trust gate.** Project-local hooks and agents
   load only when the directory is trusted. Behavior: the port's install docs must
   state the trust requirement. An untrusted directory skips hooks without warning.
   Skills bypass the gate entirely. Codex gates "project-local config, hooks, and
   exec policies" (`config/src/loader/mod.rs:912`) and skills are absent from that
   set, so a user-scope skill install is exposed to every session with no prompt.
-- **Resource limit: Codex `agents.max_threads=6`, Gemini parallel cap.** Team's
-  5-reviewer parallel dispatch must fit each host's thread ceiling. Behavior: cap
-  or batch reviewer dispatch per host.
+- **Resource limit: Codex `agents.max_threads=6`.** Team's 5-reviewer parallel
+  dispatch must fit the host's thread ceiling. Behavior: cap or batch reviewer
+  dispatch per host.
 
-## Open questions (deferred to the port epics)
+## Open questions (deferred to the port epic)
 
-- **Shim generation vs. hand-authoring, per host.** Decision 1 permits both. which
-  to use is a per-epic structure-phase choice for #56/#57.
-- **Host version pinning policy.** Which exact Gemini/Codex versions each port
-  certifies against (recency risk) is an implementation detail for the port epics.
+- **Shim generation vs. hand-authoring.** Decision 1 permits both. Which to use
+  is a structure-phase choice for #57.
+- **Host version pinning policy.** Which exact Codex version the port certifies
+  against (recency risk) is an implementation detail for the port epic.
 - **Posture on the one open host issue ([codex#15250](https://github.com/openai/codex/issues/15250)).**
-  The port epics make the maintenance-posture call: upstream a fix, or only design
-  around it. The other two cited issues,
-  [gemini-cli#8022](https://github.com/google-gemini/gemini-cli/issues/8022) and
-  [codex#15451](https://github.com/openai/codex/issues/15451), are already
+  The port epic makes the maintenance-posture call: upstream a fix, or only
+  design around it. The other cited issue,
+  [codex#15451](https://github.com/openai/codex/issues/15451), is already
   resolved upstream.
 - **The full `.team/config.json` schema.** Decision 6 fixes its purpose and core
   fields: model-tier map, host, parallelism caps, and repos. The exhaustive
-  schema, defaults, and validation are for the port epics to pin.
+  schema, defaults, and validation are for the port epic to pin.
 
 ## Risks
 
-- **Young-host-API risk, Codex-weighted (moderate).** Codex's hooks and
-  multi-agent rolled out March to May 2026 (v0.114-v0.129, latest v0.142.3) and
-  its contracts may still move. Gemini's surface has been stable since late 2025
-  (latest v0.49.0) and is lower risk. Mitigation: bindings isolated in shims, pin
-  host versions, re-validate on upgrade. *(Capabilities verified against the host
-  repos 2026-06-27. Issue statuses 2026-06-25.)*
+- **Young-host-API risk (moderate).** Codex's hooks and multi-agent rolled out
+  March to May 2026 (v0.114-v0.129, latest v0.142.3) and its contracts may still
+  move. Mitigation: bindings isolated in shims, pin host versions, re-validate
+  on upgrade. *(Capabilities verified against the host repos 2026-06-27. Issue
+  statuses 2026-06-25.)*
 - **[codex#15250](https://github.com/openai/codex/issues/15250) (open,
   moderate).** Custom agents are not always reachable from tool sessions, which
   hits Team's tool-heavy dispatch directly. It is the one live host bug, tracked
@@ -533,19 +496,14 @@ handle.
   low).** Silent `--output-schema` drop under active tools, resolved upstream. It
   is a risk only on a pre-fix Codex pin, covered by shape validation plus a text
   fallback.
-- **Gemini structured subagent return (unverified, low to moderate).** There is no
-  backing issue. CLI structured output shipped
-  ([gemini-cli#8022](https://github.com/google-gemini/gemini-cli/issues/8022),
-  completed September 2025). #56 must make sure that the subagent-return boundary
-  works on the pinned version.
 - **Hidden Claude Code assumptions (low to moderate).** Some agent prose may
   assume Claude-specific tool names or behaviors that the layer analysis did not
-  catch. The port epics should audit bodies for host-specific references during
+  catch. The port epic should audit bodies for host-specific references during
   structure.
 
 ## See also
 
 - **[Architecture](architecture.md)**: the full plugin design these primitives are drawn from.
 - **[#50](https://github.com/bostonaholic/team/issues/50)**: the source issue this study delivers.
-- **[#56 Gemini port](https://github.com/bostonaholic/team/issues/56)**: the epic that executes this matrix for Gemini CLI.
 - **[#57 Codex port](https://github.com/bostonaholic/team/issues/57)**: the epic that executes this matrix for Codex CLI.
+- **[#56 Antigravity backend](https://github.com/bostonaholic/team/issues/56)**: the epic that runs the pipeline against the Antigravity CLI as an alternate model backend (formerly the Gemini CLI port).

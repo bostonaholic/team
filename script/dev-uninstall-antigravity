@@ -9,6 +9,9 @@ set -euo pipefail
 # that one. The parent is the host's own config tree and is never removed.
 
 PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# The `.gemini` spelling below is correct: it is Antigravity CLI's own global
+# config root. Never rename it — no test drives the real `agy` binary, so a
+# rename would pass CI while silently breaking every dev install.
 TARGET="${HOME}/.gemini/config/plugins/team"
 
 echo "Uninstalling Team for Antigravity (dev)..."
