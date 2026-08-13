@@ -187,7 +187,10 @@ becomes standing consent for every clone of the repo. The `.gitignore`
 line keeps it local to the machine that opted in.
 
 Without the marker, no diff is ever sent — both script verbs refuse before
-any vendor binary is even looked up.
+any vendor binary is even looked up. Above the per-repo marker sits a
+machine-wide kill-switch: set `TEAM_DISABLE_CROSS_MODEL` to any non-empty
+value and every cross-model call is disabled on that machine, regardless
+of any repo's opt-in.
 
 ## Architecture
 

@@ -45,7 +45,9 @@ When a trigger class matched but the marker is absent, emit one ordinary
 `nitpick (non-blocking)` finding naming the literal marker path
 `.team/cross-model-review`, so the user learns the pass exists and how to
 opt in. It rides your existing finding routes like any other nitpick — no
-new plumbing, and no external call.
+new plumbing, and no external call. The nitpick does not fire when
+`TEAM_DISABLE_CROSS_MODEL` is set: machine policy overrides the
+invitation, so there is nothing to invite the user into.
 
 ## Caps
 

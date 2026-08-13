@@ -9,7 +9,8 @@
  *     node <skill-dir>/external-review.mjs run <cli> <repo-root> [timeout-ms]
  *
  * Both verbs check the consent marker `.team/cross-model-review` before
- * anything else. `detect` reports per-CLI availability: without the marker
+ * any lookup or spawn (only the machine-policy kill-switch below outranks
+ * it). `detect` reports per-CLI availability: without the marker
  * the answer is unavailable and no binary claim is made, so a repo that never
  * opted in never even learns what sits on PATH. `run` refuses with a non-zero
  * exit before any child process spawns when the marker is absent. With
@@ -26,8 +27,11 @@
  * auto-load repo-resident agent context files.
  *
  * The trailing [timeout-ms] argument exists for the accelerated-timeout test
- * only; the skill's documented invocation never passes it. No environment
- * knobs, no relative imports — the script runs from any install path.
+ * only; the skill's documented invocation never passes it. One deliberate
+ * environment knob exists — TEAM_DISABLE_CROSS_MODEL, the machine-policy
+ * kill-switch checked above the consent marker in both verbs (any non-empty
+ * value disables, fail closed) — and no other; no relative imports — the
+ * script runs from any install path.
  *
  * The pure pieces below are exported for L1 tests
  * (tests/cross-model-review.test.ts); the CLI runs only when executed
@@ -137,6 +141,19 @@ export function truncateOutput(text) {
 
 const SUPPORTED_CLIS = ["codex", "gemini"];
 
+/**
+ * Machine-policy kill-switch, checked in both verbs before the per-repo
+ * consent marker: policy outranks invitation. Any non-empty value disables
+ * — unclear values land on off, fail closed. Deliberately absent from the
+ * child env allowlists: the child never needs to see it.
+ */
+const KILL_SWITCH_VAR = "TEAM_DISABLE_CROSS_MODEL";
+
+function killSwitchSet() {
+  const value = process.env[KILL_SWITCH_VAR];
+  return value !== undefined && value !== "";
+}
+
 function findOnPath(name) {
   const pathValue = process.env.PATH ?? "";
   for (const dir of pathValue.split(delimiter)) {
@@ -173,6 +190,14 @@ function markerPresent(repoRoot) {
 }
 
 function detect(repoRoot) {
+  if (killSwitchSet()) {
+    // Disabled by machine policy: no marker check, no binary lookup, and no
+    // binary claim of any kind.
+    for (const cli of SUPPORTED_CLIS) {
+      process.stdout.write(`${cli}: unavailable (disabled by ${KILL_SWITCH_VAR})\n`);
+    }
+    return 0;
+  }
   if (!markerPresent(repoRoot)) {
     // Fail-closed and marker-first: no consent means no binary lookup and no
     // binary claim of any kind.
@@ -245,6 +270,10 @@ async function run(cli, repoRoot, timeoutMs) {
   // nothing, and no diff ever leaves the machine without standing consent.
   if (!SUPPORTED_CLIS.includes(cli)) {
     return usage(`unknown CLI "${cli}"`);
+  }
+  if (killSwitchSet()) {
+    process.stderr.write(`${KILL_SWITCH_VAR} is set: cross-model calls are disabled on this machine\n`);
+    return 4;
   }
   if (!markerPresent(repoRoot)) {
     process.stderr.write(
