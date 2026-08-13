@@ -78,8 +78,8 @@ When the diff is higher-stakes and the repo has opted in, run the
 cross-vendor pass per `skills/cross-model-review/SKILL.md` (preloaded). That
 skill carries the whole procedure: the opt-in marker and trigger-class gate,
 the bundled runner script, verify-before-adopt disposition, and the
-`### Cross-model disposition` block in your report. Two of the vendor CLIs
-(codex, agy) run full-access in the repo by the marker's grant, so after
+`### Cross-model disposition` block in your report. The vendor CLIs run
+full-access in the repo by the marker's grant, so after
 the pass check the tree per that skill's `## Invocation`: report any
 mutation you did not make as a Blocking finding. Skip loudly on any
 failure — the pass is an optimization, never a dependency, and never a

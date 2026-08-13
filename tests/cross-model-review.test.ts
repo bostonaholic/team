@@ -10,7 +10,8 @@
 // review-notes copy rules that keep every round appearing exactly once.
 //
 // Free tier per docs/testing.md: no model call, no metered API. Fake CLIs
-// are bash stubs in a mkdtemp bin dir; the child PATH is fully controlled.
+// are bash stubs in a mkdtemp bin dir; the child PATH is fully controlled,
+// so no real codex/agy install can leak in.
 
 import { afterAll, describe, expect, test } from "bun:test";
 import { spawn, spawnSync } from "node:child_process";
@@ -89,7 +90,7 @@ const mod: Partial<ExternalReviewModule> = existsSync(SCRIPT)
 // ---------------------------------------------------------------------------
 // L3 harness: run the bundled script with node against fake CLIs placed in a
 // mkdtemp bin dir. PATH is replaced wholesale (bin dir + /usr/bin:/bin for
-// bash/cat/head), so no real codex/gemini install can leak in.
+// bash/cat/head), so no real codex/agy install can leak in.
 // ---------------------------------------------------------------------------
 
 const NODE = Bun.which("node") ?? "node";
@@ -182,15 +183,6 @@ describe("external-review.mjs pure core (L1)", () => {
     ]);
   });
 
-  test("buildArgv pins the gemini plan-mode argv with no prompt in argv", () => {
-    // The prompt rides stdin for codex and gemini: argv delivery exposed
-    // the diff in the process table for the call's duration.
-    expect(typeof mod.buildArgv).toBe("function");
-    const built = mod.buildArgv!("gemini");
-    expect(built.command).toBe("gemini");
-    expect(built.args).toEqual(["--approval-mode", "plan"]);
-  });
-
   test("buildArgv pins the agy full-access argv with the prompt as the -p value", () => {
     // agy cannot read stdin: the prompt must be the -p flag's value, so
     // for this CLI alone it is visible in the process table.
@@ -247,12 +239,11 @@ describe("detect is fail-closed and marker-first (L3)", () => {
 
   test("marker present + fake binaries on PATH → per-CLI ready, and detect spawns nothing", () => {
     expect(existsSync(SCRIPT)).toBe(true);
-    const bin = makeBin({ codex: RECORDING_FAKE, gemini: RECORDING_FAKE, agy: RECORDING_FAKE });
+    const bin = makeBin({ codex: RECORDING_FAKE, agy: RECORDING_FAKE });
     const repo = makeRepo(/* withMarker */ true);
     const r = runScript(["detect", repo], { binDir: bin });
     expect(r.status).toBe(0);
     expect(r.stdout).toContain("codex: ready");
-    expect(r.stdout).toContain("gemini: ready");
     expect(r.stdout).toContain("agy: ready");
     // detect only vets PATH; the recording fake proves it never spawned.
     expect(existsSync(join(bin, "ran"))).toBe(false);
@@ -264,7 +255,6 @@ describe("detect is fail-closed and marker-first (L3)", () => {
     // No bin dir: PATH carries only /usr/bin:/bin, where no vendor CLI lives.
     const r = runScript(["detect", repo]);
     expect(r.combined).toContain("codex");
-    expect(r.combined).toContain("gemini");
     expect(r.combined).toContain("agy");
     expect(r.combined).toMatch(/unavailable/i);
     expect(r.combined).not.toMatch(CLAIMS_READY);
@@ -391,12 +381,12 @@ sleep 60
     15_000,
   );
 
-  test("codex child never receives gemini/google credentials; its own vendor block passes through", () => {
+  test("codex child never receives agy's google-family credentials; its own vendor block passes through", () => {
     expect(existsSync(SCRIPT)).toBe(true);
     const bin = makeBin({
       codex: `#!/bin/bash
 cat >/dev/null
-echo "gemini=[\${GEMINI_API_KEY:-unset}] google=[\${GOOGLE_API_KEY:-unset}] gac=[\${GOOGLE_APPLICATION_CREDENTIALS:-unset}] openai=[\${OPENAI_API_KEY:-unset}]"
+echo "GEMINI_API_KEY=[\${GEMINI_API_KEY:-unset}] GOOGLE_API_KEY=[\${GOOGLE_API_KEY:-unset}] GOOGLE_APPLICATION_CREDENTIALS=[\${GOOGLE_APPLICATION_CREDENTIALS:-unset}] OPENAI_API_KEY=[\${OPENAI_API_KEY:-unset}]"
 `,
     });
     const repo = makeRepo(true);
@@ -404,69 +394,19 @@ echo "gemini=[\${GEMINI_API_KEY:-unset}] google=[\${GOOGLE_API_KEY:-unset}] gac=
       binDir: bin,
       input: "prompt",
       extraEnv: {
-        GEMINI_API_KEY: "gemini-credential-leaked",
+        GEMINI_API_KEY: "agy-credential-leaked",
         GOOGLE_API_KEY: "google-credential-leaked",
         GOOGLE_APPLICATION_CREDENTIALS: "/tmp/google-adc-leaked.json",
         OPENAI_API_KEY: "openai-own-credential",
       },
     });
-    expect(r.stdout).toContain("gemini=[unset]");
-    expect(r.stdout).toContain("google=[unset]");
-    expect(r.stdout).toContain("gac=[unset]");
+    expect(r.stdout).toContain("GEMINI_API_KEY=[unset]");
+    expect(r.stdout).toContain("GOOGLE_API_KEY=[unset]");
+    expect(r.stdout).toContain("GOOGLE_APPLICATION_CREDENTIALS=[unset]");
     // Positive control: the codex child still gets its own vendor variable,
     // so the absences above are partitioning, not a broken allowlist.
-    expect(r.stdout).toContain("openai=[openai-own-credential]");
+    expect(r.stdout).toContain("OPENAI_API_KEY=[openai-own-credential]");
     expect(r.combined).not.toContain("credential-leaked");
-  });
-
-  test("gemini child never receives openai/codex credentials; its own vendor block passes through", () => {
-    expect(existsSync(SCRIPT)).toBe(true);
-    const bin = makeBin({
-      gemini: `#!/bin/bash
-echo "openai=[\${OPENAI_API_KEY:-unset}] codexhome=[\${CODEX_HOME:-unset}] gemini=[\${GEMINI_API_KEY:-unset}]"
-`,
-    });
-    const repo = makeRepo(true);
-    const r = runScript(["run", "gemini", repo], {
-      binDir: bin,
-      input: "prompt",
-      extraEnv: {
-        OPENAI_API_KEY: "openai-credential-leaked",
-        CODEX_HOME: "/tmp/codex-home-leaked",
-        GEMINI_API_KEY: "gemini-own-credential",
-      },
-    });
-    expect(r.stdout).toContain("openai=[unset]");
-    expect(r.stdout).toContain("codexhome=[unset]");
-    // Positive control: the gemini child still gets its own vendor variable.
-    expect(r.stdout).toContain("gemini=[gemini-own-credential]");
-    expect(r.combined).not.toContain("credential-leaked");
-  });
-
-  test("run spawns gemini in an empty scratch cwd outside the repo root, cleaned up after", () => {
-    expect(existsSync(SCRIPT)).toBe(true);
-    const bin = makeBin({
-      gemini: `#!/bin/bash
-cat >/dev/null
-pwd
-ls -A
-`,
-    });
-    const repo = makeRepo(true);
-    const r = runScript(["run", "gemini", repo], { binDir: bin, input: "prompt" });
-    const lines = r.stdout.trim().split("\n");
-    const reportedCwd = lines[0] ?? "";
-    const rest = lines.slice(1);
-    expect(reportedCwd.length).toBeGreaterThan(0);
-    // Compare against both the symlinked and the resolved repo path (macOS
-    // tmpdir rides /private), so a regression to cwd: repoRoot cannot slip
-    // past a path-form mismatch.
-    expect(reportedCwd.startsWith(repo)).toBe(false);
-    expect(reportedCwd.startsWith(realpathSync(repo))).toBe(false);
-    expect(reportedCwd.startsWith(REPO_ROOT)).toBe(false);
-    // The scratch cwd is empty (ls -A printed nothing) and gone after settle.
-    expect(rest.join("")).toBe("");
-    expect(existsSync(reportedCwd)).toBe(false);
   });
 
   test("run spawns the full-access CLIs in the repo root cwd so they can read the codebase they review", () => {
@@ -483,28 +423,6 @@ pwd
       // Accept either path form (macOS tmpdir rides /private).
       expect([repo, realpathSync(repo)]).toContain(reportedCwd);
     }
-  });
-
-  test("run keeps repo-resident files out of gemini's relative-path reach: a planted .env never leaks", () => {
-    expect(existsSync(SCRIPT)).toBe(true);
-    const bin = makeBin({
-      gemini: `#!/bin/bash
-cat >/dev/null
-if cat .env 2>/dev/null; then
-  echo "env-read-succeeded"
-else
-  echo "env-read-failed"
-fi
-`,
-    });
-    const repo = makeRepo(true);
-    writeFileSync(join(repo, ".env"), "SECRET_TOKEN=planted-secret\n");
-    const r = runScript(["run", "gemini", repo], { binDir: bin, input: "prompt" });
-    // The failure branch printing proves the fake ran and the read failed —
-    // not a vacuous pass.
-    expect(r.stdout).toContain("env-read-failed");
-    expect(r.combined).not.toContain("env-read-succeeded");
-    expect(r.combined).not.toContain("planted-secret");
   });
 
   test("run skips a CLI reachable only through a relative PATH entry, so the vetted file is always the executed file", () => {
@@ -540,10 +458,10 @@ exit 7
     expect(r.stdout).toContain("[vendor stderr] boom");
   });
 
-  test("run delivers the prompt to gemini on stdin", () => {
+  test("run delivers the prompt to codex on stdin", () => {
     expect(existsSync(SCRIPT)).toBe(true);
     const bin = makeBin({
-      gemini: `#!/bin/bash
+      codex: `#!/bin/bash
 printf 'stdin-received: '
 cat
 `,
@@ -552,7 +470,7 @@ cat
     // The fake echoes its stdin back, so the sentinel appearing is a
     // positive proof of stdin delivery, never an absence check. The
     // accelerated timeout bounds a stdin-starved fake.
-    const r = runScript(["run", "gemini", repo, "2000"], {
+    const r = runScript(["run", "codex", repo, "2000"], {
       binDir: bin,
       input: "prompt-sentinel-on-stdin",
     });
@@ -582,7 +500,7 @@ echo "argv-prompt: $3"
     expect(existsSync(SCRIPT)).toBe(true);
     const bin = makeBin({
       agy: `#!/bin/bash
-echo "openai=[\${OPENAI_API_KEY:-unset}] codexhome=[\${CODEX_HOME:-unset}] gemini=[\${GEMINI_API_KEY:-unset}]"
+echo "OPENAI_API_KEY=[\${OPENAI_API_KEY:-unset}] CODEX_HOME=[\${CODEX_HOME:-unset}] GEMINI_API_KEY=[\${GEMINI_API_KEY:-unset}]"
 `,
     });
     const repo = makeRepo(true);
@@ -592,13 +510,14 @@ echo "openai=[\${OPENAI_API_KEY:-unset}] codexhome=[\${CODEX_HOME:-unset}] gemin
       extraEnv: {
         OPENAI_API_KEY: "openai-credential-leaked",
         CODEX_HOME: "/tmp/codex-home-leaked",
-        GEMINI_API_KEY: "gemini-own-credential",
+        GEMINI_API_KEY: "agy-own-credential",
       },
     });
-    expect(r.stdout).toContain("openai=[unset]");
-    expect(r.stdout).toContain("codexhome=[unset]");
-    // Positive control: the agy child still gets its google-family block.
-    expect(r.stdout).toContain("gemini=[gemini-own-credential]");
+    expect(r.stdout).toContain("OPENAI_API_KEY=[unset]");
+    expect(r.stdout).toContain("CODEX_HOME=[unset]");
+    // Positive control: the agy child still gets its google-family block
+    // (variable names inherited from the CLI it superseded).
+    expect(r.stdout).toContain("GEMINI_API_KEY=[agy-own-credential]");
     expect(r.combined).not.toContain("credential-leaked");
   });
 
@@ -666,7 +585,6 @@ describe("CLI main guard through a symlinked invocation path (L3)", () => {
     );
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("codex");
-    expect(result.stdout).toContain("gemini");
     expect(result.stdout).toContain("agy");
   });
 });
@@ -740,9 +658,9 @@ describe("no unsanctioned bypass flag anywhere in skills/cross-model-review/ (L2
   // The sanctioned full-access flags (codex's
   // --dangerously-bypass-approvals-and-sandbox, agy's
   // --dangerously-skip-permissions) are pinned exactly by the buildArgv
-  // pins above; everything else stays banned. gemini in particular must
-  // stay in plan mode, so its bypass spellings lead the list. The bare
-  // "yolo" token subsumes --yolo and any yolo=true config spelling.
+  // pins above; every other bypass or escalation spelling stays banned.
+  // The bare "yolo" token subsumes --yolo and any yolo=true config
+  // spelling.
   const FORBIDDEN = [
     "yolo",
     "--full-auto",
@@ -952,14 +870,13 @@ describe("TEAM_DISABLE_CROSS_MODEL kill-switch", () => {
     expect(existsSync(SCRIPT)).toBe(true);
     // Positive control: the matcher sees the script's real positive token.
     expect("codex: ready").toMatch(CLAIMS_READY);
-    const bin = makeBin({ codex: RECORDING_FAKE, gemini: RECORDING_FAKE });
+    const bin = makeBin({ codex: RECORDING_FAKE, agy: RECORDING_FAKE });
     const repo = makeRepo(/* withMarker */ true);
     const r = runScript(["detect", repo], {
       binDir: bin,
       extraEnv: { [KILL_SWITCH_VAR]: "1" },
     });
     expect(r.stdout).toContain(`codex: unavailable (disabled by ${KILL_SWITCH_VAR})`);
-    expect(r.stdout).toContain(`gemini: unavailable (disabled by ${KILL_SWITCH_VAR})`);
     expect(r.stdout).toContain(`agy: unavailable (disabled by ${KILL_SWITCH_VAR})`);
     expect(r.combined).not.toMatch(CLAIMS_READY);
   });
@@ -999,7 +916,7 @@ describe("TEAM_DISABLE_CROSS_MODEL kill-switch", () => {
 
   test("detect with the marker absent and the kill-switch set reports disabled, never marker-absent", () => {
     expect(existsSync(SCRIPT)).toBe(true);
-    const bin = makeBin({ codex: RECORDING_FAKE, gemini: RECORDING_FAKE });
+    const bin = makeBin({ codex: RECORDING_FAKE, agy: RECORDING_FAKE });
     const repo = makeRepo(/* withMarker */ false);
     const r = runScript(["detect", repo], {
       binDir: bin,
@@ -1007,7 +924,6 @@ describe("TEAM_DISABLE_CROSS_MODEL kill-switch", () => {
     });
     expect(r.status).toBe(0);
     expect(r.stdout).toContain(`codex: unavailable (disabled by ${KILL_SWITCH_VAR})`);
-    expect(r.stdout).toContain(`gemini: unavailable (disabled by ${KILL_SWITCH_VAR})`);
     expect(r.stdout).toContain(`agy: unavailable (disabled by ${KILL_SWITCH_VAR})`);
     // The marker-absent wording appearing here would mean the marker check
     // ran first (the no-marker detect test above is the positive control

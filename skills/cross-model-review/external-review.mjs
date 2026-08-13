@@ -17,17 +17,16 @@
  * consent, `run` reads the review prompt from stdin and invokes the named CLI
  * with a pinned argv.
  *
- * Trust model per CLI: codex and agy run with their full-access flags
- * (`--dangerously-bypass-approvals-and-sandbox`,
- * `--dangerously-skip-permissions`) in the repo cwd — unsandboxed, with the
- * invoking user's permissions — so they can read the codebase they review;
- * the consent marker is consent to exactly that grant. gemini stays in plan
- * approval mode and runs from an empty scratch directory, never the repo.
+ * Trust model: both CLIs run with their full-access flags
+ * (`--dangerously-bypass-approvals-and-sandbox` for codex,
+ * `--dangerously-skip-permissions` for agy) in the repo cwd — unsandboxed,
+ * with the invoking user's permissions — so they can read the codebase
+ * they review; the consent marker is consent to exactly that grant.
  * Every CLI gets an allowlisted environment, never the parent's full env,
  * so env-only secrets (ANTHROPIC_API_KEY, GH_TOKEN) stay with the parent.
  *
- * Prompt delivery: codex and gemini read the prompt on stdin (then EOF,
- * which defeats the stdin-block hang), so it never rides argv where the
+ * Prompt delivery: codex reads the prompt on stdin (then EOF, which
+ * defeats the stdin-block hang), so it never rides argv where the
  * process table would expose it. agy cannot read stdin, so its prompt is
  * the `-p` flag's value — visible in the process table for the call's
  * duration. agy's known headless hangs are already covered here: the
@@ -54,12 +53,9 @@ import {
   accessSync,
   constants,
   existsSync,
-  mkdtempSync,
   realpathSync,
-  rmSync,
   statSync,
 } from "node:fs";
-import { tmpdir } from "node:os";
 import { delimiter, isAbsolute, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -93,21 +89,18 @@ const STDERR_CAP_BYTES = 4 * 1024;
  */
 const ENV_ALLOWLIST_BASE = ["PATH", "HOME", "TMPDIR", "TERM", "LANG", "LC_ALL"];
 
-const GOOGLE_FAMILY_ENV = [
-  "GEMINI_API_KEY",
-  "GOOGLE_API_KEY",
-  "GOOGLE_APPLICATION_CREDENTIALS",
-  "GOOGLE_CLOUD_PROJECT",
-  "GOOGLE_CLOUD_LOCATION",
-  "GOOGLE_GENAI_USE_VERTEXAI",
-];
-
 const ENV_ALLOWLIST_BY_CLI = {
   codex: ["OPENAI_API_KEY", "CODEX_HOME"],
-  // agy (Antigravity) is Google's successor to the gemini CLI: same
-  // credential family.
-  gemini: GOOGLE_FAMILY_ENV,
-  agy: GOOGLE_FAMILY_ENV,
+  // The Antigravity CLI honors its predecessor's credential variables, so
+  // the GEMINI_*-named entries are agy configuration, not a second vendor.
+  agy: [
+    "GEMINI_API_KEY",
+    "GOOGLE_API_KEY",
+    "GOOGLE_APPLICATION_CREDENTIALS",
+    "GOOGLE_CLOUD_PROJECT",
+    "GOOGLE_CLOUD_LOCATION",
+    "GOOGLE_GENAI_USE_VERTEXAI",
+  ],
 };
 
 function childEnv(cli) {
@@ -119,10 +112,10 @@ function childEnv(cli) {
 }
 
 /**
- * The pinned argv per supported CLI. codex and gemini read the prompt from
- * stdin, never argv; agy cannot read stdin, so the prompt is its `-p`
- * value. Returns null for any unsupported CLI name so callers reject
- * before spawning.
+ * The pinned argv per supported CLI. codex reads the prompt from stdin,
+ * never argv; agy cannot read stdin, so the prompt is its `-p` value.
+ * Returns null for any unsupported CLI name so callers reject before
+ * spawning.
  */
 export function buildArgv(cli, prompt) {
   if (cli === "codex") {
@@ -135,9 +128,6 @@ export function buildArgv(cli, prompt) {
         "-",
       ],
     };
-  }
-  if (cli === "gemini") {
-    return { command: "gemini", args: ["--approval-mode", "plan"] };
   }
   if (cli === "agy") {
     return { command: "agy", args: ["--dangerously-skip-permissions", "-p", prompt] };
@@ -165,7 +155,7 @@ export function truncateOutput(text) {
   return `${head}\n[output truncated at ${OUTPUT_CAP_BYTES} bytes]`;
 }
 
-const SUPPORTED_CLIS = ["codex", "gemini", "agy"];
+const SUPPORTED_CLIS = ["codex", "agy"];
 
 /**
  * Machine-policy kill-switch, checked in both verbs before the per-repo
@@ -185,7 +175,7 @@ function findOnPath(name) {
   for (const dir of pathValue.split(delimiter)) {
     if (!dir) continue;
     // A relative PATH entry (".", "relbin") names a different file per
-    // resolver cwd (the child spawns from a scratch directory, not this
+    // resolver cwd (the child spawns from the repo root, not this
     // process's cwd), so only an absolute entry names the same file at vet
     // time and spawn time.
     if (!isAbsolute(dir)) continue;
@@ -264,7 +254,7 @@ function usage(message) {
   process.stderr.write(
     `${message}\n` +
       "usage: external-review.mjs detect <repo-root>\n" +
-      "       external-review.mjs run <codex|gemini|agy> <repo-root> [timeout-ms]\n",
+      "       external-review.mjs run <codex|agy> <repo-root> [timeout-ms]\n",
   );
   return 2;
 }
@@ -330,16 +320,11 @@ async function run(cli, repoRoot, timeoutMs) {
     process.stdout.write(`skip: ${cli} not found on PATH\n`);
     return 0;
   }
-  // codex and agy run full-access in the repo cwd — the consent marker
-  // grants exactly that — so they can read the codebase they review.
-  // gemini stays contained: plan mode bounds writes, and an empty scratch
-  // cwd (never repoRoot) keeps repo-resident files (an untracked .env,
-  // .git/config, agent context files) out of its reach.
-  const scratchDir =
-    cli === "gemini" ? mkdtempSync(join(tmpdir(), "cross-model-review-")) : null;
+  // Both CLIs run full-access in the repo cwd — the consent marker grants
+  // exactly that — so they can read the codebase they review.
   return new Promise((resolvePromise) => {
     const child = spawn(resolved, args, {
-      cwd: scratchDir ?? repoRoot,
+      cwd: repoRoot,
       stdio: ["pipe", "pipe", "pipe"],
       env: childEnv(cli),
       // Own process group, so the timeout kill can reach grandchildren.
@@ -380,13 +365,6 @@ async function run(cli, repoRoot, timeoutMs) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      if (scratchDir) {
-        try {
-          rmSync(scratchDir, { recursive: true, force: true });
-        } catch {
-          // Best-effort cleanup of an empty tmpdir entry; the report matters more.
-        }
-      }
       report();
       resolvePromise(0);
     };
@@ -430,7 +408,7 @@ async function run(cli, repoRoot, timeoutMs) {
           );
           return;
         }
-        // Only stdout is the review; gemini writes progress noise to stderr.
+        // Only stdout is the review; vendors write progress noise to stderr.
         const output = stdoutCollector.text();
         if (output.trim() === "") {
           // Silence from a healthy CLI must never read as agreement.

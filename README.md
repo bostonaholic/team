@@ -165,7 +165,7 @@ inline images.
 ## Cross-model review (opt-in)
 
 Team can get a second opinion from other vendors' models at two gates,
-sending the payload to the `codex`, `gemini`, and `agy` (Antigravity)
+sending the payload to the `codex` and `agy` (Antigravity)
 CLIs, verifying every claim that comes back before adopting any of it,
 and recording each round's disposition to
 `docs/plans/<id>/cross-model-notes.md`, which `/team-pr` surfaces in the
@@ -173,16 +173,15 @@ PR's `## Review notes` section. The payload is a diff or a design
 document. On the code path, the code-reviewer sends the diff, and only
 when it touches auth/session/crypto code, data storage or schema
 migrations, or public API contracts. On the design path, the orchestrator
-sends the design document on **every** design-review round — up to ~15
+sends the design document on **every** design-review round — up to ~10
 vendor calls per topic at the revision cap — with no trigger gate beyond
 the consent marker.
 
-The three CLIs run with different trust. `codex` and `agy` run with their
-full-access flags (`--dangerously-bypass-approvals-and-sandbox`,
+Both CLIs run with their full-access flags
+(`--dangerously-bypass-approvals-and-sandbox`,
 `--dangerously-skip-permissions`) in the repo working directory:
 unsandboxed, with your permissions — read, write, and network — so they
-can explore the codebase they review. `gemini` runs in plan approval mode
-from an empty scratch directory. Every CLI receives only an allowlisted
+can explore the codebase they review. Each CLI receives only an allowlisted
 environment (its own vendor credentials, never another's, never
 `GH_TOKEN`/`ANTHROPIC_API_KEY`), and every vendor's *output* is treated
 as untrusted data regardless of the vendor's privileges. After a pass,
@@ -190,7 +189,7 @@ the invoking agent checks `git status` and treats any unexpected tree
 mutation as a blocking finding.
 
 It is off by default because **diff or design-document content leaves the
-machine** and, for `codex` and `agy`, **the vendor CLI runs unsandboxed
+machine** and **the vendor CLIs run unsandboxed
 with your full permissions**. The consent marker is consent to both. Opt
 in per repo by creating it:
 

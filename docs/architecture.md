@@ -374,11 +374,11 @@ One path steps outside that enforcement: the opt-in cross-model pass
 path — and an external process is beyond the harness's tool grants. On
 that path the reviewer invariant is **trusted, not enforced**: by the
 marker's explicit grant, `codex` and `agy` run with their full-access
-flags in the repo cwd — unsandboxed, with the invoking user's permissions
-— while `gemini` stays in plan mode in an empty scratch directory. What
+flags in the repo cwd — unsandboxed, with the invoking user's permissions.
+What
 bounds the path is the pinned argv the bundled script hardcodes (the
 unsanctioned-flag tripwire in `tests/cross-model-review.test.ts` keeps
-gemini's bypass spellings and every other escalation out), the per-vendor
+every other bypass and escalation spelling out), the per-vendor
 env allowlist, the gates that keep the pass off by default — the consent
 marker on both paths, plus trigger classes on the code path; default-off
 on the design path is carried by the marker alone, while the machine-wide
