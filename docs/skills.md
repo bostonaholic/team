@@ -1138,7 +1138,7 @@ entry-point section above rather than repeating them here.
 | `conventional-comments` | code-reviewer, security-reviewer, technical-writer | Implement (verify): finding format |
 | `review-severity-tiers` | orchestrator (team, team-implement, qrspi-workflow) | Implement (aggregate review gate) |
 | `reviewing-security` | security-reviewer | Implement (verify) |
-| `cross-model-review` | code-reviewer | Implement (verify) |
+| `cross-model-review` | code-reviewer. Orchestrator or invoking session (team, team-design, eng-design-doc-review) through `## Design-review pass`. Design-review brief (conditional, on `## External review input`) | Implement (verify), and Design (review gate) |
 | `decomposing-intent` | questioner | Question |
 | `authoring-designs` | design-author | Design |
 | `researching-codebases` | researcher | Research |

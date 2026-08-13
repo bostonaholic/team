@@ -244,6 +244,16 @@ function usage(message) {
 }
 
 /**
+ * Collapse every line-break form — CR, LF, and the U+2028/U+2029 breaks
+ * some renderers honor — to a single space. The caller contract says a
+ * skip is exactly one line, and untrusted vendor text folded into a skip
+ * reason must never break it.
+ */
+function collapseToOneLine(text) {
+  return text.trim().replace(/[\r\n\u2028\u2029]+\s*/g, " ");
+}
+
+/**
  * Retain stream chunks only up to capBytes; everything past the cap is read
  * and dropped, so a runaway child can neither grow memory nor block on a
  * full pipe.
@@ -374,7 +384,9 @@ async function run(cli, repoRoot, timeoutMs) {
     child.on("error", (error) => {
       childExited = true;
       settle(() => {
-        process.stdout.write(`skip: ${cli} failed to start (${error.message})\n`);
+        process.stdout.write(
+          `skip: ${cli} failed to start (${collapseToOneLine(error.message)})\n`,
+        );
       });
     });
 
@@ -382,10 +394,7 @@ async function run(cli, repoRoot, timeoutMs) {
       childExited = true;
       settle(() => {
         if (code !== 0) {
-          // Collapse interior newlines and CRs to spaces: the caller
-          // contract says a skip is exactly one line, and a multi-line
-          // vendor stderr (an auth stack trace) must not break it.
-          const reason = stderrCollector.text().trim().replace(/[\r\n]+\s*/g, " ");
+          const reason = collapseToOneLine(stderrCollector.text());
           // The fence keeps vendor stderr reading as quoted diagnostics,
           // never as the runner's own protocol lines.
           process.stdout.write(

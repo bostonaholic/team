@@ -1062,17 +1062,33 @@ describe("untrusted-output containment rules (L2)", () => {
     expect(squash(section)).toContain("longest backtick run");
   });
 
-  test("the untrusted-output section binds the write sink to the Write tool or a quoted heredoc", () => {
+  test("the untrusted-output section binds the write sink to the Write tool and bans heredocs", () => {
     const section = windowSection(readOrEmpty(SKILL_MD), /^## Untrusted output/, /^## /);
     // Guard: a renamed section must fail, not vacuously pass.
     expect(section.length).toBeGreaterThan(0);
     const flattened = squash(section);
     // Raw vendor bytes reach disk only through a sink that cannot
-    // evaluate them: interpolation into a shell command would execute
-    // an embedded $(…) with the orchestrator's permissions.
+    // evaluate them. A heredoc — quoted or not — is not such a sink: a
+    // vendor line equal to the delimiter ends it early and the rest of
+    // the text runs as shell (the groom-backlog rule). Interpolation
+    // into a shell command would execute an embedded $(…) directly.
     expect(flattened).toContain("Write tool");
-    expect(flattened).toMatch(/heredoc/i);
+    expect(flattened).toContain("never a heredoc");
+    expect(flattened).toContain("equal to the delimiter");
     expect(flattened).toMatch(/never interpolated/i);
+  });
+
+  test("all three entrances carry the fence-length and untrusted-opening-line pointers", () => {
+    // Round-2 drift class: a containment rule stated in one surface and
+    // absent in a sibling. Every entrance that restates the append must
+    // carry both pointers into the shared section.
+    for (const path of [TEAM_SKILL, TEAM_DESIGN_SKILL, ENG_REVIEW_SKILL]) {
+      const flattened = squash(read(path));
+      // Guard: an emptied file must fail, not vacuously pass.
+      expect(flattened.length).toBeGreaterThan(0);
+      expect(flattened).toContain("backtick run");
+      expect(flattened).toContain("untrusted-content line");
+    }
   });
 });
 

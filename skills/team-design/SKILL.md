@@ -111,7 +111,9 @@ done
    reviewer's verdict is the terminal line of its report. When the
    report contains a `### Cross-model disposition` section, append that
    section as one block to `$ARGUMENTS/cross-model-notes.md`,
-   blockquote-wrapped, opening with the orchestrator-authored label
+   blockquote-wrapped — prefix every line with `>` at append time, per
+   the design-review gate in `skills/team/SKILL.md` — opening with the
+   orchestrator-authored label
    line — the literal `> **Design round <n>**` — prepended inside the
    wrap; same frontmatter-on-first-append rules as the other gates
    (schema in `skills/artifact-frontmatter/SKILL.md`). Then act on the
