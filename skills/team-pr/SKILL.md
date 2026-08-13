@@ -205,7 +205,10 @@ the final aggregate review round, tagged by source reviewer, such as
 finding under the `### Cross-model disposition` heading, because the copy
 in (d) replaces the final round's inline disposition block (every round
 appears exactly once, never twice). (b) COMMENT findings from the
-latest `design-review-<n>.md`, tagged `design-review-<n>`. (c) The loud
+latest `design-review-<n>.md`, tagged `design-review-<n>` — except that
+whenever `docs/plans/<id>/cross-model-notes.md` exists, this sweep too
+drops any finding under the `### Cross-model disposition` heading,
+because the copy in (d) is the single carrier. (c) The loud
 unresolved-repo omission note from `design.md` `## Risks` (or `task.md`)
 when present. And (d) when `docs/plans/<id>/cross-model-notes.md` exists,
 its body copied as-is into the section with the frontmatter stripped,

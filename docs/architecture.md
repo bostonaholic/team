@@ -159,14 +159,19 @@ User-facing setup (the one-time GitHub sign-in that enables inline upload) is
 documented in the README's
 ["Screenshots in PRs"](../README.md#screenshots-in-prs) section.
 
-`docs/plans/<id>/cross-model-notes.md` is written by the orchestrator at the
-IMPLEMENT aggregate gate — one `### Cross-model disposition` block appended
-per review round in which the code-reviewer ran the opt-in cross-model
-pass — and consumed by team-pr for the PR's `## Review notes` section. It is
-created only on the first round that runs the pass, so a repo that never
-triggers it gains no artifact. Its frontmatter schema
-(`phase: cross-model-review`, no `verdict`) lives in
-`skills/artifact-frontmatter/SKILL.md`.
+`docs/plans/<id>/cross-model-notes.md` is written by the orchestrator at
+the DESIGN review gate and the IMPLEMENT aggregate gate — one
+`### Cross-model disposition` block appended per review round, at either
+gate, in which the opt-in cross-model pass ran — and consumed by team-pr
+for the PR's `## Review notes` section. It is created only on the first
+round that runs the pass, so a repo that never triggers it gains no
+artifact. Beside it, `docs/plans/<id>/cross-model-raw.md` is the design
+path's raw transcript — the orchestrator appends each vendor call's
+result line and fenced output at capture time. Like the notes file, it is
+invisible to discovery: neither is a phase artifact, and neither is ever
+read back as state. Both frontmatter schemas
+(`phase: cross-model-review` and `phase: cross-model-raw`, no `verdict`)
+live in `skills/artifact-frontmatter/SKILL.md`.
 
 ## 3. Pipeline (QRSPI)
 

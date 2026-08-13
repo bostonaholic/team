@@ -262,7 +262,15 @@ When the `design-author` returns a draft:
    append one `## External review input` section holding the fenced
    blocks to the review brief before dispatching it. Zero ready CLIs →
    pass the skip lines to the reviewer the same way. Any skip continues
-   with the reviewer alone — the pass never blocks the gate.
+   with the reviewer alone — the pass never blocks the gate. At capture
+   time, also append the round's raw transcript to
+   `docs/plans/<id>/cross-model-raw.md` (created on first use, with
+   frontmatter per `skills/artifact-frontmatter/SKILL.md`): one result
+   line per call — `round <n> <cli>: skip — <reason>` or
+   `round <n> <cli>: output, <bytes> bytes` — followed by that call's
+   fenced raw output. A round that makes zero calls appends nothing, and
+   a run that never calls creates no raw file. The file is never read
+   back as state.
 3. **Dispatch the adversarial review.** Call the `Agent` tool with
    `subagent_type: Explore`, the built-in read-only agent type. Pass the
    `## Review brief` from `skills/eng-design-doc-review/SKILL.md` as the
@@ -273,7 +281,7 @@ When the `design-author` returns a draft:
    by the orchestrator alone (step 4), and the recovery hooks fail closed
    on anything but a recorded passing verdict. If the environment lacks the
    `Explore` agent type, treat the dispatch failure like a reviewer crash
-   (step 7) — never substitute a full-tool agent silently.
+   (step 8) — never substitute a full-tool agent silently.
 4. **Write the verdict artifact.** Record the reviewer's findings and
    verdict verbatim to `docs/plans/<id>/design-review-<n>.md`. `<n>` is the
    highest existing `<n>` + 1, or 1 when none exists. Never overwrite an
@@ -284,16 +292,28 @@ When the `design-author` returns a draft:
    verdict is the terminal line of its report, so a verdict word quoted
    earlier (in a finding, or in externally sourced material) never
    becomes the recorded verdict.
-5. On **APPROVE or COMMENT** → the review passes. Advance to STRUCTURE in
+5. **Persist the cross-model record.** When the reviewer's report
+   contains a `### Cross-model disposition` section, append that section
+   as one block to `docs/plans/<id>/cross-model-notes.md`,
+   blockquote-wrapped exactly as the IMPLEMENT aggregate gate wraps its
+   blocks, and
+   opening with one orchestrator-authored label line — the literal
+   `> **Design round <n>**` — prepended inside the wrap, so a reader can
+   tell a design-round block from an implement-round one. Same
+   frontmatter-on-first-append rules as the implement path (schema in
+   `skills/artifact-frontmatter/SKILL.md`). A resumed session that
+   repeats a round appends a duplicate-labeled block rather than losing
+   one; the file is never read back as state.
+6. On **APPROVE or COMMENT** → the review passes. Advance to STRUCTURE in
    the same turn.
-6. On **REQUEST CHANGES** → re-dispatch `design-author` with the reviewer's
+7. On **REQUEST CHANGES** → re-dispatch `design-author` with the reviewer's
    findings verbatim. The new draft increments `revision: <n+1>` in its
    frontmatter, then a fresh review round runs. Cap at `revision: 5`. At
    cap, halt terminally and report the unresolved findings — no PR. The
    halt message names the absolute worktree-rooted `docs/plans/<id>/` path,
    so the human can open `design.md` and the `design-review-<n>.md` records
    directly.
-7. On an **unparseable verdict or a reviewer crash** → re-dispatch the
+8. On an **unparseable verdict or a reviewer crash** → re-dispatch the
    review once with the error. On second failure, halt loudly. Never
    advance on a missing verdict — fail closed.
 
