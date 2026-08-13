@@ -466,7 +466,7 @@ fi
     expect(existsSync(join(bin, "ran"))).toBe(false);
   });
 
-  test("run reads a non-zero child exit as skip, naming the reason", () => {
+  test("run reads a non-zero child exit as skip, naming the reason behind a vendor-stderr fence", () => {
     expect(existsSync(SCRIPT)).toBe(true);
     const bin = makeBin({
       codex: `#!/bin/bash
@@ -479,6 +479,8 @@ exit 7
     const r = runScript(["run", "codex", repo], { binDir: bin, input: "prompt" });
     expect(r.combined).toMatch(/skip/i);
     expect(r.combined).toContain("7");
+    // Vendor stderr is fenced so it can never read as runner protocol.
+    expect(r.stdout).toContain("[vendor stderr] boom");
   });
 });
 

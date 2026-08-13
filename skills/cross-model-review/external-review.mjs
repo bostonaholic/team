@@ -281,9 +281,12 @@ async function run(cli, repoRoot, timeoutMs) {
     });
 
     // A detached child survives its parent's death, so reap the whole
-    // process group on any exit path — normal completion (the group is
-    // already gone; ESRCH is caught), a fatal signal, or an interrupt.
+    // process group when a fatal signal or an interrupt ends this process
+    // early. Once the child has exited, its PID (and so the group ID) may
+    // be recycled by an unrelated process — the reap no-ops from then on.
+    let childExited = false;
     const reapChildGroup = () => {
+      if (childExited) return;
       try {
         process.kill(-child.pid, "SIGKILL");
       } catch {
@@ -339,17 +342,21 @@ async function run(cli, repoRoot, timeoutMs) {
     child.stderr.on("data", (chunk) => stderrCollector.push(chunk));
 
     child.on("error", (error) => {
+      childExited = true;
       settle(() => {
         process.stdout.write(`skip: ${cli} failed to start (${error.message})\n`);
       });
     });
 
     child.on("close", (code) => {
+      childExited = true;
       settle(() => {
         if (code !== 0) {
           const reason = stderrCollector.text().trim();
+          // The fence keeps vendor stderr reading as quoted diagnostics,
+          // never as the runner's own protocol lines.
           process.stdout.write(
-            `skip: ${cli} exited with code ${code}${reason ? `: ${reason}` : ""}\n`,
+            `skip: ${cli} exited with code ${code}${reason ? `: [vendor stderr] ${reason}` : ""}\n`,
           );
           return;
         }
