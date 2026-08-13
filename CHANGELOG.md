@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`/pr-rebase` stopped at the finish line to ask permission it had already been given.** Step 7 was a pre-publish confirmation: after the baseline comparison came back clean, the run asked "rewrite the remote?" and pushed only on a yes, with a `--yes` flag as the documented bypass. But nothing reaches that prompt without a deliberate human invocation — the skill sets `disable-model-invocation: true` and fires only on explicit rebase intent — so the answer to "rewrite the remote?" was in the request that started the run, and every run stalled at the publish waiting on a question already answered. The confirmation and the now-dead `--yes` are both gone: once the step 6 verification gate reports no regression, the run publishes, and the skill states the rule positively because a model reading a publish procedure will otherwise reinsert a confirmation on its own instinct. The guards on the irreversible push are unchanged and mechanical, and none of them is a question — explicit rebase intent scopes the invocation, the verification gate hard-stops on any regression, remote divergence refuses before the rebase starts, and the lease still fails the push if the remote moved during the run. The all-`UNKNOWN` baseline case no longer asks either: it publishes on the invocation's authority but must be reported as unverified in exactly those words, never as checks matching a baseline, with the recovery anchor restated. Pinned by two L2 tripwires in [`tests/pr-rebase-skill.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/pr-rebase-skill.test.ts): `argument-hint` offers no `--yes`, and no `--yes` survives anywhere in the skill. [`skills/pr-rebase/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-rebase/SKILL.md)
+
 ## [0.48.0] - 2026-08-13
 
 ### Added
