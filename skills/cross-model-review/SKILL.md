@@ -91,8 +91,8 @@ at spawn time.
 
 ## Invocation
 
-Build the prompt from `prompt-template.md` (in this skill's directory) plus
-the diff. Then, with `<skill-dir>` standing for this skill's directory:
+Build the prompt from `prompt-template-code-review.md` (in this skill's
+directory) plus the diff. Then, with `<skill-dir>` standing for this skill's directory:
 
 ```bash
 node <skill-dir>/external-review.mjs detect <repo-root>

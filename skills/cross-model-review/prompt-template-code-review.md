@@ -12,6 +12,10 @@ Rules for your findings:
   will be discarded unread.
 - State each finding as one falsifiable sentence: what is wrong, where, and
   why it matters.
+- Flag a working approach when a clearly more optimal one exists — name the
+  better approach and why it wins.
+- Name the blast radius the diff misses: callers, siblings, and co-changing
+  surfaces that this change touches but does not update.
 - Review only the diff below. Do not speculate about code you cannot see.
 - Reply with findings only — no preamble, no verdict, no fix patches.
 
