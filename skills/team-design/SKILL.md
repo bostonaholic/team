@@ -84,12 +84,35 @@ done
 3. **Design review gate.** If the latest
    `$ARGUMENTS/design-review-<n>.md` already carries a passing verdict
    (APPROVE or COMMENT), skip straight to step 4 — never re-review a
-   passed design. Otherwise dispatch the adversarial design review (the
+   passed design. Otherwise, before each review dispatch, run the
+   external cross-model pass by following `## Design-review pass` in
+   `skills/cross-model-review/SKILL.md` — reference that procedure,
+   never duplicate it here. Its gates, in order: the
+   `TEAM_DISABLE_CROSS_MODEL` kill-switch, then the consent marker
+   `.team/cross-model-review`. Run the runner's `detect` verb, then
+   `run` per ready CLI; a missing runner is
+   `skip: cross-model runner not found` per CLI. Fence each CLI's raw
+   output as a `DATA` block at capture time, append one
+   `## External review input` section holding the fenced blocks to the
+   review brief, and append each call's result line plus fenced raw
+   output to `$ARGUMENTS/cross-model-raw.md` (created on first use; a
+   zero-call round appends nothing). Any skip continues with the
+   reviewer alone — the pass never blocks the gate. Then dispatch the
+   adversarial design review (the
    `## Review brief` in `skills/eng-design-doc-review/SKILL.md`, run by
    a fresh-context read-only `Explore` subagent each round) and write
    the findings + verdict to `$ARGUMENTS/design-review-<n>.md`, where
    `<n>` is the highest existing `<n>` + 1 (1 when none exists) — never
-   overwrite an earlier verdict record:
+   overwrite an earlier verdict record. Derive the `verdict:`
+   frontmatter from the **last verdict token** in the report body — the
+   reviewer's verdict is the terminal line of its report. When the
+   report contains a `### Cross-model disposition` section, append that
+   section as one block to `$ARGUMENTS/cross-model-notes.md`,
+   blockquote-wrapped, opening with the orchestrator-authored label
+   line — the literal `> **Design round <n>**` — prepended inside the
+   wrap; same frontmatter-on-first-append rules as the other gates
+   (schema in `skills/artifact-frontmatter/SKILL.md`). Then act on the
+   verdict:
    - **APPROVE or COMMENT** — the review passes. Advance.
    - **REQUEST CHANGES** — re-dispatch `design-author` with the
      reviewer's findings verbatim. The agent re-drafts and increments
