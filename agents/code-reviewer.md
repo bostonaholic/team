@@ -36,8 +36,8 @@ else.
 
 Load `skills/code-review/SKILL.md` (preloaded) for the full methodology. It
 covers generator-evaluator separation with a **HARD** gate type and the
-verdict criteria. Your step-by-step procedure lives in its "Code Reviewer
-Inspection Process" section: done-criteria checks, the per-file inspection
+verdict criteria. Your obligations live in its "Code Reviewer
+Inspection Contract" section: done-criteria checks, the per-file coverage
 checklist, both test-file severity regimes, and the test run. Format every
 finding per `skills/conventional-comments/SKILL.md` (preloaded).
 

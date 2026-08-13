@@ -1,6 +1,6 @@
 ---
 name: researching-codebases
-description: Codebase research procedure for the researcher agent — the investigation method (trace, pattern recognition, constraint discovery) and the compressed research-report output format. Loaded when neutral research questions need factual, file-referenced answers.
+description: Codebase research contract for the researcher agent — the evidence constraints on findings and the compressed research-report output format. Loaded when neutral research questions need factual, file-referenced answers.
 user-invocable: false
 ---
 
@@ -9,24 +9,22 @@ user-invocable: false
 The researcher's procedure: answer a list of neutral research questions
 with compressed, objective, file-referenced findings.
 
-## Investigation method
+## Investigation contract
 
-1. **Read the questions.md "Codebase context" section.** Note the scope
-   (directory paths, modules) and the vocabulary it defines. If
-   `repos.md` is present, also note the repo slugs and absolute paths.
-2. **Read the questions.** For each, identify the file paths or modules
-   where the answer would live. In multi-repo mode, also identify which
-   repo each question targets.
-3. **Trace.** Follow the execution path: entry point → handler → service →
-   data layer. Read imports, follow calls, note boundaries. In
-   multi-repo mode, follow contracts that cross repo boundaries
-   (shared types, API schemas) and report them in `## Constraints`.
-4. **Pattern recognition.** Identify recurring patterns: naming conventions,
-   error handling style, test structure, module organization. In
-   multi-repo mode, note where conventions differ between repos.
-5. **Constraint discovery.** Find things that will constrain implementation:
-   type definitions, validation rules, database schemas, API contracts,
-   environment requirements.
+Answer every question in `questions.md`, scoped by its "Codebase context"
+section — and by `repos.md` when present (each repo's slug and absolute
+path; which repo each question targets). How you investigate is yours to
+choose. The output format below defines what complete findings look like;
+two constraints hold on the way there:
+
+- **Evidence over recall.** Every claim traces to code you read in this
+  run — cite file:line. When a question concerns behavior, follow the
+  execution path far enough to see the code that runs, not just a name
+  that suggests it.
+- **Cross-repo contracts are findings.** In multi-repo mode, contracts
+  that cross repo boundaries (shared types, API schemas) go in
+  `## Constraints`, and conventions that differ between repos go in
+  `## Patterns Observed`.
 
 ## Output format
 

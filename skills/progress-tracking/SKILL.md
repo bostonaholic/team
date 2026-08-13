@@ -18,10 +18,12 @@ exempt — a one-item ledger is noise.
 
 ## Per-step granularity
 
-One todo item per numbered step — not per phase, not per file. Mark each item
-`in_progress` when its step starts and `completed` when that step lands,
-matching how `team-fix` already marks each step. Keep items at the
-granularity of the procedure's own numbered list.
+One todo item per numbered step — not per phase, not per file. When a
+procedure states goals and constraints rather than numbered steps, seed one
+item per natural unit of work (a slice, a question, a hard-gate finding),
+never one per sentence of guidance. Mark each item `in_progress` when its
+step starts and `completed` when that step lands, matching how `team-fix`
+already marks each step.
 
 ## Ledger ownership
 
