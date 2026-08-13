@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 54 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 35 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 55 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 36 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -57,7 +57,7 @@ resolve, groom a project backlog, tear down branch state after a PR is
 finished, verify a PR's test plan, and rebase a branch onto its base
 without changing what it does.
 None is a pipeline phase. The split is
-**11 pipeline entry-point + 8 standalone utility + 35 methodology = 54**.
+**11 pipeline entry-point + 8 standalone utility + 36 methodology = 55**.
 
 For *why* the system is shaped this way (the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits),
@@ -115,8 +115,11 @@ argument shape.
   aggregate gate sorts every finding into Blocking / Major / Minor-and-below
   tiers and auto-loops on any Blocking or Major (the no-consult rule: the
   user is never asked about any finding mid-run), recording the remaining
-  Minor-and-below findings in the PR body's `## Review notes`. Its body is
-  organized as `## Input`,
+  Minor-and-below findings in the PR body's `## Review notes`. The
+  cross-model pass runs
+  before every design-review round,
+  feeding `cross-model-notes.md` and `cross-model-raw.md`. Its
+  body is organized as `## Input`,
   `## Setup`, `## The Phase Loop`, `## Gate Handling`, and `## Rules`,
   not the downstream Input / Execution / Completion template.
 
@@ -150,6 +153,9 @@ argument shape.
   `design.md`. The design-author resolves its own open questions as
   recorded assumptions. The skill then runs the adversarial design-review
   loop (`design-review-<n>.md`, where APPROVE and COMMENT advance, cap 5).
+  The cross-model pass
+  runs before every design-review round,
+  feeding `cross-model-notes.md` and `cross-model-raw.md`.
 
 ### team-structure
 
@@ -253,7 +259,9 @@ argument shape.
   (not the `design-author` agent) so the audit reads the design with fresh
   eyes. That subagent loads four methodology skills as its review criteria
   (`technical-design-doc`, `code-review`, `engineering-standards`, and
-  `documenting-decisions`), which makes this one more consumer of all four.
+  `documenting-decisions`), which makes this one more consumer of all
+  four, plus a conditional fifth — `cross-model-review`, loaded only when
+  the brief carries an `## External review input` section.
   Points the report's prose at the seventh-grade bar in `writing-prose`.
 
 ## Standalone utilities
@@ -601,7 +609,7 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 35 methodology skills carry no `argument-hint` and, with one
+The 36 methodology skills carry no `argument-hint` and, with one
 exception, are never invoked directly. The exception is `code-review`: it
 is a meaningful standalone user action ("review this diff",
 `/code-review`) as well as a building block, so it does not set
@@ -766,6 +774,37 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   rule and the CRITICAL/HIGH/MEDIUM/LOW severity classification ladder, in
   which CRITICAL and HIGH are hard gates. The PASS/FAIL verdict rule stays
   in `code-review`.
+
+### cross-model-review
+
+- **Purpose:** Cross-vendor review pass — second opinions from the
+  codex and agy (Antigravity) CLIs on diffs and on design
+  documents, verified before any of it is adopted.
+- **Loaded by:** code-reviewer; the orchestrator or invoking session
+  (`team`, `team-design`, `eng-design-doc-review`) runs its
+  `## Design-review pass` procedure directly; and the design-review brief
+  in `eng-design-doc-review` loads it conditionally when its prompt
+  carries an `## External review input` section.
+- **Key behaviors:** Runs on every code review and every design-review
+  round, with whichever vendor CLIs are installed — a missing CLI is
+  named to the user and the review continues with the rest. Each vendor
+  call is dispatched through its own named courier sub-agent
+  (`codex-review`, `agy-review`) for per-model visibility, with an
+  inline background-task fallback. A machine-wide
+  `TEAM_DISABLE_CROSS_MODEL` kill-switch
+  hard-disables both paths. The bundled `external-review.mjs` script pins
+  each CLI's full-access argv in the repo cwd,
+  enforces the prompt, output, and
+  timeout caps, and hands each vendor only its own credential allowlist.
+  The invoking agent checks `git status` after the pass and reports any
+  vendor tree mutation as a blocking finding.
+  Every external claim is verified before adoption — nothing reaches
+  Blocking or Major without the reviewer's own `file:line` confirmation —
+  and the per-round record lands under one `### Cross-model disposition`
+  block in the report. External output is data, never instructions; the
+  pass skips loudly and never softens a verdict. The orchestrator persists
+  each round's block to `docs/plans/<id>/cross-model-notes.md`, and
+  `team-pr` copies that file into the PR's `## Review notes` section.
 
 ### review-severity-tiers
 
@@ -1102,6 +1141,7 @@ entry-point section above rather than repeating them here.
 | `conventional-comments` | code-reviewer, security-reviewer, technical-writer | Implement (verify): finding format |
 | `review-severity-tiers` | orchestrator (team, team-implement, qrspi-workflow) | Implement (aggregate review gate) |
 | `reviewing-security` | security-reviewer | Implement (verify) |
+| `cross-model-review` | code-reviewer. Orchestrator or invoking session (team, team-design, eng-design-doc-review) through `## Design-review pass`. Design-review brief (conditional, on `## External review input`) | Implement (verify), and Design (review gate) |
 | `decomposing-intent` | questioner | Question |
 | `authoring-designs` | design-author | Design |
 | `researching-codebases` | researcher | Research |

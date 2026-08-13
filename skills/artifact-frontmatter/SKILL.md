@@ -80,6 +80,37 @@ increments `revision: <n+1>` in its frontmatter and a fresh review round
 runs. Cap at 5 revisions. At cap, the run halts terminally and reports
 the unresolved findings — no consultation, no PR.
 
+**Cross-model notes record** (`cross-model-notes.md`): orchestrator-written
+and append-only — one `### Cross-model disposition` block per review round,
+in round order, from either gate that runs the cross-model pass: the
+DESIGN review gate (the design-review reviewer's report) or the IMPLEMENT
+aggregate gate (the code-reviewer's report). An implement-path block is
+altered only by the blockquote wrap (every line prefixed with `>`, per the
+appending skill's procedure); a design-path block is altered by the wrap
+plus one orchestrator-authored label line prepended inside it, so the file
+always holds already-blockquoted content. Reading rule: a block opening
+with the label `> **Design round <n>**` came from the design-review gate;
+an
+unlabeled block came from the IMPLEMENT aggregate gate. The
+orchestrator creates the file only on the first round that runs the
+cross-model pass, so a repo that never triggers it gains no artifact.
+Frontmatter: `topic` (copied verbatim), `date`, and
+`phase: cross-model-review`, following the `phase: design-review` precedent
+for orchestrator-written records outside the phase-artifact enum. There is
+**no `verdict` field** — the block is Minor-tier by construction and never
+gates. No reviewer reads the file back as prior state; it
+exists for the human.
+
+**Cross-model raw transcript** (`cross-model-raw.md`): orchestrator-written
+and append-only — the design-review gate's capture-time record, one result
+line
+plus the fenced raw output per vendor call, created on first use (a
+zero-call round appends nothing). Frontmatter: `topic` (copied verbatim),
+`date`, and `phase: cross-model-raw`. There is **no `verdict` field**.
+Its auditability is bounded: `docs/plans/` is gitignored and `/pr-cleanup`
+deletes the topic directory, so the transcript serves a live or pre-merge
+audit only — it survives neither the merge cleanup nor a clone.
+
 ## Topic consistency invariant
 
 Every artifact's `topic` frontmatter field MUST be identical across all

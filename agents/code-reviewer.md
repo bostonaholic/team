@@ -11,6 +11,7 @@ skills:
   - nested-agents
   - code-review
   - conventional-comments
+  - cross-model-review
 ---
 
 # Code Reviewer Agent
@@ -70,6 +71,20 @@ of `skills/nested-agents/SKILL.md` (preloaded).
 - Skip the pass when there are no Blocking findings or the Agent tool is
   unavailable. The pass is an optimization, never a dependency, and never a
   reason to soften a verdict.
+
+## Cross-model review pass
+
+Run the cross-vendor pass per `skills/cross-model-review/SKILL.md`
+(preloaded) on every review. That skill carries the whole procedure: the
+bundled runner script, the per-vendor courier sub-agent dispatch (one
+named courier per ready CLI, inline fallback), the unavailable-CLI
+notification rule, verify-before-adopt disposition, and the
+`### Cross-model disposition` block in your report. The vendor CLIs run
+full-access in the repo, so after
+the pass check the tree per that skill's `## Invocation`: report any
+mutation you did not make as a Blocking finding. Skip loudly on any
+failure — the pass is an optimization, never a dependency, and never a
+reason to soften a verdict.
 
 ## Verdict
 

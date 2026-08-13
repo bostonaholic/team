@@ -149,13 +149,29 @@ IMPLEMENT is confirmed only once there is
 `git log <merge-base>..<id>` is non-empty. A present `plan.md` with no
 commit means the run is still pre-IMPLEMENT.
 
-One non-phase sibling output exists: `docs/plans/<id>/screenshots/` (PNGs
-plus `manifest.md`), written by ux-reviewer during IMPLEMENT for UI-touching
-changes and consumed by team-pr. Discovery keys only on the six `PHASE_FILES`
-names, so this directory is invisible to hooks and skills, and IMPLEMENT still
-declares no phase artifact. User-facing setup (the one-time GitHub sign-in
-that enables inline upload) is documented in the README's
+Two non-phase sibling outputs exist. Discovery keys only on the six
+`PHASE_FILES` names, so both are invisible to hooks and skills, and IMPLEMENT
+still declares no phase artifact.
+
+`docs/plans/<id>/screenshots/` (PNGs plus `manifest.md`) is written by
+ux-reviewer during IMPLEMENT for UI-touching changes and consumed by team-pr.
+User-facing setup (the one-time GitHub sign-in that enables inline upload) is
+documented in the README's
 ["Screenshots in PRs"](../README.md#screenshots-in-prs) section.
+
+`docs/plans/<id>/cross-model-notes.md` is written by the orchestrator at
+the DESIGN review gate and the IMPLEMENT aggregate gate — one
+`### Cross-model disposition` block appended per review round, at either
+gate, in which the cross-model pass ran — and consumed by team-pr
+for the PR's `## Review notes` section. It is created only on the first
+round that runs the pass, so a repo where the pass never runs gains no
+artifact. Beside it, `docs/plans/<id>/cross-model-raw.md` is the design
+path's raw transcript — the orchestrator appends each vendor call's
+result line and fenced output at capture time. Like the notes file, it is
+invisible to discovery: neither is a phase artifact, and neither is ever
+read back as state. Both frontmatter schemas
+(`phase: cross-model-review` and `phase: cross-model-raw`, no `verdict`)
+live in `skills/artifact-frontmatter/SKILL.md`.
 
 ## 3. Pipeline (QRSPI)
 
@@ -270,13 +286,18 @@ No gate. The plan is mechanically derived from the structure.
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
 5. **Aggregate gate.** The orchestrator sorts every finding into a
    severity tier: **Blocking, Major, or Minor-and-below**. See
-   `skills/review-severity-tiers/SKILL.md`. While any Blocking or Major
-   finding remains, it dispatches the implementer to fix the typed
-   failure class. It then re-runs all 5 reviewers automatically. It never
-   consults the user. This is the *no-consult rule*. The cap is 5 rounds.
-   At the cap, the run halts terminally. Once Blocking and Major are
-   clean, any remaining Minor-and-below findings are recorded in the PR
-   body's `## Review notes` for the human's PR review.
+   `skills/review-severity-tiers/SKILL.md`. Each round in which the
+   code-reviewer's report carries a `### Cross-model disposition` block,
+   the orchestrator appends that block — altered only by the blockquote
+   wrap (every line prefixed with `>`) — to
+   `docs/plans/<id>/cross-model-notes.md` (see section 2). While any
+   Blocking or Major finding remains, it dispatches the implementer to
+   fix the typed failure class. It then re-runs all 5 reviewers
+   automatically. It never consults the user. This is the *no-consult
+   rule*. The cap is 5 rounds. At the cap, the run halts terminally.
+   Once Blocking and Major are clean, any remaining Minor-and-below
+   findings are recorded in the PR body's `## Review notes` for the
+   human's PR review.
 
 The orchestrator tracks the round count by appending "Review round N"
 items to the TodoWrite ledger.
@@ -300,9 +321,12 @@ surface the tracking ticket, if `task.md` carries `ticketId`. When a
 capture manifest exists (`docs/plans/<id>/screenshots/`, see the
 artifact-layout note in section 2), the PR body also gets a
 `## Screenshots` section populated by uploading the PNGs through GitHub's
-user-attachments pipeline. The worktree stays in place after the PR
-opens. Teardown is deferred until the PR merges or the user asks, so the
-branch remains available for iteration. Completion points at the
+user-attachments pipeline. When `docs/plans/<id>/cross-model-notes.md`
+exists, its body (frontmatter stripped) is copied into the PR's
+`## Review notes` section, replacing the final round's inline disposition
+block so every round appears exactly once. The worktree stays in place
+after the PR opens. Teardown is deferred until the PR merges or the user
+asks, so the branch remains available for iteration. Completion points at the
 standalone `/pr-watch-as-author` utility for watching the PR once it is
 ready for review.
 
@@ -343,6 +367,23 @@ the generator and the evaluator into one role. Read-only tool grants plus
 `permissionMode: plan` make that impossible at the harness layer.
 `tests/protocol.test.ts` pins both halves as an L2 tripwire, so a new reviewer
 that ships with `Write` fails CI.
+
+One path steps outside that enforcement: the cross-model pass
+(`skills/cross-model-review/SKILL.md`) shells out to external vendor CLIs
+— the `code-reviewer` on the code path, the orchestrator on the design
+path — and an external process is beyond the harness's tool grants. On
+that path the reviewer invariant is **trusted, not enforced**:
+`codex` and `agy` run with their full-access
+flags in the repo cwd — unsandboxed, with the invoking user's permissions.
+What
+bounds the path is the pinned argv the bundled script hardcodes (the
+unsanctioned-flag tripwire in `tests/cross-model-review.test.ts` keeps
+every other bypass and escalation spelling out), the per-vendor
+env allowlist, the machine-wide
+`TEAM_DISABLE_CROSS_MODEL` kill-switch that disables both paths
+when set, the untrusted-output rules on everything a vendor
+returns, and the post-pass `git status` check that reports any vendor
+write as a blocking finding.
 
 `researcher` and `file-finder` are also read-only, for a different reason:
 research isolation (see [Phase 3](#phase-3-research)). Read-only does not by
@@ -559,7 +600,7 @@ cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. `code-review` is the only skill loaded as composed
 methodology that is also a user command.)
 
-For the full per-skill reference (all 54 skills, their arguments,
+For the full per-skill reference (all 55 skills, their arguments,
 consumers, and behaviors), see [skills.md](skills.md).
 
 ### Design guidelines
@@ -571,6 +612,10 @@ consumers, and behaviors), see [skills.md](skills.md).
    design convention, not a hard constraint. An agent's own extracted
    procedure skill does not count toward the soft limit: it replaces
    former inline body content 1:1, so it adds no net context.
+   `code-reviewer` preloads `cross-model-review` beyond the soft limit —
+   a stated deviation, not an oversight to fix back: the
+   cross-vendor pass belongs to the code review and nowhere else, and
+   inlining it would bloat the agent body it was extracted from.
 
 2. **Extraction threshold: capability against fragment.** Content that is
    an **independently useful capability** earns its own skill
@@ -709,8 +754,8 @@ phase N finish?"
 ## 10. Nested sub-agents
 
 Claude Code v2.1.172 lets sub-agents spawn their own sub-agents (up to
-5 levels deep). The plugin uses this capability in exactly two patterns,
-both governed by `skills/nested-agents/SKILL.md`:
+5 levels deep). The plugin uses this capability in exactly three patterns,
+all governed by `skills/nested-agents/SKILL.md`:
 
 - **Context-economy scouts** (`researcher`, `implementer`): read-only
   `Explore` / `team:file-finder` helpers that absorb bulk reading the
@@ -734,6 +779,14 @@ both governed by `skills/nested-agents/SKILL.md`:
   evidence-backed refutation the reviewer verifies itself. A false
   hard-gate finding costs an entire review round (implementer re-dispatch
   + all 5 reviewers re-run), so the pass pays for itself.
+- **Vendor couriers** (`code-reviewer`; the orchestrator uses the same
+  pattern at the design-review gate as ordinary dispatch): each cross-model
+  vendor call runs through one `Explore` courier named after its CLI
+  (`codex-review`, `agy-review`), so each external model's review is
+  visible as its own agent while it runs. The courier's errand is fixed —
+  run the pinned runner command, return its stdout verbatim — and the
+  vendor-courier block in `skills/cross-model-review/SKILL.md` carries
+  the contract plus the inline fallback when nesting is unavailable.
 
 **Policy:**
 
@@ -790,7 +843,7 @@ children are confirmed, and the depth cap is stable.
 
 ## See also
 
-- **[Skills](skills.md)**: the full per-skill reference for all 54 skills.
+- **[Skills](skills.md)**: the full per-skill reference for all 55 skills.
 - **[Testing](testing.md)**: the six-layer test harness and which layer each check belongs at.
 - **[Vision](vision.md)**: the loop-driven end state this design builds toward.
 - **[Ethos](ethos.md)**: the principles behind the pipeline.

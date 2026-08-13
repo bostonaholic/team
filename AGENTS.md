@@ -71,7 +71,7 @@ Four agents (`researcher`, `implementer`, `code-reviewer`, `security-reviewer`) 
 
 **Invariant (checks and balances):** producers write, reviewers judge, and no agent does both. A reviewer (`code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`) holds no `Write`/`Edit` tool and carries `permissionMode: plan`. A reviewer that can edit can fix what it found and then approve its own fix, which collapses the generator and the evaluator into one role. `tests/protocol.test.ts` enforces both halves. See [docs/architecture.md](docs/architecture.md#checks-and-balances).
 
-## Skills (54)
+## Skills (55)
 
 See `skills/*/SKILL.md`. Entry point skills double as slash commands. Eight of them are standalone slash-command utilities that are not QRSPI phases. `shipit` lands a reviewed PR. `pr-open-comments` triages unresolved PR review feedback. `pr-watch-as-author` is a bounded PR review watch loop. `pr-watch-as-reviewer` is the reviewer-side watch-and-approve. `groom-backlog` grooms a project backlog with a board-level pass plus per-item promotion, and can close an issue whose premise evaporated — an irreversible public mutation, each close gated on its own per-issue approval. `pr-cleanup` tears down local and remote branch state after a PR is merged or abandoned. `pr-verify` verifies a PR's test plan with evidence-rated verdicts. `pr-rebase` rebases a branch onto its base, resolving conflicts and gating the force-push on a pre-rebase check baseline — user-invoked only (`disable-model-invocation: true`), on stated rebase intent, never on a branch merely being behind. Methodology skills are loaded by agents. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
 
@@ -94,7 +94,7 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Eight of t
 
 ## State
 
-State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `design.md` also carries `revision`, and review verdicts live in `design-review-<n>.md`. Live in-session coordination uses TodoWrite (session-scoped). Any `/team-*` command rebuilds the ledger by scanning artifacts on entry. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
+State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions (when the opt-in pass ran) in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite (session-scoped). Any `/team-*` command rebuilds the ledger by scanning artifacts on entry. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
 
 ## Learned rules
 

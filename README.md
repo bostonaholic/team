@@ -59,7 +59,7 @@ agy plugin install /path/to/team
 ```
 
 Team ships `plugin.json` at the repo root, which is this host's plugin marker,
-so it installs as a native Antigravity plugin — all 54 skills and all 13 agents.
+so it installs as a native Antigravity plugin — all 55 skills and all 13 agents.
 `agy plugin uninstall team` removes it.
 
 Skills arrive under **bare names** — ask for `shipit`, not `team:shipit`. The
@@ -162,6 +162,44 @@ revoke it, sign out of github.com inside that profile or delete the
 directory. Until you sign in, PRs carry local screenshot paths instead of
 inline images.
 
+## Cross-model review
+
+Team gets a second opinion from other vendors' models at two gates,
+sending the payload to the `codex` and `agy` (Antigravity)
+CLIs, verifying every claim that comes back before adopting any of it,
+and recording each round's disposition to
+`docs/plans/<id>/cross-model-notes.md`, which `/team-pr` surfaces in the
+PR's `## Review notes` section. The payload is a diff or a design
+document. On the code path, the code-reviewer sends the diff on every
+review. On the design path, the orchestrator
+sends the design document on **every** design-review round — up to ~10
+vendor calls per topic at the revision cap.
+
+The pass runs with whichever vendor CLIs are installed. Each vendor call
+is dispatched through its own named courier sub-agent (`codex-review`,
+`agy-review`), so each model's review shows up as its own agent in the
+session while it runs; when sub-agent dispatch is unavailable the calls
+fall back to inline background tasks. A missing or
+failing CLI never blocks a review: the runner reports it as a named skip,
+the invoking agent tells you which vendors the review ran without, and the
+review completes with the rest — or with Team's own reviewers alone when
+none are available. **Be aware that with a vendor CLI installed, diff and
+design-document content leaves the machine.** To disable the pass
+entirely, set the machine-wide kill-switch: `TEAM_DISABLE_CROSS_MODEL` to
+any non-empty value, and every cross-model call is disabled on that
+machine.
+
+Both CLIs run with their full-access flags
+(`--dangerously-bypass-approvals-and-sandbox`,
+`--dangerously-skip-permissions`) in the repo working directory:
+unsandboxed, with your permissions — read, write, and network — so they
+can explore the codebase they review. Each CLI receives only an allowlisted
+environment (its own vendor credentials, never another's, never
+`GH_TOKEN`/`ANTHROPIC_API_KEY`), and every vendor's *output* is treated
+as untrusted data regardless of the vendor's privileges. After a pass,
+the invoking agent checks `git status` and treats any unexpected tree
+mutation as a blocking finding.
+
 ## Architecture
 
 See [docs/architecture.md](docs/architecture.md) for the full architecture, the artifact frontmatter schema, and the phase-inference rules.
@@ -169,7 +207,7 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 ## Components
 
 - **13 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
-- **54 entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch-as-author`, `/pr-watch-as-reviewer`, `/groom-backlog`, `/pr-cleanup`, `/pr-verify`, and `/pr-rebase` utilities, and shared methodologies
+- **55 entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch-as-author`, `/pr-watch-as-reviewer`, `/groom-backlog`, `/pr-cleanup`, `/pr-verify`, and `/pr-rebase` utilities, and shared methodologies
 - **3 hooks** in `hooks/`: `docs/plans/`-aware compaction resilience and plugin-file validation
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
-- **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `design.md` also carries `revision`, and review verdicts live in `design-review-<n>.md`. Live in-session coordination uses TodoWrite.
+- **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.
