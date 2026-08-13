@@ -14,10 +14,12 @@ nav_label: portability
 > [Antigravity CLI](#antigravity-cli), which needed no porting strategy: it
 > installs Team from a local checkout through a manifest of its own, like the
 > other hosts. It is a decision document, not a code change. The source issue is
-> [#50](https://github.com/bostonaholic/team/issues/50). One epic consumes it:
-> the [#57](https://github.com/bostonaholic/team/issues/57) Codex port. It
+> [#50](https://github.com/bostonaholic/team/issues/50). Two epics consume it:
+> the [#57](https://github.com/bostonaholic/team/issues/57) Codex port, which
 > builds against the matrix, the gap analysis, and the "what #57 builds
-> against" section below.
+> against" section below, and the
+> [#56](https://github.com/bostonaholic/team/issues/56) Antigravity backend,
+> which builds against the Antigravity CLI host facts.
 
 > **Deprecated host (2026-08-13).** An earlier revision of this study scored a
 > third host and handed it a port epic of its own. That Gemini CLI port was
@@ -238,7 +240,7 @@ cross-cutting recency caveat:
      logic files, is *already portable*. The hybrid boundary lines up with the
      natural portable/non-portable seam, so it minimizes both duplication and the
      blast radius of churn.
-   - *Serves whom:* Team's maintainer and the #57 port-epic implementer. They
+   - *Serves whom:* Team's maintainer and the #56/#57 epic implementers. They
      edit behavior once and re-bind per host, instead of maintaining a drifting
      copy per host.
 
@@ -412,12 +414,13 @@ invisible to `agy`.
 **Scope.** Antigravity installs every skill and every agent, and the dev install
 keeps a checkout's edits live. What is unproven is dispatch: the pipeline
 commands install but are not claimed to run, and hooks, commands, and rules
-remain unported on this host.
+remain unported on this host. That work stays with
+[#56](https://github.com/bostonaholic/team/issues/56).
 
 ## Out of scope
 
-- **Writing any of the port code.** #57 owns the implementation. This is the
-  study it builds against.
+- **Writing any of the port code.** #56 and #57 own the implementation. This is
+  the study they build against.
 - **Building the shim generator and build tooling.** The epic chooses if it
   generates the shims or hand-writes them (decision 1 permits both).
 - **Porting the dev-only tree** (`.claude/`, `tests/`, `evals/`, `docs/`,
