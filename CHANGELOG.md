@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.48.0] - 2026-08-13
+
+### Added
+
+- **Review reports now follow one explicit format, on every surface a review crosses.** The code-review skill pinned how a single finding is written (Conventional Comments) and which verdict tokens exist, but never the shape of the full report — so each dispatched reviewer invented its own structure, and a directly invoked `/code-review` relayed whatever subset of the subagent's report the session chose. The skill now carries a `## Report Format` template — the parseable verdict line first, then Summary, Findings, and Checks, with conditional sections like the skeptic pass's `### Refuted by verification` appended rather than improvised — and binds every producer to it: the dispatched reviewer's final report, a subagent reviewing on a dispatcher's behalf, and the top-level relay, which must reproduce the report in full instead of summarizing it. [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md), [`agents/code-reviewer.md`](https://github.com/bostonaholic/team/blob/main/agents/code-reviewer.md)
+
 ## [0.47.0] - 2026-08-13
 
 ### Fixed
@@ -519,7 +525,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.47.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.48.0...HEAD
+[0.48.0]: https://github.com/bostonaholic/team/compare/v0.47.0...v0.48.0
 [0.47.0]: https://github.com/bostonaholic/team/compare/v0.46.0...v0.47.0
 [0.46.0]: https://github.com/bostonaholic/team/compare/v0.45.0...v0.46.0
 [0.45.0]: https://github.com/bostonaholic/team/compare/v0.44.0...v0.45.0

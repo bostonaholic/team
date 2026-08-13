@@ -1105,3 +1105,62 @@ describe("slicing asks whether a slice deserves its own PR (L2 tripwire)", () =>
     expect(text).toContain("## Cross-slice concerns");
   });
 });
+
+// ---------------------------------------------------------------------------
+// One report shape must bind every surface a review crosses: the dispatched
+// reviewer's final report, a subagent reviewing on a dispatcher's behalf, and
+// the full output the top-level session presents after a direct invocation.
+// Without a pinned shape, each reviewer invents its own report structure and
+// the relay trims whatever it likes.
+// ---------------------------------------------------------------------------
+describe("code-review report format (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
+  const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
+
+  // Text between two markers; "" when either marker is missing. Callers guard
+  // the slice as non-empty so a missing section fails loud, never vacuously.
+  // The module-level sectionFrom cannot slice this section: its next-heading
+  // regex (\n##) also matches the ### template headings inside it.
+  function between(text: string, startMarker: string, endMarker: string): string {
+    const start = text.indexOf(startMarker);
+    if (start === -1) return "";
+    const end = text.indexOf(endMarker, start + startMarker.length);
+    if (end === -1) return "";
+    return text.slice(start, end);
+  }
+
+  test("the skill pins one report template: verdict line first, then Summary, Findings, Checks", () => {
+    // Newline-anchored start: the heading, not an inline `## Report Format`
+    // cross-reference elsewhere in the skill.
+    const section = between(read(SKILL_FILE), "\n## Report Format\n", "\n## ");
+    // Guard: a missing section must fail, not vacuously pass the checks below.
+    expect(section.length).toBeGreaterThan(0);
+    // Template strings the reviewer must emit, in emission order.
+    const verdict = section.indexOf("**Verdict:");
+    const summary = section.indexOf("### Summary");
+    const findings = section.indexOf("### Findings");
+    const checks = section.indexOf("### Checks");
+    expect(verdict).toBeGreaterThan(-1);
+    expect(summary).toBeGreaterThan(verdict);
+    expect(findings).toBeGreaterThan(summary);
+    expect(checks).toBeGreaterThan(findings);
+    // The verdict token vocabulary stays in Verdict Criteria; the template
+    // points there instead of duplicating the per-reviewer token lists.
+    expect(section).toContain("Verdict Criteria");
+    // The skeptic-pass record is a named conditional section of the report.
+    expect(section).toContain("### Refuted by verification");
+  });
+
+  test("the direct-invocation relay binds to the report format", () => {
+    const invoked = between(read(SKILL_FILE), "\n## When Invoked Directly\n", "\n## ");
+    // Guard: a missing section must fail, not vacuously pass the check below.
+    expect(invoked.length).toBeGreaterThan(0);
+    expect(invoked).toContain("Report Format");
+  });
+
+  test("code-reviewer defers its report structure to the skill's report format", () => {
+    const text = read(CODE_REVIEWER);
+    expect(text).toContain("Report Format");
+    expect(text).toContain("skills/code-review/SKILL.md");
+  });
+});
