@@ -157,7 +157,7 @@ summary. The vector records these fields as a minimum:
 ```json
 {
   "date": "YYYY-MM-DD",
-  "model": "claude-opus-4-8",
+  "model": "claude-opus-5",
   "provider": "anthropic",
   "backend": "claude-code",
   "pipeline_version": "team vX.Y.Z (commit …)",

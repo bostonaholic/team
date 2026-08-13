@@ -59,15 +59,19 @@ export interface RunAgentTestOptions {
   disallowedTools?: string[];
 }
 
-const DEFAULT_MODEL = "claude-sonnet-4-6";
+// Matches what plugin users get: the shipped agents use floating aliases,
+// and Claude Code's `sonnet` resolves to Sonnet 5 today.
+const DEFAULT_MODEL = "claude-sonnet-5";
 const DEFAULT_TIMEOUT_MS = 120_000;
 
 // Rough public-pricing per million tokens (USD). Override at the call site
 // if you need stricter accounting; these are good-enough for relative deltas.
 const PRICING_PER_MILLION: Record<string, { input: number; output: number }> = {
+  "claude-sonnet-5": { input: 3, output: 15 },
   "claude-sonnet-4-6": { input: 3, output: 15 },
-  "claude-sonnet-4-7": { input: 3, output: 15 },
-  "claude-opus-4-7": { input: 15, output: 75 },
+  "claude-opus-5": { input: 5, output: 25 },
+  "claude-opus-4-8": { input: 5, output: 25 },
+  "claude-opus-4-7": { input: 5, output: 25 },
   "claude-fable-5": { input: 10, output: 50 },
   "claude-haiku-4-5-20251001": { input: 1, output: 5 },
 };
