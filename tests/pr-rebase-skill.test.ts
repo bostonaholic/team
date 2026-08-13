@@ -75,10 +75,14 @@ describe("pr-rebase skill: frontmatter and invocation surface", () => {
     expect(/^disable-model-invocation:\s*true\s*$/m.test(f)).toBe(true);
   });
 
-  test("argument-hint declares both the PR selector and --yes", () => {
+  test("argument-hint declares the PR selector and offers no --yes", () => {
+    // Guard: a missing frontmatter must fail, not vacuously pass the
+    // absence check below. The flag existed only to bypass the pre-publish
+    // confirmation, which is gone.
     const f = fm();
+    expect(f.length).toBeGreaterThan(0);
     expect(/^argument-hint:.*pr-number/m.test(f)).toBe(true);
-    expect(/^argument-hint:.*--yes/m.test(f)).toBe(true);
+    expect(/^argument-hint:.*--yes/m.test(f)).toBe(false);
   });
 
   test("description carries a quoted trigger phrase and the slash name", () => {
@@ -366,6 +370,21 @@ describe("pr-rebase skill: the push form", () => {
     for (const line of fencedLines().filter((l) => /^\s*git push/.test(l))) {
       expect(line).toContain("${BRANCH:?}");
     }
+  });
+});
+
+// The invocation IS the authorization: `disable-model-invocation: true` means
+// only a deliberate human invocation starts the run, so a second ask before
+// the publish re-requests permission the invocation carried. The guards on
+// the irreversible push are mechanical, not questions: explicit rebase intent
+// scopes the invocation, and the step 6 verification gate stops the run on
+// any regression before step 7 is reached.
+describe("pr-rebase skill: the publish is not gated on a human confirmation", () => {
+  test("no --yes escape hatch anywhere in the skill", () => {
+    const t = body();
+    // Guard: a missing file reads as "" and would vacuously pass.
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).not.toContain("--yes");
   });
 });
 

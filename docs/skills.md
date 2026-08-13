@@ -562,10 +562,12 @@ QRSPI phase: a self-contained action a user runs on demand.
   rebases onto the latest base, resolves each conflict from both sides'
   intent, re-runs the same checks, and force-pushes only when nothing
   regressed.
-- **`$ARGUMENTS`:** `[<pr-number-or-url>] [--yes]` — the PR reference is
+- **`$ARGUMENTS`:** `[<pr-number-or-url>]` — the PR reference is
   optional and only resolves the base branch; the rebased branch is always
-  the current checkout. `--yes` skips the pre-push confirmation for a
-  caller that already carries the user's authorization.
+  the current checkout. There is no pre-push confirmation to skip: the
+  deliberate invocation carries the authorization to publish, and the run
+  completes without stopping once the verification gate reports no
+  regression.
 - **Phase:** None. A standalone branch-maintenance action, not part of the
   pipeline.
 - **Key behaviors:** **User-invocable only** — it sets

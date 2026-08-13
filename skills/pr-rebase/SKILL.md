@@ -6,7 +6,7 @@ description: |
   latest base, resolve each conflict from both sides' intent with the
   rationale recorded to disk, re-run the same checks, and treat any check
   that passed before and fails after as a regression that blocks the push.
-  Ends with a confirmed, lease-verified publish through the repo's own
+  Ends with an unprompted, lease-verified publish through the repo's own
   publisher — a `--force-with-lease --force-if-includes` push by default.
   Invoke ONLY on explicit rebase intent — the user says "rebase onto main",
   "pull main and rebase", "update the branch", "get this branch current",
@@ -14,7 +14,7 @@ description: |
   remote: never infer rebase intent from a branch merely being behind its
   base, from a red CI run, or from a merge-conflict warning on the PR page.
 effort: high
-argument-hint: "[<pr-number-or-url>] [--yes]"
+argument-hint: "[<pr-number-or-url>]"
 disable-model-invocation: true
 ---
 
@@ -40,7 +40,10 @@ remote. Three things make it more than `git pull --rebase`:
 Model invocation is disabled (`disable-model-invocation: true`). The push
 rewrites published history: a teammate who has the branch checked out ends
 up on a discarded line of development, and no verification step can undo
-that after the fact. Only a deliberate human invocation starts the run.
+that after the fact. Only a deliberate human invocation starts the run —
+and that invocation carries the authorization to publish. Once the step 6
+gate reports no regression, the run publishes without stopping to re-ask
+(step 7).
 
 ## Input
 
@@ -51,10 +54,6 @@ that after the fact. Only a deliberate human invocation starts the run.
   which branch is rebased — the branch is always the current checkout, so a
   PR argument that names a different head branch is a refusal, not a
   checkout.
-- **`--yes`** skips the pre-publish confirmation (step 7). It belongs to a
-  caller that already carries the user's authorization to rewrite the
-  remote. **It is the caller's to pass, never yours to add** — running as
-  an agent does not make you a non-interactive caller.
 
 **The base branch is discovered, never assumed.** Resolve it through the
 fallback chain, in one bash call (an agent thread resets cwd between calls).
@@ -155,8 +154,9 @@ claims which side is correct.
 9. **A check with no baseline proves nothing after.** A check that could not
    run before the rebase is reported `UNKNOWN`, never counted as evidence
    that behavior was preserved (step 2). When *every* check is `UNKNOWN`, the
-   run verified nothing at all: the push still requires a confirmation that
-   names the absent evidence, and `--yes` does not skip it (step 7).
+   run verified nothing at all: the publish proceeds on the invocation's
+   authority, but it is reported as unverified in exactly those words —
+   never as checks matching a baseline (step 7).
 10. **No destructive command relies on a variable set in an earlier Bash
     invocation.** Shell state does not persist between invocations: the
     publish and any `git reset --hard` re-derive `$BRANCH`, `$BASE`, `$PUSH_REMOTE`,
@@ -570,7 +570,8 @@ suite-level comparison calls that clean.
 **When every row is UNKNOWN, say so in those words.** Zero regressions out
 of zero comparisons is not a clean verification, and reporting it as one is
 the most misleading thing this skill could do. Carry the no-evidence state
-into step 7, where it forces a confirmation `--yes` cannot skip.
+into step 7 and the completion, which must report the publish as
+unverified.
 
 **Any regression is a hard stop.** Do not push. Report which check and which
 named tests went from green to red, then offer the two real options: revisit
@@ -584,27 +585,29 @@ shows what each commit's content gained or lost in the replay — it is the
 fastest way to find a resolution that quietly dropped a hunk. It is a
 diagnostic to reach for on failure, not a required step.
 
-### Step 7 — confirm, then publish
+### Step 7 — publish
 
 Reached only with no regression and no unresolved escalation.
 
-**Ask for an explicit confirmation** before publishing — "rebased `<branch>`
-from `<ORIG_SHA>` onto `<BASE_REMOTE>/<base>` at `<new-sha>`; `<n>` conflicts
-resolved; checks match baseline; publishing to `<PUSH_REMOTE>` through
-`<publisher>` — rewrite the remote?" — and publish only on a yes. `--yes`
-skips this prompt and is the caller's to pass (see Input), with one
-exception below.
+**Do not ask the user to confirm the publish.** The invocation carried the
+authorization to rewrite the remote: model invocation is disabled, so only
+a deliberate human started this run, and a confirmation here re-requests
+permission that invocation granted — and every caller that chains into the
+run inherits the stop. The guards on this irreversible push are mechanical,
+not questions, and both have already run: explicit rebase intent scoped the
+invocation, and the step 6 gate stopped the run on any regression. Once
+step 6 reports no regression, publish.
 
-**The no-evidence case overrides `--yes`.** When *every* configured check
-came back `UNKNOWN` — or the project configures no checks at all — the
-comparison in step 6 had nothing to compare, so the run has produced **zero
-evidence** that behavior was preserved. The skill's premise is unmet. Ask
-regardless of `--yes`, and say exactly that: "no check produced a usable
-baseline, so nothing verified that this rebase preserved behavior —
-force-push anyway?" Never render this case as "checks match baseline";
-they did not match, they were absent. A repo with no checks is legitimate,
-which is why this is a confirmation and not a refusal — but the user
-confirms an unverified push knowing it is unverified.
+**The no-evidence case publishes but never claims verification.** When
+*every* configured check came back `UNKNOWN` — or the project configures no
+checks at all — the comparison in step 6 had nothing to compare, so the run
+has produced **zero evidence** that behavior was preserved. Publish on the
+invocation's authority, and say exactly that in the completion: "no check
+produced a usable baseline, so nothing verified that this rebase preserved
+behavior." Never render this case as "checks match baseline"; they did not
+match, they were absent. A repo with no checks is legitimate — the recovery
+anchor (`git reset --hard <ORIG_SHA>`) is the safety net an unverified
+publish leans on, so restate it with the completion.
 
 **Capture the PR's draft state before anything publishes** — a publisher can
 change it, and the re-check at the end of this step is how that is caught:
