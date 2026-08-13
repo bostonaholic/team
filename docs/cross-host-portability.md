@@ -22,7 +22,10 @@ nav_label: portability
 > **Deprecated host (2026-08-13).** An earlier revision of this study scored a
 > third host and handed it a port epic of its own. That Gemini CLI port was
 > scored on 2026-06-27 and then dropped in favor of Antigravity CLI, which
-> ships today. The matrix below scores the surviving hosts only.
+> ships today. The port epic,
+> [#56](https://github.com/bostonaholic/team/issues/56), was retargeted at the
+> Antigravity CLI as an alternate model backend rather than closed. The matrix
+> below scores the surviving hosts only.
 
 ## Contents
 
@@ -500,3 +503,4 @@ handle.
 - **[Architecture](architecture.md)**: the full plugin design these primitives are drawn from.
 - **[#50](https://github.com/bostonaholic/team/issues/50)**: the source issue this study delivers.
 - **[#57 Codex port](https://github.com/bostonaholic/team/issues/57)**: the epic that executes this matrix for Codex CLI.
+- **[#56 Antigravity backend](https://github.com/bostonaholic/team/issues/56)**: the epic that runs the pipeline against the Antigravity CLI as an alternate model backend (formerly the Gemini CLI port).

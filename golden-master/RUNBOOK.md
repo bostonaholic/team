@@ -84,7 +84,7 @@ bin/rails test                                        # pre-existing suite must 
   *as a plugin*, not from a Team source checkout in the working directory.
 - Select the **model / backend** for this run and make sure that it is correct.
   Anthropic-internal model swaps work today. Cross-provider swaps depend on
-  #55 / #57.
+  #55 / #56 / #57.
 
 ### 3. Run the pipeline
 
@@ -146,7 +146,7 @@ summary. The vector records these fields as a minimum:
 - **Anthropic-internal (now):** swap Opus, Sonnet, Haiku, or a future model in
   Claude Code. Record which model ran.
 - **Cross-provider (gated):** GPT, Gemini, and others, through the model-backend
-  adapters (#55 / #57, strategy #50). Document and wire them as they land.
+  adapters (#55 / #56 / #57, strategy #50). Document and wire them as they land.
 - **Pricing is per-model.** One caveat applies across *providers*. Raw token
   counts are **not** comparable across tokenizers. Score cross-provider runs on
   **outcome quality, wall-clock, and dollar cost**. Keep token counts as a

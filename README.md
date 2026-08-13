@@ -66,7 +66,8 @@ Skills arrive under **bare names** — ask for `shipit`, not `team:shipit`. The
 install copies the checkout, so upgrading means installing again. Unlike Codex,
 this host honors `disable-model-invocation`, so nothing needs removing
 afterward. The `/team-*` pipeline commands install but are not claimed to run
-here yet, because agent dispatch on this host is untested.
+here yet, because agent dispatch on this host is untested
+([#56](https://github.com/bostonaholic/team/issues/56)).
 
 Developing Team itself? The install copies, so link your checkout instead:
 
