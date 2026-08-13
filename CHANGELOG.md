@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.50.0] - 2026-08-13
+
 ### Added
 
 - **The cross-model pass runs at the design-review gate too.** The pipeline's DESIGN review gate consults the `codex` and `agy` CLIs before each adversarial review round: the orchestrator sends the design document plus the task's goal sections to each ready CLI, fences the raw output as data at capture time, and hands it to the fresh-context reviewer as an `## External review input` section of its brief. The reviewer verifies, refutes, or downgrades every external claim and emits a paraphrase-only disposition; the recorded verdict derives from the terminal verdict line of its report. Relative to the code-review pass the payload is a design document rather than a diff, and the pass runs every design-review round — up to ~10 vendor calls per topic at the revision cap. Each design round's disposition is appended to `docs/plans/<id>/cross-model-notes.md` under a round label, its raw vendor transcript to `docs/plans/<id>/cross-model-raw.md` at capture time, and the PR body carries each round's disposition exactly once. Standalone `/team-design` runs the identical gate procedure, and standalone `/eng-design-doc-review` runs the pass too — writing no artifact. [`skills/cross-model-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/cross-model-review/SKILL.md), [`skills/team/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md), [`skills/eng-design-doc-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/SKILL.md)
@@ -536,7 +538,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.49.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.50.0...HEAD
+[0.50.0]: https://github.com/bostonaholic/team/compare/v0.49.0...v0.50.0
 [0.49.0]: https://github.com/bostonaholic/team/compare/v0.48.0...v0.49.0
 [0.48.0]: https://github.com/bostonaholic/team/compare/v0.47.0...v0.48.0
 [0.47.0]: https://github.com/bostonaholic/team/compare/v0.46.0...v0.47.0

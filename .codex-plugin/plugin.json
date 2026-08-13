@@ -1,6 +1,6 @@
 {
   "name": "team",
-  "version": "0.49.0",
+  "version": "0.50.0",
   "description": "Orchestrates specialized agents to autonomously implement entire features end-to-end",
   "keywords": [
     "agents",
