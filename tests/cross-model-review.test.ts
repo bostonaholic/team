@@ -18,6 +18,7 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -385,6 +386,54 @@ echo "openai=[\${OPENAI_API_KEY:-unset}] codexhome=[\${CODEX_HOME:-unset}] gemin
     // Positive control: the gemini child still gets its own vendor variable.
     expect(r.stdout).toContain("gemini=[gemini-own-credential]");
     expect(r.combined).not.toContain("credential-leaked");
+  });
+
+  test("run spawns the vendor CLI in an empty scratch cwd outside the repo root, cleaned up after", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+    const bin = makeBin({
+      codex: `#!/bin/bash
+cat >/dev/null
+pwd
+ls -A
+`,
+    });
+    const repo = makeRepo(true);
+    const r = runScript(["run", "codex", repo], { binDir: bin, input: "prompt" });
+    const lines = r.stdout.trim().split("\n");
+    const reportedCwd = lines[0] ?? "";
+    const rest = lines.slice(1);
+    expect(reportedCwd.length).toBeGreaterThan(0);
+    // Compare against both the symlinked and the resolved repo path (macOS
+    // tmpdir rides /private), so a regression to cwd: repoRoot cannot slip
+    // past a path-form mismatch.
+    expect(reportedCwd.startsWith(repo)).toBe(false);
+    expect(reportedCwd.startsWith(realpathSync(repo))).toBe(false);
+    expect(reportedCwd.startsWith(REPO_ROOT)).toBe(false);
+    // The scratch cwd is empty (ls -A printed nothing) and gone after settle.
+    expect(rest.join("")).toBe("");
+    expect(existsSync(reportedCwd)).toBe(false);
+  });
+
+  test("run keeps repo-resident files out of the child's relative-path reach: a planted .env never leaks", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+    const bin = makeBin({
+      codex: `#!/bin/bash
+cat >/dev/null
+if cat .env 2>/dev/null; then
+  echo "env-read-succeeded"
+else
+  echo "env-read-failed"
+fi
+`,
+    });
+    const repo = makeRepo(true);
+    writeFileSync(join(repo, ".env"), "SECRET_TOKEN=planted-secret\n");
+    const r = runScript(["run", "codex", repo], { binDir: bin, input: "prompt" });
+    // The failure branch printing proves the fake ran and the read failed —
+    // not a vacuous pass.
+    expect(r.stdout).toContain("env-read-failed");
+    expect(r.combined).not.toContain("env-read-succeeded");
+    expect(r.combined).not.toContain("planted-secret");
   });
 
   test("run skips a CLI reachable only through a relative PATH entry, so the vetted file is always the executed file", () => {

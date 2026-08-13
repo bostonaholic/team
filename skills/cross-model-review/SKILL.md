@@ -88,8 +88,11 @@ node <skill-dir>/external-review.mjs run <cli> <repo-root>
 
 The script pins the argv — codex runs `exec` in its read-only sandbox with
 the prompt on stdin; gemini runs in plan approval mode with the prompt as
-the `-p` value. Never invoke the vendor CLIs directly, and never pass extra
-flags. A missing consent marker is a refusal, not a skip: both verbs check
+the `-p` value. The child runs from an empty scratch directory, never the
+repo: the consent covers the diff in the prompt, so no vendor process gets
+to read repo-resident files (an untracked `.env`, `.git/config`) or
+auto-load repo agent-context files from its cwd. Never invoke the vendor
+CLIs directly, and never pass extra flags. A missing consent marker is a refusal, not a skip: both verbs check
 it first, and `run` exits non-zero before any child process spawns. On any
 other failure — binary missing, timeout, non-zero exit — the script prints
 a skip with the reason. Report the skip in your disposition block and move

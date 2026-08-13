@@ -18,7 +18,11 @@
  * which defeats the stdin-block hang), gemini gets it as the `-p` value.
  * Guard failures (unknown CLI, prompt over the cap) are usage errors that
  * also exit before any child process spawns, so a rejected attempt consumes
- * nothing. The child gets an allowlisted environment, never the parent's.
+ * nothing. The child gets an allowlisted environment, never the parent's,
+ * and runs from an empty scratch directory, never the repo: the prompt
+ * already carries the diff, so a child in the repo could only ever read
+ * files the consent never covered (an untracked .env, .git/config) or
+ * auto-load repo-resident agent context files.
  *
  * The trailing [timeout-ms] argument exists for the accelerated-timeout test
  * only; the skill's documented invocation never passes it. No environment
@@ -30,7 +34,16 @@
  */
 
 import { spawn } from "node:child_process";
-import { accessSync, constants, existsSync, realpathSync, statSync } from "node:fs";
+import {
+  accessSync,
+  constants,
+  existsSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  statSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { delimiter, isAbsolute, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -127,9 +140,10 @@ function findOnPath(name) {
   const pathValue = process.env.PATH ?? "";
   for (const dir of pathValue.split(delimiter)) {
     if (!dir) continue;
-    // A relative PATH entry (".", "relbin") would vet one file here and let
-    // spawn resolve another later (spawn runs with cwd: repoRoot). Only an
-    // absolute entry names the same file at vet time and spawn time.
+    // A relative PATH entry (".", "relbin") names a different file per
+    // resolver cwd (the child spawns from a scratch directory, not this
+    // process's cwd), so only an absolute entry names the same file at vet
+    // time and spawn time.
     if (!isAbsolute(dir)) continue;
     const candidate = join(dir, name);
     try {
@@ -250,9 +264,16 @@ async function run(cli, repoRoot, timeoutMs) {
     process.stdout.write(`skip: ${cli} not found on PATH\n`);
     return 0;
   }
+  // The child needs no filesystem context: the prompt already carries the
+  // diff and the codex argv pins --skip-git-repo-check. An empty scratch cwd
+  // (never repoRoot) keeps repo-resident files out of the vendor's reach —
+  // `-s read-only` bounds writes, not reads, and both CLIs auto-load agent
+  // context files from their cwd. The marker check above stays keyed to
+  // repoRoot: consent lives in the repo, the child does not.
+  const scratchDir = mkdtempSync(join(tmpdir(), "cross-model-review-"));
   return new Promise((resolvePromise) => {
     const child = spawn(resolved, args, {
-      cwd: repoRoot,
+      cwd: scratchDir,
       stdio: ["pipe", "pipe", "pipe"],
       env: childEnv(cli),
       // Own process group, so the timeout kill can reach grandchildren.
@@ -290,6 +311,11 @@ async function run(cli, repoRoot, timeoutMs) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      try {
+        rmSync(scratchDir, { recursive: true, force: true });
+      } catch {
+        // Best-effort cleanup of an empty tmpdir entry; the report matters more.
+      }
       report();
       resolvePromise(0);
     };
