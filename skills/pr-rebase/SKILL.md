@@ -6,7 +6,8 @@ description: |
   latest base, resolve each conflict from both sides' intent with the
   rationale recorded to disk, re-run the same checks, and treat any check
   that passed before and fails after as a regression that blocks the push.
-  Ends with a confirmed `--force-with-lease --force-if-includes` push.
+  Ends with a confirmed, lease-verified publish through the repo's own
+  publisher — a `--force-with-lease --force-if-includes` push by default.
   Invoke ONLY on explicit rebase intent — the user says "rebase onto main",
   "pull main and rebase", "update the branch", "get this branch current",
   or runs "/pr-rebase". A rebase rewrites history and the push rewrites the
@@ -50,7 +51,7 @@ that after the fact. Only a deliberate human invocation starts the run.
   which branch is rebased — the branch is always the current checkout, so a
   PR argument that names a different head branch is a refusal, not a
   checkout.
-- **`--yes`** skips the pre-push confirmation (step 7). It belongs to a
+- **`--yes`** skips the pre-publish confirmation (step 7). It belongs to a
   caller that already carries the user's authorization to rewrite the
   remote. **It is the caller's to pass, never yours to add** — running as
   an agent does not make you a non-interactive caller.
@@ -122,15 +123,21 @@ claims which side is correct.
 1. **Never push without the verification gate.** A regression (step 6) or an
    unresolved escalation (step 5) stops the run before step 7. There is no
    ungated path to the remote.
-2. **Never a bare `git push --force`.** The push is
+2. **Never overwrite remote work you have not seen.** The rule is an
+   invariant, not a command: at publish time the remote tip must be verified
+   equal to `$REMOTE_SHA_BEFORE` (step 2), and the publish must fail rather
+   than overwrite if it moved. The default realization is plain git —
    `--force-with-lease=<branch>:<pre-fetch-sha>` plus `--force-if-includes`,
-   aimed at `$PUSH_REMOTE`, or it does not happen. A plain
-   `--force-with-lease` is **not** sufficient here: this skill runs
-   `git fetch` in step 3, which advances the remote-tracking ref the implicit
-   lease reads, so the lease would happily clobber a teammate's push that we
-   fetched but never integrated. Nor is a hardcoded `origin` sufficient: the
-   remote comes from the branch's own upstream (step 0), because on a fork PR
-   `origin` can be the upstream repository.
+   aimed at `$PUSH_REMOTE` — and a bare `git push --force` is never it. A
+   plain `--force-with-lease` is **not** sufficient here either: this skill
+   runs `git fetch` in step 3, which advances the remote-tracking ref the
+   implicit lease reads, so the lease would happily clobber a teammate's push
+   that we fetched but never integrated. Nor is a hardcoded `origin`
+   sufficient: the remote comes from the branch's own upstream (step 0),
+   because on a fork PR `origin` can be the upstream repository. When the
+   repo's publishing is owned by a stack manager (step 0), delegating the
+   push to it satisfies this rule only after the explicit lease check in
+   step 7 has verified the remote tip unchanged.
 3. **Never `git rebase --skip`.** It drops the conflicting commit entirely.
    A conflict is resolved or the rebase is aborted; it is never skipped.
 4. **Never resolve a conflict by picking a side wholesale** unless one
@@ -151,8 +158,8 @@ claims which side is correct.
    run verified nothing at all: the push still requires a confirmation that
    names the absent evidence, and `--yes` does not skip it (step 7).
 10. **No destructive command relies on a variable set in an earlier Bash
-    invocation.** Shell state does not persist between invocations: the push
-    and any `git reset --hard` re-derive `$BRANCH`, `$BASE`, `$PUSH_REMOTE`,
+    invocation.** Shell state does not persist between invocations: the
+    publish and any `git reset --hard` re-derive `$BRANCH`, `$BASE`, `$PUSH_REMOTE`,
     and `$ORIG_SHA` in the same invocation (re-reading the rebase log from step
     2 when needed) and expand them as `${VAR:?}` so an unset variable aborts
     instead of expanding to empty.
@@ -242,6 +249,36 @@ force-push would rewrite a branch the PR does not track and leave the PR
 itself unchanged. Report both values and let the user point the branch at
 the right remote.
 
+**Resolve the publisher — the tool that owns pushing this branch.** The push
+is not always the author's to issue: a Graphite-managed repo forbids
+`git push` outright and requires `gt submit`, and Sapling, Gerrit, and
+Phabricator own publishing the same way. Detection order, first match wins:
+
+1. An explicit override — the user or the caller named the publish command.
+2. A project or user instruction that forbids `git push` or names a required
+   publish command. This tier is read from the instructions the session was
+   loaded with, never from the filesystem — it is the constraint a repo's own
+   rules supply, and the one that must win over any marker probe.
+3. Repository markers, probed in one invocation:
+
+   ```sh
+   PUBLISHER=git
+   ROOT="$(git rev-parse --show-toplevel)"
+   if [ -f "$ROOT/.graphite_repo_config" ] \
+      || { command -v gt >/dev/null 2>&1 && gt branch info "$BRANCH" >/dev/null 2>&1; }; then
+     PUBLISHER=graphite
+   elif [ -f "$ROOT/.arcconfig" ]; then
+     PUBLISHER=arc
+   elif command -v sl >/dev/null 2>&1 && sl root >/dev/null 2>&1; then
+     PUBLISHER=sl
+   fi
+   ```
+
+Report the resolved publisher — and which tier resolved it — in the
+completion, the same way the base-discovery tier is reported. Every
+publisher passes through the same step 7 gate; only the final command
+differs.
+
 ### Step 1 — refuse the states a rebase must not start from
 
 All of these are refusals, checked before anything is rewritten:
@@ -278,7 +315,8 @@ All of these are refusals, checked before anything is rewritten:
 6's verdict meaningful.
 
 1. Capture the anchors, and the remote tip *as it stands now* — the pre-fetch
-   sha is the explicit lease value step 7 pushes against:
+   sha is the value step 7's publish is verified against, whichever
+   publisher runs it:
 
    ```sh
    ORIG_SHA="$(git rev-parse HEAD)"
@@ -361,6 +399,16 @@ If the branch contains merge commits
 flattens the topology and can silently drop a merge's second parent.
 
 A clean rebase goes straight to step 6. A conflict enters step 5.
+
+**A branch with tracked children is a stack, not a lone branch.** When the
+publisher is a stack manager and the branch has tracked children, the rebase
+just moved their parent out from under them, and they are orphaned unless
+they are restacked. Once the rebase completes cleanly (or step 5 resolves
+its last conflict), cascade with the manager's own restack — `gt restack`
+restacks this branch's descendants onto the new history — and report which
+branches moved. The cascade is scoped to this branch's own descendants: an
+unrelated sibling branch that also needs restacking is not this run's to
+touch.
 
 ### Step 5 — resolve conflicts from both sides' intent
 
@@ -536,15 +584,16 @@ shows what each commit's content gained or lost in the replay — it is the
 fastest way to find a resolution that quietly dropped a hunk. It is a
 diagnostic to reach for on failure, not a required step.
 
-### Step 7 — confirm, then force-push
+### Step 7 — confirm, then publish
 
 Reached only with no regression and no unresolved escalation.
 
-**Ask for an explicit confirmation** before pushing — "rebased `<branch>`
+**Ask for an explicit confirmation** before publishing — "rebased `<branch>`
 from `<ORIG_SHA>` onto `<BASE_REMOTE>/<base>` at `<new-sha>`; `<n>` conflicts
-resolved; checks match baseline; pushing to `<PUSH_REMOTE>` — force-push?" —
-and push only on a yes. `--yes` skips this prompt and is the caller's to
-pass (see Input), with one exception below.
+resolved; checks match baseline; publishing to `<PUSH_REMOTE>` through
+`<publisher>` — rewrite the remote?" — and publish only on a yes. `--yes`
+skips this prompt and is the caller's to pass (see Input), with one
+exception below.
 
 **The no-evidence case overrides `--yes`.** When *every* configured check
 came back `UNKNOWN` — or the project configures no checks at all — the
@@ -556,6 +605,15 @@ force-push anyway?" Never render this case as "checks match baseline";
 they did not match, they were absent. A repo with no checks is legitimate,
 which is why this is a confirmation and not a refusal — but the user
 confirms an unverified push knowing it is unverified.
+
+**Capture the PR's draft state before anything publishes** — a publisher can
+change it, and the re-check at the end of this step is how that is caught:
+
+```sh
+DRAFT_BEFORE="$(gh pr view ${PR:+"$PR"} --repo "$REPO" --json isDraft --jq .isDraft 2>/dev/null)"
+```
+
+**Plain git — the default publisher:**
 
 ```sh
 git push --force-with-lease="${BRANCH:?}:${REMOTE_SHA_BEFORE:?}" --force-if-includes "${PUSH_REMOTE:?}" "${BRANCH:?}"
@@ -579,6 +637,42 @@ track while leaving the PR itself unchanged.
   stale lease means the remote moved during the run — re-run the skill from
   step 0 against the new remote state.
 
+**A delegated publisher (`graphite`, `arc`, `sl`, or an instruction-named
+command) takes no lease**, so take one for it: verify the remote tip is
+still the sha captured in step 2, in the same invocation that publishes
+(Hard Rule 10):
+
+```sh
+REMOTE_NOW="$(git ls-remote "${PUSH_REMOTE:?}" "refs/heads/${BRANCH:?}" | cut -f1)"
+[ "$REMOTE_NOW" = "${REMOTE_SHA_BEFORE:?}" ] || { echo "refusing: remote moved during the run" >&2; exit 1; }
+```
+
+Then issue the publisher's own command — `gt submit`, `arc diff`,
+`sl pr submit`, or whatever the instruction named — scoped to this branch
+and the children step 4 restacked. Be plain in the report about what this
+check is: it is check-then-act, and it races in a way git's atomic lease
+does not — the remote can move between the `ls-remote` and the publish. It
+is the best available guard when the push is not ours to issue, not an
+equivalent one; never present it as if it were.
+
+One Graphite wrinkle: `gt submit --stack` validates the whole repo, so it
+can refuse because an *unrelated sibling* branch needs restacking. The
+correct response is to scope the submit down to the current branch and its
+restacked children — never to restack branches this run did not touch.
+
+**Re-check the draft state after the publish, whichever path ran:**
+
+```sh
+DRAFT_AFTER="$(gh pr view ${PR:+"$PR"} --repo "$REPO" --json isDraft --jq .isDraft 2>/dev/null)"
+```
+
+Graphite's non-interactive mode announces that it creates PRs as drafts, and
+a publisher that touches the PR can silently flip a ready-for-review PR back
+to draft. When `$DRAFT_AFTER` differs from `$DRAFT_BEFORE`, say so loudly in
+the completion and name the restore command (`gh pr ready --repo "$REPO"` to
+mark it ready again; `gh pr ready --undo` for the reverse) — restoring it is
+the user's call, not yours.
+
 ## Success criteria
 
 - The branch is replayed on `<BASE_REMOTE>/<base>` with every commit intact —
@@ -586,7 +680,10 @@ track while leaving the PR itself unchanged.
 - Every conflict resolution is recorded in `docs/plans/<ID>/rebase-<n>.md`
   with both sides' intent and the reasoning.
 - Every check that passed before the rebase passes after it.
-- The remote matches the local branch, or the run stopped before the push
+- The remote tip was verified equal to `$REMOTE_SHA_BEFORE` at publish time —
+  by git's lease or by the explicit `ls-remote` check — whichever publisher
+  ran.
+- The remote matches the local branch, or the run stopped before the publish
   with the reason and the recovery anchor stated.
 
 ## Pitfalls
@@ -610,10 +707,12 @@ track while leaving the PR itself unchanged.
 ## Completion
 
 Report, in a few lines: the branch, `<ORIG_SHA>` → the new head sha, the
-base and which discovery tier resolved it, how many commits were replayed
-and any that were dropped as empty, the number of conflicts resolved
-(and how many were escalated), the baseline-vs-after check table, and
-whether the push happened. On any stop, state the reason and repeat
+base and which discovery tier resolved it, the resolved publisher and which
+detection tier supplied it, how many commits were replayed and any that were
+dropped as empty, the number of conflicts resolved (and how many were
+escalated), any tracked children that were restacked, the baseline-vs-after
+check table, whether the publish happened, and whether the PR's draft state
+survived it. On any stop, state the reason and repeat
 `Recovery: git reset --hard <ORIG_SHA>`. Name the rebase log path so the
 resolutions can be read back.
 
