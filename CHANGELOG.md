@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.47.0] - 2026-08-13
+
+### Fixed
+
+- **`/pr-rebase` now publishes through the repo's own publisher instead of assuming the push is its to make.** The skill's final step hardcoded a `git push --force-with-lease --force-if-includes` as the rule itself, but the safety property that command realizes is an outcome — never overwrite remote work you have not seen — and in a repo whose publishing belongs to a stack manager (a Graphite repo whose instructions forbid `git push` and require `gt submit`; Sapling, Gerrit, and Phabricator have the same shape), following the skill literally meant violating the repo's rules. The hard rule is now that invariant: the remote tip must be verified equal to the pre-fetch sha at publish time, with the plain-git force-with-lease push as the default realization and delegation permitted only after an explicit `git ls-remote` lease check — honestly framed as check-then-act, not equivalent to git's atomic lease. The skill detects the publisher up front (an explicit override, then project or user instructions that forbid `git push` or name a publish command, then repo markers, then plain git) and names it in the completion report. Two adjacent gaps closed with it: the PR's draft state is captured before the publish and re-checked after, because a publisher can silently flip a ready-for-review PR back to draft, and rebasing a branch with tracked children now cascades a scoped restack instead of orphaning them — scoped to this branch's own descendants, never to unrelated siblings the run did not touch. [`skills/pr-rebase/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-rebase/SKILL.md)
+
 ## [0.46.0] - 2026-08-13
 
 ### Changed
@@ -513,7 +519,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.46.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.47.0...HEAD
+[0.47.0]: https://github.com/bostonaholic/team/compare/v0.46.0...v0.47.0
 [0.46.0]: https://github.com/bostonaholic/team/compare/v0.45.0...v0.46.0
 [0.45.0]: https://github.com/bostonaholic/team/compare/v0.44.0...v0.45.0
 [0.44.0]: https://github.com/bostonaholic/team/compare/v0.43.2...v0.44.0

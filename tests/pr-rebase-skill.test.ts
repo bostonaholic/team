@@ -368,3 +368,69 @@ describe("pr-rebase skill: the push form", () => {
     }
   });
 });
+
+describe("pr-rebase skill: the publisher is detected, never assumed to be git", () => {
+  // The safety property Hard Rule 2 protects is an OUTCOME (never overwrite
+  // remote work you have not seen), not a command. In a repo whose publishing
+  // is owned by a stack manager (Graphite, arc, Sapling), `git push` is not
+  // the author's to issue — so step 0 must resolve WHICH tool publishes, and
+  // a delegated publish must take its own explicit lease first.
+
+  test("step 0 probes the stack-manager markers and defaults to plain git", () => {
+    const t = body();
+    expect(t).toContain(".graphite_repo_config");
+    expect(t).toContain(".arcconfig");
+    expect(fencedLines().join("\n")).toContain("PUBLISHER=git");
+  });
+
+  test("a delegated publisher takes an explicit lease via git ls-remote", () => {
+    // None of the stack managers accept a lease value, so the skill must
+    // read the remote tip itself and compare it to the pre-fetch sha.
+    const leaseLine = fencedLines().find((line) => line.includes("git ls-remote"));
+    expect(leaseLine).toBeDefined();
+    expect(leaseLine ?? "").toContain("${PUSH_REMOTE:?}");
+    expect(leaseLine ?? "").toContain("${BRANCH:?}");
+
+    const compareLine = fencedLines().find((line) => line.includes("REMOTE_NOW"));
+    expect(compareLine).toBeDefined();
+    expect(fencedLines().join("\n")).toContain('"${REMOTE_SHA_BEFORE:?}"');
+  });
+
+  test("the ls-remote lease check belongs to the publish step, after verification", () => {
+    const t = body();
+    const verifyStep = t.indexOf("### Step 6");
+    const publishStep = t.indexOf("### Step 7");
+    const lease = t.indexOf("git ls-remote");
+    for (const position of [verifyStep, publishStep, lease]) {
+      expect(position).toBeGreaterThan(-1);
+    }
+    expect(verifyStep).toBeLessThan(publishStep);
+    expect(publishStep).toBeLessThan(lease);
+  });
+
+  test("the PR's draft state is captured before the publish and re-checked after", () => {
+    // A publisher can silently flip a ready-for-review PR back to draft
+    // (Graphite's non-interactive mode creates PRs as drafts), so the
+    // before/after pair must bracket the publish command.
+    const t = body();
+    const firstDraft = t.indexOf("isDraft");
+    const lastDraft = t.lastIndexOf("isDraft");
+    const push = t.indexOf('--force-with-lease="${BRANCH:?}:${REMOTE_SHA_BEFORE:?}"');
+    expect(firstDraft).toBeGreaterThan(-1);
+    expect(push).toBeGreaterThan(-1);
+    expect(firstDraft).toBeLessThan(push);
+    expect(lastDraft).toBeGreaterThan(push);
+  });
+
+  test("a rebase with tracked children restacks them rather than orphaning them", () => {
+    expect(body()).toContain("gt restack");
+  });
+
+  test("the completion names the resolved publisher", () => {
+    const t = body();
+    const completion = t.slice(t.indexOf("## Completion"));
+    // Guard: a missing section must fail, not vacuously pass.
+    expect(completion.length).toBeGreaterThan("## Completion".length);
+    expect(completion).toContain("publisher");
+  });
+});
