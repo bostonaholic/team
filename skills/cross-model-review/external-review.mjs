@@ -30,8 +30,8 @@
  */
 
 import { spawn } from "node:child_process";
-import { accessSync, constants, existsSync, statSync } from "node:fs";
-import { delimiter, join } from "node:path";
+import { accessSync, constants, existsSync, realpathSync, statSync } from "node:fs";
+import { delimiter, isAbsolute, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 /** In-process kill timer for a hung CLI (macOS ships no `timeout` binary). */
@@ -55,33 +55,29 @@ const STDERR_CAP_BYTES = 4 * 1024;
 /**
  * The only environment variables a vendor CLI child receives. PATH/HOME/
  * TMPDIR/TERM and the locale pair keep the CLI functional (both read their
- * config and cached auth under HOME); the vendor variables are each CLI's
- * own credentials. Everything else — ANTHROPIC_API_KEY, GH_TOKEN, cloud
- * creds — stays with the parent: a review subprocess has no business
- * holding credentials for services it does not call.
+ * config and cached auth under HOME); the per-vendor block is that CLI's
+ * own credentials, and no vendor ever receives the other's. Everything
+ * else — ANTHROPIC_API_KEY, GH_TOKEN, cloud creds — stays with the parent:
+ * a review subprocess has no business holding credentials for services it
+ * does not call.
  */
-const ENV_ALLOWLIST = [
-  "PATH",
-  "HOME",
-  "TMPDIR",
-  "TERM",
-  "LANG",
-  "LC_ALL",
-  // codex
-  "OPENAI_API_KEY",
-  "CODEX_HOME",
-  // gemini
-  "GEMINI_API_KEY",
-  "GOOGLE_API_KEY",
-  "GOOGLE_APPLICATION_CREDENTIALS",
-  "GOOGLE_CLOUD_PROJECT",
-  "GOOGLE_CLOUD_LOCATION",
-  "GOOGLE_GENAI_USE_VERTEXAI",
-];
+const ENV_ALLOWLIST_BASE = ["PATH", "HOME", "TMPDIR", "TERM", "LANG", "LC_ALL"];
 
-function childEnv() {
+const ENV_ALLOWLIST_BY_CLI = {
+  codex: ["OPENAI_API_KEY", "CODEX_HOME"],
+  gemini: [
+    "GEMINI_API_KEY",
+    "GOOGLE_API_KEY",
+    "GOOGLE_APPLICATION_CREDENTIALS",
+    "GOOGLE_CLOUD_PROJECT",
+    "GOOGLE_CLOUD_LOCATION",
+    "GOOGLE_GENAI_USE_VERTEXAI",
+  ],
+};
+
+function childEnv(cli) {
   const env = {};
-  for (const key of ENV_ALLOWLIST) {
+  for (const key of [...ENV_ALLOWLIST_BASE, ...ENV_ALLOWLIST_BY_CLI[cli]]) {
     if (process.env[key] !== undefined) env[key] = process.env[key];
   }
   return env;
@@ -131,6 +127,10 @@ function findOnPath(name) {
   const pathValue = process.env.PATH ?? "";
   for (const dir of pathValue.split(delimiter)) {
     if (!dir) continue;
+    // A relative PATH entry (".", "relbin") would vet one file here and let
+    // spawn resolve another later (spawn runs with cwd: repoRoot). Only an
+    // absolute entry names the same file at vet time and spawn time.
+    if (!isAbsolute(dir)) continue;
     const candidate = join(dir, name);
     try {
       if (!statSync(candidate).isFile()) continue;
@@ -184,9 +184,12 @@ function detect(repoRoot) {
 
 function readStdin() {
   return new Promise((resolvePromise, rejectPromise) => {
-    const chunks = [];
-    process.stdin.on("data", (chunk) => chunks.push(chunk));
-    process.stdin.on("end", () => resolvePromise(Buffer.concat(chunks).toString("utf8")));
+    // Retain one byte past the prompt cap: enough for promptWithinCap to
+    // reject an over-cap prompt, while an unbounded stdin stops growing
+    // memory the moment it crosses the cap.
+    const collector = boundedCollector(PROMPT_CAP_BYTES + 1);
+    process.stdin.on("data", (chunk) => collector.push(chunk));
+    process.stdin.on("end", () => resolvePromise(collector.text()));
     process.stdin.on("error", rejectPromise);
   });
 }
@@ -251,10 +254,31 @@ async function run(cli, repoRoot, timeoutMs) {
     const child = spawn(resolved, args, {
       cwd: repoRoot,
       stdio: ["pipe", "pipe", "pipe"],
-      env: childEnv(),
+      env: childEnv(cli),
       // Own process group, so the timeout kill can reach grandchildren.
       detached: true,
     });
+
+    // A detached child survives its parent's death, so reap the whole
+    // process group on any exit path — normal completion (the group is
+    // already gone; ESRCH is caught), a fatal signal, or an interrupt.
+    const reapChildGroup = () => {
+      try {
+        process.kill(-child.pid, "SIGKILL");
+      } catch {
+        // Group already gone: nothing left to reap.
+      }
+    };
+    process.once("exit", reapChildGroup);
+    for (const [signal, exitCode] of [
+      ["SIGTERM", 143],
+      ["SIGINT", 130],
+    ]) {
+      process.once(signal, () => {
+        reapChildGroup();
+        process.exit(exitCode);
+      });
+    }
 
     // Retain one byte past the stdout cap so truncateOutput can tell an
     // exactly-at-cap output (passes untouched) from an over-cap one (gets
@@ -319,7 +343,21 @@ async function run(cli, repoRoot, timeoutMs) {
 // CLI entry point — runs only when executed directly, not when imported by a
 // test. process.argv[1] is the test runner under `bun test`, so the import is
 // side-effect free.
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+function invokedDirectly() {
+  if (!process.argv[1]) return false;
+  let argvPath = process.argv[1];
+  try {
+    // Node realpaths import.meta.url but leaves argv[1] as typed, so a
+    // symlinked invocation path (script/dev-install-* install the plugin as
+    // a symlink) would never compare equal without this realpath.
+    argvPath = realpathSync(argvPath);
+  } catch {
+    // Unresolvable argv[1]: fall back to comparing the literal path.
+  }
+  return import.meta.url === pathToFileURL(argvPath).href;
+}
+
+if (invokedDirectly()) {
   const [, , verb, ...rest] = process.argv;
   if (verb === "detect" && rest.length === 1) {
     process.exit(detect(rest[0]));

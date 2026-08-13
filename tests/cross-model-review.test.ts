@@ -10,18 +10,20 @@
 // are bash stubs in a mkdtemp bin dir; the child PATH is fully controlled.
 
 import { afterAll, describe, expect, test } from "bun:test";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import {
   chmodSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
+  readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { isAbsolute, join, relative } from "node:path";
 
 import { frontmatter, read, squash } from "./helpers/text";
 
@@ -333,6 +335,74 @@ sleep 60
     15_000,
   );
 
+  test("codex child never receives gemini/google credentials; its own vendor block passes through", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+    const bin = makeBin({
+      codex: `#!/bin/bash
+cat >/dev/null
+echo "gemini=[\${GEMINI_API_KEY:-unset}] google=[\${GOOGLE_API_KEY:-unset}] gac=[\${GOOGLE_APPLICATION_CREDENTIALS:-unset}] openai=[\${OPENAI_API_KEY:-unset}]"
+`,
+    });
+    const repo = makeRepo(true);
+    const r = runScript(["run", "codex", repo], {
+      binDir: bin,
+      input: "prompt",
+      extraEnv: {
+        GEMINI_API_KEY: "gemini-credential-leaked",
+        GOOGLE_API_KEY: "google-credential-leaked",
+        GOOGLE_APPLICATION_CREDENTIALS: "/tmp/google-adc-leaked.json",
+        OPENAI_API_KEY: "openai-own-credential",
+      },
+    });
+    expect(r.stdout).toContain("gemini=[unset]");
+    expect(r.stdout).toContain("google=[unset]");
+    expect(r.stdout).toContain("gac=[unset]");
+    // Positive control: the codex child still gets its own vendor variable,
+    // so the absences above are partitioning, not a broken allowlist.
+    expect(r.stdout).toContain("openai=[openai-own-credential]");
+    expect(r.combined).not.toContain("credential-leaked");
+  });
+
+  test("gemini child never receives openai/codex credentials; its own vendor block passes through", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+    const bin = makeBin({
+      gemini: `#!/bin/bash
+echo "openai=[\${OPENAI_API_KEY:-unset}] codexhome=[\${CODEX_HOME:-unset}] gemini=[\${GEMINI_API_KEY:-unset}]"
+`,
+    });
+    const repo = makeRepo(true);
+    const r = runScript(["run", "gemini", repo], {
+      binDir: bin,
+      input: "prompt",
+      extraEnv: {
+        OPENAI_API_KEY: "openai-credential-leaked",
+        CODEX_HOME: "/tmp/codex-home-leaked",
+        GEMINI_API_KEY: "gemini-own-credential",
+      },
+    });
+    expect(r.stdout).toContain("openai=[unset]");
+    expect(r.stdout).toContain("codexhome=[unset]");
+    // Positive control: the gemini child still gets its own vendor variable.
+    expect(r.stdout).toContain("gemini=[gemini-own-credential]");
+    expect(r.combined).not.toContain("credential-leaked");
+  });
+
+  test("run skips a CLI reachable only through a relative PATH entry, so the vetted file is always the executed file", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+    const bin = makeBin({ codex: RECORDING_FAKE });
+    const repo = makeRepo(true);
+    // The same fake through an absolute entry runs (the truncation tests
+    // above are that positive control); only the PATH spelling changes here.
+    const relativeBin = relative(REPO_ROOT, bin);
+    expect(isAbsolute(relativeBin)).toBe(false);
+    const r = runScript(["run", "codex", repo], { binDir: relativeBin, input: "prompt" });
+    expect(r.status).toBe(0);
+    expect(r.combined).toMatch(/skip/i);
+    expect(r.combined).toMatch(/not found/i);
+    // The recording fake proves no child process ever ran.
+    expect(existsSync(join(bin, "ran"))).toBe(false);
+  });
+
   test("run reads a non-zero child exit as skip, naming the reason", () => {
     expect(existsSync(SCRIPT)).toBe(true);
     const bin = makeBin({
@@ -347,6 +417,83 @@ exit 7
     expect(r.combined).toMatch(/skip/i);
     expect(r.combined).toContain("7");
   });
+});
+
+// ---------------------------------------------------------------------------
+// CLI main guard through a symlinked install path (L3)
+// ---------------------------------------------------------------------------
+
+describe("CLI main guard through a symlinked invocation path (L3)", () => {
+  // script/dev-install-* install the plugin as a symlink. Node realpaths
+  // import.meta.url but leaves argv[1] as typed, so a main guard comparing
+  // the two literally makes every symlinked invocation a silent no-op:
+  // empty stdout + exit 0, which reads as "no findings".
+  test("detect invoked through a symlinked skill directory prints real output, never an empty exit 0", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+    const linkParent = mkdtempSync(join(tmpdir(), `cross-model-link-${process.pid}-`));
+    tempDirs.push(linkParent);
+    const linkedSkillDir = join(linkParent, "linked-skill");
+    symlinkSync(SKILL_DIR, linkedSkillDir);
+    const repo = makeRepo(true);
+    const result = spawnSync(
+      NODE,
+      [join(linkedSkillDir, "external-review.mjs"), "detect", repo],
+      { encoding: "utf8", env: { ...process.env, PATH: SYSTEM_PATH }, timeout: 10_000 },
+    );
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("codex");
+    expect(result.stdout).toContain("gemini");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// detached child is reaped when the parent dies (L4)
+// ---------------------------------------------------------------------------
+
+describe("detached child group is reaped on parent death (L4)", () => {
+  test(
+    "SIGTERM to the running script kills the spawned CLI's process group",
+    async () => {
+      expect(existsSync(SCRIPT)).toBe(true);
+      const bin = makeBin({
+        codex: `#!/bin/bash
+echo $$ > "$(dirname "$0")/child-pid"
+cat >/dev/null
+sleep 60
+`,
+      });
+      const repo = makeRepo(true);
+      const parent = spawn(NODE, [SCRIPT, "run", "codex", repo, "30000"], {
+        env: { ...process.env, PATH: `${bin}:${SYSTEM_PATH}` },
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+      parent.stdin.write("prompt");
+      parent.stdin.end();
+
+      const pidFile = join(bin, "child-pid");
+      const spawnDeadline = Date.now() + 8_000;
+      while (!existsSync(pidFile) && Date.now() < spawnDeadline) await Bun.sleep(50);
+      expect(existsSync(pidFile)).toBe(true);
+      const fakePid = Number(readFileSync(pidFile, "utf8").trim());
+      expect(Number.isInteger(fakePid)).toBe(true);
+      // Positive control: the fake CLI is alive before the parent dies.
+      expect(() => process.kill(fakePid, 0)).not.toThrow();
+
+      parent.kill("SIGTERM");
+      let alive = true;
+      const reapDeadline = Date.now() + 5_000;
+      while (alive && Date.now() < reapDeadline) {
+        try {
+          process.kill(fakePid, 0);
+          await Bun.sleep(50);
+        } catch {
+          alive = false;
+        }
+      }
+      expect(alive).toBe(false);
+    },
+    20_000,
+  );
 });
 
 // ---------------------------------------------------------------------------

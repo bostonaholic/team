@@ -64,7 +64,11 @@ Gemini takes the prompt as a single `-p` argument, and Linux caps one argv
 string at `MAX_ARG_STRLEN` (~128 KiB) — the same order as
 `PROMPT_CAP_BYTES` — so a near-cap prompt can fail to exec there for gemini
 specifically. That failure reads as an ordinary skip (a spawn error), never
-a hang.
+a hang. The same argv delivery also exposes the prompt — diff included — in
+the process table (`ps`, `/proc/<pid>/cmdline`) for the call's duration,
+readable by other local users on a shared machine. `gemini -p` is the CLI's
+only documented non-interactive prompt delivery, so this exposure is a
+known cost of the gemini leg; the consent marker is consent to it too.
 
 ## Invocation
 
