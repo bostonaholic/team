@@ -378,7 +378,13 @@ complex-work agents now run on `fable`.
   **permanently**, not as a fallback. Fable 5's cybersecurity safety
   classifiers flag security-review content. In a non-interactive subagent
   context, a flagged request ends the turn with a refusal instead of a
-  fallback.
+  fallback. `opus` is a floating alias — it resolves to Claude Code's
+  current Opus (Opus 5 today), and riding the latest Opus rather than
+  pinning a dated one is deliberate: the pin exists to avoid Fable's
+  classifiers, not to freeze a specific Opus. Opus-tier models carry
+  cybersecurity safeguards of their own (far milder than Fable's), so if
+  security reviews ever start ending in refusals after an Opus upgrade,
+  overriding to the prior Opus is the escape hatch.
 - **`sonnet` (bounded single-pass judgment):** `questioner`,
   `ux-reviewer`, `technical-writer`.
 - **`haiku` (mechanical checks):** `file-finder`, `verifier`.
@@ -393,8 +399,9 @@ Notes:
   below. `opus` remains the documented fallback tier for every `fable`
   agent.
 - **1M context window comes for free at the fable and opus tiers.** Fable
-  5's context window is 1M by default, and Opus 4.8 always runs with the
-  1M window on the Anthropic API. Max, Team, and Enterprise plans include
+  5's context window is 1M by default, and the current Opus models (Opus
+  5, like 4.8 before it) always run with the 1M window on the Anthropic
+  API. Max, Team, and Enterprise plans include
   the 1M upgrade with the subscription, and Pro degrades gracefully to
   200K. These agents thus need no `[1m]` suffix. The sonnet agents stay
   at 200K, because their bounded single-pass work is nowhere near the

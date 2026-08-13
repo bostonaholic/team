@@ -71,7 +71,7 @@ scheduled or manual sweeps.
 |---|---|---|
 | `EVALS_ALL` | Ignore diff-based selection. Run every test. | unset |
 | `EVALS_TIER` | Filter to one tier, `gate` or `periodic` | unset (all) |
-| `EVALS_MODEL` | Override the default model for the agent under test | `claude-sonnet-4-6` |
+| `EVALS_MODEL` | Override the default model for the agent under test | `claude-sonnet-5` |
 | `EVALS_CONCURRENCY` | Max parallel tests | 15 |
 | `EVALS_BASE` | Base ref for diff-based selection | `origin/main` (fallback chain) |
 | `EVALS_RESULTS_ROOT` | Override result storage root | `evals/results/` |

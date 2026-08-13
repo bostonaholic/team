@@ -18,6 +18,9 @@ import type { GroundTruth } from "./fixtures";
 const UNTRUSTED_OPEN = "<<<UNTRUSTED_OUTPUT>>>";
 const UNTRUSTED_CLOSE = "<<<END_UNTRUSTED_OUTPUT>>>";
 
+// Deliberately pinned (not the floating `sonnet` alias): stored runs were
+// scored by this judge, and a judge swap silently moves every rubric
+// baseline. Bump only alongside a re-baseline of stored evals.
 const DEFAULT_JUDGE_MODEL = "claude-sonnet-4-6";
 const HAIKU_MODEL = "claude-haiku-4-5-20251001";
 
