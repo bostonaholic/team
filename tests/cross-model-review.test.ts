@@ -1079,9 +1079,9 @@ describe("untrusted-output containment rules (L2)", () => {
   });
 
   test("all three entrances carry the fence-length and untrusted-opening-line pointers", () => {
-    // Round-2 drift class: a containment rule stated in one surface and
-    // absent in a sibling. Every entrance that restates the append must
-    // carry both pointers into the shared section.
+    // Drift class: a containment rule stated in one surface and absent in
+    // a sibling. Every entrance that restates the append must carry both
+    // pointers into the shared section.
     for (const path of [TEAM_SKILL, TEAM_DESIGN_SKILL, ENG_REVIEW_SKILL]) {
       const flattened = squash(read(path));
       // Guard: an emptied file must fail, not vacuously pass.
