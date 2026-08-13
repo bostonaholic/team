@@ -1,10 +1,13 @@
 // Acceptance fence for the opt-in cross-vendor review pass. It covers the
 // bundled skills/cross-model-review/external-review.mjs runner (L1 pure
 // core + L3 subprocess against fake CLIs on a controlled PATH), the
+// TEAM_DISABLE_CROSS_MODEL kill-switch above the consent marker, the
 // no-bypass sweep, the skill/agent/docs wiring tripwires, the
 // orchestrator's per-round disposition persistence to cross-model-notes.md
-// (including the terminal halt naming the file), and the PR review-notes
-// copy rules that keep every round appearing exactly once.
+// (including the terminal halt naming the file), the design-review gate's
+// external pass and its records (cross-model-raw.md, the bold round
+// label), the two standalone design-gate entrances, and the PR
+// review-notes copy rules that keep every round appearing exactly once.
 //
 // Free tier per docs/testing.md: no model call, no metered API. Fake CLIs
 // are bash stubs in a mkdtemp bin dir; the child PATH is fully controlled.
@@ -35,7 +38,14 @@ const REPO_ROOT = process.cwd();
 const DISPOSITION_HEADING = "### Cross-model disposition";
 const MARKER_PATH = ".team/cross-model-review";
 const NOTES_FILENAME = "cross-model-notes.md";
+const RAW_FILENAME = "cross-model-raw.md";
 const MARKER_ABSENT_HEADING = "## When the marker is absent";
+const EXTERNAL_INPUT_HEADING = "## External review input";
+const KILL_SWITCH_VAR = "TEAM_DISABLE_CROSS_MODEL";
+// The label the orchestrator prepends inside the blockquote wrap when a
+// design-round disposition lands in cross-model-notes.md. Bold form, never
+// an h4 — a heading inside the wrap would leak into the PR body's outline.
+const ROUND_LABEL = "> **Design round <n>**";
 
 // Named caps: 120 s, 128 KB, 32 KB.
 const EXPECTED_TIMEOUT_MS = 120_000;
@@ -50,6 +60,8 @@ const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
 const TEAM_IMPLEMENT_SKILL = join(REPO_ROOT, "skills", "team-implement", "SKILL.md");
 const TEAM_PR_SKILL = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
 const ARTIFACT_SKILL = join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md");
+const ENG_REVIEW_SKILL = join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md");
+const TEAM_DESIGN_SKILL = join(REPO_ROOT, "skills", "team-design", "SKILL.md");
 const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
 
 // Missing-file reads return "" so dependent checks fail as assertions
@@ -65,7 +77,7 @@ type ExternalReviewModule = {
   TIMEOUT_MS: number;
   PROMPT_CAP_BYTES: number;
   OUTPUT_CAP_BYTES: number;
-  buildArgv: (cli: string, prompt: string) => { command: string; args: string[] };
+  buildArgv: (cli: string) => { command: string; args: string[] };
   promptWithinCap: (prompt: string) => boolean;
   truncateOutput: (text: string) => string;
 };
@@ -113,10 +125,21 @@ function runScript(
   options: { binDir?: string; input?: string; extraEnv?: Record<string, string> } = {},
 ): { status: number | null; stdout: string; stderr: string; combined: string } {
   const path = options.binDir ? `${options.binDir}:${SYSTEM_PATH}` : SYSTEM_PATH;
+  const env: Record<string, string | undefined> = {
+    ...process.env,
+    ...options.extraEnv,
+    PATH: path,
+  };
+  // A developer machine may set the kill-switch globally. Unless a test
+  // opts in through extraEnv, scrub it so marker-present expectations
+  // never go red on that machine's policy.
+  if (!(options.extraEnv && KILL_SWITCH_VAR in options.extraEnv)) {
+    delete env[KILL_SWITCH_VAR];
+  }
   const result = spawnSync(NODE, [SCRIPT, ...args], {
     encoding: "utf8",
     input: options.input,
-    env: { ...process.env, ...options.extraEnv, PATH: path },
+    env,
     timeout: 10_000,
   });
   const stdout = result.stdout ?? "";
@@ -149,16 +172,18 @@ describe("external-review.mjs pure core (L1)", () => {
 
   test("buildArgv pins the codex read-only argv exactly (prompt rides stdin)", () => {
     expect(typeof mod.buildArgv).toBe("function");
-    const built = mod.buildArgv!("codex", "PROMPT");
+    const built = mod.buildArgv!("codex");
     expect(built.command).toBe("codex");
     expect(built.args).toEqual(["exec", "-s", "read-only", "--skip-git-repo-check", "-"]);
   });
 
-  test("buildArgv pins the gemini plan-mode argv exactly (prompt via -p)", () => {
+  test("buildArgv pins the gemini plan-mode argv with no prompt in argv", () => {
+    // The prompt rides stdin for both CLIs: argv delivery exposed the diff
+    // in the process table for the call's duration.
     expect(typeof mod.buildArgv).toBe("function");
-    const built = mod.buildArgv!("gemini", "PROMPT");
+    const built = mod.buildArgv!("gemini");
     expect(built.command).toBe("gemini");
-    expect(built.args).toEqual(["--approval-mode", "plan", "-p", "PROMPT"]);
+    expect(built.args).toEqual(["--approval-mode", "plan"]);
   });
 
   test("promptWithinCap accepts exactly PROMPT_CAP_BYTES and rejects one byte more", () => {
@@ -482,6 +507,41 @@ exit 7
     // Vendor stderr is fenced so it can never read as runner protocol.
     expect(r.stdout).toContain("[vendor stderr] boom");
   });
+
+  test("run delivers the prompt to gemini on stdin", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+    const bin = makeBin({
+      gemini: `#!/bin/bash
+printf 'stdin-received: '
+cat
+`,
+    });
+    const repo = makeRepo(true);
+    // The fake echoes its stdin back, so the sentinel appearing is a
+    // positive proof of stdin delivery, never an absence check. The
+    // accelerated timeout bounds a stdin-starved fake.
+    const r = runScript(["run", "gemini", repo, "2000"], {
+      binDir: bin,
+      input: "prompt-sentinel-on-stdin",
+    });
+    expect(r.stdout).toContain("stdin-received: prompt-sentinel-on-stdin");
+  });
+
+  test("run reads exit 0 with empty stdout as a produced-no-output skip", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+    const bin = makeBin({
+      codex: `#!/bin/bash
+cat >/dev/null
+exit 0
+`,
+    });
+    const repo = makeRepo(true);
+    const r = runScript(["run", "codex", repo], { binDir: bin, input: "prompt" });
+    // Silence from a healthy CLI must never read as agreement: the runner
+    // says so out loud, on one line the caller can discriminate.
+    expect(r.status).toBe(0);
+    expect(r.stdout).toContain("skip: codex produced no output");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -596,8 +656,9 @@ describe("no approval-bypass flag anywhere in skills/cross-model-review/ (L2)", 
       // (docs/testing.md — prove a negative check can find a positive).
       expect(`argv carries ${token} by mistake`).toContain(token);
       // Guard: a missing or empty skill dir must fail, not vacuously pass.
-      // The skill ships three files: SKILL.md, external-review.mjs,
-      // prompt-template.md.
+      // The exact shipped file count is pinned by the dedicated floor test
+      // in the role-named prompt templates block; this lower bound only
+      // keeps the sweep from running over an emptied directory.
       const files = filesUnder(SKILL_DIR);
       expect(files.length).toBeGreaterThanOrEqual(3);
       const offenders = files.filter((file) => read(file).includes(token));
@@ -773,5 +834,233 @@ describe("PR contract in skills/team-pr/SKILL.md (L2)", () => {
     for (const path of [TEAM_SKILL, TEAM_IMPLEMENT_SKILL, TEAM_PR_SKILL, ARTIFACT_SKILL]) {
       expect(read(path)).toContain(NOTES_FILENAME);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TEAM_DISABLE_CROSS_MODEL kill-switch (L3 + L2)
+// ---------------------------------------------------------------------------
+
+describe("TEAM_DISABLE_CROSS_MODEL kill-switch", () => {
+  // Machine policy sits above the per-repo consent marker: any non-empty
+  // value hard-disables every cross-model call, fail closed.
+  test("detect with the kill-switch set reports disabled for every CLI and claims no binary", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+    // Positive control: the matcher sees the script's real positive token.
+    expect("codex: ready").toMatch(CLAIMS_READY);
+    const bin = makeBin({ codex: RECORDING_FAKE, gemini: RECORDING_FAKE });
+    const repo = makeRepo(/* withMarker */ true);
+    const r = runScript(["detect", repo], {
+      binDir: bin,
+      extraEnv: { [KILL_SWITCH_VAR]: "1" },
+    });
+    expect(r.stdout).toContain(`codex: unavailable (disabled by ${KILL_SWITCH_VAR})`);
+    expect(r.stdout).toContain(`gemini: unavailable (disabled by ${KILL_SWITCH_VAR})`);
+    expect(r.combined).not.toMatch(CLAIMS_READY);
+  });
+
+  test("run with the kill-switch set exits 4 before any spawn", () => {
+    expect(existsSync(SCRIPT)).toBe(true);
+    const bin = makeBin({ codex: RECORDING_FAKE });
+    const repo = makeRepo(/* withMarker */ true);
+    const r = runScript(["run", "codex", repo], {
+      binDir: bin,
+      input: "prompt",
+      extraEnv: { [KILL_SWITCH_VAR]: "1" },
+    });
+    // Exit 4 is the kill-switch refusal, distinct from the marker
+    // refusal's 3, and the refusal names the variable it enforces.
+    expect(r.status).toBe(4);
+    expect(r.stderr).toContain(KILL_SWITCH_VAR);
+    // The recording fake proves no child process ever ran.
+    expect(existsSync(join(bin, "ran"))).toBe(false);
+  });
+
+  test("skill names the kill-switch variable in the marker-absent section", () => {
+    const section = windowSection(
+      readOrEmpty(SKILL_MD),
+      /^## When the marker is absent/,
+      /^## /,
+    );
+    // Guard: a renamed section must fail, not vacuously pass.
+    expect(section.length).toBeGreaterThan(0);
+    expect(section).toContain(KILL_SWITCH_VAR);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// role-named prompt templates (L2)
+// ---------------------------------------------------------------------------
+
+describe("role-named prompt templates (L2)", () => {
+  const CODE_TEMPLATE = join(SKILL_DIR, "prompt-template-code-review.md");
+  const DESIGN_TEMPLATE = join(SKILL_DIR, "prompt-template-design-review.md");
+
+  test("deny-list sweep floor guards four shipped files", () => {
+    // SKILL.md, external-review.mjs, and the two role-named templates: a
+    // dropped file shrinks the surface the forbidden-token sweep covers.
+    expect(filesUnder(SKILL_DIR).length).toBeGreaterThanOrEqual(4);
+  });
+
+  test("skill names prompt-template-code-review.md, and the bare prompt-template.md name is gone", () => {
+    // Positive control: the sweep can see the token it hunts.
+    expect("Build the prompt from prompt-template.md plus the diff").toContain(
+      "prompt-template.md",
+    );
+    // The role-named filenames do not carry the bare name as a substring,
+    // so the sweep cannot false-positive on them.
+    expect("prompt-template-code-review.md").not.toContain("prompt-template.md");
+    expect(readOrEmpty(SKILL_MD)).toContain("prompt-template-code-review.md");
+    const files = filesUnder(SKILL_DIR);
+    // Guard: a missing or empty skill dir must fail, not vacuously pass.
+    expect(files.length).toBeGreaterThan(0);
+    const offenders = files.filter((file) => read(file).includes("prompt-template.md"));
+    expect(offenders).toEqual([]);
+  });
+
+  test("both templates carry the optimality and blast-radius directives", () => {
+    // Guards: a missing template must fail here, not vacuously pass.
+    const codeTemplate = squash(readOrEmpty(CODE_TEMPLATE));
+    expect(codeTemplate.length).toBeGreaterThan(0);
+    expect(codeTemplate).toMatch(/optimal/i);
+    expect(codeTemplate).toContain("blast radius");
+
+    const designTemplate = squash(readOrEmpty(DESIGN_TEMPLATE));
+    expect(designTemplate.length).toBeGreaterThan(0);
+    expect(designTemplate).toMatch(/optimal/i);
+    expect(designTemplate).toContain("blast radius");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The pipeline design gate runs the external pass (L2)
+// ---------------------------------------------------------------------------
+
+function designReviewGate(): string {
+  return windowSection(read(TEAM_SKILL), /^### Design Review Gate/, /^#{1,3} /);
+}
+
+describe("design-review gate wiring (L2)", () => {
+  test("the Design Review Gate section runs the external pass", () => {
+    const gate = designReviewGate();
+    // Guard: a renamed section must fail, not vacuously pass.
+    expect(gate.length).toBeGreaterThan(0);
+    expect(gate).toContain("`detect`");
+    expect(gate).toContain("`run`");
+    // Raw vendor output is fenced as DATA at capture time.
+    expect(gate).toContain("DATA");
+    expect(gate).toContain(EXTERNAL_INPUT_HEADING);
+    // Ordering tripwire on first occurrence: machine policy (kill-switch)
+    // is checked before the per-repo consent marker.
+    const killSwitchAt = gate.indexOf(KILL_SWITCH_VAR);
+    const markerAt = gate.indexOf(MARKER_PATH);
+    expect(killSwitchAt).toBeGreaterThanOrEqual(0);
+    expect(markerAt).toBeGreaterThanOrEqual(0);
+    expect(killSwitchAt).toBeLessThan(markerAt);
+    // The verdict: frontmatter derives from the last verdict token in the
+    // reviewer's report body — the terminal line, never the first mention.
+    expect(squash(gate)).toContain("last verdict token");
+  });
+
+  test("the review brief loads cross-model-review as the conditional fifth manual", () => {
+    const text = read(ENG_REVIEW_SKILL);
+    expect(text).toContain("cross-model-review");
+    expect(text).toContain(EXTERNAL_INPUT_HEADING);
+    // Positive control: the sweep can see the phrase it retires.
+    expect("load these four methodology skills now").toContain("four methodology skills");
+    expect(squash(text)).not.toContain("four methodology skills");
+  });
+
+  test("the disposition definition lives in exactly one skill, which states the skill-dir fallback", () => {
+    const ANTI_LAUNDERING = "**Anti-laundering:**";
+    // Positive control: the sweep can see the definition literal.
+    expect(`${ANTI_LAUNDERING} no external claim`).toContain(ANTI_LAUNDERING);
+    const skillFiles = filesUnder(join(REPO_ROOT, "skills"));
+    // Guard: an empty skills tree must fail, not vacuously pass.
+    expect(skillFiles.length).toBeGreaterThan(0);
+    const holders = skillFiles.filter((file) => read(file).includes(ANTI_LAUNDERING));
+    expect(holders).toEqual([SKILL_MD]);
+    // The single home also carries the runner-not-found fallback the
+    // referencing surfaces rely on.
+    expect(readOrEmpty(SKILL_MD)).toContain("skip: cross-model runner not found");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// design rounds persist to the shared records (L2)
+// ---------------------------------------------------------------------------
+
+describe("design-round records (L2)", () => {
+  test("the Design Review Gate names the notes file, the raw file, and the bold round-label literal", () => {
+    const gate = designReviewGate();
+    // Guard: a renamed section must fail, not vacuously pass.
+    expect(gate.length).toBeGreaterThan(0);
+    expect(gate).toContain(NOTES_FILENAME);
+    expect(gate).toContain(RAW_FILENAME);
+    expect(gate).toContain(ROUND_LABEL);
+  });
+
+  test("artifact-frontmatter documents cross-model-raw.md with phase: cross-model-raw and the label reading rule", () => {
+    const text = read(ARTIFACT_SKILL);
+    expect(text).toContain(RAW_FILENAME);
+    expect(text).toContain("phase: cross-model-raw");
+    // The reading rule keys on the label: a block opening with it came from
+    // the design gate; an unlabeled block came from the IMPLEMENT gate.
+    expect(text).toContain(ROUND_LABEL);
+  });
+
+  test("the Review notes clause (b) excludes the cross-model disposition heading", () => {
+    const spec = reviewNotesSpec();
+    // Guard: a reworded anchor must fail, not vacuously pass.
+    expect(spec.length).toBeGreaterThan(0);
+    // Clause (a)'s existing exclusion plus clause (b)'s: the copy in (d)
+    // is the single carrier, so every round appears exactly once.
+    const occurrences = spec.split(DISPOSITION_HEADING).length - 1;
+    expect(occurrences).toBeGreaterThanOrEqual(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// /team-design carries the same gate procedure (L2)
+// ---------------------------------------------------------------------------
+
+describe("orchestrator contract in skills/team-design/SKILL.md (L2)", () => {
+  // team-design carries its own complete design-gate procedure, so it needs
+  // the same external-pass and persistence rules as skills/team/SKILL.md —
+  // a standalone /team-design run must not silently drop them.
+  test("team-design carries the disposition heading and the notes file", () => {
+    const text = read(TEAM_DESIGN_SKILL);
+    expect(text).toContain(DISPOSITION_HEADING);
+    expect(text).toContain(NOTES_FILENAME);
+  });
+
+  test("the round-label literal is byte-identical between team and team-design", () => {
+    expect(read(TEAM_SKILL)).toContain(ROUND_LABEL);
+    expect(read(TEAM_DESIGN_SKILL)).toContain(ROUND_LABEL);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// standalone /eng-design-doc-review runs the pass (L2)
+// ---------------------------------------------------------------------------
+
+describe("eng-design-doc-review standalone pass (L2)", () => {
+  test("eng-design-doc-review execution runs the external pass and writes no artifact", () => {
+    const execution = windowSection(read(ENG_REVIEW_SKILL), /^## Execution/, /^## /);
+    // Guard: a renamed section must fail, not vacuously pass.
+    expect(execution.length).toBeGreaterThan(0);
+    expect(execution).toContain("external-review.mjs");
+    expect(execution).toContain(EXTERNAL_INPUT_HEADING);
+    // A standalone run records nothing: raw vendor text stays in the
+    // invoking session — no notes append, no raw file.
+    expect(squash(execution)).toMatch(/no artifact/i);
+  });
+
+  test("the completion notice names the marker path and its kill-switch suppression", () => {
+    const completion = windowSection(read(ENG_REVIEW_SKILL), /^## Completion/, /^## /);
+    // Guard: a renamed section must fail, not vacuously pass.
+    expect(completion.length).toBeGreaterThan(0);
+    expect(completion).toContain(MARKER_PATH);
+    expect(completion).toContain(KILL_SWITCH_VAR);
   });
 });
