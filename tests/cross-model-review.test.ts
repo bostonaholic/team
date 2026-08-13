@@ -684,6 +684,46 @@ describe("skill and agent wiring (L2)", () => {
     expect(readOrEmpty(SKILL_MD)).toContain(UNAVAILABLE_HEADING);
   });
 
+  test("the vendor-courier block pins the dispatch: named Explore courier per ready CLI, verbatim relay, inline fallback", () => {
+    const section = windowSection(
+      readOrEmpty(SKILL_MD),
+      /^### Vendor couriers/,
+      /^#{1,3} /,
+    );
+    // Guard: a renamed section must fail, not vacuously pass.
+    expect(section.length).toBeGreaterThan(0);
+    expect(section).toContain("`Explore`");
+    expect(section).toContain("codex-review");
+    expect(section).toContain("agy-review");
+    // The relay must not corrupt the one-line skip protocol: the courier
+    // returns the runner's stdout verbatim, and the caller reads it as
+    // that stdout.
+    expect(section).toContain("verbatim");
+    expect(squash(section)).toContain("Inline fallback");
+  });
+
+  test("all four courier consumers point at the vendor-courier block", () => {
+    // The three design entrances plus the code-reviewer agent each route
+    // vendor runs through couriers; the block itself lives only in the
+    // cross-model skill.
+    for (const path of [TEAM_SKILL, TEAM_DESIGN_SKILL, ENG_REVIEW_SKILL, CODE_REVIEWER]) {
+      expect(read(path)).toContain("courier");
+    }
+  });
+
+  test("nested-agents guardrails carry the code-reviewer vendor-courier cap section", () => {
+    const nestedAgents = read(join(REPO_ROOT, "skills", "nested-agents", "SKILL.md"));
+    const section = windowSection(
+      nestedAgents,
+      /^### `code-reviewer` — vendor couriers/,
+      /^#{1,3} /,
+    );
+    // Guard: a renamed section must fail, not vacuously pass.
+    expect(section.length).toBeGreaterThan(0);
+    expect(section).toContain("cross-model-review");
+    expect(squash(section)).toMatch(/4-helpers-in-flight/);
+  });
+
   test("skill states the three caps, drift-guarded against the script's exported constants", () => {
     // MIN_VERSION precedent (tests/nested-agents.test.ts): the prose caps and
     // the script constants must never drift apart.

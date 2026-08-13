@@ -197,6 +197,19 @@ sub-agent through the `Agent` tool and try to get it refuted.
   unavailable — report findings as-is. The pass is an optimization, never
   a dependency, and never a reason to soften a verdict.
 
+### `code-reviewer` — vendor couriers (cross-model pass)
+
+When the cross-model pass runs, dispatch each vendor `run` call through
+one `Explore` courier named after its CLI (`codex-review`, `agy-review`),
+per the vendor-courier block in `skills/cross-model-review/SKILL.md` —
+that block carries the errand prompt, the verbatim return contract, and
+the inline fallback. The courier itself stays read-only: it runs the
+pinned runner command and returns its stdout, writes nothing, and spawns
+nothing. The vendor *process* it launches is governed by that skill's own
+bounds (pinned argv, env allowlist, post-pass tree check), not by this
+skill's read-only rule. Couriers count toward the 4-helpers-in-flight
+cap.
+
 ### `implementer` — read-only scouts
 
 Spawn a read-only scout when a slice touches a subsystem the plan does not

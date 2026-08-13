@@ -175,7 +175,11 @@ review. On the design path, the orchestrator
 sends the design document on **every** design-review round — up to ~10
 vendor calls per topic at the revision cap.
 
-The pass runs with whichever vendor CLIs are installed. A missing or
+The pass runs with whichever vendor CLIs are installed. Each vendor call
+is dispatched through its own named courier sub-agent (`codex-review`,
+`agy-review`), so each model's review shows up as its own agent in the
+session while it runs; when sub-agent dispatch is unavailable the calls
+fall back to inline background tasks. A missing or
 failing CLI never blocks a review: the runner reports it as a named skip,
 the invoking agent tells you which vendors the review ran without, and the
 review completes with the rest — or with Team's own reviewers alone when

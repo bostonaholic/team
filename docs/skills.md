@@ -787,7 +787,10 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   carries an `## External review input` section.
 - **Key behaviors:** Runs on every code review and every design-review
   round, with whichever vendor CLIs are installed — a missing CLI is
-  named to the user and the review continues with the rest. A machine-wide
+  named to the user and the review continues with the rest. Each vendor
+  call is dispatched through its own named courier sub-agent
+  (`codex-review`, `agy-review`) for per-model visibility, with an
+  inline background-task fallback. A machine-wide
   `TEAM_DISABLE_CROSS_MODEL` kill-switch
   hard-disables both paths. The bundled `external-review.mjs` script pins
   each CLI's full-access argv in the repo cwd,

@@ -754,8 +754,8 @@ phase N finish?"
 ## 10. Nested sub-agents
 
 Claude Code v2.1.172 lets sub-agents spawn their own sub-agents (up to
-5 levels deep). The plugin uses this capability in exactly two patterns,
-both governed by `skills/nested-agents/SKILL.md`:
+5 levels deep). The plugin uses this capability in exactly three patterns,
+all governed by `skills/nested-agents/SKILL.md`:
 
 - **Context-economy scouts** (`researcher`, `implementer`): read-only
   `Explore` / `team:file-finder` helpers that absorb bulk reading the
@@ -779,6 +779,14 @@ both governed by `skills/nested-agents/SKILL.md`:
   evidence-backed refutation the reviewer verifies itself. A false
   hard-gate finding costs an entire review round (implementer re-dispatch
   + all 5 reviewers re-run), so the pass pays for itself.
+- **Vendor couriers** (`code-reviewer`; the orchestrator uses the same
+  pattern at the design-review gate as ordinary dispatch): each cross-model
+  vendor call runs through one `Explore` courier named after its CLI
+  (`codex-review`, `agy-review`), so each external model's review is
+  visible as its own agent while it runs. The courier's errand is fixed —
+  run the pinned runner command, return its stdout verbatim — and the
+  vendor-courier block in `skills/cross-model-review/SKILL.md` carries
+  the contract plus the inline fallback when nesting is unavailable.
 
 **Policy:**
 

@@ -255,7 +255,9 @@ When the `design-author` returns a draft:
    `skills/cross-model-review/SKILL.md` — reference that procedure, never
    duplicate it here. Its one gate: the `TEAM_DISABLE_CROSS_MODEL`
    kill-switch. Run
-   the runner's `detect` verb, then `run` per ready CLI, naming any
+   the runner's `detect` verb, then `run` per ready CLI — each through
+   its own named courier sub-agent per that skill's vendor-courier
+   block, with its inline fallback — naming any
    unavailable CLI to the user per that skill's `## When a vendor CLI is
    unavailable`; a missing runner
    is `skip: cross-model runner not found` per CLI, an over-cap prompt

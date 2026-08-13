@@ -76,8 +76,9 @@ of `skills/nested-agents/SKILL.md` (preloaded).
 
 Run the cross-vendor pass per `skills/cross-model-review/SKILL.md`
 (preloaded) on every review. That skill carries the whole procedure: the
-bundled runner script, the unavailable-CLI notification rule,
-verify-before-adopt disposition, and the
+bundled runner script, the per-vendor courier sub-agent dispatch (one
+named courier per ready CLI, inline fallback), the unavailable-CLI
+notification rule, verify-before-adopt disposition, and the
 `### Cross-model disposition` block in your report. The vendor CLIs run
 full-access in the repo, so after
 the pass check the tree per that skill's `## Invocation`: report any
