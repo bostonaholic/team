@@ -1,7 +1,7 @@
-// Acceptance fence for the opt-in cross-vendor review pass. It covers the
-// bundled skills/cross-model-review/external-review.mjs runner (L1 pure
-// core + L3 subprocess against fake CLIs on a controlled PATH), the
-// TEAM_DISABLE_CROSS_MODEL kill-switch above the consent marker, the
+// Acceptance fence for the always-on cross-vendor review pass. It covers
+// the bundled skills/cross-model-review/external-review.mjs runner (L1
+// pure core + L3 subprocess against fake CLIs on a controlled PATH), the
+// TEAM_DISABLE_CROSS_MODEL kill-switch, the
 // no-bypass sweep, the skill/agent/docs wiring tripwires, the
 // orchestrator's per-round disposition persistence to cross-model-notes.md
 // (including the terminal halt naming the file), the design-review gate's
@@ -18,7 +18,6 @@ import { spawn, spawnSync } from "node:child_process";
 import {
   chmodSync,
   existsSync,
-  mkdirSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
@@ -37,10 +36,9 @@ const REPO_ROOT = process.cwd();
 // Literals shared between the script, the skills, and the docs. Every
 // drift tripwire below reuses these constants.
 const DISPOSITION_HEADING = "### Cross-model disposition";
-const MARKER_PATH = ".team/cross-model-review";
 const NOTES_FILENAME = "cross-model-notes.md";
 const RAW_FILENAME = "cross-model-raw.md";
-const MARKER_ABSENT_HEADING = "## When the marker is absent";
+const UNAVAILABLE_HEADING = "## When a vendor CLI is unavailable";
 const EXTERNAL_INPUT_HEADING = "## External review input";
 const KILL_SWITCH_VAR = "TEAM_DISABLE_CROSS_MODEL";
 // The label the orchestrator prepends inside the blockquote wrap when a
@@ -111,13 +109,9 @@ function makeBin(fakes: Record<string, string>): string {
   return dir;
 }
 
-function makeRepo(withMarker: boolean): string {
+function makeRepo(): string {
   const dir = mkdtempSync(join(tmpdir(), `cross-model-repo-${process.pid}-`));
   tempDirs.push(dir);
-  if (withMarker) {
-    mkdirSync(join(dir, ".team"), { recursive: true });
-    writeFileSync(join(dir, ".team", "cross-model-review"), "");
-  }
   return dir;
 }
 
@@ -218,30 +212,17 @@ describe("external-review.mjs pure core (L1)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// detect: fail-closed, marker-first (L3)
+// detect: availability report (L3)
 // ---------------------------------------------------------------------------
 
-describe("detect is fail-closed and marker-first (L3)", () => {
-  test("no marker → unavailable naming the marker path, with no ready claim even when a fake codex sits on PATH", () => {
+describe("detect reports per-CLI availability (L3)", () => {
+  test("fake binaries on PATH → per-CLI ready, and detect spawns nothing", () => {
     expect(existsSync(SCRIPT)).toBe(true);
-    // Positive control: the matcher sees the script's real positive token
-    // (asserted end-to-end by the marker-present test below).
+    // Positive control: the matcher sees the script's real positive token.
     expect("codex: ready").toMatch(CLAIMS_READY);
     expect("codex: unavailable (binary not found on PATH)").not.toMatch(CLAIMS_READY);
-
-    const bin = makeBin({ codex: RECORDING_FAKE });
-    const repo = makeRepo(/* withMarker */ false);
-    const r = runScript(["detect", repo], { binDir: bin });
-    expect(r.combined).toContain(MARKER_PATH);
-    expect(r.combined).toMatch(/unavailable/i);
-    expect(r.combined).not.toMatch(CLAIMS_READY);
-  });
-
-  test("marker present + fake binaries on PATH → per-CLI ready, and detect spawns nothing", () => {
-    expect(existsSync(SCRIPT)).toBe(true);
     const bin = makeBin({ codex: RECORDING_FAKE, agy: RECORDING_FAKE });
-    const repo = makeRepo(/* withMarker */ true);
-    const r = runScript(["detect", repo], { binDir: bin });
+    const r = runScript(["detect"], { binDir: bin });
     expect(r.status).toBe(0);
     expect(r.stdout).toContain("codex: ready");
     expect(r.stdout).toContain("agy: ready");
@@ -249,25 +230,23 @@ describe("detect is fail-closed and marker-first (L3)", () => {
     expect(existsSync(join(bin, "ran"))).toBe(false);
   });
 
-  test("marker present + missing binaries → per-CLI unavailable", () => {
+  test("missing binaries → per-CLI unavailable naming the reason, so the caller can notify the user", () => {
     expect(existsSync(SCRIPT)).toBe(true);
-    const repo = makeRepo(/* withMarker */ true);
     // No bin dir: PATH carries only /usr/bin:/bin, where no vendor CLI lives.
-    const r = runScript(["detect", repo]);
-    expect(r.combined).toContain("codex");
-    expect(r.combined).toContain("agy");
-    expect(r.combined).toMatch(/unavailable/i);
+    const r = runScript(["detect"]);
+    expect(r.status).toBe(0);
+    expect(r.stdout).toContain("codex: unavailable (binary not found on PATH)");
+    expect(r.stdout).toContain("agy: unavailable (binary not found on PATH)");
     expect(r.combined).not.toMatch(CLAIMS_READY);
   });
 
-  test("lookup error (nonexistent repo root) → unavailable, never a crash claim of availability", () => {
+  test("one vendor present, one missing → mixed report, never all-or-nothing", () => {
     expect(existsSync(SCRIPT)).toBe(true);
     const bin = makeBin({ codex: RECORDING_FAKE });
-    const r = runScript(["detect", join(tmpdir(), "cross-model-does-not-exist")], {
-      binDir: bin,
-    });
-    expect(r.combined).toMatch(/unavailable/i);
-    expect(r.combined).not.toMatch(CLAIMS_READY);
+    const r = runScript(["detect"], { binDir: bin });
+    expect(r.status).toBe(0);
+    expect(r.stdout).toContain("codex: ready");
+    expect(r.stdout).toContain("agy: unavailable (binary not found on PATH)");
   });
 });
 
@@ -279,7 +258,7 @@ describe("run guards and skip paths (L3)", () => {
   test("run rejects an unknown CLI name with a usage error and non-zero exit before any spawn", () => {
     expect(existsSync(SCRIPT)).toBe(true);
     const bin = makeBin({ codex: RECORDING_FAKE });
-    const repo = makeRepo(true);
+    const repo = makeRepo();
     const r = runScript(["run", "qwen", repo], { binDir: bin, input: "prompt" });
     expect(r.status).not.toBe(0);
     expect(r.combined).toMatch(/usage/i);
@@ -290,22 +269,11 @@ describe("run guards and skip paths (L3)", () => {
   test("run rejects a prompt over PROMPT_CAP_BYTES with a usage error and non-zero exit before any spawn", () => {
     expect(existsSync(SCRIPT)).toBe(true);
     const bin = makeBin({ codex: RECORDING_FAKE });
-    const repo = makeRepo(true);
+    const repo = makeRepo();
     const oversized = "x".repeat(EXPECTED_PROMPT_CAP_BYTES + 1);
     const r = runScript(["run", "codex", repo], { binDir: bin, input: oversized });
     expect(r.status).not.toBe(0);
     expect(r.combined).toMatch(/usage/i);
-    expect(existsSync(join(bin, "ran"))).toBe(false);
-  });
-
-  test("run refuses without the consent marker: non-zero exit and no spawn, even with a CLI on PATH", () => {
-    expect(existsSync(SCRIPT)).toBe(true);
-    const bin = makeBin({ codex: RECORDING_FAKE });
-    const repo = makeRepo(/* withMarker */ false);
-    const r = runScript(["run", "codex", repo], { binDir: bin, input: "prompt" });
-    expect(r.status).not.toBe(0);
-    expect(r.combined).toContain(MARKER_PATH);
-    // The recording fake proves no child process ever ran.
     expect(existsSync(join(bin, "ran"))).toBe(false);
   });
 
@@ -317,7 +285,7 @@ cat >/dev/null
 echo "canary=[\${CROSS_MODEL_TEST_CANARY:-unset}]"
 `,
     });
-    const repo = makeRepo(true);
+    const repo = makeRepo();
     const r = runScript(["run", "codex", repo], {
       binDir: bin,
       input: "prompt",
@@ -336,7 +304,7 @@ head -c 100000 /dev/zero | tr '\\0' e >&2
 exit 7
 `,
     });
-    const repo = makeRepo(true);
+    const repo = makeRepo();
     const r = runScript(["run", "codex", repo], { binDir: bin, input: "prompt" });
     expect(r.combined).toMatch(/skip/i);
     expect(r.combined).toContain("7");
@@ -353,7 +321,7 @@ echo
 echo tail-sentinel-past-the-cap
 `,
     });
-    const repo = makeRepo(true);
+    const repo = makeRepo();
     const r = runScript(["run", "codex", repo], { binDir: bin, input: "prompt" });
     expect(r.stdout).toMatch(/truncat/i);
     expect(r.stdout).not.toContain("tail-sentinel-past-the-cap");
@@ -371,7 +339,7 @@ echo tail-sentinel-past-the-cap
 sleep 60
 `,
       });
-      const repo = makeRepo(true);
+      const repo = makeRepo();
       // Trailing timeout-ms argument exists for this test only; the skill's
       // documented invocation never passes it.
       const r = runScript(["run", "codex", repo, "500"], { binDir: bin, input: "prompt" });
@@ -389,7 +357,7 @@ cat >/dev/null
 echo "GEMINI_API_KEY=[\${GEMINI_API_KEY:-unset}] GOOGLE_API_KEY=[\${GOOGLE_API_KEY:-unset}] GOOGLE_APPLICATION_CREDENTIALS=[\${GOOGLE_APPLICATION_CREDENTIALS:-unset}] OPENAI_API_KEY=[\${OPENAI_API_KEY:-unset}]"
 `,
     });
-    const repo = makeRepo(true);
+    const repo = makeRepo();
     const r = runScript(["run", "codex", repo], {
       binDir: bin,
       input: "prompt",
@@ -415,7 +383,7 @@ echo "GEMINI_API_KEY=[\${GEMINI_API_KEY:-unset}] GOOGLE_API_KEY=[\${GOOGLE_API_K
 cat >/dev/null
 pwd
 `;
-    const repo = makeRepo(true);
+    const repo = makeRepo();
     for (const cli of ["codex", "agy"]) {
       const bin = makeBin({ [cli]: PWD_FAKE });
       const r = runScript(["run", cli, repo], { binDir: bin, input: "prompt" });
@@ -428,7 +396,7 @@ pwd
   test("run skips a CLI reachable only through a relative PATH entry, so the vetted file is always the executed file", () => {
     expect(existsSync(SCRIPT)).toBe(true);
     const bin = makeBin({ codex: RECORDING_FAKE });
-    const repo = makeRepo(true);
+    const repo = makeRepo();
     // The same fake through an absolute entry runs (the truncation tests
     // above are that positive control); only the PATH spelling changes here.
     const relativeBin = relative(REPO_ROOT, bin);
@@ -450,7 +418,7 @@ echo "boom" >&2
 exit 7
 `,
     });
-    const repo = makeRepo(true);
+    const repo = makeRepo();
     const r = runScript(["run", "codex", repo], { binDir: bin, input: "prompt" });
     expect(r.combined).toMatch(/skip/i);
     expect(r.combined).toContain("7");
@@ -466,7 +434,7 @@ printf 'stdin-received: '
 cat
 `,
     });
-    const repo = makeRepo(true);
+    const repo = makeRepo();
     // The fake echoes its stdin back, so the sentinel appearing is a
     // positive proof of stdin delivery, never an absence check. The
     // accelerated timeout bounds a stdin-starved fake.
@@ -484,7 +452,7 @@ cat
 echo "argv-prompt: $3"
 `,
     });
-    const repo = makeRepo(true);
+    const repo = makeRepo();
     // The fake echoes argv position 3 (after --dangerously-skip-permissions
     // and -p), so the sentinel appearing proves argv delivery. It never
     // reads stdin, so a runner regression that blocks on writing agy's
@@ -503,7 +471,7 @@ echo "argv-prompt: $3"
 echo "OPENAI_API_KEY=[\${OPENAI_API_KEY:-unset}] CODEX_HOME=[\${CODEX_HOME:-unset}] GEMINI_API_KEY=[\${GEMINI_API_KEY:-unset}]"
 `,
     });
-    const repo = makeRepo(true);
+    const repo = makeRepo();
     const r = runScript(["run", "agy", repo], {
       binDir: bin,
       input: "prompt",
@@ -532,7 +500,7 @@ echo "  at vendor.stack.frame.three" >&2
 exit 1
 `,
     });
-    const repo = makeRepo(true);
+    const repo = makeRepo();
     const r = runScript(["run", "codex", repo], { binDir: bin, input: "prompt" });
     // The caller contract says a skip is exactly one line starting
     // "skip: " — a vendor stack trace on stderr must not break it.
@@ -553,7 +521,7 @@ cat >/dev/null
 exit 0
 `,
     });
-    const repo = makeRepo(true);
+    const repo = makeRepo();
     const r = runScript(["run", "codex", repo], { binDir: bin, input: "prompt" });
     // Silence from a healthy CLI must never read as agreement: the runner
     // says so out loud, on one line the caller can discriminate.
@@ -577,10 +545,9 @@ describe("CLI main guard through a symlinked invocation path (L3)", () => {
     tempDirs.push(linkParent);
     const linkedSkillDir = join(linkParent, "linked-skill");
     symlinkSync(SKILL_DIR, linkedSkillDir);
-    const repo = makeRepo(true);
     const result = spawnSync(
       NODE,
-      [join(linkedSkillDir, "external-review.mjs"), "detect", repo],
+      [join(linkedSkillDir, "external-review.mjs"), "detect"],
       { encoding: "utf8", env: { ...process.env, PATH: SYSTEM_PATH }, timeout: 10_000 },
     );
     expect(result.status).toBe(0);
@@ -605,7 +572,7 @@ cat >/dev/null
 sleep 60
 `,
       });
-      const repo = makeRepo(true);
+      const repo = makeRepo();
       const parent = spawn(NODE, [SCRIPT, "run", "codex", repo, "30000"], {
         env: { ...process.env, PATH: `${bin}:${SYSTEM_PATH}` },
         stdio: ["pipe", "pipe", "pipe"],
@@ -713,12 +680,8 @@ describe("skill and agent wiring (L2)", () => {
     expect(readOrEmpty(SKILL_MD)).toContain(DISPOSITION_HEADING);
   });
 
-  test("skill body names the literal consent-marker path", () => {
-    expect(readOrEmpty(SKILL_MD)).toContain(MARKER_PATH);
-  });
-
-  test("skill body carries the marker-absent discoverability section", () => {
-    expect(readOrEmpty(SKILL_MD)).toContain(MARKER_ABSENT_HEADING);
+  test("skill body carries the unavailable-CLI notification section", () => {
+    expect(readOrEmpty(SKILL_MD)).toContain(UNAVAILABLE_HEADING);
   });
 
   test("skill states the three caps, drift-guarded against the script's exported constants", () => {
@@ -864,15 +827,14 @@ describe("PR contract in skills/team-pr/SKILL.md (L2)", () => {
 // ---------------------------------------------------------------------------
 
 describe("TEAM_DISABLE_CROSS_MODEL kill-switch", () => {
-  // Machine policy sits above the per-repo consent marker: any non-empty
-  // value hard-disables every cross-model call, fail closed.
+  // Machine policy: any non-empty value hard-disables every cross-model
+  // call, fail closed.
   test("detect with the kill-switch set reports disabled for every CLI and claims no binary", () => {
     expect(existsSync(SCRIPT)).toBe(true);
     // Positive control: the matcher sees the script's real positive token.
     expect("codex: ready").toMatch(CLAIMS_READY);
     const bin = makeBin({ codex: RECORDING_FAKE, agy: RECORDING_FAKE });
-    const repo = makeRepo(/* withMarker */ true);
-    const r = runScript(["detect", repo], {
+    const r = runScript(["detect"], {
       binDir: bin,
       extraEnv: { [KILL_SWITCH_VAR]: "1" },
     });
@@ -884,58 +846,24 @@ describe("TEAM_DISABLE_CROSS_MODEL kill-switch", () => {
   test("run with the kill-switch set exits 4 before any spawn", () => {
     expect(existsSync(SCRIPT)).toBe(true);
     const bin = makeBin({ codex: RECORDING_FAKE });
-    const repo = makeRepo(/* withMarker */ true);
+    const repo = makeRepo();
     const r = runScript(["run", "codex", repo], {
       binDir: bin,
       input: "prompt",
       extraEnv: { [KILL_SWITCH_VAR]: "1" },
     });
-    // Exit 4 is the kill-switch refusal, distinct from the marker
-    // refusal's 3, and the refusal names the variable it enforces.
+    // Exit 4 is the kill-switch refusal, and it names the variable it
+    // enforces.
     expect(r.status).toBe(4);
     expect(r.stderr).toContain(KILL_SWITCH_VAR);
     // The recording fake proves no child process ever ran.
     expect(existsSync(join(bin, "ran"))).toBe(false);
   });
 
-  test("run with the marker absent and the kill-switch set exits 4, not the marker refusal's 3", () => {
-    expect(existsSync(SCRIPT)).toBe(true);
-    const bin = makeBin({ codex: RECORDING_FAKE });
-    const repo = makeRepo(/* withMarker */ false);
-    const r = runScript(["run", "codex", repo], {
-      binDir: bin,
-      input: "prompt",
-      extraEnv: { [KILL_SWITCH_VAR]: "1" },
-    });
-    // Machine policy outranks the per-repo marker: with both gates shut,
-    // the kill-switch refusal (4) wins over the marker refusal (3).
-    expect(r.status).toBe(4);
-    expect(r.stderr).toContain(KILL_SWITCH_VAR);
-    expect(existsSync(join(bin, "ran"))).toBe(false);
-  });
-
-  test("detect with the marker absent and the kill-switch set reports disabled, never marker-absent", () => {
-    expect(existsSync(SCRIPT)).toBe(true);
-    const bin = makeBin({ codex: RECORDING_FAKE, agy: RECORDING_FAKE });
-    const repo = makeRepo(/* withMarker */ false);
-    const r = runScript(["detect", repo], {
-      binDir: bin,
-      extraEnv: { [KILL_SWITCH_VAR]: "1" },
-    });
-    expect(r.status).toBe(0);
-    expect(r.stdout).toContain(`codex: unavailable (disabled by ${KILL_SWITCH_VAR})`);
-    expect(r.stdout).toContain(`agy: unavailable (disabled by ${KILL_SWITCH_VAR})`);
-    // The marker-absent wording appearing here would mean the marker check
-    // ran first (the no-marker detect test above is the positive control
-    // that the wording exists and names this path).
-    expect(r.combined).not.toContain(MARKER_PATH);
-    expect(r.combined).not.toMatch(CLAIMS_READY);
-  });
-
-  test("skill names the kill-switch variable in the marker-absent section", () => {
+  test("skill names the kill-switch variable in the unavailable-CLI section", () => {
     const section = windowSection(
       readOrEmpty(SKILL_MD),
-      /^## When the marker is absent/,
+      /^## When a vendor CLI is unavailable/,
       /^## /,
     );
     // Guard: a renamed section must fail, not vacuously pass.
@@ -1006,13 +934,8 @@ describe("design-review gate wiring (L2)", () => {
     // Raw vendor output is fenced as DATA at capture time.
     expect(gate).toContain("DATA");
     expect(gate).toContain(EXTERNAL_INPUT_HEADING);
-    // Ordering tripwire on first occurrence: machine policy (kill-switch)
-    // is checked before the per-repo consent marker.
-    const killSwitchAt = gate.indexOf(KILL_SWITCH_VAR);
-    const markerAt = gate.indexOf(MARKER_PATH);
-    expect(killSwitchAt).toBeGreaterThanOrEqual(0);
-    expect(markerAt).toBeGreaterThanOrEqual(0);
-    expect(killSwitchAt).toBeLessThan(markerAt);
+    // The one gate before any call is machine policy: the kill-switch.
+    expect(gate).toContain(KILL_SWITCH_VAR);
     // The verdict: frontmatter derives from the last verdict token in the
     // reviewer's report body — the terminal line, never the first mention.
     expect(squash(gate)).toContain("last verdict token");
@@ -1160,11 +1083,11 @@ describe("eng-design-doc-review standalone pass (L2)", () => {
     expect(squash(execution)).toMatch(/no artifact/i);
   });
 
-  test("the completion notice names the marker path and its kill-switch suppression", () => {
+  test("the completion notice reports unavailable CLIs and names the kill-switch", () => {
     const completion = windowSection(read(ENG_REVIEW_SKILL), /^## Completion/, /^## /);
     // Guard: a renamed section must fail, not vacuously pass.
     expect(completion.length).toBeGreaterThan(0);
-    expect(completion).toContain(MARKER_PATH);
+    expect(completion).toMatch(/unavailable/i);
     expect(completion).toContain(KILL_SWITCH_VAR);
   });
 });

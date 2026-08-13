@@ -115,10 +115,10 @@ argument shape.
   aggregate gate sorts every finding into Blocking / Major / Minor-and-below
   tiers and auto-loops on any Blocking or Major (the no-consult rule: the
   user is never asked about any finding mid-run), recording the remaining
-  Minor-and-below findings in the PR body's `## Review notes`. With the
-  `.team/cross-model-review` opt-in marker, the cross-model pass runs
-  before every design-review round (no trigger classes on the design
-  path), feeding `cross-model-notes.md` and `cross-model-raw.md`. Its
+  Minor-and-below findings in the PR body's `## Review notes`. The
+  cross-model pass runs
+  before every design-review round,
+  feeding `cross-model-notes.md` and `cross-model-raw.md`. Its
   body is organized as `## Input`,
   `## Setup`, `## The Phase Loop`, `## Gate Handling`, and `## Rules`,
   not the downstream Input / Execution / Completion template.
@@ -153,9 +153,9 @@ argument shape.
   `design.md`. The design-author resolves its own open questions as
   recorded assumptions. The skill then runs the adversarial design-review
   loop (`design-review-<n>.md`, where APPROVE and COMMENT advance, cap 5).
-  With the `.team/cross-model-review` opt-in marker, the cross-model pass
-  runs before every design-review round (no trigger classes on the design
-  path), feeding `cross-model-notes.md` and `cross-model-raw.md`.
+  The cross-model pass
+  runs before every design-review round,
+  feeding `cross-model-notes.md` and `cross-model-raw.md`.
 
 ### team-structure
 
@@ -777,23 +777,21 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 
 ### cross-model-review
 
-- **Purpose:** Opt-in cross-vendor review pass — second opinions from the
-  codex and agy (Antigravity) CLIs on higher-stakes diffs and on design
+- **Purpose:** Cross-vendor review pass — second opinions from the
+  codex and agy (Antigravity) CLIs on diffs and on design
   documents, verified before any of it is adopted.
 - **Loaded by:** code-reviewer; the orchestrator or invoking session
   (`team`, `team-design`, `eng-design-doc-review`) runs its
   `## Design-review pass` procedure directly; and the design-review brief
   in `eng-design-doc-review` loads it conditionally when its prompt
   carries an `## External review input` section.
-- **Key behaviors:** Runs only when the repo carries the consent marker
-  `.team/cross-model-review`. On the code path the diff must also match a
-  trigger class (auth/session/crypto, data storage and schema migrations,
-  public API contracts); on the design path the orchestrator runs the
-  pass every design-review round, no trigger classes. A machine-wide
-  `TEAM_DISABLE_CROSS_MODEL` kill-switch, checked before the marker,
+- **Key behaviors:** Runs on every code review and every design-review
+  round, with whichever vendor CLIs are installed — a missing CLI is
+  named to the user and the review continues with the rest. A machine-wide
+  `TEAM_DISABLE_CROSS_MODEL` kill-switch
   hard-disables both paths. The bundled `external-review.mjs` script pins
-  each CLI's full-access argv in the repo cwd, checks the
-  marker before any binary lookup, enforces the prompt, output, and
+  each CLI's full-access argv in the repo cwd,
+  enforces the prompt, output, and
   timeout caps, and hands each vendor only its own credential allowlist.
   The invoking agent checks `git status` after the pass and reports any
   vendor tree mutation as a blocking finding.

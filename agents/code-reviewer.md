@@ -72,14 +72,14 @@ of `skills/nested-agents/SKILL.md` (preloaded).
   unavailable. The pass is an optimization, never a dependency, and never a
   reason to soften a verdict.
 
-## Cross-model review pass (optional)
+## Cross-model review pass
 
-When the diff is higher-stakes and the repo has opted in, run the
-cross-vendor pass per `skills/cross-model-review/SKILL.md` (preloaded). That
-skill carries the whole procedure: the opt-in marker and trigger-class gate,
-the bundled runner script, verify-before-adopt disposition, and the
+Run the cross-vendor pass per `skills/cross-model-review/SKILL.md`
+(preloaded) on every review. That skill carries the whole procedure: the
+bundled runner script, the unavailable-CLI notification rule,
+verify-before-adopt disposition, and the
 `### Cross-model disposition` block in your report. The vendor CLIs run
-full-access in the repo by the marker's grant, so after
+full-access in the repo, so after
 the pass check the tree per that skill's `## Invocation`: report any
 mutation you did not make as a Blocking finding. Skip loudly on any
 failure — the pass is an optimization, never a dependency, and never a

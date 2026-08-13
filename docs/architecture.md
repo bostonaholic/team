@@ -162,9 +162,9 @@ documented in the README's
 `docs/plans/<id>/cross-model-notes.md` is written by the orchestrator at
 the DESIGN review gate and the IMPLEMENT aggregate gate — one
 `### Cross-model disposition` block appended per review round, at either
-gate, in which the opt-in cross-model pass ran — and consumed by team-pr
+gate, in which the cross-model pass ran — and consumed by team-pr
 for the PR's `## Review notes` section. It is created only on the first
-round that runs the pass, so a repo that never triggers it gains no
+round that runs the pass, so a repo where the pass never runs gains no
 artifact. Beside it, `docs/plans/<id>/cross-model-raw.md` is the design
 path's raw transcript — the orchestrator appends each vendor call's
 result line and fenced output at capture time. Like the notes file, it is
@@ -368,22 +368,20 @@ the generator and the evaluator into one role. Read-only tool grants plus
 `tests/protocol.test.ts` pins both halves as an L2 tripwire, so a new reviewer
 that ships with `Write` fails CI.
 
-One path steps outside that enforcement: the opt-in cross-model pass
+One path steps outside that enforcement: the cross-model pass
 (`skills/cross-model-review/SKILL.md`) shells out to external vendor CLIs
 — the `code-reviewer` on the code path, the orchestrator on the design
 path — and an external process is beyond the harness's tool grants. On
-that path the reviewer invariant is **trusted, not enforced**: by the
-marker's explicit grant, `codex` and `agy` run with their full-access
+that path the reviewer invariant is **trusted, not enforced**:
+`codex` and `agy` run with their full-access
 flags in the repo cwd — unsandboxed, with the invoking user's permissions.
 What
 bounds the path is the pinned argv the bundled script hardcodes (the
 unsanctioned-flag tripwire in `tests/cross-model-review.test.ts` keeps
 every other bypass and escalation spelling out), the per-vendor
-env allowlist, the gates that keep the pass off by default — the consent
-marker on both paths, plus trigger classes on the code path; default-off
-on the design path is carried by the marker alone, while the machine-wide
-`TEAM_DISABLE_CROSS_MODEL` kill-switch governs both paths equally and is
-unset by default — the untrusted-output rules on everything a vendor
+env allowlist, the machine-wide
+`TEAM_DISABLE_CROSS_MODEL` kill-switch that disables both paths
+when set, the untrusted-output rules on everything a vendor
 returns, and the post-pass `git status` check that reports any vendor
 write as a blocking finding.
 
@@ -615,7 +613,7 @@ consumers, and behaviors), see [skills.md](skills.md).
    procedure skill does not count toward the soft limit: it replaces
    former inline body content 1:1, so it adds no net context.
    `code-reviewer` preloads `cross-model-review` beyond the soft limit —
-   a stated deviation, not an oversight to fix back: the opt-in
+   a stated deviation, not an oversight to fix back: the
    cross-vendor pass belongs to the code review and nowhere else, and
    inlining it would bloat the agent body it was extracted from.
 

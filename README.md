@@ -162,20 +162,28 @@ revoke it, sign out of github.com inside that profile or delete the
 directory. Until you sign in, PRs carry local screenshot paths instead of
 inline images.
 
-## Cross-model review (opt-in)
+## Cross-model review
 
-Team can get a second opinion from other vendors' models at two gates,
+Team gets a second opinion from other vendors' models at two gates,
 sending the payload to the `codex` and `agy` (Antigravity)
 CLIs, verifying every claim that comes back before adopting any of it,
 and recording each round's disposition to
 `docs/plans/<id>/cross-model-notes.md`, which `/team-pr` surfaces in the
 PR's `## Review notes` section. The payload is a diff or a design
-document. On the code path, the code-reviewer sends the diff, and only
-when it touches auth/session/crypto code, data storage or schema
-migrations, or public API contracts. On the design path, the orchestrator
+document. On the code path, the code-reviewer sends the diff on every
+review. On the design path, the orchestrator
 sends the design document on **every** design-review round — up to ~10
-vendor calls per topic at the revision cap — with no trigger gate beyond
-the consent marker.
+vendor calls per topic at the revision cap.
+
+The pass runs with whichever vendor CLIs are installed. A missing or
+failing CLI never blocks a review: the runner reports it as a named skip,
+the invoking agent tells you which vendors the review ran without, and the
+review completes with the rest — or with Team's own reviewers alone when
+none are available. **Be aware that with a vendor CLI installed, diff and
+design-document content leaves the machine.** To disable the pass
+entirely, set the machine-wide kill-switch: `TEAM_DISABLE_CROSS_MODEL` to
+any non-empty value, and every cross-model call is disabled on that
+machine.
 
 Both CLIs run with their full-access flags
 (`--dangerously-bypass-approvals-and-sandbox`,
@@ -188,26 +196,6 @@ as untrusted data regardless of the vendor's privileges. After a pass,
 the invoking agent checks `git status` and treats any unexpected tree
 mutation as a blocking finding.
 
-It is off by default because **diff or design-document content leaves the
-machine** and **the vendor CLIs run unsandboxed
-with your full permissions**. The consent marker is consent to both. Opt
-in per repo by creating it:
-
-```sh
-mkdir -p .team && touch .team/cross-model-review
-echo cross-model-review >> .team/.gitignore
-```
-
-Keep the marker untracked — committed, it stops being your consent and
-becomes standing consent for every clone of the repo. The `.gitignore`
-line keeps it local to the machine that opted in.
-
-Without the marker, no diff or design document is ever sent — both script
-verbs refuse before any vendor binary is even looked up. Above the per-repo marker sits a
-machine-wide kill-switch: set `TEAM_DISABLE_CROSS_MODEL` to any non-empty
-value and every cross-model call is disabled on that machine, regardless
-of any repo's opt-in.
-
 ## Architecture
 
 See [docs/architecture.md](docs/architecture.md) for the full architecture, the artifact frontmatter schema, and the phase-inference rules.
@@ -218,4 +206,4 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 - **55 entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch-as-author`, `/pr-watch-as-reviewer`, `/groom-backlog`, `/pr-cleanup`, `/pr-verify`, and `/pr-rebase` utilities, and shared methodologies
 - **3 hooks** in `hooks/`: `docs/plans/`-aware compaction resilience and plugin-file validation
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
-- **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions (when the opt-in pass ran) in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.
+- **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.

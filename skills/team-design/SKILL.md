@@ -87,10 +87,11 @@ done
    passed design. Otherwise, before each review dispatch, run the
    external cross-model pass by following `## Design-review pass` in
    `skills/cross-model-review/SKILL.md` — reference that procedure,
-   never duplicate it here. Its gates, in order: the
-   `TEAM_DISABLE_CROSS_MODEL` kill-switch, then the consent marker
-   `.team/cross-model-review`. Run the runner's `detect` verb, then
-   `run` per ready CLI; a missing runner is
+   never duplicate it here. Its one gate: the
+   `TEAM_DISABLE_CROSS_MODEL` kill-switch. Run the runner's `detect`
+   verb, then `run` per ready CLI, naming any unavailable CLI to the
+   user per that skill's `## When a vendor CLI is unavailable`; a
+   missing runner is
    `skip: cross-model runner not found` per CLI. Fence each CLI's raw
    output as a `DATA` block at capture time (fence longer than any
    backtick run in the output, per that section), append one

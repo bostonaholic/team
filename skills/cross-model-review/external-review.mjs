@@ -3,25 +3,23 @@
 /**
  * Cross-vendor review runner for the cross-model-review skill.
  *
- * Two verbs, both fail-closed:
+ * Two verbs:
  *
- *     node <skill-dir>/external-review.mjs detect <repo-root>
+ *     node <skill-dir>/external-review.mjs detect
  *     node <skill-dir>/external-review.mjs run <cli> <repo-root> [timeout-ms]
  *
- * Both verbs check the consent marker `.team/cross-model-review` before
- * any lookup or spawn (only the machine-policy kill-switch below outranks
- * it). `detect` reports per-CLI availability: without the marker
- * the answer is unavailable and no binary claim is made, so a repo that never
- * opted in never even learns what sits on PATH. `run` refuses with a non-zero
- * exit before any child process spawns when the marker is absent. With
- * consent, `run` reads the review prompt from stdin and invokes the named CLI
- * with a pinned argv.
+ * The pass is on by default: `detect` reports per-CLI availability so the
+ * invoking agent can tell the user which vendors are missing, and the
+ * review continues with whichever are present. `run` reads the review
+ * prompt from stdin and invokes the named CLI with a pinned argv. The one
+ * off-switch is the machine-policy kill-switch below, checked in both
+ * verbs before any lookup or spawn.
  *
  * Trust model: both CLIs run with their full-access flags
  * (`--dangerously-bypass-approvals-and-sandbox` for codex,
  * `--dangerously-skip-permissions` for agy) in the repo cwd — unsandboxed,
  * with the invoking user's permissions — so they can read the codebase
- * they review; the consent marker is consent to exactly that grant.
+ * they review.
  * Every CLI gets an allowlisted environment, never the parent's full env,
  * so env-only secrets (ANTHROPIC_API_KEY, GH_TOKEN) stay with the parent.
  *
@@ -39,9 +37,8 @@
  * The trailing [timeout-ms] argument exists for the accelerated-timeout test
  * only; the skill's documented invocation never passes it. One deliberate
  * environment knob exists — TEAM_DISABLE_CROSS_MODEL, the machine-policy
- * kill-switch checked above the consent marker in both verbs (any non-empty
- * value disables, fail closed) — and no other; no relative imports — the
- * script runs from any install path.
+ * kill-switch (any non-empty value disables, fail closed) — and no other;
+ * no relative imports — the script runs from any install path.
  *
  * The pure pieces below are exported for L1 tests
  * (tests/cross-model-review.test.ts); the CLI runs only when executed
@@ -49,13 +46,7 @@
  */
 
 import { spawn } from "node:child_process";
-import {
-  accessSync,
-  constants,
-  existsSync,
-  realpathSync,
-  statSync,
-} from "node:fs";
+import { accessSync, constants, realpathSync, statSync } from "node:fs";
 import { delimiter, isAbsolute, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -67,9 +58,6 @@ export const PROMPT_CAP_BYTES = 128 * 1024;
 
 /** Hard ceiling on the output read back from an external vendor: 32 KB. */
 export const OUTPUT_CAP_BYTES = 32 * 1024;
-
-/** Consent marker, relative to the repo root. Checked before anything else. */
-export const MARKER_RELATIVE_PATH = join(".team", "cross-model-review");
 
 /**
  * Ceiling on stderr retained for a skip reason. Stderr is diagnostic noise,
@@ -158,10 +146,10 @@ export function truncateOutput(text) {
 const SUPPORTED_CLIS = ["codex", "agy"];
 
 /**
- * Machine-policy kill-switch, checked in both verbs before the per-repo
- * consent marker: policy outranks invitation. Any non-empty value disables
- * — unclear values land on off, fail closed. Deliberately absent from the
- * child env allowlists: the child never needs to see it.
+ * Machine-policy kill-switch, checked in both verbs before any lookup or
+ * spawn. Any non-empty value disables — unclear values land on off, fail
+ * closed. Deliberately absent from the child env allowlists: the child
+ * never needs to see it.
  */
 const KILL_SWITCH_VAR = "TEAM_DISABLE_CROSS_MODEL";
 
@@ -191,36 +179,12 @@ function findOnPath(name) {
   return null;
 }
 
-/**
- * Shared consent preflight for both verbs: `detect` answers unavailable
- * without it, `run` refuses pre-spawn without it. Any read error counts as
- * absent — fail closed.
- */
-function markerPresent(repoRoot) {
-  const marker = join(repoRoot, MARKER_RELATIVE_PATH);
-  try {
-    return existsSync(marker) && statSync(marker).isFile();
-  } catch {
-    return false;
-  }
-}
-
-function detect(repoRoot) {
+function detect() {
   if (killSwitchSet()) {
-    // Disabled by machine policy: no marker check, no binary lookup, and no
-    // binary claim of any kind.
+    // Disabled by machine policy: no binary lookup and no binary claim of
+    // any kind.
     for (const cli of SUPPORTED_CLIS) {
       process.stdout.write(`${cli}: unavailable (disabled by ${KILL_SWITCH_VAR})\n`);
-    }
-    return 0;
-  }
-  if (!markerPresent(repoRoot)) {
-    // Fail-closed and marker-first: no consent means no binary lookup and no
-    // binary claim of any kind.
-    for (const cli of SUPPORTED_CLIS) {
-      process.stdout.write(
-        `${cli}: unavailable (consent marker ${MARKER_RELATIVE_PATH} absent)\n`,
-      );
     }
     return 0;
   }
@@ -253,7 +217,7 @@ function readStdin() {
 function usage(message) {
   process.stderr.write(
     `${message}\n` +
-      "usage: external-review.mjs detect <repo-root>\n" +
+      "usage: external-review.mjs detect\n" +
       "       external-review.mjs run <codex|agy> <repo-root> [timeout-ms]\n",
   );
   return 2;
@@ -292,20 +256,14 @@ function boundedCollector(capBytes) {
 }
 
 async function run(cli, repoRoot, timeoutMs) {
-  // All four guards exit before any spawn: a rejected attempt consumes
-  // nothing, and no diff ever leaves the machine without standing consent.
+  // All three guards exit before any spawn: a rejected attempt consumes
+  // nothing.
   if (!SUPPORTED_CLIS.includes(cli)) {
     return usage(`unknown CLI "${cli}"`);
   }
   if (killSwitchSet()) {
     process.stderr.write(`${KILL_SWITCH_VAR} is set: cross-model calls are disabled on this machine\n`);
     return 4;
-  }
-  if (!markerPresent(repoRoot)) {
-    process.stderr.write(
-      `consent marker ${MARKER_RELATIVE_PATH} absent under ${repoRoot}: refusing to run\n`,
-    );
-    return 3;
   }
   const prompt = await readStdin();
   if (!promptWithinCap(prompt)) {
@@ -320,8 +278,8 @@ async function run(cli, repoRoot, timeoutMs) {
     process.stdout.write(`skip: ${cli} not found on PATH\n`);
     return 0;
   }
-  // Both CLIs run full-access in the repo cwd — the consent marker grants
-  // exactly that — so they can read the codebase they review.
+  // Both CLIs run full-access in the repo cwd, so they can read the
+  // codebase they review.
   return new Promise((resolvePromise) => {
     const child = spawn(resolved, args, {
       cwd: repoRoot,
@@ -448,8 +406,8 @@ function invokedDirectly() {
 
 if (invokedDirectly()) {
   const [, , verb, ...rest] = process.argv;
-  if (verb === "detect" && rest.length === 1) {
-    process.exit(detect(rest[0]));
+  if (verb === "detect" && rest.length === 0) {
+    process.exit(detect());
   } else if (verb === "run" && (rest.length === 2 || rest.length === 3)) {
     const timeoutMs = rest.length === 3 ? Number(rest[2]) : TIMEOUT_MS;
     if (!Number.isInteger(timeoutMs) || timeoutMs <= 0) {

@@ -100,10 +100,10 @@ done
    holding the fenced blocks to the Review brief below. Any skip
    continues with the reviewer alone. **No artifact is written** on this
    surface: a standalone run records nothing — no notes append, no raw
-   file — and the raw vendor text stays in the invoking session. Edge
-   cases ride the shared section: an unauthenticated CLI exits non-zero
-   and reads as an ordinary skip, and a marker path that is a directory
-   or a broken symlink counts as absent.
+   file — and the raw vendor text stays in the invoking session. Name
+   any unavailable CLI to the user per that skill's `## When a vendor
+   CLI is unavailable`. Edge cases ride the shared section: an
+   unauthenticated CLI exits non-zero and reads as an ordinary skip.
 3. **Dispatch the review.** Call the `Agent` tool with
    `subagent_type: Explore`, the built-in read-only agent type. Pass the
    **Review brief** below as the prompt, with `$ARGUMENTS` substituted for
@@ -290,10 +290,9 @@ verdict is the **terminal line of your report** — nothing follows it:
 ## Completion
 
 Print the verdict and the count of issue / suggestion / nitpick findings.
-When the consent marker `.team/cross-model-review` is absent, add one
-line naming that path, so the user learns the cross-model opt-in exists
-— suppressed when `TEAM_DISABLE_CROSS_MODEL` is set, because machine
-policy overrides the invitation.
+When any vendor CLI was unavailable during the cross-model pass, add one
+line per CLI naming it and the reason — or a single line naming
+`TEAM_DISABLE_CROSS_MODEL` when the pass was disabled machine-wide.
 
 **A standalone run records no `design-review-<n>.md`.** Only the pipeline's
 DESIGN review gate writes the verdict artifact. `/team-structure` needs a
