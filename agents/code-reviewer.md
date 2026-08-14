@@ -92,10 +92,10 @@ Structure the whole report per the `## Report Format` section of
 `skills/code-review/SKILL.md` (preloaded): the verdict line leads the
 report. The orchestrator parses it as one of:
 
-- **APPROVE** — all done criteria met, no blocking issues, tests pass.
-- **REQUEST CHANGES** — blocking issues found. The loop auto-fixes them, and
+- **✅ APPROVE** — all done criteria met, no blocking issues, tests pass.
+- **❌ REQUEST CHANGES** — blocking issues found. The loop auto-fixes them, and
   they never go to the user to triage.
-- **COMMENT** — non-blocking suggestions only.
+- **💬 COMMENT** — non-blocking suggestions only.
 
 Every finding uses Conventional Comments (issue, suggestion, nitpick) with a
 `file:line` reference. List skeptic-refuted findings under a
