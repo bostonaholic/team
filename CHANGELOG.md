@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The code-review verdict line now carries the standard verdict emoji.** The pinned report template and the Code Reviewer verdict vocabulary render each verdict with its emoji — ✅ APPROVE, ❌ REQUEST CHANGES, 💬 COMMENT — so a report's outcome reads at a glance on every surface the report crosses. The word token, not the emoji, remains what the orchestrator matches on, so verdict parsing is unchanged. [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md), [`agents/code-reviewer.md`](https://github.com/bostonaholic/team/blob/main/agents/code-reviewer.md)
+
 ## [0.50.0] - 2026-08-13
 
 ### Added

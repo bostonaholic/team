@@ -68,7 +68,7 @@ ux-reviewer, the technical-writer, the verifier) keeps it; this shape
 governs the code review.
 
 ```markdown
-**Verdict: <APPROVE | REQUEST CHANGES | COMMENT>**
+**Verdict: <✅ APPROVE | ❌ REQUEST CHANGES | 💬 COMMENT>**
 
 ### Summary
 
@@ -93,7 +93,9 @@ when nothing was refuted.>
 
 - **The verdict line comes first.** The orchestrator parses it. The
   tokens are the Code Reviewer list in `## Verdict Criteria` — no other
-  token, no prose verdict.
+  token, no prose verdict. Each token carries its standard emoji prefix
+  (✅ APPROVE, ❌ REQUEST CHANGES, 💬 COMMENT); the word token, not the
+  emoji, is what the orchestrator matches on.
 - `### Findings` entries use the Conventional Comments format
   (`## Conventional Comments` above), each with its `file:line`
   reference.
@@ -125,10 +127,10 @@ verdict-aggregation rules.
 
 ### Code Reviewer
 
-- **APPROVE:** All done criteria met, no blocking issues, tests pass.
-- **REQUEST CHANGES:** Blocking issues found. The pipeline MUST loop back to
+- **✅ APPROVE:** All done criteria met, no blocking issues, tests pass.
+- **❌ REQUEST CHANGES:** Blocking issues found. The pipeline MUST loop back to
   IMPLEMENT. No override.
-- **COMMENT:** Non-blocking suggestions only. Implementation is correct.
+- **💬 COMMENT:** Non-blocking suggestions only. Implementation is correct.
 
 **Test-quality flags.** Test files are part of the diff. Walk every changed
 `*test*` / `*spec*` / `__tests__/*` file against `skills/test-style/SKILL.md`.
