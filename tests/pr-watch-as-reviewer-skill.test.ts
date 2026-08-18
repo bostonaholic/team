@@ -165,7 +165,10 @@ describe("pr-watch-as-reviewer skill: head-SHA drift check at approval", () => {
     // read the approval template alone.
     const heredoc = t.match(/<<'GH_APPROVE_EOF'\n([\s\S]*?)\nGH_APPROVE_EOF/);
     expect(heredoc).not.toBeNull();
-    const template = heredoc![1];
+    // Empty-string fallback fails the assertions below loudly rather than
+    // tripping TS18048 on the optional capture group.
+    const template = heredoc?.[1] ?? "";
+    expect(template.length).toBeGreaterThan(0);
     // The automated-attribution disclosure, with no tooling name after it.
     expect(template.startsWith("Approved automatically:")).toBe(true);
     // Internal tooling names are process noise to the PR's readers.
