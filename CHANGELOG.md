@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **The watch's approval body no longer names the skill.** The cast body opened with "Approved automatically by /pr-watch-as-reviewer" — an internal tooling name that means nothing to the PR's readers and reads as process noise. The body now leads with the 🤖 prefix as the automated-attribution disclosure and states substance only: the thread count, that each resolution was re-reviewed against the diff and accepted, and the head SHA(s) — with an explicit rule that no skill, slash command, or agent name ever appears in it. [`skills/pr-watch-as-reviewer/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md)
+- **The watch's approval body no longer names the skill.** The cast body opened with "Approved automatically by /pr-watch-as-reviewer" — an internal tooling name that means nothing to the PR's readers and reads as process noise. The body now opens with a plain "Approved automatically" disclosure and states substance only: the thread count, that each resolution was re-reviewed against the diff and accepted, and the head SHA(s) — with an explicit rule that no skill, slash command, or agent name ever appears in it. A user or project convention that prescribes its own disclosure marker (an emoji prefix, a footer) composes on top. [`skills/pr-watch-as-reviewer/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md)
 
 ## [0.51.0] - 2026-08-14
 

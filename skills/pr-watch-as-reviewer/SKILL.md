@@ -506,15 +506,19 @@ body text is never interpolated into the shell command:
 
 ```bash
 gh pr review --approve "$PR_URL" --body-file - <<'GH_APPROVE_EOF'
-🤖 All <N> review threads opened by @<viewer> are resolved, and each resolution was re-reviewed against the diff and accepted. Head commit at approval time: <approval-head-SHA>. Armed at head commit: <arm-head-SHA>.
+Approved automatically: all <N> review threads opened by @<viewer> are resolved, and each resolution was re-reviewed against the diff and accepted. Head commit at approval time: <approval-head-SHA>. Armed at head commit: <arm-head-SHA>.
 GH_APPROVE_EOF
 ```
 
 The body never names this skill, a slash command, or an agent — internal
-tooling names mean nothing to the reader and read as process noise. The
-🤖 prefix carries the automated-attribution disclosure; the rest of the
-body states substance only: what was verified and at which SHAs. The
-body carries the head commit SHA current at approval time. That SHA is the `headRefOid` from the final
+tooling names mean nothing to the reader and read as process noise.
+"Approved automatically" carries the automated-attribution disclosure
+without naming any tooling; the rest of the body states substance only:
+what was verified and at which SHAs. A user or project convention may
+prescribe an additional disclosure marker (an emoji prefix, a footer) —
+apply it on top; it composes with this rule, which only forbids the
+tooling name. The body carries the head commit SHA current at approval
+time. That SHA is the `headRefOid` from the final
 poll, and the confirmation rule above guarantees no wait separates that
 poll from the cast. The body also carries the arm-time head SHA and the
 resolved-thread count. When the two SHAs are equal, collapse the two SHA

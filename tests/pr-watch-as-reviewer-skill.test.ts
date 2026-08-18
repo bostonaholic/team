@@ -156,7 +156,7 @@ describe("pr-watch-as-reviewer skill: head-SHA drift check at approval", () => {
     expect(t).toContain("<arm-head-SHA>");
   });
 
-  test("approval-body template carries the 🤖 disclosure and never names the skill", () => {
+  test("approval-body template discloses automation and never names the skill", () => {
     const t = body();
     // Guard: an empty body must fail, not vacuously pass.
     expect(t.length).toBeGreaterThan(0);
@@ -166,8 +166,8 @@ describe("pr-watch-as-reviewer skill: head-SHA drift check at approval", () => {
     const heredoc = t.match(/<<'GH_APPROVE_EOF'\n([\s\S]*?)\nGH_APPROVE_EOF/);
     expect(heredoc).not.toBeNull();
     const template = heredoc![1];
-    // The 🤖 prefix is the automated-attribution disclosure.
-    expect(template.startsWith("🤖")).toBe(true);
+    // The automated-attribution disclosure, with no tooling name after it.
+    expect(template.startsWith("Approved automatically:")).toBe(true);
     // Internal tooling names are process noise to the PR's readers.
     expect(template).not.toContain("pr-watch-as-reviewer");
     expect(template).not.toContain("Approved automatically by");
