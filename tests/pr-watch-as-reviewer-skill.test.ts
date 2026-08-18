@@ -156,13 +156,23 @@ describe("pr-watch-as-reviewer skill: head-SHA drift check at approval", () => {
     expect(t).toContain("<arm-head-SHA>");
   });
 
-  test("approval-body template attributes the cast to /pr-watch-as-reviewer (full literal)", () => {
+  test("approval-body template carries the 🤖 disclosure and never names the skill", () => {
     const t = body();
     // Guard: an empty body must fail, not vacuously pass.
     expect(t.length).toBeGreaterThan(0);
-    // Pin the FULL literal in the approval template — a bare prefix of the
-    // name would false-pass.
-    expect(t).toContain("Approved automatically by /pr-watch-as-reviewer");
+    // Scope to the heredoc content: the skill name legitimately appears
+    // elsewhere in the doc (trigger phrases), so the absence check must
+    // read the approval template alone.
+    const heredoc = t.match(/<<'GH_APPROVE_EOF'\n([\s\S]*?)\nGH_APPROVE_EOF/);
+    expect(heredoc).not.toBeNull();
+    const template = heredoc![1];
+    // The 🤖 prefix is the automated-attribution disclosure.
+    expect(template.startsWith("🤖")).toBe(true);
+    // Internal tooling names are process noise to the PR's readers.
+    expect(template).not.toContain("pr-watch-as-reviewer");
+    expect(template).not.toContain("Approved automatically by");
+    // The body states substance: each resolution was re-reviewed.
+    expect(template).toContain("re-reviewed");
   });
 });
 

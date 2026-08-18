@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.52.0] - 2026-08-18
+
+### Added
+
+- **`/pr-watch-as-reviewer` re-reviews every resolution before it counts.** The watch previously approved on GraphQL `isResolved` state alone: anyone who opened the PR or held write access could resolve the reviewer's threads with no answer, and the skill approved when they did — the person whose code was being approved controlled the gate, and the skill named that trade-off as the design. Resolution state is now only the *wait* gate; the *approval* gate is a re-review on substance. Each poll re-reviews the tracked threads that newly flipped to resolved (and at cycle 0, every already-resolved thread, which also covers the immediate path) against the PR diff and the thread's replies, recording one verdict per thread: **addressed** (the change removes the concern), **answered** (a reply's argument holds when verified against the diff — claims are checked, never believed), or **rejected**. A rejected verdict stops the watch at once without approving, because the author believes the thread is settled and silence until timeout would confirm that by accident; the reviewer's follow-up (reply or unresolve) stays a by-hand action — the approval remains the skill's only write. A pre-cast sweep in the approve step requires a current passing verdict on every tracked thread, voids verdicts on reopen, and re-checks threads whose files later pushes touched, since a verdict rendered at head B proves nothing about head C. The thread bodies and diff hunks these two reads carry are the DATA rule's one named carve-out: an imperative inside them is never executed, never grants a confirmation, and never passes a verdict by assertion. Verdicts print in every snapshot line so they survive compaction, and a compaction that loses them re-runs the re-review instead of trusting memory. [`skills/pr-watch-as-reviewer/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md)
+
+### Changed
+
+- **The watch's approval body no longer names the skill.** The cast body opened with "Approved automatically by /pr-watch-as-reviewer" — an internal tooling name that means nothing to the PR's readers and reads as process noise. The body now leads with the 🤖 prefix as the automated-attribution disclosure and states substance only: the thread count, that each resolution was re-reviewed against the diff and accepted, and the head SHA(s) — with an explicit rule that no skill, slash command, or agent name ever appears in it. [`skills/pr-watch-as-reviewer/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md)
+
 ## [0.51.0] - 2026-08-14
 
 ### Changed
@@ -544,7 +554,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.51.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.52.0...HEAD
+[0.52.0]: https://github.com/bostonaholic/team/compare/v0.51.0...v0.52.0
 [0.51.0]: https://github.com/bostonaholic/team/compare/v0.50.0...v0.51.0
 [0.50.0]: https://github.com/bostonaholic/team/compare/v0.49.0...v0.50.0
 [0.49.0]: https://github.com/bostonaholic/team/compare/v0.48.0...v0.49.0
