@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.0] - 2026-08-19
+
+### Added
+
+- **`/groom-backlog` now defines its grooming actions, in the order a run performs them.** The `## Vocabulary` section gains a twelve-entry action list — Verify, Rank, Cluster, Describe, Retarget, Place, Refine, Triage, File, Close, Link, Promote — one line each, ordered as the run performs them, with the load-bearing ordering rationales stated inline: priority follows the rewrite because the tiers weigh verified scope and the rewrite pins the scope down, and links go last among the writes because one that touches a just-closed endpoint must die at the endpoint re-read. Aligning the list against both modes exposed one real contradiction: the board-mode execute step ran state/priority/label hygiene before description rewrites while promotion mode rewrote before setting priority, so the execution chain now rewrites first and both modes agree with the list. [`skills/groom-backlog/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/groom-backlog/SKILL.md)
+
 ## [0.52.0] - 2026-08-18
 
 ### Added
@@ -554,7 +560,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.52.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.53.0...HEAD
+[0.53.0]: https://github.com/bostonaholic/team/compare/v0.52.0...v0.53.0
 [0.52.0]: https://github.com/bostonaholic/team/compare/v0.51.0...v0.52.0
 [0.51.0]: https://github.com/bostonaholic/team/compare/v0.50.0...v0.51.0
 [0.50.0]: https://github.com/bostonaholic/team/compare/v0.49.0...v0.50.0
