@@ -285,15 +285,21 @@ describe("pr-watch-as-reviewer skill: PENDING-review check is a fenced snippet",
   });
 });
 
-describe("pr-watch-as-reviewer skill: README Codex removal command targets the guarded skill", () => {
-  // Codex ignores disable-model-invocation, so the README tells Codex users
-  // to remove this skill after installing. A rename or move of the skill
-  // must fail the build until the README's removal path moves with it.
+describe("pr-watch-as-reviewer skill: Codex removal commands target the guarded skills on both install surfaces", () => {
+  // Codex ignores disable-model-invocation, so both install surfaces —
+  // README.md (GitHub) and docs/index.md (team.bostonaholic.dev) — tell
+  // Codex users to remove the guarded skills after installing. A rename or
+  // move of a skill must fail the build until each surface's removal path
+  // moves with it.
   const README = join(REPO_ROOT, "README.md");
+  const DOCS_INDEX = join(REPO_ROOT, "docs", "index.md");
 
   // Defensive read: missing file → "" so assertions FAIL (not throw).
   function readmeBody(): string {
     return existsSync(README) ? read(README) : "";
+  }
+  function docsIndexBody(): string {
+    return existsSync(DOCS_INDEX) ? read(DOCS_INDEX) : "";
   }
 
   // Every rm -rf target must be a real skill that actually sets the flag —
@@ -351,5 +357,14 @@ describe("pr-watch-as-reviewer skill: README Codex removal command targets the g
     const readme = readmeBody();
     expect(readme.length).toBeGreaterThan(0);
     expect([...new Set(removalTargets(readme))].sort()).toEqual(guardedSkills());
+  });
+
+  test("rm -rf targets in docs/index.md equal the guarded-skill set on disk", () => {
+    // Same set equality, second surface: a docs page whose removal list is a
+    // stale subset of README's ships a silently weakened safety guard.
+    const docsIndex = docsIndexBody();
+    // Guard: a missing docs page must fail cleanly, not vacuously pass.
+    expect(docsIndex.length).toBeGreaterThan(0);
+    expect([...new Set(removalTargets(docsIndex))].sort()).toEqual(guardedSkills());
   });
 });
