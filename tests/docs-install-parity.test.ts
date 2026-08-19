@@ -30,8 +30,9 @@ function readIf(path: string): string {
 }
 
 // The path prefix every removal command must target. The skill name after
-// the prefix belongs to the set-equality invariant, not this file.
-const RM_RF_PREFIX = '"$CODEX_HOME/plugins/cache"/*/team/*/skills/';
+// the prefix belongs to the set-equality invariant, not this file. The :?
+// expansion makes an unset CODEX_HOME abort loudly instead of no-opping.
+const RM_RF_PREFIX = '"${CODEX_HOME:?}/plugins/cache"/*/team/*/skills/';
 
 // Every rm -rf invocation's target token, path shape only — prose around
 // the command can change freely without touching this extraction.
@@ -69,7 +70,7 @@ describe("docs-install-parity: README.md and docs/index.md each carry all seven 
   });
 });
 
-describe('docs-install-parity: every rm -rf invocation on each surface targets the prefix "$CODEX_HOME/plugins/cache"/*/team/*/skills/', () => {
+describe('docs-install-parity: every rm -rf invocation on each surface targets the prefix "${CODEX_HOME:?}/plugins/cache"/*/team/*/skills/', () => {
   test("README.md has rm -rf invocations and every one targets the Codex cache prefix", () => {
     const readme = readIf(README_MD);
     expect(readme.length).toBeGreaterThan(0);

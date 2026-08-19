@@ -43,8 +43,8 @@ agents, so they will not run the pipeline. The standalone utilities do.
 > guards:
 >
 > ```bash
-> rm -rf "$CODEX_HOME/plugins/cache"/*/team/*/skills/pr-watch-as-reviewer
-> rm -rf "$CODEX_HOME/plugins/cache"/*/team/*/skills/pr-rebase
+> rm -rf "${CODEX_HOME:?}/plugins/cache"/*/team/*/skills/pr-watch-as-reviewer
+> rm -rf "${CODEX_HOME:?}/plugins/cache"/*/team/*/skills/pr-rebase
 > ```
 >
 > Re-running `codex plugin add` restores them.
