@@ -49,11 +49,13 @@ Pick yours.
 ### Claude Code
 
 ```bash
-claude plugin add /path/to/team
+claude plugin marketplace add /path/to/team
+claude plugin install team@team-dev
 ```
 
-That is the whole install. Skills register as slash commands (`/team`,
-`/shipit`), and agents and hooks load with them.
+The first command registers the checkout as a marketplace; the second installs
+from it. Skills register as slash commands (`/team`, `/shipit`), and agents and
+hooks load with them.
 
 Then run a phase end-to-end:
 
