@@ -1,6 +1,6 @@
 ---
 title: Overview
-description: "Team is a Claude Code plugin. It orchestrates specialized agents that implement features end-to-end through the QRSPI pipeline."
+description: "Team orchestrates specialized agents that implement features end-to-end through the QRSPI pipeline. The full pipeline runs on Claude Code; the standalone utilities also work on Codex CLI and Antigravity CLI."
 permalink: /
 audience: [user, developer]
 nav_order: 1
@@ -41,11 +41,21 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 
 ## Install
 
-Team is a Claude Code plugin. Add it to your Claude Code installation:
+Team ships a native manifest for each host, so one repo installs on all three
+from a local checkout. The full pipeline needs Claude Code, because that is the
+host that dispatches the agents. The standalone utilities work on all three.
+Pick yours.
+
+### Claude Code
 
 ```bash
-claude plugin add /path/to/team
+claude plugin marketplace add /path/to/team
+claude plugin install team@team-dev
 ```
+
+The first command registers the checkout as a marketplace; the second installs
+from it. Skills register as slash commands (`/team`, `/shipit`), and agents and
+hooks load with them.
 
 Then run a phase end-to-end:
 
@@ -57,6 +67,53 @@ For a focused bug fix that skips the QRSPI ceremony:
 
 ```bash
 /team-fix Users see stale cache after profile update
+```
+
+### Codex CLI
+
+```bash
+codex plugin marketplace add /path/to/team
+codex plugin add team@team-dev
+```
+
+Skills arrive **namespaced** — ask for `team:shipit`, not `shipit`. Codex
+budgets its skill catalog, so it shortens the longest descriptions; the skills
+still work. The `/team-*` pipeline commands load but cannot dispatch Claude
+Code agents, so they will not run the pipeline. The standalone utilities do.
+
+> **Two skills lose a safety guard here.** `team:pr-watch-as-reviewer` casts an
+> approval that can transitively merge a PR, and `team:pr-rebase` force-pushes
+> a rewritten branch over published history. Both set
+> `disable-model-invocation` so only a person can start them, and **Codex
+> ignores that key**. To keep the guards:
+
+```bash
+rm -rf "${CODEX_HOME:?}/plugins/cache"/*/team/*/skills/pr-watch-as-reviewer
+rm -rf "${CODEX_HOME:?}/plugins/cache"/*/team/*/skills/pr-rebase
+```
+
+Re-running `codex plugin add` restores them.
+
+### Antigravity CLI
+
+```bash
+agy plugin install /path/to/team
+```
+
+Team ships `plugin.json` at the repo root, which is this host's plugin marker,
+so it installs as a native Antigravity plugin — every skill and every agent
+installs with it. `agy plugin uninstall team` removes it.
+
+Skills arrive under **bare names** — ask for `shipit`, not `team:shipit`. The
+install copies the checkout, so upgrading means installing again. Unlike
+Codex, this host honors `disable-model-invocation`, so nothing needs removing
+afterward.
+
+Developing Team itself? The install copies, so link your checkout instead:
+
+```bash
+script/dev-install antigravity
+script/dev-uninstall antigravity
 ```
 
 ## Read next

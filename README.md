@@ -15,11 +15,13 @@ from a local checkout. Pick yours.
 <summary><strong>Claude Code</strong></summary>
 
 ```bash
-claude plugin add /path/to/team
+claude plugin marketplace add /path/to/team
+claude plugin install team@team-dev
 ```
 
-That is the whole install. Skills register as slash commands (`/team`,
-`/shipit`), and agents and hooks load with them.
+The first command registers the checkout as a marketplace; the second installs
+from it. Skills register as slash commands (`/team`, `/shipit`), and agents and
+hooks load with them.
 
 </details>
 
@@ -43,8 +45,8 @@ agents, so they will not run the pipeline. The standalone utilities do.
 > guards:
 >
 > ```bash
-> rm -rf "$CODEX_HOME/plugins/cache"/*/team/*/skills/pr-watch-as-reviewer
-> rm -rf "$CODEX_HOME/plugins/cache"/*/team/*/skills/pr-rebase
+> rm -rf "${CODEX_HOME:?}/plugins/cache"/*/team/*/skills/pr-watch-as-reviewer
+> rm -rf "${CODEX_HOME:?}/plugins/cache"/*/team/*/skills/pr-rebase
 > ```
 >
 > Re-running `codex plugin add` restores them.
@@ -65,9 +67,7 @@ so it installs as a native Antigravity plugin — all 55 skills and all 13 agent
 Skills arrive under **bare names** — ask for `shipit`, not `team:shipit`. The
 install copies the checkout, so upgrading means installing again. Unlike Codex,
 this host honors `disable-model-invocation`, so nothing needs removing
-afterward. The `/team-*` pipeline commands install but are not claimed to run
-here yet, because agent dispatch on this host is untested
-([#56](https://github.com/bostonaholic/team/issues/56)).
+afterward.
 
 Developing Team itself? The install copies, so link your checkout instead:
 
