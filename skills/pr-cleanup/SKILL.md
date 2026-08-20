@@ -313,9 +313,9 @@ a protected branch, not the branch to clean up.
 Run `git -C "$PRIMARY_ROOT" status --porcelain` — and when the target
 branch lives in a linked worktree, run
 `git -C "$WORKTREE_PATH" status --porcelain` there too, deriving
-`$WORKTREE_PATH` with the `worktree list --porcelain` awk shown in Mode A
-step 2 (Mode B step 2 uses the same derivation) — never invent another
-lookup. Untracked generated reports are disposable in
+`$WORKTREE_PATH` with the `worktree list --porcelain` read loop shown in
+Mode A step 2 (Mode B step 2 uses the same derivation) — never invent
+another lookup. Untracked generated reports are disposable in
 Mode B only; tracked modifications always stop the run. Surface them — do
 not discard work.
 
@@ -366,8 +366,15 @@ not discard work.
    capture its path in the same invocation as the removal:
 
    ```sh
+   # Never reach for awk's record variable here: a `$` before a digit is an
+   # argument placeholder the loader substitutes before you read this.
    WORKTREE_PATH="$(git -C "$PRIMARY_ROOT" worktree list --porcelain |
-     awk -v b="refs/heads/$BRANCH" '/^worktree /{w=substr($0,10)} $0=="branch "b{print w; exit}')"
+     while IFS= read -r line; do
+       case "$line" in
+         "worktree "*)                candidate="${line#worktree }" ;;
+         "branch refs/heads/$BRANCH") printf '%s\n' "$candidate"; break ;;
+       esac
+     done)"
    ```
 
    Empty `$WORKTREE_PATH` → the branch lives in no worktree; skip this
@@ -473,8 +480,15 @@ order child before parent throughout.
    in the same invocation as the removal:
 
    ```sh
+   # Never reach for awk's record variable here: a `$` before a digit is an
+   # argument placeholder the loader substitutes before you read this.
    WORKTREE_PATH="$(git -C "$PRIMARY_ROOT" worktree list --porcelain |
-     awk -v b="refs/heads/$BRANCH" '/^worktree /{w=substr($0,10)} $0=="branch "b{print w; exit}')"
+     while IFS= read -r line; do
+       case "$line" in
+         "worktree "*)                candidate="${line#worktree }" ;;
+         "branch refs/heads/$BRANCH") printf '%s\n' "$candidate"; break ;;
+       esac
+     done)"
    ```
 
    Empty `$WORKTREE_PATH` → no worktree; skip this step. Otherwise:

@@ -206,6 +206,13 @@ seeds `docs/plans/<id>/` for the archetype-A consumers downstream.)
 - Each shell block is its own process — recompute derived vars. Do not rely on persistence.
 - An argument carries a scalar (URL/window/ID) or an OPTIONAL artifact-dir path that
   discovery resolves when omitted — never the document's contents.
+- **Never write a `$` immediately followed by a digit anywhere in a SKILL.md.** The
+  loader reads it as an argument placeholder and substitutes the caller's Nth argument,
+  which silently rewrites awk record/field variables and shell positional parameters in
+  your snippets. Read a line into a named variable and match it with `case`, or reach
+  for `cut`/`sed`, instead. The documented backslash escape is not enough: a host that
+  substitutes the placeholder without implementing the escape leaves the backslash in
+  the command. `tests/regression-skill-body-positional-args.test.ts` enforces this.
 
 ---
 

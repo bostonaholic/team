@@ -436,8 +436,14 @@ add/add conflict, and one of `:2:`/`:3:` is absent on every modify/delete.
 Ask the index which stages are present, then branch on the answer:
 
 ```sh
-git ls-files -u -- "<path>" | awk '{print $3}' | sort -u   # prints the stage numbers present
+git ls-files -u -- "<path>" | cut -d' ' -f3 | cut -f1 | sort -u   # the stage numbers present
 ```
+
+Each `ls-files -u` line is `<mode> <object> <stage>` and then a tab before the
+path, so the first `cut` takes the third space-separated field and the second
+trims the path off it. Do not collapse the pair into `awk` addressing a
+numbered field: a `$` before a digit is an argument placeholder that the
+slash-command loader substitutes before this skill ever reaches you.
 
 | Stages present | Conflict type | What it means |
 |----------------|---------------|---------------|

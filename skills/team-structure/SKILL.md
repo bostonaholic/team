@@ -60,7 +60,7 @@ for dir in docs/plans/*/; do
   # Frontmatter-only verdict parse (mirrors the hooks): line 1 must be ---,
   # the scan stops at the closing --- (60-line window), so a body line
   # quoting "verdict: APPROVE" can never pass. Fail-closed.
-  awk 'NR==1 { if ($0 != "---") exit; next } /^---$/ { exit } NR > 60 { exit } { print }' "$rv" \
+  awk 'NR==1 { if (!/^---$/) exit; next } /^---$/ { exit } NR > 60 { exit } { print }' "$rv" \
     | grep -qE '^verdict:[[:space:]]*(APPROVE|COMMENT)[[:space:]]*$' || continue
   m=-1
   for p in $PHASE_FILES; do
