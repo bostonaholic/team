@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
 
@@ -278,6 +278,57 @@ describe("effort tiering", () => {
         expect(/^effort:/m.test(fm)).toBe(false);
       }
     }
+  });
+});
+
+describe("model tiering", () => {
+  // opus: complex work (the default) plus security-reviewer's permanent pin
+  // (Fable's cybersecurity classifiers refuse security-review content in
+  // non-interactive subagent contexts). sonnet: bounded judgment.
+  // haiku: mechanical.
+  const EXPECTED_MODELS: Record<string, string> = {
+    "code-reviewer": "opus",
+    "design-author": "opus",
+    "file-finder": "haiku",
+    implementer: "opus",
+    planner: "opus",
+    questioner: "sonnet",
+    researcher: "opus",
+    "security-reviewer": "opus",
+    "structure-planner": "opus",
+    "technical-writer": "sonnet",
+    "test-architect": "opus",
+    "ux-reviewer": "sonnet",
+    verifier: "haiku",
+  };
+
+  test("EXPECTED_MODELS pins all 13 agents to their tiers", () => {
+    // Key-set equality both directions: a new agent missing from the map and
+    // a stale map key both fail here. agentFiles() is already sorted.
+    const names = agentFiles().map((file) => basename(file, ".md"));
+    expect(Object.keys(EXPECTED_MODELS).sort()).toEqual(names);
+    for (const [agent, tier] of Object.entries(EXPECTED_MODELS)) {
+      const fm = frontmatter(read(join(REPO_ROOT, "agents", `${agent}.md`)));
+      expect(fm).toMatch(new RegExp(`^model: ${tier}$`, "m"));
+    }
+  });
+
+  test("each agent's frontmatter carries exactly one model: key", () => {
+    // No trailing space in the pattern, so a stray `model:fable` counts too.
+    const offenders: string[] = [];
+    for (const file of agentFiles()) {
+      const count = frontmatter(read(join(REPO_ROOT, file))).match(/^model:/gm)?.length ?? 0;
+      if (count !== 1) offenders.push(`${file}: ${count} model: keys`);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  test("no skill frontmatter carries a model: key", () => {
+    const offenders: string[] = [];
+    for (const file of skillFiles()) {
+      if (/^model:/m.test(frontmatter(read(join(REPO_ROOT, file))))) offenders.push(file);
+    }
+    expect(offenders).toEqual([]);
   });
 });
 
