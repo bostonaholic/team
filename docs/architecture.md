@@ -403,53 +403,169 @@ Three more balances bound the checks themselves:
 ### Model tiering
 
 The principle:
-**complex work runs on the most capable available model. Bounded judgment runs on `sonnet`. Mechanical checks run on `haiku`.**
+**complex work runs on `opus`. Bounded judgment runs on `sonnet`.
+Mechanical checks run on `haiku`.** `fable` (Fable 5), though more
+capable, is reserved for an agent with a demonstrated, concrete need
+that `opus` cannot meet — and no agent meets that bar today.
 
-The most capable model is `fable` (Fable 5). It was temporarily suspended
-for all customers under a U.S. government export-control directive (see
-[Anthropic's notice](https://www.anthropic.com/news/fable-mythos-access)).
-During the suspension, complex work ran on `opus` (Opus 4.8), Fable's
-documented fallback target. Access has been restored, and the
-complex-work agents now run on `fable`.
+Fable was temporarily suspended for all customers in June 2026 under a
+U.S. government export-control directive (see
+[Anthropic's notice](https://www.anthropic.com/news/fable-mythos-access)),
+and complex work ran on `opus` during the suspension. After access was
+restored, the complex-work agents ran `fable` from 0.15.0 until this
+change flipped the default back to `opus` for cost.
 
-- **`fable` (complex work):** `researcher`, `design-author`,
+- **`opus` (complex work, the default):** `researcher`, `design-author`,
   `structure-planner`, `planner`, `test-architect`, `implementer`, and
   `code-reviewer`.
-- **`opus` (security review):** `security-reviewer` stays on `opus`
-  **permanently**, not as a fallback. Fable 5's cybersecurity safety
-  classifiers flag security-review content. In a non-interactive subagent
-  context, a flagged request ends the turn with a refusal instead of a
-  fallback. `opus` is a floating alias — it resolves to Claude Code's
-  current Opus (Opus 5 today), and riding the latest Opus rather than
-  pinning a dated one is deliberate: the pin exists to avoid Fable's
-  classifiers, not to freeze a specific Opus. Opus-tier models carry
-  cybersecurity safeguards of their own (far milder than Fable's), so if
-  security reviews ever start ending in refusals after an Opus upgrade,
-  overriding to the prior Opus is the escape hatch.
+- **`opus` (security review, permanent pin):** `security-reviewer` stays
+  on `opus` **permanently**, not as a fallback. Fable 5's cybersecurity
+  safety classifiers flag security-review content. In a non-interactive
+  subagent context, a flagged request ends the turn with a refusal
+  instead of a fallback. `opus` is a floating alias — it resolves to
+  Claude Code's current Opus (Opus 5 today), and riding the latest Opus
+  rather than pinning a dated one is deliberate: the pin exists to avoid
+  Fable's classifiers, not to freeze a specific Opus. Opus-tier models
+  carry cybersecurity safeguards of their own (far milder than Fable's),
+  so if security reviews ever start ending in refusals after an Opus
+  upgrade, overriding to the prior Opus is the escape hatch.
 - **`sonnet` (bounded single-pass judgment):** `questioner`,
   `ux-reviewer`, `technical-writer`.
 - **`haiku` (mechanical checks):** `file-finder`, `verifier`.
 
 Notes:
 
-- **What the `fable` agents require of plugin users:** Claude Code ≥
-  v2.1.170 and Fable access. Fable 5 is not available under zero data
-  retention (30-day retention is necessary), and on
-  Bedrock/Vertex/Foundry `ANTHROPIC_DEFAULT_FABLE_MODEL` must be pinned.
-  Users without access must override to `opus`. See the override note
-  below. `opus` remains the documented fallback tier for every `fable`
-  agent.
-- **1M context window comes for free at the fable and opus tiers.** Fable
-  5's context window is 1M by default, and the current Opus models (Opus
-  5, like 4.8 before it) always run with the 1M window on the Anthropic
-  API. Max, Team, and Enterprise plans include
+- **Overriding up to fable.** After the flip, `fable` is the override
+  tier and `opus` is the shipped default, so a user without fable access
+  needs no override at all. What the `fable` override requires of plugin
+  users: Claude Code ≥ v2.1.170 and Fable access. Fable 5 is not
+  available under zero data retention (30-day retention is necessary),
+  and on Bedrock/Vertex/Foundry `ANTHROPIC_DEFAULT_FABLE_MODEL` must be
+  pinned.
+  - **The recommended mechanism is a per-agent file copy:** copy the
+    agent file into the `.claude/agents/` directory of the session that
+    runs it, with the one-line edit `model: fable`, one file per agent.
+    **Never copy `security-reviewer`:** on fable its classifier refusals
+    end security reviews mid-run, which is the reason the permanent pin
+    exists.
+  - **Placement is part of the recommendation.** An override takes
+    effect only where the session runs, and a pipeline run does not open
+    the primary repo root — it opens `.claude/worktrees/<id>`, a fresh
+    checkout that carries no untracked files unless the root
+    `.worktreeinclude` names them (and only files that are also
+    gitignored are copied). So a plain untracked copy at the primary
+    repo root is invisible to every pipeline run. The rule splits by run
+    mode. For an **autonomous `/team` run**, add `.claude/agents/` to
+    the repository's `.gitignore` **and** to its root `.worktreeinclude`,
+    then keep the untracked override copy at `.claude/agents/<name>.md`:
+    worktree creation copies it into each new worktree on its own, and
+    `/team` opens no window to place a file after the worktree exists.
+    The gitignore half is not optional — only files that are also
+    gitignored get copied. For a **phase-by-phase or manual session**,
+    an untracked copy inside the directory that session opens works
+    with no repo change, because the user places it before dispatching.
+    The **committed alternative**, for a team that wants one shared
+    repository-wide override: commit `.claude/agents/<name>.md` on the
+    repository's default branch and push it — never on a run's feature
+    branch — which needs permission to push to that branch. The
+    observable that an override took effect is the manual **routing
+    check**: spawn the agent from a fresh headless session and read back
+    the model it reports, valid only against an install of the plugin
+    version under test (against a stale install it is a false pass). One
+    residual holds under either route: **a worktree that already exists
+    misses the override**, because reuse runs no checkout and no
+    `.worktreeinclude` copy. The fix is by hand — drop the copy into
+    that worktree's own `.claude/agents/`, or let the next new worktree
+    pick it up.
+  - **Parity:** a user who moves `implementer` up to fable moves
+    `test-architect` and `code-reviewer` with it — the scope fence and
+    the correctness evaluator must not run on a weaker model than the
+    implementer they gate. The parity set is exactly those three agents
+    and stops there.
+  - **Freeze and resync:** a copied file is a whole agent definition,
+    not a model patch. It shadows the plugin's prompt, `tools`,
+    `effort`, and `permissionMode`, and it keeps shadowing them after
+    plugin updates, so re-copy overridden agents after each plugin
+    upgrade and re-apply the one-line model edit. Skill content is not
+    frozen: the `skills:` field lists names, and the bodies load from
+    the installed plugin.
+  - **Do not use `CLAUDE_CODE_SUBAGENT_MODEL` for this.** The variable
+    applies to every subagent, so *any* value flattens the five
+    sonnet/haiku agents onto that tier's price — and `=fable` also drags
+    `security-reviewer` onto the model whose classifier refusals the
+    permanent pin exists to avoid.
+  - An override takes effect no later than the next session: a restart,
+    or a copy placed before a session opens, applies it whether the host
+    reads frontmatter once at session start or live-loads it.
+  - **The re-pin bar.** An agent returns to `fable` in the shipped
+    defaults on a differential: a recorded opus failure on the agent's
+    own task that reproduces across at least two independent runs, *and*
+    a matched fable success on the same task. The bar's qualifications
+    and limits are part of the bar:
+    - **No instrument for producing that matched pair ships with this
+      change.** Its requirements sit on #139. Until that instrument
+      lands, a re-pin proposal rests on recorded production failures
+      plus operator judgment — weak evidence the maintainer weighs,
+      never a cleared bar. The bar is an evidential target, not a
+      procedure to improvise: the design that specifies one has not
+      been done.
+    - **Reach.** The bar starts from a recorded failure on the agent's
+      own task, and only three agents produce one: `design-author` (the
+      adversarial design-review verdict), `test-architect` (the
+      mechanical test gate), and `implementer` (acceptance tests plus
+      the 5-reviewer verify). It does not reach `researcher`,
+      `structure-planner`, `planner`, or `code-reviewer`, because
+      nothing evaluates the artifact or verdict they produce.
+      `code-reviewer`'s one live route is the parity carve-out below;
+      `researcher`, `structure-planner`, and `planner` have **no live
+      re-pin route today**, and the shipped opus default holds for them
+      until either the deferred work on #139 produces per-agent
+      evidence and the bar's terms are extended to admit it (a future
+      decision, recorded then), or a per-task failure signal for them
+      comes into existence. The deferred aggregate comparison is not
+      that route: it observes the flip in aggregate, which cannot meet
+      a bar written per agent and per task.
+    - **The parity carve-out**, a named exception to the bar's
+      per-agent shape: if `implementer` clears the bar, the re-pin
+      moves `test-architect` and `code-reviewer` with it on
+      `implementer`'s evidence alone. Never re-pin `implementer` solo —
+      a scope fence or evaluator on a weaker model than the implementer
+      it gates is the defect the 0.14.1 fence rationale forbids. The
+      cost is stated: one agent's evidence triples the pin count, and
+      with it the permanent spend.
+    - **The `test-architect` narrowing:** its gate detects mechanical
+      faults only (a crash, a failing static check, a new test that
+      does not fail with an assertion error), not a scope fence that
+      runs green and covers too little. The recorded failure exists for
+      that narrow class alone — its place on the reached list is not a
+      broad failure signal, and its practical route back is the parity
+      carve-out.
+    - **The multi-repo limit:** a failure in a multi-repo run has no
+      live re-pin route today, and the aggregate comparison cannot host
+      it — the Golden Master is pinned to one repository, and #139
+      models a run with no repository axis — so the deferred instrument
+      work must state its own repository scope.
+    - **The evidence venue:** whatever evidence a re-pin proposal rests
+      on lives in a GitHub issue on the project board, linking the runs
+      it cites.
+
+    Even for the three reached agents, nobody can complete a case
+    today, because the matched fable half needs the instrument this
+    change defers. And "a matched fable success on the same task" is
+    the evidential target, not proof on its own that the tier caused a
+    difference — two opus failures alone prove the task is hard, not
+    that the tier caused it.
+- **1M context window comes for free at the opus tier.** The current
+  Opus models (Opus 5, like 4.8 before it) always run with the 1M window
+  on the Anthropic API. Max, Team, and Enterprise plans include
   the 1M upgrade with the subscription, and Pro degrades gracefully to
   200K. These agents thus need no `[1m]` suffix. The sonnet agents stay
   at 200K, because their bounded single-pass work is nowhere near the
   ceiling. Haiku does not support 1M.
 - Users can override any agent's model with `CLAUDE_CODE_SUBAGENT_MODEL`
-  (applies to all subagents), or copy an agent file into
-  `.claude/agents/` with a different `model:`.
+  (applies to all subagents — see the env-var warning in the override
+  note above), or copy an agent file into `.claude/agents/` with a
+  different `model:`.
 
 - Four agents (`researcher`, `implementer`, `code-reviewer`,
   `security-reviewer`) additionally hold the `Agent` tool and may spawn
