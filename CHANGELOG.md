@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.55.0] - 2026-08-20
+
 ### Fixed
 
 - **Three skills carried shell snippets that the slash-command loader silently rewrote before you read them.** A `$` immediately followed by a digit is not inert in a skill body: the loader treats it as an argument placeholder and substitutes the caller's Nth argument. So `/pr-cleanup PR 244` turned the worktree-path lookup's `awk` program into `substr(PR,10)` and `PR=="branch "b`, matching an unset variable — the lookup returned nothing, every consumer read that as "this branch lives in no worktree", and the worktree survived a teardown that reported success while the dirty-tree check inside it never ran. Because a placeholder with no matching argument is left alone, whether a given site broke depended on how many arguments you typed, which is why this read as intermittent rather than broken. [`pr-cleanup`](https://github.com/bostonaholic/team/blob/main/skills/pr-cleanup/SKILL.md) now derives the path with a `case`-matched read loop, which also compares the branch name as a string instead of interpolating it into a pattern; [`team-structure`](https://github.com/bostonaholic/team/blob/main/skills/team-structure/SKILL.md)'s frontmatter scan matches the closing marker as a regex; and [`pr-rebase`](https://github.com/bostonaholic/team/blob/main/skills/pr-rebase/SKILL.md)'s conflict-stage query reads the stage column with `cut`. Each rewrite drops the token rather than leaning on the documented backslash escape, since a host that substitutes the placeholder without implementing the escape would leave the backslash in the command. **What this asks of you:** nothing — but a `/pr-cleanup` run that reported success while leaving a worktree behind was this bug, and that worktree is still on disk.
@@ -570,7 +572,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.54.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.55.0...HEAD
+[0.55.0]: https://github.com/bostonaholic/team/compare/v0.54.0...v0.55.0
 [0.54.0]: https://github.com/bostonaholic/team/compare/v0.53.0...v0.54.0
 [0.53.0]: https://github.com/bostonaholic/team/compare/v0.52.0...v0.53.0
 [0.52.0]: https://github.com/bostonaholic/team/compare/v0.51.0...v0.52.0
