@@ -449,16 +449,22 @@ Notes:
     end security reviews mid-run, which is the reason the permanent pin
     exists.
   - **Placement is part of the recommendation.** An override takes
-    effect only where the session runs, and a pipeline run does not open
-    the primary repo root — it opens `.claude/worktrees/<id>`, a fresh
-    checkout that carries no untracked files unless the root
-    `.worktreeinclude` names them (and only files that are also
-    gitignored are copied). So a plain untracked copy at the primary
-    repo root is invisible to every pipeline run. The rule splits by run
-    mode. For an **autonomous `/team` run**, add `.claude/agents/` to
+    effect only where the host looks for it, and a `/team` run has two
+    candidate directories: the orchestrating session keeps its own
+    directory at the primary repo root and dispatches each agent into
+    `.claude/worktrees/<id>` by absolute path (`skills/team/SKILL.md`).
+    The worktree is a fresh checkout that carries no untracked files
+    unless the root `.worktreeinclude` names them (and only files that
+    are also gitignored are copied), and no repo surface pins which of
+    the two directories the host's project-agent resolution follows —
+    unpinned host behavior, like the frontmatter-read timing hedged
+    below. The rule splits by run mode and holds under either answer.
+    For an **autonomous `/team` run**, add `.claude/agents/` to
     the repository's `.gitignore` **and** to its root `.worktreeinclude`,
     then keep the untracked override copy at `.claude/agents/<name>.md`:
-    worktree creation copies it into each new worktree on its own, and
+    the copy stays present at the primary repo root and worktree
+    creation carries it into each new worktree on its own, so the
+    override is in place whichever directory resolution follows — and
     `/team` opens no window to place a file after the worktree exists.
     The gitignore half is not optional — only files that are also
     gitignored get copied. For a **phase-by-phase or manual session**,
