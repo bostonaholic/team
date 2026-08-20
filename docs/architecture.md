@@ -408,13 +408,6 @@ Mechanical checks run on `haiku`.** `fable` (Fable 5), though more
 capable, is reserved for an agent with a demonstrated, concrete need
 that `opus` cannot meet — and no agent meets that bar today.
 
-Fable was temporarily suspended for all customers in June 2026 under a
-U.S. government export-control directive (see
-[Anthropic's notice](https://www.anthropic.com/news/fable-mythos-access)),
-and complex work ran on `opus` during the suspension. After access was
-restored, the complex-work agents ran `fable` from 0.15.0 until this
-change flipped the default back to `opus` for cost.
-
 - **`opus` (complex work, the default):** `researcher`, `design-author`,
   `structure-planner`, `planner`, `test-architect`, `implementer`, and
   `code-reviewer`.
