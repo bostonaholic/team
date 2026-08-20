@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.54.0] - 2026-08-20
+
+### Changed
+
+- **The complex-work agents default to `opus`, at roughly half fable's per-token price.** The seven complex-work agents — [`researcher`](https://github.com/bostonaholic/team/blob/main/agents/researcher.md), [`design-author`](https://github.com/bostonaholic/team/blob/main/agents/design-author.md), [`structure-planner`](https://github.com/bostonaholic/team/blob/main/agents/structure-planner.md), [`planner`](https://github.com/bostonaholic/team/blob/main/agents/planner.md), [`test-architect`](https://github.com/bostonaholic/team/blob/main/agents/test-architect.md), [`implementer`](https://github.com/bostonaholic/team/blob/main/agents/implementer.md), and [`code-reviewer`](https://github.com/bostonaholic/team/blob/main/agents/code-reviewer.md) — flip from `fable` back to `opus`, and the default path no longer carries fable's prerequisites. **What this asks of you:** nothing, unless you override back up to fable — an override user takes those prerequisites on: Claude Code ≥ v2.1.170 and Fable access (not available under zero data retention — 30-day retention is necessary; pin `ANTHROPIC_DEFAULT_FABLE_MODEL` on Bedrock/Vertex/Foundry). The recommended override is a per-agent copy: copy an agent file into `.claude/agents/` with the one-line edit `model: fable` — **never `security-reviewer`**, whose classifier refusals on fable end security reviews mid-run. Place the copy by run mode: for an autonomous `/team` run, add `.claude/agents/` to the repository's `.gitignore` and to its root `.worktreeinclude` and keep the copy untracked — the orchestrating session stays at the primary repo root while agents work in `.claude/worktrees/<id>` by absolute path, and the pair keeps the copy present at the root and carried into each new worktree, so the override is in place whichever directory the host's project-agent resolution follows; for a phase-by-phase or manual session, an untracked copy inside the directory that session opens works with no repo change; a committed `.claude/agents/<name>.md` on the default branch is the alternative for a team that wants one shared repository-wide override, and it needs permission to push to that branch. The routing check — spawn the agent from a fresh headless session and read back the model it reports — is how you see the override took effect, and a worktree created before the override was set up does not receive it. Move the parity set together: taking `implementer` up to fable takes `test-architect` and `code-reviewer` with it. A copied file shadows the plugin's prompt, `tools`, `effort`, and `permissionMode` until re-copied, so re-copy overridden agents after each plugin upgrade and re-apply the one-line edit. Do not reach for `CLAUDE_CODE_SUBAGENT_MODEL=fable`: the variable applies to every subagent, so it drags `security-reviewer` onto the model whose classifier refusals its permanent `opus` pin exists to avoid, and lifts the five sonnet/haiku agents off their tiers. **Migrating from the 0.15.0 advice:** if you set `CLAUDE_CODE_SUBAGENT_MODEL=opus`, unset it — after this flip it buys nothing for the seven and silently prices the five sonnet/haiku agents at opus rates; if you copied agent files into `.claude/agents/` with `model: opus`, delete them — they are redundant now and keep shadowing the plugin's prompt, `tools`, `effort`, and `permissionMode` with definitions frozen at copy time — or re-copy from the current plugin and re-apply the one-line edit if an override is still intended. A live session can keep `fable` until restart, so the saving begins no later than the next session. See [docs/architecture.md → Model tiering](https://github.com/bostonaholic/team/blob/main/docs/architecture.md#model-tiering).
+
 ## [0.53.0] - 2026-08-19
 
 ### Added
@@ -560,7 +566,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.53.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.54.0...HEAD
+[0.54.0]: https://github.com/bostonaholic/team/compare/v0.53.0...v0.54.0
 [0.53.0]: https://github.com/bostonaholic/team/compare/v0.52.0...v0.53.0
 [0.52.0]: https://github.com/bostonaholic/team/compare/v0.51.0...v0.52.0
 [0.51.0]: https://github.com/bostonaholic/team/compare/v0.50.0...v0.51.0
