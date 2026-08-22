@@ -695,7 +695,19 @@ QRSPI phase: a self-contained action a user runs on demand.
   installed host `skill-creator`) with a fixed frontmatter contract as the
   fallback, since none of those ships with the plugin. After the writes it runs
   the repo's own check through `running-quality-checks` and reports the
-  verdict; it neither fixes a failure nor reverts.
+  verdict; it neither fixes a failure nor reverts. Demoted findings go to
+  **whatever tracker the repo already names**, resolved in three tiers: the
+  repo's own router first (so a repo naming Linear or Jira is not silently
+  fixed to GitHub issues), then an authenticated `gh` with issues enabled, then
+  print-only. Every `gh issue` call passes `--repo` explicitly, resolved from
+  `git remote get-url origin`, because a bare `gh` reads the current
+  directory's remote and a set `GH_REPO` answers from anywhere. Issue creation
+  is public and irreversible, so it takes **one approval question per issue**,
+  and the issue carries the board fields its router states (in this repo, per
+  `docs/project-tracking.md`: on the board, with a `Priority`, and `P0` on a
+  `bug`). A tracker that cannot be reached does not stop the run — the item
+  bodies print verbatim and the summary lists filed and unfiled items
+  separately.
 
 ## Methodology skills
 
