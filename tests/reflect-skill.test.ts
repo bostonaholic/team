@@ -190,6 +190,7 @@ function section(heading: RegExp): string {
 const LENSES = /^##\s+.*\blenses\b/i;
 const SYNTHESIS = /^##\s+.*\bsynthesis\b/i;
 const APPLY = /^##\s+.*\bapply\b/i;
+const BACKLOG = /^##\s+.*\bbacklog\b/i;
 
 // The two `### ` subsections of `## The lenses` that exist so a rule has a
 // stable place to live. Exact headings, which docs/testing.md lists among the
@@ -905,5 +906,76 @@ describe("Slice 2 — L2: reflect's apply turn is fenced by a clean-and-tracked 
     const apply = section(APPLY);
     expect(apply.length).toBeGreaterThan(0);
     expect(apply).toContain("skills/running-quality-checks/SKILL.md");
+  });
+});
+
+// ===========================================================================
+// Slice 3 — L2: backlog routing
+// ===========================================================================
+
+describe("Slice 3 — L2: reflect files demoted findings to whatever tracker the repo names", () => {
+  test("tracker resolution runs three tiers, the repo router first", () => {
+    // Ordering tripwire: probing `gh` before the router fixes every repo to
+    // GitHub issues even when its router names another tracker.
+    const backlog = section(BACKLOG);
+    expect(backlog.length).toBeGreaterThan(0);
+    const router = backlog.indexOf("AGENTS.md");
+    const authenticated = backlog.indexOf("hasIssuesEnabled");
+    const printOnly = backlog.indexOf("print-only");
+    expect(router).toBeGreaterThan(-1);
+    expect(authenticated).toBeGreaterThan(router);
+    expect(printOnly).toBeGreaterThan(authenticated);
+  });
+
+  test("every gh issue call names its repository explicitly", () => {
+    // A bare `gh` reads the current directory's remote, and a set GH_REPO
+    // answers from anywhere — so the repo is resolved and passed, never
+    // inferred. Scoped to `gh issue`: `gh api` carries the repository in its
+    // path and `gh project` takes --owner, so neither accepts --repo.
+    const ghIssueLines = fencedLines().filter((line) => /\bgh\s+issue\b/.test(line));
+    expect(ghIssueLines.length).toBeGreaterThan(0);
+    expect(ghIssueLines.filter((line) => !line.includes("--repo"))).toEqual([]);
+    expect(body()).toContain("git remote get-url origin");
+  });
+
+  test("both prose values travel by file — the title as well as the body", () => {
+    // The title is a paraphrase of transcript text, and filing is the run's
+    // one irreversible public write. Pasted into the command as a literal it
+    // runs its own $(…), backticks, and ${…} as shell before gh starts; read
+    // back from a file it reaches gh only as an expanded variable, whose
+    // output the shell does not re-parse. `:?` aborts on an empty read rather
+    // than filing a titleless issue.
+    const backlog = section(BACKLOG);
+    expect(backlog.length).toBeGreaterThan(0);
+    expect(backlog).toContain('TITLE="$(cat');
+    expect(backlog).toContain('--title "${TITLE:?}"');
+    expect(backlog).toContain("--body-file");
+  });
+
+  test("each proposed issue takes its own approval question", () => {
+    // Creation is public and irreversible, so the granularity is per issue,
+    // not per class.
+    const backlog = flat(section(BACKLOG));
+    expect(backlog.length).toBeGreaterThan(0);
+    expect(backlog).toContain("AskUserQuestion");
+    expect(backlog).toContain("one question per issue");
+  });
+
+  test("a filed issue carries the board fields the repo's router states", () => {
+    const backlog = section(BACKLOG);
+    expect(backlog.length).toBeGreaterThan(0);
+    expect(backlog).toContain("docs/project-tracking.md");
+    expect(backlog).toContain("Priority");
+    expect(backlog).toContain("P0");
+    expect(backlog).toContain("bug");
+  });
+
+  test("the summary names filed and unfiled items separately", () => {
+    // An unauthenticated tracker must be visible in the summary rather than
+    // silently leaving the backlog undurable.
+    const text = flat(prose());
+    expect(text.length).toBeGreaterThan(0);
+    expect(/\bfiled\b/i.test(text)).toBe(true);
+    expect(/\bunfiled\b/i.test(text)).toBe(true);
   });
 });
