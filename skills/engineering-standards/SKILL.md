@@ -128,11 +128,7 @@ Every item is a gate. If one fails, fix it before moving on.
 The Design-First Workflow and Quality Checklist above are the procedure. These
 are the calls they do not make for you:
 
-- **Construct with collaborators, call with work.** Constructors take
-  long-lived dependencies (clock, DB, logger, HTTP client) that define
-  identity. Methods take per-call work parameters (date range, request body).
-  Constructors do no work — no I/O, no static lookups, no expensive
-  computation.
+- **Construct with collaborators, call with work.**
 - **No mixed levels of abstraction in a function.** A function calls functions
   one level below its own. If one function does both high-level orchestration
   and low-level byte work, extract the low-level work into a helper named at
@@ -142,6 +138,9 @@ are the calls they do not make for you:
   chained. Never `catch (Exception e)` around a large block.
 - **Follow the project's existing style, naming conventions, and patterns.**
   Read neighboring files to calibrate if unsure.
+
+Constructor shape is stated in full in
+`skills/principle-construct-with-collaborators/SKILL.md`.
 
 ## When Reviewing
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A rule that several skills each stated a piece of now lives in one file, and the skills point at it.** The new `principle-*` family is a flavor of methodology skill at a finer grain: one claim per file, with the shapes it rules out and the place it stops. The first member, [`principle-construct-with-collaborators`](https://github.com/bostonaholic/team/blob/main/skills/principle-construct-with-collaborators/SKILL.md), carries the constructor-shape rule that [`solid-principles`](https://github.com/bostonaholic/team/blob/main/skills/solid-principles/SKILL.md), [`engineering-standards`](https://github.com/bostonaholic/team/blob/main/skills/engineering-standards/SKILL.md), and [`refactoring-to-patterns`](https://github.com/bostonaholic/team/blob/main/skills/refactoring-to-patterns/SKILL.md) each stated separately; all three now point at it, and the two that an agent reaches without a path keep the sentence saying what to do. The naming rule that governs the family is written down in [docs/architecture.md § 6](https://github.com/bostonaholic/team/blob/main/docs/architecture.md#design-guidelines) rather than left as observed precedent. **What this asks of you:** nothing. No agent's preloaded context changes — principle skills are reached by model auto-load or by following a pointer.
+
 ## [0.59.0] - 2026-08-28
 
 ### Added

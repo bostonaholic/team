@@ -49,12 +49,8 @@ level of abstraction below its own — never two or more at once.**
 inside methods (`new HttpClient()` inside `fetchUser()`), taking per-call work
 parameters in the constructor (`new ReportGenerator(2024, 1, 1, 2024, 12,
 31)`), or doing I/O and static lookups in the constructor. All three leave no
-seam for tests to substitute collaborators. The fix is one rule:
-**construct with collaborators, call with work.** Long-lived dependencies
-(HTTP client, DB, clock, logger) are injected through the constructor;
-per-call parameters (date ranges, query strings, request bodies) go on the
-method; constructors assign and return, doing no work at all. Production wires
-real collaborators; tests substitute fakes at construction.
+seam for tests to substitute collaborators. The fix is one rule, stated in
+full in `skills/principle-construct-with-collaborators/SKILL.md`.
 
 ## Safe refactoring procedure
 

@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 56 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 37 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 57 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 38 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -22,6 +22,7 @@ nav_label: skills
 - [Entry-point skills](#entry-point-skills)
 - [Standalone utilities](#standalone-utilities)
 - [Methodology skills](#methodology-skills)
+- [Principle skills](#principle-skills)
 - [Skill ↔ agent ↔ phase](#skill--agent--phase)
 - [Name-collision pairs](#name-collision-pairs)
 - [See also](#see-also)
@@ -57,7 +58,7 @@ resolve, groom a project backlog, tear down branch state after a PR is
 finished, verify a PR's test plan, and rebase a branch onto its base
 without changing what it does.
 None is a pipeline phase. The split is
-**11 pipeline entry-point + 8 standalone utility + 37 methodology = 56**.
+**11 pipeline entry-point + 8 standalone utility + 38 methodology = 57**.
 
 For *why* the system is shaped this way (the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits),
@@ -609,7 +610,7 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 37 methodology skills carry no `argument-hint` and, with one
+The 38 methodology skills carry no `argument-hint` and, with one
 exception, are never invoked directly. The exception is `code-review`: it
 is a meaningful standalone user action ("review this diff",
 `/code-review`) as well as a building block, so it does not set
@@ -1127,6 +1128,31 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   directory from a live one's. A repo with no `.teamteardown` runs nothing and
   is told so.
 
+## Principle skills
+
+The `principle-*` family is a flavor of methodology skill, not a fourth
+flavor: its members carry no `argument-hint`, so the two-flavor split above
+still holds. What sets them apart is grain. Each states exactly one claim —
+the rule, what it rules out, and where it stops — and each is reachable from
+the source skills whose prose it now carries.
+
+No agent preloads a principle skill and no agent body loads one. They are
+discovery-only: the model auto-loads one by name and description, or a reader
+follows a pointer from a source skill. The `Loaded by` line below therefore
+names the pointing sources rather than an agent.
+
+### principle-construct-with-collaborators
+
+- **Purpose:** Where a dependency enters an object, and what a constructor is
+  allowed to do once it has one.
+- **Pointed to by:** `solid-principles`, `engineering-standards`,
+  `refactoring-to-patterns`. Also reachable by model auto-load.
+- **Key behaviors:** Separates object identity from per-call work, and names
+  the four shapes that erase the test seam — work parameters in the
+  constructor, a constructor that does I/O, a dependency built inside the
+  method that uses it, and infrastructure reached statically. Bounds itself
+  against the SOLID readings of collaborator count and collaborator type.
+
 ## Skill ↔ agent ↔ phase
 
 This table ties each skill to the agents or orchestrator skills that load
@@ -1194,6 +1220,7 @@ entry-point section above rather than repeating them here.
 | `tracking-tickets` | orchestrator (team, team-pr, team-fix, just-in-time through pointers) | Setup (ticket pickup), and PR (ticket link + state) |
 | `worktree-isolation` | orchestrator (team, team-worktree) | Worktree |
 | `sweeping-local-state` | `pr-cleanup`, `worktree-isolation` (both inline) | Standalone: teardown after a merged PR, a closed PR, or a completed review (not a QRSPI phase) |
+| `principle-construct-with-collaborators` | `solid-principles`, `engineering-standards`, `refactoring-to-patterns` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
 
 The read-only `Explore` subagent dispatched by `eng-design-doc-review` is
 an one more consumer of `technical-design-doc`, `code-review`,

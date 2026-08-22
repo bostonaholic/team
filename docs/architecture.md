@@ -715,7 +715,7 @@ cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. `code-review` is the only skill loaded as composed
 methodology that is also a user command.)
 
-For the full per-skill reference (all 56 skills, their arguments,
+For the full per-skill reference (all 57 skills, their arguments,
 consumers, and behaviors), see [skills.md](skills.md).
 
 ### Design guidelines
@@ -742,6 +742,39 @@ consumers, and behaviors), see [skills.md](skills.md).
    instead forecloses just-in-time loading for everyone else. Content
    that is only meaningful inside one consumer's procedure, a
    **procedure fragment**, stays inline in that consumer.
+
+3. **Naming, and the `principle-*` family.** Skill directories are
+   lowercase kebab-case. Most prefixes group by *subject*: `team-*` is the
+   QRSPI pipeline, `pr-*` is the pull-request lifecycle. `principle-` is
+   the one prefix that groups by *kind*, and it marks a **single-claim**
+   skill: one rule, stated in full, in one file. A new `principle-*` skill
+   states exactly one claim, carries `## What it rules out` and
+   `## Boundary`, and is reachable from at least one pointer in another
+   skill. The name is the claim in the imperative
+   (`principle-construct-with-collaborators`), never a noun phrase naming
+   a topic.
+
+   No agent preloads a principle skill and no agent body loads one, so the
+   usual `description` suffix ("loaded by `<agent>`") would state something
+   false. The family uses a variant that names the pointing sources
+   instead: "— pointed to by `<source skills>` when `<situation>`."
+
+   Extracting a claim out of a source skill depends on **how that source's
+   reader arrives**, and there are three ways in. A reader who arrives
+   **preloaded** (through an agent's `skills:` frontmatter) or
+   **name-loaded** (through the `Skill` tool by bare name — the review
+   brief at `skills/eng-design-doc-review/SKILL.md:139` is the repo's only
+   such site) was handed no path, so the source keeps at least one sentence
+   saying what to do, and only the rationale and the generalization move.
+   A reader who arrives **by path** already opens files by path, so a
+   pointer is one more path and the site may reduce to it. Seven skills are
+   preloaded by some agent today — `nested-agents`, `code-review`,
+   `conventional-comments`, `systems-thinking`, `authoring-designs`,
+   `cross-model-review`, and `verifying-ux` — and moving a rule out of any
+   of them is governed by the first case.
+
+   What is left behind is a pointer, because a fact lives in one file and
+   every other surface carries its path rather than a second copy.
 
 ## 7. Hooks
 
@@ -958,7 +991,7 @@ children are confirmed, and the depth cap is stable.
 
 ## See also
 
-- **[Skills](skills.md)**: the full per-skill reference for all 56 skills.
+- **[Skills](skills.md)**: the full per-skill reference for all 57 skills.
 - **[Testing](testing.md)**: the six-layer test harness and which layer each check belongs at.
 - **[Vision](vision.md)**: the loop-driven end state this design builds toward.
 - **[Ethos](ethos.md)**: the principles behind the pipeline.

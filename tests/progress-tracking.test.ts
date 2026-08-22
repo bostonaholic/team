@@ -134,30 +134,32 @@ describe("Slice 1: progress-tracking convention skill exists", () => {
   });
 });
 
-describe("skill count reconciliation (-> 56: sweeping-local-state added to the 55-skill baseline)", () => {
+describe("skill count reconciliation (-> 57: the first principle-* skill added to the 56-skill library)", () => {
   const CLAUDE_MD = join(REPO_ROOT, "CLAUDE.md");
   const AGENTS_MD = join(REPO_ROOT, "AGENTS.md");
 
-  test("CLAUDE.md heading reads '## Skills (56)'", () => {
-    expect(/^## Skills \(56\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md heading reads '## Skills (57)'", () => {
+    expect(/^## Skills \(57\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 
-  test("AGENTS.md heading reads '## Skills (56)'", () => {
-    expect(/^## Skills \(56\)/m.test(read(AGENTS_MD))).toBe(true);
+  test("AGENTS.md heading reads '## Skills (57)'", () => {
+    expect(/^## Skills \(57\)/m.test(read(AGENTS_MD))).toBe(true);
   });
 
-  test("filesystem has exactly 56 SKILL.md files declaring a name:", () => {
-    // 55-skill baseline (11 pipeline entry points + 8 standalone utilities —
+  test("filesystem has exactly 57 SKILL.md files declaring a name:", () => {
+    // 56-skill library (11 pipeline entry points + 8 standalone utilities —
     // shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog,
-    // pr-cleanup, pr-verify, pr-rebase — plus 36 methodology skills) plus
-    // sweeping-local-state (the post-PR and post-review machine-local
-    // teardown methodology skill), which takes the count to 56.
+    // pr-cleanup, pr-verify, pr-rebase — plus 37 methodology skills, which
+    // include sweeping-local-state, the post-PR and post-review
+    // machine-local teardown skill) plus
+    // principle-construct-with-collaborators, the first member of the
+    // single-claim principle-* family, which takes the count to 57.
     const dirs = readdirSync(SKILLS_DIR, { withFileTypes: true })
       .filter((d) => d.isDirectory())
       .map((d) => join(SKILLS_DIR, d.name, "SKILL.md"))
       .filter((p) => existsSync(p));
     const withName = dirs.filter((p) => /^name:/m.test(read(p)));
-    expect(withName.length).toBe(56);
+    expect(withName.length).toBe(57);
   });
 });
 
