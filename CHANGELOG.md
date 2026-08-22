@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **PR bodies now carry a `## Pre-merge` section for the work that has to happen before the merge, and `## How to Verify` no longer emits checkboxes that block one.** A `- [ ]` item in a PR body is not decoration — the `square-task-list-completed` bot refuses to merge until a human ticks it. `## How to Verify` was written with checkboxes, so every PR the phase opened shipped a merge gate over verification the author had already run, and somebody had to tick off finished work before the PR could land. Those become plain bullets, and `- [ ]` is now reserved for the one thing it means: an action that must complete before *this* PR merges. That is what the new conditional [`## Pre-merge`](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md) section collects — a dependency PR that has to merge or deploy first (with its URL and the reason the order matters), ordered operational steps such as running migrations, artifacts that could not be regenerated in the authoring environment and will fail CI until someone regenerates them, and verification that genuinely gates the merge rather than merely informing the reviewer. Post-merge follow-ups stay plain bullets. In multi-repo mode the dependency is recorded in one direction only, derived from which side is inert without the other — a UI change that no-ops until its backend ships waits on the backend, and the backend PR gets no mirrored checkbox, because two PRs each blocking the other is a deadlock the bot will happily enforce. Dependency URLs are unknown when the PRs are opened, so the section is added by the same open-then-edit pass that adds `## Companion PRs`, and it is ordered ahead of it. **What this asks of you:** nothing, and one fewer box to tick — the phase never checks a box on your behalf, since a checked box asserts the work is done and only you can assert that.
+
 ## [0.55.0] - 2026-08-20
 
 ### Fixed
