@@ -97,12 +97,7 @@ An atomic commit is the smallest unit of change that is independently correct.
 
 ### One Logical Change Per Commit
 
-A commit should contain exactly one logical change. If you find yourself
-writing "and" in the commit message, the commit probably contains two changes
-that should be two commits.
-
-**Bad:** "Fix login bug and add user profile endpoint"
-**Good:** Two separate commits — one for the fix, one for the endpoint.
+Per `skills/principle-one-change-per-commit/SKILL.md`.
 
 ### Each Commit Must Pass Tests
 

@@ -7,14 +7,14 @@ user-invocable: false
 # Refactoring to Patterns
 
 Change internal structure without changing observable behavior. Every step
-leaves all tests passing. **Never refactor while also adding features** —
-separate the two activities into separate commits.
+leaves all tests passing.
 
 ## When to refactor
 
 - **Before making a change that the current structure makes hard.** Two small
   moves beat one large dangerous move.
-- **On the third duplication.** Rule of Three: tolerate it the second time.
+- **On the third duplication.** Rule of Three: tolerate it the second time,
+  per `skills/principle-rule-of-three/SKILL.md`.
 - **Before debugging code you cannot understand.** Clarify, then fix.
 
 Do **not** refactor when tests are failing (fix them first), when the code
@@ -42,8 +42,8 @@ Two smells carry rules the catalog above does not make obvious:
 high-level orchestration ("save the order, charge the card, send the
 receipt") and low-level primitives ("format the price as fixed-width 8
 chars") forces readers to swap mental contexts. Extract the low-level work
-into a helper named at the surrounding level. **A function calls functions one
-level of abstraction below its own — never two or more at once.**
+into a helper named at the surrounding level. The rule is stated in full in
+`skills/principle-one-level-of-abstraction/SKILL.md`.
 
 **Constructor doing work.** Any of three shapes: instantiating dependencies
 inside methods (`new HttpClient()` inside `fetchUser()`), taking per-call work
@@ -64,7 +64,8 @@ full in `skills/principle-construct-with-collaborators/SKILL.md`.
 ## In the implementer role
 
 - **Read the code before changing it.** Identify smells before writing.
-- **Refactor in its own commit, first** — then add the feature.
+- **Refactor in its own commit, first** — then add the feature, per
+  `skills/principle-one-change-per-commit/SKILL.md`.
 - **Refactor only what you touch.** Opportunistic refactoring of distant code
   is scope creep.
 - **Name the smell and the refactoring in the commit.**

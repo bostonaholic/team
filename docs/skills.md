@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 57 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 38 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 61 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 42 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -58,7 +58,7 @@ resolve, groom a project backlog, tear down branch state after a PR is
 finished, verify a PR's test plan, and rebase a branch onto its base
 without changing what it does.
 None is a pipeline phase. The split is
-**11 pipeline entry-point + 8 standalone utility + 38 methodology = 57**.
+**11 pipeline entry-point + 8 standalone utility + 42 methodology = 61**.
 
 For *why* the system is shaped this way (the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits),
@@ -610,7 +610,7 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 38 methodology skills carry no `argument-hint` and, with one
+The 42 methodology skills carry no `argument-hint` and, with one
 exception, are never invoked directly. The exception is `code-review`: it
 is a meaningful standalone user action ("review this diff",
 `/code-review`) as well as a building block, so it does not set
@@ -1153,6 +1153,49 @@ names the pointing sources rather than an agent.
   method that uses it, and infrastructure reached statically. Bounds itself
   against the SOLID readings of collaborator count and collaborator type.
 
+### principle-one-level-of-abstraction
+
+- **Purpose:** How far a function may reach below itself in one body.
+- **Pointed to by:** `engineering-standards`, `refactoring-to-patterns`. Also
+  reachable by model auto-load.
+- **Key behaviors:** Treats level-mixing as the defect and extraction to a
+  helper named at the surrounding level as the fix. Distinguishes itself from
+  function length, defers the whether-to-extract call to
+  `principle-rule-of-three`, and exempts the outermost layer, which has no
+  level below it to call.
+
+### principle-targeted-exception-scopes
+
+- **Purpose:** The shape of an exception handler: scope, catch, and cause.
+- **Pointed to by:** `engineering-standards`. Also reachable by model
+  auto-load.
+- **Key behaviors:** Narrows the try block to the throwing call, requires the
+  specific subclass and a chained cause, and names the four shapes that turn a
+  handler into a place failures go to be forgotten. Exempts process
+  boundaries, which catch broadly on purpose, and takes no position on whether
+  to handle rather than propagate.
+
+### principle-rule-of-three
+
+- **Purpose:** When duplication has earned an abstraction.
+- **Pointed to by:** `engineering-standards`, `refactoring-to-patterns`. Also
+  reachable by model auto-load.
+- **Key behaviors:** Prices abstraction as an ongoing cost paid by evidence
+  rather than anticipation, so the second instance waits and the third
+  extracts. Rules out premature DRY, the single-caller parameterized helper,
+  and counting textual similarity as duplication. Notes that the trade runs in
+  reverse for an indirection down to one caller.
+
+### principle-one-change-per-commit
+
+- **Purpose:** What one commit is allowed to contain.
+- **Pointed to by:** `git-commit`, `refactoring-to-patterns`. Also reachable
+  by model auto-load.
+- **Key behaviors:** Ties the unit of a commit to a single logical change that
+  is independently correct, with the "and" in a subject line as the tell.
+  Separates refactoring from feature work into ordered commits. Bounds itself
+  against commit size and against the project's merge strategy.
+
 ## Skill ↔ agent ↔ phase
 
 This table ties each skill to the agents or orchestrator skills that load
@@ -1221,6 +1264,10 @@ entry-point section above rather than repeating them here.
 | `worktree-isolation` | orchestrator (team, team-worktree) | Worktree |
 | `sweeping-local-state` | `pr-cleanup`, `worktree-isolation` (both inline) | Standalone: teardown after a merged PR, a closed PR, or a completed review (not a QRSPI phase) |
 | `principle-construct-with-collaborators` | `solid-principles`, `engineering-standards`, `refactoring-to-patterns` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-one-level-of-abstraction` | `engineering-standards`, `refactoring-to-patterns` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-targeted-exception-scopes` | `engineering-standards` (pointer); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-rule-of-three` | `engineering-standards`, `refactoring-to-patterns` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-one-change-per-commit` | `git-commit`, `refactoring-to-patterns` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
 
 The read-only `Explore` subagent dispatched by `eng-design-doc-review` is
 an one more consumer of `technical-design-doc`, `code-review`,

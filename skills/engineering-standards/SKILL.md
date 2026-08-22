@@ -24,8 +24,8 @@ Six lenses, applied as severity guidance when a decision is contested:
 **Cost-benefit, not religion.** Every test, abstraction, and interface has an
 ongoing cost: maintenance, runtime, false-positive triage, cognitive load. A
 test that catches no real bug and slows the build is a liability. Premature
-DRY couples behaviors that need to evolve independently. Apply the **Rule of
-Three**: tolerate duplication the second time, extract on the third.
+DRY couples behaviors that need to evolve independently. The Rule of Three is
+stated in full in `skills/principle-rule-of-three/SKILL.md`.
 
 ## Code Comments
 
@@ -129,18 +129,15 @@ The Design-First Workflow and Quality Checklist above are the procedure. These
 are the calls they do not make for you:
 
 - **Construct with collaborators, call with work.**
-- **No mixed levels of abstraction in a function.** A function calls functions
-  one level below its own. If one function does both high-level orchestration
-  and low-level byte work, extract the low-level work into a helper named at
-  the surrounding level.
-- **Targeted exception scopes only.** Wrap exactly the call that can throw.
-  Catch the specific exception subclass. Rethrow with the original cause
-  chained. Never `catch (Exception e)` around a large block.
+- **No mixed levels of abstraction in a function.**
+- **Targeted exception scopes only.**
 - **Follow the project's existing style, naming conventions, and patterns.**
   Read neighboring files to calibrate if unsure.
 
-Constructor shape is stated in full in
-`skills/principle-construct-with-collaborators/SKILL.md`.
+Constructor shape, abstraction levels, and exception scope are each stated in
+full in `skills/principle-construct-with-collaborators/SKILL.md`,
+`skills/principle-one-level-of-abstraction/SKILL.md`, and
+`skills/principle-targeted-exception-scopes/SKILL.md`.
 
 ## When Reviewing
 

@@ -134,19 +134,19 @@ describe("Slice 1: progress-tracking convention skill exists", () => {
   });
 });
 
-describe("skill count reconciliation (-> 57: the first principle-* skill added to the 56-skill library)", () => {
+describe("skill count reconciliation (-> 61: five principle-* skills added to the 56-skill library)", () => {
   const CLAUDE_MD = join(REPO_ROOT, "CLAUDE.md");
   const AGENTS_MD = join(REPO_ROOT, "AGENTS.md");
 
-  test("CLAUDE.md heading reads '## Skills (57)'", () => {
-    expect(/^## Skills \(57\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md heading reads '## Skills (61)'", () => {
+    expect(/^## Skills \(61\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 
-  test("AGENTS.md heading reads '## Skills (57)'", () => {
-    expect(/^## Skills \(57\)/m.test(read(AGENTS_MD))).toBe(true);
+  test("AGENTS.md heading reads '## Skills (61)'", () => {
+    expect(/^## Skills \(61\)/m.test(read(AGENTS_MD))).toBe(true);
   });
 
-  test("filesystem has exactly 57 SKILL.md files declaring a name:", () => {
+  test("filesystem has exactly 61 SKILL.md files declaring a name:", () => {
     // 56-skill library (11 pipeline entry points + 8 standalone utilities —
     // shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog,
     // pr-cleanup, pr-verify, pr-rebase — plus 37 methodology skills, which
@@ -159,7 +159,7 @@ describe("skill count reconciliation (-> 57: the first principle-* skill added t
       .map((d) => join(SKILLS_DIR, d.name, "SKILL.md"))
       .filter((p) => existsSync(p));
     const withName = dirs.filter((p) => /^name:/m.test(read(p)));
-    expect(withName.length).toBe(57);
+    expect(withName.length).toBe(61);
   });
 });
 

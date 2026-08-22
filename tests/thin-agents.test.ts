@@ -117,13 +117,13 @@ describe("thin agents: new methodology skills exist with the methodology-skill f
 // (docs/testing.md, "Prove a negative check can find a positive"). The value
 // walks the slice ladder 1 / 5 / 9 / 14 / 19 as each batch of principles
 // lands — the same per-slice treatment as the documentation count strings.
-const EXPECTED_PRINCIPLE_COUNT = 1;
+const EXPECTED_PRINCIPLE_COUNT = 5;
 
 // The slice whose prose has moved. MOVED_RUNS below carries every marker of
 // the whole change, and a marker only becomes checkable once its own slice
 // moves the prose it was lifted from, so the test-6 sweeps read the markers up
 // to this slice and no further. Walks 1 / 2 / 3 / 4 / 5 beside the count above.
-const CURRENT_SLICE = 1;
+const CURRENT_SLICE = 2;
 
 const SKILLS_ROOT = join(REPO_ROOT, "skills");
 
@@ -498,7 +498,7 @@ const MOVED_RUNS: { slice: number; owner: string; source: string; run: string[] 
 
 const ACTIVE_MOVED_RUNS = MOVED_RUNS.filter(({ slice }) => slice <= CURRENT_SLICE);
 
-describe("principle-* family contract (tests 2-7) at expected member count 1", () => {
+describe("principle-* family contract (tests 2-7) at expected member count 5", () => {
   test("every principle skill declares its directory name, a discovery-only description, and user-invocable false", () => {
     const names = principleSkillNames();
     expect(names.length).toBe(EXPECTED_PRINCIPLE_COUNT);
@@ -872,15 +872,15 @@ describe("thin agents: haiku skills are self-contained", () => {
   }
 });
 
-describe("thin agents: documentation counts agree at 57 skills", () => {
+describe("thin agents: documentation counts agree at 61 skills", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
 
-  test("skills/ holds exactly 57 SKILL.md files", () => {
+  test("skills/ holds exactly 61 SKILL.md files", () => {
     const count = readdirSync(join(REPO_ROOT, "skills")).filter((name) =>
       existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")),
     ).length;
-    expect(count).toBe(57);
+    expect(count).toBe(61);
   });
 
   test("docs/skills.md documents every skill: ### entry count equals the on-disk count", () => {
@@ -894,28 +894,27 @@ describe("thin agents: documentation counts agree at 57 skills", () => {
     expect(entries.length).toBe(count);
   });
 
-  test("AGENTS.md heading reads Skills (57)", () => {
-    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (57)");
+  test("AGENTS.md heading reads Skills (61)", () => {
+    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (61)");
   });
 
-  test("docs/skills.md description counts 57 skills and no stale 56", () => {
+  test("docs/skills.md description counts 61 skills and no stale 56", () => {
     const flattened = read(SKILLS_MD).replace(/\s+/g, " ");
-    expect(flattened).toContain("57 skills");
+    expect(flattened).toContain("61 skills");
     // The methodology subtotal climbs toward 56 as the principle-* family
     // lands, so the guard pins the whole phrase and never a bare 56.
     expect(flattened).not.toContain("56 skills");
   });
 
-  test("docs/skills.md split sentence sums to 57", () => {
+  test("docs/skills.md split sentence sums to 61", () => {
     expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain(
-      "11 pipeline entry-point + 8 standalone utility + 38 methodology = 57",
+      "11 pipeline entry-point + 8 standalone utility + 42 methodology = 61",
     );
   });
 
-  test("docs/architecture.md counts all 57 skills in both locations and no stale 55/54/53/51/31", () => {
+  test("docs/architecture.md counts all 61 skills in both locations and no stale 55/54/53/51/31", () => {
     const content = read(ARCHITECTURE_MD);
-    expect(content).toContain("all 57 skills");
-    expect(content).not.toContain("all 56 skills");
+    expect(content).toContain("all 61 skills");
     // Stale-guard: the count appears twice in this doc; a half-swept second
     // occurrence passes a bare toContain, so forbid the old value outright
     // (no-stale-31 precedent).
@@ -929,38 +928,38 @@ describe("thin agents: documentation counts agree at 57 skills", () => {
   // Previously unpinned count locations — they drifted silently before, so
   // each gains a pin, and docs/skills.md gains a stale-guard on the old
   // methodology count (catches its description sentence going stale).
-  test("README.md counts 57 entry-point + methodology skills", () => {
+  test("README.md counts 61 entry-point + methodology skills", () => {
     expect(read(join(REPO_ROOT, "README.md")).replace(/\s+/g, " ")).toContain(
-      "57 entry-point + methodology skills",
+      "61 entry-point + methodology skills",
     );
   });
 
-  test("README.md counts all 57 skills in the Antigravity install line", () => {
+  test("README.md counts all 61 skills in the Antigravity install line", () => {
     expect(read(join(REPO_ROOT, "README.md")).replace(/\s+/g, " ")).toContain(
-      "all 57 skills",
+      "all 61 skills",
     );
   });
 
-  test("docs/cross-host-portability.md counts 57 skills and no stale 56", () => {
+  test("docs/cross-host-portability.md counts 61 skills and no stale 56", () => {
     const flattened = read(join(REPO_ROOT, "docs", "cross-host-portability.md")).replace(
       /\s+/g,
       " ",
     );
-    expect(flattened).toContain("57 skills");
+    expect(flattened).toContain("61 skills");
     // The count appears four times in this doc; a half-swept occurrence
     // passes a bare toContain, so forbid the old value outright.
     expect(flattened).not.toContain("56 skills");
   });
 
-  test("docs/index.md counts all 57 skills", () => {
+  test("docs/index.md counts all 61 skills", () => {
     expect(read(join(REPO_ROOT, "docs", "index.md")).replace(/\s+/g, " ")).toContain(
-      "all 57 skills",
+      "all 61 skills",
     );
   });
 
-  test("docs/skills.md counts 38 methodology skills and no stale 37", () => {
+  test("docs/skills.md counts 42 methodology skills and no stale 37", () => {
     const flattened = read(SKILLS_MD).replace(/\s+/g, " ");
-    expect(flattened).toContain("The 38 methodology skills");
+    expect(flattened).toContain("The 42 methodology skills");
     expect(flattened).not.toContain("37 methodology");
   });
 

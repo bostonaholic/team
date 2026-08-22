@@ -140,7 +140,10 @@ describe("engineering-standards methodology", () => {
   });
 
   test("skills.md methodology table includes engineering-standards row with all 3 consumers", () => {
-    const row = filterRows(read(SKILLS_MD), "engineering-standards", /^#|^>|\/\/|event/);
+    // Key on the row prefix, as the code-review row below does: the skill
+    // name alone also matches prose and the principle-* catalog entries that
+    // cite it, which crowd the real row out of filterRows' window.
+    const row = filterRows(read(SKILLS_MD), "| `engineering-standards` |", /^#|^>|\/\/|event/);
     expect(row.length).toBeGreaterThan(0);
     for (const agent of ["planner", "implementer", "code-reviewer"]) {
       expect(row).toContain(agent);
