@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 56 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 37 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 57 skills: 11 pipeline entry-point slash commands, 9 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase, reflect), and 37 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -48,16 +48,18 @@ catalog into two flavors:
   …`).
 
 That `argument-hint` marker is the whole flavor distinction. Most
-`argument-hint` skills drive a QRSPI phase, but eight (`shipit`,
+`argument-hint` skills drive a QRSPI phase, but nine (`shipit`,
 `pr-open-comments`, `pr-watch-as-author`, `pr-watch-as-reviewer`, `groom-backlog`,
-`pr-cleanup`, `pr-verify`, and `pr-rebase`) are standalone utilities. They land a
+`pr-cleanup`, `pr-verify`, `pr-rebase`, and `reflect`) are standalone utilities.
+They land a
 reviewed PR, triage its unresolved review feedback, and watch it for new
 feedback. They also watch it as a reviewer, approve when your threads
 resolve, groom a project backlog, tear down branch state after a PR is
-finished, verify a PR's test plan, and rebase a branch onto its base
-without changing what it does.
+finished, verify a PR's test plan, rebase a branch onto its base
+without changing what it does, and mine a finished session for the
+learnings worth keeping.
 None is a pipeline phase. The split is
-**11 pipeline entry-point + 8 standalone utility + 37 methodology = 56**.
+**11 pipeline entry-point + 9 standalone utility + 37 methodology = 57**.
 
 For *why* the system is shaped this way (the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits),
@@ -606,6 +608,72 @@ QRSPI phase: a self-contained action a user runs on demand.
   a bare `--force` and never an implicit lease — the skill's own `git
   fetch` advances the remote-tracking ref an implicit lease would read.
   It does not wait for CI and does not merge; `/shipit` lands the PR.
+
+### reflect
+
+- **Purpose:** Mine the session it was invoked from for learnings that
+  outlive it, and propose each one as a concrete change. It resolves the
+  session's own transcript, sends three read-only lenses over it, and
+  synthesizes one Accepted / Rejected / Backlog list with the evidence
+  behind every item.
+- **`$ARGUMENTS`:** `[skill-name]` — an optional focus that narrows every
+  lens to learnings about one skill. Empty means the whole session. A focus
+  naming no skill stops the run before anything is read and prints its near
+  matches.
+- **Phase:** None. A standalone session-review action, not part of the
+  pipeline.
+- **Key behaviors:** **User-invocable only** — it sets
+  `disable-model-invocation: true`, because a run rewrites `SKILL.md` files
+  every later run reads and files public issues. Resolution is by **marker**,
+  never by content match: the run creates its cache with `mktemp -d` and
+  prints the absolute path, the host records that output inline in the
+  transcript, and a bundled script
+  (`skills/reflect/resolve-transcript.mjs`) finds the one file on disk
+  holding that string. The search returns file names only, so no unmatched
+  session's content reaches a lens. The same script normalizes the
+  transcript: `user` and `assistant` records only (every other type is
+  dropped and counted), each span cut to 4,000 bytes, a tool call carried as
+  its tool name plus its invocation so the tooling lens has an invocation to
+  count, the stream bounded to
+  2,000 records and 4 MB with the newest kept, and malformed lines skipped
+  and counted — so the record classifier, the byte cap, and the rule that
+  the `tool-results/*.txt` sidecars are never opened all run as code. The
+  three lenses — **judgment** (guidance that was absent, ambiguous, or
+  misleading), **tooling** (a command or test that cost unwarranted
+  retries), **divergent** (something no skill describes) — run as parallel
+  `team:file-finder` subagents capped at 30 reply lines each. The dispatch
+  target is chosen for its toolset (`Read, Grep, Glob`, no `Bash` and no
+  `Write`): a lens reads the transcript path it is handed, so an imperative
+  embedded in a transcript span cannot be fenced, and a target holding `Bash`
+  would give it a command sink. `team:researcher` is rejected on the same axis
+  rather than on fit — it holds `Agent`, and its preloaded `nested-agents`
+  authorizes dispatch to `Explore`, which holds `Bash`, or to `general-purpose`,
+  which holds every tool; `team:file-finder` holds no `Agent` at all, so it has
+  no delegation path. Both agents scope themselves to `questions.md` and forbid
+  themselves speculation, so each lens prompt states its overrides of the agent
+  body outright: the transcript path is the lens's only input and its scope, the
+  reply shape is the prompt's own, and judgment about the session is the errand.
+  An override cannot bind an agent body, so a reply carrying no finding in the
+  shape the prompt asked for — a `## Found Files` report, a bare path list, an
+  error, or nothing — is **disqualified**: that lens's pass re-runs inline and
+  the report names it, because a disqualified reply and a session that taught
+  nothing both arrive as zero findings and only this check separates them.
+  Where dispatch is unavailable the three passes run sequentially in-session as
+  a named **reduced-assurance mode** — that session holds `Bash` and `Write`, so
+  the toolset guarantee does not carry, and the bound that replaces it is that
+  the spans are the session's own history, already in its context once, under
+  two compensating rules: a pass's only output is findings in the plan file, and
+  no span may cause a tool call. On Codex and Antigravity, which install the
+  skill but cannot dispatch Claude Code agents, that mode is the normal path,
+  and the run's report names which mode it ran in. Transcript spans
+  are untrusted content: proposals paraphrase and cite a file path or a turn
+  index, and never quote a transcript line. Sorting happens once, in
+  synthesis, so one finding cannot be classified three ways; a finding a
+  deterministic check would enforce better is demoted to Backlog, as is any
+  proposal to rewrite `AGENTS.md`, `CLAUDE.md`, or `docs/`. The read-and-plan
+  phase writes only inside its printed run cache — the plan file it leaves
+  there is what the later turns read, and the cache is never deleted so the
+  report stays auditable.
 
 ## Methodology skills
 
