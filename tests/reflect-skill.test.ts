@@ -5,12 +5,14 @@
 //
 //     bun test tests/reflect-skill.test.ts -t "Slice 1"
 //
-// L1 (pure unit, hermetic): the bundled resolver,
-// skills/reflect/resolve-transcript.mjs. Resolution, record classification,
-// and the byte/record bounds are all `f(input) -> output`, so docs/testing.md
-// ("L1: Pure unit") puts them here rather than in prose. Every fixture is
-// synthetic JSONL written into a temp dir keyed by pid+timestamp and removed
-// afterwards — no test ever reads a real ~/.claude/projects/.
+// L1 (pure unit, hermetic): the two bundled scripts,
+// skills/reflect/resolve-transcript.mjs and skills/reflect/write-target.mjs.
+// Resolution, record classification, the byte/record bounds, the untrusted
+// name pattern, <repo> containment, and the two-root tie-break are all
+// `f(input) -> output`, so docs/testing.md ("L1: Pure unit") puts them here
+// rather than in prose. Every fixture is synthetic JSONL written into a temp
+// dir keyed by pid+timestamp and removed afterwards — no test ever reads a real
+// ~/.claude/projects/.
 //
 // L2 (static-invariant tripwires): the load-bearing rules of
 // skills/reflect/SKILL.md. These assert CONTRACTS — frontmatter keys and
@@ -31,6 +33,7 @@ import {
   mkdtempSync,
   realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -45,6 +48,12 @@ import {
   normalizeTranscript,
   resolveTranscript,
 } from "../skills/reflect/resolve-transcript.mjs";
+import {
+  hasPluginMarker,
+  isInsideRepo,
+  isValidSkillName,
+  preferredEditRoot,
+} from "../skills/reflect/write-target.mjs";
 
 const REPO_ROOT = process.cwd();
 // reflect is a RUNTIME skill — under skills/ (distributed), not .claude/.
@@ -180,6 +189,7 @@ function section(heading: RegExp): string {
 
 const LENSES = /^##\s+.*\blenses\b/i;
 const SYNTHESIS = /^##\s+.*\bsynthesis\b/i;
+const APPLY = /^##\s+.*\bapply\b/i;
 
 // The two `### ` subsections of `## The lenses` that exist so a rule has a
 // stable place to live. Exact headings, which docs/testing.md lists among the
@@ -710,5 +720,190 @@ describe("Slice 1 — L2: reflect's three reporting lenses", () => {
     // Guard: a missing file reads as "" and would vacuously pass the absence.
     expect(text.length).toBeGreaterThan(0);
     expect(/frog/i.test(text)).toBe(false);
+  });
+});
+
+// ===========================================================================
+// Slice 2 — L1: write targets
+// ===========================================================================
+
+describe("Slice 2 — L1: write-target rejects an untrusted skill name", () => {
+  test("a lowercase hyphenated name is accepted", () => {
+    // The positive control: every skill on disk matches this shape, so a
+    // validator that rejects everything cannot pass the rejections below.
+    expect(isValidSkillName("reflect")).toBe(true);
+    expect(isValidSkillName("pr-watch-as-reviewer")).toBe(true);
+  });
+
+  test("a dotfile name is rejected", () => {
+    expect(isValidSkillName(".hidden")).toBe(false);
+  });
+
+  test("a name carrying a dot is rejected", () => {
+    expect(isValidSkillName("foo.bar")).toBe(false);
+  });
+
+  test("the current and parent directory names are rejected", () => {
+    expect(isValidSkillName(".")).toBe(false);
+    expect(isValidSkillName("..")).toBe(false);
+  });
+
+  test("an uppercase name is rejected", () => {
+    expect(isValidSkillName("Reflect")).toBe(false);
+  });
+});
+
+describe("Slice 2 — L1: write-target refuses a target outside <repo>", () => {
+  test("a path under a symlinked directory that leaves <repo> is rejected", () => {
+    const outside = tree("escape-outside", { "stolen/keep.txt": "outside the repo\n" });
+    const repoRoot = tree("escape-repo", { ".claude/skills/real/SKILL.md": "---\nname: real\n---\n" });
+    symlinkSync(join(outside, "stolen"), join(repoRoot, ".claude", "skills", "escapee"));
+
+    // Positive control first: a real path inside the repo is accepted, so a
+    // containment check that refuses everything cannot pass this test.
+    expect(
+      isInsideRepo({
+        candidatePath: join(repoRoot, ".claude", "skills", "real", "SKILL.md"),
+        repoRoot,
+      }),
+    ).toBe(true);
+
+    // The write target's final component does not exist yet, which is the
+    // normal create case — containment must resolve the real parent anyway.
+    expect(
+      isInsideRepo({
+        candidatePath: join(repoRoot, ".claude", "skills", "escapee", "SKILL.md"),
+        repoRoot,
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("Slice 2 — L1: write-target's two-root tie-break follows the plugin marker", () => {
+  test("a repo carrying a plugin marker resolves edits to <repo>/skills", () => {
+    const repoRoot = tree("tiebreak-plugin", {
+      ".claude-plugin/plugin.json": '{"name":"team"}\n',
+      "skills/reflect/SKILL.md": "---\nname: reflect\n---\n",
+      ".claude/skills/reflect/SKILL.md": "---\nname: reflect\n---\n",
+    });
+
+    expect(
+      preferredEditRoot({ repoRoot, hasPluginMarker: hasPluginMarker(repoRoot) }),
+    ).toBe(join(repoRoot, "skills"));
+  });
+
+  test("a repo carrying no plugin marker resolves edits to <repo>/.claude/skills", () => {
+    const repoRoot = tree("tiebreak-plain", {
+      "skills/reflect/SKILL.md": "---\nname: reflect\n---\n",
+      ".claude/skills/reflect/SKILL.md": "---\nname: reflect\n---\n",
+    });
+
+    expect(
+      preferredEditRoot({ repoRoot, hasPluginMarker: hasPluginMarker(repoRoot) }),
+    ).toBe(join(repoRoot, ".claude", "skills"));
+  });
+});
+
+// ===========================================================================
+// Slice 2 — L2: the apply turn
+// ===========================================================================
+
+describe("Slice 2 — L2: reflect's apply turn is fenced by a clean-and-tracked precondition", () => {
+  test("both git preconditions are the commands the apply turn runs", () => {
+    // These two are the premise that makes `git restore` a true undo: an
+    // untracked or already-dirty target cannot be restored to a known state.
+    const apply = section(APPLY);
+    expect(apply.length).toBeGreaterThan(0);
+    expect(apply).toContain("git ls-files --error-unmatch");
+    expect(apply).toContain("git status --porcelain");
+    expect(apply).toContain("git restore");
+  });
+
+  test("the untrusted proposed name travels by file and reaches the guard expanded", () => {
+    // The name is transcript text. Pasted into a command as a literal, a name
+    // carrying $(…), a backtick, or ${…} runs as shell before the guard's own
+    // allowlist can see it — one process too late. A command substitution's
+    // output is not re-parsed, so reading the name back from a file and
+    // referencing only the variable is what keeps the allowlist first.
+    const apply = section(APPLY);
+    expect(apply.length).toBeGreaterThan(0);
+    expect(apply).toContain('NAME="$(cat');
+    expect(apply).toContain('"${NAME:?}"');
+  });
+
+  test("a creation is fenced on the absence of its target", () => {
+    // The tracked-and-clean fence cannot hold a creation — the path does not
+    // exist yet, so it is untracked by definition and has no pre-image, and
+    // that fence would skip every creation ever proposed. Absence is the
+    // precondition that makes "delete the named path" a true undo.
+    const apply = flat(section(APPLY));
+    expect(apply.length).toBeGreaterThan(0);
+    expect(apply).toContain("must not exist");
+    expect(/skips? that item/i.test(apply)).toBe(true);
+  });
+
+  test("creation only ever targets .claude/skills/<name>/SKILL.md", () => {
+    const apply = section(APPLY);
+    expect(apply.length).toBeGreaterThan(0);
+    expect(apply).toContain(".claude/skills/<name>/SKILL.md");
+  });
+
+  test("the never-write list names the three forbidden destinations", () => {
+    const apply = flat(section(APPLY));
+    expect(apply.length).toBeGreaterThan(0);
+    expect(apply).toContain("~/.claude/");
+    expect(apply).toContain("agents/*.md");
+    expect(apply).toContain("sibling repo");
+  });
+
+  test("the authoring route probes three tiers and falls back to a fixed contract", () => {
+    // A miss at every tier is not an error, so the fallback contract must be
+    // stated in reflect's own body — .claude/skills/create-team-skill/ does
+    // not ship to a consumer repo.
+    const apply = section(APPLY);
+    expect(apply.length).toBeGreaterThan(0);
+    expect(apply).toContain(".claude/skills/create-team-skill/");
+    expect(apply).toContain("create-*skill*");
+    expect(apply).toContain("skill-creator");
+  });
+
+  test("the fallback frontmatter contract names every field it fixes", () => {
+    const apply = section(APPLY);
+    expect(apply.length).toBeGreaterThan(0);
+    expect(apply).toContain("argument-hint");
+    expect(apply).toContain("effort");
+    expect(apply).toContain("user-invocable: false");
+    expect(apply).toContain("/<name>");
+  });
+
+  test("a plan path this conversation did not print is refused", () => {
+    // Approval is not idempotent and two reflect runs can sit on one repo, so
+    // reading a plan file from a directory this conversation never printed
+    // applies a stranger run's edits. With no printed path the turn stops and
+    // asks for one rather than guessing.
+    const apply = section(APPLY);
+    expect(apply.length).toBeGreaterThan(0);
+    expect(/printed/i.test(apply)).toBe(true);
+    expect(apply).toContain("AskUserQuestion");
+    expect(flat(apply)).toContain("absolute plan path");
+  });
+
+  test("each target is re-read and compared against the plan's pre-image", () => {
+    // The gap between approval and application is a window in which the target
+    // can change — including by already carrying the edit. A difference skips
+    // that item instead of overwriting whatever landed there.
+    const apply = flat(section(APPLY));
+    expect(apply.length).toBeGreaterThan(0);
+    expect(apply).toContain("pre-image");
+    expect(/skip/i.test(apply)).toBe(true);
+  });
+
+  test("the apply turn runs the repo's own check after the writes", () => {
+    // A pinned-prose test elsewhere in the repo can go red from one edit, and
+    // the user should learn that here rather than in CI. Reflect reports the
+    // verdict and neither fixes nor reverts.
+    const apply = section(APPLY);
+    expect(apply.length).toBeGreaterThan(0);
+    expect(apply).toContain("skills/running-quality-checks/SKILL.md");
   });
 });
