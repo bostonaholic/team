@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`/reflect` mines the session you are in for the learnings worth keeping.** A long session teaches things that die with it: the guidance that was missing, the command that cost four retries, the thing you did that no skill describes. Run [`/reflect`](https://github.com/bostonaholic/team/blob/main/skills/reflect/SKILL.md) at the end of one and it reads that session's own transcript — not its own memory, which compaction has already thinned — and reports an Accepted / Rejected / Backlog list with the evidence behind every item. Resolution is by **marker**, not by guessing which transcript is yours: the run prints its `mktemp -d` cache path, the host records that line inline in the transcript, and a bundled script finds the one file on disk holding that string. Two matches stop the run rather than hand three reading passes a stranger's session, and the search returns file names only, so no unmatched session's content is read. Three lenses go over the normalized transcript in parallel — **judgment** (guidance that was absent, ambiguous, or misleading), **tooling** (a command or test that cost retries the task did not warrant), **divergent** (something no skill describes) — and the sort into buckets happens once afterwards, so one finding cannot come back classified three ways. Transcript spans are treated as untrusted content throughout: every proposal paraphrases and cites a file path or a turn index, and none quotes a transcript line into a file or an issue body. **What this asks of you:** invoke it deliberately — `reflect` sets `disable-model-invocation: true`, so no model starts a run on its own, and this pass writes nothing outside the run cache whose absolute path it prints. On Codex, which ignores that key, delete `skills/reflect` after installing (the install now says so).
+
 ## [0.55.0] - 2026-08-20
 
 ### Fixed

@@ -10,9 +10,9 @@ set -euo pipefail
 # install — no manifest is generated and no per-skill link is written.
 #
 # Discovery follows a symlinked plugin root, and this host honors
-# disable-model-invocation, so pr-rebase and pr-watch-as-reviewer stay out of the
-# model's reach on their own. Nothing is withheld here, unlike the Codex install,
-# whose host ignores that key.
+# disable-model-invocation, so pr-rebase, pr-watch-as-reviewer, and reflect stay
+# out of the model's reach on their own. Nothing is withheld here, unlike the
+# Codex install, whose host ignores that key.
 
 PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # The `.gemini` spelling below is correct: it is Antigravity CLI's own global
