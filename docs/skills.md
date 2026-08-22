@@ -673,7 +673,29 @@ QRSPI phase: a self-contained action a user runs on demand.
   proposal to rewrite `AGENTS.md`, `CLAUDE.md`, or `docs/`. The read-and-plan
   phase writes only inside its printed run cache — the plan file it leaves
   there is what the later turns read, and the cache is never deleted so the
-  report stays auditable.
+  report stays auditable. Applying the approved edits is a **separate turn**
+  behind one approval for the whole skill-write class, and it reads a plan file
+  only from a run cache this conversation printed. **Write scope is narrow and
+  checked in code** (`skills/reflect/write-target.mjs`): a proposed name must
+  match `^[a-z][a-z0-9-]*$`; an edit lands in the skills root the running host
+  actually loads (`<repo>/skills/` for a repo carrying a plugin marker,
+  `<repo>/.claude/skills/` otherwise); a creation only ever targets
+  `<repo>/.claude/skills/<name>/SKILL.md` and only when that path does not
+  exist; every resolved real path must stay inside the repository, so a
+  symlinked directory cannot carry a write out; and `~/.claude/**`, a sibling
+  repository, and `agents/*.md` are never written. The two modes carry different
+  preconditions, because they have different undos: an **edit** is applied only
+  while its target is **tracked and clean** (`git ls-files --error-unmatch`,
+  `git status --porcelain`) and still matches the pre-image the plan recorded,
+  which is what makes `git restore -- <path>` a true undo; a **creation**
+  targets a path that does not exist, so its precondition is that absence and
+  its undo is deleting the named path. Anything else is skipped with a reason.
+  Authoring guidance is discovered
+  (`.claude/skills/create-team-skill/`, any `create-*skill*` repo skill, an
+  installed host `skill-creator`) with a fixed frontmatter contract as the
+  fallback, since none of those ships with the plugin. After the writes it runs
+  the repo's own check through `running-quality-checks` and reports the
+  verdict; it neither fixes a failure nor reverts.
 
 ## Methodology skills
 
