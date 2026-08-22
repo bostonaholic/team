@@ -6,6 +6,7 @@ deps:
   - skills/code-review/SKILL.md
   - skills/conventional-comments/SKILL.md
   - skills/engineering-standards/SKILL.md
+  - skills/principle-comment-the-why/SKILL.md
 ---
 
 # Synthetic implementer artifact: webhook delivery retry helper

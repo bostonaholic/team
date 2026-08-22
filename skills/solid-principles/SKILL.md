@@ -84,4 +84,5 @@ consequence — why this violation matters for this codebase right now:
 > `issue: SRP violation — this function handles both input validation and the
 > database write.`
 
-A finding that names no principle and no consequence is not actionable.
+A finding that names no principle and no consequence is not actionable, per
+`skills/principle-make-findings-actionable/SKILL.md`.

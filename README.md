@@ -93,7 +93,7 @@ agy plugin install /path/to/team
 ```
 
 Team ships `plugin.json` at the repo root, which is this host's plugin marker,
-so it installs as a native Antigravity plugin — all 61 skills and all 13 agents.
+so it installs as a native Antigravity plugin — all 65 skills and all 13 agents.
 `agy plugin uninstall team` removes it.
 
 Skills arrive under **bare names** — ask for `shipit`, not `team:shipit`. The
@@ -168,7 +168,7 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 ## Components
 
 - **13 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
-- **61 entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch-as-author`, `/pr-watch-as-reviewer`, `/groom-backlog`, `/pr-cleanup`, `/pr-verify`, and `/pr-rebase` utilities, and shared methodologies
+- **65 entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch-as-author`, `/pr-watch-as-reviewer`, `/groom-backlog`, `/pr-cleanup`, `/pr-verify`, and `/pr-rebase` utilities, and shared methodologies
 - **3 hooks** in `hooks/`: `docs/plans/`-aware compaction resilience and plugin-file validation
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
 - **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.

@@ -14,8 +14,9 @@ reference.
 
 ## Comment Style
 
-Critique the code, not the coder. Assume competence. The same finding can
-read as collaborative or hostile depending on phrasing:
+Critique the code, not the coder. Assume competence, per
+`skills/principle-critique-the-code-not-the-coder/SKILL.md`. The same finding
+can read as collaborative or hostile depending on phrasing:
 
 | Avoid (person-directed) | Prefer (code-directed) |
 |-------------------------|------------------------|
@@ -23,8 +24,8 @@ read as collaborative or hostile depending on phrasing:
 | "You are not handling the null case." | "The null case is not handled here." |
 | "This does not make any sense." | "I cannot follow what this branch is doing — clarify?" |
 
-- Explain *why* the change is requested. A finding without a reason loses
-  the rationale for the next reader of the diff.
+- Explain *why* the change is requested, per
+  `skills/principle-make-findings-actionable/SKILL.md`.
 - Reserve `issue:` for findings that materially affect correctness,
   security, or maintainability. Use `suggestion:` or `nitpick:` for
   preferences.

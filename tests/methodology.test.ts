@@ -916,8 +916,15 @@ describe("code-comment rules (L2 content tripwire)", () => {
   const SKILL_FILE = join(REPO_ROOT, "skills", "engineering-standards", "SKILL.md");
   const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
 
-  test("engineering-standards defines the Code Comments rule set", () => {
-    const section = sectionFrom(read(SKILL_FILE), "## Code Comments");
+  const COMMENT_PRINCIPLE = join(
+    REPO_ROOT,
+    "skills",
+    "principle-comment-the-why",
+    "SKILL.md",
+  );
+
+  test("principle-comment-the-why defines the Code Comments rule set", () => {
+    const section = sectionFrom(read(COMMENT_PRINCIPLE), "## What it rules out");
     expect(section.length).toBeGreaterThan(0);
     // Why-only rule: comments never explain WHAT, only non-obvious WHY.
     expect(/non-obvious why/i.test(section)).toBe(true);
@@ -929,9 +936,8 @@ describe("code-comment rules (L2 content tripwire)", () => {
     expect(/doc-section references/i.test(section)).toBe(true);
     // Upstream-bug-link exemption: the link IS the why.
     expect(/upstream/i.test(section)).toBe(true);
-    // No commented-out code; no TODOs in delivered code.
+    // No commented-out code.
     expect(/commented-out code/i.test(section)).toBe(true);
-    expect(section).toContain("TODO");
     // Doc comments on exported/public interfaces follow the ecosystem's
     // convention and are exempt.
     expect(/doc comments/i.test(section)).toBe(true);
@@ -943,6 +949,16 @@ describe("code-comment rules (L2 content tripwire)", () => {
     // is behavior, not wording — it lives in the planted-comment-*
     // code-reviewer evals, per docs/testing.md ("behavior that only prose
     // can carry belongs at L5 or L6").
+  });
+
+  test("engineering-standards keeps the TODO ban and points at the principle", () => {
+    // The rule set moved out; what stays is the deferred-work bullet, which
+    // names this repo's implementer report, and the pointer that carries a
+    // reader with no path to the rest.
+    const section = sectionFrom(read(SKILL_FILE), "## Code Comments");
+    expect(section.length).toBeGreaterThan(0);
+    expect(section).toContain("TODO");
+    expect(section).toContain("skills/principle-comment-the-why/SKILL.md");
   });
 
   test("implementer defers comment discipline to engineering-standards via a one-line pointer", () => {

@@ -418,6 +418,7 @@ describe("static gate: planted-comment-violations fixture", () => {
       "agents/code-reviewer.md",
       "skills/code-review/SKILL.md",
       "skills/engineering-standards/SKILL.md",
+      "skills/principle-comment-the-why/SKILL.md",
     ]) {
       expect(fixture.frontmatter.deps).toContain(dep);
     }
@@ -469,6 +470,7 @@ describe("static gate: planted-comment-violations fixture", () => {
       "agents/code-reviewer.md",
       "skills/code-review/**",
       "skills/engineering-standards/**",
+      "skills/principle-comment-the-why/**",
       "tests/code-reviewer.evals.ts",
       "evals/fixtures/code-reviewer/planted-comment-violations/**",
       "evals/rubrics/code-reviewer.md",

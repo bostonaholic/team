@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 61 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 42 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 65 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 46 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -58,7 +58,7 @@ resolve, groom a project backlog, tear down branch state after a PR is
 finished, verify a PR's test plan, and rebase a branch onto its base
 without changing what it does.
 None is a pipeline phase. The split is
-**11 pipeline entry-point + 8 standalone utility + 42 methodology = 61**.
+**11 pipeline entry-point + 8 standalone utility + 46 methodology = 65**.
 
 For *why* the system is shaped this way (the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits),
@@ -610,7 +610,7 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 42 methodology skills carry no `argument-hint` and, with one
+The 46 methodology skills carry no `argument-hint` and, with one
 exception, are never invoked directly. The exception is `code-review`: it
 is a meaningful standalone user action ("review this diff",
 `/code-review`) as well as a building block, so it does not set
@@ -1196,6 +1196,50 @@ names the pointing sources rather than an agent.
   Separates refactoring from feature work into ordered commits. Bounds itself
   against commit size and against the project's merge strategy.
 
+### principle-comment-the-why
+
+- **Purpose:** What earns a comment in a source file, and what a comment may
+  not say.
+- **Pointed to by:** `engineering-standards`, `code-review`. Also reachable by
+  model auto-load.
+- **Key behaviors:** Admits only the non-obvious why, and only where neither
+  code nor tests can carry it. Bans references that rot, process narration,
+  and commented-out code, and exempts doc comments on public interfaces and
+  the upstream-bug link that is itself the why. Scopes itself to source files
+  and hands review findings to `conventional-comments`.
+
+### principle-make-findings-actionable
+
+- **Purpose:** What a reported problem has to contain to be usable.
+- **Pointed to by:** `conventional-comments`, `solid-principles`,
+  `engineering-standards`. Also reachable by model auto-load.
+- **Key behaviors:** Requires the condition, the evidence, and the consequence
+  together, across review comments, commit bodies, assertion messages, and
+  user-visible errors. Rules out the reasonless verdict, withheld evidence,
+  and the finding with no address. Takes no position on severity, tone, or
+  whether a fix is proposed.
+
+### principle-critique-the-code-not-the-coder
+
+- **Purpose:** Whose name the sentence takes when a finding is phrased.
+- **Pointed to by:** `conventional-comments`. Also reachable by model
+  auto-load.
+- **Key behaviors:** Puts the artifact in the subject position and assumes the
+  author had a reason. Rules out second-person defect phrasing, defects
+  attributed to traits, and sarcasm. Explicitly does not soften severity and
+  asks for no praise — a blocking finding stays blocking.
+
+### principle-fail-loudly
+
+- **Purpose:** Where a failure has to become visible.
+- **Pointed to by:** `engineering-standards`, `code-review`. Also reachable by
+  model auto-load.
+- **Key behaviors:** Treats silence as indistinguishable from success and
+  requires the report to reach a reader who can act. Rules out the swallowing
+  catch, the debug-level whisper, the test that passes without running, and
+  the zero exit on a failed step. Governs the primary path only, leaving
+  declared best-effort steps to `principle-degrade-never-block`.
+
 ## Skill ↔ agent ↔ phase
 
 This table ties each skill to the agents or orchestrator skills that load
@@ -1268,6 +1312,10 @@ entry-point section above rather than repeating them here.
 | `principle-targeted-exception-scopes` | `engineering-standards` (pointer); model auto-load | Discovery-only (no QRSPI phase) |
 | `principle-rule-of-three` | `engineering-standards`, `refactoring-to-patterns` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
 | `principle-one-change-per-commit` | `git-commit`, `refactoring-to-patterns` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-comment-the-why` | `engineering-standards`, `code-review` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-make-findings-actionable` | `conventional-comments`, `solid-principles`, `engineering-standards` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-critique-the-code-not-the-coder` | `conventional-comments` (pointer); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-fail-loudly` | `engineering-standards`, `code-review` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
 
 The read-only `Explore` subagent dispatched by `eng-design-doc-review` is
 an one more consumer of `technical-design-doc`, `code-review`,
