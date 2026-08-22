@@ -91,7 +91,8 @@ in the codebase so the implementer does not pick the wrong precedent.>
 
 ## Decisions made
 <numbered list of design decisions, each with: the decision, the alternative
-considered, why this was chosen. Name the surfaces that must change together
+considered, why this was chosen — per
+`skills/principle-name-the-alternative/SKILL.md`. Name the surfaces that must change together
 (callers, siblings, config, docs). Mark every self-resolved choice
 "Assumption — chosen without user review" here.>
 
@@ -113,7 +114,9 @@ Edge cases that are intentionally deferred belong in `## Out of scope`,
 not here — so structure and tests do not silently expand into them.>
 
 ## Surfaces
-<Include this section ONLY when the design defines more than one way in:
+<The rule this section enforces is
+`skills/principle-every-rule-reaches-every-surface/SKILL.md`.
+Include this section ONLY when the design defines more than one way in:
 two entry modes, a self-contained path that can be loaded alone, a split
 across turns, or any procedure a reader can arrive at without reading the
 rest. A single-path design omits the section entirely.

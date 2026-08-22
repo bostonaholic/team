@@ -715,7 +715,7 @@ cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. `code-review` is the only skill loaded as composed
 methodology that is also a user command.)
 
-For the full per-skill reference (all 65 skills, their arguments,
+For the full per-skill reference (all 70 skills, their arguments,
 consumers, and behaviors), see [skills.md](skills.md).
 
 ### Design guidelines
@@ -773,8 +773,8 @@ consumers, and behaviors), see [skills.md](skills.md).
    `cross-model-review`, and `verifying-ux` — and moving a rule out of any
    of them is governed by the first case.
 
-   What is left behind is a pointer, because a fact lives in one file and
-   every other surface carries its path rather than a second copy.
+   What is left behind is a pointer, per
+   `skills/principle-state-it-once/SKILL.md`.
 
 ## 7. Hooks
 
@@ -991,7 +991,7 @@ children are confirmed, and the depth cap is stable.
 
 ## See also
 
-- **[Skills](skills.md)**: the full per-skill reference for all 65 skills.
+- **[Skills](skills.md)**: the full per-skill reference for all 70 skills.
 - **[Testing](testing.md)**: the six-layer test harness and which layer each check belongs at.
 - **[Vision](vision.md)**: the loop-driven end state this design builds toward.
 - **[Ethos](ethos.md)**: the principles behind the pipeline.

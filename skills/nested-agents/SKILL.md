@@ -172,9 +172,8 @@ sub-agent through the `Agent` tool and try to get it refuted.
   > CONFIRMED. Do not write files or spawn agents.
 
 - **A stated rule outranks observed precedent.** The same pattern existing
-  elsewhere in the tree does not refute a rule-violation claim. Precedent
-  records what someone did; a rule records what is permitted, and the gap
-  between them is exactly the debt a rule exists to stop growing. A skeptic
+  elsewhere in the tree does not refute a rule-violation claim, per
+  `skills/principle-rules-outrank-precedent/SKILL.md`. A skeptic
   that answers "this already appears on the default branch" has found more
   instances of the violation, not a defence of it. Only two things refute
   such a claim: the rule does not say what the claim says, or the code falls

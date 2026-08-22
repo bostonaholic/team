@@ -143,7 +143,8 @@ means every planned shot is present. `partial` means some were skipped.
 
 - ALWAYS stop the dev server when you are done, even if verification fails.
   Use process IDs or `kill` to make sure that cleanup happens.
-- Do NOT change any code. You are a tester, not a fixer.
+- Do NOT change any code. You are a tester, not a fixer — per
+  `skills/principle-separate-generator-from-evaluator/SKILL.md`.
 - Do NOT test functionality unrelated to the recent implementation.
 - If the server fails to start, report that as the primary finding and stop.
 - Never commit screenshots to any branch or worktree — they are local scratch

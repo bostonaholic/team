@@ -106,7 +106,8 @@ edge-case section is incomplete.
 
 ### Trade-offs Considered
 
-Every design choice implies rejected alternatives. For each major decision:
+Every design choice implies rejected alternatives, per
+`skills/principle-name-the-alternative/SKILL.md`. For each major decision:
 
 ```
 **Decision:** What was chosen.

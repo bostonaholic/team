@@ -43,7 +43,8 @@ All phase artifacts live under `docs/plans/<id>/`. The schema is canonical in
 `skills/artifact-frontmatter/SKILL.md` — the `<id>` forms, the artifact
 inventory, the `repos.md` and `prd.md` schemas, the topic-consistency
 invariant, and the `ticketId` scope. Consult that skill rather than restating
-it. What matters for phase discipline:
+it, per `skills/principle-state-it-once/SKILL.md`. What matters for phase
+discipline:
 
 - The `<id>` slug and the `topic` frontmatter field match across every
   artifact for the same feature.

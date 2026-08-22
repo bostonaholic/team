@@ -1061,6 +1061,16 @@ describe("skeptic passes weigh a stated rule above precedent (L2 tripwire)", () 
     expect(SYSTEMS.length).toBeGreaterThan(0);
     const text = squash(SYSTEMS);
     expect(/conventions established elsewhere/i.test(text)).toBe(true);
+    // The deferral itself now lives in the principle; systems-thinking keeps
+    // the convention half of the lens and carries the path.
+    expect(text).toContain("skills/principle-rules-outrank-precedent/SKILL.md");
+  });
+
+  test("the precedent rule states where convention stops governing", () => {
+    const text = squash(
+      read(join(REPO_ROOT, "skills", "principle-rules-outrank-precedent", "SKILL.md")),
+    );
+    expect(text.length).toBeGreaterThan(0);
     expect(/where no written\s+rule speaks|no written rule speaks/i.test(text)).toBe(true);
   });
 });

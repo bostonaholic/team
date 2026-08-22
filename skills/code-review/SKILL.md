@@ -5,10 +5,8 @@ description: Generator-evaluator separation and review methodology — loaded by
 
 # Code Review
 
-Reviews must be performed by agents with fresh context. The generator (the
-agent that wrote the code) must never evaluate its own output. This separation
-prevents self-evaluation bias — the tendency to see what you intended to write
-rather than what you actually wrote.
+Reviews must be performed by agents with fresh context, per
+`skills/principle-separate-generator-from-evaluator/SKILL.md`.
 
 Write the prose this skill governs at a seventh-grade reading level, in
 STE-flavored mode. Full methodology: `skills/writing-prose/SKILL.md`. Apply
@@ -27,8 +25,6 @@ applies.
 
 ## Generator-Evaluator Separation
 
-The cardinal rule: **Do not let the same model grade its own exam.**
-
 - Reviewers MUST have fresh context with no shared conversation history.
 - Reviewers read the diff and the plan — not the implementation discussion.
 - Reviewers form their own understanding of intent from artifacts, not from
@@ -37,9 +33,6 @@ The cardinal rule: **Do not let the same model grade its own exam.**
   the implementer.
 
 ## Veto Without Authorship
-
-The separation runs both directions. A reviewer blocks the line and changes
-nothing. A producer changes the tree and casts no verdict.
 
 - **You hold no write tool.** Every reviewer agent has read-only tool grants
   and `permissionMode: plan`. Report the defect. Never fix it. A reviewer that
@@ -234,11 +227,9 @@ Three obligations are non-negotiable:
 - **Verify every done criterion is met.** Flag any that are missing or
   incomplete.
 - **Run the project's test suite.** Report the command used and the result.
-- **Check each rule the diff introduces reaches every surface it must.**
-  When the changed code or prose has more than one way in — two entry modes,
-  a path documented as usable on its own, a split across turns or processes —
-  a new rule added to one is not added to the others by implication. Take
-  each rule the diff adds and name where it now holds. A rule present in one
+- **Check each rule the diff introduces reaches every surface it must**, per
+  `skills/principle-every-rule-reaches-every-surface/SKILL.md`.
+  A rule present in one
   surface and silently absent from a sibling is a finding; a stated reason
   for the absence answers it. Read a self-contained path **alone**, the way
   its callers arrive at it.
@@ -260,6 +251,8 @@ no order implied:
   established elsewhere (cite the convention)? Findings cite the
   `System Fit` checklist item.
 - **SOLID violations** — per `skills/solid-principles/SKILL.md`.
+- **A fact restated rather than pointed at** — per
+  `skills/principle-state-it-once/SKILL.md`.
 - **Test files** — per both severity regimes above and
   `skills/test-style/SKILL.md`.
 

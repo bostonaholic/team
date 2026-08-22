@@ -190,13 +190,10 @@ it defines their format.
    path — is incomplete. Edge cases deliberately deferred must appear in
    "Out of scope" or "Non-Goals", not be silently omitted.
 
-5. **Check every rule reaches every surface it must.** Skip this step when
-   the design defines one path in. When it defines more than one — two entry
-   modes, a section that claims to be loadable on its own, a split across
-   turns — take each rule or safeguard the design introduces and ask which
-   surfaces state it. A design can satisfy step 4 *per surface in isolation*
-   while the surfaces disagree with each other, so the categories above will
-   not catch this.
+5. **Check every rule reaches every surface it must**, per
+   `skills/principle-every-rule-reaches-every-surface/SKILL.md`. A design can
+   satisfy step 4 *per surface in isolation* while the surfaces disagree with
+   each other, so the categories above will not catch this.
 
    An omission is a finding unless the design says why it is deliberate.
    Judge a `no` on its reasoning, not its presence: a safeguard that is

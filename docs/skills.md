@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 65 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 46 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 70 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 51 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -58,7 +58,7 @@ resolve, groom a project backlog, tear down branch state after a PR is
 finished, verify a PR's test plan, and rebase a branch onto its base
 without changing what it does.
 None is a pipeline phase. The split is
-**11 pipeline entry-point + 8 standalone utility + 46 methodology = 65**.
+**11 pipeline entry-point + 8 standalone utility + 51 methodology = 70**.
 
 For *why* the system is shaped this way (the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits),
@@ -610,7 +610,7 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 46 methodology skills carry no `argument-hint` and, with one
+The 51 methodology skills carry no `argument-hint` and, with one
 exception, are never invoked directly. The exception is `code-review`: it
 is a meaningful standalone user action ("review this diff",
 `/code-review`) as well as a building block, so it does not set
@@ -1240,6 +1240,63 @@ names the pointing sources rather than an agent.
   the zero exit on a failed step. Governs the primary path only, leaving
   declared best-effort steps to `principle-degrade-never-block`.
 
+### principle-separate-generator-from-evaluator
+
+- **Purpose:** Who is allowed to cast the verdict on a piece of work.
+- **Pointed to by:** `code-review`, `verifying-ux`. Also reachable by model
+  auto-load.
+- **Key behaviors:** Keeps the producer and the evaluator in separate heads
+  with separate context, in both directions — the evaluator reports and does
+  not fix, the producer changes the artifact and casts no verdict. Rules out
+  self-grading, shared history standing in for fresh context, and asking the
+  producer what it meant. Testing your own work stays allowed.
+
+### principle-rules-outrank-precedent
+
+- **Purpose:** What wins when a written rule and an established pattern
+  disagree.
+- **Pointed to by:** `nested-agents`, `systems-thinking`. Also reachable by
+  model auto-load.
+- **Key behaviors:** Reads a pattern on the default branch as evidence it
+  shipped, not that it is permitted, so "this already exists elsewhere"
+  refutes nothing. Names the two things that do refute a rule-violation claim,
+  both readings of the rule. Applies only where a written rule exists, and
+  sends a genuine rule-versus-convention conflict to the report.
+
+### principle-every-rule-reaches-every-surface
+
+- **Purpose:** Whether a rule added to one way in governs the others.
+- **Pointed to by:** `code-review`, `eng-design-doc-review`,
+  `authoring-designs`. Also reachable by model auto-load.
+- **Key behaviors:** Requires each rule to be placed against every surface,
+  because per-surface correctness is exactly what lets the surfaces disagree
+  unnoticed. Treats an unexplained absence as a finding and a stated reason as
+  an answer. Accepts a pointer only where the reader can follow it, and bounds
+  itself against `principle-state-it-once`.
+
+### principle-name-the-alternative
+
+- **Purpose:** What a recorded decision has to carry beside the choice.
+- **Pointed to by:** `documenting-decisions`, `technical-design-doc`,
+  `authoring-designs`. Also reachable by model auto-load.
+- **Key behaviors:** Requires the rejected alternatives and the reason each
+  was rejected, so a later reader can tell a weighed trade-off from the first
+  idea that worked. Rules out the straw alternative, the reasonless rejection,
+  and deferring the alternatives to a later pass, when they are hardest to
+  reconstruct.
+
+### principle-state-it-once
+
+- **Purpose:** Where a fact lives when several surfaces need it.
+- **Pointed to by:** `qrspi-workflow`, `code-review`. Also reachable by model
+  auto-load.
+- **Key behaviors:** Keeps one file as the home of a fact and its rationale,
+  with every other surface carrying the path. Rules out the convenience
+  paraphrase that becomes a rival source and the anchorless path. Permits a
+  source to keep one imperative sentence beside its pointer, and yields to
+  `principle-every-rule-reaches-every-surface` where a reader cannot open a
+  second file.
+
 ## Skill ↔ agent ↔ phase
 
 This table ties each skill to the agents or orchestrator skills that load
@@ -1316,6 +1373,11 @@ entry-point section above rather than repeating them here.
 | `principle-make-findings-actionable` | `conventional-comments`, `solid-principles`, `engineering-standards` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
 | `principle-critique-the-code-not-the-coder` | `conventional-comments` (pointer); model auto-load | Discovery-only (no QRSPI phase) |
 | `principle-fail-loudly` | `engineering-standards`, `code-review` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-separate-generator-from-evaluator` | `code-review`, `verifying-ux` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-rules-outrank-precedent` | `nested-agents`, `systems-thinking` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-every-rule-reaches-every-surface` | `code-review`, `eng-design-doc-review`, `authoring-designs` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-name-the-alternative` | `documenting-decisions`, `technical-design-doc`, `authoring-designs` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-state-it-once` | `qrspi-workflow`, `code-review` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
 
 The read-only `Explore` subagent dispatched by `eng-design-doc-review` is
 an one more consumer of `technical-design-doc`, `code-review`,

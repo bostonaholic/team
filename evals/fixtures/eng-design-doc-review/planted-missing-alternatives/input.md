@@ -5,6 +5,7 @@ deps:
   - skills/eng-design-doc-review/**
   - skills/technical-design-doc/**
   - skills/documenting-decisions/**
+  - skills/principle-name-the-alternative/**
 ---
 
 # Adversarial design-doc review with a planted gap

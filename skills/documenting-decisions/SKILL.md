@@ -112,7 +112,8 @@ Do not write an ADR when:
 - **Be specific.** "We chose X because it is better" is not useful. "We chose
   X because it supports concurrent writes without locking, which Y does not"
   is useful.
-- **Name the alternatives.** Every decision implies rejected alternatives.
+- **Name the alternatives**, per
+  `skills/principle-name-the-alternative/SKILL.md`.
   List them and say why they were rejected.
 - **Acknowledge uncertainty.** If the decision was made with incomplete
   information, say so. Future readers will know to re-evaluate if new

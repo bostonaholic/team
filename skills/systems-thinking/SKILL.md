@@ -108,10 +108,9 @@ The questions behind the `System Fit` checklist item in
   changed files *and* the neighbors whose expectations they carry.
 - **Does the change follow the conventions established elsewhere?** Cite
   the specific convention when flagging a divergence, so the finding is
-  checkable rather than a taste claim. Convention governs where no written
-  rule speaks. Where one does, the rule wins and the precedent is a second
-  violation rather than a defence — a pattern's presence on the default
-  branch says it shipped, not that it is permitted.
+  checkable rather than a taste claim. Where a written rule speaks, it
+  outranks the convention — per
+  `skills/principle-rules-outrank-precedent/SKILL.md`.
 
 ## Lens, Not Dogma
 
