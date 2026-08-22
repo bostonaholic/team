@@ -184,8 +184,12 @@ done
 omitted entirely when no manifest exists]
 
 ## How to Verify
-- [ ] [Automated verification command]
-- [ ] [Manual verification step]
+- [Automated verification command]
+- [Manual verification step]
+
+## Pre-merge
+[Conditional — actions that must complete before this PR merges; omitted
+entirely when there are none]
 
 ## Review notes
 [Conditional — deferred findings for the human's PR review; see below]
@@ -196,6 +200,46 @@ omitted entirely when no manifest exists]
 
 Closes #<n>
 ```
+
+**`## Pre-merge` (conditional):** this section carries only the actions that
+must complete *before* this PR merges. Four things qualify. (a) A dependency
+PR — another PR that has to merge, and sometimes deploy, before this one, as a
+checkbox carrying its full URL and a clause saying *why* the order matters,
+not merely that it does. (b) Ordered operational steps the merge depends on,
+such as running SHIFT migrations. (c) Artifacts that could not be regenerated
+in the authoring environment and will fail a CI verify check until someone
+regenerates them. (d) Verification that genuinely gates the merge, rather than
+verification that merely informs the reviewer. Post-merge follow-ups do not
+belong here.
+**Omit the section entirely when empty — never emit a bare heading.**
+
+**Checkbox discipline.** A `- [ ]` item hard-gates the merge through the
+`square-task-list-completed` bot: an unchecked box blocks merging until a human
+ticks it. So use `- [ ]` only for pre-merge actions, and plain `- ` bullets for
+anything informational or post-merge. This is why `## How to Verify` uses plain
+bullets — its steps report verification the author already ran, and a checkbox
+there would emit a PR the bot refuses to merge until someone ticks off
+finished work. Verification that truly must be re-run by a human before the
+merge belongs in `## Pre-merge` instead. Never tick a box on the user's
+behalf: a checked box asserts the work is done, and only the human can assert
+that.
+
+**Dependency direction (multi-repo).** The dependency is asymmetric and the
+section must reflect that. Only the PR that has to wait carries the
+"merge/deploy X first" checkbox. The PR being waited on gets no mirrored item —
+at most a plain bullet naming the deploy order. Two PRs each blocking the other
+is a deadlock the bot will happily enforce. Derive the direction from which
+side is inert without the other: a UI change that no-ops until its backend
+ships waits on the backend, not the reverse. When neither side is inert, emit
+no dependency item.
+
+**Timing.** Dependency URLs are unknown at creation time, exactly like
+`## Companion PRs`, so reuse that mechanism: open the PRs first, then edit each
+body to add the section once all URLs are known. The note below about "final
+line of the PR body" referring to creation-time authoring covers this section
+too — a post-open appended `## Pre-merge` is expected, not a violation. Keep
+the ordering stable: `## Pre-merge` comes before `## Companion PRs` in the
+final body.
 
 **`## Review notes` (conditional):** this section carries the findings
 deferred to the human's PR review. (a) Every Minor-and-below finding from
