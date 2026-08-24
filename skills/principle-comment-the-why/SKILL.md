@@ -1,6 +1,6 @@
 ---
 name: principle-comment-the-why
-description: A comment explains a non-obvious why, never a what, and stays timeless — pointed to by engineering-standards and code-review when source comments are written or read.
+description: A comment explains a non-obvious why, never a what — pointed to by engineering-standards, code-review, and the reviewer and implementer agents when comments are written or read.
 user-invocable: false
 ---
 
@@ -69,3 +69,5 @@ artifact instead.
 
 - `skills/engineering-standards/SKILL.md`
 - `skills/code-review/SKILL.md`
+- `agents/code-reviewer.md`
+- `agents/implementer.md`

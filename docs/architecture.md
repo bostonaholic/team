@@ -651,8 +651,9 @@ points at it.
 
 ### Methodology skills (loaded by agents, not directly invoked)
 
-Methodology skills carry no `argument-hint`. Agents load them through one
-of two mechanisms. The first is a `skills:` YAML list in the agent's
+Methodology skills carry no `argument-hint`. Agents load them — all but
+the 19 discovery-only `principle-*` skills covered below — through one of
+two mechanisms. The first is a `skills:` YAML list in the agent's
 frontmatter. For example, `agents/design-author.md` declares
 `skills: [product-thinking, progress-tracking, authoring-designs,
 writing-prose]`. Those four names are three countable skills under the
@@ -756,15 +757,17 @@ consumers, and behaviors), see [skills.md](skills.md).
    states exactly one claim, carries `## What it rules out`, `## Boundary`,
    and `## Where it applies`, and is reachable from at least one pointer in
    another skill. **The name states the claim, not the topic the claim is
-   about.** Three shapes do that: an imperative
+   about.** Shapes that do that, not an exhaustive list: an imperative
    (`principle-construct-with-collaborators`, `principle-comment-the-why`), a
    declarative clause (`principle-rules-outrank-precedent`,
-   `principle-every-rule-reaches-every-surface`), or the claim's own
+   `principle-every-rule-reaches-every-surface`), the claim's own
    established short name (`principle-rule-of-three`,
-   `principle-one-change-per-commit`). What the name may never be is a bare
-   subject label the rule cannot be read off — `principle-comments`,
-   `principle-constructors`, `principle-error-handling`. The test is whether a
-   reader who sees only the directory name can state the rule.
+   `principle-one-change-per-commit`), or a phrase naming the property the
+   rule demands (`principle-targeted-exception-scopes`). What the name may
+   never be is a bare subject label the rule cannot be read off —
+   `principle-comments`, `principle-constructors`,
+   `principle-error-handling`. The test is whether a reader who sees only
+   the directory name can state the rule.
 
    No agent preloads a principle skill and no agent body loads one, so the
    usual `description` suffix ("loaded by `<agent>`") would state something

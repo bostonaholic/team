@@ -32,6 +32,10 @@ when what varies is finally visible.
 - It governs abstraction born of duplication. An abstraction that exists to
   name a domain concept or to open a test seam is justified by that, not by a
   count — `solid-principles` owns those readings.
+- Extracting a helper to unmix levels of abstraction inside one body is
+  justified by the level mix, not by a count.
+  `principle-one-level-of-abstraction` asks for that extraction on the first
+  occurrence, and the threshold here neither delays nor excuses it.
 - The trade runs in reverse too: an indirection left with one caller has
   stopped earning its cost and is a candidate to inline.
 

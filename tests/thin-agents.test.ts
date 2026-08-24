@@ -1,5 +1,5 @@
 // Acceptance fence for the thin-agents-over-skills refactor: every agent
-// file becomes an identity-only wrapper (69-90 lines) whose procedure lives
+// file becomes an identity-only wrapper whose procedure lives
 // in a preloaded methodology skill — 9 new skills plus folds into existing
 // skills. L2 static-invariant tripwires per docs/testing.md: read source,
 // assert the contract, execute nothing. The suite passes only when the
@@ -169,16 +169,49 @@ function principleSkillNames(): string[] {
 }
 
 // The holder scan for the pointer sweeps below: every skill outside the
-// family. Excluding the family is what lets a `## Boundary` cite a sibling
-// without polluting that sibling's `## Where it applies` set.
-function nonFamilySkillNames(): string[] {
-  return allSkillNames().filter((name) => !name.startsWith("principle-"));
+// family, plus every agent file. Excluding the family is what lets a
+// `## Boundary` cite a sibling without polluting that sibling's
+// `## Where it applies` set. Agent bodies are in scope because they may point
+// at a principle by path too, and a scan of skills/ alone would report the
+// pointer graph complete while a rename left an agent pointing at a dead path.
+// Read from disk rather than a literal list, so a new agent joins the scan.
+function pointerHolderPaths(): string[] {
+  const skills = allSkillNames()
+    .filter((name) => !name.startsWith("principle-"))
+    .map((name) => `skills/${name}/SKILL.md`);
+  const agents = readdirSync(join(REPO_ROOT, "agents"))
+    .filter((name) => name.endsWith(".md"))
+    .map((name) => `agents/${name}`);
+  return [...skills, ...agents].sort();
+}
+
+const holderTextCache = new Map<string, string>();
+function holderText(path: string): string {
+  let text = holderTextCache.get(path);
+  if (text === undefined) {
+    text = readOrEmpty(join(REPO_ROOT, path));
+    holderTextCache.set(path, text);
+  }
+  return text;
+}
+
+// Index of `heading` where it starts a line; -1 when it never does. A bare
+// indexOf lets prose that mentions a heading before that heading's own line
+// re-scope the section onto the wrong text, and the length guards downstream
+// then pass on it (docs/testing.md, "Prove a negative check can find a
+// positive").
+function headingStart(text: string, heading: string): number {
+  let at = text.indexOf(heading);
+  while (at > 0 && text[at - 1] !== "\n") {
+    at = text.indexOf(heading, at + 1);
+  }
+  return at;
 }
 
 // Text from `heading` to the next heading line; "" when the heading is missing
 // (tests/methodology.test.ts sectionFrom).
 function sectionFrom(text: string, heading: string): string {
-  const start = text.indexOf(heading);
+  const start = headingStart(text, heading);
   if (start === -1) return "";
   const afterHeading = start + heading.length;
   const next = text.slice(afterHeading).search(/\n##/);
@@ -211,7 +244,9 @@ const RULES_OUT_HEADING = "## What it rules out";
 const BOUNDARY_HEADING = "## Boundary";
 const WHERE_IT_APPLIES_HEADING = "## Where it applies";
 
-const SKILL_PATH_PATTERN = /skills\/[a-z0-9-]+\/SKILL\.md/g;
+// A pointer target as `## Where it applies` names it: a skill file or an
+// agent file, the two kinds of holder the scan above covers.
+const POINTER_PATH_PATTERN = /skills\/[a-z0-9-]+\/SKILL\.md|agents\/[a-z0-9-]+\.md/g;
 
 // The moved runs. A marker is one contiguous run of prose that leaves a source
 // skill, held here as the source's own lines so it can be audited against the
@@ -615,7 +650,7 @@ describe("principle-* family contract at expected member count 19", () => {
   test("every principle is reachable from at least one non-family pointer, and cites only non-family sources", () => {
     const names = principleSkillNames();
     expect(names.length).toBe(EXPECTED_PRINCIPLE_COUNT);
-    const holders = nonFamilySkillNames();
+    const holders = pointerHolderPaths();
     expect(holders.length).toBeGreaterThan(0);
 
     const offenders: string[] = [];
@@ -623,13 +658,13 @@ describe("principle-* family contract at expected member count 19", () => {
       const declared = [
         ...new Set(
           sectionBody(readOrEmpty(skillPath(name)), WHERE_IT_APPLIES_HEADING).match(
-            SKILL_PATH_PATTERN,
+            POINTER_PATH_PATTERN,
           ) ?? [],
         ),
       ];
       if (declared.length === 0) {
         offenders.push(
-          `${name}: "${WHERE_IT_APPLIES_HEADING}" names no literal skills/<name>/SKILL.md path`,
+          `${name}: "${WHERE_IT_APPLIES_HEADING}" names no literal skills/<name>/SKILL.md or agents/<name>.md path`,
         );
       }
       for (const path of declared) {
@@ -642,18 +677,18 @@ describe("principle-* family contract at expected member count 19", () => {
       // inside a sibling principle does not count — otherwise two siblings
       // satisfy the floor for each other.
       const pointer = `skills/${name}/SKILL.md`;
-      const pointingSources = holders.filter((holder) => skillText(holder).includes(pointer));
+      const pointingSources = holders.filter((holder) => holderText(holder).includes(pointer));
       if (pointingSources.length === 0) {
-        offenders.push(`${name}: no non-family SKILL.md names ${pointer}`);
+        offenders.push(`${name}: no non-family skill or agent file names ${pointer}`);
       }
     }
     expect(offenders).toEqual([]);
   });
 
-  test("each Where it applies list equals the on-disk set of skills that point at it", () => {
+  test("each Where it applies list equals the on-disk set of skills and agents that point at it", () => {
     const names = principleSkillNames();
     expect(names.length).toBe(EXPECTED_PRINCIPLE_COUNT);
-    const holders = nonFamilySkillNames();
+    const holders = pointerHolderPaths();
     expect(holders.length).toBeGreaterThan(0);
 
     const offenders: string[] = [];
@@ -661,7 +696,7 @@ describe("principle-* family contract at expected member count 19", () => {
       const declared = [
         ...new Set(
           sectionBody(readOrEmpty(skillPath(name)), WHERE_IT_APPLIES_HEADING).match(
-            SKILL_PATH_PATTERN,
+            POINTER_PATH_PATTERN,
           ) ?? [],
         ),
       ].sort();
@@ -672,10 +707,7 @@ describe("principle-* family contract at expected member count 19", () => {
       }
 
       const pointer = `skills/${name}/SKILL.md`;
-      const onDisk = holders
-        .filter((holder) => skillText(holder).includes(pointer))
-        .map((holder) => `skills/${holder}/SKILL.md`)
-        .sort();
+      const onDisk = holders.filter((holder) => holderText(holder).includes(pointer)).sort();
       if (declared.join(", ") !== onDisk.join(", ")) {
         offenders.push(
           `${name}: declared [${declared.join(", ")}] but the pointing set on disk is [${onDisk.join(", ")}]`,

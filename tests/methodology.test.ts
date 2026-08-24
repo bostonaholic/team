@@ -50,10 +50,23 @@ function sliceBetween(text: string, startMarker: string, endMarker: string): str
   return text.slice(start, end);
 }
 
+// Index of `heading` where it starts a line; -1 when it never does. A bare
+// indexOf lets prose that mentions a heading before that heading's own line
+// re-scope the section onto the wrong text, and the length guards downstream
+// then pass on it (docs/testing.md, "Prove a negative check can find a
+// positive").
+function headingStart(text: string, heading: string): number {
+  let at = text.indexOf(heading);
+  while (at > 0 && text[at - 1] !== "\n") {
+    at = text.indexOf(heading, at + 1);
+  }
+  return at;
+}
+
 // Text from `heading` to the next heading line (`## ` or deeper); "" when the
 // heading is missing, so dependent assertions fail loud, never vacuously.
 function sectionFrom(text: string, heading: string): string {
-  const start = text.indexOf(heading);
+  const start = headingStart(text, heading);
   if (start === -1) return "";
   const afterHeading = start + heading.length;
   const next = text.slice(afterHeading).search(/\n##/);
@@ -1075,7 +1088,6 @@ describe("skeptic passes weigh a stated rule above precedent (L2 tripwire)", () 
     const text = squash(
       read(join(REPO_ROOT, "skills", "principle-rules-outrank-precedent", "SKILL.md")),
     );
-    expect(text.length).toBeGreaterThan(0);
     expect(/where no written\s+rule speaks|no written rule speaks/i.test(text)).toBe(true);
   });
 });

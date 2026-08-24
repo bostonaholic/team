@@ -289,13 +289,16 @@ describe("retention-floor facts stay pinned to the tree", () => {
         `agents/ preload ${count} distinct skills, outside this test's ${Object.keys(COUNT_WORDS).join("/")} range — extend COUNT_WORDS and update docs/architecture.md item 3`,
       );
     } else {
-      const sentence = `${word} skills are preloaded by some agent today`;
-      // Flattened: this doc hard-wraps, so the sentence spans two lines and a
+      // The number and what it counts, and no more of the sentence around
+      // them: a copy edit to the rest is not a broken contract
+      // (docs/testing.md, "A tripwire asserts a contract, never a wording").
+      const phrase = `${word} skills are preloaded`;
+      // Flattened: this doc hard-wraps, so the phrase can span two lines and a
       // raw includes() sweeps past it (docs/testing.md, "Prove a negative
       // check can find a positive").
-      if (!read(ARCHITECTURE_MD).replace(/\s+/g, " ").includes(sentence)) {
+      if (!read(ARCHITECTURE_MD).replace(/\s+/g, " ").includes(phrase)) {
         offenders.push(
-          `docs/architecture.md item 3 does not say "${sentence}" — agents/ now preload ${count} distinct skills, and the retention floor hangs on that number`,
+          `docs/architecture.md item 3 does not say "${phrase}" — agents/ now preload ${count} distinct skills, and the retention floor hangs on that number`,
         );
       }
     }

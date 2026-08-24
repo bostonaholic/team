@@ -79,10 +79,12 @@ A new `principle-*` skill states exactly one claim, carries
 `## What it rules out`, `## Boundary`, and `## Where it applies`, and is
 reachable from at least one pointer in another skill.
 
-**Name it after the claim, not after the topic the claim is about.** Three
-shapes do that: an imperative (`principle-comment-the-why`), a declarative
-clause (`principle-rules-outrank-precedent`), or the claim's own established
-short name (`principle-rule-of-three`). Never a bare subject label the rule
+**Name it after the claim, not after the topic the claim is about.** Shapes
+that do that, not an exhaustive list: an imperative
+(`principle-comment-the-why`), a declarative clause
+(`principle-rules-outrank-precedent`), the claim's own established short name
+(`principle-rule-of-three`), or a phrase naming the property the rule demands
+(`principle-targeted-exception-scopes`). Never a bare subject label the rule
 cannot be read off (`principle-constructors`, `principle-error-handling`). The
 test is whether a reader who sees only the directory name can state the rule.
 

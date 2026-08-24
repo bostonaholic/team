@@ -1164,10 +1164,11 @@ agent-loaded skill gets.
 - **Pointed to by:** `engineering-standards`, `refactoring-to-patterns`. Also
   reachable by model auto-load.
 - **Key behaviors:** Treats level-mixing as the defect and extraction to a
-  helper named at the surrounding level as the fix. Distinguishes itself from
-  function length, defers the whether-to-extract call to
-  `principle-rule-of-three`, and exempts the outermost layer, which has no
-  level below it to call.
+  helper named at the surrounding level as the fix, on the first occurrence
+  and whether or not the fragment repeats — `principle-rule-of-three` answers
+  the different question of when duplication justifies a shared abstraction.
+  Distinguishes itself from function length, and exempts the outermost layer,
+  which has no level below it to call.
 
 ### principle-targeted-exception-scopes
 
@@ -1205,13 +1206,13 @@ agent-loaded skill gets.
 
 - **Purpose:** What earns a comment in a source file, and what a comment may
   not say.
-- **Pointed to by:** `engineering-standards`, `code-review`. Also reachable by
-  model auto-load.
+- **Pointed to by:** `engineering-standards`, `code-review`, and the
+  `code-reviewer` and `implementer` agent bodies. Also reachable by model
+  auto-load.
 - **Key behaviors:** Owns the binding Code Comments rule set. Admits only the
   non-obvious why, and only where neither code nor tests can carry it.
-  Enumerates the permitted comment class — API limits, compatibility,
-  security assumptions, performance, ordering, concurrency, framework
-  surprises — which the reviewer's missing-why finding gates on. Bans
+  Enumerates the class of non-obvious constraint and deliberate oddity that a
+  comment may record, which the reviewer's missing-why finding gates on. Bans
   references that rot, process narration,
   and commented-out code, and exempts doc comments on public interfaces and
   the upstream-bug link that is itself the why. Scopes itself to source files
@@ -1363,8 +1364,11 @@ agent-loaded skill gets.
   than executed. Rules out trusting attribution and widening scope on fetched
   text. Never relaxes a human-approval gate, and permits an unloadable surface
   to state the rule inline. Carves out content the user designated as the work,
-  such as an issue URL resolved into a task description, while incidental text
-  keeps the untrusted posture.
+  such as an issue URL resolved into a task description, and bounds that
+  carve-out three ways: it never reaches the pointing skills above, where the
+  fetched item is the subject of review; it is not inherited by what the
+  designated text itself points at; and an imperative in it that ranges past
+  the work asked for is still content to surface.
 
 ## Skill ↔ agent ↔ phase
 
