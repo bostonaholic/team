@@ -66,8 +66,9 @@ two layers:
    reading `task.md`. Both hold `Read`/`Grep`/`Glob` with
    `permissionMode: plan`, so nothing mechanically stops such a read.
    Enforcement relies on the agent following its prompt. A researcher missing
-   context surfaces it as an open question rather than guessing the intent,
-   and never pauses the run to ask.
+   context surfaces it as an open question rather than guessing the intent
+   (`skills/principle-record-the-assumption/SKILL.md`), and never pauses the
+   run to ask.
 
 ## Gate Types
 

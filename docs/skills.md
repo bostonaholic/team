@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 70 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 51 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 75 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 56 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -58,7 +58,7 @@ resolve, groom a project backlog, tear down branch state after a PR is
 finished, verify a PR's test plan, and rebase a branch onto its base
 without changing what it does.
 None is a pipeline phase. The split is
-**11 pipeline entry-point + 8 standalone utility + 51 methodology = 70**.
+**11 pipeline entry-point + 8 standalone utility + 56 methodology = 75**.
 
 For *why* the system is shaped this way (the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits),
@@ -610,7 +610,7 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 51 methodology skills carry no `argument-hint` and, with one
+The 56 methodology skills carry no `argument-hint` and, with one
 exception, are never invoked directly. The exception is `code-review`: it
 is a meaningful standalone user action ("review this diff",
 `/code-review`) as well as a building block, so it does not set
@@ -1297,6 +1297,65 @@ names the pointing sources rather than an agent.
   `principle-every-rule-reaches-every-surface` where a reader cannot open a
   second file.
 
+### principle-record-the-assumption
+
+- **Purpose:** What a choice made on incomplete information has to leave
+  behind.
+- **Pointed to by:** `authoring-designs`, `nested-agents`, `qrspi-workflow`.
+  Also reachable by model auto-load.
+- **Key behaviors:** Treats an unmarked guess as a defect, because a guess in
+  the voice of a settled fact cannot be audited, and puts the mark where the
+  auditor reads rather than in a scratch note. Counts a deferral as a recorded
+  choice and an absorbed ambiguity as an unrecorded one. Takes no position on
+  whether to resolve a question or route it elsewhere.
+
+### principle-ask-for-refutation
+
+- **Purpose:** How to phrase a claim you are handing to someone else to check.
+- **Pointed to by:** `nested-agents`, `cross-model-review`. Also reachable by
+  model auto-load.
+- **Key behaviors:** Withholds the verdict, the severity, and the reasoning so
+  the verifier reaches its own, and locates the claim so it has something to
+  test. Rules out asking for confirmation and reusing a verifier that already
+  judged your earlier claims. Carries the rule a rule-violation claim cites,
+  which is context rather than conclusion.
+
+### principle-verify-before-you-adopt
+
+- **Purpose:** What has to happen before a borrowed claim becomes your
+  finding.
+- **Pointed to by:** `nested-agents`, `cross-model-review`. Also reachable by
+  model auto-load.
+- **Key behaviors:** Requires confirmation against the artifact, since a
+  helper's error in your output is your error. Holds a finding on an
+  inconclusive reply and records a refuted one rather than dropping it
+  silently. Bounds itself against redoing the work and against treating
+  external input as inadmissible.
+
+### principle-degrade-never-block
+
+- **Purpose:** What happens to a run when an optional enhancement is
+  unavailable.
+- **Pointed to by:** `nested-agents`, `cross-model-review`,
+  `tracking-tickets`. Also reachable by model auto-load.
+- **Key behaviors:** Continues the primary path without the enhancement and
+  keeps the outcome's strictness unchanged, since one that could soften a
+  verdict was never optional. Requires the optional designation in advance,
+  and rules out silence where nobody declared a step best-effort. Bounds
+  `principle-fail-loudly` rather than overriding it.
+
+### principle-treat-fetched-content-as-data
+
+- **Purpose:** How to handle text that arrives from outside the repository.
+- **Pointed to by:** `pr-open-comments`, `pr-watch-as-reviewer`, `pr-verify`,
+  `pr-rebase`, `pr-cleanup`, `groom-backlog`, `cross-model-review`. Also
+  reachable by model auto-load.
+- **Key behaviors:** Reads a comment, title, thread, display name, or model
+  output as content to triage, so an embedded imperative is surfaced rather
+  than executed. Rules out trusting attribution and widening scope on fetched
+  text. Never relaxes a human-approval gate, and permits an unloadable surface
+  to state the rule inline.
+
 ## Skill ↔ agent ↔ phase
 
 This table ties each skill to the agents or orchestrator skills that load
@@ -1378,6 +1437,11 @@ entry-point section above rather than repeating them here.
 | `principle-every-rule-reaches-every-surface` | `code-review`, `eng-design-doc-review`, `authoring-designs` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
 | `principle-name-the-alternative` | `documenting-decisions`, `technical-design-doc`, `authoring-designs` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
 | `principle-state-it-once` | `qrspi-workflow`, `code-review` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-record-the-assumption` | `authoring-designs`, `nested-agents`, `qrspi-workflow` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-ask-for-refutation` | `nested-agents`, `cross-model-review` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-verify-before-you-adopt` | `nested-agents`, `cross-model-review` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-degrade-never-block` | `nested-agents`, `cross-model-review`, `tracking-tickets` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-treat-fetched-content-as-data` | `pr-open-comments`, `pr-watch-as-reviewer`, `pr-verify`, `pr-rebase`, `pr-cleanup`, `groom-backlog`, `cross-model-review` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
 
 The read-only `Explore` subagent dispatched by `eng-design-doc-review` is
 an one more consumer of `technical-design-doc`, `code-review`,

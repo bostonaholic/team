@@ -61,10 +61,11 @@ leave a genuine design choice open, resolve it yourself: pick the
 option you would have recommended, and record it in `## Decisions made`
 marked "Assumption — chosen without user review", naming the rejected
 alternative and the trade-off accepted. The human audits these
-assumptions at PR review — an unmarked guess is a defect.
+assumptions at PR review, per
+`skills/principle-record-the-assumption/SKILL.md`.
 
 Park low-stakes items in `## Open questions (deferred)` rather than
-inflating the decision list. Deferral is itself a recorded choice.
+inflating the decision list.
 
 On a revision dispatch, address the reviewer's findings verbatim in the
 re-draft, recording any newly resolved choice the same way.

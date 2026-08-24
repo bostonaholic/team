@@ -17,7 +17,7 @@ Every tracker interaction below is best-effort and tracker-agnostic: if
 the project defines no tracker-move mechanism (e.g. a free-form
 description with no ticket, or a tracker the environment cannot reach),
 skip silently and continue. Never block the pipeline on a tracker
-update.
+update. The rule is `skills/principle-degrade-never-block/SKILL.md`.
 
 ## Pickup: move the ticket to in-progress
 

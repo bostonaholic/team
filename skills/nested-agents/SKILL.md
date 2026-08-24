@@ -12,6 +12,8 @@ level further down. These rules are non-negotiable.
 
 ## Optimization, never a dependency
 
+This section applies `skills/principle-degrade-never-block/SKILL.md`.
+
 Nested spawning is new (Claude Code >= 2.1.172) and may be absent or capped
 differently in the user's version. If the `Agent` tool is missing from your
 toolset, a dispatch errors, or results never arrive: **do the work yourself
@@ -69,14 +71,15 @@ Helpers never pause for user input — nothing a helper emits can reach
 the user, and a helper that waits for an answer stalls forever. Never
 delegate question-asking downward. If a helper surfaces an ambiguity,
 absorb it and record it in YOUR own artifact's open-questions section
-(or resolve it yourself and record the assumption).
+(or resolve it yourself and record the assumption, per
+`skills/principle-record-the-assumption/SKILL.md`).
 
 ## Verification helpers get neutral claims
 
-When you use a helper to check your own finding, state the claim as a
-neutral, falsifiable sentence with its `file:line`. Never give your verdict,
-severity, or reasoning. Ask the helper to refute it with evidence. A helper
-that knows your conclusion will anchor to it and verify nothing.
+Per `skills/principle-ask-for-refutation/SKILL.md`. When you use a helper to
+check your own finding, state the claim as a neutral, falsifiable sentence
+with its `file:line`. Never give your verdict, severity, or reasoning. Ask
+the helper to refute it with evidence.
 
 ## Caps and ownership
 
@@ -85,7 +88,7 @@ that knows your conclusion will anchor to it and verify nothing.
 - Bound every helper's reply (e.g. "return <= 30 lines of file:line
   findings").
 - You own everything you report. Spot-verify helper claims before including
-  them. A helper's error in your output is your error.
+  them, per `skills/principle-verify-before-you-adopt/SKILL.md`.
 
 ## Prefer a follow-up over a respawn (scouts only)
 
@@ -189,7 +192,6 @@ sub-agent through the `Agent` tool and try to get it refuted.
 - **Default-keep.** Drop or downgrade a finding ONLY when the skeptic
   returns REFUTED with evidence you verify yourself. Inconclusive means the
   finding stands — severity is never softened on an uncertain skeptic reply.
-  The pass removes false positives. It must never remove a true positive.
   List refuted findings under a `### Refuted by verification` section of
   your report (auditable, not silently dropped).
 - Skip the pass when there are no hard-gate findings or the Agent tool is

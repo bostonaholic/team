@@ -117,24 +117,51 @@ describe("thin agents: new methodology skills exist with the methodology-skill f
 // (docs/testing.md, "Prove a negative check can find a positive"). The value
 // walks the slice ladder 1 / 5 / 9 / 14 / 19 as each batch of principles
 // lands — the same per-slice treatment as the documentation count strings.
-const EXPECTED_PRINCIPLE_COUNT = 14;
+const EXPECTED_PRINCIPLE_COUNT = 19;
 
 // The slice whose prose has moved. MOVED_RUNS below carries every marker of
 // the whole change, and a marker only becomes checkable once its own slice
 // moves the prose it was lifted from, so the test-6 sweeps read the markers up
 // to this slice and no further. Walks 1 / 2 / 3 / 4 / 5 beside the count above.
-const CURRENT_SLICE = 4;
+const CURRENT_SLICE = 5;
 
 const SKILLS_ROOT = join(REPO_ROOT, "skills");
 
 // Every repo-root skill directory holding a SKILL.md, sorted. The scan never
 // reaches .claude/skills/**, which is development tooling, not the library.
+//
+// The family sweeps below cross the whole library once per principle, and once
+// per marker, so the same file is read on the order of a thousand times. No
+// test in this file writes to disk, so the scan and every read it feeds are
+// memoized for the run.
+let allSkillNamesCache: string[] | undefined;
 function allSkillNames(): string[] {
-  return readdirSync(SKILLS_ROOT, { withFileTypes: true })
+  allSkillNamesCache ??= readdirSync(SKILLS_ROOT, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
     .filter((name) => existsSync(skillPath(name)))
     .sort();
+  return allSkillNamesCache;
+}
+
+const skillTextCache = new Map<string, string>();
+function skillText(name: string): string {
+  let text = skillTextCache.get(name);
+  if (text === undefined) {
+    text = readOrEmpty(skillPath(name));
+    skillTextCache.set(name, text);
+  }
+  return text;
+}
+
+const normalizedSkillTextCache = new Map<string, string>();
+function normalizedSkillText(name: string): string {
+  let text = normalizedSkillTextCache.get(name);
+  if (text === undefined) {
+    text = normalizeForMarkers(skillText(name));
+    normalizedSkillTextCache.set(name, text);
+  }
+  return text;
 }
 
 function principleSkillNames(): string[] {
@@ -498,7 +525,7 @@ const MOVED_RUNS: { slice: number; owner: string; source: string; run: string[] 
 
 const ACTIVE_MOVED_RUNS = MOVED_RUNS.filter(({ slice }) => slice <= CURRENT_SLICE);
 
-describe("principle-* family contract (tests 2-7) at expected member count 14", () => {
+describe("principle-* family contract (tests 2-7) at expected member count 19", () => {
   test("every principle skill declares its directory name, a discovery-only description, and user-invocable false", () => {
     const names = principleSkillNames();
     expect(names.length).toBe(EXPECTED_PRINCIPLE_COUNT);
@@ -606,9 +633,7 @@ describe("principle-* family contract (tests 2-7) at expected member count 14", 
       // inside a sibling principle does not count — otherwise two siblings
       // satisfy the floor for each other.
       const pointer = `skills/${name}/SKILL.md`;
-      const pointingSources = holders.filter((holder) =>
-        readOrEmpty(skillPath(holder)).includes(pointer),
-      );
+      const pointingSources = holders.filter((holder) => skillText(holder).includes(pointer));
       if (pointingSources.length === 0) {
         offenders.push(`${name}: no non-family SKILL.md names ${pointer}`);
       }
@@ -639,7 +664,7 @@ describe("principle-* family contract (tests 2-7) at expected member count 14", 
 
       const pointer = `skills/${name}/SKILL.md`;
       const onDisk = holders
-        .filter((holder) => readOrEmpty(skillPath(holder)).includes(pointer))
+        .filter((holder) => skillText(holder).includes(pointer))
         .map((holder) => `skills/${holder}/SKILL.md`)
         .sort();
       if (declared.join(", ") !== onDisk.join(", ")) {
@@ -659,10 +684,9 @@ describe("principle-* family contract (tests 2-7) at expected member count 14", 
     const offenders: string[] = [];
     for (const { owner, source, run } of ACTIVE_MOVED_RUNS) {
       const marker = normalizeForMarkers(run.join(" "));
-      const content = readOrEmpty(skillPath(source));
       // Guard: a renamed or deleted source, or an empty marker, would make the
       // absence check pass for the wrong reason.
-      if (content.length === 0) {
+      if (skillText(source).length === 0) {
         offenders.push(`${source}: SKILL.md is missing or empty, so its absence check is blind`);
         continue;
       }
@@ -670,7 +694,7 @@ describe("principle-* family contract (tests 2-7) at expected member count 14", 
         offenders.push(`${owner}: empty marker lifted from ${source}`);
         continue;
       }
-      if (normalizeForMarkers(content).includes(marker)) {
+      if (normalizedSkillText(source).includes(marker)) {
         offenders.push(`${source}: still holds the run that moved to ${owner} — "${marker.slice(0, 69)}…"`);
       }
     }
@@ -690,12 +714,11 @@ describe("principle-* family contract (tests 2-7) at expected member count 14", 
       }
       for (const skill of everySkill) {
         if (skill === owner) continue;
-        const content = readOrEmpty(skillPath(skill));
-        if (content.length === 0) {
+        if (skillText(skill).length === 0) {
           offenders.push(`${skill}: SKILL.md is missing or empty, so its absence check is blind`);
           continue;
         }
-        if (normalizeForMarkers(content).includes(marker)) {
+        if (normalizedSkillText(skill).includes(marker)) {
           offenders.push(`${skill}: holds a second copy of the run owned by ${owner} — "${marker.slice(0, 69)}…"`);
         }
       }
@@ -872,15 +895,15 @@ describe("thin agents: haiku skills are self-contained", () => {
   }
 });
 
-describe("thin agents: documentation counts agree at 70 skills", () => {
+describe("thin agents: documentation counts agree at 75 skills", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
 
-  test("skills/ holds exactly 70 SKILL.md files", () => {
+  test("skills/ holds exactly 75 SKILL.md files", () => {
     const count = readdirSync(join(REPO_ROOT, "skills")).filter((name) =>
       existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")),
     ).length;
-    expect(count).toBe(70);
+    expect(count).toBe(75);
   });
 
   test("docs/skills.md documents every skill: ### entry count equals the on-disk count", () => {
@@ -894,27 +917,27 @@ describe("thin agents: documentation counts agree at 70 skills", () => {
     expect(entries.length).toBe(count);
   });
 
-  test("AGENTS.md heading reads Skills (70)", () => {
-    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (70)");
+  test("AGENTS.md heading reads Skills (75)", () => {
+    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (75)");
   });
 
-  test("docs/skills.md description counts 70 skills and no stale 56", () => {
+  test("docs/skills.md description counts 75 skills and no stale 56", () => {
     const flattened = read(SKILLS_MD).replace(/\s+/g, " ");
-    expect(flattened).toContain("70 skills");
+    expect(flattened).toContain("75 skills");
     // The methodology subtotal climbs toward 56 as the principle-* family
     // lands, so the guard pins the whole phrase and never a bare 56.
     expect(flattened).not.toContain("56 skills");
   });
 
-  test("docs/skills.md split sentence sums to 70", () => {
+  test("docs/skills.md split sentence sums to 75", () => {
     expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain(
-      "11 pipeline entry-point + 8 standalone utility + 51 methodology = 70",
+      "11 pipeline entry-point + 8 standalone utility + 56 methodology = 75",
     );
   });
 
-  test("docs/architecture.md counts all 70 skills in both locations and no stale 55/54/53/51/31", () => {
+  test("docs/architecture.md counts all 75 skills in both locations and no stale 55/54/53/51/31", () => {
     const content = read(ARCHITECTURE_MD);
-    expect(content).toContain("all 70 skills");
+    expect(content).toContain("all 75 skills");
     // Stale-guard: the count appears twice in this doc; a half-swept second
     // occurrence passes a bare toContain, so forbid the old value outright
     // (no-stale-31 precedent).
@@ -928,38 +951,38 @@ describe("thin agents: documentation counts agree at 70 skills", () => {
   // Previously unpinned count locations — they drifted silently before, so
   // each gains a pin, and docs/skills.md gains a stale-guard on the old
   // methodology count (catches its description sentence going stale).
-  test("README.md counts 70 entry-point + methodology skills", () => {
+  test("README.md counts 75 entry-point + methodology skills", () => {
     expect(read(join(REPO_ROOT, "README.md")).replace(/\s+/g, " ")).toContain(
-      "70 entry-point + methodology skills",
+      "75 entry-point + methodology skills",
     );
   });
 
-  test("README.md counts all 70 skills in the Antigravity install line", () => {
+  test("README.md counts all 75 skills in the Antigravity install line", () => {
     expect(read(join(REPO_ROOT, "README.md")).replace(/\s+/g, " ")).toContain(
-      "all 70 skills",
+      "all 75 skills",
     );
   });
 
-  test("docs/cross-host-portability.md counts 70 skills and no stale 56", () => {
+  test("docs/cross-host-portability.md counts 75 skills and no stale 56", () => {
     const flattened = read(join(REPO_ROOT, "docs", "cross-host-portability.md")).replace(
       /\s+/g,
       " ",
     );
-    expect(flattened).toContain("70 skills");
+    expect(flattened).toContain("75 skills");
     // The count appears four times in this doc; a half-swept occurrence
     // passes a bare toContain, so forbid the old value outright.
     expect(flattened).not.toContain("56 skills");
   });
 
-  test("docs/index.md counts all 70 skills", () => {
+  test("docs/index.md counts all 75 skills", () => {
     expect(read(join(REPO_ROOT, "docs", "index.md")).replace(/\s+/g, " ")).toContain(
-      "all 70 skills",
+      "all 75 skills",
     );
   });
 
-  test("docs/skills.md counts 51 methodology skills and no stale 37", () => {
+  test("docs/skills.md counts 56 methodology skills and no stale 37", () => {
     const flattened = read(SKILLS_MD).replace(/\s+/g, " ");
-    expect(flattened).toContain("The 51 methodology skills");
+    expect(flattened).toContain("The 56 methodology skills");
     expect(flattened).not.toContain("37 methodology");
   });
 
@@ -997,7 +1020,7 @@ describe("thin agents: name-collision pairs documented", () => {
 describe("thin agents: eval diff-selection keeps firing on the new skills", () => {
   const TOUCHFILE_ADDITIONS: Record<string, string[]> = {
     "team-question-neutral-questions": ["skills/decomposing-intent/**"],
-    "team-design-seeded-research-and-task": ["skills/authoring-designs/**"],
+    "team-design-seeded-research-and-task": ["skills/authoring-designs/**", "skills/principle-record-the-assumption/**"],
     "team-research-answers-seeded-questions": ["skills/researching-codebases/**", "skills/finding-files/**"],
     "team-structure-seeded-design": ["skills/slicing-work/**"],
     "team-plan-seeded-structure": ["skills/planning-implementation/**"],

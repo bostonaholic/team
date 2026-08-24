@@ -4,6 +4,7 @@ tier: periodic
 deps:
   - skills/team-design/**
   - skills/authoring-designs/**
+  - skills/principle-record-the-assumption/**
   - agents/design-author.md
 ---
 

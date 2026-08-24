@@ -100,6 +100,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "team-design-seeded-research-and-task": [
     "skills/team-design/**",
     "skills/authoring-designs/**",
+    "skills/principle-record-the-assumption/**",
     "agents/design-author.md",
     "tests/helpers/seed.ts",
     "tests/team-design.evals.ts",
