@@ -6,11 +6,18 @@
 import { execFileSync } from "node:child_process";
 import { test } from "bun:test";
 
+// Every code-reviewer fixture shares one injection list in
+// tests/code-reviewer.evals.ts, so each skill that list names is a dep of
+// every code-reviewer entry below — not only of the fixture whose subject it
+// is. A skill injected into a fixture that does not name it can change that
+// fixture's outcome without selecting it to rerun.
 export const E2E_TOUCHFILES: Record<string, string[]> = {
   "planted-null-deref": [
     "agents/code-reviewer.md",
     "skills/code-review/**",
     "skills/conventional-comments/**",
+    "skills/engineering-standards/**",
+    "skills/principle-comment-the-why/**",
     "tests/code-reviewer.evals.ts",
     "evals/fixtures/code-reviewer/planted-null-deref/**",
     "evals/rubrics/code-reviewer.md",
@@ -19,14 +26,13 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "agents/code-reviewer.md",
     "skills/code-review/**",
     "skills/conventional-comments/**",
+    "skills/engineering-standards/**",
+    "skills/principle-comment-the-why/**",
     "skills/test-style/**",
     "tests/code-reviewer.evals.ts",
     "evals/fixtures/code-reviewer/planted-time-bomb/**",
     "evals/rubrics/code-reviewer.md",
   ],
-  // engineering-standards owns the comment rule content, so a change to it
-  // can alter this fixture's outcome — it is a dep alongside the reviewer
-  // agent and the severity skill.
   "planted-comment-violations": [
     "agents/code-reviewer.md",
     "skills/code-review/**",
