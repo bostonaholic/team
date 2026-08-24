@@ -740,8 +740,9 @@ describe("principle-* family contract at expected member count 19", () => {
 
   test("no principle suppresses a pause, stop, wait, or ask", () => {
     // A principle is auto-loadable into any session, including one running a
-    // skill that deliberately stops for the user, so no principle body may
-    // state an unbounded prohibition on stopping.
+    // skill that deliberately stops for the user, so nowhere in a principle
+    // file — description included — may state an unbounded prohibition on
+    // stopping.
     const names = principleSkillNames();
     expect(names.length).toBe(EXPECTED_PRINCIPLE_COUNT);
 
@@ -758,16 +759,21 @@ describe("principle-* family contract at expected member count 19", () => {
     ];
     const offenders: string[] = [];
     for (const name of names) {
+      // Frontmatter included, not stripped: a `description` sits in context
+      // for every session whether or not the skill body loads, so a
+      // suppressive imperative there reaches the model more reliably than one
+      // in the body.
+      //
       // Normalized, not raw: every principle body wraps at ≤79 columns, so a
       // raw regex sweeps straight past "never\n  pause" and reports clean
       // (docs/testing.md, "Prove a negative check can find a positive").
-      const content = normalizeForMarkers(body(readOrEmpty(skillPath(name))));
+      const content = normalizeForMarkers(readOrEmpty(skillPath(name)));
       for (const pattern of banned) {
         const hit = content.match(pattern);
         if (hit) {
           const at = hit.index ?? 0;
           const context = content.slice(Math.max(0, at - 40), at + hit[0].length + 40);
-          offenders.push(`${name}: body matches ${pattern} — "…${context}…"`);
+          offenders.push(`${name}: file matches ${pattern} — "…${context}…"`);
         }
       }
     }

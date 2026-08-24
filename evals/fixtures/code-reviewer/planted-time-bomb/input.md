@@ -5,6 +5,8 @@ deps:
   - agents/code-reviewer.md
   - skills/code-review/SKILL.md
   - skills/conventional-comments/SKILL.md
+  - skills/engineering-standards/SKILL.md
+  - skills/principle-comment-the-why/SKILL.md
   - skills/test-style/SKILL.md
 ---
 

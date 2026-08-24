@@ -13,6 +13,12 @@ permitted only when neither the code nor a test can carry the explanation. It
 is timeless: it describes the code as it exists now, and it stays true when
 the surrounding code changes.
 
+**The permitted comment class is a non-obvious constraint or a deliberate
+oddity:** API limits, compatibility, security assumptions, performance,
+ordering, concurrency, and framework surprises. For a deliberate oddity, state
+the consequence of removing or simplifying the code. A comment outside that
+class has to justify itself against every rule below.
+
 ## What it rules out
 
 - **A comment restating the code.** Only a non-obvious why earns one, and only

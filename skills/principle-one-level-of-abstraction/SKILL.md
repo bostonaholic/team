@@ -31,9 +31,12 @@ it is telling.
 - It governs the levels a body mixes, not its length. A long function whose
   every call sits at one level is not a violation of this rule;
   `refactoring-to-patterns` catalogs Long Method separately.
-- Extraction costs a name and an indirection. Where a low-level fragment
-  appears once and reads plainly, `principle-rule-of-three` governs whether to
-  extract at all.
+- Extraction costs a name and an indirection, and this rule pays that cost on
+  the first occurrence: a function doing both orchestration and low-level work
+  extracts the low-level work into a helper whether or not the fragment
+  repeats anywhere. `principle-rule-of-three` answers a different question —
+  when duplication justifies a *shared* abstraction — and never licenses
+  leaving levels mixed.
 - The outermost layer has no level below it to call. A script, a main
   function, or an I/O shell may touch primitives directly.
 

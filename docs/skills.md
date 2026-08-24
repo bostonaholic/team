@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 75 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 56 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 75 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 56 methodology skills — agent-loaded, except the 19 discovery-only `principle-*` skills — with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -10,7 +10,8 @@ nav_label: skills
 
 > **The features you use.** Every entry-point skill is a slash command you can
 > run (`/team`, `/team-fix`, …). The methodology skills are the internal
-> building blocks the agents load to do their work.
+> building blocks the agents load to do their work — except the
+> `principle-*` family, which no agent loads and the model discovers.
 >
 > **Source of truth:** the skill bodies themselves, `skills/*/SKILL.md`.
 > This page is a hand-maintained reference. When it disagrees with a
@@ -46,7 +47,9 @@ catalog into two flavors:
   progress-tracking, authoring-designs, writing-prose]`), or an inline
   prose load
   instruction in the agent body (e.g., `Load skills/<name>/SKILL.md for
-  …`).
+  …`). The 19 `principle-*` skills are the exception: no agent reaches one
+  through either mechanism, so they are **discovery-only** (see
+  [Principle skills](#principle-skills)).
 
 That `argument-hint` marker is the whole flavor distinction. Most
 `argument-hint` skills drive a QRSPI phase, but eight (`shipit`,
@@ -621,8 +624,12 @@ fresh-context separation it mandates (see
 Agents load them through one of two mechanisms. The first is a
 `skills:` YAML list in the agent's frontmatter. The second is an inline
 prose load instruction in the agent body. See the "Two flavors of skill"
-section above. The "Loaded by" line for each skill names its consumers from
-the per-agent load manifest. An agent typically loads at most three. An
+section above. Neither mechanism reaches the 19 `principle-*` skills, which
+are **discovery-only** — the model auto-loads one by name and description, or
+a reader follows a pointer from a source skill (see
+[Principle skills](#principle-skills)). The "Loaded by" line for each
+agent-loaded skill names its consumers from the per-agent load manifest.
+An agent typically loads at most three. An
 agent's own extracted procedure skill does not count toward that soft
 limit: it replaces former inline body content 1:1, so it adds no net
 context (see [architecture.md](architecture.md#design-guidelines)).
@@ -829,16 +836,13 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   quality checklist.
 - **Loaded by:** planner, implementer, code-reviewer (3).
 - **Key behaviors:** Anchors planning and implementation in a shared
-  standard so reviewers check against the same bar. It owns the binding
-  Code Comments rule set. Comments are why-only, timeless, and
-  process-free, with a rewrite before a comment, and they document
-  non-obvious constraints and deliberate oddities with locality and
-  precision. The bans cover duplicated documentation, ticket or plan
-  references, TODO or FIXME in delivered code, and commented-out code.
-  Maintenance: obsolete comments are removed in the same diff, and repo
-  comment style is preserved. A four-question Decision Test closes the
-  set. Doc comments on public interfaces are exempt. It also owns the
-  Comment Discipline quality-checklist item that reviewer findings cite.
+  standard so reviewers check against the same bar. Its Code Comments
+  section scopes the subject to comments inside source files, states the
+  why-only rule in one sentence, and keeps the TODO/FIXME ban, whose
+  deferred work belongs in the implementer's report. The comment rule set
+  itself is owned by `principle-comment-the-why`, and this section points
+  there rather than restating it. It does own the Comment Discipline
+  quality-checklist item that reviewer findings cite by name.
 
 ### test-first-development
 
@@ -1203,8 +1207,12 @@ agent-loaded skill gets.
   not say.
 - **Pointed to by:** `engineering-standards`, `code-review`. Also reachable by
   model auto-load.
-- **Key behaviors:** Admits only the non-obvious why, and only where neither
-  code nor tests can carry it. Bans references that rot, process narration,
+- **Key behaviors:** Owns the binding Code Comments rule set. Admits only the
+  non-obvious why, and only where neither code nor tests can carry it.
+  Enumerates the permitted comment class — API limits, compatibility,
+  security assumptions, performance, ordering, concurrency, framework
+  surprises — which the reviewer's missing-why finding gates on. Bans
+  references that rot, process narration,
   and commented-out code, and exempts doc comments on public interfaces and
   the upstream-bug link that is itself the why. Scopes itself to source files
   and hands review findings to `conventional-comments`.

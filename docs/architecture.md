@@ -662,10 +662,15 @@ The second is an inline prose load instruction in the agent body. For
 example, the `implementer` body's Code quality section loads
 `solid-principles` inline.
 
+A third mode reaches no agent at all. The 19 `principle-*` skills are
+**discovery-only**: no agent preloads one and no agent body loads one, so the
+model auto-loads one by name and description, or a reader follows a pointer
+from a source skill. See item 3 of the Design guidelines below.
+
 Because they are reference material rather than user actions, methodology
 skills set `user-invocable: false` in their frontmatter. This keeps them
 out of the `/` slash-command menu, because a `/qrspi-workflow` command is
-meaningless to a user. They stay fully loadable by their two mechanisms
+meaningless to a user. They stay fully loadable by the mechanisms
 above. Neither the `skills:` preload nor a by-path load is affected by
 the field, which governs only menu visibility. The model can still
 auto-load a methodology skill when relevant, so
@@ -750,9 +755,16 @@ consumers, and behaviors), see [skills.md](skills.md).
    skill: one rule, stated in full, in one file. A new `principle-*` skill
    states exactly one claim, carries `## What it rules out`, `## Boundary`,
    and `## Where it applies`, and is reachable from at least one pointer in
-   another skill. The name is the claim in the imperative
-   (`principle-construct-with-collaborators`), never a noun phrase naming
-   a topic.
+   another skill. **The name states the claim, not the topic the claim is
+   about.** Three shapes do that: an imperative
+   (`principle-construct-with-collaborators`, `principle-comment-the-why`), a
+   declarative clause (`principle-rules-outrank-precedent`,
+   `principle-every-rule-reaches-every-surface`), or the claim's own
+   established short name (`principle-rule-of-three`,
+   `principle-one-change-per-commit`). What the name may never be is a bare
+   subject label the rule cannot be read off — `principle-comments`,
+   `principle-constructors`, `principle-error-handling`. The test is whether a
+   reader who sees only the directory name can state the rule.
 
    No agent preloads a principle skill and no agent body loads one, so the
    usual `description` suffix ("loaded by `<agent>`") would state something

@@ -195,9 +195,10 @@ regimes apply:
   diff with zero comments passes trivially — never manufacture a finding.
 
   A **missing-why** finding is separate and narrow. Raise it only when the
-  diff introduces or rewrites code shaped by a constraint in the
-  "Document non-obvious constraints" list *and* you can name the exact
-  constraint and the consequence of removing the code. It is
+  diff introduces or rewrites code shaped by a constraint in the permitted
+  comment class that `skills/principle-comment-the-why/SKILL.md` enumerates
+  *and* you can name the exact constraint and the consequence of removing the
+  code. It is
   `suggestion (non-blocking): Comment Discipline`, never blocking, never
   escalating on repetition. Absence of comments is never by itself evidence.
 

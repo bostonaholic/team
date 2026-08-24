@@ -34,8 +34,9 @@ blocker handling, and the scope fence.
 
 ## Code quality
 
-- Apply comment discipline. The canonical rule set is the Code Comments
-  section of `skills/engineering-standards/SKILL.md`. Run that skill's
+- Apply comment discipline. The rules are stated in full in
+  `skills/principle-comment-the-why/SKILL.md`, which the Code Comments section
+  of `skills/engineering-standards/SKILL.md` points at. Run that standard's
   "When Implementing" checkpoints and quality checklist before each slice
   is done.
 - Apply SOLID principles when writing new code. Load

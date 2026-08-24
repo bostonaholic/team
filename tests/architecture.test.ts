@@ -244,6 +244,81 @@ describe("simplify orchestration scope fence", () => {
   });
 });
 
+// The retention floor in docs/architecture.md item 3 tells an author to keep a
+// source's what-to-do sentence when the reader arrives without a path. Two
+// hand-maintained facts decide that: how many skills an agent preloads, and
+// that the review brief is the repo's only `Skill`-tool name-load site. Both
+// were prose with nothing failing the build when the truth moved.
+describe("retention-floor facts stay pinned to the tree", () => {
+  const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
+
+  // The doc spells the count as a word. Range-bounded on purpose: a count
+  // outside it fails loudly rather than silently skipping the assertion.
+  const COUNT_WORDS: Record<number, string> = {
+    17: "Seventeen",
+    18: "Eighteen",
+    19: "Nineteen",
+    20: "Twenty",
+    21: "Twenty-one",
+    22: "Twenty-two",
+    23: "Twenty-three",
+  };
+
+  // Every name in an agent's `skills:` frontmatter block, deduplicated.
+  function preloadedSkillNames(): string[] {
+    const names = new Set<string>();
+    for (const file of agentFiles()) {
+      const fm = frontmatter(read(join(REPO_ROOT, file)));
+      const start = fm.indexOf("skills:");
+      if (start === -1) continue;
+      for (const line of fm.slice(start).split("\n").slice(1)) {
+        const entry = line.match(/^ {2}- (\S+)$/);
+        if (!entry) break; // the list ends at the first non-item line
+        names.add(entry[1] as string);
+      }
+    }
+    return [...names].sort();
+  }
+
+  test("the preloaded-skill count in docs/architecture.md equals the count under agents/", () => {
+    const count = preloadedSkillNames().length;
+    const word = COUNT_WORDS[count];
+    const offenders: string[] = [];
+    if (word === undefined) {
+      offenders.push(
+        `agents/ preload ${count} distinct skills, outside this test's ${Object.keys(COUNT_WORDS).join("/")} range — extend COUNT_WORDS and update docs/architecture.md item 3`,
+      );
+    } else {
+      const sentence = `${word} skills are preloaded by some agent today`;
+      // Flattened: this doc hard-wraps, so the sentence spans two lines and a
+      // raw includes() sweeps past it (docs/testing.md, "Prove a negative
+      // check can find a positive").
+      if (!read(ARCHITECTURE_MD).replace(/\s+/g, " ").includes(sentence)) {
+        offenders.push(
+          `docs/architecture.md item 3 does not say "${sentence}" — agents/ now preload ${count} distinct skills, and the retention floor hangs on that number`,
+        );
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  test("the eng-design-doc-review brief is the only Skill-tool name-load site", () => {
+    // A second name-load site moves another file into the name-loaded group,
+    // and nothing recomputes the retention floor for it.
+    const namedLoad = /\bskill`?\s+tool\b/i;
+    const sites = [...agentFiles(), ...skillFiles()].filter((file) =>
+      namedLoad.test(read(join(REPO_ROOT, file))),
+    );
+    const offenders: string[] = [];
+    if (sites.join(",") !== "skills/eng-design-doc-review/SKILL.md") {
+      offenders.push(
+        `Skill-tool load sites are [${sites.join(", ")}]; docs/architecture.md item 3 calls the eng-design-doc-review brief the repo's only such site, and the retention floor hangs on that`,
+      );
+    }
+    expect(offenders).toEqual([]);
+  });
+});
+
 describe("effort tiering", () => {
   const EFFORT_LEVELS = /^effort: (low|medium|high|xhigh|max)$/m;
 

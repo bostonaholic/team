@@ -24,7 +24,8 @@ Six lenses, applied as severity guidance when a decision is contested:
 **Cost-benefit, not religion.** Every test, abstraction, and interface has an
 ongoing cost: maintenance, runtime, false-positive triage, cognitive load. A
 test that catches no real bug and slows the build is a liability. Premature
-DRY couples behaviors that need to evolve independently. The Rule of Three is
+DRY couples behaviors that need to evolve independently. **Tolerate
+duplication the second time; extract on the third** — the Rule of Three,
 stated in full in `skills/principle-rule-of-three/SKILL.md`.
 
 ## Code Comments
@@ -32,7 +33,11 @@ stated in full in `skills/principle-rule-of-three/SKILL.md`.
 These rules govern comments inside source files, not review findings, which
 use `skills/conventional-comments/SKILL.md`.
 
-The rules are stated in full in `skills/principle-comment-the-why/SKILL.md`.
+**Comment the why, never the what.** A comment earns its place only for a
+non-obvious constraint or deliberate oddity that neither intention-revealing
+code nor a test can carry, and it stays timeless. The full rule set — the
+permitted comment class, the bans, the maintenance clause, and the Decision
+Test — is stated in `skills/principle-comment-the-why/SKILL.md`.
 
 - **No TODO or FIXME comments in delivered code.** Deferred work goes in the
   implementer's report, where it is visible and actionable — not buried in the

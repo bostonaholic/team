@@ -77,9 +77,14 @@ Skill directories are lowercase kebab-case. Most prefixes group by *subject*:
 
 A new `principle-*` skill states exactly one claim, carries
 `## What it rules out`, `## Boundary`, and `## Where it applies`, and is
-reachable from at least one pointer in another skill. Name it as the claim in
-the imperative (`principle-construct-with-collaborators`), never as a noun
-phrase naming a topic (`principle-constructors`).
+reachable from at least one pointer in another skill.
+
+**Name it after the claim, not after the topic the claim is about.** Three
+shapes do that: an imperative (`principle-comment-the-why`), a declarative
+clause (`principle-rules-outrank-precedent`), or the claim's own established
+short name (`principle-rule-of-three`). Never a bare subject label the rule
+cannot be read off (`principle-constructors`, `principle-error-handling`). The
+test is whether a reader who sees only the directory name can state the rule.
 
 ### §1A — Wire it as an entry point
 
@@ -281,7 +286,7 @@ Invocation
 - [ ] Invocation surface decided — **both** / **user-invocable only** / **model-invocable only** — with high confidence. If not, asked the user through `AskUserQuestion`.
 - [ ] Frontmatter matches the verdict: both → neither flag. User-only → `disable-model-invocation: true`. Model-only → `user-invocable: false`.
 - [ ] Only the intended path(s) wired (entry point §1A, building block §1B, or both).
-- [ ] `principle-*` skill: states one claim, carries `## What it rules out`, `## Boundary`, and `## Where it applies`, and at least one other skill points at it by path.
+- [ ] `principle-*` skill: states one claim, carries `## What it rules out`, `## Boundary`, and `## Where it applies`, and at least one other skill points at it by path. Named after the claim, not the topic — a reader seeing only the directory name can state the rule.
 - [ ] Entry point: description has WHAT + explicit trigger intents/phrases. Added to routing map.
 - [ ] Building block: chose inline (sequential) vs subagent (isolated/parallel) deliberately.
 - [ ] If subagented: self-contained, returns a conclusion not a transcript. If inlined: headed, independently-runnable sections.

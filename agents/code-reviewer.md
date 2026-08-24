@@ -43,8 +43,9 @@ checklist, both test-file severity regimes, and the test run. Format every
 finding per `skills/conventional-comments/SKILL.md` (preloaded).
 
 - Check in-source comments per the skill's Comment red flags. Cite the
-  `Comment Discipline` checklist item. Its canonical rule set is the Code
-  Comments section of `skills/engineering-standards/SKILL.md`.
+  `Comment Discipline` checklist item. The comment rules themselves are stated
+  in full in `skills/principle-comment-the-why/SKILL.md`, which the Code
+  Comments section of `skills/engineering-standards/SKILL.md` points at.
 - Check design-principle violations with `skills/solid-principles/SKILL.md`.
 - Walk changed test files against the style rules in
   `skills/test-style/SKILL.md`. Flaky-test red flags are blocking on
