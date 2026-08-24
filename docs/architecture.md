@@ -748,9 +748,9 @@ consumers, and behaviors), see [skills.md](skills.md).
    QRSPI pipeline, `pr-*` is the pull-request lifecycle. `principle-` is
    the one prefix that groups by *kind*, and it marks a **single-claim**
    skill: one rule, stated in full, in one file. A new `principle-*` skill
-   states exactly one claim, carries `## What it rules out` and
-   `## Boundary`, and is reachable from at least one pointer in another
-   skill. The name is the claim in the imperative
+   states exactly one claim, carries `## What it rules out`, `## Boundary`,
+   and `## Where it applies`, and is reachable from at least one pointer in
+   another skill. The name is the claim in the imperative
    (`principle-construct-with-collaborators`), never a noun phrase naming
    a topic.
 
@@ -767,11 +767,21 @@ consumers, and behaviors), see [skills.md](skills.md).
    such site) was handed no path, so the source keeps at least one sentence
    saying what to do, and only the rationale and the generalization move.
    A reader who arrives **by path** already opens files by path, so a
-   pointer is one more path and the site may reduce to it. Seven skills are
-   preloaded by some agent today — `nested-agents`, `code-review`,
-   `conventional-comments`, `systems-thinking`, `authoring-designs`,
-   `cross-model-review`, and `verifying-ux` — and moving a rule out of any
-   of them is governed by the first case.
+   pointer is one more path and the site may reduce to it.
+
+   **Keeping the sentence is the default. Reducing a site to a pointer is
+   the case that has to be argued.** Twenty skills are preloaded by some
+   agent today, and that list is not maintained here: derive it from the
+   `skills:` blocks under `agents/`, which `tests/thin-agents.test.ts` pins
+   agent by agent. Before a site loses its what-to-do sentence, confirm that
+   no agent preloads the file and that the review brief does not name-load
+   it. Either one puts the site under the first case above.
+
+   Two skills can hold no pointer at all. `finding-files` and
+   `running-quality-checks` must contain no `skills/` substring, because the
+   haiku agents that run them cannot be trusted to chase a cross-reference,
+   and `tests/thin-agents.test.ts` enforces the absence. A rule either one
+   needs stays stated inline, in full.
 
    What is left behind is a pointer, per
    `skills/principle-state-it-once/SKILL.md`.

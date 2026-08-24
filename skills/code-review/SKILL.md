@@ -168,8 +168,7 @@ outcome depends on them. The full catalog lives in
 `skills/test-style/SKILL.md` ("Flaky-test red flags (reviewer checklist)").
 
 **Comment red flags.** Check in-source comments in every changed file against
-the Code Comments rules in `skills/engineering-standards/SKILL.md`, which
-state the rule as `skills/principle-comment-the-why/SKILL.md`. Findings
+the comment rules in `skills/principle-comment-the-why/SKILL.md`. Findings
 cite the checklist item by name and carry the tier's decoration — a
 blocking-regime hit reads `issue (blocking): Comment Discipline — ...`. Two
 regimes apply:

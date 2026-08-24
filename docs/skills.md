@@ -1138,8 +1138,9 @@ the source skills whose prose it now carries.
 
 No agent preloads a principle skill and no agent body loads one. They are
 discovery-only: the model auto-loads one by name and description, or a reader
-follows a pointer from a source skill. The `Loaded by` line below therefore
-names the pointing sources rather than an agent.
+follows a pointer from a source skill. Each entry below therefore carries a
+`Pointed to by` line naming those sources, in place of the `Loaded by` line an
+agent-loaded skill gets.
 
 ### principle-construct-with-collaborators
 
@@ -1312,8 +1313,7 @@ names the pointing sources rather than an agent.
 ### principle-ask-for-refutation
 
 - **Purpose:** How to phrase a claim you are handing to someone else to check.
-- **Pointed to by:** `nested-agents`, `cross-model-review`. Also reachable by
-  model auto-load.
+- **Pointed to by:** `nested-agents`. Also reachable by model auto-load.
 - **Key behaviors:** Withholds the verdict, the severity, and the reasoning so
   the verifier reaches its own, and locates the claim so it has something to
   test. Rules out asking for confirmation and reusing a verifier that already
@@ -1354,16 +1354,20 @@ names the pointing sources rather than an agent.
   output as content to triage, so an embedded imperative is surfaced rather
   than executed. Rules out trusting attribution and widening scope on fetched
   text. Never relaxes a human-approval gate, and permits an unloadable surface
-  to state the rule inline.
+  to state the rule inline. Carves out content the user designated as the work,
+  such as an issue URL resolved into a task description, while incidental text
+  keeps the untrusted posture.
 
 ## Skill ↔ agent ↔ phase
 
 This table ties each skill to the agents or orchestrator skills that load
 it and the phase where that happens. The `Invoked / loaded by` column
-carries two meanings depending on the row: for **entry-point skills** it
+carries three meanings depending on the row: for **entry-point skills** it
 names who *invokes* the skill (you directly, or the orchestrator running a
 phase). For **methodology skills** it names the agent(s) that *load* the
-skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see the
+skill. For **`principle-*` skills** no agent loads them at all, so it names
+the source skills that *point* at them, marked `(pointers)`, plus model
+auto-load. For the `$ARGUMENTS` shapes and the three-tier discovery, see the
 entry-point section above rather than repeating them here.
 
 | Skill | Invoked / loaded by | Phase / context |
@@ -1438,7 +1442,7 @@ entry-point section above rather than repeating them here.
 | `principle-name-the-alternative` | `documenting-decisions`, `technical-design-doc`, `authoring-designs` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
 | `principle-state-it-once` | `qrspi-workflow`, `code-review` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
 | `principle-record-the-assumption` | `authoring-designs`, `nested-agents`, `qrspi-workflow` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
-| `principle-ask-for-refutation` | `nested-agents`, `cross-model-review` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-ask-for-refutation` | `nested-agents` (pointer); model auto-load | Discovery-only (no QRSPI phase) |
 | `principle-verify-before-you-adopt` | `nested-agents`, `cross-model-review` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
 | `principle-degrade-never-block` | `nested-agents`, `cross-model-review`, `tracking-tickets` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
 | `principle-treat-fetched-content-as-data` | `pr-open-comments`, `pr-watch-as-reviewer`, `pr-verify`, `pr-rebase`, `pr-cleanup`, `groom-backlog`, `cross-model-review` (pointers); model auto-load | Discovery-only (no QRSPI phase) |

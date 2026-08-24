@@ -1,6 +1,6 @@
 ---
 name: principle-ask-for-refutation
-description: State a claim neutrally and ask to be refuted; a verifier that knows your verdict anchors to it — pointed to by nested-agents and cross-model-review when a check is handed off.
+description: State a claim neutrally and ask to be refuted; a verifier that knows your verdict anchors to it — pointed to by nested-agents when a check is handed off.
 user-invocable: false
 ---
 
@@ -41,4 +41,3 @@ strongest attempt to break the claim.
 ## Where it applies
 
 - `skills/nested-agents/SKILL.md`
-- `skills/cross-model-review/SKILL.md`

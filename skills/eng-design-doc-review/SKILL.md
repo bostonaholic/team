@@ -191,9 +191,10 @@ it defines their format.
    "Out of scope" or "Non-Goals", not be silently omitted.
 
 5. **Check every rule reaches every surface it must**, per
-   `skills/principle-every-rule-reaches-every-surface/SKILL.md`. A design can
-   satisfy step 4 *per surface in isolation* while the surfaces disagree with
-   each other, so the categories above will not catch this.
+   `skills/principle-every-rule-reaches-every-surface/SKILL.md`. Skip this
+   step when the design defines one path in. A design can satisfy step 4
+   *per surface in isolation* while the surfaces disagree with each other, so
+   the categories above will not catch this.
 
    An omission is a finding unless the design says why it is deliberate.
    Judge a `no` on its reasoning, not its presence: a safeguard that is

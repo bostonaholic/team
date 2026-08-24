@@ -89,16 +89,14 @@ Items 4 and 12 rest on `skills/principle-fail-loudly/SKILL.md` and
 The Design-First Workflow and Quality Checklist above are the procedure. These
 are the calls they do not make for you:
 
-- **Construct with collaborators, call with work.**
-- **No mixed levels of abstraction in a function.**
-- **Targeted exception scopes only.**
+- **Construct with collaborators, call with work.** Stated in full in
+  `skills/principle-construct-with-collaborators/SKILL.md`.
+- **No mixed levels of abstraction in a function.** Stated in full in
+  `skills/principle-one-level-of-abstraction/SKILL.md`.
+- **Targeted exception scopes only.** Stated in full in
+  `skills/principle-targeted-exception-scopes/SKILL.md`.
 - **Follow the project's existing style, naming conventions, and patterns.**
   Read neighboring files to calibrate if unsure.
-
-Constructor shape, abstraction levels, and exception scope are each stated in
-full in `skills/principle-construct-with-collaborators/SKILL.md`,
-`skills/principle-one-level-of-abstraction/SKILL.md`, and
-`skills/principle-targeted-exception-scopes/SKILL.md`.
 
 ## When Reviewing
 

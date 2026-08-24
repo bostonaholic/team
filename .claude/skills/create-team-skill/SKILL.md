@@ -76,10 +76,10 @@ Skill directories are lowercase kebab-case. Most prefixes group by *subject*:
 **single-claim** skill — one rule, stated in full, in one file.
 
 A new `principle-*` skill states exactly one claim, carries
-`## What it rules out` and `## Boundary`, and is reachable from at least one
-pointer in another skill. Name it as the claim in the imperative
-(`principle-construct-with-collaborators`), never as a noun phrase naming a
-topic (`principle-constructors`).
+`## What it rules out`, `## Boundary`, and `## Where it applies`, and is
+reachable from at least one pointer in another skill. Name it as the claim in
+the imperative (`principle-construct-with-collaborators`), never as a noun
+phrase naming a topic (`principle-constructors`).
 
 ### §1A — Wire it as an entry point
 
@@ -281,7 +281,7 @@ Invocation
 - [ ] Invocation surface decided — **both** / **user-invocable only** / **model-invocable only** — with high confidence. If not, asked the user through `AskUserQuestion`.
 - [ ] Frontmatter matches the verdict: both → neither flag. User-only → `disable-model-invocation: true`. Model-only → `user-invocable: false`.
 - [ ] Only the intended path(s) wired (entry point §1A, building block §1B, or both).
-- [ ] `principle-*` skill: states one claim, carries `## What it rules out` and `## Boundary`, and at least one other skill points at it by path.
+- [ ] `principle-*` skill: states one claim, carries `## What it rules out`, `## Boundary`, and `## Where it applies`, and at least one other skill points at it by path.
 - [ ] Entry point: description has WHAT + explicit trigger intents/phrases. Added to routing map.
 - [ ] Building block: chose inline (sequential) vs subagent (isolated/parallel) deliberately.
 - [ ] If subagented: self-contained, returns a conclusion not a transcript. If inlined: headed, independently-runnable sections.

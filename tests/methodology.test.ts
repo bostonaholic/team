@@ -192,12 +192,16 @@ describe("engineering-standards methodology", () => {
   // a property of the code under test, so it is intentionally not covered here.
 
   test("skills.md methodology table includes solid-principles row", () => {
-    const row = filterRows(read(SKILLS_MD), "solid-principles", /^#|^>|\/\/|event/);
+    // Key on the row prefix: the bare name also matches prose and the
+    // principle-* catalog entries that cite it, so the row could be deleted
+    // and this check would still find five other lines.
+    const row = filterRows(read(SKILLS_MD), "| `solid-principles` |", /^#|^>|\/\/|event/);
     expect(row.length).toBeGreaterThan(0);
   });
 
   test("skills.md methodology table includes refactoring-to-patterns row", () => {
-    const row = filterRows(read(SKILLS_MD), "refactoring-to-patterns", /^#|^>|\/\/|event/);
+    // Row prefix, for the same reason as the solid-principles row above.
+    const row = filterRows(read(SKILLS_MD), "| `refactoring-to-patterns` |", /^#|^>|\/\/|event/);
     expect(row.length).toBeGreaterThan(0);
   });
 });
@@ -906,10 +910,11 @@ describe("time-bomb example pair (single copy in test-style)", () => {
 
 // ---------------------------------------------------------------------------
 // Code-comment rules — free L2 content tripwires (docs/testing.md §2).
-// engineering-standards is the single source of truth for the binding comment
-// rule set (why-only, rewrite-first, no ticket/pipeline references, no
-// commented-out code, no TODOs, doc-comment exemption); the implementer's
-// `## Code quality` block defers to it with a one-line pointer.
+// principle-comment-the-why is the single source of truth for the binding
+// comment rule set (why-only, rewrite-first, no ticket/pipeline references, no
+// commented-out code, doc-comment exemption). engineering-standards keeps the
+// TODO ban and the pointer to it; the implementer's `## Code quality` block
+// defers to engineering-standards with a one-line pointer.
 // ---------------------------------------------------------------------------
 
 describe("code-comment rules (L2 content tripwire)", () => {

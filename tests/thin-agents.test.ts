@@ -105,7 +105,7 @@ describe("thin agents: new methodology skills exist with the methodology-skill f
 });
 
 // ---------------------------------------------------------------------------
-// The principle-* family (design tests 2-7).
+// The principle-* family.
 //
 // Each member is a single-claim skill discovered by description, pointed to
 // from the source skills whose prose it now carries. Every check below is an
@@ -115,14 +115,14 @@ describe("thin agents: new methodology skills exist with the methodology-skill f
 // The member-count guard. Without it, a renamed prefix or an empty glob turns
 // every per-member sweep below into a permanently green no-op
 // (docs/testing.md, "Prove a negative check can find a positive"). The value
-// walks the slice ladder 1 / 5 / 9 / 14 / 19 as each batch of principles
-// lands — the same per-slice treatment as the documentation count strings.
+// is the family's real size, and it moves in the commit that adds or removes a
+// member — the same treatment the documentation count strings get.
 const EXPECTED_PRINCIPLE_COUNT = 19;
 
-// The slice whose prose has moved. MOVED_RUNS below carries every marker of
-// the whole change, and a marker only becomes checkable once its own slice
-// moves the prose it was lifted from, so the test-6 sweeps read the markers up
-// to this slice and no further. Walks 1 / 2 / 3 / 4 / 5 beside the count above.
+// A slice is one commit of this change, and MOVED_RUNS below tags every marker
+// with the slice that moves its prose. A marker is only checkable once that
+// commit lands, so the absence sweeps read the markers up to this slice and no
+// further. It sits at the last slice once the whole change has landed.
 const CURRENT_SLICE = 5;
 
 const SKILLS_ROOT = join(REPO_ROOT, "skills");
@@ -168,9 +168,9 @@ function principleSkillNames(): string[] {
   return allSkillNames().filter((name) => name.startsWith("principle-"));
 }
 
-// The holder scan for tests 4 and 5: every skill outside the family. Excluding
-// the family is what lets a `## Boundary` cite a sibling without polluting that
-// sibling's `## Where it applies` set.
+// The holder scan for the pointer sweeps below: every skill outside the
+// family. Excluding the family is what lets a `## Boundary` cite a sibling
+// without polluting that sibling's `## Where it applies` set.
 function nonFamilySkillNames(): string[] {
   return allSkillNames().filter((name) => !name.startsWith("principle-"));
 }
@@ -213,15 +213,20 @@ const WHERE_IT_APPLIES_HEADING = "## Where it applies";
 
 const SKILL_PATH_PATTERN = /skills\/[a-z0-9-]+\/SKILL\.md/g;
 
-// The 26 moved runs (design test 6). A marker is one contiguous run of prose
-// that leaves a source skill, held here as the source's own lines so it can be
-// audited against the line range it was lifted from. The lines join on a single
-// space because normalizeForMarkers squashes whitespace anyway.
+// The moved runs. A marker is one contiguous run of prose that leaves a source
+// skill, held here as the source's own lines so it can be audited against the
+// range it was lifted from. The lines join on a single space because
+// normalizeForMarkers squashes whitespace anyway. No marker is ever drawn from
+// prose the source retains: such a marker is present in its own source and
+// turns the removal sweep red.
 //
-// Per-slice budget: 3 / 6 / 3 / 8 / 6 = 26. Rows 7, 15, 16, and 18 move no
-// prose, so they contribute no marker.
+// Five principles state a claim that no source stated in general terms, so
+// their bodies are written from the sites rather than lifted from a passage,
+// and no marker names them — critique-the-code-not-the-coder,
+// degrade-never-block, treat-fetched-content-as-data, fail-loudly, and
+// state-it-once.
 const MOVED_RUNS: { slice: number; owner: string; source: string; run: string[] }[] = [
-  // ---- Slice 1 (3) ----
+  // ---- slice 1: 3 markers ----
   {
     slice: 1,
     owner: "principle-construct-with-collaborators",
@@ -262,7 +267,7 @@ const MOVED_RUNS: { slice: number; owner: string; source: string; run: string[] 
     ],
   },
 
-  // ---- Slice 2 (6) ----
+  // ---- slice 2: 6 markers ----
   {
     slice: 2,
     owner: "principle-one-level-of-abstraction",
@@ -325,7 +330,7 @@ const MOVED_RUNS: { slice: number; owner: string; source: string; run: string[] 
     ],
   },
 
-  // ---- Slice 3 (3) ----
+  // ---- slice 3: 3 markers ----
   {
     slice: 3,
     owner: "principle-comment-the-why",
@@ -394,7 +399,7 @@ const MOVED_RUNS: { slice: number; owner: string; source: string; run: string[] 
     ],
   },
 
-  // ---- Slice 4 (8) ----
+  // ---- slice 4: 8 markers ----
   {
     slice: 4,
     owner: "principle-separate-generator-from-evaluator",
@@ -456,15 +461,14 @@ const MOVED_RUNS: { slice: number; owner: string; source: string; run: string[] 
   {
     slice: 4,
     owner: "principle-every-rule-reaches-every-surface",
-    source: "eng-design-doc-review", // :193 (after the retained bold lead) -199
+    // Step 5's own skip condition and its step-4 caveat both name this
+    // skill's procedure, so both stay. Only the general branch moves.
+    source: "eng-design-doc-review", // :194-197
     run: [
-      "Skip this step when",
-      "the design defines one path in. When it defines more than one — two entry",
+      "When it defines more than one — two entry",
       "modes, a section that claims to be loadable on its own, a split across",
       "turns — take each rule or safeguard the design introduces and ask which",
-      "surfaces state it. A design can satisfy step 4 *per surface in isolation*",
-      "while the surfaces disagree with each other, so the categories above will",
-      "not catch this.",
+      "surfaces state it.",
     ],
   },
   {
@@ -474,11 +478,11 @@ const MOVED_RUNS: { slice: number; owner: string; source: string; run: string[] 
     run: ["Every decision implies rejected alternatives."],
   },
 
-  // ---- Slice 5 (6) ----
+  // ---- slice 5: 6 markers ----
   {
     slice: 5,
     owner: "principle-record-the-assumption",
-    source: "authoring-designs", // :69, the trailing clause
+    source: "authoring-designs", // :64, the trailing clause
     run: ["an unmarked guess is a defect"],
   },
   {
@@ -505,12 +509,10 @@ const MOVED_RUNS: { slice: number; owner: string; source: string; run: string[] 
   {
     slice: 5,
     owner: "principle-verify-before-you-adopt",
-    source: "nested-agents", // :193-195
-    run: [
-      "The pass removes false positives. It must never remove a true positive.",
-      "List refuted findings under a `### Refuted by verification` section of",
-      "your report (auditable, not silently dropped).",
-    ],
+    // The `### Refuted by verification` sentences that followed this one name
+    // a section of the reader's own report, so they stay in the source.
+    source: "nested-agents", // :193
+    run: ["The pass removes false positives. It must never remove a true positive."],
   },
   {
     slice: 5,
@@ -525,7 +527,14 @@ const MOVED_RUNS: { slice: number; owner: string; source: string; run: string[] 
 
 const ACTIVE_MOVED_RUNS = MOVED_RUNS.filter(({ slice }) => slice <= CURRENT_SLICE);
 
-describe("principle-* family contract (tests 2-7) at expected member count 19", () => {
+// The marker-count guard, on the dimension the two absence sweeps below
+// iterate. Without it, lowering CURRENT_SLICE, renaming the fixture, or
+// emptying it drops every marker assertion and both sweeps still pass green —
+// the permanently green no-op docs/testing.md warns about. Cumulative per
+// slice: 3 / 9 / 12 / 20 / 26.
+const EXPECTED_ACTIVE_MARKERS = 26;
+
+describe("principle-* family contract at expected member count 19", () => {
   test("every principle skill declares its directory name, a discovery-only description, and user-invocable false", () => {
     const names = principleSkillNames();
     expect(names.length).toBe(EXPECTED_PRINCIPLE_COUNT);
@@ -677,10 +686,12 @@ describe("principle-* family contract (tests 2-7) at expected member count 19", 
   });
 
   test("moved exactly once: each moved run is gone from the source skill it left", () => {
-    // Positive control (design test 6, "Prove a negative check can find a
-    // positive"): before the prose moves, every one of these assertions is red
-    // because the run is still in its source file. A marker that passes
+    // Positive control ("Prove a negative check can find a positive",
+    // docs/testing.md): before the prose moves, every one of these assertions
+    // is red because the run is still in its source file. A marker that passes
     // pre-move was mis-lifted and must be re-lifted, never accepted.
+    expect(ACTIVE_MOVED_RUNS.length).toBe(EXPECTED_ACTIVE_MARKERS);
+
     const offenders: string[] = [];
     for (const { owner, source, run } of ACTIVE_MOVED_RUNS) {
       const marker = normalizeForMarkers(run.join(" "));
@@ -702,6 +713,7 @@ describe("principle-* family contract (tests 2-7) at expected member count 19", 
   });
 
   test("moved exactly once: no moved run has a second home in another skill", () => {
+    expect(ACTIVE_MOVED_RUNS.length).toBe(EXPECTED_ACTIVE_MARKERS);
     const everySkill = allSkillNames();
     expect(everySkill.length).toBeGreaterThan(0);
 
@@ -727,18 +739,36 @@ describe("principle-* family contract (tests 2-7) at expected member count 19", 
   });
 
   test("no principle suppresses a pause, stop, wait, or ask", () => {
-    // The mechanical half of Decision 10: a principle auto-loaded into a
-    // session must not soften a shipped human-approval gate.
+    // A principle is auto-loadable into any session, including one running a
+    // skill that deliberately stops for the user, so no principle body may
+    // state an unbounded prohibition on stopping.
     const names = principleSkillNames();
     expect(names.length).toBe(EXPECTED_PRINCIPLE_COUNT);
 
-    const banned = [/never (pause|stop|wait|ask)/i, /do not wait/i, /without (asking|approval)/i];
+    // The value is prospective — it gates every future family member — so the
+    // set covers the paraphrases as well as the literal wording.
+    const banned = [
+      /never (pause|stop|wait|ask)/i,
+      /never (block|halt) on/i,
+      /do not wait/i,
+      /do not (stop|pause|block) for/i,
+      /no need to (ask|wait)/i,
+      /without (asking|approval)/i,
+      /without (waiting|a human|the user)/i,
+    ];
     const offenders: string[] = [];
     for (const name of names) {
-      const content = body(readOrEmpty(skillPath(name)));
+      // Normalized, not raw: every principle body wraps at ≤79 columns, so a
+      // raw regex sweeps straight past "never\n  pause" and reports clean
+      // (docs/testing.md, "Prove a negative check can find a positive").
+      const content = normalizeForMarkers(body(readOrEmpty(skillPath(name))));
       for (const pattern of banned) {
         const hit = content.match(pattern);
-        if (hit) offenders.push(`${name}: body matches ${pattern} — "${hit[0]}"`);
+        if (hit) {
+          const at = hit.index ?? 0;
+          const context = content.slice(Math.max(0, at - 40), at + hit[0].length + 40);
+          offenders.push(`${name}: body matches ${pattern} — "…${context}…"`);
+        }
       }
     }
     expect(offenders).toEqual([]);
@@ -921,12 +951,14 @@ describe("thin agents: documentation counts agree at 75 skills", () => {
     expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (75)");
   });
 
-  test("docs/skills.md description counts 75 skills and no stale 56", () => {
+  test("docs/skills.md description counts 75 skills and no stale 56 or 70", () => {
     const flattened = read(SKILLS_MD).replace(/\s+/g, " ");
     expect(flattened).toContain("75 skills");
     // The methodology subtotal climbs toward 56 as the principle-* family
-    // lands, so the guard pins the whole phrase and never a bare 56.
+    // lands, so the guard pins the whole phrase and never a bare 56. 70 is
+    // the total this family's last batch replaced, so it goes in too.
     expect(flattened).not.toContain("56 skills");
+    expect(flattened).not.toContain("70 skills");
   });
 
   test("docs/skills.md split sentence sums to 75", () => {
@@ -935,12 +967,13 @@ describe("thin agents: documentation counts agree at 75 skills", () => {
     );
   });
 
-  test("docs/architecture.md counts all 75 skills in both locations and no stale 55/54/53/51/31", () => {
+  test("docs/architecture.md counts all 75 skills in both locations and no stale 70/55/54/53/51/31", () => {
     const content = read(ARCHITECTURE_MD);
     expect(content).toContain("all 75 skills");
     // Stale-guard: the count appears twice in this doc; a half-swept second
     // occurrence passes a bare toContain, so forbid the old value outright
     // (no-stale-31 precedent).
+    expect(content).not.toContain("all 69 skills");
     expect(content).not.toContain("all 55 skills");
     expect(content).not.toContain("all 54 skills");
     expect(content).not.toContain("all 53 skills");
@@ -963,15 +996,16 @@ describe("thin agents: documentation counts agree at 75 skills", () => {
     );
   });
 
-  test("docs/cross-host-portability.md counts 75 skills and no stale 56", () => {
+  test("docs/cross-host-portability.md counts 75 skills and no stale 56 or 70", () => {
     const flattened = read(join(REPO_ROOT, "docs", "cross-host-portability.md")).replace(
       /\s+/g,
       " ",
     );
     expect(flattened).toContain("75 skills");
     // The count appears four times in this doc; a half-swept occurrence
-    // passes a bare toContain, so forbid the old value outright.
+    // passes a bare toContain, so forbid the old values outright.
     expect(flattened).not.toContain("56 skills");
+    expect(flattened).not.toContain("70 skills");
   });
 
   test("docs/index.md counts all 75 skills", () => {
@@ -980,10 +1014,12 @@ describe("thin agents: documentation counts agree at 75 skills", () => {
     );
   });
 
-  test("docs/skills.md counts 56 methodology skills and no stale 37", () => {
+  test("docs/skills.md counts 56 methodology skills and no stale 37 or 51", () => {
     const flattened = read(SKILLS_MD).replace(/\s+/g, " ");
     expect(flattened).toContain("The 56 methodology skills");
     expect(flattened).not.toContain("37 methodology");
+    // 51 is the methodology subtotal this family's last batch replaced.
+    expect(flattened).not.toContain("51 methodology");
   });
 
   test("docs/architecture.md exempts own-procedure skills from the 3-skill soft limit", () => {

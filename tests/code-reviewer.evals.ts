@@ -168,14 +168,19 @@ function registerPlantedBugEval(options: {
           // inline prompt alone. 180s clipped completing runs.
           timeout: 300_000,
           testName: fixtureName,
-          // The reviewer's real rule text. `code-review` owns the severity
-          // regime, `conventional-comments` the finding format, and
-          // `engineering-standards` the canonical Code Comments rule set the
-          // planted-comment-* fixtures exercise. These three are the globs in
-          // every code-reviewer touchfiles entry.
+          // The reviewer's real rule text, shared by every code-reviewer
+          // fixture. `code-review` owns the severity regime,
+          // `conventional-comments` the finding format,
+          // `principle-comment-the-why` the Code Comments rule set the
+          // planted-comment-* fixtures exercise, and `engineering-standards`
+          // the Quality Checklist those findings cite by name plus the TODO
+          // ban. The cwd is an empty temp dir and `Bash` and `Task` are
+          // disallowed below, so a rule not injected here is a rule the
+          // reviewer cannot reach.
           systemPromptAppend: loadSkillContext([
             "code-review",
             "conventional-comments",
+            "principle-comment-the-why",
             "engineering-standards",
           ]),
           // The fixture supplies the whole change inline, and the temp cwd is

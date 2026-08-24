@@ -8,9 +8,10 @@ user-invocable: false
 
 A principle, not a gate. A commit holds exactly one logical change, the
 smallest unit that is independently correct. When the message needs the word
-"and" to describe what happened, the commit is two commits. The payoff is all
-downstream: a reviewer reads one intent at a time, a bisect lands on one
-change, and a revert takes back that change and nothing beside it.
+"and" to describe what happened, the commit probably holds two changes that
+should be two commits. The payoff is all downstream: a reviewer reads one
+intent at a time, a bisect lands on one change, and a revert takes back that
+change and nothing beside it.
 
 ## What it rules out
 

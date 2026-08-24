@@ -31,7 +31,7 @@ Report it at the level that can act on it.
 
 - It governs the primary path. A step that a skill declares **best-effort** is
   not a swallowed error when it is skipped, and that carve-out belongs to
-  `degrade-never-block`. This rule does not override it.
+  `principle-degrade-never-block`. This rule does not override it.
 - It requires the failure to be surfaced, not that everything come to a halt.
   A run that reports and then carries on has satisfied this rule; what the run
   does afterward is its own decision.

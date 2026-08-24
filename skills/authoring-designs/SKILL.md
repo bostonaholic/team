@@ -93,9 +93,9 @@ in the codebase so the implementer does not pick the wrong precedent.>
 ## Decisions made
 <numbered list of design decisions, each with: the decision, the alternative
 considered, why this was chosen — per
-`skills/principle-name-the-alternative/SKILL.md`. Name the surfaces that must change together
-(callers, siblings, config, docs). Mark every self-resolved choice
-"Assumption — chosen without user review" here.>
+`skills/principle-name-the-alternative/SKILL.md`. Name the surfaces that must
+change together (callers, siblings, config, docs). Mark every self-resolved
+choice "Assumption — chosen without user review" here.>
 
 ## Out of scope
 <bulleted list of things this design explicitly does NOT do. Be specific —
