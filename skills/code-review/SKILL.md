@@ -11,8 +11,9 @@ prevents self-evaluation bias — the tendency to see what you intended to write
 rather than what you actually wrote.
 
 Write the prose this skill governs at a seventh-grade reading level, in
-STE-flavored mode. Full methodology: `skills/writing-prose/SKILL.md`. Apply
-its `## Self-lint` checklist before you finalize.
+STE-flavored mode. Full methodology: `writing-prose`
+(`skills/writing-prose/SKILL.md`). Call the Skill tool with `writing-prose`
+and apply its `## Self-lint` checklist before you finalize.
 
 ## When Invoked Directly
 
@@ -121,8 +122,9 @@ that pass did not run.>
 
 ## Gate Types and Severity Tiers
 
-How each reviewer's verdict gates the pipeline lives in
-`skills/review-severity-tiers/SKILL.md` — the gate-type table, the Blocking,
+Call the Skill tool with `review-severity-tiers`
+(`skills/review-severity-tiers/SKILL.md`). It owns how each reviewer's
+verdict gates the pipeline: the gate-type table, the Blocking,
 Major, and Minor tiers with the auto-fix boundary, the consult guard, and the
 verdict-aggregation rules.
 
@@ -148,7 +150,8 @@ verdict-aggregation rules.
 - **💬 COMMENT:** Non-blocking suggestions only. Implementation is correct.
 
 **Test-quality flags.** Test files are part of the diff. Walk every changed
-`*test*` / `*spec*` / `__tests__/*` file against `skills/test-style/SKILL.md`.
+`*test*` / `*spec*` / `__tests__/*` file against the rules in `test-style` —
+call the Skill tool with `test-style` (`skills/test-style/SKILL.md`).
 These are `suggestion:` individually and `issue:` when they appear across
 multiple tests:
 
@@ -175,7 +178,8 @@ outcome depends on them. The full catalog lives in
 `skills/test-style/SKILL.md` ("Flaky-test red flags (reviewer checklist)").
 
 **Comment red flags.** Check in-source comments in every changed file against
-the Code Comments rules in `skills/engineering-standards/SKILL.md`. Findings
+the Code Comments rules in `engineering-standards` — call the Skill tool with
+`engineering-standards` (`skills/engineering-standards/SKILL.md`). Findings
 cite the checklist item by name and carry the tier's decoration — a
 blocking-regime hit reads `issue (blocking): Comment Discipline — ...`. Two
 regimes apply:

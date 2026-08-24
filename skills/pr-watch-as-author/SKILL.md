@@ -69,9 +69,9 @@ the current branch (`gh pr view`). Refuse up front, before any other work:
   offer: say "the PR is ready for review" to promote it now.
 - If `gh pr ready` fails (for example, permissions), warn and keep
   watching — the promotion is not a precondition for the loop.
-- Apply the best-effort in-review ticket transition per
-  `skills/tracking-tickets/SKILL.md` — a tracker call never blocks the
-  watch.
+- Call the Skill tool with `tracking-tickets`
+  (`skills/tracking-tickets/SKILL.md`) and apply the best-effort in-review
+  ticket transition — a tracker call never blocks the watch.
 - Take a baseline snapshot: the unresolved review-thread ids, the
   **issue-comment ids** with their timestamps, `state`, and
   `reviewDecision`. Record comment ids, not just the latest timestamp: a
@@ -140,9 +140,10 @@ error is an authentication failure, suggest `gh auth login` or
 
 ### 4. On new feedback — run the triage procedure
 
-When a poll detects a change, load `skills/pr-open-comments/SKILL.md` and
-follow it. This skill never restates the triage steps — the fetch,
-verification, and punch-list format live there.
+When a poll detects a change, call the Skill tool with `pr-open-comments`
+(`skills/pr-open-comments/SKILL.md`) and follow it. This skill never
+restates the triage steps — the fetch, verification, and punch-list format
+live there.
 
 **Plain PR comments are triaged alongside threads.** The delegated
 procedure is written around unresolved review threads, so pass the

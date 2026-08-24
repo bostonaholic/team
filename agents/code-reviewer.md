@@ -42,18 +42,23 @@ Inspection Contract" section: done-criteria checks, the per-file coverage
 checklist, both test-file severity regimes, and the test run. Format every
 finding per `skills/conventional-comments/SKILL.md` (preloaded).
 
+Call the Skill tool with `engineering-standards`
+(`skills/engineering-standards/SKILL.md`), `solid-principles`
+(`skills/solid-principles/SKILL.md`), `test-style`
+(`skills/test-style/SKILL.md`), and `systems-thinking`
+(`skills/systems-thinking/SKILL.md`). None of the four is preloaded, and the
+checks below are their application:
+
 - Check in-source comments per the skill's Comment red flags. Cite the
-  `Comment Discipline` checklist item. Its canonical rule set is the Code
-  Comments section of `skills/engineering-standards/SKILL.md`.
-- Check design-principle violations with `skills/solid-principles/SKILL.md`.
-- Walk changed test files against the style rules in
-  `skills/test-style/SKILL.md`. Flaky-test red flags are blocking on
-  **first** occurrence.
-- Apply the "When Reviewing" section of
-  `skills/engineering-standards/SKILL.md` as more review criteria, and cite
-  checklist item names in findings.
-- Apply the `System Fit` item per `skills/systems-thinking/SKILL.md`
-  (`## When Reviewing`). It covers diverging siblings, un-updated callers or
+  `Comment Discipline` checklist item. Its canonical rule set is
+  `engineering-standards`' Code Comments section.
+- Check design-principle violations with `solid-principles`.
+- Walk changed test files against `test-style`'s style rules. Flaky-test
+  red flags are blocking on **first** occurrence.
+- Apply `engineering-standards`' "When Reviewing" section as more review
+  criteria, and cite checklist item names in findings.
+- Apply the `System Fit` item from `systems-thinking`'s `## When Reviewing`
+  section. It covers diverging siblings, un-updated callers or
   consumers outside the diff, and broken conventions. Cite `System Fit` by
   name.
 

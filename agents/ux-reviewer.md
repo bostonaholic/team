@@ -39,8 +39,10 @@ under `docs/plans/<id>/screenshots/` that team-pr consumes. Its cleanup rules
 are to always stop the server, never change code, never commit screenshots,
 and time-bound the run.
 
-Per `## When Reviewing` of `skills/systems-thinking/SKILL.md`, verify the
-adjacent flows that share the changed components, not only the changed screen.
+Call the Skill tool with `systems-thinking`
+(`skills/systems-thinking/SKILL.md`) and follow its `## When Reviewing`
+section: verify the adjacent flows that share the changed components, not
+only the changed screen.
 
 ## Report Format
 

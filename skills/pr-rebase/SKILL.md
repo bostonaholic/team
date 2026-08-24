@@ -330,7 +330,8 @@ All of these are refusals, checked before anything is rewritten:
    The merge base is deliberately *not* captured here — it is computed
    after the fetch (step 3), against the base as it actually stands.
 
-2. Run the project's checks. Follow `skills/running-quality-checks/SKILL.md`
+2. Run the project's checks. Call the Skill tool with
+   `running-quality-checks` (`skills/running-quality-checks/SKILL.md`)
    for detection and speed order — do not invent a check the project does
    not configure. Record, per check: the exact command, its exit status, and
    the individual failing test names where the runner reports them. Test

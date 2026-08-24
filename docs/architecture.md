@@ -662,6 +662,28 @@ The second is an inline prose load instruction in the agent body. For
 example, the `implementer` body's Code quality section loads
 `solid-principles` inline.
 
+**Wording convention for an inline load.** An inline load instruction reads
+`Call the Skill tool with \`<name>\``, followed by the path in parentheses.
+That imperative phrasing is what reliably makes a model actually issue the
+tool call — "load X", "see X", and "per X" all read as citations, and a
+model that treats a load as a citation proceeds on the summary in its own
+context instead of the skill's actual content. The path stays alongside the
+bare name because a human reader (and the tripwires in `tests/`) navigate by
+path.
+
+The convention applies **only where the other skill is genuinely needed** —
+where the reader must go execute that skill's procedure. A pure
+cross-reference keeps its ordinary wording: a schema lookup, a "see also",
+a rule already restated inline (the `progress-tracking` blockquote every
+multi-step skill carries), and a pointer to a skill the frontmatter already
+preloaded. Adding the imperative phrasing to a citation would spend a tool
+call and a context window on content nobody asked for.
+
+This is a wording convention, deliberately **not** machine-checked. Per
+[testing.md](testing.md#a-tripwire-asserts-a-contract-never-a-wording), a
+tripwire asserts a contract, never a phrasing — a test pinning this sentence
+shape would turn every honest rewrite red.
+
 Because they are reference material rather than user actions, methodology
 skills set `user-invocable: false` in their frontmatter. This keeps them
 out of the `/` slash-command menu, because a `/qrspi-workflow` command is

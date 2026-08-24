@@ -12,8 +12,9 @@ template below.
 
 Write the prose this skill governs at a seventh-grade reading level, in
 STE-flavored mode — short sentences, common words, no unexplained jargon.
-Full methodology: `skills/writing-prose/SKILL.md`. Before you finalize
-prose this skill governs, apply the `## Self-lint` checklist in that file.
+Full methodology: `writing-prose` (`skills/writing-prose/SKILL.md`). Before
+you finalize prose this skill governs, call the Skill tool with
+`writing-prose` and apply its `## Self-lint` checklist.
 
 If `task.md` references a `prd.md`, read it first and treat its scope
 boundaries and acceptance criteria per the "Consuming a PRD downstream"
@@ -146,8 +147,9 @@ operational concerns. One bullet each.>
   Type signatures are OK if they crystallize a decision.
 - **Reference patterns, do not duplicate them.** "Follow the pattern in
   `lib/foo.ts:30-60`" is better than restating those 30 lines.
-- **Apply the systems-thinking lens** — read
-  `skills/systems-thinking/SKILL.md` if it is not already in context and
+- **Apply the systems-thinking lens** — if it is not already in context,
+  call the Skill tool with `systems-thinking`
+  (`skills/systems-thinking/SKILL.md`) and
   use its `## When Designing` section: document adjacent components in
   `## Current state` and name the surfaces that must change together in
   `## Decisions made`. Adds no new gate.

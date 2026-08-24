@@ -85,7 +85,8 @@ must not propagate the user's framing to the research agents.
 - **No implementation suggestions.** You produce questions and context, not
   approaches. Approaches are the design-author's job.
 - **Apply the product-need lens.** The `skills:` frontmatter preloads it.
-  Read `skills/product-thinking/SKILL.md` if it is not already in context.
+  If it is not already in context, call the Skill tool with
+  `product-thinking` (`skills/product-thinking/SKILL.md`).
   Use its `## When Framing the Task` section to sharpen the inferred goal
   and acceptance signals in `task.md`. The goal stays in that `task.md`
   framing only, never in the research or in `questions.md`.

@@ -63,8 +63,9 @@ No Question. No Research. No Design. No Structure. No Plan. No approval gate.
    URL is resolved as `## Input` describes (`gh issue view` for URLs).
 2. **Move the ticket to in-progress.** If the input resolved to a ticket id
    or issue, move that ticket to its tracker's in-progress state — this is
-   the first action of the fix, before any other work begins. Best-effort
-   per the ticket-lifecycle rules in `skills/tracking-tickets/SKILL.md` —
+   the first action of the fix, before any other work begins. Call the Skill
+   tool with `tracking-tickets` (`skills/tracking-tickets/SKILL.md`) and
+   follow its ticket-lifecycle rules, best-effort —
    skip silently when no tracker mechanism exists. Never block the pipeline
    on a tracker update.
 3. **Derive `<id>`** the same way `/team` does (ticket-prefixed or
@@ -126,9 +127,10 @@ fi
 ### Isolate
 
 Create the home worktree on branch `<id>` off `origin/HEAD`, exactly as
-`/team`'s leading WORKTREE phase does. See the single-repo block in
-`skills/team-worktree/SKILL.md` → "Create the worktree(s)" for the procedure
-and `skills/worktree-isolation/SKILL.md` for the topology:
+`/team`'s leading WORKTREE phase does. Call the Skill tool with
+`team-worktree` (`skills/team-worktree/SKILL.md`) for the single-repo
+"Create the worktree(s)" procedure, and with `worktree-isolation`
+(`skills/worktree-isolation/SKILL.md`) for the topology:
 
 ```sh
 git fetch origin --quiet
@@ -155,12 +157,14 @@ a fix to the default branch.
 
 ## Execution
 
-Follow the test-driven-bug-fix methodology from
-`skills/test-driven-bug-fix/SKILL.md`. Read that skill before proceeding.
+Call the Skill tool with `test-driven-bug-fix`
+(`skills/test-driven-bug-fix/SKILL.md`) before proceeding, and follow that
+methodology.
 
-When the failure is non-obvious, Load `skills/systematic-debugging/SKILL.md`
-and drill its **Root Cause Analysis (5 Whys)** causal chain to the root before
-proposing a fix.
+When the failure is non-obvious, call the Skill tool with
+`systematic-debugging` (`skills/systematic-debugging/SKILL.md`) and drill its
+**Root Cause Analysis (5 Whys)** causal chain to the root before proposing a
+fix.
 
 Mark each TodoWrite item `in_progress` when you begin and `completed`
 when it finishes.
@@ -183,8 +187,9 @@ behind a green suite.
    default branch. If it does, push nothing and report: the commits are
    local and recoverable, a push to the default branch is not.
 3. **Ticket — link now, in-review when ready.** If `ticketId` is non-null in
-   `task.md`'s frontmatter, apply the ticket-lifecycle rules in
-   `skills/tracking-tickets/SKILL.md`: link the PR to the ticket through the
+   `task.md`'s frontmatter, call the Skill tool with `tracking-tickets`
+   (`skills/tracking-tickets/SKILL.md`) and apply its ticket-lifecycle
+   rules: link the PR to the ticket through the
    conditional closing footer, keep the ticket in-progress while the PR is a
    draft and move it to in-review only once the PR is marked ready for
    review, and never close the ticket by hand — the link auto-closes it on

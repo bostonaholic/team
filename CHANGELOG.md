@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Every place an agent or skill must go load another skill now says so as an imperative tool call.** A pointer that read "load X", "see X", or "per X" reads as a citation, and a model that treats a load as a citation never issues the tool call — it proceeds on whatever summary of X already sits in its context, which is how a slice ships without the commit conventions applied or a design review runs without its severity table. Those sites now read `Call the Skill tool with \`<name>\``, with the path kept alongside for human navigation, across the orchestrator's phase gates, the `/team-fix`, `/team-design`, `/team-implement`, `/team-pr`, `/pr-rebase`, `/pr-verify`, and `/pr-watch-as-author` procedures, the shared `code-review`, `implementing-slices`, `test-driven-bug-fix`, `authoring-designs`, `decomposing-intent`, and `worktree-isolation` methodology, and the `code-reviewer`, `implementer`, `planner`, `test-architect`, `ux-reviewer`, `questioner`, `design-author`, and `structure-planner` agent bodies. Pure cross-references are deliberately untouched — a schema lookup, a rule already restated inline, and a pointer to a skill the frontmatter preloads all keep their ordinary wording, because spending a tool call on content nobody asked for is its own defect. **What this asks of you:** nothing. Runs should reach for the referenced skill instead of guessing at it. The convention and the citation/load boundary are documented in [docs/architecture.md → Methodology skills](https://github.com/bostonaholic/team/blob/main/docs/architecture.md#methodology-skills-loaded-by-agents-not-directly-invoked).
+
 ## [0.59.0] - 2026-08-28
 
 ### Added
