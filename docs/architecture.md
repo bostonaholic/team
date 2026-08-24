@@ -666,7 +666,7 @@ example, the `implementer` body's Code quality section loads
 A third mode reaches no agent at all. The 19 `principle-*` skills are
 **discovery-only**: no agent preloads one and no agent body loads one, so the
 model auto-loads one by name and description, or a reader follows a pointer
-from a source skill. See item 3 of the Design guidelines below.
+from a source skill or agent body. See item 3 of the Design guidelines below.
 
 Because they are reference material rather than user actions, methodology
 skills set `user-invocable: false` in their frontmatter. This keeps them
@@ -756,10 +756,11 @@ consumers, and behaviors), see [skills.md](skills.md).
    skill: one rule, stated in full, in one file. A new `principle-*` skill
    states exactly one claim, carries `## What it rules out`, `## Boundary`,
    and `## Where it applies`, and is reachable from at least one pointer in
-   another skill. **The name states the claim, not the topic the claim is
-   about.** Shapes that do that, not an exhaustive list: an imperative
-   (`principle-construct-with-collaborators`, `principle-comment-the-why`), a
-   declarative clause (`principle-rules-outrank-precedent`,
+   another skill or an agent body. **The name states the claim, not the topic
+   the claim is about.** Shapes that do that, not an exhaustive list: an
+   imperative (`principle-construct-with-collaborators`,
+   `principle-comment-the-why`), a declarative clause
+   (`principle-rules-outrank-precedent`,
    `principle-every-rule-reaches-every-surface`), the claim's own
    established short name (`principle-rule-of-three`,
    `principle-one-change-per-commit`), or a phrase naming the property the

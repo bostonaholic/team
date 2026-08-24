@@ -626,7 +626,7 @@ Agents load them through one of two mechanisms. The first is a
 prose load instruction in the agent body. See the "Two flavors of skill"
 section above. Neither mechanism reaches the 19 `principle-*` skills, which
 are **discovery-only** — the model auto-loads one by name and description, or
-a reader follows a pointer from a source skill (see
+a reader follows a pointer from a source skill or agent body (see
 [Principle skills](#principle-skills)). The "Loaded by" line for each
 agent-loaded skill names its consumers from the per-agent load manifest.
 An agent typically loads at most three. An
@@ -1142,7 +1142,7 @@ the source skills whose prose it now carries.
 
 No agent preloads a principle skill and no agent body loads one. They are
 discovery-only: the model auto-loads one by name and description, or a reader
-follows a pointer from a source skill. Each entry below therefore carries a
+follows a pointer from a source skill or agent body. Each entry below carries a
 `Pointed to by` line naming those sources, in place of the `Loaded by` line an
 agent-loaded skill gets.
 
@@ -1190,7 +1190,9 @@ agent-loaded skill gets.
   rather than anticipation, so the second instance waits and the third
   extracts. Rules out premature DRY, the single-caller parameterized helper,
   and counting textual similarity as duplication. Notes that the trade runs in
-  reverse for an indirection down to one caller.
+  reverse for an indirection down to one caller, and that unmixing levels of
+  abstraction inside one body is justified by the level mix rather than by a
+  count, which this threshold neither delays nor excuses.
 
 ### principle-one-change-per-commit
 
@@ -1444,7 +1446,7 @@ entry-point section above rather than repeating them here.
 | `principle-targeted-exception-scopes` | `engineering-standards` (pointer); model auto-load | Discovery-only (no QRSPI phase) |
 | `principle-rule-of-three` | `engineering-standards`, `refactoring-to-patterns` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
 | `principle-one-change-per-commit` | `git-commit`, `refactoring-to-patterns` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
-| `principle-comment-the-why` | `engineering-standards`, `code-review` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
+| `principle-comment-the-why` | `engineering-standards`, `code-review`, `code-reviewer` and `implementer` agent bodies (pointers); model auto-load | Discovery-only (no QRSPI phase) |
 | `principle-make-findings-actionable` | `conventional-comments`, `solid-principles`, `engineering-standards` (pointers); model auto-load | Discovery-only (no QRSPI phase) |
 | `principle-critique-the-code-not-the-coder` | `conventional-comments` (pointer); model auto-load | Discovery-only (no QRSPI phase) |
 | `principle-fail-loudly` | `engineering-standards`, `code-review` (pointers); model auto-load | Discovery-only (no QRSPI phase) |

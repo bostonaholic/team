@@ -601,7 +601,8 @@ describe("principle-* family contract at expected member count 19", () => {
 
   test("no principle skill declares an effort key", () => {
     // A principle skill is never loaded by an agent, so it inherits effort and
-    // must not pin one (tests/architecture.test.ts:274-281).
+    // must not pin one. tests/architecture.test.ts, "methodology skills carry
+    // no effort key", holds the same rule for the wider library.
     const names = principleSkillNames();
     expect(names.length).toBe(EXPECTED_PRINCIPLE_COUNT);
 

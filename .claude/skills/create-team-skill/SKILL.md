@@ -77,7 +77,7 @@ Skill directories are lowercase kebab-case. Most prefixes group by *subject*:
 
 A new `principle-*` skill states exactly one claim, carries
 `## What it rules out`, `## Boundary`, and `## Where it applies`, and is
-reachable from at least one pointer in another skill.
+reachable from at least one pointer in another skill or an agent body.
 
 **Name it after the claim, not after the topic the claim is about.** Shapes
 that do that, not an exhaustive list: an imperative
