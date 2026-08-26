@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **[`/pr-open-comments`](https://github.com/bostonaholic/team/blob/main/skills/pr-open-comments/SKILL.md) now reacts 👍 or 👎 to every comment it triages, so the person who wrote it learns whether it landed.** The reaction goes on as soon as the verdict is assigned, not at auto-apply time: 👍 when the comment named something real in the code, 👎 when its claim does not hold against the code, and nothing at all when the code moved out from under a comment that may well have been right, or when the ask is not yet clear enough to rate. An item that ends on the punch list has still been read and judged, so it earns the same signal as one that auto-applies. The punch-list block and the auto-applied line both name the reaction, and a failed reaction is a warning rather than a stop. **What this asks of you:** nothing — but a reviewer whose claim did not survive verification will now see a 👎 on it, where before the only signal was a reply you had to write yourself.
+
 ## [0.56.0] - 2026-08-26
 
 ### Added

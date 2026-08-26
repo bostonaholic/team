@@ -2,7 +2,8 @@
 name: pr-open-comments
 description: |
   Fetch every unresolved review thread on a pull request, verify each
-  comment against the current code, and rate confidence in one
+  comment against the current code, react 👍 or 👎 to tell the reviewer
+  whether it was useful, and rate confidence in one
   recommendation per item. An item rated above 90% confidence that passes
   every hard rule is applied, pushed, replied to, and resolved
   automatically; every other item lands on a globally numbered punch list
@@ -70,7 +71,10 @@ weaken a rule below.
    that hits one is presented, never auto-applied, at any confidence.
 4. **Present, then stop for everything else.** Every item that does not
    clear the auto-apply bar goes on the punch list untouched. There are
-   no edits, no replies, and no resolution for them. The only
+   no edits, no replies, and no resolution for them. The step-4
+   usefulness reaction is the one exception, and it is deliberate: it
+   carries no ask, resolves nothing, and every reviewer earns that
+   signal whether or not their comment led to a change. The only
    working-tree exception is a throwaway verification test written in
    step 4 to prove a comment's claim: never stage or commit it, and
    delete it before step 6 (auto-apply) runs — under the red-green proof,
@@ -209,6 +213,26 @@ code can have moved since. For every unresolved thread:
    90% unless the named reproduction test fails before the fix and passes
    after the fix is applied — the red-green proof, with the passing run
    happening before any push.
+6. **React to signal usefulness.** Add exactly one reaction to the
+   comment that opened the thread, so the reviewer learns whether their
+   feedback landed. Do this here, right after the verdict, not at
+   auto-apply time — an item that ends on the punch list has still been
+   read and judged, and its author deserves the same signal. The verdict
+   picks the reaction:
+   - 👍 `THUMBS_UP` — `STILL RELEVANT` or `ALREADY ADDRESSED`. The
+     comment named something real in the code; whether the fix lands now
+     or landed already does not change that.
+   - 👎 `THUMBS_DOWN` — `INACCURATE`. The claim does not hold against
+     the code, and the verdict's evidence says why.
+   - No reaction — `STALE`, or any item flagged `NEEDS CLARIFICATION`.
+     Neither judgment would be honest: the code moved out from under a
+     comment that may well have been right, or the ask is not yet
+     understood well enough to rate.
+
+   Never react to a comment you wrote yourself. A reaction is a signal
+   and never a substitute for the reply — a 👎 item still gets the
+   clarifying reply its option menu recommends, and a 👍 item still gets
+   its SHA-cited reply when it auto-applies.
 
 The verdict feeds steps 5–7. `ALREADY ADDRESSED` maps to option **F**.
 `STALE` and `INACCURATE` usually map to a clarifying reply (**C**/**G**)
@@ -267,6 +291,7 @@ Block format:
     > <1–2 line excerpt of the comment body>
     URL: <thread url>
     Verified: <STILL RELEVANT|ALREADY ADDRESSED|STALE|INACCURATE>  —  <one-line evidence>
+    Reacted: <👍|👎|none>
     Confidence: <NN%>  —  <one-line why it did not clear the auto-apply bar>
 
     Options:
@@ -288,6 +313,36 @@ After the report is rendered, stop. Do not begin editing, posting, or
 resolving for `Needs your decision` items in the same turn. Wait for the
 user's per-item decisions. The hand-off prompt is in `## Completion`
 below.
+
+## Reaction mechanics
+
+`addReaction` takes a GraphQL node id, so one mutation covers every
+shape feedback arrives in — an inline review comment, a plain PR
+comment, and a review submission body are all `Reactable`:
+
+```bash
+gh api graphql -f query='
+mutation($subjectId: ID!, $content: ReactionContent!) {
+  addReaction(input: {subjectId: $subjectId, content: $content}) {
+    reaction { content }
+  }
+}' -f subjectId="<comment-node-id>" -f content=THUMBS_UP
+```
+
+Pass both variables with `-f`: `gh api -F` reads a leading `@` as a file
+reference and coerces typed values. The content values are `THUMBS_UP`
+and `THUMBS_DOWN`.
+
+To capture what the mutation needs, select `id` and
+`reactionGroups { content viewerHasReacted }` on the comment nodes in
+the step 2 query. Skip any subject whose `viewerHasReacted` is already
+true for the reaction you would add — a second run over the same PR must
+not double-react. Both fields are structural, so neither widens what
+untrusted prose reaches context.
+
+A reaction failure is never fatal and never a carve-out. Warn, note it
+on the item's report line, and carry on with the triage — the signal is
+a courtesy to the reviewer, not a gate on the work.
 
 ## Authorized Execution
 
@@ -377,6 +432,11 @@ To capture the ids needed above, add `id` (the thread node id) and
   is behavioral, the evidence is a specific named test with its run
   result. Otherwise current code, diff, or a commit SHA. No comment is
   triaged on the assumption that it is still accurate.
+- Every item another author wrote carries the reaction its verdict
+  calls for — 👍, 👎, or a deliberate none — and the report names which.
+  Auto-applied items carry it on their one-line entry, punch-list items
+  on their `Reacted:` line. No item is reacted to twice, and no reaction
+  failure stopped the triage.
 - Delete throwaway reproduction tests written during verification before
   step 6 (auto-apply) runs, and always before any commit. Leave the
   working tree as you found it.
