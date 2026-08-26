@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.56.0] - 2026-08-26
+
 ### Added
 
 - **Both PR watch skills now track plain PR comments, not just inline review threads.** A whole-PR review posted as one comment body — a summary review, a bot's findings, an automated review — lands on the conversation tab as an issue comment, which carries no resolved/unresolved bit. Neither watch could represent one. [`/pr-watch-as-reviewer`](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md) refused to arm on a PR whose only feedback was a plain comment, reporting an empty tracked set; and because a comment has no bit for the author to flip, treating one like a thread would have deadlocked the watch until timeout. [`/pr-watch-as-author`](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md) had the opposite failure: it already woke on a new issue comment, but its triage worked from the unresolved-thread set, and a comment-triggered wake has zero unresolved threads by definition — so the "zero unresolved threads and no other change" edge case swallowed exactly the feedback that woke the loop. The reviewer skill now classifies the viewer's own plain comments once at arm, tracking those that carry an ask and skipping acknowledgements, and prints both lists so the judgement is auditable rather than silent. The author skill keys its baseline on comment ids instead of timestamps, since a delete-then-post leaves the newest timestamp unchanged and a timestamp cannot say which comments were already triaged; each comment is triaged once and retired by id, ends at a reply rather than a resolve, and becomes a needs-clarification carve-out when its prose scope cannot be tied to specific code. **What this asks of you:** nothing — but a `/pr-watch-as-reviewer` that refused to arm right after you posted a review as a single comment was this gap, and it will now arm.
@@ -580,7 +582,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.55.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.56.0...HEAD
+[0.56.0]: https://github.com/bostonaholic/team/compare/v0.55.0...v0.56.0
 [0.55.0]: https://github.com/bostonaholic/team/compare/v0.54.0...v0.55.0
 [0.54.0]: https://github.com/bostonaholic/team/compare/v0.53.0...v0.54.0
 [0.53.0]: https://github.com/bostonaholic/team/compare/v0.52.0...v0.53.0
