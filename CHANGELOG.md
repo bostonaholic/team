@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.57.0] - 2026-08-26
+
+### Added
+
+- **Every PR comment these skills triage now gets a 👍 or a 👎, so the person who wrote it learns whether it landed.** [`/pr-open-comments`](https://github.com/bostonaholic/team/blob/main/skills/pr-open-comments/SKILL.md) reacts the moment it assigns a verdict, not at auto-apply time: 👍 when the comment named something real in the code, 👎 when its claim does not hold against the code, and nothing at all when the code moved out from under a comment that may well have been right, or when the ask is not yet clear enough to rate. An item that ends on the punch list has still been read and judged, so it earns the same signal as one that auto-applies. [`/pr-watch-as-author`](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md) carries the rule to the two shapes that are not inline threads — a plain PR comment and a review submission body — reacting once per item, keyed by id, so a comment that re-enters triage after a compaction does not collect a second reaction. [`/pr-watch-as-reviewer`](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md) reacts to the author's settlement instead of to your own comment: 👍 on a reply that did what it claimed, 👎 on one the re-review rejected, and nothing while an item is still pending or when the fix landed silently. **What this asks of you:** the reviewer skill now has a second write action, where the approval used to be its only one. That is deliberate and narrow — a reaction resolves no thread, so it cannot satisfy the skill's own approval gate, and it carries no ask, so it is not the reply the skill still refuses to post for you. A 👎 rides the same high bar the rejected verdict already carried — very high confidence plus strong disagreement — so it never lands on a settlement you would merely quibble with.
+
 ## [0.56.0] - 2026-08-26
 
 ### Added
@@ -582,7 +588,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.56.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.57.0...HEAD
+[0.57.0]: https://github.com/bostonaholic/team/compare/v0.56.0...v0.57.0
 [0.56.0]: https://github.com/bostonaholic/team/compare/v0.55.0...v0.56.0
 [0.55.0]: https://github.com/bostonaholic/team/compare/v0.54.0...v0.55.0
 [0.54.0]: https://github.com/bostonaholic/team/compare/v0.53.0...v0.54.0
