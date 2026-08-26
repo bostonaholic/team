@@ -23,6 +23,38 @@ The first command registers the checkout as a marketplace; the second installs
 from it. Skills register as slash commands (`/team`, `/shipit`), and agents and
 hooks load with them.
 
+**Turn on auto-update, or you stay on the version you installed.** Claude Code
+enables auto-update for official Anthropic marketplaces by default and
+**disables it for local development marketplaces** — which is what a local
+checkout is. Without it, `git pull`ing this repo moves the source while your
+installed copy stays pinned, silently, with nothing to tell you a release
+happened. Toggle it in `/plugin` → **Marketplaces** → `team-dev` → **Enable
+auto-update**, or declare it in `~/.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "team-dev": {
+      "source": { "source": "directory", "path": "/path/to/team" },
+      "autoUpdate": true
+    }
+  }
+}
+```
+
+Claude Code then checks after a session starts, on a random delay of up to ten
+minutes, so the running session keeps what it launched with. When a plugin
+updates you are prompted to run `/reload-plugins` — a full restart is not
+needed. To update on demand instead, refresh the marketplace before the plugin:
+
+```bash
+claude plugin marketplace update team-dev
+claude plugin update team@team-dev
+```
+
+The order matters. `plugin update` reads the cached catalog, so on its own it
+reports nothing to do.
+
 </details>
 
 <details>
