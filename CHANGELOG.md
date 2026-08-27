@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **A code review's report shape was still a per-run choice at the tail.** 0.48.0 pinned the first four elements — the verdict line, `### Summary`, `### Findings`, `### Checks` — and then left everything after them open: "a pass that produced a record appends its own `###` section". Two records exist. The skeptic pass's `### Refuted by verification` was named in the template; the cross-model pass's `### Cross-model disposition` was not, and [`cross-model-review`](https://github.com/bostonaholic/team/blob/main/skills/cross-model-review/SKILL.md) placed it only as "the sibling" of the skeptic section — a relation that fixes no order. Since the cross-model pass runs on every code review, a report carrying both records had no defined order between them, and an open tail let a reviewer append a section under a name the format never listed. The template now names all five `###` headings in emission order, ending with the two conditional records — skeptic pass, then cross-model pass — and states that the list is closed: invent no section, rename none, move none, and a pass that did not run contributes nothing while the rest close up. `cross-model-review` now points at the report format for its section's position instead of describing one of its own. Pinned by an L2 tripwire in [`tests/methodology.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/methodology.test.ts) that asserts the exact ordered heading list. **What this asks of you:** nothing — but two `/code-review` runs on the same diff that came back in different shapes were this gap. [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md)
+
 ## [0.57.0] - 2026-08-26
 
 ### Added

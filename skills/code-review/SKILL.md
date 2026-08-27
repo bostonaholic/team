@@ -87,8 +87,14 @@ result. Any other check run, with its result.>
 
 ### Refuted by verification
 
-<Findings dropped because verification refuted them. Omit the section
-when nothing was refuted.>
+<Findings the skeptic pass refuted. Omit the section when nothing was
+refuted.>
+
+### Cross-model disposition
+
+<The cross-model pass's per-round record, built per
+`skills/cross-model-review/SKILL.md`. Omit the section when that pass did
+not run.>
 ```
 
 - **The verdict line comes first.** The orchestrator parses it. The
@@ -99,10 +105,17 @@ when nothing was refuted.>
 - `### Findings` entries use the Conventional Comments format
   (`## Conventional Comments` above), each with its `file:line`
   reference.
-- **Conditional sections extend the report; they never replace a fixed
-  section.** A pass that produced a record appends its own `###` section
-  after `### Checks` — `### Refuted by verification` is the skeptic pass's.
-  A pass that did not run appends nothing.
+- **The section list is closed and ordered.** Emit the five headings
+  above, in the order the template gives them, and no others. Invent no
+  section, rename none, and move none. The first three are fixed: every
+  report carries them, `### Findings` included, which reads
+  "No findings." when there are none.
+- **The last two sections are the conditional ones,** each a record of one
+  optional pass — the skeptic pass, then the cross-model pass, in that
+  order. A pass that ran contributes its section; a pass that did not run
+  contributes nothing, and the sections that follow it close up. A
+  conditional section never replaces a fixed one and never precedes
+  `### Checks`.
 
 ## Gate Types and Severity Tiers
 
