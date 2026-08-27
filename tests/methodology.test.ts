@@ -1118,9 +1118,9 @@ describe("code-review report format (L2 content tripwire)", () => {
   const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
   const CROSS_MODEL = join(REPO_ROOT, "skills", "cross-model-review", "SKILL.md");
 
-  // Every `###` heading the report may carry, in the order it is emitted. The
-  // list is closed: a reviewer that appends a section of its own invention
-  // emits a shape no other run emits.
+  // Every `###` heading the report carries, in the order it is emitted. The
+  // list is closed and complete: a reviewer that invents a section, or drops
+  // one, emits a shape no other run emits.
   const REPORT_SECTIONS = [
     "### Summary",
     "### Findings",
@@ -1128,6 +1128,16 @@ describe("code-review report format (L2 content tripwire)", () => {
     "### Refuted by verification",
     "### Cross-model disposition",
   ];
+
+  // What a section with nothing to report says instead of disappearing.
+  const NO_FINDINGS_LINE = "No findings.";
+  const NOTHING_REFUTED_LINE = "Nothing refuted.";
+  const NOT_RUN_LINE = "Not run:";
+
+  // "Omit the section", "omit this section", "omit that section" — the escape
+  // that would let a reviewer decide the report's shape. `omit none` reads the
+  // other way and must not match.
+  const OMISSION_ESCAPE = /omit (?:the|this|that) section/i;
 
   // Text between two markers; "" when either marker is missing. Callers guard
   // the slice as non-empty so a missing section fails loud, never vacuously.
@@ -1171,6 +1181,28 @@ describe("code-review report format (L2 content tripwire)", () => {
     // cross-references to them in the prose below the template.
     const headings = [...section.matchAll(/^### .+$/gm)].map((match) => match[0]);
     expect(headings).toEqual(REPORT_SECTIONS);
+  });
+
+  test("a section with nothing to report carries a placeholder instead of vanishing", () => {
+    const section = between(read(SKILL_FILE), "\n## Report Format\n", "\n## ");
+    // Guard: a missing section must fail, not vacuously pass the checks below.
+    expect(section.length).toBeGreaterThan(0);
+    // Placeholder literals the template tells the reviewer to emit. Each one
+    // only exists for a section that is present, so pinning them pins that
+    // every heading ships on every report.
+    expect(section).toContain(NO_FINDINGS_LINE);
+    expect(section).toContain(NOTHING_REFUTED_LINE);
+    expect(section).toContain(NOT_RUN_LINE);
+    // An omission escape reintroduces the choice the placeholders remove.
+    expect(OMISSION_ESCAPE.test(section)).toBe(false);
+  });
+
+  test("the omission-escape matcher can find a positive", () => {
+    // Guards the guard: the absence check above must be able to fire, so a
+    // reworded template cannot turn it into a permanent no-op unnoticed.
+    expect(OMISSION_ESCAPE.test("Omit the section when nothing was refuted.")).toBe(true);
+    expect(OMISSION_ESCAPE.test("omit this section when the pass did not run")).toBe(true);
+    expect(OMISSION_ESCAPE.test("Emit the five headings above, and omit none.")).toBe(false);
   });
 
   test("cross-model-review defers the disposition section's position to the report format", () => {
