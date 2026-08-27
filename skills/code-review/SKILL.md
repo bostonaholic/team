@@ -87,14 +87,15 @@ result. Any other check run, with its result.>
 
 ### Refuted by verification
 
-<Findings the skeptic pass refuted. Omit the section when nothing was
-refuted.>
+<Findings the skeptic pass refuted. Exactly "Nothing refuted." when the
+pass ran and refuted none. Exactly "Not run: <reason>." when it did not
+run.>
 
 ### Cross-model disposition
 
 <The cross-model pass's per-round record, built per
-`skills/cross-model-review/SKILL.md`. Omit the section when that pass did
-not run.>
+`skills/cross-model-review/SKILL.md`. Exactly "Not run: <reason>." when
+that pass did not run.>
 ```
 
 - **The verdict line comes first.** The orchestrator parses it. The
@@ -105,17 +106,18 @@ not run.>
 - `### Findings` entries use the Conventional Comments format
   (`## Conventional Comments` above), each with its `file:line`
   reference.
-- **The section list is closed and ordered.** Emit the five headings
-  above, in the order the template gives them, and no others. Invent no
-  section, rename none, and move none. The first three are fixed: every
-  report carries them, `### Findings` included, which reads
-  "No findings." when there are none.
-- **The last two sections are the conditional ones,** each a record of one
-  optional pass — the skeptic pass, then the cross-model pass, in that
-  order. A pass that ran contributes its section; a pass that did not run
-  contributes nothing, and the sections that follow it close up. A
-  conditional section never replaces a fixed one and never precedes
-  `### Checks`.
+- **The output format is not a choice.** Emit all five headings, in the
+  order the template gives them, on every report. Invent no section,
+  rename none, move none, and drop none. Two reports of the same diff
+  differ in what their sections say and never in which sections they
+  have.
+- **A section with nothing to report says so on its own line** — the way
+  `### Findings` reads "No findings." when there are none. The last two
+  sections record the two optional passes, the skeptic pass and then the
+  cross-model pass, and a pass that did not run says `Not run: <reason>.`
+  in its section. This is where "skip loudly" lands in the report. A
+  reader of a report that dropped the section cannot tell a pass that ran
+  and found nothing from one that never ran at all.
 
 ## Gate Types and Severity Tiers
 
