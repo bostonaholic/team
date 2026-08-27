@@ -1116,6 +1116,18 @@ describe("slicing asks whether a slice deserves its own PR (L2 tripwire)", () =>
 describe("code-review report format (L2 content tripwire)", () => {
   const SKILL_FILE = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
   const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
+  const CROSS_MODEL = join(REPO_ROOT, "skills", "cross-model-review", "SKILL.md");
+
+  // Every `###` heading the report may carry, in the order it is emitted. The
+  // list is closed: a reviewer that appends a section of its own invention
+  // emits a shape no other run emits.
+  const REPORT_SECTIONS = [
+    "### Summary",
+    "### Findings",
+    "### Checks",
+    "### Refuted by verification",
+    "### Cross-model disposition",
+  ];
 
   // Text between two markers; "" when either marker is missing. Callers guard
   // the slice as non-empty so a missing section fails loud, never vacuously.
@@ -1149,6 +1161,27 @@ describe("code-review report format (L2 content tripwire)", () => {
     expect(section).toContain("Verdict Criteria");
     // The skeptic-pass record is a named conditional section of the report.
     expect(section).toContain("### Refuted by verification");
+  });
+
+  test("the template enumerates every section, in emission order, and no others", () => {
+    const section = between(read(SKILL_FILE), "\n## Report Format\n", "\n## ");
+    // Guard: a missing section must fail, not vacuously pass the check below.
+    expect(section.length).toBeGreaterThan(0);
+    // Line-anchored: the template's own headings, not the backticked
+    // cross-references to them in the prose below the template.
+    const headings = [...section.matchAll(/^### .+$/gm)].map((match) => match[0]);
+    expect(headings).toEqual(REPORT_SECTIONS);
+  });
+
+  test("cross-model-review defers the disposition section's position to the report format", () => {
+    const text = read(CROSS_MODEL);
+    // Guard: a missing file must fail, not vacuously pass the checks below.
+    expect(text.length).toBeGreaterThan(0);
+    expect(text).toContain("### Cross-model disposition");
+    // The position is the report template's to state; this skill points at it
+    // rather than describing a placement of its own.
+    expect(text).toContain("skills/code-review/SKILL.md");
+    expect(text).toContain("Report Format");
   });
 
   test("the direct-invocation relay binds to the report format", () => {
