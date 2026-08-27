@@ -396,8 +396,11 @@ returned:
    the authoritative table in `skills/review-severity-tiers/SKILL.md`
    ("Severity Tiers and the Auto-Fix Boundary"). Consult that table rather
    than restating it here.
-2. Persist the cross-model record. When the code-reviewer's report
-   contains a `### Cross-model disposition` section, append that section
+2. Persist the cross-model record. Every code-reviewer report carries a
+   `### Cross-model disposition` section, so read what it says rather than
+   whether it is there: a section reading `Not run:` records no pass and
+   appends nothing, and a repo where the pass never runs gains no notes
+   file. When the section records a pass that ran, append it
    as one block, in round order, to
    `docs/plans/<id>/cross-model-notes.md`, altered only by the blockquote
    wrap: prefix every line with `>` at append time (embedded content

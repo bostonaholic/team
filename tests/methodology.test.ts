@@ -1116,6 +1116,28 @@ describe("slicing asks whether a slice deserves its own PR (L2 tripwire)", () =>
 describe("code-review report format (L2 content tripwire)", () => {
   const SKILL_FILE = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
   const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
+  const CROSS_MODEL = join(REPO_ROOT, "skills", "cross-model-review", "SKILL.md");
+
+  // Every `###` heading the report carries, in the order it is emitted. The
+  // list is closed and complete: a reviewer that invents a section, or drops
+  // one, emits a shape no other run emits.
+  const REPORT_SECTIONS = [
+    "### Summary",
+    "### Findings",
+    "### Checks",
+    "### Refuted by verification",
+    "### Cross-model disposition",
+  ];
+
+  // What a section with nothing to report says instead of disappearing.
+  const NO_FINDINGS_LINE = "No findings.";
+  const NOTHING_REFUTED_LINE = "Nothing refuted.";
+  const NOT_RUN_LINE = "Not run:";
+
+  // "Omit the section", "omit this section", "omit that section" — the escape
+  // that would let a reviewer decide the report's shape. `omit none` reads the
+  // other way and must not match.
+  const OMISSION_ESCAPE = /omit (?:the|this|that) section/i;
 
   // Text between two markers; "" when either marker is missing. Callers guard
   // the slice as non-empty so a missing section fails loud, never vacuously.
@@ -1149,6 +1171,49 @@ describe("code-review report format (L2 content tripwire)", () => {
     expect(section).toContain("Verdict Criteria");
     // The skeptic-pass record is a named conditional section of the report.
     expect(section).toContain("### Refuted by verification");
+  });
+
+  test("the template enumerates every section, in emission order, and no others", () => {
+    const section = between(read(SKILL_FILE), "\n## Report Format\n", "\n## ");
+    // Guard: a missing section must fail, not vacuously pass the check below.
+    expect(section.length).toBeGreaterThan(0);
+    // Line-anchored: the template's own headings, not the backticked
+    // cross-references to them in the prose below the template.
+    const headings = [...section.matchAll(/^### .+$/gm)].map((match) => match[0]);
+    expect(headings).toEqual(REPORT_SECTIONS);
+  });
+
+  test("a section with nothing to report carries a placeholder instead of vanishing", () => {
+    const section = between(read(SKILL_FILE), "\n## Report Format\n", "\n## ");
+    // Guard: a missing section must fail, not vacuously pass the checks below.
+    expect(section.length).toBeGreaterThan(0);
+    // Placeholder literals the template tells the reviewer to emit. Each one
+    // only exists for a section that is present, so pinning them pins that
+    // every heading ships on every report.
+    expect(section).toContain(NO_FINDINGS_LINE);
+    expect(section).toContain(NOTHING_REFUTED_LINE);
+    expect(section).toContain(NOT_RUN_LINE);
+    // An omission escape reintroduces the choice the placeholders remove.
+    expect(OMISSION_ESCAPE.test(section)).toBe(false);
+  });
+
+  test("the omission-escape matcher can find a positive", () => {
+    // Guards the guard: the absence check above must be able to fire, so a
+    // reworded template cannot turn it into a permanent no-op unnoticed.
+    expect(OMISSION_ESCAPE.test("Omit the section when nothing was refuted.")).toBe(true);
+    expect(OMISSION_ESCAPE.test("omit this section when the pass did not run")).toBe(true);
+    expect(OMISSION_ESCAPE.test("Emit the five headings above, and omit none.")).toBe(false);
+  });
+
+  test("cross-model-review defers the disposition section's position to the report format", () => {
+    const text = read(CROSS_MODEL);
+    // Guard: a missing file must fail, not vacuously pass the checks below.
+    expect(text.length).toBeGreaterThan(0);
+    expect(text).toContain("### Cross-model disposition");
+    // The position is the report template's to state; this skill points at it
+    // rather than describing a placement of its own.
+    expect(text).toContain("skills/code-review/SKILL.md");
+    expect(text).toContain("Report Format");
   });
 
   test("the direct-invocation relay binds to the report format", () => {

@@ -36,6 +36,10 @@ const REPO_ROOT = process.cwd();
 // Literals shared between the script, the skills, and the docs. Every
 // drift tripwire below reuses these constants.
 const DISPOSITION_HEADING = "### Cross-model disposition";
+// What the disposition section says when the pass did not run. The code-review
+// report format pins the literal; the orchestrator reads it to decide whether
+// a round has a record to persist. Producer and consumer must agree.
+const NOT_RUN_MARKER = "Not run:";
 const NOTES_FILENAME = "cross-model-notes.md";
 const RAW_FILENAME = "cross-model-raw.md";
 const UNAVAILABLE_HEADING = "## When a vendor CLI is unavailable";
@@ -785,6 +789,15 @@ describe("orchestrator contract in skills/team/SKILL.md (L2)", () => {
     expect(read(TEAM_SKILL)).toContain(DISPOSITION_HEADING);
     expect(read(TEAM_IMPLEMENT_SKILL)).toContain(DISPOSITION_HEADING);
   });
+
+  test("the Aggregate Gate keys persistence on the not-run marker, not on the heading being present", () => {
+    const gate = aggregateGate();
+    // Guard: a renamed section must fail, not vacuously pass.
+    expect(gate.length).toBeGreaterThan(0);
+    // Every code-review report now carries the heading, so presence alone
+    // would create cross-model-notes.md on a run where no pass ever ran.
+    expect(gate).toContain(NOT_RUN_MARKER);
+  });
 });
 
 describe("orchestrator contract in skills/team-implement/SKILL.md (L2)", () => {
@@ -795,6 +808,10 @@ describe("orchestrator contract in skills/team-implement/SKILL.md (L2)", () => {
     const text = read(TEAM_IMPLEMENT_SKILL);
     expect(text).toContain(DISPOSITION_HEADING);
     expect(text).toContain(NOTES_FILENAME);
+  });
+
+  test("the execution steps key persistence on the not-run marker, not on the heading being present", () => {
+    expect(read(TEAM_IMPLEMENT_SKILL)).toContain(NOT_RUN_MARKER);
   });
 
   test("the terminal-halt step names the notes file beside the unresolved findings", () => {
