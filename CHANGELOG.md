@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.58.0] - 2026-08-27
+
 ### Fixed
 
 - **A code review's report shape was a per-run choice at the tail; every report now carries the same five sections.** 0.48.0 pinned the first four elements — the verdict line, `### Summary`, `### Findings`, `### Checks` — and left everything after them open: "a pass that produced a record appends its own `###` section". Two records exist. The skeptic pass's `### Refuted by verification` was named in the template; the cross-model pass's `### Cross-model disposition` was not, and [`cross-model-review`](https://github.com/bostonaholic/team/blob/main/skills/cross-model-review/SKILL.md) placed it only as "the sibling" of the skeptic section — a relation that fixes no order. Since the cross-model pass runs on every code review, a report carrying both records had no defined order between them, an open tail let a reviewer append a section under a name the format never listed, and a pass that produced nothing dropped its section, so the section list itself varied run to run. The template now names all five `###` headings and the report carries every one of them every time, in that order: nothing is invented, renamed, moved, or dropped. A section with nothing to report says so on its own line, the way `### Findings` already read "No findings." — `Nothing refuted.` when the skeptic pass refuted none, and `Not run: <reason>.` when a pass did not run, which is also where "skip loudly" now lands in the report instead of only in the chat. `cross-model-review` points at the report format for its section's position rather than describing one of its own. Pinned by L2 tripwires in [`tests/methodology.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/methodology.test.ts) (the exact ordered heading list, the placeholder literals, and the absence of an omit-the-section escape) and [`tests/cross-model-review.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/cross-model-review.test.ts). **What this asks of you:** nothing — but two `/code-review` runs on the same diff that came back in different shapes were this gap. **For the orchestrator paths:** because the disposition section is now always present, [`/team`](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md) and [`/team-implement`](https://github.com/bostonaholic/team/blob/main/skills/team-implement/SKILL.md) decide whether to persist a round's record by reading the section rather than by finding it — a `Not run:` section appends nothing, so a repo where the pass never runs still gains no `cross-model-notes.md`. [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md)
@@ -592,7 +594,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.57.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.58.0...HEAD
+[0.58.0]: https://github.com/bostonaholic/team/compare/v0.57.0...v0.58.0
 [0.57.0]: https://github.com/bostonaholic/team/compare/v0.56.0...v0.57.0
 [0.56.0]: https://github.com/bostonaholic/team/compare/v0.55.0...v0.56.0
 [0.55.0]: https://github.com/bostonaholic/team/compare/v0.54.0...v0.55.0
