@@ -147,7 +147,7 @@ describe("ci workflows: consuming workflows stay intact (Slice 3)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// docs/plans/2026-08-28-rss-release-feed — the RSS release feed at /rss.xml.
+// The RSS release feed at /rss.xml.
 // ---------------------------------------------------------------------------
 
 const PAGES = WF("pages.yml");
@@ -163,8 +163,7 @@ function jobsSection(text: string): string {
   return at === -1 ? "" : text.slice(at);
 }
 
-// Each step block of a job, with its offset, so ordering is an index compare
-// (the ordering tripwire at docs/testing.md:120).
+// Each step block of a job, with its offset, so ordering is an index compare.
 function steps(jobs: string): { body: string; at: number }[] {
   const starts: number[] = [];
   const marker = /\n      - /g;
@@ -186,8 +185,7 @@ describe("ci workflows: pages.yml builds the release feed before Jekyll (Slice 1
   const wrapperStep = stepContaining(jobs, "script/build-release-feed");
 
   test("pages.yml still exists and has a jobs section", () => {
-    // Guard: an empty slice would make every ordering assertion below
-    // vacuous (docs/testing.md:172-212).
+    // Guard: an empty slice would make every ordering assertion below vacuous.
     expect(existsSync(PAGES)).toBe(true);
     expect(jobs.length).toBeGreaterThan(0);
   });
@@ -219,7 +217,7 @@ describe("ci workflows: pages.yml builds the release feed before Jekyll (Slice 1
   });
 
   test("installs libxml2-utils, after an apt-get update, before the wrapper step", () => {
-    // xmllint is a hard gate on the deploy (decision 9), so the workflow
+    // xmllint is a hard gate on the deploy, so the workflow
     // declares the package rather than inheriting it from the runner image.
     // The update is mandatory: a rotated package version otherwise 404s.
     const update = jobs.indexOf("apt-get update");
@@ -348,7 +346,7 @@ describe("ci workflows: a published release dispatches the Pages build (Slice 3)
   test("the final step dispatches pages.yml, guarded on that step's output", () => {
     // `gh workflow run` is the documented path: GitHub does not start a
     // workflow from an event caused by GITHUB_TOKEN, so `on: release` would
-    // never fire for our own automation (decision 8).
+    // never fire for our own automation.
     expect(releaseStepId.length).toBeGreaterThan(0);
     expect(lastStep.body).toContain("gh workflow run pages.yml");
     expect(lastStep.body).toContain(`steps.${releaseStepId}.outputs.published == 'true'`);

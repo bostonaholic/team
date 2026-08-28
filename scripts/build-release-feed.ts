@@ -9,8 +9,7 @@
 // Two invariants make this file cheap to test and safe to pipe:
 //
 // - Stdout carries the feed and nothing else. Every failure goes to stderr as
-//   `::error::<msg>` with a non-zero exit, matching
-//   .github/scripts/pr-title-version.sh:26.
+//   `::error::<msg>` with a non-zero exit, so CI surfaces it as an annotation.
 // - Zero dependencies: only `node:` builtins are imported, because the Pages
 //   build runs this with no `bun install` step.
 //
@@ -92,7 +91,7 @@ function toRelease(value: unknown, index: number): Release {
   return raw as unknown as Release;
 }
 
-/** Keep a release only when it is published and is not a draft (decision 12). */
+/** Keep a release only when it is published and is not a draft. */
 function isPublished(release: Release): boolean {
   return isNonEmptyString(release.published_at) && release.draft !== true;
 }
@@ -121,8 +120,7 @@ function renderItem(release: Release, time: number): string {
 
 /**
  * Build the RSS 2.0 document. Pure: the same releases and site URL always
- * produce the same bytes, which is why the channel omits `lastBuildDate`
- * (decision 13).
+ * produce the same bytes, which is why the channel omits `lastBuildDate`.
  *
  * @param releases the GitHub Releases API payload, already flattened
  * @param siteUrl the site origin, with no trailing slash

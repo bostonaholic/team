@@ -125,11 +125,10 @@ describe("doc drift guard: no in-tree doc points at version-bump-check.yml (#120
 });
 
 // ---------------------------------------------------------------------------
-// docs/plans/2026-08-28-rss-release-feed, Slice 3 — the release→Pages dispatch
-// and its one-command recovery are written down (decision 16).
+// The release→Pages dispatch and its one-command recovery are written down.
 //
 // Contracts only: the workflow file name, the trigger name, and the feed path.
-// Never the wording (docs/testing.md:127-163).
+// Never the wording.
 // ---------------------------------------------------------------------------
 
 // Body of a `## ` section, up to the next `## ` heading (or EOF).

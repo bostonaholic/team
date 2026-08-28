@@ -1,25 +1,23 @@
 // tests/build-release-feed-wrapper.test.ts
 //
-// Acceptance fence for Slice 1 of docs/plans/2026-08-28-rss-release-feed —
-// the bash side-effect wrapper `script/build-release-feed`.
+// Acceptance fence for the bash side-effect wrapper `script/build-release-feed`.
 //
-// L3 in-process integration (docs/testing.md:218-224): free, fast, and the
-// cheapest layer that can catch what a source-pattern assertion cannot — a
-// wrong working directory, a quote that survived the YAML parse, a broken
-// `jq -s 'add'` flatten, or a partial write. So this file EXECUTES the
-// wrapper.
+// L3 in-process integration: free, fast, and the cheapest layer that can catch
+// what a source-pattern assertion cannot — a wrong working directory, a quote
+// that survived the YAML parse, a broken `jq -s 'add'` flatten, or a partial
+// write. So this file EXECUTES the wrapper.
 //
-// Hermetic by construction (docs/testing.md §8): every case builds its own
-// temp tree keyed by `pid`, copies the wrapper and the CLI in at their real
-// relative paths so decision 6's root anchoring resolves there, writes a
-// fixture `docs/_config.yml`, puts a stub `gh` first on PATH that records its
-// argv, and invokes the wrapper from an UNRELATED working directory. Nothing
-// touches the network, the real repo, or the real `docs/rss.xml`.
+// Hermetic by construction: every case builds its own temp tree keyed by
+// `pid`, copies the wrapper and the CLI in at their real relative paths so the
+// wrapper's root anchoring resolves there, writes a fixture
+// `docs/_config.yml`, puts a stub `gh` first on PATH that records its argv,
+// and invokes the wrapper from an UNRELATED working directory. Nothing touches
+// the network, the real repo, or the real `docs/rss.xml`.
 //
 // The `CI` variable is cleared explicitly for the local-branch cases:
-// harness-checks.yml:80 runs `bun test` inside GitHub Actions, where `CI` is
-// set and every child inherits it (design.md:443-447). Without the clear, the
-// exit-0 assertion passes locally and fails in CI.
+// harness-checks.yml runs `bun test` inside GitHub Actions, where `CI` is set
+// and every child inherits it. Without the clear, the exit-0 assertion passes
+// locally and fails in CI.
 
 import { afterAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
@@ -42,8 +40,7 @@ const CLI_SRC = join(REPO_ROOT, "scripts", "build-release-feed.ts");
 
 // The wrapper shells out to all five. A missing one is an environment gap,
 // never a defect in the code under test, so the suite skips rather than
-// reporting a red that means nothing (the `describe.if` shape at
-// tests/pr-title-version.test.ts:109).
+// reporting a red that means nothing.
 const REQUIRED_TOOLS = ["bash", "bun", "jq", "ruby", "xmllint"];
 const HAS_TOOLS = REQUIRED_TOOLS.every(
   (tool) => spawnSync(tool, ["--version"], { encoding: "utf8" }).status === 0,
@@ -79,7 +76,7 @@ const CONFIG_OK = 'title: Team\nurl: "https://feed.example.test/"\nbaseurl: ""\n
 
 // An unterminated double-quoted scalar: Ruby's YAML load RAISES here, and the
 // raise must route through the wrapper's `die()` as a real annotation rather
-// than aborting under `set -e` with a backtrace (design-review-5.md:22).
+// than aborting under `set -e` with a backtrace.
 const CONFIG_MALFORMED = 'title: Team\nurl: "https://feed.example.test\nbaseurl: ""\n';
 
 function ghStub(argvLog: string, pages: string[]): string {
@@ -150,8 +147,8 @@ function runWrapper(tree: Tree, opts: { ci: boolean }) {
   if (opts.ci) env.CI = "1";
 
   const result = spawnSync(join(tree.root, "script", "build-release-feed"), [], {
-    // Deliberately NOT the tree root: decision 6 anchors every path at the
-    // script's own location, so the wrapper must be correct from anywhere.
+    // Deliberately NOT the tree root: the wrapper anchors every path at the
+    // script's own location, so it must be correct from anywhere.
     cwd: join(tree.root, "elsewhere"),
     encoding: "utf8",
     env,
@@ -316,7 +313,7 @@ describe.if(HAS_TOOLS)("script/build-release-feed: the CI-versus-local branch (d
 
 describe.if(HAS_TOOLS)("script/build-release-feed: a malformed _config.yml is loud on BOTH branches", () => {
   // A broken config is a repository defect, not an offline condition, so it
-  // sits outside the local tolerance (decision 5).
+  // sits outside the local tolerance.
   test("exits non-zero with an ::error:: line when CI is unset", () => {
     const tree = makeTree({ config: CONFIG_MALFORMED });
 

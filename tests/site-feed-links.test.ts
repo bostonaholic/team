@@ -1,14 +1,13 @@
 // tests/site-feed-links.test.ts
 //
-// Acceptance fence for Slice 2 of docs/plans/2026-08-28-rss-release-feed —
-// readers discover the feed from the site.
+// Acceptance fence for feed discovery from the site.
 //
 // L2 tripwire (free, deterministic): the autodiscovery `<link>` in
 // docs/_layouts/default.html and the visible rss link in
 // docs/_includes/footer.html. Both hrefs must be built with Jekyll's
-// `relative_url` filter, exactly like every other internal path in the layout
-// (docs/_layouts/default.html:16-17) — a hardcoded absolute URL would freeze
-// the domain into the markup and diverge from the local preview.
+// `relative_url` filter, exactly like every other internal path in the
+// layout — a hardcoded absolute URL would freeze the domain into the markup
+// and diverge from the local preview.
 //
 // Defensive reads: a missing file → "" so content assertions FAIL cleanly
 // rather than throwing ENOENT (the mechanical gate rejects crashes).
@@ -53,7 +52,7 @@ describe("site: the feed is offered by autodiscovery (docs/_layouts/default.html
   test("the head carries an RSS autodiscovery link with the pinned attributes", () => {
     const tag = tagLinkingTheFeed(layout, "link");
     // Guard the guard: a missing tag would pass every attribute check below
-    // vacuously (docs/testing.md:172-212).
+    // vacuously.
     expect(tag.length).toBeGreaterThan(0);
 
     expect(tag).toContain('rel="alternate"');

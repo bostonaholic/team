@@ -1,31 +1,27 @@
 // tests/build-release-feed.test.ts
 //
-// Acceptance fence for Slice 1 of docs/plans/2026-08-28-rss-release-feed —
-// the RSS 2.0 release feed served at /rss.xml.
+// Acceptance fence for the RSS 2.0 release feed served at /rss.xml.
 //
-// Two halves, both free and deterministic (docs/testing.md):
+// Two halves, both free and deterministic:
 //
 // - L1 pure unit on the exported builder `buildReleaseFeed(releases, siteUrl)`.
 //   The builder is a pure f(input) -> XML string: no network, no clock, no
 //   filesystem, so every channel value, the ordering, the two filter
 //   predicates, the field contract, and the single-escape contract are pinned
-//   here for microseconds (design.md:73-90, :363-398, :593-620).
+//   here for microseconds.
 //
 // - L1 subprocess on the thin CLI in the same file. The five structural
 //   failures (malformed stdin, non-array payload, missing site URL, an empty
 //   array, and a payload where no item carries a `body_html` key) must each
-//   exit non-zero, print nothing on stdout, and print `::error::` on stderr,
-//   matching .github/scripts/pr-title-version.sh:26.
+//   exit non-zero, print nothing on stdout, and print `::error::` on stderr.
 //
 // Defensive load: `scripts/build-release-feed.ts` is imported dynamically
 // behind an existence assertion, so a not-yet-written module FAILS an
 // assertion rather than throwing at import time (the mechanical gate rejects
 // crashes).
 //
-// Escaping and control-character assertions each carry a positive control in
-// the shape of tests/changelog-links.test.ts:52-60 — a check that finds
-// nothing has not distinguished "absent" from "blind"
-// (docs/testing.md:172-212).
+// Escaping and control-character assertions each carry a positive control: a
+// check that finds nothing has not distinguished "absent" from "blind".
 
 import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
@@ -448,7 +444,7 @@ describe("build-release-feed CLI: structural guards fail loud (design.md:589-613
 
   test("a payload where no item carries body_html exits non-zero with ::error::", () => {
     // The dropped-Accept-header case: emitting 80 empty descriptions would
-    // look like a working feed (design.md:610-613).
+    // look like a working feed.
     const payload = JSON.stringify([
       {
         tag_name: "v1.0.0",
