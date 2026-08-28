@@ -46,7 +46,7 @@ nav_label: portability
 
 ## Current state
 
-Team is a Claude Code-native plugin. It ships 13 agents (`agents/*.md`), 56 skills
+Team is a Claude Code-native plugin. It ships 13 agents (`agents/*.md`), 57 skills
 (`skills/*/SKILL.md` + `registry.json`), and 3 hooks (`hooks/*.mjs`). They
 register through `.claude-plugin/plugin.json`. The orchestrator walks the QRSPI
 phase table (`skills/team/SKILL.md`). It persists state as artifact files under
@@ -125,7 +125,8 @@ nested subagents, and structured returns.
 
 - **Runtime vs. development split** (`CLAUDE.md`, `docs/architecture.md`). Only
   the distributed set ports: `agents/`, `skills/*/SKILL.md` + `registry.json` +
-  the bundled skill scripts (`supports-nesting.mjs`, `ste-lint.mjs`),
+  the bundled skill scripts (`supports-nesting.mjs`, `ste-lint.mjs`,
+  `external-review.mjs`, `resolve-transcript.mjs`, `write-target.mjs`),
   `hooks/*.mjs`, `.claude-plugin/`. The entire `.claude/`
   tree, `tests/`, `evals/`, `docs/`, `.github/` never ship and are out of every
   port's scope.
@@ -256,7 +257,7 @@ cross-cutting recency caveat:
    superset of this option's value with less risk.
 
 3. **Rejected: per-host maintained adapters (parallel hand-maintained trees).**
-   *Why rejected:* it costs 3× the maintenance across 13 agents, 56 skills, and 4
+   *Why rejected:* it costs 3× the maintenance across 13 agents, 57 skills, and 4
    hooks, one tree per shipped host — Claude Code, Codex CLI, and Antigravity
    CLI. It also guarantees drift, because someone must apply a fix to an agent
    body three times by hand. It throws away the fact that the bodies are *already
@@ -331,7 +332,7 @@ installed here.
 **This host installs Team natively, through its own manifest.** Team ships
 `plugin.json` at the repo root, which is Antigravity's plugin marker, with
 `skills/` and `agents/` beside it where this host resolves components.
-`agy plugin install /path/to/team` then copies all 56 skills and all 13 agents
+`agy plugin install /path/to/team` then copies all 57 skills and all 13 agents
 into `~/.gemini/config/plugins/team/`, and `import_manifest.json` records the
 source as **`antigravity`** — its native path, the same local-checkout form the
 Claude Code and Codex installs use.
@@ -358,7 +359,7 @@ a file, and installing from a URL clones fresh so the socket never exists.
   and a manifest cannot redirect its component paths. That is why Team's
   Antigravity manifest is at the repo root rather than in a directory beside the
   other two.
-- Given a root manifest, `agy` processed all 55 skills and all 13 agents.
+- Given a root manifest, `agy` processed all 57 skills and all 13 agents.
 - Skill discovery descends the tree but stops at any directory that owns a
   `SKILL.md`, so a skill cannot nest another skill.
 - A symlinked skill folder is followed at plugin scope **and** at global scope.
@@ -375,11 +376,13 @@ a file, and installing from a URL clones fresh so the socket never exists.
   been tested, which is why Team claims no pipeline support here.
 
 **`disable-model-invocation` is honored.** With the plugin installed, the
-probe (taken when the plugin shipped 54 skills) had the agent list 52 of
-them. The two missing ones were exactly `pr-rebase` and
-`pr-watch-as-reviewer`, the two that set the key. This host therefore keeps them
-out of the model's reach on its own, which is the opposite of Codex, and it is
-why Team's install for this host withholds nothing and needs no post-install
+probe (taken when the plugin shipped 54 skills, two of which set the key) had
+the agent list 52 of them. The two missing ones were exactly `pr-rebase` and
+`pr-watch-as-reviewer` — the skills that set the key **as of that probe**. The
+guarded set has since grown to three: `reflect` sets it too, so this host
+withholds that one as well. This host therefore keeps every guarded skill out
+of the model's reach on its own, which is the opposite of Codex, and it is why
+Team's install for this host withholds nothing and needs no post-install
 removal step.
 
 **Paths and naming.**

@@ -30,7 +30,7 @@
 // team-pr is demoted; no protocol.test.ts sentinel, that convention is for
 // the pipeline-skill demotions):
 //   shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer,
-//   groom-backlog, pr-cleanup, pr-verify, pr-rebase
+//   groom-backlog, pr-cleanup, pr-verify, pr-rebase, reflect
 
 import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
@@ -623,6 +623,28 @@ describe("L2 coverage: pr-rebase (executable utility, not L5)", () => {
   });
 });
 
+// `reflect` reads the invoking session's own transcript, files issues against a
+// live tracker, and runs the repo's own check after it writes — heavy external
+// state it cannot be handed synthetically, the same reason `pr-rebase` and
+// `shipit` are demoted. An L5 eval would also have to produce a real session to
+// reflect on. Its behavioral contract is pinned by its dedicated L2 tripwire,
+// tests/reflect-skill.test.ts, whose L1 half additionally covers the two
+// bundled scripts directly.
+
+describe("L2 coverage: reflect (executable utility, not L5)", () => {
+  test("reflect has no evals/fixtures/reflect/ directory (no L5 eval)", () => {
+    expect(existsSync(fixtureDir("reflect"))).toBe(false);
+  });
+
+  test("reflect has no tests/reflect.evals.ts file (no L5 eval)", () => {
+    expect(existsSync(evalsFilePath("reflect"))).toBe(false);
+  });
+
+  test("reflect is pinned by its dedicated L2 tripwire tests/reflect-skill.test.ts", () => {
+    expect(existsSync(join(TESTS_ROOT, "reflect-skill.test.ts"))).toBe(true);
+  });
+});
+
 // List-driven sweep over every executable utility skill. The per-skill blocks
 // above each carry that skill's own demotion rationale; this one carries the
 // invariant, so a utility added to the header list in future cannot be
@@ -637,6 +659,7 @@ const UTILITY_SKILLS = [
   "pr-cleanup",
   "pr-verify",
   "pr-rebase",
+  "reflect",
 ] as const;
 
 describe("L2 coverage: every executable utility skill is actually pinned", () => {

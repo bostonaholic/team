@@ -113,15 +113,17 @@ budgets its skill catalog, so it shortens the longest descriptions; the skills
 still work. The `/team-*` pipeline commands load but cannot dispatch Claude
 Code agents, so they will not run the pipeline. The standalone utilities do.
 
-> **Two skills lose a safety guard here.** `team:pr-watch-as-reviewer` casts an
-> approval that can transitively merge a PR, and `team:pr-rebase` force-pushes
-> a rewritten branch over published history. Both set
+> **Three skills lose a safety guard here.** `team:pr-watch-as-reviewer` casts
+> an approval that can transitively merge a PR, `team:pr-rebase` force-pushes
+> a rewritten branch over published history, and `team:reflect` rewrites skill
+> files and files public issues. All three set
 > `disable-model-invocation` so only a person can start them, and **Codex
 > ignores that key**. To keep the guards:
 
 ```bash
 rm -rf "${CODEX_HOME:?}/plugins/cache"/*/team/*/skills/pr-watch-as-reviewer
 rm -rf "${CODEX_HOME:?}/plugins/cache"/*/team/*/skills/pr-rebase
+rm -rf "${CODEX_HOME:?}/plugins/cache"/*/team/*/skills/reflect
 ```
 
 Re-running `codex plugin add` restores them.
@@ -153,7 +155,7 @@ script/dev-uninstall antigravity
 - **[Vision](vision.md)**: the loop-driven end state Team builds toward.
 - **[Ethos](ethos.md)**: the principles that make the autonomous middle trustworthy.
 - **[Architecture](architecture.md)**: full design, artifact frontmatter, phase-inference rules.
-- **[Skills](skills.md)**: all 56 skills, their arguments, consumers, and behaviors.
+- **[Skills](skills.md)**: all 57 skills, their arguments, consumers, and behaviors.
 - **[Screenshots in PRs](screenshots-in-prs.md)**: inline UI screenshots on pull requests, and the one-time sign-in that enables them.
 - **[Cross-host portability](cross-host-portability.md)**: the capability matrix for Codex CLI, the Antigravity CLI host facts, and the chosen portability strategy.
 - **[GitHub repository](https://github.com/bostonaholic/team)**: source, agents, skills.

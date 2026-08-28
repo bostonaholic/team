@@ -22,7 +22,7 @@ if [ ! -d "$SKILLS_SRC" ]; then
 fi
 
 # Refuse to stack this on top of a native plugin install. Codex would then find
-# the same 53 skills under two roots and render every one twice, which doubles
+# the same 57 skills under two roots and render every one twice, which doubles
 # the catalog, worsens description truncation, and leaves the source ambiguous.
 # A registered-but-uninstalled marketplace row reads `not installed` and is
 # fine; only an installed row collides.
@@ -66,9 +66,10 @@ echo
 mkdir -p "$(dirname "$TARGET")"
 ln -sfn "$SKILLS_SRC" "$TARGET"
 echo "  Linked: ${TARGET} → ${SKILLS_SRC}"
-echo "  Note: pr-watch-as-reviewer and pr-rebase are model-invocable on Codex,"
-echo "        which ignores disable-model-invocation. The first one's approval"
-echo "        can merge a PR; the second one force-pushes a rewritten branch."
+echo "  Note: pr-watch-as-reviewer, pr-rebase, and reflect are model-invocable on"
+echo "        Codex, which ignores disable-model-invocation. The first one's"
+echo "        approval can merge a PR; the second force-pushes a rewritten"
+echo "        branch; reflect rewrites skill files and files public issues."
 
 echo
 echo "Done. Codex loads the skills at the next thread start."
