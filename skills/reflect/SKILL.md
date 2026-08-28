@@ -125,7 +125,7 @@ after the run ends.
 ### Step 2 — resolve and normalize this session's transcript
 
 ```bash
-node "<skill-dir>/resolve-transcript.mjs" "<the printed run cache path>"
+node "<skill-dir>/resources/resolve-transcript.mjs" "<the printed run cache path>"
 ```
 
 Substitute `<skill-dir>` with this skill's own directory. Never interpolate a
@@ -387,7 +387,7 @@ case "$NAME" in
     echo "refusing: a proposed name must be a skill name, lowercase and hyphenated" >&2
     exit 1 ;;
 esac
-node "<skill-dir>/write-target.mjs" "$(git rev-parse --show-toplevel)" "${NAME:?}"
+node "<skill-dir>/resources/write-target.mjs" "$(git rev-parse --show-toplevel)" "${NAME:?}"
 ```
 
 Pasted between double quotes, a name carrying `$(…)`, a backtick, or `${…}`

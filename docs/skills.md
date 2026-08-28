@@ -628,7 +628,7 @@ QRSPI phase: a self-contained action a user runs on demand.
   never by content match: the run creates its cache with `mktemp -d` and
   prints the absolute path, the host records that output inline in the
   transcript, and a bundled script
-  (`skills/reflect/resolve-transcript.mjs`) finds the one file on disk
+  (`skills/reflect/resources/resolve-transcript.mjs`) finds the one file on disk
   holding that string. The search returns file names only, so no unmatched
   session's content reaches a lens. The same script normalizes the
   transcript: `user` and `assistant` records only (every other type is
@@ -676,7 +676,7 @@ QRSPI phase: a self-contained action a user runs on demand.
   report stays auditable. Applying the approved edits is a **separate turn**
   behind one approval for the whole skill-write class, and it reads a plan file
   only from a run cache this conversation printed. **Write scope is narrow and
-  checked in code** (`skills/reflect/write-target.mjs`): a proposed name must
+  checked in code** (`skills/reflect/resources/write-target.mjs`): a proposed name must
   match `^[a-z][a-z0-9-]*$`; an edit lands in the skills root the running host
   actually loads (`<repo>/skills/` for a repo carrying a plugin marker,
   `<repo>/.claude/skills/` otherwise); a creation only ever targets

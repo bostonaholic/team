@@ -6,7 +6,7 @@
 //     bun test tests/reflect-skill.test.ts -t "Slice 1"
 //
 // L1 (pure unit, hermetic): the two bundled scripts,
-// skills/reflect/resolve-transcript.mjs and skills/reflect/write-target.mjs.
+// skills/reflect/resources/resolve-transcript.mjs and skills/reflect/resources/write-target.mjs.
 // Resolution, record classification, the byte/record bounds, the untrusted
 // name pattern, <repo> containment, and the two-root tie-break are all
 // `f(input) -> output`, so docs/testing.md ("L1: Pure unit") puts them here
@@ -47,13 +47,13 @@ import {
   isUserTurn,
   normalizeTranscript,
   resolveTranscript,
-} from "../skills/reflect/resolve-transcript.mjs";
+} from "../skills/reflect/resources/resolve-transcript.mjs";
 import {
   hasPluginMarker,
   isInsideRepo,
   isValidSkillName,
   preferredEditRoot,
-} from "../skills/reflect/write-target.mjs";
+} from "../skills/reflect/resources/write-target.mjs";
 
 const REPO_ROOT = process.cwd();
 // reflect is a RUNTIME skill — under skills/ (distributed), not .claude/.

@@ -4,7 +4,7 @@
  * Where an approved skill edit is allowed to land, and whether a proposed
  * skill name may be used at all.
  *
- *     node "<skill-dir>/write-target.mjs" <repo-root> <skill-name>
+ *     node "<skill-dir>/resources/write-target.mjs" <repo-root> <skill-name>
  *
  * Every input here comes from transcript text, so it is untrusted. The three
  * checks below are `f(input) -> output`, which is why they are code rather
