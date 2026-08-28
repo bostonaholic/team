@@ -3,6 +3,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read, squash } from "./helpers/text";
+import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 
@@ -307,7 +308,7 @@ describe("implement-to-pr continuation", () => {
     const text = read(TEAM_IMPLEMENT);
     expect(text).toContain("do **not** end the turn");
     expect(text).toContain("same turn");
-    expect(text).toContain("team-pr/SKILL.md");
+    expect(loadsSkill(text, "team-pr")).toBe(true);
   });
 
   test("team-implement still suggests /team-pr in standalone mode", () => {
@@ -495,11 +496,12 @@ describe("ticket pickup → in-progress", () => {
   }
 
   // Pointer pin: the host names the pickup move and defers the rules to
-  // tracking-tickets rather than restating the full contract.
+  // tracking-tickets rather than restating the full contract. The deferral is
+  // encoded as a Skill-tool load, so the bare name is the reference.
   function assertInProgressPointer(path: string) {
     const text = flat(read(path));
     expect(/move the ticket to in-progress/i.test(text)).toBe(true);
-    expect(text).toContain("tracking-tickets/SKILL.md");
+    expect(loadsSkill(text, "tracking-tickets")).toBe(true);
     // Does not hardcode this repo's board into the distributed runtime.
     expect(text).not.toContain("project-set-status");
     expect(text).not.toContain("projects/5");
@@ -568,7 +570,7 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
   // rules (interpretation, timing, multi-repo closing) to tracking-tickets.
   function assertInReviewPointer(path: string) {
     const text = flat(read(path));
-    expect(text).toContain("tracking-tickets/SKILL.md");
+    expect(loadsSkill(text, "tracking-tickets")).toBe(true);
     // Still names the tracker moment so the pointer step is discoverable.
     expect(/in-review/i.test(text)).toBe(true);
     // Does not hardcode this repo's board into the distributed runtime.
@@ -695,7 +697,7 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     const text = flat(read(path));
     // Names the home-only rule and defers its detail to tracking-tickets.
     expect(/home[^.]{0,250}closing/i.test(text)).toBe(true);
-    expect(text).toContain("tracking-tickets/SKILL.md");
+    expect(loadsSkill(text, "tracking-tickets")).toBe(true);
   }
 
   test("tracking-tickets: multi-repo — only the home PR carries a closing keyword; companions use a non-closing qualified reference", () => {

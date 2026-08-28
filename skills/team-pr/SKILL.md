@@ -123,9 +123,8 @@ done
    draft PR per repo. Cross-link the PRs in their bodies (see PR Body
    Template below).
 9. **Tracking ticket — link now, in-review when ready.** If `ticketId` is
-   non-null, apply the ticket-lifecycle rules in
-   `skills/tracking-tickets/SKILL.md`. Render the ticket link as the
-   closing line that the PR Body Template below ends with. That skill owns
+   non-null, call the Skill tool with `tracking-tickets` and apply its
+   ticket-lifecycle rules. Render the ticket link as the closing line that the PR Body Template below ends with. That skill owns
    the `ticketId` interpretation, the omit-when-null rule, the multi-repo
    home-only closing rule, and the in-review timing. The ticket keeps its
    in-progress state while the PR is a draft. It moves to in-review only
@@ -140,9 +139,9 @@ done
    (`gh pr edit --body-file`, or a quoted heredoc per step 7) so the
    Summary, Changes, and How-to-Verify sections still match what the branch
    actually does. **Screenshots go stale the same way the prose does.**
-   When the push changed the UI, re-capture per
-   `skills/verifying-ux/SKILL.md` → "Screenshot Capture (UI projects)". It
-   wipes and recaptures. Then re-render and re-upload the `## Screenshots`
+   When the push changed the UI, call the Skill tool with `verifying-ux` and
+   re-capture per its "Screenshot Capture (UI projects)" section. It wipes
+   and recaptures. Then re-render and re-upload the `## Screenshots`
    section, per the rules below, so the embedded images show the UI the
    branch now produces. When the push left the UI alone, the refresh
    carries the uploaded `## Screenshots` section through verbatim: never
@@ -160,8 +159,9 @@ done
 11. **Leave the worktree(s) in place.** Do not remove a worktree after
    opening a PR — the user may need to iterate on the branch (push
    follow-up commits, address review feedback). Clean up only after the
-   PR is merged or when the user explicitly asks, following the teardown
-   procedure in `skills/worktree-isolation/SKILL.md` → "Ship (teardown)":
+   PR is merged or when the user explicitly asks. Call the Skill tool with
+   `worktree-isolation` and follow
+   its "Ship (teardown)" procedure:
    commit preservation, worktree and branch removal, the rebase-only
    default-branch update, and deletion of the feature's untracked
    `docs/plans/<id>` scratch dir. In multi-repo mode, run cleanup for
@@ -342,8 +342,8 @@ user.
 
 ## Changelog Update
 
-Before creating the ship commit, update `CHANGELOG.md` per
-`skills/changelog/SKILL.md`:
+Before creating the ship commit, call the Skill tool with `changelog` and
+update `CHANGELOG.md` per that skill:
 
 1. Scan commits since the last changelog entry using `git log`.
 2. Filter to user-facing commits: `feat:`, `fix:`, `perf:`, `security:`,
@@ -359,7 +359,7 @@ this in the completion report.
 
 ## Commit Discipline
 
-When creating the commit, apply `skills/git-commit/SKILL.md`:
+When creating the commit, call the Skill tool with `git-commit` and apply it:
 
 - Conventional Commits format: `feat:`, `fix:`, `refactor:`, etc.
 - Subject ≤ 50 chars, imperative, no trailing period

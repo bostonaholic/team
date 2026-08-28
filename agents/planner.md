@@ -46,7 +46,8 @@ the structure. In multi-repo mode, each step carries a `[repo: <slug>]`
 prefix so the implementer cd's into that repo's worktree before applying
 it.
 
-**Apply engineering standards.** Load `skills/engineering-standards/SKILL.md`
+**Apply engineering standards.** Call the Skill tool with
+`engineering-standards`
 for the design-first workflow and quality checklist. Reference the
 checklist as verification criteria for steps.
 

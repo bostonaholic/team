@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read, squash } from "./helpers/text";
+import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 
@@ -127,16 +128,16 @@ describe("engineering-standards methodology", () => {
     expect(text).toContain("When Reviewing");
   });
 
-  test("planner.md references engineering-standards/SKILL.md", () => {
-    expect(read(PLANNER)).toContain("engineering-standards/SKILL.md");
+  test("planner.md loads engineering-standards", () => {
+    expect(loadsSkill(read(PLANNER), "engineering-standards")).toBe(true);
   });
 
-  test("implementer.md references engineering-standards/SKILL.md", () => {
-    expect(read(IMPLEMENTER)).toContain("engineering-standards/SKILL.md");
+  test("implementer.md loads engineering-standards", () => {
+    expect(loadsSkill(read(IMPLEMENTER), "engineering-standards")).toBe(true);
   });
 
-  test("code-reviewer.md references engineering-standards/SKILL.md", () => {
-    expect(read(CODE_REVIEWER)).toContain("engineering-standards/SKILL.md");
+  test("code-reviewer.md loads engineering-standards", () => {
+    expect(loadsSkill(read(CODE_REVIEWER), "engineering-standards")).toBe(true);
   });
 
   test("skills.md methodology table includes engineering-standards row with all 3 consumers", () => {
@@ -160,16 +161,16 @@ describe("engineering-standards methodology", () => {
     expect(read(SKILL_FILE)).toContain("solid-principles/SKILL.md");
   });
 
-  test("implementer.md still references solid-principles/SKILL.md", () => {
-    expect(read(IMPLEMENTER)).toContain("solid-principles/SKILL.md");
+  test("implementer.md still loads solid-principles", () => {
+    expect(loadsSkill(read(IMPLEMENTER), "solid-principles")).toBe(true);
   });
 
-  test("implementer.md still references refactoring-to-patterns/SKILL.md", () => {
-    expect(read(IMPLEMENTER)).toContain("refactoring-to-patterns/SKILL.md");
+  test("implementer.md still loads refactoring-to-patterns", () => {
+    expect(loadsSkill(read(IMPLEMENTER), "refactoring-to-patterns")).toBe(true);
   });
 
-  test("code-reviewer.md still references solid-principles/SKILL.md", () => {
-    expect(read(CODE_REVIEWER)).toContain("solid-principles/SKILL.md");
+  test("code-reviewer.md still loads solid-principles", () => {
+    expect(loadsSkill(read(CODE_REVIEWER), "solid-principles")).toBe(true);
   });
 
   test("code-reviewer.md still references code-review/SKILL.md", () => {
@@ -371,14 +372,21 @@ describe("product-thinking methodology", () => {
 // ## When Implementing / ## When Reviewing in engineering-standards), so
 // bare heading resolution would pass a broken citation. Every citation
 // tripwire thus asserts PATH-adjacency: the grepA4 window around each
-// `systems-thinking` mention must carry BOTH the skill file path
-// skills/systems-thinking/SKILL.md AND the cited ## When ... heading, and
-// the heading must resolve in the skill itself.
+// `systems-thinking` mention must carry BOTH a reference to the skill — bare
+// name at a load site, path at a citation site — AND the cited ## When ...
+// heading, and the heading must resolve in the skill itself.
 // ---------------------------------------------------------------------------
 
 describe("systems-thinking lens (L2 content tripwire)", () => {
   const SKILL_FILE = join(REPO_ROOT, "skills", "systems-thinking", "SKILL.md");
+  // Two reference forms, and which one a site uses is itself the contract
+  // (docs/architecture.md, "Methodology skills"). A site that must go load the
+  // skill names it bare, because that is the Skill tool's argument; a site
+  // whose frontmatter already preloaded it cites the path. Either form
+  // disambiguates the `## When ...` heading below, which is the point of the
+  // adjacency window: product-thinking carries a same-named heading.
   const SKILL_PATH = "skills/systems-thinking/SKILL.md";
+  const SKILL_NAME = "`systems-thinking`";
 
   // Missing-file reads return "" so pre-implementation checks fail as
   // assertions (expected "" to contain ...), never as ENOENT crashes
@@ -439,14 +447,14 @@ describe("systems-thinking lens (L2 content tripwire)", () => {
       expect(/convention/i.test(window)).toBe(true);
     });
 
-    test("code-reviewer and ux-reviewer directives name the systems-thinking skill file adjacent to their ## When Reviewing cite", () => {
+    test("code-reviewer and ux-reviewer directives load systems-thinking adjacent to their ## When Reviewing cite", () => {
       const codeReviewerWindow = citationWindow(CODE_REVIEWER);
-      expect(codeReviewerWindow).toContain(SKILL_PATH);
+      expect(codeReviewerWindow).toContain(SKILL_NAME);
       expect(codeReviewerWindow).toContain("## When Reviewing");
       // code-reviewer's bullet cites the checklist item by name.
       expect(codeReviewerWindow).toContain("System Fit");
       const uxReviewerWindow = citationWindow(UX_REVIEWER);
-      expect(uxReviewerWindow).toContain(SKILL_PATH);
+      expect(uxReviewerWindow).toContain(SKILL_NAME);
       expect(uxReviewerWindow).toContain("## When Reviewing");
       // The cited heading resolves in the skill itself.
       expect(readOrEmpty(SKILL_FILE)).toContain("## When Reviewing");
@@ -457,11 +465,11 @@ describe("systems-thinking lens (L2 content tripwire)", () => {
     const AUTHORING_DESIGNS = join(REPO_ROOT, "skills", "authoring-designs", "SKILL.md");
     const ENG_DESIGN_REVIEW = join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md");
 
-    test("authoring-designs rules bullet names skills/systems-thinking/SKILL.md adjacent to its ## When Designing cite", () => {
-      // design-author.md:80 already cites product-thinking's same-named
-      // ## When Designing — the skill-file path is what disambiguates.
+    test("authoring-designs rules bullet loads systems-thinking adjacent to its ## When Designing cite", () => {
+      // design-author.md already cites product-thinking's same-named
+      // ## When Designing — the skill name is what disambiguates.
       const window = grepA4(read(AUTHORING_DESIGNS), /systems-thinking/);
-      expect(window).toContain(SKILL_PATH);
+      expect(window).toContain(SKILL_NAME);
       expect(window).toContain("## When Designing");
       expect(readOrEmpty(SKILL_FILE)).toContain("## When Designing");
     });
@@ -486,9 +494,9 @@ describe("systems-thinking lens (L2 content tripwire)", () => {
   describe("slice 3: implementer execution discipline", () => {
     const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
 
-    test("implementer directive names the systems-thinking skill file adjacent to its ## When Implementing cite", () => {
+    test("implementer directive loads systems-thinking adjacent to its ## When Implementing cite", () => {
       const window = citationWindow(IMPLEMENTER);
-      expect(window).toContain(SKILL_PATH);
+      expect(window).toContain(SKILL_NAME);
       expect(window).toContain("## When Implementing");
       expect(readOrEmpty(SKILL_FILE)).toContain("## When Implementing");
     });
@@ -501,22 +509,26 @@ describe("systems-thinking lens (L2 content tripwire)", () => {
   });
 
   describe("slice 4: upstream preloads — researcher, structure-planner, planner", () => {
-    const UPSTREAM_AGENTS: { agent: string; heading: string }[] = [
-      { agent: "researcher", heading: "## When Researching" },
-      { agent: "structure-planner", heading: "## When Slicing" },
-      { agent: "planner", heading: "## When Planning" },
+    // `reference` is the form each body uses. researcher and planner cite the
+    // path — their bodies read the preloaded skill and never call the tool.
+    // structure-planner loads on demand ("if it is not already in context"),
+    // so it names the skill bare.
+    const UPSTREAM_AGENTS: { agent: string; heading: string; reference: string }[] = [
+      { agent: "researcher", heading: "## When Researching", reference: SKILL_PATH },
+      { agent: "structure-planner", heading: "## When Slicing", reference: SKILL_NAME },
+      { agent: "planner", heading: "## When Planning", reference: SKILL_PATH },
     ];
 
-    for (const { agent, heading } of UPSTREAM_AGENTS) {
+    for (const { agent, heading, reference } of UPSTREAM_AGENTS) {
       test(`${agent} frontmatter has a skills: block listing systems-thinking`, () => {
         const fm = frontmatter(read(join(REPO_ROOT, "agents", `${agent}.md`)));
         expect(/^skills:/m.test(fm)).toBe(true);
         expect(/systems-thinking|team:systems-thinking/.test(fm)).toBe(true);
       });
 
-      test(`${agent} directive names the systems-thinking skill file adjacent to its ${heading} cite`, () => {
+      test(`${agent} directive references systems-thinking adjacent to its ${heading} cite`, () => {
         const window = citationWindow(join(REPO_ROOT, "agents", `${agent}.md`));
-        expect(window).toContain(SKILL_PATH);
+        expect(window).toContain(reference);
         expect(window).toContain(heading);
         expect(readOrEmpty(SKILL_FILE)).toContain(heading);
       });
@@ -948,7 +960,7 @@ describe("code-comment rules (L2 content tripwire)", () => {
     // comment-discipline mention.
     const directive = grepA4(read(IMPLEMENTER), /comment discipline/i);
     expect(directive.length).toBeGreaterThan(0);
-    expect(directive).toContain("engineering-standards/SKILL.md");
+    expect(directive).toContain("`engineering-standards`");
   });
 });
 

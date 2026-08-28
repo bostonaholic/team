@@ -97,8 +97,8 @@ new one. There is no new branch and no artifact copy, and work continues
 in place on the current branch. If that worktree is checked out on the
 default branch (main/master), the phase refuses and stops — implementing
 directly on the default branch is never acceptable, and nesting worktrees
-is not supported. See "Detect existing worktree" in
-`skills/team-worktree/SKILL.md` for the procedure.
+is not supported. Call the Skill tool with `team-worktree` for the
+"Detect existing worktree" procedure.
 
 ### Why first
 

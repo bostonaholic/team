@@ -61,7 +61,7 @@ Then the body:
 
 Keep this under 80 lines. The point is intent, not exhaustive detail.
 
-Load `skills/product-requirements-doc/SKILL.md` when the feature request
+Call the Skill tool with `product-requirements-doc` when the feature request
 is vague or underspecified, spans multiple user stories, is
 cross-cutting, or replaces existing behavior. Produce
 `docs/plans/<id>/prd.md` alongside `task.md`, and reference the PRD's

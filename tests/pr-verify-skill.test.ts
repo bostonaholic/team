@@ -17,6 +17,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
+import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 // pr-verify is a RUNTIME skill — under skills/ (distributed), not .claude/.
@@ -206,7 +207,7 @@ describe("pr-verify skill: per-item strategy classification", () => {
   });
 
   test("build/test strategy detects checks per running-quality-checks", () => {
-    expect(body()).toContain("skills/running-quality-checks/SKILL.md");
+    expect(loadsSkill(body(), "running-quality-checks")).toBe(true);
   });
 });
 

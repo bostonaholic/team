@@ -24,6 +24,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
+import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 // pr-watch-as-author is a RUNTIME skill — under skills/ (distributed), not .claude/.
@@ -124,8 +125,8 @@ describe("pr-watch-as-author skill: pinned edge cases", () => {
 });
 
 describe("pr-watch-as-author skill: triage contract is referenced, never restated", () => {
-  test("references the triage procedure by path", () => {
-    expect(body()).toContain("skills/pr-open-comments/SKILL.md");
+  test("loads the triage procedure through the Skill tool", () => {
+    expect(loadsSkill(body(), "pr-open-comments")).toBe(true);
   });
 
   test("does not restate the punch-list pipeline (no verdict internals)", () => {

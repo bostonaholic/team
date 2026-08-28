@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.60.0] - 2026-08-28
+
+### Changed
+
+- **Every place an agent or skill must go load another skill now says so as an imperative tool call, naming the skill and nothing else.** A pointer that read "load X", "see X", or "per X" reads as a citation, and a model that treats a load as a citation never issues the tool call — it proceeds on whatever summary of X already sits in its context, which is how a slice ships without the commit conventions applied or a design review runs without its severity table. Those sites now read **Call the Skill tool with `<name>`** — a bare name, no path, because the bare name is what the tool takes and a path beside it reads as a file to go open instead. The change covers the orchestrator's phase gates, the `/team-fix`, `/team-design`, `/team-implement`, `/team-pr`, `/pr-rebase`, `/pr-verify`, and `/pr-watch-as-author` procedures, the shared `code-review`, `implementing-slices`, `test-driven-bug-fix`, `authoring-designs`, `decomposing-intent`, `eng-design-doc-review`, and `worktree-isolation` methodology, the five prose-bar pointers that `git-commit`, `changelog`, `product-requirements-doc`, `technical-design-doc`, and `documenting-decisions` share, and the `code-reviewer`, `implementer`, `planner`, `test-architect`, `ux-reviewer`, `questioner`, `design-author`, and `structure-planner` agent bodies. Pure cross-references are deliberately untouched — a schema lookup, a rule already restated inline, and a pointer to a skill the frontmatter preloads all keep their paths and their ordinary wording, because spending a tool call on content nobody asked for is its own defect. **What this asks of you:** nothing. Runs should reach for the referenced skill instead of guessing at it. The two forms and the boundary between them are documented in [docs/architecture.md → Methodology skills](https://github.com/bostonaholic/team/blob/main/docs/architecture.md#methodology-skills-loaded-by-agents-not-directly-invoked).
+
+### Fixed
+
+- **A mistyped or renamed skill reference is now caught at build time instead of at runtime.** The tripwires guarding these cross-references asserted only that a path *string* was present in the referring file, never that the path resolved — so `skills/git-commmit/SKILL.md` passed, and the referring agent found nothing when it went looking. Loads now resolve their bare name against the actual `skills/` directory listing, which catches a rename and a typo, and reports the exact referring file and dangling name. **What this asks of you:** nothing.
+
 ## [0.59.0] - 2026-08-28
 
 ### Added
@@ -600,7 +610,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.59.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.60.0...HEAD
+[0.60.0]: https://github.com/bostonaholic/team/compare/v0.59.0...v0.60.0
 [0.59.0]: https://github.com/bostonaholic/team/compare/v0.58.0...v0.59.0
 [0.58.0]: https://github.com/bostonaholic/team/compare/v0.57.0...v0.58.0
 [0.57.0]: https://github.com/bostonaholic/team/compare/v0.56.0...v0.57.0

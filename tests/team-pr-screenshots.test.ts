@@ -17,6 +17,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import { read } from "./helpers/text";
+import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 // team-pr is a RUNTIME skill — it lives under skills/ (distributed).
@@ -58,8 +59,8 @@ describe("team-pr Screenshots refresh on every push", () => {
   // as sections that survive the rewrite. Screenshots need both halves:
   // preserved when the push left the UI alone, re-rendered when it did not.
   test("a UI-changing push defers re-capture to the ux-reviewer procedure", () => {
-    // Re-capture is ux-reviewer's procedure — referenced by path, not restated.
-    expect(body()).toContain("skills/verifying-ux/SKILL.md");
+    // Re-capture is ux-reviewer's procedure — loaded, not restated.
+    expect(loadsSkill(body(), "verifying-ux")).toBe(true);
   });
 });
 

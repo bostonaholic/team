@@ -34,17 +34,21 @@ blocker handling, and the scope fence.
 
 ## Code quality
 
-- Apply comment discipline. The canonical rule set is the Code Comments
-  section of `skills/engineering-standards/SKILL.md`. Run that skill's
+- Apply comment discipline. Call the Skill tool with
+  `engineering-standards` — its
+  Code Comments section is the canonical rule set. Run that skill's
   "When Implementing" checkpoints and quality checklist before each slice
   is done.
-- Apply SOLID principles when writing new code. Load
-  `skills/solid-principles/SKILL.md` for the full methodology.
-- When the plan changes existing code, apply the refactoring methodology
-  from `skills/refactoring-to-patterns/SKILL.md`. Keep refactoring commits
+- Apply SOLID principles when writing new code. Call the Skill tool with
+  `solid-principles` for the full
+  methodology.
+- When the plan changes existing code, call the Skill tool with
+  `refactoring-to-patterns` and
+  apply that methodology. Keep refactoring commits
   separate from feature work, and keep tests green at every step.
-- Per `skills/systems-thinking/SKILL.md` (`## When Implementing`), search
-  for an existing implementation first. Update every affected caller.
+- Call the Skill tool with `systems-thinking` and follow its
+  `## When Implementing` section: search for an existing implementation
+  first. Update every affected caller.
 
 ## Read-only scouts for unfamiliar code (optional)
 
