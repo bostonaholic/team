@@ -424,6 +424,33 @@ Report all of this, every run:
 - Anything the run warned about: a dirty or ahead primary checkout, a rejected
   tag push, a declined or failed repoint.
 
+### Which recovery lines to print
+
+Print, least destructive first, only the lines that apply: the cache undo when
+the repoint already happened (it loses nothing), then the whole-tree rollback,
+then the ending sequence from `NUKE.md`. Every one of them is printed with the
+label saying what it discards.
+
+The ending sequence is conditional. Before printing it, ask whether anything
+has been authored in the worktree yet — using only values `NUKE.md` can hold.
+The check cannot compare against the nuke commit's own SHA, because `NUKE.md`
+is inside that commit and cannot name it; its parent, `ARCHIVE_SHA`, is
+recorded, and one commit past the archive is exactly the untouched state:
+
+```sh
+: "${WORKTREE:?}"
+: "${ARCHIVE_SHA:?}"
+git -C "$WORKTREE" rev-list --count "${ARCHIVE_SHA}..HEAD"
+git -C "$WORKTREE" status --porcelain
+```
+
+A count of exactly 1 **and** an empty status means nothing has been authored:
+print the sequence as it stands. Otherwise lead with the preservation lines
+(steps 1 to 3) and name what steps 5 and 6 would discard without them. When
+signing is unavailable the sequence stops at step 1, before anything is
+removed, so an unsignable machine costs the maintainer the ending, never the
+experiment.
+
 ## Restore mode
 
 `/nuke-team-plugin restore [<item>]` runs **from inside the experiment
@@ -697,6 +724,68 @@ It **returns the worktree to the archived tree and discards the nuke commit,
 every commit made after it, and every uncommitted change.** Nothing that
 existed before the run is at risk — `main` is untouched and the baseline tag is
 the archive — but the experiment's own output is.
+
+### Teardown — one ordered sequence, never a bare pair
+
+Run these **in order**, with the run's literal paths and dates as written.
+Steps 1 to 3 preserve this experiment's output; steps 5 and 6 remove it.
+
+1. Tag the branch tip, annotated and signed, with an explicit message — a tag
+   command with no `-m` opens an editor a Claude Code Bash call cannot answer:
+
+   `git -C <primary root> tag -a -s -m "nuke experiment <date>" nuke-result/<date> experiment/nuke-<date>`
+
+   If git says that name is already used — a second experiment on the same date
+   — take the next free suffix and carry it through steps 2 and 3:
+
+   `git -C <primary root> tag -a -s -m "nuke experiment <date>" nuke-result/<date>.2 experiment/nuke-<date>`
+
+   then `.3`, counting up to the first free one. **Never `-f`**: the tag
+   standing in the way is the other run's only durable copy, and step 1 exists
+   precisely so that nothing overwrites it.
+
+2. Push it. Best-effort, like the baseline tag: a refusal leaves the local tag
+   holding every commit on the branch.
+
+   `git -C <primary root> push origin nuke-result/<date>`
+
+3. Prove it. Both lines must print, and print the **same** commit SHA, before
+   step 4 is run. Take the SHA at the start of the `ls-remote` line — an
+   annotated tag's own object SHA is not the commit's, so the ref is read
+   peeled:
+
+   `git -C <primary root> ls-remote --tags origin "refs/tags/nuke-result/<date>^{}" | cut -f1`
+
+   When the push in step 2 was refused, prove the local tag instead with
+   `git -C <primary root> rev-parse "nuke-result/<date>^{}"`. Either way, the
+   second half is the branch tip:
+
+   `git -C <primary root> rev-parse experiment/nuke-<date>`
+
+   Four steps separate the tag from step 6, and a commit made in between would
+   otherwise be reflog-only while the first line still passed.
+
+4. Undo the cache link — the one-line command under `### The cache undo`.
+
+5. `git -C <primary root> worktree remove <worktree>`
+
+6. `git -C <primary root> branch -D experiment/nuke-<date>`
+
+Step 5 carries no `--force`, on purpose: an uncommitted restore or a scratch
+file then stops the removal and shows itself instead of vanishing. Adding
+`--force` discards exactly that, so add it only after reading what step 5
+refused to remove.
+
+Steps 5 and 6 run on their own leave the reflog as the only copy of this
+experiment's commits, restores, and notes. A reflog is not a copy: it expires,
+it is machine-local, and nothing here treats it as a backup. That is what steps
+1 to 3 exist to prevent.
+
+Neither tag is ever removed by this file. `nuke-baseline/<date>` is the archive
+of everything the nuke deleted, and `nuke-result/<date>` is this experiment's
+own record. Removing either one, locally or on the remote, destroys it — so no
+command that would do so appears anywhere here, deliberately. Retiring a tag is
+a decision the maintainer makes by hand, long after this run.
 
 ## Success Criteria
 
