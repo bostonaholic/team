@@ -424,6 +424,188 @@ Report all of this, every run:
 - Anything the run warned about: a dirty or ahead primary checkout, a rejected
   tag push, a declined or failed repoint.
 
+## Restore mode
+
+`/nuke-team-plugin restore [<item>]` runs **from inside the experiment
+worktree**. Bare, it prints the manifest and stops. With an item id it proves
+every claim below before it writes anything; a failed proof refuses, names what
+failed, and writes nothing. The steps run in order, and none is skipped when an
+earlier one already looks convincing.
+
+**The write scope, stated once.** Restore checks out **every path on the item's
+line whose baseline is `present`** — including the whole-file checkout of a
+path whose recorded state is a hash, which is what makes `runtime-hooks` and
+`dev-hooks` restorable at all, since their manifests were edited rather than
+removed. A path whose baseline is `absent` is skipped, and each skip is named
+in the output. An item refuses only when *every* path on its line is `absent`.
+
+Checking out an edited manifest whole is equivalent to returning its `hooks`
+key, because the recorded hash proves the file is byte-for-byte what the nuke
+wrote, so the checkout changes that key and nothing else.
+
+### R1 — the argument
+
+Any first word other than `restore` prints the usage line and stops; the skill
+never guesses a mode. With no item id, print the manifest and stop. An item id
+is checked before it reaches anything:
+
+```sh
+LC_ALL=C
+case "$ITEM" in
+  ''|/*|*..*|*[!A-Za-z0-9._/-]*)
+    echo "refusing: '$ITEM' is not a valid item id — printing the manifest, nothing was written" >&2; exit 1 ;;
+esac
+```
+
+### R2 — location, branch, and containment
+
+`NUKE.md` must sit at the toplevel of the tree being restored into, and the
+current branch must equal the branch recorded in it. Neither is a proof — the
+file under test supplies the value it is compared against — so both are cheap
+consistency checks that catch the honest mistake with a clear message.
+
+The containment check is the one that matters: **refuse when the toplevel is
+the primary clone**. A path recorded with a hash is restorable in a tree that
+was never nuked, so "every recorded state is `-`" is not by itself a proof of
+where this is running.
+
+```sh
+TOPLEVEL="$(git rev-parse --show-toplevel)"
+[ -f "${TOPLEVEL}/NUKE.md" ] ||
+  { echo "refusing: no NUKE.md at ${TOPLEVEL} — run this from inside the experiment worktree" >&2; exit 1; }
+COMMON_DIR="$(git rev-parse --path-format=absolute --git-common-dir)"
+PRIMARY_ROOT="$(dirname "$COMMON_DIR")"
+[ "$TOPLEVEL" != "$PRIMARY_ROOT" ] ||
+  { echo "refusing: ${TOPLEVEL} is the primary clone, not an experiment worktree — restore never writes there" >&2; exit 1; }
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+[ "$BRANCH" = "$RECORDED_BRANCH" ] ||
+  { echo "refusing: on ${BRANCH}, but NUKE.md records ${RECORDED_BRANCH} — run 'git switch ${RECORDED_BRANCH}' and re-run" >&2; exit 1; }
+```
+
+### R3 — the manifest block and membership
+
+`NUKE.md` must carry exactly one fenced block whose info string is
+`nuke-manifest`. Zero or several is a refusal; the skill never picks one.
+Membership is an exact match on field 1, read with the digit-free
+`cut -d' ' -f1` and proved with `grep -qxF` — never a substring or a pattern
+match, either of which would let `skills/pr` open `skills/pr-cleanup`:
+
+```sh
+LC_ALL=C
+: "${TOPLEVEL:?}"
+OPENERS="$(grep -c '^[`]\{3\}nuke-manifest[[:space:]]*$' "${TOPLEVEL}/NUKE.md")"
+[ "$OPENERS" = 1 ] ||
+  { echo "refusing: NUKE.md carries ${OPENERS} nuke-manifest blocks, not exactly one" >&2; exit 1; }
+LINES="$(sed -n '/^[`]\{3\}nuke-manifest/,/^[`]\{3\}[[:space:]]*$/p' "${TOPLEVEL}/NUKE.md" | sed '1d;$d')"
+printf '%s\n' "$LINES" | cut -d' ' -f1 | grep -qxF -- "$ITEM" ||
+  { echo "refusing: '$ITEM' is not an item in the manifest" >&2; exit 1; }
+[ "$(printf '%s\n' "$LINES" | cut -d' ' -f1 | grep -cxF -- "$ITEM")" = 1 ] ||
+  { echo "refusing: duplicate manifest id '$ITEM'" >&2; exit 1; }
+```
+
+### R4 — validate the item's line
+
+A line that fails any check below is **refused, never repaired**:
+
+- Fewer than five fields, or fields from 3 onward that do not divide into whole
+  `<path> <baseline> <state>` triples.
+- A `<kind>` (field 2) outside `pair|tree|file|group`. It labels the report
+  only; no gate branches on it.
+- A `<baseline>` outside `present|absent`.
+- A `<state>` that is neither `-` nor 40 lowercase hex.
+- The combination `absent` with a hash, which is a contradiction.
+- A path that fails the R1 syntax check under `LC_ALL=C`, or that sits outside
+  the deletion-set roots hard-coded in Hard Rule 10, or that sits under
+  `.claude/skills/nuke-team-plugin/`.
+
+### R5 — prove the archive ref
+
+The recorded `ARCHIVE_SHA` and the recorded tag name come out of the same
+untrusted file, but only the tag is signed. So the tag name must match
+`^nuke-baseline/[0-9]{4}-[0-9]{2}-[0-9]{2}$`, `git tag -v` must verify it, and
+**the trusted commit is the peeled `^{}` value**. The recorded `ARCHIVE_SHA` is
+a cross-check that never reaches a command:
+
+```sh
+LC_ALL=C
+case "$RECORDED_TAG" in
+  nuke-baseline/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) : ;;
+  *) echo "refusing: '$RECORDED_TAG' is not a dated nuke-baseline tag name" >&2; exit 1 ;;
+esac
+git rev-parse --verify --quiet "refs/tags/${RECORDED_TAG}" >/dev/null ||
+  { echo "refusing: ${RECORDED_TAG} is missing locally — run 'git fetch origin tag ${RECORDED_TAG}' and re-run" >&2; exit 1; }
+git tag -v "$RECORDED_TAG" ||
+  { echo "refusing: ${RECORDED_TAG} does not verify" >&2; exit 1; }
+ARCHIVE="$(git rev-parse "${RECORDED_TAG}^{}")"
+[ "$ARCHIVE" = "$RECORDED_ARCHIVE_SHA" ] ||
+  { echo "refusing: ${RECORDED_TAG} peels to ${ARCHIVE}, but NUKE.md records ${RECORDED_ARCHIVE_SHA} — the file was edited" >&2; exit 1; }
+```
+
+### R6 — the recorded-state gate
+
+`git checkout <sha> -- <path>` overwrites the working tree **and** the index,
+so both are checked for every `present` path. A state of `-` requires the path
+to be absent from each; the `-L` half is not decoration, because `-e` follows a
+link and a dangling symlink would otherwise read as absent. A hash requires the
+working file and the staged blob to both equal it, and a path missing from the
+index counts as a mismatch:
+
+```sh
+: "${TOPLEVEL:?}"
+if [ "$STATE" = "-" ]; then
+  { [ ! -e "$ITEM_PATH" ] && [ ! -L "$ITEM_PATH" ] && [ -z "$(git ls-files -- "$ITEM_PATH")" ]; } ||
+    { echo "refusing: ${ITEM_PATH} is recorded absent but exists in the tree or the index" >&2; exit 1; }
+else
+  [ "$(git hash-object -- "$ITEM_PATH")" = "$STATE" ] &&
+  [ "$(git rev-parse ":${ITEM_PATH}")" = "$STATE" ] ||
+    { echo "refusing: ${ITEM_PATH} no longer matches its recorded state ${STATE}" >&2; exit 1; }
+fi
+```
+
+This gate reads only present state, so the maintainer may commit freely in the
+worktree. Any mismatch refuses and names the offending path.
+
+### R7 — check out, then report
+
+```sh
+: "${ARCHIVE:?}"
+git checkout "$ARCHIVE" -- "$ITEM_PATH"
+```
+
+Report every path written, every `absent` path skipped and why, and that the
+restored files are live in a session only after a restart.
+
+### The re-restore escape
+
+Restoring the same item twice is refused by R6 — that is the idempotent
+outcome. A filesystem `rm` does **not** clear it, because the index entry
+survives and R6 checks the index too. The escape therefore goes through git.
+
+The nuke commit is derived, never read: `NUKE.md` sits inside that commit and
+cannot record its own SHA. It records `ARCHIVE_SHA`, and the nuke commit is the
+archive's only child on the experiment branch, which R2 has already established
+is the current branch:
+
+```sh
+: "${ARCHIVE:?}"
+NUKE_COMMIT="$(git rev-list --ancestry-path --reverse "${ARCHIVE}..HEAD" | head -1)"
+[ -n "$NUKE_COMMIT" ] ||
+  { echo "refusing: cannot derive the nuke commit from ${ARCHIVE}..HEAD" >&2; exit 1; }
+[ "$(git rev-parse "${NUKE_COMMIT}^")" = "$ARCHIVE" ] ||
+  { echo "refusing: the derived commit's parent is not the verified archive commit" >&2; exit 1; }
+```
+
+Then, per path on the item's line:
+
+- Recorded state `-` — return it with `git rm -r -f -- "$ITEM_PATH"`, which
+  clears the working tree and the index together.
+- Recorded state a hash — return it with
+  `git checkout "$NUKE_COMMIT" -- "$ITEM_PATH"`, restoring the exact bytes the
+  nuke wrote so the recorded hash matches again.
+
+For a manifest the maintainer edited on purpose, the alternative is a hand
+merge from `git show <ARCHIVE_SHA>:<path>`, which writes nothing.
+
 ## NUKE.md template
 
 Step 6 writes `NUKE.md` at the worktree root. **Every value is written
@@ -483,7 +665,24 @@ git log --oneline experiment/nuke-2026-08-28
 ```
 
 `git show <ARCHIVE_SHA>:AGENTS.md` prints the whole router, so a single section
-can be copied back by hand.
+can be copied back by hand. Written with the run's literal SHA:
+
+```
+git show 4f9a1c0b7d2e8f36a5b4c3d2e1f0a9b8c7d6e5f4:AGENTS.md
+```
+
+### The restore command
+
+The gated skill is the **only** write path into this tree. `NUKE.md` carries no
+raw checkout line, so nothing in it can write an arbitrary ref over an
+arbitrary path:
+
+```
+/nuke-team-plugin restore skills/pr-cleanup
+```
+
+Bare `/nuke-team-plugin restore` prints the manifest. Every id in the
+`nuke-manifest` block above is a valid argument.
 
 ### Recovery
 
