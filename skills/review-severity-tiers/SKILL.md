@@ -1,6 +1,6 @@
 ---
 name: review-severity-tiers
-description: The authoritative severity-tier map for aggregating reviewer verdicts — gate types by reviewer, the Blocking/Major/Minor tiers with the auto-fix boundary, the no-consult rule, and the 5-round terminal cap. Load when aggregating review findings, deciding a pipeline gate, or sorting a finding into a severity tier.
+description: The authoritative severity-tier map for aggregating reviewer verdicts — gate types by reviewer, the Blocking/Major/Minor tiers with the auto-fix boundary, the no-consult rule, and the exit condition of zero Blocking and zero Major findings. Load when aggregating review findings, deciding a pipeline gate, or sorting a finding into a severity tier.
 user-invocable: false
 ---
 
@@ -38,8 +38,9 @@ the finding is worth that price. `suggestion (non-blocking)` and security
 MEDIUM are not. Both say in their own label that the work can ship without
 them, and prose review yields some of both on nearly every pass — so pricing
 them at a full round means the loop ends only when five independent reviewers
-return zero non-blocking findings, which is not a reachable state. The loop
-then burns its 5-round cap discovering that.
+return zero non-blocking findings, which is not a reachable state. Nothing
+counts the rounds down for you, so a loop priced that way does not end at
+all.
 
 The tier boundary is therefore **not** a judgment about whether a finding
 matters. A security MEDIUM can matter a great deal. It is a judgment about
@@ -78,8 +79,8 @@ pipeline gate decision:
    SHIP.
 3. If no findings remain -> pipeline gate PASSES (proceed to SHIP).
 
-The loop continues until Blocking and Major are zero, capped at 5 rounds. At
-the cap, halt with the full unresolved-findings summary — terminal, no PR.
+The loop continues until Blocking and Major are zero. Nothing else ends it:
+no round count, and no consultation with the user.
 
 Blocking and Major failures are never aggregated away and never surfaced for
 triage. A single CRITICAL security finding blocks shipping regardless of how

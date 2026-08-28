@@ -135,9 +135,10 @@ is itself checked.
   grants are read-only and they run in `plan` mode, so the constraint is a
   property of the harness rather than a promise in a prompt. Producers change
   code but cast no verdict. Neither role can close a review cycle by itself.
-- **Bounded veto.** The review loop is capped at five rounds, then halts to a
-  human. A check that cannot be satisfied must hand the work back, not grind. An
-  unbounded veto is its own failure mode.
+- **The veto ends on agreement, not on a count.** The review loop runs until no
+  Blocking or Major finding is left, however many rounds that takes. The cost is
+  real: a check that can never be satisfied grinds until a person stops the run.
+  That price buys a verdict no one can outwait.
 - **A check on the check.** The skeptic pass that tries to refute a blocking
   finding is default-keep: inconclusive means the finding stands. A refuter can
   remove a false positive and never a true one.

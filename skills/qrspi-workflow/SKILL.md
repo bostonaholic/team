@@ -35,7 +35,8 @@ tests; a mechanical gate confirms all tests fail with assertion errors (not
 crashes) *and* every static check the project defines passes; `implementer`
 works through vertical slices, committing each when its tests pass; then 5
 parallel reviewers (code, security, docs, ux, verifier) return typed failure
-classes that loop back to the implementer, capped at 5 rounds.
+classes that loop back to the implementer, until no Blocking or Major finding
+remains.
 
 ## Artifact Conventions
 

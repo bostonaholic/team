@@ -129,7 +129,9 @@ Before any agent dispatch, decide where to work:
    `$ARGUMENTS/task.md` (standalone mode).
 2. Dispatch `test-architect` → produces failing tests. In standalone
    mode it derives acceptance criteria from `$ARGUMENTS/task.md` instead
-   of `structure.md`.
+   of `structure.md`. If those tests already exist, skip this dispatch.
+   When the slice commits are on the branch too, resume at step 5.
+   Otherwise, resume at step 4.
 3. **Mechanical gate** — confirm all tests fail with assertion errors
    (not crashes), **and** that every static check the project defines
    passes (typecheck, lint, format, build — call the Skill tool with
@@ -139,6 +141,8 @@ Before any agent dispatch, decide where to work:
    back to the `test-architect`: a runner that executes tests without
    type-checking them leaves a red type checker behind a green suite, and
    the next actor to notice is the `verifier`, a full review round later.
+   This gate applies to a fresh `test-architect` run only. A resumed run
+   that skips step 2 skips this gate too.
 4. Dispatch `implementer` → executes slices with per-slice commits. In
    standalone mode it works from `$ARGUMENTS/task.md` and the failing
    tests.
@@ -172,18 +176,24 @@ Before any agent dispatch, decide where to work:
      just produced. The count starts on the round-2 item: the round-1 seed
      is written before the implementer runs, so no aggregate has sorted
      anything yet.
-   - If round count < 5: re-dispatch implementer with the typed class(es),
-     then re-dispatch ALL 5 reviewers for a fresh review.
-   - If round count ≥ 5: **halt** with a full unresolved-findings
-     summary — terminal; no PR is opened. When `cross-model-notes.md`
-     exists, name it beside the unresolved findings so every round's
-     external-review disposition stays visible at the halt. Recovery: a
-     human fixes the unresolved findings by hand and re-invokes
-     `/team-implement` bare; the round counter is session-scoped
-     (TodoWrite) and starts fresh on re-invocation.
+   - Re-dispatch implementer with the typed class(es), then re-dispatch
+     ALL 5 reviewers for a fresh review.
    - **Never** stop to ask the user which Blocking or Major items to address —
      this is the no-consult rule. A prompt that lists a blocking or major
      finding is a defect.
+
+   **Recovery** runs outside that loop, after an operator stop or a
+   context-exhausted session. No round's findings are on disk. None of the
+   five reviewers holds a write tool, and the round item above carries
+   counts rather than findings.
+
+   So re-invoke `/team-implement` bare. The resume branch at step 2 skips
+   the test and slice steps, so the phase re-enters at step 5. The five
+   reviewers there re-derive the current finding set, and the loop above
+   fixes it at the cost of one round. The round counter is session-scoped
+   (TodoWrite) and starts fresh on re-invocation. The re-invoked session's
+   ledger carries no `PR` phase item, so step 9 takes the standalone
+   branch and names `/team-pr`.
 9. **Once Blocking and Major are clean:** record any **Minor-and-below**
    findings for the PR body's `## Review notes` section, tagged by
    source reviewer — never present them mid-run. Then:

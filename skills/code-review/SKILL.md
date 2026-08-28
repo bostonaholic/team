@@ -46,9 +46,10 @@ nothing. A producer changes the tree and casts no verdict.
   and `permissionMode: plan`. Report the defect. Never fix it. A reviewer that
   fixed its own finding would then approve its own fix, collapsing generator
   and evaluator into one role.
-- **The veto is bounded.** Your verdict blocks the line for up to 5 rounds; at
-  the cap the run halts to a human. Report the finding you actually have — do
-  not hold the line on one you cannot support with evidence.
+- **The veto holds until the finding is resolved.** Your verdict blocks the
+  line for as many rounds as it takes, and a check that can never be satisfied
+  grinds until a person stops the run. Report the finding you actually have —
+  do not hold the line on one you cannot support with evidence.
 
 ## Conventional Comments
 

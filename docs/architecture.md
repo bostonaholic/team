@@ -291,8 +291,7 @@ No gate. The plan is mechanically derived from the structure.
    Blocking or Major finding remains, it dispatches the implementer to
    fix the typed failure class. It then re-runs all 5 reviewers
    automatically. It never consults the user. This is the *no-consult
-   rule*. The cap is 5 rounds. At the cap, the run halts terminally.
-   Once Blocking and Major are clean, any remaining Minor-and-below
+   rule*. Once Blocking and Major are clean, any remaining Minor-and-below
    findings are recorded in the PR body's `## Review notes` for the
    human's PR review.
 
@@ -302,11 +301,19 @@ TodoWrite ledger. The count is that round's open Blocking and Major
 total, so an operator watching the ledger can tell a converging loop
 from a stuck one.
 
-**Recovery after a terminal halt**: a human addresses the unresolved
-findings by hand (editing the design or the code) and re-invokes the
-same `/team-*` command bare. The aggregate round counter is
-session-scoped through TodoWrite and starts fresh on re-invocation. The
-design `revision` counter persists in `design.md` frontmatter.
+**Recovery after an operator stop, a context-exhausted session, or a
+fail-closed halt**: a human re-invokes the same `/team-*` command bare.
+Each command runs its own phase and names the next one to run. What
+the human can fix first differs by gate.
+
+The design-review gate writes every round's findings to
+`design-review-<n>.md`, so they are on disk to read before editing
+`design.md`. The aggregate gate persists none of its findings. So
+`/team-implement` resumes at the reviewer-dispatch step, and the five
+reviewers re-derive the open set at the cost of one round. The aggregate
+round counter is session-scoped through TodoWrite and starts fresh on
+re-invocation. The design `revision` counter persists in `design.md`
+frontmatter.
 
 ### Phase 8: PR
 
@@ -391,8 +398,9 @@ itself mean reviewer.
 
 Three more balances bound the checks themselves:
 
-- **The veto is bounded.** The review loop is capped at 5 rounds, then halts to a
-  human with the unresolved findings. See
+- **The veto ends on agreement, not on a count.** The review loop runs until no
+  Blocking or Major finding is left. A check that can never be satisfied grinds
+  until a person stops the run. See
   `skills/review-severity-tiers/SKILL.md`.
 - **The check has a check.** The optional skeptic pass is default-keep. An
   inconclusive refutation leaves the finding standing, so the pass removes false
@@ -980,7 +988,7 @@ children are confirmed, and the depth cap is stable.
   the typed failure retry loop. It returns a compact terminal verdict for
   the orchestrator to render:
   `{verdict: PASS | CONDITIONAL | ESCALATE, rounds, findings[]}`. This
-  keeps up to 25 reviewer reports out of the orchestrator's long-lived
+  keeps every reviewer report out of the orchestrator's long-lived
   context. Needs: a terminal-verdict envelope protocol, because the
   no-consult rule means no mid-loop user interaction exists to forward.
   It also needs per-round state artifacts

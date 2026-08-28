@@ -744,20 +744,21 @@ describe("design-review gate brief (L2 drift tripwire)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Terminal review caps — free L2 content tripwire (docs/testing.md §2).
-// A review cap (aggregate rounds or design revisions) is terminal: the run
-// halts and reports every unresolved finding. It never consults the user
-// mid-run.
+// The no-consult rule — free L2 content tripwire (docs/testing.md §2). While a
+// Blocking or Major finding is open the review loop runs automatically: it
+// never stops mid-run to hand the finding to the user. The rule is owned by
+// skills/review-severity-tiers/SKILL.md and restated by both copies of the
+// aggregate loop, so all three files must stay clear of escalation wording.
 // ---------------------------------------------------------------------------
 
-describe("terminal review caps (L2 tripwire)", () => {
+describe("the no-consult rule (L2 tripwire)", () => {
   for (const name of ["team", "team-implement", "review-severity-tiers"]) {
-    test(`${name} SKILL halts at cap instead of escalating to the user`, () => {
+    test(`${name} SKILL never escalates an open finding to the user mid-run`, () => {
       const text = read(join(REPO_ROOT, "skills", name, "SKILL.md"));
+      // Guard: an empty or moved file must fail, not vacuously pass the
+      // absence check below.
+      expect(text.length).toBeGreaterThan(0);
       expect(text).not.toContain("escalate to the user");
-      // Halt-and-report language: the halt names the unresolved findings.
-      expect(/halt/i.test(text)).toBe(true);
-      expect(/unresolved/i.test(text)).toBe(true);
     });
   }
 });
@@ -915,11 +916,24 @@ describe("checks and balances", () => {
     });
   }
 
-  test("the review loop cap is bounded and stated as a number", () => {
-    // An unbounded veto is its own failure mode: a check that can never be
-    // satisfied must hand the work to a human, not spin.
+  test("both copies of the aggregate loop load the severity-tier authority", () => {
+    // Nothing bounds the review loop by a count, so its exit condition is the
+    // aggregate — and one skill owns it. Both loop copies must instruct a load
+    // of that skill, or a reader of either one alone learns no exit condition.
+    // A load is the bare name through the Skill tool, never a path
+    // (tests/helpers/skill-refs.ts).
+    const team = read(join(REPO_ROOT, "skills", "team", "SKILL.md"));
+    const implement = read(join(REPO_ROOT, "skills", "team-implement", "SKILL.md"));
+    expect(loadsSkill(team, "review-severity-tiers")).toBe(true);
+    expect(loadsSkill(implement, "review-severity-tiers")).toBe(true);
+  });
+
+  test("the severity-tier authority still carries the ## Aggregating Verdicts section", () => {
+    // The load above is only worth having while its target section exists: a
+    // load of a skill whose aggregate section was deleted is a dangling
+    // reference that the two `loadsSkill` checks above cannot see.
     const tiers = read(join(REPO_ROOT, "skills", "review-severity-tiers", "SKILL.md"));
-    expect(/\b5 rounds\b/.test(tiers)).toBe(true);
+    expect(/^## Aggregating Verdicts$/m.test(tiers)).toBe(true);
   });
 
   test("both copies of the design loop speak the APPROVE and COMMENT verdict vocabulary", () => {
@@ -1058,22 +1072,26 @@ describe("the worktree phase preflights the environment", () => {
 });
 
 // ---------------------------------------------------------------------------
-// No stated revision cap — free L2 forbidden-pattern sweep (docs/testing.md
-// §2, forbidden-pattern form). The DESIGN review loop no longer stops on a
-// count: it ends on the verdict. So no doc, skill, or agent prompt may state a
-// revision limit, or describe a halt caused by reaching one. One test per
-// pattern, over every .md file under docs/, skills/, and agents/, plus
-// README.md and AGENTS.md. docs/plans/ is pipeline state and CHANGELOG.md is
-// append-only history naming a cap that really did exist; neither is scanned.
+// No stated round or revision cap — free L2 forbidden-pattern sweep
+// (docs/testing.md §2, forbidden-pattern form). Neither review loop stops on a
+// count: DESIGN ends on the verdict, IMPLEMENT ends when no Blocking and no
+// Major finding remains. So no doc, skill, or agent prompt may state a round
+// or revision limit, or describe a halt caused by reaching one. Seven
+// patterns, one test each, over every .md file under docs/, skills/, and
+// agents/, plus README.md and AGENTS.md. docs/plans/ is pipeline state and
+// CHANGELOG.md is append-only history naming a cap that really did exist;
+// neither is scanned.
 //
 // Each test fires its pattern at a planted positive before trusting a clean
 // offender list (the planted-positive discipline in docs/testing.md §2): a
 // sweep whose pattern can no longer see the text it was written against
 // reports clean for the wrong reason. Each planted sample is the real text
-// from the site that motivated the pattern, its line wrap included.
+// from the site that motivated the pattern, its line wrap included; the
+// at-or-under-cap sample straddles that wrap, so one planted positive also
+// proves flat() feeds the matcher.
 // ---------------------------------------------------------------------------
 
-describe("no stated revision cap (L2 forbidden-pattern sweep)", () => {
+describe("no stated round or revision cap (L2 forbidden-pattern sweep)", () => {
   // All .md files under `dir` (relative to REPO_ROOT), recursively, skipping
   // docs/plans/ — pipeline state is never scanned.
   function mdFilesUnder(dir: string): string[] {
@@ -1100,6 +1118,12 @@ describe("no stated revision cap (L2 forbidden-pattern sweep)", () => {
 
   const CAP_PATTERNS = [
     {
+      label: "a five-round review bound",
+      pattern: /\b(?:5|five)[-\s]rounds?\b/i,
+      planted:
+        "- **Bounded veto.** The review loop is capped at five rounds, then halts to a\n  human.",
+    },
+    {
       label: "a five-revision design bound",
       pattern: /\b(?:5|five)[-\s]revisions?\b/i,
       planted:
@@ -1110,6 +1134,27 @@ describe("no stated revision cap (L2 forbidden-pattern sweep)", () => {
       pattern: /revision:\s*5\b/,
       planted:
         "   frontmatter, then a fresh review round runs. Cap at `revision: 5`. At\n   cap, halt terminally and report the unresolved findings — no PR.",
+    },
+    {
+      label: "a cap whose value is 5",
+      pattern: /\bcap(?:ped)?\s+(?:at\s+|is\s+)?(?:5|five)\b/i,
+      planted:
+        "`revision: <n+1>` in the new draft's frontmatter. The cap is 5. At the\ncap, the run halts terminally.",
+    },
+    {
+      label: "a round-count comparison against 5",
+      pattern: /\bround count\s*[<>≥≤]=?\s*(?:5|five)\b/i,
+      planted:
+        "   - If round count ≥ 5: **halt** with a full unresolved-findings\n     summary — terminal; no PR is opened.",
+    },
+    {
+      label: "a branch taken at or under a cap",
+      // The planted sample is the line-wrapped instance on purpose: "At the"
+      // and "cap" sit on different lines, so this pattern matches only once
+      // flat() has joined them.
+      pattern: /\b(?:at|under)\s+(?:the\s+)?cap\b/i,
+      planted:
+        "`revision: <n+1>` in the new draft's frontmatter. The cap is 5. At the\ncap, the run halts terminally.",
     },
     {
       label: "a revision cap or revision budget",
@@ -1135,12 +1180,12 @@ describe("no stated revision cap (L2 forbidden-pattern sweep)", () => {
 
 // ---------------------------------------------------------------------------
 // The IMPLEMENT round item names the open finding count — free L2 drift
-// tripwire (docs/testing.md §2, template-string form). A round number alone
-// does not tell the operator whether the loop is converging, so every round
-// item from round 2 on carries the open Blocking and Major count. Three files
-// restate that item and must carry one literal. The round-1 TodoWrite seed
-// keeps the bare label: it is written before the implementer runs, so no
-// aggregate has sorted anything and no count exists.
+// tripwire (docs/testing.md §2, template-string form). With no round cap, a
+// round number alone does not tell the operator whether the loop is
+// converging, so every round item from round 2 on carries the open Blocking
+// and Major count. Three files restate that item and must carry one literal.
+// The round-1 TodoWrite seed keeps the bare label: it is written before the
+// implementer runs, so no aggregate has sorted anything and no count exists.
 // ---------------------------------------------------------------------------
 
 const ROUND_ITEM = "Review round <n+1> (<b> Blocking, <m> Major open)";

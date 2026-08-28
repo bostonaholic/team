@@ -109,10 +109,10 @@ loop:
        failure, advance.
      - ROUTER-EMIT (worktree, PR): perform the action.
      - AGGREGATE (5 reviewers): dispatch in parallel, collect results,
-       sort findings into severity tiers; auto-loop on any Blocking or
-       Major finding (never consulting the user), tracking the round count
-       in TodoWrite, capped at 5 rounds (at cap, terminal halt); record
-       Minor-and-below for the PR body's `## Review notes`.
+       sort findings into severity tiers; auto-loop while any Blocking or
+       Major finding remains (never consulting the user), tracking the
+       round count in TodoWrite; record Minor-and-below for the PR body's
+       `## Review notes`.
   7. Update TodoWrite — mark current phase `completed` and the next one
      `in_progress`.
   8. Goto loop.
@@ -431,24 +431,31 @@ returned:
    item. From there on, append an item like
    `Review round <n+1> (<b> Blocking, <m> Major open)` each retry. `<b>`
    and `<m>` are this round's open counts from the tier sort above.
-   Cap at 5 rounds.
-4. While any **Blocking or Major** finding remains and under cap → dispatch
+4. While any **Blocking or Major** finding remains → dispatch
    implementer to fix, passing the typed failure class(es). After fixes, all
    5 reviewers re-run from scratch. **Never** stop to consult the user while a
    Blocking or Major finding is open — loop automatically (the no-consult
    rule).
-5. If at cap → **terminal halt**: report every unresolved finding with
-   its severity tier, naming the absolute worktree-rooted
-   `docs/plans/<id>/` artifact path so the human can inspect the run's
-   record directly. When `cross-model-notes.md` exists, name it beside
-   the unresolved findings and the artifact path, so every round's
-   external-review disposition stays visible at the halt. No PR is
-   opened, no consultation happens — the run ends there.
-6. Once Blocking and Major are clean → record any **Minor-and-below**
+5. Once Blocking and Major are clean → record any **Minor-and-below**
    findings for the PR body's `## Review notes` section, tagged by source
    reviewer. Never present them mid-run, and advance to PR
    **in the same turn**. Do not summarize and end the turn. The run is
    complete only when the draft PR URL is reported.
+
+**Recovery**: after an operator stop or a context-exhausted session, the
+open findings are gone. No reviewer holds a write tool, so no round's
+findings are on disk. The TodoWrite round item carries counts rather than
+findings. The design-review gate is the opposite case, because it writes
+every round's findings to disk for a person to read before the fix.
+
+Here, re-invoke `/team-implement` bare. That command resumes the phase at
+its reviewer-dispatch step, because `plan.md`, the tests, and the slice
+commits are already on the branch. The five reviewers there re-derive the
+current finding set, which the loop then fixes, at the cost of one round.
+The round counter is session-scoped through TodoWrite and starts fresh on
+re-invocation. A re-invoked session seeds no `PR` phase item, so
+`/team-implement` reads as standalone and names `/team-pr` as the next
+command. Run it to reach the draft PR.
 
 **The loop is: IMPLEMENT → VERIFY (5 reviewers) → typed gate check →
 IMPLEMENT → VERIFY → ...** Each round is a complete re-review.

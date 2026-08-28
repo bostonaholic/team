@@ -208,7 +208,7 @@ argument shape.
   verify sub-pipeline. The verify loop sorts findings into Blocking / Major
   / Minor-and-below tiers. While any Blocking or Major remains it
   re-dispatches the implementer automatically without consulting the user
-  (the no-consult rule), capped at 5 rounds. At the cap, terminal halt.
+  (the no-consult rule), until no Blocking or Major finding remains.
   Minor-and-below findings are recorded in the PR body's `## Review notes`
   once Blocking and Major are clean, and never surfaced mid-run.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
@@ -921,8 +921,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   which maps every reviewer vocabulary onto one scale. Findings are never
   presented mid-run: the orchestrator loops the implementer automatically
   on Blocking/Major and defers Minor-and-below to the PR body's
-  `## Review notes`, capped at 5 rounds (at the cap, terminal halt).
-  Classifies `ux-reviewer` REQUEST CHANGES as an auto-fixed Major.
+  `## Review notes`. Classifies `ux-reviewer` REQUEST CHANGES as an
+  auto-fixed Major.
 
 ### [engineering-standards](https://github.com/bostonaholic/team/blob/main/skills/engineering-standards/SKILL.md)
 
