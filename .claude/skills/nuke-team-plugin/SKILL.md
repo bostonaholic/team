@@ -329,6 +329,101 @@ git -C "$WORKTREE" commit -S -m "experiment: nuke Team's instruction surface (${
 If signing fails, stop here, print the command and its verbatim error, and
 print the recovery line from `## NUKE.md template`. Never commit unsigned.
 
+### Step 7 — repoint the plugin cache
+
+The deletions are inert until this step: Team's skills, agents and hooks are
+live in a session because the plugin is *installed*, not because files sit in a
+checkout. The dev install is a symlink under `~/.claude/plugins/cache/team-dev/team/`
+pointing at the primary clone; repointing it at the experiment worktree is what
+makes the nuke real.
+
+**Find the entry by proof, never by arithmetic.** The live entry was named by
+whichever checkout last ran the installer, so a directory name computed today
+can name a path that does not exist while the real link sits beside it. Match
+on the link target instead:
+
+```sh
+: "${PRIMARY_ROOT:?}"
+CACHE_DIR="${HOME}/.claude/plugins/cache/team-dev/team"
+for entry in "$CACHE_DIR"/*; do
+  [ -e "$entry" ] || [ -L "$entry" ] || continue
+  printf '%s\t%s\t%s\n' "$entry" "$([ -L "$entry" ] && echo symlink || echo directory)" "$(readlink "$entry" || true)"
+done
+```
+
+Keep the entries that are symlinks whose `readlink` target equals
+`$PRIMARY_ROOT` byte for byte. Then branch on how many there are.
+
+**Exactly one match.** Ask for an explicit confirmation first — this changes
+what every Claude Code session on the machine loads. Name the entry, its
+current target, and the worktree it will point at. Only after the user agrees:
+
+```sh
+: "${PRIMARY_ROOT:?}"
+: "${WORKTREE:?}"
+: "${CACHE_ENTRY:?}"
+ln -sfn "$WORKTREE" "$CACHE_ENTRY"
+readlink "$CACHE_ENTRY"
+```
+
+`ln -sfn` replaces the link in place. Never append a trailing slash to a
+symlink path in a removal command: BSD `rm -rf link/` follows the link and
+empties the checkout behind it.
+
+**Two or more matches.** Refuse the repoint, keep the commit, and list every
+entry with its `readlink` target so the maintainer can retire the duplicates by
+hand.
+
+**Zero matches.** Refuse the repoint, keep the commit, and give the remediation
+for the case actually found — a blanket "run the installer" is a no-op in two
+of the four, because the dev installer short-circuits on a link that already
+points at its own checkout and skips any path that is already a symlink:
+
+- *No entry at all under the cache directory* — Team was never dev-installed
+  here. Run `script/dev-install claude` from `$PRIMARY_ROOT`.
+- *A symlink pointing at a `team-nuke-<date>` worktree of this same clone* — an
+  earlier experiment is still live. This is this skill's own doing, not a stale
+  foreign link. Name the date it carries and give both ways forward: finish
+  that experiment through its `NUKE.md` teardown, or undo its cache link
+  (relink the entry at `$PRIMARY_ROOT`) and re-run.
+- *A symlink pointing anywhere else* (another clone, or a linked worktree that
+  ran the installer) — the installer skips an existing symlink, so it does
+  nothing here. Print the entry path and its `readlink` target, and say to
+  `rm <entry>` first, then run `script/dev-install claude` from
+  `$PRIMARY_ROOT`.
+- *A real directory* — a plain, non-dev install. Run `script/dev-install claude`
+  from `$PRIMARY_ROOT`, which does relink that shape.
+
+Print the remediation; never run it. Removing another checkout's install is a
+machine-wide change, and this skill asks before every one of those.
+
+**A declined or failed repoint is not a failure of the run.** The commit
+stands. Print the exact command that would complete it and say the experiment
+is inert until it runs. Never roll a commit back to fix a machine-local step.
+
+## Final report
+
+Report all of this, every run:
+
+- **The repoint is machine-wide.** While the link points at the worktree, every
+  Claude Code session on this machine, in every repo, loads a Team with no
+  skills, no agents and no hooks. Live sessions keep whatever they loaded at
+  start; the change lands on their next restart.
+- **The one-line undo**, ready to paste:
+  `ln -sfn <primary root> <cache entry>`. It is idempotent and loses nothing.
+- **Known contamination.** The experiment is not a clean room. These survive
+  and are reported, never deleted: `~/.claude/CLAUDE.md`, `~/.claude/skills/`,
+  and any `CLAUDE.md` in an ancestor directory of the worktree path. The run
+  measures "Team removed", not "no instructions".
+- **The primary checkout is partially nuked from a session's point of view.**
+  It keeps its own `AGENTS.md` and `.claude/`, but loses every runtime skill
+  while the link is moved. Work in the worktree.
+- **The worktree's test suite is red by construction** — `tests/` survives
+  while its targets do not. **Do not repair them.** Repairing them is
+  contamination of the experiment.
+- Anything the run warned about: a dirty or ahead primary checkout, a rejected
+  tag push, a declined or failed repoint.
+
 ## NUKE.md template
 
 Step 6 writes `NUKE.md` at the worktree root. **Every value is written
@@ -364,6 +459,19 @@ agents/implementer file agents/implementer.md present -
 runtime-hooks group hooks/ present - .claude-plugin/plugin.json present 3b5d0c1a7f4e29806b5a4c3d2e1f0a9b8c7d6e5f
 dev-hooks group .claude/hooks/ present - .claude/settings.json present 8a4c2e6019bd7f35c4b3a2918070f6e5d4c3b2a1
 ```
+
+### The cache undo
+
+Idempotent, and it loses nothing: it points the dev install back at the primary
+clone, so the next session loads Team as it was. Written with the run's literal
+entry path and primary root, never a variable:
+
+```
+ln -sfn /Users/<you>/code/bostonaholic/team /Users/<you>/.claude/plugins/cache/team-dev/team/0.59.0
+```
+
+Running it does not end the experiment: the branch, the worktree and the
+archive all stay exactly as they were.
 
 ### Read-only inspection
 
@@ -419,7 +527,6 @@ the archive — but the experiment's own output is.
 
 ## Completion
 
-Report, in this order: the archive SHA and the branch it came from; the
-baseline tag and whether the push succeeded; the worktree path and the commit
-SHA; anything the run warned about (a dirty or ahead primary checkout, a
-rejected push); and the recovery line above.
+State the facts of the run — the archive SHA and the branch it came from, the
+baseline tag and whether its push succeeded, the worktree path and the commit
+SHA, and the recovery line above — then everything `## Final report` lists.
