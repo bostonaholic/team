@@ -1132,3 +1132,34 @@ describe("no stated revision cap (L2 forbidden-pattern sweep)", () => {
     });
   }
 });
+
+// ---------------------------------------------------------------------------
+// The IMPLEMENT round item names the open finding count — free L2 drift
+// tripwire (docs/testing.md §2, template-string form). A round number alone
+// does not tell the operator whether the loop is converging, so every round
+// item from round 2 on carries the open Blocking and Major count. Three files
+// restate that item and must carry one literal. The round-1 TodoWrite seed
+// keeps the bare label: it is written before the implementer runs, so no
+// aggregate has sorted anything and no count exists.
+// ---------------------------------------------------------------------------
+
+const ROUND_ITEM = "Review round <n+1> (<b> Blocking, <m> Major open)";
+
+describe("the IMPLEMENT round item carries the open finding count (L2 tripwire)", () => {
+  test("all three restating files carry the round-item template byte-identically", () => {
+    expect(read(join(REPO_ROOT, "skills", "team", "SKILL.md"))).toContain(ROUND_ITEM);
+    expect(read(join(REPO_ROOT, "skills", "team-implement", "SKILL.md"))).toContain(ROUND_ITEM);
+    expect(read(join(REPO_ROOT, "docs", "architecture.md"))).toContain(ROUND_ITEM);
+  });
+
+  test("the round-1 TodoWrite seed keeps the bare label and carries no count", () => {
+    const seed = read(join(REPO_ROOT, "skills", "team-implement", "SKILL.md"))
+      .split("\n")
+      .filter((line) => line.includes("Review round 1"))
+      .join("\n");
+    // Guard: a renamed or deleted seed line must fail, not vacuously pass the
+    // absence check below.
+    expect(seed.length).toBeGreaterThan(0);
+    expect(seed).not.toContain(ROUND_ITEM);
+  });
+});

@@ -167,7 +167,11 @@ Before any agent dispatch, decide where to work:
 8. While any **Blocking or Major** finding remains:
    - Record the typed failure class(es) (security, lint, typecheck, build,
      test, review, suggestion, ux).
-   - Append `Review round <n+1>` to the TodoWrite ledger.
+   - Append `Review round <n+1> (<b> Blocking, <m> Major open)` to the
+     TodoWrite ledger, where `<b>` and `<m>` are the counts the tier sort
+     just produced. The count starts on the round-2 item: the round-1 seed
+     is written before the implementer runs, so no aggregate has sorted
+     anything yet.
    - If round count < 5: re-dispatch implementer with the typed class(es),
      then re-dispatch ALL 5 reviewers for a fresh review.
    - If round count ≥ 5: **halt** with a full unresolved-findings

@@ -296,8 +296,11 @@ No gate. The plan is mechanically derived from the structure.
    findings are recorded in the PR body's `## Review notes` for the
    human's PR review.
 
-The orchestrator tracks the round count by appending "Review round N"
-items to the TodoWrite ledger.
+The orchestrator tracks the round count by appending
+`Review round <n+1> (<b> Blocking, <m> Major open)` items to the
+TodoWrite ledger. The count is that round's open Blocking and Major
+total, so an operator watching the ledger can tell a converging loop
+from a stuck one.
 
 **Recovery after a terminal halt**: a human addresses the unresolved
 findings by hand (editing the design or the code) and re-invokes the
