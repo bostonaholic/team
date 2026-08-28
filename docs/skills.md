@@ -154,7 +154,7 @@ argument shape.
 - **Key behaviors:** Dispatches the design-author to write a ~200-line
   `design.md`. The design-author resolves its own open questions as
   recorded assumptions. The skill then runs the adversarial design-review
-  loop (`design-review-<n>.md`, where APPROVE and COMMENT advance, cap 5).
+  loop (`design-review-<n>.md`, where APPROVE and COMMENT advance).
   The cross-model pass
   runs before every design-review round,
   feeding `cross-model-notes.md` and `cross-model-raw.md`.

@@ -104,7 +104,7 @@ loop:
        "Design Review Gate (design)" below); write the verdict to
        `design-review-<n>.md`. On APPROVE or COMMENT, advance. On
        REQUEST CHANGES, re-dispatch design-author with the findings
-       verbatim and `revision: <n+1>`, capped at 5 → terminal halt.
+       verbatim and `revision: <n+1>`; a fresh review round follows.
      - MECHANICAL (tests-failing): run the suite; on assertion-only
        failure, advance.
      - ROUTER-EMIT (worktree, PR): perform the action.
@@ -312,14 +312,23 @@ When the `design-author` returns a draft:
    the same turn.
 7. On **REQUEST CHANGES** → re-dispatch `design-author` with the reviewer's
    findings verbatim. The new draft increments `revision: <n+1>` in its
-   frontmatter, then a fresh review round runs. Cap at `revision: 5`. At
-   cap, halt terminally and report the unresolved findings — no PR. The
-   halt message names the absolute worktree-rooted `docs/plans/<id>/` path,
-   so the human can open `design.md` and the `design-review-<n>.md` records
-   directly.
+   frontmatter, then a fresh review round runs. The loop ends on the
+   verdict: it keeps re-drafting and re-reviewing for as long as the
+   reviewer returns REQUEST CHANGES.
 8. On an **unparseable verdict or a reviewer crash** → re-dispatch the
    review once with the error. On second failure, halt loudly. Never
-   advance on a missing verdict — fail closed.
+   advance on a missing verdict — fail closed. The halt message names the
+   absolute worktree-rooted `docs/plans/<id>/` path, so the operator can
+   open `design.md` and the `design-review-<n>.md` records directly. After
+   an operator stop, a context-exhausted session, or this fail-closed
+   halt, edit `design.md` by hand and re-invoke `/team-design` bare. That
+   command resumes at its own review step and never re-drafts an existing
+   `design.md`. It then stops and names `/team-structure` as the next
+   command. `/team` also resumes when you give it the same description or
+   ticket. Setup steps 4 through 7 re-derive `<id>` and fast-forward the
+   ledger to the first incomplete phase. A recovered run can instead
+   continue one phase command at a time, through `/team-implement` and
+   `/team-pr`.
 
 ### Structure (no gate — autonomous)
 

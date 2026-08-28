@@ -20,7 +20,7 @@ WORKTREE -> QUESTION -> RESEARCH -> DESIGN -> STRUCTURE -> PLAN -> IMPLEMENT -> 
 | **WORKTREE** | git worktree on branch `<id>` off `origin/HEAD`, with `docs/plans/<id>/` authored inside it | HARD — the worktree must exist before QUESTION authors artifacts |
 | **QUESTION** | `task.md` (full description, human-only) and `questions.md` (neutral questions plus a "Codebase context" section naming files, modules, and vocabulary but NOT the goal) | HARD — both on disk |
 | **RESEARCH** | `research.md` | HARD — artifact on disk |
-| **DESIGN** | `design.md` (~200 lines) plus one `design-review-<n>.md` per round | REVIEW — adversarial design review. APPROVE/COMMENT advance; REQUEST CHANGES re-drafts, cap 5 → terminal halt |
+| **DESIGN** | `design.md` (~200 lines) plus one `design-review-<n>.md` per round | REVIEW — adversarial design review. APPROVE/COMMENT advance; REQUEST CHANGES re-drafts and a fresh round reviews the new draft |
 | **STRUCTURE** | `structure.md` (~2 pages of vertical slices) | NONE — autonomous |
 | **PLAN** | `plan.md` | SOFT — no approval. The reviewed design is the contract |
 | **IMPLEMENT** | production code, passing tests, per-slice commits | AGGREGATE — security, verifier, and code-review hard gates |

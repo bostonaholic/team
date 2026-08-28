@@ -125,12 +125,14 @@ done
    - **APPROVE or COMMENT** — the review passes. Advance.
    - **REQUEST CHANGES** — re-dispatch `design-author` with the
      reviewer's findings verbatim. The agent re-drafts and increments
-     `revision: <n+1>`, then a fresh review round runs. Cap at
-     `revision: 5`; at cap, halt terminally and report the unresolved
-     findings. Recovery: a human revises `$ARGUMENTS/design.md` by
-     hand and re-invokes `/team-design` bare — the run resumes at this
-     gate. The `revision` counter persists in `design.md` frontmatter;
-     hand-lower it to restore the revision budget.
+     `revision: <n+1>`, then a fresh review round runs. The loop ends
+     on the verdict, so REQUEST CHANGES keeps re-drafting for as many
+     rounds as it takes. Recovery runs after an operator stop, a
+     context-exhausted session, or the fail-closed halt below. A person
+     revises `$ARGUMENTS/design.md` by hand and re-invokes
+     `/team-design` bare. The run then resumes at this gate, per the
+     resume branch at step 2. The `revision` counter persists in
+     `design.md` frontmatter.
    - **Unparseable verdict or reviewer crash** — retry the review once
      with the error; on second failure, halt loudly. Fail closed —
      never advance on a missing verdict.

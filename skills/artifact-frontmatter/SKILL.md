@@ -77,8 +77,8 @@ when the highest-`<n>` file carries APPROVE or COMMENT.
 **Review loop**: on REQUEST CHANGES, the orchestrator re-dispatches
 `design-author` with the reviewer's findings verbatim. The new draft
 increments `revision: <n+1>` in its frontmatter and a fresh review round
-runs. Cap at 5 revisions. At cap, the run halts terminally and reports
-the unresolved findings — no consultation, no PR.
+runs. A missing or non-numeric `revision` reads as `0`, so the next draft
+writes `revision: 1` and a bad value never stops the run.
 
 **Cross-model notes record** (`cross-model-notes.md`): orchestrator-written
 and append-only — one `### Cross-model disposition` block per review round,

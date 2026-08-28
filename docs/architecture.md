@@ -125,8 +125,7 @@ highest-`<n>` file carries APPROVE or COMMENT.
 
 **Review loop** (REQUEST CHANGES): the design-author re-drafts with the
 reviewer's findings verbatim. The orchestrator increments
-`revision: <n+1>` in the new draft's frontmatter. The cap is 5. At the
-cap, the run halts terminally.
+`revision: <n+1>` in the new draft's frontmatter.
 
 **Phase inference** (orchestrator + hooks):
 
@@ -253,7 +252,6 @@ The subagent holds no Write or Edit tools, so the reviewer cannot touch
 the artifacts it judges. The orchestrator records the verdict to
 `design-review-<n>.md`. APPROVE and COMMENT advance. On REQUEST CHANGES
 the agent re-drafts with the findings verbatim and increments `revision`.
-At cap 5 the run halts terminally.
 
 ### Phase 5: Structure
 
@@ -301,12 +299,11 @@ No gate. The plan is mechanically derived from the structure.
 The orchestrator tracks the round count by appending "Review round N"
 items to the TodoWrite ledger.
 
-**Recovery after a terminal halt** (either cap): a human addresses the
-unresolved findings by hand (editing the design or the code) and
-re-invokes the same `/team-*` command bare. The aggregate round counter
-is session-scoped through TodoWrite and starts fresh on re-invocation.
-The design `revision` counter persists in `design.md` frontmatter. Lower
-it by hand to restore the revision budget.
+**Recovery after a terminal halt**: a human addresses the unresolved
+findings by hand (editing the design or the code) and re-invokes the
+same `/team-*` command bare. The aggregate round counter is
+session-scoped through TodoWrite and starts fresh on re-invocation. The
+design `revision` counter persists in `design.md` frontmatter.
 
 ### Phase 8: PR
 

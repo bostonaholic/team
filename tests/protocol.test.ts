@@ -922,6 +922,23 @@ describe("checks and balances", () => {
     expect(/\b5 rounds\b/.test(tiers)).toBe(true);
   });
 
+  test("both copies of the design loop speak the APPROVE and COMMENT verdict vocabulary", () => {
+    // The DESIGN loop exits on the verdict token, so both copies must still
+    // carry the two values that end it (skills/artifact-frontmatter/SKILL.md).
+    // Residual: both files also use the tokens away from their exit branch —
+    // in resume detection, in the phase-loop sketch, in the stop condition,
+    // and in the `verdict:` frontmatter enum — so a whole-file check stays
+    // green if someone deletes the exit branch itself. This pins the verdict
+    // vocabulary, not the branch; whether the branch still acts on the token
+    // is a meaning question, deferred to the L5/L6 tiers.
+    const design = read(join(REPO_ROOT, "skills", "team-design", "SKILL.md"));
+    const team = read(join(REPO_ROOT, "skills", "team", "SKILL.md"));
+    expect(design).toContain("APPROVE");
+    expect(design).toContain("COMMENT");
+    expect(team).toContain("APPROVE");
+    expect(team).toContain("COMMENT");
+  });
+
   // Every auto-fix tier costs a full re-review: implementer, then all five
   // reviewers again. A finding whose own label says non-blocking must not
   // carry that price, or the loop only ends when five reviewers return zero
@@ -1038,4 +1055,80 @@ describe("the worktree phase preflights the environment", () => {
     // a cold credential is worth naming, never worth stopping for.
     expect(/blocks the run/i.test(squash(TEAM))).toBe(true);
   });
+});
+
+// ---------------------------------------------------------------------------
+// No stated revision cap — free L2 forbidden-pattern sweep (docs/testing.md
+// §2, forbidden-pattern form). The DESIGN review loop no longer stops on a
+// count: it ends on the verdict. So no doc, skill, or agent prompt may state a
+// revision limit, or describe a halt caused by reaching one. One test per
+// pattern, over every .md file under docs/, skills/, and agents/, plus
+// README.md and AGENTS.md. docs/plans/ is pipeline state and CHANGELOG.md is
+// append-only history naming a cap that really did exist; neither is scanned.
+//
+// Each test fires its pattern at a planted positive before trusting a clean
+// offender list (the planted-positive discipline in docs/testing.md §2): a
+// sweep whose pattern can no longer see the text it was written against
+// reports clean for the wrong reason. Each planted sample is the real text
+// from the site that motivated the pattern, its line wrap included.
+// ---------------------------------------------------------------------------
+
+describe("no stated revision cap (L2 forbidden-pattern sweep)", () => {
+  // All .md files under `dir` (relative to REPO_ROOT), recursively, skipping
+  // docs/plans/ — pipeline state is never scanned.
+  function mdFilesUnder(dir: string): string[] {
+    const out: string[] = [];
+    for (const entry of readdirSync(join(REPO_ROOT, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) {
+        if (entry.name === "plans") continue;
+        out.push(...mdFilesUnder(rel));
+      } else if (entry.name.endsWith(".md")) {
+        out.push(rel);
+      }
+    }
+    return out;
+  }
+
+  const SWEPT_FILES = [
+    ...mdFilesUnder("docs"),
+    ...mdFilesUnder("skills"),
+    ...mdFilesUnder("agents"),
+    "README.md",
+    "AGENTS.md",
+  ];
+
+  const CAP_PATTERNS = [
+    {
+      label: "a five-revision design bound",
+      pattern: /\b(?:5|five)[-\s]revisions?\b/i,
+      planted:
+        "runs. Cap at 5 revisions. At cap, the run halts terminally and reports\nthe unresolved findings — no consultation, no PR.",
+    },
+    {
+      label: "a terminal `revision: 5`",
+      pattern: /revision:\s*5\b/,
+      planted:
+        "   frontmatter, then a fresh review round runs. Cap at `revision: 5`. At\n   cap, halt terminally and report the unresolved findings — no PR.",
+    },
+    {
+      label: "a revision cap or revision budget",
+      pattern: /\brevision\s+(?:cap|budget)\b/i,
+      planted:
+        "(machine policy). The pass runs on **every design-review round**, up to\nthe revision cap. Relative to the code-review pass, the payload is a\ndesign document rather than a diff.",
+    },
+  ];
+
+  for (const { label, pattern, planted } of CAP_PATTERNS) {
+    test(`no file states ${label}`, () => {
+      // Planted positive: prove the pattern still sees the text it bans.
+      expect(pattern.test(flat(planted))).toBe(true);
+      // Guard: an empty corpus must fail, not vacuously pass the sweep.
+      expect(SWEPT_FILES.length).toBeGreaterThan(0);
+      const offenders = SWEPT_FILES.filter((rel) =>
+        pattern.test(flat(read(join(REPO_ROOT, rel)))),
+      );
+      expect(offenders).toEqual([]);
+    });
+  }
 });

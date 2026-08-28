@@ -224,6 +224,13 @@ describe("simplify orchestration scope fence", () => {
     expect(grepAbsent(["-q", "passEvent", "skills/team/registry.json"])).toBe(true);
   });
 
+  // The DESIGN loop no longer stops on a revision count, and the Markdown
+  // sweep in tests/protocol.test.ts cannot read JSON. A key that names a limit
+  // implies a limit mechanism exists, so the key is gone rather than nulled.
+  test("registry.json has no maxRevisions field", () => {
+    expect(grepAbsent(["-q", "maxRevisions", "skills/team/registry.json"])).toBe(true);
+  });
+
   test("registry.json agents array still has 13 entries", () => {
     const reg = JSON.parse(read(join(REPO_ROOT, "skills", "team", "registry.json")));
     expect(reg.agents.length).toBe(13);
