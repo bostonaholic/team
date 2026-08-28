@@ -243,3 +243,10 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 - **3 hooks** in `hooks/`: `docs/plans/`-aware compaction resilience and plugin-file validation
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
 - **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.
+
+## References and inspiration
+
+- [matanshavit/qrspi](https://github.com/matanshavit/qrspi/tree/main) — the QRSPI workflow: a phased Claude Code methodology that splits complex coding tasks into sequential steps, each producing a markdown artifact the next phase consumes
+- [mattpocock/skills](https://github.com/mattpocock/skills) — a collection of agent skills and workflows targeting common AI-assisted development failure modes
+- [cursor/plugins — pstack](https://github.com/cursor/plugins/tree/main/pstack) — engineering skills and playbooks that route tasks to appropriate models and verification strategies
+- [garrytan/gstack](https://github.com/garrytan/gstack) — a collection of AI-assisted workflow tools for Claude Code with specialized roles (product review, engineering management, QA, release) as slash commands
