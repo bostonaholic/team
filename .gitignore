@@ -23,6 +23,8 @@ docs/plans/
 .playwright-mcp/
 
 # Jekyll site build artifacts
+# regenerated from the live Releases API on every build
+docs/rss.xml
 docs/_site/
 docs/.jekyll-cache/
 docs/.sass-cache/

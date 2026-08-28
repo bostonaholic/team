@@ -7,6 +7,9 @@ on:
       - "docs/**"
       - "!docs/plans/**" # plans are excluded from the site (_config.yml exclude)
       - ".github/workflows/pages.yml"
+      # the release feed generator: editing it must redeploy the site
+      - "scripts/build-release-feed.ts"
+      - "script/build-release-feed"
   workflow_dispatch:
 
 permissions:
@@ -28,6 +31,22 @@ jobs:
           working-directory: docs # reads docs/.ruby-version
           bundler-cache: true
       - uses: actions/configure-pages@v6
+      # The feed generator imports only node: builtins, so no `bun install`.
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install xmllint
+        # The well-formedness check hard-gates the deploy, so the workflow
+        # declares the package rather than inheriting it from the runner image.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxml2-utils
+      - name: Build the release feed
+        # Runs from the repo root, which the wrapper anchors itself at anyway.
+        # `gh` and `jq` come from the runner image.
+        run: script/build-release-feed
+        env:
+          GH_TOKEN: ${{ github.token }}
       - name: Build site
         working-directory: docs
         run: bundle exec jekyll build

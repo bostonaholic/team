@@ -5,6 +5,8 @@
 title: Team
 description: Autonomous feature delivery for Claude Code
 url: "https://team.bostonaholic.dev"
+# rss.xml derives its absolute URLs from `url` alone, so a non-empty baseurl
+# means teaching script/build-release-feed to concatenate it.
 baseurl: ""
 author: Matthew Boston
 

@@ -32,7 +32,7 @@ commands:
       antigravity: "script/dev-uninstall antigravity"
   docs:
     desc: "Build and serve the docs site locally at http://localhost:4000"
-    run: "cd docs && bundle config set --local path 'vendor/bundle' && bundle install && bundle exec jekyll serve --livereload"
+    run: "script/build-release-feed && cd docs && bundle config set --local path 'vendor/bundle' && bundle install && bundle exec jekyll serve --livereload"
   evals:
     desc: "Run the paid behavioral evals — live agent runs + LLM judge (requires EVALS_ANTHROPIC_API_KEY; spends real money)"
     run: "bun run test:evals"

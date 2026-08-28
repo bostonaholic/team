@@ -145,3 +145,158 @@ describe("ci workflows: consuming workflows stay intact (Slice 3)", () => {
     expect(/^\s*run:\s*bun test\s*$/m.test(harness)).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// docs/plans/2026-08-28-rss-release-feed — the RSS release feed at /rss.xml.
+// ---------------------------------------------------------------------------
+
+const PAGES = WF("pages.yml");
+const RELEASE_FEED_WRAPPER = join(REPO_ROOT, "script", "build-release-feed");
+const DEV_YML = join(REPO_ROOT, "dev.yml");
+const JEKYLL_CONFIG = join(REPO_ROOT, "docs", "_config.yml");
+
+// Everything from `jobs:` onward. Slicing first matters: `on.push.paths`
+// entries carry the SAME 6-space `- ` list marker as a step, so a naive split
+// would read a path filter as a step.
+function jobsSection(text: string): string {
+  const at = text.indexOf("\njobs:");
+  return at === -1 ? "" : text.slice(at);
+}
+
+// Each step block of a job, with its offset, so ordering is an index compare
+// (the ordering tripwire at docs/testing.md:120).
+function steps(jobs: string): { body: string; at: number }[] {
+  const starts: number[] = [];
+  const marker = /\n      - /g;
+  let match: RegExpExecArray | null;
+  while ((match = marker.exec(jobs)) !== null) starts.push(match.index + 1);
+  return starts.map((start, i) => ({
+    body: jobs.slice(start, starts[i + 1] ?? jobs.length),
+    at: start,
+  }));
+}
+
+function stepContaining(jobs: string, needle: string): { body: string; at: number } {
+  return steps(jobs).find((step) => step.body.includes(needle)) ?? { body: "", at: -1 };
+}
+
+describe("ci workflows: pages.yml builds the release feed before Jekyll (Slice 1)", () => {
+  const pages = readIf(PAGES);
+  const jobs = jobsSection(pages);
+  const wrapperStep = stepContaining(jobs, "script/build-release-feed");
+
+  test("pages.yml still exists and has a jobs section", () => {
+    // Guard: an empty slice would make every ordering assertion below
+    // vacuous (docs/testing.md:172-212).
+    expect(existsSync(PAGES)).toBe(true);
+    expect(jobs.length).toBeGreaterThan(0);
+  });
+
+  test("runs script/build-release-feed as a step of the build job", () => {
+    expect(wrapperStep.body.length).toBeGreaterThan(0);
+  });
+
+  test("the wrapper step sits after ruby/setup-ruby@v1 and before Build site", () => {
+    const ruby = jobs.indexOf("ruby/setup-ruby@v1");
+    const buildSite = jobs.indexOf("name: Build site");
+    expect(ruby).toBeGreaterThan(-1);
+    expect(buildSite).toBeGreaterThan(-1);
+    expect(wrapperStep.at).toBeGreaterThan(ruby);
+    expect(wrapperStep.at).toBeLessThan(buildSite);
+  });
+
+  test("the wrapper step carries no working-directory: key (decision 6)", () => {
+    // The wrapper anchors its own paths at the repo root, so a
+    // working-directory would be a second, disagreeing contract.
+    expect(wrapperStep.body.length).toBeGreaterThan(0);
+    expect(wrapperStep.body).not.toContain("working-directory:");
+  });
+
+  test("sets up Bun before the wrapper step", () => {
+    const bun = jobs.indexOf("oven-sh/setup-bun@v2");
+    expect(bun).toBeGreaterThan(-1);
+    expect(wrapperStep.at).toBeGreaterThan(bun);
+  });
+
+  test("installs libxml2-utils, after an apt-get update, before the wrapper step", () => {
+    // xmllint is a hard gate on the deploy (decision 9), so the workflow
+    // declares the package rather than inheriting it from the runner image.
+    // The update is mandatory: a rotated package version otherwise 404s.
+    const update = jobs.indexOf("apt-get update");
+    const install = jobs.indexOf("apt-get install -y libxml2-utils");
+    expect(update).toBeGreaterThan(-1);
+    expect(install).toBeGreaterThan(update);
+    expect(wrapperStep.at).toBeGreaterThan(install);
+  });
+
+  test("the push path filter covers both generator scripts", () => {
+    // Otherwise editing the generator would never redeploy the site.
+    const header = pages.slice(0, pages.indexOf("\njobs:"));
+    expect(header.length).toBeGreaterThan(0);
+    expect(header).toContain('"scripts/build-release-feed.ts"');
+    expect(header).toContain('"script/build-release-feed"');
+  });
+});
+
+describe("ci workflows: `dev docs` builds the feed on the local path (Slice 1)", () => {
+  const dev = readIf(DEV_YML);
+  const docsRun =
+    /run: "([^"]*)"/.exec(/\n  docs:\n((?:    .*\n)+)/.exec(dev)?.[1] ?? "")?.[1] ?? "";
+
+  test("dev.yml has a docs command with a run string", () => {
+    expect(docsRun.length).toBeGreaterThan(0);
+  });
+
+  test("calls the wrapper before `cd docs`, joined by the && chain", () => {
+    const wrapper = docsRun.indexOf("script/build-release-feed");
+    const cd = docsRun.indexOf("cd docs");
+    expect(wrapper).toBeGreaterThan(-1);
+    expect(cd).toBeGreaterThan(wrapper);
+    expect(docsRun.slice(wrapper, cd)).toContain("&&");
+  });
+
+  test("adds no `|| true` and swallows no exit code (the wrapper owns tolerance)", () => {
+    // Decision 9 puts the CI-versus-local branch in ONE place. A caller-side
+    // tolerance either duplicates that rule or quietly disagrees with it.
+    expect(docsRun.length).toBeGreaterThan(0);
+    expect(docsRun).not.toContain("|| true");
+    expect(docsRun).not.toContain("|| :");
+    expect(docsRun).not.toContain("; true");
+  });
+});
+
+describe("ci workflows: the wrapper writes a temp file, checks it, then moves it (Slice 1)", () => {
+  const wrapper = readIf(RELEASE_FEED_WRAPPER);
+
+  test("script/build-release-feed exists", () => {
+    expect(existsSync(RELEASE_FEED_WRAPPER)).toBe(true);
+  });
+
+  test("runs `xmllint --noout` before the move onto docs/rss.xml", () => {
+    // No failed run may leave a truncated feed for Jekyll to publish.
+    const lint = wrapper.indexOf("xmllint --noout");
+    const move = wrapper.search(/^\s*mv\s/m);
+    expect(lint).toBeGreaterThan(-1);
+    expect(move).toBeGreaterThan(lint);
+    expect(wrapper).toContain("docs/rss.xml");
+  });
+});
+
+describe("ci workflows: baseurl stays empty for the feed's absolute URLs (decision 18)", () => {
+  const config = readIf(JEKYLL_CONFIG);
+  const lines = config.split("\n");
+  const at = lines.findIndex((line) => /^\s*baseurl:\s*""/.test(line));
+
+  test("docs/_config.yml sets baseurl to the empty string", () => {
+    expect(at).toBeGreaterThan(-1);
+  });
+
+  test("an adjacent comment names the feed as the reason", () => {
+    // The feed derives absolute URLs from `url` alone, which is only correct
+    // while baseurl is empty. A future maintainer who sets one gets a red test
+    // that says why.
+    expect(at).toBeGreaterThan(-1);
+    const neighborhood = lines.slice(Math.max(0, at - 3), at + 2).join("\n");
+    expect(neighborhood).toContain("rss.xml");
+  });
+});

@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Build the RSS release feed at docs/rss.xml, for both site build paths.
+#
+#   script/build-release-feed
+#
+# Called by .github/workflows/pages.yml before `jekyll build`, and by `dev docs`
+# before `cd docs`. This script owns every side effect: it reads the site URL
+# out of docs/_config.yml, fetches the releases with `gh`, pipes them through
+# scripts/build-release-feed.ts, checks the result with `xmllint`, and only then
+# moves it into place — so no failed run can leave a truncated feed behind.
+#
+# One failure rule lives here and nowhere else: a fetch, generate, or check
+# failure is fatal in CI and a warning locally, so no caller adds `|| true`. A
+# malformed docs/_config.yml sits outside that tolerance — a repository defect
+# is loud on both paths.
+#
+# Requires: ruby, gh, jq, bun, xmllint. `gh` and `jq` come from the runner
+# image in CI, matching .github/workflows/release-on-merge.yml.
+
+die() { printf '::error::%s\n' "$1" >&2; exit 1; }
+
+# Anchored at the repository root, never $PWD: pages.yml builds from docs/ and
+# `dev docs` cd's into it.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CONFIG="$ROOT/docs/_config.yml"
+FEED="$ROOT/docs/rss.xml"
+RELEASES_PATH='repos/bostonaholic/team/releases?per_page=100'
+# GitHub returns the pre-rendered `body_html` only under this media type.
+HTML_MEDIA_TYPE='Accept: application/vnd.github.html+json'
+SITE_URL_RE="^https://[^[:space:]\"']+\$"
+
+[ -f "$CONFIG" ] || die "no site config at $CONFIG"
+
+# Read `url` the way Jekyll reads it, then print it only as a structurally
+# valid https origin. A quote that survived, an empty host, a fragment, or a
+# path prefix would each reach the feed as a broken absolute URL.
+SITE_URL=$(ruby -ryaml -ruri -e '
+  config = YAML.load_file(ARGV[0])
+  url = config.is_a?(Hash) ? config["url"] : nil
+  exit unless url.is_a?(String)
+  begin
+    parsed = URI.parse(url.strip)
+  rescue URI::InvalidURIError
+    exit
+  end
+  exit unless parsed.scheme == "https" && parsed.host && !parsed.host.empty?
+  exit unless parsed.userinfo.nil? && parsed.query.nil? && parsed.fragment.nil?
+  exit unless parsed.path.nil? || parsed.path.empty? || parsed.path == "/"
+  origin = "#{parsed.scheme}://#{parsed.host}"
+  origin += ":#{parsed.port}" unless parsed.port == parsed.default_port
+  print origin
+' "$CONFIG") || die "could not read the site url from $CONFIG"
+
+[ -n "$SITE_URL" ] || die "$CONFIG has no usable https origin under 'url'"
+[[ "$SITE_URL" =~ $SITE_URL_RE ]] || die "site url is not a bare https origin: '$SITE_URL'"
+
+# Outside docs/, so a half-written document can never leak into the site.
+TMP="$(mktemp "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/release-feed.XXXXXX")"
+trap 'rm -f "$TMP"' EXIT
+
+build_feed() {
+  # `--paginate` prints one array per page, which `jq -s 'add'` flattens.
+  gh api --paginate "$RELEASES_PATH" -H "$HTML_MEDIA_TYPE" \
+    | jq -s 'add' \
+    | bun "$ROOT/scripts/build-release-feed.ts" "$SITE_URL" > "$TMP" || return 1
+  xmllint --noout "$TMP" || return 1
+  mv "$TMP" "$FEED"
+}
+
+if ! build_feed; then
+  [ -z "${CI:-}" ] || die "could not build the release feed"
+  printf 'warning: could not build the release feed; %s left untouched\n' "$FEED" >&2
+  exit 0
+fi
