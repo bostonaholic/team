@@ -65,11 +65,24 @@ function isNonEmptyString(value: unknown): value is string {
 }
 
 /**
+ * Drop the entries GitHub itself marks as unpublished, before any field is
+ * validated. A draft is exempt from the item field contract because it is not
+ * feed content: a draft saved without a tag carries `tag_name: ""`, and
+ * validating first would abort the whole feed over a release that was never
+ * going to appear in it.
+ */
+function isUnpublished(value: unknown): boolean {
+  if (typeof value !== "object" || value === null) return false;
+  const raw = value as Record<string, unknown>;
+  return raw.draft === true || raw.published_at === null || raw.published_at === "";
+}
+
+/**
  * Check the required half of the item field contract. `tag_name`, `html_url`,
- * and `published_at` anchor identity, link, and date, so a release missing any
- * of them fails loud rather than emitting an item with an empty element.
- * A `published_at` of null is a different case: it means never published, and
- * the filter drops it.
+ * and `published_at` anchor identity, link, and date, so a published release
+ * missing any of them fails loud rather than emitting an item with an empty
+ * element. An absent `published_at` key is one of those failures — only an
+ * explicitly null or empty one means "never published".
  */
 function toRelease(value: unknown, index: number): Release {
   if (typeof value !== "object" || value === null) {
@@ -89,11 +102,6 @@ function toRelease(value: unknown, index: number): Release {
     throw new Error(`release ${index} has a non-string 'published_at'`);
   }
   return raw as unknown as Release;
-}
-
-/** Keep a release only when it is published and is not a draft. */
-function isPublished(release: Release): boolean {
-  return isNonEmptyString(release.published_at) && release.draft !== true;
 }
 
 function parsePublishedAt(release: Release): number {
@@ -126,9 +134,12 @@ function renderItem(release: Release, time: number): string {
  * @param siteUrl the site origin, with no trailing slash
  */
 export function buildReleaseFeed(releases: unknown[], siteUrl: string): string {
+  // Payload index is carried through the filter so a validation error still
+  // names the entry the caller sent, not its position after drafts were cut.
   const dated = releases
-    .map(toRelease)
-    .filter(isPublished)
+    .map((value, index) => ({ value, index }))
+    .filter(({ value }) => !isUnpublished(value))
+    .map(({ value, index }) => toRelease(value, index))
     .map((release) => ({ release, time: parsePublishedAt(release) }));
 
   // Newest first. A tie on the second breaks on plain lexicographic descending

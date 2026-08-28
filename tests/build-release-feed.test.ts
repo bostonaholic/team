@@ -165,7 +165,7 @@ describe("buildReleaseFeed: ordering (design.md:383-398)", () => {
     const build = await loadBuilder();
     // Same instant to the second. Descending string comparison puts "v0.9.0"
     // ahead of "v0.10.0" ('9' > '1'); a semver-aware comparator would not.
-    // Decision 13 pins the plain lexicographic one — no semver dependency.
+    // The tiebreak is plain lexicographic — no semver dependency.
     const xml = build(
       [
         release({ tag_name: "v0.10.0", name: "v0.10.0", published_at: "2026-07-01T00:00:00Z" }),
@@ -209,6 +209,22 @@ describe("buildReleaseFeed: filters (decision 12)", () => {
           draft: true,
           published_at: "2026-08-01T00:00:00Z",
         }),
+      ],
+      SITE_URL,
+    );
+
+    const titles = itemBlocks(xml).map((item) => elementOf(item, "title"));
+    expect(titles).toEqual(["kept"]);
+  });
+
+  test("drops a draft with an empty tag_name instead of failing the whole feed", async () => {
+    const build = await loadBuilder();
+    // A draft saved without a tag comes back with tag_name: "". It must never
+    // reach the required-field contract, or one draft kills every item.
+    const xml = build(
+      [
+        release({ tag_name: "v1.0.0", name: "kept" }),
+        { tag_name: "", name: null, html_url: "x", published_at: null, draft: true },
       ],
       SITE_URL,
     );
@@ -308,7 +324,7 @@ describe("buildReleaseFeed: item field contract (design.md:593-620)", () => {
   });
 });
 
-// --- L1 unit: single-escape contract (decision 10) --------------------------
+// --- L1 unit: single-escape contract ----------------------------------------
 
 describe("buildReleaseFeed: body_html is XML-escaped exactly once (decision 10)", () => {
   test("escapes markup once: <h3>Fixed</h3> becomes &lt;h3&gt;Fixed&lt;/h3&gt;", async () => {

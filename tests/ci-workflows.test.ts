@@ -254,7 +254,7 @@ describe("ci workflows: `dev docs` builds the feed on the local path (Slice 1)",
   });
 
   test("adds no `|| true` and swallows no exit code (the wrapper owns tolerance)", () => {
-    // Decision 9 puts the CI-versus-local branch in ONE place. A caller-side
+    // The CI-versus-local branch lives in ONE place, the wrapper. A caller-side
     // tolerance either duplicates that rule or quietly disagrees with it.
     expect(docsRun.length).toBeGreaterThan(0);
     expect(docsRun).not.toContain("|| true");
