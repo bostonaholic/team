@@ -326,7 +326,26 @@ On every push to `main`, `release-on-merge.yml`:
 Because `version-bump` cut the section before landing, the section the release
 workflow reads is exactly what `version-bump` wrote.
 
+### The release feed
+
+A published release then dispatches `pages.yml` with `gh workflow run`, which
+rebuilds the site and, with it, the RSS feed at `/rss.xml`. The feed is
+regenerated in full from the Releases API on every build, so it always carries
+every published release. A release that no-ops (the release already existed)
+dispatches nothing.
+
 ## Recovery
+
+### The release feed is missing a release, or shows a corrected one stale
+
+Either the dispatch failed, or the `pages.yml` run it started failed, or a
+release body was edited on GitHub after the last build. The release itself is
+fine — only the feed is behind. One command fixes all three, by re-running the
+Pages deploy through its `workflow_dispatch` trigger:
+
+```bash
+gh workflow run pages.yml
+```
 
 ### `/shipit` stopped before merge (CI failed or timed out)
 

@@ -300,3 +300,57 @@ describe("ci workflows: baseurl stays empty for the feed's absolute URLs (decisi
     expect(neighborhood).toContain("rss.xml");
   });
 });
+
+describe("ci workflows: a published release dispatches the Pages build (Slice 3)", () => {
+  const release = readIf(RELEASE_ON_MERGE);
+  const jobs = jobsSection(release);
+  const tagStep = stepContaining(jobs, "name: Tag and release");
+  const releaseStepId = /^\s+id:\s*(\S+)/m.exec(tagStep.body)?.[1] ?? "";
+  const allSteps = steps(jobs);
+  const lastStep = allSteps[allSteps.length - 1] ?? { body: "", at: -1 };
+
+  test("release-on-merge.yml still has a jobs section", () => {
+    expect(jobs.length).toBeGreaterThan(0);
+  });
+
+  test("grants actions: write ALONGSIDE the existing contents: write", () => {
+    // The addition must not read as a replacement — the tag push still needs
+    // contents: write.
+    const permissions = /\npermissions:\n((?:  \S.*\n)+)/.exec(release)?.[1] ?? "";
+    expect(permissions.length).toBeGreaterThan(0);
+    expect(permissions).toContain("contents: write");
+    expect(permissions).toContain("actions: write");
+  });
+
+  test("the Tag and release step carries an id:", () => {
+    expect(tagStep.body.length).toBeGreaterThan(0);
+    expect(releaseStepId.length).toBeGreaterThan(0);
+  });
+
+  test("keeps the `gh release view` idempotence probe (decision 8 must not undo it)", () => {
+    expect(release).toContain("gh release view");
+  });
+
+  test("writes published=false on the early-exit path, before its `exit 0`", () => {
+    const published = release.indexOf("published=false");
+    const earlyExit = release.indexOf("exit 0");
+    expect(published).toBeGreaterThan(-1);
+    expect(earlyExit).toBeGreaterThan(published);
+  });
+
+  test("writes published=true after `gh release create`", () => {
+    const create = release.indexOf("gh release create");
+    const published = release.indexOf("published=true");
+    expect(create).toBeGreaterThan(-1);
+    expect(published).toBeGreaterThan(create);
+  });
+
+  test("the final step dispatches pages.yml, guarded on that step's output", () => {
+    // `gh workflow run` is the documented path: GitHub does not start a
+    // workflow from an event caused by GITHUB_TOKEN, so `on: release` would
+    // never fire for our own automation (decision 8).
+    expect(releaseStepId.length).toBeGreaterThan(0);
+    expect(lastStep.body).toContain("gh workflow run pages.yml");
+    expect(lastStep.body).toContain(`steps.${releaseStepId}.outputs.published == 'true'`);
+  });
+});

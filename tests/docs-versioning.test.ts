@@ -123,3 +123,45 @@ describe("doc drift guard: no in-tree doc points at version-bump-check.yml (#120
     });
   }
 });
+
+// ---------------------------------------------------------------------------
+// docs/plans/2026-08-28-rss-release-feed, Slice 3 — the release→Pages dispatch
+// and its one-command recovery are written down (decision 16).
+//
+// Contracts only: the workflow file name, the trigger name, and the feed path.
+// Never the wording (docs/testing.md:127-163).
+// ---------------------------------------------------------------------------
+
+// Body of a `## ` section, up to the next `## ` heading (or EOF).
+function section(md: string, heading: string): string {
+  const start = md.indexOf(`\n${heading}\n`);
+  if (start === -1) return "";
+  const rest = md.slice(start + heading.length + 2);
+  const end = rest.search(/\n## /);
+  return end === -1 ? rest : rest.slice(0, end);
+}
+
+describe("docs/versioning.md: the release feed dispatch is documented (Slice 3)", () => {
+  const doc = readIf(VERSIONING_DOC);
+  const releaseFlow = section(doc, "## Release on merge");
+  const recovery = section(doc, "## Recovery");
+
+  test("the `## Release on merge` section is findable", () => {
+    // Guard: a renamed heading would make every assertion below vacuous.
+    expect(releaseFlow.length).toBeGreaterThan(0);
+  });
+
+  test("the release flow names the Pages dispatch and the feed path", () => {
+    expect(releaseFlow).toContain("pages.yml");
+    expect(releaseFlow).toContain("/rss.xml");
+  });
+
+  test("the `## Recovery` section is findable", () => {
+    expect(recovery.length).toBeGreaterThan(0);
+  });
+
+  test("recovery names the workflow_dispatch re-run of pages.yml as the fix", () => {
+    expect(recovery).toContain("workflow_dispatch");
+    expect(recovery).toContain("pages.yml");
+  });
+});

@@ -25,6 +25,7 @@ concurrency:
 
 permissions:
   contents: write
+  actions: write # dispatch pages.yml so the new release reaches /rss.xml
 
 jobs:
   release:
@@ -40,6 +41,7 @@ jobs:
           fetch-depth: 0
 
       - name: Tag and release
+        id: release
         run: |
           set -euo pipefail
           V=$(jq -r .version .claude-plugin/plugin.json)
@@ -48,6 +50,7 @@ jobs:
 
           if gh release view "v$V" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "Release v$V already exists; nothing to do."
+            echo "published=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -69,4 +72,13 @@ jobs:
           fi
 
           gh release create "v$V" --repo "$GITHUB_REPOSITORY" --title "v$V" --notes-file notes.md
+          echo "published=true" >> "$GITHUB_OUTPUT"
           echo "Published release v$V."
+
+      - name: Refresh the release feed
+        if: steps.release.outputs.published == 'true'
+        # The feed is rebuilt by the Pages deploy, and GitHub does not start a
+        # workflow from an event caused by GITHUB_TOKEN — so dispatch it here.
+        # A failed dispatch leaves the feed stale, never broken; docs/versioning.md
+        # documents the manual re-run.
+        run: gh workflow run pages.yml
