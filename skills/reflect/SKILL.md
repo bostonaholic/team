@@ -436,9 +436,8 @@ fallback is fixed here:
 
 ### After the writes
 
-Run the repo's own check — detected through
-`skills/running-quality-checks/SKILL.md`, never invented — and report the
-verdict. A failure names the failing test and the file written. Reflect neither
+Run the repo's own check — call the Skill tool with `running-quality-checks`
+to detect it, never invent one — and report the verdict. A failure names the failing test and the file written. Reflect neither
 fixes the failure nor reverts the write: a revert hides which edit was wrong,
 and the recovery command per item is already in the report. Where the repo
 configures no check, say that none ran.

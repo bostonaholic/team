@@ -40,6 +40,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
+import { loadsSkill } from "./helpers/skill-refs";
 import {
   MAX_RECORDS,
   MAX_TOTAL_BYTES,
@@ -903,9 +904,13 @@ describe("Slice 2 — L2: reflect's apply turn is fenced by a clean-and-tracked 
     // A pinned-prose test elsewhere in the repo can go red from one edit, and
     // the user should learn that here rather than in CI. Reflect reports the
     // verdict and neither fixes nor reverts.
+    //
+    // Asserted as a LOAD by bare name, not as a path substring: this step has
+    // to go execute that skill's detection procedure, and a citation is what a
+    // model reads past without ever issuing the call.
     const apply = section(APPLY);
     expect(apply.length).toBeGreaterThan(0);
-    expect(apply).toContain("skills/running-quality-checks/SKILL.md");
+    expect(loadsSkill(apply, "running-quality-checks")).toBe(true);
   });
 });
 
