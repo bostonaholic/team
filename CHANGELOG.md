@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Follow Team releases from any RSS reader.** The docs site now serves an RSS 2.0 feed at [https://team.bostonaholic.dev/rss.xml](https://team.bostonaholic.dev/rss.xml) carrying every published release — the version as the title, the exact publish time, a link to the release page, and the release notes as GitHub-rendered HTML. Feed readers discover it automatically from any page of the site, and a footer link points to it. The feed is rebuilt from the GitHub Releases API on every site deploy, and publishing a release now triggers that deploy, so a new version reaches subscribers without any manual step.
+
 ## [0.58.0] - 2026-08-27
 
 ### Fixed
