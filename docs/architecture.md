@@ -156,8 +156,7 @@ still declares no phase artifact.
 `docs/plans/<id>/screenshots/` (PNGs plus `manifest.md`) is written by
 ux-reviewer during IMPLEMENT for UI-touching changes and consumed by team-pr.
 User-facing setup (the one-time GitHub sign-in that enables inline upload) is
-documented in the README's
-["Screenshots in PRs"](../README.md#screenshots-in-prs) section.
+documented in [Screenshots in PRs](screenshots-in-prs.md).
 
 `docs/plans/<id>/cross-model-notes.md` is written by the orchestrator at
 the DESIGN review gate and the IMPLEMENT aggregate gate — one
@@ -374,8 +373,9 @@ One path steps outside that enforcement: the cross-model pass
 path — and an external process is beyond the harness's tool grants. On
 that path the reviewer invariant is **trusted, not enforced**:
 `codex` and `agy` run with their full-access
-flags in the repo cwd — unsandboxed, with the invoking user's permissions.
-What
+flags in the repo cwd — unsandboxed, with the invoking user's permissions —
+and with a vendor CLI installed, diff and design-document content leaves
+the machine. What
 bounds the path is the pinned argv the bundled script hardcodes (the
 unsanctioned-flag tripwire in `tests/cross-model-review.test.ts` keeps
 every other bypass and escalation spelling out), the per-vendor
