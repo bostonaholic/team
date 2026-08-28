@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.59.0] - 2026-08-28
+
 ### Added
 
 - **Cleaning up after a finished PR now tears down the database and containers it provisioned, not just the branch.** [`/pr-cleanup`](https://github.com/bostonaholic/team/blob/main/skills/pr-cleanup/SKILL.md) removed worktrees, branches, tracking refs, and planning scratch, and then asked you one open question about "per-worktree external state" — a question with no mechanism behind it, so a test database named after the branch outlived every run that answered it wrong or skipped it. The in-pipeline teardown in [`worktree-isolation`](https://github.com/bostonaholic/team/blob/main/skills/worktree-isolation/SKILL.md) did not ask at all. New methodology skill [`sweeping-local-state`](https://github.com/bostonaholic/team/blob/main/skills/sweeping-local-state/SKILL.md) replaces the question with a declaration: a repo lists its teardown commands one per line in a `.teamteardown` file at its root, and each line runs verbatim with `TEAM_REPO_ROOT`, `TEAM_BRANCH`, and `TEAM_WORKTREE` in its environment. `pr-cleanup` loads it in both modes and `worktree-isolation` loads it as teardown step 8. **Only the copy committed to the default branch ever runs** — never the working tree's, never the finished branch's. That is what keeps the reviewer case safe: the branch you just reviewed is unlanded code, and a pull request that edits `.teamteardown` would otherwise earn code execution on the machine of whoever cleans up after reading it. A failing line is reported and the remaining lines still run; nothing here can block the git teardown. Temp-directory scratch is removed only when the run recorded the path, never through a wildcard sweep — `groom-backlog.XXXXXXXX` carries no session, pid, or clock, so a name cannot tell a dead run's directory from a live one's. **What this asks of you:** nothing, unless your repo provisions per-branch resources. If it does, add `.teamteardown` and commit it to the default branch; a repo without one runs nothing and is told so. Pinned by [`tests/sweeping-local-state-skill.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/sweeping-local-state-skill.test.ts).
@@ -598,7 +600,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.58.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.59.0...HEAD
+[0.59.0]: https://github.com/bostonaholic/team/compare/v0.58.0...v0.59.0
 [0.58.0]: https://github.com/bostonaholic/team/compare/v0.57.0...v0.58.0
 [0.57.0]: https://github.com/bostonaholic/team/compare/v0.56.0...v0.57.0
 [0.56.0]: https://github.com/bostonaholic/team/compare/v0.55.0...v0.56.0
