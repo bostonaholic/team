@@ -46,7 +46,7 @@ nav_label: portability
 
 ## Current state
 
-Team is a Claude Code-native plugin. It ships 13 agents (`agents/*.md`), 55 skills
+Team is a Claude Code-native plugin. It ships 13 agents (`agents/*.md`), 56 skills
 (`skills/*/SKILL.md` + `registry.json`), and 3 hooks (`hooks/*.mjs`). They
 register through `.claude-plugin/plugin.json`. The orchestrator walks the QRSPI
 phase table (`skills/team/SKILL.md`). It persists state as artifact files under
@@ -256,7 +256,7 @@ cross-cutting recency caveat:
    superset of this option's value with less risk.
 
 3. **Rejected: per-host maintained adapters (parallel hand-maintained trees).**
-   *Why rejected:* it costs 3× the maintenance across 13 agents, 55 skills, and 4
+   *Why rejected:* it costs 3× the maintenance across 13 agents, 56 skills, and 4
    hooks, one tree per shipped host — Claude Code, Codex CLI, and Antigravity
    CLI. It also guarantees drift, because someone must apply a fix to an agent
    body three times by hand. It throws away the fact that the bodies are *already
@@ -331,7 +331,7 @@ installed here.
 **This host installs Team natively, through its own manifest.** Team ships
 `plugin.json` at the repo root, which is Antigravity's plugin marker, with
 `skills/` and `agents/` beside it where this host resolves components.
-`agy plugin install /path/to/team` then copies all 55 skills and all 13 agents
+`agy plugin install /path/to/team` then copies all 56 skills and all 13 agents
 into `~/.gemini/config/plugins/team/`, and `import_manifest.json` records the
 source as **`antigravity`** — its native path, the same local-checkout form the
 Claude Code and Codex installs use.

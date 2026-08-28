@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 55 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 36 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 56 skills: 11 pipeline entry-point slash commands, 8 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase), and 37 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -57,7 +57,7 @@ resolve, groom a project backlog, tear down branch state after a PR is
 finished, verify a PR's test plan, and rebase a branch onto its base
 without changing what it does.
 None is a pipeline phase. The split is
-**11 pipeline entry-point + 8 standalone utility + 36 methodology = 55**.
+**11 pipeline entry-point + 8 standalone utility + 37 methodology = 56**.
 
 For *why* the system is shaped this way (the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits),
@@ -609,7 +609,7 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 36 methodology skills carry no `argument-hint` and, with one
+The 37 methodology skills carry no `argument-hint` and, with one
 exception, are never invoked directly. The exception is `code-review`: it
 is a meaningful standalone user action ("review this diff",
 `/code-review`) as well as a building block, so it does not set
@@ -1103,7 +1103,29 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Key behaviors:** Set up isolated worktrees, so implementation never
   touches the main checkout. Tear them down only after the PR merges, or on
   explicit request. A branch thus stays available for iteration while its
-  PR is open.
+  PR is open. Teardown ends by loading `sweeping-local-state`, so a
+  database or container the worktree provisioned goes with it.
+
+### sweeping-local-state
+
+- **Purpose:** Machine-local teardown for a merged PR, a closed PR, or a
+  completed review.
+- **Loaded by:** `pr-cleanup` (Mode A step 5, Mode B step 5) and
+  `worktree-isolation` (teardown step 8).
+- **Key behaviors:** Removes what git teardown never reaches — provisioned
+  databases, containers, queues, buckets, caches, and recorded temp-directory
+  scratch. It infers nothing: the repo declares its own teardown as one
+  command per line in a `.teamteardown` file at the repo root, and each line
+  runs verbatim with `TEAM_REPO_ROOT`, `TEAM_BRANCH`, and `TEAM_WORKTREE` in
+  its environment. **Only the copy committed to the default branch runs.** The
+  working tree's copy and the finished branch's copy are never read, so a pull
+  request cannot earn code execution on your machine by editing the file you
+  run after reviewing it. A declared line that fails is reported and the
+  remaining lines still run; nothing here blocks the caller's git teardown. A
+  temp path is deleted only when the run recorded it, and never through a
+  wildcard sweep of `$TMPDIR` — the names cannot distinguish a dead run's
+  directory from a live one's. A repo with no `.teamteardown` runs nothing and
+  is told so.
 
 ## Skill ↔ agent ↔ phase
 
@@ -1171,6 +1193,7 @@ entry-point section above rather than repeating them here.
 | `changelog` | team, team-pr | PR |
 | `tracking-tickets` | orchestrator (team, team-pr, team-fix, just-in-time through pointers) | Setup (ticket pickup), and PR (ticket link + state) |
 | `worktree-isolation` | orchestrator (team, team-worktree) | Worktree |
+| `sweeping-local-state` | `pr-cleanup`, `worktree-isolation` (both inline) | Standalone: teardown after a merged PR, a closed PR, or a completed review (not a QRSPI phase) |
 
 The read-only `Explore` subagent dispatched by `eng-design-doc-review` is
 an one more consumer of `technical-design-doc`, `code-review`,

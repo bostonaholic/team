@@ -417,7 +417,7 @@ not discard work.
 5. **Shared tail.** Remote deletion is usually automatic on merge; check
    whether origin still has the branch with
    `git -C "$PRIMARY_ROOT" ls-remote --heads origin -- "$BRANCH"` and OFFER
-   deletion if it does. Then run the external-state ask and the scratch
+   deletion if it does. Then run the local-state sweep and the scratch
    removal exactly as Mode B steps 5 and 6 describe them.
 
 6. **Sever the stale tracking ref, and offer to reclaim the space.**
@@ -532,12 +532,15 @@ order child before parent throughout.
    explains why that matters and what the full space-reclaim sequence
    costs.
 
-5. **External-state ask.** Whenever a worktree was removed, ask one
-   question: does this repo provision per-worktree external state (for
-   example a test database named after the worktree)? If the user names a
-   teardown command, run it on confirmation — never guess credentials or
-   invent commands. If the named command fails, report it loudly and
-   continue the git teardown.
+5. **Sweep the machine-local state.** Follow
+   `skills/sweeping-local-state/SKILL.md` — all sections, full depth. Skip
+   "Finishing a review rather than a merge", which covers the reviewer
+   case rather than this one. It removes what the git teardown above does
+   not reach: databases, containers, and other resources the repo declares
+   in `.teamteardown`, plus temp scratch this run recorded. Supply it
+   `$PRIMARY_ROOT`, `$DEFAULT`, `$BRANCH`, and `$WORKTREE_PATH` as its
+   `WORKTREE` (empty when no worktree existed). A failure there is
+   reported and does not stop the git teardown.
 
 6. **Remove planning scratch that lives outside the worktree.** First
    derive `$ID` explicitly — it is this feature's `docs/plans/` directory
@@ -605,7 +608,8 @@ order child before parent throughout.
 Report, for both modes: the primary clone's state via
 `git -C "$PRIMARY_ROOT" branch --show-current` and
 `git -C "$PRIMARY_ROOT" status --short`, plus what was closed and deleted
-(PRs, worktrees, local and remote branches, scratch dirs). Mode A ends with
+(PRs, worktrees, local and remote branches, scratch dirs) and the
+local-state sweep's own report from step 5. Mode A ends with
 `git -C "$PRIMARY_ROOT" log --oneline -1` and reports
 `On <default> at <sha> — <subject>. Deleted branch <branch>.` A few lines,
 no more.
