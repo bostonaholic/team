@@ -78,7 +78,7 @@ Copy the `topic` value verbatim from the predecessor artifact
   cases, or with only the happy path, is incomplete.
 - **Apply the product-need lens.** The `skills:` frontmatter preloads it.
   If it is not already in context, call the Skill tool with
-  `product-thinking` (`skills/product-thinking/SKILL.md`).
+  `product-thinking`.
   Use its `## When Designing` section while you write `## Decisions made`
   and `## Out of scope`. Prefer the thinnest design that delivers what real
   users want, and surface where an assumption stands in for demand. It adds

@@ -17,7 +17,7 @@ the design-author later turns the task into an approach.
 
 Write the prose this skill governs at a seventh-grade reading level, in
 STE-flavored mode — short sentences, common words, no unexplained jargon.
-Full methodology: `writing-prose` (`skills/writing-prose/SKILL.md`). Before
+Full methodology: `writing-prose`. Before
 you finalize prose this skill governs, call the Skill tool with
 `writing-prose` and apply its `## Self-lint` checklist.
 

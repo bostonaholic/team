@@ -39,9 +39,8 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
 3. **Move the ticket to in-progress.** If a `ticketId` or issue was
    resolved in steps 1–2, move that ticket to its tracker's in-progress
    state. This is the first action of the run, before any other work
-   begins. Call the Skill tool with `tracking-tickets`
-   (`skills/tracking-tickets/SKILL.md`) and follow its ticket-lifecycle
-   rules, best-effort — skip silently when no tracker
+   begins. Call the Skill tool with `tracking-tickets` and follow its
+   ticket-lifecycle rules, best-effort — skip silently when no tracker
    mechanism exists. Never block the pipeline on a tracker update.
 4. **Derive `<id>`:**
    - With ticket: `<TICKET>-<kebab-topic>` (e.g., `ENG-1234-add-auth`)
@@ -219,7 +218,7 @@ clean for the whole run.
 
 1. **Create the home worktree** on branch `<id>` off `origin/HEAD`, with
    Claude Code's native worktree support. Call the Skill tool with
-   `team-worktree` (`skills/team-worktree/SKILL.md`) and follow the
+   `team-worktree` and follow the
    single-repo block under "Create the worktree(s)". Only the
    home repo gets a worktree at this phase. Multi-repo secondary worktrees
    are deferred until after the design review (see "Orchestrator-Emit Gate
@@ -253,8 +252,7 @@ When the `design-author` returns a draft:
    COMMENT), skip the review and advance to STRUCTURE. A resumed session
    never re-reviews a passed design.
 2. **Run the external cross-model pass** (every round, before the
-   dispatch). Call the Skill tool with `cross-model-review`
-   (`skills/cross-model-review/SKILL.md`) and follow its
+   dispatch). Call the Skill tool with `cross-model-review` and follow its
    `## Design-review pass` — reference that procedure, never
    duplicate it here. Its one gate: the `TEAM_DISABLE_CROSS_MODEL`
    kill-switch. Run
@@ -279,7 +277,7 @@ When the `design-author` returns a draft:
 3. **Dispatch the adversarial review.** Call the `Agent` tool with
    `subagent_type: Explore`, the built-in read-only agent type. Pass the
    `## Review brief` as the prompt: call the Skill tool with
-   `eng-design-doc-review` (`skills/eng-design-doc-review/SKILL.md`) to
+   `eng-design-doc-review` to
    read that brief (reference it, never duplicate it here), with
    the artifact directory substituted. Each round gets a fresh subagent
    context. `Explore` holds no Write/Edit tools, so the reviewer **cannot**
@@ -346,8 +344,8 @@ When the design review passes:
    in that file, all on the same `<id>` branch. Otherwise you are in
    **single-repo mode** and nothing further is needed here (the home
    worktree already exists). Call the Skill tool with
-   `worktree-isolation` (`skills/worktree-isolation/SKILL.md`) for
-   the topology and `team-worktree` (`skills/team-worktree/SKILL.md`) for
+   `worktree-isolation` for
+   the topology and `team-worktree` for
    the procedure.
    Create the worktrees **without a confirmation prompt** — the phase loop
    never pauses mid-run. The "Confirm with the user" dialog in
@@ -377,9 +375,8 @@ When the `test-architect` returns failing tests:
 
 1. Run the test suite.
 2. Run every **static** check the project defines — typecheck, lint, format,
-   build. Call the Skill tool with `running-quality-checks`
-   (`skills/running-quality-checks/SKILL.md`) and detect them the way it
-   does. Skip the test entry there: step 1 already ran it.
+   build. Call the Skill tool with `running-quality-checks` and detect them
+   the way it does. Skip the test entry there: step 1 already ran it.
 3. Advance only when both hold: all tests fail with assertion errors (not
    crashes), **and** every static check passes.
 4. If tests crash or error, fix infrastructure and re-run.
@@ -401,9 +398,8 @@ returned:
 1. Collect all verdicts from the most recent round. Sort every finding into
    a severity tier: **Blocking**, **Major**, or **Minor and below**. Use
    the authoritative table under "Severity Tiers and the Auto-Fix
-   Boundary": call the Skill tool with `review-severity-tiers`
-   (`skills/review-severity-tiers/SKILL.md`). Consult that table rather
-   than restating it here.
+   Boundary": call the Skill tool with `review-severity-tiers`. Consult that
+   table rather than restating it here.
 2. Persist the cross-model record. Every code-reviewer report carries a
    `### Cross-model disposition` section, so read what it says rather than
    whether it is there: a section reading `Not run:` records no pass and
@@ -448,9 +444,8 @@ failure classes so it knows exactly what to fix.
 
 When the aggregate gate passes:
 
-1. Update `CHANGELOG.md`: call the Skill tool with `changelog`
-   (`skills/changelog/SKILL.md`) and apply it — bullets go
-   under `## [Unreleased]`. In multi-repo mode, update each repo's
+1. Update `CHANGELOG.md`: call the Skill tool with `changelog` and apply it
+   — bullets go under `## [Unreleased]`. In multi-repo mode, update each repo's
    `CHANGELOG.md` with the entries belonging to that repo's commits.
 2. **Never version here.** Do not touch a version string, cut a dated
    changelog section, or put a version in the PR title. A version is
@@ -461,15 +456,14 @@ When the aggregate gate passes:
 3. **Open a draft PR automatically — do not stop to ask.** The PR phase
    never waits for approval. Push the branch and
    open the PR as a **draft** (`gh pr create --draft`). Call the Skill tool
-   with `team-pr` (`skills/team-pr/SKILL.md`) for the canonical procedure.
+   with `team-pr` for the canonical procedure.
 4. In multi-repo mode this opens
    **one draft PR per repo with commits ahead**. The PR bodies cross-link
    to each other, so reviewers can see the full change set.
 5. **Ticket — link now, in-review when ready.** If `task.md` frontmatter
-   has `ticketId` set, call the Skill tool with `tracking-tickets`
-   (`skills/tracking-tickets/SKILL.md`) and apply its ticket-lifecycle
-   rules. Link the PR to the ticket through
-   the conditional closing footer (in multi-repo mode the home repo's PR
+   has `ticketId` set, call the Skill tool with `tracking-tickets` and apply
+   its ticket-lifecycle rules. Link the PR to the ticket through the
+   conditional closing footer (in multi-repo mode the home repo's PR
    alone carries the closing keyword. Companions get a non-closing
    qualified reference). Keep the ticket in-progress while the PR is a
    draft. Move it to in-review only once the PR is marked ready for review.
@@ -482,7 +476,7 @@ When the aggregate gate passes:
    is opened. The user can need to iterate on the branch, to push follow-up
    commits or address review feedback. Clean up a worktree only after its
    PR is merged or when the user explicitly asks. Call the Skill tool with
-   `worktree-isolation` (`skills/worktree-isolation/SKILL.md`) and follow
+   `worktree-isolation` and follow
    its "Ship (teardown)" procedure:
    commit preservation, worktree and branch removal, the rebase-only
    default-branch update, and deletion of the feature's untracked

@@ -42,12 +42,9 @@ Inspection Contract" section: done-criteria checks, the per-file coverage
 checklist, both test-file severity regimes, and the test run. Format every
 finding per `skills/conventional-comments/SKILL.md` (preloaded).
 
-Call the Skill tool with `engineering-standards`
-(`skills/engineering-standards/SKILL.md`), `solid-principles`
-(`skills/solid-principles/SKILL.md`), `test-style`
-(`skills/test-style/SKILL.md`), and `systems-thinking`
-(`skills/systems-thinking/SKILL.md`). None of the four is preloaded, and the
-checks below are their application:
+Call the Skill tool with `engineering-standards`, `solid-principles`,
+`test-style`, and `systems-thinking`. None of the four is preloaded, and
+the checks below are their application:
 
 - Check in-source comments per the skill's Comment red flags. Cite the
   `Comment Discipline` checklist item. Its canonical rule set is

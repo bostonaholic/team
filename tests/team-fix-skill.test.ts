@@ -28,6 +28,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { read, squash } from "./helpers/text";
+import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 // team-fix is a RUNTIME skill — under skills/ (distributed), not .claude/.
@@ -86,10 +87,11 @@ describe("team-fix: the leading WORKTREE phase exists", () => {
   });
 
   test("delegates the worktree procedure to the canonical skills", () => {
-    // File-path contracts: a rename of either target must fail the build.
+    // Load contracts: a rename of either target must fail the build — the
+    // sweep in tests/skill-tool-invocation.test.ts resolves every loaded name.
     const s = worktreeSection();
-    expect(s).toContain("skills/team-worktree/SKILL.md");
-    expect(s).toContain("skills/worktree-isolation/SKILL.md");
+    expect(loadsSkill(s, "team-worktree")).toBe(true);
+    expect(loadsSkill(s, "worktree-isolation")).toBe(true);
   });
 
   test("branches off origin/HEAD with the documented worktree-add form", () => {

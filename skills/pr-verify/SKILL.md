@@ -89,7 +89,7 @@ match, code verification, diff analysis, build/test, structural:
 | **Content match** | "X contains Y", "check the frontmatter" | Read, Grep |
 | **Code verification** | "claims match the code", "invariants accurate" | `team:file-finder` dispatch (Read/Grep/Glob only) — codebase tracing |
 | **Diff analysis** | "no content loss", "no regressions" | `git diff`, `git show` |
-| **Build/test validation** | "tests pass", "lint clean" | the project's checks — call the Skill tool with `running-quality-checks` (`skills/running-quality-checks/SKILL.md`) to detect them |
+| **Build/test validation** | "tests pass", "lint clean" | the project's checks — call the Skill tool with `running-quality-checks` to detect them |
 | **Structural check** | "size limits hold", "map matches files" | `wc -l`, Glob, Read |
 
 Build/test validation has a trust boundary Hard Rule 2 does not cover:

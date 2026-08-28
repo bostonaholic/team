@@ -15,7 +15,7 @@ you want an independent, fresh-context audit of a design document.
 
 Write the prose this skill governs at a seventh-grade reading level, in
 STE-flavored mode — short sentences, common words, no unexplained jargon.
-Full methodology: `writing-prose` (`skills/writing-prose/SKILL.md`). Before
+Full methodology: `writing-prose`. Before
 you finalize prose this skill governs, call the Skill tool with
 `writing-prose` and apply its `## Self-lint` checklist.
 
@@ -90,7 +90,7 @@ done
 
 1. Use the directory resolved in `## Input`.
 2. **Run the external cross-model pass.** Call the Skill tool with
-   `cross-model-review` (`skills/cross-model-review/SKILL.md`) and follow
+   `cross-model-review` and follow
    its `## Design-review pass` —
    reference that procedure, never duplicate it here. You, the invoking
    session, are the actor: you hold Bash for the runner
@@ -138,23 +138,24 @@ beyond what the document itself states. This isolation is intentional: it
 prevents self-evaluation bias. You are read-only — use `Read`, `Grep`, and
 `Glob` only. Do not edit any file.
 
-**First, load your operating manual.** Call the Skill tool with each of these
-methodology skills before you begin — they are your review criteria:
+**First, load your operating manual.** Call the Skill tool with
+`technical-design-doc`, `code-review`, `engineering-standards`, and
+`documenting-decisions` before you begin — they are your review criteria:
 
-- **technical-design-doc** — the spec a TDD/design doc must satisfy. Use it
+- `technical-design-doc` — the spec a TDD/design doc must satisfy. Use it
   as a literal checklist against the artifact under review.
-- **code-review** — generator-evaluator separation and verdict criteria.
+- `code-review` — generator-evaluator separation and verdict criteria.
   The same review discipline applies to prose artifacts as to code.
-- **engineering-standards** — the design philosophy lens (Hickey, Carmack,
+- `engineering-standards` — the design philosophy lens (Hickey, Carmack,
   Armstrong, Knuth, Liskov, Ousterhout). Use the "When Reviewing" section as
   severity guidance.
-- **documenting-decisions** — ADR-quality criteria for evaluating how well
+- `documenting-decisions` — ADR-quality criteria for evaluating how well
   each decision in the doc captures context, alternatives, and consequences.
-- **cross-model-review** — call the Skill tool with this fifth manual when,
-  and only when,
-  this prompt carries an `## External review input` section. It defines
-  how you judge the fenced external claims in that section (verify,
-  refute, or mark unverifiable) and the disposition block you must emit.
+
+Call the Skill tool with `cross-model-review` as a fifth manual when, and
+only when, this prompt carries an `## External review input` section. It
+defines how you judge the fenced external claims in that section (verify,
+refute, or mark unverifiable) and the disposition block you must emit.
 
 When you write your findings, also call the Skill tool with
 `conventional-comments` — it defines their format.

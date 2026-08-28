@@ -32,7 +32,7 @@ four above. Quarantining a test as "flaky" without classifying the failure
 hides the very intermittent product bug that the test surfaced. The
 conditions that make a test flaky are frequently the conditions that trigger
 the bug. Reproduce deterministically before fixing — call the Skill tool
-with `systematic-debugging` (`skills/systematic-debugging/SKILL.md`). When
+with `systematic-debugging`. When
 the failure is non-obvious,
 drill the causal chain to its root first through that skill's
 **Root Cause Analysis (5 Whys)** subsection before proposing a fix.

@@ -12,7 +12,7 @@ template below.
 
 Write the prose this skill governs at a seventh-grade reading level, in
 STE-flavored mode — short sentences, common words, no unexplained jargon.
-Full methodology: `writing-prose` (`skills/writing-prose/SKILL.md`). Before
+Full methodology: `writing-prose`. Before
 you finalize prose this skill governs, call the Skill tool with
 `writing-prose` and apply its `## Self-lint` checklist.
 
@@ -148,8 +148,7 @@ operational concerns. One bullet each.>
 - **Reference patterns, do not duplicate them.** "Follow the pattern in
   `lib/foo.ts:30-60`" is better than restating those 30 lines.
 - **Apply the systems-thinking lens** — if it is not already in context,
-  call the Skill tool with `systems-thinking`
-  (`skills/systems-thinking/SKILL.md`) and
+  call the Skill tool with `systems-thinking` and
   use its `## When Designing` section: document adjacent components in
   `## Current state` and name the surfaces that must change together in
   `## Decisions made`. Adds no new gate.

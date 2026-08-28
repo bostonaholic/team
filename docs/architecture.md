@@ -662,27 +662,42 @@ The second is an inline prose load instruction in the agent body. For
 example, the `implementer` body's Code quality section loads
 `solid-principles` inline.
 
-**Wording convention for an inline load.** An inline load instruction reads
-`Call the Skill tool with \`<name>\``, followed by the path in parentheses.
-That imperative phrasing is what reliably makes a model actually issue the
-tool call — "load X", "see X", and "per X" all read as citations, and a
-model that treats a load as a citation proceeds on the summary in its own
-context instead of the skill's actual content. The path stays alongside the
-bare name because a human reader (and the tripwires in `tests/`) navigate by
-path.
+**Two reference forms, and the form is the contract.** Every skill-to-skill
+reference is one of two kinds, and each has its own encoding:
 
-The convention applies **only where the other skill is genuinely needed** —
-where the reader must go execute that skill's procedure. A pure
-cross-reference keeps its ordinary wording: a schema lookup, a "see also",
-a rule already restated inline (the `progress-tracking` blockquote every
-multi-step skill carries), and a pointer to a skill the frontmatter already
-preloaded. Adding the imperative phrasing to a citation would spend a tool
-call and a context window on content nobody asked for.
+| Kind | Reads | Encoded as | Checked by |
+|------|-------|-----------|------------|
+| **Load** — the reader must go execute that skill | ``Call the Skill tool with `<name>` `` | bare name | `tests/skill-tool-invocation.test.ts` resolves the name against `skills/*/SKILL.md` |
+| **Citation** — a schema lookup, a "see also", a rule restated nearby | `skills/<name>/SKILL.md` | path | the path assertions in `tests/methodology.test.ts` and siblings |
 
-This is a wording convention, deliberately **not** machine-checked. Per
-[testing.md](testing.md#a-tripwire-asserts-a-contract-never-a-wording), a
-tripwire asserts a contract, never a phrasing — a test pinning this sentence
-shape would turn every honest rewrite red.
+The imperative phrasing on a load is what makes a model actually issue the
+tool call. "Load X", "see X", and "per X" all read as citations, and a model
+that treats a load as a citation proceeds on the summary in its own context
+instead of the skill's actual content — a slice ships without the commit
+conventions applied, a review runs without its severity table, and nothing
+announces either.
+
+A load carries **no path**. The bare name is what the Skill tool takes, and a
+path sitting beside it reintroduces the ambiguity the imperative exists to
+remove: it reads as a file to go open. Name resolution is what replaces the
+path's rename-detection, and it is strictly stronger — it catches a rename
+*and* a typo, where a path assertion only ever confirmed a string was
+present. `skills/git-commmit/SKILL.md` passed the old check.
+
+The load form applies **only where the other skill is genuinely needed**. A
+citation keeps its path and its ordinary wording: a schema lookup, a "see
+also", a rule already restated inline (the `progress-tracking` blockquote
+every multi-step skill carries), and a pointer to a skill the frontmatter
+already preloaded. Turning one of those into a tool call would spend a call
+and a slice of context on content nobody asked for.
+
+The sweep asserts the *reference*, not the sentence around it — the same
+thing the path assertions always asserted, which is why
+[testing.md](testing.md#a-tripwire-asserts-a-contract-never-a-wording)
+sanctions it ("File paths and cross-references. A renamed target must fail
+the build."). The phrase is load-bearing as the encoding, so it lives in one
+place: `PHRASE` in `tests/helpers/skill-refs.ts`. Changing the convention
+means changing it there, deliberately.
 
 Because they are reference material rather than user actions, methodology
 skills set `user-invocable: false` in their frontmatter. This keeps them

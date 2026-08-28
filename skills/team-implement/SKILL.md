@@ -133,7 +133,7 @@ Before any agent dispatch, decide where to work:
 3. **Mechanical gate** — confirm all tests fail with assertion errors
    (not crashes), **and** that every static check the project defines
    passes (typecheck, lint, format, build — call the Skill tool with
-   `running-quality-checks` (`skills/running-quality-checks/SKILL.md`) and
+   `running-quality-checks` and
    detect them the way it does). On crash, fix
    test infrastructure before proceeding. On a failing static check, send it
    back to the `test-architect`: a runner that executes tests without
@@ -147,8 +147,7 @@ Before any agent dispatch, decide where to work:
 6. **Aggregate gate** — sort every finding into a severity tier —
    **Blocking**, **Major**, or **Minor and below** — per the authoritative
    table under "Severity Tiers and the Auto-Fix Boundary": call the Skill
-   tool with `review-severity-tiers`
-   (`skills/review-severity-tiers/SKILL.md`). Consult that table rather
+   tool with `review-severity-tiers`. Consult that table rather
    than restating it here.
 7. **Persist the cross-model record.** Every code-reviewer report carries
    a `### Cross-model disposition` section, so read what it says rather
@@ -186,8 +185,7 @@ Before any agent dispatch, decide where to work:
    source reviewer — never present them mid-run. Then:
    - **Full pipeline** (the TodoWrite ledger carries a `PR` phase item —
      `/team` seeded it): do **not** end the turn. Proceed directly to the
-     PR phase — call the Skill tool with `team-pr`
-     (`skills/team-pr/SKILL.md`) — in the same turn.
+     PR phase — call the Skill tool with `team-pr` — in the same turn.
    - **Standalone**: suggest `/team-pr`.
 
 ## Quality Loop
@@ -221,8 +219,7 @@ How the phase ends depends on how it was entered:
 
 - **Full pipeline** (the TodoWrite ledger carries a `PR` phase item —
   `/team` seeded it): present all review verdicts, then continue straight
-  into the PR phase: call the Skill tool with `team-pr`
-  (`skills/team-pr/SKILL.md`) — push the branch and
+  into the PR phase: call the Skill tool with `team-pr` — push the branch and
   open the draft PR in the same turn. Ending the turn with verdicts but
   no draft PR is a defect.
 - **Standalone**: present all review verdicts and tell the user:

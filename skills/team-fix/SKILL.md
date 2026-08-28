@@ -64,7 +64,7 @@ No Question. No Research. No Design. No Structure. No Plan. No approval gate.
 2. **Move the ticket to in-progress.** If the input resolved to a ticket id
    or issue, move that ticket to its tracker's in-progress state — this is
    the first action of the fix, before any other work begins. Call the Skill
-   tool with `tracking-tickets` (`skills/tracking-tickets/SKILL.md`) and
+   tool with `tracking-tickets` and
    follow its ticket-lifecycle rules, best-effort —
    skip silently when no tracker mechanism exists. Never block the pipeline
    on a tracker update.
@@ -128,9 +128,8 @@ fi
 
 Create the home worktree on branch `<id>` off `origin/HEAD`, exactly as
 `/team`'s leading WORKTREE phase does. Call the Skill tool with
-`team-worktree` (`skills/team-worktree/SKILL.md`) for the single-repo
-"Create the worktree(s)" procedure, and with `worktree-isolation`
-(`skills/worktree-isolation/SKILL.md`) for the topology:
+`team-worktree` for the single-repo
+"Create the worktree(s)" procedure, and with `worktree-isolation` for the topology:
 
 ```sh
 git fetch origin --quiet
@@ -157,12 +156,11 @@ a fix to the default branch.
 
 ## Execution
 
-Call the Skill tool with `test-driven-bug-fix`
-(`skills/test-driven-bug-fix/SKILL.md`) before proceeding, and follow that
+Call the Skill tool with `test-driven-bug-fix` before proceeding, and follow that
 methodology.
 
 When the failure is non-obvious, call the Skill tool with
-`systematic-debugging` (`skills/systematic-debugging/SKILL.md`) and drill its
+`systematic-debugging` and drill its
 **Root Cause Analysis (5 Whys)** causal chain to the root before proposing a
 fix.
 
@@ -187,9 +185,8 @@ behind a green suite.
    default branch. If it does, push nothing and report: the commits are
    local and recoverable, a push to the default branch is not.
 3. **Ticket — link now, in-review when ready.** If `ticketId` is non-null in
-   `task.md`'s frontmatter, call the Skill tool with `tracking-tickets`
-   (`skills/tracking-tickets/SKILL.md`) and apply its ticket-lifecycle
-   rules: link the PR to the ticket through the
+   `task.md`'s frontmatter, call the Skill tool with `tracking-tickets` and
+   apply its ticket-lifecycle rules: link the PR to the ticket through the
    conditional closing footer, keep the ticket in-progress while the PR is a
    draft and move it to in-review only once the PR is marked ready for
    review, and never close the ticket by hand — the link auto-closes it on

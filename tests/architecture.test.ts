@@ -4,6 +4,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
+import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 
@@ -96,8 +97,8 @@ describe("skill architecture", () => {
     expect(text).not.toContain("indirection without reuse");
   });
 
-  test("implementer.md still references solid-principles/SKILL.md", () => {
-    expect(read(IMPLEMENTER)).toContain("solid-principles/SKILL.md");
+  test("implementer.md still loads solid-principles", () => {
+    expect(loadsSkill(read(IMPLEMENTER), "solid-principles")).toBe(true);
   });
 
   test("technical-writer.md still references writing-prose/SKILL.md", () => {

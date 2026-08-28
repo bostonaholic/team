@@ -35,7 +35,7 @@ Your full authoring process lives in `skills/test-first-development/SKILL.md`
 Make sure that each one fails cleanly, with an assertion failure and never an
 error. Fix errors with obviously incomplete stubs only, never with
 implementation code. Then lock the list. Call the Skill tool with
-`test-style` (`skills/test-style/SKILL.md`) — the preloaded skill points to
+`test-style` — the preloaded skill points to
 it — and audit every test against its "Test Style Rules" and "Audit
 checklist", citing the failing check by name when reporting issues.
 

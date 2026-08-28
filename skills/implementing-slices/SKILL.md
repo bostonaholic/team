@@ -47,7 +47,7 @@ findings. Fix what the findings name, under these constraints:
   until it passes. Auto-fixable lint issues go through `--fix` first.
 - When a failure is **non-obvious** — the cause is not plain from the
   error and the first fix you reach for is a guess — call the Skill tool
-  with `systematic-debugging` (`skills/systematic-debugging/SKILL.md`)
+  with `systematic-debugging`
   and walk the
   **Root Cause Analysis (5 Whys)** causal chain to the root before
   editing, so you fix the root cause rather than the symptom. Skip this
@@ -74,10 +74,9 @@ contract per slice:
   within one slice are routine — switch directories as needed.
 - **Tests.** In multi-repo mode, run each acceptance test in the worktree
   where it lives (the test name in the plan carries a `<repo>:` prefix).
-- **Commits.** Call the Skill tool with `git-commit`
-  (`skills/git-commit/SKILL.md`) and apply its commit conventions
-  (Conventional Commits, the 50/72 rule,
-  one logical change per commit). Single-repo: one commit per slice
+- **Commits.** Call the Skill tool with `git-commit` and apply its commit
+  conventions (Conventional Commits, the 50/72 rule, one logical change per
+  commit). Single-repo: one commit per slice
   using the slice's `Commit:` line as the subject, body referencing
   the design and structure paths. Multi-repo: when the slice's
   `Repos:` field names more than one repo, produce **one commit per
