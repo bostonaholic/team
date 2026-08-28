@@ -345,6 +345,9 @@ on the link target instead:
 ```sh
 : "${PRIMARY_ROOT:?}"
 CACHE_DIR="${HOME}/.claude/plugins/cache/team-dev/team"
+# Test the directory first: an unmatched glob aborts under zsh.
+[ -d "$CACHE_DIR" ] ||
+  { echo "no cache entry at all: ${CACHE_DIR} does not exist — Team was never dev-installed on this machine" >&2; exit 1; }
 for entry in "$CACHE_DIR"/*; do
   [ -e "$entry" ] || [ -L "$entry" ] || continue
   printf '%s\t%s\t%s\n' "$entry" "$([ -L "$entry" ] && echo symlink || echo directory)" "$(readlink "$entry" || true)"
