@@ -207,6 +207,14 @@ When teardown is warranted (post-merge or on explicit request):
    residue was found. A kept directory is surfaced to the user with the
    files it holds — never deleted silently, never left unreported.
 
+8. **Tear down what the worktree provisioned**, not only the worktree.
+   Steps 1-7 remove checkouts, refs, and directories; a database or
+   container created for the branch survives all of them. Follow
+   `skills/sweeping-local-state/SKILL.md` — all sections, full depth. Skip
+   "Finishing a review rather than a merge". It runs the teardown commands
+   the repo declares in `.teamteardown`, and runs nothing when the repo
+   declares none.
+
 ## Gitignored Files
 
 Git worktrees are fresh checkouts — they do not include untracked files
@@ -220,6 +228,15 @@ like `.env` or `.env.local`. To copy these automatically, add a
 
 Only files matching a pattern that are also gitignored get copied. In
 multi-repo mode, each repo honors its own `.worktreeinclude` independently.
+
+## Provisioned resources
+
+`.worktreeinclude` is the setup half of a pair. The teardown half is
+`.teamteardown`, also at the project root: one command per line, run when
+the work the worktree carried is finished, so a database or container
+created for the branch does not outlive it. Only the copy committed to the
+default branch ever runs. `skills/sweeping-local-state/SKILL.md` carries
+the format and the rules; teardown step 8 above is what runs it.
 
 ## Fallback
 

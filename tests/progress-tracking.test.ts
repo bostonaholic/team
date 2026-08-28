@@ -134,30 +134,30 @@ describe("Slice 1: progress-tracking convention skill exists", () => {
   });
 });
 
-describe("skill count reconciliation (-> 55: cross-model-review added to the 54-skill baseline)", () => {
+describe("skill count reconciliation (-> 56: sweeping-local-state added to the 55-skill baseline)", () => {
   const CLAUDE_MD = join(REPO_ROOT, "CLAUDE.md");
   const AGENTS_MD = join(REPO_ROOT, "AGENTS.md");
 
-  test("CLAUDE.md heading reads '## Skills (55)'", () => {
-    expect(/^## Skills \(55\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md heading reads '## Skills (56)'", () => {
+    expect(/^## Skills \(56\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 
-  test("AGENTS.md heading reads '## Skills (55)'", () => {
-    expect(/^## Skills \(55\)/m.test(read(AGENTS_MD))).toBe(true);
+  test("AGENTS.md heading reads '## Skills (56)'", () => {
+    expect(/^## Skills \(56\)/m.test(read(AGENTS_MD))).toBe(true);
   });
 
-  test("filesystem has exactly 55 SKILL.md files declaring a name:", () => {
-    // 54-skill baseline (11 pipeline entry points + 8 standalone utilities —
+  test("filesystem has exactly 56 SKILL.md files declaring a name:", () => {
+    // 55-skill baseline (11 pipeline entry points + 8 standalone utilities —
     // shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog,
-    // pr-cleanup, pr-verify, pr-rebase — plus 35 methodology skills) plus
-    // cross-model-review (the code-reviewer's cross-vendor methodology
-    // skill), which takes the count to 55.
+    // pr-cleanup, pr-verify, pr-rebase — plus 36 methodology skills) plus
+    // sweeping-local-state (the post-PR and post-review machine-local
+    // teardown methodology skill), which takes the count to 56.
     const dirs = readdirSync(SKILLS_DIR, { withFileTypes: true })
       .filter((d) => d.isDirectory())
       .map((d) => join(SKILLS_DIR, d.name, "SKILL.md"))
       .filter((p) => existsSync(p));
     const withName = dirs.filter((p) => /^name:/m.test(read(p)));
-    expect(withName.length).toBe(55);
+    expect(withName.length).toBe(56);
   });
 });
 
