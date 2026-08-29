@@ -63,6 +63,7 @@ option you would have recommended, and record it in `## Decisions made`
 marked "Assumption — chosen without user review", naming the rejected
 alternative and the trade-off accepted. The human audits these
 assumptions at PR review — an unmarked guess is a defect.
+Cross-gate canon: `skills/principle-record-assumptions/SKILL.md`.
 
 Park low-stakes items in `## Open questions (deferred)` rather than
 inflating the decision list. Deferral is itself a recorded choice.

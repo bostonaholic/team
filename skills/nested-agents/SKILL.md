@@ -17,6 +17,7 @@ differently in the user's version. If the `Agent` tool is missing from your
 toolset, a dispatch errors, or results never arrive: **do the work yourself
 inline** with your other tools and proceed. Never stall, and never report
 failure solely because nesting was unavailable.
+Cross-gate canon: `skills/principle-optimization-never-dependency/SKILL.md`.
 
 ## Version gate — confirm before the first nested dispatch
 
@@ -42,6 +43,7 @@ run the check all count as `unsupported`. On any non-zero result — i.e.
 whenever the version is less than 2.1.172 or undeterminable —
 **do not spawn helpers. Do the work yourself inline.** Run the gate once. A
 `supported` result holds for the rest of your turn.
+Unknown counts as unsupported (`skills/principle-fail-closed/SKILL.md`).
 
 ## When to spawn vs. do it yourself (context economy)
 
@@ -62,6 +64,7 @@ under `docs/plans/` — artifacts are written only by you or the orchestrator.
 
 You are at depth 2 of 5. Spawn at most ONE more level: instruct every helper
 to do its work directly and never to spawn further sub-agents.
+Depth stays shallow because seams stay narrow (`skills/principle-deep-agents-narrow-seams/SKILL.md`).
 
 ## Nested helpers are non-interactive
 
@@ -70,6 +73,7 @@ the user, and a helper that waits for an answer stalls forever. Never
 delegate question-asking downward. If a helper surfaces an ambiguity,
 absorb it and record it in YOUR own artifact's open-questions section
 (or resolve it yourself and record the assumption).
+Resolved and recorded, never asked upward (`skills/principle-record-assumptions/SKILL.md`).
 
 ## Verification helpers get neutral claims
 
@@ -77,6 +81,7 @@ When you use a helper to check your own finding, state the claim as a
 neutral, falsifiable sentence with its `file:line`. Never give your verdict,
 severity, or reasoning. Ask the helper to refute it with evidence. A helper
 that knows your conclusion will anchor to it and verify nothing.
+Hand the investigator the question, never the wanted answer (`skills/principle-blind-the-investigator/SKILL.md`) — the scouts' isolation-extends-downward rule below is the same principle.
 
 ## Caps and ownership
 
@@ -103,6 +108,7 @@ skeptic that has judged your earlier claims accumulates a model of your
 review and anchors to it, which is exactly what the neutral-claim rule
 exists to prevent. Never send a second claim to a live skeptic, even where
 a follow-up would be cheaper.
+Fresh context is the evaluator's mechanism (`skills/principle-generator-evaluator/SKILL.md`).
 
 ## Per-agent caps
 

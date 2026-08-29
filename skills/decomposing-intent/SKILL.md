@@ -177,6 +177,7 @@ anywhere else (e.g. through a symlink) is unresolvable.
   repo's parent directory. Record it in `task.md`'s
   `## Open assumptions` (name the repo you could not resolve so the miss
   is auditable at PR review).
+  A recorded assumption, never an unmarked guess (`skills/principle-record-assumptions/SKILL.md`).
 
 ### Writing `repos.md`
 
@@ -222,6 +223,7 @@ stay single-repo and record the assumption in `task.md`.
    knowing the goal, would the answer still be useful?" If no, rewrite.
    In multi-repo mode, scope each question to "in repo `<name>`, ..."
    so research can answer it in the correct repo.
+   The stranger test is `skills/principle-blind-the-investigator/SKILL.md` in miniature.
 6. Read the "Codebase context" section back: it should tell a stranger
    "what code exists here" without telling them "what we want to do with it".
 7. Write `task.md` and `questions.md`. When the PRD criteria apply, also

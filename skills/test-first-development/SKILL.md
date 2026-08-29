@@ -9,6 +9,7 @@ user-invocable: false
 Acceptance tests define the scope fence. They are written before implementation
 begins and remain immutable throughout. Implementation is complete when — and
 only when — all acceptance tests pass.
+The fence's cross-gate canon: `skills/principle-scope-fence/SKILL.md` — the artifact authorizes exactly the change it names.
 
 ## Core Rule
 
@@ -47,6 +48,7 @@ Run the full test suite after writing all acceptance tests. Every new test must:
 
 A test that errors is not a failing test — it is a broken test. The
 distinction matters.
+The failure check is a mechanical gate — deterministic, running whether or not the model cooperates (`skills/principle-mechanical-gates/SKILL.md`).
 
 **Then run the project's static checks and make them pass.** A green suite is
 not the same as sound code. Many runners transpile without type-checking, so a

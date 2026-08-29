@@ -69,7 +69,11 @@ two layers:
    context surfaces it as an open question rather than guessing the intent,
    and never pauses the run to ask.
 
+This section owns the pipeline instance of the blind-the-investigator principle; the cross-gate canon is `skills/principle-blind-the-investigator/SKILL.md`.
+
 ## Gate Types
+
+Where a rule must hold, a deterministic check enforces it — never prompt memory alone (`skills/principle-mechanical-gates/SKILL.md`).
 
 ### HARD
 
@@ -81,12 +85,14 @@ findings that gate, test failures.
 
 Informational. SOFT findings land in the PR body's `## Review notes` for the
 human's PR review and are never acknowledged mid-run. The pipeline proceeds.
+The human owns the ends, not the middle: `skills/principle-human-owns-the-ends/SKILL.md`.
 
 Which findings gate, and which auto-fix rather than land as recorded notes, is
 defined in exactly one place: `skills/review-severity-tiers/SKILL.md` →
 "Severity Tiers and the Auto-Fix Boundary". Only findings below the auto-fix
 boundary are recorded for the PR body. Consult that table rather than
 restating it here.
+Defined once, consulted everywhere: `skills/principle-single-source-of-truth/SKILL.md`.
 
 ### ADVISORY
 
@@ -99,6 +105,7 @@ Pipeline state is reconstructed by scanning `docs/plans/<id>/*.md` and reading
 YAML frontmatter. The orchestrator tracks in-flight work through TodoWrite — a
 session-scoped ledger mirroring the phase table, rebuilt on entry to any
 `/team-*` command.
+The files-are-the-contract rule (`skills/principle-files-are-the-contract/SKILL.md`): the artifact on disk, never conversation memory, is the interface between phases.
 
 ### Phase inference from artifacts
 
@@ -157,6 +164,7 @@ recorded for the PR body's `## Review notes`, never presented mid-run.
 - **Gold-plating.** Adding features, tests, or abstractions beyond what the
   structure specifies. If scope must expand, update the structure; for a
   material change, return to DESIGN for a fresh design review.
+  Scope expands by changing the artifact, never by quietly exceeding it (`skills/principle-scope-fence/SKILL.md`).
 - **Backward skipping.** Jump back one phase, never several. A structure flaw
   returns to STRUCTURE; a design flaw returns to DESIGN.
 - **Premature shipping.** Every HARD gate in the implement-verify loop must

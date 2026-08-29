@@ -87,6 +87,7 @@ the pass check the tree per that skill's `## Invocation`: report any
 mutation you did not make as a Blocking finding. Skip loudly on any
 failure — the pass is an optimization, never a dependency, and never a
 reason to soften a verdict.
+Skip-loudly canon: `skills/principle-skip-loudly/SKILL.md`.
 
 ## Verdict
 

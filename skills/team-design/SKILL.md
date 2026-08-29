@@ -81,6 +81,7 @@ done
 
    If `$ARGUMENTS/design.md` already exists, skip this dispatch and
    resume at step 3 — never re-draft an existing design.
+   Both this skip and step 3's never-re-review skip are idempotent re-runs: converge on the same end state, never duplicate work (`skills/principle-idempotent-reruns/SKILL.md`).
 3. **Design review gate.** If the latest
    `$ARGUMENTS/design-review-<n>.md` already carries a passing verdict
    (APPROVE or COMMENT), skip straight to step 4 — never re-review a
@@ -136,6 +137,7 @@ done
    - **Unparseable verdict or reviewer crash** — retry the review once
      with the error; on second failure, halt loudly. Fail closed —
      never advance on a missing verdict.
+     A missing verdict counts as not passed (`skills/principle-fail-closed/SKILL.md`).
 4. **Stop once `$ARGUMENTS/design.md` exists and the latest
    `$ARGUMENTS/design-review-<n>.md` verdict is APPROVE or COMMENT.**
 

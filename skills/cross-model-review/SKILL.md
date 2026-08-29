@@ -13,6 +13,7 @@ At a design-review gate: the orchestrator sends the design document to the
 same CLIs before each review round (see `## Design-review pass`). The pass
 is an optimization, never a dependency — skip loudly on any failure and
 never soften a verdict because it was unavailable.
+The enhancement-path canon: `skills/principle-optimization-never-dependency/SKILL.md`.
 
 Both CLIs run with their full-access flags in the repo cwd — unsandboxed,
 with the invoking user's permissions — so they can explore the codebase
@@ -29,6 +30,7 @@ continue. Zero available CLIs → say so once and complete the review with
 Team's own reviewers alone. When `TEAM_DISABLE_CROSS_MODEL` is set, the
 pass is disabled machine-wide: report that as the reason instead of
 per-CLI lines.
+Every miss gets a named line (`skills/principle-skip-loudly/SKILL.md`).
 
 ## Caps
 
@@ -74,6 +76,7 @@ secrets; files on disk are within the granted reach. Binary lookup vets
 absolute `PATH` entries only: a relative entry (`.`, `relbin`) is skipped,
 and the vetted absolute path is what spawns — never a second `PATH` walk
 at spawn time.
+The allowlist is least privilege for the child process (`skills/principle-least-privilege/SKILL.md`).
 
 ## Invocation
 
@@ -255,6 +258,7 @@ with `via <cli>` in the finding text. The block itself is Minor-tier by
 construction — a record, not a verdict — so it can never cross the auto-fix
 boundary in `skills/review-severity-tiers/SKILL.md` ("Severity Tiers and
 the Auto-Fix Boundary").
+One severity map, owned elsewhere and consulted here (`skills/principle-single-source-of-truth/SKILL.md`).
 
 ## Untrusted output
 

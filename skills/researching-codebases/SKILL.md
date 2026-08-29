@@ -21,6 +21,7 @@ two constraints hold on the way there:
   run — cite file:line. When a question concerns behavior, follow the
   execution path far enough to see the code that runs, not just a name
   that suggests it.
+  A claim earns its place only with cited evidence (`skills/principle-evidence-over-assertion/SKILL.md`).
 - **Cross-repo contracts are findings.** In multi-repo mode, contracts
   that cross repo boundaries (shared types, API schemas) go in
   `## Constraints`, and conventions that differ between repos go in
@@ -80,6 +81,7 @@ matching entry in `repos.md`.
 
 - **Objective findings only.** Report what IS, not what SHOULD BE. Do not
   recommend approaches.
+  A blinded investigator returns facts, not opinions (`skills/principle-blind-the-investigator/SKILL.md`).
 - **Compress, do not summarize.** Include specific function names, type
   signatures, and file paths. Omit prose that does not carry information.
 - **Stay under 100 lines.** If you need more space, cut the least

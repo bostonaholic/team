@@ -121,3 +121,5 @@ incorrect):
 - **Do NOT refactor existing code** unless the plan explicitly calls for it.
 - **Reference real file paths from the plan.** Do not invent new files or
   directories that the plan does not specify.
+
+The cross-gate canon lives at `skills/principle-scope-fence/SKILL.md`; this section owns the implementer's application.

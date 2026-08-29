@@ -37,6 +37,8 @@ The cardinal rule: **Do not let the same model grade its own exam.**
 - A reviewer needing clarification flags it as an open question. It never asks
   the implementer.
 
+The cross-gate canon lives at `skills/principle-generator-evaluator/SKILL.md`; this skill owns the code-review application.
+
 ## Veto Without Authorship
 
 The separation runs both directions. A reviewer blocks the line and changes
@@ -46,6 +48,8 @@ nothing. A producer changes the tree and casts no verdict.
   and `permissionMode: plan`. Report the defect. Never fix it. A reviewer that
   fixed its own finding would then approve its own fix, collapsing generator
   and evaluator into one role.
+  The constraint is the withheld tool, not a request for restraint
+  (`skills/principle-least-privilege/SKILL.md`).
 - **The veto holds until the finding is resolved.** Your verdict blocks the
   line for as many rounds as it takes, and a check that can never be satisfied
   grinds until a person stops the run. Report the finding you actually have —
@@ -120,6 +124,7 @@ that pass did not run.>
   in its section. This is where "skip loudly" lands in the report. A
   reader of a report that dropped the section cannot tell a pass that ran
   and found nothing from one that never ran at all.
+  What did not happen is reported as visibly as what did (`skills/principle-skip-loudly/SKILL.md`).
 
 ## Gate Types and Severity Tiers
 
