@@ -157,20 +157,20 @@ describe("engineering-standards methodology", () => {
     }
   });
 
-  test("skill defers to solid-principles for LSP/SRP", () => {
-    expect(read(SKILL_FILE)).toContain("solid-principles/SKILL.md");
+  test("skill defers to principle-solid for LSP/SRP", () => {
+    expect(read(SKILL_FILE)).toContain("principle-solid/SKILL.md");
   });
 
-  test("implementer.md still loads solid-principles", () => {
-    expect(loadsSkill(read(IMPLEMENTER), "solid-principles")).toBe(true);
+  test("implementer.md still loads principle-solid", () => {
+    expect(loadsSkill(read(IMPLEMENTER), "principle-solid")).toBe(true);
   });
 
   test("implementer.md still loads refactoring-to-patterns", () => {
     expect(loadsSkill(read(IMPLEMENTER), "refactoring-to-patterns")).toBe(true);
   });
 
-  test("code-reviewer.md still loads solid-principles", () => {
-    expect(loadsSkill(read(CODE_REVIEWER), "solid-principles")).toBe(true);
+  test("code-reviewer.md still loads principle-solid", () => {
+    expect(loadsSkill(read(CODE_REVIEWER), "principle-solid")).toBe(true);
   });
 
   test("code-reviewer.md still references code-review/SKILL.md", () => {
@@ -189,8 +189,8 @@ describe("engineering-standards methodology", () => {
   // The working-tree `git diff` cleanliness check is a CI-hygiene concern, not
   // a property of the code under test, so it is intentionally not covered here.
 
-  test("skills.md methodology table includes solid-principles row", () => {
-    const row = filterRows(read(SKILLS_MD), "solid-principles", /^#|^>|\/\/|event/);
+  test("skills.md methodology table includes principle-solid row", () => {
+    const row = filterRows(read(SKILLS_MD), "principle-solid", /^#|^>|\/\/|event/);
     expect(row.length).toBeGreaterThan(0);
   });
 

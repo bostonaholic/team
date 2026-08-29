@@ -17,7 +17,7 @@ Six lenses, applied as severity guidance when a decision is contested:
 - **Carmack** — implement directly; keep a way to measure performance.
 - **Armstrong** — isolate failures so one module's fault does not propagate.
 - **Knuth** — clarity before cleverness.
-- **Liskov** — honor interface contracts (`skills/solid-principles/SKILL.md`
+- **Liskov** — honor interface contracts (`skills/principle-solid/SKILL.md`
   carries LSP and SRP in full).
 - **Ousterhout** — deep modules, simple interfaces; pull complexity downward.
 

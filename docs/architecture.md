@@ -668,7 +668,7 @@ load limit in the Design guidelines below: `authoring-designs` is
 design-author's own extracted procedure skill, which that limit exempts.
 The second is an inline prose load instruction in the agent body. For
 example, the `implementer` body's Code quality section loads
-`solid-principles` inline.
+`principle-solid` inline.
 
 **Two reference forms, and the form is the contract.** Every skill-to-skill
 reference is one of two kinds, and each has its own encoding:

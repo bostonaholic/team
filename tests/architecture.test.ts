@@ -97,8 +97,8 @@ describe("skill architecture", () => {
     expect(text).not.toContain("indirection without reuse");
   });
 
-  test("implementer.md still loads solid-principles", () => {
-    expect(loadsSkill(read(IMPLEMENTER), "solid-principles")).toBe(true);
+  test("implementer.md still loads principle-solid", () => {
+    expect(loadsSkill(read(IMPLEMENTER), "principle-solid")).toBe(true);
   });
 
   test("technical-writer.md still references writing-prose/SKILL.md", () => {

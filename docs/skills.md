@@ -973,7 +973,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Key behaviors:** Write a failing test that reproduces the bug, then make
   it green. No fix lands without a reproducing test.
 
-### [solid-principles](https://github.com/bostonaholic/team/blob/main/skills/solid-principles/SKILL.md)
+### [principle-solid](https://github.com/bostonaholic/team/blob/main/skills/principle-solid/SKILL.md)
 
 - **Purpose:** The five object-oriented design principles.
 - **Loaded by:** implementer, code-reviewer (2).
@@ -1276,7 +1276,7 @@ entry-point section above rather than repeating them here.
 | `test-first-development` | test-architect, code-reviewer. Orchestrator | Implement |
 | `test-style` | test-architect, code-reviewer (just-in-time through pointers) | Implement |
 | `test-driven-bug-fix` | team-fix | Bug-fix flow |
-| `solid-principles` | implementer, code-reviewer | Implement |
+| `principle-solid` | implementer, code-reviewer | Implement |
 | `refactoring-to-patterns` | implementer | Implement |
 | `implementing-slices` | implementer | Implement |
 | `running-quality-checks` | verifier. reflect (after the writes) | Implement (verify), and Any (reflect) |

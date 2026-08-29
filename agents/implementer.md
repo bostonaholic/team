@@ -40,7 +40,7 @@ blocker handling, and the scope fence.
   "When Implementing" checkpoints and quality checklist before each slice
   is done.
 - Apply SOLID principles when writing new code. Call the Skill tool with
-  `solid-principles` for the full
+  `principle-solid` for the full
   methodology.
 - When the plan changes existing code, call the Skill tool with
   `refactoring-to-patterns` and
