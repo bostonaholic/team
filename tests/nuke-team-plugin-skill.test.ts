@@ -768,3 +768,176 @@ describe("Cross-slice: AGENTS.md registers the skill as a development concern on
     expect(entryPoints).not.toContain("nuke-team-plugin");
   });
 });
+
+// ===========================================================================
+// Round-2 review-fix tripwires (docs/plans/2026-08-28-nuke-team-plugin,
+// design-review-5.md). Each pins a mechanic the round-2 gate found missing:
+// untrusted NUKE.md values reaching the shell as literals (security CRITICAL),
+// the zsh-hostile generator loop (code B1), restore bindings that never re-prove
+// (code B2), and the manifest-fence / R4 / R5 hardening (security MEDIUM).
+// ===========================================================================
+
+// A bare `LINES=` assignment — the zsh special integer parameter (terminal
+// height). Assigning a manifest string to it makes zsh arithmetic-evaluate the
+// value on next use and abort. `MANIFEST_LINES` is the safe name; this matcher
+// must NOT fire on it, so it is anchored to a non-name character before LINES.
+const BARE_LINES_ASSIGN = /(^|[^A-Za-z0-9_])LINES=/m;
+
+// A `for X in $VAR` loop over an unquoted expansion — zsh does not word-split
+// it, so the loop runs once over the whole blob (code B1). Literal-list loops
+// (`for p in AGENTS.md ...`) carry no `$` and never match.
+const FOR_IN_UNQUOTED = /for\s+\w+\s+in\s+\$/;
+
+describe("Round 2: untrusted NUKE.md values are bound by file-reading command substitution, never retyped (security CRITICAL S-C1)", () => {
+  test("the item argument is bound by a single-quoted here-doc, so $(...) in it is inert", () => {
+    expect(restoreSection()).toContain(`IFS= read -r ITEM <<'RESTORE_ITEM'`);
+  });
+
+  test("the recorded branch is read from NUKE.md by sed, not retyped", () => {
+    expect(restoreSection()).toContain(
+      `RECORDED_BRANCH="$(sed -n 's/^- Branch: //p'`,
+    );
+  });
+
+  test("the recorded baseline tag is read from NUKE.md by sed, not retyped", () => {
+    expect(restoreSection()).toContain(
+      `RECORDED_TAG="$(sed -n 's/^- Baseline tag: //p'`,
+    );
+  });
+
+  test("the recorded archive SHA is read from NUKE.md by sed, not retyped", () => {
+    expect(restoreSection()).toContain(
+      `RECORDED_ARCHIVE_SHA="$(sed -n 's/^- Archive SHA: //p'`,
+    );
+  });
+
+  test("the cache-undo entry is read from NUKE.md by grep/sed before the equality gate (step 7)", () => {
+    expect(body()).toContain(`RECORDED_ENTRY="$(grep -E '^ln -sfn '`);
+  });
+
+  test("step 7 refuses unless the recorded entry equals the discovered live entry", () => {
+    // Mutant target: delete this equality and the undo line can name any path.
+    expect(body()).toContain(`[ "$CACHE_ENTRY" = "$RECORDED_ENTRY" ]`);
+  });
+
+  test("Hard Rule 12 bans a NUKE.md/argument value as literal text in a command", () => {
+    expect(squash(body())).toContain(
+      "A value from `NUKE.md` or the `<item>` argument is never typed into a command",
+    );
+  });
+
+  test("manifest triples are split with parameter expansion, never read by eye", () => {
+    // ${REST%% *} peels one whitespace-delimited field with no subshell.
+    expect(restoreSection()).toContain(`tok="${"${REST%% *}"}"`);
+  });
+});
+
+describe("Round 2: the manifest variable is MANIFEST_LINES, never the zsh special LINES (code B1 / restore)", () => {
+  test("the bare-LINES matcher fires on a planted assignment", () => {
+    expect(BARE_LINES_ASSIGN.test('\nLINES="$(sed -n ...)"')).toBe(true);
+    expect(BARE_LINES_ASSIGN.test('\nMANIFEST_LINES="$(sed ...)"')).toBe(false);
+  });
+
+  test("restore assigns MANIFEST_LINES", () => {
+    expect(restoreSection()).toContain(`MANIFEST_LINES="$(sed -n`);
+  });
+
+  test("no block assigns the zsh special integer parameter LINES", () => {
+    expect(body().length).toBeGreaterThan(0);
+    expect(BARE_LINES_ASSIGN.test(body())).toBe(false);
+  });
+});
+
+describe("Round 2: the generator enumerates per entry with while-read, not a zsh-hostile for-in (code B1)", () => {
+  test("the for-in matcher fires on a planted unquoted loop", () => {
+    expect(FOR_IN_UNQUOTED.test("for ENTRY in $ENTRIES; do")).toBe(true);
+    expect(FOR_IN_UNQUOTED.test("for p in AGENTS.md CLAUDE.md; do")).toBe(false);
+  });
+
+  test("the manifest generator iterates entries with while IFS= read -r", () => {
+    // Mutant target: revert to `for ENTRY in $ENTRIES` and zsh runs one blob
+    // iteration after the tag push — a stranded tag and no commit.
+    expect(body()).toContain("while IFS= read -r ENTRY");
+  });
+
+  test("no loop iterates an unquoted variable expansion with for-in", () => {
+    expect(body().length).toBeGreaterThan(0);
+    const offenders = body()
+      .split("\n")
+      .filter((line) => FOR_IN_UNQUOTED.test(line))
+      .map((line) => line.trim());
+    expect(offenders).toEqual([]);
+  });
+
+  test("the per-path removal loop deletes each surviving path on its own presence", () => {
+    // Mutant target: the presence-guarded per-path `git rm`, not one pathspec.
+    expect(body()).toContain(`git -C "$WORKTREE" rm -r -q -- "$p"`);
+  });
+});
+
+describe("Round 2: restore proves within one invocation and re-proves in the escape (code B2)", () => {
+  test("restore states R2 through R7 run as one Bash invocation", () => {
+    expect(squash(restoreSection())).toContain(
+      "R2 through R7 are one Bash invocation",
+    );
+  });
+
+  test("the re-restore escape re-establishes both proofs from scratch", () => {
+    expect(squash(restoreSection())).toContain(
+      "re-runs R2's containment proof and R5's tag verification from scratch",
+    );
+  });
+
+  test("R7 loops over the proved TRIPLES, gating and writing each present path", () => {
+    expect(restoreSection()).toContain(`while IFS=' ' read -r ITEM_PATH BASELINE STATE`);
+    expect(restoreSection()).toContain(`git -C "$TOPLEVEL" checkout "$ARCHIVE" -- "$ITEM_PATH"`);
+  });
+
+  test("R7 refuses only when every path on the item is absent, never on a partial", () => {
+    expect(restoreSection()).toContain(`[ "$WROTE" -ge 1 ]`);
+  });
+});
+
+describe("Round 2: the manifest fence and R4/R5 gates are hardened (security MEDIUM S-M1..M4)", () => {
+  test("the closer matches a CommonMark 3-or-more-backtick fence (S-M1)", () => {
+    // Mutant target: exactly-three closer lets a 4-backtick line run the range on.
+    expect(restoreSection()).toContain(`^ \\{0,3\\}[\`]\\{3,\\}[[:space:]]*$`);
+  });
+
+  test("every extracted manifest line must match the record grammar, counted (S-M1)", () => {
+    expect(restoreSection()).toContain("(pair|tree|file|group)");
+    expect(restoreSection()).toContain(`[ "$TOTAL" = "$GOOD" ]`);
+  });
+
+  test("R4 is one runnable gate: baseline enum, state format, and the absent+hash contradiction (S-M4)", () => {
+    // Mutant target: any of these deleted and a forged line reaches checkout.
+    expect(restoreSection()).toContain("present|absent) ;;");
+    expect(restoreSection()).toContain(`[ "${"${#STATE}"}" = 40 ]`);
+    expect(squash(restoreSection())).toContain(
+      `[ "$BASELINE" = absent ] && [ "$STATE" != - ]`,
+    );
+  });
+
+  test("R4 excludes the skill's own directory case-insensitively (security LOW)", () => {
+    expect(restoreSection()).toContain(`tr 'A-Z' 'a-z'`);
+  });
+
+  test("R5 binds the tag and branch to the date derived from the proved worktree (S-M2)", () => {
+    // Mutant target: the two equalities, not just the interpolated strings —
+    // an edited NUKE.md must not name another date's verified baseline.
+    expect(restoreSection()).toContain(`NUKE_DATE="${"${TOPLEVEL##*/team-nuke-}"}"`);
+    expect(restoreSection()).toContain(
+      `[ "$RECORDED_TAG" = "nuke-baseline/${"${NUKE_DATE}"}" ]`,
+    );
+    expect(restoreSection()).toContain(
+      `[ "$RECORDED_BRANCH" = "experiment/nuke-${"${NUKE_DATE}"}" ]`,
+    );
+  });
+
+  test("R5's git reads are scoped to $TOPLEVEL behind a guard (S-M3)", () => {
+    expect(restoreSection()).toContain(`git -C "$TOPLEVEL" tag -v "$RECORDED_TAG"`);
+    expect(restoreSection()).toContain(
+      `ARCHIVE="$(git -C "$TOPLEVEL" rev-parse "${"${RECORDED_TAG}"}^{}")"`,
+    );
+  });
+});
