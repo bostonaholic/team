@@ -76,7 +76,7 @@ Aim for ~2 pages (≈100–200 lines, excluding frontmatter).
   `## Slices` and `## Out of structure`. Make sure that slice 1 ships
   something a real person wants, not infrastructure. Cut scope to the
   smallest wanted thing. It adds no new gate.
-- **Apply the principle-systems-thinking lens.** The `skills:` frontmatter preloads
+- **Apply the systems-thinking lens.** The `skills:` frontmatter preloads
   it. If it is not already in context, call the Skill tool with
   `principle-systems-thinking`.
   Use its `## When Slicing` section. A slice's scope includes

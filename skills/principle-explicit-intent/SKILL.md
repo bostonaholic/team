@@ -18,8 +18,10 @@ its scope must match exactly what it authorizes.
 
 **Pattern:**
 - Granularity matches irreversibility: one yes per irreversible mutation.
-  A single yes never closes several, and approving an adjacent class of
-  change never carries the irreversible one.
+  An approval covers exactly the items it names — a request naming a set
+  covers that set, and a yes to one item never silently extends to an
+  item it did not name. Approving an adjacent class of change never
+  carries the irreversible one.
 - The grant is scoped and complete: authorization to act is authorization
   to finish the verified act — and nothing beyond what was stated.
 - Spend granted authorization; do not re-ask it. Once intent is stated

@@ -148,7 +148,7 @@ operational concerns. One bullet each.>
   Type signatures are OK if they crystallize a decision.
 - **Reference patterns, do not duplicate them.** "Follow the pattern in
   `lib/foo.ts:30-60`" is better than restating those 30 lines.
-- **Apply the principle-systems-thinking lens** — if it is not already in context,
+- **Apply the systems-thinking lens** — if it is not already in context,
   call the Skill tool with `principle-systems-thinking` and
   use its `## When Designing` section: document adjacent components in
   `## Current state` and name the surfaces that must change together in

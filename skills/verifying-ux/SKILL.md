@@ -119,8 +119,7 @@ heredoc with a **quoted delimiter** (`<<'EOF'`), so caption and `seed_note`
 text can never trigger `$()`/backtick expansion. The same discipline applies
 to every command in this section: pass variable content (routes, file paths,
 captions) single-quoted or as separate argv words — never interpolated into
-a command string — the rule of `skills/principle-never-interpolate/SKILL.md`.
-Frontmatter schema, exactly:
+a command string. Frontmatter schema, exactly:
 
 ```yaml
 ---

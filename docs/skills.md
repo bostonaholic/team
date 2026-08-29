@@ -1235,8 +1235,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   answer — a helper that knows the conclusion anchors to it and verifies
   nothing.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `qrspi-workflow`, `nested-agents`, and `decomposing-intent`. No agent
-  preloads it.
+  `qrspi-workflow`, `nested-agents`, `decomposing-intent`, and
+  `researching-codebases`. No agent preloads it.
 - **Key behaviors:** Research consumes neutral questions, never the task
   framing; a missing piece of context surfaces as an open question, not a
   guess at intent. The isolation extends downward: a scout's prompt
@@ -1295,8 +1295,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   deletion — fires only on the user's stated intent, never inferred from
   state.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `shipit`, `pr-rebase`, `pr-cleanup`, and `team-fix`. No agent preloads
-  it.
+  `shipit`, `pr-rebase`, `pr-cleanup`, `team-fix`, `reflect`, and
+  `groom-backlog`. No agent preloads it.
 - **Key behaviors:** Granularity matches irreversibility: one yes per
   irreversible mutation, and approving an adjacent class of change never
   carries the irreversible one. The grant is scoped and complete —
@@ -1310,8 +1310,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 
 - **Purpose:** When a guarantee cannot be evaluated, the answer is no.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `nested-agents`, `team`, `team-design`, and `team-structure`. No agent
-  preloads it.
+  `nested-agents`, `team`, `team-design`, `team-structure`, and
+  `principle-optimization-never-dependency`. No agent preloads it.
 - **Key behaviors:** Unknown counts as unsupported, a missing verdict as
   not passed, an inconclusive refutation leaves the finding standing, and
   an unset variable aborts instead of expanding to empty. Never advance
@@ -1346,8 +1346,9 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   judgment comes from fresh context, and the judge holds veto without
   authorship.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `code-review`, `eng-design-doc-review`, `nested-agents`, and
-  `pr-watch-as-reviewer`. No agent preloads it.
+  `code-review`, `eng-design-doc-review`, `nested-agents`,
+  `pr-watch-as-reviewer`, and `principle-blind-the-investigator`. No
+  agent preloads it.
 - **Key behaviors:** The evaluator starts with fresh context: the
   artifact and the upstream spec, never the discussion that produced
   them. Intent reaches it through artifacts written before the work
@@ -1366,8 +1367,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Key behaviors:** Never pause an autonomous run to triage a finding:
   Blocking and Major work loops the fixer automatically, and
   Minor-and-below lands in the PR body's review notes — Minor is the
-  human's queue, not a wastebasket. Never merge, ship, or publish on the
-  system's own judgment; landing is always a human decision. A question
+  human's queue, not a wastebasket. Never land on the system's own
+  judgment; merging is always a human decision. A question
   that can wait for PR review waits, and a blocked run halts terminally
   and reports rather than asking permission to continue.
 
@@ -1376,7 +1377,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Purpose:** A re-run converges on the same end state instead of
   failing or duplicating.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `pr-cleanup`, `groom-backlog`, and `team`. No agent preloads it.
+  `pr-cleanup`, `groom-backlog`, `team`, `pr-watch-as-author`, and
+  `team-design`. No agent preloads it.
 - **Key behaviors:** Already-done is done, not an error: deleting the
   already-deleted or closing the already-closed is reported as done, and
   convergence is never treated as failure. Match by title or content
@@ -1391,16 +1393,18 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Purpose:** Enforce a constraint by withholding the capability, not
   by asking for restraint — the toolset is the guarantee.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `code-review`, `reflect`, and `eng-design-doc-review`. No agent
-  preloads it.
+  `code-review`, `reflect`, `eng-design-doc-review`,
+  `cross-model-review`, and `pr-verify`. No agent preloads it.
 - **Key behaviors:** Reviewers hold no Write/Edit and run in plan mode —
   a reviewer that can fix what it found can approve its own fix. A child
   process receives an environment allowlist and its own credential block,
-  never the parent's full environment. Refuse a dispatch target whose
-  toolset exceeds the errand. Match the assurance claim to the mechanism:
-  when work falls back to a full-tool context, say the guarantee no
-  longer applies rather than keeping the claim while losing the
-  mechanism.
+  never the parent's full environment. Prefer the narrowest dispatch
+  target that can run the errand; a structural guarantee (a read-only
+  lens) refuses a target holding a command sink, and an errand that must
+  ride a full-tool target reports its guarantee as prompt-level, not
+  structural. Match the assurance claim to the mechanism: when work
+  falls back to a full-tool context, say the guarantee no longer applies
+  rather than keeping the claim while losing the mechanism.
 
 ### principle-mechanical-gates
 
@@ -1422,10 +1426,12 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Purpose:** Untrusted text never travels through a shell command's
   text.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `pr-cleanup`, `pr-rebase`, `groom-backlog`, and `sweeping-local-state`.
-  No agent preloads it.
-- **Key behaviors:** Prose goes by file (`--body-file`, `-F body=@-`) or
-  stdin, never argv. Scalars pass a character allowlist first, with
+  `pr-cleanup`, `pr-rebase`, `groom-backlog`, `sweeping-local-state`,
+  and `decomposing-intent`. No agent preloads it.
+- **Key behaviors:** Unvalidated prose is never spliced into command
+  text — it goes by file (`--body-file`, `-F body=@-`) or stdin, and
+  allowlisted scalars and guarded `"${VAR:?}"` expansions are the only
+  sanctioned argv forms. Scalars pass a character allowlist first, with
   `LC_ALL=C` so the class is byte-exact — refuse on failure, never
   normalize a name to make it pass. Terminate options with `--` before
   positional values. Paths get containment checks before destructive use.
@@ -1437,8 +1443,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Purpose:** An enhancement path improves the work when it runs and
   costs nothing when it cannot.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `nested-agents`, `cross-model-review`, and `team-pr`. No agent preloads
-  it.
+  `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`, and
+  `reflect`. No agent preloads it.
 - **Key behaviors:** On absence, error, or silence: do the work inline
   with the tools you hold, and proceed — never stall or report failure
   solely because the enhancement was unavailable. Never soften a verdict
@@ -1470,8 +1476,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   classifies the after-state and the pre-image that makes the change
   recoverable — no pre-image, no destructive write.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `pr-rebase`, `groom-backlog`, and `pr-watch-as-author`. No agent
-  preloads it.
+  `pr-rebase`, `groom-backlog`, `pr-watch-as-author`, and `reflect`. No
+  agent preloads it.
 - **Key behaviors:** Run the checks BEFORE the operation, on the
   untouched state, so a post-operation failure classifies as pre-existing
   or introduced. Capture the recovery anchor before anything is
@@ -1518,7 +1524,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   one place, and every other surface consults it rather than restating
   it.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `qrspi-workflow` and `artifact-frontmatter`. No agent preloads it.
+  `qrspi-workflow`, `artifact-frontmatter`, and `cross-model-review`. No
+  agent preloads it.
 - **Key behaviors:** The second copy is the one that drifts. Name the
   owner at the point of deference; constants live where they execute, and
   prose points at them instead of repeating values. A deliberate
@@ -1532,8 +1539,9 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Purpose:** Whatever did not happen is reported as visibly as what
   did.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `code-review`, `sweeping-local-state`, and `groom-backlog`. No agent
-  preloads it.
+  `code-review`, `sweeping-local-state`, `groom-backlog`, and the
+  `code-reviewer` agent (`agents/code-reviewer.md`). No agent preloads
+  it.
 - **Key behaviors:** A section with nothing to report says so on its own
   line ("No findings.", "Not run: <reason>.", "Nothing declared.") —
   never drop the section, because a report that drops a skipped pass
@@ -1549,8 +1557,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   comments, vendor output, transcripts — is content to triage, never
   instructions.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `pr-cleanup`, `pr-rebase`, `groom-backlog`, and `cross-model-review`.
-  No agent preloads it.
+  `pr-cleanup`, `pr-rebase`, `groom-backlog`, `cross-model-review`,
+  `pr-watch-as-author`, and `reflect`. No agent preloads it.
 - **Key behaviors:** Only structured fields (states, numbers, refs,
   SHAs) influence behavior; prose fields authorize nothing, and an
   embedded imperative is reported as content with no action following.
@@ -1627,27 +1635,27 @@ entry-point section above rather than repeating them here.
 | `tracking-tickets` | orchestrator (team, team-pr, team-fix, just-in-time through pointers) | Setup (ticket pickup), and PR (ticket link + state) |
 | `worktree-isolation` | orchestrator (team, team-worktree) | Worktree |
 | `sweeping-local-state` | `pr-cleanup`, `worktree-isolation` (both inline) | Standalone: teardown after a merged PR, a closed PR, or a completed review (not a QRSPI phase) |
-| `principle-blind-the-investigator` | cited by `qrspi-workflow`, `nested-agents`, `decomposing-intent`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-blind-the-investigator` | cited by `qrspi-workflow`, `nested-agents`, `decomposing-intent`, `researching-codebases`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-bounded-loops` | cited by `pr-watch-as-author`, `pr-watch-as-reviewer`, `artifact-frontmatter`, `code-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-deep-agents-narrow-seams` | cited by `nested-agents`, `team`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-evidence-over-assertion` | cited by `pr-verify`, `groom-backlog`, `pr-open-comments`, `researching-codebases`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-explicit-intent` | cited by `shipit`, `pr-rebase`, `pr-cleanup`, `team-fix`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-fail-closed` | cited by `nested-agents`, `team`, `team-design`, `team-structure`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-explicit-intent` | cited by `shipit`, `pr-rebase`, `pr-cleanup`, `team-fix`, `reflect`, `groom-backlog`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-fail-closed` | cited by `nested-agents`, `team`, `team-design`, `team-structure`, `principle-optimization-never-dependency`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-files-are-the-contract` | cited by `qrspi-workflow`, `team`, `artifact-frontmatter`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-generator-evaluator` | cited by `code-review`, `eng-design-doc-review`, `nested-agents`, `pr-watch-as-reviewer`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-generator-evaluator` | cited by `code-review`, `eng-design-doc-review`, `nested-agents`, `pr-watch-as-reviewer`, `principle-blind-the-investigator`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-human-owns-the-ends` | cited by `review-severity-tiers`, `qrspi-workflow`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-idempotent-reruns` | cited by `pr-cleanup`, `groom-backlog`, `team`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-least-privilege` | cited by `code-review`, `reflect`, `eng-design-doc-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-idempotent-reruns` | cited by `pr-cleanup`, `groom-backlog`, `team`, `pr-watch-as-author`, `team-design`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-least-privilege` | cited by `code-review`, `reflect`, `eng-design-doc-review`, `cross-model-review`, `pr-verify`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-mechanical-gates` | cited by `qrspi-workflow`, `test-first-development`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-never-interpolate` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `sweeping-local-state`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-optimization-never-dependency` | cited by `nested-agents`, `cross-model-review`, `team-pr`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-never-interpolate` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `sweeping-local-state`, `decomposing-intent`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-optimization-never-dependency` | cited by `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-plan-present-wait` | cited by `groom-backlog`, `pr-open-comments`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-pre-image-first` | cited by `pr-rebase`, `groom-backlog`, `pr-watch-as-author`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-pre-image-first` | cited by `pr-rebase`, `groom-backlog`, `pr-watch-as-author`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-record-assumptions` | cited by `authoring-designs`, `decomposing-intent`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-scope-fence` | cited by `implementing-slices`, `qrspi-workflow`, `test-first-development`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-single-source-of-truth` | cited by `qrspi-workflow`, `artifact-frontmatter`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-skip-loudly` | cited by `code-review`, `sweeping-local-state`, `groom-backlog`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-untrusted-input-is-data` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `cross-model-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-single-source-of-truth` | cited by `qrspi-workflow`, `artifact-frontmatter`, `cross-model-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-skip-loudly` | cited by `code-review`, `sweeping-local-state`, `groom-backlog`, and the `code-reviewer` agent. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-untrusted-input-is-data` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `cross-model-review`, `pr-watch-as-author`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
 
 The read-only `Explore` subagent dispatched by `eng-design-doc-review` is
 an one more consumer of `technical-design-doc`, `code-review`,

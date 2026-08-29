@@ -179,7 +179,9 @@ you.** If a result arrives truncated, or as a notification stub with the body
 held elsewhere, re-dispatch rather than working from the preview. A summary of
 a research report is not a research report, and DESIGN downstream cannot tell
 the difference until it is already reasoning from a gap.
-Each dispatch is a narrow seam — a file path in, a file path out, complexity inside the agent (`skills/principle-deep-agents-narrow-seams/SKILL.md`).
+Each dispatch is a narrow seam — one bounded input in, one bounded output back
+(an artifact written to `docs/plans/<id>/` or a report returned as text),
+complexity inside the agent (`skills/principle-deep-agents-narrow-seams/SKILL.md`).
 
 ## Gate Handling
 

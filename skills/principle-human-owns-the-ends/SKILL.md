@@ -21,8 +21,8 @@ saved for the two decisions that were always the human's.
   work loops the fixer automatically; Minor-and-below lands in the PR
   body's review notes. Minor is not a wastebasket — it is the human's
   queue.
-- Never merge, ship, or publish on the system's own judgment. Landing is
-  always a human decision.
+- Never land on the system's own judgment: merging is always a human
+  decision. Opening the PR is autonomous; landing it is not.
 - Ask at the ends, be autonomous in the middle: a question that can wait
   for PR review waits. A blocked run halts terminally and reports rather
   than asking permission to continue.

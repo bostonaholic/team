@@ -18,7 +18,9 @@ Heredocs are no safer: a body line equal to the delimiter ends the
 heredoc early and the rest runs as shell.
 
 **Pattern:**
-- Prose goes by file (`--body-file`, `-F body=@-`) or stdin, never argv.
+- Splicing is the sin: unvalidated prose never enters command text. Prose
+  goes by file (`--body-file`, `-F body=@-`) or stdin; the only sanctioned
+  argv forms are allowlisted scalars and guarded `"${VAR:?}"` expansions.
   Declared command lines run verbatim; values reach them through the
   environment, never by editing or re-quoting the line.
 - Scalars (branch names, IDs) pass a character allowlist first, with

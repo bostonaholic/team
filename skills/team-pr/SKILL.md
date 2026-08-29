@@ -113,9 +113,7 @@ done
    never waits for approval. Opening the PR requires no approval. Push the
    branch and open the PR as a **draft** (`gh pr create --draft`). Pass the
    body to `gh pr create`/`gh pr edit` through `--body-file` or a quoted
-   heredoc — never interpolated into a double-quoted shell argument
-   (`skills/principle-never-interpolate/SKILL.md`: prose travels by file or
-   stdin, never through command text). Any
+   heredoc — never interpolated into a double-quoted shell argument. Any
    uncommitted final changes (typically `CHANGELOG.md`) land as a single
    trailing ship commit before the push. In multi-repo mode this opens
    **one draft PR per repo with commits** and cross-links them. When a

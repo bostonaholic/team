@@ -13,8 +13,9 @@ memory. Trusting "the model will remember" fails about one time in five.
 
 **Why:** A file survives a truncated context, a compaction, a crash, a new
 session, and a handoff to a different agent. The state lives on disk, not
-in memory. The file is the value passed between steps, and it is immutable
-history once written.
+in memory. The file is the value passed between steps, and it revises only
+by explicit rule — a design is overwritten on revision, a verdict record is
+appended and never overwritten — so nothing is silently lost.
 
 **Pattern:**
 - A step that produced no artifact did not happen. Write the file before

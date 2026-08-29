@@ -237,7 +237,7 @@ cross-cutting recency caveat:
    - *Why:* the expensive, divergent, high-churn surface is exactly the bindings
      (three manifest formats ship today — Claude Code's, Codex's, and
      Antigravity's — atop per-host hook schemas and still-moving host APIs),
-     while the stable, valuable surface, the 64 agent/skill bodies and 4 hook
+     while the stable, valuable surface, the 91 agent/skill bodies and 4 hook
      logic files, is *already portable*. The hybrid boundary lines up with the
      natural portable/non-portable seam, so it minimizes both duplication and the
      blast radius of churn.
@@ -288,7 +288,7 @@ cross-cutting recency caveat:
    - *Why:* it pulls the one irreducibly host-varying value out of the portable
      definitions, since the agent `model:` frontmatter is a Claude-specific model
      name and meaningless on Codex, and puts it behind a single host-agnostic
-     indirection, so the 64 agent/skill bodies never carry a host-specific model
+     indirection, so the 91 agent/skill bodies never carry a host-specific model
      literal. The per-host shims *read* `.team/config.json`; they never restate
      it.
 
@@ -365,7 +365,8 @@ a file, and installing from a URL clones fresh so the socket never exists.
 - A symlinked skill folder is followed at plugin scope **and** at global scope.
 - **A symlinked plugin root is discovered with no registration step.** A single
   link at `~/.gemini/config/plugins/team` pointing at a checkout put 52 Team
-  skills in the agent's own skill list, with no entry in `import_manifest.json`.
+  skills in the agent's own skill list, with no entry in `import_manifest.json`
+  (a probe from the 54-skill era; the tree now carries 78 skills).
   Team's dev install is that one link. A directory holding a hand-written
   `plugin.json` beside symlinked `skills/` and `agents/` works too; linking the
   root is preferred because the checkout already carries the manifest, so nothing

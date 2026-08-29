@@ -788,12 +788,18 @@ consumers, and behaviors), see [skills.md](skills.md).
    that is only meaningful inside one consumer's procedure, a
    **procedure fragment**, stays inline in that consumer.
 
-3. **Principle skills:** the 21 `principle-*` skills each state one
+3. **Principle skills:** 24 skills carry the `principle-` prefix, in two
+   tiers. The 21 extracted single-invariant skills each state one
    cross-cutting invariant — fail closed, bounded loops, evidence over
-   assertion, and their siblings. No agent preloads one, so they cost
-   nothing against the soft limit: the skills that apply a rule consult
-   it by citation, and any agent can load it just-in-time. Each exists so
-   the rule is defined once, not restated in every skill that obeys it.
+   assertion, and their siblings. No agent preloads one of those, so they
+   cost nothing against the soft limit: the skills that apply a rule
+   consult it by citation, and any agent can load it just-in-time. Each
+   exists so the rule is defined once, not restated in every skill that
+   obeys it. The other three — `principle-solid`,
+   `principle-product-thinking`, and `principle-systems-thinking` — are
+   renamed principle sets that ARE preloaded or agent-loaded (see the
+   Methodology skills section above), and they count toward the limit
+   like any methodology skill.
 
 ## 7. Hooks
 

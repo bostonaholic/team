@@ -200,7 +200,7 @@ describe("engineering-standards methodology", () => {
   });
 });
 
-describe("product-thinking methodology", () => {
+describe("principle-product-thinking methodology", () => {
   const SKILL_FILE = join(REPO_ROOT, "skills", "principle-product-thinking", "SKILL.md");
   const QUESTIONER = join(REPO_ROOT, "agents", "questioner.md");
   const DESIGN_AUTHOR = join(REPO_ROOT, "agents", "design-author.md");
@@ -377,7 +377,7 @@ describe("product-thinking methodology", () => {
 // heading, and the heading must resolve in the skill itself.
 // ---------------------------------------------------------------------------
 
-describe("systems-thinking lens (L2 content tripwire)", () => {
+describe("principle-systems-thinking lens (L2 content tripwire)", () => {
   const SKILL_FILE = join(REPO_ROOT, "skills", "principle-systems-thinking", "SKILL.md");
   // Two reference forms, and which one a site uses is itself the contract
   // (docs/architecture.md, "Methodology skills"). A site that must go load the
@@ -1243,12 +1243,12 @@ describe("code-review report format (L2 content tripwire)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// APPEND TO tests/methodology.test.ts — no new imports needed: these blocks
-// use only describe/expect/test, existsSync, join, REPO_ROOT, and the
-// frontmatter/read/squash helpers that file already imports.
-//
 // Principle skills — free L2 content tripwires (docs/testing.md §2). The 21
-// `principle-*` skills are prose contracts consulted by citation, with no L5
+// extracted single-invariant `principle-*` skills (24 dirs carry the prefix;
+// the other 3 — principle-solid, principle-product-thinking,
+// principle-systems-thinking — are renamed principle sets that agents
+// preload or load, pinned by their own describes above) are prose contracts
+// consulted by citation, with no L5
 // behavioral output, so a content tripwire pins each one's load-bearing
 // contract: the SKILL.md exists, the `name:` frontmatter matches, the
 // methodology-convention `user-invocable: false` is set, and 1-2 contract
@@ -1454,10 +1454,10 @@ describe("principle-human-owns-the-ends (L2 content tripwire)", () => {
     expect(/^user-invocable:\s*false\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
   });
 
-  test("pins the two human decisions (build and ship, never merge on own judgment)", () => {
+  test("pins the two human decisions (build and ship, never land on own judgment)", () => {
     const text = squash(read(SKILL_FILE));
     expect(text).toContain("what to build and what to ship");
-    expect(text).toContain("Never merge, ship, or publish on the system's own judgment");
+    expect(text).toContain("Never land on the system's own judgment");
   });
 
   test("citation site: review-severity-tiers cites the principle by path", () => {

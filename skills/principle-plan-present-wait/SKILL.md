@@ -9,7 +9,9 @@ user-invocable: false
 Mutations are planned to a file, presented as questions with exactly one
 recommendation each, and executed only on the user's answer. Nothing
 changes before the user answers; no answer means no mutation; a partial
-answer executes only the answered subset.
+answer executes only the answered subset — with one stated exception: an
+item above the verified confidence bar of the final bullet below, and
+inside every hard rule, may execute without the wait.
 
 **Why:** Separating deciding from doing keeps the blast radius auditable:
 the user judges the exact mutation, the plan on disk survives the wait,
