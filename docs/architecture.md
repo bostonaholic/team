@@ -760,7 +760,7 @@ cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. `code-review` is the only skill loaded as composed
 methodology that is also a user command.)
 
-For the full per-skill reference (all 57 skills, their arguments,
+For the full per-skill reference (all 78 skills, their arguments,
 consumers, and behaviors), see [skills.md](skills.md).
 
 ### Design guidelines
@@ -787,6 +787,13 @@ consumers, and behaviors), see [skills.md](skills.md).
    instead forecloses just-in-time loading for everyone else. Content
    that is only meaningful inside one consumer's procedure, a
    **procedure fragment**, stays inline in that consumer.
+
+3. **Principle skills:** the 21 `principle-*` skills each state one
+   cross-cutting invariant — fail closed, bounded loops, evidence over
+   assertion, and their siblings. No agent preloads one, so they cost
+   nothing against the soft limit: the skills that apply a rule consult
+   it by citation, and any agent can load it just-in-time. Each exists so
+   the rule is defined once, not restated in every skill that obeys it.
 
 ## 7. Hooks
 
@@ -1003,7 +1010,7 @@ children are confirmed, and the depth cap is stable.
 
 ## See also
 
-- **[Skills](skills.md)**: the full per-skill reference for all 57 skills.
+- **[Skills](skills.md)**: the full per-skill reference for all 78 skills.
 - **[Testing](testing.md)**: the six-layer test harness and which layer each check belongs at.
 - **[Vision](vision.md)**: the loop-driven end state this design builds toward.
 - **[Ethos](ethos.md)**: the principles behind the pipeline.
