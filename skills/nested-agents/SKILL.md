@@ -182,7 +182,7 @@ sub-agent through the `Agent` tool and try to get it refuted.
   written rule genuinely conflict, that is a finding for the report, not a
   refutation to act on alone.
 
-  This cuts against the system-fit lens in `skills/systems-thinking/SKILL.md`,
+  This cuts against the system-fit lens in `skills/principle-systems-thinking/SKILL.md`,
   which asks whether a change follows the conventions established elsewhere.
   Both hold, in this order: follow convention where no rule speaks, and follow
   the rule where one does.

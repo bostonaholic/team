@@ -378,15 +378,15 @@ describe("product-thinking methodology", () => {
 // ---------------------------------------------------------------------------
 
 describe("systems-thinking lens (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "systems-thinking", "SKILL.md");
+  const SKILL_FILE = join(REPO_ROOT, "skills", "principle-systems-thinking", "SKILL.md");
   // Two reference forms, and which one a site uses is itself the contract
   // (docs/architecture.md, "Methodology skills"). A site that must go load the
   // skill names it bare, because that is the Skill tool's argument; a site
   // whose frontmatter already preloaded it cites the path. Either form
   // disambiguates the `## When ...` heading below, which is the point of the
   // adjacency window: product-thinking carries a same-named heading.
-  const SKILL_PATH = "skills/systems-thinking/SKILL.md";
-  const SKILL_NAME = "`systems-thinking`";
+  const SKILL_PATH = "skills/principle-systems-thinking/SKILL.md";
+  const SKILL_NAME = "`principle-systems-thinking`";
 
   // Missing-file reads return "" so pre-implementation checks fail as
   // assertions (expected "" to contain ...), never as ENOENT crashes
@@ -1033,7 +1033,7 @@ describe("comment red flags (L2 content tripwire)", () => {
 // and precedent does not outrank one.
 describe("skeptic passes weigh a stated rule above precedent (L2 tripwire)", () => {
   const NESTED = read(join(REPO_ROOT, "skills", "nested-agents", "SKILL.md"));
-  const SYSTEMS = read(join(REPO_ROOT, "skills", "systems-thinking", "SKILL.md"));
+  const SYSTEMS = read(join(REPO_ROOT, "skills", "principle-systems-thinking", "SKILL.md"));
 
   test("a rule-violation claim carries the rule it cites", () => {
     // Guard: a missing file must fail, not vacuously pass the checks below.

@@ -43,7 +43,7 @@ checklist, both test-file severity regimes, and the test run. Format every
 finding per `skills/conventional-comments/SKILL.md` (preloaded).
 
 Call the Skill tool with `engineering-standards`, `principle-solid`,
-`test-style`, and `systems-thinking`. None of the four is preloaded, and
+`test-style`, and `principle-systems-thinking`. None of the four is preloaded, and
 the checks below are their application:
 
 - Check in-source comments per the skill's Comment red flags. Cite the
@@ -54,7 +54,7 @@ the checks below are their application:
   red flags are blocking on **first** occurrence.
 - Apply `engineering-standards`' "When Reviewing" section as more review
   criteria, and cite checklist item names in findings.
-- Apply the `System Fit` item from `systems-thinking`'s `## When Reviewing`
+- Apply the `System Fit` item from `principle-systems-thinking`'s `## When Reviewing`
   section. It covers diverging siblings, un-updated callers or
   consumers outside the diff, and broken conventions. Cite `System Fit` by
   name.

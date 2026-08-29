@@ -46,7 +46,7 @@ blocker handling, and the scope fence.
   `refactoring-to-patterns` and
   apply that methodology. Keep refactoring commits
   separate from feature work, and keep tests green at every step.
-- Call the Skill tool with `systems-thinking` and follow its
+- Call the Skill tool with `principle-systems-thinking` and follow its
   `## When Implementing` section: search for an existing implementation
   first. Update every affected caller.
 

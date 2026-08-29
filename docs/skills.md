@@ -1096,13 +1096,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   `docs/plans/<id>/prd.md`, referenced from `task.md`. Points PRD authors
   at the seventh-grade prose bar in `writing-prose`.
 
-<<<<<<< HEAD
-### [product-thinking](https://github.com/bostonaholic/team/blob/main/skills/product-thinking/SKILL.md)
-||||||| parent of 150b1f0 (refactor(skills): rename product-thinking to principle-product-thinking)
-### product-thinking
-=======
-### principle-product-thinking
->>>>>>> 150b1f0 (refactor(skills): rename product-thinking to principle-product-thinking)
+### [principle-product-thinking](https://github.com/bostonaholic/team/blob/main/skills/principle-product-thinking/SKILL.md)
 
 - **Purpose:** Product-need reasoning lens for "make something people
   want", which sharpens framing, design, and slicing so the work serves real
@@ -1113,7 +1107,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   thing people want, named user, talk-to-users mindset) shape the
   pre-implementation phases.
 
-### [systems-thinking](https://github.com/bostonaholic/team/blob/main/skills/systems-thinking/SKILL.md)
+### [principle-systems-thinking](https://github.com/bostonaholic/team/blob/main/skills/principle-systems-thinking/SKILL.md)
 
 - **Purpose:** System-fit reasoning lens that weighs a change's blast radius
   (callers, consumers, sibling implementations, conventions) rather than
@@ -1294,7 +1288,7 @@ entry-point section above rather than repeating them here.
 | `technical-design-doc` | planner | Plan |
 | `product-requirements-doc` | questioner (through `decomposing-intent`, conditional). Design-author (through `authoring-designs`) | Question, Design |
 | `principle-product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
-| `systems-thinking` | researcher, structure-planner, planner (frontmatter). Implementer, code-reviewer, ux-reviewer (inline). Authoring-designs, code-review, eng-design-doc-review (citing skills) | Research, Design, Structure, Plan, Implement (incl. verify) |
+| `principle-systems-thinking` | researcher, structure-planner, planner (frontmatter). Implementer, code-reviewer, ux-reviewer (inline). Authoring-designs, code-review, eng-design-doc-review (citing skills) | Research, Design, Structure, Plan, Implement (incl. verify) |
 | `writing-prose` | technical-writer, design-author | Design (authoring bar), and Implement (verify): bar for prose it writes and prose it assesses |
 | `reviewing-documentation` | technical-writer | Implement (verify): doc-gap review process + classification |
 | `git-commit` | team-pr. Implementer (through `implementing-slices`) | PR, and Implement (slice commits) |
