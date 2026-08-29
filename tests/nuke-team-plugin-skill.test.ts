@@ -134,6 +134,12 @@ const NARROW_WRITE_SCOPE = [
   "only writes recorded-absent paths",
 ];
 
+// Either half of a tag deletion. Neither tag is ever removed by the skill:
+// `nuke-baseline/<date>` is the archive, `nuke-result/<date>` is the
+// experiment's only durable record. Non-global, so `.test()` carries no
+// lastIndex between calls.
+const TAG_DELETION = /\btag -d\b|\bpush --delete\b/;
+
 // Decision 13's hard-coded scope check: every manifest path must sit inside one
 // of these roots, and the roots live in the skill body, never in NUKE.md.
 const DELETION_SET_ROOTS = [
@@ -302,6 +308,44 @@ describe("Slice 1: the remote baseline pre-flight refuses a lightweight remote t
 
   test("that block also reads the row's ^{} companion, so a missing companion is detectable", () => {
     expect(lsRemoteBlock()).toContain("^{}");
+  });
+
+  // The three above only pin the argv, which a body that reads both rows and
+  // then ignores the lightweight case would still satisfy. These pin the
+  // refusal itself: the two rows are bound to named variables, compared, and
+  // the comparison ends in a refusal.
+  test("the two rows are bound to named variables, so they can be compared at all", () => {
+    expect(lsRemoteBlock()).toContain("UNPEELED_ROW=");
+    expect(lsRemoteBlock()).toContain("PEELED_ROW=");
+  });
+
+  test('an unpeeled row with NO peeled companion is the refused condition', () => {
+    // Reading both rows is not the correction; refusing on
+    // "present unpeeled AND absent peeled" is (design.md:714).
+    expect(squash(lsRemoteBlock())).toContain(
+      `[ -n "$UNPEELED_ROW" ] && [ -z "$PEELED_ROW" ]`,
+    );
+  });
+
+  test("that condition refuses, naming the lightweight tag", () => {
+    expect(lsRemoteBlock()).toContain("refusing:");
+    expect(lsRemoteBlock()).toContain("LIGHTWEIGHT");
+  });
+
+  test("a peeled row that differs from the archive SHA is refused separately", () => {
+    expect(squash(lsRemoteBlock())).toContain(
+      `[ "$PEELED_ROW" != "$ARCHIVE_SHA" ]`,
+    );
+  });
+
+  test("the pre-flight is read-only, so it never creates the local tag it may refuse", () => {
+    // Ordering correction: the remote pre-flight runs before `tag -a -s`, so a
+    // refusal leaves no stray local tag behind.
+    const preflight = lineIndex(body(), /ls-remote --tags origin/);
+    const create = lineIndex(body(), /tag -a -s -m "Team instruction surface/);
+    expect(preflight).toBeGreaterThanOrEqual(0);
+    expect(create).toBeGreaterThan(preflight);
+    expect(lsRemoteBlock()).not.toContain("tag -a -s");
   });
 });
 
@@ -505,6 +549,35 @@ describe("Slice 3: restore refuses when the worktree toplevel equals the derived
     expect(restoreSection()).toContain("--git-common-dir");
   });
 
+  // Deriving both values is not the correction; comparing them and refusing on
+  // equality is. These three pin the comparison, its refusal, and the positive
+  // containment proof that a bare "not the primary clone" leaves out.
+  test("the derived toplevel is COMPARED with the derived primary root", () => {
+    expect(squash(restoreSection())).toContain(
+      `[ "$TOPLEVEL" != "$PRIMARY_ROOT" ]`,
+    );
+  });
+
+  test("that comparison refuses, saying the toplevel is the primary clone", () => {
+    expect(restoreSection()).toContain("refusing:");
+    expect(squash(restoreSection())).toContain("is the primary clone");
+  });
+
+  test("containment is proved positively, not only by excluding the primary clone", () => {
+    // "Not the primary clone" admits every other checkout on the machine. The
+    // toplevel must carry the team-nuke-<date> shape AND be a registered
+    // worktree of the derived primary root.
+    expect(restoreSection()).toContain("team-nuke-[0-9]");
+    expect(squash(restoreSection())).toContain(
+      `git -C "$PRIMARY_ROOT" worktree list --porcelain | grep -qxF "worktree ${"${TOPLEVEL}"}"`,
+    );
+  });
+
+  test("the recorded branch is shape-checked before it is compared", () => {
+    // NUKE.md is data: every allowlisted field it holds carries a shape check.
+    expect(restoreSection()).toContain("experiment/nuke-[0-9]");
+  });
+
   test("the nuke commit is derived, never read from NUKE.md, with rev-list --ancestry-path", () => {
     // NUKE.md sits inside the nuke commit and cannot record its own SHA.
     expect(restoreSection()).toContain("rev-list --ancestry-path");
@@ -562,20 +635,24 @@ describe("Slice 4: in the NUKE.md teardown template the nuke-result/ tag line pr
 
 describe("Slice 4: teardown carries no tag-deletion command anywhere, no --force on worktree remove, both tags created with an explicit -m, and the .2 collision line written literally beneath step 1", () => {
   test("the tag-deletion matcher fires on planted local and remote deletions", () => {
-    expect("git tag -d nuke-result/2026-08-28").toContain("tag -d");
-    expect("git push --delete origin nuke-result/2026-08-28").toContain(
-      "push --delete",
+    // Controls the matcher the absence sweeps below actually use — asserting a
+    // literal contains its own substring would prove nothing about them.
+    expect(TAG_DELETION.test("git tag -d nuke-result/2026-08-28")).toBe(true);
+    expect(
+      TAG_DELETION.test("git push --delete origin nuke-result/2026-08-28"),
+    ).toBe(true);
+    expect(TAG_DELETION.test("git tag -a -s -m msg nuke-result/<date>")).toBe(
+      false,
     );
   });
 
-  test("the teardown section carries no local tag deletion", () => {
+  test("the teardown section carries no local or remote tag deletion", () => {
     expect(teardownSection().length).toBeGreaterThan(0);
-    expect(teardownSection()).not.toContain("tag -d");
-  });
-
-  test("the teardown section carries no remote tag deletion", () => {
-    expect(teardownSection().length).toBeGreaterThan(0);
-    expect(teardownSection()).not.toContain("push --delete");
+    const offenders = teardownSection()
+      .split("\n")
+      .filter((line) => TAG_DELETION.test(line))
+      .map((line) => line.trim());
+    expect(offenders).toEqual([]);
   });
 
   test("no worktree remove line carries --force", () => {
