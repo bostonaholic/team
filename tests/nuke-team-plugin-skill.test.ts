@@ -430,15 +430,21 @@ describe("Slice 3: restore proves before it writes: exactly one nuke-manifest bl
   });
 
   test("the recorded-state gate checks the index, not only the working tree", () => {
-    expect(restoreSection()).toContain("git ls-files");
+    // Bound to $TOPLEVEL, not to the caller's cwd: R6 and R7 must read and
+    // write the same tree, which is the one R2 proved.
+    expect(restoreSection()).toContain(`git -C "$TOPLEVEL" ls-files`);
   });
 
   test("the recorded-state gate compares the staged blob with git rev-parse ':<path>'", () => {
-    expect(restoreSection()).toContain(`git rev-parse ":`);
+    expect(restoreSection()).toContain(`git -C "$TOPLEVEL" rev-parse ":`);
   });
 
   test("the recorded-state gate compares the working file with git hash-object", () => {
-    expect(restoreSection()).toContain("git hash-object");
+    expect(restoreSection()).toContain(`git -C "$TOPLEVEL" hash-object`);
+  });
+
+  test("the only restore write is bound to the proved toplevel, never to the caller's cwd", () => {
+    expect(restoreSection()).toContain(`git -C "$TOPLEVEL" checkout "$ARCHIVE" --`);
   });
 
   for (const root of DELETION_SET_ROOTS) {
@@ -511,11 +517,13 @@ describe("Slice 3: restore refuses when the worktree toplevel equals the derived
   test("a `-` state path is cleared from tree AND index with git rm -r -f", () => {
     // A filesystem `rm` leaves the index entry, so the stated escape would
     // never clear the recorded-state gate (design.md:426).
-    expect(restoreSection()).toContain("git rm -r -f --");
+    expect(restoreSection()).toContain(`git -C "$TOPLEVEL" rm -r -f --`);
   });
 
   test("a hashed manifest is returned by checking out the nuke commit, restoring the exact bytes the nuke wrote", () => {
-    expect(restoreSection()).toContain(`git checkout "$NUKE_COMMIT" --`);
+    expect(restoreSection()).toContain(
+      `git -C "$TOPLEVEL" checkout "$NUKE_COMMIT" --`,
+    );
   });
 });
 

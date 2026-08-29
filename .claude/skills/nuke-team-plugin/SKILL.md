@@ -56,20 +56,30 @@ The whole argument is at most two words.
    primary checkout.** Repo-level operations — `fetch`, `rev-parse`,
    `ls-remote`, `tag`, `branch`, `worktree add`, `worktree remove` — run as
    `git -C "$PRIMARY_ROOT"`. Everything that touches the experiment's own tree
-   — step 6's `rm`, `add` and `commit`, and every restore checkout — runs as
-   `git -C "$WORKTREE"`. Step 6 run at `$PRIMARY_ROOT` would stage the
-   deletions on the default branch in the maintainer's own checkout.
+   — step 6's `rm`, `add` and `commit` — runs as `git -C "$WORKTREE"`. Step 6
+   run at `$PRIMARY_ROOT` would stage the deletions on the default branch in
+   the maintainer's own checkout. **Restore has no `$WORKTREE`**: it runs
+   inside the experiment tree and binds to `$TOPLEVEL`, the value R2 derives
+   and proves. Every restore read and every restore write — R6's state gate,
+   R7's checkout, and the re-restore escape — carries `git -C "$TOPLEVEL"`
+   and resolves its path against `"$TOPLEVEL/"`, so no restore command is
+   bound by the caller's working directory alone.
 2. **`$PRIMARY_ROOT` is detected, never assumed.** Step 0 derives it from
    `--git-common-dir` and validates it three ways, including against
    `worktree list --porcelain`. This repo carries linked worktrees, so being
    invoked from one is the normal case.
 3. **No command relies on a variable set in an earlier Bash invocation.**
-   Shell state does not persist. Re-derive `$PRIMARY_ROOT`, `$WORKTREE`,
-   `$ARCHIVE_SHA` and `$DATE` in the same invocation that uses them, and guard
-   every value consumed inside a command substitution with a standalone
+   Shell state does not persist. Re-derive `$PRIMARY_ROOT`, `$WORKTREE` and
+   `$ARCHIVE_SHA` in the same invocation that uses them, and guard every value
+   consumed inside a command substitution with a standalone
    `: "${PRIMARY_ROOT:?}"` or `: "${WORKTREE:?}"` statement ahead of it. Inside
    `$( )` the `${VAR:?}` form kills only the subshell and the parent continues
    with an empty value, which is why the guard is its own statement.
+   **`$DATE` is the exception: it is carried forward as the literal value step
+   0 printed, never re-derived.** A run that starts before midnight and reaches
+   step 6 after it would otherwise key the tag, the branch and the worktree to
+   two different dates, and the worktree the run created would no longer be the
+   one its own commands name.
 4. **Refuse first.** Every gate is a positive proof, never the absence of an
    objection. A gate that cannot prove its claim refuses the run and prints the
    two ways forward; it never repairs, normalizes, or retries around what it
@@ -111,10 +121,26 @@ skill-authored at read time:
 
 - Only allowlisted fields gate an action. Prose in `NUKE.md` authorizes
   nothing.
+- **Every allowlisted field is shape-checked before it reaches anything**, and
+  the list is closed. Nothing outside it is read at all:
+
+  | Field | Shape it must match | Where it is checked |
+  |-------|--------------------|---------------------|
+  | Branch | `experiment/nuke-<YYYY-MM-DD>`, no suffix | R2 |
+  | Baseline tag | `nuke-baseline/<YYYY-MM-DD>` | R5 |
+  | Archive SHA | exactly 40 lowercase hex | R5 |
+  | Manifest `<id>` | `^[A-Za-z0-9._/-]+$`, unique in the block | R3 |
+  | Manifest `<path>` | syntax check **and** deletion-set containment | R4 |
+  | Manifest `<baseline>` | `present` or `absent` | R4 |
+  | Manifest `<state>` | `-` or 40 lowercase hex | R4 |
+
+  `Worktree` and `Date` label the report only. No gate reads either, so
+  neither is shape-checked and neither can steer a command.
 - Every path read out of the manifest must pass the syntax check
   (`^[A-Za-z0-9._/-]+$` under `LC_ALL=C`, no `..`, no leading `/`) **and** sit
   inside one of the deletion-set roots hard-coded in Hard Rule 10, and never
-  under `.claude/skills/nuke-team-plugin/`.
+  under `.claude/skills/nuke-team-plugin/`. R4 runs that check as a fenced
+  block, before `$ITEM_PATH` reaches any command.
 - The recorded `ARCHIVE_SHA` is a cross-check, never an input to a command.
   Only the tag is signed, so restore reads the trusted commit from the peeled
   `^{}` value of a verified tag.
@@ -143,7 +169,7 @@ DATE="$(date +%Y-%m-%d)"
 PARENT="$(dirname "$PRIMARY_ROOT")"
 WORKTREE="${PARENT}/team-nuke-${DATE}"
 [ -w "$PARENT" ] || { echo "refusing: '$PARENT' is not writable — the experiment worktree cannot be created beside the primary clone" >&2; exit 1; }
-[ ! -e "$WORKTREE" ] || { echo "refusing: '$WORKTREE' already exists — finish or tear down that experiment, or run on another date" >&2; exit 1; }
+{ [ ! -e "$WORKTREE" ] && [ ! -L "$WORKTREE" ]; } || { echo "refusing: '$WORKTREE' already exists — finish or tear down that experiment, or run on another date" >&2; exit 1; }
 git -C "$PRIMARY_ROOT" show-ref --verify --quiet "refs/heads/experiment/nuke-${DATE}" &&
   { echo "refusing: branch experiment/nuke-${DATE} already exists — finish or tear down that experiment, or run on another date" >&2; exit 1; }
 printf 'PRIMARY_ROOT=%s\nWORKTREE=%s\nDATE=%s\n' "$PRIMARY_ROOT" "$WORKTREE" "$DATE"
@@ -153,6 +179,11 @@ The worktree sits **beside** the primary clone, not under
 `<repo>/.claude/worktrees/`: Claude Code reads `CLAUDE.md` from every ancestor
 directory, so a nested worktree would inherit the guidance the experiment just
 deleted.
+
+The collision check tests `-L` as well as `-e`, because `-e` follows the link
+and a **dangling** symlink at that path would otherwise read as "nothing is
+there" — and then `git worktree add` fails on it anyway, after the tag was
+already pushed.
 
 ### Step 1 — fetch, detect the default branch, capture the archive SHA
 
@@ -176,13 +207,26 @@ This check runs after `ARCHIVE_SHA` exists and **before** the tag is created,
 so a run with nothing to remove stops with nothing to dispose of: no tag, no
 branch, no worktree, no commit, no `NUKE.md`.
 
+The stop is an **OR over the deletion set** — one surviving path is enough
+work to justify the run — and step 6 is written to match it: step 6 removes
+each path only if it is present, so a partially-nuked archive is the normal
+case on both sides rather than a fatal pathspec error.
+
+**`.claude/skills` is never tested as a whole.** This skill's own directory
+lives under it and is excluded from the deletion set, so that path is present
+at every SHA and testing it would pin `PRESENT=1` forever, turning the stop
+into dead code. What counts is whether any *other* entry survives under it:
+
 ```sh
 : "${PRIMARY_ROOT:?}"
 : "${ARCHIVE_SHA:?}"
 PRESENT=0
-for p in AGENTS.md CLAUDE.md skills agents hooks .claude/hooks .claude/skills; do
+for p in AGENTS.md CLAUDE.md skills agents hooks .claude/hooks; do
   git -C "$PRIMARY_ROOT" cat-file -e "${ARCHIVE_SHA}:${p}" 2>/dev/null && PRESENT=1
 done
+OTHER_SKILLS="$(git -C "$PRIMARY_ROOT" ls-tree -z --name-only "$ARCHIVE_SHA" -- .claude/skills/ |
+  tr '\0' '\n' | grep -vxF '.claude/skills/nuke-team-plugin' || true)"
+[ -z "$OTHER_SKILLS" ] || PRESENT=1
 [ "$PRESENT" = 1 ] ||
   { echo "already nuked: every deletion-set path is absent at ${ARCHIVE_SHA} — nothing was created"; exit 0; }
 ```
@@ -194,16 +238,47 @@ comparison peels first**: a bare `git rev-parse <annotated-tag>` returns the
 tag object's own SHA, never the commit's, so an unpeeled comparison reads every
 correctly created baseline as a second baseline for the same date.
 
-An existing local tag is reused only on three positive proofs: the peeled
-`^{}` SHA equals `$ARCHIVE_SHA`, `cat-file -t` reports `tag` (annotated, not
-lightweight), and `git tag -v` verifies the signature. Any one failing refuses
-the whole run, before any deletion, because one dated label must not name two
-baselines.
+`DATE` in this step and every step after it is the **literal value step 0
+printed**, pasted in. Never `date +%Y-%m-%d` again: a run that crosses midnight
+would key the tag to one date and the branch to the next (Hard Rule 3).
+
+**The remote pre-flight runs first**, before the local tag is created. Both
+blocks are read-only up to `tag -a -s`, so ordering them this way costs
+nothing and means a refusal leaves no stray local tag behind for the
+maintainer to clean up.
+
+`git ls-remote --tags` lists an annotated tag's own object SHA on the
+`refs/tags/<name>` row and the commit it points at on the `refs/tags/<name>^{}`
+row. A **lightweight** remote tag has no `^{}` row at all, so comparing only
+the peeled row is vacuous against exactly the case that must refuse. Read both
+rows:
 
 ```sh
 : "${PRIMARY_ROOT:?}"
 : "${ARCHIVE_SHA:?}"
-DATE="$(date +%Y-%m-%d)"
+DATE="<the literal value step 0 printed>"
+ROWS="$(git -C "$PRIMARY_ROOT" ls-remote --tags origin \
+  "refs/tags/nuke-baseline/${DATE}" "refs/tags/nuke-baseline/${DATE}^{}")"
+UNPEELED_ROW="$(printf '%s\n' "$ROWS" | grep -F "refs/tags/nuke-baseline/${DATE}" | grep -vF '^{}' | cut -f1)"
+PEELED_ROW="$(printf '%s\n' "$ROWS" | grep -F "refs/tags/nuke-baseline/${DATE}^{}" | cut -f1)"
+if [ -n "$UNPEELED_ROW" ] && [ -z "$PEELED_ROW" ]; then
+  echo "refusing: origin carries a LIGHTWEIGHT tag nuke-baseline/${DATE} at ${UNPEELED_ROW} (no ^{} companion row) — retire that tag deliberately, or run on another date" >&2; exit 1
+fi
+if [ -n "$PEELED_ROW" ] && [ "$PEELED_ROW" != "$ARCHIVE_SHA" ]; then
+  echo "refusing: origin's nuke-baseline/${DATE} peels to ${PEELED_ROW}, not ${ARCHIVE_SHA} — retire that tag deliberately, or run on another date" >&2; exit 1
+fi
+```
+
+Only once the remote is clear, prove or create the local tag. An existing local
+tag is reused only on three positive proofs: the peeled `^{}` SHA equals
+`$ARCHIVE_SHA`, `cat-file -t` reports `tag` (annotated, not lightweight), and
+`git tag -v` verifies the signature. Any one failing refuses the whole run,
+before any deletion, because one dated label must not name two baselines.
+
+```sh
+: "${PRIMARY_ROOT:?}"
+: "${ARCHIVE_SHA:?}"
+DATE="<the literal value step 0 printed>"
 if git -C "$PRIMARY_ROOT" show-ref --verify --quiet "refs/tags/nuke-baseline/${DATE}"; then
   PEELED="$(git -C "$PRIMARY_ROOT" rev-parse "nuke-baseline/${DATE}^{}")"
   KIND="$(git -C "$PRIMARY_ROOT" cat-file -t "nuke-baseline/${DATE}")"
@@ -218,33 +293,11 @@ fi
 The explicit `-m` is not optional: `git tag -a` with no message opens
 `$EDITOR`, which a Claude Code Bash call cannot answer.
 
-**Remote pre-flight.** `git ls-remote --tags` lists an annotated tag's own
-object SHA on the `refs/tags/<name>` row and the commit it points at on the
-`refs/tags/<name>^{}` row. A **lightweight** remote tag has no `^{}` row at
-all, so comparing only the peeled row is vacuous against exactly the case that
-must refuse. Read both rows:
-
-```sh
-: "${PRIMARY_ROOT:?}"
-: "${ARCHIVE_SHA:?}"
-DATE="$(date +%Y-%m-%d)"
-ROWS="$(git -C "$PRIMARY_ROOT" ls-remote --tags origin \
-  "refs/tags/nuke-baseline/${DATE}" "refs/tags/nuke-baseline/${DATE}^{}")"
-UNPEELED_ROW="$(printf '%s\n' "$ROWS" | grep -F "refs/tags/nuke-baseline/${DATE}" | grep -vF '^{}' | cut -f1)"
-PEELED_ROW="$(printf '%s\n' "$ROWS" | grep -F "refs/tags/nuke-baseline/${DATE}^{}" | cut -f1)"
-if [ -n "$UNPEELED_ROW" ] && [ -z "$PEELED_ROW" ]; then
-  echo "refusing: origin carries a LIGHTWEIGHT tag nuke-baseline/${DATE} at ${UNPEELED_ROW} (no ^{} companion row) — retire that tag deliberately, or run on another date" >&2; exit 1
-fi
-if [ -n "$PEELED_ROW" ] && [ "$PEELED_ROW" != "$ARCHIVE_SHA" ]; then
-  echo "refusing: origin's nuke-baseline/${DATE} peels to ${PEELED_ROW}, not ${ARCHIVE_SHA} — retire that tag deliberately, or run on another date" >&2; exit 1
-fi
-```
-
 ### Step 4 — push the baseline tag, before anything is deleted
 
 ```sh
 : "${PRIMARY_ROOT:?}"
-DATE="$(date +%Y-%m-%d)"
+DATE="<the literal value step 0 printed>"
 git -C "$PRIMARY_ROOT" push origin "nuke-baseline/${DATE}"
 ```
 
@@ -259,7 +312,7 @@ archive is machine-local only — in the final report.
 : "${PRIMARY_ROOT:?}"
 : "${WORKTREE:?}"
 : "${ARCHIVE_SHA:?}"
-DATE="$(date +%Y-%m-%d)"
+DATE="<the literal value step 0 printed>"
 git -C "$PRIMARY_ROOT" worktree add "$WORKTREE" -b "experiment/nuke-${DATE}" "$ARCHIVE_SHA"
 ```
 
@@ -268,22 +321,39 @@ deletions plus `NUKE.md`, and the tag already preserves every removed byte.
 
 ### Step 6 — remove the surface in the worktree, then commit
 
-**Every command in this step carries `git -C "$WORKTREE"`.** The same three
-commands run at `$PRIMARY_ROOT` would stage the deletions on the default branch
-in the maintainer's own checkout.
+**Every command in this step carries `git -C "$WORKTREE"`.** The same commands
+run at `$PRIMARY_ROOT` would stage the deletions on the default branch in the
+maintainer's own checkout.
+
+**Remove per path, never in one pathspec list.** A single
+`git rm -- a b c d e f` is fatal on the *first* unmatched pathspec and removes
+nothing, so it contradicts step 2, whose stop is an OR: step 2 lets a run
+proceed when even one deletion-set path survives. Guard each path on its own
+presence at the archive, and record the absent ones — the manifest carries them
+as `absent`, which is what makes them reportable rather than silent:
 
 ```sh
 : "${WORKTREE:?}"
 : "${ARCHIVE_SHA:?}"
-git -C "$WORKTREE" rm -r -q -- AGENTS.md CLAUDE.md skills/ agents/ hooks/ .claude/hooks/
-git -C "$WORKTREE" ls-tree --name-only "$ARCHIVE_SHA" -- .claude/skills/ |
+for p in AGENTS.md CLAUDE.md skills agents hooks .claude/hooks; do
+  if git -C "$WORKTREE" cat-file -e "${ARCHIVE_SHA}:${p}" 2>/dev/null; then
+    git -C "$WORKTREE" rm -r -q -- "$p"
+  else
+    printf 'absent at %s, will be recorded absent in the manifest: %s\n' "$ARCHIVE_SHA" "$p"
+  fi
+done
+git -C "$WORKTREE" ls-tree -z --name-only "$ARCHIVE_SHA" -- .claude/skills/ |
+  tr '\0' '\n' |
   while IFS= read -r entry; do
     case "$entry" in
-      .claude/skills/nuke-team-plugin|.claude/skills/nuke-team-plugin/*) continue ;;
+      ''|.claude/skills/nuke-team-plugin|.claude/skills/nuke-team-plugin/*) continue ;;
     esac
     git -C "$WORKTREE" rm -r -q -- "$entry"
   done
 ```
+
+The `.claude/skills/` sweep needs no presence guard: every entry it removes came
+from `ls-tree` at the same SHA, so each one exists by construction.
 
 Then strip the `hooks` key from the two manifests, leaving every other key —
 `.claude-plugin/plugin.json` also carries `name` and `version`, without which
@@ -298,30 +368,133 @@ done
 ```
 
 **Generate the manifest, never type it.** Enumerate the deletion-set roots at
-`$ARCHIVE_SHA` and write one line per entry found, so an item added after this
-skill shipped still gets a line and stays restorable. Each generated id is
-checked before it is written, and the `<state>` of an edited manifest is its
-`git hash-object` value as the nuke wrote it:
+`$ARCHIVE_SHA` and write one line per item found, so an item added after this
+skill shipped still gets a line and stays restorable.
+
+A line is `<id> <kind> <path> <baseline> <state> [<path> <baseline> <state> …]`
+— **one whole triple per path**, and an item may carry more than one. A `pair`
+carries two, and `runtime-hooks` and `dev-hooks` each carry a removed tree plus
+an edited manifest. So the generator emits triples, then joins them; it never
+emits one fixed-width line.
+
+`<state>` is `-` for every path the nuke *removed*, and only the two edited
+manifests are hashed. Hashing is not conditional decoration: a removed path is
+gone from the worktree, so `git hash-object` against it errors.
+
+These helpers read named variables rather than positional parameters, because
+Hard Rule 9 bans a `$` followed by a digit anywhere in this file.
 
 ```sh
-LC_ALL=C
+export LC_ALL=C
 : "${WORKTREE:?}"
-case "$ITEM_ID" in
-  ''|/*|*..*|*[!A-Za-z0-9._/-]*)
-    echo "refusing: generated item id '$ITEM_ID' fails the syntax check" >&2; exit 1 ;;
-esac
-printf '%s\n' "$LINES_SO_FAR" | cut -d' ' -f1 | grep -qxF -- "$ITEM_ID" &&
-  { echo "refusing: duplicate manifest item id '$ITEM_ID'" >&2; exit 1; }
-STATE="$(git -C "$WORKTREE" hash-object -- "$ITEM_PATH")"
-printf '%s %s %s %s %s\n' "$ITEM_ID" "$ITEM_KIND" "$ITEM_PATH" "$BASELINE" "$STATE"
+: "${ARCHIVE_SHA:?}"
+MANIFEST=""
+
+check_path() {   # reads P — syntax, own-directory exclusion, then containment
+  case "$P" in
+    ''|/*|*..*|*[!A-Za-z0-9._/-]*)
+      echo "refusing: path '$P' fails the syntax check" >&2; exit 1 ;;
+  esac
+  case "$P" in
+    .claude/skills/nuke-team-plugin|.claude/skills/nuke-team-plugin/*)
+      echo "refusing: path '$P' is inside this skill's own directory" >&2; exit 1 ;;
+  esac
+  case "$P" in
+    AGENTS.md|CLAUDE.md|skills/*|agents/*|hooks/*|.claude/hooks/*|.claude/skills/*|.claude-plugin/plugin.json|.claude/settings.json) ;;
+    *) echo "refusing: path '$P' sits outside the deletion-set roots of Hard Rule 10" >&2; exit 1 ;;
+  esac
+}
+
+add_triple() {   # reads P and K (removed|edited); appends one triple to FIELDS
+  check_path
+  if git -C "$WORKTREE" cat-file -e "${ARCHIVE_SHA}:${P%/}" 2>/dev/null
+  then BASE=present; else BASE=absent; fi
+  STATE=-
+  if [ "$K" = edited ] && [ "$BASE" = present ]; then
+    STATE="$(git -C "$WORKTREE" hash-object -- "${WORKTREE}/${P}")"
+  fi
+  FIELDS="${FIELDS}${FIELDS:+ }${P} ${BASE} ${STATE}"
+}
+
+emit_item() {   # reads ID, KIND, FIELDS
+  case "$ID" in
+    ''|/*|*..*|*[!A-Za-z0-9._/-]*)
+      echo "refusing: generated item id '$ID' fails the syntax check" >&2; exit 1 ;;
+  esac
+  printf '%s\n' "$MANIFEST" | cut -d' ' -f1 | grep -qxF -- "$ID" &&
+    { echo "refusing: duplicate manifest item id '$ID'" >&2; exit 1; }
+  MANIFEST="${MANIFEST}${ID} ${KIND} ${FIELDS}
+"
+}
+
+FIELDS=; ID=guidance; KIND=pair
+P=AGENTS.md; K=removed; add_triple
+P=CLAUDE.md; K=removed; add_triple
+emit_item
+
+ENTRIES="$(for ROOT in skills agents .claude/skills; do
+  git -C "$WORKTREE" ls-tree -z --name-only "$ARCHIVE_SHA" -- "${ROOT}/" | tr '\0' '\n'
+done)"
+OLD_IFS="$IFS"; IFS='
+'
+for ENTRY in $ENTRIES; do
+  case "$ENTRY" in ''|.claude/skills/nuke-team-plugin) continue ;; esac
+  # Round-trip proof: every entry came from ls-tree at this SHA, so one that
+  # no longer resolves means the NUL-to-newline split cut a path in half.
+  TYPE="$(git -C "$WORKTREE" cat-file -t "${ARCHIVE_SHA}:${ENTRY}" 2>/dev/null)" ||
+    { echo "refusing: listed entry '$ENTRY' does not resolve at ${ARCHIVE_SHA}" >&2; exit 1; }
+  FIELDS=
+  case "$TYPE" in
+    tree) ID="$ENTRY"; KIND=tree; P="${ENTRY}/" ;;
+    blob) ID="${ENTRY%.md}"; KIND=file; P="$ENTRY" ;;
+    *) echo "refusing: unexpected object type '$TYPE' for '$ENTRY'" >&2; exit 1 ;;
+  esac
+  K=removed; add_triple
+  emit_item
+done
+IFS="$OLD_IFS"
+
+FIELDS=; ID=runtime-hooks; KIND=group
+P=hooks/; K=removed; add_triple
+P=.claude-plugin/plugin.json; K=edited; add_triple
+emit_item
+FIELDS=; ID=dev-hooks; KIND=group
+P=.claude/hooks/; K=removed; add_triple
+P=.claude/settings.json; K=edited; add_triple
+emit_item
+
+printf '%s' "$MANIFEST"
 ```
+
+The two `group` items run **after** the `node` edit above, so their recorded
+hash is the byte-for-byte state the nuke left, which is exactly what R6 later
+compares against.
+
+#### Locate the cache entry — read-only, and before the commit
+
+`NUKE.md` carries the cache undo as a **literal** `ln -sfn <primary root>
+<cache entry>` line, and a reader's shell has none of this skill's variables
+set. That entry path is therefore needed *while `NUKE.md` is being written*,
+which is here — not in step 7. This scan is read-only: it moves nothing, so
+running it before the commit costs nothing and keeps the run at one commit.
+
+Run the discovery block from `### Step 7 — repoint the plugin cache` now,
+unchanged, and keep the entries whose `readlink` target equals `$PRIMARY_ROOT`
+byte for byte. Then:
+
+- **Exactly one match** — write its literal path into `NUKE.md`'s
+  `### The cache undo` section.
+- **Zero or two-or-more matches** — step 7 will refuse the repoint, so there is
+  no link to undo. Write the matching zero- or multi-match remediation from
+  step 7 into that section instead of an undo line, and say the experiment is
+  inert. Never invent an entry path to fill the template.
 
 Write `NUKE.md` at the worktree root from `## NUKE.md template`, then stage and
 commit — signed, with no unsigned fallback:
 
 ```sh
 : "${WORKTREE:?}"
-DATE="$(date +%Y-%m-%d)"
+DATE="<the literal value step 0 printed>"
 git -C "$WORKTREE" add -- NUKE.md .claude-plugin/plugin.json .claude/settings.json
 git -C "$WORKTREE" commit -S -m "experiment: nuke Team's instruction surface (${DATE})"
 ```
@@ -342,32 +515,46 @@ whichever checkout last ran the installer, so a directory name computed today
 can name a path that does not exist while the real link sits beside it. Match
 on the link target instead:
 
+This is the same read-only discovery step 6 already ran to write the undo line
+into `NUKE.md`. It is re-run here rather than remembered, because shell state
+does not survive a Bash invocation (Hard Rule 3).
+
 ```sh
 : "${PRIMARY_ROOT:?}"
 CACHE_DIR="${HOME}/.claude/plugins/cache/team-dev/team"
-# Test the directory first: an unmatched glob aborts under zsh.
+# Enumerate with find, never a glob: `-d` says the directory exists, not that
+# it has entries, and zsh aborts the whole command on a glob that matches none.
 [ -d "$CACHE_DIR" ] ||
   { echo "no cache entry at all: ${CACHE_DIR} does not exist — Team was never dev-installed on this machine" >&2; exit 1; }
-for entry in "$CACHE_DIR"/*; do
-  [ -e "$entry" ] || [ -L "$entry" ] || continue
-  printf '%s\t%s\t%s\n' "$entry" "$([ -L "$entry" ] && echo symlink || echo directory)" "$(readlink "$entry" || true)"
-done
+find "$CACHE_DIR" -mindepth 1 -maxdepth 1 -print |
+  while IFS= read -r entry; do
+    printf '%s\t%s\t%s\n' "$entry" "$([ -L "$entry" ] && echo symlink || echo directory)" "$(readlink "$entry" || true)"
+  done
 ```
 
 Keep the entries that are symlinks whose `readlink` target equals
 `$PRIMARY_ROOT` byte for byte. Then branch on how many there are.
 
-**Exactly one match.** Ask for an explicit confirmation first — this changes
-what every Claude Code session on the machine loads. Name the entry, its
-current target, and the worktree it will point at. Only after the user agrees:
+**Exactly one match.** Prove it is the entry `NUKE.md` names, then ask for an
+explicit confirmation — this changes what every Claude Code session on the
+machine loads. Name the entry, its current target, and the worktree it will
+point at. Only after the user agrees:
 
 ```sh
 : "${PRIMARY_ROOT:?}"
 : "${WORKTREE:?}"
 : "${CACHE_ENTRY:?}"
+: "${RECORDED_ENTRY:?}"
+[ "$CACHE_ENTRY" = "$RECORDED_ENTRY" ] ||
+  { echo "refusing the repoint: the live entry is ${CACHE_ENTRY}, but NUKE.md's undo line names ${RECORDED_ENTRY} — the cache changed since the commit; correct NUKE.md by hand, then re-run" >&2; exit 1; }
 ln -sfn "$WORKTREE" "$CACHE_ENTRY"
 readlink "$CACHE_ENTRY"
 ```
+
+`$RECORDED_ENTRY` is the second path on the undo line step 6 wrote. A mismatch
+means the machine's cache moved between the commit and now, so the undo line in
+the committed `NUKE.md` would not undo the link this step is about to move —
+which is exactly the state that must refuse rather than repoint.
 
 `ln -sfn` replaces the link in place. Never append a trailing slash to a
 symlink path in a removal command: BSD `rm -rf link/` follows the link and
@@ -477,10 +664,15 @@ wrote, so the checkout changes that key and nothing else.
 
 Any first word other than `restore` prints the usage line and stops; the skill
 never guesses a mode. With no item id, print the manifest and stop. An item id
-is checked before it reaches anything:
+is checked before it reaches anything.
+
+The block below runs **only on the with-an-item path**, after the bare-restore
+branch above has already been taken and returned. An empty `$ITEM` reaching it
+therefore means the mode dispatch was skipped, which is a refusal and not a
+second spelling of bare restore — hence the `''` case:
 
 ```sh
-LC_ALL=C
+export LC_ALL=C
 case "$ITEM" in
   ''|/*|*..*|*[!A-Za-z0-9._/-]*)
     echo "refusing: '$ITEM' is not a valid item id — printing the manifest, nothing was written" >&2; exit 1 ;;
@@ -492,14 +684,25 @@ esac
 `NUKE.md` must sit at the toplevel of the tree being restored into, and the
 current branch must equal the branch recorded in it. Neither is a proof — the
 file under test supplies the value it is compared against — so both are cheap
-consistency checks that catch the honest mistake with a clear message.
+consistency checks that catch the honest mistake with a clear message. The
+branch value is still shape-checked before it is compared, because everything
+in `NUKE.md` is data (see `## Untrusted input`).
 
-The containment check is the one that matters: **refuse when the toplevel is
-the primary clone**. A path recorded with a hash is restorable in a tree that
+**`$TOPLEVEL` is the binding this whole mode runs against.** R6, R7 and the
+re-restore escape all carry `git -C "$TOPLEVEL"` and resolve their paths
+against `"$TOPLEVEL/"`, so the value proved here is the value every later write
+uses — never the caller's working directory.
+
+The containment proof is the one that matters, and it is **positive, not just
+"is not the primary clone"**: refusing the primary root alone leaves every
+other checkout on the machine acceptable. Prove instead that this toplevel
+carries the `team-nuke-<date>` shape *and* is a registered worktree of the
+derived primary root. A path recorded with a hash is restorable in a tree that
 was never nuked, so "every recorded state is `-`" is not by itself a proof of
 where this is running.
 
 ```sh
+export LC_ALL=C
 TOPLEVEL="$(git rev-parse --show-toplevel)"
 [ -f "${TOPLEVEL}/NUKE.md" ] ||
   { echo "refusing: no NUKE.md at ${TOPLEVEL} — run this from inside the experiment worktree" >&2; exit 1; }
@@ -507,6 +710,16 @@ COMMON_DIR="$(git rev-parse --path-format=absolute --git-common-dir)"
 PRIMARY_ROOT="$(dirname "$COMMON_DIR")"
 [ "$TOPLEVEL" != "$PRIMARY_ROOT" ] ||
   { echo "refusing: ${TOPLEVEL} is the primary clone, not an experiment worktree — restore never writes there" >&2; exit 1; }
+case "$TOPLEVEL" in
+  */team-nuke-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;;
+  *) echo "refusing: ${TOPLEVEL} does not carry the team-nuke-<date> shape — restore only ever writes into an experiment worktree" >&2; exit 1 ;;
+esac
+git -C "$PRIMARY_ROOT" worktree list --porcelain | grep -qxF "worktree ${TOPLEVEL}" ||
+  { echo "refusing: ${TOPLEVEL} is not a registered worktree of ${PRIMARY_ROOT}" >&2; exit 1; }
+case "$RECORDED_BRANCH" in
+  experiment/nuke-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;;
+  *) echo "refusing: NUKE.md records branch '$RECORDED_BRANCH', which is not a dated experiment/nuke name" >&2; exit 1 ;;
+esac
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 [ "$BRANCH" = "$RECORDED_BRANCH" ] ||
   { echo "refusing: on ${BRANCH}, but NUKE.md records ${RECORDED_BRANCH} — run 'git switch ${RECORDED_BRANCH}' and re-run" >&2; exit 1; }
@@ -520,13 +733,19 @@ Membership is an exact match on field 1, read with the digit-free
 `cut -d' ' -f1` and proved with `grep -qxF` — never a substring or a pattern
 match, either of which would let `skills/pr` open `skills/pr-cleanup`:
 
+**The counter and the extractor use one identical, end-anchored regex.** Two
+spellings of "the opener" is a parser differential: an end-anchored `grep -c`
+paired with an unanchored `sed` counts one block but extracts from a
+`nuke-manifestX` decoy fence that the count never saw. The anchored form
+`^```nuke-manifest[[:space:]]*$` appears in both, character for character:
+
 ```sh
-LC_ALL=C
+export LC_ALL=C
 : "${TOPLEVEL:?}"
 OPENERS="$(grep -c '^[`]\{3\}nuke-manifest[[:space:]]*$' "${TOPLEVEL}/NUKE.md")"
 [ "$OPENERS" = 1 ] ||
   { echo "refusing: NUKE.md carries ${OPENERS} nuke-manifest blocks, not exactly one" >&2; exit 1; }
-LINES="$(sed -n '/^[`]\{3\}nuke-manifest/,/^[`]\{3\}[[:space:]]*$/p' "${TOPLEVEL}/NUKE.md" | sed '1d;$d')"
+LINES="$(sed -n '/^[`]\{3\}nuke-manifest[[:space:]]*$/,/^[`]\{3\}[[:space:]]*$/p' "${TOPLEVEL}/NUKE.md" | sed '1d;$d')"
 printf '%s\n' "$LINES" | cut -d' ' -f1 | grep -qxF -- "$ITEM" ||
   { echo "refusing: '$ITEM' is not an item in the manifest" >&2; exit 1; }
 [ "$(printf '%s\n' "$LINES" | cut -d' ' -f1 | grep -cxF -- "$ITEM")" = 1 ] ||
@@ -544,9 +763,37 @@ A line that fails any check below is **refused, never repaired**:
 - A `<baseline>` outside `present|absent`.
 - A `<state>` that is neither `-` nor 40 lowercase hex.
 - The combination `absent` with a hash, which is a contradiction.
-- A path that fails the R1 syntax check under `LC_ALL=C`, or that sits outside
-  the deletion-set roots hard-coded in Hard Rule 10, or that sits under
+- A path that fails the syntax check under `LC_ALL=C`, or that sits outside the
+  deletion-set roots hard-coded in Hard Rule 10, or that sits under
   `.claude/skills/nuke-team-plugin/`.
+
+**The path check is a runnable block, not a description.** `$ITEM_PATH` comes
+out of an untrusted file and goes on to reach `hash-object`, `ls-files`,
+`checkout` and `git rm -r -f`; nothing else stands between it and them. Run
+this against **every** path on the line, before any of those:
+
+```sh
+export LC_ALL=C
+case "$ITEM_PATH" in
+  ''|/*|*..*|*[!A-Za-z0-9._/-]*)
+    echo "refusing: manifest path '$ITEM_PATH' fails the syntax check" >&2; exit 1 ;;
+esac
+case "$ITEM_PATH" in
+  .claude/skills/nuke-team-plugin|.claude/skills/nuke-team-plugin/*)
+    echo "refusing: manifest path '$ITEM_PATH' is inside this skill's own directory, which the nuke never removed" >&2; exit 1 ;;
+esac
+case "$ITEM_PATH" in
+  AGENTS.md|CLAUDE.md|skills/*|agents/*|hooks/*|.claude/hooks/*|.claude/skills/*|.claude-plugin/plugin.json|.claude/settings.json) ;;
+  *) echo "refusing: manifest path '$ITEM_PATH' sits outside the deletion-set roots of Hard Rule 10" >&2; exit 1 ;;
+esac
+```
+
+The exclusion case is tested **before** the containment case, on purpose:
+`.claude/skills/nuke-team-plugin/SKILL.md` matches `.claude/skills/*`, so
+ordering them the other way would admit the one path the nuke must never write.
+This is the same `check_path` the generator runs in step 6 — both ends of the
+manifest are checked, so a hand-edited `NUKE.md` gains nothing a generated one
+could not already say.
 
 ### R5 — prove the archive ref
 
@@ -557,11 +804,16 @@ untrusted file, but only the tag is signed. So the tag name must match
 a cross-check that never reaches a command:
 
 ```sh
-LC_ALL=C
+export LC_ALL=C
 case "$RECORDED_TAG" in
   nuke-baseline/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) : ;;
   *) echo "refusing: '$RECORDED_TAG' is not a dated nuke-baseline tag name" >&2; exit 1 ;;
 esac
+case "$RECORDED_ARCHIVE_SHA" in
+  *[!0-9a-f]*|'') echo "refusing: NUKE.md's archive SHA is not lowercase hex" >&2; exit 1 ;;
+esac
+[ "${#RECORDED_ARCHIVE_SHA}" = 40 ] ||
+  { echo "refusing: NUKE.md's archive SHA is ${#RECORDED_ARCHIVE_SHA} characters, not 40" >&2; exit 1; }
 git rev-parse --verify --quiet "refs/tags/${RECORDED_TAG}" >/dev/null ||
   { echo "refusing: ${RECORDED_TAG} is missing locally — run 'git fetch origin tag ${RECORDED_TAG}' and re-run" >&2; exit 1; }
 git tag -v "$RECORDED_TAG" ||
@@ -580,14 +832,20 @@ link and a dangling symlink would otherwise read as absent. A hash requires the
 working file and the staged blob to both equal it, and a path missing from the
 index counts as a mismatch:
 
+**Every command here binds to `$TOPLEVEL`.** The `git -C "$TOPLEVEL"` prefix
+and the `"${TOPLEVEL}/${ITEM_PATH}"` resolution are what make the guard above
+them load-bearing: with bare `git` and a relative path, this gate would check
+one tree while R7 wrote into whichever tree the caller happened to `cd` into.
+
 ```sh
 : "${TOPLEVEL:?}"
 if [ "$STATE" = "-" ]; then
-  { [ ! -e "$ITEM_PATH" ] && [ ! -L "$ITEM_PATH" ] && [ -z "$(git ls-files -- "$ITEM_PATH")" ]; } ||
+  { [ ! -e "${TOPLEVEL}/${ITEM_PATH}" ] && [ ! -L "${TOPLEVEL}/${ITEM_PATH}" ] &&
+    [ -z "$(git -C "$TOPLEVEL" ls-files -- "$ITEM_PATH")" ]; } ||
     { echo "refusing: ${ITEM_PATH} is recorded absent but exists in the tree or the index" >&2; exit 1; }
 else
-  [ "$(git hash-object -- "$ITEM_PATH")" = "$STATE" ] &&
-  [ "$(git rev-parse ":${ITEM_PATH}")" = "$STATE" ] ||
+  [ "$(git -C "$TOPLEVEL" hash-object -- "${TOPLEVEL}/${ITEM_PATH}")" = "$STATE" ] &&
+  [ "$(git -C "$TOPLEVEL" rev-parse ":${ITEM_PATH}")" = "$STATE" ] ||
     { echo "refusing: ${ITEM_PATH} no longer matches its recorded state ${STATE}" >&2; exit 1; }
 fi
 ```
@@ -598,12 +856,15 @@ worktree. Any mismatch refuses and names the offending path.
 ### R7 — check out, then report
 
 ```sh
+: "${TOPLEVEL:?}"
 : "${ARCHIVE:?}"
-git checkout "$ARCHIVE" -- "$ITEM_PATH"
+git -C "$TOPLEVEL" checkout "$ARCHIVE" -- "$ITEM_PATH"
 ```
 
-Report every path written, every `absent` path skipped and why, and that the
-restored files are live in a session only after a restart.
+The only write in this mode carries `git -C "$TOPLEVEL"`, so it lands in the
+tree R2 proved and nowhere else. Report every path written, every `absent` path
+skipped and why, and that the restored files are live in a session only after a
+restart.
 
 ### The re-restore escape
 
@@ -617,21 +878,24 @@ archive's only child on the experiment branch, which R2 has already established
 is the current branch:
 
 ```sh
+: "${TOPLEVEL:?}"
 : "${ARCHIVE:?}"
-NUKE_COMMIT="$(git rev-list --ancestry-path --reverse "${ARCHIVE}..HEAD" | head -1)"
+NUKE_COMMIT="$(git -C "$TOPLEVEL" rev-list --ancestry-path --reverse "${ARCHIVE}..HEAD" | head -1)"
 [ -n "$NUKE_COMMIT" ] ||
   { echo "refusing: cannot derive the nuke commit from ${ARCHIVE}..HEAD" >&2; exit 1; }
-[ "$(git rev-parse "${NUKE_COMMIT}^")" = "$ARCHIVE" ] ||
+[ "$(git -C "$TOPLEVEL" rev-parse "${NUKE_COMMIT}^")" = "$ARCHIVE" ] ||
   { echo "refusing: the derived commit's parent is not the verified archive commit" >&2; exit 1; }
 ```
 
-Then, per path on the item's line:
+Then, per path on the item's line — both destructive, and both bound to
+`$TOPLEVEL` like every other restore write:
 
-- Recorded state `-` — return it with `git rm -r -f -- "$ITEM_PATH"`, which
-  clears the working tree and the index together.
+- Recorded state `-` — return it with
+  `git -C "$TOPLEVEL" rm -r -f -- "$ITEM_PATH"`, which clears the working tree
+  and the index together.
 - Recorded state a hash — return it with
-  `git checkout "$NUKE_COMMIT" -- "$ITEM_PATH"`, restoring the exact bytes the
-  nuke wrote so the recorded hash matches again.
+  `git -C "$TOPLEVEL" checkout "$NUKE_COMMIT" -- "$ITEM_PATH"`, restoring the
+  exact bytes the nuke wrote so the recorded hash matches again.
 
 For a manifest the maintainer edited on purpose, the alternative is a hand
 merge from `git show <ARCHIVE_SHA>:<path>`, which writes nothing.
@@ -676,7 +940,8 @@ dev-hooks group .claude/hooks/ present - .claude/settings.json present 8a4c2e601
 
 Idempotent, and it loses nothing: it points the dev install back at the primary
 clone, so the next session loads Team as it was. Written with the run's literal
-entry path and primary root, never a variable:
+entry path and primary root, never a variable — which is why step 6 runs the
+read-only cache scan **before** it writes this file:
 
 ```
 ln -sfn /Users/<you>/code/bostonaholic/team /Users/<you>/.claude/plugins/cache/team-dev/team/0.59.0
@@ -684,6 +949,13 @@ ln -sfn /Users/<you>/code/bostonaholic/team /Users/<you>/.claude/plugins/cache/t
 
 Running it does not end the experiment: the branch, the worktree and the
 archive all stay exactly as they were.
+
+When that scan found **zero or several** matching entries, there is no entry
+path to write and no link that will be moved. Write step 7's remediation for
+the case actually found in place of the line above, under the sentence "no
+cache entry was repointed; the experiment is inert until one is." Never write a
+guessed path here: a wrong undo line is worse than none, because it is the line
+a maintainer pastes without reading.
 
 ### Read-only inspection
 
@@ -797,10 +1069,14 @@ a decision the maintainer makes by hand, long after this run.
   after.
 - `nuke-baseline/<date>` exists as a verified, signed, annotated tag at the
   archive SHA, and its push was attempted before the first deletion.
-- One signed commit sits on `experiment/nuke-<date>` in `team-nuke-<date>`,
-  carrying the deletions, the two edited manifests, and `NUKE.md`.
+- **Exactly one** signed commit sits on `experiment/nuke-<date>` in
+  `team-nuke-<date>`, carrying the deletions, the two edited manifests, and
+  `NUKE.md`. Step 6's cache-entry scan is read-only and runs before it, so the
+  literal undo line is inside that one commit and nothing is amended after
+  step 7.
 - `NUKE.md` carries exactly one `nuke-manifest` block, with one line per
-  removed or edited item.
+  removed or edited item, and every deletion-set path absent at the archive
+  appears on it as `absent` rather than being silently omitted.
 
 ## Pitfalls
 
@@ -811,6 +1087,15 @@ a decision the maintainer makes by hand, long after this run.
   path that should succeed.
 - **Assuming a remote tag row exists in pairs.** A lightweight remote tag has
   no `^{}` row, which is why step 3 reads both.
+- **One `git rm` over the whole deletion set.** It is fatal on the first
+  unmatched pathspec and removes nothing, which contradicts step 2's OR: step 2
+  lets a partially-nuked archive through, so step 6 must remove per path.
+- **Testing `.claude/skills` as a whole in step 2.** This skill lives under it,
+  so that path is present at every SHA and the already-nuked stop becomes dead
+  code. Test the entries *other than* `nuke-team-plugin`.
+- **Writing `NUKE.md` before the cache entry is known.** The undo line is
+  literal, so the read-only scan runs in step 6, ahead of the commit — not in
+  step 7, which would need a second commit to record it.
 - **Treating the tag push as a gate.** It is best-effort; a maintainer with no
   push access must not be stranded.
 - **Repairing the nuked worktree's test suite.** It is red by construction —
