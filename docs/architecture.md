@@ -662,7 +662,7 @@ points at it.
 Methodology skills carry no `argument-hint`. Agents load them through one
 of two mechanisms. The first is a `skills:` YAML list in the agent's
 frontmatter. For example, `agents/design-author.md` declares
-`skills: [product-thinking, progress-tracking, authoring-designs,
+`skills: [principle-product-thinking, progress-tracking, authoring-designs,
 writing-prose]`. Those four names are three countable skills under the
 load limit in the Design guidelines below: `authoring-designs` is
 design-author's own extracted procedure skill, which that limit exempts.

@@ -7,7 +7,7 @@ effort: xhigh
 tools: Read, Write, Edit, Grep, Glob, TodoWrite
 permissionMode: acceptEdits
 skills:
-  - product-thinking
+  - principle-product-thinking
   - progress-tracking
   - systems-thinking
   - slicing-work
@@ -71,7 +71,7 @@ Aim for ~2 pages (≈100–200 lines, excluding frontmatter).
   including its content and length constraints on the document itself.
 - **Apply the product-need lens.** The `skills:` frontmatter preloads it.
   If it is not already in context, call the Skill tool with
-  `product-thinking`.
+  `principle-product-thinking`.
   Use its `## When Slicing` section while you order the slices in
   `## Slices` and `## Out of structure`. Make sure that slice 1 ships
   something a real person wants, not infrastructure. Cut scope to the

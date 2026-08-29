@@ -201,7 +201,7 @@ describe("engineering-standards methodology", () => {
 });
 
 describe("product-thinking methodology", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "product-thinking", "SKILL.md");
+  const SKILL_FILE = join(REPO_ROOT, "skills", "principle-product-thinking", "SKILL.md");
   const QUESTIONER = join(REPO_ROOT, "agents", "questioner.md");
   const DESIGN_AUTHOR = join(REPO_ROOT, "agents", "design-author.md");
   const STRUCTURE_PLANNER = join(REPO_ROOT, "agents", "structure-planner.md");
@@ -211,9 +211,9 @@ describe("product-thinking methodology", () => {
     expect(read(SKILL_FILE).split("\n")[0]).toBe("---");
   });
 
-  test("frontmatter declares name: product-thinking", () => {
+  test("frontmatter declares name: principle-product-thinking", () => {
     const head10 = read(SKILL_FILE).split("\n").slice(0, 10).join("\n");
-    expect(/^name: product-thinking$/m.test(head10)).toBe(true);
+    expect(/^name: principle-product-thinking$/m.test(head10)).toBe(true);
   });
 
   test("description names all three loaders (questioner, design-author, structure-planner)", () => {

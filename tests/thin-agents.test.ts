@@ -115,14 +115,14 @@ describe("thin agents: new skills carry the moved procedure content", () => {
 describe("thin agents: frontmatter skills preloads per agent", () => {
   const EXPECTED_PRELOADS: Record<string, string[]> = {
     "code-reviewer": ["code-review", "conventional-comments", "cross-model-review", "nested-agents", "progress-tracking"],
-    "design-author": ["authoring-designs", "product-thinking", "progress-tracking", "writing-prose"],
+    "design-author": ["authoring-designs", "principle-product-thinking", "progress-tracking", "writing-prose"],
     "file-finder": ["finding-files"],
     implementer: ["implementing-slices", "nested-agents", "progress-tracking"],
     planner: ["planning-implementation", "progress-tracking", "systems-thinking"],
-    questioner: ["decomposing-intent", "product-thinking", "progress-tracking"],
+    questioner: ["decomposing-intent", "principle-product-thinking", "progress-tracking"],
     researcher: ["nested-agents", "progress-tracking", "researching-codebases", "systems-thinking"],
     "security-reviewer": ["code-review", "conventional-comments", "nested-agents", "progress-tracking", "reviewing-security"],
-    "structure-planner": ["product-thinking", "progress-tracking", "slicing-work", "systems-thinking"],
+    "structure-planner": ["principle-product-thinking", "progress-tracking", "slicing-work", "systems-thinking"],
     "technical-writer": ["code-review", "conventional-comments", "progress-tracking", "reviewing-documentation", "writing-prose"],
     "test-architect": ["progress-tracking", "test-first-development"],
     "ux-reviewer": ["code-review", "progress-tracking", "verifying-ux"],

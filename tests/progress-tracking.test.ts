@@ -62,7 +62,7 @@ const PRELOAD_AGENTS = [
 
 // Skills explicitly out of scope — must NOT gain the reference.
 const OUT_OF_SCOPE_SKILLS = [
-  "product-thinking",
+  "principle-product-thinking",
   "qrspi-workflow",
   "engineering-standards",
   "code-review",

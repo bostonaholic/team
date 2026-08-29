@@ -41,7 +41,7 @@ catalog into two flavors:
   [Methodology skills](#methodology-skills)). Agents load them through one
   of two mechanisms: a `skills:`
   YAML list in the agent's frontmatter (e.g., `agents/design-author.md`
-  declares `skills: [product-thinking,
+  declares `skills: [principle-product-thinking,
   progress-tracking, authoring-designs, writing-prose]`), or an inline
   prose load
   instruction in the agent body (e.g., `Load skills/<name>/SKILL.md for
@@ -1096,7 +1096,13 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   `docs/plans/<id>/prd.md`, referenced from `task.md`. Points PRD authors
   at the seventh-grade prose bar in `writing-prose`.
 
+<<<<<<< HEAD
 ### [product-thinking](https://github.com/bostonaholic/team/blob/main/skills/product-thinking/SKILL.md)
+||||||| parent of 150b1f0 (refactor(skills): rename product-thinking to principle-product-thinking)
+### product-thinking
+=======
+### principle-product-thinking
+>>>>>>> 150b1f0 (refactor(skills): rename product-thinking to principle-product-thinking)
 
 - **Purpose:** Product-need reasoning lens for "make something people
   want", which sharpens framing, design, and slicing so the work serves real
@@ -1287,7 +1293,7 @@ entry-point section above rather than repeating them here.
 | `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
 | `technical-design-doc` | planner | Plan |
 | `product-requirements-doc` | questioner (through `decomposing-intent`, conditional). Design-author (through `authoring-designs`) | Question, Design |
-| `product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
+| `principle-product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
 | `systems-thinking` | researcher, structure-planner, planner (frontmatter). Implementer, code-reviewer, ux-reviewer (inline). Authoring-designs, code-review, eng-design-doc-review (citing skills) | Research, Design, Structure, Plan, Implement (incl. verify) |
 | `writing-prose` | technical-writer, design-author | Design (authoring bar), and Implement (verify): bar for prose it writes and prose it assesses |
 | `reviewing-documentation` | technical-writer | Implement (verify): doc-gap review process + classification |
