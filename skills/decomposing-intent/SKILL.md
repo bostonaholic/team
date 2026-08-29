@@ -155,7 +155,9 @@ name must match `^[A-Za-z0-9._-]+$`, and it must not be exactly `.` or
 sequences, shell metacharacters such as `$()` or backticks — fails the
 allowlist and is unresolvable. When you run a command on a candidate,
 pass the name/path to the tool as a single argument (argv), never
-interpolated into a shell string. Then resolve each surviving candidate
+interpolated into a shell string
+(`skills/principle-never-interpolate/SKILL.md`). Then resolve each
+surviving candidate
 to a local path by checking the sibling directories of the home repo
 root: a repo named `<name>` is expected at `<root>/../<name>`. Make sure
 that each candidate path is a git working tree with

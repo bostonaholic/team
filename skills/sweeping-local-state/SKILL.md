@@ -205,6 +205,7 @@ unchanged, with one boundary that does not apply to your own merged work:
    branch.** Only the default-branch copy runs.
 3. **Never edit, re-quote, or interpolate a declared line.** It runs verbatim;
    values reach it through `TEAM_*` in the environment.
+   The general rule: `skills/principle-never-interpolate/SKILL.md`.
 4. **Never guess credentials.** A teardown command that needs them reads them
    the way the repo's own tooling does. This skill does not open `.env` files
    and does not prompt for secrets.
@@ -229,3 +230,4 @@ One line per thing that happened, and nothing else:
 
 Anything left on disk is named. A sweep that skipped something and did not say
 so is indistinguishable from one that had nothing to do.
+The general rule: `skills/principle-skip-loudly/SKILL.md`.

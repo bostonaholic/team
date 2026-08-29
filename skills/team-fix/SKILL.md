@@ -17,6 +17,10 @@ argument-hint: "<ticket id, issue URL, or bug description>"
 Run the compressed bug-fix pipeline. Goes straight to test-driven fix
 discipline without the full QRSPI ceremony.
 
+Invocation is guarded per `skills/principle-explicit-intent/SKILL.md`: the
+pipeline fires only on stated pipeline intent — a plain "fix this bug" asks
+for an inline fix, not this pipeline.
+
 ## Input
 
 `$ARGUMENTS` may be:

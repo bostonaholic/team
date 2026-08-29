@@ -72,7 +72,9 @@ so a reader can see which evidence the approval rested on.
 
 - **The approval and the usefulness reaction are the skill's only two
   writes.** It never resolves threads, because that would let it satisfy
-  its own gate. It never replies to threads, edits code, merges, or
+  its own gate — the generator–evaluator collapse
+  `skills/principle-generator-evaluator/SKILL.md` names. It never replies
+  to threads, edits code, merges, or
   auto-runs `/shipit`. Landing belongs to the author. The step-4
   reaction is admitted as the second write because it touches none of
   that. A 👍 or 👎 resolves nothing, so it cannot satisfy the gate. It
@@ -450,6 +452,9 @@ The loop is bounded, never infinite:
   timeout must be at least as long as each individual call. If the
   environment caps the timeout lower, shorten the sleeps and add calls.
 
+The cap convention is `skills/principle-bounded-loops/SKILL.md`: declare the
+bound with the loop; hitting it is a loud, terminal, reported outcome.
+
 ### 4. Poll
 
 Each poll is one Bash call. The GraphQL query below fetches the PR state
@@ -807,9 +812,9 @@ path, there is no loop to resume and none is silently started — stop and
 report the reopened gate under the **confirmation declined** stop, and
 offer to re-arm. Neither outcome consumes a confirmation round, because
 the cap counts confirmations asked. The confirm-then-re-poll loop is
-bounded. When three consecutive re-polls each trigger a new
-confirmation, stop without approving. Report the churn under the
-**confirmation declined** stop instead of asking a fourth time —
+bounded per `skills/principle-bounded-loops/SKILL.md`: at three
+consecutive re-polls that each trigger a new confirmation, stop without
+approving and report the churn under the **confirmation declined** stop —
 re-arming remains available.
 
 Cast one approval against `$PR_URL`, the canonical URL bound in step 1.
