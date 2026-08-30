@@ -60,12 +60,13 @@ The whole argument is at most two words.
    run at `$PRIMARY_ROOT` would stage the deletions on the default branch in
    the maintainer's own checkout. **Restore has no `$WORKTREE`**: it runs
    inside the experiment tree and binds to `$TOPLEVEL`, the value R2 derives
-   and proves. **Restore's whole proof-and-write path — R2 through R7 — runs as
-   one Bash invocation**, so `$TOPLEVEL` (proved in R2) and `$ARCHIVE` (proved
-   in R5) are the exact values R6's gate and R7's checkout write against: the
-   value proved is the value used because no Bash boundary sits between the
-   proof and the write. The re-restore escape is its own single invocation that
-   re-establishes both proofs before it writes. Every restore read and every
+   and proves. **Restore's whole proof-and-write path — R1 through R7 — runs as
+   one Bash invocation**, so `$ITEM` (bound in R1), `$TOPLEVEL` (proved in R2)
+   and `$ARCHIVE` (proved in R5) are the exact values R6's gate and R7's
+   checkout write against: the value proved is the value used because no Bash
+   boundary sits between the proof and the write. The re-restore escape is its
+   own single invocation that re-establishes every one of those bindings before
+   it writes. Every restore read and every
    restore write — R6's state gate, R7's checkout, and the re-restore escape —
    carries `git -C "$TOPLEVEL"` and resolves its path against `"$TOPLEVEL/"`, so
    no restore command is bound by the caller's working directory alone.
@@ -84,10 +85,13 @@ The whole argument is at most two words.
    0 printed, never re-derived.** A run that starts before midnight and reaches
    step 6 after it would otherwise key the tag, the branch and the worktree to
    two different dates, and the worktree the run created would no longer be the
-   one its own commands name. Restore is the other exception: R2 through R7 are
-   one invocation (Hard Rule 1), so `$TOPLEVEL` and `$ARCHIVE` are proved once
-   and persist to every later block without re-derivation, and the re-restore
-   escape re-proves both from scratch.
+   one its own commands name. Restore is the other exception: R1 through R7 are
+   one invocation (Hard Rule 1), so `$ITEM`, `$TOPLEVEL`, `$MANIFEST_LINE`,
+   `$TRIPLES` and `$ARCHIVE` are bound once and persist to every later block
+   without re-derivation, and the re-restore escape re-runs R1 through R5 to
+   re-establish all five from scratch. `$SCRATCH_DIR` is a third exception: R0
+   creates it in its own invocation and R1 transcribes the literal path R0
+   printed, because the Write that fills it has to land between the two.
 4. **Refuse first.** Every gate is a positive proof, never the absence of an
    objection. A gate that cannot prove its claim refuses the run and prints the
    two ways forward; it never repairs, normalizes, or retries around what it
@@ -125,13 +129,19 @@ The whole argument is at most two words.
     that originates in `NUKE.md` or the user `<item>` argument may appear as
     literal text inside any shell command. Retyping it as `VAR="<value>"`
     executes any embedded `$(...)` or backtick at assignment, before a single
-    gate runs (this is the injection round 2's CRITICAL named). Every such value
+    gate runs — the file is read by the very command the retyping would run it
+    in. Every such value
     is bound by a command that *reads it* — a file-reading command substitution
     for `NUKE.md` fields (`sed`/`grep`/`cut` against `"${TOPLEVEL}/NUKE.md"`),
     a `cut`/`read` split for the manifest triples in `$MANIFEST_LINES`, and a
-    single-quoted here-doc for the `<item>` argument that has no file — and then
-    shape-checked before it reaches any command. Command substitution does not
-    re-evaluate the bytes it captures, so `$(...)` in the file lands in the
+    redirect from R0's scratch file for the `<item>` argument — and then
+    shape-checked before it reaches any command. **The argument's bytes never
+    enter the script text at all.** Any in-script quoting the argument is pasted
+    into is a string the argument itself can close — a here-doc delimiter
+    included, since a line equal to the delimiter ends the here-doc and every
+    byte after it parses as shell. A redirect has no such closing sequence.
+    Command substitution and `read` do not
+    re-evaluate the bytes they capture, so `$(...)` in the file lands in the
     variable as inert text. The `$DATE` literal-transcription idiom is only ever
     for values step 0 *printed* (from `date`, from `git`), never for anything
     that came out of `NUKE.md` or the argument.
@@ -308,8 +318,8 @@ before any deletion, because one dated label must not name two baselines.
 : "${ARCHIVE_SHA:?}"
 DATE="<the literal value step 0 printed>"
 if git -C "$PRIMARY_ROOT" show-ref --verify --quiet "refs/tags/nuke-baseline/${DATE}"; then
-  PEELED="$(git -C "$PRIMARY_ROOT" rev-parse "nuke-baseline/${DATE}^{}")"
-  KIND="$(git -C "$PRIMARY_ROOT" cat-file -t "nuke-baseline/${DATE}")"
+  PEELED="$(git -C "$PRIMARY_ROOT" rev-parse "refs/tags/nuke-baseline/${DATE}^{}")"
+  KIND="$(git -C "$PRIMARY_ROOT" cat-file -t "refs/tags/nuke-baseline/${DATE}")"
   [ "$PEELED" = "$ARCHIVE_SHA" ] && [ "$KIND" = tag ] &&
     git -C "$PRIMARY_ROOT" tag -v "nuke-baseline/${DATE}" ||
     { echo "refusing: nuke-baseline/${DATE} already exists at ${PEELED} (kind ${KIND}) and is not a verified annotated tag at ${ARCHIVE_SHA} — retire that tag deliberately, or run on another date" >&2; exit 1; }
@@ -423,6 +433,12 @@ gone from the worktree, so `git hash-object` against it errors.
 These helpers read named variables rather than positional parameters, because
 Hard Rule 9 bans a `$` followed by a digit anywhere in this file.
 
+`check_path` folds the path to lower case before the own-directory exclusion,
+exactly as R4 does. macOS is case-insensitive by default, so
+`.claude/Skills/Nuke-Team-Plugin/SKILL.md` names this skill's own file while
+matching neither the exclusion nor, without the fold, anything that would stop
+it being written to the manifest.
+
 ```sh
 export LC_ALL=C
 : "${WORKTREE:?}"
@@ -434,7 +450,8 @@ check_path() {   # reads P — syntax, own-directory exclusion, then containment
     ''|/*|*..*|*[!A-Za-z0-9._/-]*)
       echo "refusing: path '$P' fails the syntax check" >&2; exit 1 ;;
   esac
-  case "$P" in
+  P_LC="$(printf '%s' "$P" | tr 'A-Z' 'a-z')"
+  case "$P_LC" in
     .claude/skills/nuke-team-plugin|.claude/skills/nuke-team-plugin/*)
       echo "refusing: path '$P' is inside this skill's own directory" >&2; exit 1 ;;
   esac
@@ -479,8 +496,8 @@ done)"
 # unquoted expansion, so that form would run once over the whole blob. The
 # here-doc feeds the loop in
 # the current shell (never a pipe), so MANIFEST keeps accumulating and a refusal
-# `exit 1` aborts the whole run. The two other enumeration loops use the same
-# idiom.
+# `exit 1` aborts the whole run. Every loop that accumulates a value or refuses
+# is fed the same way.
 while IFS= read -r ENTRY; do
   case "$ENTRY" in ''|.claude/skills/nuke-team-plugin) continue ;; esac
   # Round-trip proof: every entry came from ls-tree at this SHA, so one that
@@ -523,9 +540,10 @@ set. That entry path is therefore needed *while `NUKE.md` is being written*,
 which is here — not in step 7. This scan is read-only: it moves nothing, so
 running it before the commit costs nothing and keeps the run at one commit.
 
-Run the discovery block from `### Step 7 — repoint the plugin cache` now,
-unchanged, and keep the entries whose `readlink` target equals `$PRIMARY_ROOT`
-byte for byte. Then:
+Run step 7's **read-only scan block** — the first of its two, the one that only
+`printf`s each entry with its kind and target — now, unchanged, and keep the
+entries whose `readlink` target equals `$PRIMARY_ROOT` byte for byte. Never run
+step 7's second block here: it moves the link. Then:
 
 - **Exactly one match** — write its literal path into `NUKE.md`'s
   `### The cache undo` section.
@@ -598,16 +616,40 @@ explicit confirmation — this changes what every Claude Code session on the
 machine loads. Name the entry, its current target, and the worktree it will
 point at. Only after the user agrees:
 
-`$CACHE_ENTRY` is the single discovered match, bound from the scan above — a
-trusted filesystem path. `$RECORDED_ENTRY` comes out of the committed `NUKE.md`,
-so it is **read from the file, never retyped** (Hard Rule 12), and shape-checked
-before the equality gate:
+**This block re-runs the match itself, so `$CACHE_ENTRY` is bound by the command
+that finds it.** The scan above is a report for the human to confirm against; its
+output does not survive into this invocation (Hard Rule 3), and transcribing the
+matched path by hand would make a machine-local filesystem value into literal
+script text — the shape Hard Rule 12 rules out. The `find` below filters to
+symlinks and compares each `readlink` target itself, so the value repointed is
+the value proved, and the count is proved here too rather than carried over from
+the human's reading of the report.
+
+`$RECORDED_ENTRY` comes out of the committed `NUKE.md`, so it is **read from the
+file, never retyped** (Hard Rule 12). Both paths are shape-checked and proved to
+sit under the cache directory before the equality gate:
 
 ```sh
+export LC_ALL=C
 : "${PRIMARY_ROOT:?}"
 : "${WORKTREE:?}"
-: "${CACHE_ENTRY:?}"
 CACHE_DIR="${HOME}/.claude/plugins/cache/team-dev/team"
+CACHE_ENTRY="$(find "$CACHE_DIR" -mindepth 1 -maxdepth 1 -type l -print |
+  while IFS= read -r entry; do
+    [ "$(readlink "$entry")" = "$PRIMARY_ROOT" ] && printf '%s\n' "$entry"
+  done)"
+[ -n "$CACHE_ENTRY" ] ||
+  { echo "refusing the repoint: no symlink under ${CACHE_DIR} targets ${PRIMARY_ROOT} — the cache changed since the scan; re-read the scan and start step 7 again" >&2; exit 1; }
+[ "$(printf '%s\n' "$CACHE_ENTRY" | grep -c .)" = 1 ] ||
+  { echo "refusing the repoint: several symlinks under ${CACHE_DIR} target ${PRIMARY_ROOT} — retire the duplicates by hand, then re-run" >&2; exit 1; }
+case "$CACHE_ENTRY" in
+  *..*|*[!A-Za-z0-9._/-]*|'')
+    echo "refusing the repoint: the live entry '${CACHE_ENTRY}' fails the syntax check" >&2; exit 1 ;;
+esac
+case "$CACHE_ENTRY" in
+  "${CACHE_DIR}/"*) : ;;
+  *) echo "refusing the repoint: the live entry '${CACHE_ENTRY}' is not under ${CACHE_DIR}" >&2; exit 1 ;;
+esac
 # The undo line is `ln -sfn <primary root> <cache entry>`; the recorded entry is
 # its last whitespace-separated field. Reading it with sed keeps any `$(...)`
 # planted in NUKE.md inert — command substitution never re-evaluates captured
@@ -725,18 +767,22 @@ every claim below before it writes anything; a failed proof refuses, names what
 failed, and writes nothing. The steps run in order, and none is skipped when an
 earlier one already looks convincing.
 
-**R2 through R7 are one Bash invocation.** Run them as a single script, in
-order, in one shell — `$TOPLEVEL` (proved in R2) and `$ARCHIVE` (proved in R5)
-must be the exact values R6's gate and R7's checkout write against, and shell
+**R1 through R7 are one Bash invocation.** Run them as a single script, in
+order, in one shell — `$ITEM` (bound in R1), `$TOPLEVEL` (proved in R2),
+`$MANIFEST_LINE` (R3), `$TRIPLES` (R4) and `$ARCHIVE` (proved in R5) must be the
+exact values R6's gate and R7's checkout write against, and shell
 state does not survive a Bash boundary (Hard Rule 3). Splitting the blocks
-across separate Bash calls loses both bindings, so the value proved is no longer
-the value used. The re-restore escape is a separate, deliberate invocation that
-re-establishes both proofs from scratch before it writes.
+across separate Bash calls loses those bindings, so the value proved is no longer
+the value used. R0 is the one block outside the span, because the Write that
+fills its scratch file has to land between R0 and R1. The re-restore escape is a
+separate, deliberate invocation that re-runs R1 through R5 from scratch before
+it writes.
 
 **Every value read from `NUKE.md` is bound by a file-reading command
-substitution, and the `<item>` argument by a quoted here-doc — never retyped**
-(Hard Rule 12). Retyping a NUKE.md value or the argument into `VAR="<value>"`
-would execute any embedded `$(...)` at assignment, before a single gate runs.
+substitution, and the `<item>` argument by a redirect from R0's scratch file —
+never retyped** (Hard Rule 12). Retyping a NUKE.md value or the argument into
+`VAR="<value>"` would execute any embedded `$(...)` at assignment, before a
+single gate runs.
 The manifest triples are split out of `$MANIFEST_LINES` with parameter
 expansion, never read off the line by eye.
 
@@ -751,7 +797,7 @@ Checking out an edited manifest whole is equivalent to returning its `hooks`
 key, because the recorded hash proves the file is byte-for-byte what the nuke
 wrote, so the checkout changes that key and nothing else.
 
-### R1 — the argument
+### R0 and R1 — the argument
 
 Any first word other than `restore` prints the usage line and stops; the skill
 never guesses a mode. With no item id, print the manifest and stop. An item id
@@ -762,22 +808,71 @@ branch above has already been taken and returned. An empty `$ITEM` reaching it
 therefore means the mode dispatch was skipped, which is a refusal and not a
 second spelling of bare restore — hence the `''` case.
 
-`<item>` is untrusted and has no file to read it from, so it is bound with a
-**single-quoted here-doc** (`<<'RESTORE_ITEM'`), whose body is never expanded:
-a `$(...)` in the argument lands in `$ITEM` as inert text instead of running at
-assignment (Hard Rule 12). The shape check then runs before `$ITEM` reaches any
-command. Paste the raw argument on the line between the markers, nothing else:
+`<item>` is untrusted, so **it is given a file to be read from rather than
+pasted into the script** (Hard Rule 12). R0 makes that file; R1 reads it.
+
+Pasting the argument anywhere inside the script text is unsafe no matter how it
+is quoted, because every in-script quoting has a closing sequence the argument
+itself can supply. A single-quoted here-doc is the trap worth naming: its body
+is never expanded, but a line of the argument equal to the delimiter *ends* the
+here-doc, and every byte after that line parses as ordinary shell — at parse
+time, before the shape check below has run. A redirect from a file has no
+closing sequence, so the argument's bytes are data from beginning to end.
+
+#### R0 — make the scratch file
+
+Its own invocation, and the only block outside the R1-through-R7 span: the
+Write that fills the file has to land between this block and R1. `mktemp -d`
+creates an unpredictable directory with owner-only permissions, so the file
+R1 reads cannot be pre-planted or swapped by another user on the machine:
+
+```sh
+SCRATCH_DIR="$(mktemp -d "${TMPDIR:-/tmp}/nuke-team-plugin.XXXXXXXX")"
+[ -d "$SCRATCH_DIR" ] ||
+  { echo "refusing: could not create the scratch directory for the item argument" >&2; exit 1; }
+printf 'SCRATCH_DIR=%s\n' "$SCRATCH_DIR"
+```
+
+Then, with the **Write tool** (never a shell command — a shell command would put
+the argument's bytes back into script text, which is the whole thing this
+avoids), write the raw `<item>` argument, verbatim and alone, to
+`<the SCRATCH_DIR path just printed>/item`. No quotes around it, no edits, no
+trailing commentary. The Write tool carries its content as data, so nothing in
+the argument is ever parsed as shell.
+
+#### R1 — read it back and shape-check it
+
+`$SCRATCH_DIR` is transcribed as the literal path R0 *printed* — the `$DATE`
+idiom of Hard Rule 3, for a value `mktemp` generated and no untrusted source
+can influence — and it is shape-checked anyway. The file is read with a
+redirect, capped at one line, and deleted immediately; the shape check then
+runs before `$ITEM` reaches any command:
 
 ```sh
 export LC_ALL=C
-IFS= read -r ITEM <<'RESTORE_ITEM'
-<the item argument, pasted here verbatim — no surrounding quotes, no edits>
-RESTORE_ITEM
+SCRATCH_DIR="<the literal path R0 printed>"
+case "$SCRATCH_DIR" in
+  /*) : ;;
+  *) echo "refusing: the scratch path '$SCRATCH_DIR' is not absolute" >&2; exit 1 ;;
+esac
+[ -f "${SCRATCH_DIR}/item" ] && [ ! -L "${SCRATCH_DIR}/item" ] ||
+  { echo "refusing: ${SCRATCH_DIR}/item is not a regular file — write the argument there first" >&2; exit 1; }
+[ "$(wc -l < "${SCRATCH_DIR}/item")" -le 1 ] ||
+  { rm -f "${SCRATCH_DIR}/item"; rmdir "$SCRATCH_DIR"
+    echo "refusing: the item argument spans more than one line — an item id never does" >&2; exit 1; }
+IFS= read -r ITEM < "${SCRATCH_DIR}/item"
+rm -f "${SCRATCH_DIR}/item"; rmdir "$SCRATCH_DIR"
 case "$ITEM" in
   ''|/*|*..*|*[!A-Za-z0-9._/-]*)
     echo "refusing: '$ITEM' is not a valid item id — printing the manifest, nothing was written" >&2; exit 1 ;;
 esac
 ```
+
+The one-line cap is not redundant with the shape check. `read` would take the
+first line and silently drop the rest, so a multi-line argument would restore a
+real item while the maintainer never saw what else was sent; refusing names it
+instead. The scratch file is removed on both paths, so untrusted bytes never
+outlive the block that read them.
 
 ### R2 — location, branch, and containment
 
@@ -851,6 +946,12 @@ fence that still runs the range on is caught by the grammar assertion below:
 every extracted line must be a whole `<id> <kind> <path> <baseline> <state>`
 record, and the extracted count must equal the count that matches the grammar.
 
+**`$ITEM` is guarded here, never re-bound.** R1 is inside this invocation, so
+the value is already in the shell; the standalone `: "${ITEM:?}"` proves it
+arrived. An empty `$ITEM` means the span was split across Bash calls — re-run
+R0 and R1, and never repair it by retyping the argument, which is the one
+assignment Hard Rule 12 exists to stop.
+
 **The variable is `MANIFEST_LINES`, never `LINES`.** `LINES` is a zsh special
 integer parameter (the terminal's line count); the Bash tool runs zsh, and
 assigning a manifest string to `LINES` makes zsh arithmetic-evaluate it on the
@@ -860,6 +961,7 @@ written. The name is load-bearing.
 ```sh
 export LC_ALL=C
 : "${TOPLEVEL:?}"
+: "${ITEM:?}"
 NUKE_MD="${TOPLEVEL}/NUKE.md"
 OPENERS="$(grep -c '^[`]\{3\}nuke-manifest[[:space:]]*$' "$NUKE_MD")"
 [ "$OPENERS" = 1 ] ||
@@ -977,6 +1079,13 @@ the tag is signed, so the tag name must match
 **the trusted commit is the peeled `^{}` value**; the recorded `ARCHIVE_SHA` is
 a cross-check that never reaches a command.
 
+**Every revision naming a tag is fully qualified as `refs/tags/<name>`**, here
+and in step 3. A bare `<name>` is resolved through git's revision search order,
+which tries `refs/<name>` before `refs/tags/<name>` — so a ref planted at
+`refs/nuke-baseline/<date>` would be the object peeled and checked out while
+`tag -v` verified the real tag under `refs/tags/`, and the object proved would
+not be the object used.
+
 **The tag is bound to THIS experiment, not merely to a valid signature.** The
 date is derived once from the proved `$TOPLEVEL` worktree name and must key both
 the recorded tag and the recorded branch — otherwise an edited `NUKE.md` could
@@ -1010,7 +1119,7 @@ git -C "$TOPLEVEL" rev-parse --verify --quiet "refs/tags/${RECORDED_TAG}" >/dev/
   { echo "refusing: ${RECORDED_TAG} is missing locally — run 'git fetch origin tag ${RECORDED_TAG}' and re-run" >&2; exit 1; }
 git -C "$TOPLEVEL" tag -v "$RECORDED_TAG" ||
   { echo "refusing: ${RECORDED_TAG} does not verify" >&2; exit 1; }
-ARCHIVE="$(git -C "$TOPLEVEL" rev-parse "${RECORDED_TAG}^{}")"
+ARCHIVE="$(git -C "$TOPLEVEL" rev-parse "refs/tags/${RECORDED_TAG}^{}")"
 [ "$ARCHIVE" = "$RECORDED_ARCHIVE_SHA" ] ||
   { echo "refusing: ${RECORDED_TAG} peels to ${ARCHIVE}, but NUKE.md records ${RECORDED_ARCHIVE_SHA} — the file was edited" >&2; exit 1; }
 ```
@@ -1035,43 +1144,70 @@ the maintainer may commit freely in the worktree.
 
 ### R7 — check out every present path, then report
 
-**One loop over `$TRIPLES` — R4's normalized `<path> <baseline> <state>` per
-line — applies R6's gate and then the checkout to each `present` path.** An
-`absent` path is skipped and named; the item refuses only when *every* path was
-absent, so nothing silently restores a partial item and nothing silently
-restores nothing. Both the gate and the write carry `git -C "$TOPLEVEL"`, so
-they land in the tree R2 proved and nowhere else:
+**Two loops over `$TRIPLES` — R4's normalized `<path> <baseline> <state>` per
+line — and every gate runs in the first one, before the second one writes
+anything.** One loop that gated and wrote per iteration would break the
+"a failed proof writes nothing" contract on any multi-path item: a `pair` whose
+first path passes and whose second fails would leave the first path already
+checked out when the refusal fires, half-restoring the item and wedging the
+re-run on the path that is now present. Gating the whole item first makes the
+refusal total.
+
+An `absent` path is skipped and named; the item refuses only when *every* path
+is absent, so nothing silently restores a partial item and nothing silently
+restores nothing. Every gate and every write carries `git -C "$TOPLEVEL"`, so
+they read and land in the tree R2 proved and nowhere else.
+
+First pass — R6's gate over every `present` path on the item, writing nothing:
 
 ```sh
 : "${TOPLEVEL:?}"
 : "${ARCHIVE:?}"
 : "${TRIPLES:?}"
-WROTE=0
+: "${ITEM:?}"
+PRESENT_COUNT=0
+while IFS=' ' read -r ITEM_PATH BASELINE STATE; do
+  [ -n "$ITEM_PATH" ] || continue
+  [ "$BASELINE" = absent ] && continue
+  PRESENT_COUNT=$((PRESENT_COUNT + 1))
+  if [ "$STATE" = "-" ]; then
+    { [ ! -e "${TOPLEVEL}/${ITEM_PATH}" ] && [ ! -L "${TOPLEVEL}/${ITEM_PATH}" ] &&
+      [ -z "$(git -C "$TOPLEVEL" ls-files -- "$ITEM_PATH")" ]; } ||
+      { echo "refusing: ${ITEM_PATH} is recorded removed but exists in the tree or the index — nothing was written" >&2; exit 1; }
+  else
+    [ "$(git -C "$TOPLEVEL" hash-object -- "${TOPLEVEL}/${ITEM_PATH}")" = "$STATE" ] &&
+    [ "$(git -C "$TOPLEVEL" rev-parse ":${ITEM_PATH}")" = "$STATE" ] ||
+      { echo "refusing: ${ITEM_PATH} no longer matches its recorded state ${STATE} — nothing was written" >&2; exit 1; }
+  fi
+done <<ITEM_TRIPLES
+$TRIPLES
+ITEM_TRIPLES
+[ "$PRESENT_COUNT" -ge 1 ] ||
+  { echo "refusing: every path on '$ITEM' is recorded absent — nothing to restore" >&2; exit 1; }
+```
+
+Second pass — every path on the item is now proved, so the checkouts run:
+
+```sh
+: "${TOPLEVEL:?}"
+: "${ARCHIVE:?}"
+: "${TRIPLES:?}"
 while IFS=' ' read -r ITEM_PATH BASELINE STATE; do
   [ -n "$ITEM_PATH" ] || continue
   if [ "$BASELINE" = absent ]; then
     printf 'skipping %s — recorded absent at the archive, nothing to restore\n' "$ITEM_PATH"
     continue
   fi
-  # R6 recorded-state gate for this present path, working tree AND index.
-  if [ "$STATE" = "-" ]; then
-    { [ ! -e "${TOPLEVEL}/${ITEM_PATH}" ] && [ ! -L "${TOPLEVEL}/${ITEM_PATH}" ] &&
-      [ -z "$(git -C "$TOPLEVEL" ls-files -- "$ITEM_PATH")" ]; } ||
-      { echo "refusing: ${ITEM_PATH} is recorded removed but exists in the tree or the index" >&2; exit 1; }
-  else
-    [ "$(git -C "$TOPLEVEL" hash-object -- "${TOPLEVEL}/${ITEM_PATH}")" = "$STATE" ] &&
-    [ "$(git -C "$TOPLEVEL" rev-parse ":${ITEM_PATH}")" = "$STATE" ] ||
-      { echo "refusing: ${ITEM_PATH} no longer matches its recorded state ${STATE}" >&2; exit 1; }
-  fi
-  git -C "$TOPLEVEL" checkout "$ARCHIVE" -- "$ITEM_PATH"
+  git -C "$TOPLEVEL" checkout "$ARCHIVE" -- "$ITEM_PATH" ||
+    { echo "refusing: checking out ${ITEM_PATH} from ${ARCHIVE} failed — the item is partly restored; re-run after reading 'git status'" >&2; exit 1; }
   printf 'restored %s\n' "$ITEM_PATH"
-  WROTE=$((WROTE + 1))
 done <<ITEM_TRIPLES
 $TRIPLES
 ITEM_TRIPLES
-[ "$WROTE" -ge 1 ] ||
-  { echo "refusing: every path on '$ITEM' is recorded absent — nothing to restore" >&2; exit 1; }
 ```
+
+Both loops are fed by a here-doc rather than a pipe, so `$PRESENT_COUNT`
+accumulates in the current shell and a refusal's `exit 1` ends the run.
 
 The `-L` half of the `-` gate is not decoration: `-e` follows a link, so a
 dangling symlink would otherwise read as absent. Report every path written,
@@ -1088,9 +1224,23 @@ survives and R6 checks the index too. The escape therefore goes through git.
 rather than trusting a variable from the main path** (Hard Rule 3): shell state
 does not survive a Bash boundary, and a bare `${VAR:?}` guard would only prove a
 value is non-empty, not that it was ever proved. Before it writes, the escape
-**re-runs R2's containment proof and R5's tag verification from scratch** — the
-same blocks, in the same invocation as the writes below — to re-derive
-`$TOPLEVEL`, `$ARCHIVE`, and the item's `$TRIPLES`. Only then:
+**re-runs R1 through R5 from scratch** — the same blocks, in the same
+invocation as the writes below — because each binding it needs is made by a
+different one of them and none can be skipped:
+
+| Binding | The block that makes it |
+|---------|-------------------------|
+| `$ITEM` | R1, from a fresh R0 scratch file |
+| `$TOPLEVEL` | R2's containment proof |
+| `$MANIFEST_LINE` | R3's fence, grammar and membership gates |
+| `$TRIPLES` | R4's per-triple validation |
+| `$ARCHIVE` | R5's tag verification |
+
+R2 and R5 alone are not enough: `$TRIPLES` is R4's output, R4 reads R3's
+`$MANIFEST_LINE`, and R3 reads R1's `$ITEM`. An escape that ran only R2 and R5
+would reach `: "${TRIPLES:?}"` unbound, and the obvious repair — retyping the
+manifest triples as literals immediately before a `git rm -r -f` — is exactly
+the assignment Hard Rule 12 forbids. Only once all five are re-bound:
 
 The nuke commit is derived, never read: `NUKE.md` sits inside that commit and
 cannot record its own SHA. It records `ARCHIVE_SHA`, and the nuke commit is the
@@ -1101,6 +1251,7 @@ is the current branch:
 : "${TOPLEVEL:?}"
 : "${ARCHIVE:?}"
 : "${TRIPLES:?}"
+: "${ITEM:?}"
 NUKE_COMMIT="$(git -C "$TOPLEVEL" rev-list --ancestry-path --reverse "${ARCHIVE}..HEAD" | head -1)"
 [ -n "$NUKE_COMMIT" ] ||
   { echo "refusing: cannot derive the nuke commit from ${ARCHIVE}..HEAD" >&2; exit 1; }
@@ -1110,9 +1261,11 @@ while IFS=' ' read -r ITEM_PATH BASELINE STATE; do
   [ -n "$ITEM_PATH" ] || continue
   [ "$BASELINE" = absent ] && continue
   if [ "$STATE" = "-" ]; then
-    git -C "$TOPLEVEL" rm -r -f -- "$ITEM_PATH"
+    git -C "$TOPLEVEL" rm -r -f -- "$ITEM_PATH" ||
+      { echo "refusing: could not clear ${ITEM_PATH} from the tree and index" >&2; exit 1; }
   else
-    git -C "$TOPLEVEL" checkout "$NUKE_COMMIT" -- "$ITEM_PATH"
+    git -C "$TOPLEVEL" checkout "$NUKE_COMMIT" -- "$ITEM_PATH" ||
+      { echo "refusing: could not return ${ITEM_PATH} to the state the nuke left" >&2; exit 1; }
   fi
 done <<ITEM_TRIPLES
 $TRIPLES
@@ -1125,6 +1278,11 @@ with `git -C "$TOPLEVEL" rm -r -f -- "$ITEM_PATH"`, which clears the working
 tree and the index together; a recorded hash is returned with
 `git -C "$TOPLEVEL" checkout "$NUKE_COMMIT" -- "$ITEM_PATH"`, restoring the exact
 bytes the nuke wrote so the recorded hash matches again.
+
+Each write's exit status is checked and refuses the escape (Hard Rule 4).
+`git rm` exits non-zero on a pathspec that matches nothing, and an unchecked
+loop would carry on to the next path and report success while the recorded
+state it was meant to clear is still there.
 
 For a manifest the maintainer edited on purpose, the alternative is a hand
 merge from `git show <ARCHIVE_SHA>:<path>`, which writes nothing.
@@ -1339,6 +1497,25 @@ a decision the maintainer makes by hand, long after this run.
   step 7, which would need a second commit to record it.
 - **Treating the tag push as a gate.** It is best-effort; a maintainer with no
   push access must not be stranded.
+- **Retyping a `NUKE.md` value or the `<item>` argument as `VAR="<value>"`.**
+  The shell expands a double-quoted assignment, so an embedded `$(...)` or
+  backtick runs at assignment — before the gate that was going to reject the
+  value ever executes. Bind every such value with a command that reads it
+  (Hard Rule 12), and reach for that binding rather than a retype when a
+  variable turns up unset: an unset variable means the invocation span was
+  split, and the repair is to re-run the span.
+- **Pasting the `<item>` argument into the script under any quoting.** Every
+  in-script quoting has a closing sequence the argument can supply — a
+  single-quoted here-doc ends at a line equal to its delimiter, and the bytes
+  after it parse as shell at parse time, ahead of every gate. The argument
+  reaches the shell only through R0's scratch file.
+- **Gating and writing in one loop over a multi-path item.** A `pair` or
+  `group` whose second path fails its gate would already have had its first
+  path checked out, so "a failed proof writes nothing" would be false and the
+  re-run would wedge on the path that is now present. Gate every triple first.
+- **Naming a tag as a bare revision.** `rev-parse <name>^{}` searches
+  `refs/<name>` before `refs/tags/<name>`, so the object verified and the
+  object used can differ. Qualify every tag revision as `refs/tags/<name>`.
 - **Repairing the nuked worktree's test suite.** It is red by construction —
   `tests/` survives while its targets do not. Repairing it is contamination.
 

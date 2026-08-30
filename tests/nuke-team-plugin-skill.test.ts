@@ -1,21 +1,18 @@
 // tests/nuke-team-plugin-skill.test.ts
 //
-// L2 tripwire (free, deterministic): fences the DEV `nuke-team-plugin` skill
-// (.claude/skills/nuke-team-plugin/SKILL.md) — Team's instruction-surface nuke
-// experiment (docs/plans/2026-08-28-nuke-team-plugin). It archives, removes,
-// and selectively restores Team's own skills/agents/hooks on a throwaway
+// Free, deterministic tripwire over the DEV `nuke-team-plugin` skill
+// (.claude/skills/nuke-team-plugin/SKILL.md), which archives, removes, and
+// selectively restores Team's own skills/agents/hooks on a throwaway
 // experiment branch, then repoints the plugin cache so the experiment is live.
 //
-// What this file pins, per docs/testing.md §L2: frontmatter keys and values,
-// the commands and template strings the body tells the model to emit, the
-// hard-coded deletion-set roots, section headings, and the order of two
-// headings. Never a wording, never a proximity span, never a file length.
-// Every absence assertion carries a length guard plus a positive control, so a
-// renamed heading fails loudly instead of turning the sweep into a green no-op.
+// What this file pins: frontmatter keys and values, the commands and template
+// strings the body tells the model to emit, the hard-coded deletion-set roots,
+// section headings, and the order of two headings. Never a wording, never a
+// proximity span, never a file length. Every absence assertion carries a
+// length guard plus a positive control, so a renamed heading fails loudly
+// instead of turning the sweep into a green no-op.
 //
-// Describe blocks are named with the acceptance criteria verbatim from
-// docs/plans/2026-08-28-nuke-team-plugin/structure.md, one describe per named
-// criterion, grouped by slice so a slice's fence can be run in isolation:
+// Describe blocks are grouped so one group's fence can be run in isolation:
 //   bun test tests/nuke-team-plugin-skill.test.ts -t "Slice 3"
 //
 // Defensive reads: a missing file → "" and a missing section → "", so every
@@ -53,19 +50,41 @@ function agents(): string {
   return readIf(AGENTS_MD);
 }
 
+// Mark every line that sits inside a fenced code block, fence lines included.
+// A shell comment (`# ...`) inside a block otherwise reads as a level-1
+// heading, which would end a section early and leave the sweeps below scanning
+// a stub that passes every absence check vacuously.
+function fencedLines(lines: string[]): boolean[] {
+  const FENCE = /^\s{0,3}(?:`{3,}|~{3,})/;
+  const marks: boolean[] = [];
+  let fenced = false;
+  for (const line of lines) {
+    if (FENCE.test(line)) {
+      marks.push(true);
+      fenced = !fenced;
+      continue;
+    }
+    marks.push(fenced);
+  }
+  return marks;
+}
+
 // Slice the body from the heading matching `re` to the next heading at the
 // same or a shallower level. A heading that does not exist yields "" — the
 // length guard on each dependent assertion then fails rather than passing
-// vacuously (docs/testing.md, "Prove a negative check can find a positive").
+// vacuously.
 function sectionFrom(re: RegExp): string {
   const lines = body().split("\n");
-  const start = lines.findIndex((line) => re.test(line));
+  const fenced = fencedLines(lines);
+  const start = lines.findIndex((line, i) => !fenced[i] && re.test(line));
   if (start < 0) return "";
   const hashes = lines[start]!.match(/^#+/);
   const level = hashes ? hashes[0].length : 6;
   const boundary = new RegExp(`^#{1,${level}}\\s`);
   for (let i = start + 1; i < lines.length; i++) {
-    if (boundary.test(lines[i]!)) return lines.slice(start, i).join("\n");
+    if (!fenced[i] && boundary.test(lines[i]!)) {
+      return lines.slice(start, i).join("\n");
+    }
   }
   return lines.slice(start).join("\n");
 }
@@ -74,7 +93,7 @@ function lineIndex(text: string, re: RegExp): number {
   return text.split("\n").findIndex((line) => re.test(line));
 }
 
-// The three sections the later slices assert against, each pinned by its
+// The three sections the later groups assert against, each pinned by its
 // heading — a rename is a real contract change and must fail the build.
 const RESTORE_HEADING = /^##\s+Restore mode\b/;
 const CACHE_STEP_HEADING = /^#{2,4}\s*Step\s+\d+\b.*cache/i;
@@ -103,18 +122,18 @@ function tableAfter(text: string, header: string): string {
 
 // --- Matchers used by the negative sweeps, each with a positive control ------
 
-// The self-containment ban of Decision 7: no directive telling the model to
-// read another instruction file, since every other one is deleted by the nuke.
-// Non-global so `.test()` carries no lastIndex between calls.
+// The self-containment ban: no directive telling the model to read another
+// instruction file, since every other one is deleted by the nuke. Non-global
+// so `.test()` carries no lastIndex between calls.
 const LOAD_DIRECTIVE = /^\s*>?\s*(Load|Follow)\b.*SKILL\.md/m;
 
-// Version arithmetic on the cache entry (Decision 5's rejected alternative):
-// the live entry was named by whichever checkout last ran the installer, so a
-// version read today can name a directory that does not exist.
+// Version arithmetic on the cache entry: the live entry was named by whichever
+// checkout last ran the installer, so a version read today can name a
+// directory that does not exist while the real link sits beside it.
 const VERSION_ARITHMETIC = /PLUGIN_VERSION|\.claude-plugin\/plugin\.json/;
 
 // A `rm -rf` whose target ends in `/`. BSD `rm -rf link/` follows the symlink
-// and deletes the checkout it points at (design-review-5.md:59).
+// and deletes the checkout it points at.
 const RM_RF_TRAILING_SLASH =
   /rm -rf\s+(?:"[^"]*"|'[^']*'|[^\s"']+)\/(?:\s|$)/;
 
@@ -123,12 +142,12 @@ const RM_RF_TRAILING_SLASH =
 const POSITIONAL = /\$[0-9]/;
 
 // awk positional field extraction, which is how the `$<digit>` token would get
-// into the body (design.md:346 spells the membership gate that way).
+// into the body.
 const AWK_POSITIONAL = /awk\s+'\{\s*print/;
 
-// The two narrower write-scope phrasings the review Major (design.md:806)
-// rejected. Reproducing either builds a restore that cannot restore
-// `runtime-hooks` or `dev-hooks`, whose manifest state is a hash, not `-`.
+// The two narrower write-scope phrasings. Either one builds a restore that
+// cannot restore `runtime-hooks` or `dev-hooks`, whose manifest state is a
+// hash, not `-`.
 const NARROW_WRITE_SCOPE = [
   "the paths the nuke actually removed",
   "only writes recorded-absent paths",
@@ -140,8 +159,8 @@ const NARROW_WRITE_SCOPE = [
 // lastIndex between calls.
 const TAG_DELETION = /\btag -d\b|\bpush --delete\b/;
 
-// Decision 13's hard-coded scope check: every manifest path must sit inside one
-// of these roots, and the roots live in the skill body, never in NUKE.md.
+// Every manifest path must sit inside one of these roots, and the roots live
+// in the skill body, never in NUKE.md.
 const DELETION_SET_ROOTS = [
   "AGENTS.md",
   "CLAUDE.md",
@@ -190,7 +209,7 @@ describe("Slice 1: frontmatter carries name + disable-model-invocation: true, no
     expect(squash(fm())).toContain("Invoke ONLY on explicit");
   });
 
-  test("frontmatter carries no skills: key (Decision 7 self-containment)", () => {
+  test("frontmatter carries no skills: key (the skill loads no other instruction file)", () => {
     // Guard: empty frontmatter must fail, not vacuously pass the absence check.
     expect(fm().length).toBeGreaterThan(0);
     expect(/^skills:/m.test(fm())).toBe(false);
@@ -284,13 +303,19 @@ describe('Slice 1: nuke steps split the two scopes — repo-level commands run a
   test("the recovery line is a whole-tree git reset --hard to the archive SHA", () => {
     expect(body()).toContain("git reset --hard");
   });
+
+  test("the manifest generator folds case before excluding the skill's own directory", () => {
+    // Mutant target: drop the fold and `.claude/Skills/Nuke-Team-Plugin/…`
+    // reaches the manifest on a case-insensitive filesystem.
+    expect(body()).toContain(`P_LC="$(printf '%s' "$P" | tr 'A-Z' 'a-z')"`);
+  });
 });
 
 describe("Slice 1: the remote baseline pre-flight refuses a lightweight remote tag (an unpeeled refs/tags row with no ^{} companion), not only a differing peeled SHA", () => {
   // The pre-flight reads `git ls-remote --tags origin`, which lists an
   // annotated tag's own object SHA on `refs/tags/<name>` and the commit on
   // `refs/tags/<name>^{}`. A lightweight remote tag has NO `^{}` row at all,
-  // so a peeled-row-only comparison is vacuous against it (design.md:714).
+  // so a peeled-row-only comparison is vacuous against it.
   function lsRemoteBlock(): string {
     const blocks = [...body().matchAll(/```[a-z]*\n([\s\S]*?)```/g)].map(
       (m) => m[1]!,
@@ -321,7 +346,7 @@ describe("Slice 1: the remote baseline pre-flight refuses a lightweight remote t
 
   test('an unpeeled row with NO peeled companion is the refused condition', () => {
     // Reading both rows is not the correction; refusing on
-    // "present unpeeled AND absent peeled" is (design.md:714).
+    // "present unpeeled AND absent peeled" is.
     expect(squash(lsRemoteBlock())).toContain(
       `[ -n "$UNPEELED_ROW" ] && [ -z "$PEELED_ROW" ]`,
     );
@@ -339,13 +364,25 @@ describe("Slice 1: the remote baseline pre-flight refuses a lightweight remote t
   });
 
   test("the pre-flight is read-only, so it never creates the local tag it may refuse", () => {
-    // Ordering correction: the remote pre-flight runs before `tag -a -s`, so a
-    // refusal leaves no stray local tag behind.
+    // The remote pre-flight runs before `tag -a -s`, so a refusal leaves no
+    // stray local tag behind.
     const preflight = lineIndex(body(), /ls-remote --tags origin/);
     const create = lineIndex(body(), /tag -a -s -m "Team instruction surface/);
     expect(preflight).toBeGreaterThanOrEqual(0);
     expect(create).toBeGreaterThan(preflight);
     expect(lsRemoteBlock()).not.toContain("tag -a -s");
+  });
+
+  test("the baseline-tag reuse gate peels a fully qualified refs/tags/ revision", () => {
+    // Mutant target: a bare `<name>^{}` resolves through git's search order,
+    // which tries `refs/<name>` before `refs/tags/<name>`, so the object
+    // verified and the object used can differ.
+    expect(body()).toContain(
+      `PEELED="$(git -C "$PRIMARY_ROOT" rev-parse "refs/tags/nuke-baseline/${"${DATE}"}^{}")"`,
+    );
+    expect(body()).toContain(
+      `KIND="$(git -C "$PRIMARY_ROOT" cat-file -t "refs/tags/nuke-baseline/${"${DATE}"}")"`,
+    );
   });
 });
 
@@ -372,7 +409,7 @@ describe('Slice 2: the cache entry is identified by readlink equality with "$PRI
 
   test("the foreign-symlink case says to remove the stale link first", () => {
     // `script/dev-install claude` is a no-op here — the installer skips an
-    // existing symlink (script/dev-install-claude:14,27).
+    // existing symlink.
     expect(body()).toContain("rm <entry>");
   });
 
@@ -388,6 +425,58 @@ describe('Slice 2: the cache entry is identified by readlink equality with "$PRI
   test("the cache section derives no entry path from a version string", () => {
     expect(cacheSection().length).toBeGreaterThan(0);
     expect(VERSION_ARITHMETIC.test(cacheSection())).toBe(false);
+  });
+});
+
+describe("Slice 2: the repoint block binds CACHE_ENTRY with the command that finds it, shape-checks it, and only then moves the link", () => {
+  test("CACHE_ENTRY is assigned by a find over the cache directory, never transcribed", () => {
+    // Mutant target: consuming `$CACHE_ENTRY` without assigning it leaves the
+    // repoint dead on `: "${CACHE_ENTRY:?}"`, and the only way to revive it is
+    // to type a machine-local path in as literal script text.
+    expect(cacheSection()).toContain(
+      `CACHE_ENTRY="$(find "$CACHE_DIR" -mindepth 1 -maxdepth 1 -type l -print |`,
+    );
+  });
+
+  test("the find filters candidates by readlink equality with the primary root", () => {
+    expect(squash(cacheSection())).toContain(
+      `[ "$(readlink "$entry")" = "$PRIMARY_ROOT" ]`,
+    );
+  });
+
+  test("an empty match set refuses the repoint", () => {
+    expect(squash(cacheSection())).toContain(`[ -n "$CACHE_ENTRY" ]`);
+  });
+
+  test("more than one match refuses the repoint, counted in the same block", () => {
+    expect(squash(cacheSection())).toContain(
+      `[ "$(printf '%s\\n' "$CACHE_ENTRY" | grep -c .)" = 1 ]`,
+    );
+  });
+
+  test("the discovered entry gets the same syntax check the recorded entry gets", () => {
+    const checks = cacheSection()
+      .split("\n")
+      .filter((line) => line.includes(`*..*|*[!A-Za-z0-9._/-]*|''`));
+    expect(checks.length).toBeGreaterThanOrEqual(2);
+  });
+
+  test("the discovered entry is proved to sit under the cache directory", () => {
+    const contained = cacheSection()
+      .split("\n")
+      .filter((line) => line.includes(`"${"${CACHE_DIR}"}/"*`));
+    expect(contained.length).toBeGreaterThanOrEqual(2);
+  });
+
+  test("the repoint block runs its shape checks under LC_ALL=C", () => {
+    expect(cacheSection()).toContain("export LC_ALL=C");
+  });
+
+  test("the link is only moved after the discovered and recorded entries agree", () => {
+    const equality = lineIndex(cacheSection(), /\[ "\$CACHE_ENTRY" = "\$RECORDED_ENTRY" \]/);
+    const link = lineIndex(cacheSection(), /^ln -sfn "\$WORKTREE" "\$CACHE_ENTRY"/);
+    expect(equality).toBeGreaterThanOrEqual(0);
+    expect(link).toBeGreaterThan(equality);
   });
 });
 
@@ -421,7 +510,7 @@ describe("Slice 2: the repoint target carries no trailing slash (or uses ln -sfn
 
   test("no rm -rf line in the body ends its target with a trailing slash", () => {
     // BSD `rm -rf link/` follows the symlink and empties the checkout behind
-    // it (design-review-5.md:59).
+    // it.
     expect(body().length).toBeGreaterThan(0);
     const offenders = body()
       .split("\n")
@@ -469,13 +558,13 @@ describe("Slice 3: restore proves before it writes: exactly one nuke-manifest bl
   test("the trusted archive commit comes from the peeled <tag>^{} SHA", () => {
     // The recorded ARCHIVE_SHA is untrusted (NUKE.md is a tracked file anyone
     // can edit); only the tag is signed, so the checkout runs against the
-    // peeled value and the recorded field is a cross-check (Decision 13).
+    // peeled value and the recorded field is a cross-check.
     expect(restoreSection()).toContain("^{}");
   });
 
   test("the recorded-state gate checks the index, not only the working tree", () => {
-    // Bound to $TOPLEVEL, not to the caller's cwd: R6 and R7 must read and
-    // write the same tree, which is the one R2 proved.
+    // Bound to $TOPLEVEL, not to the caller's cwd: the gate and the write must
+    // read and write the same tree, which is the one R2 proved.
     expect(restoreSection()).toContain(`git -C "$TOPLEVEL" ls-files`);
   });
 
@@ -526,8 +615,7 @@ describe("Slice 3: restore's write scope is stated one way: every present path o
 
   test("the body never says restore writes only the paths the nuke removed", () => {
     // Either narrower phrasing builds a restore that silently cannot return
-    // runtime-hooks or dev-hooks, whose state is a hash, not `-`
-    // (review Major, design.md:806).
+    // runtime-hooks or dev-hooks, whose state is a hash, not `-`.
     expect(body().length).toBeGreaterThan(0);
     expect(squash(body())).not.toContain(NARROW_WRITE_SCOPE[0]!);
   });
@@ -545,7 +633,7 @@ describe("Slice 3: restore refuses when the worktree toplevel equals the derived
 
   test("restore derives the primary root so it can refuse a toplevel that equals it", () => {
     // The `present <hash>` branch is reachable in a non-nuked tree, so the
-    // `-`-only state argument is not the containment proof (design.md:437).
+    // `-`-only state argument is not the containment proof.
     expect(restoreSection()).toContain("--git-common-dir");
   });
 
@@ -589,13 +677,25 @@ describe("Slice 3: restore refuses when the worktree toplevel equals the derived
 
   test("a `-` state path is cleared from tree AND index with git rm -r -f", () => {
     // A filesystem `rm` leaves the index entry, so the stated escape would
-    // never clear the recorded-state gate (design.md:426).
+    // never clear the recorded-state gate.
     expect(restoreSection()).toContain(`git -C "$TOPLEVEL" rm -r -f --`);
   });
 
   test("a hashed manifest is returned by checking out the nuke commit, restoring the exact bytes the nuke wrote", () => {
     expect(restoreSection()).toContain(
       `git -C "$TOPLEVEL" checkout "$NUKE_COMMIT" --`,
+    );
+  });
+
+  test("both escape writes refuse on a non-zero exit status", () => {
+    // Mutant target: `git rm` exits non-zero on a pathspec that matches
+    // nothing, and an unchecked loop reports success while the recorded state
+    // it was meant to clear is still there.
+    expect(restoreSection()).toContain(
+      `git -C "$TOPLEVEL" rm -r -f -- "$ITEM_PATH" ||`,
+    );
+    expect(restoreSection()).toContain(
+      `git -C "$TOPLEVEL" checkout "$NUKE_COMMIT" -- "$ITEM_PATH" ||`,
     );
   });
 });
@@ -618,7 +718,7 @@ describe("Slice 4: in the NUKE.md teardown template the nuke-result/ tag line pr
 
   test("the nuke-result/ tag line comes BEFORE the worktree remove line", () => {
     // Preservation first: four steps separate the tag from the branch -D, and
-    // the tag is what keeps every commit reachable afterwards (Decision 17).
+    // the tag is what keeps every commit reachable afterwards.
     const tag = lineIndex(teardownSection(), /tag -a -s -m/);
     const remove = lineIndex(teardownSection(), /worktree remove/);
     expect(tag).toBeGreaterThanOrEqual(0);
@@ -656,8 +756,8 @@ describe("Slice 4: teardown carries no tag-deletion command anywhere, no --force
   });
 
   test("no worktree remove line carries --force", () => {
-    // Mirrors skills/pr-cleanup/SKILL.md:388-391 — an uncommitted restore
-    // stops the removal and shows itself instead of vanishing.
+    // An uncommitted restore stops the removal and shows itself instead of
+    // vanishing.
     expect(teardownSection().length).toBeGreaterThan(0);
     const forced = teardownSection()
       .split("\n")
@@ -706,7 +806,7 @@ describe("Slice 4: the tip-equality proof names git -C <primary root> on both ha
 });
 
 // ===========================================================================
-// Cross-slice concerns (structure.md ## Cross-slice concerns)
+// Cross-slice concerns
 // ===========================================================================
 
 describe("Cross-slice: no $<digit> the slash-command loader would substitute, and fields are read with cut", () => {
@@ -770,11 +870,8 @@ describe("Cross-slice: AGENTS.md registers the skill as a development concern on
 });
 
 // ===========================================================================
-// Round-2 review-fix tripwires (docs/plans/2026-08-28-nuke-team-plugin,
-// design-review-5.md). Each pins a mechanic the round-2 gate found missing:
-// untrusted NUKE.md values reaching the shell as literals (security CRITICAL),
-// the zsh-hostile generator loop (code B1), restore bindings that never re-prove
-// (code B2), and the manifest-fence / R4 / R5 hardening (security MEDIUM).
+// Injection and binding discipline: every untrusted value reaches the shell
+// through a command that reads it, and never as script text.
 // ===========================================================================
 
 // A bare `LINES=` assignment — the zsh special integer parameter (terminal
@@ -784,15 +881,16 @@ describe("Cross-slice: AGENTS.md registers the skill as a development concern on
 const BARE_LINES_ASSIGN = /(^|[^A-Za-z0-9_])LINES=/m;
 
 // A `for X in $VAR` loop over an unquoted expansion — zsh does not word-split
-// it, so the loop runs once over the whole blob (code B1). Literal-list loops
+// it, so the loop runs once over the whole blob. Literal-list loops
 // (`for p in AGENTS.md ...`) carry no `$` and never match.
 const FOR_IN_UNQUOTED = /for\s+\w+\s+in\s+\$/;
 
-describe("Round 2: untrusted NUKE.md values are bound by file-reading command substitution, never retyped (security CRITICAL S-C1)", () => {
-  test("the item argument is bound by a single-quoted here-doc, so $(...) in it is inert", () => {
-    expect(restoreSection()).toContain(`IFS= read -r ITEM <<'RESTORE_ITEM'`);
-  });
+// A here-doc used to carry the untrusted `<item>` argument. A line of the
+// argument equal to the delimiter ends the here-doc, and every byte after it
+// parses as shell at parse time — before any shape check runs.
+const ITEM_HEREDOC = /<<'?RESTORE_ITEM'?/;
 
+describe("Untrusted NUKE.md values are bound by file-reading command substitution, never retyped", () => {
   test("the recorded branch is read from NUKE.md by sed, not retyped", () => {
     expect(restoreSection()).toContain(
       `RECORDED_BRANCH="$(sed -n 's/^- Branch: //p'`,
@@ -811,11 +909,11 @@ describe("Round 2: untrusted NUKE.md values are bound by file-reading command su
     );
   });
 
-  test("the cache-undo entry is read from NUKE.md by grep/sed before the equality gate (step 7)", () => {
+  test("the cache-undo entry is read from NUKE.md by grep/sed before the equality gate", () => {
     expect(body()).toContain(`RECORDED_ENTRY="$(grep -E '^ln -sfn '`);
   });
 
-  test("step 7 refuses unless the recorded entry equals the discovered live entry", () => {
+  test("the repoint refuses unless the recorded entry equals the discovered live entry", () => {
     // Mutant target: delete this equality and the undo line can name any path.
     expect(body()).toContain(`[ "$CACHE_ENTRY" = "$RECORDED_ENTRY" ]`);
   });
@@ -832,7 +930,58 @@ describe("Round 2: untrusted NUKE.md values are bound by file-reading command su
   });
 });
 
-describe("Round 2: the manifest variable is MANIFEST_LINES, never the zsh special LINES (code B1 / restore)", () => {
+describe("The item argument reaches the shell only through a scratch file, never as script text", () => {
+  test("the here-doc matcher fires on the binding it replaced", () => {
+    expect(ITEM_HEREDOC.test(`IFS= read -r ITEM <<'RESTORE_ITEM'`)).toBe(true);
+  });
+
+  test("no here-doc carries the item argument into the script", () => {
+    // Mutant target: a single-quoted here-doc keeps `$(...)` inert but cannot
+    // stop a line equal to its own delimiter from closing it, which hands the
+    // remaining bytes to the shell as commands.
+    expect(body().length).toBeGreaterThan(0);
+    expect(ITEM_HEREDOC.test(body())).toBe(false);
+  });
+
+  test("the scratch directory is created with mktemp -d, so it cannot be pre-planted", () => {
+    expect(restoreSection()).toContain(
+      `SCRATCH_DIR="$(mktemp -d "${"${TMPDIR:-/tmp}"}/nuke-team-plugin.XXXXXXXX")"`,
+    );
+  });
+
+  test("the argument is bound by a redirect from that scratch file", () => {
+    expect(restoreSection()).toContain(
+      `IFS= read -r ITEM < "${"${SCRATCH_DIR}"}/item"`,
+    );
+  });
+
+  test("the scratch file must be a regular file, never a symlink", () => {
+    expect(squash(restoreSection())).toContain(
+      `[ -f "${"${SCRATCH_DIR}"}/item" ] && [ ! -L "${"${SCRATCH_DIR}"}/item" ]`,
+    );
+  });
+
+  test("an argument spanning more than one line is refused, not silently truncated", () => {
+    // Mutant target: `read` takes the first line and drops the rest, so a
+    // multi-line argument would restore a real item while the maintainer never
+    // saw what else was sent.
+    expect(restoreSection()).toContain(
+      `[ "$(wc -l < "${"${SCRATCH_DIR}"}/item")" -le 1 ]`,
+    );
+  });
+
+  test("the shape check still runs before $ITEM reaches any command", () => {
+    expect(restoreSection()).toContain(`''|/*|*..*|*[!A-Za-z0-9._/-]*)`);
+  });
+
+  test("the scratch file is removed once it has been read", () => {
+    expect(restoreSection()).toContain(
+      `rm -f "${"${SCRATCH_DIR}"}/item"; rmdir "$SCRATCH_DIR"`,
+    );
+  });
+});
+
+describe("The manifest variable is MANIFEST_LINES, never the zsh special LINES", () => {
   test("the bare-LINES matcher fires on a planted assignment", () => {
     expect(BARE_LINES_ASSIGN.test('\nLINES="$(sed -n ...)"')).toBe(true);
     expect(BARE_LINES_ASSIGN.test('\nMANIFEST_LINES="$(sed ...)"')).toBe(false);
@@ -848,7 +997,7 @@ describe("Round 2: the manifest variable is MANIFEST_LINES, never the zsh specia
   });
 });
 
-describe("Round 2: the generator enumerates per entry with while-read, not a zsh-hostile for-in (code B1)", () => {
+describe("The generator enumerates per entry with while-read, not a zsh-hostile for-in", () => {
   test("the for-in matcher fires on a planted unquoted loop", () => {
     expect(FOR_IN_UNQUOTED.test("for ENTRY in $ENTRIES; do")).toBe(true);
     expect(FOR_IN_UNQUOTED.test("for p in AGENTS.md CLAUDE.md; do")).toBe(false);
@@ -875,16 +1024,25 @@ describe("Round 2: the generator enumerates per entry with while-read, not a zsh
   });
 });
 
-describe("Round 2: restore proves within one invocation and re-proves in the escape (code B2)", () => {
-  test("restore states R2 through R7 run as one Bash invocation", () => {
+describe("Restore binds and proves within one invocation, and re-proves in the escape", () => {
+  test("restore states R1 through R7 run as one Bash invocation", () => {
+    // The span must start at R1: it is the block that binds $ITEM, which R3
+    // and R7 read. Excluding it leaves them unbound, and the obvious repair is
+    // the retype Hard Rule 12 forbids.
     expect(squash(restoreSection())).toContain(
-      "R2 through R7 are one Bash invocation",
+      "R1 through R7 are one Bash invocation",
     );
   });
 
-  test("the re-restore escape re-establishes both proofs from scratch", () => {
+  test("R3 guards $ITEM rather than re-binding it", () => {
+    expect(restoreSection()).toContain(`: "\${ITEM:?}"`);
+  });
+
+  test("the re-restore escape re-runs every block that makes a binding it uses", () => {
+    // Mutant target: naming only R2 and R5 leaves $TRIPLES (R4), which reads
+    // $MANIFEST_LINE (R3), which reads $ITEM (R1), unbound at the write.
     expect(squash(restoreSection())).toContain(
-      "re-runs R2's containment proof and R5's tag verification from scratch",
+      "re-runs R1 through R5 from scratch",
     );
   });
 
@@ -894,22 +1052,58 @@ describe("Round 2: restore proves within one invocation and re-proves in the esc
   });
 
   test("R7 refuses only when every path on the item is absent, never on a partial", () => {
-    expect(restoreSection()).toContain(`[ "$WROTE" -ge 1 ]`);
+    expect(restoreSection()).toContain(`[ "$PRESENT_COUNT" -ge 1 ]`);
   });
 });
 
-describe("Round 2: the manifest fence and R4/R5 gates are hardened (security MEDIUM S-M1..M4)", () => {
-  test("the closer matches a CommonMark 3-or-more-backtick fence (S-M1)", () => {
+describe("R7 gates every path on an item before it writes any of them", () => {
+  test("the gate pass counts present paths without writing", () => {
+    expect(restoreSection()).toContain("PRESENT_COUNT=0");
+    expect(restoreSection()).toContain(`PRESENT_COUNT=$((PRESENT_COUNT + 1))`);
+  });
+
+  test("the recorded-state gate runs BEFORE the first checkout", () => {
+    // Mutant target: gating and writing in one loop leaves a `pair` whose
+    // first path passes and whose second fails half-restored, which both
+    // breaks the "a failed proof writes nothing" contract and wedges the
+    // re-run on the path that is now present.
+    const gate = lineIndex(restoreSection(), /git -C "\$TOPLEVEL" hash-object -- /);
+    const allGatesPassed = lineIndex(restoreSection(), /\[ "\$PRESENT_COUNT" -ge 1 \]/);
+    const write = lineIndex(
+      restoreSection(),
+      /git -C "\$TOPLEVEL" checkout "\$ARCHIVE" -- "\$ITEM_PATH"/,
+    );
+    expect(gate).toBeGreaterThanOrEqual(0);
+    expect(allGatesPassed).toBeGreaterThan(gate);
+    expect(write).toBeGreaterThan(allGatesPassed);
+  });
+
+  test("both refusals in the gate pass say nothing was written", () => {
+    const refusals = restoreSection()
+      .split("\n")
+      .filter((line) => line.includes("nothing was written"));
+    expect(refusals.length).toBeGreaterThanOrEqual(2);
+  });
+
+  test("a failed checkout in the write pass refuses rather than reporting success", () => {
+    expect(restoreSection()).toContain(
+      `git -C "$TOPLEVEL" checkout "$ARCHIVE" -- "$ITEM_PATH" ||`,
+    );
+  });
+});
+
+describe("The manifest fence and the R4/R5 gates are hardened", () => {
+  test("the closer matches a CommonMark 3-or-more-backtick fence", () => {
     // Mutant target: exactly-three closer lets a 4-backtick line run the range on.
     expect(restoreSection()).toContain(`^ \\{0,3\\}[\`]\\{3,\\}[[:space:]]*$`);
   });
 
-  test("every extracted manifest line must match the record grammar, counted (S-M1)", () => {
+  test("every extracted manifest line must match the record grammar, counted", () => {
     expect(restoreSection()).toContain("(pair|tree|file|group)");
     expect(restoreSection()).toContain(`[ "$TOTAL" = "$GOOD" ]`);
   });
 
-  test("R4 is one runnable gate: baseline enum, state format, and the absent+hash contradiction (S-M4)", () => {
+  test("R4 is one runnable gate: baseline enum, state format, and the absent+hash contradiction", () => {
     // Mutant target: any of these deleted and a forged line reaches checkout.
     expect(restoreSection()).toContain("present|absent) ;;");
     expect(restoreSection()).toContain(`[ "${"${#STATE}"}" = 40 ]`);
@@ -918,11 +1112,11 @@ describe("Round 2: the manifest fence and R4/R5 gates are hardened (security MED
     );
   });
 
-  test("R4 excludes the skill's own directory case-insensitively (security LOW)", () => {
+  test("R4 excludes the skill's own directory case-insensitively", () => {
     expect(restoreSection()).toContain(`tr 'A-Z' 'a-z'`);
   });
 
-  test("R5 binds the tag and branch to the date derived from the proved worktree (S-M2)", () => {
+  test("R5 binds the tag and branch to the date derived from the proved worktree", () => {
     // Mutant target: the two equalities, not just the interpolated strings —
     // an edited NUKE.md must not name another date's verified baseline.
     expect(restoreSection()).toContain(`NUKE_DATE="${"${TOPLEVEL##*/team-nuke-}"}"`);
@@ -934,10 +1128,17 @@ describe("Round 2: the manifest fence and R4/R5 gates are hardened (security MED
     );
   });
 
-  test("R5's git reads are scoped to $TOPLEVEL behind a guard (S-M3)", () => {
+  test("R5's git reads are scoped to $TOPLEVEL behind a guard", () => {
     expect(restoreSection()).toContain(`git -C "$TOPLEVEL" tag -v "$RECORDED_TAG"`);
     expect(restoreSection()).toContain(
-      `ARCHIVE="$(git -C "$TOPLEVEL" rev-parse "${"${RECORDED_TAG}"}^{}")"`,
+      `ARCHIVE="$(git -C "$TOPLEVEL" rev-parse "refs/tags/${"${RECORDED_TAG}"}^{}")"`,
     );
+  });
+
+  test("R5 peels a fully qualified refs/tags/ revision, never a bare tag name", () => {
+    // Mutant target: git's revision search order tries `refs/<name>` before
+    // `refs/tags/<name>`, so a planted ref would be peeled and checked out
+    // while `tag -v` verified the real tag.
+    expect(restoreSection()).toContain(`rev-parse "refs/tags/${"${RECORDED_TAG}"}^{}"`);
   });
 });
