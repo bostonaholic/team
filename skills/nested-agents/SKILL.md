@@ -64,7 +64,8 @@ under `docs/plans/` — artifacts are written only by you or the orchestrator.
 
 You are at depth 2 of 5. Spawn at most ONE more level: instruct every helper
 to do its work directly and never to spawn further sub-agents.
-Depth stays shallow because seams stay narrow (`skills/principle-deep-agents-narrow-seams/SKILL.md`).
+Depth stays shallow because seams stay narrow
+(`skills/principle-deep-agents-narrow-seams/SKILL.md`).
 
 ## Nested helpers are non-interactive
 

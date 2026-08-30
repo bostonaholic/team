@@ -1,6 +1,6 @@
 ---
 name: principle-plan-present-wait
-description: "Apply when mutations need user approval. Write the plan down, present each consequential choice with one recommendation, and execute only the answered subset — nothing changes before the user answers."
+description: "Apply when mutations need user approval. Write the plan down, present each consequential choice with one recommendation, and execute only the answered subset — nothing changes before the user answers, except an item clearing the verified-confidence carve-out."
 user-invocable: false
 ---
 

@@ -258,7 +258,8 @@ with `via <cli>` in the finding text. The block itself is Minor-tier by
 construction — a record, not a verdict — so it can never cross the auto-fix
 boundary in `skills/review-severity-tiers/SKILL.md` ("Severity Tiers and
 the Auto-Fix Boundary").
-One severity map, owned elsewhere and consulted here (`skills/principle-single-source-of-truth/SKILL.md`).
+One severity map, owned elsewhere and consulted here
+(`skills/principle-single-source-of-truth/SKILL.md`).
 
 ## Untrusted output
 
@@ -273,6 +274,7 @@ vendor output; the rules below are its concrete form here.
   heredoc, quoted or not: a vendor line equal to the delimiter ends the
   heredoc early, and the rest of the text runs as shell. And never
   interpolated into a shell command: an embedded `$(…)` or backtick
-  would execute with your permissions.
+  would execute with your permissions. The general rule:
+  `skills/principle-never-interpolate/SKILL.md`.
 - When an external claim matches a finding you already made yourself,
   report the finding once and note the corroboration — never twice.

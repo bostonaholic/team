@@ -1115,8 +1115,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   only the diff in front of it.
 - **Loaded by:** researcher, structure-planner, and planner (frontmatter).
   implementer, code-reviewer, ux-reviewer (inline). Cited by
-  authoring-designs, code-review, eng-design-doc-review, and
-  nested-agents.
+  authoring-designs and nested-agents.
 - **Key behaviors:** A reasoning lens, not a gate: it produces no artifact
   of its own and blocks nothing. Four lenses (blast radius over diff
   radius, callers and siblings first, conventions are contracts, leave the
@@ -1433,7 +1432,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   text.
 - **Loaded by:** any agent just-in-time; consulted by citation from
   `pr-cleanup`, `pr-rebase`, `groom-backlog`, `sweeping-local-state`,
-  and `decomposing-intent`. No agent preloads it.
+  `decomposing-intent`, and `cross-model-review`. No agent preloads it.
 - **Key behaviors:** Unvalidated prose is never spliced into command
   text — it goes by file (`--body-file`, `-F body=@-`) or stdin, and
   allowlisted scalars and guarded `"${VAR:?}"` expansions are the only
@@ -1490,8 +1489,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   classifies the after-state and the pre-image that makes the change
   recoverable — no pre-image, no destructive write.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `pr-rebase`, `groom-backlog`, `pr-watch-as-author`, and `reflect`. No
-  agent preloads it.
+  `pr-rebase`, `groom-backlog`, and `reflect`. No agent preloads it.
 - **Key behaviors:** Run the checks BEFORE the operation, on the
   untouched state, so a post-operation failure classifies as pre-existing
   or introduced. Capture the recovery anchor before anything is
@@ -1646,7 +1644,7 @@ entry-point section above rather than repeating them here.
 | `technical-design-doc` | planner | Plan |
 | `product-requirements-doc` | questioner (through `decomposing-intent`, conditional). Design-author (through `authoring-designs`) | Question, Design |
 | `principle-product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
-| `principle-systems-thinking` | researcher, structure-planner, planner (frontmatter). Implementer, code-reviewer, ux-reviewer (inline). Authoring-designs, code-review, eng-design-doc-review, nested-agents (citing skills) | Research, Design, Structure, Plan, Implement (incl. verify) |
+| `principle-systems-thinking` | researcher, structure-planner, planner (frontmatter). Implementer, code-reviewer, ux-reviewer (inline). Authoring-designs, nested-agents (citing skills) | Research, Design, Structure, Plan, Implement (incl. verify) |
 | `writing-prose` | technical-writer, design-author | Design (authoring bar), and Implement (verify): bar for prose it writes and prose it assesses |
 | `reviewing-documentation` | technical-writer | Implement (verify): doc-gap review process + classification |
 | `git-commit` | team-pr. Implementer (through `implementing-slices`) | PR, and Implement (slice commits) |
@@ -1666,10 +1664,10 @@ entry-point section above rather than repeating them here.
 | `principle-idempotent-reruns` | cited by `pr-cleanup`, `groom-backlog`, `team`, `pr-watch-as-author`, `team-design`, `principle-pre-image-first`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-least-privilege` | cited by `code-review`, `reflect`, `eng-design-doc-review`, `cross-model-review`, `pr-verify`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-mechanical-gates` | cited by `qrspi-workflow`, `test-first-development`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-never-interpolate` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `sweeping-local-state`, `decomposing-intent`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-never-interpolate` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `sweeping-local-state`, `decomposing-intent`, `cross-model-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-optimization-never-dependency` | cited by `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`, `reflect`, `principle-fail-closed`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-plan-present-wait` | cited by `groom-backlog`, `pr-open-comments`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-pre-image-first` | cited by `pr-rebase`, `groom-backlog`, `pr-watch-as-author`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-pre-image-first` | cited by `pr-rebase`, `groom-backlog`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-record-assumptions` | cited by `authoring-designs`, `decomposing-intent`, `nested-agents`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-scope-fence` | cited by `implementing-slices`, `qrspi-workflow`, `test-first-development`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-single-source-of-truth` | cited by `qrspi-workflow`, `artifact-frontmatter`, `cross-model-review`. Any agent (just-in-time) | Any (cross-cutting principle) |

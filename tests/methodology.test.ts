@@ -1839,8 +1839,12 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
     test(`entry for ${principle} omits no file that cites it by path`, () => {
       const section = entrySections.get(principle) ?? "";
       expect(section.length).toBeGreaterThan(0);
+      // Clip at "Key behaviors" so a citer named only in a Key-behaviors
+      // cross-reference cannot satisfy the consumer-list check.
+      const cut = section.indexOf("Key behaviors");
+      const clipped = cut === -1 ? section : section.slice(0, cut);
       const missing = (citersByPrinciple.get(principle) ?? [])
-        .filter((citer) => !mentions(section, citer))
+        .filter((citer) => !mentions(clipped, citer))
         .map((citer) => `${principle}: catalog entry omits consumer ${citer}`);
       expect(missing).toEqual([]);
     });

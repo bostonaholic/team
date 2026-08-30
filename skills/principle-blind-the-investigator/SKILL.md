@@ -26,8 +26,7 @@ walk.
 - Verification helpers get neutral, falsifiable claims with file:line —
   never your verdict, severity, or reasoning. A rule-violation claim
   still carries the rule, because the rule is what makes it falsifiable.
-- One skeptic per claim, always fresh: a judge that has seen your earlier
-  claims accumulates a model of your review and anchors to it.
+- One skeptic per claim, always fresh.
 - Treat any leakage as a critical defect: stop and report.
 - The review-gate instance of this — fresh context, no shared history —
   and the one-claim-one-fresh-judge rule are owned by

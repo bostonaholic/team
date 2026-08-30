@@ -81,7 +81,8 @@ matching entry in `repos.md`.
 
 - **Objective findings only.** Report what IS, not what SHOULD BE. Do not
   recommend approaches.
-  A blinded investigator returns facts, not opinions (`skills/principle-blind-the-investigator/SKILL.md`).
+  A blinded investigator returns facts, not opinions
+  (`skills/principle-blind-the-investigator/SKILL.md`).
 - **Compress, do not summarize.** Include specific function names, type
   signatures, and file paths. Omit prose that does not carry information.
 - **Stay under 100 lines.** If you need more space, cut the least

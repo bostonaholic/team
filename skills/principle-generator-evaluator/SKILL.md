@@ -31,6 +31,5 @@ confident wrong answer is the most expensive kind.
 - One claim, one fresh judge: a checker that has judged earlier claims
   accumulates a model of the review and anchors to it.
 
-Applied to code review by `skills/code-review/SKILL.md`, to design review
-by `skills/eng-design-doc-review/SKILL.md`, and to skeptic passes by
-`skills/nested-agents/SKILL.md`.
+Applied wherever work is judged; `skills/code-review/SKILL.md` owns the
+code-review application.

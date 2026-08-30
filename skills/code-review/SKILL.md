@@ -37,7 +37,8 @@ The cardinal rule: **Do not let the same model grade its own exam.**
 - A reviewer needing clarification flags it as an open question. It never asks
   the implementer.
 
-The cross-gate canon lives at `skills/principle-generator-evaluator/SKILL.md`; this skill owns the code-review application.
+The cross-gate canon lives at `skills/principle-generator-evaluator/SKILL.md`;
+this skill owns the code-review application.
 
 ## Veto Without Authorship
 

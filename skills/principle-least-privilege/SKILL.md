@@ -25,10 +25,11 @@ thing needs no rule against it.
   environment.
 - Prefer the narrowest dispatch target that can run the errand. Where a
   governing rule demands a structural guarantee — a read-only lens — a
-  target holding a command sink is refused, whatever else it can do.
-  When only a full-tool target exists, the errand rides on an explicitly
-  scoped prompt, and the report says the guarantee is prompt-level, not
-  structural.
+  target holding a command sink is refused whenever a narrower target
+  can carry the errand, whatever else the wider one can do. When the
+  narrowest available target still carries more than the errand needs,
+  the errand rides on an explicitly scoped prompt, and the report says
+  the guarantee is prompt-level, not structural.
 - Match the assurance claim to the mechanism: when work falls back to a
   full-tool context, say the guarantee no longer applies rather than
   keeping the claim while losing the mechanism.

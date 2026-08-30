@@ -122,4 +122,5 @@ incorrect):
 - **Reference real file paths from the plan.** Do not invent new files or
   directories that the plan does not specify.
 
-The cross-gate canon lives at `skills/principle-scope-fence/SKILL.md`; this section owns the implementer's application.
+The cross-gate canon lives at `skills/principle-scope-fence/SKILL.md`; this
+section owns the implementer's application.

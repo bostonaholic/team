@@ -78,8 +78,7 @@ the current branch (`gh pr view`). Refuse up front, before any other work:
   and a timestamp alone cannot say *which* comments have already been
   triaged. The set of triaged comment ids is what makes triage
   idempotent across cycles.
-  The snapshot is the `skills/principle-pre-image-first/SKILL.md` baseline;
-  the triaged-id set is `skills/principle-idempotent-reruns/SKILL.md` in
+  The triaged-id set is `skills/principle-idempotent-reruns/SKILL.md` in
   practice — a re-run converges instead of re-triaging.
 - Comments authored by you are never feedback to yourself — exclude the
   viewer's own issue comments from the baseline and from every later
