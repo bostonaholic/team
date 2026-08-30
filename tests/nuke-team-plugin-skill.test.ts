@@ -12,8 +12,8 @@
 // length guard plus a positive control, so a renamed heading fails loudly
 // instead of turning the sweep into a green no-op.
 //
-// Describe blocks are grouped so one group's fence can be run in isolation:
-//   bun test tests/nuke-team-plugin-skill.test.ts -t "Slice 3"
+// Describe blocks are grouped by mode so one group can be run in isolation:
+//   bun test tests/nuke-team-plugin-skill.test.ts -t "Restore"
 //
 // Defensive reads: a missing file → "" and a missing section → "", so every
 // content assertion FAILS cleanly rather than throwing ENOENT. The mechanical
@@ -69,7 +69,7 @@ function fencedLines(lines: string[]): boolean[] {
   return marks;
 }
 
-// Slice the body from the heading matching `re` to the next heading at the
+// Extract the body from the heading matching `re` to the next heading at the
 // same or a shallower level. A heading that does not exist yields "" — the
 // length guard on each dependent assertion then fails rather than passing
 // vacuously.
@@ -174,10 +174,10 @@ const DELETION_SET_ROOTS = [
 ];
 
 // ===========================================================================
-// Slice 1: Nuke mode — archive, isolate, remove
+// Nuke mode — archive, isolate, remove
 // ===========================================================================
 
-describe("Slice 1: frontmatter carries name + disable-model-invocation: true, no skills: key, and no Load/Follow …SKILL.md directive", () => {
+describe("Nuke mode: frontmatter carries name + disable-model-invocation: true, no skills: key, and no Load/Follow …SKILL.md directive", () => {
   test("the skill file lives under .claude/skills (dev-only, never distributed)", () => {
     expect(existsSync(SKILL)).toBe(true);
   });
@@ -239,7 +239,7 @@ describe("Slice 1: frontmatter carries name + disable-model-invocation: true, no
   });
 });
 
-describe('Slice 1: nuke steps split the two scopes — repo-level commands run at "$PRIMARY_ROOT", tree mutations run at "$WORKTREE" — and baseline-tag reuse requires peeled ^{} equality + cat-file -t tag + tag -v', () => {
+describe('Nuke mode: nuke steps split the two scopes — repo-level commands run at "$PRIMARY_ROOT", tree mutations run at "$WORKTREE" — and baseline-tag reuse requires peeled ^{} equality + cat-file -t tag + tag -v', () => {
   test("repo-level git commands are scoped to the derived primary root", () => {
     expect(body()).toContain(`git -C "$PRIMARY_ROOT"`);
   });
@@ -262,6 +262,12 @@ describe('Slice 1: nuke steps split the two scopes — repo-level commands run a
 
   test("WORKTREE is re-derived behind a standalone ${VAR:?} guard", () => {
     expect(body()).toContain(`: "\${WORKTREE:?}"`);
+  });
+
+  test("the fetch refuses on a non-zero exit status, never proceeding on stale refs", () => {
+    // Mutant target: an unguarded fetch fails silently offline, and every gate
+    // after it then proves its claim against the previous run's refs.
+    expect(body()).toContain(`git -C "$PRIMARY_ROOT" fetch origin --tags ||`);
   });
 
   test("baseline-tag reuse compares the peeled ^{} SHA, never the tag object's own", () => {
@@ -311,7 +317,7 @@ describe('Slice 1: nuke steps split the two scopes — repo-level commands run a
   });
 });
 
-describe("Slice 1: the remote baseline pre-flight refuses a lightweight remote tag (an unpeeled refs/tags row with no ^{} companion), not only a differing peeled SHA", () => {
+describe("Nuke mode: the remote baseline pre-flight refuses a lightweight remote tag (an unpeeled refs/tags row with no ^{} companion), not only a differing peeled SHA", () => {
   // The pre-flight reads `git ls-remote --tags origin`, which lists an
   // annotated tag's own object SHA on `refs/tags/<name>` and the commit on
   // `refs/tags/<name>^{}`. A lightweight remote tag has NO `^{}` row at all,
@@ -357,6 +363,13 @@ describe("Slice 1: the remote baseline pre-flight refuses a lightweight remote t
     expect(lsRemoteBlock()).toContain("LIGHTWEIGHT");
   });
 
+  test("the ROWS read is gated on its own exit status before either comparison", () => {
+    // Mutant target: a failed `ls-remote` yields no rows either, so an
+    // unguarded read fires neither refusal below and falls through to
+    // `tag -a -s` having proved nothing.
+    expect(lsRemoteBlock()).toContain(`^{}")" ||`);
+  });
+
   test("a peeled row that differs from the archive SHA is refused separately", () => {
     expect(squash(lsRemoteBlock())).toContain(
       `[ "$PEELED_ROW" != "$ARCHIVE_SHA" ]`,
@@ -370,6 +383,9 @@ describe("Slice 1: the remote baseline pre-flight refuses a lightweight remote t
     const create = lineIndex(body(), /tag -a -s -m "Team instruction surface/);
     expect(preflight).toBeGreaterThanOrEqual(0);
     expect(create).toBeGreaterThan(preflight);
+    // Length guard so a renamed heading or vanished block fails loudly rather
+    // than passing the `.not.toContain` sweep vacuously.
+    expect(lsRemoteBlock().length).toBeGreaterThan(0);
     expect(lsRemoteBlock()).not.toContain("tag -a -s");
   });
 
@@ -387,10 +403,10 @@ describe("Slice 1: the remote baseline pre-flight refuses a lightweight remote t
 });
 
 // ===========================================================================
-// Slice 2: Liveness — repoint the plugin cache
+// Liveness — repoint the plugin cache
 // ===========================================================================
 
-describe('Slice 2: the cache entry is identified by readlink equality with "$PRIMARY_ROOT" and never by version arithmetic, and each of the four zero-match cases carries its own remediation', () => {
+describe('Liveness: the cache entry is identified by readlink equality with "$PRIMARY_ROOT" and never by version arithmetic, and each of the four zero-match cases carries its own remediation', () => {
   test("a cache-repoint step section exists", () => {
     expect(cacheSection().length).toBeGreaterThan(0);
   });
@@ -428,7 +444,7 @@ describe('Slice 2: the cache entry is identified by readlink equality with "$PRI
   });
 });
 
-describe("Slice 2: the repoint block binds CACHE_ENTRY with the command that finds it, shape-checks it, and only then moves the link", () => {
+describe("Liveness: the repoint block binds CACHE_ENTRY with the command that finds it, shape-checks it, and only then moves the link", () => {
   test("CACHE_ENTRY is assigned by a find over the cache directory, never transcribed", () => {
     // Mutant target: consuming `$CACHE_ENTRY` without assigning it leaves the
     // repoint dead on `: "${CACHE_ENTRY:?}"`, and the only way to revive it is
@@ -480,7 +496,7 @@ describe("Slice 2: the repoint block binds CACHE_ENTRY with the command that fin
   });
 });
 
-describe("Slice 2: the cache-repoint step heading appears after the commit step heading", () => {
+describe("Liveness: the cache-repoint step heading appears after the commit step heading", () => {
   test("a commit step heading is present", () => {
     expect(lineIndex(body(), COMMIT_STEP_HEADING)).toBeGreaterThanOrEqual(0);
   });
@@ -499,7 +515,7 @@ describe("Slice 2: the cache-repoint step heading appears after the commit step 
   });
 });
 
-describe("Slice 2: the repoint target carries no trailing slash (or uses ln -sfn)", () => {
+describe("Liveness: the repoint target carries no trailing slash (or uses ln -sfn)", () => {
   test("the trailing-slash matcher fires on a planted rm -rf target", () => {
     expect(RM_RF_TRAILING_SLASH.test(`rm -rf "$ENTRY"/`)).toBe(true);
   });
@@ -521,10 +537,10 @@ describe("Slice 2: the repoint target carries no trailing slash (or uses ln -sfn
 });
 
 // ===========================================================================
-// Slice 3: Selective restore
+// Restore — selective, proof-gated
 // ===========================================================================
 
-describe("Slice 3: restore proves before it writes: exactly one nuke-manifest block, exact-match membership, LC_ALL=C path syntax plus containment in the hard-coded deletion set, tag shape + git tag -v, and the checkout runs against the peeled <tag>^{} SHA and never against the recorded string", () => {
+describe("Restore: restore proves before it writes: exactly one nuke-manifest block, exact-match membership, LC_ALL=C path syntax plus containment in the hard-coded deletion set, tag shape + git tag -v, and the checkout runs against the peeled <tag>^{} SHA and never against the recorded string", () => {
   test("a Restore mode section exists", () => {
     expect(restoreSection().length).toBeGreaterThan(0);
   });
@@ -558,8 +574,11 @@ describe("Slice 3: restore proves before it writes: exactly one nuke-manifest bl
   test("the trusted archive commit comes from the peeled <tag>^{} SHA", () => {
     // The recorded ARCHIVE_SHA is untrusted (NUKE.md is a tracked file anyone
     // can edit); only the tag is signed, so the checkout runs against the
-    // peeled value and the recorded field is a cross-check.
-    expect(restoreSection()).toContain("^{}");
+    // peeled value and the recorded field is a cross-check. Pinned to the R5
+    // derivation itself, not a bare "^{}" that any prose could satisfy.
+    expect(restoreSection()).toContain(
+      `ARCHIVE="$(git -C "$TOPLEVEL" rev-parse "refs/tags/${"${RECORDED_TAG}"}^{}")"`,
+    );
   });
 
   test("the recorded-state gate checks the index, not only the working tree", () => {
@@ -591,7 +610,7 @@ describe("Slice 3: restore proves before it writes: exactly one nuke-manifest bl
   });
 });
 
-describe("Slice 3: restore's write scope is stated one way: every present path on the item's line, including whole-file checkout of a present-with-hash manifest; absent paths are skipped and named", () => {
+describe("Restore: restore's write scope is stated one way: every present path on the item's line, including whole-file checkout of a present-with-hash manifest; absent paths are skipped and named", () => {
   test("the write scope distinguishes present paths", () => {
     expect(restoreSection()).toContain("present");
   });
@@ -626,7 +645,7 @@ describe("Slice 3: restore's write scope is stated one way: every present path o
   });
 });
 
-describe("Slice 3: restore refuses when the worktree toplevel equals the derived primary root, and the re-restore escape clears the index (git rm -f / a checkout of the nuke commit), not only the file", () => {
+describe("Restore: restore refuses when the worktree toplevel equals the derived primary root, and the re-restore escape clears the index (git rm -f / a checkout of the nuke commit), not only the file", () => {
   test("restore derives the toplevel with rev-parse --show-toplevel", () => {
     expect(restoreSection()).toContain("--show-toplevel");
   });
@@ -701,10 +720,10 @@ describe("Slice 3: restore refuses when the worktree toplevel equals the derived
 });
 
 // ===========================================================================
-// Slice 4: Teardown that preserves the experiment
+// Teardown — preserves the experiment
 // ===========================================================================
 
-describe("Slice 4: in the NUKE.md teardown template the nuke-result/ tag line precedes the worktree remove line and branch -D is last", () => {
+describe("Teardown: in the NUKE.md teardown template the nuke-result/ tag line precedes the worktree remove line and branch -D is last", () => {
   test("a teardown section exists in the NUKE.md template", () => {
     expect(teardownSection().length).toBeGreaterThan(0);
   });
@@ -733,7 +752,7 @@ describe("Slice 4: in the NUKE.md teardown template the nuke-result/ tag line pr
   });
 });
 
-describe("Slice 4: teardown carries no tag-deletion command anywhere, no --force on worktree remove, both tags created with an explicit -m, and the .2 collision line written literally beneath step 1", () => {
+describe("Teardown: teardown carries no tag-deletion command anywhere, no --force on worktree remove, both tags created with an explicit -m, and the .2 collision line written literally beneath step 1", () => {
   test("the tag-deletion matcher fires on planted local and remote deletions", () => {
     // Controls the matcher the absence sweeps below actually use — asserting a
     // literal contains its own substring would prove nothing about them.
@@ -781,7 +800,7 @@ describe("Slice 4: teardown carries no tag-deletion command anywhere, no --force
   });
 });
 
-describe("Slice 4: the tip-equality proof names git -C <primary root> on both halves and compares the SHA at the start of the ls-remote line", () => {
+describe("Teardown: the tip-equality proof names git -C <primary root> on both halves and compares the SHA at the start of the ls-remote line", () => {
   test("the ls-remote proof line is scoped with git -C <primary root>", () => {
     const line = teardownSection()
       .split("\n")
@@ -789,15 +808,24 @@ describe("Slice 4: the tip-equality proof names git -C <primary root> on both ha
     expect(line ?? "").toContain("git -C <primary root>");
   });
 
-  test("the branch-tip rev-parse proof line is scoped with git -C <primary root>", () => {
+  test("the branch-tip rev-parse proof line is scoped with git -C <primary root> and fully qualifies the branch", () => {
+    // The branch is qualified as refs/heads/ so a planted lightweight tag named
+    // experiment/nuke-<date> cannot satisfy git's revision search order and let
+    // the tip-equality proof pass against the wrong object.
     const line = teardownSection()
       .split("\n")
-      .find((l) => /rev-parse experiment\/nuke-/.test(l));
+      .find((l) => /rev-parse refs\/heads\/experiment\/nuke-/.test(l));
     expect(line ?? "").toContain("git -C <primary root>");
   });
 
-  test("the ls-remote proof reads the peeled refs/tags/nuke-result ref", () => {
+  test("the ls-remote proof reads the peeled, fully qualified refs/tags/nuke-result ref", () => {
     expect(teardownSection()).toContain("refs/tags/nuke-result/<date>^{}");
+  });
+
+  test("the local-tag fallback rev-parse fully qualifies the tag as refs/tags/", () => {
+    // A bare nuke-result/<date>^{} resolves through refs/<name> before
+    // refs/tags/<name>, so a planted ref could be proved instead of the tag.
+    expect(teardownSection()).toContain(`rev-parse "refs/tags/nuke-result/<date>^{}"`);
   });
 
   test("the ls-remote proof takes the SHA at the start of the line with a digit-free cut -f1", () => {
@@ -806,10 +834,10 @@ describe("Slice 4: the tip-equality proof names git -C <primary root> on both ha
 });
 
 // ===========================================================================
-// Cross-slice concerns
+// Cross-cutting concerns
 // ===========================================================================
 
-describe("Cross-slice: no $<digit> the slash-command loader would substitute, and fields are read with cut", () => {
+describe("Cross-cutting: no $<digit> the slash-command loader would substitute, and fields are read with cut", () => {
   test("the positional matcher fires on a planted awk field reference", () => {
     const planted = `awk '{print $1}'`;
     expect(POSITIONAL.test(planted)).toBe(true);
@@ -836,7 +864,7 @@ describe("Cross-slice: no $<digit> the slash-command loader would substitute, an
   });
 });
 
-describe("Cross-slice: AGENTS.md registers the skill as a development concern only", () => {
+describe("Cross-cutting: AGENTS.md registers the skill as a development concern only", () => {
   const DEV_TABLE_HEADER = "| Concern | Where it lives | Who runs it |";
   const ENTRY_POINTS_HEADER = "| Command | Phase |";
 
@@ -909,8 +937,12 @@ describe("Untrusted NUKE.md values are bound by file-reading command substitutio
     );
   });
 
-  test("the cache-undo entry is read from NUKE.md by grep/sed before the equality gate", () => {
-    expect(body()).toContain(`RECORDED_ENTRY="$(grep -E '^ln -sfn '`);
+  test("the cache-undo entry is read from NUKE.md by section-scoped grep/sed before the equality gate", () => {
+    // Scoped to the `### The cache undo` section, so an `ln -sfn` line planted
+    // in any other NUKE.md section cannot be read as the recorded undo entry.
+    expect(body()).toContain(
+      `RECORDED_ENTRY="$(sed -n '/^### The cache undo$/,/^### /p' "${"${WORKTREE}"}/NUKE.md" | grep -E '^ln -sfn '`,
+    );
   });
 
   test("the repoint refuses unless the recorded entry equals the discovered live entry", () => {
@@ -966,8 +998,20 @@ describe("The item argument reaches the shell only through a scratch file, never
     // multi-line argument would restore a real item while the maintainer never
     // saw what else was sent.
     expect(restoreSection()).toContain(
-      `[ "$(wc -l < "${"${SCRATCH_DIR}"}/item")" -le 1 ]`,
+      `[ -z "$(sed -n '2,$p' "${"${SCRATCH_DIR}"}/item")" ]`,
     );
+  });
+
+  test("no runnable block caps the argument by counting newlines", () => {
+    // Mutant target: `wc -l` counts newline characters and the Write tool
+    // appends no trailing newline, so `a\nb` counts as one line and its second
+    // line is dropped in silence. Scoped to fenced blocks, so the prose may
+    // still name the rejected form.
+    const fenced = [...restoreSection().matchAll(/```[a-z]*\n([\s\S]*?)```/g)]
+      .map((m) => m[1]!)
+      .join("\n");
+    expect(fenced.length).toBeGreaterThan(0);
+    expect(fenced).not.toContain("wc -l");
   });
 
   test("the shape check still runs before $ITEM reaches any command", () => {
@@ -1021,6 +1065,23 @@ describe("The generator enumerates per entry with while-read, not a zsh-hostile 
   test("the per-path removal loop deletes each surviving path on its own presence", () => {
     // Mutant target: the presence-guarded per-path `git rm`, not one pathspec.
     expect(body()).toContain(`git -C "$WORKTREE" rm -r -q -- "$p"`);
+  });
+
+  test("the step-6 .claude/skills sweep folds case before the own-directory exclusion", () => {
+    // Mutant target: drop the fold and a case-variant archive path like
+    // `.claude/skills/Nuke-Team-Plugin` misses the exact-case exclusion and
+    // `git rm -r` deletes this skill's own directory on case-insensitive macOS.
+    expect(body()).toContain(`entry_lc="$(printf '%s' "$entry" | tr 'A-Z' 'a-z')"`);
+  });
+
+  test("the manifest generator sweep folds case before the own-directory exclusion", () => {
+    expect(body()).toContain(`ENTRY_LC="$(printf '%s' "$ENTRY" | tr 'A-Z' 'a-z')"`);
+  });
+
+  test("step 2's already-nuked survivor scan excludes the skill's own dir case-insensitively", () => {
+    // `grep -vixF` folds case, matching check_path; `grep -vxF` would let a
+    // case-variant of the own directory read as a surviving other-skill.
+    expect(body()).toContain(`grep -vixF '.claude/skills/nuke-team-plugin'`);
   });
 });
 

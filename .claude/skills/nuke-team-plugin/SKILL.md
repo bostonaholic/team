@@ -189,6 +189,13 @@ run this skill at all. Everything the run *produced* is downstream of it.
 
 ## Execution
 
+**Unlike restore, the nuke steps are not one Bash invocation.** Each numbered
+step is its own Bash call that re-derives `$PRIMARY_ROOT`, `$WORKTREE` and
+`$ARCHIVE_SHA` from scratch behind a standalone `${VAR:?}` guard (Hard Rule 3),
+carrying forward only the `$DATE` literal step 0 printed. So a `${VAR:?}` guard
+here proves a value was re-derived in *this* invocation, never that one crossed
+a Bash boundary it should not have — the guards are the discipline, not a defect.
+
 ### Step 0 — resolve and validate $PRIMARY_ROOT, then derive the worktree
 
 The whole resolve-validate-derive sequence is one runnable block. A failure
@@ -225,9 +232,15 @@ already pushed.
 
 ### Step 1 — fetch, detect the default branch, capture the archive SHA
 
+**The fetch is a gate, so its exit status is checked** (Hard Rule 4). A failed
+fetch — offline, or no read access — leaves the previous run's refs in place,
+and every later gate would then prove its claim against stale data while Hard
+Rule 5 reads as satisfied:
+
 ```sh
 : "${PRIMARY_ROOT:?}"
-git -C "$PRIMARY_ROOT" fetch origin --tags
+git -C "$PRIMARY_ROOT" fetch origin --tags ||
+  { echo "refusing: 'git fetch origin --tags' failed — offline or no read access to origin, and every gate after this would read stale refs; restore access to origin and re-run, or fetch by hand and re-run once it succeeds" >&2; exit 1; }
 DEFAULT="$(git -C "$PRIMARY_ROOT" symbolic-ref --quiet --short refs/remotes/origin/HEAD | sed -n 's#^origin/##p')"
 [ -n "$DEFAULT" ] || { echo "refusing: cannot detect the default branch — run 'git remote set-head origin --auto' and re-run" >&2; exit 1; }
 ARCHIVE_SHA="$(git -C "$PRIMARY_ROOT" rev-parse "origin/${DEFAULT}")"
@@ -263,7 +276,7 @@ for p in AGENTS.md CLAUDE.md skills agents hooks .claude/hooks; do
   git -C "$PRIMARY_ROOT" cat-file -e "${ARCHIVE_SHA}:${p}" 2>/dev/null && PRESENT=1
 done
 OTHER_SKILLS="$(git -C "$PRIMARY_ROOT" ls-tree -z --name-only "$ARCHIVE_SHA" -- .claude/skills/ |
-  tr '\0' '\n' | grep -vxF '.claude/skills/nuke-team-plugin' || true)"
+  tr '\0' '\n' | grep -vixF '.claude/skills/nuke-team-plugin' || true)"
 [ -z "$OTHER_SKILLS" ] || PRESENT=1
 [ "$PRESENT" = 1 ] ||
   { echo "already nuked: every deletion-set path is absent at ${ARCHIVE_SHA} — nothing was created"; exit 0; }
@@ -289,14 +302,18 @@ maintainer to clean up.
 `refs/tags/<name>` row and the commit it points at on the `refs/tags/<name>^{}`
 row. A **lightweight** remote tag has no `^{}` row at all, so comparing only
 the peeled row is vacuous against exactly the case that must refuse. Read both
-rows:
+rows, and **check the read's own exit status before either comparison**: a
+failed `ls-remote` yields no rows either, so an unguarded pre-flight would read
+"origin carries nothing" off a network error and fall through to `tag -a -s`
+having proved nothing (Hard Rule 4):
 
 ```sh
 : "${PRIMARY_ROOT:?}"
 : "${ARCHIVE_SHA:?}"
 DATE="<the literal value step 0 printed>"
 ROWS="$(git -C "$PRIMARY_ROOT" ls-remote --tags origin \
-  "refs/tags/nuke-baseline/${DATE}" "refs/tags/nuke-baseline/${DATE}^{}")"
+  "refs/tags/nuke-baseline/${DATE}" "refs/tags/nuke-baseline/${DATE}^{}")" ||
+  { echo "refusing: 'git ls-remote --tags origin' failed — offline or no read access to origin, so the pre-flight cannot prove origin carries no nuke-baseline/${DATE}; restore access to origin and re-run, or read the remote tag by hand and re-run once it succeeds" >&2; exit 1; }
 UNPEELED_ROW="$(printf '%s\n' "$ROWS" | grep -F "refs/tags/nuke-baseline/${DATE}" | grep -vF '^{}' | cut -f1)"
 PEELED_ROW="$(printf '%s\n' "$ROWS" | grep -F "refs/tags/nuke-baseline/${DATE}^{}" | cut -f1)"
 if [ -n "$UNPEELED_ROW" ] && [ -z "$PEELED_ROW" ]; then
@@ -383,7 +400,8 @@ done
 git -C "$WORKTREE" ls-tree -z --name-only "$ARCHIVE_SHA" -- .claude/skills/ |
   tr '\0' '\n' |
   while IFS= read -r entry; do
-    case "$entry" in
+    entry_lc="$(printf '%s' "$entry" | tr 'A-Z' 'a-z')"
+    case "$entry_lc" in
       ''|.claude/skills/nuke-team-plugin|.claude/skills/nuke-team-plugin/*) continue ;;
     esac
     git -C "$WORKTREE" rm -r -q -- "$entry"
@@ -391,7 +409,12 @@ git -C "$WORKTREE" ls-tree -z --name-only "$ARCHIVE_SHA" -- .claude/skills/ |
 ```
 
 The `.claude/skills/` sweep needs no presence guard: every entry it removes came
-from `ls-tree` at the same SHA, so each one exists by construction.
+from `ls-tree` at the same SHA, so each one exists by construction. It **folds
+each entry to lower case before the own-directory exclusion**, exactly as
+`check_path` and R4 do: macOS is case-insensitive by default, so a case-variant
+archive path like `.claude/skills/Nuke-Team-Plugin` names this skill's own
+directory, and an exact-case exclusion would let it fall through to `git rm -r`
+and delete the very directory the exclusion protects.
 
 Then strip the `hooks` key from the two manifests, leaving every other key —
 `.claude-plugin/plugin.json` also carries `name` and `version`, without which
@@ -499,7 +522,8 @@ done)"
 # `exit 1` aborts the whole run. Every loop that accumulates a value or refuses
 # is fed the same way.
 while IFS= read -r ENTRY; do
-  case "$ENTRY" in ''|.claude/skills/nuke-team-plugin) continue ;; esac
+  ENTRY_LC="$(printf '%s' "$ENTRY" | tr 'A-Z' 'a-z')"
+  case "$ENTRY_LC" in ''|.claude/skills/nuke-team-plugin) continue ;; esac
   # Round-trip proof: every entry came from ls-tree at this SHA, so one that
   # no longer resolves means the NUL-to-newline split cut a path in half.
   TYPE="$(git -C "$WORKTREE" cat-file -t "${ARCHIVE_SHA}:${ENTRY}" 2>/dev/null)" ||
@@ -654,7 +678,7 @@ esac
 # its last whitespace-separated field. Reading it with sed keeps any `$(...)`
 # planted in NUKE.md inert — command substitution never re-evaluates captured
 # bytes.
-RECORDED_ENTRY="$(grep -E '^ln -sfn ' "${WORKTREE}/NUKE.md" | head -1 | sed -E 's/^ln -sfn .* //')"
+RECORDED_ENTRY="$(sed -n '/^### The cache undo$/,/^### /p' "${WORKTREE}/NUKE.md" | grep -E '^ln -sfn ' | head -1 | sed -E 's/^ln -sfn .* //')"
 case "$RECORDED_ENTRY" in
   *..*|*[!A-Za-z0-9._/-]*|'')
     echo "refusing the repoint: NUKE.md's undo entry '${RECORDED_ENTRY}' fails the syntax check" >&2; exit 1 ;;
@@ -856,8 +880,9 @@ case "$SCRATCH_DIR" in
   *) echo "refusing: the scratch path '$SCRATCH_DIR' is not absolute" >&2; exit 1 ;;
 esac
 [ -f "${SCRATCH_DIR}/item" ] && [ ! -L "${SCRATCH_DIR}/item" ] ||
-  { echo "refusing: ${SCRATCH_DIR}/item is not a regular file — write the argument there first" >&2; exit 1; }
-[ "$(wc -l < "${SCRATCH_DIR}/item")" -le 1 ] ||
+  { rm -f "${SCRATCH_DIR}/item"; rmdir "$SCRATCH_DIR" 2>/dev/null
+    echo "refusing: ${SCRATCH_DIR}/item is not a regular file — write the argument there first" >&2; exit 1; }
+[ -z "$(sed -n '2,$p' "${SCRATCH_DIR}/item")" ] ||
   { rm -f "${SCRATCH_DIR}/item"; rmdir "$SCRATCH_DIR"
     echo "refusing: the item argument spans more than one line — an item id never does" >&2; exit 1; }
 IFS= read -r ITEM < "${SCRATCH_DIR}/item"
@@ -873,6 +898,14 @@ first line and silently drop the rest, so a multi-line argument would restore a
 real item while the maintainer never saw what else was sent; refusing names it
 instead. The scratch file is removed on both paths, so untrusted bytes never
 outlive the block that read them.
+
+**The cap asks whether a second line exists, never how many newlines the file
+holds.** `wc -l` counts newline *characters*, and the Write tool appends no
+trailing newline — so a two-line argument written as `a\nb` counts as one and
+sails through the cap, after which `read` takes `a` and drops `b` silently:
+exactly the case the cap exists to name. `sed -n '2,$p'` prints every line past
+the first whether or not the last one is terminated, so any second line makes
+the substitution non-empty and the run refuses.
 
 ### R2 — location, branch, and containment
 
@@ -982,6 +1015,8 @@ Then extract **the item's own line** by an exact match on field 1 — pipe-free,
 so it never depends on `$ITEM` being regex-safe — for R4 through R7 to read:
 
 ```sh
+: "${MANIFEST_LINES:?}"
+: "${ITEM:?}"
 MANIFEST_LINE=""
 while IFS= read -r ml; do
   [ -n "$ml" ] || continue
@@ -1095,6 +1130,7 @@ carries `git -C "$TOPLEVEL"` behind a standalone guard (Hard Rule 1):
 ```sh
 export LC_ALL=C
 : "${TOPLEVEL:?}"
+: "${RECORDED_BRANCH:?}"
 RECORDED_TAG="$(sed -n 's/^- Baseline tag: //p' "${TOPLEVEL}/NUKE.md" | head -1)"
 RECORDED_ARCHIVE_SHA="$(sed -n 's/^- Archive SHA: //p' "${TOPLEVEL}/NUKE.md" | head -1)"
 case "$RECORDED_TAG" in
@@ -1431,10 +1467,10 @@ Steps 1 to 3 preserve this experiment's output; steps 5 and 6 remove it.
    `git -C <primary root> ls-remote --tags origin "refs/tags/nuke-result/<date>^{}" | cut -f1`
 
    When the push in step 2 was refused, prove the local tag instead with
-   `git -C <primary root> rev-parse "nuke-result/<date>^{}"`. Either way, the
-   second half is the branch tip:
+   `git -C <primary root> rev-parse "refs/tags/nuke-result/<date>^{}"`. Either
+   way, the second half is the branch tip:
 
-   `git -C <primary root> rev-parse experiment/nuke-<date>`
+   `git -C <primary root> rev-parse refs/heads/experiment/nuke-<date>`
 
    Four steps separate the tag from step 6, and a commit made in between would
    otherwise be reflog-only while the first line still passed.
