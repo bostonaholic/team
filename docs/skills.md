@@ -976,7 +976,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 ### [principle-solid](https://github.com/bostonaholic/team/blob/main/skills/principle-solid/SKILL.md)
 
 - **Purpose:** The five object-oriented design principles.
-- **Loaded by:** implementer, code-reviewer (2).
+- **Loaded by:** implementer, code-reviewer (2). Cited by
+  `engineering-standards` and `code-review`.
 - **Key behaviors:** SRP, OCP, LSP, ISP, and DIP as concrete checkpoints
   for new code and review.
 
@@ -1114,7 +1115,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   only the diff in front of it.
 - **Loaded by:** researcher, structure-planner, and planner (frontmatter).
   implementer, code-reviewer, ux-reviewer (inline). Cited by
-  authoring-designs, code-review, and eng-design-doc-review.
+  authoring-designs, code-review, eng-design-doc-review, and
+  nested-agents.
 - **Key behaviors:** A reasoning lens, not a gate: it produces no artifact
   of its own and blocks nothing. Four lenses (blast radius over diff
   radius, callers and siblings first, conventions are contracts, leave the
@@ -1303,8 +1305,9 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   authorization to act is authorization to finish the verified act, and
   nothing beyond it. Spend granted authorization; never re-ask it, since
   confirmation churn erodes the signal a real confirmation carries. A
-  side-effecting skill states an explicit-intent guard in its description
-  and disables model invocation where the host honors it.
+  skill whose invocation itself authorizes a side effect states an
+  explicit-intent guard in its description; the strictest also disable
+  model invocation where the host honors it.
 
 ### principle-fail-closed
 
@@ -1443,8 +1446,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Purpose:** An enhancement path improves the work when it runs and
   costs nothing when it cannot.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`, and
-  `reflect`. No agent preloads it.
+  `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`,
+  `reflect`, and `principle-fail-closed`. No agent preloads it.
 - **Key behaviors:** On absence, error, or silence: do the work inline
   with the tools you hold, and proceed — never stall or report failure
   solely because the enhancement was unavailable. Never soften a verdict
@@ -1456,15 +1459,18 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 
 ### principle-plan-present-wait
 
-- **Purpose:** Mutations are planned to a file, presented as questions
+- **Purpose:** Mutations are planned in writing, presented as questions
   with one recommendation each, and executed only on the user's answer.
 - **Loaded by:** any agent just-in-time; consulted by citation from
   `groom-backlog`, `pr-open-comments`, and `reflect`. No agent preloads
   it.
 - **Key behaviors:** Write the plan before presenting; the ask and the
-  act are separate turns, and the executing turn re-reads the plan from
-  disk. One consequential choice per question, presenting the exact text
-  a mutation would create. Nothing changes before the user answers, no
+  act are separate turns, and when the approval may outlive the turn or
+  survive compaction the plan goes to a durable file the executing turn
+  re-reads rather than remembers (an in-conversation list is the
+  degenerate form for a same-session punch list). One consequential
+  choice per question, presenting the exact text a mutation would
+  create. Nothing changes before the user answers, no
   answer means no mutation, and a partial answer executes only the
   answered subset. Execution re-validates each step against the approved
   class — an approval never relaxes a hard rule. An item may skip the
@@ -1493,7 +1499,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   records each as an explicit, auditable assumption — an unmarked guess
   is a defect.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `authoring-designs` and `decomposing-intent`. No agent preloads it.
+  `authoring-designs`, `decomposing-intent`, and `nested-agents`. No
+  agent preloads it.
 - **Key behaviors:** Mark it where it governs ("Assumption — chosen
   without user review", in the artifact the decision shapes), naming the
   rejected alternative and the trade-off accepted so the audit is a
@@ -1539,9 +1546,9 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Purpose:** Whatever did not happen is reported as visibly as what
   did.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `code-review`, `sweeping-local-state`, `groom-backlog`, and the
-  `code-reviewer` agent (`agents/code-reviewer.md`). No agent preloads
-  it.
+  `code-review`, `sweeping-local-state`, `groom-backlog`,
+  `cross-model-review`, and the `code-reviewer` agent
+  (`agents/code-reviewer.md`). No agent preloads it.
 - **Key behaviors:** A section with nothing to report says so on its own
   line ("No findings.", "Not run: <reason>.", "Nothing declared.") —
   never drop the section, because a report that drops a skipped pass
@@ -1598,6 +1605,8 @@ entry-point section above rather than repeating them here.
 | `groom-backlog` | user or model (direct invocation) | Standalone: groom a project backlog (not a QRSPI phase) |
 | `pr-cleanup` | user or model (direct invocation; Mode B only on explicit abandon intent) | Standalone: post-PR teardown (not a QRSPI phase) |
 | `pr-verify` | user or model (direct invocation) | Standalone: test-plan verification (not a QRSPI phase) |
+| `pr-rebase` | user (direct invocation, on explicit rebase intent; model invocation disabled) | Standalone: rebase a branch onto its base (not a QRSPI phase) |
+| `reflect` | user (direct invocation, on explicit reflection intent; model invocation disabled) | Standalone: mine the session transcript for durable learnings (not a QRSPI phase) |
 | `qrspi-workflow` | orchestrator skills | All phases |
 | `artifact-frontmatter` | orchestrator skills. Artifact authors (just-in-time through pointers) | All phases: artifact schema |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
@@ -1615,7 +1624,7 @@ entry-point section above rather than repeating them here.
 | `test-first-development` | test-architect, code-reviewer. Orchestrator | Implement |
 | `test-style` | test-architect, code-reviewer (just-in-time through pointers) | Implement |
 | `test-driven-bug-fix` | team-fix | Bug-fix flow |
-| `principle-solid` | implementer, code-reviewer | Implement |
+| `principle-solid` | implementer, code-reviewer. `engineering-standards`, `code-review` (citing skills) | Implement |
 | `refactoring-to-patterns` | implementer | Implement |
 | `implementing-slices` | implementer | Implement |
 | `running-quality-checks` | verifier. reflect (after the writes) | Implement (verify), and Any (reflect) |
@@ -1627,7 +1636,7 @@ entry-point section above rather than repeating them here.
 | `technical-design-doc` | planner | Plan |
 | `product-requirements-doc` | questioner (through `decomposing-intent`, conditional). Design-author (through `authoring-designs`) | Question, Design |
 | `principle-product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
-| `principle-systems-thinking` | researcher, structure-planner, planner (frontmatter). Implementer, code-reviewer, ux-reviewer (inline). Authoring-designs, code-review, eng-design-doc-review (citing skills) | Research, Design, Structure, Plan, Implement (incl. verify) |
+| `principle-systems-thinking` | researcher, structure-planner, planner (frontmatter). Implementer, code-reviewer, ux-reviewer (inline). Authoring-designs, code-review, eng-design-doc-review, nested-agents (citing skills) | Research, Design, Structure, Plan, Implement (incl. verify) |
 | `writing-prose` | technical-writer, design-author | Design (authoring bar), and Implement (verify): bar for prose it writes and prose it assesses |
 | `reviewing-documentation` | technical-writer | Implement (verify): doc-gap review process + classification |
 | `git-commit` | team-pr. Implementer (through `implementing-slices`) | PR, and Implement (slice commits) |
@@ -1648,13 +1657,13 @@ entry-point section above rather than repeating them here.
 | `principle-least-privilege` | cited by `code-review`, `reflect`, `eng-design-doc-review`, `cross-model-review`, `pr-verify`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-mechanical-gates` | cited by `qrspi-workflow`, `test-first-development`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-never-interpolate` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `sweeping-local-state`, `decomposing-intent`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-optimization-never-dependency` | cited by `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-optimization-never-dependency` | cited by `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`, `reflect`, `principle-fail-closed`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-plan-present-wait` | cited by `groom-backlog`, `pr-open-comments`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-pre-image-first` | cited by `pr-rebase`, `groom-backlog`, `pr-watch-as-author`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-record-assumptions` | cited by `authoring-designs`, `decomposing-intent`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-record-assumptions` | cited by `authoring-designs`, `decomposing-intent`, `nested-agents`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-scope-fence` | cited by `implementing-slices`, `qrspi-workflow`, `test-first-development`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-single-source-of-truth` | cited by `qrspi-workflow`, `artifact-frontmatter`, `cross-model-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-skip-loudly` | cited by `code-review`, `sweeping-local-state`, `groom-backlog`, and the `code-reviewer` agent. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-skip-loudly` | cited by `code-review`, `sweeping-local-state`, `groom-backlog`, `cross-model-review`, and the `code-reviewer` agent. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-untrusted-input-is-data` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `cross-model-review`, `pr-watch-as-author`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
 
 The read-only `Explore` subagent dispatched by `eng-design-doc-review` is

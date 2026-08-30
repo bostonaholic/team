@@ -81,7 +81,9 @@ When you use a helper to check your own finding, state the claim as a
 neutral, falsifiable sentence with its `file:line`. Never give your verdict,
 severity, or reasoning. Ask the helper to refute it with evidence. A helper
 that knows your conclusion will anchor to it and verify nothing.
-Hand the investigator the question, never the wanted answer (`skills/principle-blind-the-investigator/SKILL.md`) — the scouts' isolation-extends-downward rule below is the same principle.
+Hand the investigator the question, never the wanted answer
+(`skills/principle-blind-the-investigator/SKILL.md`) — the scouts'
+isolation-extends-downward rule below is the same principle.
 
 ## Caps and ownership
 

@@ -237,7 +237,7 @@ cross-cutting recency caveat:
    - *Why:* the expensive, divergent, high-churn surface is exactly the bindings
      (three manifest formats ship today — Claude Code's, Codex's, and
      Antigravity's — atop per-host hook schemas and still-moving host APIs),
-     while the stable, valuable surface, the 91 agent/skill bodies and 4 hook
+     while the stable, valuable surface, the 91 agent/skill bodies and 3 hook
      logic files, is *already portable*. The hybrid boundary lines up with the
      natural portable/non-portable seam, so it minimizes both duplication and the
      blast radius of churn.
@@ -257,7 +257,7 @@ cross-cutting recency caveat:
    superset of this option's value with less risk.
 
 3. **Rejected: per-host maintained adapters (parallel hand-maintained trees).**
-   *Why rejected:* it costs 3× the maintenance across 13 agents, 78 skills, and 4
+   *Why rejected:* it costs 3× the maintenance across 13 agents, 78 skills, and 3
    hooks, one tree per shipped host — Claude Code, Codex CLI, and Antigravity
    CLI. It also guarantees drift, because someone must apply a fix to an agent
    body three times by hand. It throws away the fact that the bodies are *already
@@ -359,7 +359,7 @@ a file, and installing from a URL clones fresh so the socket never exists.
   and a manifest cannot redirect its component paths. That is why Team's
   Antigravity manifest is at the repo root rather than in a directory beside the
   other two.
-- Given a root manifest, `agy` processed all 57 skills and all 13 agents (78 skills as of the principle-skill tier; the validation ran against the 57-skill tree).
+- Given a root manifest, `agy` processed all 78 skills and all 13 agents.
 - Skill discovery descends the tree but stops at any directory that owns a
   `SKILL.md`, so a skill cannot nest another skill.
 - A symlinked skill folder is followed at plugin scope **and** at global scope.

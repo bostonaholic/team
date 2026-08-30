@@ -28,6 +28,9 @@ its scope must match exactly what it authorizes.
   and the gates pass, the run completes without stopping to re-confirm.
   Confirmation churn erodes the signal a real confirmation carries, so
   even the churn is bounded and reported.
-- Guard the entry: a side-effecting skill states an explicit-intent guard
-  in its description ("Invoke ONLY on … never infer …") and disables
-  model invocation where the host honors it.
+- Guard the entry: a skill whose invocation itself authorizes a side
+  effect MUST state an explicit-intent guard in its description ("Invoke
+  ONLY on … never infer …"); the strictest ones also set
+  `disable-model-invocation` where the host honors it. A skill that
+  instead gates every mutation on its own in-run approval guards there,
+  not at the entry.

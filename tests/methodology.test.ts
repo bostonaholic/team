@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read, squash } from "./helpers/text";
@@ -1047,7 +1047,7 @@ describe("skeptic passes weigh a stated rule above precedent (L2 tripwire)", () 
   test("nested-agents states that a rule outranks precedent", () => {
     const text = squash(NESTED);
     expect(/stated rule outranks observed precedent/i.test(text)).toBe(true);
-    expect(text).toContain("systems-thinking/SKILL.md");
+    expect(text).toContain("principle-systems-thinking/SKILL.md");
   });
 
   test("systems-thinking defers to a written rule where one speaks", () => {
@@ -1740,4 +1740,100 @@ describe("principle-untrusted-input-is-data (L2 content tripwire)", () => {
   test("citation site: pr-cleanup cites the principle by path", () => {
     expect(read(join(REPO_ROOT, "skills", "pr-cleanup", "SKILL.md"))).toContain("skills/principle-untrusted-input-is-data/SKILL.md");
   });
+});
+
+// The catalog's consumer lists drifted: new `skills/principle-*/SKILL.md`
+// citations landed and the docs/skills.md entry did not follow. This gate
+// makes that drift class deterministic: for every principle-* skill, every
+// file under agents/ or skills/ that cites it by path must appear by name
+// in the catalog's `### <name>` entry. The reverse direction is enforced
+// only for entries carrying the JIT "consulted by citation from" wording,
+// where by convention every listed name cites the full path; lens-style
+// entries ("Cited by ...") also name checklist-level consumers a path grep
+// cannot see, so they are exempt from the reverse check.
+describe("docs/skills.md principle consumer lists match on-disk citations (L2 tripwire)", () => {
+  const SKILLS_DIR = join(REPO_ROOT, "skills");
+  const AGENTS_DIR = join(REPO_ROOT, "agents");
+  const SKILLS_MD = read(join(REPO_ROOT, "docs", "skills.md"));
+
+  const skillNames = readdirSync(SKILLS_DIR).filter((name) =>
+    existsSync(join(SKILLS_DIR, name, "SKILL.md")),
+  );
+  const agentNames = readdirSync(AGENTS_DIR)
+    .filter((name) => name.endsWith(".md"))
+    .map((name) => name.replace(/\.md$/, ""));
+  const principleSkills = skillNames.filter((name) => name.startsWith("principle-")).sort();
+
+  // The `### <name>` catalog entry, up to the next heading. "" when the
+  // entry is missing, so dependent assertions fail loud, never vacuously.
+  function entrySection(name: string): string {
+    const marker = `### ${name}\n`;
+    const start = SKILLS_MD.indexOf(marker);
+    if (start === -1) return "";
+    const rest = SKILLS_MD.slice(start + marker.length);
+    const next = rest.search(/\n##+ /);
+    return next === -1 ? rest : rest.slice(0, next);
+  }
+
+  // `name` bounded by non-name characters, so `code-review` never matches
+  // inside `code-reviewer` and `planner` never inside `structure-planner`.
+  function mentions(text: string, name: string): boolean {
+    return new RegExp(`(?:^|[^\\w-])${name}(?:$|[^\\w-])`).test(text);
+  }
+
+  // Every agents/ and skills/ file (other than the skill's own) whose
+  // content cites `skills/<principle>/SKILL.md`, reported by bare name.
+  function citersOf(principle: string): string[] {
+    const needle = `skills/${principle}/SKILL.md`;
+    const citers: string[] = [];
+    for (const skill of skillNames) {
+      if (skill === principle) continue;
+      if (read(join(SKILLS_DIR, skill, "SKILL.md")).includes(needle)) citers.push(skill);
+    }
+    for (const agent of agentNames) {
+      if (read(join(AGENTS_DIR, `${agent}.md`)).includes(needle)) citers.push(agent);
+    }
+    return citers;
+  }
+
+  test("the principle tier exists on disk (the loops below cannot go vacuous)", () => {
+    expect(principleSkills.length).toBeGreaterThan(20);
+  });
+
+  for (const principle of principleSkills) {
+    test(`entry for ${principle} omits no file that cites it by path`, () => {
+      const section = entrySection(principle);
+      expect(section.length).toBeGreaterThan(0);
+      const missing = citersOf(principle).filter((citer) => !mentions(section, citer));
+      expect(missing).toEqual([]);
+    });
+  }
+
+  const jitPrinciples = principleSkills.filter((name) =>
+    squash(entrySection(name)).includes("consulted by citation from"),
+  );
+
+  test("JIT-worded entries exist (the reverse check below cannot go vacuous)", () => {
+    expect(jitPrinciples.length).toBeGreaterThan(0);
+  });
+
+  for (const principle of jitPrinciples) {
+    test(`"consulted by citation from" list for ${principle} names only real citers`, () => {
+      const flat = squash(entrySection(principle));
+      const list = flat.slice(flat.indexOf("consulted by citation from"));
+      // Clip at the bullet's tail so Key-behavior cross-references (which
+      // legitimately name non-citers) never register as consumers.
+      const ends = ["No agent preloads", "Key behaviors"]
+        .map((m) => list.indexOf(m))
+        .filter((i) => i !== -1);
+      const clipped = ends.length === 0 ? list : list.slice(0, Math.min(...ends));
+      const named = [...clipped.matchAll(/`([a-z0-9-]+)`/g)]
+        .map((m) => m[1] ?? "")
+        .filter((n) => skillNames.includes(n) || agentNames.includes(n));
+      expect(named.length).toBeGreaterThan(0);
+      const citers = new Set(citersOf(principle));
+      const phantom = named.filter((n) => !citers.has(n));
+      expect(phantom).toEqual([]);
+    });
+  }
 });
