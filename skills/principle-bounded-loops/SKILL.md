@@ -1,6 +1,6 @@
 ---
 name: principle-bounded-loops
-description: "Apply when writing any loop, retry, or watch cycle. Declare the cap with the loop and make hitting it a loud, terminal, reported outcome — never silent grinding."
+description: "Apply when writing any loop, retry, or watch cycle. Declare the cap with the loop and make hitting it a loud, terminal, reported outcome — never silent grinding. Size budgets are the output-side instance."
 user-invocable: false
 ---
 

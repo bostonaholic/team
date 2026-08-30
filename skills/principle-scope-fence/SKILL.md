@@ -26,4 +26,5 @@ cannot.
 - If scope must genuinely expand, update the governing artifact — and for
   a material change, go back through its review.
 - Never expand or shrink scope in silence: record the expansion, or the
-  omission, loudly where the reader will look.
+  omission, loudly where the reader will look
+  (`skills/principle-skip-loudly/SKILL.md`).

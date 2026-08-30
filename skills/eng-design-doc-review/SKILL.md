@@ -291,7 +291,7 @@ verdict is the **terminal line of your report** — nothing follows it:
   *orchestrator* records the verdict to `design-review-<n>.md` when the
   pipeline gate runs the brief. The recovery hooks fail closed on anything
   but a recorded passing verdict. The skill itself writes no artifacts.
-  The toolset, not the prose, is the guarantee (`skills/principle-least-privilege/SKILL.md`).
+  The toolset, not the prose, is the guarantee for writes (`skills/principle-least-privilege/SKILL.md`).
 - Standalone use blocks nothing: users may run `/team-design` or
   `/team-structure` without ever invoking this skill directly.
 

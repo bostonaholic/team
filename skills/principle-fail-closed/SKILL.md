@@ -7,9 +7,8 @@ user-invocable: false
 # Fail Closed
 
 When a guarantee cannot be evaluated, the answer is no. Unknown counts as
-unsupported, a missing verdict counts as not passed, an inconclusive
-refutation leaves the finding standing, and an unset variable aborts
-instead of expanding to empty.
+unsupported, a missing verdict counts as not passed, and an inconclusive
+refutation leaves the finding standing.
 
 **Why:** The ambiguous state is where silent failures live. A gate that
 defaults open under uncertainty is a gate only while nothing is wrong —

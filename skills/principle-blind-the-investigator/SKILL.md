@@ -30,5 +30,6 @@ walk.
   claims accumulates a model of your review and anchors to it.
 - Treat any leakage as a critical defect: stop and report.
 - The review-gate instance of this — fresh context, no shared history —
-  is owned by `skills/principle-generator-evaluator/SKILL.md`; this is
-  the same move applied upstream of review.
+  and the one-claim-one-fresh-judge rule are owned by
+  `skills/principle-generator-evaluator/SKILL.md`; this is the same move
+  applied upstream of review.

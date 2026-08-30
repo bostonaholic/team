@@ -20,7 +20,8 @@ the enhancement optional.
   tools you hold, and proceed. Never stall, and never report failure
   solely because the enhancement was unavailable.
 - Never soften a verdict because an optional pass did not run. Record the
-  skip and its reason where the report format puts it.
+  skip and its reason where the report format puts it
+  (`skills/principle-skip-loudly/SKILL.md`).
 - The enhancement never blocks, retry-loops, or prompts the user; its
   failure is a line in the report, not a stop.
 - A malformed enhancement result is discarded and the fallback used —

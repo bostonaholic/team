@@ -6,10 +6,11 @@ user-invocable: false
 
 # Files Are the Contract
 
-The conversation is ephemeral; the artifact on disk is durable. Every phase
-of work writes a file that declares what it is and whether its gate passed,
-and steps communicate through those files — never through shared chat
-memory. Trusting "the model will remember" fails about one time in five.
+The conversation is ephemeral; the artifact on disk is durable. Work that
+matters is written to a file that declares what it is — and, where a gate
+governs it, whether the gate passed — and steps communicate through those
+files, never through shared chat memory. Trusting the model to remember
+fails often enough to plan for.
 
 **Why:** A file survives a truncated context, a compaction, a crash, a new
 session, and a handoff to a different agent. The state lives on disk, not

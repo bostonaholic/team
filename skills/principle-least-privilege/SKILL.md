@@ -12,8 +12,8 @@ the prose telling it to behave: a prompt does not rewrite an agent body,
 and an instruction never widens or narrows what a role can actually
 touch.
 
-**Why:** Prose is forgotten about one time in five; a missing Write tool
-is not. A constraint that is a property of the harness holds even when
+**Why:** Prose gets forgotten; a missing Write tool does not. A
+constraint that is a property of the harness holds even when
 the model does not cooperate — and a role that cannot do the forbidden
 thing needs no rule against it.
 
