@@ -105,13 +105,9 @@ the same in-flight caps and carries the same reply bound. Without
 `SendMessage`, spawn fresh scouts as before — the follow-up path is an
 optimization, never a dependency.
 
-**Skeptics are the exception — one skeptic per claim, always fresh.**
-Fresh context is the skeptic's mechanism, not an implementation detail: a
-skeptic that has judged your earlier claims accumulates a model of your
-review and anchors to it, which is exactly what the neutral-claim rule
-exists to prevent. Never send a second claim to a live skeptic, even where
-a follow-up would be cheaper.
-Fresh context is the evaluator's mechanism (`skills/principle-generator-evaluator/SKILL.md`).
+**Skeptics are the exception — one skeptic per claim, always fresh**
+(`skills/principle-generator-evaluator/SKILL.md`). Never send a second
+claim to a live skeptic, even where a follow-up would be cheaper.
 
 ## Per-agent caps
 
