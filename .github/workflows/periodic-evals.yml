@@ -113,3 +113,49 @@ jobs:
           name: periodic-evals-${{ matrix.suite.name }}-${{ github.run_id }}
           path: evals/results/
           retention-days: 90
+
+  # A scheduled run has no PR to redden, so a failure is invisible unless
+  # someone subscribes to workflow notifications. Surface it as an issue.
+  # `failure()` covers any failed matrix leg and stays false when the run is
+  # cancelled (e.g. by the concurrency group).
+  report-failure:
+    name: Open failure issue
+    needs: periodic-evals
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+      actions: read  # gh run view: list this run's jobs to find the failed ones
+    steps:
+      - name: Create issue linking the failed jobs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          EVENT_NAME: ${{ github.event_name }}
+          SHA: ${{ github.sha }}
+        run: |
+          # This job is still in_progress (conclusion empty), so the filter
+          # can only match the completed matrix legs.
+          failed_jobs=$(gh run view "$RUN_ID" --repo "$REPO" --json jobs \
+            --jq '.jobs[] | select(.conclusion == "failure") | "- [\(.name)](\(.url))"')
+          {
+            echo "The [periodic evals run]($RUN_URL) failed."
+            echo
+            echo "**Failed jobs:**"
+            echo "$failed_jobs"
+            echo
+            echo "**Context:**"
+            echo "- Trigger: \`$EVENT_NAME\`"
+            echo "- Commit: $SHA"
+            echo "- Per-suite eval results are attached to the run as artifacts (90-day retention)."
+            echo "- Suites run live agents against a live model, so first rule out a transient"
+            echo "  (API outage, rate limit) by re-running the failed jobs before treating this"
+            echo "  as a behavioral regression."
+          } > "$RUNNER_TEMP/issue-body.md"
+          gh issue create --repo "$REPO" \
+            --title "Periodic evals failed ($(date -u +%F))" \
+            --label bug --label tests \
+            --body-file "$RUNNER_TEMP/issue-body.md"
