@@ -7,12 +7,13 @@
 // trigger, so a page that silently drops out of the nav, or a `nav_order` tie
 // that silently reorders a menu, still builds green and ships unnoticed.
 //
+// docs/testing.md carries no `audience` on purpose: it is served at its URL
+// for inbound links but appears in neither nav group. The existence check
+// beside that assertion keeps a deleted or renamed file from passing it
+// vacuously.
+//
 // Values are compared whole, never as substrings, because Liquid's `contains`
 // on a list tests element equality — `[user-facing]` is not `user`.
-//
-// Each absence assertion is paired with a presence assertion on the same page,
-// so a deleted or misspelled `audience` line FAILS instead of vacuously
-// passing the absence check.
 //
 // Defensive reads: a missing file → "" so assertions FAIL cleanly rather than
 // throwing ENOENT (the mechanical gate rejects crashes).
@@ -33,7 +34,6 @@ const VERSIONING_MD = join(REPO_ROOT, "docs", "versioning.md");
 const PROJECT_TRACKING_MD = join(REPO_ROOT, "docs", "project-tracking.md");
 const TESTING_MD = join(REPO_ROOT, "docs", "testing.md");
 const PORTABILITY_MD = join(REPO_ROOT, "docs", "cross-host-portability.md");
-const SCREENSHOTS_MD = join(REPO_ROOT, "docs", "screenshots-in-prs.md");
 
 function readIf(path: string): string {
   return existsSync(path) ? read(path) : "";
@@ -41,10 +41,8 @@ function readIf(path: string): string {
 
 // The whole values of one front-matter key, read off the raw frontmatter slice
 // (no YAML parser: adding one would raise the >=1.0.0 bun engine floor).
-// Match the key anchored at the start of a line, drop a trailing inline
-// comment and any flow-sequence brackets, split on commas, then trim
-// whitespace and wrapping quotes off each piece. A missing line yields no
-// values, so the caller's assertion fails rather than skipping.
+// A missing line yields no values, so the caller's assertion fails rather
+// than skipping.
 function frontMatterValues(path: string, key: string): string[] {
   const line = new RegExp(`^${key}:(.*)$`, "m").exec(frontmatter(readIf(path)));
   if (line === null) return [];
@@ -76,17 +74,7 @@ function duplicates(values: number[]): number[] {
 }
 
 describe("docs site nav: membership and ordering are data-driven from audience + nav_order front matter", () => {
-  test("dropdown membership: moved pages name developer and not user", () => {
-    const screenshots = frontMatterValues(SCREENSHOTS_MD, "audience");
-    const testing = frontMatterValues(TESTING_MD, "audience");
-
-    expect(screenshots).toContain("developer");
-    expect(screenshots).not.toContain("user");
-    expect(testing).toContain("developer");
-    expect(testing).not.toContain("user");
-  });
-
-  test("primary row: the five remaining pages keep user", () => {
+  test("primary row pages carry user", () => {
     expect(frontMatterValues(INDEX_MD, "audience")).toContain("user");
     expect(frontMatterValues(VISION_MD, "audience")).toContain("user");
     expect(frontMatterValues(ETHOS_MD, "audience")).toContain("user");
@@ -94,13 +82,16 @@ describe("docs site nav: membership and ordering are data-driven from audience +
     expect(frontMatterValues(SKILLS_MD, "audience")).toContain("user");
   });
 
-  test("dropdown nav_order values are distinct", () => {
+  test("testing.md is served but belongs to neither nav group", () => {
+    expect(existsSync(TESTING_MD)).toBe(true);
+    expect(frontMatterValues(TESTING_MD, "audience")).toEqual([]);
+  });
+
+  test("dropdown nav_order values are distinct integers", () => {
     const orders = [
       navOrder(VERSIONING_MD),
       navOrder(PROJECT_TRACKING_MD),
-      navOrder(TESTING_MD),
       navOrder(PORTABILITY_MD),
-      navOrder(SCREENSHOTS_MD),
     ];
 
     expect(nonIntegers(orders)).toEqual([]);
