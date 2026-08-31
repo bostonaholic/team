@@ -15,9 +15,8 @@ level further down. These rules are non-negotiable.
 Nested spawning is new (Claude Code >= 2.1.172) and may be absent or capped
 differently in the user's version. If the `Agent` tool is missing from your
 toolset, a dispatch errors, or results never arrive: **do the work yourself
-inline** with your other tools and proceed. Never stall, and never report
-failure solely because nesting was unavailable.
-Cross-gate canon: `skills/principle-optimization-never-dependency/SKILL.md`.
+inline** with your other tools and proceed — nesting is an optimization,
+never a dependency (`skills/principle-optimization-never-dependency/SKILL.md`).
 
 ## Version gate — confirm before the first nested dispatch
 
@@ -78,13 +77,11 @@ Resolved and recorded, never asked upward (`skills/principle-record-assumptions/
 
 ## Verification helpers get neutral claims
 
-When you use a helper to check your own finding, state the claim as a
-neutral, falsifiable sentence with its `file:line`. Never give your verdict,
-severity, or reasoning. Ask the helper to refute it with evidence. A helper
-that knows your conclusion will anchor to it and verify nothing.
-Hand the investigator the question, never the wanted answer
-(`skills/principle-blind-the-investigator/SKILL.md`) — the scouts'
-isolation-extends-downward rule below is the same principle.
+When a helper checks your own finding, apply
+`skills/principle-blind-the-investigator/SKILL.md`: a neutral, falsifiable
+claim with `file:line` — never your verdict, severity, or reasoning — and
+ask the helper to refute it. The scouts' isolation-extends-downward rule
+below is the same principle.
 
 ## Caps and ownership
 
