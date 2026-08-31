@@ -56,9 +56,11 @@ revision: 0
 ---
 ```
 
-`revision` counts review loops. Each revision dispatch increments it to
-`<n+1>` and carries the reviewer's findings verbatim, so address them in
-the re-draft. Review verdicts live in `design-review-<n>.md`, which the
+`revision` counts review loops. A missing or non-numeric `revision` reads
+as `0`, so the next draft writes `revision: 1` and a bad value never stops
+the run. Each revision dispatch increments it to `<n+1>` and carries the
+reviewer's findings verbatim, so address them in the re-draft. Review
+verdicts live in `design-review-<n>.md`, which the
 orchestrator writes. `design.md` carries no approval fields.
 **Never create or edit any `design-review-<n>.md`.** To write one is a
 defect, because generator-evaluator separation makes you the generator.

@@ -3,8 +3,8 @@
 // pure core + L3 subprocess against fake CLIs on a controlled PATH), the
 // TEAM_DISABLE_CROSS_MODEL kill-switch, the
 // no-bypass sweep, the skill/agent/docs wiring tripwires, the
-// orchestrator's per-round disposition persistence to cross-model-notes.md
-// (including the terminal halt naming the file), the design-review gate's
+// orchestrator's per-round disposition persistence to cross-model-notes.md,
+// the design-review gate's
 // external pass and its records (cross-model-raw.md, the bold round
 // label), the two standalone design-gate entrances, and the PR
 // review-notes copy rules that keep every round appearing exactly once.
@@ -774,17 +774,6 @@ describe("orchestrator contract in skills/team/SKILL.md (L2)", () => {
     expect(gate).toContain(NOTES_FILENAME);
   });
 
-  test("the terminal-halt step names the notes file beside the unresolved findings", () => {
-    const gate = aggregateGate();
-    expect(gate.length).toBeGreaterThan(0);
-    const lines = gate.split("\n");
-    const start = lines.findIndex((line) => /terminal halt/i.test(line));
-    expect(start).toBeGreaterThanOrEqual(0);
-    const end = lines.findIndex((line, i) => i > start && /^\d+\.\s/.test(line));
-    const step = lines.slice(start, end === -1 ? undefined : end).join("\n");
-    expect(step).toContain(NOTES_FILENAME);
-  });
-
   test("the disposition heading is byte-identical between producer and orchestrator skills", () => {
     expect(readOrEmpty(SKILL_MD)).toContain(DISPOSITION_HEADING);
     expect(read(TEAM_SKILL)).toContain(DISPOSITION_HEADING);
@@ -813,15 +802,6 @@ describe("orchestrator contract in skills/team-implement/SKILL.md (L2)", () => {
 
   test("the execution steps key persistence on the not-run marker, not on the heading being present", () => {
     expect(read(TEAM_IMPLEMENT_SKILL)).toContain(NOT_RUN_MARKER);
-  });
-
-  test("the terminal-halt step names the notes file beside the unresolved findings", () => {
-    const lines = read(TEAM_IMPLEMENT_SKILL).split("\n");
-    const start = lines.findIndex((line) => /round count ≥ 5.*halt/i.test(line));
-    expect(start).toBeGreaterThanOrEqual(0);
-    const end = lines.findIndex((line, i) => i > start && /^\s*-\s|^\d+\.\s/.test(line));
-    const step = lines.slice(start, end === -1 ? undefined : end).join("\n");
-    expect(step).toContain(NOTES_FILENAME);
   });
 });
 

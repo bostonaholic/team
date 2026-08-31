@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.63.0] - 2026-08-31
+
+### Changed
+
+- **Neither review loop stops at five rounds any more. Each one now ends when its reviewer is satisfied.** The design-review loop re-drafted at most five times before it halted the run and handed the work back; the implement-phase loop re-ran its five reviewers at most five times before doing the same. Both halts are gone. [`/team-design`](https://github.com/bostonaholic/team/blob/main/skills/team-design/SKILL.md) now advances on APPROVE or COMMENT and re-drafts on REQUEST CHANGES for as long as that takes. [`/team-implement`](https://github.com/bostonaholic/team/blob/main/skills/team-implement/SKILL.md) now loops until no Blocking or Major finding is left. The fail-closed halt on an unparseable verdict or a crashed reviewer is untouched — a missing verdict still stops the run loudly. **What this asks of you:** you are the outer bound now. A check that can never be satisfied grinds until you stop the run, where before it stopped itself at round five. Two things make that watchable: each implement round's ledger item carries the open counts, as `Review round <n+1> (<b> Blocking, <m> Major open)`, so a flat or growing count says the loop is stuck; and after you stop a run, re-invoking the same `/team-*` command bare picks it back up — [`/team-implement`](https://github.com/bostonaholic/team/blob/main/skills/team-implement/SKILL.md) re-enters at its reviewer-dispatch step, since no round's findings are written to disk, and the five reviewers re-derive the open set at the cost of one round. [`/team`](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md) also resumes when you give it the same description or ticket. The rationale [`docs/ethos.md`](https://github.com/bostonaholic/team/blob/main/docs/ethos.md) recorded for the old bound is replaced rather than dropped: the veto ends on agreement, not on a count. Pinned by an L2 forbidden-pattern sweep in [`tests/protocol.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/protocol.test.ts) that fails if any skill, agent, or doc states a round or revision cap again, and by absence guards in [`tests/architecture.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/architecture.test.ts) for the `maxRevisions` and `maxRetries` keys, which are removed from [`skills/team/registry.json`](https://github.com/bostonaholic/team/blob/main/skills/team/registry.json).
+
 ## [0.62.0] - 2026-08-28
 
 ### Added
@@ -622,7 +628,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.62.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.63.0...HEAD
+[0.63.0]: https://github.com/bostonaholic/team/compare/v0.62.0...v0.63.0
 [0.62.0]: https://github.com/bostonaholic/team/compare/v0.61.0...v0.62.0
 [0.61.0]: https://github.com/bostonaholic/team/compare/v0.60.0...v0.61.0
 [0.60.0]: https://github.com/bostonaholic/team/compare/v0.59.0...v0.60.0

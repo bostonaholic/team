@@ -125,8 +125,7 @@ highest-`<n>` file carries APPROVE or COMMENT.
 
 **Review loop** (REQUEST CHANGES): the design-author re-drafts with the
 reviewer's findings verbatim. The orchestrator increments
-`revision: <n+1>` in the new draft's frontmatter. The cap is 5. At the
-cap, the run halts terminally.
+`revision: <n+1>` in the new draft's frontmatter.
 
 **Phase inference** (orchestrator + hooks):
 
@@ -253,7 +252,6 @@ The subagent holds no Write or Edit tools, so the reviewer cannot touch
 the artifacts it judges. The orchestrator records the verdict to
 `design-review-<n>.md`. APPROVE and COMMENT advance. On REQUEST CHANGES
 the agent re-drafts with the findings verbatim and increments `revision`.
-At cap 5 the run halts terminally.
 
 ### Phase 5: Structure
 
@@ -293,20 +291,29 @@ No gate. The plan is mechanically derived from the structure.
    Blocking or Major finding remains, it dispatches the implementer to
    fix the typed failure class. It then re-runs all 5 reviewers
    automatically. It never consults the user. This is the *no-consult
-   rule*. The cap is 5 rounds. At the cap, the run halts terminally.
-   Once Blocking and Major are clean, any remaining Minor-and-below
+   rule*. Once Blocking and Major are clean, any remaining Minor-and-below
    findings are recorded in the PR body's `## Review notes` for the
    human's PR review.
 
-The orchestrator tracks the round count by appending "Review round N"
-items to the TodoWrite ledger.
+The orchestrator tracks the round count by appending
+`Review round <n+1> (<b> Blocking, <m> Major open)` items to the
+TodoWrite ledger. The count is that round's open Blocking and Major
+total, so an operator watching the ledger can tell a converging loop
+from a stuck one.
 
-**Recovery after a terminal halt** (either cap): a human addresses the
-unresolved findings by hand (editing the design or the code) and
-re-invokes the same `/team-*` command bare. The aggregate round counter
-is session-scoped through TodoWrite and starts fresh on re-invocation.
-The design `revision` counter persists in `design.md` frontmatter. Lower
-it by hand to restore the revision budget.
+**Recovery after an operator stop, a context-exhausted session, or a
+fail-closed halt**: a human re-invokes the same `/team-*` command bare.
+Each command runs its own phase and names the next one to run. What
+the human can fix first differs by gate.
+
+The design-review gate writes every round's findings to
+`design-review-<n>.md`, so they are on disk to read before editing
+`design.md`. The aggregate gate persists none of its findings. So
+`/team-implement` resumes at the reviewer-dispatch step, and the five
+reviewers re-derive the open set at the cost of one round. The aggregate
+round counter is session-scoped through TodoWrite and starts fresh on
+re-invocation. The design `revision` counter persists in `design.md`
+frontmatter.
 
 ### Phase 8: PR
 
@@ -391,8 +398,9 @@ itself mean reviewer.
 
 Three more balances bound the checks themselves:
 
-- **The veto is bounded.** The review loop is capped at 5 rounds, then halts to a
-  human with the unresolved findings. See
+- **The veto ends on agreement, not on a count.** The review loop runs until no
+  Blocking or Major finding is left. A check that can never be satisfied grinds
+  until a person stops the run. See
   `skills/review-severity-tiers/SKILL.md`.
 - **The check has a check.** The optional skeptic pass is default-keep. An
   inconclusive refutation leaves the finding standing, so the pass removes false
@@ -980,7 +988,7 @@ children are confirmed, and the depth cap is stable.
   the typed failure retry loop. It returns a compact terminal verdict for
   the orchestrator to render:
   `{verdict: PASS | CONDITIONAL | ESCALATE, rounds, findings[]}`. This
-  keeps up to 25 reviewer reports out of the orchestrator's long-lived
+  keeps every reviewer report out of the orchestrator's long-lived
   context. Needs: a terminal-verdict envelope protocol, because the
   no-consult rule means no mid-loop user interaction exists to forward.
   It also needs per-round state artifacts
