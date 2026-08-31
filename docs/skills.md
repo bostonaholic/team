@@ -102,7 +102,7 @@ chain above" instead of repeating these tiers. The two skills that take a
 free-form description (`team`, `team-question`, `team-fix`) state their own
 argument shape.
 
-### team
+### [team](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md)
 
 - **Purpose:** Run the full eight-phase QRSPI pipeline end to end, from a
   raw request to an opened pull request.
@@ -125,7 +125,7 @@ argument shape.
   `## Setup`, `## The Phase Loop`, `## Gate Handling`, and `## Rules`,
   not the downstream Input / Execution / Completion template.
 
-### team-question
+### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
 
 - **Purpose:** Decompose a raw intent into a task statement plus a neutral
   question set, producing `task.md` and `questions.md`.
@@ -135,7 +135,7 @@ argument shape.
   emits the neutral `questions.md` so the downstream research sees only the
   questions, not your task framing.
 
-### team-research
+### [team-research](https://github.com/bostonaholic/team/blob/main/skills/team-research/SKILL.md)
 
 - **Purpose:** Run isolated codebase research against the neutral question set.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
@@ -144,7 +144,7 @@ argument shape.
 - **Key behaviors:** Reads only `questions.md`, never the task, so the
   research carries no opinion-bias. Writes `research.md`.
 
-### team-design
+### [team-design](https://github.com/bostonaholic/team/blob/main/skills/team-design/SKILL.md)
 
 - **Purpose:** Draft the alignment doc and run the adversarial design
   review that gates advancement.
@@ -159,7 +159,7 @@ argument shape.
   runs before every design-review round,
   feeding `cross-model-notes.md` and `cross-model-raw.md`.
 
-### team-structure
+### [team-structure](https://github.com/bostonaholic/team/blob/main/skills/team-structure/SKILL.md)
 
 - **Purpose:** Break the reviewed design into vertical slices with
   per-slice verification checkpoints.
@@ -169,7 +169,7 @@ argument shape.
 - **Key behaviors:** Produces the ~2-page `structure.md`, then advances
   to PLAN automatically.
 
-### team-plan
+### [team-plan](https://github.com/bostonaholic/team/blob/main/skills/team-plan/SKILL.md)
 
 - **Purpose:** Turn the structure into a tactical, file-level
   implementation plan.
@@ -179,7 +179,7 @@ argument shape.
 - **Key behaviors:** Writes `plan.md` for the implementer. The plan is a
   tactical artifact, not a human-reviewed gate.
 
-### team-worktree
+### [team-worktree](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/SKILL.md)
 
 - **Purpose:** Prepare an isolated git worktree. In a full `/team` run this
   is the **leading** phase, and it runs before QUESTION. `docs/plans/<id>/`
@@ -197,7 +197,7 @@ argument shape.
   refuses any repo path outside the home repo's sibling set (realpath
   containment).
 
-### team-implement
+### [team-implement](https://github.com/bostonaholic/team/blob/main/skills/team-implement/SKILL.md)
 
 - **Purpose:** Implement the plan. Write tests first, work slice by slice,
   then run the adversarial reviewer loop.
@@ -214,7 +214,7 @@ argument shape.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
   the missing upstream artifacts inline rather than hard-erroring.
 
-### team-pr
+### [team-pr](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md)
 
 - **Purpose:** Update the changelog, commit, and open the pull request.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
@@ -233,7 +233,7 @@ argument shape.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
   the missing upstream artifacts inline rather than hard-erroring.
 
-### team-fix
+### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md)
 
 - **Purpose:** Run a compressed bug-fix pipeline that skips the QRSPI
   ceremony.
@@ -249,7 +249,7 @@ argument shape.
   cannot be created degrades to a plain `<id>` branch rather than to the
   default branch. Ship re-asserts the gate before it pushes.
 
-### eng-design-doc-review
+### [eng-design-doc-review](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/SKILL.md)
 
 - **Purpose:** Adversarially audit `design.md` with fresh context. Its
   `## Review brief` doubles as the pipeline's DESIGN review gate.
@@ -271,7 +271,7 @@ argument shape.
 Each carries `argument-hint` (so it is a slash command) but is **not** a
 QRSPI phase: a self-contained action a user runs on demand.
 
-### shipit
+### [shipit](https://github.com/bostonaholic/team/blob/main/skills/shipit/SKILL.md)
 
 - **Purpose:** Land a reviewed pull request: push unpushed commits, wait for
   CI to go green, then squash-merge (the PR title becomes the commit subject).
@@ -303,7 +303,7 @@ QRSPI phase: a self-contained action a user runs on demand.
   timeout, branch protection) merged nothing and reaches no cleanup, and
   `/pr-cleanup` Mode B (closed / abandoned) stays user-triggered.
 
-### pr-open-comments
+### [pr-open-comments](https://github.com/bostonaholic/team/blob/main/skills/pr-open-comments/SKILL.md)
 
 - **Purpose:** Triage unresolved review feedback on a pull request. It
   fetches every unresolved review thread through GraphQL and checks each
@@ -331,7 +331,7 @@ QRSPI phase: a self-contained action a user runs on demand.
   cue-based auto-invocation is justified by the carve-out set plus the
   verification bar.
 
-### pr-watch-as-author
+### [pr-watch-as-author](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md)
 
 - **Purpose:** Arm a bounded watch loop on a pull request: undraft it, take
   a baseline snapshot, then poll GitHub for new review feedback and triage
@@ -358,7 +358,7 @@ QRSPI phase: a self-contained action a user runs on demand.
   Model-invocable: it promotes a draft only on an unambiguous readiness cue
   and reports the promotion loudly, so cue-based auto-invocation is safe.
 
-### pr-watch-as-reviewer
+### [pr-watch-as-reviewer](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md)
 
 - **Purpose:** Reviewer-side watch-and-approve. After you post review
   comments on a PR you are reviewing, it polls GitHub until every review
@@ -415,7 +415,7 @@ QRSPI phase: a self-contained action a user runs on demand.
   profile display names thus never enter context.
 
 
-### groom-backlog
+### [groom-backlog](https://github.com/bostonaholic/team/blob/main/skills/groom-backlog/SKILL.md)
 
 - **Purpose:** Groom a project backlog in an issue tracker. It loads the
   whole board in bulk, computes a gap inventory, verifies each candidate
@@ -490,7 +490,7 @@ QRSPI phase: a self-contained action a user runs on demand.
   mutates nothing and execution requires the user's answer, so those two
   guards make cue-based auto-invocation safe.
 
-### pr-cleanup
+### [pr-cleanup](https://github.com/bostonaholic/team/blob/main/skills/pr-cleanup/SKILL.md)
 
 - **Purpose:** Tear down local and remote branch state after a pull
   request is finished. Mode A (merged) verifies the PR actually merged,
@@ -537,7 +537,7 @@ QRSPI phase: a self-contained action a user runs on demand.
   removed only after an untracked check that distinguishes empty output
   from a failed command.
 
-### pr-verify
+### [pr-verify](https://github.com/bostonaholic/team/blob/main/skills/pr-verify/SKILL.md)
 
 - **Purpose:** Verify a pull request's test plan with evidence-rated
   verdicts. It extracts every test-plan item, classifies each by
@@ -565,7 +565,7 @@ QRSPI phase: a self-contained action a user runs on demand.
   no pushes. Pasted-description mode degrades the diff and build
   strategies honestly, per item.
 
-### pr-rebase
+### [pr-rebase](https://github.com/bostonaholic/team/blob/main/skills/pr-rebase/SKILL.md)
 
 - **Purpose:** Bring a feature branch up to date with its base without
   changing what the branch does. It captures a pre-rebase check baseline,
@@ -609,7 +609,7 @@ QRSPI phase: a self-contained action a user runs on demand.
   fetch` advances the remote-tracking ref an implicit lease would read.
   It does not wait for CI and does not merge; `/shipit` lands the PR.
 
-### reflect
+### [reflect](https://github.com/bostonaholic/team/blob/main/skills/reflect/SKILL.md)
 
 - **Purpose:** Mine the session it was invoked from for learnings that
   outlive it, and propose each one as a concrete change. It resolves the
@@ -728,7 +728,7 @@ agent's own extracted procedure skill does not count toward that soft
 limit: it replaces former inline body content 1:1, so it adds no net
 context (see [architecture.md](architecture.md#design-guidelines)).
 
-### qrspi-workflow
+### [qrspi-workflow](https://github.com/bostonaholic/team/blob/main/skills/qrspi-workflow/SKILL.md)
 
 - **Purpose:** Phase discipline: the phase sequence, gates, and
   anti-patterns every phase follows.
@@ -739,7 +739,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   anti-patterns catalog. The artifact/frontmatter schema it once carried is
   canonical in `artifact-frontmatter`. This skill keeps pointers.
 
-### artifact-frontmatter
+### [artifact-frontmatter](https://github.com/bostonaholic/team/blob/main/skills/artifact-frontmatter/SKILL.md)
 
 - **Purpose:** The artifact schema contract for `docs/plans/<id>/`.
 - **Loaded by:** orchestrator skills and artifact-authoring agents
@@ -753,7 +753,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   `hooks/session-start-recover.mjs` as the executable canon for
   `ID_RE`/`PHASE_FILES` rather than forking them.
 
-### researching-codebases
+### [researching-codebases](https://github.com/bostonaholic/team/blob/main/skills/researching-codebases/SKILL.md)
 
 - **Purpose:** Codebase research contract for the Research phase.
 - **Loaded by:** researcher.
@@ -764,7 +764,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   The isolation stance itself (questions.md only,
   never task.md) stays in the researcher agent as identity.
 
-### finding-files
+### [finding-files](https://github.com/bostonaholic/team/blob/main/skills/finding-files/SKILL.md)
 
 - **Purpose:** File-location search strategy for the Research phase.
 - **Loaded by:** file-finder.
@@ -774,7 +774,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   self-contained: the file-finder runs on haiku, so the skill carries
   everything inline with no cross-references.
 
-### decomposing-intent
+### [decomposing-intent](https://github.com/bostonaholic/team/blob/main/skills/decomposing-intent/SKILL.md)
 
 - **Purpose:** Artifact templates and decomposition procedure for the
   Question phase.
@@ -787,7 +787,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   `product-requirements-doc` for vague, multi-story, cross-cutting, or
   behavior-replacing requests, producing `prd.md` alongside `task.md`.
 
-### authoring-designs
+### [authoring-designs](https://github.com/bostonaholic/team/blob/main/skills/authoring-designs/SKILL.md)
 
 - **Purpose:** Design-document authoring procedure for the Design phase.
 - **Loaded by:** design-author.
@@ -799,7 +799,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   honors its scope boundaries and acceptance criteria per
   `product-requirements-doc`'s "Consuming a PRD downstream" section.
 
-### slicing-work
+### [slicing-work](https://github.com/bostonaholic/team/blob/main/skills/slicing-work/SKILL.md)
 
 - **Purpose:** Vertical-slice breakdown methodology for the Structure
   phase.
@@ -811,7 +811,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   the slicing heuristics: walking-skeleton first, and migrations alone are
   never a slice.
 
-### planning-implementation
+### [planning-implementation](https://github.com/bostonaholic/team/blob/main/skills/planning-implementation/SKILL.md)
 
 - **Purpose:** Tactical planning methodology for the Plan phase.
 - **Loaded by:** planner.
@@ -821,7 +821,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   under 300 lines. It also forbids implementation code, keeps slices
   atomic, and matches test coverage to the structure.
 
-### code-review
+### [code-review](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md)
 
 - **Purpose:** Generator-evaluator separation and the gate verdict
   vocabulary.
@@ -852,7 +852,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   the unordered per-file coverage checklist). The security review
   methodology lives in `reviewing-security`.
 
-### conventional-comments
+### [conventional-comments](https://github.com/bostonaholic/team/blob/main/skills/conventional-comments/SKILL.md)
 
 - **Purpose:** The Conventional Comments format for review findings.
 - **Loaded by:** code-reviewer, security-reviewer, and technical-writer
@@ -865,7 +865,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   `nitpick`) with literal examples. Every comment includes a specific
   `file:line` reference.
 
-### reviewing-security
+### [reviewing-security](https://github.com/bostonaholic/team/blob/main/skills/reviewing-security/SKILL.md)
 
 - **Purpose:** Security review methodology and the severity ladder.
 - **Loaded by:** security-reviewer.
@@ -877,7 +877,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   which CRITICAL and HIGH are hard gates. The PASS/FAIL verdict rule stays
   in `code-review`.
 
-### cross-model-review
+### [cross-model-review](https://github.com/bostonaholic/team/blob/main/skills/cross-model-review/SKILL.md)
 
 - **Purpose:** Cross-vendor review pass — second opinions from the
   codex and agy (Antigravity) CLIs on diffs and on design
@@ -908,7 +908,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   each round's block to `docs/plans/<id>/cross-model-notes.md`, and
   `team-pr` copies that file into the PR's `## Review notes` section.
 
-### review-severity-tiers
+### [review-severity-tiers](https://github.com/bostonaholic/team/blob/main/skills/review-severity-tiers/SKILL.md)
 
 - **Purpose:** The authoritative severity-tier map for aggregating
   reviewer verdicts.
@@ -924,7 +924,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   `## Review notes`, capped at 5 rounds (at the cap, terminal halt).
   Classifies `ux-reviewer` REQUEST CHANGES as an auto-fixed Major.
 
-### engineering-standards
+### [engineering-standards](https://github.com/bostonaholic/team/blob/main/skills/engineering-standards/SKILL.md)
 
 - **Purpose:** The design-first workflow, implementation standards, and the
   quality checklist.
@@ -941,7 +941,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   set. Doc comments on public interfaces are exempt. It also owns the
   Comment Discipline quality-checklist item that reviewer findings cite.
 
-### test-first-development
+### [test-first-development](https://github.com/bostonaholic/team/blob/main/skills/test-first-development/SKILL.md)
 
 - **Purpose:** Treat acceptance tests as the immutable scope fence.
 - **Loaded by:** test-architect, code-reviewer, and the orchestrator.
@@ -951,7 +951,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   before handoff — a green suite does not imply a green type checker. The style
   rules every acceptance test follows live in `test-style`.
 
-### test-style
+### [test-style](https://github.com/bostonaholic/team/blob/main/skills/test-style/SKILL.md)
 
 - **Purpose:** Test style rules and the flaky-test red-flag catalog.
 - **Loaded by:** test-architect and code-reviewer just-in-time, through
@@ -966,21 +966,21 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   red-flag catalog with its canonical time-bomb example pair. The
   always-blocking severity regime for flaky flags stays in `code-review`.
 
-### test-driven-bug-fix
+### [test-driven-bug-fix](https://github.com/bostonaholic/team/blob/main/skills/test-driven-bug-fix/SKILL.md)
 
 - **Purpose:** Reproduce-first, red-green bug discipline.
 - **Loaded by:** team-fix.
 - **Key behaviors:** Write a failing test that reproduces the bug, then make
   it green. No fix lands without a reproducing test.
 
-### solid-principles
+### [solid-principles](https://github.com/bostonaholic/team/blob/main/skills/solid-principles/SKILL.md)
 
 - **Purpose:** The five object-oriented design principles.
 - **Loaded by:** implementer, code-reviewer (2).
 - **Key behaviors:** SRP, OCP, LSP, ISP, and DIP as concrete checkpoints
   for new code and review.
 
-### refactoring-to-patterns
+### [refactoring-to-patterns](https://github.com/bostonaholic/team/blob/main/skills/refactoring-to-patterns/SKILL.md)
 
 - **Purpose:** Code smells and the safe transformations that resolve them
   (Fowler).
@@ -988,7 +988,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Key behaviors:** Name the smell, apply the pattern in its own commit,
   and keep tests green at every step.
 
-### implementing-slices
+### [implementing-slices](https://github.com/bostonaholic/team/blob/main/skills/implementing-slices/SKILL.md)
 
 - **Purpose:** Slice-by-slice execution procedure for the Implement phase.
 - **Loaded by:** implementer.
@@ -999,7 +999,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   discipline within a slice, blocker handling, and the scope fence.
   Acceptance tests are immutable, and no slices go beyond the plan.
 
-### systematic-debugging
+### [systematic-debugging](https://github.com/bostonaholic/team/blob/main/skills/systematic-debugging/SKILL.md)
 
 - **Purpose:** Evidence-first root-cause diagnosis.
 - **Loaded by:** the implementer's preloaded `implementing-slices` skill
@@ -1012,7 +1012,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Key behaviors:** Gather evidence before theorizing, then isolate the
   root cause rather than patching symptoms.
 
-### running-quality-checks
+### [running-quality-checks](https://github.com/bostonaholic/team/blob/main/skills/running-quality-checks/SKILL.md)
 
 - **Purpose:** Mechanical verification procedure for the Implement phase's
   verify gate.
@@ -1024,7 +1024,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   skill is deliberately self-contained. The verifier runs on haiku, so the
   skill carries everything inline with no cross-references.
 
-### progress-tracking
+### [progress-tracking](https://github.com/bostonaholic/team/blob/main/skills/progress-tracking/SKILL.md)
 
 - **Purpose:** Todo-first progress convention for multi-step procedures.
 - **Loaded by:** every multi-step agent (questioner, design-author,
@@ -1038,7 +1038,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   The orchestrator owns the phase ledger. An agent tracks its own
   sub-steps in its own context and never merges them up.
 
-### nested-agents
+### [nested-agents](https://github.com/bostonaholic/team/blob/main/skills/nested-agents/SKILL.md)
 
 - **Purpose:** Guardrails for the four `Agent`-tool holders that spawn
   read-only nested sub-agents.
@@ -1061,7 +1061,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   so each claim meets genuinely fresh context. Default-keep holds on
   anything short of a verified refutation.
 
-### documenting-decisions
+### [documenting-decisions](https://github.com/bostonaholic/team/blob/main/skills/documenting-decisions/SKILL.md)
 
 - **Purpose:** Creating and managing architecture decision records (ADRs).
 - **Loaded by:** planner and orchestrator (per the skill's own
@@ -1072,7 +1072,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   rationale so later readers understand the "why". Points ADR authors at
   the seventh-grade prose bar in `writing-prose`.
 
-### technical-design-doc
+### [technical-design-doc](https://github.com/bostonaholic/team/blob/main/skills/technical-design-doc/SKILL.md)
 
 - **Purpose:** Technical-design / architecture-doc methodology.
 - **Loaded by:** planner (per the skill's own self-description. The
@@ -1083,7 +1083,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   desired end state, patterns to follow, and trade-offs. Points design-doc
   authors at the seventh-grade prose bar in `writing-prose`.
 
-### product-requirements-doc
+### [product-requirements-doc](https://github.com/bostonaholic/team/blob/main/skills/product-requirements-doc/SKILL.md)
 
 - **Purpose:** Optional product-requirements-document methodology.
 - **Loaded by:** questioner, through `decomposing-intent`'s conditional
@@ -1096,7 +1096,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   `docs/plans/<id>/prd.md`, referenced from `task.md`. Points PRD authors
   at the seventh-grade prose bar in `writing-prose`.
 
-### product-thinking
+### [product-thinking](https://github.com/bostonaholic/team/blob/main/skills/product-thinking/SKILL.md)
 
 - **Purpose:** Product-need reasoning lens for "make something people
   want", which sharpens framing, design, and slicing so the work serves real
@@ -1107,7 +1107,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   thing people want, named user, talk-to-users mindset) shape the
   pre-implementation phases.
 
-### systems-thinking
+### [systems-thinking](https://github.com/bostonaholic/team/blob/main/skills/systems-thinking/SKILL.md)
 
 - **Purpose:** System-fit reasoning lens that weighs a change's blast radius
   (callers, consumers, sibling implementations, conventions) rather than
@@ -1122,7 +1122,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   the `System Fit` checklist item by name. On greenfield targets "none
   found" is a complete answer.
 
-### writing-prose
+### [writing-prose](https://github.com/bostonaholic/team/blob/main/skills/writing-prose/SKILL.md)
 
 - **Purpose:** Plain-language prose quality for authoring and review.
 - **Loaded by:** technical-writer, design-author.
@@ -1139,7 +1139,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   nothing. The technical-writer's review procedure that applies this
   bar lives in `reviewing-documentation`.
 
-### reviewing-documentation
+### [reviewing-documentation](https://github.com/bostonaholic/team/blob/main/skills/reviewing-documentation/SKILL.md)
 
 - **Purpose:** Documentation-gap review methodology and the
   REQUIRED/RECOMMENDED doc-change classification.
@@ -1151,7 +1151,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   documentation-gap review process (inventory, impact analysis, and
   cross-reference) and the REQUIRED/RECOMMENDED doc-change classification.
 
-### verifying-ux
+### [verifying-ux](https://github.com/bostonaholic/team/blob/main/skills/verifying-ux/SKILL.md)
 
 - **Purpose:** Live application verification procedure for the Implement
   phase's UX gate.
@@ -1161,7 +1161,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   endpoints with real `curl` requests, including error and edge cases.
   Always stop the server when done.
 
-### git-commit
+### [git-commit](https://github.com/bostonaholic/team/blob/main/skills/git-commit/SKILL.md)
 
 - **Purpose:** Commit discipline: conventional commits, the 50/72 subject
   and body rule, and atomic commits.
@@ -1171,7 +1171,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   message. Points commit-body prose at the seventh-grade bar in
   `writing-prose`.
 
-### changelog
+### [changelog](https://github.com/bostonaholic/team/blob/main/skills/changelog/SKILL.md)
 
 - **Purpose:** Keep a Changelog methodology.
 - **Loaded by:** team, team-pr.
@@ -1179,7 +1179,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   Added / Changed / Fixed headings before the PR opens. Points entry
   authors at the seventh-grade prose bar in `writing-prose`.
 
-### tracking-tickets
+### [tracking-tickets](https://github.com/bostonaholic/team/blob/main/skills/tracking-tickets/SKILL.md)
 
 - **Purpose:** Ticket-lifecycle discipline for tracker-linked runs: the
   in-progress / in-review timing, the conditional PR closing footer, and
@@ -1198,7 +1198,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   never while it is a draft. No one closes the ticket by hand, because the
   link auto-closes it on merge.
 
-### worktree-isolation
+### [worktree-isolation](https://github.com/bostonaholic/team/blob/main/skills/worktree-isolation/SKILL.md)
 
 - **Purpose:** Worktree topology for single- and multi-repo work.
 - **Loaded by:** orchestrator (team, team-worktree).
@@ -1208,7 +1208,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   PR is open. Teardown ends by loading `sweeping-local-state`, so a
   database or container the worktree provisioned goes with it.
 
-### sweeping-local-state
+### [sweeping-local-state](https://github.com/bostonaholic/team/blob/main/skills/sweeping-local-state/SKILL.md)
 
 - **Purpose:** Machine-local teardown for a merged PR, a closed PR, or a
   completed review.
