@@ -55,9 +55,8 @@ it. What matters for phase discipline:
 
 ## Research Isolation
 
-Research is the most-corruptible phase: a model that knows what it is being
-asked to build returns opinions instead of facts. The invariant is enforced in
-two layers:
+Research is the most-corruptible phase; it runs blind per
+`skills/principle-blind-the-investigator/SKILL.md`, enforced in two layers:
 
 1. **Structural** — the orchestrator passes `researcher` and `file-finder`
    only the path to `questions.md`. It is forbidden from handing them the
@@ -66,10 +65,7 @@ two layers:
    reading `task.md`. Both hold `Read`/`Grep`/`Glob` with
    `permissionMode: plan`, so nothing mechanically stops such a read.
    Enforcement relies on the agent following its prompt. A researcher missing
-   context surfaces it as an open question rather than guessing the intent,
-   and never pauses the run to ask.
-
-This section owns the pipeline instance of the blind-the-investigator principle; the cross-gate canon is `skills/principle-blind-the-investigator/SKILL.md`.
+   context never pauses the run to ask.
 
 ## Gate Types
 
