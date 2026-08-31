@@ -113,6 +113,25 @@ describe("code-reviewer scoring pipeline offline replay", () => {
   );
 
   test(
+    "regression: a line-cited review that never quotes the plants still scores detected",
+    () => {
+      // Real transcript from periodic run 33364482304: the reviewer found
+      // all three plants and exempted both decoys, but cited each finding
+      // as `file: src/webhooks/retry.js:<line>` with a description instead
+      // of quoting the planted comment text — the citation style
+      // skills/conventional-comments/SKILL.md mandates. Detection hints
+      // that only match verbatim quotes scored it 1/3.
+      const result = runReplay(
+        join(TRANSCRIPT_DIR, "regression-line-cited-review.ndjson"),
+      );
+
+      expect(result.output).toContain("(pass) planted-comment-violations");
+      expect(result.status).toBe(0);
+    },
+    SCENARIO_TIMEOUT_MS,
+  );
+
+  test(
     "reddens on a transcript whose blocking label rides the wrong finding",
     () => {
       const result = runReplay(
