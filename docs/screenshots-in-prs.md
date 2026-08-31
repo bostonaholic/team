@@ -1,8 +1,8 @@
 ---
 title: Screenshots in PRs
 description: "How the pipeline attaches inline UI screenshots to pull requests, and the one-time GitHub sign-in that enables the inline upload."
-audience: [user]
-nav_order: 6
+audience: [developer]
+nav_order: 10
 nav_label: screenshots
 ---
 

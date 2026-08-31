@@ -210,7 +210,7 @@ header nav a:hover {
   background: var(--fg);
 }
 
-/* contributor docs live in a "contributing" dropdown, kept out of the user-facing bar */
+/* the bar is the evaluate-and-adopt path; this dropdown is deeper reference (developer only) */
 header nav details.nav-dd {
   position: relative;
   display: inline-block;

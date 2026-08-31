@@ -1,7 +1,7 @@
 ---
 title: Testing
 description: "Team's six-layer test harness for products where a model is part of the system. Push every check to the cheapest, most deterministic layer; gate on deterministic checks, run stochastic evals on a schedule."
-audience: [user, developer]
+audience: [developer]
 nav_order: 8
 nav_label: testing
 ---
