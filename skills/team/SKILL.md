@@ -514,7 +514,7 @@ When the aggregate gate passes:
 
 - Artifacts in `docs/plans/<id>/` are the single durable record of
   pipeline state. Each artifact's YAML frontmatter describes its phase
-  and revision metadata.
+  and revision metadata. Write phase findings to disk before advancing.
   The file, not conversation memory, is the interface (`skills/principle-files-are-the-contract/SKILL.md`).
 - TodoWrite is the orchestrator's live coordination ledger. It is
   session-scoped and is rebuilt on entry to any `/team-*` command by
@@ -524,8 +524,6 @@ When the aggregate gate passes:
   It records every such choice as an explicit assumption in its artifact,
   so the guess stays auditable at PR review. No subagent prompts the user,
   directly or through the orchestrator.
-- File artifacts in `docs/plans/<id>/` are the durable communication
-  protocol. Always write phase findings to disk before advancing.
 - There are **no mid-run human gates**. The design is gated by an
   adversarial design review. Never present the structure or plan for
   approval. The structure and plan are autonomous tactical artifacts.

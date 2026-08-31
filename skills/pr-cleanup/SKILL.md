@@ -77,9 +77,8 @@ Refusals, before anything else runs:
   ```
 
   Then run `git check-ref-format --branch "$BRANCH"` as an additional
-  ref-syntax check. It is NOT a shell control — it accepts `$(...)`,
-  backticks, `;`, `|`, and `&&` — so only the allowlist makes a name safe
-  to place in a command.
+  ref-syntax check — a syntax check, not a shell control; only the
+  allowlist makes a name safe to place in a command.
   The general rule is `skills/principle-never-interpolate/SKILL.md`: prose
   travels by file or stdin, and only allowlisted scalars enter command text.
 
@@ -156,9 +155,9 @@ An external name is NEVER inlined as literal text into a command. Shell
 state does not persist between Bash invocations, so capture the name into
 a variable in the SAME invocation that uses it —
 `BRANCH=$(gh pr view --repo "$REPO" --json headRefName --jq .headRefName -- "$NUMBER")`
-— and reference it only as `"$BRANCH"` after the allowlist accepts it.
-Double quotes stop word-splitting and globbing; they do not stop `$(...)`
-or backticks, which is why pasting the literal value is never safe.
+— and reference it only as `"$BRANCH"` after the allowlist accepts it;
+pasting the literal value is never safe
+(`skills/principle-never-interpolate/SKILL.md`).
 
 ## Execution
 

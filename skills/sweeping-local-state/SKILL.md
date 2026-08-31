@@ -228,6 +228,5 @@ One line per thing that happened, and nothing else:
   rather than silence that reads as a clean sweep.
 - `No recorded temp paths.` when the caller recorded none.
 
-Anything left on disk is named. A sweep that skipped something and did not say
-so is indistinguishable from one that had nothing to do.
+Anything left on disk is named.
 The general rule: `skills/principle-skip-loudly/SKILL.md`.
