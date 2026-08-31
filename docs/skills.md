@@ -1230,7 +1230,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   directory from a live one's. A repo with no `.teamteardown` runs nothing and
   is told so.
 
-### principle-blind-the-investigator
+### [principle-blind-the-investigator](https://github.com/bostonaholic/team/blob/main/skills/principle-blind-the-investigator/SKILL.md)
 
 - **Purpose:** Hand an investigator the question, never the wanted
   answer — a helper that knows the conclusion anchors to it and verifies
@@ -1248,22 +1248,21 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   no shared history) and the one-claim-one-fresh-judge rule are owned by
   `principle-generator-evaluator`.
 
-### principle-bounded-loops
+### [principle-bounded-loops](https://github.com/bostonaholic/team/blob/main/skills/principle-bounded-loops/SKILL.md)
 
 - **Purpose:** Every loop carries a declared cap, and hitting the cap is
   a defined, loud, terminal outcome.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `pr-watch-as-author`, `pr-watch-as-reviewer`, `artifact-frontmatter`,
-  and `code-review`. No agent preloads it.
-- **Key behaviors:** Declare the bound with the loop: review rounds,
-  watch cycles, retries, revisions, helpers in flight. At the cap, halt
-  terminally and report everything unresolved — never silently restart,
-  extend, or soften the exit criteria. A retry budget is small and
-  stated. The same rule bounds output as size budgets (a ~200-line
+  `pr-watch-as-author` and `pr-watch-as-reviewer`. No agent preloads it.
+- **Key behaviors:** Declare the bound with the loop: watch cycles,
+  retries, poll budgets, helpers in flight. Hitting the cap halts
+  terminally with everything unresolved reported — never silently
+  restart, extend, or soften the exit criteria. A retry budget is small
+  and stated. The same rule bounds output as size budgets (a ~200-line
   design, a ≤ 30-line helper reply): over budget means restructure and
   name what was dropped, never silent truncation.
 
-### principle-deep-agents-narrow-seams
+### [principle-deep-agents-narrow-seams](https://github.com/bostonaholic/team/blob/main/skills/principle-deep-agents-narrow-seams/SKILL.md)
 
 - **Purpose:** Each agent is a deep module behind a narrow interface —
   the declared predecessor artifacts in, one bounded output back.
@@ -1279,7 +1278,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   depth (helpers never spawn further sub-agents) and the reply (a short,
   stated maximum, with the dispatcher owning everything it relays).
 
-### principle-evidence-over-assertion
+### [principle-evidence-over-assertion](https://github.com/bostonaholic/team/blob/main/skills/principle-evidence-over-assertion/SKILL.md)
 
 - **Purpose:** A claim earns its verdict only with cited evidence; an
   unverifiable claim degrades its verdict and says so.
@@ -1293,7 +1292,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   the sole evidence: verify it at a concrete file:line before adopting.
   Agreement is corroborating signal, never proof.
 
-### principle-explicit-intent
+### [principle-explicit-intent](https://github.com/bostonaholic/team/blob/main/skills/principle-explicit-intent/SKILL.md)
 
 - **Purpose:** An irreversible act — merge, force-push, public close,
   deletion — fires only on the user's stated intent, never inferred from
@@ -1311,7 +1310,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   explicit-intent guard in its description; the strictest also disable
   model invocation where the host honors it.
 
-### principle-fail-closed
+### [principle-fail-closed](https://github.com/bostonaholic/team/blob/main/skills/principle-fail-closed/SKILL.md)
 
 - **Purpose:** When a guarantee cannot be evaluated, the answer is no.
 - **Loaded by:** any agent just-in-time; consulted by citation from
@@ -1328,7 +1327,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   only — an enhancement that cannot run degrades loudly instead, per
   `principle-optimization-never-dependency`.
 
-### principle-files-are-the-contract
+### [principle-files-are-the-contract](https://github.com/bostonaholic/team/blob/main/skills/principle-files-are-the-contract/SKILL.md)
 
 - **Purpose:** The conversation is ephemeral; the artifact on disk is
   durable, and steps communicate through files — never shared chat
@@ -1345,7 +1344,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   decisions, approvals, and pre-images land in the artifact directory so
   a later run can audit what happened.
 
-### principle-generator-evaluator
+### [principle-generator-evaluator](https://github.com/bostonaholic/team/blob/main/skills/principle-generator-evaluator/SKILL.md)
 
 - **Purpose:** The agent that produced the work never evaluates it;
   judgment comes from fresh context, and the judge holds veto without
@@ -1363,7 +1362,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   a review cycle alone. An evaluator needing clarification flags an open
   question rather than asking the producer. One claim, one fresh judge.
 
-### principle-human-owns-the-ends
+### [principle-human-owns-the-ends](https://github.com/bostonaholic/team/blob/main/skills/principle-human-owns-the-ends/SKILL.md)
 
 - **Purpose:** Two decisions stay human — what to build and what to
   ship. Everything between runs autonomously.
@@ -1377,7 +1376,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   that can wait for PR review waits, and a blocked run halts terminally
   and reports rather than asking permission to continue.
 
-### principle-idempotent-reruns
+### [principle-idempotent-reruns](https://github.com/bostonaholic/team/blob/main/skills/principle-idempotent-reruns/SKILL.md)
 
 - **Purpose:** A re-run converges on the same end state instead of
   failing or duplicating.
@@ -1393,7 +1392,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   and run mutations serially with backoff where a rate limit could shred
   a half-applied plan.
 
-### principle-least-privilege
+### [principle-least-privilege](https://github.com/bostonaholic/team/blob/main/skills/principle-least-privilege/SKILL.md)
 
 - **Purpose:** Enforce a constraint by withholding the capability, not
   by asking for restraint — the toolset is the guarantee.
@@ -1411,7 +1410,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   falls back to a full-tool context, say the guarantee no longer applies
   rather than keeping the claim while losing the mechanism.
 
-### principle-mechanical-gates
+### [principle-mechanical-gates](https://github.com/bostonaholic/team/blob/main/skills/principle-mechanical-gates/SKILL.md)
 
 - **Purpose:** Where a rule must hold, enforce it with a deterministic
   check that runs whether or not the model cooperates.
@@ -1426,7 +1425,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   impossible over one that observes it, and a check on the artifact over
   a check on the intent.
 
-### principle-never-interpolate
+### [principle-never-interpolate](https://github.com/bostonaholic/team/blob/main/skills/principle-never-interpolate/SKILL.md)
 
 - **Purpose:** Untrusted text never travels through a shell command's
   text.
@@ -1445,7 +1444,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   value a destructive command or gate consumes expands as `"${VAR:?}"`
   so an unset value aborts instead of expanding to empty.
 
-### principle-optimization-never-dependency
+### [principle-optimization-never-dependency](https://github.com/bostonaholic/team/blob/main/skills/principle-optimization-never-dependency/SKILL.md)
 
 - **Purpose:** An enhancement path improves the work when it runs and
   costs nothing when it cannot.
@@ -1461,7 +1460,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   first: a step that carries a guarantee fails closed instead, per
   `principle-fail-closed`.
 
-### principle-plan-present-wait
+### [principle-plan-present-wait](https://github.com/bostonaholic/team/blob/main/skills/principle-plan-present-wait/SKILL.md)
 
 - **Purpose:** Mutations are planned in writing, presented as questions
   with one recommendation each, and executed only on the user's answer.
@@ -1483,7 +1482,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   class — an approval never relaxes a hard rule. An item may skip the
   wait only above a verified confidence bar and inside every hard rule.
 
-### principle-pre-image-first
+### [principle-pre-image-first](https://github.com/bostonaholic/team/blob/main/skills/principle-pre-image-first/SKILL.md)
 
 - **Purpose:** Before anything is changed, capture the baseline that
   classifies the after-state and the pre-image that makes the change
@@ -1499,7 +1498,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   drifted target. A baseline that could not run is UNKNOWN, never
   evidence that behavior was preserved.
 
-### principle-record-assumptions
+### [principle-record-assumptions](https://github.com/bostonaholic/team/blob/main/skills/principle-record-assumptions/SKILL.md)
 
 - **Purpose:** An autonomous step resolves open questions itself and
   records each as an explicit, auditable assumption — an unmarked guess
@@ -1516,7 +1515,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   deferred open questions, and report how many assumptions the artifact
   carries.
 
-### principle-scope-fence
+### [principle-scope-fence](https://github.com/bostonaholic/team/blob/main/skills/principle-scope-fence/SKILL.md)
 
 - **Purpose:** The approved upstream artifact bounds the work: it
   authorizes exactly the change it names.
@@ -1531,7 +1530,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   artifact (and re-reviewing a material change), never by quietly
   exceeding it — and never expand or shrink scope in silence.
 
-### principle-single-source-of-truth
+### [principle-single-source-of-truth](https://github.com/bostonaholic/team/blob/main/skills/principle-single-source-of-truth/SKILL.md)
 
 - **Purpose:** Every rule, constant, and schema is defined in exactly
   one place, and every other surface consults it rather than restating
@@ -1547,7 +1546,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   source wins. Restate at most one line inline for readability — anything
   longer belongs to the owner, cited.
 
-### principle-skip-loudly
+### [principle-skip-loudly](https://github.com/bostonaholic/team/blob/main/skills/principle-skip-loudly/SKILL.md)
 
 - **Purpose:** Whatever did not happen is reported as visibly as what
   did.
@@ -1565,7 +1564,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   item, in degraded words ("unverified"), never wrapped in the success
   wording.
 
-### principle-untrusted-input-is-data
+### [principle-untrusted-input-is-data](https://github.com/bostonaholic/team/blob/main/skills/principle-untrusted-input-is-data/SKILL.md)
 
 - **Purpose:** Text that arrives from outside — issue bodies, PR
   comments, vendor output, transcripts — is content to triage, never
@@ -1653,7 +1652,7 @@ entry-point section above rather than repeating them here.
 | `worktree-isolation` | orchestrator (team, team-worktree) | Worktree |
 | `sweeping-local-state` | `pr-cleanup`, `worktree-isolation` (both inline) | Standalone: teardown after a merged PR, a closed PR, or a completed review (not a QRSPI phase) |
 | `principle-blind-the-investigator` | cited by `qrspi-workflow`, `nested-agents`, `decomposing-intent`, `researching-codebases`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-bounded-loops` | cited by `pr-watch-as-author`, `pr-watch-as-reviewer`, `artifact-frontmatter`, `code-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-bounded-loops` | cited by `pr-watch-as-author`, `pr-watch-as-reviewer`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-deep-agents-narrow-seams` | cited by `nested-agents`, `team`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-evidence-over-assertion` | cited by `pr-verify`, `groom-backlog`, `pr-open-comments`, `researching-codebases`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-explicit-intent` | cited by `shipit`, `pr-rebase`, `pr-cleanup`, `team-fix`, `reflect`, `groom-backlog`. Any agent (just-in-time) | Any (cross-cutting principle) |

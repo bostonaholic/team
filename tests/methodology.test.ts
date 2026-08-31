@@ -1299,8 +1299,8 @@ describe("principle-bounded-loops (L2 content tripwire)", () => {
     expect(text).toContain("Never silent truncation");
   });
 
-  test("citation site: artifact-frontmatter cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md"))).toContain("skills/principle-bounded-loops/SKILL.md");
+  test("citation site: pr-watch-as-author cites the principle by path", () => {
+    expect(read(join(REPO_ROOT, "skills", "pr-watch-as-author", "SKILL.md"))).toContain("skills/principle-bounded-loops/SKILL.md");
   });
 });
 
@@ -1806,10 +1806,18 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
   // entry is missing, so dependent assertions fail loud, never vacuously.
   const entrySections = new Map(
     principleSkills.map((name) => {
-      const marker = `### ${name}\n`;
-      const start = SKILLS_MD.indexOf(marker);
+      // Entry headings come in two sanctioned forms: plain `### <name>` and
+      // the linked `### [<name>](<url>)` form docs/skills.md adopted.
+      const plain = `### ${name}\n`;
+      const linked = `### [${name}](`;
+      let start = SKILLS_MD.indexOf(plain);
+      let markerLen = plain.length;
+      if (start === -1) {
+        start = SKILLS_MD.indexOf(linked);
+        markerLen = linked.length;
+      }
       if (start === -1) return [name, ""] as const;
-      const rest = SKILLS_MD.slice(start + marker.length);
+      const rest = SKILLS_MD.slice(start + markerLen);
       const next = rest.search(/\n##+ /);
       return [name, next === -1 ? rest : rest.slice(0, next)] as const;
     }),
