@@ -24,7 +24,7 @@
     "devtools"
   ],
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.120.0",
+    "@anthropic-ai/sdk": "^0.122.0",
     "bun-types": "^1.4.0",
     "typescript": "^7.0.2"
   }
