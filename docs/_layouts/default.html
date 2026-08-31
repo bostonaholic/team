@@ -22,8 +22,8 @@
         <a class="site-title" href="{{ '/' | relative_url }}">{{ site.title | downcase }}</a>
         <nav>
           {%- comment -%} Nav is data-driven: each page declares `audience` + `nav_order`.
-          The shared group (audience: user) serves everyone; contributor-only pages
-          live in the "contributing" dropdown. Add a page → set its front matter. {%- endcomment -%}
+          The primary row (audience contains user) is the evaluate-and-adopt path; the
+          dropdown is deeper reference (developer only). Add a page → set its front matter. {%- endcomment -%}
           {%- assign shared = site.html_pages | where_exp: "p", "p.audience contains 'user'" | sort: "nav_order" -%}
           {%- for p in shared -%}
           <a href="{{ p.url | relative_url }}">{{ p.nav_label | default: p.title | downcase }}</a>

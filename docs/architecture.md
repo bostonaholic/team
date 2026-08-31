@@ -155,8 +155,8 @@ still declares no phase artifact.
 
 `docs/plans/<id>/screenshots/` (PNGs plus `manifest.md`) is written by
 ux-reviewer during IMPLEMENT for UI-touching changes and consumed by team-pr.
-User-facing setup (the one-time GitHub sign-in that enables inline upload) is
-documented in [Screenshots in PRs](screenshots-in-prs.md).
+User-facing setup (the one-time GitHub sign-in that enables inline upload)
+lives in `skills/team-pr/SKILL.md`.
 
 `docs/plans/<id>/cross-model-notes.md` is written by the orchestrator at
 the DESIGN review gate and the IMPLEMENT aggregate gate — one

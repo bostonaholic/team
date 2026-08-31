@@ -742,7 +742,8 @@ describe("skill and agent wiring (L2)", () => {
   });
 
   test("docs/skills.md documents cross-model-review", () => {
-    expect(read(SKILLS_MD)).toContain("### cross-model-review");
+    // Heading text may be bare or a source link; the entry is the contract.
+    expect(read(SKILLS_MD)).toMatch(/^### \[?cross-model-review\b/m);
   });
 });
 
