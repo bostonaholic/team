@@ -4,15 +4,15 @@
       "id": "b1",
       "category": "comment-ticket-plan-reference",
       "severity": "blocking",
-      "description": "The `// ENG-2417: slice 2 of the retry plan` comment carries an internal ticket ID plus a plan/slice marker. Per Comment Discipline this is mechanical, judgment-free, and rots — a blocking finding on first occurrence.",
-      "detection_hint": "eng.?2417"
+      "description": "The `// ENG-2417: slice 2 of the retry plan` comment carries an internal ticket ID plus a plan/slice marker. Per Comment Discipline this is mechanical, judgment-free, and rots — a blocking finding on first occurrence. The hint alternates the verbatim ticket ID with the plant's unique content words, because a conventional-comments review cites file:line and describes the violation without quoting it.",
+      "detection_hint": "eng.?2417|slice 2|retry plan|plan.?slice"
     },
     {
       "id": "b2",
       "category": "comment-restates-what",
       "severity": "style",
-      "description": "The `// multiply the base delay by two to the power of the attempt number` comment restates the adjacent line instead of explaining a non-obvious why.",
-      "detection_hint": "multiply the base delay"
+      "description": "The `// multiply the base delay by two to the power of the attempt number` comment restates the adjacent line instead of explaining a non-obvious why. The hint alternates two verbatim fragments with restate-phrasing, because a conventional-comments review cites file:line and describes the violation without quoting it.",
+      "detection_hint": "multiply the base delay|power of the attempt|restat(?:es?|ing)\\b"
     },
     {
       "id": "b3",
