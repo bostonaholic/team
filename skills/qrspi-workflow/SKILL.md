@@ -65,7 +65,7 @@ Research is the most-corruptible phase; it runs blind per
    reading `task.md`. Both hold `Read`/`Grep`/`Glob` with
    `permissionMode: plan`, so nothing mechanically stops such a read.
    Enforcement relies on the agent following its prompt. A researcher missing
-   context never pauses the run to ask.
+   context surfaces it as an open question and never pauses the run to ask.
 
 ## Gate Types
 

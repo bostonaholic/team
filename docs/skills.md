@@ -997,8 +997,10 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   and review-fix with typed failure classes. It defines the slice-execution
   loop, in which the implementer implements the steps, runs the slice's
   acceptance tests, commits atomically, and reports. It also defines TDD
-  discipline within a slice, blocker handling, and the scope fence.
-  Acceptance tests are immutable, and no slices go beyond the plan.
+  discipline within a slice, blocker handling, and the implementer's own
+  scope-fence bounds (acceptance tests are immutable, file paths are
+  real); the plan-authorizes-exactly-what-it-names rule is consulted from
+  `principle-scope-fence`.
 
 ### [systematic-debugging](https://github.com/bostonaholic/team/blob/main/skills/systematic-debugging/SKILL.md)
 

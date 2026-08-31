@@ -15,8 +15,9 @@ level further down. These rules are non-negotiable.
 Nested spawning is new (Claude Code >= 2.1.172) and may be absent or capped
 differently in the user's version. If the `Agent` tool is missing from your
 toolset, a dispatch errors, or results never arrive: **do the work yourself
-inline** with your other tools and proceed — nesting is an optimization,
-never a dependency (`skills/principle-optimization-never-dependency/SKILL.md`).
+inline** with your other tools and proceed. Never report failure solely
+because nesting was unavailable — it is an optimization, never a
+dependency (`skills/principle-optimization-never-dependency/SKILL.md`).
 
 ## Version gate — confirm before the first nested dispatch
 

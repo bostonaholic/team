@@ -38,8 +38,8 @@ this skill owns the code-review application.
 
 ## Veto Without Authorship
 
-Veto without authorship (`skills/principle-generator-evaluator/SKILL.md`):
-block the line, change nothing.
+Block the line, change nothing
+(`skills/principle-generator-evaluator/SKILL.md`).
 
 - **You hold no write tool.** Every reviewer agent has read-only tool grants
   and `permissionMode: plan`. Report the defect. Never fix it.
