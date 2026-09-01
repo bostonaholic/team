@@ -1,17 +1,16 @@
 ---
 name: pr-open-comments
 description: |
-  Fetch every unresolved review thread on a pull request, verify each
-  comment against the current code, react 👍 or 👎 to tell the reviewer
-  whether it was useful, and rate confidence in one
-  recommendation per item. An item rated above 90% confidence that passes
-  every hard rule is applied, pushed, replied to, and resolved
-  automatically; every other item lands on a globally numbered punch list
-  that presents and stops until the user picks actions. Explicit user
-  authorization applies the whole batch regardless of confidence.
-  Trigger on "address PR comments", "triage PR feedback",
-  "handle the comments", "unresolved review comments", or
-  "/pr-open-comments".
+  Triage unresolved review threads on a pull request: verify each comment
+  against the code, react 👍/👎, rate one recommendation per item. Invoke ONLY
+  on explicit triage intent — never infer it from a PR merely having new
+  comments; a Skill-tool load from a running /pr-watch-as-author is already
+  explicit. An item above 90% confidence that passes every hard rule is
+  applied, pushed, replied to, and resolved automatically; every other item
+  lands on a globally numbered punch list that presents and stops until the
+  user picks actions. Explicit user authorization applies the whole batch
+  regardless of confidence. The user says "address PR comments", "triage PR
+  feedback", "handle the comments", or runs "/pr-open-comments".
 effort: high
 argument-hint: "[<pr-number-or-url>]"
 ---

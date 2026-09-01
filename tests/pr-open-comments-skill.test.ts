@@ -54,9 +54,16 @@ describe("pr-open-comments skill: runtime standalone utility frontmatter", () =>
     expect(/^name:\s*pr-open-comments\s*$/m.test(fm())).toBe(true);
   });
 
-  test("description carries the trigger-phrase convention incl. /pr-open-comments", () => {
-    const f = flat(fm());
-    expect(/description:.*Trigger on/i.test(f)).toBe(true);
+  test("description carries the explicit-intent guard anchors incl. /pr-open-comments", () => {
+    // A remote-mutating skill states its guard instead of a plain `Trigger
+    // on` carrier. Anchor PLACEMENT is pinned in tests/skill-invocation.test.ts.
+    // Whitespace-squashed, so an anchor split across two block-scalar lines
+    // still matches — the same normalisation tests/pr-rebase-skill.test.ts uses.
+    const f = fm().replace(/\s+/g, " ");
+    // Guard: an empty frontmatter must fail, not vacuously pass.
+    expect(f.length).toBeGreaterThan(0);
+    expect(/only on explicit/i.test(f)).toBe(true);
+    expect(/never infer/i.test(f)).toBe(true);
     expect(f).toContain("/pr-open-comments");
   });
 

@@ -55,9 +55,16 @@ describe("pr-watch-as-author skill: runtime standalone utility frontmatter", () 
     expect(/^name:\s*pr-watch-as-author\s*$/m.test(fm())).toBe(true);
   });
 
-  test("description carries trigger phrases incl. \"ready for review\" and /pr-watch-as-author", () => {
-    const f = flat(fm());
-    expect(/description:.*Trigger on/i.test(f)).toBe(true);
+  test("description carries the guard anchors incl. \"ready for review\" and /pr-watch-as-author", () => {
+    // A remote-mutating skill states its guard instead of a plain `Trigger
+    // on` carrier. Anchor PLACEMENT is pinned in tests/skill-invocation.test.ts.
+    // Whitespace-squashed, so an anchor split across two block-scalar lines
+    // still matches — the same normalisation tests/pr-rebase-skill.test.ts uses.
+    const f = fm().replace(/\s+/g, " ");
+    // Guard: an empty frontmatter must fail, not vacuously pass.
+    expect(f.length).toBeGreaterThan(0);
+    expect(/only on explicit/i.test(f)).toBe(true);
+    expect(/never infer/i.test(f)).toBe(true);
     expect(/ready for review/i.test(f)).toBe(true);
     // Pin the FULL literal — a bare prefix of the name would false-pass.
     expect(f).toContain("/pr-watch-as-author");

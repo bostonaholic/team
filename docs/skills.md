@@ -1693,8 +1693,8 @@ entry-point section above rather than repeating them here.
 | `team-fix` | user or model (direct invocation, on explicit pipeline intent) | Compressed bug-fix flow (outside QRSPI) |
 | `eng-design-doc-review` | user (direct invocation). Pipeline DESIGN review gate (brief by reference) | Design review-gate brief + standalone audit. Dispatches a read-only Explore subagent |
 | `shipit` | user or model (direct invocation, on explicit ship intent) | Standalone: land a reviewed PR (not a QRSPI phase) |
-| `pr-open-comments` | user or model (direct invocation) | Standalone: triage unresolved PR review feedback (not a QRSPI phase) |
-| `pr-watch-as-author` | user or model (direct invocation) | Standalone: bounded PR review watch loop (not a QRSPI phase) |
+| `pr-open-comments` | user or model (direct invocation, on explicit triage intent) | Standalone: triage unresolved PR review feedback (not a QRSPI phase) |
+| `pr-watch-as-author` | user or model (direct invocation, on explicit watch intent) | Standalone: bounded PR review watch loop (not a QRSPI phase) |
 | `pr-watch-as-reviewer` | user (direct invocation) | Standalone: reviewer-side watch-and-approve (not a QRSPI phase) |
 | `groom-backlog` | user or model (direct invocation) | Standalone: groom a project backlog (not a QRSPI phase) |
 | `pr-cleanup` | user or model (direct invocation; Mode B only on explicit abandon intent) | Standalone: post-PR teardown (not a QRSPI phase) |

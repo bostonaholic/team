@@ -143,6 +143,9 @@ surface(s) per §1A / §1B below and set the frontmatter from the table above.
       Trigger on "<phrase>", "<phrase>", or "/<name>".
     ```
     Specific intents + example phrases = reliable triggering. Vague text = mis-routing.
+    A guarded skill (step 3) may instead LEAD with the guard, moving the summary
+    behind it, when the summary will not compress enough to fit both guard anchors
+    inside the first 200 characters of the description.
 2. **Add one line to the routing map** in your standing agent instructions — in this
     repo that's the Entry Points table in `AGENTS.md`: `- <user intent> → invoke
     /<skill>`. This is guidance the agent reads, not a code gate, so keep it in sync

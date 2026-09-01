@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`/team` no longer fires on a plain feature request.** Its description now leads with an explicit-intent guard, and the cue `"build a feature"` is gone from its trigger list — the pipeline commits, pushes, and opens a pull request without stopping, so it now starts only on stated pipeline intent. **What this asks of you:** say "hey team", "run the team pipeline", or run `/team` where you previously just described the feature.
+- **`/team-implement` no longer fires on "implement this".** That cue asks for an inline change, not a phase that pushes and opens a draft PR, so it is now explicitly refused. `/team-pr`, `/pr-open-comments`, and `/pr-watch-as-author` gained the same front-loaded guard. **What this asks of you:** say "run the implement phase", "execute the plan", or run `/team-implement` to start the phase.
+
 ## [0.74.0] - 2026-09-01
 
 ### Fixed

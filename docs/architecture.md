@@ -728,8 +728,33 @@ normally as a final `Trigger on "…", "…", or "/<name>".` sentence. A
 pushes, opens a PR, moves a ticket, merges, deploys, or deletes — MUST
 replace the plain carrier with shipit-style explicit-intent guard wording
 ("Invoke ONLY on explicit … intent — … never infer …"), still carrying
-the quoted phrases and the slash name, and should set
-`disable-model-invocation` where the host honors it. Such a skill stays
+the quoted phrases and the slash name. The guard **replaces** the plain
+carrier with no mode-scoped exception: a skill whose cues belong to one
+mode keeps them as quoted phrases inside the guard-bearing sentence
+rather than in a separate `Trigger on` sentence, so no unguarded routing
+sentence survives beside the guard.
+
+Both halves of the guard are recognised by a **closed set of anchors**,
+matched case-insensitively. The positive anchor is `invoke only on
+explicit` or `only on explicit`; the negative anchor is `never infer`.
+Each must **end at or before character 200** of the description. The
+count is taken on the `description:` block-scalar lines, each trimmed and
+joined with a single space — what a host reads after YAML folding, so it
+is the only offset that means anything. 200 is a stated estimate of where
+a Codex-style description truncation lands, not a measured budget: one
+real truncation cut a tail guard off `pr-approve-watch` (`CHANGELOG.md`,
+0.31.0, Security). Revisit the number when a truncation is observed
+against a **front-loaded** guard, never merely because a description
+grew.
+
+Three controls exist and they compose. The guard wording is the one that
+reaches every host, so it is never optional. `disable-model-invocation`
+is a hard opt-out and should be set where the host honors it — Codex
+ignores it outright. An **in-run, per-mutation approval gate** in the
+skill body is the third: a skill that gates every mutation as it happens
+guards there rather than at the entry
+(`skills/principle-explicit-intent/SKILL.md`, "Guard the entry").
+Such a skill stays
 listed as a command, but its routing-map line in `AGENTS.md` states the
 explicit intent, so the map never invites it on a plain request. A deterministic test
 in `tests/architecture.test.ts` enforces the phrase invariant with no
