@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.64.0] - 2026-08-31
+
 ### Added
 
 - **21 `principle-*` skills give every rule the pipeline runs on exactly one home.** Disciplines like "fail closed", "bound every loop", and "never interpolate untrusted text into a shell command" were restated in every skill that obeyed them, and restated copies drift. Each invariant now lives in one short methodology skill — [`principle-fail-closed`](https://github.com/bostonaholic/team/blob/main/skills/principle-fail-closed/SKILL.md), [`principle-bounded-loops`](https://github.com/bostonaholic/team/blob/main/skills/principle-bounded-loops/SKILL.md), [`principle-never-interpolate`](https://github.com/bostonaholic/team/blob/main/skills/principle-never-interpolate/SKILL.md), and 18 siblings covering evidence over assertion, explicit intent, untrusted input as data, plan-present-wait, pre-images before destructive writes, idempotent re-runs, scope fencing, generator-evaluator separation, and more — that states the rule, why it holds, and the pattern that applies it. The skills that enforce a rule now cite its principle skill instead of re-explaining it, and any agent can load one just-in-time when the situation calls for it. None registers as a slash command: they are reference building blocks (`user-invocable: false`), pinned by L2 tripwires in [`tests/methodology.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/methodology.test.ts). **What this asks of you:** nothing — the catalog grows from 57 to 78 skills, and the behavior the principles describe is the behavior the pipeline already had.
@@ -636,7 +638,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.63.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.64.0...HEAD
+[0.64.0]: https://github.com/bostonaholic/team/compare/v0.63.0...v0.64.0
 [0.63.0]: https://github.com/bostonaholic/team/compare/v0.62.0...v0.63.0
 [0.62.0]: https://github.com/bostonaholic/team/compare/v0.61.0...v0.62.0
 [0.61.0]: https://github.com/bostonaholic/team/compare/v0.60.0...v0.61.0
