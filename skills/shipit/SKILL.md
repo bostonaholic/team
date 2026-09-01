@@ -39,6 +39,10 @@ frontmatter flag, and neither of them a question put to the user mid-run:
 2. **CI green** (step 3), which gates the merge mechanically — a red or timed
    out check stops the land before `gh pr merge` ever runs.
 
+The first guard is `skills/principle-explicit-intent/SKILL.md` applied to
+the merge: an irreversible act fires on stated intent, never on state, and
+granted authorization is spent, not re-asked.
+
 **Do not ask the user to confirm the merge.** Ship intent already carried the
 authorization to merge, so a confirmation re-requests permission the invocation
 granted, and every caller that chains into `/shipit` inherits the stop. Once

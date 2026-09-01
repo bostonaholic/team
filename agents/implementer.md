@@ -40,13 +40,13 @@ blocker handling, and the scope fence.
   "When Implementing" checkpoints and quality checklist before each slice
   is done.
 - Apply SOLID principles when writing new code. Call the Skill tool with
-  `solid-principles` for the full
+  `principle-solid` for the full
   methodology.
 - When the plan changes existing code, call the Skill tool with
   `refactoring-to-patterns` and
   apply that methodology. Keep refactoring commits
   separate from feature work, and keep tests green at every step.
-- Call the Skill tool with `systems-thinking` and follow its
+- Call the Skill tool with `principle-systems-thinking` and follow its
   `## When Implementing` section: search for an existing implementation
   first. Update every affected caller.
 

@@ -11,6 +11,7 @@ artifact under `docs/plans/<id>/`, its YAML frontmatter, and the
 design-review record mechanics that gate the DESIGN transition. Phase
 discipline — what each phase does and when it advances — lives in
 `skills/qrspi-workflow/SKILL.md`. This skill owns the schema.
+The schema exists because files are the contract between phases (`skills/principle-files-are-the-contract/SKILL.md`).
 
 ## Artifact inventory
 
@@ -25,6 +26,7 @@ The executable definitions of the `<id>` pattern (`ID_RE`) and the
 phase-file list (`PHASE_FILES`) live in `hooks/session-start-recover.mjs`
 — that hook is the canon. Reference it rather than forking the pattern
 here.
+One definition, one owner, every other surface consults it (`skills/principle-single-source-of-truth/SKILL.md`).
 
 | Artifact  | Path                              | Created By              | Required? |
 |-----------|-----------------------------------|-------------------------|-----------|

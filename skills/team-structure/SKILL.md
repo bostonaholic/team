@@ -100,6 +100,7 @@ done
    no review artifact exists, or the latest verdict is REQUEST CHANGES,
    **refuse**: report that the design has not passed review and suggest
    `/team-design $ARGUMENTS` — never slice an unreviewed design.
+   No recorded verdict counts as not passed (`skills/principle-fail-closed/SKILL.md`).
 2. Dispatch `structure-planner`, which writes `$ARGUMENTS/structure.md`
    with vertical slices. The artifact carries plain frontmatter
    (`topic`, `date`, `phase: structure`) — no approval fields, because

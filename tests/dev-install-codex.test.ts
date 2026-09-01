@@ -116,7 +116,7 @@ describe("dev install: codex harness", () => {
   });
 
   // Stacking the dev symlink on a native plugin install makes Codex find the
-  // same 54 skills under two roots and render every one twice — a doubled
+  // same 78 skills under two roots and render every one twice — a doubled
   // catalog, worse truncation, and an ambiguous source. The guard reads the
   // STATUS column, so a registered-but-uninstalled marketplace row is fine.
   test("install aborts when a Codex plugin install is already present", () => {

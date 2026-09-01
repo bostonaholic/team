@@ -8,7 +8,7 @@ tools: Read, Write, Edit, Grep, Glob, TodoWrite
 permissionMode: acceptEdits
 skills:
   - progress-tracking
-  - systems-thinking
+  - principle-systems-thinking
   - planning-implementation
 ---
 
@@ -51,7 +51,7 @@ it.
 for the design-first workflow and quality checklist. Reference the
 checklist as verification criteria for steps.
 
-**Apply the systems-thinking lens** per `skills/systems-thinking/SKILL.md`
+**Apply the systems-thinking lens** per `skills/principle-systems-thinking/SKILL.md`
 (preloaded), `## When Planning`: enumerate every call site of a changed
 contract as explicit steps, and include co-changing doc and config surfaces
 in the slice.

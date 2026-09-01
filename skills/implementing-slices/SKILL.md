@@ -114,10 +114,10 @@ incorrect):
 
 ## Scope fence
 
+Apply `skills/principle-scope-fence/SKILL.md` — the plan authorizes exactly
+the change it names. The implementer's own bounds:
+
 - **Do NOT change acceptance tests.** They are immutable. If a test seems
   wrong, document your concern but implement to make it pass as written.
-- **Do NOT add slices beyond the plan.** If you see a missing slice, document
-  it but do not implement it.
-- **Do NOT refactor existing code** unless the plan explicitly calls for it.
 - **Reference real file paths from the plan.** Do not invent new files or
   directories that the plan does not specify.

@@ -6,9 +6,7 @@ description: Generator-evaluator separation and review methodology — loaded by
 # Code Review
 
 Reviews must be performed by agents with fresh context. The generator (the
-agent that wrote the code) must never evaluate its own output. This separation
-prevents self-evaluation bias — the tendency to see what you intended to write
-rather than what you actually wrote.
+agent that wrote the code) must never evaluate its own output.
 
 Write the prose this skill governs at a seventh-grade reading level, in
 STE-flavored mode. Full methodology: `writing-prose`. Call the Skill tool
@@ -28,8 +26,6 @@ applies.
 
 ## Generator-Evaluator Separation
 
-The cardinal rule: **Do not let the same model grade its own exam.**
-
 - Reviewers MUST have fresh context with no shared conversation history.
 - Reviewers read the diff and the plan — not the implementation discussion.
 - Reviewers form their own understanding of intent from artifacts, not from
@@ -37,15 +33,18 @@ The cardinal rule: **Do not let the same model grade its own exam.**
 - A reviewer needing clarification flags it as an open question. It never asks
   the implementer.
 
+The cross-gate canon lives at `skills/principle-generator-evaluator/SKILL.md`;
+this skill owns the code-review application.
+
 ## Veto Without Authorship
 
-The separation runs both directions. A reviewer blocks the line and changes
-nothing. A producer changes the tree and casts no verdict.
+Block the line, change nothing
+(`skills/principle-generator-evaluator/SKILL.md`).
 
 - **You hold no write tool.** Every reviewer agent has read-only tool grants
-  and `permissionMode: plan`. Report the defect. Never fix it. A reviewer that
-  fixed its own finding would then approve its own fix, collapsing generator
-  and evaluator into one role.
+  and `permissionMode: plan`. Report the defect. Never fix it.
+  The constraint is the withheld tool, not a request for restraint
+  (`skills/principle-least-privilege/SKILL.md`).
 - **The veto holds until the finding is resolved.** Your verdict blocks the
   line for as many rounds as it takes, and a check that can never be satisfied
   grinds until a person stops the run. Report the finding you actually have —
@@ -117,9 +116,8 @@ that pass did not run.>
   `### Findings` reads "No findings." when there are none. The last two
   sections record the two optional passes, the skeptic pass and then the
   cross-model pass, and a pass that did not run says `Not run: <reason>.`
-  in its section. This is where "skip loudly" lands in the report. A
-  reader of a report that dropped the section cannot tell a pass that ran
-  and found nothing from one that never ran at all.
+  in its section. This is where "skip loudly" lands in the report.
+  What did not happen is reported as visibly as what did (`skills/principle-skip-loudly/SKILL.md`).
 
 ## Gate Types and Severity Tiers
 
@@ -261,7 +259,7 @@ no order implied:
   outside the diff need updating? Does the change follow conventions
   established elsewhere (cite the convention)? Findings cite the
   `System Fit` checklist item.
-- **SOLID violations** — per `skills/solid-principles/SKILL.md`.
+- **SOLID violations** — per `skills/principle-solid/SKILL.md`.
 - **Test files** — per both severity regimes above and
   `skills/test-style/SKILL.md`.
 

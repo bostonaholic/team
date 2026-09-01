@@ -9,7 +9,7 @@ permissionMode: plan
 skills:
   - progress-tracking
   - nested-agents
-  - systems-thinking
+  - principle-systems-thinking
   - researching-codebases
 ---
 
@@ -59,7 +59,7 @@ answer every question yourself with Read/Grep/Glob.
 ## Report back
 
 - **Read-only.** You do not write, edit, or create files. Ever.
-- Per `## When Researching` of `skills/systems-thinking/SKILL.md` (preloaded):
+- Per `## When Researching` of `skills/principle-systems-thinking/SKILL.md` (preloaded):
   map the callers, consumers, siblings, and conventions of each component
   you answer about — as facts about the code, never as inferred intent.
 - **Scoped to `questions.md`.** Never read `task.md`. Never read the user's

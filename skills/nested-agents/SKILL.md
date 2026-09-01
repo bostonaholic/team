@@ -15,8 +15,9 @@ level further down. These rules are non-negotiable.
 Nested spawning is new (Claude Code >= 2.1.172) and may be absent or capped
 differently in the user's version. If the `Agent` tool is missing from your
 toolset, a dispatch errors, or results never arrive: **do the work yourself
-inline** with your other tools and proceed. Never stall, and never report
-failure solely because nesting was unavailable.
+inline** with your other tools and proceed. Never report failure solely
+because nesting was unavailable — it is an optimization, never a
+dependency (`skills/principle-optimization-never-dependency/SKILL.md`).
 
 ## Version gate — confirm before the first nested dispatch
 
@@ -42,6 +43,7 @@ run the check all count as `unsupported`. On any non-zero result — i.e.
 whenever the version is less than 2.1.172 or undeterminable —
 **do not spawn helpers. Do the work yourself inline.** Run the gate once. A
 `supported` result holds for the rest of your turn.
+Unknown counts as unsupported (`skills/principle-fail-closed/SKILL.md`).
 
 ## When to spawn vs. do it yourself (context economy)
 
@@ -62,6 +64,8 @@ under `docs/plans/` — artifacts are written only by you or the orchestrator.
 
 You are at depth 2 of 5. Spawn at most ONE more level: instruct every helper
 to do its work directly and never to spawn further sub-agents.
+Depth stays shallow because seams stay narrow
+(`skills/principle-deep-agents-narrow-seams/SKILL.md`).
 
 ## Nested helpers are non-interactive
 
@@ -70,13 +74,15 @@ the user, and a helper that waits for an answer stalls forever. Never
 delegate question-asking downward. If a helper surfaces an ambiguity,
 absorb it and record it in YOUR own artifact's open-questions section
 (or resolve it yourself and record the assumption).
+Resolved and recorded, never asked upward (`skills/principle-record-assumptions/SKILL.md`).
 
 ## Verification helpers get neutral claims
 
-When you use a helper to check your own finding, state the claim as a
-neutral, falsifiable sentence with its `file:line`. Never give your verdict,
-severity, or reasoning. Ask the helper to refute it with evidence. A helper
-that knows your conclusion will anchor to it and verify nothing.
+When a helper checks your own finding, apply
+`skills/principle-blind-the-investigator/SKILL.md`: a neutral, falsifiable
+claim with `file:line` — never your verdict, severity, or reasoning — and
+ask the helper to refute it. The scouts' isolation-extends-downward rule
+below is the same principle.
 
 ## Caps and ownership
 
@@ -97,12 +103,9 @@ the same in-flight caps and carries the same reply bound. Without
 `SendMessage`, spawn fresh scouts as before — the follow-up path is an
 optimization, never a dependency.
 
-**Skeptics are the exception — one skeptic per claim, always fresh.**
-Fresh context is the skeptic's mechanism, not an implementation detail: a
-skeptic that has judged your earlier claims accumulates a model of your
-review and anchors to it, which is exactly what the neutral-claim rule
-exists to prevent. Never send a second claim to a live skeptic, even where
-a follow-up would be cheaper.
+**Skeptics are the exception — one skeptic per claim, always fresh**
+(`skills/principle-generator-evaluator/SKILL.md`). Never send a second
+claim to a live skeptic, even where a follow-up would be cheaper.
 
 ## Per-agent caps
 
@@ -182,7 +185,7 @@ sub-agent through the `Agent` tool and try to get it refuted.
   written rule genuinely conflict, that is a finding for the report, not a
   refutation to act on alone.
 
-  This cuts against the system-fit lens in `skills/systems-thinking/SKILL.md`,
+  This cuts against the system-fit lens in `skills/principle-systems-thinking/SKILL.md`,
   which asks whether a change follows the conventions established elsewhere.
   Both hold, in this order: follow convention where no rule speaks, and follow
   the rule where one does.

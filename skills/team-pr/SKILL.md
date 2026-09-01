@@ -382,7 +382,9 @@ the same URLs — never re-upload per repo.
 
 **Failure posture:** every branch ends with an open PR, a visible note, and
 local paths. Upload problems never block the PR, retry-loop, or prompt the
-user.
+user — the upload is an enhancement per
+`skills/principle-optimization-never-dependency/SKILL.md`, and its absence
+costs nothing but the note.
 
 ## Changelog Update
 

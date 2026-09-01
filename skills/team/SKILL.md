@@ -74,6 +74,7 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
    **Never re-dispatch a phase whose artifact already exists** — re-running
    QUESTION over an existing `task.md`, for example, would overwrite
    in-progress work (data loss).
+   Resume is an idempotent re-run: already-done is done, never an error (`skills/principle-idempotent-reruns/SKILL.md`).
 
 You hold the description in your own context. Downstream of QUESTION the
 description must NEVER appear in any artifact or agent payload outside
@@ -178,6 +179,8 @@ you.** If a result arrives truncated, or as a notification stub with the body
 held elsewhere, re-dispatch rather than working from the preview. A summary of
 a research report is not a research report, and DESIGN downstream cannot tell
 the difference until it is already reasoning from a gap.
+Each dispatch is a narrow seam — declared inputs in, one bounded output back,
+complexity inside the agent (`skills/principle-deep-agents-narrow-seams/SKILL.md`).
 
 ## Gate Handling
 
@@ -317,7 +320,9 @@ When the `design-author` returns a draft:
    reviewer returns REQUEST CHANGES.
 8. On an **unparseable verdict or a reviewer crash** → re-dispatch the
    review once with the error. On second failure, halt loudly. Never
-   advance on a missing verdict — fail closed. The halt message names the
+   advance on a missing verdict — fail closed. A missing verdict counts as
+   not passed (`skills/principle-fail-closed/SKILL.md`). The halt message
+   names the
    absolute worktree-rooted `docs/plans/<id>/` path, so the operator can
    open `design.md` and the `design-review-<n>.md` records directly. After
    an operator stop, a context-exhausted session, or this fail-closed
@@ -509,7 +514,8 @@ When the aggregate gate passes:
 
 - Artifacts in `docs/plans/<id>/` are the single durable record of
   pipeline state. Each artifact's YAML frontmatter describes its phase
-  and revision metadata.
+  and revision metadata. Write phase findings to disk before advancing.
+  The file, not conversation memory, is the interface (`skills/principle-files-are-the-contract/SKILL.md`).
 - TodoWrite is the orchestrator's live coordination ledger. It is
   session-scoped and is rebuilt on entry to any `/team-*` command by
   scanning artifacts.
@@ -518,8 +524,6 @@ When the aggregate gate passes:
   It records every such choice as an explicit assumption in its artifact,
   so the guess stays auditable at PR review. No subagent prompts the user,
   directly or through the orchestrator.
-- File artifacts in `docs/plans/<id>/` are the durable communication
-  protocol. Always write phase findings to disk before advancing.
 - There are **no mid-run human gates**. The design is gated by an
   adversarial design review. Never present the structure or plan for
   approval. The structure and plan are autonomous tactical artifacts.

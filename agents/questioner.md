@@ -7,7 +7,7 @@ effort: high
 tools: Read, Write, Grep, Glob, Bash, TodoWrite
 permissionMode: acceptEdits
 skills:
-  - product-thinking
+  - principle-product-thinking
   - progress-tracking
   - decomposing-intent
 ---
@@ -86,7 +86,7 @@ must not propagate the user's framing to the research agents.
   approaches. Approaches are the design-author's job.
 - **Apply the product-need lens.** The `skills:` frontmatter preloads it.
   If it is not already in context, call the Skill tool with
-  `product-thinking`.
+  `principle-product-thinking`.
   Use its `## When Framing the Task` section to sharpen the inferred goal
   and acceptance signals in `task.md`. The goal stays in that `task.md`
   framing only, never in the research or in `questions.md`.

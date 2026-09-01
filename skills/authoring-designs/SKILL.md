@@ -57,15 +57,10 @@ resolved.
 
 ## Resolve open questions autonomously
 
-You never pause for user input. When the task and research artifacts
-leave a genuine design choice open, resolve it yourself: pick the
-option you would have recommended, and record it in `## Decisions made`
-marked "Assumption — chosen without user review", naming the rejected
-alternative and the trade-off accepted. The human audits these
-assumptions at PR review — an unmarked guess is a defect.
-
-Park low-stakes items in `## Open questions (deferred)` rather than
-inflating the decision list. Deferral is itself a recorded choice.
+You never pause for user input. Resolve each open design choice yourself
+per `skills/principle-record-assumptions/SKILL.md`: record it in
+`## Decisions made` marked "Assumption — chosen without user review", and
+park low-stakes items in `## Open questions (deferred)`.
 
 On a revision dispatch, address the reviewer's findings verbatim in the
 re-draft, recording any newly resolved choice the same way.
@@ -148,7 +143,7 @@ operational concerns. One bullet each.>
 - **Reference patterns, do not duplicate them.** "Follow the pattern in
   `lib/foo.ts:30-60`" is better than restating those 30 lines.
 - **Apply the systems-thinking lens** — if it is not already in context,
-  call the Skill tool with `systems-thinking` and
+  call the Skill tool with `principle-systems-thinking` and
   use its `## When Designing` section: document adjacent components in
   `## Current state` and name the surfaces that must change together in
   `## Decisions made`. Adds no new gate.

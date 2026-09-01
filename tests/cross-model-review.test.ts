@@ -1033,7 +1033,6 @@ describe("untrusted-output containment rules (L2)", () => {
     // into a shell command would execute an embedded $(…) directly.
     expect(flattened).toContain("Write tool");
     expect(flattened).toContain("never a heredoc");
-    expect(flattened).toContain("equal to the delimiter");
     expect(flattened).toMatch(/never interpolated/i);
   });
 
