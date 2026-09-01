@@ -125,6 +125,14 @@ timeout 1800 gh pr checks <pr-number> --watch --fail-fast --interval 30
 status=$?
 ```
 
+**Run it with `run_in_background: true`.** The 1800s cap only applies to a
+backgrounded call: in the foreground the harness kills the watch at its own
+ceiling (600 s in Claude Code) with exit 143, so on any repo whose CI runs
+longer than ten minutes the stated 30-minute cap never applies and the watch
+is lost rather than timed out. Backgrounded, the harness reports the call when
+it exits and `status` is the real verdict. See
+`skills/principle-non-blocking-waits/SKILL.md`.
+
 `--fail-fast` returns non-zero the moment any check fails. `timeout` kills the
 watch and returns **124** when the 30-min cap is hit. Map the exit code to one
 of three outcomes:

@@ -92,8 +92,14 @@ describe("pr-watch-as-author skill: arm sequence — loud undraft + best-effort 
 });
 
 describe("pr-watch-as-author skill: bounded cycle mechanics", () => {
-  test("sleeps in bounded chunks: the literal sleep 600 appears", () => {
-    expect(body()).toContain("sleep 600");
+  test("the cycle wait is one backgrounded sleep-then-poll call, not foreground chunks", () => {
+    // A foreground wait dies at the harness ceiling (600s in Claude Code) and
+    // costs a turn per fragment. The cycle must emit one backgrounded call.
+    const t = body();
+    expect(t).toContain("sleep 1860");
+    expect(t).toContain("run_in_background: true");
+    expect(t).toContain("principle-non-blocking-waits");
+    expect(t).not.toContain("sleep 600");
   });
   test("polls PR state and reviewDecision alongside the trimmed reviewThreads query", () => {
     const t = body();
