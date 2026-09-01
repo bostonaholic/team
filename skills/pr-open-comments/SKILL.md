@@ -18,7 +18,7 @@ argument-hint: "[<pr-number-or-url>]"
 
 # pr-open-comments — fetch, verify, recommend
 
-> Follow `skills/progress-tracking/SKILL.md`: this procedure has more than two steps —
+> Follow `skills/principle-progress-tracking/SKILL.md`: this procedure has more than two steps —
 > seed one todo item per step below before starting and mark each complete as you go.
 
 Pull every **unresolved** review thread on a pull request. Hand the user a

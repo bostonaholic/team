@@ -24,13 +24,13 @@ describe("loadedSkills — the load form", () => {
 
   test("extracts every name in a list form", () => {
     const text =
-      "Call the Skill tool with `engineering-standards`, `principle-solid`, " +
-      "`test-style`, and `principle-systems-thinking`. None of the four is preloaded.";
+      "Call the Skill tool with `engineering-standards`, `solid`, " +
+      "`test-style`, and `systems-thinking`. None of the four is preloaded.";
     expect(loadedSkills(text)).toEqual([
       "engineering-standards",
-      "principle-solid",
+      "solid",
       "test-style",
-      "principle-systems-thinking",
+      "systems-thinking",
     ]);
   });
 

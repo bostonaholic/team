@@ -41,8 +41,8 @@ catalog into two flavors:
   [Methodology skills](#methodology-skills)). Agents load them through one
   of two mechanisms: a `skills:`
   YAML list in the agent's frontmatter (e.g., `agents/design-author.md`
-  declares `skills: [principle-product-thinking,
-  progress-tracking, authoring-designs, writing-prose]`), or an inline
+  declares `skills: [product-thinking,
+  principle-progress-tracking, authoring-designs, writing-prose]`), or an inline
   prose load
   instruction in the agent body (e.g., `Load skills/<name>/SKILL.md for
   …`).
@@ -973,7 +973,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Key behaviors:** Write a failing test that reproduces the bug, then make
   it green. No fix lands without a reproducing test.
 
-### [principle-solid](https://github.com/bostonaholic/team/blob/main/skills/principle-solid/SKILL.md)
+### [solid](https://github.com/bostonaholic/team/blob/main/skills/solid/SKILL.md)
 
 - **Purpose:** The five object-oriented design principles.
 - **Loaded by:** implementer, code-reviewer (2). Cited by
@@ -1027,12 +1027,19 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   skill is deliberately self-contained. The verifier runs on haiku, so the
   skill carries everything inline with no cross-references.
 
-### [progress-tracking](https://github.com/bostonaholic/team/blob/main/skills/progress-tracking/SKILL.md)
+### [principle-progress-tracking](https://github.com/bostonaholic/team/blob/main/skills/principle-progress-tracking/SKILL.md)
 
 - **Purpose:** Todo-first progress convention for multi-step procedures.
 - **Loaded by:** every multi-step agent (questioner, design-author,
   structure-planner, planner, test-architect, implementer, code-reviewer,
-  security-reviewer, ux-reviewer, technical-writer, researcher, verifier).
+  security-reviewer, ux-reviewer, technical-writer, researcher, verifier);
+  consulted by citation from `team`, `team-question`, `team-research`,
+  `team-design`, `team-structure`, `team-plan`, `team-worktree`,
+  `team-implement`, `team-pr`, `team-fix`, `eng-design-doc-review`,
+  `shipit`, `groom-backlog`, `pr-cleanup`, `pr-open-comments`,
+  `pr-rebase`, `pr-verify`, `pr-watch-as-author`, `pr-watch-as-reviewer`,
+  `reflect`, `systematic-debugging`, `test-driven-bug-fix`, and
+  `test-first-development`.
 - **Key behaviors:** A convention, not a gate: it produces no artifact and
   blocks nothing. When a procedure has two or more steps, seed one todo
   item per step before starting and mark each complete as you go. A
@@ -1099,7 +1106,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   `docs/plans/<id>/prd.md`, referenced from `task.md`. Points PRD authors
   at the seventh-grade prose bar in `writing-prose`.
 
-### [principle-product-thinking](https://github.com/bostonaholic/team/blob/main/skills/principle-product-thinking/SKILL.md)
+### [product-thinking](https://github.com/bostonaholic/team/blob/main/skills/product-thinking/SKILL.md)
 
 - **Purpose:** Product-need reasoning lens for "make something people
   want", which sharpens framing, design, and slicing so the work serves real
@@ -1110,7 +1117,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   thing people want, named user, talk-to-users mindset) shape the
   pre-implementation phases.
 
-### [principle-systems-thinking](https://github.com/bostonaholic/team/blob/main/skills/principle-systems-thinking/SKILL.md)
+### [systems-thinking](https://github.com/bostonaholic/team/blob/main/skills/systems-thinking/SKILL.md)
 
 - **Purpose:** System-fit reasoning lens that weighs a change's blast radius
   (callers, consumers, sibling implementations, conventions) rather than
@@ -1648,19 +1655,19 @@ entry-point section above rather than repeating them here.
 | `test-first-development` | test-architect, code-reviewer. Orchestrator | Implement |
 | `test-style` | test-architect, code-reviewer (just-in-time through pointers) | Implement |
 | `test-driven-bug-fix` | team-fix | Bug-fix flow |
-| `principle-solid` | implementer, code-reviewer. `engineering-standards`, `code-review` (citing skills) | Implement |
+| `solid` | implementer, code-reviewer. `engineering-standards`, `code-review` (citing skills) | Implement |
 | `refactoring-to-patterns` | implementer | Implement |
 | `implementing-slices` | implementer | Implement |
 | `running-quality-checks` | verifier. reflect (after the writes) | Implement (verify), and Any (reflect) |
 | `verifying-ux` | ux-reviewer | Implement (verify) |
 | `systematic-debugging` | implementer (inline Load on non-obvious failures). Other agents when debugging (advisory) | Implement, and Any (debugging) |
-| `progress-tracking` | every multi-step agent (convention) | Any (multi-step procedure) |
+| `principle-progress-tracking` | every multi-step agent; cited by `team`, `team-question`, `team-research`, `team-design`, `team-structure`, `team-plan`, `team-worktree`, `team-implement`, `team-pr`, `team-fix`, `eng-design-doc-review`, `shipit`, `groom-backlog`, `pr-cleanup`, `pr-open-comments`, `pr-rebase`, `pr-verify`, `pr-watch-as-author`, `pr-watch-as-reviewer`, `reflect`, `systematic-debugging`, `test-driven-bug-fix`, `test-first-development` | Any (multi-step procedure) |
 | `nested-agents` | researcher, implementer, code-reviewer, security-reviewer | Research, Implement (scouts + skeptic passes) |
 | `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
 | `technical-design-doc` | planner | Plan |
 | `product-requirements-doc` | questioner (through `decomposing-intent`, conditional). Design-author (through `authoring-designs`) | Question, Design |
-| `principle-product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
-| `principle-systems-thinking` | researcher, structure-planner, planner (frontmatter). Implementer, code-reviewer, ux-reviewer (inline). Authoring-designs, nested-agents (citing skills) | Research, Design, Structure, Plan, Implement (incl. verify) |
+| `product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
+| `systems-thinking` | researcher, structure-planner, planner (frontmatter). Implementer, code-reviewer, ux-reviewer (inline). Authoring-designs, nested-agents (citing skills) | Research, Design, Structure, Plan, Implement (incl. verify) |
 | `writing-prose` | technical-writer, design-author | Design (authoring bar), and Implement (verify): bar for prose it writes and prose it assesses |
 | `reviewing-documentation` | technical-writer | Implement (verify): doc-gap review process + classification |
 | `git-commit` | team-pr. Implementer (through `implementing-slices`) | PR, and Implement (slice commits) |

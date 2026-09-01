@@ -19,7 +19,7 @@ disable-model-invocation: true
 
 # reflect — turn a finished session into durable learnings
 
-> Follow `skills/progress-tracking/SKILL.md`: this procedure has more than two steps —
+> Follow `skills/principle-progress-tracking/SKILL.md`: this procedure has more than two steps —
 > seed one todo item per step below before starting and mark each complete as you go.
 
 A long session teaches things that die with it: the guidance that was missing,

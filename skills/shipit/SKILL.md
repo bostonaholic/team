@@ -16,7 +16,7 @@ argument-hint: "[<pr-number>]"
 
 # shipit — land a reviewed PR
 
-> Follow `skills/progress-tracking/SKILL.md`: this procedure has more than two steps —
+> Follow `skills/principle-progress-tracking/SKILL.md`: this procedure has more than two steps —
 > seed one todo item per step below before starting and mark each complete as you go.
 
 `shipit` lands a pull request that already passed review. It pushes any unpushed

@@ -16,7 +16,7 @@ argument-hint: "[<pr-number-or-url>]"
 
 # pr-watch-as-author — bounded PR review watch loop
 
-> Follow `skills/progress-tracking/SKILL.md`: this procedure has more than two steps —
+> Follow `skills/principle-progress-tracking/SKILL.md`: this procedure has more than two steps —
 > seed one todo item per step below before starting and mark each complete as you go.
 
 `pr-watch-as-author` closes the gap between "PR open" and "ship it". It promotes the

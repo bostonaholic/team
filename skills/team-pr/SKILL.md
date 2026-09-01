@@ -76,7 +76,7 @@ done
 
 ## Execution
 
-> Follow `skills/progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
+> Follow `skills/principle-progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
 
 1. **Detect mode and inventory worktrees with commits.**
    - Read `$ARGUMENTS/repos.md` if present. When present, you are in

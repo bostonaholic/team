@@ -157,20 +157,20 @@ describe("engineering-standards methodology", () => {
     }
   });
 
-  test("skill defers to principle-solid for LSP/SRP", () => {
-    expect(read(SKILL_FILE)).toContain("principle-solid/SKILL.md");
+  test("skill defers to solid for LSP/SRP", () => {
+    expect(read(SKILL_FILE)).toContain("solid/SKILL.md");
   });
 
-  test("implementer.md still loads principle-solid", () => {
-    expect(loadsSkill(read(IMPLEMENTER), "principle-solid")).toBe(true);
+  test("implementer.md still loads solid", () => {
+    expect(loadsSkill(read(IMPLEMENTER), "solid")).toBe(true);
   });
 
   test("implementer.md still loads refactoring-to-patterns", () => {
     expect(loadsSkill(read(IMPLEMENTER), "refactoring-to-patterns")).toBe(true);
   });
 
-  test("code-reviewer.md still loads principle-solid", () => {
-    expect(loadsSkill(read(CODE_REVIEWER), "principle-solid")).toBe(true);
+  test("code-reviewer.md still loads solid", () => {
+    expect(loadsSkill(read(CODE_REVIEWER), "solid")).toBe(true);
   });
 
   test("code-reviewer.md still references code-review/SKILL.md", () => {
@@ -189,8 +189,8 @@ describe("engineering-standards methodology", () => {
   // The working-tree `git diff` cleanliness check is a CI-hygiene concern, not
   // a property of the code under test, so it is intentionally not covered here.
 
-  test("skills.md methodology table includes principle-solid row", () => {
-    const row = filterRows(read(SKILLS_MD), "principle-solid", /^#|^>|\/\/|event/);
+  test("skills.md methodology table includes solid row", () => {
+    const row = filterRows(read(SKILLS_MD), "solid", /^#|^>|\/\/|event/);
     expect(row.length).toBeGreaterThan(0);
   });
 
@@ -200,8 +200,8 @@ describe("engineering-standards methodology", () => {
   });
 });
 
-describe("principle-product-thinking methodology", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "principle-product-thinking", "SKILL.md");
+describe("product-thinking methodology", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "product-thinking", "SKILL.md");
   const QUESTIONER = join(REPO_ROOT, "agents", "questioner.md");
   const DESIGN_AUTHOR = join(REPO_ROOT, "agents", "design-author.md");
   const STRUCTURE_PLANNER = join(REPO_ROOT, "agents", "structure-planner.md");
@@ -211,9 +211,9 @@ describe("principle-product-thinking methodology", () => {
     expect(read(SKILL_FILE).split("\n")[0]).toBe("---");
   });
 
-  test("frontmatter declares name: principle-product-thinking", () => {
+  test("frontmatter declares name: product-thinking", () => {
     const head10 = read(SKILL_FILE).split("\n").slice(0, 10).join("\n");
-    expect(/^name: principle-product-thinking$/m.test(head10)).toBe(true);
+    expect(/^name: product-thinking$/m.test(head10)).toBe(true);
   });
 
   test("description names all three loaders (questioner, design-author, structure-planner)", () => {
@@ -377,16 +377,16 @@ describe("principle-product-thinking methodology", () => {
 // heading, and the heading must resolve in the skill itself.
 // ---------------------------------------------------------------------------
 
-describe("principle-systems-thinking lens (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "principle-systems-thinking", "SKILL.md");
+describe("systems-thinking lens (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "systems-thinking", "SKILL.md");
   // Two reference forms, and which one a site uses is itself the contract
   // (docs/architecture.md, "Methodology skills"). A site that must go load the
   // skill names it bare, because that is the Skill tool's argument; a site
   // whose frontmatter already preloaded it cites the path. Either form
   // disambiguates the `## When ...` heading below, which is the point of the
   // adjacency window: product-thinking carries a same-named heading.
-  const SKILL_PATH = "skills/principle-systems-thinking/SKILL.md";
-  const SKILL_NAME = "`principle-systems-thinking`";
+  const SKILL_PATH = "skills/systems-thinking/SKILL.md";
+  const SKILL_NAME = "`systems-thinking`";
 
   // Missing-file reads return "" so pre-implementation checks fail as
   // assertions (expected "" to contain ...), never as ENOENT crashes
@@ -1033,7 +1033,7 @@ describe("comment red flags (L2 content tripwire)", () => {
 // and precedent does not outrank one.
 describe("skeptic passes weigh a stated rule above precedent (L2 tripwire)", () => {
   const NESTED = read(join(REPO_ROOT, "skills", "nested-agents", "SKILL.md"));
-  const SYSTEMS = read(join(REPO_ROOT, "skills", "principle-systems-thinking", "SKILL.md"));
+  const SYSTEMS = read(join(REPO_ROOT, "skills", "systems-thinking", "SKILL.md"));
 
   test("a rule-violation claim carries the rule it cites", () => {
     // Guard: a missing file must fail, not vacuously pass the checks below.
@@ -1047,7 +1047,7 @@ describe("skeptic passes weigh a stated rule above precedent (L2 tripwire)", () 
   test("nested-agents states that a rule outranks precedent", () => {
     const text = squash(NESTED);
     expect(/stated rule outranks observed precedent/i.test(text)).toBe(true);
-    expect(text).toContain("principle-systems-thinking/SKILL.md");
+    expect(text).toContain("systems-thinking/SKILL.md");
   });
 
   test("systems-thinking defers to a written rule where one speaks", () => {
@@ -1245,8 +1245,8 @@ describe("code-review report format (L2 content tripwire)", () => {
 // ---------------------------------------------------------------------------
 // Principle skills — free L2 content tripwires (docs/testing.md). The 21
 // extracted single-invariant `principle-*` skills (24 dirs carry the prefix;
-// the other 3 — principle-solid, principle-product-thinking,
-// principle-systems-thinking — are renamed principle sets that agents
+// the other 3 — solid, product-thinking,
+// systems-thinking — are renamed principle sets that agents
 // preload or load, pinned by their own describes above) are prose contracts
 // consulted by citation, with no L5
 // behavioral output, so a content tripwire pins each one's load-bearing
@@ -1791,14 +1791,9 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
     .map((name) => name.replace(/\.md$/, ""));
   const principleSkills = skillNames.filter((name) => name.startsWith("principle-")).sort();
 
-  // The 3 renamed principle sets carry loader lists, not citer lists, so
-  // the table-row check covers only the 21 extracted principles.
-  const RENAMED_SETS = new Set([
-    "principle-solid",
-    "principle-product-thinking",
-    "principle-systems-thinking",
-  ]);
-  const extractedPrinciples = principleSkills.filter((name) => !RENAMED_SETS.has(name));
+  // Every principle-prefixed skill is a single-invariant skill with a
+  // citer list; the multi-rule methodology sets carry no prefix.
+  const extractedPrinciples = principleSkills;
 
   // Each skill and agent file is read exactly once.
   const skillContents = new Map(
@@ -1863,7 +1858,7 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
 
   test("the principle tier exists on disk (the loops below cannot go vacuous)", () => {
     expect(principleSkills.length).toBeGreaterThan(20);
-    expect(extractedPrinciples.length).toBe(22);
+    expect(extractedPrinciples.length).toBe(23);
   });
 
   for (const principle of principleSkills) {

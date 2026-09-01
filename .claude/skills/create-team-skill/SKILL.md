@@ -44,9 +44,9 @@ Decide this before Part 1: the verdict fixes the name, the shape, and the frontm
 A `principle-` skill states ONE cross-cutting invariant that other skills obey by
 citation (`principle-bounded-loops`, `principle-fail-closed`). Everything else —
 procedures, phase methodology, pattern catalogs, entry points — is a regular skill with
-no prefix. (The three renamed principle sets — `principle-solid`,
-`principle-product-thinking`, `principle-systems-thinking` — are grandfathered
-exceptions, not precedent: a new bundle does not get the prefix because they have it.)
+no prefix. (The multi-rule methodology sets — `solid`, `product-thinking`,
+`systems-thinking` — deliberately carry no prefix: a bundle never earns it,
+however principle-shaped its content.)
 
 Run the eight-point admission test:
 
@@ -115,7 +115,7 @@ into exactly one of three buckets, then carry the verdict into the frontmatter:
 |--------|---------------|-------------|----------|
 | **Both** (default for anything a user might run) | A user triggers it by intent **and** the model/another skill may pull it in | leave `user-invocable` unset (default) | `team`, `team-*`, `code-review` |
 | **User-invocable only** | A user must trigger it explicitly. The model must NOT auto-fire it | `disable-model-invocation: true` | irreversible actions: deploy, force-push, destructive cleanup |
-| **Model-invocable only** (pure building block) | Reference material loaded by agents / read by path. A `/<skill>` command is meaningless to users | `user-invocable: false` | every pure methodology skill (`qrspi-workflow`, `principle-solid`, …) |
+| **Model-invocable only** (pure building block) | Reference material loaded by agents / read by path. A `/<skill>` command is meaningless to users | `user-invocable: false` | every pure methodology skill (`qrspi-workflow`, `solid`, …) |
 
 Decide with these tests, in order:
 

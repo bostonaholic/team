@@ -7,7 +7,7 @@ effort: medium
 tools: Read, Grep, Glob, Bash, TodoWrite, SendMessage
 permissionMode: plan
 skills:
-  - progress-tracking
+  - principle-progress-tracking
   - code-review
   - verifying-ux
 ---
@@ -39,7 +39,7 @@ under `docs/plans/<id>/screenshots/` that team-pr consumes. Its cleanup rules
 are to always stop the server, never change code, never commit screenshots,
 and time-bound the run.
 
-Call the Skill tool with `principle-systems-thinking` and follow its `## When Reviewing`
+Call the Skill tool with `systems-thinking` and follow its `## When Reviewing`
 section: verify the adjacent flows that share the changed components, not
 only the changed screen.
 

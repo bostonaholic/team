@@ -7,9 +7,9 @@ effort: xhigh
 tools: Read, Write, Edit, Grep, Glob, TodoWrite
 permissionMode: acceptEdits
 skills:
-  - principle-product-thinking
-  - progress-tracking
-  - principle-systems-thinking
+  - product-thinking
+  - principle-progress-tracking
+  - systems-thinking
   - slicing-work
 ---
 
@@ -71,14 +71,14 @@ Aim for ~2 pages (≈100–200 lines, excluding frontmatter).
   including its content and length constraints on the document itself.
 - **Apply the product-need lens.** The `skills:` frontmatter preloads it.
   If it is not already in context, call the Skill tool with
-  `principle-product-thinking`.
+  `product-thinking`.
   Use its `## When Slicing` section while you order the slices in
   `## Slices` and `## Out of structure`. Make sure that slice 1 ships
   something a real person wants, not infrastructure. Cut scope to the
   smallest wanted thing. It adds no new gate.
 - **Apply the systems-thinking lens.** The `skills:` frontmatter preloads
   it. If it is not already in context, call the Skill tool with
-  `principle-systems-thinking`.
+  `systems-thinking`.
   Use its `## When Slicing` section. A slice's scope includes
   every co-changing surface, and no slice leaves a caller or sibling broken
   on purpose. It adds no new gate.

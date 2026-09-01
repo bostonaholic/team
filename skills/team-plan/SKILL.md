@@ -72,7 +72,7 @@ done
 
 ## Execution
 
-> Follow `skills/progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
+> Follow `skills/principle-progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
 
 1. Use the directory resolved in `## Input` (the discovery there already
    confirmed `structure.md` exists).

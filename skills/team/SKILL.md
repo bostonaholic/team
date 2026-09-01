@@ -49,7 +49,7 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
 5. **Seed the TodoWrite ledger** with one item per phase, in order:
    `Worktree → Question → Research → Design → Structure → Plan → Implement → PR`.
    Mark `Worktree` as `in_progress`.
-   See `skills/progress-tracking/SKILL.md` for the per-step tracking convention agents follow within each phase.
+   See `skills/principle-progress-tracking/SKILL.md` for the per-step tracking convention agents follow within each phase.
    The home worktree and `docs/plans/<id>/` are both created at the leading
    WORKTREE phase (see "Orchestrator-Emit Gate (leading worktree)" below) —
    not here.

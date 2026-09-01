@@ -7,7 +7,7 @@ effort: high
 tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite
 permissionMode: acceptEdits
 skills:
-  - progress-tracking
+  - principle-progress-tracking
   - test-first-development
 ---
 

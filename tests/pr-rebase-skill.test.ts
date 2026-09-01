@@ -97,8 +97,8 @@ describe("pr-rebase skill: frontmatter and invocation surface", () => {
     expect(f).toContain("/pr-rebase");
   });
 
-  test("references the progress-tracking convention", () => {
-    expect(body()).toContain("skills/progress-tracking/SKILL.md");
+  test("references the principle-progress-tracking convention", () => {
+    expect(body()).toContain("skills/principle-progress-tracking/SKILL.md");
   });
 
   test("section headings appear in the documented order", () => {
