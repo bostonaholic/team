@@ -820,9 +820,10 @@ consumers, and behaviors), see [skills.md](skills.md).
 3. **Principle skills:** some skills carry the `principle-` prefix, and the
    prefix is a claim, not a namespace. Each states one cross-cutting
    invariant — fail closed, bounded loops, evidence over assertion, and
-   their siblings. No agent preloads one, so they cost nothing against
-   the soft limit: the skills that apply a rule consult it by citation,
-   and any agent can load it just-in-time. Each exists so the rule is
+   their siblings. Exactly one, `principle-progress-tracking`, is
+   preloaded — by 12 of the 13 agents. Every other principle skill costs
+   nothing against the soft limit: the skills that apply a rule consult
+   it by citation, and any agent can load it just-in-time. Each exists so the rule is
    defined once, not restated in every skill that obeys it. The
    multi-rule methodology sets — `solid`, `product-thinking`, and
    `systems-thinking` — deliberately carry no prefix: they are preloaded

@@ -136,6 +136,62 @@ describe("thin agents: frontmatter skills preloads per agent", () => {
   }
 });
 
+describe("thin agents: the principle-* preload claim", () => {
+  // docs/architecture.md and AGENTS.md both asserted that principle skills are
+  // "preloaded by none, so they cost nothing against the load limit". Twelve of
+  // the thirteen agents contradict that on disk: they preload
+  // principle-progress-tracking. The true claim is narrower, and these three
+  // assertions pin it so the corrected sentence cannot drift back.
+
+  // The complete set of principle-* skills any agent may preload. A second
+  // name here is a DECISION about the preload budget — every preloaded skill
+  // spends context on every run of that agent — never a bookkeeping update.
+  const PRINCIPLE_PRELOAD_UNION = ["principle-progress-tracking"];
+
+  function principlePreloads(agent: string): string[] {
+    return preloads(agentPath(agent)).filter((name) => name.startsWith("principle-"));
+  }
+
+  // Agents preloading a principle skill outside the pinned union, one line
+  // each, so a single run names every offender.
+  function agentsPreloadingOutsideUnion(): string[] {
+    return ALL_AGENTS.flatMap((agent) => {
+      const extra = principlePreloads(agent).filter(
+        (name) => !PRINCIPLE_PRELOAD_UNION.includes(name),
+      );
+      return extra.length === 0 ? [] : [`${agent}: ${extra.join(", ")}`];
+    });
+  }
+
+  test("each agent's principle-* preload set is a subset of the pinned union", () => {
+    // Subset, not equality: agents/file-finder.md declares `skills:
+    // [finding-files]` and preloads no principle skill at all, which is legal.
+    expect(agentsPreloadingOutsideUnion()).toEqual([]);
+  });
+
+  test("the union across all 13 agents equals the pinned set", () => {
+    // The half the subset check cannot give: empty preload lists everywhere
+    // would satisfy "subset" while making the claim vacuous.
+    expect(ALL_AGENTS.length).toBe(13);
+    const union = [...new Set(ALL_AGENTS.flatMap(principlePreloads))].sort();
+    expect(union).toEqual(PRINCIPLE_PRELOAD_UNION);
+  });
+
+  test("neither docs/architecture.md nor AGENTS.md still claims no agent preloads one", () => {
+    // Both surfaces in one test on purpose: fixing one copy and leaving the
+    // other is the failure mode, and it must stay red until both are true.
+    const architecture = read(join(REPO_ROOT, "docs", "architecture.md"));
+    const agents = read(join(REPO_ROOT, "AGENTS.md"));
+    // Guard: a missing or renamed file must fail here, not pass the absence
+    // checks vacuously.
+    expect(architecture.length).toBeGreaterThan(0);
+    expect(agents.length).toBeGreaterThan(0);
+
+    expect(architecture).not.toContain("No agent preloads one");
+    expect(agents).not.toContain("preloaded by none");
+  });
+});
+
 describe("thin agents: wrapper bodies point at their procedure skills", () => {
   // Convention: a wrapper keeps a one-line pointer (or a preload note
   // naming the path) for each skill it runs on — the body must name it.
