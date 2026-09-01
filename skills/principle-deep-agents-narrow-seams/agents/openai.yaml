@@ -1,0 +1,5 @@
+# Codex host manifest for the principle-deep-agents-narrow-seams skill.
+interface:
+  display_name: "Principle: Deep Agents Narrow Seams"
+  short_description: "Keep complexity inside, keep the seam narrow"
+  default_prompt: "Use $team:principle-deep-agents-narrow-seams to keep complexity inside, keep the seam narrow."

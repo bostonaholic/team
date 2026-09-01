@@ -1,0 +1,5 @@
+# Codex host manifest for the refactoring-to-patterns skill.
+interface:
+  display_name: "Refactoring to Patterns"
+  short_description: "Refactor code smells into known patterns"
+  default_prompt: "Use $team:refactoring-to-patterns to refactor code smells into known patterns."

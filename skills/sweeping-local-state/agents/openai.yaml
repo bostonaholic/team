@@ -1,0 +1,5 @@
+# Codex host manifest for the sweeping-local-state skill.
+interface:
+  display_name: "Sweeping Local State"
+  short_description: "Tear down machine-local state after a PR"
+  default_prompt: "Use $team:sweeping-local-state to tear down machine-local state after a PR."

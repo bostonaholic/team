@@ -1,0 +1,5 @@
+# Codex host manifest for the principle-explicit-intent skill.
+interface:
+  display_name: "Principle: Explicit Intent"
+  short_description: "Fire an irreversible act on stated intent only"
+  default_prompt: "Use $team:principle-explicit-intent to fire an irreversible act on stated intent only."

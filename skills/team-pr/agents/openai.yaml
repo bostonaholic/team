@@ -1,0 +1,5 @@
+# Codex host manifest for the team-pr skill.
+interface:
+  display_name: "Team PR"
+  short_description: "Open the pull request after verification"
+  default_prompt: "Use $team:team-pr to open the pull request after verification."

@@ -1,0 +1,5 @@
+# Codex host manifest for the qrspi-workflow skill.
+interface:
+  display_name: "QRSPI Workflow"
+  short_description: "Govern the pipeline's phase transitions"
+  default_prompt: "Use $team:qrspi-workflow to govern the pipeline's phase transitions."

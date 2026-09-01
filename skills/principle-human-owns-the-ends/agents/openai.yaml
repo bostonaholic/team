@@ -1,0 +1,5 @@
+# Codex host manifest for the principle-human-owns-the-ends skill.
+interface:
+  display_name: "Principle: Human Owns the Ends"
+  short_description: "Consult the human at the ends, not mid-run"
+  default_prompt: "Use $team:principle-human-owns-the-ends to consult the human at the ends, not mid-run."

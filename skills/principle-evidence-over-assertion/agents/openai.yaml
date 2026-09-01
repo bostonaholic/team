@@ -1,0 +1,5 @@
+# Codex host manifest for the principle-evidence-over-assertion skill.
+interface:
+  display_name: "Principle: Evidence Over Assertion"
+  short_description: "Cite the evidence behind every verdict"
+  default_prompt: "Use $team:principle-evidence-over-assertion to cite the evidence behind every verdict."

@@ -1,0 +1,5 @@
+# Codex host manifest for the implementing-slices skill.
+interface:
+  display_name: "Implementing Slices"
+  short_description: "Execute an implementation plan slice by slice"
+  default_prompt: "Use $team:implementing-slices to execute an implementation plan slice by slice."

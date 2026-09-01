@@ -1,0 +1,5 @@
+# Codex host manifest for the pr-verify skill.
+interface:
+  display_name: "PR Verify"
+  short_description: "Verify a PR's test plan with evidence"
+  default_prompt: "Use $team:pr-verify to verify a PR's test plan with evidence."

@@ -1,0 +1,5 @@
+# Codex host manifest for the principle-record-assumptions skill.
+interface:
+  display_name: "Principle: Record Assumptions"
+  short_description: "Resolve an open question as an auditable assumption"
+  default_prompt: "Use $team:principle-record-assumptions to resolve an open question as an auditable assumption."

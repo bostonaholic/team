@@ -1,0 +1,5 @@
+# Codex host manifest for the researching-codebases skill.
+interface:
+  display_name: "Researching Codebases"
+  short_description: "Answer research questions with file citations"
+  default_prompt: "Use $team:researching-codebases to answer research questions with file citations."

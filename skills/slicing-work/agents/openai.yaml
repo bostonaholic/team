@@ -1,0 +1,5 @@
+# Codex host manifest for the slicing-work skill.
+interface:
+  display_name: "Slicing Work"
+  short_description: "Break a design into vertical slices"
+  default_prompt: "Use $team:slicing-work to break a design into vertical slices."

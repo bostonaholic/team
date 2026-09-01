@@ -1,0 +1,5 @@
+# Codex host manifest for the team-worktree skill.
+interface:
+  display_name: "Team Worktree"
+  short_description: "Prepare an isolated git worktree"
+  default_prompt: "Use $team:team-worktree to prepare an isolated git worktree."

@@ -1,0 +1,5 @@
+# Codex host manifest for the principle-fail-closed skill.
+interface:
+  display_name: "Principle: Fail Closed"
+  short_description: "Treat an unevaluable guarantee as a no"
+  default_prompt: "Use $team:principle-fail-closed to treat an unevaluable guarantee as a no."

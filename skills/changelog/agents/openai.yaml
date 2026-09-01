@@ -1,0 +1,5 @@
+# Codex host manifest for the changelog skill.
+interface:
+  display_name: "Changelog"
+  short_description: "Update the changelog for a release"
+  default_prompt: "Use $team:changelog to update the changelog for a release."

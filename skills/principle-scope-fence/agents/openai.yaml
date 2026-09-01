@@ -1,0 +1,5 @@
+# Codex host manifest for the principle-scope-fence skill.
+interface:
+  display_name: "Principle: Scope Fence"
+  short_description: "Work only inside the change the plan names"
+  default_prompt: "Use $team:principle-scope-fence to work only inside the change the plan names."

@@ -1,0 +1,5 @@
+# Codex host manifest for the decomposing-intent skill.
+interface:
+  display_name: "Decomposing Intent"
+  short_description: "Decompose a task into neutral questions"
+  default_prompt: "Use $team:decomposing-intent to decompose a task into neutral questions."

@@ -1,0 +1,5 @@
+# Codex host manifest for the principle-generator-evaluator skill.
+interface:
+  display_name: "Principle: Generator Evaluator"
+  short_description: "Keep the generator from grading its own work"
+  default_prompt: "Use $team:principle-generator-evaluator to keep the generator from grading its own work."

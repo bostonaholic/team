@@ -1,0 +1,5 @@
+# Codex host manifest for the pr-cleanup skill.
+interface:
+  display_name: "PR Cleanup"
+  short_description: "Tear down branch state after a PR"
+  default_prompt: "Use $team:pr-cleanup to tear down branch state after a PR."

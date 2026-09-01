@@ -1,0 +1,5 @@
+# Codex host manifest for the team-question skill.
+interface:
+  display_name: "Team Question"
+  short_description: "Decompose a feature into task and questions"
+  default_prompt: "Use $team:team-question to decompose a feature into task and questions."

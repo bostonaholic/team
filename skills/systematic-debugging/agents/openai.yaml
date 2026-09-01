@@ -1,0 +1,5 @@
+# Codex host manifest for the systematic-debugging skill.
+interface:
+  display_name: "Systematic Debugging"
+  short_description: "Diagnose a failure from evidence first"
+  default_prompt: "Use $team:systematic-debugging to diagnose a failure from evidence first."

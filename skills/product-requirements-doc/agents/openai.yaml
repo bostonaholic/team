@@ -1,0 +1,5 @@
+# Codex host manifest for the product-requirements-doc skill.
+interface:
+  display_name: "Product Requirements Doc"
+  short_description: "Write a structured product spec"
+  default_prompt: "Use $team:product-requirements-doc to write a structured product spec."

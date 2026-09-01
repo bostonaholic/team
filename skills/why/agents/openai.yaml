@@ -1,0 +1,5 @@
+# Codex host manifest for the why skill.
+interface:
+  display_name: "Why"
+  short_description: "Investigate the design rationale behind code"
+  default_prompt: "Use $team:why to investigate the design rationale behind code."

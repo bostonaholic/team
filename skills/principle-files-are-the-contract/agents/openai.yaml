@@ -1,0 +1,5 @@
+# Codex host manifest for the principle-files-are-the-contract skill.
+interface:
+  display_name: "Principle: Files Are the Contract"
+  short_description: "Pass state between steps as files on disk"
+  default_prompt: "Use $team:principle-files-are-the-contract to pass state between steps as files on disk."

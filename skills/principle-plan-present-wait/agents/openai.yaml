@@ -1,0 +1,5 @@
+# Codex host manifest for the principle-plan-present-wait skill.
+interface:
+  display_name: "Principle: Plan Present Wait"
+  short_description: "Present a plan and wait before mutating"
+  default_prompt: "Use $team:principle-plan-present-wait to present a plan and wait before mutating."

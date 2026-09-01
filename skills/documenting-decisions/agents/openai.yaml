@@ -1,0 +1,5 @@
+# Codex host manifest for the documenting-decisions skill.
+interface:
+  display_name: "Documenting Decisions"
+  short_description: "Record an architectural decision"
+  default_prompt: "Use $team:documenting-decisions to record an architectural decision."
