@@ -556,6 +556,16 @@ Then, **once per rebase stop, after every path above is resolved**:
    A rebase with several conflicting commits stops again after this. Each
    stop re-enters step 5 from the top with its own path list.
 
+**A clean git merge is not a semantic merge.** Before continuing past a
+stop, sweep the commit's own files — conflicted or not — for semantic
+coupling to what the base changed: a file the base renamed that this
+branch still cites by its old path, a moved directory, a renamed symbol.
+Git merges those files clean because no lines collide, so nothing stops
+at a marker, and the breakage surfaces only at step 6 — or after the
+push. Apply such fixups now, stage them into the replayed commit beside
+the conflict resolutions, and record each in the step 2 log with the
+base change that forced it.
+
 **To abandon mid-rebase**, `git rebase --abort` restores the pre-rebase
 state exactly. Never `git rebase --skip` (Hard Rule 3).
 

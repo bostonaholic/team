@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.70.0] - 2026-09-01
+
+### Changed
+
+- **`/pr-rebase` now sweeps every rebase stop for semantic coupling git cannot see.** A file that merges clean can still cite something the base renamed or moved — the breakage only surfaces at verification, or after the push. The skill now instructs a sweep of the commit's own files at each stop, folds the fixups into the replayed commit beside the conflict resolutions, and records each in the rebase log with the base change that forced it. **What this asks of you:** nothing.
+
 ## [0.69.0] - 2026-09-01
 
 ### Changed
@@ -668,7 +674,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.69.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.70.0...HEAD
+[0.70.0]: https://github.com/bostonaholic/team/compare/v0.69.0...v0.70.0
 [0.69.0]: https://github.com/bostonaholic/team/compare/v0.68.0...v0.69.0
 [0.68.0]: https://github.com/bostonaholic/team/compare/v0.67.0...v0.68.0
 [0.67.0]: https://github.com/bostonaholic/team/compare/v0.66.0...v0.67.0
