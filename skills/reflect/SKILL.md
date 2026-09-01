@@ -43,7 +43,8 @@ make it more than "summarize this session":
 Model invocation is disabled (`disable-model-invocation: true`). A run rewrites
 `SKILL.md` files that every future run reads and creates issues that are public
 and irreversible, and no verification afterwards undoes either. Only a
-deliberate invocation starts it.
+deliberate invocation starts it. `agents/openai.yaml` restates the same guard
+for Codex as `policy.allow_implicit_invocation: false`.
 
 ## Input
 

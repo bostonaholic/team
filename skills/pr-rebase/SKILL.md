@@ -43,6 +43,8 @@ up on a discarded line of development, and no verification step can undo
 that after the fact. Per `skills/principle-explicit-intent/SKILL.md`, the
 deliberate invocation is the authorization to publish: once the step 6 gate
 reports no regression, the run publishes without stopping to re-ask (step 7).
+`agents/openai.yaml` restates the same guard for Codex as
+`policy.allow_implicit_invocation: false`.
 
 ## Input
 

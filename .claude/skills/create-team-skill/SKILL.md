@@ -347,8 +347,10 @@ interface:
 ```
 
 **Style.** Two-space indent. Every string value double-quoted; every key
-unquoted. No icons, no brand color, no dependencies — the four remaining
-`interface` keys are deliberately unused.
+unquoted. The three remaining `interface` keys — `icon_small`, `icon_large`,
+`brand_color` — are deliberately unused, and so is `dependencies`, which is a
+TOP-LEVEL key in the spec, never an `interface` one. Nesting it under
+`interface:` fails the gate's interface allowlist.
 
 **The three fields.** Each is derived, not invented:
 
@@ -430,5 +432,7 @@ Host manifest
       phrase, not a noun phrase.
 - [ ] Every string value double-quoted; every key unquoted.
 - [ ] `default_prompt` is the template, naming `$team:<name>`.
-- [ ] `policy` block present if and only if the frontmatter sets
+- [ ] `policy` block present, and carrying the literal
+      `allow_implicit_invocation: false`, if and only if the frontmatter sets
       `disable-model-invocation: true`.
+- [ ] `bun test tests/skill-openai-yaml.test.ts` passes.

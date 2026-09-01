@@ -13,8 +13,11 @@
 //     lists (uppercase acronyms, lowercase joiners), with a `principle-`
 //     prefix rendered as `Principle: `
 //   - `short_description` is 25-64 characters inclusive (the Codex spec's own
-//     window) and does not open with an article, which is the cheap tell for
-//     the noun phrase that reads as nonsense after the word "to" below
+//     window), opens with a capital, carries no trailing period, and opens
+//     with neither an article nor an acronym. The article is the cheap tell
+//     for the noun phrase that reads as nonsense after the word "to" below;
+//     the period and the acronym both survive the splice into
+//     `default_prompt` and render there as `works..` and `sOLID`
 //   - `default_prompt` is exactly `Use $<ns>:<name> to <short_description>.`,
 //     where `<ns>` is the plugin namespace read from `.codex-plugin/plugin.json`
 //     — the manifest Codex prefers, pinned equal to `.claude-plugin/plugin.json`
@@ -23,14 +26,16 @@
 //     allowlists
 //   - read from the RAW TEXT, not the parse tree: every `interface` value is a
 //     double-quoted scalar, no key is quoted, and a `policy` block is exactly
-//     `allow_implicit_invocation: false`. `Bun.YAML.parse` returns the same
-//     value for `"x"` and `x`, so the parse tree cannot see the spec's style
-//     rule at all.
+//     `allow_implicit_invocation: false` — present, not merely un-contradicted.
+//     `Bun.YAML.parse` returns the same value for `"x"` and `x`, so the parse
+//     tree cannot see the spec's style rule at all.
 //
 // And repo-wide: `short_description` is unique across every skill, and the set
-// of skills carrying a `policy` block equals the set whose frontmatter sets
-// `disable-model-invocation: true` — in BOTH directions, each side rebuilt
-// from disk.
+// of skills DECLARING `allow_implicit_invocation: false` equals the set whose
+// frontmatter sets `disable-model-invocation: true` — in BOTH directions, each
+// side rebuilt from disk. Both halves of that declaration check are positive:
+// an empty `policy:` block satisfies neither, because the whole point of the
+// block is the value it carries, not the key that holds it.
 //
 // Sibling: tests/guarded-skill-prose.test.ts pins the same guarded set where it
 // appears in prose. This file pins it where it appears as structured data. The
@@ -75,6 +80,12 @@ const JOINERS = ["a", "as", "at", "by", "for", "in", "of", "on", "the", "to"];
 // A leading article is the cheap tell for a noun phrase, which reads as
 // nonsense spliced after "to" in `default_prompt`.
 const ARTICLES = ["a", "an", "the"];
+
+// An acronym is matched by shape, not by list: two or more consecutive capitals
+// leading the first word. `promptFor` lowercases only the first character, so
+// "SOLID" splices in as "sOLID". A shape check needs no creep fence, and it
+// catches an acronym nobody has coined yet.
+const LEADING_ACRONYM = /^[A-Z]{2,}/;
 
 // The canonical shape, used as the known-good baseline the three raw-text
 // matchers are proved against below.
@@ -165,16 +176,19 @@ function quotedKeys(text: string): string[] {
 
 // The policy block, when present, is exactly one line with exactly one value.
 // `allow_implicit_invocation: true` restates the documented default and is the
-// opposite of the safety claim the block exists to make.
+// opposite of the safety claim the block exists to make. An EMPTY block is the
+// same loss stated more quietly, so it is an offender too: a check that only
+// filters out wrong lines reports nothing when every line is gone.
 function malformedPolicyLines(text: string): string[] {
   const lines = text.split("\n");
   const start = lines.findIndex((line) => /^policy:\s*$/.test(line));
   if (start === -1) return [];
-  return lines
+  const body = lines
     .slice(start + 1)
     .map((line) => line.trim())
-    .filter((line) => line !== "" && !line.startsWith("#"))
-    .filter((line) => line !== "allow_implicit_invocation: false");
+    .filter((line) => line !== "" && !line.startsWith("#"));
+  if (body.length === 0) return ["policy: declares nothing"];
+  return body.filter((line) => line !== "allow_implicit_invocation: false");
 }
 
 // --- enumeration ------------------------------------------------------------
@@ -290,6 +304,26 @@ function shortDescriptionsOpeningWithAnArticle(): string[] {
   }).map((m) => `${m.skill}: "${stringField(m, "short_description")}"`);
 }
 
+function shortDescriptionsNotCapitalized(): string[] {
+  return PARSED.filter((m) => {
+    const first = stringField(m, "short_description").charAt(0);
+    return first !== "" && first !== first.toUpperCase();
+  }).map((m) => `${m.skill}: "${stringField(m, "short_description")}"`);
+}
+
+// A trailing period survives the splice and renders as `... works..`.
+function shortDescriptionsEndingInAPeriod(): string[] {
+  return PARSED.filter((m) => stringField(m, "short_description").endsWith(".")).map(
+    (m) => `${m.skill}: "${stringField(m, "short_description")}"`,
+  );
+}
+
+function shortDescriptionsOpeningWithAnAcronym(): string[] {
+  return PARSED.filter((m) => LEADING_ACRONYM.test(stringField(m, "short_description"))).map(
+    (m) => `${m.skill}: "${stringField(m, "short_description")}"`,
+  );
+}
+
 function duplicateShortDescriptions(): string[] {
   const seen = new Map<string, string>();
   const duplicates: string[] = [];
@@ -344,9 +378,15 @@ function policyKeysOutsideAllowlist(): string[] {
   return keysOutsideAllowlist(policyBlock, POLICY_KEYS);
 }
 
-// Both sides of the guarded-set equality, each rebuilt from disk.
-function skillsWithPolicyBlock(): string[] {
-  return PARSED.filter((m) => m.mapping !== null && "policy" in m.mapping).map((m) => m.skill);
+// Both sides of the guarded-set equality, each rebuilt from disk. The
+// declaration is read POSITIVELY — the value must be there and must be
+// `false`. Testing for the `policy` key instead would let a bare `policy:`
+// (which parses to null, and whose empty body no line filter can see) stand in
+// for the safety claim six prose surfaces make on its behalf.
+function skillsDeclaringNoImplicitInvocation(): string[] {
+  return PARSED.filter((m) => policyBlock(m)["allow_implicit_invocation"] === false).map(
+    (m) => m.skill,
+  );
 }
 
 function skillsDisablingModelInvocation(): string[] {
@@ -355,15 +395,15 @@ function skillsDisablingModelInvocation(): string[] {
 
 // Guarded skills whose manifest never declares the policy — the safety claim
 // stated in prose but absent from the data Codex reads.
-function guardedWithoutPolicyBlock(): string[] {
-  const withPolicy = skillsWithPolicyBlock();
-  return skillsDisablingModelInvocation().filter((skill) => !withPolicy.includes(skill));
+function guardedWithoutDeclaration(): string[] {
+  const declaring = skillsDeclaringNoImplicitInvocation();
+  return skillsDisablingModelInvocation().filter((skill) => !declaring.includes(skill));
 }
 
-// The other direction: a policy block on a skill that never asked for one.
-function policyBlockWithoutGuard(): string[] {
+// The other direction: the declaration on a skill that never asked for one.
+function declarationWithoutGuard(): string[] {
   const guarded = skillsDisablingModelInvocation();
-  return skillsWithPolicyBlock().filter((skill) => !guarded.includes(skill));
+  return skillsDeclaringNoImplicitInvocation().filter((skill) => !guarded.includes(skill));
 }
 
 describe("the sweep can see a positive (L2 tripwire)", () => {
@@ -409,6 +449,14 @@ describe("the sweep can see a positive (L2 tripwire)", () => {
 
     expect(malformedPolicyLines(mutated)).toEqual(["allow_implicit_invocation: true"]);
   });
+
+  test("the policy-line matcher reports a policy block that declares nothing", () => {
+    // The quiet mutation: the block survives, the claim does not. A filter for
+    // wrong lines cannot see this — there are no lines left to be wrong.
+    const mutated = SAMPLE_MANIFEST.replace("\n  allow_implicit_invocation: false", "");
+
+    expect(malformedPolicyLines(mutated)).toEqual(["policy: declares nothing"]);
+  });
 });
 
 describe("every skill has a valid agents/openai.yaml (L2 tripwire)", () => {
@@ -434,6 +482,22 @@ describe("every skill has a valid agents/openai.yaml (L2 tripwire)", () => {
 
   test("no short_description opens with an article", () => {
     expect(shortDescriptionsOpeningWithAnArticle()).toEqual([]);
+  });
+
+  test("every short_description opens with a capital", () => {
+    expect(shortDescriptionsNotCapitalized()).toEqual([]);
+  });
+
+  test("no short_description ends in a period", () => {
+    expect(shortDescriptionsEndingInAPeriod()).toEqual([]);
+  });
+
+  test("no short_description opens with an acronym", () => {
+    expect(shortDescriptionsOpeningWithAnAcronym()).toEqual([]);
+  });
+
+  test("no two skills share a short_description", () => {
+    expect(duplicateShortDescriptions()).toEqual([]);
   });
 
   test("every default_prompt is the namespaced template over name and short_description", () => {
@@ -469,15 +533,11 @@ describe("the guarded set and the policy-block set agree in both directions (L2 
   // Both sides rebuilt from disk, the way tests/guarded-skill-prose.test.ts
   // does it, so neither side can drift into agreement with a stale constant.
 
-  test("every skill disabling model invocation carries a policy block", () => {
-    expect(guardedWithoutPolicyBlock()).toEqual([]);
+  test("every skill disabling model invocation declares allow_implicit_invocation: false", () => {
+    expect(guardedWithoutDeclaration()).toEqual([]);
   });
 
-  test("every skill carrying a policy block disables model invocation", () => {
-    expect(policyBlockWithoutGuard()).toEqual([]);
-  });
-
-  test("no two skills share a short_description", () => {
-    expect(duplicateShortDescriptions()).toEqual([]);
+  test("every skill declaring allow_implicit_invocation: false disables model invocation", () => {
+    expect(declarationWithoutGuard()).toEqual([]);
   });
 });

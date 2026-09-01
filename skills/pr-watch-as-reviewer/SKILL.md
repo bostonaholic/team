@@ -36,6 +36,8 @@ passes casts `gh pr review --approve` on your behalf and stops. Model
 invocation is disabled (`disable-model-invocation: true`): on a PR with
 auto-merge enabled, an approval can transitively trigger an irreversible
 merge, so only a deliberate human invocation arms the watch.
+`agents/openai.yaml` restates the same guard for Codex as
+`policy.allow_implicit_invocation: false`.
 
 Feedback comes in two shapes, and the watch tracks both:
 

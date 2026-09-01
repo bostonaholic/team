@@ -813,7 +813,8 @@ than stored twice: `display_name` title-cases the kebab `name:` through two
 closed lists (acronyms up, joiners down) with a `principle-` prefix rendered as
 `Principle: `; `short_description` is an imperative phrase in the spec's 25-64
 character window; `default_prompt` is `Use $<ns>:<name> to
-<short_description>.` over the namespace in `.codex-plugin/plugin.json`. No
+<short_description with its first character lowercased>.` over the namespace in
+`.codex-plugin/plugin.json`. No
 icons, no brand color. A `policy` block declaring
 `allow_implicit_invocation: false` appears if and only if the frontmatter sets
 `disable-model-invocation: true`, and the test asserts that equality in both
