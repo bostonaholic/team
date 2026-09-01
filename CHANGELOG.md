@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.72.0] - 2026-09-01
+
 ### Added
 
-- **Every skill now ships a Codex host manifest, so Codex names it properly instead of guessing.** Without `agents/openai.yaml` Codex falls back to the directory name and a truncated `description:`; each skill now declares its own display name, a short imperative description, and the `Use $team:<name> to …` prompt Codex offers. **What this asks of you:** nothing — reinstall on Codex to pick up the new catalog entries.
+- **Every skill now ships a Codex host manifest, so Codex names it properly instead of guessing.** Without `agents/openai.yaml` Codex falls back to the directory name and a truncated `description:`; each skill now declares its own display name, a short imperative description, and the `Use $team:<name> to …` prompt Codex offers. **What this asks of you:** reinstall on Codex to pick up the new catalog entries.
 - **The three user-invoked-only skills now restate that guard where Codex can read it.** `/pr-rebase`, `/pr-watch-as-reviewer`, and `/reflect` each rewrite something that cannot be undone — published history, an approval that can trigger a merge, your `SKILL.md` files and public issues — so their manifests declare `allow_implicit_invocation: false`, matching the `disable-model-invocation: true` they already carried for Claude Code. **What this asks of you:** nothing.
 
 ## [0.71.0] - 2026-09-01
@@ -685,7 +687,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.71.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.72.0...HEAD
+[0.72.0]: https://github.com/bostonaholic/team/compare/v0.71.0...v0.72.0
 [0.71.0]: https://github.com/bostonaholic/team/compare/v0.70.0...v0.71.0
 [0.70.0]: https://github.com/bostonaholic/team/compare/v0.69.0...v0.70.0
 [0.69.0]: https://github.com/bostonaholic/team/compare/v0.68.0...v0.69.0
