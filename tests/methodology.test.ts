@@ -1419,6 +1419,29 @@ describe("principle-files-are-the-contract (L2 content tripwire)", () => {
   });
 });
 
+describe("principle-fix-root-causes (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "principle-fix-root-causes", "SKILL.md");
+
+  test("skill file exists with name: principle-fix-root-causes", () => {
+    expect(existsSync(SKILL_FILE)).toBe(true);
+    expect(/^name:\s*principle-fix-root-causes\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  });
+
+  test("frontmatter sets user-invocable: false (methodology convention)", () => {
+    expect(/^user-invocable:\s*false\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  });
+
+  test("pins the root-cause contract (fix at the root, suspect state on restart)", () => {
+    const text = squash(read(SKILL_FILE));
+    expect(text).toContain("root cause, never at the symptom");
+    expect(text).toContain("suspect stale persistent state first");
+  });
+
+  test("citation site: systematic-debugging cites the principle by path", () => {
+    expect(read(join(REPO_ROOT, "skills", "systematic-debugging", "SKILL.md"))).toContain("skills/principle-fix-root-causes/SKILL.md");
+  });
+});
+
 describe("principle-generator-evaluator (L2 content tripwire)", () => {
   const SKILL_FILE = join(REPO_ROOT, "skills", "principle-generator-evaluator", "SKILL.md");
 
@@ -1840,7 +1863,7 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
 
   test("the principle tier exists on disk (the loops below cannot go vacuous)", () => {
     expect(principleSkills.length).toBeGreaterThan(20);
-    expect(extractedPrinciples.length).toBe(21);
+    expect(extractedPrinciples.length).toBe(22);
   });
 
   for (const principle of principleSkills) {
