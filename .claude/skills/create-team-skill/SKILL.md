@@ -2,9 +2,10 @@
 name: create-team-skill
 description: |
   Authoring guide for creating a new skill in this plugin, matching the conventions
-  the existing skills already use. Establishes the three decisions every skill must
-  make before any prose is written: how it is invoked (entry point vs building block),
-  how it acquires its input, and how it manages the context window.
+  the existing skills already use. Establishes the principle-or-not classification
+  (Part 0) and the three decisions every skill must make before any prose is written:
+  how it is invoked (entry point vs building block), how it acquires its input, and
+  how it manages the context window.
   Do NOT hand-write a SKILL.md directly. Trigger on "create a skill",
   "add a new skill", "scaffold a skill", "write a SKILL.md", or a description of
   new skill functionality the user wants to build.
@@ -14,8 +15,9 @@ description: |
 
 This is the dev-workspace guide for authoring a skill in this plugin. Follow it so a new
 skill matches the conventions the existing skills already use. A skill is a document the
-agent reads, not a function it calls. Before writing one, make three decisions in order.
-Each has a wrong-by-default failure mode, so decide deliberately rather than copying
+agent reads, not a function it calls. Before writing one, classify it — principle
+skill or not (Part 0) — then make three decisions in order. Each has a
+wrong-by-default failure mode, so decide deliberately rather than copying
 another skill's wiring.
 
 1. **Invocation** — is this an entry point (user/model triggers it) or a building
@@ -33,6 +35,69 @@ checkpoints, and findings. In this repo that directory is **`docs/plans/<id>/`**
 `<ARTIFACTS>`. Producers write there. Consumers discover and read from there. The
 agreement matters more than the path: every handoff uses the same convention so skills
 stay decoupled.
+
+---
+
+## Part 0 — Principle skill or not
+
+Decide this before Part 1: the verdict fixes the name, the shape, and the frontmatter.
+A `principle-` skill states ONE cross-cutting invariant that other skills obey by
+citation (`principle-bounded-loops`, `principle-fail-closed`). Everything else —
+procedures, phase methodology, pattern catalogs, entry points — is a regular skill with
+no prefix. (The three renamed principle sets — `principle-solid`,
+`principle-product-thinking`, `principle-systems-thinking` — are grandfathered
+exceptions, not precedent: a new bundle does not get the prefix because they have it.)
+
+Run the eight-point admission test:
+
+1. **One invariant, one sentence.** The rule states in a single sentence what must
+   always (or never) hold. If it needs an "and", it is two principles or a methodology
+   skill. A corollary of an existing principle folds into that principle instead of
+   becoming a new skill.
+2. **Citable by name mid-task.** "That violates principle-<name>" must make the
+   correction obvious on its own. A name that invokes an action ("review this",
+   "set up X") names a procedure, not a principle.
+3. **Violation is observable.** You can point at a transcript, diff, or artifact and
+   say "here is where it broke." A value statement whose violation is always arguable
+   does not qualify.
+4. **Not mechanizable.** If a test, hook, or lint enforces it more reliably, build the
+   gate instead (docs/testing.md: push every check as far down and as deterministic as
+   it goes). A principle is reserved for what only judgment can enforce.
+5. **Two-plus independent consumers.** At least two skills or agents already restate
+   the rule, or would cite it at a point of application.
+6. **Extraction replaces restatement.** Admitting it lets existing prose collapse to a
+   citation in the same change. If nothing would cite it, it has no consumers.
+7. **Earned, not aspirational.** It encodes an observed failure (ideally recurring) or
+   an invariant the system already enforces somewhere. Imported best practices with no
+   local scar tissue do not get the prefix.
+8. **Fits the shape.** Statement + why + pattern in roughly 30 lines. Frontmatter:
+   `user-invocable: false`, an "Apply when …" description, no `effort` field. No agent
+   preloads it — consumers cite it and any agent loads it just-in-time.
+
+**Passing grade — the bar is tiered, not a count:**
+
+- **Criteria 1–4, 7, and 8 are hard gates.** Any failure is a rejection. 1–4 and 8 are
+  categorical (a bundle, an action name, an arguable value, a lint-able rule, or a
+  procedure is simply not a principle skill), and 7 guards against importing doctrine
+  the project never bled for.
+- **Criteria 5–6 are the demand test, waivable once.** Normally both must hold. A
+  single current consumer is acceptable when the invariant is clearly cross-cutting:
+  the "Apply when" line names concrete situations a second consumer would hit, and the
+  one existing consumer's restatement still collapses to a citation. Record the
+  single-consumer status in the commit message. An unused `principle-` skill costs
+  nearly nothing at load time, so extracting slightly ahead of demand is cheap — but a
+  rule with no consumer at all stays inline where it is used.
+
+Verdicts:
+
+- **Passes the bar** → author it as `skills/principle-<name>/` in the shape above, and
+  collapse each consumer's restatement to a citation in the same change.
+- **Fails any hard gate** → not a principle. Author it as a regular skill via
+  Parts 1–3. If a single invariant is buried inside it (a procedure that exists to
+  uphold one rule), consider extracting THAT invariant as the principle and letting
+  the procedure cite it.
+- **Fails 7 only** → the rule may be right but is unproven here. Keep it inline and
+  revisit after it has caught or caused something real.
 
 ---
 
@@ -263,6 +328,16 @@ Gate yourself before acting:
 ---
 
 ## Acceptance checklist (verify before the skill is done)
+
+Classification
+- [ ] Part 0 verdict recorded: principle skill or regular skill.
+- [ ] If principle: all hard gates (1–4, 7, 8) pass; 5–6 both hold, or the one-consumer
+      waiver is justified and noted in the commit message.
+- [ ] If principle: named `principle-<name>`, ~30-line statement + why + pattern shape,
+      `user-invocable: false`, no `effort`, and every consumer's restatement collapsed
+      to a citation in the same change.
+- [ ] If a rule passed the identity gates but has no consumer: left inline in its
+      consumer, not extracted.
 
 Invocation
 - [ ] Invocation surface decided — **both** / **user-invocable only** / **model-invocable only** — with high confidence. If not, asked the user through `AskUserQuestion`.
