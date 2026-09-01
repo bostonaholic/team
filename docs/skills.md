@@ -1325,9 +1325,13 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   retries, poll budgets, helpers in flight. Hitting the cap halts
   terminally with everything unresolved reported — never silently
   restart, extend, or soften the exit criteria. A retry budget is small
-  and stated. The same rule bounds output as size budgets (a ~200-line
-  design, a ≤ 30-line helper reply): over budget means restructure and
-  name what was dropped, never silent truncation.
+  and stated. A loop that ends on a verdict rather than a count is
+  already bounded — the verdict is the bound, the missing number is the
+  design, and a reader never supplies a count the loop deliberately
+  omits. Team's two review loops are that case. The same rule bounds
+  output as size budgets (a ~200-line design, a ≤ 30-line helper reply):
+  over budget means restructure and name what was dropped, never silent
+  truncation.
 
 ### [principle-deep-agents-narrow-seams](https://github.com/bostonaholic/team/blob/main/skills/principle-deep-agents-narrow-seams/SKILL.md)
 

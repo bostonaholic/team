@@ -20,9 +20,13 @@ one, at a bounded and pre-agreed cost.
 - Hitting the cap halts terminally: report everything unresolved. Never
   silently restart, extend, or soften the exit criteria to escape.
 - A retry budget is small and stated ("retry once, then halt loudly").
-- A loop that ends on a verdict rather than a count still declares its
-  terminal condition, and the operator who can stop the run is its outer
-  bound.
+- A loop that ends on a verdict rather than a count is already bounded:
+  the verdict is the bound. Declare that terminal condition, and then
+  never supply a count the loop deliberately omits — the missing number
+  is the design, not a gap for a reader to fill. The operator who can
+  stop the run is the outer bound. Team's two review loops are this
+  case: DESIGN ends on the reviewer's verdict, IMPLEMENT ends when no
+  Blocking or Major finding is left, and neither takes a round cap.
 
 ## Size budgets
 
