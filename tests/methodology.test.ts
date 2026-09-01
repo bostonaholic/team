@@ -1243,10 +1243,9 @@ describe("code-review report format (L2 content tripwire)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Principle skills — free L2 content tripwires (docs/testing.md). The 21
-// extracted single-invariant `principle-*` skills (24 dirs carry the prefix;
-// the other 3 — solid, product-thinking,
-// systems-thinking — are renamed principle sets that agents
+// Principle skills — free L2 content tripwires (docs/testing.md). The
+// extracted single-invariant `principle-*` skills (solid, product-thinking,
+// and systems-thinking are renamed principle sets that agents
 // preload or load, pinned by their own describes above) are prose contracts
 // consulted by citation, with no L5
 // behavioral output, so a content tripwire pins each one's load-bearing

@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 81 skills: 11 pipeline entry-point slash commands, 11 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase, reflect, why, how), and 59 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's skills: pipeline entry-point slash commands, standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase, reflect, why, how), and methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -48,7 +48,7 @@ catalog into two flavors:
   …`).
 
 That `argument-hint` marker is the whole flavor distinction. Most
-`argument-hint` skills drive a QRSPI phase, but eleven (`shipit`,
+`argument-hint` skills drive a QRSPI phase, but some (`shipit`,
 `pr-open-comments`, `pr-watch-as-author`, `pr-watch-as-reviewer`, `groom-backlog`,
 `pr-cleanup`, `pr-verify`, `pr-rebase`, `reflect`, `why`, and `how`) are
 standalone utilities.
@@ -60,8 +60,7 @@ finished, verify a PR's test plan, rebase a branch onto its base
 without changing what it does, mine a finished session for the
 learnings worth keeping, investigate the design rationale behind code,
 and explain how a subsystem works.
-None is a pipeline phase. The split is
-**11 pipeline entry-point + 11 standalone utility + 59 methodology = 81**.
+None is a pipeline phase.
 
 For *why* the system is shaped this way (the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits),
@@ -770,7 +769,7 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 59 methodology skills carry no `argument-hint` and, with one
+The methodology skills carry no `argument-hint` and, with one
 exception, are never invoked directly. The exception is `code-review`: it
 is a meaningful standalone user action ("review this diff",
 `/code-review`) as well as a building block, so it does not set

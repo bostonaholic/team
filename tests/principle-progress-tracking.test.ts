@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
@@ -133,35 +133,6 @@ describe("Slice 1: principle-progress-tracking convention skill exists", () => {
 
   test("principle-progress-tracking cross-links qrspi-workflow", () => {
     expect(readOrEmpty(PT)).toContain("qrspi-workflow");
-  });
-});
-
-describe("skill count reconciliation (-> 81: 22 principle-* skills plus the why and how utilities on the 57-skill baseline)", () => {
-  const CLAUDE_MD = join(REPO_ROOT, "CLAUDE.md");
-  const AGENTS_MD = join(REPO_ROOT, "AGENTS.md");
-
-  test("CLAUDE.md heading reads '## Skills (81)'", () => {
-    expect(/^## Skills \(81\)/m.test(read(CLAUDE_MD))).toBe(true);
-  });
-
-  test("AGENTS.md heading reads '## Skills (81)'", () => {
-    expect(/^## Skills \(81\)/m.test(read(AGENTS_MD))).toBe(true);
-  });
-
-  test("filesystem has exactly 81 SKILL.md files declaring a name:", () => {
-    // 57-skill baseline (11 pipeline entry points + 9 standalone utilities —
-    // shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog,
-    // pr-cleanup, pr-verify, pr-rebase, reflect — plus 37 methodology
-    // skills) plus the 22 principle-* methodology skills (one cross-cutting
-    // invariant each: fail closed, bounded loops, evidence over assertion,
-    // and their siblings), plus the why and how standalone investigation
-    // utilities, which take the count to 81.
-    const dirs = readdirSync(SKILLS_DIR, { withFileTypes: true })
-      .filter((d) => d.isDirectory())
-      .map((d) => join(SKILLS_DIR, d.name, "SKILL.md"))
-      .filter((p) => existsSync(p));
-    const withName = dirs.filter((p) => /^name:/m.test(read(p)));
-    expect(withName.length).toBe(81);
   });
 });
 
