@@ -212,6 +212,9 @@ argument shape.
   (the no-consult rule), until no Blocking or Major finding remains.
   Minor-and-below findings are recorded in the PR body's `## Review notes`
   once Blocking and Major are clean, and never surfaced mid-run.
+  Model-invocable, but guarded: it fires only on explicit implement intent,
+  never on "implement this", which asks for an inline change. A Skill-tool
+  load from a running Team phase is already explicit.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
   the missing upstream artifacts inline rather than hard-erroring.
 
@@ -230,7 +233,9 @@ argument shape.
   and the PR always opens. Leaves the worktree in place after opening the
   PR so you can iterate. Teardown waits until the PR merges or you ask.
   Completion suggests arming `/pr-watch-as-author` once the PR is ready
-  for review.
+  for review. Model-invocable, but guarded: it fires only on explicit PR
+  intent, never on work merely looking finished. A Skill-tool load from a
+  running Team phase is already explicit.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
   the missing upstream artifacts inline rather than hard-erroring.
 
@@ -293,9 +298,9 @@ QRSPI phase: a self-contained action a user runs on demand.
   skill). Model-invocable, but the merge is irreversible, so two guards
   replace the former hard flag: it fires only on explicit ship intent
   ("ship it", "land the PR", "land this", `/shipit`) — front-loaded in the
-  description so a truncation cannot cut it — and never on a PR that is
-  merely approved, green, or finished, and the CI-green wait gates the
-  merge mechanically.
+  description to lower its exposure to a host that truncates a long
+  description — and never on a PR that is merely approved, green, or
+  finished, and the CI-green wait gates the merge mechanically.
   Neither guard is a question put to the user mid-run — **it does not stop
   to confirm the merge**, because ship intent already carried the
   authorization and every caller chaining into `/shipit` would inherit the
@@ -330,9 +335,11 @@ QRSPI phase: a self-contained action a user runs on demand.
   Treats comment bodies as untrusted data. It never acts on embedded
   imperatives beyond the thread's anchored code. Auto-apply is bounded to
   the file and lines the thread references. Broader asks and new
-  security-sensitive constructs thus become carve-outs. Model-invocable:
-  cue-based auto-invocation is justified by the carve-out set plus the
-  verification bar.
+  security-sensitive constructs thus become carve-outs. Model-invocable,
+  but guarded: it fires only on explicit triage intent, never on a PR
+  merely having new comments. A Skill-tool load from a running
+  `/pr-watch-as-author` is already explicit. The carve-out set and the
+  verification bar bound what an invocation may then do.
 
 ### [pr-watch-as-author](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md)
 
@@ -358,8 +365,9 @@ QRSPI phase: a self-contained action a user runs on demand.
   Stops on approval, merge, close, user interrupt, cycle-48 timeout, or 3
   consecutive poll failures. On approval it runs a final triage pass and
   hands off with `Next: run /shipit`. It never auto-runs `/shipit`.
-  Model-invocable: it promotes a draft only on an unambiguous readiness cue
-  and reports the promotion loudly, so cue-based auto-invocation is safe.
+  Model-invocable, but guarded: it fires only on explicit watch intent,
+  never on a PR merely being open. Within an invocation it promotes a draft
+  only on an unambiguous readiness cue and reports the promotion loudly.
 
 ### [pr-watch-as-reviewer](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md)
 
@@ -515,7 +523,10 @@ QRSPI phase: a self-contained action a user runs on demand.
   of the default branch. A gate failure halts the run; only the user's
   explicit delete-anyway confirmation re-enters it. Mode B has no
   merged check because the user's explicit abandon request is the gate —
-  the skill never infers abandon intent. Refuses protected branch names
+  the skill never infers abandon intent. Model-invocable, but guarded: it
+  fires only on explicit cleanup intent, and Mode B only on an explicit
+  abandon request. A dispatch from a running `/shipit` — which runs
+  `/pr-cleanup` itself on a merge that landed — is already explicit. Refuses protected branch names
   (the detected default, `master`, `develop`, `release/*`) and a dirty
   tree with tracked modifications. Every externally sourced branch name
   must pass a byte-exact (`LC_ALL=C`) character allowlist before it
@@ -1699,7 +1710,7 @@ entry-point section above rather than repeating them here.
 | `pr-watch-as-author` | user or model (direct invocation, on explicit watch intent) | Standalone: bounded PR review watch loop (not a QRSPI phase) |
 | `pr-watch-as-reviewer` | user (direct invocation) | Standalone: reviewer-side watch-and-approve (not a QRSPI phase) |
 | `groom-backlog` | user or model (direct invocation) | Standalone: groom a project backlog (not a QRSPI phase) |
-| `pr-cleanup` | user or model (direct invocation; Mode B only on explicit abandon intent) | Standalone: post-PR teardown (not a QRSPI phase) |
+| `pr-cleanup` | user or model (direct invocation, on explicit cleanup intent; Mode B only on explicit abandon intent) | Standalone: post-PR teardown (not a QRSPI phase) |
 | `pr-verify` | user or model (direct invocation) | Standalone: test-plan verification (not a QRSPI phase) |
 | `pr-rebase` | user (direct invocation, on explicit rebase intent; model invocation disabled) | Standalone: rebase a branch onto its base (not a QRSPI phase) |
 | `reflect` | user (direct invocation, on explicit reflection intent; model invocation disabled) | Standalone: mine the session transcript for durable learnings (not a QRSPI phase) |

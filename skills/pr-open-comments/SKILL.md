@@ -10,7 +10,8 @@ description: |
   lands on a globally numbered punch list that presents and stops until the
   user picks actions. Explicit user authorization applies the whole batch
   regardless of confidence. The user says "address PR comments", "triage PR
-  feedback", "handle the comments", or runs "/pr-open-comments".
+  feedback", "handle the comments", "unresolved review comments", or runs
+  "/pr-open-comments".
 effort: high
 argument-hint: "[<pr-number-or-url>]"
 ---
