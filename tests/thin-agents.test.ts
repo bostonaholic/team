@@ -114,19 +114,19 @@ describe("thin agents: new skills carry the moved procedure content", () => {
 
 describe("thin agents: frontmatter skills preloads per agent", () => {
   const EXPECTED_PRELOADS: Record<string, string[]> = {
-    "code-reviewer": ["code-review", "conventional-comments", "cross-model-review", "nested-agents", "progress-tracking"],
-    "design-author": ["authoring-designs", "principle-product-thinking", "progress-tracking", "writing-prose"],
+    "code-reviewer": ["code-review", "conventional-comments", "cross-model-review", "nested-agents", "principle-progress-tracking"],
+    "design-author": ["authoring-designs", "principle-progress-tracking", "product-thinking", "writing-prose"],
     "file-finder": ["finding-files"],
-    implementer: ["implementing-slices", "nested-agents", "progress-tracking"],
-    planner: ["planning-implementation", "principle-systems-thinking", "progress-tracking"],
-    questioner: ["decomposing-intent", "principle-product-thinking", "progress-tracking"],
-    researcher: ["nested-agents", "principle-systems-thinking", "progress-tracking", "researching-codebases"],
-    "security-reviewer": ["code-review", "conventional-comments", "nested-agents", "progress-tracking", "reviewing-security"],
-    "structure-planner": ["principle-product-thinking", "principle-systems-thinking", "progress-tracking", "slicing-work"],
-    "technical-writer": ["code-review", "conventional-comments", "progress-tracking", "reviewing-documentation", "writing-prose"],
-    "test-architect": ["progress-tracking", "test-first-development"],
-    "ux-reviewer": ["code-review", "progress-tracking", "verifying-ux"],
-    verifier: ["progress-tracking", "running-quality-checks"],
+    implementer: ["implementing-slices", "nested-agents", "principle-progress-tracking"],
+    planner: ["planning-implementation", "principle-progress-tracking", "systems-thinking"],
+    questioner: ["decomposing-intent", "principle-progress-tracking", "product-thinking"],
+    researcher: ["nested-agents", "principle-progress-tracking", "researching-codebases", "systems-thinking"],
+    "security-reviewer": ["code-review", "conventional-comments", "nested-agents", "principle-progress-tracking", "reviewing-security"],
+    "structure-planner": ["principle-progress-tracking", "product-thinking", "slicing-work", "systems-thinking"],
+    "technical-writer": ["code-review", "conventional-comments", "principle-progress-tracking", "reviewing-documentation", "writing-prose"],
+    "test-architect": ["principle-progress-tracking", "test-first-development"],
+    "ux-reviewer": ["code-review", "principle-progress-tracking", "verifying-ux"],
+    verifier: ["principle-progress-tracking", "running-quality-checks"],
   };
 
   for (const [agent, expected] of Object.entries(EXPECTED_PRELOADS)) {

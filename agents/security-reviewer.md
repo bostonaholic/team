@@ -7,7 +7,7 @@ effort: high
 tools: Read, Grep, Glob, Bash, TodoWrite, Agent, SendMessage
 permissionMode: plan
 skills:
-  - progress-tracking
+  - principle-progress-tracking
   - nested-agents
   - code-review
   - conventional-comments

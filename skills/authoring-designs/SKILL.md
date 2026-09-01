@@ -143,7 +143,7 @@ operational concerns. One bullet each.>
 - **Reference patterns, do not duplicate them.** "Follow the pattern in
   `lib/foo.ts:30-60`" is better than restating those 30 lines.
 - **Apply the systems-thinking lens** — if it is not already in context,
-  call the Skill tool with `principle-systems-thinking` and
+  call the Skill tool with `systems-thinking` and
   use its `## When Designing` section: document adjacent components in
   `## Current state` and name the surfaces that must change together in
   `## Decisions made`. Adds no new gate.

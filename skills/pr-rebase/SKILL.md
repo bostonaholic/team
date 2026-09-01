@@ -20,7 +20,7 @@ disable-model-invocation: true
 
 # pr-rebase — rebase onto the latest base without changing behavior
 
-> Follow `skills/progress-tracking/SKILL.md`: this procedure has more than two steps —
+> Follow `skills/principle-progress-tracking/SKILL.md`: this procedure has more than two steps —
 > seed one todo item per step below before starting and mark each complete as you go.
 
 `pr-rebase` replays a feature branch on top of the current base branch and

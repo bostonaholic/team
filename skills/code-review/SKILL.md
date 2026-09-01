@@ -259,7 +259,7 @@ no order implied:
   outside the diff need updating? Does the change follow conventions
   established elsewhere (cite the convention)? Findings cite the
   `System Fit` checklist item.
-- **SOLID violations** — per `skills/principle-solid/SKILL.md`.
+- **SOLID violations** — per `skills/solid/SKILL.md`.
 - **Test files** — per both severity regimes above and
   `skills/test-style/SKILL.md`.
 

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.66.0] - 2026-09-01
+
+### Changed
+
+- **The `principle-` prefix is now a claim, and four skills moved to keep it honest.** The prefix means one cross-cutting invariant, citable by name, loadable just-in-time, preloaded by no agent. Audited against that bar, three multi-rule methodology sets lose the prefix — `principle-solid` is now [`solid`](https://github.com/bostonaholic/team/blob/main/skills/solid/SKILL.md), `principle-product-thinking` is now [`product-thinking`](https://github.com/bostonaholic/team/blob/main/skills/product-thinking/SKILL.md), and `principle-systems-thinking` is now [`systems-thinking`](https://github.com/bostonaholic/team/blob/main/skills/systems-thinking/SKILL.md) (each is a preloaded, multi-rule catalog or lens, which is what the prefix says a skill is not) — and one skill that meets every criterion gains it: `progress-tracking`, the single most-cited rule in the plugin, is now [`principle-progress-tracking`](https://github.com/bostonaholic/team/blob/main/skills/principle-progress-tracking/SKILL.md). Content is unchanged in all four; every agent and skill that loads or cites them was updated in the same change. **What this asks of you:** nothing, unless your own prompts referenced one of the four by its old name — the old names no longer resolve.
+
 ## [0.65.0] - 2026-08-31
 
 ### Added
@@ -644,7 +650,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.65.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.66.0...HEAD
+[0.66.0]: https://github.com/bostonaholic/team/compare/v0.65.0...v0.66.0
 [0.65.0]: https://github.com/bostonaholic/team/compare/v0.64.0...v0.65.0
 [0.64.0]: https://github.com/bostonaholic/team/compare/v0.63.0...v0.64.0
 [0.63.0]: https://github.com/bostonaholic/team/compare/v0.62.0...v0.63.0

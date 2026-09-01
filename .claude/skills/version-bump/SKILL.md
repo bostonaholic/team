@@ -16,7 +16,7 @@ description: |
 
 # Version Bump — version a Team PR at land time
 
-> Follow `skills/progress-tracking/SKILL.md`: this procedure has more than two steps —
+> Follow `skills/principle-progress-tracking/SKILL.md`: this procedure has more than two steps —
 > seed one todo item per step below before starting and mark each complete as you go.
 
 This skill versions the **Team plugin itself** at land time. It is **dev-only**

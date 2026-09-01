@@ -29,7 +29,7 @@ import { frontmatter, read } from "./helpers/text";
 const REPO_ROOT = process.cwd();
 // groom-backlog is a RUNTIME skill — under skills/ (distributed), not .claude/.
 const SKILL = join(REPO_ROOT, "skills", "groom-backlog", "SKILL.md");
-// The canonical standalone-utility progress-tracking pointer lives here.
+// The canonical standalone-utility principle-progress-tracking pointer lives here.
 const SHIPIT_SKILL = join(REPO_ROOT, "skills", "shipit", "SKILL.md");
 // The board doc is the stated source of truth for the `Ready` WIP limit.
 const PROJECT_TRACKING = join(REPO_ROOT, "docs", "project-tracking.md");
@@ -63,7 +63,7 @@ function shipitPointer(): string {
   if (!existsSync(SHIPIT_SKILL)) return "";
   const lines = read(SHIPIT_SKILL).split("\n");
   const start = lines.findIndex((line) =>
-    line.startsWith("> Follow `skills/progress-tracking/SKILL.md`"),
+    line.startsWith("> Follow `skills/principle-progress-tracking/SKILL.md`"),
   );
   if (start < 0 || start + 1 >= lines.length) return "";
   return `${lines[start]}\n${lines[start + 1]}`;
@@ -163,7 +163,7 @@ describe("groom-backlog skill: frontmatter", () => {
 });
 
 describe("groom-backlog skill: pointer copied from shipit", () => {
-  test("carries the standalone-utility progress-tracking pointer byte-for-byte", () => {
+  test("carries the standalone-utility principle-progress-tracking pointer byte-for-byte", () => {
     const pointer = shipitPointer();
     // Guard: a pointer we failed to extract must fail, not vacuously pass.
     expect(pointer.length).toBeGreaterThan(0);

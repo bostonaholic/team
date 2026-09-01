@@ -17,7 +17,7 @@ argument-hint: "[<pr-number-or-url-or-branch>]"
 
 # pr-cleanup — post-PR teardown
 
-> Follow `skills/progress-tracking/SKILL.md`: this procedure has more than two steps —
+> Follow `skills/principle-progress-tracking/SKILL.md`: this procedure has more than two steps —
 > seed one todo item per step below before starting and mark each complete as you go.
 
 Tidy up git state after a feature branch's PR is finished, in either of two

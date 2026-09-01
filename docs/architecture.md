@@ -662,13 +662,13 @@ points at it.
 Methodology skills carry no `argument-hint`. Agents load them through one
 of two mechanisms. The first is a `skills:` YAML list in the agent's
 frontmatter. For example, `agents/design-author.md` declares
-`skills: [principle-product-thinking, progress-tracking, authoring-designs,
+`skills: [product-thinking, principle-progress-tracking, authoring-designs,
 writing-prose]`. Those four names are three countable skills under the
 load limit in the Design guidelines below: `authoring-designs` is
 design-author's own extracted procedure skill, which that limit exempts.
 The second is an inline prose load instruction in the agent body. For
 example, the `implementer` body's Code quality section loads
-`principle-solid` inline.
+`solid` inline.
 
 **Two reference forms, and the form is the contract.** Every skill-to-skill
 reference is one of two kinds, and each has its own encoding:
@@ -694,7 +694,7 @@ present. `skills/git-commmit/SKILL.md` passed the old check.
 
 The load form applies **only where the other skill is genuinely needed**. A
 citation keeps its path and its ordinary wording: a schema lookup, a "see
-also", a rule already restated inline (the `progress-tracking` blockquote
+also", a rule already restated inline (the `principle-progress-tracking` blockquote
 every multi-step skill carries), and a pointer to a skill the frontmatter
 already preloaded. Turning one of those into a tool call would spend a call
 and a slice of context on content nobody asked for.
@@ -788,18 +788,18 @@ consumers, and behaviors), see [skills.md](skills.md).
    that is only meaningful inside one consumer's procedure, a
    **procedure fragment**, stays inline in that consumer.
 
-3. **Principle skills:** 25 skills carry the `principle-` prefix, in two
-   tiers. The 22 extracted single-invariant skills each state one
-   cross-cutting invariant — fail closed, bounded loops, evidence over
-   assertion, and their siblings. No agent preloads one of those, so they
-   cost nothing against the soft limit: the skills that apply a rule
-   consult it by citation, and any agent can load it just-in-time. Each
-   exists so the rule is defined once, not restated in every skill that
-   obeys it. The other three — `principle-solid`,
-   `principle-product-thinking`, and `principle-systems-thinking` — are
-   renamed principle sets that ARE preloaded or agent-loaded (see the
-   Methodology skills section above), and they count toward the limit
-   like any methodology skill.
+3. **Principle skills:** 23 skills carry the `principle-` prefix, and the
+   prefix is a claim, not a namespace. Each states one cross-cutting
+   invariant — fail closed, bounded loops, evidence over assertion, and
+   their siblings. No agent preloads one, so they cost nothing against
+   the soft limit: the skills that apply a rule consult it by citation,
+   and any agent can load it just-in-time. Each exists so the rule is
+   defined once, not restated in every skill that obeys it. The
+   multi-rule methodology sets — `solid`, `product-thinking`, and
+   `systems-thinking` — deliberately carry no prefix: they are preloaded
+   or agent-loaded (see the Methodology skills section above) and count
+   toward the limit like any methodology skill. A bundle of rules never
+   takes the prefix, however principle-shaped its content.
 
 ## 7. Hooks
 

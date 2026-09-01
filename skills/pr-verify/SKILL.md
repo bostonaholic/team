@@ -14,7 +14,7 @@ argument-hint: "[<pr-number-or-url>]"
 
 # pr-verify — evidence-rated test-plan verification
 
-> Follow `skills/progress-tracking/SKILL.md`: this procedure has more than two steps —
+> Follow `skills/principle-progress-tracking/SKILL.md`: this procedure has more than two steps —
 > seed one todo item per step below before starting and mark each complete as you go.
 
 Systematically verify every test-plan item in a PR against the actual

@@ -12,7 +12,7 @@ const skill = (name: string) => join(SKILLS_DIR, name, "SKILL.md");
 const agent = (name: string) => join(AGENTS_DIR, `${name}.md`);
 
 // Read a file, returning "" when it does not exist yet. This keeps tests for
-// not-yet-created files (e.g. the new progress-tracking skill) failing on a
+// not-yet-created files (e.g. the new principle-progress-tracking skill) failing on a
 // clean assertion rather than crashing with ENOENT.
 const readOrEmpty = (path: string): string => (existsSync(path) ? read(path) : "");
 
@@ -44,7 +44,7 @@ const METHODOLOGY_SKILLS = [
 // The 3 existing seeders that get an additive pointer (Slice 4).
 const SEEDER_SKILLS = ["team", "team-fix", "team-implement"];
 
-// The 12 multi-step agents that must preload progress-tracking (Slices 5+6).
+// The 12 multi-step agents that must preload principle-progress-tracking (Slices 5+6).
 const PRELOAD_AGENTS = [
   "questioner",
   "design-author",
@@ -62,14 +62,14 @@ const PRELOAD_AGENTS = [
 
 // Skills explicitly out of scope — must NOT gain the reference.
 const OUT_OF_SCOPE_SKILLS = [
-  "principle-product-thinking",
+  "product-thinking",
   "qrspi-workflow",
   "engineering-standards",
   "code-review",
   "writing-prose",
 ];
 
-// True if a SKILL.md's frontmatter `skills:` array contains `progress-tracking`.
+// True if a SKILL.md's frontmatter `skills:` array contains `principle-progress-tracking`.
 function skillsArrayHasProgressTracking(text: string): boolean {
   const fm = frontmatter(text);
   const lines = fm.split("\n");
@@ -80,7 +80,7 @@ function skillsArrayHasProgressTracking(text: string): boolean {
       continue;
     }
     if (inSkills) {
-      if (/^\s*-\s+progress-tracking\s*$/.test(line)) return true;
+      if (/^\s*-\s+principle-progress-tracking\s*$/.test(line)) return true;
       // Leaving the list once a non-indented, non-list-item line appears.
       if (!/^\s*-\s+/.test(line) && line.trim() !== "") break;
     }
@@ -89,33 +89,33 @@ function skillsArrayHasProgressTracking(text: string): boolean {
 }
 
 // True if an agent's frontmatter `tools:` line grants the TodoWrite tool, so
-// the preloaded progress-tracking convention is actually executable.
+// the preloaded principle-progress-tracking convention is actually executable.
 function toolsLineHasTodoWrite(text: string): boolean {
   return /^tools:.*\bTodoWrite\b/m.test(frontmatter(text));
 }
 
-describe("Slice 1: progress-tracking convention skill exists", () => {
-  const PT = skill("progress-tracking");
+describe("Slice 1: principle-progress-tracking convention skill exists", () => {
+  const PT = skill("principle-progress-tracking");
 
-  test("skills/progress-tracking/SKILL.md exists", () => {
+  test("skills/principle-progress-tracking/SKILL.md exists", () => {
     expect(existsSync(PT)).toBe(true);
   });
 
-  test("progress-tracking opens with --- frontmatter", () => {
+  test("principle-progress-tracking opens with --- frontmatter", () => {
     expect(/^---\n/.test(readOrEmpty(PT))).toBe(true);
   });
 
-  test("progress-tracking frontmatter declares name: progress-tracking", () => {
+  test("principle-progress-tracking frontmatter declares name: principle-progress-tracking", () => {
     const fm = frontmatter(readOrEmpty(PT));
-    expect(/^name:\s*progress-tracking\s*$/m.test(fm)).toBe(true);
+    expect(/^name:\s*principle-progress-tracking\s*$/m.test(fm)).toBe(true);
   });
 
-  test("progress-tracking frontmatter has a non-empty description", () => {
+  test("principle-progress-tracking frontmatter has a non-empty description", () => {
     const fm = frontmatter(readOrEmpty(PT));
     expect(/^description:\s*\S/m.test(fm)).toBe(true);
   });
 
-  test("progress-tracking frontmatter omits argument-hint", () => {
+  test("principle-progress-tracking frontmatter omits argument-hint", () => {
     // Bundles existence so a missing file fails here rather than passing
     // vacuously against empty text (the field is genuinely absent only once
     // the file is authored without it).
@@ -125,11 +125,11 @@ describe("Slice 1: progress-tracking convention skill exists", () => {
     expect(present && lacksArgHint).toBe(true);
   });
 
-  test("progress-tracking body opens with the 'A convention, not a gate' role marker", () => {
+  test("principle-progress-tracking body opens with the 'A convention, not a gate' role marker", () => {
     expect(readOrEmpty(PT)).toContain("A convention, not a gate");
   });
 
-  test("progress-tracking cross-links qrspi-workflow", () => {
+  test("principle-progress-tracking cross-links qrspi-workflow", () => {
     expect(readOrEmpty(PT)).toContain("qrspi-workflow");
   });
 });
@@ -162,18 +162,18 @@ describe("skill count reconciliation (-> 79: 22 principle-* skills added to the 
   });
 });
 
-describe("Slice 2: entry-point skills reference progress-tracking", () => {
+describe("Slice 2: entry-point skills reference principle-progress-tracking", () => {
   for (const name of ENTRY_POINT_SKILLS) {
-    test(`${name} references skills/progress-tracking/SKILL.md`, () => {
-      expect(read(skill(name))).toContain("skills/progress-tracking/SKILL.md");
+    test(`${name} references skills/principle-progress-tracking/SKILL.md`, () => {
+      expect(read(skill(name))).toContain("skills/principle-progress-tracking/SKILL.md");
     });
   }
 });
 
-describe("Slice 3: methodology procedure skills reference progress-tracking", () => {
+describe("Slice 3: methodology procedure skills reference principle-progress-tracking", () => {
   for (const name of METHODOLOGY_SKILLS) {
-    test(`${name} references skills/progress-tracking/SKILL.md`, () => {
-      expect(read(skill(name))).toContain("skills/progress-tracking/SKILL.md");
+    test(`${name} references skills/principle-progress-tracking/SKILL.md`, () => {
+      expect(read(skill(name))).toContain("skills/principle-progress-tracking/SKILL.md");
     });
   }
 });
@@ -195,10 +195,10 @@ describe("Slices 2-3: canonical reference sentence is byte-identical (drift guar
   });
 });
 
-describe("Slice 4: existing seeders cross-reference progress-tracking", () => {
+describe("Slice 4: existing seeders cross-reference principle-progress-tracking", () => {
   for (const name of SEEDER_SKILLS) {
-    test(`${name} contains a pointer to skills/progress-tracking/SKILL.md`, () => {
-      expect(read(skill(name))).toContain("skills/progress-tracking/SKILL.md");
+    test(`${name} contains a pointer to skills/principle-progress-tracking/SKILL.md`, () => {
+      expect(read(skill(name))).toContain("skills/principle-progress-tracking/SKILL.md");
     });
   }
 
@@ -217,14 +217,14 @@ describe("Slice 4: existing seeders cross-reference progress-tracking", () => {
   });
 });
 
-describe("Slices 5-6: multi-step agents preload progress-tracking", () => {
+describe("Slices 5-6: multi-step agents preload principle-progress-tracking", () => {
   for (const name of PRELOAD_AGENTS) {
-    test(`${name} skills: frontmatter contains progress-tracking`, () => {
+    test(`${name} skills: frontmatter contains principle-progress-tracking`, () => {
       expect(skillsArrayHasProgressTracking(read(agent(name)))).toBe(true);
     });
   }
 
-  test("file-finder does NOT preload progress-tracking", () => {
+  test("file-finder does NOT preload principle-progress-tracking", () => {
     expect(skillsArrayHasProgressTracking(read(agent("file-finder")))).toBe(false);
   });
 });
@@ -243,8 +243,8 @@ describe("Slices 5-6: multi-step agents grant the TodoWrite tool", () => {
 
 describe("Out of scope: pure reference / methodology skills are untouched", () => {
   for (const name of OUT_OF_SCOPE_SKILLS) {
-    test(`${name} does NOT reference progress-tracking`, () => {
-      expect(read(skill(name))).not.toContain("progress-tracking");
+    test(`${name} does NOT reference principle-progress-tracking`, () => {
+      expect(read(skill(name))).not.toContain("principle-progress-tracking");
     });
   }
 });

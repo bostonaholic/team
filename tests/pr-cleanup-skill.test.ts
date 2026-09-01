@@ -132,8 +132,8 @@ describe("pr-cleanup skill: section contract", () => {
     expect(completion).toBeGreaterThan(pitfalls);
   });
 
-  test("loads the progress-tracking convention", () => {
-    expect(body()).toContain("skills/progress-tracking/SKILL.md");
+  test("loads the principle-progress-tracking convention", () => {
+    expect(body()).toContain("skills/principle-progress-tracking/SKILL.md");
   });
 });
 

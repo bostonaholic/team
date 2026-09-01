@@ -1,6 +1,6 @@
 ---
-name: progress-tracking
-description: Todo-first progress convention for multi-step procedures — loaded by every multi-step agent to track its own steps without drift
+name: principle-progress-tracking
+description: "Apply when executing any procedure with two or more ordered steps. Seed one todo item per step before starting and mark each complete as you go; the context running the procedure owns its own ledger and never merges it upward."
 user-invocable: false
 ---
 

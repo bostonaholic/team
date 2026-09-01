@@ -22,7 +22,7 @@ argument-hint: "[<project-number-or-url>] [--promote <issue-number>]"
 
 # groom-backlog — plan, ask, wait, then execute
 
-> Follow `skills/progress-tracking/SKILL.md`: this procedure has more than two steps —
+> Follow `skills/principle-progress-tracking/SKILL.md`: this procedure has more than two steps —
 > seed one todo item per step below before starting and mark each complete as you go.
 
 Grooming mutates shared state that a whole team reads. Placement, dates, and ticket rewrites

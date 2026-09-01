@@ -7,7 +7,7 @@ effort: low
 tools: Read, Grep, Glob, Bash, TodoWrite, SendMessage
 permissionMode: plan
 skills:
-  - progress-tracking
+  - principle-progress-tracking
   - running-quality-checks
 ---
 
