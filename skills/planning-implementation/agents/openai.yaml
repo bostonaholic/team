@@ -1,4 +1,3 @@
-# Codex host manifest for the planning-implementation skill.
 interface:
   display_name: "Planning Implementation"
   short_description: "Turn a structure into file-level steps"

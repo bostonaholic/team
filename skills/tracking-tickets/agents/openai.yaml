@@ -1,4 +1,3 @@
-# Codex host manifest for the tracking-tickets skill.
 interface:
   display_name: "Tracking Tickets"
   short_description: "Move a tracker ticket through its states"

@@ -1,4 +1,3 @@
-# Codex host manifest for the test-style skill.
 interface:
   display_name: "Test Style"
   short_description: "Write behavior-focused, non-flaky tests"

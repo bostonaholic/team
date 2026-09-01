@@ -1,4 +1,3 @@
-# Codex host manifest for the engineering-standards skill.
 interface:
   display_name: "Engineering Standards"
   short_description: "Apply the engineering quality standards"

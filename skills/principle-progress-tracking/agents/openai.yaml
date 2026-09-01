@@ -1,4 +1,3 @@
-# Codex host manifest for the principle-progress-tracking skill.
 interface:
   display_name: "Principle: Progress Tracking"
   short_description: "Seed one todo per step and mark each done"

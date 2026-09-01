@@ -1,4 +1,3 @@
-# Codex host manifest for the verifying-ux skill.
 interface:
   display_name: "Verifying UX"
   short_description: "Boot the app and verify it live"

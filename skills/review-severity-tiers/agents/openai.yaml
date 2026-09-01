@@ -1,4 +1,3 @@
-# Codex host manifest for the review-severity-tiers skill.
 interface:
   display_name: "Review Severity Tiers"
   short_description: "Sort a finding into a severity tier"

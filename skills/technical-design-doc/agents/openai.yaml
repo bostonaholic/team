@@ -1,4 +1,3 @@
-# Codex host manifest for the technical-design-doc skill.
 interface:
   display_name: "Technical Design Doc"
   short_description: "Structure a technical design document"

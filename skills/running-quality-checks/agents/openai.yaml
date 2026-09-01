@@ -1,4 +1,3 @@
-# Codex host manifest for the running-quality-checks skill.
 interface:
   display_name: "Running Quality Checks"
   short_description: "Run every available check in speed order"

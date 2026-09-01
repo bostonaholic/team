@@ -1,4 +1,3 @@
-# Codex host manifest for the finding-files skill.
 interface:
   display_name: "Finding Files"
   short_description: "Locate files relevant to an area"

@@ -1,4 +1,3 @@
-# Codex host manifest for the artifact-frontmatter skill.
 interface:
   display_name: "Artifact Frontmatter"
   short_description: "Validate a pipeline artifact's frontmatter"

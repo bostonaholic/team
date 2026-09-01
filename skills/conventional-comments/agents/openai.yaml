@@ -1,4 +1,3 @@
-# Codex host manifest for the conventional-comments skill.
 interface:
   display_name: "Conventional Comments"
   short_description: "Label and format a review finding"

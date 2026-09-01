@@ -1,4 +1,3 @@
-# Codex host manifest for the team skill.
 interface:
   display_name: "Team"
   short_description: "Run the full autonomous feature pipeline"

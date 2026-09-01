@@ -1,4 +1,3 @@
-# Codex host manifest for the git-commit skill.
 interface:
   display_name: "Git Commit"
   short_description: "Write an atomic conventional commit"

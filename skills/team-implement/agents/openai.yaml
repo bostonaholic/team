@@ -1,4 +1,3 @@
-# Codex host manifest for the team-implement skill.
 interface:
   display_name: "Team Implement"
   short_description: "Execute and verify the implementation phase"

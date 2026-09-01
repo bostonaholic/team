@@ -1,4 +1,3 @@
-# Codex host manifest for the authoring-designs skill.
 interface:
   display_name: "Authoring Designs"
   short_description: "Draft or revise the design document"

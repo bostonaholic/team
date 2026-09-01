@@ -1,4 +1,3 @@
-# Codex host manifest for the team-pr skill.
 interface:
   display_name: "Team PR"
   short_description: "Open the pull request after verification"

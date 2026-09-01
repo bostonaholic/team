@@ -1,4 +1,3 @@
-# Codex host manifest for the solid skill.
 interface:
   display_name: "SOLID"
   short_description: "Apply the SOLID design principles"

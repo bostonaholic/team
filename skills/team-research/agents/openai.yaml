@@ -1,4 +1,3 @@
-# Codex host manifest for the team-research skill.
 interface:
   display_name: "Team Research"
   short_description: "Research a codebase area before changing it"

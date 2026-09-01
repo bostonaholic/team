@@ -1,4 +1,3 @@
-# Codex host manifest for the pr-watch-as-author skill.
 interface:
   display_name: "PR Watch as Author"
   short_description: "Watch your own PR for review feedback"

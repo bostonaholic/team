@@ -1,4 +1,3 @@
-# Codex host manifest for the principle-blind-the-investigator skill.
 interface:
   display_name: "Principle: Blind the Investigator"
   short_description: "Hand an investigator the question, never the answer"

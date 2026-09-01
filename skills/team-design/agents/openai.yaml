@@ -1,4 +1,3 @@
-# Codex host manifest for the team-design skill.
 interface:
   display_name: "Team Design"
   short_description: "Decide the approach before writing code"

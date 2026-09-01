@@ -1,4 +1,3 @@
-# Codex host manifest for the principle-scope-fence skill.
 interface:
   display_name: "Principle: Scope Fence"
   short_description: "Work only inside the change the plan names"

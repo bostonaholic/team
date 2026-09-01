@@ -1,4 +1,3 @@
-# Codex host manifest for the test-driven-bug-fix skill.
 interface:
   display_name: "Test Driven Bug Fix"
   short_description: "Reproduce a bug, then fix it red to green"

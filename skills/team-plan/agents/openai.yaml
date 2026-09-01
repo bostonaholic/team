@@ -1,4 +1,3 @@
-# Codex host manifest for the team-plan skill.
 interface:
   display_name: "Team Plan"
   short_description: "Produce the tactical implementation plan"

@@ -1,4 +1,3 @@
-# Codex host manifest for the nested-agents skill.
 interface:
   display_name: "Nested Agents"
   short_description: "Spawn a nested sub-agent safely"

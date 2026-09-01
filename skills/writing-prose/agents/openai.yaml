@@ -1,4 +1,3 @@
-# Codex host manifest for the writing-prose skill.
 interface:
   display_name: "Writing Prose"
   short_description: "Write and assess plain-language prose"

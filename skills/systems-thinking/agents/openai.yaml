@@ -1,4 +1,3 @@
-# Codex host manifest for the systems-thinking skill.
 interface:
   display_name: "Systems Thinking"
   short_description: "Weigh a change's blast radius"

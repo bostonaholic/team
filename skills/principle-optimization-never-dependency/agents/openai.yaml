@@ -1,4 +1,3 @@
-# Codex host manifest for the principle-optimization-never-dependency skill.
 interface:
   display_name: "Principle: Optimization Never Dependency"
   short_description: "Skip an enhancement loudly and fall back inline"

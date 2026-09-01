@@ -1,4 +1,3 @@
-# Codex host manifest for the eng-design-doc-review skill.
 interface:
   display_name: "Eng Design Doc Review"
   short_description: "Adversarially review a design document"

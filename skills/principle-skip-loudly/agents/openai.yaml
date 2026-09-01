@@ -1,4 +1,3 @@
-# Codex host manifest for the principle-skip-loudly skill.
 interface:
   display_name: "Principle: Skip Loudly"
   short_description: "Report what did not happen as loudly as what did"

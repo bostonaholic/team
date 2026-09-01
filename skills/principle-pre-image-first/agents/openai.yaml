@@ -1,4 +1,3 @@
-# Codex host manifest for the principle-pre-image-first skill.
 interface:
   display_name: "Principle: Pre Image First"
   short_description: "Capture a recoverable pre-image before destroying"

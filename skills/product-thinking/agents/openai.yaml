@@ -1,4 +1,3 @@
-# Codex host manifest for the product-thinking skill.
 interface:
   display_name: "Product Thinking"
   short_description: "Weigh user demand while shaping scope"

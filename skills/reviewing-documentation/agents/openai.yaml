@@ -1,4 +1,3 @@
-# Codex host manifest for the reviewing-documentation skill.
 interface:
   display_name: "Reviewing Documentation"
   short_description: "Review a diff for documentation gaps"

@@ -1,4 +1,3 @@
-# Codex host manifest for the team-structure skill.
 interface:
   display_name: "Team Structure"
   short_description: "Break the reviewed design into slices"

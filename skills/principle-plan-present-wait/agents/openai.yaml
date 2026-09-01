@@ -1,4 +1,3 @@
-# Codex host manifest for the principle-plan-present-wait skill.
 interface:
   display_name: "Principle: Plan Present Wait"
   short_description: "Present a plan and wait before mutating"

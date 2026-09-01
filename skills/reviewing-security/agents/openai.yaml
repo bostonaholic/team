@@ -1,4 +1,3 @@
-# Codex host manifest for the reviewing-security skill.
 interface:
   display_name: "Reviewing Security"
   short_description: "Review a diff for security vulnerabilities"

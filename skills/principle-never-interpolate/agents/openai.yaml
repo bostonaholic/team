@@ -1,4 +1,3 @@
-# Codex host manifest for the principle-never-interpolate skill.
 interface:
   display_name: "Principle: Never Interpolate"
   short_description: "Keep external values out of shell commands"

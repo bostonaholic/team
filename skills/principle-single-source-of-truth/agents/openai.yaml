@@ -1,4 +1,3 @@
-# Codex host manifest for the principle-single-source-of-truth skill.
 interface:
   display_name: "Principle: Single Source of Truth"
   short_description: "Define a rule once and consult that owner"

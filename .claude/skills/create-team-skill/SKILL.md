@@ -339,7 +339,6 @@ This part consumes Part 0's name and Part 1's verdict, so run it last.
 The whole file, for a skill that is model-invocable at all:
 
 ```yaml
-# Codex host manifest for the <name> skill.
 interface:
   display_name: "<Display Name>"
   short_description: "<imperative phrase>"

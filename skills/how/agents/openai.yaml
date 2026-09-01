@@ -1,4 +1,3 @@
-# Codex host manifest for the how skill.
 interface:
   display_name: "How"
   short_description: "Explain how a subsystem works"

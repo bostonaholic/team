@@ -1,4 +1,3 @@
-# Codex host manifest for the groom-backlog skill.
 interface:
   display_name: "Groom Backlog"
   short_description: "Groom a project backlog end to end"

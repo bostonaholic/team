@@ -89,8 +89,7 @@ const LEADING_ACRONYM = /^[A-Z]{2,}/;
 
 // The canonical shape, used as the known-good baseline the three raw-text
 // matchers are proved against below.
-const SAMPLE_MANIFEST = `# Codex host manifest for the pr-rebase skill.
-interface:
+const SAMPLE_MANIFEST = `interface:
   display_name: "PR Rebase"
   short_description: "Rebase a branch onto its base"
   default_prompt: "Use $team:pr-rebase to rebase a branch onto its base."

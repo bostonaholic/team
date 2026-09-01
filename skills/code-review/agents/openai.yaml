@@ -1,4 +1,3 @@
-# Codex host manifest for the code-review skill.
 interface:
   display_name: "Code Review"
   short_description: "Review a diff with fresh-context discipline"

@@ -1,4 +1,3 @@
-# Codex host manifest for the principle-least-privilege skill.
 interface:
   display_name: "Principle: Least Privilege"
   short_description: "Enforce a constraint by withholding the tool"

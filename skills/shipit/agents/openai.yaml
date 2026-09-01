@@ -1,4 +1,3 @@
-# Codex host manifest for the shipit skill.
 interface:
   display_name: "Shipit"
   short_description: "Land a reviewed pull request"

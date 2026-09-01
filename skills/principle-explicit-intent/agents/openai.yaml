@@ -1,4 +1,3 @@
-# Codex host manifest for the principle-explicit-intent skill.
 interface:
   display_name: "Principle: Explicit Intent"
   short_description: "Fire an irreversible act on stated intent only"

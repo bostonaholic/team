@@ -1,4 +1,3 @@
-# Codex host manifest for the principle-fix-root-causes skill.
 interface:
   display_name: "Principle: Fix Root Causes"
   short_description: "Trace each symptom to its root and fix it there"

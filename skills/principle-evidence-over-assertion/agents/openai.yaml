@@ -1,4 +1,3 @@
-# Codex host manifest for the principle-evidence-over-assertion skill.
 interface:
   display_name: "Principle: Evidence Over Assertion"
   short_description: "Cite the evidence behind every verdict"

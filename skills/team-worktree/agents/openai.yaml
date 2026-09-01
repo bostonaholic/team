@@ -1,4 +1,3 @@
-# Codex host manifest for the team-worktree skill.
 interface:
   display_name: "Team Worktree"
   short_description: "Prepare an isolated git worktree"
