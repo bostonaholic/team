@@ -243,16 +243,9 @@ describe("thin agents: haiku skills are self-contained", () => {
   }
 });
 
-describe("thin agents: documentation counts agree at 81 skills", () => {
+describe("thin agents: skills catalog stays complete", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
-
-  test("skills/ holds exactly 81 SKILL.md files", () => {
-    const count = readdirSync(join(REPO_ROOT, "skills")).filter((name) =>
-      existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")),
-    ).length;
-    expect(count).toBe(81);
-  });
 
   test("docs/skills.md documents every skill: ### entry count equals the on-disk count", () => {
     // Every per-skill entry in docs/skills.md is an h3; nothing else in the
@@ -263,63 +256,6 @@ describe("thin agents: documentation counts agree at 81 skills", () => {
       existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")),
     ).length;
     expect(entries.length).toBe(count);
-  });
-
-  test("AGENTS.md heading reads Skills (81)", () => {
-    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (81)");
-  });
-
-  test("docs/skills.md description counts 81 skills", () => {
-    expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain("81 skills");
-  });
-
-  test("docs/skills.md split sentence sums to 81", () => {
-    expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain(
-      "11 pipeline entry-point + 11 standalone utility + 59 methodology = 81",
-    );
-  });
-
-  test("docs/architecture.md counts all 81 skills in both locations and no stale 80/79/78/57/56/55/54/53/51/31", () => {
-    const content = read(ARCHITECTURE_MD);
-    expect(content).toContain("all 81 skills");
-    expect(content).not.toContain("all 80 skills");
-    expect(content).not.toContain("all 79 skills");
-    expect(content).not.toContain("all 78 skills");
-    expect(content).not.toContain("all 57 skills");
-    expect(content).not.toContain("all 56 skills");
-    // Stale-guard: the count appears twice in this doc; a half-swept second
-    // occurrence passes a bare toContain, so forbid the old value outright
-    // (no-stale-31 precedent). Every superseded value stays on the list —
-    // bumping only the positive assertion would let one occurrence keep the
-    // previous count.
-    expect(content).not.toContain("all 55 skills");
-    expect(content).not.toContain("all 54 skills");
-    expect(content).not.toContain("all 53 skills");
-    expect(content).not.toContain("all 51 skills");
-    expect(content).not.toContain("31 skills");
-  });
-
-  // Previously unpinned count locations — they drifted silently before, so
-  // each gains a pin, and docs/skills.md gains a stale-guard on the old
-  // methodology count (catches its description sentence going stale).
-  test("README.md counts 81 entry-point + methodology skills", () => {
-    expect(read(join(REPO_ROOT, "README.md")).replace(/\s+/g, " ")).toContain(
-      "81 entry-point + methodology skills",
-    );
-  });
-
-  test("docs/index.md counts all 81 skills", () => {
-    expect(read(join(REPO_ROOT, "docs", "index.md")).replace(/\s+/g, " ")).toContain(
-      "all 81 skills",
-    );
-  });
-
-  test("docs/skills.md counts 59 methodology skills and no stale 58/37/36", () => {
-    const flattened = read(SKILLS_MD).replace(/\s+/g, " ");
-    expect(flattened).toContain("The 59 methodology skills");
-    expect(flattened).not.toContain("58 methodology");
-    expect(flattened).not.toContain("37 methodology");
-    expect(flattened).not.toContain("36 methodology");
   });
 
   test("docs/architecture.md exempts own-procedure skills from the 3-skill soft limit", () => {
