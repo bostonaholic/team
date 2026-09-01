@@ -342,7 +342,7 @@ The whole file, for a skill that is model-invocable at all:
 interface:
   display_name: "<Display Name>"
   short_description: "<imperative phrase>"
-  default_prompt: "Use $team:<name> to <short description, first letter lowercased>."
+  default_prompt: "Use $<name> to <short description, first letter lowercased>."
 ```
 
 **Style.** Two-space indent. Every string value double-quoted; every key
@@ -367,10 +367,9 @@ TOP-LEVEL key in the spec, never an `interface` one. Nesting it under
    back inside the `default_prompt` below and it is not a request. `"Record an
    architectural decision"` is. Do not open with an article or an acronym —
    the template lowercases the first character, and `"sOLID"` is the result.
-3. `default_prompt` — the template exactly: `Use $team:<name> to <short
-   description with its first character lowercased>.` The `$team:` namespace is
-   how Codex names a skill from this plugin; it is not optional and not
-   per-skill.
+3. `default_prompt` — the template exactly: `Use $<name> to <short description
+   with its first character lowercased>.` The `$<name>` token names the skill
+   explicitly using its own declared `name:`.
 
 **The one fork.** If the Part 1 verdict was **user-invocable only**, append a
 blank line and a policy block:
@@ -430,7 +429,7 @@ Host manifest
 - [ ] `short_description` is an imperative phrase of 25–64 characters — a verb
       phrase, not a noun phrase.
 - [ ] Every string value double-quoted; every key unquoted.
-- [ ] `default_prompt` is the template, naming `$team:<name>`.
+- [ ] `default_prompt` is the template, naming `$<name>`.
 - [ ] `policy` block present, and carrying the literal
       `allow_implicit_invocation: false`, if and only if the frontmatter sets
       `disable-model-invocation: true`.

@@ -1,4 +1,4 @@
 interface:
   display_name: "Team Structure"
   short_description: "Break the reviewed design into slices"
-  default_prompt: "Use $team:team-structure to break the reviewed design into slices."
+  default_prompt: "Use $team-structure to break the reviewed design into slices."

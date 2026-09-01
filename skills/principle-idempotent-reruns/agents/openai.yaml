@@ -1,4 +1,4 @@
 interface:
   display_name: "Principle: Idempotent Reruns"
   short_description: "Make a re-run converge on the same end state"
-  default_prompt: "Use $team:principle-idempotent-reruns to make a re-run converge on the same end state."
+  default_prompt: "Use $principle-idempotent-reruns to make a re-run converge on the same end state."

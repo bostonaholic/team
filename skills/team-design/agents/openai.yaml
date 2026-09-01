@@ -1,4 +1,4 @@
 interface:
   display_name: "Team Design"
   short_description: "Decide the approach before writing code"
-  default_prompt: "Use $team:team-design to decide the approach before writing code."
+  default_prompt: "Use $team-design to decide the approach before writing code."

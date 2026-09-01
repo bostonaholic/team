@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.73.0] - 2026-09-01
+
+### Fixed
+
+- Corrected Codex explicit skill prompts to use `$<skill-name>`, which Codex 0.152.0 resolves. Reinstall Team in Codex to refresh the skill catalog.
+
 ## [0.72.0] - 2026-09-01
 
 ### Added
@@ -687,7 +693,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.72.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.73.0...HEAD
+[0.73.0]: https://github.com/bostonaholic/team/compare/v0.72.0...v0.73.0
 [0.72.0]: https://github.com/bostonaholic/team/compare/v0.71.0...v0.72.0
 [0.71.0]: https://github.com/bostonaholic/team/compare/v0.70.0...v0.71.0
 [0.70.0]: https://github.com/bostonaholic/team/compare/v0.69.0...v0.70.0

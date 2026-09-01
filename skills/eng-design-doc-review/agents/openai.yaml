@@ -1,4 +1,4 @@
 interface:
   display_name: "Eng Design Doc Review"
   short_description: "Adversarially review a design document"
-  default_prompt: "Use $team:eng-design-doc-review to adversarially review a design document."
+  default_prompt: "Use $eng-design-doc-review to adversarially review a design document."

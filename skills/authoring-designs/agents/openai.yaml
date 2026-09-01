@@ -1,4 +1,4 @@
 interface:
   display_name: "Authoring Designs"
   short_description: "Draft or revise the design document"
-  default_prompt: "Use $team:authoring-designs to draft or revise the design document."
+  default_prompt: "Use $authoring-designs to draft or revise the design document."

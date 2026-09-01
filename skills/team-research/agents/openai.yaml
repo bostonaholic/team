@@ -1,4 +1,4 @@
 interface:
   display_name: "Team Research"
   short_description: "Research a codebase area before changing it"
-  default_prompt: "Use $team:team-research to research a codebase area before changing it."
+  default_prompt: "Use $team-research to research a codebase area before changing it."

@@ -1,4 +1,4 @@
 interface:
   display_name: "Principle: Progress Tracking"
   short_description: "Seed one todo per step and mark each done"
-  default_prompt: "Use $team:principle-progress-tracking to seed one todo per step and mark each done."
+  default_prompt: "Use $principle-progress-tracking to seed one todo per step and mark each done."

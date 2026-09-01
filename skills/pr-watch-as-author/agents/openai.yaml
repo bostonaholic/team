@@ -1,4 +1,4 @@
 interface:
   display_name: "PR Watch as Author"
   short_description: "Watch your own PR for review feedback"
-  default_prompt: "Use $team:pr-watch-as-author to watch your own PR for review feedback."
+  default_prompt: "Use $pr-watch-as-author to watch your own PR for review feedback."
