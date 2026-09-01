@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.67.0] - 2026-09-01
+
 ### Fixed
 
 - **`/pr-rebase` step 0 no longer errors resolving the base repository.** The documented probe requested a `baseRepository` field that `gh pr view` does not expose, so the command failed on every run. A pull request lives in its base repository, so the step now uses the repository already resolved in step 0 — same fork-aware remote matching, one fewer network call, and the probe actually works. **What this asks of you:** nothing.
@@ -654,7 +656,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.66.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.67.0...HEAD
+[0.67.0]: https://github.com/bostonaholic/team/compare/v0.66.0...v0.67.0
 [0.66.0]: https://github.com/bostonaholic/team/compare/v0.65.0...v0.66.0
 [0.65.0]: https://github.com/bostonaholic/team/compare/v0.64.0...v0.65.0
 [0.64.0]: https://github.com/bostonaholic/team/compare/v0.63.0...v0.64.0
