@@ -1,6 +1,6 @@
 {
   "name": "team",
-  "version": "0.70.0",
+  "version": "0.71.0",
   "description": "Orchestrates specialized agents to autonomously implement entire features end-to-end",
   "license": "MIT",
   "type": "module",

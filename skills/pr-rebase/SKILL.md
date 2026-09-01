@@ -573,6 +573,10 @@ state exactly. Never `git rebase --skip` (Hard Rule 3).
 
 Re-run **the same checks, the same commands, in the same order** as step 2.
 Do not add a check that had no baseline, and do not drop one that did.
+The one exception: a check whose baseline is `UNKNOWN` may be skipped —
+the verdict table maps it to `UNKNOWN` whatever it returns now, so
+re-running it can produce no evidence either way. Report it `UNKNOWN`
+in the table regardless.
 
 Classify each check by comparing `AFTER` to `BASELINE`:
 
