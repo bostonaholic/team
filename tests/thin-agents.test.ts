@@ -177,6 +177,17 @@ describe("thin agents: the principle-* preload claim", () => {
     expect(union).toEqual(PRINCIPLE_PRELOAD_UNION);
   });
 
+  test("exactly 12 of the 13 agents preload principle-progress-tracking", () => {
+    // Both prose surfaces state the count "12 of the 13 agents". The subset
+    // and union checks above allow it to drift: an agent dropping the preload
+    // leaves them green and the prose wrong. Pin the number the prose quotes.
+    const preloaders = ALL_AGENTS.filter((agent) =>
+      principlePreloads(agent).includes("principle-progress-tracking"),
+    );
+    expect(preloaders.length).toBe(12);
+    expect(ALL_AGENTS.length).toBe(13);
+  });
+
   test("neither docs/architecture.md nor AGENTS.md still claims no agent preloads one", () => {
     // Both surfaces in one test on purpose: fixing one copy and leaving the
     // other is the failure mode, and it must stay red until both are true.

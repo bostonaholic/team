@@ -50,7 +50,7 @@ Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-
 | Command | Phase |
 |---------|-------|
 | `/team <desc>` | Full 8-phase QRSPI pipeline. On stated pipeline intent only — never on a plain feature request |
-| `/team-fix <bug>` | Compressed bug-fix pipeline (no QRSPI ceremony) |
+| `/team-fix <bug>` | Compressed bug-fix pipeline (no QRSPI ceremony). On stated pipeline intent only — never on a plain "fix this bug" |
 | `/team-worktree` | Leading WORKTREE phase: create the home worktree. In a full run it is automatic and first. Standalone, it consumes `plan.md` post-PLAN for manual recovery or multi-repo setup |
 | `/team-question <desc>` | Decompose intent into task + questions + brief |
 | `/team-research` | Isolated codebase research (runs Question if missing) |

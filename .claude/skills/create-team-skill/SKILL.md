@@ -72,7 +72,9 @@ Run the eight-point admission test:
    local scar tissue do not get the prefix.
 8. **Fits the shape.** Statement + why + pattern in roughly 30 lines. Frontmatter:
    `user-invocable: false`, an "Apply when …" description, no `effort` field. No agent
-   preloads it — consumers cite it and any agent loads it just-in-time.
+   preloads it — consumers cite it and any agent loads it just-in-time. The one
+   exception is `principle-progress-tracking`, preloaded by 12 of the 13 agents; it is
+   grandfathered, not a precedent.
 
 **Passing grade — the bar is tiered, not a count:**
 
