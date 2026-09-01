@@ -30,6 +30,9 @@ picture of what is happening.
   narrows the search space dramatically.
 - **Record timestamps and sequence.** When did it start failing? What changed
   just before? Check git log, deployment history, and dependency updates.
+  When the trail leads to code that looks deliberate and the question
+  becomes "why was it written this way" rather than "what broke", that is
+  design-rationale archaeology — `skills/why/SKILL.md` owns it.
 - **Treat intermittency as evidence, not noise.** A test that fails 1 in 10
   runs is not "flaky". It reports a real condition that most invocations do
   not hit: timing, ordering, resource contention, or hidden global state. The

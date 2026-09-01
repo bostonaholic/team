@@ -147,3 +147,13 @@ operational concerns. One bullet each.>
   use its `## When Designing` section: document adjacent components in
   `## Current state` and name the surfaces that must change together in
   `## Decisions made`. Adds no new gate.
+- **Existing rationale is a design constraint.** When the design reshapes
+  or removes long-standing code — a guard, a threshold, an ownership or
+  layering boundary that looks deliberate — its original motivation
+  belongs in `## Decisions made` as a constraint, not a guess. The
+  standalone `skills/why/SKILL.md` utility is the archaeology procedure
+  for recovering it (its Preserve / Change / Avoid / Risk output maps
+  directly onto a decision record), and `skills/how/SKILL.md` describes
+  the explanation shape `## Current state` wants. Both are citations for
+  depth, not steps in this procedure — `research.md` remains the default
+  source.

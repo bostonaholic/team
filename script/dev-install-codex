@@ -22,7 +22,7 @@ if [ ! -d "$SKILLS_SRC" ]; then
 fi
 
 # Refuse to stack this on top of a native plugin install. Codex would then find
-# the same 79 skills under two roots and render every one twice, which doubles
+# the same 81 skills under two roots and render every one twice, which doubles
 # the catalog, worsens description truncation, and leaves the source ambiguous.
 # A registered-but-uninstalled marketplace row reads `not installed` and is
 # fine; only an installed row collides.

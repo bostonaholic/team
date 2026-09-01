@@ -258,7 +258,12 @@ no order implied:
 - **System fit** — does a sibling implementation now diverge? Does a caller
   outside the diff need updating? Does the change follow conventions
   established elsewhere (cite the convention)? Findings cite the
-  `System Fit` checklist item.
+  `System Fit` checklist item. When the diff removes or weakens
+  long-standing behavior — a guard, a threshold, a workaround that looks
+  deliberate — check its rationale before flagging or approving the
+  removal: call the Skill tool with `why`. A Chesterton's-fence deletion
+  whose motivating constraint still holds is a finding; one whose
+  constraint provably evaporated is not.
 - **SOLID violations** — per `skills/solid/SKILL.md`.
 - **Test files** — per both severity regimes above and
   `skills/test-style/SKILL.md`.
