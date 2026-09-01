@@ -103,10 +103,19 @@ Verdicts:
 
 ## Part 1 — Invocation surface
 
-The load-bearing rule: **composition never goes through the skill-invocation tool.**
-The invocation tool is for the top surface only — a user typing the skill, or the model
-auto-invoking it by intent. When one skill pulls in another, it *reads that skill's file*
-or *spawns a subagent*.
+The load-bearing rule: **every skill-to-skill reference is one of two kinds, and the
+form is the contract** (`docs/architecture.md`, "Two reference forms"):
+
+| Kind | Reads | Encoded as |
+|------|-------|-----------|
+| **Load** — the reader must go execute that skill | ``Call the Skill tool with `<name>` `` | bare name, no path |
+| **Citation** — a schema lookup, a "see also", a rule restated nearby | `skills/<name>/SKILL.md` | path |
+
+A load carries no path: the bare name is what the Skill tool takes, and
+`tests/skill-tool-invocation.test.ts` resolves it, so a rename and a typo both fail the
+build. Use the load form only where the other skill is genuinely needed. A parent may
+also spawn a subagent to run a child in a fresh context — that is a dispatch mechanism,
+not a third reference form.
 
 **First, make the invocation-surface decision — do not skip it.** Classify the skill
 into exactly one of three buckets, then carry the verdict into the frontmatter:
@@ -114,13 +123,20 @@ into exactly one of three buckets, then carry the verdict into the frontmatter:
 | Bucket | What it means | Frontmatter | Examples |
 |--------|---------------|-------------|----------|
 | **Both** (default for anything a user might run) | A user triggers it by intent **and** the model/another skill may pull it in | leave `user-invocable` unset (default) | `team`, `team-*`, `code-review` |
-| **User-invocable only** | A user must trigger it explicitly. The model must NOT auto-fire it | `disable-model-invocation: true` | irreversible actions: deploy, force-push, destructive cleanup |
+| **User-invocable only** | A user must trigger it explicitly. The model must NOT auto-fire it. The bar is high: an auto-fire must be catastrophic AND losing the skill on a host that ignores the flag (Codex) must be acceptable | `disable-model-invocation: true` | exactly three: `pr-rebase`, `pr-watch-as-reviewer`, `reflect` |
 | **Model-invocable only** (pure building block) | Reference material loaded by agents / read by path. A `/<skill>` command is meaningless to users | `user-invocable: false` | every pure methodology skill (`qrspi-workflow`, `solid`, …) |
 
 Decide with these tests, in order:
 
-1. **Is it irreversible or side-effecting** (deploys, pushes, deletes, sends)? →
-   **User-invocable only**. Never let the model auto-trigger it.
+1. **Is it irreversible or side-effecting** (deploys, pushes, deletes, sends)? → it
+   still belongs in a bucket by who routes to it, and it MUST carry a guard. Three
+   controls compose (`skills/principle-explicit-intent/SKILL.md`, "Guard the entry"):
+   explicit-intent guard wording in the description ("Invoke ONLY on explicit … never
+   infer …"), which is the only one that reaches every host and is never optional;
+   `disable-model-invocation: true` where the host honors it, which costs the skill its
+   model reach everywhere and is ignored on Codex; and an in-run, per-mutation approval
+   gate in the body, which is where a skill that gates each mutation guards instead of
+   at its entry. Reach for **User-invocable only** only at the bar in the table above.
 2. **Is it purely reference material** — methodology, conventions, a protocol another
    agent reads — with no standalone "do this now" meaning for a user? →
    **Model-invocable only**.
@@ -172,11 +188,12 @@ surface(s) per §1A / §1B below and set the frontmatter from the table above.
 Composability is never declared — any skill file can be composed. What you choose is HOW
 a parent pulls it in, by if the parent needs coordination or isolation:
 
-- **(a) Inline** — parent reads this skill's file and follows it. For sequential work
-  the parent coordinates and weaves into one result. Parent instruction reads:
-  > "Follow <child>/SKILL.md — all sections, full depth. Skip: <list>." Author this child
-  with clearly-headed, independently-runnable sections (parents skip by header), and do
-  not assume you own the whole conversation.
+- **(a) Inline** — the parent executes this skill in its own context. For sequential
+  work the parent coordinates and weaves into one result. That is a **Load**, so the
+  parent instruction is the imperative plus the bare name:
+  > "Call the Skill tool with `<child>` and apply <what>. Skip: <list>." Author this
+  child with clearly-headed, independently-runnable sections (parents skip by header),
+  and do not assume you own the whole conversation.
 
 - **(b) Subagent** — the parent spawns a fresh-context agent to run this. Use it for an
   unbiased perspective, such as adversarial review, or for parallelism, such as N
@@ -193,8 +210,9 @@ a parent pulls it in, by if the parent needs coordination or isolation:
 **Hide it from the slash menu.** A pure building block is reference material, not a user
 action, so a `/<skill>` command for it is meaningless. Set `user-invocable: false` in its
 frontmatter to keep it out of the `/` menu. The field governs *menu visibility only*. It
-does not affect read-and-follow or subagent composition (those reach the file directly),
-and the model can still auto-load it when relevant. In this repo every pure methodology
+does not affect composition: a Load resolves the bare name and a subagent dispatch
+reads the file, and neither consults the field. The model can still auto-load it when
+relevant. In this repo every pure methodology
 skill sets this. Entry-point skills leave it unset so they register as slash commands. (A
 skill wired as *both* surfaces stays user-invocable — do not set it. `code-review` is the
 repo's standing example: it is loaded as composed methodology by the review agents yet is
@@ -202,12 +220,14 @@ also a direct user action ("review this diff"). It is the only methodology skill
 user-invocable.)
 
 ### Invocation invariants
-- Never compose through the skill-invocation tool. Composition = read-and-follow OR subagent.
+- Reference by form: a **Load** is the Skill tool plus a bare name; a **Citation** keeps
+  its `skills/<name>/SKILL.md` path. A subagent dispatch is the third way to compose.
 - Heavy or adversarial sub-work → subagent (keeps the parent lean and unbiased).
   Sequential/coordinated sub-work → inline.
 - A skill can serve both surfaces. Just make its description trigger correctly AND its
   sections survive being inlined/subagented.
-- Do not auto-trigger irreversible skills.
+- A side-effecting or irreversible skill states an explicit-intent guard in its
+  description, with both anchors inside the first 200 characters.
 - Pure building block → `user-invocable: false` (out of the slash menu, still loadable).
 
 ---
@@ -413,7 +433,8 @@ Invocation
 - [ ] Entry point: description has WHAT + explicit trigger intents/phrases. Added to routing map.
 - [ ] Building block: chose inline (sequential) vs subagent (isolated/parallel) deliberately.
 - [ ] If subagented: self-contained, returns a conclusion not a transcript. If inlined: headed, independently-runnable sections.
-- [ ] No skill invokes another through the skill-invocation tool.
+- [ ] Every reference to another skill uses the right form: **Load** → Skill tool plus
+      bare name; **Citation** → `skills/<name>/SKILL.md` path.
 
 Input
 - [ ] Correct archetype chosen (default §2A for documents).
