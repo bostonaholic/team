@@ -327,6 +327,66 @@ Gate yourself before acting:
 
 ---
 
+## Part 4 — Host manifest
+
+Every skill under `skills/` also ships `skills/<name>/agents/openai.yaml`, the
+per-skill manifest Codex reads to build its catalog entry. Without it, Codex
+falls back to the directory name and a truncated `description:`. It is optional
+upstream and mandatory here — `tests/skill-openai-yaml.test.ts` gates it.
+
+This part consumes Part 0's name and Part 1's verdict, so run it last.
+
+The whole file, for a skill that is model-invocable at all:
+
+```yaml
+# Codex host manifest for the <name> skill.
+interface:
+  display_name: "<Display Name>"
+  short_description: "<imperative phrase>"
+  default_prompt: "Use $team:<name> to <short description, first letter lowercased>."
+```
+
+**Style.** Two-space indent. Every string value double-quoted; every key
+unquoted. No icons, no brand color, no dependencies — the four remaining
+`interface` keys are deliberately unused.
+
+**The three fields.** Each is derived, not invented:
+
+1. `display_name` — title-case the kebab `name:`. Split on `-`; uppercase any
+   token in `{pr, ux, qrspi, solid}`; leave any token in
+   `{a, as, at, by, for, in, of, on, the, to}` lowercase unless it comes first;
+   otherwise capitalize the first character. A `principle-` prefix becomes the
+   literal `Principle: ` — so `principle-fail-closed` renders
+   `Principle: Fail Closed`, and `pr-verify` renders `PR Verify`. A new acronym
+   is a decision: add it to that list in the test in the same change.
+2. `short_description` — 25 to 64 characters inclusive, imperative, verb first,
+   first character capitalized, no trailing period, and unique across every
+   skill. **It must be a verb phrase, not a noun phrase.** `"Architecture
+   Decision Record format"` sits inside the window and is still wrong: read it
+   back inside the `default_prompt` below and it is not a request. `"Record an
+   architectural decision"` is. Do not open with an article or an acronym —
+   the template lowercases the first character, and `"sOLID"` is the result.
+3. `default_prompt` — the template exactly: `Use $team:<name> to <short
+   description with its first character lowercased>.` The `$team:` namespace is
+   how Codex names a skill from this plugin; it is not optional and not
+   per-skill.
+
+**The one fork.** If the Part 1 verdict was **user-invocable only**, append a
+blank line and a policy block:
+
+```yaml
+
+policy:
+  allow_implicit_invocation: false
+```
+
+That is the Codex-side restatement of `disable-model-invocation: true`, and the
+gate asserts the two agree in both directions: a policy block on a skill that
+never set the frontmatter key fails just as loudly as a guarded skill without
+one. Any other verdict emits no `policy` block at all.
+
+---
+
 ## Acceptance checklist (verify before the skill is done)
 
 Classification
@@ -363,3 +423,12 @@ Context
 - [ ] Heavy/broad reading delegated to subagents. Conclusions returned, not transcripts.
 - [ ] Searches/excerpts over whole-file reads. No copying large files into sub-tasks.
 - [ ] Payload left complete (not compressed for size). Working set kept lean.
+
+Host manifest
+- [ ] File exists at `skills/<name>/agents/openai.yaml`.
+- [ ] `short_description` is an imperative phrase of 25–64 characters — a verb
+      phrase, not a noun phrase.
+- [ ] Every string value double-quoted; every key unquoted.
+- [ ] `default_prompt` is the template, naming `$team:<name>`.
+- [ ] `policy` block present if and only if the frontmatter sets
+      `disable-model-invocation: true`.
