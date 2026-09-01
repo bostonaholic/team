@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Corrected Codex explicit skill prompts to use `$<skill-name>`, which Codex 0.152.0 resolves. Reinstall Team in Codex to refresh the skill catalog.
+
 ## [0.72.0] - 2026-09-01
 
 ### Added

@@ -1,4 +1,4 @@
 interface:
   display_name: "Principle: Mechanical Gates"
   short_description: "Enforce a rule with a deterministic check"
-  default_prompt: "Use $team:principle-mechanical-gates to enforce a rule with a deterministic check."
+  default_prompt: "Use $principle-mechanical-gates to enforce a rule with a deterministic check."

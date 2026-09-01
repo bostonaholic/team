@@ -1,4 +1,4 @@
 interface:
   display_name: "Principle: Pre Image First"
   short_description: "Capture a recoverable pre-image before destroying"
-  default_prompt: "Use $team:principle-pre-image-first to capture a recoverable pre-image before destroying."
+  default_prompt: "Use $principle-pre-image-first to capture a recoverable pre-image before destroying."

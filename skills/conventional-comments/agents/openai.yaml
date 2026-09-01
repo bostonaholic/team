@@ -1,4 +1,4 @@
 interface:
   display_name: "Conventional Comments"
   short_description: "Label and format a review finding"
-  default_prompt: "Use $team:conventional-comments to label and format a review finding."
+  default_prompt: "Use $conventional-comments to label and format a review finding."

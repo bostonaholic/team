@@ -1,4 +1,4 @@
 interface:
   display_name: "Principle: Fix Root Causes"
   short_description: "Trace each symptom to its root and fix it there"
-  default_prompt: "Use $team:principle-fix-root-causes to trace each symptom to its root and fix it there."
+  default_prompt: "Use $principle-fix-root-causes to trace each symptom to its root and fix it there."

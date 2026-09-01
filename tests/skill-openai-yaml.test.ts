@@ -18,10 +18,8 @@
 //     for the noun phrase that reads as nonsense after the word "to" below;
 //     the period and the acronym both survive the splice into
 //     `default_prompt` and render there as `works..` and `sOLID`
-//   - `default_prompt` is exactly `Use $<ns>:<name> to <short_description>.`,
-//     where `<ns>` is the plugin namespace read from `.codex-plugin/plugin.json`
-//     — the manifest Codex prefers, pinned equal to `.claude-plugin/plugin.json`
-//     by tests/version-consistency.test.ts
+//   - `default_prompt` is exactly `Use $<name> to <short_description>.`, using
+//     the skill's own declared name as Codex's explicit-invocation token
 //   - top-level, `interface`, and `policy` keys stay inside the spec's
 //     allowlists
 //   - read from the RAW TEXT, not the parse tree: every `interface` value is a
@@ -92,29 +90,11 @@ const LEADING_ACRONYM = /^[A-Z]{2,}/;
 const SAMPLE_MANIFEST = `interface:
   display_name: "PR Rebase"
   short_description: "Rebase a branch onto its base"
-  default_prompt: "Use $team:pr-rebase to rebase a branch onto its base."
+  default_prompt: "Use $pr-rebase to rebase a branch onto its base."
 
 policy:
   allow_implicit_invocation: false
 `;
-
-// The plugin namespace Codex builds its skill names from. Read defensively: a
-// missing or malformed manifest yields "" so the guard below FAILS rather than
-// throwing, and rather than silently asserting `Use $:<name> to ...`.
-function pluginNamespace(): string {
-  const file = join(REPO_ROOT, ".codex-plugin", "plugin.json");
-  if (!existsSync(file)) return "";
-  try {
-    const parsed: unknown = JSON.parse(read(file));
-    if (typeof parsed !== "object" || parsed === null) return "";
-    const name = (parsed as Record<string, unknown>)["name"];
-    return typeof name === "string" ? name : "";
-  } catch {
-    return "";
-  }
-}
-
-const NAMESPACE = pluginNamespace();
 
 // `display_name` from the skill's kebab `name:`. Split on `-`; uppercase any
 // acronym; leave any joiner lowercase unless it leads; else capitalize. A
@@ -130,11 +110,11 @@ function displayNameFor(name: string): string {
   return `${isPrinciple ? "Principle: " : ""}${words.join(" ")}`;
 }
 
-// `default_prompt`: the one fixed template, over the namespace, the skill's
-// `name:`, and its own `short_description` with the first character lowercased.
+// `default_prompt`: the one fixed template, over the skill's `name:` and its
+// own `short_description` with the first character lowercased.
 function promptFor(name: string, shortDescription: string): string {
   const spliced = shortDescription.charAt(0).toLowerCase() + shortDescription.slice(1);
-  return `Use $${NAMESPACE}:${name} to ${spliced}.`;
+  return `Use $${name} to ${spliced}.`;
 }
 
 // --- the three raw-text matchers -------------------------------------------
@@ -411,13 +391,12 @@ describe("the sweep can see a positive (L2 tripwire)", () => {
   // are covered here — an empty-haystack floor, and each raw-text matcher
   // pointed at a known positive.
 
-  test("the enumeration sees every skill and resolves the plugin namespace", () => {
+  test("the enumeration sees every skill", () => {
     // Floors, not exact counts: adding a skill is ordinary work. The `> 50`
     // floor is the one tests/skill-tool-invocation.test.ts:51 puts on skill
     // names alone. Without this, a moved directory or a broken enumerator
     // turns every check below into a permanently green no-op.
     expect(MANIFESTS.length).toBeGreaterThan(50);
-    expect(NAMESPACE.length).toBeGreaterThan(0);
   });
 
   test("the three raw-text matchers report nothing on a well-formed manifest", () => {
@@ -499,7 +478,7 @@ describe("every skill has a valid agents/openai.yaml (L2 tripwire)", () => {
     expect(duplicateShortDescriptions()).toEqual([]);
   });
 
-  test("every default_prompt is the namespaced template over name and short_description", () => {
+  test("every default_prompt names the skill and derives from short_description", () => {
     expect(wrongDefaultPrompts()).toEqual([]);
   });
 

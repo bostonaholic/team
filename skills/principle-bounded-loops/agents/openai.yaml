@@ -1,4 +1,4 @@
 interface:
   display_name: "Principle: Bounded Loops"
   short_description: "Declare a loop's cap and make hitting it loud"
-  default_prompt: "Use $team:principle-bounded-loops to declare a loop's cap and make hitting it loud."
+  default_prompt: "Use $principle-bounded-loops to declare a loop's cap and make hitting it loud."

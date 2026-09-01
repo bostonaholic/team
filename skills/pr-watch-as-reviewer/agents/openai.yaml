@@ -1,7 +1,7 @@
 interface:
   display_name: "PR Watch as Reviewer"
   short_description: "Watch a PR you review, then approve once"
-  default_prompt: "Use $team:pr-watch-as-reviewer to watch a PR you review, then approve once."
+  default_prompt: "Use $pr-watch-as-reviewer to watch a PR you review, then approve once."
 
 policy:
   allow_implicit_invocation: false

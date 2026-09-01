@@ -1,4 +1,4 @@
 interface:
   display_name: "SOLID"
   short_description: "Apply the SOLID design principles"
-  default_prompt: "Use $team:solid to apply the SOLID design principles."
+  default_prompt: "Use $solid to apply the SOLID design principles."

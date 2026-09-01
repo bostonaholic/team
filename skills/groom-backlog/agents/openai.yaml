@@ -1,4 +1,4 @@
 interface:
   display_name: "Groom Backlog"
   short_description: "Groom a project backlog end to end"
-  default_prompt: "Use $team:groom-backlog to groom a project backlog end to end."
+  default_prompt: "Use $groom-backlog to groom a project backlog end to end."

@@ -1,4 +1,4 @@
 interface:
   display_name: "Running Quality Checks"
   short_description: "Run every available check in speed order"
-  default_prompt: "Use $team:running-quality-checks to run every available check in speed order."
+  default_prompt: "Use $running-quality-checks to run every available check in speed order."

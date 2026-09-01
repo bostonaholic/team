@@ -1,7 +1,7 @@
 interface:
   display_name: "Reflect"
   short_description: "Mine this session for durable learnings"
-  default_prompt: "Use $team:reflect to mine this session for durable learnings."
+  default_prompt: "Use $reflect to mine this session for durable learnings."
 
 policy:
   allow_implicit_invocation: false

@@ -1,4 +1,4 @@
 interface:
   display_name: "Team"
   short_description: "Run the full autonomous feature pipeline"
-  default_prompt: "Use $team:team to run the full autonomous feature pipeline."
+  default_prompt: "Use $team to run the full autonomous feature pipeline."
