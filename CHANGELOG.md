@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.69.0] - 2026-09-01
+
+### Changed
+
+- **The changelog methodology now names the rebase-conflict resolution: keep both sides.** When a branch's `[Unreleased]` entries collide with dated sections the base added, the branch's entries stay under `[Unreleased]`, above the base's newest dated section, and every dated section from the base survives untouched — positional, not either/or. **What this asks of you:** nothing.
+
 ## [0.68.0] - 2026-09-01
 
 ### Added
@@ -662,7 +668,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.68.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.69.0...HEAD
+[0.69.0]: https://github.com/bostonaholic/team/compare/v0.68.0...v0.69.0
 [0.68.0]: https://github.com/bostonaholic/team/compare/v0.67.0...v0.68.0
 [0.67.0]: https://github.com/bostonaholic/team/compare/v0.66.0...v0.67.0
 [0.66.0]: https://github.com/bostonaholic/team/compare/v0.65.0...v0.66.0
