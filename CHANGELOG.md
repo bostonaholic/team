@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`/pr-rebase` step 0 no longer errors resolving the base repository.** The documented probe requested a `baseRepository` field that `gh pr view` does not expose, so the command failed on every run. A pull request lives in its base repository, so the step now uses the repository already resolved in step 0 — same fork-aware remote matching, one fewer network call, and the probe actually works. **What this asks of you:** nothing.
+
 ## [0.66.0] - 2026-09-01
 
 ### Changed
