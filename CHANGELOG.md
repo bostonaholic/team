@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.68.0] - 2026-09-01
+
 ### Added
 
 - **Two standalone investigation utilities answer the questions every change starts with: `/how` (how does this work?) and `/why` (why is it this way?).** [`how`](https://github.com/bostonaholic/team/blob/main/skills/how/SKILL.md) explains a subsystem at onboarding depth — simple questions traced inline, complex ones fanned out to 2–4 read-only `Explore` subagents and synthesized into an overview, flow, file map, and gotchas, with an optional fresh-context critique mode (three architectural lenses, findings rated structural / concern / observation, judged Act on / Consider / Noted / Dismissed). [`why`](https://github.com/bostonaholic/team/blob/main/skills/why/SKILL.md) recovers design rationale from the historical record — a git code anchor, one read-only investigator per available evidence source (git and `gh` always; tracker, docs, chat, observability, error tracking, and analytics when an MCP serves them), and a synthesis where every claim sits in a confidence tier (Direct / Supported / Inferred / Speculative / Unknown), causal claims carry citations, and a Sources Consulted map names every source searched, empty, or skipped. Both are read-only and write nothing. The pipeline consults them where rationale matters: [`team-fix`](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md) and [`code-review`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md) load `why` before changing or judging deliberate-looking behavior, and [`systematic-debugging`](https://github.com/bostonaholic/team/blob/main/skills/systematic-debugging/SKILL.md) and [`authoring-designs`](https://github.com/bostonaholic/team/blob/main/skills/authoring-designs/SKILL.md) cite it and its companion. Pinned by L2 tripwires in [`tests/why-skill.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/why-skill.test.ts) and [`tests/how-skill.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/how-skill.test.ts). The catalog grows from 79 to 81 skills. **What this asks of you:** nothing — two new slash commands are available; no existing behavior changes.
@@ -660,7 +662,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.67.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.68.0...HEAD
+[0.68.0]: https://github.com/bostonaholic/team/compare/v0.67.0...v0.68.0
 [0.67.0]: https://github.com/bostonaholic/team/compare/v0.66.0...v0.67.0
 [0.66.0]: https://github.com/bostonaholic/team/compare/v0.65.0...v0.66.0
 [0.65.0]: https://github.com/bostonaholic/team/compare/v0.64.0...v0.65.0
