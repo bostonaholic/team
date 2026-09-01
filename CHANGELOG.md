@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The changelog methodology now names the rebase-conflict resolution: keep both sides.** When a branch's `[Unreleased]` entries collide with dated sections the base added, the branch's entries stay under `[Unreleased]`, above the base's newest dated section, and every dated section from the base survives untouched — positional, not either/or. **What this asks of you:** nothing.
+
 ## [0.68.0] - 2026-09-01
 
 ### Added

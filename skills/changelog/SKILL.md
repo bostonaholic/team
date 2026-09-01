@@ -206,6 +206,11 @@ commits are excluded and the rest are rewritten user-facing:
 - **Never duplicate an entry.** Check `[Unreleased]` before you add to it. This
   skill runs more than once against the same branch, so it must be safe to
   repeat: the second run over an unchanged branch writes nothing.
+- **A rebase conflict on the changelog keeps both sides.** When a branch's
+  `[Unreleased]` entries collide with dated sections the base added, the
+  resolution is positional, not either/or: the branch's entries stay under
+  `[Unreleased]`, above the base's newest `## [X.Y.Z]` section, and every
+  dated section from the base survives untouched.
 - **Write in past tense.** "Added X" not "Add X". The changelog records what
   happened.
 - **Keep entries short.** One to two sentences maximum. Link to documentation
