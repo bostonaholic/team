@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`/pr-rebase` no longer has to re-run a check whose baseline is `UNKNOWN`.** Such a check maps to `UNKNOWN` in the verification table whatever it returns, so re-running it produces no evidence either way — it may now be skipped, and it is reported `UNKNOWN` in the table regardless. **What this asks of you:** nothing.
+
 ## [0.70.0] - 2026-09-01
 
 ### Changed
