@@ -84,6 +84,11 @@ agents, so they will not run the pipeline. The standalone utilities do.
 > ```
 >
 > Re-running `codex plugin add` restores them.
+>
+> All three also declare `allow_implicit_invocation: false` in their
+> `agents/openai.yaml`, which asks Codex for the same guarantee in the host's
+> own vocabulary. The removal step above stands until a live Codex build is
+> observed to honor that key.
 
 </details>
 
