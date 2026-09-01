@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cross Model Review"
+  short_description: "Run a second-vendor review pass"
+  default_prompt: "Use $team:cross-model-review to run a second-vendor review pass."

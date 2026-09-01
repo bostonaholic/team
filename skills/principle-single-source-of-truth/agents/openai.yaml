@@ -1,0 +1,4 @@
+interface:
+  display_name: "Principle: Single Source of Truth"
+  short_description: "Define a rule once and consult that owner"
+  default_prompt: "Use $team:principle-single-source-of-truth to define a rule once and consult that owner."

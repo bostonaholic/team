@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team Implement"
+  short_description: "Execute and verify the implementation phase"
+  default_prompt: "Use $team:team-implement to execute and verify the implementation phase."

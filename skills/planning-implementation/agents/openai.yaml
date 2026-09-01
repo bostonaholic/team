@@ -1,0 +1,4 @@
+interface:
+  display_name: "Planning Implementation"
+  short_description: "Turn a structure into file-level steps"
+  default_prompt: "Use $team:planning-implementation to turn a structure into file-level steps."

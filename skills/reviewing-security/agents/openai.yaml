@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reviewing Security"
+  short_description: "Review a diff for security vulnerabilities"
+  default_prompt: "Use $team:reviewing-security to review a diff for security vulnerabilities."

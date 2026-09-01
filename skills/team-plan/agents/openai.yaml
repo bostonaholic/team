@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team Plan"
+  short_description: "Produce the tactical implementation plan"
+  default_prompt: "Use $team:team-plan to produce the tactical implementation plan."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Code Review"
+  short_description: "Review a diff with fresh-context discipline"
+  default_prompt: "Use $team:code-review to review a diff with fresh-context discipline."

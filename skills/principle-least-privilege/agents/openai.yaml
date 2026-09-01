@@ -1,0 +1,4 @@
+interface:
+  display_name: "Principle: Least Privilege"
+  short_description: "Enforce a constraint by withholding the tool"
+  default_prompt: "Use $team:principle-least-privilege to enforce a constraint by withholding the tool."

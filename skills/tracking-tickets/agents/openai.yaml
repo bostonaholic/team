@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tracking Tickets"
+  short_description: "Move a tracker ticket through its states"
+  default_prompt: "Use $team:tracking-tickets to move a tracker ticket through its states."

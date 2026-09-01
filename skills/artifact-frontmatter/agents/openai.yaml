@@ -1,0 +1,4 @@
+interface:
+  display_name: "Artifact Frontmatter"
+  short_description: "Validate a pipeline artifact's frontmatter"
+  default_prompt: "Use $team:artifact-frontmatter to validate a pipeline artifact's frontmatter."

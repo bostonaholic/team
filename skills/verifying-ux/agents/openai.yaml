@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verifying UX"
+  short_description: "Boot the app and verify it live"
+  default_prompt: "Use $team:verifying-ux to boot the app and verify it live."

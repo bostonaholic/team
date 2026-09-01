@@ -164,7 +164,7 @@ facility, so the design must work around it.
 |----------------|-------------|-----------|
 | Agent/skill Markdown bodies | native (loaded as-is) | native (system-prompt body) |
 | Custom slash entry points | native (SKILL.md auto-register) | native (built-ins and Skills. Prompts are deprecated in favor of Skills.) |
-| On-demand SKILL.md injection | native (`skills:` + auto-load) | native (`.agents/skills/SKILL.md`, description-matched implicit invocation) |
+| On-demand SKILL.md injection | native (`skills:` + auto-load) | native (`.agents/skills/SKILL.md`, description-matched implicit invocation). A skill may opt out through `policy.allow_implicit_invocation: false` in its `agents/openai.yaml`; unverified on a live build |
 | Subagent dispatch (parallel) | native (Agent/Task tool) | native (`spawn_agent`/`wait_agent`…, `features.multi_agent`) |
 | Nested subagents | native (depth 2, ≤4, read-only) | workaround: `max_depth=1`, nesting capped one level |
 | Structured agent→caller output | native (final-text JSON envelope) | native and strongest (`--output-schema` JSON Schema). A silent-drop bug under tools ([codex#15451](https://github.com/openai/codex/issues/15451)) was fixed April 2026 |
@@ -302,7 +302,10 @@ full parity. It starts from the matrix and works around the named gaps.
 - Bodies port as-is. Agent roles → TOML in `.codex/agents/` with the same
   system-prompt body.
 - Skills port natively to `.agents/skills/SKILL.md` (description-matched implicit
-  invocation).
+  invocation). Each skill also ships `agents/openai.yaml`, which names it in the
+  catalog; the three guarded skills declare `policy.allow_implicit_invocation:
+  false` there to opt out of that matching. Whether this host honors the key is
+  unverified on a live build.
 - Hooks: reuse the 4 `.mjs` files. The shim adapts to Codex
   `hooks.json`/`[hooks]`, whose schema mirrors Claude closely
   (`permissionDecision:"deny"`/exit 2). Events map nearly 1:1
@@ -385,6 +388,13 @@ withholds that one as well. This host therefore keeps every guarded skill out
 of the model's reach on its own, which is the opposite of Codex, and it is why
 Team's install for this host withholds nothing and needs no post-install
 removal step.
+
+Codex now gets the closest thing it has to the same claim: `pr-rebase`,
+`pr-watch-as-reviewer`, and `reflect` each declare
+`policy.allow_implicit_invocation: false` in their `agents/openai.yaml`. That
+narrows the gap without closing it. The declaration is a request to a host that
+has not been observed to honor it, where this host's behavior was observed
+directly, so the Codex install keeps both its warning and its removal step.
 
 **Paths and naming.**
 

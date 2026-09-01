@@ -1,0 +1,4 @@
+interface:
+  display_name: "Writing Prose"
+  short_description: "Write and assess plain-language prose"
+  default_prompt: "Use $team:writing-prose to write and assess plain-language prose."

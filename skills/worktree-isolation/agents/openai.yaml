@@ -1,0 +1,4 @@
+interface:
+  display_name: "Worktree Isolation"
+  short_description: "Run the pipeline in isolated worktrees"
+  default_prompt: "Use $team:worktree-isolation to run the pipeline in isolated worktrees."

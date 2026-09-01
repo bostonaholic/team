@@ -1,0 +1,4 @@
+interface:
+  display_name: "Principle: Optimization Never Dependency"
+  short_description: "Skip an enhancement loudly and fall back inline"
+  default_prompt: "Use $team:principle-optimization-never-dependency to skip an enhancement loudly and fall back inline."

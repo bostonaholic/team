@@ -1,0 +1,4 @@
+interface:
+  display_name: "Principle: Blind the Investigator"
+  short_description: "Hand an investigator the question, never the answer"
+  default_prompt: "Use $team:principle-blind-the-investigator to hand an investigator the question, never the answer."

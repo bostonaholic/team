@@ -1,0 +1,4 @@
+interface:
+  display_name: "Shipit"
+  short_description: "Land a reviewed pull request"
+  default_prompt: "Use $team:shipit to land a reviewed pull request."

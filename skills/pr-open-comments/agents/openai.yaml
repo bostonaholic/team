@@ -1,0 +1,4 @@
+interface:
+  display_name: "PR Open Comments"
+  short_description: "Triage unresolved PR review comments"
+  default_prompt: "Use $team:pr-open-comments to triage unresolved PR review comments."

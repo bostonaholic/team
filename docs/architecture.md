@@ -801,6 +801,35 @@ consumers, and behaviors), see [skills.md](skills.md).
    toward the limit like any methodology skill. A bundle of rules never
    takes the prefix, however principle-shaped its content.
 
+### Codex host manifests
+
+Every skill under `skills/` carries `agents/openai.yaml`, the per-skill
+manifest Codex reads to build its catalog entry. Without one, Codex falls back
+to the directory name and a truncated `description:`. The file is optional
+upstream and mandatory here, gated by `tests/skill-openai-yaml.test.ts`.
+
+Three fields, each derived from the skill's own `SKILL.md` frontmatter rather
+than stored twice: `display_name` title-cases the kebab `name:` through two
+closed lists (acronyms up, joiners down) with a `principle-` prefix rendered as
+`Principle: `; `short_description` is an imperative phrase in the spec's 25-64
+character window; `default_prompt` is `Use $<ns>:<name> to
+<short_description with its first character lowercased>.` over the namespace in
+`.codex-plugin/plugin.json`. No
+icons, no brand color. A `policy` block declaring
+`allow_implicit_invocation: false` appears if and only if the frontmatter sets
+`disable-model-invocation: true`, and the test asserts that equality in both
+directions.
+
+`short_description` is the one field no derivation produces, and that is where
+drift lives. `.claude/skills/create-team-skill/` teaches the manifest for a new
+skill and says nothing about keeping it current when a `description:` is
+rewritten later. Reflect is the concrete actor: `skills/reflect/SKILL.md`
+consults that guide before editing an existing skill, so the guide is reachable
+on an edit path, but it is silent about `short_description` — leaving Reflect
+able to rewrite a `description:` and leave the manifest stale. Nothing detects
+that today; the gate checks the manifest's shape, never its agreement with the
+prose it summarizes.
+
 ## 7. Hooks
 
 Runtime hooks (`hooks/`, distributed with the plugin):

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nested Agents"
+  short_description: "Spawn a nested sub-agent safely"
+  default_prompt: "Use $team:nested-agents to spawn a nested sub-agent safely."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Finding Files"
+  short_description: "Locate files relevant to an area"
+  default_prompt: "Use $team:finding-files to locate files relevant to an area."

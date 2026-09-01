@@ -1,0 +1,4 @@
+interface:
+  display_name: "Test First Development"
+  short_description: "Write acceptance tests before the code"
+  default_prompt: "Use $team:test-first-development to write acceptance tests before the code."

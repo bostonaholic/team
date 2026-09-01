@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team Fix"
+  short_description: "Run the compressed bug-fix pipeline"
+  default_prompt: "Use $team:team-fix to run the compressed bug-fix pipeline."

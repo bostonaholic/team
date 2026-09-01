@@ -1,0 +1,4 @@
+interface:
+  display_name: "Technical Design Doc"
+  short_description: "Structure a technical design document"
+  default_prompt: "Use $team:technical-design-doc to structure a technical design document."

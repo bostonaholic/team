@@ -1,0 +1,7 @@
+interface:
+  display_name: "PR Rebase"
+  short_description: "Rebase a branch onto its base"
+  default_prompt: "Use $team:pr-rebase to rebase a branch onto its base."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Product Thinking"
+  short_description: "Weigh user demand while shaping scope"
+  default_prompt: "Use $team:product-thinking to weigh user demand while shaping scope."
