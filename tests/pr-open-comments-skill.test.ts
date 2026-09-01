@@ -20,7 +20,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { descriptionText, frontmatter, read } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 // pr-open-comments is a RUNTIME skill — under skills/ (distributed), not .claude/.
@@ -57,10 +57,13 @@ describe("pr-open-comments skill: runtime standalone utility frontmatter", () =>
   test("description carries the explicit-intent guard anchors incl. /pr-open-comments", () => {
     // A remote-mutating skill states its guard instead of a plain `Trigger
     // on` carrier. Anchor PLACEMENT is pinned in tests/skill-invocation.test.ts.
-    // Whitespace-squashed, so an anchor split across two block-scalar lines
-    // still matches — the same normalisation tests/pr-rebase-skill.test.ts uses.
-    const f = fm().replace(/\s+/g, " ");
-    // Guard: an empty frontmatter must fail, not vacuously pass.
+    // Scoped to the DESCRIPTION, not the whole frontmatter: the retired
+    // `Trigger on` pattern was description-scoped, and an anchor that drifted
+    // into `argument-hint` must not satisfy this check. Whitespace-squashed,
+    // so an anchor split across two block-scalar lines still matches — the
+    // same normalisation tests/pr-rebase-skill.test.ts uses.
+    const f = descriptionText(fm()).replace(/\s+/g, " ");
+    // Guard: an empty description must fail, not vacuously pass.
     expect(f.length).toBeGreaterThan(0);
     expect(/only on explicit/i.test(f)).toBe(true);
     expect(/never infer/i.test(f)).toBe(true);

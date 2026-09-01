@@ -247,7 +247,8 @@ const EXPECTED_INVOCATION: Record<string, InvocationRow> = {
   },
   // `sweeping-local-state` stays `local`, defended on LOCALITY, not on the
   // ownership table in its own body. Two grounds. (1) Its contract scopes it
-  // to state left "on the machine" (skills/sweeping-local-state/SKILL.md:4-5).
+  // to state left "on the machine" — its own description's wording in
+  // skills/sweeping-local-state/SKILL.md.
   // (2) A `.teamteardown` line is runtime input from a consuming repo, not one
   // of the four authoring-time dispatch forms this map sweeps — outside the
   // map's universe by construction, not overlooked by it. Residual: a repo
@@ -326,8 +327,9 @@ const EXPECTED_INVOCATION: Record<string, InvocationRow> = {
   // is the half that survives on a host that drops the flag.
   "pr-rebase": { class: "user-only", mutates: "remote", guard: "clause" }, // force-pushes the branch
   "pr-watch-as-reviewer": { class: "user-only", mutates: "remote", guard: "clause" }, // submits a review / approval
-  // `reflect` ALSO runs an in-run approval gate (skills/reflect/SKILL.md:42,
-  // :322-350, :503-505). Its row stays `clause` because the `gate` fence is a
+  // `reflect` ALSO runs an in-run approval gate — skills/reflect/SKILL.md,
+  // "Nothing mutates before you answer", and the approval prompts its
+  // procedure carries. Its row stays `clause` because the `gate` fence is a
   // closed one-item list, not because the gate is absent. Recorded here so
   // nobody re-derives it and "corrects" the row.
   reflect: { class: "user-only", mutates: "remote", guard: "clause" }, // rewrites SKILL.md files, files public issues
@@ -398,8 +400,9 @@ const EXPECTED_INVOCATION: Record<string, InvocationRow> = {
 
 // ---------------------------------------------------------------------------
 // Disk side. Rebuilt here from the filesystem the way
-// tests/guarded-skill-prose.test.ts:56-67 does, so both sides of every
-// comparison come from the same source of truth and no map is cross-imported.
+// tests/guarded-skill-prose.test.ts's guardedSkills() does, so both sides of
+// every comparison come from the same source of truth and no map is
+// cross-imported.
 // ---------------------------------------------------------------------------
 
 // A `skills/<name>/` directory with no SKILL.md is SKIPPED, never thrown on:

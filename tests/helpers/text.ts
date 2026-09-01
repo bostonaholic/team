@@ -24,8 +24,9 @@ export function squash(text: string): string {
 //
 // Latent hole: any inline value other than "" and "|" is treated as a
 // scalar, so `|-`, `|+` or `>` would measure as a two-character
-// description. Inert today — all 13 block scalars use a bare `|` — and it
-// fails loud downstream at tests/architecture.test.ts's phrase check.
+// description. Inert today — every block scalar in the corpus opens with a
+// bare `|` — and it fails loud downstream at the description-phrase checks
+// in tests/architecture.test.ts.
 export function descriptionText(fm: string): string {
   const lines = fm.split("\n");
   const start = lines.findIndex((line) => line.startsWith("description:"));
@@ -59,13 +60,17 @@ export function descriptionText(fm: string): string {
 }
 
 // Frontmatter slice: the lines strictly between the first and second `---`
-// markers. Zero markers is a legal shape — the slice is empty ("") and
-// dependent assertions fail rather than skip. Exactly one marker is an
-// UNTERMINATED block: returning the whole body would silently feed body
-// prose to a frontmatter predicate, so it throws instead, quoting the two
-// signals this signature can offer (it takes text, not a path).
+// markers. Frontmatter is only frontmatter on line 1, so a file that does
+// not open with `---` has none and yields "" — a body thematic break must
+// not be read as an opening marker. Zero markers is likewise a legal
+// shape — the slice is empty ("") and dependent assertions fail rather than
+// skip. Exactly one marker is an UNTERMINATED block: returning the whole
+// body would silently feed body prose to a frontmatter predicate, so it
+// throws instead, quoting the two signals this signature can offer (it
+// takes text, not a path).
 export function frontmatter(text: string): string {
   const lines = text.split("\n");
+  if ((lines[0] ?? "").trim() !== "---") return "";
   let count = 0;
   const out: string[] = [];
   for (const line of lines) {

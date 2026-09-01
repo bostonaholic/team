@@ -89,9 +89,18 @@ describe("frontmatter()", () => {
   });
 
   test("returns \"\" for text with no --- marker at all", () => {
-    // tests/docs-nav.test.ts:47 sweeps docs that carry no frontmatter and
-    // depends on the empty slice. Zero markers is a legal shape, not an error.
+    // tests/docs-nav.test.ts's frontMatterValues() sweeps docs that carry no
+    // frontmatter and depends on the empty slice. Zero markers is a legal
+    // shape, not an error.
     expect(frontmatter("# A heading\n\nJust prose.\n")).toBe("");
+  });
+
+  test("returns \"\" when the first --- is a body thematic break, not frontmatter", () => {
+    // Frontmatter is only frontmatter on line 1. A legal markdown file whose
+    // body carries one thematic break has none, so it yields the empty slice
+    // rather than throwing "unterminated".
+    const file = ["# A heading", "", "Prose.", "", "---", "", "More prose."].join("\n");
+    expect(frontmatter(file)).toBe("");
   });
 
   test("throws on an opening --- that is never closed", () => {

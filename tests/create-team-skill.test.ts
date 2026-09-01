@@ -80,10 +80,19 @@ describe("the dev authoring guide agrees with docs/architecture.md", () => {
     expect(guide).not.toContain(RETIRED_BUCKET_CLAIM);
   });
 
+  test("the bucket absence sweep can find a positive", () => {
+    // Same reason as the dispatch sweep above, and the seed is spelled out
+    // rather than interpolated on purpose: a typo in the 60-character literal
+    // would otherwise make the check permanently green against any guide.
+    const seeded =
+      "intro\n**User-invocable only**. Never let the model auto-trigger it.\noutro";
+    expect(seeded).toContain(RETIRED_BUCKET_CLAIM);
+  });
+
   test("the bucket rule names the guard clause, the flag, and the in-run gate", () => {
     // The three options docs/architecture.md and
-    // skills/principle-explicit-intent/SKILL.md:31-36 allow, in place of the
-    // single bucket the retired rule forced.
+    // skills/principle-explicit-intent/SKILL.md ("Guard the entry") allow, in
+    // place of the single bucket the retired rule forced.
     expect(guide).toContain("never infer");
     expect(guide).toContain("disable-model-invocation");
     expect(guide).toContain("principle-explicit-intent");
