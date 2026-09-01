@@ -2,16 +2,17 @@
 name: reflect
 description: |
   Mine the session you are in for learnings that outlive it, and propose each
-  one as a concrete change. It resolves this session's own transcript by a
-  marker the run planted, normalizes it into a bounded record stream, sends
-  three read-only lenses over it (judgment, tooling, divergent), synthesizes
-  one Accepted / Rejected / Backlog list with the evidence behind every item,
-  writes a plan file into a printed run cache, and waits: nothing outside that
-  cache changes before you answer. Invoke ONLY on explicit reflection intent —
-  the user says "reflect on this session", "capture what we learned", "what
-  should we take from this session", or runs "/reflect". A run edits skill
-  files and files public issues, so never infer that intent from a session
-  ending, from a retrospective remark, or from a run that hit friction.
+  one as a concrete change. Invoke ONLY on explicit reflection intent — never
+  infer that intent from a session ending, from a retrospective remark, or
+  from a run that hit friction. A run edits skill files and files public
+  issues. The user says "reflect on this session", "capture what we learned",
+  "what should we take from this session", or runs "/reflect". It resolves
+  this session's own transcript by a marker the run planted, normalizes it
+  into a bounded record stream, sends three read-only lenses over it
+  (judgment, tooling, divergent), synthesizes one Accepted / Rejected /
+  Backlog list with the evidence behind every item, writes a plan file into a
+  printed run cache, and waits: nothing outside that cache changes before you
+  answer.
 effort: high
 argument-hint: "[skill-name]"
 disable-model-invocation: true

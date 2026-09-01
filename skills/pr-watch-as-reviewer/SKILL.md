@@ -1,21 +1,21 @@
 ---
 name: pr-watch-as-reviewer
 description: |
-  Watch a pull request you are reviewing until your feedback is settled,
-  re-review each settlement, then approve once: poll GitHub in
-  ~31-minute cycles for up to 24 hours until every review thread you
-  opened is resolved and every plain PR comment you posted has a later
-  push behind it, re-review each settlement against the current branch
-  (the
-  change or the reply must actually meet the comment's concern), then
-  cast one attributed, SHA-cited approval and stop. A settlement that
-  fails re-review stops the watch without approving.
-  The approval and a 👍/👎 reaction marking each settlement useful or
-  not are the only write actions — it never resolves threads,
-  never replies, never edits code, never merges. Trigger on "approve
-  the PR when my comments are resolved", "watch and approve", or
-  "/pr-watch-as-reviewer" — user-invoked only; model invocation is
-  disabled because an approval can transitively trigger an auto-merge.
+  Watch a pull request you are reviewing until your feedback is settled, then
+  approve once. Invoke ONLY on explicit approval-watch intent — never infer
+  it from a PR merely being open or from your own comments being resolved.
+  User-invoked only; model invocation is disabled because an approval can
+  transitively trigger an auto-merge. The user says "approve the PR when my
+  comments are resolved", "watch and approve", or runs
+  "/pr-watch-as-reviewer". It polls GitHub in ~31-minute cycles for up to 24
+  hours until every review thread you opened is resolved and every plain PR
+  comment you posted has a later push behind it, re-reviews each settlement
+  against the current branch (the change or the reply must actually meet the
+  comment's concern), then casts one attributed, SHA-cited approval and
+  stops. A settlement that fails re-review stops the watch without approving.
+  The approval and a 👍/👎 reaction marking each settlement useful or not are
+  the only write actions — it never resolves threads, never replies, never
+  edits code, never merges.
 effort: medium
 argument-hint: "[<pr-number-or-url>]"
 disable-model-invocation: true
