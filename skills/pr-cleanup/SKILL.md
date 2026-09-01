@@ -1,16 +1,16 @@
 ---
 name: pr-cleanup
 description: |
-  Tear down local and remote branch state after a pull request is finished,
-  in one of two modes. Mode A (merged): verify the PR actually merged,
-  remove the branch's worktree, resync the default branch, and delete the
-  local branch. Mode B (closed / abandoned): close the PR(s), then delete
-  every trace — worktree, local and remote branches, planning scratch.
-  Mode B runs ONLY on an explicit user request to abandon the work — the
-  user says "close the PR", "abandon this", "scrap it". Never infer abandon
-  intent from a PR merely being stale, red, or unreviewed. Trigger on
-  "the PR was merged", "clean up the branch", "delete the merged branch",
-  "close those PRs", or "/pr-cleanup".
+  Tear down local and remote branch state after a finished pull request, in
+  two modes: A (merged) and B (closed / abandoned). Invoke ONLY on explicit
+  cleanup intent — never infer Mode B's abandon intent from a PR merely
+  being stale, red, or unreviewed. The user says "the PR was merged", "clean
+  up the branch", "delete the merged branch", "close those PRs",
+  "abandon this", "scrap it", or runs "/pr-cleanup". Mode A verifies the PR
+  actually merged, removes the branch's worktree, resyncs the default
+  branch, and deletes the local branch. Mode B closes the PR(s), then
+  deletes every trace — worktree, local and remote branches, planning
+  scratch.
 effort: medium
 argument-hint: "[<pr-number-or-url-or-branch>]"
 ---

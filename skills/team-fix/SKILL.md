@@ -1,13 +1,13 @@
 ---
 name: team-fix
 description: |
-  Compressed bug-fix pipeline — reproduce, write failing test, minimal fix,
-  verify, and open a draft PR. Skips Question/Research/Design/Structure/Plan
-  phases. Invoke ONLY on explicit pipeline intent — the user says "run the
-  bug-fix pipeline", "team-fix this bug", or runs "/team-fix". The pipeline
-  moves the tracker ticket, commits, pushes a branch, and opens a draft PR
-  without stopping to ask: never infer pipeline intent from a plain request
-  to fix a bug — that asks for an inline fix, not this pipeline.
+  Compressed bug-fix pipeline: reproduce, write a failing test, minimal fix,
+  verify, open a draft PR. Invoke ONLY on explicit pipeline intent — never
+  infer it from a plain request to fix a bug, which asks for an inline fix,
+  not this pipeline. Skips the Question/Research/Design/Structure/Plan
+  phases. The user says "run the bug-fix pipeline", "team-fix this bug", or
+  runs "/team-fix". The pipeline moves the tracker ticket, commits, pushes a
+  branch, and opens a draft PR without stopping to ask.
 effort: high
 argument-hint: "<ticket id, issue URL, or bug description>"
 ---

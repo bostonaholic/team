@@ -292,8 +292,10 @@ QRSPI phase: a self-contained action a user runs on demand.
   in a separate step before `/shipit` (in this repo, the dev `version-bump`
   skill). Model-invocable, but the merge is irreversible, so two guards
   replace the former hard flag: it fires only on explicit ship intent
-  ("ship it", "land the PR", `/shipit`) and never on a PR that is merely
-  approved or green, and the CI-green wait gates the merge mechanically.
+  ("ship it", "land the PR", "land this", `/shipit`) — front-loaded in the
+  description so a truncation cannot cut it — and never on a PR that is
+  merely approved, green, or finished, and the CI-green wait gates the
+  merge mechanically.
   Neither guard is a question put to the user mid-run — **it does not stop
   to confirm the merge**, because ship intent already carried the
   authorization and every caller chaining into `/shipit` would inherit the
