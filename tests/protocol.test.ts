@@ -1118,36 +1118,60 @@ describe("no stated round or revision cap (L2 forbidden-pattern sweep)", () => {
     "AGENTS.md",
   ];
 
+  // Any count a bound could name. `1`/`one` is excluded on purpose: "at the
+  // cost of one round" is the loop paying for a re-review, not a bound on it.
+  const COUNT = String.raw`(?:[2-9]|[1-9]\d+|two|three|four|five|six|seven|eight|nine|ten)`;
+  // The same set without multi-digit numerals, for the pattern that reads a
+  // bare cap value with no round or revision noun to scope it. A legitimate
+  // cap on something else ("capped at 30 reply lines") must stay unswept.
+  const SMALL_COUNT = String.raw`(?:[2-9]|two|three|four|five|six|seven|eight|nine|ten)`;
+
+  // Each entry plants two positives: the historical five-valued text that
+  // motivated the pattern, and the same claim at a different count. A pattern
+  // pinned to the old number bans the old wording, not the rule — a run that
+  // announced a cap of six is what put the second sample here.
   const CAP_PATTERNS = [
     {
-      label: "a five-round review bound",
-      pattern: /\b(?:5|five)[-\s]rounds?\b/i,
-      planted:
+      label: "a numbered round review bound",
+      pattern: new RegExp(String.raw`\b${COUNT}[-\s]rounds?\b`, "i"),
+      planted: [
         "- **Bounded veto.** The review loop is capped at five rounds, then halts to a\n  human.",
+        "- **Bounded veto.** The review loop is capped at six rounds, then halts\n  loudly to a human.",
+      ],
     },
     {
-      label: "a five-revision design bound",
-      pattern: /\b(?:5|five)[-\s]revisions?\b/i,
-      planted:
+      label: "a numbered revision design bound",
+      pattern: new RegExp(String.raw`\b${COUNT}[-\s]revisions?\b`, "i"),
+      planted: [
         "runs. Cap at 5 revisions. At cap, the run halts terminally and reports\nthe unresolved findings — no consultation, no PR.",
+        "runs. Cap at 6 revisions. At cap, the run halts terminally and reports\nthe unresolved findings — no consultation, no PR.",
+      ],
     },
     {
-      label: "a terminal `revision: 5`",
-      pattern: /revision:\s*5\b/,
-      planted:
+      label: "a terminal numbered `revision:`",
+      // `revision: 0` and `revision: 1` are the first-draft values the schema
+      // really uses, so the terminal-cap pattern starts at 2.
+      pattern: /revision:\s*[2-9]\d*\b/,
+      planted: [
         "   frontmatter, then a fresh review round runs. Cap at `revision: 5`. At\n   cap, halt terminally and report the unresolved findings — no PR.",
+        "   frontmatter, then a fresh review round runs. Cap at `revision: 6`. At\n   cap, halt terminally and report the unresolved findings — no PR.",
+      ],
     },
     {
-      label: "a cap whose value is 5",
-      pattern: /\bcap(?:ped)?\s+(?:at\s+|is\s+)?(?:5|five)\b/i,
-      planted:
+      label: "a numbered cap value",
+      pattern: new RegExp(String.raw`\bcap(?:ped)?\s+(?:at\s+|is\s+)?${SMALL_COUNT}\b`, "i"),
+      planted: [
         "`revision: <n+1>` in the new draft's frontmatter. The cap is 5. At the\ncap, the run halts terminally.",
+        "`revision: <n+1>` in the new draft's frontmatter. The cap is 6. At the\ncap, the run halts terminally.",
+      ],
     },
     {
-      label: "a round-count comparison against 5",
-      pattern: /\bround count\s*[<>≥≤]=?\s*(?:5|five)\b/i,
-      planted:
+      label: "a numbered round-count comparison",
+      pattern: new RegExp(String.raw`\bround count\s*[<>≥≤]=?\s*${COUNT}\b`, "i"),
+      planted: [
         "   - If round count ≥ 5: **halt** with a full unresolved-findings\n     summary — terminal; no PR is opened.",
+        "   - If round count ≥ 6: **halt** with a full unresolved-findings\n     summary — terminal; no PR is opened.",
+      ],
     },
     {
       label: "a branch taken at or under a cap",
@@ -1155,21 +1179,25 @@ describe("no stated round or revision cap (L2 forbidden-pattern sweep)", () => {
       // and "cap" sit on different lines, so this pattern matches only once
       // flat() has joined them.
       pattern: /\b(?:at|under)\s+(?:the\s+)?cap\b/i,
-      planted:
+      planted: [
         "`revision: <n+1>` in the new draft's frontmatter. The cap is 5. At the\ncap, the run halts terminally.",
+      ],
     },
     {
       label: "a revision cap or revision budget",
       pattern: /\brevision\s+(?:cap|budget)\b/i,
-      planted:
+      planted: [
         "(machine policy). The pass runs on **every design-review round**, up to\nthe revision cap. Relative to the code-review pass, the payload is a\ndesign document rather than a diff.",
+      ],
     },
   ];
 
   for (const { label, pattern, planted } of CAP_PATTERNS) {
     test(`no file states ${label}`, () => {
-      // Planted positive: prove the pattern still sees the text it bans.
-      expect(pattern.test(flat(planted))).toBe(true);
+      // Planted positives: prove the pattern still sees the text it bans.
+      for (const sample of planted) {
+        expect(pattern.test(flat(sample))).toBe(true);
+      }
       // Guard: an empty corpus must fail, not vacuously pass the sweep.
       expect(SWEPT_FILES.length).toBeGreaterThan(0);
       const offenders = SWEPT_FILES.filter((rel) =>

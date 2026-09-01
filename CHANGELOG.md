@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.74.0] - 2026-09-01
+
+### Fixed
+
+- **`principle-bounded-loops` no longer reads as licence to invent a round cap for the review loops.** Its opening rule — every loop carries a declared cap — is absolute, and its accommodation for a loop that ends on a verdict was a soft trailing clause. An agent applying the principle to the IMPLEMENT review loop supplied the number the loop deliberately omits, and announced it was capping the loop at round six. The principle now states that a verdict terminal condition **is** the bound, that the missing count is the design rather than a gap for a reader to fill, and that Team's two review loops are that case: DESIGN ends on the reviewer's verdict, IMPLEMENT ends when no Blocking or Major finding is left. **What this asks of you:** nothing. The mechanical guard is widened to match: the forbidden-pattern sweep in [`tests/protocol.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/protocol.test.ts) banned the historical five-valued wording, so a stated cap of six swept clean; it now trips on a round or revision cap at any count.
+
 ## [0.73.0] - 2026-09-01
 
 ### Fixed
@@ -693,7 +699,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.73.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.74.0...HEAD
+[0.74.0]: https://github.com/bostonaholic/team/compare/v0.73.0...v0.74.0
 [0.73.0]: https://github.com/bostonaholic/team/compare/v0.72.0...v0.73.0
 [0.72.0]: https://github.com/bostonaholic/team/compare/v0.71.0...v0.72.0
 [0.71.0]: https://github.com/bostonaholic/team/compare/v0.70.0...v0.71.0

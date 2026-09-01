@@ -1298,6 +1298,15 @@ describe("principle-bounded-loops (L2 content tripwire)", () => {
     expect(text).toContain("Never silent truncation");
   });
 
+  // A reader who takes "every loop carries a cap" as licence to supply the
+  // missing number reintroduces the round cap both review loops shed. The
+  // principle has to say the verdict IS the bound, and that an omitted count
+  // is a decision rather than a gap.
+  test("pins that a verdict terminal condition is itself the bound", () => {
+    const text = squash(read(SKILL_FILE));
+    expect(text).toContain("never supply a count the loop deliberately omits");
+  });
+
   test("citation site: pr-watch-as-author cites the principle by path", () => {
     expect(read(join(REPO_ROOT, "skills", "pr-watch-as-author", "SKILL.md"))).toContain("skills/principle-bounded-loops/SKILL.md");
   });
