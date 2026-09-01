@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.71.0] - 2026-09-01
+
 ### Changed
 
 - **`/pr-rebase` no longer has to re-run a check whose baseline is `UNKNOWN`.** Such a check maps to `UNKNOWN` in the verification table whatever it returns, so re-running it produces no evidence either way — it may now be skipped, and it is reported `UNKNOWN` in the table regardless. **What this asks of you:** nothing.
@@ -678,7 +680,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.70.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.71.0...HEAD
+[0.71.0]: https://github.com/bostonaholic/team/compare/v0.70.0...v0.71.0
 [0.70.0]: https://github.com/bostonaholic/team/compare/v0.69.0...v0.70.0
 [0.69.0]: https://github.com/bostonaholic/team/compare/v0.68.0...v0.69.0
 [0.68.0]: https://github.com/bostonaholic/team/compare/v0.67.0...v0.68.0
