@@ -84,7 +84,7 @@ Identify the root cause and design the fix.
   is null." The root cause is "this function is called before initialization
   completes." Fix the root cause. To drill from the proximate cause down to the
   root, use the [Root Cause Analysis (5 Whys)](#root-cause-analysis-5-whys)
-  technique below.
+  technique below. The canon: `skills/principle-fix-root-causes/SKILL.md`.
 - **Verify the fix addresses the root cause.** The original reproduction steps
   must succeed after the fix. No other behavior should change.
 - **Check for related instances.** If the root cause is a pattern (e.g.,

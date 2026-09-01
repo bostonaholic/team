@@ -50,7 +50,8 @@ findings. Fix what the findings name, under these constraints:
   with `systematic-debugging`
   and walk the
   **Root Cause Analysis (5 Whys)** causal chain to the root before
-  editing, so you fix the root cause rather than the symptom. Skip this
+  editing, so you fix the root cause rather than the symptom
+  (`skills/principle-fix-root-causes/SKILL.md`). Skip this
   for an **obvious** failure (a typo, a trivially-named assertion, a
   clear one-line fix) — drilling a one-line fix is wasted ceremony. The
   fast path stays intact.

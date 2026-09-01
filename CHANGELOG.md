@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`principle-fix-root-causes` gives the debugging invariant one home: the fix lands at the root cause, never at the symptom.** Reproduce first, ask "why" until the causal chain bottoms out at a cause you can change, resist guards that silence crashes, fix the pattern rather than the instance, instrument instead of guessing when stuck, and on restart bugs suspect stale persistent state before code. The rule was restated across the debugging surfaces; each now cites [`principle-fix-root-causes`](https://github.com/bostonaholic/team/blob/main/skills/principle-fix-root-causes/SKILL.md) instead — [`systematic-debugging`](https://github.com/bostonaholic/team/blob/main/skills/systematic-debugging/SKILL.md), [`test-driven-bug-fix`](https://github.com/bostonaholic/team/blob/main/skills/test-driven-bug-fix/SKILL.md), [`implementing-slices`](https://github.com/bostonaholic/team/blob/main/skills/implementing-slices/SKILL.md), and [`team-fix`](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md) — and any agent can load it just-in-time. Like its 21 siblings it is a reference building block (`user-invocable: false`, no slash command), pinned by an L2 tripwire in [`tests/methodology.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/methodology.test.ts). **What this asks of you:** nothing — the catalog grows from 78 to 79 skills, and the discipline it names is the discipline the pipeline already ran on.
+
 ## [0.64.0] - 2026-08-31
 
 ### Added

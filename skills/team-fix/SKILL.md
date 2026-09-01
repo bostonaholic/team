@@ -166,7 +166,8 @@ methodology.
 When the failure is non-obvious, call the Skill tool with
 `systematic-debugging` and drill its
 **Root Cause Analysis (5 Whys)** causal chain to the root before proposing a
-fix.
+fix. The fix lands at the root, never at the symptom, per
+`skills/principle-fix-root-causes/SKILL.md`.
 
 Mark each TodoWrite item `in_progress` when you begin and `completed`
 when it finishes.

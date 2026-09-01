@@ -146,4 +146,5 @@ the test proves the bug existed, the fix makes it go away.
   functionality beyond restoring the previous intent, that is a feature, not
   a bug fix.
 - **Not a workaround.** A workaround avoids the buggy code path. A fix
-  corrects the buggy code. When in doubt, fix the root cause.
+  corrects the buggy code. When in doubt, fix the root cause
+  (`skills/principle-fix-root-causes/SKILL.md`).

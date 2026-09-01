@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 78 skills: 11 pipeline entry-point slash commands, 9 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase, reflect), and 58 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 79 skills: 11 pipeline entry-point slash commands, 9 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase, reflect), and 59 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -59,7 +59,7 @@ finished, verify a PR's test plan, rebase a branch onto its base
 without changing what it does, and mine a finished session for the
 learnings worth keeping.
 None is a pipeline phase. The split is
-**11 pipeline entry-point + 9 standalone utility + 58 methodology = 78**.
+**11 pipeline entry-point + 9 standalone utility + 59 methodology = 79**.
 
 For *why* the system is shaped this way (the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits),
@@ -711,7 +711,7 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 ## Methodology skills
 
-The 58 methodology skills carry no `argument-hint` and, with one
+The 59 methodology skills carry no `argument-hint` and, with one
 exception, are never invoked directly. The exception is `code-review`: it
 is a meaningful standalone user action ("review this diff",
 `/code-review`) as well as a building block, so it does not set
@@ -1346,6 +1346,21 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   decisions, approvals, and pre-images land in the artifact directory so
   a later run can audit what happened.
 
+### [principle-fix-root-causes](https://github.com/bostonaholic/team/blob/main/skills/principle-fix-root-causes/SKILL.md)
+
+- **Purpose:** A debugging fix lands at the root cause, never at the
+  symptom — trace every failure to the cause that produced it and
+  correct it there.
+- **Loaded by:** any agent just-in-time; consulted by citation from
+  `systematic-debugging`, `test-driven-bug-fix`, `implementing-slices`,
+  and `team-fix`. No agent preloads it.
+- **Key behaviors:** Reproduce first — a bug you cannot reproduce is a
+  fix you cannot verify. Ask "why" until the causal chain bottoms out at
+  a cause you can change. Resist guards that silence crashes, and fix
+  the code rather than justify a workaround with a comment. Fix the
+  pattern, not just the instance. When stuck, instrument instead of
+  guessing. On restart bugs, suspect stale persistent state before code.
+
 ### [principle-generator-evaluator](https://github.com/bostonaholic/team/blob/main/skills/principle-generator-evaluator/SKILL.md)
 
 - **Purpose:** The agent that produced the work never evaluates it;
@@ -1660,6 +1675,7 @@ entry-point section above rather than repeating them here.
 | `principle-explicit-intent` | cited by `shipit`, `pr-rebase`, `pr-cleanup`, `team-fix`, `reflect`, `groom-backlog`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-fail-closed` | cited by `nested-agents`, `team`, `team-design`, `team-structure`, `principle-optimization-never-dependency`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-files-are-the-contract` | cited by `qrspi-workflow`, `team`, `artifact-frontmatter`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-fix-root-causes` | cited by `systematic-debugging`, `test-driven-bug-fix`, `implementing-slices`, `team-fix`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-generator-evaluator` | cited by `code-review`, `eng-design-doc-review`, `nested-agents`, `pr-watch-as-reviewer`, `principle-blind-the-investigator`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-human-owns-the-ends` | cited by `review-severity-tiers`, `qrspi-workflow`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-idempotent-reruns` | cited by `pr-cleanup`, `groom-backlog`, `team`, `pr-watch-as-author`, `team-design`, `principle-pre-image-first`. Any agent (just-in-time) | Any (cross-cutting principle) |
