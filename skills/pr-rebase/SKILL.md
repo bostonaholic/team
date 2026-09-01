@@ -219,8 +219,9 @@ onto it replays your work on old history and produces a diff full of
 changes you did not make:
 
 ```sh
-BASE_OWNER="$(gh pr view ${PR:+"$PR"} --repo "$REPO" --json baseRepository \
-  --jq '.baseRepository.owner.login + "/" + .baseRepository.name' 2>/dev/null)"
+# gh pr view exposes no baseRepository field; a PR lives in its base
+# repository, so $REPO (step 0) already names the base owner/name.
+BASE_OWNER="$REPO"
 # Pick the remote whose URL names that repository.
 BASE_REMOTE="$(git remote | while read -r r; do
   case "$(git remote get-url "$r")" in *"$BASE_OWNER"*) echo "$r"; break ;; esac

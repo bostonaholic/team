@@ -175,7 +175,7 @@ describe("pr-rebase skill: the two remotes are resolved separately", () => {
     // base branch is stale — rebasing onto it replays your work on old
     // history.
     const lines = fencedLines().join("\n");
-    expect(lines).toContain("baseRepository");
+    expect(lines).toContain('BASE_OWNER="$REPO"');
     expect(lines).toContain("git remote get-url");
   });
 
