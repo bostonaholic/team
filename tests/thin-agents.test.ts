@@ -243,15 +243,15 @@ describe("thin agents: haiku skills are self-contained", () => {
   }
 });
 
-describe("thin agents: documentation counts agree at 79 skills", () => {
+describe("thin agents: documentation counts agree at 81 skills", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
 
-  test("skills/ holds exactly 79 SKILL.md files", () => {
+  test("skills/ holds exactly 81 SKILL.md files", () => {
     const count = readdirSync(join(REPO_ROOT, "skills")).filter((name) =>
       existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")),
     ).length;
-    expect(count).toBe(79);
+    expect(count).toBe(81);
   });
 
   test("docs/skills.md documents every skill: ### entry count equals the on-disk count", () => {
@@ -265,23 +265,25 @@ describe("thin agents: documentation counts agree at 79 skills", () => {
     expect(entries.length).toBe(count);
   });
 
-  test("AGENTS.md heading reads Skills (79)", () => {
-    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (79)");
+  test("AGENTS.md heading reads Skills (81)", () => {
+    expect(read(join(REPO_ROOT, "AGENTS.md"))).toContain("## Skills (81)");
   });
 
-  test("docs/skills.md description counts 79 skills", () => {
-    expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain("79 skills");
+  test("docs/skills.md description counts 81 skills", () => {
+    expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain("81 skills");
   });
 
-  test("docs/skills.md split sentence sums to 79", () => {
+  test("docs/skills.md split sentence sums to 81", () => {
     expect(read(SKILLS_MD).replace(/\s+/g, " ")).toContain(
-      "11 pipeline entry-point + 9 standalone utility + 59 methodology = 79",
+      "11 pipeline entry-point + 11 standalone utility + 59 methodology = 81",
     );
   });
 
-  test("docs/architecture.md counts all 79 skills in both locations and no stale 78/57/56/55/54/53/51/31", () => {
+  test("docs/architecture.md counts all 81 skills in both locations and no stale 80/79/78/57/56/55/54/53/51/31", () => {
     const content = read(ARCHITECTURE_MD);
-    expect(content).toContain("all 79 skills");
+    expect(content).toContain("all 81 skills");
+    expect(content).not.toContain("all 80 skills");
+    expect(content).not.toContain("all 79 skills");
     expect(content).not.toContain("all 78 skills");
     expect(content).not.toContain("all 57 skills");
     expect(content).not.toContain("all 56 skills");
@@ -300,15 +302,15 @@ describe("thin agents: documentation counts agree at 79 skills", () => {
   // Previously unpinned count locations — they drifted silently before, so
   // each gains a pin, and docs/skills.md gains a stale-guard on the old
   // methodology count (catches its description sentence going stale).
-  test("README.md counts 79 entry-point + methodology skills", () => {
+  test("README.md counts 81 entry-point + methodology skills", () => {
     expect(read(join(REPO_ROOT, "README.md")).replace(/\s+/g, " ")).toContain(
-      "79 entry-point + methodology skills",
+      "81 entry-point + methodology skills",
     );
   });
 
-  test("docs/index.md counts all 79 skills", () => {
+  test("docs/index.md counts all 81 skills", () => {
     expect(read(join(REPO_ROOT, "docs", "index.md")).replace(/\s+/g, " ")).toContain(
-      "all 79 skills",
+      "all 81 skills",
     );
   });
 

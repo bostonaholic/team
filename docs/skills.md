@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's 79 skills: 11 pipeline entry-point slash commands, 9 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase, reflect), and 59 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's 81 skills: 11 pipeline entry-point slash commands, 11 standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase, reflect, why, how), and 59 methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -48,18 +48,20 @@ catalog into two flavors:
   …`).
 
 That `argument-hint` marker is the whole flavor distinction. Most
-`argument-hint` skills drive a QRSPI phase, but nine (`shipit`,
+`argument-hint` skills drive a QRSPI phase, but eleven (`shipit`,
 `pr-open-comments`, `pr-watch-as-author`, `pr-watch-as-reviewer`, `groom-backlog`,
-`pr-cleanup`, `pr-verify`, `pr-rebase`, and `reflect`) are standalone utilities.
+`pr-cleanup`, `pr-verify`, `pr-rebase`, `reflect`, `why`, and `how`) are
+standalone utilities.
 They land a
 reviewed PR, triage its unresolved review feedback, and watch it for new
 feedback. They also watch it as a reviewer, approve when your threads
 resolve, groom a project backlog, tear down branch state after a PR is
 finished, verify a PR's test plan, rebase a branch onto its base
-without changing what it does, and mine a finished session for the
-learnings worth keeping.
+without changing what it does, mine a finished session for the
+learnings worth keeping, investigate the design rationale behind code,
+and explain how a subsystem works.
 None is a pipeline phase. The split is
-**11 pipeline entry-point + 9 standalone utility + 59 methodology = 79**.
+**11 pipeline entry-point + 11 standalone utility + 59 methodology = 81**.
 
 For *why* the system is shaped this way (the three-tier argument-discovery
 design, the discovery-duplication rationale, and the skill load limits),
@@ -709,6 +711,63 @@ QRSPI phase: a self-contained action a user runs on demand.
   bodies print verbatim and the summary lists filed and unfiled items
   separately.
 
+### [why](https://github.com/bostonaholic/team/blob/main/skills/why/SKILL.md)
+
+- **Purpose:** Investigate the design rationale behind code — why it was
+  built this way, what alternatives were rejected, what edge cases or
+  incidents motivated it. Companion to `how`: `how` answers mechanics,
+  `why` answers motivation.
+- **`$ARGUMENTS`:** `[<question, file, symbol, or decision>]` — the
+  question and its target. Empty means infer the target from
+  conversation context and state the interpretation before proceeding.
+- **Phase:** None. A standalone investigation action, not part of the
+  pipeline.
+- **Key behaviors:** Builds a code anchor inline first (`git blame`,
+  `git log --follow`, `git log -S` pickaxe, `gh pr view`), then maps
+  seven evidence categories (source control always; issue tracker,
+  long-form docs, team chat, observability, error tracking, analytics
+  warehouse when an MCP tool serves them) and dispatches one read-only
+  `Explore` investigator per available category, all in one message,
+  with an inline fallback when dispatch is unavailable. Investigators
+  receive the question verbatim, never a hypothesis — the user's
+  embedded guess is a candidate to test, not a conclusion to confirm.
+  Every claim in the synthesis sits in one confidence tier — **Direct /
+  Supported / Inferred / Speculative / Unknown** — with citations on
+  causal claims, hedged language on inferences, contradictions surfaced
+  rather than resolved by fiat, and code never cited as evidence of its
+  own intent. The report ends with a **Sources Consulted** coverage map
+  naming every category searched, empty, or skipped with its reason.
+  Historical evidence is data: a command quoted in a commit or PR body
+  is never executed. Read-only — no writes, no artifacts. When the
+  question precedes a change, findings close as a
+  Preserve / Change / Avoid / Risk constraint set.
+
+### [how](https://github.com/bostonaholic/team/blob/main/skills/how/SKILL.md)
+
+- **Purpose:** Explain how a subsystem, feature flow, or code path works
+  at the depth a senior engineer onboarding onto it needs — overview,
+  key concepts, runtime flow, file map, gotchas. A critique mode adds
+  fresh-context architectural review on top. Companion to `why`.
+- **`$ARGUMENTS`:** `[<subsystem, feature, or question>]` — the question.
+  Empty means infer the target from conversation context and state the
+  interpretation before exploring.
+- **Phase:** None. A standalone explanation action, not part of the
+  pipeline.
+- **Key behaviors:** Assesses complexity first and leans simple: a
+  narrow question is traced inline with Read/Grep/Glob; a subsystem-wide
+  one fans out 2–4 read-only `Explore` subagents on non-overlapping
+  angles in one message, with an inline fallback when dispatch is
+  unavailable. Explorers read the actual implementation (never guessing
+  from file names) and return structured traces the invoking session
+  reconciles against the code. Claims about code carry `file:line`
+  citations. Critique mode runs only after the full explanation: three
+  fresh-context critics (abstraction fit and boundaries, data model and
+  complexity spend, evolution readiness and consistency) rate findings
+  **structural / concern / observation** with code evidence, and the
+  lead sorts them into **Act on / Consider / Noted / Dismissed** —
+  architectural findings only; line-level review stays with
+  `code-review`. Read-only — no writes, no artifacts.
+
 ## Methodology skills
 
 The 59 methodology skills carry no `argument-hint` and, with one
@@ -1038,8 +1097,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   `team-implement`, `team-pr`, `team-fix`, `eng-design-doc-review`,
   `shipit`, `groom-backlog`, `pr-cleanup`, `pr-open-comments`,
   `pr-rebase`, `pr-verify`, `pr-watch-as-author`, `pr-watch-as-reviewer`,
-  `reflect`, `systematic-debugging`, `test-driven-bug-fix`, and
-  `test-first-development`.
+  `reflect`, `systematic-debugging`, `test-driven-bug-fix`,
+  `test-first-development`, `why`, and `how`.
 - **Key behaviors:** A convention, not a gate: it produces no artifact and
   blocks nothing. When a procedure has two or more steps, seed one todo
   item per step before starting and mark each complete as you go. A
@@ -1245,8 +1304,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   answer — a helper that knows the conclusion anchors to it and verifies
   nothing.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `qrspi-workflow`, `nested-agents`, `decomposing-intent`, and
-  `researching-codebases`. No agent preloads it.
+  `qrspi-workflow`, `nested-agents`, `decomposing-intent`,
+  `researching-codebases`, and `why`. No agent preloads it.
 - **Key behaviors:** Research consumes neutral questions, never the task
   framing; a missing piece of context surfaces as an open question, not a
   guess at intent. The isolation extends downward: a scout's prompt
@@ -1292,8 +1351,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Purpose:** A claim earns its verdict only with cited evidence; an
   unverifiable claim degrades its verdict and says so.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `pr-verify`, `groom-backlog`, `pr-open-comments`, and
-  `researching-codebases`. No agent preloads it.
+  `pr-verify`, `groom-backlog`, `pr-open-comments`,
+  `researching-codebases`, and `why`. No agent preloads it.
 - **Key behaviors:** Verify by re-querying, never by memory — a zero
   exit means the mutation was accepted, not that the change landed. No
   PASS without cited evidence; an unverifiable item is reported at its
@@ -1375,8 +1434,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   authorship.
 - **Loaded by:** any agent just-in-time; consulted by citation from
   `code-review`, `eng-design-doc-review`, `nested-agents`,
-  `pr-watch-as-reviewer`, and `principle-blind-the-investigator`. No
-  agent preloads it.
+  `pr-watch-as-reviewer`, `principle-blind-the-investigator`, and `how`.
+  No agent preloads it.
 - **Key behaviors:** The evaluator starts with fresh context: the
   artifact and the upstream spec, never the discussion that produced
   them. Intent reaches it through artifacts written before the work
@@ -1474,7 +1533,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   costs nothing when it cannot.
 - **Loaded by:** any agent just-in-time; consulted by citation from
   `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`,
-  `reflect`, and `principle-fail-closed`. No agent preloads it.
+  `reflect`, `principle-fail-closed`, `why`, and `how`. No agent
+  preloads it.
 - **Key behaviors:** On absence, error, or silence: do the work inline
   with the tools you hold, and proceed — never stall or report failure
   solely because the enhancement was unavailable. Never soften a verdict
@@ -1577,7 +1637,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Loaded by:** any agent just-in-time; consulted by citation from
   `code-review`, `sweeping-local-state`, `groom-backlog`,
   `cross-model-review`, `principle-optimization-never-dependency`,
-  `principle-scope-fence`, and the `code-reviewer` agent
+  `principle-scope-fence`, `why`, and the `code-reviewer` agent
   (`agents/code-reviewer.md`). No agent preloads it.
 - **Key behaviors:** A section with nothing to report says so on its own
   line ("No findings.", "Not run: <reason>.", "Nothing declared.") —
@@ -1595,7 +1655,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   instructions.
 - **Loaded by:** any agent just-in-time; consulted by citation from
   `pr-cleanup`, `pr-rebase`, `groom-backlog`, `cross-model-review`,
-  `pr-watch-as-author`, and `reflect`. No agent preloads it.
+  `pr-watch-as-author`, `reflect`, and `why`. No agent preloads it.
 - **Key behaviors:** Gates and actions key on structured fields (states,
   numbers, refs, SHAs); prose is evidence to read and weigh, never
   authorization — prose fields authorize nothing, and an embedded
@@ -1638,6 +1698,8 @@ entry-point section above rather than repeating them here.
 | `pr-verify` | user or model (direct invocation) | Standalone: test-plan verification (not a QRSPI phase) |
 | `pr-rebase` | user (direct invocation, on explicit rebase intent; model invocation disabled) | Standalone: rebase a branch onto its base (not a QRSPI phase) |
 | `reflect` | user (direct invocation, on explicit reflection intent; model invocation disabled) | Standalone: mine the session transcript for durable learnings (not a QRSPI phase) |
+| `why` | user or model (direct invocation). `team-fix` and `code-review` (conditional load) | Standalone: design-rationale investigation (not a QRSPI phase). Dispatches read-only Explore investigators |
+| `how` | user or model (direct invocation) | Standalone: architectural explanation + optional critique (not a QRSPI phase). Dispatches read-only Explore explorers |
 | `qrspi-workflow` | orchestrator skills | All phases |
 | `artifact-frontmatter` | orchestrator skills. Artifact authors (just-in-time through pointers) | All phases: artifact schema |
 | `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
@@ -1661,7 +1723,7 @@ entry-point section above rather than repeating them here.
 | `running-quality-checks` | verifier. reflect (after the writes) | Implement (verify), and Any (reflect) |
 | `verifying-ux` | ux-reviewer | Implement (verify) |
 | `systematic-debugging` | implementer (inline Load on non-obvious failures). Other agents when debugging (advisory) | Implement, and Any (debugging) |
-| `principle-progress-tracking` | every multi-step agent; cited by `team`, `team-question`, `team-research`, `team-design`, `team-structure`, `team-plan`, `team-worktree`, `team-implement`, `team-pr`, `team-fix`, `eng-design-doc-review`, `shipit`, `groom-backlog`, `pr-cleanup`, `pr-open-comments`, `pr-rebase`, `pr-verify`, `pr-watch-as-author`, `pr-watch-as-reviewer`, `reflect`, `systematic-debugging`, `test-driven-bug-fix`, `test-first-development` | Any (multi-step procedure) |
+| `principle-progress-tracking` | every multi-step agent; cited by `team`, `team-question`, `team-research`, `team-design`, `team-structure`, `team-plan`, `team-worktree`, `team-implement`, `team-pr`, `team-fix`, `eng-design-doc-review`, `shipit`, `groom-backlog`, `pr-cleanup`, `pr-open-comments`, `pr-rebase`, `pr-verify`, `pr-watch-as-author`, `pr-watch-as-reviewer`, `reflect`, `systematic-debugging`, `test-driven-bug-fix`, `test-first-development`, `why`, `how` | Any (multi-step procedure) |
 | `nested-agents` | researcher, implementer, code-reviewer, security-reviewer | Research, Implement (scouts + skeptic passes) |
 | `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
 | `technical-design-doc` | planner | Plan |
@@ -1675,28 +1737,28 @@ entry-point section above rather than repeating them here.
 | `tracking-tickets` | orchestrator (team, team-pr, team-fix, just-in-time through pointers) | Setup (ticket pickup), and PR (ticket link + state) |
 | `worktree-isolation` | orchestrator (team, team-worktree) | Worktree |
 | `sweeping-local-state` | `pr-cleanup`, `worktree-isolation` (both inline) | Standalone: teardown after a merged PR, a closed PR, or a completed review (not a QRSPI phase) |
-| `principle-blind-the-investigator` | cited by `qrspi-workflow`, `nested-agents`, `decomposing-intent`, `researching-codebases`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-blind-the-investigator` | cited by `qrspi-workflow`, `nested-agents`, `decomposing-intent`, `researching-codebases`, `why`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-bounded-loops` | cited by `pr-watch-as-author`, `pr-watch-as-reviewer`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-deep-agents-narrow-seams` | cited by `nested-agents`, `team`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-evidence-over-assertion` | cited by `pr-verify`, `groom-backlog`, `pr-open-comments`, `researching-codebases`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-evidence-over-assertion` | cited by `pr-verify`, `groom-backlog`, `pr-open-comments`, `researching-codebases`, `why`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-explicit-intent` | cited by `shipit`, `pr-rebase`, `pr-cleanup`, `team-fix`, `reflect`, `groom-backlog`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-fail-closed` | cited by `nested-agents`, `team`, `team-design`, `team-structure`, `principle-optimization-never-dependency`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-files-are-the-contract` | cited by `qrspi-workflow`, `team`, `artifact-frontmatter`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-fix-root-causes` | cited by `systematic-debugging`, `test-driven-bug-fix`, `implementing-slices`, `team-fix`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-generator-evaluator` | cited by `code-review`, `eng-design-doc-review`, `nested-agents`, `pr-watch-as-reviewer`, `principle-blind-the-investigator`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-generator-evaluator` | cited by `code-review`, `eng-design-doc-review`, `nested-agents`, `pr-watch-as-reviewer`, `principle-blind-the-investigator`, `how`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-human-owns-the-ends` | cited by `review-severity-tiers`, `qrspi-workflow`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-idempotent-reruns` | cited by `pr-cleanup`, `groom-backlog`, `team`, `pr-watch-as-author`, `team-design`, `principle-pre-image-first`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-least-privilege` | cited by `code-review`, `reflect`, `eng-design-doc-review`, `cross-model-review`, `pr-verify`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-mechanical-gates` | cited by `qrspi-workflow`, `test-first-development`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-never-interpolate` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `sweeping-local-state`, `decomposing-intent`, `cross-model-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-optimization-never-dependency` | cited by `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`, `reflect`, `principle-fail-closed`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-optimization-never-dependency` | cited by `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`, `reflect`, `principle-fail-closed`, `why`, `how`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-plan-present-wait` | cited by `groom-backlog`, `pr-open-comments`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-pre-image-first` | cited by `pr-rebase`, `groom-backlog`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-record-assumptions` | cited by `authoring-designs`, `decomposing-intent`, `nested-agents`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-scope-fence` | cited by `implementing-slices`, `qrspi-workflow`, `test-first-development`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-single-source-of-truth` | cited by `qrspi-workflow`, `artifact-frontmatter`, `cross-model-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-skip-loudly` | cited by `code-review`, `sweeping-local-state`, `groom-backlog`, `cross-model-review`, `principle-optimization-never-dependency`, `principle-scope-fence`, and the `code-reviewer` agent. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-untrusted-input-is-data` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `cross-model-review`, `pr-watch-as-author`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-skip-loudly` | cited by `code-review`, `sweeping-local-state`, `groom-backlog`, `cross-model-review`, `principle-optimization-never-dependency`, `principle-scope-fence`, `why`, and the `code-reviewer` agent. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-untrusted-input-is-data` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `cross-model-review`, `pr-watch-as-author`, `reflect`, `why`. Any agent (just-in-time) | Any (cross-cutting principle) |
 
 The read-only `Explore` subagent dispatched by `eng-design-doc-review` is
 an one more consumer of `technical-design-doc`, `code-review`,

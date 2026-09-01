@@ -169,6 +169,12 @@ When the failure is non-obvious, call the Skill tool with
 fix. The fix lands at the root, never at the symptom, per
 `skills/principle-fix-root-causes/SKILL.md`.
 
+When the buggy behavior looks deliberate — a guard, a threshold, a
+workaround, anything an author plausibly wrote on purpose — call the
+Skill tool with `why` on that code before changing it. A "bug" that was a
+deliberate trade-off needs its constraint preserved, not deleted; the
+rationale findings become inputs to the minimal fix.
+
 Mark each TodoWrite item `in_progress` when you begin and `completed`
 when it finishes.
 

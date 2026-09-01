@@ -22,7 +22,7 @@ const readOrEmpty = (path: string): string => (existsSync(path) ? read(path) : "
 const CANONICAL_INNER =
   "when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.";
 
-// The 8 entry-point skills that must reference the convention (Slice 2).
+// The 10 entry-point skills that must reference the convention (Slice 2).
 const ENTRY_POINT_SKILLS = [
   "team-question",
   "team-research",
@@ -32,6 +32,8 @@ const ENTRY_POINT_SKILLS = [
   "team-worktree",
   "team-pr",
   "eng-design-doc-review",
+  "why",
+  "how",
 ];
 
 // The 3 methodology procedure skills that must reference it (Slice 3).
@@ -134,31 +136,32 @@ describe("Slice 1: principle-progress-tracking convention skill exists", () => {
   });
 });
 
-describe("skill count reconciliation (-> 79: 22 principle-* skills added to the 57-skill baseline)", () => {
+describe("skill count reconciliation (-> 81: 22 principle-* skills plus the why and how utilities on the 57-skill baseline)", () => {
   const CLAUDE_MD = join(REPO_ROOT, "CLAUDE.md");
   const AGENTS_MD = join(REPO_ROOT, "AGENTS.md");
 
-  test("CLAUDE.md heading reads '## Skills (79)'", () => {
-    expect(/^## Skills \(79\)/m.test(read(CLAUDE_MD))).toBe(true);
+  test("CLAUDE.md heading reads '## Skills (81)'", () => {
+    expect(/^## Skills \(81\)/m.test(read(CLAUDE_MD))).toBe(true);
   });
 
-  test("AGENTS.md heading reads '## Skills (79)'", () => {
-    expect(/^## Skills \(79\)/m.test(read(AGENTS_MD))).toBe(true);
+  test("AGENTS.md heading reads '## Skills (81)'", () => {
+    expect(/^## Skills \(81\)/m.test(read(AGENTS_MD))).toBe(true);
   });
 
-  test("filesystem has exactly 79 SKILL.md files declaring a name:", () => {
+  test("filesystem has exactly 81 SKILL.md files declaring a name:", () => {
     // 57-skill baseline (11 pipeline entry points + 9 standalone utilities —
     // shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog,
     // pr-cleanup, pr-verify, pr-rebase, reflect — plus 37 methodology
     // skills) plus the 22 principle-* methodology skills (one cross-cutting
     // invariant each: fail closed, bounded loops, evidence over assertion,
-    // and their siblings), which take the count to 79.
+    // and their siblings), plus the why and how standalone investigation
+    // utilities, which take the count to 81.
     const dirs = readdirSync(SKILLS_DIR, { withFileTypes: true })
       .filter((d) => d.isDirectory())
       .map((d) => join(SKILLS_DIR, d.name, "SKILL.md"))
       .filter((p) => existsSync(p));
     const withName = dirs.filter((p) => /^name:/m.test(read(p)));
-    expect(withName.length).toBe(79);
+    expect(withName.length).toBe(81);
   });
 });
 
