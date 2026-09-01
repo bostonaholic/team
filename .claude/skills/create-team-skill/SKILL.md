@@ -157,9 +157,13 @@ surface(s) per §1A / §1B below and set the frontmatter from the table above.
     explicit intent, so the map never invites the skill on a plain request — `team-fix`
     is listed as a command but reached only on stated pipeline intent, never on "fix
     this bug". The description still carries the quoted phrases and the `/<name>` — the trigger
-    test has no opt-out, but it checks phrase presence only: no test checks the guard
-    wording, so it is YOUR responsibility, and its absence on a side-effecting skill
-    is a review-blocking defect. If your host honors a hard opt-out flag (e.g.
+    test has no opt-out, but it checks phrase presence only. The guard itself is
+    pinned by `tests/skill-invocation.test.ts`: your skill's row there declares
+    `guard: clause`, and the suite then requires one positive anchor (`Invoke ONLY on
+    explicit` or `only on explicit`) and one negative anchor (`never infer`), each
+    ending at or before character 200 of the description. Wording beyond those anchors
+    is YOUR responsibility, and the guard's absence on a side-effecting skill is a
+    review-blocking defect. If your host honors a hard opt-out flag (e.g.
     `disable-model-invocation`), set it — but on hosts that ignore it, the description
     is the only control.
 

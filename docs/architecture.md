@@ -759,9 +759,13 @@ listed as a command, but its routing-map line in `AGENTS.md` states the
 explicit intent, so the map never invites it on a plain request. A deterministic test
 in `tests/architecture.test.ts` enforces the phrase invariant with no
 opt-out; the slash-name check is prefix-safe, so `/team-research` cannot
-satisfy the `/team` requirement. The guard wording is NOT
-machine-checked — it is the author's and reviewer's responsibility, and
-its absence on a side-effecting skill is a review-blocking defect.
+satisfy the `/team` requirement. The guard is machine-checked too:
+`tests/skill-invocation.test.ts` pins every skill's invocation class and
+requires a `guard: clause` row to carry both anchors within the bound
+above. It checks presence and position, never the sentence around them,
+so wording beyond the anchors stays the author's and reviewer's
+responsibility — and the guard's absence on a side-effecting skill is a
+review-blocking defect.
 
 Among methodology skills, `code-review` is the only one kept
 user-invocable. It is a building block: the `code-reviewer`,

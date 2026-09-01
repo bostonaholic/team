@@ -759,3 +759,34 @@ describe("the guard fences", () => {
     expect(namesWithGuard(rows, "gate")).toEqual(["some-new-skill"]);
   });
 });
+
+describe("no surface still claims the guard wording is unchecked", () => {
+  // Three surfaces asserted the guard wording is "NOT machine-checked", and the
+  // dev authoring guide told it to every author mid-description. The anchor
+  // check above makes all three false. Asserted as an ABSENCE, in the shape
+  // tests/architecture.test.ts uses for retired doc strings, so the sentence
+  // cannot survive in one copy or creep back into a fourth.
+  const RETIRED_CLAIM = /not\s+machine-checked/i;
+
+  const SURFACES = [
+    join(REPO_ROOT, "docs", "architecture.md"),
+    join(REPO_ROOT, ".claude", "skills", "create-team-skill", "SKILL.md"),
+    join(REPO_ROOT, "tests", "pr-rebase-skill.test.ts"),
+  ];
+
+  test("the retired claim is absent from every surface that carried it", () => {
+    const surviving = SURFACES.filter((file) => {
+      const text = read(file);
+      // Guard: a renamed or moved surface must fail here, not turn the
+      // absence check into a green no-op.
+      expect(text.length).toBeGreaterThan(0);
+      return RETIRED_CLAIM.test(text);
+    });
+    expect(surviving).toEqual([]);
+  });
+
+  test("the absence sweep can find a positive", () => {
+    // docs/testing.md, "Prove a negative check can find a positive".
+    expect(RETIRED_CLAIM.test("The guard wording is NOT machine-checked.")).toBe(true);
+  });
+});

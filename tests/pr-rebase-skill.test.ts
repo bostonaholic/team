@@ -88,9 +88,9 @@ describe("pr-rebase skill: frontmatter and invocation surface", () => {
 
   test("description carries a quoted trigger phrase and the slash name", () => {
     // The phrase-plus-slash-name shape IS machine-checked (architecture.md
-    // and tests/architecture.test.ts). The explicit-intent guard wording is
-    // deliberately NOT machine-checked there — it is the author's and
-    // reviewer's responsibility — so nothing here pins that sentence.
+    // and tests/architecture.test.ts), and the guard's two anchors and their
+    // placement are pinned by tests/skill-invocation.test.ts. Neither suite
+    // pins the sentence around them, and neither does this one.
     const f = fm().replace(/\s+/g, " ");
     expect(f.length).toBeGreaterThan(0);
     expect(/"[^"]+"/.test(f)).toBe(true);
