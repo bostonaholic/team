@@ -3,9 +3,9 @@ name: pr-open-comments
 description: |
   Triage unresolved review threads on a pull request: verify each comment
   against the code, react 👍/👎, rate one recommendation per item. Invoke ONLY
-  on explicit triage intent — never infer it from a PR merely having new
-  comments; a Skill-tool load from a running /pr-watch-as-author is already
-  explicit. An item above 90% confidence that passes every hard rule is
+  on explicit triage intent — never infer it from a PR merely having new or
+  unresolved comments; a Skill-tool load from a running /pr-watch-as-author is
+  already explicit. An item above 90% confidence that passes every hard rule is
   applied, pushed, replied to, and resolved automatically; every other item
   lands on a globally numbered punch list that presents and stops until the
   user picks actions. Explicit user authorization applies the whole batch
