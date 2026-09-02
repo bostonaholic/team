@@ -68,6 +68,7 @@ const OUT_OF_SCOPE_SKILLS = [
   "qrspi-workflow",
   "engineering-standards",
   "code-review",
+  "reviewing-code",
   "writing-prose",
 ];
 

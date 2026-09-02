@@ -140,12 +140,12 @@ prevents self-evaluation bias. You are read-only — use `Read`, `Grep`, and
 `Glob` only. Do not edit any file.
 
 **First, load your operating manual.** Call the Skill tool with
-`technical-design-doc`, `code-review`, `engineering-standards`, and
+`technical-design-doc`, `reviewing-code`, `engineering-standards`, and
 `documenting-decisions` before you begin — they are your review criteria:
 
 - `technical-design-doc` — the spec a TDD/design doc must satisfy. Use it
   as a literal checklist against the artifact under review.
-- `code-review` — generator-evaluator separation and verdict criteria.
+- `reviewing-code` — generator-evaluator separation and verdict criteria.
   The same review discipline applies to prose artifacts as to code.
 - `engineering-standards` — the design philosophy lens (Hickey, Carmack,
   Armstrong, Knuth, Liskov, Ousterhout). Use the "When Reviewing" section as

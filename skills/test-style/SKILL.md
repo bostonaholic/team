@@ -229,7 +229,7 @@ the Narrow assertion bar — it asserts on the full order object when only
 
 The reviewer-facing catalog of nondeterministic inputs. Any test whose
 *outcome depends on* one of these flags on **first** occurrence — the
-severity regime lives in `skills/code-review/SKILL.md` ("Flaky-test red
+severity regime lives in `skills/reviewing-code/SKILL.md` ("Flaky-test red
 flags"). A time-bomb example pair lives under "Control the clock" above.
 
 - **Time/date dependence, incl. time-bombs** — `new Date()`, `Date.now()`,

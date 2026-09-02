@@ -36,9 +36,7 @@ catalog into two flavors:
   as slash commands (`/team`, `/team-research`, and so on). The
   `argument-hint` documents what to pass as `$ARGUMENTS`.
 - **Methodology skills omit `argument-hint`.** They are never invoked
-  directly — with one exception, `code-review`, which stays user-invocable
-  as a standalone review command (see
-  [Methodology skills](#methodology-skills)). Agents load them through one
+  directly. Agents load them through one
   of two mechanisms: a `skills:`
   YAML list in the agent's frontmatter (e.g., `agents/design-author.md`
   declares `skills: [product-thinking,
@@ -261,7 +259,7 @@ argument shape.
 - **Key behaviors:** Dispatches the built-in read-only `Explore` subagent
   (not the `design-author` agent) so the audit reads the design with fresh
   eyes. That subagent loads four methodology skills as its review criteria
-  (`technical-design-doc`, `code-review`, `engineering-standards`, and
+  (`technical-design-doc`, `reviewing-code`, `engineering-standards`, and
   `documenting-decisions`), which makes this one more consumer of all
   four, plus a conditional fifth — `cross-model-review`, loaded only when
   the brief carries an `## External review input` section.
@@ -767,15 +765,26 @@ QRSPI phase: a self-contained action a user runs on demand.
   architectural findings only; line-level review stays with
   `code-review`. Read-only — no writes, no artifacts.
 
+### [code-review](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md)
+
+- **Purpose:** The direct-invocation front door for a code review.
+- **Loaded by:** nobody — it is invoked directly by a user or the model.
+- **Key behaviors:** The one methodology-section skill a user can invoke.
+  Invoked directly, it dispatches the `code-reviewer` agent rather than
+  reviewing inline — the main session holds the conversation history
+  `reviewing-code` forbids — then prints that reviewer's report in full, in
+  the shape `reviewing-code` pins. The review methodology itself lives in
+  `reviewing-code`, which the front door loads by name.
+
+
 ## Methodology skills
 
-The methodology skills carry no `argument-hint` and, with one
-exception, are never invoked directly. The exception is `code-review`: it
-is a meaningful standalone user action ("review this diff",
-`/code-review`) as well as a building block, so it does not set
-`user-invocable: false` — and when invoked directly it dispatches the
-`code-reviewer` agent rather than reviewing inline, preserving the
-fresh-context separation it mandates (see
+The methodology skills carry no `argument-hint` and are never invoked
+directly. A methodology that also wants a user-facing command does not
+become the exception: it stays `user-invocable: false` and a separate
+front door is filed under [Standalone utilities](#standalone-utilities)
+above. `reviewing-code` and its front door `code-review` are the worked
+example (see
 [architecture.md](architecture.md#methodology-skills-loaded-by-agents-not-directly-invoked)).
 Agents load them through one of two mechanisms. The first is a
 `skills:` YAML list in the agent's frontmatter. The second is an inline
@@ -879,16 +888,15 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   under 300 lines. It also forbids implementation code, keeps slices
   atomic, and matches test coverage to the structure.
 
-### [code-review](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md)
+### [reviewing-code](https://github.com/bostonaholic/team/blob/main/skills/reviewing-code/SKILL.md)
 
 - **Purpose:** Generator-evaluator separation and the gate verdict
   vocabulary.
 - **Loaded by:** code-reviewer, security-reviewer, ux-reviewer,
-  technical-writer (4).
+  technical-writer (4), and the `code-review` front door on direct
+  invocation.
 - **Key behaviors:** Defines how a reviewer reads with fresh eyes and emits
-  a structured verdict. Invoked directly, it dispatches the `code-reviewer`
-  agent rather than reviewing inline — the main session holds the
-  conversation history the skill forbids. Findings use the format defined in
+  a structured verdict. Findings use the format defined in
   `conventional-comments`. The ux-reviewer is the exception: its
   live-verification report uses its own Working/Broken/Could Improve
   format. The gate-type and severity-tier map lives in
@@ -933,7 +941,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   and missing input validation. It also carries the search-beyond-the-diff
   rule and the CRITICAL/HIGH/MEDIUM/LOW severity classification ladder, in
   which CRITICAL and HIGH are hard gates. The PASS/FAIL verdict rule stays
-  in `code-review`.
+  in `reviewing-code`.
 
 ### [cross-model-review](https://github.com/bostonaholic/team/blob/main/skills/cross-model-review/SKILL.md)
 
@@ -1013,7 +1021,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 
 - **Purpose:** Test style rules and the flaky-test red-flag catalog.
 - **Loaded by:** test-architect and code-reviewer just-in-time, through
-  pointers from `test-first-development` and `code-review` (no agent
+  pointers from `test-first-development` and `reviewing-code` (no agent
   preloads it).
 - **Key behaviors:** Carries the full style-rule set:
   behavior-not-implementation, DAMP setup, narrow assertions, and
@@ -1022,7 +1030,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   and keep hermetic boundaries) and the fidelity ladder. It holds the audit
   checklist too, plus the single copy of the reviewer-facing flaky-test
   red-flag catalog with its canonical time-bomb example pair. The
-  always-blocking severity regime for flaky flags stays in `code-review`.
+  always-blocking severity regime for flaky flags stays in `reviewing-code`.
 
 ### [test-driven-bug-fix](https://github.com/bostonaholic/team/blob/main/skills/test-driven-bug-fix/SKILL.md)
 
@@ -1035,7 +1043,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 
 - **Purpose:** The five object-oriented design principles.
 - **Loaded by:** implementer, code-reviewer (2). Cited by
-  `engineering-standards` and `code-review`.
+  `engineering-standards` and `reviewing-code`.
 - **Key behaviors:** SRP, OCP, LSP, ISP, and DIP as concrete checkpoints
   for new code and review.
 
@@ -1436,7 +1444,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   judgment comes from fresh context, and the judge holds veto without
   authorship.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `code-review`, `eng-design-doc-review`, `nested-agents`,
+  `reviewing-code`, `eng-design-doc-review`, `nested-agents`,
   `pr-watch-as-reviewer`, `principle-blind-the-investigator`, and `how`.
   No agent preloads it.
 - **Key behaviors:** The evaluator starts with fresh context: the
@@ -1483,7 +1491,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Purpose:** Enforce a constraint by withholding the capability, not
   by asking for restraint — the toolset is the guarantee.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `code-review`, `reflect`, `eng-design-doc-review`,
+  `reviewing-code`, `reflect`, `eng-design-doc-review`,
   `cross-model-review`, and `pr-verify`. No agent preloads it.
 - **Key behaviors:** Reviewers hold no Write/Edit and run in plan mode —
   a reviewer that can fix what it found can approve its own fix. A child
@@ -1638,7 +1646,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Purpose:** Whatever did not happen is reported as visibly as what
   did.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `code-review`, `sweeping-local-state`, `groom-backlog`,
+  `reviewing-code`, `sweeping-local-state`, `groom-backlog`,
   `cross-model-review`, `principle-optimization-never-dependency`,
   `principle-scope-fence`, `why`, and the `code-reviewer` agent
   (`agents/code-reviewer.md`). No agent preloads it.
@@ -1701,11 +1709,12 @@ entry-point section above rather than repeating them here.
 | `pr-verify` | user or model (direct invocation) | Standalone: test-plan verification (not a QRSPI phase) |
 | `pr-rebase` | user (direct invocation, on explicit rebase intent; model invocation disabled) | Standalone: rebase a branch onto its base (not a QRSPI phase) |
 | `reflect` | user (direct invocation, on explicit reflection intent; model invocation disabled) | Standalone: mine the session transcript for durable learnings (not a QRSPI phase) |
-| `why` | user or model (direct invocation). `team-fix` and `code-review` (conditional load) | Standalone: design-rationale investigation (not a QRSPI phase). Dispatches read-only Explore investigators |
+| `why` | user or model (direct invocation). `team-fix` and `reviewing-code` (conditional load) | Standalone: design-rationale investigation (not a QRSPI phase). Dispatches read-only Explore investigators |
 | `how` | user or model (direct invocation) | Standalone: architectural explanation + optional critique (not a QRSPI phase). Dispatches read-only Explore explorers |
 | `qrspi-workflow` | orchestrator skills | All phases |
 | `artifact-frontmatter` | orchestrator skills. Artifact authors (just-in-time through pointers) | All phases: artifact schema |
-| `code-review` | code-reviewer, security-reviewer, ux-reviewer, technical-writer | Implement (verify) |
+| `code-review` | user or model (direct invocation) | Standalone: dispatch a fresh-context code review (not a QRSPI phase) |
+| `reviewing-code` | code-reviewer, security-reviewer, ux-reviewer, technical-writer. `code-review` (front door) | Implement (verify) |
 | `conventional-comments` | code-reviewer, security-reviewer, technical-writer | Implement (verify): finding format |
 | `review-severity-tiers` | orchestrator (team, team-implement, qrspi-workflow) | Implement (aggregate review gate) |
 | `reviewing-security` | security-reviewer | Implement (verify) |
@@ -1720,7 +1729,7 @@ entry-point section above rather than repeating them here.
 | `test-first-development` | test-architect, code-reviewer. Orchestrator | Implement |
 | `test-style` | test-architect, code-reviewer (just-in-time through pointers) | Implement |
 | `test-driven-bug-fix` | team-fix | Bug-fix flow |
-| `solid` | implementer, code-reviewer. `engineering-standards`, `code-review` (citing skills) | Implement |
+| `solid` | implementer, code-reviewer. `engineering-standards`, `reviewing-code` (citing skills) | Implement |
 | `refactoring-to-patterns` | implementer | Implement |
 | `implementing-slices` | implementer | Implement |
 | `running-quality-checks` | verifier. reflect (after the writes) | Implement (verify), and Any (reflect) |
@@ -1748,10 +1757,10 @@ entry-point section above rather than repeating them here.
 | `principle-fail-closed` | cited by `nested-agents`, `team`, `team-design`, `team-structure`, `principle-optimization-never-dependency`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-files-are-the-contract` | cited by `qrspi-workflow`, `team`, `artifact-frontmatter`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-fix-root-causes` | cited by `systematic-debugging`, `test-driven-bug-fix`, `implementing-slices`, `team-fix`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-generator-evaluator` | cited by `code-review`, `eng-design-doc-review`, `nested-agents`, `pr-watch-as-reviewer`, `principle-blind-the-investigator`, `how`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-generator-evaluator` | cited by `reviewing-code`, `eng-design-doc-review`, `nested-agents`, `pr-watch-as-reviewer`, `principle-blind-the-investigator`, `how`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-human-owns-the-ends` | cited by `review-severity-tiers`, `qrspi-workflow`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-idempotent-reruns` | cited by `pr-cleanup`, `groom-backlog`, `team`, `pr-watch-as-author`, `team-design`, `principle-pre-image-first`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-least-privilege` | cited by `code-review`, `reflect`, `eng-design-doc-review`, `cross-model-review`, `pr-verify`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-least-privilege` | cited by `reviewing-code`, `reflect`, `eng-design-doc-review`, `cross-model-review`, `pr-verify`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-mechanical-gates` | cited by `qrspi-workflow`, `test-first-development`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-never-interpolate` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `sweeping-local-state`, `decomposing-intent`, `cross-model-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-optimization-never-dependency` | cited by `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`, `reflect`, `principle-fail-closed`, `why`, `how`. Any agent (just-in-time) | Any (cross-cutting principle) |
@@ -1760,11 +1769,11 @@ entry-point section above rather than repeating them here.
 | `principle-record-assumptions` | cited by `authoring-designs`, `decomposing-intent`, `nested-agents`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-scope-fence` | cited by `implementing-slices`, `qrspi-workflow`, `test-first-development`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-single-source-of-truth` | cited by `qrspi-workflow`, `artifact-frontmatter`, `cross-model-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-skip-loudly` | cited by `code-review`, `sweeping-local-state`, `groom-backlog`, `cross-model-review`, `principle-optimization-never-dependency`, `principle-scope-fence`, `why`, and the `code-reviewer` agent. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-skip-loudly` | cited by `reviewing-code`, `sweeping-local-state`, `groom-backlog`, `cross-model-review`, `principle-optimization-never-dependency`, `principle-scope-fence`, `why`, and the `code-reviewer` agent. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-untrusted-input-is-data` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `cross-model-review`, `pr-watch-as-author`, `reflect`, `why`. Any agent (just-in-time) | Any (cross-cutting principle) |
 
 The read-only `Explore` subagent dispatched by `eng-design-doc-review` is
-an one more consumer of `technical-design-doc`, `code-review`,
+an one more consumer of `technical-design-doc`, `reviewing-code`,
 `engineering-standards`, and `documenting-decisions`. It loads all four as
 the criteria for the design review.
 
@@ -1777,7 +1786,7 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 | Skill | Agent | How they differ |
 |---|---|---|
 | `team-research` | `researcher` | Skill dispatches the Research phase. The agent is the doer that runs the research. |
-| `code-review` | `code-reviewer` | Skill is the review methodology. The agent is the reviewer that applies it. |
+| `reviewing-code` | `code-reviewer` | Skill is the review methodology. The agent is the reviewer that applies it. |
 | `reviewing-security` | `security-reviewer` | Skill is the security review methodology and severity ladder. The agent is the reviewer that applies it. |
 | `reviewing-documentation` | `technical-writer` | Skill is the doc-gap review methodology and classification. The agent is the reviewer that applies it. |
 | `team-question` | `questioner` | Skill drives the Question phase. The agent decomposes the intent. |

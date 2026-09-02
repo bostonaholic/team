@@ -978,12 +978,12 @@ describe("checks and balances", () => {
     });
   }
 
-  test("security-reviewer and code-review agree MEDIUM does not block", () => {
+  test("security-reviewer and reviewing-code agree MEDIUM does not block", () => {
     // Three files describe this one boundary. When the tier table auto-fixed
     // MEDIUM while these two called it non-blocking, the reviewer reported
     // MEDIUMs candidly and each one silently bought a round.
     const agent = read(join(REPO_ROOT, "agents", "security-reviewer.md"));
-    const review = read(join(REPO_ROOT, "skills", "code-review", "SKILL.md"));
+    const review = read(join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md"));
     expect(agent.length).toBeGreaterThan(0);
     expect(review.length).toBeGreaterThan(0);
     expect(/MEDIUM and LOW do not block/.test(agent)).toBe(true);

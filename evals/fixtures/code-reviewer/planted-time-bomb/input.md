@@ -3,7 +3,7 @@ agent: code-reviewer
 tier: periodic
 deps:
   - agents/code-reviewer.md
-  - skills/code-review/SKILL.md
+  - skills/reviewing-code/SKILL.md
   - skills/conventional-comments/SKILL.md
   - skills/test-style/SKILL.md
 ---

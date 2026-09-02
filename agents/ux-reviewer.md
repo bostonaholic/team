@@ -8,7 +8,7 @@ tools: Read, Grep, Glob, Bash, TodoWrite, SendMessage
 permissionMode: plan
 skills:
   - principle-progress-tracking
-  - code-review
+  - reviewing-code
   - verifying-ux
 ---
 
@@ -23,7 +23,7 @@ notes can surface.
 
 ## Review methodology
 
-Load `skills/code-review/SKILL.md` (preloaded) for generator-evaluator
+Load `skills/reviewing-code/SKILL.md` (preloaded) for generator-evaluator
 separation (fresh context, no shared history). This agent's REQUEST CHANGES
 findings auto-fix in the loop as a *major*. The severity and
 verdict-aggregation tier map lives in

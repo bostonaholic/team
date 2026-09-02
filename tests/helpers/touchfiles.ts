@@ -9,7 +9,7 @@ import { test } from "bun:test";
 export const E2E_TOUCHFILES: Record<string, string[]> = {
   "planted-null-deref": [
     "agents/code-reviewer.md",
-    "skills/code-review/**",
+    "skills/reviewing-code/**",
     "skills/conventional-comments/**",
     "tests/code-reviewer.evals.ts",
     "evals/fixtures/code-reviewer/planted-null-deref/**",
@@ -17,7 +17,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   ],
   "planted-time-bomb": [
     "agents/code-reviewer.md",
-    "skills/code-review/**",
+    "skills/reviewing-code/**",
     "skills/conventional-comments/**",
     "skills/test-style/**",
     "tests/code-reviewer.evals.ts",
@@ -29,7 +29,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   // agent and the severity skill.
   "planted-comment-violations": [
     "agents/code-reviewer.md",
-    "skills/code-review/**",
+    "skills/reviewing-code/**",
     "skills/conventional-comments/**",
     "skills/engineering-standards/**",
     "tests/code-reviewer.evals.ts",
@@ -38,7 +38,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   ],
   "planted-comment-process-narration": [
     "agents/code-reviewer.md",
-    "skills/code-review/**",
+    "skills/reviewing-code/**",
     "skills/conventional-comments/**",
     "skills/engineering-standards/**",
     "tests/code-reviewer.evals.ts",

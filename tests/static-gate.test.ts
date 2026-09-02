@@ -416,7 +416,7 @@ describe("static gate: planted-comment-violations fixture", () => {
     // a dep alongside the reviewer agent and severity skill.
     for (const dep of [
       "agents/code-reviewer.md",
-      "skills/code-review/SKILL.md",
+      "skills/reviewing-code/SKILL.md",
       "skills/engineering-standards/SKILL.md",
     ]) {
       expect(fixture.frontmatter.deps).toContain(dep);
@@ -467,7 +467,7 @@ describe("static gate: planted-comment-violations fixture", () => {
     const globs = E2E_TOUCHFILES["planted-comment-violations"] ?? [];
     for (const glob of [
       "agents/code-reviewer.md",
-      "skills/code-review/**",
+      "skills/reviewing-code/**",
       "skills/engineering-standards/**",
       "tests/code-reviewer.evals.ts",
       "evals/fixtures/code-reviewer/planted-comment-violations/**",

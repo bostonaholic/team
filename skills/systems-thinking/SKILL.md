@@ -99,7 +99,7 @@ Discipline to apply before and during each slice:
 ## When Reviewing
 
 The questions behind the `System Fit` checklist item in
-`skills/code-review/SKILL.md`, and the ux-reviewer's adjacent-flow check:
+`skills/reviewing-code/SKILL.md`, and the ux-reviewer's adjacent-flow check:
 
 - **Does a sibling implementation now diverge?** Two components that did
   the same job the same way should still agree after the diff — flag the
