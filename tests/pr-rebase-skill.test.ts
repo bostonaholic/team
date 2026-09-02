@@ -24,7 +24,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { descriptionText, frontmatter, read } from "./helpers/text";
 import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
@@ -91,7 +91,11 @@ describe("pr-rebase skill: frontmatter and invocation surface", () => {
     // and tests/architecture.test.ts), and the guard's two anchors and their
     // placement are pinned by tests/skill-invocation.test.ts. Neither suite
     // pins the sentence around them, and neither does this one.
-    const f = fm().replace(/\s+/g, " ");
+    //
+    // Scoped to the DESCRIPTION, not the whole frontmatter: the quoted
+    // `argument-hint` value alone satisfies the quoted-phrase pattern, so an
+    // unscoped sweep passes with zero trigger phrases in the description.
+    const f = descriptionText(fm()).replace(/\s+/g, " ");
     expect(f.length).toBeGreaterThan(0);
     expect(/"[^"]+"/.test(f)).toBe(true);
     expect(f).toContain("/pr-rebase");

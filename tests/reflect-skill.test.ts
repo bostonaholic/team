@@ -39,7 +39,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { descriptionText, frontmatter, read } from "./helpers/text";
 import { loadsSkill } from "./helpers/skill-refs";
 import {
   MAX_RECORDS,
@@ -530,7 +530,10 @@ describe("Slice 1 — L2: reflect's frontmatter and invocation surface", () => {
   });
 
   test("description carries a quoted trigger phrase and the slash name", () => {
-    const front = flat(fm());
+    // Scoped to the DESCRIPTION, not the whole frontmatter: the quoted
+    // `argument-hint` value alone satisfies the quoted-phrase pattern, so an
+    // unscoped sweep passes with zero trigger phrases in the description.
+    const front = flat(descriptionText(fm()));
     expect(front.length).toBeGreaterThan(0);
     expect(/"[^"]+"/.test(front)).toBe(true);
     expect(front).toContain("/reflect");

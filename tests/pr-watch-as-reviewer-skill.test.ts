@@ -35,11 +35,6 @@ function body(): string {
 function fm(): string {
   return existsSync(SKILL) ? frontmatter(read(SKILL)) : "";
 }
-// Flatten newlines so multi-line prose can be matched in one regex.
-function flat(text: string): string {
-  return text.replace(/\n/g, " ");
-}
-
 describe("pr-watch-as-reviewer skill: runtime standalone utility frontmatter", () => {
   test("skill file lives under runtime skills/ (distributed)", () => {
     expect(existsSync(SKILL)).toBe(true);
