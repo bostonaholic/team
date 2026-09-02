@@ -399,8 +399,11 @@ QRSPI phase: a self-contained action a user runs on demand.
   (without approving), or a declined confirmation (stops without
   approving). The approval is its only write: it never resolves threads,
   never replies, never edits code, never merges, never auto-runs `/shipit`.
-  `disable-model-invocation: true`, because an approval can transitively
-  trigger an auto-merge, so only a deliberate human invocation arms it.
+  It arms ONLY on explicit approval-watch intent, never inferred from a PR
+  merely being open or from the reviewer's own comments being resolved, and
+  it sets `disable-model-invocation: true`, because an approval can
+  transitively trigger an auto-merge, so only a deliberate human invocation
+  arms it.
   When auto-merge is enabled at arm, explicit confirmation is necessary on
   both paths. The immediate path, where the gate is already satisfied at
   arm, confirms before it casts. The loop path confirms before it arms the
@@ -1708,7 +1711,7 @@ entry-point section above rather than repeating them here.
 | `shipit` | user or model (direct invocation, on explicit ship intent) | Standalone: land a reviewed PR (not a QRSPI phase) |
 | `pr-open-comments` | user or model (direct invocation, on explicit triage intent) | Standalone: triage unresolved PR review feedback (not a QRSPI phase) |
 | `pr-watch-as-author` | user or model (direct invocation, on explicit watch intent) | Standalone: bounded PR review watch loop (not a QRSPI phase) |
-| `pr-watch-as-reviewer` | user (direct invocation) | Standalone: reviewer-side watch-and-approve (not a QRSPI phase) |
+| `pr-watch-as-reviewer` | user (direct invocation, on explicit approval-watch intent; model invocation disabled) | Standalone: reviewer-side watch-and-approve (not a QRSPI phase) |
 | `groom-backlog` | user or model (direct invocation) | Standalone: groom a project backlog (not a QRSPI phase) |
 | `pr-cleanup` | user or model (direct invocation, on explicit cleanup intent; Mode B only on explicit abandon intent) | Standalone: post-PR teardown (not a QRSPI phase) |
 | `pr-verify` | user or model (direct invocation) | Standalone: test-plan verification (not a QRSPI phase) |
