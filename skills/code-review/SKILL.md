@@ -9,22 +9,23 @@ argument-hint: "[<diff target>]"
 
 ## Input
 
-`$ARGUMENTS` names the diff to review — a PR number or URL, a branch, a
-commit range, or a path. It is optional: with no argument, review the
-working tree's diff against the base branch. Resolve it once and pass the
-resolved target to the reviewer; never ask the user to restate it.
+`$ARGUMENTS` names the diff — a PR number or URL, a branch, a commit range,
+or a path. With no argument, review the working tree's diff against the base
+branch. Resolve it once and pass the resolved target to the reviewer; never
+ask the user to restate it.
 
 ## When Invoked Directly
 
-When a user asks for a review in the main session ("review this diff",
-`/code-review`), the session itself is not a valid reviewer — it holds the
-conversation history `reviewing-code` forbids. Do not review inline.
-Dispatch the `code-reviewer` agent (or, if unavailable, a fresh read-only
-subagent instructed to follow `reviewing-code`) against the resolved diff,
-then present its report in full, in the shape `reviewing-code`'s
-`## Report Format` pins — never a summary of it. The methodology
-`reviewing-code` carries is what that dispatched reviewer applies.
+The main session holds the conversation history `reviewing-code` forbids, so
+it is not a valid reviewer. Do not review inline. Run these in order:
 
-## Methodology
-
-Call the Skill tool with `reviewing-code`.
+1. **Load the format.** Call the Skill tool with `reviewing-code` and read
+   its `## Report Format`. Order matters: a relay cannot hold a shape it has
+   not read, and loading it after the dispatch is the defect this sequence
+   fixes.
+2. **Dispatch.** Dispatch the `code-reviewer` agent, which preloads
+   `reviewing-code`, against the resolved target. When it is unavailable,
+   dispatch the built-in read-only `Explore` subagent and write the same
+   `## Report Format` requirement into its prompt.
+3. **Relay.** Print what the reviewer returned. `## Report Format` states
+   what a relay owes, and what to do with a report that does not match it.

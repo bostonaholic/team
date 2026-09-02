@@ -1167,6 +1167,18 @@ describe("code-review report format (L2 content tripwire)", () => {
     return text.slice(start, end);
   }
 
+  // Same slice, but a missing end marker means "to end of file". The front
+  // door is deliberately thin and `## When Invoked Directly` is its last
+  // section, so there is no following `## ` to terminate on. `between` is
+  // kept strict for the template slices, where a missing terminator would
+  // silently pull in a later section's headings.
+  function toEnd(text: string, startMarker: string, endMarker: string): string {
+    const start = text.indexOf(startMarker);
+    if (start === -1) return "";
+    const end = text.indexOf(endMarker, start + startMarker.length);
+    return end === -1 ? text.slice(start) : text.slice(start, end);
+  }
+
   test("the skill pins one report template: verdict line first, then Summary, Findings, Checks", () => {
     // Newline-anchored start: the heading, not an inline `## Report Format`
     // cross-reference elsewhere in the skill.
@@ -1233,10 +1245,59 @@ describe("code-review report format (L2 content tripwire)", () => {
   });
 
   test("the direct-invocation relay binds to the report format", () => {
-    const invoked = between(read(FRONT_DOOR), "\n## When Invoked Directly\n", "\n## ");
+    const invoked = toEnd(read(FRONT_DOOR), "\n## When Invoked Directly\n", "\n## ");
     // Guard: a missing section must fail, not vacuously pass the check below.
     expect(invoked.length).toBeGreaterThan(0);
     expect(invoked).toContain("Report Format");
+  });
+
+  test("the front door loads the format before it dispatches the reviewer", () => {
+    // Ordering tripwire. The relay can only hold a shape it has read, and the
+    // front door carries the template by reference, not by value. With the
+    // load stated after the dispatch, a session that reads top-to-bottom
+    // dispatches, relays, and never opens the template — so the shape of the
+    // report becomes a per-call choice.
+    const invoked = toEnd(read(FRONT_DOOR), "\n## When Invoked Directly\n", "\n## ");
+    // Guard: a missing section must fail, not vacuously pass the checks below.
+    expect(invoked.length).toBeGreaterThan(0);
+    const format = invoked.indexOf("Report Format");
+    const dispatch = invoked.indexOf("`code-reviewer`");
+    expect(format).toBeGreaterThan(-1);
+    expect(dispatch).toBeGreaterThan(-1);
+    expect(format).toBeLessThan(dispatch);
+  });
+
+  test("both dispatch paths are bound to the format, not just the relay", () => {
+    // The front door names two reviewers: the `code-reviewer` agent, which
+    // preloads the methodology, and a fallback subagent, which does not. One
+    // mention of the format binds one surface. The fallback's prompt and the
+    // relay are two surfaces, so the section must state the requirement on
+    // each — a fallback dispatched without the template returns whatever
+    // shape it invents.
+    const invoked = toEnd(read(FRONT_DOOR), "\n## When Invoked Directly\n", "\n## ");
+    // Guard: a missing section must fail, not vacuously pass the checks below.
+    expect(invoked.length).toBeGreaterThan(0);
+    // The built-in read-only agent type, named the way the sibling front door
+    // `eng-design-doc-review` names it, rather than an unnamed "subagent".
+    expect(invoked).toContain("Explore");
+    const mentions = invoked.match(/Report Format/g) ?? [];
+    expect(mentions.length).toBeGreaterThanOrEqual(2);
+  });
+
+  test("the front door defers the template instead of restating it", () => {
+    // Single-source-of-truth sweep. The template lives in `reviewing-code`.
+    // A copy on the front door is a second place the shape can drift, and the
+    // front door is deliberately thin: it binds to the section by name (the
+    // tests above) and names no heading of its own.
+    const text = read(FRONT_DOOR);
+    // Guard: a missing file must fail, not vacuously pass the absence checks.
+    expect(text.length).toBeGreaterThan(0);
+    for (const heading of REPORT_SECTIONS) {
+      expect(text).not.toContain(heading);
+    }
+    // Guards the guard: the sweep must be able to find a positive, so a
+    // reworded front door cannot turn it into a permanent no-op unnoticed.
+    expect(`${text}\n${REPORT_SECTIONS[1]}\n`).toContain(REPORT_SECTIONS[1] as string);
   });
 
   test("code-reviewer defers its report structure to the skill's report format", () => {
