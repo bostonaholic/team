@@ -1239,6 +1239,39 @@ describe("code-review report format (L2 content tripwire)", () => {
     expect(invoked).toContain("Report Format");
   });
 
+  test("the front door loads the format before it dispatches the reviewer", () => {
+    // Ordering tripwire. The relay can only hold a shape it has read, and the
+    // front door carries the template by reference, not by value. With the
+    // load stated after the dispatch, a session that reads top-to-bottom
+    // dispatches, relays, and never opens the template — so the shape of the
+    // report becomes a per-call choice.
+    const invoked = between(read(FRONT_DOOR), "\n## When Invoked Directly\n", "\n## ");
+    // Guard: a missing section must fail, not vacuously pass the checks below.
+    expect(invoked.length).toBeGreaterThan(0);
+    const format = invoked.indexOf("Report Format");
+    const dispatch = invoked.indexOf("`code-reviewer`");
+    expect(format).toBeGreaterThan(-1);
+    expect(dispatch).toBeGreaterThan(-1);
+    expect(format).toBeLessThan(dispatch);
+  });
+
+  test("both dispatch paths are bound to the format, not just the relay", () => {
+    // The front door names two reviewers: the `code-reviewer` agent, which
+    // preloads the methodology, and a fallback subagent, which does not. One
+    // mention of the format binds one surface. The fallback's prompt and the
+    // relay are two surfaces, so the section must state the requirement on
+    // each — a fallback dispatched without the template returns whatever
+    // shape it invents.
+    const invoked = between(read(FRONT_DOOR), "\n## When Invoked Directly\n", "\n## ");
+    // Guard: a missing section must fail, not vacuously pass the checks below.
+    expect(invoked.length).toBeGreaterThan(0);
+    // The built-in read-only agent type, named the way the sibling front door
+    // `eng-design-doc-review` names it, rather than an unnamed "subagent".
+    expect(invoked).toContain("Explore");
+    const mentions = invoked.match(/Report Format/g) ?? [];
+    expect(mentions.length).toBeGreaterThanOrEqual(2);
+  });
+
   test("code-reviewer defers its report structure to the skill's report format", () => {
     const text = read(CODE_REVIEWER);
     expect(text).toContain("Report Format");
