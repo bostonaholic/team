@@ -278,7 +278,10 @@ When the `design-author` returns a draft:
    section pins (created on first use; a zero-call round appends
    nothing; never read back as state).
 3. **Dispatch the adversarial review.** Call the `Agent` tool with
-   `subagent_type: Explore`, the built-in read-only agent type. Pass the
+   `subagent_type: Explore` and `model: opus` — this gate is one of the
+   few places worth the expensive model, and pinning it keeps a cheaper
+   machine-wide subagent default from silently weakening the review.
+   Pass the
    `## Review brief` as the prompt: call the Skill tool with
    `eng-design-doc-review` to
    read that brief (reference it, never duplicate it here), with

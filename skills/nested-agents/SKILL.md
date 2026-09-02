@@ -60,6 +60,22 @@ Dispatch read-only helper types: the built-in `Explore`, the plugin's
 Nested helpers NEVER write files, NEVER commit, and NEVER write anything
 under `docs/plans/` — artifacts are written only by you or the orchestrator.
 
+## Pass a model on every dispatch
+
+An `Agent` call with no `model:` inherits YOUR model and effort, so an
+expensive agent spawns expensive helpers. Every dispatch passes `model:`
+explicitly:
+
+- `haiku` for file location, grep sweeps, and bulk reading that returns a
+  short map — `team:file-finder` and most scouts.
+- `sonnet` for tracing an unfamiliar subsystem, and for skeptics checking a
+  single claim against call sites.
+- `opus` only when a `sonnet` helper already came back inconclusive on the
+  same errand. Name that failure in the prompt.
+
+Effort follows the same rule: `low` for lookups, `medium` for tracing, and
+`xhigh` never — a helper answering one bounded question does not need it.
+
 ## Depth budget
 
 You are at depth 2 of 5. Spawn at most ONE more level: instruct every helper

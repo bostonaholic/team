@@ -110,7 +110,9 @@ done
    CLI is unavailable`. Edge cases ride the shared section: an
    unauthenticated CLI exits non-zero and reads as an ordinary skip.
 3. **Dispatch the review.** Call the `Agent` tool with
-   `subagent_type: Explore`, the built-in read-only agent type. Pass the
+   `subagent_type: Explore` and `model: opus` — pinning the model keeps a
+   cheaper machine-wide subagent default from silently weakening this
+   gate. Pass the
    **Review brief** below as the prompt, with `$ARGUMENTS` substituted for
    the artifact directory. Do **not** define or reference a project agent —
    the built-in read-only type is the whole mechanism. Its clean context is

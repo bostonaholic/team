@@ -73,8 +73,8 @@ design") selects Critique; everything else is Explain.
    state*, *request path and enforcement*, *configuration and
    observability*. Dispatch one explorer per angle, all **in one
    message**, through the `Agent` tool with `subagent_type: Explore` —
-   the built-in read-only type. Each prompt carries the
-   `### Explorer brief` below, the question, and its assigned angle.
+   the built-in read-only type — and `model: sonnet`. Each prompt carries
+   the `### Explorer brief` below, the question, and its assigned angle.
 
    If the `Agent` tool or the `Explore` type is unavailable, explore
    every angle yourself inline — the fan-out is an optimization, never a
@@ -152,8 +152,8 @@ Explain first — run `## Explain mode` in full. You cannot judge an
 architecture you have not established.
 
 1. **Dispatch critics.** Three fresh-context critics, all **in one
-   message**, through the `Agent` tool with `subagent_type: Explore`,
-   one lens each:
+   message**, through the `Agent` tool with `subagent_type: Explore` and
+   `model: sonnet`, one lens each:
    - *Abstraction fit and boundary discipline* — does each abstraction
      earn its place; are boundaries where things change independently;
      is validation at entry points; could this be tested in isolation?
