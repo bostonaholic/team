@@ -119,8 +119,8 @@ Phrasing rules:
 
 4. **Dispatch investigators.** One investigator per available category,
    all launched **in one message**, through the `Agent` tool with
-   `subagent_type: Explore` — the built-in read-only type. Each prompt
-   carries: the `### Investigator brief` below, its assigned category
+   `subagent_type: Explore` — the built-in read-only type — and
+   `model: sonnet`. Each prompt carries: the `### Investigator brief` below, its assigned category
    and the tools that serve it, the code anchor from step 2, and the
    user's question **verbatim — never your hypothesis, the user's
    embedded guess, or a wanted answer**

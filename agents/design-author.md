@@ -3,7 +3,7 @@ name: design-author
 description: Use after research is complete to draft the approach before any code is written. Drafts a ~200-line design document covering current state, desired end state, patterns to follow, and decisions made. Resolves its own open questions autonomously, recording each as an explicit, auditable assumption in the design.
 color: purple
 model: opus
-effort: xhigh
+effort: high
 tools: Read, Write, Edit, Grep, Glob, TodoWrite
 permissionMode: acceptEdits
 skills:
