@@ -31,5 +31,5 @@ confident wrong answer is the most expensive kind.
 - One claim, one fresh judge: a checker that has judged earlier claims
   accumulates a model of the review and anchors to it.
 
-Applied wherever work is judged; `skills/code-review/SKILL.md` owns the
+Applied wherever work is judged; `skills/reviewing-code/SKILL.md` owns the
 code-review application.

@@ -286,6 +286,7 @@ const EXPECTED_INVOCATION: Record<string, InvocationRow> = {
   "nested-agents": { class: "model-only", mutates: "none", guard: "none" },
   "product-thinking": { class: "model-only", mutates: "none", guard: "none" },
   "review-severity-tiers": { class: "model-only", mutates: "none", guard: "none" },
+  "reviewing-code": { class: "model-only", mutates: "none", guard: "none" },
   "reviewing-documentation": { class: "model-only", mutates: "none", guard: "none" },
   "reviewing-security": { class: "model-only", mutates: "none", guard: "none" },
   solid: { class: "model-only", mutates: "none", guard: "none" },

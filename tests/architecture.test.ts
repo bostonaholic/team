@@ -44,20 +44,20 @@ describe("skill architecture", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
 
-  test("code-reviewer references code-review/SKILL.md", () => {
-    expect(read(CODE_REVIEWER)).toContain("code-review/SKILL.md");
+  test("code-reviewer references reviewing-code/SKILL.md", () => {
+    expect(read(CODE_REVIEWER)).toContain("reviewing-code/SKILL.md");
   });
 
-  test("security-reviewer references code-review/SKILL.md", () => {
-    expect(read(SECURITY_REVIEWER)).toContain("code-review/SKILL.md");
+  test("security-reviewer references reviewing-code/SKILL.md", () => {
+    expect(read(SECURITY_REVIEWER)).toContain("reviewing-code/SKILL.md");
   });
 
-  test("ux-reviewer references code-review/SKILL.md", () => {
-    expect(read(UX_REVIEWER)).toContain("code-review/SKILL.md");
+  test("ux-reviewer references reviewing-code/SKILL.md", () => {
+    expect(read(UX_REVIEWER)).toContain("reviewing-code/SKILL.md");
   });
 
-  test("technical-writer references code-review/SKILL.md", () => {
-    expect(read(TECHNICAL_WRITER)).toContain("code-review/SKILL.md");
+  test("technical-writer references reviewing-code/SKILL.md", () => {
+    expect(read(TECHNICAL_WRITER)).toContain("reviewing-code/SKILL.md");
   });
 
   test("inline Conventional Comments format definition removed from code-reviewer.md", () => {
@@ -66,14 +66,17 @@ describe("skill architecture", () => {
     expect(count).toBe(0);
   });
 
-  test("verifier does NOT reference code-review/SKILL.md", () => {
+  test("verifier references neither the review front door nor its methodology", () => {
+    // Both paths, because the checks runner must stay clear of the review
+    // methodology wherever it lives and must not dispatch a reviewer either.
     expect(read(VERIFIER)).not.toContain("code-review/SKILL.md");
+    expect(read(VERIFIER)).not.toContain("reviewing-code/SKILL.md");
   });
 
-  test("code-review row in docs/skills.md names all 4 consumer agents", () => {
+  test("reviewing-code row in docs/skills.md names all 4 consumer agents", () => {
     // Key on the table-row delimiter so prose mentions of the skill name
     // elsewhere in the doc cannot crowd the row out of the 5-line window.
-    const row = filterRows(read(SKILLS_MD), "| `code-review` |", /^#|^>|SKILL\.md|\/\/|event/);
+    const row = filterRows(read(SKILLS_MD), "| `reviewing-code` |", /^#|^>|SKILL\.md|\/\/|event/);
     for (const agent of ["code-reviewer", "security-reviewer", "ux-reviewer", "technical-writer"]) {
       expect(row).toContain(agent);
     }

@@ -9,7 +9,7 @@ permissionMode: plan
 skills:
   - principle-progress-tracking
   - nested-agents
-  - code-review
+  - reviewing-code
   - conventional-comments
   - cross-model-review
 ---
@@ -35,7 +35,7 @@ else.
 
 ## Review methodology
 
-Load `skills/code-review/SKILL.md` (preloaded) for the full methodology. It
+Load `skills/reviewing-code/SKILL.md` (preloaded) for the full methodology. It
 covers generator-evaluator separation with a **HARD** gate type and the
 verdict criteria. Your obligations live in its "Code Reviewer
 Inspection Contract" section: done-criteria checks, the per-file coverage
@@ -92,7 +92,7 @@ Skip-loudly canon: `skills/principle-skip-loudly/SKILL.md`.
 ## Verdict
 
 Structure the whole report per the `## Report Format` section of
-`skills/code-review/SKILL.md` (preloaded): the verdict line leads the
+`skills/reviewing-code/SKILL.md` (preloaded): the verdict line leads the
 report. The orchestrator parses it as one of:
 
 - **✅ APPROVE** — all done criteria met, no blocking issues, tests pass.

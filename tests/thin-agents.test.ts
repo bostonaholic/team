@@ -114,18 +114,18 @@ describe("thin agents: new skills carry the moved procedure content", () => {
 
 describe("thin agents: frontmatter skills preloads per agent", () => {
   const EXPECTED_PRELOADS: Record<string, string[]> = {
-    "code-reviewer": ["code-review", "conventional-comments", "cross-model-review", "nested-agents", "principle-progress-tracking"],
+    "code-reviewer": ["conventional-comments", "cross-model-review", "nested-agents", "principle-progress-tracking", "reviewing-code"],
     "design-author": ["authoring-designs", "principle-progress-tracking", "product-thinking", "writing-prose"],
     "file-finder": ["finding-files"],
     implementer: ["implementing-slices", "nested-agents", "principle-progress-tracking"],
     planner: ["planning-implementation", "principle-progress-tracking", "systems-thinking"],
     questioner: ["decomposing-intent", "principle-progress-tracking", "product-thinking"],
     researcher: ["nested-agents", "principle-progress-tracking", "researching-codebases", "systems-thinking"],
-    "security-reviewer": ["code-review", "conventional-comments", "nested-agents", "principle-progress-tracking", "reviewing-security"],
+    "security-reviewer": ["conventional-comments", "nested-agents", "principle-progress-tracking", "reviewing-code", "reviewing-security"],
     "structure-planner": ["principle-progress-tracking", "product-thinking", "slicing-work", "systems-thinking"],
-    "technical-writer": ["code-review", "conventional-comments", "principle-progress-tracking", "reviewing-documentation", "writing-prose"],
+    "technical-writer": ["conventional-comments", "principle-progress-tracking", "reviewing-code", "reviewing-documentation", "writing-prose"],
     "test-architect": ["principle-progress-tracking", "test-first-development"],
-    "ux-reviewer": ["code-review", "principle-progress-tracking", "verifying-ux"],
+    "ux-reviewer": ["principle-progress-tracking", "reviewing-code", "verifying-ux"],
     verifier: ["principle-progress-tracking", "running-quality-checks"],
   };
 
@@ -231,12 +231,12 @@ describe("thin agents: fold targets absorbed the moved methodology", () => {
     const reviewingSecurity = readOrEmpty(skillPath("reviewing-security"));
     expect(reviewingSecurity).toContain("OWASP");
     expect(reviewingSecurity).toContain("CRITICAL — Hard Gate");
-    const codeReview = readOrEmpty(skillPath("code-review"));
+    const codeReview = readOrEmpty(skillPath("reviewing-code"));
     expect(codeReview).toContain("reviewing-security/SKILL.md");
   });
 
-  test("code-review absorbs the code-reviewer inspection checklist (off-by-one)", () => {
-    expect(readOrEmpty(skillPath("code-review"))).toContain("off-by-one");
+  test("reviewing-code absorbs the code-reviewer inspection checklist (off-by-one)", () => {
+    expect(readOrEmpty(skillPath("reviewing-code"))).toContain("off-by-one");
   });
 
   test("reviewing-documentation carries the technical-writer doc-change classification; writing-prose keeps the pointer", () => {

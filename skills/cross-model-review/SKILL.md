@@ -237,7 +237,7 @@ Emit the whole per-round record under one literal heading in your report:
 
 Where that heading sits is the report format's call, not this skill's. In a
 code review it is the last section, after `### Refuted by verification`, per
-`## Report Format` in `skills/code-review/SKILL.md`.
+`## Report Format` in `skills/reviewing-code/SKILL.md`.
 
 One block per round, one subsection per CLI, covering: adopted claims (with
 their tiers), refuted claims (with the `file:line` you checked),

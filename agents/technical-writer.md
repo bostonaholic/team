@@ -8,7 +8,7 @@ tools: Read, Grep, Glob, Bash, TodoWrite, SendMessage
 permissionMode: plan
 skills:
   - principle-progress-tracking
-  - code-review
+  - reviewing-code
   - conventional-comments
   - reviewing-documentation
   - writing-prose
@@ -22,7 +22,7 @@ incomplete. You produce a structured report — you do NOT rewrite documentation
 
 ## Review methodology
 
-Load `skills/code-review/SKILL.md` (preloaded) for the full review
+Load `skills/reviewing-code/SKILL.md` (preloaded) for the full review
 methodology: generator-evaluator separation (fresh context, no shared
 history) with an **ADVISORY** gate type. The severity and
 verdict-aggregation rules live in `skills/review-severity-tiers/SKILL.md`.

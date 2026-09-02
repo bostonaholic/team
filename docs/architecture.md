@@ -768,26 +768,31 @@ responsibility — and the guard's absence on a side-effecting skill is a
 review-blocking defect.
 
 Among methodology skills, `code-review` is the only one kept
-user-invocable. It is a building block: the `code-reviewer`,
-`security-reviewer`, `ux-reviewer`, and `technical-writer` agents load it
-as working methodology. It is **also** a meaningful standalone user
-action, "review this diff". The field thus stays unset. The distinction
-is the *primary* surface: a skill earns a slash command when a user would
-plausibly run it directly, even if agents also compose it.
+user-invocable, and it is a front door rather than a building block. The
+methodology it fronts lives in `reviewing-code`, which the
+`code-reviewer`, `security-reviewer`, `ux-reviewer`, and
+`technical-writer` agents preload and which sets `user-invocable: false`
+like every other methodology skill. What stays on the front door is the
+one thing a user runs: "review this diff". The field thus stays unset
+there. The distinction is the *primary* surface: a skill earns a slash
+command when a user would plausibly run it directly.
 
 That standalone path behaves differently from an ordinary entry point,
-which simply runs its own procedure. A methodology skill invoked directly
-still owes its own rules: the main session shares conversation history
-with whatever wrote the code, so it is not a valid reviewer. `code-review`
-therefore dispatches the `code-reviewer` agent and relays the verdict
-rather than reviewing inline.
+which simply runs its own procedure. The front door still owes the
+methodology's own rules: the main session shares conversation history
+with whatever wrote the code, so it is not a valid reviewer.
+`code-review` therefore dispatches the `code-reviewer` agent and relays
+the verdict rather than reviewing inline, then loads `reviewing-code` for
+the methodology that reviewer applies.
 
 (This is separate from the entry-point skills, which are user-invocable by
 definition. Some of those, e.g. `team-worktree` and `team-pr`, are also
 *referenced by path* from `team/SKILL.md`, but those are procedural
 cross-links in the orchestrator's prose, not a parent loading the skill as
-a building block. `code-review` is the only skill loaded as composed
-methodology that is also a user command.)
+a building block. `code-review` is the only user command in the
+methodology section, and the pair it forms with `reviewing-code` is how a
+composed methodology keeps a user-facing entry point without becoming
+one.)
 
 For the full per-skill reference (all skills, their arguments,
 consumers, and behaviors), see [skills.md](skills.md).
