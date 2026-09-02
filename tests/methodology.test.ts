@@ -1870,7 +1870,7 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
 
   test("the principle tier exists on disk (the loops below cannot go vacuous)", () => {
     expect(principleSkills.length).toBeGreaterThan(20);
-    expect(extractedPrinciples.length).toBe(23);
+    expect(extractedPrinciples.length).toBe(24);
   });
 
   for (const principle of principleSkills) {

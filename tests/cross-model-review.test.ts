@@ -706,6 +706,17 @@ describe("skill and agent wiring (L2)", () => {
     expect(squash(section)).toContain("Inline fallback");
   });
 
+  test("the courier errand forbids polling the backgrounded run", () => {
+    // A backgrounded task is harness-tracked: its exit re-invokes the
+    // courier. Polling the output file pays for that notification twice —
+    // one TIMEOUT_MS run costs eight to ten turns instead of one.
+    const section = windowSection(readOrEmpty(SKILL_MD), /^### Vendor couriers/, /^#{1,3} /);
+    expect(section.length).toBeGreaterThan(0);
+    expect(section).toContain("principle-non-blocking-waits");
+    expect(squash(section)).toContain("do **not** poll");
+    expect(squash(section)).not.toContain("poll its task output until it completes");
+  });
+
   test("all four courier consumers point at the vendor-courier block", () => {
     // The three design entrances plus the code-reviewer agent each route
     // vendor runs through couriers; the block itself lives only in the

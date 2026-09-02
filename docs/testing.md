@@ -136,7 +136,7 @@ change:
   prompt tells the model to emit.
 - File paths and cross-references. A renamed target must fail the build.
 - Section headings, and the order of two sections.
-- Numeric constants that bound behavior (`sleep 600`, `timeout 1800`).
+- Numeric constants that bound behavior (`sleep 1860`, `timeout 1800`).
 - The **absence** of a forbidden identifier or a forbidden claim. A negative
   sweep never breaks under a rewrite, because a rewrite does not add back the
   thing you banned. It can, however, pass for the wrong reason — see

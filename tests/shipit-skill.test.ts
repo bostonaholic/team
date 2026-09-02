@@ -113,6 +113,15 @@ describe("shipit skill: push, wait for CI, merge", () => {
     expect(body()).toContain("--fail-fast");
   });
 
+  test("the CI watch runs backgrounded so the 1800s cap is the one that applies", () => {
+    // In the foreground the harness kills the watch at its own ceiling (600s
+    // in Claude Code) with exit 143, so `timeout 1800` never binds and the
+    // watch is lost rather than timed out on any repo with CI over 10 minutes.
+    const t = body();
+    expect(t).toContain("run_in_background: true");
+    expect(t).toContain("principle-non-blocking-waits");
+  });
+
   test("names `gh pr merge --squash` explicitly", () => {
     // Squash lands the PR title as the commit subject (so a version in the
     // title shows up in git log) while keeping linear history.

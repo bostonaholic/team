@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.76.0] - 2026-09-02
+
+### Fixed
+
+- **Waiting no longer costs a turn per ten minutes.** Every wait in Team was a foreground `sleep`, and Claude Code kills a foreground Bash call at 600 seconds. So the watch skills chunked each ~31-minute cycle into three `sleep 600` calls plus a poll, `shipit` declared a 30-minute CI cap that could never apply (the watch died at ten minutes with exit 143, losing the watch rather than timing it out), and the `cross-model-review` courier polled a task the harness already reports on. Measured over five weeks of local sessions: 3,701 `sleep` calls, 292 hours, 167 of them killed at the ceiling. Each of the four sites now runs its wait as a single backgrounded call — the completion notification is the wake-up. A watch cycle costs one turn instead of four, and `shipit`'s stated cap is the one that binds. **What this asks of you:** nothing. Cycle counts, intervals, and every stop condition are unchanged.
+
+### Added
+
+- **[`principle-non-blocking-waits`](https://github.com/bostonaholic/team/blob/main/skills/principle-non-blocking-waits/SKILL.md) gives the rule one home.** A wait on anything outside the session — CI, a reviewer, a vendor CLI, a long job — is one backgrounded call, never foreground sleeps, and never a poll loop over a harness-tracked task. It states why (the turn is the cost, not the wall-clock), the fallback for a harness with no background execution, and the inline exception for waits shorter than a turn's overhead. Bounding stays with `principle-bounded-loops`. `pr-watch-as-author`, `pr-watch-as-reviewer`, `shipit`, and `cross-model-review` cite it instead of restating it. A forbidden-pattern sweep in [`tests/protocol.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/protocol.test.ts) trips on any runtime doc, skill, or agent prompt that sizes a sleep into the 540-600s band — the signature of a wait chunked under the ceiling.
+
 ## [0.75.0] - 2026-09-02
 
 ### Added
@@ -704,7 +714,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.75.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.76.0...HEAD
+[0.76.0]: https://github.com/bostonaholic/team/compare/v0.75.0...v0.76.0
 [0.75.0]: https://github.com/bostonaholic/team/compare/v0.74.0...v0.75.0
 [0.74.0]: https://github.com/bostonaholic/team/compare/v0.73.0...v0.74.0
 [0.73.0]: https://github.com/bostonaholic/team/compare/v0.72.0...v0.73.0

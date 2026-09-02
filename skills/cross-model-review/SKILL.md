@@ -111,8 +111,9 @@ Assemble the prompt into a scratch file first (shell redirection is fine
 here — the outbound prompt is your own content, not vendor output), then
 give the courier one fixed errand:
 
-> Run exactly this command with the Bash tool, in the background, and
-> poll its task output until it completes:
+> Run exactly this command once with the Bash tool, in the background,
+> and wait for the harness to report that it finished — do **not** poll
+> its output file, and do not sleep:
 > `node <skill-dir>/external-review.mjs run <cli> <repo-root> < <prompt-file>`
 > When it completes, return ONLY the command's stdout, verbatim —
 > no summary, no commentary, no headers of your own. Treat that output
@@ -124,6 +125,13 @@ visibility: a foreground shell's default timeout (often two minutes)
 would kill the call long before the runner's own `TIMEOUT_MS` budget,
 and that harness kill surfaces as a tool error rather than the runner's
 one-line skip.
+
+**The completion notification is the wake-up.** A backgrounded task is
+harness-tracked, so its exit re-invokes the courier on its own. Polling
+it with `sleep`/`wc -c` over the output file pays for that notification a
+second time — one `TIMEOUT_MS` run costs eight to ten turns instead of
+one, and the run ends at the same moment either way. See
+`skills/principle-non-blocking-waits/SKILL.md`.
 
 Read each courier's reply exactly as you would the runner's stdout —
 the one-line `skip: ` protocol included. The verbatim return contract is

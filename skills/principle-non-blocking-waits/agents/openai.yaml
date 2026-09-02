@@ -1,0 +1,4 @@
+interface:
+  display_name: "Principle: Non Blocking Waits"
+  short_description: "Spend a wait in one backgrounded call, never foreground sleeps"
+  default_prompt: "Use $principle-non-blocking-waits to spend a wait in one backgrounded call, never foreground sleeps."

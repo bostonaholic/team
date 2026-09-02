@@ -1238,3 +1238,74 @@ describe("the IMPLEMENT round item carries the open finding count (L2 tripwire)"
     expect(seed).not.toContain(ROUND_ITEM);
   });
 });
+
+// ---------------------------------------------------------------------------
+// No ceiling-hugging foreground sleep — free L2 forbidden-pattern sweep
+// (docs/testing.md §2, forbidden-pattern form). A wait on anything outside the
+// session is one backgrounded call
+// (skills/principle-non-blocking-waits/SKILL.md). A foreground wait is killed
+// at the harness ceiling (600s in Claude Code), so a procedure that sizes a
+// sleep to sit at or just under that ceiling has chunked a wait it should have
+// backgrounded: it pays a turn per fragment and still dies at the cap when the
+// host suspends. The 540-600s band is that signature; no in-script poll
+// interval lands there by coincidence.
+//
+// skills/principle-non-blocking-waits/ is exempt: it names the banned values as
+// the counter-examples that motivate the rule, the same way CHANGELOG.md is
+// exempt from the round-cap sweep as history.
+// ---------------------------------------------------------------------------
+
+describe("no ceiling-hugging foreground sleep (L2 forbidden-pattern sweep)", () => {
+  const EXEMPT = "skills/principle-non-blocking-waits/";
+
+  function mdFilesUnder(dir: string): string[] {
+    const out: string[] = [];
+    for (const entry of readdirSync(join(REPO_ROOT, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) {
+        if (entry.name === "plans") continue;
+        out.push(...mdFilesUnder(rel));
+      } else if (entry.name.endsWith(".md")) {
+        out.push(rel);
+      }
+    }
+    return out;
+  }
+
+  const SWEPT_FILES = [...mdFilesUnder("docs"), ...mdFilesUnder("skills"), ...mdFilesUnder("agents")]
+    .filter((rel) => !rel.startsWith(EXEMPT));
+
+  // 540-600 inclusive: the band a author reaches for when sizing a sleep to
+  // just miss a 600s kill.
+  const CEILING_SLEEP = /\bsleep\s+(?:5[4-9]\d|600)\b/;
+
+  const PLANTED = [
+    // The historical cycle body this change removed, its line wrap included.
+    "- Each later cycle is up to three `sleep 600` Bash calls plus one short\n  poll call (~31 minutes per cycle).",
+    // The same chunking at the value a run drifted to after the first kill.
+    "(Sleep call hit the 10-minute cap due to timing jitter. Shortening sleeps to `sleep 570` to stay under the cap.)",
+  ];
+
+  test("the pattern still sees the text it bans", () => {
+    for (const sample of PLANTED) {
+      expect(CEILING_SLEEP.test(flat(sample))).toBe(true);
+    }
+    // A value outside the band is not the signature and must stay unswept.
+    expect(CEILING_SLEEP.test("sleep 1860; run the poll")).toBe(false);
+    expect(CEILING_SLEEP.test("sleep 30")).toBe(false);
+  });
+
+  test("no runtime doc, skill, or agent prompt sizes a sleep to the ceiling", () => {
+    // Guard: an empty corpus must fail, not vacuously pass the sweep.
+    expect(SWEPT_FILES.length).toBeGreaterThan(0);
+    const offenders = SWEPT_FILES.filter((rel) => CEILING_SLEEP.test(flat(read(join(REPO_ROOT, rel)))));
+    expect(offenders).toEqual([]);
+  });
+
+  test("the exemption is real: the principle names the counter-examples it bans", () => {
+    // Without this, the exemption could silently cover an empty file and the
+    // sweep would look principled while protecting nothing.
+    const principle = read(join(REPO_ROOT, "skills", "principle-non-blocking-waits", "SKILL.md"));
+    expect(CEILING_SLEEP.test(flat(principle))).toBe(true);
+  });
+});
