@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A skill hidden from the slash-command menu can no longer carry the `$ARGUMENTS` token.** No host passes arguments to a skill it never routes to, so the token binds to nothing and reads as a path the skill will never receive. A new tripwire in [`tests/skill-invocation.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/skill-invocation.test.ts) names every skill that sets `user-invocable: false` and holds the token. **What this asks of you:** nothing.
+
 ### Changed
 
 - **`/team` no longer fires on a plain feature request.** Its description now leads with an explicit-intent guard, and the cue `"build a feature"` is gone from its trigger list — the pipeline commits, pushes, and opens a pull request without stopping, so it now starts only on stated pipeline intent. **What this asks of you:** say "hey team", "run the team pipeline", or run `/team` where you previously just described the feature.

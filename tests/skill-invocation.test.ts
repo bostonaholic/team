@@ -441,6 +441,18 @@ function deriveClass(fm: string): ClassVerdict {
   return "both";
 }
 
+// Skills that carry `$ARGUMENTS` while their frontmatter hides them from the
+// slash-command menu. No host passes arguments to a skill it never routes to,
+// so the token binds to nothing and reads as a path the file will never get.
+// Reads the WHOLE file, not the frontmatter slice: the token lives in bodies.
+// One readable name per offender, so a single run names them all.
+function argumentTokenInModelOnlySkills(root: string): string[] {
+  return skillNamesUnder(root).filter((name) => {
+    const text = read(join(root, name, "SKILL.md"));
+    return deriveClass(frontmatter(text)) === "model-only" && text.includes("$ARGUMENTS");
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Schema, anchors, and fences as pure functions over rows, so each check can
 // be pointed at a synthetic input and watched to fire (docs/testing.md,
@@ -570,6 +582,40 @@ describe("EXPECTED_INVOCATION covers every skill on disk", () => {
       writeFileSync(join(root, "loose-file.md"), "not a skill\n");
 
       expect(skillNamesUnder(root)).toEqual(["real-skill"]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("no model-only skill carries the $ARGUMENTS token", () => {
+    // No host passes arguments to a skill it never routes to, so the token
+    // binds to nothing.
+    expect(argumentTokenInModelOnlySkills(SKILLS_ROOT)).toEqual([]);
+  });
+
+  test("the $ARGUMENTS check names a model-only skill that carries the token", () => {
+    // Point the check at an offender it must see, and at the two shapes it
+    // must not report: a model-only skill with no token, and an entry point
+    // whose `$ARGUMENTS` a host does bind.
+    const root = mkdtempSync(join(tmpdir(), `skill-arguments-${process.pid}-${Date.now()}-`));
+    try {
+      mkdirSync(join(root, "offender"));
+      writeFileSync(
+        join(root, "offender", "SKILL.md"),
+        ["---", "name: offender", "user-invocable: false", "---", "", "Read $ARGUMENTS/design.md.", ""].join("\n"),
+      );
+      mkdirSync(join(root, "clean-primitive"));
+      writeFileSync(
+        join(root, "clean-primitive", "SKILL.md"),
+        ["---", "name: clean-primitive", "user-invocable: false", "---", "", "Read <artifact-dir>/design.md.", ""].join("\n"),
+      );
+      mkdirSync(join(root, "entry-point"));
+      writeFileSync(
+        join(root, "entry-point", "SKILL.md"),
+        ["---", "name: entry-point", "argument-hint: <topic>", "---", "", "Read $ARGUMENTS/design.md.", ""].join("\n"),
+      );
+
+      expect(argumentTokenInModelOnlySkills(root)).toEqual(["offender"]);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
