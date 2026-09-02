@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.76.0] - 2026-09-02
+
 ### Fixed
 
 - **Waiting no longer costs a turn per ten minutes.** Every wait in Team was a foreground `sleep`, and Claude Code kills a foreground Bash call at 600 seconds. So the watch skills chunked each ~31-minute cycle into three `sleep 600` calls plus a poll, `shipit` declared a 30-minute CI cap that could never apply (the watch died at ten minutes with exit 143, losing the watch rather than timing it out), and the `cross-model-review` courier polled a task the harness already reports on. Measured over five weeks of local sessions: 3,701 `sleep` calls, 292 hours, 167 of them killed at the ceiling. Each of the four sites now runs its wait as a single backgrounded call — the completion notification is the wake-up. A watch cycle costs one turn instead of four, and `shipit`'s stated cap is the one that binds. **What this asks of you:** nothing. Cycle counts, intervals, and every stop condition are unchanged.
@@ -712,7 +714,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.75.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.76.0...HEAD
+[0.76.0]: https://github.com/bostonaholic/team/compare/v0.75.0...v0.76.0
 [0.75.0]: https://github.com/bostonaholic/team/compare/v0.74.0...v0.75.0
 [0.74.0]: https://github.com/bostonaholic/team/compare/v0.73.0...v0.74.0
 [0.73.0]: https://github.com/bostonaholic/team/compare/v0.72.0...v0.73.0
