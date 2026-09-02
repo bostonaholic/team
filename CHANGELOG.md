@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.75.0] - 2026-09-02
+
 ### Added
 
 - **Methodology skills now have no exception: none of them is user-invocable.** `code-review` was the single skill that broke the rule — a methodology four agents preload that was also a slash command. Its methodology moved into a new model-only skill, [`reviewing-code`](https://github.com/bostonaholic/team/blob/main/skills/reviewing-code/SKILL.md), and `code-review` became an ordinary entry point: a front door that resolves the diff, dispatches the `code-reviewer` agent, and prints the reviewer's report in full. It now carries `argument-hint` and `effort` like every other standalone utility, and is catalogued as one. The `code-reviewer`, `security-reviewer`, `ux-reviewer`, and `technical-writer` agents preload `reviewing-code` instead. The catalog grows from 81 to 82 skills. **What this asks of you:** nothing — `/code-review` behaves as before, and now accepts an optional diff target.
-
 ## [0.74.0] - 2026-09-01
 
 ### Fixed
@@ -703,7 +704,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.74.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.75.0...HEAD
+[0.75.0]: https://github.com/bostonaholic/team/compare/v0.74.0...v0.75.0
 [0.74.0]: https://github.com/bostonaholic/team/compare/v0.73.0...v0.74.0
 [0.73.0]: https://github.com/bostonaholic/team/compare/v0.72.0...v0.73.0
 [0.72.0]: https://github.com/bostonaholic/team/compare/v0.71.0...v0.72.0
