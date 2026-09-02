@@ -113,7 +113,7 @@ into exactly one of three buckets, then carry the verdict into the frontmatter:
 
 | Bucket | What it means | Frontmatter | Examples |
 |--------|---------------|-------------|----------|
-| **Both** (default for anything a user might run) | A user triggers it by intent **and** the model/another skill may pull it in | leave `user-invocable` unset (default) | `team`, `team-*`, `code-review` |
+| **Both** (default for anything a user might run) | A user triggers it by intent **and** the model/another skill may pull it in | leave `user-invocable` unset (default) | `team`, `team-*`, `why`, `how` |
 | **User-invocable only** | A user must trigger it explicitly. The model must NOT auto-fire it | `disable-model-invocation: true` | irreversible actions: deploy, force-push, destructive cleanup |
 | **Model-invocable only** (pure building block) | Reference material loaded by agents / read by path. A `/<skill>` command is meaningless to users | `user-invocable: false` | every pure methodology skill (`qrspi-workflow`, `solid`, …) |
 
@@ -126,6 +126,22 @@ Decide with these tests, in order:
    **Model-invocable only**.
 3. **Would a user plausibly type `/<skill>` to run it as an action**, even if agents also
    compose it? → **Both** (the default, do not over-restrict).
+
+**A methodology skill is never user-invocable. There is no exception.** If test 2 sent
+you to **Model-invocable only**, you may not then also register a slash command "because
+a user might run it too". That combination is what makes a file carry a user-facing
+command *and* the methodology four agents preload, and the rule in
+[`docs/skills.md`](../../../docs/skills.md) — methodology skills are never invoked
+directly — then has to be written with an exception attached to your skill.
+
+When a methodology genuinely wants a user-facing command, build a **front door**: the
+methodology keeps `user-invocable: false`, and a *separate* entry-point skill carries the
+slash command, resolves the argument, dispatches, and loads the methodology by name. Two
+skills, one bucket each. `reviewing-code` (methodology, model-only) and `code-review`
+(front door, entry point) are the worked pair. The front door is not a bare pointer — it
+keeps whatever is true of the *invoking surface* rather than of the methodology, which for
+`code-review` is the rule that the session holding the code's conversation history is not
+a valid reviewer.
 
 **If you cannot place the skill in one bucket with high confidence, STOP and ask the user**
 through `AskUserQuestion` (header `Invocation`), with the three buckets as options. State
@@ -189,11 +205,12 @@ frontmatter to keep it out of the `/` menu. The field governs *menu visibility o
 does not affect read-and-follow or subagent composition (those reach the file directly),
 and the model can still auto-load it when relevant. In this repo every pure methodology
 skill sets this. Entry-point skills leave it unset so they register as slash commands. (A
-skill wired as *both* surfaces stays user-invocable — do not set it. The
-`code-review`/`reviewing-code` pair is the repo's standing example: `reviewing-code` sets
-the field and is loaded as composed methodology by the review agents, while `code-review`
-leaves it unset because dispatching a review is a direct user action ("review this
-diff"). `code-review` is the only methodology-section skill kept user-invocable.)
+skill wired as *both* surfaces stays user-invocable — do not set it. But a methodology
+skill is never one of those: it sets the field and gets a front door instead. The
+`code-review`/`reviewing-code` pair is the worked example — `reviewing-code` sets the
+field and is loaded as composed methodology by the review agents, while `code-review` is
+a separate entry-point skill that dispatches the review. No methodology skill in this repo
+is user-invocable.)
 
 ### Invocation invariants
 - Never compose through the skill-invocation tool. Composition = read-and-follow OR subagent.
@@ -203,6 +220,8 @@ diff"). `code-review` is the only methodology-section skill kept user-invocable.
   sections survive being inlined/subagented.
 - Do not auto-trigger irreversible skills.
 - Pure building block → `user-invocable: false` (out of the slash menu, still loadable).
+- A methodology skill is never user-invocable. If it wants a command, add a front-door
+  entry-point skill beside it; never leave the field unset to get both.
 
 ---
 
@@ -403,6 +422,7 @@ Classification
 Invocation
 - [ ] Invocation surface decided — **both** / **user-invocable only** / **model-invocable only** — with high confidence. If not, asked the user through `AskUserQuestion`.
 - [ ] Frontmatter matches the verdict: both → neither flag. User-only → `disable-model-invocation: true`. Model-only → `user-invocable: false`.
+- [ ] If it is methodology, it is **not** user-invocable. A user-facing command for it is a separate front-door skill, not an unset flag on this one.
 - [ ] Only the intended path(s) wired (entry point §1A, building block §1B, or both).
 - [ ] Entry point: description has WHAT + explicit trigger intents/phrases. Added to routing map.
 - [ ] Building block: chose inline (sequential) vs subagent (isolated/parallel) deliberately.
