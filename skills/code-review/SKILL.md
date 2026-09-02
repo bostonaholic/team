@@ -9,45 +9,23 @@ argument-hint: "[<diff target>]"
 
 ## Input
 
-`$ARGUMENTS` names the diff to review — a PR number or URL, a branch, a
-commit range, or a path. It is optional: with no argument, review the
-working tree's diff against the base branch. Resolve it once and pass the
-resolved target to the reviewer; never ask the user to restate it.
+`$ARGUMENTS` names the diff — a PR number or URL, a branch, a commit range,
+or a path. With no argument, review the working tree's diff against the base
+branch. Resolve it once and pass the resolved target to the reviewer; never
+ask the user to restate it.
 
 ## When Invoked Directly
 
-When a user asks for a review in the main session ("review this diff",
-`/code-review`), the session itself is not a valid reviewer — it holds the
-conversation history `reviewing-code` forbids. Do not review inline.
+The main session holds the conversation history `reviewing-code` forbids, so
+it is not a valid reviewer. Do not review inline. Run these in order:
 
-Run the four steps below **in this order**. This skill carries the report
-template by reference, not by value, so a step that shapes the report needs a
-template this session has already read. Out of order, the shape of the report
-becomes a per-call choice, and two runs on the same diff come back different.
-
-1. **Load the format first.** Call the Skill tool with `reviewing-code` and
-   read its `## Report Format` section. It lists every heading the report
-   carries, and the order they are emitted in.
-2. **Dispatch the review.** Dispatch the `code-reviewer` agent against the
-   resolved target. That agent preloads `reviewing-code`, so it already holds
-   the format. When the agent is unavailable, dispatch the built-in read-only
-   `Explore` subagent instead, and put the format in its prompt: tell it to
-   call the Skill tool with `reviewing-code`, review the resolved target by
-   that methodology, and return its report in the exact shape that skill's
-   `## Report Format` pins. A brief that names no format gets back a shape the
-   subagent invented.
-3. **Relay the report in full.** Print what the reviewer returned, in the
-   shape `## Report Format` pins — the verdict line, then every one of its
-   `###` headings, in the template's order. Never a summary, never a subset.
-4. **Report a deviation. Never repair it.** When the returned report drops a
-   heading, adds one the template does not list, or reorders them, print the
-   report as returned and name the deviation on a line of its own. A relay
-   that quietly reshapes the report makes itself a second place the format is
-   decided, which is what this order exists to prevent.
-
-The methodology `reviewing-code` carries is what that dispatched reviewer
-applies.
-
-## Methodology
-
-Call the Skill tool with `reviewing-code`.
+1. **Load the format.** Call the Skill tool with `reviewing-code` and read
+   its `## Report Format`. Order matters: a relay cannot hold a shape it has
+   not read, and loading it after the dispatch is the defect this sequence
+   fixes.
+2. **Dispatch.** Dispatch the `code-reviewer` agent, which preloads
+   `reviewing-code`, against the resolved target. When it is unavailable,
+   dispatch the built-in read-only `Explore` subagent and write the same
+   `## Report Format` requirement into its prompt.
+3. **Relay.** Print what the reviewer returned. `## Report Format` states
+   what a relay owes, and what to do with a report that does not match it.

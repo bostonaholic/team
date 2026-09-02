@@ -108,6 +108,13 @@ that pass did not run.>
   cross-model pass, and a pass that did not run says `Not run: <reason>.`
   in its section. This is where "skip loudly" lands in the report.
   What did not happen is reported as visibly as what did (`skills/principle-skip-loudly/SKILL.md`).
+- **A receiver reports a deviation. It never repairs one.** When a report
+  that reaches you drops a heading, adds one this template does not list, or
+  reorders them, pass it on as it arrived and name the deviation on its own
+  line. This binds every surface named above — the relay after a direct
+  invocation, and a dispatcher folding in what a subagent returned. A
+  receiver that quietly reshapes a report becomes a second place the shape
+  is decided, and then it is no longer one shape.
 
 ## Gate Types and Severity Tiers
 
