@@ -281,6 +281,7 @@ const EXPECTED_INVOCATION: Record<string, InvocationRow> = {
   // Reference material an agent reads. Following one changes how a caller
   // reasons, never what is on disk.
   "conventional-comments": { class: "model-only", mutates: "none", guard: "none" },
+  "design-review-brief": { class: "model-only", mutates: "none", guard: "none" },
   "engineering-standards": { class: "model-only", mutates: "none", guard: "none" },
   "finding-files": { class: "model-only", mutates: "none", guard: "none" },
   "nested-agents": { class: "model-only", mutates: "none", guard: "none" },

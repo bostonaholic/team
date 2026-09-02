@@ -463,7 +463,7 @@ describe("systems-thinking lens (L2 content tripwire)", () => {
 
   describe("slice 2: designs name their blast radius and the gate audits it", () => {
     const AUTHORING_DESIGNS = join(REPO_ROOT, "skills", "authoring-designs", "SKILL.md");
-    const ENG_DESIGN_REVIEW = join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md");
+    const ENG_DESIGN_REVIEW = join(REPO_ROOT, "skills", "design-review-brief", "SKILL.md");
 
     test("authoring-designs rules bullet loads systems-thinking adjacent to its ## When Designing cite", () => {
       // design-author.md already cites product-thinking's same-named
@@ -480,7 +480,7 @@ describe("systems-thinking lens (L2 content tripwire)", () => {
       expect(/change together/i.test(text)).toBe(true);
     });
 
-    test("eng-design-doc-review step 3 carries the blast-radius question", () => {
+    test("design-review-brief step 3 carries the blast-radius question", () => {
       const step3 = sliceBetween(
         read(ENG_DESIGN_REVIEW),
         "**Audit the decisions.**",
@@ -1064,7 +1064,7 @@ describe("skeptic passes weigh a stated rule above precedent (L2 tripwire)", () 
 // rounds each found one more asymmetry, one instance at a time.
 describe("cross-surface parity is checked (L2 tripwire)", () => {
   const AUTHORING = read(join(REPO_ROOT, "skills", "authoring-designs", "SKILL.md"));
-  const REVIEW = read(join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md"));
+  const REVIEW = read(join(REPO_ROOT, "skills", "design-review-brief", "SKILL.md"));
   const CODE_REVIEW = read(join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md"));
 
   test("the design template asks for a surfaces section", () => {

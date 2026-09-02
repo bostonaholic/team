@@ -3,6 +3,7 @@ agent: eng-design-doc-review
 tier: periodic
 deps:
   - skills/eng-design-doc-review/**
+  - skills/design-review-brief/**
   - skills/technical-design-doc/**
   - skills/documenting-decisions/**
 ---

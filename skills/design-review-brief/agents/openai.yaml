@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design Review Brief"
+  short_description: "Run a fresh-context review of a design doc"
+  default_prompt: "Use $design-review-brief to run a fresh-context review of a design doc."

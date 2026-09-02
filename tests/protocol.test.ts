@@ -719,29 +719,28 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
 // Design-review gate brief — free L2 drift tripwire (docs/testing.md §2).
 // The DESIGN phase is gated by an adversarial design review: the orchestrator
 // dispatches a fresh-context read-only `Explore` subagent with the
-// `## Review brief` from eng-design-doc-review, by reference. Renaming that
-// heading or the verdict set would silently change pipeline behavior (design
-// risk: silent gate drift) — these pins fail the build the moment either
-// moves.
+// design-review-brief skill, by reference. Renaming that brief's title or
+// the verdict set would silently change pipeline behavior (design risk:
+// silent gate drift) — these pins fail the build the moment either moves.
 // ---------------------------------------------------------------------------
 
 describe("design-review gate brief (L2 drift tripwire)", () => {
-  const ENG_REVIEW = join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md");
+  const BRIEF = join(REPO_ROOT, "skills", "design-review-brief", "SKILL.md");
   const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
 
-  test("eng-design-doc-review carries the ## Review brief heading verbatim", () => {
-    expect(/^## Review brief$/m.test(read(ENG_REVIEW))).toBe(true);
+  test("design-review-brief carries the Review brief title verbatim", () => {
+    expect(/^# Review brief$/m.test(read(BRIEF))).toBe(true);
   });
 
-  test("eng-design-doc-review pins the APPROVE / REQUEST CHANGES / COMMENT verdict set", () => {
-    const text = read(ENG_REVIEW);
+  test("design-review-brief pins the APPROVE / REQUEST CHANGES / COMMENT verdict set", () => {
+    const text = read(BRIEF);
     expect(/^- \*\*APPROVE\*\*/m.test(text)).toBe(true);
     expect(/^- \*\*REQUEST CHANGES\*\*/m.test(text)).toBe(true);
     expect(/^- \*\*COMMENT\*\*/m.test(text)).toBe(true);
   });
 
-  test("team SKILL dispatches the design review via the eng-design-doc-review brief", () => {
-    expect(read(TEAM_SKILL)).toContain("eng-design-doc-review");
+  test("team SKILL dispatches the design review via design-review-brief", () => {
+    expect(read(TEAM_SKILL)).toContain("design-review-brief");
   });
 });
 

@@ -64,6 +64,7 @@ const TEAM_IMPLEMENT_SKILL = join(REPO_ROOT, "skills", "team-implement", "SKILL.
 const TEAM_PR_SKILL = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
 const ARTIFACT_SKILL = join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md");
 const ENG_REVIEW_SKILL = join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md");
+const DESIGN_REVIEW_BRIEF = join(REPO_ROOT, "skills", "design-review-brief", "SKILL.md");
 const TEAM_DESIGN_SKILL = join(REPO_ROOT, "skills", "team-design", "SKILL.md");
 const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
 
@@ -980,7 +981,7 @@ describe("design-review gate wiring (L2)", () => {
   });
 
   test("the review brief loads cross-model-review as the conditional fifth manual", () => {
-    const text = read(ENG_REVIEW_SKILL);
+    const text = read(DESIGN_REVIEW_BRIEF);
     expect(text).toContain("cross-model-review");
     expect(text).toContain(EXTERNAL_INPUT_HEADING);
     // Positive control: the sweep can see the phrase it retires.

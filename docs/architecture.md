@@ -247,7 +247,7 @@ research artifact with the necessary frontmatter.
 each as an auditable assumption) **Predecessor:** `research.md`
 **Artifact:** `docs/plans/<id>/design.md` **Gate:** REVIEW. The
 orchestrator dispatches a fresh-context, read-only `Explore` subagent
-with the `## Review brief` from `skills/eng-design-doc-review/SKILL.md`.
+with the brief from `skills/design-review-brief/SKILL.md`.
 The subagent holds no Write or Edit tools, so the reviewer cannot touch
 the artifacts it judges. The orchestrator records the verdict to
 `design-review-<n>.md`. APPROVE and COMMENT advance. On REQUEST CHANGES

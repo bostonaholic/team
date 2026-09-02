@@ -363,7 +363,7 @@ describe("thin agents: eval diff-selection keeps firing on the new skills", () =
     "team-research-answers-seeded-questions": ["skills/researching-codebases/**", "skills/finding-files/**"],
     "team-structure-seeded-design": ["skills/slicing-work/**"],
     "team-plan-seeded-structure": ["skills/planning-implementation/**"],
-    "eng-design-doc-review-planted-missing-alternatives": ["skills/documenting-decisions/**", "skills/technical-design-doc/**"],
+    "eng-design-doc-review-planted-missing-alternatives": ["skills/documenting-decisions/**", "skills/technical-design-doc/**", "skills/design-review-brief/**"],
   };
 
   const FIXTURE_INPUTS: Record<string, string> = {

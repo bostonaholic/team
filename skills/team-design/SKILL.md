@@ -106,9 +106,10 @@ done
    section pins (created on first use; a zero-call round appends
    nothing). Any skip continues with the
    reviewer alone — the pass never blocks the gate. Then dispatch the
-   adversarial design review (the
-   `## Review brief` — call the Skill tool with `eng-design-doc-review` to
-   read it — run by a fresh-context read-only `Explore` subagent each round) and write
+   adversarial design review (the design-review brief — call the Skill
+   tool with `design-review-brief` to read it, with `$ARGUMENTS`
+   substituted for every `<artifact-dir>` placeholder it carries — run by
+   a fresh-context read-only `Explore` subagent each round) and write
    the findings + verdict to `$ARGUMENTS/design-review-<n>.md`, where
    `<n>` is the highest existing `<n>` + 1 (1 when none exists) — never
    overwrite an earlier verdict record. Derive the `verdict:`

@@ -36,11 +36,12 @@ const ENTRY_POINT_SKILLS = [
   "how",
 ];
 
-// The 3 methodology procedure skills that must reference it (Slice 3).
+// The 4 methodology procedure skills that must reference it (Slice 3).
 const METHODOLOGY_SKILLS = [
   "test-driven-bug-fix",
   "systematic-debugging",
   "test-first-development",
+  "design-review-brief",
 ];
 
 // The 3 existing seeders that get an additive pointer (Slice 4).

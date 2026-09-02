@@ -284,10 +284,11 @@ When the `design-author` returns a draft:
    nothing; never read back as state).
 3. **Dispatch the adversarial review.** Call the `Agent` tool with
    `subagent_type: Explore`, the built-in read-only agent type. Pass the
-   `## Review brief` as the prompt: call the Skill tool with
-   `eng-design-doc-review` to
+   design-review brief as the prompt: call the Skill tool with
+   `design-review-brief` to
    read that brief (reference it, never duplicate it here), with
-   the artifact directory substituted. Each round gets a fresh subagent
+   the artifact directory substituted for every `<artifact-dir>`
+   placeholder it carries. Each round gets a fresh subagent
    context. `Explore` holds no Write/Edit tools, so the reviewer **cannot**
    change `design.md` or forge a verdict artifact. The verdict is written
    by the orchestrator alone (step 4), and the recovery hooks fail closed
