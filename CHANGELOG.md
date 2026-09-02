@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **The code review methodology moved into its own model-only skill, [`reviewing-code`](https://github.com/bostonaholic/team/blob/main/skills/reviewing-code/SKILL.md).** [`code-review`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md) kept two jobs in one file: a slash command that dispatches a fresh-context reviewer, and the methodology four agents preload. It is now a front door that dispatches, prints the reviewer's report in full, and loads `reviewing-code` for the methodology; `reviewing-code` holds the generator-evaluator rule, the report format, the severity regimes, and the inspection contract. The `code-reviewer`, `security-reviewer`, `ux-reviewer`, and `technical-writer` agents preload `reviewing-code` instead. The catalog grows from 81 to 82 skills. **What this asks of you:** nothing — `/code-review` behaves as before.
+
 ## [0.74.0] - 2026-09-01
 
 ### Fixed

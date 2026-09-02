@@ -148,10 +148,10 @@ describe("engineering-standards methodology", () => {
     }
   });
 
-  test("skills.md code-review row unchanged", () => {
+  test("skills.md reviewing-code row unchanged", () => {
     // Key on the table-row delimiter so prose mentions of the skill name
     // elsewhere in the doc cannot crowd the row out of the 5-line window.
-    const row = filterRows(read(SKILLS_MD), "| `code-review` |", /^#|^>|SKILL\.md|\/\/|event/);
+    const row = filterRows(read(SKILLS_MD), "| `reviewing-code` |", /^#|^>|SKILL\.md|\/\/|event/);
     for (const agent of ["code-reviewer", "security-reviewer", "ux-reviewer", "technical-writer"]) {
       expect(row).toContain(agent);
     }
@@ -173,8 +173,8 @@ describe("engineering-standards methodology", () => {
     expect(loadsSkill(read(CODE_REVIEWER), "solid")).toBe(true);
   });
 
-  test("code-reviewer.md still references code-review/SKILL.md", () => {
-    expect(read(CODE_REVIEWER)).toContain("code-review/SKILL.md");
+  test("code-reviewer.md still references reviewing-code/SKILL.md", () => {
+    expect(read(CODE_REVIEWER)).toContain("reviewing-code/SKILL.md");
   });
 
   test("skill contains design-first workflow with all 5 steps", () => {
@@ -403,7 +403,7 @@ describe("systems-thinking lens (L2 content tripwire)", () => {
   }
 
   describe("slice 1: the lens exists and reviewers enforce System Fit", () => {
-    const CODE_REVIEW_SKILL = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
+    const CODE_REVIEW_SKILL = join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md");
     const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
     const UX_REVIEWER = join(REPO_ROOT, "agents", "ux-reviewer.md");
 
@@ -436,7 +436,7 @@ describe("systems-thinking lens (L2 content tripwire)", () => {
       expect(/complete answer/i.test(closer)).toBe(true);
     });
 
-    test("code-review step 4 carries the System fit item", () => {
+    test("reviewing-code step 4 carries the System fit item", () => {
       // The bold checklist item asks the three system-fit questions:
       // sibling divergence, callers/consumers outside the diff, and the
       // conventions established elsewhere.
@@ -803,7 +803,7 @@ describe("design-review gate replaces approval frontmatter (L2 tripwire)", () =>
 
 // ---------------------------------------------------------------------------
 // Flaky-test red flags — free L2 content tripwires (docs/testing.md §2).
-// The code-review skill carries an always-blocking checklist for tests whose
+// The reviewing-code skill carries an always-blocking checklist for tests whose
 // outcome depends on a nondeterministic input (time, randomness, ordering,
 // network...). Two severity regimes coexist in the skill: style flags escalate
 // suggestion→issue across multiple tests; flaky red flags are blocking on
@@ -812,8 +812,8 @@ describe("design-review gate replaces approval frontmatter (L2 tripwire)", () =>
 // docs/plans/2026-07-15-flaky-test-red-flags/design.md).
 // ---------------------------------------------------------------------------
 
-describe("code-review flaky-test red flags (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
+describe("reviewing-code flaky-test red flags (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md");
   const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
 
   // Text between two markers; "" when either marker is missing. Callers guard
@@ -827,7 +827,7 @@ describe("code-review flaky-test red flags (L2 content tripwire)", () => {
     return text.slice(start, end);
   }
 
-  test("code-review skill keeps the always-blocking flaky-test severity rule keyed to outcome-dependence", () => {
+  test("reviewing-code skill keeps the always-blocking flaky-test severity rule keyed to outcome-dependence", () => {
     const text = read(SKILL_FILE);
     expect(text).toContain("**Flaky-test red flags (always blocking).**");
     // Scope severity assertions to the checklist region so the `issue
@@ -845,7 +845,7 @@ describe("code-review flaky-test red flags (L2 content tripwire)", () => {
     expect(flaky).toContain("test-style/SKILL.md");
   });
 
-  test("the flaky red-flag catalog lives in test-style only, not duplicated in code-review", () => {
+  test("the flaky red-flag catalog lives in test-style only, not duplicated in reviewing-code", () => {
     const TEST_STYLE = join(REPO_ROOT, "skills", "test-style", "SKILL.md");
     const codeReview = read(SKILL_FILE);
     const styleFlags = between(codeReview, "Test-quality flags.", "Flaky-test red flags");
@@ -856,7 +856,7 @@ describe("code-review flaky-test red flags (L2 content tripwire)", () => {
     expect(flaky.length).toBeGreaterThan(0);
     // The six-flag style list never carries sleep() (design decision 3)...
     expect(styleFlags).not.toContain("sleep()");
-    // ...and the catalog bullets no longer live in code-review at all.
+    // ...and the catalog bullets no longer live in reviewing-code at all.
     expect(flaky).not.toContain("sleep()");
     // The single catalog copy sits in test-style's reviewer checklist.
     const testStyle = read(TEST_STYLE);
@@ -874,21 +874,21 @@ describe("code-review flaky-test red flags (L2 content tripwire)", () => {
     const text = read(CODE_REVIEWER);
     expect(/first\*{0,2} occurrence/i.test(text)).toBe(true);
     expect(/blocking/i.test(text)).toBe(true);
-    expect(text).toContain("skills/code-review/SKILL.md");
+    expect(text).toContain("skills/reviewing-code/SKILL.md");
   });
 });
 
 // ---------------------------------------------------------------------------
 // Time-bomb example pair — free L2 content tripwire (docs/testing.md §2).
 // The fenced bad/good time-bomb example used to live in two hand-maintained
-// copies (code-review + test-first-development) under a byte-identity drift
+// copies (reviewing-code + test-first-development) under a byte-identity drift
 // guard. The test-style extraction collapsed it to ONE copy — a single copy
 // needs no drift guard, so this pin asserts single-copy residency plus the
 // pointers the former hosts keep.
 // ---------------------------------------------------------------------------
 
 describe("time-bomb example pair (single copy in test-style)", () => {
-  const CODE_REVIEW_SKILL = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
+  const CODE_REVIEW_SKILL = join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md");
   const TFD_SKILL = join(REPO_ROOT, "skills", "test-first-development", "SKILL.md");
   const TEST_STYLE_SKILL = join(REPO_ROOT, "skills", "test-style", "SKILL.md");
 
@@ -966,7 +966,7 @@ describe("code-comment rules (L2 content tripwire)", () => {
 
 // ---------------------------------------------------------------------------
 // Comment red flags — free L2 content tripwires (docs/testing.md §2). The
-// code-review skill owns the split severity regime for comment violations:
+// reviewing-code skill owns the split severity regime for comment violations:
 // ticket/issue IDs and plan/slice/phase markers in comments are mechanical,
 // judgment-free, and rot — blocking on FIRST occurrence (flaky-test
 // precedent); what-restating, wordiness, and commented-out code follow the
@@ -976,10 +976,10 @@ describe("code-comment rules (L2 content tripwire)", () => {
 // ---------------------------------------------------------------------------
 
 describe("comment red flags (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
+  const SKILL_FILE = join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md");
   const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
 
-  test("code-review skill defines the Comment red flags split regime", () => {
+  test("reviewing-code skill defines the Comment red flags split regime", () => {
     const flags = sliceBetween(read(SKILL_FILE), "Comment red flags", "### UX Reviewer");
     expect(flags.length).toBeGreaterThan(0);
     // Mechanical references block on first occurrence; tolerate bold
@@ -1065,7 +1065,7 @@ describe("skeptic passes weigh a stated rule above precedent (L2 tripwire)", () 
 describe("cross-surface parity is checked (L2 tripwire)", () => {
   const AUTHORING = read(join(REPO_ROOT, "skills", "authoring-designs", "SKILL.md"));
   const REVIEW = read(join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md"));
-  const CODE_REVIEW = read(join(REPO_ROOT, "skills", "code-review", "SKILL.md"));
+  const CODE_REVIEW = read(join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md"));
 
   test("the design template asks for a surfaces section", () => {
     // Guard: a missing file must fail, not vacuously pass the checks below.
@@ -1090,7 +1090,7 @@ describe("cross-surface parity is checked (L2 tripwire)", () => {
     expect(new Set(numbers).size).toBe(numbers.length);
   });
 
-  test("code-review applies the same check to a diff", () => {
+  test("reviewing-code applies the same check to a diff", () => {
     expect(CODE_REVIEW.length).toBeGreaterThan(0);
     expect(/reaches every surface/i.test(squash(CODE_REVIEW))).toBe(true);
   });
@@ -1126,7 +1126,11 @@ describe("slicing asks whether a slice deserves its own PR (L2 tripwire)", () =>
 // the relay trims whatever it likes.
 // ---------------------------------------------------------------------------
 describe("code-review report format (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
+  // Two files, because the report template and the direct-invocation relay
+  // that binds to it now live on opposite sides of the front-door/methodology
+  // split.
+  const SKILL_FILE = join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md");
+  const FRONT_DOOR = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
   const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
   const CROSS_MODEL = join(REPO_ROOT, "skills", "cross-model-review", "SKILL.md");
 
@@ -1224,12 +1228,12 @@ describe("code-review report format (L2 content tripwire)", () => {
     expect(text).toContain("### Cross-model disposition");
     // The position is the report template's to state; this skill points at it
     // rather than describing a placement of its own.
-    expect(text).toContain("skills/code-review/SKILL.md");
+    expect(text).toContain("skills/reviewing-code/SKILL.md");
     expect(text).toContain("Report Format");
   });
 
   test("the direct-invocation relay binds to the report format", () => {
-    const invoked = between(read(SKILL_FILE), "\n## When Invoked Directly\n", "\n## ");
+    const invoked = between(read(FRONT_DOOR), "\n## When Invoked Directly\n", "\n## ");
     // Guard: a missing section must fail, not vacuously pass the check below.
     expect(invoked.length).toBeGreaterThan(0);
     expect(invoked).toContain("Report Format");
@@ -1238,7 +1242,7 @@ describe("code-review report format (L2 content tripwire)", () => {
   test("code-reviewer defers its report structure to the skill's report format", () => {
     const text = read(CODE_REVIEWER);
     expect(text).toContain("Report Format");
-    expect(text).toContain("skills/code-review/SKILL.md");
+    expect(text).toContain("skills/reviewing-code/SKILL.md");
   });
 });
 
@@ -1468,8 +1472,8 @@ describe("principle-generator-evaluator (L2 content tripwire)", () => {
     expect(text).toContain("Veto without authorship");
   });
 
-  test("citation site: code-review cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "code-review", "SKILL.md"))).toContain("skills/principle-generator-evaluator/SKILL.md");
+  test("citation site: reviewing-code cites the principle by path", () => {
+    expect(read(join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md"))).toContain("skills/principle-generator-evaluator/SKILL.md");
   });
 });
 
@@ -1745,8 +1749,8 @@ describe("principle-skip-loudly (L2 content tripwire)", () => {
     expect(text).toContain("says so on its own line");
   });
 
-  test("citation site: code-review cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "code-review", "SKILL.md"))).toContain("skills/principle-skip-loudly/SKILL.md");
+  test("citation site: reviewing-code cites the principle by path", () => {
+    expect(read(join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md"))).toContain("skills/principle-skip-loudly/SKILL.md");
   });
 });
 

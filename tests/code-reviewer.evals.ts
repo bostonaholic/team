@@ -168,13 +168,13 @@ function registerPlantedBugEval(options: {
           // inline prompt alone. 180s clipped completing runs.
           timeout: 300_000,
           testName: fixtureName,
-          // The reviewer's real rule text. `code-review` owns the severity
+          // The reviewer's real rule text. `reviewing-code` owns the severity
           // regime, `conventional-comments` the finding format, and
           // `engineering-standards` the canonical Code Comments rule set the
           // planted-comment-* fixtures exercise. These three are the globs in
           // every code-reviewer touchfiles entry.
           systemPromptAppend: loadSkillContext([
-            "code-review",
+            "reviewing-code",
             "conventional-comments",
             "engineering-standards",
           ]),

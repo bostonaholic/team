@@ -9,7 +9,7 @@ permissionMode: plan
 skills:
   - principle-progress-tracking
   - nested-agents
-  - code-review
+  - reviewing-code
   - conventional-comments
   - reviewing-security
 ---
@@ -33,7 +33,7 @@ Your step-by-step procedure lives in `skills/reviewing-security/SKILL.md`
 (preloaded). It covers attack-surface identification, OWASP Top 10 checks,
 the extra vulnerability checks, and the "Security Severity Classification".
 CRITICAL and HIGH are hard gates. MEDIUM and LOW do not block. Load
-`skills/code-review/SKILL.md` (preloaded) for generator-evaluator
+`skills/reviewing-code/SKILL.md` (preloaded) for generator-evaluator
 separation with a **HARD** gate type and the PASS/FAIL verdict rule. Format
 findings per `skills/conventional-comments/SKILL.md` (preloaded).
 

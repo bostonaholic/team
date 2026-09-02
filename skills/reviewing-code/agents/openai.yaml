@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reviewing Code"
+  short_description: "Review a diff for correctness and quality"
+  default_prompt: "Use $reviewing-code to review a diff for correctness and quality."

@@ -189,10 +189,11 @@ frontmatter to keep it out of the `/` menu. The field governs *menu visibility o
 does not affect read-and-follow or subagent composition (those reach the file directly),
 and the model can still auto-load it when relevant. In this repo every pure methodology
 skill sets this. Entry-point skills leave it unset so they register as slash commands. (A
-skill wired as *both* surfaces stays user-invocable — do not set it. `code-review` is the
-repo's standing example: it is loaded as composed methodology by the review agents yet is
-also a direct user action ("review this diff"). It is the only methodology skill kept
-user-invocable.)
+skill wired as *both* surfaces stays user-invocable — do not set it. The
+`code-review`/`reviewing-code` pair is the repo's standing example: `reviewing-code` sets
+the field and is loaded as composed methodology by the review agents, while `code-review`
+leaves it unset because dispatching a review is a direct user action ("review this
+diff"). `code-review` is the only methodology-section skill kept user-invocable.)
 
 ### Invocation invariants
 - Never compose through the skill-invocation tool. Composition = read-and-follow OR subagent.

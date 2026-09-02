@@ -53,7 +53,7 @@ The human decides what to build and what to ship; the middle runs autonomously (
 Two consequences worth stating, because both have been read the other way:
 
 - **`security-reviewer`'s own instructions agree with this table.**
-  `agents/security-reviewer.md` and `skills/code-review/SKILL.md` both say
+  `agents/security-reviewer.md` and `skills/reviewing-code/SKILL.md` both say
   CRITICAL and HIGH are hard gates while MEDIUM and LOW do not block. That is
   correct, and it is why the reviewer reports MEDIUMs freely. A table that
   auto-fixed them would silently convert candid reporting into rounds.
