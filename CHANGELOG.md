@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.77.0] - 2026-09-02
+
 ### Fixed
 
 - **`/code-review` now emits the same report shape on every call.** The front door [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md) named the report template — "the shape `reviewing-code`'s `## Report Format` pins" — but carried it only by reference, and stated the load of `reviewing-code` in a `## Methodology` section placed *after* the dispatch instruction. Nothing sequenced the load before the dispatch or the relay, so a session that read the skill top-to-bottom could dispatch a reviewer, relay its report, and never open the template it was told to match: the relayed shape was a per-call choice. The fallback dispatch made it worse — "a fresh read-only subagent instructed to follow `reviewing-code`" was the whole brief, with no output contract in it, so that reviewer returned whatever shape it invented. `## When Invoked Directly` is now three ordered steps — load `reviewing-code` and read `## Report Format` **first**, then dispatch (the `code-reviewer` agent, which preloads the methodology, or the built-in read-only `Explore` subagent with the same requirement written into its prompt), then relay — and the redundant `## Methodology` section is gone, since step 1 is that load. The front door drops from 53 lines to 31: it resolves the argument, dispatches, and relays, and states no rule the methodology owns. The rule for a report that arrives in the wrong shape went to [`reviewing-code`](https://github.com/bostonaholic/team/blob/main/skills/reviewing-code/SKILL.md)'s `## Report Format` instead of the front door, because it binds every surface that receives a report rather than the direct-invocation relay alone: a receiver passes a non-conforming report on as it arrived and names the deviation, never quietly reshaping it into a second place the shape gets decided. Pinned by L2 tripwires in [`tests/methodology.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/methodology.test.ts) — an ordering assertion that the format reference precedes the `code-reviewer` dispatch, a check that both dispatch paths bind to the format rather than the relay alone, and a single-source sweep that fails if the template's headings are ever restated on the front door. **What this asks of you:** nothing.
@@ -718,7 +720,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.76.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.77.0...HEAD
+[0.77.0]: https://github.com/bostonaholic/team/compare/v0.76.0...v0.77.0
 [0.76.0]: https://github.com/bostonaholic/team/compare/v0.75.0...v0.76.0
 [0.75.0]: https://github.com/bostonaholic/team/compare/v0.74.0...v0.75.0
 [0.74.0]: https://github.com/bostonaholic/team/compare/v0.73.0...v0.74.0
