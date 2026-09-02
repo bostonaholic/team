@@ -56,9 +56,9 @@
 //    below so adding a second is a decision, not a typo.
 // 3. `caller` is a pointer, not a mechanism: the row inherits whatever guard
 //    its loading entry points carry. Fenced to `class: model-only` and forced
-//    to name its loaders in the reason. KNOWN HOLE: that reason hand-lists
-//    four caller paths, so renaming one leaves the reason wrong and this file
-//    green.
+//    to name its loaders in the reason. The reason's prose stays unchecked,
+//    but the loader set behind it does not: it is derived from disk below,
+//    and every derived loader must carry a guard clause of its own.
 // 4. `noGuardReason` is free prose. Only its non-emptiness is checked.
 //
 // This suite runs in this repo's CI and never reaches an installed host, so it
@@ -274,7 +274,7 @@ const EXPECTED_INVOCATION: Record<string, InvocationRow> = {
     mutates: "remote",
     guard: "caller",
     noGuardReason:
-      "Never routed to directly (user-invocable: false). Loaded only by skills/team/SKILL.md:47,:496, skills/team-fix/SKILL.md:71,:199, skills/team-pr/SKILL.md:134, and skills/pr-watch-as-author/SKILL.md:73 — each of which carries its own explicit-intent clause.",
+      "Never routed to directly (user-invocable: false). Loaded through the Skill tool by team, team-fix, team-pr, and pr-watch-as-author, each of which carries its own explicit-intent clause. That set is derived from disk and re-checked below, not taken from this sentence.",
   },
 
   // -- model-only: pure reference, no effects ------------------------------
@@ -506,6 +506,19 @@ function anchorViolations(
     }
   }
   return out.sort();
+}
+
+// Skills that hand `tracking-tickets` to the Skill tool. `\s+` between the
+// words spans the line wrap the phrase takes inside a SKILL.md paragraph, so a
+// wrapped call site counts like any other.
+const TRACKING_TICKETS_LOAD = /Skill\s+tool\s+with\s+`tracking-tickets`/;
+
+function trackingTicketsLoaders(): string[] {
+  return skillNames().filter(
+    (name) =>
+      name !== "tracking-tickets" &&
+      TRACKING_TICKETS_LOAD.test(read(join(SKILLS_ROOT, name, "SKILL.md"))),
+  );
 }
 
 function namesWithGuard(rows: Record<string, InvocationRow>, guard: Guard): string[] {
@@ -760,6 +773,32 @@ describe("the guard fences", () => {
     };
     expect(namesWithGuard(rows, "gate")).not.toEqual([]);
     expect(namesWithGuard(rows, "gate")).toEqual(["some-new-skill"]);
+  });
+});
+
+describe("the guard: caller row inherits a real guard from every loader", () => {
+  // `tracking-tickets` carries no clause of its own, so its whole safety is
+  // its loaders'. Deriving that set from disk means a new or renamed loader is
+  // classified here, rather than drifting away from a hand-written sentence.
+  test("the loader sweep finds call sites, not an empty set", () => {
+    // Blindness floor: an empty sweep would make the guard check below pass
+    // against a tree with no loaders at all.
+    expect(trackingTicketsLoaders().length).toBeGreaterThan(0);
+  });
+
+  test("the loader pattern matches a call site split across two lines", () => {
+    // Positive control for the wrap. skills/team-fix/SKILL.md breaks the
+    // phrase after "Skill", which a single-line pattern would drop silently.
+    expect(TRACKING_TICKETS_LOAD.test("Call the Skill\n   tool with `tracking-tickets` and")).toBe(
+      true,
+    );
+  });
+
+  test("every skill that loads tracking-tickets carries its own guard clause", () => {
+    const unguarded = trackingTicketsLoaders().filter(
+      (name) => EXPECTED_INVOCATION[name]?.guard !== "clause",
+    );
+    expect(unguarded).toEqual([]);
   });
 });
 
