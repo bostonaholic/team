@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`/code-review` now emits the same report shape on every call.** The front door [`skills/code-review/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md) named the report template — "the shape `reviewing-code`'s `## Report Format` pins" — but carried it only by reference, and stated the load of `reviewing-code` in a `## Methodology` section placed *after* the dispatch instruction. Nothing sequenced the load before the dispatch or the relay, so a session that read the skill top-to-bottom could dispatch a reviewer, relay its report, and never open the template it was told to match: the relayed shape was a per-call choice. The fallback dispatch made it worse — "a fresh read-only subagent instructed to follow `reviewing-code`" was the whole brief, with no output contract in it, so that reviewer returned whatever shape it invented. `## When Invoked Directly` is now a four-step ordered procedure: load `reviewing-code` and read `## Report Format` **first**, then dispatch (the `code-reviewer` agent, which preloads the methodology, or the built-in read-only `Explore` subagent with the format written into its prompt), then relay the report in full — verdict line, then every `###` heading in the template's order — and finally report a non-conforming report as returned, naming the deviation, rather than reshaping it. That last step closes the remaining leak: a relay that quietly repairs the shape is a second place the format gets decided. Pinned by L2 tripwires in [`tests/methodology.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/methodology.test.ts) — an ordering assertion that the format reference precedes the `code-reviewer` dispatch, and a check that both dispatch paths bind to the format rather than the relay alone. **What this asks of you:** nothing.
+
 ## [0.76.0] - 2026-09-02
 
 ### Fixed
