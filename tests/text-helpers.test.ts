@@ -3,20 +3,20 @@
 // L1 unit tests for the two shared frontmatter helpers in tests/helpers/text.ts,
 // plus one L2 tripwire pinning that `descriptionText()` has a single owner.
 //
-// Both helpers are load-bearing: 113 call sites across the structural suites
-// read frontmatter through `frontmatter()`, and every description-offset check
-// in this repo counts characters on `descriptionText()` output. A silent
-// wrong answer from either one turns those suites green while wrong, which is
-// the exact failure mode this file exists to prevent.
+// Both helpers are load-bearing: every structural suite in this repo reads
+// frontmatter through `frontmatter()`, and every description-offset check
+// counts characters on `descriptionText()` output. A silent wrong answer from
+// either one turns those suites green while wrong, which is the exact failure
+// mode this file exists to prevent.
 //
 // The behavior being pinned:
 //
 //   frontmatter()      Returns the lines strictly between the first and second
 //                      `---` markers. ZERO markers -> "" (tests/docs-nav.test.ts
 //                      depends on that). Exactly ONE marker is an UNTERMINATED
-//                      block and must THROW, quoting the offending text —
-//                      today it silently returns the whole file body, so a
-//                      class or key predicate would run against body prose.
+//                      block and THROWS, quoting the offending text. Returning
+//                      the whole file body instead would run a class or key
+//                      predicate against body prose.
 //
 //   descriptionText()  Extracts the `description:` value from a frontmatter
 //                      slice across the YAML styles in use, and throws on a
@@ -33,9 +33,9 @@ const REPO_ROOT = process.cwd();
 const SKILLS_ROOT = join(REPO_ROOT, "skills");
 
 // A file whose frontmatter opens and never closes. Exactly 17 lines follow the
-// lone `---`, which is the slice the helper silently returns today. The error
-// must quote both signals the signature can offer — it takes text and no path:
-// the first line of the block, and the number of lines the block swallowed.
+// lone `---`, which is the count the error reports. The error quotes both
+// signals the signature can offer — it takes text and no path: the first line
+// of the block, and the number of lines the block swallowed.
 const UNTERMINATED_17_LINES = [
   "---",
   "name: broken",
@@ -116,8 +116,8 @@ describe("frontmatter()", () => {
   });
 
   test("every SKILL.md on disk parses without throwing", () => {
-    // Blast-radius guard for the throw above: no file on disk is unterminated
-    // today, so hardening the helper must not turn any existing suite red.
+    // Blast-radius guard for the throw above: no file on disk is unterminated,
+    // so the throw must not turn any existing suite red.
     expect(skillFiles().length).toBeGreaterThan(60);
     expect(unparseableSkillFiles()).toEqual([]);
   });

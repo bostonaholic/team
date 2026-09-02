@@ -22,11 +22,14 @@ export function squash(text: string): string {
 // description prevents a false positive on the quoted `argument-hint`
 // value elsewhere in the frontmatter.
 //
-// Latent hole: any inline value other than "" and "|" is treated as a
-// scalar, so `|-`, `|+` or `>` would measure as a two-character
-// description. Inert today — every block scalar in the corpus opens with a
-// bare `|` — and it fails loud downstream at the description-phrase checks
-// in tests/architecture.test.ts.
+// Two latent holes, both inert against the corpus today and both failing
+// loud downstream at the description-phrase checks in
+// tests/architecture.test.ts. First, any inline value other than "" and "|"
+// is treated as a scalar, so `|-`, `|+` or `>` measures as a two-character
+// description; every block scalar in the corpus opens with a bare `|`.
+// Second, a block scalar ends at the first line that is not indented text,
+// so a blank line inside one truncates the description there; no description
+// in the corpus spans a paragraph break.
 export function descriptionText(fm: string): string {
   const lines = fm.split("\n");
   const start = lines.findIndex((line) => line.startsWith("description:"));
