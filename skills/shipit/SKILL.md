@@ -112,10 +112,40 @@ locally, see the force-with-lease guidance in step 4. Never use a bare
 
 ### 3. Wait for CI
 
-Poll the PR's checks with `gh pr checks`. The bound is **mechanical, not prose**:
-`timeout` enforces the total cap and `--fail-fast` exits the instant a check
-fails. **Bounded, never infinite.** Defaults (overridable so a future automation
-loop can tune them):
+Three parts, in order: **settle**, **watch**, **verify**. The watch is how the
+wait is spent cheaply. It is not the verdict.
+
+**Why the watch cannot be the verdict.** `gh pr checks --watch` exits when
+nothing is pending *right now*, and two different states produce that: every
+check finished, and no check has started yet. An exit code cannot tell them
+apart. Just after a push, workflows take seconds to attach to the head commit,
+so a watch started too early sees an empty or partial check set, calls it done,
+and exits 0 — a green light on CI that never ran. Checks also appear mid-run: a
+job gated on another job does not exist until that one finishes, so "nothing
+pending" can be premature long after the push. The verdict therefore comes from
+GitHub's own aggregate, which knows a check *suite* is still running even when
+every job it has created so far has passed.
+
+**3a — Settle.** Let the push's workflows register before watching. This is the
+wait shorter than a turn's overhead that
+`skills/principle-non-blocking-waits/SKILL.md` names as its exception, so it
+runs inline rather than backgrounded:
+
+```bash
+for _ in 1 2 3 4 5 6; do
+  STATE=$(gh pr view <pr-number> --json mergeStateStatus --jq .mergeStateStatus)
+  COUNT=$(gh pr view <pr-number> --json statusCheckRollup --jq '.statusCheckRollup | length')
+  [ "$STATE" != "UNKNOWN" ] && [ "${COUNT:-0}" -gt 0 ] && break
+  sleep 10
+done
+```
+
+A repo with no CI leaves `COUNT` at 0 for the full minute. That is a legitimate
+outcome, not a failure — fall through and let 3c decide.
+
+**3b — Watch.** The bound is **mechanical, not prose**: `timeout` enforces the
+total cap and `--fail-fast` exits the instant a check fails. **Bounded, never
+infinite.** Defaults (overridable so a future automation loop can tune them):
 
 - **interval:** poll every 30s (`--interval 30`)
 - **total timeout:** 30 min cap = 1800s (`timeout 1800`)
@@ -133,20 +163,32 @@ is lost rather than timed out. Backgrounded, the harness reports the call when
 it exits and `status` is the real verdict. See
 `skills/principle-non-blocking-waits/SKILL.md`.
 
-`--fail-fast` returns non-zero the moment any check fails. `timeout` kills the
-watch and returns **124** when the 30-min cap is hit. Map the exit code to one
-of three outcomes:
+Map `status` first — it is the fast path out, never the way in:
 
-- **`status` is 0** (all required checks passed) → continue to the merge. (Add
-  `--required` to gate on required checks only. The default here gates on
-  **all** checks so a failing optional check still halts the land — the
-  conservative choice for an irreversible merge.)
-- **`status` is non-zero and not 124** (a check failed) → **stop before merge**.
-  Run `gh pr checks <pr-number>` to print the failing check, and report it by
-  name. Leave the branch in place — the user fixes CI and re-runs `/shipit`. Do
+- **non-zero and not 124** (a check failed) → **stop before merge**. Run
+  `gh pr checks <pr-number>` to print the failing check, and report it by name.
+  Leave the branch in place — the user fixes CI and re-runs `/shipit`. Do
   **not** merge.
-- **`status` is 124** (the 30-min cap was hit and CI never went green) → stop
-  and report "CI wait timed out". Do not merge.
+- **124** (the 30-min cap was hit and CI never went green) → stop and report
+  "CI wait timed out". Do not merge.
+- **0** → necessary, not sufficient. Continue to 3c.
+
+**3c — Verify. This is the gate.** Read GitHub's aggregate for the head commit:
+
+```bash
+gh pr view <pr-number> --json mergeStateStatus --jq .mergeStateStatus
+```
+
+- **`CLEAN`** or **`HAS_HOOKS`** → CI is genuinely green. Merge.
+- **`UNSTABLE`** → a suite is still running, or a check failed. Return to 3b
+  and watch once more. **At most one re-watch**: a second `UNSTABLE` on the
+  same head commit is a failure, not a race, so print `gh pr checks
+  <pr-number>` and stop.
+- **`BEHIND`** → the base moved. Take step 4's rebase path, then re-enter 3a.
+- **`UNKNOWN`** → GitHub is still computing mergeability. Re-read once; stop if
+  it does not resolve.
+- **anything else** (`BLOCKED`, `DIRTY`, `DRAFT`, …) → stop and report the
+  status verbatim. Never merge on a status this list does not name.
 
 **Re-entry after a CI fix:** when re-running `/shipit` after fixing CI, the
 commits are already on the branch — `shipit` simply pushes any new ones, waits

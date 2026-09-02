@@ -122,6 +122,49 @@ describe("shipit skill: push, wait for CI, merge", () => {
     expect(t).toContain("principle-non-blocking-waits");
   });
 
+  // `gh pr checks --watch` exits when nothing is pending RIGHT NOW, and two
+  // states produce that: every check finished, and no check has started yet.
+  // The exit code cannot tell them apart, so treating exit 0 as "CI green"
+  // squash-merges a branch whose workflows had not registered yet. The verdict
+  // must come from GitHub's aggregate, which knows a check suite is still
+  // running even when every job it has created so far has passed.
+  test("the merge verdict is mergeStateStatus, read after the watch", () => {
+    const t = body();
+    const watch = t.indexOf("timeout 1800 gh pr checks");
+    const verify = t.indexOf("**3c");
+    const merge = t.indexOf("gh pr merge <pr-number>");
+    // Guards: all three anchors must exist, or the ordering below is
+    // meaningless and would pass for the wrong reason.
+    expect(watch).toBeGreaterThan(-1);
+    expect(verify).toBeGreaterThan(-1);
+    expect(merge).toBeGreaterThan(-1);
+    // The verify part sits after the watch exits and before anything merges.
+    expect(verify).toBeGreaterThan(watch);
+    expect(merge).toBeGreaterThan(verify);
+    // And it is the aggregate that gets read there, not the exit code again.
+    expect(t.slice(verify, merge)).toContain("mergeStateStatus");
+  });
+
+  test("the watch is settled against a registered check set before it starts", () => {
+    // Without a settle the watch races the workflows attaching to the head
+    // commit, which is the common case immediately after a push.
+    const t = body();
+    const settle = t.indexOf("statusCheckRollup");
+    const watch = t.indexOf("timeout 1800 gh pr checks");
+    expect(settle).toBeGreaterThan(-1);
+    expect(watch).toBeGreaterThan(-1);
+    expect(settle).toBeLessThan(watch);
+  });
+
+  test("the merge-state vocabulary is enumerated, and only CLEAN-ish merges", () => {
+    // A status the skill does not name must stop the land rather than fall
+    // through to a merge, so the states it acts on are spelled out.
+    const t = body();
+    for (const state of ["CLEAN", "UNSTABLE", "BEHIND", "UNKNOWN"]) {
+      expect(t).toContain(state);
+    }
+  });
+
   test("names `gh pr merge --squash` explicitly", () => {
     // Squash lands the PR title as the commit subject (so a version in the
     // title shows up in git log) while keeping linear history.
