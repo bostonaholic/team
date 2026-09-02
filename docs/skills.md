@@ -36,9 +36,7 @@ catalog into two flavors:
   as slash commands (`/team`, `/team-research`, and so on). The
   `argument-hint` documents what to pass as `$ARGUMENTS`.
 - **Methodology skills omit `argument-hint`.** They are never invoked
-  directly — with one exception, `code-review`, which stays user-invocable
-  as a standalone review command (see
-  [Methodology skills](#methodology-skills)). Agents load them through one
+  directly. Agents load them through one
   of two mechanisms: a `skills:`
   YAML list in the agent's frontmatter (e.g., `agents/design-author.md`
   declares `skills: [product-thinking,
@@ -767,15 +765,26 @@ QRSPI phase: a self-contained action a user runs on demand.
   architectural findings only; line-level review stays with
   `code-review`. Read-only — no writes, no artifacts.
 
+### [code-review](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md)
+
+- **Purpose:** The direct-invocation front door for a code review.
+- **Loaded by:** nobody — it is invoked directly by a user or the model.
+- **Key behaviors:** The one methodology-section skill a user can invoke.
+  Invoked directly, it dispatches the `code-reviewer` agent rather than
+  reviewing inline — the main session holds the conversation history
+  `reviewing-code` forbids — then prints that reviewer's report in full, in
+  the shape `reviewing-code` pins. The review methodology itself lives in
+  `reviewing-code`, which the front door loads by name.
+
+
 ## Methodology skills
 
-The methodology skills carry no `argument-hint` and, with one
-exception, are never invoked directly. The exception is `code-review`: it
-is a meaningful standalone user action ("review this diff",
-`/code-review`), so it does not set `user-invocable: false` — and when
-invoked directly it dispatches the `code-reviewer` agent rather than
-reviewing inline, preserving the fresh-context separation `reviewing-code`
-mandates (see
+The methodology skills carry no `argument-hint` and are never invoked
+directly. A methodology that also wants a user-facing command does not
+become the exception: it stays `user-invocable: false` and a separate
+front door is filed under [Standalone utilities](#standalone-utilities)
+above. `reviewing-code` and its front door `code-review` are the worked
+example (see
 [architecture.md](architecture.md#methodology-skills-loaded-by-agents-not-directly-invoked)).
 Agents load them through one of two mechanisms. The first is a
 `skills:` YAML list in the agent's frontmatter. The second is an inline
@@ -878,17 +887,6 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   Its tactical rules are one slice at a time, reuse over reinvention, and
   under 300 lines. It also forbids implementation code, keeps slices
   atomic, and matches test coverage to the structure.
-
-### [code-review](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md)
-
-- **Purpose:** The direct-invocation front door for a code review.
-- **Loaded by:** nobody — it is invoked directly by a user or the model.
-- **Key behaviors:** The one methodology-section skill a user can invoke.
-  Invoked directly, it dispatches the `code-reviewer` agent rather than
-  reviewing inline — the main session holds the conversation history
-  `reviewing-code` forbids — then prints that reviewer's report in full, in
-  the shape `reviewing-code` pins. The review methodology itself lives in
-  `reviewing-code`, which the front door loads by name.
 
 ### [reviewing-code](https://github.com/bostonaholic/team/blob/main/skills/reviewing-code/SKILL.md)
 

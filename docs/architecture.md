@@ -738,15 +738,16 @@ satisfy the `/team` requirement. The guard wording is NOT
 machine-checked — it is the author's and reviewer's responsibility, and
 its absence on a side-effecting skill is a review-blocking defect.
 
-Among methodology skills, `code-review` is the only one kept
-user-invocable, and it is a front door rather than a building block. The
-methodology it fronts lives in `reviewing-code`, which the
+No methodology skill is user-invocable. When a methodology also wants a
+user-facing command, the answer is a **front door**, not an exception:
+the methodology keeps `user-invocable: false` and a separate entry-point
+skill carries the slash command. `reviewing-code` and `code-review` are
+that pair. The methodology lives in `reviewing-code`, which the
 `code-reviewer`, `security-reviewer`, `ux-reviewer`, and
-`technical-writer` agents preload and which sets `user-invocable: false`
-like every other methodology skill. What stays on the front door is the
-one thing a user runs: "review this diff". The field thus stays unset
-there. The distinction is the *primary* surface: a skill earns a slash
-command when a user would plausibly run it directly.
+`technical-writer` agents preload; `code-review` carries `argument-hint`
+and `effort` like any other entry point and is catalogued under
+Standalone utilities. What stays on the front door is the one thing a
+user runs: "review this diff".
 
 That standalone path behaves differently from an ordinary entry point,
 which simply runs its own procedure. The front door still owes the
@@ -760,8 +761,7 @@ the methodology that reviewer applies.
 definition. Some of those, e.g. `team-worktree` and `team-pr`, are also
 *referenced by path* from `team/SKILL.md`, but those are procedural
 cross-links in the orchestrator's prose, not a parent loading the skill as
-a building block. `code-review` is the only user command in the
-methodology section, and the pair it forms with `reviewing-code` is how a
+a building block. The `code-review` / `reviewing-code` pair is how a
 composed methodology keeps a user-facing entry point without becoming
 one.)
 
