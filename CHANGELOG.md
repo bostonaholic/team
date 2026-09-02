@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.79.0] - 2026-09-02
+
 ### Changed
 
 - **[`/pr-watch-as-reviewer`](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md) now answers every reply instead of reading it and saying nothing.** The watch woke only when a thread was *resolved*, so an author who answered in prose and left the thread open — the ordinary way to push back on a review comment — got silence until the 24-hour timeout expired, after the skill had already judged that reply internally and thrown the judgement away. Every verdict now maps to exactly one visible action: a reply that meets the concern **resolves the thread**, one that does not draws a **rebuttal** naming the specific claim the branch does not bear out, and an inconclusive one writes nothing and keeps waiting. The writes go from two (approval, 👍/👎) to four (+ resolve, + rebuttal). Two rules keep the new resolve honest, because a reviewer that closes threads counting toward its own approval could otherwise clear its own gate: the approval condition reads the **verdict**, never `isResolved`, so a thread the skill closed and a thread the author closed are worth the same and both still need a verdict rendered against the branch; and resolving on a **pending** verdict is forbidden outright, since that is the one path that walks an unmet concern into an approval. An unresolved thread carrying a reply defaults to pending rather than inheriting the resolved-thread deference — there is no author assertion of doneness to defer to yet. The rebuttal exchange ends on the verdict, not on a round number, consistent with both review loops: one rebuttal answers one reply, so the author's own participation paces it, an author who stops replying draws no further rebuttals, and a dispute nobody settles rides to the cycle-48 timeout, which now reports it by name. The approval body discloses how many threads the approver resolved itself, and the completion report gained a write ledger that prints on every path — including an interrupt — because these are writes on someone else's pull request. **What this asks of you:** nothing at arm time, but the skill now speaks on your behalf inside the review conversation rather than only at the end of it, so a rebuttal it posts is one you own.
@@ -730,7 +732,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.78.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.79.0...HEAD
+[0.79.0]: https://github.com/bostonaholic/team/compare/v0.78.0...v0.79.0
 [0.78.0]: https://github.com/bostonaholic/team/compare/v0.77.0...v0.78.0
 [0.77.0]: https://github.com/bostonaholic/team/compare/v0.76.0...v0.77.0
 [0.76.0]: https://github.com/bostonaholic/team/compare/v0.75.0...v0.76.0
