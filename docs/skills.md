@@ -278,11 +278,16 @@ QRSPI phase: a self-contained action a user runs on demand.
 - **Phase:** None. A standalone land action, not part of the pipeline.
 - **Key behaviors:** Discovers the open PR for the current branch through
   the §2B fallback chain (refuses if there is none, or if it is already
-  merged/closed). Pushes any unpushed commits. Waits for CI with a
-  mechanically bounded poll
+  merged/closed). Pushes any unpushed commits. Waits for CI in three
+  parts — settle, watch, verify. It settles until the push's workflows
+  have registered, watches with a mechanically bounded poll
   (`timeout 1800 gh pr checks --watch --fail-fast --interval 30`), run
   backgrounded so the 30-minute cap is the one that applies rather than
-  the harness's own foreground ceiling. Handles
+  the harness's own foreground ceiling, and then reads
+  `mergeStateStatus` for the verdict. The watch's exit code is not the
+  gate: it exits when nothing is pending *right now*, which is equally
+  true of a finished check set and one that has not started, so the
+  aggregate is what tells those apart. Handles
   a PR that has fallen behind its base (rebase + `--force-with-lease`,
   never a bare `--force`) and surfaces branch-protection rejections
   verbatim. It merges with `gh pr merge --squash`, building the commit
