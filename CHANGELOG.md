@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.78.0] - 2026-09-02
+
 ### Fixed
 
 - **`/shipit` no longer merges a PR whose CI never ran.** [`skills/shipit/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/shipit/SKILL.md) treated `gh pr checks --watch` exiting 0 as proof CI was green. That watch exits when nothing is pending *right now*, and two different states produce that: every check finished, and no check has started yet. An exit code cannot tell them apart. Immediately after the step 2 push — which is exactly when step 3 runs — GitHub takes seconds to attach the workflows to the head commit, so the watch could see a partial check set, call it done, and hand step 4 a green light on CI that had not started. Observed on [#295](https://github.com/bostonaholic/team/pull/295): the watch returned 0 while three of four checks were still pending, and only an out-of-band `mergeStateStatus` read (`UNSTABLE`) stopped the merge. Checks can also appear mid-run — a job gated on another job does not exist until that one finishes — so a settle alone does not close it. Step 3 is now **settle, watch, verify**: it settles inline until the check set registers (the sub-turn wait [`principle-non-blocking-waits`](https://github.com/bostonaholic/team/blob/main/skills/principle-non-blocking-waits/SKILL.md) names as its own exception), watches as before, and then takes the verdict from `mergeStateStatus`, which knows a check *suite* is still running even when every job it has created so far has passed. `CLEAN`/`HAS_HOOKS` merges; `UNSTABLE` re-watches exactly once and then stops; `BEHIND` routes to the rebase path; every other status stops with the status reported verbatim, so a state the skill does not name can never fall through to a merge. Pinned by L2 tripwires in [`tests/shipit-skill.test.ts`](https://github.com/bostonaholic/team/blob/main/tests/shipit-skill.test.ts) — the verify part sits between the watch and the merge and reads the aggregate there, the settle precedes the watch, and the acted-on status vocabulary is enumerated. **What this asks of you:** nothing, and one fewer way for an unattended land to merge something unverified.
@@ -724,7 +726,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.77.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.78.0...HEAD
+[0.78.0]: https://github.com/bostonaholic/team/compare/v0.77.0...v0.78.0
 [0.77.0]: https://github.com/bostonaholic/team/compare/v0.76.0...v0.77.0
 [0.76.0]: https://github.com/bostonaholic/team/compare/v0.75.0...v0.76.0
 [0.75.0]: https://github.com/bostonaholic/team/compare/v0.74.0...v0.75.0
