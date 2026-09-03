@@ -782,7 +782,8 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 - **Purpose:** The direct-invocation front door for a code review.
 - **Loaded by:** nobody — it is invoked directly by a user or the model.
-- **Key behaviors:** The one methodology-section skill a user can invoke.
+- **Key behaviors:** The front door over the `reviewing-code` methodology;
+  it is catalogued here as a command and never loaded as a building block.
   Invoked directly, it dispatches the `code-reviewer` agent rather than
   reviewing inline — the main session holds the conversation history
   `reviewing-code` forbids — then prints that reviewer's report in full, in
@@ -795,10 +796,13 @@ QRSPI phase: a self-contained action a user runs on demand.
 The methodology skills carry no `argument-hint` and are never invoked
 directly. A methodology that also wants a user-facing command does not
 become the exception: it stays `user-invocable: false` and a separate
-front door is filed under [Standalone utilities](#standalone-utilities)
-above. Two pairs hold that shape: `reviewing-code` with its front door
-`code-review`, and `reviewing-designs` with its front door
-`eng-design-doc-review` (see
+front-door skill carries the command. The front door is catalogued as a
+command — under [Entry-point skills](#entry-point-skills) or
+[Standalone utilities](#standalone-utilities), whichever fits its role —
+while the methodology stays in this section. Two pairs hold that shape:
+`reviewing-code` with its front door `code-review`, catalogued under
+Standalone utilities, and `reviewing-designs` with its front door
+`eng-design-doc-review`, catalogued under Entry-point skills (see
 [architecture.md](architecture.md#methodology-skills-loaded-by-agents-not-directly-invoked)).
 Agents load them through one of two mechanisms. The first is a
 `skills:` YAML list in the agent's frontmatter. The second is an inline
