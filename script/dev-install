@@ -16,6 +16,7 @@ HARNESSES=(claude codex antigravity)
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(dirname "$HERE")"
 HOOK_MARKER="# Managed by Team dev install."
+PULL_HOOK_SOURCE="${HERE}/dev-install-claude-pull-hook"
 
 resolve_pull_hooks_dir() {
   local common_dir hooks_dir
@@ -38,6 +39,11 @@ resolve_pull_hooks_dir() {
 
 preflight_pull_hooks() {
   local hooks_dir hook_name hook_path
+  if [ ! -f "$PULL_HOOK_SOURCE" ] || [ ! -x "$PULL_HOOK_SOURCE" ]; then
+    echo "Error: Claude pull hook is missing or not executable:" >&2
+    echo "  ${PULL_HOOK_SOURCE}" >&2
+    return 1
+  fi
   hooks_dir=$(resolve_pull_hooks_dir) || return 1
 
   # Check both destinations before writing either one.
@@ -61,27 +67,7 @@ install_pull_hooks() {
   for hook_name in post-merge post-rewrite; do
     hook_path="${hooks_dir}/${hook_name}"
     temp_path=$(mktemp "${hooks_dir}/.team-${hook_name}.XXXXXX")
-    # These variables belong to the generated hook, not this installer.
-    # shellcheck disable=SC2016
-    printf '%s\n' \
-      '#!/usr/bin/env bash' \
-      'set -euo pipefail' \
-      '' \
-      '# Managed by Team dev install.' \
-      '# Re-run the Claude installer after merge pulls and rebase pulls.' \
-      '[ "${TEAM_DEV_INSTALL_HOOK_RUNNING:-}" != "1" ] || exit 0' \
-      'HOOK_NAME="${0##*/}"' \
-      '[ "$HOOK_NAME" != "post-rewrite" ] || [ "${1:-}" = "rebase" ] || exit 0' \
-      'ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || {' \
-      '  echo "Error: Team pull hook cannot resolve the checkout root." >&2' \
-      '  exit 1' \
-      '}' \
-      '[ -x "$ROOT/script/dev-install" ] || {' \
-      '  echo "Error: Team pull hook cannot run $ROOT/script/dev-install." >&2' \
-      '  exit 1' \
-      '}' \
-      'TEAM_DEV_INSTALL_HOOK_RUNNING=1 "$ROOT/script/dev-install" claude' \
-      >"$temp_path"
+    cp "$PULL_HOOK_SOURCE" "$temp_path"
     chmod 0755 "$temp_path"
     mv "$temp_path" "$hook_path"
     echo "Installed Git hook: ${hook_path}"

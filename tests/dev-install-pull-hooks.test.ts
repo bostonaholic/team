@@ -19,6 +19,11 @@ import { join } from "node:path";
 const REPO_ROOT = join(import.meta.dir, "..");
 const INSTALL_SOURCE = join(REPO_ROOT, "script", "dev-install");
 const UNINSTALL_SOURCE = join(REPO_ROOT, "script", "dev-uninstall");
+const PULL_HOOK_SOURCE = join(
+  REPO_ROOT,
+  "script",
+  "dev-install-claude-pull-hook",
+);
 const tempDirs: string[] = [];
 
 type Fixture = {
@@ -73,6 +78,10 @@ function newFixture(): Fixture {
   writeExecutable(
     join(upstream, "script", "dev-uninstall"),
     readFileSync(UNINSTALL_SOURCE, "utf8"),
+  );
+  writeExecutable(
+    join(upstream, "script", "dev-install-claude-pull-hook"),
+    readFileSync(PULL_HOOK_SOURCE, "utf8"),
   );
   writeExecutable(
     join(upstream, "script", "dev-install-claude"),
@@ -186,6 +195,12 @@ describe("dev install: refresh after pulls (#312)", () => {
     const fixture = newFixture();
     expect(install(fixture).status).toBe(0);
     const first = readFileSync(hookPath(fixture, "post-merge"), "utf8");
+    expect(first).toBe(
+      readFileSync(
+        join(fixture.checkout, "script", "dev-install-claude-pull-hook"),
+        "utf8",
+      ),
+    );
 
     expect(install(fixture).status).toBe(0);
     expect(readFileSync(hookPath(fixture, "post-merge"), "utf8")).toBe(first);
