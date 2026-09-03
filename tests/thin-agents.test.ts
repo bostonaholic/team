@@ -272,12 +272,18 @@ describe("every preloaded name counts against the budget", () => {
     expect(inlineSkillsKey(frontmatters)).toEqual([]);
   });
 
-  // Prove each rule can find a positive: three planted violations, one per
+  // Prove each rule can find a positive: four planted violations, one per
   // failure mode the budget can hide.
   test("the budget checks can see planted violations", () => {
     const overBudget = new Map([["planted-agent", ["a", "b", "c", "d"]]]);
     expect(overBudgetWithNoReason(overBudget, {})).toEqual([
       "planted-agent: preloads 4 names, no recorded reason",
+    ]);
+
+    const underBudget = new Map([["planted-agent", ["a"]]]);
+    const spuriousReason = { "planted-agent": { count: 1, reason: "planted" } };
+    expect(reasonWithoutABudgetToJustify(underBudget, spuriousReason)).toEqual([
+      "planted-agent: recorded reason for an agent at or under the budget",
     ]);
 
     const wrongCount = { "planted-agent": { count: 5, reason: "planted" } };
@@ -291,7 +297,6 @@ describe("every preloaded name counts against the budget", () => {
     ]);
   });
 });
-
 
 describe("thin agents: wrapper bodies point at their procedure skills", () => {
   // Convention: a wrapper keeps a one-line pointer (or a preload note

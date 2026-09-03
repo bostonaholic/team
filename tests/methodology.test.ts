@@ -2045,7 +2045,12 @@ describe("the principle set is derived, not counted", () => {
       if (!new RegExp(`^### \\[${bundle}\\]`, "m").test(SKILLS_MD)) {
         offenders.push(`${bundle}: no catalog entry`);
       }
-      if (bundle.startsWith("principle-")) offenders.push(`${bundle}: carries the principle- prefix`);
+      // Reachable from disk and catalog state, unlike a prefix test on the
+      // literal name: a bundle renamed under the prefix lands in the derived
+      // principle set above.
+      if (onDisk.includes(`principle-${bundle}`) || catalogued.includes(`principle-${bundle}`)) {
+        offenders.push(`${bundle}: carries the principle- prefix`);
+      }
     }
     expect(offenders).toEqual([]);
   });

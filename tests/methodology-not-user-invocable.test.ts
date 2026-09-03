@@ -210,6 +210,14 @@ describe("skill flavor and catalog completeness", () => {
     expect(unknownSectionEntries(entries)).toEqual([]);
   });
 
+  // Every per-skill entry is an h3 in the linked `### [<name>](…)` form, and
+  // nothing else in the file uses that level. A plain `### ` heading would slip
+  // past the parser above and out of every check here.
+  test("every ### heading in the catalog is a parsed skill entry", () => {
+    const headings = read(CATALOG).match(/^### /gm) ?? [];
+    expect(entries.length).toBe(headings.length);
+  });
+
 
   // Prove each rule can find a positive: four planted violations, one per way
   // the catalog can lie about what a skill is.

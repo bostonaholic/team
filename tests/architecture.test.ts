@@ -321,6 +321,16 @@ describe("effort tiering", () => {
     expect(offenders).toEqual([]);
   });
 
+  test("each agent's frontmatter carries exactly one effort: key", () => {
+    // No trailing space in the pattern, so a stray `effort:low` counts too.
+    const offenders: string[] = [];
+    for (const file of agentFiles()) {
+      const count = frontmatter(read(join(REPO_ROOT, file))).match(/^effort:/gm)?.length ?? 0;
+      if (count !== 1) offenders.push(`${file}: ${count} effort: keys`);
+    }
+    expect(offenders).toEqual([]);
+  });
+
   test("methodology skills carry no effort (it would override the loading agent's effort)", () => {
     for (const file of skillFiles()) {
       const fm = frontmatter(read(join(REPO_ROOT, file)));
