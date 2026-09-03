@@ -1,31 +1,22 @@
 ---
 name: principle-files-are-the-contract
-description: "Apply when passing state between steps, agents, sessions, or runs. Write the durable artifact to disk and treat the file as the interface; never rely on conversation memory."
+description: "Apply when passing state: persist the complete contract in a file."
 user-invocable: false
 ---
 
 # Files Are the Contract
 
-The conversation is ephemeral; the artifact on disk is durable. Work that
-matters is written to a file that declares what it is — and, where a gate
-governs it, whether the gate passed — and steps communicate through those
-files, never through shared chat memory. Trusting the model to remember
-fails often enough to plan for.
+**Invariant:** Durable files, not conversation memory, carry state between
+steps, agents, sessions, and runs.
 
-**Why:** A file survives a truncated context, a compaction, a crash, a new
-session, and a handoff to a different agent. The state lives on disk, not
-in memory. The file is the value passed between steps, and it revises only
-by explicit rule — a design is overwritten on revision, a verdict record is
-appended and never overwritten — so nothing is silently lost.
+**Rules:**
+- Write the declared artifact, including gate status, before reporting a step
+  complete. No artifact means the step did not happen.
+- Pass the path; consumers read the artifact, not a producer's summary.
+- Rebuild ledgers and phase state by scanning artifacts after interruption.
+- Follow explicit revision rules: overwrite a revised design; append verdict
+  records and long-procedure checkpoints without overwriting them.
+- Record decisions, approvals, and pre-images in the artifact directory.
 
-**Pattern:**
-- A step that produced no artifact did not happen. Write the file before
-  reporting the step done.
-- Pass a path, not a paraphrase: the consumer reads the artifact itself,
-  never the producer's summary of it.
-- Rebuild in-session state (ledgers, phase tables) by scanning the
-  artifacts; after any interruption the files are authoritative.
-- Long procedures checkpoint to an append-only log, so a fresh context can
-  resume from disk instead of from recollection.
-- Record decisions, approvals, and pre-images in the artifact directory,
-  so a later turn — or a later run — can audit what happened.
+**Check:** Could a fresh session recover the authoritative state from files
+alone?

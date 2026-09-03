@@ -1,29 +1,22 @@
 ---
 name: principle-skip-loudly
-description: "Apply when reporting any run's outcome. What did not happen is reported as visibly as what did — skipped passes, degraded modes, and deliberate omissions each get a named line."
+description: "Apply to completion reports: name every skipped, degraded, or omitted action."
 user-invocable: false
 ---
 
 # Skip Loudly
 
-Whatever did not happen is reported as visibly as what did. A skipped
-pass, a degraded mode, and a deliberate omission each get a named line;
-a report that drops them reads exactly like a clean run.
+**Invariant:** Reports name skipped, degraded, incomplete, and deliberately
+omitted work as visibly as completed work.
 
-**Why:** A sweep that skipped something and did not say so is
-indistinguishable from one that had nothing to do. A reader of a report
-that dropped a section cannot tell a pass that ran and found nothing from
-one that never ran at all.
+**Rules:**
+- Keep empty sections and state `No findings.`, `Not run: <reason>.`, or
+  `Nothing declared.` as appropriate.
+- For every skip, name the check, cause, and work that would have run.
+- Name unchanged items, fenced omissions, partially loaded data, and remaining
+  disk or board state.
+- Report degradation per affected item with degraded wording such as
+  `unverified`, never success wording.
 
-**Pattern:**
-- A section with nothing to report says so on its own line: "No
-  findings.", "Not run: <reason>.", "Nothing declared." Never drop the
-  section.
-- Name the reason with the skip — which check, what was unavailable, what
-  would have run.
-- Report what you did NOT change: deliberate omissions, items skipped by
-  a fence, data loaded only in part. Anything left on disk or on the
-  board is named.
-- A degradation is stated per affected item, in degraded words
-  ("unverified", "captured — not yet uploaded"), never wrapped in the
-  success wording.
+**Check:** Could a reader mistake anything not run or not completed for a clean
+success?

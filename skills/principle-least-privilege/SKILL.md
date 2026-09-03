@@ -1,35 +1,24 @@
 ---
 name: principle-least-privilege
-description: "Apply when granting tools, credentials, or environment to any role or child process. The toolset is the guarantee: enforce a constraint by withholding the capability, not by asking for restraint."
+description: "Apply when granting capabilities: provide only those required for the role."
 user-invocable: false
 ---
 
 # Least Privilege
 
-Enforce a constraint by withholding the capability, not by asking for
-restraint. On a dispatch path the guarantee is the target's toolset, not
-the prose telling it to behave: a prompt does not rewrite an agent body,
-and an instruction never widens or narrows what a role can actually
-touch.
+**Invariant:** Enforce constraints with the narrowest available toolset,
+credentials, and environment; prose alone provides no structural guarantee.
 
-**Why:** Prose gets forgotten; a missing Write tool does not. A
-constraint that is a property of the harness holds even when
-the model does not cooperate — and a role that cannot do the forbidden
-thing needs no rule against it.
+**Rules:**
+- Reviewers have no Write/Edit capability and run in plan mode.
+- Give each child an environment allowlist and only its own credentials, never
+  another vendor's or the parent's full environment.
+- Choose the narrowest capable dispatch target. If a rule requires structural
+  read-only enforcement, refuse a target with a command sink when a narrower
+  target exists.
+- If every target has excess capability, scope the prompt and report that the
+  assurance is prompt-level, not structural.
+- On fallback to a full-tool context, explicitly withdraw any structural
+  assurance claim.
 
-**Pattern:**
-- Reviewers hold no Write/Edit and run in plan mode. A reviewer that can
-  fix what it found can approve its own fix.
-- A child process receives an environment allowlist and its own
-  credential block — never another vendor's, never the parent's full
-  environment.
-- Prefer the narrowest dispatch target that can run the errand. Where a
-  governing rule demands a structural guarantee — a read-only lens — a
-  target holding a command sink is refused whenever a narrower target
-  can carry the errand, whatever else the wider one can do. When the
-  narrowest available target still carries more than the errand needs,
-  the errand rides on an explicitly scoped prompt, and the report says
-  the guarantee is prompt-level, not structural.
-- Match the assurance claim to the mechanism: when work falls back to a
-  full-tool context, say the guarantee no longer applies rather than
-  keeping the claim while losing the mechanism.
+**Check:** Does the actual capability boundary enforce every assurance claimed?

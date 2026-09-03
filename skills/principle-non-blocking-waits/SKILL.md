@@ -1,52 +1,26 @@
 ---
 name: principle-non-blocking-waits
-description: "Apply when a procedure waits on something outside the session — CI, a reviewer, a vendor CLI, a long job. Spend the wait in one backgrounded call the harness reports on, never in foreground sleeps that occupy the turn."
+description: "Apply to external waits: use one backgrounded call with a reported result."
 user-invocable: false
 ---
 
 # Non-Blocking Waits
 
-Waiting is not work. A wait on anything outside the session — CI, a
-reviewer, a vendor CLI, a long job — is one **backgrounded** call that
-ends when the thing being waited on ends. Never a foreground `sleep`,
-and never a poll loop over a task whose completion the harness already
-reports.
+**Invariant:** A wait that would span turns runs as one backgrounded call; do
+not occupy turns with foreground sleeps or poll a task the harness reports.
 
-**Why:** a foreground wait spends a whole turn producing nothing, and it
-is the turn, not the wall-clock, that costs. The session is idle either
-way; the difference is whether the model is re-invoked once at the end or
-once per fragment. A 24-hour watch built from foreground sleeps costs
-~192 turns and re-sends the full context on each one. The same watch
-built from backgrounded waits costs one turn per cycle.
+**Rules:**
+- Use one Bash call with `run_in_background: true`; its completion notification
+  is the wake-up.
+- Put each delayed poll in that call: `sleep <interval>; <poll command>`.
+- Never poll a backgrounded task for completion.
+- Declare a loud terminal bound under
+  `skills/principle-bounded-loops/SKILL.md`.
+- Do not rely on a foreground timeout beyond the host ceiling; Claude Code
+  stops foreground Bash at 600 seconds.
+- If background execution is unavailable, say so and use foreground chunks
+  below the host ceiling. Name this fallback at the call site.
+- Keep sub-minute waits inline when they fit within one turn.
 
-A foreground wait is also **capped by the harness, not by your budget**.
-Claude Code kills a foreground Bash call at 600 s. A stated
-`timeout 1800` on a foreground call is a cap that never applies: the call
-dies at ten minutes with exit 143, and whatever it was watching is lost.
-Sizing sleeps to just miss the ceiling (`sleep 570`, `sleep 590`) trades
-one failure for three turns and still drifts past the cap whenever the
-host suspends.
-
-**Pattern:**
-- **Background the wait.** One Bash call with `run_in_background: true`.
-  The harness re-invokes on exit, so the completion notification *is* the
-  wake-up. No ceiling applies.
-- **Put the poll inside the same backgrounded call** — `sleep <interval>;
-  <poll command>`. One call per cycle, and the result is already in hand
-  when the turn resumes.
-- **Never poll a backgrounded task.** Its completion is reported. A
-  `sleep 120; wc -c <output-file>` loop over a task the harness is
-  already tracking pays for a notification twice.
-- **Bound it as usual.** The cap in `skills/principle-bounded-loops/SKILL.md`
-  is unchanged by where the wait runs — declare it, and make hitting it
-  loud and terminal.
-- **Fall back loudly.** Where a harness has no background execution, say
-  so and chunk the wait into foreground calls sized under that harness's
-  ceiling. Name the fallback at the call site; it is never the default
-  shape.
-
-**Below the threshold, wait inline.** A wait shorter than a single turn's
-overhead stays in the foreground: settling for a few seconds after a push
-before the first poll is cheaper inline than backgrounded. The rule
-starts where a wait would otherwise be fragmented — roughly a minute and
-up.
+**Check:** Does this wait resume only on a result or declared terminal bound,
+without foreground polling turns?
