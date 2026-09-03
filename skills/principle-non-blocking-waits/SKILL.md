@@ -42,10 +42,11 @@ host suspends.
   loud and terminal.
 - **Fall back loudly.** Where a harness has no background execution, say
   so and chunk the wait into foreground calls sized under that harness's
-  ceiling. The fallback is the exception, named at the call site — never
-  the default shape.
+  ceiling. Name the fallback at the call site; it is never the default
+  shape.
 
-**The exception:** a wait shorter than a single turn's overhead. Settling
-for a few seconds after a push before the first poll is cheaper inline
-than backgrounded. The rule starts where a wait would otherwise be
-fragmented — roughly a minute and up.
+**Below the threshold, wait inline.** A wait shorter than a single turn's
+overhead stays in the foreground: settling for a few seconds after a push
+before the first poll is cheaper inline than backgrounded. The rule
+starts where a wait would otherwise be fragmented — roughly a minute and
+up.
