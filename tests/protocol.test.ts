@@ -716,16 +716,15 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
 });
 
 // ---------------------------------------------------------------------------
-// eliminate-rule-exceptions slice 1 — the design-review brief moves out of the
-// `eng-design-doc-review` entry point into the `reviewing-designs` methodology
-// skill, so no skill is both a methodology and a slash command (design.md
-// Appendix D). The pins above move with it, and three callers now load the
-// same brief: skills/team/SKILL.md, skills/team-design/SKILL.md, and the
-// entry point itself. Each dispatches it with the artifact directory
-// substituted for `$ARGUMENTS`, which is the contract a subagent depends on.
+// The design-review brief lives in the `reviewing-designs` methodology skill
+// rather than in the `eng-design-doc-review` entry point, so no skill is both
+// a methodology and a slash command. Three callers load the same brief:
+// skills/team/SKILL.md, skills/team-design/SKILL.md, and the entry point
+// itself. Each dispatches it with the artifact directory substituted for
+// `$ARGUMENTS`, which is the contract a subagent depends on.
 // ---------------------------------------------------------------------------
 
-describe("eliminate-rule-exceptions slice 1: the design-review brief lives in reviewing-designs", () => {
+describe("the design-review brief lives in reviewing-designs", () => {
   const REVIEWING_DESIGNS = join(REPO_ROOT, "skills", "reviewing-designs", "SKILL.md");
 
   // Missing-file reads return "" so a not-yet-created skill fails as an
@@ -896,7 +895,6 @@ describe("no mid-run human-gate claims (L2 forbidden-pattern sweep)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// T5 — eliminate-rule-exceptions slice 11 (design.md "## The five tripwires").
 // Exception vocabulary is how a rule quietly stops applying: a clause names one
 // case, the rule reads false everywhere else, and nothing fails. This sweep
 // makes the class fail the build. It is the extension-list widening of the
@@ -917,10 +915,10 @@ describe("no mid-run human-gate claims (L2 forbidden-pattern sweep)", () => {
 //
 // A red names a file and a phrase. Restate that sentence — never add an
 // allowlist entry. The allowlist takes domain nouns only, and its six entries
-// are fixed by the design.
+// are fixed.
 // ---------------------------------------------------------------------------
 
-describe("eliminate-rule-exceptions slice 11: exception vocabulary appears in no rule prose (T5)", () => {
+describe("exception vocabulary appears in no rule prose", () => {
   const FAMILIES: Record<string, RegExp> = {
     // An exception claim: a state verb before "the exception", or a counted or
     // labeled one. The counter list runs to ten so a future "four exceptions"

@@ -286,10 +286,9 @@ describe("effort tiering", () => {
     }
   });
 
-  // T4 — eliminate-rule-exceptions slice 4 (design.md "## The five tripwires").
-  // Effort tracks the work, the same way model does, but nothing pinned a
+  // Effort tracks the work, the same way model does, and nothing else pins a
   // per-agent effort level: a silent downgrade of a strategic author to `low`
-  // would have passed every check above. EXPECTED_EFFORTS is the pin, mirroring
+  // passes every check above. EXPECTED_EFFORTS is the pin, mirroring
   // EXPECTED_MODELS in describe("model tiering") below.
   const EXPECTED_EFFORTS: Record<string, string> = {
     "code-reviewer": "high",
@@ -307,7 +306,7 @@ describe("effort tiering", () => {
     verifier: "low",
   };
 
-  test("eliminate-rule-exceptions slice 4: EXPECTED_EFFORTS pins all 13 agents to their levels (T4)", () => {
+  test("EXPECTED_EFFORTS pins all 13 agents to their levels", () => {
     // Key-set equality both directions: a new agent missing from the map and a
     // stale map key both fail here. agentFiles() is already sorted.
     const names = agentFiles().map((file) => basename(file, ".md"));

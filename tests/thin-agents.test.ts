@@ -137,15 +137,13 @@ describe("thin agents: frontmatter skills preloads per agent", () => {
 });
 
 // ---------------------------------------------------------------------------
-// T2 — eliminate-rule-exceptions slice 3 (design.md "## The five tripwires").
-// The soft limit is three preloaded skills. It was stated with a standing
-// exemption — an agent's own extracted procedure "does not count" — which made
-// the budget unfalsifiable: every agent past three had a reason available and
-// none was written down. The budget stays soft, but the record becomes
+// The soft limit is three preloaded skills, and every name in a `skills:` list
+// counts toward the number it justifies. A budget that lets a category of name
+// "not count" is unfalsifiable: every agent past three has a reason available
+// and none of them is written down. The budget stays soft; the record is
 // mechanical. PRELOAD_BUDGET_REASONS is that record, exactly as
 // EXPECTED_GUARDED (tests/guarded-skill-prose.test.ts) is the record for the
-// guarded set, and every name in a `skills:` list counts toward the number it
-// justifies.
+// guarded set.
 //
 // The agent set comes from disk, never from ALL_AGENTS: a hardcoded thirteen
 // would hide a fourteenth agent from the rule this exists to enforce.
@@ -237,7 +235,7 @@ function inlineSkillsKey(frontmatters: Map<string, string>): string[] {
     .map(([agent]) => `${agent}: skills: is an inline list, not a block list`);
 }
 
-describe("eliminate-rule-exceptions slice 3: every preloaded name counts against the budget (T2)", () => {
+describe("every preloaded name counts against the budget", () => {
   const agentNames = readdirSync(join(REPO_ROOT, "agents"))
     .filter((name) => name.endsWith(".md"))
     .map((name) => name.replace(/\.md$/, ""))
@@ -451,13 +449,12 @@ describe("thin agents: eval diff-selection keeps firing on the new skills", () =
     "eng-design-doc-review-planted-missing-alternatives": "evals/fixtures/eng-design-doc-review/planted-missing-alternatives/input.md",
   };
 
-  // eliminate-rule-exceptions slice 1: the design-review brief moves into
-  // skills/reviewing-designs/, so the fixture that exercises the review now
-  // depends on it. Declaring it here is what makes the binder below check the
-  // selection map (tests/helpers/touchfiles.ts) against the fixture's own
-  // `deps` frontmatter for the new glob, exactly as it already does for this
-  // fixture's two sibling globs.
-  test("eliminate-rule-exceptions slice 1: TOUCHFILE_ADDITIONS declares the reviewing-designs glob", () => {
+  // The fixture that exercises the design review depends on
+  // skills/reviewing-designs/, which holds the brief. Declaring the glob here
+  // is what makes the binder below check the selection map
+  // (tests/helpers/touchfiles.ts) against the fixture's own `deps`
+  // frontmatter for it, exactly as it does for the fixture's two siblings.
+  test("TOUCHFILE_ADDITIONS declares the reviewing-designs glob", () => {
     expect(TOUCHFILE_ADDITIONS["eng-design-doc-review-planted-missing-alternatives"]).toContain(
       "skills/reviewing-designs/**",
     );

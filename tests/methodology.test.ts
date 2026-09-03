@@ -1993,19 +1993,18 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
 });
 
 // ---------------------------------------------------------------------------
-// T3 — eliminate-rule-exceptions slice 3 (design.md "## The five tripwires").
 // The `principle-` prefix is a claim: one cross-cutting invariant per skill.
-// The catalog's principle set was pinned by a bare count, which goes stale on
-// every addition and says nothing about *which* skills are in it. Derive both
-// sides instead: the directories on disk and the catalog entries must be the
-// same set, in both directions.
+// A bare count of the catalog's principle set goes stale on every addition and
+// says nothing about *which* skills are in it, so both sides are derived: the
+// directories on disk and the catalog entries must be the same set, in both
+// directions.
 //
 // Both sides are prefix-filtered, so this catches a missing or an extra catalog
 // entry and cannot catch a fourth multi-rule bundle that wrongly takes the
 // prefix. The three that exist today are named below and asserted prefix-free.
 // ---------------------------------------------------------------------------
 
-describe("eliminate-rule-exceptions slice 3: the principle set is derived, not counted (T3)", () => {
+describe("the principle set is derived, not counted", () => {
   const SKILLS_MD = read(join(REPO_ROOT, "docs", "skills.md"));
 
   const onDisk = readdirSync(join(REPO_ROOT, "skills"))

@@ -102,12 +102,10 @@ describe("methodology skills are never user-invocable", () => {
 });
 
 // ---------------------------------------------------------------------------
-// T1 — eliminate-rule-exceptions slice 1 (design.md "## The five tripwires").
-// The design-review brief moves into a `reviewing-designs` methodology skill
-// so no skill is both a methodology and a slash command. Three classifiers
-// then have to agree for every skill, and the catalog has to be a total,
-// duplicate-free map of what is on disk: the count comparison this subsumes
-// (tests/thin-agents.test.ts, "### entry count equals the on-disk count")
+// The design-review brief lives in a `reviewing-designs` methodology skill so
+// no skill is both a methodology and a slash command. Three classifiers have to
+// agree for every skill, and the catalog has to be a total, duplicate-free map
+// of what is on disk: a bare count comparison of entries against directories
 // passes whenever a duplicate entry offsets a missing one.
 // ---------------------------------------------------------------------------
 
@@ -181,7 +179,7 @@ function unknownSectionEntries(entries: Entry[]): string[] {
     .map((entry) => `${entry.name} (${entry.section})`);
 }
 
-describe("eliminate-rule-exceptions slice 1: skill flavor and catalog completeness (T1)", () => {
+describe("skill flavor and catalog completeness", () => {
   const entries = catalogEntries();
   const directories = skillDirectories();
 
@@ -212,9 +210,10 @@ describe("eliminate-rule-exceptions slice 1: skill flavor and catalog completene
     expect(unknownSectionEntries(entries)).toEqual([]);
   });
 
+
   // Prove each rule can find a positive: four planted violations, one per way
   // the catalog can lie about what a skill is.
-  test("the T1 checks can see planted violations", () => {
+  test("the flavor and completeness checks can see planted violations", () => {
     const miscatalogued: Entry[] = [{ name: "reviewing-code", section: "## Standalone utilities" }];
     expect(classifierDisagreements(miscatalogued)).toEqual([
       "reviewing-code: section=## Standalone utilities user-invocable-false=true argument-hint=false",

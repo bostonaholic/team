@@ -993,8 +993,8 @@ describe("design-review gate wiring (L2)", () => {
 
   test("the review brief loads cross-model-review as the conditional fifth manual", () => {
     // The brief itself, never the entry point that dispatches it: both
-    // strings below also survive in `eng-design-doc-review`'s `## Execution`,
-    // so reading that file would pass without the brief saying anything.
+    // strings below also appear in that entry point's own body, so reading it
+    // would pass without the brief saying anything.
     const text = read(REVIEWING_DESIGNS_SKILL);
     expect(text).toContain("cross-model-review");
     expect(text).toContain(EXTERNAL_INPUT_HEADING);

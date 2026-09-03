@@ -226,16 +226,15 @@ describe("Out of scope: pure reference / methodology skills are untouched", () =
 });
 
 // ---------------------------------------------------------------------------
-// eliminate-rule-exceptions slice 1 — the design-review brief moves out of
-// eng-design-doc-review into the new `reviewing-designs` methodology skill.
-// The file's only progress-tracking cite (inside the moved `## Review brief`)
-// travels with it, so the entry point has to carry its own: it is in
-// ENTRY_POINT_SKILLS, and `## Execution` is the multi-step procedure it keeps.
-// The new skill joins METHODOLOGY_SKILLS above, which is what puts both files
-// under the byte-identity drift guard.
+// The design-review brief lives in the `reviewing-designs` methodology skill,
+// and it carries that skill's progress-tracking cite. The
+// `eng-design-doc-review` entry point that dispatches the brief carries its
+// own cite for the multi-step procedure it runs, which is why it is in
+// ENTRY_POINT_SKILLS. `reviewing-designs` is in METHODOLOGY_SKILLS above,
+// which puts both files under the byte-identity drift guard.
 // ---------------------------------------------------------------------------
 
-describe("eliminate-rule-exceptions slice 1: the split keeps both halves citing progress-tracking", () => {
+describe("both halves of the design review cite progress-tracking", () => {
   // The lines under `## <heading>`, up to the next `## `. "" when the heading
   // is missing, so a rename fails the length guard instead of passing
   // vacuously.
