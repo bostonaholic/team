@@ -3,7 +3,8 @@
 When the arming instruction grants authorization, each feedback batch
 runs the Authorized Execution path of
 `skills/pr-open-comments/SKILL.md`: apply → push → reply → resolve.
-Then the loop re-arms until approval, merge, or timeout. Authorized mode
+Then the loop continues cycling until approval, merge, or the 3-cycle
+soft cap. Authorized mode
 is unchanged by the confidence gate — it applies every non-exclusion
 item regardless of confidence.
 

@@ -124,7 +124,7 @@ fire the semantic check the wait gate deliberately lacks:
    non-viewer reply. **This trigger fires whether or not the thread is
    resolved**, and it is the one that keeps a reply from sitting in the
    dark: an author who answers in prose and waits for you gets an answer
-   instead of silence until the cycle-48 timeout. It is why the poll
+   instead of silence until the soft cap. It is why the poll
    query selects each thread's full comment connection rather than only
    its first comment: diffing this poll's comment ids against the
    previous poll's is what detects the reply.
@@ -200,7 +200,8 @@ nothing is written and the loop keeps waiting.
 - A **rejected** verdict draws a rebuttal (the verdict actions below)
   and the loop continues — it is never itself a stop. It does block the
   approval for as long as it stands, so a dispute the author never
-  answers rides to the cycle-48 timeout, which reports it. Never approve
+  answers rides to the soft cap, which hands off with the dispute still
+  open. Never approve
   over a live rejected verdict.
 - A **pending** verdict neither stops the loop nor approves. Keep
   polling: a later push may yet meet the concern. This
@@ -268,8 +269,8 @@ one action, taken in the same cycle it is rendered:
   skill writes again only when the author has written again — an author
   who stops replying draws no further rebuttals, and one who keeps
   replying is having a conversation rather than being talked at. The
-  cycle-48 timeout is the outer bound on the whole watch and needs no
-  help here.
+  3-cycle soft cap is the outer bound on the whole in-session watch and
+  needs no help here.
 - **One action per verdict.** Key it by the thread id plus the
   comment id that triggered the verdict, and skip any thread already
   acted on for that same trigger. This is what keeps a standing

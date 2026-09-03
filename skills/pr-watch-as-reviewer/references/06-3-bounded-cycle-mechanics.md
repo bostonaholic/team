@@ -16,9 +16,16 @@ The loop is bounded, never infinite:
   `principle-non-blocking-waits`, a foreground wait is
   killed at the harness ceiling (600 s in Claude Code) and spends a turn
   per fragment.
-- **Hard cap: 48 cycles** (~24 hours). At the cycle-48 timeout, report
-  the timeout and offer to re-arm.
-- The bound is the invariant, not the interval: 48 cycles at ~31 minutes.
+- **Soft cap: 3 cycles** (~90 minutes). At cycle 3, if nothing has
+  stopped the loop already, end the interactive session — do not sleep
+  again. Print a handoff: the tracked-set state (unresolved thread ids,
+  plain-comment engagement and verdict state, the arm-time and current
+  head SHA, the arm-time and current auto-merge state) and the exact
+  command to resume the watch as a scheduled headless job — the
+  scheduled pr-watch job (`~/dotfiles/bin/pr-watch.sh`, run from
+  launchd). Re-arming the interactive loop happens only on explicit user
+  request; the loop does not re-arm itself.
+- The bound is the invariant, not the interval: 3 cycles at ~31 minutes.
   Where a harness offers no background execution, say so and chunk the
   wait into foreground sleeps sized under that harness's ceiling — the
   cycle count is what must hold.

@@ -7,5 +7,7 @@ The loop stops on:
 - **User interrupt** — the escape hatch. The user can stop the watch at
   any time. Pressing Esc or sending a message stops the loop between
   Bash calls.
-- **Cycle-48 timeout** — report the timeout and offer to re-arm.
+- **3-cycle soft cap** — print the handoff (baseline state plus the
+  resume command for the scheduled pr-watch job) and end the
+  interactive loop. Re-arming it happens only on explicit user request.
 - **3 consecutive poll failures** — stop and name the error.

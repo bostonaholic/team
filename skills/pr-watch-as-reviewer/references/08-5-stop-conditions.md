@@ -9,11 +9,16 @@ name:
   including "merged without your approval" when that is what happened.
 - **User interrupt** — the escape hatch. Pressing Esc or sending a
   message stops the loop between Bash calls at any time.
-- **Cycle-48 timeout** — report the timeout and offer to re-arm. When
-  the timeout was reached with a plain comment still pending, say so
+- **3-cycle soft cap** — print the handoff and end the interactive loop:
+  the tracked-set state (unresolved thread ids, plain-comment engagement
+  and verdict state, the arm-time and current head SHA, the arm-time and
+  current auto-merge state) plus the exact command to resume the watch
+  as a scheduled headless job. Re-arming the interactive loop happens
+  only on explicit user request. When
+  the cap was reached with a plain comment still pending, say so
   explicitly and name the comment: this is the expected outcome for a
   comment the author never engaged, not a malfunction, and the reader
-  should not have to infer that from a bare timeout. This is also where
+  should not have to infer that from a bare handoff. This is also where
   an unsettled disagreement lands, since a rejected verdict rebuts
   rather than stops: name each thread still holding one, what the last
   rebuttal argued, and how the author answered it. That is the case

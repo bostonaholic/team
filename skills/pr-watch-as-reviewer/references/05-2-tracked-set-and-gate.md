@@ -19,7 +19,7 @@ client-side into two classes:
   kind of evidence the approval rests on.
 - Threads from the viewer's PENDING (unsubmitted) review stay excluded
   until the review is submitted. The author cannot see or resolve them,
-  so a count of them would deadlock the watch until timeout. A pending
+  so a count of them would deadlock the watch until the soft cap. A pending
   review's threads join the gate only when the review is submitted.
   Plain comments have no unsubmitted state — posting one publishes it —
   so this exclusion never applies to them. (GitHub's PENDING review

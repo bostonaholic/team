@@ -17,10 +17,11 @@ moment; a dropped one costs them the feedback.
 
 Report:
 
-- the stop reason (approval, merge, close, user interrupt, cycle-48
-  timeout, or 3 consecutive poll failures)
+- the stop reason (approval, merge, close, user interrupt, 3-cycle soft
+  cap, or 3 consecutive poll failures)
 - the active mode (present-then-stop or authorized)
 - the number of cycles consumed
 - the handoff — on approval,
-  `Next: run /shipit when you want to land it.`. On timeout or after the
-  user's choices run, offer to re-arm the watch.
+  `Next: run /shipit when you want to land it.`. On the soft cap, print
+  the baseline state and the resume command for the scheduled pr-watch
+  job. After the user's choices run, offer to re-arm the watch.
