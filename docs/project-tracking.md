@@ -227,6 +227,12 @@ case-insensitive: `Backlog`, `Bugs`, `Ready`, `In progress`, `In review`, or
 to work if someone recreates a field or an option. They are dev-only helpers
 under `.claude/`. They are not part of the distributed plugin.
 
+> **Token scopes.** Reading the board needs the `read:project` scope and
+> editing a card needs `project`; a default `gh auth login` token carries
+> neither. Without them `gh issue edit --add-project` reports the project as
+> not found and the scripts above fail with gh's own message naming the
+> scope. Grant it once: `gh auth refresh -s project`.
+
 > **The script checks each move. It does not assume it.**
 > `project-set-status.sh` does not trust the edit's exit code. It fires `gh
 > project item-edit` and does not suppress the command's output. It then

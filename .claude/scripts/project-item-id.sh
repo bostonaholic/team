@@ -41,7 +41,7 @@ esac
 # pipe-clean) rather than failing to find an item that is genuinely on the board.
 LIMIT=10000
 items_json="$(gh project item-list "$PROJECT_NUMBER" --owner "$OWNER" --format json --limit "$LIMIT")" \
-  || die "failed to list project items (is gh authenticated?)"
+  || die "failed to list project items — gh's error above names the cause; a token missing a project scope needs: gh auth refresh -s <scope gh named>"
 
 total="$(printf '%s' "$items_json" | jq -r '.totalCount // (.items | length)')"
 fetched="$(printf '%s' "$items_json" | jq -r '.items | length')"
