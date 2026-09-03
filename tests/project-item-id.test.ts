@@ -90,3 +90,35 @@ describe("project-item-id.sh: source contract", () => {
     expect(read(SCRIPT)).toContain("--limit");
   });
 });
+
+// A fake `gh` whose `project` subcommands fail the way the real CLI does when
+// the token lacks the project scope: the scope name and the remedy on stderr,
+// exit 1. The resolver must surface that cause, not report a generic auth
+// failure ("is gh authenticated?") that sends the operator to `gh auth login`.
+const FAKE_GH_NO_SCOPE = `#!/usr/bin/env bash
+echo "error: your authentication token is missing required scopes [read:project]" >&2
+echo "To request it, run:  gh auth refresh -s read:project" >&2
+exit 1
+`;
+
+const noScopeBin = mkdtempSync(join(tmpdir(), "project-item-id-noscope-"));
+writeFileSync(join(noScopeBin, "gh"), FAKE_GH_NO_SCOPE);
+chmodSync(join(noScopeBin, "gh"), 0o755);
+afterAll(() => rmSync(noScopeBin, { recursive: true, force: true }));
+
+describe("project-item-id.sh: names a missing token scope", () => {
+  function runNoScope(issue: string) {
+    const env = { ...process.env, PATH: `${noScopeBin}:${process.env.PATH ?? ""}` };
+    const r = spawnSync("bash", [SCRIPT, issue], { encoding: "utf8", env });
+    return { status: r.status, out: (r.stdout ?? "").trim(), err: r.stderr ?? "" };
+  }
+
+  test("reports the missing scope and the gh auth refresh remedy, not a generic auth failure", () => {
+    const r = runNoScope("42");
+    expect(r.status).not.toBe(0);
+    expect(r.out).toBe("");
+    expect(r.err).toMatch(/read:project/);
+    expect(r.err).toMatch(/gh auth refresh -s read:project/);
+    expect(r.err).not.toMatch(/is gh authenticated/i);
+  });
+});

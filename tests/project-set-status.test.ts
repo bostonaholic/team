@@ -131,3 +131,47 @@ describe("project-set-status.sh: source contract", () => {
     expect(read(SCRIPT)).toContain("item-list");
   });
 });
+
+describe("project-set-status.sh: an empty item id fails loudly", () => {
+  // The resolver prints nothing when it fails, so a caller that captured its
+  // output hands the setter an empty second argument. That must be a loud
+  // failure at once, never a fall-through to reading stdin — in a pipeline the
+  // read hangs until the caller's timeout.
+  test("rejects an explicit empty item id without reading stdin", () => {
+    const env = {
+      ...process.env,
+      PATH: `${binDir}:${process.env.PATH ?? ""}`,
+      GH_FAKE_STATE: stateFile,
+      GH_FAKE_MASK: "0",
+    };
+    // stdin carries a valid id: the old fall-through would read it and succeed.
+    const r = spawnSync("bash", [SCRIPT, "In review", ""], {
+      encoding: "utf8",
+      env,
+      input: "PVTI_TEST\n",
+    });
+    expect(r.status).not.toBe(0);
+    expect(r.stderr ?? "").toMatch(/empty item id/i);
+  });
+});
+
+const FAKE_GH_NO_SCOPE_SETTER = `#!/usr/bin/env bash
+echo "error: your authentication token is missing required scopes [read:project]" >&2
+echo "To request it, run:  gh auth refresh -s read:project" >&2
+exit 1
+`;
+const noScopeBin = mkdtempSync(join(tmpdir(), "project-set-status-noscope-"));
+writeFileSync(join(noScopeBin, "gh"), FAKE_GH_NO_SCOPE_SETTER);
+chmodSync(join(noScopeBin, "gh"), 0o755);
+afterAll(() => rmSync(noScopeBin, { recursive: true, force: true }));
+
+describe("project-set-status.sh: names a missing token scope", () => {
+  test("reports the missing scope and the gh auth refresh remedy, not a generic auth failure", () => {
+    const env = { ...process.env, PATH: `${noScopeBin}:${process.env.PATH ?? ""}` };
+    const r = spawnSync("bash", [SCRIPT, "In review", "PVTI_TEST"], { encoding: "utf8", env });
+    expect(r.status).not.toBe(0);
+    expect(r.stderr ?? "").toMatch(/read:project/);
+    expect(r.stderr ?? "").toMatch(/gh auth refresh -s read:project/);
+    expect(r.stderr ?? "").not.toMatch(/is gh authenticated/i);
+  });
+});
