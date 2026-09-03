@@ -60,68 +60,29 @@ export function userInvocableSkillFiles(repoRoot: string): string[] {
     .sort();
 }
 
-// Everything from the first whitespace-preceded `#` onward. Callers apply it
-// only where YAML treats that `#` as a comment opener.
-function stripInlineComment(text: string): string {
-  const at = text.search(/\s#/);
-  return at === -1 ? text : text.slice(0, at);
-}
-
-// Extract the description field's text only from a frontmatter slice,
-// handling both YAML styles in use: single-line scalar
-// (`description: <text>`) and block scalar (`description: |` followed by
-// indented lines until the first non-indented line). Scoping to the
-// description prevents a false positive on the quoted `argument-hint`
-// value elsewhere in the frontmatter.
+// Extract the description field's text from a frontmatter slice, through the
+// same YAML parser the host routes on. Hand-rolled scalar rules diverged from
+// it in a class of ways — a quoted scalar swallowed its trailing comment, a
+// duplicate key kept the first value where YAML keeps the last — and every
+// divergence let a sweep read text the host never sees. Parsing settles
+// quoting, comments, duplicate keys, and flow collections in one place.
 export function descriptionText(fm: string): string {
-  const lines = fm.split("\n");
-  const start = lines.findIndex((line) => line.startsWith("description:"));
-  if (start === -1) return "";
-  const raw = (lines[start] ?? "").slice("description:".length);
-  const trimmed = raw.trim();
-  const opener = trimmed[0];
-  const isQuoted = opener === '"' || opener === "'";
-  // Outside quotes, a `#` preceded by whitespace opens a YAML comment and the
-  // value ends there. Reading past it would let a guard the host's parser
-  // discards satisfy a description check. Inside quotes the `#` is content,
-  // and `foo#bar` has no preceding whitespace, so both are kept.
-  const inline = isQuoted ? trimmed : stripInlineComment(raw).trim();
-  if (inline !== "" && inline !== "|") {
-    // A fully-quoted inline scalar must be unwrapped: returned verbatim,
-    // its surrounding quotes would make matchAll treat the whole value as
-    // one "phrase" and pass with zero real trigger phrases. A quote that
-    // opens but never closes on the line is an unsupported style — throw
-    // rather than scan text that YAML would parse differently.
-    // A folded scalar would otherwise return the literal ">" and drop the
-    // body, passing an absence check for the wrong reason. Throw, like the
-    // unterminated quote below.
-    if (inline.startsWith(">")) {
-      throw new Error(`unsupported description scalar style: ${inline}`);
-    }
-    const quote = inline[0];
-    if (quote === '"' || quote === "'") {
-      if (inline.length < 2 || !inline.endsWith(quote)) {
-        throw new Error(`unsupported description scalar style: ${inline}`);
-      }
-      const body = inline.slice(1, -1);
-      return quote === '"'
-        ? body.replace(/\\"/g, '"')
-        : body.replace(/''/g, "'");
-    }
-    return inline;
+  // A slice that is not a mapping (the empty slice above all) holds no keys,
+  // so the description is absent rather than malformed.
+  const parsed: unknown = Bun.YAML.parse(fm);
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return "";
+  const value = (parsed as Record<string, unknown>).description;
+  // Absent stays "": the caller's own empty-description branch reports it.
+  if (value === undefined) return "";
+  // A sequence, mapping, number, or explicit null is a style this sweep
+  // cannot read. Stringifying it would match on punctuation the host never
+  // renders, so fail loud instead.
+  if (typeof value !== "string") {
+    throw new Error(`unsupported description value: ${JSON.stringify(value)}`);
   }
-  const block: string[] = [];
-  for (let i = start + 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (line === undefined) break;
-    // A blank line continues a `|` block in YAML, so it is skipped rather
-    // than treated as the terminator: a guard sitting after a paragraph
-    // break is still part of the description.
-    if (line.trim() === "") continue;
-    if (!/^\s+\S/.test(line)) break;
-    block.push(line.trim());
-  }
-  return block.join(" ");
+  // A block scalar keeps its newlines. Collapsing them yields the one line of
+  // text a host renders, which is what every caller compares against.
+  return squash(value).trim();
 }
 
 // The path leads the message, so a malformed SKILL.md names itself rather

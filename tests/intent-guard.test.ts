@@ -199,6 +199,44 @@ describe("the guard sweep can see a positive", () => {
     expect(guardOffenders([entry], PLANTED)).toEqual([PLANTED_IN]);
   });
 
+  test("an in-class guard that sits only in a quoted scalar's trailing comment is reported", () => {
+    // The same bypass one scalar style over: the comment's own text ends in
+    // the opening quote character, so a parser that ends the value at the
+    // line's last quote absorbs the comment and reads a guard the host
+    // discards.
+    const quoted = [
+      "---",
+      "name: planted-in-class",
+      `description: '${CARRIER}' # '${CANONICAL}'`,
+      "---",
+      "body",
+    ].join("\n");
+    const entry = {
+      file: PLANTED_IN,
+      description: descriptionText(frontmatter(quoted)),
+    };
+    expect(guardOffenders([entry], PLANTED)).toEqual([PLANTED_IN]);
+  });
+
+  test("an in-class guard that sits only in a shadowed `description:` key is reported", () => {
+    // YAML keeps the LAST of two duplicate keys. An edit that appends a
+    // description instead of replacing one leaves the guard in the file and
+    // none of it in what the host routes on, so the sweep must read the last.
+    const shadowed = [
+      "---",
+      "name: planted-in-class",
+      `description: ${CARRIER} ${CANONICAL}`,
+      `description: ${CARRIER}`,
+      "---",
+      "body",
+    ].join("\n");
+    const entry = {
+      file: PLANTED_IN,
+      description: descriptionText(frontmatter(shadowed)),
+    };
+    expect(guardOffenders([entry], PLANTED)).toEqual([PLANTED_IN]);
+  });
+
   test("a conforming in-class and out-of-class pair is not reported", () => {
     const conforming = [
       { file: PLANTED_IN, description: `${CARRIER} ${CANONICAL}` },
