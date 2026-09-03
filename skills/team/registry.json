@@ -1,14 +1,14 @@
 {
-  "$comment": "Agent inventory for the Team pipeline. Dispatch is driven by the phase table in skills/team/SKILL.md, not by this file. The phases array documents which artifacts each phase produces under docs/plans/. WORKTREE is the leading orchestrator-emit phase: it runs before QUESTION, creating the home worktree on branch <id> and authoring docs/plans/<id>/ inside it. The agents array lists every specialist agent and the phase it serves (no agent serves WORKTREE — it is orchestrator-emit). The gates array documents the gate kind that follows each phase that has one (no mid-run human gates; DESIGN is gated by an adversarial design review; STRUCTURE advances autonomously). Kept in sync with agents/*.md frontmatter (each agent's `phase` field) by .claude/hooks/check-registry-sync.mjs.",
+  "$comment": "Agent and phase-artifact inventory. The team coordinator dispatches the hidden team-* phase modules; phase-state.mjs resolves completion. Agent names remain synchronized with agents/*.md by .claude/hooks/check-registry-sync.mjs.",
   "phases": [
-    {"name": "WORKTREE", "artifacts": []},
-    {"name": "QUESTION", "artifacts": ["1-task.md", "2-questions.md"]},
+    {"name": "WORKTREE", "artifacts": ["1-task.md"]},
+    {"name": "QUESTION", "artifacts": ["2-questions.md"]},
     {"name": "RESEARCH", "artifacts": ["5-research.md"]},
     {"name": "DESIGN", "artifacts": ["6-design.md", "design-review-<n>.md"]},
     {"name": "STRUCTURE", "artifacts": ["7-structure.md"]},
     {"name": "PLAN", "artifacts": ["8-plan.md"]},
-    {"name": "IMPLEMENT", "artifacts": []},
-    {"name": "PR", "artifacts": []}
+    {"name": "IMPLEMENT", "artifacts": ["9-implementation.md"]},
+    {"name": "PR", "artifacts": ["10-pr.md"]}
   ],
   "agents": [
     {"name": "questioner", "phase": "QUESTION"},
