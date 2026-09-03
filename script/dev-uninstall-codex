@@ -12,7 +12,7 @@ PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SKILLS_SRC="${PLUGIN_ROOT}/skills"
 TARGET="${HOME}/.agents/skills/team"
 
-echo "Uninstalling Team skills for Codex (dev)..."
+echo "Uninstalling Team for Codex (dev)..."
 echo
 
 if [ ! -L "$TARGET" ] && [ ! -e "$TARGET" ]; then

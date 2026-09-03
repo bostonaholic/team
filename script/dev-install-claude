@@ -22,7 +22,7 @@ if [ -e "$CACHE_PATH" ] && [ ! -d "$CACHE_PATH" ]; then
   exit 1
 fi
 
-echo "Installing Team plugin (dev)..."
+echo "Installing Team for Claude Code (dev)..."
 echo "  Source: ${PLUGIN_ROOT}"
 echo
 
@@ -110,7 +110,7 @@ if [ -d "$CACHE_PATH" ] && [ ! -L "$CACHE_PATH" ]; then
   ln -s "$PLUGIN_ROOT" "$CACHE_PATH"
   echo "  Linked: ${CACHE_PATH} → ${PLUGIN_ROOT}"
 elif [ -L "$CACHE_PATH" ]; then
-  echo "Team plugin already installed (dev)."
+  echo "Team already installed for Claude Code (dev)."
 else
   echo "Error: Claude Code reported Team at ${CACHE_PATH}, but that directory does not exist." >&2
   exit 1

@@ -48,7 +48,7 @@ fi
 
 # Already linked — nothing to do
 if [ -L "$TARGET" ] && [ "$(readlink "$TARGET")" = "$SKILLS_SRC" ]; then
-  echo "Team skills already installed for Codex (dev)."
+  echo "Team already installed for Codex (dev)."
   exit 0
 fi
 
@@ -59,7 +59,7 @@ if [ -e "$TARGET" ] && [ ! -L "$TARGET" ]; then
   exit 1
 fi
 
-echo "Installing Team skills for Codex (dev)..."
+echo "Installing Team for Codex (dev)..."
 echo "  Source: ${SKILLS_SRC}"
 echo
 
