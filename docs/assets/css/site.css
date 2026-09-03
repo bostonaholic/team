@@ -118,6 +118,32 @@ h3 {
   letter-spacing: 0.25px;
 }
 
+main h3 {
+  position: relative;
+}
+
+main h3 .heading-anchor {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 0.5em);
+  transform: translateY(-50%);
+  white-space: nowrap;
+  color: var(--muted-2);
+  background: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+main h3:hover .heading-anchor,
+main h3 .heading-anchor:focus-visible {
+  opacity: 1;
+}
+
+main h3 .heading-anchor:hover {
+  color: var(--fg);
+  background: none;
+}
+
 p {
   margin: 1em 0;
 }
@@ -407,6 +433,10 @@ a:focus-visible,
   }
 
   a {
+    transition: none;
+  }
+
+  main h3 .heading-anchor {
     transition: none;
   }
 }
