@@ -8,17 +8,6 @@ import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 
-// Keep lines containing `key`, drop lines matching the `exclude` regex, take
-// the first 5, join. Isolates a single table row from a methodology doc.
-function filterRows(text: string, key: string, exclude: RegExp): string {
-  return text
-    .split("\n")
-    .filter((line) => line.includes(key))
-    .filter((line) => !exclude.test(line))
-    .slice(0, 5)
-    .join("\n");
-}
-
 // Absence check: runs grep through execFileSync. A non-zero exit (grep found
 // nothing) is the PASS and returns true; a zero exit (a match was found)
 // returns false. grep's exit code 2 (a real error, e.g. unreadable path)
@@ -43,6 +32,7 @@ describe("skill architecture", () => {
   const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
+  const CREATE_TEAM_SKILL = join(REPO_ROOT, ".claude", "skills", "create-team-skill", "SKILL.md");
 
   test("code-reviewer references reviewing-code/SKILL.md", () => {
     expect(read(CODE_REVIEWER)).toContain("reviewing-code/SKILL.md");
@@ -73,11 +63,10 @@ describe("skill architecture", () => {
     expect(read(VERIFIER)).not.toContain("reviewing-code/SKILL.md");
   });
 
-  test("reviewing-code row in docs/skills.md names all 4 consumer agents", () => {
-    const row = filterRows(read(SKILLS_MD), "| `reviewing-code` |", /^#|^>|SKILL\.md|\/\/|event/);
-    for (const agent of ["code-reviewer", "security-reviewer", "ux-reviewer", "technical-writer"]) {
-      expect(row).toContain(agent);
-    }
+  test("docs/skills.md catalogs reviewing-code without duplicating its consumers", () => {
+    const text = read(SKILLS_MD);
+    expect(text.split("../skills/reviewing-code/SKILL.md").length - 1).toBe(1);
+    expect(text).toContain("it does not repeat procedures, triggers, or consumer");
   });
 
   test("extraction threshold documented in docs/architecture.md", () => {
@@ -130,6 +119,19 @@ describe("skill architecture", () => {
       stderr = `${e.stderr ?? ""}${e.stdout ?? ""}`;
     }
     expect(stderr).not.toContain("mismatch");
+  });
+
+  test("architecture points to the shared artifact resolver, not deleted discovery scripts", () => {
+    const text = read(ARCHITECTURE_MD);
+    expect(text).toContain("skills/artifact-frontmatter/scripts/resolve-topic.mjs");
+    expect(text).not.toContain("check-discovery-consistency.sh");
+    expect(text).not.toContain("discover-topic.sh");
+
+    const authoring = read(CREATE_TEAM_SKILL);
+    expect(authoring).toContain("artifact-frontmatter/scripts/resolve-topic.mjs");
+    expect(authoring).toContain("--argument-stdin");
+    expect(authoring).not.toContain("check-discovery-consistency.sh");
+    expect(authoring).not.toContain("Discovery block copied verbatim");
   });
 });
 

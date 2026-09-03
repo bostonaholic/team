@@ -765,7 +765,7 @@ describe("skill and agent wiring (L2)", () => {
   });
 
   test("docs/skills.md documents cross-model-review", () => {
-    expect(read(SKILLS_MD)).toMatch(/^### \[?cross-model-review\b/m);
+    expect(read(SKILLS_MD).split("../skills/cross-model-review/SKILL.md").length - 1).toBe(1);
   });
 });
 

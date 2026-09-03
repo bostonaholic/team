@@ -16,12 +16,6 @@ const agent = (name: string) => join(AGENTS_DIR, `${name}.md`);
 // clean assertion rather than crashing with ENOENT.
 const readOrEmpty = (path: string): string => (existsSync(path) ? read(path) : "");
 
-// Canonical reference sentence inner text (from 8-plan.md). Slices 2 and 3
-// copy this byte-for-byte as a blockquote; the drift guard asserts a single
-// unique variant across the repo.
-const CANONICAL_INNER =
-  "when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.";
-
 // The 10 entry-point skills that must reference the convention (Slice 2).
 const ENTRY_POINT_SKILLS = [
   "team-question",
@@ -98,6 +92,10 @@ function toolsLineHasTodoWrite(text: string): boolean {
   return /^tools:.*\bTodoWrite\b/m.test(frontmatter(text));
 }
 
+function usesProgressTracking(text: string): boolean {
+  return /(?:Skill tool with `|skills\/)principle-progress-tracking/.test(text);
+}
+
 describe("Slice 1: principle-progress-tracking convention skill exists", () => {
   const PT = skill("principle-progress-tracking");
 
@@ -129,8 +127,14 @@ describe("Slice 1: principle-progress-tracking convention skill exists", () => {
     expect(present && lacksArgHint).toBe(true);
   });
 
-  test("principle-progress-tracking body opens with the 'A convention, not a gate' role marker", () => {
-    expect(readOrEmpty(PT)).toContain("A convention, not a gate");
+  test("principle-progress-tracking states the executable ledger contract", () => {
+    const text = readOrEmpty(PT);
+    expect(text).toContain("two or more ordered steps");
+    expect(text).toMatch(/one item per\s+step/);
+    expect(text).toContain("Seed every item before starting");
+    expect(text).toContain("`in_progress`");
+    expect(text).toContain("`completed`");
+    expect(text).toContain("blocks nothing");
   });
 
   test("principle-progress-tracking cross-links qrspi-workflow", () => {
@@ -140,55 +144,42 @@ describe("Slice 1: principle-progress-tracking convention skill exists", () => {
 
 describe("Slice 2: entry-point skills reference principle-progress-tracking", () => {
   for (const name of ENTRY_POINT_SKILLS) {
-    test(`${name} references skills/principle-progress-tracking/SKILL.md`, () => {
-      expect(read(skill(name))).toContain("skills/principle-progress-tracking/SKILL.md");
+    test(`${name} loads principle-progress-tracking`, () => {
+      expect(usesProgressTracking(read(skill(name)))).toBe(true);
     });
   }
 });
 
 describe("Slice 3: methodology procedure skills reference principle-progress-tracking", () => {
   for (const name of METHODOLOGY_SKILLS) {
-    test(`${name} references skills/principle-progress-tracking/SKILL.md`, () => {
-      expect(read(skill(name))).toContain("skills/principle-progress-tracking/SKILL.md");
+    test(`${name} loads principle-progress-tracking`, () => {
+      expect(usesProgressTracking(read(skill(name)))).toBe(true);
     });
   }
-});
-
-describe("Slices 2-3: canonical reference sentence is byte-identical (drift guard)", () => {
-  test("exactly one unique variant of the canonical sentence exists across all entry-point + methodology skills", () => {
-    const targets = [...ENTRY_POINT_SKILLS, ...METHODOLOGY_SKILLS];
-    const variants = new Set<string>();
-    for (const name of targets) {
-      const lines = read(skill(name)).split("\n");
-      for (const line of lines) {
-        if (line.includes(CANONICAL_INNER)) variants.add(line.trim());
-      }
-    }
-    // Exactly one distinct variant: the sentence is present across the
-    // targets and never drifts into a second wording. (size 0 — absent —
-    // also fails, so this requires presence as a side effect.)
-    expect(variants.size).toBe(1);
-  });
 });
 
 describe("Slice 4: existing seeders cross-reference principle-progress-tracking", () => {
   for (const name of SEEDER_SKILLS) {
-    test(`${name} contains a pointer to skills/principle-progress-tracking/SKILL.md`, () => {
-      expect(read(skill(name))).toContain("skills/principle-progress-tracking/SKILL.md");
+    test(`${name} loads principle-progress-tracking`, () => {
+      expect(usesProgressTracking(read(skill(name)))).toBe(true);
     });
   }
 
-  test("team seed wording is unchanged ('Seed the TodoWrite ledger')", () => {
-    expect(read(skill("team"))).toContain("Seed the TodoWrite ledger");
+  test("team seeds all QRSPI phases in order", () => {
+    expect(read(skill("team"))).toContain(
+      "Worktree → Question → Research → Design → Structure → Plan → Implement → PR",
+    );
   });
 
-  test("team-fix seed wording is unchanged ('Seed the TodoWrite ledger')", () => {
-    expect(read(skill("team-fix"))).toContain("Seed the TodoWrite ledger");
+  test("team-fix seeds its complete workflow in order", () => {
+    expect(read(skill("team-fix"))).toContain(
+      "Worktree → Reproduce → Red (failing test) → Green (minimal fix) → Verify → Ship",
+    );
   });
 
-  test("team-implement seed wording is unchanged ('Coordinate progress through TodoWrite. Seed:')", () => {
+  test("team-implement seeds its producer and review work in order", () => {
     expect(read(skill("team-implement"))).toContain(
-      "Coordinate progress through TodoWrite. Seed:",
+      "Test-architect → Mechanical gate → Implementer (per slice) → Review round 1",
     );
   });
 });
@@ -235,30 +226,15 @@ describe("Out of scope: pure reference / methodology skills are untouched", () =
 // ---------------------------------------------------------------------------
 
 describe("both halves of the design review cite progress-tracking", () => {
-  // The lines under `## <heading>`, up to the next `## `. "" when the heading
-  // is missing, so a rename fails the length guard instead of passing
-  // vacuously.
-  function section(text: string, heading: string): string {
-    const start = text.indexOf(`\n${heading}\n`);
-    if (start === -1) return "";
-    const rest = text.slice(start + heading.length + 2);
-    const next = rest.search(/\n## /);
-    return next === -1 ? rest : rest.slice(0, next);
-  }
-
-  test("reviewing-designs cites skills/principle-progress-tracking/SKILL.md", () => {
-    expect(existsSync(skill("reviewing-designs"))).toBe(true);
-    expect(readOrEmpty(skill("reviewing-designs"))).toContain(
-      "skills/principle-progress-tracking/SKILL.md",
-    );
+  test("reviewing-designs loads the convention before its numbered process", () => {
+    const text = readOrEmpty(skill("reviewing-designs"));
+    expect(usesProgressTracking(text)).toBe(true);
+    expect(text).toMatch(/1\. \*\*Locate the document\.\*\*/);
   });
 
-  test("eng-design-doc-review carries the canonical sentence inside ## Execution", () => {
-    const execution = section(readOrEmpty(skill("eng-design-doc-review")), "## Execution");
-    // Guard: a renamed or missing heading must fail here, not pass the
-    // content assertions below on an empty string.
-    expect(execution.length).toBeGreaterThan(0);
-    expect(execution).toContain("skills/principle-progress-tracking/SKILL.md");
-    expect(execution).toContain(CANONICAL_INNER);
+  test("eng-design-doc-review loads the convention before dispatch", () => {
+    const text = readOrEmpty(skill("eng-design-doc-review"));
+    expect(usesProgressTracking(text)).toBe(true);
+    expect(text).toMatch(/1\. Call the Skill tool with `cross-model-review`/);
   });
 });

@@ -13,7 +13,7 @@
  * resolve-transcript.mjs — one job each.
  */
 
-import { existsSync, realpathSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -28,6 +28,16 @@ const SKILL_NAME = /^[a-z][a-z0-9-]*$/;
 
 export function isValidSkillName(name) {
   return typeof name === "string" && SKILL_NAME.test(name);
+}
+
+const FOCUS_NAME = /^[a-z0-9][a-z0-9-]*$/;
+
+export function parseFocus(raw) {
+  if (raw === "") return { focus: null };
+  if (typeof raw !== "string" || !FOCUS_NAME.test(raw)) {
+    throw new Error("focus must be empty or one lowercase skill name");
+  }
+  return { focus: raw };
 }
 
 /**
@@ -93,36 +103,45 @@ export function preferredEditRoot(query) {
 // CLI entry point — runs only when executed directly, never on import, so a
 // test import has no side effects (the supports-nesting.mjs shape).
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const repoRoot = process.argv[2] ?? "";
-  const name = process.argv[3] ?? "";
+  if (process.argv[2] === "focus" && process.argv.length === 3) {
+    try {
+      process.stdout.write(`${JSON.stringify(parseFocus(readFileSync(0, "utf8")))}\n`);
+    } catch (error) {
+      process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+      process.exitCode = 2;
+    }
+  } else {
+    const repoRoot = process.argv[2] ?? "";
+    const name = process.argv[3] ?? "";
 
-  if (!repoRoot || !name) {
-    process.stderr.write("usage: write-target.mjs <repo-root> <skill-name>\n");
-    process.exit(1);
-  }
-
-  if (!isValidSkillName(name)) {
-    process.stderr.write(`refusing: '${name}' is not a valid skill name\n`);
-    process.exit(1);
-  }
-
-  const editRoot = preferredEditRoot({ repoRoot, hasPluginMarker: hasPluginMarker(repoRoot) });
-  const editTarget = join(editRoot, name, "SKILL.md");
-  const createTarget = join(repoRoot, ".claude", "skills", name, "SKILL.md");
-
-  for (const [label, target] of [
-    ["edit target", editTarget],
-    ["create target", createTarget],
-  ]) {
-    if (!isInsideRepo({ candidatePath: target, repoRoot })) {
-      process.stderr.write(`refusing: ${label} resolves outside the repository\n`);
+    if (!repoRoot || !name) {
+      process.stderr.write("usage: write-target.mjs <repo-root> <skill-name>\n");
       process.exit(1);
     }
-  }
 
-  process.stdout.write(`edit root: ${editRoot}\n`);
-  process.stdout.write(`edit target: ${editTarget}\n`);
-  process.stdout.write(`edit target exists: ${existsSync(editTarget)}\n`);
-  process.stdout.write(`create target: ${createTarget}\n`);
-  process.stdout.write(`create target exists: ${existsSync(createTarget)}\n`);
+    if (!isValidSkillName(name)) {
+      process.stderr.write(`refusing: '${name}' is not a valid skill name\n`);
+      process.exit(1);
+    }
+
+    const editRoot = preferredEditRoot({ repoRoot, hasPluginMarker: hasPluginMarker(repoRoot) });
+    const editTarget = join(editRoot, name, "SKILL.md");
+    const createTarget = join(repoRoot, ".claude", "skills", name, "SKILL.md");
+
+    for (const [label, target] of [
+      ["edit target", editTarget],
+      ["create target", createTarget],
+    ]) {
+      if (!isInsideRepo({ candidatePath: target, repoRoot })) {
+        process.stderr.write(`refusing: ${label} resolves outside the repository\n`);
+        process.exit(1);
+      }
+    }
+
+    process.stdout.write(`edit root: ${editRoot}\n`);
+    process.stdout.write(`edit target: ${editTarget}\n`);
+    process.stdout.write(`edit target exists: ${existsSync(editTarget)}\n`);
+    process.stdout.write(`create target: ${createTarget}\n`);
+    process.stdout.write(`create target exists: ${existsSync(createTarget)}\n`);
+  }
 }

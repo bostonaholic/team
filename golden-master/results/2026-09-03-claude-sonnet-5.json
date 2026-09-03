@@ -1,0 +1,155 @@
+{
+  "date": "2026-09-03",
+  "status": {
+    "pipeline": "completed",
+    "pr_at_capture": "open_draft",
+    "teardown": "closed_unmerged_branch_retained",
+    "ci": "failed_non_code_check"
+  },
+  "model": "claude-sonnet-5",
+  "provider": "anthropic",
+  "backend": "claude-code",
+  "pipeline_version": "commit ce51f3e3d4e50e1b198c3d2a439c646432c76c89",
+  "session_id": "562ef207-82fa-49bf-96e7-d0f61a567695",
+  "prompt_sha256": "8c5bb38e357103f783d2ad80dcc8fa551891a586356ab49b3dcebf378580fa4f",
+  "baseline_commit": "2cfee1a864760bc7a11bd875507f72c08c1641e3",
+  "started_at": "2026-09-03T21:20:25.320Z",
+  "completed_at": "2026-09-04T01:41:24.805Z",
+  "time_s": {
+    "total": 15659.485,
+    "active_excluding_reported_blocker_waits": 12106.333,
+    "reported_blocker_waits": 3553.152,
+    "worktree": 56.778,
+    "question": 82.546,
+    "research": 185.26,
+    "design": 8971.489,
+    "structure": 115.652,
+    "plan": 199.569,
+    "implement": 1780.655,
+    "pr": 4267.536,
+    "signing_first_attempt_to_success": 4122.365
+  },
+  "tokens": {
+    "input": 1793,
+    "output": 686345,
+    "thinking_subset_of_output": 225643,
+    "cache_read": 95189132,
+    "cache_creation": 3864383,
+    "cache_creation_5m": 2404819,
+    "cache_creation_1h": 1459564,
+    "per_phase": {
+      "worktree": {"input": 16, "output": 2118, "thinking": 419, "cache_read": 366519, "cache_creation_5m": 0, "cache_creation_1h": 33975, "cost_usd": 0.2304158},
+      "question": {"input": 23, "output": 7506, "thinking": 1194, "cache_read": 354376, "cache_creation_5m": 36971, "cache_creation_1h": 1924, "cost_usd": 0.2461047},
+      "research": {"input": 275, "output": 27121, "thinking": 2324, "cache_read": 1150830, "cache_creation_5m": 85225, "cache_creation_1h": 16911, "cost_usd": 0.99288145},
+      "design": {"input": 822, "output": 433909, "thinking": 125098, "cache_read": 40766783, "cache_creation_5m": 1442960, "cache_creation_1h": 358021, "cost_usd": 20.9688338},
+      "structure": {"input": 12, "output": 8967, "thinking": 3220, "cache_read": 939284, "cache_creation_5m": 42022, "cache_creation_1h": 1526, "cost_usd": 0.6941539},
+      "plan": {"input": 36, "output": 18334, "thinking": 4380, "cache_read": 3918716, "cache_creation_5m": 65003, "cache_creation_1h": 14013, "cost_usd": 1.74512185},
+      "implement": {"input": 521, "output": 162282, "thinking": 80851, "cache_read": 26524725, "cache_creation_5m": 708248, "cache_creation_1h": 497365, "cost_usd": 17.4288473},
+      "pr": {"input": 88, "output": 26108, "thinking": 8157, "cache_read": 21167899, "cache_creation_5m": 24390, "cache_creation_1h": 535829, "cost_usd": 7.0718477}
+    },
+    "per_model": {
+      "claude-sonnet-5": {"input": 917, "output": 440402, "thinking": 129194, "cache_read": 80110291, "cache_creation_5m": 1191705, "cache_creation_1h": 1459564, "cost_usd": 29.2454307},
+      "claude-opus-5": {"input": 502, "output": 225143, "thinking": 92028, "cache_read": 14252463, "cache_creation_5m": 1134411, "cache_creation_1h": 0, "cost_usd": 19.84738525},
+      "claude-haiku-4.5": {"input": 374, "output": 20800, "thinking": 4421, "cache_read": 826378, "cache_creation_5m": 78703, "cache_creation_1h": 0, "cost_usd": 0.28539055}
+    },
+    "per_role": {
+      "orchestrator": {"instances": 1, "input": 418, "output": 219983, "thinking": 23815, "cache_read": 67973821, "cache_creation_5m": 0, "cache_creation_1h": 1459564, "cost_usd": 21.6336862},
+      "design-author": {"instances": 10, "input": 190, "output": 67864, "thinking": 18942, "cache_read": 2868714, "cache_creation_5m": 414964, "cache_creation_1h": 0, "cost_usd": 5.725432},
+      "design-reviewer": {"instances": 10, "input": 356, "output": 185599, "thinking": 98055, "cache_read": 10230780, "cache_creation_5m": 700526, "cache_creation_1h": 0, "cost_usd": 5.654173},
+      "code-reviewer": {"instances": 1, "input": 88, "output": 55089, "thinking": 32774, "cache_read": 4389279, "cache_creation_5m": 303184, "cache_creation_1h": 0, "cost_usd": 5.4672045},
+      "implementer": {"instances": 1, "input": 80, "output": 26334, "thinking": 7318, "cache_read": 3294312, "cache_creation_5m": 105996, "cache_creation_1h": 0, "cost_usd": 2.968381},
+      "test-architect": {"instances": 1, "input": 58, "output": 29035, "thinking": 15458, "cache_read": 1917954, "cache_creation_5m": 89482, "cache_creation_1h": 0, "cost_usd": 2.2444045},
+      "security-reviewer": {"instances": 1, "input": 40, "output": 17341, "thinking": 10443, "cache_read": 1000168, "cache_creation_5m": 65864, "cache_creation_1h": 0, "cost_usd": 1.345459},
+      "planner": {"instances": 1, "input": 20, "output": 12519, "thinking": 3517, "cache_read": 426003, "cache_creation_5m": 65003, "cache_creation_1h": 0, "cost_usd": 0.93234525},
+      "cross-model-codex-courier": {"instances": 11, "input": 58, "output": 6647, "thinking": 372, "cache_read": 126076, "cache_creation_5m": 306683, "cache_creation_1h": 0, "cost_usd": 0.83598095},
+      "researcher": {"instances": 1, "input": 18, "output": 8695, "thinking": 356, "cache_read": 276541, "cache_creation_5m": 47896, "cache_creation_1h": 0, "cost_usd": 0.6550855},
+      "ux-reviewer": {"instances": 1, "input": 61, "output": 20493, "thinking": 6057, "cache_read": 1354324, "cache_creation_5m": 67417, "cache_creation_1h": 0, "cost_usd": 0.6444593},
+      "structure-planner": {"instances": 1, "input": 8, "output": 8266, "thinking": 3220, "cache_read": 79492, "cache_creation_5m": 42022, "cache_creation_1h": 0, "cost_usd": 0.5090735},
+      "questioner": {"instances": 1, "input": 19, "output": 6186, "thinking": 1194, "cache_read": 248595, "cache_creation_5m": 36971, "cache_creation_1h": 0, "cost_usd": 0.2040445},
+      "file-finder": {"instances": 1, "input": 249, "output": 14450, "thinking": 1942, "cache_read": 636421, "cache_creation_5m": 37329, "cache_creation_1h": 0, "cost_usd": 0.18280235},
+      "cross-model-agy-courier": {"instances": 4, "input": 30, "output": 3665, "thinking": 367, "cache_read": 103758, "cache_creation_5m": 41533, "cache_creation_1h": 0, "cost_usd": 0.14362035},
+      "technical-writer": {"instances": 1, "input": 9, "output": 219, "thinking": 21, "cache_read": 94267, "cache_creation_5m": 28905, "cache_creation_1h": 0, "cost_usd": 0.0933239},
+      "no-op-placeholder": {"instances": 1, "input": 2, "output": 30, "thinking": 0, "cache_read": 0, "cache_creation_5m": 30416, "cache_creation_1h": 0, "cost_usd": 0.076344},
+      "verifier": {"instances": 1, "input": 89, "output": 3930, "thinking": 1792, "cache_read": 168627, "cache_creation_5m": 20628, "cache_creation_1h": 0, "cost_usd": 0.0623867}
+    }
+  },
+  "cost_usd": 49.3782065,
+  "cost_basis": {
+    "type": "list_price_equivalent",
+    "usd_per_million_tokens": {
+      "claude-sonnet-5": {"input": 2, "output": 10, "cache_read": 0.2, "cache_write_5m": 2.5, "cache_write_1h": 4},
+      "claude-opus-5": {"input": 5, "output": 25, "cache_read": 0.5, "cache_write_5m": 6.25, "cache_write_1h": 10},
+      "claude-haiku-4.5": {"input": 1, "output": 5, "cache_read": 0.1, "cache_write_5m": 1.25, "cache_write_1h": 2}
+    },
+    "external_codex_agy_vendor_cost_included": false,
+    "external_vendor_cost_usd": null
+  },
+  "shape": {
+    "slices": 3,
+    "design_review_rounds": 10,
+    "design_review_retries": 9,
+    "implementation_review_rounds": 1,
+    "implementation_review_retries": 0,
+    "human_design_gate_round_trips": 0,
+    "human_operational_resume_messages": 2,
+    "agent_dispatches": 48,
+    "productive_dispatches": 47,
+    "placeholder_dispatches": 1,
+    "maximum_agent_depth": 2,
+    "codex_vendor_calls": 11,
+    "agy_vendor_calls": 4,
+    "agy_timeouts": 2,
+    "agy_skipped_rounds": 7,
+    "signed_commit_attempts": 6,
+    "signing_failures": 5,
+    "signing_diagnostic_calls": 3
+  },
+  "effectiveness": {
+    "feature_tests_pass": true,
+    "preexisting_suite_green": true,
+    "baseline_tests": {"runs": 117, "assertions": 328, "failures": 0, "errors": 0},
+    "final_tests": {"runs": 139, "assertions": 392, "failures": 0, "errors": 0, "skips": 0},
+    "new_tests": 22,
+    "files_touched": 22,
+    "lines_added": 575,
+    "lines_removed": 13,
+    "artifacts": {"count": 18, "lines": 3226, "directory": "docs/plans/2026-09-03-save-posts", "uncommitted_by_convention": true},
+    "commits": [
+      {"sha": "a9661014cf5c1ae8c8971d5433fdbf312b9142fc", "signature": "good"},
+      {"sha": "2eaa3186d807aa9fcdaf980b5f37e7be6d829ec8", "signature": "good"},
+      {"sha": "fb5b695b7e36108bf4cbbe52a19aaf1e861c5e60", "signature": "good"},
+      {"sha": "fbd0df1c97a55f7633dcd8e58e67750032b4b565", "signature": "good"}
+    ],
+    "code_review": {"verdict": "COMMENT", "blocking": 0, "major": 0, "nonblocking": 6},
+    "security_review": {"verdict": "PASS", "critical": 0, "high": 0, "medium": 0, "low": 2},
+    "documentation_review": {"required": 0, "recommended": 2},
+    "ux_review": {"verdict": "PASS", "screenshots_uploaded": false},
+    "verifier": {"verdict": "PASS"},
+    "local_brakeman": {"verdict": "PASS", "warnings": 0, "errors": 0},
+    "ci": {
+      "test": "SUCCESS",
+      "lint": "SUCCESS",
+      "scan_ruby": "FAILURE",
+      "scan_ruby_reason": "Brakeman 8.0.5 latest-version check requires 8.0.6; direct security scan passed"
+    },
+    "pr_url": "https://github.com/bostonaholic/linkboard/pull/25",
+    "pr_head": "fbd0df1c97a55f7633dcd8e58e67750032b4b565",
+    "tracker": null
+  },
+  "measurement": {
+    "usage": "Deduplicate assistant rows by message.id, retain the row with maximum apiBlockIndex, then sum usage.",
+    "dispatches": "Count unique Agent tool-use IDs.",
+    "phase_time": "Use initial command, phase Skill invocations, and final assistant timestamps as boundaries.",
+    "role_mapping": "Chronologically pair 48 unique Agent tool calls with 48 subagent transcript starts; maximum timestamp delta 33 ms."
+  },
+  "reporting_gaps": [
+    "Direct Codex and Agy vendor usage and cost are absent from the Claude transcripts and excluded.",
+    "Cost is a list-price equivalent, not invoice data.",
+    "The initial CLI rollup exceeded same-window transcript-dedup cost by $0.2104704; later resumed CLI rollups were unavailable. Transcript-dedup is canonical.",
+    "Per-role persisted usage may omit terminal result-generation usage for some agents.",
+    "Full API duration across resumed invocations is unavailable; wall time comes from transcript timestamps.",
+    "The two human messages only resumed unchanged signed-commit attempts; neither changed task or design.",
+    "The test architect wrote acceptance-test files before production, but the mechanical gate advanced with 20 errors and two new tests already green instead of assertion-only failures. It also left an omitted 404 case unresolved instead of returning the gap upstream.",
+    "This run used ce51f3e; deterministic helper hardening was applied afterward and is covered by repository tests."
+  ]
+}

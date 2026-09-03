@@ -224,7 +224,7 @@ root and the threaded path is the home-repo root.
 
 **Agent:** `questioner`
 **Predecessor:** worktree prepared (+ description in `$ARGUMENTS`)
-**Artifacts:** `docs/plans/<id>/{task,questions}.md`
+**Artifacts:** `docs/plans/<id>/{1-task,2-questions}.md`
 
 Decomposes the user's intent into two artifacts. Only the questioner ever
 sees the user's description. There is no separate `brief.md`. Neutral
@@ -616,8 +616,8 @@ loop:
      artifact path(s) in the phase table.
   3. Make sure that predecessors exist on disk. For STRUCTURE that includes
      a `design-review-<n>.md` with a passing verdict. If one is missing, the
-     run is desynced. Suggest the bare /team-* command again. Its three-tier
-     discovery resolves docs/plans/<id>/ without an explicit arg.
+     run is desynced. Suggest the matching /team-* recovery command. Its shared
+     resolver can locate docs/plans/<id>/ without an explicit argument.
   4. Dispatch the agent(s) — pass them the artifact directory
      `docs/plans/<id>/`.
   5. Write returned artifacts to docs/plans/<id>/<name>.md with the
@@ -646,27 +646,19 @@ completion message. For the 8 directory-consuming skills
 the `docs/plans/<id>/` argument is **optional**. Each skill resolves the
 directory through a three-tier chain: explicit `$ARGUMENTS` →
 newest-mtime convention discovery → `AskUserQuestion`. The middle tier
-filters by `ID_RE` and `PHASE_FILES`, ported from
-`hooks/session-start-recover.mjs` as a POSIX ERE translation, and by the
-skill's necessary predecessor artifact. The orchestrator or entry-point
-skill calls `AskUserQuestion` itself, never a subagent. Subagents never
-pause for user input. Standalone modes still exist. A partial skill
-invoked with no resolvable directory, or with a free-form description,
-bootstraps the missing upstream artifacts inline rather than hard-error.
+filters by the command's required predecessor and, where applicable, a passing
+design review. The orchestrator or entry-point skill calls `AskUserQuestion`
+itself, never a subagent. Subagents never pause for user input. Standalone
+modes still exist. A partial skill invoked with no resolvable directory, or
+with a free-form description, can bootstrap its documented standalone mode.
 
-**Discovery duplication: design rationale.** Each archetype-A skill
-embeds the three-tier resolver as a single self-contained bash block
-rather than calling a shared script. Agent threads reset their cwd
-between Bash calls, so the block cannot rely on any shared shell state
-and must stand alone in one invocation. The ~6 load-bearing lines
-(`ID_RE`, `PHASE_FILES`, root literal, and predecessor filter) are thus
-duplicated verbatim across the 8 directory-consuming skills by deliberate
-decision. No shared runtime helper was added, and the
-`check-discovery-consistency.sh` gate enforces byte-identity, so the
-copies cannot drift. A shared `discover-topic.sh` could also dedup the
-two hooks' `findActiveTopic`. That is a recorded future consolidation.
-The `# NOTE: ... future: shared discover-topic.sh` comment in each block
-points at it.
+**Shared resolution.** The eight skills call
+`skills/artifact-frontmatter/scripts/resolve-topic.mjs`. That helper owns the
+`<id>` pattern, phase-file inventory, newest-topic selection, predecessor
+checks, and design-review validation. It returns structured `resolved` or
+`needs-input` output; each skill owns the resulting prompt or phase action.
+The two recovery hooks import active-topic and phase inference from the same
+module.
 
 ### Methodology skills (loaded by agents, not directly invoked)
 
@@ -904,7 +896,7 @@ same way. They list `docs/plans/*/` directories. They pick the most
 recent artifact directory by the mtime of any contained artifact. They
 infer the current phase from artifact presence and frontmatter. They then
 emit a short context message that names the phase, `<id>`, and the
-suggested next `/team-*` command. Both are stateless, exit 0 on any
+`/team` recovery action. Both are stateless, exit 0 on any
 error, and return within the 5000ms hook budget.
 
 Development hooks (`.claude/hooks/`, not distributed):
@@ -915,11 +907,9 @@ Development hooks (`.claude/hooks/`, not distributed):
 | `pre-merge-guard.mjs`    | PreToolUse(Bash)         | Deny `gh pr merge` when the version-bump invariant fails             |
 
 Development scripts (`.claude/scripts/`, not distributed) house dev-only
-acceptance tooling run by plugin developers. `check-discovery-consistency.sh`
-is the committed consistency gate for the input-discovery feature: it asserts
-every archetype-A skill carries the discovery block, the load-bearing fragments
-(`ID_RE`, `PHASE_FILES`, `docs/plans/` root) stay byte-identical
-to canon, and the research-isolation invariant holds.
+acceptance and analysis tooling. Runtime artifact resolution is implemented and
+tested under `skills/artifact-frontmatter/`; it has no duplicated discovery
+block or development-script dependency.
 
 ## 8. Behavioral evals
 
@@ -996,7 +986,7 @@ review round durably. The artifacts are self-describing.
 
 **Compaction defense:** the PreCompact hook scans `docs/plans/<id>/`
 directories for the active topic and injects a 4-line anchor (phase,
-`<id>`, suggested next `/team-*` command). The SessionStart hook does
+`<id>`, and `/team` recovery action). The SessionStart hook does
 the same for new sessions.
 
 **Artifact persistence:** during a run, files in `docs/plans/<id>/` live

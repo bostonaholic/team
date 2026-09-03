@@ -269,26 +269,25 @@ the archetype that matches the input type. Default to §2A for documents.
 ### §2A — Convention-based document discovery (archetype A)
 The skill takes an OPTIONAL artifact-directory arg and DISCOVERS it when omitted.
 Discovery is the front door, and the arg is only an override. Declare the hint in
-frontmatter and read `$ARGUMENTS`:
+frontmatter:
 ```yaml
 argument-hint: "[docs/plans/<id>/]"
 ```
-Resolve the directory with the canonical **three-tier** block:
-1. **Explicit** — `$ARGUMENTS` names an existing dir → use it verbatim.
-2. **Discover** — newest-mtime dir under `docs/plans/` that matches `ID_RE` and holds
-   this skill's predecessor artifact (filter by `ID_RE` / `PHASE_FILES`). Announce the
-   auto-picked directory before proceeding — never pick a topic silently.
-3. **None found** — fall to the empty case below. Do not error.
+Pass the exact `$ARGUMENTS` as stdin data to the shared resolver; never place it in
+shell text or argv:
 
-Do NOT hand-roll this block. Copy it **verbatim** from an existing archetype-A skill
-(e.g. `skills/team-research/SKILL.md`) — the dev gate
-`.claude/scripts/check-discovery-consistency.sh` asserts byte-identity across every
-archetype-A skill, so any variant fails the suite. Run it as a single bash call (an
-agent thread resets cwd between calls).
+```sh
+node "<skill-dir>/../artifact-frontmatter/scripts/resolve-topic.mjs" --argument-stdin --predecessor <artifact>.md
+```
+
+Add `--require-design-review` when that gate applies. The helper owns explicit-path
+selection, `ID_RE`, `PHASE_FILES`, newest-mtime discovery, predecessor validation,
+and design-review validation. It returns `resolved` or `needs-input`. Announce a
+discovered directory before proceeding — never pick a topic silently.
 
 - If a directory resolves: read the predecessor artifact from it. Treat it as source of
   truth for problem, constraints, approach.
-- Empty case (REQUIRED): do NOT error. Fire `AskUserQuestion` (header `Setup`) with two
+- `needs-input` (REQUIRED): do NOT error. Fire `AskUserQuestion` (header `Setup`) with two
   labeled options. **Run the producer** runs `/team-<producer>` to create the missing
   artifact. **Give a path** lets the user supply `docs/plans/<id>/`.
 
@@ -462,9 +461,8 @@ Invocation
 
 Input
 - [ ] Correct archetype chosen (default §2A for documents).
-- [ ] Archetype-A: `argument-hint` declared. Discovery block copied verbatim from an
-      existing skill (e.g. team-research), not hand-rolled — the dev consistency gate
-      enforces byte-identity.
+- [ ] Archetype-A: `argument-hint` declared; raw arguments reach the shared resolver
+      through stdin with the required predecessor and optional design-review gate.
 - [ ] Discovery runs before any question wherever there is something to discover (§2D, the ask-first archetype, has no discoverable input). An auto-picked topic is announced.
 - [ ] Empty/not-found path uses `AskUserQuestion` (run producer / give path) — never throws.
 - [ ] Base branch (if used) through the fallback chain, no bare `main`. Args carry a
