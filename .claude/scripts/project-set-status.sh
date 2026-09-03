@@ -35,7 +35,13 @@ die() { printf 'error: %s\n' "$1" >&2; exit 1; }
 
 { [ "$#" -ge 1 ] && [ "$#" -le 2 ]; } || die "usage: $(basename "$0") <status> [item-id]"
 status="$1"
-item_id="${2:--}"
+if [ "$#" -eq 2 ]; then
+  item_id="$2"
+  [ -n "$item_id" ] \
+    || die "empty item id — the resolver printed nothing, so fix that first; an empty argument never falls through to stdin"
+else
+  item_id="-"
+fi
 
 command -v gh >/dev/null 2>&1 || die "gh CLI not found"
 command -v jq >/dev/null 2>&1 || die "jq not found"
@@ -49,7 +55,7 @@ fi
 
 # Status field ID + the option ID for the requested column (case-insensitive).
 fields_json="$(gh project field-list "$PROJECT_NUMBER" --owner "$OWNER" --format json)" \
-  || die "failed to list project fields (is gh authenticated?)"
+  || die "failed to list project fields — gh's error above names the cause; a token missing a project scope needs: gh auth refresh -s <scope gh named>"
 read -r field_id option_id <<EOF
 $(printf '%s' "$fields_json" | jq -r --arg s "$status" '
   .fields[] | select(.name == "Status") | .id as $fid
@@ -60,7 +66,7 @@ EOF
   || die "unknown status: '$status' (valid: Backlog, Ready, In progress, In review, Done)"
 
 project_id="$(gh project view "$PROJECT_NUMBER" --owner "$OWNER" --format json --jq '.id')" \
-  || die "failed to resolve project id"
+  || die "failed to resolve project id — gh's error above names the cause; a token missing a project scope needs: gh auth refresh -s <scope gh named>"
 
 # Perform the edit. Capture its output instead of suppressing it, so a silent
 # or partial failure surfaces in the error rather than being masked (bug #141).
@@ -78,7 +84,7 @@ edit_out="$(gh project item-edit \
 # first page is still found.
 LIMIT=10000
 items_json="$(gh project item-list "$PROJECT_NUMBER" --owner "$OWNER" --format json --limit "$LIMIT")" \
-  || die "failed to re-read project status for verification (is gh authenticated?)"
+  || die "failed to re-read project status for verification — gh's error above names the cause; a token missing a project scope needs: gh auth refresh -s <scope gh named>"
 actual="$(printf '%s' "$items_json" \
   | jq -r --arg id "$item_id" '.items[] | select(.id == $id) | .status')"
 [ -n "$actual" ] \
