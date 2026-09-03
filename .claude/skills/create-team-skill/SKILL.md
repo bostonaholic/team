@@ -183,9 +183,12 @@ surface(s) per §1A / §1B below and set the frontmatter from the table above.
     commit, a branch, a rebase, a push, a branch delete); or a change on a host
     outside the checkout (a PR opened, approved, or merged; a ticket or issue moved,
     filed, or closed; a deploy). Committing, pushing, opening a PR, moving a ticket,
-    merging, deploying, and deleting all illustrate the in-class half. An in-class
-    skill carries shipit-style explicit-intent guard wording ("Invoke ONLY on
-    explicit … intent — … never infer …") beside or instead of the plain
+    merging, deploying, and deleting all illustrate the in-class half. A write the
+    invocation never authorized, such as an unsandboxed vendor CLI mutating the
+    tree during a cross-model pass, moves no skill into the class: the caller
+    detects that write and reverts it rather than authoring it. An in-class skill
+    carries shipit-style explicit-intent guard wording ("Invoke ONLY on explicit …
+    intent — … never infer …") beside or instead of the plain
     `Trigger on` carrier. Word its routing-map line with that same
     explicit intent, so the map never invites the skill on a plain request — `team-fix`
     is listed as a command but reached only on stated pipeline intent, never on "fix
