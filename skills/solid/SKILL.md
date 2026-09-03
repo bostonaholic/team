@@ -1,92 +1,37 @@
 ---
 name: solid
-description: SOLID object-oriented design principles methodology — loaded by implementer agent when writing code and by code-reviewer agent when checking for design violations
+description: Apply SOLID principles when writing or reviewing object-oriented code.
 user-invocable: false
 ---
 
 # SOLID Principles
 
-Apply when writing new code; check for violations when reviewing. Each
-principle below carries the smells that betray it in a diff.
+## Input
 
-## S — Single Responsibility
+Apply to object-oriented code being designed or reviewed.
 
-**One reason to change** — one actor or stakeholder whose requirements could
-change the code.
+## Required checks
 
-Smells: a unit with more than one clear purpose (`UserService` that validates,
-persists, *and* sends email); `and` in a name (`validateAndSave()`); functions
-past ~30 lines; multiple unrelated tests for one unit.
+- **S — Single Responsibility:** one actor-driven reason to change. Split
+  units with unrelated jobs or names requiring “and.”
+- **O — Open/Closed:** add variants through an existing extension contract,
+  not a growing type switch or hardcoded list.
+- **L — Liskov Substitution:** every subtype preserves base preconditions,
+  postconditions, and behavior. Prefer composition when “is-a” is false.
+- **I — Interface Segregation:** no client depends on methods it does not use;
+  split interfaces that force unsupported methods or irrelevant test stubs.
+- **D — Dependency Inversion:** business logic depends on injected
+  abstractions, not database, HTTP, filesystem, static infrastructure calls,
+  or hidden singletons.
 
-If you cannot name a function without "and", it has too many jobs.
+Construct with long-lived collaborators and call with per-request work.
+Constructors perform no I/O, lookup, or computation.
 
-## O — Open/Closed
+## Output
 
-**Open for extension, closed for modification.** Adding behavior should not
-require changing existing tested code.
+For each violation, name the principle, cite `file:line`, and state its
+present consequence:
 
-Smells: a `switch`/`if-else` chain on a type field that must be edited for
-every new type; hardcoded variant lists; tests that break whenever a new
-variant is added.
+> `issue: SRP violation — this function handles both validation and storage.`
 
-Fix by defining an interface for the varying behavior and adding
-implementations rather than branches.
-
-## L — Liskov Substitution
-
-**Subtypes are substitutable for their base types** without the caller
-knowing which it got.
-
-Smells: an override that throws `NotImplementedError` or does nothing;
-callers checking `instanceof` before calling; subclasses weakening
-preconditions or strengthening postconditions; tests that cannot run against
-both base and subtype.
-
-Design hierarchies on behavior, not taxonomy. Prefer composition when "is-a"
-does not hold behaviorally. A subtype may restrict behavior (`ReadOnlyList`)
-but must fulfill every contract the base advertises.
-
-## I — Interface Segregation
-
-**No client depends on methods it does not call.**
-
-Smells: a 10-method interface whose implementers each use three; implementing
-by throwing `UnsupportedOperationException`; test doubles that must stub many
-irrelevant methods.
-
-Split large interfaces; compose small ones when a concrete type needs several
-contracts.
-
-## D — Dependency Inversion
-
-**High-level modules and low-level modules both depend on abstractions.**
-Business logic does not import database drivers, HTTP clients, or filesystem
-APIs directly.
-
-Smells: domain classes that `new` their own dependencies; an infrastructure
-import inside a domain service; tests that cannot run without a real database
-or network. Two smells are easy to miss because the dependency is invisible in
-the signature:
-
-- **Static calls into infrastructure** (`Database.query(...)`, `Clock.now()`,
-  `Config.get(...)`) have no seam, so tests cannot substitute them.
-- **Singletons fetched inside business code** (`Registry.getInstance()`) make
-  the class lie about what it needs.
-
-**Construct with collaborators. Call with work.** The constructor takes the
-long-lived collaborators that define what the object IS — its clients,
-loggers, clock, database handle. Methods take the per-call work parameters. A
-`ReportGenerator(reportingDb, clock)` serves many date ranges through
-`generate(startDate, endDate)`. A
-`ReportGenerator(reportingDb, clock, startDate, endDate)` needs a new instance
-per query and conflates identity with work.
-
-## In the reviewer role
-
-Flag each violation by principle name, cite the file and line, and state the
-consequence — why this violation matters for this codebase right now:
-
-> `issue: SRP violation — this function handles both input validation and the
-> database write.`
-
-A finding that names no principle and no consequence is not actionable.
+A finding without a principle and consequence is not actionable.

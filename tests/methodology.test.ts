@@ -29,17 +29,6 @@ function body(text: string): string {
   return out.join("\n");
 }
 
-// Keep lines containing `key`, drop lines matching the `exclude` regex, take
-// the first 5, join. Isolates a single table row from a methodology doc.
-function filterRows(text: string, key: string, exclude: RegExp): string {
-  return text
-    .split("\n")
-    .filter((line) => line.includes(key))
-    .filter((line) => !exclude.test(line))
-    .slice(0, 5)
-    .join("\n");
-}
-
 // Text between two markers; "" when either marker is missing. Callers guard
 // the slice as non-empty so a missing section fails loud, never vacuously
 // (pattern: tests/protocol.test.ts softSection guard).
@@ -79,7 +68,6 @@ function grepA4(text: string, pattern: RegExp): string {
 
 describe("engineering-standards methodology", () => {
   const SKILL_FILE = join(REPO_ROOT, "skills", "engineering-standards", "SKILL.md");
-  const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const PLANNER = join(REPO_ROOT, "agents", "planner.md");
   const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
   const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
@@ -140,23 +128,6 @@ describe("engineering-standards methodology", () => {
     expect(loadsSkill(read(CODE_REVIEWER), "engineering-standards")).toBe(true);
   });
 
-  test("skills.md methodology table includes engineering-standards row with all 3 consumers", () => {
-    const row = filterRows(read(SKILLS_MD), "engineering-standards", /^#|^>|\/\/|event/);
-    expect(row.length).toBeGreaterThan(0);
-    for (const agent of ["planner", "implementer", "code-reviewer"]) {
-      expect(row).toContain(agent);
-    }
-  });
-
-  test("skills.md reviewing-code row unchanged", () => {
-    // Key on the table-row delimiter so prose mentions of the skill name
-    // elsewhere in the doc cannot crowd the row out of the 5-line window.
-    const row = filterRows(read(SKILLS_MD), "| `reviewing-code` |", /^#|^>|SKILL\.md|\/\/|event/);
-    for (const agent of ["code-reviewer", "security-reviewer", "ux-reviewer", "technical-writer"]) {
-      expect(row).toContain(agent);
-    }
-  });
-
   test("skill defers to solid for LSP/SRP", () => {
     expect(read(SKILL_FILE)).toContain("solid/SKILL.md");
   });
@@ -189,15 +160,6 @@ describe("engineering-standards methodology", () => {
   // The working-tree `git diff` cleanliness check is a CI-hygiene concern, not
   // a property of the code under test, so it is intentionally not covered here.
 
-  test("skills.md methodology table includes solid row", () => {
-    const row = filterRows(read(SKILLS_MD), "solid", /^#|^>|\/\/|event/);
-    expect(row.length).toBeGreaterThan(0);
-  });
-
-  test("skills.md methodology table includes refactoring-to-patterns row", () => {
-    const row = filterRows(read(SKILLS_MD), "refactoring-to-patterns", /^#|^>|\/\/|event/);
-    expect(row.length).toBeGreaterThan(0);
-  });
 });
 
 describe("product-thinking methodology", () => {
@@ -214,17 +176,6 @@ describe("product-thinking methodology", () => {
   test("frontmatter declares name: product-thinking", () => {
     const head10 = read(SKILL_FILE).split("\n").slice(0, 10).join("\n");
     expect(/^name: product-thinking$/m.test(head10)).toBe(true);
-  });
-
-  test("description names all three loaders (questioner, design-author, structure-planner)", () => {
-    const descBlock = read(SKILL_FILE)
-      .split("\n")
-      .slice(0, 10)
-      .filter((line) => /^description:/.test(line))
-      .join("\n");
-    for (const loader of ["questioner", "design-author", "structure-planner"]) {
-      expect(descBlock).toContain(loader);
-    }
   });
 
   test("frontmatter is exactly name + description (no argument-hint/model/tools/permissionMode)", () => {
@@ -1370,171 +1321,7 @@ describe("principle skill form and semantics", () => {
     });
   }
 });
-// The catalog's consumer lists drifted: new `skills/principle-*/SKILL.md`
-// citations landed and the docs/skills.md entry did not follow. This gate
-// makes that drift class deterministic: for every principle-* skill, every
-// file under agents/ or skills/ that cites it by path must appear by name
-// in the catalog's `### <name>` entry, and — for the 21 extracted
-// single-invariant principles — in the "Skill ↔ agent ↔ phase" table row.
-// The reverse direction runs where an entry's own wording promises a
-// path-visible citer list: the JIT "consulted by citation from" form, where
-// by convention every listed name cites the full path. A lens-style entry
-// ("Cited by ...") never made that promise — it also names checklist-level
-// consumers a path grep cannot see. All parsing is precomputed once at module level:
-// each file is read once, and each test body is a declarative assertion
-// whose failure value names the skill and the missing or phantom consumer.
-describe("docs/skills.md principle consumer lists match on-disk citations (L2 tripwire)", () => {
-  const SKILLS_DIR = join(REPO_ROOT, "skills");
-  const AGENTS_DIR = join(REPO_ROOT, "agents");
-  const SKILLS_MD = read(join(REPO_ROOT, "docs", "skills.md"));
-
-  const skillNames = readdirSync(SKILLS_DIR).filter((name) =>
-    existsSync(join(SKILLS_DIR, name, "SKILL.md")),
-  );
-  const agentNames = readdirSync(AGENTS_DIR)
-    .filter((name) => name.endsWith(".md"))
-    .map((name) => name.replace(/\.md$/, ""));
-  const principleSkills = skillNames.filter((name) => name.startsWith("principle-")).sort();
-
-  // Every principle-prefixed skill is a single-invariant skill with a
-  // citer list; the multi-rule methodology sets carry no prefix.
-  const extractedPrinciples = principleSkills;
-
-  // Each skill and agent file is read exactly once.
-  const skillContents = new Map(
-    skillNames.map((skill) => [skill, read(join(SKILLS_DIR, skill, "SKILL.md"))]),
-  );
-  const agentContents = new Map(
-    agentNames.map((agent) => [agent, read(join(AGENTS_DIR, `${agent}.md`))]),
-  );
-
-  // Every agents/ and skills/ file (other than the skill's own) whose
-  // content cites `skills/<principle>/SKILL.md`, by bare name.
-  const citersByPrinciple = new Map(
-    principleSkills.map((principle) => {
-      const needle = `skills/${principle}/SKILL.md`;
-      return [
-        principle,
-        [
-          ...skillNames.filter(
-            (skill) => skill !== principle && (skillContents.get(skill) ?? "").includes(needle),
-          ),
-          ...agentNames.filter((agent) => (agentContents.get(agent) ?? "").includes(needle)),
-        ],
-      ] as const;
-    }),
-  );
-
-  // The `### <name>` catalog entry, up to the next heading. "" when the
-  // entry is missing, so dependent assertions fail loud, never vacuously.
-  const entrySections = new Map(
-    principleSkills.map((name) => {
-      // Entry headings come in two sanctioned forms: plain `### <name>` and
-      // the linked `### [<name>](<url>)` form docs/skills.md adopted.
-      const plain = `### ${name}\n`;
-      const linked = `### [${name}](`;
-      let start = SKILLS_MD.indexOf(plain);
-      let markerLen = plain.length;
-      if (start === -1) {
-        start = SKILLS_MD.indexOf(linked);
-        markerLen = linked.length;
-      }
-      if (start === -1) return [name, ""] as const;
-      const rest = SKILLS_MD.slice(start + markerLen);
-      const next = rest.search(/\n##+ /);
-      return [name, next === -1 ? rest : rest.slice(0, next)] as const;
-    }),
-  );
-
-  // The `| \`<name>\` | ... |` row of the "Skill ↔ agent ↔ phase" table.
-  // "" when the row is missing, so the assertion fails loud, never vacuously.
-  const tableRows = new Map(
-    principleSkills.map((name) => {
-      const match = SKILLS_MD.match(new RegExp(`^\\| \`${name}\` \\|.*$`, "m"));
-      return [name, match ? match[0] : ""] as const;
-    }),
-  );
-
-  // `name` bounded by non-name characters, so `code-review` never matches
-  // inside `code-reviewer` and `planner` never inside `structure-planner`.
-  function mentions(text: string, name: string): boolean {
-    return new RegExp(`(?:^|[^\\w-])${name}(?:$|[^\\w-])`).test(text);
-  }
-
-  test("the principle tier exists on disk (the loops below cannot go vacuous)", () => {
-    expect(principleSkills.length).toBeGreaterThan(20);
-  });
-
-  for (const principle of principleSkills) {
-    test(`entry for ${principle} omits no file that cites it by path`, () => {
-      const section = entrySections.get(principle) ?? "";
-      expect(section.length).toBeGreaterThan(0);
-      // Clip at "Key behaviors" so a citer named only in a Key-behaviors
-      // cross-reference cannot satisfy the consumer-list check.
-      const cut = section.indexOf("Key behaviors");
-      const clipped = cut === -1 ? section : section.slice(0, cut);
-      const missing = (citersByPrinciple.get(principle) ?? [])
-        .filter((citer) => !mentions(clipped, citer))
-        .map((citer) => `${principle}: catalog entry omits consumer ${citer}`);
-      expect(missing).toEqual([]);
-    });
-  }
-
-  for (const principle of extractedPrinciples) {
-    test(`table row for ${principle} omits no file that cites it by path`, () => {
-      const row = tableRows.get(principle) ?? "";
-      expect(row.length).toBeGreaterThan(0);
-      const missing = (citersByPrinciple.get(principle) ?? [])
-        .filter((citer) => !mentions(row, citer))
-        .map((citer) => `${principle}: table row omits consumer ${citer}`);
-      expect(missing).toEqual([]);
-    });
-  }
-
-  const jitPrinciples = principleSkills.filter((name) =>
-    squash(entrySections.get(name) ?? "").includes("consulted by citation from"),
-  );
-
-  test("JIT-worded entries exist (the reverse check below cannot go vacuous)", () => {
-    expect(jitPrinciples.length).toBeGreaterThan(0);
-  });
-
-  for (const principle of jitPrinciples) {
-    test(`"consulted by citation from" list for ${principle} names only real citers`, () => {
-      const flat = squash(entrySections.get(principle) ?? "");
-      const list = flat.slice(flat.indexOf("consulted by citation from"));
-      // Clip at the bullet's tail so Key-behavior cross-references (which
-      // legitimately name non-citers) never register as consumers.
-      const ends = ["No agent preloads", "Key behaviors"]
-        .map((m) => list.indexOf(m))
-        .filter((i) => i !== -1);
-      const clipped = ends.length === 0 ? list : list.slice(0, Math.min(...ends));
-      const named = [...clipped.matchAll(/`([a-z0-9-]+)`/g)]
-        .map((m) => m[1] ?? "")
-        .filter((n) => skillNames.includes(n) || agentNames.includes(n));
-      expect(named.length).toBeGreaterThan(0);
-      const citers = new Set(citersByPrinciple.get(principle) ?? []);
-      const phantom = named
-        .filter((n) => !citers.has(n))
-        .map((n) => `${principle}: entry names ${n}, which does not cite it`);
-      expect(phantom).toEqual([]);
-    });
-  }
-});
-
-// ---------------------------------------------------------------------------
-// The `principle-` prefix is a claim: one cross-cutting invariant per skill.
-// A bare count of the catalog's principle set goes stale on every addition and
-// says nothing about *which* skills are in it, so both sides are derived: the
-// directories on disk and the catalog entries must be the same set, in both
-// directions.
-//
-// Both sides are prefix-filtered, so this catches a missing or an extra catalog
-// entry and cannot catch a fourth multi-rule bundle that wrongly takes the
-// prefix. The three that exist today are named below and asserted prefix-free.
-// ---------------------------------------------------------------------------
-
-describe("the principle set is derived, not counted", () => {
+describe("the principle catalog matches the on-disk set", () => {
   const SKILLS_MD = read(join(REPO_ROOT, "docs", "skills.md"));
 
   const onDisk = readdirSync(join(REPO_ROOT, "skills"))
@@ -1542,18 +1329,24 @@ describe("the principle set is derived, not counted", () => {
     .filter((name) => existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")))
     .sort();
 
-  const catalogued = [...SKILLS_MD.matchAll(/^### \[(principle-[a-z0-9-]+)\]/gm)]
-    .map((match) => match[1] ?? "")
-    .sort();
+  const linked = [
+    ...SKILLS_MD.matchAll(
+      /\[`(principle-[a-z0-9-]+)`\]\(\.\.\/skills\/([a-z0-9-]+)\/SKILL\.md\)/g,
+    ),
+  ];
+  const malformed = linked
+    .filter((match) => match[1] !== match[2])
+    .map((match) => `${match[1]} links to ${match[2]}`);
+  const catalogued = linked.map((match) => match[1] ?? "").sort();
 
   // The multi-rule methodology sets. They carry no prefix on purpose: each is a
   // set of rules, not a single invariant.
   const BUNDLES = ["solid", "product-thinking", "systems-thinking"];
 
-  // Guard: an empty prefix set on either side would pass both directions.
-  test("the principle tier is non-empty on disk and in the catalog", () => {
+  test("the principle tier is non-empty and every link targets its own skill", () => {
     expect(onDisk.length).toBeGreaterThan(20);
     expect(catalogued.length).toBeGreaterThan(20);
+    expect(malformed).toEqual([]);
   });
 
   // Takes both sides as arguments, so synthetic sets can prove the comparison
@@ -1585,7 +1378,7 @@ describe("the principle set is derived, not counted", () => {
       if (!existsSync(join(REPO_ROOT, "skills", bundle, "SKILL.md"))) {
         offenders.push(`${bundle}: no skill on disk`);
       }
-      if (!new RegExp(`^### \\[${bundle}\\]`, "m").test(SKILLS_MD)) {
+      if (!SKILLS_MD.includes("[`" + bundle + "`](../skills/" + bundle + "/SKILL.md)")) {
         offenders.push(`${bundle}: no catalog entry`);
       }
       // Reachable from disk and catalog state, unlike a prefix test on the

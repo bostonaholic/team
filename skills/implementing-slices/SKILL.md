@@ -1,124 +1,78 @@
 ---
 name: implementing-slices
-description: Slice-by-slice execution procedure for the implementer agent — dispatch modes (initial and review-fix), the slice-execution loop, TDD discipline, blocker handling, and the scope fence. Loaded when an implementation plan is executed or a hard-gate review failure needs fixing.
+description: Execute 8-plan.md one slice at a time or fix hard review findings. Loaded by implementer.
 user-invocable: false
 ---
 
 # Implementing Slices
 
-The implementer's execution procedure: consume the plan, work through one
-vertical slice at a time, and commit each slice atomically the moment its
-tests pass.
+## Input
 
-## Dispatch modes
+The dispatch names `docs/plans/<id>/` and one mode.
 
-The orchestrator dispatches you with the artifact directory
-`docs/plans/<id>/`.
+### Initial
 
-### Initial dispatch (after the test-architect's failing tests are confirmed)
+Read `8-plan.md`, `7-structure.md`, the failing acceptance tests, and `4-repos.md`
+when present. Before editing, run the test suite once in every involved
+worktree to confirm the failing baseline.
 
-Your inputs are the plan (`docs/plans/<id>/8-plan.md` — slice list,
-file-level steps, per-slice tests), the structure
-(`docs/plans/<id>/7-structure.md` — order and verification checkpoints), the
-failing acceptance tests (the completion contract), and
-`docs/plans/<id>/4-repos.md` when present. `4-repos.md` defines multi-repo
-mode: each repo's slug, absolute path, and worktree path (under
-`## Worktrees`); every plan step annotated `[repo: <slug>]` is applied
-inside that repo's worktree — `cd` there before running the step's edits,
-tests, and commits. Before implementing, run the test suite once (in each
-involved worktree, in multi-repo mode) to establish the baseline of
-failing tests.
+In multi-repo mode, `4-repos.md` maps repo slugs to worktrees. Run every
+`[repo: <slug>]` step, test, and commit from that worktree.
 
-### Review-fix dispatch (after a hard-gate failure)
+### Review fix
 
-When dispatched after the aggregate gate fails, you are in a **fix loop**.
-The orchestrator passes you a typed failure class and the reviewers'
-findings. Fix what the findings name, under these constraints:
+The dispatch supplies a typed failure class and findings. Resolve every
+finding from the round:
 
-- **Security findings: never weaken the fix.** Fix each vulnerability
-  directly — parameterize the query, remove the hardcoded secret, add the
-  auth check, escape the output. The security reviewer re-checks with
-  fresh eyes.
-- **Test failures: fix the code, not the tests.** Tests are the
-  contract — the implementation must satisfy them as written.
-- **Code-review findings: do not argue with the review.** Fix what each
-  `issue:` comment names.
-- **Lint / format, typecheck, and build failures:** re-run the same check
-  until it passes. Auto-fixable lint issues go through `--fix` first.
-- When a failure is **non-obvious** — the cause is not plain from the
-  error and the first fix you reach for is a guess — call the Skill tool
-  with `systematic-debugging`
-  and walk the
-  **Root Cause Analysis (5 Whys)** causal chain to the root before
-  editing, so you fix the root cause rather than the symptom
-  (`skills/principle-fix-root-causes/SKILL.md`). Skip this
-  for an **obvious** failure (a typo, a trivially-named assertion, a
-  clear one-line fix) — drilling a one-line fix is wasted ceremony. The
-  fast path stays intact.
+- Security: fix the vulnerability directly; never weaken the fix.
+- Tests: fix code, not tests.
+- Code review: fix every `issue:`.
+- Format, lint, typecheck, build: rerun the same check to green; try the
+  linter's auto-fix first when applicable.
+- Non-obvious failures: call the Skill tool with `systematic-debugging` and
+  trace the Root Cause Analysis (5 Whys) before editing
+  (`skills/principle-fix-root-causes/SKILL.md`). Skip it for an obvious typo
+  or clear one-line correction.
 
-After fixing: re-run the full test suite so nothing regressed, address
-every failure type reported in the round before reporting completion, and
-report which findings were fixed and what changed. The orchestrator will
-re-dispatch ALL 5 reviewers to verify your fixes.
+Then run the full suite and report each finding and its fix. The orchestrator
+re-runs all five reviewers.
 
-## Slice-by-slice execution
+## Required actions
 
-Execute the plan one slice at a time, in the order the plan specifies. A
-slice is done when its acceptance tests pass and prior slices' tests still
-pass; commit it atomically at that moment, report it, and move on. The
-contract per slice:
+Process slices in plan order. For each slice:
 
-- **Steps.** The plan lists each slice's file-level steps. `[sequential]`
-  steps depend on prior steps in the slice; `[parallel]` steps may be done
-  in any order. In multi-repo mode each step carries `[repo: <slug>]` —
-  cd into that repo's worktree before applying it. Cross-repo steps
-  within one slice are routine — switch directories as needed.
-- **Tests.** In multi-repo mode, run each acceptance test in the worktree
-  where it lives (the test name in the plan carries a `<repo>:` prefix).
-- **Commits.** Call the Skill tool with `git-commit` and apply its commit
-  conventions (Conventional Commits, the 50/72 rule, one logical change per
-  commit). Single-repo: one commit per slice
-  using the slice's `Commit:` line as the subject, body referencing
-  the design and structure paths. Multi-repo: when the slice's
-  `Repos:` field names more than one repo, produce **one commit per
-  repo** in their respective worktrees, using each per-repo `Commit:`
-  subject from the plan. Each commit body references the same
-  design/structure paths and notes "part of slice <N>: <name>" so
-  reviewers can correlate.
-- **Report.** Return a brief summary to the orchestrator per slice:
-  `{slice: <name>, testsPassing: [list], commits: [
-  {repo: <slug>, sha: <sha>}, ... ]}` (`commits` is a single-entry
-  list in single-repo mode).
+1. Execute its file-level steps. `[sequential]` preserves order;
+   `[parallel]` may run in any order. Change worktrees at `[repo: <slug>]`.
+2. Run that slice's acceptance tests in the repo where each test lives, plus
+   prior slices' tests.
+3. When all pass, call the Skill tool with `git-commit`. Single-repo work gets
+   one commit using the slice's `Commit:` subject and a body citing the design
+   and structure paths. A slice spanning repos gets one commit per repo using
+   each repo's `Commit:` subject; each body cites the same artifacts and says
+   `part of slice <N>: <name>`.
+4. Report:
 
-When all slices are done, return a final implementation summary to the
-orchestrator (paths, slice list, final test status).
+   `{slice: <name>, testsPassing: [<tests>], commits: [{repo: <slug>, sha: <sha>}]}`
 
-## TDD discipline within each slice
+Within a slice:
 
-- Write the minimal code to make the slice's tests pass — no more.
-- If a test requires functionality from a later slice, document the
-  dependency but do not preempt that slice.
-- Do not optimize or refactor until the slice's tests pass.
-- If you find yourself writing code that no test exercises, stop and check
-  if you are on scope.
+- Write only the minimum code needed for its tests.
+- Do not preempt later slices; record the dependency.
+- Do not optimize or refactor before green.
+- Stop and check scope if code has no test.
 
-## Handle blockers
-
-If a slice is blocked (dependency missing, unclear requirement, test appears
-incorrect):
-
-1. **Document the blocker** — what is blocked, why, and what would unblock it.
-2. **Continue with the next unblocked slice** if the structure allows it.
-   Many slices depend on prior slices. Respect those dependencies.
-3. **Return to blocked slices** after completing unblocked work, in case the
-   blocker has been resolved.
+If blocked, record what, why, and the unblock condition. Continue only with
+independent slices, then retry the blocked slice.
 
 ## Scope fence
 
-Apply `skills/principle-scope-fence/SKILL.md` — the plan authorizes exactly
-the change it names. The implementer's own bounds:
+Apply `skills/principle-scope-fence/SKILL.md`.
 
-- **Do NOT change acceptance tests.** They are immutable. If a test seems
-  wrong, document your concern but implement to make it pass as written.
-- **Reference real file paths from the plan.** Do not invent new files or
-  directories that the plan does not specify.
+- Never change acceptance tests. Record a concern, but satisfy them as written.
+- Use the real paths in the plan. Do not invent unspecified files or directories.
+
+## Done
+
+Every slice's tests pass, prior tests still pass, each slice has its required
+per-repo commit, and the final report lists paths, slices, commits, and full-suite
+status.

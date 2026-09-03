@@ -1,75 +1,37 @@
 ---
 name: product-thinking
-description: Product-need reasoning lens for "make something people want" — loaded by questioner, design-author, and structure-planner to validate user demand while framing, designing, and slicing scope
+description: Apply the "make something people want" lens while framing, designing, or slicing product work.
 user-invocable: false
 ---
 
 # Product Thinking
 
-A reasoning lens, not a gate. It produces no artifact of its own and blocks
-nothing. It shapes how the pre-implementation agents frame, design, and slice
-scope so that the work is something real people actually want.
+This lens creates no artifact and never gates the pipeline.
 
 ## Core Lenses
 
-Four lenses sharpen every framing, design, and slicing decision:
-
-- **Demand evidence over assertion**: Ask what signal says a real person wants
-  this — not if it is technically possible or interesting to build. A clever
-  capability nobody asked for is still waste.
-- **Smallest thing people want**: Prefer the thinnest version that delivers
-  real value, and resist speculative scope and gold-plating. Extra surface
-  area is cost you pay before you have learned if anyone wants it.
-- **Build for someone specific, not nobody**: Name the actual user a change
-  serves. A feature with no identifiable user is a red flag to surface, not a
-  detail to gloss over.
-- **Talk-to-users mindset**: Treat the user's stated intent as a *proxy* for
-  real demand, and explicitly surface where an assumption is standing in for
-  validation rather than silently accepting it as fact.
+- **Demand evidence over assertion:** identify the observable demand signal.
+- **Smallest thing people want:** cut speculative scope.
+- **Build for someone specific, not nobody:** name the person or role served.
+- **Talk-to-users mindset:** mark assumptions standing in for validation.
 
 ## When Framing the Task
 
-Questions to sharpen the *inferred goal* and *acceptance signals* you write
-into `1-task.md`:
-
-- **Who specifically is this for?** Identify, if knowable, who the work serves
-  — an actual person or role, not "users" in the abstract.
-- **What signal would tell us they want it?** Identify the observable demand
-  signal that the acceptance criteria can stand on.
-- **What is the smallest version that delivers that?** Frame the goal around
-  the thinnest outcome that would satisfy the named person.
-
-These lens questions shape only how the questioner frames the inferred goal and
-acceptance signals — never what gets researched or what goes into
-`2-questions.md`. (The goal stays out of `2-questions.md` by design.)
+In `1-task.md`, ask who specifically this is for, what signal proves demand, and
+the smallest version that serves them. Do not put product framing in
+`2-questions.md`.
 
 ## When Designing
 
-Questions to apply while choosing an approach and writing `## Decisions made`
-and `## Out of scope`:
-
-- **Does this decision serve a real user need or a hypothetical one?** Tie each
-  decision back to the named user, or surface it as an open question.
-- **Where is an assumption standing in for demand?** Call out the places where
-  "users will want this" is unvalidated, rather than burying it.
-- **What is the thinnest design that delivers the wanted outcome?** Prefer the
-  simplest approach that satisfies real demand over the most complete one.
+Tie decisions to the named need, mark unvalidated demand assumptions, and put
+unneeded capability in `## Out of scope`.
 
 ## When Slicing
 
-Questions to apply while ordering slices:
-
-- **Does slice 1 ship something a real person would want, or only
-  infrastructure?** The first slice should deliver value, not scaffolding.
-- **Is any slice building for nobody?** A slice with no identifiable user is a
-  signal to cut or re-order.
-- **Can we cut scope to the smallest wanted thing?** Trim slices toward the
-  thinnest version that delivers real value.
+Make slice 1 the smallest wanted behavior. Cut or reorder infrastructure-only
+slices and slices with no identifiable user.
 
 ## Lens, Not Dogma
 
-This lens informs judgment. It never blocks the pipeline. Do not manufacture
-user-research ceremony where the user's stated intent already answers "who
-wants this." On an empty or trivial task, the right move is to apply judgment
-and ask nothing extra. The point is to keep "do real people want this?" in
-view — not to add ritual.
+Do not add user-research ceremony when stated intent supplies the answer.
+For greenfield or trivial work, `none found` is a complete answer.

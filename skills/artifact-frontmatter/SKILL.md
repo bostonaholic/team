@@ -1,155 +1,102 @@
 ---
 name: artifact-frontmatter
-description: The artifact schema contract for docs/plans/<id>/ — the artifact inventory, the YAML frontmatter schema and phase enum, the 4-repos.md and 3-prd.md schemas, the topic-consistency invariant, ticketId scope, and the design-review record mechanics. Load when authoring or validating a pipeline artifact's frontmatter, checking the design-review verdict, or writing 4-repos.md or 3-prd.md.
+description: Canonical schemas for Team pipeline artifacts. Load when writing or validating files under docs/plans/<id>/.
 user-invocable: false
 ---
 
 # Artifact Frontmatter
 
-The single schema contract for the pipeline's durable state: every
-artifact under `docs/plans/<id>/`, its YAML frontmatter, and the
-design-review record mechanics that gate the DESIGN transition. Phase
-discipline — what each phase does and when it advances — lives in
-`skills/qrspi-workflow/SKILL.md`. This skill owns the schema.
-The schema exists because files are the contract between phases (`skills/principle-files-are-the-contract/SKILL.md`).
+Canonical schema for durable state in `docs/plans/<id>/`. Phase behavior lives
+in `skills/qrspi-workflow/SKILL.md`; executable `<id>` and phase-file definitions
+live in `scripts/resolve-topic.mjs`. Do not duplicate either. Files are
+the inter-phase contract (`skills/principle-files-are-the-contract/SKILL.md`),
+and each definition has one owner
+(`skills/principle-single-source-of-truth/SKILL.md`).
 
 ## Artifact inventory
 
-All phase artifacts live under `docs/plans/<id>/`, where `<id>` is one of:
+`<id>` is ticket-prefixed (`<TICKET>-<kebab-topic>`) or date-prefixed
+(`<YYYY-MM-DD>-<kebab-topic>`).
 
-- **Ticket-prefixed**: `<TICKET>-<kebab-topic>` (e.g.,
-  `ENG-1234-add-rate-limiting`)
-- **Date-prefixed**: `<YYYY-MM-DD>-<kebab-topic>` (e.g.,
-  `2026-05-01-add-rate-limiting`)
+| File | Writer | Required |
+|---|---|---|
+| `1-task.md` | questioner | yes |
+| `2-questions.md` | questioner | yes |
+| `3-prd.md` | questioner | when PRD criteria apply |
+| `4-repos.md` | questioner or design-author | multi-repo only |
+| `5-research.md` | researcher | yes |
+| `6-design.md` | design-author | yes |
+| `7-structure.md` | structure-planner | yes |
+| `8-plan.md` | planner | yes |
 
-The executable definitions of the `<id>` pattern (`ID_RE`) and the
-phase-file list (`PHASE_FILES`) live in `hooks/session-start-recover.mjs`
-— that hook is the canon. Reference it rather than forking the pattern
-here.
-One definition, one owner, every other surface consults it (`skills/principle-single-source-of-truth/SKILL.md`).
+## Common schema
 
-| Artifact  | Path                              | Created By              | Required? |
-|-----------|-----------------------------------|-------------------------|-----------|
-| Task      | `docs/plans/<id>/1-task.md`         | questioner agent        | yes       |
-| Questions | `docs/plans/<id>/2-questions.md`    | questioner agent        | yes       |
-| PRD       | `docs/plans/<id>/3-prd.md`          | questioner agent        | when PRD criteria apply |
-| Repos     | `docs/plans/<id>/4-repos.md`        | questioner / design-author | when topic spans repos |
-| Research  | `docs/plans/<id>/5-research.md`     | researcher agent        | yes       |
-| Design    | `docs/plans/<id>/6-design.md`       | design-author agent     | yes       |
-| Structure | `docs/plans/<id>/7-structure.md`    | structure-planner agent | yes       |
-| Plan      | `docs/plans/<id>/8-plan.md`         | planner agent           | yes       |
-
-The `<id>` slug should match across every artifact for the same feature.
-
-## Frontmatter schema (all artifacts)
-
-Every artifact opens with YAML frontmatter. Common fields:
+Every artifact begins:
 
 ```yaml
 ---
 topic: <kebab-case>
-date: 2026-04-30
-phase: design        # task | questions | prd | repos | research | design | structure | plan
+date: <YYYY-MM-DD>
+phase: <task | questions | prd | repos | research | design | structure | plan>
 ---
 ```
 
-Per-phase additions:
+- `1-task.md` alone adds `ticketId: <id>` or `ticketId: null`.
+- `6-design.md` adds `revision: 0`.
+- No other phase artifact adds either field.
 
-| Phase     | Extra frontmatter                                                                  |
-|-----------|------------------------------------------------------------------------------------|
-| task      | `ticketId: <id>` (or `null`)                                                       |
-| questions | (none)                                                                             |
-| prd       | (none — not gated, written conditionally by the questioner)                        |
-| repos     | (none — written conditionally in multi-repo mode)                                  |
-| research  | (none)                                                                             |
-| design    | `revision: 0`                                                                      |
-| structure | (none — not gated, advances to PLAN once it exists)                                |
-| plan      | (none — derived mechanically from the structure)                                   |
+The `topic` value is identical in every file and equals `<id>` after removing
+its ticket or date prefix. The questioner chooses it; every later writer copies
+it verbatim. Example: `ENG-9876-cache-invalidation` and
+`2026-05-01-cache-invalidation` both use `topic: cache-invalidation`.
 
-**Design-review record** (`design-review-<n>.md`): each review round the
-orchestrator writes `docs/plans/<id>/design-review-<n>.md` (`<n>` = the
-highest existing `<n>` + 1, or 1 when none exists) with frontmatter
-`topic`, `date`, `phase: design-review`, and
-`verdict: <APPROVE|REQUEST CHANGES|COMMENT>`. The body carries the
-reviewer's findings and verdict verbatim. The `verdict` field is the
-deterministic read for hooks and resume detection (it replaces the
-retired `^approved:` frontmatter grep). A design has **passed review**
-when the highest-`<n>` file carries APPROVE or COMMENT.
+## Design-review records
 
-**Review loop**: on REQUEST CHANGES, the orchestrator re-dispatches
-`design-author` with the reviewer's findings verbatim. The new draft
-increments `revision: <n+1>` in its frontmatter and a fresh review round
-runs. A missing or non-numeric `revision` reads as `0`, so the next draft
-writes `revision: 1` and a bad value never stops the run.
+For each round, the orchestrator writes `design-review-<n>.md`, where `<n>` is
+one above the highest existing round or `1` when none exists:
 
-**Cross-model notes record** (`cross-model-notes.md`): orchestrator-written
-and append-only — one `### Cross-model disposition` block per review round,
-in round order, from either gate that runs the cross-model pass: the
-DESIGN review gate (the design-review reviewer's report) or the IMPLEMENT
-aggregate gate (the code-reviewer's report). An implement-path block is
-altered only by the blockquote wrap (every line prefixed with `>`, per the
-appending skill's procedure); a design-path block is altered by the wrap
-plus one orchestrator-authored label line prepended inside it, so the file
-always holds already-blockquoted content. Reading rule: a block opening
-with the label `> **Design round <n>**` came from the design-review gate;
-an
-unlabeled block came from the IMPLEMENT aggregate gate. The
-orchestrator creates the file only on the first round that runs the
-cross-model pass, so a repo that never triggers it gains no artifact.
-Frontmatter: `topic` (copied verbatim), `date`, and
-`phase: cross-model-review`, following the `phase: design-review` precedent
-for orchestrator-written records outside the phase-artifact enum. There is
-**no `verdict` field** — the block is Minor-tier by construction and never
-gates. No reviewer reads the file back as prior state; it
-exists for the human.
+```yaml
+---
+topic: <copied verbatim>
+date: <YYYY-MM-DD>
+phase: design-review
+verdict: <APPROVE | REQUEST CHANGES | COMMENT>
+---
+```
 
-**Cross-model raw transcript** (`cross-model-raw.md`): orchestrator-written
-and append-only — the design-review gate's capture-time record, one result
-line
-plus the fenced raw output per vendor call, created on first use (a
-zero-call round appends nothing). Frontmatter: `topic` (copied verbatim),
-`date`, and `phase: cross-model-raw`. There is **no `verdict` field**.
-Its auditability is bounded: `docs/plans/` is gitignored and `/pr-cleanup`
-deletes the topic directory, so the transcript serves a live or pre-merge
-audit only — it survives neither the merge cleanup nor a clone.
+The body is the reviewer's report verbatim. The highest-numbered record is
+authoritative; APPROVE or COMMENT passes. REQUEST CHANGES re-dispatches the
+design-author with the findings verbatim, increments `6-design.md`'s revision,
+then runs another review. Missing or non-numeric revision reads as `0`.
 
-## Topic consistency invariant
+## Cross-model records
 
-Every artifact's `topic` frontmatter field MUST be identical across all
-artifacts in the same `docs/plans/<id>/` directory. The `topic` value
-is the kebab portion of `<id>` — i.e. `<id>` minus the `<TICKET>-` or
-`<YYYY-MM-DD>-` prefix:
+`cross-model-notes.md` is orchestrator-written and append-only. It contains one
+already-blockquoted `### Cross-model disposition` block per DESIGN or IMPLEMENT
+round, in order. A design block starts with `> **Design round <n>**`; an
+unlabeled block came from IMPLEMENT. Create the file only on the first pass
+that runs:
 
-| `<id>`                                  | `topic`                       |
-|-----------------------------------------|-------------------------------|
-| `ENG-9876-cache-invalidation`           | `cache-invalidation`          |
-| `2026-05-01-add-rate-limiting`          | `add-rate-limiting`           |
+```yaml
+---
+topic: <copied verbatim>
+date: <YYYY-MM-DD>
+phase: cross-model-review
+---
+```
 
-Never use the ticket id, the date, or a re-worded description as the
-topic. Downstream agents copy the topic verbatim from upstream artifacts.
-The questioner is the one place where it is chosen.
+It has no `verdict`; no reviewer reads it as state.
 
-## ticketId scope
+`cross-model-raw.md` is the orchestrator's append-only design-review transcript:
+one result line and fenced raw output per vendor call. A zero-call round appends
+nothing. It has `topic`, `date`, and `phase: cross-model-raw`, with no
+`verdict`. It is live/pre-merge evidence only: `docs/plans/` is gitignored and
+cleanup deletes it. A block opening with `> **Design round <n>**` is a design
+record; unlabeled notes in `cross-model-notes.md` are IMPLEMENT records.
 
-`ticketId` lives **only on `1-task.md`**. It does not appear on
-`2-questions.md`, `5-research.md`, `6-design.md`, `7-structure.md`, or
-`8-plan.md`. The rationale: the directory name `<id>` already encodes
-the ticket prefix, and `1-task.md` is the canonical intent record. Re-
-encoding `ticketId` on every artifact would be duplication that can
-drift out of sync with the directory name.
+## Repos artifact
 
-## Repos artifact (`4-repos.md`)
-
-When a topic touches **more than one repository**, the questioner or
-design-author writes `docs/plans/<id>/4-repos.md` to enumerate the repos
-involved. The presence of this file switches the pipeline into multi-repo
-mode (one worktree per listed repo, see
-`skills/worktree-isolation/SKILL.md`). The home worktree is created at
-the leading WORKTREE phase and secondary worktrees after the design
-review. Its absence keeps the pipeline in single-repo mode — today's
-default.
-
-`4-repos.md` schema:
+`4-repos.md` selects multi-repo mode; absence means single-repo. Schema:
 
 ```yaml
 ---
@@ -161,48 +108,31 @@ phase: repos
 # Repos: <topic>
 
 ## Home repo
-- **name:** <short-slug>
-- **path:** <absolute-path>
-- **role:** One sentence describing what kind of work happens here.
+- **name:** <unique-short-slug>
+- **path:** <absolute-git-working-tree-path>
+- **role:** <one sentence>
 
 ## Additional repos
-- **name:** <short-slug>
-  **path:** <absolute-path>
-  **role:** One sentence describing what kind of work happens here.
-- **name:** <short-slug>
-  **path:** <absolute-path>
-  **role:** ...
+- **name:** <unique-short-slug>
+  **path:** <absolute-git-working-tree-path>
+  **role:** <one sentence>
 
 ## Worktrees
-<written by the orchestrator after the design review; back-records the home worktree path created at the leading WORKTREE phase plus each secondary path>
 - home: <home-worktree-path>
 - <repo-name>: <repo-path>/.claude/worktrees/<id>
-- ...
 ```
 
-Rules:
+The home repo is the invocation repo and owns the only artifact directory.
+Names annotate slices and plan steps as `[repo: <name>]`. The questioner or
+design-author writes repo entries; after design review, the orchestrator writes
+`## Worktrees`, back-recording the existing home worktree and all secondary
+worktrees. See `skills/worktree-isolation/SKILL.md`.
 
-- **Names are short slugs** (e.g. `frontend`, `api`, `shared-types`) used
-  in slice and plan annotations like `[repo: api]`. Names must be unique
-  across `4-repos.md`.
-- **Paths are absolute.** Each must be a git working tree.
-- **The home repo is the one the user invoked `/team` from.** Its
-  `docs/plans/<id>/` directory is the canonical artifact location. Other
-  repos' worktrees do not carry duplicate artifacts.
-- **The `## Worktrees` section is written by the orchestrator** after the
-  design review (back-recording the home worktree created at the leading
-  WORKTREE phase plus each secondary worktree), not by the questioner or
-  design-author. Until then, `4-repos.md` lists only the repos to be involved.
+## PRD artifact
 
-## PRD artifact (`3-prd.md`)
-
-Written conditionally by the questioner when the PRD criteria in
-`skills/product-requirements-doc/SKILL.md` apply (vague, multi-story,
-cross-cutting, or behavior-replacing requests), and referenced from
-`1-task.md`. It rides the autonomous Question phase — not gated, so
-no `approved`/`revision` fields.
-
-`3-prd.md` frontmatter:
+The questioner writes `3-prd.md` only when
+`skills/product-requirements-doc/SKILL.md` applies. It is referenced by
+`1-task.md`, is not gated, and has no `approved` or `revision` field:
 
 ```yaml
 ---

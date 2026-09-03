@@ -1,123 +1,43 @@
 ---
 name: documenting-decisions
-description: Architecture Decision Record format — capturing the context, decision, alternatives considered, and consequences of a significant technical choice. Load when recording an architectural decision or writing an ADR.
+description: Write or update Architecture Decision Records for consequential technical choices.
 user-invocable: false
 ---
 
 # Documenting Decisions
 
-Architecture Decision Records (ADRs) capture important technical decisions
-with their context, rationale, and consequences. They are the institutional
-memory that explains WHY the codebase looks the way it does.
+## Input
 
-Write the prose this skill governs at a seventh-grade reading level, in
-STE-flavored mode — short sentences, common words, no unexplained jargon.
-Full methodology: `writing-prose`. Before
-you finalize prose this skill governs, call the Skill tool with
-`writing-prose` and apply its `## Self-lint` checklist.
+Write an Architecture Decision Record only for a consequential choice between
+alternatives: a material trade-off, convention break, or new dependency. Skip
+obvious, established, minor, or trivially reversible choices.
 
-## ADR Format
+Call the Skill tool with `writing-prose` and apply its `## Self-lint` in
+STE-flavored mode.
 
-Every ADR follows this structure:
+## Required output
+
+Create the next zero-padded file in `docs/decisions/`, starting at `0001`:
 
 ```markdown
 # NNNN. Decision Title
 
 ## Status
-
 Proposed | Accepted | Deprecated | Superseded by [NNNN](NNNN-title.md)
 
 ## Context
-
-What is the issue that we're seeing that is motivating this decision or change?
-Describe the forces at play — technical constraints, business requirements,
-team capabilities, timeline pressure. Be objective: state facts, not opinions.
+<facts and forces that require a choice>
 
 ## Decision
-
-What is the change that we're proposing and/or doing? State the decision in
-full sentences, using active voice: "We will..." not "It was decided that..."
+<active-voice decision and named rejected alternatives>
 
 ## Consequences
-
-What becomes easier or more difficult to do because of this change? List both
-positive and negative consequences. Every decision has trade-offs — if you
-cannot identify any negative consequences, you have not thought hard enough.
+<positive and negative effects, uncertainty, and exit strategy>
 ```
 
-## File Convention
+When superseded, link both records to each other. Keep the record under five
+minutes to read; omit implementation detail.
 
-ADRs live in `docs/decisions/` with zero-padded sequential numbering:
+## Done
 
-```
-docs/decisions/
-  0001-use-typescript-for-plugin.md
-  0002-agent-per-phase-architecture.md
-  0003-file-based-state-management.md
-```
-
-To determine the next number, read the existing files in `docs/decisions/`
-and increment the highest number. If the directory is empty or does not exist,
-start at `0001`.
-
-## When to Write an ADR
-
-Write an ADR when the decision:
-
-- **Chooses between alternatives** — You evaluated multiple options and
-  picked one. The rejected alternatives and the reasons for rejection are
-  valuable context for future developers who will wonder "why did not we
-  just..."
-
-- **Involves important trade-offs** — The decision sacrifices something
-  (performance, simplicity, flexibility) to gain something else. Record what
-  was traded and why.
-
-- **Breaks an established convention** — Deviating from existing patterns is
-  sometimes correct, but the reasoning must be explicit so the deviation is
-  not "fixed" back by a future developer who assumes it was a mistake.
-
-- **Introduces a new dependency** — Adding a library, service, or tool creates
-  a long-term commitment. Record why this dependency was chosen over
-  alternatives and what the exit strategy is.
-
-## When NOT to Write an ADR
-
-Do not write an ADR when:
-
-- **The choice is obvious** — If there is one clearly correct option and no
-  reasonable alternative, an ADR adds bureaucratic overhead without value.
-
-- **Following established patterns** — If the codebase already uses a pattern
-  and you are applying it to a new case, no decision was made.
-
-- **Minor implementation details** — Function naming, variable scoping, loop
-  structure. These are code-level decisions, not architecture-level.
-
-- **The decision is trivially reversible** — If the choice can be changed in
-  minutes with no downstream impact, it does not need formal documentation.
-
-## ADR Statuses
-
-- **Proposed** — written, not yet accepted; open for discussion.
-- **Accepted** — in effect; the codebase should conform.
-- **Deprecated** — no longer relevant (the system it covers is gone). The ADR
-  stays for historical context.
-- **Superseded** — replaced by a newer decision. The ADR must name its
-  successor (`Superseded by [0007](0007-new-approach-to-state.md)`), and the
-  successor references what it supersedes in its Context section, so the
-  decision trail stays walkable in both directions.
-
-## Writing Guidance
-
-- **Be specific.** "We chose X because it is better" is not useful. "We chose
-  X because it supports concurrent writes without locking, which Y does not"
-  is useful.
-- **Name the alternatives.** Every decision implies rejected alternatives.
-  List them and say why they were rejected.
-- **Acknowledge uncertainty.** If the decision was made with incomplete
-  information, say so. Future readers will know to re-evaluate if new
-  information emerges.
-- **Keep it short.** An ADR should be readable in under 5 minutes. If it
-  takes longer, you are including implementation details that belong in code
-  or comments.
+The ADR names the choice, alternatives, trade-offs, status, and consequences.
