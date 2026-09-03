@@ -44,7 +44,7 @@ const FIXTURE_ROOT = join(REPO_ROOT, "evals", "fixtures");
 const RUBRIC_ROOT = join(REPO_ROOT, "evals", "rubrics");
 const TESTS_ROOT = join(REPO_ROOT, "tests");
 
-// The nine L5-eligible skills from structure.md triage.
+// The nine skills the structure.md triage assigned to tier L5.
 const L5_SKILLS = [
   "git-commit",
   "changelog",
@@ -57,7 +57,8 @@ const L5_SKILLS = [
   "team-plan",
 ] as const;
 
-// The four skills demoted to L2 (heavy prior state).
+// The four skills that triage assigned to tier L2 instead: each needs heavy
+// prior state an L5 eval cannot stand up.
 const L2_DEMOTED_SKILLS = [
   "team",
   "team-worktree",
@@ -646,10 +647,10 @@ describe("L2 coverage: reflect (executable utility, not L5)", () => {
 });
 
 // List-driven sweep over every executable utility skill. The per-skill blocks
-// above each carry that skill's own demotion rationale; this one carries the
-// invariant, so a utility added to the header list in future cannot be
-// "documented as covered" without the tripwire that actually covers it —
-// the gap this sweep was added to close.
+// above each carry that skill's own tier rationale; this one carries the
+// invariant that every skill on the list has coverage, so a utility added to
+// the header list in future cannot be "documented as covered" without the
+// tripwire that actually covers it — the gap this sweep was added to close.
 const UTILITY_SKILLS = [
   "shipit",
   "pr-open-comments",

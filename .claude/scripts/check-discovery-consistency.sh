@@ -332,7 +332,7 @@ else
 fi
 
 # =============================================================================
-# STANDALONE-PRESERVED (slice 2): team-implement keeps its plan.md-absent
+# STANDALONE-PRESERVED: team-implement keeps its plan.md-absent
 # standalone branch; team-pr keeps archetype-B base detection + the
 # "Nothing to ship." standalone stop.
 # =============================================================================

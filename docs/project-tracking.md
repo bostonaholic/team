@@ -176,16 +176,16 @@ of the work.
 | **Bugs** | A **Backlog for `bug`-labeled issues only**. It is a convenience view that makes open bugs easy to spot. The card is captured, not started, and not committed to. This is not a separate stage in the flow. | Someone captures a `bug` issue. Use this column instead of **Backlog**, so the card shows in the bugs view. Bugs move **directly into In progress** from here. They are **not** promoted to **Ready**. |
 | **Ready** | Shaped and ready for someone to pick up. It has enough detail to start. **WIP-limited to 5.** | The work is well-understood and prioritized, and Ready has an open slot (see the WIP limit below). |
 | **In progress** | Someone is working on it now. | You start work. You open a worktree, run `/team`, or begin to code. |
-| **In review** | Implementation is complete. A PR is ready and under review. | Someone **marks the card's pull request ready for review**. A **draft** PR does not move the card. The card stays in **In progress** until someone marks the draft ready. |
+| **In review** | Implementation is complete. A PR is ready and under review. | Someone **marks the card's pull request ready for review**. That is the trigger: a card sits in **In progress** for as long as its PR is a draft. |
 | **Done** | Merged and complete. An issue closed without a merged PR also lands here, through the issue-close automation. | The PR is merged, or the issue is closed without one (the issue-close automation moves the card). |
 
 > **The Bugs column.** `Bugs` is an entry bucket, not a stage. It holds the same
 > captured-but-not-started state as `Backlog`, reserved for `bug` issues so they
-> are easy to find at a glance. **Bug issues stay in `Bugs` and move directly
-> into `In progress`. They are not promoted to `Ready`.** Grooming thus leaves
-> bugs in `Bugs` and does not move them to `Ready`. The `Bugs` column *is* their
-> ready-to-pull state. Promotion to `Ready` applies to non-bug `Backlog` items
-> only.
+> are easy to find at a glance. **Two lanes share one tail.** A `bug` enters at
+> `Bugs` and moves straight into `In progress`, because the `Bugs` column *is*
+> its ready-to-pull state. A non-bug enters at `Backlog` and is promoted to
+> `Ready` first. From `In progress` on, both lanes run the same stages, and
+> promotion to `Ready` is the non-bug lane's step.
 
 > **WIP limit on `Ready`.** The `Ready` column is capped at **5** cards. This is
 > a work-in-progress limit. When the column is full, promote a new card only by
@@ -205,9 +205,9 @@ of the work.
 **Move the card as the work moves.** Pull a card into **In progress** when you
 start, not after. Pull it from `Ready` for non-bug work, or from `Bugs` for bug
 work. When someone marks the PR ready for review, move the card to
-**In review**. A draft PR opened is not that moment. The card stays in
-**In progress** while the PR is a draft. When the PR merges, move the card to
-**Done**.
+**In review** — a review-ready PR is what moves the card, so a card sits in
+**In progress** for as long as its PR is a draft. When the PR merges, move the
+card to **Done**.
 
 The simplest way is to drag the card on the board UI. From the CLI, two small
 helper scripts in `.claude/scripts/` compose over a pipe. One resolves an issue

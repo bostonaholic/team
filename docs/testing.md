@@ -78,8 +78,8 @@ graded checks on stochastic behavior.
 > **Outside these six layers sits the [Golden Master](../golden-master/RUNBOOK.md)**:
 > a manual, out-of-band run of the *whole* `/team` pipeline. It runs against a
 > frozen external app and a frozen prompt. It tracks pipeline drift and compares
-> models. It is deliberately **not** an L1-L6 layer, **not** in `bun test`, and
-> **not** in CI. A run from inside this repo would let Team's own context poison
+> models. It is a manual reference run rather than a check, so it sits
+> outside the L1-L6 taxonomy, outside `bun test`, and outside CI. A run from inside this repo would let Team's own context poison
 > a test that must mirror a real outside user. See
 > [`golden-master/`](../golden-master/).
 
@@ -348,9 +348,9 @@ test poisons the whole base. A tripwire that greps tests for forbidden paid
 calls is a good L2 guard for exactly this. It greps for the model CLI or the SDK
 import in the free test roots.
 
-Token-consuming CI jobs are additionally restricted to trusted PR authors
-(OWNER, MEMBER, or COLLABORATOR). Untrusted PRs skip them: forks, Dependabot,
-and first-time contributors. This is a security control against token-spend
+Token-consuming CI jobs run only for trusted PR authors — OWNER, MEMBER, or
+COLLABORATOR. Every other author is untrusted, which covers forks,
+Dependabot, and first-time contributors. This is a security control against token-spend
 griefing, not only a cost optimization. It is also forward-proofing. The
 `periodic-evals.yml` gate stays dormant until someone adds a `pull_request`
 trigger. `harness-checks.yml` carries the trust expression as a documented-only

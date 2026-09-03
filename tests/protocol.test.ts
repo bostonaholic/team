@@ -1339,8 +1339,9 @@ describe("no stated round or revision cap (L2 forbidden-pattern sweep)", () => {
     "AGENTS.md",
   ];
 
-  // Any count a bound could name. `1`/`one` is excluded on purpose: "at the
-  // cost of one round" is the loop paying for a re-review, not a bound on it.
+  // Any count a multi-round bound could name, so it starts at 2. The residue
+  // it leaves is `1`/`one`: "at the cost of one round" is the loop paying for
+  // a re-review, not a bound on it.
   const COUNT = String.raw`(?:[2-9]|[1-9]\d+|two|three|four|five|six|seven|eight|nine|ten)`;
   // The same set without multi-digit numerals, for the pattern that reads a
   // bare cap value with no round or revision noun to scope it. A legitimate

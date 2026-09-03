@@ -1844,11 +1844,11 @@ describe("principle-untrusted-input-is-data (L2 content tripwire)", () => {
 // file under agents/ or skills/ that cites it by path must appear by name
 // in the catalog's `### <name>` entry, and — for the 21 extracted
 // single-invariant principles — in the "Skill ↔ agent ↔ phase" table row.
-// The reverse direction is enforced only for entries carrying the JIT
-// "consulted by citation from" wording, where by convention every listed
-// name cites the full path; lens-style entries ("Cited by ...") also name
-// checklist-level consumers a path grep cannot see, so they are exempt
-// from the reverse check. All parsing is precomputed once at module level:
+// The reverse direction runs where an entry's own wording promises a
+// path-visible citer list: the JIT "consulted by citation from" form, where
+// by convention every listed name cites the full path. A lens-style entry
+// ("Cited by ...") never made that promise — it also names checklist-level
+// consumers a path grep cannot see. All parsing is precomputed once at module level:
 // each file is read once, and each test body is a declarative assertion
 // whose failure value names the skill and the missing or phantom consumer.
 describe("docs/skills.md principle consumer lists match on-disk citations (L2 tripwire)", () => {
