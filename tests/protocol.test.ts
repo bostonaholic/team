@@ -3,7 +3,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read, squash } from "./helpers/text";
-import { loadsSkill } from "./helpers/skill-refs";
+import { loadsSkill, SUBSTITUTION_CLAUSE } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 
@@ -760,10 +760,10 @@ describe("the design-review brief lives in reviewing-designs", () => {
 
   test("every caller dispatches the brief with the artifact directory substituted", () => {
     // Matched over squash() because this repo hard-wraps prose and the phrase
-    // splits across lines. The three contract words, never the `substitut`
-    // stem, which passes on a sentence naming the wrong direction.
+    // splits across lines. The contract words own the check, never the
+    // `substitut` stem, which passes on a sentence naming the wrong direction.
     const offenders = CALLERS.filter(
-      ([, path]) => !squash(readOrMissing(path)).includes("artifact directory substituted"),
+      ([, path]) => !squash(readOrMissing(path)).includes(SUBSTITUTION_CLAUSE),
     ).map(([name]) => name);
     expect(offenders).toEqual([]);
   });
