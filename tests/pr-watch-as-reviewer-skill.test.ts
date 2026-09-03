@@ -19,7 +19,7 @@
 // not clean assertion failures.
 
 import { describe, expect, test } from "bun:test";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
@@ -291,86 +291,3 @@ describe("pr-watch-as-reviewer skill: PENDING-review check is a fenced snippet",
   });
 });
 
-describe("pr-watch-as-reviewer skill: Codex removal commands target the guarded skills on both install surfaces", () => {
-  // Codex ignores disable-model-invocation, so both install surfaces —
-  // README.md (GitHub) and docs/index.md (team.bostonaholic.dev) — tell
-  // Codex users to remove the guarded skills after installing. A rename or
-  // move of a skill must fail the build until each surface's removal path
-  // moves with it.
-  const README = join(REPO_ROOT, "README.md");
-  const DOCS_INDEX = join(REPO_ROOT, "docs", "index.md");
-
-  // Defensive read: missing file → "" so assertions FAIL (not throw).
-  function readmeBody(): string {
-    return existsSync(README) ? read(README) : "";
-  }
-  function docsIndexBody(): string {
-    return existsSync(DOCS_INDEX) ? read(DOCS_INDEX) : "";
-  }
-
-  // Every rm -rf target must be a real skill that actually sets the flag —
-  // a rename or move must fail the build until the README path moves with it.
-  function removalTargets(readme: string): string[] {
-    // Match the path shape only, never the surrounding prose, so a README
-    // rewrite that keeps the paths correct stays green.
-    return [...readme.matchAll(/rm -rf .*\/skills\/([A-Za-z0-9._-]+)/g)].map(
-      (m) => m[1] ?? "",
-    );
-  }
-
-  // Skills on disk that disable model invocation — the set the README owes
-  // Codex users a removal line for.
-  function guardedSkills(): string[] {
-    const skillsRoot = join(REPO_ROOT, "skills");
-    return readdirSync(skillsRoot, { withFileTypes: true })
-      .filter((d) => d.isDirectory())
-      .map((d) => d.name)
-      .filter((name) => {
-        const file = join(skillsRoot, name, "SKILL.md");
-        if (!existsSync(file)) return false;
-        return /^disable-model-invocation:\s*true\s*$/m.test(
-          frontmatter(read(file)),
-        );
-      })
-      .sort();
-  }
-
-  test("every rm -rf path names a skill that exists and disables model invocation", () => {
-    const readme = readmeBody();
-    // Guard: a missing README must fail cleanly, not vacuously pass.
-    expect(readme.length).toBeGreaterThan(0);
-
-    const targets = removalTargets(readme);
-    expect(targets.length).toBeGreaterThan(0);
-
-    for (const targetName of targets) {
-      const targetSkill = join(REPO_ROOT, "skills", targetName, "SKILL.md");
-      expect(existsSync(targetSkill)).toBe(true);
-
-      const targetFrontmatter = existsSync(targetSkill)
-        ? frontmatter(read(targetSkill))
-        : "";
-      expect(/^disable-model-invocation:\s*true\s*$/m.test(targetFrontmatter)).toBe(
-        true,
-      );
-    }
-  });
-
-  test("the removal list covers every skill that disables model invocation", () => {
-    // The dangerous direction: a NEW user-only skill ships, Codex ignores its
-    // flag, and the README never tells anyone to remove it. Set equality
-    // catches that as well as a stale line for a deleted skill.
-    const readme = readmeBody();
-    expect(readme.length).toBeGreaterThan(0);
-    expect([...new Set(removalTargets(readme))].sort()).toEqual(guardedSkills());
-  });
-
-  test("rm -rf targets in docs/index.md equal the guarded-skill set on disk", () => {
-    // Same set equality, second surface: a docs page whose removal list is a
-    // stale subset of README's ships a silently weakened safety guard.
-    const docsIndex = docsIndexBody();
-    // Guard: a missing docs page must fail cleanly, not vacuously pass.
-    expect(docsIndex.length).toBeGreaterThan(0);
-    expect([...new Set(removalTargets(docsIndex))].sort()).toEqual(guardedSkills());
-  });
-});

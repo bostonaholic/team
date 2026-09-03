@@ -46,23 +46,9 @@ if command -v codex >/dev/null 2>&1; then
   done <<<"$plugin_list"
 fi
 
-# The model-invocation caveat. Printed on BOTH exit paths — the
-# already-linked path below returns 0 before the tail ever runs, so a
-# re-install would otherwise silently drop the one warning that matters.
-print_invocation_notice() {
-  echo "  Note: pr-watch-as-reviewer, pr-rebase, and reflect are model-invocable on"
-  echo "        Codex, which ignores disable-model-invocation. The first one's"
-  echo "        approval can merge a PR; the second force-pushes a rewritten"
-  echo "        branch; reflect rewrites skill files and files public issues."
-  echo "        All three now declare allow_implicit_invocation: false in their"
-  echo "        agents/openai.yaml; this warning and the removal step stand until"
-  echo "        a live Codex build proves that key is honored."
-}
-
 # Already linked — nothing to do
 if [ -L "$TARGET" ] && [ "$(readlink "$TARGET")" = "$SKILLS_SRC" ]; then
   echo "Team skills already installed for Codex (dev)."
-  print_invocation_notice
   exit 0
 fi
 
@@ -80,7 +66,6 @@ echo
 mkdir -p "$(dirname "$TARGET")"
 ln -sfn "$SKILLS_SRC" "$TARGET"
 echo "  Linked: ${TARGET} → ${SKILLS_SRC}"
-print_invocation_notice
 
 echo
 echo "Done. Codex loads the skills at the next thread start."

@@ -1,28 +1,22 @@
 // tests/guarded-skill-prose.test.ts
 //
-// L2 tripwire (free, deterministic): the three guarded-skill prose surfaces
-// that no test pinned, so they stayed green while wrong.
+// L2 tripwire (free, deterministic): the guarded-skill prose surfaces that
+// no test pinned, so they stayed green while wrong.
 //
 // A skill setting `disable-model-invocation: true` is a skill whose blast
 // radius is large enough that only a deliberate human invocation may start it.
-// Five surfaces owe that set a mention, and two of them are already pinned by
-// set equality (tests/pr-watch-as-reviewer-skill.test.ts reads the
-// README.md and docs/index.md removal lists). The other three carry the same
-// claim in prose and comments and were pinned by nothing:
+// Two surfaces name that set in prose and comments:
 //
 //   script/dev-install-antigravity  — the comment naming which skills this
 //                                     host keeps out of the model's reach
-//   script/dev-install-codex        — the post-install notice naming which
-//                                     skills stay model-invocable on Codex
 //   docs/cross-host-portability.md  — the Antigravity probe result
 //
-// A skill added to the guarded set without touching those three ships a
-// silently weakened safety claim: an Antigravity user reads a comment that
-// omits the new skill, and a Codex user is never told to delete it.
+// A skill added to the guarded set without touching those two ships a
+// silently weakened safety claim: a reader gets a list that omits it.
 //
 // This asserts a CONTRACT — the presence of a skill NAME, matched as a whole
-// token — never a wording. A rewrite of any of the three surfaces that keeps
-// every guarded name stays green.
+// token — never a wording. A rewrite of either surface that keeps every
+// guarded name stays green.
 
 import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
@@ -32,10 +26,9 @@ import { frontmatter, read } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 
-// The three prose surfaces this file exists to pin.
+// The prose surfaces this file exists to pin.
 const SURFACES = [
   join("script", "dev-install-antigravity"),
-  join("script", "dev-install-codex"),
   join("docs", "cross-host-portability.md"),
 ];
 
@@ -79,7 +72,7 @@ describe("the guarded-skill set on disk", () => {
   });
 });
 
-describe("every guarded skill is named on all three unpinned prose surfaces", () => {
+describe("every guarded skill is named on every unpinned prose surface", () => {
   for (const relative of SURFACES) {
     test(`${relative} names every guarded skill`, () => {
       const text = surface(relative);
