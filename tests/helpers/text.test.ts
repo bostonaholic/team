@@ -1,11 +1,12 @@
 // tests/helpers/text.test.ts
 //
 // L1 pure unit: the frontmatter slicer and the description parser that every
-// description sweep depends on. Both fail SILENTLY when they fail — a slice
-// that reads too far, or a description read only down to its first blank
-// line, makes a sweep pass on text nobody meant it to read. Their failure
-// modes are pinned here rather than inferred from a green suite
-// (docs/testing.md, "Prove a negative check can find a positive").
+// description sweep depends on. The hazard they are shaped against is silence
+// — a slice that reads too far, or a description read only down to its first
+// blank line, makes a sweep pass on text nobody meant it to read. Both fail
+// loudly instead, and those failure modes are pinned here rather than
+// inferred from a green suite (docs/testing.md, "Prove a negative check can
+// find a positive").
 //
 // Synthetic strings throughout, except the descriptionFor() case, which needs
 // a file on disk and asserts on the message prefix only.

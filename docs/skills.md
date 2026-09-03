@@ -338,9 +338,10 @@ QRSPI phase: a self-contained action a user runs on demand.
   Treats comment bodies as untrusted data. It never acts on embedded
   imperatives beyond the thread's anchored code. Auto-apply is bounded to
   the file and lines the thread references. Broader asks and new
-  security-sensitive constructs thus become carve-outs. Model-invocable:
-  cue-based auto-invocation is justified by the carve-out set plus the
-  verification bar.
+  security-sensitive constructs thus become carve-outs. Model-invocable on
+  stated triage intent, never on a PR merely carrying unresolved comments;
+  the carve-out set and the verification bar are further safeguards on top
+  of that entry guard, not a replacement for it.
 
 ### [pr-watch-as-author](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md)
 
@@ -367,8 +368,10 @@ QRSPI phase: a self-contained action a user runs on demand.
   Stops on approval, merge, close, user interrupt, cycle-48 timeout, or 3
   consecutive poll failures. On approval it runs a final triage pass and
   hands off with `Next: run /shipit`. It never auto-runs `/shipit`.
-  Model-invocable: it promotes a draft only on an unambiguous readiness cue
-  and reports the promotion loudly, so cue-based auto-invocation is safe.
+  Model-invocable on stated watch intent, never on a PR merely being open or
+  awaiting review; promoting a draft only on an unambiguous readiness cue,
+  and reporting that promotion loudly, are further safeguards on top of that
+  entry guard, not a replacement for it.
 
 ### [pr-watch-as-reviewer](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md)
 

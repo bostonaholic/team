@@ -198,8 +198,9 @@ surface(s) per §1A / §1B below and set the frontmatter from the table above.
     this bug". The description still carries the quoted phrases and the `/<name>` — the trigger
     test has no opt-out, and it checks phrase presence only. The guard wording is
     checked separately by `tests/intent-guard.test.ts`, which sweeps every
-    user-invocable skill under both roots against its `GUARD_CLASS` map — so
-    classify your new skill in that map, or the build stays red naming your file.
+    user-invocable skill under both roots against the `GUARD_CLASS` map in
+    `tests/helpers/intent-guard.ts` — so classify your new skill in that map, or
+    the build stays red naming your file.
     **A skill that gates every mutation on its own in-run approval** has an
     additional safeguard, never a substitute for the entry guard —
     `groom-backlog` presents each irreversible close and waits, and still states
@@ -462,6 +463,7 @@ Invocation
 - [ ] If it is methodology, it is **not** user-invocable. A user-facing command for it is a separate front-door skill, not an unset flag on this one.
 - [ ] Only the intended path(s) wired (entry point §1A, building block §1B, or both).
 - [ ] Entry point: description has WHAT + explicit trigger intents/phrases. Added to routing map.
+- [ ] Entry point: classified `in` or `out` in the `GUARD_CLASS` map in `tests/helpers/intent-guard.ts`, and an `in` description carries the explicit-intent guard wording verbatim. An unclassified skill fails the build naming your file.
 - [ ] Building block: chose inline (sequential) vs subagent (isolated/parallel) deliberately.
 - [ ] If subagented: self-contained, returns a conclusion not a transcript. If inlined: headed, independently-runnable sections.
 - [ ] No composed building block registers its own slash command.

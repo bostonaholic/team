@@ -17,7 +17,7 @@
 //
 // What this file does NOT judge: whether a guard sentence is TRUE, or whether
 // a skill's class is right. Key-set equality forces a value, never a correct
-// one. That residual is stated in the design and belongs at L5.
+// one. That residual belongs at L5.
 //
 // The parser controls for tests/helpers/text.ts live in their own suite,
 // tests/helpers/text.test.ts.
@@ -195,6 +195,14 @@ describe("every teaching copy shows the canonical form verbatim", () => {
     expect(text.length).toBeGreaterThan(0);
     expect(squash(text)).toContain(CANONICAL);
   }
+
+  // The haystack guard for this enumeration: emptying TEACHING_COPIES
+  // generates no per-copy test at all, so the drift sweep would go dark with
+  // nothing red. It has no disk enumeration to equal, so non-empty is the
+  // check.
+  test("the teaching-copy enumeration is not empty", () => {
+    expect(TEACHING_COPIES.length).toBeGreaterThan(0);
+  });
 
   for (const relative of TEACHING_COPIES) {
     test(`${relative} contains the canonical form`, () => {
