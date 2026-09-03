@@ -10,8 +10,9 @@ description: |
   that presents and stops until the user picks actions. Explicit user
   authorization applies the whole batch regardless of confidence.
   Trigger on "address PR comments", "triage PR feedback",
-  "handle the comments", "unresolved review comments", or
-  "/pr-open-comments". An auto-applied item commits and pushes without
+  "handle the comments", "unresolved review comments",
+  "/pr-open-comments", or a `/pr-watch-as-author` watch dispatching it on
+  a poll-detected change. An auto-applied item commits and pushes without
   stopping to ask, so invoke this ONLY on one of those stated intents:
   never infer triage intent from a PR merely carrying unresolved
   comments.
