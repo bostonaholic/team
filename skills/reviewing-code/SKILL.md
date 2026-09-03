@@ -1,275 +1,157 @@
 ---
 name: reviewing-code
-description: Code review methodology — generator-evaluator separation, veto without authorship, the report format, gate types and severity tiers, per-reviewer verdict criteria, and the code-reviewer inspection contract. Load when reviewing a diff for defects, classifying a code-review finding's severity, or writing a review verdict.
+description: Review a diff with fresh context and return Team's exact evidence-backed verdict format.
 user-invocable: false
 ---
 
 # Reviewing Code
 
-Reviews must be performed by agents with fresh context. The generator (the
-agent that wrote the code) must never evaluate its own output.
+Review with fresh context. The producer never evaluates its own work
+(`skills/principle-generator-evaluator/SKILL.md`). Apply `writing-prose` in
+STE-flavored mode and run its `## Self-lint` before finalizing.
 
-Write the prose this skill governs at a seventh-grade reading level, in
-STE-flavored mode. Full methodology: `writing-prose`. Call the Skill tool
-with `writing-prose` and apply its `## Self-lint` checklist before you
-finalize.
+## Reviewer boundary
 
-## Generator-Evaluator Separation
-
-- Reviewers MUST have fresh context with no shared conversation history.
-- Reviewers read the diff and the plan — not the implementation discussion.
-- Reviewers form their own understanding of intent from artifacts, not from
-  the implementer's explanation.
-- A reviewer needing clarification flags it as an open question. It never asks
-  the implementer.
-
-The cross-gate canon lives at `skills/principle-generator-evaluator/SKILL.md`;
-this skill owns the code-review application.
-
-## Veto Without Authorship
-
-Block the line, change nothing
-(`skills/principle-generator-evaluator/SKILL.md`).
-
-- **You hold no write tool.** Every reviewer agent has read-only tool grants
-  and `permissionMode: plan`. Report the defect. Never fix it.
-  The constraint is the withheld tool, not a request for restraint
+- Read the diff and artifacts, not the implementation discussion.
+- Form intent from evidence. Record ambiguity; never ask the implementer.
+- Hold no write tool and make no fix. Report the defect
   (`skills/principle-least-privilege/SKILL.md`).
-- **The veto holds until the finding is resolved.** Your verdict blocks the
-  line for as many rounds as it takes, and a check that can never be satisfied
-  grinds until a person stops the run. Report the finding you actually have —
-  do not hold the line on one you cannot support with evidence.
-
-## Conventional Comments
-
-Format follows the artifact. A **finding** — from the code, security, or
-docs reviewer — uses the Conventional Comments format in
-`skills/conventional-comments/SKILL.md`. A **live-verification report**, which
-is what the ux-reviewer produces, uses its own Working/Broken/Could Improve
-format.
+- Keep a veto only while supported by evidence.
+- Format code, security, and docs findings with
+  `skills/conventional-comments/SKILL.md`. UX uses its live-verification form.
 
 ## Report Format
 
-One report shape binds every surface a code review crosses: the
-code-reviewer's final report, the report a subagent returns when it
-reviews a diff on a dispatcher's behalf, and the full output the top-level
-session presents after a direct invocation. A relay reproduces the report
-in full — never a paraphrase, never a subset. A reviewer that carries its
-own report template in its agent file (the security-reviewer, the
-ux-reviewer, the technical-writer, the verifier) keeps it; this shape
-governs the code review.
+This exact shape governs the code-reviewer report, a fallback subagent's
+report, and the top-level relay:
 
 ```markdown
-**Verdict: <✅ APPROVE | ❌ REQUEST CHANGES | 💬 COMMENT>**
+**Verdict: <token from Verdict Criteria>**
 
 ### Summary
 
-<What was reviewed — the diff or range — and why the verdict. Two to
-five sentences.>
+<Reviewed range and verdict reason, two to five sentences.>
 
 ### Findings
 
-<One finding per entry, Blocking tier first. Exactly "No findings."
-when there are none.>
+<Blocking first; one Conventional Comment with file:line per entry. Exactly
+"No findings." when empty.>
 
 ### Checks
 
-<Each done criterion, met or not met. The test-suite command and its
-result. Any other check run, with its result.>
+<Each done criterion and result; test command/result; every other check run.>
 
 ### Refuted by verification
 
-<Findings the skeptic pass refuted. Exactly "Nothing refuted." when the
-pass ran and refuted none. Exactly "Not run: <reason>." when it did not
-run.>
+<Refuted skeptic findings. "Nothing refuted." when none. "Not run: <reason>."
+when skipped.>
 
 ### Cross-model disposition
 
-<The cross-model pass's per-round record, built per
-`skills/cross-model-review/SKILL.md`. Exactly "Not run: <reason>." when
-that pass did not run.>
+<Record from `skills/cross-model-review/SKILL.md`. "Not run: <reason>." when
+skipped.>
 ```
 
-- **The verdict line comes first.** The orchestrator parses it. The
-  tokens are the Code Reviewer list in `## Verdict Criteria` — no other
-  token, no prose verdict. Each token carries its standard emoji prefix
-  (✅ APPROVE, ❌ REQUEST CHANGES, 💬 COMMENT); the word token, not the
-  emoji, is what the orchestrator matches on.
-- `### Findings` entries use the Conventional Comments format
-  (`## Conventional Comments` above), each with its `file:line`
-  reference.
-- **The output format is not a choice.** Emit all five headings, in the
-  order the template gives them, on every report. Invent no section,
-  rename none, move none, and drop none. Two reports of the same diff
-  differ in what their sections say and never in which sections they
-  have.
-- **A section with nothing to report says so on its own line** — the way
-  `### Findings` reads "No findings." when there are none. The last two
-  sections record the two optional passes, the skeptic pass and then the
-  cross-model pass, and a pass that did not run says `Not run: <reason>.`
-  in its section. This is where "skip loudly" lands in the report.
-  What did not happen is reported as visibly as what did (`skills/principle-skip-loudly/SKILL.md`).
-- **A receiver reports a deviation. It never repairs one.** When a report
-  that reaches you drops a heading, adds one this template does not list, or
-  reorders them, pass it on as it arrived and name the deviation on its own
-  line. This binds every surface named above — the relay after a direct
-  invocation, and a dispatcher folding in what a subagent returned. A
-  receiver that quietly reshapes a report becomes a second place the shape
-  is decided, and then it is no longer one shape.
+The verdict line is first and uses the emoji-prefixed token in Verdict
+Criteria. Emit all five headings in this order; add, rename, reorder, or omit
+none. A receiver relays a malformed report unchanged and names the deviation
+separately; it never repairs the report. This is the visible skip record
+(`skills/principle-skip-loudly/SKILL.md`).
 
-## Gate Types and Severity Tiers
+## Gate and Verdict Criteria
 
-Call the Skill tool with `review-severity-tiers`. It owns how each reviewer's
-verdict gates the pipeline: the gate-type table, the Blocking,
-Major, and Minor tiers with the auto-fix boundary, the consult guard, and the
-verdict-aggregation rules.
-
-## Verdict Criteria
+Call the Skill tool with `review-severity-tiers`; it alone maps findings to
+pipeline action.
 
 ### Security Reviewer
 
 - **PASS:** No CRITICAL or HIGH findings. MEDIUM/LOW findings are reported but
   do not block.
-- **FAIL:** Any CRITICAL or HIGH finding. The pipeline MUST loop back to
-  IMPLEMENT. No override.
+- **FAIL:** Any CRITICAL or HIGH finding; loop to IMPLEMENT with no override.
 
 ### Verifier
 
-- **PASS:** All detected checks (format, lint, typecheck, build, test) pass.
-- **FAIL:** Any check fails. The pipeline loops back to IMPLEMENT.
+- **PASS:** Every detected format, lint, typecheck, build, and test check passes.
+- **FAIL:** Any check fails; loop to IMPLEMENT.
 
 ### Code Reviewer
 
-- **✅ APPROVE:** All done criteria met, no blocking issues, tests pass.
-- **❌ REQUEST CHANGES:** Blocking issues found. The pipeline MUST loop back to
-  IMPLEMENT. No override.
-- **💬 COMMENT:** Non-blocking suggestions only. Implementation is correct.
+- **✅ APPROVE:** Done criteria met, no blocking issue, tests pass.
+- **❌ REQUEST CHANGES:** Any blocking issue; loop to IMPLEMENT with no override.
+- **💬 COMMENT:** Non-blocking findings only; implementation is correct.
 
-**Test-quality flags.** Test files are part of the diff. Walk every changed
-`*test*` / `*spec*` / `__tests__/*` file against the rules in `test-style` —
-call the Skill tool with `test-style`.
-These are `suggestion:` individually and `issue:` when they appear across
-multiple tests:
+**Test-quality flags.** Load `test-style` and inspect every changed test. One
+instance is `suggestion:`; repetition across tests is `issue:`:
 
-- Change-detector tests — assertions on which collaborator methods were
-  called without verifying observable state
-- Mock-everything / mock chains where a real or fake equivalent exists
-- Full-equality assertions on complex objects when one field carries the
-  contract
-- Logic in tests (`if`, loops, string-building) that can carry the same bug as
-  the code
-- Tests named after methods (`testProcessOrder_2`) rather than behaviors
-  (`refundsCardOnPartialFailure`)
+- collaborator-call assertions without observable-state verification
+- mock-everything or mock chains when a real/fake equivalent exists
+- full equality on complex objects when one field is the contract
+- test logic (`if`, loops, value-building) that can repeat the production bug
+- method-shaped names instead of behavior names
 - DRY helpers that hide the asserted value
 
-**Flaky-test red flags (always blocking).** Distinct from the style flags
-above. Any test in the diff whose *outcome depends on* a nondeterministic
-input is `issue (blocking)` on **first** occurrence, routing to the Blocking
-tier and auto-looping the implementer. A single time-bomb ships a guaranteed
-future CI failure, and flakiness erodes the "green means safe" signal. The
-rule keys to outcome-dependence, not token presence: a `Date.now()` in a log
-line does not flag; one feeding an assertion does. Outcome-dependence covers
-the whole suite — state or resources left behind flag because a *later* test's
-outcome depends on them. The full catalog lives in
+**Flaky-test red flags (always blocking).** When any test outcome depends on a
+nondeterministic input, report `issue (blocking)` on the **first** occurrence.
+This includes leaked state/resources that affect a later test. Token presence
+alone is insufficient. The sole catalog is
 `skills/test-style/SKILL.md` ("Flaky-test red flags (reviewer checklist)").
 
-**Comment red flags.** Check in-source comments in every changed file against
-the Code Comments rules in `engineering-standards` — call the Skill tool with
-`engineering-standards`. Findings
-cite the checklist item by name and carry the tier's decoration — a
-blocking-regime hit reads `issue (blocking): Comment Discipline — ...`. Two
-regimes apply:
+**Comment red flags.** Load `engineering-standards`; cite `Comment Discipline`.
 
-- **Blocking on first occurrence** — ticket/issue IDs, plan/slice/phase
-  markers, and doc-section references in code comments, plus TODO/FIXME
-  comments the diff introduces. These checks are mechanical and
-  judgment-free, and the references rot.
-- **Style escalation** — comments restating WHAT the code does, wordy or
-  narrating comments, commented-out code, process narration, comments far
-  from the code they explain, vague language ("handle edge case"),
-  speculation, duplication of what types/tests/names/docs already carry,
-  fragile positional references, style diverging from the repo convention,
-  doc comments restating a signature, and a stale comment the diff leaves
-  contradicting the changed code. `suggestion:` for a single occurrence,
-  `issue:` when repeated. A single what-comment never blocks a round.
-  Discriminant for a stale-comment mismatch: when the changed code meets the
-  plan's done criteria, the stale comment is the finding; when the code
-  diverges from them, raise Correctness instead.
-- **Not violations:** upstream-bug links where the link IS the why.
-  Ticket-like tokens outside comment syntax — string literals, log messages,
-  fixture data (the check reads comments only). Doc comments on
-  exported/public interfaces. A pre-existing TODO the diff does not touch. A
-  diff with zero comments passes trivially — never manufacture a finding.
-
-  A **missing-why** finding is separate and narrow. Raise it only when the
-  diff introduces or rewrites code shaped by a constraint in the
-  "Document non-obvious constraints" list *and* you can name the exact
-  constraint and the consequence of removing the code. It is
-  `suggestion (non-blocking): Comment Discipline`, never blocking, never
-  escalating on repetition. Absence of comments is never by itself evidence.
+- **Blocking on first occurrence:** ticket/issue IDs,
+  plan/slice/phase markers, or doc-section references in code comments; a
+  TODO/FIXME introduced by the diff.
+- **Style escalation:** WHAT-restating, wordy/narrating, commented-out,
+  process, distant, vague, speculative, duplicative, positional,
+  convention-breaking, signature-restating, or stale comments. Use
+  `suggestion:` once and `issue:` when repeated. If changed code violates a
+  done criterion, report Correctness instead of its stale comment.
+- **Allowed:** an upstream-bug link that is the why; ticket-like tokens in
+  string literals, logs, or fixtures; public-interface doc comments; untouched existing
+  TODOs. Zero comments means zero comment findings.
+- **Missing why:** only when new/changed code encodes a named non-obvious
+  constraint whose removal has a concrete consequence. Always
+  `suggestion (non-blocking): Comment Discipline`; never escalate.
 
 ### UX Reviewer
 
-- **APPROVE:** API/UX is intuitive, consistent with existing patterns.
-- **REQUEST CHANGES:** Usability issues found. Treated as a *major* —
-  auto-fixed in the loop, not surfaced to the user.
-- **COMMENT:** Minor ergonomic suggestions (minor-and-below — recorded in the
-  PR body's `## Review notes`, never presented mid-run).
+- **APPROVE:** UX/API is intuitive and matches existing patterns.
+- **REQUEST CHANGES:** usability Major; auto-fix.
+- **COMMENT:** Minor note for the PR body.
 
 ### Technical Writer
 
-- **PASS:** Documentation is adequate for the changes made.
-- **GAPS:** Documentation gaps identified. Recorded for future work.
+- **PASS:** documentation is adequate.
+- **GAPS:** record documentation gaps for future work.
 
 ## Code Reviewer Inspection Contract
 
-Your input is the diff on the current branch (`git diff HEAD~1`, or the
-range the orchestrator names; `git log --oneline -10` when the scope is
-unclear) and the done criteria in whatever plan file, issue references, or
-commit messages the branch carries. When no criteria exist, review on
-general correctness and quality. Order the work however you judge best.
-Three obligations are non-negotiable:
+Input is the named diff/range and its done criteria. If scope is unclear, use
+`git log --oneline -10`; if no criteria exist, review general correctness and
+quality.
 
-- **Verify every done criterion is met.** Flag any that are missing or
-  incomplete.
-- **Run the project's test suite.** Report the command used and the result.
-- **Check each rule the diff introduces reaches every surface it must.**
-  When the changed code or prose has more than one way in — two entry modes,
-  a path documented as usable on its own, a split across turns or processes —
-  a new rule added to one is not added to the others by implication. Take
-  each rule the diff adds and name where it now holds. A rule present in one
-  surface and silently absent from a sibling is a finding; a stated reason
-  for the absence answers it. Read a self-contained path **alone**, the way
-  its callers arrive at it.
+Required actions:
 
-**Coverage checklist** — every changed file is checked against every item;
-no order implied:
+1. Verify every done criterion.
+2. Run the project's test suite and report command/result.
+3. Check each new rule reaches every surface it must. For multiple entry modes,
+   standalone paths, turns, or processes, name where the rule holds. Read a
+   self-contained path alone. Unexplained sibling asymmetry is a finding.
+4. Inspect every changed file for:
 
-- **Correctness** — off-by-one errors, missing null checks, broken edge
-  cases. Does the logic do what it claims?
-- **Maintainability** — intention-revealing names, obvious control flow.
-- **Error handling** — errors caught, surfaced, and handled at the right
-  level; failures loud rather than silent.
-- **Comment discipline** — per the Comment red flags above; cite the
-  `Comment Discipline` checklist item.
-- **Unnecessary complexity** — abstraction serving no current need.
-- **System fit** — does a sibling implementation now diverge? Does a caller
-  outside the diff need updating? Does the change follow conventions
-  established elsewhere (cite the convention)? Findings cite the
-  `System Fit` checklist item. When the diff removes or weakens
-  long-standing behavior — a guard, a threshold, a workaround that looks
-  deliberate — check its rationale before flagging or approving the
-  removal: call the Skill tool with `why`. A Chesterton's-fence deletion
-  whose motivating constraint still holds is a finding; one whose
-  constraint provably evaporated is not.
-- **SOLID violations** — per `skills/solid/SKILL.md`.
-- **Test files** — per both severity regimes above and
-  `skills/test-style/SKILL.md`.
+   - **Correctness** — off-by-one, null handling, edge paths, claimed behavior.
+   - **Maintainability** — revealing names and direct control flow.
+   - **Error handling** — failures caught, surfaced, and handled at the owner.
+   - **Comment discipline** — apply the split regime above.
+   - **Unnecessary complexity** — abstraction with no current need.
+   - **System fit** — sibling divergence, affected caller outside the diff,
+     or conflict with an established convention. Cite `System Fit`. Before
+     approving removal of a long-standing guard/threshold/workaround, load
+     `why`; flag it only if its motivating constraint still holds.
+   - **SOLID** — apply `skills/solid/SKILL.md`.
+   - **Tests** — apply both test severity regimes above.
 
-## Security Review
+## Done
 
-The security reviewer's process lives in `skills/reviewing-security/SKILL.md`
-— attack-surface identification, the OWASP Top 10 checks, the extra
-vulnerability checks, and the CRITICAL/HIGH/MEDIUM/LOW severity ladder. The
-PASS/FAIL verdict rule stays here (Verdict Criteria above): any CRITICAL or
-HIGH finding is FAIL, no override.
+Return the exact report format. The security process is owned by
+`skills/reviewing-security/SKILL.md`; this skill owns only its PASS/FAIL gate.

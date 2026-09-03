@@ -1,231 +1,84 @@
 ---
 name: decomposing-intent
-description: Artifact templates and decomposition procedure for the questioner agent — the 1-task.md and 2-questions.md body templates, the topic-slug rules, and the multi-repo detection flow. Loaded when a user's task description is decomposed into intent and neutral research questions.
+description: Derive neutral questions and conditional PRD or repo artifacts from 1-task.md. Loaded by questioner.
 user-invocable: false
 ---
 
 # Decomposing Intent
 
-The questioner's templates and procedure. Capture the user's intent in
-`1-task.md`, and write neutral research questions in `2-questions.md`.
-Record repo scope in `4-repos.md` when the topic spans more than one
-repository.
+## Input
 
-## The `topic` field
+In the Team pipeline, read the supplied `1-task.md` and its `## Request`. Copy
+its `topic` and `date`; never modify it. Confirm any named files, modules, or
+errors before using them in questions.
 
-`topic` must be **identical across `1-task.md` and `2-questions.md`**. It is
-the kebab portion of `<id>` — i.e. `<id>` minus the `<TICKET>-` or
-`<YYYY-MM-DD>-` prefix the orchestrator added. Never use the ticket id,
-the date, or a re-worded form of the description as the topic. Never
-write a different topic in `2-questions.md` than the one in `1-task.md`.
-Downstream phases (research, design, structure, plan) inherit the same
-topic value. The full invariant and worked examples live in
-`skills/artifact-frontmatter/SKILL.md`.
+For a legacy direct questioner dispatch without `1-task.md`, use the description,
+choose a roughly three-word kebab-case topic, and write the canonical task
+artifact with `workflow: team` and the full description under `## Request`.
+`skills/artifact-frontmatter/SKILL.md` owns both schemas and the topic rule.
 
-## 1-task.md
+## Required decisions
 
-Capture the user's intent in their own framing. Required frontmatter:
+### Decide whether a PRD is needed
 
-```yaml
----
-topic: <kebab-case-topic>
-date: <YYYY-MM-DD>
-phase: task
-ticketId: null               # set if a tracking ticket is tracking this work
----
-```
+Call the Skill tool with `product-requirements-doc` for vague,
+multi-story, cross-cutting, or behavior-replacing requests. Otherwise omit
+`3-prd.md`.
 
-`ticketId` lives **only** on `1-task.md` — no other artifact carries it
-(rationale in `skills/artifact-frontmatter/SKILL.md`).
+### Decide repo scope
 
-Then the body:
+Suspect multi-repo only when the user names multiple projects or an external
+contract. Resolve candidates autonomously:
+
+1. Require each name to match `^[A-Za-z0-9._-]+$`; reject `.`, `..`,
+   separators, absolute paths, traversal, and shell metacharacters.
+2. Pass values as argv, never interpolated shell text, per
+   `skills/principle-never-interpolate/SKILL.md`.
+3. Require `git -C <path> rev-parse --git-dir`.
+4. Require
+   `realpath "<root>/../<name>" == "$(dirname "$(realpath "<root>")")/<name>"`.
+
+Write `4-repos.md` only when every candidate resolves. Otherwise stay
+single-repo and name the omission in `2-questions.md` under `## Scope
+assumptions`. If no extra repo is named, do not invent one. Apply
+`skills/principle-record-assumptions/SKILL.md`.
+
+## Required outputs
+
+### 2-questions.md
 
 ```markdown
-# Task: <topic>
-
-## Description
-<the user's description verbatim, plus any obvious clarifications>
-
-## Stated goal
-<one sentence: what the user wants to achieve>
-
-## Inferred goal
-<one sentence: what they probably actually need — may be the same>
-
-## Acceptance signals
-- <how the user will know this is done, even if they did not say>
-
-## Open assumptions
-- <assumptions you are making about scope, users, or environment>
-```
-
-Keep this under 80 lines. The point is intent, not exhaustive detail.
-
-Call the Skill tool with `product-requirements-doc` when the feature request
-is vague or underspecified, spans multiple user stories, is
-cross-cutting, or replaces existing behavior. Produce
-`docs/plans/<id>/3-prd.md` alongside `1-task.md`, and reference the PRD's
-path from `1-task.md`. The full criteria live in that skill's "When to
-Write a PRD" section. For simple, well-scoped requests, skip the PRD.
-
-Required frontmatter for `3-prd.md` (the PRD rides the autonomous Question
-phase — it is not gated, so it carries no `approved` or `revision`
-fields):
-
-```yaml
 ---
-topic: <kebab-case-topic>
-date: <YYYY-MM-DD>
-phase: prd
----
-```
-
-## 2-questions.md
-
-Write neutral research questions that, when answered factually, give the
-design-author everything it needs. Phrase questions about the **codebase**,
-not about the **goal**. Bad: "How should we add rate limiting?". Good:
-"Where do incoming HTTP requests enter the application and what middleware
-chain do they pass through?"
-
-Required frontmatter:
-
-```yaml
----
-topic: <kebab-case-topic>
+topic: <topic>
 date: <YYYY-MM-DD>
 phase: questions
 ---
-```
-
-Then the body:
-
-```markdown
 # Research Questions: <topic>
-
 ## Codebase context
-- Scope: <directory paths, modules, or subsystem labels under investigation>
-- Vocabulary: <neutral term definitions used below — no statement of goal>
-
+- Scope: <confirmed paths/modules>
+- Vocabulary: <neutral definitions; no goal>
 ## Topology
-- Where does <component class> live in this codebase?
-- What modules consume / produce <relevant data>?
-
 ## Conventions
-- What test framework, naming convention, and structure does the codebase use?
-- What error-handling pattern is used for <relevant subsystem>?
-
 ## Constraints
-- What types, schemas, or interfaces will any change in this area need to honor?
-- What existing utilities or abstractions exist for <relevant capability>?
-
 ## Reference points
-- What is the most representative existing implementation of a similar feature
-  in this codebase, and where is it located?
+## Scope assumptions
 ```
 
-Aim for 8–15 questions. Each should be answerable by reading code, not by
-guessing intent. The "Codebase context" section replaces the legacy
-`brief.md`: it is allowed to name files, modules, and vocabulary, but it
-must NOT state the goal or desired outcome.
+Write 8–15 factual codebase questions. A stranger unaware of the goal must be
+able to answer them. Scope multi-repo questions by repo. `2-questions.md`
+must not state the goal or desired outcome; Codebase context replaces
+`brief.md`. Apply
+`skills/principle-blind-the-investigator/SKILL.md`.
 
-## Multi-repo detection
+### Conditional artifacts
 
-A topic can legitimately span more than one repository. Examples are
-frontend and backend, an API and a shared SDK, and a service and its
-infrastructure repo. In that case you must record the repos, so the rest
-of the pipeline can run worktrees, slices, plan steps, and PRs in each.
+`3-prd.md` frontmatter is `topic`, `date`, `phase: prd`; it has no
+`approved` or `revision`. `4-repos.md` uses `topic`, `date`,
+`phase: repos` and the schema in `artifact-frontmatter`. Do not write its
+`## Worktrees` section; the internal WORKTREE module owns it.
 
-### When to suspect a multi-repo topic
+## Done
 
-Watch for these signals in the description:
-
-- The user names two or more directories or projects (e.g. "the `web`
-  app and the `api` service").
-- The description says "across", "spans", "in both", or refers to a
-  protocol/contract that lives in a third repo.
-- The user references repos by absolute paths or by names that do not
-  exist as subdirectories of the current repo (run `ls` to make sure).
-
-If you suspect multi-repo, resolve the scope **autonomously**. Never
-pause to ask. First
-**validate every candidate `<name>` against a strict allowlist**. The
-name must match `^[A-Za-z0-9._-]+$`, and it must not be exactly `.` or
-`..`. Anything else — path separators, absolute paths, traversal
-sequences, shell metacharacters such as `$()` or backticks — fails the
-allowlist and is unresolvable. When you run a command on a candidate,
-pass the name/path to the tool as a single argument (argv), never
-interpolated into a shell string
-(`skills/principle-never-interpolate/SKILL.md`). Then resolve each
-surviving candidate
-to a local path by checking the sibling directories of the home repo
-root: a repo named `<name>` is expected at `<root>/../<name>`. Make sure
-that each candidate path is a git working tree with
-`git -C <path> rev-parse --git-dir`, and require its real path to be a
-**direct child of the home repo's parent directory**:
-`realpath "<root>/../<name>"` must equal
-`"$(dirname "$(realpath "<root>")")/<name>"`. A path that resolves
-anywhere else (e.g. through a symlink) is unresolvable.
-
-- **Every candidate resolves** → write `4-repos.md` from the resolved
-  `<slug>: <absolute-path>` list per the schema in
-  `skills/artifact-frontmatter/SKILL.md`.
-- **Any candidate is unresolvable** → proceed in single-repo mode, do
-  not write `4-repos.md`, and record the omission as an explicit
-  assumption. Unresolvable means it fails the allowlist, has no sibling
-  directory, is not a git working tree, or resolves outside the home
-  repo's parent directory. Record it in `1-task.md`'s
-  `## Open assumptions` (name the repo you could not resolve so the miss
-  is auditable at PR review).
-  A recorded assumption, never an unmarked guess (`skills/principle-record-assumptions/SKILL.md`).
-
-### Writing `4-repos.md`
-
-Required frontmatter:
-
-```yaml
----
-topic: <kebab-case-topic>
-date: <YYYY-MM-DD>
-phase: repos
----
-```
-
-Body — see the schema in `skills/artifact-frontmatter/SKILL.md`. The
-home repo is whichever repo the orchestrator dispatched you in (the one
-holding `docs/plans/<id>/`). Use its absolute path. Each more repo gets
-a name slug (unique, kebab-case) and an absolute path.
-
-Do not yet write the `## Worktrees` section — that is the orchestrator's
-job during the WORKTREE phase.
-
-### Do not infer multi-repo
-
-If the description does not name more repos, stay in single-repo mode.
-Inventing extra repos would expand scope without consent. When in doubt,
-stay single-repo and record the assumption in `1-task.md`.
-
-## Process
-
-1. Read the user's description carefully. If it references existing code
-   (file names, modules, error messages), grep/glob to make sure those
-   exist.
-2. **Decide repo scope.** Look for the multi-repo signals above. If
-   present, resolve each candidate repo through the allowlist +
-   sibling-directory check and write `4-repos.md` when every candidate
-   resolves. Otherwise stay single-repo and record the assumption in
-   `1-task.md`.
-3. Decide the topic slug (kebab-case, ~3 words).
-4. Identify the codebase scope: which directories or modules — and in
-   multi-repo mode, which repos — will research touch? Make sure of this
-   by listing them.
-5. Draft questions. For each, ask: "If a stranger answered this without
-   knowing the goal, would the answer still be useful?" If no, rewrite.
-   In multi-repo mode, scope each question to "in repo `<name>`, ..."
-   so research can answer it in the correct repo.
-   The stranger test is `skills/principle-blind-the-investigator/SKILL.md` in miniature.
-6. Read the "Codebase context" section back: it should tell a stranger
-   "what code exists here" without telling them "what we want to do with it".
-7. Write `1-task.md` and `2-questions.md`. When the PRD criteria apply, also
-   write `3-prd.md`. In multi-repo mode also write `4-repos.md`. Return the
-   structured result.
+Preserve the supplied `1-task.md`. Write `2-questions.md` and only the applicable
+conditional artifacts. Return their paths. A legacy direct dispatch also
+returns the new `1-task.md` path.

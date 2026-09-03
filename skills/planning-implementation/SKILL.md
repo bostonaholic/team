@@ -1,82 +1,56 @@
 ---
 name: planning-implementation
-description: Tactical planning methodology for the planner agent — the 8-plan.md document template that expands each vertical slice into file-level steps, and the tactical rules that keep the plan scannable and scoped. Loaded when a structure is translated into the implementer's playbook.
+description: Expand 7-structure.md into file-level 8-plan.md steps, tests, verification, and commits. Loaded by planner.
 user-invocable: false
 ---
 
 # Planning Implementation
 
-The planner's methodology: expand each vertical slice from the structure
-into precise file-level steps with acceptance-test mappings.
+## Input
 
-## Plan structure
+Read `7-structure.md`, `5-research.md`, and, in multi-repo mode, the worktree
+paths in `4-repos.md`.
 
-The body of `8-plan.md`:
+## Required plan
+
+Write `8-plan.md`:
 
 ```markdown
 # Plan: <topic>
 
 ## Context
-
-Two to three sentences summarizing the change. Reference the
-structure by path. In multi-repo mode, list the repo slugs and their
-worktree paths (read from 4-repos.md `## Worktrees` once the worktrees
-exist) so the implementer knows where to cd for each step.
+<2–3 sentences; cite 7-structure.md. In multi-repo mode list repo slugs and worktrees.>
 
 ## Slices
 
-For each slice from 7-structure.md, expand it into file-level steps.
-
-### Slice 1: <name from 7-structure.md>
-
-**Repos:** <multi-repo only — comma-separated repo slugs>
-**Acceptance tests** (from 7-structure.md):
-- `test_name_1` — what it asserts
-  (multi-repo: `<repo>:test_name_1`)
-- `test_name_2` — what it asserts
+### Slice 1: <7-structure.md name>
+**Repos:** <multi-repo only>
+**Acceptance tests:**
+- <exact test from 7-structure.md; prefix with repo when multi-repo>
 
 **Steps:**
+1. [repo: <slug>] path/to/file — <precise change and file:line precedent;
+   mark parallel or sequential>
 
-1. `path/to/file.ts` — <what to add/modify/remove. Reference patterns to
-   follow with file:line. Mark as `[parallel]` or `[sequential]`.>
-   (multi-repo: prefix the file path with the repo slug, e.g.
-   `[repo: api] path/to/file.ts` — the implementer cd's into that repo's
-   worktree before applying the step)
-
-2. `path/to/other.ts` — ...
-
-**Verification:** Run `<command>`. The slice is done when its acceptance
-tests pass and prior slices' tests still pass.
-(multi-repo: list one verification command per repo, scoped to that
-repo's worktree)
-
-**Commit:** `<conventional-commit subject for this slice>`
-(multi-repo: when the slice spans repos, list one **Commit** per repo;
-the implementer creates one commit per repo, all with the same slice
-context referenced in the body)
-
-### Slice 2: <name>
-...
+**Verification:** <command per affected repo; new and prior tests must pass>
+**Commit:** <Conventional Commit subject per affected repo>
 
 ## Done Criteria
-
-- All acceptance tests for every slice pass
-- No regressions in existing tests
-- Any additional criteria specific to this feature
-- (multi-repo) every involved repo's worktree has only the commits this
-  topic produced — no incidental edits in other repos
+- Every planned acceptance test passes
+- Existing tests pass
+- Feature-specific criteria pass
+- Multi-repo worktrees contain no incidental edits
 ```
 
-## Tactical rules
+## Rules
 
-1. **One slice at a time.** Steps within a slice may parallelize, but slices
-   themselves are sequential. The implementer commits each slice atomically.
-2. **Reuse, do not reinvent.** Reference existing functions, utilities, and
-   patterns from 5-research.md.
-3. **Stay under 300 lines.** The plan must be scannable in one sitting.
-4. **No implementation code.** Describe *what* to build and *where*. Leave
-   *how* (the actual code) to the implementer.
-5. **Atomic slices.** Each slice should leave the codebase in a working
-   state with its acceptance tests passing.
-6. **Test coverage matches the structure.** Do not add tests beyond what the
-   structure specifies — the structure is the scope fence.
+- Preserve slice order; parallelize only steps within a slice.
+- One atomic commit per slice and repo.
+- Reference existing code; include no implementation code.
+- Keep the plan under 300 lines.
+- Add no tests beyond `7-structure.md`; it is the scope fence.
+
+## Done
+
+Every structure slice maps to explicit files, acceptance tests, verification,
+and commits.

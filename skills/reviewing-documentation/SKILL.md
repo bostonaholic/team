@@ -1,85 +1,37 @@
 ---
 name: reviewing-documentation
-description: Documentation-gap review methodology — applying prose-quality principles to reviews, the diff-to-docs review process (inventory, impact analysis, cross-reference), and the REQUIRED/RECOMMENDED doc-change classification. Load when reviewing a diff for documentation gaps, assessing existing docs against changed code, or classifying a documentation finding.
+description: Review a diff for required and recommended documentation changes.
 user-invocable: false
 ---
 
 # Reviewing Documentation
 
-The technical-writer's review methodology: how to apply the
-prose-quality principles in `skills/writing-prose/SKILL.md` when
-reviewing, how to walk a diff against existing documentation, and how
-to classify each gap found.
+## Input
 
-## Applying Prose Principles to Reviews
-
-When the technical-writer agent identifies documentation gaps or assesses
-documentation quality, apply the writing-prose principles:
-
-1. **Classify by impact.** A readability issue in a tutorial affects all
-   readers. An accuracy issue in a reference doc affects anyone who uses that
-   feature. Weight your recommendations accordingly.
-
-2. **Be specific about the failure mode.** "This is hard to read" is not
-   actionable. "This paragraph uses passive voice in every sentence, which
-   obscures who does each action" is actionable.
-
-3. **Suggest the direction, not the rewrite.** The reviewer's job is to
-   identify and classify gaps, not to rewrite the documentation. Point to the
-   principle being violated and what would satisfy it — leave the rewrite to
-   the author.
-
-4. **Acknowledge what works.** Documentation that is accurate, complete, and
-   readable should be noted as such. Reviewers who only identify problems
-   give incomplete signal.
+Read the applicable diff and `skills/writing-prose/SKILL.md`.
 
 ## Documentation-Gap Review Process
 
-The technical-writer's procedure for reviewing a diff against existing
-documentation:
-
-1. **Read the diff.** Run `git diff HEAD~1` (or the applicable range) to
-   understand what changed.
-
-2. **Inventory existing documentation.** Search for:
-   - Project README files (`**/README*`)
-   - Documentation directories (`docs/`, `doc/`)
-   - Inline documentation (JSDoc, docstrings, type definitions)
-   - API documentation (OpenAPI specs, route comments)
-   - Configuration documentation (environment variable docs, setup guides)
-   - Changelog or release notes
-
-3. **Analyze the changes for documentation impact:**
-   - **New public APIs** — Functions, classes, endpoints, CLI commands, or
-     configuration options that are part of the public interface.
-   - **Changed behavior** — Existing functionality that now works differently.
-   - **Removed functionality** — Features, APIs, or options that no longer exist.
-   - **New dependencies** — Libraries, services, or tools that users or
-     contributors need to know about.
-   - **Changed setup or configuration** — New environment variables, build
-     steps, or prerequisites.
-
-4. **Cross-reference.** For each change identified above, check if existing
-   documentation accurately reflects the new state. Look for:
-   - Documentation that references removed code or old behavior
-   - Code examples that no longer work
-   - Setup instructions that are now incomplete
-   - Type definitions or interfaces that changed but whose docs did not
+1. Inventory READMEs, docs, inline/API/config docs, and changelog entries.
+2. Identify public APIs, behavior, removals, dependencies, setup, or
+   configuration changed by the diff.
+3. Cross-check those changes against docs, examples, and types.
+4. Report concrete failure modes and cite the governing prose rule. Suggest
+   direction only; reviewers do not rewrite.
+5. State when documentation is accurate, complete, and readable.
 
 ## Doc-Change Classification
 
 ### REQUIRED
 
-The documentation gap would cause users or contributors to fail. Examples:
-- New public API with no documentation at all
-- Setup instructions that are now incorrect
-- Removed feature still documented as available
-- New necessary environment variable not documented
+A gap that makes a user or contributor fail: undocumented public API, wrong
+setup, removed behavior still documented, or a missing required setting.
 
 ### RECOMMENDED
 
-The documentation gap could cause confusion but would not block usage. Examples:
-- Complex feature that works but lacks usage examples
-- Inline comments that are now stale
-- Missing changelog entry for a notable change
-- Type definitions that could benefit from JSDoc
+A gap that can confuse but does not block use: missing examples, stale inline
+comments, missing notable changelog entry, or useful public-interface docs.
+
+## Done
+
+Each affected documentation surface is checked and every finding is classified.

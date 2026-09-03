@@ -1,150 +1,59 @@
 ---
 name: test-driven-bug-fix
-description: Test-driven bug-fix methodology — reproduce the defect first, write a failing test that captures it, then fix red-to-green. Load when fixing a bug, defect, or regression report.
+description: Fix a reproduced defect test-first, from failing regression test through verified minimal fix.
 user-invocable: false
 ---
 
 # Test-Driven Bug Fix
 
-A bug without a failing test is an unverified assumption. A bug fixed
-without a failing test may be fixed correctly this time, but has no
-protection against regression. The test-driven bug fix discipline makes sure
-that that every fix is:
+## Input
 
-1. **Reproduced** — the bug is confirmed to exist before any code changes
-2. **Pinned** — a failing test locks in the expected correct behavior
-3. **Fixed minimally** — the smallest change that makes the test pass
-4. **Verified** — no regression in existing behavior
+Classify the failure before changing code:
 
-## Triage Before Reproducing
+| Bucket | Action |
+|---|---|
+| Product defect | Continue below |
+| Wrong test | Fix the test separately; do not change production behavior |
+| Infrastructure | Fix the environment, not product code |
+| Tooling | Fix the runner/build system |
 
-Before reproducing, classify the failure into one of four buckets:
+Intermittency remains one of these four. Reproduce it deterministically. For a
+non-obvious failure, call the Skill tool with `systematic-debugging` and
+complete its Root Cause Analysis (5 Whys).
 
-| Bucket | Symptom | Action |
-|--------|---------|--------|
-| **Product** | Real defect in the code under test | Continue with the four-step discipline below |
-| **Test impl** | Test wrong. Behavior correct | File a separate test-fix. Do NOT change production code to satisfy a bad test |
-| **Infra** | CI environment, DB, network, container | Fix the env. Do not encode the env-fix as a test |
-| **Tooling** | Test runner / build system | Fix the tool. The bug is not in the product |
+## Required sequence
 
-Intermittent failures are not a fifth bucket — they belong in one of the
-four above. Quarantining a test as "flaky" without classifying the failure
-hides the very intermittent product bug that the test surfaced. The
-conditions that make a test flaky are frequently the conditions that trigger
-the bug. Reproduce deterministically before fixing — call the Skill tool
-with `systematic-debugging`. When
-the failure is non-obvious,
-drill the causal chain to its root first through that skill's
-**Root Cause Analysis (5 Whys)** subsection before proposing a fix.
-
-## The Four-Step Discipline
-
-> Follow `skills/principle-progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
+> Follow `skills/principle-progress-tracking/SKILL.md`.
 
 ### Step 1: Reproduce
 
-Before writing any code, reproduce the bug. Understanding exactly when and
-why the bug occurs is the prerequisite for everything that follows.
-
-- Run the failing scenario manually or through existing tests
-- Identify the exact inputs that trigger the bug
-- Understand what the system does (actual behavior) versus what it should
-  do (expected behavior)
-- Identify which file(s) and function(s) are involved
-
-Do not hypothesize a fix during this step. Observe first.
-
-**Reproduction is complete when you can reliably trigger the bug on demand.**
+Reproduce the failure on demand. Record exact inputs, actual and expected
+behavior, and involved symbols. Do not propose a fix yet.
 
 ### Step 2: Write a Failing Test
 
-Write a test that:
-
-- **Reproduces the bug** — the test exercises the exact scenario that
-  triggers the bug
-- **Asserts the correct behavior** — the assertion captures what should
-  happen, not what currently happens
-- **Fails for the right reason** — the test fails with an assertion
-  failure (wrong behavior), not an error (broken test infrastructure)
-
-Name the test to document the bug scenario: `test_returns_error_when_token_is_expired`,
-not `test_bug_123` or `test_fix`.
-
-Run the test suite and confirm:
-- The new test FAILS (the bug exists)
-- The new test fails with an assertion failure, not a crash or error
-- All existing tests still pass (the test itself is not broken)
-
-**This is the "Red" state. Do not proceed until the test fails correctly.**
+Write a test that **Reproduces the bug**, asserts correct external behavior,
+and fails by assertion rather than infrastructure error. Use a behavior name,
+not a ticket id. Run the full suite: the new test must be red and existing
+tests must stay green.
 
 ### Step 3: Fix Minimally
 
-Apply the smallest change that makes the failing test pass.
-
-- **Minimal means minimal.** Change only the code that produces the wrong
-  behavior. Do not refactor, improve, or extend.
-- **Do not change the test.** The test defines correct behavior. If the test
-  is wrong, that is a separate problem — do not fix the code to match wrong
-  tests.
-- **Do not fix other bugs found along the way.** If you discover a related
-  bug, note it. File it for later. Fix only the targeted bug.
-- **After each change, run the tests.** The failing test should move from
-  failing to passing. No existing test should start failing.
-
-**This is the "Green" state. The targeted test passes, all other tests pass.**
+Change only the root cause needed to turn the new test green. Do not edit the
+test, refactor, add features, or fix adjacent defects. Run tests after each
+change.
 
 ### Step 4: Verify
 
-After the fix:
+Run the full suite and original reproduction. Search for sibling instances but
+file them separately. Temporarily revert one fix line: the regression test must
+turn red, then restore it. If it stays green, strengthen the test.
 
-1. **Run the full test suite.** Every existing test must pass. If any test
-   now fails that passed before, the fix introduced a regression — undo and
-   investigate.
+## Output
 
-2. **Re-run the reproduction case.** Make sure that the original bug no
-   longer occurs with the original inputs.
-
-3. **Check for related instances.** If the root cause is a pattern (e.g.,
-   missing null check), search the codebase for the same pattern. File issues
-   for related instances — do not fix them in this commit.
-
-4. **Review the minimal fix with a mutation check.** Temporarily revert one
-   line of the fix and re-run the new test. It must go red again. If it
-   still passes, the test does not exercise the fix — strengthen the
-   assertion or the reproduction inputs. This guards against fixes that
-   hide the symptom without addressing the root cause, and against tests
-   that drift away from the bug.
-
-## Commit Structure
-
-Each step produces a commit:
-
-```
-test: reproduce <bug description> with failing test
-
-Adds a test that fails due to the bug described in <issue reference>.
-The test will pass once the fix is applied.
-```
-
-```
-fix: <minimal description of the fix>
-
-Fixes the root cause identified in the preceding test commit.
-All tests now pass including the new reproduction test.
-
-Closes #<issue>
-```
-
-Keeping the test commit and fix commit separate makes the intention clear:
-the test proves the bug existed, the fix makes it go away.
-
-## What This Is NOT
-
-- **Not a refactoring opportunity.** Bug fixes are not the time to improve
-  the surrounding code. The scope is: broken test passes, no regressions.
-- **Not a feature addition.** If the correct behavior requires new
-  functionality beyond restoring the previous intent, that is a feature, not
-  a bug fix.
-- **Not a workaround.** A workaround avoids the buggy code path. A fix
-  corrects the buggy code. When in doubt, fix the root cause
-  (`skills/principle-fix-root-causes/SKILL.md`).
+Keep the reproduction test and fix in separate atomic commits. The final state
+has a green regression test, a green suite, and no unrelated change. Use
+`test: reproduce <bug description> with failing test`, then
+`fix: <minimal description>`, with the issue reference in their bodies. This
+is not a workaround; fix the root per
+`skills/principle-fix-root-causes/SKILL.md`.

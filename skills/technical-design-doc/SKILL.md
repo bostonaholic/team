@@ -1,175 +1,67 @@
 ---
 name: technical-design-doc
-description: Technical design document structure — problem statement, goals and non-goals, trade-off analysis, edge cases, and rollout planning. Load when writing or evaluating a design doc, TDD, or architecture proposal.
+description: Write or evaluate a technical design document for consequential technical choices.
 user-invocable: false
 ---
 
 # Technical Design Document
 
-A technical design document (TDD) captures the architecture, trade-offs, and
-rollout plan for a important feature before implementation begins. Not every
-feature needs a full TDD — apply this methodology when a feature is complex
-enough that undocumented architectural decisions would slow or block
-implementation.
+## Input
 
-Write the prose this skill governs at a seventh-grade reading level, in
-STE-flavored mode — short sentences, common words, no unexplained jargon.
-Full methodology: `writing-prose`. Before
-you finalize prose this skill governs, call the Skill tool with
-`writing-prose` and apply its `## Self-lint` checklist.
+Use a TDD for a new architecture pattern, multiple viable approaches,
+cross-subsystem coordination, non-trivial rollout, or material
+performance/security implications. Skip it for a small established-pattern
+change.
 
-## When to Write a TDD
+Call the Skill tool with `writing-prose` and apply its `## Self-lint` in
+STE-flavored mode.
 
-Write a TDD when the feature:
-
-- **Introduces a new architectural pattern** not already established in the
-  codebase (new data store, new service boundary, new async pattern)
-- **Has multiple valid approaches** with real trade-offs worth documenting
-  before committing to one
-- **Touches multiple subsystems** and requires coordination across components
-- **Has a non-trivial rollout** (schema migration, backward compatibility
-  requirements, phased rollout, feature flag)
-- **Has important performance or security implications** that need
-  deliberate design
-
-When in doubt: if the plan would benefit from having the architectural
-decisions documented alongside the steps, write the TDD section.
-
-## TDD Structure
+## Required output
 
 ### Problem Statement
 
-One to three sentences: what problem does this feature solve, and why does
-it need to be solved now? This grounds every subsequent decision in context.
+State the problem and why it needs action.
 
 ### Goals and Non-Goals
 
-**Goals:** What the feature must accomplish. State measurable outcomes where
-possible. This section defines scope.
-
-**Non-Goals:** What the feature explicitly does NOT do. Non-goals are as
-important as goals — they prevent scope creep and answer "why did not you
-also do X?" questions in advance.
+Define measurable outcomes and explicit exclusions.
 
 ### Background
 
-Context a reader needs to understand the design: relevant existing components,
-prior art in the codebase, constraints inherited from other systems. Keep this
-to what a new contributor would need to evaluate the design choices.
+Give only the existing components, prior art, and constraints needed to judge
+the design.
 
 ### Design
 
-The core of the TDD. Describe the architecture of the solution:
-
-#### Data Model
-
-If the feature introduces new data structures, describe them. For databases:
-table names, columns, types, indexes, foreign keys. For in-memory: type
-definitions, invariants, lifecycle.
-
-#### API / Interface
-
-What new interfaces does this feature expose? HTTP endpoints, function
-signatures, event schemas, CLI commands. Be precise — these become the
-contract downstream agents implement against.
-
-#### Key Components
-
-Which existing components are modified? Which new components are introduced?
-For each:
-- What is its single responsibility?
-- What does it consume and produce?
-- What are its dependencies?
-
-#### Sequence / Flow
-
-For features with non-obvious control flow, describe the sequence of
-operations from trigger to completion. A numbered list or ASCII sequence
-diagram works well.
+Specify applicable data invariants, APIs/interfaces, component inputs and
+outputs, dependencies, and non-obvious sequence.
 
 #### Edge Cases and Failure Modes
 
-Enumerate the boundary conditions, error paths, and unusual inputs the
-feature must handle. For each, name the scenario and the chosen
-behavior. Walk these categories so none gets skipped:
-
-- **Boundary values:** empty inputs, zero, one, max size, off-by-one.
-- **Invalid inputs:** malformed payloads, wrong types, missing fields.
-- **Failure paths:** downstream errors, timeouts, partial writes,
-  network failures, retries.
-- **Concurrency:** simultaneous requests, idempotency, races.
-- **Authorization:** unauthenticated, unauthorized, expired credentials.
-- **Resource limits:** rate exhaustion, quota, memory pressure.
-
-Edge cases that are intentionally out of scope belong in **Non-Goals**,
-so downstream agents do not silently expand coverage. A TDD with no
-edge-case section is incomplete.
+Choose behavior for boundary and invalid inputs, downstream failure and
+partial writes, concurrency/idempotency, authorization, and resource limits.
+Put intentionally excluded cases in Non-Goals.
 
 ### Trade-offs Considered
 
-Every design choice implies rejected alternatives. For each major decision:
-
-```
-**Decision:** What was chosen.
-
-**Alternatives considered:**
-- Alternative A — why rejected
-- Alternative B — why rejected
-
-**Risk:** What could go wrong with the chosen approach, and how it is mitigated.
-```
+For each major choice, name the decision, rejected alternatives and reasons,
+risk, and mitigation.
 
 ### Rollout Plan
 
-How will this feature be deployed safely?
-
-- **Migration strategy:** If the feature changes data or APIs, how is
-  compatibility maintained during the transition?
-- **Feature flags:** If the feature should be enabled gradually, what flags
-  exist and what gates them?
-- **Rollback plan:** If the feature needs to be reverted, what does that
-  require? Is it reversible?
-- **Monitoring:** What metrics or logs will confirm the feature is working
-  correctly in production?
+State migration compatibility, feature-flag behavior, rollback steps, and
+production metrics/logs.
 
 ### Open Questions
 
-Unresolved decisions that must be answered before implementation begins.
-List them explicitly so they are not silently assumed. Each open question
-should include who must answer it and when.
+Name each unresolved decision, owner, and deadline. Resolve it before
+implementation.
 
-## Integration With the Standard Plan Format
+For an enhanced plan, place Trade-offs, optional Data Model, and optional
+Rollout Plan between Context and Steps. Keep a plan under 300 lines; otherwise
+write a separate TDD under `docs/plans/` and link it.
 
-For smaller features the standard plan format is sufficient — do not add TDD
-sections for their own sake. A well-structured plan without TDD overhead beats
-an incomplete TDD that delays implementation.
+## Done
 
-When producing an enhanced plan, add TDD sections after the Context section
-and before the Steps section:
-
-```markdown
-### Context
-...
-
-### Trade-offs
-...
-
-### Data Model (if applicable)
-...
-
-### Rollout Plan (if applicable)
-...
-
-### Steps
-...
-
-### Tests
-...
-
-### Done Criteria
-...
-```
-
-Keep the total plan under 300 lines. If the TDD content would push the plan
-over that limit, extract the TDD to a separate file in `docs/plans/` and
-reference it from the plan.
+The document fixes scope, interfaces, failure behavior, trade-offs, rollout,
+and all decisions needed to implement.
