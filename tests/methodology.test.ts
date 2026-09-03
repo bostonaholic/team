@@ -941,9 +941,9 @@ describe("code-comment rules (L2 content tripwire)", () => {
     // No commented-out code; no TODOs in delivered code.
     expect(/commented-out code/i.test(section)).toBe(true);
     expect(section).toContain("TODO");
-    // The ban covers in-body comments that restate the code; a doc comment on
-    // an exported/public interface adds contract information the signature
-    // does not carry, so it satisfies the rule.
+    // The why-only rule covers in-body comments that restate the code; a doc
+    // comment on an exported/public interface adds contract information the
+    // signature does not carry, so it satisfies the rule.
     expect(/doc comments/i.test(section)).toBe(true);
     expect(/exported\/public/i.test(section)).toBe(true);
     // Scope pointer: in-source comments here; review findings belong to

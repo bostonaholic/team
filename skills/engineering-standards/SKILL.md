@@ -70,10 +70,10 @@ neither intention-revealing code nor tests can carry the explanation.
   bar does not ship.
 - **Maintain: remove obsolete comments, preserve repo style.** A change that
   invalidates a comment updates or deletes it in the same diff.
-- **The ban covers in-body comments that restate the code.** Doc comments on
-  exported/public interfaces add contract information the signature does not
-  carry, following the ecosystem's convention (JSDoc, docstrings, rustdoc),
-  so they satisfy the rule. A doc comment that merely repeats the signature
+- **The why-only rule covers in-body comments that restate the code.**
+  Doc comments on exported/public interfaces add contract information the
+  signature does not carry, following the ecosystem's convention (JSDoc,
+  docstrings, rustdoc), so they satisfy the rule. A doc comment that merely repeats the signature
   carries no contract information and is a what-comment.
 
 **Decision Test.** Before you keep a comment: does it explain why? Would code
