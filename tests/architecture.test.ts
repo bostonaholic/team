@@ -286,6 +286,67 @@ describe("effort tiering", () => {
     }
   });
 
+  // Effort tracks the work, the same way model does, and nothing else pins a
+  // per-agent effort level: a silent downgrade of a strategic author to `low`
+  // passes every check above. EXPECTED_EFFORTS is the pin, mirroring
+  // EXPECTED_MODELS in describe("model tiering") below.
+  const EXPECTED_EFFORTS: Record<string, string> = {
+    "code-reviewer": "high",
+    "design-author": "high",
+    "file-finder": "low",
+    implementer: "high",
+    planner: "high",
+    questioner: "high",
+    researcher: "medium",
+    "security-reviewer": "high",
+    "structure-planner": "high",
+    "technical-writer": "low",
+    "test-architect": "high",
+    "ux-reviewer": "medium",
+    verifier: "low",
+  };
+
+  // Takes frontmatter rather than an agent name, so a synthetic one can prove
+  // the check reports what it claims to catch.
+  function effortMismatch(agent: string, level: string, fm: string): string | null {
+    if (new RegExp(`^effort: ${level}$`, "m").test(fm)) return null;
+    return `${agent}: expected effort ${level}, got ${/^effort: (\S+)$/m.exec(fm)?.[1] ?? "none"}`;
+  }
+
+  test("EXPECTED_EFFORTS pins all 13 agents to their levels", () => {
+    // Key-set equality both directions: a new agent missing from the map and a
+    // stale map key both fail here. agentFiles() is already sorted.
+    const names = agentFiles().map((file) => basename(file, ".md"));
+    expect(Object.keys(EXPECTED_EFFORTS).sort()).toEqual(names);
+    const offenders: string[] = [];
+    for (const [agent, level] of Object.entries(EXPECTED_EFFORTS)) {
+      const fm = frontmatter(read(join(REPO_ROOT, "agents", `${agent}.md`)));
+      const offender = effortMismatch(agent, level, fm);
+      if (offender) offenders.push(offender);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  // Prove the pin can find a positive: a downgraded level and a dropped key.
+  test("the effort pin can see planted violations", () => {
+    expect(effortMismatch("planted-agent", "xhigh", "effort: low\n")).toBe(
+      "planted-agent: expected effort xhigh, got low",
+    );
+    expect(effortMismatch("planted-agent", "xhigh", "model: opus\n")).toBe(
+      "planted-agent: expected effort xhigh, got none",
+    );
+  });
+
+  test("each agent's frontmatter carries exactly one effort: key", () => {
+    // No trailing space in the pattern, so a stray `effort:low` counts too.
+    const offenders: string[] = [];
+    for (const file of agentFiles()) {
+      const count = frontmatter(read(join(REPO_ROOT, file))).match(/^effort:/gm)?.length ?? 0;
+      if (count !== 1) offenders.push(`${file}: ${count} effort: keys`);
+    }
+    expect(offenders).toEqual([]);
+  });
+
   test("methodology skills carry no effort (it would override the loading agent's effort)", () => {
     for (const file of skillFiles()) {
       const fm = frontmatter(read(join(REPO_ROOT, file)));
@@ -297,9 +358,10 @@ describe("effort tiering", () => {
 });
 
 describe("model tiering", () => {
-  // opus: complex work (the default) plus security-reviewer's permanent pin
-  // (Fable's cybersecurity classifiers refuse security-review content in
-  // non-interactive subagent contexts). sonnet: bounded judgment.
+  // opus: complex work, and the default. Security review is complex work, so
+  // `security-reviewer` sits on that rung like any other complex-work agent;
+  // what keeps it there is the override recipe in docs/architecture.md, which
+  // carries the vendor-classifier fact. sonnet: bounded judgment.
   // haiku: mechanical.
   const EXPECTED_MODELS: Record<string, string> = {
     "code-reviewer": "opus",

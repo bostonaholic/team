@@ -29,6 +29,10 @@ import { squash } from "./text";
 // ("..., call the Skill tool with ...").
 const PHRASE = /call the Skill tool with\b/gi;
 
+// The contract string every design-review caller must carry when it hands the
+// brief to its subagent.
+export const SUBSTITUTION_CLAUSE = "artifact directory substituted";
+
 // A skill name: lowercase kebab. Deliberately narrow, so the backticked
 // non-skill tokens that share these clauses cannot match — `CHANGELOG.md` and
 // `TEAM_DISABLE_CROSS_MODEL` (uppercase), `design.md` (dot),

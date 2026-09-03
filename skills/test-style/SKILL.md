@@ -20,8 +20,8 @@ refactor without proving the system works.
 
 - Assert on what the caller observes: return values, persisted state, effects
   visible to other components.
-- Do not assert on which private methods were called in which order, unless
-  the call itself is the observable behavior. One example is a message
+- Assert on which private methods were called, and in which order, only where
+  the call itself is what the caller observes. One example is a message
   published to an external channel.
 - Interaction tests verify state-changing calls only. Never assert on
   query-only calls.
@@ -212,7 +212,7 @@ below is the audit checklist.
 | Check | Pass criterion |
 |-------|----------------|
 | Behavior-named | Test name describes the behavior, not the method. `sendsEmailWhenBalanceIsLow`, not `testProcess_1`. |
-| Narrow assertion | The assertion targets the specific field/effect under test. No full-equality on complex objects unless that IS the contract. |
+| Narrow assertion | The assertion targets the specific field/effect under test. Full-equality on a complex object only where that equality IS the contract. |
 | Actionable failure | If the test fails, the failure message names the failing condition. `EXPECT_OK(...)` not `EXPECT_TRUE(...ok())`. |
 | No sleeps | No `sleep()` for synchronization. Use wait-for-condition primitives. |
 | Deterministic inputs | No wall-clock reads, unseeded randomness, order-dependent or shared-state assumptions, race-interleaving assumptions, positional asserts on unordered collections, real network, hard-coded ports, or exact float equality feeding an assertion. Clock frozen/injected. RNG seeded. |

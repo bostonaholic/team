@@ -71,8 +71,13 @@ Run the eight-point admission test:
    an invariant the system already enforces somewhere. Imported best practices with no
    local scar tissue do not get the prefix.
 8. **Fits the shape.** Statement + why + pattern in roughly 30 lines. Frontmatter:
-   `user-invocable: false`, an "Apply when …" description, no `effort` field. No agent
-   preloads it — consumers cite it and any agent loads it just-in-time.
+   `user-invocable: false`, an "Apply when …" description, no `effort` field.
+   Consumers cite it and any agent loads it just-in-time. An agent that does
+   preload one counts that name against its load budget like any other. The
+   set is enumerated in `docs/skills.md` under `## Methodology skills`, one
+   `### [principle-<name>]` entry per directory on disk, and
+   `tests/methodology.test.ts` asserts that equality in both directions — so
+   a new principle skill lands with its catalog entry in the same change.
 
 **Passing grade — the bar is tiered, not a count:**
 
@@ -80,11 +85,11 @@ Run the eight-point admission test:
   categorical (a bundle, an action name, an arguable value, a lint-able rule, or a
   procedure is simply not a principle skill), and 7 guards against importing doctrine
   the project never bled for.
-- **Criteria 5–6 are the demand test, waivable once.** Normally both must hold. A
-  single current consumer is acceptable when the invariant is clearly cross-cutting:
-  the "Apply when" line names concrete situations a second consumer would hit, and the
-  one existing consumer's restatement still collapses to a citation. Record the
-  single-consumer status in the commit message. An unused `principle-` skill costs
+- **Criteria 5–6 are the demand test, and it is met two ways.** Two independent
+  consumers meet it. So does a single current consumer when the invariant is clearly
+  cross-cutting: the "Apply when" line names concrete situations a second consumer
+  would hit, and the one existing consumer's restatement still collapses to a
+  citation. Record the single-consumer status in the commit message. An unused `principle-` skill costs
   nearly nothing at load time, so extracting slightly ahead of demand is cheap — but a
   rule with no consumer at all stays inline where it is used.
 
@@ -103,10 +108,11 @@ Verdicts:
 
 ## Part 1 — Invocation surface
 
-The load-bearing rule: **composition never goes through the skill-invocation tool.**
-The invocation tool is for the top surface only — a user typing the skill, or the model
-auto-invoking it by intent. When one skill pulls in another, it *reads that skill's file*
-or *spawns a subagent*.
+The load-bearing rule: **a building block never gets its own slash command.**
+Composition itself has three sanctioned forms — a Skill-tool load (``Call the Skill
+tool with `<name>` ``, the form `tests/skill-tool-invocation.test.ts` resolves), a
+read-and-follow by path, or a subagent. What a composed skill must not do is register
+as a command a user could type: that is what `user-invocable: false` is for.
 
 **First, make the invocation-surface decision — do not skip it.** Classify the skill
 into exactly one of three buckets, then carry the verdict into the frontmatter:
@@ -114,13 +120,17 @@ into exactly one of three buckets, then carry the verdict into the frontmatter:
 | Bucket | What it means | Frontmatter | Examples |
 |--------|---------------|-------------|----------|
 | **Both** (default for anything a user might run) | A user triggers it by intent **and** the model/another skill may pull it in | leave `user-invocable` unset (default) | `team`, `team-*`, `why`, `how` |
-| **User-invocable only** | A user must trigger it explicitly. The model must NOT auto-fire it | `disable-model-invocation: true` | irreversible actions: deploy, force-push, destructive cleanup |
+| **User-invocable only** | A user must trigger it explicitly. The model must NOT auto-fire it | `disable-model-invocation: true` | a per-skill call, each with its own recorded reason: `pr-rebase`, `pr-watch-as-reviewer`, `reflect` |
 | **Model-invocable only** (pure building block) | Reference material loaded by agents / read by path. A `/<skill>` command is meaningless to users | `user-invocable: false` | every pure methodology skill (`qrspi-workflow`, `solid`, …) |
 
 Decide with these tests, in order:
 
-1. **Is it irreversible or side-effecting** (deploys, pushes, deletes, sends)? →
-   **User-invocable only**. Never let the model auto-trigger it.
+1. **Does an invocation authorize a write** beyond a `docs/plans/` artifact or an
+   invocation-local scratch file (deploys, pushes, commits, deletes, sends)? → it
+   guards in its description, per §1A step 3. Whether it also sets
+   `disable-model-invocation` is a further per-skill call, made on its own recorded
+   reason — three skills have one today; a skill that sets it on that reason lands in
+   **User-invocable only**.
 2. **Is it purely reference material** — methodology, conventions, a protocol another
    agent reads — with no standalone "do this now" meaning for a user? →
    **Model-invocable only**.
@@ -163,18 +173,35 @@ surface(s) per §1A / §1B below and set the frontmatter from the table above.
     repo that's the Entry Points table in `AGENTS.md`: `- <user intent> → invoke
     /<skill>`. This is guidance the agent reads, not a code gate, so keep it in sync
     with the description.
-3. **Side-effecting or irreversible skills MUST guard.** If the skill commits, pushes,
-    opens a PR, moves a ticket, merges, deploys, or deletes, replace the plain
-    `Trigger on` carrier with shipit-style explicit-intent guard wording ("Invoke ONLY
-    on explicit … intent — … never infer …"). Word its routing-map line with that same
+3. **A skill that authorizes a write MUST guard.** The class is a complement pair
+    over every write an invocation authorizes, so it returns one answer per skill.
+    *Out of class*: the invocation reads only, or writes only (1) files under
+    `docs/plans/` and (2) invocation-local scratch files — untracked, created and
+    consumed inside the same run, carried by no commit, and read by no later phase.
+    *In class*: everything else — a change to any file the repo tracks, or to an
+    untracked file the change is meant to deliver; a git write to history or refs (a
+    commit, a branch, a rebase, a push, a branch delete); or a change on a host
+    outside the checkout (a PR opened, approved, or merged; a ticket or issue moved,
+    filed, or closed; a deploy). Committing, pushing, opening a PR, moving a ticket,
+    merging, deploying, and deleting all illustrate the in-class half. A write the
+    invocation never authorized, such as an unsandboxed vendor CLI mutating the
+    tree during a cross-model pass, moves no skill into the class: the caller
+    detects that write and reverts it rather than authoring it. An in-class skill
+    carries shipit-style explicit-intent guard wording ("Invoke ONLY on explicit …
+    intent — … never infer …") beside or instead of the plain
+    `Trigger on` carrier. Word its routing-map line with that same
     explicit intent, so the map never invites the skill on a plain request — `team-fix`
     is listed as a command but reached only on stated pipeline intent, never on "fix
     this bug". The description still carries the quoted phrases and the `/<name>` — the trigger
     test has no opt-out, but it checks phrase presence only: no test checks the guard
-    wording, so it is YOUR responsibility, and its absence on a side-effecting skill
-    is a review-blocking defect. If your host honors a hard opt-out flag (e.g.
-    `disable-model-invocation`), set it — but on hosts that ignore it, the description
-    is the only control.
+    wording, so it is YOUR responsibility, and its absence on an in-class skill
+    is a review-blocking defect.
+    **Second tier:** a skill that gates every mutation on its own in-run approval
+    carries the guard there instead — `groom-backlog` presents each irreversible
+    close and waits. Setting a hard opt-out flag (e.g. `disable-model-invocation`)
+    is a further per-skill call with its own recorded reason, never a property of
+    this class; on hosts that ignore the flag the description is the only control
+    either way.
 
 ### §1B — Wire it as a building block
 
@@ -213,12 +240,14 @@ a separate entry-point skill that dispatches the review. No methodology skill in
 is user-invocable.)
 
 ### Invocation invariants
-- Never compose through the skill-invocation tool. Composition = read-and-follow OR subagent.
+- Composition = a Skill-tool load, a read-and-follow by path, OR a subagent. What a
+  building block never gets is its own slash command.
 - Heavy or adversarial sub-work → subagent (keeps the parent lean and unbiased).
   Sequential/coordinated sub-work → inline.
 - A skill can serve both surfaces. Just make its description trigger correctly AND its
   sections survive being inlined/subagented.
-- Do not auto-trigger irreversible skills.
+- A skill whose invocation authorizes a write guards in its description; setting
+  `disable-model-invocation` on top of that is a per-skill call with its own reason.
 - Pure building block → `user-invocable: false` (out of the slash menu, still loadable).
 - A methodology skill is never user-invocable. If it wants a command, add a front-door
   entry-point skill beside it; never leave the field unset to get both.
@@ -285,7 +314,9 @@ answer is already on disk. (In this repo, `/team-question` is the ask-first prod
 seeds `docs/plans/<id>/` for the archetype-A consumers downstream.)
 
 ### Input invariants
-- Discover before you demand. A question is the fallback, not the front door (except §2D).
+- Discover before you demand, wherever there is something to discover. A question is
+  the fallback, not the front door. The ask-first archetype (§2D) has no discoverable
+  input, so it asks.
 - The empty/not-found path uses `AskUserQuestion` to offer a producer or ask for a
   path — it never throws.
 - Each shell block is its own process — recompute derived vars. Do not rely on persistence.
@@ -421,20 +452,20 @@ Classification
 
 Invocation
 - [ ] Invocation surface decided — **both** / **user-invocable only** / **model-invocable only** — with high confidence. If not, asked the user through `AskUserQuestion`.
-- [ ] Frontmatter matches the verdict: both → neither flag. User-only → `disable-model-invocation: true`. Model-only → `user-invocable: false`.
+- [ ] Frontmatter matches the verdict: both → neither flag. User-only → `disable-model-invocation: true`, with the reason for this skill recorded. Model-only → `user-invocable: false`.
 - [ ] If it is methodology, it is **not** user-invocable. A user-facing command for it is a separate front-door skill, not an unset flag on this one.
 - [ ] Only the intended path(s) wired (entry point §1A, building block §1B, or both).
 - [ ] Entry point: description has WHAT + explicit trigger intents/phrases. Added to routing map.
 - [ ] Building block: chose inline (sequential) vs subagent (isolated/parallel) deliberately.
 - [ ] If subagented: self-contained, returns a conclusion not a transcript. If inlined: headed, independently-runnable sections.
-- [ ] No skill invokes another through the skill-invocation tool.
+- [ ] No composed building block registers its own slash command.
 
 Input
 - [ ] Correct archetype chosen (default §2A for documents).
 - [ ] Archetype-A: `argument-hint` declared. Discovery block copied verbatim from an
       existing skill (e.g. team-research), not hand-rolled — the dev consistency gate
       enforces byte-identity.
-- [ ] Discovery runs before any question (except §2D). An auto-picked topic is announced.
+- [ ] Discovery runs before any question wherever there is something to discover (§2D, the ask-first archetype, has no discoverable input). An auto-picked topic is announced.
 - [ ] Empty/not-found path uses `AskUserQuestion` (run producer / give path) — never throws.
 - [ ] Base branch (if used) through the fallback chain, no bare `main`. Args carry a
       scalar or optional artifact-dir path, never document contents.

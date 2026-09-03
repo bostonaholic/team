@@ -64,6 +64,7 @@ const TEAM_IMPLEMENT_SKILL = join(REPO_ROOT, "skills", "team-implement", "SKILL.
 const TEAM_PR_SKILL = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
 const ARTIFACT_SKILL = join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md");
 const ENG_REVIEW_SKILL = join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md");
+const REVIEWING_DESIGNS_SKILL = join(REPO_ROOT, "skills", "reviewing-designs", "SKILL.md");
 const TEAM_DESIGN_SKILL = join(REPO_ROOT, "skills", "team-design", "SKILL.md");
 const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
 
@@ -991,7 +992,10 @@ describe("design-review gate wiring (L2)", () => {
   });
 
   test("the review brief loads cross-model-review as the conditional fifth manual", () => {
-    const text = read(ENG_REVIEW_SKILL);
+    // The brief itself, never the entry point that dispatches it: both
+    // strings below also appear in that entry point's own body, so reading it
+    // would pass without the brief saying anything.
+    const text = read(REVIEWING_DESIGNS_SKILL);
     expect(text).toContain("cross-model-review");
     expect(text).toContain(EXTERNAL_INPUT_HEADING);
     // Positive control: the sweep can see the phrase it retires.
@@ -1084,12 +1088,12 @@ describe("design-round records (L2)", () => {
     expect(text).toContain(ROUND_LABEL);
   });
 
-  test("the Review notes clause (b) excludes the cross-model disposition heading", () => {
-    const spec = reviewNotesSpec();
+  test("the Review notes spec makes (d) the single carrier for the disposition block", () => {
+    const spec = squash(reviewNotesSpec());
     // Guard: a reworded anchor must fail, not vacuously pass.
     expect(spec.length).toBeGreaterThan(0);
-    // Clause (a)'s existing exclusion plus clause (b)'s: the copy in (d)
-    // is the single carrier, so every round appears exactly once.
+    // The heading is named twice: once where the spec decides which clause
+    // carries it, once where the sweeps exclude it.
     const occurrences = spec.split(DISPOSITION_HEADING).length - 1;
     expect(occurrences).toBeGreaterThanOrEqual(2);
   });

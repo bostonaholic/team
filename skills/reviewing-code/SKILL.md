@@ -42,10 +42,11 @@ Block the line, change nothing
 
 ## Conventional Comments
 
-Findings from the code, security, and docs reviewers use the Conventional
-Comments format in `skills/conventional-comments/SKILL.md`. The one exception
-is the ux-reviewer: its live-verification report uses its own
-Working/Broken/Could Improve format.
+Format follows the artifact. A **finding** — from the code, security, or
+docs reviewer — uses the Conventional Comments format in
+`skills/conventional-comments/SKILL.md`. A **live-verification report**, which
+is what the ux-reviewer produces, uses its own Working/Broken/Could Improve
+format.
 
 ## Report Format
 

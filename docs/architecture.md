@@ -247,7 +247,7 @@ research artifact with the necessary frontmatter.
 each as an auditable assumption) **Predecessor:** `research.md`
 **Artifact:** `docs/plans/<id>/design.md` **Gate:** REVIEW. The
 orchestrator dispatches a fresh-context, read-only `Explore` subagent
-with the `## Review brief` from `skills/eng-design-doc-review/SKILL.md`.
+with the `## Review brief` from `skills/reviewing-designs/SKILL.md`.
 The subagent holds no Write or Edit tools, so the reviewer cannot touch
 the artifacts it judges. The orchestrator records the verdict to
 `design-review-<n>.md`. APPROVE and COMMENT advance. On REQUEST CHANGES
@@ -412,24 +412,19 @@ Three more balances bound the checks themselves:
 
 The principle:
 **complex work runs on `opus`. Bounded judgment runs on `sonnet`.
-Mechanical checks run on `haiku`.** `fable` (Fable 5), though more
-capable, is reserved for an agent with a demonstrated, concrete need
-that `opus` cannot meet — and no agent meets that bar today.
+Mechanical checks run on `haiku`.** `fable` (Fable 5) is the tier above
+`opus`: an agent runs there on a demonstrated, concrete need `opus`
+cannot meet. The tier is empty, and `EXPECTED_MODELS`
+(`tests/architecture.test.ts`) pins all thirteen agents in both
+directions, so setting any agent to `model: fable` fails the build.
 
 - **`opus` (complex work, the default):** `researcher`, `design-author`,
-  `structure-planner`, `planner`, `test-architect`, `implementer`, and
-  `code-reviewer`.
-- **`opus` (security review, permanent pin):** `security-reviewer` stays
-  on `opus` **permanently**, not as a fallback. Fable 5's cybersecurity
-  safety classifiers flag security-review content. In a non-interactive
-  subagent context, a flagged request ends the turn with a refusal
-  instead of a fallback. `opus` is a floating alias — it resolves to
-  Claude Code's current Opus (Opus 5 today), and riding the latest Opus
-  rather than pinning a dated one is deliberate: the pin exists to avoid
-  Fable's classifiers, not to freeze a specific Opus. Opus-tier models
-  carry cybersecurity safeguards of their own (far milder than Fable's),
-  so if security reviews ever start ending in refusals after an Opus
-  upgrade, overriding to the prior Opus is the escape hatch.
+  `structure-planner`, `planner`, `test-architect`, `implementer`,
+  `code-reviewer`, and `security-reviewer`. Security review is complex
+  work, so it runs on this rung like the rest. What is particular to
+  `security-reviewer` is that it must never be overridden **up** to
+  `fable`, and never **down** off `opus`; the override recipe below
+  carries that constraint and its reason.
 - **`sonnet` (bounded single-pass judgment):** `questioner`,
   `ux-reviewer`, `technical-writer`.
 - **`haiku` (mechanical checks):** `file-finder`, `verifier`.
@@ -446,9 +441,18 @@ Notes:
   - **The recommended mechanism is a per-agent file copy:** copy the
     agent file into the `.claude/agents/` directory of the session that
     runs it, with the one-line edit `model: fable`, one file per agent.
-    **Never copy `security-reviewer`:** on fable its classifier refusals
-    end security reviews mid-run, which is the reason the permanent pin
-    exists.
+    **Never copy `security-reviewer`.** This is a named, load-bearing
+    constraint on the recipe, and here is the fact behind it: Fable 5's
+    cybersecurity safety classifiers flag security-review content, and in
+    a non-interactive subagent context a flagged request ends the turn
+    with a refusal rather than a fallback, so the review dies mid-run.
+    `opus` is a floating alias — it resolves to Claude Code's current
+    Opus (Opus 5 today) — and riding the latest Opus rather than a dated
+    one is deliberate: the constraint is about Fable's classifiers, not
+    about freezing a specific Opus. Opus-tier models carry cybersecurity
+    safeguards of their own (far milder than Fable's), so if security
+    reviews ever start ending in refusals after an Opus upgrade,
+    overriding to the prior Opus is the escape hatch.
   - **Placement is part of the recommendation.** An override takes
     effect only where the host looks for it, and a `/team` run has two
     candidate directories: the orchestrating session keeps its own
@@ -499,8 +503,8 @@ Notes:
   - **Do not use `CLAUDE_CODE_SUBAGENT_MODEL` for this.** The variable
     applies to every subagent, so *any* value flattens the five
     sonnet/haiku agents onto that tier's price — and `=fable` also drags
-    `security-reviewer` onto the model whose classifier refusals the
-    permanent pin exists to avoid.
+    `security-reviewer` onto the model whose classifier refusals end a
+    security review mid-run.
   - An override takes effect no later than the next session: a restart,
     or a copy placed before a session opens, applies it whether the host
     reads frontmatter once at session start or live-loads it.
@@ -523,32 +527,34 @@ Notes:
       the 5-reviewer verify). It does not reach `researcher`,
       `structure-planner`, `planner`, or `code-reviewer`, because
       nothing evaluates the artifact or verdict they produce.
-      `code-reviewer`'s one live route is the parity carve-out below;
-      `researcher`, `structure-planner`, and `planner` have **no live
-      re-pin route today**, and the shipped opus default holds for them
-      until either the deferred work on #139 produces per-agent
-      evidence and the bar's terms are extended to admit it (a future
-      decision, recorded then), or a per-task failure signal for them
-      comes into existence. The deferred aggregate comparison is not
-      that route: it observes the flip in aggregate, which cannot meet
-      a bar written per agent and per task.
-    - **The parity carve-out**, a named exception to the bar's
-      per-agent shape: if `implementer` clears the bar, the re-pin
-      moves `test-architect` and `code-reviewer` with it on
-      `implementer`'s evidence alone. Never re-pin `implementer` solo —
-      a scope fence or evaluator on a weaker model than the implementer
-      it gates is the defect the 0.14.1 fence rationale forbids. The
-      cost is stated: one agent's evidence triples the pin count, and
-      with it the permanent spend.
-    - **The `test-architect` narrowing:** its gate detects mechanical
-      faults only (a crash, a failing static check, a new test that
-      does not fail with an assertion error), not a scope fence that
-      runs green and covers too little. The recorded failure exists for
-      that narrow class alone — its place on the reached list is not a
-      broad failure signal, and its practical route back is the parity
-      carve-out.
-    - **The multi-repo limit:** a failure in a multi-repo run has no
-      live re-pin route today, and the aggregate comparison cannot host
+      `code-reviewer`'s one live route is the coupled reviewer set
+      below. For `researcher`, `structure-planner`, and `planner` the
+      routes are two, and both are future work: the deferred work on
+      #139 produces per-agent evidence and the bar's terms are extended
+      to admit it (a future decision, recorded then), or a per-task
+      failure signal for them comes into existence. Until one of those
+      opens, the shipped opus default holds for them. The deferred
+      aggregate comparison is neither route: it observes the flip in
+      aggregate, which cannot meet a bar written per agent and per
+      task.
+    - **The bar's unit is a coupled set of pins.** Most sets hold one
+      member. The reviewer set holds three: if `implementer` clears the
+      bar, the re-pin moves `test-architect` and `code-reviewer` with it
+      on `implementer`'s evidence alone. Never re-pin `implementer`
+      solo — a scope fence or evaluator on a weaker model than the
+      implementer it gates is the defect the 0.14.1 fence rationale
+      forbids. The cost is stated: one agent's evidence triples the pin
+      count, and with it the permanent spend.
+    - **What counts as recorded evidence is defined per agent**, because
+      each agent's gate detects its own class of failure.
+      `test-architect`'s gate detects mechanical faults (a crash, a
+      failing static check, a new test that does not fail with an
+      assertion error), not a scope fence that runs green and covers too
+      little. Its recorded failure is evidence for that class, which is
+      what puts it on the reached list, and its practical route back is
+      the coupled reviewer set above.
+    - **The multi-repo limit:** the route for a failure in a multi-repo
+      run is future work too, and the aggregate comparison cannot host
       it — the Golden Master is pinned to one repository, and #139
       models a run with no repository axis — so the deferred instrument
       work must state its own repository scope.
@@ -580,10 +586,15 @@ Notes:
 
 ### Effort tiering
 
-Effort tiering mirrors the model tiers: `low` (mechanical), `medium` and
-`high` (judgment), and `xhigh` (strategic artifact authors). The `xhigh`
-tier holds `design-author` and `structure-planner`, whose artifacts set
-the direction everything downstream inherits. Methodology skills carry no
+Effort tracks the work the agent does, on its own four-rung ladder:
+`low` (mechanical), `medium` and `high` (judgment — the band spans both
+rungs), and `xhigh` (strategic artifact authors). The `xhigh` tier holds
+`design-author` and `structure-planner`, whose artifacts set the
+direction everything downstream inherits. The ladder runs alongside the
+model ladder rather than off it, so an agent on `sonnet` at `high` is
+inside the rule: `questioner` is the live case, doing judgment work in a
+bounded single pass. `EXPECTED_EFFORTS` (`tests/architecture.test.ts`)
+pins all thirteen values in both directions. Methodology skills carry no
 `effort`. They inherit it from the loading agent.
 
 ## 5. Phase-table orchestrator
@@ -660,12 +671,23 @@ points at it.
 ### Methodology skills (loaded by agents, not directly invoked)
 
 Methodology skills carry no `argument-hint`. Agents load them through one
-of two mechanisms. The first is a `skills:` YAML list in the agent's
-frontmatter. For example, `agents/design-author.md` declares
-`skills: [product-thinking, principle-progress-tracking, authoring-designs,
-writing-prose]`. Those four names are three countable skills under the
-load limit in the Design guidelines below: `authoring-designs` is
-design-author's own extracted procedure skill, which that limit exempts.
+of two mechanisms. The first is a `skills:` YAML **block** list in the
+agent's frontmatter, one indented `- <name>` per line. For example,
+`agents/design-author.md` declares:
+
+```yaml
+skills:
+  - product-thinking
+  - principle-progress-tracking
+  - authoring-designs
+  - writing-prose
+```
+
+That is four counted names against the load limit in the Design
+guidelines below, one over the threshold, so `design-author` carries one
+recorded reason naming that count. The block form is the contract: three
+test parsers read it, and the one-line inline flow form parses to zero
+names, so it is an offender rather than a second shape.
 The second is an inline prose load instruction in the agent body. For
 example, the `implementer` body's Code quality section loads
 `solid` inline.
@@ -712,11 +734,13 @@ skills set `user-invocable: false` in their frontmatter. This keeps them
 out of the `/` slash-command menu, because a `/qrspi-workflow` command is
 meaningless to a user. They stay fully loadable by their two mechanisms
 above. Neither the `skills:` preload nor a by-path load is affected by
-the field, which governs only menu visibility. The model can still
-auto-load a methodology skill when relevant, so
-`disable-model-invocation` is deliberately **not** set. When you add a
-new methodology skill, set `user-invocable: false`. When you add a new
-entry-point skill, leave it unset, so it registers as a slash command.
+the field, which governs only menu visibility. Setting
+`disable-model-invocation` is a separate per-skill call with its own
+recorded reason, and no methodology skill has one: the model auto-loading
+a methodology skill when relevant is how it reaches one at all. When you
+add a new methodology skill, set `user-invocable: false`. When you add a
+new entry-point skill, leave it unset, so it registers as a slash
+command.
 
 The trigger-phrase convention keys on the `user-invocable` field —
 not on `argument-hint`, which `docs/skills.md` uses to sort skill
@@ -724,14 +748,36 @@ not on `argument-hint`, which `docs/skills.md` uses to sort skill
 in its description, at least one double-quoted natural-language phrase
 (one that does not start with `/`) plus its own literal `/<name>`,
 normally as a final `Trigger on "…", "…", or "/<name>".` sentence. A
-**side-effecting or irreversible** entry-point skill — one that commits,
-pushes, opens a PR, moves a ticket, merges, deploys, or deletes — MUST
-replace the plain carrier with shipit-style explicit-intent guard wording
-("Invoke ONLY on explicit … intent — … never infer …"), still carrying
-the quoted phrases and the slash name, and should set
-`disable-model-invocation` where the host honors it. Such a skill stays
-listed as a command, but its routing-map line in `AGENTS.md` states the
-explicit intent, so the map never invites it on a plain request. A deterministic test
+**side-effecting or irreversible** entry-point skill MUST carry
+shipit-style explicit-intent guard wording ("Invoke ONLY on explicit …
+intent — … never infer …") beside or instead of the plain carrier, and
+still state the quoted phrases and the slash name.
+
+**Which skills are in that class is a complement pair over every write an
+invocation authorizes**, so it returns one answer per skill. *Out of
+class*: the invocation reads only, or writes only (1) files under
+`docs/plans/` and (2) invocation-local scratch files — untracked, created
+and consumed inside the same run, carried by no commit, and read by no
+later phase. *In class*: everything else — a change to any file the repo
+tracks, or to an untracked file the change is meant to deliver; a git
+write to history or refs (a commit, a branch, a rebase, a push, a branch
+delete); or a change on a host outside the checkout (a PR opened,
+approved, or merged; a ticket or issue moved, filed, or closed; a
+deploy). The verb list this replaced — commits, pushes, opens a PR, moves
+a ticket, merges, deploys, or deletes — still reads as an illustration of
+the in-class half. A write the invocation never authorized, such as an
+unsandboxed vendor CLI mutating the tree during a cross-model pass, moves
+no skill into the class: the caller detects that write and reverts it
+rather than authoring it.
+
+**Second tier: a skill that gates every mutation on its own in-run
+approval** carries the guard there instead, which is where
+`skills/principle-explicit-intent/SKILL.md` puts it. `groom-backlog` is
+the worked example — it presents each irreversible close and waits.
+Setting `disable-model-invocation` is a further per-skill call with its
+own recorded reason, never a property of this class. An in-class skill
+stays listed as a command, and its routing-map line in `AGENTS.md` states
+the explicit intent, so the map never invites it on a plain request. A deterministic test
 in `tests/architecture.test.ts` enforces the phrase invariant with no
 opt-out; the slash-name check is prefix-safe, so `/team-research` cannot
 satisfy the `/team` requirement. The guard wording is NOT
@@ -741,46 +787,49 @@ its absence on a side-effecting skill is a review-blocking defect.
 No methodology skill is user-invocable. When a methodology also wants a
 user-facing command, the answer is a **front door**, not an exception:
 the methodology keeps `user-invocable: false` and a separate entry-point
-skill carries the slash command. `reviewing-code` and `code-review` are
-that pair. The methodology lives in `reviewing-code`, which the
-`code-reviewer`, `security-reviewer`, `ux-reviewer`, and
-`technical-writer` agents preload; `code-review` carries `argument-hint`
-and `effort` like any other entry point and is catalogued under
-Standalone utilities. What stays on the front door is the one thing a
-user runs: "review this diff".
+skill carries the slash command. Two pairs hold that shape.
+`reviewing-code` and `code-review` are the first: the methodology lives
+in `reviewing-code`, which the `code-reviewer`, `security-reviewer`,
+`ux-reviewer`, and `technical-writer` agents preload; `code-review`
+carries `argument-hint` and `effort` like any other entry point and is
+catalogued under Standalone utilities. What stays on the front door is
+the one thing a user runs: "review this diff". `reviewing-designs` and
+`eng-design-doc-review` are the second: the design-review brief lives in
+the methodology, and `team`, `team-design`, and the front door all load
+it through the Skill tool.
 
-That standalone path behaves differently from an ordinary entry point,
-which simply runs its own procedure. The front door still owes the
-methodology's own rules: the main session shares conversation history
-with whatever wrote the code, so it is not a valid reviewer.
-`code-review` therefore dispatches the `code-reviewer` agent and relays
-the verdict rather than reviewing inline, then loads `reviewing-code` for
-the methodology that reviewer applies.
+A front door is a second kind of entry point, and both kinds are
+ordinary. One runs its own procedure; a front door owes the methodology's
+own rules and routes the work to whoever may do it. The main session
+shares conversation history with whatever wrote the code, so it is not a
+valid reviewer. `code-review` therefore dispatches the `code-reviewer`
+agent and relays the verdict rather than reviewing inline, then loads
+`reviewing-code` for the methodology that reviewer applies.
+`eng-design-doc-review` does the same with a read-only `Explore`
+subagent and the `reviewing-designs` brief.
 
 (This is separate from the entry-point skills, which are user-invocable by
 definition. Some of those, e.g. `team-worktree` and `team-pr`, are also
 *referenced by path* from `team/SKILL.md`, but those are procedural
 cross-links in the orchestrator's prose, not a parent loading the skill as
-a building block. The `code-review` / `reviewing-code` pair is how a
-composed methodology keeps a user-facing entry point without becoming
-one.)
+a building block. The two front-door pairs are how a composed methodology
+keeps a user-facing entry point without becoming one.)
 
 For the full per-skill reference (all skills, their arguments,
 consumers, and behaviors), see [skills.md](skills.md).
 
 ### Design guidelines
 
-1. **Methodology skill load limit:** Soft limit of 3 methodology skills
-   per agent invocation. A skill averages roughly 190 lines, so 3 skills
-   add roughly 570 lines (~10K tokens, about 5% of 200K context). A fourth skill
-   signals that the agent's responsibility can be too broad. This is a
-   design convention, not a hard constraint. An agent's own extracted
-   procedure skill does not count toward the soft limit: it replaces
-   former inline body content 1:1, so it adds no net context.
-   `code-reviewer` preloads `cross-model-review` beyond the soft limit —
-   a stated deviation, not an oversight to fix back: the
-   cross-vendor pass belongs to the code review and nowhere else, and
-   inlining it would bloat the agent body it was extracted from.
+1. **Methodology skill load limit:** three methodology skills is what an
+   agent gets without argument. **Every name in the agent's `skills:`
+   block counts** — a `principle-` skill and the agent's own extracted
+   procedure skill alike. An agent that lists more than three carries one
+   recorded reason, and that record names the count it justifies. The
+   record is `PRELOAD_BUDGET_REASONS` in `tests/thin-agents.test.ts`,
+   keyed by agent; the reason is reviewed prose and the count is what the
+   machine holds, so a list that grows in silence reds the build. A fourth
+   name still signals that the agent's responsibility can be too broad,
+   and answering that is what the reason is for.
 
 2. **Extraction threshold: capability against fragment.** Content that is
    an **independently useful capability** earns its own skill
@@ -796,10 +845,15 @@ consumers, and behaviors), see [skills.md](skills.md).
 3. **Principle skills:** some skills carry the `principle-` prefix, and the
    prefix is a claim, not a namespace. Each states one cross-cutting
    invariant — fail closed, bounded loops, evidence over assertion, and
-   their siblings. No agent preloads one, so they cost nothing against
-   the soft limit: the skills that apply a rule consult it by citation,
-   and any agent can load it just-in-time. Each exists so the rule is
-   defined once, not restated in every skill that obeys it. The
+   their siblings. The skills that apply a rule consult it by citation,
+   and any agent can load it just-in-time. A preloaded principle skill
+   counts against the load limit like any other name: twelve of the
+   thirteen agents preload `principle-progress-tracking`, and
+   `file-finder` is the one that does not. Each exists so the rule is
+   defined once, not restated in every skill that obeys it. The set is
+   enumerated in one place, `docs/skills.md` under `## Methodology
+   skills`: one `### [principle-<name>]` entry per directory on disk, an
+   equality `tests/methodology.test.ts` asserts in both directions. The
    multi-rule methodology sets — `solid`, `product-thinking`, and
    `systems-thinking` — deliberately carry no prefix: they are preloaded
    or agent-loaded (see the Methodology skills section above) and count

@@ -1,17 +1,17 @@
 ---
 name: principle-plan-present-wait
-description: "Apply when mutations need user approval. Write the plan down, present each consequential choice with one recommendation, and execute only the answered subset — nothing changes before the user answers, except an item clearing the verified-confidence carve-out."
+description: "Apply when mutations need user approval. Write the plan down, present each consequential choice with one recommendation, and execute only the answered subset — a mutation executes on the user's answer, or on an item clearing the verified-confidence carve-out."
 user-invocable: false
 ---
 
 # Plan, Present, Wait
 
 Mutations are planned in writing, presented as questions with exactly one
-recommendation each, and executed only on the user's answer. Nothing
-changes before the user answers; no answer means no mutation; a partial
-answer executes only the answered subset — with one stated exception: an
-item that clears the verified-confidence carve-out, and stays inside
-every hard rule, may execute without the wait.
+recommendation each. A mutation executes on the user's answer, or on an
+item that clears the verified-confidence carve-out while staying inside
+every hard rule. Nothing changes before the user answers, and no answer
+means no mutation, outside that carve-out; a partial answer executes only
+the answered subset.
 
 **Why:** Separating deciding from doing keeps the blast radius auditable:
 the user judges the exact mutation, the written plan survives the wait,

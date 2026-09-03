@@ -13,8 +13,8 @@ work visible, so steps are not silently skipped.
 ## When it applies
 
 When a procedure has two or more ordered steps, seed one todo item per step
-before starting and mark each complete as you go. A single-step procedure is
-exempt — a one-item ledger is noise.
+before starting and mark each complete as you go. The rule starts at two
+because a one-item ledger is noise.
 
 ## Per-step granularity
 

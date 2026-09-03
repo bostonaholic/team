@@ -16,10 +16,11 @@
  * resolve through $CLAUDE_PROJECT_DIR, and worktrees live under
  * <repo>/.claude/worktrees/, so the path above routinely lands in the OUTER
  * main checkout while the branch being merged sits in a worktree. Reading from
- * the commit removes the coupling entirely. A fork head is the exception —
- * running its script would execute unreviewed code locally, which this repo
- * already refuses for fork PRs (docs/testing.md §5) — so a fork whose script
- * differs from this checkout's denies instead.
+ * the commit removes the coupling entirely. That read needs a trusted head:
+ * a fork head is unreviewed code, and running its script would execute that
+ * code locally, which this repo already refuses for fork PRs
+ * (docs/testing.md) — so a fork whose script differs from this checkout's
+ * denies instead.
  *
  * Failure direction: fail open only before jurisdiction is decided
  * (unparseable stdin, a parsed command with no `gh pr merge` simple
@@ -275,8 +276,9 @@ function readDoubleQuoteBody(command, openIndex) {
 // null into a DENY whenever the raw text could spell `merge` through
 // quoting and splicing characters, and into a permit only when it cannot.
 // A merge spelled with nothing but those characters therefore has no
-// fail-open path, parseable or not. The never-expanded residue below is
-// the exception, and it is the same on both paths.
+// fail-open path, parseable or not. What still reaches a permit is the
+// never-expanded residue below, and it reaches it the same way on both
+// paths.
 //
 // The single structural invariant (bash's own rule): the metacharacters
 // space, tab, newline, |, &, ;, (, ), <, > ALWAYS end a word when unquoted.
@@ -1074,7 +1076,7 @@ function gate(mergeWords) {
           "does not execute a gate script it has not reviewed, so it cannot " +
           "render a verdict. Recovery: read the head's copy " +
           `(git show ${headRefOid}:${INVARIANT_SCRIPT_PATH}), and land the PR ` +
-          "deliberately outside this guard once you trust it.",
+          "deliberately, on another merge surface, once you trust it.",
       );
     }
   }

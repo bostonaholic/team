@@ -143,8 +143,9 @@ sides, never from a comment that claims which side is correct.
    step 7 has verified the remote tip unchanged.
 3. **Never `git rebase --skip`.** It drops the conflicting commit entirely.
    A conflict is resolved or the rebase is aborted; it is never skipped.
-4. **Never resolve a conflict by picking a side wholesale** unless one
-   side's change is literally contained in the other. `git checkout --ours`
+4. **Every resolution keeps both sides' intent.** Taking one side whole is
+   a valid resolution exactly when it does that — when one side's change is
+   literally contained in the other. `git checkout --ours`
    and `--theirs` are reserved for generated files, and even there the
    correct action is to regenerate, not to pick (step 5).
 5. **Never touch uncommitted tracked work.** A dirty tree stops the run
@@ -488,9 +489,10 @@ For each conflicted path:
    State both in one sentence each before writing any resolution. If you
    cannot state them, you do not yet know enough to resolve the hunk.
 
-2. **Resolve so both intents survive.** Wholesale side-picking is forbidden
-   (Hard Rule 4) unless one side's change is literally contained in the
-   other. Generated files are the one carve-out: a lockfile, a
+2. **Resolve so both intents survive.** Taking one side whole is a valid
+   resolution exactly where that side's change is literally contained in the
+   other (Hard Rule 4). A generated file is resolved a third way, and
+   regenerating was never side-picking: a lockfile, a
    `structure.sql`, a compiled asset, or any other artifact with a
    regeneration command is resolved by **regenerating it** after the source
    conflicts are settled — not by `--ours` / `--theirs`, which produces a
@@ -574,10 +576,12 @@ state exactly. Never `git rebase --skip` (Hard Rule 3).
 ### Step 6 — verify against the baseline
 
 Re-run **the same checks, the same commands, in the same order** as step 2.
-Do not add a check that had no baseline, and do not drop one that did.
-The one exception: a check whose baseline is `UNKNOWN` may be skipped —
-the verdict table maps it to `UNKNOWN` whatever it returns now, so
-re-running it can produce no evidence either way. Report it `UNKNOWN`
+Do not add a check that had no baseline, and do not drop one whose
+baseline is `PASS` or `FAIL`.
+Re-running is conditional on the baseline: a check whose baseline is
+`PASS` or `FAIL` is re-run, and one whose baseline is `UNKNOWN` may be
+skipped — the verdict table maps it to `UNKNOWN` whatever it returns now,
+so re-running it can produce no evidence either way. Report it `UNKNOWN`
 in the table regardless.
 
 Classify each check by comparing `AFTER` to `BASELINE`:

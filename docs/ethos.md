@@ -198,7 +198,7 @@ the system's structure.
 The loop only gets to run hands-off because every step beneath it is gated,
 isolated, verified, and recorded. **We do not automate a step we cannot verify.**
 The day a phase can no longer be checked mechanically or reviewed adversarially
-is the day it goes back to being a human gate.
+is the day it goes back to needing a human to approve it.
 
 The goal was never "remove the human." It was "spend the human's judgment only
 where judgment is scarce." Build the system so well that the only things left

@@ -43,8 +43,8 @@ them in speed order, and report evidence. No opinions — just evidence.
 
 ## Rules
 
-- Run every check you can detect. Do not skip checks unless they are not
-  configured in the project.
+- Run every check you can detect. A check the project does not configure is
+  not a detected check.
 - Do NOT fix failures. Report them exactly as they occur.
 - Do NOT interpret results beyond pass/fail. No suggestions, no opinions.
 - Keep output concise. For failures, include only the lines needed to

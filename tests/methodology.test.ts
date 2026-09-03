@@ -463,7 +463,7 @@ describe("systems-thinking lens (L2 content tripwire)", () => {
 
   describe("slice 2: designs name their blast radius and the gate audits it", () => {
     const AUTHORING_DESIGNS = join(REPO_ROOT, "skills", "authoring-designs", "SKILL.md");
-    const ENG_DESIGN_REVIEW = join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md");
+    const ENG_DESIGN_REVIEW = join(REPO_ROOT, "skills", "reviewing-designs", "SKILL.md");
 
     test("authoring-designs rules bullet loads systems-thinking adjacent to its ## When Designing cite", () => {
       // design-author.md already cites product-thinking's same-named
@@ -480,7 +480,7 @@ describe("systems-thinking lens (L2 content tripwire)", () => {
       expect(/change together/i.test(text)).toBe(true);
     });
 
-    test("eng-design-doc-review step 3 carries the blast-radius question", () => {
+    test("the reviewing-designs brief's step 3 carries the blast-radius question", () => {
       const step3 = sliceBetween(
         read(ENG_DESIGN_REVIEW),
         "**Audit the decisions.**",
@@ -917,7 +917,7 @@ describe("time-bomb example pair (single copy in test-style)", () => {
 // Code-comment rules — free L2 content tripwires (docs/testing.md §2).
 // engineering-standards is the single source of truth for the binding comment
 // rule set (why-only, rewrite-first, no ticket/pipeline references, no
-// commented-out code, no TODOs, doc-comment exemption); the implementer's
+// commented-out code, no TODOs, and the in-body scope of the ban); the implementer's
 // `## Code quality` block defers to it with a one-line pointer.
 // ---------------------------------------------------------------------------
 
@@ -936,13 +936,14 @@ describe("code-comment rules (L2 content tripwire)", () => {
     expect(/ticket\/issue IDs/i.test(section)).toBe(true);
     expect(/plan\/slice\/phase markers/i.test(section)).toBe(true);
     expect(/doc-section references/i.test(section)).toBe(true);
-    // Upstream-bug-link exemption: the link IS the why.
+    // A link that IS the why satisfies the reference ban.
     expect(/upstream/i.test(section)).toBe(true);
     // No commented-out code; no TODOs in delivered code.
     expect(/commented-out code/i.test(section)).toBe(true);
     expect(section).toContain("TODO");
-    // Doc comments on exported/public interfaces follow the ecosystem's
-    // convention and are exempt.
+    // The why-only rule covers in-body comments that restate the code; a doc
+    // comment on an exported/public interface adds contract information the
+    // signature does not carry, so it satisfies the rule.
     expect(/doc comments/i.test(section)).toBe(true);
     expect(/exported\/public/i.test(section)).toBe(true);
     // Scope pointer: in-source comments here; review findings belong to
@@ -1000,8 +1001,9 @@ describe("comment red flags (L2 content tripwire)", () => {
     // Style regime escalates: `suggestion:` once, `issue:` when repeated.
     expect(flags).toContain("suggestion:");
     expect(flags).toContain("issue:");
-    // Carve-outs: upstream-bug links where the link is the why, and
-    // ticket-like tokens outside comment syntax (string literals).
+    // What the flag list still admits: an upstream-bug link where the link is
+    // the why, and ticket-like tokens outside comment syntax (string
+    // literals).
     expect(/upstream/i.test(flags)).toBe(true);
     expect(/string literals/i.test(flags)).toBe(true);
     // Which severity bucket a judgment class lands in is behavior a model
@@ -1064,7 +1066,7 @@ describe("skeptic passes weigh a stated rule above precedent (L2 tripwire)", () 
 // rounds each found one more asymmetry, one instance at a time.
 describe("cross-surface parity is checked (L2 tripwire)", () => {
   const AUTHORING = read(join(REPO_ROOT, "skills", "authoring-designs", "SKILL.md"));
-  const REVIEW = read(join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md"));
+  const REVIEW = read(join(REPO_ROOT, "skills", "reviewing-designs", "SKILL.md"));
   const CODE_REVIEW = read(join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md"));
 
   test("the design template asks for a surfaces section", () => {
@@ -1844,11 +1846,11 @@ describe("principle-untrusted-input-is-data (L2 content tripwire)", () => {
 // file under agents/ or skills/ that cites it by path must appear by name
 // in the catalog's `### <name>` entry, and — for the 21 extracted
 // single-invariant principles — in the "Skill ↔ agent ↔ phase" table row.
-// The reverse direction is enforced only for entries carrying the JIT
-// "consulted by citation from" wording, where by convention every listed
-// name cites the full path; lens-style entries ("Cited by ...") also name
-// checklist-level consumers a path grep cannot see, so they are exempt
-// from the reverse check. All parsing is precomputed once at module level:
+// The reverse direction runs where an entry's own wording promises a
+// path-visible citer list: the JIT "consulted by citation from" form, where
+// by convention every listed name cites the full path. A lens-style entry
+// ("Cited by ...") never made that promise — it also names checklist-level
+// consumers a path grep cannot see. All parsing is precomputed once at module level:
 // each file is read once, and each test body is a declarative assertion
 // whose failure value names the skill and the missing or phantom consumer.
 describe("docs/skills.md principle consumer lists match on-disk citations (L2 tripwire)", () => {
@@ -1931,7 +1933,6 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
 
   test("the principle tier exists on disk (the loops below cannot go vacuous)", () => {
     expect(principleSkills.length).toBeGreaterThan(20);
-    expect(extractedPrinciples.length).toBe(24);
   });
 
   for (const principle of principleSkills) {
@@ -1989,4 +1990,81 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
       expect(phantom).toEqual([]);
     });
   }
+});
+
+// ---------------------------------------------------------------------------
+// The `principle-` prefix is a claim: one cross-cutting invariant per skill.
+// A bare count of the catalog's principle set goes stale on every addition and
+// says nothing about *which* skills are in it, so both sides are derived: the
+// directories on disk and the catalog entries must be the same set, in both
+// directions.
+//
+// Both sides are prefix-filtered, so this catches a missing or an extra catalog
+// entry and cannot catch a fourth multi-rule bundle that wrongly takes the
+// prefix. The three that exist today are named below and asserted prefix-free.
+// ---------------------------------------------------------------------------
+
+describe("the principle set is derived, not counted", () => {
+  const SKILLS_MD = read(join(REPO_ROOT, "docs", "skills.md"));
+
+  const onDisk = readdirSync(join(REPO_ROOT, "skills"))
+    .filter((name) => name.startsWith("principle-"))
+    .filter((name) => existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")))
+    .sort();
+
+  const catalogued = [...SKILLS_MD.matchAll(/^### \[(principle-[a-z0-9-]+)\]/gm)]
+    .map((match) => match[1] ?? "")
+    .sort();
+
+  // The multi-rule methodology sets. They carry no prefix on purpose: each is a
+  // set of rules, not a single invariant.
+  const BUNDLES = ["solid", "product-thinking", "systems-thinking"];
+
+  // Guard: an empty prefix set on either side would pass both directions.
+  test("the principle tier is non-empty on disk and in the catalog", () => {
+    expect(onDisk.length).toBeGreaterThan(20);
+    expect(catalogued.length).toBeGreaterThan(20);
+  });
+
+  // Takes both sides as arguments, so synthetic sets can prove the comparison
+  // reports what it claims to catch.
+  function absentFrom(names: string[], other: string[]): string[] {
+    return names.filter((name) => !other.includes(name));
+  }
+
+  test("every principle- skill on disk has a catalog entry", () => {
+    expect(absentFrom(onDisk, catalogued)).toEqual([]);
+  });
+
+  test("every principle- catalog entry names a skill on disk", () => {
+    expect(absentFrom(catalogued, onDisk)).toEqual([]);
+  });
+
+  // Prove both directions can find a positive: an uncatalogued skill and a
+  // catalog entry naming nothing on disk.
+  test("the derived comparison can see planted drift in both directions", () => {
+    const disk = ["principle-real", "principle-uncatalogued"];
+    const catalog = ["principle-real", "principle-phantom"];
+    expect(absentFrom(disk, catalog)).toEqual(["principle-uncatalogued"]);
+    expect(absentFrom(catalog, disk)).toEqual(["principle-phantom"]);
+  });
+
+  test("the multi-rule bundles are catalogued and carry no principle- prefix", () => {
+    const offenders: string[] = [];
+    for (const bundle of BUNDLES) {
+      if (!existsSync(join(REPO_ROOT, "skills", bundle, "SKILL.md"))) {
+        offenders.push(`${bundle}: no skill on disk`);
+      }
+      if (!new RegExp(`^### \\[${bundle}\\]`, "m").test(SKILLS_MD)) {
+        offenders.push(`${bundle}: no catalog entry`);
+      }
+      // Reachable from disk and catalog state, unlike a prefix test on the
+      // literal name: a bundle renamed under the prefix lands in the derived
+      // principle set above.
+      if (onDisk.includes(`principle-${bundle}`) || catalogued.includes(`principle-${bundle}`)) {
+        offenders.push(`${bundle}: carries the principle- prefix`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
 });

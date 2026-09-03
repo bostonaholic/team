@@ -1,6 +1,13 @@
 ---
 name: team
-description: Full 8-phase autonomous feature implementation pipeline (QRSPI). Trigger on "hey team", "build a feature", "implement end to end", "autonomous implementation", or "/team".
+description: |
+  Full 8-phase autonomous feature implementation pipeline (QRSPI).
+  Trigger on "hey team", "build a feature", "implement end to end",
+  "autonomous implementation", or "/team". The pipeline commits, pushes a
+  branch, opens a pull request, and moves the tracker ticket without
+  stopping to ask, so invoke it ONLY on one of those stated intents:
+  never infer pipeline intent from a plain request to write some code —
+  that asks for a direct edit, not this pipeline.
 effort: medium
 argument-hint: "<ticket id, issue URL, or feature description>"
 ---
@@ -283,7 +290,7 @@ When the `design-author` returns a draft:
    machine-wide subagent default from silently weakening the review.
    Pass the
    `## Review brief` as the prompt: call the Skill tool with
-   `eng-design-doc-review` to
+   `reviewing-designs` to
    read that brief (reference it, never duplicate it here), with
    the artifact directory substituted. Each round gets a fresh subagent
    context. `Explore` holds no Write/Edit tools, so the reviewer **cannot**
@@ -348,11 +355,11 @@ frontmatter.
 
 ### Orchestrator-Emit Gate (post-design-review secondary worktrees)
 
-The home worktree is born at the leading WORKTREE phase. Secondary
-worktrees, in multi-repo mode, are created **after the design review**. The
-set of repos a topic touches is settled only once the design lands, in
-`repos.md`. This is the documented asymmetry: the home worktree exists from
-phase 1, while secondary repos lag until post-design-review.
+One rule, two knowledge times: **each repo's worktree is born the moment
+that repo is known.** The home repo is known at phase 1, so its worktree is
+born at the leading WORKTREE phase. The rest are settled only once the
+design lands, in `repos.md`, so in multi-repo mode their worktrees are
+created **after the design review**.
 
 When the design review passes:
 

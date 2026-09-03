@@ -10,8 +10,12 @@ description: |
   that presents and stops until the user picks actions. Explicit user
   authorization applies the whole batch regardless of confidence.
   Trigger on "address PR comments", "triage PR feedback",
-  "handle the comments", "unresolved review comments", or
-  "/pr-open-comments".
+  "handle the comments", "unresolved review comments",
+  "/pr-open-comments", or a `/pr-watch-as-author` watch dispatching it on
+  a poll-detected change. An auto-applied item commits and pushes without
+  stopping to ask, so invoke this ONLY on one of those stated intents:
+  never infer triage intent from a PR merely carrying unresolved
+  comments.
 effort: high
 argument-hint: "[<pr-number-or-url>]"
 ---
@@ -72,16 +76,16 @@ weaken a rule below.
    could-not-apply, a push failure, and any untrusted-input rule. An item
    that hits one is presented, never auto-applied, at any confidence.
 4. **Present, then stop for everything else.** Every item that does not
-   clear the auto-apply bar goes on the punch list untouched. There are
-   no edits, no replies, and no resolution for them. The step-4
-   usefulness reaction is the one exception, and it is deliberate: it
-   carries no ask, resolves nothing, and every reviewer earns that
-   signal whether or not their comment led to a change. The only
-   working-tree exception is a throwaway verification test written in
-   step 4 to prove a comment's claim: never stage or commit it, and
-   delete it before step 6 (auto-apply) runs — under the red-green proof,
+   clear the auto-apply bar goes on the punch list, and what step 4 may
+   do for such an item is a **closed list of two**. **One:** the
+   usefulness reaction — it carries no ask, resolves nothing, and every
+   reviewer earns that signal whether or not their comment led to a
+   change. **Two:** a throwaway verification test written in step 4 to
+   prove a comment's claim — never stage or commit it, and
+   delete it before step 6 (auto-apply) runs; under the red-green proof,
    delete it after the passing run and before the commit itself, so an
-   autonomous commit can never contain a reproduction test. After you
+   autonomous commit can never contain a reproduction test. Nothing else:
+   no edit to any other file, no reply, no resolution. After you
    render the punch list, end the turn and wait for the user to pick
    actions. Each chosen action runs in a separate, follow-up turn.
    Rules 2–4 are `skills/principle-plan-present-wait/SKILL.md` applied per
@@ -171,8 +175,9 @@ Top-level PR comments (not tied to a line) live on a different endpoint:
 gh pr view "$NUMBER" --json comments --jq '.comments[] | {author: .author.login, body: .body, createdAt: .createdAt, url: .url}'
 ```
 
-These comments have no resolved state. Treat each one as an open item
-unless the author's own follow-up clearly closes it.
+These comments carry no resolved flag, so an item stays open until the
+author's own follow-up clearly closes it. That follow-up is the only
+closure signal the endpoint offers.
 
 ### Step 4 — Verify each comment (trust but verify)
 
@@ -214,10 +219,11 @@ code can have moved since. For every unresolved thread:
      code (for example, the "bug" cannot occur); note the evidence.
 5. **Rate confidence in the recommendation.** Assign the rating only
    after the verdict (Hard Rule 1). Only a `STILL RELEVANT` verdict
-   reaches the auto-apply bar. For a behavioral claim, cap the rating at
-   90% unless the named reproduction test fails before the fix and passes
-   after the fix is applied — the red-green proof, with the passing run
-   happening before any push.
+   reaches the auto-apply bar. For a behavioral claim, a rating
+   above 90% rests on the red-green proof: the named reproduction test
+   fails before the fix and passes
+   after the fix is applied, with the passing run
+   happening before any push. Without that proof the rating caps at 90%.
 6. **React to signal usefulness.** Add exactly one reaction to the
    comment that opened the thread, so the reviewer learns whether their
    feedback landed. Do this here, right after the verdict, not at

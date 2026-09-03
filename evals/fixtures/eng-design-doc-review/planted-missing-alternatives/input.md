@@ -3,6 +3,7 @@ agent: eng-design-doc-review
 tier: periodic
 deps:
   - skills/eng-design-doc-review/**
+  - skills/reviewing-designs/**
   - skills/technical-design-doc/**
   - skills/documenting-decisions/**
 ---
@@ -10,7 +11,7 @@ deps:
 # Adversarial design-doc review with a planted gap
 
 You are adversarially reviewing the design-doc excerpt below with fresh
-context. Apply the eng-design-doc-review brief: walk the design against the
+context. Apply the `reviewing-designs` brief: walk the design against the
 technical-design-doc methodology, audit each decision for a named alternative
 and an honest trade-off, and verify edge-case enumeration. Use Conventional
 Comments (`issue (blocking):`, `suggestion (non-blocking):`, `nitpick`) with a

@@ -216,9 +216,9 @@ function lensSubsection(heading: RegExp): string {
 // (skills/nested-agents/SKILL.md, "Read-only by default").
 const SHELL_HOLDING_TYPES = ["Explore", "general-purpose"] as const;
 
-// Everything in the skill EXCEPT the subsection whose whole job is to name a
-// rejected target. That carve-out is the only place a type name is not a
-// dispatch, so the sweep below runs over the rest of the file unchanged.
+// The skill's dispatch prose: everything but the subsection whose whole job is
+// to name a rejected target. That subsection is not dispatch prose, so it was
+// never in the sweep's scope; the sweep below runs over the rest unchanged.
 function dispatchProse(rejected: string): string {
   const text = body();
   return rejected ? text.replace(rejected, "") : text;
@@ -588,19 +588,18 @@ describe("Slice 1 — L2: reflect's three reporting lenses", () => {
     // team:file-finder.
     //
     // What is asserted is the absence of the DISPATCH, not of the word. Naming
-    // a type in order to reject it is the one place a type name is not a
-    // dispatch, so that rationale lives under its own heading and the sweep
-    // runs over the whole file minus that one carve-out — a proximity span
-    // would be a wording pin (docs/testing.md, "That two words appear near
-    // each other"). Coverage is unchanged everywhere else: a dispatch aimed at
-    // a shell-holding type, in any phrasing, still fires, and a
-    // meaning-preserving rewrite cannot reintroduce a type this skill never
-    // dispatches to.
+    // a type in order to reject it is not a dispatch, so that rationale lives
+    // under its own heading and the sweep targets the dispatch prose: the file
+    // minus that subsection — a proximity span would be a wording pin
+    // (docs/testing.md, "That two words appear near each other"). Coverage is
+    // unchanged everywhere else: a dispatch aimed at a shell-holding type, in
+    // any phrasing, still fires, and a meaning-preserving rewrite cannot
+    // reintroduce a type this skill never dispatches to.
     const rejected = lensSubsection(REJECTED_TARGETS);
     // Guard: a renamed or deleted heading must fail here rather than silently
-    // widen the carve-out to the whole file.
+    // shrinking the dispatch prose to nothing.
     expect(rejected.length).toBeGreaterThan(0);
-    // The carve-out earns itself only by naming what it rejects. An unnamed
+    // The subsection earns its place only by naming what it rejects. An unnamed
     // rejection is what the whole-file ban forced, and it left the one asserted
     // fact a reader would check unstated.
     for (const type of SHELL_HOLDING_TYPES) expect(rejected).toContain(type);

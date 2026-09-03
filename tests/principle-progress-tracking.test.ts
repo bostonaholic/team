@@ -36,11 +36,12 @@ const ENTRY_POINT_SKILLS = [
   "how",
 ];
 
-// The 3 methodology procedure skills that must reference it (Slice 3).
+// The methodology procedure skills that must reference it.
 const METHODOLOGY_SKILLS = [
   "test-driven-bug-fix",
   "systematic-debugging",
   "test-first-development",
+  "reviewing-designs",
 ];
 
 // The 3 existing seeders that get an additive pointer (Slice 4).
@@ -222,4 +223,42 @@ describe("Out of scope: pure reference / methodology skills are untouched", () =
       expect(read(skill(name))).not.toContain("principle-progress-tracking");
     });
   }
+});
+
+// ---------------------------------------------------------------------------
+// The design-review brief lives in the `reviewing-designs` methodology skill,
+// and it carries that skill's progress-tracking cite. The
+// `eng-design-doc-review` entry point that dispatches the brief carries its
+// own cite for the multi-step procedure it runs, which is why it is in
+// ENTRY_POINT_SKILLS. `reviewing-designs` is in METHODOLOGY_SKILLS above,
+// which puts both files under the byte-identity drift guard.
+// ---------------------------------------------------------------------------
+
+describe("both halves of the design review cite progress-tracking", () => {
+  // The lines under `## <heading>`, up to the next `## `. "" when the heading
+  // is missing, so a rename fails the length guard instead of passing
+  // vacuously.
+  function section(text: string, heading: string): string {
+    const start = text.indexOf(`\n${heading}\n`);
+    if (start === -1) return "";
+    const rest = text.slice(start + heading.length + 2);
+    const next = rest.search(/\n## /);
+    return next === -1 ? rest : rest.slice(0, next);
+  }
+
+  test("reviewing-designs cites skills/principle-progress-tracking/SKILL.md", () => {
+    expect(existsSync(skill("reviewing-designs"))).toBe(true);
+    expect(readOrEmpty(skill("reviewing-designs"))).toContain(
+      "skills/principle-progress-tracking/SKILL.md",
+    );
+  });
+
+  test("eng-design-doc-review carries the canonical sentence inside ## Execution", () => {
+    const execution = section(readOrEmpty(skill("eng-design-doc-review")), "## Execution");
+    // Guard: a renamed or missing heading must fail here, not pass the
+    // content assertions below on an empty string.
+    expect(execution.length).toBeGreaterThan(0);
+    expect(execution).toContain("skills/principle-progress-tracking/SKILL.md");
+    expect(execution).toContain(CANONICAL_INNER);
+  });
 });

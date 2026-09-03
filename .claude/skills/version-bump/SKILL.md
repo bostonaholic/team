@@ -158,7 +158,9 @@ HEAD_SHA=$(git rev-parse HEAD) BASE_SHA=$(git rev-parse "refs/remotes/origin/$DE
   already passed, which is the only reason the verdict is actionable here;
   read outside a land it states a merge precondition and nothing more.
   - On a branch with **no** `chore(version)` commit: **continue to step 1**.
-    This is the only exit-1 signal that ever means continue.
+    This signal reports an unmet merge precondition on a branch that has not
+    bumped, which is exactly the state step 1 exists to change. Every other
+    exit-1 verdict in this list stops.
   - On a branch **already carrying** a `chore(version)` commit: the bump went
     stale (a rebase moved the fork point). Stop — drop the bump commit, undo
     the changelog cut, reset the title, and re-enter step 0.

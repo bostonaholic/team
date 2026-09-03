@@ -472,7 +472,7 @@ describe("pr-cleanup skill: step 0 captures the invocation context pre-anchoring
     expect(resolve).toBeGreaterThan(capture);
   });
 
-  test("step 0 enumerates the capture among exactly four anchoring exceptions", () => {
+  test("step 0 closes the list of anchors that are not the primary clone", () => {
     // Four: the invoking-branch capture, check-ref-format (a pure
     // ref-syntax check), step 3's dirty check, step A2's inspection.
     const s = sliceBetween("### Step 0", "### Step 1");

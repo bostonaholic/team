@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reviewing Designs"
+  short_description: "Review a design document with fresh context"
+  default_prompt: "Use $reviewing-designs to review a design document with fresh context."

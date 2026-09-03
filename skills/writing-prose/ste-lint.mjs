@@ -49,8 +49,9 @@
 // indices instead. Read that trap as the standing rule for this file: a
 // trailing `$` bounds nothing on its own, so give a quantifier a real
 // boundary — \b, ^, a lookaround, or a literal delimiter. A `^…$` full-match
-// test such as the --cap check is exempt: the leading `^` pins the one start
-// position, which is what bounds the scan. No quantifier here nests another.
+// test such as the --cap check already has one: the leading `^` pins the one
+// start position, which is what bounds the scan. No quantifier here nests
+// another.
 //
 // Measured under Node 22 after the index-scan fix: linear to 64 MB of
 // ordinary prose, and flat in the length of an interior whitespace or pipe
