@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Every side-effecting skill's description now reads one canonical explicit-intent guard, and CI fails when one is missing or when a read-only skill grows one.** Nine runtime entry points were rewritten to the single form `Invoke ONLY on explicit … intent — … never infer …`, and each one keeps the triggers that already invoked it, including the `/team` phase advances and the `/shipit` handoff into `/pr-cleanup`. The wording used to be the author's and reviewer's responsibility; it is now swept class-wide, so deleting a guard turns the build red with the skill named. **What this asks of you:** nothing — every existing trigger phrase still works.
+- **Every side-effecting skill's description now reads one canonical explicit-intent guard, and CI fails when one is missing or when a read-only skill grows one.** Nine runtime entry points were rewritten to the single form `Invoke ONLY on explicit … intent — … never infer …`, and each one keeps the triggers that already invoked it, including the `/team` phase advances and the `/shipit` handoff into `/pr-cleanup`. The wording used to be the author's and reviewer's responsibility; it is now swept class-wide — across the shipped skills and the dev-workspace entry points alike — so deleting a guard, or adding a skill nobody classified, turns the build red with the file named. **What this asks of you:** nothing — every existing trigger phrase still works.
 
 ## [0.81.0] - 2026-09-03
 

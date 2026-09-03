@@ -7,8 +7,8 @@ description: |
   how it is invoked (entry point vs building block), how it acquires its input, and
   how it manages the context window.
   Do NOT hand-write a SKILL.md directly. Trigger on "create a skill",
-  "add a new skill", "scaffold a skill", "write a SKILL.md", or a description of
-  new skill functionality the user wants to build. Invoke ONLY on explicit
+  "add a new skill", "scaffold a skill", "write a SKILL.md", "/create-team-skill",
+  or a description of new skill functionality the user wants to build. Invoke ONLY on explicit
   skill-authoring intent, meaning one of the stated triggers above — never infer
   authoring intent from a conversation merely describing new functionality.
 ---
@@ -195,15 +195,18 @@ surface(s) per §1A / §1B below and set the frontmatter from the table above.
     explicit intent, so the map never invites the skill on a plain request — `team-fix`
     is listed as a command but reached only on stated pipeline intent, never on "fix
     this bug". The description still carries the quoted phrases and the `/<name>` — the trigger
-    test has no opt-out, but it checks phrase presence only: no test checks the guard
-    wording, so it is YOUR responsibility, and its absence on an in-class skill
-    is a review-blocking defect.
-    **Second tier:** a skill that gates every mutation on its own in-run approval
-    carries the guard there instead — `groom-backlog` presents each irreversible
-    close and waits. Setting a hard opt-out flag (e.g. `disable-model-invocation`)
-    is a further per-skill call with its own recorded reason, never a property of
-    this class; on hosts that ignore the flag the description is the only control
-    either way.
+    test has no opt-out, and it checks phrase presence only. The guard wording is
+    checked separately by `tests/intent-guard.test.ts`, which sweeps every
+    user-invocable skill under both roots against its `GUARD_CLASS` map — so
+    classify your new skill in that map, or the build stays red naming your file.
+    **A skill that gates every mutation on its own in-run approval** has an
+    additional safeguard, never a substitute for the entry guard —
+    `groom-backlog` presents each irreversible close and waits, and still states
+    the guard, because the approval covers each close while the guard covers the
+    run starting at all. Setting a hard opt-out flag (e.g.
+    `disable-model-invocation`) is a further per-skill call with its own recorded
+    reason, never a property of this class; on hosts that ignore the flag the
+    description is the only control either way.
 
 ### §1B — Wire it as a building block
 

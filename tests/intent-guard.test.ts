@@ -24,7 +24,7 @@
 // file — they are their own suite, tests/helpers/text.test.ts.
 
 import { describe, expect, test } from "bun:test";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import {
@@ -34,7 +34,7 @@ import {
   GUARD_OPEN,
   carriesGuard,
 } from "./helpers/intent-guard";
-import { frontmatter, read, squash } from "./helpers/text";
+import { frontmatter, read, squash, userInvocableSkillFiles } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 
@@ -48,38 +48,16 @@ const TEACHING_COPIES = [
 ];
 
 // ---------------------------------------------------------------------------
-// Enumeration and parsing.
+// Parsing.
 //
 // Scaffolding, on its way to `tests/helpers/text.ts`: `descriptionText()` is
 // copied verbatim from tests/architecture.test.ts (two parsers that differ
-// would let one sweep see a guard the other cannot), and the enumerator and
-// the path-wrapping `descriptionFor()` carry the signatures they will keep
-// once shared. Both description sweeps read the same list from the same
-// place, or the two halves of one sentence disagree about who they cover.
+// would let one sweep see a guard the other cannot), and the path-wrapping
+// `descriptionFor()` carries the signature it will keep once shared. The
+// enumerator is already shared: both description sweeps read the same list
+// from the same place, or the two halves of one sentence disagree about who
+// they cover.
 // ---------------------------------------------------------------------------
-
-function skillFilesUnder(repoRoot: string, root: string): string[] {
-  // A missing root throws out of readdirSync. Fail loud: an empty list would
-  // make every per-file assertion below pass on zero files.
-  return readdirSync(join(repoRoot, root))
-    .sort()
-    .map((name) => join(root, name, "SKILL.md"))
-    .filter((path) => existsSync(join(repoRoot, path)));
-}
-
-// Every SKILL.md under either root that does not set `user-invocable: false`
-// is a user-facing entry point. Repo-relative paths, sorted, so offender
-// output is stable across runs.
-function userInvocableSkillFiles(repoRoot: string): string[] {
-  return [
-    ...skillFilesUnder(repoRoot, "skills"),
-    ...skillFilesUnder(repoRoot, join(".claude", "skills")),
-  ]
-    .filter(
-      (file) => !/^user-invocable: false$/m.test(frontmatter(read(join(repoRoot, file)))),
-    )
-    .sort();
-}
 
 // Extract the description field's text only from a frontmatter slice,
 // handling both YAML styles in use: single-line scalar

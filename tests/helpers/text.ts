@@ -1,6 +1,7 @@
 // Shared text/file helpers for the structural test suites.
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 
 export function read(path: string): string {
   return readFileSync(path, "utf8");
@@ -30,4 +31,29 @@ export function frontmatter(text: string): string {
     if (count === 1) out.push(line);
   }
   return out.join("\n");
+}
+
+// The two roots that hold entry-point skills: the distributed plugin and the
+// dev workspace. Both answer the same one-sentence description rule in
+// `docs/architecture.md`, so both sweeps and the guard sweep read one list.
+const SKILL_ROOTS = ["skills", join(".claude", "skills")];
+
+// A missing root throws out of readdirSync. Fail loud: an empty list would let
+// every per-file sweep over it pass on zero files.
+function skillFilesUnder(repoRoot: string, root: string): string[] {
+  return readdirSync(join(repoRoot, root))
+    .sort()
+    .map((name) => join(root, name, "SKILL.md"))
+    .filter((path) => existsSync(join(repoRoot, path)));
+}
+
+// Every SKILL.md under either root that does not set `user-invocable: false`
+// is a user-facing entry point. Repo-relative paths, sorted, so offender
+// output is stable across runs.
+export function userInvocableSkillFiles(repoRoot: string): string[] {
+  return SKILL_ROOTS.flatMap((root) => skillFilesUnder(repoRoot, root))
+    .filter(
+      (file) => !/^user-invocable: false$/m.test(frontmatter(read(join(repoRoot, file)))),
+    )
+    .sort();
 }

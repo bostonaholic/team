@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
-import { basename, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { frontmatter, read, userInvocableSkillFiles } from "./helpers/text";
 import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
@@ -448,15 +448,17 @@ describe("user-invocable trigger phrases", () => {
     return block.join(" ");
   }
 
-  // Every skills/*/SKILL.md that does not set `user-invocable: false` is a
-  // user-facing entry point and must carry routing triggers in its
-  // description. Offenders are collected and asserted empty so a single run
-  // names every non-conforming skill.
+  // Every user-invocable SKILL.md under either root is a user-facing entry
+  // point and must carry routing triggers in its description. The enumeration
+  // is shared with tests/intent-guard.test.ts, so both halves of the one
+  // sentence in docs/architecture.md cover the same files. Offenders are
+  // collected and asserted empty so a single run names every non-conforming
+  // skill.
   function userInvocableSkills(): Array<{ file: string; description: string }> {
-    return skillFiles()
-      .map((file) => ({ file, fm: frontmatter(read(join(REPO_ROOT, file))) }))
-      .filter(({ fm }) => !/^user-invocable: false$/m.test(fm))
-      .map(({ file, fm }) => ({ file, description: descriptionText(fm) }));
+    return userInvocableSkillFiles(REPO_ROOT).map((file) => ({
+      file,
+      description: descriptionText(frontmatter(read(join(REPO_ROOT, file)))),
+    }));
   }
 
   test("every user-invocable skill description carries at least one double-quoted natural-language phrase", () => {
@@ -481,7 +483,10 @@ describe("user-invocable trigger phrases", () => {
     // name (eng-design-doc-review) passes.
     const offenders: string[] = [];
     for (const { file, description } of userInvocableSkills()) {
-      const name = file.split("/")[1];
+      // The skill's own directory name, which a `.claude/skills/` path shares
+      // with a `skills/` one — splitting on the first segment would yield
+      // "skills" for the dev root.
+      const name = basename(dirname(file));
       const slashName = new RegExp(`/${name}(?![a-z0-9-])`);
       if (!slashName.test(description)) offenders.push(file);
     }

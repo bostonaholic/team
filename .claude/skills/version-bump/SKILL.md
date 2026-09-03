@@ -8,7 +8,8 @@ description: |
   `chore(version): X.Y.Z`. This is the Team-internal bumper; the generic runtime
   `/shipit` skill then pushes, waits for CI, and squash-merges. Invoke ONLY on
   explicit land intent — the user says "ship it", "land the PR", "bump the
-  version", "version this PR", or a `/shipit` is already in flight. Never infer
+  version", "version this PR", runs "/version-bump", or a `/shipit` is already
+  in flight. Never infer
   land intent from work merely being finished, reviewed, green, or ready to open
   a draft PR: a drafted PR carries no version, and a bump made before land time
   is stale by the time the PR merges.
