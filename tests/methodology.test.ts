@@ -917,7 +917,7 @@ describe("time-bomb example pair (single copy in test-style)", () => {
 // Code-comment rules — free L2 content tripwires (docs/testing.md §2).
 // engineering-standards is the single source of truth for the binding comment
 // rule set (why-only, rewrite-first, no ticket/pipeline references, no
-// commented-out code, no TODOs, doc-comment exemption); the implementer's
+// commented-out code, no TODOs, and the in-body scope of the ban); the implementer's
 // `## Code quality` block defers to it with a one-line pointer.
 // ---------------------------------------------------------------------------
 
@@ -936,13 +936,14 @@ describe("code-comment rules (L2 content tripwire)", () => {
     expect(/ticket\/issue IDs/i.test(section)).toBe(true);
     expect(/plan\/slice\/phase markers/i.test(section)).toBe(true);
     expect(/doc-section references/i.test(section)).toBe(true);
-    // Upstream-bug-link exemption: the link IS the why.
+    // A link that IS the why satisfies the reference ban.
     expect(/upstream/i.test(section)).toBe(true);
     // No commented-out code; no TODOs in delivered code.
     expect(/commented-out code/i.test(section)).toBe(true);
     expect(section).toContain("TODO");
-    // Doc comments on exported/public interfaces follow the ecosystem's
-    // convention and are exempt.
+    // The ban covers in-body comments that restate the code; a doc comment on
+    // an exported/public interface adds contract information the signature
+    // does not carry, so it satisfies the rule.
     expect(/doc comments/i.test(section)).toBe(true);
     expect(/exported\/public/i.test(section)).toBe(true);
     // Scope pointer: in-source comments here; review findings belong to
@@ -1000,8 +1001,9 @@ describe("comment red flags (L2 content tripwire)", () => {
     // Style regime escalates: `suggestion:` once, `issue:` when repeated.
     expect(flags).toContain("suggestion:");
     expect(flags).toContain("issue:");
-    // Carve-outs: upstream-bug links where the link is the why, and
-    // ticket-like tokens outside comment syntax (string literals).
+    // What the flag list still admits: an upstream-bug link where the link is
+    // the why, and ticket-like tokens outside comment syntax (string
+    // literals).
     expect(/upstream/i.test(flags)).toBe(true);
     expect(/string literals/i.test(flags)).toBe(true);
     // Which severity bucket a judgment class lands in is behavior a model

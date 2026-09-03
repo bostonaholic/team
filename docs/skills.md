@@ -910,9 +910,9 @@ lists more than three carries one recorded reason naming that count (see
   invocation.
 - **Key behaviors:** Defines how a reviewer reads with fresh eyes and emits
   a structured verdict. Findings use the format defined in
-  `conventional-comments`. The ux-reviewer is the exception: its
-  live-verification report uses its own Working/Broken/Could Improve
-  format. The gate-type and severity-tier map lives in
+  `conventional-comments`; format follows the artifact, so the
+  ux-reviewer's live-verification report uses its own
+  Working/Broken/Could Improve format instead. The gate-type and severity-tier map lives in
   `review-severity-tiers`. Points review-comment prose at the seventh-grade
   bar in `writing-prose`. Carries the Comment red flags check with its
   split severity regime. Ticket or plan references and TODO or FIXME
@@ -1033,7 +1033,9 @@ lists more than three carries one recorded reason naming that count (see
   references, TODO or FIXME in delivered code, and commented-out code.
   Maintenance: obsolete comments are removed in the same diff, and repo
   comment style is preserved. A four-question Decision Test closes the
-  set. Doc comments on public interfaces are exempt. It also owns the
+  set. The comment ban covers in-body comments that restate the code; doc
+  comments on public interfaces add contract information, so they satisfy
+  the rule. It also owns the
   Comment Discipline quality-checklist item that reviewer findings cite.
 
 ### [test-first-development](https://github.com/bostonaholic/team/blob/main/skills/test-first-development/SKILL.md)
@@ -1562,9 +1564,9 @@ lists more than three carries one recorded reason naming that count (see
   allowlisted scalars and guarded `"${VAR:?}"` expansions are the only
   sanctioned argv forms. Scalars pass a character allowlist first, with
   `LC_ALL=C` so the class is byte-exact — refuse on failure, never
-  normalize a name to make it pass. Terminate options with `--` where an
-  option-shaped value could be read as an option; a value whose position
-  already fixes its role is exempt. Paths get containment checks before
+  normalize a name to make it pass. Terminate options with `--` where a value
+  could be read as an option, which a value whose position already fixes
+  its role could not be. Paths get containment checks before
   destructive use. Capture, validate, and use in the SAME invocation; a
   value a destructive command or gate consumes expands as `"${VAR:?}"`
   so an unset value aborts instead of expanding to empty.
@@ -1670,8 +1672,8 @@ lists more than three carries one recorded reason naming that count (see
   No agent preloads it.
 - **Key behaviors:** Do not add steps, slices, or features beyond the
   plan — a missing piece is documented as a finding, not implemented on
-  the spot. Do not refactor or "improve" adjacent code unless the plan
-  calls for it. An applied fix stays bounded to the anchored file and
+  the spot. Adjacent code is refactored where the plan calls for it and
+  noted as an opportunity where it does not. An applied fix stays bounded to the anchored file and
   lines it was approved for. Scope expands by changing the governing
   artifact (and re-reviewing a material change), never by quietly
   exceeding it — and never expand or shrink scope in silence.

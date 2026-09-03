@@ -20,8 +20,8 @@ slower upfront and cheaper in total debugging time.
 - Ask "why" until the chain bottoms out at a cause you can change;
   the proximate cause ("this variable is null") is never the root
   ("this runs before initialization completes").
-- Resist guards that silence crashes: a nil check added to stop a
-  crash is a symptom fix unless absence is a legal state.
+- Resist guards that silence crashes: a nil check is a root-cause fix
+  where absence is a legal state, and a symptom fix where it is not.
 - A workaround that needs a paragraph-long comment to justify it
   means the code is wrong. Fix the code, not the comment.
 - Fix the pattern, not just the instance: grep for siblings of the

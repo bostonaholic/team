@@ -32,7 +32,7 @@
     },
     {
       "id": "n2",
-      "description": "The normalizeHeaders workaround comment links the upstream node-fetch bug — the link IS the why, so it is exempt from the reference ban.",
+      "description": "The normalizeHeaders workaround comment links the upstream node-fetch bug — the link IS the why, so it satisfies the reference ban.",
       "false_positive_hint": "\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:[^\n]{0,200}?(?:node.?fetch|1735|normalizeheaders)|(?:node.?fetch|1735|normalizeheaders)[^\n]{0,200}?\\b(?:issue|suggestion|nitpick|todo)[\\s*]*(?:\\([^)]*\\))?[\\s*]*:"
     },
     {

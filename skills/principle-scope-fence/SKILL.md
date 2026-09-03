@@ -19,8 +19,8 @@ cannot.
 **Pattern:**
 - Do not add steps, slices, or features beyond the plan. A missing piece
   is documented as a finding, not implemented on the spot.
-- Do not refactor or "improve" adjacent code unless the plan calls for
-  it; note the opportunity instead.
+- Refactor or "improve" adjacent code where the plan calls for it, and
+  note the opportunity where it does not.
 - An applied fix stays bounded to the anchored file and lines it was
   approved for; a change that wants to grow returns for approval.
 - If scope must genuinely expand, update the governing artifact — and for

@@ -71,8 +71,9 @@ elimination, not confirmation.
   impossible to attribute the result.
 - **Record results immediately.** Note what you tried, what you expected,
   and what actually happened — even for negative results.
-- **Eliminate definitively.** If a hypothesis is disproven, cross it off and
-  do not revisit it unless new evidence emerges.
+- **Eliminate definitively.** A disproven hypothesis stays crossed off. New
+  evidence reopens it; a hunch or a second pass over the same evidence does
+  not.
 - **When you have a working baseline and a failing tip, bisect.** Do not
   reason from first principles about which of 40 commits broke it —
   `git bisect` is faster and more reliable. Each step discriminates half the

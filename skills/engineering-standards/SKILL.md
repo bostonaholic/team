@@ -43,10 +43,9 @@ neither intention-revealing code nor tests can carry the explanation.
 - **No ticket/issue IDs, plan/slice/phase markers, or doc-section references
   in comments.** They rot: the tracker migrates, the plan is deleted, the
   section is renumbered, and the comment becomes a lie.
-  Exemption: an upstream-bug link where the link IS the why — a workaround
-  pointing at a public issue URL stays true for exactly as long as the
-  workaround does. The ban targets internal trackers and pipeline artifacts,
-  not those links.
+  A link that IS the why satisfies the rule: a workaround pointing at a
+  public upstream-issue URL stays true for exactly as long as the workaround
+  does. The ban targets internal trackers and pipeline artifacts.
 - **No process narration.** Describe the code as it exists now. No dates,
   corrections, changelog entries, or historical narration. Never describe the
   edit that produced the code. Never mention the user, the prompt, review
@@ -71,11 +70,11 @@ neither intention-revealing code nor tests can carry the explanation.
   bar does not ship.
 - **Maintain: remove obsolete comments, preserve repo style.** A change that
   invalidates a comment updates or deletes it in the same diff.
-- **Doc comments on exported/public interfaces are exempt.** They follow the
-  ecosystem's convention (JSDoc, docstrings, rustdoc) and define the
-  abstraction. The why-only rule governs implementation comments. A doc
-  comment that merely repeats the signature is a what-comment, not an exempt
-  doc comment.
+- **The ban covers in-body comments that restate the code.** Doc comments on
+  exported/public interfaces add contract information the signature does not
+  carry, following the ecosystem's convention (JSDoc, docstrings, rustdoc),
+  so they satisfy the rule. A doc comment that merely repeats the signature
+  carries no contract information and is a what-comment.
 
 **Decision Test.** Before you keep a comment: does it explain why? Would code
 or tests carry it better? Is it true after this change, with no reference to
