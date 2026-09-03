@@ -1,13 +1,12 @@
 // tests/intent-guard.test.ts
 //
-// L2 tripwire (free, deterministic): the explicit-intent guard, which until
-// now was checked by nobody.
+// L2 tripwire (free, deterministic): the explicit-intent guard wording in
+// every user-invocable skill description.
 //
 // `docs/architecture.md` requires a side-effecting entry-point skill to state
-// an explicit-intent guard in its description, and `tests/architecture.test.ts`
-// enforces only the other half of that sentence (a quoted phrase plus the
-// literal `/<name>`). The guard itself was left to the author and the
-// reviewer, so deleting it shipped green.
+// an explicit-intent guard in its description. `tests/architecture.test.ts`
+// covers the other half of that sentence (a quoted phrase plus the literal
+// `/<name>`); the guard wording is this file's half.
 //
 // This asserts a REQUIRED FORM, which `docs/testing.md` permits under exactly
 // three conditions, all of which hold here: the prose itself mandates the
@@ -20,8 +19,8 @@
 // a skill's class is right. Key-set equality forces a value, never a correct
 // one. That residual is stated in the design and belongs at L5.
 //
-// Assumption: the parser controls for tests/helpers/text.ts are not in this
-// file — they are their own suite, tests/helpers/text.test.ts.
+// The parser controls for tests/helpers/text.ts live in their own suite,
+// tests/helpers/text.test.ts.
 
 import { describe, expect, test } from "bun:test";
 import { existsSync } from "node:fs";
@@ -69,6 +68,12 @@ function guardOffenders(entries: Entry[], classes: Record<string, "in" | "out">)
       continue;
     }
     const membership = classes[file];
+    // An unclassified file has no rule to satisfy, so it counts as an
+    // offender rather than passing (skills/principle-fail-closed/SKILL.md).
+    if (membership === undefined) {
+      offenders.push(file);
+      continue;
+    }
     if (membership === "in" && !carriesGuard(description)) offenders.push(file);
     if (membership === "out" && carriesGuard(description)) offenders.push(file);
   }
@@ -116,6 +121,19 @@ describe("the guard sweep can see a positive", () => {
 
   test("the canonical teaching rendering satisfies the check it teaches", () => {
     expect(carriesGuard(CANONICAL)).toBe(true);
+  });
+
+  test("an empty description is reported whatever its class", () => {
+    // The branch that fires before any class lookup, on either class.
+    const blankIn = { file: PLANTED_IN, description: "  \n  " };
+    const blankOut = { file: PLANTED_OUT, description: "" };
+    expect(guardOffenders([blankIn, blankOut], PLANTED)).toEqual([PLANTED_IN, PLANTED_OUT]);
+  });
+
+  test("a file absent from the class map is reported", () => {
+    const unclassified = join("skills", "planted-unclassified", "SKILL.md");
+    const entry = { file: unclassified, description: `${CARRIER} ${CANONICAL}` };
+    expect(guardOffenders([entry], PLANTED)).toEqual([unclassified]);
   });
 
   test("an in-class description with the guard stripped is reported", () => {
@@ -168,19 +186,29 @@ describe("every teaching copy shows the canonical form verbatim", () => {
   // A doc that shows the form is showing the whole shape, so a paraphrase
   // that drifts teaches a guard this sweep would reject. Read through
   // squash(), because this repo hard-wraps every one of these copies.
+
+  // The one assertion the real copies and the planted drift both run, so a
+  // control cannot pass through a path the sweep does not use.
+  function assertShowsCanonical(text: string): void {
+    // A missing or renamed file reads as "" and must fail here, not pass
+    // vacuously.
+    expect(text.length).toBeGreaterThan(0);
+    expect(squash(text)).toContain(CANONICAL);
+  }
+
   for (const relative of TEACHING_COPIES) {
     test(`${relative} contains the canonical form`, () => {
-      const text = surface(relative);
-      // Guard: a missing or renamed file must fail here, not pass vacuously.
-      expect(text.length).toBeGreaterThan(0);
-      expect(squash(text)).toContain(CANONICAL);
+      assertShowsCanonical(surface(relative));
     });
   }
 
-  test("a teaching copy with a word dropped fails the same check", () => {
-    // The live drift: one copy omits "explicit" from the open fragment.
+  test("a teaching copy with a word dropped fails the same assertion", () => {
     const drifted = CANONICAL.replace("explicit ", "");
-    expect(drifted).not.toBe(CANONICAL);
-    expect(squash(drifted)).not.toContain(CANONICAL);
+    expect(() => assertShowsCanonical(drifted)).toThrow();
+  });
+
+  test("a teaching copy that is missing fails the same assertion", () => {
+    const absent = surface(join("docs", "no-such-teaching-copy.md"));
+    expect(() => assertShowsCanonical(absent)).toThrow();
   });
 });

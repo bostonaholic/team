@@ -51,9 +51,6 @@ export function carriesGuard(description: string): boolean {
   return afterOpen.toLowerCase().includes(GUARD_CLOSE.toLowerCase());
 }
 
-// Assumption: the class map lives here, beside the encoding it keys, rather
-// than at module scope in tests/intent-guard.test.ts.
-//
 // Class membership per user-invocable skill, keyed by repo-relative path.
 // Hand-maintained on purpose: the complement pair in `docs/architecture.md`
 // asks what an invocation AUTHORIZES, which no pattern over the file can

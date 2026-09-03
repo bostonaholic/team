@@ -28,8 +28,8 @@ describe("frontmatter — the slice between two markers", () => {
   });
 
   test("returns nothing when the closing marker is missing", () => {
-    // The failure this guards: an unterminated block used to return the whole
-    // rest of the file, so a body sentence could satisfy a frontmatter check.
+    // Returning the rest of the file would let a body sentence satisfy a
+    // frontmatter check.
     const text = ["---", "name: truncated", "", "# Body", "user-invocable: false"].join("\n");
     expect(frontmatter(text)).toBe("");
   });
