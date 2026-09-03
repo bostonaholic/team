@@ -1,31 +1,20 @@
 ---
 name: code-review
-description: Dispatches a fresh-context code review of a diff and prints the reviewer's report in full; the review methodology itself lives in `reviewing-code`, which the review agents load. Trigger on "review this diff", "review these changes", "code review this", or "/code-review".
+description: Fresh-context review of a resolved diff. Trigger on "review this diff", "review these changes", "code review this", or "/code-review".
 effort: high
 argument-hint: "[<diff target>]"
 ---
 
 # Code Review
 
-## Input
+Resolve `$ARGUMENTS` once as a PR, branch, commit range, or path. With no
+argument, use the working-tree diff against its base.
 
-`$ARGUMENTS` names the diff — a PR number or URL, a branch, a commit range,
-or a path. With no argument, review the working tree's diff against the base
-branch. Resolve it once and pass the resolved target to the reviewer; never
-ask the user to restate it.
-
-## When Invoked Directly
-
-The main session holds the conversation history `reviewing-code` forbids, so
-it is not a valid reviewer. Do not review inline. Run these in order:
-
-1. **Load the format.** Call the Skill tool with `reviewing-code` and read
-   its `## Report Format`. Order matters: a relay cannot hold a shape it has
-   not read, and loading it after the dispatch is the defect this sequence
-   fixes.
-2. **Dispatch.** Dispatch the `code-reviewer` agent, which preloads
-   `reviewing-code`, against the resolved target. When it is unavailable,
-   dispatch the built-in read-only `Explore` subagent and write the same
-   `## Report Format` requirement into its prompt.
-3. **Relay.** Print what the reviewer returned. `## Report Format` states
-   what a relay owes, and what to do with a report that does not match it.
+1. Call the Skill tool with `reviewing-code` and read `## Report Format`.
+2. Dispatch `code-reviewer` with fresh context and the resolved target; never
+   review inline from the conversation that produced the change.
+3. If that agent is unavailable, dispatch a built-in read-only `Explore`
+   subagent with the same target and report contract. Never substitute a
+   write-capable reviewer.
+4. Relay the complete report according to `## Report Format`; do not summarize
+   away findings or verdicts.

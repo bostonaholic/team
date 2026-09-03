@@ -1208,8 +1208,7 @@ describe("code-review report format (L2 content tripwire)", () => {
   });
 
   test("the direct-invocation relay binds to the report format", () => {
-    const invoked = toEnd(read(FRONT_DOOR), "\n## When Invoked Directly\n", "\n## ");
-    // Guard: a missing section must fail, not vacuously pass the check below.
+    const invoked = read(FRONT_DOOR);
     expect(invoked.length).toBeGreaterThan(0);
     expect(invoked).toContain("Report Format");
   });
@@ -1220,8 +1219,7 @@ describe("code-review report format (L2 content tripwire)", () => {
     // load stated after the dispatch, a session that reads top-to-bottom
     // dispatches, relays, and never opens the template — so the shape of the
     // report becomes a per-call choice.
-    const invoked = toEnd(read(FRONT_DOOR), "\n## When Invoked Directly\n", "\n## ");
-    // Guard: a missing section must fail, not vacuously pass the checks below.
+    const invoked = read(FRONT_DOOR);
     expect(invoked.length).toBeGreaterThan(0);
     const format = invoked.indexOf("Report Format");
     const dispatch = invoked.indexOf("`code-reviewer`");
@@ -1237,12 +1235,12 @@ describe("code-review report format (L2 content tripwire)", () => {
     // relay are two surfaces, so the section must state the requirement on
     // each — a fallback dispatched without the template returns whatever
     // shape it invents.
-    const invoked = toEnd(read(FRONT_DOOR), "\n## When Invoked Directly\n", "\n## ");
-    // Guard: a missing section must fail, not vacuously pass the checks below.
+    const invoked = read(FRONT_DOOR);
     expect(invoked.length).toBeGreaterThan(0);
     // The built-in read-only agent type, named the way the sibling front door
     // `eng-design-doc-review` names it, rather than an unnamed "subagent".
     expect(invoked).toContain("Explore");
+    expect(invoked).toContain("same target and report contract");
     const mentions = invoked.match(/Report Format/g) ?? [];
     expect(mentions.length).toBeGreaterThanOrEqual(2);
   });
