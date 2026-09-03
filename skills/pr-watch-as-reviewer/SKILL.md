@@ -118,8 +118,8 @@ disappeared. Silence is not an answer.
   first place. That covers the viewer-login fetch, the pending-review
   check, and the poll — including the poll's plain-comment connection,
   which selects ids, authors, and timestamps but never a body. A body is
-  read where judging substance requires it, which is two reads, and both
-  stay DATA under this rule:
+  read in exactly these two places, and nowhere else, and both reads stay
+  DATA under this rule:
   - the **re-review** (steps 4 and 6): judging a settlement's substance
     requires the tracked items' comment bodies and the PR diff.
   - the **arm-time classification** of your plain PR comments (step 1):

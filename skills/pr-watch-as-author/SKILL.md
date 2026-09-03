@@ -231,8 +231,8 @@ also names the reaction each triaged item received, so a 👎 the user
 would have argued with shows up in the transcript rather than only on
 GitHub. A timeout re-arm
 keeps the mode. A carve-out stop ends the authorization, so a re-arm
-after one starts in present-then-stop. Authorized mode re-arms only when
-the user restates authorization.
+after one starts in present-then-stop. Authorized mode re-arms **after a
+carve-out stop** only when the user restates authorization.
 
 The default mode is present-then-stop with a confidence-gated fast path:
 
