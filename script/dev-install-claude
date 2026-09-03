@@ -10,24 +10,110 @@ if [ -z "$PLUGIN_VERSION" ]; then
   exit 1
 fi
 
-# Already linked — nothing to do
-if [ -L "$CACHE_PATH" ] && [ "$(readlink "$CACHE_PATH")" = "$PLUGIN_ROOT" ]; then
-  echo "Team plugin already installed (dev)."
-  exit 0
+if [ -L "$CACHE_PATH" ] && [ "$(readlink "$CACHE_PATH")" != "$PLUGIN_ROOT" ]; then
+  echo "Error: ${CACHE_PATH} already links a different checkout:" >&2
+  echo "  $(readlink "$CACHE_PATH")" >&2
+  echo "Run script/dev-uninstall claude from that checkout first." >&2
+  exit 1
+fi
+
+if [ -e "$CACHE_PATH" ] && [ ! -d "$CACHE_PATH" ]; then
+  echo "Error: ${CACHE_PATH} exists and is not a directory or symlink." >&2
+  exit 1
 fi
 
 echo "Installing Team plugin (dev)..."
 echo "  Source: ${PLUGIN_ROOT}"
 echo
 
-claude plugin marketplace add "$PLUGIN_ROOT" --scope user 2>&1
-claude plugin install team@team-dev --scope user 2>&1 || true
+MARKETPLACE_PATH=$(
+  claude plugin marketplace list --json |
+    node -e '
+      const entries = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
+      const matches = entries.filter((entry) => entry.name === "team-dev");
+      if (matches.length > 1) throw new Error("multiple team-dev marketplaces found");
+      if (matches.length === 1) {
+        const entry = matches[0];
+        if (entry.source !== "directory" || typeof entry.path !== "string") {
+          throw new Error("team-dev is not a directory marketplace");
+        }
+        process.stdout.write(entry.path);
+      }
+    '
+)
+
+MARKETPLACE_ADDED=false
+if [ -z "$MARKETPLACE_PATH" ]; then
+  claude plugin marketplace add "$PLUGIN_ROOT" --scope user 2>&1
+  MARKETPLACE_ADDED=true
+elif [ "$MARKETPLACE_PATH" != "$PLUGIN_ROOT" ]; then
+  echo "Error: team-dev already points to a different checkout:" >&2
+  echo "  ${MARKETPLACE_PATH}" >&2
+  echo "Run script/dev-uninstall claude from that checkout first." >&2
+  exit 1
+fi
+
+read_plugin_state() {
+  # The JavaScript template literal is intentionally protected from the shell.
+  # shellcheck disable=SC2016
+  claude plugin list --json |
+    node -e '
+      const entries = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
+      const matches = entries.filter(
+        (entry) => entry.id === "team@team-dev" && entry.scope === "user",
+      );
+      if (matches.length > 1) throw new Error("multiple user-scope Team installs found");
+      if (matches.length === 1) {
+        const entry = matches[0];
+        if (typeof entry.version !== "string" || typeof entry.installPath !== "string") {
+          throw new Error("Team install metadata is incomplete");
+        }
+        process.stdout.write(`${entry.version}\t${entry.installPath}`);
+      }
+    '
+}
+
+PLUGIN_STATE=$(read_plugin_state)
+INSTALLED_VERSION=""
+INSTALLED_PATH=""
+if [ -n "$PLUGIN_STATE" ]; then
+  IFS=$'\t' read -r INSTALLED_VERSION INSTALLED_PATH <<< "$PLUGIN_STATE"
+fi
+
+if [ -z "$INSTALLED_VERSION" ]; then
+  if [ "$MARKETPLACE_ADDED" = false ]; then
+    claude plugin marketplace update team-dev 2>&1
+  fi
+  if [ -L "$CACHE_PATH" ]; then
+    rm "$CACHE_PATH"
+  fi
+  claude plugin install team@team-dev --scope user 2>&1
+  PLUGIN_STATE=$(read_plugin_state)
+elif [ "$INSTALLED_VERSION" != "$PLUGIN_VERSION" ] || [ "$INSTALLED_PATH" != "$CACHE_PATH" ]; then
+  if [ -L "$CACHE_PATH" ]; then
+    rm "$CACHE_PATH"
+  fi
+  claude plugin marketplace update team-dev 2>&1
+  claude plugin update team@team-dev --scope user 2>&1
+  PLUGIN_STATE=$(read_plugin_state)
+fi
+
+IFS=$'\t' read -r INSTALLED_VERSION INSTALLED_PATH <<< "$PLUGIN_STATE"
+if [ "$INSTALLED_VERSION" != "$PLUGIN_VERSION" ] || [ "$INSTALLED_PATH" != "$CACHE_PATH" ]; then
+  echo "Error: Claude Code did not install Team ${PLUGIN_VERSION} at ${CACHE_PATH}." >&2
+  exit 1
+fi
 
 # Replace the cached copy with a symlink to the source
 if [ -d "$CACHE_PATH" ] && [ ! -L "$CACHE_PATH" ]; then
   rm -rf "$CACHE_PATH"
   ln -s "$PLUGIN_ROOT" "$CACHE_PATH"
   echo "  Linked: ${CACHE_PATH} → ${PLUGIN_ROOT}"
+elif [ -L "$CACHE_PATH" ]; then
+  echo "Team plugin already installed (dev)."
+else
+  echo "Error: Claude Code reported Team at ${CACHE_PATH}, but that directory does not exist." >&2
+  exit 1
 fi
 
 echo
