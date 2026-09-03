@@ -173,7 +173,7 @@ of the work.
 | Column | Meaning | Move here when… |
 |--------|---------|-----------------|
 | **Backlog** | Captured but not started. Not yet committed to. | The card is created. |
-| **Bugs** | A **Backlog for `bug`-labeled issues only**. It is a convenience view that makes open bugs easy to spot. The card is captured, not started, and not committed to. This is not a separate stage in the flow. | Someone captures a `bug` issue. Use this column instead of **Backlog**, so the card shows in the bugs view. Bugs move **directly into In progress** from here. They are **not** promoted to **Ready**. |
+| **Bugs** | A **Backlog for `bug`-labeled issues only**. It is a convenience view that makes open bugs easy to spot. The card is captured, not started, and not committed to. This is not a separate stage in the flow. | Someone captures a `bug` issue. Use this column instead of **Backlog**, so the card shows in the bugs view. Bugs move **directly into In progress** from here; promotion to **Ready** is the non-bug lane's step. |
 | **Ready** | Shaped and ready for someone to pick up. It has enough detail to start. **WIP-limited to 5.** | The work is well-understood and prioritized, and Ready has an open slot (see the WIP limit below). |
 | **In progress** | Someone is working on it now. | You start work. You open a worktree, run `/team`, or begin to code. |
 | **In review** | Implementation is complete. A PR is ready and under review. | Someone **marks the card's pull request ready for review**. That is the trigger: a card sits in **In progress** for as long as its PR is a draft. |
