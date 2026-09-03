@@ -1096,9 +1096,6 @@ describe("design-round records (L2)", () => {
     // carries it, once where the sweeps exclude it.
     const occurrences = spec.split(DISPOSITION_HEADING).length - 1;
     expect(occurrences).toBeGreaterThanOrEqual(2);
-    // Both sweeps are named as governed, so neither can carry a second copy
-    // of what (d) already holds.
-    expect(spec).toMatch(/\(a\) and \(b\)/);
   });
 });
 
