@@ -23,6 +23,20 @@ The first command registers the checkout as a marketplace; the second installs
 from it. Skills register as slash commands (`/team`, `/shipit`), and agents and
 hooks load with them.
 
+For a clone-backed install that updates when `git pull` changes the checkout:
+
+```bash
+script/dev-install claude
+```
+
+This adds clone-local hooks for merge and rebase pulls. Existing non-Team hooks
+are never overwritten; setup stops with manual integration instructions.
+Remove the install and Team-owned hooks with:
+
+```bash
+script/dev-uninstall claude
+```
+
 **Turn on auto-update, or you stay on the version you installed.** Claude Code
 enables auto-update for official Anthropic marketplaces by default and
 **disables it for local development marketplaces** — which is what a local

@@ -2,7 +2,7 @@
 //
 // L2 tripwire (free, deterministic): README.md and docs/index.md are the two
 // self-contained install surfaces (GitHub and team.bostonaholic.dev). Each
-// must carry all eight install/uninstall command strings verbatim, and every
+// must carry all ten install/uninstall command strings verbatim, and every
 // `rm -rf` safety-guard invocation on each surface must point at the Codex
 // plugin cache prefix — a mistyped prefix is a silent no-op for the reader.
 //
@@ -40,14 +40,16 @@ function rmRfTargets(text: string): string[] {
   return [...text.matchAll(/rm -rf\s+(\S+)/g)].map((m) => m[1] ?? "");
 }
 
-describe("docs-install-parity: README.md and docs/index.md each carry all eight install/uninstall command strings verbatim", () => {
-  test("README.md carries all eight install/uninstall command strings verbatim", () => {
+describe("docs-install-parity: README.md and docs/index.md each carry all ten install/uninstall command strings verbatim", () => {
+  test("README.md carries all ten install/uninstall command strings verbatim", () => {
     const readme = readIf(README_MD);
     // Guard: a missing README must fail cleanly, not vacuously pass.
     expect(readme.length).toBeGreaterThan(0);
 
     expect(readme).toContain("claude plugin marketplace add /path/to/team");
     expect(readme).toContain("claude plugin install team@team-dev");
+    expect(readme).toContain("script/dev-install claude");
+    expect(readme).toContain("script/dev-uninstall claude");
     expect(readme).toContain("codex plugin marketplace add /path/to/team");
     expect(readme).toContain("codex plugin add team@team-dev");
     expect(readme).toContain("agy plugin install /path/to/team");
@@ -56,13 +58,15 @@ describe("docs-install-parity: README.md and docs/index.md each carry all eight 
     expect(readme).toContain("script/dev-uninstall antigravity");
   });
 
-  test("docs/index.md carries all eight install/uninstall command strings verbatim", () => {
+  test("docs/index.md carries all ten install/uninstall command strings verbatim", () => {
     const docsIndex = readIf(DOCS_INDEX_MD);
     // Guard: a missing docs page must fail cleanly, not vacuously pass.
     expect(docsIndex.length).toBeGreaterThan(0);
 
     expect(docsIndex).toContain("claude plugin marketplace add /path/to/team");
     expect(docsIndex).toContain("claude plugin install team@team-dev");
+    expect(docsIndex).toContain("script/dev-install claude");
+    expect(docsIndex).toContain("script/dev-uninstall claude");
     expect(docsIndex).toContain("codex plugin marketplace add /path/to/team");
     expect(docsIndex).toContain("codex plugin add team@team-dev");
     expect(docsIndex).toContain("agy plugin install /path/to/team");
