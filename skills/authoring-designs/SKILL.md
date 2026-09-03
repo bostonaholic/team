@@ -88,8 +88,13 @@ in the codebase so the implementer does not pick the wrong precedent.>
 ## Decisions made
 <numbered list of design decisions, each with: the decision, the alternative
 considered, why this was chosen. Name the surfaces that must change together
-(callers, siblings, config, docs). Mark every self-resolved choice
-"Assumption — chosen without user review" here.>
+(callers, siblings, config, docs). Every set a decision declares closed — the
+surfaces a rule reaches, the members of a class, a blast radius, an
+inventory — is derived by enumeration (a grep, a directory listing, a
+key-set comparison) and the command that produced it is recorded beside the
+list, so a reviewer re-runs it instead of trusting it; a set listed from
+memory is the single most common REQUEST CHANGES cause. Mark every
+self-resolved choice "Assumption — chosen without user review" here.>
 
 ## Out of scope
 <bulleted list of things this design explicitly does NOT do. Be specific —

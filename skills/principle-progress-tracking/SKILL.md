@@ -16,6 +16,11 @@ When a procedure has two or more ordered steps, seed one todo item per step
 before starting and mark each complete as you go. The rule starts at two
 because a one-item ledger is noise.
 
+When the host offers no todo tool, keep the same ledger inline: state the
+step list once at the start and name each step as it completes. The
+ledger's job is visibility, and a reply that names the step is visible in
+the same way a todo item is.
+
 ## Per-step granularity
 
 One todo item per numbered step — not per phase, not per file. When a

@@ -384,7 +384,13 @@ not discard work.
    ```
 
    Empty `$WORKTREE_PATH` → the branch lives in no worktree; skip this
-   step. If present:
+   step. A `$WORKTREE_PATH` outside the repository's `.claude/worktrees/`
+   was created by something other than Team — a workspace manager, or the
+   user by hand — and is not this skill's to remove: skip this step, say
+   so, and name the path; that tool's own teardown removes it. The
+   remaining steps (resync, branch delete, prune) still run, except that a
+   branch checked out in such a worktree is left for that teardown too.
+   Otherwise:
 
    ```sh
    cd "$PRIMARY_ROOT"

@@ -207,6 +207,7 @@ clean for the whole run.
    ssh-add -l >/dev/null 2>&1 && echo "ssh-agent: keys loaded" || echo "ssh-agent: UNREACHABLE"
    gh auth status >/dev/null 2>&1 && echo "gh auth: ok" || echo "gh auth: NOT LOGGED IN"
    echo "global commit.gpgsign: $(git config --global --get commit.gpgsign || echo unset)"
+   T=$(mktemp -d); git -C "$T" init -q; timeout 20 git -C "$T" -c user.name=probe -c user.email=probe@example.com commit --allow-empty -q -m probe >/dev/null 2>&1 && echo "commit signing: ok" || echo "commit signing: FAILED OR HUNG"; rm -rf "$T"
    ```
 
    Each answer predicts a specific failure hours later, and knowing it up
@@ -217,6 +218,11 @@ clean for the whole run.
      `commit.gpgsign` is `true` — those inherit the setting, try to sign, and
      stall until they time out. A suite that normally runs in a minute takes
      ten and fails in places unrelated to the diff.
+   - **A signing probe that fails or hangs** predicts every later commit —
+     each slice commit and the ship commit — stalling on the signing
+     agent, which the no-unsigned-commits rule turns into a hard stop.
+     Twenty seconds here is cheaper than discovering it at the first
+     slice commit.
    - **A missing `gh` login** breaks the PR phase only, at the very end,
      after all the work is done.
 

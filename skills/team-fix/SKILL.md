@@ -122,10 +122,15 @@ else
 fi
 ```
 
-- **`ok <branch>`** — HEAD is already on a non-default branch. Reuse it in
-  place. Create no worktree and no new branch, and announce the reuse once:
-  "Continuing on branch `<branch>`." This is also the linked-worktree reuse
-  case in `skills/team-worktree/SKILL.md` → "Detect existing worktree".
+- **`ok <branch>`** — HEAD is already on a non-default branch. Check
+  whether it is the head of an open pull request:
+  `gh pr view --json number,title --jq '"#\(.number) \(.title)"' 2>/dev/null`.
+  No open PR, or one whose title names this bug → reuse the branch in
+  place: create no worktree and no new branch, and announce the reuse
+  once: "Continuing on branch `<branch>`." This is also the linked-worktree
+  reuse case in `skills/team-worktree/SKILL.md` → "Detect existing
+  worktree". An open PR for other work → treat it as `on-default`: a fix
+  never rides on another PR's branch, so isolate per **Isolate** below.
 - **`on-default`** — isolate before the first commit, per **Isolate** below.
 
 ### Isolate
