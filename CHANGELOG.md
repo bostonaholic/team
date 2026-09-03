@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.80.0] - 2026-09-03
+
 ### Added
 
 - **The design-review brief is now its own methodology skill, [`reviewing-designs`](https://github.com/bostonaholic/team/blob/main/skills/reviewing-designs/SKILL.md), and `/eng-design-doc-review` is the front door over it.** The brief used to live inside the entry point, which both pipeline orchestrators loaded as a building block — the same dual role `code-review` gave up in 0.75.0. The pipeline's DESIGN gate and `/eng-design-doc-review` now load `reviewing-designs`; the entry point keeps its discovery, dispatch, and completion steps. The catalog grows from 82 to 83 skills. **What this asks of you:** nothing — `/eng-design-doc-review` behaves as before.
@@ -742,7 +744,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.79.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.80.0...HEAD
+[0.80.0]: https://github.com/bostonaholic/team/compare/v0.79.0...v0.80.0
 [0.79.0]: https://github.com/bostonaholic/team/compare/v0.78.0...v0.79.0
 [0.78.0]: https://github.com/bostonaholic/team/compare/v0.77.0...v0.78.0
 [0.77.0]: https://github.com/bostonaholic/team/compare/v0.76.0...v0.77.0
