@@ -33,8 +33,8 @@ export function isValidSkillName(name) {
 /**
  * The real path of `candidatePath`, resolving the deepest ancestor that
  * exists and re-appending the components that do not. A create target's final
- * component never exists yet, so resolving only existing paths would exempt
- * exactly the case that matters.
+ * component never exists yet, so resolving only existing paths would let the
+ * case that matters through unchecked.
  */
 function realPathOfDeepestExisting(candidatePath) {
   let current = resolve(candidatePath);

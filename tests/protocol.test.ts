@@ -856,10 +856,6 @@ describe("no mid-run human-gate claims (L2 forbidden-pattern sweep)", () => {
   // match the pattern, so they need no allowlist).
   const FORBIDDEN = /human[ -]gate|human (approval|design) gate|human contract|design[ -]gate/i;
   const NEGATION = /no mid-run human gates/i;
-  // eliminate-rule-exceptions slice 11 (row 42): docs/ethos.md:201 is reworded
-  // so it no longer needs an allowlist, and the implementer deletes this
-  // constant and the skip below with it.
-  const ALLOWLIST = new Set(["docs/ethos.md"]);
 
   // All .md files under `dir` (relative to REPO_ROOT), recursively, skipping
   // docs/plans/ — pipeline state is never scanned.
@@ -877,7 +873,7 @@ describe("no mid-run human-gate claims (L2 forbidden-pattern sweep)", () => {
     return out;
   }
 
-  test("'human gate' appears nowhere in docs, README, AGENTS, skills, or agents outside the allowlist", () => {
+  test("'human gate' appears nowhere in docs, README, AGENTS, skills, or agents", () => {
     const files = [
       ...mdFilesUnder("docs"),
       ...mdFilesUnder("skills"),
@@ -887,7 +883,6 @@ describe("no mid-run human-gate claims (L2 forbidden-pattern sweep)", () => {
     ];
     const offenders: string[] = [];
     for (const rel of files) {
-      if (ALLOWLIST.has(rel)) continue;
       const lines = read(join(REPO_ROOT, rel)).split("\n");
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i] ?? "";
