@@ -34,6 +34,15 @@ const VERSIONING_MD = join(REPO_ROOT, "docs", "versioning.md");
 const PROJECT_TRACKING_MD = join(REPO_ROOT, "docs", "project-tracking.md");
 const TESTING_MD = join(REPO_ROOT, "docs", "testing.md");
 const PORTABILITY_MD = join(REPO_ROOT, "docs", "cross-host-portability.md");
+const DEFAULT_LAYOUT = join(REPO_ROOT, "docs", "_layouts", "default.html");
+const HEADING_ANCHORS_JS = join(
+  REPO_ROOT,
+  "docs",
+  "assets",
+  "js",
+  "heading-anchors.js",
+);
+const SITE_CSS = join(REPO_ROOT, "docs", "assets", "css", "site.css");
 
 function readIf(path: string): string {
   return existsSync(path) ? read(path) : "";
@@ -96,5 +105,28 @@ describe("docs site nav: membership and ordering are data-driven from audience +
 
     expect(nonIntegers(orders)).toEqual([]);
     expect(duplicates(orders)).toEqual([]);
+  });
+});
+
+describe("docs skill headers: section links are exposed on hover", () => {
+  const layout = readIf(DEFAULT_LAYOUT);
+  const script = readIf(HEADING_ANCHORS_JS);
+  const css = readIf(SITE_CSS);
+
+  test("default layout loads the heading-anchor script", () => {
+    expect(layout).toContain("/assets/js/heading-anchors.js");
+  });
+
+  test("the script links every h3 with its generated heading id", () => {
+    expect(script).toContain('querySelectorAll("main h3[id]")');
+    expect(script).toContain('anchor.href = "#" + heading.id');
+    expect(script).toContain('anchor.className = "heading-anchor"');
+  });
+
+  test("the permalink appears on heading hover and keyboard focus", () => {
+    expect(css).toContain("position: absolute");
+    expect(css).toContain("right: calc(100% + 0.5em)");
+    expect(css).toContain("main h3:hover .heading-anchor");
+    expect(css).toContain("main h3 .heading-anchor:focus-visible");
   });
 });
