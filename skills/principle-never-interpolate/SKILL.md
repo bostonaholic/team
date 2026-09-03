@@ -28,7 +28,8 @@ heredoc early and the rest runs as shell.
   normalize a name to make it pass. Syntax checkers are not shell
   controls; only the allowlist makes a name safe to place in a command.
 - Terminate options with `--` where a value could be read as an option. A
-  value whose position already fixes its role could not be.
+  value whose position already fixes its role, having passed the allowlist
+  above, could not be.
 - Paths get containment checks before destructive use: under the expected
   root, no `..`, not a symlink.
 - Capture, validate, and use in the SAME invocation — shell state does

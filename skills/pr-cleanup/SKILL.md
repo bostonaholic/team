@@ -112,7 +112,8 @@ Refusals, before anything else runs:
    step 0 — never `gh`'s cwd-based auto-detection), and non-git
    destructive commands take `$PRIMARY_ROOT`-absolute paths. Step 0 is
    what derives those anchors, so it runs before this rule applies; its
-   end enumerates every anchor it derived.
+   end enumerates every anchor it derived, along with every command that
+   uses a different anchor — and that list is closed.
 10. **Protected names match case-insensitively, and `-D` requires an
     exact-case local branch.** On a case-insensitive filesystem `Main` IS
     `main`: a candidate whose lowercased form matches the default branch,

@@ -576,7 +576,8 @@ state exactly. Never `git rebase --skip` (Hard Rule 3).
 ### Step 6 — verify against the baseline
 
 Re-run **the same checks, the same commands, in the same order** as step 2.
-Do not add a check that had no baseline, and do not drop one that did.
+Do not add a check that had no baseline, and do not drop one whose
+baseline is `PASS` or `FAIL`.
 Re-running is conditional on the baseline: a check whose baseline is
 `PASS` or `FAIL` is re-run, and one whose baseline is `UNKNOWN` may be
 skipped — the verdict table maps it to `UNKNOWN` whatever it returns now,

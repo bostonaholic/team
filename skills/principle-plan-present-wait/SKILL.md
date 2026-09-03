@@ -9,9 +9,9 @@ user-invocable: false
 Mutations are planned in writing, presented as questions with exactly one
 recommendation each. A mutation executes on the user's answer, or on an
 item that clears the verified-confidence carve-out while staying inside
-every hard rule. Nothing
-changes before the user answers; no answer means no mutation; a partial
-answer executes only the answered subset.
+every hard rule. Nothing changes before the user answers, and no answer
+means no mutation, outside that carve-out; a partial answer executes only
+the answered subset.
 
 **Why:** Separating deciding from doing keeps the blast radius auditable:
 the user judges the exact mutation, the written plan survives the wait,
