@@ -348,9 +348,8 @@ point — a valid bump can go stale (the branch bumped `0.13.1 → 0.13.2` while
 invariant against the rebased head and denies. Re-run `version-bump` when,
 and only when, the guard denies a bump that a rebase left stale — that
 condition is what "Do not re-run `version-bump`" above leaves open: drop the
-`chore(version)` commit,
-undo the changelog cut, re-run `version-bump` from step 0 (it recomputes
-against the new base), re-title, and re-run `/shipit`.
+`chore(version)` commit, undo the changelog cut, re-run `version-bump` from
+step 0 (it recomputes against the new base), re-title, and re-run `/shipit`.
 
 A denial loop is reachable here, and it is expected, not a bug: `/shipit`
 step 5 rebases and re-runs the 30-minute CI wait, and if `main` advances
