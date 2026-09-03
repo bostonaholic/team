@@ -39,7 +39,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { disablesModelInvocation, frontmatter, read } from "./helpers/text";
 import { loadsSkill } from "./helpers/skill-refs";
 import {
   MAX_RECORDS,
@@ -516,7 +516,7 @@ describe("Slice 1 — L2: reflect's frontmatter and invocation surface", () => {
     // It writes SKILL.md files and creates public issues, so only a deliberate
     // invocation starts the run. This is also what puts reflect in the guarded
     // set that tests/guarded-skill-prose.test.ts sweeps.
-    expect(/^disable-model-invocation:\s*true\s*$/m.test(fm())).toBe(true);
+    expect(disablesModelInvocation(fm())).toBe(true);
   });
 
   test("argument-hint declares the optional focus and effort is high", () => {

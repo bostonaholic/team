@@ -28,7 +28,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { disablesModelInvocation, forFile, read } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 
@@ -52,16 +52,18 @@ function surface(relative: string): string {
 
 // Skills on disk that disable model invocation, rebuilt from the filesystem
 // the way tests/pr-watch-as-reviewer-skill.test.ts does, so both sides
-// of the comparison below come from the same source of truth.
+// of the comparison below come from the same source of truth. The flag is read
+// through the host's YAML parser, never a text match: this selects the class of
+// files every assertion below sweeps, so a shadowed duplicate key that the host
+// resolves to `false` would drop a skill out of the guarded set silently.
 function guardedSkills(): string[] {
   const skillsRoot = join(REPO_ROOT, "skills");
   return readdirSync(skillsRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
     .filter((name) => {
-      const file = join(skillsRoot, name, "SKILL.md");
-      if (!existsSync(file)) return false;
-      return /^disable-model-invocation:\s*true\s*$/m.test(frontmatter(read(file)));
+      if (!existsSync(join(skillsRoot, name, "SKILL.md"))) return false;
+      return forFile(REPO_ROOT, join("skills", name, "SKILL.md"), disablesModelInvocation);
     })
     .sort();
 }

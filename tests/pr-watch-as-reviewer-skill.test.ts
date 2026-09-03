@@ -22,7 +22,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { disablesModelInvocation, forFile, frontmatter, read } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 // pr-watch-as-reviewer is a RUNTIME skill — under skills/ (distributed), not .claude/.
@@ -68,7 +68,7 @@ describe("pr-watch-as-reviewer skill: runtime standalone utility frontmatter", (
     const f = fm();
     // Guard: an empty frontmatter must fail, not vacuously pass a regex check.
     expect(f.length).toBeGreaterThan(0);
-    expect(/^disable-model-invocation:\s*true\s*$/m.test(f)).toBe(true);
+    expect(disablesModelInvocation(f)).toBe(true);
   });
 });
 
@@ -326,11 +326,8 @@ describe("pr-watch-as-reviewer skill: Codex removal commands target the guarded 
       .filter((d) => d.isDirectory())
       .map((d) => d.name)
       .filter((name) => {
-        const file = join(skillsRoot, name, "SKILL.md");
-        if (!existsSync(file)) return false;
-        return /^disable-model-invocation:\s*true\s*$/m.test(
-          frontmatter(read(file)),
-        );
+        if (!existsSync(join(skillsRoot, name, "SKILL.md"))) return false;
+        return forFile(REPO_ROOT, join("skills", name, "SKILL.md"), disablesModelInvocation);
       })
       .sort();
   }
@@ -350,9 +347,7 @@ describe("pr-watch-as-reviewer skill: Codex removal commands target the guarded 
       const targetFrontmatter = existsSync(targetSkill)
         ? frontmatter(read(targetSkill))
         : "";
-      expect(/^disable-model-invocation:\s*true\s*$/m.test(targetFrontmatter)).toBe(
-        true,
-      );
+      expect(disablesModelInvocation(targetFrontmatter)).toBe(true);
     }
   });
 

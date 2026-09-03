@@ -24,7 +24,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { disablesModelInvocation, frontmatter, read } from "./helpers/text";
 import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
@@ -73,7 +73,7 @@ describe("pr-rebase skill: frontmatter and invocation surface", () => {
     // invocation starts the run.
     const f = fm();
     expect(f.length).toBeGreaterThan(0);
-    expect(/^disable-model-invocation:\s*true\s*$/m.test(f)).toBe(true);
+    expect(disablesModelInvocation(f)).toBe(true);
   });
 
   test("argument-hint declares the PR selector and offers no --yes", () => {

@@ -49,7 +49,11 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import { skillNames } from "./helpers/skill-refs";
-import { frontmatter, read } from "./helpers/text";
+import {
+  disablesModelInvocation as readDisablesModelInvocation,
+  frontmatter,
+  read,
+} from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 
@@ -195,7 +199,7 @@ function manifests(): Manifest[] {
       skill,
       relative,
       declaredName: declared?.[1] ?? "",
-      disablesModelInvocation: /^disable-model-invocation:\s*true\s*$/m.test(skillFrontmatter),
+      disablesModelInvocation: readDisablesModelInvocation(skillFrontmatter),
     };
     if (!existsSync(absolute)) {
       return { ...base, exists: false, raw: "", mapping: null, parseError: "" };

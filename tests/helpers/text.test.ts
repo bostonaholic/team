@@ -19,6 +19,7 @@ import { join } from "node:path";
 import {
   descriptionFor,
   descriptionText,
+  disablesModelInvocation,
   frontmatter,
   isUserInvocable,
   read,
@@ -158,14 +159,14 @@ describe("descriptionText — the description value, whatever its scalar style",
     );
   });
 
-  test("throws on a root merge key rather than resolving one", () => {
-    // `<<: *anchor` splices the anchored mapping into the root, so this parser
-    // reads a description the anchor holds. Merge keys are a YAML 1.1
-    // extension a 1.2 host may leave unresolved, and a host that reads no
-    // description at all disagrees with a sweep that read one. The anchor
-    // itself is a nested value, which is what this rejects.
-    const fm = ["name: x", "base: &b", "  description: Merged in.", "<<: *b"].join("\n");
-    expect(() => descriptionText(fm)).toThrow(/unsupported nested frontmatter value for base/);
+  test("throws on the anchor an aliased merge defines, not on the merge itself", () => {
+    // `<<: *b` needs `base: &b` to anchor a mapping at the root, and that
+    // anchor is the nested value this rejects. The merge is NOT what fires:
+    // `Bun.YAML.parse` resolves `<<`, so the inline form below carries no
+    // anchor, leaves only scalars at the root, and passes.
+    const anchored = ["name: x", "base: &b", "  description: Merged in.", "<<: *b"].join("\n");
+    expect(() => descriptionText(anchored)).toThrow(/unsupported nested frontmatter value for base/);
+    expect(descriptionText('name: x\n<<: {description: "Merged inline."}')).toBe("Merged inline.");
   });
 });
 
@@ -228,6 +229,54 @@ describe("isUserInvocable — the key that decides which files are swept", () =>
   });
 });
 
+describe("disablesModelInvocation — the key that decides who may start a skill", () => {
+  test("an absent key leaves the skill model-invocable", () => {
+    expect(disablesModelInvocation("name: x\ndescription: One line.")).toBe(false);
+  });
+
+  test("an explicit true bars model invocation", () => {
+    expect(disablesModelInvocation("name: x\ndisable-model-invocation: true")).toBe(true);
+  });
+
+  test("an explicit false leaves the skill model-invocable", () => {
+    expect(disablesModelInvocation("name: x\ndisable-model-invocation: false")).toBe(false);
+  });
+
+  test("a shadowed `true` followed by `false` reads as false, as YAML does", () => {
+    // The bypass this reader closes. Every assertion on this key was a text
+    // match for the `true` line, which survives one appended `false` line —
+    // so a guarded skill went model-invocable for the host while the whole
+    // suite stayed byte-identically green.
+    expect(
+      disablesModelInvocation("disable-model-invocation: true\ndisable-model-invocation: false"),
+    ).toBe(false);
+  });
+
+  test("takes the last of the reverse pair too", () => {
+    expect(
+      disablesModelInvocation("disable-model-invocation: false\ndisable-model-invocation: true"),
+    ).toBe(true);
+  });
+
+  test("throws on a quoted `true`, which is a string and not the boolean", () => {
+    expect(() => disablesModelInvocation('disable-model-invocation: "true"')).toThrow(
+      /unsupported disable-model-invocation value/,
+    );
+  });
+
+  test("throws on a key that is present but empty", () => {
+    expect(() => disablesModelInvocation("disable-model-invocation:\nname: x")).toThrow(
+      /unsupported disable-model-invocation value/,
+    );
+  });
+
+  test("a slice that is not a mapping leaves the skill model-invocable", () => {
+    // Membership defaults on, matching the host: a malformed file is judged by
+    // the sweeps rather than dropped out of the guarded set by a parse failure.
+    expect(disablesModelInvocation("")).toBe(false);
+  });
+});
+
 describe("userInvocableSkillFiles — enumeration over both skill roots", () => {
   const DEV_ROOT = join(".claude", "skills");
 
@@ -280,11 +329,11 @@ describe("userInvocableSkillFiles — enumeration over both skill roots", () => 
 });
 
 describe("the text read and the parser read agree on every SKILL.md on disk", () => {
-  // L2 tripwire. The regex this replaced matched `user-invocable: false`
-  // anywhere in the slice; the parser resolves the key the way the host does.
-  // Any file where the two answers differ is a file the sweep and the host
-  // disagree about, which is the whole defect. Asserting the agreement over
-  // real files is the check that would have caught it.
+  // L2 tripwire, one per membership-deciding key. The regexes these readers
+  // replaced matched a line anywhere in the slice; the parser resolves the key
+  // the way the host does. Any file where the two answers differ is a file the
+  // sweep and the host disagree about, which is the whole defect. Asserting the
+  // agreement over real files is the check that would have caught it.
 
   function skillFiles(): string[] {
     return ["skills", join(".claude", "skills")].flatMap((root) =>
@@ -310,5 +359,29 @@ describe("the text read and the parser read agree on every SKILL.md on disk", ()
     const shadowed = "name: x\nuser-invocable: false\nuser-invocable: true";
     expect(/^user-invocable: false$/m.test(shadowed)).toBe(true);
     expect(isUserInvocable(shadowed)).toBe(true);
+  });
+
+  // The same differential for `disable-model-invocation`, the other key that
+  // decides membership in a swept class. Every assertion on it read the text;
+  // this pins that the text answer and the host's answer never part.
+  test("no shipped skill's `disable-model-invocation` reads one way to a text match and the other to the parser", () => {
+    const files = skillFiles();
+    // Haystack guard: an empty enumeration would agree vacuously.
+    expect(files.length).toBeGreaterThan(80);
+
+    const disagreements = files.filter((relative) => {
+      const fm = frontmatter(read(join(REPO_ROOT, relative)));
+      return /^disable-model-invocation:\s*true\s*$/m.test(fm) !== disablesModelInvocation(fm);
+    });
+    expect(disagreements).toEqual([]);
+  });
+
+  test("the differential can see a shadowed `disable-model-invocation`", () => {
+    // The planted positive AND the positive control: the exact one-line edit
+    // that turned the flag off for the host while all six text matches on it
+    // stayed green must now read as `false`.
+    const shadowed = "name: x\ndisable-model-invocation: true\ndisable-model-invocation: false";
+    expect(/^disable-model-invocation:\s*true\s*$/m.test(shadowed)).toBe(true);
+    expect(disablesModelInvocation(shadowed)).toBe(false);
   });
 });

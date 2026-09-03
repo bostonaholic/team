@@ -23,7 +23,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "bun:test";
 
-import { frontmatter, isUserInvocable, read } from "./helpers/text";
+import { forFile, frontmatter, isUserInvocable, read } from "./helpers/text";
 
 const REPO_ROOT = join(import.meta.dir, "..");
 const CATALOG = join(REPO_ROOT, "docs", "skills.md");
@@ -50,12 +50,14 @@ function catalogEntries(): Entry[] {
  * True when the skill's frontmatter hides it from the slash menu. Read through
  * the YAML parser the host routes on, the same way `userInvocableSkillFiles()`
  * reads it: a regex over the text matches a shadowed duplicate key that the
- * host resolves the other way.
+ * host resolves the other way. Via `forFile` for the same reason that sweep
+ * uses it — this runs inside a filter over every catalogued skill, where a bare
+ * `unsupported user-invocable value` names no file.
  */
 function isModelOnly(name: string): boolean {
-  const path = join(REPO_ROOT, "skills", name, "SKILL.md");
-  if (!existsSync(path)) return false;
-  return !isUserInvocable(frontmatter(read(path)));
+  const relative = join("skills", name, "SKILL.md");
+  if (!existsSync(join(REPO_ROOT, relative))) return false;
+  return !forFile(REPO_ROOT, relative, isUserInvocable);
 }
 
 describe("methodology skills are never user-invocable", () => {
@@ -122,10 +124,14 @@ function skillDirectories(): string[] {
 }
 
 /**
- * True when the skill's frontmatter declares an `argument-hint`. This one
- * stays a text match: it asks whether the key is PRESENT, and last-wins cannot
- * remove a key that appears twice. Every other frontmatter divergence is
- * already caught upstream, where the guard sweep parses the same file.
+ * True when the skill's frontmatter declares an `argument-hint`. This one stays
+ * a text match, and not because the text and the host cannot diverge on it —
+ * they can (`"argument-hint":`, `'argument-hint':`, and `argument-hint :` are
+ * all keys the host reads and this regex misses). It stays because the key
+ * authorizes nothing: it is a UI hint for the argument line, so a divergence on
+ * it moves who can reach the skill not at all. What it feeds is
+ * `classifierDisagreements`, which tests EQUALITY against `isModelOnly` — so a
+ * spurious answer in either direction reds rather than hides.
  */
 function takesArguments(name: string): boolean {
   const path = join(REPO_ROOT, "skills", name, "SKILL.md");

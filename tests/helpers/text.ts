@@ -67,11 +67,13 @@ function fields(fm: string): Record<string, unknown> {
   const parsed: unknown = Bun.YAML.parse(fm);
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {};
   const mapping = parsed as Record<string, unknown>;
-  // Scalars only. A mapping or sequence at the root is the shape a YAML merge
-  // key (`<<: *anchor`) needs to splice a field into the root mapping, and
-  // merge keys are a YAML 1.1 extension a 1.2 host may not resolve — so this
-  // parser and the host would read different fields. No shipped frontmatter
-  // needs a nested value.
+  // Scalars only. A nested value is a field this sweep would have to flatten
+  // before it could read it, and flattening by hand is where the rules this
+  // parse replaced diverged from the host. No shipped frontmatter needs one.
+  // This does NOT reject YAML merge keys: `Bun.YAML.parse` resolves `<<`, so an
+  // inline merge (`<<: {description: …}`) leaves only scalars here and passes.
+  // What it catches is the anchor DEFINITION an aliased merge needs
+  // (`base: &b` over a mapping), never the merge itself.
   for (const [key, value] of Object.entries(mapping)) {
     if (value !== null && typeof value === "object") {
       throw new Error(`unsupported nested frontmatter value for ${key}`);
@@ -112,9 +114,28 @@ export function isUserInvocable(fm: string): boolean {
   return value;
 }
 
+// Whether a frontmatter slice bars the model from firing the skill on its own.
+// Read through the same parser as the fields above, because this key is a
+// safety claim about blast radius: YAML resolves duplicate keys last-wins, so
+// one appended `false` line turns the flag off for the host while a text match
+// still sees the surviving `true` line above it.
+export function disablesModelInvocation(fm: string): boolean {
+  const value = fields(fm)["disable-model-invocation"];
+  // The default. Only an explicit `true` takes a skill off the model's reach.
+  if (value === undefined) return false;
+  // `"true"` is a string, not the boolean the host reads. Guessing which one
+  // the host meant is how the two reads drift apart again.
+  if (typeof value !== "boolean") {
+    throw new Error(`unsupported disable-model-invocation value: ${JSON.stringify(value)}`);
+  }
+  return value;
+}
+
 // The path leads the message, so a malformed SKILL.md names itself rather
-// than the parser or this test file.
-function forFile<T>(repoRoot: string, file: string, readField: (fm: string) => T): T {
+// than the parser or this test file. Exported for the sweeps that select a
+// class of files: a throw from inside a filter over 80+ skills is undiagnosable
+// without the path.
+export function forFile<T>(repoRoot: string, file: string, readField: (fm: string) => T): T {
   try {
     return readField(frontmatter(read(join(repoRoot, file))));
   } catch (err: unknown) {
