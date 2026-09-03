@@ -177,7 +177,7 @@ const PRELOAD_BUDGET_REASONS: Record<string, BudgetReason> = {
   researcher: {
     count: 4,
     reason:
-      "Its own extracted procedure (`researching-codebases`) plus the `nested-agents` guardrail it needs because it holds the `Agent` tool; neither belongs inside the other.",
+      "Its own extracted procedure (`researching-codebases`) and the `nested-agents` guardrail it needs because it holds the `Agent` tool sit beside two shared bases: the `systems-thinking` lens and the `principle-progress-tracking` convention. None belongs inside another.",
   },
   "structure-planner": {
     count: 4,
@@ -452,11 +452,11 @@ describe("thin agents: eval diff-selection keeps firing on the new skills", () =
     "eng-design-doc-review-planted-missing-alternatives": "evals/fixtures/eng-design-doc-review/planted-missing-alternatives/input.md",
   };
 
-  // The fixture that exercises the design review depends on
-  // skills/reviewing-designs/, which holds the brief. Declaring the glob here
-  // is what makes the binder below check the selection map
-  // (tests/helpers/touchfiles.ts) against the fixture's own `deps`
-  // frontmatter for it, exactly as it does for the fixture's two siblings.
+  // Locks the expectation the binder below consumes. The binder only checks the
+  // globs it is handed against the selection map (tests/helpers/touchfiles.ts),
+  // so deleting the reviewing-designs glob from TOUCHFILE_ADDITIONS would
+  // silence the binder instead of failing it. This assertion makes that
+  // deletion red here.
   test("TOUCHFILE_ADDITIONS declares the reviewing-designs glob", () => {
     expect(TOUCHFILE_ADDITIONS["eng-design-doc-review-planted-missing-alternatives"]).toContain(
       "skills/reviewing-designs/**",

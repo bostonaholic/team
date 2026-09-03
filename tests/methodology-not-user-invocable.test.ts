@@ -141,6 +141,8 @@ function classifierDisagreements(entries: Entry[]): string[] {
     .filter(
       (entry) =>
         (entry.section === METHODOLOGY_SECTION) !== isModelOnly(entry.name) ||
+        // Equal is the disagreement: every command carries `argument-hint`, which
+        // `docs/architecture.md` uses as the flavor sorter.
         isModelOnly(entry.name) === takesArguments(entry.name),
     )
     .map(

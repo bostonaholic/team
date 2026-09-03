@@ -978,7 +978,7 @@ describe("exception vocabulary appears in no rule prose", () => {
     const stripped = isScript
       ? text
           .split("\n")
-          .map((line) => line.replace(/^[ \t]*(\/\/|\*|#)[ \t]?/, ""))
+          .map((line) => line.replace(/^[ \t]*(\/\/|\*)[ \t]?/, ""))
           .join("\n")
       : text;
     return squash(stripped);
