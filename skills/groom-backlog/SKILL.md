@@ -105,8 +105,9 @@ last segment. Scope every repository call below to `"$OWNER/$REPO"`.
 **One repository per board-mode run.** A board whose items span more than one repository, or
 whose repository owner differs from the project's, stops before the issue load. It names what
 it found and asks which to groom. A milestone lives on one repository, and a cross-repo plan
-would place work without warning against the wrong one. Promotion mode is exempt: it names
-one issue, creates no grouping construct, and takes its repository from the issue itself.
+would place work without warning against the wrong one. Promotion mode is not a board-mode
+run: it names one issue, creates no grouping construct, and takes its repository from the
+issue itself.
 
 **`--promote` present → promotion mode**, whatever else was passed. A positional board
 reference then only scopes which board the issue must be on. Promotion mode skips the whole
@@ -757,10 +758,11 @@ never relaxes a rule below.
    shell does not re-parse an expanded value. Prose never can. A **tracker-authored prose
    value**, such as that milestone title, never travels as a bare positional or as a
    command's first word, and when it starts with `-` it is guarded with a `--` terminator
-   or stopped — an option-shaped value is read as an option. A structural value the run
-   resolved itself, such as an issue number matched against the loaded board, is exempt:
-   the recipes pass those positionally (`gh issue close "$N"`), where no flag route
-   exists.
+   or stopped — an option-shaped value is read as an option. Two positive routes, then:
+   tracker-authored prose always travels by file or stdin, and a short structural scalar
+   the run itself resolved, such as an issue number matched against the loaded board,
+   travels positionally (`gh issue close "$N"`), because the command that takes it has no
+   flag route.
    The general rule: `skills/principle-never-interpolate/SKILL.md`.
 3. **Never close a decision, investigation, or spike ticket** because the code already
    answers the question. Attach the evidence as decision input and leave it open — the

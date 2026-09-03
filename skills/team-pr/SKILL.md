@@ -251,17 +251,18 @@ the ordering stable: `## Pre-merge` comes before `## Companion PRs` in the
 final body.
 
 **`## Review notes` (conditional):** this section carries the findings
-deferred to the human's PR review. (a) Every Minor-and-below finding from
+deferred to the human's PR review. **The governing rule: every round
+appears in the section exactly once, never twice.** That is what decides
+where a `### Cross-model disposition` finding is carried — whenever
+`docs/plans/<id>/cross-model-notes.md` exists, the copy in (d) is the
+single carrier, so sweeps (a) and (b) each exclude any finding under the
+`### Cross-model disposition` heading. (a) Every
+Minor-and-below finding from
 the final aggregate review round, tagged by source reviewer, such as
-`[code-reviewer]` or `[security-reviewer]` — except that whenever
-`docs/plans/<id>/cross-model-notes.md` exists, this sweep excludes any
-finding under the `### Cross-model disposition` heading, because the copy
-in (d) replaces the final round's inline disposition block (every round
-appears exactly once, never twice). (b) COMMENT findings from the
-latest `design-review-<n>.md`, tagged `design-review-<n>` — except that
-whenever `docs/plans/<id>/cross-model-notes.md` exists, this sweep too
-drops any finding under the `### Cross-model disposition` heading,
-because the copy in (d) is the single carrier. (c) The loud
+`[code-reviewer]` or `[security-reviewer]`, applying that rule to the
+final round's inline disposition block. (b) COMMENT findings from the
+latest `design-review-<n>.md`, tagged `design-review-<n>`, applying it
+the same way. (c) The loud
 unresolved-repo omission note from `design.md` `## Risks` (or `task.md`)
 when present. And (d) when `docs/plans/<id>/cross-model-notes.md` exists,
 its body copied as-is into the section with the frontmatter stripped,

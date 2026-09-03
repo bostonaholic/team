@@ -154,13 +154,14 @@ When generating changelog entries from commit history, apply this filter:
 
 ### Exclude
 
-- `chore:` commits — tooling, build, dependency updates (unless a dependency
-  update changes user-visible behavior, in which case document the behavior
-  change, not the dep update).
+- `chore:` commits — tooling, build, dependency updates. A dependency bump
+  that changes user-visible behavior earns an entry, and the entry documents
+  the behavior change, not the dep update.
 - `test:` commits — internal test additions/changes.
 - `refactor:` commits — internal code restructuring with no behavior change.
-- `docs:` commits — unless the docs change represents the *only* change in
-  the release and users rely on the documentation as the product.
+- `docs:` commits. A `docs:` commit earns an entry when the documentation is
+  the product users rely on and the change is the *only* one in the
+  release.
 - `ci:` commits — CI/CD pipeline changes.
 - `revert:` commits — if a feat was added and reverted in the same release,
   neither appears in the changelog.

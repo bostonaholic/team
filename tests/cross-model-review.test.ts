@@ -1088,14 +1088,16 @@ describe("design-round records (L2)", () => {
     expect(text).toContain(ROUND_LABEL);
   });
 
-  test("the Review notes clause (b) excludes the cross-model disposition heading", () => {
-    const spec = reviewNotesSpec();
+  test("the Review notes spec makes (d) the single carrier for the disposition block", () => {
+    const spec = squash(reviewNotesSpec());
     // Guard: a reworded anchor must fail, not vacuously pass.
     expect(spec.length).toBeGreaterThan(0);
-    // Clause (a)'s existing exclusion plus clause (b)'s: the copy in (d)
-    // is the single carrier, so every round appears exactly once.
-    const occurrences = spec.split(DISPOSITION_HEADING).length - 1;
-    expect(occurrences).toBeGreaterThanOrEqual(2);
+    expect(spec).toContain(DISPOSITION_HEADING);
+    // The contract, not one phrasing of it: every round appears exactly once,
+    // and both finding sweeps are named as governed by that rule, so neither
+    // can carry a second copy of what (d) already holds.
+    expect(spec).toMatch(/exactly once/i);
+    expect(spec).toMatch(/\(a\) and \(b\)/);
   });
 });
 

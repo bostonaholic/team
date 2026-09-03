@@ -355,11 +355,11 @@ frontmatter.
 
 ### Orchestrator-Emit Gate (post-design-review secondary worktrees)
 
-The home worktree is born at the leading WORKTREE phase. Secondary
-worktrees, in multi-repo mode, are created **after the design review**. The
-set of repos a topic touches is settled only once the design lands, in
-`repos.md`. This is the documented asymmetry: the home worktree exists from
-phase 1, while secondary repos lag until post-design-review.
+One rule, two knowledge times: **each repo's worktree is born the moment
+that repo is known.** The home repo is known at phase 1, so its worktree is
+born at the leading WORKTREE phase. The rest are settled only once the
+design lands, in `repos.md`, so in multi-repo mode their worktrees are
+created **after the design review**.
 
 When the design review passes:
 
