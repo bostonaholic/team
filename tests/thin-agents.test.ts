@@ -9,7 +9,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-import { frontmatter, read, squash } from "./helpers/text";
+import { frontmatter, read } from "./helpers/text";
 import { E2E_TOUCHFILES } from "./helpers/touchfiles";
 
 const REPO_ROOT = process.cwd();
@@ -407,8 +407,6 @@ describe("thin agents: haiku skills are self-contained", () => {
 
 describe("thin agents: skills catalog stays complete", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
-  const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
-
 
   for (const { skill } of NEW_SKILLS) {
     test(`docs/skills.md documents ${skill}`, () => {
