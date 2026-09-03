@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.81.0] - 2026-09-03
+
+### Changed
+
+- **The cross-model vendor couriers now run the vendor in the foreground and reply only after it exits, and a vendor that times out on two consecutive rounds sits out the rest of the run.** In the 0.80.0 design review 13 of 22 courier replies came back as commentary because the courier answered before its backgrounded command finished, and one vendor timed out on 13 of 14 rounds at ten minutes each. **What this asks of you:** nothing.
+- **`/team`'s preflight now proves a commit can be signed** with a twenty-second scratch-repo probe, so a stalled signing agent is reported before the first slice commit instead of stopping the pipeline mid-run. **What this asks of you:** nothing.
+- **Four procedural clarifications:** `/team-pr` ticks a `## Pre-merge` box for work the run completed and verified itself; `/team-fix` refuses to ride on a branch that is another open PR's head and isolates instead; `/pr-cleanup` leaves a worktree that Team did not create (a workspace manager's, or one made by hand) for that tool's own teardown; and the design-author derives every closed set — surfaces, class members, blast radii, inventories — by enumeration with the command recorded, which was the root of nine of fourteen REQUEST CHANGES rounds. **What this asks of you:** nothing.
+
 ## [0.80.0] - 2026-09-03
 
 ### Added
@@ -744,7 +752,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.80.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.81.0...HEAD
+[0.81.0]: https://github.com/bostonaholic/team/compare/v0.80.0...v0.81.0
 [0.80.0]: https://github.com/bostonaholic/team/compare/v0.79.0...v0.80.0
 [0.79.0]: https://github.com/bostonaholic/team/compare/v0.78.0...v0.79.0
 [0.78.0]: https://github.com/bostonaholic/team/compare/v0.77.0...v0.78.0

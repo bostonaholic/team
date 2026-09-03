@@ -229,9 +229,10 @@ anything informational or post-merge. This is why `## How to Verify` uses plain
 bullets — its steps report verification the author already ran, and a checkbox
 there would emit a PR the bot refuses to merge until someone ticks off
 finished work. Verification that truly must be re-run by a human before the
-merge belongs in `## Pre-merge` instead. Never tick a box on the user's
-behalf: a checked box asserts the work is done, and only the human can assert
-that.
+merge belongs in `## Pre-merge` instead. A checked box asserts the work is
+done, so tick only the boxes for items this run completed and verified
+itself, in the same turn it completed them; an item the user or a later
+step must do stays unchecked.
 
 **Dependency direction (multi-repo).** The dependency is asymmetric and the
 section must reflect that. Only the PR that has to wait carries the
