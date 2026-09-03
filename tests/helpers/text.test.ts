@@ -28,6 +28,13 @@ describe("frontmatter — the slice between two markers", () => {
     expect(frontmatter("# Body\n\nProse.\n")).toBe("");
   });
 
+  test("returns nothing when the opening marker does not open the file", () => {
+    // Two thematic breaks in a body are not a frontmatter block. Slicing
+    // between them would let body prose satisfy a frontmatter check.
+    const text = ["# Body", "", "---", "user-invocable: false", "---", "More prose."].join("\n");
+    expect(frontmatter(text)).toBe("");
+  });
+
   test("returns nothing when the closing marker is missing", () => {
     // Returning the rest of the file would let a body sentence satisfy a
     // frontmatter check.

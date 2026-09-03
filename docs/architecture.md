@@ -787,8 +787,9 @@ satisfy the `/team` requirement. The guard wording is machine-checked too:
 roots, and an out-of-class skill that carries the guard is as much an
 offender as an in-class one that dropped it. Class membership is owned by
 the `GUARD_CLASS` map in `tests/helpers/intent-guard.ts`, whose key set
-must equal the skills on disk, so a new skill nobody classified fails the
-build.
+must equal that swept set — the user-invocable skills only, never every
+`SKILL.md` on disk — in both directions, so a new skill nobody classified
+and a stale key for a deleted one each fail the build.
 
 No methodology skill is user-invocable. When a methodology also wants a
 user-facing command, the answer is a **front door**, not an exception:

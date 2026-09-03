@@ -17,10 +17,15 @@ export function squash(text: string): string {
 }
 
 // Frontmatter slice: the lines strictly between the first and second `---`
-// markers. If fewer than two markers exist, the slice is empty ("") and
+// markers, and only when the first one opens the file. If the file opens
+// otherwise, or fewer than two markers exist, the slice is empty ("") and
 // dependent assertions must fail, not skip.
 export function frontmatter(text: string): string {
   const lines = text.split("\n");
+  // Frontmatter opens line 1 or it is not frontmatter, which is the rule the
+  // host applies. Without this, a body holding two thematic breaks slices out
+  // as a block and its prose could satisfy a frontmatter check.
+  if (lines[0] !== "---") return "";
   let count = 0;
   const out: string[] = [];
   for (const line of lines) {
