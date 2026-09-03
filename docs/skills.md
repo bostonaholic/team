@@ -257,7 +257,8 @@ argument shape.
   available.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
   the shared three-tier chain above.
-- **Phase:** Design (review-gate brief) + standalone audit.
+- **Phase:** Design (front door over the `reviewing-designs` brief) +
+  standalone audit.
 - **Key behaviors:** Loads the `reviewing-designs` brief and dispatches it
   to the built-in read-only `Explore` subagent (not the `design-author`
   agent), with the artifact directory substituted, so the audit reads the
@@ -795,8 +796,9 @@ The methodology skills carry no `argument-hint` and are never invoked
 directly. A methodology that also wants a user-facing command does not
 become the exception: it stays `user-invocable: false` and a separate
 front door is filed under [Standalone utilities](#standalone-utilities)
-above. `reviewing-code` and its front door `code-review` are the worked
-example (see
+above. Two pairs hold that shape: `reviewing-code` with its front door
+`code-review`, and `reviewing-designs` with its front door
+`eng-design-doc-review` (see
 [architecture.md](architecture.md#methodology-skills-loaded-by-agents-not-directly-invoked)).
 Agents load them through one of two mechanisms. The first is a
 `skills:` YAML list in the agent's frontmatter. The second is an inline
@@ -906,8 +908,8 @@ lists more than three carries one recorded reason naming that count (see
 - **Purpose:** Generator-evaluator separation and the gate verdict
   vocabulary.
 - **Loaded by:** code-reviewer, security-reviewer, ux-reviewer,
-  technical-writer (4), and the `code-review` front door on direct
-  invocation.
+  technical-writer (4), the `code-review` front door on direct
+  invocation, and `reviewing-designs` as a review criterion.
 - **Key behaviors:** Defines how a reviewer reads with fresh eyes and emits
   a structured verdict. Findings use the format defined in
   `conventional-comments`; format follows the artifact, so the
@@ -1023,7 +1025,8 @@ lists more than three carries one recorded reason naming that count (see
 
 - **Purpose:** The design-first workflow, implementation standards, and the
   quality checklist.
-- **Loaded by:** planner, implementer, code-reviewer (3).
+- **Loaded by:** planner, implementer, code-reviewer (3), and
+  `reviewing-designs` as a review criterion.
 - **Key behaviors:** Anchors planning and implementation in a shared
   standard so reviewers check against the same bar. It owns the binding
   Code Comments rule set. Comments are why-only, timeless, and
@@ -1175,7 +1178,8 @@ lists more than three carries one recorded reason naming that count (see
 - **Loaded by:** planner and orchestrator (per the skill's own
   self-description. no agent body carries an explicit
   `Load skills/documenting-decisions/SKILL.md` instruction and no agent
-  declares it through `skills:` frontmatter).
+  declares it through `skills:` frontmatter), and `reviewing-designs` as
+  a review criterion.
 - **Key behaviors:** Capture the decision, its alternatives, and its
   rationale so later readers understand the "why". Points ADR authors at
   the seventh-grade prose bar in `writing-prose`.
@@ -1186,7 +1190,7 @@ lists more than three carries one recorded reason naming that count (see
 - **Loaded by:** planner (per the skill's own self-description. The
   `planner` agent body loads `engineering-standards` explicitly but does
   not carry an explicit `Load skills/technical-design-doc/SKILL.md`
-  instruction).
+  instruction), and `reviewing-designs` as a review criterion.
 - **Key behaviors:** Structures the design narrative: current state,
   desired end state, patterns to follow, and trade-offs. Points design-doc
   authors at the seventh-grade prose bar in `writing-prose`.
@@ -1564,9 +1568,10 @@ lists more than three carries one recorded reason naming that count (see
   allowlisted scalars and guarded `"${VAR:?}"` expansions are the only
   sanctioned argv forms. Scalars pass a character allowlist first, with
   `LC_ALL=C` so the class is byte-exact — refuse on failure, never
-  normalize a name to make it pass. Terminate options with `--` where a value
-  could be read as an option, which a value whose position already fixes
-  its role, having passed the allowlist above, could not be. Paths get containment checks before
+  normalize a name to make it pass. Terminate options with `--` where a
+  value could be read as an option. A value whose position already fixes
+  its role needs no terminator when its allowlist excludes a leading
+  `-`; otherwise it gets one. Paths get containment checks before
   destructive use. Capture, validate, and use in the SAME invocation; a
   value a destructive command or gate consumes expands as `"${VAR:?}"`
   so an unset value aborts instead of expanding to empty.
