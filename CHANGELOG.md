@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Clone-backed Claude installs now refresh after merge and rebase pulls.** Run `script/dev-install claude` once. Team keeps Claude Code pointed at the pulled version, and `script/dev-uninstall claude` removes only Team-owned hooks. Existing non-Team hooks are preserved and require manual integration. **What this asks of you:** reinstall once to add the hooks.
+- **Clone-backed Claude installs now refresh after merge and rebase pulls.** Run `script/dev-install claude` once. Team keeps Claude Code pointed at the pulled version, and `script/dev-uninstall claude` removes only Team-owned hooks. A hooks surface Team does not own — an existing non-Team hook, or a `core.hooksPath` pointing outside the clone — is preserved, and the install completes anyway and tells you it skipped the refresh. **What this asks of you:** reinstall once to add the hooks.
 
 ## [0.81.0] - 2026-09-03
 

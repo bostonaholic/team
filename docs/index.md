@@ -64,8 +64,9 @@ script/dev-install claude
 ```
 
 This adds clone-local hooks for merge and rebase pulls. Existing non-Team hooks
-are never overwritten; setup stops with manual integration instructions.
-Remove the install and Team-owned hooks with:
+and a `core.hooksPath` outside the clone are never overwritten: the install
+still completes, and reports that it skipped the hooks and how to wire them up
+yourself. Remove the install and Team-owned hooks with:
 
 ```bash
 script/dev-uninstall claude

@@ -209,30 +209,33 @@ describe("dev install: refresh after pulls (#312)", () => {
     expect(existsSync(hookPath(fixture, "post-rewrite"))).toBe(false);
   });
 
-  test("an existing user hook is preserved and blocks installation", () => {
+  // A hooks surface Team does not own is preserved, and the pull-hook refresh
+  // is skipped — but the install itself proceeds. See #314 and
+  // tests/regression-314-foreign-hooks-path.test.ts.
+  test("an existing user hook is preserved and the install still runs", () => {
     const fixture = newFixture();
     const hook = hookPath(fixture, "post-merge");
     writeExecutable(hook, "#!/bin/sh\necho user-hook\n");
 
     const result = install(fixture);
 
-    expect(result.status).not.toBe(0);
+    expect(result.status).toBe(0);
     expect(result.output).toContain("not managed by Team");
     expect(readFileSync(hook, "utf8")).toBe("#!/bin/sh\necho user-hook\n");
     expect(existsSync(hookPath(fixture, "post-rewrite"))).toBe(false);
-    expect(installCalls(fixture)).toHaveLength(0);
+    expect(installCalls(fixture)).toHaveLength(1);
   });
 
-  test("a custom hooks path is preserved and blocks installation", () => {
+  test("a custom hooks path is preserved and the install still runs", () => {
     const fixture = newFixture();
     const customHooks = join(fixture.root, "shared-hooks");
     git(fixture.checkout, "config", "core.hooksPath", customHooks);
 
     const result = install(fixture);
 
-    expect(result.status).not.toBe(0);
+    expect(result.status).toBe(0);
     expect(result.output).toContain("outside this clone");
     expect(existsSync(customHooks)).toBe(false);
-    expect(installCalls(fixture)).toHaveLength(0);
+    expect(installCalls(fixture)).toHaveLength(1);
   });
 });
