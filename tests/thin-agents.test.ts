@@ -145,8 +145,9 @@ describe("thin agents: frontmatter skills preloads per agent", () => {
 // EXPECTED_GUARDED (tests/guarded-skill-prose.test.ts) is the record for the
 // guarded set.
 //
-// The agent set comes from disk, never from ALL_AGENTS: a hardcoded thirteen
-// would hide a fourteenth agent from the rule this exists to enforce.
+// The agent set comes from disk, so a fourteenth agent file is counted without
+// editing this file: a hardcoded thirteen would hide it from the rule this
+// exists to enforce.
 // ---------------------------------------------------------------------------
 
 const PRELOAD_BUDGET = 3;

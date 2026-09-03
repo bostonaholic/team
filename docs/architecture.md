@@ -423,8 +423,8 @@ directions, so setting any agent to `model: fable` fails the build.
   `code-reviewer`, and `security-reviewer`. Security review is complex
   work, so it runs on this rung like the rest. What is particular to
   `security-reviewer` is that it must never be overridden **up** to
-  `fable`; the override recipe below carries that constraint and its
-  reason.
+  `fable`, and never **down** off `opus`; the override recipe below
+  carries that constraint and its reason.
 - **`sonnet` (bounded single-pass judgment):** `questioner`,
   `ux-reviewer`, `technical-writer`.
 - **`haiku` (mechanical checks):** `file-finder`, `verifier`.
