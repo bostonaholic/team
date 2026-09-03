@@ -106,8 +106,9 @@ bump". [PR title sync](#pr-title) uses the same branch-relative measure.
 > ordinary shell syntax, no indirection tool needed), or
 > a harness that does not load these hooks all sit outside that reach — and
 > unlike the deleted CI check, this guard raises no red signal on those
-> routes. They are not ungated, only gated elsewhere: `/shipit`, for one,
-> gates its own merge on CI green. A command
+> routes. Nothing else checks the invariant on those routes either: CI does
+> not enforce it (above), so a merge through the UI, a raw terminal, a
+> wrapped call, or another host lands whatever the branch holds. A command
 > the guard cannot parse is not among these routes: it is denied outright
 > whenever its raw text, stripped of the characters bash can splice into a
 > word (quotes, escapes, line continuations, `$`), contains `merge`
