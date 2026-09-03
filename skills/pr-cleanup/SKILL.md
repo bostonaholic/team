@@ -110,8 +110,9 @@ Refusals, before anything else runs:
    `git -C "$PRIMARY_ROOT"` (including the remote-branch check and the
    prune offer), every `gh` command passes `--repo "$REPO"` (derived in
    step 0 — never `gh`'s cwd-based auto-detection), and non-git
-   destructive commands take `$PRIMARY_ROOT`-absolute paths. The end of
-   step 0 enumerates the only unanchored exceptions.
+   destructive commands take `$PRIMARY_ROOT`-absolute paths. Step 0 is
+   what derives those anchors, so it runs before this rule applies; its
+   end enumerates every anchor it derived.
 10. **Protected names match case-insensitively, and `-D` requires an
     exact-case local branch.** On a case-insensitive filesystem `Main` IS
     `main`: a candidate whose lowercased form matches the default branch,

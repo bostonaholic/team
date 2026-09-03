@@ -230,8 +230,9 @@ and landing commit SHA, so the loop stays auditable. The batch report
 also names the reaction each triaged item received, so a 👎 the user
 would have argued with shows up in the transcript rather than only on
 GitHub. A timeout re-arm
-keeps the mode. A re-arm after a carve-out stop reverts to
-present-then-stop unless the user restates authorization.
+keeps the mode. A carve-out stop ends the authorization, so a re-arm
+after one starts in present-then-stop. Authorized mode re-arms only when
+the user restates authorization.
 
 The default mode is present-then-stop with a confidence-gated fast path:
 
