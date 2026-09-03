@@ -54,34 +54,39 @@ function skillFilesUnder(repoRoot: string, root: string): string[] {
     .filter((path) => existsSync(join(repoRoot, path)));
 }
 
-// Every SKILL.md under either root that does not set `user-invocable: false`
-// is a user-facing entry point. Repo-relative paths, sorted, so offender
-// output is stable across runs.
-export function userInvocableSkillFiles(repoRoot: string): string[] {
-  return SKILL_ROOTS.flatMap((root) => skillFilesUnder(repoRoot, root))
-    .filter(
-      (file) => !/^user-invocable: false$/m.test(frontmatter(read(join(repoRoot, file)))),
-    )
-    .sort();
+// Resolve a frontmatter slice through the same YAML parser the host routes
+// on. Hand-rolled key rules diverged from it in a class of ways — a quoted
+// scalar swallowed its trailing comment, a duplicate key kept the first value
+// where YAML keeps the last — and every divergence let a sweep read something
+// the host never sees. One parse settles quoting, comments, duplicate keys,
+// and flow collections for every field read below, so two fields of one file
+// can never disagree about what the host got.
+function fields(fm: string): Record<string, unknown> {
+  // A slice that is not a mapping (the empty slice above all) holds no keys,
+  // so every field is absent rather than malformed.
+  const parsed: unknown = Bun.YAML.parse(fm);
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {};
+  const mapping = parsed as Record<string, unknown>;
+  // Scalars only. A mapping or sequence at the root is the shape a YAML merge
+  // key (`<<: *anchor`) needs to splice a field into the root mapping, and
+  // merge keys are a YAML 1.1 extension a 1.2 host may not resolve — so this
+  // parser and the host would read different fields. No shipped frontmatter
+  // needs a nested value.
+  for (const [key, value] of Object.entries(mapping)) {
+    if (value !== null && typeof value === "object") {
+      throw new Error(`unsupported nested frontmatter value for ${key}`);
+    }
+  }
+  return mapping;
 }
 
-// Extract the description field's text from a frontmatter slice, through the
-// same YAML parser the host routes on. Hand-rolled scalar rules diverged from
-// it in a class of ways — a quoted scalar swallowed its trailing comment, a
-// duplicate key kept the first value where YAML keeps the last — and every
-// divergence let a sweep read text the host never sees. Parsing settles
-// quoting, comments, duplicate keys, and flow collections in one place.
+// Extract the description field's text from a frontmatter slice.
 export function descriptionText(fm: string): string {
-  // A slice that is not a mapping (the empty slice above all) holds no keys,
-  // so the description is absent rather than malformed.
-  const parsed: unknown = Bun.YAML.parse(fm);
-  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return "";
-  const value = (parsed as Record<string, unknown>).description;
+  const value = fields(fm).description;
   // Absent stays "": the caller's own empty-description branch reports it.
   if (value === undefined) return "";
-  // A sequence, mapping, number, or explicit null is a style this sweep
-  // cannot read. Stringifying it would match on punctuation the host never
-  // renders, so fail loud instead.
+  // A number or explicit null is a style this sweep cannot read. Stringifying
+  // it would match on punctuation the host never renders, so fail loud.
   if (typeof value !== "string") {
     throw new Error(`unsupported description value: ${JSON.stringify(value)}`);
   }
@@ -90,13 +95,43 @@ export function descriptionText(fm: string): string {
   return squash(value).trim();
 }
 
+// Whether a frontmatter slice leaves the skill reachable from the slash menu.
+// Read through the same parser as the description, because this key decides
+// which files are swept AT ALL: a file that leaves the enumeration leaves the
+// guard sweep, the trigger-phrase sweep, and the guard-class key-set equality
+// in one move.
+export function isUserInvocable(fm: string): boolean {
+  const value = fields(fm)["user-invocable"];
+  // The default. Only an explicit `false` hides a skill.
+  if (value === undefined) return true;
+  // `"false"` is a string, not the boolean the host reads. Guessing which one
+  // the host meant is how the two reads drift apart again.
+  if (typeof value !== "boolean") {
+    throw new Error(`unsupported user-invocable value: ${JSON.stringify(value)}`);
+  }
+  return value;
+}
+
 // The path leads the message, so a malformed SKILL.md names itself rather
 // than the parser or this test file.
-export function descriptionFor(repoRoot: string, file: string): string {
+function forFile<T>(repoRoot: string, file: string, readField: (fm: string) => T): T {
   try {
-    return descriptionText(frontmatter(read(join(repoRoot, file))));
+    return readField(frontmatter(read(join(repoRoot, file))));
   } catch (err: unknown) {
     const detail = err instanceof Error ? err.message : String(err);
     throw new Error(`${file}: ${detail}`);
   }
+}
+
+export function descriptionFor(repoRoot: string, file: string): string {
+  return forFile(repoRoot, file, descriptionText);
+}
+
+// Every SKILL.md under either root that does not set `user-invocable: false`
+// is a user-facing entry point. Repo-relative paths, sorted, so offender
+// output is stable across runs.
+export function userInvocableSkillFiles(repoRoot: string): string[] {
+  return SKILL_ROOTS.flatMap((root) => skillFilesUnder(repoRoot, root))
+    .filter((file) => forFile(repoRoot, file, isUserInvocable))
+    .sort();
 }

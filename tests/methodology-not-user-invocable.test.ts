@@ -23,7 +23,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "bun:test";
 
-import { frontmatter, read } from "./helpers/text";
+import { frontmatter, isUserInvocable, read } from "./helpers/text";
 
 const REPO_ROOT = join(import.meta.dir, "..");
 const CATALOG = join(REPO_ROOT, "docs", "skills.md");
@@ -46,11 +46,16 @@ function catalogEntries(): Entry[] {
   return out;
 }
 
-/** True when the skill's frontmatter hides it from the slash menu. */
+/**
+ * True when the skill's frontmatter hides it from the slash menu. Read through
+ * the YAML parser the host routes on, the same way `userInvocableSkillFiles()`
+ * reads it: a regex over the text matches a shadowed duplicate key that the
+ * host resolves the other way.
+ */
 function isModelOnly(name: string): boolean {
   const path = join(REPO_ROOT, "skills", name, "SKILL.md");
   if (!existsSync(path)) return false;
-  return /^user-invocable: false$/m.test(frontmatter(read(path)));
+  return !isUserInvocable(frontmatter(read(path)));
 }
 
 describe("methodology skills are never user-invocable", () => {
@@ -116,7 +121,12 @@ function skillDirectories(): string[] {
     .sort();
 }
 
-/** True when the skill's frontmatter declares an `argument-hint`. */
+/**
+ * True when the skill's frontmatter declares an `argument-hint`. This one
+ * stays a text match: it asks whether the key is PRESENT, and last-wins cannot
+ * remove a key that appears twice. Every other frontmatter divergence is
+ * already caught upstream, where the guard sweep parses the same file.
+ */
 function takesArguments(name: string): boolean {
   const path = join(REPO_ROOT, "skills", name, "SKILL.md");
   if (!existsSync(path)) return false;

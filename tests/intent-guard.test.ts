@@ -23,7 +23,8 @@
 // tests/helpers/text.test.ts.
 
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import {
@@ -235,6 +236,41 @@ describe("the guard sweep can see a positive", () => {
       description: descriptionText(frontmatter(shadowed)),
     };
     expect(guardOffenders([entry], PLANTED)).toEqual([PLANTED_IN]);
+  });
+
+  test("an in-class skill that shadows `user-invocable: false` is still swept", () => {
+    // The bypass that reaches furthest: `user-invocable` decides which files
+    // are swept at all, so a file the host still registers but the enumeration
+    // drops leaves this sweep, the trigger-phrase sweep, and the GUARD_CLASS
+    // key-set equality at once. Written to a temp root rather than built from
+    // strings, because membership is decided by what is on disk.
+    const root = mkdtempSync(join(tmpdir(), "intent-guard-enumeration-"));
+    try {
+      for (const dir of ["skills", join(".claude", "skills")]) {
+        mkdirSync(join(root, dir), { recursive: true });
+      }
+      mkdirSync(join(root, "skills", "planted-in-class"), { recursive: true });
+      writeFileSync(
+        join(root, PLANTED_IN),
+        [
+          "---",
+          "name: planted-in-class",
+          "user-invocable: false",
+          "user-invocable: true",
+          `description: ${CARRIER}`,
+          "---",
+          "body",
+        ].join("\n"),
+      );
+
+      const files = userInvocableSkillFiles(root);
+      expect(files).toEqual([PLANTED_IN]);
+
+      const entries = files.map((file) => ({ file, description: descriptionFor(root, file) }));
+      expect(guardOffenders(entries, PLANTED)).toEqual([PLANTED_IN]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   test("a conforming in-class and out-of-class pair is not reported", () => {
