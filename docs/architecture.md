@@ -770,19 +770,24 @@ unsandboxed vendor CLI mutating the tree during a cross-model pass, moves
 no skill into the class: the caller detects that write and reverts it
 rather than authoring it.
 
-**Second tier: a skill that gates every mutation on its own in-run
-approval** carries the guard there instead, which is where
-`skills/principle-explicit-intent/SKILL.md` puts it. `groom-backlog` is
-the worked example — it presents each irreversible close and waits.
+**A skill that gates every mutation on its own in-run approval** carries
+an *additional* safeguard, never a replacement for the entry guard.
+`groom-backlog` is the worked example — it presents each irreversible
+close and waits, and it still states the entry guard, because the in-run
+approval covers each close while the guard covers the run starting at
+all.
 Setting `disable-model-invocation` is a further per-skill call with its
 own recorded reason, never a property of this class. An in-class skill
 stays listed as a command, and its routing-map line in `AGENTS.md` states
 the explicit intent, so the map never invites it on a plain request. A deterministic test
 in `tests/architecture.test.ts` enforces the phrase invariant with no
 opt-out; the slash-name check is prefix-safe, so `/team-research` cannot
-satisfy the `/team` requirement. The guard wording is NOT
-machine-checked — it is the author's and reviewer's responsibility, and
-its absence on a side-effecting skill is a review-blocking defect.
+satisfy the `/team` requirement. The guard wording is machine-checked too:
+`tests/intent-guard.test.ts` sweeps every user-invocable skill under both
+roots, and an out-of-class skill that carries the guard is as much an
+offender as an in-class one that dropped it. Class membership is owned by
+the `GUARD_CLASS` map there, whose key set must equal the skills on disk,
+so a new skill nobody classified fails the build.
 
 No methodology skill is user-invocable. When a methodology also wants a
 user-facing command, the answer is a **front door**, not an exception:

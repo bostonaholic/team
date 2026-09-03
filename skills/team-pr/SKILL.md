@@ -5,11 +5,12 @@ description: |
   optionally surfaces the tracking ticket, and closes out the topic.
   Trigger on "open the PR", "open a draft PR", "/team-pr", or a `/team`
   run advancing into PR. The phase commits, pushes, opens a pull request,
-  and moves the tracker ticket without stopping to ask, so invoke it ONLY
-  on one of those stated intents: never infer the phase from verification
-  merely having passed. To land/merge a reviewed PR (wait for CI, then
-  squash-merge) use the separate /shipit skill — "ship it", "land the PR",
-  and "land this" trigger /shipit, not this skill.
+  and moves the tracker ticket without stopping to ask. To land/merge a
+  reviewed PR (wait for CI, then squash-merge) use the separate /shipit
+  skill — "ship it", "land the PR", and "land this" trigger /shipit, not
+  this skill. Invoke ONLY on explicit PR-phase intent, meaning one of the
+  stated triggers above — never infer PR-phase intent from verification
+  merely having passed.
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---

@@ -4,9 +4,10 @@ description: |
   Prepare one or more isolated git worktrees — one per repository the
   topic touches. Router action — no agent. Trigger on "set up the
   worktree", "isolate this work", "/team-worktree", or phase 1 of a
-  `/team` run. Creating a worktree creates a branch, which writes to refs,
-  so invoke it ONLY on one of those stated intents: never infer the phase
-  from work merely looking like it wants isolation.
+  `/team` run. Creating a worktree creates a branch, which writes to refs.
+  Invoke ONLY on explicit worktree intent, meaning one of the stated
+  triggers above — never infer worktree intent from work merely looking
+  like it wants isolation.
 effort: low
 argument-hint: "[docs/plans/<id>/]"
 ---

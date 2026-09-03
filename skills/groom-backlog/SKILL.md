@@ -15,7 +15,9 @@ description: |
   for the user's approval — nothing on the tracker changes before the user
   answers. Trigger on "groom the backlog", "groom the board", "clean up the
   backlog", "shape the backlog", "place these issues under milestones", or
-  "/groom-backlog".
+  "/groom-backlog". Invoke ONLY on explicit grooming intent, meaning one of
+  the stated triggers above — never infer grooming intent from a board
+  merely looking untidy.
 effort: high
 argument-hint: "[<project-number-or-url>] [--promote <issue-number>]"
 ---

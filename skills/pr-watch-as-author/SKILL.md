@@ -11,9 +11,9 @@ description: |
   Trigger on "the PR is ready for review", "watch the PR",
   "watch this PR and fix comments", or "/pr-watch-as-author". The watch
   undrafts the pull request, moves the tracker ticket, and delegates
-  apply-and-push on a high-confidence item, so invoke it ONLY on one of
-  those stated intents: never infer watch intent from a PR merely being
-  open or awaiting review.
+  apply-and-push on a high-confidence item. Invoke ONLY on explicit watch
+  intent, meaning one of the stated triggers above — never infer watch
+  intent from a PR merely being open or awaiting review.
 effort: medium
 argument-hint: "[<pr-number-or-url>]"
 ---

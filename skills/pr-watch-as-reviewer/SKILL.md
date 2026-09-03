@@ -18,6 +18,8 @@ description: |
   the PR when my comments are resolved", "watch and approve", or
   "/pr-watch-as-reviewer" — user-invoked only; model invocation is
   disabled because an approval can transitively trigger an auto-merge.
+  Invoke ONLY on explicit watch intent, meaning one of the stated triggers
+  above — never infer watch intent from a PR merely awaiting your review.
 effort: medium
 argument-hint: "[<pr-number-or-url>]"
 disable-model-invocation: true

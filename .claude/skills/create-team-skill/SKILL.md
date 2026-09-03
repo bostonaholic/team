@@ -8,7 +8,9 @@ description: |
   how it manages the context window.
   Do NOT hand-write a SKILL.md directly. Trigger on "create a skill",
   "add a new skill", "scaffold a skill", "write a SKILL.md", or a description of
-  new skill functionality the user wants to build.
+  new skill functionality the user wants to build. Invoke ONLY on explicit
+  skill-authoring intent, meaning one of the stated triggers above — never infer
+  authoring intent from a conversation merely describing new functionality.
 ---
 
 # Creating a new Team skill

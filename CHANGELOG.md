@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Clone-backed Claude installs now refresh after merge and rebase pulls.** Run `script/dev-install claude` once. Team keeps Claude Code pointed at the pulled version, and `script/dev-uninstall claude` removes only Team-owned hooks. Existing non-Team hooks are preserved and require manual integration. **What this asks of you:** reinstall once to add the hooks.
 
+### Changed
+
+- **Every side-effecting skill's description now reads one canonical explicit-intent guard, and CI fails when one is missing or when a read-only skill grows one.** Nine runtime entry points were rewritten to the single form `Invoke ONLY on explicit … intent — … never infer …`, and each one keeps the triggers that already invoked it, including the `/team` phase advances and the `/shipit` handoff into `/pr-cleanup`. The wording used to be the author's and reviewer's responsibility; it is now swept class-wide, so deleting a guard turns the build red with the skill named. **What this asks of you:** nothing — every existing trigger phrase still works.
+
 ## [0.81.0] - 2026-09-03
 
 ### Changed

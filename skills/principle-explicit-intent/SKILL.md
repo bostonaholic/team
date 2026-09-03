@@ -30,7 +30,8 @@ its scope must match exactly what it authorizes.
   even the churn is bounded and reported.
 - Guard the entry: a skill whose invocation itself authorizes a side
   effect MUST state an explicit-intent guard in its description ("Invoke
-  ONLY on … never infer …"); the strictest ones also set
-  `disable-model-invocation` where the host honors it. A skill that
-  instead gates every mutation on its own in-run approval guards there,
-  not at the entry.
+  ONLY on explicit … intent — … never infer …"); the strictest ones also
+  set `disable-model-invocation` where the host honors it. A skill that
+  also gates every mutation on its own in-run approval has an additional
+  safeguard, never a substitute: the in-run approval covers each mutation,
+  the entry guard covers the run starting at all.

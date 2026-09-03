@@ -498,9 +498,10 @@ QRSPI phase: a self-contained action a user runs on demand.
   [project-tracking.md](project-tracking.md) owns. It reports a
   pre-existing breach instead of an addition to it. The board pass ends by
   naming the item most worth promoting and printing that command. It never
-  performs the promotion itself. Model-invocable: the read-and-plan phase
-  mutates nothing and execution requires the user's answer, so those two
-  guards make cue-based auto-invocation safe.
+  performs the promotion itself. Model-invocable on stated grooming intent,
+  never on a board merely looking untidy; the read-only board pass and the
+  per-issue approval on each close are further safeguards on top of that entry
+  guard, not a replacement for it.
 
 ### [pr-cleanup](https://github.com/bostonaholic/team/blob/main/skills/pr-cleanup/SKILL.md)
 

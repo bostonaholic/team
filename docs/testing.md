@@ -142,6 +142,14 @@ change:
   sweep never breaks under a rewrite, because a rewrite does not add back the
   thing you banned. It can, however, pass for the wrong reason — see
   *Prove a negative check can find a positive* below.
+- A **required form the prose itself mandates**, when one constant owns that
+  form and every teaching copy of it is swept. A **teaching copy** is a surface
+  that shows the required form literally, so a reader could copy it from there;
+  a surface that only describes the rule in its own words is not one. All three
+  conditions bind together — the prose mandates it, one constant owns it, every
+  teaching copy is swept. Drop any one and what is left is a wording pin. The
+  explicit-intent guard is the worked example
+  (`tests/helpers/intent-guard.ts`, swept by `tests/intent-guard.test.ts`).
 
 **Never assert these.** They break on every honest edit and hold the prose
 still:
@@ -156,6 +164,9 @@ still:
 
 The test is simple:
 **if a rewrite that preserves the meaning turns the test red, the test was measuring the wording.**
+The required-form bullet above sits inside that test rather than beside it:
+where the prose itself mandates the form, a rewrite that preserves the meaning
+keeps the form. It reaches only the case where all three of its conditions hold.
 Delete it, or find the identifier underneath it and assert that instead. A
 wording pin gives false confidence in both directions. It fails when nothing
 broke, and it passes when an author keeps the sentence but guts the logic around

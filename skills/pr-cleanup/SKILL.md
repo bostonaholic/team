@@ -10,7 +10,10 @@ description: |
   user says "close the PR", "abandon this", "scrap it". Never infer abandon
   intent from a PR merely being stale, red, or unreviewed. Trigger on
   "the PR was merged", "clean up the branch", "delete the merged branch",
-  "close those PRs", or "/pr-cleanup".
+  "close those PRs", "/pr-cleanup", or a `/shipit` run that landed a
+  merge. Invoke ONLY on explicit cleanup intent, meaning one of the stated
+  triggers above — never infer cleanup intent from a PR merely being
+  stale, red, or unreviewed.
 effort: medium
 argument-hint: "[<pr-number-or-url-or-branch>]"
 ---
