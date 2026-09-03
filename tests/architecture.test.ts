@@ -194,12 +194,12 @@ describe("simplify orchestration scope fence", () => {
     ).not.toThrow();
   });
 
-  test("pre-compact-anchor reads docs/plans/ (not ~/.team/)", () => {
-    expect(/docs.*plans/.test(read(join(REPO_ROOT, "hooks", "pre-compact-anchor.mjs")))).toBe(true);
-  });
-
-  test("session-start-recover reads docs/plans/ (not ~/.team/)", () => {
-    expect(/docs.*plans/.test(read(join(REPO_ROOT, "hooks", "session-start-recover.mjs")))).toBe(true);
+  test("recovery state reads docs/plans/ through the shared resolver (not ~/.team/)", () => {
+    const resolver = read(
+      join(REPO_ROOT, "skills", "artifact-frontmatter", "scripts", "resolve-topic.mjs"),
+    );
+    expect(/docs.*plans/.test(resolver)).toBe(true);
+    expect(resolver).not.toContain("~/.team/");
   });
 
   test("no hook imports homedir from node:os", () => {
@@ -562,23 +562,13 @@ describe("worktree-first pipeline", () => {
     });
   }
 
-  // ---- Slice 4: hook shared-region byte-identity --------------------------
-  // Locks the Slice 2 invariant. Extract the shared region from each hook —
-  // from the `const ID_RE` line up to (not including) `async function main(` —
-  // and assert the two extracted substrings are === equal.
-  function sharedRegion(src: string): string {
-    const start = src.indexOf("const ID_RE");
-    const end = src.indexOf("async function main(");
-    if (start < 0 || end < 0 || end <= start) {
-      throw new Error("hook shared-region boundary markers not found");
+  // ---- Slice 4: one executable recovery implementation -------------------
+  test("both hooks import the canonical topic-state resolver", () => {
+    for (const hook of ["session-start-recover.mjs", "pre-compact-anchor.mjs"]) {
+      const source = read(join(REPO_ROOT, "hooks", hook));
+      expect(source).toContain("../skills/artifact-frontmatter/scripts/resolve-topic.mjs");
+      expect(source).not.toContain("const ID_RE");
     }
-    return src.slice(start, end);
-  }
-
-  test("hooks share a byte-identical inference region", () => {
-    const a = sharedRegion(read(join(REPO_ROOT, "hooks", "session-start-recover.mjs")));
-    const b = sharedRegion(read(join(REPO_ROOT, "hooks", "pre-compact-anchor.mjs")));
-    expect(a).toBe(b);
   });
 
   // ---- Slice 5: registry WORKTREE-first -----------------------------------
