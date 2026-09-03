@@ -182,13 +182,11 @@ describe("multi-repo support", () => {
   });
 
   test("team-worktree skips creation when already in a non-default-branch worktree", () => {
-    const text = read(TEAM_WT);
-    // Linked-worktree detection must be layout-independent: git dir vs common git dir.
-    expect(text).toContain("--git-common-dir");
-    expect(text).toContain("skip worktree creation for this repo");
-    expect(text).toContain("Non-default branch");
-    // Default-branch worktrees still refuse — never implement on main/master.
-    expect(text).toContain("Default branch** → report and stop");
+    const text = flat(read(TEAM_WT));
+    expect(text).toContain("scripts/inspect-repo.mjs");
+    expect(/skip worktree\s+creation for this repo/.test(text)).toBe(true);
+    expect(text).toContain("**non-default branch**");
+    expect(text).toContain("**default branch**");
   });
 
   test("worktree-isolation documents worktree reuse", () => {
@@ -257,10 +255,13 @@ describe("multi-repo support", () => {
     expect(text).toContain("cd ");
   });
 
-  test("team-implement detects multi-repo and refuses in-place", () => {
+  test("team-implement accepts only recorded pipeline fallbacks in-place", () => {
     const text = read(TEAM_IMPL);
     expect(text).toContain("4-repos.md");
-    expect(text).toContain("multi-repo work requires worktrees");
+    expect(text).toContain("use `/team`'s current WORKTREE result");
+    expect(text).toContain("Standalone, call the");
+    expect(text).toContain("Require its exact inventory and existing paths");
+    expect(text).toContain("otherwise refuse in-place multi-repo work");
   });
 
   test("team-pr opens cross-linked PRs in multi-repo mode", () => {
@@ -273,6 +274,15 @@ describe("multi-repo support", () => {
     const text = read(TEAM);
     expect(text).toContain("Multi-repo topics");
     expect(text).toContain("multi-repo mode");
+  });
+
+  test("team resolves only home before reconstructing the design gate", () => {
+    const team = squash(read(TEAM));
+    const worktree = squash(read(TEAM_WT));
+    expect(team).toContain("with `team-worktree` in home-only mode");
+    expect(team).toContain("passing design review and `4-repos.md`");
+    expect(worktree).toContain("home-only call, ignore `4-repos.md`");
+    expect(worktree).toContain("after a passing design review");
   });
 });
 
@@ -314,7 +324,7 @@ describe("implement-to-pr continuation", () => {
   });
 
   test("team-implement still suggests /team-pr in standalone mode", () => {
-    expect(/\*\*Standalone\*\*.{0,200}\/team-pr/.test(flat(read(TEAM_IMPLEMENT)))).toBe(true);
+    expect(/\*\*Standalone:\*\*[\s\S]*?\/team-pr/.test(read(TEAM_IMPLEMENT))).toBe(true);
   });
 
   test("architecture.md no longer presents shipping options", () => {
@@ -406,11 +416,11 @@ describe("L2-demoted heavy-prior-state pipeline skills", () => {
     );
   });
 
-  test("team: no mid-run human gates — an adversarial design review gates DESIGN", () => {
+  test("team: no mid-run approvals — an adversarial design review gates DESIGN", () => {
     const text = read(TEAM);
     // The run has no mid-run human pause; the one human checkpoint is the
     // PR review after the run completes.
-    expect(text).toContain("no mid-run human gates");
+    expect(text).toContain("no mid-run approval prompts");
     // DESIGN is gated by the adversarial design-review loop.
     expect(/^### Design Review Gate \(design\)$/m.test(text)).toBe(true);
     // The old human-gate sections must be gone — inverse set of the
@@ -462,9 +472,17 @@ describe("L2-demoted heavy-prior-state pipeline skills", () => {
   test("team-implement: drives the test-first → slice → 5-reviewer sub-pipeline", () => {
     const text = read(TEAM_IMPL);
     expect(/test-first/i.test(text)).toBe(true);
-    expect(text).toContain("Slice execution");
-    expect(/5 parallel reviewers/i.test(text)).toBe(true);
-    expect(/hard-gate retry loop/i.test(text)).toBe(true);
+    expect(text).toContain("vertical slices in order");
+    for (const reviewer of [
+      "code-reviewer",
+      "security-reviewer",
+      "technical-writer",
+      "ux-reviewer",
+      "verifier",
+    ]) {
+      expect(text).toContain(reviewer);
+    }
+    expect(text).toContain("While Blocking or Major findings remain");
   });
 });
 
@@ -502,7 +520,7 @@ describe("ticket pickup → in-progress", () => {
   // encoded as a Skill-tool load, so the bare name is the reference.
   function assertInProgressPointer(path: string) {
     const text = flat(read(path));
-    expect(/move the ticket to in-progress/i.test(text)).toBe(true);
+    expect(/move\s+(?:it|the ticket)(?:\s+to)?\s+in[- ]progress/i.test(text)).toBe(true);
     expect(loadsSkill(text, "tracking-tickets")).toBe(true);
     // Does not hardcode this repo's board into the distributed runtime.
     expect(text).not.toContain("project-set-status");
@@ -574,7 +592,7 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     const text = flat(read(path));
     expect(loadsSkill(text, "tracking-tickets")).toBe(true);
     // Still names the tracker moment so the pointer step is discoverable.
-    expect(/in-review/i.test(text)).toBe(true);
+    expect(/in[- ]review/i.test(text)).toBe(true);
     // Does not hardcode this repo's board into the distributed runtime.
     expect(text).not.toContain("project-set-status");
     expect(text).not.toContain("projects/5");
@@ -588,8 +606,10 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     assertInReviewPointer(TEAM_PR);
   });
 
-  test("team: PR gate points at tracking-tickets for the ticket link + in-review timing", () => {
-    assertInReviewPointer(TEAM_SKILL);
+  test("team delegates PR tracking to team-pr", () => {
+    const text = read(TEAM_SKILL);
+    expect(text).toContain("| PR | `team-pr`");
+    expect(text).toContain("calls `team-pr` in the same turn");
   });
 
   test("team-fix: Ship points at tracking-tickets for the ticket link + in-review timing", () => {
@@ -624,38 +644,18 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
   // skills/tracking-tickets/SKILL.md (content pins there); team-pr keeps the
   // WHERE — the PR Body Template that ends with the footer — as host glue.
 
-  // The PR Body Template: the first fenced code block after the
-  // "## PR Body Template" heading in team-pr.
-  function prBodyTemplate(text: string): string {
-    const afterHeading = text.split("## PR Body Template")[1] ?? "";
-    return afterHeading.match(/```\n([\s\S]*?)```/)?.[1] ?? "";
-  }
-
   // Canonical placement phrase — pinned on tracking-tickets (the rule owner)
-  // and on team-pr (whose PR Body Template renders the footer in place).
+  // and on team-pr's conditional body reference.
   function assertClosingFooterPlacement(path: string) {
     const text = flat(read(path));
-    expect(/as the final line of the PR body/i.test(text)).toBe(true);
+    expect(/(?:as the final line of the PR body|final authored line)/i.test(text)).toBe(true);
   }
 
-  test("team-pr: PR Body Template ends with the Closes footer", () => {
-    const template = prBodyTemplate(read(TEAM_PR));
-    // Fail loud if the template block vanished, so the position assertions
-    // below cannot pass vacuously against an empty string.
-    expect(template.length).toBeGreaterThan(0);
-    // The closing line sits after the ## References bullets — the footer of
-    // the authored body.
-    expect(template).toContain("Closes");
-    // Guard the ordering comparison: without this, removing ## References
-    // would make indexOf return -1 and the check below pass vacuously.
-    expect(template).toContain("## References");
-    expect(template.indexOf("Closes")).toBeGreaterThan(
-      template.indexOf("## References"),
-    );
-    // And it is the FINAL line of the template — nothing may follow it.
-    // Without this, appending a section after the closing line would still
-    // pass the ordering check above.
-    expect(template.trimEnd().endsWith("Closes #<n>")).toBe(true);
+  test("team-pr delegates footer placement to its executable body renderer", () => {
+    expect(read(TEAM_PR)).toContain("scripts/render-body.mjs");
+    expect(
+      existsSync(join(REPO_ROOT, "skills", "team-pr", "references", "body.md")),
+    ).toBe(true);
   });
 
   test("tracking-tickets: footer is ticketId-conditional — omitted when null, no placeholder", () => {
@@ -663,8 +663,10 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     expect(/no placeholder/i.test(text)).toBe(true);
   });
 
-  test("team-pr: placement rationale is documented alongside the template", () => {
-    expect(/placement rationale/i.test(flat(read(TEAM_PR)))).toBe(true);
+  test("team-pr: body contract records the closing-footer placement", () => {
+    assertClosingFooterPlacement(
+      join(REPO_ROOT, "skills", "team-pr", "references", "body.md"),
+    );
   });
 
   test("team-pr: body refresh re-emits exactly one closing line", () => {
@@ -681,7 +683,9 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
   });
 
   test("team-pr: states the Closes footer placement (final line of the PR body)", () => {
-    assertClosingFooterPlacement(TEAM_PR);
+    assertClosingFooterPlacement(
+      join(REPO_ROOT, "skills", "team-pr", "references", "body.md"),
+    );
   });
 
   // Multi-repo home-only closing rule — canonical in tracking-tickets; the
@@ -710,8 +714,9 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
     assertHomeOnlyClosingPointer(TEAM_PR);
   });
 
-  test("team: PR gate points at tracking-tickets for the multi-repo home-only closing rule", () => {
-    assertHomeOnlyClosingPointer(TEAM_SKILL);
+  test("team delegates the multi-repo closing rule to team-pr", () => {
+    expect(read(TEAM_SKILL)).toContain("one cross-linked draft per repo");
+    expect(read(TEAM_SKILL)).toContain("calls `team-pr` in the same turn");
   });
 });
 
@@ -720,7 +725,7 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
 // rather than in the `eng-design-doc-review` entry point, so no skill is both
 // a methodology and a slash command. Three callers load the same brief:
 // skills/team/SKILL.md, skills/team-design/SKILL.md, and the entry point
-// itself. Each dispatches it with the artifact directory substituted for
+// itself. Direct callers dispatch it with the artifact directory substituted for
 // `$ARGUMENTS`, which is the contract a subagent depends on.
 // ---------------------------------------------------------------------------
 
@@ -732,7 +737,6 @@ describe("the design-review brief lives in reviewing-designs", () => {
   const readOrMissing = (path: string): string => (existsSync(path) ? read(path) : "");
 
   const CALLERS: [string, string][] = [
-    ["team", join(REPO_ROOT, "skills", "team", "SKILL.md")],
     ["team-design", join(REPO_ROOT, "skills", "team-design", "SKILL.md")],
     ["eng-design-doc-review", join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md")],
   ];
@@ -767,6 +771,12 @@ describe("the design-review brief lives in reviewing-designs", () => {
     ).map(([name]) => name);
     expect(offenders).toEqual([]);
   });
+
+  test("team composes the team-design caller", () => {
+    expect(read(join(REPO_ROOT, "skills", "team", "SKILL.md"))).toContain(
+      "| DESIGN | `team-design`",
+    );
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -800,36 +810,17 @@ describe("the no-consult rule (L2 tripwire)", () => {
 describe("Minor findings defer to the PR body (L2 tripwire)", () => {
   const TEAM_PR = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
   const TEAM_IMPL = join(REPO_ROOT, "skills", "team-implement", "SKILL.md");
+  const BODY_CONTRACT = join(REPO_ROOT, "skills", "team-pr", "references", "body.md");
 
-  // The PR Body Template: the first fenced code block after the
-  // "## PR Body Template" heading (pattern: the closing-footer describe).
-  function prBodyTemplate(text: string): string {
-    const afterHeading = text.split("## PR Body Template")[1] ?? "";
-    return afterHeading.match(/```\n([\s\S]*?)```/)?.[1] ?? "";
-  }
-
-  test("team-pr template carries ## Review notes between How to Verify and References", () => {
-    const template = prBodyTemplate(read(TEAM_PR));
-    // Fail loud if the template block vanished, so the position assertions
-    // below cannot pass vacuously against an empty string.
-    expect(template.length).toBeGreaterThan(0);
-    expect(template).toContain("## Review notes");
-    expect(template).toContain("## How to Verify");
-    expect(template).toContain("## References");
-    expect(template.indexOf("## Review notes")).toBeGreaterThan(
-      template.indexOf("## How to Verify"),
-    );
-    expect(template.indexOf("## Review notes")).toBeLessThan(
-      template.indexOf("## References"),
-    );
+  test("team-pr delegates conditional review notes to the body renderer", () => {
+    expect(read(TEAM_PR)).toContain("scripts/render-body.mjs");
+    expect(read(BODY_CONTRACT)).toContain("reviewNotes");
   });
 
   test("team-pr omits the section when empty and tags design-review findings by source", () => {
-    const text = flat(read(TEAM_PR));
-    expect(/omit the section entirely when empty/i.test(text)).toBe(true);
-    expect(/never emit a bare heading/i.test(text)).toBe(true);
-    // Design-review COMMENT findings are tagged with their source artifact.
-    expect(text).toContain("design-review-");
+    const contract = read(BODY_CONTRACT);
+    expect(contract).toContain("Optional empty sections are omitted");
+    expect(contract).toContain("design-review-<n>");
   });
 
   test("team-implement records Minors for the PR body instead of presenting them", () => {
@@ -1132,16 +1123,11 @@ describe("checks and balances", () => {
     });
   }
 
-  test("both copies of the aggregate loop load the severity-tier authority", () => {
-    // Nothing bounds the review loop by a count, so its exit condition is the
-    // aggregate — and one skill owns it. Both loop copies must instruct a load
-    // of that skill, or a reader of either one alone learns no exit condition.
-    // A load is the bare name through the Skill tool, never a path
-    // (tests/helpers/skill-refs.ts).
+  test("team-implement loads the severity authority and team delegates IMPLEMENT", () => {
     const team = read(join(REPO_ROOT, "skills", "team", "SKILL.md"));
     const implement = read(join(REPO_ROOT, "skills", "team-implement", "SKILL.md"));
-    expect(loadsSkill(team, "review-severity-tiers")).toBe(true);
     expect(loadsSkill(implement, "review-severity-tiers")).toBe(true);
+    expect(team).toContain("| IMPLEMENT | `team-implement`");
   });
 
   test("the severity-tier authority still carries the ## Aggregating Verdicts section", () => {
@@ -1215,14 +1201,14 @@ describe("code-review direct invocation preserves separation", () => {
   // counterpart on the path a natural-language phrase reaches.
   const CODE_REVIEW = read(join(REPO_ROOT, "skills", "code-review", "SKILL.md"));
 
-  test("the skill states the direct-invocation path", () => {
-    expect(CODE_REVIEW).toContain("## When Invoked Directly");
+  test("the front door loads the review methodology", () => {
+    expect(loadsSkill(CODE_REVIEW, "reviewing-code")).toBe(true);
   });
 
   test("the direct path dispatches instead of reviewing inline", () => {
     const text = flat(CODE_REVIEW);
-    expect(text).toContain("Do not review inline");
-    expect(/Dispatch the\s+`code-reviewer` agent/.test(text)).toBe(true);
+    expect(/never\s+review inline/.test(text)).toBe(true);
+    expect(/Dispatch\s+`code-reviewer`/.test(text)).toBe(true);
   });
 });
 
@@ -1234,12 +1220,9 @@ describe("phase agents split into self-writing and return-only", () => {
   const TEAM = read(join(REPO_ROOT, "skills", "team", "SKILL.md"));
 
   test("the orchestrator states where each kind's output lives", () => {
-    // Guard: a missing file must fail, not vacuously pass the checks below.
     expect(TEAM.length).toBeGreaterThan(0);
-    expect(TEAM).toContain("## Where a phase agent's output lives");
-    for (const agent of ["questioner", "researcher", "file-finder"]) {
-      expect(TEAM).toContain(agent);
-    }
+    expect(TEAM).toContain("Self-writing agent output is verified on disk");
+    expect(TEAM).toContain("Return-only research output");
   });
 
   test("return-only agents genuinely hold no write tool", () => {
@@ -1273,10 +1256,10 @@ describe("the worktree phase preflights the environment", () => {
   const TEAM = read(join(REPO_ROOT, "skills", "team", "SKILL.md"));
 
   test("it reads the three signals that predict a later failure", () => {
-    // Guard: a missing file must fail, not vacuously pass the checks below.
     expect(TEAM.length).toBeGreaterThan(0);
-    for (const probe of ["ssh-add -l", "gh auth status", "commit.gpgsign"]) {
-      expect(TEAM).toContain(probe);
+    expect(TEAM).toContain("scripts/preflight.mjs");
+    for (const signal of ["SSH-agent", "GitHub-auth", "signing-config"]) {
+      expect(TEAM).toContain(signal);
     }
   });
 
@@ -1436,10 +1419,11 @@ describe("no stated round or revision cap (L2 forbidden-pattern sweep)", () => {
 const ROUND_ITEM = "Review round <n+1> (<b> Blocking, <m> Major open)";
 
 describe("the IMPLEMENT round item carries the open finding count (L2 tripwire)", () => {
-  test("all three restating files carry the round-item template byte-identically", () => {
-    expect(read(join(REPO_ROOT, "skills", "team", "SKILL.md"))).toContain(ROUND_ITEM);
+  test("team-implement owns the round-item template", () => {
     expect(read(join(REPO_ROOT, "skills", "team-implement", "SKILL.md"))).toContain(ROUND_ITEM);
-    expect(read(join(REPO_ROOT, "docs", "architecture.md"))).toContain(ROUND_ITEM);
+    expect(read(join(REPO_ROOT, "skills", "team", "SKILL.md"))).toContain(
+      "| IMPLEMENT | `team-implement`",
+    );
   });
 
   test("the round-1 TodoWrite seed keeps the bare label and carries no count", () => {
@@ -1465,14 +1449,10 @@ describe("the IMPLEMENT round item carries the open finding count (L2 tripwire)"
 // host suspends. The 540-600s band is that signature; no in-script poll
 // interval lands there by coincidence.
 //
-// skills/principle-non-blocking-waits/ is exempt: it names the banned values as
-// the counter-examples that motivate the rule, the same way CHANGELOG.md is
-// exempt from the round-cap sweep as history.
+// A planted positive proves the sweep still detects the forbidden form.
 // ---------------------------------------------------------------------------
 
 describe("no ceiling-hugging foreground sleep (L2 forbidden-pattern sweep)", () => {
-  const EXEMPT = "skills/principle-non-blocking-waits/";
-
   function mdFilesUnder(dir: string): string[] {
     const out: string[] = [];
     for (const entry of readdirSync(join(REPO_ROOT, dir), { withFileTypes: true })) {
@@ -1487,8 +1467,7 @@ describe("no ceiling-hugging foreground sleep (L2 forbidden-pattern sweep)", () 
     return out;
   }
 
-  const SWEPT_FILES = [...mdFilesUnder("docs"), ...mdFilesUnder("skills"), ...mdFilesUnder("agents")]
-    .filter((rel) => !rel.startsWith(EXEMPT));
+  const SWEPT_FILES = [...mdFilesUnder("docs"), ...mdFilesUnder("skills"), ...mdFilesUnder("agents")];
 
   // 540-600 inclusive: the band a author reaches for when sizing a sleep to
   // just miss a 600s kill.
@@ -1517,10 +1496,7 @@ describe("no ceiling-hugging foreground sleep (L2 forbidden-pattern sweep)", () 
     expect(offenders).toEqual([]);
   });
 
-  test("the exemption is real: the principle names the counter-examples it bans", () => {
-    // Without this, the exemption could silently cover an empty file and the
-    // sweep would look principled while protecting nothing.
-    const principle = read(join(REPO_ROOT, "skills", "principle-non-blocking-waits", "SKILL.md"));
-    expect(CEILING_SLEEP.test(flat(principle))).toBe(true);
+  test("the pattern has planted positive controls", () => {
+    expect(PLANTED.every((sample) => CEILING_SLEEP.test(flat(sample)))).toBe(true);
   });
 });

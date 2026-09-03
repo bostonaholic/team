@@ -690,9 +690,8 @@ describe("test-first-development lens (L2 content tripwire)", () => {
   // without type-checking, and test-first deliberately writes incomplete
   // stubs. Without a static check here the first actor to notice is the
   // verifier — one of the five reviewers — which costs a whole review round.
-  // Pinned everywhere the gate is stated, so the three copies cannot drift.
+  // The phase owner states the gate. The top-level coordinator composes it.
   const GATE_FILES: Array<[string, string]> = [
-    ["team", join(REPO_ROOT, "skills", "team", "SKILL.md")],
     ["team-implement", join(REPO_ROOT, "skills", "team-implement", "SKILL.md")],
     ["team-fix", join(REPO_ROOT, "skills", "team-fix", "SKILL.md")],
   ];
@@ -702,11 +701,16 @@ describe("test-first-development lens (L2 content tripwire)", () => {
       const text = squash(read(file));
       // Guard: a missing file must fail, not vacuously pass the checks below.
       expect(text.length).toBeGreaterThan(0);
-      expect(/mechanical gate/i.test(text)).toBe(true);
-      expect(/static check/i.test(text)).toBe(true);
+      expect(/mechanical(?: red)? gate/i.test(text)).toBe(true);
       expect(/typecheck/i.test(text)).toBe(true);
     });
   }
+
+  test("team composes the implementation phase owner", () => {
+    expect(read(join(REPO_ROOT, "skills", "team", "SKILL.md"))).toContain(
+      "| IMPLEMENT | `team-implement`",
+    );
+  });
 
   test("test-first-development requires static checks before handoff", () => {
     const text = squash(read(SKILL_FILE));
@@ -741,13 +745,19 @@ describe("design-review gate replaces approval frontmatter (L2 tripwire)", () =>
     expect(/^approved/m.test(text)).toBe(false);
   });
 
+  test("the shared resolver infers from design-review verdicts, not approval fields", () => {
+    const resolver = read(
+      join(REPO_ROOT, "skills", "artifact-frontmatter", "scripts", "resolve-topic.mjs"),
+    );
+    expect(resolver).toContain("design-review-");
+    expect(/approved/.test(resolver)).toBe(false);
+  });
+
   for (const name of ["session-start-recover", "pre-compact-anchor"]) {
-    test(`hooks/${name}.mjs infers from design-review-<n>.md, not approved frontmatter`, () => {
-      const src = read(join(REPO_ROOT, "hooks", `${name}.mjs`));
-      // Phase inference reads the design-review verdict artifact...
-      expect(src).toContain("design-review-");
-      // ...and no approval-frontmatter read (or comment about one) remains.
-      expect(/approved/.test(src)).toBe(false);
+    test(`hooks/${name}.mjs delegates phase inference to the shared resolver`, () => {
+      expect(read(join(REPO_ROOT, "hooks", `${name}.mjs`))).toContain(
+        "artifact-frontmatter/scripts/resolve-topic.mjs",
+      );
     });
   }
 });

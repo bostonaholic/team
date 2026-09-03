@@ -74,8 +74,6 @@ describe("skill architecture", () => {
   });
 
   test("reviewing-code row in docs/skills.md names all 4 consumer agents", () => {
-    // Key on the table-row delimiter so prose mentions of the skill name
-    // elsewhere in the doc cannot crowd the row out of the 5-line window.
     const row = filterRows(read(SKILLS_MD), "| `reviewing-code` |", /^#|^>|SKILL\.md|\/\/|event/);
     for (const agent of ["code-reviewer", "security-reviewer", "ux-reviewer", "technical-writer"]) {
       expect(row).toContain(agent);
@@ -147,17 +145,19 @@ describe("simplify orchestration scope fence", () => {
   });
 
   test("no active code references writeState/readState/initState (excluding docs/plans/)", () => {
-    expect(
-      grepAbsent([
-        "-rEn",
-        "--exclude-dir=worktrees",
-        "writeState|readState|initState",
-        "hooks/",
-        "skills/",
-        "agents/",
-        ".claude/",
-      ]),
-    ).toBe(true);
+    for (const directory of ["hooks", "skills", "agents", ".claude"]) {
+      const files = execFileSync("git", ["ls-files", directory], {
+        cwd: REPO_ROOT,
+        encoding: "utf8",
+      })
+        .trim()
+        .split("\n")
+        .filter((file) => file && !file.includes("/worktrees/"));
+
+      for (const file of files) {
+        expect(read(join(REPO_ROOT, file))).not.toMatch(/\b(?:writeState|readState|initState)\s*\(/);
+      }
+    }
   });
 
   test("no active code (mjs/json) references ~/.team or state.json filename", () => {
@@ -541,10 +541,9 @@ describe("worktree-first pipeline", () => {
     });
   }
 
-  // A leading WORKTREE row whose signal is "worktree exists" / "no 1-task.md"
-  // maps to WORKTREE. Match a single table row that mentions a worktree-exists
-  // signal and maps to WORKTREE.
-  const LEADING_WORKTREE_ROW = /^\|[^\n]*worktree exists[^\n]*\|[^\n]*WORKTREE[^\n]*\|/im;
+  // A leading WORKTREE row whose signal is an existing worktree without
+  // 1-task.md maps to WORKTREE. Assert the decision, not one prose rendering.
+  const LEADING_WORKTREE_ROW = /^\|[^\n]*worktree[^\n]*(?:no|without)[^\n]*`?1-task\.md`?[^\n]*\|[^\n]*WORKTREE[^\n]*\|/im;
 
   for (const file of PROSE_TABLES) {
     test(`leading WORKTREE inference row present in ${file.replace(REPO_ROOT + "/", "")}`, () => {
@@ -552,13 +551,12 @@ describe("worktree-first pipeline", () => {
     });
   }
 
-  // The IMPLEMENT confirmation phrase must be byte-for-byte identical in both
-  // prose tables. The plan pins this verbatim string.
-  const IMPLEMENT_PHRASE = "≥1 commit on `<id>` since merge-base";
+  // IMPLEMENT requires both 8-plan.md and a branch commit since merge-base.
+  const IMPLEMENT_EVIDENCE = /^\|[^\n]*`8-plan\.md`[^\n]*(?:commit|branch ahead)[^\n]*(?:merge-base|since)[^\n]*\|[^\n]*IMPLEMENT[^\n]*\|/im;
 
   for (const file of PROSE_TABLES) {
-    test(`IMPLEMENT confirmation phrase is verbatim in ${file.replace(REPO_ROOT + "/", "")}`, () => {
-      expect(read(file)).toContain(IMPLEMENT_PHRASE);
+    test(`IMPLEMENT evidence requires a post-merge-base commit in ${file.replace(REPO_ROOT + "/", "")}`, () => {
+      expect(read(file)).toMatch(IMPLEMENT_EVIDENCE);
     });
   }
 

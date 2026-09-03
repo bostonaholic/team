@@ -30,6 +30,7 @@ import { tmpdir } from "node:os";
 import { isAbsolute, join, relative } from "node:path";
 
 import { frontmatter, read, squash } from "./helpers/text";
+import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 
@@ -67,6 +68,13 @@ const ENG_REVIEW_SKILL = join(REPO_ROOT, "skills", "eng-design-doc-review", "SKI
 const REVIEWING_DESIGNS_SKILL = join(REPO_ROOT, "skills", "reviewing-designs", "SKILL.md");
 const TEAM_DESIGN_SKILL = join(REPO_ROOT, "skills", "team-design", "SKILL.md");
 const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
+const PR_BODY_CONTRACT = join(
+  REPO_ROOT,
+  "skills",
+  "team-pr",
+  "references",
+  "body.md",
+);
 
 // Missing-file reads return "" so dependent checks fail as assertions
 // (expected "" to contain ...), never as ENOENT crashes.
@@ -722,13 +730,12 @@ describe("skill and agent wiring (L2)", () => {
     expect(squash(section)).not.toContain("in the background, and wait for the harness");
   });
 
-  test("all four courier consumers point at the vendor-courier block", () => {
-    // The three design entrances plus the code-reviewer agent each route
-    // vendor runs through couriers; the block itself lives only in the
-    // cross-model skill.
-    for (const path of [TEAM_SKILL, TEAM_DESIGN_SKILL, ENG_REVIEW_SKILL, CODE_REVIEWER]) {
-      expect(read(path)).toContain("courier");
+  test("direct entry skills load the shared courier procedure", () => {
+    for (const path of [TEAM_DESIGN_SKILL, ENG_REVIEW_SKILL]) {
+      expect(loadsSkill(read(path), "cross-model-review")).toBe(true);
     }
+    expect(read(TEAM_SKILL)).toContain("| DESIGN | `team-design`");
+    expect(read(TEAM_SKILL)).toContain("| IMPLEMENT | `team-implement`");
   });
 
   test("nested-agents guardrails carry the code-reviewer vendor-courier cap section", () => {
@@ -758,7 +765,6 @@ describe("skill and agent wiring (L2)", () => {
   });
 
   test("docs/skills.md documents cross-model-review", () => {
-    // Heading text may be bare or a source link; the entry is the contract.
     expect(read(SKILLS_MD)).toMatch(/^### \[?cross-model-review\b/m);
   });
 });
@@ -777,32 +783,12 @@ function windowSection(text: string, headingPattern: RegExp, terminator: RegExp)
   return lines.slice(start, end === -1 ? undefined : end).join("\n");
 }
 
-function aggregateGate(): string {
-  return windowSection(read(TEAM_SKILL), /^### Aggregate Gate/, /^#{1,3} /);
-}
-
 describe("orchestrator contract in skills/team/SKILL.md (L2)", () => {
-  test("the Aggregate Gate names the disposition heading and the notes file", () => {
-    const gate = aggregateGate();
-    // Guard: a renamed section must fail, not vacuously pass.
-    expect(gate.length).toBeGreaterThan(0);
-    expect(gate).toContain(DISPOSITION_HEADING);
-    expect(gate).toContain(NOTES_FILENAME);
-  });
-
-  test("the disposition heading is byte-identical between producer and orchestrator skills", () => {
-    expect(readOrEmpty(SKILL_MD)).toContain(DISPOSITION_HEADING);
-    expect(read(TEAM_SKILL)).toContain(DISPOSITION_HEADING);
-    expect(read(TEAM_IMPLEMENT_SKILL)).toContain(DISPOSITION_HEADING);
-  });
-
-  test("the Aggregate Gate keys persistence on the not-run marker, not on the heading being present", () => {
-    const gate = aggregateGate();
-    // Guard: a renamed section must fail, not vacuously pass.
-    expect(gate.length).toBeGreaterThan(0);
-    // Every code-review report now carries the heading, so presence alone
-    // would create cross-model-notes.md on a run where no pass ever ran.
-    expect(gate).toContain(NOT_RUN_MARKER);
+  test("the coordinator delegates disposition persistence to team-implement", () => {
+    const text = read(TEAM_SKILL);
+    expect(text).toContain("| IMPLEMENT | `team-implement`");
+    expect(text).toContain("five-reviewer aggregate");
+    expect(text).not.toContain(DISPOSITION_HEADING);
   });
 });
 
@@ -843,8 +829,7 @@ describe("artifact schema in skills/artifact-frontmatter/SKILL.md (L2)", () => {
 // ---------------------------------------------------------------------------
 
 function reviewNotesSpec(): string {
-  const paragraphs = read(TEAM_PR_SKILL).split(/\n\s*\n/);
-  return paragraphs.find((p) => p.includes("`## Review notes` (conditional)")) ?? "";
+  return readOrEmpty(PR_BODY_CONTRACT);
 }
 
 describe("PR contract in skills/team-pr/SKILL.md (L2)", () => {
@@ -859,18 +844,18 @@ describe("PR contract in skills/team-pr/SKILL.md (L2)", () => {
     const spec = squash(reviewNotesSpec());
     expect(spec.length).toBeGreaterThan(0);
     expect(spec).toMatch(/frontmatter/i);
-    expect(spec).toMatch(/strip/i);
+    expect(spec).toMatch(/strip|remove/i);
   });
 
   test("the Review notes spec carries the dedup clause: the copy replaces the final round's inline disposition block", () => {
     const spec = squash(reviewNotesSpec());
     expect(spec.length).toBeGreaterThan(0);
-    expect(spec).toContain(DISPOSITION_HEADING);
-    expect(spec).toMatch(/replac|exclud/i);
+    expect(spec).toContain(NOTES_FILENAME);
+    expect(spec).toMatch(/omit.+other sources/i);
   });
 
-  test("the literal notes filename agrees across team, team-implement, team-pr, and artifact-frontmatter skills", () => {
-    for (const path of [TEAM_SKILL, TEAM_IMPLEMENT_SKILL, TEAM_PR_SKILL, ARTIFACT_SKILL]) {
+  test("the literal notes filename agrees across its producer, renderer contract, and schema", () => {
+    for (const path of [TEAM_IMPLEMENT_SKILL, PR_BODY_CONTRACT, ARTIFACT_SKILL]) {
       expect(read(path)).toContain(NOTES_FILENAME);
     }
   });
@@ -975,23 +960,14 @@ describe("role-named prompt templates (L2)", () => {
 // ---------------------------------------------------------------------------
 
 function designReviewGate(): string {
-  return windowSection(read(TEAM_SKILL), /^### Design Review Gate/, /^#{1,3} /);
+  return windowSection(read(TEAM_DESIGN_SKILL), /^## Procedure/, /^## /);
 }
 
 describe("design-review gate wiring (L2)", () => {
-  test("the Design Review Gate section runs the external pass", () => {
+  test("team-design loads the external pass and owns the terminal verdict", () => {
     const gate = designReviewGate();
-    // Guard: a renamed section must fail, not vacuously pass.
     expect(gate.length).toBeGreaterThan(0);
-    expect(gate).toContain("`detect`");
-    expect(gate).toContain("`run`");
-    // Raw vendor output is fenced as DATA at capture time.
-    expect(gate).toContain("DATA");
-    expect(gate).toContain(EXTERNAL_INPUT_HEADING);
-    // The one gate before any call is machine policy: the kill-switch.
-    expect(gate).toContain(KILL_SWITCH_VAR);
-    // The verdict: frontmatter derives from the last verdict token in the
-    // reviewer's report body — the terminal line, never the first mention.
+    expect(loadsSkill(gate, "cross-model-review")).toBe(true);
     expect(squash(gate)).toContain("last verdict token");
   });
 
@@ -1055,17 +1031,11 @@ describe("untrusted-output containment rules (L2)", () => {
     expect(flattened).toMatch(/never interpolated/i);
   });
 
-  test("all three entrances carry the fence-length and untrusted-opening-line pointers", () => {
-    // Drift class: a containment rule stated in one surface and absent in
-    // a sibling. Every entrance that restates the append must carry both
-    // pointers into the shared section.
-    for (const path of [TEAM_SKILL, TEAM_DESIGN_SKILL, ENG_REVIEW_SKILL]) {
-      const flattened = squash(read(path));
-      // Guard: an emptied file must fail, not vacuously pass.
-      expect(flattened.length).toBeGreaterThan(0);
-      expect(flattened).toContain("backtick run");
-      expect(flattened).toContain("untrusted-content line");
+  test("direct entrances load the shared containment procedure", () => {
+    for (const path of [TEAM_DESIGN_SKILL, ENG_REVIEW_SKILL]) {
+      expect(loadsSkill(read(path), "cross-model-review")).toBe(true);
     }
+    expect(read(TEAM_SKILL)).toContain("| DESIGN | `team-design`");
   });
 });
 
@@ -1074,9 +1044,8 @@ describe("untrusted-output containment rules (L2)", () => {
 // ---------------------------------------------------------------------------
 
 describe("design-round records (L2)", () => {
-  test("the Design Review Gate names the notes file, the raw file, and the bold round-label literal", () => {
+  test("team-design names the notes file, raw file, and round label", () => {
     const gate = designReviewGate();
-    // Guard: a renamed section must fail, not vacuously pass.
     expect(gate.length).toBeGreaterThan(0);
     expect(gate).toContain(NOTES_FILENAME);
     expect(gate).toContain(RAW_FILENAME);
@@ -1094,12 +1063,9 @@ describe("design-round records (L2)", () => {
 
   test("the Review notes spec makes (d) the single carrier for the disposition block", () => {
     const spec = squash(reviewNotesSpec());
-    // Guard: a reworded anchor must fail, not vacuously pass.
     expect(spec.length).toBeGreaterThan(0);
-    // The heading is named twice: once where the spec decides which clause
-    // carries it, once where the sweeps exclude it.
-    const occurrences = spec.split(DISPOSITION_HEADING).length - 1;
-    expect(occurrences).toBeGreaterThanOrEqual(2);
+    expect(spec).toContain(NOTES_FILENAME);
+    expect(spec).toMatch(/omit.+other sources/i);
   });
 });
 
@@ -1117,9 +1083,9 @@ describe("orchestrator contract in skills/team-design/SKILL.md (L2)", () => {
     expect(text).toContain(NOTES_FILENAME);
   });
 
-  test("the round-label literal is byte-identical between team and team-design", () => {
-    expect(read(TEAM_SKILL)).toContain(ROUND_LABEL);
+  test("team-design owns the round-label literal", () => {
     expect(read(TEAM_DESIGN_SKILL)).toContain(ROUND_LABEL);
+    expect(read(TEAM_SKILL)).toContain("| DESIGN | `team-design`");
   });
 });
 
@@ -1129,21 +1095,14 @@ describe("orchestrator contract in skills/team-design/SKILL.md (L2)", () => {
 
 describe("eng-design-doc-review standalone pass (L2)", () => {
   test("eng-design-doc-review execution runs the external pass and writes no artifact", () => {
-    const execution = windowSection(read(ENG_REVIEW_SKILL), /^## Execution/, /^## /);
-    // Guard: a renamed section must fail, not vacuously pass.
-    expect(execution.length).toBeGreaterThan(0);
-    expect(execution).toContain("external-review.mjs");
-    expect(execution).toContain(EXTERNAL_INPUT_HEADING);
-    // A standalone run records nothing: raw vendor text stays in the
-    // invoking session — no notes append, no raw file.
-    expect(squash(execution)).toMatch(/no artifact/i);
+    const text = read(ENG_REVIEW_SKILL);
+    expect(loadsSkill(text, "cross-model-review")).toBe(true);
+    expect(squash(text)).toMatch(/writes no raw or notes artifact/i);
   });
 
-  test("the completion notice reports unavailable CLIs and names the kill-switch", () => {
+  test("the completion notice reports every vendor skip", () => {
     const completion = windowSection(read(ENG_REVIEW_SKILL), /^## Completion/, /^## /);
-    // Guard: a renamed section must fail, not vacuously pass.
     expect(completion.length).toBeGreaterThan(0);
-    expect(completion).toMatch(/unavailable/i);
-    expect(completion).toContain(KILL_SWITCH_VAR);
+    expect(completion).toContain("every vendor skip");
   });
 });

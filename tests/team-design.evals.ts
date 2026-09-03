@@ -10,7 +10,7 @@
 // Seeded-state mechanism (design Slice 3): the fixture input.md body embeds two
 // upstream artifacts (1-task.md + 5-research.md) in labeled fenced blocks. This
 // file parses them out of `fixture.body` and writes them into the mkdtempSync
-// workDir at docs/plans/<id>/{task,research}.md BEFORE calling runAgentTest —
+// workDir at docs/plans/<id>/{1-task,5-research}.md BEFORE calling runAgentTest —
 // no harness helper change. The deterministic axis confirms the topic slug was
 // reused and an Open Questions section is present; the gated LLM judge grades
 // design grounding. Periodic tier: grounding is a judgment with model variance.
@@ -64,7 +64,7 @@ testIfSelected(
 
       const prompt =
         "You are running the DESIGN phase against the seeded " +
-        `docs/plans/${TOPIC_ID}/{task,research}.md in your working ` +
+        `docs/plans/${TOPIC_ID}/{1-task,5-research}.md in your working ` +
         "directory. Read them, draft the design, reuse the topic slug, and " +
         "list explicit open questions.\n\n" +
         fixture.body;
