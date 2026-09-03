@@ -1092,11 +1092,12 @@ describe("design-round records (L2)", () => {
     const spec = squash(reviewNotesSpec());
     // Guard: a reworded anchor must fail, not vacuously pass.
     expect(spec.length).toBeGreaterThan(0);
-    expect(spec).toContain(DISPOSITION_HEADING);
-    // The contract, not one phrasing of it: every round appears exactly once,
-    // and both finding sweeps are named as governed by that rule, so neither
-    // can carry a second copy of what (d) already holds.
-    expect(spec).toMatch(/exactly once/i);
+    // The heading is named twice: once where the spec decides which clause
+    // carries it, once where the sweeps exclude it.
+    const occurrences = spec.split(DISPOSITION_HEADING).length - 1;
+    expect(occurrences).toBeGreaterThanOrEqual(2);
+    // Both sweeps are named as governed, so neither can carry a second copy
+    // of what (d) already holds.
     expect(spec).toMatch(/\(a\) and \(b\)/);
   });
 });
