@@ -1,36 +1,25 @@
 ---
 name: principle-bounded-loops
-description: "Apply when writing any loop, retry, or watch cycle. Declare the cap with the loop and make hitting it a loud, terminal, reported outcome — never silent grinding. Size budgets are the output-side instance."
+description: "Apply to loops, retries, watches, and output budgets: define and report the limit."
 user-invocable: false
 ---
 
 # Bounded Loops
 
-Every loop carries a declared cap, and hitting the cap is a defined,
-loud, terminal outcome: halt and hand the work back with the full
-unresolved state. A loop with no declared end is its own failure mode.
+**Invariant:** Every loop or output has a declared bound or terminal verdict;
+reaching it is loud and terminal.
 
-**Why:** A loop that cannot converge must not discover that by running
-forever. The cap converts "stuck" from an invisible state into a reported
-one, at a bounded and pre-agreed cost.
+**Rules:**
+- Declare limits for cycles, retries, polls, concurrent helpers, and output.
+- At a numeric cap, halt and report all unresolved work. Never restart, extend,
+  or soften exit criteria silently.
+- Keep retry budgets small and explicit.
+- A verdict may be the bound. Declare it and never invent a count the procedure
+  omits; the operator is the outer bound. Team's DESIGN loop ends on the review
+  verdict, and IMPLEMENT ends with no Blocking or Major findings. Neither has a
+  round cap.
+- When output exceeds its budget, drop whole units, restructure, and name every
+  omission. Never truncate silently.
 
-**Pattern:**
-- Declare the bound with the loop: watch cycles, retries, poll budgets,
-  helpers in flight.
-- Hitting the cap halts terminally: report everything unresolved. Never
-  silently restart, extend, or soften the exit criteria to escape.
-- A retry budget is small and stated ("retry once, then halt loudly").
-- A loop that ends on a verdict rather than a count is already bounded:
-  the verdict is the bound. Declare that terminal condition, and then
-  never supply a count the loop deliberately omits — the missing number
-  is the design, not a gap for a reader to fill. The operator who can
-  stop the run is the outer bound. Team's two review loops are this
-  case: DESIGN ends on the reviewer's verdict, IMPLEMENT ends when no
-  Blocking or Major finding is left, and neither takes a round cap.
-
-## Size budgets
-
-The same rule bounds output. Artifacts and replies carry size targets —
-a ~200-line design, a ≤ 30-line helper reply, a byte-capped prompt.
-Over budget means restructure: drop whole units and name what you
-dropped. Never silent truncation.
+**Check:** Can this loop or output exceed its declared bound without a terminal
+report?

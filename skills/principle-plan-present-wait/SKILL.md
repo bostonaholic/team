@@ -1,37 +1,28 @@
 ---
 name: principle-plan-present-wait
-description: "Apply when mutations need user approval. Write the plan down, present each consequential choice with one recommendation, and execute only the answered subset — a mutation executes on the user's answer, or on an item clearing the verified-confidence carve-out."
+description: "Apply when mutations need approval: present the plan and execute only approved items."
 user-invocable: false
 ---
 
 # Plan, Present, Wait
 
-Mutations are planned in writing, presented as questions with exactly one
-recommendation each. A mutation executes on the user's answer, or on an
-item that clears the verified-confidence carve-out while staying inside
-every hard rule. Nothing changes before the user answers, and no answer
-means no mutation, outside that carve-out; a partial answer executes only
-the answered subset.
+**Invariant:** Write and present mutations before execution; apply only the
+answered subset or an item allowed by the verified-confidence carve-out.
 
-**Why:** Separating deciding from doing keeps the blast radius auditable:
-the user judges the exact mutation, the written plan survives the wait,
-and a later turn executes what was approved instead of what it remembers.
+**Rules:**
+- Before any mutation, write the plan. Presentation and execution are separate
+  turns. Persist it when approval may cross another turn or compaction; a
+  same-session punch list may remain in conversation.
+- Present each irreversible mutation as the exact text it creates, one
+  consequential question with exactly one recommendation. A reversible class
+  may share approval only when every target, evidence item, and undo is named.
+- Outside the carve-out, no answer means no mutation; a partial answer permits
+  only its answered subset.
+- Re-read the plan and revalidate every item against the approved class before
+  execution. Approval never relaxes a hard rule.
+- Skip the wait only above the stated verified-confidence bar and within every
+  hard rule. Present anything below the bar or matching an auto-apply exclusion,
+  regardless of confidence.
 
-**Pattern:**
-- Write the plan before presenting. The ask and the act are separate
-  turns. When the approval may outlive the turn or survive compaction,
-  the plan goes to a durable file, and the executing turn re-reads it
-  rather than remembers it; an in-conversation list is the degenerate
-  form for a same-session punch list.
-- Presentation granularity matches irreversibility. An irreversible
-  mutation is presented as the exact text it would create — one
-  consequential choice per question, each with one recommendation. A
-  reversible class whose undo is stated may be approved as a class, each
-  item named with its target and evidence.
-- Execution re-validates each step against the class the user actually
-  approved. An approval answers the plan's questions — it never relaxes a
-  hard rule.
-- The verified-confidence carve-out: an item may skip the wait only
-  above a verified confidence bar and inside every hard rule; anything
-  below the bar, or touching a carve-out, is presented, never
-  auto-applied, at any confidence.
+**Check:** Does each planned mutation have either an exact user answer or a
+verified, hard-rule-compliant carve-out?
