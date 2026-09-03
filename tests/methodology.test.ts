@@ -2026,14 +2026,27 @@ describe("the principle set is derived, not counted", () => {
     expect(catalogued.length).toBeGreaterThan(20);
   });
 
+  // Takes both sides as arguments, so synthetic sets can prove the comparison
+  // reports what it claims to catch.
+  function absentFrom(names: string[], other: string[]): string[] {
+    return names.filter((name) => !other.includes(name));
+  }
+
   test("every principle- skill on disk has a catalog entry", () => {
-    const offenders = onDisk.filter((name) => !catalogued.includes(name));
-    expect(offenders).toEqual([]);
+    expect(absentFrom(onDisk, catalogued)).toEqual([]);
   });
 
   test("every principle- catalog entry names a skill on disk", () => {
-    const offenders = catalogued.filter((name) => !onDisk.includes(name));
-    expect(offenders).toEqual([]);
+    expect(absentFrom(catalogued, onDisk)).toEqual([]);
+  });
+
+  // Prove both directions can find a positive: an uncatalogued skill and a
+  // catalog entry naming nothing on disk.
+  test("the derived comparison can see planted drift in both directions", () => {
+    const disk = ["principle-real", "principle-uncatalogued"];
+    const catalog = ["principle-real", "principle-phantom"];
+    expect(absentFrom(disk, catalog)).toEqual(["principle-uncatalogued"]);
+    expect(absentFrom(catalog, disk)).toEqual(["principle-phantom"]);
   });
 
   test("the multi-rule bundles are catalogued and carry no principle- prefix", () => {

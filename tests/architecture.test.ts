@@ -306,6 +306,13 @@ describe("effort tiering", () => {
     verifier: "low",
   };
 
+  // Takes frontmatter rather than an agent name, so a synthetic one can prove
+  // the check reports what it claims to catch.
+  function effortMismatch(agent: string, level: string, fm: string): string | null {
+    if (new RegExp(`^effort: ${level}$`, "m").test(fm)) return null;
+    return `${agent}: expected effort ${level}, got ${/^effort: (\S+)$/m.exec(fm)?.[1] ?? "none"}`;
+  }
+
   test("EXPECTED_EFFORTS pins all 13 agents to their levels", () => {
     // Key-set equality both directions: a new agent missing from the map and a
     // stale map key both fail here. agentFiles() is already sorted.
@@ -314,11 +321,20 @@ describe("effort tiering", () => {
     const offenders: string[] = [];
     for (const [agent, level] of Object.entries(EXPECTED_EFFORTS)) {
       const fm = frontmatter(read(join(REPO_ROOT, "agents", `${agent}.md`)));
-      if (!new RegExp(`^effort: ${level}$`, "m").test(fm)) {
-        offenders.push(`${agent}: expected effort ${level}, got ${/^effort: (\S+)$/m.exec(fm)?.[1] ?? "none"}`);
-      }
+      const offender = effortMismatch(agent, level, fm);
+      if (offender) offenders.push(offender);
     }
     expect(offenders).toEqual([]);
+  });
+
+  // Prove the pin can find a positive: a downgraded level and a dropped key.
+  test("the effort pin can see planted violations", () => {
+    expect(effortMismatch("planted-agent", "xhigh", "effort: low\n")).toBe(
+      "planted-agent: expected effort xhigh, got low",
+    );
+    expect(effortMismatch("planted-agent", "xhigh", "model: opus\n")).toBe(
+      "planted-agent: expected effort xhigh, got none",
+    );
   });
 
   test("each agent's frontmatter carries exactly one effort: key", () => {
