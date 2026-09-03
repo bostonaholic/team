@@ -712,11 +712,13 @@ skills set `user-invocable: false` in their frontmatter. This keeps them
 out of the `/` slash-command menu, because a `/qrspi-workflow` command is
 meaningless to a user. They stay fully loadable by their two mechanisms
 above. Neither the `skills:` preload nor a by-path load is affected by
-the field, which governs only menu visibility. The model can still
-auto-load a methodology skill when relevant, so
-`disable-model-invocation` is deliberately **not** set. When you add a
-new methodology skill, set `user-invocable: false`. When you add a new
-entry-point skill, leave it unset, so it registers as a slash command.
+the field, which governs only menu visibility. Setting
+`disable-model-invocation` is a separate per-skill call with its own
+recorded reason, and no methodology skill has one: the model auto-loading
+a methodology skill when relevant is how it reaches one at all. When you
+add a new methodology skill, set `user-invocable: false`. When you add a
+new entry-point skill, leave it unset, so it registers as a slash
+command.
 
 The trigger-phrase convention keys on the `user-invocable` field —
 not on `argument-hint`, which `docs/skills.md` uses to sort skill
@@ -724,14 +726,36 @@ not on `argument-hint`, which `docs/skills.md` uses to sort skill
 in its description, at least one double-quoted natural-language phrase
 (one that does not start with `/`) plus its own literal `/<name>`,
 normally as a final `Trigger on "…", "…", or "/<name>".` sentence. A
-**side-effecting or irreversible** entry-point skill — one that commits,
-pushes, opens a PR, moves a ticket, merges, deploys, or deletes — MUST
-replace the plain carrier with shipit-style explicit-intent guard wording
-("Invoke ONLY on explicit … intent — … never infer …"), still carrying
-the quoted phrases and the slash name, and should set
-`disable-model-invocation` where the host honors it. Such a skill stays
-listed as a command, but its routing-map line in `AGENTS.md` states the
-explicit intent, so the map never invites it on a plain request. A deterministic test
+**side-effecting or irreversible** entry-point skill MUST carry
+shipit-style explicit-intent guard wording ("Invoke ONLY on explicit …
+intent — … never infer …") beside or instead of the plain carrier, and
+still state the quoted phrases and the slash name.
+
+**Which skills are in that class is a complement pair over every write an
+invocation authorizes**, so it returns one answer per skill. *Out of
+class*: the invocation reads only, or writes only (1) files under
+`docs/plans/` and (2) invocation-local scratch files — untracked, created
+and consumed inside the same run, carried by no commit, and read by no
+later phase. *In class*: everything else — a change to any file the repo
+tracks, or to an untracked file the change is meant to deliver; a git
+write to history or refs (a commit, a branch, a rebase, a push, a branch
+delete); or a change on a host outside the checkout (a PR opened,
+approved, or merged; a ticket or issue moved, filed, or closed; a
+deploy). The verb list this replaced — commits, pushes, opens a PR, moves
+a ticket, merges, deploys, or deletes — still reads as an illustration of
+the in-class half. A write the invocation never authorized, such as an
+unsandboxed vendor CLI mutating the tree during a cross-model pass, moves
+no skill into the class: the caller detects that write and reverts it
+rather than authoring it.
+
+**Second tier: a skill that gates every mutation on its own in-run
+approval** carries the guard there instead, which is where
+`skills/principle-explicit-intent/SKILL.md` puts it. `groom-backlog` is
+the worked example — it presents each irreversible close and waits.
+Setting `disable-model-invocation` is a further per-skill call with its
+own recorded reason, never a property of this class. An in-class skill
+stays listed as a command, and its routing-map line in `AGENTS.md` states
+the explicit intent, so the map never invites it on a plain request. A deterministic test
 in `tests/architecture.test.ts` enforces the phrase invariant with no
 opt-out; the slash-name check is prefix-safe, so `/team-research` cannot
 satisfy the `/team` requirement. The guard wording is NOT

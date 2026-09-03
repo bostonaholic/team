@@ -1,6 +1,13 @@
 ---
 name: team-implement
-description: Execute the implementation phase. Includes test-first sub-step (writing failing tests, mechanical confirmation gate) and adversarial verification (5 parallel reviewers with hard-gate retry loop). Trigger on "implement this", "execute the plan", or "/team-implement".
+description: |
+  Execute the implementation phase. Includes test-first sub-step (writing
+  failing tests, mechanical confirmation gate) and adversarial
+  verification (5 parallel reviewers with hard-gate retry loop). Trigger
+  on "implement this", "execute the plan", "/team-implement", or a `/team`
+  run advancing into IMPLEMENT. The phase commits every slice it lands
+  without stopping to ask, so invoke it ONLY on one of those stated
+  intents: never infer the phase from a plan merely being ready.
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---

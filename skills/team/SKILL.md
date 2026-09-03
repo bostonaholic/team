@@ -1,6 +1,13 @@
 ---
 name: team
-description: Full 8-phase autonomous feature implementation pipeline (QRSPI). Trigger on "hey team", "build a feature", "implement end to end", "autonomous implementation", or "/team".
+description: |
+  Full 8-phase autonomous feature implementation pipeline (QRSPI).
+  Trigger on "hey team", "build a feature", "implement end to end",
+  "autonomous implementation", or "/team". The pipeline commits, pushes a
+  branch, opens a pull request, and moves the tracker ticket without
+  stopping to ask, so invoke it ONLY on one of those stated intents:
+  never infer pipeline intent from a plain request to write some code —
+  that asks for a direct edit, not this pipeline.
 effort: medium
 argument-hint: "<ticket id, issue URL, or feature description>"
 ---

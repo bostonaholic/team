@@ -9,7 +9,11 @@ description: |
   approval, merge, close, timeout, user interrupt, or repeated poll
   failures; on approval it hands off to /shipit and never runs it.
   Trigger on "the PR is ready for review", "watch the PR",
-  "watch this PR and fix comments", or "/pr-watch-as-author".
+  "watch this PR and fix comments", or "/pr-watch-as-author". The watch
+  undrafts the pull request, moves the tracker ticket, and delegates
+  apply-and-push on a high-confidence item, so invoke it ONLY on one of
+  those stated intents: never infer watch intent from a PR merely being
+  open or awaiting review.
 effort: medium
 argument-hint: "[<pr-number-or-url>]"
 ---
