@@ -44,7 +44,7 @@ const FIXTURE_ROOT = join(REPO_ROOT, "evals", "fixtures");
 const RUBRIC_ROOT = join(REPO_ROOT, "evals", "rubrics");
 const TESTS_ROOT = join(REPO_ROOT, "tests");
 
-// The nine skills the structure.md triage assigned to tier L5.
+// The nine skills whose behavior an end-to-end eval can exercise: tier L5.
 const L5_SKILLS = [
   "git-commit",
   "changelog",
@@ -57,8 +57,8 @@ const L5_SKILLS = [
   "team-plan",
 ] as const;
 
-// The four skills that triage assigned to tier L2 instead: each needs heavy
-// prior state an L5 eval cannot stand up.
+// The four skills covered at tier L2 instead: each needs heavy prior state
+// an L5 eval cannot stand up.
 const L2_DEMOTED_SKILLS = [
   "team",
   "team-worktree",

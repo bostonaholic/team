@@ -36,7 +36,7 @@ const ENTRY_POINT_SKILLS = [
   "how",
 ];
 
-// The methodology procedure skills that must reference it (Slice 3).
+// The methodology procedure skills that must reference it.
 const METHODOLOGY_SKILLS = [
   "test-driven-bug-fix",
   "systematic-debugging",
