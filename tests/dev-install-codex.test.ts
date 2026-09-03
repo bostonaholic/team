@@ -104,12 +104,12 @@ describe("dev install: codex harness", () => {
     expect(readlinkSync(teamLink(home))).toBe(join(REPO_ROOT, "skills"));
   });
 
-  test("install announces that Codex ignores disable-model-invocation", () => {
+  test("install announces which key keeps the three skills user-only", () => {
     // All three user-only skills install like any other skill here, so the run
-    // has to name them — the guard they rely on is honored by Claude Code and
-    // ignored by Codex. pr-watch-as-reviewer's approval can merge a PR;
-    // pr-rebase force-pushes a rewritten branch; reflect rewrites skill files
-    // and files public issues. Identifiers only, never wording.
+    // has to name them and name the key that guards them on this host: Codex
+    // does not read disable-model-invocation, so the guard rests on
+    // allow_implicit_invocation in agents/openai.yaml. Identifiers only,
+    // never wording.
     const { output } = run(INSTALL, newHome());
     expect(output).toContain("pr-watch-as-reviewer");
     expect(output).toContain("pr-rebase");
@@ -121,7 +121,7 @@ describe("dev install: codex harness", () => {
   test("a re-install still announces the guard on the already-linked path", () => {
     // The already-linked path returns 0 before the tail ever prints, so the
     // notice has to be reachable from both exits. A developer re-running the
-    // installer is the likeliest reader of a warning they skimmed the first
+    // installer is the likeliest reader of a note they skimmed the first
     // time; without this, that run says only "already installed".
     const home = newHome();
     expect(run(INSTALL, home).status).toBe(0);

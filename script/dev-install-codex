@@ -46,17 +46,14 @@ if command -v codex >/dev/null 2>&1; then
   done <<<"$plugin_list"
 fi
 
-# The model-invocation caveat. Printed on BOTH exit paths — the
-# already-linked path below returns 0 before the tail ever runs, so a
-# re-install would otherwise silently drop the one warning that matters.
+# Which key guards the three user-only skills here. Printed on BOTH exit
+# paths — the already-linked path below returns 0 before the tail ever runs,
+# so a re-install would otherwise silently drop it.
 print_invocation_notice() {
-  echo "  Note: pr-watch-as-reviewer, pr-rebase, and reflect are model-invocable on"
-  echo "        Codex, which ignores disable-model-invocation. The first one's"
-  echo "        approval can merge a PR; the second force-pushes a rewritten"
-  echo "        branch; reflect rewrites skill files and files public issues."
-  echo "        All three now declare allow_implicit_invocation: false in their"
-  echo "        agents/openai.yaml; this warning and the removal step stand until"
-  echo "        a live Codex build proves that key is honored."
+  echo "  Note: pr-watch-as-reviewer, pr-rebase, and reflect stay user-only here."
+  echo "        Codex does not read disable-model-invocation, so all three declare"
+  echo "        allow_implicit_invocation: false in their agents/openai.yaml, which"
+  echo "        keeps Codex from starting them implicitly. Invoke them explicitly."
 }
 
 # Already linked — nothing to do

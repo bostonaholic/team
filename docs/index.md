@@ -128,25 +128,15 @@ budgets its skill catalog, so it shortens the longest descriptions; the skills
 still work. The `/team-*` pipeline commands load but cannot dispatch Claude
 Code agents, so they will not run the pipeline. The standalone utilities do.
 
-> **Three skills lose a safety guard here.** `team:pr-watch-as-reviewer` casts
-> an approval that can transitively merge a PR, `team:pr-rebase` force-pushes
-> a rewritten branch over published history, and `team:reflect` rewrites skill
-> files and files public issues. All three set
-> `disable-model-invocation` so only a person can start them, and **Codex
-> ignores that key**. To keep the guards:
-
-```bash
-rm -rf "${CODEX_HOME:?}/plugins/cache"/*/team/*/skills/pr-watch-as-reviewer
-rm -rf "${CODEX_HOME:?}/plugins/cache"/*/team/*/skills/pr-rebase
-rm -rf "${CODEX_HOME:?}/plugins/cache"/*/team/*/skills/reflect
-```
-
-Re-running `codex plugin add` restores them.
-
-All three also declare `allow_implicit_invocation: false` in their
-`agents/openai.yaml`, which asks Codex for the same guarantee in the host's own
-vocabulary. The removal step above stands until a live Codex build is observed
-to honor that key.
+> **Three skills stay user-only, through this host's own key.**
+> `team:pr-watch-as-reviewer` casts an approval that can transitively merge a
+> PR, `team:pr-rebase` force-pushes a rewritten branch over published history,
+> and `team:reflect` rewrites skill files and files public issues. Codex does
+> not read `disable-model-invocation`, so all three declare
+> `policy.allow_implicit_invocation: false` in their `agents/openai.yaml`.
+> Codex will not start a skill carrying that key on its own; you invoke it
+> explicitly with `$team:pr-rebase`. See
+> [Optional metadata](https://learn.chatgpt.com/docs/build-skills).
 
 ### Antigravity CLI
 
@@ -159,9 +149,9 @@ so it installs as a native Antigravity plugin — every skill and every agent
 installs with it. `agy plugin uninstall team` removes it.
 
 Skills arrive under **bare names** — ask for `shipit`, not `team:shipit`. The
-install copies the checkout, so upgrading means installing again. Unlike
-Codex, this host honors `disable-model-invocation`, so nothing needs removing
-afterward.
+install copies the checkout, so upgrading means installing again. This host
+reads `disable-model-invocation` directly, so the three user-only skills need
+no host-specific declaration the way they do on Codex.
 
 Developing Team itself? The install copies, so link your checkout instead:
 

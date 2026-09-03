@@ -164,7 +164,7 @@ facility, so the design must work around it.
 |----------------|-------------|-----------|
 | Agent/skill Markdown bodies | native (loaded as-is) | native (system-prompt body) |
 | Custom slash entry points | native (SKILL.md auto-register) | native (built-ins and Skills. Prompts are deprecated in favor of Skills.) |
-| On-demand SKILL.md injection | native (`skills:` + auto-load) | native (`.agents/skills/SKILL.md`, description-matched implicit invocation). A skill may opt out through `policy.allow_implicit_invocation: false` in its `agents/openai.yaml`; unverified on a live build |
+| On-demand SKILL.md injection | native (`skills:` + auto-load) | native (`.agents/skills/SKILL.md`, description-matched implicit invocation). A skill opts out through `policy.allow_implicit_invocation: false` in its `agents/openai.yaml` — [documented](https://learn.chatgpt.com/docs/build-skills) to block implicit invocation while leaving `$skill` working |
 | Subagent dispatch (parallel) | native (Agent/Task tool) | native (`spawn_agent`/`wait_agent`…, `features.multi_agent`) |
 | Nested subagents | native (depth 2, ≤4, read-only) | workaround: `max_depth=1`, nesting capped one level |
 | Structured agent→caller output | native (final-text JSON envelope) | native and strongest (`--output-schema` JSON Schema). A silent-drop bug under tools ([codex#15451](https://github.com/openai/codex/issues/15451)) was fixed April 2026 |
@@ -304,8 +304,8 @@ full parity. It starts from the matrix and works around the named gaps.
 - Skills port natively to `.agents/skills/SKILL.md` (description-matched implicit
   invocation). Each skill also ships `agents/openai.yaml`, which names it in the
   catalog; the three guarded skills declare `policy.allow_implicit_invocation:
-  false` there to opt out of that matching. Whether this host honors the key is
-  unverified on a live build.
+  false` there to opt out of that matching, which is this host's documented
+  equivalent of `disable-model-invocation`.
 - Hooks: reuse the 4 `.mjs` files. The shim adapts to Codex
   `hooks.json`/`[hooks]`, whose schema mirrors Claude closely
   (`permissionDecision:"deny"`/exit 2). Events map nearly 1:1
@@ -385,16 +385,17 @@ the agent list 52 of them. The two missing ones were exactly `pr-rebase` and
 `pr-watch-as-reviewer` — the skills that set the key **as of that probe**. The
 guarded set has since grown to three: `reflect` sets it too, so this host
 withholds that one as well. This host therefore keeps every guarded skill out
-of the model's reach on its own, which is the opposite of Codex, and it is why
-Team's install for this host withholds nothing and needs no post-install
-removal step.
+of the model's reach on its own, and it is why Team's install for this host
+withholds nothing.
 
-Codex now gets the closest thing it has to the same claim: `pr-rebase`,
-`pr-watch-as-reviewer`, and `reflect` each declare
-`policy.allow_implicit_invocation: false` in their `agents/openai.yaml`. That
-narrows the gap without closing it. The declaration is a request to a host that
-has not been observed to honor it, where this host's behavior was observed
-directly, so the Codex install keeps both its warning and its removal step.
+Codex reaches the same end through its own key rather than this one:
+`pr-rebase`, `pr-watch-as-reviewer`, and `reflect` each declare
+`policy.allow_implicit_invocation: false` in their `agents/openai.yaml`.
+OpenAI [documents](https://learn.chatgpt.com/docs/build-skills) that key as
+blocking implicit invocation while leaving explicit `$skill` invocation
+working, which is what `disable-model-invocation` buys on the other two hosts.
+The difference is in evidence, not in outcome: this host's behavior was
+observed on a live probe, Codex's rests on the documented contract.
 
 **Paths and naming.**
 
