@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 
-import { frontmatter, read, userInvocableSkillFiles } from "./helpers/text";
+import { descriptionFor, frontmatter, read, userInvocableSkillFiles } from "./helpers/text";
 import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
@@ -410,44 +410,6 @@ describe("model tiering", () => {
 });
 
 describe("user-invocable trigger phrases", () => {
-  // Extract the description field's text only from a frontmatter slice,
-  // handling both YAML styles in use: single-line scalar
-  // (`description: <text>`) and block scalar (`description: |` followed by
-  // indented lines until the first non-indented line). Scoping to the
-  // description prevents a false positive on the quoted `argument-hint`
-  // value elsewhere in the frontmatter.
-  function descriptionText(fm: string): string {
-    const lines = fm.split("\n");
-    const start = lines.findIndex((line) => line.startsWith("description:"));
-    if (start === -1) return "";
-    const inline = (lines[start] ?? "").slice("description:".length).trim();
-    if (inline !== "" && inline !== "|") {
-      // A fully-quoted inline scalar must be unwrapped: returned verbatim,
-      // its surrounding quotes would make matchAll treat the whole value as
-      // one "phrase" and pass with zero real trigger phrases. A quote that
-      // opens but never closes on the line is an unsupported style — throw
-      // rather than scan text that YAML would parse differently.
-      const quote = inline[0];
-      if (quote === '"' || quote === "'") {
-        if (inline.length < 2 || !inline.endsWith(quote)) {
-          throw new Error(`unsupported description scalar style: ${inline}`);
-        }
-        const body = inline.slice(1, -1);
-        return quote === '"'
-          ? body.replace(/\\"/g, '"')
-          : body.replace(/''/g, "'");
-      }
-      return inline;
-    }
-    const block: string[] = [];
-    for (let i = start + 1; i < lines.length; i++) {
-      const line = lines[i];
-      if (line === undefined || !/^\s+\S/.test(line)) break;
-      block.push(line.trim());
-    }
-    return block.join(" ");
-  }
-
   // Every user-invocable SKILL.md under either root is a user-facing entry
   // point and must carry routing triggers in its description. The enumeration
   // is shared with tests/intent-guard.test.ts, so both halves of the one
@@ -457,7 +419,7 @@ describe("user-invocable trigger phrases", () => {
   function userInvocableSkills(): Array<{ file: string; description: string }> {
     return userInvocableSkillFiles(REPO_ROOT).map((file) => ({
       file,
-      description: descriptionText(frontmatter(read(join(REPO_ROOT, file)))),
+      description: descriptionFor(REPO_ROOT, file),
     }));
   }
 

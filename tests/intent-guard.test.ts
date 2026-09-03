@@ -34,7 +34,7 @@ import {
   GUARD_OPEN,
   carriesGuard,
 } from "./helpers/intent-guard";
-import { frontmatter, read, squash, userInvocableSkillFiles } from "./helpers/text";
+import { descriptionFor, read, squash, userInvocableSkillFiles } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 
@@ -46,67 +46,6 @@ const TEACHING_COPIES = [
   join("skills", "principle-explicit-intent", "SKILL.md"),
   join(".claude", "skills", "create-team-skill", "SKILL.md"),
 ];
-
-// ---------------------------------------------------------------------------
-// Parsing.
-//
-// Scaffolding, on its way to `tests/helpers/text.ts`: `descriptionText()` is
-// copied verbatim from tests/architecture.test.ts (two parsers that differ
-// would let one sweep see a guard the other cannot), and the path-wrapping
-// `descriptionFor()` carries the signature it will keep once shared. The
-// enumerator is already shared: both description sweeps read the same list
-// from the same place, or the two halves of one sentence disagree about who
-// they cover.
-// ---------------------------------------------------------------------------
-
-// Extract the description field's text only from a frontmatter slice,
-// handling both YAML styles in use: single-line scalar
-// (`description: <text>`) and block scalar (`description: |` followed by
-// indented lines until the first non-indented line). Scoping to the
-// description prevents a false positive on the quoted `argument-hint`
-// value elsewhere in the frontmatter.
-function descriptionText(fm: string): string {
-  const lines = fm.split("\n");
-  const start = lines.findIndex((line) => line.startsWith("description:"));
-  if (start === -1) return "";
-  const inline = (lines[start] ?? "").slice("description:".length).trim();
-  if (inline !== "" && inline !== "|") {
-    // A fully-quoted inline scalar must be unwrapped: returned verbatim,
-    // its surrounding quotes would make matchAll treat the whole value as
-    // one "phrase" and pass with zero real trigger phrases. A quote that
-    // opens but never closes on the line is an unsupported style — throw
-    // rather than scan text that YAML would parse differently.
-    const quote = inline[0];
-    if (quote === '"' || quote === "'") {
-      if (inline.length < 2 || !inline.endsWith(quote)) {
-        throw new Error(`unsupported description scalar style: ${inline}`);
-      }
-      const body = inline.slice(1, -1);
-      return quote === '"'
-        ? body.replace(/\\"/g, '"')
-        : body.replace(/''/g, "'");
-    }
-    return inline;
-  }
-  const block: string[] = [];
-  for (let i = start + 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (line === undefined || !/^\s+\S/.test(line)) break;
-    block.push(line.trim());
-  }
-  return block.join(" ");
-}
-
-// The path leads the message, so a malformed SKILL.md names itself rather
-// than the parser or this test file.
-function descriptionFor(repoRoot: string, file: string): string {
-  try {
-    return descriptionText(frontmatter(read(join(repoRoot, file))));
-  } catch (err: unknown) {
-    const detail = err instanceof Error ? err.message : String(err);
-    throw new Error(`${file}: ${detail}`);
-  }
-}
 
 // ---------------------------------------------------------------------------
 // The offender rule.

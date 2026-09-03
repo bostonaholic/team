@@ -30,7 +30,9 @@ export function frontmatter(text: string): string {
     }
     if (count === 1) out.push(line);
   }
-  return out.join("\n");
+  // An unterminated block is not frontmatter. Returning the rest of the file
+  // would let a body sentence satisfy a frontmatter check.
+  return count < 2 ? "" : out.join("\n");
 }
 
 // The two roots that hold entry-point skills: the distributed plugin and the
@@ -56,4 +58,64 @@ export function userInvocableSkillFiles(repoRoot: string): string[] {
       (file) => !/^user-invocable: false$/m.test(frontmatter(read(join(repoRoot, file)))),
     )
     .sort();
+}
+
+// Extract the description field's text only from a frontmatter slice,
+// handling both YAML styles in use: single-line scalar
+// (`description: <text>`) and block scalar (`description: |` followed by
+// indented lines until the first non-indented line). Scoping to the
+// description prevents a false positive on the quoted `argument-hint`
+// value elsewhere in the frontmatter.
+export function descriptionText(fm: string): string {
+  const lines = fm.split("\n");
+  const start = lines.findIndex((line) => line.startsWith("description:"));
+  if (start === -1) return "";
+  const inline = (lines[start] ?? "").slice("description:".length).trim();
+  if (inline !== "" && inline !== "|") {
+    // A fully-quoted inline scalar must be unwrapped: returned verbatim,
+    // its surrounding quotes would make matchAll treat the whole value as
+    // one "phrase" and pass with zero real trigger phrases. A quote that
+    // opens but never closes on the line is an unsupported style — throw
+    // rather than scan text that YAML would parse differently.
+    // A folded scalar would otherwise return the literal ">" and drop the
+    // body, passing an absence check for the wrong reason. Throw, like the
+    // unterminated quote below.
+    if (inline.startsWith(">")) {
+      throw new Error(`unsupported description scalar style: ${inline}`);
+    }
+    const quote = inline[0];
+    if (quote === '"' || quote === "'") {
+      if (inline.length < 2 || !inline.endsWith(quote)) {
+        throw new Error(`unsupported description scalar style: ${inline}`);
+      }
+      const body = inline.slice(1, -1);
+      return quote === '"'
+        ? body.replace(/\\"/g, '"')
+        : body.replace(/''/g, "'");
+    }
+    return inline;
+  }
+  const block: string[] = [];
+  for (let i = start + 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (line === undefined) break;
+    // A blank line continues a `|` block in YAML, so it is skipped rather
+    // than treated as the terminator: a guard sitting after a paragraph
+    // break is still part of the description.
+    if (line.trim() === "") continue;
+    if (!/^\s+\S/.test(line)) break;
+    block.push(line.trim());
+  }
+  return block.join(" ");
+}
+
+// The path leads the message, so a malformed SKILL.md names itself rather
+// than the parser or this test file.
+export function descriptionFor(repoRoot: string, file: string): string {
+  try {
+    return descriptionText(frontmatter(read(join(repoRoot, file))));
+  } catch (err: unknown) {
+    const detail = err instanceof Error ? err.message : String(err);
+    throw new Error(`${file}: ${detail}`);
+  }
 }
