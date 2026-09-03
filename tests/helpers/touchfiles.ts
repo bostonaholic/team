@@ -68,6 +68,7 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   ],
   "eng-design-doc-review-planted-missing-alternatives": [
     "skills/eng-design-doc-review/**",
+    "skills/reviewing-designs/**",
     "skills/technical-design-doc/**",
     "skills/documenting-decisions/**",
     "tests/eng-design-doc-review.evals.ts",

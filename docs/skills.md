@@ -250,15 +250,18 @@ argument shape.
 
 ### [eng-design-doc-review](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/SKILL.md)
 
-- **Purpose:** Adversarially audit `design.md` with fresh context. Its
-  `## Review brief` doubles as the pipeline's DESIGN review gate.
-  Standalone invocation remains available.
+- **Purpose:** Adversarially audit `design.md` with fresh context. It is
+  the front door over the `reviewing-designs` brief, which the pipeline's
+  DESIGN review gate loads directly. Standalone invocation remains
+  available.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
   the shared three-tier chain above.
 - **Phase:** Design (review-gate brief) + standalone audit.
-- **Key behaviors:** Dispatches the built-in read-only `Explore` subagent
-  (not the `design-author` agent) so the audit reads the design with fresh
-  eyes. That subagent loads four methodology skills as its review criteria
+- **Key behaviors:** Loads the `reviewing-designs` brief and dispatches it
+  to the built-in read-only `Explore` subagent (not the `design-author`
+  agent), with the artifact directory substituted, so the audit reads the
+  design with fresh eyes. That subagent loads four methodology skills as
+  its review criteria
   (`technical-design-doc`, `reviewing-code`, `engineering-standards`, and
   `documenting-decisions`), which makes this one more consumer of all
   four, plus a conditional fifth — `cross-model-review`, loaded only when
@@ -926,11 +929,27 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   the unordered per-file coverage checklist). The security review
   methodology lives in `reviewing-security`.
 
+### [reviewing-designs](https://github.com/bostonaholic/team/blob/main/skills/reviewing-designs/SKILL.md)
+
+- **Purpose:** The adversarial design-document review brief, held in one
+  place for every caller that dispatches it.
+- **Loaded by:** `team` and `team-design` at the DESIGN review gate, and
+  the `eng-design-doc-review` front door on direct invocation (3).
+- **Key behaviors:** The brief is **self-contained**: everything under its
+  `## Review brief` heading is the whole prompt a fresh-context read-only
+  `Explore` subagent receives, including the definition of `$ARGUMENTS`
+  the caller substitutes before dispatch. It names the four operating
+  manuals the reviewer loads (`technical-design-doc`, `reviewing-code`,
+  `engineering-standards`, `documenting-decisions`) plus
+  `cross-model-review` as a conditional fifth, walks an eight-step review
+  process, and ends on one of APPROVE, REQUEST CHANGES, or COMMENT.
+  Changing its headings, process, or verdict set is a pipeline change.
+
 ### [conventional-comments](https://github.com/bostonaholic/team/blob/main/skills/conventional-comments/SKILL.md)
 
 - **Purpose:** The Conventional Comments format for review findings.
 - **Loaded by:** code-reviewer, security-reviewer, and technical-writer
-  (3), the `eng-design-doc-review` subagent loads it for its findings. The
+  (3), the `reviewing-designs` subagent loads it for its findings. The
   `ux-reviewer` does not preload it: its Working/Broken/Could Improve
   report is not Conventional Comments.
 - **Key behaviors:** Carries the label and decoration syntax and the
@@ -959,7 +978,7 @@ context (see [architecture.md](architecture.md#design-guidelines)).
 - **Loaded by:** code-reviewer; the orchestrator or invoking session
   (`team`, `team-design`, `eng-design-doc-review`) runs its
   `## Design-review pass` procedure directly; and the design-review brief
-  in `eng-design-doc-review` loads it conditionally when its prompt
+  in `reviewing-designs` loads it conditionally when its prompt
   carries an `## External review input` section.
 - **Key behaviors:** Runs on every code review and every design-review
   round, with whichever vendor CLIs are installed — a missing CLI is
@@ -1110,7 +1129,8 @@ context (see [architecture.md](architecture.md#design-guidelines)).
   consulted by citation from `team`, `team-question`, `team-research`,
   `team-design`, `team-structure`, `team-plan`, `team-worktree`,
   `team-implement`, `team-pr`, `team-fix`, `eng-design-doc-review`,
-  `shipit`, `groom-backlog`, `pr-cleanup`, `pr-open-comments`,
+  `reviewing-designs`, `shipit`, `groom-backlog`, `pr-cleanup`,
+  `pr-open-comments`,
   `pr-rebase`, `pr-verify`, `pr-watch-as-author`, `pr-watch-as-reviewer`,
   `reflect`, `systematic-debugging`, `test-driven-bug-fix`,
   `test-first-development`, `why`, and `how`.
@@ -1728,7 +1748,7 @@ entry-point section above rather than repeating them here.
 | `team-implement` | orchestrator → implementer + reviewers | Implement |
 | `team-pr` | orchestrator | PR |
 | `team-fix` | user or model (direct invocation, on explicit pipeline intent) | Compressed bug-fix flow (outside QRSPI) |
-| `eng-design-doc-review` | user (direct invocation). Pipeline DESIGN review gate (brief by reference) | Design review-gate brief + standalone audit. Dispatches a read-only Explore subagent |
+| `eng-design-doc-review` | user (direct invocation) | Front door over the `reviewing-designs` brief: standalone audit. Dispatches a read-only Explore subagent |
 | `shipit` | user or model (direct invocation, on explicit ship intent) | Standalone: land a reviewed PR (not a QRSPI phase) |
 | `pr-open-comments` | user or model (direct invocation) | Standalone: triage unresolved PR review feedback (not a QRSPI phase) |
 | `pr-watch-as-author` | user or model (direct invocation) | Standalone: bounded PR review watch loop (not a QRSPI phase) |
@@ -1764,7 +1784,7 @@ entry-point section above rather than repeating them here.
 | `running-quality-checks` | verifier. reflect (after the writes) | Implement (verify), and Any (reflect) |
 | `verifying-ux` | ux-reviewer | Implement (verify) |
 | `systematic-debugging` | implementer (inline Load on non-obvious failures). Other agents when debugging (advisory) | Implement, and Any (debugging) |
-| `principle-progress-tracking` | every multi-step agent; cited by `team`, `team-question`, `team-research`, `team-design`, `team-structure`, `team-plan`, `team-worktree`, `team-implement`, `team-pr`, `team-fix`, `eng-design-doc-review`, `shipit`, `groom-backlog`, `pr-cleanup`, `pr-open-comments`, `pr-rebase`, `pr-verify`, `pr-watch-as-author`, `pr-watch-as-reviewer`, `reflect`, `systematic-debugging`, `test-driven-bug-fix`, `test-first-development`, `why`, `how` | Any (multi-step procedure) |
+| `principle-progress-tracking` | every multi-step agent; cited by `team`, `team-question`, `team-research`, `team-design`, `team-structure`, `team-plan`, `team-worktree`, `team-implement`, `team-pr`, `team-fix`, `eng-design-doc-review`, `reviewing-designs`, `shipit`, `groom-backlog`, `pr-cleanup`, `pr-open-comments`, `pr-rebase`, `pr-verify`, `pr-watch-as-author`, `pr-watch-as-reviewer`, `reflect`, `systematic-debugging`, `test-driven-bug-fix`, `test-first-development`, `why`, `how` | Any (multi-step procedure) |
 | `nested-agents` | researcher, implementer, code-reviewer, security-reviewer | Research, Implement (scouts + skeptic passes) |
 | `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
 | `technical-design-doc` | planner | Plan |
@@ -1802,8 +1822,8 @@ entry-point section above rather than repeating them here.
 | `principle-skip-loudly` | cited by `reviewing-code`, `sweeping-local-state`, `groom-backlog`, `cross-model-review`, `principle-optimization-never-dependency`, `principle-scope-fence`, `why`, and the `code-reviewer` agent. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-untrusted-input-is-data` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `cross-model-review`, `pr-watch-as-author`, `reflect`, `why`. Any agent (just-in-time) | Any (cross-cutting principle) |
 
-The read-only `Explore` subagent dispatched by `eng-design-doc-review` is
-an one more consumer of `technical-design-doc`, `reviewing-code`,
+The read-only `Explore` subagent that runs the `reviewing-designs` brief
+is one more consumer of `technical-design-doc`, `reviewing-code`,
 `engineering-standards`, and `documenting-decisions`. It loads all four as
 the criteria for the design review.
 

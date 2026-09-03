@@ -64,6 +64,7 @@ const TEAM_IMPLEMENT_SKILL = join(REPO_ROOT, "skills", "team-implement", "SKILL.
 const TEAM_PR_SKILL = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
 const ARTIFACT_SKILL = join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md");
 const ENG_REVIEW_SKILL = join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md");
+const REVIEWING_DESIGNS_SKILL = join(REPO_ROOT, "skills", "reviewing-designs", "SKILL.md");
 const TEAM_DESIGN_SKILL = join(REPO_ROOT, "skills", "team-design", "SKILL.md");
 const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
 
@@ -991,7 +992,10 @@ describe("design-review gate wiring (L2)", () => {
   });
 
   test("the review brief loads cross-model-review as the conditional fifth manual", () => {
-    const text = read(ENG_REVIEW_SKILL);
+    // The brief itself, never the entry point that dispatches it: both
+    // strings below also survive in `eng-design-doc-review`'s `## Execution`,
+    // so reading that file would pass without the brief saying anything.
+    const text = read(REVIEWING_DESIGNS_SKILL);
     expect(text).toContain("cross-model-review");
     expect(text).toContain(EXTERNAL_INPUT_HEADING);
     // Positive control: the sweep can see the phrase it retires.

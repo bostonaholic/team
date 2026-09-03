@@ -283,7 +283,7 @@ When the `design-author` returns a draft:
    machine-wide subagent default from silently weakening the review.
    Pass the
    `## Review brief` as the prompt: call the Skill tool with
-   `eng-design-doc-review` to
+   `reviewing-designs` to
    read that brief (reference it, never duplicate it here), with
    the artifact directory substituted. Each round gets a fresh subagent
    context. `Explore` holds no Write/Edit tools, so the reviewer **cannot**

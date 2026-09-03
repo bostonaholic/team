@@ -247,7 +247,7 @@ research artifact with the necessary frontmatter.
 each as an auditable assumption) **Predecessor:** `research.md`
 **Artifact:** `docs/plans/<id>/design.md` **Gate:** REVIEW. The
 orchestrator dispatches a fresh-context, read-only `Explore` subagent
-with the `## Review brief` from `skills/eng-design-doc-review/SKILL.md`.
+with the `## Review brief` from `skills/reviewing-designs/SKILL.md`.
 The subagent holds no Write or Edit tools, so the reviewer cannot touch
 the artifacts it judges. The orchestrator records the verdict to
 `design-review-<n>.md`. APPROVE and COMMENT advance. On REQUEST CHANGES
@@ -741,29 +741,33 @@ its absence on a side-effecting skill is a review-blocking defect.
 No methodology skill is user-invocable. When a methodology also wants a
 user-facing command, the answer is a **front door**, not an exception:
 the methodology keeps `user-invocable: false` and a separate entry-point
-skill carries the slash command. `reviewing-code` and `code-review` are
-that pair. The methodology lives in `reviewing-code`, which the
-`code-reviewer`, `security-reviewer`, `ux-reviewer`, and
-`technical-writer` agents preload; `code-review` carries `argument-hint`
-and `effort` like any other entry point and is catalogued under
-Standalone utilities. What stays on the front door is the one thing a
-user runs: "review this diff".
+skill carries the slash command. Two pairs hold that shape.
+`reviewing-code` and `code-review` are the first: the methodology lives
+in `reviewing-code`, which the `code-reviewer`, `security-reviewer`,
+`ux-reviewer`, and `technical-writer` agents preload; `code-review`
+carries `argument-hint` and `effort` like any other entry point and is
+catalogued under Standalone utilities. What stays on the front door is
+the one thing a user runs: "review this diff". `reviewing-designs` and
+`eng-design-doc-review` are the second: the design-review brief lives in
+the methodology, and `team`, `team-design`, and the front door all load
+it through the Skill tool.
 
-That standalone path behaves differently from an ordinary entry point,
-which simply runs its own procedure. The front door still owes the
-methodology's own rules: the main session shares conversation history
-with whatever wrote the code, so it is not a valid reviewer.
-`code-review` therefore dispatches the `code-reviewer` agent and relays
-the verdict rather than reviewing inline, then loads `reviewing-code` for
-the methodology that reviewer applies.
+A front door is a second kind of entry point, and both kinds are
+ordinary. One runs its own procedure; a front door owes the methodology's
+own rules and routes the work to whoever may do it. The main session
+shares conversation history with whatever wrote the code, so it is not a
+valid reviewer. `code-review` therefore dispatches the `code-reviewer`
+agent and relays the verdict rather than reviewing inline, then loads
+`reviewing-code` for the methodology that reviewer applies.
+`eng-design-doc-review` does the same with a read-only `Explore`
+subagent and the `reviewing-designs` brief.
 
 (This is separate from the entry-point skills, which are user-invocable by
 definition. Some of those, e.g. `team-worktree` and `team-pr`, are also
 *referenced by path* from `team/SKILL.md`, but those are procedural
 cross-links in the orchestrator's prose, not a parent loading the skill as
-a building block. The `code-review` / `reviewing-code` pair is how a
-composed methodology keeps a user-facing entry point without becoming
-one.)
+a building block. The two front-door pairs are how a composed methodology
+keeps a user-facing entry point without becoming one.)
 
 For the full per-skill reference (all skills, their arguments,
 consumers, and behaviors), see [skills.md](skills.md).

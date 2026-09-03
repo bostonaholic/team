@@ -286,6 +286,42 @@ describe("effort tiering", () => {
     }
   });
 
+  // T4 — eliminate-rule-exceptions slice 4 (design.md "## The five tripwires").
+  // Effort tracks the work, the same way model does, but nothing pinned a
+  // per-agent effort level: a silent downgrade of a strategic author to `low`
+  // would have passed every check above. EXPECTED_EFFORTS is the pin, mirroring
+  // EXPECTED_MODELS in describe("model tiering") below.
+  const EXPECTED_EFFORTS: Record<string, string> = {
+    "code-reviewer": "high",
+    "design-author": "high",
+    "file-finder": "low",
+    implementer: "high",
+    planner: "high",
+    questioner: "high",
+    researcher: "medium",
+    "security-reviewer": "high",
+    "structure-planner": "high",
+    "technical-writer": "low",
+    "test-architect": "high",
+    "ux-reviewer": "medium",
+    verifier: "low",
+  };
+
+  test("eliminate-rule-exceptions slice 4: EXPECTED_EFFORTS pins all 13 agents to their levels (T4)", () => {
+    // Key-set equality both directions: a new agent missing from the map and a
+    // stale map key both fail here. agentFiles() is already sorted.
+    const names = agentFiles().map((file) => basename(file, ".md"));
+    expect(Object.keys(EXPECTED_EFFORTS).sort()).toEqual(names);
+    const offenders: string[] = [];
+    for (const [agent, level] of Object.entries(EXPECTED_EFFORTS)) {
+      const fm = frontmatter(read(join(REPO_ROOT, "agents", `${agent}.md`)));
+      if (!new RegExp(`^effort: ${level}$`, "m").test(fm)) {
+        offenders.push(`${agent}: expected effort ${level}, got ${/^effort: (\S+)$/m.exec(fm)?.[1] ?? "none"}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
   test("methodology skills carry no effort (it would override the loading agent's effort)", () => {
     for (const file of skillFiles()) {
       const fm = frontmatter(read(join(REPO_ROOT, file)));

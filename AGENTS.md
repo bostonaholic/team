@@ -55,7 +55,7 @@ Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-
 | `/team-question <desc>` | Decompose intent into task + questions + brief |
 | `/team-research` | Isolated codebase research (runs Question if missing) |
 | `/team-design` | Draft the design. An adversarial design review gates advancement |
-| `/eng-design-doc-review` | Adversarial fresh-context audit of `design.md`. Its Review brief doubles as the pipeline's design-review gate, and standalone use remains |
+| `/eng-design-doc-review` | Adversarial fresh-context audit of `design.md`. The front door over the `reviewing-designs` brief the pipeline's design-review gate also runs |
 | `/team-structure` | Break design into vertical slices (autonomous) |
 | `/team-plan` | Tactical plan from the structure |
 | `/team-implement` | Test-first + slice execution + 5-reviewer verify |

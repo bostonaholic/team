@@ -463,7 +463,7 @@ describe("systems-thinking lens (L2 content tripwire)", () => {
 
   describe("slice 2: designs name their blast radius and the gate audits it", () => {
     const AUTHORING_DESIGNS = join(REPO_ROOT, "skills", "authoring-designs", "SKILL.md");
-    const ENG_DESIGN_REVIEW = join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md");
+    const ENG_DESIGN_REVIEW = join(REPO_ROOT, "skills", "reviewing-designs", "SKILL.md");
 
     test("authoring-designs rules bullet loads systems-thinking adjacent to its ## When Designing cite", () => {
       // design-author.md already cites product-thinking's same-named
@@ -480,7 +480,7 @@ describe("systems-thinking lens (L2 content tripwire)", () => {
       expect(/change together/i.test(text)).toBe(true);
     });
 
-    test("eng-design-doc-review step 3 carries the blast-radius question", () => {
+    test("the reviewing-designs brief's step 3 carries the blast-radius question", () => {
       const step3 = sliceBetween(
         read(ENG_DESIGN_REVIEW),
         "**Audit the decisions.**",
@@ -1064,7 +1064,7 @@ describe("skeptic passes weigh a stated rule above precedent (L2 tripwire)", () 
 // rounds each found one more asymmetry, one instance at a time.
 describe("cross-surface parity is checked (L2 tripwire)", () => {
   const AUTHORING = read(join(REPO_ROOT, "skills", "authoring-designs", "SKILL.md"));
-  const REVIEW = read(join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md"));
+  const REVIEW = read(join(REPO_ROOT, "skills", "reviewing-designs", "SKILL.md"));
   const CODE_REVIEW = read(join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md"));
 
   test("the design template asks for a surfaces section", () => {
@@ -1931,6 +1931,10 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
 
   test("the principle tier exists on disk (the loops below cannot go vacuous)", () => {
     expect(principleSkills.length).toBeGreaterThan(20);
+    // replaced by "eliminate-rule-exceptions slice 3: the principle set is
+    // derived, not counted (T3)" at the end of this file — a bare count goes
+    // stale on every addition and names no member. The implementer deletes the
+    // line below.
     expect(extractedPrinciples.length).toBe(24);
   });
 
@@ -1989,4 +1993,64 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
       expect(phantom).toEqual([]);
     });
   }
+});
+
+// ---------------------------------------------------------------------------
+// T3 — eliminate-rule-exceptions slice 3 (design.md "## The five tripwires").
+// The `principle-` prefix is a claim: one cross-cutting invariant per skill.
+// The catalog's principle set was pinned by a bare count, which goes stale on
+// every addition and says nothing about *which* skills are in it. Derive both
+// sides instead: the directories on disk and the catalog entries must be the
+// same set, in both directions.
+//
+// Both sides are prefix-filtered, so this catches a missing or an extra catalog
+// entry and cannot catch a fourth multi-rule bundle that wrongly takes the
+// prefix. The three that exist today are named below and asserted prefix-free.
+// ---------------------------------------------------------------------------
+
+describe("eliminate-rule-exceptions slice 3: the principle set is derived, not counted (T3)", () => {
+  const SKILLS_MD = read(join(REPO_ROOT, "docs", "skills.md"));
+
+  const onDisk = readdirSync(join(REPO_ROOT, "skills"))
+    .filter((name) => name.startsWith("principle-"))
+    .filter((name) => existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")))
+    .sort();
+
+  const catalogued = [...SKILLS_MD.matchAll(/^### \[(principle-[a-z0-9-]+)\]/gm)]
+    .map((match) => match[1] ?? "")
+    .sort();
+
+  // The multi-rule methodology sets. They carry no prefix on purpose: each is a
+  // set of rules, not a single invariant.
+  const BUNDLES = ["solid", "product-thinking", "systems-thinking"];
+
+  // Guard: an empty prefix set on either side would pass both directions.
+  test("the principle tier is non-empty on disk and in the catalog", () => {
+    expect(onDisk.length).toBeGreaterThan(20);
+    expect(catalogued.length).toBeGreaterThan(20);
+  });
+
+  test("every principle- skill on disk has a catalog entry", () => {
+    const offenders = onDisk.filter((name) => !catalogued.includes(name));
+    expect(offenders).toEqual([]);
+  });
+
+  test("every principle- catalog entry names a skill on disk", () => {
+    const offenders = catalogued.filter((name) => !onDisk.includes(name));
+    expect(offenders).toEqual([]);
+  });
+
+  test("the multi-rule bundles are catalogued and carry no principle- prefix", () => {
+    const offenders: string[] = [];
+    for (const bundle of BUNDLES) {
+      if (!existsSync(join(REPO_ROOT, "skills", bundle, "SKILL.md"))) {
+        offenders.push(`${bundle}: no skill on disk`);
+      }
+      if (!new RegExp(`^### \\[${bundle}\\]`, "m").test(SKILLS_MD)) {
+        offenders.push(`${bundle}: no catalog entry`);
+      }
+      if (bundle.startsWith("principle-")) offenders.push(`${bundle}: carries the principle- prefix`);
+    }
+    expect(offenders).toEqual([]);
+  });
 });

@@ -716,32 +716,57 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
 });
 
 // ---------------------------------------------------------------------------
-// Design-review gate brief — free L2 drift tripwire (docs/testing.md §2).
-// The DESIGN phase is gated by an adversarial design review: the orchestrator
-// dispatches a fresh-context read-only `Explore` subagent with the
-// `## Review brief` from eng-design-doc-review, by reference. Renaming that
-// heading or the verdict set would silently change pipeline behavior (design
-// risk: silent gate drift) — these pins fail the build the moment either
-// moves.
+// eliminate-rule-exceptions slice 1 — the design-review brief moves out of the
+// `eng-design-doc-review` entry point into the `reviewing-designs` methodology
+// skill, so no skill is both a methodology and a slash command (design.md
+// Appendix D). The pins above move with it, and three callers now load the
+// same brief: skills/team/SKILL.md, skills/team-design/SKILL.md, and the
+// entry point itself. Each dispatches it with the artifact directory
+// substituted for `$ARGUMENTS`, which is the contract a subagent depends on.
 // ---------------------------------------------------------------------------
 
-describe("design-review gate brief (L2 drift tripwire)", () => {
-  const ENG_REVIEW = join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md");
-  const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
+describe("eliminate-rule-exceptions slice 1: the design-review brief lives in reviewing-designs", () => {
+  const REVIEWING_DESIGNS = join(REPO_ROOT, "skills", "reviewing-designs", "SKILL.md");
 
-  test("eng-design-doc-review carries the ## Review brief heading verbatim", () => {
-    expect(/^## Review brief$/m.test(read(ENG_REVIEW))).toBe(true);
+  // Missing-file reads return "" so a not-yet-created skill fails as an
+  // assertion, never as an ENOENT crash.
+  const readOrMissing = (path: string): string => (existsSync(path) ? read(path) : "");
+
+  const CALLERS: [string, string][] = [
+    ["team", join(REPO_ROOT, "skills", "team", "SKILL.md")],
+    ["team-design", join(REPO_ROOT, "skills", "team-design", "SKILL.md")],
+    ["eng-design-doc-review", join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md")],
+  ];
+
+  test("reviewing-designs carries the ## Review brief heading verbatim", () => {
+    expect(existsSync(REVIEWING_DESIGNS)).toBe(true);
+    expect(/^## Review brief$/m.test(readOrMissing(REVIEWING_DESIGNS))).toBe(true);
   });
 
-  test("eng-design-doc-review pins the APPROVE / REQUEST CHANGES / COMMENT verdict set", () => {
-    const text = read(ENG_REVIEW);
+  test("reviewing-designs pins the APPROVE / REQUEST CHANGES / COMMENT verdict set", () => {
+    const text = readOrMissing(REVIEWING_DESIGNS);
     expect(/^- \*\*APPROVE\*\*/m.test(text)).toBe(true);
     expect(/^- \*\*REQUEST CHANGES\*\*/m.test(text)).toBe(true);
     expect(/^- \*\*COMMENT\*\*/m.test(text)).toBe(true);
   });
 
-  test("team SKILL dispatches the design review via the eng-design-doc-review brief", () => {
-    expect(read(TEAM_SKILL)).toContain("eng-design-doc-review");
+  test("every caller of the design review loads the reviewing-designs brief", () => {
+    // The load form (`call the Skill tool with \`<name>\``) is the machine-read
+    // half of the reference; PHRASE in tests/helpers/skill-refs.ts owns it.
+    const offenders = CALLERS.filter(([, path]) => !loadsSkill(readOrMissing(path), "reviewing-designs")).map(
+      ([name]) => name,
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  test("every caller dispatches the brief with the artifact directory substituted", () => {
+    // Matched over squash() because this repo hard-wraps prose and the phrase
+    // splits across lines. The three contract words, never the `substitut`
+    // stem, which passes on a sentence naming the wrong direction.
+    const offenders = CALLERS.filter(
+      ([, path]) => !squash(readOrMissing(path)).includes("artifact directory substituted"),
+    ).map(([name]) => name);
+    expect(offenders).toEqual([]);
   });
 });
 
@@ -831,6 +856,9 @@ describe("no mid-run human-gate claims (L2 forbidden-pattern sweep)", () => {
   // match the pattern, so they need no allowlist).
   const FORBIDDEN = /human[ -]gate|human (approval|design) gate|human contract|design[ -]gate/i;
   const NEGATION = /no mid-run human gates/i;
+  // eliminate-rule-exceptions slice 11 (row 42): docs/ethos.md:201 is reworded
+  // so it no longer needs an allowlist, and the implementer deletes this
+  // constant and the skip below with it.
   const ALLOWLIST = new Set(["docs/ethos.md"]);
 
   // All .md files under `dir` (relative to REPO_ROOT), recursively, skipping
@@ -868,6 +896,199 @@ describe("no mid-run human-gate claims (L2 forbidden-pattern sweep)", () => {
         }
       }
     }
+    expect(offenders).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T5 — eliminate-rule-exceptions slice 11 (design.md "## The five tripwires").
+// Exception vocabulary is how a rule quietly stops applying: a clause names one
+// case, the rule reads false everywhere else, and nothing fails. This sweep
+// makes the class fail the build. It is the extension-list widening of the
+// stated-cap sweep above, over every file that carries Team's own rule prose.
+//
+// Normalize in two ordered steps, both load-bearing:
+//   1. `.mjs` only — strip a leading comment prefix from each line, so a rule
+//      stated across two `//` lines is one string.
+//   2. every file — squash() whitespace, so a hard-wrapped phrase still
+//      matches (docs/testing.md, "The pattern cannot match the file's own line
+//      breaks").
+// The squash costs the line number, which is why an offender reports the
+// matched phrase instead.
+//
+// Negation is tested per match by span containment, never per file: a
+// file-scoped negation would exempt five whole files and silently drop six
+// gated loci, including every multi-locus row this sweep makes atomic.
+//
+// A red names a file and a phrase. Restate that sentence — never add an
+// allowlist entry. The allowlist takes domain nouns only, and its six entries
+// are fixed by the design.
+// ---------------------------------------------------------------------------
+
+describe("eliminate-rule-exceptions slice 11: exception vocabulary appears in no rule prose (T5)", () => {
+  const FAMILIES: Record<string, RegExp> = {
+    // An exception claim: a state verb before "the exception", or a counted or
+    // labeled one. The counter list runs to ten so a future "four exceptions"
+    // is gated too, and the optional `[\w-]+` token admits a hyphenated word
+    // ("the only working-tree exception").
+    exception:
+      /\b(?:is|are|was|were|become|becomes|stays|remains)\s+the\s+exceptions?\b|\b(?:one|two|three|four|five|six|seven|eight|nine|ten|\d+|only|sole|single|named|stated|deliberate)\s+(?:[\w-]+\s+)?exceptions?\b/gi,
+    exempt: /\bexempt\w*\b/gi,
+    "carve-out": /\bcarve-?outs?\b/gi,
+    "stated deviation": /\bstated deviations?\b/gi,
+  };
+
+  // A phrase earns a place here only by containing the forbidden text it
+  // neutralizes, which the last test in this describe asserts.
+  const NEGATIONS = ["does not become the exception", "no exemption"];
+
+  // Keyed by `<family>|<file>`: the word is a domain noun there, not a rule
+  // narrowing. Every file stays swept for every family it is not keyed for.
+  const ALLOWLIST = new Set([
+    "carve-out|skills/pr-open-comments/SKILL.md",
+    "carve-out|skills/pr-watch-as-author/SKILL.md",
+    "carve-out|skills/pr-watch-as-reviewer/SKILL.md",
+    "carve-out|skills/principle-plan-present-wait/SKILL.md",
+    "carve-out|docs/skills.md",
+    "exempt|skills/nested-agents/SKILL.md",
+  ]);
+
+  // All files under `dir` (relative to REPO_ROOT) ending in one of `exts`,
+  // recursively, skipping docs/plans/ — pipeline state is never scanned.
+  function filesUnder(dir: string, exts: string[]): string[] {
+    const out: string[] = [];
+    for (const entry of readdirSync(join(REPO_ROOT, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) {
+        if (entry.name === "plans") continue;
+        out.push(...filesUnder(rel, exts));
+      } else if (exts.some((ext) => entry.name.endsWith(ext))) {
+        out.push(rel);
+      }
+    }
+    return out;
+  }
+
+  const MARKDOWN_ROOTS = ["docs", "skills", "agents", ".claude/skills"];
+  const SCRIPT_ROOTS = ["hooks", ".claude/hooks", "skills"];
+  // In for what they will host, not for today's hit count: all four state a
+  // Team rule and all four carry zero hits.
+  const NAMED_FILES = ["README.md", "AGENTS.md", "CONTRIBUTING.md", "evals/README.md"];
+
+  const sweptFiles = [
+    ...MARKDOWN_ROOTS.flatMap((root) => filesUnder(root, [".md"])),
+    ...NAMED_FILES,
+    ...SCRIPT_ROOTS.flatMap((root) => filesUnder(root, [".mjs"])),
+  ];
+
+  function normalize(text: string, isScript: boolean): string {
+    const stripped = isScript
+      ? text
+          .split("\n")
+          .map((line) => line.replace(/^[ \t]*(\/\/|\*|#)[ \t]?/, ""))
+          .join("\n")
+      : text;
+    return squash(stripped);
+  }
+
+  type Match = { family: string; phrase: string; start: number; end: number };
+
+  /** Every family match in `text`, with its `[start, end)` offsets. */
+  function familyMatchesIn(text: string, allowedFamily: (family: string) => boolean = () => false): Match[] {
+    return Object.entries(FAMILIES)
+      .filter(([family]) => !allowedFamily(family))
+      .flatMap(([family, pattern]) =>
+        [...text.matchAll(pattern)].map((hit) => ({
+          family,
+          phrase: hit[0],
+          start: hit.index ?? 0,
+          end: (hit.index ?? 0) + hit[0].length,
+        })),
+      );
+  }
+
+  /** The `[start, end)` offsets of every sanctioned negation phrase in `text`. */
+  function negationSpansIn(text: string): [number, number][] {
+    return NEGATIONS.flatMap((negation) =>
+      [...text.matchAll(new RegExp(negation, "gi"))].map(
+        (hit) => [hit.index ?? 0, (hit.index ?? 0) + hit[0].length] as [number, number],
+      ),
+    );
+  }
+
+  // Every forbidden phrase in `text`, minus the ones a negation phrase wraps.
+  // The unit is the match, not the file and not the line: the squash destroyed
+  // the line, and a file-scoped negation would exempt whole files.
+  function forbiddenIn(text: string, allowedFamily: (family: string) => boolean = () => false): Match[] {
+    const negations = negationSpansIn(text);
+    return familyMatchesIn(text, allowedFamily).filter(
+      (match) => !negations.some(([from, to]) => match.start >= from && match.end <= to),
+    );
+  }
+
+  test("no swept file states a rule exception", () => {
+    const offenders = sweptFiles.flatMap((rel) =>
+      forbiddenIn(normalize(read(join(REPO_ROOT, rel)), rel.endsWith(".mjs")), (family) =>
+        ALLOWLIST.has(`${family}|${rel}`),
+      ).map((match) => `${rel}: "${match.phrase}"`),
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  // Guard (a): a mis-scoped walk would turn every check above into a no-op, and
+  // nothing would announce it. Every root and every named file must contribute.
+  test("the sweep reaches every root and every named file", () => {
+    expect(sweptFiles.length).toBeGreaterThan(50);
+    const missing = [
+      ...MARKDOWN_ROOTS.filter((root) => !sweptFiles.some((f) => f.startsWith(`${root}/`) && f.endsWith(".md"))),
+      ...SCRIPT_ROOTS.filter((root) => !sweptFiles.some((f) => f.startsWith(`${root}/`) && f.endsWith(".mjs"))),
+      ...NAMED_FILES.filter((named) => !sweptFiles.includes(named)),
+    ];
+    expect(missing).toEqual([]);
+    expect(sweptFiles.filter((f) => f.includes("/plans/"))).toEqual([]);
+  });
+
+  // Guard (b), the teeth: a check that fires on one family says nothing about
+  // the other three. Count matches, not files, so a typo in any single pattern
+  // drops the count and reds here rather than going quietly blind.
+  test("the matcher finds every planted family, and neither negation phrase", () => {
+    const fixture = [
+      "// A planted fixture, one phrase per forbidden family.",
+      "// The step-4 usefulness reaction is the one exception, and it is deliberate.",
+      "// Doc comments on public interfaces are exempt.",
+      "// Generated files are the one carve-out: a lockfile, a compiled schema.",
+      "// code-reviewer preloads cross-model-review beyond the soft limit — a stated deviation.",
+      "// The never-expanded residue below is",
+      "// the exception, and it is the same on both paths.",
+      "// Sanctioned: a preloaded skill does not become the exception, and no exemption applies.",
+    ].join("\n");
+
+    const matches = forbiddenIn(normalize(fixture, true));
+    expect(matches.map((m) => m.phrase.toLowerCase())).toEqual([
+      "one exception",
+      "is the exception",
+      "exempt",
+      "carve-out",
+      "stated deviation",
+    ]);
+    expect(matches.map((m) => m.family).sort()).toEqual([
+      "carve-out",
+      "exception",
+      "exception",
+      "exempt",
+      "stated deviation",
+    ]);
+    // The two sanctioned negations, on their own, yield nothing: containment
+    // suppresses only the match a negation wraps, so the planted phrases beside
+    // them need no spacing rule.
+    const sanctioned = "a preloaded skill does not become the exception, and no exemption applies.";
+    expect(forbiddenIn(squash(sanctioned))).toEqual([]);
+  });
+
+  // Guard (c): a negation entry that suppresses nothing is a hole waiting for a
+  // future family to fall through, so each must wrap a real family match.
+  test("every negation phrase wraps at least one forbidden match", () => {
+    const offenders = NEGATIONS.filter((negation) => familyMatchesIn(negation).length === 0);
     expect(offenders).toEqual([]);
   });
 });
@@ -994,11 +1215,11 @@ describe("checks and balances", () => {
 });
 
 describe("code-review direct invocation preserves separation", () => {
-  // code-review is the one methodology skill a user can invoke. The main
-  // session holds the history the skill forbids, so the standalone path must
-  // hand off rather than review in place. Without this, the separation that
-  // the frontmatter enforces for the pipeline has no counterpart on the path
-  // a natural-language phrase reaches.
+  // `code-review` is the front door over the `reviewing-code` methodology.
+  // The main session holds the history that methodology forbids, so the
+  // standalone path must hand off rather than review in place. Without this,
+  // the separation that the frontmatter enforces for the pipeline has no
+  // counterpart on the path a natural-language phrase reaches.
   const CODE_REVIEW = read(join(REPO_ROOT, "skills", "code-review", "SKILL.md"));
 
   test("the skill states the direct-invocation path", () => {

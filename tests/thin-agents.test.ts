@@ -136,6 +136,165 @@ describe("thin agents: frontmatter skills preloads per agent", () => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// T2 — eliminate-rule-exceptions slice 3 (design.md "## The five tripwires").
+// The soft limit is three preloaded skills. It was stated with a standing
+// exemption — an agent's own extracted procedure "does not count" — which made
+// the budget unfalsifiable: every agent past three had a reason available and
+// none was written down. The budget stays soft, but the record becomes
+// mechanical. PRELOAD_BUDGET_REASONS is that record, exactly as
+// EXPECTED_GUARDED (tests/guarded-skill-prose.test.ts) is the record for the
+// guarded set, and every name in a `skills:` list counts toward the number it
+// justifies.
+//
+// The agent set comes from disk, never from ALL_AGENTS: a hardcoded thirteen
+// would hide a fourteenth agent from the rule this exists to enforce.
+// ---------------------------------------------------------------------------
+
+const PRELOAD_BUDGET = 3;
+
+type BudgetReason = { count: number; reason: string };
+
+const PRELOAD_BUDGET_REASONS: Record<string, BudgetReason> = {
+  "code-reviewer": {
+    count: 5,
+    reason:
+      "It is the only reviewer that runs vendor CLIs, so `cross-model-review` carries a procedure no other agent needs and `nested-agents` carries the courier cap that bounds it.",
+  },
+  "security-reviewer": {
+    count: 5,
+    reason:
+      "Two review manuals, not one: `reviewing-code` holds the verdict discipline every reviewer shares, `reviewing-security` holds the threat-model pass only this agent runs, and inlining either would fork a manual other agents cite by name.",
+  },
+  "technical-writer": {
+    count: 5,
+    reason:
+      "Same shape: `reviewing-code` for the shared verdict discipline, `reviewing-documentation` for the doc-review pass it alone runs, and `writing-prose` for house style that several other surfaces also load.",
+  },
+  "design-author": {
+    count: 4,
+    reason:
+      "Its own extracted procedure (`authoring-designs`) sits beside two shared lenses; inlining the procedure would put a 200-line method inside an agent prompt.",
+  },
+  researcher: {
+    count: 4,
+    reason:
+      "Its own extracted procedure (`researching-codebases`) plus the `nested-agents` guardrail it needs because it holds the `Agent` tool; neither belongs inside the other.",
+  },
+  "structure-planner": {
+    count: 4,
+    reason:
+      "Its own extracted procedure (`slicing-work`) plus the two lenses that decide slice order (`product-thinking`, `systems-thinking`), both shared with other agents.",
+  },
+};
+
+// The four offender rules, factored so the planted-positive test can run each
+// one against synthetic input instead of trusting that it fired on real data.
+function overBudgetWithNoReason(
+  counted: Map<string, string[]>,
+  reasons: Record<string, BudgetReason>,
+): string[] {
+  return [...counted]
+    .filter(([agent, names]) => names.length > PRELOAD_BUDGET && reasons[agent] === undefined)
+    .map(([agent, names]) => `${agent}: preloads ${names.length} names, no recorded reason`);
+}
+
+function reasonWithoutABudgetToJustify(
+  counted: Map<string, string[]>,
+  reasons: Record<string, BudgetReason>,
+): string[] {
+  return Object.keys(reasons)
+    .filter((agent) => (counted.get(agent)?.length ?? 0) <= PRELOAD_BUDGET)
+    .map((agent) =>
+      counted.has(agent)
+        ? `${agent}: recorded reason for an agent at or under the budget`
+        : `${agent}: recorded reason for a name that is not an agent`,
+    );
+}
+
+function reasonMisstatesItsCount(
+  counted: Map<string, string[]>,
+  reasons: Record<string, BudgetReason>,
+): string[] {
+  const offenders: string[] = [];
+  for (const [agent, entry] of Object.entries(reasons)) {
+    const actual = counted.get(agent)?.length;
+    if (actual !== undefined && entry.count !== actual) {
+      offenders.push(`${agent}: records ${entry.count} names, preloads ${actual}`);
+    }
+    if (entry.reason.trim() === "") offenders.push(`${agent}: empty reason`);
+  }
+  return offenders;
+}
+
+// `preloads()` opens on `/^skills:\s*$/` and reads indented `-` lines, so an
+// inline `skills: [a, b, c, d]` parses to zero names and clears the budget in
+// silence. Two sibling parsers make the same assumption, so the block form is
+// the contract — assert it rather than teach three parsers a second shape.
+function inlineSkillsKey(frontmatters: Map<string, string>): string[] {
+  return [...frontmatters]
+    .filter(([, fm]) => /^skills:[ \t]*\S/m.test(fm))
+    .map(([agent]) => `${agent}: skills: is an inline list, not a block list`);
+}
+
+describe("eliminate-rule-exceptions slice 3: every preloaded name counts against the budget (T2)", () => {
+  const agentNames = readdirSync(join(REPO_ROOT, "agents"))
+    .filter((name) => name.endsWith(".md"))
+    .map((name) => name.replace(/\.md$/, ""))
+    .sort();
+  const counted = new Map(agentNames.map((agent) => [agent, preloads(agentPath(agent))]));
+  const frontmatters = new Map(
+    agentNames.map((agent) => [agent, frontmatter(readOrEmpty(agentPath(agent)))]),
+  );
+
+  // Guard: a mis-parsed agents/ tree would empty every offender array below.
+  // It counts agents and parsed names, never entries — zero entries is a legal
+  // end state, so an entry-count guard would forbid the budget being met.
+  test("the agent parse covers every agent file and finds preloaded names", () => {
+    const files = readdirSync(join(REPO_ROOT, "agents")).filter((name) => name.endsWith(".md"));
+    expect(agentNames.length).toBe(files.length);
+    expect(agentNames.length).toBeGreaterThanOrEqual(13);
+    const total = [...counted.values()].reduce((sum, names) => sum + names.length, 0);
+    expect(total).toBeGreaterThan(0);
+  });
+
+  test("every agent past the preload budget has a recorded reason", () => {
+    expect(overBudgetWithNoReason(counted, PRELOAD_BUDGET_REASONS)).toEqual([]);
+  });
+
+  test("every recorded reason keys an agent that is past the budget", () => {
+    expect(reasonWithoutABudgetToJustify(counted, PRELOAD_BUDGET_REASONS)).toEqual([]);
+  });
+
+  test("every recorded reason states the count it justifies, and says why", () => {
+    expect(reasonMisstatesItsCount(counted, PRELOAD_BUDGET_REASONS)).toEqual([]);
+  });
+
+  test("every agent declares skills: as a block list", () => {
+    expect(inlineSkillsKey(frontmatters)).toEqual([]);
+  });
+
+  // Prove each rule can find a positive: three planted violations, one per
+  // failure mode the budget can hide.
+  test("the budget checks can see planted violations", () => {
+    const overBudget = new Map([["planted-agent", ["a", "b", "c", "d"]]]);
+    expect(overBudgetWithNoReason(overBudget, {})).toEqual([
+      "planted-agent: preloads 4 names, no recorded reason",
+    ]);
+
+    const wrongCount = { "planted-agent": { count: 5, reason: "planted" } };
+    expect(reasonMisstatesItsCount(overBudget, wrongCount)).toEqual([
+      "planted-agent: records 5 names, preloads 4",
+    ]);
+
+    const inline = new Map([["planted-agent", "name: planted-agent\nskills: [a, b, c, d]"]]);
+    expect(inlineSkillsKey(inline)).toEqual([
+      "planted-agent: skills: is an inline list, not a block list",
+    ]);
+  });
+});
+
+
 describe("thin agents: wrapper bodies point at their procedure skills", () => {
   // Convention: a wrapper keeps a one-line pointer (or a preload note
   // naming the path) for each skill it runs on — the body must name it.
@@ -247,17 +406,10 @@ describe("thin agents: skills catalog stays complete", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
 
-  test("docs/skills.md documents every skill: ### entry count equals the on-disk count", () => {
-    // Every per-skill entry in docs/skills.md is an h3; nothing else in the
-    // file uses that level. A drift here means an entry was added or lost
-    // without the catalog (or the filesystem) following.
-    const entries = read(SKILLS_MD).match(/^### /gm) ?? [];
-    const count = readdirSync(join(REPO_ROOT, "skills")).filter((name) =>
-      existsSync(join(REPO_ROOT, "skills", name, "SKILL.md")),
-    ).length;
-    expect(entries.length).toBe(count);
-  });
-
+  // replaced by "eliminate-rule-exceptions slice 3: every preloaded name counts
+  // against the budget (T2)" above — PRELOAD_BUDGET_REASONS is the contract this
+  // wording assertion was standing in for, and the prose it pins is the
+  // exemption the design removes. The implementer deletes this test.
   test("docs/architecture.md exempts own-procedure skills from the 3-skill soft limit", () => {
     const content = squash(read(ARCHITECTURE_MD));
     expect(content).toMatch(/procedure skill/i);
@@ -296,7 +448,7 @@ describe("thin agents: eval diff-selection keeps firing on the new skills", () =
     "team-research-answers-seeded-questions": ["skills/researching-codebases/**", "skills/finding-files/**"],
     "team-structure-seeded-design": ["skills/slicing-work/**"],
     "team-plan-seeded-structure": ["skills/planning-implementation/**"],
-    "eng-design-doc-review-planted-missing-alternatives": ["skills/documenting-decisions/**", "skills/technical-design-doc/**"],
+    "eng-design-doc-review-planted-missing-alternatives": ["skills/documenting-decisions/**", "skills/technical-design-doc/**", "skills/reviewing-designs/**"],
   };
 
   const FIXTURE_INPUTS: Record<string, string> = {
@@ -307,6 +459,18 @@ describe("thin agents: eval diff-selection keeps firing on the new skills", () =
     "team-plan-seeded-structure": "evals/fixtures/team-plan/seeded-structure/input.md",
     "eng-design-doc-review-planted-missing-alternatives": "evals/fixtures/eng-design-doc-review/planted-missing-alternatives/input.md",
   };
+
+  // eliminate-rule-exceptions slice 1: the design-review brief moves into
+  // skills/reviewing-designs/, so the fixture that exercises the review now
+  // depends on it. Declaring it here is what makes the binder below check the
+  // selection map (tests/helpers/touchfiles.ts) against the fixture's own
+  // `deps` frontmatter for the new glob, exactly as it already does for this
+  // fixture's two sibling globs.
+  test("eliminate-rule-exceptions slice 1: TOUCHFILE_ADDITIONS declares the reviewing-designs glob", () => {
+    expect(TOUCHFILE_ADDITIONS["eng-design-doc-review-planted-missing-alternatives"]).toContain(
+      "skills/reviewing-designs/**",
+    );
+  });
 
   for (const [evalName, globs] of Object.entries(TOUCHFILE_ADDITIONS)) {
     test(`E2E_TOUCHFILES[${evalName}] lists the new skill globs`, () => {
