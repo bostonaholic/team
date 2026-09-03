@@ -85,11 +85,11 @@ Run the eight-point admission test:
   categorical (a bundle, an action name, an arguable value, a lint-able rule, or a
   procedure is simply not a principle skill), and 7 guards against importing doctrine
   the project never bled for.
-- **Criteria 5–6 are the demand test, waivable once.** Normally both must hold. A
-  single current consumer is acceptable when the invariant is clearly cross-cutting:
-  the "Apply when" line names concrete situations a second consumer would hit, and the
-  one existing consumer's restatement still collapses to a citation. Record the
-  single-consumer status in the commit message. An unused `principle-` skill costs
+- **Criteria 5–6 are the demand test, and it is met two ways.** Two independent
+  consumers meet it. So does a single current consumer when the invariant is clearly
+  cross-cutting: the "Apply when" line names concrete situations a second consumer
+  would hit, and the one existing consumer's restatement still collapses to a
+  citation. Record the single-consumer status in the commit message. An unused `principle-` skill costs
   nearly nothing at load time, so extracting slightly ahead of demand is cheap — but a
   rule with no consumer at all stays inline where it is used.
 
@@ -108,10 +108,11 @@ Verdicts:
 
 ## Part 1 — Invocation surface
 
-The load-bearing rule: **composition never goes through the skill-invocation tool.**
-The invocation tool is for the top surface only — a user typing the skill, or the model
-auto-invoking it by intent. When one skill pulls in another, it *reads that skill's file*
-or *spawns a subagent*.
+The load-bearing rule: **a building block never gets its own slash command.**
+Composition itself has three sanctioned forms — a Skill-tool load (``Call the Skill
+tool with `<name>` ``, the form `tests/skill-tool-invocation.test.ts` resolves), a
+read-and-follow by path, or a subagent. What a composed skill must not do is register
+as a command a user could type: that is what `user-invocable: false` is for.
 
 **First, make the invocation-surface decision — do not skip it.** Classify the skill
 into exactly one of three buckets, then carry the verdict into the frontmatter:
@@ -235,7 +236,8 @@ a separate entry-point skill that dispatches the review. No methodology skill in
 is user-invocable.)
 
 ### Invocation invariants
-- Never compose through the skill-invocation tool. Composition = read-and-follow OR subagent.
+- Composition = a Skill-tool load, a read-and-follow by path, OR a subagent. What a
+  building block never gets is its own slash command.
 - Heavy or adversarial sub-work → subagent (keeps the parent lean and unbiased).
   Sequential/coordinated sub-work → inline.
 - A skill can serve both surfaces. Just make its description trigger correctly AND its
@@ -308,7 +310,9 @@ answer is already on disk. (In this repo, `/team-question` is the ask-first prod
 seeds `docs/plans/<id>/` for the archetype-A consumers downstream.)
 
 ### Input invariants
-- Discover before you demand. A question is the fallback, not the front door (except §2D).
+- Discover before you demand, wherever there is something to discover. A question is
+  the fallback, not the front door. The ask-first archetype (§2D) has no discoverable
+  input, so it asks.
 - The empty/not-found path uses `AskUserQuestion` to offer a producer or ask for a
   path — it never throws.
 - Each shell block is its own process — recompute derived vars. Do not rely on persistence.
@@ -450,14 +454,14 @@ Invocation
 - [ ] Entry point: description has WHAT + explicit trigger intents/phrases. Added to routing map.
 - [ ] Building block: chose inline (sequential) vs subagent (isolated/parallel) deliberately.
 - [ ] If subagented: self-contained, returns a conclusion not a transcript. If inlined: headed, independently-runnable sections.
-- [ ] No skill invokes another through the skill-invocation tool.
+- [ ] No composed building block registers its own slash command.
 
 Input
 - [ ] Correct archetype chosen (default §2A for documents).
 - [ ] Archetype-A: `argument-hint` declared. Discovery block copied verbatim from an
       existing skill (e.g. team-research), not hand-rolled — the dev consistency gate
       enforces byte-identity.
-- [ ] Discovery runs before any question (except §2D). An auto-picked topic is announced.
+- [ ] Discovery runs before any question wherever there is something to discover (§2D, the ask-first archetype, has no discoverable input). An auto-picked topic is announced.
 - [ ] Empty/not-found path uses `AskUserQuestion` (run producer / give path) — never throws.
 - [ ] Base branch (if used) through the fallback chain, no bare `main`. Args carry a
       scalar or optional artifact-dir path, never document contents.

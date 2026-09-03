@@ -46,9 +46,10 @@ number is thus always free. The serialization *is* the collision defense.
 done". Opening the draft PR, passing review, and going green are all *before*
 land time. A runtime PR therefore sits unbumped for its entire review
 lifetime, on purpose, and `.github/scripts/version-bump-required.sh` exits 1
-for all of it. **That exit 1 is the expected state, not a defect to
-remediate:** it states a precondition for *merging*, which is why the only
-thing that enforces it is the pre-merge guard, at the merge attempt.
+for all of it. The script is a **merge-precondition probe**, so that
+exit 1 reports an unmet precondition rather than a failure: the
+precondition is for *merging*, which is why the only thing that enforces
+it is the pre-merge guard, at the merge attempt.
 
 Bumping earlier is a defect in its own right, independent of the rule.
 `next-version.sh` computes `bump(main, level)`, so a number assigned at
@@ -82,9 +83,9 @@ remote head and **denies a violating `gh pr merge`** on either violation — a
 dev-only diff that bumped, or a runtime diff that did not. It reads the script
 **out of the PR head commit**, not from the working tree, because the script is
 itself the definition of "runtime file": a PR that widens that definition has to
-be judged by the definition it lands. A fork head is the exception. Its script
-is unreviewed code, so a fork whose copy differs from the local one is denied
-rather than executed. The script measures
+be judged by the definition it lands. That read needs a trusted head. A fork
+head is unreviewed code, so a fork whose copy differs from the local one is
+denied rather than executed. The script measures
 "did this branch bump?" against the merge-base, which is the fork point. A
 bump-less PR behind a version-bumped `main` thus reads correctly as "no
 bump". [PR title sync](#pr-title) uses the same branch-relative measure.
@@ -103,8 +104,10 @@ bump". [PR title sync](#pr-title) uses the same branch-relative measure.
 > (`if …; then gh pr merge; fi`, `{ gh pr merge; }`, `( gh pr merge )`,
 > `case x in *) gh pr merge;; esac` —
 > ordinary shell syntax, no indirection tool needed), or
-> a harness that does not load these hooks bypasses it entirely — and unlike
-> the deleted CI check, no red signal appears when that happens. A command
+> a harness that does not load these hooks all sit outside that reach — and
+> unlike the deleted CI check, this guard raises no red signal on those
+> routes. They are not ungated, only gated elsewhere: `/shipit`, for one,
+> gates its own merge on CI green. A command
 > the guard cannot parse is not among these routes: it is denied outright
 > whenever its raw text, stripped of the characters bash can splice into a
 > word (quotes, escapes, line continuations, `$`), contains `merge`
@@ -341,8 +344,10 @@ version was already assigned, and a second bump would create a redundant commit.
 `/shipit`'s step 5 rebases a behind-base branch, and the rebase moves the fork
 point — a valid bump can go stale (the branch bumped `0.13.1 → 0.13.2` while
 `main` advanced to `0.14.0`). At the merge attempt the guard re-runs the
-invariant against the rebased head and denies. This is the **one exception**
-to "Do not re-run `version-bump`" above: drop the `chore(version)` commit,
+invariant against the rebased head and denies. Re-run `version-bump` when,
+and only when, the guard denies a bump that a rebase left stale — that
+condition is what "Do not re-run `version-bump`" above leaves open: drop the
+`chore(version)` commit,
 undo the changelog cut, re-run `version-bump` from step 0 (it recomputes
 against the new base), re-title, and re-run `/shipit`.
 
