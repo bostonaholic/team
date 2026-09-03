@@ -1,104 +1,34 @@
 ---
 name: team-question
-description: Decompose a feature description, ticket, or issue link into the QRSPI Question artifacts (1-task.md, 2-questions.md). Trigger on "shape this idea", "decompose this task", or "/team-question".
+description: Internal QUESTION module for Team. Given one explicit artifact directory containing 1-task.md, derive neutral research questions and optional PRD/repository scope without running Research or choosing another topic.
+user-invocable: false
 effort: medium
-argument-hint: "<ticket id, issue URL, or task description>"
+argument-hint: "<absolute docs/plans/<id>/ directory>"
 ---
 
-# Team Question — Decompose the Task
+# Team Question
 
-Run the QUESTION phase only, then stop. The Question phase decomposes the
-user's intent into the artifacts that the rest of the QRSPI pipeline
-consumes:
+Run QUESTION only. `$ARGUMENTS` must be one existing absolute
+`docs/plans/<id>/` directory. Reject anything else; do not search for a topic.
 
-- `1-task.md` — the human's full intent. Read by `design-author` and
-  downstream phases that need intent. **Never** read by `researcher` or
-  `file-finder` — they only see `2-questions.md`.
-- `2-questions.md` — neutral research questions phrased without intent. The
-  only file `researcher` and `file-finder` ever read.
-- `3-prd.md` — written
-  **only when the request is vague, multi-story, cross-cutting, or replaces existing behavior**
-  (criteria in `skills/product-requirements-doc/SKILL.md`, loaded
-  conditionally through `skills/decomposing-intent/SKILL.md`). Referenced
-  from `1-task.md`. read downstream by `design-author`.
-- `4-repos.md` — written **only when the topic spans more than one
-  repository**. Lists each involved repo's slug, absolute path, and
-  role. Its presence switches the rest of the pipeline into multi-repo
-  mode (one worktree per repo, slice/step `[repo: <slug>]` annotations,
-  one PR per repo). See `skills/qrspi-workflow/SKILL.md` for the schema
-  and `skills/decomposing-intent/SKILL.md` for the detection rules.
+Require `1-task.md` with valid frontmatter, `workflow: team` (or no workflow on
+a legacy run), and a non-empty `## Request`. The `team` or `team-fix`
+coordinator wrote this intent record. Preserve it verbatim.
+Follow `skills/principle-progress-tracking/SKILL.md` for this procedure.
 
-These files live in `docs/plans/<id>/` where `<id>` is either a
-ticket-derived slug (`ENG-1234-add-rate-limiting`) or a date-derived slug
-(`2026-05-01-add-rate-limiting`).
+1. If `2-questions.md` already exists with the same `topic`, return it without
+   rewriting.
+2. Dispatch `questioner` with `1-task.md` and the artifact directory. Tell it to
+   preserve `1-task.md` and write:
+   - `2-questions.md`: neutral research questions. It may name codebase files,
+     modules, and vocabulary, but must not reveal the requested outcome.
+   - `3-prd.md` only when `product-requirements-doc` criteria apply.
+   - `4-repos.md` only when the topic spans repositories. Paths must be absolute
+     sibling git repositories with unique slugs.
+3. Resolve open choices autonomously and record assumptions; never prompt the
+   user mid-run.
+4. Verify `2-questions.md` exists, its `topic` matches `1-task.md`, and it does not
+   contain the request text. Fail loudly on missing or inconsistent output.
 
-## Input
-
-`$ARGUMENTS` may be:
-
-- A ticket identifier (e.g. `ENG-1234`) — recorded as `ticketId` on
-  `1-task.md`'s frontmatter. The orchestrator does not call any ticketing
-  system. The ID is stored for the user's reference.
-- An issue URL (e.g. `https://github.com/org/repo/issues/42`) — fetched
-  with `gh issue view` (or equivalent) to extract the title and body
-  before decomposition.
-- Free-form text — treated directly as the feature/task description.
-
-When `$ARGUMENTS` is empty, **discover, do not demand**: ground in repo
-context before asking. Read recent `git log` activity and the repo's
-`README` / `CLAUDE.md` to propose a likely topic, then use
-`AskUserQuestion` with labeled options to fill any genuine gap in intent.
-Never bare-stop with a plain "describe it" demand when context is already
-available.
-
-## Execution
-
-> Follow `skills/principle-progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
-
-1. **Resolve the input** to a description:
-   - Empty `$ARGUMENTS`: ground in repo context, then ask only for genuine
-     gaps, per the **"discover, don't demand"** rule in `## Input`.
-   - Ticket-only: ask the user for context, or use any tracker integration
-     they have configured to fetch the issue body.
-   - Issue URL: run `gh issue view <url> --json title,body` and use the
-     title plus body as the description.
-   - Free text: use directly.
-2. **Derive `<id>`**:
-   - If a ticket identifier is present: `<TICKET>-<kebab-topic>` (e.g.,
-     `ENG-1234-add-rate-limiting`).
-   - Otherwise: `<YYYY-MM-DD>-<kebab-topic>` (e.g.,
-     `2026-05-01-add-rate-limiting`).
-   - The `<kebab-topic>` is a 2–4 word kebab-case slug derived from the
-     description.
-3. **Create `docs/plans/<id>/`** if it does not exist.
-4. **Resume detection.** If `docs/plans/<id>/1-task.md` already exists,
-   re-read it instead of overwriting. If `2-questions.md` is missing, the
-   questioner only writes `2-questions.md`.
-5. Dispatch the `questioner` agent with the full description and the
-   target directory `docs/plans/<id>/`. The agent writes `1-task.md` and
-   `2-questions.md`, plus `3-prd.md` when the request meets the PRD criteria
-   and `4-repos.md` when it makes sure with the user that the topic spans
-   multiple repos.
-6. **Stop once `1-task.md` and `2-questions.md` exist on disk** — do not
-   continue to RESEARCH. (`3-prd.md` or `4-repos.md` can also exist, neither
-   changes the stop condition.)
-
-## When to use
-
-- The idea is vague and you want to see the questioner's framing before
-  committing to research.
-- You want to review and edit `1-task.md` / `2-questions.md` by hand before
-  research begins.
-- You want to run multiple research passes against the same task without
-  re-decomposing.
-
-## Completion
-
-Report:
-
-- Path to `1-task.md` and `2-questions.md` (and `3-prd.md` / `4-repos.md` when
-  written)
-- Topic slug and `<id>`
-- Mode: single-repo or multi-repo (with the list of involved repo slugs
-  if multi-repo)
-- Tell the user: **"Next: run `/team-research docs/plans/<id>/`"**
+Return the written artifact paths and single-/multi-repo mode. Stop; the
+coordinator decides whether RESEARCH runs.

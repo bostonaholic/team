@@ -1,6 +1,6 @@
 ---
 name: artifact-frontmatter
-description: Apply when creating or validating Team pipeline artifacts. Defines the docs/plans/<id>/ inventory, shared YAML fields, phase completion records, topic identity, and conditional repository and PRD schemas.
+description: Apply when creating or validating Team pipeline artifacts. Defines the docs/plans/<id>/ inventory, shared YAML fields, phase completion records, topic identity, and conditional repos and PRD schemas.
 user-invocable: false
 ---
 
@@ -24,7 +24,7 @@ Apply `skills/principle-files-are-the-contract/SKILL.md` and
 
 | Phase | Required output | Writer |
 | --- | --- | --- |
-| Worktree | `1-task.md` | team-worktree |
+| Worktree | `1-task.md` | team or team-fix coordinator |
 | Question | `2-questions.md` | questioner |
 | Research | `5-research.md` | team-research |
 | Design | `6-design.md`, `design-review-<n>.md` | design-author, team-design |
@@ -43,8 +43,8 @@ records, never phase-completion signals.
   `date`, and its allowed `phase` from `references/schemas.md`.
 - Copy `topic` verbatim from the predecessor. It is the `<id>` suffix after
   the ticket or date prefix. Never reword it.
-- `1-task.md` alone carries `ticketId` and `workflow: team|team-fix`, followed
-  by the full resolved request. A missing workflow means `team` for migration.
+- `1-task.md` alone carries `ticketId` and `workflow: team|team-fix`, followed by
+  the full resolved request. A missing workflow means `team` for migration.
 - Never overwrite a valid completed artifact. Optional artifacts never advance
   phase state.
 

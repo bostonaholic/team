@@ -12,8 +12,7 @@ agents operate only in the directory supplied to them.
 ## Input and topology
 
 Without `docs/plans/<id>/4-repos.md`, create one home-repo worktree at
-`<repo>/.claude/worktrees/<id>` on branch `<id>` from `origin/HEAD`, using
-Claude Code native worktree support.
+`<repo>/.claude/worktrees/<id>` on branch `<id>` from `origin/HEAD`.
 
 ### Multi-repo
 
@@ -27,6 +26,10 @@ The home worktree alone owns `docs/plans/<id>/`. After design review, append
 `## Worktrees` to `4-repos.md` with the home and secondary absolute paths. Later
 entry points recover topology from that section. Plain git worktrees and
 Claude Code native worktrees are equivalent downstream.
+
+After each successful creation or reuse, `team-worktree` applies the source repo's
+`.worktreeinclude`. It copies only matched paths that the repo also ignores and
+preserves their relative paths without replacing existing files.
 
 ## Setup
 
@@ -47,14 +50,18 @@ detection.
 ### Why first
 
 Creating the home worktree before QUESTION keeps the primary checkout
-untouched and makes `worktree exists, no 1-task.md` a recoverable WORKTREE state.
-Always report the absolute worktree-rooted artifact path.
+untouched when isolation succeeds and makes `worktree exists, no 1-task.md` a
+recoverable WORKTREE state. Always report the absolute resolved artifact path.
 
 ## During the pipeline
 
-All agents run in their assigned worktree. In multi-repo mode, the implementer
-changes worktrees per annotated step and commits each repo's part there. No
-agent changes a primary checkout.
+All agents run in their assigned checkout. In multi-repo mode, the implementer
+changes checkouts per annotated step and commits each repo's part there. A repo
+whose worktree creation failed runs in its primary checkout while other repos
+retain isolation.
+Once the home artifact directory exists in that primary checkout, later calls
+keep it there even if home-worktree creation would now succeed. They create
+only missing secondary worktrees.
 
 ## Ship and teardown
 
@@ -114,11 +121,9 @@ Provisioned-resource teardown is declared separately in default-branch
 
 ## Creation failure
 
-If worktree creation fails, report
-`Worktree creation failed in <name>. Falling back to main tree for that repo.`
-Continue other repos in worktrees and run only the failed repo in its primary
-checkout. A home-repo failure runs the pipeline in place. Never block solely
-because isolation is unavailable.
+If creation fails for one repo, report its exact error, record the primary path
+as its fallback, and continue creating the remaining repos. Keep every
+successful worktree; isolation failure alone never blocks the pipeline.
 
 ## Done
 

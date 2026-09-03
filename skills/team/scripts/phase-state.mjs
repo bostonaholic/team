@@ -138,14 +138,77 @@ function sectionEntries(path, heading, valuePattern) {
   return entries;
 }
 
+function strictSectionEntries(path, heading, valuePattern) {
+  let lines;
+  try {
+    lines = readFileSync(path, "utf8").split("\n");
+  } catch {
+    return null;
+  }
+  const start = lines.findIndex((line) => line.trim() === heading);
+  if (start < 0) return null;
+  const entries = new Map();
+  for (const line of lines.slice(start + 1)) {
+    if (/^##\s/.test(line)) break;
+    if (!line.trim()) continue;
+    const match = /^-\s+([A-Za-z0-9._-]+):\s+(.+?)\s*$/.exec(line);
+    if (!match || entries.has(match[1]) || !valuePattern.test(match[2])) return null;
+    entries.set(match[1], match[2]);
+  }
+  return entries;
+}
+
+function additionalRepos(path) {
+  let lines;
+  try {
+    lines = readFileSync(path, "utf8").split("\n");
+  } catch {
+    return null;
+  }
+  const start = lines.findIndex((line) => line.trim() === "## Additional repos");
+  if (start < 0) return null;
+  const records = [];
+  let current = null;
+  for (const line of lines.slice(start + 1)) {
+    if (/^##\s/.test(line)) break;
+    const name = /^-\s+\*\*name:\*\*\s+([A-Za-z0-9._-]+)\s*$/.exec(line);
+    if (name) {
+      if (current && current.path === null) return null;
+      current = { name: name[1], path: null };
+      records.push(current);
+      continue;
+    }
+    const repoPath = /^\s+\*\*path:\*\*\s+(.+?)\s*$/.exec(line);
+    if (repoPath) {
+      if (!current || current.path !== null || !isAbsolute(repoPath[1])) return null;
+      current.path = repoPath[1];
+      continue;
+    }
+    if (/^-\s+/.test(line)) return null;
+  }
+  if (records.length === 0 || records.some((record) => record.path === null)) return null;
+  const names = records.map(({ name }) => name);
+  const paths = records.map(({ path }) => path);
+  if (
+    names.includes("home") ||
+    new Set(names).size !== names.length ||
+    new Set(paths).size !== paths.length
+  ) return null;
+  return new Map(records.map(({ name, path }) => [name, path]));
+}
+
 export function worktreeMap(dir) {
   const repos = join(dir, "4-repos.md");
   if (existsSync(repos)) {
     if (!commonFieldsMatch(readFrontmatter(repos), topicFor(dir), "repos")) return new Map();
-    const entries = sectionEntries(repos, "## Worktrees", /\S/);
+    const declared = additionalRepos(repos);
+    const entries = strictSectionEntries(repos, "## Worktrees", /\S/);
+    if (!declared || !entries) return new Map();
     const paths = [...entries.values()];
+    const required = new Set(["home", ...declared.keys()]);
     if (
-      !entries.has("home") ||
+      entries.size !== required.size ||
+      [...required].some((name) => !entries.has(name)) ||
       paths.some((path) => !isAbsolute(path)) ||
       new Set(paths).size !== paths.length
     ) return new Map();
@@ -273,13 +336,6 @@ export function findLatestTopic(rootDir, headFor = currentHead) {
           // Optional or not written yet.
         }
       }
-      if (mtime === -Infinity && basename(root) === entry.name) {
-        try {
-          mtime = statSync(dir).mtimeMs;
-        } catch {
-          continue;
-        }
-      }
       if (mtime === -Infinity) continue;
       const previous = candidates.get(entry.name);
       if (!previous || previous.mtime < mtime) candidates.set(entry.name, { id: entry.name, dir, mtime });
@@ -288,7 +344,12 @@ export function findLatestTopic(rootDir, headFor = currentHead) {
   return (
     [...candidates.values()]
       .sort((a, b) => b.mtime - a.mtime || a.id.localeCompare(b.id))
-      .find((candidate) => isTeamRun(candidate.dir) && inferPhase(candidate.dir, headFor) !== null) ?? null
+      .find(
+        (candidate) =>
+          taskRecorded(candidate.dir) &&
+          isTeamRun(candidate.dir) &&
+          inferPhase(candidate.dir, headFor) !== null,
+      ) ?? null
   );
 }
 

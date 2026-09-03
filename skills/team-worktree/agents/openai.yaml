@@ -1,4 +1,7 @@
 interface:
   display_name: "Team Worktree"
-  short_description: "Prepare an isolated git worktree"
-  default_prompt: "Use $team-worktree to prepare an isolated git worktree."
+  short_description: "Prepare Worktree for one artifact directory"
+  default_prompt: "Use $team-worktree to prepare Worktree for one artifact directory."
+
+policy:
+  allow_implicit_invocation: false

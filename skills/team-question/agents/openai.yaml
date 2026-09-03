@@ -1,4 +1,7 @@
 interface:
   display_name: "Team Question"
-  short_description: "Decompose a feature into task and questions"
-  default_prompt: "Use $team-question to decompose a feature into task and questions."
+  short_description: "Run Question for one artifact directory"
+  default_prompt: "Use $team-question to run Question for one artifact directory."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,4 +1,7 @@
 interface:
   display_name: "Team PR"
-  short_description: "Open the pull request after verification"
-  default_prompt: "Use $team-pr to open the pull request after verification."
+  short_description: "Run PR for one artifact directory"
+  default_prompt: "Use $team-pr to run PR for one artifact directory."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,4 +1,7 @@
 interface:
   display_name: "Team Implement"
-  short_description: "Execute and verify the implementation phase"
-  default_prompt: "Use $team-implement to execute and verify the implementation phase."
+  short_description: "Run Implement for one artifact directory"
+  default_prompt: "Use $team-implement to run Implement for one artifact directory."
+
+policy:
+  allow_implicit_invocation: false

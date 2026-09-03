@@ -284,7 +284,7 @@ function openaiInterface(files, directory) {
   };
 }
 
-const ARTIFACT = /(?<![A-Za-z0-9_-])(?:docs\/plans\/(?:<[^>]+>|[A-Za-z0-9_${}.-]+)\/)?(?:1-task|2-questions|3-prd|4-repos|5-research|6-design|7-structure|8-plan|brief|design-review-<n>|cross-model-notes|cross-model-raw|plan|implementation|implementation-log|verification|ux-capture-manifest|rebase-<n>|pr)\.md/g;
+const ARTIFACT = /(?<![A-Za-z0-9_-])(?:docs\/plans\/(?:<[^>]+>|[A-Za-z0-9_${}.-]+)\/)?(?:1-task|2-questions|3-prd|4-repos|5-research|6-design|7-structure|8-plan|brief|design-review-<n>|cross-model-notes|cross-model-raw|plan|9-implementation|implementation-log|verification|ux-capture-manifest|rebase-<n>|10-pr)\.md/g;
 const ARTIFACT_INPUT = /\b(?:read(?:s|ing)?|consum(?:e|es|ed|ing)|requir(?:e|es|ed|ing)|load(?:s|ed|ing)?|inspect(?:s|ed|ing)?|match(?:es|ed|ing)?|use(?:s|d|ing)?|contain(?:s|ed|ing)?|reference(?:s|d|ing)?)\b|\b(?:from|given|beside|alongside)\b|\b(?:dispatch|call|invoke)(?:s|ed|ing)?\b[^.!?;:]{0,100}\bwith\b|\bbefore\b[^.!?;:]{0,100}\bverif(?:y|ies|ied|ying)\b/gi;
 const ARTIFACT_OUTPUT = /\b(?:write|create|update|append|produce|emit|persist|record|draft|replace|modify|overwrite|revise)(?:s|d|ing)?\b|\bverif(?:y|ies|ied|ying)\b|\bcombin(?:e|es|ed|ing)\b(?=[^.!?;:]{0,120}\binto\b)/gi;
 

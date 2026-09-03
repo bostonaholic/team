@@ -182,16 +182,16 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 
 ### Phase 1: Worktree
 
-**Action:** orchestrator-emit (the leading phase) **Predecessor:** none.
-The description arrives in ``.
+**Module:** `team-worktree` (the leading phase) **Predecessor:** none.
+The coordinator passes only the explicit planned artifact directory.
 
-Before QUESTION, the orchestrator creates the home worktree on branch
-`<id>` off `origin/HEAD` using Claude Code's native worktree support, and
-authors `docs/plans/<id>/` **inside** it. Because the artifact directory
-is born in the worktree, no copy is ever needed and the home checkout's
-`git status` stays clean for the whole run. The orchestrator computes the
-worktree's absolute path once and threads it into every downstream
-dispatch (the main session does not `cd`).
+Before QUESTION, the WORKTREE module creates the home worktree on branch
+`<id>` off `origin/HEAD` and returns the canonical artifact path inside it.
+The coordinator then authors `docs/plans/<id>/1-task.md` at that path. Because
+the artifact directory is born at its execution path, no artifact copy is ever
+needed. Successful isolation keeps the home checkout's `git status` clean for
+the whole run. The orchestrator computes the execution path once and threads
+it into every downstream dispatch (the main session does not `cd`).
 
 **Single-repo (default):** `4-repos.md` is absent. One home worktree at
 `<repo>/.claude/worktrees/<id>`.
@@ -216,9 +216,10 @@ repos' worktrees do not duplicate the artifacts. See
 `skills/worktree-isolation/SKILL.md` for full topology.
 
 **Fallback:** if home-worktree creation fails (shallow clone, certain CI
-systems, permissions), the orchestrator reports it and falls back to
-in-place for the entire run: `docs/plans/<id>/` lives at the home-repo
-root and the threaded path is the home-repo root.
+systems, permissions), the orchestrator reports it and uses
+`<home-repo>/docs/plans/<id>/` in place. Secondary repositories still attempt
+their own worktrees and fall back independently. Once that artifact directory
+exists, retries retain it as the home instead of creating a second empty home.
 
 ### Phase 2: Question
 

@@ -29,8 +29,13 @@ const REPO_ROOT = join(import.meta.dir, "..");
 const CATALOG = join(REPO_ROOT, "docs", "skills.md");
 
 const METHODOLOGY_SECTION = "## Methodology skills";
+const INTERNAL_SECTION = "## Internal phase modules";
 // Every other section that catalogues a skill a user can type.
-const COMMAND_SECTIONS = ["## Entry-point skills", "## Standalone utilities"];
+const COMMAND_SECTIONS = [
+  "## Coordinator entry point",
+  "## Other entry points",
+  "## Standalone utilities",
+];
 
 type Entry = { name: string; section: string };
 
@@ -123,27 +128,23 @@ function takesArguments(name: string): boolean {
   return /^argument-hint:/m.test(frontmatter(read(path)));
 }
 
-const KNOWN_SECTIONS = [METHODOLOGY_SECTION, ...COMMAND_SECTIONS];
+const KNOWN_SECTIONS = [METHODOLOGY_SECTION, INTERNAL_SECTION, ...COMMAND_SECTIONS];
 
 // The four offender rules, factored so the planted-positive test can run each
 // one against synthetic input instead of trusting that it fired on real data.
 
 /**
- * Skills whose three flavor classifiers disagree. Catalog section,
- * `user-invocable: false`, and `argument-hint` are three claims about one
- * thing — who may reach the skill — so a methodology skill is catalogued as
- * one, hides from the slash menu, and takes no arguments, and a command is the
- * exact mirror.
+ * Skills whose classifiers disagree. Methodologies are hidden and argumentless;
+ * internal phase modules are hidden but require an artifact argument; commands
+ * are visible and take arguments.
  */
 function classifierDisagreements(entries: Entry[]): string[] {
   return entries
     .filter((entry) => KNOWN_SECTIONS.includes(entry.section))
     .filter(
       (entry) =>
-        (entry.section === METHODOLOGY_SECTION) !== isModelOnly(entry.name) ||
-        // Equal is the disagreement: every command carries `argument-hint`, which
-        // `docs/architecture.md` uses as the flavor sorter.
-        isModelOnly(entry.name) === takesArguments(entry.name),
+        [METHODOLOGY_SECTION, INTERNAL_SECTION].includes(entry.section) !== isModelOnly(entry.name) ||
+        (entry.section !== METHODOLOGY_SECTION) !== takesArguments(entry.name),
     )
     .map(
       (entry) =>
@@ -192,8 +193,21 @@ describe("skill flavor and catalog completeness", () => {
     expect(entries.length).toBeGreaterThan(60);
   });
 
-  test("the three flavor classifiers agree for every catalogued skill", () => {
+  test("the invocation classifiers agree for every catalogued skill", () => {
     expect(classifierDisagreements(entries)).toEqual([]);
+  });
+
+  test("the eight Team phase modules are the complete internal class", () => {
+    expect(entries.filter((entry) => entry.section === INTERNAL_SECTION).map((entry) => entry.name).sort()).toEqual([
+      "team-design",
+      "team-implement",
+      "team-plan",
+      "team-pr",
+      "team-question",
+      "team-research",
+      "team-structure",
+      "team-worktree",
+    ]);
   });
 
   test("every skill directory on disk has a catalog entry", () => {

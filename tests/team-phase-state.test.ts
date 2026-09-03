@@ -12,10 +12,15 @@ import {
   isTopicId,
   phaseAction,
   resolveArtifactDirectory,
+  worktreeMap,
 } from "../skills/team/scripts/phase-state.mjs";
 
 const roots: string[] = [];
 const SCRIPT = join(process.cwd(), "skills", "team", "scripts", "phase-state.mjs");
+const HOOKS = [
+  join(process.cwd(), "hooks", "session-start-recover.mjs"),
+  join(process.cwd(), "hooks", "pre-compact-anchor.mjs"),
+];
 
 afterEach(() => {
   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
@@ -128,6 +133,46 @@ describe("Team phase-state resolver", () => {
     expect(resolved.stderr).toContain("belongs to another workflow");
   });
 
+  test("recovery hooks advertise only runs with a durable request", () => {
+    const { root, dir, id } = fixture("2026-09-03-recoverable-run");
+
+    for (const hook of HOOKS) {
+      const empty = spawnSync("node", [hook], {
+        input: JSON.stringify({ cwd: root }),
+        encoding: "utf8",
+      });
+      expect(empty.status).toBe(0);
+      expect(empty.stderr).toBe("");
+    }
+
+    writeFileSync(
+      join(dir, "1-task.md"),
+      "---\ntopic: recoverable-run\ndate: 2026-09-03\nphase: task\nticketId: null\n---\n",
+    );
+    for (const hook of HOOKS) {
+      const incomplete = spawnSync("node", [hook], {
+        input: JSON.stringify({ cwd: root }),
+        encoding: "utf8",
+      });
+      expect(incomplete.status).toBe(0);
+      expect(incomplete.stderr).toBe("");
+    }
+
+    artifact(dir, "1-task.md", "task", "## Request\nPreserve this exact request.");
+
+    for (const hook of HOOKS) {
+      const recoverable = spawnSync("node", [hook], {
+        input: JSON.stringify({ cwd: root }),
+        encoding: "utf8",
+      });
+      expect(recoverable.status).toBe(0);
+      const context = JSON.parse(recoverable.stderr).hookSpecificOutput.additionalContext;
+      expect(context).toContain(`Phase: QUESTION | Id: ${id}`);
+      expect(context).toContain(`Artifact directory: ${dir}`);
+      expect(context).toContain(`/team resume ${id}`);
+    }
+  });
+
   test("infers the first incomplete phase in strict order", () => {
     const { dir } = fixture();
     const reviewedHead = "a".repeat(40);
@@ -214,7 +259,7 @@ describe("Team phase-state resolver", () => {
       dir,
       "4-repos.md",
       "repos",
-      `## Worktrees\n- home: ${home}\n- companion: ${companion}`,
+      `## Additional repos\n- **name:** companion\n  **path:** ${companion}\n  **role:** fixture\n\n## Worktrees\n- home: ${home}\n- companion: ${companion}`,
     );
     artifact(
       dir,
@@ -248,6 +293,35 @@ describe("Team phase-state resolver", () => {
     heads.set(companion, "c".repeat(40));
     expect(implementationPassed(dir, (path: string) => heads.get(path) ?? null)).toBe(false);
     expect(inferPhase(dir, (path: string) => heads.get(path) ?? null)).toBe("IMPLEMENT");
+  });
+
+  test("requires exact worktree coverage for declared additional repos", () => {
+    const { dir } = fixture();
+    artifact(dir, "1-task.md", "task");
+    const home = join(dir, "../../..");
+    const companion = join(dir, "../../../companion");
+    const analytics = join(dir, "../../../analytics");
+    const body = (worktrees: string) =>
+      `## Additional repos\n- **name:** companion\n  **path:** ${companion}\n  **role:** fixture\n- **name:** analytics\n  **path:** ${analytics}\n  **role:** fixture\n\n## Worktrees\n${worktrees}`;
+
+    artifact(
+      dir,
+      "4-repos.md",
+      "repos",
+      body(`- home: ${home}\n- companion: ${companion}\n- analytics: ${analytics}`),
+    );
+    expect([...worktreeMap(dir).keys()]).toEqual(["home", "companion", "analytics"]);
+
+    artifact(dir, "4-repos.md", "repos", body(`- home: ${home}\n- companion: ${companion}`));
+    expect(worktreeMap(dir).size).toBe(0);
+
+    artifact(
+      dir,
+      "4-repos.md",
+      "repos",
+      body(`- home: ${home}\n- companion: ${companion}\n- analytics: ${analytics}\n- undeclared: ${join(dir, "../../../undeclared")}`),
+    );
+    expect(worktreeMap(dir).size).toBe(0);
   });
 
   test("malformed multi-repo state never degrades to a home-only pass", () => {

@@ -29,6 +29,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import { read, squash } from "./helpers/text";
+import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = join(import.meta.dir, "..");
 
@@ -79,12 +80,11 @@ describe("regression #208: the /team PR phase never bumps the version", () => {
     });
   }
 
-  // The gate's positive half: the accumulating section is named literally, so
-  // the orchestrator writes the bullet there instead of cutting a dated one.
-  // `## [Unreleased]` is a template string the prompt tells the model to emit,
-  // which docs/testing.md lists as assertable.
-  test("skills/team/SKILL.md names `## [Unreleased]` as the bullet's destination", () => {
-    expect(squash(body(TEAM_SKILL))).toContain("## [Unreleased]");
+  // The PR module owns changelog behavior; the coordinator only dispatches it.
+  test("team-pr names [Unreleased] and team delegates the PR phase", () => {
+    expect(squash(body(TEAM_PR_SKILL))).toContain("[Unreleased]");
+    expect(loadsSkill(body(TEAM_SKILL), "team-pr")).toBe(true);
+    expect(squash(body(TEAM_SKILL))).not.toContain("[Unreleased]");
   });
 });
 

@@ -44,6 +44,23 @@ describe("skill architecture", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
 
+  test("hidden Team phase modules are never advertised as slash commands", () => {
+    expect(
+      grepAbsent([
+        "-R",
+        "-E",
+        "--exclude=CHANGELOG.md",
+        "--exclude-dir=plans",
+        "/team-(worktree|question|research|design|structure|plan|implement|pr)([[:space:]`]|$)",
+        "README.md",
+        "AGENTS.md",
+        "docs",
+        "skills",
+        "agents",
+      ]),
+    ).toBe(true);
+  });
+
   test("code-reviewer references reviewing-code/SKILL.md", () => {
     expect(read(CODE_REVIEWER)).toContain("reviewing-code/SKILL.md");
   });
@@ -194,12 +211,29 @@ describe("simplify orchestration scope fence", () => {
     ).not.toThrow();
   });
 
-  test("pre-compact-anchor reads docs/plans/ (not ~/.team/)", () => {
-    expect(/docs.*plans/.test(read(join(REPO_ROOT, "hooks", "pre-compact-anchor.mjs")))).toBe(true);
+  test("recovery hooks share the phase-state resolver", () => {
+    const importPath = "../skills/team/scripts/phase-state.mjs";
+    expect(read(join(REPO_ROOT, "hooks", "pre-compact-anchor.mjs"))).toContain(importPath);
+    expect(read(join(REPO_ROOT, "hooks", "session-start-recover.mjs"))).toContain(importPath);
+    expect(read(join(REPO_ROOT, "skills", "team", "scripts", "phase-state.mjs"))).toContain(
+      '"docs", "plans"',
+    );
   });
 
-  test("session-start-recover reads docs/plans/ (not ~/.team/)", () => {
-    expect(/docs.*plans/.test(read(join(REPO_ROOT, "hooks", "session-start-recover.mjs")))).toBe(true);
+  test("artifact-frontmatter owns exact artifact resolution", () => {
+    const state = read(join(REPO_ROOT, "skills", "team", "scripts", "phase-state.mjs"));
+    expect(state).toContain("../../artifact-frontmatter/scripts/resolve-topic.mjs");
+    expect(
+      existsSync(
+        join(
+          REPO_ROOT,
+          "skills",
+          "artifact-frontmatter",
+          "scripts",
+          "resolve-topic.mjs",
+        ),
+      ),
+    ).toBe(true);
   });
 
   test("no hook imports homedir from node:os", () => {
@@ -347,12 +381,15 @@ describe("effort tiering", () => {
     expect(offenders).toEqual([]);
   });
 
-  test("methodology skills carry no effort (it would override the loading agent's effort)", () => {
+  test("methodology skills carry no effort; hidden phase modules retain it", () => {
     for (const file of skillFiles()) {
       const fm = frontmatter(read(join(REPO_ROOT, file)));
-      if (/^user-invocable: false$/m.test(fm)) {
+      const hidden = /^user-invocable: false$/m.test(fm);
+      const module = /^argument-hint:/m.test(fm);
+      if (hidden && !module) {
         expect(/^effort:/m.test(fm)).toBe(false);
       }
+      if (hidden && module) expect(fm).toMatch(EFFORT_LEVELS);
     }
   });
 });
@@ -521,64 +558,29 @@ describe("worktree-first pipeline", () => {
     });
   }
 
-  // ---- Slice 4: prose inference tables (2 files) ---------------------------
+  // ---- Durable phase state -------------------------------------------------
   const PROSE_TABLES = [
     join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md"),
     join(REPO_ROOT, "docs", "architecture.md"),
   ];
 
-  // The `8-plan.md` inference row must map to IMPLEMENT. Match the table row that
-  // names `8-plan.md` and assert IMPLEMENT appears on that same row.
-  const PLAN_ROW_IMPLEMENT = /^\|[^\n]*`8-plan\.md`[^\n]*\|[^\n]*IMPLEMENT[^\n]*\|/m;
-  // No `8-plan.md` row may map to WORKTREE anymore.
-  const PLAN_ROW_WORKTREE = /^\|[^\n]*`8-plan\.md`[^\n]*\|[^\n]*WORKTREE[^\n]*\|/m;
-
   for (const file of PROSE_TABLES) {
-    test(`8-plan.md inference row maps to IMPLEMENT in ${file.replace(REPO_ROOT + "/", "")}`, () => {
+    test(`durable completion artifacts appear in ${file.replace(REPO_ROOT + "/", "")}`, () => {
       const text = read(file);
-      expect(text).toMatch(PLAN_ROW_IMPLEMENT);
-      expect(PLAN_ROW_WORKTREE.test(text)).toBe(false);
+      expect(text).toContain("1-task.md");
+      expect(text).toContain("9-implementation.md");
+      expect(text).toContain("10-pr.md");
+      expect(text).not.toContain("≥1 commit on `<id>` since merge-base");
     });
   }
 
-  // A leading WORKTREE row whose signal is "worktree exists" / "no 1-task.md"
-  // maps to WORKTREE. Match a single table row that mentions a worktree-exists
-  // signal and maps to WORKTREE.
-  const LEADING_WORKTREE_ROW = /^\|[^\n]*worktree exists[^\n]*\|[^\n]*WORKTREE[^\n]*\|/im;
-
-  for (const file of PROSE_TABLES) {
-    test(`leading WORKTREE inference row present in ${file.replace(REPO_ROOT + "/", "")}`, () => {
-      expect(read(file)).toMatch(LEADING_WORKTREE_ROW);
-    });
-  }
-
-  // The IMPLEMENT confirmation phrase must be byte-for-byte identical in both
-  // prose tables. The plan pins this verbatim string.
-  const IMPLEMENT_PHRASE = "≥1 commit on `<id>` since merge-base";
-
-  for (const file of PROSE_TABLES) {
-    test(`IMPLEMENT confirmation phrase is verbatim in ${file.replace(REPO_ROOT + "/", "")}`, () => {
-      expect(read(file)).toContain(IMPLEMENT_PHRASE);
-    });
-  }
-
-  // ---- Slice 4: hook shared-region byte-identity --------------------------
-  // Locks the Slice 2 invariant. Extract the shared region from each hook —
-  // from the `const ID_RE` line up to (not including) `async function main(` —
-  // and assert the two extracted substrings are === equal.
-  function sharedRegion(src: string): string {
-    const start = src.indexOf("const ID_RE");
-    const end = src.indexOf("async function main(");
-    if (start < 0 || end < 0 || end <= start) {
-      throw new Error("hook shared-region boundary markers not found");
+  test("hooks delegate inference and recommend exact /team resume", () => {
+    for (const name of ["session-start-recover.mjs", "pre-compact-anchor.mjs"]) {
+      const text = read(join(REPO_ROOT, "hooks", name));
+      expect(text).toContain("../skills/team/scripts/phase-state.mjs");
+      expect(text).toContain("/team resume ${active.id}");
+      expect(text).not.toMatch(/\/team-(?:worktree|question|research|design|structure|plan|implement|pr)/);
     }
-    return src.slice(start, end);
-  }
-
-  test("hooks share a byte-identical inference region", () => {
-    const a = sharedRegion(read(join(REPO_ROOT, "hooks", "session-start-recover.mjs")));
-    const b = sharedRegion(read(join(REPO_ROOT, "hooks", "pre-compact-anchor.mjs")));
-    expect(a).toBe(b);
   });
 
   // ---- Slice 5: registry WORKTREE-first -----------------------------------

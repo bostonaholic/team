@@ -137,7 +137,7 @@ describe("skill audit", () => {
     if (question?.invocation.userInvocable) {
       expect(question.outputs.artifacts).toEqual(expect.arrayContaining(["3-prd.md", "2-questions.md", "4-repos.md"]));
     } else {
-      expect(question?.outputs.artifacts).toEqual(["3-prd.md", "2-questions.md", "4-repos.md"]);
+      expect(question?.outputs.artifacts).toEqual(["2-questions.md", "3-prd.md", "4-repos.md"]);
       expect(question?.outputs.artifacts).not.toContain("1-task.md");
     }
     expect(report.skills.find((entry) => entry.name === "team-research")?.outputs.artifacts).toContain(
@@ -281,8 +281,8 @@ describe("skill audit", () => {
             outputs: ["8-plan.md"],
           },
           "team-pr": {
-            inputs: ["1-task.md", "4-repos.md", "6-design.md", "8-plan.md", "implementation.md", "pr.md"],
-            outputs: ["pr.md"],
+            inputs: ["1-task.md", "10-pr.md", "4-repos.md", "6-design.md", "8-plan.md", "9-implementation.md"],
+            outputs: ["10-pr.md"],
           },
         }
       : {
@@ -369,7 +369,7 @@ describe("skill audit", () => {
         skill(
           "first",
           "argument-hint: \"<input>\"\n",
-          `${duplicate}\n\n${duplicateCode}\n\n${unique}\n\nCall the Skill tool with \`second\` and \`principle-third\`. Read docs/plans/<id>/1-task.md, docs/plans/<id>/3-prd.md, and docs/plans/<id>/4-repos.md. Write docs/plans/<id>/8-plan.md, docs/plans/<id>/implementation.md, and docs/plans/<id>/implementation-log.md. Append docs/plans/<ID>/rebase-<n>.md, run git commit, then require user approval.`,
+          `${duplicate}\n\n${duplicateCode}\n\n${unique}\n\nCall the Skill tool with \`second\` and \`principle-third\`. Read docs/plans/<id>/1-task.md, docs/plans/<id>/3-prd.md, and docs/plans/<id>/4-repos.md. Write docs/plans/<id>/8-plan.md, docs/plans/<id>/9-implementation.md, and docs/plans/<id>/implementation-log.md. Append docs/plans/<ID>/rebase-<n>.md, run git commit, then require user approval.`,
         ),
       );
       writeFileSync(
@@ -406,7 +406,7 @@ describe("skill audit", () => {
       expect(first?.inputs.artifacts).toContain("docs/plans/<id>/3-prd.md");
       expect(first?.inputs.artifacts).toContain("docs/plans/<id>/4-repos.md");
       expect(first?.outputs.artifacts).toContain("docs/plans/<id>/8-plan.md");
-      expect(first?.outputs.artifacts).toContain("docs/plans/<id>/implementation.md");
+      expect(first?.outputs.artifacts).toContain("docs/plans/<id>/9-implementation.md");
       expect(first?.outputs.artifacts).toContain("docs/plans/<id>/implementation-log.md");
       expect(first?.outputs.artifacts).toContain("docs/plans/<ID>/rebase-<n>.md");
       expect(first?.sideEffects).toContain("commit");
@@ -489,9 +489,9 @@ describe("skill audit", () => {
           "directions",
           "description: Given a directory containing docs/plans/<id>/1-task.md, docs/plans/<id>/2-questions.md, and docs/plans/<id>/5-research.md, draft docs/plans/<id>/6-design.md.\n",
           "Dispatch the worker with optional docs/plans/<id>/3-prd.md and docs/plans/<id>/4-repos.md. " +
-            "Write docs/plans/<id>/8-plan.md. Before any write, verify docs/plans/<id>/implementation.md has verdict PASS. " +
+            "Write docs/plans/<id>/8-plan.md. Before any write, verify docs/plans/<id>/9-implementation.md has verdict PASS. " +
             "It writes slices to docs/plans/<id>/7-structure.md and records repo slugs when docs/plans/<id>/4-repos.md exists. " +
-            "If docs/plans/<id>/pr.md lists the current HEAD, return it. Persist docs/plans/<id>/pr.md after completion. " +
+            "If docs/plans/<id>/10-pr.md lists the current HEAD, return it. Persist docs/plans/<id>/10-pr.md after completion. " +
             "Do not write docs/plans/<id>/verification.md.",
         ),
       );
@@ -499,22 +499,22 @@ describe("skill audit", () => {
       const directions = run(fixture).skills.find((entry) => entry.name === "directions");
       expect(directions?.inputs.artifacts).toEqual([
         "docs/plans/<id>/1-task.md",
+        "docs/plans/<id>/10-pr.md",
         "docs/plans/<id>/2-questions.md",
         "docs/plans/<id>/3-prd.md",
         "docs/plans/<id>/4-repos.md",
         "docs/plans/<id>/5-research.md",
-        "docs/plans/<id>/implementation.md",
-        "docs/plans/<id>/pr.md",
+        "docs/plans/<id>/9-implementation.md",
       ]);
       expect(directions?.outputs.artifacts).toEqual([
+        "docs/plans/<id>/10-pr.md",
         "docs/plans/<id>/6-design.md",
         "docs/plans/<id>/7-structure.md",
         "docs/plans/<id>/8-plan.md",
-        "docs/plans/<id>/pr.md",
       ]);
       expect(directions?.artifacts).toContain("docs/plans/<id>/verification.md");
       expect(directions?.inputs.artifacts).not.toContain("docs/plans/<id>/verification.md");
-      expect(directions?.outputs.artifacts).not.toContain("docs/plans/<id>/implementation.md");
+      expect(directions?.outputs.artifacts).not.toContain("docs/plans/<id>/9-implementation.md");
       expect(directions?.outputs.artifacts).not.toContain("docs/plans/<id>/4-repos.md");
       expect(directions?.outputs.artifacts).not.toContain("docs/plans/<id>/verification.md");
     } finally {
@@ -536,13 +536,13 @@ describe("skill audit", () => {
             "- docs/plans/<id>/2-questions.md\n\n" +
             "Writes:\n" +
             "- docs/plans/<id>/8-plan.md\n" +
-            "- docs/plans/<id>/implementation.md\n\n" +
+            "- docs/plans/<id>/9-implementation.md\n\n" +
             "| Phase | Output | Gate |\n" +
             "| --- | --- | --- |\n" +
             "| DESIGN | docs/plans/<id>/6-design.md | REQUEST CHANGES re-drafts |\n" +
             "| STRUCTURE | docs/plans/<id>/7-structure.md | none |\n" +
             "| PLAN | docs/plans/<id>/verification.md | none |\n\n" +
-            "Do not write docs/plans/<id>/pr.md. Read docs/plans/<id>/4-repos.md. " +
+            "Do not write docs/plans/<id>/10-pr.md. Read docs/plans/<id>/4-repos.md. " +
             "Write docs/plans/<id>/5-research.md.",
         ),
       );
@@ -556,14 +556,14 @@ describe("skill audit", () => {
       expect(boundaries?.outputs.artifacts).toEqual([
         "docs/plans/<id>/5-research.md",
         "docs/plans/<id>/8-plan.md",
-        "docs/plans/<id>/implementation.md",
+        "docs/plans/<id>/9-implementation.md",
       ]);
       expect(boundaries?.artifacts).toEqual(
         expect.arrayContaining([
           "docs/plans/<id>/6-design.md",
           "docs/plans/<id>/7-structure.md",
           "docs/plans/<id>/verification.md",
-          "docs/plans/<id>/pr.md",
+          "docs/plans/<id>/10-pr.md",
         ]),
       );
     } finally {

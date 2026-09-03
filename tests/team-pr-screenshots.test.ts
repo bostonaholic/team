@@ -22,10 +22,12 @@ import { loadsSkill } from "./helpers/skill-refs";
 const REPO_ROOT = process.cwd();
 // team-pr is a RUNTIME skill — it lives under skills/ (distributed).
 const TEAM_PR_SKILL = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
+const SCREENSHOT_REFERENCE = join(REPO_ROOT, "skills", "team-pr", "references", "screenshots.md");
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
 function body(): string {
-  return existsSync(TEAM_PR_SKILL) ? read(TEAM_PR_SKILL) : "";
+  if (!existsSync(TEAM_PR_SKILL) || !existsSync(SCREENSHOT_REFERENCE)) return "";
+  return `${read(TEAM_PR_SKILL)}\n${read(SCREENSHOT_REFERENCE)}`;
 }
 // Flatten newlines so multi-line prose can be matched in one regex.
 function flat(text: string): string {

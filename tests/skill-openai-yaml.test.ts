@@ -28,16 +28,16 @@
 //     `Bun.YAML.parse` returns the same value for `"x"` and `x`, so the parse
 //     tree cannot see the spec's style rule at all.
 //
-// And repo-wide: `short_description` is unique across every skill, and the set
-// of skills DECLARING `allow_implicit_invocation: false` equals the set whose
-// frontmatter sets `disable-model-invocation: true` — in BOTH directions, each
-// side rebuilt from disk. Both halves of that declaration check are positive:
-// an empty `policy:` block satisfies neither, because the whole point of the
-// block is the value it carries, not the key that holds it.
+// And repo-wide: `short_description` is unique across every skill. A manifest
+// declares `allow_implicit_invocation: false` exactly when its frontmatter
+// either disables model invocation or identifies an internal phase module
+// (`user-invocable: false` plus `argument-hint`). Both sides are rebuilt from
+// disk; an empty `policy:` block satisfies neither.
 //
-// Sibling: tests/guarded-skill-prose.test.ts pins the same guarded set where it
-// appears in prose. This file pins it where it appears as structured data. The
-// enumeration comes from `skillNames()` (tests/helpers/skill-refs.ts), which
+// Sibling: tests/guarded-skill-prose.test.ts pins the mutation-guarded subset
+// where it appears in prose. This file also covers internal phase modules as
+// structured data. Enumeration comes from `skillNames()`
+// (tests/helpers/skill-refs.ts), which
 // reads `skills/` only — that is what keeps the dev-only `.claude/skills/` out
 // of scope by construction, with no exclusion list to drift.
 //
@@ -180,7 +180,7 @@ type Manifest = {
   mapping: Record<string, unknown> | null;
   parseError: string;
   declaredName: string;
-  disablesModelInvocation: boolean;
+  requiresExplicitInvocation: boolean;
 };
 
 // One record per skill, read once. Every failure value below names the skill,
@@ -191,11 +191,16 @@ function manifests(): Manifest[] {
     const absolute = join(REPO_ROOT, relative);
     const skillFrontmatter = frontmatter(read(join(REPO_ROOT, "skills", skill, "SKILL.md")));
     const declared = /^name:\s*(\S+)\s*$/m.exec(skillFrontmatter);
+    const disablesModelInvocation =
+      /^disable-model-invocation:\s*true\s*$/m.test(skillFrontmatter);
+    const isInternalPhaseModule =
+      /^user-invocable:\s*false\s*$/m.test(skillFrontmatter) &&
+      /^argument-hint:/m.test(skillFrontmatter);
     const base = {
       skill,
       relative,
       declaredName: declared?.[1] ?? "",
-      disablesModelInvocation: /^disable-model-invocation:\s*true\s*$/m.test(skillFrontmatter),
+      requiresExplicitInvocation: disablesModelInvocation || isInternalPhaseModule,
     };
     if (!existsSync(absolute)) {
       return { ...base, exists: false, raw: "", mapping: null, parseError: "" };
@@ -368,21 +373,21 @@ function skillsDeclaringNoImplicitInvocation(): string[] {
   );
 }
 
-function skillsDisablingModelInvocation(): string[] {
-  return MANIFESTS.filter((m) => m.disablesModelInvocation).map((m) => m.skill);
+function skillsRequiringExplicitInvocation(): string[] {
+  return MANIFESTS.filter((m) => m.requiresExplicitInvocation).map((m) => m.skill);
 }
 
-// Guarded skills whose manifest never declares the policy — the safety claim
-// stated in prose but absent from the data Codex reads.
-function guardedWithoutDeclaration(): string[] {
+// Skills whose frontmatter requires explicit invocation but whose Codex
+// manifest omits the corresponding policy.
+function explicitOnlyWithoutDeclaration(): string[] {
   const declaring = skillsDeclaringNoImplicitInvocation();
-  return skillsDisablingModelInvocation().filter((skill) => !declaring.includes(skill));
+  return skillsRequiringExplicitInvocation().filter((skill) => !declaring.includes(skill));
 }
 
 // The other direction: the declaration on a skill that never asked for one.
-function declarationWithoutGuard(): string[] {
-  const guarded = skillsDisablingModelInvocation();
-  return skillsDeclaringNoImplicitInvocation().filter((skill) => !guarded.includes(skill));
+function declarationWithoutExplicitOnlyContract(): string[] {
+  const explicitOnly = skillsRequiringExplicitInvocation();
+  return skillsDeclaringNoImplicitInvocation().filter((skill) => !explicitOnly.includes(skill));
 }
 
 describe("the sweep can see a positive (L2 tripwire)", () => {
@@ -507,15 +512,14 @@ describe("every skill has a valid agents/openai.yaml (L2 tripwire)", () => {
   });
 });
 
-describe("the guarded set and the policy-block set agree in both directions (L2 tripwire)", () => {
-  // Both sides rebuilt from disk, the way tests/guarded-skill-prose.test.ts
-  // does it, so neither side can drift into agreement with a stale constant.
+describe("the explicit-only set and the policy-block set agree in both directions (L2 tripwire)", () => {
+  // Both sides are rebuilt from skill frontmatter and manifests on disk.
 
-  test("every skill disabling model invocation declares allow_implicit_invocation: false", () => {
-    expect(guardedWithoutDeclaration()).toEqual([]);
+  test("every explicit-only skill declares allow_implicit_invocation: false", () => {
+    expect(explicitOnlyWithoutDeclaration()).toEqual([]);
   });
 
-  test("every skill declaring allow_implicit_invocation: false disables model invocation", () => {
-    expect(declarationWithoutGuard()).toEqual([]);
+  test("every skill declaring allow_implicit_invocation: false has an explicit-only contract", () => {
+    expect(declarationWithoutExplicitOnlyContract()).toEqual([]);
   });
 });
