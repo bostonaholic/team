@@ -10,7 +10,11 @@ set -euo pipefail
 # a plugin its own way. Adding a harness means adding `dev-install-<name>` and
 # `dev-uninstall-<name>`, then listing it below.
 # The Claude target also installs clone-local hooks that refresh its versioned
-# cache after merge-based and rebase-based pulls.
+# cache after merge-based and rebase-based pulls. Only Claude needs them: its
+# install path embeds the plugin version, so a pull that bumps plugin.json
+# strands the link, while Codex and Antigravity link a fixed path that resolves
+# through to the checkout whatever a pull changes. That asymmetry is an
+# implementation detail — keep it out of the output the user reads.
 
 HARNESSES=(claude codex antigravity)
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -40,7 +44,7 @@ resolve_pull_hooks_dir() {
 preflight_pull_hooks() {
   local hooks_dir hook_name hook_path
   if [ ! -f "$PULL_HOOK_SOURCE" ] || [ ! -x "$PULL_HOOK_SOURCE" ]; then
-    echo "Warning: Claude pull hook is missing or not executable:" >&2
+    echo "Warning: Team's pull hook is missing or not executable:" >&2
     echo "  ${PULL_HOOK_SOURCE}" >&2
     return 1
   fi
@@ -59,10 +63,12 @@ preflight_pull_hooks() {
 }
 
 report_skipped_pull_hooks() {
-  echo "Skipped the Claude pull hooks (see the warning above)." >&2
-  echo "Every targeted harness installed. To keep the Claude cache fresh, either" >&2
-  echo "re-run 'script/dev-install claude' after each pull, or call it from your" >&2
-  echo "own post-merge and post-rewrite hooks." >&2
+  # Names the command the user actually typed, so the remedy never asks them to
+  # care that Claude is the only harness a pull can strand.
+  echo "Skipped this clone's Git hooks (see the warning above)." >&2
+  echo "Every targeted harness installed. To keep the install current, either" >&2
+  echo "re-run '${INVOCATION}' after each pull, or call it from your own" >&2
+  echo "post-merge and post-rewrite hooks." >&2
 }
 
 install_pull_hooks() {
@@ -87,6 +93,8 @@ install_pull_hooks() {
     echo "Installed Git hook: ${hook_path}"
   done
 }
+
+INVOCATION="script/dev-install${1:+ $1}"
 
 case "${1:-}" in
   "")

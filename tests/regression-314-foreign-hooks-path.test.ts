@@ -133,6 +133,12 @@ describe("dev install: an unownable hooks surface never blocks the install (#314
     expect(result.output).toContain("outside this clone");
     expect(result.output).toContain(foreignHooks);
     expect(result.output).toContain("Skipped");
+    // The remedy echoes the command the user typed. Which harness a pull can
+    // strand is an implementation detail, so no harness name reaches the user.
+    expect(result.output).toContain("re-run 'script/dev-install' after each");
+    for (const harness of HARNESSES) {
+      expect(result.output.toLowerCase()).not.toContain(harness);
+    }
   });
 
   test("an existing unmanaged hook is preserved and still installs every harness", () => {
