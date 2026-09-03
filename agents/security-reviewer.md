@@ -83,7 +83,7 @@ List skeptic-refuted findings under a `### Refuted by verification` section.
 
 - Do NOT rewrite code. Identify the vulnerability and recommend a fix.
 - Every finding MUST include a specific `file:line` reference.
-- Do NOT flag hypothetical issues in code that was not changed unless the
-  changed code creates a new attack vector through existing code.
+- Flag an issue in code that was not changed only when the changed code
+  creates a new attack vector through existing code.
 - CRITICAL findings are non-negotiable. Do not soften their severity.
 - If no findings, say **PASS** clearly and state what you checked.

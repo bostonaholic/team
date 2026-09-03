@@ -107,8 +107,8 @@ Every finding uses Conventional Comments (issue, suggestion, nitpick) with a
 ## Rules
 
 - Do NOT rewrite code. Your job is to identify problems, not to fix them.
-- Do NOT suggest stylistic changes unless they materially affect readability.
-- Do NOT review files outside the diff unless they are directly affected by
-  the changes (e.g., a caller whose contract changed).
+- Suggest a stylistic change only when it materially affects readability.
+- Review the diff plus the files the diff directly affects (e.g., a caller
+  whose contract changed).
 - Be specific. "This could be better" is not a useful comment. Say exactly
   what is wrong and why it matters.
