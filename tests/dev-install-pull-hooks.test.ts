@@ -34,13 +34,25 @@ type Fixture = {
   home: string;
 };
 
+// Neutralize the developer's own Git config. Two reasons: a global commit hook
+// manager costs ~0.9s per fixture commit, which alone times this suite out; and
+// a global `core.hooksPath` would decide the very condition under test.
+const HERMETIC_GIT = {
+  GIT_CONFIG_GLOBAL: "/dev/null",
+  GIT_CONFIG_SYSTEM: "/dev/null",
+} as const;
+
 function run(
   cwd: string,
   command: string,
   args: string[],
   env: NodeJS.ProcessEnv = process.env,
 ) {
-  const result = spawnSync(command, args, { cwd, encoding: "utf8", env });
+  const result = spawnSync(command, args, {
+    cwd,
+    encoding: "utf8",
+    env: { ...env, ...HERMETIC_GIT },
+  });
   return {
     status: result.status ?? -1,
     output: `${result.stdout ?? ""}${result.stderr ?? ""}${result.error?.message ?? ""}`,
