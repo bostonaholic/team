@@ -1,13 +1,35 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Dev uninstall, across the harnesses Team supports. Mirrors script/dev-install.
+# Dev uninstall, across the harnesses Team supports. Mirrors script/dev-install,
+# including removal of the clone-local hooks installed for Claude.
 #
 #   script/dev-uninstall          every harness
 #   script/dev-uninstall codex    just that one
 
 HARNESSES=(claude codex antigravity)
 HERE="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(dirname "$HERE")"
+HOOK_MARKER="# Managed by Team dev install."
+
+remove_pull_hooks() {
+  local common_dir hooks_dir hook_name hook_path
+  common_dir=$(git -C "$PLUGIN_ROOT" rev-parse --path-format=absolute --git-common-dir) || {
+    echo "Error: cannot resolve this checkout's common Git directory." >&2
+    return 1
+  }
+  hooks_dir="${common_dir}/hooks"
+
+  for hook_name in post-merge post-rewrite; do
+    hook_path="${hooks_dir}/${hook_name}"
+    if [ -f "$hook_path" ] && [ ! -L "$hook_path" ] && grep -qxF "$HOOK_MARKER" "$hook_path"; then
+      rm "$hook_path"
+      echo "Removed Git hook: ${hook_path}"
+    elif [ -e "$hook_path" ] || [ -L "$hook_path" ]; then
+      echo "Preserved non-Team Git hook: ${hook_path}"
+    fi
+  done
+}
 
 case "${1:-}" in
   "")
@@ -24,6 +46,14 @@ case "${1:-}" in
     ;;
 esac
 
+CLAUDE_TARGETED=false
+for harness in "${targets[@]}"; do
+  if [ "$harness" = "claude" ]; then
+    CLAUDE_TARGETED=true
+    break
+  fi
+done
+
 failed=()
 for harness in "${targets[@]}"; do
   # Keep going: a harness that is already absent must not block the rest.
@@ -36,4 +66,8 @@ done
 if [ ${#failed[@]} -gt 0 ]; then
   echo "Error: uninstall failed for: ${failed[*]}" >&2
   exit 1
+fi
+
+if [ "$CLAUDE_TARGETED" = true ]; then
+  remove_pull_hooks
 fi

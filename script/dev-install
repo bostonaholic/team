@@ -9,9 +9,84 @@ set -euo pipefail
 # Each harness has its own script beside this one, because each host installs
 # a plugin its own way. Adding a harness means adding `dev-install-<name>` and
 # `dev-uninstall-<name>`, then listing it below.
+# The Claude target also installs clone-local hooks that refresh its versioned
+# cache after merge-based and rebase-based pulls.
 
 HARNESSES=(claude codex antigravity)
 HERE="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(dirname "$HERE")"
+HOOK_MARKER="# Managed by Team dev install."
+
+resolve_pull_hooks_dir() {
+  local common_dir hooks_dir
+  common_dir=$(git -C "$PLUGIN_ROOT" rev-parse --path-format=absolute --git-common-dir) || {
+    echo "Error: cannot resolve this checkout's common Git directory." >&2
+    return 1
+  }
+  hooks_dir=$(git -C "$PLUGIN_ROOT" rev-parse --path-format=absolute --git-path hooks) || {
+    echo "Error: cannot resolve this checkout's Git hooks directory." >&2
+    return 1
+  }
+  if [ "$hooks_dir" != "${common_dir}/hooks" ]; then
+    echo "Error: the active Git hooks path is outside this clone:" >&2
+    echo "  ${hooks_dir}" >&2
+    echo "Preserving it. Add 'script/dev-install claude' to its pull hooks manually." >&2
+    return 1
+  fi
+  printf '%s\n' "$hooks_dir"
+}
+
+preflight_pull_hooks() {
+  local hooks_dir hook_name hook_path
+  hooks_dir=$(resolve_pull_hooks_dir) || return 1
+
+  # Check both destinations before writing either one.
+  for hook_name in post-merge post-rewrite; do
+    hook_path="${hooks_dir}/${hook_name}"
+    if { [ -e "$hook_path" ] || [ -L "$hook_path" ]; } &&
+      { [ -L "$hook_path" ] || [ ! -f "$hook_path" ] || ! grep -qxF "$HOOK_MARKER" "$hook_path"; }; then
+      echo "Error: ${hook_path} exists and is not managed by Team." >&2
+      echo "Preserving it. Add 'script/dev-install claude' to that hook manually." >&2
+      return 1
+    fi
+  done
+}
+
+install_pull_hooks() {
+  local hooks_dir hook_name hook_path temp_path
+  preflight_pull_hooks
+  hooks_dir=$(resolve_pull_hooks_dir)
+
+  mkdir -p "$hooks_dir"
+  for hook_name in post-merge post-rewrite; do
+    hook_path="${hooks_dir}/${hook_name}"
+    temp_path=$(mktemp "${hooks_dir}/.team-${hook_name}.XXXXXX")
+    # These variables belong to the generated hook, not this installer.
+    # shellcheck disable=SC2016
+    printf '%s\n' \
+      '#!/usr/bin/env bash' \
+      'set -euo pipefail' \
+      '' \
+      '# Managed by Team dev install.' \
+      '# Re-run the Claude installer after merge pulls and rebase pulls.' \
+      '[ "${TEAM_DEV_INSTALL_HOOK_RUNNING:-}" != "1" ] || exit 0' \
+      'HOOK_NAME="${0##*/}"' \
+      '[ "$HOOK_NAME" != "post-rewrite" ] || [ "${1:-}" = "rebase" ] || exit 0' \
+      'ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || {' \
+      '  echo "Error: Team pull hook cannot resolve the checkout root." >&2' \
+      '  exit 1' \
+      '}' \
+      '[ -x "$ROOT/script/dev-install" ] || {' \
+      '  echo "Error: Team pull hook cannot run $ROOT/script/dev-install." >&2' \
+      '  exit 1' \
+      '}' \
+      'TEAM_DEV_INSTALL_HOOK_RUNNING=1 "$ROOT/script/dev-install" claude' \
+      >"$temp_path"
+    chmod 0755 "$temp_path"
+    mv "$temp_path" "$hook_path"
+    echo "Installed Git hook: ${hook_path}"
+  done
+}
 
 case "${1:-}" in
   "")
@@ -28,6 +103,17 @@ case "${1:-}" in
     ;;
 esac
 
+CLAUDE_TARGETED=false
+for harness in "${targets[@]}"; do
+  if [ "$harness" = "claude" ]; then
+    CLAUDE_TARGETED=true
+    break
+  fi
+done
+if [ "$CLAUDE_TARGETED" = true ]; then
+  preflight_pull_hooks
+fi
+
 failed=()
 for harness in "${targets[@]}"; do
   # One harness failing must not strand the others — report at the end.
@@ -40,4 +126,8 @@ done
 if [ ${#failed[@]} -gt 0 ]; then
   echo "Error: install failed for: ${failed[*]}" >&2
   exit 1
+fi
+
+if [ "$CLAUDE_TARGETED" = true ]; then
+  install_pull_hooks
 fi
