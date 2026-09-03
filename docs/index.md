@@ -128,16 +128,6 @@ budgets its skill catalog, so it shortens the longest descriptions; the skills
 still work. The `/team-*` pipeline commands load but cannot dispatch Claude
 Code agents, so they will not run the pipeline. The standalone utilities do.
 
-> **Three skills stay user-only, through this host's own key.**
-> `team:pr-watch-as-reviewer` casts an approval that can transitively merge a
-> PR, `team:pr-rebase` force-pushes a rewritten branch over published history,
-> and `team:reflect` rewrites skill files and files public issues. Codex does
-> not read `disable-model-invocation`, so all three declare
-> `policy.allow_implicit_invocation: false` in their `agents/openai.yaml`.
-> Codex will not start a skill carrying that key on its own; you invoke it
-> explicitly with `$team:pr-rebase`. See
-> [Optional metadata](https://learn.chatgpt.com/docs/build-skills).
-
 ### Antigravity CLI
 
 ```bash
@@ -149,9 +139,7 @@ so it installs as a native Antigravity plugin — every skill and every agent
 installs with it. `agy plugin uninstall team` removes it.
 
 Skills arrive under **bare names** — ask for `shipit`, not `team:shipit`. The
-install copies the checkout, so upgrading means installing again. This host
-reads `disable-model-invocation` directly, so the three user-only skills need
-no host-specific declaration the way they do on Codex.
+install copies the checkout, so upgrading means installing again.
 
 Developing Team itself? The install copies, so link your checkout instead:
 

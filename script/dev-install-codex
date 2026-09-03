@@ -46,20 +46,9 @@ if command -v codex >/dev/null 2>&1; then
   done <<<"$plugin_list"
 fi
 
-# Which key guards the three user-only skills here. Printed on BOTH exit
-# paths — the already-linked path below returns 0 before the tail ever runs,
-# so a re-install would otherwise silently drop it.
-print_invocation_notice() {
-  echo "  Note: pr-watch-as-reviewer, pr-rebase, and reflect stay user-only here."
-  echo "        Codex does not read disable-model-invocation, so all three declare"
-  echo "        allow_implicit_invocation: false in their agents/openai.yaml, which"
-  echo "        keeps Codex from starting them implicitly. Invoke them explicitly."
-}
-
 # Already linked — nothing to do
 if [ -L "$TARGET" ] && [ "$(readlink "$TARGET")" = "$SKILLS_SRC" ]; then
   echo "Team skills already installed for Codex (dev)."
-  print_invocation_notice
   exit 0
 fi
 
@@ -77,7 +66,6 @@ echo
 mkdir -p "$(dirname "$TARGET")"
 ln -sfn "$SKILLS_SRC" "$TARGET"
 echo "  Linked: ${TARGET} → ${SKILLS_SRC}"
-print_invocation_notice
 
 echo
 echo "Done. Codex loads the skills at the next thread start."

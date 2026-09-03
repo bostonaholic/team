@@ -104,36 +104,6 @@ describe("dev install: codex harness", () => {
     expect(readlinkSync(teamLink(home))).toBe(join(REPO_ROOT, "skills"));
   });
 
-  test("install announces which key keeps the three skills user-only", () => {
-    // All three user-only skills install like any other skill here, so the run
-    // has to name them and name the key that guards them on this host: Codex
-    // does not read disable-model-invocation, so the guard rests on
-    // allow_implicit_invocation in agents/openai.yaml. Identifiers only,
-    // never wording.
-    const { output } = run(INSTALL, newHome());
-    expect(output).toContain("pr-watch-as-reviewer");
-    expect(output).toContain("pr-rebase");
-    expect(output).toContain("reflect");
-    expect(output).toContain("disable-model-invocation");
-    expect(output).toContain("allow_implicit_invocation");
-  });
-
-  test("a re-install still announces the guard on the already-linked path", () => {
-    // The already-linked path returns 0 before the tail ever prints, so the
-    // notice has to be reachable from both exits. A developer re-running the
-    // installer is the likeliest reader of a note they skimmed the first
-    // time; without this, that run says only "already installed".
-    const home = newHome();
-    expect(run(INSTALL, home).status).toBe(0);
-
-    const { output } = run(INSTALL, home);
-
-    expect(output).toContain("pr-watch-as-reviewer");
-    expect(output).toContain("pr-rebase");
-    expect(output).toContain("reflect");
-    expect(output).toContain("allow_implicit_invocation");
-  });
-
   // Stacking the dev symlink on a native plugin install makes Codex find the
   // same skills under two roots and render every one twice — a doubled
   // catalog, worse truncation, and an ambiguous source. The guard reads the
