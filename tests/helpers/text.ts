@@ -60,6 +60,13 @@ export function userInvocableSkillFiles(repoRoot: string): string[] {
     .sort();
 }
 
+// Everything from the first whitespace-preceded `#` onward. Callers apply it
+// only where YAML treats that `#` as a comment opener.
+function stripInlineComment(text: string): string {
+  const at = text.search(/\s#/);
+  return at === -1 ? text : text.slice(0, at);
+}
+
 // Extract the description field's text only from a frontmatter slice,
 // handling both YAML styles in use: single-line scalar
 // (`description: <text>`) and block scalar (`description: |` followed by
@@ -70,7 +77,15 @@ export function descriptionText(fm: string): string {
   const lines = fm.split("\n");
   const start = lines.findIndex((line) => line.startsWith("description:"));
   if (start === -1) return "";
-  const inline = (lines[start] ?? "").slice("description:".length).trim();
+  const raw = (lines[start] ?? "").slice("description:".length);
+  const trimmed = raw.trim();
+  const opener = trimmed[0];
+  const isQuoted = opener === '"' || opener === "'";
+  // Outside quotes, a `#` preceded by whitespace opens a YAML comment and the
+  // value ends there. Reading past it would let a guard the host's parser
+  // discards satisfy a description check. Inside quotes the `#` is content,
+  // and `foo#bar` has no preceding whitespace, so both are kept.
+  const inline = isQuoted ? trimmed : stripInlineComment(raw).trim();
   if (inline !== "" && inline !== "|") {
     // A fully-quoted inline scalar must be unwrapped: returned verbatim,
     // its surrounding quotes would make matchAll treat the whole value as

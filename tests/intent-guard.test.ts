@@ -33,7 +33,14 @@ import {
   GUARD_OPEN,
   carriesGuard,
 } from "./helpers/intent-guard";
-import { descriptionFor, read, squash, userInvocableSkillFiles } from "./helpers/text";
+import {
+  descriptionFor,
+  descriptionText,
+  frontmatter,
+  read,
+  squash,
+  userInvocableSkillFiles,
+} from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 
@@ -171,6 +178,25 @@ describe("the guard sweep can see a positive", () => {
 
     expect(guardOffenders([intact], PLANTED)).toEqual([]);
     expect(guardOffenders([fileLevelCloseDeleted], PLANTED)).toEqual([PLANTED_IN]);
+  });
+
+  test("an in-class guard that sits only in a YAML comment is reported", () => {
+    // The bypass this control exists to close: the bytes are in the file, but
+    // a plain scalar ends at its first whitespace-preceded `#`, so the host's
+    // parser never routes on the guard. The sweep must read what the host
+    // reads, not what the file contains.
+    const commented = [
+      "---",
+      "name: planted-in-class",
+      `description: ${CARRIER} # ${CANONICAL}`,
+      "---",
+      "body",
+    ].join("\n");
+    const entry = {
+      file: PLANTED_IN,
+      description: descriptionText(frontmatter(commented)),
+    };
+    expect(guardOffenders([entry], PLANTED)).toEqual([PLANTED_IN]);
   });
 
   test("a conforming in-class and out-of-class pair is not reported", () => {

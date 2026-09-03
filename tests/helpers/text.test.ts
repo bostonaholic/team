@@ -64,6 +64,35 @@ describe("descriptionText — the description value, whatever its scalar style",
     );
   });
 
+  test("drops a trailing comment on a plain scalar", () => {
+    // Whitespace then `#` opens a YAML comment, so the host's parser never
+    // sees the rest. Reading it would let text the host discards satisfy a
+    // description check.
+    expect(descriptionText("description: Visible. # Hidden from the host.")).toBe("Visible.");
+  });
+
+  test("keeps a `#` that no whitespace precedes on a plain scalar", () => {
+    // `foo#bar` is one plain scalar in YAML, comment indicator and all.
+    expect(descriptionText("description: Tagged as topic#42 here.")).toBe(
+      "Tagged as topic#42 here.",
+    );
+  });
+
+  test("keeps a `#` inside a quoted scalar", () => {
+    expect(descriptionText('description: "Visible. # Still visible."')).toBe(
+      "Visible. # Still visible.",
+    );
+  });
+
+  test("keeps a `#` inside a block scalar", () => {
+    // `#` is literal content in a `|` block. Stripping there would silently
+    // truncate shipped descriptions that cite a heading such as `## [X.Y.Z]`.
+    const fm = ["description: |", "  Cuts into a", "  `## [X.Y.Z]` section.", "effort: low"].join(
+      "\n",
+    );
+    expect(descriptionText(fm)).toBe("Cuts into a `## [X.Y.Z]` section.");
+  });
+
   test("throws on an unterminated quote", () => {
     expect(() => descriptionText('description: "opens but never closes\n')).toThrow(
       /unsupported description scalar style/,
