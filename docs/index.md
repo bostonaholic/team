@@ -54,8 +54,8 @@ claude plugin install team@team-dev
 ```
 
 The first command registers the checkout as a marketplace; the second installs
-from it. Skills register as slash commands (`/team`, `/shipit`), and agents and
-hooks load with them.
+from it. User-invocable skills register as slash commands (`/team`, `/shipit`),
+and agents and hooks load with them.
 
 For a clone-backed install that updates when `git pull` changes the checkout:
 
@@ -116,6 +116,16 @@ For a focused bug fix that skips the QRSPI ceremony:
 /team-fix Users see stale cache after profile update
 ```
 
+Resume one exact run, optionally stopping after its first incomplete phase:
+
+```bash
+/team resume <id>
+/team resume <id> --only implement
+```
+
+The eight `team-*` phase modules are hidden implementation details. Only
+`/team` chooses an artifact directory or advances the pipeline.
+
 ### Codex CLI
 
 ```bash
@@ -125,8 +135,9 @@ codex plugin add team@team-dev
 
 Skills arrive **namespaced** — ask for `team:shipit`, not `shipit`. Codex
 budgets its skill catalog, so it shortens the longest descriptions; the skills
-still work. The `/team-*` pipeline commands load but cannot dispatch Claude
-Code agents, so they will not run the pipeline. The standalone utilities do.
+still work. The `team:team` pipeline entry point loads but cannot dispatch
+Claude Code agents, so it will not run the pipeline. The standalone utilities
+do.
 
 ### Antigravity CLI
 
@@ -153,6 +164,6 @@ script/dev-uninstall antigravity
 - **[Vision](vision.md)**: the loop-driven end state Team builds toward.
 - **[Ethos](ethos.md)**: the principles that make the autonomous middle trustworthy.
 - **[Architecture](architecture.md)**: full design, artifact frontmatter, phase-inference rules.
-- **[Skills](skills.md)**: all skills, their arguments, consumers, and behaviors.
+- **[Skills](skills.md)**: concise catalog, invocation classes, and required consumers.
 - **[Cross-host portability](cross-host-portability.md)**: the capability matrix for Codex CLI, the Antigravity CLI host facts, and the chosen portability strategy.
 - **[GitHub repository](https://github.com/bostonaholic/team)**: source, agents, skills.

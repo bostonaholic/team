@@ -20,8 +20,8 @@ claude plugin install team@team-dev
 ```
 
 The first command registers the checkout as a marketplace; the second installs
-from it. Skills register as slash commands (`/team`, `/shipit`), and agents and
-hooks load with them.
+from it. User-invocable skills register as slash commands (`/team`, `/shipit`),
+and agents and hooks load with them.
 
 For a clone-backed install that updates when `git pull` changes the checkout:
 
@@ -82,8 +82,8 @@ codex plugin add team@team-dev
 
 Skills arrive **namespaced** — ask for `team:shipit`, not `shipit`. Codex budgets
 its skill catalog, so it shortens the longest descriptions; the skills still
-work. The `/team-*` pipeline commands load but cannot dispatch Claude Code
-agents, so they will not run the pipeline. The standalone utilities do.
+work. The `team:team` pipeline entry point loads but cannot dispatch Claude
+Code agents, so it will not run the pipeline. The standalone utilities do.
 
 </details>
 
@@ -122,25 +122,15 @@ For well-understood bugs, skip the QRSPI ceremony:
 /team-fix Users see stale cache after profile update
 ```
 
-Or run individual phases:
+Resume one exact run, optionally stopping after its first incomplete phase:
 
 ```
-/team-worktree docs/plans/<id>/
-/team-question Add rate limiting middleware to all API endpoints
-/team-research docs/plans/<id>/
-/team-design docs/plans/<id>/
-/team-structure docs/plans/<id>/
-/team-plan docs/plans/<id>/
-/team-implement docs/plans/<id>/
-/team-pr docs/plans/<id>/
+/team resume <id>
+/team resume <id> --only implement
 ```
 
-In a full `/team` run the home worktree is created automatically at the leading WORKTREE phase.
-Invoked standalone, `/team-worktree` consumes `8-plan.md` (post-PLAN). Use it for manual recovery
-or multi-repo setup.
-
-Each downstream command takes the artifact directory `docs/plans/<id>/` as
-its argument.
+The eight `team-*` phase modules are hidden implementation details. Only
+`/team` chooses an artifact directory or advances the pipeline.
 
 ## Design philosophy
 
@@ -153,13 +143,13 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 ```
 
 - **Worktree.** Orchestrator prepares an isolated git worktree first and authors `docs/plans/<id>/` inside it, keeping the home checkout's `git status` clean for the whole run.
-- **Question.** Decompose intent into a full task record (`1-task.md`) and neutral research questions (`2-questions.md`). The questioner is the only agent that ever sees the user's original description.
+- **Question.** Consume the persisted task record (`1-task.md`) and write neutral research questions (`2-questions.md`). The questioner is the only agent that sees the original description after WORKTREE.
 - **Research** *(isolated)*. Parallel agents (file-finder + researcher) consume only `2-questions.md`. They never see the task. This structurally prevents opinion-bias in research findings.
 - **Design** *(design review)*. Design author drafts a ~200-line alignment doc, resolving its own open questions as recorded assumptions. An adversarial design review gates advancement.
 - **Structure.** Break the design into vertical slices with verification checkpoints. Produced autonomously. Advances to Plan with no gate.
 - **Plan.** Tactical implementation plan derived from the structure. Read by the implementer. Not gated.
-- **Implement.** Test-first, where test-architect writes failing tests and a mechanical gate checks them and the project's static checks. Then slice execution, where implementer commits each vertical slice atomically. Then adversarial verification, with 5 parallel reviewers and a typed failure-class retry loop that runs until no Blocking or Major finding remains.
-- **PR.** Update changelog, commit, open pull request with inline UI screenshots when applicable, surface the tracking item.
+- **Implement.** Test-first, slice execution, then 5-reviewer verification. A passing `9-implementation.md` records each reviewed HEAD. This phase never opens a PR.
+- **PR.** Require the current implementation record, update changelog, commit, open draft pull requests, then write `10-pr.md` with their URLs and every worktree's final HEAD.
 
 ## Architecture
 
@@ -168,7 +158,7 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 ## Components
 
 - **13 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
-- **Entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch-as-author`, `/pr-watch-as-reviewer`, `/groom-backlog`, `/pr-cleanup`, `/pr-verify`, `/pr-rebase`, `/reflect`, `/why`, and `/how` utilities, and shared methodologies
+- **Four skill classes** in `skills/`: entry points, hidden phase modules, standalone utilities, and methodologies
 - **3 hooks** in `hooks/`: `docs/plans/`-aware compaction resilience and plugin-file validation
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
 - **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.

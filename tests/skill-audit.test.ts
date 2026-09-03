@@ -182,6 +182,13 @@ describe("skill audit", () => {
     expect(review).toBeDefined();
     expect(review?.loadedSkills.length).toBeGreaterThan(1);
     expect(review?.transitiveLoadedWords).toBeGreaterThan(0);
+
+    const watch = report.skills.find((entry) => entry.name === "pr-watch-as-author");
+    const triage = report.skills.find((entry) => entry.name === "pr-open-comments");
+    expect(watch?.loadedSkills).not.toContain("pr-open-comments");
+    expect(watch?.readSkills).toEqual(["pr-open-comments"]);
+    expect(watch?.transitiveReadSkills).toContain("pr-open-comments");
+    expect(watch?.transitiveLoadedWords).toBeGreaterThanOrEqual(triage?.totalInstructionWords ?? Infinity);
   });
 
   test("counts safe cross-skill reads and their conditional resources transitively", () => {

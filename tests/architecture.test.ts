@@ -61,6 +61,22 @@ describe("skill architecture", () => {
     ).toBe(true);
   });
 
+  test("skill authoring has no duplicated discovery gate", () => {
+    const guide = read(
+      join(REPO_ROOT, ".claude", "skills", "create-team-skill", "SKILL.md"),
+    );
+    const retired = "check-discovery-consistency.sh";
+    expect(`positive control: ${retired}`).toContain(retired);
+    expect(
+      existsSync(join(REPO_ROOT, ".claude", "scripts", retired)),
+    ).toBe(false);
+    expect(guide).not.toContain(retired);
+    expect(guide).toContain("artifact-frontmatter");
+    expect(guide).toContain(
+      'argument-hint: "<absolute docs/plans/<id>/ directory>"',
+    );
+  });
+
   test("code-reviewer references reviewing-code/SKILL.md", () => {
     expect(read(CODE_REVIEWER)).toContain("reviewing-code/SKILL.md");
   });

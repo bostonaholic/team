@@ -724,13 +724,15 @@ describe("skill and agent wiring (L2)", () => {
     expect(squash(section)).not.toContain("in the background, and wait for the harness");
   });
 
-  test("all three courier consumers point at the vendor-courier block", () => {
-    // The DESIGN module, standalone design review, and code-reviewer each route
-    // vendor runs through couriers; the block itself lives only in the
-    // cross-model skill.
-    for (const path of [TEAM_DESIGN_SKILL, ENG_REVIEW_SKILL, CODE_REVIEWER]) {
-      expect(read(path)).toContain("courier");
+  test("all three consumers delegate vendor execution to cross-model-review", () => {
+    for (const path of [TEAM_DESIGN_SKILL, ENG_REVIEW_SKILL]) {
+      const text = read(path);
+      expect(text).toContain("cross-model-review");
+      expect(text).toMatch(/Design-review\s+pass/i);
     }
+    const reviewer = read(CODE_REVIEWER);
+    expect(reviewer).toContain("skills/cross-model-review/SKILL.md");
+    expect(reviewer).toContain("courier");
   });
 
   test("nested-agents guardrails carry the code-reviewer vendor-courier cap section", () => {
@@ -1030,17 +1032,17 @@ describe("untrusted-output containment rules (L2)", () => {
     expect(flattened).toMatch(/never interpolated/i);
   });
 
-  test("both design-review entrances carry containment pointers", () => {
-    // Drift class: a containment rule stated in one surface and absent in
-    // a sibling. Every entrance that restates the append must carry both
-    // pointers into the shared section.
+  test("both design-review entrances defer containment to the shared owner", () => {
     for (const path of [TEAM_DESIGN_SKILL, ENG_REVIEW_SKILL]) {
       const flattened = squash(read(path));
-      // Guard: an emptied file must fail, not vacuously pass.
       expect(flattened.length).toBeGreaterThan(0);
-      expect(flattened).toContain("backtick run");
-      expect(flattened).toContain("untrusted-content line");
+      expect(flattened).toContain("cross-model-review");
+      expect(flattened).toMatch(/fence|DATA contract/i);
     }
+    const owner = squash(read(SKILL_MD));
+    expect(owner).toContain("backtick run");
+    expect(owner).toContain("Begin with your own line");
+    expect(owner).toContain("untrusted third-party claims");
   });
 });
 
@@ -1100,22 +1102,23 @@ describe("orchestrator contract in skills/team-design/SKILL.md (L2)", () => {
 // ---------------------------------------------------------------------------
 
 describe("eng-design-doc-review standalone pass (L2)", () => {
-  test("eng-design-doc-review execution runs the external pass and writes no artifact", () => {
-    const execution = windowSection(read(ENG_REVIEW_SKILL), /^## Execution/, /^## /);
-    // Guard: a renamed section must fail, not vacuously pass.
-    expect(execution.length).toBeGreaterThan(0);
-    expect(execution).toContain("external-review.mjs");
-    expect(execution).toContain(EXTERNAL_INPUT_HEADING);
-    // A standalone run records nothing: raw vendor text stays in the
-    // invoking session — no notes append, no raw file.
-    expect(squash(execution)).toMatch(/no artifact/i);
+  test("eng-design-doc-review runs the shared external pass and writes no artifact", () => {
+    const procedure = windowSection(read(ENG_REVIEW_SKILL), /^## Procedure/, /^## /);
+    expect(procedure.length).toBeGreaterThan(0);
+    expect(procedure).toContain("cross-model-review");
+    expect(procedure).toMatch(/Design-review\s+pass/i);
+    expect(squash(procedure)).toMatch(/no raw or notes artifact/i);
+    const owner = read(SKILL_MD);
+    expect(owner).toContain("external-review.mjs");
+    expect(owner).toContain(EXTERNAL_INPUT_HEADING);
   });
 
-  test("the completion notice reports unavailable CLIs and names the kill-switch", () => {
+  test("the completion notice reports skips while the shared owner names availability and kill-switch", () => {
     const completion = windowSection(read(ENG_REVIEW_SKILL), /^## Completion/, /^## /);
-    // Guard: a renamed section must fail, not vacuously pass.
     expect(completion.length).toBeGreaterThan(0);
-    expect(completion).toMatch(/unavailable/i);
-    expect(completion).toContain(KILL_SWITCH_VAR);
+    expect(completion).toMatch(/vendor skip/i);
+    const owner = read(SKILL_MD);
+    expect(owner).toMatch(/unavailable/i);
+    expect(owner).toContain(KILL_SWITCH_VAR);
   });
 });

@@ -253,8 +253,7 @@ under `.claude/`. They are not part of the distributed plugin.
 
 ## How it ties to the QRSPI pipeline
 
-A Team run (`/team`, or the individual `/team-*` phases) maps onto the board
-like this:
+A Team run (`/team`, including exact-ID resume) maps onto the board like this:
 
 - **Shaping work, before any run** →
   [`/groom-backlog`](skills.md#groom-backlog) is the one board-touching command
@@ -277,8 +276,8 @@ like this:
   is no board item or the description is free-form, the run continues without
   it. The move never blocks the pipeline. You no longer need to move the card
   by hand before you launch.
-- **Opening the PR** → the PR phase links the PR to the issue. This covers
-  `/team-pr`, the `/team` PR gate, and `/team-fix` Ship. The link is
+- **Opening the PR** → the PR phase links the PR to the issue. This covers the
+  hidden `team-pr` module dispatched by `/team`, and `/team-fix`. The link is
   `Closes #<N>` as the final line of the PR body, so the issue closes on merge.
   In a multi-repo run, only the home repo's PR carries the closing keyword.
   Companion PRs carry a non-closing qualified reference, either

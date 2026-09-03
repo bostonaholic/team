@@ -1,131 +1,201 @@
-// tests/pr-open-comments-skill.test.ts
-//
-// L2 tripwire (free, deterministic): fences the `pr-open-comments` RUNTIME
-// skill (skills/pr-open-comments/SKILL.md) — a standalone review-triage
-// utility distributed to Team's users.
-// It fetches every unresolved review thread on a PR through GraphQL, verifies
-// each comment against the current code (trust but verify), rates
-// confidence in one recommendation per item after verification, and
-// presents a globally numbered punch list for everything below the bar.
-// Default mode auto-runs the full Authorized Execution path (apply → push
-// → reply → resolve) for items above 90% confidence that pass every
-// hard rule; carve-outs are absolute at any confidence; explicit user
-// authorization applies the whole batch regardless of confidence.
-//
-// Every assertion is guarded so a not-yet-existing skill file yields a failed
-// expect(), never an uncaught ENOENT — the mechanical gate rejects crashes,
-// not clean assertion failures.
-
 import { describe, expect, test } from "bun:test";
+import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
+import {
+  decideTriage,
+  parseInvocation,
+  parseTarget,
+  reviewThreadCommentsQuery,
+  reviewThreadsQuery,
+  verifyHead,
+} from "../skills/pr-open-comments/scripts/triage.mjs";
 
-const REPO_ROOT = process.cwd();
-// pr-open-comments is a RUNTIME skill — under skills/ (distributed), not .claude/.
-const SKILL = join(REPO_ROOT, "skills", "pr-open-comments", "SKILL.md");
+const ROOT = process.cwd();
+const PATH = join(ROOT, "skills", "pr-open-comments", "SKILL.md");
+const REPORT = join(ROOT, "skills", "pr-open-comments", "references", "report-template.md");
+const TRIAGE = join(ROOT, "skills", "pr-open-comments", "scripts", "triage.mjs");
+const body = () => (existsSync(PATH) ? read(PATH) : "");
 
-// Defensive read: missing file → "" so content assertions FAIL (not throw).
-function body(): string {
-  return existsSync(SKILL) ? read(SKILL) : "";
-}
-function fm(): string {
-  return existsSync(SKILL) ? frontmatter(read(SKILL)) : "";
-}
-// Flatten newlines so multi-line prose can be matched in one regex.
-function flat(text: string): string {
-  return text.replace(/\n/g, " ");
-}
-// The Authorized Execution section, or "" when absent — ordering assertions
-// against "" fail cleanly (every index is -1).
-function authorizedSection(): string {
-  const text = body();
-  const start = text.search(/authorized execution/i);
-  return start >= 0 ? text.slice(start) : "";
-}
-
-describe("pr-open-comments skill: runtime standalone utility frontmatter", () => {
-  test("skill file lives under runtime skills/ (distributed)", () => {
-    expect(existsSync(SKILL)).toBe(true);
+describe("pr-open-comments public contract", () => {
+  test("keeps invocation, arguments, triggers, and push-intent guard", () => {
+    const fm = frontmatter(body());
+    expect(fm).toMatch(/^name:\s*pr-open-comments$/m);
+    expect(fm).toMatch(/^effort:\s*high$/m);
+    expect(fm).toMatch(/^argument-hint:\s*"<pr-number-or-url>"$/m);
+    expect(fm).toMatch(/^disable-model-invocation:\s*true$/m);
+    for (const trigger of ["address PR comments", "triage PR feedback", "handle the comments", "unresolved review comments", "/pr-open-comments"]) {
+      expect(fm).toContain(trigger);
+    }
+    expect(fm.replace(/\s+/g, " ")).toMatch(/Invoke ONLY on stated triage intent/i);
   });
 
-  test("frontmatter declares name: pr-open-comments", () => {
-    expect(/^name:\s*pr-open-comments\s*$/m.test(fm())).toBe(true);
+  test("fetches every unresolved thread from GraphQL", () => {
+    const query = reviewThreadsQuery();
+    expect(query).toContain("reviewThreads(first: 100, after: $endCursor)");
+    expect(query).toContain("isResolved");
+    expect(query.match(/pageInfo \{ hasNextPage endCursor \}/g)).toHaveLength(1);
+    expect(query).toContain("pageInfo { hasNextPage }");
+    expect(query).toContain("comments(first: 100)");
+    const commentsQuery = reviewThreadCommentsQuery();
+    expect(commentsQuery).toContain("node(id: $id)");
+    expect(commentsQuery).toContain("comments(first: 100, after: $endCursor)");
+    expect(commentsQuery).toContain("pageInfo { hasNextPage endCursor }");
+    expect(body()).toContain("--paginate --slurp");
+    expect(body()).toContain("comments-query");
   });
 
-  test("description carries the trigger-phrase convention incl. /pr-open-comments", () => {
-    const f = flat(fm());
-    expect(/description:.*Trigger on/i.test(f)).toBe(true);
-    expect(f).toContain("/pr-open-comments");
+  test("verifies before assigning one of four verdicts or confidence", () => {
+    const text = body();
+    const verify = text.indexOf("## 2. Verify and classify");
+    const decide = text.indexOf("## 3. Decide the path");
+    expect(verify).toBeGreaterThan(-1);
+    expect(decide).toBeGreaterThan(verify);
+    for (const verdict of ["STILL RELEVANT", "ALREADY ADDRESSED", "STALE", "INACCURATE"]) {
+      expect(text).toContain(verdict);
+    }
+    expect(text).toMatch(/fails before the fix and passes\s+after/i);
+    expect(text).toMatch(/Delete throwaway tests before staging/i);
   });
 
-  test("frontmatter carries argument-hint (PR number or URL)", () => {
-    expect(/^argument-hint:/m.test(fm())).toBe(true);
+  test("retains the non-overridable safety stops", () => {
+    const text = body();
+    for (const stop of ["security-sensitive", "broader scope", "declined", "clarification", "push failures"]) {
+      expect(text).toContain(stop);
+    }
   });
 
-  test("frontmatter carries effort", () => {
-    expect(/^effort:/m.test(fm())).toBe(true);
+  test("parses only one explicit PR target", () => {
+    expect(parseTarget("17")).toEqual({ target: "17", number: 17, repository: null });
+    expect(parseTarget("https://github.com/acme/widgets/pull/18")).toMatchObject({
+      number: 18,
+      repository: "acme/widgets",
+    });
+    for (const target of ["", "17 extra", "17;touch", "https://example.com/acme/widgets/pull/18"]) {
+      expect(() => parseTarget(target)).toThrow(/one PR number or canonical URL/);
+    }
+    expect(parseInvocation("17")).toEqual({
+      source: "direct",
+      target: "17",
+      number: 17,
+      repository: null,
+      batch: null,
+    });
+    expect(() => parseInvocation('{"source":"pr-watch-as-author"}')).toThrow(/schema or source|canonical/);
+    expect(body()).toContain("scripts/triage.mjs");
+    expect(body()).toContain("scripts/triage.mjs\" invocation");
   });
 
-  test("frontmatter does NOT set disable-model-invocation (model-invocable by design)", () => {
-    const f = fm();
-    // Guard: an empty frontmatter must fail, not vacuously pass the absence check.
-    expect(f.length).toBeGreaterThan(0);
-    expect(/^disable-model-invocation:/m.test(f)).toBe(false);
-  });
-});
-
-describe("pr-open-comments skill: unresolved-thread fetch mechanics", () => {
-  test("fetches reviewThreads via GraphQL filtered on isResolved", () => {
-    const t = body();
-    expect(t).toContain("reviewThreads");
-    expect(t).toContain("isResolved");
-    expect(/graphql/i.test(t)).toBe(true);
-  });
-
-  test("carries the >100-threads pagination note (after: cursors)", () => {
-    const t = flat(body());
-    expect(t).toContain("after:");
-    expect(/100\s*threads|>\s*100/i.test(t)).toBe(true);
-  });
-
-  test("pins the pitfall: never rely on --json reviews for resolution state", () => {
-    const t = flat(body());
-    expect(t).toContain("--json reviews");
-  });
-});
-
-describe("pr-open-comments skill: trust-but-verify verdicts", () => {
-  test("names all four verification verdicts", () => {
-    const t = body();
-    expect(t).toContain("STILL RELEVANT");
-    expect(t).toContain("ALREADY ADDRESSED");
-    expect(t).toContain("STALE");
-    expect(t).toContain("INACCURATE");
-  });
-});
-
-describe("pr-open-comments skill: Authorized Execution path", () => {
-  test("names the resolveReviewThread mutation", () => {
-    expect(body()).toContain("resolveReviewThread");
+  test("computes reactions and the only auto-apply path", () => {
+    const safe = {
+      verdict: "STILL RELEVANT" as const,
+      confidence: 91,
+      authorized: false,
+      bounded: true,
+      safetyStop: null,
+      ownComment: false,
+      viewerReactions: [],
+    };
+    expect(decideTriage(safe)).toEqual({ action: "auto-apply", reaction: "THUMBS_UP" });
+    expect(decideTriage({ ...safe, confidence: 90 })).toMatchObject({ action: "present" });
+    expect(decideTriage({ ...safe, confidence: 1, authorized: true })).toMatchObject({ action: "auto-apply" });
+    expect(decideTriage({ ...safe, safetyStop: "security-sensitive" })).toMatchObject({ action: "stop" });
+    expect(decideTriage({ ...safe, ownComment: true })).toMatchObject({ reaction: null });
+    expect(decideTriage({ ...safe, verdict: "INACCURATE" })).toEqual({
+      action: "present",
+      reaction: "THUMBS_DOWN",
+    });
+    expect(decideTriage({ ...safe, viewerReactions: ["HEART"] })).toMatchObject({
+      reaction: "THUMBS_UP",
+    });
+    expect(decideTriage({ ...safe, viewerReactions: ["THUMBS_UP"] })).toMatchObject({
+      reaction: null,
+    });
+    expect(decideTriage({
+      ...safe,
+      verdict: "INACCURATE",
+      viewerReactions: ["THUMBS_UP"],
+    })).toMatchObject({ reaction: "THUMBS_DOWN" });
   });
 
-  test("the commit stages only the anchored files — never git add -A or commit -a", () => {
-    expect(body()).toContain("git add -A");
+  test("reads decision state only from stdin", () => {
+    const result = spawnSync(process.execPath, [TRIAGE, "decision"], {
+      input: JSON.stringify({
+        verdict: "STALE",
+        confidence: 99,
+        authorized: true,
+        bounded: true,
+        safetyStop: null,
+        ownComment: false,
+        viewerReactions: [],
+        prose: "$(touch should-not-run)",
+      }),
+      encoding: "utf8",
+    });
+    expect(result.status).toBe(0);
+    expect(JSON.parse(result.stdout)).toEqual({ action: "present", reaction: null });
+    expect(result.stderr).toBe("");
   });
-});
 
-describe("pr-open-comments skill: input resolution + fail fast", () => {
-  test("accepts a PR number, a full URL, or nothing (current branch's PR)", () => {
-    expect(body()).toContain("gh pr view");
+  test("binds writes to the resolved head and supports forks", () => {
+    const context = verifyHead({
+      url: "https://github.com/acme/widgets/pull/18",
+      state: "OPEN",
+      baseRefName: "main",
+      headRefName: "feature",
+      headRepository: { nameWithOwner: "contributor/widgets" },
+      currentBranch: "feature",
+      pushRemote: "fork",
+      pushRemoteUrl: "git@github.com:contributor/widgets.git",
+      remotes: [
+        { name: "fork", url: "git@github.com:contributor/widgets.git" },
+        { name: "upstream", url: "https://github.com/acme/widgets.git" },
+      ],
+    });
+    expect(context).toMatchObject({
+      repository: "acme/widgets",
+      pushRemote: "fork",
+      pushUrl: "git@github.com:contributor/widgets.git",
+      baseRemote: "upstream",
+    });
+    const remotes = [
+      { name: "fork", url: "git@github.com:contributor/widgets.git" },
+      { name: "upstream", url: "https://github.com/acme/widgets.git" },
+    ];
+    expect(() => verifyHead({ ...context, state: "OPEN", baseRefName: "main", url: context.url, headRefName: "other", headRepository: "contributor/widgets", currentBranch: "feature", pushRemoteUrl: "git@github.com:contributor/widgets.git", remotes })).toThrow(/current branch/);
+    expect(() => verifyHead({ ...context, state: "CLOSED", baseRefName: "main", url: context.url, headRefName: "feature", headRepository: "contributor/widgets", currentBranch: "feature", pushRemoteUrl: "git@github.com:contributor/widgets.git", remotes })).toThrow(/OPEN/);
+    expect(() => verifyHead({ ...context, state: "OPEN", baseRefName: "-bad", url: context.url, headRefName: "feature", headRepository: "contributor/widgets", currentBranch: "feature", pushRemoteUrl: "git@github.com:contributor/widgets.git", remotes })).toThrow(/base branch/);
+    expect(() => verifyHead({ ...context, state: "OPEN", baseRefName: "main", url: context.url, headRefName: "feature", headRepository: "contributor/widgets", currentBranch: "feature", pushRemoteUrls: ["git@github.com:contributor/widgets.git", "https://github.com/contributor/widgets.git"], remotes })).toThrow(/exactly one/);
+    const text = body();
+    expect(text.indexOf("scripts/triage.mjs\" head")).toBeLessThan(text.indexOf("git push"));
   });
-});
 
-describe("pr-open-comments skill: punch-list deliverable", () => {
-  test("the report separates Auto-applied (confidence + SHA) from Needs your decision", () => {
-    const t = body();
-    expect(t).toContain("Auto-applied");
-    expect(t).toContain("Needs your decision");
+  test("publishes only landed, selectively staged work then replies and resolves", () => {
+    const text = body();
+    const stage = text.indexOf('git add -- "$ANCHORED_PATH"');
+    const push = text.indexOf("git push", stage);
+    const reply = text.indexOf("gh api --method POST", push);
+    const resolve = text.indexOf("resolveReviewThread", reply);
+    expect(stage).toBeGreaterThan(-1);
+    expect(push).toBeGreaterThan(stage);
+    expect(reply).toBeGreaterThan(push);
+    expect(resolve).toBeGreaterThan(reply);
+    expect(text).toContain("never `git add -A` or `git commit -a`");
+    expect(text).toContain("-F body=@-");
+    expect(text).toContain('repos/$OWNER/$REPO/issues/$NUMBER/comments');
+    expect(text).toMatch(/Review thread: reply.*resolve that thread/s);
+    expect(text).toMatch(/Issue comment or review body: post one top-level PR follow-up.*no resolve operation/s);
+  });
+
+  test("maps reactions idempotently and reports every item once", () => {
+    const text = body();
+    expect(text).toContain("THUMBS_UP");
+    expect(text).toContain("THUMBS_DOWN");
+    expect(text).toContain("Auto-applied");
+    expect(text).toContain("Needs your decision");
+    expect(existsSync(REPORT)).toBe(true);
+    expect(read(REPORT)).toContain("Recommendation:");
   });
 });

@@ -3,8 +3,9 @@ name: team-fix
 description: |
   Run the compressed autonomous bug-fix pipeline: isolate, reproduce, add a
   failing test, fix the root cause, verify, commit, push, and open a draft PR.
-  Trigger only on "run the bug-fix pipeline", "team-fix this", or
-  "/team-fix"; a plain request to fix code does not authorize branch, tracker,
+  Trigger only on "run the
+  bug-fix pipeline", "team-fix this bug", or "/team-fix"; a plain request to
+  fix code does not authorize branch, tracker,
   push, or PR mutations.
 effort: high
 argument-hint: "<ticket id, issue URL, or bug description>"

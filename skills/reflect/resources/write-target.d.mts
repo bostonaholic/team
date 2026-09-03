@@ -5,6 +5,7 @@
 
 /** True only for a name matching `^[a-z][a-z0-9-]*$`. */
 export function isValidSkillName(name: unknown): boolean;
+export function parseFocus(raw: string): { focus: string | null };
 
 export interface ContainmentQuery {
   /** The write target, whose final component need not exist yet. */

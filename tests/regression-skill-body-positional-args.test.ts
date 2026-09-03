@@ -53,6 +53,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { findWorktree } from "../skills/pr-cleanup/scripts/find-worktree.mjs";
 import { read } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
@@ -109,23 +110,15 @@ describe("regression: no skill body carries a bare $<digit> the loader would sub
   }
 });
 
-// --- L3: the pr-cleanup derivation actually resolves worktrees ---------------
+// --- L3: the pr-cleanup helper actually resolves worktrees ------------------
 
-const PR_CLEANUP = join(REPO_ROOT, "skills", "pr-cleanup", "SKILL.md");
-
-// Pull the worktree-path derivation out of the SKILL.md so the documented
-// command and the tested command cannot drift. Mode A and Mode B each carry a
-// copy; they must stay identical, since step 3 tells the reader that both use
-// the same derivation.
-function derivationSnippet(): string {
-  const blocks = [...read(PR_CLEANUP).matchAll(/```sh\n([\s\S]*?)```/g)].map(
-    (m) => m[1]!,
-  );
-  const matches = blocks.filter((b) => b.includes('WORKTREE_PATH="$('));
-  expect(matches.length).toBe(2); // guard: Mode A + Mode B, no more, no fewer
-  expect(matches[1]).toBe(matches[0]); // the two copies have not drifted
-  return matches[0]!;
-}
+const FIND_WORKTREE = join(
+  REPO_ROOT,
+  "skills",
+  "pr-cleanup",
+  "scripts",
+  "find-worktree.mjs",
+);
 
 function git(cwd: string, ...args: string[]): string {
   const res = spawnSync(
@@ -139,7 +132,7 @@ function git(cwd: string, ...args: string[]): string {
   return res.stdout.trim();
 }
 
-describe("regression: the extracted pr-cleanup derivation resolves worktree paths", () => {
+describe("regression: the pr-cleanup helper resolves worktree paths", () => {
   let root: string;
   let primary: string; // the main working tree, on branch `main`
   let linked: string; // a linked worktree, on a branch whose name holds a `/`
@@ -162,16 +155,24 @@ describe("regression: the extracted pr-cleanup derivation resolves worktree path
     rmSync(root, { recursive: true, force: true });
   });
 
-  // Run the documented snippet with the two variables it reads supplied by the
-  // caller, exactly as the surrounding skill steps supply them.
   function derive(branch: string): string {
-    const script = [
-      `PRIMARY_ROOT=${JSON.stringify(primary)}`,
-      `BRANCH=${JSON.stringify(branch)}`,
-      derivationSnippet(),
-      'printf "%s" "$WORKTREE_PATH"',
-    ].join("\n");
-    const res = spawnSync("bash", ["-c", script], { encoding: "utf8" });
+    const listing = spawnSync(
+      "git",
+      ["-C", primary, "worktree", "list", "--porcelain", "-z"],
+      { encoding: "utf8" },
+    );
+    expect(listing.status).toBe(0);
+    expect(findWorktree(listing.stdout, branch)).toBe(
+      branch === "main"
+        ? primary
+        : branch === "feature/slash-in-name"
+          ? linked
+          : "",
+    );
+    const res = spawnSync("node", [FIND_WORKTREE, "--branch", branch], {
+      input: listing.stdout,
+      encoding: "utf8",
+    });
     expect(res.status).toBe(0);
     return res.stdout;
   }
@@ -199,5 +200,14 @@ describe("regression: the extracted pr-cleanup derivation resolves worktree path
     // `main` must not answer for `mai` — the comparison is exact, not a prefix
     // or a regex match.
     expect(derive("mai")).toBe("");
+  });
+
+  test("rejects missing branch input", () => {
+    const result = spawnSync("node", [FIND_WORKTREE], {
+      input: "",
+      encoding: "utf8",
+    });
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain("usage:");
   });
 });

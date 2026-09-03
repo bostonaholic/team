@@ -237,7 +237,7 @@ cross-cutting recency caveat:
    - *Why:* the expensive, divergent, high-churn surface is exactly the bindings
      (three manifest formats ship today — Claude Code's, Codex's, and
      Antigravity's — atop per-host hook schemas and still-moving host APIs),
-     while the stable, valuable surface, the 91 agent/skill bodies and 3 hook
+     while the stable, valuable surface, the 97 agent/skill bodies and 3 hook
      logic files, is *already portable*. The hybrid boundary lines up with the
      natural portable/non-portable seam, so it minimizes both duplication and the
      blast radius of churn.
@@ -288,7 +288,7 @@ cross-cutting recency caveat:
    - *Why:* it pulls the one irreducibly host-varying value out of the portable
      definitions, since the agent `model:` frontmatter is a Claude-specific model
      name and meaningless on Codex, and puts it behind a single host-agnostic
-     indirection, so the 91 agent/skill bodies never carry a host-specific model
+     indirection, so the 97 agent/skill bodies never carry a host-specific model
      literal. The per-host shims *read* `.team/config.json`; they never restate
      it.
 
@@ -303,9 +303,9 @@ full parity. It starts from the matrix and works around the named gaps.
   system-prompt body.
 - Skills port natively to `.agents/skills/SKILL.md` (description-matched implicit
   invocation). Each skill also ships `agents/openai.yaml`, which names it in the
-  catalog; the three guarded skills declare `policy.allow_implicit_invocation:
-  false` there to opt out of that matching, which is this host's documented
-  equivalent of `disable-model-invocation`.
+  catalog. The eight mutating utilities declare
+  `policy.allow_implicit_invocation: false` there to opt out of that matching,
+  which is this host's documented equivalent of `disable-model-invocation`.
 - Hooks: reuse the 4 `.mjs` files. The shim adapts to Codex
   `hooks.json`/`[hooks]`, whose schema mirrors Claude closely
   (`permissionDecision:"deny"`/exit 2). Events map nearly 1:1
@@ -383,13 +383,13 @@ a file, and installing from a URL clones fresh so the socket never exists.
 probe (taken when the plugin shipped 54 skills, two of which set the key) had
 the agent list 52 of them. The two missing ones were exactly `pr-rebase` and
 `pr-watch-as-reviewer` — the skills that set the key **as of that probe**. The
-guarded set has since grown to three: `reflect` sets it too, so this host
-withholds that one as well. This host therefore keeps every guarded skill out
-of the model's reach on its own, and it is why Team's install for this host
-withholds nothing.
+guarded set is now `groom-backlog`, `pr-cleanup`,
+`pr-open-comments`, `pr-rebase`, `pr-watch-as-author`,
+`pr-watch-as-reviewer`, `reflect`, and `shipit`. This host keeps every guarded
+skill out of the model's reach and withholds nothing from the install.
 
 Codex reaches the same end through its own key rather than this one:
-`pr-rebase`, `pr-watch-as-reviewer`, and `reflect` each declare
+all eight mutating utilities declare
 `policy.allow_implicit_invocation: false` in their `agents/openai.yaml`.
 OpenAI [documents](https://learn.chatgpt.com/docs/build-skills) that key as
 blocking implicit invocation while leaving explicit `$skill` invocation

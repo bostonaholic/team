@@ -2,9 +2,10 @@
 name: team
 description: |
   Run Team's autonomous eight-phase feature pipeline. Trigger on "hey team",
-  "build this end to end", "resume the Team run", or "/team". It creates a
-  branch, commits, pushes, opens draft pull requests, and updates a tracker, so
-  never infer this pipeline from a plain request to edit code.
+  "build a feature", "implement end to end", "autonomous implementation", or
+  "/team". Start from a request or resume an exact topic ID. It creates a branch,
+  commits, pushes, opens draft pull requests, and updates a tracker, so never
+  infer this pipeline from a plain request to edit code.
 effort: medium
 argument-hint: "<ticket|URL|description> | resume <id> [--only <phase>]"
 ---

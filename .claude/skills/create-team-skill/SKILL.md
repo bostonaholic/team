@@ -22,7 +22,8 @@ another skill's wiring.
 
 1. **Invocation** — is this an entry point (user/model triggers it) or a building
     block (another skill composes it)? This defines what the skill *is*.
-2. **Input** — how does it get the thing it operates on? Discover it. Do not demand it.
+2. **Input** — who selects the thing it operates on: a coordinator, a helper,
+    or the invoking user?
 3. **Context** — how does it stay inside the window while it runs? Offload, delegate,
     search.
 
@@ -32,9 +33,10 @@ Every skill that hands off uses one durable, repo-local directory for what it wo
 otherwise "keep in the conversation". That covers inputs passed between skills,
 checkpoints, and findings. In this repo that directory is **`docs/plans/<id>/`**, where
 `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. This guide calls it
-`<ARTIFACTS>`. Producers write there. Consumers discover and read from there. The
-agreement matters more than the path: every handoff uses the same convention so skills
-stay decoupled.
+`<ARTIFACTS>`. Producers write there. The `team` coordinator passes its exact
+directory to internal phases; standalone consumers may resolve it through the
+canonical helper. The agreement matters more than the path: every handoff uses
+the same convention so skills stay decoupled.
 
 ---
 
@@ -119,9 +121,9 @@ into exactly one of three buckets, then carry the verdict into the frontmatter:
 
 | Bucket | What it means | Frontmatter | Examples |
 |--------|---------------|-------------|----------|
-| **Both** (default for anything a user might run) | A user triggers it by intent **and** the model/another skill may pull it in | leave `user-invocable` unset (default) | `team`, `team-*`, `why`, `how` |
+| **Both** (default for anything a user might run) | A user triggers it by intent **and** the model/another skill may pull it in | leave `user-invocable` unset (default) | `team`, `why`, `how` |
 | **User-invocable only** | A user must trigger it explicitly. The model must NOT auto-fire it | `disable-model-invocation: true` | a per-skill call, each with its own recorded reason: `pr-rebase`, `pr-watch-as-reviewer`, `reflect` |
-| **Model-invocable only** (pure building block) | Reference material loaded by agents / read by path. A `/<skill>` command is meaningless to users | `user-invocable: false` | every pure methodology skill (`qrspi-workflow`, `solid`, …) |
+| **Model-invocable only** (building block) | Reference material or an internal phase loaded by another skill. A `/<skill>` command is meaningless to users | `user-invocable: false` | methodologies and the eight internal `team-*` phases |
 
 Decide with these tests, in order:
 
@@ -131,8 +133,9 @@ Decide with these tests, in order:
    `disable-model-invocation` is a further per-skill call, made on its own recorded
    reason — three skills have one today; a skill that sets it on that reason lands in
    **User-invocable only**.
-2. **Is it purely reference material** — methodology, conventions, a protocol another
-   agent reads — with no standalone "do this now" meaning for a user? →
+2. **Is it purely reference material or a coordinator-internal phase** — methodology,
+   conventions, a protocol another agent reads, or one QRSPI phase selected only by
+   `team` — with no standalone "do this now" meaning for a user? →
    **Model-invocable only**.
 3. **Would a user plausibly type `/<skill>` to run it as an action**, even if agents also
    compose it? → **Both** (the default, do not over-restrict).
@@ -226,12 +229,12 @@ a parent pulls it in, by if the parent needs coordination or isolation:
   > "No <artifact> found. A) run /<child> now  B) skip and proceed."
   If accepted, the parent inlines it (mechanism a).
 
-**Hide it from the slash menu.** A pure building block is reference material, not a user
-action, so a `/<skill>` command for it is meaningless. Set `user-invocable: false` in its
+**Hide it from the slash menu.** A building block is not a user action, so a
+`/<skill>` command for it is meaningless. Set `user-invocable: false` in its
 frontmatter to keep it out of the `/` menu. The field governs *menu visibility only*. It
 does not affect read-and-follow or subagent composition (those reach the file directly),
-and the model can still auto-load it when relevant. In this repo every pure methodology
-skill sets this. Entry-point skills leave it unset so they register as slash commands. (A
+and the model can still auto-load it when relevant. In this repo every methodology
+and internal phase sets this. Entry-point skills leave it unset so they register as slash commands. (A
 skill wired as *both* surfaces stays user-invocable — do not set it. But a methodology
 skill is never one of those: it sets the field and gets a front door instead. The
 `code-review`/`reviewing-code` pair is the worked example — `reviewing-code` sets the
@@ -256,43 +259,43 @@ is user-invocable.)
 
 ## Part 2 — Input acquisition
 
-Skills DISCOVER their input from conventions and only ask the user as a fallback. Pick
-the archetype that matches the input type. Default to §2A for documents.
+Choose the input owner before writing the procedure. Internal pipeline modules
+receive state from `team`; standalone commands may resolve state themselves.
 
 | If the skill operates on... | Use |
 |------------------------------|-----|
-| A plan / design / spec document | **§2A — convention-based discovery** (default) |
-| The current branch's code changes | **§2B — branch-diff detection** |
-| A short scalar (URL, time window, ID) | **§2C — positional args + flags** |
-| A problem the user must describe / scope | **§2D — ask-first** |
+| One QRSPI phase | **§2A — coordinator-owned artifact directory** |
+| A standalone artifact | **§2B — canonical artifact resolution** |
+| The current branch's code changes | **§2C — branch-diff detection** |
+| A short scalar (URL, time window, ID) | **§2D — positional args + flags** |
+| A problem the user must describe / scope | **§2E — ask-first** |
 
-### §2A — Convention-based document discovery (archetype A)
-The skill takes an OPTIONAL artifact-directory arg and DISCOVERS it when omitted.
-Discovery is the front door, and the arg is only an override. Declare the hint in
-frontmatter and read `$ARGUMENTS`:
+### §2A — Coordinator-owned artifact directory
+
+The eight internal QRSPI modules take exactly one absolute
+`docs/plans/<id>/` path:
+
 ```yaml
-argument-hint: "[docs/plans/<id>/]"
+user-invocable: false
+argument-hint: "<absolute docs/plans/<id>/ directory>"
 ```
-Resolve the directory with the canonical **three-tier** block:
-1. **Explicit** — `$ARGUMENTS` names an existing dir → use it verbatim.
-2. **Discover** — newest-mtime dir under `docs/plans/` that matches `ID_RE` and holds
-   this skill's predecessor artifact (filter by `ID_RE` / `PHASE_FILES`). Announce the
-   auto-picked directory before proceeding — never pick a topic silently.
-3. **None found** — fall to the empty case below. Do not error.
 
-Do NOT hand-roll this block. Copy it **verbatim** from an existing archetype-A skill
-(e.g. `skills/team-research/SKILL.md`) — the dev gate
-`.claude/scripts/check-discovery-consistency.sh` asserts byte-identity across every
-archetype-A skill, so any variant fails the suite. Run it as a single bash call (an
-agent thread resets cwd between calls).
+Reject empty, relative, malformed, or multiple paths. `team-worktree` may create
+the directory; every later module requires its predecessor. Do not scan for the
+newest topic, prompt for a directory, bootstrap a predecessor, or invoke another
+phase. `team` alone selects IDs and successors. Each module writes or verifies
+one completion artifact, then returns.
 
-- If a directory resolves: read the predecessor artifact from it. Treat it as source of
-  truth for problem, constraints, approach.
-- Empty case (REQUIRED): do NOT error. Fire `AskUserQuestion` (header `Setup`) with two
-  labeled options. **Run the producer** runs `/team-<producer>` to create the missing
-  artifact. **Give a path** lets the user supply `docs/plans/<id>/`.
+### §2B — Canonical artifact resolution
 
-### §2B — Branch-diff detection (code review)
+A standalone command may accept a path or exact ID when that is part of its
+public contract. Use a tested helper owned by `artifact-frontmatter`; never copy
+resolution shell into skill bodies or add a consistency script for duplicate
+blocks. `resolve-topic.mjs <repo-root> <id>` is the exact-ID resolver. Add a
+new mode and deterministic tests to that owner when a different resolution rule
+is required.
+
+### §2C — Branch-diff detection (code review)
 No argument. Detect the base branch through a fallback chain, then diff:
 ```bash
 BASE=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null)
@@ -302,26 +305,22 @@ git diff "origin/$BASE"...HEAD
 ```
 Never hardcode the base branch without the chain above it.
 
-### §2C — Positional args + flags (scalars only)
+### §2D — Positional args + flags (scalars only)
 Reserve arguments for scalars, never documents. Parse with sensible defaults (`/skill 7d`
 → default `7d`, `/skill <url> --quick`). Auto-discover when a flag is omitted. Always
 state the default you chose.
 
-### §2D — Ask-first
+### §2E — Ask-first
 Start from what the user already typed. Auto-discover repo context (search, diff,
 README). Ask ONE question at a time, only for genuine gaps. Do not interrogate when the
-answer is already on disk. (In this repo, `/team-question` is the ask-first producer that
-seeds `docs/plans/<id>/` for the archetype-A consumers downstream.)
+answer is already on disk. `team` is the user-facing producer that seeds
+`docs/plans/<id>/` for its internal phases.
 
 ### Input invariants
-- Discover before you demand, wherever there is something to discover. A question is
-  the fallback, not the front door. The ask-first archetype (§2D) has no discoverable
-  input, so it asks.
-- The empty/not-found path uses `AskUserQuestion` to offer a producer or ask for a
-  path — it never throws.
+- Internal phases accept only the coordinator's exact absolute artifact path.
+- Standalone resolution uses one tested helper owned by `artifact-frontmatter`.
 - Each shell block is its own process — recompute derived vars. Do not rely on persistence.
-- An argument carries a scalar (URL/window/ID) or an OPTIONAL artifact-dir path that
-  discovery resolves when omitted — never the document's contents.
+- An argument carries a scalar or artifact-directory path, never document contents.
 - **Never write a `$` immediately followed by a digit anywhere in a SKILL.md.** The
   loader reads it as an argument placeholder and substitutes the caller's Nth argument,
   which silently rewrites awk record/field variables and shell positional parameters in
@@ -461,14 +460,14 @@ Invocation
 - [ ] No composed building block registers its own slash command.
 
 Input
-- [ ] Correct archetype chosen (default §2A for documents).
-- [ ] Archetype-A: `argument-hint` declared. Discovery block copied verbatim from an
-      existing skill (e.g. team-research), not hand-rolled — the dev consistency gate
-      enforces byte-identity.
-- [ ] Discovery runs before any question wherever there is something to discover (§2D, the ask-first archetype, has no discoverable input). An auto-picked topic is announced.
-- [ ] Empty/not-found path uses `AskUserQuestion` (run producer / give path) — never throws.
+- [ ] Input owner chosen: coordinator, canonical helper, branch, scalar argument,
+      or user.
+- [ ] Internal QRSPI phase: hidden; one required absolute artifact directory;
+      no discovery, prompt, predecessor bootstrap, or successor dispatch.
+- [ ] Standalone artifact resolution uses a tested `artifact-frontmatter` helper;
+      no duplicated resolver block.
 - [ ] Base branch (if used) through the fallback chain, no bare `main`. Args carry a
-      scalar or optional artifact-dir path, never document contents.
+      scalar or artifact-dir path, never document contents.
 
 Context
 - [ ] State offloaded to `<ARTIFACTS>`. Long tasks checkpoint.

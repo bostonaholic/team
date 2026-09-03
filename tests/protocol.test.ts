@@ -1112,13 +1112,14 @@ describe("code-review direct invocation preserves separation", () => {
   const CODE_REVIEW = read(join(REPO_ROOT, "skills", "code-review", "SKILL.md"));
 
   test("the skill states the direct-invocation path", () => {
-    expect(CODE_REVIEW).toContain("## When Invoked Directly");
+    expect(frontmatter(CODE_REVIEW)).toContain("argument-hint:");
+    expect(CODE_REVIEW).toContain("# Code Review");
   });
 
   test("the direct path dispatches instead of reviewing inline", () => {
     const text = flat(CODE_REVIEW);
-    expect(text).toContain("Do not review inline");
-    expect(/Dispatch the\s+`code-reviewer` agent/.test(text)).toBe(true);
+    expect(text).toMatch(/never\s+review inline/i);
+    expect(/Dispatch `code-reviewer`/.test(text)).toBe(true);
   });
 });
 

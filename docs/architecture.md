@@ -43,8 +43,7 @@ seeds and updates a TodoWrite ledger, and runs the gates.
   and revision metadata. Phase progression is
   inferred by scanning artifacts.
 - **TodoWrite is the live coordination ledger.** It is session-scoped.
-  Re-invoking any `/team-*` command rebuilds the ledger by scanning
-  artifacts on entry.
+  `/team resume <id>` rebuilds it from that ID's artifacts.
 - **Registry is a phase-tagged inventory.** `skills/team/registry.json`
   lists the 13 specialist agents and the QRSPI phase each serves. The
   orchestrator dispatches through the phase table in
@@ -82,8 +81,8 @@ ready for review or merges it.
 
 > **Runtime canon:** the schema below is carried for agents by
 > `skills/artifact-frontmatter/SKILL.md`. This section is the
-> doc-surface copy. The executable `ID_RE` / `PHASE_FILES` definitions
-> live in `hooks/session-start-recover.mjs`.
+> doc-surface copy. The executable resolver lives in
+> `skills/team/scripts/phase-state.mjs`.
 
 All phase artifacts live in `docs/plans/<id>/`, where `<id>` is one of:
 
@@ -98,7 +97,7 @@ Every artifact opens with YAML frontmatter. Common fields:
 ---
 topic: <kebab-case>
 date: 2026-04-30
-phase: design        # task | questions | prd | repos | research | design | structure | plan
+phase: design        # see artifact-frontmatter for the complete enum
 ---
 ```
 
@@ -106,7 +105,7 @@ Per-phase additions:
 
 | Phase     | Extra frontmatter                                                       |
 |-----------|-------------------------------------------------------------------------|
-| task      | `ticketId: <id>` (or `null`)                                            |
+| task      | `ticketId: <id>` (or `null`); `workflow: team|team-fix`                  |
 | questions | (none)                                                                  |
 | prd       | (none. Not gated. The questioner writes it conditionally.)        |
 | repos     | (none. Written conditionally in multi-repo mode.)                 |
@@ -114,6 +113,8 @@ Per-phase additions:
 | design    | `revision: 0`                                                           |
 | structure | (none. Not gated. It advances to PLAN once it exists.)            |
 | plan      | (none. Derived mechanically from the structure.)                  |
+| implementation | `verdict: PASS`; body records every verified HEAD SHA       |
+| pr        | `status: opened`; body records draft URLs and every final HEAD    |
 
 **Design-review record** (`design-review-<n>.md`): each review round the
 orchestrator writes `docs/plans/<id>/design-review-<n>.md` (`<n>` 1-based
@@ -127,46 +128,42 @@ highest-`<n>` file carries APPROVE or COMMENT.
 reviewer's findings verbatim. The orchestrator increments
 `revision: <n+1>` in the new draft's frontmatter.
 
-**Phase inference** (orchestrator + hooks):
+**Phase inference** is ordered, not newest-file based:
 
-| Latest artifact present                                | Current phase       |
-|--------------------------------------------------------|---------------------|
-| worktree exists for `<id>`, no `1-task.md` yet           | WORKTREE (next up)  |
-| `1-task.md` + `2-questions.md` only                        | RESEARCH (next up)  |
-| `5-research.md`                                          | DESIGN (next up)    |
-| `6-design.md` alone (no passing design review)           | DESIGN (review next)|
-| `6-design.md` + passing `design-review-<n>.md`           | STRUCTURE (next up) |
-| `7-structure.md`                                         | PLAN (next up)      |
-| `8-plan.md` + ≥1 commit on `<id>` since merge-base       | IMPLEMENT           |
-| `8-plan.md` (no commit on `<id>` yet)                    | PLAN (next up)      |
-| topic branch has slice commits + verifier passed       | PR (next up)        |
-| PR opened or commit shipped                            | SHIPPED             |
+| First incomplete condition | Current phase |
+| --- | --- |
+| valid `1-task.md` absent | WORKTREE |
+| valid `2-questions.md` absent | QUESTION |
+| valid `5-research.md` absent | RESEARCH |
+| valid `6-design.md` or passing review absent | DESIGN |
+| valid `7-structure.md` absent | STRUCTURE |
+| valid `8-plan.md` absent | PLAN |
+| no current-head `10-pr.md`, and `9-implementation.md` is absent, failing, incomplete, or stale | IMPLEMENT |
+| current implementation PASS exists, but current-head `10-pr.md` is absent | PR |
+| all conditions complete | COMPLETE |
 
-Worktree presence: `git worktree list --porcelain | grep -q <id>`.
-IMPLEMENT is confirmed only once there is
-**≥1 commit on `<id>` since merge-base** with the default branch, so
-`git log <merge-base>..<id>` is non-empty. A present `8-plan.md` with no
-commit means the run is still pre-IMPLEMENT.
-
-Two non-phase sibling outputs exist. Discovery keys only on the six
-`PHASE_FILES` names, so both are invisible to hooks and skills, and IMPLEMENT
-still declares no phase artifact.
+`9-implementation.md` binds PASS to each worktree's exact 40-character HEAD.
+`10-pr.md` records every opened draft and every worktree's final HEAD. A current
+PR record completes the run even though the PR-only changelog commit follows
+the reviewed implementation SHA. Any later HEAD change invalidates the PR
+record and resumes IMPLEMENT. A later file never bypasses a missing
+predecessor or failed gate.
 
 `docs/plans/<id>/screenshots/` (PNGs plus `manifest.md`) is written by
 ux-reviewer during IMPLEMENT for UI-touching changes and consumed by team-pr.
 User-facing setup (the one-time GitHub sign-in that enables inline upload)
 lives in `skills/team-pr/SKILL.md`.
 
-`docs/plans/<id>/cross-model-notes.md` is written by the orchestrator at
-the DESIGN review gate and the IMPLEMENT aggregate gate — one
+`docs/plans/<id>/cross-model-notes.md` is written by the owning DESIGN or
+IMPLEMENT module — one
 `### Cross-model disposition` block appended per review round, at either
 gate, in which the cross-model pass ran — and consumed by team-pr
 for the PR's `## Review notes` section. It is created only on the first
 round that runs the pass, so a repo where the pass never runs gains no
 artifact. Beside it, `docs/plans/<id>/cross-model-raw.md` is the design
-path's raw transcript — the orchestrator appends each vendor call's
+path's raw transcript — the DESIGN module appends each vendor call's
 result line and fenced output at capture time. Like the notes file, it is
-invisible to discovery: neither is a phase artifact, and neither is ever
+invisible to phase inference: neither is a phase artifact, and neither is ever
 read back as state. Both frontmatter schemas
 (`phase: cross-model-review` and `phase: cross-model-raw`, no `verdict`)
 live in `skills/artifact-frontmatter/SKILL.md`.
@@ -199,8 +196,9 @@ it into every downstream dispatch (the main session does not `cd`).
 **Multi-repo:** the questioner writes `4-repos.md` autonomously at
 QUESTION, one phase after WORKTREE. The design-author writes it at DESIGN
 when the questioner missed the multi-repo signals. Only the home worktree
-is created here. Secondary worktrees are created
-**after the design review**, one per listed repo. Each repo path must
+is created here. Secondary worktrees are created **after the design review and
+before STRUCTURE**, one per listed repo. This idempotent preparation also runs
+when a resumed run starts at STRUCTURE. Each repo path must
 first pass the containment check: its realpath must be a direct child of
 the home repo's parent directory.
 
@@ -208,10 +206,10 @@ the home repo's parent directory.
 git -C <repo-path> worktree add .claude/worktrees/<id> -b <id> origin/HEAD
 ```
 
-At that point the orchestrator writes a `## Worktrees` section to
+At that point the WORKTREE module writes a `## Worktrees` section to
 `4-repos.md`. It back-records the home worktree path plus each secondary
-path. Any later `/team-*` invocation can thus rediscover all paths from
-one file. Only the home repo's worktree carries `docs/plans/<id>/`. Other
+path. `/team resume <id>` can recover all paths from one file. Only the home
+repo's worktree carries `docs/plans/<id>/`. Other
 repos' worktrees do not duplicate the artifacts. See
 `skills/worktree-isolation/SKILL.md` for full topology.
 
@@ -224,11 +222,11 @@ exists, retries retain it as the home instead of creating a second empty home.
 ### Phase 2: Question
 
 **Agent:** `questioner`
-**Predecessor:** worktree prepared (+ description in `$ARGUMENTS`)
-**Artifacts:** `docs/plans/<id>/{task,questions}.md`
+**Predecessor:** persisted `1-task.md`
+**Artifact:** `docs/plans/<id>/2-questions.md`
 
-Decomposes the user's intent into two artifacts. Only the questioner ever
-sees the user's description. There is no separate `brief.md`. Neutral
+Consumes the persisted request from `1-task.md` and produces neutral research
+questions. Only the questioner ever sees the user's description. Neutral
 codebase context lives in a "Codebase context" section at the top of
 `2-questions.md`.
 
@@ -274,7 +272,7 @@ No gate. The plan is mechanically derived from the structure.
 
 **Sub-pipeline:**
 1. **Test-first.** `test-architect` writes failing acceptance tests.
-2. **Mechanical gate.** The orchestrator runs the suite and the project's
+2. **Mechanical gate.** The IMPLEMENT module runs the suite and the project's
    static checks. All tests must fail with assertion errors, not crashes,
    and every static check must pass — a runner that transpiles without
    type-checking leaves a red type checker behind a green suite.
@@ -282,44 +280,43 @@ No gate. The plan is mechanically derived from the structure.
    at a time, committing each atomically.
 4. **Code review.** 5 reviewers in parallel: `code-reviewer`,
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
-5. **Aggregate gate.** The orchestrator sorts every finding into a
+5. **Aggregate gate.** The IMPLEMENT module sorts every finding into a
    severity tier: **Blocking, Major, or Minor-and-below**. See
    `skills/review-severity-tiers/SKILL.md`. Each round in which the
    code-reviewer's report carries a `### Cross-model disposition` block,
-   the orchestrator appends that block — altered only by the blockquote
+   the module appends that block — altered only by the blockquote
    wrap (every line prefixed with `>`) — to
    `docs/plans/<id>/cross-model-notes.md` (see section 2). While any
    Blocking or Major finding remains, it dispatches the implementer to
    fix the typed failure class. It then re-runs all 5 reviewers
    automatically. It never consults the user. This is the *no-consult
    rule*. Once Blocking and Major are clean, any remaining Minor-and-below
-   findings are recorded in the PR body's `## Review notes` for the
-   human's PR review.
+   findings are recorded in `9-implementation.md`; the PR phase copies them to
+   the PR body's `## Review notes` for human review.
 
-The orchestrator tracks the round count by appending
+The IMPLEMENT module tracks the round count by appending
 `Review round <n+1> (<b> Blocking, <m> Major open)` items to the
 TodoWrite ledger. The count is that round's open Blocking and Major
 total, so an operator watching the ledger can tell a converging loop
 from a stuck one.
 
 **Recovery after an operator stop, a context-exhausted session, or a
-fail-closed halt**: a human re-invokes the same `/team-*` command bare.
-Each command runs its own phase and names the next one to run. What
-the human can fix first differs by gate.
+fail-closed halt:** run `/team resume <id>`. The coordinator resolves that
+exact ID and dispatches the first incomplete phase. Use `--only <phase>` to
+run only that first incomplete phase.
 
 The design-review gate writes every round's findings to
 `design-review-<n>.md`, so they are on disk to read before editing
-`6-design.md`. The aggregate gate persists none of its findings. So
-`/team-implement` resumes at the reviewer-dispatch step, and the five
-reviewers re-derive the open set at the cost of one round. The aggregate
-round counter is session-scoped through TodoWrite and starts fresh on
-re-invocation. The design `revision` counter persists in `6-design.md`
-frontmatter.
+`6-design.md`. The aggregate gate persists its PASS state and reviewed HEADs in
+`9-implementation.md`. An interrupted IMPLEMENT run without a current PASS
+record resumes at reviewer dispatch when slice commits already exist. The
+round counter is session-scoped. The design `revision` counter persists in
+`6-design.md` frontmatter.
 
 ### Phase 8: PR
 
-**Action:** orchestrator-emit
-**Predecessor:** aggregate gate passed
+**Module:** `team-pr`
+**Predecessor:** current `9-implementation.md` PASS for every HEAD
 
 Update CHANGELOG.md (filter for user-facing commits since last release),
 push the branch, and open a draft PR automatically with
@@ -336,6 +333,9 @@ after the PR opens. Teardown is deferred until the PR merges or the user
 asks, so the branch remains available for iteration. Completion points at the
 standalone `/pr-watch-as-author` utility for watching the PR once it is
 ready for review.
+
+After every draft exists and its final body is written, the module writes
+`10-pr.md`. This is the terminal phase artifact. IMPLEMENT never opens a PR.
 
 ## 4. Agent roster
 
@@ -600,74 +600,43 @@ pins all thirteen values in both directions. Methodology skills carry no
 
 ## 5. Phase-table orchestrator
 
-The orchestrator (the main Claude Code session) drives `/team` by
-walking the phase table in `skills/team/SKILL.md`. Pseudocode:
+`team` is the sole QRSPI coordinator. It accepts:
 
+```text
+/team <ticket id, issue URL, or description>
+/team resume <id> [--only <phase>]
 ```
-setup:
-  resolve $ARGUMENTS (issue URL → gh issue view; ticket → use as prefix).
-  derive <id> = "<TICKET>-<topic>" or "<YYYY-MM-DD>-<topic>".
-  create docs/plans/<id>/ if needed.
-  seed TodoWrite ledger with one item per phase.
-  on resume: scan docs/plans/<id>/, fast-forward the ledger.
 
-loop:
-  1. Inspect TodoWrite. If all phases completed → exit.
-  2. Identify the in_progress phase. Look up agent(s) and predecessor
-     artifact path(s) in the phase table.
-  3. Make sure that predecessors exist on disk. For STRUCTURE that includes
-     a `design-review-<n>.md` with a passing verdict. If one is missing, the
-     run is desynced. Suggest the bare /team-* command again. Its three-tier
-     discovery resolves docs/plans/<id>/ without an explicit arg.
-  4. Dispatch the agent(s) — pass them the artifact directory
-     `docs/plans/<id>/`.
-  5. Write returned artifacts to docs/plans/<id>/<name>.md with the
-     YAML frontmatter the agent specifies.
-  6. Run the gate for this phase (HUMAN | MECHANICAL | ORCHESTRATOR-EMIT
-     | AGGREGATE).
-  7. Mark current TodoWrite item complete and the next one in_progress.
-  8. Goto loop.
-```
+A new run derives an ID, creates the home worktree, and persists the resolved
+request to `1-task.md` during WORKTREE. An existing ID is never resumed
+implicitly. Resume validates the ID, resolves only that directory across git
+worktrees, infers the first incomplete phase, and rebuilds TodoWrite.
+
+For each phase, the coordinator calls the matching hidden `team-*` module with
+one canonical absolute artifact directory. The module runs one phase and
+returns. The coordinator verifies its completion artifact before dispatching
+the successor. `--only` runs at most the first incomplete phase. Future phases
+are refused; completed phases are no-ops.
 
 ## 6. Skills
 
-Skills live under `skills/`. There are two flavors:
+Skills live under `skills/` in four invocation classes:
 
-### Entry-point skills (slash commands)
+1. **Entry points:** `team`, `team-fix`, and front doors such as
+   `eng-design-doc-review`. They are slash commands with `argument-hint` and
+   `effort`.
+2. **Internal phase modules:** the eight `team-worktree` through `team-pr`
+   skills. They set `user-invocable: false`, retain `effort`, require one
+   explicit artifact directory, execute one phase, and return to `team`.
+3. **Standalone utilities:** user-facing commands outside QRSPI.
+4. **Methodologies:** non-invocable reference procedures with no arguments or
+   effort override.
 
-Every entry-point skill carries an `argument-hint` field in its
-frontmatter (Claude Code [skills frontmatter](https://code.claude.com/docs/en/skills#frontmatter-reference))
-that documents the expected `$ARGUMENTS` shape.
-
-Each downstream skill (`team-research` and beyond) treats `$ARGUMENTS` as
-an artifact directory, typically the path printed by the previous phase's
-completion message. For the 8 directory-consuming skills
-(`team-research`, `team-design`, `team-structure`, `team-plan`,
-`team-worktree`, `team-implement`, `team-pr`, `eng-design-doc-review`)
-the `docs/plans/<id>/` argument is **optional**. Each skill resolves the
-directory through a three-tier chain: explicit `$ARGUMENTS` →
-newest-mtime convention discovery → `AskUserQuestion`. The middle tier
-filters by `ID_RE` and `PHASE_FILES`, ported from
-`hooks/session-start-recover.mjs` as a POSIX ERE translation, and by the
-skill's necessary predecessor artifact. The orchestrator or entry-point
-skill calls `AskUserQuestion` itself, never a subagent. Subagents never
-pause for user input. Standalone modes still exist. A partial skill
-invoked with no resolvable directory, or with a free-form description,
-bootstraps the missing upstream artifacts inline rather than hard-error.
-
-**Discovery duplication: design rationale.** Each archetype-A skill
-embeds the three-tier resolver as a single self-contained bash block
-rather than calling a shared script. Agent threads reset their cwd
-between Bash calls, so the block cannot rely on any shared shell state
-and must stand alone in one invocation. The ~6 load-bearing lines
-(`ID_RE`, `PHASE_FILES`, root literal, and predecessor filter) are thus
-duplicated verbatim across the 8 directory-consuming skills by deliberate
-decision. No shared runtime helper was added, and the
-`check-discovery-consistency.sh` gate enforces byte-identity, so the
-copies cannot drift. A shared `discover-topic.sh` could also dedup the
-two hooks' `findActiveTopic`. That is a recorded future consolidation.
-The `# NOTE: ... future: shared discover-topic.sh` comment in each block
-points at it.
+Only the `team` coordinator selects a QRSPI ID or successor. Internal modules
+never scan for a latest topic, prompt for a directory, bootstrap predecessors,
+or call another phase. `team-fix` has its own compressed flow and reuses only
+the WORKTREE module. `skills/team/scripts/phase-state.mjs` is the single
+executable resolver used by the coordinator and recovery hooks.
 
 ### Methodology skills (loaded by agents, not directly invoked)
 
@@ -754,36 +723,14 @@ shipit-style explicit-intent guard wording ("Invoke ONLY on explicit …
 intent — … never infer …") beside or instead of the plain carrier, and
 still state the quoted phrases and the slash name.
 
-**Which skills are in that class is a complement pair over every write an
-invocation authorizes**, so it returns one answer per skill. *Out of
-class*: the invocation reads only, or writes only (1) files under
-`docs/plans/` and (2) invocation-local scratch files — untracked, created
-and consumed inside the same run, carried by no commit, and read by no
-later phase. *In class*: everything else — a change to any file the repo
-tracks, or to an untracked file the change is meant to deliver; a git
-write to history or refs (a commit, a branch, a rebase, a push, a branch
-delete); or a change on a host outside the checkout (a PR opened,
-approved, or merged; a ticket or issue moved, filed, or closed; a
-deploy). The verb list this replaced — commits, pushes, opens a PR, moves
-a ticket, merges, deploys, or deletes — still reads as an illustration of
-the in-class half. A write the invocation never authorized, such as an
-unsandboxed vendor CLI mutating the tree during a cross-model pass, moves
-no skill into the class: the caller detects that write and reverts it
-rather than authoring it.
-
-**Second tier: a skill that gates every mutation on its own in-run
-approval** carries the guard there instead, which is where
-`skills/principle-explicit-intent/SKILL.md` puts it. `groom-backlog` is
-the worked example — it presents each irreversible close and waits.
-Setting `disable-model-invocation` is a further per-skill call with its
-own recorded reason, never a property of this class. An in-class skill
-stays listed as a command, and its routing-map line in `AGENTS.md` states
-the explicit intent, so the map never invites it on a plain request. A deterministic test
-in `tests/architecture.test.ts` enforces the phrase invariant with no
-opt-out; the slash-name check is prefix-safe, so `/team-research` cannot
-satisfy the `/team` requirement. The guard wording is NOT
-machine-checked — it is the author's and reviewer's responsibility, and
-its absence on a side-effecting skill is a review-blocking defect.
+`team` and `team-fix` remain model-invocable only on stated pipeline intent.
+The eight standalone mutating utilities are user-invoked only:
+`groom-backlog`, `pr-cleanup`, `pr-open-comments`, `pr-rebase`,
+`pr-watch-as-author`, `pr-watch-as-reviewer`, `reflect`, and `shipit`. Each sets
+`disable-model-invocation: true`. Their Codex manifests also disable implicit
+invocation. `groom-backlog` requires `scan|promote`; `pr-cleanup` requires
+`merged|abandon`; every PR-scoped utility requires an explicit target; and
+`reflect` reads only the invoking session.
 
 No methodology skill is user-invocable. When a methodology also wants a
 user-facing command, the answer is a **front door**, not an exception:
@@ -796,8 +743,7 @@ carries `argument-hint` and `effort` like any other entry point and is
 catalogued under Standalone utilities. What stays on the front door is
 the one thing a user runs: "review this diff". `reviewing-designs` and
 `eng-design-doc-review` are the second: the design-review brief lives in
-the methodology, and `team`, `team-design`, and the front door all load
-it through the Skill tool.
+the methodology; `team-design` and the front door load it.
 
 A front door is a second kind of entry point, and both kinds are
 ordinary. One runs its own procedure; a front door owes the methodology's
@@ -809,15 +755,11 @@ agent and relays the verdict rather than reviewing inline, then loads
 `eng-design-doc-review` does the same with a read-only `Explore`
 subagent and the `reviewing-designs` brief.
 
-(This is separate from the entry-point skills, which are user-invocable by
-definition. Some of those, e.g. `team-worktree` and `team-pr`, are also
-*referenced by path* from `team/SKILL.md`, but those are procedural
-cross-links in the orchestrator's prose, not a parent loading the skill as
-a building block. The two front-door pairs are how a composed methodology
-keeps a user-facing entry point without becoming one.)
+Internal phase modules are neither front doors nor user commands. `team`
+loads them by name and passes an explicit artifact directory.
 
-For the full per-skill reference (all skills, their arguments,
-consumers, and behaviors), see [skills.md](skills.md).
+For the concise skill catalog, invocation classes, and required consumer notes,
+see [skills.md](skills.md).
 
 ### Design guidelines
 
@@ -876,9 +818,9 @@ character window; `default_prompt` is `Use $<name> to <short_description with
 its first character lowercased>.`, using the skill's own declared name as the
 explicit-invocation token. No
 icons, no brand color. A `policy` block declaring
-`allow_implicit_invocation: false` appears if and only if the frontmatter sets
-`disable-model-invocation: true`, and the test asserts that equality in both
-directions.
+`allow_implicit_invocation: false` appears for every explicit-only mutating
+utility and internal phase module. The test derives both sets from skill
+frontmatter and asserts equality in both directions.
 
 `short_description` is the one field no derivation produces, and that is where
 drift lives. `.claude/skills/create-team-skill/` teaches the manifest for a new
@@ -896,17 +838,19 @@ Runtime hooks (`hooks/`, distributed with the plugin):
 
 | Hook                       | Event                    | Purpose                                                    |
 |----------------------------|--------------------------|------------------------------------------------------------|
-| `pre-compact-anchor.mjs`   | PreCompact               | Scan docs/plans/<id>/ for active topic. Inject a 4-line anchor. |
-| `session-start-recover.mjs`| SessionStart             | Scan docs/plans/<id>/ for active topic. Emit a recovery notice. |
+| `pre-compact-anchor.mjs`   | PreCompact               | Find the newest active ID and inject `/team resume <id>`. |
+| `session-start-recover.mjs`| SessionStart             | Find the newest active ID and suggest `/team resume <id>`. |
 | `post-write-validate.mjs`  | PostToolUse(Write\|Edit) | Structural validation of plugin component files            |
 
 Both `pre-compact-anchor.mjs` and `session-start-recover.mjs` work the
 same way. They list `docs/plans/*/` directories. They pick the most
-recent artifact directory by the mtime of any contained artifact. They
+recent active directory by phase-artifact and design-review mtime. They
 infer the current phase from artifact presence and frontmatter. They then
 emit a short context message that names the phase, `<id>`, and the
-suggested next `/team-*` command. Both are stateless, exit 0 on any
-error, and return within the 5000ms hook budget.
+explicit `/team resume <id>` command. Hooks may select the newest run only to
+recommend an exact command; execution never uses latest-topic discovery. Both
+are stateless, exit 0 on any error, and share
+`skills/team/scripts/phase-state.mjs` with the coordinator.
 
 Development hooks (`.claude/hooks/`, not distributed):
 
@@ -916,11 +860,7 @@ Development hooks (`.claude/hooks/`, not distributed):
 | `pre-merge-guard.mjs`    | PreToolUse(Bash)         | Deny `gh pr merge` when the version-bump invariant fails             |
 
 Development scripts (`.claude/scripts/`, not distributed) house dev-only
-acceptance tooling run by plugin developers. `check-discovery-consistency.sh`
-is the committed consistency gate for the input-discovery feature: it asserts
-every archetype-A skill carries the discovery block, the load-bearing fragments
-(`ID_RE`, `PHASE_FILES`, `docs/plans/` root) stay byte-identical
-to canon, and the research-isolation invariant holds.
+acceptance tooling run by plugin developers.
 
 ## 8. Behavioral evals
 
@@ -981,15 +921,14 @@ model. See [Testing](testing.md) for where every check belongs.
 
 **Primary state:** the artifacts in `docs/plans/<id>/*.md`. Each
 artifact's YAML frontmatter is the source of truth for "did this phase
-finish?" and "did the design review pass?"
+finish?" and "did the design review pass?" `1-task.md` identifies `workflow` as
+`team` or `team-fix`; missing values remain compatible with older Team runs.
+Recovery hooks ignore `team-fix` directories.
 
-**Live coordination:** TodoWrite (session-scoped). The orchestrator
-seeds the ledger at the start of `/team`, marks each item `in_progress`
-when dispatching, and `completed` when the artifact lands. Any `/team-*`
-command rebuilds the ledger by scanning artifacts on entry, so an
-interrupted run can be resumed by re-invoking any of them bare: discovery
-auto-resolves the artifact directory (an explicit `docs/plans/<id>/` is still
-accepted).
+**Live coordination:** TodoWrite (session-scoped). The orchestrator seeds the
+ledger at the start of `/team`, marks each item `in_progress` when dispatching,
+and `completed` when its artifact lands. `/team resume <id>` rebuilds it by
+resolving that exact ID. Internal phase modules never select state.
 
 **Design-review records:** `docs/plans/<id>/design-review-<n>.md`
 (frontmatter `verdict: <APPROVE|REQUEST CHANGES|COMMENT>`) records each
@@ -997,21 +936,15 @@ review round durably. The artifacts are self-describing.
 
 **Compaction defense:** the PreCompact hook scans `docs/plans/<id>/`
 directories for the active topic and injects a 4-line anchor (phase,
-`<id>`, suggested next `/team-*` command). The SessionStart hook does
-the same for new sessions.
+`<id>`, `/team resume <id>`). The SessionStart hook does the same for new
+sessions. Newest-ID selection is advisory only.
 
 **Artifact persistence:** during a run, files in `docs/plans/<id>/` live
 on disk in the worktree's working tree and
-**the pipeline never commits them**. That discipline is what lets the
-commit-based IMPLEMENT signal (≥1 commit on `<id>` since the
-default-branch merge-base) distinguish "implementation has begun" from
-"artifacts merely exist". Any commit on `<id>` is thus a code or slice
-commit, never an artifact commit. A finished plan directory can land
-later in its feature PR, which is outside the run. Persistence across
-sessions, compaction events, and context resets comes from the survival
-of the worktree's files, not from git history. They remain the durable
-communication protocol between agents and the source of truth for "did
-phase N finish?"
+**the pipeline never commits them**. `9-implementation.md` records the exact
+reviewed HEAD for every worktree; `10-pr.md` records final heads and draft URLs.
+Persistence across sessions, compaction events, and context resets comes from
+the worktree files, not git history or a second state database.
 
 ## 10. Nested sub-agents
 

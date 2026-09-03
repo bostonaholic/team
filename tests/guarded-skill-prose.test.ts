@@ -23,6 +23,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
+import { loadedSkills } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 
@@ -32,10 +33,18 @@ const SURFACES = [
   join("docs", "cross-host-portability.md"),
 ];
 
-// The guarded set as a deliberate list. This is the creep fence: a fourth
-// skill setting the flag is a decision that must update this list, and
-// updating it forces every surface below to name the new skill.
-const EXPECTED_GUARDED = ["pr-rebase", "pr-watch-as-reviewer", "reflect"];
+// Adding this flag is a public-interface decision, so the expected set is
+// explicit. Every surface below must then name the added skill.
+const EXPECTED_GUARDED = [
+  "groom-backlog",
+  "pr-cleanup",
+  "pr-open-comments",
+  "pr-rebase",
+  "pr-watch-as-author",
+  "pr-watch-as-reviewer",
+  "reflect",
+  "shipit",
+];
 
 // Defensive read: a missing file reads as "" so assertions FAIL, never throw.
 function surface(relative: string): string {
@@ -69,6 +78,14 @@ function missingMentions(text: string, names: string[]): string[] {
 describe("the guarded-skill set on disk", () => {
   test("is exactly the deliberate list", () => {
     expect(guardedSkills()).toEqual(EXPECTED_GUARDED);
+  });
+
+  test("guarded entry commands do not invoke one another", () => {
+    const guarded = new Set(guardedSkills());
+    for (const name of guarded) {
+      const text = read(join(REPO_ROOT, "skills", name, "SKILL.md"));
+      expect(loadedSkills(text).filter((loaded) => guarded.has(loaded))).toEqual([]);
+    }
   });
 });
 

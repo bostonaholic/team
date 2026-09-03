@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **All 84 skills now state their runtime contract directly and load conditional detail only when needed.** `/team <ticket|URL|description>` starts QRSPI and `/team resume <id> [--only <phase>]` resumes one exact run. Its eight phase skills are internal modules. The eight mutating utilities are explicit-only; PR commands require a PR target, `/groom-backlog` uses `scan|promote`, and `/pr-cleanup` uses `merged|abandon`. **What this asks of you:** use `/team resume` instead of individual phase commands, and pass the named mode or PR target to mutating utilities.
+
 ## [0.82.0] - 2026-09-04
 
 ### Added

@@ -49,17 +49,14 @@ Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-
 
 | Command | Phase |
 |---------|-------|
-| `/team <desc>` | Full 8-phase QRSPI pipeline, on stated pipeline intent — it commits, pushes, opens a PR, and moves the ticket |
+| `/team <ticket\|URL\|description>` | Start the full 8-phase QRSPI pipeline on stated pipeline intent |
+| `/team resume <id> [--only <phase>]` | Resume one exact run; optionally run only its first incomplete phase |
 | `/team-fix <bug>` | Compressed bug-fix pipeline (no QRSPI ceremony), on stated pipeline intent, never on a plain "fix this bug" |
-| `/team-worktree` | Leading WORKTREE phase: create the home worktree — a branch, so on stated intent or as phase 1 of a `/team` run. In a full run it is automatic and first. Standalone, it consumes `8-plan.md` post-PLAN for manual recovery or multi-repo setup |
-| `/team-question <desc>` | Decompose intent into task + questions + brief |
-| `/team-research` | Isolated codebase research (runs Question if missing) |
-| `/team-design` | Draft the design. An adversarial design review gates advancement |
 | `/eng-design-doc-review` | Adversarial fresh-context audit of `6-design.md`. The front door over the `reviewing-designs` brief the pipeline's design-review gate also runs |
-| `/team-structure` | Break design into vertical slices (autonomous) |
-| `/team-plan` | Tactical plan from the structure |
-| `/team-implement` | Test-first + slice execution + 5-reviewer verify, on stated intent or as the IMPLEMENT phase — it commits each slice |
-| `/team-pr` | Commit + open PR, on stated intent or as the PR phase — it pushes and moves the ticket |
+
+The eight `team-worktree` through `team-pr` skills are hidden internal modules.
+Each receives one explicit artifact directory, runs one phase, and returns to
+`team`; none is a slash command or chooses the next run/phase.
 
 ## Agents (13)
 
@@ -73,7 +70,12 @@ Four agents (`researcher`, `implementer`, `code-reviewer`, `security-reviewer`) 
 
 ## Skills
 
-See `skills/*/SKILL.md`. Entry point skills double as slash commands. Some of them are standalone slash-command utilities that are not QRSPI phases. `shipit` lands a reviewed PR — on stated ship intent, never on a PR merely being approved or green. `pr-open-comments` triages unresolved PR review feedback — on stated triage intent, because an auto-applied item commits and pushes. `pr-watch-as-author` is a bounded PR review watch loop — on stated watch intent, because it undrafts the PR and moves the ticket. `pr-watch-as-reviewer` is the reviewer-side watch-and-approve — on stated watch intent, because an approval can transitively arm an auto-merge. `groom-backlog` grooms a project backlog with a board-level pass plus per-item promotion, and can close an issue whose premise evaporated — an irreversible public mutation, each close gated on its own per-issue approval. `pr-cleanup` tears down local and remote branch state after a PR is merged or abandoned — abandon mode on the user's own stated request, never on a PR merely being stale. `pr-verify` verifies a PR's test plan with evidence-rated verdicts. `pr-rebase` rebases a branch onto its base, resolving conflicts and gating the force-push on a pre-rebase check baseline — user-invoked only (`disable-model-invocation: true`), on stated rebase intent, never on a branch merely being behind. `reflect` mines the invoking session's own transcript for durable learnings and turns the approved ones into skill edits and tracker issues — user-invoked only (`disable-model-invocation: true`), because a run rewrites `SKILL.md` files and files public issues. `why` investigates the design rationale behind code — parallel read-only investigators over every available evidence source, synthesized into confidence-tiered, citation-backed findings. `how` explains how a subsystem works at onboarding depth, with an optional fresh-context architectural critique; the two are companions (mechanics vs. motivation), both read-only. Methodology skills are loaded by agents. Some of them carry the `principle-` prefix, and the prefix is a claim: one cross-cutting invariant each (fail closed, bounded loops, evidence over assertion, and their siblings), consulted by citation from the skills that apply them, loadable just-in-time by any agent, and counting against an agent's load budget like any other name when one is preloaded. `solid`, `product-thinking`, and `systems-thinking` are multi-rule methodology sets — preloaded or agent-loaded, counting toward the limit like any methodology skill — and deliberately carry no `principle-` prefix. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
+See `skills/*/SKILL.md`. Skills have four invocation classes: pipeline entry
+points, hidden phase modules, standalone utilities, and methodologies.
+All eight mutating utilities set `disable-model-invocation: true`.
+`groom-backlog` requires `scan|promote`, `pr-cleanup` requires
+`merged|abandon`, PR utilities require an explicit target, and `reflect` reads
+only the invoking session. See [docs/skills.md](docs/skills.md).
 
 ## Hooks
 
@@ -81,8 +83,8 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Some of th
 
 | Hook | Event | Purpose |
 |------|-------|---------|
-| `pre-compact-anchor.mjs` | PreCompact | Scan docs/plans/ for active topic, inject phase anchor before compaction |
-| `session-start-recover.mjs` | SessionStart | Scan docs/plans/ for active topic, surface phase + suggested next command |
+| `pre-compact-anchor.mjs` | PreCompact | Find newest active ID and inject `/team resume <id>` before compaction |
+| `session-start-recover.mjs` | SessionStart | Find newest active ID and suggest `/team resume <id>` |
 | `post-write-validate.mjs` | PostToolUse(Write\|Edit) | Structural validation of plugin files |
 
 **Development** (in `.claude/hooks/`):
@@ -94,11 +96,16 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Some of th
 
 ## State
 
-State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions (when the opt-in pass ran) in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite (session-scoped). Any `/team-*` command rebuilds the ledger by scanning artifacts on entry. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
+State is the artifacts in `docs/plans/<id>/`; there is no second state store.
+`1-task.md` preserves start intent, `9-implementation.md` records reviewed HEADs,
+and `10-pr.md` records opened drafts. TodoWrite is session-only. `/team resume
+<id>` resolves that exact ID and rebuilds the ledger. Hooks may scan for the
+newest active ID only to recommend the explicit resume command. See
+[docs/architecture.md section 9](docs/architecture.md#9-state-management).
 
 ## Learned rules
 
-- **No `commands/` directory.** Skills are the only entry point mechanism. They auto-register as slash commands.
+- **No `commands/` directory.** User-invocable skills auto-register as slash commands; hidden skills are modules or methodology.
 - **No project-scoped memory.** Do not save memories to `~/.claude/projects/*/memory/`. All project knowledge belongs in this file or docs linked from here. This file is checked into git and travels with the project.
 - **Todo-first progress tracking.** Any agent or skill that executes a multi-step numbered procedure seeds one TodoWrite item per step before starting and marks each complete as it goes. See `skills/principle-progress-tracking/SKILL.md` for the convention and ledger-ownership rules.
 - **A drafted PR carries no version. Nothing versions until the step immediately before the merge command.** Bullets accumulate under `## [Unreleased]`; the six version strings, the dated changelog section, and the `vX.Y.Z` PR-title prefix all stay untouched until that step. **"Land time" means exactly that moment, never "when the work is done"** — a version assigned at PR-open time is computed against a `main` that keeps moving, so it goes stale as soon as another PR lands and the pre-merge guard then denies the merge. Team versions itself through the dev `version-bump` skill, which fires **only on explicit land intent** and never on work merely looking landable, then lands through the generic `/shipit`. **The bump is also conditional on a runtime change, not universal:** only a PR that changes the **distributed plugin** (per the runtime-vs-development split above) bumps; a dev-only PR (CI, docs, tests, evals, `.claude/` tooling) lands with no bump, no changelog cut, and a plain conventional title. The deterministic gate `.github/scripts/version-bump-required.sh` (pinned by `tests/version-bump-required.test.ts`) states a *merge* precondition, so its exit 1 on an unbumped runtime branch is the expected state throughout review rather than a cue to bump; `version-bump` runs it early, and the pre-merge dev hook (`.claude/hooks/pre-merge-guard.mjs`) denies the merge command on either violation. Full land-time procedure: `.claude/skills/version-bump/SKILL.md` (Team's internal bumper) and `skills/shipit/SKILL.md` (project-agnostic, does no versioning). See [docs/versioning.md](docs/versioning.md).

@@ -10,10 +10,11 @@ set -euo pipefail
 # install — no manifest is generated and no per-skill link is written.
 #
 # Discovery follows a symlinked plugin root, and this host honors
-# disable-model-invocation, so pr-rebase, pr-watch-as-reviewer, and reflect stay
-# out of the model's reach on their own. Those three also declare
-# allow_implicit_invocation: false in their agents/openai.yaml, which is what
-# binds the same claim on Codex; this host needs only the frontmatter key.
+# disable-model-invocation, so groom-backlog, pr-cleanup, pr-open-comments,
+# pr-rebase, pr-watch-as-author, pr-watch-as-reviewer, reflect, and shipit stay
+# out of the model's reach. All eight also declare allow_implicit_invocation:
+# false in their agents/openai.yaml, which binds the same claim on Codex; this
+# host needs only the frontmatter key.
 
 PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # The `.gemini` spelling below is correct: it is Antigravity CLI's own global
