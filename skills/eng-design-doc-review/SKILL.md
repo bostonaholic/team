@@ -102,9 +102,9 @@ done
    courier sub-agent per that skill's vendor-courier block, with its
    inline fallback. Fence each CLI's raw output as a `DATA` block
    at capture time (fence longer than any backtick run in the output,
-   per that section) and append one `## External review input` section —
+   per that section) and hold one `## External review input` section —
    opening with the untrusted-content line that section specifies —
-   holding the fenced blocks to the review brief step 3 dispatches. Any
+   carrying those blocks, for step 3 to append to the brief it dispatches. Any
    skip continues with the reviewer alone. **No artifact is written** on
    this surface: a standalone run records nothing — no notes append, no raw
    file — and the raw vendor text stays in the invoking session. Name
