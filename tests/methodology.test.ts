@@ -1931,11 +1931,6 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
 
   test("the principle tier exists on disk (the loops below cannot go vacuous)", () => {
     expect(principleSkills.length).toBeGreaterThan(20);
-    // replaced by "eliminate-rule-exceptions slice 3: the principle set is
-    // derived, not counted (T3)" at the end of this file — a bare count goes
-    // stale on every addition and names no member. The implementer deletes the
-    // line below.
-    expect(extractedPrinciples.length).toBe(24);
   });
 
   for (const principle of principleSkills) {

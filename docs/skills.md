@@ -38,9 +38,10 @@ catalog into two flavors:
 - **Methodology skills omit `argument-hint`.** They are never invoked
   directly. Agents load them through one
   of two mechanisms: a `skills:`
-  YAML list in the agent's frontmatter (e.g., `agents/design-author.md`
-  declares `skills: [product-thinking,
-  principle-progress-tracking, authoring-designs, writing-prose]`), or an inline
+  YAML **block** list in the agent's frontmatter, one indented `- <name>`
+  per line (e.g., `agents/design-author.md` declares a block list of four
+  names — `product-thinking`, `principle-progress-tracking`,
+  `authoring-designs`, `writing-prose`), or an inline
   prose load
   instruction in the agent body (e.g., `Load skills/<name>/SKILL.md for
   …`).
@@ -801,10 +802,11 @@ Agents load them through one of two mechanisms. The first is a
 `skills:` YAML list in the agent's frontmatter. The second is an inline
 prose load instruction in the agent body. See the "Two flavors of skill"
 section above. The "Loaded by" line for each skill names its consumers from
-the per-agent load manifest. An agent typically loads at most three. An
-agent's own extracted procedure skill does not count toward that soft
-limit: it replaces former inline body content 1:1, so it adds no net
-context (see [architecture.md](architecture.md#design-guidelines)).
+the per-agent load manifest. Three names is what an agent gets
+without argument, and every name in the list counts — a `principle-`
+skill and the agent's own extracted procedure skill alike. An agent that
+lists more than three carries one recorded reason naming that count (see
+[architecture.md](architecture.md#design-guidelines)).
 
 ### [qrspi-workflow](https://github.com/bostonaholic/team/blob/main/skills/qrspi-workflow/SKILL.md)
 

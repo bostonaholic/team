@@ -71,8 +71,13 @@ Run the eight-point admission test:
    an invariant the system already enforces somewhere. Imported best practices with no
    local scar tissue do not get the prefix.
 8. **Fits the shape.** Statement + why + pattern in roughly 30 lines. Frontmatter:
-   `user-invocable: false`, an "Apply when …" description, no `effort` field. No agent
-   preloads it — consumers cite it and any agent loads it just-in-time.
+   `user-invocable: false`, an "Apply when …" description, no `effort` field.
+   Consumers cite it and any agent loads it just-in-time. An agent that does
+   preload one counts that name against its load budget like any other. The
+   set is enumerated in `docs/skills.md` under `## Methodology skills`, one
+   `### [principle-<name>]` entry per directory on disk, and
+   `tests/methodology.test.ts` asserts that equality in both directions — so
+   a new principle skill lands with its catalog entry in the same change.
 
 **Passing grade — the bar is tiered, not a count:**
 

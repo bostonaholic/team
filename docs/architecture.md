@@ -660,12 +660,23 @@ points at it.
 ### Methodology skills (loaded by agents, not directly invoked)
 
 Methodology skills carry no `argument-hint`. Agents load them through one
-of two mechanisms. The first is a `skills:` YAML list in the agent's
-frontmatter. For example, `agents/design-author.md` declares
-`skills: [product-thinking, principle-progress-tracking, authoring-designs,
-writing-prose]`. Those four names are three countable skills under the
-load limit in the Design guidelines below: `authoring-designs` is
-design-author's own extracted procedure skill, which that limit exempts.
+of two mechanisms. The first is a `skills:` YAML **block** list in the
+agent's frontmatter, one indented `- <name>` per line. For example,
+`agents/design-author.md` declares:
+
+```yaml
+skills:
+  - product-thinking
+  - principle-progress-tracking
+  - authoring-designs
+  - writing-prose
+```
+
+That is four counted names against the load limit in the Design
+guidelines below, one over the threshold, so `design-author` carries one
+recorded reason naming that count. The block form is the contract: three
+test parsers read it, and the one-line inline flow form parses to zero
+names, so it is an offender rather than a second shape.
 The second is an inline prose load instruction in the agent body. For
 example, the `implementer` body's Code quality section loads
 `solid` inline.
@@ -798,17 +809,16 @@ consumers, and behaviors), see [skills.md](skills.md).
 
 ### Design guidelines
 
-1. **Methodology skill load limit:** Soft limit of 3 methodology skills
-   per agent invocation. A skill averages roughly 190 lines, so 3 skills
-   add roughly 570 lines (~10K tokens, about 5% of 200K context). A fourth skill
-   signals that the agent's responsibility can be too broad. This is a
-   design convention, not a hard constraint. An agent's own extracted
-   procedure skill does not count toward the soft limit: it replaces
-   former inline body content 1:1, so it adds no net context.
-   `code-reviewer` preloads `cross-model-review` beyond the soft limit —
-   a stated deviation, not an oversight to fix back: the
-   cross-vendor pass belongs to the code review and nowhere else, and
-   inlining it would bloat the agent body it was extracted from.
+1. **Methodology skill load limit:** three methodology skills is what an
+   agent gets without argument. **Every name in the agent's `skills:`
+   block counts** — a `principle-` skill and the agent's own extracted
+   procedure skill alike. An agent that lists more than three carries one
+   recorded reason, and that record names the count it justifies. The
+   record is `PRELOAD_BUDGET_REASONS` in `tests/thin-agents.test.ts`,
+   keyed by agent; the reason is reviewed prose and the count is what the
+   machine holds, so a list that grows in silence reds the build. A fourth
+   name still signals that the agent's responsibility can be too broad,
+   and answering that is what the reason is for.
 
 2. **Extraction threshold: capability against fragment.** Content that is
    an **independently useful capability** earns its own skill
@@ -824,10 +834,15 @@ consumers, and behaviors), see [skills.md](skills.md).
 3. **Principle skills:** some skills carry the `principle-` prefix, and the
    prefix is a claim, not a namespace. Each states one cross-cutting
    invariant — fail closed, bounded loops, evidence over assertion, and
-   their siblings. No agent preloads one, so they cost nothing against
-   the soft limit: the skills that apply a rule consult it by citation,
-   and any agent can load it just-in-time. Each exists so the rule is
-   defined once, not restated in every skill that obeys it. The
+   their siblings. The skills that apply a rule consult it by citation,
+   and any agent can load it just-in-time. A preloaded principle skill
+   counts against the load limit like any other name: twelve of the
+   thirteen agents preload `principle-progress-tracking`, and
+   `file-finder` is the one that does not. Each exists so the rule is
+   defined once, not restated in every skill that obeys it. The set is
+   enumerated in one place, `docs/skills.md` under `## Methodology
+   skills`: one `### [principle-<name>]` entry per directory on disk, an
+   equality `tests/methodology.test.ts` asserts in both directions. The
    multi-rule methodology sets — `solid`, `product-thinking`, and
    `systems-thinking` — deliberately carry no prefix: they are preloaded
    or agent-loaded (see the Methodology skills section above) and count

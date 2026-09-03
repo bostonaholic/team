@@ -406,15 +406,6 @@ describe("thin agents: skills catalog stays complete", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
 
-  // replaced by "eliminate-rule-exceptions slice 3: every preloaded name counts
-  // against the budget (T2)" above — PRELOAD_BUDGET_REASONS is the contract this
-  // wording assertion was standing in for, and the prose it pins is the
-  // exemption the design removes. The implementer deletes this test.
-  test("docs/architecture.md exempts own-procedure skills from the 3-skill soft limit", () => {
-    const content = squash(read(ARCHITECTURE_MD));
-    expect(content).toMatch(/procedure skill/i);
-    expect(content).toMatch(/does not count/i);
-  });
 
   for (const { skill } of NEW_SKILLS) {
     test(`docs/skills.md documents ${skill}`, () => {
