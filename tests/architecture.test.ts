@@ -333,9 +333,10 @@ describe("effort tiering", () => {
 });
 
 describe("model tiering", () => {
-  // opus: complex work (the default) plus security-reviewer's permanent pin
-  // (Fable's cybersecurity classifiers refuse security-review content in
-  // non-interactive subagent contexts). sonnet: bounded judgment.
+  // opus: complex work, and the default. Security review is complex work, so
+  // `security-reviewer` sits on that rung like any other complex-work agent;
+  // what keeps it there is the override recipe in docs/architecture.md, which
+  // carries the vendor-classifier fact. sonnet: bounded judgment.
   // haiku: mechanical.
   const EXPECTED_MODELS: Record<string, string> = {
     "code-reviewer": "opus",

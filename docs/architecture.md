@@ -412,24 +412,19 @@ Three more balances bound the checks themselves:
 
 The principle:
 **complex work runs on `opus`. Bounded judgment runs on `sonnet`.
-Mechanical checks run on `haiku`.** `fable` (Fable 5), though more
-capable, is reserved for an agent with a demonstrated, concrete need
-that `opus` cannot meet — and no agent meets that bar today.
+Mechanical checks run on `haiku`.** `fable` (Fable 5) is the tier above
+`opus`: an agent runs there on a demonstrated, concrete need `opus`
+cannot meet. The tier is empty, and `EXPECTED_MODELS`
+(`tests/architecture.test.ts`) pins all thirteen agents in both
+directions, so setting any agent to `model: fable` fails the build.
 
 - **`opus` (complex work, the default):** `researcher`, `design-author`,
-  `structure-planner`, `planner`, `test-architect`, `implementer`, and
-  `code-reviewer`.
-- **`opus` (security review, permanent pin):** `security-reviewer` stays
-  on `opus` **permanently**, not as a fallback. Fable 5's cybersecurity
-  safety classifiers flag security-review content. In a non-interactive
-  subagent context, a flagged request ends the turn with a refusal
-  instead of a fallback. `opus` is a floating alias — it resolves to
-  Claude Code's current Opus (Opus 5 today), and riding the latest Opus
-  rather than pinning a dated one is deliberate: the pin exists to avoid
-  Fable's classifiers, not to freeze a specific Opus. Opus-tier models
-  carry cybersecurity safeguards of their own (far milder than Fable's),
-  so if security reviews ever start ending in refusals after an Opus
-  upgrade, overriding to the prior Opus is the escape hatch.
+  `structure-planner`, `planner`, `test-architect`, `implementer`,
+  `code-reviewer`, and `security-reviewer`. Security review is complex
+  work, so it runs on this rung like the rest. What is particular to
+  `security-reviewer` is that it must never be overridden **up** to
+  `fable`; the override recipe below carries that constraint and its
+  reason.
 - **`sonnet` (bounded single-pass judgment):** `questioner`,
   `ux-reviewer`, `technical-writer`.
 - **`haiku` (mechanical checks):** `file-finder`, `verifier`.
@@ -446,9 +441,18 @@ Notes:
   - **The recommended mechanism is a per-agent file copy:** copy the
     agent file into the `.claude/agents/` directory of the session that
     runs it, with the one-line edit `model: fable`, one file per agent.
-    **Never copy `security-reviewer`:** on fable its classifier refusals
-    end security reviews mid-run, which is the reason the permanent pin
-    exists.
+    **Never copy `security-reviewer`.** This is a named, load-bearing
+    constraint on the recipe, and here is the fact behind it: Fable 5's
+    cybersecurity safety classifiers flag security-review content, and in
+    a non-interactive subagent context a flagged request ends the turn
+    with a refusal rather than a fallback, so the review dies mid-run.
+    `opus` is a floating alias — it resolves to Claude Code's current
+    Opus (Opus 5 today) — and riding the latest Opus rather than a dated
+    one is deliberate: the constraint is about Fable's classifiers, not
+    about freezing a specific Opus. Opus-tier models carry cybersecurity
+    safeguards of their own (far milder than Fable's), so if security
+    reviews ever start ending in refusals after an Opus upgrade,
+    overriding to the prior Opus is the escape hatch.
   - **Placement is part of the recommendation.** An override takes
     effect only where the host looks for it, and a `/team` run has two
     candidate directories: the orchestrating session keeps its own
@@ -499,8 +503,8 @@ Notes:
   - **Do not use `CLAUDE_CODE_SUBAGENT_MODEL` for this.** The variable
     applies to every subagent, so *any* value flattens the five
     sonnet/haiku agents onto that tier's price — and `=fable` also drags
-    `security-reviewer` onto the model whose classifier refusals the
-    permanent pin exists to avoid.
+    `security-reviewer` onto the model whose classifier refusals end a
+    security review mid-run.
   - An override takes effect no later than the next session: a restart,
     or a copy placed before a session opens, applies it whether the host
     reads frontmatter once at session start or live-loads it.
@@ -523,32 +527,34 @@ Notes:
       the 5-reviewer verify). It does not reach `researcher`,
       `structure-planner`, `planner`, or `code-reviewer`, because
       nothing evaluates the artifact or verdict they produce.
-      `code-reviewer`'s one live route is the parity carve-out below;
-      `researcher`, `structure-planner`, and `planner` have **no live
-      re-pin route today**, and the shipped opus default holds for them
-      until either the deferred work on #139 produces per-agent
-      evidence and the bar's terms are extended to admit it (a future
-      decision, recorded then), or a per-task failure signal for them
-      comes into existence. The deferred aggregate comparison is not
-      that route: it observes the flip in aggregate, which cannot meet
-      a bar written per agent and per task.
-    - **The parity carve-out**, a named exception to the bar's
-      per-agent shape: if `implementer` clears the bar, the re-pin
-      moves `test-architect` and `code-reviewer` with it on
-      `implementer`'s evidence alone. Never re-pin `implementer` solo —
-      a scope fence or evaluator on a weaker model than the implementer
-      it gates is the defect the 0.14.1 fence rationale forbids. The
-      cost is stated: one agent's evidence triples the pin count, and
-      with it the permanent spend.
-    - **The `test-architect` narrowing:** its gate detects mechanical
-      faults only (a crash, a failing static check, a new test that
-      does not fail with an assertion error), not a scope fence that
-      runs green and covers too little. The recorded failure exists for
-      that narrow class alone — its place on the reached list is not a
-      broad failure signal, and its practical route back is the parity
-      carve-out.
-    - **The multi-repo limit:** a failure in a multi-repo run has no
-      live re-pin route today, and the aggregate comparison cannot host
+      `code-reviewer`'s one live route is the coupled reviewer set
+      below. For `researcher`, `structure-planner`, and `planner` the
+      routes are two, and both are future work: the deferred work on
+      #139 produces per-agent evidence and the bar's terms are extended
+      to admit it (a future decision, recorded then), or a per-task
+      failure signal for them comes into existence. Until one of those
+      opens, the shipped opus default holds for them. The deferred
+      aggregate comparison is neither route: it observes the flip in
+      aggregate, which cannot meet a bar written per agent and per
+      task.
+    - **The bar's unit is a coupled set of pins.** Most sets hold one
+      member. The reviewer set holds three: if `implementer` clears the
+      bar, the re-pin moves `test-architect` and `code-reviewer` with it
+      on `implementer`'s evidence alone. Never re-pin `implementer`
+      solo — a scope fence or evaluator on a weaker model than the
+      implementer it gates is the defect the 0.14.1 fence rationale
+      forbids. The cost is stated: one agent's evidence triples the pin
+      count, and with it the permanent spend.
+    - **What counts as recorded evidence is defined per agent**, because
+      each agent's gate detects its own class of failure.
+      `test-architect`'s gate detects mechanical faults (a crash, a
+      failing static check, a new test that does not fail with an
+      assertion error), not a scope fence that runs green and covers too
+      little. Its recorded failure is evidence for that class, which is
+      what puts it on the reached list, and its practical route back is
+      the coupled reviewer set above.
+    - **The multi-repo limit:** the route for a failure in a multi-repo
+      run is future work too, and the aggregate comparison cannot host
       it — the Golden Master is pinned to one repository, and #139
       models a run with no repository axis — so the deferred instrument
       work must state its own repository scope.
@@ -580,10 +586,15 @@ Notes:
 
 ### Effort tiering
 
-Effort tiering mirrors the model tiers: `low` (mechanical), `medium` and
-`high` (judgment), and `xhigh` (strategic artifact authors). The `xhigh`
-tier holds `design-author` and `structure-planner`, whose artifacts set
-the direction everything downstream inherits. Methodology skills carry no
+Effort tracks the work the agent does, on its own four-rung ladder:
+`low` (mechanical), `medium` and `high` (judgment — the band spans both
+rungs), and `xhigh` (strategic artifact authors). The `xhigh` tier holds
+`design-author` and `structure-planner`, whose artifacts set the
+direction everything downstream inherits. The ladder runs alongside the
+model ladder rather than off it, so an agent on `sonnet` at `high` is
+inside the rule: `questioner` is the live case, doing judgment work in a
+bounded single pass. `EXPECTED_EFFORTS` (`tests/architecture.test.ts`)
+pins all thirteen values in both directions. Methodology skills carry no
 `effort`. They inherit it from the loading agent.
 
 ## 5. Phase-table orchestrator
