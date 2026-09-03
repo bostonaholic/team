@@ -758,11 +758,13 @@ never relaxes a rule below.
    shell does not re-parse an expanded value. Prose never can. A **tracker-authored prose
    value**, such as that milestone title, never travels as a bare positional or as a
    command's first word, and when it starts with `-` it is guarded with a `--` terminator
-   or stopped — an option-shaped value is read as an option. Two positive routes, then:
-   tracker-authored prose always travels by file or stdin, and a short structural scalar
-   the run itself resolved, such as an issue number matched against the loaded board,
-   travels positionally (`gh issue close "$N"`), because the command that takes it has no
-   flag route.
+   or stopped — an option-shaped value is read as an option. Three positive routes, then: a
+   prose body always travels by file or stdin; a short tracker-authored scalar with no file
+   route of its own, such as a milestone title, travels as a quoted flag value expanded from
+   a variable (`--milestone "$MILESTONE_TITLE"`); and a short structural scalar the run
+   itself resolved, such as an issue number matched against the loaded board, travels
+   positionally (`gh issue close "$N"`), because the command that takes it has no flag
+   route.
    The general rule: `skills/principle-never-interpolate/SKILL.md`.
 3. **Never close a decision, investigation, or spike ticket** because the code already
    answers the question. Attach the evidence as decision input and leave it open — the
