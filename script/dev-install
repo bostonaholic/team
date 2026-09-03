@@ -21,17 +21,17 @@ PULL_HOOK_SOURCE="${HERE}/dev-install-claude-pull-hook"
 resolve_pull_hooks_dir() {
   local common_dir hooks_dir
   common_dir=$(git -C "$PLUGIN_ROOT" rev-parse --path-format=absolute --git-common-dir) || {
-    echo "Error: cannot resolve this checkout's common Git directory." >&2
+    echo "Warning: cannot resolve this checkout's common Git directory." >&2
     return 1
   }
   hooks_dir=$(git -C "$PLUGIN_ROOT" rev-parse --path-format=absolute --git-path hooks) || {
-    echo "Error: cannot resolve this checkout's Git hooks directory." >&2
+    echo "Warning: cannot resolve this checkout's Git hooks directory." >&2
     return 1
   }
   if [ "$hooks_dir" != "${common_dir}/hooks" ]; then
-    echo "Error: the active Git hooks path is outside this clone:" >&2
+    echo "Warning: the active Git hooks path is outside this clone:" >&2
     echo "  ${hooks_dir}" >&2
-    echo "Preserving it. Add 'script/dev-install claude' to its pull hooks manually." >&2
+    echo "Preserving it. Team installs no hooks there." >&2
     return 1
   fi
   printf '%s\n' "$hooks_dir"
@@ -40,7 +40,7 @@ resolve_pull_hooks_dir() {
 preflight_pull_hooks() {
   local hooks_dir hook_name hook_path
   if [ ! -f "$PULL_HOOK_SOURCE" ] || [ ! -x "$PULL_HOOK_SOURCE" ]; then
-    echo "Error: Claude pull hook is missing or not executable:" >&2
+    echo "Warning: Claude pull hook is missing or not executable:" >&2
     echo "  ${PULL_HOOK_SOURCE}" >&2
     return 1
   fi
@@ -51,25 +51,39 @@ preflight_pull_hooks() {
     hook_path="${hooks_dir}/${hook_name}"
     if { [ -e "$hook_path" ] || [ -L "$hook_path" ]; } &&
       { [ -L "$hook_path" ] || [ ! -f "$hook_path" ] || ! grep -qxF "$HOOK_MARKER" "$hook_path"; }; then
-      echo "Error: ${hook_path} exists and is not managed by Team." >&2
-      echo "Preserving it. Add 'script/dev-install claude' to that hook manually." >&2
+      echo "Warning: ${hook_path} exists and is not managed by Team." >&2
+      echo "Preserving it. Team replaces no hook it does not own." >&2
       return 1
     fi
   done
 }
 
+report_skipped_pull_hooks() {
+  echo "Skipped the Claude pull hooks (see the warning above)." >&2
+  echo "Every targeted harness installed. To keep the Claude cache fresh, either" >&2
+  echo "re-run 'script/dev-install claude' after each pull, or call it from your" >&2
+  echo "own post-merge and post-rewrite hooks." >&2
+}
+
 install_pull_hooks() {
   local hooks_dir hook_name hook_path temp_path
-  preflight_pull_hooks
-  hooks_dir=$(resolve_pull_hooks_dir)
+  # Re-check at write time: the harness installs ran since the first preflight.
+  preflight_pull_hooks || return 1
+  hooks_dir=$(resolve_pull_hooks_dir) || return 1
 
-  mkdir -p "$hooks_dir"
+  # `set -e` does not reach here: the caller tests this function's status, so
+  # every write reports its own failure and leaves no temp file behind.
+  mkdir -p "$hooks_dir" || return 1
   for hook_name in post-merge post-rewrite; do
     hook_path="${hooks_dir}/${hook_name}"
-    temp_path=$(mktemp "${hooks_dir}/.team-${hook_name}.XXXXXX")
-    cp "$PULL_HOOK_SOURCE" "$temp_path"
-    chmod 0755 "$temp_path"
-    mv "$temp_path" "$hook_path"
+    temp_path=$(mktemp "${hooks_dir}/.team-${hook_name}.XXXXXX") || return 1
+    if ! { cp "$PULL_HOOK_SOURCE" "$temp_path" &&
+      chmod 0755 "$temp_path" &&
+      mv "$temp_path" "$hook_path"; }; then
+      rm -f "$temp_path"
+      echo "Warning: cannot install Git hook: ${hook_path}" >&2
+      return 1
+    fi
     echo "Installed Git hook: ${hook_path}"
   done
 }
@@ -96,8 +110,13 @@ for harness in "${targets[@]}"; do
     break
   fi
 done
-if [ "$CLAUDE_TARGETED" = true ]; then
-  preflight_pull_hooks
+# Decide the pull hooks before the harness output scrolls by, but never gate the
+# install on them: they only re-run the Claude installer after a pull, so a
+# hooks surface Team cannot own is a skip, not a failure.
+# See skills/principle-optimization-never-dependency/SKILL.md.
+PULL_HOOKS_OWNED=false
+if [ "$CLAUDE_TARGETED" = true ] && preflight_pull_hooks; then
+  PULL_HOOKS_OWNED=true
 fi
 
 failed=()
@@ -115,5 +134,7 @@ if [ ${#failed[@]} -gt 0 ]; then
 fi
 
 if [ "$CLAUDE_TARGETED" = true ]; then
-  install_pull_hooks
+  if [ "$PULL_HOOKS_OWNED" = false ] || ! install_pull_hooks; then
+    report_skipped_pull_hooks
+  fi
 fi

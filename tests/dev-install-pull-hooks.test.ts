@@ -34,13 +34,25 @@ type Fixture = {
   home: string;
 };
 
+// Neutralize the developer's own Git config. Two reasons: a global commit hook
+// manager costs ~0.9s per fixture commit, which alone times this suite out; and
+// a global `core.hooksPath` would decide the very condition under test.
+const HERMETIC_GIT = {
+  GIT_CONFIG_GLOBAL: "/dev/null",
+  GIT_CONFIG_SYSTEM: "/dev/null",
+} as const;
+
 function run(
   cwd: string,
   command: string,
   args: string[],
   env: NodeJS.ProcessEnv = process.env,
 ) {
-  const result = spawnSync(command, args, { cwd, encoding: "utf8", env });
+  const result = spawnSync(command, args, {
+    cwd,
+    encoding: "utf8",
+    env: { ...env, ...HERMETIC_GIT },
+  });
   return {
     status: result.status ?? -1,
     output: `${result.stdout ?? ""}${result.stderr ?? ""}${result.error?.message ?? ""}`,
@@ -209,30 +221,33 @@ describe("dev install: refresh after pulls (#312)", () => {
     expect(existsSync(hookPath(fixture, "post-rewrite"))).toBe(false);
   });
 
-  test("an existing user hook is preserved and blocks installation", () => {
+  // A hooks surface Team does not own is preserved, and the pull-hook refresh
+  // is skipped — but the install itself proceeds. See #314 and
+  // tests/regression-314-foreign-hooks-path.test.ts.
+  test("an existing user hook is preserved and the install still runs", () => {
     const fixture = newFixture();
     const hook = hookPath(fixture, "post-merge");
     writeExecutable(hook, "#!/bin/sh\necho user-hook\n");
 
     const result = install(fixture);
 
-    expect(result.status).not.toBe(0);
+    expect(result.status).toBe(0);
     expect(result.output).toContain("not managed by Team");
     expect(readFileSync(hook, "utf8")).toBe("#!/bin/sh\necho user-hook\n");
     expect(existsSync(hookPath(fixture, "post-rewrite"))).toBe(false);
-    expect(installCalls(fixture)).toHaveLength(0);
+    expect(installCalls(fixture)).toHaveLength(1);
   });
 
-  test("a custom hooks path is preserved and blocks installation", () => {
+  test("a custom hooks path is preserved and the install still runs", () => {
     const fixture = newFixture();
     const customHooks = join(fixture.root, "shared-hooks");
     git(fixture.checkout, "config", "core.hooksPath", customHooks);
 
     const result = install(fixture);
 
-    expect(result.status).not.toBe(0);
+    expect(result.status).toBe(0);
     expect(result.output).toContain("outside this clone");
     expect(existsSync(customHooks)).toBe(false);
-    expect(installCalls(fixture)).toHaveLength(0);
+    expect(installCalls(fixture)).toHaveLength(1);
   });
 });
