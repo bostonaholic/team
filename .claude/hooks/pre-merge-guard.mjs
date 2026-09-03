@@ -19,7 +19,7 @@
  * the commit removes the coupling entirely. That read needs a trusted head:
  * a fork head is unreviewed code, and running its script would execute that
  * code locally, which this repo already refuses for fork PRs
- * (docs/testing.md §5) — so a fork whose script differs from this checkout's
+ * (docs/testing.md) — so a fork whose script differs from this checkout's
  * denies instead.
  *
  * Failure direction: fail open only before jurisdiction is decided

@@ -129,7 +129,8 @@ Decide with these tests, in order:
    invocation-local scratch file (deploys, pushes, commits, deletes, sends)? → it
    guards in its description, per §1A step 3. Whether it also sets
    `disable-model-invocation` is a further per-skill call, made on its own recorded
-   reason — three skills have one today.
+   reason — three skills have one today; a skill that sets it on that reason lands in
+   **User-invocable only**.
 2. **Is it purely reference material** — methodology, conventions, a protocol another
    agent reads — with no standalone "do this now" meaning for a user? →
    **Model-invocable only**.

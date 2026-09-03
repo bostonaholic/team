@@ -74,8 +74,9 @@ Where a rule must hold, a deterministic check enforces it — never prompt memor
 ### HARD
 
 Blocks the phase transition until satisfied. It clears one of two ways:
-the condition is met, or the user commands an override explicitly. Examples: a REQUEST CHANGES design-review verdict, security
-findings that gate, test failures.
+the condition is met, or the user commands an override explicitly.
+Examples: a REQUEST CHANGES design-review verdict, security findings that
+gate, test failures.
 
 ### SOFT
 

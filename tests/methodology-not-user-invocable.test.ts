@@ -218,7 +218,6 @@ describe("skill flavor and catalog completeness", () => {
     expect(entries.length).toBe(headings.length);
   });
 
-
   // Prove each rule can find a positive: four planted violations, one per way
   // the catalog can lie about what a skill is.
   test("the flavor and completeness checks can see planted violations", () => {

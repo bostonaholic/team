@@ -1566,7 +1566,7 @@ lists more than three carries one recorded reason naming that count (see
   `LC_ALL=C` so the class is byte-exact — refuse on failure, never
   normalize a name to make it pass. Terminate options with `--` where a value
   could be read as an option, which a value whose position already fixes
-  its role could not be. Paths get containment checks before
+  its role, having passed the allowlist above, could not be. Paths get containment checks before
   destructive use. Capture, validate, and use in the SAME invocation; a
   value a destructive command or gate consumes expands as `"${VAR:?}"`
   so an unset value aborts instead of expanding to empty.
