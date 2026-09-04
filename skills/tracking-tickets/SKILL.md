@@ -6,10 +6,8 @@ user-invocable: false
 
 # Tracking Tickets
 
-The single rule set for how a pipeline run interacts with a tracking
-ticket (a GitHub issue, or any other tracker the project uses). The
-entry-point skills that pick up tickets or open PRs point here for the
-rules and keep only their own procedural glue.
+Canonical tracker rules for pipeline pickup, PR linking, review state, and
+merge. Entry points keep only tracker-specific calls.
 
 ## Best-effort, tracker-agnostic, never blocking
 
