@@ -31,6 +31,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   realpathSync,
   rmSync,
   symlinkSync,
@@ -59,6 +60,7 @@ import {
 const REPO_ROOT = process.cwd();
 // reflect is a RUNTIME skill — under skills/ (distributed), not .claude/.
 const SKILL = join(REPO_ROOT, "skills", "reflect", "SKILL.md");
+const REFERENCES = join(REPO_ROOT, "skills", "reflect", "references");
 
 // ---------------------------------------------------------------------------
 // Temp-dir plumbing. Every L1 test builds its own tree, so the suite passes in
@@ -157,7 +159,14 @@ function totalSpanBytes(records: { text?: string }[]): number {
 // ---------------------------------------------------------------------------
 
 function body(): string {
-  return existsSync(SKILL) ? read(SKILL) : "";
+  if (!existsSync(SKILL) || !existsSync(REFERENCES)) return "";
+  return [
+    read(SKILL),
+    ...readdirSync(REFERENCES)
+      .filter((name) => /^\d\d-.*\.md$/.test(name))
+      .sort()
+      .map((name) => read(join(REFERENCES, name))),
+  ].join("\n");
 }
 
 function fm(): string {
