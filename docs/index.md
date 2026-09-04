@@ -9,7 +9,7 @@ nav_label: home
 
 # Team
 
-Autonomous feature delivery for Claude Code.
+**You have been made tech lead. Your team never sleeps.**
 
 ## What is Team?
 
@@ -38,6 +38,33 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 | **Plan** | The planner derives a tactical implementation plan from the structure. The implementer reads it. No gate applies. |
 | **Implement** | Test-first → slice execution → 5 parallel reviewers + typed retry loop. |
 | **PR** | Update changelog, commit, open pull request. |
+
+## The governance stack
+
+Every team you have worked on had rules that made its output trustworthy: an
+author does not approve their own pull request, a design gets challenged before
+it is built, security reads the change before it ships. Team ships those rules
+as machinery rather than as manners.
+
+| The rule | How Team enforces it |
+|----------|----------------------|
+| An author never approves their own work | Reviewers hold no `Write` or `Edit` tool and run in `plan` mode. Pinned by `tests/protocol.test.ts`, not requested in a prompt. |
+| Review is not a rubber stamp | The implement loop re-runs until no Blocking or Major finding is left. There is no fixed number of rounds to outwait. |
+| A reviewer cannot be lobbied | Reviewers read the diff and a spec written before the code existed, never the implementer's account of its own work. |
+| The design is challenged before it is built | A fresh-context adversarial design review hard-gates the pipeline. |
+| Nobody escalates to dodge a check | The orchestrator is forbidden from handing a blocking finding to the human mid-run. |
+| Every decision is on the record | `docs/plans/<id>/` holds the task, the questions, the research, the design, every review verdict, and the plan. Files in the repo, not chat history. |
+
+You cannot overrule the security reviewer by asking nicely. [Ethos](ethos.md)
+explains why each rule exists.
+
+## How far the delegation goes
+
+Team's scope today is contained: a groomed ticket, one repository, a context
+that already exists. Each rung above that hands Team a less framed problem — a
+problem statement, then an outcome to move — until one person carries
+company-significant work from problem definition through measured outcomes.
+[Vision](vision.md) has the ladder.
 
 ## Install
 
