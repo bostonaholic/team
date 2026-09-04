@@ -28,11 +28,18 @@ function distributedBodies(): { rel: string; text: string }[] {
   for (const name of readdirSync(join(REPO_ROOT, "agents")).sort()) {
     if (name.endsWith(".md")) out.push({ rel: join("agents", name), text: read(join(REPO_ROOT, "agents", name)) });
   }
+  const visit = (directory: string) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) visit(path);
+      if (entry.isFile() && entry.name.endsWith(".md")) {
+        out.push({ rel: path.slice(REPO_ROOT.length + 1), text: read(path) });
+      }
+    }
+  };
   const skillsRoot = join(REPO_ROOT, "skills");
-  for (const entry of readdirSync(skillsRoot, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
-    if (!entry.isDirectory()) continue;
-    const file = join(skillsRoot, entry.name, "SKILL.md");
-    if (existsSync(file)) out.push({ rel: join("skills", entry.name, "SKILL.md"), text: read(file) });
+  if (existsSync(skillsRoot)) {
+    visit(skillsRoot);
   }
   return out;
 }

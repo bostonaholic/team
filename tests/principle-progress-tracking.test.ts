@@ -89,15 +89,19 @@ describe("multi-step agents preload principle-progress-tracking", () => {
 
 describe("orchestrator-owned ledgers retain their specific seed rules", () => {
   test("team seeds the phase ledger", () => {
-    expect(read(skill("team"))).toContain("Seed the TodoWrite ledger");
+    expect(read(join(SKILLS_DIR, "team", "references", "02-setup.md"))).toContain(
+      "Seed the TodoWrite ledger",
+    );
   });
 
   test("team-fix seeds the bug-fix ledger", () => {
-    expect(read(skill("team-fix"))).toContain("Seed the TodoWrite ledger");
+    expect(read(join(SKILLS_DIR, "team-fix", "references", "04-setup.md"))).toContain(
+      "Seed the TodoWrite ledger",
+    );
   });
 
   test("team-implement seeds the implementation ledger", () => {
-    expect(read(skill("team-implement"))).toContain(
+    expect(read(join(SKILLS_DIR, "team-implement", "references", "01-input.md"))).toContain(
       "Coordinate progress through TodoWrite. Seed:",
     );
   });

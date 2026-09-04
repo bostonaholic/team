@@ -111,15 +111,18 @@ describe("regression: no skill body carries a bare $<digit> the loader would sub
 
 // --- L3: the pr-cleanup derivation actually resolves worktrees ---------------
 
-const PR_CLEANUP = join(REPO_ROOT, "skills", "pr-cleanup", "SKILL.md");
+const PR_CLEANUP_MODES = [
+  join(REPO_ROOT, "skills", "pr-cleanup", "references", "09-mode-a-merged.md"),
+  join(REPO_ROOT, "skills", "pr-cleanup", "references", "10-mode-b-closed-abandoned.md"),
+];
 
-// Pull the worktree-path derivation out of the SKILL.md so the documented
+// Pull the worktree-path derivation out of the routed payloads so the documented
 // command and the tested command cannot drift. Mode A and Mode B each carry a
 // copy; they must stay identical, since step 3 tells the reader that both use
 // the same derivation.
 function derivationSnippet(): string {
-  const blocks = [...read(PR_CLEANUP).matchAll(/```sh\n([\s\S]*?)```/g)].map(
-    (m) => m[1]!,
+  const blocks = PR_CLEANUP_MODES.flatMap((file) =>
+    [...read(file).matchAll(/```sh\n([\s\S]*?)```/g)].map((match) => match[1]!),
   );
   const matches = blocks.filter((b) => b.includes('WORKTREE_PATH="$('));
   expect(matches.length).toBe(2); // guard: Mode A + Mode B, no more, no fewer

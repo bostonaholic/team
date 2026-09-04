@@ -739,11 +739,11 @@ describe("test-first-development lens (L2 content tripwire)", () => {
   // without type-checking, and test-first deliberately writes incomplete
   // stubs. Without a static check here the first actor to notice is the
   // verifier — one of the five reviewers — which costs a whole review round.
-  // Pinned everywhere the gate is stated, so the three copies cannot drift.
+  // Pin the routed contract payloads, not their router wording.
   const GATE_FILES: Array<[string, string]> = [
-    ["team", join(REPO_ROOT, "skills", "team", "SKILL.md")],
-    ["team-implement", join(REPO_ROOT, "skills", "team-implement", "SKILL.md")],
-    ["team-fix", join(REPO_ROOT, "skills", "team-fix", "SKILL.md")],
+    ["team", join(REPO_ROOT, "skills", "team", "references", "11-mechanical-gate-test-confirmation.md")],
+    ["team-implement", join(REPO_ROOT, "skills", "team-implement", "references", "03-execution.md")],
+    ["team-fix", join(REPO_ROOT, "skills", "team-fix", "references", "06-execution.md")],
   ];
 
   for (const [label, file] of GATE_FILES) {

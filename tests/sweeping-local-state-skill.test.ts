@@ -35,6 +35,13 @@ const REPO_ROOT = process.cwd();
 // A RUNTIME skill — under skills/ (distributed), not .claude/.
 const SKILL = join(REPO_ROOT, "skills", "sweeping-local-state", "SKILL.md");
 const PR_CLEANUP = join(REPO_ROOT, "skills", "pr-cleanup", "SKILL.md");
+const PR_CLEANUP_MODE_B = join(
+  REPO_ROOT,
+  "skills",
+  "pr-cleanup",
+  "references",
+  "10-mode-b-closed-abandoned.md",
+);
 const WORKTREE_ISOLATION = join(
   REPO_ROOT,
   "skills",
@@ -167,7 +174,7 @@ describe("sweeping-local-state: ownership boundary and cross-references", () => 
   });
 
   test("pr-cleanup loads it, and names the section to skip", () => {
-    const text = readOrEmpty(PR_CLEANUP);
+    const text = readOrEmpty(PR_CLEANUP_MODE_B);
     expect(text).toContain("skills/sweeping-local-state/SKILL.md");
     expect(text).toContain("Finishing a review rather than a merge");
   });
