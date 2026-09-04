@@ -23,7 +23,7 @@
 
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -33,10 +33,18 @@ import { loadsSkill } from "./helpers/skill-refs";
 const REPO_ROOT = process.cwd();
 // team-fix is a RUNTIME skill — under skills/ (distributed), not .claude/.
 const SKILL = join(REPO_ROOT, "skills", "team-fix", "SKILL.md");
+const REFERENCES = join(REPO_ROOT, "skills", "team-fix", "references");
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
 function body(): string {
-  return existsSync(SKILL) ? read(SKILL) : "";
+  if (!existsSync(SKILL) || !existsSync(REFERENCES)) return "";
+  return [
+    read(SKILL),
+    ...readdirSync(REFERENCES)
+      .filter((name) => /^\d\d-.*\.md$/.test(name))
+      .sort()
+      .map((name) => read(join(REFERENCES, name))),
+  ].join("\n");
 }
 
 describe("team-fix: the leading WORKTREE phase exists", () => {
