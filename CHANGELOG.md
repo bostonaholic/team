@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.85.0] - 2026-09-04
+
 ### Added
 
 - **A new principle skill, [`principle-subtract-before-you-add`](https://github.com/bostonaholic/team/blob/main/skills/principle-subtract-before-you-add/SKILL.md), sequences removal before construction.** Remove what a change replaces or leaves unused, then build on the smaller base; add no validator, guard, or option the design, plan, or tests do not demand; and simplify prompts and skills the same way. `engineering-standards`, `implementing-slices`, `refactoring-to-patterns`, and `authoring-designs` cite it, so the planner, implementer, code-reviewer, and design-author apply it where they add code, refactor, or draft a design. Removals stay inside the approved scope per `principle-scope-fence`. The catalog grows from 84 to 85 skills. **What this asks of you:** nothing.
@@ -779,7 +781,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.84.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.85.0...HEAD
+[0.85.0]: https://github.com/bostonaholic/team/compare/v0.84.0...v0.85.0
 [0.84.0]: https://github.com/bostonaholic/team/compare/v0.83.0...v0.84.0
 [0.83.0]: https://github.com/bostonaholic/team/compare/v0.82.0...v0.83.0
 [0.82.0]: https://github.com/bostonaholic/team/compare/v0.81.0...v0.82.0
