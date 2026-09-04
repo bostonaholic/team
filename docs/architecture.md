@@ -818,6 +818,16 @@ consumers, and behaviors), see [skills.md](skills.md).
 
 ### Design guidelines
 
+Skill sources follow six rules: assert without arguing; state invariants instead
+of exhaustive case lists; define shared rules once; keep `SKILL.md` as a router
+to `references/` and scripts; use descriptions only for capability and trigger;
+and test commands, numbers, names, paths, or behavior rather than prose wording.
+
+Source budgets are 25 lines for `principle-*`, 80 for methodology, and 150 for
+entry points. Descriptions are at most 200 characters, or 150 for methodology.
+`tests/skill-budget.test.ts` enforces these limits. An overage requires a current
+`SKILL_BUDGET_REASONS` entry with its exact line count and reviewed reason.
+
 1. **Methodology skill load limit:** three methodology skills is what an
    agent gets without argument. **Every name in the agent's `skills:`
    block counts** — a `principle-` skill and the agent's own extracted
@@ -877,15 +887,9 @@ icons, no brand color. A `policy` block declaring
 `disable-model-invocation: true`, and the test asserts that equality in both
 directions.
 
-`short_description` is the one field no derivation produces, and that is where
-drift lives. `.claude/skills/create-team-skill/` teaches the manifest for a new
-skill and says nothing about keeping it current when a `description:` is
-rewritten later. Reflect is the concrete actor: `skills/reflect/SKILL.md`
-consults that guide before editing an existing skill, so the guide is reachable
-on an edit path, but it is silent about `short_description` — leaving Reflect
-able to rewrite a `description:` and leave the manifest stale. Nothing detects
-that today; the gate checks the manifest's shape, never its agreement with the
-prose it summarizes.
+`short_description` has no mechanical derivation. The creation guide requires
+updating `agents/openai.yaml` whenever `description:` changes; the manifest gate
+checks its shape and length.
 
 ## 7. Hooks
 
