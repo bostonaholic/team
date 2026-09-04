@@ -75,7 +75,7 @@ infinite.** Defaults (overridable so a future automation loop can tune them):
 
 ```bash
 timeout 1800 gh pr checks <pr-number> --watch --fail-fast --interval 30
-status=$?
+WATCH_STATUS=$?
 ```
 
 **Run it with `run_in_background: true`.** The 1800s cap only applies to a
@@ -83,10 +83,10 @@ backgrounded call: in the foreground the harness kills the watch at its own
 ceiling (600 s in Claude Code) with exit 143, so on any repo whose CI runs
 longer than ten minutes the stated 30-minute cap never applies and the watch
 is lost rather than timed out. Backgrounded, the harness reports the call when
-it exits and `status` is the real verdict. See
+it exits and `WATCH_STATUS` is the real verdict. See
 `principle-non-blocking-waits`.
 
-Map `status` first — it is the fast path out, never the way in:
+Map `WATCH_STATUS` first — it is the fast path out, never the way in:
 
 - **non-zero and not 124** (a check failed) → **stop before merge**. Run
   `gh pr checks <pr-number>` to print the failing check, and report it by name.

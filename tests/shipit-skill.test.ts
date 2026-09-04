@@ -159,6 +159,17 @@ describe("shipit skill: push, wait for CI, merge", () => {
     }
   });
 
+  test("the CI watch exit code is captured into a variable no shell reserves", () => {
+    // `status` is a read-only special parameter in zsh (an alias of `$?`), so
+    // `status=$?` aborts the wrapper with "read-only variable: status" and the
+    // watch reports failure on a fully green PR. The capture must use a name
+    // no shell reserves, and it must exist — an absent capture would pass the
+    // negative check while leaving the verdict mapping with nothing to read.
+    const t = body();
+    expect(t).toContain("WATCH_STATUS=$?");
+    expect(t).not.toMatch(/^status=\$\?/m);
+  });
+
   test("names `gh pr merge --squash` explicitly", () => {
     // Squash lands the PR title as the commit subject (so a version in the
     // title shows up in git log) while keeping linear history.

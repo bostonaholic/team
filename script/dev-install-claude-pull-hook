@@ -8,6 +8,11 @@ set -euo pipefail
 HOOK_NAME="${0##*/}"
 [ "$HOOK_NAME" != "post-rewrite" ] || [ "${1:-}" = "rebase" ] || exit 0
 
+# Hooks are shared with linked worktrees. The install links the primary
+# checkout, and a worktree rebase changes nothing that checkout serves.
+[ "$(git rev-parse --path-format=absolute --git-dir 2>/dev/null)" = \
+  "$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" ] || exit 0
+
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || {
   echo "Error: Team pull hook cannot resolve the checkout root." >&2
   exit 1
