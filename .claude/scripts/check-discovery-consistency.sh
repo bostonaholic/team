@@ -28,6 +28,14 @@ run_helper() {
   fi
 }
 
+skill_surface() {
+  local directory="$1" file
+  cat "$directory/SKILL.md"
+  for file in "$directory"/references/*.md; do
+    [ -f "$file" ] && cat "$file"
+  done
+}
+
 A_SKILLS=(team-research team-design team-structure team-plan team-worktree team-implement team-pr eng-design-doc-review)
 A_PREDECESSORS=(2-questions.md 5-research.md 6-design.md 7-structure.md 8-plan.md 8-plan.md 6-design.md 6-design.md)
 
@@ -67,6 +75,7 @@ while [ "$i" -lt "${#A_SKILLS[@]}" ]; do
   skill="${A_SKILLS[$i]}"
   predecessor="${A_PREDECESSORS[$i]}"
   file="$SKILLS/$skill/SKILL.md"
+  surface="$(skill_surface "$SKILLS/$skill")"
   expected='"<team-skill-dir>/discover-topic.sh" "${ARGUMENTS:-}" "'"$predecessor"'"'
   [ "$skill" = "team-structure" ] && expected="$expected --require-passing-review"
 
@@ -75,32 +84,35 @@ while [ "$i" -lt "${#A_SKILLS[@]}" ]; do
     i=$((i + 1))
     continue
   fi
-  count="$(grep -Fxc "$expected" "$file" || true)"
+  count="$(grep -Fxc "$expected" <<< "$surface" || true)"
   [ "$count" -eq 1 ] \
     || fail "$skill invocation" "one exact invocation: $expected" "found $count"
-  grep -qF '`<team-skill-dir>` to the absolute directory containing' "$file" \
+  grep -qF '`<team-skill-dir>` to the absolute directory containing' <<< "$surface" \
     || fail "$skill path resolution" "absolute <team-skill-dir> resolution instruction" "instruction missing"
-  grep -qF '`skills/team/SKILL.md`' "$file" \
+  grep -qF '`skills/team/SKILL.md`' <<< "$surface" \
     || fail "$skill path contract" "skills/team/SKILL.md anchor" "anchor missing"
-  if grep -qF 'ID_RE=' "$file" || grep -qF 'PHASE_FILES=' "$file"; then
+  if grep -qF 'ID_RE=' <<< "$surface" || grep -qF 'PHASE_FILES=' <<< "$surface"; then
     fail "$skill deduplication" "no embedded resolver implementation" "resolver token remains"
   fi
-  if [ "$skill" != "team-structure" ] && grep -qF -- '--require-passing-review' "$file"; then
+  if [ "$skill" != "team-structure" ] && grep -qF -- '--require-passing-review' <<< "$surface"; then
     fail "$skill review flag" "review flag absent" "review flag found"
   fi
   i=$((i + 1))
 done
 
 for skill in team-research team-design team-structure team-plan team-worktree team-implement eng-design-doc-review; do
-  grep -qF 'AskUserQuestion' "$SKILLS/$skill/SKILL.md" \
+  surface="$(skill_surface "$SKILLS/$skill")"
+  grep -qF 'AskUserQuestion' <<< "$surface" \
     || fail "$skill fallback" "retains AskUserQuestion fallback" "fallback missing"
 done
-grep -qF 'Describe the task' "$SKILLS/team-implement/SKILL.md" \
+team_implement_surface="$(skill_surface "$SKILLS/team-implement")"
+team_pr_surface="$(skill_surface "$SKILLS/team-pr")"
+grep -qF 'Describe the task' <<< "$team_implement_surface" \
   || fail "team-implement fallback" "retains Describe the task option" "option missing"
-if grep -qF 'AskUserQuestion' "$SKILLS/team-pr/SKILL.md"; then
+if grep -qF 'AskUserQuestion' <<< "$team_pr_surface"; then
   fail "team-pr fallback" "no AskUserQuestion; fall through to standalone" "AskUserQuestion found"
 fi
-grep -qF 'Nothing to ship.' "$SKILLS/team-pr/SKILL.md" \
+grep -qF 'Nothing to ship.' <<< "$team_pr_surface" \
   || fail "team-pr standalone" "retains Nothing to ship." "standalone stop missing"
 
 # Explicit paths win verbatim, including paths outside ID_RE and review-gated use.
@@ -216,9 +228,9 @@ printf '%s' "$dispatch" | grep -qF '4-repos.md' \
 if printf '%s' "$dispatch" | grep -qiE 'pass[^.]*1-task\.md|forward[^.]*1-task\.md|include[^.]*1-task\.md'; then
   fail "team-research dispatch" "does not forward 1-task.md" "forwarding reference found"
 fi
-grep -qF 'If `$ARGUMENTS/8-plan.md` does not exist' "$SKILLS/team-implement/SKILL.md" \
+grep -qF 'If `$ARGUMENTS/8-plan.md` does not exist' <<< "$team_implement_surface" \
   || fail "team-implement standalone" "retains 8-plan.md-absent branch" "branch missing"
-grep -qF 'symbolic-ref refs/remotes/origin/HEAD' "$SKILLS/team-pr/SKILL.md" \
+grep -qF 'symbolic-ref refs/remotes/origin/HEAD' <<< "$team_pr_surface" \
   || fail "team-pr base detection" "retains origin HEAD detection" "command missing"
 
 if [ "$ERRORS" -ne 0 ]; then
