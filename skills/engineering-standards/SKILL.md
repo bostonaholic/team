@@ -53,9 +53,11 @@ Every item gates progress: **Single Responsibility**; **Clear Naming**; **No Mag
 - Keep one abstraction level per function; extract lower-level work behind names at the caller’s level.
 - Catch only the exact throwing call and specific exception; chain the original cause. Never wrap a large block in `catch (Exception e)`.
 - Follow neighboring project style, naming, and patterns.
+- Remove what the change replaces or leaves unused before adding its replacement; add no guard the spec does not demand (`principle-subtract-before-you-add`).
 
 ## When Reviewing
 
 - Apply every Quality Checklist item to every changed file and cite its name in findings, e.g. `issue: Clear Naming — the variable d does not reveal intent`.
 - Check for Design-First evidence in interfaces and boundaries.
 - Rank failure isolation (Armstrong) and interface contracts (Liskov) above formatting (Knuth).
+- Flag validators, guards, options, and parallel mechanisms that no design, plan, or test demands (`principle-subtract-before-you-add`).

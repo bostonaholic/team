@@ -30,5 +30,6 @@ Read [references/design-template.md](references/design-template.md) before draft
 - Derive every closed set by grep, directory listing, or key-set comparison and record the command. Never list a blast radius or inventory from memory.
 - No implementation bodies or full type definitions; signatures are allowed only to fix a decision. Reference patterns by `file:line`, never duplicate them.
 - Prefer “follow `lib/foo.ts:30-60`” over copying those lines.
+- Prefer removing or replacing an existing mechanism over adding a parallel one; name what the change deletes in `## Decisions made` (`principle-subtract-before-you-add`).
 - Call the Skill tool with `systems-thinking` and apply `## When Designing`: cover adjacent components in `## Current state` and surfaces that must change together in `## Decisions made`; this adds no gate.
 - Existing rationale constrains changes to deliberate guards, thresholds, ownership, and layering. Default to `5-research.md`; use `skills/why/SKILL.md` for Preserve/Change/Avoid/Risk archaeology and `skills/how/SKILL.md` for current-state explanation when needed.

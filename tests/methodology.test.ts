@@ -141,7 +141,7 @@ describe("engineering-standards methodology", () => {
   });
 
   test("skills.md methodology table includes engineering-standards row with all 3 consumers", () => {
-    const row = filterRows(read(SKILLS_MD), "engineering-standards", /^#|^>|\/\/|event/);
+    const row = filterRows(read(SKILLS_MD), "| `engineering-standards` |", /^#|^>|\/\/|event/);
     expect(row.length).toBeGreaterThan(0);
     for (const agent of ["planner", "implementer", "code-reviewer"]) {
       expect(row).toContain(agent);
@@ -1824,6 +1824,29 @@ describe("principle-skip-loudly (L2 content tripwire)", () => {
 
   test("citation site: reviewing-code cites the principle by name", () => {
     expect(read(join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md"))).toContain("principle-skip-loudly");
+  });
+});
+
+describe("principle-subtract-before-you-add (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "principle-subtract-before-you-add", "SKILL.md");
+
+  test("skill file exists with name: principle-subtract-before-you-add", () => {
+    expect(existsSync(SKILL_FILE)).toBe(true);
+    expect(/^name:\s*principle-subtract-before-you-add\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  });
+
+  test("frontmatter sets user-invocable: false (methodology convention)", () => {
+    expect(/^user-invocable:\s*false\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  });
+
+  test("defers scope to principle-scope-fence by name", () => {
+    expect(read(SKILL_FILE)).toContain("principle-scope-fence");
+  });
+
+  test("citation sites: the implementing and authoring methodologies cite the principle by name", () => {
+    for (const skill of ["engineering-standards", "implementing-slices", "refactoring-to-patterns", "authoring-designs"]) {
+      expect(read(join(REPO_ROOT, "skills", skill, "SKILL.md"))).toContain("principle-subtract-before-you-add");
+    }
   });
 });
 
