@@ -10,10 +10,10 @@ argument-hint: "[<pr-number-or-url>]"
 `pr-watch-as-author` closes the gap between "PR open" and "ship it". It promotes the
 PR out of draft, takes a baseline snapshot, and polls GitHub on a bounded
 cycle. When new review feedback arrives, it runs the triage procedure in
-`skills/pr-open-comments/SKILL.md`. The session stays dedicated to the
-watch while it is armed — that trade-off is accepted by design. The user
-can interrupt at any time, and each individual command stays small and
-observable.
+`skills/pr-open-comments/SKILL.md`. The interactive session holds the
+watch for 3 cycles (~90 minutes), then hands off to the scheduled
+pr-watch job so the session is free again. The user can interrupt at
+any time, and each individual command stays small and observable.
 
 Feedback arrives in two shapes and both are triaged:
 

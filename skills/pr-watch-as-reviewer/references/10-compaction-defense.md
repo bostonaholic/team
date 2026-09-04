@@ -43,7 +43,7 @@ the values GitHub cannot return — recover them from the transcript:
 Report:
 
 - the stop reason (approval cast, merged/closed
-  without approval, user interrupt, cycle-48 timeout, 3 consecutive
+  without approval, user interrupt, 3-cycle soft cap, 3 consecutive
   poll failures, the empty-tracked-set stop, or confirmation declined)
 - the number of cycles consumed
 - when an approval was cast: its URL, the cited head SHA, and the
@@ -59,13 +59,15 @@ Report:
   reactions it placed. These are writes on someone else's PR, so they
   are reported whether or not an approval was cast — a run that ends on
   a user interrupt still leaves them behind
-- on the cycle-48 timeout: which tracked items were still gated, split
+- on the 3-cycle soft cap: which tracked items were still gated, split
   by shape, and for a plain comment whether it was never engaged or
   engaged but judged pending. Name separately any thread left holding a
   rejected verdict, with what the last rebuttal argued and how the
   author answered, plus the by-hand follow-up options (make the argument
-  yourself, take the author's position and resolve, or approve manually)
+  yourself, take the author's position and resolve, approve manually, or
+  resume the watch as the scheduled pr-watch job)
 - the handoff — path-dependent. On approval there is no follow-on
   reviewer skill: landing belongs to the author, not the reviewer. On
-  interrupt, timeout, or a declined confirmation, offer to re-arm the
-  watch.
+  the soft cap, print the tracked-set state and the resume command for
+  the scheduled pr-watch job. On interrupt or a declined confirmation,
+  offer to re-arm the watch.

@@ -4,8 +4,10 @@
 // skill (skills/pr-watch-as-author/SKILL.md) — a standalone bounded watch
 // loop distributed
 // to Team's users. Arming undrafts the
-// PR, snapshots a baseline, and polls GitHub every ~31 minutes for up to 48
-// cycles (~24 h). New feedback runs the pr-open-comments triage procedure
+// PR, snapshots a baseline, and polls GitHub every ~31 minutes to a 3-cycle
+// soft cap (~90 min) that hands off to the scheduled job; the cycle timing
+// and that bound are owned by pr-watch-mechanics, which both watches load.
+// New feedback runs the pr-open-comments triage procedure
 // (referenced by path, never restated). Default mode auto-applies items the
 // triage rates above 90% confidence (a batch fully handled that way resumes
 // the loop) and presents-then-stops for the rest; authorized mode (granted
@@ -92,14 +94,18 @@ describe("pr-watch-as-author skill: arm sequence — loud undraft + best-effort 
 });
 
 describe("pr-watch-as-author skill: bounded cycle mechanics", () => {
-  test("the cycle wait is one backgrounded sleep-then-poll call, not foreground chunks", () => {
-    // A foreground wait dies at the harness ceiling (600s in Claude Code) and
-    // costs a turn per fragment. The cycle must emit one backgrounded call.
-    const t = body();
-    expect(t).toContain("sleep 1860");
-    expect(t).toContain("run_in_background: true");
-    expect(t).toContain("principle-non-blocking-waits");
-    expect(t).not.toContain("sleep 600");
+  test("cycle timing and the bound are delegated to pr-watch-mechanics, not restated", () => {
+    // The interval, the soft cap, and the handoff are shared with
+    // pr-watch-as-reviewer and live in pr-watch-mechanics, which owns their
+    // assertions. Restating them here would let the two copies drift.
+    expect(loadsSkill(body(), "pr-watch-mechanics")).toBe(true);
+  });
+
+  test("binds its own handoff state for the shared soft cap", () => {
+    // The slot this skill fills: the reviewer's payload is a different set.
+    const t = flat(body());
+    expect(t).toContain("reviewDecision");
+    expect(t).toContain("triaged-comment ids");
   });
   test("polls PR state and reviewDecision alongside the trimmed reviewThreads query", () => {
     const t = body();

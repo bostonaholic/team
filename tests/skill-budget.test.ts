@@ -99,7 +99,7 @@ describe("skill source budget", () => {
 
   test("discovers the fixed skill tiers", () => {
     expect(budgets.filter(({ tier }) => tier === "entry")).toHaveLength(23);
-    expect(budgets.filter(({ tier }) => tier === "methodology")).toHaveLength(37);
+    expect(budgets.filter(({ tier }) => tier === "methodology")).toHaveLength(38);
     expect(budgets.filter(({ tier }) => tier === "principle")).toHaveLength(25);
   });
 

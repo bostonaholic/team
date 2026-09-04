@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A new methodology skill, [`pr-watch-mechanics`](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-mechanics/SKILL.md), owns the bounded watch-loop mechanics that `pr-watch-as-author` and `pr-watch-as-reviewer` used to duplicate.** Both skills carried their own copy of the cycle timing, the soft cap, and the handoff to the scheduled watch job, so a change to one — such as the 3-cycle soft cap (~90 minutes) that hands off to the scheduled `~/dotfiles/bin/pr-watch.sh` launchd job — had to land twice and could drift. Each watch skill now loads `pr-watch-mechanics` and binds three slots: its poll command, its cycle-0 subject, and its handoff state. The three stop conditions that are loop mechanics rather than either skill's own action — a user interrupt, the soft cap, and 3 consecutive poll failures — are also defined once, there. The catalog grows from 85 to 86 skills. **What this asks of you:** nothing — both watch skills behave the same as before the extraction.
+
 ## [0.87.0] - 2026-09-04
 
 ### Fixed

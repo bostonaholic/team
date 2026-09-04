@@ -17,8 +17,9 @@ is applied. Three differences apply to a plain comment:
 - **It is triaged once, then retired.** Add its id to the triaged set as
   soon as its item reaches an outcome — applied, presented, or declined.
   A comment left in the untriaged set re-enters triage every cycle and
-  re-presents the same punch list until timeout. An edited body does not
-  re-open a retired comment; a genuinely new ask deserves a new comment.
+  re-presents the same punch list until the soft cap. An edited body
+  does not re-open a retired comment; a genuinely new ask deserves a
+  new comment.
 - **Its scope is prose, not a diff line.** A thread names its file and
   line; a comment names its scope in words, and may cover several files
   or none. Where a plain comment's ask cannot be tied to specific code
@@ -70,7 +71,7 @@ the active mode and lists any auto-applied items with their confidence
 and landing commit SHA, so the loop stays auditable. The batch report
 also names the reaction each triaged item received, so a 👎 the user
 would have argued with shows up in the transcript rather than only on
-GitHub. A timeout re-arm
+GitHub. A soft-cap re-arm
 keeps the mode. A exclusion stop ends the authorization, so a re-arm
 after one starts in present-then-stop. Authorized mode re-arms **after a
 exclusion stop** only when the user restates authorization.
