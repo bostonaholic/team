@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.87.0] - 2026-09-04
+
 ### Fixed
 
 - **[`/shipit`](https://github.com/bostonaholic/team/blob/main/skills/shipit/SKILL.md)'s CI watch no longer fails under zsh.** The land sequence captured the watch exit code into `status`, which zsh reserves as a read-only alias of `$?`, so the backgrounded watch reported failure on a fully green PR and the operator had to verify CI by hand. The capture now uses `WATCH_STATUS`. **What this asks of you:** nothing.
@@ -792,7 +794,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.86.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.87.0...HEAD
+[0.87.0]: https://github.com/bostonaholic/team/compare/v0.86.0...v0.87.0
 [0.86.0]: https://github.com/bostonaholic/team/compare/v0.85.0...v0.86.0
 [0.85.0]: https://github.com/bostonaholic/team/compare/v0.84.0...v0.85.0
 [0.84.0]: https://github.com/bostonaholic/team/compare/v0.83.0...v0.84.0
