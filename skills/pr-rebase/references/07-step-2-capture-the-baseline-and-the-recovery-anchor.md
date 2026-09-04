@@ -27,6 +27,10 @@
    *names* are what makes the comparison precise; a bare "12 failed" cannot
    distinguish a pre-existing failure from a new one.
 
+   A check suite is the long wait this procedure runs twice, so spend it per
+   `principle-non-blocking-waits`: one backgrounded call the harness reports
+   on, never a foreground `sleep` sized to just miss the turn ceiling.
+
 3. Classify each check `PASS`, `FAIL`, or `UNKNOWN`. `UNKNOWN` is for a
    check that could not execute at all — missing dependencies, a command not
    found, a service it needs is down. A `FAIL` baseline is fine and does not

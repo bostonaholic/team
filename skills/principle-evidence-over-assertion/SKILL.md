@@ -12,3 +12,4 @@ Give every verdict cited evidence from a command run, file:line read, or authori
 - Allow No PASS without cited evidence; report unverifiable items at degraded confidence.
 - Ground verdicts in named facts you observed; verify third-party claims at concrete file:line before adopting them.
 - Treat reviewer or model agreement as corroboration, never proof or a substitute for your check.
+- Verify a dependency claim by resolving it, never by reading a version range or a changelog; load the lowest version the range admits and call the API there, because that boundary is where a removed constant or a missing symbol actually breaks.

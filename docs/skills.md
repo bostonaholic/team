@@ -1593,8 +1593,8 @@ lists more than three carries one recorded reason naming that count (see
   call the harness reports on — never foreground sleeps that occupy the
   turn.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `pr-watch-as-author`, `pr-watch-as-reviewer`, `shipit`, and
-  `cross-model-review`. No agent preloads it.
+  `pr-watch-as-author`, `pr-watch-as-reviewer`, `shipit`,
+  `cross-model-review`, and `pr-rebase`. No agent preloads it.
 - **Key behaviors:** Background the wait with `run_in_background: true`
   and let the completion notification be the wake-up. Put the poll inside
   the same backgrounded call (`sleep <interval>; <poll>`) so a cycle costs
@@ -1852,7 +1852,7 @@ entry-point section above rather than repeating them here.
 | `principle-least-privilege` | cited by `reviewing-code`, `reflect`, `eng-design-doc-review`, `cross-model-review`, `pr-verify`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-mechanical-gates` | cited by `qrspi-workflow`, `test-first-development`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-never-interpolate` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `sweeping-local-state`, `decomposing-intent`, `cross-model-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-non-blocking-waits` | cited by `pr-watch-as-author`, `pr-watch-as-reviewer`, `shipit`, `cross-model-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-non-blocking-waits` | cited by `pr-watch-as-author`, `pr-watch-as-reviewer`, `shipit`, `cross-model-review`, `pr-rebase`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-optimization-never-dependency` | cited by `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`, `reflect`, `principle-fail-closed`, `why`, `how`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-plan-present-wait` | cited by `groom-backlog`, `pr-open-comments`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-pre-image-first` | cited by `pr-rebase`, `groom-backlog`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
