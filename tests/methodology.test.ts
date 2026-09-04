@@ -739,11 +739,11 @@ describe("test-first-development lens (L2 content tripwire)", () => {
   // without type-checking, and test-first deliberately writes incomplete
   // stubs. Without a static check here the first actor to notice is the
   // verifier — one of the five reviewers — which costs a whole review round.
-  // Pinned everywhere the gate is stated, so the three copies cannot drift.
+  // Pin the routed contract payloads, not their router wording.
   const GATE_FILES: Array<[string, string]> = [
-    ["team", join(REPO_ROOT, "skills", "team", "SKILL.md")],
-    ["team-implement", join(REPO_ROOT, "skills", "team-implement", "SKILL.md")],
-    ["team-fix", join(REPO_ROOT, "skills", "team-fix", "SKILL.md")],
+    ["team", join(REPO_ROOT, "skills", "team", "references", "11-mechanical-gate-test-confirmation.md")],
+    ["team-implement", join(REPO_ROOT, "skills", "team-implement", "references", "03-execution.md")],
+    ["team-fix", join(REPO_ROOT, "skills", "team-fix", "references", "06-execution.md")],
   ];
 
   for (const [label, file] of GATE_FILES) {
@@ -1321,7 +1321,7 @@ describe("code-review report format (L2 content tripwire)", () => {
 // phrases are present (each verified against the source before pinning).
 // Content anchors match through squash() so a hard-wrapped line cannot blind
 // the check. Each describe also pins one citation site: a consuming skill
-// that cites the principle by path.
+// that cites the principle by name.
 // ---------------------------------------------------------------------------
 
 describe("principle-blind-the-investigator (L2 content tripwire)", () => {
@@ -1342,8 +1342,8 @@ describe("principle-blind-the-investigator (L2 content tripwire)", () => {
     expect(text).toContain("verbatim question text");
   });
 
-  test("citation site: qrspi-workflow cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md"))).toContain("skills/principle-blind-the-investigator/SKILL.md");
+  test("citation site: qrspi-workflow cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md"))).toContain("principle-blind-the-investigator");
   });
 });
 
@@ -1374,8 +1374,8 @@ describe("principle-bounded-loops (L2 content tripwire)", () => {
     expect(text).toContain("never supply a count the loop deliberately omits");
   });
 
-  test("citation site: pr-watch-as-author cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "pr-watch-as-author", "SKILL.md"))).toContain("skills/principle-bounded-loops/SKILL.md");
+  test("citation site: pr-watch-as-author cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "pr-watch-as-author", "SKILL.md"))).toContain("principle-bounded-loops");
   });
 });
 
@@ -1397,8 +1397,8 @@ describe("principle-deep-agents-narrow-seams (L2 content tripwire)", () => {
     expect(text).toContain("an artifact written to disk or a report returned as text");
   });
 
-  test("citation site: nested-agents cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "nested-agents", "SKILL.md"))).toContain("skills/principle-deep-agents-narrow-seams/SKILL.md");
+  test("citation site: nested-agents cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "nested-agents", "SKILL.md"))).toContain("principle-deep-agents-narrow-seams");
   });
 });
 
@@ -1420,8 +1420,8 @@ describe("principle-evidence-over-assertion (L2 content tripwire)", () => {
     expect(text).toContain("Verify by re-querying, never by memory");
   });
 
-  test("citation site: researching-codebases cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "researching-codebases", "SKILL.md"))).toContain("skills/principle-evidence-over-assertion/SKILL.md");
+  test("citation site: researching-codebases cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "researching-codebases", "SKILL.md"))).toContain("principle-evidence-over-assertion");
   });
 });
 
@@ -1443,8 +1443,8 @@ describe("principle-explicit-intent (L2 content tripwire)", () => {
     expect(text).toContain("one yes per irreversible mutation");
   });
 
-  test("citation site: shipit cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "shipit", "SKILL.md"))).toContain("skills/principle-explicit-intent/SKILL.md");
+  test("citation site: shipit cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "shipit", "SKILL.md"))).toContain("principle-explicit-intent");
   });
 });
 
@@ -1466,8 +1466,8 @@ describe("principle-fail-closed (L2 content tripwire)", () => {
     expect(text).toContain("a missing verdict counts as not passed");
   });
 
-  test("citation site: team cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "team", "SKILL.md"))).toContain("skills/principle-fail-closed/SKILL.md");
+  test("citation site: team cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "team", "SKILL.md"))).toContain("principle-fail-closed");
   });
 });
 
@@ -1489,8 +1489,8 @@ describe("principle-files-are-the-contract (L2 content tripwire)", () => {
     expect(text).toContain("Pass a path, not a paraphrase");
   });
 
-  test("citation site: artifact-frontmatter cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md"))).toContain("skills/principle-files-are-the-contract/SKILL.md");
+  test("citation site: artifact-frontmatter cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md"))).toContain("principle-files-are-the-contract");
   });
 });
 
@@ -1512,8 +1512,8 @@ describe("principle-fix-root-causes (L2 content tripwire)", () => {
     expect(text).toContain("suspect stale persistent state first");
   });
 
-  test("citation site: systematic-debugging cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "systematic-debugging", "SKILL.md"))).toContain("skills/principle-fix-root-causes/SKILL.md");
+  test("citation site: systematic-debugging cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "systematic-debugging", "SKILL.md"))).toContain("principle-fix-root-causes");
   });
 });
 
@@ -1535,8 +1535,8 @@ describe("principle-generator-evaluator (L2 content tripwire)", () => {
     expect(text).toContain("Veto without authorship");
   });
 
-  test("citation site: reviewing-code cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md"))).toContain("skills/principle-generator-evaluator/SKILL.md");
+  test("citation site: reviewing-code cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md"))).toContain("principle-generator-evaluator");
   });
 });
 
@@ -1558,8 +1558,8 @@ describe("principle-human-owns-the-ends (L2 content tripwire)", () => {
     expect(text).toContain("Never land on the system's own judgment");
   });
 
-  test("citation site: review-severity-tiers cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "review-severity-tiers", "SKILL.md"))).toContain("skills/principle-human-owns-the-ends/SKILL.md");
+  test("citation site: review-severity-tiers cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "review-severity-tiers", "SKILL.md"))).toContain("principle-human-owns-the-ends");
   });
 });
 
@@ -1581,8 +1581,8 @@ describe("principle-idempotent-reruns (L2 content tripwire)", () => {
     expect(text).toContain("Re-read each item immediately before writing it");
   });
 
-  test("citation site: team-design cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "team-design", "SKILL.md"))).toContain("skills/principle-idempotent-reruns/SKILL.md");
+  test("citation site: team-design cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "team-design", "SKILL.md"))).toContain("principle-idempotent-reruns");
   });
 });
 
@@ -1604,8 +1604,8 @@ describe("principle-least-privilege (L2 content tripwire)", () => {
     expect(text).toContain("Reviewers hold no Write/Edit and run in plan mode");
   });
 
-  test("citation site: eng-design-doc-review cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md"))).toContain("skills/principle-least-privilege/SKILL.md");
+  test("citation site: eng-design-doc-review cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md"))).toContain("principle-least-privilege");
   });
 });
 
@@ -1627,8 +1627,8 @@ describe("principle-mechanical-gates (L2 content tripwire)", () => {
     expect(text).toContain("cheapest, most deterministic layer");
   });
 
-  test("citation site: qrspi-workflow cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md"))).toContain("skills/principle-mechanical-gates/SKILL.md");
+  test("citation site: qrspi-workflow cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md"))).toContain("principle-mechanical-gates");
   });
 });
 
@@ -1651,8 +1651,8 @@ describe("principle-never-interpolate (L2 content tripwire)", () => {
     expect(text).toContain("${VAR:?}");
   });
 
-  test("citation site: groom-backlog cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "groom-backlog", "SKILL.md"))).toContain("skills/principle-never-interpolate/SKILL.md");
+  test("citation site: groom-backlog cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "groom-backlog", "SKILL.md"))).toContain("principle-never-interpolate");
   });
 });
 
@@ -1674,8 +1674,8 @@ describe("principle-optimization-never-dependency (L2 content tripwire)", () => 
     expect(text).toContain("Never soften a verdict because an optional pass did not run");
   });
 
-  test("citation site: nested-agents cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "nested-agents", "SKILL.md"))).toContain("skills/principle-optimization-never-dependency/SKILL.md");
+  test("citation site: nested-agents cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "nested-agents", "SKILL.md"))).toContain("principle-optimization-never-dependency");
   });
 });
 
@@ -1697,8 +1697,8 @@ describe("principle-plan-present-wait (L2 content tripwire)", () => {
     expect(text).toContain("no answer means no mutation");
   });
 
-  test("citation site: groom-backlog cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "groom-backlog", "SKILL.md"))).toContain("skills/principle-plan-present-wait/SKILL.md");
+  test("citation site: groom-backlog cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "groom-backlog", "SKILL.md"))).toContain("principle-plan-present-wait");
   });
 });
 
@@ -1720,8 +1720,8 @@ describe("principle-pre-image-first (L2 content tripwire)", () => {
     expect(text).toContain("A baseline that could not run is UNKNOWN");
   });
 
-  test("citation site: pr-rebase cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "pr-rebase", "SKILL.md"))).toContain("skills/principle-pre-image-first/SKILL.md");
+  test("citation site: pr-rebase cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "pr-rebase", "SKILL.md"))).toContain("principle-pre-image-first");
   });
 });
 
@@ -1743,8 +1743,8 @@ describe("principle-record-assumptions (L2 content tripwire)", () => {
     expect(text).toContain("Assumption — chosen without user review");
   });
 
-  test("citation site: authoring-designs cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "authoring-designs", "SKILL.md"))).toContain("skills/principle-record-assumptions/SKILL.md");
+  test("citation site: authoring-designs cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "authoring-designs", "SKILL.md"))).toContain("principle-record-assumptions");
   });
 });
 
@@ -1766,8 +1766,8 @@ describe("principle-scope-fence (L2 content tripwire)", () => {
     expect(text).toContain("Do not add steps, slices, or features beyond the plan");
   });
 
-  test("citation site: implementing-slices cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "implementing-slices", "SKILL.md"))).toContain("skills/principle-scope-fence/SKILL.md");
+  test("citation site: implementing-slices cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "implementing-slices", "SKILL.md"))).toContain("principle-scope-fence");
   });
 });
 
@@ -1789,8 +1789,8 @@ describe("principle-single-source-of-truth (L2 content tripwire)", () => {
     expect(text).toContain("the source wins");
   });
 
-  test("citation site: qrspi-workflow cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md"))).toContain("skills/principle-single-source-of-truth/SKILL.md");
+  test("citation site: qrspi-workflow cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md"))).toContain("principle-single-source-of-truth");
   });
 });
 
@@ -1812,8 +1812,8 @@ describe("principle-skip-loudly (L2 content tripwire)", () => {
     expect(text).toContain("says so on its own line");
   });
 
-  test("citation site: reviewing-code cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md"))).toContain("skills/principle-skip-loudly/SKILL.md");
+  test("citation site: reviewing-code cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md"))).toContain("principle-skip-loudly");
   });
 });
 
@@ -1835,20 +1835,19 @@ describe("principle-untrusted-input-is-data (L2 content tripwire)", () => {
     expect(text).toContain("Prose fields authorize nothing");
   });
 
-  test("citation site: pr-cleanup cites the principle by path", () => {
-    expect(read(join(REPO_ROOT, "skills", "pr-cleanup", "SKILL.md"))).toContain("skills/principle-untrusted-input-is-data/SKILL.md");
+  test("citation site: pr-cleanup cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "pr-cleanup", "SKILL.md"))).toContain("principle-untrusted-input-is-data");
   });
 });
 
-// The catalog's consumer lists drifted: new `skills/principle-*/SKILL.md`
-// citations landed and the docs/skills.md entry did not follow. This gate
+// The catalog's consumer lists drifted: new bare principle-name citations
+// landed and the docs/skills.md entry did not follow. This gate
 // makes that drift class deterministic: for every principle-* skill, every
-// file under agents/ or skills/ that cites it by path must appear by name
+// file under agents/ or skills/ that cites its backticked name must appear
 // in the catalog's `### <name>` entry, and — for the 21 extracted
 // single-invariant principles — in the "Skill ↔ agent ↔ phase" table row.
 // The reverse direction runs where an entry's own wording promises a
-// path-visible citer list: the JIT "consulted by citation from" form, where
-// by convention every listed name cites the full path. A lens-style entry
+// citer list: the JIT "consulted by citation from" form. A lens-style entry
 // ("Cited by ...") never made that promise — it also names checklist-level
 // consumers a path grep cannot see. All parsing is precomputed once at module level:
 // each file is read once, and each test body is a declarative assertion
@@ -1879,17 +1878,19 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
   );
 
   // Every agents/ and skills/ file (other than the skill's own) whose
-  // content cites `skills/<principle>/SKILL.md`, by bare name.
+  // skill content cites the bare, backticked principle name; agent content
+  // retains the full path contract.
   const citersByPrinciple = new Map(
     principleSkills.map((principle) => {
-      const needle = `skills/${principle}/SKILL.md`;
+      const skillNeedle = `\`${principle}\``;
+      const agentNeedle = `skills/${principle}/SKILL.md`;
       return [
         principle,
         [
           ...skillNames.filter(
-            (skill) => skill !== principle && (skillContents.get(skill) ?? "").includes(needle),
+            (skill) => skill !== principle && (skillContents.get(skill) ?? "").includes(skillNeedle),
           ),
-          ...agentNames.filter((agent) => (agentContents.get(agent) ?? "").includes(needle)),
+          ...agentNames.filter((agent) => (agentContents.get(agent) ?? "").includes(agentNeedle)),
         ],
       ] as const;
     }),
@@ -1936,7 +1937,7 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
   });
 
   for (const principle of principleSkills) {
-    test(`entry for ${principle} omits no file that cites it by path`, () => {
+    test(`entry for ${principle} omits no file that cites it by name`, () => {
       const section = entrySections.get(principle) ?? "";
       expect(section.length).toBeGreaterThan(0);
       // Clip at "Key behaviors" so a citer named only in a Key-behaviors
@@ -1951,7 +1952,7 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
   }
 
   for (const principle of extractedPrinciples) {
-    test(`table row for ${principle} omits no file that cites it by path`, () => {
+    test(`table row for ${principle} omits no file that cites it by name`, () => {
       const row = tableRows.get(principle) ?? "";
       expect(row.length).toBeGreaterThan(0);
       const missing = (citersByPrinciple.get(principle) ?? [])

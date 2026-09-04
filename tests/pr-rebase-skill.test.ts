@@ -21,7 +21,7 @@
 // crashes, not clean assertion failures.
 
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
@@ -30,10 +30,18 @@ import { loadsSkill } from "./helpers/skill-refs";
 const REPO_ROOT = process.cwd();
 // pr-rebase is a RUNTIME skill — it lives under skills/ (distributed), not .claude/.
 const PR_REBASE_SKILL = join(REPO_ROOT, "skills", "pr-rebase", "SKILL.md");
+const REFERENCES = join(REPO_ROOT, "skills", "pr-rebase", "references");
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
 function body(): string {
-  return existsSync(PR_REBASE_SKILL) ? read(PR_REBASE_SKILL) : "";
+  if (!existsSync(PR_REBASE_SKILL) || !existsSync(REFERENCES)) return "";
+  return [
+    read(PR_REBASE_SKILL),
+    ...readdirSync(REFERENCES)
+      .filter((name) => /^\d\d-.*\.md$/.test(name))
+      .sort()
+      .map((name) => read(join(REFERENCES, name))),
+  ].join("\n");
 }
 function fm(): string {
   return existsSync(PR_REBASE_SKILL) ? frontmatter(read(PR_REBASE_SKILL)) : "";
@@ -86,28 +94,6 @@ describe("pr-rebase skill: frontmatter and invocation surface", () => {
     expect(/^argument-hint:.*--yes/m.test(f)).toBe(false);
   });
 
-  test("description carries a quoted trigger phrase and the slash name", () => {
-    // The phrase-plus-slash-name shape IS machine-checked (architecture.md
-    // and tests/architecture.test.ts). The explicit-intent guard wording is
-    // deliberately NOT machine-checked there — it is the author's and
-    // reviewer's responsibility — so nothing here pins that sentence.
-    const f = fm().replace(/\s+/g, " ");
-    expect(f.length).toBeGreaterThan(0);
-    expect(/"[^"]+"/.test(f)).toBe(true);
-    expect(f).toContain("/pr-rebase");
-  });
-
-  test("references the principle-progress-tracking convention", () => {
-    expect(body()).toContain("skills/principle-progress-tracking/SKILL.md");
-  });
-
-  test("section headings appear in the documented order", () => {
-    const t = body();
-    const order = ["## Input", "## Hard rules", "## Execution", "## Completion"];
-    const positions = order.map((heading) => t.indexOf(heading));
-    for (const position of positions) expect(position).toBeGreaterThan(-1);
-    expect(positions).toEqual([...positions].sort((a, b) => a - b));
-  });
 });
 
 describe("pr-rebase skill: base-branch discovery is a chain, never a bare main", () => {
@@ -446,11 +432,16 @@ describe("pr-rebase skill: the publisher is detected, never assumed to be git", 
     expect(body()).toContain("gt restack");
   });
 
-  test("the completion names the resolved publisher", () => {
-    const t = body();
-    const completion = t.slice(t.indexOf("## Completion"));
-    // Guard: a missing section must fail, not vacuously pass.
-    expect(completion.length).toBeGreaterThan("## Completion".length);
-    expect(completion).toContain("publisher");
+  test("names the resolved publisher", () => {
+    expect(body()).toContain("publisher");
+  });
+
+  test("completion reports the publisher and publish result", () => {
+    const text = body();
+    const draftAfter = text.lastIndexOf("DRAFT_AFTER");
+    const publisher = text.lastIndexOf("publisher");
+    expect(draftAfter).toBeGreaterThan(-1);
+    expect(publisher).toBeGreaterThan(draftAfter);
+    expect(text.lastIndexOf("publish happened")).toBeGreaterThan(publisher);
   });
 });

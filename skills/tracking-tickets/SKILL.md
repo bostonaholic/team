@@ -1,15 +1,13 @@
 ---
 name: tracking-tickets
-description: Ticket-lifecycle discipline for tracker-linked pipeline runs — when a ticket moves to in-progress and in-review, how the PR links to the ticket with a conditional closing footer (including the multi-repo home-only rule), and why tickets are never closed by hand. Load when picking up a ticketed task, opening a PR for a ticketed topic, or deciding a ticket's tracker-state transition.
+description: 'Defines tracker status transitions and closing rules. Load when a pipeline run is linked to a ticket.'
 user-invocable: false
 ---
 
 # Tracking Tickets
 
-The single rule set for how a pipeline run interacts with a tracking
-ticket (a GitHub issue, or any other tracker the project uses). The
-entry-point skills that pick up tickets or open PRs point here for the
-rules and keep only their own procedural glue.
+Canonical tracker rules for pipeline pickup, PR linking, review state, and
+merge. Entry points keep only tracker-specific calls.
 
 ## Best-effort, tracker-agnostic, never blocking
 

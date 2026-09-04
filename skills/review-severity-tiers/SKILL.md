@@ -1,6 +1,6 @@
 ---
 name: review-severity-tiers
-description: The authoritative severity-tier map for aggregating reviewer verdicts — gate types by reviewer, the Blocking/Major/Minor tiers with the auto-fix boundary, the no-consult rule, and the exit condition of zero Blocking and zero Major findings. Load when aggregating review findings, deciding a pipeline gate, or sorting a finding into a severity tier.
+description: 'Maps reviewer findings to Blocking, Major, or Minor actions. Load when aggregating review verdicts or deciding whether to retry.'
 user-invocable: false
 ---
 
@@ -18,12 +18,8 @@ user-invocable: false
 
 ## Severity Tiers and the Auto-Fix Boundary
 
-There is no single "blocker/critical/major/minor" scale — reviewers raise
-findings in three different vocabularies (Conventional Comments
-`issue`/`suggestion`/`nitpick`, security CRITICAL/HIGH/MEDIUM/LOW, and the
-APPROVE/REQUEST CHANGES/COMMENT verdict). This table is the authoritative map
-from any of those onto the action the orchestrator takes. Every finding lands
-in exactly one tier.
+This table maps Conventional Comments, security severities, and reviewer
+verdicts to one orchestrator action. Every finding has one tier.
 
 | Tier | Findings in this tier | Action |
 |------|-----------------------|--------|
@@ -31,58 +27,23 @@ in exactly one tier.
 | **Major** | ux-reviewer REQUEST CHANGES | Auto-fixed in the loop. **Never** surfaced to the user. |
 | **Minor and below** | `suggestion (non-blocking)`, `nitpick (non-blocking)`, security MEDIUM, security LOW, technical-writer GAPS (REQUIRED and RECOMMENDED alike), any COMMENT-level note | Recorded in the PR body's `## Review notes` — never presented mid-run. |
 
-**A finding that calls itself non-blocking never costs a round.** Every
-auto-fix tier triggers a complete re-review: the implementer runs, then all
-five reviewers run again from scratch. So each tier assignment is a bet that
-the finding is worth that price. `suggestion (non-blocking)` and security
-MEDIUM are not. Both say in their own label that the work can ship without
-them, and prose review yields some of both on nearly every pass — so pricing
-them at a full round means the loop ends only when five independent reviewers
-return zero non-blocking findings, which is not a reachable state. Nothing
-counts the rounds down for you, so a loop priced that way does not end at
-all.
+**A non-blocking finding never costs a round.** Each auto-fix reruns the
+implementer and all five reviewers. Blocking/Major are fixed autonomously;
+Minor reaches the human in PR review, regardless of importance.
+The human decides what to build and what to ship; the middle runs autonomously (`principle-human-owns-the-ends`).
 
-The tier boundary is therefore **not** a judgment about whether a finding
-matters. A security MEDIUM can matter a great deal. It is a judgment about
-who acts on it: Blocking and Major are fixed by the loop with no human in
-sight, and everything below reaches the human at PR review, which is the
-checkpoint this pipeline already designates. Minor is not a wastebasket. It
-is the human's queue.
-The human decides what to build and what to ship; the middle runs autonomously (`skills/principle-human-owns-the-ends/SKILL.md`).
+- `agents/security-reviewer.md` and `skills/reviewing-code/SKILL.md` agree: CRITICAL/HIGH are hard gates; MEDIUM/LOW do not block.
+- Technical-writer REQUIRED and RECOMMENDED are both Minor because its gate is
+  ADVISORY.
 
-Two consequences worth stating, because both have been read the other way:
-
-- **`security-reviewer`'s own instructions agree with this table.**
-  `agents/security-reviewer.md` and `skills/reviewing-code/SKILL.md` both say
-  CRITICAL and HIGH are hard gates while MEDIUM and LOW do not block. That is
-  correct, and it is why the reviewer reports MEDIUMs freely. A table that
-  auto-fixed them would silently convert candid reporting into rounds.
-- **`technical-writer` REQUIRED is Minor, like RECOMMENDED.** That reviewer's
-  gate type is ADVISORY (above). REQUIRED and RECOMMENDED describe how badly
-  the *docs* need the change, not what the *pipeline* does about it. Neither
-  loops.
-
-**The no-consult rule (non-negotiable).** Findings are never presented to the
-user mid-run. Blocking and Major findings loop the implementer automatically
-until they are zero. Minor-and-below findings defer to the PR body's
-`## Review notes` (tagged by source reviewer) for the human's PR review. A
-mid-run prompt that lists any finding is a defect.
+**No consult:** never present findings mid-run. Loop Blocking/Major until zero;
+write Minor-and-below to PR `## Review notes`, tagged by reviewer.
 
 ## Aggregating Verdicts
 
-When multiple reviewers produce verdicts, aggregate them into a single
-pipeline gate decision:
+1. Any Blocking/Major: FAIL; return to IMPLEMENT with no consult.
+2. Only Minor-and-below: PASS with PR `## Review notes`; proceed to SHIP.
+3. No findings: PASS; proceed to SHIP.
 
-1. If ANY Blocking or Major finding exists -> pipeline gate FAILS — loop back
-   to IMPLEMENT automatically, with no consult.
-2. If only Minor-and-below findings remain -> pipeline gate PASSES with
-   notes: record them for the PR body's `## Review notes` and proceed to
-   SHIP.
-3. If no findings remain -> pipeline gate PASSES (proceed to SHIP).
-
-The loop continues until Blocking and Major are zero. Nothing else ends it:
-no round count, and no consultation with the user.
-
-Blocking and Major failures are never aggregated away and never surfaced for
-triage. A single CRITICAL security finding blocks shipping regardless of how
-many other reviewers approved.
+Loop until Blocking/Major are zero. No round limit or consultation ends it.
+Never aggregate a Blocking/Major away; one CRITICAL blocks shipping.

@@ -5,7 +5,7 @@
 // drift. Real `git` runs against hermetic temp repos; free and deterministic.
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -13,11 +13,22 @@ import { read } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 const TEAM_WT = join(REPO_ROOT, "skills", "team-worktree", "SKILL.md");
+const REFERENCES = join(REPO_ROOT, "skills", "team-worktree", "references");
+
+function skillBody(): string {
+  return [
+    read(TEAM_WT),
+    ...readdirSync(REFERENCES)
+      .filter((name) => /^\d\d-.*\.md$/.test(name))
+      .sort()
+      .map((name) => read(join(REFERENCES, name))),
+  ].join("\n");
+}
 
 // Pull the detection snippet out of the "## Detect existing worktree"
 // section's sh code block (the one comparing --git-dir to --git-common-dir).
 function detectionSnippet(): string {
-  const text = read(TEAM_WT);
+  const text = skillBody();
   const blocks = [...text.matchAll(/```sh\n([\s\S]*?)```/g)].map((m) => m[1]!);
   const matches = blocks.filter((b) => b.includes("--git-common-dir"));
   expect(matches.length).toBe(1); // guard: exactly one documented detection block

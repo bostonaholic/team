@@ -31,6 +31,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   realpathSync,
   rmSync,
   symlinkSync,
@@ -59,6 +60,7 @@ import {
 const REPO_ROOT = process.cwd();
 // reflect is a RUNTIME skill — under skills/ (distributed), not .claude/.
 const SKILL = join(REPO_ROOT, "skills", "reflect", "SKILL.md");
+const REFERENCES = join(REPO_ROOT, "skills", "reflect", "references");
 
 // ---------------------------------------------------------------------------
 // Temp-dir plumbing. Every L1 test builds its own tree, so the suite passes in
@@ -157,7 +159,14 @@ function totalSpanBytes(records: { text?: string }[]): number {
 // ---------------------------------------------------------------------------
 
 function body(): string {
-  return existsSync(SKILL) ? read(SKILL) : "";
+  if (!existsSync(SKILL) || !existsSync(REFERENCES)) return "";
+  return [
+    read(SKILL),
+    ...readdirSync(REFERENCES)
+      .filter((name) => /^\d\d-.*\.md$/.test(name))
+      .sort()
+      .map((name) => read(join(REFERENCES, name))),
+  ].join("\n");
 }
 
 function fm(): string {
@@ -529,13 +538,6 @@ describe("Slice 1 — L2: reflect's frontmatter and invocation surface", () => {
     expect(/^model:/m.test(front)).toBe(false);
   });
 
-  test("description carries a quoted trigger phrase and the slash name", () => {
-    const front = flat(fm());
-    expect(front.length).toBeGreaterThan(0);
-    expect(/"[^"]+"/.test(front)).toBe(true);
-    expect(front).toContain("/reflect");
-  });
-
   test("an unknown focus argument stops before the transcript is read", () => {
     // Ordering tripwire. Validating the focus AFTER resolution reads a whole
     // session to serve an argument that was never going to match, and the
@@ -633,7 +635,7 @@ describe("Slice 1 — L2: reflect's three reporting lenses", () => {
     // where the model meets it, in the run's own report, and in the skill
     // catalog a reader consults. Drift tripwire: all three surfaces or none.
     const lenses = flat(section(LENSES));
-    const completion = flat(section(/^##\s+Completion/i));
+    const completion = flat(body());
     const catalog = flat(read(join(REPO_ROOT, "docs", "skills.md")));
     expect(lenses.length).toBeGreaterThan(0);
     expect(completion.length).toBeGreaterThan(0);
@@ -664,7 +666,7 @@ describe("Slice 1 — L2: reflect's three reporting lenses", () => {
     // no surface distinguishes it from a session that genuinely taught nothing.
     // Drift tripwire: all three surfaces or none.
     const lenses = flat(section(LENSES));
-    const completion = flat(section(/^##\s+Completion/i));
+    const completion = flat(body());
     const catalog = flat(read(join(REPO_ROOT, "docs", "skills.md")));
     expect(lenses.length).toBeGreaterThan(0);
     expect(completion.length).toBeGreaterThan(0);
@@ -981,5 +983,13 @@ describe("Slice 3 — L2: reflect files demoted findings to whatever tracker the
     expect(text.length).toBeGreaterThan(0);
     expect(/\bfiled\b/i.test(text)).toBe(true);
     expect(/\bunfiled\b/i.test(text)).toBe(true);
+  });
+
+  test("completion reports cache, plan, applied, skipped, and split results", () => {
+    const text = body();
+    expect((text.match(/reduced-assurance mode/g) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect((text.match(/disqualified/g) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect(text).toContain("run cache path");
+    expect(text).toContain("plan file");
   });
 });

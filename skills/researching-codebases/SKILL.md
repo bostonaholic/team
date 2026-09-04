@@ -1,91 +1,57 @@
 ---
 name: researching-codebases
-description: Codebase research contract for the researcher agent — the evidence constraints on findings and the compressed research-report output format. Loaded when neutral research questions need factual, file-referenced answers.
+description: 'Defines evidence-only codebase research and `5-research.md`. Load when answering neutral questions before design.'
 user-invocable: false
 ---
 
 # Researching Codebases
 
-The researcher's procedure: answer a list of neutral research questions
-with compressed, objective, file-referenced findings.
+Answer every neutral question in `2-questions.md` with objective, compressed, file-referenced findings. Scope by its `Codebase context` and by repo slug/path in `4-repos.md` when present.
 
 ## Investigation contract
 
-Answer every question in `2-questions.md`, scoped by its "Codebase context"
-section — and by `4-repos.md` when present (each repo's slug and absolute
-path; which repo each question targets). How you investigate is yours to
-choose. The output format below defines what complete findings look like;
-two constraints hold on the way there:
-
-- **Evidence over recall.** Every claim traces to code you read in this
-  run — cite file:line. When a question concerns behavior, follow the
-  execution path far enough to see the code that runs, not just a name
-  that suggests it.
-  A claim earns its place only with cited evidence (`skills/principle-evidence-over-assertion/SKILL.md`).
-- **Cross-repo contracts are findings.** In multi-repo mode, contracts
-  that cross repo boundaries (shared types, API schemas) go in
-  `## Constraints`, and conventions that differ between repos go in
-  `## Patterns Observed`.
+- Every claim comes from code read in this run and cites `file:line`; trace runtime behavior beyond suggestive names (`principle-evidence-over-assertion`).
+- Record visible versions per repo, for example `frontend: React 18; api: Go 1.22`.
+- In multi-repo mode, record shared types/API schemas under `## Constraints` and differing conventions under `## Patterns Observed`.
+- Choose the investigation path needed to answer all questions; never infer the user's goal.
 
 ## Output format
 
-Report findings in this structure. Keep the entire report under 100
-lines (under 150 in multi-repo mode — extra budget for the per-repo
-sections). The orchestrator writes the findings to
-`docs/plans/<id>/5-research.md`.
+Keep `docs/plans/<id>/5-research.md` under 100 lines, or under 150 for multi-repo output. Prefix multi-repo references with the `4-repos.md` slug, e.g. `frontend:src/App.tsx:42`.
 
-In multi-repo mode, prefix every file reference with the repo slug,
-e.g. `frontend:src/App.tsx:42`. The slug is the `name` field from the
-matching entry in `4-repos.md`.
-
-```
+```markdown
 ## Tech Stack
-- Language, framework, key libraries with versions if visible
-  (multi-repo: list per repo, e.g. "frontend: React 18; api: Go 1.22")
+- Language, framework, key libraries, visible versions; per repo when needed
 
 ## Directory Conventions
-- How the codebase is organized, where things go
-  (multi-repo: one bullet per repo)
+- Organization and file placement; one bullet per repo when needed
 
 ## Answers to Questions
 ### Q1: <restate question>
 <answer with file:line references>
-
 ### Q2: <restate question>
 <answer with file:line references>
 ...
 
 ## Patterns Observed
-- How the codebase implements similar concerns
-- Error handling conventions
-- Naming conventions
+- Similar implementations, error handling, naming
 
 ## Test Patterns
-- Test framework and assertion style
-- Test file location convention
-- Fixture/helper patterns
+- Framework, assertions, test locations, fixtures/helpers
 
 ## Reusable Components
-- Existing utilities, helpers, or abstractions
-- Shared types or interfaces
+- Existing utilities, helpers, abstractions, shared types/interfaces
 
 ## Constraints
-- Hard constraints (type contracts, schema requirements, API compatibility)
-- Soft constraints (conventions worth following for consistency)
+- Hard contracts/schemas/API compatibility; soft conventions
 
 ## Open Questions
-- Anything ambiguous that the design-author should resolve with the user
+- Ambiguity the design-author must resolve
 ```
 
 ## Reporting rules
 
-- **Objective findings only.** Report what IS, not what SHOULD BE. Do not
-  recommend approaches.
-  A blinded investigator returns facts, not opinions
-  (`skills/principle-blind-the-investigator/SKILL.md`).
-- **Compress, do not summarize.** Include specific function names, type
-  signatures, and file paths. Omit prose that does not carry information.
-- **Stay under 100 lines.** If you need more space, cut the least
-  information-dense sections.
-- If a question feels under-specified, return it in the `## Open Questions`
-  section rather than guessing what the questioner meant.
+- Report what IS, never what SHOULD BE or recommended approaches (`principle-blind-the-investigator`).
+- Compress without generalizing: retain function names, type signatures, and paths; delete prose without information.
+- If over budget, remove the least information-dense material.
+- Return underspecified questions in `## Open Questions`; never guess.

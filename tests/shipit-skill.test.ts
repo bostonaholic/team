@@ -14,7 +14,7 @@
 // not clean assertion failures.
 
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
@@ -22,10 +22,18 @@ import { frontmatter, read } from "./helpers/text";
 const REPO_ROOT = process.cwd();
 // shipit is a RUNTIME skill — it lives under skills/ (distributed), not .claude/.
 const SHIPIT_SKILL = join(REPO_ROOT, "skills", "shipit", "SKILL.md");
+const REFERENCES = join(REPO_ROOT, "skills", "shipit", "references");
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
 function body(): string {
-  return existsSync(SHIPIT_SKILL) ? read(SHIPIT_SKILL) : "";
+  if (!existsSync(SHIPIT_SKILL) || !existsSync(REFERENCES)) return "";
+  return [
+    read(SHIPIT_SKILL),
+    ...readdirSync(REFERENCES)
+      .filter((name) => /^\d\d-.*\.md$/.test(name))
+      .sort()
+      .map((name) => read(join(REFERENCES, name))),
+  ].join("\n");
 }
 function fm(): string {
   return existsSync(SHIPIT_SKILL) ? frontmatter(read(SHIPIT_SKILL)) : "";
@@ -33,13 +41,6 @@ function fm(): string {
 // Flatten newlines so multi-line prose can be matched in one regex.
 function flat(text: string): string {
   return text.replace(/\n/g, " ");
-}
-// The Completion section, or "" when absent — content assertions against ""
-// fail cleanly.
-function completionSection(): string {
-  const text = body();
-  const start = text.indexOf("## Completion");
-  return start >= 0 ? text.slice(start) : "";
 }
 // The value of the argument-hint frontmatter line, or "" when absent.
 function argumentHint(): string {
@@ -79,13 +80,6 @@ describe("shipit skill: it is a runtime skill, project-agnostic", () => {
 });
 
 describe("shipit skill: model-invocable, scoped to explicit ship intent", () => {
-  test("description scopes invocation to explicit ship intent + names the trigger phrases", () => {
-    const f = flat(fm());
-    expect(f.length).toBeGreaterThan(0);
-    expect(/"ship it"/i.test(f)).toBe(true);
-    expect(/"land the PR"/i.test(f)).toBe(true);
-    expect(f).toContain("/shipit");
-  });
 
 });
 
@@ -229,22 +223,30 @@ describe("shipit skill: the merge is not gated on a human confirmation", () => {
 });
 
 describe("shipit skill: post-merge cleanup", () => {
-  test("the Completion report names /pr-cleanup", () => {
-    expect(completionSection()).toContain("/pr-cleanup");
+  test("frontmatter retains explicit ship cues", () => {
+    const description = frontmatter(body()).split("\n").find((line) => line.startsWith("description:")) ?? "";
+    expect(description).toContain('"ship it"');
+    expect(description).toContain('"land the PR"');
+    expect(description).toContain("/shipit");
+  });
+  test("names the /pr-cleanup command", () => {
+    expect(body()).toContain("/pr-cleanup");
   });
 
-  // A merged PR leaves the default branch unsynced and the branch undeleted.
-  // Nothing about that is a decision — the merge already happened, and
-  // /pr-cleanup's Mode A gates itself on merged-PR verification. Telling the
-  // operator to go run it re-inserts a human gate the pipeline is designed
-  // not to have, and because this is the RUNTIME skill, every caller inherits
-  // the stop. Completion must run cleanup, not recommend it.
-  test("Completion instructs running /pr-cleanup, not recommending it", () => {
-    const c = flat(completionSection());
-    // Negative sweep: the passive framings. A meaning-preserving rewrite never
-    // reintroduces a phrasing the contract bans, so this cannot pin wording.
-    expect(/end with the handoff/i.test(c)).toBe(false);
-    expect(/Next:\s*run \/pr-cleanup/i.test(c)).toBe(false);
+  test("names both cleanup modes", () => {
+    const text = body();
+    expect(text).toContain("Mode A");
+    expect(text).toContain("Mode B");
+  });
+
+  test("automatic cleanup paragraph selects Mode A only", () => {
+    const text = body();
+    const merge = text.lastIndexOf("gh pr merge");
+    const paragraph = text.slice(merge).split(/\n\s*\n/).find((value) => value.includes("/pr-cleanup") && value.includes("Mode A")) ?? "";
+    expect(merge).toBeGreaterThanOrEqual(0);
+    expect(paragraph).toContain("/pr-cleanup");
+    expect(paragraph).toContain("Mode A");
+    expect(paragraph).not.toContain("Mode B");
   });
 
   // NOT asserted here: that cleanup is *conditioned* on the merge succeeding.
@@ -256,11 +258,4 @@ describe("shipit skill: post-merge cleanup", () => {
   // passed while the bug shipped. Conditional-on-success belongs at L5/L6,
   // where a model can judge whether the instruction lands.
 
-  // Mode B force-deletes remote branches and worktrees on the strength of an
-  // explicit abandon request. It must never be reachable by automatic chaining.
-  test("only Mode A is auto-reachable; Mode B stays user-triggered", () => {
-    const c = flat(completionSection());
-    expect(/Mode A/.test(c)).toBe(true);
-    expect(/Mode B/.test(c)).toBe(true);
-  });
 });

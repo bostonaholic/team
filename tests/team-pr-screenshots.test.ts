@@ -13,7 +13,7 @@
 // crashes, not clean assertion failures.
 
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { read } from "./helpers/text";
@@ -22,10 +22,18 @@ import { loadsSkill } from "./helpers/skill-refs";
 const REPO_ROOT = process.cwd();
 // team-pr is a RUNTIME skill — it lives under skills/ (distributed).
 const TEAM_PR_SKILL = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
+const REFERENCES = join(REPO_ROOT, "skills", "team-pr", "references");
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
 function body(): string {
-  return existsSync(TEAM_PR_SKILL) ? read(TEAM_PR_SKILL) : "";
+  if (!existsSync(TEAM_PR_SKILL) || !existsSync(REFERENCES)) return "";
+  return [
+    read(TEAM_PR_SKILL),
+    ...readdirSync(REFERENCES)
+      .filter((name) => /^\d\d-.*\.md$/.test(name))
+      .sort()
+      .map((name) => read(join(REFERENCES, name))),
+  ].join("\n");
 }
 // Flatten newlines so multi-line prose can be matched in one regex.
 function flat(text: string): string {

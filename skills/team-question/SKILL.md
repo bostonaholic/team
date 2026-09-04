@@ -1,6 +1,6 @@
 ---
 name: team-question
-description: Decompose a feature description, ticket, or issue link into the QRSPI Question artifacts (1-task.md, 2-questions.md). Trigger on "shape this idea", "decompose this task", or "/team-question".
+description: 'Decomposes a feature into task and question artifacts. Trigger on "shape this idea", "decompose this task", or "/team-question".'
 effort: medium
 argument-hint: "<ticket id, issue URL, or task description>"
 ---
@@ -53,8 +53,6 @@ available.
 
 ## Execution
 
-> Follow `skills/principle-progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
-
 1. **Resolve the input** to a description:
    - Empty `$ARGUMENTS`: ground in repo context, then ask only for genuine
      gaps, per the **"discover, don't demand"** rule in `## Input`.
@@ -91,8 +89,6 @@ available.
   research begins.
 - You want to run multiple research passes against the same task without
   re-decomposing.
-
-## Completion
 
 Report:
 

@@ -1,155 +1,72 @@
 ---
 name: verifying-ux
-description: Live application verification procedure for the ux-reviewer agent — detect the project type (UI, API-only, or library), boot the application, exercise it with real requests, and evaluate the experience. Loaded when an implementation needs live smoke verification.
+description: 'Defines live application and screenshot verification. Load when a diff changes user-visible UI behavior.'
 user-invocable: false
 ---
 
 # Verifying UX
 
-The ux-reviewer's procedure: boot the application, interact with it as a
-real user would, and evaluate if the experience works correctly.
+Boot and use the application as a user. Read
+[references/procedure.md](references/procedure.md) before verification; it owns
+the detailed UI/API checks, manifest body, skip handling, and report rules.
 
-## Detection
+## Detection and lifecycle
 
-First, determine the project type by inspecting configuration files:
+- UI: rendered pages/components/routes. Start the dev server, wait until ready,
+  use `curl` on home and changed routes, inspect errors, capture screenshots,
+  then stop the server.
+- API-only: start it, use real `curl` requests for success, headers, bodies,
+  invalid input, missing auth/parameters, and not-found behavior, then stop it.
+- Library: report live verification not applicable.
 
-- **UI project:** Has a frontend framework (React, Vue, Svelte, Next.js, etc.)
-  with pages, components, or routes that render HTML.
-- **API-only project:** Has HTTP endpoints but no user-facing UI (REST API,
-  GraphQL, CLI tool).
-- **Library:** No runnable server. Skip live testing and report that live
-  verification is not applicable.
-
-## UI Project Verification
-
-1. **Start the dev server.** Find the applicable start command from
-   `package.json` scripts, `Makefile`, or equivalent. Run it in the
-   background. Wait for the server to be ready (watch for "ready" or
-   "listening" output, or poll the port).
-
-2. **Verify the home route.** Use `curl` to fetch the main page. Check that:
-   - The response status is 200
-   - The response body contains expected HTML structure
-   - No server-side error messages are present
-
-3. **Check relevant pages.** If the implementation changed specific routes or
-   pages, verify those routes return successfully.
-
-4. **Check for console errors.** If the project has a test or health endpoint,
-   hit it. Look for error indicators in the server output.
-
-5. **Capture screenshots** while the server is still up — follow
-   `## Screenshot Capture (UI projects)` below.
-
-6. **Stop the dev server** when verification is complete.
-
-## API Project Verification
-
-1. **Start the server.** Find and run the applicable start command in the
-   background. Wait for it to be ready.
-
-2. **Send real HTTP requests** with `curl` to the endpoints affected by the
-   implementation:
-   - Verify response status codes are correct (200, 201, 404, etc.)
-   - Verify response headers (Content-Type, CORS, etc.)
-   - Verify response body structure matches expectations
-   - Test error cases (invalid input, missing auth, not found)
-
-3. **Check edge cases:**
-   - Empty request bodies where a body is expected
-   - Malformed input
-   - Missing necessary parameters
-
-4. **Stop the server** when verification is complete.
+ALWAYS stop the dev server, including after failure. Do not change code or test
+unrelated behavior. A server that is not ready within 60 seconds is the primary
+finding. Keep commands and output for reproduction.
 
 ## Screenshot Capture (UI projects)
 
-Runs as step 5 of UI Project Verification, inside the server lifecycle (the
-server is up. You have not stopped it yet). Skip this entire section for
-API-only and Library projects.
+Capture while the server runs and only when both conditions hold: project type
+is UI and the full branch diff touches components, templates, pages, routes, or
+styles. Use `git diff $(git merge-base <base-branch> HEAD)..HEAD`; resolve base
+with `git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'`,
+fallback `main`. Otherwise create no screenshots directory or manifest.
 
-**UI-impact gate.** Capture only when both conditions hold: the project type
-is UI **and** the branch's full diff touches components, templates, pages,
-routes, or styles — check
-`git diff $(git merge-base <base-branch> HEAD)..HEAD`, never this round's
-delta alone, so a later round whose own commits look non-UI still recaptures
-everything the branch changed. Resolve `<base-branch>` with
-`git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'`,
-falling back to `main`. If either condition fails, create no
-`screenshots/` directory and no manifest — skip the rest of this section.
+Wipe `<artifact-dir>/screenshots/` before capture. Seed with the project's
+mechanism when available; otherwise capture with `seeded: false` and `seed_note`.
+Use Playwright CLI through Bash. Capture viewport PNGs for affected populated,
+empty, and error states as `<NN>-<route-slug>-<state>.png`.
 
-**Wipe and recapture.** Delete the contents of `<artifact-dir>/screenshots/`
-before capturing, so stale images from earlier rounds never reach the PR.
-Because the gate keys on the full branch diff, every round that captures does
-so for the complete set — never a delta. `<artifact-dir>` is the
-`docs/plans/<id>/` path from your dispatch context.
+Never capture secrets or real PII. Skip auth-only routes. Limits: 10 shots per
+round, 5-minute total, 30s per-shot timeout. Record timeouts and continue.
+Screenshot failure is Could Improve, never REQUEST CHANGES.
 
-**Seed.** Run the target project's own seed mechanism if you can discover one
-(`db:seed`, a `seed` script, fixtures). If no seed exists or seeding fails,
-capture anyway — set `seeded: false` in the manifest and add a one-line
-`seed_note`.
+Statuses:
 
-**Capture.** Use the Playwright CLI through Bash (e.g. `npx playwright
-screenshot`). Take viewport-size shots, not full-page — GitHub's 10MB
-attachment bound. Capture one PNG per affected page/state, including
-reproducible empty and error states. Name files
-`<NN>-<route-slug>-<state>.png`, zero-padded so listing order is stable, and
-write them to `<artifact-dir>/screenshots/`.
+- `captured`: every planned shot exists.
+- `partial`: some shots skipped.
+- `skipped-server-start`: server unavailable.
+- `skipped-no-tool`: Playwright or Chromium unavailable.
 
-**Data caution.** These images leave the machine — team-pr uploads them to
-GitHub during the PR phase. Do not capture routes or states that render
-secrets or real PII. Prefer seeded or synthetic data. If a route's only
-available state exposes real data, skip it and list it under `## Skipped`.
-
-**Caps and skip statuses.**
-
-- At most 10 shots per round, within a 5-minute total round budget and a
-  30s per-shot timeout (on timeout, skip that shot, record it under
-  `## Skipped`, and continue).
-- Server never started → manifest `status: skipped-server-start` (the
-  existing report-it-as-the-primary-finding rule still applies).
-- Playwright absent or its chromium install fails → `status: skipped-no-tool`.
-- Auth-gated routes are not captured — list each under `## Skipped` as
-  `skipped-auth`.
-- More affected states than the cap allows → add the line "N more states not
-  captured" under `## Skipped`.
-
-**Manifest.** Write `<artifact-dir>/screenshots/manifest.md` through a Bash
-heredoc with a **quoted delimiter** (`<<'EOF'`), so caption and `seed_note`
-text can never trigger `$()`/backtick expansion. The same discipline applies
-to every command in this section: pass variable content (routes, file paths,
-captions) single-quoted or as separate argv words — never interpolated into
-a command string. Frontmatter schema, exactly:
+Write `<artifact-dir>/screenshots/manifest.md` with a quoted heredoc delimiter
+(`<<'EOF'`). Pass every variable route, path, caption, and note as a separate or
+single-quoted argument; never interpolate into a command string.
 
 ```yaml
 ---
-topic: <topic>        # verbatim from 6-design.md, like every artifact
+topic: <topic>
 date: <YYYY-MM-DD>
 phase: implement
-round: <n>            # review round if the dispatch names one; otherwise 1
+round: <n>
 status: captured | partial | skipped-server-start | skipped-no-tool
 seeded: true | false
-seed_note: <one line when seeding was absent or failed; omitted otherwise>
+seed_note: <one line when needed>
 ---
 ```
 
-Body: a `## Captured` section with one `### <NN>-<route-slug>-<state>.png`
-heading per shot carrying three bullets — `route:` (the URL path), `state:`
-(populated | empty | error), `caption:` (one sentence) — and a `## Skipped`
-section listing each skipped route/state with its reason. `status: captured`
-means every planned shot is present. `partial` means some were skipped.
+Body requires `## Captured` with one `### <filename>` per shot and bullets
+`route:`, `state: populated | empty | error`, and `caption:`. `## Skipped` lists
+each skipped state and reason (`skipped-auth`, timeout, tool, or seed issue).
+When capped, add `N more states not captured`.
 
-## Rules
-
-- ALWAYS stop the dev server when you are done, even if verification fails.
-  Use process IDs or `kill` to make sure that cleanup happens.
-- Do NOT change any code. You are a tester, not a fixer.
-- Do NOT test functionality unrelated to the recent implementation.
-- If the server fails to start, report that as the primary finding and stop.
-- Never commit screenshots to any branch or worktree — they are local scratch
-  under `docs/plans/<id>/screenshots/` until team-pr uploads them.
-- Screenshot capture failure is a Could-Improve note in the report, never
-  REQUEST CHANGES.
-- Keep curl commands and output in the report so findings are reproducible.
-- Time-bound your verification. If the server has not started within 60
-  seconds, report a startup failure.
+Never commit screenshots to any branch or worktree. They remain local under
+`docs/plans/<id>/screenshots/` until `team-pr` uploads them.

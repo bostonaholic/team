@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.83.0] - 2026-09-04
+
+### Changed
+
+- **Team skills now load concise routers instead of repeated instructions.** Shared topic discovery runs from one bundled helper. Repeated progress banners and principle paths are removed. Detailed procedures live in adjacent references. Skill-source budgets gate principles at 25 lines, methodology at 80 lines, entry points at 150 lines, and descriptions at 200 characters. Methodology descriptions use 150 characters. Every cross-skill load keeps the machine-readable `Call the Skill tool with <name>` form. Tests validate the required load names for each component. **What this asks of you:** nothing. Commands and behavior are unchanged.
+
 ## [0.82.0] - 2026-09-04
 
 ### Added
@@ -762,7 +768,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.82.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.83.0...HEAD
+[0.83.0]: https://github.com/bostonaholic/team/compare/v0.82.0...v0.83.0
 [0.82.0]: https://github.com/bostonaholic/team/compare/v0.81.0...v0.82.0
 [0.81.0]: https://github.com/bostonaholic/team/compare/v0.80.0...v0.81.0
 [0.80.0]: https://github.com/bostonaholic/team/compare/v0.79.0...v0.80.0

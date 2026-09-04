@@ -1,6 +1,6 @@
 ---
 name: team-design
-description: Decide the approach before any code is written. The design-author drafts the ~200-line design document, resolving its own open questions autonomously as recorded assumptions, then an adversarial design review gates advancement. Trigger on "design this", "let's align on the approach", or "/team-design".
+description: 'Drafts and adversarially reviews a design. Trigger on "design this", "let''s align on the approach", or "/team-design".'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
@@ -14,7 +14,7 @@ adversarial design review gates advancement. No mid-run prompt fires.
 ## Input
 
 `$ARGUMENTS` is the artifact directory: `docs/plans/<id>/`. If empty, the
-discovery block below resolves it.
+discovery command below resolves it.
 
 The `design-author` reads:
 
@@ -22,46 +22,18 @@ The `design-author` reads:
 - `$ARGUMENTS/2-questions.md` — the questions that drove research
 - `$ARGUMENTS/5-research.md` — what exists (facts)
 
-Resolve the artifact directory by running this self-contained block (one bash
-call — agent threads reset cwd between calls):
+Resolve `<team-skill-dir>` to the absolute directory containing
+`skills/team/SKILL.md`. From the repository root, run:
 
 ```sh
-# Three-tier artifact-directory discovery (archetype A).
-# ID_RE + PHASE_FILES canonical from hooks/session-start-recover.mjs.
-# PHASE_FILES recency mirrors findActiveTopic() in session-start-recover.mjs.
-# NOTE: this block is duplicated across 8 skills by design (see docs/architecture.md); future: shared discover-topic.sh.
-ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
-PHASE_FILES="1-task 2-questions 5-research 6-design 7-structure 8-plan"
-PRED="5-research.md"            # predecessor artifact this skill consumes
-# Tier 1 — explicit: $ARGUMENTS names an existing dir → use verbatim.
-if [ -n "$ARGUMENTS" ] && [ -d "$ARGUMENTS" ]; then
-  echo "$ARGUMENTS"; exit 0
-fi
-# Tier 2 — discover: newest ID_RE dir under docs/plans/ that holds PRED.
-best=""; best_mtime=-1
-# Assumes cwd is the repo/worktree root (where docs/plans/ lives).
-for dir in docs/plans/*/; do
-  name="$(basename "$dir")"
-  printf '%s' "$name" | grep -qE "$ID_RE" || continue   # ID_RE filter
-  [ -f "$dir$PRED" ] || continue                        # predecessor filter
-  m=-1
-  for p in $PHASE_FILES; do
-    f="$dir$p.md"
-    [ -f "$f" ] || continue                             # skip racing/absent
-    s="$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f" 2>/dev/null)" || continue
-    [ "${s:-0}" -gt "$m" ] && m="$s"                    # max-mtime over PHASE_FILES
-  done
-  [ "$m" -gt "$best_mtime" ] && { best_mtime="$m"; best="$dir"; }
-done
-[ -n "$best" ] && { echo "$best"; exit 0; }
-# Tier 3 — none found: print nothing → fall to AskUserQuestion (prose below).
+"<team-skill-dir>/discover-topic.sh" "${ARGUMENTS:-}" "5-research.md"
 ```
 
-- **If the block printed a path**, use it as `$ARGUMENTS` for the rest of this
+- **If the command printed a path**, use it as `$ARGUMENTS` for the rest of this
   skill (tier 1 explicit arg, or tier 2 discovery). When the path came from
   tier 2 (no explicit arg), announce the resolved directory to the user before
   proceeding, so an auto-picked topic is never silent.
-- **If the block printed nothing** (tier 3 — no directory holds `5-research.md`),
+- **If the command printed nothing** (tier 3 — no directory holds `5-research.md`),
   do not hard-error. Fire `AskUserQuestion` with a `Setup` header and labeled
   options:
   - **Run the producer** — run `/team-research docs/plans/<id>/` to produce the
@@ -71,8 +43,6 @@ done
 
 ## Execution
 
-> Follow `skills/principle-progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
-
 1. Use the directory resolved in `## Input`.
 2. Dispatch `design-author`, which:
    a. Resolves its own open questions autonomously, recording each in
@@ -81,7 +51,7 @@ done
 
    If `$ARGUMENTS/6-design.md` already exists, skip this dispatch and
    resume at step 3 — never re-draft an existing design.
-   Both this skip and step 3's never-re-review skip are idempotent re-runs: converge on the same end state, never duplicate work (`skills/principle-idempotent-reruns/SKILL.md`).
+   Both this skip and step 3's never-re-review skip are idempotent re-runs: converge on the same end state, never duplicate work (`principle-idempotent-reruns`).
 3. **Design review gate.** If the latest
    `$ARGUMENTS/design-review-<n>.md` already carries a passing verdict
    (APPROVE or COMMENT), skip straight to step 4 — never re-review a
@@ -138,11 +108,9 @@ done
    - **Unparseable verdict or reviewer crash** — retry the review once
      with the error; on second failure, halt loudly. Fail closed —
      never advance on a missing verdict.
-     A missing verdict counts as not passed (`skills/principle-fail-closed/SKILL.md`).
+     A missing verdict counts as not passed (`principle-fail-closed`).
 4. **Stop once `$ARGUMENTS/6-design.md` exists and the latest
    `$ARGUMENTS/design-review-<n>.md` verdict is APPROVE or COMMENT.**
-
-## Completion
 
 Report design path and tell the user:
 **"Next: run `/team-structure docs/plans/<id>/`"**

@@ -1,31 +1,16 @@
 ---
 name: principle-deep-agents-narrow-seams
-description: "Apply when designing an agent, subagent, or dispatch boundary. Keep complexity inside the worker and the seam narrow: declared inputs in, one bounded output back."
+description: 'Keeps agent interfaces narrow and internal work deep. Apply when defining an agent, subagent, or dispatch boundary.'
 user-invocable: false
 ---
 
 # Deep Agents, Narrow Seams
 
-Each agent is a deep module behind a narrow interface: read the declared
-predecessor inputs, do one job well, produce exactly one bounded output.
-The complexity lives inside the agent; the seam between agents stays
-simple — the declared predecessor artifacts in, one bounded output back:
-an artifact written to disk or a report returned as text (the dispatcher
-persists what must outlive the turn).
+Give each agent one job behind this interface: the declared predecessor artifacts in, one bounded output back—an artifact written to disk or a report returned as text.
 
-**Why:** Narrow seams make the roster swappable, the pipeline legible, and
-failures local. A crash in one agent is contained to one phase instead of
-cascading down the line.
-
-**Pattern:**
-- The declared predecessor artifacts in — one where one suffices — and
-  exactly one bounded output back: an artifact on disk or a returned
-  report the dispatcher persists. An agent never reaches around its
-  declared inputs to peek at another agent's state.
-- Keep orchestration in the orchestrator. A specialist that routes,
-  retries siblings, or walks the phase table has absorbed a second job.
-- Split a "utility" agent that quietly does five unrelated things.
-- Bound the depth: instruct every helper to do its work directly and never
-  to spawn further sub-agents.
-- Bound the reply: a helper returns a short, stated maximum, and the
-  dispatcher owns everything it relays.
+- Use one predecessor where sufficient; never inspect undeclared agent state.
+- Let the dispatcher persist returned reports that must outlive the turn.
+- Keep routing, sibling retries, and the phase table in the orchestrator.
+- Split utility agents that perform unrelated jobs.
+- Require helpers to work directly and never spawn further sub-agents.
+- State a short maximum for helper replies; the dispatcher owns relayed content.

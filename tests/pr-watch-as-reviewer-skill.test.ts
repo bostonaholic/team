@@ -19,7 +19,7 @@
 // not clean assertion failures.
 
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
@@ -27,17 +27,21 @@ import { frontmatter, read } from "./helpers/text";
 const REPO_ROOT = process.cwd();
 // pr-watch-as-reviewer is a RUNTIME skill — under skills/ (distributed), not .claude/.
 const SKILL = join(REPO_ROOT, "skills", "pr-watch-as-reviewer", "SKILL.md");
+const REFERENCES = join(REPO_ROOT, "skills", "pr-watch-as-reviewer", "references");
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
 function body(): string {
-  return existsSync(SKILL) ? read(SKILL) : "";
+  if (!existsSync(SKILL) || !existsSync(REFERENCES)) return "";
+  return [
+    read(SKILL),
+    ...readdirSync(REFERENCES)
+      .filter((name) => /^\d\d-.*\.md$/.test(name))
+      .sort()
+      .map((name) => read(join(REFERENCES, name))),
+  ].join("\n");
 }
 function fm(): string {
   return existsSync(SKILL) ? frontmatter(read(SKILL)) : "";
-}
-// Flatten newlines so multi-line prose can be matched in one regex.
-function flat(text: string): string {
-  return text.replace(/\n/g, " ");
 }
 
 describe("pr-watch-as-reviewer skill: runtime standalone utility frontmatter", () => {
@@ -47,13 +51,6 @@ describe("pr-watch-as-reviewer skill: runtime standalone utility frontmatter", (
 
   test("frontmatter declares name: pr-watch-as-reviewer", () => {
     expect(/^name:\s*pr-watch-as-reviewer\s*$/m.test(fm())).toBe(true);
-  });
-
-  test("description carries trigger phrases incl. the literal /pr-watch-as-reviewer", () => {
-    const f = flat(fm());
-    expect(/description:.*Trigger on/i.test(f)).toBe(true);
-    // Pin the FULL literal — a bare prefix of the name would false-pass.
-    expect(f).toContain("/pr-watch-as-reviewer");
   });
 
   test("frontmatter carries argument-hint (PR number or URL)", () => {
@@ -290,4 +287,3 @@ describe("pr-watch-as-reviewer skill: PENDING-review check is a fenced snippet",
     expect(/```bash[\s\S]{0,400}reviews\(last: 1, states: \[PENDING\]\)/.test(body())).toBe(true);
   });
 });
-

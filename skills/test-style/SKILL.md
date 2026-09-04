@@ -1,118 +1,39 @@
 ---
 name: test-style
-description: Test style rules and the flaky-test red-flag catalog — behavior-not-implementation, DAMP setup, narrow assertions, deterministic-input rules (clock, randomness, ordering, hermetic boundaries), the fidelity ladder, and the audit checklist. Load when writing tests, auditing test quality, or reviewing changed test files for flaky patterns.
+description: 'Defines deterministic behavioral tests and flaky-test red flags. Load when writing or reviewing `.test.ts` and `.evals.ts` files.'
 user-invocable: false
 ---
 
 # Test Style Rules
 
-These rules govern every acceptance test written under
-`skills/test-first-development/SKILL.md`, and they are the bar reviewers
-hold changed test files to. Each rule catches a different class of
-test-suite decay.
+Before writing or reviewing tests, read [references/test-style-manual.md](references/test-style-manual.md).
+It owns examples, language tools, the full audit bar, and every exception.
 
-## Test behavior, not implementation
+## Core rules
 
-Tests assert externally observable outcomes. A refactor that preserves
-behavior must leave every acceptance test green. Tests that break on
-internal restructuring are change-detectors — they produce noise on every
-refactor without proving the system works.
-
-- Assert on what the caller observes: return values, persisted state, effects
-  visible to other components.
-- Assert on which private methods were called, and in which order, only where
-  the call itself is what the caller observes. One example is a message
-  published to an external channel.
-- Interaction tests verify state-changing calls only. Never assert on
-  query-only calls.
-
-## Tests are DAMP, not DRY
-
-Test code is read far more than it is run. Inline the setup a reader needs
-to understand a failing test. Tolerate duplication. Favor a linear
-arrange-act-assert story.
-
-- Pass the asserted value through helpers: `create_account(BALANCE)`, not
-  `create_account()` that hides the value the assertion checks.
-- No `if`, no loops, no string-building inside a test body — they can carry
-  the same bug as the code under test.
-- Extract helpers only when the same setup appears across many tests AND the
-  helper does not hide assertion-relevant inputs.
-
-## Narrow assertions
-
-Assert on the specific field the test cares about (`account.balance == 2000`),
-not full equality on a complex object. Reserve full-snapshot assertions for
-at most one default test per common case.
-
-Use subset matchers when available (`comparingExpectedFieldsOnly`,
-`UnorderedElementsAre`, `protocmp.FilterField`). Brittle failures are a
-signal that the test toolkit is missing a matcher — propose one rather than
-blaming the test author.
-
-## Test failures must be actionable
-
-A failing test must be diagnosable from name + assertion output alone,
-without rerunning.
-
-- `EXPECT_OK(loadMetadata())` beats `EXPECT_TRUE(loadMetadata().ok())`
-  because the failure prints the actual error.
-- `assertEqual(actual, expected)` beats `assert(predicate)` because it prints
-  both values.
-- Test names describe behavior, not method: `sendsEmailWhenBalanceIsLow`, not
-  `testProcessTransaction_1`.
-
-## Wait for the condition. Never sleep
-
-Replace every fixed `sleep(N)` with a wait-for-condition primitive (exist,
-not-exist, wait-to-exist with timeout + interval). A fixed sleep both masks
-race-condition bugs and pads runtime when the system is fast.
+- Test observable behavior, not private calls. Interaction tests cover state changes only.
+- Keep tests DAMP: linear arrange-act-assert, inputs visible, no test-body logic.
+- Assert only the field or effect under test. Make failures actionable from name and output.
+- Wait for conditions; never use fixed sleeps. Await every task; allow valid interleavings.
+- Prefer real, then fake, then mock. Wrap vendor types behind owned interfaces.
+- Reserve E2E for critical user journeys. Add cross-feature tests where behavior overlaps.
 
 ## Assert outcomes, not interleavings
 
-A test whose result depends on thread or promise scheduling passes only
-when the scheduler cooperates. Accept every valid interleaving, or make
-the interleaving deterministic.
-
-- `join()`/`await` every concurrent task before asserting — never assert
-  mid-flight.
-- Assert order-independent properties on concurrently produced results —
-  set membership or a sorted comparison, not `results[0] === "A"`.
-- Where ordering genuinely matters, impose it with latches/barriers
-  (`CountDownLatch`, chained promises) instead of relying on scheduler
-  luck.
+Never depend on scheduler order. Use joins, awaits, barriers, or latches. Sort
+or compare sets unless order is the contract.
 
 ## Control the clock
 
-Never read the real wall clock in a test — inject or freeze it
-(`vi.setSystemTime`, fake timers, `Clock.fixed`, `freezegun`). Each
-sub-pattern below ships a time-bomb: a test that is green today and
-permanently red on some future date.
+Freeze or inject time. Never feed real `new Date()`, `Date.now()`, naive calendar
+math, future expiry literals, or timezone-naive dates into assertions.
 
-- No assertion against "now": `new Date()`, `Date.now()`, `datetime.now()`
-  feeding an assertion.
-- No hard-coded future expiry: `expiresAt: "2030-01-01"`, cert `notAfter` —
-  generate expiring artifacts at setup, relative to the frozen clock.
-- No naive calendar arithmetic on "now": `addMonths` / `+1 day` assumes
-  month lengths, 24-hour days, and no DST. It fails on month-end, leap day,
-  and DST-transition days.
-- No TZ-naive date construction: `new Date("2023-08-31")` parses as UTC
-  midnight and shifts a day in negative-offset zones.
-
-Past or fixed date literals with an explicit timezone are the sanctioned
-form.
-
-**Bad:**
 ```js
-// Bad — wall-clock read feeds the assertion; hard-coded future expiry.
-// Green today, permanently red once the clock crosses the literal.
 const token = { expiresAt: "2030-01-01" };
 expect(isValid(token, new Date())).toBe(true);
 ```
 
-**Good:**
 ```js
-// Good — frozen/injected clock; expiry derived from it.
 const now = new Date("2024-06-15T12:00:00Z");
 const token = issueToken({ now, ttlDays: 30 });
 expect(isValid(token, now)).toBe(true);
@@ -120,147 +41,40 @@ expect(isValid(token, now)).toBe(true);
 
 ## Seed all randomness
 
-An unseeded RNG feeding an assertion is a defect, not a convenience —
-generated data can collide with the asserted value.
-
-- Seed every generator the test touches: `faker.seed(12345)`, a seeded
-  `Random(seed)` — never bare `Math.random()` or `uuid.v4()` in asserted
-  data.
-- Better: explicit fixed inputs. `createUser({ name: "Bob" })` cannot
-  collide. `createUser({ name: faker.person.firstName() })` can.
+Use explicit inputs or seed every RNG that can affect an assertion.
 
 ## Tests own their state — any order, any host
 
-A test builds its own preconditions and tears down what it creates. A test
-that passes only in a specific order, or only after another test has run,
-is order-dependent — a leading flakiness cause.
-
-- No static or module-level mutable state shared across tests. Reset
-  singletons and caches in `beforeEach`/`afterEach`.
-- Every DB row, file, cache entry, or env var a test creates gets a
-  teardown (prefer transaction rollback).
-- Never assert on state a different test produced. The suite must pass in
-  any order and on any host.
+Each test creates and removes its DB rows, files, cache values, and environment
+changes. Reset shared state. Never depend on another test or execution order.
 
 ## Impose order before asserting it
 
-Hash map/set iteration, `os.listdir`, and queries without `ORDER BY` have
-no defined order — a positional assertion on them is platform-dependent
-luck.
-
-- Add an explicit `ORDER BY` / `.order_by()` / sort before any positional
-  assertion (`results[0]`).
-- Or assert order-independently: set membership, unordered-elements
-  matchers.
-- Never compare an ordered structure against a set-backed result.
+Use `ORDER BY` or sort before positional assertions. Otherwise use unordered
+matchers. Never compare ordered expectations with set-backed results.
 
 ## Hermetic boundaries
 
-The test must not depend on anything outside the process it controls.
-
-- No real network or external services — stub the boundary (`nock`,
-  `WireMock`, `msw`) and inject the client.
-- No hard-coded ports for embedded servers/DBs — dynamic allocation (port
-  `0`, TestContainers) plus guaranteed teardown. Fixed ports collide under
-  parallel CI.
-- Guarantee teardown of every opened connection, file, or socket. Use
-  `try/finally`, `using`, `defer`, or the framework's fixture teardown. A
-  leaked handle can fail a later test.
-- No locale/platform-format assertions without pinning — pass the locale
-  explicitly, use `path.join()` / `os.EOL`, set `TZ`/`LANG` in the harness.
-- No exact float equality — `toBeCloseTo(0.3)`, not `toBe(0.1 + 0.2)`.
-  compare with a tolerance.
-
-## Fidelity ladder: real > fake > mock
-
-When a test needs a collaborator, prefer in this order:
-
-1. **Real** — the production implementation. Highest fidelity.
-2. **Fake** — a lightweight in-memory equivalent maintained by the real
-   implementation's owner. Use when the real is too slow or network-bound.
-3. **Mock** — last resort, primarily for error-path injection or when neither
-   real nor fake exists.
-
-Default-to-mocking collapses fidelity and produces mock chains that mirror
-production graphs without surfacing real bugs.
-
-## Do not mock types you do not own
-
-If a vendor type needs to be substituted, wrap it behind your own interface
-and mock the wrapper. Upstream API changes then ripple through one boundary
-instead of through every test.
-
-## E2E reserved for critical user journeys
-
-End-to-end tests are expensive — budget about one engineer-week per quarter
-per E2E test to keep stable. Reserve them for a small list of user
-goal-plus-task workflows. Do not chase exhaustive E2E coverage.
-
-## Test workflows, not just features
-
-Features ship into a system. Bugs live at the seams. When the design
-introduces a feature whose behavior overlaps an existing one, the
-acceptance-test list must include at least one cross-feature interaction
-test.
+Stub real networks; allocate ports dynamically; always close resources. Pin
+locale, timezone, paths, and line endings. Compare floats with tolerance.
 
 ## Audit checklist
 
-Before confirming failures, audit each test against this bar. Every "NO" is
-an issue to fix. The rules above spell each check out in full. The bar
-below is the audit checklist.
-
 | Check | Pass criterion |
-|-------|----------------|
-| Behavior-named | Test name describes the behavior, not the method. `sendsEmailWhenBalanceIsLow`, not `testProcess_1`. |
-| Narrow assertion | The assertion targets the specific field/effect under test. Full-equality on a complex object only where that equality IS the contract. |
-| Actionable failure | If the test fails, the failure message names the failing condition. `EXPECT_OK(...)` not `EXPECT_TRUE(...ok())`. |
-| No sleeps | No `sleep()` for synchronization. Use wait-for-condition primitives. |
-| Deterministic inputs | No wall-clock reads, unseeded randomness, order-dependent or shared-state assumptions, race-interleaving assumptions, positional asserts on unordered collections, real network, hard-coded ports, or exact float equality feeding an assertion. Clock frozen/injected. RNG seeded. |
-| No test logic | No `if`, no loops, no string-building inside the test body. |
-| One scenario per test | The test verifies one behavior and runs independently in any order. |
-| DAMP setup | Setup the reader needs to understand the test lives in the test (or a helper that takes the asserted value as a parameter). |
-| Fidelity ladder | Real > fake > mock. No mocks where a fake is feasible. No mocks for types you do not own — wrap them. |
-
-When reporting issues, cite the failing check by name (e.g., "Test 7 fails
-the Narrow assertion bar — it asserts on the full order object when only
-`order.total` is the slice's contract").
+|---|---|
+| Behavior-named | Name behavior, not a method. |
+| Narrow assertion | Assert the specific contract. |
+| Actionable failure | Output names the failed condition. |
+| No sleeps | Use condition waits. |
+| Deterministic inputs | Freeze clocks, seed RNGs, own state, order results, stub networks, allocate ports, close resources, pin environment, tolerate floats. |
+| No test logic | No branches, loops, or string building. |
+| One scenario per test | One independent behavior. |
+| DAMP setup | Keep assertion-relevant setup visible. |
+| Fidelity ladder | Real > fake > mock; wrap unowned types. |
 
 ## Flaky-test red flags (reviewer checklist)
 
-The reviewer-facing catalog of nondeterministic inputs. Any test whose
-*outcome depends on* one of these flags on **first** occurrence — the
-severity regime lives in `skills/reviewing-code/SKILL.md` ("Flaky-test red
-flags"). A time-bomb example pair lives under "Control the clock" above.
-
-- **Time/date dependence, incl. time-bombs** — `new Date()`, `Date.now()`,
-  `datetime.now()` feeding an assertion. A future date literal in a fixture
-  (`expiresAt: "2030-01-01"`, cert `notAfter`). Naive calendar arithmetic
-  on "now" (`addMonths`, month-end/DST/leap assumptions). TZ-naive date
-  construction. Past/fixed date literals with an explicit TZ do not flag.
-- **Fixed-sleep / timed waits** — `sleep()` for synchronization:
-  `Thread.sleep(ms)`, `setTimeout`-as-wait, `cy.wait(3000)`,
-  `page.waitForTimeout(...)`. A bounded wait whose success is asserted
-  (`assertTrue(latch.await(100, MS))` — a capped wait still flags). Tests
-  legitimately about time require a frozen/fake clock — a real sleep to
-  observe a delay still flags.
-- **Concurrency / race interleaving** — assertions assuming a completion
-  order across threads, `Promise.all`, or executors. Shared state mutated
-  without synchronization. Missing `join()`/`await` before asserting.
-  Order-independent assertions (`Set` comparison, sorted) do not flag.
-- **Test-order dependence & shared mutable state** — static/module-level
-  mutable state written by a test. State (DB row, file, env var) created
-  with no teardown. A test reading state another test produced.
-- **Unseeded randomness** — `Math.random()`, `uuid.v4()`, `faker.*` without
-  `faker.seed(n)` feeding an assertion. Seeded randomness does not flag.
-- **Real network / external services** — live URLs or SDK clients in a test
-  with no stub/interceptor at the boundary.
-- **Resource leaks & hard-coded ports** — a fixed port for an embedded
-  server/DB (collides under parallel CI). An opened connection, file, or
-  socket with no guaranteed teardown.
-- **Unordered-collection order assumptions** — positional assertions on
-  hash map/set iteration or on a query with no `ORDER BY`.
-- **Exact float equality** — `expect(0.1 + 0.2).toBe(0.3)`. Require a
-  tolerance/epsilon comparison.
-- **Platform/environment dependence** — hard-coded path separators or line
-  endings. Locale/TZ formatting asserted against a fixed string. CPU-count
-  or CI-parallelism assumptions.
+Any outcome-dependent flag is blocking on first occurrence per `skills/reviewing-code/SKILL.md`:
+real time or future dates; `sleep()` or timed waits; race order or missing awaits;
+shared state or missing teardown; unseeded randomness; real networks; leaked resources or fixed ports; unordered positions; exact floats; platform, locale,
+TZ, CPU, or CI parallelism. Fixed explicit-TZ dates and deterministic controls do not flag.

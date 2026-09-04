@@ -21,7 +21,7 @@
 // not clean assertion failures.
 
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
@@ -29,13 +29,19 @@ import { frontmatter, read } from "./helpers/text";
 const REPO_ROOT = process.cwd();
 // groom-backlog is a RUNTIME skill — under skills/ (distributed), not .claude/.
 const SKILL = join(REPO_ROOT, "skills", "groom-backlog", "SKILL.md");
-// The canonical standalone-utility principle-progress-tracking pointer lives here.
-const SHIPIT_SKILL = join(REPO_ROOT, "skills", "shipit", "SKILL.md");
+const REFERENCES = join(REPO_ROOT, "skills", "groom-backlog", "references");
 // The board doc is the stated source of truth for the `Ready` WIP limit.
 const PROJECT_TRACKING = join(REPO_ROOT, "docs", "project-tracking.md");
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
 function body(): string {
-  return existsSync(SKILL) ? read(SKILL) : "";
+  if (!existsSync(SKILL) || !existsSync(REFERENCES)) return "";
+  return [
+    read(SKILL),
+    ...readdirSync(REFERENCES)
+      .filter((name) => /^\d\d-.*\.md$/.test(name))
+      .sort()
+      .map((name) => read(join(REFERENCES, name))),
+  ].join("\n");
 }
 function fm(): string {
   return existsSync(SKILL) ? frontmatter(read(SKILL)) : "";
@@ -54,19 +60,6 @@ function prose(): string {
 // Flatten newlines so multi-line prose can be matched in one regex.
 function flat(text: string): string {
   return text.replace(/\n/g, " ");
-}
-
-// The two contiguous pointer lines from skills/shipit/SKILL.md, derived rather
-// than hardcoded so drift in either file fails loudly. Missing file or missing
-// pointer → "" so the containment assertion fails, never throws.
-function shipitPointer(): string {
-  if (!existsSync(SHIPIT_SKILL)) return "";
-  const lines = read(SHIPIT_SKILL).split("\n");
-  const start = lines.findIndex((line) =>
-    line.startsWith("> Follow `skills/principle-progress-tracking/SKILL.md`"),
-  );
-  if (start < 0 || start + 1 >= lines.length) return "";
-  return `${lines[start]}\n${lines[start + 1]}`;
 }
 
 // Byte offsets [start, end) of a `## ` section, so one section's position can
@@ -140,12 +133,6 @@ describe("groom-backlog skill: frontmatter", () => {
     expect(/^name:\s*groom-backlog\s*$/m.test(fm())).toBe(true);
   });
 
-  test("description carries a trigger sentence naming /groom-backlog", () => {
-    const f = flat(fm());
-    expect(/description:.*Trigger on/i.test(f)).toBe(true);
-    expect(f).toContain("/groom-backlog");
-  });
-
   test("frontmatter carries argument-hint (the board reference)", () => {
     expect(/^argument-hint:/m.test(fm())).toBe(true);
   });
@@ -159,15 +146,6 @@ describe("groom-backlog skill: frontmatter", () => {
     // Guard: an empty frontmatter must fail, not vacuously pass the absence check.
     expect(f.length).toBeGreaterThan(0);
     expect(/^disable-model-invocation:/m.test(f)).toBe(false);
-  });
-});
-
-describe("groom-backlog skill: pointer copied from shipit", () => {
-  test("carries the standalone-utility principle-progress-tracking pointer byte-for-byte", () => {
-    const pointer = shipitPointer();
-    // Guard: a pointer we failed to extract must fail, not vacuously pass.
-    expect(pointer.length).toBeGreaterThan(0);
-    expect(body()).toContain(pointer);
   });
 });
 
@@ -217,16 +195,13 @@ describe("groom-backlog skill: tracker text never reaches a shell argument", () 
   });
 });
 
-describe("groom-backlog skill: the approval prompt covers what the plan contains", () => {
-  test("the completion template is scoped by mode", () => {
-    const completion = flat(section("## Completion"));
-    expect(completion.length).toBeGreaterThan(0);
-    expect(/\*\*Board mode\.\*\*/.test(completion)).toBe(true);
-    expect(/\*\*Promotion mode\.\*\*/.test(completion)).toBe(true);
-  });
-});
-
 describe("groom-backlog skill: promotion contract", () => {
+  test("names both supported modes", () => {
+    const text = body();
+    expect(text).toContain("Board mode");
+    expect(text).toContain("Promotion mode");
+  });
+
   // The cap is duplicated: docs/project-tracking.md declares it and the skill
   // quotes it as its worked example. Derive the numeral from the doc so a change
   // there fails here rather than leaving the skill promoting into a stale cap.
@@ -526,5 +501,11 @@ describe("groom-backlog skill: evidence-backed closure proposals", () => {
     for (const label of labels) {
       expect(recipes).toContain(label);
     }
+  });
+
+  test("completion keeps board and promotion modes distinct", () => {
+    const text = body();
+    expect((text.match(/board mode/gi) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect((text.match(/promotion mode/gi) ?? []).length).toBeGreaterThanOrEqual(2);
   });
 });

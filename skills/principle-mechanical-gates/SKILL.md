@@ -1,27 +1,15 @@
 ---
 name: principle-mechanical-gates
-description: "Apply when a rule must hold reliably. Enforce it with a deterministic check at the cheapest layer that can catch it, never with a prompt instruction alone."
+description: 'Requires deterministic enforcement for reliable rules. Apply when a contract can be checked by code.'
 user-invocable: false
 ---
 
 # Mechanical Gates
 
-Where a rule must hold, do not ask the model to remember it. Enforce it
-with a deterministic check that runs whether or not the model cooperates.
-A rule enforced only by good behavior is not enforced at all.
+Enforce required rules with deterministic checks that run regardless of model behavior; A rule enforced only by good behavior is not enforced at all.
 
-**Why:** Models forget instructions roughly one time in five. A prompt
-line is a request; a gate is a guarantee. The deterministic layer outranks
-the model: a mechanical check can fail a step that every agent in the run
-believes is fine.
-
-**Pattern:**
-- Push every check to the cheapest, most deterministic layer that can
-  catch it. Never an expensive judge for something a regex could decide.
-- A check at the wrong layer is worse than no check: slow, flaky, or
-  costing money to learn nothing.
-- Detect errors early, surface them loudly, never mask them silently.
-- Prefer a check that makes the violation impossible over one that
-  observes it, and a check on the artifact over a check on the intent.
-- A check that only passes when the model happens to be well-behaved is
-  not a check.
+- Push each check to the cheapest, most deterministic layer that can catch it; never use an expensive judge where regex suffices.
+- Reject wrong-layer checks that are slow, flaky, or paid without need.
+- Detect errors early, report loudly, and never mask them.
+- Prefer preventing violations over observing them; check artifacts before intent.
+- Reject checks whose pass depends on model compliance.

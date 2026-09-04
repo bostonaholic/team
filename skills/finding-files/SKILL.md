@@ -1,48 +1,27 @@
 ---
 name: finding-files
-description: File-location search strategy for the file-finder agent — glob by naming convention, content search, import tracing, directory exploration, and manifest checks, scoped to the vocabulary in 2-questions.md. Loaded when files relevant to an area under investigation need to be found.
+description: 'Locates files by naming, structure, and imports. Load for read-only discovery when exact paths are unknown.'
 user-invocable: false
 ---
 
 # Finding Files
 
-The file-finder's search strategy: given the codebase scope and vocabulary
-in `2-questions.md`, find every file that is relevant to the area under
-investigation.
+Given `2-questions.md` codebase scope and vocabulary, find every relevant file. In multi-repo mode from `4-repos.md`, repeat each strategy in every listed repo and namespace results by slug.
 
 ## Search Strategy
 
-Work through these strategies in order. Cast a wide net first, then narrow.
-In multi-repo mode (when `4-repos.md` is present), repeat each strategy
-inside every listed repo and report findings namespaced by the repo's
-slug name.
+Use these in order, broad to narrow:
 
-1. **Glob by naming convention** — Search for files whose names match the
-   vocabulary terms in `2-questions.md` (e.g., `**/*auth*`, `**/*billing*`).
-   Try singular and plural forms. In multi-repo mode, run each glob
-   inside each repo's absolute path.
-
-2. **Content search** — Grep for vocabulary terms, function names, class
-   names, error messages. Try synonyms and related concepts.
-
-3. **Import/dependency tracing** — When you find a relevant file, read its
-   imports and follow the dependency chain. Also search for files that import
-   the relevant file (reverse dependencies). Cross-repo imports are
-   common in multi-repo topics — flag them in `## Notes`.
-
-4. **Directory exploration** — Read directory listings around discovered files
-   to find siblings (test files, config files, related modules).
-
-5. **Config and manifest files** — Check package manifests, build configs, and
-   entry points that may reference relevant modules.
+1. **Glob by naming convention.** Search vocabulary terms such as `**/*auth*` and `**/*billing*`; try singular/plural. Run against each repo's absolute path.
+2. **Content search.** Grep vocabulary, functions, classes, errors, synonyms, and related concepts.
+3. **Import/dependency tracing.** Follow imports and reverse dependencies from every relevant file. Record cross-repo imports in `## Notes`.
+4. **Directory exploration.** Inspect siblings for tests, configuration, and related modules.
+5. **Config and manifests.** Inspect package manifests, build configuration, and entry points referencing the area.
 
 ## Search rules
 
-- Search broadly. It is better to include a file that turns out to be
-  irrelevant than to miss one that matters.
-- Try at least three different search terms per concept before concluding
-  a search direction is exhausted.
-- Never guess file paths — only report files you have confirmed exist.
-- Keep descriptions to one line per file. Be factual, not speculative.
-- If the codebase is large, prioritize files closest to the scope named in
-  `2-questions.md` and note areas you did not search.
+- Prefer a confirmed extra file over a missed relevant file.
+- Try at least three search terms per concept before stopping that direction.
+- Never guess paths; report only confirmed files.
+- Use one factual, non-speculative line per file.
+- In large codebases, prioritize the `2-questions.md` scope and report unsearched areas.

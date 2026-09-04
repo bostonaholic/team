@@ -1,37 +1,26 @@
 ---
 name: reviewing-documentation
-description: Documentation-gap review methodology — applying prose-quality principles to reviews, the diff-to-docs review process (inventory, impact analysis, cross-reference), and the REQUIRED/RECOMMENDED doc-change classification. Load when reviewing a diff for documentation gaps, assessing existing docs against changed code, or classifying a documentation finding.
+description: 'Defines documentation-gap review and REQUIRED/RECOMMENDED findings. Load when assessing whether a diff needs user-facing docs.'
 user-invocable: false
 ---
 
 # Reviewing Documentation
 
-The technical-writer's review methodology: how to apply the
-prose-quality principles in `skills/writing-prose/SKILL.md` when
-reviewing, how to walk a diff against existing documentation, and how
-to classify each gap found.
+Apply `skills/writing-prose/SKILL.md`, compare the diff with existing docs, and
+classify each gap.
 
 ## Applying Prose Principles to Reviews
 
 When the technical-writer agent identifies documentation gaps or assesses
 documentation quality, apply the writing-prose principles:
 
-1. **Classify by impact.** A readability issue in a tutorial affects all
-   readers. An accuracy issue in a reference doc affects anyone who uses that
-   feature. Weight your recommendations accordingly.
+1. **Classify by impact.** Weight readability and accuracy by affected readers.
 
-2. **Be specific about the failure mode.** "This is hard to read" is not
-   actionable. "This paragraph uses passive voice in every sentence, which
-   obscures who does each action" is actionable.
+2. **Name the failure mode.** Cite the violated rule and its reader effect.
 
-3. **Suggest the direction, not the rewrite.** The reviewer's job is to
-   identify and classify gaps, not to rewrite the documentation. Point to the
-   principle being violated and what would satisfy it — leave the rewrite to
-   the author.
+3. **Suggest direction, not a rewrite.** The producer owns edits.
 
-4. **Acknowledge what works.** Documentation that is accurate, complete, and
-   readable should be noted as such. Reviewers who only identify problems
-   give incomplete signal.
+4. **Record what works.** A problem-only report is incomplete.
 
 ## Documentation-Gap Review Process
 

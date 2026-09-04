@@ -12,7 +12,7 @@
 // not clean assertion failures.
 
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
@@ -21,10 +21,18 @@ import { loadsSkill } from "./helpers/skill-refs";
 const REPO_ROOT = process.cwd();
 // why is a RUNTIME skill — under skills/ (distributed), not .claude/.
 const SKILL = join(REPO_ROOT, "skills", "why", "SKILL.md");
+const REFERENCES = join(REPO_ROOT, "skills", "why", "references");
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
 function body(): string {
-  return existsSync(SKILL) ? read(SKILL) : "";
+  if (!existsSync(SKILL) || !existsSync(REFERENCES)) return "";
+  return [
+    read(SKILL),
+    ...readdirSync(REFERENCES)
+      .filter((name) => /^\d\d-.*\.md$/.test(name))
+      .sort()
+      .map((name) => read(join(REFERENCES, name))),
+  ].join("\n");
 }
 function fm(): string {
   return existsSync(SKILL) ? frontmatter(read(SKILL)) : "";
@@ -54,12 +62,6 @@ describe("why skill: runtime standalone utility frontmatter", () => {
 
   test("frontmatter carries argument-hint (question or code target)", () => {
     expect(/^argument-hint:/m.test(fm())).toBe(true);
-  });
-
-  test("description carries the trigger-phrase convention incl. /why", () => {
-    const f = flat(fm());
-    expect(/Trigger on/i.test(f)).toBe(true);
-    expect(f).toContain("/why");
   });
 
   test("frontmatter does NOT set disable-model-invocation or user-invocable: false (read-only, both surfaces)", () => {
@@ -96,9 +98,6 @@ describe("why skill: section contract", () => {
     expect(rules).toBeGreaterThan(output);
   });
 
-  test("references the progress-tracking convention", () => {
-    expect(body()).toContain("skills/principle-progress-tracking/SKILL.md");
-  });
 });
 
 describe("why skill: confidence vocabulary", () => {
@@ -140,24 +139,24 @@ describe("why skill: dispatch contract", () => {
 
   test("falls back inline when dispatch is unavailable (optimization, never dependency)", () => {
     expect(body()).toContain(
-      "skills/principle-optimization-never-dependency/SKILL.md",
+      "principle-optimization-never-dependency",
     );
   });
 
   test("investigators are blinded to hypotheses", () => {
-    expect(body()).toContain("skills/principle-blind-the-investigator/SKILL.md");
+    expect(body()).toContain("principle-blind-the-investigator");
   });
 
   test("skipped or empty evidence categories are reported per skip-loudly", () => {
-    expect(body()).toContain("skills/principle-skip-loudly/SKILL.md");
+    expect(body()).toContain("principle-skip-loudly");
   });
 
   test("claims are evidence-backed per evidence-over-assertion", () => {
-    expect(body()).toContain("skills/principle-evidence-over-assertion/SKILL.md");
+    expect(body()).toContain("principle-evidence-over-assertion");
   });
 
   test("historical evidence is data per untrusted-input-is-data", () => {
-    expect(body()).toContain("skills/principle-untrusted-input-is-data/SKILL.md");
+    expect(body()).toContain("principle-untrusted-input-is-data");
   });
 });
 

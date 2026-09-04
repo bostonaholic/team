@@ -23,7 +23,7 @@
 
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -33,27 +33,18 @@ import { loadsSkill } from "./helpers/skill-refs";
 const REPO_ROOT = process.cwd();
 // team-fix is a RUNTIME skill — under skills/ (distributed), not .claude/.
 const SKILL = join(REPO_ROOT, "skills", "team-fix", "SKILL.md");
+const REFERENCES = join(REPO_ROOT, "skills", "team-fix", "references");
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
 function body(): string {
-  return existsSync(SKILL) ? read(SKILL) : "";
-}
-
-// Slice between two headings, or "" when the start heading is absent —
-// content assertions against "" fail cleanly.
-function sliceBetween(startHeading: string, endHeading: string): string {
-  const text = body();
-  const start = text.indexOf(startHeading);
-  if (start < 0) return "";
-  const rest = text.slice(start).slice(startHeading.length);
-  const end = rest.indexOf(endHeading);
-  return end >= 0 ? rest.slice(0, end) : rest;
-}
-function worktreeSection(): string {
-  return sliceBetween("## Worktree", "## Execution");
-}
-function shipSection(): string {
-  return sliceBetween("## Ship", "## Aborting");
+  if (!existsSync(SKILL) || !existsSync(REFERENCES)) return "";
+  return [
+    read(SKILL),
+    ...readdirSync(REFERENCES)
+      .filter((name) => /^\d\d-.*\.md$/.test(name))
+      .sort()
+      .map((name) => read(join(REFERENCES, name))),
+  ].join("\n");
 }
 
 describe("team-fix: the leading WORKTREE phase exists", () => {
@@ -76,45 +67,35 @@ describe("team-fix: the leading WORKTREE phase exists", () => {
     );
   });
 
-  test("a `## Worktree` section precedes `## Execution` and `## Ship`", () => {
-    const t = body();
-    const worktree = t.indexOf("## Worktree");
-    const execution = t.indexOf("## Execution");
-    const ship = t.indexOf("## Ship");
-    expect(worktree).toBeGreaterThanOrEqual(0);
-    expect(execution).toBeGreaterThan(worktree);
-    expect(ship).toBeGreaterThan(execution);
-  });
-
   test("delegates the worktree procedure to the canonical skills", () => {
     // Load contracts: a rename of either target must fail the build — the
     // sweep in tests/skill-tool-invocation.test.ts resolves every loaded name.
-    const s = worktreeSection();
+    const s = body();
     expect(loadsSkill(s, "team-worktree")).toBe(true);
     expect(loadsSkill(s, "worktree-isolation")).toBe(true);
   });
 
   test("branches off origin/HEAD with the documented worktree-add form", () => {
-    const s = worktreeSection();
+    const s = body();
     expect(s).toContain("git worktree add .claude/worktrees/<id> -b <id> origin/HEAD");
   });
 
   test("worktree failure falls back to a branch in place, never to the default branch", () => {
     // Isolation is best-effort; the branch is not. The fallback must still
     // switch off the default branch before anything is committed.
-    const s = worktreeSection();
+    const s = body();
     expect(s).toContain("git switch -c <id>");
   });
 });
 
 describe("team-fix: Ship no longer commits wherever HEAD sits", () => {
   test("Ship pushes the feature branch and opens a draft PR", () => {
-    const s = shipSection();
+    const s = body();
     expect(s).toContain("gh pr create --draft");
   });
 
   test("Ship re-asserts the branch gate before pushing", () => {
-    expect(shipSection()).toContain("git rev-parse --abbrev-ref HEAD");
+    expect(body()).toContain("git rev-parse --abbrev-ref HEAD");
   });
 
   test("the permissive fallback claim is gone from the whole skill", () => {
@@ -213,4 +194,14 @@ describe("team-fix branch gate: executed against real repos", () => {
   test("refuses main even with no origin (origin/HEAD unresolvable)", () => {
     expect(runGate(noOrigin)).toBe("on-default");
   });
+});
+
+test("team-fix ships only after the worktree gate and commits", () => {
+  const text = body();
+  const worktree = text.indexOf("git worktree add");
+  const branchGate = text.lastIndexOf("git rev-parse --abbrev-ref HEAD");
+  const create = text.lastIndexOf("gh pr create --draft");
+  expect(worktree).toBeGreaterThanOrEqual(0);
+  expect(branchGate).toBeGreaterThan(worktree);
+  expect(create).toBeGreaterThan(branchGate);
 });

@@ -1,36 +1,16 @@
 ---
 name: principle-explicit-intent
-description: "Apply before any irreversible act — merge, force-push, close, delete, publish. Fire only on stated intent, scope one approval per irreversible mutation, and never re-ask what was granted."
+description: 'Requires stated intent for irreversible actions. Apply before merge, force-push, close, delete, or publish operations.'
 user-invocable: false
 ---
 
 # Explicit Intent
 
-An irreversible act — a merge, a push over published history, a public
-close, a deletion — fires only on the user's stated intent, never
-inferred from state. A PR merely being green is not ship intent; a branch
-merely being behind is not rebase intent; a PR merely being stale is not
-abandon intent.
+Perform merges, pushes over published history, public closes, and deletions only on the user's stated intent, never inferred from state.
 
-**Why:** No verification step can undo an irreversible act after the
-fact. The invocation is the authorization, so it must be deliberate, and
-its scope must match exactly what it authorizes.
-
-**Pattern:**
-- Granularity matches irreversibility: one yes per irreversible mutation.
-  An approval covers exactly the items it names — a request naming a set
-  covers that set, and a yes to one item never silently extends to an
-  item it did not name. Approving an adjacent class of change never
-  carries the irreversible one.
-- The grant is scoped and complete: authorization to act is authorization
-  to finish the verified act — and nothing beyond what was stated.
-- Spend granted authorization; do not re-ask it. Once intent is stated
-  and the gates pass, the run completes without stopping to re-confirm.
-  Confirmation churn erodes the signal a real confirmation carries, so
-  even the churn is bounded and reported.
-- Guard the entry: a skill whose invocation itself authorizes a side
-  effect MUST state an explicit-intent guard in its description ("Invoke
-  ONLY on … never infer …"); the strictest ones also set
-  `disable-model-invocation` where the host honors it. A skill that
-  instead gates every mutation on its own in-run approval guards there,
-  not at the entry.
+- Do not infer ship intent from green, rebase intent from behind, or abandon intent from stale.
+- Require one yes per irreversible mutation; a named set authorizes that set, never unnamed items or adjacent change classes.
+- Treat authorization as permission to finish the verified act, and nothing beyond it.
+- Use granted authorization without re-asking; after gates pass, finish. Bound and report any confirmation churn.
+- Put `"Invoke ONLY on … never infer …"` in descriptions of skills whose invocation authorizes side effects; set `disable-model-invocation` for stricter host-enforced entry guards.
+- Put the guard at each in-run approval instead when invocation alone authorizes no mutation.

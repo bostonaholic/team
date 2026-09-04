@@ -1,31 +1,16 @@
 ---
 name: principle-files-are-the-contract
-description: "Apply when passing state between steps, agents, sessions, or runs. Write the durable artifact to disk and treat the file as the interface; never rely on conversation memory."
+description: 'Requires durable files for cross-step state. Apply when passing work between agents, phases, sessions, or reruns.'
 user-invocable: false
 ---
 
 # Files Are the Contract
 
-The conversation is ephemeral; the artifact on disk is durable. Work that
-matters is written to a file that declares what it is — and, where a gate
-governs it, whether the gate passed — and steps communicate through those
-files, never through shared chat memory. Trusting the model to remember
-fails often enough to plan for.
+Persist durable work and gate results in self-declaring files; pass state between steps through files, never shared chat memory.
 
-**Why:** A file survives a truncated context, a compaction, a crash, a new
-session, and a handoff to a different agent. The state lives on disk, not
-in memory. The file is the value passed between steps, and it revises only
-by explicit rule — a design is overwritten on revision, a verdict record is
-appended and never overwritten — so nothing is silently lost.
-
-**Pattern:**
-- A step that produced no artifact did not happen. Write the file before
-  reporting the step done.
-- Pass a path, not a paraphrase: the consumer reads the artifact itself,
-  never the producer's summary of it.
-- Rebuild in-session state (ledgers, phase tables) by scanning the
-  artifacts; after any interruption the files are authoritative.
-- Long procedures checkpoint to an append-only log, so a fresh context can
-  resume from disk instead of from recollection.
-- Record decisions, approvals, and pre-images in the artifact directory,
-  so a later turn — or a later run — can audit what happened.
+- A step that produced no artifact did not happen; write before reporting completion.
+- Pass a path, not a paraphrase; consumers read the artifact, not the producer's summary.
+- Treat files as authoritative after interruption; rebuild ledgers and phase tables by scanning them.
+- Revise only by explicit rule: overwrite a revised design; append and never overwrite verdict records.
+- Checkpoint long procedures to append-only logs for fresh-context recovery.
+- Record decisions, approvals, and pre-images in the artifact directory for later audit.

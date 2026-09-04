@@ -1,90 +1,56 @@
 ---
 name: solid
-description: SOLID object-oriented design principles methodology — loaded by implementer agent when writing code and by code-reviewer agent when checking for design violations
+description: 'Defines SOLID design and review rules. Load when writing or reviewing object-oriented production code.'
 user-invocable: false
 ---
 
 # SOLID Principles
 
-Apply when writing new code; check for violations when reviewing. Each
-principle below carries the smells that betray it in a diff.
+Apply when writing new code and reviewing diffs.
 
 ## S — Single Responsibility
 
-**One reason to change** — one actor or stakeholder whose requirements could
-change the code.
-
-Smells: a unit with more than one clear purpose (`UserService` that validates,
-persists, *and* sends email); `and` in a name (`validateAndSave()`); functions
-past ~30 lines; multiple unrelated tests for one unit.
+**One reason to change:** one actor or stakeholder. Smells: multiple purposes;
+`and` in `validateAndSave()`; functions past ~30 lines; unrelated tests for one unit.
 
 If you cannot name a function without "and", it has too many jobs.
 
 ## O — Open/Closed
 
-**Open for extension, closed for modification.** Adding behavior should not
-require changing existing tested code.
-
-Smells: a `switch`/`if-else` chain on a type field that must be edited for
-every new type; hardcoded variant lists; tests that break whenever a new
-variant is added.
-
-Fix by defining an interface for the varying behavior and adding
-implementations rather than branches.
+**Open for extension, closed for modification.** Smells: `switch`/`if-else` on
+types, hardcoded variants, or tests broken by a new variant. Define an interface
+for varying behavior; add implementations instead of branches.
 
 ## L — Liskov Substitution
 
-**Subtypes are substitutable for their base types** without the caller
-knowing which it got.
-
-Smells: an override that throws `NotImplementedError` or does nothing;
-callers checking `instanceof` before calling; subclasses weakening
-preconditions or strengthening postconditions; tests that cannot run against
-both base and subtype.
-
-Design hierarchies on behavior, not taxonomy. Prefer composition when "is-a"
-does not hold behaviorally. A subtype may restrict behavior (`ReadOnlyList`)
-but must fulfill every contract the base advertises.
+**Subtypes substitute for base types.** Smells: `NotImplementedError`, no-op
+overrides, caller `instanceof`, weaker preconditions, stronger postconditions,
+or tests that cannot cover both. Model behavior, prefer composition when “is-a”
+fails, and keep every advertised contract, including for `ReadOnlyList`.
 
 ## I — Interface Segregation
 
-**No client depends on methods it does not call.**
-
-Smells: a 10-method interface whose implementers each use three; implementing
-by throwing `UnsupportedOperationException`; test doubles that must stub many
-irrelevant methods.
-
-Split large interfaces; compose small ones when a concrete type needs several
-contracts.
+**No client depends on unused methods.** Smells: a 10-method interface whose
+implementers use three, `UnsupportedOperationException`, or irrelevant stubs.
+Split interfaces; compose small contracts.
 
 ## D — Dependency Inversion
 
-**High-level modules and low-level modules both depend on abstractions.**
-Business logic does not import database drivers, HTTP clients, or filesystem
-APIs directly.
+**High- and low-level modules depend on abstractions.** Business logic never
+imports database, HTTP, or filesystem APIs directly. Smells: constructing
+dependencies, infrastructure imports, required real services, static
+`Database.query(...)`/`Clock.now()`/`Config.get(...)`, or hidden
+`Registry.getInstance()` singletons.
 
-Smells: domain classes that `new` their own dependencies; an infrastructure
-import inside a domain service; tests that cannot run without a real database
-or network. Two smells are easy to miss because the dependency is invisible in
-the signature:
-
-- **Static calls into infrastructure** (`Database.query(...)`, `Clock.now()`,
-  `Config.get(...)`) have no seam, so tests cannot substitute them.
-- **Singletons fetched inside business code** (`Registry.getInstance()`) make
-  the class lie about what it needs.
-
-**Construct with collaborators. Call with work.** The constructor takes the
-long-lived collaborators that define what the object IS — its clients,
-loggers, clock, database handle. Methods take the per-call work parameters. A
-`ReportGenerator(reportingDb, clock)` serves many date ranges through
-`generate(startDate, endDate)`. A
-`ReportGenerator(reportingDb, clock, startDate, endDate)` needs a new instance
-per query and conflates identity with work.
+**Construct with collaborators. Call with work.** Inject long-lived clients,
+loggers, clocks, and DB handles; pass per-call inputs to methods. Prefer
+`ReportGenerator(reportingDb, clock).generate(startDate, endDate)` over putting
+the date range in the constructor.
+Reuse `ReportGenerator(reportingDb, clock)` across calls; constructing `ReportGenerator(reportingDb, clock, startDate, endDate)` per range is the smell.
 
 ## In the reviewer role
 
-Flag each violation by principle name, cite the file and line, and state the
-consequence — why this violation matters for this codebase right now:
+Name the principle, cite `file:line`, and state the current consequence:
 
 > `issue: SRP violation — this function handles both input validation and the
 > database write.`
