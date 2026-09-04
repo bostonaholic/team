@@ -21,7 +21,7 @@
 // crashes, not clean assertion failures.
 
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
@@ -30,10 +30,18 @@ import { loadsSkill } from "./helpers/skill-refs";
 const REPO_ROOT = process.cwd();
 // pr-rebase is a RUNTIME skill — it lives under skills/ (distributed), not .claude/.
 const PR_REBASE_SKILL = join(REPO_ROOT, "skills", "pr-rebase", "SKILL.md");
+const REFERENCES = join(REPO_ROOT, "skills", "pr-rebase", "references");
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
 function body(): string {
-  return existsSync(PR_REBASE_SKILL) ? read(PR_REBASE_SKILL) : "";
+  if (!existsSync(PR_REBASE_SKILL) || !existsSync(REFERENCES)) return "";
+  return [
+    read(PR_REBASE_SKILL),
+    ...readdirSync(REFERENCES)
+      .filter((name) => /^\d\d-.*\.md$/.test(name))
+      .sort()
+      .map((name) => read(join(REFERENCES, name))),
+  ].join("\n");
 }
 function fm(): string {
   return existsSync(PR_REBASE_SKILL) ? frontmatter(read(PR_REBASE_SKILL)) : "";
