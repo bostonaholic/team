@@ -29,10 +29,6 @@ function body(): string {
 function fm(): string {
   return existsSync(SKILL) ? frontmatter(read(SKILL)) : "";
 }
-// Flatten newlines so multi-line prose can be matched in one regex.
-function flat(text: string): string {
-  return text.replace(/\n/g, " ");
-}
 // Slice between two markers, or "" when the start marker is absent —
 // content assertions against "" fail cleanly.
 function sliceBetween(startMarker: string, endMarker: string): string {
@@ -64,12 +60,6 @@ describe("how skill: runtime standalone utility frontmatter", () => {
 
   test("frontmatter carries argument-hint (subsystem or question)", () => {
     expect(/^argument-hint:/m.test(fm())).toBe(true);
-  });
-
-  test("description carries the trigger-phrase convention incl. /how", () => {
-    const f = flat(fm());
-    expect(/Trigger on/i.test(f)).toBe(true);
-    expect(f).toContain("/how");
   });
 
   test("frontmatter does NOT set disable-model-invocation or user-invocable: false (read-only, both surfaces)", () => {

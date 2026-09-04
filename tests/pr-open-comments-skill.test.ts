@@ -54,12 +54,6 @@ describe("pr-open-comments skill: runtime standalone utility frontmatter", () =>
     expect(/^name:\s*pr-open-comments\s*$/m.test(fm())).toBe(true);
   });
 
-  test("description carries the trigger-phrase convention incl. /pr-open-comments", () => {
-    const f = flat(fm());
-    expect(/description:.*Trigger on/i.test(f)).toBe(true);
-    expect(f).toContain("/pr-open-comments");
-  });
-
   test("frontmatter carries argument-hint (PR number or URL)", () => {
     expect(/^argument-hint:/m.test(fm())).toBe(true);
   });

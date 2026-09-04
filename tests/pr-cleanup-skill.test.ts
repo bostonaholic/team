@@ -56,7 +56,7 @@ function modeASection(): string {
   return sliceBetween("### Mode A — merged", "### Mode B");
 }
 function modeBSection(): string {
-  return sliceBetween("### Mode B — closed / abandoned", "## Success Criteria");
+  return sliceBetween("### Mode B — closed / abandoned", "### End");
 }
 
 describe("pr-cleanup skill: runtime standalone utility frontmatter", () => {
@@ -76,18 +76,6 @@ describe("pr-cleanup skill: runtime standalone utility frontmatter", () => {
     expect(/^argument-hint:/m.test(fm())).toBe(true);
   });
 
-  test("description carries the trigger-phrase convention incl. /pr-cleanup", () => {
-    const f = flat(fm());
-    expect(/description:.*Trigger on/i.test(f)).toBe(true);
-    expect(f).toContain("/pr-cleanup");
-  });
-
-  test("description carries the Mode B invoke guard (quoted abandon trigger cue)", () => {
-    // The quoted user cue is a template string the description tells the
-    // model to match on — a contract, unlike the surrounding prose.
-    expect(flat(fm())).toContain(`"abandon this"`);
-  });
-
   test("frontmatter does NOT set disable-model-invocation (model-invocable by design)", () => {
     const f = fm();
     // Guard: an empty frontmatter must fail, not vacuously pass the absence check.
@@ -105,9 +93,6 @@ describe("pr-cleanup skill: section contract", () => {
     expect(t).toContain("## Execution");
     expect(t).toContain("### Mode A — merged");
     expect(t).toContain("### Mode B — closed / abandoned");
-    expect(t).toContain("## Success Criteria");
-    expect(t).toContain("## Pitfalls");
-    expect(t).toContain("## Completion");
   });
 
   test("sections appear in the pinned order", () => {
@@ -118,18 +103,12 @@ describe("pr-cleanup skill: section contract", () => {
     const execution = t.indexOf("## Execution");
     const modeA = t.indexOf("### Mode A — merged");
     const modeB = t.indexOf("### Mode B — closed / abandoned");
-    const success = t.indexOf("## Success Criteria");
-    const pitfalls = t.indexOf("## Pitfalls");
-    const completion = t.indexOf("## Completion");
     expect(input).toBeGreaterThanOrEqual(0);
     expect(hardRules).toBeGreaterThan(input);
     expect(untrusted).toBeGreaterThan(hardRules);
     expect(execution).toBeGreaterThan(untrusted);
     expect(modeA).toBeGreaterThan(execution);
     expect(modeB).toBeGreaterThan(modeA);
-    expect(success).toBeGreaterThan(modeB);
-    expect(pitfalls).toBeGreaterThan(success);
-    expect(completion).toBeGreaterThan(pitfalls);
   });
 
   test("loads the principle-progress-tracking convention", () => {

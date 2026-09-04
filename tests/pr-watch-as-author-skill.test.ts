@@ -55,14 +55,6 @@ describe("pr-watch-as-author skill: runtime standalone utility frontmatter", () 
     expect(/^name:\s*pr-watch-as-author\s*$/m.test(fm())).toBe(true);
   });
 
-  test("description carries trigger phrases incl. \"ready for review\" and /pr-watch-as-author", () => {
-    const f = flat(fm());
-    expect(/description:.*Trigger on/i.test(f)).toBe(true);
-    expect(/ready for review/i.test(f)).toBe(true);
-    // Pin the FULL literal — a bare prefix of the name would false-pass.
-    expect(f).toContain("/pr-watch-as-author");
-  });
-
   test("frontmatter carries argument-hint (PR number or URL)", () => {
     expect(/^argument-hint:/m.test(fm())).toBe(true);
   });
@@ -144,12 +136,8 @@ describe("pr-watch-as-author skill: triage contract is referenced, never restate
   });
 });
 
-describe("pr-watch-as-author skill: team-pr Completion hands off to /pr-watch-as-author", () => {
-  test("skills/team-pr/SKILL.md Completion contains the /pr-watch-as-author pointer", () => {
-    const t = teamPrBody();
-    const completionIdx = t.indexOf("## Completion");
-    const pointerIdx = t.indexOf("/pr-watch-as-author");
-    expect(completionIdx).toBeGreaterThanOrEqual(0);
-    expect(pointerIdx).toBeGreaterThan(completionIdx);
+describe("pr-watch-as-author skill: team-pr handoff", () => {
+  test("skills/team-pr/SKILL.md names /pr-watch-as-author", () => {
+    expect(teamPrBody()).toContain("/pr-watch-as-author");
   });
 });

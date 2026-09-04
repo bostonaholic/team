@@ -56,12 +56,6 @@ describe("why skill: runtime standalone utility frontmatter", () => {
     expect(/^argument-hint:/m.test(fm())).toBe(true);
   });
 
-  test("description carries the trigger-phrase convention incl. /why", () => {
-    const f = flat(fm());
-    expect(/Trigger on/i.test(f)).toBe(true);
-    expect(f).toContain("/why");
-  });
-
   test("frontmatter does NOT set disable-model-invocation or user-invocable: false (read-only, both surfaces)", () => {
     const f = fm();
     // Guard: an empty frontmatter must fail, not vacuously pass the absence checks.

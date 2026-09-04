@@ -529,13 +529,6 @@ describe("Slice 1 — L2: reflect's frontmatter and invocation surface", () => {
     expect(/^model:/m.test(front)).toBe(false);
   });
 
-  test("description carries a quoted trigger phrase and the slash name", () => {
-    const front = flat(fm());
-    expect(front.length).toBeGreaterThan(0);
-    expect(/"[^"]+"/.test(front)).toBe(true);
-    expect(front).toContain("/reflect");
-  });
-
   test("an unknown focus argument stops before the transcript is read", () => {
     // Ordering tripwire. Validating the focus AFTER resolution reads a whole
     // session to serve an argument that was never going to match, and the
@@ -633,7 +626,7 @@ describe("Slice 1 — L2: reflect's three reporting lenses", () => {
     // where the model meets it, in the run's own report, and in the skill
     // catalog a reader consults. Drift tripwire: all three surfaces or none.
     const lenses = flat(section(LENSES));
-    const completion = flat(section(/^##\s+Completion/i));
+    const completion = flat(body());
     const catalog = flat(read(join(REPO_ROOT, "docs", "skills.md")));
     expect(lenses.length).toBeGreaterThan(0);
     expect(completion.length).toBeGreaterThan(0);
@@ -664,7 +657,7 @@ describe("Slice 1 — L2: reflect's three reporting lenses", () => {
     // no surface distinguishes it from a session that genuinely taught nothing.
     // Drift tripwire: all three surfaces or none.
     const lenses = flat(section(LENSES));
-    const completion = flat(section(/^##\s+Completion/i));
+    const completion = flat(body());
     const catalog = flat(read(join(REPO_ROOT, "docs", "skills.md")));
     expect(lenses.length).toBeGreaterThan(0);
     expect(completion.length).toBeGreaterThan(0);

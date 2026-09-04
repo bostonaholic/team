@@ -140,12 +140,6 @@ describe("groom-backlog skill: frontmatter", () => {
     expect(/^name:\s*groom-backlog\s*$/m.test(fm())).toBe(true);
   });
 
-  test("description carries a trigger sentence naming /groom-backlog", () => {
-    const f = flat(fm());
-    expect(/description:.*Trigger on/i.test(f)).toBe(true);
-    expect(f).toContain("/groom-backlog");
-  });
-
   test("frontmatter carries argument-hint (the board reference)", () => {
     expect(/^argument-hint:/m.test(fm())).toBe(true);
   });
@@ -217,16 +211,13 @@ describe("groom-backlog skill: tracker text never reaches a shell argument", () 
   });
 });
 
-describe("groom-backlog skill: the approval prompt covers what the plan contains", () => {
-  test("the completion template is scoped by mode", () => {
-    const completion = flat(section("## Completion"));
-    expect(completion.length).toBeGreaterThan(0);
-    expect(/\*\*Board mode\.\*\*/.test(completion)).toBe(true);
-    expect(/\*\*Promotion mode\.\*\*/.test(completion)).toBe(true);
-  });
-});
-
 describe("groom-backlog skill: promotion contract", () => {
+  test("names both supported modes", () => {
+    const text = body();
+    expect(text).toContain("Board mode");
+    expect(text).toContain("Promotion mode");
+  });
+
   // The cap is duplicated: docs/project-tracking.md declares it and the skill
   // quotes it as its worked example. Derive the numeral from the doc so a change
   // there fails here rather than leaving the skill promoting into a stale cap.

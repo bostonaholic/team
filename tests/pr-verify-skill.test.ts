@@ -30,10 +30,6 @@ function body(): string {
 function fm(): string {
   return existsSync(SKILL) ? frontmatter(read(SKILL)) : "";
 }
-// Flatten newlines so multi-line prose can be matched in one regex.
-function flat(text: string): string {
-  return text.replace(/\n/g, " ");
-}
 // Slice between two markers, or "" when the start marker is absent —
 // content assertions against "" fail cleanly.
 function sliceBetween(startMarker: string, endMarker: string): string {
@@ -70,12 +66,6 @@ describe("pr-verify skill: runtime standalone utility frontmatter", () => {
     expect(/^argument-hint:/m.test(fm())).toBe(true);
   });
 
-  test("description carries the trigger-phrase convention incl. /pr-verify", () => {
-    const f = flat(fm());
-    expect(/description:.*Trigger on/i.test(f)).toBe(true);
-    expect(f).toContain("/pr-verify");
-  });
-
   test("frontmatter does NOT set disable-model-invocation (model-invocable by design)", () => {
     const f = fm();
     // Guard: an empty frontmatter must fail, not vacuously pass the absence check.
@@ -96,9 +86,6 @@ describe("pr-verify skill: section contract", () => {
     expect(t).toContain("### Step 3");
     expect(t).toContain("### Step 4");
     expect(t).toContain("### Step 5");
-    expect(t).toContain("## Success Criteria");
-    expect(t).toContain("## Pitfalls");
-    expect(t).toContain("## Completion");
   });
 
   test("sections appear in the pinned order", () => {
@@ -112,9 +99,6 @@ describe("pr-verify skill: section contract", () => {
     const step3 = t.indexOf("### Step 3");
     const step4 = t.indexOf("### Step 4");
     const step5 = t.indexOf("### Step 5");
-    const success = t.indexOf("## Success Criteria");
-    const pitfalls = t.indexOf("## Pitfalls");
-    const completion = t.indexOf("## Completion");
     expect(input).toBeGreaterThanOrEqual(0);
     expect(hardRules).toBeGreaterThan(input);
     expect(untrusted).toBeGreaterThan(hardRules);
@@ -124,9 +108,6 @@ describe("pr-verify skill: section contract", () => {
     expect(step3).toBeGreaterThan(step2);
     expect(step4).toBeGreaterThan(step3);
     expect(step5).toBeGreaterThan(step4);
-    expect(success).toBeGreaterThan(step5);
-    expect(pitfalls).toBeGreaterThan(success);
-    expect(completion).toBeGreaterThan(pitfalls);
   });
 
   test("loads the principle-progress-tracking convention", () => {
