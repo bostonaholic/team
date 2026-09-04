@@ -1,6 +1,10 @@
 # Team
 
-A plugin that orchestrates specialized agents to autonomously implement entire features end-to-end, driven by the **QRSPI** workflow. The orchestrator is the main Claude Code session. It persists pipeline state as artifacts in `docs/plans/` and tracks live progress with TodoWrite.
+**You have been made tech lead. Your team never sleeps.**
+
+13 specialists, five reviewers who can block you, and a written record of every decision. You keep the two calls that were always yours: what to build, and what to ship. The promotion comes with no headcount req.
+
+Team is a plugin that orchestrates specialized agents to autonomously implement entire features end-to-end, driven by the **QRSPI** workflow. The orchestrator is the main Claude Code session. It persists pipeline state as artifacts in `docs/plans/` and tracks live progress with TodoWrite.
 
 Team installs on Claude Code, on Codex CLI, and on Antigravity CLI. The full pipeline needs Claude Code, because that is the host that dispatches the agents. The standalone utilities work on all three.
 
@@ -141,6 +145,21 @@ or multi-repo setup.
 
 Each downstream command takes the artifact directory `docs/plans/<id>/` as
 its argument.
+
+## The governance stack
+
+Every team you have worked on had rules that made its output trustworthy: an author does not approve their own pull request, a design gets challenged before it is built, security reads the change before it ships. Team ships those rules as machinery rather than as manners.
+
+| The rule | How Team enforces it |
+|----------|----------------------|
+| An author never approves their own work | Reviewers hold no `Write` or `Edit` tool and run in `plan` mode. Pinned by `tests/protocol.test.ts`, not requested in a prompt. |
+| Review is not a rubber stamp | The implement loop re-runs until no Blocking or Major finding is left. There is no fixed number of rounds to outwait. |
+| A reviewer cannot be lobbied | Reviewers read the diff and a spec written before the code existed, never the implementer's account of its own work. |
+| The design is challenged before it is built | A fresh-context adversarial design review hard-gates the pipeline. |
+| Nobody escalates to dodge a check | The orchestrator is forbidden from handing a blocking finding to the human mid-run. |
+| Every decision is on the record | `docs/plans/<id>/` holds the task, the questions, the research, the design, every review verdict, and the plan. Files in the repo, not chat history. |
+
+You cannot overrule the security reviewer by asking nicely. [docs/ethos.md](docs/ethos.md) explains why each rule exists, and [docs/vision.md](docs/vision.md) covers how far the delegation goes.
 
 ## Design philosophy
 
