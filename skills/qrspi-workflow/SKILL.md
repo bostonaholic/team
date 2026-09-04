@@ -6,163 +6,70 @@ user-invocable: false
 
 # QRSPI Workflow
 
-Phase discipline for the Team pipeline. Eight sequential phases, none
-skippable. Each produces artifacts the next consumes.
+Eight sequential phases; none are skippable:
 
-## Phase Sequence
-
-```
+```text
 WORKTREE -> QUESTION -> RESEARCH -> DESIGN -> STRUCTURE -> PLAN -> IMPLEMENT -> PR
 ```
 
+## Phase Sequence
+
 | Phase | Produces | Gate |
-|-------|----------|------|
-| **WORKTREE** | git worktree on branch `<id>` off `origin/HEAD`, with `docs/plans/<id>/` authored inside it | HARD — the worktree must exist before QUESTION authors artifacts |
-| **QUESTION** | `1-task.md` (full description, human-only) and `2-questions.md` (neutral questions plus a "Codebase context" section naming files, modules, and vocabulary but NOT the goal) | HARD — both on disk |
-| **RESEARCH** | `5-research.md` | HARD — artifact on disk |
-| **DESIGN** | `6-design.md` (~200 lines) plus one `design-review-<n>.md` per round | REVIEW — adversarial design review. APPROVE/COMMENT advance; REQUEST CHANGES re-drafts and a fresh round reviews the new draft |
-| **STRUCTURE** | `7-structure.md` (~2 pages of vertical slices) | NONE — autonomous |
-| **PLAN** | `8-plan.md` | SOFT — no approval. The reviewed design is the contract |
-| **IMPLEMENT** | production code, passing tests, per-slice commits | AGGREGATE — security, verifier, and code-review hard gates |
-| **PR** | GitHub draft PR | Terminal — record the PR URL, close the ledger |
+|---|---|---|
+| **WORKTREE** | branch `<id>` worktree from `origin/HEAD`; author `docs/plans/<id>/` inside it | HARD: exists before QUESTION |
+| **QUESTION** | `1-task.md` (full, human-only) and `2-questions.md` (neutral codebase context; no goal) | HARD: both on disk |
+| **RESEARCH** | `5-research.md` | HARD: on disk |
+| **DESIGN** | `6-design.md` (~200 lines) and `design-review-<n>.md` each round | REVIEW: APPROVE/COMMENT advance; REQUEST CHANGES redrafts and reviews again |
+| **STRUCTURE** | `7-structure.md` (~2 pages, vertical slices) | NONE: autonomous |
+| **PLAN** | `8-plan.md` | SOFT: no approval; reviewed design is contract |
+| **IMPLEMENT** | code, passing tests, per-slice commits | AGGREGATE: security, verifier, code-review hard gates |
+| **PR** | GitHub draft PR | terminal: record URL; close ledger |
 
-WORKTREE is the leading phase and has no agent — purely a router
-responsibility. For why it leads, see "Why first" in
-`skills/worktree-isolation/SKILL.md`.
+WORKTREE is router-owned and has no agent; see “Why first” in `skills/worktree-isolation/SKILL.md`. IMPLEMENT has four sub-phases: test-architect writes failing acceptance tests; a mechanical gate requires assertion failures rather than crashes plus passing static checks; implementer commits green slices; 5 parallel code/security/docs/ux/verifier reviews return typed failures until no Blocking/Major remains.
 
-IMPLEMENT runs four sub-phases: `test-architect` writes failing acceptance
-tests; a mechanical gate confirms all tests fail with assertion errors (not
-crashes) *and* every static check the project defines passes; `implementer`
-works through vertical slices, committing each when its tests pass; then 5
-parallel reviewers (code, security, docs, ux, verifier) return typed failure
-classes that loop back to the implementer, until no Blocking or Major finding
-remains.
+## Artifact and isolation invariants
 
-## Artifact Conventions
+`skills/artifact-frontmatter/SKILL.md` owns `<id>`, inventory, `3-prd.md`, `4-repos.md`, topic, and `ticketId` schemas. Topic matches across all artifacts. `4-repos.md` presence enables multi-repo; absence means single-repo. `3-prd.md` is autonomous and ungated.
 
-All phase artifacts live under `docs/plans/<id>/`. The schema is canonical in
-`skills/artifact-frontmatter/SKILL.md` — the `<id>` forms, the artifact
-inventory, the `4-repos.md` and `3-prd.md` schemas, the topic-consistency
-invariant, and the `ticketId` scope. Consult that skill rather than restating
-it. What matters for phase discipline:
+Research is blind (`principle-blind-the-investigator`). The orchestrator passes researcher/file-finder only `2-questions.md`, never the description or `1-task.md`; their prompts also forbid reading `1-task.md`. They have `Read`/`Grep`/`Glob` with `permissionMode: plan`, so prompt adherence enforces this. Missing context becomes an open question; no user pause. Any intent leak is critical: stop and report.
 
-- The `<id>` slug and the `topic` frontmatter field match across every
-  artifact for the same feature.
-- `4-repos.md` (when present) switches the pipeline into multi-repo mode. Its
-  absence keeps single-repo mode — today's default.
-- `3-prd.md` (when present) rides the autonomous Question phase and is not
-  gated.
-
-## Research Isolation
-
-Research is the most-corruptible phase; it runs blind per
-`principle-blind-the-investigator`, enforced in two layers:
-
-1. **Structural** — the orchestrator passes `researcher` and `file-finder`
-   only the path to `2-questions.md`. It is forbidden from handing them the
-   description or `1-task.md` at dispatch time.
-2. **Procedural** — the `researcher` and `file-finder` system prompts forbid
-   reading `1-task.md`. Both hold `Read`/`Grep`/`Glob` with
-   `permissionMode: plan`, so nothing mechanically stops such a read.
-   Enforcement relies on the agent following its prompt. A researcher missing
-   context surfaces it as an open question and never pauses the run to ask.
-
-## Gate Types
-
-Where a rule must hold, a deterministic check enforces it — never prompt memory alone (`principle-mechanical-gates`).
+## Gates
 
 ### HARD
 
-Blocks the phase transition until satisfied. It clears one of two ways:
-the condition is met, or the user commands an override explicitly.
-Examples: a REQUEST CHANGES design-review verdict, security findings that
-gate, test failures.
+Block until satisfied or explicitly overridden by the user. Examples: REQUEST CHANGES, gating security findings, test failures.
 
 ### SOFT
 
-Informational. SOFT findings land in the PR body's `## Review notes` for the
-human's PR review and are never acknowledged mid-run. The pipeline proceeds.
-The human owns the ends, not the middle: `principle-human-owns-the-ends`.
-
-Which findings gate, and which auto-fix rather than land as recorded notes, is
-defined in exactly one place: `skills/review-severity-tiers/SKILL.md` →
-"Severity Tiers and the Auto-Fix Boundary". Only findings below the auto-fix
-boundary are recorded for the PR body. Consult that table rather than
-restating it here.
-Defined once, consulted everywhere: `principle-single-source-of-truth`.
+Add eligible findings to PR `## Review notes`; never ask mid-run. `skills/review-severity-tiers/SKILL.md` “Severity Tiers and the Auto-Fix Boundary” alone defines gating, auto-fix, and which lower-tier findings qualify (`principle-single-source-of-truth`). Human owns the ends (`principle-human-owns-the-ends`).
 
 ### ADVISORY
 
-Non-blocking, no acknowledgment required. Examples: documentation gap
-analysis, style suggestions.
+Non-blocking; no acknowledgment, e.g. documentation-gap analysis or style suggestions. Deterministic checks enforce rules where possible (`principle-mechanical-gates`).
 
-## State and Coordination
+## State and transitions
 
-Pipeline state is reconstructed by scanning `docs/plans/<id>/*.md` and reading
-YAML frontmatter. The orchestrator tracks in-flight work through TodoWrite — a
-session-scoped ledger mirroring the phase table, rebuilt on entry to any
-`/team-*` command.
-The files-are-the-contract rule (`principle-files-are-the-contract`): the artifact on disk, never conversation memory, is the interface between phases.
+Files, never conversation memory, are the phase interface (`principle-files-are-the-contract`). Rebuild state from `docs/plans/<id>/*.md` frontmatter and TodoWrite on every `/team-*` entry.
 
-### Phase inference from artifacts
+| Latest durable state | Next/current phase |
+|---|---|
+| worktree exists; no `1-task.md` | WORKTREE |
+| `1-task.md` + `2-questions.md` | RESEARCH |
+| `5-research.md` | DESIGN |
+| `6-design.md`; no passing `design-review-<n>.md` | DESIGN review |
+| passing design review | STRUCTURE |
+| `7-structure.md` | PLAN |
+| `8-plan.md` + ≥1 commit on `<id>` since merge-base | IMPLEMENT |
+| `8-plan.md` with no commit on `<id>` yet | PLAN |
+| topic commits plus clean verifier | PR |
+| PR(s) open or commits shipped | SHIPPED |
 
-| Latest artifact present                                | Current phase       |
-|--------------------------------------------------------|---------------------|
-| worktree exists for `<id>`, no `1-task.md` yet           | WORKTREE (next up)  |
-| `1-task.md` + `2-questions.md`                             | RESEARCH (next up)  |
-| `5-research.md`                                          | DESIGN (next up)    |
-| `6-design.md` alone (no passing design review)           | DESIGN (review next)|
-| `6-design.md` + passing `design-review-<n>.md`           | STRUCTURE (next up) |
-| `7-structure.md`                                         | PLAN (next up)      |
-| `8-plan.md` + ≥1 commit on `<id>` since merge-base       | IMPLEMENT           |
-| `8-plan.md` (no commit on `<id>` yet)                    | PLAN (next up)      |
-| topic branch has commits ahead and verifier passed     | PR (next up)        |
-| PR(s) opened or commit(s) shipped                      | SHIPPED             |
+Worktree check: `git worktree list --porcelain | grep -q <id>`; multi-repo paths come from `4-repos.md`. Latest `review-<n>.md` records verifier status. Each transition: verify required artifacts (including passing design review), complete/current next TodoWrite items, then dispatch agents named by `skills/team/SKILL.md`.
 
-Worktree presence (single-repo): `git worktree list --porcelain | grep -q <id>`.
-Multi-repo: the same per repo path in `docs/plans/<id>/4-repos.md`.
-**IMPLEMENT signal:** a worktree alone is not enough — IMPLEMENT is confirmed
-only once `git log <merge-base>..<id>` is non-empty. Before that, `8-plan.md`
-present with no commit means the run is still pre-IMPLEMENT.
-Verifier passed: the latest `docs/plans/<id>/review-<n>.md` shows the
-aggregate gate clean.
+## Scope and sequencing rules
 
-### Phase Transition Protocol
-
-1. **Verify artifacts** exist on disk for the current phase. For DESIGN →
-   STRUCTURE that includes a `design-review-<n>.md` with a passing verdict.
-2. **Update the ledger** — current TodoWrite item complete, next `in_progress`.
-3. **Dispatch next agent(s)** — the phase table in `skills/team/SKILL.md`
-   names them.
-
-Never proceed while a Blocking or Major finding remains. The implementer loops
-automatically and the user is never consulted about it — the no-consult rule
-in `skills/review-severity-tiers/SKILL.md`. Minor-and-below findings are
-recorded for the PR body's `## Review notes`, never presented mid-run.
-
-## Anti-Patterns
-
-- **Skipping Question.** The researcher then inherits the user's framing and
-  produces opinionated findings. Always run the questioner first.
-- **Letting research see intent.** A researcher that reads `1-task.md` or
-  receives the description in any form breaks the isolation invariant. Treat
-  any leakage as a critical defect: stop and report.
-- **Reviewing the plan.** A 1000-line plan begets ~1000 lines of code, and
-  surprises during implementation invalidate the review. Review the design
-  (~200 lines) instead — that is where leverage lives. The structure and plan
-  are autonomous tactical artifacts.
-- **Horizontal layering.** A structure that builds the entire database, then
-  the entire API, then the entire UI defers integration risk to the end.
-  Reject any structure that flattens into layers — slices are end-to-end,
-  independently testable, and atomically committable
-  (`skills/slicing-work/SKILL.md`).
-- **Implementing without a structure.** The structure is the scope fence.
-  Always produce it, even though it advances autonomously.
-- **Gold-plating.** Adding features, tests, or abstractions beyond what the
-  structure specifies. If scope must expand, update the structure; for a
-  material change, return to DESIGN for a fresh design review.
-  Scope expands by changing the artifact, never by quietly exceeding it (`principle-scope-fence`).
-- **Backward skipping.** Jump back one phase, never several. A structure flaw
-  returns to STRUCTURE; a design flaw returns to DESIGN.
-- **Premature shipping.** Every HARD gate in the implement-verify loop must
-  pass before the PR phase.
+- Always QUESTION before RESEARCH. Review DESIGN (~200 lines), never tactical PLAN (~1000 lines). STRUCTURE/PLAN are autonomous.
+- Reject horizontal database/API/UI layering; slices must be end-to-end, testable, atomic (`skills/slicing-work/SKILL.md`). Never implement without structure.
+- Add no feature, test, or abstraction beyond structure. Expand the artifact first; material expansion returns to DESIGN review (`principle-scope-fence`).
+- Move backward one phase only. A structure flaw returns to STRUCTURE; a design flaw to DESIGN.
+- Never enter PR while a HARD gate, Blocking, or Major finding remains. Fix loops never consult the user; Minor-and-below eligible findings become review notes.
