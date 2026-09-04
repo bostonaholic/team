@@ -1,6 +1,6 @@
 ---
 title: Vision
-description: "Team's north star: a human keeps the board fed and reviews finished work, and everything in between runs itself via a continuously running, board-driven control loop."
+description: "Team's north star: a human keeps the board fed and reviews finished work, everything in between runs itself via a continuously running, board-driven control loop, and one person takes on work that used to need a team."
 audience: [user, developer]
 nav_order: 2
 nav_label: vision
@@ -17,6 +17,7 @@ nav_label: vision
 - [What the human does](#what-the-human-does)
 - [What the system does](#what-the-system-does)
 - [Why this is the goal](#why-this-is-the-goal)
+- [What one person becomes](#what-one-person-becomes)
 - [How we get there](#how-we-get-there)
 
 ## The one-sentence vision
@@ -88,6 +89,38 @@ starting runs, and shepherding cards across the board. Loop-driven development
 automates that orchestration too. The human's role collapses to the two
 decisions only a human should own, **what to build** and **what to ship**, and
 the machine handles the mechanical flow.
+
+## What one person becomes
+
+Absorbing the mechanics of delivery does one thing for the human: it raises the
+size of problem one person can take on.
+
+Autonomy has a scope, and Team's is contained today. A groomed ticket, one
+repository, a context that already exists: the problem arrives framed and the
+machine carries it to a PR. Each rung above that widens the frame. What the
+human hands over stops being a ticket and becomes a problem statement, then an
+outcome to move. The framing, the context, the decisions, and the verification
+that used to arrive *with* the ticket become things the system produces on the
+way.
+
+| Rung | The human supplies | Team supplies |
+|------|--------------------|---------------|
+| **Contained scope** | a groomed ticket in an established context | design, implementation, review, a PR |
+| **Defined problem** | a problem inside a known context | the items, their order, and the delivery of each |
+| **Ambiguous problem** | an outcome worth moving | the framing, the context, the decisions, the systems, and the proof the outcome moved |
+
+The rungs extend the board in both directions. Rung two adds the work before the
+Backlog, turning a problem into ready items — the `Backlog → Ready` step
+[`/groom-backlog`](skills.md#groom-backlog) already performs. Rung three adds
+the work after Done: deciding what to measure, then reporting whether the
+shipped thing moved it.
+
+At the top rung a builder is a one-person fleet, carrying company-significant
+work from problem definition through measured outcomes: creating the context
+others work from, making the decisions, building the systems, and running the
+verification, at a scope that used to require a team.
+
+**Team is the tool that lets one person scale as a team.**
 
 ## How we get there
 
