@@ -1,6 +1,6 @@
 ---
 name: reviewing-documentation
-description: 'Defines reviewing documentation methodology. Load when agents need its procedure.'
+description: 'Defines documentation-gap review and REQUIRED/RECOMMENDED findings. Load when assessing whether a diff needs user-facing docs.'
 user-invocable: false
 ---
 

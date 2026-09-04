@@ -1,6 +1,6 @@
 ---
 name: principle-blind-the-investigator
-description: 'Defines blind the investigator. Apply when its cross-cutting rule governs the current work.'
+description: 'Keeps desired outcomes out of research prompts. Apply when dispatching research, scouting, or verification.'
 user-invocable: false
 ---
 

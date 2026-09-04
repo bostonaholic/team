@@ -1,6 +1,6 @@
 ---
 name: principle-mechanical-gates
-description: 'Defines mechanical gates. Apply when its cross-cutting rule governs the current work.'
+description: 'Requires deterministic enforcement for reliable rules. Apply when a contract can be checked by code.'
 user-invocable: false
 ---
 

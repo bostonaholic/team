@@ -1,6 +1,6 @@
 ---
 name: test-driven-bug-fix
-description: 'Defines test driven bug fix methodology. Load when agents need its procedure.'
+description: 'Defines reproduce-red-green-refactor bug fixes. Load when correcting a defect with a regression test.'
 user-invocable: false
 ---
 

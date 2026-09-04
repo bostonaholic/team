@@ -1,6 +1,6 @@
 ---
 name: decomposing-intent
-description: 'Defines decomposing intent methodology. Load when agents need its procedure.'
+description: 'Defines task and question artifacts plus multi-repo detection. Load when converting feature intent into QRSPI Question outputs.'
 user-invocable: false
 ---
 

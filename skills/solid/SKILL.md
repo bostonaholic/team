@@ -1,6 +1,6 @@
 ---
 name: solid
-description: 'Defines solid methodology. Load when agents need its procedure.'
+description: 'Defines SOLID design and review rules. Load when writing or reviewing object-oriented production code.'
 user-invocable: false
 ---
 

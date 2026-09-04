@@ -1,6 +1,6 @@
 ---
 name: principle-skip-loudly
-description: 'Defines skip loudly. Apply when its cross-cutting rule governs the current work.'
+description: 'Requires skipped work to be reported explicitly. Apply when reporting any run outcome.'
 user-invocable: false
 ---
 

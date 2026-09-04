@@ -1,6 +1,6 @@
 ---
 name: tracking-tickets
-description: 'Defines tracking tickets methodology. Load when agents need its procedure.'
+description: 'Defines tracker status transitions and closing rules. Load when a pipeline run is linked to a ticket.'
 user-invocable: false
 ---
 

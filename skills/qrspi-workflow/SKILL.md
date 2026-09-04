@@ -1,6 +1,6 @@
 ---
 name: qrspi-workflow
-description: 'Defines qrspi workflow methodology. Load when agents need its procedure.'
+description: 'Defines QRSPI phases, artifacts, gates, and state transitions. Load when routing or resuming Team pipeline work.'
 user-invocable: false
 ---
 

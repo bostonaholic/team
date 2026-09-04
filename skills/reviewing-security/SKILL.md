@@ -1,6 +1,6 @@
 ---
 name: reviewing-security
-description: 'Defines reviewing security methodology. Load when agents need its procedure.'
+description: 'Defines threat and OWASP review with evidence-rated findings. Load when reviewing a diff for security defects.'
 user-invocable: false
 ---
 

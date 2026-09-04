@@ -1,6 +1,6 @@
 ---
 name: verifying-ux
-description: 'Defines verifying ux methodology. Load when agents need its procedure.'
+description: 'Defines live application and screenshot verification. Load when a diff changes user-visible UI behavior.'
 user-invocable: false
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: conventional-comments
-description: 'Defines conventional comments methodology. Load when agents need its procedure.'
+description: 'Defines review labels and decorations. Load when formatting code, design, security, documentation, or UX review comments.'
 user-invocable: false
 ---
 

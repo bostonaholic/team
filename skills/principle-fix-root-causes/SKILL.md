@@ -1,6 +1,6 @@
 ---
 name: principle-fix-root-causes
-description: 'Defines fix root causes. Apply when its cross-cutting rule governs the current work.'
+description: 'Requires diagnosis and repair of root causes. Apply when debugging any failure or regression.'
 user-invocable: false
 ---
 

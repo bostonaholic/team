@@ -1,6 +1,6 @@
 ---
 name: worktree-isolation
-description: 'Defines worktree isolation methodology. Load when agents need its procedure.'
+description: 'Defines Team worktree creation, validation, and teardown. Load when pipeline work must be isolated from the default branch.'
 user-invocable: false
 ---
 

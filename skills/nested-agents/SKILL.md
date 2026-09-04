@@ -1,6 +1,6 @@
 ---
 name: nested-agents
-description: 'Defines nested agents methodology. Load when agents need its procedure.'
+description: 'Defines safe nested-agent dispatch and fallback. Load before agents spawn read-only scouts or cross-model couriers.'
 user-invocable: false
 ---
 

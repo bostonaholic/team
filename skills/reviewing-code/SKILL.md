@@ -1,6 +1,6 @@
 ---
 name: reviewing-code
-description: 'Defines reviewing code methodology. Load when agents need its procedure.'
+description: 'Defines adversarial code review and evidence-based findings. Load when reviewing a diff without author context.'
 user-invocable: false
 ---
 

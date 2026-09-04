@@ -1,6 +1,6 @@
 ---
 name: principle-fail-closed
-description: 'Defines fail closed. Apply when its cross-cutting rule governs the current work.'
+description: 'Treats unknown guarantees as failures. Apply when a safety, validity, or completion gate cannot be evaluated.'
 user-invocable: false
 ---
 

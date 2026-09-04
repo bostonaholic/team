@@ -1,6 +1,6 @@
 ---
 name: review-severity-tiers
-description: 'Defines review severity tiers methodology. Load when agents need its procedure.'
+description: 'Maps reviewer findings to Blocking, Major, or Minor actions. Load when aggregating review verdicts or deciding whether to retry.'
 user-invocable: false
 ---
 

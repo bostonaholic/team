@@ -1,6 +1,6 @@
 ---
 name: documenting-decisions
-description: 'Defines documenting decisions methodology. Load when agents need its procedure.'
+description: 'Defines ADR structure and lifecycle. Load when recording a consequential architecture decision and its alternatives.'
 user-invocable: false
 ---
 

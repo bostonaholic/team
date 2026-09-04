@@ -1,6 +1,6 @@
 ---
 name: test-style
-description: 'Defines test style methodology. Load when agents need its procedure.'
+description: 'Defines deterministic behavioral tests and flaky-test red flags. Load when writing or reviewing `.test.ts` and `.evals.ts` files.'
 user-invocable: false
 ---
 

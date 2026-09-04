@@ -1,6 +1,6 @@
 ---
 name: implementing-slices
-description: 'Defines implementing slices methodology. Load when agents need its procedure.'
+description: 'Defines test-first slice execution, commits, and review fixes. Load when an implementer executes `8-plan.md`.'
 user-invocable: false
 ---
 

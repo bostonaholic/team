@@ -1,6 +1,6 @@
 ---
 name: systems-thinking
-description: 'Defines systems thinking methodology. Load when agents need its procedure.'
+description: 'Defines system-boundary, feedback, and dependency analysis. Load during research, design, structure, or planning.'
 user-invocable: false
 ---
 

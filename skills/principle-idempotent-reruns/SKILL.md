@@ -1,6 +1,6 @@
 ---
 name: principle-idempotent-reruns
-description: 'Defines idempotent reruns. Apply when its cross-cutting rule governs the current work.'
+description: 'Requires reruns to converge without duplicate effects. Apply to interruptible or repeatable procedures.'
 user-invocable: false
 ---
 

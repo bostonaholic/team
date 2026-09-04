@@ -1,6 +1,6 @@
 ---
 name: product-requirements-doc
-description: 'Defines product requirements doc methodology. Load when agents need its procedure.'
+description: 'Defines when and how to write `3-prd.md`. Load during Question for vague, multi-story, cross-cutting, or behavior-replacing work.'
 user-invocable: false
 ---
 

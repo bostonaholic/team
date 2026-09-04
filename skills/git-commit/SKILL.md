@@ -1,6 +1,6 @@
 ---
 name: git-commit
-description: 'Defines git commit methodology. Load when agents need its procedure.'
+description: 'Defines Conventional Commit subjects and safe commit procedure. Load before creating or reviewing commits.'
 user-invocable: false
 ---
 

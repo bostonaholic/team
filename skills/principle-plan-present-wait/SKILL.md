@@ -1,6 +1,6 @@
 ---
 name: principle-plan-present-wait
-description: 'Defines plan present wait. Apply when its cross-cutting rule governs the current work.'
+description: 'Requires a written plan and user approval before mutations. Apply when consequential changes need authorization.'
 user-invocable: false
 ---
 

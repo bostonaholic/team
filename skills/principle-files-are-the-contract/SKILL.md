@@ -1,6 +1,6 @@
 ---
 name: principle-files-are-the-contract
-description: 'Defines files are the contract. Apply when its cross-cutting rule governs the current work.'
+description: 'Requires durable files for cross-step state. Apply when passing work between agents, phases, sessions, or reruns.'
 user-invocable: false
 ---
 

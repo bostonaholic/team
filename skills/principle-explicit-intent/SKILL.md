@@ -1,6 +1,6 @@
 ---
 name: principle-explicit-intent
-description: 'Defines explicit intent. Apply when its cross-cutting rule governs the current work.'
+description: 'Requires stated intent for irreversible actions. Apply before merge, force-push, close, delete, or publish operations.'
 user-invocable: false
 ---
 

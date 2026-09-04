@@ -1,6 +1,6 @@
 ---
 name: principle-single-source-of-truth
-description: 'Defines single source of truth. Apply when its cross-cutting rule governs the current work.'
+description: 'Requires one authoritative definition per rule or schema. Apply when a constant or contract could be duplicated.'
 user-invocable: false
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: 'Defines systematic debugging methodology. Load when agents need its procedure.'
+description: 'Defines reproduce, hypothesize, isolate, and fix workflow. Load when diagnosing a defect, failed test, or unexplained behavior.'
 user-invocable: false
 ---
 

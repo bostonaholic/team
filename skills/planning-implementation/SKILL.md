@@ -1,6 +1,6 @@
 ---
 name: planning-implementation
-description: 'Defines planning implementation methodology. Load when agents need its procedure.'
+description: 'Defines the tactical plan schema. Load when converting `7-structure.md` into executable `8-plan.md` steps.'
 user-invocable: false
 ---
 

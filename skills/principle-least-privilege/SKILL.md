@@ -1,6 +1,6 @@
 ---
 name: principle-least-privilege
-description: 'Defines least privilege. Apply when its cross-cutting rule governs the current work.'
+description: 'Limits tools, credentials, and environment to the task. Apply when granting capabilities to any role or child process.'
 user-invocable: false
 ---
 

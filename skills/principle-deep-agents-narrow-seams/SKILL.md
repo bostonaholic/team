@@ -1,6 +1,6 @@
 ---
 name: principle-deep-agents-narrow-seams
-description: 'Defines deep agents narrow seams. Apply when its cross-cutting rule governs the current work.'
+description: 'Keeps agent interfaces narrow and internal work deep. Apply when defining an agent, subagent, or dispatch boundary.'
 user-invocable: false
 ---
 

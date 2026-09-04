@@ -1,6 +1,6 @@
 ---
 name: principle-never-interpolate
-description: 'Defines never interpolate. Apply when its cross-cutting rule governs the current work.'
+description: 'Keeps external text out of shell syntax. Apply when untrusted values approach a command or script.'
 user-invocable: false
 ---
 

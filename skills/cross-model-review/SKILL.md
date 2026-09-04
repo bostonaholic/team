@@ -1,6 +1,6 @@
 ---
 name: cross-model-review
-description: 'Defines cross model review methodology. Load when agents need its procedure.'
+description: 'Runs second-vendor reviews through machine-only CLI adapters. Load at design or code review gates when cross-model review is enabled.'
 user-invocable: false
 ---
 

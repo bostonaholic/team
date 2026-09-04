@@ -1,6 +1,6 @@
 ---
 name: reviewing-designs
-description: 'Defines reviewing designs methodology. Load when agents need its procedure.'
+description: 'Defines adversarial design review and verdicts. Load when a fresh-context reviewer evaluates `6-design.md`.'
 user-invocable: false
 ---
 

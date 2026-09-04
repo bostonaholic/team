@@ -1,6 +1,6 @@
 ---
 name: principle-evidence-over-assertion
-description: 'Defines evidence over assertion. Apply when its cross-cutting rule governs the current work.'
+description: 'Requires evidence for claims and verdicts. Apply when reporting completion, review findings, or verification results.'
 user-invocable: false
 ---
 

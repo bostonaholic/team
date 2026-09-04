@@ -1,6 +1,6 @@
 ---
 name: principle-human-owns-the-ends
-description: 'Defines human owns the ends. Apply when its cross-cutting rule governs the current work.'
+description: 'Reserves goals and shipping decisions for the user. Apply when deciding whether autonomous work may proceed or finish.'
 user-invocable: false
 ---
 

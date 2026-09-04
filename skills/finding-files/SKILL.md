@@ -1,6 +1,6 @@
 ---
 name: finding-files
-description: 'Defines finding files methodology. Load when agents need its procedure.'
+description: 'Locates files by naming, structure, and imports. Load for read-only discovery when exact paths are unknown.'
 user-invocable: false
 ---
 

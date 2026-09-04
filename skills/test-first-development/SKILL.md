@@ -1,6 +1,6 @@
 ---
 name: test-first-development
-description: 'Defines test first development methodology. Load when agents need its procedure.'
+description: 'Defines acceptance tests as the implementation scope contract. Load before production code is written for a planned change.'
 user-invocable: false
 ---
 

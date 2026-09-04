@@ -1,6 +1,6 @@
 ---
 name: principle-bounded-loops
-description: 'Defines bounded loops. Apply when its cross-cutting rule governs the current work.'
+description: 'Requires explicit retry and watch limits. Apply when writing any loop, retry, polling, or wait cycle.'
 user-invocable: false
 ---
 

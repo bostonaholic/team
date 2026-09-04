@@ -1,6 +1,6 @@
 ---
 name: principle-pre-image-first
-description: 'Defines pre image first. Apply when its cross-cutting rule governs the current work.'
+description: 'Requires a recoverable baseline before destructive changes. Apply before deletion or history rewriting.'
 user-invocable: false
 ---
 

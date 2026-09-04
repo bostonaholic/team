@@ -1,6 +1,6 @@
 ---
 name: principle-generator-evaluator
-description: 'Defines generator evaluator. Apply when its cross-cutting rule governs the current work.'
+description: 'Separates producers from evaluators. Apply when work receives a review, verdict, or verification pass.'
 user-invocable: false
 ---
 

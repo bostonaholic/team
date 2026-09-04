@@ -1,6 +1,6 @@
 ---
 name: refactoring-to-patterns
-description: 'Defines refactoring to patterns methodology. Load when agents need its procedure.'
+description: 'Maps code smells to behavior-preserving refactorings. Load before refactoring code or preparing it for an imminent change.'
 user-invocable: false
 ---
 

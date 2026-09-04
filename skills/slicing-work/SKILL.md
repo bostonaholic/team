@@ -1,6 +1,6 @@
 ---
 name: slicing-work
-description: 'Defines slicing work methodology. Load when agents need its procedure.'
+description: 'Defines vertical slices and verification checkpoints. Load when converting a reviewed design into `7-structure.md`.'
 user-invocable: false
 ---
 

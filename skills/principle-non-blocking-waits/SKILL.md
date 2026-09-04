@@ -1,6 +1,6 @@
 ---
 name: principle-non-blocking-waits
-description: 'Defines non blocking waits. Apply when its cross-cutting rule governs the current work.'
+description: 'Requires resumable waits for external state. Apply when waiting on CI, reviewers, deployments, or rate limits.'
 user-invocable: false
 ---
 

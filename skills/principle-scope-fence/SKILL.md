@@ -1,6 +1,6 @@
 ---
 name: principle-scope-fence
-description: 'Defines scope fence. Apply when its cross-cutting rule governs the current work.'
+description: 'Restricts execution to approved scope. Apply when working from a plan, structure, or anchored change request.'
 user-invocable: false
 ---
 

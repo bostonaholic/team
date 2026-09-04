@@ -1,6 +1,6 @@
 ---
 name: principle-progress-tracking
-description: 'Defines progress tracking. Apply when its cross-cutting rule governs the current work.'
+description: 'Requires one live ledger for ordered procedures. Apply when executing two or more dependent steps.'
 user-invocable: false
 ---
 

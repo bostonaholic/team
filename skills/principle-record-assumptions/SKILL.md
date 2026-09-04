@@ -1,6 +1,6 @@
 ---
 name: principle-record-assumptions
-description: 'Defines record assumptions. Apply when its cross-cutting rule governs the current work.'
+description: 'Records autonomous resolutions as assumptions. Apply when an open question can be resolved without user input.'
 user-invocable: false
 ---
 

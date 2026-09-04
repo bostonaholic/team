@@ -1,6 +1,6 @@
 ---
 name: running-quality-checks
-description: 'Defines running quality checks methodology. Load when agents need its procedure.'
+description: 'Runs project-native tests, static checks, builds, and linters. Load when verifying an implementation before handoff.'
 user-invocable: false
 ---
 

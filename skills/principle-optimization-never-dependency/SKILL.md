@@ -1,6 +1,6 @@
 ---
 name: principle-optimization-never-dependency
-description: 'Defines optimization never dependency. Apply when its cross-cutting rule governs the current work.'
+description: 'Keeps optional enhancements off the correctness path. Apply when adding subagents, second-vendor passes, caches, or uploads.'
 user-invocable: false
 ---
 

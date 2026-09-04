@@ -1,6 +1,6 @@
 ---
 name: engineering-standards
-description: 'Defines engineering standards methodology. Load when agents need its procedure.'
+description: 'Defines code design, comment, and review standards. Load while planning, implementing, or reviewing production code.'
 user-invocable: false
 ---
 

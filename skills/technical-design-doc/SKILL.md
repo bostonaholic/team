@@ -1,6 +1,6 @@
 ---
 name: technical-design-doc
-description: 'Defines technical design doc methodology. Load when agents need its procedure.'
+description: 'Defines technical design sections and decision content. Load when drafting or assessing an implementation design.'
 user-invocable: false
 ---
 

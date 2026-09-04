@@ -1,6 +1,6 @@
 ---
 name: researching-codebases
-description: 'Defines researching codebases methodology. Load when agents need its procedure.'
+description: 'Defines evidence-only codebase research and `5-research.md`. Load when answering neutral questions before design.'
 user-invocable: false
 ---
 
