@@ -14,7 +14,7 @@
 // not clean assertion failures.
 
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
@@ -22,10 +22,18 @@ import { frontmatter, read } from "./helpers/text";
 const REPO_ROOT = process.cwd();
 // shipit is a RUNTIME skill — it lives under skills/ (distributed), not .claude/.
 const SHIPIT_SKILL = join(REPO_ROOT, "skills", "shipit", "SKILL.md");
+const REFERENCES = join(REPO_ROOT, "skills", "shipit", "references");
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
 function body(): string {
-  return existsSync(SHIPIT_SKILL) ? read(SHIPIT_SKILL) : "";
+  if (!existsSync(SHIPIT_SKILL) || !existsSync(REFERENCES)) return "";
+  return [
+    read(SHIPIT_SKILL),
+    ...readdirSync(REFERENCES)
+      .filter((name) => /^\d\d-.*\.md$/.test(name))
+      .sort()
+      .map((name) => read(join(REFERENCES, name))),
+  ].join("\n");
 }
 function fm(): string {
   return existsSync(SHIPIT_SKILL) ? frontmatter(read(SHIPIT_SKILL)) : "";
