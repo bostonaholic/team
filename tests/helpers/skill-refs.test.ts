@@ -67,7 +67,7 @@ describe("loadedSkills — what it must NOT collect", () => {
   test("ignores backticked tokens that cannot be skill names", () => {
     const text =
       "Call the Skill tool with `changelog` and update `CHANGELOG.md`, " +
-      "honoring `TEAM_DISABLE_CROSS_MODEL`, `design.md`, `## When Implementing`, " +
+      "honoring `TEAM_DISABLE_CROSS_MODEL`, `6-design.md`, `## When Implementing`, " +
       "and `gh pr create --draft`.";
     expect(loadedSkills(text)).toEqual(["changelog"]);
   });

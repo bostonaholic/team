@@ -10,20 +10,20 @@ deps:
 # Seeded-state task: slice a reviewed design into vertical slices
 
 You are running the STRUCTURE phase. The eval harness writes the fenced block
-below to `docs/plans/2026-06-03-token-bucket/design.md` in your working
+below to `docs/plans/2026-06-03-token-bucket/6-design.md` in your working
 directory before you start. Read it and
-produce a `structure.md`-style breakdown in your response.
+produce a `7-structure.md`-style breakdown in your response.
 
 The load-bearing properties: the structure breaks the work into vertical slices
 where each slice has its own verification checkpoint, and it copies the topic
 slug `token-bucket` verbatim from the seeded design.
 
-Output, in your response, the `structure.md` you would write — a frontmatter
+Output, in your response, the `7-structure.md` you would write — a frontmatter
 block with `topic: token-bucket`, then numbered slices. Each slice must name a
 goal, the layers it touches, and an explicit verification checkpoint (how you
 confirm the slice is done). Do not write files; just output the structure.
 
-```markdown design.md
+```markdown 6-design.md
 ---
 topic: token-bucket
 date: 2026-06-03

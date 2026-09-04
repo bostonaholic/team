@@ -29,7 +29,7 @@ in-session coordination uses TodoWrite.
 `$ARGUMENTS` may be:
 
 - A ticket identifier (e.g. `ENG-1234`) — used as `<id>` prefix and
-  recorded as `ticketId` on `task.md`.
+  recorded as `ticketId` on `1-task.md`.
 - An issue URL (e.g. `https://github.com/org/repo/issues/42`) — fetched
   through `gh issue view` to extract the title and body.
 - Free-form text — used directly as the feature description.
@@ -42,7 +42,7 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
    URL. Lookup tracker if a ticket-only ID. Otherwise use as-is).
 2. **Capture `ticketId`** — if `$ARGUMENTS` starts with a ticket-like
    pattern (e.g., `<system>-<id>`), set it aside as `ticketId` for
-   `task.md`. Otherwise leave `ticketId` as `null`.
+   `1-task.md`. Otherwise leave `ticketId` as `null`.
 3. **Move the ticket to in-progress.** If a `ticketId` or issue was
    resolved in steps 1–2, move that ticket to its tracker's in-progress
    state. This is the first action of the run, before any other work
@@ -74,18 +74,18 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
    canonical artifact directory resolved in step 6, fast-forward the
    ledger. Mark completed any phase whose artifacts are present. DESIGN is
    complete only when the latest `design-review-<n>.md` carries a passing
-   verdict (APPROVE or COMMENT). A `design.md` with no passing review
+   verdict (APPROVE or COMMENT). A `6-design.md` with no passing review
    resumes **at the review step**, never a re-draft (any `approved` fields
    left by older runs are ignored). Then mark the first incomplete phase
    `in_progress`.
    **Never re-dispatch a phase whose artifact already exists** — re-running
-   QUESTION over an existing `task.md`, for example, would overwrite
+   QUESTION over an existing `1-task.md`, for example, would overwrite
    in-progress work (data loss).
    Resume is an idempotent re-run: already-done is done, never an error (`skills/principle-idempotent-reruns/SKILL.md`).
 
 You hold the description in your own context. Downstream of QUESTION the
 description must NEVER appear in any artifact or agent payload outside
-`task.md` and the questioner's own outputs.
+`1-task.md` and the questioner's own outputs.
 
 ## The Phase Loop
 
@@ -132,16 +132,16 @@ loop:
 |------------|---------------------------------------------------------|-----------------------------------------------------------------|--------------------|
 | WORKTREE   | (orchestrator-emit)                                     | (none — description in `$ARGUMENTS`)                            | QUESTION           |
 | QUESTION   | `questioner`                                            | worktree prepared (+ description in `$ARGUMENTS`)               | RESEARCH           |
-| RESEARCH   | `file-finder`, `researcher` (parallel, isolated)        | `docs/plans/<id>/questions.md`                                  | DESIGN             |
-| DESIGN     | `design-author` (→ design review)                       | `docs/plans/<id>/research.md`                                   | STRUCTURE          |
-| STRUCTURE  | `structure-planner`                                     | `docs/plans/<id>/design.md` + passing `design-review-<n>.md`    | PLAN               |
-| PLAN       | `planner`                                               | `docs/plans/<id>/structure.md`                                  | IMPLEMENT          |
-| IMPLEMENT  | `test-architect`, `implementer`, 5 reviewers (parallel) | `docs/plans/<id>/plan.md`                                       | PR                 |
+| RESEARCH   | `file-finder`, `researcher` (parallel, isolated)        | `docs/plans/<id>/2-questions.md`                                  | DESIGN             |
+| DESIGN     | `design-author` (→ design review)                       | `docs/plans/<id>/5-research.md`                                   | STRUCTURE          |
+| STRUCTURE  | `structure-planner`                                     | `docs/plans/<id>/6-design.md` + passing `design-review-<n>.md`    | PLAN               |
+| PLAN       | `planner`                                               | `docs/plans/<id>/7-structure.md`                                  | IMPLEMENT          |
+| IMPLEMENT  | `test-architect`, `implementer`, 5 reviewers (parallel) | `docs/plans/<id>/8-plan.md`                                       | PR                 |
 | PR         | (orchestrator-emit)                                     | aggregate gate passed                                           | SHIPPED            |
 
 For RESEARCH, dispatch `file-finder` and `researcher` in parallel passing
-each only the `docs/plans/<id>/questions.md` path. Combine their returned
-content into a single `docs/plans/<id>/research.md` artifact (with the
+each only the `docs/plans/<id>/2-questions.md` path. Combine their returned
+content into a single `docs/plans/<id>/5-research.md` artifact (with the
 frontmatter the researcher's documentation specifies) before advancing.
 
 `skills/team/registry.json` is an inventory of the 13 specialist agents
@@ -154,13 +154,13 @@ The questioner is the only agent that ever sees the raw description from
 `$ARGUMENTS`. When dispatching the questioner, pass the full description.
 When the questioner returns:
 
-1. Make sure that `task.md` and `questions.md` exist in `docs/plans/<id>/`.
+1. Make sure that `1-task.md` and `2-questions.md` exist in `docs/plans/<id>/`.
    The questioner writes them directly with the necessary YAML frontmatter
    (see the agent file).
 2. Mark Question complete in TodoWrite and Research `in_progress`.
 
 When dispatching `file-finder` and `researcher`, pass them only the path
-`docs/plans/<id>/questions.md`. They are forbidden from reading `task.md`
+`docs/plans/<id>/2-questions.md`. They are forbidden from reading `1-task.md`
 and the orchestrator must not give the original description in their
 context.
 
@@ -263,7 +263,7 @@ clean for the whole run.
 
 When the `design-author` returns a draft:
 
-1. Make sure that `docs/plans/<id>/design.md` exists. If the latest
+1. Make sure that `docs/plans/<id>/6-design.md` exists. If the latest
    `design-review-<n>.md` already carries a passing verdict (APPROVE or
    COMMENT), skip the review and advance to STRUCTURE. A resumed session
    never re-reviews a passed design.
@@ -278,7 +278,7 @@ When the `design-author` returns a draft:
    unavailable CLI to the user per that skill's `## When a vendor CLI is
    unavailable`; a missing runner
    is `skip: cross-model runner not found` per CLI, an over-cap prompt
-   (after dropping the `task.md` excerpt once) is `skip: prompt over cap`.
+   (after dropping the `1-task.md` excerpt once) is `skip: prompt over cap`.
    Fence each CLI's raw output as a `DATA` block at capture time, with a
    fence longer than any backtick run in the output, per that section.
    Append one `## External review input` section — opening with the
@@ -300,7 +300,7 @@ When the `design-author` returns a draft:
    read that brief (reference it, never duplicate it here), with
    the artifact directory substituted. Each round gets a fresh subagent
    context. `Explore` holds no Write/Edit tools, so the reviewer **cannot**
-   change `design.md` or forge a verdict artifact. The verdict is written
+   change `6-design.md` or forge a verdict artifact. The verdict is written
    by the orchestrator alone (step 4), and the recovery hooks fail closed
    on anything but a recorded passing verdict. If the environment lacks the
    `Explore` agent type, treat the dispatch failure like a reviewer crash
@@ -340,11 +340,11 @@ When the `design-author` returns a draft:
    not passed (`skills/principle-fail-closed/SKILL.md`). The halt message
    names the
    absolute worktree-rooted `docs/plans/<id>/` path, so the operator can
-   open `design.md` and the `design-review-<n>.md` records directly. After
+   open `6-design.md` and the `design-review-<n>.md` records directly. After
    an operator stop, a context-exhausted session, or this fail-closed
-   halt, edit `design.md` by hand and re-invoke `/team-design` bare. That
+   halt, edit `6-design.md` by hand and re-invoke `/team-design` bare. That
    command resumes at its own review step and never re-drafts an existing
-   `design.md`. It then stops and names `/team-structure` as the next
+   `6-design.md`. It then stops and names `/team-structure` as the next
    command. `/team` also resumes when you give it the same description or
    ticket. Setup steps 4 through 7 re-derive `<id>` and fast-forward the
    ledger to the first incomplete phase. A recovered run can instead
@@ -353,7 +353,7 @@ When the `design-author` returns a draft:
 
 ### Structure (no gate — autonomous)
 
-When the `structure-planner` returns `docs/plans/<id>/structure.md`, record
+When the `structure-planner` returns `docs/plans/<id>/7-structure.md`, record
 it and advance to PLAN immediately. There is no approval wait — nothing is
 presented for approval mid-run. Structure was formerly gated. It now
 auto-advances. The artifact carries no `approved`/`approved_at`/ `revision`
@@ -364,12 +364,12 @@ frontmatter.
 One rule, two knowledge times: **each repo's worktree is born the moment
 that repo is known.** The home repo is known at phase 1, so its worktree is
 born at the leading WORKTREE phase. The rest are settled only once the
-design lands, in `repos.md`, so in multi-repo mode their worktrees are
+design lands, in `4-repos.md`, so in multi-repo mode their worktrees are
 created **after the design review**.
 
 When the design review passes:
 
-1. **Detect mode.** If `docs/plans/<id>/repos.md` exists, you are in
+1. **Detect mode.** If `docs/plans/<id>/4-repos.md` exists, you are in
    **multi-repo mode** — create one secondary worktree per more repo listed
    in that file, all on the same `<id>` branch. Otherwise you are in
    **single-repo mode** and nothing further is needed here (the home
@@ -381,13 +381,13 @@ When the design review passes:
    never pauses mid-run. The "Confirm with the user" dialog in
    `skills/team-worktree/SKILL.md` applies only to standalone human
    invocation of `/team-worktree`. The resolved repo set is already
-   recorded loudly in `design.md` (`## Decisions made`/`## Risks`) and
+   recorded loudly in `6-design.md` (`## Decisions made`/`## Risks`) and
    echoed in the PR body's `## Review notes`. Before each
    `git worktree add`, re-check **containment**: the repo path's `realpath`
    must be a direct child of the home repo's parent directory. Refuse and
-   report any repo that fails (`repos.md` may have been authored without a
+   report any repo that fails (`4-repos.md` may have been authored without a
    Bash-side path check).
-2. **Append a `## Worktrees` section to `repos.md`**, post-design-review,
+2. **Append a `## Worktrees` section to `4-repos.md`**, post-design-review,
    **back-recording the home worktree path** created at the leading
    WORKTREE phase, plus each secondary repo's worktree path. Later
    `/team-*` invocations can then rediscover every worktree from that one
@@ -470,7 +470,7 @@ findings. The design-review gate is the opposite case, because it writes
 every round's findings to disk for a person to read before the fix.
 
 Here, re-invoke `/team-implement` bare. That command resumes the phase at
-its reviewer-dispatch step, because `plan.md`, the tests, and the slice
+its reviewer-dispatch step, because `8-plan.md`, the tests, and the slice
 commits are already on the branch. The five reviewers there re-derive the
 current finding set, which the loop then fixes, at the cost of one round.
 The round counter is session-scoped through TodoWrite and starts fresh on
@@ -503,7 +503,7 @@ When the aggregate gate passes:
 4. In multi-repo mode this opens
    **one draft PR per repo with commits ahead**. The PR bodies cross-link
    to each other, so reviewers can see the full change set.
-5. **Ticket — link now, in-review when ready.** If `task.md` frontmatter
+5. **Ticket — link now, in-review when ready.** If `1-task.md` frontmatter
    has `ticketId` set, call the Skill tool with `tracking-tickets` and apply
    its ticket-lifecycle rules. Link the PR to the ticket through the
    conditional closing footer (in multi-repo mode the home repo's PR
@@ -557,16 +557,16 @@ When the aggregate gate passes:
 ### Multi-repo topics
 
 A topic that touches more than one repository is recorded in
-`docs/plans/<id>/repos.md` (schema in
-`skills/artifact-frontmatter/SKILL.md`). `repos.md` is settled
+`docs/plans/<id>/4-repos.md` (schema in
+`skills/artifact-frontmatter/SKILL.md`). `4-repos.md` is settled
 autonomously. The questioner writes it when the description names multiple
 repos (resolving each to a sibling-directory path), and the design-author
-confirms or amends the list on research evidence. Once `repos.md` exists,
+confirms or amends the list on research evidence. Once `4-repos.md` exists,
 every downstream phase respects it: research spans every listed repo,
 slices and plan steps carry `[repo: <name>]` annotations, secondary
 worktrees are created after the design review (the home worktree already
 exists from the leading WORKTREE phase), the implementer changes directory
-between them per step, and PR opens one PR per repo. When `repos.md` is
+between them per step, and PR opens one PR per repo. When `4-repos.md` is
 absent, the pipeline runs in single-repo mode (today's default).
 
 ### Design-review record convention
@@ -577,6 +577,6 @@ with frontmatter `topic`, `date`, `phase: design-review`, and
 `verdict: <APPROVE|REQUEST CHANGES|COMMENT>`. A design has passed review
 when the highest-`<n>` file carries APPROVE or COMMENT. Downstream
 phases and the recovery hooks verify passage by reading that file —
-`design.md` itself carries no approval frontmatter.
+`6-design.md` itself carries no approval frontmatter.
 See `skills/artifact-frontmatter/SKILL.md` for the full frontmatter
 convention.

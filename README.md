@@ -136,7 +136,7 @@ Or run individual phases:
 ```
 
 In a full `/team` run the home worktree is created automatically at the leading WORKTREE phase.
-Invoked standalone, `/team-worktree` consumes `plan.md` (post-PLAN). Use it for manual recovery
+Invoked standalone, `/team-worktree` consumes `8-plan.md` (post-PLAN). Use it for manual recovery
 or multi-repo setup.
 
 Each downstream command takes the artifact directory `docs/plans/<id>/` as
@@ -153,8 +153,8 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 ```
 
 - **Worktree.** Orchestrator prepares an isolated git worktree first and authors `docs/plans/<id>/` inside it, keeping the home checkout's `git status` clean for the whole run.
-- **Question.** Decompose intent into a full task record (`task.md`) and neutral research questions (`questions.md`). The questioner is the only agent that ever sees the user's original description.
-- **Research** *(isolated)*. Parallel agents (file-finder + researcher) consume only `questions.md`. They never see the task. This structurally prevents opinion-bias in research findings.
+- **Question.** Decompose intent into a full task record (`1-task.md`) and neutral research questions (`2-questions.md`). The questioner is the only agent that ever sees the user's original description.
+- **Research** *(isolated)*. Parallel agents (file-finder + researcher) consume only `2-questions.md`. They never see the task. This structurally prevents opinion-bias in research findings.
 - **Design** *(design review)*. Design author drafts a ~200-line alignment doc, resolving its own open questions as recorded assumptions. An adversarial design review gates advancement.
 - **Structure.** Break the design into vertical slices with verification checkpoints. Produced autonomously. Advances to Plan with no gate.
 - **Plan.** Tactical implementation plan derived from the structure. Read by the implementer. Not gated.
@@ -171,7 +171,7 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 - **Entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch-as-author`, `/pr-watch-as-reviewer`, `/groom-backlog`, `/pr-cleanup`, `/pr-verify`, `/pr-rebase`, `/reflect`, `/why`, and `/how` utilities, and shared methodologies
 - **3 hooks** in `hooks/`: `docs/plans/`-aware compaction resilience and plugin-file validation
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
-- **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.
+- **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.
 
 ## References and inspiration
 

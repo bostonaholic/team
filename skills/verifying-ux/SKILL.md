@@ -123,7 +123,7 @@ a command string. Frontmatter schema, exactly:
 
 ```yaml
 ---
-topic: <topic>        # verbatim from design.md, like every artifact
+topic: <topic>        # verbatim from 6-design.md, like every artifact
 date: <YYYY-MM-DD>
 phase: implement
 round: <n>            # review round if the dispatch names one; otherwise 1

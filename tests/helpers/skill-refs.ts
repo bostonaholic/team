@@ -35,7 +35,7 @@ export const SUBSTITUTION_CLAUSE = "artifact directory substituted";
 
 // A skill name: lowercase kebab. Deliberately narrow, so the backticked
 // non-skill tokens that share these clauses cannot match — `CHANGELOG.md` and
-// `TEAM_DISABLE_CROSS_MODEL` (uppercase), `design.md` (dot),
+// `TEAM_DISABLE_CROSS_MODEL` (uppercase), `6-design.md` (dot),
 // `## When Implementing` and `gh pr create --draft` (spaces).
 const NAME = /`([a-z0-9][a-z0-9-]*)`/g;
 

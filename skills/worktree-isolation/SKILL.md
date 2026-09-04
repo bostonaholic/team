@@ -18,12 +18,12 @@ is at the **router level** — not per-agent. This means:
 3. **Simple agents.** No agent needs to know about isolation. They operate
    in whatever directory the orchestrator hands them.
 4. **Multi-repo features.** A single topic can span repos (e.g. frontend
-   + backend + shared types) by listing them in `docs/plans/<id>/repos.md`.
+   + backend + shared types) by listing them in `docs/plans/<id>/4-repos.md`.
    The router creates a worktree in each, branched off the same `<id>`.
 
 ## Single-repo (default)
 
-When `docs/plans/<id>/repos.md` is **absent**, the topic touches only the
+When `docs/plans/<id>/4-repos.md` is **absent**, the topic touches only the
 home repo (the repo the user invoked `/team` from). The router creates
 exactly one worktree using Claude Code's native worktree support:
 
@@ -35,7 +35,7 @@ No custom worktree creation, path management, or teardown logic is needed.
 
 ## Multi-repo
 
-When `docs/plans/<id>/repos.md` is **present**, the topic spans multiple
+When `docs/plans/<id>/4-repos.md` is **present**, the topic spans multiple
 repos. The router creates **one worktree per listed repo**, all sharing
 the same branch name `<id>`:
 
@@ -43,8 +43,8 @@ the same branch name `<id>`:
   resolve to a direct child of the home repo's parent directory
   (`dirname "$(realpath "<repo-path>")"` equals
   `dirname "$(realpath "<home-root>")"`). A repo that fails is refused
-  and reported — `repos.md` content is not trusted blindly.
-- For each repo with absolute path `<repo-path>` in `repos.md` that
+  and reported — `4-repos.md` content is not trusted blindly.
+- For each repo with absolute path `<repo-path>` in `4-repos.md` that
   passes the containment check:
   - Worktree path: `<repo-path>/.claude/worktrees/<id>`
   - Branch: `<id>`, branched from that repo's `origin/HEAD`
@@ -55,7 +55,7 @@ the same branch name `<id>`:
   which the orchestrator passes in.
 
 After all worktrees are created, the orchestrator appends a `## Worktrees`
-section to `repos.md` recording the per-repo worktree paths. Any later
+section to `4-repos.md` recording the per-repo worktree paths. Any later
 `/team-*` invocation rediscovers them by reading that one file.
 
 ## Claude Code Native Worktrees
@@ -79,7 +79,7 @@ rationale). The router's responsibilities are:
    Author `docs/plans/<id>/` **inside** it. No copy is ever needed,
    because the artifact directory is born in the worktree. (Secondary
    repos in multi-repo mode get their worktrees after the design review,
-   once `repos.md` confirms the repo set. Same `<id>` branch in each.)
+   once `4-repos.md` confirms the repo set. Same `<id>` branch in each.)
 2. After this phase, all downstream agent dispatches operate within the
    applicable worktree. That is the home worktree by default, or a
    per-repo worktree when a slice or step carries a `[repo: <name>]`
@@ -111,13 +111,13 @@ intermediate artifacts, test scaffolding, or commits ever touch the
 main working tree.
 
 Second, a leading worktree gives the recovery hooks a genuine first
-state to detect: "a worktree exists for `<id>`, no `task.md` yet" ⇒
+state to detect: "a worktree exists for `<id>`, no `1-task.md` yet" ⇒
 WORKTREE. The phase becomes inferable from the moment the run begins
 rather than only appearing midway through the pipeline.
 
 For artifact ergonomics, the orchestrator
 **reports the absolute worktree-rooted `docs/plans/<id>/` path**. That is
-where `design.md` and the `design-review-<n>.md` verdict records live.
+where `6-design.md` and the `design-review-<n>.md` verdict records live.
 Anyone who audits the run then opens the artifacts cleanly, with no hunt
 for the worktree. This supersedes the old "review on the home tree"
 rationale.

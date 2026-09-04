@@ -18,9 +18,9 @@ discovery block below resolves it.
 
 The `design-author` reads:
 
-- `$ARGUMENTS/task.md` — what we are building (intent)
-- `$ARGUMENTS/questions.md` — the questions that drove research
-- `$ARGUMENTS/research.md` — what exists (facts)
+- `$ARGUMENTS/1-task.md` — what we are building (intent)
+- `$ARGUMENTS/2-questions.md` — the questions that drove research
+- `$ARGUMENTS/5-research.md` — what exists (facts)
 
 Resolve the artifact directory by running this self-contained block (one bash
 call — agent threads reset cwd between calls):
@@ -31,8 +31,8 @@ call — agent threads reset cwd between calls):
 # PHASE_FILES recency mirrors findActiveTopic() in session-start-recover.mjs.
 # NOTE: this block is duplicated across 8 skills by design (see docs/architecture.md); future: shared discover-topic.sh.
 ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
-PHASE_FILES="task questions research design structure plan"
-PRED="research.md"            # predecessor artifact this skill consumes
+PHASE_FILES="1-task 2-questions 5-research 6-design 7-structure 8-plan"
+PRED="5-research.md"            # predecessor artifact this skill consumes
 # Tier 1 — explicit: $ARGUMENTS names an existing dir → use verbatim.
 if [ -n "$ARGUMENTS" ] && [ -d "$ARGUMENTS" ]; then
   echo "$ARGUMENTS"; exit 0
@@ -61,11 +61,11 @@ done
   skill (tier 1 explicit arg, or tier 2 discovery). When the path came from
   tier 2 (no explicit arg), announce the resolved directory to the user before
   proceeding, so an auto-picked topic is never silent.
-- **If the block printed nothing** (tier 3 — no directory holds `research.md`),
+- **If the block printed nothing** (tier 3 — no directory holds `5-research.md`),
   do not hard-error. Fire `AskUserQuestion` with a `Setup` header and labeled
   options:
   - **Run the producer** — run `/team-research docs/plans/<id>/` to produce the
-    missing `research.md`.
+    missing `5-research.md`.
   - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
 
@@ -77,9 +77,9 @@ done
 2. Dispatch `design-author`, which:
    a. Resolves its own open questions autonomously, recording each in
       `## Decisions made` marked as an assumption (see the agent file)
-   b. Writes `$ARGUMENTS/design.md` with frontmatter `revision: 0`
+   b. Writes `$ARGUMENTS/6-design.md` with frontmatter `revision: 0`
 
-   If `$ARGUMENTS/design.md` already exists, skip this dispatch and
+   If `$ARGUMENTS/6-design.md` already exists, skip this dispatch and
    resume at step 3 — never re-draft an existing design.
    Both this skip and step 3's never-re-review skip are idempotent re-runs: converge on the same end state, never duplicate work (`skills/principle-idempotent-reruns/SKILL.md`).
 3. **Design review gate.** If the latest
@@ -131,15 +131,15 @@ done
      on the verdict, so REQUEST CHANGES keeps re-drafting for as many
      rounds as it takes. Recovery runs after an operator stop, a
      context-exhausted session, or the fail-closed halt below. A person
-     revises `$ARGUMENTS/design.md` by hand and re-invokes
+     revises `$ARGUMENTS/6-design.md` by hand and re-invokes
      `/team-design` bare. The run then resumes at this gate, per the
      resume branch at step 2. The `revision` counter persists in
-     `design.md` frontmatter.
+     `6-design.md` frontmatter.
    - **Unparseable verdict or reviewer crash** — retry the review once
      with the error; on second failure, halt loudly. Fail closed —
      never advance on a missing verdict.
      A missing verdict counts as not passed (`skills/principle-fail-closed/SKILL.md`).
-4. **Stop once `$ARGUMENTS/design.md` exists and the latest
+4. **Stop once `$ARGUMENTS/6-design.md` exists and the latest
    `$ARGUMENTS/design-review-<n>.md` verdict is APPROVE or COMMENT.**
 
 ## Completion

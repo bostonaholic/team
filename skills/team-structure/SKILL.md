@@ -17,14 +17,14 @@ discovery block below resolves it.
 
 The `structure-planner` reads:
 
-- `$ARGUMENTS/design.md` (the reviewed design — the latest
+- `$ARGUMENTS/6-design.md` (the reviewed design — the latest
   `$ARGUMENTS/design-review-<n>.md` must carry a passing verdict)
-- `$ARGUMENTS/research.md`
-- `$ARGUMENTS/task.md` (for cross-reference, not for re-litigating intent)
+- `$ARGUMENTS/5-research.md`
+- `$ARGUMENTS/1-task.md` (for cross-reference, not for re-litigating intent)
 
 Resolve the artifact directory by running this self-contained block (one bash
 call — agent threads reset cwd between calls). The predecessor filter requires
-a `design.md` whose latest `design-review-<n>.md` carries a passing verdict
+a `6-design.md` whose latest `design-review-<n>.md` carries a passing verdict
 (APPROVE or COMMENT), so unreviewed or REQUEST-CHANGES candidates are skipped:
 
 ```sh
@@ -33,8 +33,8 @@ a `design.md` whose latest `design-review-<n>.md` carries a passing verdict
 # PHASE_FILES recency mirrors findActiveTopic() in session-start-recover.mjs.
 # NOTE: this block is duplicated across 8 skills by design (see docs/architecture.md); future: shared discover-topic.sh.
 ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
-PHASE_FILES="task questions research design structure plan"
-PRED="design.md"            # predecessor artifact this skill consumes
+PHASE_FILES="1-task 2-questions 5-research 6-design 7-structure 8-plan"
+PRED="6-design.md"            # predecessor artifact this skill consumes
 # Tier 1 — explicit: $ARGUMENTS names an existing dir → use verbatim.
 if [ -n "$ARGUMENTS" ] && [ -d "$ARGUMENTS" ]; then
   echo "$ARGUMENTS"; exit 0
@@ -81,11 +81,11 @@ done
   directory to the user before proceeding, so an auto-picked topic is never
   silent.
 - **If the block printed nothing** (tier 3 — no directory holds a
-  `design.md` with a passing design review), do not hard-error. Fire
+  `6-design.md` with a passing design review), do not hard-error. Fire
   `AskUserQuestion` with a `Setup` header
   and labeled options:
   - **Run the producer** — run `/team-design docs/plans/<id>/` to produce
-    and review `design.md`.
+    and review `6-design.md`.
   - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
 
@@ -101,7 +101,7 @@ done
    **refuse**: report that the design has not passed review and suggest
    `/team-design $ARGUMENTS` — never slice an unreviewed design.
    No recorded verdict counts as not passed (`skills/principle-fail-closed/SKILL.md`).
-2. Dispatch `structure-planner`, which writes `$ARGUMENTS/structure.md`
+2. Dispatch `structure-planner`, which writes `$ARGUMENTS/7-structure.md`
    with vertical slices. The artifact carries plain frontmatter
    (`topic`, `date`, `phase: structure`) — no approval fields, because
    structure is not gated.
@@ -109,7 +109,7 @@ done
    `/team` run the orchestrator advances to PLAN automatically. Run
    standalone, this skill stops after writing the structure and reports the
    next command.
-4. **Stop once `$ARGUMENTS/structure.md` exists.**
+4. **Stop once `$ARGUMENTS/7-structure.md` exists.**
 
 ## Completion
 

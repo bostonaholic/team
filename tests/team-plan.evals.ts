@@ -8,9 +8,9 @@
 // explicitly. Selection / tier gating goes through `testIfSelected`.
 //
 // Seeded-state mechanism (design Slice 4): the fixture input.md body embeds the
-// upstream artifact (a structure.md) in a labeled fenced block. This
+// upstream artifact (a 7-structure.md) in a labeled fenced block. This
 // file parses it out of `fixture.body` and writes it into the mkdtempSync
-// workDir at docs/plans/<id>/structure.md BEFORE calling runAgentTest — no
+// workDir at docs/plans/<id>/7-structure.md BEFORE calling runAgentTest — no
 // harness helper change. The deterministic axis confirms topic reuse +
 // acceptance-test mapping; the gated LLM judge grades file-level step quality.
 // Periodic tier: plan quality is a judgment with model-output variance.
@@ -45,17 +45,17 @@ testIfSelected(
     const workDir = mkdtempSync(join(tmpdir(), "team-plan-e2e-"));
 
     try {
-      const seed = extractSeed(fixture.body, "structure.md");
+      const seed = extractSeed(fixture.body, "7-structure.md");
       expect(seed).not.toBeNull();
       // Drift guard: the working-dir TOPIC_SLUG must match the seed's topic.
       expect(seed).toContain(`topic: ${TOPIC_SLUG}`);
-      const seedPath = join(workDir, "docs", "plans", TOPIC_ID, "structure.md");
+      const seedPath = join(workDir, "docs", "plans", TOPIC_ID, "7-structure.md");
       mkdirSync(dirname(seedPath), { recursive: true });
       writeFileSync(seedPath, `${seed}\n`, "utf8");
 
       const prompt =
         "You are running the PLAN phase against the seeded " +
-        `docs/plans/${TOPIC_ID}/structure.md in your working directory. Read ` +
+        `docs/plans/${TOPIC_ID}/7-structure.md in your working directory. Read ` +
         "it, expand each slice into file-level steps with acceptance tests, " +
         "and reuse the topic slug.\n\n" +
         fixture.body;

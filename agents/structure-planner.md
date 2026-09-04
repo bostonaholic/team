@@ -24,11 +24,11 @@ each slice's tests pass.
 
 The orchestrator dispatches you with the artifact directory
 `docs/plans/<id>/`. On initial dispatch, after the design review passes,
-you read `design.md` (the reviewed design), `research.md` (codebase facts),
-and `task.md` (the user's intent). You also read `repos.md` (repo scope)
+you read `6-design.md` (the reviewed design), `5-research.md` (codebase facts),
+and `1-task.md` (the user's intent). You also read `4-repos.md` (repo scope)
 when it is present. Re-dispatch happens when the design changed, or when
 implementation surfaced a structure flaw. Then you read the previous
-`structure.md` plus the reason for the re-run that the orchestrator
+`7-structure.md` plus the reason for the re-run that the orchestrator
 supplies.
 
 ## Procedure
@@ -43,7 +43,7 @@ prefixed `<repo>:`.
 
 ## Output
 
-Write to `docs/plans/<id>/structure.md` (overwrite on re-dispatch). The
+Write to `docs/plans/<id>/7-structure.md` (overwrite on re-dispatch). The
 file MUST open with this YAML frontmatter:
 
 ```yaml
@@ -60,7 +60,7 @@ PLAN automatically (the design is gated by the adversarial design
 review, not by an approval field).
 
 The `topic` value MUST be copied verbatim from the predecessor
-`design.md`. Never re-derive, re-word, or combine it with the ticket
+`6-design.md`. Never re-derive, re-word, or combine it with the ticket
 id. Every artifact in `docs/plans/<id>/` carries the same `topic` slug.
 
 Aim for ~2 pages (≈100–200 lines, excluding frontmatter).

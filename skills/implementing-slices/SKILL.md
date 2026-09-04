@@ -17,11 +17,11 @@ The orchestrator dispatches you with the artifact directory
 
 ### Initial dispatch (after the test-architect's failing tests are confirmed)
 
-Your inputs are the plan (`docs/plans/<id>/plan.md` — slice list,
+Your inputs are the plan (`docs/plans/<id>/8-plan.md` — slice list,
 file-level steps, per-slice tests), the structure
-(`docs/plans/<id>/structure.md` — order and verification checkpoints), the
+(`docs/plans/<id>/7-structure.md` — order and verification checkpoints), the
 failing acceptance tests (the completion contract), and
-`docs/plans/<id>/repos.md` when present. `repos.md` defines multi-repo
+`docs/plans/<id>/4-repos.md` when present. `4-repos.md` defines multi-repo
 mode: each repo's slug, absolute path, and worktree path (under
 `## Worktrees`); every plan step annotated `[repo: <slug>]` is applied
 inside that repo's worktree — `cd` there before running the step's edits,

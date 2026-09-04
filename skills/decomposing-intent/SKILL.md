@@ -1,28 +1,28 @@
 ---
 name: decomposing-intent
-description: Artifact templates and decomposition procedure for the questioner agent — the task.md and questions.md body templates, the topic-slug rules, and the multi-repo detection flow. Loaded when a user's task description is decomposed into intent and neutral research questions.
+description: Artifact templates and decomposition procedure for the questioner agent — the 1-task.md and 2-questions.md body templates, the topic-slug rules, and the multi-repo detection flow. Loaded when a user's task description is decomposed into intent and neutral research questions.
 user-invocable: false
 ---
 
 # Decomposing Intent
 
 The questioner's templates and procedure. Capture the user's intent in
-`task.md`, and write neutral research questions in `questions.md`.
-Record repo scope in `repos.md` when the topic spans more than one
+`1-task.md`, and write neutral research questions in `2-questions.md`.
+Record repo scope in `4-repos.md` when the topic spans more than one
 repository.
 
 ## The `topic` field
 
-`topic` must be **identical across `task.md` and `questions.md`**. It is
+`topic` must be **identical across `1-task.md` and `2-questions.md`**. It is
 the kebab portion of `<id>` — i.e. `<id>` minus the `<TICKET>-` or
 `<YYYY-MM-DD>-` prefix the orchestrator added. Never use the ticket id,
 the date, or a re-worded form of the description as the topic. Never
-write a different topic in `questions.md` than the one in `task.md`.
+write a different topic in `2-questions.md` than the one in `1-task.md`.
 Downstream phases (research, design, structure, plan) inherit the same
 topic value. The full invariant and worked examples live in
 `skills/artifact-frontmatter/SKILL.md`.
 
-## task.md
+## 1-task.md
 
 Capture the user's intent in their own framing. Required frontmatter:
 
@@ -35,7 +35,7 @@ ticketId: null               # set if a tracking ticket is tracking this work
 ---
 ```
 
-`ticketId` lives **only** on `task.md` — no other artifact carries it
+`ticketId` lives **only** on `1-task.md` — no other artifact carries it
 (rationale in `skills/artifact-frontmatter/SKILL.md`).
 
 Then the body:
@@ -64,11 +64,11 @@ Keep this under 80 lines. The point is intent, not exhaustive detail.
 Call the Skill tool with `product-requirements-doc` when the feature request
 is vague or underspecified, spans multiple user stories, is
 cross-cutting, or replaces existing behavior. Produce
-`docs/plans/<id>/prd.md` alongside `task.md`, and reference the PRD's
-path from `task.md`. The full criteria live in that skill's "When to
+`docs/plans/<id>/3-prd.md` alongside `1-task.md`, and reference the PRD's
+path from `1-task.md`. The full criteria live in that skill's "When to
 Write a PRD" section. For simple, well-scoped requests, skip the PRD.
 
-Required frontmatter for `prd.md` (the PRD rides the autonomous Question
+Required frontmatter for `3-prd.md` (the PRD rides the autonomous Question
 phase — it is not gated, so it carries no `approved` or `revision`
 fields):
 
@@ -80,7 +80,7 @@ phase: prd
 ---
 ```
 
-## questions.md
+## 2-questions.md
 
 Write neutral research questions that, when answered factually, give the
 design-author everything it needs. Phrase questions about the **codebase**,
@@ -167,19 +167,19 @@ that each candidate path is a git working tree with
 `"$(dirname "$(realpath "<root>")")/<name>"`. A path that resolves
 anywhere else (e.g. through a symlink) is unresolvable.
 
-- **Every candidate resolves** → write `repos.md` from the resolved
+- **Every candidate resolves** → write `4-repos.md` from the resolved
   `<slug>: <absolute-path>` list per the schema in
   `skills/artifact-frontmatter/SKILL.md`.
 - **Any candidate is unresolvable** → proceed in single-repo mode, do
-  not write `repos.md`, and record the omission as an explicit
+  not write `4-repos.md`, and record the omission as an explicit
   assumption. Unresolvable means it fails the allowlist, has no sibling
   directory, is not a git working tree, or resolves outside the home
-  repo's parent directory. Record it in `task.md`'s
+  repo's parent directory. Record it in `1-task.md`'s
   `## Open assumptions` (name the repo you could not resolve so the miss
   is auditable at PR review).
   A recorded assumption, never an unmarked guess (`skills/principle-record-assumptions/SKILL.md`).
 
-### Writing `repos.md`
+### Writing `4-repos.md`
 
 Required frontmatter:
 
@@ -203,7 +203,7 @@ job during the WORKTREE phase.
 
 If the description does not name more repos, stay in single-repo mode.
 Inventing extra repos would expand scope without consent. When in doubt,
-stay single-repo and record the assumption in `task.md`.
+stay single-repo and record the assumption in `1-task.md`.
 
 ## Process
 
@@ -212,9 +212,9 @@ stay single-repo and record the assumption in `task.md`.
    exist.
 2. **Decide repo scope.** Look for the multi-repo signals above. If
    present, resolve each candidate repo through the allowlist +
-   sibling-directory check and write `repos.md` when every candidate
+   sibling-directory check and write `4-repos.md` when every candidate
    resolves. Otherwise stay single-repo and record the assumption in
-   `task.md`.
+   `1-task.md`.
 3. Decide the topic slug (kebab-case, ~3 words).
 4. Identify the codebase scope: which directories or modules — and in
    multi-repo mode, which repos — will research touch? Make sure of this
@@ -226,6 +226,6 @@ stay single-repo and record the assumption in `task.md`.
    The stranger test is `skills/principle-blind-the-investigator/SKILL.md` in miniature.
 6. Read the "Codebase context" section back: it should tell a stranger
    "what code exists here" without telling them "what we want to do with it".
-7. Write `task.md` and `questions.md`. When the PRD criteria apply, also
-   write `prd.md`. In multi-repo mode also write `repos.md`. Return the
+7. Write `1-task.md` and `2-questions.md`. When the PRD criteria apply, also
+   write `3-prd.md`. In multi-repo mode also write `4-repos.md`. Return the
    structured result.

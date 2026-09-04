@@ -22,10 +22,10 @@ are missing, the feature is incomplete.
 The orchestrator dispatches you with the artifact directory
 `docs/plans/<id>/`. You read:
 
-- `docs/plans/<id>/structure.md` — the source of truth for which acceptance
+- `docs/plans/<id>/7-structure.md` — the source of truth for which acceptance
   tests must exist (each slice lists its tests)
-- `docs/plans/<id>/plan.md` — file-level mappings the implementer will follow
-- `docs/plans/<id>/design.md` — context for understanding what each test
+- `docs/plans/<id>/8-plan.md` — file-level mappings the implementer will follow
+- `docs/plans/<id>/6-design.md` — context for understanding what each test
   should assert
 
 ## Process

@@ -12,7 +12,7 @@ describe("extractSeed", () => {
     const body = [
       "Preamble prose.",
       "",
-      "```markdown questions.md",
+      "```markdown 2-questions.md",
       "---",
       "topic: token-bucket",
       "---",
@@ -24,7 +24,7 @@ describe("extractSeed", () => {
       "Trailing prose.",
     ].join("\n");
 
-    const seed = extractSeed(body, "questions.md");
+    const seed = extractSeed(body, "2-questions.md");
     expect(seed).toBe(
       [
         "---",
@@ -39,36 +39,36 @@ describe("extractSeed", () => {
 
   test("returns null when no block with the requested label is present", () => {
     const body = [
-      "```markdown design.md",
+      "```markdown 6-design.md",
       "# Design",
       "```",
     ].join("\n");
 
-    expect(extractSeed(body, "questions.md")).toBeNull();
+    expect(extractSeed(body, "2-questions.md")).toBeNull();
   });
 
   test("returns null when there are no fenced blocks at all", () => {
-    expect(extractSeed("just prose, no fences", "questions.md")).toBeNull();
+    expect(extractSeed("just prose, no fences", "2-questions.md")).toBeNull();
   });
 
   test("selects the correctly-labeled block when several blocks are present", () => {
     const body = [
-      "```markdown task.md",
+      "```markdown 1-task.md",
       "task body",
       "```",
       "",
-      "```markdown research.md",
+      "```markdown 5-research.md",
       "research body",
       "```",
     ].join("\n");
 
-    expect(extractSeed(body, "task.md")).toBe("task body");
-    expect(extractSeed(body, "research.md")).toBe("research body");
+    expect(extractSeed(body, "1-task.md")).toBe("task body");
+    expect(extractSeed(body, "5-research.md")).toBe("research body");
   });
 
   test("stops at the first closing fence (does not run past the block)", () => {
     const body = [
-      "```markdown structure.md",
+      "```markdown 7-structure.md",
       "slice one",
       "```",
       "prose between blocks",
@@ -77,7 +77,7 @@ describe("extractSeed", () => {
       "```",
     ].join("\n");
 
-    expect(extractSeed(body, "structure.md")).toBe("slice one");
+    expect(extractSeed(body, "7-structure.md")).toBe("slice one");
   });
 
   test("handles a block with empty content", () => {
@@ -86,7 +86,7 @@ describe("extractSeed", () => {
   });
 
   test("requires an exact label match (no prefix/suffix collision)", () => {
-    const body = ["```markdown questions.md.bak", "decoy", "```"].join("\n");
-    expect(extractSeed(body, "questions.md")).toBeNull();
+    const body = ["```markdown 2-questions.md.bak", "decoy", "```"].join("\n");
+    expect(extractSeed(body, "2-questions.md")).toBeNull();
   });
 });

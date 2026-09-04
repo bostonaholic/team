@@ -4,14 +4,14 @@ agent: team-research
 
 # team-research rubric
 
-The RESEARCH phase answers a seeded `questions.md` and writes `research.md`. The
+The RESEARCH phase answers a seeded `2-questions.md` and writes `5-research.md`. The
 seeded artifact is written into the eval's working dir before the model spawns
 (seeding mechanism in `tests/team-research.evals.ts`). The deterministic axis
 confirms the topic slug was reused verbatim; research-fact grounding is the LLM
 criterion.
 
 1. Topic slug reuse (kind: deterministic). The output must carry
-   `topic: token-bucket` copied verbatim from the seeded `questions.md`,
+   `topic: token-bucket` copied verbatim from the seeded `2-questions.md`,
    matched by the `ground-truth.json` `detection_hint` via `outcomeJudge` — no
    model call. Pass = detection_rate ≥ `minimum_detection`.
 2. Research-fact grounding (kind: llm). 1-5 scale, scored only when the

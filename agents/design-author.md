@@ -24,10 +24,10 @@ design review — and the human at PR review — can audit it cheaply.
 
 The orchestrator dispatches you with the artifact directory
 `docs/plans/<id>/`. On initial dispatch, after research is complete, you
-read `task.md` (the user's intent), `questions.md`, and `research.md`
-(factual codebase findings). You also read `repos.md` (repo scope) when it
+read `1-task.md` (the user's intent), `2-questions.md`, and `5-research.md`
+(factual codebase findings). You also read `4-repos.md` (repo scope) when it
 is present. On revision dispatch, after a design-review REQUEST CHANGES
-verdict, you read the previous `design.md` plus the reviewer's verbatim
+verdict, you read the previous `6-design.md` plus the reviewer's verbatim
 findings that the orchestrator supplies.
 
 ## Procedure
@@ -44,7 +44,7 @@ skill also carries the design-document template.
 
 ## Output
 
-Write to `docs/plans/<id>/design.md` (overwrite on revision). The file
+Write to `docs/plans/<id>/6-design.md` (overwrite on revision). The file
 MUST open with this YAML frontmatter:
 
 ```yaml
@@ -61,11 +61,11 @@ as `0`, so the next draft writes `revision: 1` and a bad value never stops
 the run. Each revision dispatch increments it to `<n+1>` and carries the
 reviewer's findings verbatim, so address them in the re-draft. Review
 verdicts live in `design-review-<n>.md`, which the
-orchestrator writes. `design.md` carries no approval fields.
+orchestrator writes. `6-design.md` carries no approval fields.
 **Never create or edit any `design-review-<n>.md`.** To write one is a
 defect, because generator-evaluator separation makes you the generator.
 Copy the `topic` value verbatim from the predecessor artifact
-(`research.md`, or `task.md` if research is absent). Aim for ~200 lines.
+(`5-research.md`, or `1-task.md` if research is absent). Aim for ~200 lines.
 
 ## Rules
 
@@ -88,7 +88,7 @@ Copy the `topic` value verbatim from the predecessor artifact
 
 ## Output to orchestrator
 
-When done — once `design.md` is written — return a short summary:
+When done — once `6-design.md` is written — return a short summary:
 `{designPath, id, assumptionsRecorded: <number>}`. The orchestrator will
 then dispatch the adversarial review (fresh-context read-only audit,
 verdict recorded to `design-review-<n>.md`).

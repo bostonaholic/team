@@ -1,6 +1,6 @@
 ---
 name: team-question
-description: Decompose a feature description, ticket, or issue link into the QRSPI Question artifacts (task.md, questions.md). Trigger on "shape this idea", "decompose this task", or "/team-question".
+description: Decompose a feature description, ticket, or issue link into the QRSPI Question artifacts (1-task.md, 2-questions.md). Trigger on "shape this idea", "decompose this task", or "/team-question".
 effort: medium
 argument-hint: "<ticket id, issue URL, or task description>"
 ---
@@ -11,17 +11,17 @@ Run the QUESTION phase only, then stop. The Question phase decomposes the
 user's intent into the artifacts that the rest of the QRSPI pipeline
 consumes:
 
-- `task.md` — the human's full intent. Read by `design-author` and
+- `1-task.md` — the human's full intent. Read by `design-author` and
   downstream phases that need intent. **Never** read by `researcher` or
-  `file-finder` — they only see `questions.md`.
-- `questions.md` — neutral research questions phrased without intent. The
+  `file-finder` — they only see `2-questions.md`.
+- `2-questions.md` — neutral research questions phrased without intent. The
   only file `researcher` and `file-finder` ever read.
-- `prd.md` — written
+- `3-prd.md` — written
   **only when the request is vague, multi-story, cross-cutting, or replaces existing behavior**
   (criteria in `skills/product-requirements-doc/SKILL.md`, loaded
   conditionally through `skills/decomposing-intent/SKILL.md`). Referenced
-  from `task.md`. read downstream by `design-author`.
-- `repos.md` — written **only when the topic spans more than one
+  from `1-task.md`. read downstream by `design-author`.
+- `4-repos.md` — written **only when the topic spans more than one
   repository**. Lists each involved repo's slug, absolute path, and
   role. Its presence switches the rest of the pipeline into multi-repo
   mode (one worktree per repo, slice/step `[repo: <slug>]` annotations,
@@ -37,7 +37,7 @@ ticket-derived slug (`ENG-1234-add-rate-limiting`) or a date-derived slug
 `$ARGUMENTS` may be:
 
 - A ticket identifier (e.g. `ENG-1234`) — recorded as `ticketId` on
-  `task.md`'s frontmatter. The orchestrator does not call any ticketing
+  `1-task.md`'s frontmatter. The orchestrator does not call any ticketing
   system. The ID is stored for the user's reference.
 - An issue URL (e.g. `https://github.com/org/repo/issues/42`) — fetched
   with `gh issue view` (or equivalent) to extract the title and body
@@ -71,23 +71,23 @@ available.
    - The `<kebab-topic>` is a 2–4 word kebab-case slug derived from the
      description.
 3. **Create `docs/plans/<id>/`** if it does not exist.
-4. **Resume detection.** If `docs/plans/<id>/task.md` already exists,
-   re-read it instead of overwriting. If `questions.md` is missing, the
-   questioner only writes `questions.md`.
+4. **Resume detection.** If `docs/plans/<id>/1-task.md` already exists,
+   re-read it instead of overwriting. If `2-questions.md` is missing, the
+   questioner only writes `2-questions.md`.
 5. Dispatch the `questioner` agent with the full description and the
-   target directory `docs/plans/<id>/`. The agent writes `task.md` and
-   `questions.md`, plus `prd.md` when the request meets the PRD criteria
-   and `repos.md` when it makes sure with the user that the topic spans
+   target directory `docs/plans/<id>/`. The agent writes `1-task.md` and
+   `2-questions.md`, plus `3-prd.md` when the request meets the PRD criteria
+   and `4-repos.md` when it makes sure with the user that the topic spans
    multiple repos.
-6. **Stop once `task.md` and `questions.md` exist on disk** — do not
-   continue to RESEARCH. (`prd.md` or `repos.md` can also exist, neither
+6. **Stop once `1-task.md` and `2-questions.md` exist on disk** — do not
+   continue to RESEARCH. (`3-prd.md` or `4-repos.md` can also exist, neither
    changes the stop condition.)
 
 ## When to use
 
 - The idea is vague and you want to see the questioner's framing before
   committing to research.
-- You want to review and edit `task.md` / `questions.md` by hand before
+- You want to review and edit `1-task.md` / `2-questions.md` by hand before
   research begins.
 - You want to run multiple research passes against the same task without
   re-decomposing.
@@ -96,7 +96,7 @@ available.
 
 Report:
 
-- Path to `task.md` and `questions.md` (and `prd.md` / `repos.md` when
+- Path to `1-task.md` and `2-questions.md` (and `3-prd.md` / `4-repos.md` when
   written)
 - Topic slug and `<id>`
 - Mode: single-repo or multi-repo (with the list of involved repo slugs

@@ -156,12 +156,12 @@ describe("multi-repo support", () => {
   const PLANNER = join(REPO_ROOT, "agents", "planner.md");
   const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
 
-  test("artifact-frontmatter carries the repos.md schema; qrspi-workflow keeps the pointer", () => {
+  test("artifact-frontmatter carries the 4-repos.md schema; qrspi-workflow keeps the pointer", () => {
     const schema = read(join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md"));
-    expect(schema).toContain("repos.md");
+    expect(schema).toContain("4-repos.md");
     expect(schema).toContain("phase: repos");
     const text = read(QRSPI);
-    expect(text).toContain("repos.md");
+    expect(text).toContain("4-repos.md");
     expect(text).toContain("artifact-frontmatter/SKILL.md");
   });
 
@@ -171,13 +171,13 @@ describe("multi-repo support", () => {
     expect(text).toContain("one worktree per listed repo");
   });
 
-  test("team-worktree reads repos.md and runs per-repo worktree add", () => {
+  test("team-worktree reads 4-repos.md and runs per-repo worktree add", () => {
     const text = read(TEAM_WT);
-    expect(text).toContain("repos.md");
+    expect(text).toContain("4-repos.md");
     expect(/git -C .* worktree add/.test(text)).toBe(true);
   });
 
-  test("team-worktree records ## Worktrees section in repos.md", () => {
+  test("team-worktree records ## Worktrees section in 4-repos.md", () => {
     expect(read(TEAM_WT)).toContain("## Worktrees");
   });
 
@@ -219,28 +219,28 @@ describe("multi-repo support", () => {
     expect(text).toContain("single-repo");
   });
 
-  test("researcher allowed to read repos.md (scope, not intent)", () => {
+  test("researcher allowed to read 4-repos.md (scope, not intent)", () => {
     const text = read(RESEARCHER);
-    expect(text).toContain("repos.md");
+    expect(text).toContain("4-repos.md");
     expect(text).toContain("scope, not intent");
   });
 
-  test("file-finder references repos.md", () => {
-    expect(read(FILE_FINDER)).toContain("repos.md");
+  test("file-finder references 4-repos.md", () => {
+    expect(read(FILE_FINDER)).toContain("4-repos.md");
   });
 
-  test("file-finder forbids reading task.md and enumerating docs/plans/", () => {
+  test("file-finder forbids reading 1-task.md and enumerating docs/plans/", () => {
     const text = flat(read(FILE_FINDER));
     // Hard isolation: must never read the user's original description.
-    expect(/MUST NOT.*task\.md/i.test(text)).toBe(true);
+    expect(/MUST NOT.*1-task\.md/i.test(text)).toBe(true);
     // Must never glob/list/enumerate the plan directory to discover the task,
     // closing the wide-net search-strategy hole. Order-independent: the verb
     // may precede or follow the `docs/plans/` reference.
     expect(/\b(enumerate|glob|list)\b.{0,40}docs\/plans\/|docs\/plans\/.{0,40}\b(enumerate|glob|list)\b/i.test(text)).toBe(true);
   });
 
-  test("team-research includes repos.md path in dispatch", () => {
-    expect(read(TEAM_RES)).toContain("repos.md");
+  test("team-research includes 4-repos.md path in dispatch", () => {
+    expect(read(TEAM_RES)).toContain("4-repos.md");
   });
 
   test("structure-planner supports per-slice Repos: field", () => {
@@ -259,7 +259,7 @@ describe("multi-repo support", () => {
 
   test("team-implement detects multi-repo and refuses in-place", () => {
     const text = read(TEAM_IMPL);
-    expect(text).toContain("repos.md");
+    expect(text).toContain("4-repos.md");
     expect(text).toContain("multi-repo work requires worktrees");
   });
 
@@ -281,18 +281,18 @@ describe("conditional PRD artifact", () => {
   const DECOMPOSING_INTENT = join(REPO_ROOT, "skills", "decomposing-intent", "SKILL.md");
   const QUESTIONER = join(REPO_ROOT, "agents", "questioner.md");
 
-  test("artifact-frontmatter carries the prd.md schema; qrspi-workflow keeps the pointer", () => {
+  test("artifact-frontmatter carries the 3-prd.md schema; qrspi-workflow keeps the pointer", () => {
     const schema = read(join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md"));
-    expect(schema).toContain("prd.md");
+    expect(schema).toContain("3-prd.md");
     expect(schema).toContain("phase: prd");
     const text = read(QRSPI);
-    expect(text).toContain("prd.md");
+    expect(text).toContain("3-prd.md");
     expect(text).toContain("artifact-frontmatter/SKILL.md");
   });
 
-  test("decomposing-intent carries the prd.md frontmatter contract", () => {
+  test("decomposing-intent carries the 3-prd.md frontmatter contract", () => {
     const text = read(DECOMPOSING_INTENT);
-    expect(text).toContain("prd.md");
+    expect(text).toContain("3-prd.md");
     expect(text).toContain("phase: prd");
   });
 
@@ -423,9 +423,9 @@ describe("L2-demoted heavy-prior-state pipeline skills", () => {
     expect(/### Structure \(no gate — autonomous\)/.test(text)).toBe(true);
   });
 
-  test("team-worktree: reads repos.md and runs per-repo git worktree add", () => {
+  test("team-worktree: reads 4-repos.md and runs per-repo git worktree add", () => {
     const text = read(TEAM_WT);
-    expect(text).toContain("repos.md");
+    expect(text).toContain("4-repos.md");
     expect(/git -C .* worktree add/.test(text)).toBe(true);
     // Single-repo worktree-creation contract (load-bearing default mode).
     expect(text).toContain("single-repo mode");
@@ -454,8 +454,8 @@ describe("L2-demoted heavy-prior-state pipeline skills", () => {
 
   test("team-implement: requires a structure + plan + worktree", () => {
     const text = read(TEAM_IMPL);
-    expect(text).toContain("structure.md");
-    expect(text).toContain("plan.md");
+    expect(text).toContain("7-structure.md");
+    expect(text).toContain("8-plan.md");
     expect(/worktree/i.test(text)).toBe(true);
   });
 

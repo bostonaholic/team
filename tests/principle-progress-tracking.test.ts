@@ -16,7 +16,7 @@ const agent = (name: string) => join(AGENTS_DIR, `${name}.md`);
 // clean assertion rather than crashing with ENOENT.
 const readOrEmpty = (path: string): string => (existsSync(path) ? read(path) : "");
 
-// Canonical reference sentence inner text (from plan.md). Slices 2 and 3
+// Canonical reference sentence inner text (from 8-plan.md). Slices 2 and 3
 // copy this byte-for-byte as a blockquote; the drift guard asserts a single
 // unique variant across the repo.
 const CANONICAL_INNER =

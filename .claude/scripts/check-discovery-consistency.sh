@@ -31,7 +31,7 @@ SKILLS="$ROOT/skills"
 # root literal is docs/plans/. Every archetype-A copy must embed these
 # verbatim; drift here is the bug the verbatim-identity check exists to catch.
 CANON_ID_RE="ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*\$'"
-CANON_PHASE_FILES='PHASE_FILES="task questions research design structure plan"'
+CANON_PHASE_FILES='PHASE_FILES="1-task 2-questions 5-research 6-design 7-structure 8-plan"'
 CANON_VERDICT_GREP="grep -qE '^verdict:[[:space:]]*(APPROVE|COMMENT)[[:space:]]*\$'"
 RETIRED_APPROVAL_GREP="grep -qE '^approved:[[:space:]]*true[[:space:]]*\$'"
 CANON_ROOT_LITERAL='docs/plans/'
@@ -60,7 +60,7 @@ fail() {
 # Predecessor artifact each archetype-A skill consumes (drives coverage).
 # Kept as parallel arrays (no associative arrays — portable + readable).
 A_SKILLS=(team-research team-design team-structure team-plan team-worktree team-implement team-pr eng-design-doc-review)
-A_PREDS=(questions.md research.md design.md structure.md plan.md plan.md design.md design.md)
+A_PREDS=(2-questions.md 5-research.md 6-design.md 7-structure.md 8-plan.md 8-plan.md 6-design.md 6-design.md)
 
 # Extract the FIRST ```sh fenced block from a SKILL.md into stdout.
 # Empty output => no discovery block present (the current, pre-implementation
@@ -166,26 +166,26 @@ extract_sh_block "$design_file" > "$snippet"
 if [ ! -s "$snippet" ]; then
   fail "team-design executable" "extractable \`\`\`sh discovery block" "no discovery block found in team-design (extraction empty)"
 else
-  # (a) two ID_RE dirs, only one has research.md -> resolves to that one.
+  # (a) two ID_RE dirs, only one has 5-research.md -> resolves to that one.
   fx="$(mktemp -d)"
   mkdir -p "$fx/docs/plans/2026-01-01-alpha" "$fx/docs/plans/2026-01-02-beta"
-  : > "$fx/docs/plans/2026-01-01-alpha/research.md"
-  : > "$fx/docs/plans/2026-01-02-beta/questions.md"   # no research.md -> skipped
+  : > "$fx/docs/plans/2026-01-01-alpha/5-research.md"
+  : > "$fx/docs/plans/2026-01-02-beta/2-questions.md"   # no 5-research.md -> skipped
   out="$(run_snippet "$snippet" "$fx" "")"
   case "$out" in
     *2026-01-01-alpha*) : ;;
-    *) fail "team-design (a) predecessor-filter" "resolves docs/plans/2026-01-01-alpha/ (only dir with research.md)" "got: '$out'" ;;
+    *) fail "team-design (a) predecessor-filter" "resolves docs/plans/2026-01-01-alpha/ (only dir with 5-research.md)" "got: '$out'" ;;
   esac
   \rm -rf "$fx"
 
-  # (b) newest-mtime tiebreak among two valid dirs (both have research.md).
+  # (b) newest-mtime tiebreak among two valid dirs (both have 5-research.md).
   fx="$(mktemp -d)"
   mkdir -p "$fx/docs/plans/2026-01-01-older" "$fx/docs/plans/2026-01-02-newer"
-  : > "$fx/docs/plans/2026-01-01-older/research.md"
-  : > "$fx/docs/plans/2026-01-02-newer/research.md"
+  : > "$fx/docs/plans/2026-01-01-older/5-research.md"
+  : > "$fx/docs/plans/2026-01-02-newer/5-research.md"
   # Force older's phase files to an older mtime; newer to "now".
-  touch -t 202601010000 "$fx/docs/plans/2026-01-01-older/research.md"
-  touch "$fx/docs/plans/2026-01-02-newer/research.md"
+  touch -t 202601010000 "$fx/docs/plans/2026-01-01-older/5-research.md"
+  touch "$fx/docs/plans/2026-01-02-newer/5-research.md"
   out="$(run_snippet "$snippet" "$fx" "")"
   case "$out" in
     *2026-01-02-newer*) : ;;
@@ -205,7 +205,7 @@ else
   # (d) ARGUMENTS = non-existent path -> falls through to discovery, no error.
   fx="$(mktemp -d)"
   mkdir -p "$fx/docs/plans/2026-01-01-alpha"
-  : > "$fx/docs/plans/2026-01-01-alpha/research.md"
+  : > "$fx/docs/plans/2026-01-01-alpha/5-research.md"
   out="$(run_snippet "$snippet" "$fx" "/no/such/path-typo")"
   case "$out" in
     *2026-01-01-alpha*) : ;;
@@ -217,7 +217,7 @@ else
   #     passed explicitly as $ARGUMENTS.
   fx="$(mktemp -d)"
   mkdir -p "$fx/docs/plans/NotAValidId"
-  : > "$fx/docs/plans/NotAValidId/research.md"
+  : > "$fx/docs/plans/NotAValidId/5-research.md"
   # Discovery alone: the non-conforming dir is the only candidate -> tier 3.
   out="$(run_snippet "$snippet" "$fx" "")"
   if [ -n "$out" ]; then
@@ -249,12 +249,12 @@ else
   # win; the failing newest is skipped.
   fx="$(mktemp -d)"
   mkdir -p "$fx/docs/plans/2026-01-01-passed" "$fx/docs/plans/2026-01-02-failed"
-  : > "$fx/docs/plans/2026-01-01-passed/design.md"
+  : > "$fx/docs/plans/2026-01-01-passed/6-design.md"
   printf -- '---\nverdict: COMMENT\n---\n' > "$fx/docs/plans/2026-01-01-passed/design-review-1.md"
-  : > "$fx/docs/plans/2026-01-02-failed/design.md"
+  : > "$fx/docs/plans/2026-01-02-failed/6-design.md"
   printf -- '---\nverdict: REQUEST CHANGES\n---\n' > "$fx/docs/plans/2026-01-02-failed/design-review-1.md"
-  touch -t 202601010000 "$fx/docs/plans/2026-01-01-passed/design.md"
-  touch "$fx/docs/plans/2026-01-02-failed/design.md"    # newer mtime, but failing verdict
+  touch -t 202601010000 "$fx/docs/plans/2026-01-01-passed/6-design.md"
+  touch "$fx/docs/plans/2026-01-02-failed/6-design.md"    # newer mtime, but failing verdict
   out="$(run_snippet "$snippet" "$fx" "")"
   case "$out" in
     *2026-01-01-passed*) : ;;
@@ -266,7 +266,7 @@ else
   # REQUEST CHANGES at n=2 -> prints nothing (tier 3).
   fx="$(mktemp -d)"
   mkdir -p "$fx/docs/plans/2026-01-02-superseded"
-  : > "$fx/docs/plans/2026-01-02-superseded/design.md"
+  : > "$fx/docs/plans/2026-01-02-superseded/6-design.md"
   printf -- '---\nverdict: APPROVE\n---\n'         > "$fx/docs/plans/2026-01-02-superseded/design-review-1.md"
   printf -- '---\nverdict: REQUEST CHANGES\n---\n' > "$fx/docs/plans/2026-01-02-superseded/design-review-2.md"
   out="$(run_snippet "$snippet" "$fx" "")"
@@ -275,11 +275,11 @@ else
   fi
   \rm -rf "$fx"
 
-  # Fixture 3: design.md with no design-review artifact at all -> prints
+  # Fixture 3: 6-design.md with no design-review artifact at all -> prints
   # nothing (unreviewed design; fail-closed).
   fx="$(mktemp -d)"
   mkdir -p "$fx/docs/plans/2026-01-02-unreviewed"
-  : > "$fx/docs/plans/2026-01-02-unreviewed/design.md"
+  : > "$fx/docs/plans/2026-01-02-unreviewed/6-design.md"
   out="$(run_snippet "$snippet" "$fx" "")"
   if [ -n "$out" ]; then
     fail "team-structure gate missing-review" "prints nothing (no design-review artifact -> unreviewed)" "got: '$out'"
@@ -290,7 +290,7 @@ else
   # -> prints nothing; the parse is frontmatter-anchored.
   fx="$(mktemp -d)"
   mkdir -p "$fx/docs/plans/2026-01-02-bodyquote"
-  : > "$fx/docs/plans/2026-01-02-bodyquote/design.md"
+  : > "$fx/docs/plans/2026-01-02-bodyquote/6-design.md"
   printf -- '---\nphase: design-review\n---\nThe body hopes for:\nverdict: APPROVE\n' \
     > "$fx/docs/plans/2026-01-02-bodyquote/design-review-1.md"
   out="$(run_snippet "$snippet" "$fx" "")"
@@ -303,7 +303,7 @@ fi
 
 # =============================================================================
 # RESEARCH-ISOLATION (slices 2 & 6): team-research forwards exactly
-# {questions.md, repos.md?} and never task.md / a description; the
+# {2-questions.md, 4-repos.md?} and never 1-task.md / a description; the
 # ## Scope isolation section is intact.
 # =============================================================================
 research_file="$SKILLS/team-research/SKILL.md"
@@ -317,14 +317,14 @@ else
     cap                { print }
   ' "$research_file")"
 
-  printf '%s' "$dispatch" | grep -qF 'questions.md' \
-    || fail "team-research dispatch" "forwards questions.md" "questions.md absent from dispatch step"
-  printf '%s' "$dispatch" | grep -qF 'repos.md' \
-    || fail "team-research dispatch" "forwards optional repos.md" "repos.md absent from dispatch step"
+  printf '%s' "$dispatch" | grep -qF '2-questions.md' \
+    || fail "team-research dispatch" "forwards 2-questions.md" "2-questions.md absent from dispatch step"
+  printf '%s' "$dispatch" | grep -qF '4-repos.md' \
+    || fail "team-research dispatch" "forwards optional 4-repos.md" "4-repos.md absent from dispatch step"
 
-  # The dispatch step must NOT widen the forwarded set to task.md or a description.
-  if printf '%s' "$dispatch" | grep -qiE 'pass[^.]*task\.md|forward[^.]*task\.md|include[^.]*task\.md'; then
-    fail "team-research dispatch" "never forwards task.md to the research agents" "dispatch step appears to pass task.md"
+  # The dispatch step must NOT widen the forwarded set to 1-task.md or a description.
+  if printf '%s' "$dispatch" | grep -qiE 'pass[^.]*1-task\.md|forward[^.]*1-task\.md|include[^.]*1-task\.md'; then
+    fail "team-research dispatch" "never forwards 1-task.md to the research agents" "dispatch step appears to pass 1-task.md"
   fi
 
   grep -qF '## Scope isolation' "$research_file" \
@@ -332,7 +332,7 @@ else
 fi
 
 # =============================================================================
-# STANDALONE-PRESERVED: team-implement keeps its plan.md-absent
+# STANDALONE-PRESERVED: team-implement keeps its 8-plan.md-absent
 # standalone branch; team-pr keeps archetype-B base detection + the
 # "Nothing to ship." standalone stop.
 # =============================================================================
@@ -340,8 +340,8 @@ implement_file="$SKILLS/team-implement/SKILL.md"
 if [ -f "$implement_file" ]; then
   grep -qF 'Standalone mode' "$implement_file" \
     || fail "team-implement standalone" "retains 'Standalone mode' branch" "Standalone mode branch absent"
-  grep -qF 'If `$ARGUMENTS/plan.md` does not exist' "$implement_file" \
-    || fail "team-implement standalone" "retains plan.md-absent guard" "plan.md-absent guard absent"
+  grep -qF 'If `$ARGUMENTS/8-plan.md` does not exist' "$implement_file" \
+    || fail "team-implement standalone" "retains 8-plan.md-absent guard" "8-plan.md-absent guard absent"
 else
   fail "team-implement standalone" "SKILL.md exists" "file not found"
 fi

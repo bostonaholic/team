@@ -8,7 +8,7 @@
 // explicitly. Selection / tier gating goes through `testIfSelected`.
 //
 // Seeded-state mechanism (design Slice 3): the fixture input.md body embeds two
-// upstream artifacts (task.md + research.md) in labeled fenced blocks. This
+// upstream artifacts (1-task.md + 5-research.md) in labeled fenced blocks. This
 // file parses them out of `fixture.body` and writes them into the mkdtempSync
 // workDir at docs/plans/<id>/{task,research}.md BEFORE calling runAgentTest —
 // no harness helper change. The deterministic axis confirms the topic slug was
@@ -52,15 +52,15 @@ testIfSelected(
 
     try {
       // Seed both upstream artifacts into the working dir before spawning.
-      const task = extractSeed(fixture.body, "task.md");
-      const research = extractSeed(fixture.body, "research.md");
+      const task = extractSeed(fixture.body, "1-task.md");
+      const research = extractSeed(fixture.body, "5-research.md");
       expect(task).not.toBeNull();
       expect(research).not.toBeNull();
       // Drift guard: the working-dir TOPIC_SLUG must match the seeds' topic.
       expect(task).toContain(`topic: ${TOPIC_SLUG}`);
       expect(research).toContain(`topic: ${TOPIC_SLUG}`);
-      seedFile(workDir, "task.md", task as string);
-      seedFile(workDir, "research.md", research as string);
+      seedFile(workDir, "1-task.md", task as string);
+      seedFile(workDir, "5-research.md", research as string);
 
       const prompt =
         "You are running the DESIGN phase against the seeded " +

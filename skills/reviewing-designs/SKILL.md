@@ -19,7 +19,7 @@ change.
 > subagent. `$ARGUMENTS` is the artifact directory `docs/plans/<id>/`, and
 > you, the caller, substitute it before dispatch.
 
-You are reviewing a technical design document — `$ARGUMENTS/design.md`. You
+You are reviewing a technical design document — `$ARGUMENTS/6-design.md`. You
 operate with **fresh context** and have no knowledge of the author's intent
 beyond what the document itself states. This isolation is intentional: it
 prevents self-evaluation bias. You are read-only — use `Read`, `Grep`, and
@@ -51,14 +51,14 @@ When you write your findings, also call the Skill tool with
 
 > Follow `skills/principle-progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
 
-1. **Locate the document.** Read `$ARGUMENTS/design.md`. Also read the
-   sibling artifacts (`task.md`, `questions.md`, `research.md`, `repos.md`)
+1. **Locate the document.** Read `$ARGUMENTS/6-design.md`. Also read the
+   sibling artifacts (`1-task.md`, `2-questions.md`, `5-research.md`, `4-repos.md`)
    when present — they ground the design in the work that produced it.
 
 2. **Evaluate structure against the TDD methodology.** Walk every section
    the `technical-design-doc` skill prescribes: Problem, Goals and
    Non-Goals, Background, Design, Trade-offs, Rollout, Edge Cases, and Open
-   Questions. Note any missing or thin sections. For `design.md` artifacts,
+   Questions. Note any missing or thin sections. For `6-design.md` artifacts,
    walk the `design-author` template instead (Current state, Desired end
    state, Patterns to follow, Decisions made, Out of scope, Edge cases,
    Open questions (deferred), Risks).

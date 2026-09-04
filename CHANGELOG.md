@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Clone-backed Claude installs now refresh after merge and rebase pulls.** Run `script/dev-install claude` once. Team keeps Claude Code pointed at the pulled version, and `script/dev-uninstall claude` removes only Team-owned hooks. A hooks surface Team does not own — an existing non-Team hook, or a `core.hooksPath` pointing outside the clone — is preserved, and the install completes anyway and tells you it skipped the refresh. **What this asks of you:** reinstall once to add the hooks.
 
+### Changed
+
+- **Pipeline artifacts are now numbered in phase order:** `1-task.md`, `2-questions.md`, `3-prd.md`, `4-repos.md`, `5-research.md`, `6-design.md`, `7-structure.md`, `8-plan.md`. A `docs/plans/<id>/` listing now reads in the order the pipeline produces the files, and the two conditional artifacts (`3-prd.md`, `4-repos.md`) hold fixed slots whether or not a run writes them. Review records keep their names: `design-review-<n>.md`, `cross-model-notes.md`, `cross-model-raw.md`, `review-<n>.md`. The unnumbered names are no longer recognized anywhere — the recovery hooks, the eight discovery blocks, and every agent prompt read only the numbered form. **What this asks of you:** a run started on an earlier version will not resume — rename its artifacts to the numbered form, or finish that run before upgrading.
+
 ## [0.81.0] - 2026-09-03
 
 ### Changed

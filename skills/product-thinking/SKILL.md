@@ -30,7 +30,7 @@ Four lenses sharpen every framing, design, and slicing decision:
 ## When Framing the Task
 
 Questions to sharpen the *inferred goal* and *acceptance signals* you write
-into `task.md`:
+into `1-task.md`:
 
 - **Who specifically is this for?** Identify, if knowable, who the work serves
   — an actual person or role, not "users" in the abstract.
@@ -41,7 +41,7 @@ into `task.md`:
 
 These lens questions shape only how the questioner frames the inferred goal and
 acceptance signals — never what gets researched or what goes into
-`questions.md`. (The goal stays out of `questions.md` by design.)
+`2-questions.md`. (The goal stays out of `2-questions.md` by design.)
 
 ## When Designing
 

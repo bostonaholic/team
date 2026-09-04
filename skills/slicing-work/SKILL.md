@@ -1,6 +1,6 @@
 ---
 name: slicing-work
-description: Vertical-slice breakdown methodology for the structure-planner agent — the rationale for vertical slices, the structure.md document format, the slicing rules, and the slicing heuristics. Loaded when a reviewed design is broken into independently testable slices.
+description: Vertical-slice breakdown methodology for the structure-planner agent — the rationale for vertical slices, the 7-structure.md document format, the slicing rules, and the slicing heuristics. Loaded when a reviewed design is broken into independently testable slices.
 user-invocable: false
 ---
 
@@ -21,7 +21,7 @@ even if the demo is narrow.
 
 ## Structure document format
 
-The body of `structure.md`:
+The body of `7-structure.md`:
 
 ```markdown
 # Structure: <topic>
@@ -31,7 +31,7 @@ The body of `structure.md`:
 
 ### Slice 1: <name>
 **Goal:** <one sentence describing the user-visible behavior this slice ships>
-**Repos:** <multi-repo only — comma-separated repo slugs from repos.md
+**Repos:** <multi-repo only — comma-separated repo slugs from 4-repos.md
 that this slice touches; e.g. `frontend, api`>
 **Layers touched:** <e.g., migration, repository, service, API handler, client>
 **Tests:** <list of acceptance test names that prove this slice is done.
@@ -65,7 +65,7 @@ does not accidentally include it>
 - **Each slice has 1–3 acceptance tests.** A slice with 10 tests is too big.
   A slice with 0 tests is too horizontal.
 - **Acceptance tests cover edge cases, not just happy paths.** Pull the
-  relevant scenarios from `design.md`'s `## Edge cases` section into the
+  relevant scenarios from `6-design.md`'s `## Edge cases` section into the
   slice that ships that behavior — boundary values, invalid inputs, failure
   paths, concurrency, auth, and resource limits. A slice whose test list
   reads as happy-path only is incomplete. Either add the missing edge-case

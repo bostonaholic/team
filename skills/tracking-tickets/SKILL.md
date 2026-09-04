@@ -27,7 +27,7 @@ before any other work begins.
 
 ## PR open: link the PR to the ticket
 
-When the PR phase opens a pull request and `task.md`'s frontmatter has
+When the PR phase opens a pull request and `1-task.md`'s frontmatter has
 `ticketId` set, **link the PR to the ticket**. The tracker then closes
 the ticket when the PR merges, and any board automation moves it to its
 done state. On GitHub, render the link as a closing line emitted

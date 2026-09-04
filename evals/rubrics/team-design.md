@@ -4,7 +4,7 @@ agent: team-design
 
 # team-design rubric
 
-The DESIGN phase drafts a design against seeded `task.md` + `research.md`. The
+The DESIGN phase drafts a design against seeded `1-task.md` + `5-research.md`. The
 seeded artifacts are written into the eval's working dir before the model
 spawns (seeding mechanism in `tests/team-design.evals.ts`). The deterministic
 axis confirms the topic slug was reused verbatim and a Decisions made section

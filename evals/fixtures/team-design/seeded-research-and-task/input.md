@@ -7,12 +7,12 @@ deps:
   - agents/design-author.md
 ---
 
-# Seeded-state task: draft a design against seeded research.md + task.md
+# Seeded-state task: draft a design against seeded 5-research.md + 1-task.md
 
 You are running the DESIGN phase. The eval harness writes the two fenced blocks
-below to `docs/plans/2026-06-03-token-bucket/task.md` and
-`docs/plans/2026-06-03-token-bucket/research.md` in your working directory
-before you start. Read them and draft a `design.md`-style document in your
+below to `docs/plans/2026-06-03-token-bucket/1-task.md` and
+`docs/plans/2026-06-03-token-bucket/5-research.md` in your working directory
+before you start. Read them and draft a `6-design.md`-style document in your
 response.
 
 The load-bearing properties: the design carries a `## Decisions made` section
@@ -20,14 +20,14 @@ recording its self-resolved choices marked as explicit assumptions, and copies
 the topic slug `token-bucket` verbatim from the seeded
 artifacts.
 
-Output, in your response, the `design.md` you would write — a frontmatter block
+Output, in your response, the `6-design.md` you would write — a frontmatter block
 with `topic: token-bucket` and the standard sections (Current state, Desired
 end state, Decisions made, Out of scope), where `## Decisions made` records at
 least two self-resolved choices marked as assumptions with the rejected
 alternative. Do not write files; just output
 the design.
 
-```markdown task.md
+```markdown 1-task.md
 ---
 topic: token-bucket
 date: 2026-06-03
@@ -41,7 +41,7 @@ Add a per-client request limiter to the public API so one abusive client
 cannot exhaust the backend.
 ```
 
-```markdown research.md
+```markdown 5-research.md
 ---
 topic: token-bucket
 date: 2026-06-03

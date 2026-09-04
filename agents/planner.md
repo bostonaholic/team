@@ -1,6 +1,6 @@
 ---
 name: planner
-description: Use after the structure is produced to create the tactical implementation plan. Translates each vertical slice in structure.md into precise file-level steps with acceptance test mappings. The plan is a tactical artifact for the implementer — neither the structure nor the plan is human-reviewed (the design passed adversarial review).
+description: Use after the structure is produced to create the tactical implementation plan. Translates each vertical slice in 7-structure.md into precise file-level steps with acceptance test mappings. The plan is a tactical artifact for the implementer — neither the structure nor the plan is human-reviewed (the design passed adversarial review).
 color: purple
 model: opus
 effort: high
@@ -28,17 +28,17 @@ plan in detail — your audience is the implementer.
 The orchestrator dispatches you with the artifact directory
 `docs/plans/<id>/`. You read:
 
-- `docs/plans/<id>/structure.md` — the vertical-slice breakdown
-- `docs/plans/<id>/design.md` — context, decisions, patterns
-- `docs/plans/<id>/research.md` — codebase facts
-- `docs/plans/<id>/repos.md` — repo scope. It is present only when the
+- `docs/plans/<id>/7-structure.md` — the vertical-slice breakdown
+- `docs/plans/<id>/6-design.md` — context, decisions, patterns
+- `docs/plans/<id>/5-research.md` — codebase facts
+- `docs/plans/<id>/4-repos.md` — repo scope. It is present only when the
   topic spans more than one repository. Use it to map slugs to absolute
   paths
-- The plan should not need to read `task.md`
+- The plan should not need to read `1-task.md`
 
 ## Procedure
 
-The plan.md document template and the tactical rules live in
+The 8-plan.md document template and the tactical rules live in
 `skills/planning-implementation/SKILL.md` (preloaded). Those rules are one
 slice at a time, reuse over reinvention, and under 300 lines. They also
 forbid implementation code, keep slices atomic, and match test coverage to
@@ -58,7 +58,7 @@ in the slice.
 
 ## Output
 
-Write to `docs/plans/<id>/plan.md`. The file MUST open with this YAML
+Write to `docs/plans/<id>/8-plan.md`. The file MUST open with this YAML
 frontmatter:
 
 ```yaml
@@ -70,7 +70,7 @@ phase: plan
 ```
 
 The `topic` value MUST be copied verbatim from the predecessor
-`structure.md`. Never re-derive, re-word, or combine it with the
+`7-structure.md`. Never re-derive, re-word, or combine it with the
 ticket id. Every artifact in `docs/plans/<id>/` carries the same
 `topic` slug.
 

@@ -121,7 +121,7 @@ describe("residue sweep (snippet from worktree-isolation SKILL.md)", () => {
 
   test("planning scratch stays disposable — docs/plans/ alone does not block the sweep", () => {
     git(repo, "worktree", "remove", staleWt);
-    writeFileAt(join(staleWt, "docs", "plans", "feat-stale", "plan.md"), "# plan\n");
+    writeFileAt(join(staleWt, "docs", "plans", "feat-stale", "8-plan.md"), "# plan\n");
 
     expect(runSweep(repo)).toContain(`swept: ${staleWt}`);
     expect(existsSync(staleWt)).toBe(false);

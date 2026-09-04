@@ -18,7 +18,7 @@ Comments (`issue (blocking):`, `suggestion (non-blocking):`, `nitpick`) with a
 `file:line` reference for every finding, and end with a verdict (APPROVE,
 REQUEST CHANGES, or COMMENT).
 
-The design doc under review (`design.md`):
+The design doc under review (`6-design.md`):
 
 ```markdown
 # Design: session-cache
