@@ -11,6 +11,7 @@ Answer every neutral question in `2-questions.md` with objective, compressed, fi
 ## Investigation contract
 
 - Every claim comes from code read in this run and cites `file:line`; trace runtime behavior beyond suggestive names (`principle-evidence-over-assertion`).
+- Record visible versions per repo, for example `frontend: React 18; api: Go 1.22`.
 - In multi-repo mode, record shared types/API schemas under `## Constraints` and differing conventions under `## Patterns Observed`.
 - Choose the investigation path needed to answer all questions; never infer the user's goal.
 

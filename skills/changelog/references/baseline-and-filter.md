@@ -16,6 +16,8 @@ git rev-parse -q --verify "v<X.Y.Z>^{commit}" \
 git log --oneline --grep="<X.Y.Z>" -1
 ```
 
+Accept project conventions such as `v0.37.0 feat(scope): …` and `chore(release): 0.37.0`; match the version string, not a fixed prefix.
+
 3. List candidates:
 
 ```bash

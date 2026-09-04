@@ -12,7 +12,7 @@ Write at seventh-grade, STE-flavored level. Before finalizing, call `writing-pro
 
 ## Structure
 
-All changes stay under `## [Unreleased]` until an explicit release. Each bullet belongs to exactly one of `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, or `Security`; always document vulnerability fixes. On release only, rename it `## [X.Y.Z] - YYYY-MM-DD` and add a new empty `[Unreleased]` above it. Read [references/format-and-examples.md](references/format-and-examples.md) when creating the file or choosing a section.
+All changes stay under `## [Unreleased]` until an explicit release. Each bullet belongs to exactly one of `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, or `Security`; always document vulnerability fixes. On release only, rename it using `[X.Y.Z] - YYYY-MM-DD` as `## [X.Y.Z] - YYYY-MM-DD` and add a new empty `[Unreleased]` above it. Read [references/format-and-examples.md](references/format-and-examples.md) when creating the file or choosing a section.
 
 ## Candidate selection
 
@@ -33,5 +33,6 @@ Include every `feat:`, `fix:`, `perf:`, `BREAKING CHANGE:`, and `security:` or s
 - Never duplicate an entry; reruns are idempotent.
 - Write in past tense: “Added X,” not “Add X.”
 - Use absolute URLs for links because released sections become GitHub release notes. Use `https://github.com/<owner>/<repo>/blob/<default-branch>/<path>` or published docs; never repository-relative links. Bare `#anchors` and `mailto:` are allowed.
+- Relative `[versioning](docs/versioning.md)` links break in release notes; replace them with full `https://…` URLs.
 - A changelog rebase conflict keeps both: branch entries remain under `[Unreleased]`, above the base’s newest `## [X.Y.Z]`; every dated base section remains unchanged.
 - Always update `[Unreleased]`. Never create a versioned section unless the user explicitly requests a release.

@@ -29,5 +29,6 @@ Read [references/design-template.md](references/design-template.md) before draft
 - Enumerate boundary values (empty, zero, one, max-size, off-by-one), invalid inputs, downstream failures/timeouts/partial writes/retries, concurrency/idempotency/races, authorization states, and resource limits. Choose behavior or put intentional deferrals in `## Out of scope`.
 - Derive every closed set by grep, directory listing, or key-set comparison and record the command. Never list a blast radius or inventory from memory.
 - No implementation bodies or full type definitions; signatures are allowed only to fix a decision. Reference patterns by `file:line`, never duplicate them.
+- Prefer “follow `lib/foo.ts:30-60`” over copying those lines.
 - Apply `systems-thinking` `## When Designing`: cover adjacent components in `## Current state` and surfaces that must change together in `## Decisions made`; this adds no gate.
 - Existing rationale constrains changes to deliberate guards, thresholds, ownership, and layering. Default to `5-research.md`; use `skills/why/SKILL.md` for Preserve/Change/Avoid/Risk archaeology and `skills/how/SKILL.md` for current-state explanation when needed.

@@ -65,6 +65,7 @@ Files, never conversation memory, are the phase interface (`principle-files-are-
 | PR(s) open or commits shipped | SHIPPED |
 
 Worktree check: `git worktree list --porcelain | grep -q <id>`; multi-repo paths come from `4-repos.md`. Latest `review-<n>.md` records verifier status. Each transition: verify required artifacts (including passing design review), complete/current next TodoWrite items, then dispatch agents named by `skills/team/SKILL.md`.
+Confirm IMPLEMENT only when `git log <merge-base>..<id>` is non-empty; a worktree and `8-plan.md` alone remain PLAN.
 
 ## Scope and sequencing rules
 

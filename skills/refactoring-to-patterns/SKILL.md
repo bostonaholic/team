@@ -30,6 +30,7 @@ Refactor before an imminent change that current structure obstructs, on the thir
 **Mixed abstraction levels:** a function calls functions one level below its own, never two or more. Extract low-level byte/format work from high-level orchestration behind a name at the caller's level.
 
 **Constructor doing work:** construct with long-lived collaborators (HTTP client, DB, clock, logger); call methods with per-call work (date ranges, query strings, request bodies). Never instantiate collaborators inside work methods, pass work into constructors, or perform I/O/static lookup there. Constructors assign and return; tests inject fakes.
+`new HttpClient()` inside `fetchUser()` is forbidden per-call construction.
 
 ## Safe refactoring procedure
 

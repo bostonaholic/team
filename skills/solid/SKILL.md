@@ -46,6 +46,7 @@ dependencies, infrastructure imports, required real services, static
 loggers, clocks, and DB handles; pass per-call inputs to methods. Prefer
 `ReportGenerator(reportingDb, clock).generate(startDate, endDate)` over putting
 the date range in the constructor.
+Reuse `ReportGenerator(reportingDb, clock)` across calls; constructing `ReportGenerator(reportingDb, clock, startDate, endDate)` per range is the smell.
 
 ## In the reviewer role
 

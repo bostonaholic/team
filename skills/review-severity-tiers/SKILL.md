@@ -32,7 +32,7 @@ implementer and all five reviewers. Blocking/Major are fixed autonomously;
 Minor reaches the human in PR review, regardless of importance.
 The human decides what to build and what to ship; the middle runs autonomously (`principle-human-owns-the-ends`).
 
-- CRITICAL/HIGH are hard gates; MEDIUM/LOW do not block.
+- `agents/security-reviewer.md` and `skills/reviewing-code/SKILL.md` agree: CRITICAL/HIGH are hard gates; MEDIUM/LOW do not block.
 - Technical-writer REQUIRED and RECOMMENDED are both Minor because its gate is
   ADVISORY.
 
