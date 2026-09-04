@@ -6,149 +6,59 @@ user-invocable: false
 
 # Systematic Debugging
 
-Never skip to fixing. Understand the cause first. A fix applied without
-understanding the root cause is a coin flip — it may mask the symptom while
-leaving the disease.
+Find the cause before fixing. Read
+[references/investigation.md](references/investigation.md) for the full evidence
+checklist, 5 Whys method, examples, and escalation payload.
 
-## 4-Phase Investigation
+## Phase 1: OBSERVE
 
-### Phase 1: OBSERVE
+- Read complete errors and stack traces.
+- Reproduce the failure and record exact steps.
+- Gather logs, runtime state, timestamps, sequence, recent code/deploy/config
+  changes, multiple samples, and what still works.
+- Treat intermittency as evidence. Measure failure rate and environment
+  variance; inspect timing, concurrency, resources, and shared state.
+- When the question becomes why deliberate code exists, load
+  `skills/why/SKILL.md`.
 
-Gather evidence before forming any theories. The goal is to build a factual
-picture of what is happening.
+Do not hypothesize during OBSERVE.
 
-- **Read error messages completely.** The first line is the symptom. The stack
-  trace is the geography. The last frame before your code is where to look.
-- **Reproduce the failure.** If you cannot reproduce it, you cannot verify
-  your fix. Document the exact reproduction steps.
-- **Collect multiple data points.** One error message is an anecdote. Three
-  error messages are a pattern. Gather logs, stack traces, test output, and
-  runtime state.
-- **Note what IS working.** The boundary between working and broken code
-  narrows the search space dramatically.
-- **Record timestamps and sequence.** When did it start failing? What changed
-  just before? Check git log, deployment history, and dependency updates.
-  When the trail leads to code that looks deliberate and the question
-  becomes "why was it written this way" rather than "what broke", that is
-  design-rationale archaeology — `skills/why/SKILL.md` owns it.
-- **Treat intermittency as evidence, not noise.** A test that fails 1 in 10
-  runs is not "flaky". It reports a real condition that most invocations do
-  not hit: timing, ordering, resource contention, or hidden global state. The
-  conditions that make a test intermittent are frequently the conditions that
-  make the product intermittently misbehave in production. Record the failure
-  rate (e.g., 3/30 runs), the variance across environments (local vs CI), what
-  is concurrent/asynchronous/stateful in the path, and any shared state
-  (`/tmp`, env vars, singletons, DB rows).
+## Phase 2: HYPOTHESIZE
 
-Do not hypothesize during OBSERVE. Just collect.
+List at least two explanations. Rank common, configuration, environment, then
+code causes. Each theory must explain all failures and working neighbors. State
+predictions that can prove it wrong.
 
-### Phase 2: HYPOTHESIZE
+## Phase 3: TEST
 
-Form theories that explain ALL the observed evidence. A hypothesis that
-explains only some observations is incomplete.
+- Run a discriminating experiment that eliminates a hypothesis under either
+  outcome. Change one variable.
+- Record expected and actual results immediately. Keep disproved theories
+  closed unless new evidence appears.
+- With a working baseline and failing tip, use `git bisect`. Apply the same
+  binary search to config, dependency, or feature-flag ranges.
 
-- **Generate multiple hypotheses.** Premature commitment to a single theory
-  creates confirmation bias. List at least two plausible explanations.
-- **Rank by likelihood.** Common causes before exotic ones. Configuration
-  before code. Environment before logic.
-- **Check consistency.** Each hypothesis must explain why the failure occurs
-  AND why related functionality still works.
-- **State what each hypothesis predicts.** If hypothesis A is correct, what
-  else should be true? What should be false? These predictions become your
-  tests.
+## Phase 4: CONCLUDE
 
-### Phase 3: TEST
+- Identify the root cause, not the proximate symptom
+  (`principle-fix-root-causes`).
+- Make the original reproduction pass without changing unrelated behavior.
+- Search for related instances and document evidence and eliminated theories.
 
-Validate or eliminate hypotheses through targeted experiments. Test by
-elimination, not confirmation.
+### Root Cause Analysis (5 Whys)
 
-- **Design discriminating tests.** A good test eliminates at least one
-  hypothesis regardless of the outcome. A test that can only confirm is
-  subject to confirmation bias.
-- **Change one variable at a time.** Multiple simultaneous changes make it
-  impossible to attribute the result.
-- **Record results immediately.** Note what you tried, what you expected,
-  and what actually happened — even for negative results.
-- **Eliminate definitively.** A disproven hypothesis stays crossed off. New
-  evidence reopens it; a hunch or a second pass over the same evidence does
-  not.
-- **When you have a working baseline and a failing tip, bisect.** Do not
-  reason from first principles about which of 40 commits broke it —
-  `git bisect` is faster and more reliable. Each step discriminates half the
-  commit range. The same logic applies to config changes, dependency versions,
-  and feature-flag rollouts.
-
-### Phase 4: CONCLUDE
-
-Identify the root cause and design the fix.
-
-- **Root cause, not proximate cause.** The proximate cause is "this variable
-  is null." The root cause is "this function is called before initialization
-  completes." Fix the root cause. To drill from the proximate cause down to the
-  root, use the [Root Cause Analysis (5 Whys)](#root-cause-analysis-5-whys)
-  technique below. The canon: `principle-fix-root-causes`.
-- **Verify the fix addresses the root cause.** The original reproduction steps
-  must succeed after the fix. No other behavior should change.
-- **Check for related instances.** If the root cause is a pattern (e.g.,
-  missing null check), search for the same pattern elsewhere in the codebase.
-- **Document what you found.** Future debuggers (including yourself) will
-  benefit from knowing what was investigated and ruled out.
-
-#### Root Cause Analysis (5 Whys)
-
-To get from a proximate cause to a root cause, drill the causal chain. Take the
-proximate cause and ask "why?" — the answer is the next link. Ask "why?" of
-that link, and so on, until the chain bottoms out at a cause you can change.
-
-Ask "why?" of the proximate cause, then of each answer: "the variable is
-null" → "the loader returned early" → "the config flag was unset" → "the flag
-defaults to off in this environment."
-
-- **Anchor every link in OBSERVE evidence** — a log line, a stack frame, a git
-  change. If you cannot point to evidence for a link, you have left the chain:
-  go back to OBSERVE rather than invent it.
-- **Branch when a link has multiple causes.** The root is reached only when
-  **every** branch bottoms out at a cause you can change.
-- **Stop at a cause you can change** — one more "why?" would leave your
-  control (a third-party default, a platform constraint, a human decision).
-  Past that boundary you are blaming the universe.
-- **The chain can be length 1.** Five is the technique's name, not its quota.
-  Never manufacture questions to hit a number.
-- **Fix at the root link**, not at a proximate link above it. The
-  `test-driven-bug-fix` mutation check — revert one line, confirm the test
-  goes red — verifies the fix landed at the root and not on a symptom.
-- **Blame the process, not the person**, when the chain reaches a human
-  decision.
-- **When the chain will not converge, escalate** per `## Escalation Rules`
-  below rather than loop.
+Ask why from symptom to a cause you can change. Evidence must support every
+link; branch when multiple causes exist. Stop at an external constraint. The
+chain can contain one link; five is not a quota. Fix the root link. The
+`test-driven-bug-fix` mutation check proves the regression test depends on the
+fix. Blame process, not people.
 
 ## Escalation Rules
 
-### After 3 Failed Hypotheses
+After 3 failed hypotheses, widen to adjacent systems, environment differences,
+questioned evidence, and component interactions.
 
-If three hypotheses have been tested and eliminated, the investigation scope
-is too narrow. Expand:
-
-- Widen the search to adjacent systems (database, network, OS, dependencies)
-- Check for environmental differences (local vs CI, dev vs production)
-- Re-examine assumptions made during OBSERVE — is the evidence itself reliable?
-- Look for interactions between components that were assumed to be independent
-
-### When to Escalate to the User
-
-Escalate when you have exhausted reasonable investigation:
-
-- All plausible hypotheses have been eliminated
-- The failure depends on environment or configuration you cannot inspect
-- The failure is intermittent and you cannot establish a reliable reproduction
-- The root cause is in a third-party dependency or system outside your control
-
-When escalating, give:
-
-1. What you observed (evidence)
-2. What you hypothesized (theories)
-3. What you tested and eliminated (experiments)
-4. What you believe the remaining possibilities are (next steps)
-
-Never escalate with "I do not know what is wrong." Always escalate with "Here
-is what I have ruled out, and here is where I think the answer lies."
+Escalate to the user only after plausible hypotheses are exhausted, required
+environment is inaccessible, reproduction remains unreliable, or the cause is
+external. Give observed evidence, tested hypotheses, eliminated explanations,
+and remaining possibilities. Never return only “I do not know.”
