@@ -2,8 +2,6 @@
 
 **You have been made tech lead. Your team never sleeps.**
 
-13 specialists, five reviewers who can block you, and a written record of every decision. You keep the two calls that were always yours: what to build, and what to ship. The promotion comes with no headcount req.
-
 Team is a plugin that orchestrates specialized agents to autonomously implement entire features end-to-end, driven by the **QRSPI** workflow. The orchestrator is the main Claude Code session. It persists pipeline state as artifacts in `docs/plans/` and tracks live progress with TodoWrite.
 
 Team installs on Claude Code, on Codex CLI, and on Antigravity CLI. The full pipeline needs Claude Code, because that is the host that dispatches the agents. The standalone utilities work on all three.

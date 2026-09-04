@@ -11,10 +11,6 @@ nav_label: home
 
 **You have been made tech lead. Your team never sleeps.**
 
-13 specialists, five reviewers who can block you, and a written record of every
-decision. You keep the two calls that were always yours: what to build, and what
-to ship. The promotion comes with no headcount req.
-
 ## What is Team?
 
 Team orchestrates 13 specialized agents. They range from isolated researchers to adversarial
