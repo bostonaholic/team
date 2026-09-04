@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **[`/shipit`](https://github.com/bostonaholic/team/blob/main/skills/shipit/SKILL.md)'s CI watch no longer fails under zsh.** The land sequence captured the watch exit code into `status`, which zsh reserves as a read-only alias of `$?`, so the backgrounded watch reported failure on a fully green PR and the operator had to verify CI by hand. The capture now uses `WATCH_STATUS`. **What this asks of you:** nothing.
+
 ## [0.86.0] - 2026-09-04
 
 ### Changed
