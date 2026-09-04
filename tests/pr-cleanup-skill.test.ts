@@ -111,9 +111,6 @@ describe("pr-cleanup skill: section contract", () => {
     expect(modeB).toBeGreaterThan(modeA);
   });
 
-  test("loads the principle-progress-tracking convention", () => {
-    expect(body()).toContain("skills/principle-progress-tracking/SKILL.md");
-  });
 });
 
 describe("pr-cleanup skill: step 0 resolves AND validates $PRIMARY_ROOT", () => {

@@ -39,8 +39,6 @@ drill the causal chain to its root first through that skill's
 
 ## The Four-Step Discipline
 
-> Follow `skills/principle-progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
-
 ### Step 1: Reproduce
 
 Before writing any code, reproduce the bug. Understanding exactly when and
@@ -147,4 +145,4 @@ the test proves the bug existed, the fix makes it go away.
   a bug fix.
 - **Not a workaround.** A workaround avoids the buggy code path. A fix
   corrects the buggy code. When in doubt, fix the root cause
-  (`skills/principle-fix-root-causes/SKILL.md`).
+  (`principle-fix-root-causes`).

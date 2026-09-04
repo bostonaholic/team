@@ -16,51 +16,23 @@ listed repo, all sharing the same `<id>` branch name.
 ## Input
 
 `$ARGUMENTS` is the artifact directory: `docs/plans/<id>/`. If empty, the
-discovery block below resolves it.
+discovery command below resolves it.
 
 The directory's basename — `<id>` — is used as both the branch name and
 the worktree directory name in every involved repo.
 
-Resolve the artifact directory by running this self-contained block (one bash
-call — agent threads reset cwd between calls):
+Resolve `<team-skill-dir>` to the absolute directory containing
+`skills/team/SKILL.md`. From the repository root, run:
 
 ```sh
-# Three-tier artifact-directory discovery (archetype A).
-# ID_RE + PHASE_FILES canonical from hooks/session-start-recover.mjs.
-# PHASE_FILES recency mirrors findActiveTopic() in session-start-recover.mjs.
-# NOTE: this block is duplicated across 8 skills by design (see docs/architecture.md); future: shared discover-topic.sh.
-ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
-PHASE_FILES="1-task 2-questions 5-research 6-design 7-structure 8-plan"
-PRED="8-plan.md"            # predecessor artifact this skill consumes
-# Tier 1 — explicit: $ARGUMENTS names an existing dir → use verbatim.
-if [ -n "$ARGUMENTS" ] && [ -d "$ARGUMENTS" ]; then
-  echo "$ARGUMENTS"; exit 0
-fi
-# Tier 2 — discover: newest ID_RE dir under docs/plans/ that holds PRED.
-best=""; best_mtime=-1
-# Assumes cwd is the repo/worktree root (where docs/plans/ lives).
-for dir in docs/plans/*/; do
-  name="$(basename "$dir")"
-  printf '%s' "$name" | grep -qE "$ID_RE" || continue   # ID_RE filter
-  [ -f "$dir$PRED" ] || continue                        # predecessor filter
-  m=-1
-  for p in $PHASE_FILES; do
-    f="$dir$p.md"
-    [ -f "$f" ] || continue                             # skip racing/absent
-    s="$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f" 2>/dev/null)" || continue
-    [ "${s:-0}" -gt "$m" ] && m="$s"                    # max-mtime over PHASE_FILES
-  done
-  [ "$m" -gt "$best_mtime" ] && { best_mtime="$m"; best="$dir"; }
-done
-[ -n "$best" ] && { echo "$best"; exit 0; }
-# Tier 3 — none found: print nothing → fall to AskUserQuestion (prose below).
+"<team-skill-dir>/discover-topic.sh" "${ARGUMENTS:-}" "8-plan.md"
 ```
 
-- **If the block printed a path**, use it as `$ARGUMENTS` for the rest of this
+- **If the command printed a path**, use it as `$ARGUMENTS` for the rest of this
   skill (tier 1 explicit arg, or tier 2 discovery). When the path came from
   tier 2 (no explicit arg), announce the resolved directory to the user before
   proceeding, so an auto-picked topic is never silent.
-- **If the block printed nothing** (tier 3 — no directory holds `8-plan.md`),
+- **If the command printed nothing** (tier 3 — no directory holds `8-plan.md`),
   do not hard-error. Fire `AskUserQuestion` with a `Setup` header and labeled
   options:
   - **Run the producer** — run `/team-plan docs/plans/<id>/` to produce the
@@ -122,8 +94,6 @@ the home repo. Skipped repos reuse their current checkout. The remaining
 repos still get fresh `<id>`-branch worktrees.
 
 ## Execution
-
-> Follow `skills/principle-progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
 
 ### Derive identifiers
 
@@ -234,8 +204,6 @@ reads to relocate the worktrees.
 For trivial single-file changes, in-place implementation is allowed — no
 worktree needed.
 
-## Completion
-
 Report the worktree paths and tell the user:
 
 - Single-repo: **"Next: cd <home-worktree> and run `/team-implement docs/plans/<id>/`"**
@@ -247,7 +215,7 @@ Report the worktree paths and tell the user:
   per-repo worktrees as the plan steps require."**
 
 > The `/team-implement` handoff above is for **standalone, post-PLAN**
-> invocation (this skill's discovery block is gated on `8-plan.md`). In a full
+> invocation (this skill's discovery command is gated on `8-plan.md`). In a full
 > `/team` pipeline run, WORKTREE is the **leading** phase: the orchestrator
 > creates the home worktree first, supplying `<id>` directly (it does not run
 > this skill's `8-plan.md`-gated discovery), and proceeds to QUESTION next — not

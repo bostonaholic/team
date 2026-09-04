@@ -332,7 +332,7 @@ exists, its body (frontmatter stripped) is copied into the PR's
 `## Review notes` section, replacing the final round's inline disposition
 block so every round appears exactly once. The worktree stays in place
 after the PR opens. Teardown is deferred until the PR merges or the user
-asks, so the branch remains available for iteration. Completion points at the
+asks, so the branch remains available for iteration. The final report points at the
 standalone `/pr-watch-as-author` utility for watching the PR once it is
 ready for review.
 
@@ -654,19 +654,17 @@ pause for user input. Standalone modes still exist. A partial skill
 invoked with no resolvable directory, or with a free-form description,
 bootstraps the missing upstream artifacts inline rather than hard-error.
 
-**Discovery duplication: design rationale.** Each archetype-A skill
-embeds the three-tier resolver as a single self-contained bash block
-rather than calling a shared script. Agent threads reset their cwd
-between Bash calls, so the block cannot rely on any shared shell state
-and must stand alone in one invocation. The ~6 load-bearing lines
-(`ID_RE`, `PHASE_FILES`, root literal, and predecessor filter) are thus
-duplicated verbatim across the 8 directory-consuming skills by deliberate
-decision. No shared runtime helper was added, and the
-`check-discovery-consistency.sh` gate enforces byte-identity, so the
-copies cannot drift. A shared `discover-topic.sh` could also dedup the
-two hooks' `findActiveTopic`. That is a recorded future consolidation.
-The `# NOTE: ... future: shared discover-topic.sh` comment in each block
-points at it.
+**Shared discovery helper.** The 8 directory-consuming skills invoke the
+bundled `skills/team/discover-topic.sh` helper with their predecessor
+filename. `team-structure` also passes `--require-passing-review`. Each
+skill resolves `<team-skill-dir>` to the absolute directory containing
+`skills/team/SKILL.md`, then runs the helper from the repository root.
+The helper reads no host-specific environment variable or relative import.
+It owns `ID_RE`, `PHASE_FILES`, macOS/Linux mtime lookup, explicit-path
+precedence, and empty-success output when no candidate matches. The optional
+review filter accepts only APPROVE or COMMENT from the highest-numbered
+`design-review-<n>.md` YAML frontmatter. Line 1 and a closing marker within
+60 lines must both be `---`; malformed or over-cap input fails closed.
 
 ### Methodology skills (loaded by agents, not directly invoked)
 
@@ -916,10 +914,10 @@ Development hooks (`.claude/hooks/`, not distributed):
 
 Development scripts (`.claude/scripts/`, not distributed) house dev-only
 acceptance tooling run by plugin developers. `check-discovery-consistency.sh`
-is the committed consistency gate for the input-discovery feature: it asserts
-every archetype-A skill carries the discovery block, the load-bearing fragments
-(`ID_RE`, `PHASE_FILES`, `docs/plans/` root) stay byte-identical
-to canon, and the research-isolation invariant holds.
+is the committed consistency gate for the input-discovery feature. It executes
+the shared helper against explicit, discovered, empty, and review-gated
+fixtures; checks every consumer's predecessor and review flag; and preserves
+the research-isolation and standalone fallbacks.
 
 ## 8. Behavioral evals
 

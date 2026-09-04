@@ -49,7 +49,7 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
 5. **Seed the TodoWrite ledger** with one item per phase, in order:
    `Worktree → Question → Research → Design → Structure → Plan → Implement → PR`.
    Mark `Worktree` as `in_progress`.
-   See `skills/principle-progress-tracking/SKILL.md` for the per-step tracking convention agents follow within each phase.
+   See `principle-progress-tracking` for the per-step tracking convention agents follow within each phase.
    The home worktree and `docs/plans/<id>/` are both created at the leading
    WORKTREE phase (see "Orchestrator-Emit Gate (leading worktree)" below) —
    not here.
@@ -74,7 +74,7 @@ If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
    **Never re-dispatch a phase whose artifact already exists** — re-running
    QUESTION over an existing `1-task.md`, for example, would overwrite
    in-progress work (data loss).
-   Resume is an idempotent re-run: already-done is done, never an error (`skills/principle-idempotent-reruns/SKILL.md`).
+   Resume is an idempotent re-run: already-done is done, never an error (`principle-idempotent-reruns`).
 
 You hold the description in your own context. Downstream of QUESTION the
 description must NEVER appear in any artifact or agent payload outside
@@ -180,7 +180,7 @@ held elsewhere, re-dispatch rather than working from the preview. A summary of
 a research report is not a research report, and DESIGN downstream cannot tell
 the difference until it is already reasoning from a gap.
 Each dispatch is a narrow seam — declared inputs in, one bounded output back,
-complexity inside the agent (`skills/principle-deep-agents-narrow-seams/SKILL.md`).
+complexity inside the agent (`principle-deep-agents-narrow-seams`).
 
 ## Gate Handling
 
@@ -330,7 +330,7 @@ When the `design-author` returns a draft:
 8. On an **unparseable verdict or a reviewer crash** → re-dispatch the
    review once with the error. On second failure, halt loudly. Never
    advance on a missing verdict — fail closed. A missing verdict counts as
-   not passed (`skills/principle-fail-closed/SKILL.md`). The halt message
+   not passed (`principle-fail-closed`). The halt message
    names the
    absolute worktree-rooted `docs/plans/<id>/` path, so the operator can
    open `6-design.md` and the `design-review-<n>.md` records directly. After
@@ -524,7 +524,7 @@ When the aggregate gate passes:
 - Artifacts in `docs/plans/<id>/` are the single durable record of
   pipeline state. Each artifact's YAML frontmatter describes its phase
   and revision metadata. Write phase findings to disk before advancing.
-  The file, not conversation memory, is the interface (`skills/principle-files-are-the-contract/SKILL.md`).
+  The file, not conversation memory, is the interface (`principle-files-are-the-contract`).
 - TodoWrite is the orchestrator's live coordination ledger. It is
   session-scoped and is rebuilt on entry to any `/team-*` command by
   scanning artifacts.

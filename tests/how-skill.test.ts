@@ -96,9 +96,6 @@ describe("how skill: section contract", () => {
     expect(rules).toBeGreaterThan(critique);
   });
 
-  test("references the progress-tracking convention", () => {
-    expect(body()).toContain("skills/principle-progress-tracking/SKILL.md");
-  });
 });
 
 describe("how skill: dispatch contract", () => {
@@ -108,7 +105,7 @@ describe("how skill: dispatch contract", () => {
 
   test("falls back inline when dispatch is unavailable (optimization, never dependency)", () => {
     expect(body()).toContain(
-      "skills/principle-optimization-never-dependency/SKILL.md",
+      "principle-optimization-never-dependency",
     );
   });
 
@@ -122,7 +119,7 @@ describe("how skill: dispatch contract", () => {
 describe("how skill: critique-mode vocabulary", () => {
   test("critics are fresh-context per generator-evaluator", () => {
     const s = sliceBetween("## Critique mode", "\n## ");
-    expect(s).toContain("skills/principle-generator-evaluator/SKILL.md");
+    expect(s).toContain("principle-generator-evaluator");
   });
 
   test("findings are rated structural / concern / observation", () => {

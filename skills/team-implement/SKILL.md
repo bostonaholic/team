@@ -17,7 +17,7 @@ Run the IMPLEMENT phase. Three internal sub-steps:
 ## Input
 
 `$ARGUMENTS` is the artifact directory: `docs/plans/<id>/`. If empty, the
-discovery block below resolves it.
+discovery command below resolves it.
 
 The agents read:
 
@@ -29,46 +29,18 @@ The agents read:
   steps require
 - `$ARGUMENTS/1-task.md` — intent (for the implementer when in standalone mode)
 
-Resolve the artifact directory by running this self-contained block (one bash
-call — agent threads reset cwd between calls):
+Resolve `<team-skill-dir>` to the absolute directory containing
+`skills/team/SKILL.md`. From the repository root, run:
 
 ```sh
-# Three-tier artifact-directory discovery (archetype A).
-# ID_RE + PHASE_FILES canonical from hooks/session-start-recover.mjs.
-# PHASE_FILES recency mirrors findActiveTopic() in session-start-recover.mjs.
-# NOTE: this block is duplicated across 8 skills by design (see docs/architecture.md); future: shared discover-topic.sh.
-ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
-PHASE_FILES="1-task 2-questions 5-research 6-design 7-structure 8-plan"
-PRED="8-plan.md"            # predecessor artifact this skill consumes
-# Tier 1 — explicit: $ARGUMENTS names an existing dir → use verbatim.
-if [ -n "$ARGUMENTS" ] && [ -d "$ARGUMENTS" ]; then
-  echo "$ARGUMENTS"; exit 0
-fi
-# Tier 2 — discover: newest ID_RE dir under docs/plans/ that holds PRED.
-best=""; best_mtime=-1
-# Assumes cwd is the repo/worktree root (where docs/plans/ lives).
-for dir in docs/plans/*/; do
-  name="$(basename "$dir")"
-  printf '%s' "$name" | grep -qE "$ID_RE" || continue   # ID_RE filter
-  [ -f "$dir$PRED" ] || continue                        # predecessor filter
-  m=-1
-  for p in $PHASE_FILES; do
-    f="$dir$p.md"
-    [ -f "$f" ] || continue                             # skip racing/absent
-    s="$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f" 2>/dev/null)" || continue
-    [ "${s:-0}" -gt "$m" ] && m="$s"                    # max-mtime over PHASE_FILES
-  done
-  [ "$m" -gt "$best_mtime" ] && { best_mtime="$m"; best="$dir"; }
-done
-[ -n "$best" ] && { echo "$best"; exit 0; }
-# Tier 3 — none found: print nothing → fall to AskUserQuestion (prose below).
+"<team-skill-dir>/discover-topic.sh" "${ARGUMENTS:-}" "8-plan.md"
 ```
 
-- **If the block printed a path**, use it as `$ARGUMENTS` for the rest of this
+- **If the command printed a path**, use it as `$ARGUMENTS` for the rest of this
   skill (tier 1 explicit arg, or tier 2 discovery). When the path came from
   tier 2 (no explicit arg), announce the resolved directory to the user before
   proceeding, so an auto-picked topic is never silent.
-- **If the block printed nothing** (tier 3 — no directory under `docs/plans/`
+- **If the command printed nothing** (tier 3 — no directory under `docs/plans/`
   holds `8-plan.md`), do not hard-error. Fire
   `AskUserQuestion` with a `Setup` header and labeled options:
   - **Run the producer** — run `/team-plan docs/plans/<id>/` to produce the
@@ -90,7 +62,7 @@ If `$ARGUMENTS/8-plan.md` does not exist in it, run `test-architect` →
 
 Coordinate progress through TodoWrite. Seed:
 `Test-architect → Mechanical gate → Implementer (per slice) → Review round 1`.
-See `skills/principle-progress-tracking/SKILL.md` for the per-step tracking convention
+See `principle-progress-tracking` for the per-step tracking convention
 agents follow within each phase.
 
 ## Worktree Check
@@ -226,8 +198,6 @@ explicit slice breakdown. Use it when:
 - The change is small enough that QRSPI artifacts would be overhead
 
 For larger features, prefer `/team` (full pipeline) for the alignment gates.
-
-## Completion
 
 How the phase ends depends on how it was entered:
 

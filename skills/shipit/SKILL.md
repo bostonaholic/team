@@ -7,9 +7,6 @@ argument-hint: "[<pr-number>]"
 
 # shipit — land a reviewed PR
 
-> Follow `skills/principle-progress-tracking/SKILL.md`: this procedure has more than two steps —
-> seed one todo item per step below before starting and mark each complete as you go.
-
 `shipit` lands a pull request that already passed review. It pushes any unpushed
 local commits, waits for CI to go green, and squash-merges. The PR title then
 lands as the commit subject on the base branch. If a project puts a version in
@@ -30,7 +27,7 @@ frontmatter flag, and neither of them a question put to the user mid-run:
 2. **CI green** (step 3), which gates the merge mechanically — a red or timed
    out check stops the land before `gh pr merge` ever runs.
 
-The first guard is `skills/principle-explicit-intent/SKILL.md` applied to
+The first guard is `principle-explicit-intent` applied to
 the merge: an irreversible act fires on stated intent, never on state, and
 granted authorization is spent, not re-asked.
 
@@ -119,7 +116,7 @@ every job it has created so far has passed.
 
 **3a — Settle.** Let the push's workflows register before watching. This is the
 wait shorter than a turn's overhead that
-`skills/principle-non-blocking-waits/SKILL.md` names as its exception, so it
+`principle-non-blocking-waits` names as its exception, so it
 runs inline rather than backgrounded:
 
 ```bash
@@ -152,7 +149,7 @@ ceiling (600 s in Claude Code) with exit 143, so on any repo whose CI runs
 longer than ten minutes the stated 30-minute cap never applies and the watch
 is lost rather than timed out. Backgrounded, the harness reports the call when
 it exits and `status` is the real verdict. See
-`skills/principle-non-blocking-waits/SKILL.md`.
+`principle-non-blocking-waits`.
 
 Map `status` first — it is the fast path out, never the way in:
 
@@ -216,8 +213,6 @@ unless the operator asks otherwise.
 
 - On a **branch-protection rejection**, surface GitHub's rejection message
   **verbatim** to the user. **never force** the merge.
-
-## Completion
 
 Report the merge result. If it stopped short, report the reason: a failing
 check, a timeout, or branch protection. If the project publishes a release on

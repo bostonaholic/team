@@ -21,11 +21,11 @@ the enhancement optional.
   solely because the enhancement was unavailable.
 - Never soften a verdict because an optional pass did not run. Record the
   skip and its reason where the report format puts it
-  (`skills/principle-skip-loudly/SKILL.md`).
+  (`principle-skip-loudly`).
 - The enhancement never blocks, retry-loops, or prompts the user; its
   failure is a line in the report, not a stop.
 - A malformed enhancement result is discarded and the fallback used —
   never patched up and trusted.
 - Classify first: this rule is for enhancements. A step that carries a
   guarantee fails closed instead — see
-  `skills/principle-fail-closed/SKILL.md`.
+  `principle-fail-closed`.

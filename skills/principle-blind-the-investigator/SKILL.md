@@ -30,5 +30,5 @@ walk.
 - Treat any leakage as a critical defect: stop and report.
 - The review-gate instance of this — fresh context, no shared history —
   and the one-claim-one-fresh-judge rule are owned by
-  `skills/principle-generator-evaluator/SKILL.md`; this is the same move
+  `principle-generator-evaluator`; this is the same move
   applied upstream of review.

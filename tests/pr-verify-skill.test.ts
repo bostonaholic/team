@@ -110,9 +110,6 @@ describe("pr-verify skill: section contract", () => {
     expect(step5).toBeGreaterThan(step4);
   });
 
-  test("loads the principle-progress-tracking convention", () => {
-    expect(body()).toContain("skills/principle-progress-tracking/SKILL.md");
-  });
 });
 
 describe("pr-verify skill: test-plan extraction", () => {

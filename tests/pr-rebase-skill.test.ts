@@ -86,10 +86,6 @@ describe("pr-rebase skill: frontmatter and invocation surface", () => {
     expect(/^argument-hint:.*--yes/m.test(f)).toBe(false);
   });
 
-  test("references the principle-progress-tracking convention", () => {
-    expect(body()).toContain("skills/principle-progress-tracking/SKILL.md");
-  });
-
 });
 
 describe("pr-rebase skill: base-branch discovery is a chain, never a bare main", () => {

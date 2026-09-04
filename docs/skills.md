@@ -66,7 +66,7 @@ and explain how a subsystem works.
 None is a pipeline phase.
 
 For *why* the system is shaped this way (the three-tier argument-discovery
-design, the discovery-duplication rationale, and the skill load limits),
+design, the shared helper contract, and the skill load limits),
 see [architecture.md §6](architecture.md#6-skills). The architecture page
 explains the design. The full per-skill enumeration now lives here.
 
@@ -81,10 +81,10 @@ template.
 The **downstream phase skills**, `team-question` through `team-pr`, plus
 the optional `eng-design-doc-review`, share a consistent body template. It
 holds an `## Input` section that describes `$ARGUMENTS` and an
-`## Execution` section of numbered steps. It ends with a `## Completion`
-section that lists what to report, plus the `Next: run /team-…` handoff to
-the next phase. The `team` orchestrator does not follow that template. It
-walks a Phase Loop instead (see its entry below).
+`## Execution` section of numbered steps. The final operational section
+states what to report and the `Next: run /team-…` handoff. The `team`
+orchestrator does not follow that template. It walks a Phase Loop instead
+(see its entry below).
 
 **Shared argument resolution (three-tier discovery).** Eight of these
 skills consume an artifact directory rather than a free-form description:
@@ -96,10 +96,12 @@ through the same three-tier chain:
 1. **Tier 1: explicit `$ARGUMENTS`.** If you pass a directory path, it is
    used directly.
 2. **Tier 2: newest-mtime convention discovery.** With no argument, the
-   skill scans `docs/plans/` for the most recently modified topic directory
-   that holds the predecessor artifact it needs.
-3. **Tier 3: `AskUserQuestion`.** If discovery is ambiguous, the skill
-   asks you which topic to operate on.
+   shared `skills/team/discover-topic.sh` helper scans `docs/plans/` for the
+   most recently modified topic directory that holds the predecessor artifact
+   it needs. `team-structure` also requires a passing design review.
+3. **Tier 3: fallback.** Empty helper output activates the consumer's existing
+   fallback: seven skills use `AskUserQuestion`; `team-pr` checks the current
+   branch's standalone work instead.
 
 The entries below say "resolves `$ARGUMENTS` through the shared three-tier
 chain above" instead of repeating these tiers. The two skills that take a
@@ -127,7 +129,7 @@ argument shape.
   feeding `cross-model-notes.md` and `cross-model-raw.md`. Its
   body is organized as `## Input`,
   `## Setup`, `## The Phase Loop`, `## Gate Handling`, and `## Rules`,
-  not the downstream Input / Execution / Completion template.
+  not the downstream Input / Execution template.
 
 ### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
 
@@ -232,7 +234,7 @@ argument shape.
   capture or upload failure degrades to a visible note with local paths,
   and the PR always opens. Leaves the worktree in place after opening the
   PR so you can iterate. Teardown waits until the PR merges or you ask.
-  Completion suggests arming `/pr-watch-as-author` once the PR is ready
+  The final report suggests arming `/pr-watch-as-author` once the PR is ready
   for review.
 - **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
   the missing upstream artifacts inline rather than hard-erroring.
@@ -1141,14 +1143,7 @@ lists more than three carries one recorded reason naming that count (see
 - **Loaded by:** every multi-step agent (questioner, design-author,
   structure-planner, planner, test-architect, implementer, code-reviewer,
   security-reviewer, ux-reviewer, technical-writer, researcher, verifier);
-  consulted by citation from `team`, `team-question`, `team-research`,
-  `team-design`, `team-structure`, `team-plan`, `team-worktree`,
-  `team-implement`, `team-pr`, `team-fix`, `eng-design-doc-review`,
-  `reviewing-designs`, `shipit`, `groom-backlog`, `pr-cleanup`,
-  `pr-open-comments`,
-  `pr-rebase`, `pr-verify`, `pr-watch-as-author`, `pr-watch-as-reviewer`,
-  `reflect`, `systematic-debugging`, `test-driven-bug-fix`,
-  `test-first-development`, `why`, and `how`.
+  consulted by citation from `team`, `team-implement`, and `team-fix`.
 - **Key behaviors:** A convention, not a gate: it produces no artifact and
   blocks nothing. When a procedure has two or more steps, seed one todo
   item per step before starting and mark each complete as you go. A
@@ -1802,7 +1797,7 @@ entry-point section above rather than repeating them here.
 | `running-quality-checks` | verifier. reflect (after the writes) | Implement (verify), and Any (reflect) |
 | `verifying-ux` | ux-reviewer | Implement (verify) |
 | `systematic-debugging` | implementer (inline Load on non-obvious failures). Other agents when debugging (advisory) | Implement, and Any (debugging) |
-| `principle-progress-tracking` | every multi-step agent; cited by `team`, `team-question`, `team-research`, `team-design`, `team-structure`, `team-plan`, `team-worktree`, `team-implement`, `team-pr`, `team-fix`, `eng-design-doc-review`, `reviewing-designs`, `shipit`, `groom-backlog`, `pr-cleanup`, `pr-open-comments`, `pr-rebase`, `pr-verify`, `pr-watch-as-author`, `pr-watch-as-reviewer`, `reflect`, `systematic-debugging`, `test-driven-bug-fix`, `test-first-development`, `why`, `how` | Any (multi-step procedure) |
+| `principle-progress-tracking` | every multi-step agent; cited by `team`, `team-implement`, `team-fix` | Any (multi-step procedure) |
 | `nested-agents` | researcher, implementer, code-reviewer, security-reviewer | Research, Implement (scouts + skeptic passes) |
 | `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
 | `technical-design-doc` | planner | Plan |

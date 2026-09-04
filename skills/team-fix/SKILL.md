@@ -10,7 +10,7 @@ argument-hint: "<ticket id, issue URL, or bug description>"
 Run the compressed bug-fix pipeline. Goes straight to test-driven fix
 discipline without the full QRSPI ceremony.
 
-Invocation is guarded per `skills/principle-explicit-intent/SKILL.md`: the
+Invocation is guarded per `principle-explicit-intent`: the
 pipeline fires only on stated pipeline intent — a plain "fix this bug" asks
 for an inline fix, not this pipeline.
 
@@ -81,7 +81,7 @@ No Question. No Research. No Design. No Structure. No Plan. No approval gate.
 6. **Seed the TodoWrite ledger** with the bug-fix phases:
    `Worktree → Reproduce → Red (failing test) → Green (minimal fix) → Verify → Ship`.
    Mark `Worktree` as `in_progress`.
-   See `skills/principle-progress-tracking/SKILL.md` for the per-step tracking convention agents follow within each phase.
+   See `principle-progress-tracking` for the per-step tracking convention agents follow within each phase.
 
 ## Worktree
 
@@ -165,7 +165,7 @@ When the failure is non-obvious, call the Skill tool with
 `systematic-debugging` and drill its
 **Root Cause Analysis (5 Whys)** causal chain to the root before proposing a
 fix. The fix lands at the root, never at the symptom, per
-`skills/principle-fix-root-causes/SKILL.md`.
+`principle-fix-root-causes`.
 
 When the buggy behavior looks deliberate — a guard, a threshold, a
 workaround, anything an author plausibly wrote on purpose — call the

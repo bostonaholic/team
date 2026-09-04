@@ -48,7 +48,7 @@ who acts on it: Blocking and Major are fixed by the loop with no human in
 sight, and everything below reaches the human at PR review, which is the
 checkpoint this pipeline already designates. Minor is not a wastebasket. It
 is the human's queue.
-The human decides what to build and what to ship; the middle runs autonomously (`skills/principle-human-owns-the-ends/SKILL.md`).
+The human decides what to build and what to ship; the middle runs autonomously (`principle-human-owns-the-ends`).
 
 Two consequences worth stating, because both have been read the other way:
 

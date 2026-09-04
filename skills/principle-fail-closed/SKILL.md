@@ -26,4 +26,4 @@ which is exactly when it was not needed.
   safer reading (watch the draft rather than publish it).
 - Fail closed governs guarantees. An enhancement that cannot run degrades
   loudly instead — see
-  `skills/principle-optimization-never-dependency/SKILL.md`.
+  `principle-optimization-never-dependency`.

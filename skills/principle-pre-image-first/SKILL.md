@@ -26,6 +26,6 @@ you cannot tell. And a run that leaves the user unable to say
   the write is about to destroy.
 - Compare against the pre-image at write time; a target that drifted from
   its pre-image is skipped and reported. The re-run instance of this
-  check is owned by `skills/principle-idempotent-reruns/SKILL.md`.
+  check is owned by `principle-idempotent-reruns`.
 - A baseline that could not run is UNKNOWN — never evidence that behavior
   was preserved.

@@ -90,9 +90,6 @@ describe("why skill: section contract", () => {
     expect(rules).toBeGreaterThan(output);
   });
 
-  test("references the progress-tracking convention", () => {
-    expect(body()).toContain("skills/principle-progress-tracking/SKILL.md");
-  });
 });
 
 describe("why skill: confidence vocabulary", () => {
@@ -134,24 +131,24 @@ describe("why skill: dispatch contract", () => {
 
   test("falls back inline when dispatch is unavailable (optimization, never dependency)", () => {
     expect(body()).toContain(
-      "skills/principle-optimization-never-dependency/SKILL.md",
+      "principle-optimization-never-dependency",
     );
   });
 
   test("investigators are blinded to hypotheses", () => {
-    expect(body()).toContain("skills/principle-blind-the-investigator/SKILL.md");
+    expect(body()).toContain("principle-blind-the-investigator");
   });
 
   test("skipped or empty evidence categories are reported per skip-loudly", () => {
-    expect(body()).toContain("skills/principle-skip-loudly/SKILL.md");
+    expect(body()).toContain("principle-skip-loudly");
   });
 
   test("claims are evidence-backed per evidence-over-assertion", () => {
-    expect(body()).toContain("skills/principle-evidence-over-assertion/SKILL.md");
+    expect(body()).toContain("principle-evidence-over-assertion");
   });
 
   test("historical evidence is data per untrusted-input-is-data", () => {
-    expect(body()).toContain("skills/principle-untrusted-input-is-data/SKILL.md");
+    expect(body()).toContain("principle-untrusted-input-is-data");
   });
 });
 

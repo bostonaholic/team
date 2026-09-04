@@ -58,7 +58,7 @@ resolved.
 ## Resolve open questions autonomously
 
 You never pause for user input. Resolve each open design choice yourself
-per `skills/principle-record-assumptions/SKILL.md`: record it in
+per `principle-record-assumptions`: record it in
 `## Decisions made` marked "Assumption — chosen without user review", and
 park low-stakes items in `## Open questions (deferred)`.
 
@@ -78,7 +78,19 @@ only the component being changed>
 
 ## Desired end state
 <2-4 paragraphs describing how it will work after this change, with the
-same level of file-level specificity>
+same level of file-level specificity.
+
+Include a bulleted list of boundary conditions, error paths, and unusual
+inputs the design must handle. Each item names the scenario AND the chosen
+behavior. Walk these categories explicitly so none gets skipped:
+- **Boundary values:** empty, zero, one, max-size, off-by-one.
+- **Invalid inputs:** malformed payloads, wrong types, missing fields.
+- **Failure paths:** downstream errors, timeouts, partial writes, retries.
+- **Concurrency:** simultaneous requests, idempotency, races.
+- **Authorization:** unauthenticated, unauthorized, expired credentials.
+- **Resource limits:** rate exhaustion, quota, memory pressure.
+Edge cases that are intentionally deferred belong in `## Out of scope`,
+so structure and tests do not silently expand into them.>
 
 ## Patterns to follow
 <bulleted list of existing patterns the implementation will mirror, with
@@ -99,19 +111,6 @@ self-resolved choice "Assumption — chosen without user review" here.>
 ## Out of scope
 <bulleted list of things this design explicitly does NOT do. Be specific —
 "error handling" is not out of scope, "rate limiting on the public API" is.>
-
-## Edge cases
-<bulleted list of boundary conditions, error paths, and unusual inputs the
-design must handle. Each item names the scenario AND the chosen behavior.
-Walk these categories explicitly so none gets skipped:
-- **Boundary values:** empty, zero, one, max-size, off-by-one.
-- **Invalid inputs:** malformed payloads, wrong types, missing fields.
-- **Failure paths:** downstream errors, timeouts, partial writes, retries.
-- **Concurrency:** simultaneous requests, idempotency, races.
-- **Authorization:** unauthenticated, unauthorized, expired credentials.
-- **Resource limits:** rate exhaustion, quota, memory pressure.
-Edge cases that are intentionally deferred belong in `## Out of scope`,
-not here — so structure and tests do not silently expand into them.>
 
 ## Surfaces
 <Include this section ONLY when the design defines more than one way in:

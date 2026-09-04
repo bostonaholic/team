@@ -37,7 +37,7 @@ host suspends.
 - **Never poll a backgrounded task.** Its completion is reported. A
   `sleep 120; wc -c <output-file>` loop over a task the harness is
   already tracking pays for a notification twice.
-- **Bound it as usual.** The cap in `skills/principle-bounded-loops/SKILL.md`
+- **Bound it as usual.** The cap in `principle-bounded-loops`
   is unchanged by where the wait runs — declare it, and make hitting it
   loud and terminal.
 - **Fall back loudly.** Where a harness has no background execution, say

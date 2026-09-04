@@ -29,8 +29,6 @@ import { frontmatter, read } from "./helpers/text";
 const REPO_ROOT = process.cwd();
 // groom-backlog is a RUNTIME skill — under skills/ (distributed), not .claude/.
 const SKILL = join(REPO_ROOT, "skills", "groom-backlog", "SKILL.md");
-// The canonical standalone-utility principle-progress-tracking pointer lives here.
-const SHIPIT_SKILL = join(REPO_ROOT, "skills", "shipit", "SKILL.md");
 // The board doc is the stated source of truth for the `Ready` WIP limit.
 const PROJECT_TRACKING = join(REPO_ROOT, "docs", "project-tracking.md");
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
@@ -54,19 +52,6 @@ function prose(): string {
 // Flatten newlines so multi-line prose can be matched in one regex.
 function flat(text: string): string {
   return text.replace(/\n/g, " ");
-}
-
-// The two contiguous pointer lines from skills/shipit/SKILL.md, derived rather
-// than hardcoded so drift in either file fails loudly. Missing file or missing
-// pointer → "" so the containment assertion fails, never throws.
-function shipitPointer(): string {
-  if (!existsSync(SHIPIT_SKILL)) return "";
-  const lines = read(SHIPIT_SKILL).split("\n");
-  const start = lines.findIndex((line) =>
-    line.startsWith("> Follow `skills/principle-progress-tracking/SKILL.md`"),
-  );
-  if (start < 0 || start + 1 >= lines.length) return "";
-  return `${lines[start]}\n${lines[start + 1]}`;
 }
 
 // Byte offsets [start, end) of a `## ` section, so one section's position can
@@ -153,15 +138,6 @@ describe("groom-backlog skill: frontmatter", () => {
     // Guard: an empty frontmatter must fail, not vacuously pass the absence check.
     expect(f.length).toBeGreaterThan(0);
     expect(/^disable-model-invocation:/m.test(f)).toBe(false);
-  });
-});
-
-describe("groom-backlog skill: pointer copied from shipit", () => {
-  test("carries the standalone-utility principle-progress-tracking pointer byte-for-byte", () => {
-    const pointer = shipitPointer();
-    // Guard: a pointer we failed to extract must fail, not vacuously pass.
-    expect(pointer.length).toBeGreaterThan(0);
-    expect(body()).toContain(pointer);
   });
 });
 

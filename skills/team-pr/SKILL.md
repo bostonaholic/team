@@ -19,64 +19,31 @@ Run the PR phase. Two modes:
 ## Input
 
 `$ARGUMENTS` is the artifact directory: `docs/plans/<id>/`. If empty, the
-discovery block below resolves it for the **resume** path (discovery only
+discovery command below resolves it for the **resume** path (discovery only
 augments resume — the standalone path is unchanged).
 
 The PR description is grounded in `$ARGUMENTS/6-design.md`. The ticket
 identifier (if any) is read from `$ARGUMENTS/1-task.md`'s frontmatter.
 
-Resolve the artifact directory by running this self-contained block (one bash
-call — agent threads reset cwd between calls):
+Resolve `<team-skill-dir>` to the absolute directory containing
+`skills/team/SKILL.md`. From the repository root, run:
 
 ```sh
-# Three-tier artifact-directory discovery (archetype A).
-# ID_RE + PHASE_FILES canonical from hooks/session-start-recover.mjs.
-# PHASE_FILES recency mirrors findActiveTopic() in session-start-recover.mjs.
-# NOTE: this block is duplicated across 8 skills by design (see docs/architecture.md); future: shared discover-topic.sh.
-ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
-PHASE_FILES="1-task 2-questions 5-research 6-design 7-structure 8-plan"
-# 6-design.md is a lenient discovery proxy: the canonical PR-phase predecessor is
-# "aggregate gate passed" (no single artifact), so we key on 6-design.md to mean
-# "topic progressed far enough to have design context". team-pr also runs standalone.
-PRED="6-design.md"            # predecessor artifact this skill consumes
-# Tier 1 — explicit: $ARGUMENTS names an existing dir → use verbatim.
-if [ -n "$ARGUMENTS" ] && [ -d "$ARGUMENTS" ]; then
-  echo "$ARGUMENTS"; exit 0
-fi
-# Tier 2 — discover: newest ID_RE dir under docs/plans/ that holds PRED.
-best=""; best_mtime=-1
-# Assumes cwd is the repo/worktree root (where docs/plans/ lives).
-for dir in docs/plans/*/; do
-  name="$(basename "$dir")"
-  printf '%s' "$name" | grep -qE "$ID_RE" || continue   # ID_RE filter
-  [ -f "$dir$PRED" ] || continue                        # predecessor filter
-  m=-1
-  for p in $PHASE_FILES; do
-    f="$dir$p.md"
-    [ -f "$f" ] || continue                             # skip racing/absent
-    s="$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f" 2>/dev/null)" || continue
-    [ "${s:-0}" -gt "$m" ] && m="$s"                    # max-mtime over PHASE_FILES
-  done
-  [ "$m" -gt "$best_mtime" ] && { best_mtime="$m"; best="$dir"; }
-done
-[ -n "$best" ] && { echo "$best"; exit 0; }
-# Tier 3 — none found: print nothing → fall to AskUserQuestion (prose below).
+"<team-skill-dir>/discover-topic.sh" "${ARGUMENTS:-}" "6-design.md"
 ```
 
-- **If the block printed a path**, use it as `$ARGUMENTS` for the resume
+- **If the command printed a path**, use it as `$ARGUMENTS` for the resume
   path. That is tier 1 explicit arg, or tier 2 discovery of a directory
   holding `6-design.md`. When the path came from tier 2, with no explicit
   arg, announce the resolved directory to the user first, so an auto-picked
   topic is never silent.
-- **If the block printed nothing** (tier 3 — no matching directory), do not
+- **If the command printed nothing** (tier 3 — no matching directory), do not
   hard-error. The working tree can still have commits to ship. Fall through
   to the **Standalone path** in `## Execution`. It detects the base branch
   (archetype B) and stops with "Nothing to ship." only when there is
   nothing ahead of the base.
 
 ## Execution
-
-> Follow `skills/principle-progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
 
 1. **Detect mode and inventory worktrees with commits.**
    - Read `$ARGUMENTS/4-repos.md` if present. When present, you are in
@@ -385,7 +352,7 @@ the same URLs — never re-upload per repo.
 **Failure posture:** every branch ends with an open PR, a visible note, and
 local paths. Upload problems never block the PR, retry-loop, or prompt the
 user — the upload is an enhancement per
-`skills/principle-optimization-never-dependency/SKILL.md`, and its absence
+`principle-optimization-never-dependency`, and its absence
 costs nothing but the note.
 
 ## Changelog Update
@@ -418,8 +385,6 @@ When creating the commit, call the Skill tool with `git-commit` and apply it:
 The implementer already committed each slice atomically during Implement.
 The PR may contain multiple commits (one per slice). The ship commit is
 only used if there are uncommitted final changes (e.g., changelog).
-
-## Completion
 
 Report the outcome (draft PR URL and commit hash). When the screenshot
 upload was skipped for lack of an authenticated session, the report also

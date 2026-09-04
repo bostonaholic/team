@@ -12,8 +12,6 @@ leaving the disease.
 
 ## 4-Phase Investigation
 
-> Follow `skills/principle-progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
-
 ### Phase 1: OBSERVE
 
 Gather evidence before forming any theories. The goal is to build a factual
@@ -88,7 +86,7 @@ Identify the root cause and design the fix.
   is null." The root cause is "this function is called before initialization
   completes." Fix the root cause. To drill from the proximate cause down to the
   root, use the [Root Cause Analysis (5 Whys)](#root-cause-analysis-5-whys)
-  technique below. The canon: `skills/principle-fix-root-causes/SKILL.md`.
+  technique below. The canon: `principle-fix-root-causes`.
 - **Verify the fix addresses the root cause.** The original reproduction steps
   must succeed after the fix. No other behavior should change.
 - **Check for related instances.** If the root cause is a pattern (e.g.,

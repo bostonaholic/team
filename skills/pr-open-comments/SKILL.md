@@ -7,9 +7,6 @@ argument-hint: "[<pr-number-or-url>]"
 
 # pr-open-comments — fetch, verify, recommend
 
-> Follow `skills/principle-progress-tracking/SKILL.md`: this procedure has more than two steps —
-> seed one todo item per step below before starting and mark each complete as you go.
-
 Pull every **unresolved** review thread on a pull request. Hand the user a
 decision list: for each comment, show the request, the options, and one
 recommended option with a one-line rationale.
@@ -48,7 +45,7 @@ weaken a rule below.
    claim exceeds 90% only when verification produced a named reproduction
    test that fails before the fix and passes after the fix is applied —
    run the passing check before any push.
-   The general rule: `skills/principle-evidence-over-assertion/SKILL.md` —
+   The general rule: `principle-evidence-over-assertion` —
    no verdict without cited evidence.
 2. **The auto-apply bar is 90%.** In default mode, an item that rates
    above 90% confidence, hits no carve-out, and stays inside the anchored
@@ -73,7 +70,7 @@ weaken a rule below.
    no edit to any other file, no reply, no resolution. After you
    render the punch list, end the turn and wait for the user to pick
    actions. Each chosen action runs in a separate, follow-up turn.
-   Rules 2–4 are `skills/principle-plan-present-wait/SKILL.md` applied per
+   Rules 2–4 are `principle-plan-present-wait` applied per
    item: above a verified bar and inside every hard rule an item may skip
    the wait; everything else is presented, never auto-applied.
 
@@ -409,8 +406,6 @@ mutation($threadId: ID!) {
 To capture the ids needed above, add `id` (the thread node id) and
 `comments(first: 1) { nodes { databaseId } }` to the step 2 query.
 
-## Success Criteria
-
 - Every `reviewThreads` node with `isResolved == false` appears in the
   output exactly once — under `Auto-applied` or `Needs your decision` —
   and the punch-list blocks are globally numbered.
@@ -445,8 +440,6 @@ To capture the ids needed above, add `id` (the thread node id) and
   edits, replies, or thread resolutions occur in that turn for items that
   did not clear the auto-apply bar.
 
-## Pitfalls
-
 - Do not rely on `gh pr view --json reviews` for resolution state —
   reviews aggregate comments but do not expose thread resolution.
 - Do not treat `isOutdated` as resolved. An outdated thread can still be
@@ -464,8 +457,6 @@ To capture the ids needed above, add `id` (the thread node id) and
 
 - If the PR holds both the user's own comments and reviewer comments,
   confirm if self-comments count as open items to address.
-
-## Completion
 
 List the `Auto-applied` items first — each with its confidence and
 landing commit SHA. Then end the turn with a short hand-off prompt for

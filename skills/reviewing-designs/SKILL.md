@@ -49,8 +49,6 @@ When you write your findings, also call the Skill tool with
 
 ### Review process
 
-> Follow `skills/principle-progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
-
 1. **Locate the document.** Read `$ARGUMENTS/6-design.md`. Also read the
    sibling artifacts (`1-task.md`, `2-questions.md`, `5-research.md`, `4-repos.md`)
    when present — they ground the design in the work that produced it.

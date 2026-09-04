@@ -23,18 +23,18 @@ finalize.
 - A reviewer needing clarification flags it as an open question. It never asks
   the implementer.
 
-The cross-gate canon lives at `skills/principle-generator-evaluator/SKILL.md`;
+The cross-gate canon lives at `principle-generator-evaluator`;
 this skill owns the code-review application.
 
 ## Veto Without Authorship
 
 Block the line, change nothing
-(`skills/principle-generator-evaluator/SKILL.md`).
+(`principle-generator-evaluator`).
 
 - **You hold no write tool.** Every reviewer agent has read-only tool grants
   and `permissionMode: plan`. Report the defect. Never fix it.
   The constraint is the withheld tool, not a request for restraint
-  (`skills/principle-least-privilege/SKILL.md`).
+  (`principle-least-privilege`).
 - **The veto holds until the finding is resolved.** Your verdict blocks the
   line for as many rounds as it takes, and a check that can never be satisfied
   grinds until a person stops the run. Report the finding you actually have —
@@ -108,7 +108,7 @@ that pass did not run.>
   sections record the two optional passes, the skeptic pass and then the
   cross-model pass, and a pass that did not run says `Not run: <reason>.`
   in its section. This is where "skip loudly" lands in the report.
-  What did not happen is reported as visibly as what did (`skills/principle-skip-loudly/SKILL.md`).
+  What did not happen is reported as visibly as what did (`principle-skip-loudly`).
 - **A receiver reports a deviation. It never repairs one.** When a report
   that reaches you drops a heading, adds one this template does not list, or
   reorders them, pass it on as it arrived and name the deviation on its own

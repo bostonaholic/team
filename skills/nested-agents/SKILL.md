@@ -17,7 +17,7 @@ differently in the user's version. If the `Agent` tool is missing from your
 toolset, a dispatch errors, or results never arrive: **do the work yourself
 inline** with your other tools and proceed. Never report failure solely
 because nesting was unavailable — it is an optimization, never a
-dependency (`skills/principle-optimization-never-dependency/SKILL.md`).
+dependency (`principle-optimization-never-dependency`).
 
 ## Version gate — confirm before the first nested dispatch
 
@@ -43,7 +43,7 @@ run the check all count as `unsupported`. On any non-zero result — i.e.
 whenever the version is less than 2.1.172 or undeterminable —
 **do not spawn helpers. Do the work yourself inline.** Run the gate once. A
 `supported` result holds for the rest of your turn.
-Unknown counts as unsupported (`skills/principle-fail-closed/SKILL.md`).
+Unknown counts as unsupported (`principle-fail-closed`).
 
 ## When to spawn vs. do it yourself (context economy)
 
@@ -81,7 +81,7 @@ Effort follows the same rule: `low` for lookups, `medium` for tracing, and
 You are at depth 2 of 5. Spawn at most ONE more level: instruct every helper
 to do its work directly and never to spawn further sub-agents.
 Depth stays shallow because seams stay narrow
-(`skills/principle-deep-agents-narrow-seams/SKILL.md`).
+(`principle-deep-agents-narrow-seams`).
 
 ## Nested helpers are non-interactive
 
@@ -90,12 +90,12 @@ the user, and a helper that waits for an answer stalls forever. Never
 delegate question-asking downward. If a helper surfaces an ambiguity,
 absorb it and record it in YOUR own artifact's open-questions section
 (or resolve it yourself and record the assumption).
-Resolved and recorded, never asked upward (`skills/principle-record-assumptions/SKILL.md`).
+Resolved and recorded, never asked upward (`principle-record-assumptions`).
 
 ## Verification helpers get neutral claims
 
 When a helper checks your own finding, apply
-`skills/principle-blind-the-investigator/SKILL.md`: a neutral, falsifiable
+`principle-blind-the-investigator`: a neutral, falsifiable
 claim with `file:line` — never your verdict, severity, or reasoning — and
 ask the helper to refute it. The scouts' isolation-extends-downward rule
 below is the same principle.
@@ -121,7 +121,7 @@ optimization, never a dependency.
 
 **A skeptic is deliberately one-shot, never a follow-up — one skeptic per
 claim, always fresh**
-(`skills/principle-generator-evaluator/SKILL.md`). Never send a second
+(`principle-generator-evaluator`). Never send a second
 claim to a live skeptic, even where a follow-up would be cheaper.
 
 ## Per-agent caps

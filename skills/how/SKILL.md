@@ -47,8 +47,6 @@ design") selects Critique; everything else is Explain.
 
 ## Explain mode
 
-> Follow `skills/principle-progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
-
 1. **Assess complexity.** A single module, one utility, or a narrow
    "how does function X work" is **simple**. A subsystem spanning many
    files or services, a cross-cutting feature flow, or a full
@@ -69,7 +67,7 @@ design") selects Critique; everything else is Explain.
 
    If the `Agent` tool or the `Explore` type is unavailable, explore
    every angle yourself inline — the fan-out is an optimization, never a
-   dependency (`skills/principle-optimization-never-dependency/SKILL.md`).
+   dependency (`principle-optimization-never-dependency`).
    Never substitute a full-tool agent silently.
 
 4. **Synthesize.** Merge the explorers' findings into one coherent
@@ -167,7 +165,7 @@ architecture you have not established.
    line-level review belongs to `code-review`, and a rewrite may not be
    suggested without a demonstrated problem. The critics get fresh
    context and no authorship stake — that separation is the point
-   (`skills/principle-generator-evaluator/SKILL.md`). If dispatch is
+   (`principle-generator-evaluator`). If dispatch is
    unavailable, run the three lenses yourself sequentially and say so.
 
 2. **Judge as the lead.** You are a pragmatic lead, not an aggregator.

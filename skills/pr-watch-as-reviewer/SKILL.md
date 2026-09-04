@@ -8,10 +8,6 @@ disable-model-invocation: true
 
 # pr-watch-as-reviewer — reviewer-side watch-and-approve loop
 
-> Follow `skills/principle-progress-tracking/SKILL.md`: when this procedure has two or
-> more steps, seed one todo item per step before starting and mark each
-> complete as you go.
-
 `pr-watch-as-reviewer` is the reviewer-side mirror of
 `pr-watch-as-author`. You post
 review comments on a PR you are reviewing, then arm the skill. It polls
@@ -75,7 +71,7 @@ disappeared. Silence is not an answer.
 - **The resolve never satisfies the gate it clears.** This is the
   load-bearing invariant, because the skill now closes threads that
   count toward its own approval — the generator–evaluator collapse
-  `skills/principle-generator-evaluator/SKILL.md` names. It holds because
+  `principle-generator-evaluator` names. It holds because
   the approval condition
   reads the **verdict**, not `isResolved` (step 2): a thread the skill
   resolved contributes the verdict that authorized the resolve, which
@@ -476,7 +472,7 @@ The loop is bounded, never infinite:
   ```
 
   Run it with `run_in_background: true`. Per
-  `skills/principle-non-blocking-waits/SKILL.md`, a foreground wait is
+  `principle-non-blocking-waits`, a foreground wait is
   killed at the harness ceiling (600 s in Claude Code) and spends a turn
   per fragment.
 - **Hard cap: 48 cycles** (~24 hours). At the cycle-48 timeout, report
@@ -486,7 +482,7 @@ The loop is bounded, never infinite:
   wait into foreground sleeps sized under that harness's ceiling — the
   cycle count is what must hold.
 
-The cap convention is `skills/principle-bounded-loops/SKILL.md`: declare the
+The cap convention is `principle-bounded-loops`: declare the
 bound with the loop; hitting it is a loud, terminal, reported outcome.
 
 ### 4. Poll
@@ -953,7 +949,7 @@ path, there is no loop to resume and none is silently started — stop and
 report the reopened gate under the **confirmation declined** stop, and
 offer to re-arm. Neither outcome consumes a confirmation round, because
 the cap counts confirmations asked. The confirm-then-re-poll loop is
-bounded per `skills/principle-bounded-loops/SKILL.md`: at three
+bounded per `principle-bounded-loops`: at three
 consecutive re-polls that each trigger a new confirmation, stop without
 approving and report the churn under the **confirmation declined** stop —
 re-arming remains available.
@@ -1056,8 +1052,6 @@ the values GitHub cannot return — recover them from the transcript:
   arm-time baselines these are re-derivable from GitHub: when no copy
   survives, re-run the step-4 re-review over every settled tracked
   item instead of trusting memory. A verdict is never assumed passed.
-
-## Completion
 
 Report:
 

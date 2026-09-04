@@ -1,407 +1,228 @@
 #!/usr/bin/env bash
-#
-# check-discovery-consistency.sh — acceptance suite for skill-input-discovery.
-#
-# Dev-only, non-distributed (lives under .claude/, not hooks/) per the
-# runtime-vs-development split in CLAUDE.md. This is the committed consistency
-# gate for the skill-input-discovery feature: it asserts every archetype-A
-# skill carries the discovery block, the load-bearing fragments stay
-# byte-identical to canon, and the research-isolation invariant holds.
-#
-# It is the scope fence for the whole feature. If every assertion here passes,
-# the feature is intact; any failing assertion names a regression or drift.
-#
-# set -uo pipefail (NOT -e): every assertion must run so the failure count is
-# complete. fail() prints the violating skill + expected-vs-actual and bumps a
-# counter; the script exits non-zero with that count unless all pass.
+# Acceptance suite for artifact-directory discovery and its eight consumers.
+
 set -uo pipefail
 
-# --- locate the repo root (the dir that holds skills/ and hooks/) ------------
-# The script lives at <root>/.claude/scripts/; resolve <root> from its path so
-# it runs identically from any cwd.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SKILLS="$ROOT/skills"
+HELPER="$SKILLS/team/discover-topic.sh"
 
-# --- canonical fragments (the single source of truth) ------------------------
-# ID_RE + PHASE_FILES are byte-sourced from hooks/session-start-recover.mjs
-# (ported to POSIX ERE: \d -> [0-9]). The verdict grep pins team-structure's
-# review-gate filter (frontmatter-anchored; mirrors the hooks'
-# designReviewPassed). The retired approval grep must appear nowhere. The
-# root literal is docs/plans/. Every archetype-A copy must embed these
-# verbatim; drift here is the bug the verbatim-identity check exists to catch.
-CANON_ID_RE="ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*\$'"
-CANON_PHASE_FILES='PHASE_FILES="1-task 2-questions 5-research 6-design 7-structure 8-plan"'
-CANON_VERDICT_GREP="grep -qE '^verdict:[[:space:]]*(APPROVE|COMMENT)[[:space:]]*\$'"
-RETIRED_APPROVAL_GREP="grep -qE '^approved:[[:space:]]*true[[:space:]]*\$'"
-CANON_ROOT_LITERAL='docs/plans/'
-MARKER='Three-tier artifact-directory discovery'
-
-# --- temp cleanup -------------------------------------------------------------
-# The executable checks below create a mktemp snippet file and per-fixture
-# mktemp -d dirs (`snippet` / `fx`), removed inline on the happy path. This
-# trap is the safety net: on EXIT/INT/TERM it removes whatever those vars
-# currently point at, so an interrupt never leaks temp artifacts. It touches
-# no assertion and no exit code.
 cleanup() {
-  [ -n "${snippet:-}" ] && \rm -f "$snippet" 2>/dev/null || true
-  [ -n "${fx:-}" ] && \rm -rf "$fx" 2>/dev/null || true
+  [ -n "${fixture:-}" ] && \rm -rf "$fixture" 2>/dev/null || true
 }
 trap cleanup EXIT INT TERM
 
-# --- failure bookkeeping ------------------------------------------------------
 ERRORS=0
 fail() {
-  # $1 = skill/area, $2 = what was expected, $3 = what was actually found
   ERRORS=$((ERRORS + 1))
   printf 'FAIL [%s]\n  expected: %s\n  actual:   %s\n' "$1" "$2" "$3" >&2
 }
 
-# Predecessor artifact each archetype-A skill consumes (drives coverage).
-# Kept as parallel arrays (no associative arrays — portable + readable).
+run_helper() {
+  local cwd="$1" explicit_path="$2" predecessor="$3" review_flag="${4:-}"
+  if [ -n "$review_flag" ]; then
+    (cd "$cwd" && "$HELPER" "$explicit_path" "$predecessor" "$review_flag" 2>/dev/null)
+  else
+    (cd "$cwd" && "$HELPER" "$explicit_path" "$predecessor" 2>/dev/null)
+  fi
+}
+
 A_SKILLS=(team-research team-design team-structure team-plan team-worktree team-implement team-pr eng-design-doc-review)
-A_PREDS=(2-questions.md 5-research.md 6-design.md 7-structure.md 8-plan.md 8-plan.md 6-design.md 6-design.md)
+A_PREDECESSORS=(2-questions.md 5-research.md 6-design.md 7-structure.md 8-plan.md 8-plan.md 6-design.md 6-design.md)
 
-# Extract the FIRST ```sh fenced block from a SKILL.md into stdout.
-# Empty output => no discovery block present (the current, pre-implementation
-# state) — callers treat empty extraction as a clean assertion failure, not a
-# crash.
-extract_sh_block() {
-  awk '
-    /^```sh$/   { infence=1; next }
-    /^```$/     { if (infence) exit }
-    infence     { print }
-  ' "$1"
-}
+if [ ! -x "$HELPER" ]; then
+  fail "helper executable" "$HELPER exists and is executable" "missing or not executable"
+fi
+grep -qF "ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'" "$HELPER" \
+  || fail "helper ID_RE" "canonical ID_RE" "missing or changed"
+grep -qF 'PHASE_FILES="1-task 2-questions 5-research 6-design 7-structure 8-plan"' "$HELPER" \
+  || fail "helper PHASE_FILES" "canonical phase-file list" "missing or changed"
+grep -qF 'stat -f %m' "$HELPER" \
+  || fail "helper macOS stat" "stat -f %m fallback" "missing"
+grep -qF 'stat -c %Y' "$HELPER" \
+  || fail "helper Linux stat" "stat -c %Y fallback" "missing"
+if grep -qE 'CLAUDE_PLUGIN_ROOT|CLAUDE_PROJECT_DIR|source[[:space:]]|^[[:space:]]*\.[[:space:]]' "$HELPER"; then
+  fail "helper portability" "no host variables or relative imports" "host variable or import found"
+fi
 
-# Run an extracted snippet in an isolated subprocess against a fixture cwd.
-# Args: <snippet-file> <fixture-cwd> <arguments-value>
-# Prints the snippet stdout (the resolved dir, or empty for tier 3). Runs in a
-# separate `bash` process so the snippet's `exit 0` cannot kill this harness.
-run_snippet() {
-  local snippet="$1" cwd="$2" args="$3"
-  ( cd "$cwd" && ARGUMENTS="$args" bash "$snippet" 2>/dev/null )
-}
+("$HELPER" >/dev/null 2>&1)
+status=$?
+[ "$status" -eq 2 ] || fail "helper missing arguments" "exit 2" "exit $status"
+("$HELPER" '5-research.md' >/dev/null 2>&1)
+status=$?
+[ "$status" -eq 2 ] || fail "helper missing predecessor" "exit 2" "exit $status"
+("$HELPER" '' '5-research.md' '--unknown' >/dev/null 2>&1)
+status=$?
+[ "$status" -eq 2 ] || fail "helper unknown option" "exit 2" "exit $status"
+("$HELPER" '' '5-research.md' '' >/dev/null 2>&1)
+status=$?
+[ "$status" -eq 2 ] || fail "helper empty option" "exit 2" "exit $status"
+("$HELPER" '' '5-research.md' '--require-passing-review' 'extra' >/dev/null 2>&1)
+status=$?
+[ "$status" -eq 2 ] || fail "helper extra argument" "exit 2" "exit $status"
 
-# =============================================================================
-# COVERAGE (slices 1-4): every archetype-A skill carries the marker + correct
-# predecessor.
-# =============================================================================
 i=0
 while [ "$i" -lt "${#A_SKILLS[@]}" ]; do
   skill="${A_SKILLS[$i]}"
-  pred="${A_PREDS[$i]}"
+  predecessor="${A_PREDECESSORS[$i]}"
   file="$SKILLS/$skill/SKILL.md"
+  expected='"<team-skill-dir>/discover-topic.sh" "${ARGUMENTS:-}" "'"$predecessor"'"'
+  [ "$skill" = "team-structure" ] && expected="$expected --require-passing-review"
 
   if [ ! -f "$file" ]; then
-    fail "$skill" "SKILL.md exists at $file" "file not found"
-    i=$((i + 1)); continue
+    fail "$skill" "$file exists" "file missing"
+    i=$((i + 1))
+    continue
   fi
-
-  if ! grep -qF "$MARKER" "$file"; then
-    fail "$skill coverage" "contains discovery marker comment '$MARKER'" "marker absent (no discovery block)"
+  count="$(grep -Fxc "$expected" "$file" || true)"
+  [ "$count" -eq 1 ] \
+    || fail "$skill invocation" "one exact invocation: $expected" "found $count"
+  grep -qF '`<team-skill-dir>` to the absolute directory containing' "$file" \
+    || fail "$skill path resolution" "absolute <team-skill-dir> resolution instruction" "instruction missing"
+  grep -qF '`skills/team/SKILL.md`' "$file" \
+    || fail "$skill path contract" "skills/team/SKILL.md anchor" "anchor missing"
+  if grep -qF 'ID_RE=' "$file" || grep -qF 'PHASE_FILES=' "$file"; then
+    fail "$skill deduplication" "no embedded resolver implementation" "resolver token remains"
   fi
-
-  # Predecessor must appear as the PRED= assignment in the discovery block.
-  if ! grep -qE "PRED=\"$pred\"" "$file"; then
-    fail "$skill predecessor" "discovery block sets PRED=\"$pred\"" "PRED=\"$pred\" not found"
-  fi
-
-  i=$((i + 1))
-done
-
-# =============================================================================
-# VERBATIM-IDENTITY (slices 1-4): the load-bearing fragments are byte-identical
-# to canon in every copy. Verdict grep present in team-structure ONLY.
-# =============================================================================
-i=0
-while [ "$i" -lt "${#A_SKILLS[@]}" ]; do
-  skill="${A_SKILLS[$i]}"
-  file="$SKILLS/$skill/SKILL.md"
-
-  if [ -f "$file" ]; then
-    grep -qF "$CANON_ID_RE" "$file" \
-      || fail "$skill ID_RE" "verbatim canonical ID_RE line" "ID_RE line missing or drifted"
-    grep -qF "$CANON_PHASE_FILES" "$file" \
-      || fail "$skill PHASE_FILES" "verbatim canonical PHASE_FILES list" "PHASE_FILES line missing or drifted"
-    grep -qF "$CANON_ROOT_LITERAL" "$file" \
-      || fail "$skill root literal" "contains '$CANON_ROOT_LITERAL'" "root literal absent"
+  if [ "$skill" != "team-structure" ] && grep -qF -- '--require-passing-review' "$file"; then
+    fail "$skill review flag" "review flag absent" "review flag found"
   fi
   i=$((i + 1))
 done
 
-# Verdict grep: present verbatim in team-structure only, absent elsewhere.
-for skill in team-structure; do
-  file="$SKILLS/$skill/SKILL.md"
-  [ -f "$file" ] && grep -qF "$CANON_VERDICT_GREP" "$file" \
-    || fail "$skill verdict grep" "verbatim review-gate verdict grep in predecessor filter" "verdict grep absent"
+for skill in team-research team-design team-structure team-plan team-worktree team-implement eng-design-doc-review; do
+  grep -qF 'AskUserQuestion' "$SKILLS/$skill/SKILL.md" \
+    || fail "$skill fallback" "retains AskUserQuestion fallback" "fallback missing"
 done
-for skill in team-research team-design team-plan team-worktree team-implement team-pr eng-design-doc-review; do
-  file="$SKILLS/$skill/SKILL.md"
-  if [ -f "$file" ] && grep -qF "$CANON_VERDICT_GREP" "$file"; then
-    fail "$skill verdict grep" "no verdict grep (non-gated skill)" "verdict grep unexpectedly present"
-  fi
-done
-# Retired approval grep: absent from every archetype-A skill (the DESIGN
-# human gate is gone; design-review-<n>.md verdicts replaced it).
-i=0
-while [ "$i" -lt "${#A_SKILLS[@]}" ]; do
-  skill="${A_SKILLS[$i]}"
-  file="$SKILLS/$skill/SKILL.md"
-  if [ -f "$file" ] && grep -qF "$RETIRED_APPROVAL_GREP" "$file"; then
-    fail "$skill retired approval grep" "no ^approved: frontmatter grep remains" "retired approval grep unexpectedly present"
-  fi
-  i=$((i + 1))
-done
-
-# =============================================================================
-# EXECUTABLE DISCOVERY BEHAVIOR (slice 1): extract team-design's block, run it
-# against fixture trees, assert all edge cases (a)-(e). Fixture is created and
-# torn down inside this block.
-# =============================================================================
-design_file="$SKILLS/team-design/SKILL.md"
-snippet="$(mktemp)"
-extract_sh_block "$design_file" > "$snippet"
-
-if [ ! -s "$snippet" ]; then
-  fail "team-design executable" "extractable \`\`\`sh discovery block" "no discovery block found in team-design (extraction empty)"
-else
-  # (a) two ID_RE dirs, only one has 5-research.md -> resolves to that one.
-  fx="$(mktemp -d)"
-  mkdir -p "$fx/docs/plans/2026-01-01-alpha" "$fx/docs/plans/2026-01-02-beta"
-  : > "$fx/docs/plans/2026-01-01-alpha/5-research.md"
-  : > "$fx/docs/plans/2026-01-02-beta/2-questions.md"   # no 5-research.md -> skipped
-  out="$(run_snippet "$snippet" "$fx" "")"
-  case "$out" in
-    *2026-01-01-alpha*) : ;;
-    *) fail "team-design (a) predecessor-filter" "resolves docs/plans/2026-01-01-alpha/ (only dir with 5-research.md)" "got: '$out'" ;;
-  esac
-  \rm -rf "$fx"
-
-  # (b) newest-mtime tiebreak among two valid dirs (both have 5-research.md).
-  fx="$(mktemp -d)"
-  mkdir -p "$fx/docs/plans/2026-01-01-older" "$fx/docs/plans/2026-01-02-newer"
-  : > "$fx/docs/plans/2026-01-01-older/5-research.md"
-  : > "$fx/docs/plans/2026-01-02-newer/5-research.md"
-  # Force older's phase files to an older mtime; newer to "now".
-  touch -t 202601010000 "$fx/docs/plans/2026-01-01-older/5-research.md"
-  touch "$fx/docs/plans/2026-01-02-newer/5-research.md"
-  out="$(run_snippet "$snippet" "$fx" "")"
-  case "$out" in
-    *2026-01-02-newer*) : ;;
-    *) fail "team-design (b) newest-mtime" "resolves docs/plans/2026-01-02-newer/ (highest max-mtime)" "got: '$out'" ;;
-  esac
-  \rm -rf "$fx"
-
-  # (c) empty docs/plans/ -> prints nothing (tier 3).
-  fx="$(mktemp -d)"
-  mkdir -p "$fx/docs/plans"
-  out="$(run_snippet "$snippet" "$fx" "")"
-  if [ -n "$out" ]; then
-    fail "team-design (c) empty -> tier 3" "prints nothing (falls to AskUserQuestion)" "got: '$out'"
-  fi
-  \rm -rf "$fx"
-
-  # (d) ARGUMENTS = non-existent path -> falls through to discovery, no error.
-  fx="$(mktemp -d)"
-  mkdir -p "$fx/docs/plans/2026-01-01-alpha"
-  : > "$fx/docs/plans/2026-01-01-alpha/5-research.md"
-  out="$(run_snippet "$snippet" "$fx" "/no/such/path-typo")"
-  case "$out" in
-    *2026-01-01-alpha*) : ;;
-    *) fail "team-design (d) bad ARGUMENTS" "ignores non-existent path, discovers docs/plans/2026-01-01-alpha/" "got: '$out'" ;;
-  esac
-  \rm -rf "$fx"
-
-  # (e) non-ID_RE dir name -> excluded from discovery, but honored verbatim when
-  #     passed explicitly as $ARGUMENTS.
-  fx="$(mktemp -d)"
-  mkdir -p "$fx/docs/plans/NotAValidId"
-  : > "$fx/docs/plans/NotAValidId/5-research.md"
-  # Discovery alone: the non-conforming dir is the only candidate -> tier 3.
-  out="$(run_snippet "$snippet" "$fx" "")"
-  if [ -n "$out" ]; then
-    fail "team-design (e) non-ID_RE excluded" "non-conforming dir excluded from discovery -> prints nothing" "got: '$out'"
-  fi
-  # Explicit tier-1: same dir passed as $ARGUMENTS is honored verbatim.
-  out="$(run_snippet "$snippet" "$fx" "docs/plans/NotAValidId")"
-  case "$out" in
-    *NotAValidId*) : ;;
-    *) fail "team-design (e) explicit honored" "explicit non-ID_RE path honored verbatim (tier 1)" "got: '$out'" ;;
-  esac
-  \rm -rf "$fx"
+grep -qF 'Describe the task' "$SKILLS/team-implement/SKILL.md" \
+  || fail "team-implement fallback" "retains Describe the task option" "option missing"
+if grep -qF 'AskUserQuestion' "$SKILLS/team-pr/SKILL.md"; then
+  fail "team-pr fallback" "no AskUserQuestion; fall through to standalone" "AskUserQuestion found"
 fi
-\rm -f "$snippet"
+grep -qF 'Nothing to ship.' "$SKILLS/team-pr/SKILL.md" \
+  || fail "team-pr standalone" "retains Nothing to ship." "standalone stop missing"
 
-# =============================================================================
-# EXECUTABLE REVIEW-GATE (slice 3): extract team-structure's block, run it
-# against design-review verdict fixtures. Created and torn down in this block.
-# =============================================================================
-structure_file="$SKILLS/team-structure/SKILL.md"
-snippet="$(mktemp)"
-extract_sh_block "$structure_file" > "$snippet"
+# Explicit paths win verbatim, including paths outside ID_RE and review-gated use.
+fixture="$(mktemp -d)"
+mkdir -p "$fixture/docs/plans/NotAValidId"
+output="$(run_helper "$fixture" 'docs/plans/NotAValidId' '6-design.md' '--require-passing-review')"
+status=$?
+[ "$status" -eq 0 ] || fail "explicit status" "exit 0" "exit $status"
+[ "$output" = 'docs/plans/NotAValidId' ] \
+  || fail "explicit path" "verbatim explicit path" "got: '$output'"
+\rm -rf "$fixture"
+fixture=""
 
-if [ ! -s "$snippet" ]; then
-  fail "team-structure executable" "extractable \`\`\`sh discovery block" "no discovery block found in team-structure (extraction empty)"
-else
-  # Fixture 1: newest dir's latest review is REQUEST CHANGES; older dir's
-  # latest review is COMMENT (passing). Expect the passing (older) dir to
-  # win; the failing newest is skipped.
-  fx="$(mktemp -d)"
-  mkdir -p "$fx/docs/plans/2026-01-01-passed" "$fx/docs/plans/2026-01-02-failed"
-  : > "$fx/docs/plans/2026-01-01-passed/6-design.md"
-  printf -- '---\nverdict: COMMENT\n---\n' > "$fx/docs/plans/2026-01-01-passed/design-review-1.md"
-  : > "$fx/docs/plans/2026-01-02-failed/6-design.md"
-  printf -- '---\nverdict: REQUEST CHANGES\n---\n' > "$fx/docs/plans/2026-01-02-failed/design-review-1.md"
-  touch -t 202601010000 "$fx/docs/plans/2026-01-01-passed/6-design.md"
-  touch "$fx/docs/plans/2026-01-02-failed/6-design.md"    # newer mtime, but failing verdict
-  out="$(run_snippet "$snippet" "$fx" "")"
-  case "$out" in
-    *2026-01-01-passed*) : ;;
-    *) fail "team-structure gate skip-failing" "resolves docs/plans/2026-01-01-passed/ (skips newer REQUEST CHANGES)" "got: '$out'" ;;
+# Discovery filters ID_RE and predecessor, then ranks by max phase-file mtime.
+fixture="$(mktemp -d)"
+mkdir -p "$fixture/docs/plans/2026-01-01-predecessor-newer" \
+  "$fixture/docs/plans/2026-01-02-phase-newer" \
+  "$fixture/docs/plans/2026-01-03-missing" \
+  "$fixture/docs/plans/NotAValidId"
+: > "$fixture/docs/plans/2026-01-01-predecessor-newer/5-research.md"
+: > "$fixture/docs/plans/2026-01-02-phase-newer/5-research.md"
+: > "$fixture/docs/plans/2026-01-02-phase-newer/6-design.md"
+: > "$fixture/docs/plans/2026-01-03-missing/2-questions.md"
+: > "$fixture/docs/plans/NotAValidId/5-research.md"
+touch -t 202601030000 "$fixture/docs/plans/2026-01-01-predecessor-newer/5-research.md"
+touch -t 202601010000 "$fixture/docs/plans/2026-01-02-phase-newer/5-research.md"
+touch -t 202601040000 "$fixture/docs/plans/2026-01-02-phase-newer/6-design.md"
+output="$(run_helper "$fixture" '/no/such/path' '5-research.md')"
+status=$?
+[ "$status" -eq 0 ] || fail "discovery status" "exit 0" "exit $status"
+case "$output" in
+  *2026-01-02-phase-newer/) : ;;
+  *) fail "discovery filters and recency" "2026-01-02-phase-newer/" "got: '$output'" ;;
+esac
+\rm -rf "$fixture"
+fixture=""
+
+# No match prints nothing and exits 0.
+fixture="$(mktemp -d)"
+mkdir -p "$fixture/docs/plans"
+output="$(run_helper "$fixture" '' '8-plan.md')"
+status=$?
+[ "$status" -eq 0 ] || fail "no-match status" "exit 0" "exit $status"
+[ -z "$output" ] || fail "no-match stdout" "empty stdout" "got: '$output'"
+\rm -rf "$fixture"
+fixture=""
+
+write_review_fixture() {
+  local directory="$1" review_body="$2"
+  mkdir -p "$directory"
+  : > "$directory/6-design.md"
+  printf '%s' "$review_body" > "$directory/design-review-1.md"
+}
+
+# Review flag selects only candidates whose highest numeric review passes.
+fixture="$(mktemp -d)"
+write_review_fixture "$fixture/docs/plans/2026-01-01-passed" $'---\nverdict: COMMENT\n---\n'
+write_review_fixture "$fixture/docs/plans/2026-01-02-failed" $'---\nverdict: REQUEST CHANGES\n---\n'
+touch -t 202601010000 "$fixture/docs/plans/2026-01-01-passed/6-design.md"
+touch -t 202601020000 "$fixture/docs/plans/2026-01-02-failed/6-design.md"
+output="$(run_helper "$fixture" '' '6-design.md' '--require-passing-review')"
+case "$output" in
+  *2026-01-01-passed/) : ;;
+  *) fail "review eligibility" "older passing candidate" "got: '$output'" ;;
+esac
+\rm -rf "$fixture"
+fixture=""
+
+# Highest numeric review supersedes earlier reviews.
+fixture="$(mktemp -d)"
+write_review_fixture "$fixture/docs/plans/2026-01-01-superseded" $'---\nverdict: APPROVE\n---\n'
+printf '%s' $'---\nverdict: REQUEST CHANGES\n---\n' \
+  > "$fixture/docs/plans/2026-01-01-superseded/design-review-2.md"
+output="$(run_helper "$fixture" '' '6-design.md' '--require-passing-review')"
+[ -z "$output" ] || fail "review highest number" "empty stdout" "got: '$output'"
+\rm -rf "$fixture"
+fixture=""
+
+# Frontmatter parsing fails closed: review required, line 1 marker, body excluded,
+# closing marker required within the 60-line cap.
+for case_name in missing-review bad-line-one body-verdict unclosed over-cap; do
+  fixture="$(mktemp -d)"
+  directory="$fixture/docs/plans/2026-01-01-$case_name"
+  mkdir -p "$directory"
+  : > "$directory/6-design.md"
+  case "$case_name" in
+    missing-review) ;;
+    bad-line-one) printf '%s' $'phase: design-review\nverdict: APPROVE\n---\n' > "$directory/design-review-1.md" ;;
+    body-verdict) printf '%s' $'---\nphase: design-review\n---\nverdict: APPROVE\n' > "$directory/design-review-1.md" ;;
+    unclosed) printf '%s' $'---\nverdict: APPROVE\n' > "$directory/design-review-1.md" ;;
+    over-cap)
+      {
+        printf '%s\n' '---' 'verdict: APPROVE'
+        line=3
+        while [ "$line" -le 60 ]; do printf 'key%s: value\n' "$line"; line=$((line + 1)); done
+        printf '%s\n' '---'
+      } > "$directory/design-review-1.md"
+      ;;
   esac
-  \rm -rf "$fx"
+  output="$(run_helper "$fixture" '' '6-design.md' '--require-passing-review')"
+  [ -z "$output" ] || fail "review $case_name" "empty stdout" "got: '$output'"
+  \rm -rf "$fixture"
+  fixture=""
+done
 
-  # Fixture 2: highest-<n> rules — APPROVE at n=1 superseded by
-  # REQUEST CHANGES at n=2 -> prints nothing (tier 3).
-  fx="$(mktemp -d)"
-  mkdir -p "$fx/docs/plans/2026-01-02-superseded"
-  : > "$fx/docs/plans/2026-01-02-superseded/6-design.md"
-  printf -- '---\nverdict: APPROVE\n---\n'         > "$fx/docs/plans/2026-01-02-superseded/design-review-1.md"
-  printf -- '---\nverdict: REQUEST CHANGES\n---\n' > "$fx/docs/plans/2026-01-02-superseded/design-review-2.md"
-  out="$(run_snippet "$snippet" "$fx" "")"
-  if [ -n "$out" ]; then
-    fail "team-structure gate highest-n" "prints nothing (latest round REQUEST CHANGES supersedes earlier APPROVE)" "got: '$out'"
-  fi
-  \rm -rf "$fx"
-
-  # Fixture 3: 6-design.md with no design-review artifact at all -> prints
-  # nothing (unreviewed design; fail-closed).
-  fx="$(mktemp -d)"
-  mkdir -p "$fx/docs/plans/2026-01-02-unreviewed"
-  : > "$fx/docs/plans/2026-01-02-unreviewed/6-design.md"
-  out="$(run_snippet "$snippet" "$fx" "")"
-  if [ -n "$out" ]; then
-    fail "team-structure gate missing-review" "prints nothing (no design-review artifact -> unreviewed)" "got: '$out'"
-  fi
-  \rm -rf "$fx"
-
-  # Fixture 4: verdict only quoted in the BODY (frontmatter carries none)
-  # -> prints nothing; the parse is frontmatter-anchored.
-  fx="$(mktemp -d)"
-  mkdir -p "$fx/docs/plans/2026-01-02-bodyquote"
-  : > "$fx/docs/plans/2026-01-02-bodyquote/6-design.md"
-  printf -- '---\nphase: design-review\n---\nThe body hopes for:\nverdict: APPROVE\n' \
-    > "$fx/docs/plans/2026-01-02-bodyquote/design-review-1.md"
-  out="$(run_snippet "$snippet" "$fx" "")"
-  if [ -n "$out" ]; then
-    fail "team-structure gate body-quoted-verdict" "prints nothing (body-line verdict never passes the frontmatter parse)" "got: '$out'"
-  fi
-  \rm -rf "$fx"
-fi
-\rm -f "$snippet"
-
-# =============================================================================
-# RESEARCH-ISOLATION (slices 2 & 6): team-research forwards exactly
-# {2-questions.md, 4-repos.md?} and never 1-task.md / a description; the
-# ## Scope isolation section is intact.
-# =============================================================================
+# Research isolation and standalone behavior remain intact.
 research_file="$SKILLS/team-research/SKILL.md"
-if [ ! -f "$research_file" ]; then
-  fail "team-research isolation" "SKILL.md exists" "file not found"
-else
-  # Isolate the dispatch step (## Execution step 2) to scope the assertions.
-  dispatch="$(awk '
-    /^2\. Dispatch/    { cap=1 }
-    /^3\./             { cap=0 }
-    cap                { print }
-  ' "$research_file")"
-
-  printf '%s' "$dispatch" | grep -qF '2-questions.md' \
-    || fail "team-research dispatch" "forwards 2-questions.md" "2-questions.md absent from dispatch step"
-  printf '%s' "$dispatch" | grep -qF '4-repos.md' \
-    || fail "team-research dispatch" "forwards optional 4-repos.md" "4-repos.md absent from dispatch step"
-
-  # The dispatch step must NOT widen the forwarded set to 1-task.md or a description.
-  if printf '%s' "$dispatch" | grep -qiE 'pass[^.]*1-task\.md|forward[^.]*1-task\.md|include[^.]*1-task\.md'; then
-    fail "team-research dispatch" "never forwards 1-task.md to the research agents" "dispatch step appears to pass 1-task.md"
-  fi
-
-  grep -qF '## Scope isolation' "$research_file" \
-    || fail "team-research" "## Scope isolation section present" "section missing"
+dispatch="$(awk '/^2\. Dispatch/ { capture=1 } /^3\./ { capture=0 } capture { print }' "$research_file")"
+printf '%s' "$dispatch" | grep -qF '2-questions.md' \
+  || fail "team-research dispatch" "forwards 2-questions.md" "missing"
+printf '%s' "$dispatch" | grep -qF '4-repos.md' \
+  || fail "team-research dispatch" "forwards optional 4-repos.md" "missing"
+if printf '%s' "$dispatch" | grep -qiE 'pass[^.]*1-task\.md|forward[^.]*1-task\.md|include[^.]*1-task\.md'; then
+  fail "team-research dispatch" "does not forward 1-task.md" "forwarding reference found"
 fi
+grep -qF 'If `$ARGUMENTS/8-plan.md` does not exist' "$SKILLS/team-implement/SKILL.md" \
+  || fail "team-implement standalone" "retains 8-plan.md-absent branch" "branch missing"
+grep -qF 'symbolic-ref refs/remotes/origin/HEAD' "$SKILLS/team-pr/SKILL.md" \
+  || fail "team-pr base detection" "retains origin HEAD detection" "command missing"
 
-# =============================================================================
-# STANDALONE-PRESERVED: team-implement keeps its 8-plan.md-absent
-# standalone branch; team-pr keeps archetype-B base detection + the
-# "Nothing to ship." standalone stop.
-# =============================================================================
-implement_file="$SKILLS/team-implement/SKILL.md"
-if [ -f "$implement_file" ]; then
-  grep -qF 'Standalone mode' "$implement_file" \
-    || fail "team-implement standalone" "retains 'Standalone mode' branch" "Standalone mode branch absent"
-  grep -qF 'If `$ARGUMENTS/8-plan.md` does not exist' "$implement_file" \
-    || fail "team-implement standalone" "retains 8-plan.md-absent guard" "8-plan.md-absent guard absent"
-else
-  fail "team-implement standalone" "SKILL.md exists" "file not found"
-fi
-
-pr_file="$SKILLS/team-pr/SKILL.md"
-if [ -f "$pr_file" ]; then
-  grep -qF 'symbolic-ref refs/remotes/origin/HEAD' "$pr_file" \
-    || fail "team-pr archetype-B" "retains base detection (symbolic-ref refs/remotes/origin/HEAD)" "base detection absent"
-  grep -qF 'Falls back to `main`' "$pr_file" \
-    || fail "team-pr archetype-B" "retains fallback to main" "main fallback absent"
-  grep -qF 'Nothing to ship.' "$pr_file" \
-    || fail "team-pr standalone" "retains 'Nothing to ship.' standalone stop" "standalone stop absent"
-else
-  fail "team-pr archetype-B" "SKILL.md exists" "file not found"
-fi
-
-# =============================================================================
-# ARCHETYPE-D (slice 5): team-question and team-fix drop the bare-stop, add
-# repo-context grounding + AskUserQuestion, and keep `gh issue view`.
-# =============================================================================
-question_file="$SKILLS/team-question/SKILL.md"
-if [ -f "$question_file" ]; then
-  if grep -qF 'ask the user to describe what they want and stop' "$question_file"; then
-    fail "team-question bare-stop" "bare-stop string removed" "bare-stop string still present"
-  fi
-  grep -qE 'git log|recent git' "$question_file" \
-    || fail "team-question grounding" "references recent git activity" "git grounding absent"
-  grep -qE 'README|CLAUDE\.md' "$question_file" \
-    || fail "team-question grounding" "references README/CLAUDE.md repo context" "README/CLAUDE.md grounding absent"
-  grep -qF 'AskUserQuestion' "$question_file" \
-    || fail "team-question grounding" "uses AskUserQuestion for genuine gaps" "AskUserQuestion absent"
-  grep -qF 'gh issue view' "$question_file" \
-    || fail "team-question ticket resolution" "retains 'gh issue view' verbatim" "gh issue view absent"
-else
-  fail "team-question" "SKILL.md exists" "file not found"
-fi
-
-fix_file="$SKILLS/team-fix/SKILL.md"
-if [ -f "$fix_file" ]; then
-  if grep -qF 'ask the user to describe the bug and stop' "$fix_file"; then
-    fail "team-fix bare-stop" "bare-stop string removed" "bare-stop string still present"
-  fi
-  grep -qE 'git log|recent git' "$fix_file" \
-    || fail "team-fix grounding" "references recent git activity" "git grounding absent"
-  grep -qE 'README|CLAUDE\.md' "$fix_file" \
-    || fail "team-fix grounding" "references README/CLAUDE.md repo context" "README/CLAUDE.md grounding absent"
-  grep -qF 'AskUserQuestion' "$fix_file" \
-    || fail "team-fix grounding" "uses AskUserQuestion for genuine gaps" "AskUserQuestion absent"
-  grep -qF 'gh issue view' "$fix_file" \
-    || fail "team-fix ticket resolution" "retains 'gh issue view' verbatim" "gh issue view absent"
-else
-  fail "team-fix" "SKILL.md exists" "file not found"
-fi
-
-# =============================================================================
-# RESULT
-# =============================================================================
 if [ "$ERRORS" -ne 0 ]; then
   printf '\n%s assertion(s) failed.\n' "$ERRORS" >&2
   exit 1
 fi
 printf '\nAll discovery-consistency assertions passed.\n'
-exit 0

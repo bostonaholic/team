@@ -51,7 +51,7 @@ findings. Fix what the findings name, under these constraints:
   and walk the
   **Root Cause Analysis (5 Whys)** causal chain to the root before
   editing, so you fix the root cause rather than the symptom
-  (`skills/principle-fix-root-causes/SKILL.md`). Skip this
+  (`principle-fix-root-causes`). Skip this
   for an **obvious** failure (a typo, a trivially-named assertion, a
   clear one-line fix) — drilling a one-line fix is wasted ceremony. The
   fast path stays intact.
@@ -115,7 +115,7 @@ incorrect):
 
 ## Scope fence
 
-Apply `skills/principle-scope-fence/SKILL.md` — the plan authorizes exactly
+Apply `principle-scope-fence` — the plan authorizes exactly
 the change it names. The implementer's own bounds:
 
 - **Do NOT change acceptance tests.** They are immutable. If a test seems
