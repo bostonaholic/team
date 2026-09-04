@@ -6,7 +6,7 @@ user-invocable: false
 
 # Documenting Decisions
 
-An Architecture Decision Record (ADR) records an important technical choice, its context, alternatives, and consequences. Write at seventh-grade, STE-flavored level; call `writing-prose` and apply `## Self-lint` before finalizing.
+An Architecture Decision Record (ADR) records an important technical choice, its context, alternatives, and consequences. Write at seventh-grade, STE-flavored level; call the Skill tool with `writing-prose` and apply `## Self-lint` before finalizing.
 
 ## ADR Format
 

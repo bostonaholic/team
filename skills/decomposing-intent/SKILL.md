@@ -14,7 +14,7 @@ Capture user intent in `1-task.md`, neutral codebase questions in `2-questions.m
 
 Read [references/artifact-templates.md](references/artifact-templates.md) before writing the artifacts. Keep `1-task.md` under 80 lines. Write 8–15 questions answerable from code. `Codebase context` may name files, modules, and vocabulary, but MUST NOT state the goal or desired outcome; it replaces legacy `brief.md`.
 
-Call `product-requirements-doc` when a request is vague/underspecified, spans multiple user stories, is cross-cutting, or replaces existing behavior. Then write `docs/plans/<id>/3-prd.md` with `phase: prd` and reference it from `1-task.md`. Skip it for simple, well-scoped requests.
+Call the Skill tool with `product-requirements-doc` when a request is vague/underspecified, spans multiple user stories, is cross-cutting, or replaces existing behavior. Then write `docs/plans/<id>/3-prd.md` with `phase: prd` and reference it from `1-task.md`. Skip it for simple, well-scoped requests.
 
 ## Research isolation
 

@@ -19,7 +19,7 @@ Classify first:
 - **Infra:** fix the environment, not product behavior.
 - **Tooling:** fix the runner or build system.
 
-Intermittency is not a fifth bucket. Use `systematic-debugging` to reproduce it
+Intermittency is not a fifth bucket. Call the Skill tool with `systematic-debugging` to reproduce it
 and its Root Cause Analysis (5 Whys) for non-obvious causes.
 
 ## Step 1: Reproduce

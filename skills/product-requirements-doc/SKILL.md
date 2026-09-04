@@ -6,7 +6,7 @@ user-invocable: false
 
 # Product Requirements Document
 
-A PRD complements `1-task.md` when a request needs explicit behavior, scope, acceptance criteria, and constraints. Prefer precision over exhaustive detail. Write at seventh-grade, STE-flavored level; call `writing-prose` and apply `## Self-lint` before finalizing.
+A PRD complements `1-task.md` when a request needs explicit behavior, scope, acceptance criteria, and constraints. Prefer precision over exhaustive detail. Write at seventh-grade, STE-flavored level; call the Skill tool with `writing-prose` and apply `## Self-lint` before finalizing.
 
 ## When to Write a PRD
 

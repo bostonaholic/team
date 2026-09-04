@@ -10,7 +10,7 @@ Use a TDD for new architecture, material alternatives, multiple subsystems,
 non-trivial rollout, or important performance/security decisions. Otherwise
 use the standard plan. Read [references/template.md](references/template.md)
 before authoring; it owns the full prompts, examples, and enhanced-plan layout.
-Apply `writing-prose` in STE-flavored mode and run its Self-lint.
+Call the Skill tool with `writing-prose`, apply STE-flavored mode, and run its Self-lint.
 
 ## TDD contract
 

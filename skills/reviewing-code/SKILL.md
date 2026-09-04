@@ -9,7 +9,7 @@ user-invocable: false
 Review with fresh context. The generator never evaluates or fixes its output. Reviewers have
 read-only tools and `permissionMode: plan` (`principle-generator-evaluator`, `principle-least-privilege`).
 Read [references/review-manual.md](references/review-manual.md).
-Apply `writing-prose` and Self-lint before returning the report.
+Call the Skill tool with `writing-prose` and apply Self-lint before returning the report.
 
 ## Report Format
 
@@ -32,7 +32,7 @@ Emit every heading below in order. Use Code Reviewer tokens from Verdict Criteri
 
 ## Gate Types and Severity Tiers
 
-Load `review-severity-tiers`; it owns gates, tiers, auto-fix, consult, and aggregation.
+Call the Skill tool with `review-severity-tiers`; it owns gates, tiers, auto-fix, consult, and aggregation.
 Findings use `skills/conventional-comments/SKILL.md`; UX uses Working/Broken/Could Improve.
 
 ## Verdict Criteria
@@ -47,7 +47,7 @@ PASS only when format, lint, typecheck, build, and test pass. Any failure return
 ✅ APPROVE: done criteria met, no blockers, tests pass. ❌ REQUEST CHANGES: a
 Blocking issue; return to IMPLEMENT. 💬 COMMENT: only non-blocking suggestions.
 
-**Test-quality flags.** Load `test-style`. One change-detector, mock-chain,
+**Test-quality flags.** Call the Skill tool with `test-style`. One change-detector, mock-chain,
 overbroad equality, test logic, method-named test, or opaque helper is `suggestion:`;
 repetition across tests is `issue:`.
 
@@ -55,7 +55,7 @@ repetition across tests is `issue:`.
 nondeterministic input, the first occurrence is `issue (blocking)`. The catalog
 lives only in `skills/test-style/SKILL.md`.
 
-**Comment red flags.** Load `engineering-standards`. **Blocking on first occurrence:**
+**Comment red flags.** Call the Skill tool with `engineering-standards`. **Blocking on first occurrence:**
 ticket/issue IDs, plan/slice/phase markers, or introduced TODO/FIXME in code comments. **Style escalation:** one occurrence is
 `suggestion:`; repeated occurrences are `issue:`. Upstream-bug links whose link
 is the reason, string literals, public-interface docs, and untouched TODOs are

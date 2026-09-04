@@ -16,10 +16,11 @@ owns the full criteria, exceptions, and output rules.
 Review `$ARGUMENTS/6-design.md` with no author conversation. Use only Read,
 Grep, and Glob. Never edit files or run state-changing commands.
 
-Load `technical-design-doc`, `reviewing-code`, `engineering-standards`, and
-`documenting-decisions`. Load `cross-model-review` only when the prompt carries
-an `## External review input` section. Load `conventional-comments` for findings
-and `writing-prose` for STE-flavored prose and Self-lint.
+Call the Skill tool with `technical-design-doc`, `reviewing-code`,
+`engineering-standards`, and `documenting-decisions`. Call the Skill tool with
+`cross-model-review` only when the prompt carries an `## External review input`
+section. Call the Skill tool with `conventional-comments` for findings and
+`writing-prose` for STE-flavored prose and Self-lint.
 
 ### Review process
 

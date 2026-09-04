@@ -20,6 +20,63 @@ import { loadedSkills, skillNames } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 
+const REQUIRED_LOADS_BY_COMPONENT: Record<string, readonly string[]> = {
+  "skills/git-commit": ["writing-prose"],
+  "skills/team-fix": [
+    "tracking-tickets",
+    "team-worktree",
+    "worktree-isolation",
+    "test-driven-bug-fix",
+    "systematic-debugging",
+  ],
+  "skills/changelog": ["writing-prose"],
+  "skills/decomposing-intent": ["product-requirements-doc"],
+  "skills/code-review": ["reviewing-code"],
+  "skills/reviewing-code": ["writing-prose", "review-severity-tiers", "test-style", "engineering-standards"],
+  "skills/pr-verify": ["running-quality-checks"],
+  "skills/implementing-slices": ["systematic-debugging", "git-commit"],
+  "skills/product-requirements-doc": ["writing-prose"],
+  "skills/team": [
+    "tracking-tickets",
+    "team-worktree",
+    "cross-model-review",
+    "reviewing-designs",
+    "worktree-isolation",
+    "running-quality-checks",
+    "review-severity-tiers",
+    "changelog",
+    "team-pr",
+  ],
+  "skills/team-pr": ["tracking-tickets", "verifying-ux", "worktree-isolation", "changelog", "git-commit"],
+  "skills/technical-design-doc": ["writing-prose"],
+  "skills/pr-rebase": ["running-quality-checks"],
+  "skills/documenting-decisions": ["writing-prose"],
+  "skills/pr-watch-as-author": ["tracking-tickets", "pr-open-comments"],
+  "skills/authoring-designs": ["writing-prose", "systems-thinking"],
+  "skills/test-driven-bug-fix": ["systematic-debugging"],
+  "skills/eng-design-doc-review": ["writing-prose", "cross-model-review", "reviewing-designs"],
+  "skills/reviewing-designs": [
+    "technical-design-doc",
+    "reviewing-code",
+    "engineering-standards",
+    "documenting-decisions",
+    "cross-model-review",
+    "conventional-comments",
+    "writing-prose",
+  ],
+  "skills/team-implement": ["running-quality-checks", "review-severity-tiers", "team-pr"],
+  "skills/team-design": ["cross-model-review", "reviewing-designs"],
+  "skills/worktree-isolation": ["team-worktree"],
+  "agents/code-reviewer.md": ["engineering-standards", "solid", "test-style", "systems-thinking"],
+  "agents/test-architect.md": ["test-style"],
+  "agents/ux-reviewer.md": ["systems-thinking"],
+  "agents/questioner.md": ["product-thinking"],
+  "agents/structure-planner.md": ["product-thinking", "systems-thinking"],
+  "agents/planner.md": ["engineering-standards"],
+  "agents/design-author.md": ["product-thinking"],
+  "agents/implementer.md": ["engineering-standards", "solid", "refactoring-to-patterns", "systems-thinking"],
+};
+
 // Every distributed prose surface that can carry a load: the 13 agent bodies
 // and every skill body. Dev tooling under .claude/ is out of scope — it ships
 // to nobody.
@@ -82,5 +139,21 @@ describe("Skill-tool loads resolve to real skills", () => {
       if (own && loadedSkills(text).includes(own)) selfLoads.push(rel);
     }
     expect(selfLoads).toEqual([]);
+  });
+
+  test("explicit cross-skill load contracts survive router splits", () => {
+    const missing: string[] = [];
+    for (const [component, required] of Object.entries(REQUIRED_LOADS_BY_COMPONENT)) {
+      const prefix = `${component}/`;
+      const actual = new Set(
+        bodies
+          .filter(({ rel }) => rel === component || rel.startsWith(prefix))
+          .flatMap(({ text }) => loadedSkills(text)),
+      );
+      for (const name of required) {
+        if (!actual.has(name)) missing.push(`${component} -> ${name}`);
+      }
+    }
+    expect(missing).toEqual([]);
   });
 });

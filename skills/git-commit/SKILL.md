@@ -6,7 +6,7 @@ user-invocable: false
 
 # Git Commit Methodology
 
-Each commit records one independently correct decision: what changed, why, and how to understand/revert it without surrounding context. Write at seventh-grade, STE-flavored level; call `writing-prose` and apply `## Self-lint` before finalizing.
+Each commit records one independently correct decision: what changed, why, and how to understand/revert it without surrounding context. Write at seventh-grade, STE-flavored level; call the Skill tool with `writing-prose` and apply `## Self-lint` before finalizing.
 
 ## The 50/72 Rule
 

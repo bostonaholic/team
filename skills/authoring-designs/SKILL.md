@@ -6,7 +6,7 @@ user-invocable: false
 
 # Authoring Designs
 
-Confirm repo scope, resolve choices autonomously as recorded assumptions, and write `6-design.md`. Use seventh-grade STE-flavored prose; call `writing-prose` and apply `## Self-lint` before finalizing.
+Confirm repo scope, resolve choices autonomously as recorded assumptions, and write `6-design.md`. Use seventh-grade STE-flavored prose; call the Skill tool with `writing-prose` and apply `## Self-lint` before finalizing.
 
 If `1-task.md` references `3-prd.md`, read it first and follow “Consuming a PRD downstream” in `skills/product-requirements-doc/SKILL.md`.
 
@@ -30,5 +30,5 @@ Read [references/design-template.md](references/design-template.md) before draft
 - Derive every closed set by grep, directory listing, or key-set comparison and record the command. Never list a blast radius or inventory from memory.
 - No implementation bodies or full type definitions; signatures are allowed only to fix a decision. Reference patterns by `file:line`, never duplicate them.
 - Prefer “follow `lib/foo.ts:30-60`” over copying those lines.
-- Apply `systems-thinking` `## When Designing`: cover adjacent components in `## Current state` and surfaces that must change together in `## Decisions made`; this adds no gate.
+- Call the Skill tool with `systems-thinking` and apply `## When Designing`: cover adjacent components in `## Current state` and surfaces that must change together in `## Decisions made`; this adds no gate.
 - Existing rationale constrains changes to deliberate guards, thresholds, ownership, and layering. Default to `5-research.md`; use `skills/why/SKILL.md` for Preserve/Change/Avoid/Risk archaeology and `skills/how/SKILL.md` for current-state explanation when needed.
