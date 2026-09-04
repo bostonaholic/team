@@ -2,6 +2,36 @@
 
 The authoring bar for documentation, and the rubric a reviewer holds prose to.
 
+## Write for one busy reader
+
+The rules that follow govern sentences. This one governs the whole document.
+
+Kenneth Roman and Joel Raphaelson wrote *Writing That Works: How to Communicate
+Effectively in Business* about memos and proposals. A pull request description
+is the same job: one busy reader, one decision, no time. So are a design
+summary, a changelog entry, a review comment, and a status report. Apply these
+rules to any text that asks a reader to decide or act.
+
+- **Lead with the point.** Put the recommendation, the finding, or the request
+  in the first sentence. Support follows it. A reader who stops after the first
+  paragraph must still know what you want.
+- **Make the title say something.** "Move the launch to March" beats "Launch".
+  A PR title states the change, not the area it touches.
+- **Name the action, the owner, and the date.** Close with what the reader does
+  next. A document that asks for nothing gets nothing.
+- **Cut the throat-clearing.** Delete "The purpose of this document is to" and
+  every other sentence that describes the document instead of the subject.
+- **Write to a person.** Use "you" and "we". Answer the reader's question: what
+  does this change for me?
+- **Be specific.** Give the number, the date, the file, or the measurement. A
+  generality is a claim the reader cannot check.
+- **Take a stand.** State the recommendation you hold. A hedge hands the
+  decision back to the reader.
+- **Keep it to one page.** A longer document opens with a summary that stands
+  alone. Headings and lists carry the rest.
+- **Read it aloud before you send it.** Rewrite each sentence you cannot say
+  out loud.
+
 ## Plain language
 
 - **Write at a seventh-grade reading level.** Short sentences, common words,
@@ -49,8 +79,8 @@ Apply the mode **per sentence, not per document** — a rationale paragraph can
 embed one imperative instruction, which takes strict mode while the sentences
 around it take STE-flavored. Every other rule below binds both modes. When a
 consuming skill's format rule conflicts with a prose rule (git-commit's
-50-character subject, changelog's headings), the consuming skill wins. This
-skill governs sentence-level prose only.
+50-character subject, changelog's headings), the consuming skill wins. These
+modes govern sentence-level prose only.
 
 ### The mechanical rules
 
@@ -218,6 +248,8 @@ defect. Fix every hit.
    STE-flavored mode, "would" or "could" as a hedge, or any "might".
 9. **Empty closer** — a closing sentence that states no measurable property
    ("provides a solid foundation for..."). Delete it.
+10. **Buried point** — the recommendation, the finding, or the request does not
+    appear in the first paragraph. Move it to the first sentence.
 
 The self-lint applies to the text an author returns, never to quoted
 counter-examples — this file's own Non-STE examples break the rules on

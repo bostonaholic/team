@@ -8,8 +8,14 @@ user-invocable: false
 
 Apply plain language and Simplified Technical English (ASD-STE100) to
 documentation. Read [references/style-guide.md](references/style-guide.md)
-before authoring or reviewing governed prose; it contains the word table,
-exceptions, examples, mechanical score command, and quality review criteria.
+first. It carries the word table, examples, score command, and review criteria.
+
+## One busy reader
+
+Kenneth Roman and Joel Raphaelson wrote *Writing That Works* for memos and
+proposals. A PR description is the same job: one busy reader, one decision, no
+time. Lead with the recommendation, name the action you want, and cut every
+sentence that describes the document. The style guide carries the rest.
 
 ## Plain language
 
@@ -29,7 +35,7 @@ Choose per sentence:
   review comments. Cap at 25 words. Declarative prose is allowed. Use `would`
   or `could` only for an actual alternative or consequence. Ban `might`.
 
-A consuming skill's format contract wins. This skill governs sentence prose.
+A consuming skill's format contract wins. These modes govern sentence prose.
 
 ## Mechanical invariants
 

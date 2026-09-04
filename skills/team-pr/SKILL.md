@@ -56,6 +56,8 @@ Run the PR phase. Two modes:
 Closes #<n>
 ```
 
+**Prose bar.** The body addresses one busy reader making one decision. Before finalizing, call the Skill tool with `writing-prose` and apply its `## One busy reader` rule and its `## Self-lint`. `## Summary` opens with the recommendation or the observable outcome, never with a sentence describing the PR.
+
 The `Closes` footer is conditional and appears as the final line of the PR body. **Placement rationale:** narrative precedes machine metadata. For `## Review notes`, omit the section entirely when empty; never emit a bare heading. Tag COMMENT findings with their `design-review-<n>` source.
 
 **`## Review notes` (conditional):** copy `cross-model-notes.md` with frontmatter stripped. Its copy replaces the final round's inline `### Cross-model disposition` block; exclude `### Cross-model disposition` from other sweeps so each round appears once.
