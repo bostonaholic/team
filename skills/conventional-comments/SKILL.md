@@ -6,56 +6,35 @@ user-invocable: false
 
 # Conventional Comments
 
-Review comments from the code, security, and docs reviewers use the
-Conventional Comments format (https://conventionalcomments.org) — the
-ux-reviewer's live-verification report uses its own Working/Broken/Could
-Improve format instead. Every comment MUST include a specific `file:line`
-reference.
+Code, security, and docs reviewers use [Conventional Comments](https://conventionalcomments.org); ux-reviewer uses Working/Broken/Could Improve. Every comment includes a specific `file:line`.
 
 ## Comment Style
 
-Critique the code, not the coder. Assume competence. The same finding can
-read as collaborative or hostile depending on phrasing:
+Address code, not its author; assume competence. Explain why. Reserve `issue:` for correctness, security, or maintainability defects; use `suggestion:`/`nitpick:` for preferences. More than ~10 substantive comments on one change indicates a design problem: propose splitting the change or continuing design discussion outside review.
 
-| Avoid (person-directed) | Prefer (code-directed) |
-|-------------------------|------------------------|
-| "Your approach is adding unnecessary complexity." | "The complexity this adds is not worth the result." |
-| "You are not handling the null case." | "The null case is not handled here." |
-| "This does not make any sense." | "I cannot follow what this branch is doing — clarify?" |
-
-- Explain *why* the change is requested. A finding without a reason loses
-  the rationale for the next reader of the diff.
-- Reserve `issue:` for findings that materially affect correctness,
-  security, or maintainability. Use `suggestion:` or `nitpick:` for
-  preferences.
-- A high comment density on a single change is a design signal, not just a
-  style problem. When the count climbs past ~10 substantive comments,
-  propose splitting the change or escalating the design conversation out
-  of the review tool.
+Prefer “The null case is not handled here” over “You are not handling the null case.” Prefer “I cannot follow this branch—clarify?” over “This does not make sense.”
 
 ## Comment Types
 
-Every comment body MUST begin with the label and decoration wrapped in
-`**...**` so GitHub renders it bold. Copy the format in the examples below
-literally — including the asterisks — into the comment body you emit.
+Every body begins with its label and decoration inside literal `**...**`.
 
-**issue (blocking):**
-Identifies a defect that must be fixed before approval.
-```
+**issue (blocking):** must be fixed before approval.
+
+```text
 **issue (blocking):** This query interpolates user input without parameterization.
 file: src/api/users.ts:42
 ```
 
-**suggestion (non-blocking):**
-Proposes an improvement. The author may accept or decline.
-```
+**suggestion (non-blocking):** author may accept or decline.
+
+```text
 **suggestion (non-blocking):** Consider extracting this validation into a shared utility.
 file: src/handlers/create.ts:18
 ```
 
-**nitpick (non-blocking):**
-Minor style or naming observation. Never blocks approval.
-```
+**nitpick (non-blocking):** minor style/naming; never blocks.
+
+```text
 **nitpick (non-blocking):** "data" is too vague — consider "userProfile" to match the domain.
 file: src/models/types.ts:7
 ```
