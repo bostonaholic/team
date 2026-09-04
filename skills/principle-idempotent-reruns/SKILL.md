@@ -1,6 +1,6 @@
 ---
 name: principle-idempotent-reruns
-description: "Apply when a procedure can be interrupted or repeated. A re-run converges on the same end state: already-done is done, match before create, re-read before write."
+description: 'Defines idempotent reruns. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

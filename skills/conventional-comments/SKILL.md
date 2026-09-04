@@ -1,6 +1,6 @@
 ---
 name: conventional-comments
-description: The Conventional Comments format for review findings — label and decoration syntax, code-directed comment style, and the issue/suggestion/nitpick comment types with literal examples. Load when writing, formatting, or labeling review comments, PR feedback, or reviewer findings.
+description: 'Defines conventional comments methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

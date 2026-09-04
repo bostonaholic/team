@@ -215,6 +215,12 @@ describe("shipit skill: the merge is not gated on a human confirmation", () => {
 });
 
 describe("shipit skill: post-merge cleanup", () => {
+  test("frontmatter retains explicit ship cues", () => {
+    const description = frontmatter(body()).split("\n").find((line) => line.startsWith("description:")) ?? "";
+    expect(description).toContain('"ship it"');
+    expect(description).toContain('"land the PR"');
+    expect(description).toContain("/shipit");
+  });
   test("names the /pr-cleanup command", () => {
     expect(body()).toContain("/pr-cleanup");
   });
@@ -223,6 +229,16 @@ describe("shipit skill: post-merge cleanup", () => {
     const text = body();
     expect(text).toContain("Mode A");
     expect(text).toContain("Mode B");
+  });
+
+  test("automatic cleanup paragraph selects Mode A only", () => {
+    const text = body();
+    const merge = text.lastIndexOf("gh pr merge");
+    const paragraph = text.slice(merge).split(/\n\s*\n/).find((value) => value.includes("/pr-cleanup") && value.includes("Mode A")) ?? "";
+    expect(merge).toBeGreaterThanOrEqual(0);
+    expect(paragraph).toContain("/pr-cleanup");
+    expect(paragraph).toContain("Mode A");
+    expect(paragraph).not.toContain("Mode B");
   });
 
   // NOT asserted here: that cleanup is *conditioned* on the merge succeeding.

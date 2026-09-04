@@ -1,6 +1,6 @@
 ---
 name: writing-prose
-description: Prose quality methodology for writing and assessing documentation. Grounded in plain language and ASD-STE100 Simplified Technical English in two modes — strict for instruction text, STE-flavored for descriptive prose.
+description: 'Defines plain-language prose rules. Load when writing or assessing documentation in strict or STE-flavored modes.'
 user-invocable: false
 ---
 

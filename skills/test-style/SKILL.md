@@ -1,6 +1,6 @@
 ---
 name: test-style
-description: Test style rules and the flaky-test red-flag catalog — behavior-not-implementation, DAMP setup, narrow assertions, deterministic-input rules (clock, randomness, ordering, hermetic boundaries), the fidelity ladder, and the audit checklist. Load when writing tests, auditing test quality, or reviewing changed test files for flaky patterns.
+description: 'Defines test style methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

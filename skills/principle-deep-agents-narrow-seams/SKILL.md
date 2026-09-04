@@ -1,6 +1,6 @@
 ---
 name: principle-deep-agents-narrow-seams
-description: "Apply when designing an agent, subagent, or dispatch boundary. Keep complexity inside the worker and the seam narrow: declared inputs in, one bounded output back."
+description: 'Defines deep agents narrow seams. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

@@ -975,4 +975,12 @@ describe("Slice 3 — L2: reflect files demoted findings to whatever tracker the
     expect(/\bfiled\b/i.test(text)).toBe(true);
     expect(/\bunfiled\b/i.test(text)).toBe(true);
   });
+
+  test("completion reports cache, plan, applied, skipped, and split results", () => {
+    const text = body();
+    expect((text.match(/reduced-assurance mode/g) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect((text.match(/disqualified/g) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect(text).toContain("run cache path");
+    expect(text).toContain("plan file");
+  });
 });

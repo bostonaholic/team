@@ -1,6 +1,6 @@
 ---
 name: principle-single-source-of-truth
-description: "Apply when a rule, constant, or schema could live in two places. Define it in exactly one, name that owner, and make every other surface consult it rather than restate it."
+description: 'Defines single source of truth. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

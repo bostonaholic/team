@@ -1,6 +1,6 @@
 ---
 name: review-severity-tiers
-description: The authoritative severity-tier map for aggregating reviewer verdicts — gate types by reviewer, the Blocking/Major/Minor tiers with the auto-fix boundary, the no-consult rule, and the exit condition of zero Blocking and zero Major findings. Load when aggregating review findings, deciding a pipeline gate, or sorting a finding into a severity tier.
+description: 'Defines review severity tiers methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: principle-least-privilege
-description: "Apply when granting tools, credentials, or environment to any role or child process. The toolset is the guarantee: enforce a constraint by withholding the capability, not by asking for restraint."
+description: 'Defines least privilege. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

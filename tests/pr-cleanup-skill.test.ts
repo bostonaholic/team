@@ -496,4 +496,10 @@ describe("pr-cleanup skill: worktree-isolation teardown hands off to it", () => 
     const t = existsSync(WORKTREE_ISOLATION) ? read(WORKTREE_ISOLATION) : "";
     expect(t).toContain("skills/pr-cleanup/SKILL.md");
   });
+
+  test("frontmatter retains explicit abandon cue and Mode A gate", () => {
+    const description = frontmatter(body()).split("\n").find((line) => line.startsWith("description:")) ?? "";
+    expect(description).toContain('"abandon this"');
+    expect(description).toContain("never infer abandon intent");
+  });
 });

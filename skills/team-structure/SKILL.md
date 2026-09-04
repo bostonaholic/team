@@ -1,6 +1,6 @@
 ---
 name: team-structure
-description: Break the reviewed design into vertical slices with verification checkpoints. Runs autonomously and advances to PLAN — no approval gate. Trigger on "slice this up", "break the design into steps", or "/team-structure".
+description: 'Breaks a reviewed design into verified slices. Trigger on "slice this up", "break the design into steps", or "/team-structure".'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---

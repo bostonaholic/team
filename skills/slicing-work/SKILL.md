@@ -1,6 +1,6 @@
 ---
 name: slicing-work
-description: Vertical-slice breakdown methodology for the structure-planner agent — the rationale for vertical slices, the 7-structure.md document format, the slicing rules, and the slicing heuristics. Loaded when a reviewed design is broken into independently testable slices.
+description: 'Defines slicing work methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

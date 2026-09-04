@@ -1,6 +1,6 @@
 ---
 name: principle-skip-loudly
-description: "Apply when reporting any run's outcome. What did not happen is reported as visibly as what did — skipped passes, degraded modes, and deliberate omissions each get a named line."
+description: 'Defines skip loudly. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

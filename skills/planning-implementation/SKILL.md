@@ -1,6 +1,6 @@
 ---
 name: planning-implementation
-description: Tactical planning methodology for the planner agent — the 8-plan.md document template that expands each vertical slice into file-level steps, and the tactical rules that keep the plan scannable and scoped. Loaded when a structure is translated into the implementer's playbook.
+description: 'Defines planning implementation methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

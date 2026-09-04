@@ -1,6 +1,6 @@
 ---
 name: decomposing-intent
-description: Artifact templates and decomposition procedure for the questioner agent — the 1-task.md and 2-questions.md body templates, the topic-slug rules, and the multi-repo detection flow. Loaded when a user's task description is decomposed into intent and neutral research questions.
+description: 'Defines decomposing intent methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

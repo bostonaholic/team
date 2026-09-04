@@ -1,6 +1,6 @@
 ---
 name: systems-thinking
-description: System-fit reasoning lens — loaded by researcher, structure-planner, and planner, and read inline by implementer, code-reviewer, and ux-reviewer to weigh a change's blast radius (callers, siblings, conventions) rather than only the diff in front of it
+description: 'Defines systems thinking methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

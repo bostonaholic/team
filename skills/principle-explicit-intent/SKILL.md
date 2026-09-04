@@ -1,6 +1,6 @@
 ---
 name: principle-explicit-intent
-description: "Apply before any irreversible act — merge, force-push, close, delete, publish. Fire only on stated intent, scope one approval per irreversible mutation, and never re-ask what was granted."
+description: 'Defines explicit intent. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

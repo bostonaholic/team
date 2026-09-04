@@ -187,3 +187,13 @@ describe("team-fix branch gate: executed against real repos", () => {
     expect(runGate(noOrigin)).toBe("on-default");
   });
 });
+
+test("team-fix ships only after the worktree gate and commits", () => {
+  const text = body();
+  const worktree = text.indexOf("git worktree add");
+  const branchGate = text.lastIndexOf("git rev-parse --abbrev-ref HEAD");
+  const create = text.lastIndexOf("gh pr create --draft");
+  expect(worktree).toBeGreaterThanOrEqual(0);
+  expect(branchGate).toBeGreaterThan(worktree);
+  expect(create).toBeGreaterThan(branchGate);
+});

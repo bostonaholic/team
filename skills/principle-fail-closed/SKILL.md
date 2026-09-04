@@ -1,6 +1,6 @@
 ---
 name: principle-fail-closed
-description: "Apply when a guarantee cannot be evaluated. The answer is no: unknown counts as unsupported, a missing verdict as not passed, an inconclusive refutation as the finding standing."
+description: 'Defines fail closed. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

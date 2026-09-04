@@ -1,6 +1,6 @@
 ---
 name: eng-design-doc-review
-description: Adversarially review a technical design document with fresh context. Dispatches the built-in read-only `Explore` subagent (clean context, no shared history with the design-author) against `docs/plans/<id>/6-design.md` and presents its verdict — APPROVE, REQUEST CHANGES, or COMMENT. It is the front door over the `reviewing-designs` brief the pipeline's DESIGN review gate also runs. Trigger on "review the design doc", "audit 6-design.md", "is this design ready", or `/eng-design-doc-review`.
+description: 'Reviews a technical design document with fresh context. Trigger on "review the design doc", "audit 6-design.md", "is this design ready", or "/eng-design-doc-review".'
 effort: high
 argument-hint: "[docs/plans/<id>/]"
 ---

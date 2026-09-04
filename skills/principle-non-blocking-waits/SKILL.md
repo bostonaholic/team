@@ -1,6 +1,6 @@
 ---
 name: principle-non-blocking-waits
-description: "Apply when a procedure waits on something outside the session — CI, a reviewer, a vendor CLI, a long job. Spend the wait in one backgrounded call the harness reports on, never in foreground sleeps that occupy the turn."
+description: 'Defines non blocking waits. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

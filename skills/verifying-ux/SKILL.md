@@ -1,6 +1,6 @@
 ---
 name: verifying-ux
-description: Live application verification procedure for the ux-reviewer agent — detect the project type (UI, API-only, or library), boot the application, exercise it with real requests, and evaluate the experience. Loaded when an implementation needs live smoke verification.
+description: 'Defines verifying ux methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

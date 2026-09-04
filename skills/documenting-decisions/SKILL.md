@@ -1,6 +1,6 @@
 ---
 name: documenting-decisions
-description: Architecture Decision Record format — capturing the context, decision, alternatives considered, and consequences of a significant technical choice. Load when recording an architectural decision or writing an ADR.
+description: 'Defines documenting decisions methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

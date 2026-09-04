@@ -1,6 +1,6 @@
 ---
 name: nested-agents
-description: Guardrails for spawning nested sub-agents from inside a Team pipeline agent (Claude Code >= 2.1.172) — loaded by researcher, implementer, code-reviewer, and security-reviewer. Nested dispatch is a context-economy optimization, never a dependency.
+description: 'Defines nested agents methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

@@ -140,4 +140,13 @@ describe("pr-watch-as-author skill: team-pr handoff", () => {
   test("skills/team-pr/SKILL.md names /pr-watch-as-author", () => {
     expect(teamPrBody()).toContain("/pr-watch-as-author");
   });
+
+  test("team-pr handoff follows its draft PR creation", () => {
+    const text = teamPrBody();
+    const create = text.lastIndexOf("gh pr create");
+    const handoff = text.lastIndexOf("/pr-watch-as-author");
+    expect(create).toBeGreaterThanOrEqual(0);
+    expect(handoff).toBeGreaterThan(create);
+  });
+
 });

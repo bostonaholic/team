@@ -1,6 +1,6 @@
 ---
 name: technical-design-doc
-description: Technical design document structure — problem statement, goals and non-goals, trade-off analysis, edge cases, and rollout planning. Load when writing or evaluating a design doc, TDD, or architecture proposal.
+description: 'Defines technical design doc methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

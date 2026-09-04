@@ -1,6 +1,6 @@
 ---
 name: reviewing-documentation
-description: Documentation-gap review methodology — applying prose-quality principles to reviews, the diff-to-docs review process (inventory, impact analysis, cross-reference), and the REQUIRED/RECOMMENDED doc-change classification. Load when reviewing a diff for documentation gaps, assessing existing docs against changed code, or classifying a documentation finding.
+description: 'Defines reviewing documentation methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

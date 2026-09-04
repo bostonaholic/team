@@ -1,13 +1,6 @@
 ---
 name: team-fix
-description: |
-  Compressed bug-fix pipeline — reproduce, write failing test, minimal fix,
-  verify, and open a draft PR. Skips Question/Research/Design/Structure/Plan
-  phases. Invoke ONLY on explicit pipeline intent — the user says "run the
-  bug-fix pipeline", "team-fix this bug", or runs "/team-fix". The pipeline
-  moves the tracker ticket, commits, pushes a branch, and opens a draft PR
-  without stopping to ask: never infer pipeline intent from a plain request
-  to fix a bug — that asks for an inline fix, not this pipeline.
+description: 'Runs the compressed bug-fix pipeline. Trigger on "run the bug-fix pipeline", "team-fix this bug", or "/team-fix" only; never infer pipeline intent from a plain bug-fix request.'
 effort: high
 argument-hint: "<ticket id, issue URL, or bug description>"
 ---
@@ -195,11 +188,11 @@ behind a green suite.
    - `test:` commit with the failing test
    - `fix:` commit with the minimal fix
 2. **Open a draft PR automatically — do not stop to ask.** The WORKTREE
-   phase already put the run on a non-default branch, so push that branch
-   and open the PR as a **draft** (`gh pr create --draft`). Re-assert the
-   branch gate first — `git rev-parse --abbrev-ref HEAD` must not name the
-   default branch. If it does, push nothing and report: the commits are
-   local and recoverable, a push to the default branch is not.
+   phase already put the run on a non-default branch. Re-assert the branch gate
+   first — `git rev-parse --abbrev-ref HEAD` must not name the default branch.
+   If it does, push nothing and report: the commits are local and recoverable;
+   a push to the default branch is not. Otherwise push that branch and open the
+   PR as a **draft** (`gh pr create --draft`).
 3. **Ticket — link now, in-review when ready.** If `ticketId` is non-null in
    `1-task.md`'s frontmatter, call the Skill tool with `tracking-tickets` and
    apply its ticket-lifecycle rules: link the PR to the ticket through the

@@ -1,6 +1,6 @@
 ---
 name: solid
-description: SOLID object-oriented design principles methodology — loaded by implementer agent when writing code and by code-reviewer agent when checking for design violations
+description: 'Defines solid methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

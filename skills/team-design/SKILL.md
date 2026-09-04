@@ -1,6 +1,6 @@
 ---
 name: team-design
-description: Decide the approach before any code is written. The design-author drafts the ~200-line design document, resolving its own open questions autonomously as recorded assumptions, then an adversarial design review gates advancement. Trigger on "design this", "let's align on the approach", or "/team-design".
+description: 'Drafts and adversarially reviews a design. Trigger on "design this", "let''s align on the approach", or "/team-design".'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---

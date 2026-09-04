@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Dispatches a fresh-context code review of a diff and prints the reviewer's report in full; the review methodology itself lives in `reviewing-code`, which the review agents load. Trigger on "review this diff", "review these changes", "code review this", or "/code-review".
+description: 'Reviews a diff with fresh context. Trigger on "review this diff", "review these changes", "code review this", or "/code-review".'
 effort: high
 argument-hint: "[<diff target>]"
 ---

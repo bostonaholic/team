@@ -1,6 +1,6 @@
 ---
 name: reviewing-security
-description: Security review methodology — attack-surface identification, OWASP Top 10 checks, additional vulnerability checks, and the CRITICAL/HIGH/MEDIUM/LOW severity classification ladder. Load when reviewing a diff for security vulnerabilities, auditing code for injection/XSS/secrets, or classifying a security finding's severity.
+description: 'Defines reviewing security methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

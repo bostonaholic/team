@@ -1,6 +1,6 @@
 ---
 name: researching-codebases
-description: Codebase research contract for the researcher agent — the evidence constraints on findings and the compressed research-report output format. Loaded when neutral research questions need factual, file-referenced answers.
+description: 'Defines researching codebases methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

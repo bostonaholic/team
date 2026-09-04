@@ -1,6 +1,6 @@
 ---
 name: principle-fix-root-causes
-description: "Apply when debugging any failure. Trace each symptom to its root cause and fix it there — reproduce first, ask why until the causal chain bottoms out, and never add a guard that silences the symptom while the disease remains."
+description: 'Defines fix root causes. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

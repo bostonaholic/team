@@ -1,6 +1,6 @@
 ---
 name: principle-generator-evaluator
-description: "Apply when work is judged — a review, a verdict, a verification pass. Never let the generator grade its own work; give the evaluator fresh context and veto without authorship."
+description: 'Defines generator evaluator. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

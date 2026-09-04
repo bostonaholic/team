@@ -1,15 +1,6 @@
 ---
 name: how
-description: |
-  Explain how a subsystem, feature flow, or code path works, at the level
-  a senior engineer onboarding onto it needs: architecture, runtime flow,
-  where things live, and the gotchas. Simple questions are answered
-  inline; complex ones fan out parallel read-only explorers and
-  synthesize their traces into one coherent explanation. A critique mode
-  adds fresh-context architectural review on top of the explanation.
-  Read-only — it writes nothing. Use `why` for motivation and history.
-  Trigger on "how does X work", "walk me through", "explain the
-  architecture", "where should this live", or "/how".
+description: 'Explains subsystem architecture and runtime flow. Trigger on "how does X work", "walk me through", "explain the architecture", or "/how".'
 effort: medium
 argument-hint: "[<subsystem, feature, or question>]"
 ---

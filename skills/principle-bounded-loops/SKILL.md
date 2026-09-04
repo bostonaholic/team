@@ -1,6 +1,6 @@
 ---
 name: principle-bounded-loops
-description: "Apply when writing any loop, retry, or watch cycle. Declare the cap with the loop and make hitting it a loud, terminal, reported outcome — never silent grinding. Size budgets are the output-side instance."
+description: 'Defines bounded loops. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

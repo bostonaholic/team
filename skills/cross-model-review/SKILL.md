@@ -1,6 +1,6 @@
 ---
 name: cross-model-review
-description: Cross-vendor review pass at the code-review and design-review gates — machine-wide kill-switch, pinned full-access invocation of the codex and agy CLIs through a bundled script, verify-before-adopt disposition of external claims, and untrusted-output handling.
+description: 'Defines cross model review methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

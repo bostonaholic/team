@@ -1,6 +1,6 @@
 ---
 name: principle-never-interpolate
-description: "Apply when any externally sourced value approaches a shell command. Prose travels by file, stdin, or the environment; scalars pass a byte-exact allowlist; everything is captured, guarded, and used in one invocation."
+description: 'Defines never interpolate. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

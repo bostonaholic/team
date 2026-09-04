@@ -1,6 +1,6 @@
 ---
 name: running-quality-checks
-description: Mechanical verification procedure for the verifier agent — detect available checks from project configuration, run them fastest-first in speed order, capture evidence, and derive a PASS/FAIL verdict. Loaded when pre-completion quality checks need to run.
+description: 'Defines running quality checks methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

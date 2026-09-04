@@ -1,6 +1,6 @@
 ---
 name: engineering-standards
-description: Engineering standards for design and implementation methodology -- loaded by planner, implementer, and code-reviewer agents for design-first workflow, implementation standards, and quality checklist
+description: 'Defines engineering standards methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

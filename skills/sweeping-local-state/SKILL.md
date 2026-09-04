@@ -1,13 +1,6 @@
 ---
 name: sweeping-local-state
-description: |
-  Machine-local teardown procedure for finished work — remove the state a merged
-  pull request, a closed pull request, or a completed review leaves on the machine
-  that git teardown never reaches: provisioned databases, containers, queues,
-  buckets, caches, and temp-directory scratch. Driven by a repo-declared
-  `.teamteardown` command list read from the default branch, never from the branch
-  being cleaned up. Loaded by pr-cleanup and by any caller finishing with a PR or
-  a review.
+description: 'Defines machine-local teardown. Load when finishing a PR or review that leaves provisioned local state.'
 user-invocable: false
 ---
 

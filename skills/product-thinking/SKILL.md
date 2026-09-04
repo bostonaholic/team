@@ -1,6 +1,6 @@
 ---
 name: product-thinking
-description: Product-need reasoning lens for "make something people want" — loaded by questioner, design-author, and structure-planner to validate user demand while framing, designing, and slicing scope
+description: 'Defines product-need lenses. Load when questioner, design-author, or structure-planner validates demand and scope.'
 user-invocable: false
 ---
 

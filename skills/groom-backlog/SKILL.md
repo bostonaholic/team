@@ -1,21 +1,6 @@
 ---
 name: groom-backlog
-description: |
-  Groom a project backlog in an issue tracker. Loads the whole board in bulk,
-  computes a gap inventory instead of eyeballing one, verifies each candidate
-  issue's factual claims against the code and the tracker, ranks the verified
-  candidates by a stated four-tier heuristic, proposes an evidence-backed
-  closure for an issue whose premise evaporated, clusters open issues by
-  outcome, places each cluster under a grouping construct whose description
-  states a verifiable property of the system, finds the dependencies between
-  tickets — the ones the tracker already records and the ones only the prose
-  admits — and proposes each missing link, and fixes triage, priority, label,
-  and state hygiene. The read-and-plan phase writes a plan file,
-  presents the consequential choices with one recommendation each, and waits
-  for the user's approval — nothing on the tracker changes before the user
-  answers. Trigger on "groom the backlog", "groom the board", "clean up the
-  backlog", "shape the backlog", "place these issues under milestones", or
-  "/groom-backlog".
+description: 'Grooms a project backlog and proposes tracker changes. Trigger on "groom the backlog", "groom the board", "clean up the backlog", or "/groom-backlog"; changes require user approval.'
 effort: high
 argument-hint: "[<project-number-or-url>] [--promote <issue-number>]"
 ---

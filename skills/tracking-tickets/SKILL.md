@@ -1,6 +1,6 @@
 ---
 name: tracking-tickets
-description: Ticket-lifecycle discipline for tracker-linked pipeline runs — when a ticket moves to in-progress and in-review, how the PR links to the ticket with a conditional closing footer (including the multi-repo home-only rule), and why tickets are never closed by hand. Load when picking up a ticketed task, opening a PR for a ticketed topic, or deciding a ticket's tracker-state transition.
+description: 'Defines tracking tickets methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

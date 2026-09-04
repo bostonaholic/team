@@ -518,4 +518,10 @@ describe("groom-backlog skill: evidence-backed closure proposals", () => {
       expect(recipes).toContain(label);
     }
   });
+
+  test("completion keeps board and promotion modes distinct", () => {
+    const text = body();
+    expect((text.match(/board mode/gi) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect((text.match(/promotion mode/gi) ?? []).length).toBeGreaterThanOrEqual(2);
+  });
 });

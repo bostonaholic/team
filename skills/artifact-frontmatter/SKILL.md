@@ -1,6 +1,6 @@
 ---
 name: artifact-frontmatter
-description: The artifact schema contract for docs/plans/<id>/ — the artifact inventory, the YAML frontmatter schema and phase enum, the 4-repos.md and 3-prd.md schemas, the topic-consistency invariant, ticketId scope, and the design-review record mechanics. Load when authoring or validating a pipeline artifact's frontmatter, checking the design-review verdict, or writing 4-repos.md or 3-prd.md.
+description: 'Defines pipeline artifact schemas. Load when authoring or validating artifact frontmatter, `4-repos.md`, `3-prd.md`, or design-review records.'
 user-invocable: false
 ---
 

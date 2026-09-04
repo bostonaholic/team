@@ -1,6 +1,6 @@
 ---
 name: worktree-isolation
-description: Worktree isolation methodology — loaded by the router to run the entire Team pipeline in one or more isolated git worktrees, enabling parallel /team runs and features that span multiple repositories
+description: 'Defines worktree isolation methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

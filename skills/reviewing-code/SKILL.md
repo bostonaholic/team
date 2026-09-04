@@ -1,6 +1,6 @@
 ---
 name: reviewing-code
-description: Code review methodology — generator-evaluator separation, veto without authorship, the report format, gate types and severity tiers, per-reviewer verdict criteria, and the code-reviewer inspection contract. Load when reviewing a diff for defects, classifying a code-review finding's severity, or writing a review verdict.
+description: 'Defines reviewing code methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

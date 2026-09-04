@@ -1,6 +1,6 @@
 ---
 name: principle-pre-image-first
-description: "Apply before any destructive or history-rewriting step. Capture the baseline that classifies the after-state and the pre-image or anchor that makes the change recoverable — no pre-image, no destructive write."
+description: 'Defines pre image first. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

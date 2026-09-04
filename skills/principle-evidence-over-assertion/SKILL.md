@@ -1,6 +1,6 @@
 ---
 name: principle-evidence-over-assertion
-description: "Apply when issuing any verdict, claim, or completion report. Cite the evidence that proves it — a command run, a file:line, a re-queried value — or degrade the verdict and say so."
+description: 'Defines evidence over assertion. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

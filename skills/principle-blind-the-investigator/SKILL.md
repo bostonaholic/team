@@ -1,6 +1,6 @@
 ---
 name: principle-blind-the-investigator
-description: "Apply when dispatching research, scouts, or verification helpers. Hand the investigator the question, never the wanted answer — an investigator that knows the conclusion anchors to it and verifies nothing."
+description: 'Defines blind the investigator. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

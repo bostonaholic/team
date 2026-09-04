@@ -1,6 +1,6 @@
 ---
 name: principle-record-assumptions
-description: "Apply when an autonomous step hits an open question. Resolve it yourself, mark it as an explicit auditable assumption naming the rejected alternative — an unmarked guess is a defect."
+description: 'Defines record assumptions. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

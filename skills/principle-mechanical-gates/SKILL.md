@@ -1,6 +1,6 @@
 ---
 name: principle-mechanical-gates
-description: "Apply when a rule must hold reliably. Enforce it with a deterministic check at the cheapest layer that can catch it, never with a prompt instruction alone."
+description: 'Defines mechanical gates. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

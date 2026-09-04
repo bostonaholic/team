@@ -1,6 +1,6 @@
 ---
 name: reviewing-designs
-description: The adversarial design-document review brief — the operating manuals a fresh-context read-only reviewer loads, the eight-step review process, the Conventional Comments output format, and the APPROVE / REQUEST CHANGES / COMMENT verdict set. Load when dispatching or running a design review.
+description: 'Defines reviewing designs methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 
@@ -156,4 +156,3 @@ verdict is the **terminal line of your report** — nothing follows it:
   scope — the `code-reviewer` agent owns that.
 - **Read-only.** Do not edit the design doc and do not run state-changing
   commands.
-

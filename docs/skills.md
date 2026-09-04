@@ -32,6 +32,10 @@ Every skill lives under `skills/<name>/SKILL.md` as YAML frontmatter plus a
 Markdown body. A single frontmatter field, `argument-hint`, sorts the
 catalog into two flavors:
 
+Frontmatter descriptions provide routing only: what a skill does and when to
+load or invoke it. Commands, numbers, names, paths, and hard rules remain in
+the skill body.
+
 - **Entry-point skills carry `argument-hint`.** Claude Code registers them
   as slash commands (`/team`, `/team-research`, and so on). The
   `argument-hint` documents what to pass as `$ARGUMENTS`.

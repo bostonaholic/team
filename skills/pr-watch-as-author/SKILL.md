@@ -1,19 +1,6 @@
 ---
 name: pr-watch-as-author
-description: |
-  Watch your own pull request for review feedback: undraft it when the
-  cue clearly says it is ready (an ambiguous cue watches the draft),
-  take a baseline snapshot, then poll GitHub in ~31-minute cycles for
-  up to 24 hours and triage new feedback as it arrives — inline review
-  threads and plain PR comments alike. Stops on
-  approval, merge, close, timeout, user interrupt, or repeated poll
-  failures; on approval it hands off to /shipit and never runs it.
-  Trigger on "the PR is ready for review", "watch the PR",
-  "watch this PR and fix comments", or "/pr-watch-as-author". The watch
-  undrafts the pull request, moves the tracker ticket, and delegates
-  apply-and-push on a high-confidence item, so invoke it ONLY on one of
-  those stated intents: never infer watch intent from a PR merely being
-  open or awaiting review.
+description: 'Watches an authored PR for feedback. Trigger on "watch the PR", "watch this PR and fix comments", or "/pr-watch-as-author" only; never infer intent from an open PR.'
 effort: medium
 argument-hint: "[<pr-number-or-url>]"
 ---

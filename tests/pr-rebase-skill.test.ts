@@ -431,4 +431,13 @@ describe("pr-rebase skill: the publisher is detected, never assumed to be git", 
   test("names the resolved publisher", () => {
     expect(body()).toContain("publisher");
   });
+
+  test("completion reports the publisher and publish result", () => {
+    const text = body();
+    const draftAfter = text.lastIndexOf("DRAFT_AFTER");
+    const publisher = text.lastIndexOf("publisher");
+    expect(draftAfter).toBeGreaterThan(-1);
+    expect(publisher).toBeGreaterThan(draftAfter);
+    expect(text.lastIndexOf("publish happened")).toBeGreaterThan(publisher);
+  });
 });

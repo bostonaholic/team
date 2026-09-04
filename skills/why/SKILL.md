@@ -1,15 +1,6 @@
 ---
 name: why
-description: |
-  Investigate the design rationale behind code: what forces led to its
-  shape, what alternatives were rejected, what edge cases or incidents
-  motivated it. Builds a code anchor from git history, fans out parallel
-  read-only investigators across every available evidence source, and
-  synthesizes a confidence-tiered, citation-backed answer that separates
-  what the record states from what is merely inferred. Read-only — it
-  writes nothing. Use `how` for runtime behavior. Trigger on "why does X
-  work this way", "why was this built like this", "design rationale",
-  "what's the history of", or "/why".
+description: 'Investigates design rationale behind code. Trigger on "why does X work this way", "why was this built like this", "design rationale", or "/why".'
 effort: high
 argument-hint: "[<question, file, symbol, or decision>]"
 ---

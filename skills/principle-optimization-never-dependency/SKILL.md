@@ -1,6 +1,6 @@
 ---
 name: principle-optimization-never-dependency
-description: "Apply when wiring an enhancement path — a sub-agent, a second-vendor pass, an upload. It improves the work when it runs and costs nothing when it cannot: skip loudly, fall back inline, never soften the outcome."
+description: 'Defines optimization never dependency. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

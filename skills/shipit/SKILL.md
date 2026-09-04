@@ -1,15 +1,6 @@
 ---
 name: shipit
-description: |
-  Land a reviewed pull request: discover the open PR for the current branch,
-  push any unpushed commits, wait for CI to go green, then squash-merge it so
-  the PR title (which may carry a version) lands as the commit subject.
-  Handles a PR that has fallen behind its base (rebase + force-with-lease) and
-  surfaces branch-protection rejections verbatim. Project-agnostic — it knows
-  nothing about how any project versions itself. Invoke ONLY on explicit ship
-  intent — the user says "ship it", "land the PR", "land this", or runs
-  "/shipit". Landing merges, which is irreversible: never infer ship intent
-  from a PR merely being approved, green, or finished.
+description: 'Lands a reviewed pull request. Trigger on "ship it", "land the PR", "land this", or "/shipit" only; never infer ship intent from approval, green CI, or completion.'
 effort: medium
 argument-hint: "[<pr-number>]"
 ---

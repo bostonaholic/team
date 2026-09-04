@@ -1,6 +1,6 @@
 ---
 name: implementing-slices
-description: Slice-by-slice execution procedure for the implementer agent — dispatch modes (initial and review-fix), the slice-execution loop, TDD discipline, blocker handling, and the scope fence. Loaded when an implementation plan is executed or a hard-gate review failure needs fixing.
+description: 'Defines implementing slices methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

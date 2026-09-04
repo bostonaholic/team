@@ -11,99 +11,88 @@ const LINE_BUDGETS = { entry: 150, methodology: 80, principle: 25 } as const;
 const DESCRIPTION_BUDGETS = { entry: 200, methodology: 150, principle: 150 } as const;
 
 type SkillTier = keyof typeof LINE_BUDGETS;
-type BudgetReason = { lineCount: number; descriptionLength: number; reason: string };
+type BudgetReason = { lineCount?: number; descriptionLength?: number; reason: string };
 
 // docs/testing.md normally rejects line ceilings. This is a deliberate narrow
 // exception: skill source is loaded into model context, so its size is a cost
 // contract. Exceptions record the current baseline until compression removes it.
 const SKILL_BUDGET_REASONS: Record<string, BudgetReason> = Object.fromEntries(
   [
-    ["artifact-frontmatter", 213, 377],
-    ["authoring-designs", 164, 270],
-    ["changelog", 228, 140],
-    ["code-review", 31, 271],
-    ["conventional-comments", 61, 277],
-    ["cross-model-review", 291, 260],
-    ["decomposing-intent", 231, 271],
-    ["documenting-decisions", 123, 212],
-    ["eng-design-doc-review", 177, 489],
-    ["engineering-standards", 155, 198],
-    ["finding-files", 48, 278],
-    ["git-commit", 162, 228],
-    ["groom-backlog", 844, 1046],
-    ["how", 202, 592],
-    ["implementing-slices", 124, 275],
-    ["nested-agents", 249, 246],
-    ["planning-implementation", 82, 274],
-    ["pr-cleanup", 632, 677],
-    ["pr-open-comments", 493, 919],
-    ["pr-rebase", 756, 868],
-    ["pr-verify", 199, 465],
-    ["pr-watch-as-author", 333, 808],
-    ["pr-watch-as-reviewer", 1107, 1014],
-    ["principle-blind-the-investigator", 34, 207],
-    ["principle-bounded-loops", 36, 206],
-    ["principle-deep-agents-narrow-seams", 31, 164],
-    ["principle-evidence-over-assertion", 28, 181],
-    ["principle-explicit-intent", 36, 189],
-    ["principle-fail-closed", 29, 179],
-    ["principle-files-are-the-contract", 31, 175],
-    ["principle-fix-root-causes", 37, 227],
-    ["principle-generator-evaluator", 35, 177],
-    ["principle-human-owns-the-ends", 28, 183],
-    ["principle-idempotent-reruns", 28, 163],
-    ["principle-least-privilege", 35, 197],
-    ["principle-mechanical-gates", 27, 157],
-    ["principle-never-interpolate", 39, 217],
-    ["principle-non-blocking-waits", 52, 220],
-    ["principle-optimization-never-dependency", 31, 212],
-    ["principle-plan-present-wait", 37, 261],
-    ["principle-pre-image-first", 31, 210],
-    ["principle-progress-tracking", 46, 228],
-    ["principle-record-assumptions", 30, 184],
-    ["principle-scope-fence", 30, 191],
-    ["principle-single-source-of-truth", 29, 173],
-    ["principle-skip-loudly", 29, 178],
-    ["principle-untrusted-input-is-data", 31, 169],
-    ["product-requirements-doc", 142, 247],
-    ["product-thinking", 75, 189],
-    ["qrspi-workflow", 168, 203],
-    ["refactoring-to-patterns", 77, 156],
-    ["reflect", 542, 817],
-    ["researching-codebases", 91, 218],
-    ["review-severity-tiers", 88, 348],
-    ["reviewing-code", 275, 321],
-    ["reviewing-designs", 159, 289],
-    ["reviewing-documentation", 85, 356],
-    ["reviewing-security", 79, 323],
-    ["running-quality-checks", 66, 254],
-    ["shipit", 256, 646],
-    ["slicing-work", 117, 262],
-    ["solid", 92, 162],
-    ["sweeping-local-state", 232, 477],
-    ["systematic-debugging", 156, 145],
-    ["systems-thinking", 122, 251],
-    ["team", 582, 454],
-    ["team-design", 148, 303],
-    ["team-fix", 220, 505],
-    ["team-implement", 247, 474],
-    ["team-plan", 86, 291],
-    ["team-pr", 438, 615],
-    ["team-research", 110, 233],
-    ["team-structure", 118, 217],
-    ["team-worktree", 260, 392],
-    ["technical-design-doc", 175, 208],
-    ["test-driven-bug-fix", 150, 177],
-    ["test-first-development", 136, 159],
-    ["test-style", 266, 338],
-    ["tracking-tickets", 82, 384],
-    ["verifying-ux", 155, 263],
-    ["why", 215, 590],
-    ["worktree-isolation", 254, 198],
-    ["writing-prose", 274, 217],
-  ].map(([skill, lineCount, descriptionLength]) => [
+    ["artifact-frontmatter", 213],
+    ["authoring-designs", 164],
+    ["changelog", 228],
+    ["cross-model-review", 291],
+    ["decomposing-intent", 231],
+    ["documenting-decisions", 123],
+    ["eng-design-doc-review", 177],
+    ["engineering-standards", 155],
+    ["git-commit", 162],
+    ["groom-backlog", 829],
+    ["how", 193],
+    ["implementing-slices", 124],
+    ["nested-agents", 249],
+    ["planning-implementation", 82],
+    ["pr-cleanup", 622],
+    ["pr-open-comments", 478],
+    ["pr-rebase", 744],
+    ["pr-verify", 192],
+    ["pr-watch-as-author", 320],
+    ["pr-watch-as-reviewer", 1090],
+    ["principle-blind-the-investigator", 34],
+    ["principle-bounded-loops", 36],
+    ["principle-deep-agents-narrow-seams", 31],
+    ["principle-evidence-over-assertion", 28],
+    ["principle-explicit-intent", 36],
+    ["principle-fail-closed", 29],
+    ["principle-files-are-the-contract", 31],
+    ["principle-fix-root-causes", 37],
+    ["principle-generator-evaluator", 35],
+    ["principle-human-owns-the-ends", 28],
+    ["principle-idempotent-reruns", 28],
+    ["principle-least-privilege", 35],
+    ["principle-mechanical-gates", 27],
+    ["principle-never-interpolate", 39],
+    ["principle-non-blocking-waits", 52],
+    ["principle-optimization-never-dependency", 31],
+    ["principle-plan-present-wait", 37],
+    ["principle-pre-image-first", 31],
+    ["principle-progress-tracking", 46],
+    ["principle-record-assumptions", 30],
+    ["principle-scope-fence", 30],
+    ["principle-single-source-of-truth", 29],
+    ["principle-skip-loudly", 29],
+    ["principle-untrusted-input-is-data", 31],
+    ["product-requirements-doc", 142],
+    ["qrspi-workflow", 168],
+    ["reflect", 531],
+    ["researching-codebases", 91],
+    ["review-severity-tiers", 88],
+    ["reviewing-code", 275],
+    ["reviewing-designs", 158],
+    ["reviewing-documentation", 85],
+    ["shipit", 247],
+    ["slicing-work", 117],
+    ["solid", 92],
+    ["sweeping-local-state", 225],
+    ["systematic-debugging", 156],
+    ["systems-thinking", 122],
+    ["team", 575],
+    ["team-fix", 213],
+    ["team-implement", 240],
+    ["team-pr", 429],
+    ["team-worktree", 254],
+    ["technical-design-doc", 175],
+    ["test-driven-bug-fix", 150],
+    ["test-first-development", 136],
+    ["test-style", 266],
+    ["tracking-tickets", 82],
+    ["verifying-ux", 155],
+    ["why", 206],
+    ["worktree-isolation", 254],
+    ["writing-prose", 274],
+  ].map(([skill, lineCount]) => [
     skill,
-    { lineCount, descriptionLength, reason: "Existing skill awaits compression." },
+    { lineCount, reason: "Existing skill awaits compression." },
   ]),
 );
 
@@ -114,13 +103,19 @@ function description(text: string): string {
   const index = lines.findIndex((line) => line.startsWith("description:"));
   if (index < 0) return "";
   const value = lines[index]!.replace(/^description:\s*/, "");
-  if (value !== "|" && value !== ">") return value.trim();
+  if (!/^[|>][-]?$/.test(value)) {
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      return value[0] === '"' ? value.slice(1, -1).replace(/\\([\\"])/g, "$1") : value.slice(1, -1).replace(/''/g, "'");
+    }
+    return value.trim();
+  }
   const continuation: string[] = [];
   for (const line of lines.slice(index + 1)) {
     if (!/^\s/.test(line)) break;
-    continuation.push(line);
+    continuation.push(line.trim());
   }
-  return continuation.join(" ").replace(/\s+/g, " ").trim();
+  const folded = value.startsWith(">") ? continuation.join(" ").replace(/\s+/g, " ") : continuation.join("\n");
+  return value.endsWith("-") ? folded.trimEnd() : `${folded.trim()}\n`;
 }
 
 function tier(name: string, metadata: string): SkillTier {
@@ -166,8 +161,12 @@ function misstatedReasons(budgets: SkillBudget[], reasons: Record<string, Budget
     const budget = byName.get(name);
     if (budget === undefined) return [];
     const errors: string[] = [];
-    if (reason.lineCount !== budget.lineCount) errors.push(`${name}: line count`);
-    if (reason.descriptionLength !== budget.descriptionLength) errors.push(`${name}: description length`);
+    const lineOver = budget.lineCount > LINE_BUDGETS[budget.tier];
+    const descriptionOver = budget.descriptionLength > DESCRIPTION_BUDGETS[budget.tier];
+    if (lineOver ? reason.lineCount !== budget.lineCount : reason.lineCount !== undefined) errors.push(`${name}: line count`);
+    if (descriptionOver ? reason.descriptionLength !== budget.descriptionLength : reason.descriptionLength !== undefined) {
+      errors.push(`${name}: description length`);
+    }
     if (reason.reason.trim() === "") errors.push(`${name}: empty reason`);
     return errors;
   });
@@ -199,5 +198,18 @@ describe("skill source budget", () => {
     expect(overBudgetWithoutReason(planted, {})).toEqual(["planted"]);
     expect(reasonWithoutOverage(planted, { planted: { lineCount: 151, descriptionLength: 201, reason: "recorded" } })).toEqual([]);
     expect(misstatedReasons(planted, { planted: { lineCount: 150, descriptionLength: 201, reason: "recorded" } })).toEqual(["planted: line count"]);
+    expect(reasonWithoutOverage([{ name: "small", tier: "entry", lineCount: 1, descriptionLength: 1 }], { small: { lineCount: 1, reason: "stale" } })).toEqual(["small"]);
+    expect(misstatedReasons(planted, { planted: { lineCount: 151, descriptionLength: 200, reason: "recorded" } })).toEqual(["planted: description length"]);
+    expect(misstatedReasons(planted, { planted: { lineCount: 151, descriptionLength: 201, reason: "" } })).toEqual(["planted: empty reason"]);
+    expect(overBudgetWithoutReason(planted, { other: { lineCount: 151, reason: "wrong key" } })).toEqual(["planted"]);
+    expect(reasonWithoutOverage([], { ghost: { lineCount: 151, reason: "stale" } })).toEqual(["ghost"]);
+  });
+
+  test("description parser handles YAML scalar styles and chomping", () => {
+    expect(description("---\ndescription: \"quoted value\"\n---\n")).toBe("quoted value");
+    expect(description("---\ndescription: |\n  line one\n  line two\n---\n")).toBe("line one\nline two\n");
+    expect(description("---\ndescription: |-\n  line one\n  line two\n---\n")).toBe("line one\nline two");
+    expect(description("---\ndescription: >\n  line one\n  line two\n---\n")).toBe("line one line two\n");
+    expect(description("---\ndescription: >-\n  line one\n  line two\n---\n")).toBe("line one line two");
   });
 });

@@ -1,6 +1,6 @@
 ---
 name: team-plan
-description: Produce the tactical implementation plan from the structure. The plan is an autonomous artifact for the implementer — no approval gate at this phase (the design was already gated by the adversarial design review). Trigger on "plan the implementation", "spell out the steps", or "/team-plan".
+description: 'Produces the tactical implementation plan. Trigger on "plan the implementation", "spell out the steps", or "/team-plan".'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---

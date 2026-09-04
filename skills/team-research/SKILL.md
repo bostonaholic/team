@@ -1,6 +1,6 @@
 ---
 name: team-research
-description: Research a codebase area before making changes. Dispatches parallel read-only agents (file-finder + researcher) that read 2-questions.md only — never 1-task.md. Trigger on "research this", "explore the codebase for", or "/team-research".
+description: 'Researches a codebase area before changes. Trigger on "research this", "explore the codebase for", or "/team-research".'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---

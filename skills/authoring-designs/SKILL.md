@@ -1,6 +1,6 @@
 ---
 name: authoring-designs
-description: Design-document authoring procedure for the design-author agent — the repo-scope confirmation flow, the autonomous open-questions resolution rule, and the 6-design.md document template. Loaded when a design document is drafted or revised for the adversarial design review.
+description: 'Defines the design-document procedure. Load when drafting or revising `6-design.md` for adversarial review.'
 user-invocable: false
 ---
 

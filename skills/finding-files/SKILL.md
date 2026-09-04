@@ -1,6 +1,6 @@
 ---
 name: finding-files
-description: File-location search strategy for the file-finder agent — glob by naming convention, content search, import tracing, directory exploration, and manifest checks, scoped to the vocabulary in 2-questions.md. Loaded when files relevant to an area under investigation need to be found.
+description: 'Defines finding files methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

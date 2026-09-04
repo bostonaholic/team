@@ -136,7 +136,9 @@ change:
 - Commands, flags, GraphQL fields, shell patterns, and template strings the
   prompt tells the model to emit.
 - File paths and cross-references. A renamed target must fail the build.
-- Section headings, and the order of two sections.
+- Section headings and order only when they identify a machine-facing contract;
+  skill-prose tests may pin commands, numbers, names, or paths, never a
+  sentence or exact section heading/order.
 - Numeric constants that bound behavior (`sleep 1860`, `timeout 1800`).
 - The **absence** of a forbidden identifier or a forbidden claim. A negative
   sweep never breaks under a rewrite, because a rewrite does not add back the
@@ -151,8 +153,9 @@ still:
 - That two words appear near each other. Proximity spans (`[^.]{0,240}`,
   `.{0,250}`) test if an author put two ideas in one sentence. That is a style
   question, not a contract.
-- How long a file is. A line ceiling measures nothing about correctness, and it
-  turns every later edit into a budget negotiation.
+- How long a file is. A line ceiling measures nothing about correctness, except
+  a declared context-cost budget for model-loaded skill source. That exception
+  records its current baseline and expires when compression removes the overage.
 
 The test is simple:
 **if a rewrite that preserves the meaning turns the test red, the test was measuring the wording.**

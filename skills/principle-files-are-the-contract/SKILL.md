@@ -1,6 +1,6 @@
 ---
 name: principle-files-are-the-contract
-description: "Apply when passing state between steps, agents, sessions, or runs. Write the durable artifact to disk and treat the file as the interface; never rely on conversation memory."
+description: 'Defines files are the contract. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

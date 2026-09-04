@@ -1,6 +1,6 @@
 ---
 name: principle-human-owns-the-ends
-description: "Apply when deciding whether to consult the user mid-run. The human decides what to build and what to ship; everything between runs autonomously and defers findings to the PR review."
+description: 'Defines human owns the ends. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: principle-scope-fence
-description: "Apply when executing against an approved plan, structure, or anchored change. The artifact authorizes exactly the change it names; work outside the fence is documented, never done silently."
+description: 'Defines scope fence. Apply when its cross-cutting rule governs the current work.'
 user-invocable: false
 ---
 

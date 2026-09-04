@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: Root cause investigation methodology — loaded by agents when debugging failures to enforce evidence-first diagnosis over guess-and-fix approaches
+description: 'Defines systematic debugging methodology. Load when agents need its procedure.'
 user-invocable: false
 ---
 

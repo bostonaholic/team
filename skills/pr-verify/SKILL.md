@@ -1,13 +1,6 @@
 ---
 name: pr-verify
-description: |
-  Verify a pull request's test plan with evidence-rated verdicts: extract
-  every test-plan item, classify each by verification strategy, collect
-  cited evidence per item (PASS / FAIL / PARTIAL at HIGH / MEDIUM / LOW
-  confidence), and report a READY / NEEDS ATTENTION / NOT READY final
-  verdict with follow-up recommendations. Read-only — it verifies claims
-  and changes nothing. Trigger on "verify the test plan", "check the PR
-  items", "is this PR ready", or "/pr-verify".
+description: 'Verifies a PR test plan with evidence-rated verdicts. Trigger on "verify the test plan", "check the PR items", "is this PR ready", or "/pr-verify".'
 effort: high
 argument-hint: "[<pr-number-or-url>]"
 ---

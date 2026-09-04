@@ -1,18 +1,6 @@
 ---
 name: pr-rebase
-description: |
-  Bring a feature branch up to date with its base without changing what the
-  branch does: capture a pre-rebase check baseline, fetch, rebase onto the
-  latest base, resolve each conflict from both sides' intent with the
-  rationale recorded to disk, re-run the same checks, and treat any check
-  that passed before and fails after as a regression that blocks the push.
-  Ends with an unprompted, lease-verified publish through the repo's own
-  publisher — a `--force-with-lease --force-if-includes` push by default.
-  Invoke ONLY on explicit rebase intent — the user says "rebase onto main",
-  "pull main and rebase", "update the branch", "get this branch current",
-  or runs "/pr-rebase". A rebase rewrites history and the push rewrites the
-  remote: never infer rebase intent from a branch merely being behind its
-  base, from a red CI run, or from a merge-conflict warning on the PR page.
+description: 'Rebases a branch onto its base. Trigger on "rebase onto main", "pull main and rebase", "update the branch", or "/pr-rebase" only; never infer intent from a branch being behind.'
 effort: high
 argument-hint: "[<pr-number-or-url>]"
 disable-model-invocation: true
