@@ -203,6 +203,36 @@ describe("dev install: refresh after pulls (#312)", () => {
     expect(installCalls(fixture)).toHaveLength(2);
   });
 
+  // The hooks live in the shared .git/hooks, so a rebase inside a linked
+  // worktree fires post-rewrite too. The install links the primary checkout,
+  // and a worktree rebase changes nothing that checkout serves, so the hook
+  // must stay quiet there instead of running the installer against the
+  // worktree (whose guard refuses a checkout the marketplace does not link).
+  test("a rebase inside a linked worktree neither reruns the installer nor fails", () => {
+    const fixture = newFixture();
+    expect(install(fixture).status).toBe(0);
+    expect(installCalls(fixture)).toHaveLength(1);
+
+    const worktree = join(fixture.root, "worktree");
+    git(fixture.checkout, "worktree", "add", "-q", worktree, "-b", "feature");
+    writeFileSync(join(worktree, "local"), "local\n");
+    git(worktree, "add", "local");
+    git(worktree, "commit", "-q", "-m", "local change");
+    advanceUpstream(fixture, "two");
+    git(worktree, "fetch", "-q", "origin");
+
+    const rebase = run(
+      worktree,
+      "git",
+      ["rebase", "origin/main"],
+      fixtureEnv(fixture),
+    );
+
+    expect(rebase.status).toBe(0);
+    expect(rebase.output).not.toContain("install failed");
+    expect(installCalls(fixture)).toHaveLength(1);
+  });
+
   test("reinstallation is idempotent and uninstall removes owned hooks", () => {
     const fixture = newFixture();
     expect(install(fixture).status).toBe(0);
