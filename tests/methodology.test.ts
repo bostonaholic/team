@@ -627,6 +627,16 @@ describe("writing-prose lens (L2 content tripwire)", () => {
     expect(text).toContain("Two modes");
   });
 
+  // The document-level rule, which sits above the sentence-level rules.
+  test("pins the one-busy-reader rule and its named source", () => {
+    const text = read(SKILL_FILE);
+    expect(text).toContain("One busy reader");
+    expect(text).toContain("Writing That Works");
+    expect(text).toContain("Kenneth Roman");
+    expect(text).toContain("Joel Raphaelson");
+    expect(text).toContain("Lead with the recommendation");
+  });
+
   test("frontmatter description names both modes (strict and STE-flavored)", () => {
     const fm = frontmatter(read(SKILL_FILE));
     const description = fm.split("\n").find((line) => line.startsWith("description:")) ?? "";

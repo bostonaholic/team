@@ -1241,9 +1241,14 @@ lists more than three carries one recorded reason naming that count (see
 
 - **Purpose:** Plain-language prose quality for authoring and review.
 - **Loaded by:** technical-writer, design-author.
-- **Key behaviors:** A seventh-grade reading-level bar governs prose the
-  agent writes as well as prose it assesses: readable, plain language
-  aimed at someone who has not seen the code, clarity over cleverness.
+- **Key behaviors:** One document-level rule sits above the sentence rules,
+  drawn from Kenneth Roman and Joel Raphaelson's *Writing That Works*: a PR
+  description, a design summary, or a review comment addresses one busy
+  reader deciding one thing, so it leads with the recommendation, names the
+  action wanted, and cuts every sentence that describes the document. A
+  seventh-grade reading-level bar governs prose the agent writes as well as
+  prose it assesses: readable, plain language aimed at someone who has not
+  seen the code, clarity over cleverness.
   ASD-STE100 rules run in two modes — strict for instruction text,
   STE-flavored for descriptive prose — with three deltas (sentence cap,
   form, conditional mood) and every ban list shared. A delete-list names

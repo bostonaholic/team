@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **[`writing-prose`](https://github.com/bostonaholic/team/blob/main/skills/writing-prose/SKILL.md) now carries a document-level rule, not only sentence-level ones.** Every rule in the skill governed a sentence: the word caps, the substitutions, the delete list. None said where the point goes. The new `## One busy reader` rule comes from Kenneth Roman and Joel Raphaelson's *Writing That Works: How to Communicate Effectively in Business*, which is about memos and proposals — the same job a PR description does, for one busy reader making one decision with no time. Nine sub-rules in the style guide: lead with the recommendation, make the title say something, name the action and owner and date, cut the throat-clearing, write to a person, be specific, take a stand, keep it to one page, and read it aloud. A tenth self-lint item, **Buried point**, fails a draft whose recommendation is not in the first paragraph. **What this asks of you:** nothing. Design docs, PR bodies, and review comments the pipeline writes should open with the point instead of building to it.
+
 ## [0.83.0] - 2026-09-04
 
 ### Changed
