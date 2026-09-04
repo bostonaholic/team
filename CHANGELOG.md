@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Team skills now load concise routers instead of repeated instructions.** Shared topic discovery runs from one bundled helper. Repeated progress banners and principle paths are removed. Detailed procedures live in adjacent references. Skill-source budgets gate principles at 25 lines, methodology at 80 lines, entry points at 150 lines, and descriptions at 200 characters. Methodology descriptions use 150 characters. Every cross-skill load keeps the machine-readable `Call the Skill tool with <name>` form. Tests validate the required load names for each component. **What this asks of you:** nothing. Commands and behavior are unchanged.
+
 ## [0.82.0] - 2026-09-04
 
 ### Added
@@ -15,7 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Team skills now load concise routers instead of repeated instructions.** Shared topic discovery runs from one bundled helper, repeated progress banners and principle paths are removed, and detailed procedures live in adjacent references. Skill-source budgets now gate principles at 25 lines, methodology at 80, entry points at 150, and descriptions at 200 characters (150 for methodology), with reviewed exceptions recorded in tests. **What this asks of you:** nothing; commands and behavior are unchanged.
 - **Pipeline artifacts are now numbered in phase order:** `1-task.md`, `2-questions.md`, `3-prd.md`, `4-repos.md`, `5-research.md`, `6-design.md`, `7-structure.md`, `8-plan.md`. A `docs/plans/<id>/` listing now reads in the order the pipeline produces the files, and the two conditional artifacts (`3-prd.md`, `4-repos.md`) hold fixed slots whether or not a run writes them. Review records keep their names: `design-review-<n>.md`, `cross-model-notes.md`, `cross-model-raw.md`, `review-<n>.md`. The unnumbered names are no longer recognized anywhere — the recovery hooks, the eight discovery blocks, and every agent prompt read only the numbered form. **What this asks of you:** a run started on an earlier version will not resume — rename its artifacts to the numbered form, or finish that run before upgrading.
 
 ## [0.81.0] - 2026-09-03
