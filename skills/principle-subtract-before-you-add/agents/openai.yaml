@@ -1,0 +1,4 @@
+interface:
+  display_name: "Principle: Subtract Before You Add"
+  short_description: "Remove complexity first, then build on the simpler base"
+  default_prompt: "Use $principle-subtract-before-you-add to remove complexity first, then build on the simpler base."

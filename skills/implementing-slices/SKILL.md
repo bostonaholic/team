@@ -34,6 +34,7 @@ Then run the full suite, resolve every failure type from the round, and report e
 ## TDD and scope invariants
 
 - Write only minimal code exercised by the current slice's tests. Do not preempt later slices; do not optimize/refactor before green. Stop if code has no test.
+- Apply `principle-subtract-before-you-add`: remove what the slice replaces before adding its replacement, and add no guard its tests do not exercise.
 - Apply `principle-scope-fence`: the plan authorizes exactly its named changes. Do NOT change acceptance tests or invent files/directories absent from the plan. Record concerns but satisfy tests as written.
 
 ## Blockers

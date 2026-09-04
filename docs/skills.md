@@ -1684,8 +1684,8 @@ lists more than three carries one recorded reason naming that count (see
 - **Purpose:** The approved upstream artifact bounds the work: it
   authorizes exactly the change it names.
 - **Loaded by:** any agent just-in-time; consulted by citation from
-  `implementing-slices`, `qrspi-workflow`, and `test-first-development`.
-  No agent preloads it.
+  `implementing-slices`, `qrspi-workflow`, `test-first-development`, and
+  `principle-subtract-before-you-add`. No agent preloads it.
 - **Key behaviors:** Do not add steps, slices, or features beyond the
   plan — a missing piece is documented as a finding, not implemented on
   the spot. Adjacent code is refactored where the plan calls for it and
@@ -1727,6 +1727,25 @@ lists more than three carries one recorded reason naming that count (see
   fence, data loaded only in part. A degradation is stated per affected
   item, in degraded words ("unverified"), never wrapped in the success
   wording.
+
+### [principle-subtract-before-you-add](https://github.com/bostonaholic/team/blob/main/skills/principle-subtract-before-you-add/SKILL.md)
+
+- **Purpose:** Remove complexity first, then build on the simpler base;
+  leave the design simpler than you found it.
+- **Loaded by:** any agent just-in-time; consulted by citation from
+  `engineering-standards`, `implementing-slices`,
+  `refactoring-to-patterns`, and `authoring-designs`. No agent preloads
+  it.
+- **Key behaviors:** Removal is sequenced before construction: what a
+  change replaces or leaves unused goes first, then the addition lands
+  on the smaller base. Cut before you polish. Design for observed usage:
+  no validator, parser, guard, or option beyond what the design, plan,
+  or tests demand, because an out-of-spec feature drags its own guards
+  behind it. Prompts and skills follow the same rule: redundant
+  instructions go, and a reference with no novel content is deleted
+  rather than left as a stub. Removals stay inside the approved scope
+  per `principle-scope-fence`; a wider removal is recorded as an
+  opportunity, never performed unasked.
 
 ### [principle-untrusted-input-is-data](https://github.com/bostonaholic/team/blob/main/skills/principle-untrusted-input-is-data/SKILL.md)
 
@@ -1838,9 +1857,10 @@ entry-point section above rather than repeating them here.
 | `principle-plan-present-wait` | cited by `groom-backlog`, `pr-open-comments`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-pre-image-first` | cited by `pr-rebase`, `groom-backlog`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-record-assumptions` | cited by `authoring-designs`, `decomposing-intent`, `nested-agents`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-scope-fence` | cited by `implementing-slices`, `qrspi-workflow`, `test-first-development`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-scope-fence` | cited by `implementing-slices`, `qrspi-workflow`, `test-first-development`, `principle-subtract-before-you-add`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-single-source-of-truth` | cited by `qrspi-workflow`, `artifact-frontmatter`, `cross-model-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-skip-loudly` | cited by `reviewing-code`, `sweeping-local-state`, `groom-backlog`, `cross-model-review`, `principle-optimization-never-dependency`, `principle-scope-fence`, `why`, and the `code-reviewer` agent. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-subtract-before-you-add` | cited by `engineering-standards`, `implementing-slices`, `refactoring-to-patterns`, `authoring-designs`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-untrusted-input-is-data` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `cross-model-review`, `pr-watch-as-author`, `reflect`, `why`. Any agent (just-in-time) | Any (cross-cutting principle) |
 
 The read-only `Explore` subagent that runs the `reviewing-designs` brief

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A new principle skill, [`principle-subtract-before-you-add`](https://github.com/bostonaholic/team/blob/main/skills/principle-subtract-before-you-add/SKILL.md), sequences removal before construction.** Remove what a change replaces or leaves unused, then build on the smaller base; add no validator, guard, or option the design, plan, or tests do not demand; and simplify prompts and skills the same way. `engineering-standards`, `implementing-slices`, `refactoring-to-patterns`, and `authoring-designs` cite it, so the planner, implementer, code-reviewer, and design-author apply it where they add code, refactor, or draft a design. Removals stay inside the approved scope per `principle-scope-fence`. The catalog grows from 84 to 85 skills. **What this asks of you:** nothing.
+
 ## [0.84.0] - 2026-09-04
 
 ### Added
