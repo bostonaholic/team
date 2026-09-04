@@ -6,23 +6,10 @@ user-invocable: false
 
 # Idempotent Re-runs
 
-A re-run converges on the same end state instead of failing or
-duplicating. Already-done is done, not an error; match before create;
-re-read before write.
+Make re-runs converge without failure or duplication: Already-done is done, not an error; match before create; re-read before write.
 
-**Why:** Interruption is normal — a rate limit, a crash, a compaction, a
-user stop. When a failure mid-plan stops the run, the recovery story is
-"run it again", and that only works if the second pass is safe against
-the first pass's partial results.
-
-**Pattern:**
-- Deleting the already-deleted, closing the already-closed: report it as
-  done and continue. Never treat convergence as failure.
-- Match by title or content before creating, so a re-run of an approved
-  plan never duplicates an issue, a comment, or a construct.
-- Re-read each item immediately before writing it. An item whose state
-  changed since the plan is skipped and reported, not overwritten.
-- Record landed steps as you go, so a re-run knows which steps remain
-  rather than re-deriving them from hope.
-- Run mutations serially with backoff where a rate limit could shred a
-  half-applied plan.
+- Report already-deleted or already-closed targets as done and continue.
+- Match title or content before creating issues, comments, or constructs.
+- Re-read each item immediately before writing it; skip and report state drift instead of overwriting it.
+- Record landed steps during execution so re-runs know what remains.
+- Run mutations serially with backoff where rate limits could leave a plan partly applied.
