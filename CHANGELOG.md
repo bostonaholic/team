@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.86.0] - 2026-09-04
+
+### Changed
+
+- **[`/pr-rebase`](https://github.com/bostonaholic/team/blob/main/skills/pr-rebase/SKILL.md) no longer holds the turn open while the project's checks run.** The skill runs the full check suite twice — once for the baseline before the rebase, once to compare after it — and it was the only long-wait skill in the plugin that did not cite `principle-non-blocking-waits`. It cites it now, and the step that captures the baseline says to spend that wait as one backgrounded call. A foreground wait gets killed at the harness ceiling, so on a repo whose checks run longer than that, the run used to lose its baseline instead of timing out. **What this asks of you:** nothing.
+- **[`principle-evidence-over-assertion`](https://github.com/bostonaholic/team/blob/main/skills/principle-evidence-over-assertion/SKILL.md) now treats a version range as a claim, not as evidence.** To support a statement about what a dependency does, load the lowest version its range admits and call the API there. That boundary is where a removed constant or a missing symbol actually breaks, and neither the range nor a changelog shows it. Every skill and agent that applies the principle picks up the new rule. **What this asks of you:** nothing.
+
 ## [0.85.0] - 2026-09-04
 
 ### Added
@@ -781,7 +788,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.85.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.86.0...HEAD
+[0.86.0]: https://github.com/bostonaholic/team/compare/v0.85.0...v0.86.0
 [0.85.0]: https://github.com/bostonaholic/team/compare/v0.84.0...v0.85.0
 [0.84.0]: https://github.com/bostonaholic/team/compare/v0.83.0...v0.84.0
 [0.83.0]: https://github.com/bostonaholic/team/compare/v0.82.0...v0.83.0
