@@ -6,26 +6,11 @@ user-invocable: false
 
 # Pre-image First
 
-Before anything is changed, capture what was true: the baseline that
-lets the after-state be classified, and the pre-image or recovery anchor
-that makes the change reversible. No pre-image, no destructive write.
+Before mutation, capture the untouched baseline and a recovery anchor or pre-image; No pre-image, no destructive write.
 
-**Why:** A check with no baseline proves nothing after — a failure that
-was already red is not a regression you caused, and without the before
-you cannot tell. And a run that leaves the user unable to say
-`git reset --hard <sha>` has failed even when the operation succeeded.
-
-**Pattern:**
-- Run the checks BEFORE the operation, on the untouched state, so a
-  post-operation failure classifies as pre-existing or introduced.
-- Capture the recovery anchor before anything is rewritten, and report it
-  at every stop — success and failure alike.
-- Cache the pre-image of any body you rewrite, close, or overwrite,
-  before composing the replacement. A rewrite with no cached pre-image
-  does not run: the only record of what the item said would be the value
-  the write is about to destroy.
-- Compare against the pre-image at write time; a target that drifted from
-  its pre-image is skipped and reported. The re-run instance of this
-  check is owned by `principle-idempotent-reruns`.
-- A baseline that could not run is UNKNOWN — never evidence that behavior
-  was preserved.
+- Run checks BEFORE the operation so later failures classify as pre-existing or introduced.
+- Capture the recovery anchor before rewrites and report it on success and failure; preserve `git reset --hard <sha>` recovery where applicable.
+- Cache bodies before composing replacements for rewrite, close, or overwrite operations.
+- Compare the target with its pre-image at write time; skip and report drift.
+- Apply `principle-idempotent-reruns` to this comparison on re-run.
+- A baseline that could not run is UNKNOWN and never proves preservation.
