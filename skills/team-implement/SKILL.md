@@ -28,13 +28,13 @@ discovery block below resolves it.
 
 The agents read:
 
-- `$ARGUMENTS/plan.md` — file-level steps and per-slice tests
-- `$ARGUMENTS/structure.md` — slice ordering and verification checkpoints
-- `$ARGUMENTS/design.md` — context for what each test should assert
-- `$ARGUMENTS/repos.md` — repo scope (only present when the topic spans more
+- `$ARGUMENTS/8-plan.md` — file-level steps and per-slice tests
+- `$ARGUMENTS/7-structure.md` — slice ordering and verification checkpoints
+- `$ARGUMENTS/6-design.md` — context for what each test should assert
+- `$ARGUMENTS/4-repos.md` — repo scope (only present when the topic spans more
   than one repository). The implementer cd's between worktrees as the plan
   steps require
-- `$ARGUMENTS/task.md` — intent (for the implementer when in standalone mode)
+- `$ARGUMENTS/1-task.md` — intent (for the implementer when in standalone mode)
 
 Resolve the artifact directory by running this self-contained block (one bash
 call — agent threads reset cwd between calls):
@@ -45,8 +45,8 @@ call — agent threads reset cwd between calls):
 # PHASE_FILES recency mirrors findActiveTopic() in session-start-recover.mjs.
 # NOTE: this block is duplicated across 8 skills by design (see docs/architecture.md); future: shared discover-topic.sh.
 ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
-PHASE_FILES="task questions research design structure plan"
-PRED="plan.md"            # predecessor artifact this skill consumes
+PHASE_FILES="1-task 2-questions 5-research 6-design 7-structure 8-plan"
+PRED="8-plan.md"            # predecessor artifact this skill consumes
 # Tier 1 — explicit: $ARGUMENTS names an existing dir → use verbatim.
 if [ -n "$ARGUMENTS" ] && [ -d "$ARGUMENTS" ]; then
   echo "$ARGUMENTS"; exit 0
@@ -76,24 +76,24 @@ done
   tier 2 (no explicit arg), announce the resolved directory to the user before
   proceeding, so an auto-picked topic is never silent.
 - **If the block printed nothing** (tier 3 — no directory under `docs/plans/`
-  holds `plan.md`), do not hard-error. Fire
+  holds `8-plan.md`), do not hard-error. Fire
   `AskUserQuestion` with a `Setup` header and labeled options:
   - **Run the producer** — run `/team-plan docs/plans/<id>/` to produce the
-    missing `plan.md`.
+    missing `8-plan.md`.
   - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
   - **Describe the task** — the user types a 1–2 sentence description of what
     to implement. Derive a fresh `<id>` (date-prefixed kebab slug, the same way
-    the questioner does), create `docs/plans/<id>/task.md` from that
+    the questioner does), create `docs/plans/<id>/1-task.md` from that
     description, then proceed from the new directory in **standalone mode**.
 
-**Standalone mode** — the resolved or provided directory has no `plan.md`, so
-the run starts from that directory's `task.md` instead. It triggers whenever
+**Standalone mode** — the resolved or provided directory has no `8-plan.md`, so
+the run starts from that directory's `1-task.md` instead. It triggers whenever
 tier 1 (explicit `$ARGUMENTS`), a user-provided path, or a freshly derived
 directory (from **Describe the task**) names a `docs/plans/<id>/` that lacks
-`plan.md`. The directory is always defined in this case.
-If `$ARGUMENTS/plan.md` does not exist in it, run `test-architect` →
-`implementer` → reviewers from `$ARGUMENTS/task.md` alone.
+`8-plan.md`. The directory is always defined in this case.
+If `$ARGUMENTS/8-plan.md` does not exist in it, run `test-architect` →
+`implementer` → reviewers from `$ARGUMENTS/1-task.md` alone.
 
 Coordinate progress through TodoWrite. Seed:
 `Test-architect → Mechanical gate → Implementer (per slice) → Review round 1`.
@@ -104,7 +104,7 @@ agents follow within each phase.
 
 Before any agent dispatch, decide where to work:
 
-1. **Read `$ARGUMENTS/repos.md` if present.** When present, you are in
+1. **Read `$ARGUMENTS/4-repos.md` if present.** When present, you are in
    multi-repo mode. Make sure that a worktree exists in **every** listed
    repo (read the `## Worktrees` section). If any are missing, tell the user
    to run `/team-worktree [docs/plans/<id>/]` (the path is optional —
@@ -127,16 +127,16 @@ Before any agent dispatch, decide where to work:
      the home worktree path, and ask them to re-run
      `/team-implement [docs/plans/<id>/]` from that directory.
    - On **In-place** — proceed. (In-place is single-repo only — refuse
-     in-place if `repos.md` is present and tell the user that
+     in-place if `4-repos.md` is present and tell the user that
      multi-repo work requires worktrees.)
 
 ## Execution
 
-1. **Verify** `$ARGUMENTS/plan.md` (resume mode) or bootstrap
-   `$ARGUMENTS/task.md` (standalone mode).
+1. **Verify** `$ARGUMENTS/8-plan.md` (resume mode) or bootstrap
+   `$ARGUMENTS/1-task.md` (standalone mode).
 2. Dispatch `test-architect` → produces failing tests. In standalone
-   mode it derives acceptance criteria from `$ARGUMENTS/task.md` instead
-   of `structure.md`. If those tests already exist, skip this dispatch.
+   mode it derives acceptance criteria from `$ARGUMENTS/1-task.md` instead
+   of `7-structure.md`. If those tests already exist, skip this dispatch.
    When the slice commits are on the branch too, resume at step 5.
    Otherwise, resume at step 4.
 3. **Mechanical gate** — confirm all tests fail with assertion errors
@@ -151,7 +151,7 @@ Before any agent dispatch, decide where to work:
    This gate applies to a fresh `test-architect` run only. A resumed run
    that skips step 2 skips this gate too.
 4. Dispatch `implementer` → executes slices with per-slice commits. In
-   standalone mode it works from `$ARGUMENTS/task.md` and the failing
+   standalone mode it works from `$ARGUMENTS/1-task.md` and the failing
    tests.
 5. Dispatch 5 reviewers in parallel: `code-reviewer`,
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.

@@ -4,7 +4,7 @@ agent: team-question
 
 # team-question rubric
 
-The QUESTION phase produces neutral research questions (`questions.md`). The
+The QUESTION phase produces neutral research questions (`2-questions.md`). The
 deterministic axis confirms questions were emitted at all; the load-bearing
 neutrality property is graded by the LLM judge (it is a negative property — the
 *absence* of feature framing — which a positive regex cannot capture).

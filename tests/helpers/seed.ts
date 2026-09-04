@@ -2,8 +2,8 @@
 //
 // Shared seed-extraction helper for the light-prior-state L5 evals
 // (team-research, team-design, team-structure, team-plan). Those evals embed
-// an upstream pipeline artifact (questions.md, research.md, design.md,
-// structure.md) inside the fixture input.md body as a labeled fenced block,
+// an upstream pipeline artifact (2-questions.md, 5-research.md, 6-design.md,
+// 7-structure.md) inside the fixture input.md body as a labeled fenced block,
 // then write it into the eval's working directory before spawning the model.
 //
 // This module owns ONLY the parsing of that labeled fenced block — a pure,

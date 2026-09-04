@@ -22,8 +22,8 @@ tests pass. You do not improvise, embellish, or deviate.
 ## Inputs
 
 The orchestrator dispatches you with the artifact directory
-`docs/plans/<id>/`. It holds the plan (`plan.md`) and the structure
-(`structure.md`). It also holds `repos.md` when multi-repo mode applies. In
+`docs/plans/<id>/`. It holds the plan (`8-plan.md`) and the structure
+(`7-structure.md`). It also holds `4-repos.md` when multi-repo mode applies. In
 that mode every plan step carries a `[repo: <slug>]` annotation, so cd into
 that repo's worktree before you apply the step's edits, tests, and commits.
 

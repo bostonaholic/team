@@ -36,7 +36,7 @@ const PR_EVALS_WORKFLOW = join(
 const FIXTURE_SIZE_CAP = 50 * 1024;
 
 // Canonical trust expression — the cross-workflow contract from
-// docs/plans/2026-06-09-gate-llm-ci-jobs-on-pr-author/structure.md.
+// docs/plans/2026-06-09-gate-llm-ci-jobs-on-pr-author/7-structure.md.
 // Every job/step that consumes a secret or spawns `claude` on a
 // pull_request event applies this expression VERBATIM, which is what lets
 // the tripwires below match it as a plain substring.

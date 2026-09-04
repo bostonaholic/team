@@ -1,6 +1,6 @@
 ---
 name: eng-design-doc-review
-description: Adversarially review a technical design document with fresh context. Dispatches the built-in read-only `Explore` subagent (clean context, no shared history with the design-author) against `docs/plans/<id>/design.md` and presents its verdict — APPROVE, REQUEST CHANGES, or COMMENT. It is the front door over the `reviewing-designs` brief the pipeline's DESIGN review gate also runs. Trigger on "review the design doc", "audit design.md", "is this design ready", or `/eng-design-doc-review`.
+description: Adversarially review a technical design document with fresh context. Dispatches the built-in read-only `Explore` subagent (clean context, no shared history with the design-author) against `docs/plans/<id>/6-design.md` and presents its verdict — APPROVE, REQUEST CHANGES, or COMMENT. It is the front door over the `reviewing-designs` brief the pipeline's DESIGN review gate also runs. Trigger on "review the design doc", "audit 6-design.md", "is this design ready", or `/eng-design-doc-review`.
 effort: high
 argument-hint: "[docs/plans/<id>/]"
 ---
@@ -35,9 +35,9 @@ discovery block below resolves it.
 
 The review reads:
 
-- `$ARGUMENTS/design.md` — the document under review (required)
-- `$ARGUMENTS/task.md`, `$ARGUMENTS/questions.md`,
-  `$ARGUMENTS/research.md`, `$ARGUMENTS/repos.md` — predecessor artifacts
+- `$ARGUMENTS/6-design.md` — the document under review (required)
+- `$ARGUMENTS/1-task.md`, `$ARGUMENTS/2-questions.md`,
+  `$ARGUMENTS/5-research.md`, `$ARGUMENTS/4-repos.md` — predecessor artifacts
   (read for grounding when present, missing siblings are not a hard error)
 
 Resolve the artifact directory by running this self-contained block (one bash
@@ -49,8 +49,8 @@ call — agent threads reset cwd between calls):
 # PHASE_FILES recency mirrors findActiveTopic() in session-start-recover.mjs.
 # NOTE: this block is duplicated across 8 skills by design (see docs/architecture.md); future: shared discover-topic.sh.
 ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
-PHASE_FILES="task questions research design structure plan"
-PRED="design.md"            # predecessor artifact this skill consumes
+PHASE_FILES="1-task 2-questions 5-research 6-design 7-structure 8-plan"
+PRED="6-design.md"            # predecessor artifact this skill consumes
 # Tier 1 — explicit: $ARGUMENTS names an existing dir → use verbatim.
 if [ -n "$ARGUMENTS" ] && [ -d "$ARGUMENTS" ]; then
   echo "$ARGUMENTS"; exit 0
@@ -79,11 +79,11 @@ done
   this skill. That is tier 1 explicit arg, or tier 2 discovery. When the
   path came from tier 2, with no explicit arg, announce the resolved
   directory to the user first. An auto-picked topic is then never silent.
-- **If the block printed nothing** (tier 3 — no directory holds `design.md`),
+- **If the block printed nothing** (tier 3 — no directory holds `6-design.md`),
   do not hard-error. Fire `AskUserQuestion` with a `Setup` header and labeled
   options:
   - **Run the producer** — run `/team-design docs/plans/<id>/` to produce the
-    missing `design.md`.
+    missing `6-design.md`.
   - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
 
@@ -137,7 +137,7 @@ done
 - The brief lives in `skills/reviewing-designs/SKILL.md`, and changing it
   is a pipeline change — that file states the rule.
 - This skill is **read-only, structurally for writes**. The `Explore`
-  subagent holds no Write/Edit tools, so it cannot change `design.md`, the
+  subagent holds no Write/Edit tools, so it cannot change `6-design.md`, the
   artifact directory, or any verdict record. Residual tools — a `Bash`
   grant included, when the host's `Explore` type carries one — are
   governed by the brief's read-only instruction, and that residual is
@@ -167,7 +167,7 @@ DESIGN review gate writes the verdict artifact. `/team-structure` needs a
 recorded passing verdict before it slices a design.
 
 If the verdict is APPROVE or COMMENT, tell the user:
-**"To advance, run `/team-design docs/plans/<id>/` — with `design.md`
+**"To advance, run `/team-design docs/plans/<id>/` — with `6-design.md`
 already present it skips drafting and runs the review gate (skipping
 even that when the latest recorded verdict already passes — no
 redundant re-review), recording

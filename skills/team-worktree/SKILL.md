@@ -16,7 +16,7 @@ argument-hint: "[docs/plans/<id>/]"
 Create a git worktree per involved repository so implementation happens on
 isolated branches without affecting any main working tree. In single-repo
 mode (the default) this is one worktree in the home repo. In multi-repo
-mode (when `docs/plans/<id>/repos.md` is present) it is one worktree per
+mode (when `docs/plans/<id>/4-repos.md` is present) it is one worktree per
 listed repo, all sharing the same `<id>` branch name.
 
 ## Input
@@ -36,8 +36,8 @@ call — agent threads reset cwd between calls):
 # PHASE_FILES recency mirrors findActiveTopic() in session-start-recover.mjs.
 # NOTE: this block is duplicated across 8 skills by design (see docs/architecture.md); future: shared discover-topic.sh.
 ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
-PHASE_FILES="task questions research design structure plan"
-PRED="plan.md"            # predecessor artifact this skill consumes
+PHASE_FILES="1-task 2-questions 5-research 6-design 7-structure 8-plan"
+PRED="8-plan.md"            # predecessor artifact this skill consumes
 # Tier 1 — explicit: $ARGUMENTS names an existing dir → use verbatim.
 if [ -n "$ARGUMENTS" ] && [ -d "$ARGUMENTS" ]; then
   echo "$ARGUMENTS"; exit 0
@@ -66,23 +66,23 @@ done
   skill (tier 1 explicit arg, or tier 2 discovery). When the path came from
   tier 2 (no explicit arg), announce the resolved directory to the user before
   proceeding, so an auto-picked topic is never silent.
-- **If the block printed nothing** (tier 3 — no directory holds `plan.md`),
+- **If the block printed nothing** (tier 3 — no directory holds `8-plan.md`),
   do not hard-error. Fire `AskUserQuestion` with a `Setup` header and labeled
   options:
   - **Run the producer** — run `/team-plan docs/plans/<id>/` to produce the
-    missing `plan.md`.
+    missing `8-plan.md`.
   - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
 
 ## Detect mode
 
 1. Use the directory resolved in `## Input`.
-2. **Read `$ARGUMENTS/repos.md`** if present:
+2. **Read `$ARGUMENTS/4-repos.md`** if present:
    - Parse the home repo path and the list of more repos (each with `path:`
      and `name:` fields). See `skills/qrspi-workflow/SKILL.md` for the
      schema.
    - This puts you in **multi-repo mode**.
-3. If `repos.md` is absent, you are in **single-repo mode**: only the
+3. If `4-repos.md` is absent, you are in **single-repo mode**: only the
    home repo (the one this command is running in) gets a worktree.
 
 ## Detect existing worktree
@@ -158,7 +158,7 @@ The dialog fires only when a human invoked `/team-worktree` directly — a
 setup-time prompt on direct invocation. Within a full `/team` run the
 orchestrator creates the worktrees **without a confirmation prompt** (the
 phase loop never pauses mid-run). The resolved repo set is recorded loudly
-in `design.md` and echoed in the PR body's `## Review notes`.
+in `6-design.md` and echoed in the PR body's `## Review notes`.
 
 Create a worktree only for the repos that actually need one. If **no** repo
 needs creation (single-repo mode where the detect step skipped the home
@@ -171,7 +171,7 @@ Ready to create worktree:
 
 Worktree: <home-worktree-path>
 Branch:   <id>
-Plan:     $ARGUMENTS/plan.md
+Plan:     $ARGUMENTS/8-plan.md
 
 Proceed?
 ```
@@ -185,7 +185,7 @@ Ready to create N worktrees (one per listed repo):
   ...
 
 Branch in each: <id>
-Plan:           $ARGUMENTS/plan.md
+Plan:           $ARGUMENTS/8-plan.md
 
 Proceed?
 ```
@@ -212,7 +212,7 @@ worktree directory and the `-b` flag in every repo. In the common case
   [ "$(dirname "$(realpath "<repo-path>")")" = "$(dirname "$(realpath "<home-root>")")" ]
   ```
   If the check fails, **refuse that repo and report it**. Never create a
-  worktree outside the home repo's sibling set. Do not trust `repos.md`
+  worktree outside the home repo's sibling set. Do not trust `4-repos.md`
   content blindly, because someone can author it with no Bash-side path
   check. For each repo that passes:
   ```
@@ -225,7 +225,7 @@ worktree directory and the `-b` flag in every repo. In the common case
 ### Record the worktree paths (multi-repo only)
 
 After all worktrees are created, append a `## Worktrees` section to the
-home worktree's `docs/plans/<id>/repos.md` listing each repo's worktree
+home worktree's `docs/plans/<id>/4-repos.md` listing each repo's worktree
 path. For repos the detect step skipped, record the current checkout's
 path. This becomes the discoverable record any later `/team-*` invocation
 reads to relocate the worktrees.
@@ -253,8 +253,8 @@ Report the worktree paths and tell the user:
   per-repo worktrees as the plan steps require."**
 
 > The `/team-implement` handoff above is for **standalone, post-PLAN**
-> invocation (this skill's discovery block is gated on `plan.md`). In a full
+> invocation (this skill's discovery block is gated on `8-plan.md`). In a full
 > `/team` pipeline run, WORKTREE is the **leading** phase: the orchestrator
 > creates the home worktree first, supplying `<id>` directly (it does not run
-> this skill's `plan.md`-gated discovery), and proceeds to QUESTION next — not
+> this skill's `8-plan.md`-gated discovery), and proceeds to QUESTION next — not
 > to `/team-implement`.

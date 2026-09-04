@@ -1,13 +1,13 @@
 ---
 name: authoring-designs
-description: Design-document authoring procedure for the design-author agent — the repo-scope confirmation flow, the autonomous open-questions resolution rule, and the design.md document template. Loaded when a design document is drafted or revised for the adversarial design review.
+description: Design-document authoring procedure for the design-author agent — the repo-scope confirmation flow, the autonomous open-questions resolution rule, and the 6-design.md document template. Loaded when a design document is drafted or revised for the adversarial design review.
 user-invocable: false
 ---
 
 # Authoring Designs
 
 The design-author's procedure: confirm repo scope, resolve open questions
-autonomously as recorded assumptions, and write `design.md` from the
+autonomously as recorded assumptions, and write `6-design.md` from the
 template below.
 
 Write the prose this skill governs at a seventh-grade reading level, in
@@ -16,18 +16,18 @@ Full methodology: `writing-prose`. Before
 you finalize prose this skill governs, call the Skill tool with
 `writing-prose` and apply its `## Self-lint` checklist.
 
-If `task.md` references a `prd.md`, read it first and treat its scope
+If `1-task.md` references a `3-prd.md`, read it first and treat its scope
 boundaries and acceptance criteria per the "Consuming a PRD downstream"
 section of `skills/product-requirements-doc/SKILL.md`.
 
 ## Confirm repo scope (before drafting)
 
-If `docs/plans/<id>/repos.md` is **present**, read it and treat the
+If `docs/plans/<id>/4-repos.md` is **present**, read it and treat the
 listed repos as the working assumption. The design must respect that
 scope — note in `## Decisions made` which repos each decision touches
 and why.
 
-If `repos.md` is **absent**, scan `research.md` for signals that the
+If `4-repos.md` is **absent**, scan `5-research.md` for signals that the
 work plausibly spans more than one repo (cross-service contracts, shared
 schemas, references to "the other repo"). When you see such signals,
 resolve each candidate repo autonomously through the sibling directories
@@ -40,11 +40,11 @@ surviving repo named `<name>` is expected at `<root>/../<name>`. Make
 sure that the sibling path exists and is a git working tree (check for
 its `.git` entry — you have no Bash tool, so use Glob/Read. The
 questioner's check is `git -C <path> rev-parse --git-dir`). Never record
-a `repos.md` path outside the home repo's parent directory. If you
+a `4-repos.md` path outside the home repo's parent directory. If you
 cannot verify the resolved path is a direct child of that directory,
 treat the candidate as unresolvable.
 
-- **All candidates resolve** → write `docs/plans/<id>/repos.md`
+- **All candidates resolve** → write `docs/plans/<id>/4-repos.md`
   yourself (schema in `skills/artifact-frontmatter/SKILL.md`) before
   continuing the design.
 - **Any candidate is unresolvable** → proceed in single-repo mode and
@@ -72,7 +72,7 @@ re-draft, recording any newly resolved choice the same way.
 
 ## Current state
 <2-4 paragraphs describing how the relevant subsystem works today, citing
-specific files and functions from research.md — including the
+specific files and functions from 5-research.md — including the
 adjacent components (callers, consumers, and sibling implementations), not
 only the component being changed>
 
@@ -160,5 +160,5 @@ operational concerns. One bullet each.>
   for recovering it (its Preserve / Change / Avoid / Risk output maps
   directly onto a decision record), and `skills/how/SKILL.md` describes
   the explanation shape `## Current state` wants. Both are citations for
-  depth, not steps in this procedure — `research.md` remains the default
+  depth, not steps in this procedure — `5-research.md` remains the default
   source.

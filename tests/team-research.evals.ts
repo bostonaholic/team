@@ -8,9 +8,9 @@
 // explicitly. Selection / tier gating goes through `testIfSelected`.
 //
 // Seeded-state mechanism (design Slice 3): the fixture input.md body embeds the
-// upstream artifact (questions.md) in a labeled fenced block. This file parses
+// upstream artifact (2-questions.md) in a labeled fenced block. This file parses
 // that block out of `fixture.body` and writes it into the mkdtempSync workDir
-// at docs/plans/<id>/questions.md BEFORE calling runAgentTest — no harness
+// at docs/plans/<id>/2-questions.md BEFORE calling runAgentTest — no harness
 // helper change. The deterministic axis confirms the topic slug was reused
 // verbatim; the gated LLM judge grades research-fact grounding. Periodic tier:
 // grounding is a judgment with model-output variance.
@@ -47,17 +47,17 @@ testIfSelected(
 
     try {
       // Seed the upstream artifact into the working dir before spawning.
-      const seed = extractSeed(fixture.body, "questions.md");
+      const seed = extractSeed(fixture.body, "2-questions.md");
       expect(seed).not.toBeNull();
       // Drift guard: the working-dir TOPIC_SLUG must match the seed's topic.
       expect(seed).toContain(`topic: ${TOPIC_SLUG}`);
-      const seedPath = join(workDir, "docs", "plans", TOPIC_ID, "questions.md");
+      const seedPath = join(workDir, "docs", "plans", TOPIC_ID, "2-questions.md");
       mkdirSync(dirname(seedPath), { recursive: true });
       writeFileSync(seedPath, `${seed}\n`, "utf8");
 
       const prompt =
         "You are running the RESEARCH phase against the seeded " +
-        `docs/plans/${TOPIC_ID}/questions.md in your working directory. ` +
+        `docs/plans/${TOPIC_ID}/2-questions.md in your working directory. ` +
         "Read it, answer its questions against this codebase, and reuse its " +
         "topic slug verbatim.\n\n" +
         fixture.body;

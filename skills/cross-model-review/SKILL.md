@@ -185,12 +185,12 @@ continue with the reviewer alone.
 Per round:
 
 1. **Build the prompt** from `prompt-template-design-review.md` (in this
-   skill's directory), `design.md` **in full**, and the `## Stated goal`,
-   `## Inferred goal`, and `## Acceptance signals` sections of `task.md`.
-   When `task.md` or those sections are absent, say so in the prompt and
+   skill's directory), `6-design.md` **in full**, and the `## Stated goal`,
+   `## Inferred goal`, and `## Acceptance signals` sections of `1-task.md`.
+   When `1-task.md` or those sections are absent, say so in the prompt and
    send the design alone.
 2. **Cap handling:** when the assembled prompt exceeds `PROMPT_CAP_BYTES`,
-   drop the `task.md` excerpt and rebuild once. Still over → record
+   drop the `1-task.md` excerpt and rebuild once. Still over → record
    `skip: prompt over cap` for the round and make no call. Never truncate
    the design.
 3. **Call** `detect`, then `run` per ready CLI, exactly as `## Invocation`

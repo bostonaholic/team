@@ -26,7 +26,7 @@ for an inline fix, not this pipeline.
 `$ARGUMENTS` may be:
 
 - A ticket identifier (e.g. `ENG-1234`) — set aside as `ticketId` on
-  `task.md`.
+  `1-task.md`.
 - An issue URL — fetched through `gh issue view` to extract title and body.
 - Free-form text — treated as the bug description.
 
@@ -78,12 +78,12 @@ No Question. No Research. No Design. No Structure. No Plan. No approval gate.
    touches the working tree. It settles which branch the fix commits to, so
    it must finish before the artifact directory is authored.
 5. **Create `docs/plans/<id>/`** inside the resolved worktree, and write a
-   minimal `docs/plans/<id>/task.md` with the standard frontmatter
+   minimal `docs/plans/<id>/1-task.md` with the standard frontmatter
    (`topic`, `date`, `phase: task`, `ticketId`) plus a brief description
    of the bug. The `topic` value is the kebab portion of `<id>` — i.e.
    `<id>` minus the `<TICKET>-` or `<YYYY-MM-DD>-` prefix. Never use the
    ticket id, the date, or a re-worded description as the topic.
-   `ticketId` lives only on `task.md`. This is the single durable record
+   `ticketId` lives only on `1-task.md`. This is the single durable record
    for the fix and lets any `/team-*` command pick it up if interrupted.
 6. **Seed the TodoWrite ledger** with the bug-fix phases:
    `Worktree → Reproduce → Red (failing test) → Green (minimal fix) → Verify → Ship`.
@@ -201,7 +201,7 @@ behind a green suite.
    default branch. If it does, push nothing and report: the commits are
    local and recoverable, a push to the default branch is not.
 3. **Ticket — link now, in-review when ready.** If `ticketId` is non-null in
-   `task.md`'s frontmatter, call the Skill tool with `tracking-tickets` and
+   `1-task.md`'s frontmatter, call the Skill tool with `tracking-tickets` and
    apply its ticket-lifecycle rules: link the PR to the ticket through the
    conditional closing footer, keep the ticket in-progress while the PR is a
    draft and move it to in-review only once the PR is marked ready for

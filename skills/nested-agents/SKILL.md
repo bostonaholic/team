@@ -129,14 +129,14 @@ claim to a live skeptic, even where a follow-up would be cheaper.
 ### `researcher` — exploration scouts
 
 Fan out read-only exploration when the questions cluster into independent
-areas, or when `repos.md` lists multiple repos.
+areas, or when `4-repos.md` lists multiple repos.
 
 - **Scout types:** `team:file-finder` (locate files) or the built-in
   `Explore` agent (read-only tracing). Nothing else.
 - **The isolation invariant extends downward.** A scout's prompt may contain
-  ONLY: question text copied verbatim from `questions.md`, the "Codebase
-  context" section, and repo slugs/paths from `repos.md`. Never add your own
-  framing, never mention `task.md`, never speculate about intent inside a
+  ONLY: question text copied verbatim from `2-questions.md`, the "Codebase
+  context" section, and repo slugs/paths from `4-repos.md`. Never add your own
+  framing, never mention `1-task.md`, never speculate about intent inside a
   scout prompt. A scout that learns the goal is the same pipeline defect as
   you learning it.
 - **When:** only if a cluster requires reading more material than you will

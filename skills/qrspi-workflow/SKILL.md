@@ -18,11 +18,11 @@ WORKTREE -> QUESTION -> RESEARCH -> DESIGN -> STRUCTURE -> PLAN -> IMPLEMENT -> 
 | Phase | Produces | Gate |
 |-------|----------|------|
 | **WORKTREE** | git worktree on branch `<id>` off `origin/HEAD`, with `docs/plans/<id>/` authored inside it | HARD — the worktree must exist before QUESTION authors artifacts |
-| **QUESTION** | `task.md` (full description, human-only) and `questions.md` (neutral questions plus a "Codebase context" section naming files, modules, and vocabulary but NOT the goal) | HARD — both on disk |
-| **RESEARCH** | `research.md` | HARD — artifact on disk |
-| **DESIGN** | `design.md` (~200 lines) plus one `design-review-<n>.md` per round | REVIEW — adversarial design review. APPROVE/COMMENT advance; REQUEST CHANGES re-drafts and a fresh round reviews the new draft |
-| **STRUCTURE** | `structure.md` (~2 pages of vertical slices) | NONE — autonomous |
-| **PLAN** | `plan.md` | SOFT — no approval. The reviewed design is the contract |
+| **QUESTION** | `1-task.md` (full description, human-only) and `2-questions.md` (neutral questions plus a "Codebase context" section naming files, modules, and vocabulary but NOT the goal) | HARD — both on disk |
+| **RESEARCH** | `5-research.md` | HARD — artifact on disk |
+| **DESIGN** | `6-design.md` (~200 lines) plus one `design-review-<n>.md` per round | REVIEW — adversarial design review. APPROVE/COMMENT advance; REQUEST CHANGES re-drafts and a fresh round reviews the new draft |
+| **STRUCTURE** | `7-structure.md` (~2 pages of vertical slices) | NONE — autonomous |
+| **PLAN** | `8-plan.md` | SOFT — no approval. The reviewed design is the contract |
 | **IMPLEMENT** | production code, passing tests, per-slice commits | AGGREGATE — security, verifier, and code-review hard gates |
 | **PR** | GitHub draft PR | Terminal — record the PR URL, close the ledger |
 
@@ -42,15 +42,15 @@ remains.
 
 All phase artifacts live under `docs/plans/<id>/`. The schema is canonical in
 `skills/artifact-frontmatter/SKILL.md` — the `<id>` forms, the artifact
-inventory, the `repos.md` and `prd.md` schemas, the topic-consistency
+inventory, the `4-repos.md` and `3-prd.md` schemas, the topic-consistency
 invariant, and the `ticketId` scope. Consult that skill rather than restating
 it. What matters for phase discipline:
 
 - The `<id>` slug and the `topic` frontmatter field match across every
   artifact for the same feature.
-- `repos.md` (when present) switches the pipeline into multi-repo mode. Its
+- `4-repos.md` (when present) switches the pipeline into multi-repo mode. Its
   absence keeps single-repo mode — today's default.
-- `prd.md` (when present) rides the autonomous Question phase and is not
+- `3-prd.md` (when present) rides the autonomous Question phase and is not
   gated.
 
 ## Research Isolation
@@ -59,10 +59,10 @@ Research is the most-corruptible phase; it runs blind per
 `skills/principle-blind-the-investigator/SKILL.md`, enforced in two layers:
 
 1. **Structural** — the orchestrator passes `researcher` and `file-finder`
-   only the path to `questions.md`. It is forbidden from handing them the
-   description or `task.md` at dispatch time.
+   only the path to `2-questions.md`. It is forbidden from handing them the
+   description or `1-task.md` at dispatch time.
 2. **Procedural** — the `researcher` and `file-finder` system prompts forbid
-   reading `task.md`. Both hold `Read`/`Grep`/`Glob` with
+   reading `1-task.md`. Both hold `Read`/`Grep`/`Glob` with
    `permissionMode: plan`, so nothing mechanically stops such a read.
    Enforcement relies on the agent following its prompt. A researcher missing
    context surfaces it as an open question and never pauses the run to ask.
@@ -108,21 +108,21 @@ The files-are-the-contract rule (`skills/principle-files-are-the-contract/SKILL.
 
 | Latest artifact present                                | Current phase       |
 |--------------------------------------------------------|---------------------|
-| worktree exists for `<id>`, no `task.md` yet           | WORKTREE (next up)  |
-| `task.md` + `questions.md`                             | RESEARCH (next up)  |
-| `research.md`                                          | DESIGN (next up)    |
-| `design.md` alone (no passing design review)           | DESIGN (review next)|
-| `design.md` + passing `design-review-<n>.md`           | STRUCTURE (next up) |
-| `structure.md`                                         | PLAN (next up)      |
-| `plan.md` + ≥1 commit on `<id>` since merge-base       | IMPLEMENT           |
-| `plan.md` (no commit on `<id>` yet)                    | PLAN (next up)      |
+| worktree exists for `<id>`, no `1-task.md` yet           | WORKTREE (next up)  |
+| `1-task.md` + `2-questions.md`                             | RESEARCH (next up)  |
+| `5-research.md`                                          | DESIGN (next up)    |
+| `6-design.md` alone (no passing design review)           | DESIGN (review next)|
+| `6-design.md` + passing `design-review-<n>.md`           | STRUCTURE (next up) |
+| `7-structure.md`                                         | PLAN (next up)      |
+| `8-plan.md` + ≥1 commit on `<id>` since merge-base       | IMPLEMENT           |
+| `8-plan.md` (no commit on `<id>` yet)                    | PLAN (next up)      |
 | topic branch has commits ahead and verifier passed     | PR (next up)        |
 | PR(s) opened or commit(s) shipped                      | SHIPPED             |
 
 Worktree presence (single-repo): `git worktree list --porcelain | grep -q <id>`.
-Multi-repo: the same per repo path in `docs/plans/<id>/repos.md`.
+Multi-repo: the same per repo path in `docs/plans/<id>/4-repos.md`.
 **IMPLEMENT signal:** a worktree alone is not enough — IMPLEMENT is confirmed
-only once `git log <merge-base>..<id>` is non-empty. Before that, `plan.md`
+only once `git log <merge-base>..<id>` is non-empty. Before that, `8-plan.md`
 present with no commit means the run is still pre-IMPLEMENT.
 Verifier passed: the latest `docs/plans/<id>/review-<n>.md` shows the
 aggregate gate clean.
@@ -144,7 +144,7 @@ recorded for the PR body's `## Review notes`, never presented mid-run.
 
 - **Skipping Question.** The researcher then inherits the user's framing and
   produces opinionated findings. Always run the questioner first.
-- **Letting research see intent.** A researcher that reads `task.md` or
+- **Letting research see intent.** A researcher that reads `1-task.md` or
   receives the description in any form breaks the isolation invariant. Treat
   any leakage as a critical defect: stop and report.
 - **Reviewing the plan.** A 1000-line plan begets ~1000 lines of code, and

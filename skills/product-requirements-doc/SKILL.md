@@ -1,13 +1,13 @@
 ---
 name: product-requirements-doc
-description: Optional PRD methodology — loaded by the questioner agent when a feature request is vague or complex enough to warrant a structured product spec alongside task.md. Produces a PRD artifact that downstream design-author work can ground decisions in.
+description: Optional PRD methodology — loaded by the questioner agent when a feature request is vague or complex enough to warrant a structured product spec alongside 1-task.md. Produces a PRD artifact that downstream design-author work can ground decisions in.
 user-invocable: false
 ---
 
 # Product Requirements Document
 
 A PRD translates a vague or complex feature request into a structured artifact
-that complements `task.md`. The questioner produces it when intent is rich
+that complements `1-task.md`. The questioner produces it when intent is rich
 enough to need explicit scope, acceptance criteria, and constraints, rather
 than a one-page task summary alone.
 
@@ -23,8 +23,8 @@ you finalize prose this skill governs, call the Skill tool with
 
 ## When to Write a PRD
 
-The questioner produces a PRD (in addition to the standard `task.md`
-and `questions.md`) when the feature request is:
+The questioner produces a PRD (in addition to the standard `1-task.md`
+and `2-questions.md`) when the feature request is:
 
 - **Vague or underspecified** — the request does not say what "done" looks
   like ("improve the onboarding experience" has no clear scope boundary)
@@ -36,12 +36,12 @@ and `questions.md`) when the feature request is:
   scope of "existing" needs to be defined before research can begin
 
 For simple, well-scoped requests ("add a `--verbose` flag to the CLI"), the
-standard `task.md` is sufficient — no PRD needed.
+standard `1-task.md` is sufficient — no PRD needed.
 
 ## PRD Structure
 
-Write the PRD to `docs/plans/<id>/prd.md`. Reference its path from
-`task.md` so the design-author knows to read it.
+Write the PRD to `docs/plans/<id>/3-prd.md`. Reference its path from
+`1-task.md` so the design-author knows to read it.
 
 ### Problem Statement
 
@@ -116,7 +116,7 @@ Non-negotiable requirements the implementation must satisfy:
 
 ## Consuming a PRD downstream
 
-When the design-author finds a PRD path referenced in `task.md`, it should:
+When the design-author finds a PRD path referenced in `1-task.md`, it should:
 
 1. **Read the PRD first.** The PRD supersedes any ambiguity in the original
    feature request.

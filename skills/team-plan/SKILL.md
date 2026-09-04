@@ -17,13 +17,13 @@ discovery block below resolves it.
 
 The `planner` reads:
 
-- `$ARGUMENTS/structure.md`
-- `$ARGUMENTS/design.md`
-- `$ARGUMENTS/research.md`
+- `$ARGUMENTS/7-structure.md`
+- `$ARGUMENTS/6-design.md`
+- `$ARGUMENTS/5-research.md`
 
 Resolve the artifact directory by running this self-contained block (one bash
 call — agent threads reset cwd between calls). The predecessor filter requires
-a `structure.md` (structure is not gated, so no approval check):
+a `7-structure.md` (structure is not gated, so no approval check):
 
 ```sh
 # Three-tier artifact-directory discovery (archetype A).
@@ -31,8 +31,8 @@ a `structure.md` (structure is not gated, so no approval check):
 # PHASE_FILES recency mirrors findActiveTopic() in session-start-recover.mjs.
 # NOTE: this block is duplicated across 8 skills by design (see docs/architecture.md); future: shared discover-topic.sh.
 ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
-PHASE_FILES="task questions research design structure plan"
-PRED="structure.md"            # predecessor artifact this skill consumes
+PHASE_FILES="1-task 2-questions 5-research 6-design 7-structure 8-plan"
+PRED="7-structure.md"            # predecessor artifact this skill consumes
 # Tier 1 — explicit: $ARGUMENTS names an existing dir → use verbatim.
 if [ -n "$ARGUMENTS" ] && [ -d "$ARGUMENTS" ]; then
   echo "$ARGUMENTS"; exit 0
@@ -63,10 +63,10 @@ done
   directory to the user before proceeding, so an auto-picked topic is never
   silent.
 - **If the block printed nothing** (tier 3 — no directory holds a
-  `structure.md`), do not hard-error. Fire `AskUserQuestion` with a `Setup`
+  `7-structure.md`), do not hard-error. Fire `AskUserQuestion` with a `Setup`
   header and labeled options:
   - **Run the producer** — run `/team-structure docs/plans/<id>/` to produce
-    `structure.md`.
+    `7-structure.md`.
   - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
 
@@ -75,10 +75,10 @@ done
 > Follow `skills/principle-progress-tracking/SKILL.md`: when this procedure has two or more steps, seed one todo item per step before starting and mark each complete as you go.
 
 1. Use the directory resolved in `## Input` (the discovery there already
-   confirmed `structure.md` exists).
-2. Dispatch `planner`, which writes `$ARGUMENTS/plan.md` with file-level
+   confirmed `7-structure.md` exists).
+2. Dispatch `planner`, which writes `$ARGUMENTS/8-plan.md` with file-level
    steps and per-slice acceptance test mappings.
-3. **Stop once `$ARGUMENTS/plan.md` exists.**
+3. **Stop once `$ARGUMENTS/8-plan.md` exists.**
 
 ## Completion
 

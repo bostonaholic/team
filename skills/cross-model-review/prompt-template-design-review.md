@@ -9,7 +9,7 @@ drawn in the wrong place. Do not summarize the design and do not praise it.
 
 Rules for your findings:
 
-- Cite a concrete `design.md:<line>` for every claim. A claim without a
+- Cite a concrete `6-design.md:<line>` for every claim. A claim without a
   location will be discarded unread.
 - State each finding as one falsifiable sentence: what is wrong, where, and
   why it matters.

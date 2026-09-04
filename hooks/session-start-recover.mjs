@@ -4,7 +4,7 @@
  * Scans the home docs/plans/<id>/ subdirectories plus every git worktree's
  * docs/plans/<id>/ for the most recent active topic, infers the current phase
  * from artifact presence + git signals (a leading WORKTREE state when a
- * worktree exists with no task.md yet; IMPLEMENT once >=1 commit lands on the
+ * worktree exists with no 1-task.md yet; IMPLEMENT once >=1 commit lands on the
  * <id> branch), and injects a recovery notice into additionalContext so the
  * agent suggests re-invoking any /team-* command bare — discovery
  * auto-resolves the directory (an explicit docs/plans/<id>/ is still accepted).
@@ -18,7 +18,7 @@ import { readFile, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 
 const ID_RE = /^([A-Za-z][A-Za-z0-9_]*-\d+|\d{4}-\d{2}-\d{2})-[a-z0-9][a-z0-9-]*$/;
-const PHASE_FILES = ["task", "questions", "research", "design", "structure", "plan"];
+const PHASE_FILES = ["1-task", "2-questions", "5-research", "6-design", "7-structure", "8-plan"];
 
 async function readStdinJSON() {
   const chunks = [];
@@ -208,20 +208,20 @@ async function designReviewPassed(dir) {
 async function inferPhase(dir, rootDir, id, hasWorktree) {
   const p = (kind) => join(dir, `${kind}.md`);
   const has = async (path) => { try { await stat(path); return true; } catch { return false; } };
-  // Leading phase: a worktree exists for <id> but no task.md has been authored.
-  if (hasWorktree && !(await has(p("task")))) return "WORKTREE";
-  if (await has(p("plan"))) {
-    // plan.md present: IMPLEMENT once >=1 commit lands on <id>; otherwise the
+  // Leading phase: a worktree exists for <id> but no 1-task.md has been authored.
+  if (hasWorktree && !(await has(p("1-task")))) return "WORKTREE";
+  if (await has(p("8-plan"))) {
+    // 8-plan.md present: IMPLEMENT once >=1 commit lands on <id>; otherwise the
     // run is still pre-IMPLEMENT — fall through to the artifact-derived phase.
     if (hasImplCommit(rootDir, id)) return "IMPLEMENT";
   }
-  if (await has(p("structure"))) return "PLAN";   // structure is not gated; advances to PLAN
-  if (await has(p("design"))) {
+  if (await has(p("7-structure"))) return "PLAN";   // structure is not gated; advances to PLAN
+  if (await has(p("6-design"))) {
     // design gates on the review verdict; without a passing one, DESIGN
     return (await designReviewPassed(dir)) ? "STRUCTURE" : "DESIGN";
   }
-  if (await has(p("research"))) return "DESIGN";
-  if (await has(p("questions")) || await has(p("task"))) return "RESEARCH";
+  if (await has(p("5-research"))) return "DESIGN";
+  if (await has(p("2-questions")) || await has(p("1-task"))) return "RESEARCH";
   return null;
 }
 

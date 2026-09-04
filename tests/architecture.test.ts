@@ -527,21 +527,21 @@ describe("worktree-first pipeline", () => {
     join(REPO_ROOT, "docs", "architecture.md"),
   ];
 
-  // The `plan.md` inference row must map to IMPLEMENT. Match the table row that
-  // names `plan.md` and assert IMPLEMENT appears on that same row.
-  const PLAN_ROW_IMPLEMENT = /^\|[^\n]*`plan\.md`[^\n]*\|[^\n]*IMPLEMENT[^\n]*\|/m;
-  // No `plan.md` row may map to WORKTREE anymore.
-  const PLAN_ROW_WORKTREE = /^\|[^\n]*`plan\.md`[^\n]*\|[^\n]*WORKTREE[^\n]*\|/m;
+  // The `8-plan.md` inference row must map to IMPLEMENT. Match the table row that
+  // names `8-plan.md` and assert IMPLEMENT appears on that same row.
+  const PLAN_ROW_IMPLEMENT = /^\|[^\n]*`8-plan\.md`[^\n]*\|[^\n]*IMPLEMENT[^\n]*\|/m;
+  // No `8-plan.md` row may map to WORKTREE anymore.
+  const PLAN_ROW_WORKTREE = /^\|[^\n]*`8-plan\.md`[^\n]*\|[^\n]*WORKTREE[^\n]*\|/m;
 
   for (const file of PROSE_TABLES) {
-    test(`plan.md inference row maps to IMPLEMENT in ${file.replace(REPO_ROOT + "/", "")}`, () => {
+    test(`8-plan.md inference row maps to IMPLEMENT in ${file.replace(REPO_ROOT + "/", "")}`, () => {
       const text = read(file);
       expect(text).toMatch(PLAN_ROW_IMPLEMENT);
       expect(PLAN_ROW_WORKTREE.test(text)).toBe(false);
     });
   }
 
-  // A leading WORKTREE row whose signal is "worktree exists" / "no task.md"
+  // A leading WORKTREE row whose signal is "worktree exists" / "no 1-task.md"
   // maps to WORKTREE. Match a single table row that mentions a worktree-exists
   // signal and maps to WORKTREE.
   const LEADING_WORKTREE_ROW = /^\|[^\n]*worktree exists[^\n]*\|[^\n]*WORKTREE[^\n]*\|/im;
@@ -607,7 +607,7 @@ describe("worktree-first pipeline", () => {
 });
 
 // Pipeline artifacts under docs/plans/<id>/ are per-run scratch: a topic's
-// task.md/design.md/plan.md describe one run's state, not the plugin. Tracking
+// 1-task.md/6-design.md/8-plan.md describe one run's state, not the plugin. Tracking
 // them puts one contributor's in-flight run in everyone's clone, and the site
 // already excludes them (docs/_config.yml `exclude: plans`, and pages.yml skips
 // docs/plans/** as a trigger path), so a tracked one ships nowhere and only

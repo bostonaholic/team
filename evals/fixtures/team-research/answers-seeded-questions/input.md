@@ -8,24 +8,24 @@ deps:
   - agents/researcher.md
 ---
 
-# Seeded-state task: research a codebase against seeded questions.md
+# Seeded-state task: research a codebase against seeded 2-questions.md
 
-You are running the RESEARCH phase against a seeded `questions.md`. The eval
+You are running the RESEARCH phase against a seeded `2-questions.md`. The eval
 harness writes the fenced block below to
-`docs/plans/2026-06-03-token-bucket/questions.md` in your working directory
+`docs/plans/2026-06-03-token-bucket/2-questions.md` in your working directory
 before you start. Read that file, answer its questions against the working-dir
-codebase, and produce `research.md`-style findings in your response.
+codebase, and produce `5-research.md`-style findings in your response.
 
-The load-bearing property: `research.md` answers the seeded questions and
+The load-bearing property: `5-research.md` answers the seeded questions and
 reuses the topic slug `token-bucket` verbatim from the seeded
-`questions.md` frontmatter — never improvised, never combined with a ticket id.
+`2-questions.md` frontmatter — never improvised, never combined with a ticket id.
 
-Output, in your response, the `research.md` you would write — including a
+Output, in your response, the `5-research.md` you would write — including a
 frontmatter block with `topic: token-bucket` and findings that address each
 seeded question. Reference the file `src/api/handler.js` in at least one
 finding.
 
-```markdown questions.md
+```markdown 2-questions.md
 ---
 topic: token-bucket
 date: 2026-06-03

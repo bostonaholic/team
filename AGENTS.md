@@ -43,7 +43,7 @@ Agents are **decoupled microservices**. Each consumes a predecessor artifact on 
 WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → PR
 ```
 
-Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-PR). There are **no mid-run human gates**. An adversarial design review gates the Design (~200-line alignment doc), and the orchestrator records the verdicts to `design-review-<n>.md`. The human's checkpoint is the PR review at the end. The Structure (~2-page vertical-slice breakdown) is produced autonomously and advances to Plan with no approval wait. Research is **isolated**: the researcher reads only `questions.md`, never `task.md` or the user's framing. The Plan is a tactical artifact for the implementer, not for human review. Implement is a sub-pipeline (test-first → slice execution → 5-reviewer adversarial verify with hard-gate retry loop). The whole run is autonomous with mechanical gates.
+Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-PR). There are **no mid-run human gates**. An adversarial design review gates the Design (~200-line alignment doc), and the orchestrator records the verdicts to `design-review-<n>.md`. The human's checkpoint is the PR review at the end. The Structure (~2-page vertical-slice breakdown) is produced autonomously and advances to Plan with no approval wait. Research is **isolated**: the researcher reads only `2-questions.md`, never `1-task.md` or the user's framing. The Plan is a tactical artifact for the implementer, not for human review. Implement is a sub-pipeline (test-first → slice execution → 5-reviewer adversarial verify with hard-gate retry loop). The whole run is autonomous with mechanical gates.
 
 ## Entry points
 
@@ -51,11 +51,11 @@ Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-
 |---------|-------|
 | `/team <desc>` | Full 8-phase QRSPI pipeline, on stated pipeline intent — it commits, pushes, opens a PR, and moves the ticket |
 | `/team-fix <bug>` | Compressed bug-fix pipeline (no QRSPI ceremony), on stated pipeline intent, never on a plain "fix this bug" |
-| `/team-worktree` | Leading WORKTREE phase: create the home worktree — a branch, so on stated intent or as phase 1 of a `/team` run. In a full run it is automatic and first. Standalone, it consumes `plan.md` post-PLAN for manual recovery or multi-repo setup |
+| `/team-worktree` | Leading WORKTREE phase: create the home worktree — a branch, so on stated intent or as phase 1 of a `/team` run. In a full run it is automatic and first. Standalone, it consumes `8-plan.md` post-PLAN for manual recovery or multi-repo setup |
 | `/team-question <desc>` | Decompose intent into task + questions + brief |
 | `/team-research` | Isolated codebase research (runs Question if missing) |
 | `/team-design` | Draft the design. An adversarial design review gates advancement |
-| `/eng-design-doc-review` | Adversarial fresh-context audit of `design.md`. The front door over the `reviewing-designs` brief the pipeline's design-review gate also runs |
+| `/eng-design-doc-review` | Adversarial fresh-context audit of `6-design.md`. The front door over the `reviewing-designs` brief the pipeline's design-review gate also runs |
 | `/team-structure` | Break design into vertical slices (autonomous) |
 | `/team-plan` | Tactical plan from the structure |
 | `/team-implement` | Test-first + slice execution + 5-reviewer verify, on stated intent or as the IMPLEMENT phase — it commits each slice |
@@ -94,7 +94,7 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Some of th
 
 ## State
 
-State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions (when the opt-in pass ran) in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite (session-scoped). Any `/team-*` command rebuilds the ledger by scanning artifacts on entry. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
+State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions (when the opt-in pass ran) in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite (session-scoped). Any `/team-*` command rebuilds the ledger by scanning artifacts on entry. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
 
 ## Learned rules
 

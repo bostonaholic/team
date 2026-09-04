@@ -1,7 +1,7 @@
 // tests/skill-eval-coverage.test.ts
 //
 // Coverage-audit meta-test (TESTING.md §6 — every component must have a test
-// of the right kind). Encodes the structure.md triage as the immutable scope
+// of the right kind). Encodes the 7-structure.md triage as the immutable scope
 // fence. Free, deterministic, no model calls.
 //
 // L5 skills (self-contained or light-prior-state — 9 total):

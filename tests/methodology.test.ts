@@ -289,15 +289,15 @@ describe("product-thinking methodology", () => {
     expect(/product-thinking|product-need lens/i.test(b)).toBe(true);
   });
 
-  test("questioner directive restates goal isolation and scopes to task.md framing", () => {
+  test("questioner directive restates goal isolation and scopes to 1-task.md framing", () => {
     const directive = grepA4(body(read(QUESTIONER)), /Apply the product-need lens|product-thinking/i);
-    expect(/questions\.md|never/i.test(directive)).toBe(true);
-    expect(/task\.md|framing/i.test(directive)).toBe(true);
+    expect(/2-questions\.md|never/i.test(directive)).toBe(true);
+    expect(/1-task\.md|framing/i.test(directive)).toBe(true);
   });
 
   test("questioner description frontmatter is unchanged", () => {
     const expected =
-      "description: Use as the first agent of the QRSPI pipeline. Decomposes a user's task description into a full task record (task.md) and neutral research questions (questions.md), plus conditional artifacts — a prd.md when the PRD criteria apply, and a repos.md listing the repos the topic touches when the description names more than one repository. The researcher who reads questions.md should have no idea what feature is being built.";
+      "description: Use as the first agent of the QRSPI pipeline. Decomposes a user's task description into a full task record (1-task.md) and neutral research questions (2-questions.md), plus conditional artifacts — a 3-prd.md when the PRD criteria apply, and a 4-repos.md listing the repos the topic touches when the description names more than one repository. The researcher who reads 2-questions.md should have no idea what feature is being built.";
     expect(read(QUESTIONER)).toContain(expected);
   });
 
@@ -772,7 +772,7 @@ describe("test-first-development lens (L2 content tripwire)", () => {
 
 // ---------------------------------------------------------------------------
 // Design-review gate replaces approval frontmatter — free L2 content
-// tripwires (docs/testing.md §2). The DESIGN human gate is retired: design.md
+// tripwires (docs/testing.md §2). The DESIGN human gate is retired: 6-design.md
 // carries only `revision` (no `approved`/`approved_at`), and the runtime
 // hooks infer phase from the `design-review-<n>.md` verdict artifact instead
 // of reading approval frontmatter.
@@ -809,7 +809,7 @@ describe("design-review gate replaces approval frontmatter (L2 tripwire)", () =>
 // suggestion→issue across multiple tests; flaky red flags are blocking on
 // FIRST occurrence. These tripwires pin that contract and the skill↔agent
 // mirror agreement (design decision 8,
-// docs/plans/2026-07-15-flaky-test-red-flags/design.md).
+// docs/plans/2026-07-15-flaky-test-red-flags/6-design.md).
 // ---------------------------------------------------------------------------
 
 describe("reviewing-code flaky-test red flags (L2 content tripwire)", () => {

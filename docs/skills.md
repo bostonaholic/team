@@ -128,11 +128,11 @@ argument shape.
 ### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
 
 - **Purpose:** Decompose a raw intent into a task statement plus a neutral
-  question set, producing `task.md` and `questions.md`.
+  question set, producing `1-task.md` and `2-questions.md`.
 - **`$ARGUMENTS`:** `<ticket id, issue URL, or task description>`.
 - **Phase:** Question (the pipeline's first phase).
 - **Key behaviors:** The only step that sees your original description. It
-  emits the neutral `questions.md` so the downstream research sees only the
+  emits the neutral `2-questions.md` so the downstream research sees only the
   questions, not your task framing.
 
 ### [team-research](https://github.com/bostonaholic/team/blob/main/skills/team-research/SKILL.md)
@@ -141,8 +141,8 @@ argument shape.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
   the shared three-tier chain above.
 - **Phase:** Research (isolated).
-- **Key behaviors:** Reads only `questions.md`, never the task, so the
-  research carries no opinion-bias. Writes `research.md`.
+- **Key behaviors:** Reads only `2-questions.md`, never the task, so the
+  research carries no opinion-bias. Writes `5-research.md`.
 
 ### [team-design](https://github.com/bostonaholic/team/blob/main/skills/team-design/SKILL.md)
 
@@ -152,7 +152,7 @@ argument shape.
   the shared three-tier chain above.
 - **Phase:** Design (design review).
 - **Key behaviors:** Dispatches the design-author to write a ~200-line
-  `design.md`. The design-author resolves its own open questions as
+  `6-design.md`. The design-author resolves its own open questions as
   recorded assumptions. The skill then runs the adversarial design-review
   loop (`design-review-<n>.md`, where APPROVE and COMMENT advance).
   The cross-model pass
@@ -166,7 +166,7 @@ argument shape.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
   the shared three-tier chain above.
 - **Phase:** Structure (autonomous, no gate).
-- **Key behaviors:** Produces the ~2-page `structure.md`, then advances
+- **Key behaviors:** Produces the ~2-page `7-structure.md`, then advances
   to PLAN automatically.
 
 ### [team-plan](https://github.com/bostonaholic/team/blob/main/skills/team-plan/SKILL.md)
@@ -176,7 +176,7 @@ argument shape.
 - **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
   the shared three-tier chain above.
 - **Phase:** Plan.
-- **Key behaviors:** Writes `plan.md` for the implementer. The plan is a
+- **Key behaviors:** Writes `8-plan.md` for the implementer. The plan is a
   tactical artifact, not a human-reviewed gate.
 
 ### [team-worktree](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/SKILL.md)
@@ -251,7 +251,7 @@ argument shape.
 
 ### [eng-design-doc-review](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/SKILL.md)
 
-- **Purpose:** Adversarially audit `design.md` with fresh context. It is
+- **Purpose:** Adversarially audit `6-design.md` with fresh context. It is
   the front door over the `reviewing-designs` brief, which the pipeline's
   DESIGN review gate loads directly. Standalone invocation remains
   available.
@@ -661,7 +661,7 @@ QRSPI phase: a self-contained action a user runs on demand.
   rather than on fit — it holds `Agent`, and its preloaded `nested-agents`
   authorizes dispatch to `Explore`, which holds `Bash`, or to `general-purpose`,
   which holds every tool; `team:file-finder` holds no `Agent` at all, so it has
-  no delegation path. Both agents scope themselves to `questions.md` and forbid
+  no delegation path. Both agents scope themselves to `2-questions.md` and forbid
   themselves speculation, so each lens prompt states its overrides of the agent
   body outright: the transcript path is the lens's only input and its scope, the
   reply shape is the prompt's own, and judgment about the session is the errand.
@@ -833,7 +833,7 @@ lists more than three carries one recorded reason naming that count (see
   `team`). No agent preloads it.
 - **Key behaviors:** Carries the artifact inventory and `<id>` forms, plus
   the YAML frontmatter schema and phase enum. It also carries the
-  `repos.md` and `prd.md` schemas, the topic-consistency invariant, the
+  `4-repos.md` and `3-prd.md` schemas, the topic-consistency invariant, the
   `ticketId` scope rule, and the design-review record mechanics
   (`design-review-<n>.md` verdicts). Defers to
   `hooks/session-start-recover.mjs` as the executable canon for
@@ -847,8 +847,8 @@ lists more than three carries one recorded reason naming that count (see
   cites code read in this run; cross-repo contracts are findings) and
   the compressed research-report output format with its 100-line budget
   (150 in multi-repo mode). How to investigate is left to the model.
-  The isolation stance itself (questions.md only,
-  never task.md) stays in the researcher agent as identity.
+  The isolation stance itself (2-questions.md only,
+  never 1-task.md) stays in the researcher agent as identity.
 
 ### [finding-files](https://github.com/bostonaholic/team/blob/main/skills/finding-files/SKILL.md)
 
@@ -856,7 +856,7 @@ lists more than three carries one recorded reason naming that count (see
 - **Loaded by:** file-finder.
 - **Key behaviors:** Glob by naming convention, content search,
   import/dependency tracing, directory exploration, and config/manifest
-  checks, scoped to the vocabulary in `questions.md`. Deliberately
+  checks, scoped to the vocabulary in `2-questions.md`. Deliberately
   self-contained: the file-finder runs on haiku, so the skill carries
   everything inline with no cross-references.
 
@@ -865,13 +865,13 @@ lists more than three carries one recorded reason naming that count (see
 - **Purpose:** Artifact templates and decomposition procedure for the
   Question phase.
 - **Loaded by:** questioner.
-- **Key behaviors:** Carries the `task.md` and `questions.md` body
+- **Key behaviors:** Carries the `1-task.md` and `2-questions.md` body
   templates, the topic-slug rules, and the process steps. It also carries
   the multi-repo detection flow: an autonomous allowlist, sibling-directory
   resolution with realpath containment, the loud single-repo fallback, and
-  the `repos.md` schema pointer. Conditionally loads
+  the `4-repos.md` schema pointer. Conditionally loads
   `product-requirements-doc` for vague, multi-story, cross-cutting, or
-  behavior-replacing requests, producing `prd.md` alongside `task.md`.
+  behavior-replacing requests, producing `3-prd.md` alongside `1-task.md`.
 
 ### [authoring-designs](https://github.com/bostonaholic/team/blob/main/skills/authoring-designs/SKILL.md)
 
@@ -880,8 +880,8 @@ lists more than three carries one recorded reason naming that count (see
 - **Key behaviors:** Carries the repo-scope confirmation flow and the
   autonomous open-questions resolution rule. Self-resolved choices land in
   `## Decisions made`, marked "Assumption — chosen without user review". It
-  also carries the `design.md` document template with its six-category
-  edge-case walk. When `task.md` references a `prd.md`, reads it first and
+  also carries the `6-design.md` document template with its six-category
+  edge-case walk. When `1-task.md` references a `3-prd.md`, reads it first and
   honors its scope boundaries and acceptance criteria per
   `product-requirements-doc`'s "Consuming a PRD downstream" section.
 
@@ -891,7 +891,7 @@ lists more than three carries one recorded reason naming that count (see
   phase.
 - **Loaded by:** structure-planner.
 - **Key behaviors:** Carries the vertical-slice rationale and the
-  `structure.md` document format. Its slicing rules are that every slice
+  `7-structure.md` document format. Its slicing rules are that every slice
   ends in a passing test and holds 1-3 acceptance tests. Edge cases come
   from the design, and slices order by user value. The skill also carries
   the slicing heuristics: walking-skeleton first, and migrations alone are
@@ -901,7 +901,7 @@ lists more than three carries one recorded reason naming that count (see
 
 - **Purpose:** Tactical planning methodology for the Plan phase.
 - **Loaded by:** planner.
-- **Key behaviors:** Carries the `plan.md` document template that expands
+- **Key behaviors:** Carries the `8-plan.md` document template that expands
   each vertical slice into file-level steps with acceptance-test mappings.
   Its tactical rules are one slice at a time, reuse over reinvention, and
   under 300 lines. It also forbids implementation code, keeps slices
@@ -1205,11 +1205,11 @@ lists more than three carries one recorded reason naming that count (see
 - **Loaded by:** questioner, through `decomposing-intent`'s conditional
   load, which fires when the request is vague, multi-story, cross-cutting,
   or replaces existing behavior. Also design-author, through
-  `authoring-designs`, when `task.md` references a `prd.md`, per the
+  `authoring-designs`, when `1-task.md` references a `3-prd.md`, per the
   skill's "Consuming a PRD downstream" section.
 - **Key behaviors:** Frames the problem, users, and success criteria when a
   request warrants a PRD before design. The PRD lands at
-  `docs/plans/<id>/prd.md`, referenced from `task.md`. Points PRD authors
+  `docs/plans/<id>/3-prd.md`, referenced from `1-task.md`. Points PRD authors
   at the seventh-grade prose bar in `writing-prose`.
 
 ### [product-thinking](https://github.com/bostonaholic/team/blob/main/skills/product-thinking/SKILL.md)

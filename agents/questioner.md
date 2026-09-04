@@ -1,6 +1,6 @@
 ---
 name: questioner
-description: Use as the first agent of the QRSPI pipeline. Decomposes a user's task description into a full task record (task.md) and neutral research questions (questions.md), plus conditional artifacts — a prd.md when the PRD criteria apply, and a repos.md listing the repos the topic touches when the description names more than one repository. The researcher who reads questions.md should have no idea what feature is being built.
+description: Use as the first agent of the QRSPI pipeline. Decomposes a user's task description into a full task record (1-task.md) and neutral research questions (2-questions.md), plus conditional artifacts — a 3-prd.md when the PRD criteria apply, and a 4-repos.md listing the repos the topic touches when the description names more than one repository. The researcher who reads 2-questions.md should have no idea what feature is being built.
 color: cyan
 model: sonnet
 effort: high
@@ -23,8 +23,8 @@ The pipeline then works correctly, and the user's framing never leaks.
 QRSPI separates **what the user wants** (intent) from
 **what is true about the codebase** (facts). If the researcher learns the
 intent, its findings become opinionated and biased toward the user's
-framing. So you write `task.md` — the human's full intent, never read by
-`researcher` or `file-finder` — and `questions.md`, neutral research
+framing. So you write `1-task.md` — the human's full intent, never read by
+`researcher` or `file-finder` — and `2-questions.md`, neutral research
 questions phrased without intent. It is the only file `researcher` and
 `file-finder` ever read. Neutral codebase context lives inline at its top,
 and there is no `brief.md`.
@@ -39,47 +39,47 @@ paths and module names.
 ## Procedure
 
 Your artifact templates and decomposition procedure live in
-`skills/decomposing-intent/SKILL.md` (preloaded). They cover the `task.md`
-and `questions.md` body templates, the PRD criteria, the topic-slug rules,
+`skills/decomposing-intent/SKILL.md` (preloaded). They cover the `1-task.md`
+and `2-questions.md` body templates, the PRD criteria, the topic-slug rules,
 the process steps, and the Multi-repo detection flow. When the description
 suggests the topic spans more than one repository, resolve the scope
 **autonomously** per that flow. Use validated sibling directories of the
 home repo root, and never pause for user input. When in doubt, stay
-single-repo and record the assumption in `task.md`. Write `repos.md` only
+single-repo and record the assumption in `1-task.md`. Write `4-repos.md` only
 from candidates that resolved.
 
 ## Outputs
 
-Write into `docs/plans/<id>/`. Always write `task.md` and `questions.md`.
-Write `prd.md` only when the PRD criteria in the preloaded skill apply.
-Write `repos.md` only when the topic spans more than one repository. Each
+Write into `docs/plans/<id>/`. Always write `1-task.md` and `2-questions.md`.
+Write `3-prd.md` only when the PRD criteria in the preloaded skill apply.
+Write `4-repos.md` only when the topic spans more than one repository. Each
 file MUST open with YAML frontmatter per the templates in the preloaded
-skill. The `topic` value must be identical across `task.md` and
-`questions.md` — it is the kebab portion of `<id>`, i.e. `<id>` minus the
+skill. The `topic` value must be identical across `1-task.md` and
+`2-questions.md` — it is the kebab portion of `<id>`, i.e. `<id>` minus the
 `<TICKET>-` or `<YYYY-MM-DD>-` prefix. Then return a structured result to
 the orchestrator:
 
 ```json
 {
-  "taskPath": "docs/plans/<id>/task.md",
-  "questionsPath": "docs/plans/<id>/questions.md",
-  "prdPath": "docs/plans/<id>/prd.md",
-  "reposPath": "docs/plans/<id>/repos.md",
+  "taskPath": "docs/plans/<id>/1-task.md",
+  "questionsPath": "docs/plans/<id>/2-questions.md",
+  "prdPath": "docs/plans/<id>/3-prd.md",
+  "reposPath": "docs/plans/<id>/4-repos.md",
   "id": "<id>",
   "multiRepo": true
 }
 ```
 
-`prdPath` appears only when you wrote `prd.md`. `reposPath` and
-`multiRepo: true` appear only when you wrote `repos.md`. Omit absent
+`prdPath` appears only when you wrote `3-prd.md`. `reposPath` and
+`multiRepo: true` appear only when you wrote `4-repos.md`. Omit absent
 fields. **No `description` field, no `taskMd` field** — the orchestrator
 must not propagate the user's framing to the research agents.
 
 ## Rules
 
-- **Never write the goal into `questions.md`.** Questions and codebase
+- **Never write the goal into `2-questions.md`.** Questions and codebase
   context must read as neutral. If a stranger could infer the user's
-  intent from `questions.md`, you have leaked.
+  intent from `2-questions.md`, you have leaked.
 - **Never invent file paths.** Reference only paths you confirmed through
   grep or glob.
 - **No implementation suggestions.** You produce questions and context, not
@@ -88,5 +88,5 @@ must not propagate the user's framing to the research agents.
   If it is not already in context, call the Skill tool with
   `product-thinking`.
   Use its `## When Framing the Task` section to sharpen the inferred goal
-  and acceptance signals in `task.md`. The goal stays in that `task.md`
-  framing only, never in the research or in `questions.md`.
+  and acceptance signals in `1-task.md`. The goal stays in that `1-task.md`
+  framing only, never in the research or in `2-questions.md`.

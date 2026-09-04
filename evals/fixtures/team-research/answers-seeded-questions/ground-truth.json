@@ -4,7 +4,7 @@
       "id": "topic-slug-reused",
       "category": "required-property",
       "severity": "high",
-      "description": "Required property (seeded-state guardrail): the research output must reuse the topic slug from the seeded questions.md verbatim — `topic: token-bucket`.",
+      "description": "Required property (seeded-state guardrail): the research output must reuse the topic slug from the seeded 2-questions.md verbatim — `topic: token-bucket`.",
       "detection_hint": "topic:\\s*token-bucket"
     }
   ],

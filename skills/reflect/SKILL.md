@@ -190,11 +190,11 @@ constraint by withholding the capability, not by asking for restraint.
 **The fit is imperfect, knowingly.** `team:file-finder` runs on haiku at low
 effort; its agent body is written for locating files, so its report format is
 wrong for a lens; and two of that body's own rules point away from this errand —
-it scopes itself to `questions.md` and it is told never to speculate about what
+it scopes itself to `2-questions.md` and it is told never to speculate about what
 the user wants, which is close to the inverse of a judgment lens's job. So each
 lens prompt states three overrides outright rather than leaning on being the
 more specific instruction: the normalized transcript path is the lens's **only**
-input and replaces `questions.md` as its scope, the reply shape is the one the
+input and replaces `2-questions.md` as its scope, the reply shape is the one the
 prompt gives and not that agent's `## Found Files` report, and judgment about
 this session **is** the errand rather than speculation to avoid. What an
 override cannot do is bind — a prompt does not rewrite an agent body, so a lens
@@ -268,7 +268,7 @@ reported **unrun**, never counted as a zero.
 ### Rejected lens targets
 
 `team:researcher` runs on a stronger model and would need the same scope
-override, since it carries the same `questions.md` binding — so the
+override, since it carries the same `2-questions.md` binding — so the
 differentiator is the toolset, not the fit. It holds `Agent` and `SendMessage`
 and `team:file-finder` holds neither, and its preloaded
 `skills/nested-agents/SKILL.md` authorizes it to dispatch `Explore`, which holds
@@ -305,7 +305,7 @@ Two kinds of proposal are demoted by rule, whatever a lens claimed: rewriting
 reason stated, and so is promoting a skill into a distributed plugin's own
 `skills/` directory. Both are decisions a person makes.
 
-Then write the **plan file** to `<run cache>/plan.md` and print its absolute
+Then write the **plan file** to `<run cache>/8-plan.md` and print its absolute
 path. It is the artifact the later turns read, so it is self-contained: every
 proposed edit in full, the pre-image of every target file, the resolved
 transcript path, the write-scope rules, the untrusted-content and

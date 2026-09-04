@@ -54,9 +54,9 @@ seeds and updates a TodoWrite ledger, and runs the gates.
   can be re-read by any agent in any session, and live in git history.
 - **Research isolation.** The researcher and file-finder never receive
   the user's original task description. Enforcement is two-layer.
-  *Structural*: the orchestrator only passes the `questions.md` path to
+  *Structural*: the orchestrator only passes the `2-questions.md` path to
   the research agents. *Procedural*: the research agents' system prompts
-  forbid reading `task.md`.
+  forbid reading `1-task.md`.
 - **No mid-run human gates.** The design (~200-line alignment doc) is
   gated by an adversarial design review. A fresh-context subagent audits
   it, and the orchestrator records its verdict to `design-review-<n>.md`.
@@ -131,21 +131,21 @@ reviewer's findings verbatim. The orchestrator increments
 
 | Latest artifact present                                | Current phase       |
 |--------------------------------------------------------|---------------------|
-| worktree exists for `<id>`, no `task.md` yet           | WORKTREE (next up)  |
-| `task.md` + `questions.md` only                        | RESEARCH (next up)  |
-| `research.md`                                          | DESIGN (next up)    |
-| `design.md` alone (no passing design review)           | DESIGN (review next)|
-| `design.md` + passing `design-review-<n>.md`           | STRUCTURE (next up) |
-| `structure.md`                                         | PLAN (next up)      |
-| `plan.md` + ≥1 commit on `<id>` since merge-base       | IMPLEMENT           |
-| `plan.md` (no commit on `<id>` yet)                    | PLAN (next up)      |
+| worktree exists for `<id>`, no `1-task.md` yet           | WORKTREE (next up)  |
+| `1-task.md` + `2-questions.md` only                        | RESEARCH (next up)  |
+| `5-research.md`                                          | DESIGN (next up)    |
+| `6-design.md` alone (no passing design review)           | DESIGN (review next)|
+| `6-design.md` + passing `design-review-<n>.md`           | STRUCTURE (next up) |
+| `7-structure.md`                                         | PLAN (next up)      |
+| `8-plan.md` + ≥1 commit on `<id>` since merge-base       | IMPLEMENT           |
+| `8-plan.md` (no commit on `<id>` yet)                    | PLAN (next up)      |
 | topic branch has slice commits + verifier passed       | PR (next up)        |
 | PR opened or commit shipped                            | SHIPPED             |
 
 Worktree presence: `git worktree list --porcelain | grep -q <id>`.
 IMPLEMENT is confirmed only once there is
 **≥1 commit on `<id>` since merge-base** with the default branch, so
-`git log <merge-base>..<id>` is non-empty. A present `plan.md` with no
+`git log <merge-base>..<id>` is non-empty. A present `8-plan.md` with no
 commit means the run is still pre-IMPLEMENT.
 
 Two non-phase sibling outputs exist. Discovery keys only on the six
@@ -193,10 +193,10 @@ is born in the worktree, no copy is ever needed and the home checkout's
 worktree's absolute path once and threads it into every downstream
 dispatch (the main session does not `cd`).
 
-**Single-repo (default):** `repos.md` is absent. One home worktree at
+**Single-repo (default):** `4-repos.md` is absent. One home worktree at
 `<repo>/.claude/worktrees/<id>`.
 
-**Multi-repo:** the questioner writes `repos.md` autonomously at
+**Multi-repo:** the questioner writes `4-repos.md` autonomously at
 QUESTION, one phase after WORKTREE. The design-author writes it at DESIGN
 when the questioner missed the multi-repo signals. Only the home worktree
 is created here. Secondary worktrees are created
@@ -209,7 +209,7 @@ git -C <repo-path> worktree add .claude/worktrees/<id> -b <id> origin/HEAD
 ```
 
 At that point the orchestrator writes a `## Worktrees` section to
-`repos.md`. It back-records the home worktree path plus each secondary
+`4-repos.md`. It back-records the home worktree path plus each secondary
 path. Any later `/team-*` invocation can thus rediscover all paths from
 one file. Only the home repo's worktree carries `docs/plans/<id>/`. Other
 repos' worktrees do not duplicate the artifacts. See
@@ -229,14 +229,14 @@ root and the threaded path is the home-repo root.
 Decomposes the user's intent into two artifacts. Only the questioner ever
 sees the user's description. There is no separate `brief.md`. Neutral
 codebase context lives in a "Codebase context" section at the top of
-`questions.md`.
+`2-questions.md`.
 
 ### Phase 3: Research
 
 **Agents:** `file-finder` and `researcher` (parallel, isolated)
-**Predecessor:** `questions.md` (orchestrator passes only the
-`questions.md` path to the research agents)
-**Artifact:** `docs/plans/<id>/research.md`
+**Predecessor:** `2-questions.md` (orchestrator passes only the
+`2-questions.md` path to the research agents)
+**Artifact:** `docs/plans/<id>/5-research.md`
 
 Orchestrator waits for both agents to return, then writes the combined
 research artifact with the necessary frontmatter.
@@ -244,8 +244,8 @@ research artifact with the necessary frontmatter.
 ### Phase 4: Design
 
 **Agent:** `design-author` (resolves its own open questions, recording
-each as an auditable assumption) **Predecessor:** `research.md`
-**Artifact:** `docs/plans/<id>/design.md` **Gate:** REVIEW. The
+each as an auditable assumption) **Predecessor:** `5-research.md`
+**Artifact:** `docs/plans/<id>/6-design.md` **Gate:** REVIEW. The
 orchestrator dispatches a fresh-context, read-only `Explore` subagent
 with the `## Review brief` from `skills/reviewing-designs/SKILL.md`.
 The subagent holds no Write or Edit tools, so the reviewer cannot touch
@@ -256,16 +256,16 @@ the agent re-drafts with the findings verbatim and increments `revision`.
 ### Phase 5: Structure
 
 **Agent:** `structure-planner`
-**Predecessor:** `design.md` + passing `design-review-<n>.md`
-**Artifact:** `docs/plans/<id>/structure.md`
-**Gate:** NONE (autonomous). Once `structure.md` exists the pipeline
+**Predecessor:** `6-design.md` + passing `design-review-<n>.md`
+**Artifact:** `docs/plans/<id>/7-structure.md`
+**Gate:** NONE (autonomous). Once `7-structure.md` exists the pipeline
 advances to PLAN.
 
 ### Phase 6: Plan
 
 **Agent:** `planner`
-**Predecessor:** `structure.md`
-**Artifact:** `docs/plans/<id>/plan.md`
+**Predecessor:** `7-structure.md`
+**Artifact:** `docs/plans/<id>/8-plan.md`
 
 No gate. The plan is mechanically derived from the structure.
 
@@ -308,11 +308,11 @@ the human can fix first differs by gate.
 
 The design-review gate writes every round's findings to
 `design-review-<n>.md`, so they are on disk to read before editing
-`design.md`. The aggregate gate persists none of its findings. So
+`6-design.md`. The aggregate gate persists none of its findings. So
 `/team-implement` resumes at the reviewer-dispatch step, and the five
 reviewers re-derive the open set at the cost of one round. The aggregate
 round counter is session-scoped through TodoWrite and starts fresh on
-re-invocation. The design `revision` counter persists in `design.md`
+re-invocation. The design `revision` counter persists in `6-design.md`
 frontmatter.
 
 ### Phase 8: PR
@@ -323,7 +323,7 @@ frontmatter.
 Update CHANGELOG.md (filter for user-facing commits since last release),
 push the branch, and open a draft PR automatically with
 `gh pr create --draft`. The PR phase never waits for approval. Then
-surface the tracking ticket, if `task.md` carries `ticketId`. When a
+surface the tracking ticket, if `1-task.md` carries `ticketId`. When a
 capture manifest exists (`docs/plans/<id>/screenshots/`, see the
 artifact-layout note in section 2), the PR body also gets a
 `## Screenshots` section populated by uploading the PNGs through GitHub's
@@ -1027,8 +1027,8 @@ all governed by `skills/nested-agents/SKILL.md`:
   the implementer dispatches the next slice's scout in the background
   while finishing the current slice. The researcher's scouts inherit the
   research isolation invariant: scout prompts — first dispatch and
-  follow-up alike — are built only from verbatim `questions.md` text and
-  `repos.md` paths.
+  follow-up alike — are built only from verbatim `2-questions.md` text and
+  `4-repos.md` paths.
 - **Skeptic verification** (`code-reviewer`, `security-reviewer`): each
   hard-gate finding (Blocking, CRITICAL, or HIGH) goes to a fresh
   `general-purpose` sub-agent as a neutral, falsifiable claim, with

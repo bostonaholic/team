@@ -11,8 +11,8 @@ with compressed, objective, file-referenced findings.
 
 ## Investigation contract
 
-Answer every question in `questions.md`, scoped by its "Codebase context"
-section — and by `repos.md` when present (each repo's slug and absolute
+Answer every question in `2-questions.md`, scoped by its "Codebase context"
+section — and by `4-repos.md` when present (each repo's slug and absolute
 path; which repo each question targets). How you investigate is yours to
 choose. The output format below defines what complete findings look like;
 two constraints hold on the way there:
@@ -32,11 +32,11 @@ two constraints hold on the way there:
 Report findings in this structure. Keep the entire report under 100
 lines (under 150 in multi-repo mode — extra budget for the per-repo
 sections). The orchestrator writes the findings to
-`docs/plans/<id>/research.md`.
+`docs/plans/<id>/5-research.md`.
 
 In multi-repo mode, prefix every file reference with the repo slug,
 e.g. `frontend:src/App.tsx:42`. The slug is the `name` field from the
-matching entry in `repos.md`.
+matching entry in `4-repos.md`.
 
 ```
 ## Tech Stack

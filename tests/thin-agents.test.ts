@@ -75,12 +75,12 @@ const NEW_SKILLS: { skill: string; agent: string; anchor: string }[] = [
   { skill: "implementing-slices", agent: "implementer", anchor: "acceptance test" },
   { skill: "running-quality-checks", agent: "verifier", anchor: "speed order" },
   { skill: "verifying-ux", agent: "ux-reviewer", anchor: "curl" },
-  { skill: "decomposing-intent", agent: "questioner", anchor: "questions.md" },
-  { skill: "authoring-designs", agent: "design-author", anchor: "design.md" },
-  { skill: "researching-codebases", agent: "researcher", anchor: "research.md" },
-  { skill: "finding-files", agent: "file-finder", anchor: "questions.md" },
-  { skill: "slicing-work", agent: "structure-planner", anchor: "structure.md" },
-  { skill: "planning-implementation", agent: "planner", anchor: "plan.md" },
+  { skill: "decomposing-intent", agent: "questioner", anchor: "2-questions.md" },
+  { skill: "authoring-designs", agent: "design-author", anchor: "6-design.md" },
+  { skill: "researching-codebases", agent: "researcher", anchor: "5-research.md" },
+  { skill: "finding-files", agent: "file-finder", anchor: "2-questions.md" },
+  { skill: "slicing-work", agent: "structure-planner", anchor: "7-structure.md" },
+  { skill: "planning-implementation", agent: "planner", anchor: "8-plan.md" },
 ];
 
 
