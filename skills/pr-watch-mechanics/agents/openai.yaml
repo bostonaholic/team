@@ -1,0 +1,4 @@
+interface:
+  display_name: "PR Watch Mechanics"
+  short_description: "Pace and bound a PR watch loop"
+  default_prompt: "Use $pr-watch-mechanics to pace and bound a PR watch loop."

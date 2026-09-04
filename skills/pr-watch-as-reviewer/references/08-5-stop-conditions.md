@@ -1,30 +1,13 @@
 ### 5. Stop conditions
 
-The loop stops on exactly one of seven conditions, each reported by
-name:
+The loop stops on exactly one of seven conditions, each reported by name.
+`pr-watch-mechanics` owns three of them: user interrupt, the 3-cycle soft
+cap, and 3 consecutive poll failures. This skill adds four:
 
 - **Approval cast** — the gate cleared, every re-review verdict passed,
   and step 6 ran.
 - **Merge or close** — the PR reached a terminal state. Report it,
   including "merged without your approval" when that is what happened.
-- **User interrupt** — the escape hatch. Pressing Esc or sending a
-  message stops the loop between Bash calls at any time.
-- **3-cycle soft cap** — print the handoff and end the interactive loop:
-  the tracked-set state (unresolved thread ids, plain-comment engagement
-  and verdict state, the arm-time and current head SHA, the arm-time and
-  current auto-merge state) plus the exact command to resume the watch
-  as a scheduled headless job. Re-arming the interactive loop happens
-  only on explicit user request. When
-  the cap was reached with a plain comment still pending, say so
-  explicitly and name the comment: this is the expected outcome for a
-  comment the author never engaged, not a malfunction, and the reader
-  should not have to infer that from a bare handoff. This is also where
-  an unsettled disagreement lands, since a rejected verdict rebuts
-  rather than stops: name each thread still holding one, what the last
-  rebuttal argued, and how the author answered it. That is the case
-  most worth a human read — the argument is on the record and open, and
-  deciding it is yours.
-- **3 consecutive poll failures** — stop and name the error.
 - **Empty tracked set** — a mid-watch poll that returns an empty tracked
   set stops the loop without approving. This happens when you deleted
   your own last comment, or GitHub stopped returning the threads or the
@@ -47,3 +30,13 @@ name:
   happened instead. Never cast anyway, and never downgrade the decline
   into a skip without warning. (A "no" to the loop-path confirmation at
   arm is a refusal to arm, not a stop — that loop never started.)
+
+When the shared soft cap fires, two reports are this skill's to add. When
+the cap was reached with a plain comment still pending, say so explicitly
+and name the comment: this is the expected outcome for a comment the
+author never engaged, not a malfunction, and the reader should not have
+to infer that from a bare handoff. The cap is also where an unsettled
+disagreement lands, since a rejected verdict rebuts rather than stops:
+name each thread still holding one, what the last rebuttal argued, and
+how the author answered it. That is the case most worth a human read —
+the argument is on the record and open, and deciding it is yours.

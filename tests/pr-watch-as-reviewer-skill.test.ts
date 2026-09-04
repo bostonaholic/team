@@ -5,7 +5,8 @@
 // watch-and-approve utility distributed to Team's users. Arming resolves the
 // base repo from the canonical PR URL (never head-repository fields), fetches
 // the viewer login once, refuses self-approval and zero-thread arms, then
-// polls GitHub in ~31-minute cycles for up to 48 cycles (~24 h) until every
+// polls GitHub in ~31-minute cycles to a 3-cycle soft cap (~90 min) — timing
+// and bound owned by pr-watch-mechanics, which both watches load — until every
 // review thread the invoking user opened is resolved, and casts one
 // attributed, SHA-cited `gh pr review --approve`. The approval is the skill's
 // ONLY write: it never resolves threads, never replies, never edits code,
@@ -23,6 +24,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
+import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 // pr-watch-as-reviewer is a RUNTIME skill — under skills/ (distributed), not .claude/.
@@ -91,14 +93,18 @@ describe("pr-watch-as-reviewer skill: tracked set and gate", () => {
 });
 
 describe("pr-watch-as-reviewer skill: bounded cycle mechanics", () => {
-  test("the cycle wait is one backgrounded sleep-then-poll call, not foreground chunks", () => {
-    // A foreground wait dies at the harness ceiling (600s in Claude Code) and
-    // costs a turn per fragment. The cycle must emit one backgrounded call.
+  test("cycle timing and the bound are delegated to pr-watch-mechanics, not restated", () => {
+    // The interval, the soft cap, and the handoff are shared with
+    // pr-watch-as-author and live in pr-watch-mechanics, which owns their
+    // assertions. Restating them here would let the two copies drift.
+    expect(loadsSkill(body(), "pr-watch-mechanics")).toBe(true);
+  });
+
+  test("binds its own handoff state for the shared soft cap", () => {
+    // The slot this skill fills: the author's payload is a different set.
     const t = body();
-    expect(t).toContain("sleep 1860");
-    expect(t).toContain("run_in_background: true");
-    expect(t).toContain("principle-non-blocking-waits");
-    expect(t).not.toContain("sleep 600");
+    expect(t).toContain("auto-merge state");
+    expect(t).toContain("tracked-set state");
   });
 
   test("polls reviewThreads and gates on isResolved", () => {
