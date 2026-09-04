@@ -227,7 +227,10 @@ argument shape.
   the shared three-tier chain above.
 - **Phase:** PR (the pipeline's final phase).
 - **Key behaviors:** Loads `git-commit` for commit discipline and
-  `changelog` for the changelog update. Adds a PR body from its template.
+  `changelog` for the changelog update. Adds a PR body from its template,
+  held to the `writing-prose` prose bar: the body addresses one busy reader
+  making one decision, so `## Summary` opens with the recommendation or the
+  observable outcome rather than a sentence describing the PR.
   Renders a conditional `## Screenshots` section from ux-reviewer's capture
   manifest (`docs/plans/<id>/screenshots/manifest.md`) and uploads the PNGs
   through GitHub's user-attachments pipeline so they render inline. Any

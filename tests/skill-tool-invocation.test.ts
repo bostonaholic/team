@@ -47,7 +47,7 @@ const REQUIRED_LOADS_BY_COMPONENT: Record<string, readonly string[]> = {
     "changelog",
     "team-pr",
   ],
-  "skills/team-pr": ["tracking-tickets", "verifying-ux", "worktree-isolation", "changelog", "git-commit"],
+  "skills/team-pr": ["tracking-tickets", "verifying-ux", "worktree-isolation", "changelog", "git-commit", "writing-prose"],
   "skills/technical-design-doc": ["writing-prose"],
   "skills/pr-rebase": ["running-quality-checks"],
   "skills/documenting-decisions": ["writing-prose"],
