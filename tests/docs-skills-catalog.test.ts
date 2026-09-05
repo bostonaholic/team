@@ -229,7 +229,7 @@ function deriveMentions(
 }
 
 // ---------------------------------------------------------------------------
-// Read once at module scope: the page, plus 236 `.md` files
+// Read once at module scope: the page, plus every `.md` file under skills/
 // (skillContents and agentContents in tests/methodology.test.ts).
 // ---------------------------------------------------------------------------
 
@@ -292,15 +292,16 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     ); // (5) every parsed body non-empty
 
     // (6) Reference-form axis: at least one edge only the `skills/<x>/SKILL.md`
-    // path form produced (69 today). A broken path pattern drops them silently.
+    // path form produced. A broken path pattern drops them silently.
     const allEdges = edgeSet(ALL_MD_TEXT, BOTH_FORMS);
     const bareEdges = edgeSet(ALL_MD_TEXT, ["bare"]);
     expect([...allEdges].filter((edge) => !bareEdges.has(edge)).length).toBeGreaterThan(0);
 
-    // (7) Depth axis: the edge set over the 84 SKILL.md files alone is a STRICT
-    // subset of the set over all 236 `.md` files (49 edges live only in
-    // references/ and the two prompt templates). An equal pair means the walk
-    // shrank — a shallow glob or a missed references/ directory.
+    // (7) Depth axis: the edge set over the SKILL.md files alone is a STRICT
+    // subset of the set over every `.md` file. Dozens of edges live only in
+    // references/ and the two prompt templates, so the margin is wide; an equal
+    // pair means the walk shrank — a shallow glob or a missed references/
+    // directory.
     const skillMdEdges = edgeSet(SKILL_MD_TEXT, BOTH_FORMS);
     expect([...skillMdEdges].filter((edge) => !allEdges.has(edge))).toEqual([]);
     expect(skillMdEdges.size).toBeLessThan(allEdges.size);
@@ -308,7 +309,7 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     // Every skill on disk has an entry. Fails loud rather than skipping.
     expect(SKILL_DIRECTORIES.filter((name) => !ENTRY_BY_NAME.has(name))).toEqual([]);
 
-    // The four sweeps, over all 84 entries.
+    // The four sweeps, over every entry.
     expect(SKILL_DIRECTORIES.flatMap(shapeOffenders)).toEqual([]);
     expect(SKILL_DIRECTORIES.flatMap(sentenceOffenders)).toEqual([]);
     expect(SKILL_DIRECTORIES.flatMap(mentionSetOffenders)).toEqual([]);
