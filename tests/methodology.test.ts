@@ -190,12 +190,12 @@ describe("engineering-standards methodology", () => {
   // a property of the code under test, so it is intentionally not covered here.
 
   test("skills.md methodology table includes solid row", () => {
-    const row = filterRows(read(SKILLS_MD), "solid", /^#|^>|\/\/|event/);
+    const row = filterRows(read(SKILLS_MD), "| `solid` |", /^#|^>|\/\/|event/);
     expect(row.length).toBeGreaterThan(0);
   });
 
   test("skills.md methodology table includes refactoring-to-patterns row", () => {
-    const row = filterRows(read(SKILLS_MD), "refactoring-to-patterns", /^#|^>|\/\/|event/);
+    const row = filterRows(read(SKILLS_MD), "| `refactoring-to-patterns` |", /^#|^>|\/\/|event/);
     expect(row.length).toBeGreaterThan(0);
   });
 });
@@ -1873,19 +1873,16 @@ describe("principle-untrusted-input-is-data (L2 content tripwire)", () => {
   });
 });
 
-// The catalog's consumer lists drifted: new bare principle-name citations
-// landed and the docs/skills.md entry did not follow. This gate
-// makes that drift class deterministic: for every principle-* skill, every
-// file under agents/ or skills/ that cites its backticked name must appear
-// in the catalog's `### <name>` entry, and — for the 21 extracted
-// single-invariant principles — in the "Skill ↔ agent ↔ phase" table row.
-// The reverse direction runs where an entry's own wording promises a
-// citer list: the JIT "consulted by citation from" form. A lens-style entry
-// ("Cited by ...") never made that promise — it also names checklist-level
-// consumers a path grep cannot see. All parsing is precomputed once at module level:
-// each file is read once, and each test body is a declarative assertion
-// whose failure value names the skill and the missing or phantom consumer.
-describe("docs/skills.md principle consumer lists match on-disk citations (L2 tripwire)", () => {
+// The "Skill ↔ agent ↔ phase" table drifted: new bare principle-name citations
+// landed and the row did not follow. This gate makes that drift class
+// deterministic: for every principle-* skill, every file under agents/ or
+// skills/ that cites its backticked name must appear in that skill's table
+// row. This is where inbound *agent* citers are covered, since the per-entry
+// Mentions: sweep in tests/docs-skills-catalog.test.ts reads nothing under
+// agents/. All parsing is precomputed once at module level: each file is read
+// once, and each test body is a declarative assertion whose failure value
+// names the skill and the missing consumer.
+describe("docs/skills.md principle table rows match on-disk citations (L2 tripwire)", () => {
   const SKILLS_DIR = join(REPO_ROOT, "skills");
   const AGENTS_DIR = join(REPO_ROOT, "agents");
   const SKILLS_MD = read(join(REPO_ROOT, "docs", "skills.md"));
@@ -1929,27 +1926,6 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
     }),
   );
 
-  // The `### <name>` catalog entry, up to the next heading. "" when the
-  // entry is missing, so dependent assertions fail loud, never vacuously.
-  const entrySections = new Map(
-    principleSkills.map((name) => {
-      // Entry headings come in two sanctioned forms: plain `### <name>` and
-      // the linked `### [<name>](<url>)` form docs/skills.md adopted.
-      const plain = `### ${name}\n`;
-      const linked = `### [${name}](`;
-      let start = SKILLS_MD.indexOf(plain);
-      let markerLen = plain.length;
-      if (start === -1) {
-        start = SKILLS_MD.indexOf(linked);
-        markerLen = linked.length;
-      }
-      if (start === -1) return [name, ""] as const;
-      const rest = SKILLS_MD.slice(start + markerLen);
-      const next = rest.search(/\n##+ /);
-      return [name, next === -1 ? rest : rest.slice(0, next)] as const;
-    }),
-  );
-
   // The `| \`<name>\` | ... |` row of the "Skill ↔ agent ↔ phase" table.
   // "" when the row is missing, so the assertion fails loud, never vacuously.
   const tableRows = new Map(
@@ -1969,21 +1945,6 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
     expect(principleSkills.length).toBeGreaterThan(20);
   });
 
-  for (const principle of principleSkills) {
-    test(`entry for ${principle} omits no file that cites it by name`, () => {
-      const section = entrySections.get(principle) ?? "";
-      expect(section.length).toBeGreaterThan(0);
-      // Clip at "Key behaviors" so a citer named only in a Key-behaviors
-      // cross-reference cannot satisfy the consumer-list check.
-      const cut = section.indexOf("Key behaviors");
-      const clipped = cut === -1 ? section : section.slice(0, cut);
-      const missing = (citersByPrinciple.get(principle) ?? [])
-        .filter((citer) => !mentions(clipped, citer))
-        .map((citer) => `${principle}: catalog entry omits consumer ${citer}`);
-      expect(missing).toEqual([]);
-    });
-  }
-
   for (const principle of extractedPrinciples) {
     test(`table row for ${principle} omits no file that cites it by name`, () => {
       const row = tableRows.get(principle) ?? "";
@@ -1992,36 +1953,6 @@ describe("docs/skills.md principle consumer lists match on-disk citations (L2 tr
         .filter((citer) => !mentions(row, citer))
         .map((citer) => `${principle}: table row omits consumer ${citer}`);
       expect(missing).toEqual([]);
-    });
-  }
-
-  const jitPrinciples = principleSkills.filter((name) =>
-    squash(entrySections.get(name) ?? "").includes("consulted by citation from"),
-  );
-
-  test("JIT-worded entries exist (the reverse check below cannot go vacuous)", () => {
-    expect(jitPrinciples.length).toBeGreaterThan(0);
-  });
-
-  for (const principle of jitPrinciples) {
-    test(`"consulted by citation from" list for ${principle} names only real citers`, () => {
-      const flat = squash(entrySections.get(principle) ?? "");
-      const list = flat.slice(flat.indexOf("consulted by citation from"));
-      // Clip at the bullet's tail so Key-behavior cross-references (which
-      // legitimately name non-citers) never register as consumers.
-      const ends = ["No agent preloads", "Key behaviors"]
-        .map((m) => list.indexOf(m))
-        .filter((i) => i !== -1);
-      const clipped = ends.length === 0 ? list : list.slice(0, Math.min(...ends));
-      const named = [...clipped.matchAll(/`([a-z0-9-]+)`/g)]
-        .map((m) => m[1] ?? "")
-        .filter((n) => skillNames.includes(n) || agentNames.includes(n));
-      expect(named.length).toBeGreaterThan(0);
-      const citers = new Set(citersByPrinciple.get(principle) ?? []);
-      const phantom = named
-        .filter((n) => !citers.has(n))
-        .map((n) => `${principle}: entry names ${n}, which does not cite it`);
-      expect(phantom).toEqual([]);
     });
   }
 });
