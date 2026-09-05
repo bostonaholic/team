@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { description, frontmatter, read } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 const SKILLS_ROOT = join(REPO_ROOT, "skills");
@@ -19,26 +19,6 @@ type BudgetReason = { lineCount?: number; descriptionLength?: number; reason: st
 const SKILL_BUDGET_REASONS: Record<string, BudgetReason> = {};
 
 type SkillBudget = { name: string; tier: SkillTier; lineCount: number; descriptionLength: number };
-
-function description(text: string): string {
-  const lines = frontmatter(text).split("\n");
-  const index = lines.findIndex((line) => line.startsWith("description:"));
-  if (index < 0) return "";
-  const value = lines[index]!.replace(/^description:\s*/, "");
-  if (!/^[|>][-]?$/.test(value)) {
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-      return value[0] === '"' ? value.slice(1, -1).replace(/\\([\\"])/g, "$1") : value.slice(1, -1).replace(/''/g, "'");
-    }
-    return value.trim();
-  }
-  const continuation: string[] = [];
-  for (const line of lines.slice(index + 1)) {
-    if (!/^\s/.test(line)) break;
-    continuation.push(line.trim());
-  }
-  const folded = value.startsWith(">") ? continuation.join(" ").replace(/\s+/g, " ") : continuation.join("\n");
-  return value.endsWith("-") ? folded.trimEnd() : `${folded.trim()}\n`;
-}
 
 function tier(name: string, metadata: string): SkillTier {
   if (name.startsWith("principle-")) return "principle";
