@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: pipeline entry-point slash commands, standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase, reflect, why, how), and methodology skills loaded by agents, with purpose, arguments, consumers, and behaviors."
+description: "The Team plugin's skills: pipeline entry-point slash commands, standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase, reflect, why, how), and methodology skills loaded by agents, each with the skills it mentions."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -16,268 +16,155 @@ nav_label: skills
 > This page is a hand-maintained reference. When it disagrees with a
 > `SKILL.md`, the `SKILL.md` wins.
 
-## Contents
-
-- [Two flavors of skill](#two-flavors-of-skill)
-- [Entry-point skills](#entry-point-skills)
-- [Standalone utilities](#standalone-utilities)
-- [Methodology skills](#methodology-skills)
-- [Skill ↔ agent ↔ phase](#skill--agent--phase)
-- [Name-collision pairs](#name-collision-pairs)
-- [See also](#see-also)
-
-## Two flavors of skill
-
-Every skill lives under `skills/<name>/SKILL.md` as YAML frontmatter plus a
-Markdown body. A single frontmatter field, `argument-hint`, sorts the
-catalog into two flavors:
-
-Frontmatter descriptions provide routing only: what a skill does and when to
-load or invoke it. Commands, numbers, names, paths, and hard rules remain in
-the skill body.
-
-- **Entry-point skills carry `argument-hint`.** Claude Code registers them
-  as slash commands (`/team`, `/team-research`, and so on). The
-  `argument-hint` documents what to pass as `$ARGUMENTS`.
-- **Methodology skills omit `argument-hint`.** They are never invoked
-  directly. Agents load them through one
-  of two mechanisms: a `skills:`
-  YAML **block** list in the agent's frontmatter, one indented `- <name>`
-  per line (e.g., `agents/design-author.md` declares a block list of four
-  names — `product-thinking`, `principle-progress-tracking`,
-  `authoring-designs`, `writing-prose`), or an inline
-  prose load
-  instruction in the agent body (e.g., `Load skills/<name>/SKILL.md for
-  …`).
-
-That `argument-hint` marker is the whole flavor distinction. Most
-`argument-hint` skills drive a QRSPI phase, but some (`shipit`,
-`pr-open-comments`, `pr-watch-as-author`, `pr-watch-as-reviewer`, `groom-backlog`,
-`pr-cleanup`, `pr-verify`, `pr-rebase`, `reflect`, `why`, and `how`) are
-standalone utilities.
-They land a
-reviewed PR, triage its unresolved review feedback, and watch it for new
-feedback. They also watch it as a reviewer, approve when your threads
-resolve, groom a project backlog, tear down branch state after a PR is
-finished, verify a PR's test plan, rebase a branch onto its base
-without changing what it does, mine a finished session for the
-learnings worth keeping, investigate the design rationale behind code,
-and explain how a subsystem works.
-None is a pipeline phase.
-
-For *why* the system is shaped this way (the three-tier argument-discovery
-design, the shared helper contract, and the skill load limits),
-see [architecture.md §6](architecture.md#6-skills). The architecture page
-explains the design. The full per-skill enumeration now lives here.
+Each entry is one sentence, copied from that skill's frontmatter
+`description`. A `**Mentions:**` list follows it when the skill's own `.md`
+files name other skills — a load, a citation, and a passing mention alike.
+For what separates a load from a citation, and for how a skill is loaded at
+all, see [architecture.md §6](architecture.md#6-skills).
 
 ## Entry-point skills
 
-Each entry-point skill either kicks off a full run (`team`, `team-fix`) or
-drives one phase of the QRSPI pipeline. The phases are Worktree, Question,
-Research, Design, Structure, Plan, Implement, and PR. What ties most of
-them together is a shared argument-resolution chain and a common body
-template.
-
-The **downstream phase skills**, `team-question` through `team-pr`, plus
-the optional `eng-design-doc-review`, share a consistent body template. It
-holds an `## Input` section that describes `$ARGUMENTS` and an
-`## Execution` section of numbered steps. The final operational section
-states what to report and the `Next: run /team-…` handoff. The `team`
-orchestrator does not follow that template. It walks a Phase Loop instead
-(see its entry below).
-
-**Shared argument resolution (three-tier discovery).** Eight of these
-skills consume an artifact directory rather than a free-form description:
-`team-research`, `team-design`, `team-structure`, `team-plan`,
-`team-worktree`, `team-implement`, `team-pr`, and `eng-design-doc-review`.
-For all eight, the `docs/plans/<id>/` argument is **optional** and resolves
-through the same three-tier chain:
-
-1. **Tier 1: explicit `$ARGUMENTS`.** If you pass a directory path, it is
-   used directly.
-2. **Tier 2: newest-mtime convention discovery.** With no argument, the
-   shared `skills/team/discover-topic.sh` helper scans `docs/plans/` for the
-   most recently modified topic directory that holds the predecessor artifact
-   it needs. `team-structure` also requires a passing design review.
-3. **Tier 3: fallback.** Empty helper output activates the consumer's existing
-   fallback: seven skills use `AskUserQuestion`; `team-pr` checks the current
-   branch's standalone work instead.
-
-The entries below say "resolves `$ARGUMENTS` through the shared three-tier
-chain above" instead of repeating these tiers. The two skills that take a
-free-form description (`team`, `team-question`, `team-fix`) state their own
-argument shape.
+Each carries `argument-hint`, so it is a slash command, and each either kicks off a
+full run or drives one phase of the QRSPI pipeline.
 
 ### [team](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md)
 
-- **Purpose:** Run the full eight-phase QRSPI pipeline end to end, from a
-  raw request to an opened pull request.
-- **`$ARGUMENTS`:** `<ticket id, issue URL, or feature description>`.
-- **Phase:** Drives all phases (Worktree → Question → Research → Design →
-  Structure → Plan → Implement → PR).
-- **Key behaviors:** Walks a linear Phase Loop, dispatching the specialist
-  agent(s) for each phase per its phase table, then running that phase's
-  gate before advancing. Enforces the adversarial design-review gate
-  (Design)
-  and the aggregate five-reviewer review gate during Implement. That
-  aggregate gate sorts every finding into Blocking / Major / Minor-and-below
-  tiers and auto-loops on any Blocking or Major (the no-consult rule: the
-  user is never asked about any finding mid-run), recording the remaining
-  Minor-and-below findings in the PR body's `## Review notes`. The
-  cross-model pass runs
-  before every design-review round,
-  feeding `cross-model-notes.md` and `cross-model-raw.md`. Its
-  body is organized as `## Input`,
-  `## Setup`, `## The Phase Loop`, `## Gate Handling`, and `## Rules`,
-  not the downstream Input / Execution template.
+Runs the 8-phase QRSPI feature pipeline.
+
+**Mentions:**
+
+- `artifact-frontmatter`
+- `changelog`
+- `cross-model-review`
+- `principle-deep-agents-narrow-seams`
+- `principle-fail-closed`
+- `principle-files-are-the-contract`
+- `principle-idempotent-reruns`
+- `principle-progress-tracking`
+- `qrspi-workflow`
+- `review-severity-tiers`
+- `reviewing-designs`
+- `running-quality-checks`
+- `team-implement`
+- `team-pr`
+- `team-worktree`
+- `tracking-tickets`
+- `worktree-isolation`
 
 ### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
 
-- **Purpose:** Decompose a raw intent into a task statement plus a neutral
-  question set, producing `1-task.md` and `2-questions.md`.
-- **`$ARGUMENTS`:** `<ticket id, issue URL, or task description>`.
-- **Phase:** Question (the pipeline's first phase).
-- **Key behaviors:** The only step that sees your original description. It
-  emits the neutral `2-questions.md` so the downstream research sees only the
-  questions, not your task framing.
+Decomposes a feature into task and question artifacts.
+
+**Mentions:**
+
+- `decomposing-intent`
+- `product-requirements-doc`
+- `qrspi-workflow`
 
 ### [team-research](https://github.com/bostonaholic/team/blob/main/skills/team-research/SKILL.md)
 
-- **Purpose:** Run isolated codebase research against the neutral question set.
-- **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
-  the shared three-tier chain above.
-- **Phase:** Research (isolated).
-- **Key behaviors:** Reads only `2-questions.md`, never the task, so the
-  research carries no opinion-bias. Writes `5-research.md`.
+Researches a codebase area before changes.
+
+**Mentions:**
+
+- `team`
 
 ### [team-design](https://github.com/bostonaholic/team/blob/main/skills/team-design/SKILL.md)
 
-- **Purpose:** Draft the alignment doc and run the adversarial design
-  review that gates advancement.
-- **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
-  the shared three-tier chain above.
-- **Phase:** Design (design review).
-- **Key behaviors:** Dispatches the design-author to write a ~200-line
-  `6-design.md`. The design-author resolves its own open questions as
-  recorded assumptions. The skill then runs the adversarial design-review
-  loop (`design-review-<n>.md`, where APPROVE and COMMENT advance).
-  The cross-model pass
-  runs before every design-review round,
-  feeding `cross-model-notes.md` and `cross-model-raw.md`.
+Drafts and adversarially reviews a design.
+
+**Mentions:**
+
+- `artifact-frontmatter`
+- `cross-model-review`
+- `principle-fail-closed`
+- `principle-idempotent-reruns`
+- `reviewing-designs`
+- `team`
 
 ### [team-structure](https://github.com/bostonaholic/team/blob/main/skills/team-structure/SKILL.md)
 
-- **Purpose:** Break the reviewed design into vertical slices with
-  per-slice verification checkpoints.
-- **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
-  the shared three-tier chain above.
-- **Phase:** Structure (autonomous, no gate).
-- **Key behaviors:** Produces the ~2-page `7-structure.md`, then advances
-  to PLAN automatically.
+Breaks a reviewed design into verified slices.
+
+**Mentions:**
+
+- `principle-fail-closed`
+- `team`
 
 ### [team-plan](https://github.com/bostonaholic/team/blob/main/skills/team-plan/SKILL.md)
 
-- **Purpose:** Turn the structure into a tactical, file-level
-  implementation plan.
-- **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
-  the shared three-tier chain above.
-- **Phase:** Plan.
-- **Key behaviors:** Writes `8-plan.md` for the implementer. The plan is a
-  tactical artifact, not a human-reviewed gate.
+Produces the tactical implementation plan.
+
+**Mentions:**
+
+- `team`
 
 ### [team-worktree](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/SKILL.md)
 
-- **Purpose:** Prepare an isolated git worktree. In a full `/team` run this
-  is the **leading** phase, and it runs before QUESTION. `docs/plans/<id>/`
-  is thus authored inside the worktree, and the home checkout's
-  `git status` stays clean for the whole run.
-- **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
-  the shared three-tier chain above.
-- **Phase:** Worktree (the first phase).
-- **Key behaviors:** Creates the branch and home worktree first, then
-  authors `docs/plans/<id>/` inside it so implementation, and every prior
-  phase's artifacts, never touch the main checkout. Loads
-  `worktree-isolation` for the single- and multi-repo topology. The
-  confirmation dialog fires only on standalone invocation, because a full
-  `/team` run creates worktrees without a pause. Multi-repo creation
-  refuses any repo path outside the home repo's sibling set (realpath
-  containment).
+Prepares isolated git worktrees.
+
+**Mentions:**
+
+- `qrspi-workflow`
+- `team`
+- `worktree-isolation`
 
 ### [team-implement](https://github.com/bostonaholic/team/blob/main/skills/team-implement/SKILL.md)
 
-- **Purpose:** Implement the plan. Write tests first, work slice by slice,
-  then run the adversarial reviewer loop.
-- **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
-  the shared three-tier chain above.
-- **Phase:** Implement.
-- **Key behaviors:** Runs the test-first → slice-execution → five-reviewer
-  verify sub-pipeline. The verify loop sorts findings into Blocking / Major
-  / Minor-and-below tiers. While any Blocking or Major remains it
-  re-dispatches the implementer automatically without consulting the user
-  (the no-consult rule), until no Blocking or Major finding remains.
-  Minor-and-below findings are recorded in the PR body's `## Review notes`
-  once Blocking and Major are clean, and never surfaced mid-run.
-- **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
-  the missing upstream artifacts inline rather than hard-erroring.
+Executes and verifies implementation slices.
+
+**Mentions:**
+
+- `artifact-frontmatter`
+- `principle-progress-tracking`
+- `review-severity-tiers`
+- `running-quality-checks`
+- `team`
+- `team-pr`
 
 ### [team-pr](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md)
 
-- **Purpose:** Update the changelog, commit, and open the pull request.
-- **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
-  the shared three-tier chain above.
-- **Phase:** PR (the pipeline's final phase).
-- **Key behaviors:** Loads `git-commit` for commit discipline and
-  `changelog` for the changelog update. Adds a PR body from its template,
-  held to the `writing-prose` prose bar: the body addresses one busy reader
-  making one decision, so `## Summary` opens with the recommendation or the
-  observable outcome rather than a sentence describing the PR.
-  Renders a conditional `## Screenshots` section from ux-reviewer's capture
-  manifest (`docs/plans/<id>/screenshots/manifest.md`) and uploads the PNGs
-  through GitHub's user-attachments pipeline so they render inline. Any
-  capture or upload failure degrades to a visible note with local paths,
-  and the PR always opens. Leaves the worktree in place after opening the
-  PR so you can iterate. Teardown waits until the PR merges or you ask.
-  The final report suggests arming `/pr-watch-as-author` once the PR is ready
-  for review.
-- **Standalone Mode:** Invoked with no resolvable directory, it bootstraps
-  the missing upstream artifacts inline rather than hard-erroring.
+Opens a pull request after verification.
+
+**Mentions:**
+
+- `changelog`
+- `git-commit`
+- `principle-optimization-never-dependency`
+- `team`
+- `tracking-tickets`
+- `verifying-ux`
+- `worktree-isolation`
+- `writing-prose`
 
 ### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md)
 
-- **Purpose:** Run a compressed bug-fix pipeline that skips the QRSPI
-  ceremony.
-- **`$ARGUMENTS`:** `<ticket id, issue URL, or bug description>`.
-- **Phase:** Standalone fix flow (not a QRSPI phase). Runs the compressed
-  pipeline `WORKTREE → REPRODUCE → RED → GREEN → VERIFY → SHIP`.
-- **Key behaviors:** Loads `test-driven-bug-fix` for reproduce-first,
-  red-green discipline: a failing test that reproduces the bug, then the
-  fix that turns it green. The leading WORKTREE phase is the pipeline's one
-  hard gate: a documented branch-gate block resolves the default branch and
-  the fix never commits to it. A non-default branch is reused in place;
-  otherwise the run isolates into a `<id>` worktree, and a worktree that
-  cannot be created degrades to a plain `<id>` branch rather than to the
-  default branch. Ship re-asserts the gate before it pushes.
+Runs the compressed bug-fix pipeline.
+
+**Mentions:**
+
+- `principle-explicit-intent`
+- `principle-fix-root-causes`
+- `principle-progress-tracking`
+- `systematic-debugging`
+- `team-worktree`
+- `test-driven-bug-fix`
+- `tracking-tickets`
+- `why`
+- `worktree-isolation`
 
 ### [eng-design-doc-review](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/SKILL.md)
 
-- **Purpose:** Adversarially audit `6-design.md` with fresh context. It is
-  the front door over the `reviewing-designs` brief, which the pipeline's
-  DESIGN review gate loads directly. Standalone invocation remains
-  available.
-- **`$ARGUMENTS`:** `[docs/plans/<id>/]` is optional. It resolves through
-  the shared three-tier chain above.
-- **Phase:** Design (front door over the `reviewing-designs` brief) +
-  standalone audit.
-- **Key behaviors:** Loads the `reviewing-designs` brief and dispatches it
-  to the built-in read-only `Explore` subagent (not the `design-author`
-  agent), with the artifact directory substituted, so the audit reads the
-  design with fresh eyes. That subagent loads four methodology skills as
-  its review criteria
-  (`technical-design-doc`, `reviewing-code`, `engineering-standards`, and
-  `documenting-decisions`), which makes this one more consumer of all
-  four, plus a conditional fifth — `cross-model-review`, loaded only when
-  the brief carries an `## External review input` section.
-  Points the report's prose at the seventh-grade bar in `writing-prose`.
+Reviews a technical design document with fresh context.
+
+**Mentions:**
+
+- `cross-model-review`
+- `principle-generator-evaluator`
+- `principle-least-privilege`
+- `reviewing-designs`
+- `team`
+- `writing-prose`
 
 ## Standalone utilities
 
@@ -1802,8 +1689,8 @@ it and the phase where that happens. The `Invoked / loaded by` column
 carries two meanings depending on the row: for **entry-point skills** it
 names who *invokes* the skill (you directly, or the orchestrator running a
 phase). For **methodology skills** it names the agent(s) that *load* the
-skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see the
-entry-point section above rather than repeating them here.
+skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see
+[architecture.md §6](architecture.md#6-skills) rather than repeating them here.
 
 | Skill | Invoked / loaded by | Phase / context |
 |---|---|---|
