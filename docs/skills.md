@@ -196,6 +196,7 @@ Watches an authored PR for feedback.
 **Mentions:**
 
 - `pr-open-comments`
+- `pr-watch-mechanics`
 - `principle-bounded-loops`
 - `principle-idempotent-reruns`
 - `principle-non-blocking-waits`
@@ -211,6 +212,7 @@ Watches a reviewed PR and approves settled feedback.
 - `conventional-comments`
 - `pr-open-comments`
 - `pr-watch-as-author`
+- `pr-watch-mechanics`
 - `principle-bounded-loops`
 - `principle-generator-evaluator`
 - `principle-non-blocking-waits`
@@ -265,6 +267,7 @@ Rebases a branch onto its base.
 - `pr-cleanup`
 - `principle-explicit-intent`
 - `principle-never-interpolate`
+- `principle-non-blocking-waits`
 - `principle-pre-image-first`
 - `principle-untrusted-input-is-data`
 - `running-quality-checks`
@@ -389,6 +392,7 @@ Defines the design-document procedure.
 - `artifact-frontmatter`
 - `how`
 - `principle-record-assumptions`
+- `principle-subtract-before-you-add`
 - `product-requirements-doc`
 - `systems-thinking`
 - `why`
@@ -480,6 +484,7 @@ Defines code design, comment, and review standards.
 **Mentions:**
 
 - `conventional-comments`
+- `principle-subtract-before-you-add`
 - `solid`
 
 ### [test-first-development](https://github.com/bostonaholic/team/blob/main/skills/test-first-development/SKILL.md)
@@ -518,6 +523,10 @@ Defines SOLID design and review rules.
 
 Maps code smells to behavior-preserving refactorings.
 
+**Mentions:**
+
+- `principle-subtract-before-you-add`
+
 ### [implementing-slices](https://github.com/bostonaholic/team/blob/main/skills/implementing-slices/SKILL.md)
 
 Defines test-first slice execution, commits, and review fixes.
@@ -527,6 +536,7 @@ Defines test-first slice execution, commits, and review fixes.
 - `git-commit`
 - `principle-fix-root-causes`
 - `principle-scope-fence`
+- `principle-subtract-before-you-add`
 - `systematic-debugging`
 
 ### [systematic-debugging](https://github.com/bostonaholic/team/blob/main/skills/systematic-debugging/SKILL.md)
@@ -671,32 +681,14 @@ Defines machine-local teardown.
 
 ### [pr-watch-mechanics](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-mechanics/SKILL.md)
 
-- **Purpose:** Bounded watch-loop mechanics shared by the two PR watch
-  skills — cycle timing, the soft cap, and the handoff. A consuming skill
-  owns what each cycle *does*; this skill owns how the loop is paced,
-  bounded, and ended.
-- **Loaded by:** `pr-watch-as-author` (bounded-cycle-mechanics reference)
-  and `pr-watch-as-reviewer` (bounded-cycle-mechanics reference).
-- **Key behaviors:** A consumer binds three slots and nothing else: its
-  poll command, its cycle-0 subject (what an already-satisfied condition
-  at arm time means for it), and its handoff state (the fields its
-  handoff prints). Cycle 0 polls immediately. Each later cycle is one
-  backgrounded Bash call — `sleep 1860; <the poll command>`, run with
-  `run_in_background: true` per `principle-non-blocking-waits` — so the
-  cycle costs one turn. **Soft cap: 3 cycles (~90 minutes).** At cycle 3,
-  if nothing has stopped the loop already, the interactive session ends
-  rather than sleeping again, printing a handoff — the consumer's handoff
-  state plus the exact command to resume the watch as the scheduled
-  `~/dotfiles/bin/pr-watch.sh` launchd job. Re-arming the interactive loop
-  happens only on explicit user request; the loop never re-arms itself.
-  The bound is the invariant, not the interval, per
-  `principle-bounded-loops`: a harness with no background execution
-  chunks the wait into foreground sleeps under its own ceiling, holding
-  the cycle count. Three stop conditions are loop mechanics this skill
-  owns, each reported by name — user interrupt, the 3-cycle soft cap, and
-  3 consecutive poll failures — and a consumer adds its own terminal
-  conditions (an approval, a merge or close, a gate-specific state)
-  without restating these three.
+Bounded watch-loop mechanics for the pr-watch skills: cycle timing, soft cap, handoff.
+
+**Mentions:**
+
+- `pr-watch-as-author`
+- `pr-watch-as-reviewer`
+- `principle-bounded-loops`
+- `principle-non-blocking-waits`
 
 ### [principle-blind-the-investigator](https://github.com/bostonaholic/team/blob/main/skills/principle-blind-the-investigator/SKILL.md)
 
@@ -817,22 +809,11 @@ Requires skipped work to be reported explicitly.
 
 ### [principle-subtract-before-you-add](https://github.com/bostonaholic/team/blob/main/skills/principle-subtract-before-you-add/SKILL.md)
 
-- **Purpose:** Remove complexity first, then build on the simpler base;
-  leave the design simpler than you found it.
-- **Loaded by:** any agent just-in-time; consulted by citation from
-  `engineering-standards`, `implementing-slices`,
-  `refactoring-to-patterns`, and `authoring-designs`. No agent preloads
-  it.
-- **Key behaviors:** Removal is sequenced before construction: what a
-  change replaces or leaves unused goes first, then the addition lands
-  on the smaller base. Cut before you polish. Design for observed usage:
-  no validator, parser, guard, or option beyond what the design, plan,
-  or tests demand, because an out-of-spec feature drags its own guards
-  behind it. Prompts and skills follow the same rule: redundant
-  instructions go, and a reference with no novel content is deleted
-  rather than left as a stub. Removals stay inside the approved scope
-  per `principle-scope-fence`; a wider removal is recorded as an
-  opportunity, never performed unasked.
+Requires removal before addition.
+
+**Mentions:**
+
+- `principle-scope-fence`
 
 ### [principle-untrusted-input-is-data](https://github.com/bostonaholic/team/blob/main/skills/principle-untrusted-input-is-data/SKILL.md)
 
