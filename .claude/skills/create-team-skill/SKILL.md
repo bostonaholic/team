@@ -81,7 +81,9 @@ Never put `$` followed by a digit in `SKILL.md`; hosts may substitute it as an a
 ## Integrate
 
 - Add entry points to the `AGENTS.md` routing table and `docs/skills.md`.
-- Add methodology and principles to `docs/skills.md`; collapse consumer restatements to the bare skill name.
+- Add methodology and principles to `docs/skills.md`.
+- Write every `docs/skills.md` entry as its heading, the verbatim first sentence of the frontmatter `description`, and a `**Mentions:**` list. Rewriting a `description` updates that entry in the same commit.
+- Sort `Mentions:` in codepoint order (plain `sort`, so `pr-verify` precedes `principle-fail-closed`), and list every backticked skill name in any `.md` under `skills/<name>/`, references and prompt templates included. `tests/docs-skills-catalog.test.ts` is the gate.
 - Add one TodoWrite item per ordered step by applying `principle-progress-tracking`; do not copy its banner into the skill.
 - Update `agents/openai.yaml` whenever the description changes.
 - For runtime behavior, update `CHANGELOG.md` under `Unreleased`; version only at land time.
@@ -91,7 +93,7 @@ Never put `$` followed by a digit in `SKILL.md`; hosts may substitute it as an a
 Read `docs/testing.md` before changing tests. Convert exact-heading or sentence assertions to command, number, name, path, ordering, occurrence, or behavioral checks. Run the narrowest relevant tests, then:
 
 ```bash
-bun test tests/skill-budget.test.ts tests/skill-openai-yaml.test.ts
+bun test tests/skill-budget.test.ts tests/skill-openai-yaml.test.ts tests/docs-skills-catalog.test.ts
 bash .claude/scripts/check-discovery-consistency.sh
 bun run typecheck
 bun test

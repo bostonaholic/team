@@ -813,8 +813,8 @@ cross-links in the orchestrator's prose, not a parent loading the skill as
 a building block. The two front-door pairs are how a composed methodology
 keeps a user-facing entry point without becoming one.)
 
-For the full per-skill reference (all skills, their arguments,
-consumers, and behaviors), see [skills.md](skills.md).
+For the full per-skill reference (all skills, each with the skills it
+mentions), see [skills.md](skills.md).
 
 ### Design guidelines
 
