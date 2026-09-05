@@ -6,16 +6,17 @@
 // added to any `.md` under `skills/<name>/`, reds the build with a message
 // naming the skill, the name, and the direction.
 //
-// WHY THE SENTENCE EQUALITY IS NOT A WORDING PIN. docs/testing.md:160-161 sets
-// the test: "if a rewrite that preserves the meaning turns the test red, the
-// test was measuring the wording." This assertion passes it. The page holds no
+// WHY THE SENTENCE EQUALITY IS NOT A WORDING PIN. docs/testing.md, under "A
+// tripwire asserts a contract, never a wording", sets the test: "if a rewrite
+// that preserves the meaning turns the test red, the test was measuring the
+// wording." This assertion passes it. The page holds no
 // wording of its own here — the entry sentence is a *copy* of the first
 // sentence of that skill's frontmatter `description`. A meaning-preserving
 // rewrite of the description updates both copies in the same commit and stays
 // green. The check reds only when the two copies disagree, which is drift
 // between an artifact and its source, the "collision / drift tripwire" form
 // docs/testing.md sanctions at L2. Same treatment as the recorded exception at
-// tests/skill-budget.test.ts:16-18.
+// SKILL_BUDGET_REASONS in tests/skill-budget.test.ts.
 
 import { describe, expect, test } from "bun:test";
 import { readdirSync } from "node:fs";
@@ -47,7 +48,7 @@ const BOTH_FORMS: ReferenceForm[] = ["bare", "path"];
  * carrying its body — every line after the heading up to the next `/^#{2,3} /`
  * or EOF, with blank (trimmed-empty) lines dropped. The heading line is never
  * part of the body, so it cannot leak into the sentence comparison. Same pass
- * as tests/methodology-not-user-invocable.test.ts:38-47.
+ * as catalogEntries() in tests/methodology-not-user-invocable.test.ts.
  */
 function catalogEntries(page: string): Entry[] {
   const out: Entry[] = [];
@@ -98,7 +99,7 @@ function isProse(line: string): boolean {
 // ---------------------------------------------------------------------------
 // The four page-side rules and the scanner, factored as pure functions so the
 // planted-positive test runs the same code the real sweep runs
-// (tests/methodology-not-user-invocable.test.ts:128-182).
+// (the offender rules in tests/methodology-not-user-invocable.test.ts).
 // ---------------------------------------------------------------------------
 
 /**
@@ -229,7 +230,7 @@ function deriveMentions(
 
 // ---------------------------------------------------------------------------
 // Read once at module scope: the page, plus 236 `.md` files
-// (tests/methodology.test.ts:1883-1888).
+// (skillContents and agentContents in tests/methodology.test.ts).
 // ---------------------------------------------------------------------------
 
 const ENTRIES = catalogEntries(read(CATALOG));

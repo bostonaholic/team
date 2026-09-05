@@ -82,7 +82,7 @@ Never put `$` followed by a digit in `SKILL.md`; hosts may substitute it as an a
 
 - Add entry points to the `AGENTS.md` routing table and `docs/skills.md`.
 - Add methodology and principles to `docs/skills.md`.
-- Write every `docs/skills.md` entry as its heading, the verbatim first sentence of the frontmatter `description`, and a `**Mentions:**` list. Rewriting a `description` updates that entry in the same commit.
+- Write every `docs/skills.md` entry as its heading and the verbatim first sentence of the frontmatter `description`, followed by a `**Mentions:**` list only when the skill's own `.md` files name at least one other skill; omit the block entirely when they name none. Rewriting a `description` updates that entry in the same commit.
 - Sort `Mentions:` in codepoint order (plain `sort`, so `pr-verify` precedes `principle-fail-closed`), and list every backticked skill name in any `.md` under `skills/<name>/`, references and prompt templates included. `tests/docs-skills-catalog.test.ts` is the gate.
 - Add one TodoWrite item per ordered step by applying `principle-progress-tracking`; do not copy its banner into the skill.
 - Update `agents/openai.yaml` whenever the description changes.
