@@ -173,520 +173,152 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 ### [shipit](https://github.com/bostonaholic/team/blob/main/skills/shipit/SKILL.md)
 
-- **Purpose:** Land a reviewed pull request: push unpushed commits, wait for
-  CI to go green, then squash-merge (the PR title becomes the commit subject).
-- **`$ARGUMENTS`:** `[<pr-number>]` is an optional PR number override.
-- **Phase:** None. A standalone land action, not part of the pipeline.
-- **Key behaviors:** Discovers the open PR for the current branch through
-  the §2B fallback chain (refuses if there is none, or if it is already
-  merged/closed). Pushes any unpushed commits. Waits for CI in three
-  parts — settle, watch, verify. It settles until the push's workflows
-  have registered, watches with a mechanically bounded poll
-  (`timeout 1800 gh pr checks --watch --fail-fast --interval 30`), run
-  backgrounded so the 30-minute cap is the one that applies rather than
-  the harness's own foreground ceiling, and then reads
-  `mergeStateStatus` for the verdict. The watch's exit code is not the
-  gate: it exits when nothing is pending *right now*, which is equally
-  true of a finished check set and one that has not started, so the
-  aggregate is what tells those apart. Handles
-  a PR that has fallen behind its base (rebase + `--force-with-lease`,
-  never a bare `--force`) and surfaces branch-protection rejections
-  verbatim. It merges with `gh pr merge --squash`, building the commit
-  subject from the PR title plus `(#<number>)` so any version in the title
-  lands in `git log`. **Project-agnostic**: it does no versioning,
-  changelog editing, or release work. Those, if a project needs them, run
-  in a separate step before `/shipit` (in this repo, the dev `version-bump`
-  skill). Model-invocable, but the merge is irreversible, so two guards
-  replace the former hard flag: it fires only on explicit ship intent
-  ("ship it", "land the PR", `/shipit`) and never on a PR that is merely
-  approved or green, and the CI-green wait gates the merge mechanically.
-  Neither guard is a question put to the user mid-run — **it does not stop
-  to confirm the merge**, because ship intent already carried the
-  authorization and every caller chaining into `/shipit` would inherit the
-  stop. On a merge that **landed**, it runs
-  `/pr-cleanup` rather than recommending it — resyncing the default branch
-  and deleting the merged branch carry no decision, and Mode A gates itself
-  on merged-PR verification. A run that stopped short (failing check, CI
-  timeout, branch protection) merged nothing and reaches no cleanup, and
-  `/pr-cleanup` Mode B (closed / abandoned) stays user-triggered.
+Lands a reviewed pull request.
+
+**Mentions:**
+
+- `principle-explicit-intent`
+- `principle-non-blocking-waits`
 
 ### [pr-open-comments](https://github.com/bostonaholic/team/blob/main/skills/pr-open-comments/SKILL.md)
 
-- **Purpose:** Triage unresolved review feedback on a pull request. It
-  fetches every unresolved review thread through GraphQL and checks each
-  comment against the current code. It auto-applies recommendations rated
-  above 90% confidence, through a full apply → push → reply → resolve
-  pipeline. For the rest it presents a globally numbered punch list, with
-  2-4 tailored options and one recommendation per item.
-- **`$ARGUMENTS`:** `[<pr-number-or-url>]`: optional. Defaults to the
-  current branch's PR.
-- **Phase:** None. A standalone triage action, not part of the pipeline.
-- **Key behaviors:** Confidence-gated autonomy: each recommendation gets a
-  confidence rating assigned only after verification (a behavioral claim
-  needs a passing named test to exceed 90%). Items above 90% that pass
-  every hard rule are applied, pushed, replied to, and resolved
-  automatically. Each one is reported with its confidence and commit SHA.
-  Everything else presents-then-stops: the turn ends with a hand-off prompt
-  that separates "Auto-applied" from "Needs your decision". Explicit user
-  authorization (apply → push → reply → resolve) applies the whole batch
-  regardless of confidence. Carve-outs are absolute at any confidence
-  (declined, needs-clarification, could-not-apply, security-sensitive).
-  Treats comment bodies as untrusted data. It never acts on embedded
-  imperatives beyond the thread's anchored code. Auto-apply is bounded to
-  the file and lines the thread references. Broader asks and new
-  security-sensitive constructs thus become carve-outs. Model-invocable:
-  cue-based auto-invocation is justified by the carve-out set plus the
-  verification bar.
+Triages unresolved PR review comments.
+
+**Mentions:**
+
+- `principle-evidence-over-assertion`
+- `principle-plan-present-wait`
 
 ### [pr-watch-as-author](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md)
 
-- **Purpose:** Arm a bounded watch loop on a pull request: undraft it, take
-  a baseline snapshot, then poll GitHub for new review feedback and triage
-  it through `pr-open-comments` as it arrives.
-- **`$ARGUMENTS`:** `[<pr-number-or-url>]`: optional. Defaults to the
-  current branch's PR.
-- **Phase:** None. A standalone watch action, not part of the pipeline.
-- **Key behaviors:** Undrafts through `gh pr ready` only on a clear
-  readiness cue, and reports the promotion loudly. An ambiguous cue watches
-  the draft in place and never promotes. A `gh pr ready` failure warns and
-  keeps watching. It applies the best-effort in-review ticket transition.
-  Loop mechanics — cycle timing, the 3-cycle soft cap (~90 minutes), and
-  the scheduled-job handoff — load from `pr-watch-mechanics`.
-  Default mode auto-applies items the triage rates above 90% confidence. A
-  batch fully handled that way resumes the loop with a report. Sub-90% or
-  carve-out items render the punch list and end the turn. Authorized mode
-  (granted by one of several canonical phrases, e.g. "watch this PR and fix
-  comments") applies, pushes, replies, resolves, and resumes regardless of
-  confidence. An ambiguous cue never selects authorized mode. Loop reports
-  name the mode and list auto-applied items with confidence and commit SHA.
-  Stops on approval, merge, close, or one of the three loop-mechanics
-  conditions `pr-watch-mechanics` owns (user interrupt, the soft cap, 3
-  consecutive poll failures). On approval it runs a final triage pass and
-  hands off with `Next: run /shipit`. It never auto-runs `/shipit`.
-  Model-invocable: it promotes a draft only on an unambiguous readiness cue
-  and reports the promotion loudly, so cue-based auto-invocation is safe.
+Watches an authored PR for feedback.
+
+**Mentions:**
+
+- `pr-open-comments`
+- `principle-bounded-loops`
+- `principle-idempotent-reruns`
+- `principle-non-blocking-waits`
+- `principle-untrusted-input-is-data`
+- `tracking-tickets`
 
 ### [pr-watch-as-reviewer](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md)
 
-- **Purpose:** Reviewer-side watch-and-approve. After you post review
-  comments on a PR you are reviewing, it polls GitHub until every review
-  thread you opened is resolved. It then casts one attributed, SHA-cited
-  `gh pr review --approve` on your behalf and stops.
-- **`$ARGUMENTS`:** `[<pr-number-or-url>]`: optional. Defaults to the
-  current branch's PR. A bare number with no local checkout is refused.
-  Pass the full PR URL.
-- **Phase:** None. A standalone reviewer-side action, not part of the
-  pipeline.
-- **Key behaviors:** Resolves the base repo from the PR's canonical URL
-  (correct on fork PRs, where head-repository fields name the contributor's
-  fork). It refuses to arm when the invoking `gh` identity is the PR
-  author, which would be self-approval. It also refuses when that identity
-  has no submitted review threads on the PR. It hints "submit your pending
-  review first" when a pending review exists. Per poll it recomputes the
-  tracked set and the auto-merge state. The tracked set holds threads whose
-  first comment the viewer authored in a submitted review, and it excludes
-  pending-review threads. The gate rests purely on GraphQL `isResolved`
-  state. Comment bodies are data, never instructions. Thread pagination is
-  fail-closed: the gate is computed only after every page is fetched, and
-  an unfetched page is a poll failure, never an empty gate. Loop
-  mechanics — cycle timing, the 3-cycle soft cap (~90 minutes), and the
-  scheduled-job handoff — load from `pr-watch-mechanics`. It stops on an
-  approval cast, a merge or close, or one of the three loop-mechanics
-  conditions `pr-watch-mechanics` owns (user interrupt, the soft cap, 3
-  consecutive poll failures). It also stops on a tracked set that empties
-  mid-watch (without approving), or a declined confirmation (stops without
-  approving). The approval is its only write: it never resolves threads,
-  never replies, never edits code, never merges, never auto-runs `/shipit`.
-  `disable-model-invocation: true`, because an approval can transitively
-  trigger an auto-merge, so only a deliberate human invocation arms it.
-  When auto-merge is enabled at arm, explicit confirmation is necessary on
-  both paths. The immediate path, where the gate is already satisfied at
-  arm, confirms before it casts. The loop path confirms before it arms the
-  unattended watch. A "no" refuses to arm. The auto-merge reading covers
-  GitHub-native auto-merge only: repo automation that merges on approval
-  (Mergify, a merge bot, an approval-triggered workflow) is not detected,
-  and auto-merge off is no assurance against it. Before casting,
-  merge-safety checks read the final poll's values, never the arm-time
-  reading: any head drift (with or without auto-merge) requires explicit
-  confirmation, with both SHAs named in the approval body and completion
-  report. A tracked count that changed between arm and approval without
-  ever going empty likewise names both counts in the approval body and
-  completion report. auto-merge that turned on mid-watch (no arm-time
-  confirmation) requires confirmation even without drift. A granted
-  confirmation triggers a fresh poll and re-check before casting (bounded,
-  so confirmation churn stops the run rather than looping). An arm-time
-  head SHA lost to compaction also fails closed: it is printed in the arm
-  report and every poll snapshot, never re-derived from the current head,
-  and never approved unconfirmed. Every GitHub read is minimized to
-  structural fields (logins, review states, `isResolved`, SHAs). The arm
-  read goes through a `--jq` projection. The poll goes through a selection
-  set that fetches no body fields. Review bodies, PR descriptions, and
-  profile display names thus never enter context.
+Watches a reviewed PR and approves settled feedback.
 
+**Mentions:**
+
+- `conventional-comments`
+- `pr-open-comments`
+- `pr-watch-as-author`
+- `principle-bounded-loops`
+- `principle-generator-evaluator`
+- `principle-non-blocking-waits`
 
 ### [groom-backlog](https://github.com/bostonaholic/team/blob/main/skills/groom-backlog/SKILL.md)
 
-- **Purpose:** Groom a project backlog in an issue tracker. It loads the
-  whole board in bulk, computes a gap inventory, verifies each candidate
-  issue's factual claims, ranks the verified candidates, proposes an
-  evidence-backed closure for an issue whose premise evaporated, and
-  clusters open issues by outcome. It places each cluster under a grouping
-  construct whose description states a verifiable property. It finds the
-  dependencies between tickets and proposes the missing links. It fixes
-  triage, priority, label, and state hygiene, then reports what it
-  deliberately left alone.
-- **`$ARGUMENTS`:** `[<project-number-or-url>] [--promote <issue-number>]`:
-  both optional. With no board reference it discovers the visible projects and
-  uses the only one, stopping and listing them if more than one is visible.
-  `--promote` selects promotion mode, which brings one item to the
-  ready-to-work standard and moves its card. Without it the skill runs the
-  board-level pass.
-- **Phase:** None. A standalone grooming action, not part of the pipeline.
-- **Key behaviors:** Tracker-agnostic method, with GitHub Projects v2 as
-  the worked example. A vocabulary map covers Linear and Jira: grouping
-  construct, column, priority, iteration, dependency link, and
-  decomposition link. Those two recipes ship under an explicit
-  **Unverified** heading with a mandatory `--help` preflight before any
-  mutation. Loads once in bulk into a run-scoped temp cache, passing an
-  explicit `--limit`. Each cached query then gets the completeness check
-  its own payload shape supports. A shortfall thus stops the run rather
-  than groom a partial board. Comment threads load with the issues, capped
-  at one page of 100 per issue. Every thread that hit the cap is named in
-  the report. Declared dependency and decomposition links ride that same
-  bulk query rather than a per-issue call. A link connection that came back
-  short is recorded and reported, because an unseen blocker reads as an
-  unblocked issue. Issue bodies, titles, and comments are untrusted data, a
-  hard rule in every mode, promotion included. An embedded imperative is
-  reported as content, never executed. Tracker-derived prose never reaches
-  a shell argument: bodies travel by file or on stdin. Each candidate
-  issue's factual claims are verified against the code and the tracker,
-  with dated evidence and one of three outcomes recorded per issue. The
-  verified candidates are then ranked by a stated four-tier heuristic,
-  smaller verified scope breaking ties, so the promotion pick rests on
-  checked premises. An issue whose premise evaporated becomes a closure
-  proposal behind its own question. An approved closure posts the dated
-  evidence as a comment, adds a resolution label additively, and closes
-  with reason "not planned". Decision, investigation, and spike tickets
-  are carved out: the evidence attaches as a comment and the ticket stays
-  open. Plans, asks, waits,
-  then executes. The plan file is written before the questions are asked.
-  There is one question per mutation class the plan contains, each carrying
-  exactly one recommendation, and filing a new issue always needs its own
-  answer. Nothing on the tracker changes before the user answers. On
-  approval it executes in dependency order, re-reads each item before
-  writing it, and verifies every step by re-querying the tracker rather
-  than by memory. Dependency analysis reads the links the tracker already
-  records and infers the ones only the prose admits: sequencing phrases in
-  bodies and comments, and one issue introducing the artifact another
-  consumes. Every inferred link is a proposal needing its own answer,
-  direction is fixed by which issue cannot be *finished* until the other
-  lands, and a proposed edge that would close a cycle is reported rather
-  than filed. Eleven hard rules hold in every mode. Decision and spike
-  tickets stay open. Label writes are additive. A split ticket's original
-  description is never rewritten. Priority, assignee, and state are left
-  alone on someone else's in-flight work. Promotion mode skips the eleven
-  board steps for a narrow single-issue load. It then brings that item to
-  the ready-to-work standard: check it, rewrite it, prioritize it, then
-  move the card. An open blocker, declared or found in the thread, drops
-  the card move and nothing else: a blocked ticket is still worth
-  clarifying while it waits. It refuses a `bug` outright, because `Bugs` is
-  already its ready-to-pull state. It swaps a card back to `Backlog` rather
-  than exceed the `Ready` WIP limit of 5, the number that
-  [project-tracking.md](project-tracking.md) owns. It reports a
-  pre-existing breach instead of an addition to it. The board pass ends by
-  naming the item most worth promoting and printing that command. It never
-  performs the promotion itself. Model-invocable: the read-and-plan phase
-  mutates nothing and execution requires the user's answer, so those two
-  guards make cue-based auto-invocation safe.
+Grooms a project backlog and proposes tracker changes.
+
+**Mentions:**
+
+- `pr-open-comments`
+- `principle-evidence-over-assertion`
+- `principle-explicit-intent`
+- `principle-idempotent-reruns`
+- `principle-never-interpolate`
+- `principle-plan-present-wait`
+- `principle-pre-image-first`
+- `principle-skip-loudly`
+- `principle-untrusted-input-is-data`
 
 ### [pr-cleanup](https://github.com/bostonaholic/team/blob/main/skills/pr-cleanup/SKILL.md)
 
-- **Purpose:** Tear down local and remote branch state after a pull
-  request is finished. Mode A (merged) verifies the PR actually merged,
-  removes the branch's worktree, resyncs the default branch, and deletes
-  the local branch. Mode B (closed / abandoned) closes the PR(s), then
-  deletes every trace — worktree, local and remote branches, planning
-  scratch.
-- **`$ARGUMENTS`:** `[<pr-number-or-url-or-branch>]` — a PR number or URL
-  (its head branch is resolved via `gh`), a branch name, or nothing to
-  default to the branch checked out in the invoking directory (captured
-  before commands are anchored to the primary clone, so a run from inside
-  a worktree targets that worktree's branch, not the primary checkout).
-- **Phase:** None. A standalone teardown action, not part of the pipeline.
-- **Key behaviors:** Runs a merged-PR verification gate
-  (`gh pr list --state merged`) before any `git branch -D`, and the gate
-  checks identity and containment, not just a head-branch name match: the
-  merged PR's head repository must be this repo (a fork PR sharing the
-  branch name licenses nothing) and its merge commit must be an ancestor
-  of the default branch. A gate failure halts the run; only the user's
-  explicit delete-anyway confirmation re-enters it. Mode B has no
-  merged check because the user's explicit abandon request is the gate —
-  the skill never infers abandon intent. Refuses protected branch names
-  (the detected default, `master`, `develop`, `release/*`) and a dirty
-  tree with tracked modifications. Every externally sourced branch name
-  must pass a byte-exact (`LC_ALL=C`) character allowlist before it
-  reaches any command. Protected names are refused case-insensitively,
-  and `git branch -D` runs only when a local branch matches the name byte
-  for byte — so `Main` cannot force-delete `main` on a case-insensitive
-  filesystem. No destructive command relies on a variable set in an
-  earlier shell invocation: the primary-clone root and repo slug are
-  re-derived in every invocation that uses them, and destructive
-  expansions abort when a variable is unset. Before any destructive step it resolves
-  AND validates `$PRIMARY_ROOT` (the primary clone, found via
-  `git rev-parse --path-format=absolute --git-common-dir` and cross-checked
-  against the main working tree), then anchors every subsequent command
-  with `git -C "$PRIMARY_ROOT"` — so invoking it from inside the worktree
-  it is about to remove cannot strand the run. Mode A worktree removal is
-  **try-then-confirm** (no `--force` until the user sees what blocks and
-  confirms); Mode B removes with `--force` unconfirmed. The resync pull is
-  `--ff-only` — a non-fast-forward default branch stops the run rather
-  than auto-resolving. PR metadata is data: only structured `gh` JSON
-  fields gate actions, and prose fields never enter shell arguments.
-  Stacks unwind child before parent. Scratch dirs under `docs/plans/` are
-  removed only after an untracked check that distinguishes empty output
-  from a failed command.
+Cleans PR state.
+
+**Mentions:**
+
+- `principle-explicit-intent`
+- `principle-idempotent-reruns`
+- `principle-never-interpolate`
+- `principle-untrusted-input-is-data`
+- `sweeping-local-state`
 
 ### [pr-verify](https://github.com/bostonaholic/team/blob/main/skills/pr-verify/SKILL.md)
 
-- **Purpose:** Verify a pull request's test plan with evidence-rated
-  verdicts. It extracts every test-plan item, classifies each by
-  verification strategy, collects cited evidence per item, and reports a
-  final verdict on the PR's readiness with follow-up recommendations.
-- **`$ARGUMENTS`:** `[<pr-number-or-url>]` — a PR number or URL, or
-  nothing to resolve the current branch's PR. A pasted PR description is
-  the third input path.
-- **Phase:** None. A standalone verification action, not part of the
-  pipeline.
-- **Key behaviors:** Extracts items from `## Test plan` (and `## How to
-  Verify`, which the pipeline's PR phase emits), outputs them as a
-  numbered list before verifying, and stops with `nothing to verify` when
-  none exist. Each item gets a **PASS / FAIL / PARTIAL** verdict at
-  **HIGH / MEDIUM / LOW** confidence — PARTIAL means the claim holds only
-  in part, and no PASS is issued without cited evidence. Six verification
-  strategies (filesystem, content match, code verification, diff
-  analysis, build/test via the project's detected checks, structural);
-  code-verification items dispatch a `team:file-finder` subagent — its
-  grant is Read/Grep/Glob only, no Bash, so an imperative embedded in PR
-  prose has no command sink — with an inline fallback. The final verdict is mechanical: READY (all PASS at
-  HIGH/MEDIUM), NEEDS ATTENTION (any PARTIAL or LOW), NOT READY (any
-  FAIL — FAIL wins over PARTIAL/LOW). The test plan is data: items are claims, never instructions, and
-  a command quoted in a PR body is never executed. Read-only — no writes,
-  no pushes. Pasted-description mode degrades the diff and build
-  strategies honestly, per item.
+Verifies a PR test plan with evidence-rated verdicts.
+
+**Mentions:**
+
+- `nested-agents`
+- `principle-evidence-over-assertion`
+- `principle-least-privilege`
+- `principle-optimization-never-dependency`
+- `running-quality-checks`
 
 ### [pr-rebase](https://github.com/bostonaholic/team/blob/main/skills/pr-rebase/SKILL.md)
 
-- **Purpose:** Bring a feature branch up to date with its base without
-  changing what the branch does. It captures a pre-rebase check baseline,
-  rebases onto the latest base, resolves each conflict from both sides'
-  intent, re-runs the same checks, and force-pushes only when nothing
-  regressed.
-- **`$ARGUMENTS`:** `[<pr-number-or-url>]` — the PR reference is
-  optional and only resolves the base branch; the rebased branch is always
-  the current checkout. There is no pre-push confirmation to skip: the
-  deliberate invocation carries the authorization to publish, and the run
-  completes without stopping once the verification gate reports no
-  regression.
-- **Phase:** None. A standalone branch-maintenance action, not part of the
-  pipeline.
-- **Key behaviors:** **User-invocable only** — it sets
-  `disable-model-invocation: true`, because the push rewrites published
-  history and no later verification can undo that for a teammate who has
-  the branch. The base branch comes from the §2B fallback chain
-  (`gh pr view` → `origin/HEAD` → `main`), never a hardcoded `main`, and
-  every externally sourced branch name passes a character allowlist. It
-  refuses a dirty tree, a detached HEAD, an in-progress
-  rebase/merge/cherry-pick, a protected branch as the rebase target, and a
-  branch someone else has pushed to. Before touching anything it records
-  the recovery anchor (`git reset --hard <ORIG_SHA>`) and runs the
-  project's detected checks (via `running-quality-checks`) as the
-  **baseline**; a check that could not execute is `UNKNOWN` and is barred
-  from counting as post-rebase evidence. Conflicts are resolved by
-  reconstructing both sides' intent from history — the skill flags the
-  rebase inversion (`--ours` is the base, `--theirs` is your commit),
-  forbids wholesale side-picking and `git rebase --skip`, regenerates
-  generated files instead of picking one, delegates a large conflicted
-  file to a read-only subagent, and escalates a genuinely undecidable hunk
-  through `AskUserQuestion` without aborting the rebase. Every resolution
-  is written to `docs/plans/<id>/rebase-<n>.md` (append-only local
-  scratch). Verification re-runs the identical checks and compares at the
-  level of individual test names: PASS→FAIL is a regression and **hard
-  stops before the push**; FAIL→FAIL is pre-existing and does not block.
-  The push is
-  `--force-with-lease=<branch>:<pre-fetch-sha> --force-if-includes`, never
-  a bare `--force` and never an implicit lease — the skill's own `git
-  fetch` advances the remote-tracking ref an implicit lease would read.
-  It does not wait for CI and does not merge; `/shipit` lands the PR.
+Rebases a branch onto its base.
+
+**Mentions:**
+
+- `artifact-frontmatter`
+- `pr-cleanup`
+- `principle-explicit-intent`
+- `principle-never-interpolate`
+- `principle-pre-image-first`
+- `principle-untrusted-input-is-data`
+- `running-quality-checks`
 
 ### [reflect](https://github.com/bostonaholic/team/blob/main/skills/reflect/SKILL.md)
 
-- **Purpose:** Mine the session it was invoked from for learnings that
-  outlive it, and propose each one as a concrete change. It resolves the
-  session's own transcript, sends three read-only lenses over it, and
-  synthesizes one Accepted / Rejected / Backlog list with the evidence
-  behind every item.
-- **`$ARGUMENTS`:** `[skill-name]` — an optional focus that narrows every
-  lens to learnings about one skill. Empty means the whole session. A focus
-  naming no skill stops the run before anything is read and prints its near
-  matches.
-- **Phase:** None. A standalone session-review action, not part of the
-  pipeline.
-- **Key behaviors:** **User-invocable only** — it sets
-  `disable-model-invocation: true`, because a run rewrites `SKILL.md` files
-  every later run reads and files public issues. Resolution is by **marker**,
-  never by content match: the run creates its cache with `mktemp -d` and
-  prints the absolute path, the host records that output inline in the
-  transcript, and a bundled script
-  (`skills/reflect/resources/resolve-transcript.mjs`) finds the one file on disk
-  holding that string. The search returns file names only, so no unmatched
-  session's content reaches a lens. The same script normalizes the
-  transcript: `user` and `assistant` records only (every other type is
-  dropped and counted), each span cut to 4,000 bytes, a tool call carried as
-  its tool name plus its invocation so the tooling lens has an invocation to
-  count, the stream bounded to
-  2,000 records and 4 MB with the newest kept, and malformed lines skipped
-  and counted — so the record classifier, the byte cap, and the rule that
-  the `tool-results/*.txt` sidecars are never opened all run as code. The
-  three lenses — **judgment** (guidance that was absent, ambiguous, or
-  misleading), **tooling** (a command or test that cost unwarranted
-  retries), **divergent** (something no skill describes) — run as parallel
-  `team:file-finder` subagents capped at 30 reply lines each. The dispatch
-  target is chosen for its toolset (`Read, Grep, Glob`, no `Bash` and no
-  `Write`): a lens reads the transcript path it is handed, so an imperative
-  embedded in a transcript span cannot be fenced, and a target holding `Bash`
-  would give it a command sink. `team:researcher` is rejected on the same axis
-  rather than on fit — it holds `Agent`, and its preloaded `nested-agents`
-  authorizes dispatch to `Explore`, which holds `Bash`, or to `general-purpose`,
-  which holds every tool; `team:file-finder` holds no `Agent` at all, so it has
-  no delegation path. Both agents scope themselves to `2-questions.md` and forbid
-  themselves speculation, so each lens prompt states its overrides of the agent
-  body outright: the transcript path is the lens's only input and its scope, the
-  reply shape is the prompt's own, and judgment about the session is the errand.
-  An override cannot bind an agent body, so a reply carrying no finding in the
-  shape the prompt asked for — a `## Found Files` report, a bare path list, an
-  error, or nothing — is **disqualified**: that lens's pass re-runs inline and
-  the report names it, because a disqualified reply and a session that taught
-  nothing both arrive as zero findings and only this check separates them.
-  Where dispatch is unavailable the three passes run sequentially in-session as
-  a named **reduced-assurance mode** — that session holds `Bash` and `Write`, so
-  the toolset guarantee does not carry, and the bound that replaces it is that
-  the spans are the session's own history, already in its context once, under
-  two compensating rules: a pass's only output is findings in the plan file, and
-  no span may cause a tool call. On Codex and Antigravity, which install the
-  skill but cannot dispatch Claude Code agents, that mode is the normal path,
-  and the run's report names which mode it ran in. Transcript spans
-  are untrusted content: proposals paraphrase and cite a file path or a turn
-  index, and never quote a transcript line. Sorting happens once, in
-  synthesis, so one finding cannot be classified three ways; a finding a
-  deterministic check would enforce better is demoted to Backlog, as is any
-  proposal to rewrite `AGENTS.md`, `CLAUDE.md`, or `docs/`. The read-and-plan
-  phase writes only inside its printed run cache — the plan file it leaves
-  there is what the later turns read, and the cache is never deleted so the
-  report stays auditable. Applying the approved edits is a **separate turn**
-  behind one approval for the whole skill-write class, and it reads a plan file
-  only from a run cache this conversation printed. **Write scope is narrow and
-  checked in code** (`skills/reflect/resources/write-target.mjs`): a proposed name must
-  match `^[a-z][a-z0-9-]*$`; an edit lands in the skills root the running host
-  actually loads (`<repo>/skills/` for a repo carrying a plugin marker,
-  `<repo>/.claude/skills/` otherwise); a creation only ever targets
-  `<repo>/.claude/skills/<name>/SKILL.md` and only when that path does not
-  exist; every resolved real path must stay inside the repository, so a
-  symlinked directory cannot carry a write out; and `~/.claude/**`, a sibling
-  repository, and `agents/*.md` are never written. The two modes carry different
-  preconditions, because they have different undos: an **edit** is applied only
-  while its target is **tracked and clean** (`git ls-files --error-unmatch`,
-  `git status --porcelain`) and still matches the pre-image the plan recorded,
-  which is what makes `git restore -- <path>` a true undo; a **creation**
-  targets a path that does not exist, so its precondition is that absence and
-  its undo is deleting the named path. Anything else is skipped with a reason.
-  Authoring guidance is discovered
-  (`.claude/skills/create-team-skill/`, any `create-*skill*` repo skill, an
-  installed host `skill-creator`) with a fixed frontmatter contract as the
-  fallback, since none of those ships with the plugin. After the writes it runs
-  the repo's own check through `running-quality-checks` and reports the
-  verdict; it neither fixes a failure nor reverts. Demoted findings go to
-  **whatever tracker the repo already names**, resolved in three tiers: the
-  repo's own router first (so a repo naming Linear or Jira is not silently
-  fixed to GitHub issues), then an authenticated `gh` with issues enabled, then
-  print-only. Every `gh issue` call passes `--repo` explicitly, resolved from
-  `git remote get-url origin`, because a bare `gh` reads the current
-  directory's remote and a set `GH_REPO` answers from anywhere. Issue creation
-  is public and irreversible, so it takes **one approval question per issue**,
-  and the issue carries the board fields its router states (in this repo, per
-  `docs/project-tracking.md`: on the board, with a `Priority`, and `P0` on a
-  `bug`). A tracker that cannot be reached does not stop the run — the item
-  bodies print verbatim and the summary lists filed and unfiled items
-  separately.
+Mines a session for durable learnings.
+
+**Mentions:**
+
+- `finding-files`
+- `nested-agents`
+- `principle-explicit-intent`
+- `principle-least-privilege`
+- `principle-optimization-never-dependency`
+- `principle-plan-present-wait`
+- `principle-pre-image-first`
+- `principle-untrusted-input-is-data`
+- `running-quality-checks`
 
 ### [why](https://github.com/bostonaholic/team/blob/main/skills/why/SKILL.md)
 
-- **Purpose:** Investigate the design rationale behind code — why it was
-  built this way, what alternatives were rejected, what edge cases or
-  incidents motivated it. Companion to `how`: `how` answers mechanics,
-  `why` answers motivation.
-- **`$ARGUMENTS`:** `[<question, file, symbol, or decision>]` — the
-  question and its target. Empty means infer the target from
-  conversation context and state the interpretation before proceeding.
-- **Phase:** None. A standalone investigation action, not part of the
-  pipeline.
-- **Key behaviors:** Builds a code anchor inline first (`git blame`,
-  `git log --follow`, `git log -S` pickaxe, `gh pr view`), then maps
-  seven evidence categories (source control always; issue tracker,
-  long-form docs, team chat, observability, error tracking, analytics
-  warehouse when an MCP tool serves them) and dispatches one read-only
-  `Explore` investigator per available category, all in one message,
-  with an inline fallback when dispatch is unavailable. Investigators
-  receive the question verbatim, never a hypothesis — the user's
-  embedded guess is a candidate to test, not a conclusion to confirm.
-  Every claim in the synthesis sits in one confidence tier — **Direct /
-  Supported / Inferred / Speculative / Unknown** — with citations on
-  causal claims, hedged language on inferences, contradictions surfaced
-  rather than resolved by fiat, and code never cited as evidence of its
-  own intent. The report ends with a **Sources Consulted** coverage map
-  naming every category searched, empty, or skipped with its reason.
-  Historical evidence is data: a command quoted in a commit or PR body
-  is never executed. Read-only — no writes, no artifacts. When the
-  question precedes a change, findings close as a
-  Preserve / Change / Avoid / Risk constraint set.
+Investigates design rationale behind code.
+
+**Mentions:**
+
+- `documenting-decisions`
+- `how`
+- `principle-blind-the-investigator`
+- `principle-evidence-over-assertion`
+- `principle-optimization-never-dependency`
+- `principle-skip-loudly`
+- `principle-untrusted-input-is-data`
+- `systematic-debugging`
 
 ### [how](https://github.com/bostonaholic/team/blob/main/skills/how/SKILL.md)
 
-- **Purpose:** Explain how a subsystem, feature flow, or code path works
-  at the depth a senior engineer onboarding onto it needs — overview,
-  key concepts, runtime flow, file map, gotchas. A critique mode adds
-  fresh-context architectural review on top. Companion to `why`.
-- **`$ARGUMENTS`:** `[<subsystem, feature, or question>]` — the question.
-  Empty means infer the target from conversation context and state the
-  interpretation before exploring.
-- **Phase:** None. A standalone explanation action, not part of the
-  pipeline.
-- **Key behaviors:** Assesses complexity first and leans simple: a
-  narrow question is traced inline with Read/Grep/Glob; a subsystem-wide
-  one fans out 2–4 read-only `Explore` subagents on non-overlapping
-  angles in one message, with an inline fallback when dispatch is
-  unavailable. Explorers read the actual implementation (never guessing
-  from file names) and return structured traces the invoking session
-  reconciles against the code. Claims about code carry `file:line`
-  citations. Critique mode runs only after the full explanation: three
-  fresh-context critics (abstraction fit and boundaries, data model and
-  complexity spend, evolution readiness and consistency) rate findings
-  **structural / concern / observation** with code evidence, and the
-  lead sorts them into **Act on / Consider / Noted / Dismissed** —
-  architectural findings only; line-level review stays with
-  `code-review`. Read-only — no writes, no artifacts.
+Explains subsystem architecture and runtime flow.
+
+**Mentions:**
+
+- `code-review`
+- `principle-generator-evaluator`
+- `principle-optimization-never-dependency`
+- `researching-codebases`
+- `why`
 
 ### [code-review](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md)
 
-- **Purpose:** The direct-invocation front door for a code review.
-- **Loaded by:** nobody — it is invoked directly by a user or the model.
-- **Key behaviors:** The front door over the `reviewing-code` methodology;
-  it is catalogued here as a command and never loaded as a building block.
-  Invoked directly, it dispatches the `code-reviewer` agent rather than
-  reviewing inline — the main session holds the conversation history
-  `reviewing-code` forbids — then prints that reviewer's report in full, in
-  the shape `reviewing-code` pins. The review methodology itself lives in
-  `reviewing-code`, which the front door loads by name.
+Reviews a diff with fresh context.
 
+**Mentions:**
+
+- `reviewing-code`
 
 ## Methodology skills
 

@@ -632,17 +632,14 @@ describe("Slice 1 — L2: reflect's three reporting lenses", () => {
     // runs in a session holding Bash and Write, so it cannot inherit it. On
     // Codex and Antigravity, which install the skill but cannot dispatch Claude
     // Code agents, the fallback is the only path — so the degradation is named
-    // where the model meets it, in the run's own report, and in the skill
-    // catalog a reader consults. Drift tripwire: all three surfaces or none.
+    // where the model meets it and in the run's own report. Drift tripwire:
+    // both surfaces or neither.
     const lenses = flat(section(LENSES));
     const completion = flat(body());
-    const catalog = flat(read(join(REPO_ROOT, "docs", "skills.md")));
     expect(lenses.length).toBeGreaterThan(0);
     expect(completion.length).toBeGreaterThan(0);
-    expect(catalog.length).toBeGreaterThan(0);
     expect(/reduced-assurance mode/i.test(lenses)).toBe(true);
     expect(/reduced-assurance mode/i.test(completion)).toBe(true);
-    expect(/reduced-assurance mode/i.test(catalog)).toBe(true);
   });
 
   test("the dispatch sweep can see a positive", () => {
@@ -658,22 +655,19 @@ describe("Slice 1 — L2: reflect's three reporting lenses", () => {
   });
 
   test("a disqualified lens reply is a named failure on every surface", () => {
-    // The dispatch path's OTHER degradation mode is named on three surfaces and
+    // The dispatch path's OTHER degradation mode is named on two surfaces and
     // pinned above, and this one needs the same treatment: a prompt cannot bind
     // an agent body, so a lens can follow `agents/file-finder.md` instead and
     // reply with a file list or nothing. Unnamed, that reply is a zero — a run
     // where all three lenses ignored the errand reports as a clean session, and
     // no surface distinguishes it from a session that genuinely taught nothing.
-    // Drift tripwire: all three surfaces or none.
+    // Drift tripwire: both surfaces or neither.
     const lenses = flat(section(LENSES));
     const completion = flat(body());
-    const catalog = flat(read(join(REPO_ROOT, "docs", "skills.md")));
     expect(lenses.length).toBeGreaterThan(0);
     expect(completion.length).toBeGreaterThan(0);
-    expect(catalog.length).toBeGreaterThan(0);
     expect(/disqualified/i.test(lenses)).toBe(true);
     expect(/disqualified/i.test(completion)).toBe(true);
-    expect(/disqualified/i.test(catalog)).toBe(true);
   });
 
   test("a disqualified reply re-runs inline and is never reported as a zero", () => {

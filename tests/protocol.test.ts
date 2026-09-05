@@ -914,7 +914,7 @@ describe("no mid-run human-gate claims (L2 forbidden-pattern sweep)", () => {
 // gated loci, including every multi-locus row this sweep makes atomic.
 //
 // A red names a file and a phrase. Restate that sentence — never add an
-// allowlist entry. The allowlist takes domain nouns only, and its six entries
+// allowlist entry. The allowlist takes domain nouns only, and its five entries
 // are fixed.
 // ---------------------------------------------------------------------------
 
@@ -942,7 +942,6 @@ describe("exception vocabulary appears in no rule prose", () => {
     "carve-out|skills/pr-watch-as-author/SKILL.md",
     "carve-out|skills/pr-watch-as-reviewer/SKILL.md",
     "carve-out|skills/principle-plan-present-wait/SKILL.md",
-    "carve-out|docs/skills.md",
     "exempt|skills/nested-agents/SKILL.md",
   ]);
 
