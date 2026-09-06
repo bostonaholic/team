@@ -149,5 +149,21 @@ push. Apply such fixups now, stage them into the replayed commit beside
 the conflict resolutions, and record each in the step 2 log with the
 base change that forced it.
 
+The mirror case is sharper, and the conflicted-path list will never
+surface it: a file the base **added** that cites a path this branch
+moved. Nothing conflicts, because this branch never touched that file —
+so the merge is clean for the wrong reason and the new file lands stale
+the day it was written. Enumerate the candidates from what the base
+contributed across the range being replayed, not from what conflicted:
+
+```sh
+git diff --name-only --diff-filter=A "${MERGE_BASE:?}..${BASE_REMOTE:?}/${BASE:?}"
+```
+
+Read each one for the paths, symbols, and directories this branch moved
+or renamed. Fix them the same way: staged into the replayed commit beside
+the conflict resolutions, and recorded in the step 2 log with the base
+change that forced them.
+
 **To abandon mid-rebase**, `git rebase --abort` restores the pre-rebase
 state exactly. Never `git rebase --skip` (Hard Rule 3).

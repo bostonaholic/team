@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **[`/pr-rebase`](https://github.com/bostonaholic/team/blob/main/skills/pr-rebase/SKILL.md)'s semantic sweep now also reads what the base branch *added*.** The sweep already covered a file this branch still cites after the base renamed or moved something. The mirror case is sharper and it went unhandled: the base creates a brand-new file citing paths this branch had moved, and it merges perfectly cleanly — not because the merge was smart, but because this branch never touched that file, so there was nothing to conflict. No marker, no stop, nothing in the conflicted-path list to review, and the new file lands on the default branch stale the day it was written. The sweep now enumerates the base's additions across the replayed range with `git diff --name-only --diff-filter=A`, reads each for the paths and symbols this branch moved, and stages the fixups into the replayed commit like any other resolution. **What this asks of you:** nothing.
+
 ## [0.89.0] - 2026-09-07
 
 ### Changed
