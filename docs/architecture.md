@@ -990,7 +990,10 @@ when dispatching, and `completed` when the artifact lands. Any `/team-*`
 command rebuilds the ledger by scanning artifacts on entry, so an
 interrupted run can be resumed by re-invoking any of them bare: discovery
 auto-resolves the artifact directory (an explicit `docs/plans/<id>/` is still
-accepted).
+accepted). On a host offering no TodoWrite, `docs/plans/<id>/ledger.md`
+substitutes for the ledger rather than supplementing it, and the run reports
+which of the two it used; being on disk, that one is durable rather than
+session-scoped, so the aggregate gate's round counts survive a restart.
 
 **Design-review records:** `docs/plans/<id>/design-review-<n>.md`
 (frontmatter `verdict: <APPROVE|REQUEST CHANGES|COMMENT>`) records each

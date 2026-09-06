@@ -41,6 +41,7 @@ Runs the 8-phase QRSPI feature pipeline.
 - `principle-files-are-the-contract`
 - `principle-idempotent-reruns`
 - `principle-progress-tracking`
+- `principle-skip-loudly`
 - `qrspi-workflow`
 - `review-severity-tiers`
 - `reviewing-designs`
