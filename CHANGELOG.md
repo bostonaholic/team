@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **[`running-quality-checks`](https://github.com/bostonaholic/team/blob/main/skills/running-quality-checks/SKILL.md) now warns that two checks can poison each other.** The skill detected a project's checks and ordered them by speed, and said nothing about checks that interfere. Running a production build immediately before a dev-server-backed browser suite, in one sequential loop, left the shared build directory in a state the dev server did not recover from: two browser tests failed on assertions that looked exactly like real regressions — a form control that never appeared, page metadata with the wrong value — and clearing the build directory and running the suite alone returned it to green, twice. The skill now states the hazard, the mitigation (clear the build directory, run the browser suite alone, never beside another agent's dev server), and the stronger rule for baselines: a before/after comparison is valid only when both sides ran under the same isolation. That last one is the expensive case — the observed run was capturing a baseline for a rebase, so it nearly recorded a false red as the pre-change state, which would have reclassified a later regression as pre-existing. **What this asks of you:** nothing.
+
 ## [0.91.0] - 2026-09-07
 
 ### Changed

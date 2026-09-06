@@ -26,6 +26,13 @@ them in speed order, and report evidence. No opinions — just evidence.
    4. **Build** — Production build command
    5. **Test** — Test suite execution
 
+   Checks interfere. A production build and a dev-server-backed browser suite
+   share one build directory in most frameworks that have one, so back-to-back
+   in a single sequence the second reads state the first wrote and fails on
+   assertions that read exactly like regressions. Clear the build directory and
+   run the browser suite alone. A suite that boots its own servers is unsafe
+   beside anything else, another agent's dev server included.
+
 3. **Capture results.** For each check, record:
    - The exact command run
    - The exit code
@@ -57,6 +64,11 @@ them in speed order, and report evidence. No opinions — just evidence.
   (`### Notes — Intermittent: testFoo passed on retry, the underlying race condition is unresolved`).
   Reruns that turn red → green without a code change are evidence of a
   flake or a real intermittent bug, not a verdict of PASS.
+- **A baseline is comparable only under the same isolation.** When this run is
+  the before side of a before/after comparison (`principle-pre-image-first`),
+  run both sides the same way. A false red recorded as the pre-change state
+  reclassifies a later regression as pre-existing — a failure in the safe
+  direction, which is why it goes unnoticed.
 - **Coverage is reported, not gated.** If the project has a coverage tool
   configured, run it and report the coverage delta for changed files
   (e.g., "coverage on changed files: 73% → 78%"). Do NOT gate on an
