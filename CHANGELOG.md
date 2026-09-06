@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **[`reviewing-designs`](https://github.com/bostonaholic/team/blob/main/skills/reviewing-designs/SKILL.md) now calibrates the bar to the class of change.** The brief held every design to one standard, so a design for a pure refactor — file moves plus reference updates, zero behavior change — took five review rounds. Rounds 1 and 2 found real defects; by round 3 the findings were defects in the review's own verification commands, and rounds 4 and 5 turned on one internal contradiction and then a wording nit. What made it converge was calibration typed into the review prompt by hand, which meant it depended on whoever was driving noticing the problem. It is in the brief now: a refactor design is legitimately thin on edge cases, concurrency, and authorization because the change adds no behavior there; blocking means acting on the design as written produces a wrong or incomplete result; `COMMENT` is the verdict for a design carrying only non-blocking observations; and a reviewer never manufactures a blocking finding to justify another round. The defects the first two rounds caught — a self-contradiction, a missing edit, a verification command that would reject a correct implementation — stay blocking under the new wording, whatever the class of change. **What this asks of you:** nothing. `/eng-design-doc-review` dispatches the same brief, so it calibrates the same way.
+
 ## [0.90.0] - 2026-09-07
 
 ### Changed
