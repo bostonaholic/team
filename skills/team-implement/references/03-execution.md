@@ -6,7 +6,10 @@
    mode it derives acceptance criteria from `$ARGUMENTS/1-task.md` instead
    of `7-structure.md`. If those tests already exist, skip this dispatch.
    When the slice commits are on the branch too, resume at step 5.
-   Otherwise, resume at step 4.
+   Otherwise, resume at step 4. A change whose stated contract is zero
+   behavior change has nothing to write either — the current suite is the
+   acceptance suite — so skip this dispatch, record the reason on a named
+   line, and run step 3 in its inverted form.
 3. **Mechanical gate** — confirm all tests fail with assertion errors
    (not crashes), **and** that every static check the project defines
    passes (typecheck, lint, format, build — call the Skill tool with
@@ -18,6 +21,13 @@
    the next actor to notice is the `verifier`, a full review round later.
    This gate applies to a fresh `test-architect` run only. A resumed run
    that skips step 2 skips this gate too.
+   **Inverted for a zero-behavior-change refactor:** capture the suite and
+   the static checks as a baseline **before** any file moves
+   (`principle-pre-image-first`), and advance only when they reproduce it —
+   green is the correct state throughout, and a new failure is a
+   regression. Structural checks carry what the tests cannot express here:
+   a `grep` with an exact expected match count, a path that must no longer
+   exist.
 4. Dispatch `implementer` → executes slices with per-slice commits. In
    standalone mode it works from `$ARGUMENTS/1-task.md` and the failing
    tests.
