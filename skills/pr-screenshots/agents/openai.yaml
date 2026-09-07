@@ -1,0 +1,4 @@
+interface:
+  display_name: "PR Screenshots"
+  short_description: "Attach local images to a PR body"
+  default_prompt: "Use $pr-screenshots to attach local images to a PR body."
