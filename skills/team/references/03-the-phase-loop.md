@@ -25,7 +25,8 @@ loop:
        REQUEST CHANGES, re-dispatch design-author with the findings
        verbatim and `revision: <n+1>`; a fresh review round follows.
      - MECHANICAL (tests-failing): run the suite; on assertion-only
-       failure, advance.
+       failure, advance. For a zero-behavior-change refactor this gate
+       inverts — see "Mechanical Gate (test confirmation)" below.
      - ROUTER-EMIT (worktree, PR): perform the action.
      - AGGREGATE (5 reviewers): dispatch in parallel, collect results,
        sort findings into severity tiers; auto-loop while any Blocking or
@@ -54,6 +55,11 @@ For RESEARCH, dispatch `file-finder` and `researcher` in parallel passing
 each only the `docs/plans/<id>/2-questions.md` path. Combine their returned
 content into a single `docs/plans/<id>/5-research.md` artifact (with the
 frontmatter the researcher's documentation specifies) before advancing.
+
+For IMPLEMENT, the `test-architect` dispatch is conditional. A change whose
+stated contract is zero behavior change has nothing to write — the current
+suite is the acceptance suite — so that dispatch is skipped with a recorded
+reason and the mechanical gate runs in its inverted form.
 
 `skills/team/registry.json` is an inventory of the 13 specialist agents
 for documentation purposes only. The orchestrator dispatches based on

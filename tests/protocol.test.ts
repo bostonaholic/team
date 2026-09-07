@@ -1555,3 +1555,34 @@ describe("the TodoWrite fallback names one ledger path (L2 tripwire)", () => {
     expect(setup).not.toContain(FALLBACK_LEDGER);
   });
 });
+
+// -------------------------------------------------------------------------
+// The inverted mechanical gate keeps its baseline rule on both dispatch
+// surfaces — free L2 drift tripwire (docs/testing.md §2, name form). The gate
+// advances on tests that go red, which is right for a change that adds
+// behavior and has no answer for a pure refactor: there the acceptance tests
+// are the current suite and green is correct throughout, so the gate becomes
+// "the checks reproduce a pre-change baseline". That inversion is worthless
+// without the ordering it rests on — the baseline is captured BEFORE anything
+// moves. Two surfaces dispatch `test-architect` and so must both carry it: the
+// orchestrator's gate reference and the standalone /team-implement procedure.
+// A skip path added to one alone is a surface that inverts the gate with no
+// baseline to compare against.
+// ---------------------------------------------------------------------------
+
+describe("the inverted mechanical gate cites its baseline rule (L2 tripwire)", () => {
+  const DISPATCH_SURFACES = [
+    join("skills", "team", "references", "11-mechanical-gate-test-confirmation.md"),
+    join("skills", "team-implement", "references", "03-execution.md"),
+  ];
+
+  test("both test-architect dispatch surfaces name principle-pre-image-first", () => {
+    for (const relative of DISPATCH_SURFACES) {
+      const text = read(join(REPO_ROOT, relative));
+      // Guard: a renamed or deleted surface must fail, not vacuously pass.
+      expect(text.length).toBeGreaterThan(0);
+      expect(text).toContain("test-architect");
+      expect(text).toContain("principle-pre-image-first");
+    }
+  });
+});

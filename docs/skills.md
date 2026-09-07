@@ -40,6 +40,7 @@ Runs the 8-phase QRSPI feature pipeline.
 - `principle-fail-closed`
 - `principle-files-are-the-contract`
 - `principle-idempotent-reruns`
+- `principle-pre-image-first`
 - `principle-progress-tracking`
 - `principle-skip-loudly`
 - `qrspi-workflow`
@@ -117,6 +118,7 @@ Executes and verifies implementation slices.
 **Mentions:**
 
 - `artifact-frontmatter`
+- `principle-pre-image-first`
 - `principle-progress-tracking`
 - `review-severity-tiers`
 - `running-quality-checks`
