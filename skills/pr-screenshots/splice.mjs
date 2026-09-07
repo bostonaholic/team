@@ -156,6 +156,13 @@ const INDENTED_HEADING = /^ {4,}#{1,2}(?:[ \t]|$)/;
  * which is the gap exactly inverted from where the risk is. A tag name is
  * required, so an autolink such as `<https://example.com>` is not mistaken for
  * one, and an escaped `\<` is text that renders literally rather than markup.
+ *
+ * It over-refuses on ordinary prose, deliberately and visibly: `fails when a<b`
+ * matches, because the tag-name class takes `b` and the alternation accepts end
+ * of line. That is the designed direction of error — a refusal leaves the body
+ * byte-identical — but the recovery is not obvious from the reason alone, so
+ * `references/02-upload-and-body-edit.md` names the class and the edit that
+ * clears it.
  */
 const HTML_TAG = /(?<!\\)<\/?[A-Za-z][A-Za-z0-9-]*(?:[ \t/>]|$)/;
 
@@ -206,21 +213,53 @@ const ANY_IMAGE = /!\[[^\]]*\]\([^)]*\)/g;
 const OWN_IMAGE = /^!\[screenshot-\d+\]\(\s*https?:\/\/[^\s)]+\s*\)$/;
 
 /**
- * The remaining line shapes this skill writes into its own section: a bold
- * caption line (resolved or degraded), a blockquoted `notes` line, and a
- * `Not uploaded:` failure line. Together with `OWN_IMAGE` they are the whole
- * emitted vocabulary of `references/02-upload-and-body-edit.md`, "The section's
- * markdown shape" — which is what lets a replace tell its own previous output
- * apart from a sentence a reviewer typed there.
+ * The remaining line shapes this skill writes into its own section. Together
+ * with `OWN_IMAGE` they are the whole emitted vocabulary of
+ * `references/02-upload-and-body-edit.md`, "The section's markdown shape" —
+ * which is what lets a replace tell its own previous output apart from text a
+ * reviewer typed there.
+ *
+ * **Ownership is provenance, not shape.** `OWN_NOTE` used to be `/^>/`, which
+ * claimed EVERY blockquote: `> Reviewer: the second shot is stale, do not ship`
+ * was deleted with `changed: true` and no reason. So the renderer emits a
+ * marker a reviewer would not type — `> _note:_ ` — and an unmarked blockquote
+ * now refuses exactly as bare prose does. `OWN_SEPARATOR` is the bare `>` the
+ * renderer puts between two notes so they do not render as one run-on
+ * paragraph; it carries no text, so claiming it deletes nothing.
  */
 const OWN_CAPTION = /^\*\*.+\*\*(?:\s.*)?$/;
-const OWN_NOTE = /^>(?:\s|$)/;
+const OWN_NOTE = /^>[ \t]+_note:_[ \t]+\S/;
+const OWN_SEPARATOR = /^>$/;
 const OWN_FAILURE = /^Not uploaded:\s/;
 
-/** True when `line` is a shape this skill's own section renderer emits. */
-function ownSectionLine(line) {
-  const text = line.trim();
-  return text === "" || OWN_IMAGE.test(text) || OWN_CAPTION.test(text) || OWN_NOTE.test(text) || OWN_FAILURE.test(text);
+/**
+ * The degraded caption line: the one caption shape the renderer emits with no
+ * image below it, pinned to its whole wording rather than to "a bold line".
+ */
+const OWN_DEGRADED_CAPTION = /^\*\*.+\*\*(?:[ \t]+\([^)]*\))?[ \t]+—[ \t]+captured, not yet uploaded:[ \t]+\S/;
+
+/**
+ * True when `lines[index]` is a shape this skill's own section renderer emits.
+ *
+ * A caption is decided by GRAMMAR, not by shape alone. `**…**` matches any bold
+ * line, so `**IMPORTANT: these images contain a real API key**` typed by a
+ * reviewer read as this skill's own caption and was deleted. The renderer emits
+ * a caption in exactly two positions — carrying the degraded tail and standing
+ * alone, or DIRECTLY above an `![screenshot-NN]` image this skill wrote — and a
+ * bold line in neither position is a shape the renderer cannot have emitted.
+ *
+ * The residue is named rather than hidden: a bold line that a reviewer put in
+ * the one position the renderer uses, immediately above this skill's own image,
+ * is still indistinguishable from the caption it displaced. Inserting one
+ * anywhere else pushes some emitted line out of its grammar and refuses the
+ * whole replace.
+ */
+function ownSectionLine(lines, index) {
+  const text = lines[index].trim();
+  if (text === "") return true;
+  if (OWN_IMAGE.test(text) || OWN_NOTE.test(text) || OWN_SEPARATOR.test(text) || OWN_FAILURE.test(text)) return true;
+  if (OWN_DEGRADED_CAPTION.test(text)) return true;
+  return OWN_CAPTION.test(text) && OWN_IMAGE.test((lines[index + 1] ?? "").trim());
 }
 
 /**
@@ -563,10 +602,12 @@ export function bodyRefusal(body) {
   // shapes; a sentence a reviewer typed under the heading was in none of them,
   // so `Reviewer note: the second shot is stale` was replaced away with exit 0.
   // The whole vocabulary this skill emits is `ownSectionLine`, so anything else
-  // in the range a replace deletes is somebody else's text.
+  // in the range a replace deletes is somebody else's text — including a
+  // blockquote or a bold line, which matched by shape until ownership became
+  // provenance.
   const first = ATX_HEADING.test(lines[start]) ? start + 1 : start + 2; // setext takes two lines
   for (let index = first; index < stop; index++) {
-    if (ownSectionLine(lines[index])) continue;
+    if (ownSectionLine(lines, index)) continue;
     return at(index, lines[index], "the Screenshots section holds a line this skill did not write, so replacing it would delete it");
   }
   return "";

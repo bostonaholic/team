@@ -44,11 +44,16 @@ run, when, and which entries qualify, then calls this skill.
   never removed. Anything else this skill did not write is a refusal that
   leaves the body byte-identical, because a duplicate is recoverable and a
   deletion is not. The rule is stated positively, so nothing falls outside it:
-  the only lines a replace may delete are the four shapes this skill's own
-  renderer emits — a `**caption**` line, an `![screenshot-NN]` image, a `>`
-  note, and a `Not uploaded:` line. Prose, an HTML comment, a raw HTML
-  container, an image in any form the splice cannot count, or a body shape the
-  splice does not model each refuse, with the offending line number named.
+  the only lines a replace may delete are the shapes this skill's own renderer
+  emits — a `**caption**` line in the position the renderer puts one, an
+  `![screenshot-NN]` image, a `> _note:_` note with its bare `>` separator, and
+  a `Not uploaded:` line. **Ownership is provenance, not shape:** the note
+  carries a marker a reviewer would not type and a caption is owned only
+  directly above an image this skill wrote, so a reviewer's own blockquote or
+  bold line refuses rather than being read as this skill's output. Prose, an
+  HTML comment, a raw HTML container, an image in any form the splice cannot
+  count, or a body shape the splice does not model each refuse, with the
+  offending line number named.
 - **Nothing leaves the declared root, and nothing that is not an image is
   uploaded.** The entries file declares one **absolute** top-level `root`, and
   every entry's path is resolved and must sit inside it. Acceptance is decided

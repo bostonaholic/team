@@ -23,6 +23,20 @@ that failed keeps a local filesystem path in a body that may already be merged.
 
 **Step A — take the pre-image and run every check that can run against it.**
 
+Bind every temporary this run writes, once, in one directory. Each of these is
+load-bearing below, and a variable a later fence expands but no fence binds is
+a variable the session invents:
+
+```bash
+RUN_DIR="$(mktemp -d)"
+PRE_IMAGE_FILE="$RUN_DIR/pre-image.md"     # step A's normalized pre-image
+SECTION_FILE="$RUN_DIR/section.md"         # step D's rendered section
+NEW_BODY_FILE="$RUN_DIR/new-body.md"       # step D's spliced body
+CANDIDATES_FILE="$RUN_DIR/candidates.txt"  # step C's URLs, one per line
+FAILURES_FILE="$RUN_DIR/failures.tsv" ; : >"$FAILURES_FILE"   # one line per failed entry
+ASSETS_FILE="$RUN_DIR/assets.tsv"     ; : >"$ASSETS_FILE"     # one line per landed entry
+```
+
 ```bash
 # The read is GUARDED, and the guard is not decoration. An unguarded
 # assignment binds "" on any transient gh failure — a rate limit, a network
@@ -130,9 +144,11 @@ baseline for the lost-update guard, and the subject of four checks:
    `<details>`, or anywhere else with no trailing position to lift it into —
    has nothing to be lifted into, so the splice **refuses** instead. The same
    holds for text that is no image at all: the only lines a replace may delete
-   are the ones this skill's own renderer emits — a `**caption**` line, an
-   `![screenshot-NN]` image, a `>` note, and a `Not uploaded:` line — so a
-   sentence a reviewer typed under the heading is a refusal too. Between the
+   are the ones this skill's own renderer emits — a `**caption**` line in the
+   position the renderer puts one, an `![screenshot-NN]` image, a `> _note:_`
+   note with its bare `>` separator, and a `Not uploaded:` line — so a sentence
+   a reviewer typed under the heading is a refusal, and so is a blockquote or a
+   bold line they typed there. Between the
    two, "never delete what you did not write" holds in every shape: the
    trailing run is preserved as a duplicate, and everything else is a refusal
    with the offending line named.
@@ -280,6 +296,11 @@ for ENTRY_PATH in "$@"; do
   # "nothing happened" is never inferred from an exit code.
   AFTER_JSON="$(gh pr view "$NUMBER" --repo "$REPO_SPEC" --json body)" \
     || { REASON="body read failed" ; fail_entry ; continue ; }
+  # The envelope check, exactly as in step A: a failed call yields no JSON
+  # object, and without this the `jq -r` below turns that into "" — which is
+  # indistinguishable from a body the host emptied.
+  printf '%s' "$AFTER_JSON" | jq -e 'has("body") and (.body | type == "string")' >/dev/null \
+    || { REASON="body read failed" ; fail_entry ; continue ; }
   AFTER="$(printf '%s' "$AFTER_JSON" | jq -r .body)" \
     || { REASON="body read failed" ; fail_entry ; continue ; }
   # A failed attach records its class and CONTINUES. Falling through instead
@@ -324,9 +345,11 @@ the loop, and the re-read runs *before* the status is acted on. An attach that
 exits non-zero may still have updated the PR, so never infer "nothing happened"
 from an exit code — the arm above records `attach failed` after the re-read and
 then `continue`s. Derive `assets`, `failures`, and `outcome` from what the read
-shows. The read is guarded the same way the pre-image is, and for the same
-reason: an unguarded `AFTER=` binds `""` on a transient failure, which reads as
-"the host removed the body".
+shows. The read is guarded the same way the pre-image is — the process exit and
+the JSON envelope both — and for the same reason: an unguarded `AFTER=` binds
+`""` on a transient failure, which reads as "the host removed the body". The
+difference is only what a failure costs: the pre-image exits 2 for the run,
+while this one records `body read failed` for the entry and continues.
 
 Three failure classes exist only after the upload begins, and they join the
 eight in the table above: `attach failed`, `body read failed`, and `body
@@ -364,8 +387,19 @@ any public repository's content, so a suffix carrying
 `https://raw.githubusercontent.com/attacker/evil/main/x.png` was harvested,
 embedded, and copied into every companion PR — the path anchor bypassed
 entirely, because the wildcard arm allowed *any* path. The proxy is one host
-with one shape: a single path segment naming an image file. The host allowlist
-is derived from the PR this run already resolved, never hardcoded:
+with one shape: **one or two path segments, the last naming an image file.**
+
+Two, because the rewrite GitHub actually emits carries two —
+`https://private-user-images.githubusercontent.com/<user-id>/<asset-id>-<uuid>.png?jwt=…`.
+A one-segment rule matches no real rewrite at all: the query string is stripped
+first, and the remaining `/<user-id>/<asset-id>-<uuid>.png` then fails the
+segment test, so on **every private-repository PR** each entry is rejected, the
+run reports nothing landed, and the read-back's second assertion fails the same
+way — `outcome: unverified`, `section: null`, nothing propagating to any
+companion. The containment work is done by the host allowlist, which admits one
+enumerated proxy host; the segment bound only keeps that host's own paths from
+being a free variable. The host allowlist is derived from the PR this run
+already resolved, never hardcoded:
 
 - the host of `$PR_URL` — `github.com`, or the GitHub Enterprise host the PR
   actually lives on;
@@ -404,13 +438,21 @@ while IFS= read -r CANDIDATE; do      # the absolute URLs the suffix of AFTER ho
   case "$CANDIDATE_HOST" in
     ""|*[!A-Za-z0-9.-]*) continue ;;  # empty, or carrying userinfo, a port, or worse
   esac
+  # Dot segments walk straight out of the path anchor below, and this runs
+  # BEFORE it. `https://github.com/user-attachments/assets/../../attacker/evil/
+  # raw/main/x.png` passes every prefix test and every host test, and an HTTP
+  # client then normalizes it to attacker-controlled content on an allowlisted
+  # host. The percent-encoded forms of `.` and `/` do the same after the
+  # server decodes them, so they are refused unencoded rather than decoded here.
+  case "$CANDIDATE_PATH" in *..|*../*|*/..|*/../*) continue ;; esac
+  case "$CANDIDATE" in *%2[eEfF]*) continue ;; esac
   CANDIDATE_FILE="${CANDIDATE_PATH%%\?*}"  # the path with its query string removed
   case "$CANDIDATE_PATH" in
     /user-attachments/assets/*) : ;;  # github.com and GitHub Enterprise
     *)                                # the private-repo proxy rewrite, on its own host
       case "$CANDIDATE_HOST" in "$ASSET_PROXY_HOST") : ;; *) continue ;; esac
-      case "${CANDIDATE_FILE#/}" in   # one segment, naming an image file
-        */*) continue ;;
+      case "${CANDIDATE_FILE#/}" in   # one or two segments, naming an image file
+        */*/*) continue ;;
         *.png|*.jpg|*.jpeg|*.gif|*.webp|*.avif) : ;;
         *) continue ;;
       esac ;;
@@ -422,6 +464,11 @@ while IFS= read -r CANDIDATE; do      # the absolute URLs the suffix of AFTER ho
   [ -z "$ASSET_URL" ] || { ASSET_URL="" ; REASON="ambiguous attachment URL" ; break ; }
   ASSET_URL="$CANDIDATE"
 done < "$CANDIDATES_FILE"
+
+# Still inside the entry loop, and its last statement. The landed URL is
+# recorded HERE, one line per entry that landed one, because `$LANDED_COUNT` in
+# step D is that file's line count and nothing else may produce it.
+[ -z "$ASSET_URL" ] || printf '%s\t%s\n' "$ASSET_URL" "$ENTRY_PATH" >>"$ASSETS_FILE"
 ```
 
 The host is compared as a whole label, never as a substring, and a host
@@ -430,6 +477,15 @@ carrying anything but letters, digits, dots, and hyphens is rejected outright �
 as `github.com@attacker.example`, and a substring test would call it ours. The
 path is compared only after the host has been split off it, so `/user-attachments/assets/`
 means the *first* path segments and not any segment.
+
+**A path anchor holds only while the path cannot walk out of it.** A candidate
+whose path carries a `..` segment, or a `%2e`/`%2f` encoding of one, is
+rejected before the anchor is tested at all:
+`https://github.com/user-attachments/assets/../../attacker/evil/raw/main/x.png`
+satisfies the prefix and the host, and every HTTP client resolves it to content
+the attacker controls on the allowlisted host. The read-back applies the same
+rejection (`references/03-verify.md`), because a read-back checking a weaker
+rule than the harvest cannot detect what the harvest let through.
 
 A suffix yielding **more than one** allowlisted candidate is a failure for that
 entry, not a guess between them — the loop above clears `ASSET_URL` and records
@@ -464,10 +520,12 @@ operator decide whether to edit the body by hand. It is a guard rather than
 full coverage — a concurrent *append* keeps the prefix, passes the check, and is
 dropped by the pre-image-based write below. That residual window is accepted.
 
-Render the section (shape below), then splice it into the **pre-image** with
-resolved URLs only:
+Render the section (shape below) into `$SECTION_FILE`, bind the landed count
+from step C's own record, then splice into the **pre-image** with resolved URLs
+only:
 
 ```bash
+LANDED_COUNT="$(wc -l <"$ASSETS_FILE" | tr -d '[:space:]')"   # step C wrote one line per landed entry
 if node "<skill-dir>/splice.mjs" --body-file "$PRE_IMAGE_FILE" \
      --section-file "$SECTION_FILE" --landed "$LANDED_COUNT" > "$NEW_BODY_FILE.tmp"; then
   mv "$NEW_BODY_FILE.tmp" "$NEW_BODY_FILE"
@@ -522,6 +580,14 @@ imply it — move the hand-authored image out of the `## Screenshots` section (o
 delete the HTML comment inside it) and re-run; for an unmodeled construct,
 either take it out of the body or write the section by hand. Then re-run.
 
+One refusal in that catalogue reads as a false positive and is not: **a `<`
+followed by a letter anywhere in the body is a raw HTML tag to the scan**, so a
+body reading `fails when a<b` refuses the whole run. The scan cannot tell that
+`<b` from a real `<b>`, and refusing costs a byte-identical body while guessing
+costs deleted text. The recovery is not obvious from the reason, so state it:
+escape the `<` as `\<` in the body — which is also how it should have been
+written to render literally — or reword the line, then re-run.
+
 Three exit codes, and they mean different things:
 
 | Exit | Means | Do |
@@ -556,7 +622,9 @@ span:
 **<caption>** (<state>)
 ![screenshot-02](<resolved-url>)
 
-> <one blockquoted line per normalized entry in the entries file's notes list>
+> _note:_ <one blockquoted line per normalized entry in the entries file's notes list>
+>
+> _note:_ <the next one, separated by a bare `>` so the two are not one paragraph>
 
 Not uploaded: <caption> — <reason>
 ```
@@ -581,17 +649,34 @@ path is in `result.json` and the operator report, where it is the useful form:
 
 **<caption>** (<state>) — captured, not yet uploaded: <basename>
 
-> <one blockquoted line per entry in the entries file's notes list>
+> _note:_ <one blockquoted line per entry in the entries file's notes list>
 ```
 
-**Every `notes` line is a blockquote, and that is load-bearing.** The four
-shapes above — a `**caption**` line, an `![screenshot-NN]` image, a `>` note,
-and a `Not uploaded:` line — are the entire vocabulary this skill emits, which
-is what lets `splice.mjs` tell its own previous output apart from a sentence
-somebody else typed under the heading and refuse rather than delete it. Render a
-note as bare prose and the next run over that body cannot make the distinction:
-either the note is refused as foreign text, or the refusal has to be dropped and
-the reviewer's sentence goes back to being deleted.
+**Every `notes` line is a blockquote carrying the literal `_note:_` marker, and
+the marker is load-bearing.** The vocabulary above — a `**caption**` line, an
+`![screenshot-NN]` image, a `> _note:_` note with its bare `>` separator, and a
+`Not uploaded:` line — is everything this skill emits, which is what lets
+`splice.mjs` tell its own previous output apart from text somebody else typed
+under the heading and refuse rather than delete it.
+
+**The marker exists because a bare `> ` is not provenance.** Matching every
+blockquote made `> Reviewer: the second shot is stale, do not ship` a line this
+skill claimed to have written, and it was deleted with exit 0. A reviewer types
+`> `; a reviewer does not type `> _note:_ `. Drop the marker and the same
+choice returns: either the note is refused as foreign text, or the refusal is
+dropped and the reviewer's blockquote goes back to being deleted.
+
+**A caption is owned by its position, not by being bold.** `**IMPORTANT: these
+images contain a real API key**` is a bold line too. `splice.mjs` therefore
+treats a `**caption**` line as its own only when it sits directly above an
+`![screenshot-NN]` image this skill wrote, or when it carries the degraded
+`— captured, not yet uploaded:` tail and stands alone. Emit a caption anywhere
+else and the next run refuses its own section.
+
+**Two consecutive `> ` lines are one GFM blockquote paragraph**, so N notes
+rendered flush read as one run-on sentence. Separate them with a bare `>` line,
+which keeps them one blockquote with one paragraph each and stays inside the
+vocabulary above.
 
 **Never a markdown image reference to a local path, in any form.** A local path
 never renders on the host anyway, and the attach step rewrites a matching image

@@ -66,6 +66,28 @@ function teamPrMarkdown(): string[] {
   return out;
 }
 
+// Every fenced block in `text`: the commands the skill tells the model to EMIT.
+// Prose that names a rejected form is discussion, not emission, so a
+// forbidden-pattern sweep belongs on the fences alone. Mirrors the helper in
+// tests/pr-screenshots-skill.test.ts.
+function fencedBlocks(text: string): string[] {
+  const blocks: string[] = [];
+  let open = false;
+  let buffer: string[] = [];
+  for (const line of text.split("\n")) {
+    if (/^\s*(```|~~~)/.test(line)) {
+      if (open) {
+        blocks.push(buffer.join("\n"));
+        buffer = [];
+      }
+      open = !open;
+      continue;
+    }
+    if (open) buffer.push(line);
+  }
+  return blocks;
+}
+
 // Flatten newlines so multi-line prose can be matched in one regex.
 function flat(text: string): string {
   return text.replace(/\n/g, " ");
@@ -245,6 +267,81 @@ describe("Slice 3: the companion recipe guards its own redirect", () => {
     ).toBe(true);
   });
 
+  test("the companion pre-image read is guarded by exit AND by envelope", () => {
+    // Round-5 B1. The companion read was the bare
+    // `gh pr view … --json body --jq .body` form the home path spent eighteen
+    // lines replacing: on a rate limit it binds "", the splice then returns
+    // the `## Screenshots` section as the WHOLE body, and step 4 writes it —
+    // blanking a live companion PR's entire description.
+    const multiRepo = multiRepoBlock();
+    expect(multiRepo.length).toBeGreaterThan(0);
+    expect(multiRepo).toContain('jq -e \'has("body") and (.body | type == "string")\'');
+    // The unguarded form the loop shipped is gone.
+    expect(multiRepo).not.toContain("--json body --jq .body");
+    // The read fails the run rather than continuing on "".
+    const read = multiRepo.indexOf('PRE_JSON="$(gh pr view');
+    expect(read).toBeGreaterThanOrEqual(0);
+    expect(multiRepo.slice(read, read + 400)).toContain("|| exit 2");
+  });
+
+  test("a companion write is gated on the pre-image still being current", () => {
+    // Round-5 B1, second half: nothing on the companion path guarded a lost
+    // update at all, so a companion edited between the read and the write had
+    // that edit overwritten by a body computed before it existed.
+    const multiRepo = multiRepoBlock();
+    expect(multiRepo.length).toBeGreaterThan(0);
+    expect(multiRepo).toContain('NOW_JSON="$(gh pr view');
+    // The comparison gates the edit, and the edit is inside the gate.
+    const compare = multiRepo.indexOf('NOW_JSON="$(gh pr view');
+    const edit = multiRepo.indexOf('gh pr edit "$NUMBER"');
+    expect(edit).toBeGreaterThan(compare);
+    expect(multiRepo).toContain('= "$(printf \'%s\' "$PRE_JSON" | jq -r .body)"');
+  });
+
+  test("every companion temporary is bound per companion, and a refusal clears both", () => {
+    // Round-5 B2. `$NEW_BODY_FILE` was never bound to a per-companion path, so
+    // from the second companion onward a refusal left the FIRST companion's
+    // spliced body on disk — its summary, its footer, its `Part of` line — for
+    // the unconditional write below to put on this companion's description.
+    const multiRepo = multiRepoBlock();
+    expect(multiRepo.length).toBeGreaterThan(0);
+    expect(multiRepo).toContain('COMPANION_DIR="$(mktemp -d)"');
+    expect(multiRepo).toContain('NEW_BODY_FILE="$COMPANION_DIR/new-body.md"');
+    expect(multiRepo).toContain('COMPANION_BODY_FILE="$COMPANION_DIR/pre-image.md"');
+    // The binding comes before the splice that writes into it.
+    expect(multiRepo.indexOf('NEW_BODY_FILE="$COMPANION_DIR')).toBeLessThan(multiRepo.indexOf("splice.mjs"));
+    // The refusal arm removes the promoted path too, which is what makes its
+    // own comment ("step 4 cannot run") true on the second iteration.
+    expect(multiRepo).toContain('rm -f "$NEW_BODY_FILE.tmp" "$NEW_BODY_FILE"');
+    expect(multiRepo).not.toContain('rm -f "$NEW_BODY_FILE.tmp"  ');
+  });
+
+  test("every companion call carries the host the companion lives on", () => {
+    // Round-5 documentation REQUIRED. `--repo "$OWNER/$REPO"` resolves against
+    // whichever host `gh` considers default and a bare `gh api repos/…` does
+    // the same, so on Enterprise every companion edit and read-back silently
+    // targeted github.com — and the read-back then asserted against an
+    // unrelated PR, which is verification evidence about something else.
+    const multiRepo = multiRepoBlock();
+    expect(multiRepo.length).toBeGreaterThan(0);
+    expect(multiRepo).toContain('COMPANION_SPEC="$COMPANION_HOST/$OWNER/$REPO"');
+    // No EMITTED command may use the hostless spec. The sweep runs on the
+    // fences, because the prose beside them names the rejected form on purpose.
+    const emitted = fencedBlocks(multiRepo).join("\n");
+    expect(emitted.length).toBeGreaterThan(0);
+    expect(emitted).not.toContain('--repo "$OWNER/$REPO"');
+    // The sweep fires on a planted positive — the form that shipped.
+    expect(fencedBlocks('```bash\ngh pr edit "$NUMBER" --repo "$OWNER/$REPO"\n```').join("\n")).toContain(
+      '--repo "$OWNER/$REPO"',
+    );
+    // Every `gh pr view`/`gh pr edit` in the block carries the host-bearing one.
+    const calls = emitted.match(/gh pr (?:view|edit) "\$NUMBER"[^\n]*/g) ?? [];
+    expect(calls.length).toBeGreaterThanOrEqual(3);
+    expect(calls.filter((call) => !call.includes('--repo "$COMPANION_SPEC"'))).toEqual([]);
+    // And the read-back names the host explicitly.
+    expect(multiRepo).toContain('gh api --hostname "$COMPANION_HOST"');
+  });
+
   test("the companion splice passes the landed-asset count and names exit 2", () => {
     // The count is what keeps rule 4's no-downgrade guard from being
     // satisfiable by caller-supplied note text, and exit 2 is a fault rather
@@ -252,6 +349,9 @@ describe("Slice 3: the companion recipe guards its own redirect", () => {
     const multiRepo = multiRepoBlock();
     expect(multiRepo.length).toBeGreaterThan(0);
     expect(multiRepo).toContain("--landed");
+    // And `$LANDED_COUNT` is bound in a visible fence, from result.json's own
+    // `assets`, rather than left as prose for the session to reconstruct.
+    expect(multiRepo).toContain("LANDED_COUNT=\"$(jq '[.assets[] | select(.url != null)] | length'");
     expect(multiRepo).toContain("exit 2");
     expect(multiRepo).toContain("unchanged: <reason>");
   });

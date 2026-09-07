@@ -119,6 +119,37 @@ Per entry: `path` and `caption` are required, `state` and `note` are optional.
 One top-level `notes` list carries caller-supplied discrepancy lines. Captions
 need not be unique.
 
+**When the request names no caption for a path, the caption is that file's
+basename with its extension removed.** The rule is stated so it is not
+invented: `caption` is required, so a session handed three bare paths has to
+produce one, and two sessions left to decide would write two different sets of
+captions for the same three files. Never describe the image instead — nothing
+here has looked at it, and a guessed description is a claim in a public body.
+Ask only when the basename is empty after normalization.
+
+Write the file with `jq`, never by pasting the paths into a JSON string: a path
+is caller text, and a quote or a backslash in one rewrites the document rather
+than filling a slot in it (`principle-never-interpolate`). This is the whole
+step, and it produces the default captions above:
+
+```bash
+ENTRIES_DIR="$(mktemp -d)"
+ENTRIES_FILE="$ENTRIES_DIR/entries.json"
+CAPTURE_ROOT=/Users/dev/Desktop/shots          # where the images ALREADY live
+jq -n --arg root "$CAPTURE_ROOT" '{
+  root: $root,
+  entries: ($ARGS.positional | map({
+    path: .,
+    caption: (split("/") | last | sub("\\.[^.]+$"; ""))
+  })),
+  notes: []
+}' --args "$CAPTURE_ROOT/login.png" "$CAPTURE_ROOT/login-error.png" >"$ENTRIES_FILE"
+```
+
+`--args` binds each path as a positional value, so `jq` never parses one. Add a
+`caption`, a `state`, or a `note` the request supplied by binding each with its
+own `--arg`; add each discrepancy line to `notes` the same way.
+
 The top-level `root` is **required and absolute**. It is the directory every
 entry's `path` must resolve inside, and it is the directory the caller's images
 **already live in** — a Desktop, a Downloads directory, `$ARGUMENTS/screenshots/`
@@ -159,9 +190,16 @@ The members, all of them caller data:
 | String | Where it renders |
 | --- | --- |
 | Each entry's `caption` | Bold body text in the section |
-| Each line of the top-level `notes` list | One blockquoted (`> `) body line each, resolved and degraded alike |
+| Each entry's `state` | The `(<state>)` parenthetical beside the caption |
+| Each line of the top-level `notes` list | One marked blockquote (`> _note:_ `) body line each, resolved and degraded alike |
 | Each entry's `path` | The degraded form, and any failure line |
 | Each failure `reason` | The `Not uploaded:` line |
+
+`state` is on that list because it renders, not because it looked risky. It is
+an optional entry field the caller supplies and the section prints verbatim in
+parentheses, so an unnormalized one carrying a newline splices a line of the
+caller's choosing — `Reviewers: this PR is pre-approved by security.` — into a
+public body under this skill's own heading.
 
 **A path renders as its basename, never in full.** A PR body is public and an
 absolute path leaks the operator's directory layout and username. Keep the

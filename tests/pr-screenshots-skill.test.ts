@@ -1556,7 +1556,7 @@ describe("Slice 1 — constructs outside the model (L1)", () => {
       "**Login** (default)",
       "![screenshot-01](https://example.com/user-attachments/assets/abcd)",
       "",
-      "> 2 states skipped — see manifest",
+      "> _note:_ 2 states skipped — see manifest",
       "",
       "Not uploaded: Signup — not an image",
       "",
@@ -1567,6 +1567,69 @@ describe("Slice 1 — constructs outside the model (L1)", () => {
     expect(rewritten.changed).toBe(true);
     expect(rewritten.body).not.toContain("assets/abcd");
     expect(occurrences(rewritten.body, "Closes #3")).toBe(1);
+  });
+
+  test("ownership is provenance, so a foreign blockquote or bold line refuses", () => {
+    // Round-5 B3. `OWN_NOTE` was `/^>/` and `OWN_CAPTION` was "any bold line",
+    // so the renderer's own vocabulary claimed text a reviewer typed: a `>`
+    // note and a `**bold**` warning were both deleted with `changed: true` and
+    // an empty reason. Rendering notes as `> ` to make them recognizable is
+    // what widened the surface, so the marker closes it.
+    const foreign: [string, string][] = [
+      ["a reviewer's blockquote", "> Reviewer: the second shot is stale, do not ship"],
+      ["a reviewer's bold warning", "**IMPORTANT: these images contain a real API key**"],
+      ["a bold line above no image", "**Note** see the thread"],
+    ];
+    for (const [label, line] of foreign) {
+      const body = ["## Screenshots", "", line, "", "Closes #3", ""].join("\n");
+      const result = splice(body, SECTION, { landed: 2 });
+      expect({ label, changed: result.changed }).toEqual({ label, changed: false });
+      expect({ label, body: result.body }).toEqual({ label, body });
+      expect({ label, named: result.reason.includes(line.slice(0, 20)) }).toEqual({ label, named: true });
+      // A pre-image refusal, so it fires in step A before any upload runs.
+      expect({ label, same: bodyRefusal(body) === result.reason }).toEqual({ label, same: true });
+    }
+
+    // A foreign bold line one line above this skill's own image still refuses,
+    // because it displaces the caption out of the grammar the renderer emits.
+    const displaced = [
+      "## Screenshots",
+      "",
+      "**IMPORTANT: these images contain a real API key**",
+      "**Login** (default)",
+      "![screenshot-01](https://example.com/user-attachments/assets/abcd)",
+      "",
+      "Closes #3",
+      "",
+    ].join("\n");
+    expect(splice(displaced, SECTION, { landed: 2 }).changed).toBe(false);
+  });
+
+  test("the marked note, its separator, and both caption positions still write", () => {
+    // Blindness guard for the test above: a provenance rule strict enough to
+    // refuse everything would make the skill unable to replace its own output.
+    const own = [
+      "## Screenshots",
+      "",
+      "**Login** (default)",
+      "![screenshot-01](https://example.com/user-attachments/assets/abcd)",
+      "",
+      "**Signup** (error) — captured, not yet uploaded: signup.png",
+      "",
+      "> _note:_ 2 states skipped — see manifest",
+      ">",
+      "> _note:_ one image was missing from disk",
+      "",
+      "Not uploaded: Signup — not an image",
+      "",
+      "Closes #3",
+      "",
+    ].join("\n");
+    const result = splice(own, SECTION, { landed: 2 });
+    expect(result.reason).toBe("");
+    expect(result.changed).toBe(true);
+    expect(result.body).not.toContain("assets/abcd");
+    expect(occurrences(result.body, "Closes #3")).toBe(1);
   });
 
   test("an indented Screenshots heading is refused, never replaced through", () => {
@@ -1591,7 +1654,9 @@ describe("Slice 1 — constructs outside the model (L1)", () => {
     expect(bodyRefusal(nested)).toBe(result.reason);
 
     // Control: at column zero it is a document heading and the replace runs.
-    const flat = nested.replace("  ## Screenshots", "## Screenshots").replace("  - [ ] sibling bullet", "**Old**");
+    const flat = nested
+      .replace("  ## Screenshots", "## Screenshots")
+      .replace("  - [ ] sibling bullet", "**Old** — captured, not yet uploaded: old.png");
     expect(splice(flat, SECTION, { landed: 2 }).changed).toBe(true);
   });
 
@@ -1902,13 +1967,14 @@ describe("Slice 1 — splice.mjs property sweep (L1)", () => {
       "**Old** (default)",
       "![screenshot-01](https://example.com/a/0)",
       "",
-      "**a caption that no boundary protects**",
+      "**a caption that no boundary protects** — captured, not yet uploaded: old.png",
       "",
     ].join("\n");
     const result = splice(swallowed, SECTION, { landed: 2 });
 
     expect(result.changed).toBe(true);
     expect(occurrences(result.body, "**a caption that no boundary protects**")).toBe(0);
+    expect(occurrences(result.body, "captured, not yet uploaded: old.png")).toBe(0);
   });
 });
 
@@ -2048,9 +2114,18 @@ describe("Slice 1 — resolution, normalization, and harvest (L2)", () => {
     for (const token of ["`\\`", "`!`", "`[`", "`]`", "`<`", "`>`"]) {
       expect(input).toContain(token);
     }
-    // The members, by field name.
-    for (const field of ["caption", "notes", "path", "reason"]) {
-      expect(input).toContain(field);
+    // The members, by field name, each pinned as a row of the members table —
+    // a bare word would be satisfied by any prose mentioning it. `state` is on
+    // the list because it renders as the `(<state>)` parenthetical: an
+    // unnormalized one carrying a newline splices a line of the caller's
+    // choosing into a public body under this skill's own heading.
+    const members = withoutFences(input)
+      .split("\n")
+      .filter((line) => line.startsWith("|"))
+      .join("\n");
+    expect(members.length).toBeGreaterThan(0);
+    for (const field of ["`caption`", "`state`", "`notes`", "`path`", "`reason`"]) {
+      expect(members).toContain(field);
     }
     // Newlines are stripped, so a note cannot smuggle `Closes #999` onto its
     // own line and close an unrelated issue when the PR merges.
@@ -2628,19 +2703,12 @@ describe("Slice 1 — round-4 recipe gaps (L2)", () => {
       for (const match of block.matchAll(/\$\{([A-Z][A-Z0-9_]*):[?=-]/g)) assigned.add(match[1] as string);
       for (const match of block.matchAll(/\b(?:for|read -r)\s+([A-Z][A-Z0-9_]*)\b/g)) assigned.add(match[1] as string);
     }
-    // The run's own scratch paths and counts, each named in the prose around
-    // the fence that consumes it, and the two values the environment supplies.
-    const ambient = new Set([
-      "ARGUMENTS",
-      "PR_SCREENSHOTS_ASSET_HOST",
-      "IFS",
-      "CANDIDATES_FILE",
-      "FAILURES_FILE",
-      "PRE_IMAGE_FILE",
-      "SECTION_FILE",
-      "NEW_BODY_FILE",
-      "LANDED_COUNT",
-    ]);
+    // What the environment supplies, and `jq`'s own `$ARGS` builtin, which is
+    // read inside a `jq -n` program and is not a shell variable at all. Round 5
+    // took the run's scratch paths and `$LANDED_COUNT` OFF this list: each is
+    // now bound in a visible fence like every other load-bearing value, so
+    // "named in the prose nearby" is no longer an exemption any of them needs.
+    const ambient = new Set(["ARGUMENTS", "PR_SCREENSHOTS_ASSET_HOST", "IFS", "ARGS"]);
     const read = new Set<string>();
     for (const block of code) {
       for (const match of block.matchAll(/\$\{?([A-Z][A-Z0-9_]*)\b/g)) read.add(match[1] as string);
@@ -2712,7 +2780,7 @@ describe("Slice 1 — round-4 recipe gaps (L2)", () => {
 
     // The proxy path is shaped, not "any path at all".
     expect(upload).toContain('case "${CANDIDATE_FILE#/}" in');
-    expect(squash(verify)).toContain("single segment naming an image file");
+    expect(squash(verify)).toContain("one or two segments whose last names an image file");
   });
 
   test("Enterprise is reachable by URL, and every call carries the host", () => {
@@ -2732,17 +2800,125 @@ describe("Slice 1 — round-4 recipe gaps (L2)", () => {
     expect(verifyRef()).toContain('gh api --hostname "$PR_HOST"');
   });
 
+  test("a URL that walks out of the path anchor is rejected in both layers", () => {
+    // Round-5 security MEDIUM. `https://github.com/user-attachments/assets/../
+    // ../attacker/evil/raw/main/x.png` satisfied the prefix test and the host
+    // test, and an HTTP client normalizes it to attacker-controlled content on
+    // an allowlisted host.
+    const upload = uploadRef();
+    const verify = verifyRef();
+    expect(upload.length).toBeGreaterThan(0);
+    expect(verify.length).toBeGreaterThan(0);
+
+    // The harvest rejects it in the copyable block, before the anchor test.
+    const fence = fencedBlocks(upload).find((block) => block.includes("ASSET_PROXY_HOST=")) ?? "";
+    expect(fence.length).toBeGreaterThan(0);
+    expect(fence).toContain('case "$CANDIDATE_PATH" in *..|*../*|*/..|*/../*) continue ;; esac');
+    expect(fence).toContain('case "$CANDIDATE" in *%2[eEfF]*) continue ;; esac');
+    expect(fence.indexOf("*/../*")).toBeLessThan(fence.indexOf("/user-attachments/assets/*)"));
+
+    // The read-back checks the same rule, or it cannot detect what the harvest
+    // let through.
+    const squashedVerify = squash(verify);
+    expect(squashedVerify).toContain("`..` path segment");
+    expect(squashedVerify).toContain("%2f");
+  });
+
+  test("the proxy path admits the rewrite GitHub actually emits", () => {
+    // Round-5 security MEDIUM. A one-segment rule matched NO real rewrite:
+    // the genuine form is `/<user-id>/<asset-id>-<uuid>.png?jwt=…`, two
+    // segments, so every private-repository PR rejected every entry and the
+    // read-back reported `unverified` on a correct write.
+    const upload = uploadRef();
+    expect(upload.length).toBeGreaterThan(0);
+    const fence = fencedBlocks(upload).find((block) => block.includes("ASSET_PROXY_HOST=")) ?? "";
+    expect(fence.length).toBeGreaterThan(0);
+    // Three or more segments is the reject arm; one and two are allowed.
+    expect(fence).toContain("*/*/*) continue ;;");
+    // The one-segment rule that rejected every real rewrite is gone: the arm
+    // is now three-or-more, so `/<user-id>/<asset-id>-<uuid>.png` is admitted.
+    expect(fence).not.toContain("one segment, naming an image file");
+    expect(fence).toContain("one or two segments, naming an image file");
+    // The extension test still bounds the last segment.
+    expect(fence).toContain("*.png|*.jpg|*.jpeg|*.gif|*.webp|*.avif)");
+    // A realistic rewrite is pinned, so the shape cannot drift back.
+    for (const text of [upload, verifyRef()]) {
+      expect(text).toContain("<user-id>/<asset-id>-<uuid>.png?jwt=");
+    }
+  });
+
+  test("the in-loop body re-read is guarded by envelope, not only by exit", () => {
+    // The prose claimed the re-read "is guarded the same way the pre-image
+    // is"; the pre-image checks the JSON envelope and the re-read did not, so
+    // a rate-limited response became `""` — "the host removed the body".
+    const fence = validationFence();
+    expect(fence.length).toBeGreaterThan(0);
+    const envelope = 'jq -e \'has("body") and (.body | type == "string")\'';
+    expect(fence).toContain("AFTER_JSON=");
+    expect(fence).toContain(envelope);
+    expect(fence.indexOf(envelope)).toBeLessThan(fence.indexOf('AFTER="$(printf'));
+    // Step A's pre-image read carries the same check, so the claim holds.
+    expect(uploadRef()).toContain("PRE_IMAGE_JSON=");
+    expect((uploadRef().match(/has\("body"\) and \(\.body \| type == "string"\)/g) ?? []).length).toBeGreaterThanOrEqual(2);
+  });
+
+  test("every load-bearing temporary and count is bound in a visible fence", () => {
+    // A variable a later fence expands but no fence binds is a variable the
+    // session invents — `$LANDED_COUNT` feeds the guard that keeps rule 4 from
+    // being satisfiable by caller text.
+    const fences = fencedBlocks(uploadRef()).join("\n");
+    expect(fences.length).toBeGreaterThan(0);
+    for (const binding of [
+      'PRE_IMAGE_FILE="$RUN_DIR/pre-image.md"',
+      'SECTION_FILE="$RUN_DIR/section.md"',
+      'NEW_BODY_FILE="$RUN_DIR/new-body.md"',
+      'CANDIDATES_FILE="$RUN_DIR/candidates.txt"',
+      "LANDED_COUNT=",
+      'ASSETS_FILE',
+    ]) {
+      expect(fences).toContain(binding);
+    }
+    // The count comes from the run's own record of what landed, not from prose.
+    expect(fences).toContain('LANDED_COUNT="$(wc -l <"$ASSETS_FILE"');
+  });
+
+  test("the entries file has a worked, non-interpolating construction", () => {
+    // The one step a standalone session must freehand, and it holds
+    // user-supplied paths: a quote or a backslash in one rewrites the JSON.
+    const input = inputRef();
+    expect(input.length).toBeGreaterThan(0);
+    const fence = fencedBlocks(input).find((block) => block.includes("jq -n")) ?? "";
+    expect(fence.length).toBeGreaterThan(0);
+    expect(fence).toContain("--args");
+    expect(fence).toContain("$ARGS.positional");
+    expect(fence).toContain("ENTRIES_FILE=");
+    // The default-caption rule is executable in that same fence, so two
+    // sessions handed the same three paths write the same three captions.
+    expect(fence).toContain('sub("\\\\.[^.]+$"; "")');
+    expect(squash(input)).toContain("basename with its extension removed");
+  });
+
+  test("the raw-HTML-tag over-refusal is in the recovery catalogue", () => {
+    // `HTML_TAG` matches `a<b` in ordinary prose, so a body reading "fails
+    // when a<b" refuses the whole run. Designed direction of error, non-obvious
+    // recovery — so the recovery is written down.
+    const upload = squash(uploadRef());
+    expect(upload.length).toBeGreaterThan(0);
+    expect(upload).toContain("a<b");
+    expect(upload).toContain("\\<");
+  });
+
   test("the section's own vocabulary is written down, root and content type included", () => {
     // The prose refusal is only safe if this skill's own output is
     // distinguishable from a reviewer's sentence, which is what the
     // blockquoted `notes` line buys.
     const templates = sectionTemplates();
     expect(templates.length).toBeGreaterThan(0);
-    expect(templates.filter((template) => template.includes("> <one blockquoted line")).length).toBe(templates.length);
+    expect(templates.filter((template) => template.includes("> _note:_ <one blockquoted line")).length).toBe(templates.length);
 
     const skill = fileOr(SKILL);
     expect(skill.length).toBeGreaterThan(0);
-    for (const shape of ["`**caption**`", "`![screenshot-NN]`", "`>`", "`Not uploaded:`"]) {
+    for (const shape of ["`**caption**`", "`![screenshot-NN]`", "`> _note:_`", "`Not uploaded:`"]) {
       expect(skill).toContain(shape);
     }
     // Carried over from round 3: the entries file's absolute root and the

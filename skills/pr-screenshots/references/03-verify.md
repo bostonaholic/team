@@ -49,11 +49,18 @@ tolerance.
    is the host of `$PR_URL`, the one proxy host `$ASSET_PROXY_HOST` names —
    `private-user-images.githubusercontent.com` on github.com and
    `private-user-images.<enterprise-host>` on an Enterprise install — or the
-   configured `PR_SCREENSHOTS_ASSET_HOST`; and its path — taken after the host
-   is split off, never matched mid-path — begins `/user-attachments/assets/`,
-   or, on the proxy host alone, is a single segment naming an image file, which
-   is the private-repository proxy rewrite and the only other shape allowed. A
-   proxy rewrite is therefore never turned into a reported failure, while
+   configured `PR_SCREENSHOTS_ASSET_HOST`; no `src` carries a `..` path segment
+   or a `%2e`/`%2f` encoding of one, which walks out of any path anchor and is
+   rejected before the anchor is tested; and its path — taken after the host is
+   split off, never matched mid-path — begins `/user-attachments/assets/`, or,
+   on the proxy host alone, is one or two segments whose last names an image
+   file, which is the private-repository proxy rewrite and the only other shape
+   allowed. Two segments, because the rewrite the host actually emits is
+   `https://private-user-images.githubusercontent.com/<user-id>/<asset-id>-<uuid>.png?jwt=…`
+   — a one-segment rule fails every private-repository PR here, which turns a
+   correct write into `outcome: unverified` with `section: null` and nothing
+   reaching any companion. A proxy rewrite is therefore never turned into a
+   reported failure, while
    `https://github.com/attacker/repo/raw/main/user-attachments/evil.png` and
    `https://raw.githubusercontent.com/attacker/evil/main/x.png` both fail here
    exactly as they fail the harvest — the second one is why the proxy host is
