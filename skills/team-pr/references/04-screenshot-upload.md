@@ -58,6 +58,54 @@ pre-upload wording, and the skill's single write replaces it.
 One call, on the home repository's PR. Never one call per repository: that
 re-uploads the same image once per repo and orphans the extra assets.
 
+When the returned `section` is non-null, copy that exact string into each
+companion PR's body, one companion at a time:
+
+1. Read that companion's pre-image with
+   `gh pr view "$NUMBER" --repo "$OWNER/$REPO" --json body --jq .body`, using
+   that companion's own owner, repository, and number.
+2. Splice the string in with the committed pure function, which applies the
+   same five rules the home write used, including the overflow and
+   no-downgrade refusals:
+
+   ```bash
+   node "<pr-screenshots-skill-dir>/splice.mjs" \
+     --body-file "$COMPANION_BODY_FILE" --section-file "$SECTION_FILE" > "$NEW_BODY_FILE"
+   ```
+
+   That script is `skills/pr-screenshots/splice.mjs`. Exit 1 prints
+   `unchanged: <reason>` on stderr: report the reason and leave that companion
+   alone.
+3. Write it with one
+   `gh pr edit "$NUMBER" --repo "$OWNER/$REPO" --body-file "$NEW_BODY_FILE"`.
+4. Read that companion's own rendered body back, against its own
+   `<owner>/<repo>/<number>`:
+
+   ```bash
+   gh api repos/"$OWNER"/"$REPO"/pulls/"$NUMBER" \
+     -H "Accept: application/vnd.github.full+json" --jq .body_html
+   ```
+
+   Apply the assertions in `skills/pr-screenshots/references/03-verify.md`. A
+   companion whose read-back does not pass is named in the report and left
+   **as written** — never reverted, never retried. The write that could fail to
+   render is the write that gets checked.
+
+When the returned `section` is `null`, touch no companion body at all. Each
+companion already carries the open-time degraded note, which is the correct
+thing for it to say.
+
+A cross-repository rendering failure is not a branch this run takes. It is the
+design change such a failure would force — calling the skill once per
+repository, at the cost of re-uploading every image per repo. The
+per-companion read-back exists to detect that case, not to route around it.
+
+The footer rules survive the companion edit intact: each PR still re-emits
+exactly one closing line in footer position, and a companion PR re-emits its
+non-closing `Part of owner/repo#<n>` reference the same way, per
+`references/02-execution.md`. The splice lifts that footer out and re-emits it
+byte-identical, so a companion edit neither duplicates nor drops it.
+
 **Failure posture:** every branch ends with an open PR, a visible note, and
 local paths. Upload problems never block the PR, retry-loop, or prompt the
 user — the upload is an enhancement per
