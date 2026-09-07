@@ -87,7 +87,14 @@ if ! printf '%s' "$PRE_JSON" | jq -e 'has("body") and (.body | type == "string")
   printf 'the companion body response carried no body field\n' >&2
   exit 2
 fi
-printf '%s' "$PRE_JSON" | jq -r '.body | gsub("\r";"")' >"$BODY_FILE"
+# Guarded like the read above it. Unguarded, the pipeline's status is
+# discarded and a jq failure exits with jq's own 5 — outside the 0/1/2 set this
+# script declares and its callers map. The redirect keeps the bytes jq emits,
+# so the file is not reshaped by a command substitution.
+if ! printf '%s' "$PRE_JSON" | jq -r '.body | gsub("\r";"")' >"$BODY_FILE"; then
+  printf 'could not normalize the companion body\n' >&2
+  exit 2
+fi
 
 # Promoted only on success. A plain `> "$NEW_BODY_FILE"` truncates before the
 # command runs, so a refusal — which prints nothing — leaves a zero-byte file
@@ -115,7 +122,19 @@ if ! printf '%s' "$NOW_JSON" | jq -e 'has("body") and (.body | type == "string")
   printf 'the companion body response carried no body field\n' >&2
   exit 2
 fi
-if [ "$(printf '%s' "$NOW_JSON" | jq -r '.body | gsub("\r";"")')" != "$(cat "$BODY_FILE")" ]; then
+# Bound before it is compared: inside `[ … ]` the substitution's status is
+# discarded and `set -e` cannot reach it, so a jq failure binds "" — which
+# equals a companion whose description is empty, passes the guard vacuously,
+# and writes over the update it exists to catch.
+if ! NOW_BODY="$(printf '%s' "$NOW_JSON" | jq -r '.body | gsub("\r";"")')"; then
+  printf 'could not normalize the companion body\n' >&2
+  exit 2
+fi
+# Both sides lose their trailing newlines to command substitution, so a
+# concurrent append of nothing but whitespace compares equal and the write
+# lands. Accepted: the only update lost is trailing whitespace GitHub itself
+# normalizes and no reader can see.
+if [ "$NOW_BODY" != "$(cat "$BODY_FILE")" ]; then
   rm -f "$NEW_BODY_FILE"
   printf 'another writer landed first — this companion is untouched\n' >&2
   exit 1

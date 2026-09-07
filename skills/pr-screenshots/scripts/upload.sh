@@ -294,7 +294,8 @@ printf '%s' "$AFTER" >"$RUN_DIR/after.md"
 # `AFTER` must start with the pre-image — and that test alone is vacuous when
 # the pre-image is empty, because every string starts with "". The empty case
 # therefore has its own arm: all AFTER may hold is the tails the attach
-# appended, since prose there was written by somebody else during the window.
+# appended, since anything else there was written by somebody else during the
+# window.
 #
 # One gap is named and accepted: a concurrent APPEND keeps the prefix and is
 # dropped by the pre-image-based write. The other is closed — a run whose
@@ -306,12 +307,37 @@ if [ "$READ_FAILED" = yes ]; then
   exit 4
 fi
 if [ -z "$PRE_IMAGE" ]; then
-  # One command, never a pipeline: `grep -q` exits on its first match, and
-  # under `pipefail` the SIGPIPE that kills an upstream stage becomes the
-  # status the `if` reads — so past the pipe buffer the guard silently
-  # skipped. A line is this run's own only if it is blank or one attach tail.
-  if LC_ALL=C grep -qvE '^([[:space:]]*|!\[[^]]*\]\(https://[^)]*\))$' <<<"$AFTER"; then
-    printf 'the body was empty and now holds text this run did not append\n' >&2
+  # A line is this run's own only if it is blank, or an image line whose URL
+  # is on the SAME attachment allowlist the harvest applies. The alt cannot
+  # identify it — `--attach` appends a tail whose alt the HOST derives from
+  # the file it received, so this skill never sees it — which leaves the URL
+  # as the only provenance there is. Matching image SHAPE alone classified
+  # another writer's `![beacon](https://evil.example/track.png)` as ours and
+  # the write then dropped it, while their prose in the same position exited
+  # 4. `harvest` is called rather than restated: a second copy of the
+  # allowlist is a second copy to drift.
+  #
+  # A loop over lines, never `grep -q` at the end of a pipeline: `grep -q`
+  # exits on its first match, and under `pipefail` the SIGPIPE that kills the
+  # upstream stage becomes the status the `if` reads — so past the pipe
+  # buffer the guard silently skipped.
+  FOREIGN=""
+  while IFS= read -r LINE; do
+    case "$LINE" in
+      *[![:space:]]*) : ;;
+      *) continue ;;                     # blank, or whitespace alone
+    esac
+    case "$LINE" in
+      '!['*']('*')') : ;;
+      *) FOREIGN="$LINE" ; break ;;      # prose, or anything else not an image line
+    esac
+    harvest "$LINE"
+    if [ -z "$ASSET_URL" ]; then
+      FOREIGN="$LINE" ; break            # an image, on a host this run never attached to
+    fi
+  done <<<"$AFTER"
+  if [ -n "$FOREIGN" ]; then
+    printf 'the body was empty and now holds a line this run did not append: %s\n' "$FOREIGN" >&2
     exit 4
   fi
 else

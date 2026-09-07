@@ -368,8 +368,16 @@ reaches here has a baseline it can prove: `after.md` starts with the pre-image,
 after the CRLF normalization — **and the prefix test alone is vacuous when the
 pre-image is empty**, because every string starts with `""`. An empty pre-image
 therefore carries a second arm: the only thing the body may hold is the tails
-the attach step appended, since a body that was empty at step A and holds prose
-now was written by somebody else during the upload window.
+the attach step appended, since a body that was empty at step A and holds
+anything else now was written by somebody else during the upload window.
+
+**A tail is recognized by its URL, never by its shape.** The alt text is the
+**host's**, derived from the file it received, so it identifies nothing; the
+arm therefore runs each line's URL through the same allowlist step C's harvest
+applies. Image shape alone is not provenance — another writer's
+`![beacon](https://evil.example/track.png)` is image-shaped, and matching on
+shape classified it as this run's own and let the write drop it, while their
+prose in the same position exited 4.
 
 Exit 4 is either arm failing, and it means another writer replaced the body.
 Stop, report the lost update, and return `outcome: uploaded-not-written` with

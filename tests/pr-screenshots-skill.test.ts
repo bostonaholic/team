@@ -3058,6 +3058,32 @@ describe("Slice 1 — upload.sh, executed (L1)", () => {
     expect(replaced.assets.length).toBe(1);
   }, 60_000);
 
+  test("the empty-pre-image guard reads provenance off the URL, not the image shape", () => {
+    // The alt in an attach tail is the HOST's, derived from the file it
+    // received, so it identifies nothing and the URL is the only provenance
+    // there is. Matching image SHAPE alone classified another writer's beacon
+    // as this run's own and the write then dropped it, while their prose in
+    // the same position exited 4.
+    const dir = sandbox();
+    const root = join(dir, "shots");
+    mkdirSync(root, { recursive: true });
+    writeFileSync(join(root, "a.png"), PNG_1X1);
+
+    const beacon = upload([join(root, "a.png")], {
+      root,
+      body: "",
+      append: "\n![i](https://github.com/user-attachments/assets/aaaa)\n![beacon](https://evil.example/track.png)",
+    });
+    expect(beacon.status).toBe(4);
+    expect(beacon.stderr).toContain("https://evil.example/track.png");
+
+    // And the host's own tail — whose alt this skill never chose — still
+    // passes, so the narrowing did not close the path it guards.
+    const clean = upload([join(root, "a.png")], { root, body: "" });
+    expect({ status: clean.status, stderr: clean.stderr }).toEqual({ status: 0, stderr: "" });
+    expect(clean.assets.length).toBe(1);
+  }, 60_000);
+
   test("a failed re-read refuses to write rather than trusting a stale baseline", () => {
     // `after.md` is the body as of the last SUCCESSFUL read, so an entry that
     // recorded `body read failed` leaves a stale baseline for the guard to
