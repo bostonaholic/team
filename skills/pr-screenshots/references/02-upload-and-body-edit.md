@@ -143,13 +143,20 @@ complete when it is not, so each is named where it actually fires:
 **Step B — check the capability, then attach one file per command.**
 
 Capability decides, never a version string. A parsed version pins a floor
-nothing else here pins and breaks on distro-patched version output:
+nothing else here pins and breaks on distro-patched version output. The help
+text is bound first and tested second, so no consumer that can exit before its
+input is drained sits at the end of a pipeline — the shape that broke the
+lost-update guard in `upload.sh`:
 
 ```bash
-if ! gh pr edit --help | grep -q -- '--attach'; then
-  printf '%s\n' "upgrade gh — attaching a file needs at least 2.100.0" >&2
-  exit 3                     # skip the upload, keep step D
-fi
+GH_EDIT_HELP="$(gh pr edit --help 2>&1)"
+case "$GH_EDIT_HELP" in
+  *--attach*) : ;;
+  *)
+    printf '%s\n' "upgrade gh — attaching a file needs at least 2.100.0" >&2
+    exit 3                   # skip the upload, keep step D
+    ;;
+esac
 ```
 
 Absent means unavailable, and unavailable takes the degraded path: no upload

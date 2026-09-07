@@ -4046,8 +4046,12 @@ const UNGUARDED_PRE_IMAGE = /PRE_IMAGE(?:_JSON)?="\$\(gh pr view[^\n]*\)"\s*$/m;
 const WILDCARD_PROXY_HOST = /\*\.githubusercontent\.com/;
 
 // A pipeline whose last stage can exit before its input is drained, under the
-// `set -o pipefail` every script here carries.
-const PIPED_EARLY_EXIT = /\|\s*(?:[A-Z_]+=\S+\s+)*(?:grep\s+[^|\n]*-[A-Za-z]*q|head\b|read\b)/;
+// `set -o pipefail` every script here carries. The consumer list is wider than
+// the shapes in this tree: `grep -m1`, `sed '…q'`, and `awk '…{exit}'` stop
+// early for the same reason `grep -q` does, and a detector that only knows
+// today's offenders catches tomorrow's after it ships.
+const PIPED_EARLY_EXIT =
+  /\|\s*(?:[A-Z_]+=\S+\s+)*(?:grep\s+[^|\n]*-[A-Za-z]*(?:q|m[ ]?\d)|head\b|read\b|sed\s+[^|\n]*q(?:['"]|\s|$)|awk\s+[^|\n]*\bexit\b)/;
 
 describe("Slice 1 — recipe gaps (L2)", () => {
   test("the pre-image read is guarded, and the lost-update guard is not vacuous", () => {
@@ -4093,13 +4097,30 @@ describe("Slice 1 — recipe gaps (L2)", () => {
       expect(source).toContain("set -euo pipefail");
       expect(shellCode(source).split("\n").filter((line) => PIPED_EARLY_EXIT.test(line))).toEqual([]);
     }
-    // The detector fires on planted positives — the line that shipped, and the
-    // two other early-exit consumers.
+    // A fence runs in the session's own shell, so the status it reads depends
+    // on whether `pipefail` is set there — which the fence cannot know. The
+    // rule holds in both corpora, not only where a script declares the option.
+    for (const { skill } of SHELL_CORPORA) {
+      const blocks = corpusBlocks(skill);
+      expect(blocks.length).toBeGreaterThan(0);
+      const offenders = blocks
+        .flatMap((block) => shellCode(block).split("\n"))
+        .filter((line) => PIPED_EARLY_EXIT.test(line));
+      expect({ skill, offenders }).toEqual({ skill, offenders: [] });
+    }
+    // The detector fires on planted positives — the line that shipped, the
+    // fence form beside it, and every other early-exit consumer.
     expect(PIPED_EARLY_EXIT.test(`printf '%s' "$A" | grep -v '^x$' | grep -qvE '^y$'`)).toBe(true);
+    expect(PIPED_EARLY_EXIT.test("if ! gh pr edit --help | grep -q -- '--attach'; then")).toBe(true);
     expect(PIPED_EARLY_EXIT.test('gh pr view 1 | head -n 1')).toBe(true);
     expect(PIPED_EARLY_EXIT.test('cat f | read -r LINE')).toBe(true);
-    // And not on a stage that drains its input.
+    expect(PIPED_EARLY_EXIT.test("gh pr view 1 | grep -m1 -- '--attach'")).toBe(true);
+    expect(PIPED_EARLY_EXIT.test(`gh pr view 1 | sed -n '/--attach/q'`)).toBe(true);
+    expect(PIPED_EARLY_EXIT.test(`gh pr view 1 | awk '/--attach/{exit}'`)).toBe(true);
+    // And not on stages that drain their input.
     expect(PIPED_EARLY_EXIT.test(`printf '%s' "$S" | grep -Eo 'https://x' >"$F"`)).toBe(false);
+    expect(PIPED_EARLY_EXIT.test(`printf '%s' "$S" | sed 's/q//g' >"$F"`)).toBe(false);
+    expect(PIPED_EARLY_EXIT.test(`printf '%s' "$S" | awk '{print $2}' >"$F"`)).toBe(false);
   });
 
   test("the resolved parent takes its status from the cd, never from basename", () => {
@@ -4351,7 +4372,11 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     // else here pins and breaks on distro-patched version output.
     const capability = fencedBlocks(uploadRef()).find((block) => block.includes("--attach")) ?? "";
     expect(capability.length).toBeGreaterThan(0);
-    expect(capability).toContain("if ! gh pr edit --help | grep -q -- '--attach'; then");
+    // Bound first, tested second: the help text reaches a `case` rather than a
+    // consumer at the end of a pipeline, which is the shape the sweep bans.
+    expect(capability).toContain('GH_EDIT_HELP="$(gh pr edit --help 2>&1)"');
+    expect(capability).toContain('case "$GH_EDIT_HELP" in');
+    expect(capability).toContain("*--attach*)");
     // A status of its own, distinct from refusal (1) and fault (2).
     expect(capability).toContain("exit 3");
   });
