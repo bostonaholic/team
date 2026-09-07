@@ -31,7 +31,16 @@
 
 import { afterAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -44,6 +53,27 @@ const SKILL_DIR = join(REPO_ROOT, "skills", "pr-screenshots");
 const SKILL = join(SKILL_DIR, "SKILL.md");
 const REFERENCES = join(SKILL_DIR, "references");
 const SPLICE = join(SKILL_DIR, "splice.mjs");
+// The committed procedures. Anything with a loop, a branch, or a value a later
+// step needs is a file with a shebang — never a markdown fence, which carries
+// no shebang and holds no state across an invocation boundary.
+const SCRIPTS = join(SKILL_DIR, "scripts");
+const SCRIPT_NAMES = ["resolve-pr.sh"] as const;
+
+function scriptPath(name: string): string {
+  return join(SCRIPTS, name);
+}
+function scriptSource(name: string): string {
+  return fileOr(scriptPath(name));
+}
+// One script, run directly so its own shebang chooses the interpreter, with
+// `env` merged over the inherited environment.
+function runScript(name: string, args: string[], env: Record<string, string> = {}): ShellRun {
+  const result = spawnSync(scriptPath(name), args, {
+    encoding: "utf8",
+    env: { ...process.env, ...env },
+  });
+  return { status: result.status ?? -1, stdout: result.stdout ?? "", stderr: result.stderr ?? "" };
+}
 
 // ---------------------------------------------------------------------------
 // L1 plumbing: load splice.mjs without letting its absence abort the file.
@@ -103,7 +133,8 @@ function corpus(): string {
         .sort()
         .map((name) => read(join(REFERENCES, name)))
     : [];
-  return [fileOr(SKILL), ...references, spliceSource()].join("\n");
+  const scripts = SCRIPT_NAMES.map((name) => scriptSource(name));
+  return [fileOr(SKILL), ...references, spliceSource(), ...scripts].join("\n");
 }
 
 // Every fenced block (``` or ~~~) in `text`. Fenced blocks are what the skill
@@ -560,8 +591,10 @@ describe("Slice 1 — skill prose (L2)", () => {
     // nothing asks for the URL instead of guessing.
     const input = inputRef();
     expect(input.length).toBeGreaterThan(0);
-    expect(input).toContain("gh pr view");
-    expect(input).toContain("--json url --jq .url");
+    const resolveSource = scriptSource("resolve-pr.sh");
+    expect(resolveSource.length).toBeGreaterThan(0);
+    expect(resolveSource).toContain("gh pr view");
+    expect(resolveSource).toContain("--json url --jq .url");
     // The strict parser this refusal reuses, cited by path.
     expect(input).toContain("pr-watch-as-reviewer/references/02-input.md");
 
@@ -2250,22 +2283,6 @@ describe("Slice 1 — splice.mjs CLI exit codes (L1)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// L1: the argument validator, RUN. The fence is a complete shell program over
-// `$ARGUMENTS`, so the contract "the advertised invocation is accepted" is a
-// deterministic execution rather than a substring check — and a substring check
-// is exactly what let a validator that refuses the primary pipeline path ship.
-// ---------------------------------------------------------------------------
-
-// Everything the reference emits before the PR is resolved: the split, then
-// the validation of the token it produced. Both fences, because the split is
-// the half whose absence made the validator refuse the advertised call.
-function argumentFence(): string {
-  const blocks = fencedBlocks(inputRef());
-  const validator = blocks.findIndex((block) => block.includes("PR_URL_PATTERN"));
-  return validator < 0 ? "" : blocks.slice(0, validator + 1).join("\n");
-}
-
-// ---------------------------------------------------------------------------
 // Cross-shell execution. EVERY executable fence in this file runs under EVERY
 // shell here and must produce identical status, stdout, and stderr.
 //
@@ -2309,129 +2326,200 @@ function runEveryShell(script: string, setup: () => void = () => {}): ShellRun {
   return { status: first.status, stdout: first.stdout, stderr: first.stderr };
 }
 
-// Run that fence with `$ARGUMENTS` bound to `args`, and report what it bound —
-// under bash AND zsh, asserted identical.
-function runArguments(args: string): { status: number; stderr: string; bindings: string[] } {
-  const script = [
-    `ARGUMENTS=${JSON.stringify(args)}`,
-    argumentFence(),
-    `printf '%s|%s|%s|%s\\n' "$ARG_NUMBER" "$ARG_HOST" "$ARG_OWNER" "$ENTRIES_FILE"`,
-  ].join("\n");
-  const result = runEveryShell(script);
+// ---------------------------------------------------------------------------
+// L1: the committed scripts, RUN. Each one is a complete program with a
+// shebang, argv inputs, and documented exit codes, so its contracts are
+// deterministic executions rather than substring checks — and a substring
+// check is exactly what let a validator that refuses the primary pipeline
+// path ship green.
+// ---------------------------------------------------------------------------
+
+// The canonical URL the `gh` stubs below resolve to.
+const PR_URL = "https://github.com/owner/repo/pull/412";
+
+// A `gh` that answers `pr view … --json url` with `url`, and records the
+// arguments it was called with. Returns the env the script runs under.
+function ghUrlStub(dir: string, url: string): Record<string, string> {
+  const bin = join(dir, "bin");
+  mkdirSync(bin, { recursive: true });
+  const log = join(dir, "gh-argv");
+  writeFileSync(
+    join(bin, "gh"),
+    ["#!/bin/sh", `printf '%s\\n' "$*" >>"$GH_ARGV"`, `printf '%s\\n' ${JSON.stringify(url)}`, ""].join("\n"),
+    { mode: 0o755 },
+  );
+  return { PATH: `${bin}:${process.env.PATH ?? ""}`, GH_ARGV: log };
+}
+
+// A `gh` that fails the way an absent checkout does.
+function ghFailStub(dir: string): Record<string, string> {
+  const bin = join(dir, "bin");
+  mkdirSync(bin, { recursive: true });
+  writeFileSync(join(bin, "gh"), ["#!/bin/sh", 'printf \'no git remote found\\n\' >&2', "exit 1", ""].join("\n"), {
+    mode: 0o755,
+  });
+  return { PATH: `${bin}:${process.env.PATH ?? ""}`, GH_ARGV: join(dir, "gh-argv") };
+}
+
+// `resolve-pr.sh` over one invocation string, reporting its exit, its stderr,
+// every value it wrote into the run directory, and every `gh` call it made.
+function resolve(
+  args: string,
+  url: string = PR_URL,
+): { status: number; stderr: string; values: Record<string, string>; ghArgv: string[] } {
+  const dir = sandbox();
+  const run = join(dir, "run");
+  mkdirSync(run, { recursive: true });
+  const env = ghUrlStub(dir, url);
+  const result = runScript("resolve-pr.sh", [args, run], env);
+  const values: Record<string, string> = {};
+  for (const name of readdirSync(run).sort()) values[name] = read(join(run, name)).replace(/\n$/, "");
+  const log = env.GH_ARGV as string;
   return {
     status: result.status,
     stderr: result.stderr,
-    bindings: result.stdout.trim().split("|"),
+    values,
+    ghArgv: existsSync(log) ? read(log).split("\n").filter((line) => line !== "") : [],
   };
 }
 
-describe("Slice 1 — the argument validator, executed (L1)", () => {
-  test("the advertised invocation is accepted, PR token and --entries alike", () => {
-    expect(argumentFence().length).toBeGreaterThan(0);
+describe("Slice 1 — resolve-pr.sh, executed (L1)", () => {
+  test("every committed script pins its own interpreter and is executable", () => {
+    // The whole reason these procedures are files rather than fences: a
+    // markdown fence carries no shebang, so the host shell picks the dialect —
+    // `set -- $ARGUMENTS` splits in bash and does not in zsh, which refused
+    // every multi-token invocation of this skill. A shebang pins it, and a
+    // script nothing can execute pins nothing at all.
+    expect(SCRIPT_NAMES.length).toBeGreaterThan(0);
+    for (const name of SCRIPT_NAMES) {
+      const path = scriptPath(name);
+      expect({ name, exists: existsSync(path) }).toEqual({ name, exists: true });
+      expect({ name, shebang: scriptSource(name).split("\n")[0] }).toEqual({
+        name,
+        shebang: "#!/usr/bin/env bash",
+      });
+      // Executable, and strict: an unset variable or a failing command is a
+      // stop, never a silent empty binding.
+      expect({ name, executable: (statSync(path).mode & 0o111) !== 0 }).toEqual({ name, executable: true });
+      expect(scriptSource(name)).toContain("set -euo pipefail");
+    }
+  });
 
-    // `SKILL.md`'s own `argument-hint`, and the call `team-pr` makes. Validated
-    // as ONE token this took the `*[!0-9]*` arm, failed the anchored URL
-    // pattern, and exited 1 — the primary pipeline path refusing before it
-    // started.
-    const bare = runArguments("412 --entries /tmp/e/entries.json");
+  test("the advertised invocation is accepted, PR token and --entries alike", () => {
+    // `SKILL.md`'s own `argument-hint`, and the call `team-pr` makes. Split
+    // wrongly, this whole invocation is one token: not a bare number, no match
+    // for the URL pattern, and the primary pipeline path refuses before it
+    // starts.
+    const bare = resolve("412 --entries /tmp/e/entries.json");
     expect({ status: bare.status, stderr: bare.stderr }).toEqual({ status: 0, stderr: "" });
-    expect(bare.bindings).toEqual(["412", "", "", "/tmp/e/entries.json"]);
+    expect(bare.values).toEqual({
+      "pr-url": PR_URL,
+      "pr-host": "github.com",
+      owner: "owner",
+      repo: "repo",
+      number: "412",
+      "repo-spec": "github.com/owner/repo",
+      "entries-file": "/tmp/e/entries.json",
+    });
 
     // The URL form of the same invocation, in either flag spelling.
-    const url = runArguments("https://github.com/owner/repo/pull/412 --entries /tmp/e/entries.json");
+    const url = resolve("https://github.com/owner/repo/pull/412 --entries /tmp/e/entries.json");
     expect(url.status).toBe(0);
-    expect(url.bindings).toEqual(["412", "github.com", "owner", "/tmp/e/entries.json"]);
-    expect(runArguments("412 --entries=/tmp/e.json").bindings[3]).toBe("/tmp/e.json");
+    expect(url.values["entries-file"]).toBe("/tmp/e/entries.json");
+    expect(resolve("412 --entries=/tmp/e.json").values["entries-file"]).toBe("/tmp/e.json");
 
-    // A PR token alone still resolves, and an Enterprise host survives.
-    expect(runArguments("412").bindings).toEqual(["412", "", "", ""]);
-    expect(runArguments("https://ghe.example.com/owner/repo/pull/9").bindings).toEqual([
-      "9",
-      "ghe.example.com",
-      "owner",
-      "",
-    ]);
+    // A PR token alone still resolves, and binds no entries file.
+    const alone = resolve("412");
+    expect(alone.status).toBe(0);
+    expect(alone.values["entries-file"]).toBe("");
   });
 
   test("a malformed argument refuses, and refuses loudly", () => {
-    expect(argumentFence().length).toBeGreaterThan(0);
-
-    const malformed = runArguments("not-a-pr");
+    const malformed = resolve("not-a-pr");
     expect(malformed.status).toBe(1);
     expect(malformed.stderr).toContain("malformed PR argument");
 
     // A path holding whitespace arrives as two words: a named refusal, never a
     // silently truncated path.
-    const split = runArguments("412 --entries /tmp/my dir/e.json");
+    const split = resolve("412 --entries /tmp/my dir/e.json");
     expect(split.status).toBe(1);
     expect(split.stderr).toContain("more than one PR argument");
 
     // A flag with no value, and a flag this skill does not take.
-    expect(runArguments("412 --entries").status).toBe(1);
-    expect(runArguments("412 --body-file /tmp/x").status).toBe(1);
+    expect(resolve("412 --entries").status).toBe(1);
+    expect(resolve("412 --body-file /tmp/x").status).toBe(1);
 
     // A repeated `--entries` refuses as loudly as a repeated PR token, in
     // either spelling and in any mix of them. Taking the last value silently
     // uploads from a manifest the caller may not have named on purpose.
-    const repeated = runArguments("412 --entries /tmp/a.json --entries /tmp/b.json");
+    const repeated = resolve("412 --entries /tmp/a.json --entries /tmp/b.json");
     expect(repeated.status).toBe(1);
     expect(repeated.stderr).toContain("more than one --entries");
-    expect(runArguments("412 --entries=/tmp/a.json --entries=/tmp/b.json").status).toBe(1);
-    expect(runArguments("412 --entries /tmp/a.json --entries=/tmp/b.json").status).toBe(1);
+    expect(resolve("412 --entries=/tmp/a.json --entries=/tmp/b.json").status).toBe(1);
+    expect(resolve("412 --entries /tmp/a.json --entries=/tmp/b.json").status).toBe(1);
+
+    // A refusal writes nothing, so no later step can read a half-resolved run.
+    const dir = sandbox();
+    const run = join(dir, "run");
+    mkdirSync(run, { recursive: true });
+    expect(runScript("resolve-pr.sh", ["not-a-pr", run], ghUrlStub(dir, PR_URL)).status).toBe(1);
+    expect(readdirSync(run)).toEqual([]);
+    // A run directory that does not exist is a usage fault, not a refusal.
+    expect(runScript("resolve-pr.sh", ["412", join(dir, "absent")], ghUrlStub(dir, PR_URL)).status).toBe(2);
   });
 
-  test("every shell in the cross-shell matrix is actually present", () => {
-    // A missing shell would make `runEveryShell` compare one run against
-    // itself and report green on a fence nothing cross-checked — the vacuum
-    // this whole matrix exists to close. Fail loudly and name the shell
-    // instead (`principle-fail-closed`).
-    for (const shell of SHELLS) {
-      const probe = spawnSync(shell, ["-c", "exit 0"], { encoding: "utf8" });
-      expect({ shell, status: probe.status }).toEqual({ shell, status: 0 });
-    }
+  test("the resolution call carries the URL's own repository", () => {
+    // For a URL argument the parser binds owner, repo, and number separately,
+    // and `gh pr view <number>` with no `--repo` resolves against the CURRENT
+    // DIRECTORY's default repository — so a full URL for repo A, run from a
+    // checkout of repo B, silently resolves B's PR of the same number and
+    // every later call inherits it.
+    const url = resolve("https://ghe.example.com/owner/other/pull/9", "https://ghe.example.com/owner/other/pull/9");
+    expect(url.status).toBe(0);
+    expect(url.ghArgv).toEqual(["pr view 9 --repo ghe.example.com/owner/other --json url --jq .url"]);
+
+    // The bare-number form has no repository of its own and resolves against
+    // the checkout by design.
+    expect(resolve("412").ghArgv).toEqual(["pr view 412 --json url --jq .url"]);
   });
 
-  test("no fence in this file is executed under one pinned interpreter", () => {
-    // How the `set -- $ARGUMENTS` defect shipped green: the harness spawned
-    // `bash` and nothing else, so the one shell the skill actually runs under
-    // was never asked. Every shell-executing call site goes through
-    // `runInShell`, which the matrix drives — so a new fence test cannot
-    // re-pin an interpreter without this failing.
-    //
-    // The detector is BUILT rather than written, so the literal it looks for
-    // cannot sit in this file and match itself.
-    const pinned = () => new RegExp(`spawnSync\\(\\s*"(?:ba|z|k|d)?sh"`, "g");
-    const whole = fileOr(join(REPO_ROOT, "tests", "pr-screenshots-skill.test.ts"));
-    expect(whole.length).toBeGreaterThan(0);
-    // Code only: the paragraph above NAMES the call site it forbids, and
-    // discussion of a rejected form is not an emission of it.
-    const source = whole
-      .split("\n")
-      .filter((line) => !/^\s*(?:\/\/|\*|\/\*)/.test(line))
-      .join("\n");
-    expect(source.match(pinned()) ?? []).toEqual([]);
-
-    // The detector fires on the exact call site that shipped the defect.
-    expect(pinned().test(['const r = spawnSync("ba' + 'sh", ["-c", script]);'].join(""))).toBe(true);
+  test("an Enterprise PR resolves, and every later call carries its host", () => {
+    // `01`'s validator once mandated an anchored `^https://github.com/`, which
+    // refused every Enterprise PR URL as malformed before the three places
+    // that handle a GHES host could run. `--repo "$OWNER/$REPO"` then names a
+    // repository on github.com, so the host is bound into the spec once.
+    const ghe = "https://ghe.example.com/owner/repo/pull/9";
+    const run = resolve(ghe, ghe);
+    expect(run.status).toBe(0);
+    expect(run.values).toMatchObject({
+      "pr-host": "ghe.example.com",
+      "repo-spec": "ghe.example.com/owner/repo",
+      number: "9",
+    });
   });
 
-  test("the split reads its tokens through a shell-independent construct", () => {
-    // The shape, pinned so the executable matrix above cannot be satisfied by
-    // re-introducing the construct it was written for. `set -- $VAR` splits an
-    // unquoted PARAMETER expansion, which zsh does not do; `set -- $(cmd)` is
-    // COMMAND substitution, which zsh does split, so the step-B bridge keeps
-    // it. `setopt shwordsplit` is not the fix either: it rewrites the caller's
-    // shell rather than the recipe.
-    const fence = argumentFence();
-    expect(fence.length).toBeGreaterThan(0);
-    expect(fence).not.toContain("set -- $ARGUMENTS");
-    expect(fence).not.toContain("shwordsplit");
-    expect(/set -- \$[A-Za-z_]/.test(fence)).toBe(false);
+  test("a resolved URL that is not a PR URL is never split", () => {
+    // Stripping a literal `https://github.com/` prefix is a no-op on every
+    // other host, which leaves OWNER as `https:` and REPO empty for every
+    // later `--repo`. The shape test runs before any segment is read out, and
+    // the charset tests refuse anything else.
+    expect(resolve("412", "not-a-url").status).toBe(1);
+    expect(resolve("412", "https://github.com/owner/repo/issues/9").status).toBe(1);
+    const hostile = resolve("412", "https://github.com/ow|ner/repo/pull/9");
+    expect(hostile.status).toBe(1);
+    expect(hostile.stderr).toContain("unexpected character");
+  });
 
-    // And the reason the whole file's fences run twice, stated where a reader
-    // of the fence will meet it.
-    const input = squash(inputRef());
-    expect(input).toContain("SH_WORD_SPLIT");
+  test("a bare number with no checkout refuses and names the fix", () => {
+    // No repository context exists to bind it to, so the refusal asks for the
+    // full PR URL rather than guessing one.
+    const dir = sandbox();
+    const run = join(dir, "run");
+    mkdirSync(run, { recursive: true });
+    const failing = ghFailStub(dir);
+    const result = runScript("resolve-pr.sh", ["412", run], failing);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("full PR URL");
   });
 });
 
@@ -2446,23 +2534,6 @@ describe("Slice 1 — the argument validator, executed (L1)", () => {
 const UNGUARDED_REDIRECT = /splice\.mjs[\s\S]{0,200}?>\s*"\$NEW_BODY_FILE"\s*$/m;
 
 describe("Slice 1 — resolution, normalization, and harvest (L2)", () => {
-  test("the first resolution call carries the URL's own repository", () => {
-    // For a URL argument the parser binds owner, repo, and number
-    // separately, and `gh pr view <number>` with no `--repo` resolves against
-    // the CURRENT DIRECTORY's default repository — so a full URL for repo A,
-    // run from a checkout of repo B, silently resolves B's PR of the same
-    // number and every later call inherits it.
-    const input = inputRef();
-    expect(input.length).toBeGreaterThan(0);
-
-    const resolve = input.indexOf("--json url --jq .url");
-    expect(resolve).toBeGreaterThanOrEqual(0);
-    // The resolution command itself binds the repository, not a later call.
-    const line = input.slice(input.lastIndexOf("\n", resolve) + 1, resolve);
-    expect(line).toContain("--repo");
-    expect(line).toContain("$ARG_OWNER");
-  });
-
   test("normalization is stated over every caller string, not per field", () => {
     // Captions were escaped because a caption is caller text; the
     // `notes` list, the path, and the failure reason are equally caller text
@@ -3426,12 +3497,12 @@ describe("Slice 1 — the copyable blocks (L2)", () => {
   test("the PR URL split is guarded and binds the host it resolved", () => {
     // `${PR_URL#https://github.com/}` is a no-op on an Enterprise URL, which
     // leaves `OWNER` as `https:` and `REPO` empty for every later `--repo`.
-    const input = inputRef();
-    expect(input.length).toBeGreaterThan(0);
-    expect(input).not.toContain('REST="${PR_URL#https://github.com/}"');
-    expect(input).toContain("https://*/*/*/pull/[0-9]*)");
-    expect(input).toContain('PR_HOST="${REST%%/*}"');
-    expect(input).toContain('case "$NUMBER" in ""|*[!0-9]*)');
+    const source = scriptSource("resolve-pr.sh");
+    expect(source.length).toBeGreaterThan(0);
+    expect(source).not.toContain('REST="${PR_URL#https://github.com/}"');
+    expect(source).toContain("https://*/*/*/pull/[0-9]*)");
+    expect(source).toContain('PR_HOST="${REST%%/*}"');
+    expect(source).toContain('case "$NUMBER" in');
   });
 });
 
@@ -3845,13 +3916,13 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     // `01`'s first line mandated a validator anchored at `^https://github.com/`
     // while three later places handled a GHES host, so an Enterprise PR URL was
     // refused as malformed before any of that handling ran.
-    const input = inputRef();
-    expect(input.length).toBeGreaterThan(0);
-    expect(input).toContain("PR_URL_PATTERN='^https://[A-Za-z0-9.-]{1,253}/");
-    expect(input).not.toContain("^https://github\\.com/[A-Za-z0-9._-]");
+    const source = scriptSource("resolve-pr.sh");
+    expect(source.length).toBeGreaterThan(0);
+    expect(source).toContain("PR_URL_PATTERN='^https://[A-Za-z0-9.-]{1,253}/");
+    expect(source).not.toContain("^https://github\\.com/[A-Za-z0-9._-]");
 
     // The host the URL named is carried into every later call.
-    expect(input).toContain('REPO_SPEC="$PR_HOST/$OWNER/$REPO"');
+    expect(source).toContain('REPO_SPEC="$PR_HOST/$OWNER/$REPO"');
     const calls = skillBlocks().filter((block) => /gh pr (?:view|edit) "\$NUMBER"/.test(block));
     expect(calls.length).toBeGreaterThan(0);
     expect(calls.filter((block) => block.includes('--repo "$OWNER/$REPO"'))).toEqual([]);

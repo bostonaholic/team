@@ -16,6 +16,14 @@ behind it.
 The upload mechanics live here and nowhere else. `team-pr` decides whether to
 run, when, and which entries qualify, then calls this skill.
 
+**Every procedure with a loop, a branch, or a value a later step needs is a
+committed script under `scripts/`, run with its arguments and read by its exit
+code.** A markdown fence carries no shebang, so the host shell picks the
+dialect, and a fence boundary is an invocation boundary that no shell variable
+survives. A script with `#!/usr/bin/env bash` pins both. Each reference below
+names the script its stage runs; what stays inline is a single command whose
+reader benefits from seeing it.
+
 ## Hard rules
 
 - **Upload first, write second.** Never fuse an attach flag with a body flag in

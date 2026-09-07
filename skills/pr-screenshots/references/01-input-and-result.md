@@ -1,150 +1,93 @@
 ## Input and result
 
-### Split the arguments before validating any of them
+### Resolve the PR once
 
 `$ARGUMENTS` carries the whole invocation — `<pr-number-or-url>` **and**
 `--entries <path>`, which is what `SKILL.md` advertises and what `team-pr`
-sends. The flags come off first, and the PR token is validated alone:
-`412 --entries /tmp/e/entries.json` tested as one token takes the
-`*[!0-9]*` arm below, fails the anchored URL pattern, and exits 1 with
-"malformed PR argument" before the run starts.
-
-**The split has to be shell-independent, and `set -- $ARGUMENTS` is not.**
-Word-splitting an unquoted *parameter* expansion is a bash behaviour zsh does
-not share — `SH_WORD_SPLIT` is off by default — so under a zsh session the
-whole value arrives as one positional, `PR_ARG` binds
-`412 --entries /tmp/e/entries.json` entire, `ENTRIES_FILE` stays empty, and the
-validator below exits 1 with exactly the refusal this split exists to prevent.
-Every invocation carrying more than one token fails that way, which is the
-whole `team-pr` path and the `argument-hint` `SKILL.md` advertises. `tr` splits
-the same in every shell, and `setopt shwordsplit` is not the fix: it changes
-the caller's shell rather than the recipe. The step-B bridge in
-`references/02-upload-and-body-edit.md` is *command* substitution, which zsh
-does split, so it stays as it is; this is the one parameter-expansion split.
+sends. `scripts/resolve-pr.sh` splits it, validates the PR token alone,
+resolves the PR in one call, and writes each derived value into the run's own
+directory. Run it first, and bind the values the inline `gh` commands
+below and in `references/03-verify.md` expand:
 
 ```bash
-PR_ARG='' ; ENTRIES_FILE='' ; ARG_HOST='' ; ARG_OWNER='' ; ARG_REPO='' ; PENDING=''
-ARG_TOKENS_FILE="$(mktemp)"
-# One token per LINE, written here and read back below. Nothing is unquoted, so
-# no token can glob and no `set -f` is needed. The redirect keeps the loop in
-# the current shell in bash and zsh alike, which a pipeline into `while` does
-# not. `printf '%s\n'` — with the newline — because `read` discards a final
-# line that has none, which silently drops the LAST argument of every
-# invocation; `-s` squeezes the run that trailing newline may join.
-printf '%s\n' "$ARGUMENTS" | tr -s ' \t\n' '\n\n\n' >"$ARG_TOKENS_FILE"
-while IFS= read -r ARG_TOKEN; do
-  [ -n "$ARG_TOKEN" ] || continue       # a leading separator squeezes to one empty line
-  if [ -n "$PENDING" ]; then ENTRIES_FILE="$ARG_TOKEN" ; PENDING='' ; continue ; fi
-  case "$ARG_TOKEN" in
-    --entries)   [ -z "$ENTRIES_FILE" ] || { echo "more than one --entries" >&2 ; exit 1 ; }
-                 PENDING=1 ;;
-    --entries=*) [ -z "$ENTRIES_FILE" ] || { echo "more than one --entries" >&2 ; exit 1 ; }
-                 ENTRIES_FILE="${ARG_TOKEN#--entries=}" ;;
-    --*)         echo "unknown flag: $ARG_TOKEN" >&2 ; exit 1 ;;
-    *)           [ -z "$PR_ARG" ] || { echo "more than one PR argument" >&2 ; exit 1 ; }
-                 PR_ARG="$ARG_TOKEN" ;;
-  esac
-done <"$ARG_TOKENS_FILE"
-[ -z "$PENDING" ] || { echo "--entries needs a path" >&2 ; exit 1 ; }
+RUN_DIR="$(mktemp -d)"                     # every temporary this run writes
+"<skill-dir>/scripts/resolve-pr.sh" "$ARGUMENTS" "$RUN_DIR" || exit 1
+PR_URL="$(cat "$RUN_DIR/pr-url")"          # the canonical URL, on the base repo
+PR_HOST="$(cat "$RUN_DIR/pr-host")"
+OWNER="$(cat "$RUN_DIR/owner")"
+REPO="$(cat "$RUN_DIR/repo")"
+NUMBER="$(cat "$RUN_DIR/number")"
+REPO_SPEC="$(cat "$RUN_DIR/repo-spec")"    # gh's own [HOST/]OWNER/REPO form
 ```
 
-`$ENTRIES_FILE` is bound here and nowhere else; step B of
-`references/02-upload-and-body-edit.md` reads it. The split is on whitespace,
-so an entries path holding a space arrives as two tokens and lands on "more
-than one PR argument" — a loud refusal that names the argument, never a
-silently truncated path.
+`$RUN_DIR` is this run's whole state. Every script below reads its inputs from
+it and writes its outputs back into it, so no value has to survive from one
+command to the next in a session's shell:
 
-**A repeated `--entries` refuses too, in either spelling.** A second value
-overwriting the first would let `412 --entries a.json --entries b.json` upload
-from a manifest the caller may not have named on purpose, silently, while the
-same repetition of the PR token refuses loudly. A malformed form refuses rather
-than guessing, and "the last one wins" is a guess.
+| File | Written by | Holds |
+| --- | --- | --- |
+| `pr-url` | `resolve-pr.sh` | The canonical PR URL, on the base repository |
+| `pr-host`, `owner`, `repo`, `number` | `resolve-pr.sh` | Its four segments |
+| `repo-spec` | `resolve-pr.sh` | `[HOST/]OWNER/REPO`, for every `--repo` |
+| `entries-file` | `resolve-pr.sh` | The `--entries` path, or empty |
+| `pre-image.md` | `pre-image.sh` | The body as read before the first attach |
+| `after.md` | `pre-image.sh`, `upload.sh` | The body as of the last read |
+| `assets.tsv` | `pre-image.sh`, `upload.sh` | One line per landed entry |
+| `failures.tsv` | `pre-image.sh`, `upload.sh` | One line per failed entry |
+| `section.md`, `new-body.md` | step D of `references/02-upload-and-body-edit.md` | The rendered section, and the spliced body |
 
-### Resolve the PR once
+Exit 1 is a refusal, and it names the argument on stderr. The rules it
+enforces:
 
-`$PR_ARG` carries a PR number or a full PR URL. Validate it before it
-reaches any command, using the technique at
-`skills/pr-watch-as-reviewer/references/02-input.md`, lines 11-42: an anchored
-pattern, then a parameter-expansion split of the string that already matched
-it. Never use `[^/]+` for an owner or repo segment: that class admits `$`,
-backticks, parentheses, and spaces. Never use `$BASH_REMATCH` either — zsh
-matches the same pattern and leaves it unset.
-
-**The pattern is this skill's own, and its host segment is a variable.** That
-sibling's pattern is anchored at `^https://github\.com/`, and this skill
-supports GitHub Enterprise in three later places — the guarded split below, the
-attachment allowlist, and the read-back. Reusing an anchored-at-github.com
-pattern would refuse every Enterprise PR URL as malformed before any of that
-handling could run, leaving Enterprise reachable only by bare number from a
-checkout. The claim and the validator have to say the same thing, so the host
-is a charset here:
-
-```bash
-PR_URL_PATTERN='^https://[A-Za-z0-9.-]{1,253}/[A-Za-z0-9._-]{1,39}/[A-Za-z0-9._-]{1,100}/pull/[0-9]+$'
-case "$PR_ARG" in
-  ''|*[!0-9]*) ARG_NUMBER='' ;;               # not a bare PR number
-  *)           ARG_NUMBER="$PR_ARG" ;;        # bare number — repo comes from the checkout
-esac
-if [ -z "$ARG_NUMBER" ]; then
-  [[ "$PR_ARG" =~ $PR_URL_PATTERN ]] || { echo "malformed PR argument" >&2; exit 1; }
-  REST="${PR_ARG#https://}"
-  ARG_HOST="${REST%%/*}"  ; REST="${REST#*/}"
-  ARG_OWNER="${REST%%/*}" ; REST="${REST#*/}"
-  ARG_REPO="${REST%%/*}"
-  ARG_NUMBER="${PR_ARG##*/}"
-fi
-```
-
-Resolve the canonical URL in one call, then bind the four values from it. The
-resolution call carries `--repo` too, whenever the argument supplied one: for a
-URL argument `$ARG_NUMBER` is the trailing number alone, and `gh pr view` with
-no `--repo` resolves a bare number against the *current directory's* default
-repository. A full URL for one repository, run from a checkout of another,
-would otherwise silently resolve the other repository's PR of the same number —
-and every later call inherits that resolution, ending with a `## Screenshots`
-section written into an unrelated PR.
-
-```bash
-if [ -n "$ARG_OWNER" ]; then
-  PR_URL="$(gh pr view "$ARG_NUMBER" --repo "$ARG_HOST/$ARG_OWNER/$ARG_REPO" --json url --jq .url)"
-else
-  PR_URL="$(gh pr view "$ARG_NUMBER" --json url --jq .url)"
-fi
-case "$PR_URL" in
-  https://*/*/*/pull/[0-9]*) : ;;
-  *) exit 1 ;;                       # not a PR URL, so nothing below may split it
-esac
-REST="${PR_URL#https://}"
-PR_HOST="${REST%%/*}" ; REST="${REST#*/}"
-OWNER="${REST%%/*}"   ; REST="${REST#*/}"
-REPO="${REST%%/*}"
-NUMBER="${PR_URL##*/}"
-case "$PR_HOST$OWNER$REPO" in *[!A-Za-z0-9._-]*) exit 1 ;; esac
-case "$NUMBER" in ""|*[!0-9]*) exit 1 ;; esac
-REPO_SPEC="$PR_HOST/$OWNER/$REPO"    # gh's own [HOST/]OWNER/REPO form
-```
-
-**The split is guarded, and the host is a bound value of its own.** Stripping a
-literal `https://github.com/` prefix is a no-op on every other host: a GitHub
-Enterprise URL would leave `OWNER` as `https:` and `REPO` empty, and each later
-`--repo` would carry a repository that cannot exist. The shape test refuses a
-URL that is not a PR URL before any segment is read out of it, and the charset
-tests refuse a host, owner, repository, or number carrying anything else.
-`PR_HOST` is the value step C's attachment allowlist is derived from
-(`references/02-upload-and-body-edit.md`), so an Enterprise install harvests
-against its own host rather than a hardcoded one.
-
-**`REPO_SPEC` carries the host, and every later call uses it.** `--repo
-"$OWNER/$REPO"` resolves against whichever host `gh` considers default, so on
-an Enterprise PR it names a repository on github.com. `gh` accepts
-`[HOST/]OWNER/REPO`, so binding the host into the spec once makes every
-`gh pr view` and `gh pr edit` below land on the host the URL actually named.
-The read-back's `gh api` takes the same host through `--hostname "$PR_HOST"`
-(`references/03-verify.md`).
-
-The `else` branch is the bare-number form, which has no repository of its own
-and resolves against the checkout by design; with no checkout it resolves
-nothing, which is the refusal below.
+- **The flags come off first, and the PR token is validated alone.**
+  `412 --entries /tmp/e/entries.json` tested as one token is not a bare number
+  and does not match the URL pattern, so it would refuse the whole `team-pr`
+  path and the `argument-hint` `SKILL.md` advertises.
+- **The split is on whitespace**, so an entries path holding a space arrives as
+  two tokens and lands on "more than one PR argument" — a loud refusal that
+  names the argument, never a silently truncated path.
+- **A repeated `--entries` refuses too, in either spelling.** A second value
+  overwriting the first would let `412 --entries a.json --entries b.json`
+  upload from a manifest the caller may not have named on purpose, silently,
+  while the same repetition of the PR token refuses loudly. A malformed form
+  refuses rather than guessing, and "the last one wins" is a guess.
+- **The PR token is matched against an anchored pattern, then split by
+  parameter expansion** — the technique at
+  `skills/pr-watch-as-reviewer/references/02-input.md`, lines 11-42. Never
+  `[^/]+` for an owner or repository segment: that class admits `$`, backticks,
+  parentheses, and spaces.
+- **The pattern is this skill's own, and its host segment is a variable.** That
+  sibling's pattern is anchored at `^https://github\.com/`, and this skill
+  supports GitHub Enterprise in three later places — the guarded split, the
+  attachment allowlist, and the read-back. Reusing an anchored-at-github.com
+  pattern would refuse every Enterprise PR URL as malformed before any of that
+  handling could run, leaving Enterprise reachable only by bare number from a
+  checkout. The claim and the validator have to say the same thing.
+- **The resolution call carries `--repo` whenever the argument supplied one.**
+  For a URL argument the trailing number alone is what `gh pr view` receives,
+  and with no `--repo` it resolves that number against the *current
+  directory's* default repository. A full URL for one repository, run from a
+  checkout of another, would otherwise silently resolve the other repository's
+  PR of the same number — and every later call inherits that resolution, ending
+  with a `## Screenshots` section written into an unrelated PR.
+- **The split of the resolved URL is guarded, and the host is a bound value of
+  its own.** Stripping a literal `https://github.com/` prefix is a no-op on
+  every other host: a GitHub Enterprise URL would leave `OWNER` as `https:` and
+  `REPO` empty, and each later `--repo` would carry a repository that cannot
+  exist. A shape test refuses a URL that is not a PR URL before any segment is
+  read out of it, and charset tests refuse a host, owner, repository, or number
+  carrying anything else. `pr-host` is the value step C's attachment allowlist
+  is derived from (`references/02-upload-and-body-edit.md`), so an Enterprise
+  install harvests against its own host rather than a hardcoded one.
+- **`repo-spec` carries the host, and every later call uses it.** `--repo
+  "$OWNER/$REPO"` resolves against whichever host `gh` considers default, so on
+  an Enterprise PR it names a repository on github.com. `gh` accepts
+  `[HOST/]OWNER/REPO`, so binding the host into the spec once makes every
+  `gh pr view` and `gh pr edit` below land on the host the URL actually named.
+  The read-back's `gh api` takes the same host through `--hostname "$PR_HOST"`
+  (`references/03-verify.md`).
+- **A bare number resolves against the checkout by design**, and with no
+  checkout it resolves nothing — which is the refusal below.
 
 `gh pr view` returns the URL on the **base** repository, which is the PR a fork
 contribution is edited on. Every later call carries `--repo "$REPO_SPEC"`, so
@@ -206,7 +149,12 @@ jq -n --arg root "$CAPTURE_ROOT" '{
   })),
   notes: []
 }' --args "$CAPTURE_ROOT/login.png" "$CAPTURE_ROOT/login-error.png" >"$ENTRIES_FILE"
+printf '%s\n' "$ENTRIES_FILE" >"$RUN_DIR/entries-file"   # what `upload.sh` reads
 ```
+
+The last line is what makes this path reachable: `resolve-pr.sh` writes an
+empty `entries-file` when the invocation carried no `--entries`, and
+`upload.sh` reads that file rather than a variable.
 
 `--args` binds each path as a positional value, so `jq` never parses one. Add a
 `caption`, a `state`, or a `note` the request supplied by binding each with its
