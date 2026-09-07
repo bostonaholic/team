@@ -30,7 +30,7 @@
 // team-pr is demoted; no protocol.test.ts sentinel, that convention is for
 // the pipeline-skill demotions):
 //   shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer,
-//   groom-backlog, pr-cleanup, pr-verify, pr-rebase, reflect
+//   groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, reflect
 
 import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
@@ -604,6 +604,28 @@ describe("L2 coverage: pr-verify (executable utility, not L5)", () => {
   });
 });
 
+// `pr-screenshots` attaches local images to a live PR and rewrites that PR's
+// body — heavy external state (a real PR, GitHub's attachment pipeline, the
+// rendered body read back through the API) that cannot be honestly driven in a
+// single offline `claude -p` eval, the same reason `pr-verify` and `team-pr`
+// are demoted. Its pure body transform is covered directly at L1 and its prose
+// contract by its dedicated L2 tripwire, tests/pr-screenshots-skill.test.ts,
+// not an L5 eval.
+
+describe("L2 coverage: pr-screenshots (executable utility, not L5)", () => {
+  test("pr-screenshots has no evals/fixtures/pr-screenshots/ directory (no L5 eval)", () => {
+    expect(existsSync(fixtureDir("pr-screenshots"))).toBe(false);
+  });
+
+  test("pr-screenshots has no tests/pr-screenshots.evals.ts file (no L5 eval)", () => {
+    expect(existsSync(evalsFilePath("pr-screenshots"))).toBe(false);
+  });
+
+  test("pr-screenshots is pinned by its dedicated L2 tripwire tests/pr-screenshots-skill.test.ts", () => {
+    expect(existsSync(join(TESTS_ROOT, "pr-screenshots-skill.test.ts"))).toBe(true);
+  });
+});
+
 // `pr-rebase` rebases a branch against a live base and force-pushes — heavy
 // external state (remotes, a PR, the project's own check suite) that it also
 // mutates destructively, the same reason `pr-cleanup` and `shipit` are
@@ -659,6 +681,7 @@ const UTILITY_SKILLS = [
   "groom-backlog",
   "pr-cleanup",
   "pr-verify",
+  "pr-screenshots",
   "pr-rebase",
   "reflect",
 ] as const;

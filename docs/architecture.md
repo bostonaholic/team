@@ -154,8 +154,8 @@ still declares no phase artifact.
 
 `docs/plans/<id>/screenshots/` (PNGs plus `manifest.md`) is written by
 ux-reviewer during IMPLEMENT for UI-touching changes and consumed by team-pr.
-User-facing setup (the one-time GitHub sign-in that enables inline upload)
-lives in `skills/team-pr/SKILL.md`.
+The upload itself, and every mechanic it needs, lives in
+`skills/pr-screenshots/`.
 
 `docs/plans/<id>/cross-model-notes.md` is written by the orchestrator at
 the DESIGN review gate and the IMPLEMENT aggregate gate — one
@@ -330,9 +330,9 @@ push the branch, and open a draft PR automatically with
 surface the tracking ticket, if `1-task.md` carries `ticketId`. When a
 capture manifest exists (`docs/plans/<id>/screenshots/`, see the
 artifact-layout note in section 2), the PR body also gets a
-`## Screenshots` section populated by uploading the PNGs through GitHub's
-user-attachments pipeline. When `docs/plans/<id>/cross-model-notes.md`
-exists, its body (frontmatter stripped) is copied into the PR's
+`## Screenshots` section, populated by one delegated call to the
+`pr-screenshots` skill, which attaches the PNGs and rewrites the body.
+When `docs/plans/<id>/cross-model-notes.md` exists, its body (frontmatter stripped) is copied into the PR's
 `## Review notes` section, replacing the final round's inline disposition
 block so every round appears exactly once. The worktree stays in place
 after the PR opens. Teardown is deferred until the PR merges or the user

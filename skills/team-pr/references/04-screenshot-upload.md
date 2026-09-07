@@ -1,64 +1,178 @@
 ## Screenshot Upload
 
-Screenshots render inline for any reviewer, private repos included, through
-GitHub's user-attachments pipeline. Run this procedure only when the
-manifest carries `## Captured` entries whose PNGs exist on disk. In every
-other case the rendering rules above already produced the final section
-(absent, or note-only) and there is nothing to upload. Sequencing is
-PR-first — three explicit steps, mirroring the Companion-PRs open-then-edit
-shape:
+Caller policy only. The upload mechanics, the section's markdown shape, and the
+body write live in one place — `skills/pr-screenshots/` — and this file decides
+whether to run, when, and which manifest entries qualify.
 
-1. **The draft PR already exists**, opened in Execution step 7. Its initial
-   body carries whatever the rendering rules above produced. When this
-   procedure runs, that is the "not yet uploaded" local-path form of the
-   `## Screenshots` section.
-2. **Upload.** Session pre-check first — Chromium writes its cookie store
-   in either of two layouts, so tolerate both:
-   `P="${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile"; [ -f "$P/Default/Cookies" ] || [ -f "$P/Default/Network/Cookies" ]`.
-   If the check fails, no authenticated browser session exists → skip the
-   upload entirely, keep the degraded note, and append the one-time sign-in
-   instruction to the **operator-facing completion report** — never to the PR
-   body, which keeps only the degraded note and local paths. The instruction
-   (keep it in sync with the README's "Screenshots in PRs" section):
+### When to call
 
-   ```sh
-   mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile"
-   chmod 700 "${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile"
-   npx playwright codegen \
-     --user-data-dir="${XDG_CONFIG_HOME:-$HOME/.config}/team/github-profile" \
-     https://github.com
+Call only when `$ARGUMENTS/screenshots/manifest.md` carries `## Captured`
+entries whose PNGs exist on disk. In every other case — manifest absent,
+`status` any `skipped-*` value, a malformed manifest, or every listed PNG
+missing from disk — do **not** call. The rendering rules in
+`references/03-pr-body-template.md` already produced the final section (absent,
+or note-only) and there is nothing to upload.
+
+The draft PR already exists, opened in Execution step 7, and its body already
+carries the section in its pre-upload degraded form. That is the sequencing:
+open first, then attach and rewrite.
+
+### Build the entries file
+
+Write a JSON entries file under `$(mktemp -d)`. That directory is bound once
+and named below, because `result.json` comes back beside the entries file:
+
+```bash
+ENTRIES_DIR="$(mktemp -d)"
+ENTRIES_FILE="$ENTRIES_DIR/entries.json"
+# `$ARGUMENTS` is the RELATIVE artifact directory `docs/plans/<id>/`, and the
+# callee refuses "a missing, relative, or unresolvable top-level `root`" before
+# it starts. Resolve it here, once, and write the resolved value — not the
+# relative one.
+CAPTURE_ROOT="$(cd -- "$ARGUMENTS/screenshots" && pwd -P)" || exit 2
+```
+
+The file itself carries:
+
+- a top-level `root` of `$CAPTURE_ROOT` — the **absolute** path of
+  `$ARGUMENTS/screenshots/`, resolved in the fence above, which is the
+  directory the PNGs live in and the directory every entry's path must resolve
+  inside. Each entry's `path` is absolute for the same reason, built by
+  prefixing `$CAPTURE_ROOT`. The entries file itself sits under
+  `$(mktemp -d)`, and that is not where the images are;
+- one entry per `## Captured` entry whose PNG exists on disk, in manifest
+  order, carrying `path`, `caption`, and the entry's `state`;
+- a `## Captured` entry whose PNG is missing from disk is dropped, and the
+  discrepancy adds one line to the top-level `notes` list;
+- a manifest with `status: partial` adds one `notes` line naming how many
+  states were skipped and pointing at the manifest.
+
+The file's schema, and the worked `jq -n --args` construction that writes it,
+are in `skills/pr-screenshots/references/01-input-and-result.md`. Use that
+construction: a path and a caption are caller text, so each is bound as a `jq`
+argument and never pasted into a JSON string, where a quote or a backslash in
+one rewrites the document rather than filling a slot in it
+(`principle-never-interpolate`).
+
+### Call the skill
+
+Call the Skill tool with `pr-screenshots`, passing the PR's URL and
+`--entries <path>` for the file just written. One call per run, on the home
+repository's PR.
+
+### Read the result
+
+`result.json` is the contract, and the companion loop below reads `assets` and
+`section` out of it:
+
+```bash
+RESULT_FILE="$ENTRIES_DIR/result.json"   # the skill writes it beside the entries file
+[ -r "$RESULT_FILE" ] || exit 2
+```
+
+Three fields decide what happens next:
+
+- `section` — the exact markdown written, or null. Null means no write landed
+  a verified URL, so the open-time degraded note stands as the final section.
+- `operator_note` — carried verbatim into the operator-facing completion
+  report, never into a PR body.
+- `failures` — named in the report, one line per entry, so a missing image is
+  visible rather than silently absent.
+
+The skill owns the section's wording, the failure list, and the degraded form.
+Never restate them here, and never edit the `## Screenshots` section a second
+time from this skill: `team-pr` renders it once, at open time, in the
+pre-upload wording, and the skill's single write replaces it.
+
+### Multi-repo
+
+One call, on the home repository's PR. Never one call per repository: that
+re-uploads the same image once per repo and orphans the extra assets.
+
+When the returned `section` is non-null, copy that exact string into each
+companion PR's body, one companion at a time.
+
+This loop is the home write run once per companion, so it runs the same
+committed scripts the home write runs rather than restating them. Restating is
+what let it drift: the read lost its envelope check, the body file lost its
+per-companion binding, and the host stopped being carried into any of the three
+calls.
+
+1. Bind that companion's own values. The split, the charset tests, and the
+   host binding are `resolve-pr.sh`'s — the same code the home path resolved
+   with, over the companion's URL instead of the home one. The host is not
+   optional: `--repo "$OWNER/$REPO"` resolves against whichever host `gh`
+   considers default, so on an Enterprise PR every call below would name a
+   repository on github.com, and the read-back would then assert against an
+   unrelated PR.
+
+   ```bash
+   COMPANION_URL="https://github.com/owner/other-repo/pull/17"   # this companion's PR
+   COMPANION_DIR="$(mktemp -d)"                       # bound per companion, never reused
+   "<pr-screenshots-skill-dir>/scripts/resolve-pr.sh" "$COMPANION_URL" "$COMPANION_DIR" || exit 2
+   COMPANION_HOST="$(cat "$COMPANION_DIR/pr-host")"
+   OWNER="$(cat "$COMPANION_DIR/owner")"
+   REPO="$(cat "$COMPANION_DIR/repo")"
+   NUMBER="$(cat "$COMPANION_DIR/number")"
    ```
 
-   Sign in to github.com once in that headed window, then close it. The
-   sign-in itself stays manual. That profile holds a full **unencrypted**
-   github.com web session. To revoke it, sign out of github.com inside that
-   profile or delete the directory. If the pre-check passes, `chmod 700`
-   the profile directory before use (idempotent — never rely on
-   documentation alone), then run a short Node script through Bash:
-   `chromium.launchPersistentContext` on the profile directory, headless.
-   Open the PR page. Confirm the signed-in marker (the `user-login` meta
-   tag is present, no redirect to `/login`) — logged out despite the cookie
-   file means an expired session → the same degraded path. For each
-   manifest entry with an existing PNG under 10MB, set the file on the
-   markdown textarea's file input, wait for GitHub's user-attachments
-   pipeline to insert the
-   `https://github.com/user-attachments/assets/<uuid>` URL into the
-   textarea, record it, then clear the textarea before the next image so
-   each URL is unambiguously attributed to its manifest entry. 60s bound
-   per image (timeout → that image is a failure). Oversize files (>10MB)
-   are skipped at upload and noted. Pass file paths and captions to the
-   script as argv (or environment variables), never interpolated into a
-   command string. Do not submit any comment — the textarea is only the
-   upload vehicle.
-3. **Body edit.** `gh pr edit --body` replaces the `## Screenshots` section
-   wholesale — succeeded images render as `**<caption>** (<state>)` +
-   `![<caption>](<url>)`. Failures are listed by caption + local path in
-   the same section (partial success → embed the succeeded URLs, list the
-   rest as failures). Re-running team-pr for the same id replaces the
-   section wholesale again. Previously uploaded URLs remain valid.
+   `$COMPANION_DIR` is bound *inside* this loop and nowhere above it. Bound
+   once outside, the file the previous companion's splice produced survives
+   into this iteration, and a refusal here would leave the write putting the
+   previous companion's summary, footer, and `Part of` line over this
+   companion's description.
 
-**Multi-repo:** upload once, on the home-repo PR. Companion-PR bodies embed
-the same URLs — never re-upload per repo.
+2. Splice the section in and write it, once:
+
+   ```bash
+   "<pr-screenshots-skill-dir>/scripts/write-companion.sh" "$COMPANION_DIR" "$RESULT_FILE"
+   ```
+
+   | Exit | Means | Do |
+   | --- | --- | --- |
+   | 0 | The companion body was written | Read it back, step 3 |
+   | 1 | Refused — `result.json` carries no `section`, the splice refused with `unchanged: <reason>`, or another writer landed first | Report the reason and leave that companion alone. Its body is byte-identical |
+   | 2 | Fault — an unreadable or malformed input, a failed `gh` call, or `splice.mjs: <message>` | Report it as a fault, not as a refusal |
+
+   That script is the home write run once: it reads `section` and the landed
+   count out of `result.json`, reads that companion's pre-image guarded by the
+   process exit *and* the JSON envelope, splices with
+   `skills/pr-screenshots/scripts/splice.mjs`, promotes the spliced body only on
+   success, and gates the single `gh pr edit --body-file` on the pre-image
+   still being current. The exit codes are tabulated in
+   `skills/pr-screenshots/references/02-upload-and-body-edit.md`.
+
+3. Read that companion's own rendered body back, against its own host, owner,
+   repository, and number:
+
+   ```bash
+   gh api --hostname "$COMPANION_HOST" repos/"$OWNER"/"$REPO"/pulls/"$NUMBER" \
+     -H "Accept: application/vnd.github.full+json" --jq .body_html
+   ```
+
+   `--hostname` is what makes the read-back land on the host the companion
+   actually lives on; without it the assertions run against whatever PR of that
+   number exists on the default host, which is evidence about something else.
+
+   Apply the assertions in `skills/pr-screenshots/references/03-verify.md`. A
+   companion whose read-back does not pass is named in the report and left
+   *as written* — never reverted, never retried. The write that could fail to
+   render is the write that gets checked.
+
+When the returned `section` is `null`, touch no companion body at all. Each
+companion already carries the open-time degraded note, which is the correct
+thing for it to say.
+
+A cross-repository rendering failure is not a branch this run takes. It is the
+design change such a failure would force — calling the skill once per
+repository, at the cost of re-uploading every image per repo. The
+per-companion read-back exists to detect that case, not to route around it.
+
+The footer rules survive the companion edit intact: each PR still re-emits
+exactly one closing line in footer position, and a companion PR re-emits its
+non-closing `Part of owner/repo#<n>` reference the same way, per
+`references/02-execution.md`. The splice lifts that footer out and re-emits it
+byte-identical, so a companion edit neither duplicates nor drops it.
 
 **Failure posture:** every branch ends with an open PR, a visible note, and
 local paths. Upload problems never block the PR, retry-loop, or prompt the

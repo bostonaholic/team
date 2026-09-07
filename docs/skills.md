@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: pipeline entry-point slash commands, standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase, reflect, why, how), and methodology skills loaded by agents, each with the skills it loads."
+description: "The Team plugin's skills: pipeline entry-point slash commands, standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, reflect, why, how), and methodology skills loaded by agents, each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -106,6 +106,7 @@ Opens a pull request after verification.
 
 - `changelog`
 - `git-commit`
+- `pr-screenshots`
 - `tracking-tickets`
 - `verifying-ux`
 - `worktree-isolation`
@@ -180,6 +181,10 @@ Verifies a PR test plan with evidence-rated verdicts.
 **Loads:**
 
 - `running-quality-checks`
+
+### [pr-screenshots](https://github.com/bostonaholic/team/blob/main/skills/pr-screenshots/SKILL.md)
+
+Attaches local images to a PR body.
 
 ### [pr-rebase](https://github.com/bostonaholic/team/blob/main/skills/pr-rebase/SKILL.md)
 
@@ -569,6 +574,7 @@ skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see
 | `groom-backlog` | user or model (direct invocation) | Standalone: groom a project backlog (not a QRSPI phase) |
 | `pr-cleanup` | user or model (direct invocation; Mode B only on explicit abandon intent) | Standalone: post-PR teardown (not a QRSPI phase) |
 | `pr-verify` | user or model (direct invocation) | Standalone: test-plan verification (not a QRSPI phase) |
+| `pr-screenshots` | user or model (direct invocation, on explicit intent) | Standalone: attach local images to a PR body (not a QRSPI phase) |
 | `pr-rebase` | user (direct invocation, on explicit rebase intent; model invocation disabled) | Standalone: rebase a branch onto its base (not a QRSPI phase) |
 | `reflect` | user (direct invocation, on explicit reflection intent; model invocation disabled) | Standalone: mine the session transcript for durable learnings (not a QRSPI phase) |
 | `why` | user or model (direct invocation). `team-fix` and `reviewing-code` (conditional load) | Standalone: design-rationale investigation (not a QRSPI phase). Dispatches read-only Explore investigators |
@@ -598,7 +604,7 @@ skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see
 | `running-quality-checks` | verifier. reflect (after the writes) | Implement (verify), and Any (reflect) |
 | `verifying-ux` | ux-reviewer | Implement (verify) |
 | `systematic-debugging` | implementer (inline Load on non-obvious failures). Other agents when debugging (advisory) | Implement, and Any (debugging) |
-| `principle-progress-tracking` | every multi-step agent; cited by `team`, `team-implement`, `team-fix` | Any (multi-step procedure) |
+| `principle-progress-tracking` | every multi-step agent; cited by `team`, `team-implement`, `team-fix`, `pr-screenshots` | Any (multi-step procedure) |
 | `nested-agents` | researcher, implementer, code-reviewer, security-reviewer | Research, Implement (scouts + skeptic passes) |
 | `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
 | `technical-design-doc` | planner | Plan |
@@ -616,9 +622,9 @@ skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see
 | `principle-blind-the-investigator` | cited by `qrspi-workflow`, `nested-agents`, `decomposing-intent`, `researching-codebases`, `why`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-bounded-loops` | cited by `pr-watch-as-author`, `pr-watch-as-reviewer`, `pr-watch-mechanics`, `principle-non-blocking-waits`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-deep-agents-narrow-seams` | cited by `nested-agents`, `team`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-evidence-over-assertion` | cited by `pr-verify`, `groom-backlog`, `pr-open-comments`, `researching-codebases`, `why`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-evidence-over-assertion` | cited by `pr-verify`, `groom-backlog`, `pr-open-comments`, `researching-codebases`, `why`, `pr-screenshots`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-explicit-intent` | cited by `shipit`, `pr-rebase`, `pr-cleanup`, `team-fix`, `reflect`, `groom-backlog`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-fail-closed` | cited by `nested-agents`, `team`, `team-design`, `team-structure`, `principle-optimization-never-dependency`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-fail-closed` | cited by `nested-agents`, `team`, `team-design`, `team-structure`, `principle-optimization-never-dependency`, `pr-screenshots`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-files-are-the-contract` | cited by `qrspi-workflow`, `team`, `artifact-frontmatter`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-fix-root-causes` | cited by `systematic-debugging`, `test-driven-bug-fix`, `implementing-slices`, `team-fix`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-generator-evaluator` | cited by `reviewing-code`, `eng-design-doc-review`, `nested-agents`, `pr-watch-as-reviewer`, `principle-blind-the-investigator`, `how`. Any agent (just-in-time) | Any (cross-cutting principle) |
@@ -626,17 +632,17 @@ skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see
 | `principle-idempotent-reruns` | cited by `pr-cleanup`, `groom-backlog`, `team`, `pr-watch-as-author`, `team-design`, `principle-pre-image-first`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-least-privilege` | cited by `reviewing-code`, `reflect`, `eng-design-doc-review`, `cross-model-review`, `pr-verify`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-mechanical-gates` | cited by `qrspi-workflow`, `test-first-development`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-never-interpolate` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `sweeping-local-state`, `decomposing-intent`, `cross-model-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-never-interpolate` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `sweeping-local-state`, `decomposing-intent`, `cross-model-review`, `pr-screenshots`, `team-pr`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-non-blocking-waits` | cited by `pr-watch-as-author`, `pr-watch-as-reviewer`, `pr-watch-mechanics`, `shipit`, `cross-model-review`, `pr-rebase`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-optimization-never-dependency` | cited by `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`, `reflect`, `principle-fail-closed`, `why`, `how`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-optimization-never-dependency` | cited by `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`, `reflect`, `principle-fail-closed`, `why`, `how`, `pr-screenshots`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-plan-present-wait` | cited by `groom-backlog`, `pr-open-comments`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-pre-image-first` | cited by `pr-rebase`, `groom-backlog`, `reflect`, `running-quality-checks`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-record-assumptions` | cited by `authoring-designs`, `decomposing-intent`, `nested-agents`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-scope-fence` | cited by `implementing-slices`, `qrspi-workflow`, `test-first-development`, `principle-subtract-before-you-add`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-single-source-of-truth` | cited by `qrspi-workflow`, `artifact-frontmatter`, `cross-model-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-skip-loudly` | cited by `reviewing-code`, `sweeping-local-state`, `groom-backlog`, `cross-model-review`, `principle-optimization-never-dependency`, `principle-scope-fence`, `why`, and the `code-reviewer` agent. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-skip-loudly` | cited by `reviewing-code`, `sweeping-local-state`, `groom-backlog`, `cross-model-review`, `principle-optimization-never-dependency`, `principle-scope-fence`, `pr-screenshots`, `why`, and the `code-reviewer` agent. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-subtract-before-you-add` | cited by `engineering-standards`, `implementing-slices`, `refactoring-to-patterns`, `authoring-designs`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-untrusted-input-is-data` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `cross-model-review`, `pr-watch-as-author`, `reflect`, `why`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-untrusted-input-is-data` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `cross-model-review`, `pr-watch-as-author`, `reflect`, `why`, `pr-screenshots`. Any agent (just-in-time) | Any (cross-cutting principle) |
 
 The read-only `Explore` subagent that runs the `reviewing-designs` brief
 is one more consumer of `technical-design-doc`, `reviewing-code`,
