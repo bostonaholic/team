@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.88.0] - 2026-09-07
+
 ### Added
 
+- **[`/team`](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md) now names a ledger to fall back to when the host offers no TodoWrite.** The orchestrator's live ledger is TodoWrite, and the procedure said nothing about a host that lacks it, so a run improvised one — in an observed session, a file ledger invented on the spot in the artifact directory. The substitute is now named: `docs/plans/<id>/ledger.md`, the same items in the same order, rewritten in place, seeded once the leading WORKTREE phase creates the directory. It replaces TodoWrite rather than joining it, and the run reports which of the two it used. Because it is on disk, the review-round counts the aggregate gate tracks survive a restart there, which the session-scoped ledger's counts do not. **What this asks of you:** nothing. A host with TodoWrite behaves exactly as before.
 - **A new methodology skill, [`pr-watch-mechanics`](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-mechanics/SKILL.md), owns the bounded watch-loop mechanics that `pr-watch-as-author` and `pr-watch-as-reviewer` used to duplicate.** Both skills carried their own copy of the cycle timing, the soft cap, and the handoff to the scheduled watch job, so a change to one — such as the 3-cycle soft cap (~90 minutes) that hands off to the scheduled `~/dotfiles/bin/pr-watch.sh` launchd job — had to land twice and could drift. Each watch skill now loads `pr-watch-mechanics` and binds three slots: its poll command, its cycle-0 subject, and its handoff state. The three stop conditions that are loop mechanics rather than either skill's own action — a user interrupt, the soft cap, and 3 consecutive poll failures — are also defined once, there. The catalog grows from 85 to 86 skills. **What this asks of you:** nothing — both watch skills behave the same as before the extraction.
 
 ## [0.87.0] - 2026-09-04
@@ -798,7 +801,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.87.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.88.0...HEAD
+[0.88.0]: https://github.com/bostonaholic/team/compare/v0.87.0...v0.88.0
 [0.87.0]: https://github.com/bostonaholic/team/compare/v0.86.0...v0.87.0
 [0.86.0]: https://github.com/bostonaholic/team/compare/v0.85.0...v0.86.0
 [0.85.0]: https://github.com/bostonaholic/team/compare/v0.84.0...v0.85.0

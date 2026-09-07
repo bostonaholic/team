@@ -1523,3 +1523,35 @@ describe("no ceiling-hugging foreground sleep (L2 forbidden-pattern sweep)", () 
     expect(CEILING_SLEEP.test(flat(principle))).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// The TodoWrite fallback ledger names one path — free L2 drift tripwire
+// (docs/testing.md §2, collision/drift form). TodoWrite is the orchestrator's
+// live ledger, and a host without it left the procedure silent, so the
+// orchestrator improvised a file ledger per run. The substitute is now named,
+// and two surfaces state it: the Rules reference the orchestrator reads and
+// the architecture section a human reads. A path that drifts between them is
+// two different fallbacks.
+// ---------------------------------------------------------------------------
+
+const FALLBACK_LEDGER = "docs/plans/<id>/ledger.md";
+
+describe("the TodoWrite fallback names one ledger path (L2 tripwire)", () => {
+  test("both restating surfaces carry the path byte-identically", () => {
+    expect(read(join(REPO_ROOT, "skills", "team", "references", "14-rules.md"))).toContain(
+      FALLBACK_LEDGER,
+    );
+    expect(read(join(REPO_ROOT, "docs", "architecture.md"))).toContain(FALLBACK_LEDGER);
+  });
+
+  test("the setup step points at the fallback rather than restating it", () => {
+    // Single source of truth: the seed step names the Rules reference, and the
+    // path itself is defined once. A second copy of the path here would be a
+    // third surface to drift.
+    const setup = read(join(REPO_ROOT, "skills", "team", "references", "02-setup.md"));
+    // Guard: a renamed or deleted setup file must fail, not vacuously pass.
+    expect(setup.length).toBeGreaterThan(0);
+    expect(setup).toContain("TodoWrite");
+    expect(setup).not.toContain(FALLBACK_LEDGER);
+  });
+});

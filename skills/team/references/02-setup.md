@@ -19,6 +19,9 @@
    `Worktree → Question → Research → Design → Structure → Plan → Implement → PR`.
    Mark `Worktree` as `in_progress`.
    See `principle-progress-tracking` for the per-step tracking convention agents follow within each phase.
+   With no TodoWrite on the host, seed the substitute file ledger the
+   Rules reference defines instead; it is written once WORKTREE creates
+   the directory.
    The home worktree and `docs/plans/<id>/` are both created at the leading
    WORKTREE phase (see "Orchestrator-Emit Gate (leading worktree)" below) —
    not here.

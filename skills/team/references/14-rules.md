@@ -7,6 +7,14 @@
 - TodoWrite is the orchestrator's live coordination ledger. It is
   session-scoped and is rebuilt on entry to any `/team-*` command by
   scanning artifacts.
+- Where the host offers no TodoWrite, `docs/plans/<id>/ledger.md`
+  substitutes for it — never supplements it. Same items in the same
+  order, rewritten in place as their states change, seeded once the
+  leading WORKTREE phase creates the directory; frontmatter per
+  `skills/artifact-frontmatter/SKILL.md`. On disk it is durable rather
+  than session-scoped, so the review-round counts the aggregate gate
+  tracks survive a restart. Report which of the two the run used
+  (`principle-skip-loudly`).
 - **Subagents never pause for user input.** Each one resolves its own open
   questions autonomously, and picks the option it would have recommended.
   It records every such choice as an explicit assumption in its artifact,
