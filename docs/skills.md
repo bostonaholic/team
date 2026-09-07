@@ -556,6 +556,10 @@ Defines reproduce, hypothesize, isolate, and fix workflow.
 
 Runs project-native tests, static checks, builds, and linters.
 
+**Mentions:**
+
+- `principle-pre-image-first`
+
 ### [principle-progress-tracking](https://github.com/bostonaholic/team/blob/main/skills/principle-progress-tracking/SKILL.md)
 
 Requires one live ledger for ordered procedures.
@@ -913,7 +917,7 @@ skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see
 | `principle-non-blocking-waits` | cited by `pr-watch-as-author`, `pr-watch-as-reviewer`, `pr-watch-mechanics`, `shipit`, `cross-model-review`, `pr-rebase`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-optimization-never-dependency` | cited by `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`, `reflect`, `principle-fail-closed`, `why`, `how`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-plan-present-wait` | cited by `groom-backlog`, `pr-open-comments`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-pre-image-first` | cited by `pr-rebase`, `groom-backlog`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-pre-image-first` | cited by `pr-rebase`, `groom-backlog`, `reflect`, `running-quality-checks`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-record-assumptions` | cited by `authoring-designs`, `decomposing-intent`, `nested-agents`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-scope-fence` | cited by `implementing-slices`, `qrspi-workflow`, `test-first-development`, `principle-subtract-before-you-add`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-single-source-of-truth` | cited by `qrspi-workflow`, `artifact-frontmatter`, `cross-model-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
