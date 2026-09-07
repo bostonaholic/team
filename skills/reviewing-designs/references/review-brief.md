@@ -105,6 +105,30 @@ When you write your findings, also call the Skill tool with
    subsystems implied by the predecessor artifacts? Flag scope creep
    (especially silent multi-repo expansion) as a blocking issue.
 
+### Calibrate to the class of change
+
+Size the bar to what the change is, then judge against it. A design for a
+pure refactor — file moves plus reference updates, no behavior change —
+has legitimately thin edge-case, concurrency, and authorization
+sections, because the change introduces no behavior for those sections to
+describe. Thin there is the right answer, not a gap. Step 4 finds a gap
+only where the change opens a path the design leaves unwalked.
+
+**Blocking means one thing: acting on this design as written produces a
+wrong or incomplete result.** A self-contradiction, a missing edit the
+implementer would have to invent, and a verification command that would
+reject a correct implementation are all blocking, whatever the class of
+change. Prose imprecision, a citation off by a line, and a claim resting
+on vendor documentation outside the repo are not.
+
+Check your own findings before you emit them. A defect in the
+verification commands *you* propose is a defect in your review, not in
+the design.
+
+Never manufacture a blocking finding to justify another round. A round
+that turns up nothing blocking is the gate working, and a design a
+competent implementer can execute as written is approved.
+
 ### Output format
 
 Use Conventional Comments format for every finding. Every comment includes a
@@ -130,7 +154,8 @@ verdict is the **terminal line of your report** — nothing follows it:
   unjustified decision, absent edge-case enumeration, false or unverifiable
   citation, silent scope expansion, a rule that reaches one surface and not
   another with no reason given). The author must revise before the
-  design can advance.
+  design can advance. A finding that is not blocking never reaches this
+  verdict, however many of them there are.
 - **COMMENT** — Non-blocking suggestions and nitpicks only. Document is
   acceptable but could be improved.
 

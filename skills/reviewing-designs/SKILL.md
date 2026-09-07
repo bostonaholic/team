@@ -46,6 +46,15 @@ section. Call the Skill tool with `conventional-comments` for findings and
 8. **Check scope discipline.** Silent subsystem or multi-repo expansion is
    blocking.
 
+### Calibration
+
+Size the bar to the class of change. A refactor design is legitimately thin on
+edge cases, concurrency, and authorization, because the change adds no behavior
+there. Blocking means one thing: acting on the design as written produces a
+wrong or incomplete result. Prose imprecision, a citation off by a line, and a
+claim resting on vendor documentation outside the repo are not that. Never
+manufacture a blocking finding to justify another round.
+
 ### Output format
 
 Use Conventional Comments for every finding with a `file:line`. When external
