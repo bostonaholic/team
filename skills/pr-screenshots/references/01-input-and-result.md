@@ -26,7 +26,10 @@ has to survive from one command to the next in a session's shell rather than
 fifteen. The rest — `$NUMBER`, `$REPO_SPEC`, `$PR_HOST`, `$OWNER`, `$REPO`, and
 the file paths the later steps expand — are each bound in one fence and
 expanded in later ones, and a fence that lost them re-binds them by re-running
-the block above, never by resolving the PR again:
+the six `cat` lines above against the same `$RUN_DIR`. Never the `mktemp -d`
+and `resolve-pr.sh` lines beside them: those resolve the PR a second time into
+a fresh directory, and leave `pre-image.md`, `assets.tsv`, and everything else
+this run has produced behind in the old one. What the directory holds:
 
 | File | Written by | Holds |
 | --- | --- | --- |

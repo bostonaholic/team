@@ -216,8 +216,8 @@ while IFS= read -r ENTRY_PATH; do
   if [ ! -f "$ENTRY_PATH" ]; then REASON="not a regular file" ; fail_entry ; continue ; fi
   # The parent is bound on its own so the `cd` status is the one observed:
   # appending `/$(basename …)` to the substitution takes the status from
-  # `basename`, which succeeds on anything — and a failed `cd` then yielded a
-  # bare `/<name>` that this arm never saw.
+  # `basename`, which succeeds on anything, so a failed `cd` yields a bare
+  # `/<name>` this arm never sees.
   if ! ENTRY_DIR="$(cd -- "$(dirname -- "$ENTRY_PATH")" && pwd -P)"; then
     REASON="file missing" ; fail_entry ; continue
   fi

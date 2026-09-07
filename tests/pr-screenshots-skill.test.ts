@@ -2181,10 +2181,12 @@ describe("Slice 1 — splice.mjs property sweep (L1)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// L1: the CLI's exit-code and flag contract.
+// L3: the CLI's exit-code and flag contract. A subprocess-snapshot test —
+// spawn the program, read its stdout, its exit code, and the files it wrote —
+// which `docs/testing.md` places at L3, never at L1's pure-function base.
 // ---------------------------------------------------------------------------
 
-describe("Slice 1 — splice.mjs CLI exit codes (L1)", () => {
+describe("Slice 1 — splice.mjs CLI exit codes (L3)", () => {
   const scratch = mkdtempSync(join(tmpdir(), "pr-screenshots-"));
   const bodyFile = join(scratch, "body.md");
   const sectionFile = join(scratch, "section.md");
@@ -2313,11 +2315,16 @@ function runFences(script: string, env: Record<string, string> = {}): ShellRun {
 }
 
 // ---------------------------------------------------------------------------
-// L1: the committed scripts, RUN. Each one is a complete program with a
+// L3: the committed scripts, RUN. Each one is a complete program with a
 // shebang, argv inputs, and documented exit codes, so its contracts are
 // deterministic executions rather than substring checks — and a substring
 // check is exactly what let a validator that refuses the primary pipeline
 // path ship green.
+//
+// L3 rather than L1: these spawn a real process against a real temp directory
+// with `gh` stubbed on PATH. That is the subprocess-snapshot shape
+// `docs/testing.md` puts at L3 — real components, no external surface. L1 is
+// pure functions with no I/O, which is `splice.mjs` above, not these.
 // ---------------------------------------------------------------------------
 
 // The canonical URL the `gh` stubs below resolve to.
@@ -2369,7 +2376,7 @@ function resolve(
   };
 }
 
-describe("Slice 1 — resolve-pr.sh, executed (L1)", () => {
+describe("Slice 1 — resolve-pr.sh, executed (L3)", () => {
   test("every committed script pins its own interpreter and is executable", () => {
     // The whole reason these procedures are files rather than fences: a
     // markdown fence carries no shebang, so the host shell picks the dialect —
@@ -2802,7 +2809,7 @@ function upload(
   };
 }
 
-describe("Slice 1 — upload.sh, executed (L1)", () => {
+describe("Slice 1 — upload.sh, executed (L3)", () => {
   test("the validation matrix classifies every entry, in entries order", () => {
     const dir = sandbox();
     const root = join(dir, "shots");
@@ -3189,7 +3196,7 @@ const COMPANION_SECTION = [
   "",
 ].join("\n");
 
-describe("Slice 3 — write-companion.sh, executed (L1)", () => {
+describe("Slice 3 — write-companion.sh, executed (L3)", () => {
   test("the section lands in the companion body, once", () => {
     const dir = sandbox();
     const env = ghStub(dir, { body: "## Summary\n\nAdds a login page.\n\nCloses #12\n" });
@@ -3384,7 +3391,7 @@ function uploadFence(marker: string): string {
   return block.replaceAll("<skill-dir>", SKILL_DIR);
 }
 
-describe("Slice 1 — the capability gap, executed (L1)", () => {
+describe("Slice 1 — the capability gap, executed (L3)", () => {
   test("a host that cannot attach still writes the degraded section", () => {
     // The user's requirement, end to end: no upload capability means skip the
     // upload, keep the degraded note, report the instruction to the operator,

@@ -54,8 +54,9 @@ if ! printf '%s' "$PRE_IMAGE_JSON" | jq -e 'has("body") and (.body | type == "st
 fi
 # The CRLF normalization, which every later read of the body repeats:
 # normalizing one side alone makes the lost-update guard refuse every run on
-# a PR whose body carries CRLFs. It happens INSIDE `jq` so the status
-# observed is jq's own — piping into `tr` masked a jq failure as success.
+# a PR whose body carries CRLFs. It happens INSIDE `jq` so the status observed
+# is jq's own: piping into `tr` puts the pipeline's status on `tr`, which masks
+# a jq failure as success.
 if ! PRE_IMAGE="$(printf '%s' "$PRE_IMAGE_JSON" | jq -r '.body | gsub("\r";"")')"; then
   printf 'could not normalize the PR body\n' >&2
   exit 2
