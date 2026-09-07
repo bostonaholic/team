@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.88.0] - 2026-09-07
+
 ### Added
 
 - **[`/team`](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md) now names a ledger to fall back to when the host offers no TodoWrite.** The orchestrator's live ledger is TodoWrite, and the procedure said nothing about a host that lacks it, so a run improvised one — in an observed session, a file ledger invented on the spot in the artifact directory. The substitute is now named: `docs/plans/<id>/ledger.md`, the same items in the same order, rewritten in place, seeded once the leading WORKTREE phase creates the directory. It replaces TodoWrite rather than joining it, and the run reports which of the two it used. Because it is on disk, the review-round counts the aggregate gate tracks survive a restart there, which the session-scoped ledger's counts do not. **What this asks of you:** nothing. A host with TodoWrite behaves exactly as before.
@@ -799,7 +801,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.87.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.88.0...HEAD
+[0.88.0]: https://github.com/bostonaholic/team/compare/v0.87.0...v0.88.0
 [0.87.0]: https://github.com/bostonaholic/team/compare/v0.86.0...v0.87.0
 [0.86.0]: https://github.com/bostonaholic/team/compare/v0.85.0...v0.86.0
 [0.85.0]: https://github.com/bostonaholic/team/compare/v0.84.0...v0.85.0
