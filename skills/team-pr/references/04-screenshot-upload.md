@@ -47,8 +47,12 @@ The file itself carries:
 - a manifest with `status: partial` adds one `notes` line naming how many
   states were skipped and pointing at the manifest.
 
-The file's schema is in
-`skills/pr-screenshots/references/01-input-and-result.md`.
+The file's schema, and the worked `jq -n --args` construction that writes it,
+are in `skills/pr-screenshots/references/01-input-and-result.md`. Use that
+construction: a path and a caption are caller text, so each is bound as a `jq`
+argument and never pasted into a JSON string, where a quote or a backslash in
+one rewrites the document rather than filling a slot in it
+(`principle-never-interpolate`).
 
 ### Call the skill
 
@@ -88,122 +92,57 @@ re-uploads the same image once per repo and orphans the extra assets.
 When the returned `section` is non-null, copy that exact string into each
 companion PR's body, one companion at a time.
 
-This loop is the home write run once per companion, so every guard the home
-write carries is cited here rather than restated. Restating is what let it
-drift: the read lost its envelope check, the body file lost its per-companion
-binding, and the host stopped being carried into any of the three calls. Where a
-step below names a fence in `skills/pr-screenshots/`, read that fence and run
-it — do not paraphrase it.
+This loop is the home write run once per companion, so it runs the same
+committed scripts the home write runs rather than restating them. Restating is
+what let it drift: the read lost its envelope check, the body file lost its
+per-companion binding, and the host stopped being carried into any of the three
+calls.
 
-1. Bind that companion's own values, per companion. The split below is the
-   home one from `skills/pr-screenshots/references/01-input-and-result.md`
-   (`### Resolve the PR once`) — the shape test, then the parameter-expansion
-   split, then the charset tests — run over the companion's URL instead of the
-   home one, and shown rather than cited because every guard it carries is one
-   the three `gh` calls below depend on. The host is
-   not optional: `--repo "$OWNER/$REPO"` resolves against whichever host `gh`
-   considers default, so on an Enterprise PR all three calls below would name a
+1. Bind that companion's own values. The split, the charset tests, and the
+   host binding are `resolve-pr.sh`'s — the same code the home path resolved
+   with, over the companion's URL instead of the home one. The host is not
+   optional: `--repo "$OWNER/$REPO"` resolves against whichever host `gh`
+   considers default, so on an Enterprise PR every call below would name a
    repository on github.com, and the read-back would then assert against an
    unrelated PR.
 
    ```bash
    COMPANION_URL="https://github.com/owner/other-repo/pull/17"   # this companion's PR
-   case "$COMPANION_URL" in
-     https://*/*/*/pull/[0-9]*) : ;;
-     *) exit 2 ;;                                     # not a PR URL, so nothing may split it
-   esac
-   REST="${COMPANION_URL#https://}"
-   COMPANION_HOST="${REST%%/*}" ; REST="${REST#*/}"
-   OWNER="${REST%%/*}"          ; REST="${REST#*/}"
-   REPO="${REST%%/*}"
-   NUMBER="${COMPANION_URL##*/}"
-   case "$COMPANION_HOST$OWNER$REPO" in *[!A-Za-z0-9._-]*) exit 2 ;; esac
-   case "$NUMBER" in ""|*[!0-9]*) exit 2 ;; esac
-
    COMPANION_DIR="$(mktemp -d)"                       # bound per companion, never reused
-   COMPANION_BODY_FILE="$COMPANION_DIR/pre-image.md"
-   NEW_BODY_FILE="$COMPANION_DIR/new-body.md"
-   SECTION_FILE="$COMPANION_DIR/section.md"
-   COMPANION_SPEC="$COMPANION_HOST/$OWNER/$REPO"      # gh's own [HOST/]OWNER/REPO form
-   LANDED_COUNT="$(jq '[.assets[] | select(.url != null)] | length' "$RESULT_FILE")"
-   # `--section-file` reads a FILE, so the section is written to one here. `jq
-   # -r` is what writes it: the string carries the normalization's `\[`, `\]`,
-   # `\!`, `\<`, and `\>` escapes, and re-typing caller-derived text into a
-   # heredoc is the interpolation `principle-never-interpolate` forbids. The
-   # `select` refuses a null or empty `section` rather than writing the four
-   # bytes `null` into a companion body.
-   jq -e -r '.section | select(type == "string" and length > 0)' \
-     "$RESULT_FILE" >"$SECTION_FILE" || exit 2
+   "<pr-screenshots-skill-dir>/scripts/resolve-pr.sh" "$COMPANION_URL" "$COMPANION_DIR" || exit 2
+   COMPANION_HOST="$(cat "$COMPANION_DIR/pr-host")"
+   OWNER="$(cat "$COMPANION_DIR/owner")"
+   REPO="$(cat "$COMPANION_DIR/repo")"
+   NUMBER="$(cat "$COMPANION_DIR/number")"
    ```
 
-   The charset tests are the same ones the home split runs, and they are shown
-   rather than cited: a host, owner, or repository carrying anything outside
-   `[A-Za-z0-9._-]` reaches three `gh` calls below, and a number that is not
-   digits names a different PR.
+   `$COMPANION_DIR` is bound *inside* this loop and nowhere above it. Bound
+   once outside, the file the previous companion's splice produced survives
+   into this iteration, and a refusal here would leave the write putting the
+   previous companion's summary, footer, and `Part of` line over this
+   companion's description.
 
-   `$NEW_BODY_FILE` and `$SECTION_FILE` are bound *inside* this loop and
-   nowhere above it. Bound once outside, the file the previous companion's
-   splice produced survives into this iteration, and a refusal here leaves step
-   4 writing the previous companion's summary, footer, and `Part of` line over
-   this companion's description.
-
-2. Read that companion's pre-image, guarded the way step A of
-   `skills/pr-screenshots/references/02-upload-and-body-edit.md` guards the home
-   one — the process exit *and* the JSON envelope. A bare read binds `""` on a
-   rate limit or a network blip, `""` is indistinguishable from a genuinely
-   empty description, and the splice then returns the `## Screenshots` section
-   as that companion's *whole* body:
+2. Splice the section in and write it, once:
 
    ```bash
-   PRE_JSON="$(gh pr view "$NUMBER" --repo "$COMPANION_SPEC" --json body)" || exit 2
-   printf '%s' "$PRE_JSON" | jq -e 'has("body") and (.body | type == "string")' >/dev/null || exit 2
-   printf '%s' "$PRE_JSON" | jq -r .body >"$COMPANION_BODY_FILE" || exit 2
+   "<pr-screenshots-skill-dir>/scripts/write-companion.sh" "$COMPANION_DIR" "$RESULT_FILE"
    ```
 
-3. Splice the string in with the committed pure function, which applies the
-   same rules the home write used, including the overflow and no-downgrade
-   refusals:
+   | Exit | Means | Do |
+   | --- | --- | --- |
+   | 0 | The companion body was written | Read it back, step 3 |
+   | 1 | Refused — `result.json` carries no `section`, the splice refused with `unchanged: <reason>`, or another writer landed first | Report the reason and leave that companion alone. Its body is byte-identical |
+   | 2 | Fault — an unreadable input, a failed `gh` call, or `splice.mjs: <message>` | Report it as a fault, not as a refusal |
 
-   ```bash
-   if node "<pr-screenshots-skill-dir>/splice.mjs" \
-        --body-file "$COMPANION_BODY_FILE" --section-file "$SECTION_FILE" \
-        --landed "$LANDED_COUNT" > "$NEW_BODY_FILE.tmp"; then
-     mv "$NEW_BODY_FILE.tmp" "$NEW_BODY_FILE"
-   else
-     rm -f "$NEW_BODY_FILE.tmp" "$NEW_BODY_FILE"   # neither file exists, so step 4 cannot run
-   fi
-   ```
-
-   The redirect goes to a temporary path and is promoted only on success. A
-   plain `> "$NEW_BODY_FILE"` truncates before the command runs, so a refusal
-   would leave a zero-byte file for step 4 to hand `gh pr edit --body-file`,
-   blanking that companion's body. Removing *both* files is what makes the
-   comment true from the second companion onward: this is a loop, and the `rm`
-   has to clear the promoted path as well as the temporary one.
-
-   That script is `skills/pr-screenshots/splice.mjs`. Exit 1 prints
-   `unchanged: <reason>` on stderr and exit 2 prints `splice.mjs: <message>` —
-   a refusal and a fault respectively. Report either and leave that companion
-   alone; the exit codes are tabulated in
+   That script is the home write run once: it reads `section` and the landed
+   count out of `result.json`, reads that companion's pre-image guarded by the
+   process exit *and* the JSON envelope, splices with
+   `skills/pr-screenshots/splice.mjs`, promotes the spliced body only on
+   success, and gates the single `gh pr edit --body-file` on the pre-image
+   still being current. The exit codes are tabulated in
    `skills/pr-screenshots/references/02-upload-and-body-edit.md`.
 
-4. Write it, and gate the write on the pre-image still being current. The
-   splice was computed from the body read in step 2, so a companion somebody
-   edited in between would have their edit overwritten by a body that never
-   contained it — the same lost update the home path guards in its step D:
-
-   ```bash
-   NOW_JSON="$(gh pr view "$NUMBER" --repo "$COMPANION_SPEC" --json body)" || exit 2
-   printf '%s' "$NOW_JSON" | jq -e 'has("body") and (.body | type == "string")' >/dev/null || exit 2
-   if [ "$(printf '%s' "$NOW_JSON" | jq -r .body)" \
-      = "$(printf '%s' "$PRE_JSON" | jq -r .body)" ]; then
-     gh pr edit "$NUMBER" --repo "$COMPANION_SPEC" --body-file "$NEW_BODY_FILE"
-   else
-     rm -f "$NEW_BODY_FILE"          # another writer landed first — report it, write nothing
-   fi
-   ```
-
-5. Read that companion's own rendered body back, against its own host, owner,
+3. Read that companion's own rendered body back, against its own host, owner,
    repository, and number:
 
    ```bash

@@ -256,8 +256,12 @@ describe("Slice 3: companion PRs get the same section, each verified", () => {
 // `gh pr edit --body-file` — blanking that companion's body.
 const UNGUARDED_REDIRECT = /splice\.mjs[\s\S]{0,240}?>\s*"\$NEW_BODY_FILE"\s*$/m;
 
-describe("Slice 3: the companion recipe guards its own redirect", () => {
-  test("the multi-repo splice never redirects straight onto the body file", () => {
+describe("Slice 3: the companion recipe delegates its mechanics", () => {
+  test("the multi-repo loop never redirects straight onto a body file", () => {
+    // `>` truncates BEFORE the command runs and a refusal prints nothing, so
+    // that form leaves a zero-byte file for the next step to hand
+    // `gh pr edit --body-file` — blanking that companion's body. The promotion
+    // lives in the committed script now, and no fence here may reintroduce it.
     const multiRepo = multiRepoBlock();
     expect(multiRepo.length).toBeGreaterThan(0);
     expect(UNGUARDED_REDIRECT.test(multiRepo)).toBe(false);
@@ -267,53 +271,46 @@ describe("Slice 3: the companion recipe guards its own redirect", () => {
     ).toBe(true);
   });
 
-  test("the companion pre-image read is guarded by exit AND by envelope", () => {
-    // The companion read was the bare `gh pr view … --json body --jq .body`
-    // form the home path spent eighteen lines replacing: on a rate limit it
-    // binds "", the splice then returns the `## Screenshots` section as the
-    // WHOLE body, and step 4 writes it — blanking a live companion PR's entire
-    // description.
+  test("every companion mechanic is a committed script, not a restated fence", () => {
+    // Restating is what let this loop drift: the read lost its envelope check,
+    // the body file lost its per-companion binding, and the host stopped being
+    // carried into any of the three calls. The guards and their L1 tests live
+    // in skills/pr-screenshots/, so this side names the scripts and nothing
+    // else.
     const multiRepo = multiRepoBlock();
     expect(multiRepo.length).toBeGreaterThan(0);
-    expect(multiRepo).toContain('jq -e \'has("body") and (.body | type == "string")\'');
-    // The unguarded form the loop shipped is gone.
-    expect(multiRepo).not.toContain("--json body --jq .body");
-    // The read fails the run rather than continuing on "".
-    const read = multiRepo.indexOf('PRE_JSON="$(gh pr view');
-    expect(read).toBeGreaterThanOrEqual(0);
-    expect(multiRepo.slice(read, read + 400)).toContain("|| exit 2");
+    expect(multiRepo).toContain("scripts/resolve-pr.sh");
+    expect(multiRepo).toContain("scripts/write-companion.sh");
+
+    // No emitted command re-implements the split or the body write. The sweep
+    // runs on the fences, because the prose beside them names the rejected
+    // form on purpose.
+    const emitted = fencedBlocks(multiRepo).join("\n");
+    expect(emitted.length).toBeGreaterThan(0);
+    for (const restated of ['COMPANION_HOST="${REST%%/*}"', "gh pr view", "gh pr edit", "splice.mjs"]) {
+      expect({ restated, present: emitted.includes(restated) }).toEqual({ restated, present: false });
+    }
+    // The exit codes the caller branches on are tabulated, refusal and fault
+    // apart, with the splice's own reason text named.
+    expect(multiRepo).toContain("unchanged: <reason>");
+    expect(multiRepo).toContain("splice.mjs: <message>");
   });
 
-  test("a companion write is gated on the pre-image still being current", () => {
-    // Nothing on the companion path guarded a lost update at all, so a
-    // companion edited between the read and the write had that edit
-    // overwritten by a body computed before it existed.
-    const multiRepo = multiRepoBlock();
-    expect(multiRepo.length).toBeGreaterThan(0);
-    expect(multiRepo).toContain('NOW_JSON="$(gh pr view');
-    // The comparison gates the edit, and the edit is inside the gate.
-    const compare = multiRepo.indexOf('NOW_JSON="$(gh pr view');
-    const edit = multiRepo.indexOf('gh pr edit "$NUMBER"');
-    expect(edit).toBeGreaterThan(compare);
-    expect(multiRepo).toContain('= "$(printf \'%s\' "$PRE_JSON" | jq -r .body)"');
-  });
-
-  test("every companion temporary is bound per companion, and a refusal clears both", () => {
+  test("every companion temporary is bound per companion", () => {
     // `$NEW_BODY_FILE` was never bound to a per-companion path, so from the
     // second companion onward a refusal left the FIRST companion's spliced
     // body on disk — its summary, its footer, its `Part of` line — for the
-    // unconditional write below to put on this companion's description.
+    // unconditional write below to put on this companion's description. One
+    // directory per companion, and every file the write touches is inside it.
     const multiRepo = multiRepoBlock();
     expect(multiRepo.length).toBeGreaterThan(0);
     expect(multiRepo).toContain('COMPANION_DIR="$(mktemp -d)"');
-    expect(multiRepo).toContain('NEW_BODY_FILE="$COMPANION_DIR/new-body.md"');
-    expect(multiRepo).toContain('COMPANION_BODY_FILE="$COMPANION_DIR/pre-image.md"');
-    // The binding comes before the splice that writes into it.
-    expect(multiRepo.indexOf('NEW_BODY_FILE="$COMPANION_DIR')).toBeLessThan(multiRepo.indexOf("splice.mjs"));
-    // The refusal arm removes the promoted path too, which is what makes its
-    // own comment ("step 4 cannot run") true on the second iteration.
-    expect(multiRepo).toContain('rm -f "$NEW_BODY_FILE.tmp" "$NEW_BODY_FILE"');
-    expect(multiRepo).not.toContain('rm -f "$NEW_BODY_FILE.tmp"  ');
+    // Bound before the script that writes into it, and handed to it.
+    const bind = multiRepo.indexOf('COMPANION_DIR="$(mktemp -d)"');
+    const use = multiRepo.indexOf('scripts/write-companion.sh" "$COMPANION_DIR"');
+    expect(bind).toBeGreaterThanOrEqual(0);
+    expect(use).toBeGreaterThan(bind);
+    expect(squash(multiRepo)).toContain("bound *inside* this loop");
   });
 
   test("every companion call carries the host the companion lives on", () => {
@@ -324,9 +321,6 @@ describe("Slice 3: the companion recipe guards its own redirect", () => {
     // verification evidence about something else.
     const multiRepo = multiRepoBlock();
     expect(multiRepo.length).toBeGreaterThan(0);
-    expect(multiRepo).toContain('COMPANION_SPEC="$COMPANION_HOST/$OWNER/$REPO"');
-    // No EMITTED command may use the hostless spec. The sweep runs on the
-    // fences, because the prose beside them names the rejected form on purpose.
     const emitted = fencedBlocks(multiRepo).join("\n");
     expect(emitted.length).toBeGreaterThan(0);
     expect(emitted).not.toContain('--repo "$OWNER/$REPO"');
@@ -334,67 +328,27 @@ describe("Slice 3: the companion recipe guards its own redirect", () => {
     expect(fencedBlocks('```bash\ngh pr edit "$NUMBER" --repo "$OWNER/$REPO"\n```').join("\n")).toContain(
       '--repo "$OWNER/$REPO"',
     );
-    // Every `gh pr view`/`gh pr edit` in the block carries the host-bearing one.
-    const calls = emitted.match(/gh pr (?:view|edit) "\$NUMBER"[^\n]*/g) ?? [];
-    expect(calls.length).toBeGreaterThanOrEqual(3);
-    expect(calls.filter((call) => !call.includes('--repo "$COMPANION_SPEC"'))).toEqual([]);
-    // And the read-back names the host explicitly.
+    // The read-back is the one call left in a fence, and it names the host.
     expect(multiRepo).toContain('gh api --hostname "$COMPANION_HOST"');
+    expect(multiRepo).toContain('COMPANION_HOST="$(cat "$COMPANION_DIR/pr-host")"');
   });
 
-  test("the section the companion splice reads is written, not assumed", () => {
-    // `--section-file "$SECTION_FILE"` was expanded here and bound nowhere
-    // under skills/team-pr/: no step wrote `result.json`'s `.section` to a
-    // file, so the one variable carrying the section into the companion write
-    // was one the session had to invent. It is also the one place
+  test("the section the companion write copies comes from result.json", () => {
+    // `--section-file "$SECTION_FILE"` was expanded in this loop and bound
+    // nowhere under skills/team-pr/: no step wrote `result.json`'s `.section`
+    // to a file, so the one variable carrying the section into the companion
+    // write was one the session had to invent. It is also the one place
     // caller-derived text — captions carrying `\[`, `\]`, `\!`, `\<`, `\>` —
     // crosses from JSON into a shell-visible file, so an improvised heredoc
     // there breaks `principle-never-interpolate`.
     const multiRepo = multiRepoBlock();
     expect(multiRepo.length).toBeGreaterThan(0);
-    expect(multiRepo).toContain('SECTION_FILE="$COMPANION_DIR/section.md"');
-    // `jq -r` moves the string; nothing re-types it. `-e` plus `select` refuses
-    // a null or empty section rather than writing the four bytes `null`.
-    expect(multiRepo).toContain("jq -e -r '.section | select(type == \"string\" and length > 0)'");
-    // Written before the splice that reads it, and per companion.
-    const write = multiRepo.indexOf('>"$SECTION_FILE"');
-    const readBack = multiRepo.indexOf('--section-file "$SECTION_FILE"');
-    expect(write).toBeGreaterThan(multiRepo.indexOf('SECTION_FILE="$COMPANION_DIR'));
-    expect(readBack).toBeGreaterThan(write);
+    expect(multiRepo).toContain('"$COMPANION_DIR" "$RESULT_FILE"');
+    expect(multiRepo).toContain("`section`");
+    expect(squash(multiRepo)).toContain("landed count out of `result.json`");
 
     // And the file it is read out of is bound where the skill wrote it.
     expect(uploadRef()).toContain('RESULT_FILE="$ENTRIES_DIR/result.json"');
     expect(uploadRef()).toContain('ENTRIES_DIR="$(mktemp -d)"');
-  });
-
-  test("the companion split is shown, charset tests included", () => {
-    // `COMPANION_HOST`, `OWNER`, `REPO`, and `NUMBER` feed three `gh` calls
-    // below, and the split that binds them was cited rather than shown — so
-    // the charset tests that keep a hostile segment out of `--repo` and
-    // `--hostname` were a paragraph away from the fence that needs them.
-    const multiRepo = multiRepoBlock();
-    expect(multiRepo.length).toBeGreaterThan(0);
-    expect(multiRepo).toContain("https://*/*/*/pull/[0-9]*");
-    expect(multiRepo).toContain('COMPANION_HOST="${REST%%/*}"');
-    expect(multiRepo).toContain('case "$COMPANION_HOST$OWNER$REPO" in *[!A-Za-z0-9._-]*)');
-    expect(multiRepo).toContain('case "$NUMBER" in ""|*[!0-9]*)');
-    // The split runs before the spec that carries its output into `gh`.
-    expect(multiRepo.indexOf('COMPANION_HOST="${REST%%/*}"')).toBeLessThan(
-      multiRepo.indexOf('COMPANION_SPEC="$COMPANION_HOST/$OWNER/$REPO"'),
-    );
-  });
-
-  test("the companion splice passes the landed-asset count and names exit 2", () => {
-    // The count is what keeps rule 4's no-downgrade guard from being
-    // satisfiable by caller-supplied note text, and exit 2 is a fault rather
-    // than the refusal exit 1 means.
-    const multiRepo = multiRepoBlock();
-    expect(multiRepo.length).toBeGreaterThan(0);
-    expect(multiRepo).toContain("--landed");
-    // And `$LANDED_COUNT` is bound in a visible fence, from result.json's own
-    // `assets`, rather than left as prose for the session to reconstruct.
-    expect(multiRepo).toContain("LANDED_COUNT=\"$(jq '[.assets[] | select(.url != null)] | length'");
-    expect(multiRepo).toContain("exit 2");
-    expect(multiRepo).toContain("unchanged: <reason>");
   });
 });

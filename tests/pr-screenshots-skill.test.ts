@@ -57,7 +57,7 @@ const SPLICE = join(SKILL_DIR, "splice.mjs");
 // step needs is a file with a shebang — never a markdown fence, which carries
 // no shebang and holds no state across an invocation boundary.
 const SCRIPTS = join(SKILL_DIR, "scripts");
-const SCRIPT_NAMES = ["resolve-pr.sh", "pre-image.sh", "upload.sh"] as const;
+const SCRIPT_NAMES = ["resolve-pr.sh", "pre-image.sh", "upload.sh", "write-companion.sh"] as const;
 
 function scriptPath(name: string): string {
   return join(SCRIPTS, name);
@@ -3079,6 +3079,178 @@ describe("Slice 1 — upload.sh, executed (L1)", () => {
     expect(result.status).toBe(2);
     expect(result.stderr).toContain("pre-image.md");
   }, 60_000);
+});
+
+// ---------------------------------------------------------------------------
+// The companion write, EXECUTED. `team-pr` copies the home run's section into
+// each companion PR by running this same script once per companion, so its
+// guards are tested here rather than restated in that skill's prose — which is
+// where they drifted out of step the last time they lived in two places.
+// ---------------------------------------------------------------------------
+
+// A `result.json` as the home run writes it.
+function resultFile(dir: string, section: string | null, landed = 1): string {
+  const path = join(dir, "result.json");
+  writeFileSync(
+    path,
+    JSON.stringify({
+      outcome: section === null ? "degraded" : "uploaded",
+      assets: Array.from({ length: landed }, (_, index) => ({
+        caption: "c",
+        path: `/shots/${index}.png`,
+        url: `https://github.com/user-attachments/assets/a${index}`,
+      })),
+      failures: [],
+      body_written: section !== null,
+      operator_note: null,
+      section,
+    }),
+  );
+  return path;
+}
+
+const COMPANION_SECTION = [
+  "## Screenshots",
+  "",
+  "**login** (default)",
+  "![screenshot-01](https://github.com/user-attachments/assets/a0)",
+  "",
+].join("\n");
+
+describe("Slice 3 — write-companion.sh, executed (L1)", () => {
+  test("the section lands in the companion body, once", () => {
+    const dir = sandbox();
+    const env = ghStub(dir, { body: "## Summary\n\nAdds a login page.\n\nCloses #12\n" });
+    const companion = seedRun(dir, "", "https://github.com/owner/other/pull/17");
+    const result = runScript("write-companion.sh", [companion, resultFile(dir, COMPANION_SECTION)], env);
+
+    expect({ status: result.status, stderr: result.stderr }).toEqual({ status: 0, stderr: "" });
+    expect(read(join(dir, "state", "body"))).toBe(
+      [
+        "## Summary",
+        "",
+        "Adds a login page.",
+        "",
+        "## Screenshots",
+        "",
+        "**login** (default)",
+        "![screenshot-01](https://github.com/user-attachments/assets/a0)",
+        "",
+        "Closes #12",
+        "",
+        "",
+      ].join("\n"),
+    );
+  }, 60_000);
+
+  test("a null section touches no companion body", () => {
+    // Null means no write landed a verified URL, so the open-time degraded
+    // note stands. Writing the four bytes `null` into a companion body is the
+    // failure this refuses.
+    const dir = sandbox();
+    const env = ghStub(dir, { body: "## Summary\n" });
+    const companion = seedRun(dir, "", "https://github.com/owner/other/pull/17");
+    const result = runScript("write-companion.sh", [companion, resultFile(dir, null, 0)], env);
+
+    expect(result.status).toBe(1);
+    expect(read(join(dir, "state", "body"))).toBe("## Summary\n");
+    expect(existsSync(join(companion, "new-body.md"))).toBe(false);
+  }, 60_000);
+
+  test("a companion another writer edited first is left byte-identical", () => {
+    // The splice is computed from the body read before it, so a companion
+    // somebody edited in between would have their edit overwritten by a body
+    // that never contained it.
+    const dir = sandbox();
+    const env = ghStub(dir, { body: "## Summary\n" });
+    const companion = seedRun(dir, "", "https://github.com/owner/other/pull/17");
+    // A `gh` whose second read returns a different body than its first.
+    writeFileSync(
+      join(dir, "bin", "gh"),
+      [
+        "#!/bin/sh",
+        'case "$2" in',
+        "  edit) cp \"$3\" \"$GH_STATE/body\" ; exit 0 ;;",
+        "  view)",
+        '    if [ -f "$GH_STATE/seen" ]; then printf %s "somebody else" | jq -Rs \'{body: .}\' ; exit 0 ; fi',
+        '    : >"$GH_STATE/seen" ; jq -Rs \'{body: .}\' <"$GH_STATE/body" ; exit 0 ;;',
+        "esac",
+        "exit 1",
+        "",
+      ].join("\n"),
+      { mode: 0o755 },
+    );
+    const result = runScript("write-companion.sh", [companion, resultFile(dir, COMPANION_SECTION)], env);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("another writer");
+    expect(read(join(dir, "state", "body"))).toBe("## Summary\n");
+    // The promoted path is cleared too, so no later step can write it.
+    expect(existsSync(join(companion, "new-body.md"))).toBe(false);
+  }, 60_000);
+
+  test("a splice refusal leaves no body file for a write to find", () => {
+    // A plain `> "$NEW_BODY_FILE"` truncates before the command runs, so a
+    // refusal — which prints nothing on stdout — would leave a zero-byte file
+    // for the write to hand `gh pr edit --body-file`, blanking that
+    // companion's body. The section here carries more resolved images than the
+    // run landed, which is the no-downgrade refusal.
+    const dir = sandbox();
+    const env = ghStub(dir, { body: "## Summary\n" });
+    const companion = seedRun(dir, "", "https://github.com/owner/other/pull/17");
+    const section = [
+      "## Screenshots",
+      "",
+      "**a**",
+      "![screenshot-01](https://github.com/user-attachments/assets/a0)",
+      "",
+      "**b**",
+      "![screenshot-02](https://github.com/user-attachments/assets/a1)",
+      "",
+    ].join("\n");
+    const result = runScript("write-companion.sh", [companion, resultFile(dir, section, 1)], env);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("unchanged: ");
+    expect(read(join(dir, "state", "body"))).toBe("## Summary\n");
+    expect(existsSync(join(companion, "new-body.md"))).toBe(false);
+    expect(existsSync(join(companion, "new-body.md.tmp"))).toBe(false);
+  }, 60_000);
+
+  test("an unguarded read cannot pass for an empty description", () => {
+    // A bare read binds "" on a rate limit or a network blip, "" is
+    // indistinguishable from a genuinely empty description, and the splice
+    // then returns the `## Screenshots` section as that companion's WHOLE
+    // body. The envelope check is what separates them, and a fault writes
+    // nothing.
+    const dir = sandbox();
+    const env = ghStub(dir, { body: "## Summary\n" });
+    const companion = seedRun(dir, "", "https://github.com/owner/other/pull/17");
+    writeFileSync(
+      join(dir, "bin", "gh"),
+      ["#!/bin/sh", 'case "$2" in view) printf \'{"data":null}\' ; exit 0 ;; esac', "exit 1", ""].join("\n"),
+      { mode: 0o755 },
+    );
+    const result = runScript("write-companion.sh", [companion, resultFile(dir, COMPANION_SECTION)], env);
+
+    expect(result.status).toBe(2);
+    expect(read(join(dir, "state", "body"))).toBe("## Summary\n");
+  }, 60_000);
+
+  test("every companion call carries the host the companion lives on", () => {
+    // `--repo "$OWNER/$REPO"` resolves against whichever host `gh` considers
+    // default, so on Enterprise every companion edit and read silently
+    // targeted github.com.
+    const source = scriptSource("write-companion.sh");
+    expect(source.length).toBeGreaterThan(0);
+    const calls = source.match(/gh pr (?:view|edit) "\$NUMBER"[^\n]*/g) ?? [];
+    expect(calls.length).toBeGreaterThanOrEqual(3);
+    expect(calls.filter((call) => !call.includes('--repo "$REPO_SPEC"'))).toEqual([]);
+    // The spec it uses is the one `resolve-pr.sh` derived from that
+    // companion's own URL, never a hostless pair.
+    expect(source).toContain('REPO_SPEC="$(cat "$COMPANION_DIR/repo-spec")"');
+    expect(source).not.toContain('--repo "$OWNER/$REPO"');
+  });
 });
 
 // ---------------------------------------------------------------------------
