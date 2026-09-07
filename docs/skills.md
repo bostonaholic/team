@@ -106,6 +106,7 @@ Opens a pull request after verification.
 
 - `changelog`
 - `git-commit`
+- `pr-screenshots`
 - `tracking-tickets`
 - `verifying-ux`
 - `worktree-isolation`

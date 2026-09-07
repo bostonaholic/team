@@ -63,11 +63,11 @@
    actually does. **Screenshots go stale the same way the prose does.**
    When the push changed the UI, call the Skill tool with `verifying-ux` and
    re-capture per its "Screenshot Capture (UI projects)" section. It wipes
-   and recaptures. Then re-render and re-upload the `## Screenshots`
-   section, per the rules below, so the embedded images show the UI the
+   and recaptures. Then re-render the `## Screenshots` section and run the
+   Screenshot Upload procedure again, so the embedded images show the UI the
    branch now produces. When the push left the UI alone, the refresh
    carries the uploaded `## Screenshots` section through verbatim: never
-   dropped, never re-uploaded — the asset URLs already in the body stay
+   dropped, never re-run — the asset URLs already in the body stay
    valid. A re-capture that cannot run falls back to the degraded note the
    rendering rules define. A screenshot problem never blocks or delays the
    push. The footer survives every refresh too: when the body carries a

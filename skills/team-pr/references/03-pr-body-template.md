@@ -140,13 +140,14 @@ The `## Screenshots` section is built from `$ARGUMENTS/screenshots/manifest.md`
   malformed**, with unparseable frontmatter or body → render a one-line
   capture-failure note naming the reason, nothing more. Never block or
   delay the PR over screenshots. The PR phase never waits for approval.
-- **Each `## Captured` entry whose PNG exists on disk** renders as
-  `**<caption>** (<state>)` followed by its local path. Entries whose PNG is
-  missing from disk are skipped and the discrepancy noted in the section.
+- **Each `## Captured` entry whose PNG exists on disk** contributes one entry.
+  Entries whose PNG is missing from disk are skipped and the discrepancy noted
+  in the section.
 - **Manifest `status: partial`** → also append a one-line
   "N states skipped — see manifest" note to the section.
-- **Before upload runs, or when it is unavailable or fails**, the section
-  renders the degraded form. That is a "captured — not yet uploaded" note
-  plus the local file paths above. The note reads "captured — upload failed
-  or unavailable" when the upload is attempted and fails. This degraded
-  shape is the contract every upload-failure branch falls back to.
+- **The section's wording is defined once, and not here.** Its success form,
+  its failure list, and its pre-upload degraded form all live in
+  `skills/pr-screenshots/references/02-upload-and-body-edit.md`. Render the
+  degraded form at open time, before any upload runs, and never edit the
+  section a second time from this skill — the upload's single write replaces
+  it.
