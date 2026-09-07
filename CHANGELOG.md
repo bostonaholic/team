@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.89.0] - 2026-09-07
+
 ### Changed
 
 - **The IMPLEMENT phase's mechanical gate now has an answer for a pure refactor.** The gate advanced only when every acceptance test failed with an assertion error, which is correct for a change that adds behavior and wrong for one whose stated contract is zero behavior change. There the acceptance tests already exist — they are the current suite — and their correct state throughout is green, so `test-architect` had nothing to write and writing tests for the mechanics of a file move would add tests the task never asked for. For that class the gate's polarity inverts: the `test-architect` dispatch is skipped with a recorded reason rather than silently, the suite and every static check are captured as a baseline **before** any file moves, and the gate becomes "the checks reproduce that baseline". Structural checks — a `grep` with an exact expected match count, a path that must no longer exist — carry the acceptance criteria the tests cannot express there. **What this asks of you:** nothing. A change that adds behavior runs the same red-tests gate as before.
@@ -805,7 +807,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.88.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.89.0...HEAD
+[0.89.0]: https://github.com/bostonaholic/team/compare/v0.88.0...v0.89.0
 [0.88.0]: https://github.com/bostonaholic/team/compare/v0.87.0...v0.88.0
 [0.87.0]: https://github.com/bostonaholic/team/compare/v0.86.0...v0.87.0
 [0.86.0]: https://github.com/bostonaholic/team/compare/v0.85.0...v0.86.0
