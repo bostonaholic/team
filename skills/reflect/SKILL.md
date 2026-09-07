@@ -17,7 +17,10 @@ make it more than "summarize this session":
 - **It reads the session, not its own memory.** Compaction has already
   discarded the early turns from context, and those turns are where the
   corrections live. So the run resolves the session's transcript on disk and
-  works from that file.
+  works from that file — its own, identified by the id the host exported,
+  whether that host is Claude Code or Codex and whether either runs inside
+  Conductor. What the file does not carry is reported as missing, never
+  filled in from memory.
 - **Three lenses, then one list.** The lenses look for different things and
   report what they find. Sorting the findings — accepted, rejected, or handed
   to the tracker — happens once, afterwards, so one finding cannot be

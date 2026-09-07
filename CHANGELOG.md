@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **[`/reflect`](https://github.com/bostonaholic/team/blob/main/skills/reflect/SKILL.md) now reads the session it was actually invoked from, on Codex as well as Claude Code.** It looked in one place, `~/.claude/projects/`, and understood one record format, so running it from Codex — including a Codex session inside Conductor — stopped at `no-match` before a single lens read anything. It now resolves the session through the id the host itself exported (`CLAUDE_CODE_SESSION_ID`, `CODEX_THREAD_ID`), which names the transcript file directly, and re-checks that file's own header before reading it. Codex rollouts under `${CODEX_HOME:-~/.codex}/sessions/` normalize into the same bounded records Claude Code transcripts always did: your prompts, the replies, and each tool call with its name and arguments, with the host's own injected preamble kept out of the user-turn count. **Conductor is not a separate case.** It runs Claude Code, Codex, Cursor Agent, or OpenCode in a worktree and the backend writes its own transcript, so a Conductor session resolves as whichever backend it runs — and its two other backends now fail as `unsupported-host` instead of resolving to something plausible. Where two agents' session variables are set in one process, which happens when one launches the other, the run cache path this run printed breaks the tie on evidence; where it settles nothing, the run stops at `ambiguous-host` rather than picking. Every existing safeguard is unchanged — stores are only read, searches return file names only, the record and byte ceilings still bound the stream, findings still paraphrase and cite a path or a turn index, and every skill edit and tracker issue still waits on your approval. What the transcript does not carry is now reported rather than filled in: unreadable records, truncated spans, a bounded read, and the earlier turns a forked Codex thread left in its parent's file. **What this asks of you:** nothing.
+
 ## [0.92.0] - 2026-09-07
 
 ### Changed
