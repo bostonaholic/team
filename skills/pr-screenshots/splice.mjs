@@ -141,6 +141,21 @@ const COMMENT_CLOSE = /-->/;
 const INDENTED_HEADING = /^ {4,}#{1,2}(?:[ \t]|$)/;
 
 /**
+ * The escape test every raw-HTML pattern below opens with: a `<` whose
+ * preceding run of backslashes is EVEN, including zero.
+ *
+ * `(?<!\\)` alone treats any single preceding backslash as an escape, but in
+ * CommonMark `\\` is an escaped BACKSLASH and the `<` after it is live markup —
+ * so `\\<img src="https://evil.example/beacon.png">` renders a real `<img>`,
+ * confirmed through GitHub's own `POST /markdown`, which returns it
+ * camo-proxied with a `data-canonical-src` pointing at that host. `<a …>` was
+ * caught only because its closing tag carries no backslash; a void tag has no
+ * closing tag to catch. Consuming the pairs first is what makes the parity
+ * odd-or-even rather than present-or-absent.
+ */
+const UNESCAPED = "(?<!\\\\)(?:\\\\\\\\)*";
+
+/**
  * A raw HTML tag ANYWHERE on a line, opening or closing (CommonMark §4.6 for
  * the block forms, §6.6 for the inline ones). The scan models block-level HTML
  * comments and no other HTML, so a `<div>`, a `<table>`, a `<details>`, or a
@@ -164,7 +179,7 @@ const INDENTED_HEADING = /^ {4,}#{1,2}(?:[ \t]|$)/;
  * `references/02-upload-and-body-edit.md` names the class and the edit that
  * clears it.
  */
-const HTML_TAG = /(?<!\\)<\/?[A-Za-z][A-Za-z0-9-]*(?:[ \t/>]|$)/;
+const HTML_TAG = new RegExp(`${UNESCAPED}<\\/?[A-Za-z][A-Za-z0-9-]*(?:[ \\t/>]|$)`);
 
 /**
  * An HTML image anywhere on a line. `ANY_IMAGE` cannot see one, so an `<img>`
@@ -173,7 +188,7 @@ const HTML_TAG = /(?<!\\)<\/?[A-Za-z][A-Za-z0-9-]*(?:[ \t/>]|$)/;
  * exists to prevent. Tested before `HTML_TAG` so the reason names the image it
  * cannot count rather than the container class.
  */
-const HTML_IMAGE = /(?<!\\)<(?:img|picture|source|svg|video|audio|embed|object|iframe)\b/i;
+const HTML_IMAGE = new RegExp(`${UNESCAPED}<(?:img|picture|source|svg|video|audio|embed|object|iframe)\\b`, "i");
 
 /**
  * A reference-style, collapsed, or shortcut image — `![alt][ref]`, `![alt][]`,
@@ -200,9 +215,10 @@ const BARE_IMAGE_URL =
  * `references/01-input-and-result.md` backslash-escapes; this is the code-side
  * backstop for that rule, so a weakened or skipped escape cannot splice an
  * `<a href>` or an `<img src>` into a public body. An escaped `\<` is caller
- * text that renders as a literal and is left alone.
+ * text that renders as a literal and is left alone — `UNESCAPED` is what
+ * decides which backslash runs are an escape.
  */
-const SECTION_HTML = /(?<!\\)<[A-Za-z/!?]/;
+const SECTION_HTML = new RegExp(`${UNESCAPED}<[A-Za-z/!?]`);
 
 /**
  * An INLINE markdown image reference — the only image shape that reaches this
@@ -211,6 +227,17 @@ const SECTION_HTML = /(?<!\\)<[A-Za-z/!?]/;
  */
 const ANY_IMAGE = /!\[[^\]]*\]\([^)]*\)/g;
 const OWN_IMAGE = /^!\[screenshot-\d+\]\(\s*https?:\/\/[^\s)]+\s*\)$/;
+
+/**
+ * The `(<state>)` parenthetical the renderer emits beside a caption, and
+ * nothing else. One level of nesting is allowed because `state` is caller text
+ * the normalization does not escape parentheses in: with a flat `[^)]*`, a
+ * state such as `mobile (dark)` makes the renderer's OWN output unrecognizable
+ * — and since `team-pr` writes the degraded section at PR-open time, that
+ * section is the pre-image, so step A's `--check` would refuse the whole run
+ * and nothing would upload.
+ */
+const STATE = "(?:[ \\t]+\\((?:[^()]|\\([^()]*\\))*\\))?";
 
 /**
  * The remaining line shapes this skill writes into its own section. Together
@@ -226,17 +253,32 @@ const OWN_IMAGE = /^!\[screenshot-\d+\]\(\s*https?:\/\/[^\s)]+\s*\)$/;
  * now refuses exactly as bare prose does. `OWN_SEPARATOR` is the bare `>` the
  * renderer puts between two notes so they do not render as one run-on
  * paragraph; it carries no text, so claiming it deletes nothing.
+ *
+ * `OWN_CAPTION` is bound to the same standard: `**<caption>**` with an optional
+ * `(<state>)` and nothing after it. `(?:\s.*)?$` accepted arbitrary trailing
+ * text, so a reviewer's `**Login** REVIEWER: this shot is WRONG, do not merge`
+ * typed above this skill's own image was deleted with exit 0 and no reason on
+ * the next refresh.
  */
-const OWN_CAPTION = /^\*\*.+\*\*(?:\s.*)?$/;
+const OWN_CAPTION = new RegExp(`^\\*\\*.+\\*\\*${STATE}$`);
 const OWN_NOTE = /^>[ \t]+_note:_[ \t]+\S/;
 const OWN_SEPARATOR = /^>$/;
-const OWN_FAILURE = /^Not uploaded:\s/;
+
+/**
+ * A failure line, bound the same way: `Not uploaded: <caption> — <reason>`,
+ * both halves non-empty. `/^Not uploaded:\s/` was shape rather than provenance,
+ * so `Not uploaded: THIS IS A REVIEWER NOTE, do not ship` was this skill's own
+ * output to a replace. The em dash is the renderer's, not a reviewer's.
+ */
+const OWN_FAILURE = /^Not uploaded:[ \t]+\S.*[ \t]—[ \t]\S/;
 
 /**
  * The degraded caption line: the one caption shape the renderer emits with no
  * image below it, pinned to its whole wording rather than to "a bold line".
  */
-const OWN_DEGRADED_CAPTION = /^\*\*.+\*\*(?:[ \t]+\([^)]*\))?[ \t]+—[ \t]+captured, not yet uploaded:[ \t]+\S/;
+const OWN_DEGRADED_CAPTION = new RegExp(
+  `^\\*\\*.+\\*\\*${STATE}[ \\t]+—[ \\t]+captured, not yet uploaded:[ \\t]+\\S`,
+);
 
 /**
  * True when `lines[index]` is a shape this skill's own section renderer emits.
@@ -248,11 +290,13 @@ const OWN_DEGRADED_CAPTION = /^\*\*.+\*\*(?:[ \t]+\([^)]*\))?[ \t]+—[ \t]+capt
  * alone, or DIRECTLY above an `![screenshot-NN]` image this skill wrote — and a
  * bold line in neither position is a shape the renderer cannot have emitted.
  *
- * The residue is named rather than hidden: a bold line that a reviewer put in
- * the one position the renderer uses, immediately above this skill's own image,
- * is still indistinguishable from the caption it displaced. Inserting one
- * anywhere else pushes some emitted line out of its grammar and refuses the
- * whole replace.
+ * The residue is named rather than hidden, and this list is the whole of it.
+ * A bold line that a reviewer put in the one position the renderer uses,
+ * immediately above this skill's own image, is still indistinguishable from the
+ * caption it displaced. So is a line that satisfies an emitted grammar
+ * exactly — a `> _note:_ ` blockquote, or a `Not uploaded: <text> — <text>`
+ * line — typed inside the section by hand. Every OTHER insertion pushes some
+ * emitted line out of its grammar and refuses the whole replace.
  */
 function ownSectionLine(lines, index) {
   const text = lines[index].trim();

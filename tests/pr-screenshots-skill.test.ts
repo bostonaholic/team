@@ -29,9 +29,9 @@
 // pass them vacuously (docs/testing.md, "Prove a negative check can find a
 // positive").
 
-import { describe, expect, test } from "bun:test";
+import { afterAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -70,7 +70,7 @@ const splice: SpliceFn =
     : () => NOT_LOADED;
 
 // The pre-image half of the transform, exported so the caller can run it in
-// step A — before the first attach — rather than only after (round-3 C3).
+// step A — before the first attach — rather than only after.
 // Absent, it reports "" (no refusal), which fails every assertion below that
 // expects a named one.
 type BodyRefusalFn = (body: string) => string;
@@ -129,9 +129,11 @@ function fencedBlocks(text: string): string[] {
 }
 
 // The fenced blocks that are `## Screenshots` body templates: the markdown the
-// skill writes into a PR body.
+// skill writes into a PR body. A template OPENS with the heading — the shell
+// recipe that writes one to a file carries the same heading inside a heredoc,
+// and it is a command rather than a template.
 function sectionTemplates(): string[] {
-  return fencedBlocks(uploadRef()).filter((block) => block.includes("## Screenshots"));
+  return fencedBlocks(uploadRef()).filter((block) => block.trimStart().startsWith("## Screenshots"));
 }
 
 // `text` with every fenced block removed. The refusal sweep below runs over
@@ -187,16 +189,16 @@ const ENTRIES_REFUSALS: { label: string; matches: (unit: string) => boolean }[] 
 // rewrite in place (tripping decision 6's prefix guard).
 const LOCAL_IMAGE = /!\[[^\]]*\]\(\s*(?:\.{0,2}\/|~\/|file:|[A-Za-z]:\\)/;
 // An `--attach` argument carrying `#`, which gh reads as the alt-text
-// delimiter (finding 3).
+// delimiter.
 const ATTACH_ALT = /--attach\s+["']?[^\s"'`]*#/;
 // The rejected justification for excluding `## Pre-merge` as an anchor
-// (finding 6): a forbidden CLAIM, not a forbidden wording. Rule 1 DOES remove
+// — a forbidden CLAIM, not a forbidden wording. Rule 1 DOES remove
 // a trailing `## Pre-merge`, so the ban is narrowed to the "already removed
 // it" claim that made the anchor list look redundant.
 const RULE_ONE_CLAIM = /rule (1|one)[^.]{0,40}already[^.]{0,20}remov|already[^.]{0,20}remov[^.]{0,40}rule (1|one)/i;
 
 // ---------------------------------------------------------------------------
-// Slice 1 — L1: the five splice rules, plus findings 1 and 2.
+// Slice 1 — L1: the five splice rules, and the counts they turn on.
 // ---------------------------------------------------------------------------
 
 // A rendered section holding two real, resolved screenshots.
@@ -239,10 +241,10 @@ function occurrences(haystack: string, needle: string): number {
 
 describe("Slice 1 — splice.mjs (L1)", () => {
   test("splice keeps a ticket-reference line when a crash tail collapsed the footer", () => {
-    // Finding 1(a). A crash between attach and write leaves a standalone image
-    // line at EOF, so rule 1's footer scan stops immediately and `Closes #12`
-    // lands in `content`. Rule 2's replace must stop at that ticket-reference
-    // line instead of running to the end of `content` and deleting it.
+    // A crash between attach and write leaves a standalone image line at EOF,
+    // so rule 1's footer scan stops immediately and `Closes #12` lands in
+    // `content`. Rule 2's replace must stop at that ticket-reference line
+    // instead of running to the end of `content` and deleting it.
     const crashed = [
       "## Summary",
       "",
@@ -271,8 +273,8 @@ describe("Slice 1 — splice.mjs (L1)", () => {
   });
 
   test("splice treats Fixes: #123 as a ticket reference", () => {
-    // Finding 1(b). The stem pattern tolerates an optional `:`, so the colon
-    // form joins the footer block and is re-emitted last.
+    // The stem pattern tolerates an optional `:`, so the colon form joins the
+    // footer block and is re-emitted last.
     const colon = [
       "## Summary",
       "",
@@ -418,7 +420,7 @@ describe("Slice 1 — splice.mjs (L1)", () => {
   });
 
   test("an image-reference caption cannot satisfy the no-downgrade count", () => {
-    // Finding 2. Rule 4 counts asymmetrically: the NEW section counts only
+    // Rule 4 counts asymmetrically: the NEW section counts only
     // `![screenshot-<NN>](http…)`, so a caption that is itself a complete
     // image reference cannot buy an all-failures run past the guard.
     const injected = [
@@ -460,7 +462,7 @@ describe("Slice 1 — skill prose (L2)", () => {
 
     expect(preImage).toBeGreaterThanOrEqual(0);
     // Step A's pre-image check sits between the read and the first attach, so
-    // a refusal it finds costs no upload (C3: refuse before mutating).
+    // a refusal it finds costs no upload — refuse before mutating.
     expect(check).toBeGreaterThan(preImage);
     expect(attach).toBeGreaterThan(check);
     expect(spliceCall).toBeGreaterThan(attach);
@@ -479,8 +481,8 @@ describe("Slice 1 — skill prose (L2)", () => {
   });
 
   test("path validation rejects a # in a path", () => {
-    // Finding 3. The enumerated validation set is exists, regular file, no
-    // newline, no `#` — each pinned as the token that names it.
+    // The enumerated validation set is exists, regular file, no newline, no
+    // `#` — each pinned as the token that names it.
     const upload = squash(uploadRef());
     expect(upload.length).toBeGreaterThan(0);
     expect(upload).toContain("exists");
@@ -490,8 +492,8 @@ describe("Slice 1 — skill prose (L2)", () => {
   });
 
   test("the outcome enum names the post-upload halt", () => {
-    // Finding 4. `uploaded-not-written` is what decision 6's lost-update halt
-    // returns: assets landed, body untouched.
+    // `uploaded-not-written` is what decision 6's lost-update halt returns:
+    // assets landed, body untouched.
     const input = inputRef();
     expect(input.length).toBeGreaterThan(0);
 
@@ -563,8 +565,8 @@ describe("Slice 1 — skill prose (L2)", () => {
   });
 
   test("Pre-merge is excluded by the anchor list, not by rule 1", () => {
-    // Finding 6. The creation-time skeleton appends `## Pre-merge` post-open,
-    // so rule 1 does not always remove it; the anchor list is what excludes it.
+    // The creation-time skeleton appends `## Pre-merge` post-open, so rule 1
+    // does not always remove it; the anchor list is what excludes it.
     const source = spliceSource();
     expect(source.length).toBeGreaterThan(0);
 
@@ -589,9 +591,9 @@ describe("Slice 1 — skill prose (L2)", () => {
   });
 
   test("rejected approaches record tail-comparison detection", () => {
-    // Finding 7. Three rejected options — orphan branch, browser-profile
-    // uploader, tail-comparison detection — each with its own reason, in the
-    // format of docs/cross-host-portability.md.
+    // Three rejected options — orphan branch, browser-profile uploader,
+    // tail-comparison detection — each with its own reason, in the format of
+    // docs/cross-host-portability.md.
     const rejected = rejectedRef();
     expect(rejected.length).toBeGreaterThan(0);
     expect(squash(rejected).toLowerCase()).toContain("tail");
@@ -1341,7 +1343,7 @@ describe("Slice 1 — modeled shapes and unmodeled refusals (L1)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// L1: constructs OUTSIDE the modeled set (round 3, C1 and C2).
+// L1: constructs OUTSIDE the modeled set.
 //
 // The scan dispatches on fences, comments, indented headings, ATX and setext
 // headings. A raw HTML container and every non-inline image form fell through
@@ -1401,14 +1403,13 @@ const UNMODELED: { label: string; body: string; survives: string }[] = [
   },
 ];
 
-// Round-4 C1: the closed set was not closed on raw HTML, and the gap was
-// exactly inverted from where the risk is. The block test was anchored
-// `^ {0,3}<`, and the only unanchored tag test matched `img|picture|source|svg`
-// — so `<details>` at column zero refused the whole run (a deliberate
-// over-refusal) while `- <video src="https://…/user-attachments/…">` INSIDE the
-// section being replaced was deleted with `changed: true` and no reason, and
-// that attachment id is unrecoverable once the body is written.
-//
+// The closed set was not closed on raw HTML, and the gap was exactly inverted
+// from where the risk is. The block test was anchored `^ {0,3}<`, and the only
+// unanchored tag test matched `img|picture|source|svg` — so `<details>` at
+// column zero refused the whole run (a deliberate over-refusal) while `-
+// <video src="https://…/user-attachments/…">` INSIDE the section being
+// replaced was deleted with `changed: true` and no reason, and that attachment
+// id is unrecoverable once the body is written.
 // The pool above sweeps tags; it did not sweep POSITION. This is the cross
 // product, and it is the test that would have caught it.
 const RAW_HTML_TAGS = [
@@ -1475,9 +1476,9 @@ describe("Slice 1 — constructs outside the model (L1)", () => {
   });
 
   test("a refusal names the line and the construct, never the class alone", () => {
-    // Round-4 M2. A body whose Screenshots section is already correct and
-    // whose `<details>` sits paragraphs away refused with wording identical to
-    // one where the two are adjacent — no line, no snippet, not even which tag
+    // A body whose Screenshots section is already correct and whose
+    // `<details>` sits paragraphs away refused with wording identical to one
+    // where the two are adjacent — no line, no snippet, not even which tag
     // matched. The scan holds both when it decides, and discarded them.
     const body = [
       "## Summary",
@@ -1570,11 +1571,11 @@ describe("Slice 1 — constructs outside the model (L1)", () => {
   });
 
   test("ownership is provenance, so a foreign blockquote or bold line refuses", () => {
-    // Round-5 B3. `OWN_NOTE` was `/^>/` and `OWN_CAPTION` was "any bold line",
-    // so the renderer's own vocabulary claimed text a reviewer typed: a `>`
-    // note and a `**bold**` warning were both deleted with `changed: true` and
-    // an empty reason. Rendering notes as `> ` to make them recognizable is
-    // what widened the surface, so the marker closes it.
+    // `OWN_NOTE` was `/^>/` and `OWN_CAPTION` was "any bold line", so the
+    // renderer's own vocabulary claimed text a reviewer typed: a `>` note and
+    // a `**bold**` warning were both deleted with `changed: true` and an empty
+    // reason. Rendering notes as `> ` to make them recognizable is what
+    // widened the surface, so the marker closes it.
     const foreign: [string, string][] = [
       ["a reviewer's blockquote", "> Reviewer: the second shot is stale, do not ship"],
       ["a reviewer's bold warning", "**IMPORTANT: these images contain a real API key**"],
@@ -1689,9 +1690,9 @@ describe("Slice 1 — constructs outside the model (L1)", () => {
   });
 
   test("bodyRefusal names the same refusal the splice does, from the body alone", () => {
-    // C3's contract: what step A's `--check` reports and what step D's splice
-    // reports are one function, so a pre-image the check cleared cannot refuse
-    // later for a body-only reason.
+    // The two-mode contract: what step A's `--check` reports and what step D's
+    // splice reports are one function, so a pre-image the check cleared cannot
+    // refuse later for a body-only reason.
     const mismatched = UNMODELED.filter(({ body }) => bodyRefusal(body) !== splice(body, SECTION, { landed: 2 }).reason).map(
       ({ label }) => label,
     );
@@ -1773,6 +1774,102 @@ describe("Slice 1 — constructs outside the model (L1)", () => {
     // Control: the skill's own alt still writes.
     expect(splice(body, SECTION, { landed: 2 }).changed).toBe(true);
   });
+
+  test("an escaped backslash before a tag does not buy raw HTML past the backstop", () => {
+    // `(?<!\\)` read ANY preceding backslash as an escape, but in CommonMark
+    // `\\` is an escaped BACKSLASH and the `<` after it is live markup: GitHub's
+    // own `POST /markdown` renders `\\<img …>` as a real, camo-proxied `<img>`
+    // carrying the attacker's `data-canonical-src`. A void tag has no closing
+    // tag, so nothing else in the pattern set caught it.
+    const body = "## Summary\n\nhi\n\n## Test plan\n";
+    const beacon = '\\\\<img src="https://evil.example/beacon.png">';
+
+    const smuggled = ["## Screenshots", "", `**Login** (default)`, `> _note:_ ${beacon}`].join("\n");
+    const refused = splice(body, smuggled, { landed: 0 });
+    expect(refused.changed).toBe(false);
+    expect(refused.body).toBe(body);
+    expect(refused.reason.length).toBeGreaterThan(0);
+
+    // The same blindness in the body scan: an even run of backslashes escapes
+    // nothing, so the tag is unmodeled and the body refuses.
+    expect(bodyRefusal(`## Summary\n\n${beacon}\n`).length).toBeGreaterThan(0);
+    expect(bodyRefusal('## Summary\n\n\\\\<a href="https://evil.example">x\n').length).toBeGreaterThan(0);
+
+    // Parity, not a ban on backslashes: an ODD run still escapes, so caller
+    // text the normalization escaped renders literally and still writes.
+    expect(bodyRefusal('## Summary\n\na \\< b\n')).toBe("");
+    expect(bodyRefusal('## Summary\n\n\\\\\\<img src=x\\>\n')).toBe("");
+  });
+
+  test("a caption is owned by its whole grammar, not by its first two asterisks", () => {
+    // `(?:\s.*)?$` accepted arbitrary trailing text after the bold run, so a
+    // reviewer's warning typed above this skill's own image was deleted with
+    // exit 0 and no reason on the next refresh.
+    const withNote = [
+      "## Summary",
+      "",
+      "hi",
+      "",
+      "## Screenshots",
+      "",
+      "**Login** REVIEWER: this shot is WRONG, do not merge",
+      "![screenshot-01](https://example.com/user-attachments/assets/9999)",
+      "",
+    ].join("\n");
+    expect(bodyRefusal(withNote)).toContain("REVIEWER: this shot is WRONG");
+    expect(splice(withNote, SECTION, { landed: 2 }).changed).toBe(false);
+
+    // `Not uploaded:` was shape rather than provenance for the same reason.
+    const withFailureNote = withNote.replace(
+      "**Login** REVIEWER: this shot is WRONG, do not merge",
+      "Not uploaded: THIS IS A REVIEWER NOTE, do not ship",
+    );
+    expect(bodyRefusal(withFailureNote)).toContain("THIS IS A REVIEWER NOTE");
+
+    // Control: the shapes the renderer actually emits are still its own.
+    const own = [
+      "## Summary",
+      "",
+      "hi",
+      "",
+      "## Screenshots",
+      "",
+      "**Login** (default)",
+      "![screenshot-01](https://example.com/user-attachments/assets/9999)",
+      "",
+      "Not uploaded: login-error — file missing",
+      "",
+    ].join("\n");
+    expect(bodyRefusal(own)).toBe("");
+    expect(splice(own, SECTION, { landed: 2 }).changed).toBe(true);
+  });
+
+  test("a parenthesised state is still the renderer's own output", () => {
+    // `team-pr` writes the degraded section at PR-open time, so that section IS
+    // the pre-image of the upload run. A state such as `mobile (dark)` — caller
+    // text the normalization does not escape parentheses in — made the flat
+    // `\([^)]*\)` unable to match the renderer's OWN line, so step A's `--check`
+    // refused the whole run and nothing uploaded.
+    const degraded = [
+      "## Summary",
+      "",
+      "hi",
+      "",
+      "## Screenshots",
+      "",
+      "**Login** (mobile (dark)) — captured, not yet uploaded: login.png",
+      "",
+    ].join("\n");
+    expect(bodyRefusal(degraded)).toBe("");
+    expect(splice(degraded, SECTION, { landed: 2 }).changed).toBe(true);
+
+    // The resolved form of the same state, above this skill's own image.
+    const resolved = degraded.replace(
+      "**Login** (mobile (dark)) — captured, not yet uploaded: login.png",
+      "**Login** (mobile (dark))\n![screenshot-01](https://example.com/user-attachments/assets/1)",
+    );
+    expect(bodyRefusal(resolved)).toBe("");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -1829,7 +1926,7 @@ const FREE_BLOCKS = [
 // The second pool: constructs deliberately OUTSIDE the model. The two pools
 // above are assembled from shapes already known to work, so by construction a
 // sweep over them cannot discover an unmodeled construct — which is how a raw
-// HTML container and four non-inline image forms reached round 3. A body
+// HTML container and four non-inline image forms went unnoticed. A body
 // carrying any of these must produce `changed: false`, wherever it sits.
 const OUT_OF_MODEL_BLOCKS = [
   '<div align="center">\n\n## Heading <N>\n\ntext <N>\n\n</div>',
@@ -1837,7 +1934,7 @@ const OUT_OF_MODEL_BLOCKS = [
   "<details>\n<summary>Details <N></summary>\n\ntext <N>\n\n</details>",
   '<picture>\n<source srcset="https://example.com/s<N>.webp">\n<img src="https://example.com/s<N>.png">\n</picture>',
   'A diagram <N>: <img src="https://example.com/s<N>.png" width="600">',
-  // Round-4 C1's axis: the same tag space, off column zero. The pool above is
+  // The other axis: the same tag space, off column zero. The pool above is
   // every template at line start plus one mid-line `<img>`, which passed only
   // because `img` was in the one unanchored alternation — so no draw ever
   // combined "non-image tag" with "does not begin a line".
@@ -1992,6 +2089,9 @@ describe("Slice 1 — splice.mjs CLI exit codes (L1)", () => {
   const run = (args: string[]) =>
     spawnSync(process.execPath, [SPLICE, ...args], { encoding: "utf8" });
 
+  // The scratch directory is this describe's own, so it leaves with it.
+  afterAll(() => rmSync(scratch, { recursive: true, force: true }));
+
   test("exit 0 writes the body, exit 1 refuses, exit 2 is a fault", () => {
     expect(existsSync(SPLICE)).toBe(true);
 
@@ -2032,9 +2132,9 @@ describe("Slice 1 — splice.mjs CLI exit codes (L1)", () => {
   });
 
   test("--check runs the pre-image refusals with no section and no write", () => {
-    // C3. Step A has to be able to run these BEFORE the first attach, or a
-    // refusal arrives after `gh pr edit --attach` has already uploaded every
-    // entry to a PR that may be merged.
+    // Step A has to be able to run these BEFORE the first attach, or a refusal
+    // arrives after `gh pr edit --attach` has already uploaded every entry to
+    // a PR that may be merged.
     const clean = run(["--check", "--body-file", bodyFile]);
     expect(clean.status).toBe(0);
     expect(clean.stdout).toBe("");
@@ -2072,6 +2172,84 @@ describe("Slice 1 — splice.mjs CLI exit codes (L1)", () => {
     expect(swallowed.status).toBe(2);
     expect(swallowed.stderr).toContain("splice.mjs: ");
     expect(swallowed.stderr).not.toContain('at "--landed"');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// L1: the argument validator, RUN. The fence is a complete shell program over
+// `$ARGUMENTS`, so the contract "the advertised invocation is accepted" is a
+// deterministic execution rather than a substring check — and a substring check
+// is exactly what let a validator that refuses the primary pipeline path ship.
+// ---------------------------------------------------------------------------
+
+// Everything the reference emits before the PR is resolved: the split, then
+// the validation of the token it produced. Both fences, because the split is
+// the half whose absence made the validator refuse the advertised call.
+function argumentFence(): string {
+  const blocks = fencedBlocks(inputRef());
+  const validator = blocks.findIndex((block) => block.includes("PR_URL_PATTERN"));
+  return validator < 0 ? "" : blocks.slice(0, validator + 1).join("\n");
+}
+
+// Run that fence with `$ARGUMENTS` bound to `args`, and report what it bound.
+function runArguments(args: string): { status: number; stderr: string; bindings: string[] } {
+  const script = [
+    `ARGUMENTS=${JSON.stringify(args)}`,
+    argumentFence(),
+    `printf '%s|%s|%s|%s\\n' "$ARG_NUMBER" "$ARG_HOST" "$ARG_OWNER" "$ENTRIES_FILE"`,
+  ].join("\n");
+  const result = spawnSync("bash", ["-c", script], { encoding: "utf8" });
+  return {
+    status: result.status ?? -1,
+    stderr: result.stderr ?? "",
+    bindings: (result.stdout ?? "").trim().split("|"),
+  };
+}
+
+describe("Slice 1 — the argument validator, executed (L1)", () => {
+  test("the advertised invocation is accepted, PR token and --entries alike", () => {
+    expect(argumentFence().length).toBeGreaterThan(0);
+
+    // `SKILL.md`'s own `argument-hint`, and the call `team-pr` makes. Validated
+    // as ONE token this took the `*[!0-9]*` arm, failed the anchored URL
+    // pattern, and exited 1 — the primary pipeline path refusing before it
+    // started.
+    const bare = runArguments("412 --entries /tmp/e/entries.json");
+    expect({ status: bare.status, stderr: bare.stderr }).toEqual({ status: 0, stderr: "" });
+    expect(bare.bindings).toEqual(["412", "", "", "/tmp/e/entries.json"]);
+
+    // The URL form of the same invocation, in either flag spelling.
+    const url = runArguments("https://github.com/owner/repo/pull/412 --entries /tmp/e/entries.json");
+    expect(url.status).toBe(0);
+    expect(url.bindings).toEqual(["412", "github.com", "owner", "/tmp/e/entries.json"]);
+    expect(runArguments("412 --entries=/tmp/e.json").bindings[3]).toBe("/tmp/e.json");
+
+    // A PR token alone still resolves, and an Enterprise host survives.
+    expect(runArguments("412").bindings).toEqual(["412", "", "", ""]);
+    expect(runArguments("https://ghe.example.com/owner/repo/pull/9").bindings).toEqual([
+      "9",
+      "ghe.example.com",
+      "owner",
+      "",
+    ]);
+  });
+
+  test("a malformed argument refuses, and refuses loudly", () => {
+    expect(argumentFence().length).toBeGreaterThan(0);
+
+    const malformed = runArguments("not-a-pr");
+    expect(malformed.status).toBe(1);
+    expect(malformed.stderr).toContain("malformed PR argument");
+
+    // A path holding whitespace arrives as two words: a named refusal, never a
+    // silently truncated path.
+    const split = runArguments("412 --entries /tmp/my dir/e.json");
+    expect(split.status).toBe(1);
+    expect(split.stderr).toContain("more than one PR argument");
+
+    // A flag with no value, and a flag this skill does not take.
+    expect(runArguments("412 --entries").status).toBe(1);
+    expect(runArguments("412 --body-file /tmp/x").status).toBe(1);
   });
 });
 
@@ -2238,6 +2416,16 @@ const HOST_NOT_ASSERTED = /host is (?:deliberately )?not asserted/i;
 function validationFence(): string {
   return fencedBlocks(uploadRef()).find((block) => block.includes("CAPTURE_ROOT")) ?? "";
 }
+
+// Step C's harvest fence: the candidate loop and the statement that records
+// the entry's outcome.
+function harvestFence(): string {
+  return fencedBlocks(uploadRef()).find((block) => block.includes('done < "$CANDIDATES_FILE"')) ?? "";
+}
+
+// Offender detector: a terminal recorder with ONE arm, which writes a line for
+// an entry that landed a URL and nothing at all for an entry that did not.
+const UNRECORDED_ENTRY = /\[ -z "\$ASSET_URL" \][ \t]*\|\|[ \t]*printf/;
 
 describe("Slice 1 — containment, allowlist, and failure classes (L2)", () => {
   test("containment is checked against a root the entries file declares", () => {
@@ -2413,7 +2601,7 @@ describe("Slice 1 — containment, allowlist, and failure classes (L2)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// L2: round-3 findings. The recipes are what a model copying one fenced block
+// L2: the recipes, which are what a model copying one fenced block
 // at a time actually runs, so the contracts here are about the BLOCK — what is
 // in it, and what a shell does with it.
 // ---------------------------------------------------------------------------
@@ -2439,6 +2627,95 @@ function skillBlocks(): string[] {
   return fencedBlocks([fileOr(SKILL), inputRef(), uploadRef(), verifyRef(), rejectedRef()].join("\n"));
 }
 
+// ---------------------------------------------------------------------------
+// The recipe sweep: a variable the recipe expands that no fence binds, and a
+// file the recipe reads that no fence writes. Both shapes are the same defect —
+// state the recipe assumes and never produces — and both are swept rather than
+// spot-checked, over every skill that ships a fence in this contract.
+// ---------------------------------------------------------------------------
+
+// Every markdown file under `dir`, recursively. A walk, not a fixed list: a
+// new reference file must join the sweep by existing, not by being remembered.
+function markdownUnder(dir: string): string[] {
+  if (!existsSync(dir)) return [];
+  const out: string[] = [];
+  const visit = (directory: string) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) visit(path);
+      else if (entry.name.endsWith(".md")) out.push(path);
+    }
+  };
+  visit(dir);
+  return out;
+}
+
+// The fenced shell of one skill, in document order. Scoped PER SKILL: team-pr
+// runs the companion half of this same contract, and a corpus spanning both
+// would let a binding in `pr-screenshots` excuse a read in `team-pr` — which is
+// how `$SECTION_FILE`, expanded in the companion loop and bound nowhere under
+// `skills/team-pr/`, got through a sweep scoped to `skills/pr-screenshots/`.
+const SHELL_CORPORA: { skill: string; ambient: string[] }[] = [
+  // What the environment supplies, and `jq`'s own `$ARGS` builtin, which is
+  // read inside a `jq -n` program and is not a shell variable at all.
+  { skill: "pr-screenshots", ambient: ["ARGUMENTS", "PR_SCREENSHOTS_ASSET_HOST", "IFS", "ARGS"] },
+  { skill: "team-pr", ambient: ["ARGUMENTS"] },
+];
+
+function corpusBlocks(skill: string): string[] {
+  return markdownUnder(join(REPO_ROOT, "skills", skill)).flatMap((path) => fencedBlocks(read(path)));
+}
+
+// The names a corpus BINDS: an assignment, a `${VAR:-default}` form, a loop
+// variable, or a `read -r` target.
+function boundNames(code: string[]): Set<string> {
+  const bound = new Set<string>();
+  for (const block of code) {
+    for (const match of block.matchAll(/\b([A-Z][A-Z0-9_]*)=/g)) bound.add(match[1] as string);
+    for (const match of block.matchAll(/\$\{([A-Z][A-Z0-9_]*):[?=-]/g)) bound.add(match[1] as string);
+    for (const match of block.matchAll(/\b(?:for|read -r)\s+([A-Z][A-Z0-9_]*)\b/g)) bound.add(match[1] as string);
+  }
+  return bound;
+}
+
+// The names a corpus READS.
+function readNames(code: string[]): Set<string> {
+  const names = new Set<string>();
+  for (const block of code) {
+    for (const match of block.matchAll(/\$\{?([A-Z][A-Z0-9_]*)\b/g)) names.add(match[1] as string);
+  }
+  return names;
+}
+
+// A variable consumed as a file to READ: `--body-file "$X"`, `--section-file
+// "$X"`, or an input redirect `< "$X"`.
+const FILE_READ = /--(?:body-file|section-file)[ \t]+"\$\{?([A-Z][A-Z0-9_]*)\}?"|(?:^|[^<])<[ \t]*"\$\{?([A-Z][A-Z0-9_]*)\}?"/gm;
+// A fence WRITING that file: an output redirect, or a promotion onto it.
+const FILE_WRITE = /(?:^|[^0-9<>&])>>?[ \t]*"\$\{?([A-Z][A-Z0-9_]*)\}?"|\b(?:mv|cp)\b[^\n]*[ \t]"\$\{?([A-Z][A-Z0-9_]*)\}?"[ \t]*$/gm;
+
+function firstIndex(text: string, pattern: RegExp, name: string): number {
+  for (const match of text.matchAll(new RegExp(pattern.source, pattern.flags))) {
+    if ((match[1] ?? match[2]) === name) return match.index ?? -1;
+  }
+  return -1;
+}
+
+// The file variables a corpus reads with no earlier fence writing them.
+// Binding the PATH is not writing the FILE: `$PRE_IMAGE_FILE` was bound to a
+// path in step A, handed to `--body-file`, and never written — so `--check`
+// ran against an EMPTY body, where it passes vacuously, and the splice then
+// discarded the PR's real description.
+function unwrittenFiles(code: string[]): string[] {
+  const joined = code.join("\n");
+  const offenders = new Set<string>();
+  for (const match of joined.matchAll(FILE_READ)) {
+    const name = (match[1] ?? match[2]) as string;
+    const written = firstIndex(joined, FILE_WRITE, name);
+    if (written < 0 || written > (match.index ?? 0)) offenders.add(name);
+  }
+  return [...offenders].sort();
+}
+
 // Offender detector: an attachment path matched mid-path, which admits
 // `https://github.com/attacker/repo/raw/main/user-attachments/evil.png` on the
 // allowlisted host.
@@ -2449,9 +2726,9 @@ const CONTENT_CHECK_OVERSTATED = /content check is the one that survives a hosti
 
 describe("Slice 1 — the copyable blocks (L2)", () => {
   test("no fenced block uses continue or break without a loop around it", () => {
-    // Round-3 S1: the path-validation fence refused into a bare `continue`
-    // with no `for`, `while`, or `until` anywhere in the block, so in bash
-    // every refusal fell through and the block exited 0.
+    // The path-validation fence refused into a bare `continue` with no `for`,
+    // `while`, or `until` anywhere in the block, so in bash every refusal fell
+    // through and the block exited 0.
     const blocks = skillBlocks();
     expect(blocks.length).toBeGreaterThan(0);
 
@@ -2530,8 +2807,8 @@ describe("Slice 1 — the copyable blocks (L2)", () => {
 
 describe("Slice 1 — refuse before mutating (L2)", () => {
   test("step A runs every pre-image refusal before the first attach", () => {
-    // C3. Six refusals computable from the pre-image fired only in step D,
-    // after `gh pr edit --attach` had run once per entry.
+    // Six refusals computable from the pre-image fired only in step D, after
+    // `gh pr edit --attach` had run once per entry.
     const upload = uploadRef();
     expect(upload.length).toBeGreaterThan(0);
     expect(upload).toContain("--check --body-file");
@@ -2623,7 +2900,7 @@ describe("Slice 1 — the normalization backstops (L2)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// L2: the round-4 recipe gaps. Each of these is a variable the fences read and
+// L2: the recipe gaps. Each of these is a variable the fences read and
 // nothing binds, a status arm that falls through, or an allowlist that admits
 // content the attacker controls — defects a model copying one fence at a time
 // runs straight into.
@@ -2637,11 +2914,11 @@ const UNGUARDED_PRE_IMAGE = /PRE_IMAGE(?:_JSON)?="\$\(gh pr view[^\n]*\)"\s*$/m;
 // `raw.githubusercontent.com` and so any public repository's content.
 const WILDCARD_PROXY_HOST = /\*\.githubusercontent\.com/;
 
-describe("Slice 1 — round-4 recipe gaps (L2)", () => {
+describe("Slice 1 — recipe gaps (L2)", () => {
   test("the pre-image read is guarded, and the lost-update guard is not vacuous", () => {
-    // C2. `PRE_IMAGE="$(gh pr view …)"` with no `|| exit` binds "" on a rate
-    // limit or a network blip. Nothing downstream told that apart from an
-    // empty description: the check found no heading, the splice returned the
+    // `PRE_IMAGE="$(gh pr view …)"` with no `|| exit` binds "" on a rate limit
+    // or a network blip. Nothing downstream told that apart from an empty
+    // description: the check found no heading, the splice returned the
     // Screenshots section as the WHOLE body, and the lost-update guard passed
     // vacuously because every string starts with "".
     const upload = uploadRef();
@@ -2669,10 +2946,10 @@ describe("Slice 1 — round-4 recipe gaps (L2)", () => {
   });
 
   test("the validation loop binds its own inputs, in the same fence", () => {
-    // M1. The loop reads `$CAPTURE_ROOT` and `"$@"`, and nothing anywhere in
-    // the skill produced either — so a session following the doc literally
-    // hits an unbound root and has to invent its own jq extraction, which is
-    // the improvisation this fence's own prose forbids.
+    // The loop reads `$CAPTURE_ROOT` and `"$@"`, and nothing anywhere in the
+    // skill produced either — so a session following the doc literally hits an
+    // unbound root and has to invent its own jq extraction, which is the
+    // improvisation this fence's own prose forbids.
     const fence = validationFence();
     expect(fence.length).toBeGreaterThan(0);
 
@@ -2691,33 +2968,63 @@ describe("Slice 1 — round-4 recipe gaps (L2)", () => {
     expect(fence).toContain('[ "$ENTRY_COUNT" = "$LINE_COUNT" ] || exit 1');
     // And an unquoted `set --` globs without this.
     expect(fence).toContain("set -f");
+  });
 
-    // The general form of the same defect: no fence may read a variable that
-    // no fence in the skill ever assigns. Round 3 fixed the loop's shape and
-    // round 4 found its inputs still unbound, so the invariant is swept rather
-    // than spot-checked.
-    const code = skillBlocks().map(shellCode);
-    const assigned = new Set<string>();
-    for (const block of code) {
-      for (const match of block.matchAll(/\b([A-Z][A-Z0-9_]*)=/g)) assigned.add(match[1] as string);
-      for (const match of block.matchAll(/\$\{([A-Z][A-Z0-9_]*):[?=-]/g)) assigned.add(match[1] as string);
-      for (const match of block.matchAll(/\b(?:for|read -r)\s+([A-Z][A-Z0-9_]*)\b/g)) assigned.add(match[1] as string);
+  test("no fence reads a variable its own skill never binds", () => {
+    // The recurring defect, swept rather than spot-checked: a variable a later
+    // fence expands but no fence binds is a variable the session invents. The
+    // sweep runs per skill, because `pr-screenshots` and `team-pr` each ship
+    // fences for this contract and neither one's bindings reach the other's.
+    for (const { skill, ambient } of SHELL_CORPORA) {
+      const code = corpusBlocks(skill).map(shellCode);
+      expect(code.length).toBeGreaterThan(0);
+      const bound = boundNames(code);
+      const unbound = [...readNames(code)].filter((name) => !bound.has(name) && !ambient.includes(name)).sort();
+      expect({ skill, unbound }).toEqual({ skill, unbound: [] });
     }
-    // What the environment supplies, and `jq`'s own `$ARGS` builtin, which is
-    // read inside a `jq -n` program and is not a shell variable at all. Round 5
-    // took the run's scratch paths and `$LANDED_COUNT` OFF this list: each is
-    // now bound in a visible fence like every other load-bearing value, so
-    // "named in the prose nearby" is no longer an exemption any of them needs.
-    const ambient = new Set(["ARGUMENTS", "PR_SCREENSHOTS_ASSET_HOST", "IFS", "ARGS"]);
-    const read = new Set<string>();
-    for (const block of code) {
-      for (const match of block.matchAll(/\$\{?([A-Z][A-Z0-9_]*)\b/g)) read.add(match[1] as string);
+
+    // The sweep fires on a planted positive in EACH shape it missed: a name
+    // bound in one skill and read in the other, and a name bound nowhere.
+    const planted = ['node splice.mjs --section-file "$SECTION_FILE" --landed "$LANDED_COUNT"'];
+    const bound = boundNames(planted);
+    expect([...readNames(planted)].filter((name) => !bound.has(name)).sort()).toEqual([
+      "LANDED_COUNT",
+      "SECTION_FILE",
+    ]);
+  });
+
+  test("no fence reads a file its own skill never writes", () => {
+    // The second shape of the same defect, and the one a binding check cannot
+    // see: `$PRE_IMAGE_FILE` was BOUND to a path and handed to `--body-file`
+    // with no fence ever writing content to it. An unwritten path reads as an
+    // empty body, `--check` passes vacuously on one, and the splice then
+    // replaces the PR's whole description with the section alone.
+    for (const { skill } of SHELL_CORPORA) {
+      const code = corpusBlocks(skill).map(shellCode);
+      expect(code.length).toBeGreaterThan(0);
+      expect({ skill, unwritten: unwrittenFiles(code) }).toEqual({ skill, unwritten: [] });
     }
-    const unbound = [...read].filter((name) => !assigned.has(name) && !ambient.has(name)).sort();
-    expect(unbound).toEqual([]);
-    // The sweep fires on a planted positive — the shape that shipped.
-    expect(assigned.has("CAPTURE_ROOT") && assigned.has("SUFFIX")).toBe(true);
-    expect(ambient.has("CAPTURE_ROOT")).toBe(false);
+
+    // The detector fires on a planted positive: the path is bound, and nothing
+    // writes the file.
+    expect(
+      unwrittenFiles(['PRE_IMAGE_FILE="$RUN_DIR/pre-image.md"', 'node splice.mjs --check --body-file "$PRE_IMAGE_FILE"']),
+    ).toEqual(["PRE_IMAGE_FILE"]);
+    // …and it clears once a fence writes it, in that order.
+    expect(
+      unwrittenFiles([
+        'PRE_IMAGE_FILE="$RUN_DIR/pre-image.md"',
+        'printf \'%s\' "$PRE_IMAGE" >"$PRE_IMAGE_FILE"',
+        'node splice.mjs --check --body-file "$PRE_IMAGE_FILE"',
+      ]),
+    ).toEqual([]);
+    // A write that comes AFTER the read is not a write the read can use.
+    expect(
+      unwrittenFiles([
+        'node splice.mjs --check --body-file "$PRE_IMAGE_FILE"',
+        'printf \'%s\' "$PRE_IMAGE" >"$PRE_IMAGE_FILE"',
+      ]),
+    ).toEqual(["PRE_IMAGE_FILE"]);
   });
 
   test("a failed attach records its class and continues", () => {
@@ -2752,6 +3059,79 @@ describe("Slice 1 — round-4 recipe gaps (L2)", () => {
     // one invocation.
     const upload = squash(uploadRef());
     expect(upload).toContain("bound in step B's loop");
+  });
+
+  test("every entry ends recorded, as a landed URL or as a failure", () => {
+    // The harvest's terminal statement wrote a line only when a URL resolved,
+    // so an entry that harvested nothing produced NO line in either file —
+    // including the ambiguous arm, which set `REASON` and broke out of the
+    // inner `while` without recording it. If the harvest ever stops matching,
+    // every entry lands nothing, `LANDED_COUNT` is 0, and the body is written
+    // in the DEGRADED form — "captured, not yet uploaded" published over assets
+    // that are live on world-readable URLs, beside an empty failure list.
+    const fence = harvestFence();
+    expect(fence.length).toBeGreaterThan(0);
+
+    // Two arms, one per file, and no third way out of the loop body.
+    expect(fence).toContain('printf \'%s\\t%s\\n\' "$ASSET_URL" "$ENTRY_PATH" >>"$ASSETS_FILE"');
+    expect(fence).toContain('REASON="${REASON:-no attachment URL}" ; fail_entry');
+
+    // The ambiguous arm's `break` leaves the inner loop with `REASON` set and
+    // `ASSET_URL` cleared, and the recorder BELOW that loop is what turns it
+    // into a line — the class that most needs a loud signal, since it fires
+    // exactly when another writer appended a URL during the attach window.
+    const ambiguous = fence.indexOf('REASON="ambiguous attachment URL"');
+    const loopEnd = fence.indexOf('done < "$CANDIDATES_FILE"');
+    expect(ambiguous).toBeGreaterThan(0);
+    expect(loopEnd).toBeGreaterThan(ambiguous);
+    expect(fence.indexOf("fail_entry", loopEnd)).toBeGreaterThan(loopEnd);
+
+    // The detector fires on the shipped shape: a single-armed recorder.
+    expect(UNRECORDED_ENTRY.test(fence)).toBe(false);
+    expect(
+      UNRECORDED_ENTRY.test('[ -z "$ASSET_URL" ] || printf \'%s\\t%s\\n\' "$ASSET_URL" "$ENTRY_PATH" >>"$ASSETS_FILE"'),
+    ).toBe(true);
+
+    // Both classes are named where every other class is, so the
+    // `Not uploaded: <caption> — <reason>` line can carry them.
+    const upload = uploadRef();
+    expect(upload).toContain("`no attachment URL`");
+    expect(upload).toContain("`ambiguous attachment URL`");
+  });
+
+  test("the pre-image is written to the file every check reads", () => {
+    // `$PRE_IMAGE_FILE` was bound to a path, the normalization was prose, and
+    // no fence ever wrote the file. Followed literally that leaves an EMPTY
+    // file: `--check` passes vacuously on one — no heading, no fault — and step
+    // D splices against it, discarding the PR's real description.
+    const upload = uploadRef();
+    const fence = fencedBlocks(upload).find((block) => block.includes("PRE_IMAGE_JSON=")) ?? "";
+    expect(fence.length).toBeGreaterThan(0);
+
+    // Read, normalized, and written in the one fence that binds it.
+    expect(fence).toContain("tr -d '\\r'");
+    expect(fence).toContain('printf \'%s\' "$PRE_IMAGE" >"$PRE_IMAGE_FILE"');
+
+    // And written BEFORE the check that reads it.
+    const write = upload.indexOf('>"$PRE_IMAGE_FILE"');
+    const check = upload.indexOf('--check --body-file "$PRE_IMAGE_FILE"');
+    expect(write).toBeGreaterThan(0);
+    expect(check).toBeGreaterThan(write);
+
+    // Both sides of the lost-update comparison get the same normalization, or
+    // the guard refuses every run on a PR whose body carries CRLFs.
+    expect(validationFence()).toContain("tr -d '\\r'");
+  });
+
+  test("the lost-update guard records what it does not cover", () => {
+    // `AFTER` is the body as of the last SUCCESSFUL read, so an entry that
+    // recorded `body read failed` leaves a stale baseline for the guard to
+    // test — a concurrent replacement passes it, over a window spanning every
+    // entry from the failed read on. The recorded residual named only a
+    // concurrent append.
+    const upload = squash(uploadRef());
+    expect(upload).toContain("body as of the last **successful** read");
+    expect(upload).toContain("concurrent *replacement*");
   });
 
   test("the attachment proxy host is enumerated, never wildcarded", () => {
@@ -2801,10 +3181,10 @@ describe("Slice 1 — round-4 recipe gaps (L2)", () => {
   });
 
   test("a URL that walks out of the path anchor is rejected in both layers", () => {
-    // Round-5 security MEDIUM. `https://github.com/user-attachments/assets/../
-    // ../attacker/evil/raw/main/x.png` satisfied the prefix test and the host
-    // test, and an HTTP client normalizes it to attacker-controlled content on
-    // an allowlisted host.
+    // A candidate whose path walks back out of the anchor —
+    // `https://github.com/user-attachments/assets/../../attacker/evil/raw/main/x.png`
+    // — satisfied the prefix test and the host test, and an HTTP client
+    // normalizes it to attacker-controlled content on an allowlisted host.
     const upload = uploadRef();
     const verify = verifyRef();
     expect(upload.length).toBeGreaterThan(0);
@@ -2825,10 +3205,10 @@ describe("Slice 1 — round-4 recipe gaps (L2)", () => {
   });
 
   test("the proxy path admits the rewrite GitHub actually emits", () => {
-    // Round-5 security MEDIUM. A one-segment rule matched NO real rewrite:
-    // the genuine form is `/<user-id>/<asset-id>-<uuid>.png?jwt=…`, two
-    // segments, so every private-repository PR rejected every entry and the
-    // read-back reported `unverified` on a correct write.
+    // A one-segment rule matched NO real rewrite: the genuine form is
+    // `/<user-id>/<asset-id>-<uuid>.png?jwt=…`, two segments, so every
+    // private-repository PR rejected every entry and the read-back reported
+    // `unverified` on a correct write.
     const upload = uploadRef();
     expect(upload.length).toBeGreaterThan(0);
     const fence = fencedBlocks(upload).find((block) => block.includes("ASSET_PROXY_HOST=")) ?? "";
@@ -2898,6 +3278,26 @@ describe("Slice 1 — round-4 recipe gaps (L2)", () => {
     expect(squash(input)).toContain("basename with its extension removed");
   });
 
+  test("the worked example carries the captions the snippet derives", () => {
+    // The example and the snippet below it disagreed: two hand-supplied
+    // `"Login"` captions above, and `login` / `login-error` out of the jq
+    // expression that claimed to produce them — so the one executable statement
+    // of the default-caption rule contradicted its own worked example.
+    const example = fencedBlocks(inputRef()).find((block) => block.includes('"entries"')) ?? "";
+    expect(example.length).toBeGreaterThan(0);
+    const parsed = JSON.parse(example) as { entries: { path: string; caption: string }[] };
+    expect(parsed.entries.length).toBeGreaterThan(1);
+
+    // The rule, applied here exactly as the fence applies it in jq.
+    const defaultCaption = (path: string) => (path.split("/").pop() ?? "").replace(/\.[^.]+$/, "");
+    for (const entry of parsed.entries) {
+      expect({ path: entry.path, caption: entry.caption }).toEqual({
+        path: entry.path,
+        caption: defaultCaption(entry.path),
+      });
+    }
+  });
+
   test("the raw-HTML-tag over-refusal is in the recovery catalogue", () => {
     // `HTML_TAG` matches `a<b` in ordinary prose, so a body reading "fails
     // when a<b" refuses the whole run. Designed direction of error, non-obvious
@@ -2921,9 +3321,52 @@ describe("Slice 1 — round-4 recipe gaps (L2)", () => {
     for (const shape of ["`**caption**`", "`![screenshot-NN]`", "`> _note:_`", "`Not uploaded:`"]) {
       expect(skill).toContain(shape);
     }
-    // Carried over from round 3: the entries file's absolute root and the
-    // content-type acceptance rule belong in the skill's own hard rules.
+    // The entries file's absolute root and the content-type acceptance rule
+    // belong in the skill's own hard rules.
     expect(skill).toContain("file -b --mime-type");
     expect(squash(skill)).toContain("absolute** top-level `root`");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Comment discipline over the two test files this contract owns.
+// `engineering-standards`, Code Comments, forbids process narration and names
+// "review feedback" and "edit history" specifically: a comment that opens with
+// a review-round or finding ID is both, and it explains nothing a reader of
+// this file can use. The explanation is what stays; the ID is what goes.
+//
+// The marker is ASSEMBLED from fragments rather than written out, because a
+// literal one would sit in this file and make the sweep match its own detector.
+// ---------------------------------------------------------------------------
+const COMMENT_LINE = /^\s*(?:\/\/|\/\*|\*)/;
+const PROCESS_MARKER = new RegExp(`\\b(?:${"round"}|${"finding"})s?[- ]?\\d`, "i");
+
+describe("comment discipline (L2)", () => {
+  test("no test comment carries a review-round or finding ID", () => {
+    const files = ["pr-screenshots-skill.test.ts", "team-pr-screenshots.test.ts"].map((name) =>
+      join(REPO_ROOT, "tests", name),
+    );
+    const offenders: string[] = [];
+    for (const file of files) {
+      expect(existsSync(file)).toBe(true);
+      read(file)
+        .split("\n")
+        .forEach((line, index) => {
+          if (COMMENT_LINE.test(line) && PROCESS_MARKER.test(line)) {
+            offenders.push(`${relative(REPO_ROOT, file)}:${index + 1}`);
+          }
+        });
+    }
+    expect(offenders).toEqual([]);
+
+    // The detector fires on planted positives — the shapes that shipped.
+    for (const planted of [`    // ${"Round"}-5 B1. The companion read was the bare form`, `// ${"finding"} 8: a runtime branch`]) {
+      expect(COMMENT_LINE.test(planted) && PROCESS_MARKER.test(planted)).toBe(true);
+    }
+    // …and not on the durable references that stay: design decisions, slices,
+    // and CommonMark sections.
+    for (const kept of ["// Decision 12 rejects the per-repo call.", "// Slice 3 copies it verbatim.", "// CommonMark 0.31.2 §4.2."]) {
+      expect(PROCESS_MARKER.test(kept)).toBe(false);
+    }
   });
 });

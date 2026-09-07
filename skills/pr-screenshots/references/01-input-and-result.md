@@ -1,8 +1,40 @@
 ## Input and result
 
+### Split the arguments before validating any of them
+
+`$ARGUMENTS` carries the whole invocation — `<pr-number-or-url>` **and**
+`--entries <path>`, which is what `SKILL.md` advertises and what `team-pr`
+sends. The flags come off first, and the PR token is validated alone:
+`412 --entries /tmp/e/entries.json` tested as one token takes the
+`*[!0-9]*` arm below, fails the anchored URL pattern, and exits 1 with
+"malformed PR argument" before the run starts.
+
+```bash
+PR_ARG='' ; ENTRIES_FILE='' ; ARG_HOST='' ; ARG_OWNER='' ; ARG_REPO=''
+set -f                                  # no argument may glob
+set -- $ARGUMENTS                       # one word per argument
+set +f
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --entries)   [ "$#" -ge 2 ] || { echo "--entries needs a path" >&2 ; exit 1 ; }
+                 ENTRIES_FILE="$2" ; shift 2 ;;
+    --entries=*) ENTRIES_FILE="${1#--entries=}" ; shift ;;
+    --*)         echo "unknown flag: $1" >&2 ; exit 1 ;;
+    *)           [ -z "$PR_ARG" ] || { echo "more than one PR argument" >&2 ; exit 1 ; }
+                 PR_ARG="$1" ; shift ;;
+  esac
+done
+```
+
+`$ENTRIES_FILE` is bound here and nowhere else; step B of
+`references/02-upload-and-body-edit.md` reads it. The split is on whitespace,
+so an entries path holding a space arrives as two words and lands on "more
+than one PR argument" — a loud refusal that names the argument, never a
+silently truncated path.
+
 ### Resolve the PR once
 
-`$ARGUMENTS` carries a PR number or a full PR URL. Validate it before it
+`$PR_ARG` carries a PR number or a full PR URL. Validate it before it
 reaches any command, using the technique at
 `skills/pr-watch-as-reviewer/references/02-input.md`, lines 11-42: an anchored
 pattern, then a parameter-expansion split of the string that already matched
@@ -21,17 +53,17 @@ is a charset here:
 
 ```bash
 PR_URL_PATTERN='^https://[A-Za-z0-9.-]{1,253}/[A-Za-z0-9._-]{1,39}/[A-Za-z0-9._-]{1,100}/pull/[0-9]+$'
-case "$ARGUMENTS" in
+case "$PR_ARG" in
   ''|*[!0-9]*) ARG_NUMBER='' ;;               # not a bare PR number
-  *)           ARG_NUMBER="$ARGUMENTS" ;;     # bare number — repo comes from the checkout
+  *)           ARG_NUMBER="$PR_ARG" ;;        # bare number — repo comes from the checkout
 esac
 if [ -z "$ARG_NUMBER" ]; then
-  [[ "$ARGUMENTS" =~ $PR_URL_PATTERN ]] || { echo "malformed PR argument" >&2; exit 1; }
-  REST="${ARGUMENTS#https://}"
+  [[ "$PR_ARG" =~ $PR_URL_PATTERN ]] || { echo "malformed PR argument" >&2; exit 1; }
+  REST="${PR_ARG#https://}"
   ARG_HOST="${REST%%/*}"  ; REST="${REST#*/}"
   ARG_OWNER="${REST%%/*}" ; REST="${REST#*/}"
   ARG_REPO="${REST%%/*}"
-  ARG_NUMBER="${ARGUMENTS##*/}"
+  ARG_NUMBER="${PR_ARG##*/}"
 fi
 ```
 
@@ -108,8 +140,8 @@ work.
 {
   "root": "/Users/dev/Desktop/shots",
   "entries": [
-    { "path": "/Users/dev/Desktop/shots/login.png", "caption": "Login", "state": "default" },
-    { "path": "/Users/dev/Desktop/shots/login-error.png", "caption": "Login", "state": "error", "note": "seeded" }
+    { "path": "/Users/dev/Desktop/shots/login.png", "caption": "login", "state": "default" },
+    { "path": "/Users/dev/Desktop/shots/login-error.png", "caption": "login-error", "state": "error", "note": "seeded" }
   ],
   "notes": ["2 states skipped — see manifest"]
 }
@@ -130,7 +162,9 @@ Ask only when the basename is empty after normalization.
 Write the file with `jq`, never by pasting the paths into a JSON string: a path
 is caller text, and a quote or a backslash in one rewrites the document rather
 than filling a slot in it (`principle-never-interpolate`). This is the whole
-step, and it produces the default captions above:
+step, and its captions are the basename defaults the example above carries —
+each entry's caption is that entry's own path, basename-only and
+extension-stripped, and nothing else:
 
 ```bash
 ENTRIES_DIR="$(mktemp -d)"

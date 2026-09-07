@@ -107,6 +107,7 @@ Opens a pull request after verification.
 - `changelog`
 - `git-commit`
 - `pr-screenshots`
+- `principle-never-interpolate`
 - `tracking-tickets`
 - `verifying-ux`
 - `worktree-isolation`
@@ -644,7 +645,7 @@ skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see
 | `principle-idempotent-reruns` | cited by `pr-cleanup`, `groom-backlog`, `team`, `pr-watch-as-author`, `team-design`, `principle-pre-image-first`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-least-privilege` | cited by `reviewing-code`, `reflect`, `eng-design-doc-review`, `cross-model-review`, `pr-verify`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-mechanical-gates` | cited by `qrspi-workflow`, `test-first-development`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-never-interpolate` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `sweeping-local-state`, `decomposing-intent`, `cross-model-review`, `pr-screenshots`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-never-interpolate` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `sweeping-local-state`, `decomposing-intent`, `cross-model-review`, `pr-screenshots`, `team-pr`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-non-blocking-waits` | cited by `pr-watch-as-author`, `pr-watch-as-reviewer`, `pr-watch-mechanics`, `shipit`, `cross-model-review`, `pr-rebase`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-optimization-never-dependency` | cited by `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`, `reflect`, `principle-fail-closed`, `why`, `how`, `pr-screenshots`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-plan-present-wait` | cited by `groom-backlog`, `pr-open-comments`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |

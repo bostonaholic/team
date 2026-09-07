@@ -119,7 +119,7 @@ function loadCount(text: string, name: string): number {
 
 // Offender detector: an upload mechanic team-pr must no longer name.
 const UPLOAD_MECHANICS = /user-attachments|--attach/;
-// Offender detector: a per-repo call described as a runtime branch (finding 8).
+// Offender detector: a per-repo call described as a runtime branch.
 const RUNTIME_FALLBACK = /fall(s|ing|en)?[ -]?back|fallback/i;
 
 describe("Slice 2: team-pr Screenshots section rendering", () => {
@@ -179,10 +179,10 @@ describe("Slice 2: team-pr delegates screenshot upload to pr-screenshots", () =>
   });
 
   test("the body template cites pr-screenshots for the section wording", () => {
-    // Finding 5: the duplicated contract is deleted, not forked. The
-    // entries-file conditionals stay; the rendering restatement goes, and the
-    // second ("upload failed or unavailable") wording goes with it — team-pr
-    // renders the section once, at open time, and never edits it again.
+    // The duplicated contract is deleted, not forked. The entries-file
+    // conditionals stay; the rendering restatement goes, and the second
+    // ("upload failed or unavailable") wording goes with it — team-pr renders
+    // the section once, at open time, and never edits it again.
     const template = templateRef();
     expect(template.length).toBeGreaterThan(0);
     expect(template).toContain("skills/pr-screenshots/references/02-upload-and-body-edit.md");
@@ -235,9 +235,9 @@ describe("Slice 3: companion PRs get the same section, each verified", () => {
   });
 
   test("no per-repo call is described as a runtime fallback", () => {
-    // Finding 8: decision 12 rejects the per-repo call. It is the design
-    // change a real cross-repo rendering failure would force, never a branch
-    // the run takes at runtime.
+    // Decision 12 rejects the per-repo call. It is the design change a real
+    // cross-repo rendering failure would force, never a branch the run takes
+    // at runtime.
     const multiRepo = multiRepoBlock();
     expect(multiRepo.length).toBeGreaterThan(0);
     expect(RUNTIME_FALLBACK.test(multiRepo)).toBe(false);
@@ -268,11 +268,11 @@ describe("Slice 3: the companion recipe guards its own redirect", () => {
   });
 
   test("the companion pre-image read is guarded by exit AND by envelope", () => {
-    // Round-5 B1. The companion read was the bare
-    // `gh pr view … --json body --jq .body` form the home path spent eighteen
-    // lines replacing: on a rate limit it binds "", the splice then returns
-    // the `## Screenshots` section as the WHOLE body, and step 4 writes it —
-    // blanking a live companion PR's entire description.
+    // The companion read was the bare `gh pr view … --json body --jq .body`
+    // form the home path spent eighteen lines replacing: on a rate limit it
+    // binds "", the splice then returns the `## Screenshots` section as the
+    // WHOLE body, and step 4 writes it — blanking a live companion PR's entire
+    // description.
     const multiRepo = multiRepoBlock();
     expect(multiRepo.length).toBeGreaterThan(0);
     expect(multiRepo).toContain('jq -e \'has("body") and (.body | type == "string")\'');
@@ -285,9 +285,9 @@ describe("Slice 3: the companion recipe guards its own redirect", () => {
   });
 
   test("a companion write is gated on the pre-image still being current", () => {
-    // Round-5 B1, second half: nothing on the companion path guarded a lost
-    // update at all, so a companion edited between the read and the write had
-    // that edit overwritten by a body computed before it existed.
+    // Nothing on the companion path guarded a lost update at all, so a
+    // companion edited between the read and the write had that edit
+    // overwritten by a body computed before it existed.
     const multiRepo = multiRepoBlock();
     expect(multiRepo.length).toBeGreaterThan(0);
     expect(multiRepo).toContain('NOW_JSON="$(gh pr view');
@@ -299,10 +299,10 @@ describe("Slice 3: the companion recipe guards its own redirect", () => {
   });
 
   test("every companion temporary is bound per companion, and a refusal clears both", () => {
-    // Round-5 B2. `$NEW_BODY_FILE` was never bound to a per-companion path, so
-    // from the second companion onward a refusal left the FIRST companion's
-    // spliced body on disk — its summary, its footer, its `Part of` line — for
-    // the unconditional write below to put on this companion's description.
+    // `$NEW_BODY_FILE` was never bound to a per-companion path, so from the
+    // second companion onward a refusal left the FIRST companion's spliced
+    // body on disk — its summary, its footer, its `Part of` line — for the
+    // unconditional write below to put on this companion's description.
     const multiRepo = multiRepoBlock();
     expect(multiRepo.length).toBeGreaterThan(0);
     expect(multiRepo).toContain('COMPANION_DIR="$(mktemp -d)"');
@@ -317,11 +317,11 @@ describe("Slice 3: the companion recipe guards its own redirect", () => {
   });
 
   test("every companion call carries the host the companion lives on", () => {
-    // Round-5 documentation REQUIRED. `--repo "$OWNER/$REPO"` resolves against
-    // whichever host `gh` considers default and a bare `gh api repos/…` does
-    // the same, so on Enterprise every companion edit and read-back silently
-    // targeted github.com — and the read-back then asserted against an
-    // unrelated PR, which is verification evidence about something else.
+    // `--repo "$OWNER/$REPO"` resolves against whichever host `gh` considers
+    // default and a bare `gh api repos/…` does the same, so on Enterprise
+    // every companion edit and read-back silently targeted github.com — and
+    // the read-back then asserted against an unrelated PR, which is
+    // verification evidence about something else.
     const multiRepo = multiRepoBlock();
     expect(multiRepo.length).toBeGreaterThan(0);
     expect(multiRepo).toContain('COMPANION_SPEC="$COMPANION_HOST/$OWNER/$REPO"');
@@ -340,6 +340,48 @@ describe("Slice 3: the companion recipe guards its own redirect", () => {
     expect(calls.filter((call) => !call.includes('--repo "$COMPANION_SPEC"'))).toEqual([]);
     // And the read-back names the host explicitly.
     expect(multiRepo).toContain('gh api --hostname "$COMPANION_HOST"');
+  });
+
+  test("the section the companion splice reads is written, not assumed", () => {
+    // `--section-file "$SECTION_FILE"` was expanded here and bound nowhere
+    // under skills/team-pr/: no step wrote `result.json`'s `.section` to a
+    // file, so the one variable carrying the section into the companion write
+    // was one the session had to invent. It is also the one place
+    // caller-derived text — captions carrying `\[`, `\]`, `\!`, `\<`, `\>` —
+    // crosses from JSON into a shell-visible file, so an improvised heredoc
+    // there breaks `principle-never-interpolate`.
+    const multiRepo = multiRepoBlock();
+    expect(multiRepo.length).toBeGreaterThan(0);
+    expect(multiRepo).toContain('SECTION_FILE="$COMPANION_DIR/section.md"');
+    // `jq -r` moves the string; nothing re-types it. `-e` plus `select` refuses
+    // a null or empty section rather than writing the four bytes `null`.
+    expect(multiRepo).toContain("jq -e -r '.section | select(type == \"string\" and length > 0)'");
+    // Written before the splice that reads it, and per companion.
+    const write = multiRepo.indexOf('>"$SECTION_FILE"');
+    const readBack = multiRepo.indexOf('--section-file "$SECTION_FILE"');
+    expect(write).toBeGreaterThan(multiRepo.indexOf('SECTION_FILE="$COMPANION_DIR'));
+    expect(readBack).toBeGreaterThan(write);
+
+    // And the file it is read out of is bound where the skill wrote it.
+    expect(uploadRef()).toContain('RESULT_FILE="$ENTRIES_DIR/result.json"');
+    expect(uploadRef()).toContain('ENTRIES_DIR="$(mktemp -d)"');
+  });
+
+  test("the companion split is shown, charset tests included", () => {
+    // `COMPANION_HOST`, `OWNER`, `REPO`, and `NUMBER` feed three `gh` calls
+    // below, and the split that binds them was cited rather than shown — so
+    // the charset tests that keep a hostile segment out of `--repo` and
+    // `--hostname` were a paragraph away from the fence that needs them.
+    const multiRepo = multiRepoBlock();
+    expect(multiRepo.length).toBeGreaterThan(0);
+    expect(multiRepo).toContain("https://*/*/*/pull/[0-9]*");
+    expect(multiRepo).toContain('COMPANION_HOST="${REST%%/*}"');
+    expect(multiRepo).toContain('case "$COMPANION_HOST$OWNER$REPO" in *[!A-Za-z0-9._-]*)');
+    expect(multiRepo).toContain('case "$NUMBER" in ""|*[!0-9]*)');
+    // The split runs before the spec that carries its output into `gh`.
+    expect(multiRepo.indexOf('COMPANION_HOST="${REST%%/*}"')).toBeLessThan(
+      multiRepo.indexOf('COMPANION_SPEC="$COMPANION_HOST/$OWNER/$REPO"'),
+    );
   });
 
   test("the companion splice passes the landed-asset count and names exit 2", () => {

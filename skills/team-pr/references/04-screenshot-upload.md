@@ -19,7 +19,15 @@ open first, then attach and rewrite.
 
 ### Build the entries file
 
-Write a JSON entries file under `$(mktemp -d)`:
+Write a JSON entries file under `$(mktemp -d)`. That directory is bound once
+and named below, because `result.json` comes back beside the entries file:
+
+```bash
+ENTRIES_DIR="$(mktemp -d)"
+ENTRIES_FILE="$ENTRIES_DIR/entries.json"
+```
+
+The file itself carries:
 
 - a top-level `root` of `$ARGUMENTS/screenshots/` — the directory the PNGs
   live in, which is the directory every entry's path must resolve inside. The
@@ -43,9 +51,15 @@ repository's PR.
 
 ### Read the result
 
-`result.json` is the contract. Bind `RESULT_FILE` to the path the skill wrote
-it to — beside the entries file — because the companion loop below reads
-`assets` out of it. Three fields decide what happens next:
+`result.json` is the contract, and the companion loop below reads `assets` and
+`section` out of it:
+
+```bash
+RESULT_FILE="$ENTRIES_DIR/result.json"   # the skill writes it beside the entries file
+[ -r "$RESULT_FILE" ] || exit 2
+```
+
+Three fields decide what happens next:
 
 - `section` — the exact markdown written, or null. Null means no write landed
   a verified URL, so the open-time degraded note stands as the final section.
@@ -74,29 +88,57 @@ binding, and the host stopped being carried into any of the three calls. Where a
 step below names a fence in `skills/pr-screenshots/`, read that fence and run
 it — do not paraphrase it.
 
-1. Bind that companion's own values, per companion. Split its own PR URL with
-   the guarded split in `skills/pr-screenshots/references/01-input-and-result.md`
+1. Bind that companion's own values, per companion. The split below is the
+   home one from `skills/pr-screenshots/references/01-input-and-result.md`
    (`### Resolve the PR once`) — the shape test, then the parameter-expansion
-   split, then the charset tests — binding `COMPANION_HOST`, `OWNER`, `REPO`,
-   and `NUMBER` from the companion's URL instead of the home one. The host is
+   split, then the charset tests — run over the companion's URL instead of the
+   home one, and shown rather than cited because every guard it carries is one
+   the three `gh` calls below depend on. The host is
    not optional: `--repo "$OWNER/$REPO"` resolves against whichever host `gh`
    considers default, so on an Enterprise PR all three calls below would name a
    repository on github.com, and the read-back would then assert against an
    unrelated PR.
 
    ```bash
+   COMPANION_URL="https://github.com/owner/other-repo/pull/17"   # this companion's PR
+   case "$COMPANION_URL" in
+     https://*/*/*/pull/[0-9]*) : ;;
+     *) exit 2 ;;                                     # not a PR URL, so nothing may split it
+   esac
+   REST="${COMPANION_URL#https://}"
+   COMPANION_HOST="${REST%%/*}" ; REST="${REST#*/}"
+   OWNER="${REST%%/*}"          ; REST="${REST#*/}"
+   REPO="${REST%%/*}"
+   NUMBER="${COMPANION_URL##*/}"
+   case "$COMPANION_HOST$OWNER$REPO" in *[!A-Za-z0-9._-]*) exit 2 ;; esac
+   case "$NUMBER" in ""|*[!0-9]*) exit 2 ;; esac
+
    COMPANION_DIR="$(mktemp -d)"                       # bound per companion, never reused
    COMPANION_BODY_FILE="$COMPANION_DIR/pre-image.md"
    NEW_BODY_FILE="$COMPANION_DIR/new-body.md"
+   SECTION_FILE="$COMPANION_DIR/section.md"
    COMPANION_SPEC="$COMPANION_HOST/$OWNER/$REPO"      # gh's own [HOST/]OWNER/REPO form
    LANDED_COUNT="$(jq '[.assets[] | select(.url != null)] | length' "$RESULT_FILE")"
+   # `--section-file` reads a FILE, so the section is written to one here. `jq
+   # -r` is what writes it: the string carries the normalization's `\[`, `\]`,
+   # `\!`, `\<`, and `\>` escapes, and re-typing caller-derived text into a
+   # heredoc is the interpolation `principle-never-interpolate` forbids. The
+   # `select` refuses a null or empty `section` rather than writing the four
+   # bytes `null` into a companion body.
+   jq -e -r '.section | select(type == "string" and length > 0)' \
+     "$RESULT_FILE" >"$SECTION_FILE" || exit 2
    ```
 
-   `$NEW_BODY_FILE` is bound *inside* this loop and nowhere above it. Bound
-   once outside, the file the previous companion's splice produced survives
-   into this iteration, and a refusal here leaves step 4 writing the previous
-   companion's summary, footer, and `Part of` line over this companion's
-   description.
+   The charset tests are the same ones the home split runs, and they are shown
+   rather than cited: a host, owner, or repository carrying anything outside
+   `[A-Za-z0-9._-]` reaches three `gh` calls below, and a number that is not
+   digits names a different PR.
+
+   `$NEW_BODY_FILE` and `$SECTION_FILE` are bound *inside* this loop and
+   nowhere above it. Bound once outside, the file the previous companion's
+   splice produced survives into this iteration, and a refusal here leaves step
+   4 writing the previous companion's summary, footer, and `Part of` line over
+   this companion's description.
 
 2. Read that companion's pre-image, guarded the way step A of
    `skills/pr-screenshots/references/02-upload-and-body-edit.md` guards the home
