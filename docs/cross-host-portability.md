@@ -136,8 +136,12 @@ nested subagents, and structured returns.
   interpolates it into a runnable command breaks on Codex, where the value is
   empty and the path resolves to `/skills/...`. Document the command with a
   `<skill-dir>` placeholder the caller substitutes, the pattern Codex's own
-  bundled skills use, and keep the script free of relative imports and
-  environment reads so it runs from any install path (`ste-lint.mjs` does both).
+  bundled skills use, and keep the script free of relative imports and of
+  environment reads that resolve its own location, so it runs from any install
+  path (`ste-lint.mjs` does both). Reading the environment for something other
+  than the script's own path is fine and sometimes required — the host a session
+  is running on is knowable no other way, which is how
+  `resolve-transcript.mjs` tells a Claude Code session from a Codex one.
   `skills/nested-agents/SKILL.md:35` still interpolates the variable directly.
   That command is Claude-Code-only today, because the pipeline agents it serves
   cannot dispatch on Codex.
