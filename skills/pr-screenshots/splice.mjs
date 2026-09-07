@@ -221,6 +221,20 @@ const BARE_IMAGE_URL =
 const SECTION_HTML = new RegExp(`${UNESCAPED}<[A-Za-z/!?]`);
 
 /**
+ * An unescaped `](` in the SECTION — the inline-link half of the same
+ * backstop. `SECTION_HTML` catches raw HTML and `foreignImages` catches
+ * `![…](…)`, but a plain `[click me](https://evil.example/phish)` is
+ * neither, so it spliced clean with only the prose normalization between a
+ * caller's caption and a public body — and the normalization is precisely the
+ * layer the other two backstops exist because a rewrite can drop it.
+ *
+ * The escaped form `\](` is caller text that renders literally and is left
+ * alone. This skill's OWN images carry an unescaped `](`, so they are stripped
+ * out before the test runs rather than carved out of it by shape.
+ */
+const SECTION_LINK = new RegExp(`${UNESCAPED}\\]\\(`);
+
+/**
  * An INLINE markdown image reference — the only image shape that reaches this
  * point, because `scan` faults on every other form. And the one this skill
  * writes.
@@ -703,6 +717,11 @@ export function splice(body, section, options = {}) {
   if (smuggled.length > 0) {
     return refuse(`the section carries an image this skill did not write (${smuggled[0]})`);
   }
+  // Every remaining `![…](…)` is this skill's own, cleared by the check
+  // above, so what is left holding a `](` is a plain markdown link.
+  if (SECTION_LINK.test(sectionText.replace(ANY_IMAGE, ""))) {
+    return refuse("the section carries an unescaped markdown link, which must never reach a public body");
+  }
 
   const landed = Number.isFinite(options?.landed) ? options.landed : 0;
   const referenced = count(sectionText, NEW_SECTION_IMAGE);
@@ -823,8 +842,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(0);
   }
 
+  // Digits, tested BEFORE `Number()`. `Number("1e9")` is 1000000000 and
+  // `Number.isInteger` accepts it, so `--landed 1e9` widened rule 4's backstop
+  // to any count the caller liked. `0x10`, ` 7 `, and `Infinity` convert just
+  // as willingly. The shipped recipes emit plain digits, so this narrows the
+  // flag to what they already send.
+  if (!/^\d+$/.test(landedFlag)) fail(`--landed expects a non-negative integer, got "${landedFlag}"`);
   const landed = Number(landedFlag);
-  if (!Number.isInteger(landed) || landed < 0) fail(`--landed expects a non-negative integer, got "${landedFlag}"`);
 
   const result = splice(slurp(bodyFile, "body file"), slurp(sectionFile, "section file"), { landed });
   if (!result.changed) {

@@ -9,26 +9,46 @@ sends. The flags come off first, and the PR token is validated alone:
 `*[!0-9]*` arm below, fails the anchored URL pattern, and exits 1 with
 "malformed PR argument" before the run starts.
 
+**The split has to be shell-independent, and `set -- $ARGUMENTS` is not.**
+Word-splitting an unquoted *parameter* expansion is a bash behaviour zsh does
+not share — `SH_WORD_SPLIT` is off by default — so under a zsh session the
+whole value arrives as one positional, `PR_ARG` binds
+`412 --entries /tmp/e/entries.json` entire, `ENTRIES_FILE` stays empty, and the
+validator below exits 1 with exactly the refusal this split exists to prevent.
+Every invocation carrying more than one token fails that way, which is the
+whole `team-pr` path and the `argument-hint` `SKILL.md` advertises. `tr` splits
+the same in every shell, and `setopt shwordsplit` is not the fix: it changes
+the caller's shell rather than the recipe. The step-B bridge in
+`references/02-upload-and-body-edit.md` is *command* substitution, which zsh
+does split, so it stays as it is; this is the one parameter-expansion split.
+
 ```bash
-PR_ARG='' ; ENTRIES_FILE='' ; ARG_HOST='' ; ARG_OWNER='' ; ARG_REPO=''
-set -f                                  # no argument may glob
-set -- $ARGUMENTS                       # one word per argument
-set +f
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    --entries)   [ "$#" -ge 2 ] || { echo "--entries needs a path" >&2 ; exit 1 ; }
-                 ENTRIES_FILE="$2" ; shift 2 ;;
-    --entries=*) ENTRIES_FILE="${1#--entries=}" ; shift ;;
-    --*)         echo "unknown flag: $1" >&2 ; exit 1 ;;
+PR_ARG='' ; ENTRIES_FILE='' ; ARG_HOST='' ; ARG_OWNER='' ; ARG_REPO='' ; PENDING=''
+ARG_TOKENS_FILE="$(mktemp)"
+# One token per LINE, written here and read back below. Nothing is unquoted, so
+# no token can glob and no `set -f` is needed. The redirect keeps the loop in
+# the current shell in bash and zsh alike, which a pipeline into `while` does
+# not. `printf '%s\n'` — with the newline — because `read` discards a final
+# line that has none, which silently drops the LAST argument of every
+# invocation; `-s` squeezes the run that trailing newline may join.
+printf '%s\n' "$ARGUMENTS" | tr -s ' \t\n' '\n\n\n' >"$ARG_TOKENS_FILE"
+while IFS= read -r ARG_TOKEN; do
+  [ -n "$ARG_TOKEN" ] || continue       # a leading separator squeezes to one empty line
+  if [ -n "$PENDING" ]; then ENTRIES_FILE="$ARG_TOKEN" ; PENDING='' ; continue ; fi
+  case "$ARG_TOKEN" in
+    --entries)   PENDING=1 ;;
+    --entries=*) ENTRIES_FILE="${ARG_TOKEN#--entries=}" ;;
+    --*)         echo "unknown flag: $ARG_TOKEN" >&2 ; exit 1 ;;
     *)           [ -z "$PR_ARG" ] || { echo "more than one PR argument" >&2 ; exit 1 ; }
-                 PR_ARG="$1" ; shift ;;
+                 PR_ARG="$ARG_TOKEN" ;;
   esac
-done
+done <"$ARG_TOKENS_FILE"
+[ -z "$PENDING" ] || { echo "--entries needs a path" >&2 ; exit 1 ; }
 ```
 
 `$ENTRIES_FILE` is bound here and nowhere else; step B of
 `references/02-upload-and-body-edit.md` reads it. The split is on whitespace,
-so an entries path holding a space arrives as two words and lands on "more
+so an entries path holding a space arrives as two tokens and lands on "more
 than one PR argument" — a loud refusal that names the argument, never a
 silently truncated path.
 
@@ -186,12 +206,14 @@ own `--arg`; add each discrepancy line to `notes` the same way.
 
 The top-level `root` is **required and absolute**. It is the directory every
 entry's `path` must resolve inside, and it is the directory the caller's images
-**already live in** — a Desktop, a Downloads directory, `$ARGUMENTS/screenshots/`
-for a `team-pr` run. It is never the `mktemp -d` directory this JSON is written
-to: nothing here copies or stages the caller's images, so a root taken from
-where the JSON sits would fail every entry of the run this skill exists to
-serve. What `root` bounds is scope, not trust — the check that survives a
-hostile entries file is in `references/02-upload-and-body-edit.md`, step B.
+**already live in** — a Desktop, a Downloads directory, the resolved absolute
+path of `$ARGUMENTS/screenshots/` for a `team-pr` run, which that caller
+resolves itself because `$ARGUMENTS` is a relative artifact directory. It is
+never the `mktemp -d` directory this JSON is written to: nothing here copies or
+stages the caller's images, so a root taken from where the JSON sits would fail
+every entry of the run this skill exists to serve. What `root` bounds is scope,
+not trust — the check that survives a hostile entries file is in
+`references/02-upload-and-body-edit.md`, step B.
 
 ### Normalizing caller strings
 

@@ -31,7 +31,7 @@
 
 import { afterAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -1775,6 +1775,46 @@ describe("Slice 1 — constructs outside the model (L1)", () => {
     expect(splice(body, SECTION, { landed: 2 }).changed).toBe(true);
   });
 
+  test("a plain markdown link in the SECTION is refused", () => {
+    // The third shape of the same class, and the one with no code-side
+    // backstop at all: `SECTION_HTML` sees raw HTML and `foreignImages` sees
+    // `![…](…)`, but `[click me](https://evil.example/phish)` is neither, so a
+    // caption carrying one spliced clean — protected only by the prose
+    // normalization, which is precisely the layer the other two backstops
+    // exist because a rewrite can drop it.
+    const body = "## Summary\n\nhi\n\n## Test plan\n";
+    const phish = [
+      "## Screenshots",
+      "",
+      "**[click me](https://evil.example/phish)** (default)",
+      "![screenshot-01](https://example.com/user-attachments/assets/1111)",
+    ].join("\n");
+
+    const result = splice(body, phish, { landed: 1 });
+    expect(result.changed).toBe(false);
+    expect(result.body).toBe(body);
+    expect(result.reason).toContain("unescaped markdown link");
+
+    // A note line carrying one refuses the same way.
+    const inNote = ["## Screenshots", "", "> _note:_ see [here](https://evil.example/x)"].join("\n");
+    expect(splice(body, inNote, { landed: 0 }).changed).toBe(false);
+
+    // The escaped form the normalization produces renders literally and still
+    // writes: `]` is in the escape set, so `\](` is caller text, not a link.
+    const escaped = [
+      "## Screenshots",
+      "",
+      "**\\[click me\\](https://example.com/x)** (default)",
+      "![screenshot-01](https://example.com/user-attachments/assets/1111)",
+    ].join("\n");
+    expect(splice(body, escaped, { landed: 1 }).changed).toBe(true);
+
+    // Control: this skill's OWN images carry an unescaped `](` and still
+    // write — they are stripped out before the test rather than carved out
+    // of it.
+    expect(splice(body, SECTION, { landed: 2 }).changed).toBe(true);
+  });
+
   test("an escaped backslash before a tag does not buy raw HTML past the backstop", () => {
     // `(?<!\\)` read ANY preceding backslash as an escape, but in CommonMark
     // `\\` is an escaped BACKSLASH and the `<` after it is live markup: GitHub's
@@ -2129,6 +2169,17 @@ describe("Slice 1 — splice.mjs CLI exit codes (L1)", () => {
     const bad = run(["--body-file", bodyFile, "--section-file", sectionFile, "--landed", "x"]);
     expect(bad.status).toBe(2);
     expect(bad.stderr).toContain("splice.mjs: ");
+
+    // Digits, not "whatever `Number()` accepts". `Number("1e9")` is 1000000000
+    // and `Number.isInteger` agrees, so `--landed 1e9` honoured a count no
+    // recipe emits and widened rule 4's backstop to any section the caller
+    // liked. `0x10`, a padded " 2 ", a sign, and `Infinity` converted just as
+    // willingly.
+    for (const value of ["1e9", "0x10", " 2 ", "+2", "2.0", "Infinity"]) {
+      const loose = run(["--body-file", bodyFile, "--section-file", sectionFile, "--landed", value]);
+      expect({ value, status: loose.status }).toEqual({ value, status: 2 });
+      expect(loose.stderr).toContain("--landed expects a non-negative integer");
+    }
   });
 
   test("--check runs the pre-image refusals with no section and no write", () => {
@@ -2191,18 +2242,63 @@ function argumentFence(): string {
   return validator < 0 ? "" : blocks.slice(0, validator + 1).join("\n");
 }
 
-// Run that fence with `$ARGUMENTS` bound to `args`, and report what it bound.
+// ---------------------------------------------------------------------------
+// Cross-shell execution. EVERY executable fence in this file runs under EVERY
+// shell here and must produce identical status, stdout, and stderr.
+//
+// This is not belt-and-braces. `set -- $ARGUMENTS` splits an unquoted
+// PARAMETER expansion, which bash does and zsh does not (`SH_WORD_SPLIT` is
+// off by default) — so under this machine's own /bin/zsh the whole value bound
+// to `PR_ARG`, `ENTRIES_FILE` stayed empty, and the validator refused every
+// multi-token invocation, which is the entire `team-pr` path. A harness pinned
+// to `spawnSync("bash", …)` reported that fence green. The shell a fence runs
+// under is part of its contract, so the contract is asserted, not assumed.
+// ---------------------------------------------------------------------------
+
+const SHELLS = ["bash", "zsh"] as const;
+
+type ShellRun = { status: number; stdout: string; stderr: string };
+
+function runInShell(shell: string, script: string): ShellRun {
+  const result = spawnSync(shell, ["-c", script], { encoding: "utf8" });
+  return { status: result.status ?? -1, stdout: result.stdout ?? "", stderr: result.stderr ?? "" };
+}
+
+// `script` under every shell, asserted identical, then returned once. `setup`
+// runs before each shell so a fence with side effects starts from the same
+// state in both.
+function runEveryShell(script: string, setup: () => void = () => {}): ShellRun {
+  const runs = SHELLS.map((shell) => {
+    setup();
+    return { shell, ...runInShell(shell, script) };
+  });
+  const [first, ...rest] = runs as [typeof runs[number], ...typeof runs];
+  // The shell name travels into the comparison so a mismatch names the shell
+  // that diverged rather than only the values.
+  for (const run of rest) {
+    expect({ shell: run.shell, status: run.status, stdout: run.stdout, stderr: run.stderr }).toEqual({
+      shell: run.shell,
+      status: first.status,
+      stdout: first.stdout,
+      stderr: first.stderr,
+    });
+  }
+  return { status: first.status, stdout: first.stdout, stderr: first.stderr };
+}
+
+// Run that fence with `$ARGUMENTS` bound to `args`, and report what it bound —
+// under bash AND zsh, asserted identical.
 function runArguments(args: string): { status: number; stderr: string; bindings: string[] } {
   const script = [
     `ARGUMENTS=${JSON.stringify(args)}`,
     argumentFence(),
     `printf '%s|%s|%s|%s\\n' "$ARG_NUMBER" "$ARG_HOST" "$ARG_OWNER" "$ENTRIES_FILE"`,
   ].join("\n");
-  const result = spawnSync("bash", ["-c", script], { encoding: "utf8" });
+  const result = runEveryShell(script);
   return {
-    status: result.status ?? -1,
-    stderr: result.stderr ?? "",
-    bindings: (result.stdout ?? "").trim().split("|"),
+    status: result.status,
+    stderr: result.stderr,
+    bindings: result.stdout.trim().split("|"),
   };
 }
 
@@ -2250,6 +2346,60 @@ describe("Slice 1 — the argument validator, executed (L1)", () => {
     // A flag with no value, and a flag this skill does not take.
     expect(runArguments("412 --entries").status).toBe(1);
     expect(runArguments("412 --body-file /tmp/x").status).toBe(1);
+  });
+
+  test("every shell in the cross-shell matrix is actually present", () => {
+    // A missing shell would make `runEveryShell` compare one run against
+    // itself and report green on a fence nothing cross-checked — the vacuum
+    // this whole matrix exists to close. Fail loudly and name the shell
+    // instead (`principle-fail-closed`).
+    for (const shell of SHELLS) {
+      const probe = spawnSync(shell, ["-c", "exit 0"], { encoding: "utf8" });
+      expect({ shell, status: probe.status }).toEqual({ shell, status: 0 });
+    }
+  });
+
+  test("no fence in this file is executed under one pinned interpreter", () => {
+    // How the `set -- $ARGUMENTS` defect shipped green: the harness spawned
+    // `bash` and nothing else, so the one shell the skill actually runs under
+    // was never asked. Every shell-executing call site goes through
+    // `runInShell`, which the matrix drives — so a new fence test cannot
+    // re-pin an interpreter without this failing.
+    //
+    // The detector is BUILT rather than written, so the literal it looks for
+    // cannot sit in this file and match itself.
+    const pinned = () => new RegExp(`spawnSync\\(\\s*"(?:ba|z|k|d)?sh"`, "g");
+    const whole = fileOr(join(REPO_ROOT, "tests", "pr-screenshots-skill.test.ts"));
+    expect(whole.length).toBeGreaterThan(0);
+    // Code only: the paragraph above NAMES the call site it forbids, and
+    // discussion of a rejected form is not an emission of it.
+    const source = whole
+      .split("\n")
+      .filter((line) => !/^\s*(?:\/\/|\*|\/\*)/.test(line))
+      .join("\n");
+    expect(source.match(pinned()) ?? []).toEqual([]);
+
+    // The detector fires on the exact call site that shipped the defect.
+    expect(pinned().test(['const r = spawnSync("ba' + 'sh", ["-c", script]);'].join(""))).toBe(true);
+  });
+
+  test("the split reads its tokens through a shell-independent construct", () => {
+    // The shape, pinned so the executable matrix above cannot be satisfied by
+    // re-introducing the construct it was written for. `set -- $VAR` splits an
+    // unquoted PARAMETER expansion, which zsh does not do; `set -- $(cmd)` is
+    // COMMAND substitution, which zsh does split, so the step-B bridge keeps
+    // it. `setopt shwordsplit` is not the fix either: it rewrites the caller's
+    // shell rather than the recipe.
+    const fence = argumentFence();
+    expect(fence.length).toBeGreaterThan(0);
+    expect(fence).not.toContain("set -- $ARGUMENTS");
+    expect(fence).not.toContain("shwordsplit");
+    expect(/set -- \$[A-Za-z_]/.test(fence)).toBe(false);
+
+    // And the reason the whole file's fences run twice, stated where a reader
+    // of the fence will meet it.
+    const input = squash(inputRef());
+    expect(input).toContain("SH_WORD_SPLIT");
   });
 });
 
@@ -2427,6 +2577,207 @@ function harvestFence(): string {
 // an entry that landed a URL and nothing at all for an entry that did not.
 const UNRECORDED_ENTRY = /\[ -z "\$ASSET_URL" \][ \t]*\|\|[ \t]*printf/;
 
+// ---------------------------------------------------------------------------
+// The other two executable fences, run under every shell in SHELLS.
+//
+// A sweep asks what a fence DECLARES — which names it binds, which files it
+// writes and in what order. Neither shape asks whether the shell the fence
+// runs under gives it the semantics the prose claims, which is exactly how a
+// `set -- $ARGUMENTS` split shipped green. So the validation fence and the
+// harvest fence are EXECUTED here, and both shells must agree.
+// ---------------------------------------------------------------------------
+
+// A real 1x1 PNG: the fence decides by `file -b --mime-type`, and an eight-byte
+// signature alone reports `application/octet-stream`.
+const PNG_1X1 = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+  "base64",
+);
+
+const SHELL_SANDBOXES: string[] = [];
+function sandbox(): string {
+  const dir = mkdtempSync(join(tmpdir(), "pr-screenshots-fence-"));
+  SHELL_SANDBOXES.push(dir);
+  return dir;
+}
+afterAll(() => {
+  for (const dir of SHELL_SANDBOXES) rmSync(dir, { recursive: true, force: true });
+});
+
+// A `gh` that records each `--attach` by appending a tail to the body it then
+// serves back, which is what the real one does and what step B's prefix test
+// reads. Nothing here reaches the network.
+function ghStub(dir: string): string {
+  const bin = join(dir, "bin");
+  mkdirSync(bin, { recursive: true });
+  writeFileSync(
+    join(bin, "gh"),
+    [
+      "#!/bin/sh",
+      'case "$2" in',
+      "  edit)",
+      '    N="$(cat "$GH_STATE/n")" ; N=$((N + 1)) ; printf %s "$N" >"$GH_STATE/n"',
+      `    printf '\\n![image](https://github.com/user-attachments/assets/a%s)' "$N" >>"$GH_STATE/body"`,
+      "    exit 0 ;;",
+      "  view)",
+      `    jq -Rs '{body: .}' <"$GH_STATE/body" ; exit 0 ;;`,
+      "esac",
+      "exit 1",
+      "",
+    ].join("\n"),
+    { mode: 0o755 },
+  );
+  return bin;
+}
+
+describe("Slice 1 — the validation and harvest fences, executed (L1)", () => {
+  test("the validation fence classifies every entry the same way in every shell", () => {
+    const fence = validationFence();
+    expect(fence.length).toBeGreaterThan(0);
+
+    const dir = sandbox();
+    const root = join(dir, "shots");
+    const outside = join(dir, "elsewhere");
+    mkdirSync(root, { recursive: true });
+    mkdirSync(outside, { recursive: true });
+    writeFileSync(join(root, "a.png"), PNG_1X1);
+    writeFileSync(join(outside, "b.png"), PNG_1X1);
+    writeFileSync(join(root, "notes.txt"), "not an image\n");
+    writeFileSync(join(root, "has#hash.png"), PNG_1X1);
+    symlinkSync(join(root, "a.png"), join(root, "link.png"));
+
+    // Entries order IS the report order, so the expectation below is a list,
+    // not a set.
+    const paths = [
+      join(root, "a.png"),
+      join(root, "missing.png"),
+      join(outside, "b.png"),
+      join(root, "link.png"),
+      join(root, "notes.txt"),
+      "relative.png",
+      join(root, "has#hash.png"),
+    ];
+    const entriesFile = join(dir, "entries.json");
+    writeFileSync(
+      entriesFile,
+      JSON.stringify({ root, entries: paths.map((path) => ({ path, caption: "c" })), notes: [] }),
+    );
+
+    const state = join(dir, "state");
+    const bin = ghStub(dir);
+    const failures = join(dir, "failures.tsv");
+    const script = [
+      `PATH=${JSON.stringify(bin)}:$PATH`,
+      `GH_STATE=${JSON.stringify(state)}`,
+      "export PATH GH_STATE",
+      "NUMBER=412",
+      "REPO_SPEC=github.com/owner/repo",
+      'PRE_IMAGE="Intro"',
+      `ENTRIES_FILE=${JSON.stringify(entriesFile)}`,
+      `FAILURES_FILE=${JSON.stringify(failures)}`,
+      `ASSETS_FILE=${JSON.stringify(join(dir, "assets.tsv"))}`,
+      `CANDIDATES_FILE=${JSON.stringify(join(dir, "candidates.txt"))}`,
+      fence,
+      // What the loop produced: every failure class in entries order, then the
+      // body as the last successful re-read left it.
+      `printf 'AFTER=%s\\n' "$AFTER"`,
+      `printf 'READ_FAILED=%s\\n' "$READ_FAILED"`,
+      `cat "$FAILURES_FILE"`,
+    ].join("\n");
+
+    // Both shells start from the same `gh` state, or the second run reads the
+    // first one's appended tails and the comparison is meaningless.
+    const reset = () => {
+      rmSync(state, { recursive: true, force: true });
+      mkdirSync(state, { recursive: true });
+      writeFileSync(join(state, "n"), "0");
+      writeFileSync(join(state, "body"), "Intro");
+      writeFileSync(failures, "");
+    };
+    const run = runEveryShell(script, reset);
+
+    expect({ status: run.status, stderr: run.stderr }).toEqual({ status: 0, stderr: "" });
+    expect(run.stdout.split("\n").filter((line) => line !== "")).toEqual([
+      // One attach landed, so the stub appended exactly one tail and the
+      // re-read carries it.
+      "AFTER=Intro",
+      "![image](https://github.com/user-attachments/assets/a1)",
+      "READ_FAILED=no",
+      `file missing\t${join(root, "missing.png")}`,
+      `outside the declared root\t${join(outside, "b.png")}`,
+      `symlink refused\t${join(root, "link.png")}`,
+      `not an image\t${join(root, "notes.txt")}`,
+      "relative path\trelative.png",
+      `# in path\t${join(root, "has#hash.png")}`,
+    ]);
+    // One fence, one shell per run, several `gh` and `file` spawns each. The
+    // work is bounded; the wall clock is not, so the budget is stated rather
+    // than left to the 5s default on a loaded machine.
+  }, 60_000);
+
+  test("the harvest fence binds the same URL, and the same refusal, in every shell", () => {
+    const fence = harvestFence();
+    expect(fence.length).toBeGreaterThan(0);
+
+    const ASSET = "https://github.com/user-attachments/assets/aaaa";
+    const OTHER = "https://github.com/user-attachments/assets/bbbb";
+    const cases: { name: string; suffix: string; asset: string; reason: string }[] = [
+      { name: "one allowlisted URL", suffix: `\n![image](${ASSET})`, asset: ASSET, reason: "" },
+      // The shape a `for CANDIDATE in $SUFFIX` cannot see: under zsh the whole
+      // suffix arrives as ONE candidate, which satisfies every test below and
+      // defeats the ambiguity guard outright.
+      {
+        name: "two allowlisted URLs",
+        suffix: `\n![image](${ASSET})\n![image](${OTHER})`,
+        asset: "",
+        reason: "ambiguous attachment URL",
+      },
+      {
+        name: "an off-host URL",
+        suffix: "\n![image](https://attacker.example/x/user-attachments/y.png)",
+        asset: "",
+        reason: "no attachment URL",
+      },
+      {
+        name: "raw.githubusercontent.com",
+        suffix: "\n![image](https://raw.githubusercontent.com/attacker/evil/main/x.png)",
+        asset: "",
+        reason: "no attachment URL",
+      },
+      { name: "an empty suffix", suffix: "", asset: "", reason: "no attachment URL" },
+    ];
+
+    for (const { name, suffix, asset, reason } of cases) {
+      const dir = sandbox();
+      const assets = join(dir, "assets.tsv");
+      const failures = join(dir, "failures.tsv");
+      const script = [
+        "PR_URL=https://github.com/owner/repo/pull/412",
+        "ENTRY_PATH=/shots/a.png",
+        'REASON=""',
+        `ASSETS_FILE=${JSON.stringify(assets)}`,
+        `FAILURES_FILE=${JSON.stringify(failures)}`,
+        `CANDIDATES_FILE=${JSON.stringify(join(dir, "candidates.txt"))}`,
+        `fail_entry() { printf '%s\\t%s\\n' "$REASON" "$ENTRY_PATH" >>"$FAILURES_FILE" ; }`,
+        `SUFFIX=${JSON.stringify(suffix)}`,
+        fence,
+        `printf 'ASSET=%s\\n' "$(cut -f1 <"$ASSETS_FILE")"`,
+        `printf 'REASON=%s\\n' "$(cut -f1 <"$FAILURES_FILE")"`,
+      ].join("\n");
+      const reset = () => {
+        writeFileSync(assets, "");
+        writeFileSync(failures, "");
+      };
+      const run = runEveryShell(script, reset);
+      expect({ name, status: run.status, stdout: run.stdout }).toEqual({
+        name,
+        status: 0,
+        stdout: `ASSET=${asset}\nREASON=${reason}\n`,
+      });
+    }
+  }, 60_000);
+});
+
 describe("Slice 1 — containment, allowlist, and failure classes (L2)", () => {
   test("containment is checked against a root the entries file declares", () => {
     // The images a caller names live where the caller already keeps them — a
@@ -2442,11 +2793,21 @@ describe("Slice 1 — containment, allowlist, and failure classes (L2)", () => {
     const units = refusalUnits(input);
     expect(units.filter((unit) => /`root`/.test(unit)).length).toBeGreaterThan(0);
 
-    // team-pr, the one caller with a manifest, declares it too.
+    // team-pr, the one caller with a manifest, declares it too — and declares
+    // it RESOLVED. `$ARGUMENTS` is the relative artifact directory
+    // `docs/plans/<id>/`, so a `root` of the literal `$ARGUMENTS/screenshots/`
+    // is a relative root, which the refusal above rejects before the run
+    // starts: the primary pipeline path refusing every time.
     const teamPr = fileOr(join(REPO_ROOT, "skills", "team-pr", "references", "04-screenshot-upload.md"));
     expect(teamPr.length).toBeGreaterThan(0);
     expect(teamPr).toContain("`root`");
-    expect(teamPr).toContain("$ARGUMENTS/screenshots/");
+    expect(teamPr).toContain('CAPTURE_ROOT="$(cd -- "$ARGUMENTS/screenshots" && pwd -P)"');
+    expect(squash(teamPr)).toContain("a top-level `root` of `$CAPTURE_ROOT`");
+
+    // And the resolution is bound in a FENCE, before the bullet that names it.
+    const resolve = fencedBlocks(teamPr).find((block) => block.includes("CAPTURE_ROOT=")) ?? "";
+    expect(resolve).toContain("ENTRIES_FILE=");
+    expect(teamPr.indexOf("CAPTURE_ROOT=")).toBeLessThan(teamPr.indexOf("a top-level `root`"));
   });
 
   test("the root is validated and used in one invocation, never expanded unguarded", () => {
@@ -2655,11 +3016,19 @@ function markdownUnder(dir: string): string[] {
 // would let a binding in `pr-screenshots` excuse a read in `team-pr` — which is
 // how `$SECTION_FILE`, expanded in the companion loop and bound nowhere under
 // `skills/team-pr/`, got through a sweep scoped to `skills/pr-screenshots/`.
-const SHELL_CORPORA: { skill: string; ambient: string[] }[] = [
+const SHELL_CORPORA: { skill: string; ambient: string[]; external: string[] }[] = [
   // What the environment supplies, and `jq`'s own `$ARGS` builtin, which is
   // read inside a `jq -n` program and is not a shell variable at all.
-  { skill: "pr-screenshots", ambient: ["ARGUMENTS", "PR_SCREENSHOTS_ASSET_HOST", "IFS", "ARGS"] },
-  { skill: "team-pr", ambient: ["ARGUMENTS"] },
+  {
+    skill: "pr-screenshots",
+    ambient: ["ARGUMENTS", "PR_SCREENSHOTS_ASSET_HOST", "IFS", "ARGS"],
+    external: [],
+  },
+  // `result.json` is written by the `pr-screenshots` PROCESS this skill calls,
+  // never by a `team-pr` fence — the one legitimate cross-process read in
+  // either corpus, and the fence guards it with `[ -r … ] || exit 2` before
+  // anything parses it. Declared, so the sweep can see the rest.
+  { skill: "team-pr", ambient: ["ARGUMENTS"], external: ["RESULT_FILE"] },
 ];
 
 function corpusBlocks(skill: string): string[] {
@@ -2687,17 +3056,46 @@ function readNames(code: string[]): Set<string> {
   return names;
 }
 
-// A variable consumed as a file to READ: `--body-file "$X"`, `--section-file
-// "$X"`, or an input redirect `< "$X"`.
-const FILE_READ = /--(?:body-file|section-file)[ \t]+"\$\{?([A-Z][A-Z0-9_]*)\}?"|(?:^|[^<])<[ \t]*"\$\{?([A-Z][A-Z0-9_]*)\}?"/gm;
+// A variable consumed as a file to READ, in three shapes:
+//   `--body-file "$X"` / `--section-file "$X"` — a flag naming a file
+//   `< "$X"`                                   — an input redirect
+//   `jq … '<program>' "$X"`, `[ -r "$X" ]`     — a POSITIONAL file operand
+//
+// The third shape is the one a flags-and-redirects rule cannot see, and its
+// absence was a hole rather than a finding: `$RESULT_FILE` is read by
+// `[ -r "$RESULT_FILE" ]` and by two `jq` calls under `skills/team-pr/`, and
+// the sweep looked straight past all three. That one is legitimate, so it is
+// DECLARED external above — but a real gap in the same shape would have been
+// swept past too. The jq arm requires the quoted program first, so an `--arg`
+// VALUE is never mistaken for a file operand.
+const FILE_READ = new RegExp(
+  [
+    `--(?:body-file|section-file)[ \\t]+"\\$\\{?([A-Z][A-Z0-9_]*)\\}?"`,
+    `(?:^|[^<])<[ \\t]*"\\$\\{?([A-Z][A-Z0-9_]*)\\}?"`,
+    `(?:\\bjq\\b[^\\n]*?'[^'\\n]*'|\\[[ \\t]+-[rfse])[ \\t]+"\\$\\{?([A-Z][A-Z0-9_]*)\\}?"`,
+  ].join("|"),
+  "gm",
+);
 // A fence WRITING that file: an output redirect, or a promotion onto it.
 const FILE_WRITE = /(?:^|[^0-9<>&])>>?[ \t]*"\$\{?([A-Z][A-Z0-9_]*)\}?"|\b(?:mv|cp)\b[^\n]*[ \t]"\$\{?([A-Z][A-Z0-9_]*)\}?"[ \t]*$/gm;
 
 function firstIndex(text: string, pattern: RegExp, name: string): number {
   for (const match of text.matchAll(new RegExp(pattern.source, pattern.flags))) {
-    if ((match[1] ?? match[2]) === name) return match.index ?? -1;
+    if ((match[1] ?? match[2] ?? match[3]) === name) return match.index ?? -1;
   }
   return -1;
+}
+
+// The names a corpus produces ELEMENTWISE — a `for` or `read -r` variable. Its
+// value is caller data the fence's own bridge yields one item at a time, so
+// "which fence wrote that file" is the wrong question to ask of it: nothing in
+// the recipe writes `$ENTRY_PATH`, and nothing is supposed to.
+function loopNames(code: string[]): Set<string> {
+  const names = new Set<string>();
+  for (const block of code) {
+    for (const match of block.matchAll(/\b(?:for|read -r)\s+([A-Z][A-Z0-9_]*)\b/g)) names.add(match[1] as string);
+  }
+  return names;
 }
 
 // The file variables a corpus reads with no earlier fence writing them.
@@ -2705,11 +3103,14 @@ function firstIndex(text: string, pattern: RegExp, name: string): number {
 // path in step A, handed to `--body-file`, and never written — so `--check`
 // ran against an EMPTY body, where it passes vacuously, and the splice then
 // discarded the PR's real description.
-function unwrittenFiles(code: string[]): string[] {
+function unwrittenFiles(code: string[], external: string[] = []): string[] {
   const joined = code.join("\n");
+  const exempt = loopNames(code);
+  for (const name of external) exempt.add(name);
   const offenders = new Set<string>();
   for (const match of joined.matchAll(FILE_READ)) {
-    const name = (match[1] ?? match[2]) as string;
+    const name = (match[1] ?? match[2] ?? match[3]) as string;
+    if (exempt.has(name)) continue;
     const written = firstIndex(joined, FILE_WRITE, name);
     if (written < 0 || written > (match.index ?? 0)) offenders.add(name);
   }
@@ -2999,11 +3400,20 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     // with no fence ever writing content to it. An unwritten path reads as an
     // empty body, `--check` passes vacuously on one, and the splice then
     // replaces the PR's whole description with the section alone.
-    for (const { skill } of SHELL_CORPORA) {
+    for (const { skill, external } of SHELL_CORPORA) {
       const code = corpusBlocks(skill).map(shellCode);
       expect(code.length).toBeGreaterThan(0);
-      expect({ skill, unwritten: unwrittenFiles(code) }).toEqual({ skill, unwritten: [] });
+      expect({ skill, unwritten: unwrittenFiles(code, external) }).toEqual({ skill, unwritten: [] });
     }
+
+    // The POSITIONAL shape fires on a planted positive too — the shape the
+    // flags-and-redirects rule was blind to, in both of its forms.
+    expect(unwrittenFiles(['LANDED="$(jq \'.assets | length\' "$RESULT_FILE")"'])).toEqual(["RESULT_FILE"]);
+    expect(unwrittenFiles(['[ -r "$RESULT_FILE" ] || exit 2'])).toEqual(["RESULT_FILE"]);
+    // And a declared external one is exempt rather than invisible.
+    expect(unwrittenFiles(['[ -r "$RESULT_FILE" ] || exit 2'], ["RESULT_FILE"])).toEqual([]);
+    // An `--arg` VALUE is not a file operand: the jq arm needs the program first.
+    expect(unwrittenFiles(['jq -n --arg root "$CAPTURE_ROOT" \'{root: $root}\' >"$OUT"'])).toEqual([]);
 
     // The detector fires on a planted positive: the path is bound, and nothing
     // writes the file.
@@ -3108,8 +3518,12 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     const fence = fencedBlocks(upload).find((block) => block.includes("PRE_IMAGE_JSON=")) ?? "";
     expect(fence.length).toBeGreaterThan(0);
 
-    // Read, normalized, and written in the one fence that binds it.
-    expect(fence).toContain("tr -d '\\r'");
+    // Read, normalized, and written in the one fence that binds it. The CR
+    // strip runs INSIDE jq, so `|| exit 2` observes jq's own status: piping
+    // into `tr` made `tr` the last stage, and without `pipefail` a jq failure
+    // exited 0 and bound `PRE_IMAGE=""`.
+    expect(fence).toContain('jq -r \'.body | gsub("\\r";"")\'');
+    expect(fence).not.toContain("| tr -d '\\r'");
     expect(fence).toContain('printf \'%s\' "$PRE_IMAGE" >"$PRE_IMAGE_FILE"');
 
     // And written BEFORE the check that reads it.
@@ -3119,8 +3533,10 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     expect(check).toBeGreaterThan(write);
 
     // Both sides of the lost-update comparison get the same normalization, or
-    // the guard refuses every run on a PR whose body carries CRLFs.
-    expect(validationFence()).toContain("tr -d '\\r'");
+    // the guard refuses every run on a PR whose body carries CRLFs — and the
+    // re-read binds through the same unpiped jq, for the same status reason.
+    expect(validationFence()).toContain('jq -r \'.body | gsub("\\r";"")\'');
+    expect(validationFence()).not.toContain("| tr -d '\\r'");
   });
 
   test("the lost-update guard records what it does not cover", () => {
@@ -3132,6 +3548,39 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     const upload = squash(uploadRef());
     expect(upload).toContain("body as of the last **successful** read");
     expect(upload).toContain("concurrent *replacement*");
+  });
+
+  test("a failed body read makes the run refuse to write, not write from a stale baseline", () => {
+    // The window is wider than a prose residual can carry: step D's write is
+    // computed from `$PRE_IMAGE_FILE`, so a concurrent replacement landing
+    // after a failed re-read is OVERWRITTEN rather than detected — the one
+    // loss this skill exists to prevent. The mark is set where every failure
+    // class already passes, and the refusal is the guard's first line.
+    const validation = validationFence();
+    expect(validation.length).toBeGreaterThan(0);
+    expect(validation).toContain("READ_FAILED=no");
+    expect(validation).toContain('[ "$REASON" = "body read failed" ] && READ_FAILED=yes');
+
+    const guard = fencedBlocks(uploadRef()).find((block) => block.includes('case "$PRE_IMAGE" in')) ?? "";
+    expect(guard.length).toBeGreaterThan(0);
+    expect(guard).toContain('[ "${READ_FAILED:-no}" = no ] || exit 1');
+    // First line, so no arm of the guard can run against the stale baseline.
+    expect(guard.split("\n").filter((line) => !/^\s*#/.test(line) && line.trim() !== "")[0]).toBe(
+      '[ "${READ_FAILED:-no}" = no ] || exit 1',
+    );
+  });
+
+  test("the capability check branches in the fence, never in the prose", () => {
+    // `$ATTACH_SUPPORTED` was SET by a fence and read by none: the
+    // short-circuit to the degraded path was left to a session's reading of
+    // the paragraph beside it — the last place in this recipe where control
+    // flow was inferred rather than executed.
+    const capability = fencedBlocks(uploadRef()).find((block) => block.includes("ATTACH_SUPPORTED")) ?? "";
+    expect(capability.length).toBeGreaterThan(0);
+    expect(capability).toContain("gh pr edit --help | grep -q -- '--attach' || ATTACH_SUPPORTED=no");
+    expect(capability).toContain('if [ "${ATTACH_SUPPORTED:-yes}" = no ]; then');
+    // A status of its own, distinct from refusal (1) and fault (2).
+    expect(capability).toContain("exit 3");
   });
 
   test("the attachment proxy host is enumerated, never wildcarded", () => {

@@ -6,7 +6,13 @@ Capability decides, never a version string. A parsed version pins a floor
 nothing else here pins and breaks on distro-patched version output.
 
 ```bash
+ATTACH_SUPPORTED=yes
 gh pr edit --help | grep -q -- '--attach' || ATTACH_SUPPORTED=no
+if [ "${ATTACH_SUPPORTED:-yes}" = no ]; then
+  OPERATOR_NOTE="upgrade gh — attaching a file needs at least 2.100.0"
+  printf '%s\n' "$OPERATOR_NOTE" >&2
+  exit 3                     # skip steps B and C; render the section degraded
+fi
 ```
 
 Absent means unavailable, and unavailable takes the degraded path: no upload
@@ -14,6 +20,13 @@ runs, the section is written in its degraded form, `outcome` is `degraded`, and
 `operator_note` reads "upgrade gh — attaching a file needs at least 2.100.0".
 That note lives in `result.json` and in the operator report. It is never
 written into a PR body.
+
+**The branch is in the fence, not in this paragraph.** `$ATTACH_SUPPORTED` set
+by a fence that nothing branches on leaves the short-circuit to a session's
+reading of prose, which is the one place in this recipe where control flow was
+inferred rather than executed. Exit 3 is this fence's own status and says
+neither "refused" (1) nor "fault" (2): the run continues, at step D, with the
+degraded section and nothing attached.
 
 ### The four steps, in this order
 
@@ -48,11 +61,18 @@ ASSETS_FILE="$RUN_DIR/assets.tsv"     ; : >"$ASSETS_FILE"     # one line per lan
 # that may already be merged.
 PRE_IMAGE_JSON="$(gh pr view "$NUMBER" --repo "$REPO_SPEC" --json body)" || exit 2
 printf '%s' "$PRE_IMAGE_JSON" | jq -e 'has("body") and (.body | type == "string")' >/dev/null || exit 2
-# `tr -d '\r'` IS the CRLF normalization, and the same `tr` runs on every later
-# read of the body: normalizing one side alone makes the lost-update guard
-# compare a normalized pre-image against an unnormalized re-read and refuse
-# every run on a PR whose body carries CRLFs.
-PRE_IMAGE="$(printf '%s' "$PRE_IMAGE_JSON" | jq -r .body | tr -d '\r')" || exit 2
+# `gsub("\r";"")` IS the CRLF normalization, and the same `gsub` runs on every
+# later read of the body: normalizing one side alone makes the lost-update
+# guard compare a normalized pre-image against an unnormalized re-read and
+# refuse every run on a PR whose body carries CRLFs.
+#
+# The strip happens INSIDE `jq`, so `jq` is the command whose status `|| exit 2`
+# observes. Piping into `tr` put `tr` last, and without `pipefail` a `jq`
+# failure was masked by `tr` exiting 0 — binding `PRE_IMAGE=""`, which is
+# exactly the indistinguishable-from-empty state the comment above describes.
+# The `jq -e` envelope check on the line above already proved the body parses,
+# so this is unreachable today; an edit dropping that line re-arms it silently.
+PRE_IMAGE="$(printf '%s' "$PRE_IMAGE_JSON" | jq -r '.body | gsub("\r";"")')" || exit 2
 # The pre-image reaches the checks below as a FILE, so it is written here, in
 # the same fence that binds it. `$PRE_IMAGE_FILE` bound to a path nothing ever
 # wrote is an EMPTY file: `--check` then passes vacuously — an empty body has
@@ -209,10 +229,13 @@ that is not an image. It does not decide whether an image should be public,
 and nothing here does.
 
 The declared root is the entries file's own top-level `root`
-(`references/01-input-and-result.md`) — `$ARGUMENTS/screenshots/` for a
-`team-pr` run, and the directory the caller's images already live in for a
-standalone one. It is never the `mktemp -d` directory the entries JSON is
-written to: nothing here copies or stages the caller's images, so a root
+(`references/01-input-and-result.md`) — the **resolved absolute** path of
+`$ARGUMENTS/screenshots/` for a `team-pr` run, whose own recipe resolves it
+before writing the file because `$ARGUMENTS` is relative
+(`skills/team-pr/references/04-screenshot-upload.md`), and the directory the
+caller's images already live in for a standalone one. It is never the
+`mktemp -d` directory the entries JSON is written to: nothing here copies or
+stages the caller's images, so a root
 derived from where that JSON sits would fail every entry of a run over images
 on a Desktop or in a Downloads directory, and land on `outcome: degraded` with
 nothing uploaded and nothing an operator could act on.
@@ -261,11 +284,18 @@ set +f
 unset IFS
 
 AFTER="$PRE_IMAGE"                                        # the body as last read
+READ_FAILED=no                                            # no re-read has failed yet
 NEWLINE='
 '
 # Records the entry's failure class for the report. Reads REASON and
 # ENTRY_PATH, which is what keeps every arm below one readable line.
-fail_entry() { printf '%s\t%s\n' "$REASON" "$ENTRY_PATH" >>"$FAILURES_FILE" ; }
+fail_entry() {
+  # A failed re-read leaves $AFTER at the last SUCCESSFUL value, so every entry
+  # after it — and step D's lost-update guard — test a stale baseline.
+  # Marked here, once, in the one place every failure class passes through.
+  [ "$REASON" = "body read failed" ] && READ_FAILED=yes
+  printf '%s\t%s\n' "$REASON" "$ENTRY_PATH" >>"$FAILURES_FILE"
+}
 
 # One entry per iteration: validate, then attach, then re-read — all inside
 # this loop, so `continue` is a real `continue` and a refused entry can never
@@ -310,9 +340,9 @@ for ENTRY_PATH in "$@"; do
   # indistinguishable from a body the host emptied.
   printf '%s' "$AFTER_JSON" | jq -e 'has("body") and (.body | type == "string")' >/dev/null \
     || { REASON="body read failed" ; fail_entry ; continue ; }
-  # The same `tr -d '\r'` step A ran, so the prefix tests below compare two
-  # bodies normalized the same way.
-  AFTER="$(printf '%s' "$AFTER_JSON" | jq -r .body | tr -d '\r')" \
+  # The same `gsub("\r";"")` step A ran, in the same place — inside `jq`, so
+  # the status the arm below tests is `jq`'s own and not a trailing `tr`'s.
+  AFTER="$(printf '%s' "$AFTER_JSON" | jq -r '.body | gsub("\r";"")')" \
     || { REASON="body read failed" ; fail_entry ; continue ; }
   # A failed attach records its class and CONTINUES. Falling through instead
   # would carry a suffix built from someone else's append into the harvest,
@@ -531,6 +561,10 @@ hold is the tails the attach step appended, since a body that was empty at step
 A and holds prose now was written by somebody else during the upload window.
 
 ```bash
+# A run where any re-read failed cannot prove its baseline current, so it never
+# writes. Refusing here lands on `uploaded-not-written`: the assets are live,
+# the body is untouched, and the operator edits it by hand.
+[ "${READ_FAILED:-no}" = no ] || exit 1
 case "$PRE_IMAGE" in
   "") printf '%s\n' "$AFTER" | grep -v '^[[:space:]]*$' \
         | grep -qvE '^!\[[^]]*\]\(https://[^)]*\)$' && exit 1 ;;   # not our tails
@@ -546,13 +580,18 @@ step appended — under an alt text the **host** derives from the file it
 received. This skill neither pins that text nor clears those tails on this
 path, so report each appended tail verbatim in `operator_note` and let the
 operator decide whether to edit the body by hand. It is a guard rather than
-full coverage, in two named ways, both accepted. A concurrent *append* keeps
-the prefix, passes the check, and is dropped by the pre-image-based write
-below. And `AFTER` is the body as of the last **successful** read: an entry
-that recorded `body read failed` left the previous value in place, so a
-concurrent *replacement* landing after that read is tested against a stale
-baseline and passes too — over a window that spans every entry from the failed
-read to the end of the loop.
+full coverage in one named, accepted way: a concurrent *append* keeps the
+prefix, passes the check, and is dropped by the pre-image-based write below.
+
+The second gap is closed rather than accepted. `AFTER` is the body as of the
+last **successful** read, so an entry that recorded `body read failed` left the
+previous value in place and a concurrent *replacement* landing after that read
+would be tested against a stale baseline — over a window spanning every entry
+from the failed read to the end of the loop — and the write below is computed
+from `$PRE_IMAGE_FILE`, so it would be overwritten rather than detected.
+`fail_entry` marks that run in `$READ_FAILED`, and the first line of the fence
+above refuses it outright. The cost is a manual edit an operator can recover
+from; what it prevents is the silent overwrite this skill exists to prevent.
 
 Render the section (shape below) into `$SECTION_FILE`. The rendering is a
 write, not a binding: `--section-file` below reads that path, and a path

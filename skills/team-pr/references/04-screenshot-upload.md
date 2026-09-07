@@ -25,14 +25,21 @@ and named below, because `result.json` comes back beside the entries file:
 ```bash
 ENTRIES_DIR="$(mktemp -d)"
 ENTRIES_FILE="$ENTRIES_DIR/entries.json"
+# `$ARGUMENTS` is the RELATIVE artifact directory `docs/plans/<id>/`, and the
+# callee refuses "a missing, relative, or unresolvable top-level `root`" before
+# it starts. Resolve it here, once, and write the resolved value — not the
+# relative one.
+CAPTURE_ROOT="$(cd -- "$ARGUMENTS/screenshots" && pwd -P)" || exit 2
 ```
 
 The file itself carries:
 
-- a top-level `root` of `$ARGUMENTS/screenshots/` — the directory the PNGs
-  live in, which is the directory every entry's path must resolve inside. The
-  entries file itself sits under `$(mktemp -d)`, and that is not where the
-  images are;
+- a top-level `root` of `$CAPTURE_ROOT` — the **absolute** path of
+  `$ARGUMENTS/screenshots/`, resolved in the fence above, which is the
+  directory the PNGs live in and the directory every entry's path must resolve
+  inside. Each entry's `path` is absolute for the same reason, built by
+  prefixing `$CAPTURE_ROOT`. The entries file itself sits under
+  `$(mktemp -d)`, and that is not where the images are;
 - one entry per `## Captured` entry whose PNG exists on disk, in manifest
   order, carrying `path`, `caption`, and the entry's `state`;
 - a `## Captured` entry whose PNG is missing from disk is dropped, and the
