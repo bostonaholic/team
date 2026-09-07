@@ -11,10 +11,7 @@
 #   <result-file>    the `result.json` the home run wrote
 #
 # This is the home write run once per companion, so every guard the home write
-# carries is here rather than restated somewhere it can drift out of step: the
-# pre-image read is guarded by the process exit AND the JSON envelope, the
-# splice output is promoted only on success, and the write is gated on the
-# pre-image still being current.
+# carries is here rather than restated somewhere it can drift out of step.
 #
 # Writes into <companion-dir>: `section.md`, `pre-image.md`, `new-body.md`.
 #
@@ -54,13 +51,11 @@ BODY_FILE="$COMPANION_DIR/pre-image.md"
 NEW_BODY_FILE="$COMPANION_DIR/new-body.md"
 rm -f "$NEW_BODY_FILE" "$NEW_BODY_FILE.tmp"
 
-# `--section-file` reads a FILE, so the section is written to one here. `jq -r`
-# is what writes it: the string carries the normalization's `\[`, `\]`, `\!`,
-# `\<`, and `\>` escapes, and re-typing caller-derived text into a heredoc is
-# the interpolation `principle-never-interpolate` forbids. The `select`
-# refuses a null or empty `section` rather than writing the four bytes `null`
-# into a companion body — null means no write landed a verified URL, so the
-# open-time degraded note stands.
+# `jq -r` moves the section into the file `--section-file` reads; nothing
+# re-types it, because the string carries the normalization's `\[`, `\<`, and
+# `\!` escapes (`principle-never-interpolate`). `select` refuses a null or
+# empty section rather than writing the four bytes `null` into a body: null
+# means no write landed a verified URL, so the degraded note stands.
 if ! jq -e -r '.section | select(type == "string" and length > 0)' "$RESULT_FILE" >"$SECTION_FILE"; then
   printf 'the result carries no section to copy\n' >&2
   exit 1
@@ -70,10 +65,9 @@ LANDED_COUNT="$(jq '[.assets[] | select(.url != null)] | length' "$RESULT_FILE")
   exit 2
 }
 
-# The pre-image read is guarded the way the home one is. A bare read binds ""
-# on a rate limit or a network blip, "" is indistinguishable from a genuinely
-# empty description, and the splice then returns the `## Screenshots` section
-# as that companion's WHOLE body.
+# Guarded the way the home read is: a bare read binds "" on a rate limit, ""
+# is indistinguishable from an empty description, and the splice then returns
+# the section as that companion's WHOLE body.
 if ! PRE_JSON="$(gh pr view "$NUMBER" --repo "$REPO_SPEC" --json body </dev/null)"; then
   printf 'could not read the companion body\n' >&2
   exit 2
@@ -84,10 +78,9 @@ if ! printf '%s' "$PRE_JSON" | jq -e 'has("body") and (.body | type == "string")
 fi
 printf '%s' "$PRE_JSON" | jq -r '.body | gsub("\r";"")' >"$BODY_FILE"
 
-# The redirect goes to a temporary path and is promoted only on success. A
-# plain `> "$NEW_BODY_FILE"` truncates before the command runs, so a refusal —
-# which prints nothing on stdout — would leave a zero-byte file for the write
-# below to hand `gh pr edit --body-file`, blanking that companion's body.
+# Promoted only on success. A plain `> "$NEW_BODY_FILE"` truncates before the
+# command runs, so a refusal — which prints nothing — leaves a zero-byte file
+# for the write below to hand `--body-file`, blanking that companion's body.
 if node "$SPLICE" --body-file "$BODY_FILE" --section-file "$SECTION_FILE" \
      --landed "$LANDED_COUNT" >"$NEW_BODY_FILE.tmp"; then
   mv "$NEW_BODY_FILE.tmp" "$NEW_BODY_FILE"
@@ -100,10 +93,9 @@ else
   exit "$STATUS"
 fi
 
-# Gate the write on the pre-image still being current. The splice was computed
-# from the body read above, so a companion somebody edited in between would
-# have their edit overwritten by a body that never contained it — the same lost
-# update the home path guards.
+# The splice was computed from the body read above, so a companion somebody
+# edited in between would have that edit overwritten by a body which never
+# contained it — the same lost update the home path guards.
 if ! NOW_JSON="$(gh pr view "$NUMBER" --repo "$REPO_SPEC" --json body </dev/null)"; then
   printf 'could not re-read the companion body\n' >&2
   exit 2

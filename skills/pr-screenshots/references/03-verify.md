@@ -46,7 +46,7 @@ tolerance.
    checks a weaker rule than the harvest cannot detect what the harvest let
    through. No `src` starts `/`, starts `./`, or starts `file:`; each one is an
    `https://` URL; its host carries only letters, digits, dots, and hyphens and
-   is the host of `$PR_URL`, the one proxy host `$ASSET_PROXY_HOST` names —
+   is the host of `$PR_URL`, the one proxy host the harvest allowlists —
    `private-user-images.githubusercontent.com` on github.com and
    `private-user-images.<enterprise-host>` on an Enterprise install — or the
    configured `PR_SCREENSHOTS_ASSET_HOST`; no `src` carries a `..` path segment

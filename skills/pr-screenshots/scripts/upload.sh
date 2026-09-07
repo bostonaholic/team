@@ -67,10 +67,9 @@ refuse() {
 
 # --- The entries file, and the root it declares -----------------------------
 #
-# Validate the root and use it in the same process. `cd ""` succeeds as a
-# no-op, so an unbound value silently rebinds the root to the working
-# directory — after which an entry naming <repo>/.env or <repo>/.git/config is
-# "contained".
+# Validated and used in the same process: `cd ""` succeeds as a no-op, so an
+# unbound root silently becomes the working directory — after which an entry
+# naming <repo>/.env is "contained".
 
 if [ -z "$ENTRIES_FILE" ]; then
   refuse 'the run must name the entries JSON'
@@ -88,11 +87,9 @@ case "$CAPTURE_ROOT" in
 esac
 CAPTURE_ROOT="$(cd -- "$CAPTURE_ROOT" && pwd -P)" || refuse "the declared root does not resolve: $CAPTURE_ROOT"
 
-# The JSON-to-shell bridge, and the one hazard it has: a path holding a
-# newline arrives as two lines, and the `newline in path` check below could
-# never fire on it. Compare the line count against the entry count first —
-# they differ exactly when some path holds a newline — and refuse the whole
-# run when they do.
+# The JSON-to-shell bridge reads one path per line, so a path holding a
+# newline would arrive as two and the `newline in path` check could never
+# fire on it. The counts differ exactly then, and that refuses the whole run.
 ENTRY_COUNT="$(jq '.entries | length' "$ENTRIES_FILE")" || refuse 'the entries file is not valid JSON'
 PATHS_FILE="$RUN_DIR/entry-paths.txt"
 jq -r '.entries[].path' "$ENTRIES_FILE" >"$PATHS_FILE" || refuse 'the entries file is not valid JSON'
@@ -129,12 +126,10 @@ fail_entry() {
 }
 
 # Bind $ASSET_URL to the one attachment URL "$1" holds, or clear it and set
-# $REASON. Only an URL on the ATTACHMENT ORIGIN qualifies: an `https://` URL
-# whose host is on this run's allowlist and whose path is anchored at the host
-# boundary. Any absolute URL would be too wide, and so would a path-only rule
-# that leaves the host a free variable — a party with write access can append
-# their own URL to the body during the attach window and have it harvested,
-# embedded, and, in a multi-repo run, copied into every companion PR.
+# $REASON. Only an URL on the attachment origin qualifies: allowlisted host,
+# path anchored at the host boundary. Any absolute URL would be too wide — a
+# party with write access can append their own during the attach window and
+# have it harvested, embedded, and copied into every companion PR.
 harvest() {
   local suffix="$1" candidate rest host path file
   ASSET_URL=""
@@ -147,19 +142,15 @@ harvest() {
       */*) path="/${rest#*/}" ;;
       *)   path="/" ;;
     esac
-    # A host is a whole label, never a substring:
-    # `https://github.com@attacker.example/x/user-attachments/y.png` parses its
-    # host as `github.com@attacker.example`.
+    # A host is a whole label, never a substring: userinfo makes
+    # `github.com@attacker.example` the host, and a substring test ours.
     case "$host" in
       ""|*[!A-Za-z0-9.-]*) continue ;;   # empty, or carrying userinfo, a port, or worse
     esac
-    # Dot segments walk straight out of the path anchor below, and this runs
-    # BEFORE it. `https://github.com/user-attachments/assets/../../attacker/
-    # evil/raw/main/x.png` passes every prefix test and every host test, and an
-    # HTTP client then normalizes it to attacker-controlled content on an
-    # allowlisted host. The percent-encoded forms of `.` and `/` do the same
-    # after the server decodes them, so they are refused unencoded rather than
-    # decoded here.
+    # Dot segments walk out of the anchor below, so this runs BEFORE it: an
+    # HTTP client normalizes `…/assets/../../attacker/evil/x.png` to content
+    # the attacker controls on an allowlisted host. Their percent-encoded
+    # forms are refused rather than decoded.
     case "$path" in *..|*../*) continue ;; esac
     case "$candidate" in *%2[eEfF]*) continue ;; esac
     file="${path%%\?*}"                  # the path with its query string removed
@@ -167,11 +158,10 @@ harvest() {
       /user-attachments/assets/*) : ;;   # github.com and GitHub Enterprise
       *)                                 # the private-repo proxy rewrite, on its own host
         case "$host" in "$ASSET_PROXY_HOST") : ;; *) continue ;; esac
-        # `*.githubusercontent.com` is not one host: `raw.githubusercontent.com`
+        # `*.githubusercontent.com` is not one host: raw.githubusercontent.com
         # serves any public repository's content. One enumerated host, and one
-        # shape — one or two segments, the last naming an image file. Two,
-        # because the rewrite GitHub emits carries two:
-        # /<user-id>/<asset-id>-<uuid>.png?jwt=…
+        # shape — one or two segments, the last naming an image file, because
+        # the rewrite GitHub emits is /<user-id>/<asset-id>-<uuid>.png?jwt=…
         case "${file#/}" in
           */*/*) continue ;;
           *.png|*.jpg|*.jpeg|*.gif|*.webp|*.avif) : ;;
@@ -182,10 +172,8 @@ harvest() {
       "$PR_HOST"|"$ASSET_PROXY_HOST"|"${PR_SCREENSHOTS_ASSET_HOST:-$PR_HOST}") : ;;
       *) continue ;;
     esac
-    # More than one allowlisted candidate is a failure for that entry, not a
-    # guess between them — and it is the class that most needs a loud signal,
-    # since it fires exactly when another writer appended a URL during the
-    # attach window.
+    # More than one allowlisted candidate is a failure, never a guess: it
+    # fires exactly when another writer appended a URL during the window.
     if [ -n "$ASSET_URL" ]; then
       ASSET_URL=""
       REASON="ambiguous attachment URL"
@@ -197,11 +185,8 @@ harvest() {
 
 # --- One entry per iteration: validate, attach, re-read, harvest, record ----
 #
-# The path check set is exhaustive: the path is absolute, holds no newline, and
-# holds no `#`; the file exists, is a regular file, is not a symbolic link, is
-# contained in the declared root, and is an image by content. Each check names
-# its own failure class, because `Not uploaded: <caption> — <reason>` is the
-# whole account the operator gets.
+# The check set is exhaustive, and each check names its own failure class:
+# `Not uploaded: <caption> — <reason>` is the whole account the operator gets.
 
 while IFS= read -r ENTRY_PATH; do
   REASON=""
@@ -214,21 +199,19 @@ while IFS= read -r ENTRY_PATH; do
     /*)           : ;;
     *)            REASON="relative path"   ; fail_entry ; continue ;;
   esac
-  # `[ -L ]` runs BEFORE `[ -e ]`: `-e` follows the link, so a dangling symlink
-  # tested first reports as `file missing` and hides an attempted symlink
-  # behind the wrong class. A shell `-f` test follows links too, so `-f` alone
-  # accepts an entry naming a link to ~/.ssh/id_ed25519 or to a .env and
-  # uploads that file to a live, world-readable user-attachments URL.
+  # `[ -L ]` runs BEFORE `[ -e ]`, which follows the link: a dangling symlink
+  # tested first reports as `file missing` and hides the attempt. `-f` follows
+  # links too, so it alone accepts a link to ~/.ssh/id_ed25519 and uploads it
+  # to a live, world-readable user-attachments URL.
   if [ -L "$ENTRY_PATH" ]; then REASON="symlink refused"    ; fail_entry ; continue ; fi
   if [ ! -e "$ENTRY_PATH" ]; then REASON="file missing"     ; fail_entry ; continue ; fi
   if [ ! -f "$ENTRY_PATH" ]; then REASON="not a regular file" ; fail_entry ; continue ; fi
   if ! RESOLVED="$(cd -- "$(dirname -- "$ENTRY_PATH")" && pwd -P)/$(basename -- "$ENTRY_PATH")"; then
     REASON="file missing" ; fail_entry ; continue
   fi
-  # The same two tests, re-run on the value the attach command receives.
-  # `pwd -P` resolves a symlinked parent into its physical path, so a `#` or a
-  # newline in a directory ABOVE the entry reaches `--attach` without ever
-  # appearing in $ENTRY_PATH.
+  # The same two tests on the value `--attach` receives: `pwd -P` resolves a
+  # symlinked parent, so a `#` in a directory ABOVE the entry reaches the
+  # command without ever appearing in $ENTRY_PATH.
   case "$RESOLVED" in
     *"$NEWLINE"*) REASON="newline in path" ; fail_entry ; continue ;;
     *"#"*)        REASON="# in path"       ; fail_entry ; continue ;;
@@ -238,33 +221,28 @@ while IFS= read -r ENTRY_PATH; do
     "$CAPTURE_ROOT"/*) : ;;
     *) REASON="outside the declared root" ; fail_entry ; continue ;;
   esac
-  # Acceptance is decided by CONTENT TYPE, never by extension, and an
-  # environment that yields no type fails the check: unverified is not an
-  # image. That is what keeps a .env, an id_ed25519, or a .git/config off a
-  # world-readable user-attachments URL.
+  # By content type, never by extension, and no type fails: unverified is not
+  # an image. That keeps a .env or an id_ed25519 off a public URL.
   MIME="$(file -b --mime-type -- "$RESOLVED" 2>/dev/null || true)"
   case "$MIME" in
     image/*) : ;;
     *) REASON="not an image" ; fail_entry ; continue ;;
   esac
 
-  # The attach argument is $RESOLVED, never $ENTRY_PATH: the symlink,
-  # containment, and content checks all ran against $RESOLVED, and attaching
-  # the unresolved name would upload a path nothing validated. `:?` refuses to
-  # run the command at all on an unset or empty value. One file per command, so
-  # attribution is exact and the host's own multi-file cap never applies.
+  # The argument is $RESOLVED, never $ENTRY_PATH: every check ran against
+  # $RESOLVED, and the unresolved name is a path nothing validated. `:?`
+  # refuses to run at all on an empty value. One file per command, so
+  # attribution is exact.
   PREVIOUS="$AFTER"
   if gh pr edit "$NUMBER" --repo "$REPO_SPEC" --attach "${RESOLVED:?}" </dev/null; then
     ATTACHED=yes
   else
     ATTACHED=no
   fi
-  # The re-read happens after EVERY attach, success or not, and BEFORE the
-  # status is acted on: a non-zero exit may still have updated the PR, so
-  # "nothing happened" is never inferred from an exit code. It is guarded the
-  # way the pre-image is — the process exit AND the JSON envelope — because an
-  # unguarded read binds "" on a transient failure, which reads as "the host
-  # removed the body".
+  # After EVERY attach, success or not, and BEFORE the status is acted on: a
+  # non-zero exit may still have updated the PR. Guarded the way the
+  # pre-image is, because an unguarded read binds "" on a transient failure —
+  # which reads as "the host removed the body".
   if ! AFTER_JSON="$(gh pr view "$NUMBER" --repo "$REPO_SPEC" --json body </dev/null)"; then
     REASON="body read failed" ; fail_entry ; continue
   fi
@@ -300,19 +278,14 @@ printf '%s' "$AFTER" >"$RUN_DIR/after.md"
 
 # --- The lost-update guard --------------------------------------------------
 #
-# `AFTER` must start with the pre-image, after the CRLF normalization — and the
-# prefix test alone is vacuous when the pre-image is empty, because every
-# string starts with "". An empty pre-image therefore carries a second arm: the
-# only thing AFTER may hold is the tails the attach step appended, since a body
-# that was empty at the pre-image and holds prose now was written by somebody
-# else during the upload window.
+# `AFTER` must start with the pre-image — and that test alone is vacuous when
+# the pre-image is empty, because every string starts with "". The empty case
+# therefore has its own arm: all AFTER may hold is the tails the attach
+# appended, since prose there was written by somebody else during the window.
 #
-# It is a guard rather than full coverage in one named, accepted way: a
-# concurrent APPEND keeps the prefix, passes the check, and is dropped by the
-# pre-image-based write. The second gap is closed rather than accepted — a run
-# where any re-read failed cannot prove its baseline current, so it never
-# writes. What that costs is a manual edit; what it prevents is the silent
-# overwrite this skill exists to prevent.
+# One gap is named and accepted: a concurrent APPEND keeps the prefix and is
+# dropped by the pre-image-based write. The other is closed — a run whose
+# re-read failed cannot prove its baseline current, so it never writes.
 
 if [ "$READ_FAILED" = yes ]; then
   : >"$RUN_DIR/read-failed"

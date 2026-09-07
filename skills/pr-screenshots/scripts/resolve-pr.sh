@@ -39,9 +39,8 @@ fi
 # --- Split the arguments before validating any of them ----------------------
 #
 # The shebang pins bash, so splitting an unquoted parameter expansion is this
-# file's own documented behaviour rather than the host shell's: under zsh the
-# same line binds the whole string as one token. `set -f` is what keeps a
-# token holding `*` from globbing against the working directory.
+# file's own behaviour rather than the host shell's: under zsh the same line
+# binds the whole string as one token. `set -f` keeps a token from globbing.
 
 PR_ARG=''
 ENTRIES_FILE=''
@@ -60,9 +59,8 @@ for TOKEN in "$@"; do
   fi
   case "$TOKEN" in
     --entries)
-      # A second value overwriting the first would upload from a manifest the
-      # caller may not have named on purpose, silently. "The last one wins" is
-      # a guess, so both spellings refuse instead.
+      # A second value overwriting the first would upload from a manifest
+      # the caller never named. "The last one wins" is a guess.
       if [ -n "$ENTRIES_FILE" ]; then
         printf 'more than one --entries\n' >&2
         exit 1
@@ -81,9 +79,8 @@ for TOKEN in "$@"; do
       exit 1
       ;;
     *)
-      # The split is on whitespace, so an entries path holding a space arrives
-      # as two tokens and lands here — a loud refusal that names the argument,
-      # never a silently truncated path.
+      # An entries path holding a space arrives as two tokens and lands
+      # here: a loud refusal, never a silently truncated path.
       if [ -n "$PR_ARG" ]; then
         printf 'more than one PR argument\n' >&2
         exit 1
@@ -100,12 +97,10 @@ fi
 
 # --- Validate the PR token alone --------------------------------------------
 #
-# The host segment is a charset rather than a literal `github.com`, because
-# this skill supports GitHub Enterprise in three later places. An
-# anchored-at-github.com pattern would refuse every Enterprise PR URL as
-# malformed before any of that handling could run. Never `[^/]+` for an owner
-# or repository segment: that class admits `$`, backticks, parentheses, and
-# spaces.
+# The host segment is a charset, not a literal `github.com`: this skill
+# handles GitHub Enterprise in three later places, and an anchored-at-
+# github.com pattern refuses every Enterprise URL before they run. Never
+# `[^/]+` for an owner or repository — that admits `$`, backticks, and spaces.
 
 PR_URL_PATTERN='^https://[A-Za-z0-9.-]{1,253}/[A-Za-z0-9._-]{1,39}/[A-Za-z0-9._-]{1,100}/pull/[0-9]+$'
 
@@ -131,12 +126,10 @@ fi
 
 # --- Resolve it once --------------------------------------------------------
 #
-# The resolution carries --repo whenever the argument supplied one. For a URL
-# argument the number alone is what `gh pr view` receives, and with no --repo
-# it resolves that number against the CURRENT DIRECTORY's default repository —
-# so a full URL for one repository, run from a checkout of another, would
-# silently resolve the other repository's PR of the same number, and every
-# later call would inherit it.
+# With --repo whenever the argument supplied one: `gh pr view` receives the
+# number alone, and with no --repo it resolves against the CURRENT
+# DIRECTORY's default repository — so a full URL for one repository, run from
+# a checkout of another, silently resolves the other's PR of that number.
 
 if [ -n "$ARG_OWNER" ]; then
   if ! PR_URL="$(gh pr view "$ARG_NUMBER" --repo "$ARG_HOST/$ARG_OWNER/$ARG_REPO" --json url --jq .url)"; then
@@ -153,9 +146,8 @@ else
   fi
 fi
 
-# The split is guarded, and the host is a bound value of its own. Stripping a
-# literal `https://github.com/` prefix is a no-op on every other host, which
-# would leave OWNER as `https:` and REPO empty for every later --repo.
+# Guarded: stripping a literal `https://github.com/` prefix is a no-op on
+# every other host, leaving OWNER as `https:` for every later --repo.
 case "$PR_URL" in
   https://*/*/*/pull/[0-9]*) : ;;
   *)
@@ -181,10 +173,9 @@ case "$NUMBER" in
     ;;
 esac
 
-# `gh` accepts [HOST/]OWNER/REPO, so binding the host into the spec once makes
-# every later call land on the host the URL actually named. `--repo
-# "$OWNER/$REPO"` resolves against whichever host gh considers default, which
-# on an Enterprise PR is a repository on github.com.
+# `gh` accepts [HOST/]OWNER/REPO, and binding the host in once makes every
+# later call land on the host the URL named. `--repo "$OWNER/$REPO"` resolves
+# against whichever host gh considers default.
 REPO_SPEC="$PR_HOST/$OWNER/$REPO"
 
 printf '%s\n' "$PR_URL"       >"$RUN_DIR/pr-url"
