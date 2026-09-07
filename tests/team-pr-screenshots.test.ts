@@ -223,3 +223,36 @@ describe("Slice 3: companion PRs get the same section, each verified", () => {
     expect(RUNTIME_FALLBACK.test("if the read-back fails, fall back to a per-repo call")).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Review round 1 — the companion splice recipe.
+// ---------------------------------------------------------------------------
+
+// A splice invocation whose stdout is redirected straight onto the final body
+// file. `>` truncates BEFORE the command runs and a refusal prints nothing, so
+// this form leaves a zero-byte file for the next step to hand
+// `gh pr edit --body-file` — blanking that companion's body.
+const UNGUARDED_REDIRECT = /splice\.mjs[\s\S]{0,240}?>\s*"\$NEW_BODY_FILE"\s*$/m;
+
+describe("Review round 1: the companion recipe guards its own redirect", () => {
+  test("the multi-repo splice never redirects straight onto the body file", () => {
+    const multiRepo = multiRepoBlock();
+    expect(multiRepo.length).toBeGreaterThan(0);
+    expect(UNGUARDED_REDIRECT.test(multiRepo)).toBe(false);
+    // The detector fires on a planted positive.
+    expect(
+      UNGUARDED_REDIRECT.test('node "d/splice.mjs" --body-file "$C" > "$NEW_BODY_FILE"'),
+    ).toBe(true);
+  });
+
+  test("the companion splice passes the landed-asset count and names exit 2", () => {
+    // The count is what keeps rule 4's no-downgrade guard from being
+    // satisfiable by caller-supplied note text, and exit 2 is a fault rather
+    // than the refusal exit 1 means.
+    const multiRepo = multiRepoBlock();
+    expect(multiRepo.length).toBeGreaterThan(0);
+    expect(multiRepo).toContain("--landed");
+    expect(multiRepo).toContain("exit 2");
+    expect(multiRepo).toContain("unchanged: <reason>");
+  });
+});

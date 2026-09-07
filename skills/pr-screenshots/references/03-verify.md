@@ -25,8 +25,10 @@ this check.
    not asserted, so a private-repository proxy rewrite cannot turn a good
    upload into a reported failure.
 3. **A degraded write is checked as text.** When nothing landed and the
-   degraded note was written, the note wording and the local paths must appear
-   in the section as text, and rule 2 still holds.
+   degraded note was written, the note wording and each captured file's
+   basename must appear in the section as text, and rule 2 still holds. The
+   basename is what the body carries; the absolute path lives in `result.json`
+   and never renders.
 
 Nothing written means no read-back. Report what was left alone.
 
@@ -37,9 +39,16 @@ renderer and assert against that instead:
 
 ```bash
 gh pr view "$NUMBER" --repo "$OWNER/$REPO" --json body \
-  --jq '{text: .body, mode: "gfm", context: "'"$OWNER/$REPO"'"}' \
+  | jq --arg nwo "$OWNER/$REPO" '{text: .body, mode: "gfm", context: $nwo}' \
   | gh api --method POST /markdown --input -
 ```
+
+`$OWNER/$REPO` is bound with jq's own `--arg`, never spliced into the program
+string. `gh --jq` takes an expression and no arguments, which is why the pipe
+goes through `jq` here: a closing-quote dance such as `"'"$OWNER/$REPO"'"`
+makes the repository name part of the program source, so a name carrying a
+quote rewrites the jq program rather than filling a slot in it
+(`principle-never-interpolate`).
 
 The `--input -` form is the one that works; `-f text=@-` posts the literal
 `@-`.

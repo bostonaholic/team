@@ -178,7 +178,8 @@ Standard option menu (pick the options that apply):
 - **F. Mark resolved as-is** — current code already addresses it (cite commit/line).
 - **G. Needs clarification** — ask the reviewer `<specific question>` before acting.
 - **H. Attach the screenshot they asked for** — capture the image first, then
-  run `/pr-screenshots` against this PR to put it in the description.
+  run `/pr-screenshots` against this PR to put it in the description. The
+  upload mechanics are in `skills/pr-screenshots/SKILL.md`.
 
 Block format:
 

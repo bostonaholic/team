@@ -65,17 +65,30 @@ companion PR's body, one companion at a time:
    `gh pr view "$NUMBER" --repo "$OWNER/$REPO" --json body --jq .body`, using
    that companion's own owner, repository, and number.
 2. Splice the string in with the committed pure function, which applies the
-   same five rules the home write used, including the overflow and
-   no-downgrade refusals:
+   same rules the home write used, including the overflow and no-downgrade
+   refusals. `--landed` is the number of `assets` entries whose `url` is
+   non-null:
 
    ```bash
-   node "<pr-screenshots-skill-dir>/splice.mjs" \
-     --body-file "$COMPANION_BODY_FILE" --section-file "$SECTION_FILE" > "$NEW_BODY_FILE"
+   if node "<pr-screenshots-skill-dir>/splice.mjs" \
+        --body-file "$COMPANION_BODY_FILE" --section-file "$SECTION_FILE" \
+        --landed "$LANDED_COUNT" > "$NEW_BODY_FILE.tmp"; then
+     mv "$NEW_BODY_FILE.tmp" "$NEW_BODY_FILE"
+   else
+     rm -f "$NEW_BODY_FILE.tmp"        # no body file exists, so step 3 cannot run
+   fi
    ```
 
+   The redirect goes to a temporary path and is promoted only on success. A
+   plain `> "$NEW_BODY_FILE"` truncates before the command runs, so a refusal
+   would leave a zero-byte file for step 3 to hand `gh pr edit --body-file`,
+   blanking that companion's body.
+
    That script is `skills/pr-screenshots/splice.mjs`. Exit 1 prints
-   `unchanged: <reason>` on stderr: report the reason and leave that companion
-   alone.
+   `unchanged: <reason>` on stderr and exit 2 prints `splice.mjs: <message>` —
+   a refusal and a fault respectively. Report either and leave that companion
+   alone; the exit codes are tabulated in
+   `skills/pr-screenshots/references/02-upload-and-body-edit.md`.
 3. Write it with one
    `gh pr edit "$NUMBER" --repo "$OWNER/$REPO" --body-file "$NEW_BODY_FILE"`.
 4. Read that companion's own rendered body back, against its own

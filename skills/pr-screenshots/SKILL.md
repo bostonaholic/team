@@ -28,9 +28,11 @@ run, when, and which entries qualify, then calls this skill.
 - **Refuse before mutating, never after.** Every check that can run against the
   pre-image runs in step A, so a refusal always means nothing changed
   (`principle-fail-closed`).
-- **Every path and caption is caller data.** Each reaches a command as one
-  quoted `"$VAR"` expansion and never as shell source
-  (`principle-never-interpolate`, `principle-untrusted-input-is-data`).
+- **Every caller-supplied string is data, not source and not markup.** A path,
+  a caption, a note, and a failure reason each reach a command as one quoted
+  `"$VAR"` expansion, and each is normalized by the same function before it
+  renders into a body (`principle-never-interpolate`,
+  `principle-untrusted-input-is-data`).
 - **Nothing blocks, prompts, or retry-loops.** A capability gap, a failed
   entry, or a failed read-back degrades the result and says so
   (`principle-optimization-never-dependency`, `principle-skip-loudly`).
@@ -45,7 +47,7 @@ item per numbered step of the reference you are in before starting it
 (`principle-progress-tracking`).
 
 1. [Input and result](references/01-input-and-result.md) — PR resolution, the
-   entries file, caption normalization, `result.json`, every refusal.
+   entries file, caller-string normalization, `result.json`, every refusal.
 2. [Upload and body edit](references/02-upload-and-body-edit.md) — the
    capability check, the four-step order, path validation, the attach loop, the
    lost-update guard, and the section's markdown shape.

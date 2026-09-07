@@ -8,16 +8,31 @@ split at `skills/pr-watch-as-reviewer/references/02-input.md`, lines 11-42.
 Never use `[^/]+` for an owner or repo segment: that class admits `$`,
 backticks, parentheses, and spaces.
 
-Resolve the canonical URL in one call, then bind the three values from it:
+Resolve the canonical URL in one call, then bind the three values from it. The
+resolution call carries `--repo` too, whenever the argument supplied one: for a
+URL argument `$ARG_NUMBER` is the trailing number alone, and `gh pr view` with
+no `--repo` resolves a bare number against the *current directory's* default
+repository. A full URL for one repository, run from a checkout of another,
+would otherwise silently resolve the other repository's PR of the same number —
+and every later call inherits that resolution, ending with a `## Screenshots`
+section written into an unrelated PR.
 
 ```bash
-PR_URL="$(gh pr view "$ARG_NUMBER" --json url --jq .url)"
+if [ -n "$ARG_OWNER" ]; then
+  PR_URL="$(gh pr view "$ARG_NUMBER" --repo "$ARG_OWNER/$ARG_REPO" --json url --jq .url)"
+else
+  PR_URL="$(gh pr view "$ARG_NUMBER" --json url --jq .url)"
+fi
 REST="${PR_URL#https://github.com/}"
 OWNER="${REST%%/*}"
 REST="${REST#*/}"
 REPO="${REST%%/*}"
 NUMBER="${PR_URL##*/}"
 ```
+
+The `else` branch is the bare-number form, which has no repository of its own
+and resolves against the checkout by design; with no checkout it resolves
+nothing, which is the refusal below.
 
 `gh pr view` returns the URL on the **base** repository, which is the PR a fork
 contribution is edited on. Every later call carries `--repo "$OWNER/$REPO"`, so
@@ -48,12 +63,46 @@ Per entry: `path` and `caption` are required, `state` and `note` are optional.
 One top-level `notes` list carries caller-supplied discrepancy lines. Captions
 need not be unique.
 
-**Caption normalization runs once, at read.** Strip newlines, trim, collapse
-whitespace runs, then backslash-escape `\`, `!`, `[`, and `]`. A caption is
-caller text and renders as bold body markdown, so the escape is what stops it
-becoming a link or an image reference of its own. A caption that is empty after
-normalization fails its entry. The caption is never alt text: the alt is
-`screenshot-<NN>`, the entry's index, and holds no caller text at all.
+### Normalizing caller strings
+
+**Every caller-supplied string that reaches a PR body is normalized once, at
+read, by the same function.** The rule is over the *class*, not over a field: a
+new field that renders is normalized because it is caller text, and the list
+below is the current membership rather than the reason.
+
+Normalize: strip newlines, trim, collapse whitespace runs, then
+backslash-escape `\`, `!`, `[`, `]`, `<`, and `>`.
+
+The escape set is what the rendered forms need. `!`, `[`, and `]` stop the
+string becoming a link or an image reference of its own — the exact bypass that
+would otherwise let one `notes` line carry `![screenshot-01](https://…)` and so
+satisfy `splice.mjs`'s no-downgrade count with caller text, replacing live
+asset URLs with whatever the caller named. `<` and `>` stop it rendering raw
+HTML, which GitHub allows in a body: an unescaped caption can otherwise emit an
+`<a href>` to anywhere. `\` is escaped first, so no escape can be undone by a
+caller-supplied backslash.
+
+The members, all of them caller data:
+
+| String | Where it renders |
+| --- | --- |
+| Each entry's `caption` | Bold body text in the section |
+| Each line of the top-level `notes` list | One body line each, resolved and degraded alike |
+| Each entry's `path` | The degraded form, and any failure line |
+| Each failure `reason` | The `Not uploaded:` line |
+
+**A path renders as its basename, never in full.** A PR body is public and an
+absolute path leaks the operator's directory layout and username. Keep the
+absolute path in `result.json` and in the operator report, where it is the
+useful form, and render `<basename>` in the body. For the same reason **a
+failure `reason` written into the body must carry no filesystem path**; a
+reason that names one is reported to the operator and rendered in the body as
+the failure class alone.
+
+A caption that is empty after normalization fails its entry. A `notes` line
+that is empty after normalization is dropped. The caption is never alt text:
+the alt is `screenshot-<NN>`, the entry's index, and holds no caller text at
+all.
 
 ### Refusals
 
@@ -96,7 +145,7 @@ run's report.
 | --- | --- |
 | `uploaded` | Every entry landed, the body was written, the read-back passed |
 | `partial` | At least one entry landed and at least one failed |
-| `degraded` | Nothing landed; the body carries the note and the local paths as plain text |
+| `degraded` | Nothing landed; the body carries the note and the captured file names as plain text |
 | `unverified` | The body was written and the read-back did not pass |
 | `uploaded-not-written` | The assets landed and the body was left untouched — what the lost-update guard returns |
 | `refused` | Nothing changed anywhere |

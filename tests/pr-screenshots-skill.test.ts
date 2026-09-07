@@ -30,7 +30,9 @@
 // positive").
 
 import { describe, expect, test } from "bun:test";
-import { existsSync, readdirSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, readdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -48,7 +50,8 @@ const SPLICE = join(SKILL_DIR, "splice.mjs");
 // ---------------------------------------------------------------------------
 
 type SpliceResult = { body: string; changed: boolean; reason: string };
-type SpliceFn = (body: string, section: string) => SpliceResult;
+type SpliceOptions = { landed?: number };
+type SpliceFn = (body: string, section: string, options?: SpliceOptions) => SpliceResult;
 
 // A computed specifier, so TypeScript never resolves the path and Node never
 // throws at parse time. The module is imported only when it is on disk.
@@ -732,5 +735,434 @@ describe("Slice 4 — pointers and the orphan-branch trap (L2)", () => {
     expect(offenders).toEqual([]);
     // The detector fires on a planted positive.
     expect(`keep it in sync with the README's "${pointer}" section`.includes(pointer)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Review round 1 — L1: the splice defects the reviewers reproduced.
+//
+// Each of these asserts a shape in which the contract FAILED, not a shape in
+// which it already held. The five tests above pin the rules; these pin the
+// boundaries the rules were read against.
+// ---------------------------------------------------------------------------
+
+describe("Review round 1 — splice.mjs boundaries (L1)", () => {
+  test("a level-one heading bounds the replace", () => {
+    // Blocking 1. `^##\s` is not the section boundary: a `# ` heading outranks
+    // `## Screenshots` and ends it, so a replace that runs past one deletes a
+    // whole level-one section and still reports `changed` with no reason.
+    const body = [
+      "## Screenshots",
+      "",
+      "**Old** (default)",
+      "![screenshot-01](https://example.com/a/0)",
+      "",
+      "# Release notes",
+      "",
+      "- shipped the login page",
+      "",
+      "Closes #123",
+      "",
+    ].join("\n");
+
+    const result = splice(body, SECTION);
+
+    expect(result.changed).toBe(true);
+    expect(result.body).toContain("# Release notes");
+    expect(result.body).toContain("- shipped the login page");
+    expect(occurrences(result.body, "Closes #123")).toBe(1);
+    expect(result.body).toContain("assets/1111");
+    expect(result.body).not.toContain("/a/0");
+    // Order survives: the new section stays above the level-one section.
+    expect(result.body.indexOf("assets/1111")).toBeLessThan(result.body.indexOf("# Release notes"));
+  });
+
+  test("a `### ` subheading is not a boundary", () => {
+    // The other half of the same rule. A subheading belongs to the section
+    // above it, so replacing the section replaces its subheadings with it —
+    // otherwise the replace orphans them under the new content.
+    const body = [
+      "## Screenshots",
+      "",
+      "### Before",
+      "![screenshot-01](https://example.com/a/0)",
+      "",
+      "Closes #7",
+      "",
+    ].join("\n");
+
+    const result = splice(body, SECTION);
+
+    expect(result.changed).toBe(true);
+    expect(result.body).not.toContain("### Before");
+    expect(occurrences(result.body, "Closes #7")).toBe(1);
+  });
+
+  test("an unclosed fence in the body is refused, never masked over", () => {
+    // Blocking 2(a). A blind toggle masks everything below an unbalanced
+    // fence, so the replace bound runs to EOF and a standalone `Closes #123`
+    // is deleted with `changed: true`.
+    const body = [
+      "## Screenshots",
+      "",
+      "**Old**",
+      "![screenshot-01](https://example.com/a/0)",
+      "",
+      "## Notes",
+      "",
+      "```",
+      "unclosed",
+      "",
+      "Closes #123",
+      "",
+    ].join("\n");
+
+    const result = splice(body, SECTION);
+
+    expect(result.body).toBe(body);
+    expect(result.changed).toBe(false);
+    expect(result.reason.length).toBeGreaterThan(0);
+  });
+
+  test("an unclosed fence in the section is refused", () => {
+    // The same fail-closed rule on the other input: a section carrying an
+    // unbalanced fence would leave the written body unparseable for the next
+    // run, which is the state this refusal exists to prevent.
+    const body = ["## Summary", "", "hi", "", "Closes #1", ""].join("\n");
+
+    const result = splice(body, ["## Screenshots", "", "```", "note"].join("\n"));
+
+    expect(result.body).toBe(body);
+    expect(result.changed).toBe(false);
+    expect(result.reason.length).toBeGreaterThan(0);
+  });
+
+  test("a nested four-backtick block does not hide the real Screenshots heading", () => {
+    // Blocking 2(b). `## Review notes` carries the four-backtick `DATA` block
+    // skills/cross-model-review/SKILL.md mandates, wrapping an odd number of
+    // three-backtick lines. A blind toggle inverts the mask from there on,
+    // hides the real heading, fires the INSERT path, and lands a SECOND
+    // `## Screenshots` — after which the two-headings refusal locks the PR out
+    // of every later run. A closer must match its opener's character and
+    // length and carry no info string.
+    const body = [
+      "## Summary",
+      "",
+      "x",
+      "",
+      "## Review notes",
+      "",
+      "````DATA",
+      "```",
+      "````",
+      "",
+      "## Screenshots",
+      "",
+      "**Old**",
+      "![screenshot-01](https://example.com/a/0)",
+      "",
+      "Closes #12",
+      "",
+    ].join("\n");
+
+    const result = splice(body, SECTION);
+
+    expect(result.changed).toBe(true);
+    // Exactly one heading: the existing section was REPLACED, not duplicated.
+    expect(occurrences(result.body, "## Screenshots")).toBe(1);
+    expect(result.body).toContain("assets/1111");
+    expect(result.body).not.toContain("/a/0");
+    // The DATA block is re-emitted intact.
+    expect(result.body).toContain("````DATA");
+    expect(occurrences(result.body, "````")).toBe(2);
+  });
+
+  test("splice keeps a crash tail that no ticket-reference line separates", () => {
+    // Blocking 3. The preservation contract was only honored when a `Closes`
+    // line happened to sit between the section and the tail. With nothing
+    // between them the replace ran to the end of `content` and discarded the
+    // tail, against `## Hard rules`, "Never delete what you did not write".
+    const crashed = [
+      "## Summary",
+      "",
+      "Adds a login page.",
+      "",
+      "## Screenshots",
+      "",
+      "**Login** (default)",
+      "![screenshot-01](https://example.com/user-attachments/assets/0000)",
+      "",
+      "![screenshot-01](https://example.com/user-attachments/assets/dead)",
+      "",
+    ].join("\n");
+
+    const result = splice(crashed, SECTION);
+
+    expect(result.changed).toBe(true);
+    expect(result.body).toContain("assets/dead");
+    expect(result.body).toContain("assets/1111");
+    expect(result.body).not.toContain("assets/0000");
+    // The tail stays below the new section, where the attach step left it.
+    expect(result.body.indexOf("assets/1111")).toBeLessThan(result.body.indexOf("assets/dead"));
+  });
+
+  test("a captioned image is not mistaken for a crash tail", () => {
+    // The discriminator, from the other side: this skill always writes a
+    // `**caption**` line directly above its own images, so its own last image
+    // is NOT standalone and IS replaced. Without this, every rerun would
+    // duplicate the section it meant to replace.
+    const own = [
+      "## Screenshots",
+      "",
+      "**Login** (default)",
+      "![screenshot-01](https://example.com/a/0)",
+      "",
+    ].join("\n");
+
+    const result = splice(own, SECTION);
+
+    expect(result.changed).toBe(true);
+    expect(result.body).not.toContain("/a/0");
+    expect(occurrences(result.body, "## Screenshots")).toBe(1);
+  });
+
+  test("a note-borne image reference cannot satisfy the no-downgrade count", () => {
+    // Blocking 5 (security, HIGH). The top-level `notes` list is caller text
+    // and renders verbatim. One note line carrying `![screenshot-NN](http…)`
+    // made an all-failures section pass rule 4's count and REPLACE a live
+    // user-attachments URL with the attacker's — on a body that may already be
+    // merged. `--landed` is the count the run actually resolved, so a section
+    // naming more references than that is refused whatever the text says.
+    const noteBorne = [
+      "## Screenshots",
+      "",
+      "**Login** (default) — captured, not yet uploaded: login.png",
+      "",
+      "![screenshot-01](https://evil.example/pixel.png)",
+    ].join("\n");
+
+    const result = splice(REAL, noteBorne, { landed: 0 });
+
+    expect(result.body).toBe(REAL);
+    expect(result.changed).toBe(false);
+    expect(result.reason.length).toBeGreaterThan(0);
+
+    // Control: the real section, whose two references match a two-asset run,
+    // still writes — so the refusal above is the count and not a blanket ban.
+    expect(splice(REAL, SECTION, { landed: 2 }).changed).toBe(true);
+    // …and the same section is refused when the run landed only one.
+    expect(splice(REAL, SECTION, { landed: 1 }).changed).toBe(false);
+  });
+
+  test("splice is idempotent when the section file ends with a newline", () => {
+    // Major 2. A section read from a file carries a trailing newline. Left in,
+    // it stacked: every rerun of an IDENTICAL section grew the body by a blank
+    // line and reported `changed`, so `outcome` read `uploaded` on every retry
+    // with no signal that nothing new had happened.
+    const fromFile = SECTION + "\n";
+    const body = ["# Some PR", "", "Fixes: #123", ""].join("\n");
+
+    const first = splice(body, fromFile);
+    expect(first.changed).toBe(true);
+
+    const second = splice(first.body, fromFile);
+    expect(second.changed).toBe(false);
+    expect(second.reason.length).toBeGreaterThan(0);
+    expect(second.body).toBe(first.body);
+
+    // A footer follows the section, which is the shape that grew.
+    expect(first.body).toContain("Fixes: #123");
+    expect(occurrences(first.body, "Fixes: #123")).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Review round 1 — L1: the CLI's exit-code contract.
+// ---------------------------------------------------------------------------
+
+describe("Review round 1 — splice.mjs CLI exit codes (L1)", () => {
+  const scratch = mkdtempSync(join(tmpdir(), "pr-screenshots-"));
+  const bodyFile = join(scratch, "body.md");
+  const sectionFile = join(scratch, "section.md");
+  writeFileSync(bodyFile, "## Summary\n\nhi\n\nCloses #1\n", "utf8");
+  writeFileSync(sectionFile, SECTION + "\n", "utf8");
+
+  const run = (args: string[]) =>
+    spawnSync(process.execPath, [SPLICE, ...args], { encoding: "utf8" });
+
+  test("exit 0 writes the body, exit 1 refuses, exit 2 is a fault", () => {
+    expect(existsSync(SPLICE)).toBe(true);
+
+    const ok = run(["--body-file", bodyFile, "--section-file", sectionFile]);
+    expect(ok.status).toBe(0);
+    expect(ok.stdout).toContain("## Screenshots");
+
+    // A refusal: exit 1, the documented `unchanged: <reason>` on stderr.
+    const empty = join(scratch, "empty.md");
+    writeFileSync(empty, "", "utf8");
+    const refused = run(["--body-file", bodyFile, "--section-file", empty]);
+    expect(refused.status).toBe(1);
+    expect(refused.stderr).toContain("unchanged: ");
+
+    // Major 1: a missing input is an ENVIRONMENT fault, not a refusal. On
+    // exit 1 a caller cannot tell "no rule allowed the write" from "your temp
+    // path was wrong", and a raw Node stack trace tells them neither.
+    const missing = run(["--body-file", join(scratch, "absent.md"), "--section-file", sectionFile]);
+    expect(missing.status).toBe(2);
+    expect(missing.stderr).toContain("splice.mjs: ");
+    expect(missing.stderr).not.toContain("unchanged: ");
+    expect(missing.stderr).not.toContain("at Object.");
+    expect(missing.stderr).not.toContain("node:internal");
+  });
+
+  test("--landed refuses a section naming more references than the run landed", () => {
+    const refused = run(["--body-file", bodyFile, "--section-file", sectionFile, "--landed", "1"]);
+    expect(refused.status).toBe(1);
+    expect(refused.stderr).toContain("unchanged: ");
+
+    const allowed = run(["--body-file", bodyFile, "--section-file", sectionFile, "--landed", "2"]);
+    expect(allowed.status).toBe(0);
+
+    // A non-numeric count is a usage fault, not a silently ignored flag.
+    const bad = run(["--body-file", bodyFile, "--section-file", sectionFile, "--landed", "x"]);
+    expect(bad.status).toBe(2);
+    expect(bad.stderr).toContain("splice.mjs: ");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Review round 1 — L2: the prose contracts the findings named.
+// ---------------------------------------------------------------------------
+
+// A splice invocation that redirects straight onto the final body file. Exit 1
+// prints nothing on stdout, and `>` truncates BEFORE the command runs, so this
+// form leaves a zero-byte file for the next command to hand
+// `gh pr edit --body-file`.
+const UNGUARDED_REDIRECT = /splice\.mjs[\s\S]{0,200}?>\s*"\$NEW_BODY_FILE"\s*$/m;
+
+describe("Review round 1 — prose contracts (L2)", () => {
+  test("the first resolution call carries the URL's own repository", () => {
+    // Blocking 4. For a URL argument the parser binds owner, repo, and number
+    // separately, and `gh pr view <number>` with no `--repo` resolves against
+    // the CURRENT DIRECTORY's default repository — so a full URL for repo A,
+    // run from a checkout of repo B, silently resolves B's PR of the same
+    // number and every later call inherits it.
+    const input = inputRef();
+    expect(input.length).toBeGreaterThan(0);
+
+    const resolve = input.indexOf("--json url --jq .url");
+    expect(resolve).toBeGreaterThanOrEqual(0);
+    // The resolution command itself binds the repository, not a later call.
+    const line = input.slice(input.lastIndexOf("\n", resolve) + 1, resolve);
+    expect(line).toContain("--repo");
+    expect(line).toContain("$ARG_OWNER");
+  });
+
+  test("normalization is stated over every caller string, not per field", () => {
+    // Blocking 5. Captions were escaped because a caption is caller text; the
+    // `notes` list, the path, and the failure reason are equally caller text
+    // and rendered verbatim. The rule is over the class.
+    const input = inputRef();
+    expect(input.length).toBeGreaterThan(0);
+
+    // The escape set, each character pinned as the token it is.
+    for (const token of ["`\\`", "`!`", "`[`", "`]`", "`<`", "`>`"]) {
+      expect(input).toContain(token);
+    }
+    // The members, by field name.
+    for (const field of ["caption", "notes", "path", "reason"]) {
+      expect(input).toContain(field);
+    }
+    // Newlines are stripped, so a note cannot smuggle `Closes #999` onto its
+    // own line and close an unrelated issue when the PR merges.
+    expect(/strip newlines/i.test(squash(input))).toBe(true);
+  });
+
+  test("a PR body renders a basename, never an absolute path", () => {
+    // The public-body half of the same finding: the absolute path is operator
+    // data and stays in result.json; the body gets the basename.
+    const upload = uploadRef();
+    expect(upload.length).toBeGreaterThan(0);
+    expect(upload).toContain("<basename>");
+
+    const templates = sectionTemplates();
+    expect(templates.length).toBeGreaterThan(0);
+    expect(templates.filter((template) => template.includes("<local path>"))).toEqual([]);
+    // A failure reason written into the body carries no filesystem path.
+    expect(squash(upload)).toContain("never a filesystem path");
+  });
+
+  test("path validation refuses a symlink and requires containment", () => {
+    // A shell `-f` FOLLOWS symlinks, so the set that called itself exhaustive
+    // accepted an entry naming a link to `~/.ssh/id_ed25519` and uploaded it
+    // to a live user-attachments URL (skills/principle-never-interpolate).
+    const upload = uploadRef();
+    expect(upload.length).toBeGreaterThan(0);
+    expect(squash(upload)).toContain("symbolic link");
+    expect(upload).toContain("-L ");
+    expect(squash(upload)).toContain("contained");
+    expect(upload).toContain("principle-never-interpolate");
+  });
+
+  test("the harvest is constrained to the attachment origin", () => {
+    // "Whatever absolute URL appears" lets a party with write access append
+    // their own URL during the attach window and have it harvested, embedded,
+    // and copied verbatim into every companion PR.
+    const upload = uploadRef();
+    expect(upload.length).toBeGreaterThan(0);
+    expect(upload).toContain("user-attachments/assets/");
+    const flat = squash(upload);
+    expect(flat).toContain("attachment origin");
+    // More than one candidate is a failure for that entry, never a guess.
+    expect(flat).toContain("more than one");
+    // The old unconstrained instruction is gone.
+    expect(flat).not.toContain("whatever absolute URL");
+  });
+
+  test("the read-back body is labelled untrusted", () => {
+    // Matching skills/pr-watch-as-reviewer/references/02-input.md, lines 4-6:
+    // anyone with write access authored it, so it is data, never instruction.
+    const upload = uploadRef();
+    expect(upload.length).toBeGreaterThan(0);
+    expect(upload).toContain("principle-untrusted-input-is-data");
+    expect(squash(upload)).toContain("untrusted");
+  });
+
+  test("the splice recipe guards its own redirect", () => {
+    // `> "$NEW_BODY_FILE"` truncates before the command runs, so a refusal
+    // leaves a zero-byte file that the next fenced command feeds to
+    // `gh pr edit --body-file` — blanking the PR body.
+    const upload = uploadRef();
+    expect(upload.length).toBeGreaterThan(0);
+    expect(UNGUARDED_REDIRECT.test(upload)).toBe(false);
+    // The detector fires on a planted positive.
+    expect(
+      UNGUARDED_REDIRECT.test('node "x/splice.mjs" --body-file "$A" > "$NEW_BODY_FILE"'),
+    ).toBe(true);
+  });
+
+  test("the exit-code table separates a refusal from a fault", () => {
+    // Major 1. Exit 1 is `unchanged: <reason>`; a usage or environment fault
+    // is exit 2 with its own prefix, so a caller can tell them apart.
+    const upload = uploadRef();
+    expect(upload.length).toBeGreaterThan(0);
+    expect(upload).toContain("unchanged: <reason>");
+    expect(upload).toContain("splice.mjs: <message>");
+    expect(upload).toContain("--landed");
+    // Both codes are named, and the fault code is the later one.
+    expect(upload.indexOf("| 1 |")).toBeGreaterThanOrEqual(0);
+    expect(upload.indexOf("| 2 |")).toBeGreaterThan(upload.indexOf("| 1 |"));
+  });
+
+  test("the fallback render binds owner/repo as a jq argument", () => {
+    // A repository name spliced into a jq PROGRAM STRING is source, not data.
+    const verify = verifyRef();
+    expect(verify.length).toBeGreaterThan(0);
+    expect(verify).toContain("--arg ");
+    expect(verify).toContain("principle-never-interpolate");
+    // No closing-quote dance inside a fenced command.
+    const commands = fencedBlocks(verify).join("\n");
+    expect(commands.length).toBeGreaterThan(0);
+    expect(commands).not.toContain(`"'"$OWNER/$REPO"'"`);
   });
 });

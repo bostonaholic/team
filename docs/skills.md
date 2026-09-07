@@ -148,6 +148,7 @@ Lands a reviewed pull request.
 
 Triages unresolved PR review comments.
 
+- `pr-screenshots`
 ### [pr-watch-as-author](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md)
 
 Watches an authored PR for feedback.
