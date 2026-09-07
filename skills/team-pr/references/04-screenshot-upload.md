@@ -132,7 +132,7 @@ calls.
    | --- | --- | --- |
    | 0 | The companion body was written | Read it back, step 3 |
    | 1 | Refused — `result.json` carries no `section`, the splice refused with `unchanged: <reason>`, or another writer landed first | Report the reason and leave that companion alone. Its body is byte-identical |
-   | 2 | Fault — an unreadable input, a failed `gh` call, or `splice.mjs: <message>` | Report it as a fault, not as a refusal |
+   | 2 | Fault — an unreadable or malformed input, a failed `gh` call, or `splice.mjs: <message>` | Report it as a fault, not as a refusal |
 
    That script is the home write run once: it reads `section` and the landed
    count out of `result.json`, reads that companion's pre-image guarded by the

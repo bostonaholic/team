@@ -3033,6 +3033,31 @@ describe("Slice 1 — upload.sh, executed (L1)", () => {
     expect(replaced.stderr).toContain("body");
   }, 60_000);
 
+  test("the empty-pre-image guard fires on a body far past the pipe buffer", () => {
+    // `grep -q` exits on its first match, so an upstream stage still feeding
+    // it dies of SIGPIPE — and under `pipefail` that 141 became the status the
+    // `if` read. The guard then skipped, the run exited 0, and the single body
+    // write replaced the concurrent writer's whole description. Well inside
+    // the operating range: `BODY_LIMIT` is 65536.
+    const dir = sandbox();
+    const root = join(dir, "shots");
+    mkdirSync(root, { recursive: true });
+    writeFileSync(join(root, "a.png"), PNG_1X1);
+    const prose = "somebody else's release notes, written during the upload window\n".repeat(600);
+    expect(prose.length).toBeGreaterThan(32 * 1024);
+
+    const replaced = upload([join(root, "a.png")], {
+      root,
+      body: "",
+      append: `\n![i](https://github.com/user-attachments/assets/aaaa)\n${prose}`,
+    });
+    expect(replaced.status).toBe(4);
+    expect(replaced.stderr).toContain("this run did not append");
+    // The attach landed, so the assets are live: this is `uploaded-not-written`
+    // rather than a clean run, which is exactly what the status buys.
+    expect(replaced.assets.length).toBe(1);
+  }, 60_000);
+
   test("a failed re-read refuses to write rather than trusting a stale baseline", () => {
     // `after.md` is the body as of the last SUCCESSFUL read, so an entry that
     // recorded `body read failed` leaves a stale baseline for the guard to
@@ -3067,6 +3092,27 @@ describe("Slice 1 — upload.sh, executed (L1)", () => {
     expect(result.status).toBe(4);
     expect(read(join(run, "failures.tsv"))).toContain("body read failed");
     expect(existsSync(join(run, "read-failed"))).toBe(true);
+  }, 60_000);
+
+  test("upload.sh clears a stale read-failed marker on entry", () => {
+    // Only `pre-image.sh` used to remove it, so running `upload.sh` alone
+    // against a directory whose last attempt exited 4 carried that attempt's
+    // verdict into this one.
+    const dir = sandbox();
+    const root = join(dir, "shots");
+    mkdirSync(root, { recursive: true });
+    writeFileSync(join(root, "a.png"), PNG_1X1);
+    const entriesFile = join(dir, "entries.json");
+    writeFileSync(entriesFile, JSON.stringify({ root, entries: [{ path: join(root, "a.png"), caption: "c" }] }));
+    const env = ghStub(dir);
+    const run = seedRun(dir, entriesFile);
+    expect(runScript("pre-image.sh", [run], env).status).toBe(0);
+    // The marker a previous attempt left behind, against a `gh` that answers.
+    writeFileSync(join(run, "read-failed"), "");
+
+    const second = runScript("upload.sh", [run], env);
+    expect(second.status).toBe(0);
+    expect(existsSync(join(run, "read-failed"))).toBe(false);
   }, 60_000);
 
   test("upload.sh refuses a run directory step A never wrote", () => {
@@ -3234,6 +3280,51 @@ describe("Slice 3 — write-companion.sh, executed (L1)", () => {
     const result = runScript("write-companion.sh", [companion, resultFile(dir, COMPANION_SECTION)], env);
 
     expect(result.status).toBe(2);
+    expect(read(join(dir, "state", "body"))).toBe("## Summary\n");
+  }, 60_000);
+
+  test("a result file that does not parse is a fault, not a missing section", () => {
+    // A parse failure reported as "the result carries no section to copy"
+    // sends the operator hunting a missing field in a file `jq` never read.
+    const dir = sandbox();
+    const env = ghStub(dir, { body: "## Summary\n" });
+    const companion = seedRun(dir, "", "https://github.com/owner/other/pull/17");
+    const truncated = join(dir, "result.json");
+    writeFileSync(truncated, '{"section": "## Screenshots"');
+
+    const result = runScript("write-companion.sh", [companion, truncated], env);
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain("not valid JSON");
+    expect(result.stderr).not.toContain("no section to copy");
+    expect(read(join(dir, "state", "body"))).toBe("## Summary\n");
+  }, 60_000);
+
+  test("a failed body write is a fault, never another writer landing first", () => {
+    // Unguarded, `set -e` propagated gh's own status: a 1 reads to the caller
+    // as "another writer landed first — its body is byte-identical", and a 4
+    // on an auth expiry is a status this script's table does not model at all.
+    const dir = sandbox();
+    const env = ghStub(dir, { body: "## Summary\n" });
+    const companion = seedRun(dir, "", "https://github.com/owner/other/pull/17");
+    // Reads answer; the write fails the way an expired token fails.
+    writeFileSync(
+      join(dir, "bin", "gh"),
+      [
+        "#!/bin/sh",
+        'case "$2" in',
+        "  edit) exit 4 ;;",
+        `  view) jq -Rs '{body: .}' <"$GH_STATE/body" ; exit 0 ;;`,
+        "esac",
+        "exit 1",
+        "",
+      ].join("\n"),
+      { mode: 0o755 },
+    );
+
+    const result = runScript("write-companion.sh", [companion, resultFile(dir, COMPANION_SECTION)], env);
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain("could not write the companion body");
+    expect(result.stderr).not.toContain("another writer");
     expect(read(join(dir, "state", "body"))).toBe("## Summary\n");
   }, 60_000);
 
@@ -3462,7 +3553,11 @@ describe("Slice 1 — containment, allowlist, and failure classes (L2)", () => {
     const source = uploadScript();
     expect(upload.length).toBeGreaterThan(0);
     expect(source.length).toBeGreaterThan(0);
-    expect(source).toContain('PR_HOST="${PR_URL#https://}"');
+    // Read from `pr-host` — the value `resolve-pr.sh` split and charset-tested,
+    // and the source `references/01-input-and-result.md` documents this
+    // allowlist as deriving from. Never a second derivation of the same value.
+    expect(source).toContain('PR_HOST="$(cat "$RUN_DIR/pr-host")"');
+    expect(source).not.toContain('PR_HOST="${PR_URL#https://}"');
     expect(upload).toContain("*.githubusercontent.com");
     for (const text of [upload, source]) expect(text).toContain("PR_SCREENSHOTS_ASSET_HOST");
     // A host is a whole label, never a substring: userinfo is rejected.
@@ -3950,6 +4045,10 @@ const UNGUARDED_PRE_IMAGE = /PRE_IMAGE(?:_JSON)?="\$\(gh pr view[^\n]*\)"\s*$/m;
 // `raw.githubusercontent.com` and so any public repository's content.
 const WILDCARD_PROXY_HOST = /\*\.githubusercontent\.com/;
 
+// A pipeline whose last stage can exit before its input is drained, under the
+// `set -o pipefail` every script here carries.
+const PIPED_EARLY_EXIT = /\|\s*(?:[A-Z_]+=\S+\s+)*(?:grep\s+[^|\n]*-[A-Za-z]*q|head\b|read\b)/;
+
 describe("Slice 1 — recipe gaps (L2)", () => {
   test("the pre-image read is guarded, and the lost-update guard is not vacuous", () => {
     // `PRE_IMAGE="$(gh pr view …)"` with no `|| exit` binds "" on a rate limit
@@ -3982,6 +4081,37 @@ describe("Slice 1 — recipe gaps (L2)", () => {
 
     // The re-read inside the loop is guarded the same way.
     expect(guardSource).toContain('AFTER_JSON="$(gh pr view "$NUMBER" --repo "$REPO_SPEC" --json body </dev/null)"');
+  });
+
+  test("no guard ends a pipeline in a consumer that exits early", () => {
+    // `set -o pipefail` promotes an upstream stage's SIGPIPE to the pipeline's
+    // status, and `grep -q` exits on its first match — so past the pipe buffer
+    // the empty-pre-image guard's `if` read 141 as false, `exit 4` never
+    // fired, and the lost update it exists to prevent went through.
+    for (const name of SCRIPT_NAMES) {
+      const source = scriptSource(name);
+      expect(source).toContain("set -euo pipefail");
+      expect(shellCode(source).split("\n").filter((line) => PIPED_EARLY_EXIT.test(line))).toEqual([]);
+    }
+    // The detector fires on planted positives — the line that shipped, and the
+    // two other early-exit consumers.
+    expect(PIPED_EARLY_EXIT.test(`printf '%s' "$A" | grep -v '^x$' | grep -qvE '^y$'`)).toBe(true);
+    expect(PIPED_EARLY_EXIT.test('gh pr view 1 | head -n 1')).toBe(true);
+    expect(PIPED_EARLY_EXIT.test('cat f | read -r LINE')).toBe(true);
+    // And not on a stage that drains its input.
+    expect(PIPED_EARLY_EXIT.test(`printf '%s' "$S" | grep -Eo 'https://x' >"$F"`)).toBe(false);
+  });
+
+  test("the resolved parent takes its status from the cd, never from basename", () => {
+    // `RESOLVED="$(cd -- … && pwd -P)/$(basename -- …)"` takes the status of
+    // the LAST substitution, so a failed `cd` exited 0 and bound a bare
+    // `/<name>` that the `file missing` arm could never see. Containment
+    // rejected it as `outside the declared root` — fail closed, wrong class.
+    const source = uploadScript();
+    expect(source.length).toBeGreaterThan(0);
+    expect(source).toContain('if ! ENTRY_DIR="$(cd -- "$(dirname -- "$ENTRY_PATH")" && pwd -P)"; then');
+    expect(source).toContain('RESOLVED="$ENTRY_DIR/$(basename -- "$ENTRY_PATH")"');
+    expect(source).not.toContain('&& pwd -P)/$(basename');
   });
 
   test("the validation loop binds its own inputs, in the same fence", () => {

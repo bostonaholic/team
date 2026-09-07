@@ -324,8 +324,8 @@ enumerated proxy host; the segment bound only keeps that host's own paths from
 being a free variable. The host allowlist is derived from the PR this run
 already resolved, never hardcoded:
 
-- the host of `pr-url` — `github.com`, or the GitHub Enterprise host the PR
-  actually lives on;
+- `pr-host`, as `resolve-pr.sh` split and charset-tested it — `github.com`, or
+  the GitHub Enterprise host the PR actually lives on;
 - exactly one proxy host: `private-user-images.githubusercontent.com` on
   github.com, and `private-user-images.<enterprise-host>` on an Enterprise
   install — where a private repository's proxy rewrite puts the asset;

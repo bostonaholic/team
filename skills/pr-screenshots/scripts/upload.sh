@@ -6,13 +6,15 @@
 #   usage: upload.sh <run-dir>
 #
 # <run-dir> is the directory `resolve-pr.sh` and `pre-image.sh` already wrote.
-# This reads `pr-url`, `number`, `repo-spec`, `entries-file`, and
+# This reads `pr-host`, `number`, `repo-spec`, `entries-file`, and
 # `pre-image.md` out of it, and writes:
 #
-#   assets.tsv     one line per landed entry: <url> TAB <path>
-#   failures.tsv   one line per failed entry: <reason> TAB <path>
-#   after.md       the body as of the last successful read
-#   read-failed    written only when some re-read failed
+#   assets.tsv       one line per landed entry: <url> TAB <path>
+#   failures.tsv     one line per failed entry: <reason> TAB <path>
+#   after.md         the body as of the last successful read
+#   read-failed      written only when some re-read failed
+#   entry-paths.txt  the JSON-to-shell bridge: one entry path per line
+#   candidates.txt   the URLs one attach's suffix held, rewritten per entry
 #
 # EVERY entry lands in exactly one of the two files. An entry in neither
 # vanishes: `--landed` is the line count of assets.tsv, so a harvest that
@@ -38,14 +40,18 @@ if [ "$#" -ne 1 ]; then
   exit 2
 fi
 RUN_DIR="$1"
-for REQUIRED in pr-url number repo-spec entries-file pre-image.md; do
+for REQUIRED in pr-host number repo-spec entries-file pre-image.md; do
   if [ ! -r "$RUN_DIR/$REQUIRED" ]; then
     printf 'run directory has no %s — run resolve-pr.sh and pre-image.sh first\n' "$REQUIRED" >&2
     exit 2
   fi
 done
 
-PR_URL="$(cat "$RUN_DIR/pr-url")"
+# Read, never re-derived from `pr-url`: `resolve-pr.sh` already split and
+# charset-tested the resolved URL, and `pr-host` is the value the attachment
+# allowlist below is documented to come from
+# (`references/01-input-and-result.md`).
+PR_HOST="$(cat "$RUN_DIR/pr-host")"
 NUMBER="$(cat "$RUN_DIR/number")"
 REPO_SPEC="$(cat "$RUN_DIR/repo-spec")"
 ENTRIES_FILE="$(cat "$RUN_DIR/entries-file")"
@@ -54,6 +60,9 @@ FAILURES_FILE="$RUN_DIR/failures.tsv"
 CANDIDATES_FILE="$RUN_DIR/candidates.txt"
 : >"$ASSETS_FILE"
 : >"$FAILURES_FILE"
+# A previous attempt's marker is this attempt's stale verdict: `pre-image.sh`
+# clears it, and `upload.sh` runs again against the same directory without it.
+rm -f "$RUN_DIR/read-failed"
 
 # Read the pre-image byte-exactly: `$(cat …)` strips trailing newlines, and the
 # empty-pre-image arm of the guard below turns on whether the body was empty.
@@ -104,7 +113,6 @@ AFTER="$PRE_IMAGE"        # the body as of the last successful read
 READ_FAILED=no            # no re-read has failed yet
 NEWLINE='
 '
-PR_HOST="${PR_URL#https://}" ; PR_HOST="${PR_HOST%%/*}"
 case "$PR_HOST" in
   github.com) ASSET_PROXY_HOST="private-user-images.githubusercontent.com" ;;
   *)          ASSET_PROXY_HOST="private-user-images.$PR_HOST" ;;   # the Enterprise equivalent
@@ -206,9 +214,14 @@ while IFS= read -r ENTRY_PATH; do
   if [ -L "$ENTRY_PATH" ]; then REASON="symlink refused"    ; fail_entry ; continue ; fi
   if [ ! -e "$ENTRY_PATH" ]; then REASON="file missing"     ; fail_entry ; continue ; fi
   if [ ! -f "$ENTRY_PATH" ]; then REASON="not a regular file" ; fail_entry ; continue ; fi
-  if ! RESOLVED="$(cd -- "$(dirname -- "$ENTRY_PATH")" && pwd -P)/$(basename -- "$ENTRY_PATH")"; then
+  # The parent is bound on its own so the `cd` status is the one observed:
+  # appending `/$(basename …)` to the substitution takes the status from
+  # `basename`, which succeeds on anything — and a failed `cd` then yielded a
+  # bare `/<name>` that this arm never saw.
+  if ! ENTRY_DIR="$(cd -- "$(dirname -- "$ENTRY_PATH")" && pwd -P)"; then
     REASON="file missing" ; fail_entry ; continue
   fi
+  RESOLVED="$ENTRY_DIR/$(basename -- "$ENTRY_PATH")"
   # The same two tests on the value `--attach` receives: `pwd -P` resolves a
   # symlinked parent, so a `#` in a directory ABOVE the entry reaches the
   # command without ever appearing in $ENTRY_PATH.
@@ -293,7 +306,11 @@ if [ "$READ_FAILED" = yes ]; then
   exit 4
 fi
 if [ -z "$PRE_IMAGE" ]; then
-  if printf '%s\n' "$AFTER" | grep -v '^[[:space:]]*$' | grep -qvE '^!\[[^]]*\]\(https://[^)]*\)$'; then
+  # One command, never a pipeline: `grep -q` exits on its first match, and
+  # under `pipefail` the SIGPIPE that kills an upstream stage becomes the
+  # status the `if` reads — so past the pipe buffer the guard silently
+  # skipped. A line is this run's own only if it is blank or one attach tail.
+  if LC_ALL=C grep -qvE '^([[:space:]]*|!\[[^]]*\]\(https://[^)]*\))$' <<<"$AFTER"; then
     printf 'the body was empty and now holds text this run did not append\n' >&2
     exit 4
   fi

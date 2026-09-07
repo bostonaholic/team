@@ -20,7 +20,7 @@
 #   0  the companion body was written
 #   1  refused — the result carries no section, the splice refused, or another
 #      writer landed first. That companion's body is byte-identical
-#   2  fault — an unreadable input, or a failed `gh` call
+#   2  fault — an unreadable or malformed input, or a failed `gh` call
 
 set -euo pipefail
 
@@ -51,6 +51,15 @@ BODY_FILE="$COMPANION_DIR/pre-image.md"
 NEW_BODY_FILE="$COMPANION_DIR/new-body.md"
 rm -f "$NEW_BODY_FILE" "$NEW_BODY_FILE.tmp"
 
+# A file that does not parse is a fault, and it is tested first: the section
+# read below cannot tell a parse failure from a null section, and reporting one
+# as the other sends the operator hunting a missing field in a file jq never
+# read.
+if ! jq empty "$RESULT_FILE" 2>/dev/null; then
+  printf 'the result file is not valid JSON\n' >&2
+  exit 2
+fi
+
 # `jq -r` moves the section into the file `--section-file` reads; nothing
 # re-types it, because the string carries the normalization's `\[`, `\<`, and
 # `\!` escapes (`principle-never-interpolate`). `select` refuses a null or
@@ -60,8 +69,10 @@ if ! jq -e -r '.section | select(type == "string" and length > 0)' "$RESULT_FILE
   printf 'the result carries no section to copy\n' >&2
   exit 1
 fi
+# The file parses, so what fails here is the shape: `.assets` that is not an
+# array is a jq runtime error, never a parse error.
 LANDED_COUNT="$(jq '[.assets[] | select(.url != null)] | length' "$RESULT_FILE")" || {
-  printf 'the result file is not valid JSON\n' >&2
+  printf 'the result file has no readable assets list\n' >&2
   exit 2
 }
 
@@ -109,4 +120,10 @@ if [ "$(printf '%s' "$NOW_JSON" | jq -r '.body | gsub("\r";"")')" != "$(cat "$BO
   printf 'another writer landed first — this companion is untouched\n' >&2
   exit 1
 fi
-gh pr edit "$NUMBER" --repo "$REPO_SPEC" --body-file "$NEW_BODY_FILE" </dev/null
+# Guarded like every other `gh` call here: unguarded, `set -e` propagates gh's
+# own status, and a 1 reads to the caller as "another writer landed first" —
+# the one outcome this arm is not.
+if ! gh pr edit "$NUMBER" --repo "$REPO_SPEC" --body-file "$NEW_BODY_FILE" </dev/null; then
+  printf 'could not write the companion body\n' >&2
+  exit 2
+fi

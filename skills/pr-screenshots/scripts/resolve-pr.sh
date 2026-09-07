@@ -132,14 +132,14 @@ fi
 # a checkout of another, silently resolves the other's PR of that number.
 
 if [ -n "$ARG_OWNER" ]; then
-  if ! PR_URL="$(gh pr view "$ARG_NUMBER" --repo "$ARG_HOST/$ARG_OWNER/$ARG_REPO" --json url --jq .url)"; then
+  if ! PR_URL="$(gh pr view "$ARG_NUMBER" --repo "$ARG_HOST/$ARG_OWNER/$ARG_REPO" --json url --jq .url </dev/null)"; then
     printf 'could not resolve the PR: %s\n' "$PR_ARG" >&2
     exit 1
   fi
 else
   # The bare-number form has no repository of its own and resolves against the
   # checkout by design; with no checkout it resolves nothing.
-  if ! PR_URL="$(gh pr view "$ARG_NUMBER" --json url --jq .url)"; then
+  if ! PR_URL="$(gh pr view "$ARG_NUMBER" --json url --jq .url </dev/null)"; then
     printf 'could not resolve PR %s — a bare number needs a local checkout, so pass the full PR URL\n' \
       "$ARG_NUMBER" >&2
     exit 1
