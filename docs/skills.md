@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: pipeline entry-point slash commands, standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase, reflect, why, how), and methodology skills loaded by agents, each with the skills it mentions."
+description: "The Team plugin's skills: pipeline entry-point slash commands, standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-rebase, reflect, why, how), and methodology skills loaded by agents, each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -17,10 +17,26 @@ nav_label: skills
 > `SKILL.md`, the `SKILL.md` wins.
 
 Each entry is one sentence, copied from that skill's frontmatter
-`description`. A `**Mentions:**` list follows it when the skill's own `.md`
-files name other skills — a load, a citation, and a passing mention alike.
-For what separates a load from a citation, and for how a skill is loaded at
-all, see [architecture.md §6](architecture.md#6-skills).
+`description`. A `**Loads:**` list follows it when the skill's own `.md`
+files instruct a load of another skill — ``Call the Skill tool with `<name>` ``,
+the one form that makes a reader go execute it. Naming a skill any other way
+is a citation, and a citation is not an edge: `team-structure` restates a
+`principle-fail-closed` rule inline and never loads it, so it has no edge to
+it.
+
+The edges are therefore **directed**, and reading them transitively gives the
+graph. `team-implement` loads `team-pr`, which loads `git-commit`, which
+loads `writing-prose`. None of the three loads back. An entry with no
+`**Loads:**` block is a leaf: it loads nothing, which is the normal shape for
+a `principle-*` skill and for a methodology skill that states one rule and
+stops.
+
+Loads are collected across every `.md` file in the skill's directory, so a
+load written in a `references/` file counts the same as one in `SKILL.md`.
+This page carries skill-to-skill edges only. For which *agent* loads a skill,
+see [the table below](#skill--agent--phase); for what separates a load from a
+citation, and for how a skill is loaded at all, see
+[architecture.md §6](architecture.md#6-skills).
 
 ## Entry-point skills
 
@@ -31,23 +47,13 @@ full run or drives one phase of the QRSPI pipeline.
 
 Runs the 8-phase QRSPI feature pipeline.
 
-**Mentions:**
+**Loads:**
 
-- `artifact-frontmatter`
 - `changelog`
 - `cross-model-review`
-- `principle-deep-agents-narrow-seams`
-- `principle-fail-closed`
-- `principle-files-are-the-contract`
-- `principle-idempotent-reruns`
-- `principle-pre-image-first`
-- `principle-progress-tracking`
-- `principle-skip-loudly`
-- `qrspi-workflow`
 - `review-severity-tiers`
 - `reviewing-designs`
 - `running-quality-checks`
-- `team-implement`
 - `team-pr`
 - `team-worktree`
 - `tracking-tickets`
@@ -57,84 +63,49 @@ Runs the 8-phase QRSPI feature pipeline.
 
 Decomposes a feature into task and question artifacts.
 
-**Mentions:**
-
-- `decomposing-intent`
-- `product-requirements-doc`
-- `qrspi-workflow`
-
 ### [team-research](https://github.com/bostonaholic/team/blob/main/skills/team-research/SKILL.md)
 
 Researches a codebase area before changes.
-
-**Mentions:**
-
-- `team`
 
 ### [team-design](https://github.com/bostonaholic/team/blob/main/skills/team-design/SKILL.md)
 
 Drafts and adversarially reviews a design.
 
-**Mentions:**
+**Loads:**
 
-- `artifact-frontmatter`
 - `cross-model-review`
-- `principle-fail-closed`
-- `principle-idempotent-reruns`
 - `reviewing-designs`
-- `team`
 
 ### [team-structure](https://github.com/bostonaholic/team/blob/main/skills/team-structure/SKILL.md)
 
 Breaks a reviewed design into verified slices.
 
-**Mentions:**
-
-- `principle-fail-closed`
-- `team`
-
 ### [team-plan](https://github.com/bostonaholic/team/blob/main/skills/team-plan/SKILL.md)
 
 Produces the tactical implementation plan.
-
-**Mentions:**
-
-- `team`
 
 ### [team-worktree](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/SKILL.md)
 
 Prepares isolated git worktrees.
 
-**Mentions:**
-
-- `qrspi-workflow`
-- `team`
-- `worktree-isolation`
-
 ### [team-implement](https://github.com/bostonaholic/team/blob/main/skills/team-implement/SKILL.md)
 
 Executes and verifies implementation slices.
 
-**Mentions:**
+**Loads:**
 
-- `artifact-frontmatter`
-- `principle-pre-image-first`
-- `principle-progress-tracking`
 - `review-severity-tiers`
 - `running-quality-checks`
-- `team`
 - `team-pr`
 
 ### [team-pr](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md)
 
 Opens a pull request after verification.
 
-**Mentions:**
+**Loads:**
 
 - `changelog`
 - `git-commit`
-- `principle-optimization-never-dependency`
-- `team`
 - `tracking-tickets`
 - `verifying-ux`
 - `worktree-isolation`
@@ -144,11 +115,8 @@ Opens a pull request after verification.
 
 Runs the compressed bug-fix pipeline.
 
-**Mentions:**
+**Loads:**
 
-- `principle-explicit-intent`
-- `principle-fix-root-causes`
-- `principle-progress-tracking`
 - `systematic-debugging`
 - `team-worktree`
 - `test-driven-bug-fix`
@@ -160,13 +128,10 @@ Runs the compressed bug-fix pipeline.
 
 Reviews a technical design document with fresh context.
 
-**Mentions:**
+**Loads:**
 
 - `cross-model-review`
-- `principle-generator-evaluator`
-- `principle-least-privilege`
 - `reviewing-designs`
-- `team`
 - `writing-prose`
 
 ## Standalone utilities
@@ -178,151 +143,81 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 Lands a reviewed pull request.
 
-**Mentions:**
-
-- `principle-explicit-intent`
-- `principle-non-blocking-waits`
-
 ### [pr-open-comments](https://github.com/bostonaholic/team/blob/main/skills/pr-open-comments/SKILL.md)
 
 Triages unresolved PR review comments.
-
-**Mentions:**
-
-- `principle-evidence-over-assertion`
-- `principle-plan-present-wait`
 
 ### [pr-watch-as-author](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md)
 
 Watches an authored PR for feedback.
 
-**Mentions:**
+**Loads:**
 
 - `pr-open-comments`
 - `pr-watch-mechanics`
-- `principle-bounded-loops`
-- `principle-idempotent-reruns`
-- `principle-non-blocking-waits`
-- `principle-untrusted-input-is-data`
 - `tracking-tickets`
 
 ### [pr-watch-as-reviewer](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md)
 
 Watches a reviewed PR and approves settled feedback.
 
-**Mentions:**
+**Loads:**
 
-- `conventional-comments`
-- `pr-open-comments`
-- `pr-watch-as-author`
 - `pr-watch-mechanics`
-- `principle-bounded-loops`
-- `principle-generator-evaluator`
-- `principle-non-blocking-waits`
 
 ### [groom-backlog](https://github.com/bostonaholic/team/blob/main/skills/groom-backlog/SKILL.md)
 
 Grooms a project backlog and proposes tracker changes.
 
-**Mentions:**
-
-- `pr-open-comments`
-- `principle-evidence-over-assertion`
-- `principle-explicit-intent`
-- `principle-idempotent-reruns`
-- `principle-never-interpolate`
-- `principle-plan-present-wait`
-- `principle-pre-image-first`
-- `principle-skip-loudly`
-- `principle-untrusted-input-is-data`
-
 ### [pr-cleanup](https://github.com/bostonaholic/team/blob/main/skills/pr-cleanup/SKILL.md)
 
 Cleans PR state.
-
-**Mentions:**
-
-- `principle-explicit-intent`
-- `principle-idempotent-reruns`
-- `principle-never-interpolate`
-- `principle-untrusted-input-is-data`
-- `sweeping-local-state`
 
 ### [pr-verify](https://github.com/bostonaholic/team/blob/main/skills/pr-verify/SKILL.md)
 
 Verifies a PR test plan with evidence-rated verdicts.
 
-**Mentions:**
+**Loads:**
 
-- `nested-agents`
-- `principle-evidence-over-assertion`
-- `principle-least-privilege`
-- `principle-optimization-never-dependency`
 - `running-quality-checks`
 
 ### [pr-rebase](https://github.com/bostonaholic/team/blob/main/skills/pr-rebase/SKILL.md)
 
 Rebases a branch onto its base.
 
-**Mentions:**
+**Loads:**
 
-- `artifact-frontmatter`
-- `pr-cleanup`
-- `principle-explicit-intent`
-- `principle-never-interpolate`
-- `principle-non-blocking-waits`
-- `principle-pre-image-first`
-- `principle-untrusted-input-is-data`
 - `running-quality-checks`
 
 ### [reflect](https://github.com/bostonaholic/team/blob/main/skills/reflect/SKILL.md)
 
 Mines a session for durable learnings.
 
-**Mentions:**
+**Loads:**
 
-- `finding-files`
-- `nested-agents`
-- `principle-explicit-intent`
-- `principle-least-privilege`
-- `principle-optimization-never-dependency`
-- `principle-plan-present-wait`
-- `principle-pre-image-first`
-- `principle-untrusted-input-is-data`
 - `running-quality-checks`
 
 ### [why](https://github.com/bostonaholic/team/blob/main/skills/why/SKILL.md)
 
 Investigates design rationale behind code.
 
-**Mentions:**
+**Loads:**
 
-- `documenting-decisions`
-- `how`
-- `principle-blind-the-investigator`
-- `principle-evidence-over-assertion`
-- `principle-optimization-never-dependency`
-- `principle-skip-loudly`
-- `principle-untrusted-input-is-data`
 - `systematic-debugging`
 
 ### [how](https://github.com/bostonaholic/team/blob/main/skills/how/SKILL.md)
 
 Explains subsystem architecture and runtime flow.
 
-**Mentions:**
+**Loads:**
 
-- `code-review`
-- `principle-generator-evaluator`
-- `principle-optimization-never-dependency`
-- `researching-codebases`
 - `why`
 
 ### [code-review](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md)
 
 Reviews a diff with fresh context.
 
-**Mentions:**
+**Loads:**
 
 - `reviewing-code`
 
@@ -335,40 +230,13 @@ them.
 
 Defines QRSPI phases, artifacts, gates, and state transitions.
 
-**Mentions:**
-
-- `artifact-frontmatter`
-- `principle-blind-the-investigator`
-- `principle-files-are-the-contract`
-- `principle-human-owns-the-ends`
-- `principle-mechanical-gates`
-- `principle-scope-fence`
-- `principle-single-source-of-truth`
-- `review-severity-tiers`
-- `slicing-work`
-- `team`
-- `worktree-isolation`
-
 ### [artifact-frontmatter](https://github.com/bostonaholic/team/blob/main/skills/artifact-frontmatter/SKILL.md)
 
 Defines pipeline artifact schemas.
 
-**Mentions:**
-
-- `principle-files-are-the-contract`
-- `principle-single-source-of-truth`
-- `product-requirements-doc`
-- `qrspi-workflow`
-- `worktree-isolation`
-
 ### [researching-codebases](https://github.com/bostonaholic/team/blob/main/skills/researching-codebases/SKILL.md)
 
 Defines evidence-only codebase research and `5-research.md`.
-
-**Mentions:**
-
-- `principle-blind-the-investigator`
-- `principle-evidence-over-assertion`
 
 ### [finding-files](https://github.com/bostonaholic/team/blob/main/skills/finding-files/SKILL.md)
 
@@ -378,27 +246,17 @@ Locates files by naming, structure, and imports.
 
 Defines task and question artifacts plus multi-repo detection.
 
-**Mentions:**
+**Loads:**
 
-- `artifact-frontmatter`
-- `principle-blind-the-investigator`
-- `principle-never-interpolate`
-- `principle-record-assumptions`
 - `product-requirements-doc`
 
 ### [authoring-designs](https://github.com/bostonaholic/team/blob/main/skills/authoring-designs/SKILL.md)
 
 Defines the design-document procedure.
 
-**Mentions:**
+**Loads:**
 
-- `artifact-frontmatter`
-- `how`
-- `principle-record-assumptions`
-- `principle-subtract-before-you-add`
-- `product-requirements-doc`
 - `systems-thinking`
-- `why`
 - `writing-prose`
 
 ### [slicing-work](https://github.com/bostonaholic/team/blob/main/skills/slicing-work/SKILL.md)
@@ -413,17 +271,10 @@ Defines the tactical plan schema.
 
 Defines adversarial code review and evidence-based findings.
 
-**Mentions:**
+**Loads:**
 
-- `conventional-comments`
-- `cross-model-review`
 - `engineering-standards`
-- `principle-generator-evaluator`
-- `principle-least-privilege`
-- `principle-skip-loudly`
 - `review-severity-tiers`
-- `reviewing-security`
-- `solid`
 - `test-style`
 - `why`
 - `writing-prose`
@@ -432,15 +283,13 @@ Defines adversarial code review and evidence-based findings.
 
 Defines adversarial design review and verdicts.
 
-**Mentions:**
+**Loads:**
 
 - `conventional-comments`
 - `cross-model-review`
 - `documenting-decisions`
-- `eng-design-doc-review`
 - `engineering-standards`
 - `reviewing-code`
-- `team`
 - `technical-design-doc`
 - `writing-prose`
 
@@ -456,66 +305,28 @@ Defines threat and OWASP review with evidence-rated findings.
 
 Runs second-vendor reviews through machine-only CLI adapters.
 
-**Mentions:**
-
-- `artifact-frontmatter`
-- `nested-agents`
-- `principle-least-privilege`
-- `principle-never-interpolate`
-- `principle-non-blocking-waits`
-- `principle-optimization-never-dependency`
-- `principle-single-source-of-truth`
-- `principle-skip-loudly`
-- `principle-untrusted-input-is-data`
-- `review-severity-tiers`
-- `reviewing-code`
-- `team`
-
 ### [review-severity-tiers](https://github.com/bostonaholic/team/blob/main/skills/review-severity-tiers/SKILL.md)
 
 Maps reviewer findings to Blocking, Major, or Minor actions.
-
-**Mentions:**
-
-- `principle-human-owns-the-ends`
-- `reviewing-code`
 
 ### [engineering-standards](https://github.com/bostonaholic/team/blob/main/skills/engineering-standards/SKILL.md)
 
 Defines code design, comment, and review standards.
 
-**Mentions:**
-
-- `conventional-comments`
-- `principle-subtract-before-you-add`
-- `solid`
-
 ### [test-first-development](https://github.com/bostonaholic/team/blob/main/skills/test-first-development/SKILL.md)
 
 Defines acceptance tests as the implementation scope contract.
-
-**Mentions:**
-
-- `principle-mechanical-gates`
-- `principle-scope-fence`
-- `test-style`
 
 ### [test-style](https://github.com/bostonaholic/team/blob/main/skills/test-style/SKILL.md)
 
 Defines deterministic behavioral tests and flaky-test red flags.
 
-**Mentions:**
-
-- `reviewing-code`
-- `test-first-development`
-
 ### [test-driven-bug-fix](https://github.com/bostonaholic/team/blob/main/skills/test-driven-bug-fix/SKILL.md)
 
 Defines reproduce-red-green-refactor bug fixes.
 
-**Mentions:**
+**Loads:**
 
-- `principle-fix-root-causes`
 - `systematic-debugging`
 
 ### [solid](https://github.com/bostonaholic/team/blob/main/skills/solid/SKILL.md)
@@ -526,69 +337,37 @@ Defines SOLID design and review rules.
 
 Maps code smells to behavior-preserving refactorings.
 
-**Mentions:**
-
-- `principle-subtract-before-you-add`
-
 ### [implementing-slices](https://github.com/bostonaholic/team/blob/main/skills/implementing-slices/SKILL.md)
 
 Defines test-first slice execution, commits, and review fixes.
 
-**Mentions:**
+**Loads:**
 
 - `git-commit`
 - `principle-fix-root-causes`
-- `principle-scope-fence`
-- `principle-subtract-before-you-add`
 - `systematic-debugging`
 
 ### [systematic-debugging](https://github.com/bostonaholic/team/blob/main/skills/systematic-debugging/SKILL.md)
 
 Defines reproduce, hypothesize, isolate, and fix workflow.
 
-**Mentions:**
-
-- `principle-fix-root-causes`
-- `test-driven-bug-fix`
-- `why`
-
 ### [running-quality-checks](https://github.com/bostonaholic/team/blob/main/skills/running-quality-checks/SKILL.md)
 
 Runs project-native tests, static checks, builds, and linters.
-
-**Mentions:**
-
-- `principle-pre-image-first`
 
 ### [principle-progress-tracking](https://github.com/bostonaholic/team/blob/main/skills/principle-progress-tracking/SKILL.md)
 
 Requires one live ledger for ordered procedures.
 
-**Mentions:**
-
-- `qrspi-workflow`
-- `team-fix`
-
 ### [nested-agents](https://github.com/bostonaholic/team/blob/main/skills/nested-agents/SKILL.md)
 
 Defines safe nested-agent dispatch and fallback.
-
-**Mentions:**
-
-- `cross-model-review`
-- `principle-blind-the-investigator`
-- `principle-deep-agents-narrow-seams`
-- `principle-fail-closed`
-- `principle-generator-evaluator`
-- `principle-optimization-never-dependency`
-- `principle-record-assumptions`
-- `systems-thinking`
 
 ### [documenting-decisions](https://github.com/bostonaholic/team/blob/main/skills/documenting-decisions/SKILL.md)
 
 Defines ADR structure and lifecycle.
 
-**Mentions:**
+**Loads:**
 
 - `writing-prose`
 
@@ -596,7 +375,7 @@ Defines ADR structure and lifecycle.
 
 Defines technical design sections and decision content.
 
-**Mentions:**
+**Loads:**
 
 - `writing-prose`
 
@@ -604,7 +383,7 @@ Defines technical design sections and decision content.
 
 Defines when and how to write `3-prd.md`.
 
-**Mentions:**
+**Loads:**
 
 - `writing-prose`
 
@@ -616,40 +395,23 @@ Defines product-need lenses.
 
 Defines system-boundary, feedback, and dependency analysis.
 
-**Mentions:**
-
-- `reviewing-code`
-
 ### [writing-prose](https://github.com/bostonaholic/team/blob/main/skills/writing-prose/SKILL.md)
 
 Defines plain-language prose rules.
-
-**Mentions:**
-
-- `conventional-comments`
-- `reviewing-documentation`
 
 ### [reviewing-documentation](https://github.com/bostonaholic/team/blob/main/skills/reviewing-documentation/SKILL.md)
 
 Defines documentation-gap review and REQUIRED/RECOMMENDED findings.
 
-**Mentions:**
-
-- `writing-prose`
-
 ### [verifying-ux](https://github.com/bostonaholic/team/blob/main/skills/verifying-ux/SKILL.md)
 
 Defines live application and screenshot verification.
-
-**Mentions:**
-
-- `team-pr`
 
 ### [git-commit](https://github.com/bostonaholic/team/blob/main/skills/git-commit/SKILL.md)
 
 Defines Conventional Commit subjects and safe commit procedure.
 
-**Mentions:**
+**Loads:**
 
 - `writing-prose`
 
@@ -657,7 +419,7 @@ Defines Conventional Commit subjects and safe commit procedure.
 
 Defines Keep a Changelog updates.
 
-**Mentions:**
+**Loads:**
 
 - `writing-prose`
 
@@ -669,41 +431,21 @@ Defines tracker status transitions and closing rules.
 
 Defines Team worktree creation, validation, and teardown.
 
-**Mentions:**
+**Loads:**
 
-- `pr-cleanup`
-- `sweeping-local-state`
 - `team-worktree`
 
 ### [sweeping-local-state](https://github.com/bostonaholic/team/blob/main/skills/sweeping-local-state/SKILL.md)
 
 Defines machine-local teardown.
 
-**Mentions:**
-
-- `pr-cleanup`
-- `principle-never-interpolate`
-- `principle-skip-loudly`
-- `worktree-isolation`
-
 ### [pr-watch-mechanics](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-mechanics/SKILL.md)
 
 Bounded watch-loop mechanics for the pr-watch skills: cycle timing, soft cap, handoff.
 
-**Mentions:**
-
-- `pr-watch-as-author`
-- `pr-watch-as-reviewer`
-- `principle-bounded-loops`
-- `principle-non-blocking-waits`
-
 ### [principle-blind-the-investigator](https://github.com/bostonaholic/team/blob/main/skills/principle-blind-the-investigator/SKILL.md)
 
 Keeps desired outcomes out of research prompts.
-
-**Mentions:**
-
-- `principle-generator-evaluator`
 
 ### [principle-bounded-loops](https://github.com/bostonaholic/team/blob/main/skills/principle-bounded-loops/SKILL.md)
 
@@ -725,10 +467,6 @@ Requires stated intent for irreversible actions.
 
 Treats unknown guarantees as failures.
 
-**Mentions:**
-
-- `principle-optimization-never-dependency`
-
 ### [principle-files-are-the-contract](https://github.com/bostonaholic/team/blob/main/skills/principle-files-are-the-contract/SKILL.md)
 
 Requires durable files for cross-step state.
@@ -740,10 +478,6 @@ Requires diagnosis and repair of root causes.
 ### [principle-generator-evaluator](https://github.com/bostonaholic/team/blob/main/skills/principle-generator-evaluator/SKILL.md)
 
 Separates producers from evaluators.
-
-**Mentions:**
-
-- `reviewing-code`
 
 ### [principle-human-owns-the-ends](https://github.com/bostonaholic/team/blob/main/skills/principle-human-owns-the-ends/SKILL.md)
 
@@ -769,18 +503,9 @@ Keeps external text out of shell syntax.
 
 Requires resumable waits for external state.
 
-**Mentions:**
-
-- `principle-bounded-loops`
-
 ### [principle-optimization-never-dependency](https://github.com/bostonaholic/team/blob/main/skills/principle-optimization-never-dependency/SKILL.md)
 
 Keeps optional enhancements off the correctness path.
-
-**Mentions:**
-
-- `principle-fail-closed`
-- `principle-skip-loudly`
 
 ### [principle-plan-present-wait](https://github.com/bostonaholic/team/blob/main/skills/principle-plan-present-wait/SKILL.md)
 
@@ -790,10 +515,6 @@ Requires a written plan and user approval before mutations.
 
 Requires a recoverable baseline before destructive changes.
 
-**Mentions:**
-
-- `principle-idempotent-reruns`
-
 ### [principle-record-assumptions](https://github.com/bostonaholic/team/blob/main/skills/principle-record-assumptions/SKILL.md)
 
 Records autonomous resolutions as assumptions.
@@ -801,10 +522,6 @@ Records autonomous resolutions as assumptions.
 ### [principle-scope-fence](https://github.com/bostonaholic/team/blob/main/skills/principle-scope-fence/SKILL.md)
 
 Restricts execution to approved scope.
-
-**Mentions:**
-
-- `principle-skip-loudly`
 
 ### [principle-single-source-of-truth](https://github.com/bostonaholic/team/blob/main/skills/principle-single-source-of-truth/SKILL.md)
 
@@ -817,10 +534,6 @@ Requires skipped work to be reported explicitly.
 ### [principle-subtract-before-you-add](https://github.com/bostonaholic/team/blob/main/skills/principle-subtract-before-you-add/SKILL.md)
 
 Requires removal before addition.
-
-**Mentions:**
-
-- `principle-scope-fence`
 
 ### [principle-untrusted-input-is-data](https://github.com/bostonaholic/team/blob/main/skills/principle-untrusted-input-is-data/SKILL.md)
 

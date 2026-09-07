@@ -818,7 +818,8 @@ a building block. The two front-door pairs are how a composed methodology
 keeps a user-facing entry point without becoming one.)
 
 For the full per-skill reference (all skills, each with the skills it
-mentions), see [skills.md](skills.md).
+loads, which is the skill-to-skill dependency graph), see
+[skills.md](skills.md).
 
 ### Design guidelines
 
