@@ -7,7 +7,7 @@
 //     bun test tests/pr-screenshots-skill.test.ts -t "Slice 1"
 //     bun test tests/pr-screenshots-skill.test.ts -t "Slice 4"
 //
-// L1 (pure unit, hermetic): skills/pr-screenshots/splice.mjs. The body
+// L1 (pure unit, hermetic): skills/pr-screenshots/scripts/splice.mjs. The body
 // transform is `f(body, section) -> {body, changed, reason}` — no network, no
 // I/O — so docs/testing.md ("L1: Pure unit") puts its five rules here rather
 // than in prose, exactly as tests/reflect-skill.test.ts covers its bundled
@@ -21,7 +21,7 @@
 //
 // Every assertion is guarded so a not-yet-existing skill file yields a failed
 // expect(), never an uncaught ENOENT — the mechanical gate rejects crashes,
-// not clean assertion failures. splice.mjs is loaded through a COMPUTED
+// not clean assertion failures. scripts/splice.mjs is loaded through a COMPUTED
 // specifier for the same reason: a static import of an absent module aborts
 // the whole file with ERR_MODULE_NOT_FOUND before a single test runs. Absence
 // assertions are preceded by a length guard, and every offender-detector is
@@ -52,7 +52,7 @@ const REPO_ROOT = process.cwd();
 const SKILL_DIR = join(REPO_ROOT, "skills", "pr-screenshots");
 const SKILL = join(SKILL_DIR, "SKILL.md");
 const REFERENCES = join(SKILL_DIR, "references");
-const SPLICE = join(SKILL_DIR, "splice.mjs");
+const SPLICE = join(SKILL_DIR, "scripts/splice.mjs");
 // The committed procedures. Anything with a loop, a branch, or a value a later
 // step needs is a file with a shebang — never a markdown fence, which carries
 // no shebang and holds no state across an invocation boundary.
@@ -81,7 +81,7 @@ function runScript(name: string, args: string[], env: Record<string, string> = {
 }
 
 // ---------------------------------------------------------------------------
-// L1 plumbing: load splice.mjs without letting its absence abort the file.
+// L1 plumbing: load scripts/splice.mjs without letting its absence abort the file.
 // ---------------------------------------------------------------------------
 
 type SpliceResult = { body: string; changed: boolean; reason: string };
@@ -275,7 +275,7 @@ function occurrences(haystack: string, needle: string): number {
   return haystack.split(needle).length - 1;
 }
 
-describe("Slice 1 — splice.mjs (L1)", () => {
+describe("Slice 1 — scripts/splice.mjs (L1)", () => {
   test("splice keeps a ticket-reference line when a crash tail collapsed the footer", () => {
     // A crash between attach and write leaves a standalone image line at EOF,
     // so rule 1's footer scan stops immediately and `Closes #12` lands in
@@ -516,7 +516,7 @@ describe("Slice 1 — skill prose (L2)", () => {
     const preImage = upload.indexOf("scripts/pre-image.sh");
     const check = upload.indexOf("--check --body-file");
     const attach = upload.indexOf("scripts/upload.sh");
-    const spliceCall = upload.indexOf("splice.mjs", attach);
+    const spliceCall = upload.indexOf("scripts/splice.mjs", attach);
     const write = upload.indexOf('--body-file "$NEW_BODY_FILE"', spliceCall);
 
     expect(preImage).toBeGreaterThanOrEqual(0);
@@ -824,7 +824,7 @@ describe("Slice 4 — pointers and the orphan-branch trap (L2)", () => {
 // begins and ends, which is the half a body's markdown gets a vote in.
 // ---------------------------------------------------------------------------
 
-describe("Slice 1 — splice.mjs section boundaries (L1)", () => {
+describe("Slice 1 — scripts/splice.mjs section boundaries (L1)", () => {
   test("a level-one heading bounds the replace", () => {
     // `^##\s` is not the section boundary: a `# ` heading outranks
     // `## Screenshots` and ends it, so a replace that runs past one deletes a
@@ -2057,7 +2057,7 @@ const OUT_OF_MODEL_BLOCKS = [
   "https://example.com/loose<N>.png",
 ];
 
-describe("Slice 1 — splice.mjs property sweep (L1)", () => {
+describe("Slice 1 — scripts/splice.mjs property sweep (L1)", () => {
   test("every block outside the section survives, and the write settles", () => {
     const random = mulberry32(0x5eed);
     const pick = <T,>(list: T[]): T => list[Math.floor(random() * list.length)] as T;
@@ -2186,7 +2186,7 @@ describe("Slice 1 — splice.mjs property sweep (L1)", () => {
 // which `docs/testing.md` places at L3, never at L1's pure-function base.
 // ---------------------------------------------------------------------------
 
-describe("Slice 1 — splice.mjs CLI exit codes (L3)", () => {
+describe("Slice 1 — scripts/splice.mjs CLI exit codes (L3)", () => {
   const scratch = mkdtempSync(join(tmpdir(), "pr-screenshots-"));
   const bodyFile = join(scratch, "body.md");
   const sectionFile = join(scratch, "section.md");
@@ -2324,7 +2324,7 @@ function runFences(script: string, env: Record<string, string> = {}): ShellRun {
 // L3 rather than L1: these spawn a real process against a real temp directory
 // with `gh` stubbed on PATH. That is the subprocess-snapshot shape
 // `docs/testing.md` puts at L3 — real components, no external surface. L1 is
-// pure functions with no I/O, which is `splice.mjs` above, not these.
+// pure functions with no I/O, which is `scripts/splice.mjs` above, not these.
 // ---------------------------------------------------------------------------
 
 // The canonical URL the `gh` stubs below resolve to.
@@ -2615,7 +2615,7 @@ describe("Slice 1 — resolution, normalization, and harvest (L2)", () => {
     expect(UNGUARDED_REDIRECT.test(upload)).toBe(false);
     // The detector fires on a planted positive.
     expect(
-      UNGUARDED_REDIRECT.test('node "x/splice.mjs" --body-file "$A" > "$NEW_BODY_FILE"'),
+      UNGUARDED_REDIRECT.test('node "x/scripts/splice.mjs" --body-file "$A" > "$NEW_BODY_FILE"'),
     ).toBe(true);
   });
 
@@ -4209,7 +4209,7 @@ describe("Slice 1 — recipe gaps (L2)", () => {
 
     // The sweep fires on a planted positive in EACH shape it missed: a name
     // bound in one skill and read in the other, and a name bound nowhere.
-    const planted = ['node splice.mjs --section-file "$SECTION_FILE" --landed "$LANDED_COUNT"'];
+    const planted = ['node scripts/splice.mjs --section-file "$SECTION_FILE" --landed "$LANDED_COUNT"'];
     const bound = boundNames(planted);
     expect([...readNames(planted)].filter((name) => !bound.has(name)).sort()).toEqual([
       "LANDED_COUNT",
@@ -4241,20 +4241,20 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     // The detector fires on a planted positive: the path is bound, and nothing
     // writes the file.
     expect(
-      unwrittenFiles(['PRE_IMAGE_FILE="$RUN_DIR/pre-image.md"', 'node splice.mjs --check --body-file "$PRE_IMAGE_FILE"']),
+      unwrittenFiles(['PRE_IMAGE_FILE="$RUN_DIR/pre-image.md"', 'node scripts/splice.mjs --check --body-file "$PRE_IMAGE_FILE"']),
     ).toEqual(["PRE_IMAGE_FILE"]);
     // …and it clears once a fence writes it, in that order.
     expect(
       unwrittenFiles([
         'PRE_IMAGE_FILE="$RUN_DIR/pre-image.md"',
         'printf \'%s\' "$PRE_IMAGE" >"$PRE_IMAGE_FILE"',
-        'node splice.mjs --check --body-file "$PRE_IMAGE_FILE"',
+        'node scripts/splice.mjs --check --body-file "$PRE_IMAGE_FILE"',
       ]),
     ).toEqual([]);
     // A write that comes AFTER the read is not a write the read can use.
     expect(
       unwrittenFiles([
-        'node splice.mjs --check --body-file "$PRE_IMAGE_FILE"',
+        'node scripts/splice.mjs --check --body-file "$PRE_IMAGE_FILE"',
         'printf \'%s\' "$PRE_IMAGE" >"$PRE_IMAGE_FILE"',
       ]),
     ).toEqual(["PRE_IMAGE_FILE"]);

@@ -31,10 +31,10 @@ reader benefits from seeing it.
   landed, which leaves a local filesystem path inside a body that may already
   be merged.
 - **One body write per PR**, computed from the pre-image taken before the first
-  attach and produced by `splice.mjs`. That single write also clears the tails
+  attach and produced by `scripts/splice.mjs`. That single write also clears the tails
   the attach step appended.
 - **Refuse before mutating, never after.** Every check that can run against the
-  pre-image runs in step A, including `splice.mjs --check`, which is the
+  pre-image runs in step A, including `scripts/splice.mjs --check`, which is the
   structural half of the body transform run against the pre-image alone — so a
   refusal it finds means nothing changed (`principle-fail-closed`). What can
   only be computed after the upload is named, and lands on

@@ -201,7 +201,7 @@ describe("Slice 3: companion PRs get the same section, each verified", () => {
     const multiRepo = multiRepoBlock();
     expect(multiRepo.length).toBeGreaterThan(0);
     // Companions are served by the committed splice, not by a second call.
-    expect(multiRepo).toContain("skills/pr-screenshots/splice.mjs");
+    expect(multiRepo).toContain("skills/pr-screenshots/scripts/splice.mjs");
   });
 
   test("a non-null section is copied verbatim into each companion", () => {
@@ -209,10 +209,10 @@ describe("Slice 3: companion PRs get the same section, each verified", () => {
     expect(multiRepo.length).toBeGreaterThan(0);
     // The result.json field, not the English word.
     expect(multiRepo).toContain("`section`");
-    expect(multiRepo).toContain("splice.mjs");
+    expect(multiRepo).toContain("scripts/splice.mjs");
     expect(multiRepo).toContain("--body-file");
     // Splice first, then the single write.
-    expect(multiRepo.indexOf("splice.mjs")).toBeLessThan(multiRepo.indexOf("--body-file"));
+    expect(multiRepo.indexOf("scripts/splice.mjs")).toBeLessThan(multiRepo.indexOf("--body-file"));
   });
 
   test("a null section touches no companion body", () => {
@@ -267,7 +267,7 @@ describe("Slice 3: the companion recipe delegates its mechanics", () => {
     expect(UNGUARDED_REDIRECT.test(multiRepo)).toBe(false);
     // The detector fires on a planted positive.
     expect(
-      UNGUARDED_REDIRECT.test('node "d/splice.mjs" --body-file "$C" > "$NEW_BODY_FILE"'),
+      UNGUARDED_REDIRECT.test('node "d/scripts/splice.mjs" --body-file "$C" > "$NEW_BODY_FILE"'),
     ).toBe(true);
   });
 
@@ -287,7 +287,7 @@ describe("Slice 3: the companion recipe delegates its mechanics", () => {
     // form on purpose.
     const emitted = fencedBlocks(multiRepo).join("\n");
     expect(emitted.length).toBeGreaterThan(0);
-    for (const restated of ['COMPANION_HOST="${REST%%/*}"', "gh pr view", "gh pr edit", "splice.mjs"]) {
+    for (const restated of ['COMPANION_HOST="${REST%%/*}"', "gh pr view", "gh pr edit", "scripts/splice.mjs"]) {
       expect({ restated, present: emitted.includes(restated) }).toEqual({ restated, present: false });
     }
     // The exit codes the caller branches on are tabulated, refusal and fault

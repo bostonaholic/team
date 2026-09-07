@@ -31,7 +31,7 @@ fi
 COMPANION_DIR="$1"
 RESULT_FILE="$2"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-SPLICE="$SCRIPT_DIR/../splice.mjs"
+SPLICE="$SCRIPT_DIR/../scripts/splice.mjs"
 
 for REQUIRED in number repo-spec; do
   if [ ! -r "$COMPANION_DIR/$REQUIRED" ]; then
@@ -105,7 +105,7 @@ if node "$SPLICE" --body-file "$BODY_FILE" --section-file "$SECTION_FILE" \
 else
   STATUS=$?
   rm -f "$NEW_BODY_FILE.tmp" "$NEW_BODY_FILE"
-  # Exit 1 prints `unchanged: <reason>` and exit 2 prints `splice.mjs:
+  # Exit 1 prints `unchanged: <reason>` and exit 2 prints `scripts/splice.mjs:
   # <message>` — a refusal and a fault respectively. Report either and leave
   # that companion alone.
   exit "$STATUS"

@@ -42,11 +42,11 @@ obey (`principle-untrusted-input-is-data`, matching
 `pre-image.md` is the input to the splice, the baseline for the lost-update
 guard, and the subject of the two checks that have a mechanism here:
 
-1. **Every refusal `splice.mjs` computes from the pre-image alone.** Run the
+1. **Every refusal `scripts/splice.mjs` computes from the pre-image alone.** Run the
    check mode against it, here, before the first upload:
 
    ```bash
-   if node "<skill-dir>/splice.mjs" --check --body-file "$RUN_DIR/pre-image.md"; then
+   if node "<skill-dir>/scripts/splice.mjs" --check --body-file "$RUN_DIR/pre-image.md"; then
      :                                   # the pre-image allows a write
    else
      case $? in
@@ -126,7 +126,7 @@ Naming them as step-A checks would make "refuse before mutating" read as
 complete when it is not, so each is named where it actually fires:
 
 - **No headroom** — the pre-image plus the appended tails plus the section over
-  65536 characters. `splice.mjs` computes it, from `BODY_LIMIT`, against the
+  65536 characters. `scripts/splice.mjs` computes it, from `BODY_LIMIT`, against the
   body it has already spliced — which is step D, after the attach loop. Nothing
   measures it earlier, so an overflow lands on `uploaded-not-written` with the
   assets live, not on `refused`. `--check` cannot cover it: it sees the body
@@ -403,7 +403,7 @@ exists to prevent.
 
 Render the section (shape below) into `$SECTION_FILE`. The rendering is a
 write, not a binding: `--section-file` below reads that path, and a path
-nothing wrote is an empty file, which `splice.mjs` refuses as "the section to
+nothing wrote is an empty file, which `scripts/splice.mjs` refuses as "the section to
 splice is empty" *after* every asset has already landed. The heredoc delimiter
 is **quoted**, so nothing between the markers is expanded — a caller string
 carrying `$`, a backtick, or the backslashes the normalization in
@@ -427,7 +427,7 @@ Then bind the landed count from step C's own record and splice into the
 
 ```bash
 LANDED_COUNT="$(wc -l <"$RUN_DIR/assets.tsv" | tr -d '[:space:]')"   # one line per landed entry
-if node "<skill-dir>/splice.mjs" --body-file "$RUN_DIR/pre-image.md" \
+if node "<skill-dir>/scripts/splice.mjs" --body-file "$RUN_DIR/pre-image.md" \
      --section-file "$SECTION_FILE" --landed "$LANDED_COUNT" > "$NEW_BODY_FILE.tmp"; then
   mv "$NEW_BODY_FILE.tmp" "$NEW_BODY_FILE"
 else
@@ -443,7 +443,7 @@ PR body. The recipe has to guard itself, because the guard is the part a model
 copying one fenced block at a time would otherwise drop.
 
 `--landed` is the count of entries that resolved to an attachment URL in step
-C, and it is **required**: `splice.mjs` exits 2 without it. It refuses a
+C, and it is **required**: `scripts/splice.mjs` exits 2 without it. It refuses a
 section carrying more `![screenshot-NN](http…)` references than that count, so
 rule 4's no-downgrade count cannot be satisfied by caller-supplied text even if
 the normalization in `references/01-input-and-result.md` were ever weakened —
@@ -457,7 +457,7 @@ lifted into the trailing block is preserved below the new section rather than
 deleted, so it is not counted, and that case ends in a duplicate rather than a
 loss.
 
-`splice.mjs` models a closed set of markdown constructs and **refuses any body
+`scripts/splice.mjs` models a closed set of markdown constructs and **refuses any body
 carrying one it does not model**, rather than transforming it and hoping: an
 unbalanced code fence, an unterminated HTML comment, a comment that opens
 mid-line, a heading indented into a code block, a raw HTML block such as a
@@ -557,7 +557,7 @@ path is in `result.json` and the operator report, where it is the useful form:
 the marker is load-bearing.** The vocabulary above — a `**caption**` line, an
 `![screenshot-NN]` image, a `> _note:_` note with its bare `>` separator, and a
 `Not uploaded:` line — is everything this skill emits, which is what lets
-`splice.mjs` tell its own previous output apart from text somebody else typed
+`scripts/splice.mjs` tell its own previous output apart from text somebody else typed
 under the heading and refuse rather than delete it.
 
 **The marker exists because a bare `> ` is not provenance.** Matching every
@@ -568,7 +568,7 @@ choice returns: either the note is refused as foreign text, or the refusal is
 dropped and the reviewer's blockquote goes back to being deleted.
 
 **A caption is owned by its position, not by being bold.** `**IMPORTANT: these
-images contain a real API key**` is a bold line too. `splice.mjs` therefore
+images contain a real API key**` is a bold line too. `scripts/splice.mjs` therefore
 treats a `**caption**` line as its own only when it sits directly above an
 `![screenshot-NN]` image this skill wrote, or when it carries the degraded
 `— captured, not yet uploaded:` tail and stands alone. Emit a caption anywhere

@@ -3,12 +3,12 @@
 /**
  * The Screenshots-section body transform, as a pure function.
  *
- *     import { splice, bodyRefusal } from "<skill-dir>/splice.mjs";
+ *     import { splice, bodyRefusal } from "<skill-dir>/scripts/splice.mjs";
  *     const { body, changed, reason } = splice(currentBody, section, { landed });
  *
- *     node "<skill-dir>/splice.mjs" --body-file <path> --section-file <path> \
+ *     node "<skill-dir>/scripts/splice.mjs" --body-file <path> --section-file <path> \
  *       --landed <count>
- *     node "<skill-dir>/splice.mjs" --check --body-file <path>
+ *     node "<skill-dir>/scripts/splice.mjs" --check --body-file <path>
  *
  * `f(body, section, options) -> {body, changed, reason}`: no network, no `gh`,
  * no mutation of anything on disk. The document scan, the trailing-block split,

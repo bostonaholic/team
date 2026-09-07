@@ -194,7 +194,7 @@ backslash-escape `\`, `!`, `[`, `]`, `<`, and `>`.
 The escape set is what the rendered forms need. `!`, `[`, and `]` stop the
 string becoming a link or an image reference of its own — the exact bypass that
 would otherwise let one `notes` line carry `![screenshot-01](https://…)` and so
-satisfy `splice.mjs`'s no-downgrade count with caller text, replacing live
+satisfy `scripts/splice.mjs`'s no-downgrade count with caller text, replacing live
 asset URLs with whatever the caller named. `<` and `>` stop it rendering raw
 HTML, which GitHub allows in a body: an unescaped caption can otherwise emit an
 `<a href>` to anywhere. `\` is escaped first, so no escape can be undone by a
@@ -212,14 +212,14 @@ an image reference, or raw HTML.
 
 **`state` also loses its parentheses, and it is the one member with a rule of
 its own.** It renders *inside* the `(<state>)` parenthetical this skill emits,
-and `splice.mjs` recognizes that parenthetical by a grammar admitting one level
+and `scripts/splice.mjs` recognizes that parenthetical by a grammar admitting one level
 of nesting — so `loading (step (2))` or `error: unexpected )` makes the
 renderer's own caption line unrecognizable to it, and the next run's `--check`
 refuses a section this skill itself wrote. Remove `(` and `)` from `state`
 after the whitespace collapse. Escaping would not do: a backslash leaves the
 character in place, and the grammar still sees it.
 
-`splice.mjs` backstops the HTML half of this rule in code: it refuses a section
+`scripts/splice.mjs` backstops the HTML half of this rule in code: it refuses a section
 carrying an unescaped `<a`, `<img`, or any other raw tag, so a weakened or
 skipped escape is a refusal rather than an `<a href>` in a public body. The
 link half is backstopped by the unescaped-`](` test, the count half by
@@ -281,7 +281,7 @@ Each of these fires before any `gh` call and mutates nothing.
   bind it to, so refuse and ask for the full PR URL.
 
 Step A of the upload adds the rest of the pre-image refusals, listed in
-`references/02-upload-and-body-edit.md`: `splice.mjs --check`, which runs every
+`references/02-upload-and-body-edit.md`: `scripts/splice.mjs --check`, which runs every
 structural refusal computable from the body alone. It lands on `refused`,
 because it runs before the first attach. The headroom check and the check for
 an image reference to a path being attached are named in that file too, and
@@ -320,7 +320,7 @@ anything weaker must not travel.
 
 `uploaded-not-written` covers both post-attach halts, because the state they
 leave is the same one: assets live, body untouched. The lost-update guard is
-one; a `splice.mjs` refusal or fault after the attach step is the other, and
+one; a `scripts/splice.mjs` refusal or fault after the attach step is the other, and
 its `operator_note` carries the reason and the manual edit that clears it
 (`references/02-upload-and-body-edit.md`, step D). A splice refusal on a run
 where **nothing** landed is `refused` instead — nothing changed anywhere.

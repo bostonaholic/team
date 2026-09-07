@@ -127,7 +127,7 @@ nested subagents, and structured returns.
   the distributed set ports: `agents/`, `skills/*/SKILL.md` + `registry.json` +
   the bundled skill scripts (`supports-nesting.mjs`, `ste-lint.mjs`,
   `external-review.mjs`, `resolve-transcript.mjs`, `write-target.mjs`,
-  `discover-topic.sh`, and `pr-screenshots`' `splice.mjs` plus its
+  `discover-topic.sh`, and `pr-screenshots`' `scripts/splice.mjs` plus its
   `scripts/*.sh`),
   `hooks/*.mjs`, `.claude-plugin/`. The entire `.claude/`
   tree, `tests/`, `evals/`, `docs/`, `.github/` never ship and are out of every

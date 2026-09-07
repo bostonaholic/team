@@ -137,7 +137,7 @@ calls.
    That script is the home write run once: it reads `section` and the landed
    count out of `result.json`, reads that companion's pre-image guarded by the
    process exit *and* the JSON envelope, splices with
-   `skills/pr-screenshots/splice.mjs`, promotes the spliced body only on
+   `skills/pr-screenshots/scripts/splice.mjs`, promotes the spliced body only on
    success, and gates the single `gh pr edit --body-file` on the pre-image
    still being current. The exit codes are tabulated in
    `skills/pr-screenshots/references/02-upload-and-body-edit.md`.
