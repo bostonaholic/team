@@ -3,10 +3,37 @@
 ### Resolve the PR once
 
 `$ARGUMENTS` carries a PR number or a full PR URL. Validate it before it
-reaches any command, with the anchored pattern and the parameter-expansion
-split at `skills/pr-watch-as-reviewer/references/02-input.md`, lines 11-42.
-Never use `[^/]+` for an owner or repo segment: that class admits `$`,
-backticks, parentheses, and spaces.
+reaches any command, using the technique at
+`skills/pr-watch-as-reviewer/references/02-input.md`, lines 11-42: an anchored
+pattern, then a parameter-expansion split of the string that already matched
+it. Never use `[^/]+` for an owner or repo segment: that class admits `$`,
+backticks, parentheses, and spaces. Never use `$BASH_REMATCH` either — zsh
+matches the same pattern and leaves it unset.
+
+**The pattern is this skill's own, and its host segment is a variable.** That
+sibling's pattern is anchored at `^https://github\.com/`, and this skill
+supports GitHub Enterprise in three later places — the guarded split below, the
+attachment allowlist, and the read-back. Reusing an anchored-at-github.com
+pattern would refuse every Enterprise PR URL as malformed before any of that
+handling could run, leaving Enterprise reachable only by bare number from a
+checkout. The claim and the validator have to say the same thing, so the host
+is a charset here:
+
+```bash
+PR_URL_PATTERN='^https://[A-Za-z0-9.-]{1,253}/[A-Za-z0-9._-]{1,39}/[A-Za-z0-9._-]{1,100}/pull/[0-9]+$'
+case "$ARGUMENTS" in
+  ''|*[!0-9]*) ARG_NUMBER='' ;;               # not a bare PR number
+  *)           ARG_NUMBER="$ARGUMENTS" ;;     # bare number — repo comes from the checkout
+esac
+if [ -z "$ARG_NUMBER" ]; then
+  [[ "$ARGUMENTS" =~ $PR_URL_PATTERN ]] || { echo "malformed PR argument" >&2; exit 1; }
+  REST="${ARGUMENTS#https://}"
+  ARG_HOST="${REST%%/*}"  ; REST="${REST#*/}"
+  ARG_OWNER="${REST%%/*}" ; REST="${REST#*/}"
+  ARG_REPO="${REST%%/*}"
+  ARG_NUMBER="${ARGUMENTS##*/}"
+fi
+```
 
 Resolve the canonical URL in one call, then bind the four values from it. The
 resolution call carries `--repo` too, whenever the argument supplied one: for a
@@ -19,7 +46,7 @@ section written into an unrelated PR.
 
 ```bash
 if [ -n "$ARG_OWNER" ]; then
-  PR_URL="$(gh pr view "$ARG_NUMBER" --repo "$ARG_OWNER/$ARG_REPO" --json url --jq .url)"
+  PR_URL="$(gh pr view "$ARG_NUMBER" --repo "$ARG_HOST/$ARG_OWNER/$ARG_REPO" --json url --jq .url)"
 else
   PR_URL="$(gh pr view "$ARG_NUMBER" --json url --jq .url)"
 fi
@@ -34,24 +61,33 @@ REPO="${REST%%/*}"
 NUMBER="${PR_URL##*/}"
 case "$PR_HOST$OWNER$REPO" in *[!A-Za-z0-9._-]*) exit 1 ;; esac
 case "$NUMBER" in ""|*[!0-9]*) exit 1 ;; esac
+REPO_SPEC="$PR_HOST/$OWNER/$REPO"    # gh's own [HOST/]OWNER/REPO form
 ```
 
 **The split is guarded, and the host is a bound value of its own.** Stripping a
 literal `https://github.com/` prefix is a no-op on every other host: a GitHub
 Enterprise URL would leave `OWNER` as `https:` and `REPO` empty, and each later
-`--repo "$OWNER/$REPO"` would carry a repository that cannot exist. The shape
-test refuses a URL that is not a PR URL before any segment is read out of it,
-and the charset tests refuse a host, owner, repository, or number carrying
-anything else. `PR_HOST` is the value step C's attachment allowlist is derived
-from (`references/02-upload-and-body-edit.md`), so an Enterprise install
-harvests against its own host rather than a hardcoded one.
+`--repo` would carry a repository that cannot exist. The shape test refuses a
+URL that is not a PR URL before any segment is read out of it, and the charset
+tests refuse a host, owner, repository, or number carrying anything else.
+`PR_HOST` is the value step C's attachment allowlist is derived from
+(`references/02-upload-and-body-edit.md`), so an Enterprise install harvests
+against its own host rather than a hardcoded one.
+
+**`REPO_SPEC` carries the host, and every later call uses it.** `--repo
+"$OWNER/$REPO"` resolves against whichever host `gh` considers default, so on
+an Enterprise PR it names a repository on github.com. `gh` accepts
+`[HOST/]OWNER/REPO`, so binding the host into the spec once makes every
+`gh pr view` and `gh pr edit` below land on the host the URL actually named.
+The read-back's `gh api` takes the same host through `--hostname "$PR_HOST"`
+(`references/03-verify.md`).
 
 The `else` branch is the bare-number form, which has no repository of its own
 and resolves against the checkout by design; with no checkout it resolves
 nothing, which is the refusal below.
 
 `gh pr view` returns the URL on the **base** repository, which is the PR a fork
-contribution is edited on. Every later call carries `--repo "$OWNER/$REPO"`, so
+contribution is edited on. Every later call carries `--repo "$REPO_SPEC"`, so
 no command depends on the remote set of the current checkout.
 
 A merged, closed, or draft PR is in scope. Edit it and say which state was
@@ -123,7 +159,7 @@ The members, all of them caller data:
 | String | Where it renders |
 | --- | --- |
 | Each entry's `caption` | Bold body text in the section |
-| Each line of the top-level `notes` list | One body line each, resolved and degraded alike |
+| Each line of the top-level `notes` list | One blockquoted (`> `) body line each, resolved and degraded alike |
 | Each entry's `path` | The degraded form, and any failure line |
 | Each failure `reason` | The `Not uploaded:` line |
 

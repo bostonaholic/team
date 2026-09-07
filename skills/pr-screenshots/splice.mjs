@@ -32,12 +32,19 @@
  * comments, ATX headings indented up to three spaces, setext headings, ticket
  * references, and standalone INLINE image lines — and **refuses any body
  * carrying a construct outside that set** rather than guessing at its
- * boundaries (`principle-fail-closed`). Raw HTML blocks and every non-inline
- * image form — `<img>`, `<picture>`, `![alt][ref]`, `[ref]: <url>`, a bare
- * auto-embedded URL — are outside the set and fault, because the scan can
- * neither find their boundaries nor count them as images it would delete.
- * Widening the set is a code change with a test; meeting an unmodeled shape at
- * runtime is a refusal with a named reason.
+ * boundaries (`principle-fail-closed`). A raw HTML tag in ANY position — line
+ * start, list item, or mid-sentence — and every non-inline image form —
+ * `<img>`, `<picture>`, `![alt][ref]`, `[ref]: <url>`, a bare auto-embedded
+ * URL — are outside the set and fault, because the scan can neither find their
+ * boundaries nor count them as images it would delete. The scan covers the
+ * WHOLE body, not only the Screenshots section. Widening the set is a code
+ * change with a test; meeting an unmodeled shape at runtime is a refusal with a
+ * named reason, the line number, and the offending text.
+ *
+ * The same default governs the section a replace would delete: its only
+ * permitted contents are the shapes this skill's own renderer emits, so a
+ * sentence somebody else typed under the heading is a refusal rather than a
+ * silent deletion.
  *
  * The CLI guard at the bottom follows resolve-transcript.mjs and
  * write-target.mjs: it runs only on direct execution, so a test import has no
@@ -134,24 +141,32 @@ const COMMENT_CLOSE = /-->/;
 const INDENTED_HEADING = /^ {4,}#{1,2}(?:[ \t]|$)/;
 
 /**
- * A raw HTML block opening a line (CommonMark §4.6, block types 1-7). The scan
- * models block-level HTML comments and no other HTML, so a `<div>`, a
- * `<table>`, a `<details>`, or a `<picture>` is an unmodeled construct: its
- * lines read as ordinary text, a `## Screenshots` line inside one reads as
- * this skill's own heading, and a replace that swallows the closing tag leaves
- * the container open and unrenders everything below it. A tag name is
- * required, so an autolink line such as `<https://example.com>` is not
- * mistaken for one.
+ * A raw HTML tag ANYWHERE on a line, opening or closing (CommonMark §4.6 for
+ * the block forms, §6.6 for the inline ones). The scan models block-level HTML
+ * comments and no other HTML, so a `<div>`, a `<table>`, a `<details>`, or a
+ * `<video>` is an unmodeled construct: its lines read as ordinary text, a
+ * `## Screenshots` line inside one reads as this skill's own heading, and a
+ * replace that swallows the closing tag leaves the container open and unrenders
+ * everything below it.
+ *
+ * It is deliberately NOT anchored to the start of a line. An anchored test
+ * refuses `<details>` at column zero — a deliberate over-refusal — while
+ * letting `- <video src="https://…/user-attachments/assets/…">` inside the
+ * section a replace covers be deleted with `changed: true` and no reason,
+ * which is the gap exactly inverted from where the risk is. A tag name is
+ * required, so an autolink such as `<https://example.com>` is not mistaken for
+ * one, and an escaped `\<` is text that renders literally rather than markup.
  */
-const HTML_BLOCK_OPEN = /^ {0,3}<\/?[A-Za-z][A-Za-z0-9-]*(?:[ \t/>]|$)/;
+const HTML_TAG = /(?<!\\)<\/?[A-Za-z][A-Za-z0-9-]*(?:[ \t/>]|$)/;
 
 /**
  * An HTML image anywhere on a line. `ANY_IMAGE` cannot see one, so an `<img>`
  * inside the section a replace covers would be deleted with `changed: true`
  * and no reason — the silent loss "never delete what you did not write"
- * exists to prevent.
+ * exists to prevent. Tested before `HTML_TAG` so the reason names the image it
+ * cannot count rather than the container class.
  */
-const HTML_IMAGE = /<(?:img|picture|source|svg)\b/i;
+const HTML_IMAGE = /(?<!\\)<(?:img|picture|source|svg|video|audio|embed|object|iframe)\b/i;
 
 /**
  * A reference-style, collapsed, or shortcut image — `![alt][ref]`, `![alt][]`,
@@ -191,42 +206,68 @@ const ANY_IMAGE = /!\[[^\]]*\]\([^)]*\)/g;
 const OWN_IMAGE = /^!\[screenshot-\d+\]\(\s*https?:\/\/[^\s)]+\s*\)$/;
 
 /**
+ * The remaining line shapes this skill writes into its own section: a bold
+ * caption line (resolved or degraded), a blockquoted `notes` line, and a
+ * `Not uploaded:` failure line. Together with `OWN_IMAGE` they are the whole
+ * emitted vocabulary of `references/02-upload-and-body-edit.md`, "The section's
+ * markdown shape" — which is what lets a replace tell its own previous output
+ * apart from a sentence a reviewer typed there.
+ */
+const OWN_CAPTION = /^\*\*.+\*\*(?:\s.*)?$/;
+const OWN_NOTE = /^>(?:\s|$)/;
+const OWN_FAILURE = /^Not uploaded:\s/;
+
+/** True when `line` is a shape this skill's own section renderer emits. */
+function ownSectionLine(line) {
+  const text = line.trim();
+  return text === "" || OWN_IMAGE.test(text) || OWN_CAPTION.test(text) || OWN_NOTE.test(text) || OWN_FAILURE.test(text);
+}
+
+/**
  * Rule 4 counts the NEW section by the alt form this skill emits, so caller
  * text that is itself a complete image reference cannot buy an all-failures
  * run past the guard.
  */
 const NEW_SECTION_IMAGE = /!\[screenshot-\d+\]\(\s*https?:\/\//g;
 
+/** The longest construct excerpt a reason quotes, in characters. */
+const EXCERPT_LIMIT = 60;
+
 /**
- * The construct on `line` that the model does not cover, or null. Called once
- * per unmasked line, and only while no fault is recorded yet: the first one
- * found is the one reported, and a fenced or commented line never reaches
- * here. Each reason is a predicate over the document, so a caller can print it
- * after "the body" or "the section".
+ * `reason`, with the one-based line number and the offending text appended. A
+ * refusal that names only the construct CLASS leaves the operator re-reading a
+ * PR body line by line to find it — and the scan already holds both the index
+ * and the match when it decides to refuse, so discarding them costs the
+ * recovery path everything and saves nothing.
+ */
+function at(index, match, reason) {
+  const text = match.trim();
+  const shown = text.length > EXCERPT_LIMIT ? `${text.slice(0, EXCERPT_LIMIT - 1)}…` : text;
+  return `${reason} (line ${index + 1}: "${shown}")`;
+}
+
+/**
+ * The construct on `line` that the model does not cover, as `{reason, match}`,
+ * or null. Called once per unmasked line, and only while no fault is recorded
+ * yet: the first one found is the one reported, and a fenced or commented line
+ * never reaches here. Each reason is a predicate over the document, so a caller
+ * can print it after "the body" or "the section", and `match` is the substring
+ * that triggered it so the caller can quote it.
  */
 function unmodeled(line) {
-  if (line.includes("<!--")) {
-    return "carries an HTML comment that opens mid-line, which this transform does not model";
-  }
-  if (INDENTED_HEADING.test(line)) {
-    return "carries a heading-shaped line indented into a code block, which this transform does not model";
-  }
-  if (HTML_BLOCK_OPEN.test(line)) {
-    return "carries a raw HTML block, whose boundaries this transform does not model";
-  }
-  if (HTML_IMAGE.test(line)) {
-    return "carries an HTML image tag, which this transform cannot count as an image";
-  }
-  if (REFERENCE_IMAGE.test(line)) {
-    return "carries a reference-style image, whose target this transform cannot see";
-  }
-  if (LINK_REFERENCE.test(line)) {
-    return "carries a link reference definition, which this transform does not model";
-  }
-  if (BARE_IMAGE_URL.test(line)) {
-    return "carries a bare auto-embedded image URL, which this transform does not model";
-  }
-  return null;
+  const hit = (pattern, reason) => {
+    const found = pattern.exec(line);
+    return found ? { reason, match: found[0] } : null;
+  };
+  return (
+    hit(/<!--/, "carries an HTML comment that opens mid-line, which this transform does not model") ??
+    hit(INDENTED_HEADING, "carries a heading-shaped line indented into a code block, which this transform does not model") ??
+    hit(HTML_IMAGE, "carries an HTML image tag, which this transform cannot count as an image") ??
+    hit(HTML_TAG, "carries a raw HTML tag, whose boundaries this transform does not model") ??
+    hit(REFERENCE_IMAGE, "carries a reference-style image, whose target this transform cannot see") ??
+    hit(LINK_REFERENCE, "carries a link reference definition, which this transform does not model") ??
+    hit(BARE_IMAGE_URL, "carries a bare auto-embedded image URL, which this transform does not model")
+  );
 }
 
 /**
@@ -263,6 +304,7 @@ function scan(lines) {
   const headings = [];
   let fence = null;
   let comment = false;
+  let commentAt = -1;
   let fault = null;
 
   const label = (index, level, title) => {
@@ -293,16 +335,20 @@ function scan(lines) {
     const opener = FENCE_DELIMITER.exec(line);
     if (opener) {
       mask[index] = true;
-      fence = { char: opener[1][0], length: opener[1].length };
+      fence = { char: opener[1][0], length: opener[1].length, index, text: line };
       continue;
     }
     if (COMMENT_OPEN.test(line)) {
       mask[index] = true;
       commented[index] = true;
       comment = !COMMENT_CLOSE.test(line.slice(line.indexOf("<!--") + 4));
+      if (comment) commentAt = index;
       continue;
     }
-    if (fault === null) fault = unmodeled(line);
+    if (fault === null) {
+      const found = unmodeled(line);
+      if (found) fault = at(index, found.match, found.reason);
+    }
 
     const atx = ATX_HEADING.exec(line);
     if (atx) {
@@ -321,10 +367,10 @@ function scan(lines) {
   }
 
   if (fence !== null) {
-    fault ??= "carries an unclosed code fence, so its section boundaries cannot be read";
+    fault ??= at(fence.index, fence.text, "carries an unclosed code fence, so its section boundaries cannot be read");
   }
   if (comment) {
-    fault ??= "carries an unterminated HTML comment, so its section boundaries cannot be read";
+    fault ??= at(commentAt, lines[commentAt] ?? "<!--", "carries an unterminated HTML comment, so its section boundaries cannot be read");
   }
   return { mask, commented, boundary, labels, headings, fault };
 }
@@ -464,9 +510,11 @@ function bodyLines(text) {
 
 /**
  * Every refusal computable from the body alone: the scan's fault, an ambiguous
- * pair of Screenshots headings, and the two constructs a replace of the
- * existing section would delete — a foreign image and an HTML comment. Returns
- * the reason, or "" when nothing in the body refuses.
+ * pair of Screenshots headings, an indented Screenshots heading, and everything
+ * a replace of the existing section would delete that this skill did not write
+ * — a foreign image, an HTML comment, and any line outside the vocabulary its
+ * own renderer emits. Returns the reason, or "" when nothing in the body
+ * refuses. Every reason names the line it came from.
  *
  * It is a function of the pre-image and nothing else, which is the whole point:
  * `--check` runs it in step A, before the first `gh pr edit --attach`, so a
@@ -482,21 +530,44 @@ export function bodyRefusal(body) {
   const contentCount = contentEnd(lines, doc) + 1;
   const found = doc.headings.filter((index) => index < contentCount);
   if (found.length > 1) {
-    return `the body carries ${found.length} Screenshots headings; which one to replace is ambiguous`;
+    const where = found.map((index) => index + 1).join(", ");
+    return `the body carries ${found.length} Screenshots headings (lines ${where}); which one to replace is ambiguous`;
   }
 
   const start = found[0];
   if (start === undefined) return "";
 
+  // An ATX heading may carry up to three spaces of indentation and still be a
+  // document-level heading (`ATX_HEADING`) — but the same three spaces are how
+  // a heading nested in a list item looks to a flat scanner, and the scan
+  // cannot see the container. Everywhere else that blindness refuses; here it
+  // would DELETE the sibling items the replace runs through, so refuse.
+  if (/^\s+\S/.test(lines[start])) {
+    return at(start, lines[start], "the body indents its Screenshots heading, which may sit inside a list item this transform cannot see");
+  }
+
   const stop = replaceEnd(lines, doc, start, contentCount);
   const foreign = foreignImages(lines.slice(start, stop).join("\n"));
   if (foreign.length > 0) {
-    return `the Screenshots section holds an image this skill did not write (${foreign[0]}), so replacing it would delete it`;
+    const line = start + lines.slice(start, stop).findIndex((text) => text.includes(foreign[0]));
+    return at(line, foreign[0], "the Screenshots section holds an image this skill did not write, so replacing it would delete it");
   }
   for (let index = start; index < stop; index++) {
     if (doc.commented[index]) {
-      return "the Screenshots section holds an HTML comment, so replacing it would delete text this skill did not write";
+      return at(index, lines[index], "the Screenshots section holds an HTML comment, so replacing it would delete text this skill did not write");
     }
+  }
+
+  // Prose is the shape "never delete what you did not write" kept missing. The
+  // enumeration covers images, comments, HTML containers, and unmodeled
+  // shapes; a sentence a reviewer typed under the heading was in none of them,
+  // so `Reviewer note: the second shot is stale` was replaced away with exit 0.
+  // The whole vocabulary this skill emits is `ownSectionLine`, so anything else
+  // in the range a replace deletes is somebody else's text.
+  const first = ATX_HEADING.test(lines[start]) ? start + 1 : start + 2; // setext takes two lines
+  for (let index = first; index < stop; index++) {
+    if (ownSectionLine(lines[index])) continue;
+    return at(index, lines[index], "the Screenshots section holds a line this skill did not write, so replacing it would delete it");
   }
   return "";
 }
@@ -536,6 +607,16 @@ export function splice(body, section, options = {}) {
   if (sectionScan.fault) return refuse(`the section ${sectionScan.fault}`);
   if (SECTION_HTML.test(sectionText)) {
     return refuse("the section carries unescaped raw HTML, which must never reach a public body");
+  }
+  // The other half of that backstop. `SECTION_HTML` catches an `<a>` or an
+  // `<img>`, and `NEW_SECTION_IMAGE` catches extra `![screenshot-NN]`
+  // references past `--landed` — neither sees an inline markdown image under a
+  // different alt, so `![tracker](https://evil.example/pixel.png)` spliced
+  // clean: a remote-fetch beacon in a public body. Every image this skill
+  // writes is `OWN_IMAGE`-shaped, so anything else came from caller text.
+  const smuggled = foreignImages(sectionText);
+  if (smuggled.length > 0) {
+    return refuse(`the section carries an image this skill did not write (${smuggled[0]})`);
   }
 
   const landed = Number.isFinite(options?.landed) ? options.landed : 0;

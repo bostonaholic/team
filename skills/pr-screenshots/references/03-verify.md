@@ -15,9 +15,14 @@ not what renders.
 Run this once per PR whose body this run wrote:
 
 ```bash
-gh api repos/"$OWNER"/"$REPO"/pulls/"$NUMBER" \
+gh api --hostname "$PR_HOST" repos/"$OWNER"/"$REPO"/pulls/"$NUMBER" \
   -H "Accept: application/vnd.github.full+json" --jq .body_html
 ```
+
+`--hostname` is what makes the read-back land on the host the PR actually lives
+on; without it `gh api` resolves against whichever host it considers default,
+which on an Enterprise PR is the wrong one
+(`references/01-input-and-result.md`).
 
 ### Assertions
 
@@ -26,6 +31,14 @@ rendered `<h2>` to the next `<h2>`, or to the end when none follows. Scoping is
 what lets a hand-authored body embed its own diagram elsewhere without failing
 this check.
 
+**That scoping is this step's alone.** It says nothing about what the run
+tolerates elsewhere in the body: the pre-attach structural check in step A
+scans the **whole** PR body and refuses on an unmodeled construct in any
+section (`references/02-upload-and-body-edit.md`). A body that reaches this
+read-back has already passed that whole-body scan, so the narrower scope here
+is about which *rendered* span carries this run's claim, not about a wider
+tolerance.
+
 1. **Every landed asset appears.** For each entry with a resolved URL, the
    section holds an image whose `alt` equals that entry's `screenshot-<NN>`.
 2. **Every image in the section passes the same test step C harvested
@@ -33,16 +46,21 @@ this check.
    checks a weaker rule than the harvest cannot detect what the harvest let
    through. No `src` starts `/`, starts `./`, or starts `file:`; each one is an
    `https://` URL; its host carries only letters, digits, dots, and hyphens and
-   is the host of `$PR_URL`, a `*.githubusercontent.com` host, or the
+   is the host of `$PR_URL`, the one proxy host `$ASSET_PROXY_HOST` names —
+   `private-user-images.githubusercontent.com` on github.com and
+   `private-user-images.<enterprise-host>` on an Enterprise install — or the
    configured `PR_SCREENSHOTS_ASSET_HOST`; and its path — taken after the host
    is split off, never matched mid-path — begins `/user-attachments/assets/`,
-   or is any path at all on a `*.githubusercontent.com` host, which is the
-   private-repository proxy rewrite and the only other shape allowed. A proxy
-   rewrite is therefore never turned into a reported failure, while
-   `https://github.com/attacker/repo/raw/main/user-attachments/evil.png` fails
-   here exactly as it fails the harvest. Asserting nothing would let an URL
-   appended by another writer during the attach window pass the read-back and
-   travel to every companion PR.
+   or, on the proxy host alone, is a single segment naming an image file, which
+   is the private-repository proxy rewrite and the only other shape allowed. A
+   proxy rewrite is therefore never turned into a reported failure, while
+   `https://github.com/attacker/repo/raw/main/user-attachments/evil.png` and
+   `https://raw.githubusercontent.com/attacker/evil/main/x.png` both fail here
+   exactly as they fail the harvest — the second one is why the proxy host is
+   enumerated rather than wildcarded, since `raw.githubusercontent.com` serves
+   any public repository's content. Asserting nothing would let an URL appended
+   by another writer during the attach window pass the read-back and travel to
+   every companion PR.
 3. **A degraded write is checked as text.** When nothing landed and the
    degraded note was written, the note wording and each captured file's
    basename must appear in the section as text, and rule 2 still holds. The
@@ -57,9 +75,9 @@ If the field ever comes back empty, render the stored body through the same
 renderer and assert against that instead:
 
 ```bash
-gh pr view "$NUMBER" --repo "$OWNER/$REPO" --json body \
+gh pr view "$NUMBER" --repo "$REPO_SPEC" --json body \
   | jq --arg nwo "$OWNER/$REPO" '{text: .body, mode: "gfm", context: $nwo}' \
-  | gh api --method POST /markdown --input -
+  | gh api --hostname "$PR_HOST" --method POST /markdown --input -
 ```
 
 `$OWNER/$REPO` is bound with jq's own `--arg`, never spliced into the program

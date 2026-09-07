@@ -41,11 +41,21 @@ run, when, and which entries qualify, then calls this skill.
   (`principle-optimization-never-dependency`, `principle-skip-loudly`).
 - **Never delete what you did not write.** A trailing run of stray image lines
   left by an earlier crash is reported and re-emitted below the new section,
-  never removed. Anything else this skill did not write — an image inside the
-  section, an HTML comment, a raw HTML container, an image in any form the
-  splice cannot count, a body shape the splice does not model — is a refusal
-  that leaves the body byte-identical, because a duplicate is recoverable and a
-  deletion is not.
+  never removed. Anything else this skill did not write is a refusal that
+  leaves the body byte-identical, because a duplicate is recoverable and a
+  deletion is not. The rule is stated positively, so nothing falls outside it:
+  the only lines a replace may delete are the four shapes this skill's own
+  renderer emits — a `**caption**` line, an `![screenshot-NN]` image, a `>`
+  note, and a `Not uploaded:` line. Prose, an HTML comment, a raw HTML
+  container, an image in any form the splice cannot count, or a body shape the
+  splice does not model each refuse, with the offending line number named.
+- **Nothing leaves the declared root, and nothing that is not an image is
+  uploaded.** The entries file declares one **absolute** top-level `root`, and
+  every entry's path is resolved and must sit inside it. Acceptance is decided
+  by **content type**, never by extension: `file -b --mime-type` must report
+  `image/*`, and an environment that yields no type fails the check, because
+  unverified is not an image. That is what keeps a `.env`, an `id_ed25519`, or
+  a `.git/config` off a world-readable `user-attachments` URL.
 
 ## Procedure references
 
