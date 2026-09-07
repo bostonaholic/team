@@ -107,7 +107,6 @@ Opens a pull request after verification.
 - `changelog`
 - `git-commit`
 - `pr-screenshots`
-- `principle-never-interpolate`
 - `tracking-tickets`
 - `verifying-ux`
 - `worktree-isolation`
@@ -149,7 +148,6 @@ Lands a reviewed pull request.
 
 Triages unresolved PR review comments.
 
-- `pr-screenshots`
 ### [pr-watch-as-author](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md)
 
 Watches an authored PR for feedback.
@@ -187,17 +185,6 @@ Verifies a PR test plan with evidence-rated verdicts.
 ### [pr-screenshots](https://github.com/bostonaholic/team/blob/main/skills/pr-screenshots/SKILL.md)
 
 Attaches local images to a PR body.
-
-**Mentions:**
-
-- `principle-evidence-over-assertion`
-- `principle-fail-closed`
-- `principle-never-interpolate`
-- `principle-optimization-never-dependency`
-- `principle-progress-tracking`
-- `principle-skip-loudly`
-- `principle-untrusted-input-is-data`
-- `team-pr`
 
 ### [pr-rebase](https://github.com/bostonaholic/team/blob/main/skills/pr-rebase/SKILL.md)
 
