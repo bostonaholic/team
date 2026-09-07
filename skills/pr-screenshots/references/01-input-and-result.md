@@ -21,8 +21,12 @@ REPO_SPEC="$(cat "$RUN_DIR/repo-spec")"    # gh's own [HOST/]OWNER/REPO form
 ```
 
 `$RUN_DIR` is this run's whole state. Every script below reads its inputs from
-it and writes its outputs back into it, so no value has to survive from one
-command to the next in a session's shell:
+it and writes its outputs back into it, so `$RUN_DIR` is the *one* value that
+has to survive from one command to the next in a session's shell rather than
+fifteen. The rest — `$NUMBER`, `$REPO_SPEC`, `$PR_HOST`, `$OWNER`, `$REPO`, and
+the file paths the later steps expand — are each bound in one fence and
+expanded in later ones, and a fence that lost them re-binds them by re-running
+the block above, never by resolving the PR again:
 
 | File | Written by | Holds |
 | --- | --- | --- |
@@ -34,6 +38,9 @@ command to the next in a session's shell:
 | `after.md` | `pre-image.sh`, `upload.sh` | The body as of the last read |
 | `assets.tsv` | `pre-image.sh`, `upload.sh` | One line per landed entry |
 | `failures.tsv` | `pre-image.sh`, `upload.sh` | One line per failed entry |
+| `entry-paths.txt` | `upload.sh` | One entry path per line — the JSON-to-shell bridge |
+| `candidates.txt` | `upload.sh` | The URLs one attach's suffix held, rewritten per entry |
+| `read-failed` | `upload.sh`, cleared by `pre-image.sh` | Present only when a body re-read failed |
 | `section.md`, `new-body.md` | step D of `references/02-upload-and-body-edit.md` | The rendered section, and the spliced body |
 
 Exit 1 is a refusal, and it names the argument on stderr. The rules it
