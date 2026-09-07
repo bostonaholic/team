@@ -216,7 +216,7 @@ const SECTION = [
 const DEGRADED = [
   "## Screenshots",
   "",
-  "**Login** (default) — captured, not yet uploaded: /tmp/login.png",
+  "**Login** (default) — captured, not yet uploaded: login.png",
 ].join("\n");
 
 // An existing body whose section already holds a real screenshot.
@@ -426,7 +426,7 @@ describe("Slice 1 — splice.mjs (L1)", () => {
     const injected = [
       "## Screenshots",
       "",
-      "**![x](https://example.com/i.png)** (default) — captured, not yet uploaded: /tmp/login.png",
+      "**![x](https://example.com/i.png)** (default) — captured, not yet uploaded: login.png",
     ].join("\n");
 
     const result = splice(REAL, injected);
@@ -438,6 +438,29 @@ describe("Slice 1 — splice.mjs (L1)", () => {
     // Control: the same existing body DOES accept a real new section, so the
     // refusal above is the no-downgrade count and not a blanket refusal.
     expect(splice(REAL, SECTION, { landed: 2 }).changed).toBe(true);
+  });
+
+  test("splice refuses a degraded section rendering a path where a basename belongs", () => {
+    // The third backstop over the caller-string normalization. The HTML half
+    // and the count half each have one; the basename rule sits in the same
+    // table and had none, so a section built with the absolute path published
+    // the operator's home directory in a public body.
+    const body = ["## Summary", "", "Adds a login page.", ""].join("\n");
+    const leaked = [
+      "## Screenshots",
+      "",
+      "**Login** (default) — captured, not yet uploaded: /Users/dev/Desktop/shots/login.png",
+    ].join("\n");
+
+    const result = splice(body, leaked);
+
+    expect(result.body).toBe(body);
+    expect(result.changed).toBe(false);
+    expect(result.reason).toContain("basename");
+
+    // Control: the same section rendered per the rule splices, so the refusal
+    // is the `/` and not the degraded form itself.
+    expect(splice(body, DEGRADED).changed).toBe(true);
   });
 });
 
@@ -2346,6 +2369,15 @@ describe("Slice 1 — the argument validator, executed (L1)", () => {
     // A flag with no value, and a flag this skill does not take.
     expect(runArguments("412 --entries").status).toBe(1);
     expect(runArguments("412 --body-file /tmp/x").status).toBe(1);
+
+    // A repeated `--entries` refuses as loudly as a repeated PR token, in
+    // either spelling and in any mix of them. Taking the last value silently
+    // uploads from a manifest the caller may not have named on purpose.
+    const repeated = runArguments("412 --entries /tmp/a.json --entries /tmp/b.json");
+    expect(repeated.status).toBe(1);
+    expect(repeated.stderr).toContain("more than one --entries");
+    expect(runArguments("412 --entries=/tmp/a.json --entries=/tmp/b.json").status).toBe(1);
+    expect(runArguments("412 --entries /tmp/a.json --entries=/tmp/b.json").status).toBe(1);
   });
 
   test("every shell in the cross-shell matrix is actually present", () => {
@@ -2775,6 +2807,203 @@ describe("Slice 1 — the validation and harvest fences, executed (L1)", () => {
         stdout: `ASSET=${asset}\nREASON=${reason}\n`,
       });
     }
+  }, 60_000);
+
+  test("a `#` a symlinked root hides still fails the entry, in every shell", () => {
+    // The `#` guard tested `$ENTRY_PATH` while `--attach` received `$RESOLVED`.
+    // `pwd -P` resolves a symlinked capture root into its physical directory,
+    // so a `#` in THAT name reaches the attach argument — where the host reads
+    // it as the alt-text delimiter — without ever appearing in the entry path
+    // the guard saw. Containment passes, because the same `#` is in
+    // `$CAPTURE_ROOT` too.
+    const fence = validationFence();
+    expect(fence.length).toBeGreaterThan(0);
+
+    const dir = sandbox();
+    const physical = join(dir, "shots#1");
+    const root = join(dir, "shots");
+    mkdirSync(physical, { recursive: true });
+    writeFileSync(join(physical, "a.png"), PNG_1X1);
+    symlinkSync(physical, root);
+
+    const entry = join(root, "a.png"); // no `#` anywhere in the entry path
+    expect(entry).not.toContain("#");
+    const entriesFile = join(dir, "entries.json");
+    writeFileSync(entriesFile, JSON.stringify({ root, entries: [{ path: entry, caption: "c" }], notes: [] }));
+
+    const state = join(dir, "state");
+    const bin = ghStub(dir);
+    const failures = join(dir, "failures.tsv");
+    const assets = join(dir, "assets.tsv");
+    const script = [
+      `PATH=${JSON.stringify(bin)}:$PATH`,
+      `GH_STATE=${JSON.stringify(state)}`,
+      "export PATH GH_STATE",
+      "NUMBER=412",
+      "REPO_SPEC=github.com/owner/repo",
+      'PRE_IMAGE="Intro"',
+      `ENTRIES_FILE=${JSON.stringify(entriesFile)}`,
+      `FAILURES_FILE=${JSON.stringify(failures)}`,
+      `ASSETS_FILE=${JSON.stringify(assets)}`,
+      `CANDIDATES_FILE=${JSON.stringify(join(dir, "candidates.txt"))}`,
+      fence,
+      `printf 'AFTER=%s\\n' "$AFTER"`,
+      `cat "$FAILURES_FILE"`,
+    ].join("\n");
+    const reset = () => {
+      rmSync(state, { recursive: true, force: true });
+      mkdirSync(state, { recursive: true });
+      writeFileSync(join(state, "n"), "0");
+      writeFileSync(join(state, "body"), "Intro");
+      writeFileSync(failures, "");
+      writeFileSync(assets, "");
+    };
+    const run = runEveryShell(script, reset);
+
+    // `AFTER=Intro` is the proof no attach ran: the stub appends a tail per
+    // attach, and the re-read would carry it.
+    expect({ status: run.status, stdout: run.stdout }).toEqual({
+      status: 0,
+      stdout: `AFTER=Intro\n# in path\t${entry}\n`,
+    });
+  }, 60_000);
+});
+
+// ---------------------------------------------------------------------------
+// The capability gap, EXECUTED end to end. `exit 3` is a branch a session
+// takes and then keeps running from, so what matters is not that the fence
+// exits 3 but what the fences after it do — and step D's lost-update guard
+// reads `$AFTER`, which step B binds and this path skips.
+// ---------------------------------------------------------------------------
+
+// One fenced block of `02`, with the reference's own `<skill-dir>` placeholder
+// resolved exactly as a session resolves it.
+function uploadFence(marker: string): string {
+  const block = fencedBlocks(uploadRef()).find((fence) => fence.includes(marker)) ?? "";
+  return block.replaceAll("<skill-dir>", SKILL_DIR);
+}
+
+// A `gh` whose `pr edit --help` does NOT advertise `--attach` — the host the
+// capability check exists for — and which serves and rewrites a body.
+function ghWithoutAttach(dir: string): string {
+  const bin = join(dir, "bin");
+  mkdirSync(bin, { recursive: true });
+  writeFileSync(
+    join(bin, "gh"),
+    [
+      "#!/bin/sh",
+      'case "$2" in',
+      "  edit)",
+      `    case "$3" in --help) printf '%s\\n' '  --body-file file   Read body text from file' ; exit 0 ;; esac`,
+      "    while [ $# -gt 0 ]; do",
+      '      case "$1" in --body-file) cp "$2" "$GH_STATE/body" ; exit 0 ;; esac',
+      "      shift",
+      "    done",
+      "    exit 1 ;;",
+      "  view)",
+      `    jq -Rs '{body: .}' <"$GH_STATE/body" ; exit 0 ;;`,
+      "esac",
+      "exit 1",
+      "",
+    ].join("\n"),
+    { mode: 0o755 },
+  );
+  return bin;
+}
+
+describe("Slice 1 — the capability gap, executed (L1)", () => {
+  test("a host that cannot attach still writes the degraded section", () => {
+    // The user's requirement, end to end: no upload capability means skip the
+    // upload, keep the degraded note, report the instruction to the operator,
+    // and never block. With `$AFTER` bound only in step B — the step this path
+    // skips — the guard compared "" against a non-empty pre-image and exited 1,
+    // so the degraded path refused instead of writing. On a `team-pr` run the
+    // pre-image is never empty: the draft body already carries the pre-upload
+    // degraded section, which is what this fixture is.
+    const capability = uploadFence("ATTACH_SUPPORTED");
+    const temporaries = uploadFence("RUN_DIR=");
+    const preImage = uploadFence("PRE_IMAGE_JSON=");
+    const check = uploadFence("--check --body-file");
+    const guard = uploadFence('case "$PRE_IMAGE" in');
+    const spliceCall = uploadFence("LANDED_COUNT=");
+    const write = uploadFence("--body-file \"$NEW_BODY_FILE\"");
+    for (const fence of [capability, temporaries, preImage, check, guard, spliceCall, write]) {
+      expect(fence.length).toBeGreaterThan(0);
+    }
+
+    const dir = sandbox();
+    const state = join(dir, "state");
+    const bin = ghWithoutAttach(dir);
+    const opened = [
+      "## Summary",
+      "",
+      "Adds a login page.",
+      "",
+      "## Screenshots",
+      "",
+      "**login** (default) — captured, not yet uploaded: login.png",
+      "",
+      "Closes #12",
+    ].join("\n");
+
+    const script = [
+      `PATH=${JSON.stringify(bin)}:$PATH`,
+      `GH_STATE=${JSON.stringify(state)}`,
+      "export PATH GH_STATE",
+      "NUMBER=412",
+      "REPO_SPEC=github.com/owner/repo",
+      // The capability check is its own invocation, so its `exit 3` ends that
+      // fence and not the run — which is what a session does with it.
+      `( ${"\n"}${capability}${"\n"} ) ; CAP=$?`,
+      `printf 'CAP=%s\\n' "$CAP"`,
+      '[ "$CAP" = 3 ] || exit 9',
+      temporaries,
+      preImage,
+      check,
+      // Steps B and C are skipped: nothing is validated and nothing attaches.
+      // Step D renders the degraded section and writes once.
+      `cat >"$SECTION_FILE" <<'PR_SCREENSHOTS_SECTION'`,
+      "## Screenshots",
+      "",
+      "**login** (default) — captured, not yet uploaded: login.png",
+      "",
+      "> _note:_ 1 state skipped — see manifest",
+      "PR_SCREENSHOTS_SECTION",
+      guard,
+      spliceCall,
+      write,
+      `cat "$GH_STATE/body"`,
+    ].join("\n");
+
+    const reset = () => {
+      rmSync(state, { recursive: true, force: true });
+      mkdirSync(state, { recursive: true });
+      writeFileSync(join(state, "body"), opened);
+    };
+    const run = runEveryShell(script, reset);
+
+    // The run reaches the write and lands the degraded section, note included,
+    // with the summary and the ticket reference intact.
+    expect({ status: run.status, stderr: run.stderr }).toEqual({
+      status: 0,
+      stderr: "upgrade gh — attaching a file needs at least 2.100.0\n",
+    });
+    expect(run.stdout).toBe(
+      [
+        "CAP=3",
+        "## Summary",
+        "",
+        "Adds a login page.",
+        "",
+        "## Screenshots",
+        "",
+        "**login** (default) — captured, not yet uploaded: login.png",
+        "",
+        "> _note:_ 1 state skipped — see manifest",
+        "",
+        "Closes #12",
+      ].join("\n"),
+    );
   }, 60_000);
 });
 

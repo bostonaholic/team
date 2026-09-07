@@ -11,7 +11,7 @@ gh pr edit --help | grep -q -- '--attach' || ATTACH_SUPPORTED=no
 if [ "${ATTACH_SUPPORTED:-yes}" = no ]; then
   OPERATOR_NOTE="upgrade gh — attaching a file needs at least 2.100.0"
   printf '%s\n' "$OPERATOR_NOTE" >&2
-  exit 3                     # skip steps B and C; render the section degraded
+  exit 3                     # run step A, skip steps B and C, then step D
 fi
 ```
 
@@ -25,8 +25,20 @@ written into a PR body.
 by a fence that nothing branches on leaves the short-circuit to a session's
 reading of prose, which is the one place in this recipe where control flow was
 inferred rather than executed. Exit 3 is this fence's own status and says
-neither "refused" (1) nor "fault" (2): the run continues, at step D, with the
-degraded section and nothing attached.
+neither "refused" (1) nor "fault" (2): the run continues, with the degraded
+section and nothing attached.
+
+**Exit 3 skips two steps, not three.** Step A still runs — the temporaries,
+the pre-image, and every check that runs against it — and step D still writes.
+Skipping step A here strands step D: `$PRE_IMAGE_FILE` would be unwritten, and
+splicing against an unwritten file writes the section over the PR's whole
+description. Step A is also where `AFTER` is bound on this path, since step B's
+loop never runs: step D's lost-update guard tests `$AFTER` against the
+pre-image, and an unbound one takes the guard's mismatch arm and exits 1 on
+every non-empty pre-image — which on a `team-pr` run is every run, because the
+draft PR's body already carries the pre-upload degraded section
+(`skills/team-pr/references/04-screenshot-upload.md`). Step D then splices with
+`LANDED_COUNT` at 0, which is what `$ASSETS_FILE` holds when nothing attached.
 
 ### The four steps, in this order
 
@@ -79,6 +91,11 @@ PRE_IMAGE="$(printf '%s' "$PRE_IMAGE_JSON" | jq -r '.body | gsub("\r";"")')" || 
 # no heading and no fault — and step D splices against it and writes the
 # Screenshots section over the PR's whole description.
 printf '%s' "$PRE_IMAGE" >"$PRE_IMAGE_FILE" || exit 2
+# The body as of the last read, bound HERE as well as in step B's loop, because
+# the capability gap above skips step B entirely. Step D's lost-update guard
+# reads it, and an unbound one fails the prefix test against every non-empty
+# pre-image — refusing the degraded path instead of writing it.
+AFTER="$PRE_IMAGE"
 ```
 
 The envelope is what distinguishes the two cases: a failed call yields no
@@ -94,7 +111,8 @@ obey (`principle-untrusted-input-is-data`, matching
 `skills/pr-watch-as-reviewer/references/02-input.md`, lines 4-6).
 
 The normalized pre-image the fence above wrote is the input to the splice, the
-baseline for the lost-update guard, and the subject of four checks:
+baseline for the lost-update guard, and the subject of the two checks that have
+a mechanism here:
 
 1. **Every refusal `splice.mjs` computes from the pre-image alone.** Run the
    check mode against `$PRE_IMAGE_FILE`, here, before the first upload:
@@ -142,14 +160,7 @@ baseline for the lost-update guard, and the subject of four checks:
    the body is not written, and the run lands on `uploaded-not-written` instead
    of `refused`.
 
-2. **No headroom.** The pre-image plus the appended tails plus the section must
-   stay under 65536 characters. An append can overflow the body on its own, so
-   this refusal belongs here rather than after the loop.
-3. **An image reference to a path being attached.** The host rewrites a body
-   reference like an image whose target is one of the entry paths, in place,
-   which moves text mid-body and would read as a lost update. Refuse, name the
-   line, and mutate nothing.
-4. **A trailing run of standalone absolute-URL image lines.** That is the
+2. **A trailing run of standalone absolute-URL image lines.** That is the
    residue of an earlier crash between attach and write. Detect it, name it in
    the report, and never delete it: a hand-authored body may legitimately end
    in an image line, and losing it is worse than a duplicate.
@@ -181,6 +192,25 @@ baseline for the lost-update guard, and the subject of four checks:
    two, "never delete what you did not write" holds in every shape: the
    trailing run is preserved as a duplicate, and everything else is a refusal
    with the offending line named.
+
+**Two more refusals belong to this pre-image, and neither one fires here.**
+Naming them as step-A checks would make "refuse before mutating" read as
+complete when it is not, so each is named where it actually fires:
+
+- **No headroom** — the pre-image plus the appended tails plus the section over
+  65536 characters. `splice.mjs` computes it, from `BODY_LIMIT`, against the
+  body it has already spliced — which is step D, after the attach loop. Nothing
+  measures it earlier, so an overflow lands on `uploaded-not-written` with the
+  assets live, not on `refused`. `--check` cannot cover it: it sees the body
+  alone, and the length that overflows is the body plus the section.
+- **An image reference to a path being attached** — the host rewrites a body
+  reference like an image whose target is one of the entry paths, in place,
+  which moves text mid-body. Nothing in this skill detects it before the
+  upload. What catches it is the in-loop prefix test, which records `body
+  changed during upload` for the entry that triggered it, and step D's
+  lost-update guard, which then refuses the write: the run halts on
+  `uploaded-not-written` rather than refusing untouched. That is a worse
+  outcome than a pre-image refusal and it is the one this skill has.
 
 **Step B — attach one file per command.**
 
@@ -313,6 +343,15 @@ for ENTRY_PATH in "$@"; do
   [ -f "$ENTRY_PATH" ] || { REASON="not a regular file" ; fail_entry ; continue ; }
   RESOLVED="$(cd -- "$(dirname -- "$ENTRY_PATH")" && pwd -P)/$(basename -- "$ENTRY_PATH")" \
     || { REASON="file missing" ; fail_entry ; continue ; }
+  # The same two tests, re-run on the value the attach command receives.
+  # `pwd -P` resolves a symlinked parent into its physical path, so a `#` or a
+  # newline in a directory ABOVE the entry reaches `--attach` without ever
+  # appearing in $ENTRY_PATH — and the host reads that `#` as the alt-text
+  # delimiter, uploading a different file under an alt nobody chose.
+  case "$RESOLVED" in
+    *"$NEWLINE"*) REASON="newline in path" ; fail_entry ; continue ;;
+    *"#"*)        REASON="# in path"       ; fail_entry ; continue ;;
+  esac
   case "$RESOLVED" in
     "$CAPTURE_ROOT"/*) : ;;
     *) REASON="outside the declared root" ; fail_entry ; continue ;;
@@ -365,6 +404,15 @@ check is a failure with that class, and the loop continues.
 `[ -L ]` runs **before** `[ -e ]`: `-e` follows the link, so a dangling symlink
 tested first reports as `file missing` and hides an attempted symlink behind
 the wrong class.
+
+**Every check runs on the value the command receives, and that value is
+`$RESOLVED`.** The `#` and the newline tests therefore run twice: once on
+`$ENTRY_PATH` as a cheap early exit, and once on `$RESOLVED`, which is the
+argument `--attach` gets. Testing only `$ENTRY_PATH` leaves a hole in it: a
+capture root that is a symbolic link to a physical directory whose name carries
+`#` puts that `#` into `$CAPTURE_ROOT` and into `$RESOLVED` alike,
+so containment passes and the `#` the guard never saw reaches the attach
+argument, where the host reads it as the alt-text delimiter.
 
 **The attach argument is `$RESOLVED`, never `$ENTRY_PATH`.** The symlink,
 containment, and content checks all ran against `$RESOLVED`, and attaching the
@@ -771,7 +819,8 @@ vocabulary above.
 
 **Never a markdown image reference to a local path, in any form.** A local path
 never renders on the host anyway, and the attach step rewrites a matching image
-reference in place, which step A's third check would then read as a refusal and
-which the lost-update guard would read as a concurrent write. The plain-text
-rule is what makes the append-only premise true when the pre-image is itself a
-degraded section this skill or its caller wrote earlier.
+reference in place, which nothing detects before the upload and which the
+in-loop prefix test and the lost-update guard then read as a concurrent write,
+after every asset has landed. The plain-text rule is what makes the append-only
+premise true when the pre-image is itself a degraded section this skill or its
+caller wrote earlier.

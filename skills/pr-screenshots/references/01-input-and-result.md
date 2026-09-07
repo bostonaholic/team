@@ -36,8 +36,10 @@ while IFS= read -r ARG_TOKEN; do
   [ -n "$ARG_TOKEN" ] || continue       # a leading separator squeezes to one empty line
   if [ -n "$PENDING" ]; then ENTRIES_FILE="$ARG_TOKEN" ; PENDING='' ; continue ; fi
   case "$ARG_TOKEN" in
-    --entries)   PENDING=1 ;;
-    --entries=*) ENTRIES_FILE="${ARG_TOKEN#--entries=}" ;;
+    --entries)   [ -z "$ENTRIES_FILE" ] || { echo "more than one --entries" >&2 ; exit 1 ; }
+                 PENDING=1 ;;
+    --entries=*) [ -z "$ENTRIES_FILE" ] || { echo "more than one --entries" >&2 ; exit 1 ; }
+                 ENTRIES_FILE="${ARG_TOKEN#--entries=}" ;;
     --*)         echo "unknown flag: $ARG_TOKEN" >&2 ; exit 1 ;;
     *)           [ -z "$PR_ARG" ] || { echo "more than one PR argument" >&2 ; exit 1 ; }
                  PR_ARG="$ARG_TOKEN" ;;
@@ -51,6 +53,12 @@ done <"$ARG_TOKENS_FILE"
 so an entries path holding a space arrives as two tokens and lands on "more
 than one PR argument" — a loud refusal that names the argument, never a
 silently truncated path.
+
+**A repeated `--entries` refuses too, in either spelling.** A second value
+overwriting the first would let `412 --entries a.json --entries b.json` upload
+from a manifest the caller may not have named on purpose, silently, while the
+same repetition of the PR token refuses loudly. A malformed form refuses rather
+than guessing, and "the last one wins" is a guess.
 
 ### Resolve the PR once
 
@@ -234,11 +242,33 @@ HTML, which GitHub allows in a body: an unescaped caption can otherwise emit an
 `<a href>` to anywhere. `\` is escaped first, so no escape can be undone by a
 caller-supplied backslash.
 
+**What the set is exhaustive over is markdown *syntax*, not every way text can
+become clickable.** GFM's autolink extension turns a bare `https://…` into a
+link with no syntax at all, so `**Login https://evil.example/phish**` renders
+clickable in a caption and no escape reaches it — there is no syntax character
+to escape. That is out of scope here, stated rather than implied: the link text
+*is* the URL, so it names its own target rather than hiding one behind chosen
+text, and the string came from the caller this skill is acting for. What the
+escape set does close is a string becoming a link whose text hides its target,
+an image reference, or raw HTML.
+
+**`state` also loses its parentheses, and it is the one member with a rule of
+its own.** It renders *inside* the `(<state>)` parenthetical this skill emits,
+and `splice.mjs` recognizes that parenthetical by a grammar admitting one level
+of nesting — so `loading (step (2))` or `error: unexpected )` makes the
+renderer's own caption line unrecognizable to it, and the next run's `--check`
+refuses a section this skill itself wrote. Remove `(` and `)` from `state`
+after the whitespace collapse. Escaping would not do: a backslash leaves the
+character in place, and the grammar still sees it.
+
 `splice.mjs` backstops the HTML half of this rule in code: it refuses a section
 carrying an unescaped `<a`, `<img`, or any other raw tag, so a weakened or
 skipped escape is a refusal rather than an `<a href>` in a public body. The
-count half is backstopped by `--landed`. Neither backstop replaces the
-normalization; both exist because the normalization is the part a rewrite can
+link half is backstopped by the unescaped-`](` test, the count half by
+`--landed`, and the basename half by refusing a `/` in the degraded tail after
+`captured, not yet uploaded:` — a basename holds none, so one there is an
+absolute path on its way into a public body. No backstop replaces the
+normalization; each exists because the normalization is the part a rewrite can
 quietly drop.
 
 The members, all of them caller data:
@@ -293,10 +323,12 @@ Each of these fires before any `gh` call and mutates nothing.
   bind it to, so refuse and ask for the full PR URL.
 
 Step A of the upload adds the rest of the pre-image refusals, listed in
-`references/02-upload-and-body-edit.md`: the headroom check, the check for an
-image reference to a path being attached, and `splice.mjs --check`, which runs
-every structural refusal computable from the body alone. All of them land on
-`refused`, because all of them run before the first attach.
+`references/02-upload-and-body-edit.md`: `splice.mjs --check`, which runs every
+structural refusal computable from the body alone. It lands on `refused`,
+because it runs before the first attach. The headroom check and the check for
+an image reference to a path being attached are named in that file too, and
+neither one runs before the attach; that file names where each one does fire,
+and what that costs.
 
 ### The result
 

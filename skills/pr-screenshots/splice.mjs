@@ -235,6 +235,17 @@ const SECTION_HTML = new RegExp(`${UNESCAPED}<[A-Za-z/!?]`);
 const SECTION_LINK = new RegExp(`${UNESCAPED}\\]\\(`);
 
 /**
+ * A `/` in the degraded tail — the basename half of the same backstop. The
+ * degraded form renders each local path as its BASENAME
+ * (`references/01-input-and-result.md`), because a PR body is public and an
+ * absolute path leaks the operator's home directory and username. A basename
+ * holds no `/`, so a `/` after `captured, not yet uploaded:` is a path that
+ * skipped that rule, and the rule is a normalization a rewrite can drop just
+ * as quietly as the other two.
+ */
+const SECTION_PATH = /captured, not yet uploaded:[ \t]*[^\n]*\//;
+
+/**
  * An INLINE markdown image reference — the only image shape that reaches this
  * point, because `scan` faults on every other form. And the one this skill
  * writes.
@@ -244,12 +255,14 @@ const OWN_IMAGE = /^!\[screenshot-\d+\]\(\s*https?:\/\/[^\s)]+\s*\)$/;
 
 /**
  * The `(<state>)` parenthetical the renderer emits beside a caption, and
- * nothing else. One level of nesting is allowed because `state` is caller text
- * the normalization does not escape parentheses in: with a flat `[^)]*`, a
- * state such as `mobile (dark)` makes the renderer's OWN output unrecognizable
- * — and since `team-pr` writes the degraded section at PR-open time, that
- * section is the pre-image, so step A's `--check` would refuse the whole run
- * and nothing would upload.
+ * nothing else. One level of nesting is allowed as a backstop: `state` is
+ * caller text whose normalization removes parentheses
+ * (`references/01-input-and-result.md`), and a section rendered before a run
+ * that did so is still a pre-image this transform has to recognize. With a
+ * flat `[^)]*`, a state such as `mobile (dark)` makes the renderer's OWN
+ * output unrecognizable — and since `team-pr` writes the degraded section at
+ * PR-open time, that section is the pre-image, so step A's `--check` refuses
+ * the whole run and nothing uploads.
  */
 const STATE = "(?:[ \\t]+\\((?:[^()]|\\([^()]*\\))*\\))?";
 
@@ -260,19 +273,20 @@ const STATE = "(?:[ \\t]+\\((?:[^()]|\\([^()]*\\))*\\))?";
  * which is what lets a replace tell its own previous output apart from text a
  * reviewer typed there.
  *
- * **Ownership is provenance, not shape.** `OWN_NOTE` used to be `/^>/`, which
- * claimed EVERY blockquote: `> Reviewer: the second shot is stale, do not ship`
- * was deleted with `changed: true` and no reason. So the renderer emits a
- * marker a reviewer would not type — `> _note:_ ` — and an unmarked blockquote
- * now refuses exactly as bare prose does. `OWN_SEPARATOR` is the bare `>` the
- * renderer puts between two notes so they do not render as one run-on
- * paragraph; it carries no text, so claiming it deletes nothing.
+ * **Ownership is provenance, not shape.** `OWN_NOTE` requires the `_note:_`
+ * marker the renderer emits, never a bare `/^>/`: that claims EVERY
+ * blockquote, so `> Reviewer: the second shot is stale, do not ship` is
+ * deleted with `changed: true` and no reason. A reviewer does not type the
+ * marker, so an unmarked blockquote refuses exactly as bare prose does.
+ * `OWN_SEPARATOR` is the bare `>` the renderer puts between two notes so they
+ * do not render as one run-on paragraph; it carries no text, so claiming it
+ * deletes nothing.
  *
  * `OWN_CAPTION` is bound to the same standard: `**<caption>**` with an optional
- * `(<state>)` and nothing after it. `(?:\s.*)?$` accepted arbitrary trailing
- * text, so a reviewer's `**Login** REVIEWER: this shot is WRONG, do not merge`
- * typed above this skill's own image was deleted with exit 0 and no reason on
- * the next refresh.
+ * `(<state>)` and nothing after it. A trailing `(?:\s.*)?$` accepts arbitrary
+ * text after the caption, which makes a reviewer's `**Login** REVIEWER: this
+ * shot is WRONG, do not merge` typed above this skill's own image deletable
+ * with exit 0 and no reason on the next refresh.
  */
 const OWN_CAPTION = new RegExp(`^\\*\\*.+\\*\\*${STATE}$`);
 const OWN_NOTE = /^>[ \t]+_note:_[ \t]+\S/;
@@ -280,9 +294,10 @@ const OWN_SEPARATOR = /^>$/;
 
 /**
  * A failure line, bound the same way: `Not uploaded: <caption> — <reason>`,
- * both halves non-empty. `/^Not uploaded:\s/` was shape rather than provenance,
- * so `Not uploaded: THIS IS A REVIEWER NOTE, do not ship` was this skill's own
- * output to a replace. The em dash is the renderer's, not a reviewer's.
+ * both halves non-empty. A bare `/^Not uploaded:\s/` is shape rather than
+ * provenance, and makes `Not uploaded: THIS IS A REVIEWER NOTE, do not ship`
+ * this skill's own output to a replace. The em dash is the renderer's, not a
+ * reviewer's.
  */
 const OWN_FAILURE = /^Not uploaded:[ \t]+\S.*[ \t]—[ \t]\S/;
 
@@ -655,14 +670,15 @@ export function bodyRefusal(body) {
     }
   }
 
-  // Prose is the shape "never delete what you did not write" kept missing. The
-  // enumeration covers images, comments, HTML containers, and unmodeled
-  // shapes; a sentence a reviewer typed under the heading was in none of them,
-  // so `Reviewer note: the second shot is stale` was replaced away with exit 0.
+  // Prose is the shape "never delete what you did not write" misses by
+  // enumeration. Images, comments, HTML containers, and unmodeled shapes each
+  // have a rule above; a sentence a reviewer typed under the heading is in
+  // none of them, so without this loop `Reviewer note: the second shot is
+  // stale` is replaced away with exit 0.
   // The whole vocabulary this skill emits is `ownSectionLine`, so anything else
   // in the range a replace deletes is somebody else's text — including a
-  // blockquote or a bold line, which matched by shape until ownership became
-  // provenance.
+  // blockquote or a bold line, which shape alone claims and provenance does
+  // not.
   const first = ATX_HEADING.test(lines[start]) ? start + 1 : start + 2; // setext takes two lines
   for (let index = first; index < stop; index++) {
     if (ownSectionLine(lines, index)) continue;
@@ -721,6 +737,9 @@ export function splice(body, section, options = {}) {
   // above, so what is left holding a `](` is a plain markdown link.
   if (SECTION_LINK.test(sectionText.replace(ANY_IMAGE, ""))) {
     return refuse("the section carries an unescaped markdown link, which must never reach a public body");
+  }
+  if (SECTION_PATH.test(sectionText)) {
+    return refuse("the section renders a filesystem path where the degraded form takes a basename");
   }
 
   const landed = Number.isFinite(options?.landed) ? options.landed : 0;
