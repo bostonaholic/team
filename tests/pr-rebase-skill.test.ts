@@ -267,6 +267,18 @@ describe("pr-rebase skill: conflict resolution", () => {
     expect(continueLine ?? "").toContain("GIT_EDITOR=true");
   });
 
+  test("the semantic sweep enumerates what the BASE added, not only what conflicted", () => {
+    // The mirror of the rename case: a file the base CREATED that cites a
+    // path this branch moved merges clean, because this branch never touched
+    // it. No marker, no stop, nothing in --diff-filter=U to review — so the
+    // sweep has to read what the base contributed across the replayed range.
+    const added = fencedLines().find((line) => /--diff-filter=A/.test(line));
+    expect(added).toBeDefined();
+    expect(added ?? "").toContain("${MERGE_BASE:?}");
+    expect(added ?? "").toContain("${BASE_REMOTE:?}");
+    expect(added ?? "").toContain("${BASE:?}");
+  });
+
   test("the marker check runs before git add, which runs before --continue", () => {
     // Ordering tripwire: `git diff --cached --check` ahead of `git add`
     // inspects an empty staged diff and passes vacuously.
