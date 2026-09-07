@@ -57,7 +57,7 @@ const SPLICE = join(SKILL_DIR, "splice.mjs");
 // step needs is a file with a shebang — never a markdown fence, which carries
 // no shebang and holds no state across an invocation boundary.
 const SCRIPTS = join(SKILL_DIR, "scripts");
-const SCRIPT_NAMES = ["resolve-pr.sh"] as const;
+const SCRIPT_NAMES = ["resolve-pr.sh", "pre-image.sh", "upload.sh"] as const;
 
 function scriptPath(name: string): string {
   return join(SCRIPTS, name);
@@ -65,6 +65,11 @@ function scriptPath(name: string): string {
 function scriptSource(name: string): string {
   return fileOr(scriptPath(name));
 }
+// What used to be four fenced blocks — the argument split, the guarded
+// pre-image read, the path validation with the attach it gates, and the
+// harvest — is three files, so a contract that named a fence names a script.
+const uploadScript = () => scriptSource("upload.sh");
+const preImageScript = () => scriptSource("pre-image.sh");
 // One script, run directly so its own shebang chooses the interpreter, with
 // `env` merged over the inherited environment.
 function runScript(name: string, args: string[], env: Record<string, string> = {}): ShellRun {
@@ -508,9 +513,9 @@ describe("Slice 1 — skill prose (L2)", () => {
     const upload = uploadRef();
     expect(upload.length).toBeGreaterThan(0);
 
-    const preImage = upload.indexOf('PRE_IMAGE_JSON="$(gh pr view');
+    const preImage = upload.indexOf("scripts/pre-image.sh");
     const check = upload.indexOf("--check --body-file");
-    const attach = upload.indexOf('--attach "$');
+    const attach = upload.indexOf("scripts/upload.sh");
     const spliceCall = upload.indexOf("splice.mjs", attach);
     const write = upload.indexOf('--body-file "$NEW_BODY_FILE"', spliceCall);
 
@@ -522,9 +527,13 @@ describe("Slice 1 — skill prose (L2)", () => {
     expect(spliceCall).toBeGreaterThan(attach);
     expect(write).toBeGreaterThan(spliceCall);
 
-    // Re-read after every attach: the body read command appears again past
-    // the attach loop.
-    expect(upload.indexOf('AFTER_JSON="$(gh pr view', attach)).toBeGreaterThan(attach);
+    // Inside the upload program: the attach, then the re-read after EVERY
+    // attach, success or not.
+    const source = uploadScript();
+    expect(source.length).toBeGreaterThan(0);
+    const attachCall = source.indexOf('--attach "$');
+    expect(attachCall).toBeGreaterThanOrEqual(0);
+    expect(source.indexOf('AFTER_JSON="$(gh pr view', attachCall)).toBeGreaterThan(attachCall);
 
     // No `#<alt>` suffix in any command the skill emits.
     const blocks = fencedBlocks(corpus());
@@ -610,7 +619,7 @@ describe("Slice 1 — skill prose (L2)", () => {
     expect(upload.length).toBeGreaterThan(0);
 
     const detection = squash(upload).search(/trailing|tail/i);
-    const attach = squash(upload).indexOf('--attach "$');
+    const attach = squash(upload).indexOf("scripts/upload.sh");
     expect(detection).toBeGreaterThanOrEqual(0);
     expect(attach).toBeGreaterThanOrEqual(0);
     // Detection is part of step A, so it runs before the first attach.
@@ -2283,47 +2292,24 @@ describe("Slice 1 — splice.mjs CLI exit codes (L1)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Cross-shell execution. EVERY executable fence in this file runs under EVERY
-// shell here and must produce identical status, stdout, and stderr.
-//
-// This is not belt-and-braces. `set -- $ARGUMENTS` splits an unquoted
-// PARAMETER expansion, which bash does and zsh does not (`SH_WORD_SPLIT` is
-// off by default) — so under this machine's own /bin/zsh the whole value bound
-// to `PR_ARG`, `ENTRIES_FILE` stayed empty, and the validator refused every
-// multi-token invocation, which is the entire `team-pr` path. A harness pinned
-// to `spawnSync("bash", …)` reported that fence green. The shell a fence runs
-// under is part of its contract, so the contract is asserted, not assumed.
+// Every executable procedure is a script with a shebang, so the interpreter is
+// the file's own declaration rather than the host session's shell. What is
+// left in a fence is a single command with no construct whose meaning differs
+// between one shell and the next, and the sweep at the end of this file is
+// what keeps it that way.
 // ---------------------------------------------------------------------------
-
-const SHELLS = ["bash", "zsh"] as const;
 
 type ShellRun = { status: number; stdout: string; stderr: string };
 
-function runInShell(shell: string, script: string): ShellRun {
-  const result = spawnSync(shell, ["-c", script], { encoding: "utf8" });
-  return { status: result.status ?? -1, stdout: result.stdout ?? "", stderr: result.stderr ?? "" };
-}
-
-// `script` under every shell, asserted identical, then returned once. `setup`
-// runs before each shell so a fence with side effects starts from the same
-// state in both.
-function runEveryShell(script: string, setup: () => void = () => {}): ShellRun {
-  const runs = SHELLS.map((shell) => {
-    setup();
-    return { shell, ...runInShell(shell, script) };
+// The fences a session copies verbatim, run as one program. `bash` because
+// every construct left in them is POSIX and every branch and loop moved into a
+// file that pins its own interpreter.
+function runFences(script: string, env: Record<string, string> = {}): ShellRun {
+  const result = spawnSync("bash", ["-c", script], {
+    encoding: "utf8",
+    env: { ...process.env, ...env },
   });
-  const [first, ...rest] = runs as [typeof runs[number], ...typeof runs];
-  // The shell name travels into the comparison so a mismatch names the shell
-  // that diverged rather than only the values.
-  for (const run of rest) {
-    expect({ shell: run.shell, status: run.status, stdout: run.stdout, stderr: run.stderr }).toEqual({
-      shell: run.shell,
-      status: first.status,
-      stdout: first.stdout,
-      stderr: first.stderr,
-    });
-  }
-  return { status: first.status, stdout: first.stdout, stderr: first.stderr };
+  return { status: result.status ?? -1, stdout: result.stdout ?? "", stderr: result.stderr ?? "" };
 }
 
 // ---------------------------------------------------------------------------
@@ -2681,46 +2667,73 @@ function harvestFence(): string {
 const UNRECORDED_ENTRY = /\[ -z "\$ASSET_URL" \][ \t]*\|\|[ \t]*printf/;
 
 // ---------------------------------------------------------------------------
-// The other two executable fences, run under every shell in SHELLS.
+// The upload scripts, EXECUTED end to end against a stubbed `gh`.
 //
-// A sweep asks what a fence DECLARES — which names it binds, which files it
-// writes and in what order. Neither shape asks whether the shell the fence
-// runs under gives it the semantics the prose claims, which is exactly how a
-// `set -- $ARGUMENTS` split shipped green. So the validation fence and the
-// harvest fence are EXECUTED here, and both shells must agree.
+// A source sweep asks what a program DECLARES — which names it binds, which
+// files it writes and in what order. It never asks whether the program
+// classifies an entry the way the prose claims, so the path-validation matrix,
+// the harvest allowlist matrix, the lost-update guard, and the capability gap
+// are run here. Nothing below reaches the network.
 // ---------------------------------------------------------------------------
 
-// A real 1x1 PNG: the fence decides by `file -b --mime-type`, and an eight-byte
+// A real 1x1 PNG: acceptance is by `file -b --mime-type`, and an eight-byte
 // signature alone reports `application/octet-stream`.
 const PNG_1X1 = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
   "base64",
 );
 
-const SHELL_SANDBOXES: string[] = [];
+const SANDBOXES: string[] = [];
 function sandbox(): string {
-  const dir = mkdtempSync(join(tmpdir(), "pr-screenshots-fence-"));
-  SHELL_SANDBOXES.push(dir);
+  const dir = mkdtempSync(join(tmpdir(), "pr-screenshots-run-"));
+  SANDBOXES.push(dir);
   return dir;
 }
 afterAll(() => {
-  for (const dir of SHELL_SANDBOXES) rmSync(dir, { recursive: true, force: true });
+  for (const dir of SANDBOXES) rmSync(dir, { recursive: true, force: true });
 });
 
-// A `gh` that records each `--attach` by appending a tail to the body it then
-// serves back, which is what the real one does and what step B's prefix test
-// reads. Nothing here reaches the network.
-function ghStub(dir: string): string {
+// A `gh` that serves a body, records each `--attach` by appending a tail to
+// that body, and honours `--body-file` by replacing it — which is what the
+// real one does and what the prefix test and the read-back read.
+//
+//   attach  whether `pr edit --help` advertises `--attach` at all, which is
+//           the capability the degraded path exists for
+//   append  the exact text one attach appends; the default is the shape
+//           GitHub emits, with a per-attach counter
+//   body    the PR body before anything runs
+function ghStub(
+  dir: string,
+  { attach = true, append, body = "Intro" }: { attach?: boolean; append?: string; body?: string } = {},
+): Record<string, string> {
   const bin = join(dir, "bin");
+  const state = join(dir, "state");
   mkdirSync(bin, { recursive: true });
+  rmSync(state, { recursive: true, force: true });
+  mkdirSync(state, { recursive: true });
+  writeFileSync(join(state, "n"), "0");
+  writeFileSync(join(state, "body"), body);
+  if (append !== undefined) writeFileSync(join(state, "append"), append);
+  const help = attach
+    ? "  --attach file   Attach a file to the pull request"
+    : "  --body-file file   Read body text from file";
   writeFileSync(
     join(bin, "gh"),
     [
       "#!/bin/sh",
       'case "$2" in',
       "  edit)",
-      '    N="$(cat "$GH_STATE/n")" ; N=$((N + 1)) ; printf %s "$N" >"$GH_STATE/n"',
-      `    printf '\\n![image](https://github.com/user-attachments/assets/a%s)' "$N" >>"$GH_STATE/body"`,
+      `    case "$3" in --help) printf '%s\\n' ${JSON.stringify(help)} ; exit 0 ;; esac`,
+      "    while [ $# -gt 0 ]; do",
+      '      case "$1" in --body-file) cp "$2" "$GH_STATE/body" ; exit 0 ;; esac',
+      "      shift",
+      "    done",
+      '    if [ -f "$GH_STATE/append" ]; then',
+      '      cat "$GH_STATE/append" >>"$GH_STATE/body"',
+      "    else",
+      '      N="$(cat "$GH_STATE/n")" ; N=$((N + 1)) ; printf %s "$N" >"$GH_STATE/n"',
+      `      printf '\\n![image](https://github.com/user-attachments/assets/a%s)' "$N" >>"$GH_STATE/body"`,
+      "    fi",
       "    exit 0 ;;",
       "  view)",
       `    jq -Rs '{body: .}' <"$GH_STATE/body" ; exit 0 ;;`,
@@ -2730,166 +2743,124 @@ function ghStub(dir: string): string {
     ].join("\n"),
     { mode: 0o755 },
   );
-  return bin;
+  return { PATH: `${bin}:${process.env.PATH ?? ""}`, GH_STATE: state };
 }
 
-describe("Slice 1 — the validation and harvest fences, executed (L1)", () => {
-  test("the validation fence classifies every entry the same way in every shell", () => {
-    const fence = validationFence();
-    expect(fence.length).toBeGreaterThan(0);
+// The run directory as `resolve-pr.sh` leaves it. Its own contract is tested
+// above; this seeds the five files the later scripts read.
+function seedRun(dir: string, entriesFile: string, prUrl = PR_URL): string {
+  const run = join(dir, "run");
+  mkdirSync(run, { recursive: true });
+  const rest = prUrl.slice("https://".length).split("/");
+  const [host, owner, repo] = rest as [string, string, string];
+  writeFileSync(join(run, "pr-url"), `${prUrl}\n`);
+  writeFileSync(join(run, "pr-host"), `${host}\n`);
+  writeFileSync(join(run, "owner"), `${owner}\n`);
+  writeFileSync(join(run, "repo"), `${repo}\n`);
+  writeFileSync(join(run, "number"), `${prUrl.split("/").pop()}\n`);
+  writeFileSync(join(run, "repo-spec"), `${host}/${owner}/${repo}\n`);
+  writeFileSync(join(run, "entries-file"), `${entriesFile}\n`);
+  return run;
+}
 
+// Write an entries file, then run the pre-image and the upload over it. The
+// pre-image script runs for real, so what upload.sh compares against is the
+// body the stub actually served.
+function upload(
+  paths: string[],
+  options: { root?: string; append?: string; body?: string; prUrl?: string; entries?: unknown } = {},
+): { status: number; stderr: string; assets: string[]; failures: string[]; after: string; runDir: string } {
+  const dir = sandbox();
+  const root = options.root ?? join(dir, "shots");
+  const entriesFile = join(dir, "entries.json");
+  writeFileSync(
+    entriesFile,
+    JSON.stringify(
+      options.entries ?? { root, entries: paths.map((path) => ({ path, caption: "c" })), notes: [] },
+    ),
+  );
+  const env = ghStub(dir, { append: options.append, body: options.body });
+  const run = seedRun(dir, entriesFile, options.prUrl);
+  const pre = runScript("pre-image.sh", [run], env);
+  expect({ step: "pre-image.sh", status: pre.status, stderr: pre.stderr }).toEqual({
+    step: "pre-image.sh",
+    status: 0,
+    stderr: "",
+  });
+  const result = runScript("upload.sh", [run], env);
+  const lines = (name: string): string[] => {
+    const path = join(run, name);
+    return existsSync(path) ? read(path).split("\n").filter((line) => line !== "") : [];
+  };
+  return {
+    status: result.status,
+    stderr: result.stderr,
+    assets: lines("assets.tsv"),
+    failures: lines("failures.tsv"),
+    after: existsSync(join(run, "after.md")) ? read(join(run, "after.md")) : "",
+    runDir: run,
+  };
+}
+
+describe("Slice 1 — upload.sh, executed (L1)", () => {
+  test("the validation matrix classifies every entry, in entries order", () => {
     const dir = sandbox();
     const root = join(dir, "shots");
     const outside = join(dir, "elsewhere");
     mkdirSync(root, { recursive: true });
     mkdirSync(outside, { recursive: true });
+    mkdirSync(join(root, "adirectory"), { recursive: true });
     writeFileSync(join(root, "a.png"), PNG_1X1);
     writeFileSync(join(outside, "b.png"), PNG_1X1);
     writeFileSync(join(root, "notes.txt"), "not an image\n");
     writeFileSync(join(root, "has#hash.png"), PNG_1X1);
     symlinkSync(join(root, "a.png"), join(root, "link.png"));
 
-    // Entries order IS the report order, so the expectation below is a list,
-    // not a set.
-    const paths = [
-      join(root, "a.png"),
-      join(root, "missing.png"),
-      join(outside, "b.png"),
-      join(root, "link.png"),
-      join(root, "notes.txt"),
-      "relative.png",
-      join(root, "has#hash.png"),
-    ];
-    const entriesFile = join(dir, "entries.json");
-    writeFileSync(
-      entriesFile,
-      JSON.stringify({ root, entries: paths.map((path) => ({ path, caption: "c" })), notes: [] }),
+    // Entries order IS the report order, so the expectation is a list, not a
+    // set. One entry is valid, so exactly one attach runs and the re-read
+    // carries exactly one appended tail.
+    const run = upload(
+      [
+        join(root, "a.png"),
+        join(root, "missing.png"),
+        join(outside, "b.png"),
+        join(root, "link.png"),
+        join(root, "notes.txt"),
+        "relative.png",
+        join(root, "has#hash.png"),
+        join(root, "adirectory"),
+      ],
+      { root },
     );
 
-    const state = join(dir, "state");
-    const bin = ghStub(dir);
-    const failures = join(dir, "failures.tsv");
-    const script = [
-      `PATH=${JSON.stringify(bin)}:$PATH`,
-      `GH_STATE=${JSON.stringify(state)}`,
-      "export PATH GH_STATE",
-      "NUMBER=412",
-      "REPO_SPEC=github.com/owner/repo",
-      'PRE_IMAGE="Intro"',
-      `ENTRIES_FILE=${JSON.stringify(entriesFile)}`,
-      `FAILURES_FILE=${JSON.stringify(failures)}`,
-      `ASSETS_FILE=${JSON.stringify(join(dir, "assets.tsv"))}`,
-      `CANDIDATES_FILE=${JSON.stringify(join(dir, "candidates.txt"))}`,
-      fence,
-      // What the loop produced: every failure class in entries order, then the
-      // body as the last successful re-read left it.
-      `printf 'AFTER=%s\\n' "$AFTER"`,
-      `printf 'READ_FAILED=%s\\n' "$READ_FAILED"`,
-      `cat "$FAILURES_FILE"`,
-    ].join("\n");
-
-    // Both shells start from the same `gh` state, or the second run reads the
-    // first one's appended tails and the comparison is meaningless.
-    const reset = () => {
-      rmSync(state, { recursive: true, force: true });
-      mkdirSync(state, { recursive: true });
-      writeFileSync(join(state, "n"), "0");
-      writeFileSync(join(state, "body"), "Intro");
-      writeFileSync(failures, "");
-    };
-    const run = runEveryShell(script, reset);
-
     expect({ status: run.status, stderr: run.stderr }).toEqual({ status: 0, stderr: "" });
-    expect(run.stdout.split("\n").filter((line) => line !== "")).toEqual([
-      // One attach landed, so the stub appended exactly one tail and the
-      // re-read carries it.
-      "AFTER=Intro",
-      "![image](https://github.com/user-attachments/assets/a1)",
-      "READ_FAILED=no",
+    expect(run.failures).toEqual([
       `file missing\t${join(root, "missing.png")}`,
       `outside the declared root\t${join(outside, "b.png")}`,
       `symlink refused\t${join(root, "link.png")}`,
       `not an image\t${join(root, "notes.txt")}`,
       "relative path\trelative.png",
       `# in path\t${join(root, "has#hash.png")}`,
+      `not a regular file\t${join(root, "adirectory")}`,
     ]);
-    // One fence, one shell per run, several `gh` and `file` spawns each. The
-    // work is bounded; the wall clock is not, so the budget is stated rather
-    // than left to the 5s default on a loaded machine.
+    expect(run.assets).toEqual([
+      `https://github.com/user-attachments/assets/a1\t${join(root, "a.png")}`,
+    ]);
+    // Every entry lands in exactly one of the two files. One in neither
+    // vanishes: `--landed` is the line count of assets.tsv, so a harvest that
+    // stopped matching would publish "captured, not yet uploaded" over assets
+    // that are live on world-readable URLs, beside an empty failure list.
+    expect(run.assets.length + run.failures.length).toBe(8);
+    expect(run.after).toBe("Intro\n![image](https://github.com/user-attachments/assets/a1)");
   }, 60_000);
 
-  test("the harvest fence binds the same URL, and the same refusal, in every shell", () => {
-    const fence = harvestFence();
-    expect(fence.length).toBeGreaterThan(0);
-
-    const ASSET = "https://github.com/user-attachments/assets/aaaa";
-    const OTHER = "https://github.com/user-attachments/assets/bbbb";
-    const cases: { name: string; suffix: string; asset: string; reason: string }[] = [
-      { name: "one allowlisted URL", suffix: `\n![image](${ASSET})`, asset: ASSET, reason: "" },
-      // The shape a `for CANDIDATE in $SUFFIX` cannot see: under zsh the whole
-      // suffix arrives as ONE candidate, which satisfies every test below and
-      // defeats the ambiguity guard outright.
-      {
-        name: "two allowlisted URLs",
-        suffix: `\n![image](${ASSET})\n![image](${OTHER})`,
-        asset: "",
-        reason: "ambiguous attachment URL",
-      },
-      {
-        name: "an off-host URL",
-        suffix: "\n![image](https://attacker.example/x/user-attachments/y.png)",
-        asset: "",
-        reason: "no attachment URL",
-      },
-      {
-        name: "raw.githubusercontent.com",
-        suffix: "\n![image](https://raw.githubusercontent.com/attacker/evil/main/x.png)",
-        asset: "",
-        reason: "no attachment URL",
-      },
-      { name: "an empty suffix", suffix: "", asset: "", reason: "no attachment URL" },
-    ];
-
-    for (const { name, suffix, asset, reason } of cases) {
-      const dir = sandbox();
-      const assets = join(dir, "assets.tsv");
-      const failures = join(dir, "failures.tsv");
-      const script = [
-        "PR_URL=https://github.com/owner/repo/pull/412",
-        "ENTRY_PATH=/shots/a.png",
-        'REASON=""',
-        `ASSETS_FILE=${JSON.stringify(assets)}`,
-        `FAILURES_FILE=${JSON.stringify(failures)}`,
-        `CANDIDATES_FILE=${JSON.stringify(join(dir, "candidates.txt"))}`,
-        `fail_entry() { printf '%s\\t%s\\n' "$REASON" "$ENTRY_PATH" >>"$FAILURES_FILE" ; }`,
-        `SUFFIX=${JSON.stringify(suffix)}`,
-        fence,
-        `printf 'ASSET=%s\\n' "$(cut -f1 <"$ASSETS_FILE")"`,
-        `printf 'REASON=%s\\n' "$(cut -f1 <"$FAILURES_FILE")"`,
-      ].join("\n");
-      const reset = () => {
-        writeFileSync(assets, "");
-        writeFileSync(failures, "");
-      };
-      const run = runEveryShell(script, reset);
-      expect({ name, status: run.status, stdout: run.stdout }).toEqual({
-        name,
-        status: 0,
-        stdout: `ASSET=${asset}\nREASON=${reason}\n`,
-      });
-    }
-  }, 60_000);
-
-  test("a `#` a symlinked root hides still fails the entry, in every shell", () => {
-    // The `#` guard tested `$ENTRY_PATH` while `--attach` received `$RESOLVED`.
-    // `pwd -P` resolves a symlinked capture root into its physical directory,
-    // so a `#` in THAT name reaches the attach argument — where the host reads
-    // it as the alt-text delimiter — without ever appearing in the entry path
-    // the guard saw. Containment passes, because the same `#` is in
-    // `$CAPTURE_ROOT` too.
-    const fence = validationFence();
-    expect(fence.length).toBeGreaterThan(0);
-
+  test("a `#` a symlinked root hides still fails the entry", () => {
+    // The `#` guard tested the entry path while `--attach` received the
+    // resolved one. `pwd -P` resolves a symlinked capture root into its
+    // physical directory, so a `#` in THAT name reaches the attach argument —
+    // where the host reads it as the alt-text delimiter — without ever
+    // appearing in the entry path the guard saw. Containment passes, because
+    // the same `#` is in the resolved root too.
     const dir = sandbox();
     const physical = join(dir, "shots#1");
     const root = join(dir, "shots");
@@ -2899,52 +2870,222 @@ describe("Slice 1 — the validation and harvest fences, executed (L1)", () => {
 
     const entry = join(root, "a.png"); // no `#` anywhere in the entry path
     expect(entry).not.toContain("#");
-    const entriesFile = join(dir, "entries.json");
-    writeFileSync(entriesFile, JSON.stringify({ root, entries: [{ path: entry, caption: "c" }], notes: [] }));
+    const run = upload([entry], { root });
 
-    const state = join(dir, "state");
-    const bin = ghStub(dir);
-    const failures = join(dir, "failures.tsv");
-    const assets = join(dir, "assets.tsv");
-    const script = [
-      `PATH=${JSON.stringify(bin)}:$PATH`,
-      `GH_STATE=${JSON.stringify(state)}`,
-      "export PATH GH_STATE",
-      "NUMBER=412",
-      "REPO_SPEC=github.com/owner/repo",
-      'PRE_IMAGE="Intro"',
-      `ENTRIES_FILE=${JSON.stringify(entriesFile)}`,
-      `FAILURES_FILE=${JSON.stringify(failures)}`,
-      `ASSETS_FILE=${JSON.stringify(assets)}`,
-      `CANDIDATES_FILE=${JSON.stringify(join(dir, "candidates.txt"))}`,
-      fence,
-      `printf 'AFTER=%s\\n' "$AFTER"`,
-      `cat "$FAILURES_FILE"`,
-    ].join("\n");
-    const reset = () => {
-      rmSync(state, { recursive: true, force: true });
-      mkdirSync(state, { recursive: true });
-      writeFileSync(join(state, "n"), "0");
-      writeFileSync(join(state, "body"), "Intro");
-      writeFileSync(failures, "");
-      writeFileSync(assets, "");
-    };
-    const run = runEveryShell(script, reset);
-
-    // `AFTER=Intro` is the proof no attach ran: the stub appends a tail per
-    // attach, and the re-read would carry it.
-    expect({ status: run.status, stdout: run.stdout }).toEqual({
+    // `after.md` unchanged is the proof no attach ran: the stub appends a tail
+    // per attach, and the re-read would carry it.
+    expect({ status: run.status, failures: run.failures, after: run.after }).toEqual({
       status: 0,
-      stdout: `AFTER=Intro\n# in path\t${entry}\n`,
+      failures: [`# in path\t${entry}`],
+      after: "Intro",
     });
+  }, 60_000);
+
+  test("a path holding a newline refuses the whole run before any attach", () => {
+    // The JSON-to-shell bridge reads one path per line, so a path holding a
+    // newline would arrive as two and the `newline in path` class could never
+    // fire on it. The line count and the entry count differ exactly then.
+    const dir = sandbox();
+    const root = join(dir, "shots");
+    mkdirSync(root, { recursive: true });
+    const run = upload([], {
+      root,
+      entries: { root, entries: [{ path: `${root}/a\nb.png`, caption: "c" }], notes: [] },
+    });
+    expect(run.status).toBe(1);
+    expect(run.stderr).toContain("newline");
+    expect(run.after).toBe("Intro"); // nothing attached
+  }, 60_000);
+
+  test("an entries file with no absolute root refuses before the first attach", () => {
+    // Containment cannot be checked against a root that does not resolve, and
+    // a run that skipped the check would attach from anywhere on the machine.
+    const dir = sandbox();
+    const root = join(dir, "shots");
+    mkdirSync(root, { recursive: true });
+    writeFileSync(join(root, "a.png"), PNG_1X1);
+    const entry = join(root, "a.png");
+
+    for (const [name, entries] of [
+      ["no root", { entries: [{ path: entry, caption: "c" }] }],
+      ["relative root", { root: "shots", entries: [{ path: entry, caption: "c" }] }],
+      ["unresolvable root", { root: join(dir, "absent"), entries: [{ path: entry, caption: "c" }] }],
+    ] as [string, unknown][]) {
+      const run = upload([], { root, entries });
+      expect({ name, status: run.status, after: run.after }).toEqual({ name, status: 1, after: "Intro" });
+    }
+  }, 60_000);
+
+  test("the harvest binds one attachment URL, or refuses the entry", () => {
+    const ASSET = "https://github.com/user-attachments/assets/aaaa";
+    const OTHER = "https://github.com/user-attachments/assets/bbbb";
+    const PROXY = "https://private-user-images.githubusercontent.com/12/34-uuid.png?jwt=abc";
+    const cases: { name: string; append: string; asset: string; reason: string }[] = [
+      { name: "one allowlisted URL", append: `\n![image](${ASSET})`, asset: ASSET, reason: "" },
+      // The private-repository rewrite the host actually emits. A one-segment
+      // rule matches none of them, which turns every correct write on a
+      // private repository into `unverified` with `section: null`.
+      { name: "the private-repo proxy rewrite", append: `\n![image](${PROXY})`, asset: PROXY, reason: "" },
+      {
+        name: "two allowlisted URLs",
+        append: `\n![image](${ASSET})\n![image](${OTHER})`,
+        asset: "",
+        reason: "ambiguous attachment URL",
+      },
+      {
+        name: "an off-host URL",
+        append: "\n![image](https://attacker.example/x/user-attachments/y.png)",
+        asset: "",
+        reason: "no attachment URL",
+      },
+      {
+        name: "raw.githubusercontent.com",
+        append: "\n![image](https://raw.githubusercontent.com/attacker/evil/main/x.png)",
+        asset: "",
+        reason: "no attachment URL",
+      },
+      {
+        name: "user-attachments matched mid-path",
+        append: "\n![image](https://github.com/attacker/repo/raw/main/user-attachments/evil.png)",
+        asset: "",
+        reason: "no attachment URL",
+      },
+      {
+        name: "userinfo before the host",
+        append: "\n![image](https://github.com@attacker.example/x/user-attachments/y.png)",
+        asset: "",
+        reason: "no attachment URL",
+      },
+      {
+        name: "a path that walks out of the anchor",
+        append: "\n![image](https://github.com/user-attachments/assets/../../attacker/evil/raw/main/x.png)",
+        asset: "",
+        reason: "no attachment URL",
+      },
+      {
+        name: "a percent-encoded dot segment",
+        append: "\n![image](https://github.com/user-attachments/assets/%2e%2e/attacker/x.png)",
+        asset: "",
+        reason: "no attachment URL",
+      },
+      {
+        name: "a three-segment proxy path",
+        append: "\n![image](https://private-user-images.githubusercontent.com/12/34/56.png)",
+        asset: "",
+        reason: "no attachment URL",
+      },
+      { name: "an empty suffix", append: "", asset: "", reason: "no attachment URL" },
+    ];
+
+    for (const { name, append, asset, reason } of cases) {
+      const dir = sandbox();
+      const root = join(dir, "shots");
+      mkdirSync(root, { recursive: true });
+      writeFileSync(join(root, "a.png"), PNG_1X1);
+      const run = upload([join(root, "a.png")], { root, append });
+      expect({
+        name,
+        status: run.status,
+        asset: (run.assets[0] ?? "").split("\t")[0] ?? "",
+        reason: (run.failures[0] ?? "").split("\t")[0] ?? "",
+      }).toEqual({ name, status: 0, asset, reason });
+    }
+  }, 120_000);
+
+  test("an Enterprise run harvests against its own hosts", () => {
+    // The allowlist is derived from the PR this run resolved, never
+    // hardcoded, so an Enterprise install harvests its own host and its own
+    // proxy — and github.com's proxy is not on that list.
+    const dir = sandbox();
+    const root = join(dir, "shots");
+    mkdirSync(root, { recursive: true });
+    writeFileSync(join(root, "a.png"), PNG_1X1);
+    const ghe = "https://ghe.example.com/owner/repo/pull/9";
+    const asset = "https://ghe.example.com/user-attachments/assets/aaaa";
+
+    const landed = upload([join(root, "a.png")], { root, prUrl: ghe, append: `\n![i](${asset})` });
+    expect(landed.assets.map((line) => line.split("\t")[0])).toEqual([asset]);
+
+    const foreign = upload([join(root, "a.png")], {
+      root,
+      prUrl: ghe,
+      append: "\n![i](https://private-user-images.githubusercontent.com/12/34-uuid.png)",
+    });
+    expect(foreign.failures.map((line) => line.split("\t")[0])).toEqual(["no attachment URL"]);
+  }, 60_000);
+
+  test("a lost update stops the run with the assets live", () => {
+    // Another writer replaced the body during the upload window. The write is
+    // computed from the pre-image, so landing it would overwrite their edit
+    // with a body that never contained it.
+    const dir = sandbox();
+    const root = join(dir, "shots");
+    mkdirSync(root, { recursive: true });
+    writeFileSync(join(root, "a.png"), PNG_1X1);
+    const run = upload([join(root, "a.png")], { root, append: "REPLACED" });
+    // The stub appends, so the body still starts with the pre-image — a
+    // concurrent append is the named, accepted gap. A replacement is not:
+    // seed the body as empty and let the append be prose.
+    expect(run.status).toBe(0);
+
+    const replaced = upload([join(root, "a.png")], { root, body: "", append: "somebody else's prose" });
+    expect(replaced.status).toBe(4);
+    expect(replaced.stderr).toContain("body");
+  }, 60_000);
+
+  test("a failed re-read refuses to write rather than trusting a stale baseline", () => {
+    // `after.md` is the body as of the last SUCCESSFUL read, so an entry that
+    // recorded `body read failed` leaves a stale baseline for the guard to
+    // test — a concurrent replacement passes it, over a window spanning every
+    // entry from the failed read on, and the write is computed from the
+    // pre-image, so it would be overwritten rather than detected.
+    const dir = sandbox();
+    const root = join(dir, "shots");
+    mkdirSync(root, { recursive: true });
+    writeFileSync(join(root, "a.png"), PNG_1X1);
+    const entriesFile = join(dir, "entries.json");
+    writeFileSync(entriesFile, JSON.stringify({ root, entries: [{ path: join(root, "a.png"), caption: "c" }] }));
+    const env = ghStub(dir);
+    const run = seedRun(dir, entriesFile);
+    expect(runScript("pre-image.sh", [run], env).status).toBe(0);
+    // The read starts failing only after the pre-image is taken.
+    writeFileSync(join(dir, "state", "broken"), "");
+    writeFileSync(
+      join(dir, "bin", "gh"),
+      [
+        "#!/bin/sh",
+        'case "$2" in',
+        "  edit) exit 0 ;;",
+        '  view) [ -f "$GH_STATE/broken" ] && exit 1 ; exit 0 ;;',
+        "esac",
+        "exit 1",
+        "",
+      ].join("\n"),
+      { mode: 0o755 },
+    );
+    const result = runScript("upload.sh", [run], env);
+    expect(result.status).toBe(4);
+    expect(read(join(run, "failures.tsv"))).toContain("body read failed");
+    expect(existsSync(join(run, "read-failed"))).toBe(true);
+  }, 60_000);
+
+  test("upload.sh refuses a run directory step A never wrote", () => {
+    // A missing pre-image is a fault, not a refusal: an unwritten path reads
+    // as an EMPTY body, `--check` passes vacuously on one, and the splice
+    // would replace the PR's whole description with the section alone.
+    const dir = sandbox();
+    const run = seedRun(dir, join(dir, "entries.json"));
+    const result = runScript("upload.sh", [run], ghStub(dir));
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain("pre-image.md");
   }, 60_000);
 });
 
 // ---------------------------------------------------------------------------
-// The capability gap, EXECUTED end to end. `exit 3` is a branch a session
-// takes and then keeps running from, so what matters is not that the fence
-// exits 3 but what the fences after it do — and step D's lost-update guard
-// reads `$AFTER`, which step B binds and this path skips.
+// The capability gap, EXECUTED end to end. Exit 3 is a branch a session takes
+// and then keeps running from, so what matters is not that the check exits 3
+// but what the steps after it do — and the lost-update guard reads a baseline
+// the skipped step would otherwise have been the only one to write.
 // ---------------------------------------------------------------------------
 
 // One fenced block of `02`, with the reference's own `<skill-dir>` placeholder
@@ -2954,57 +3095,25 @@ function uploadFence(marker: string): string {
   return block.replaceAll("<skill-dir>", SKILL_DIR);
 }
 
-// A `gh` whose `pr edit --help` does NOT advertise `--attach` — the host the
-// capability check exists for — and which serves and rewrites a body.
-function ghWithoutAttach(dir: string): string {
-  const bin = join(dir, "bin");
-  mkdirSync(bin, { recursive: true });
-  writeFileSync(
-    join(bin, "gh"),
-    [
-      "#!/bin/sh",
-      'case "$2" in',
-      "  edit)",
-      `    case "$3" in --help) printf '%s\\n' '  --body-file file   Read body text from file' ; exit 0 ;; esac`,
-      "    while [ $# -gt 0 ]; do",
-      '      case "$1" in --body-file) cp "$2" "$GH_STATE/body" ; exit 0 ;; esac',
-      "      shift",
-      "    done",
-      "    exit 1 ;;",
-      "  view)",
-      `    jq -Rs '{body: .}' <"$GH_STATE/body" ; exit 0 ;;`,
-      "esac",
-      "exit 1",
-      "",
-    ].join("\n"),
-    { mode: 0o755 },
-  );
-  return bin;
-}
-
 describe("Slice 1 — the capability gap, executed (L1)", () => {
   test("a host that cannot attach still writes the degraded section", () => {
     // The user's requirement, end to end: no upload capability means skip the
     // upload, keep the degraded note, report the instruction to the operator,
-    // and never block. With `$AFTER` bound only in step B — the step this path
-    // skips — the guard compared "" against a non-empty pre-image and exited 1,
-    // so the degraded path refused instead of writing. On a `team-pr` run the
-    // pre-image is never empty: the draft body already carries the pre-upload
-    // degraded section, which is what this fixture is.
-    const capability = uploadFence("ATTACH_SUPPORTED");
-    const temporaries = uploadFence("RUN_DIR=");
-    const preImage = uploadFence("PRE_IMAGE_JSON=");
+    // and never block. With the baseline bound only by the step this path
+    // skips, the guard compared "" against a non-empty pre-image and refused
+    // instead of writing. On a `team-pr` run the pre-image is never empty: the
+    // draft body already carries the pre-upload degraded section, which is
+    // what this fixture is.
+    const preImage = uploadFence("pre-image.sh");
     const check = uploadFence("--check --body-file");
-    const guard = uploadFence('case "$PRE_IMAGE" in');
+    const capability = uploadFence("--attach");
     const spliceCall = uploadFence("LANDED_COUNT=");
-    const write = uploadFence("--body-file \"$NEW_BODY_FILE\"");
-    for (const fence of [capability, temporaries, preImage, check, guard, spliceCall, write]) {
+    const write = uploadFence('--body-file "$NEW_BODY_FILE"');
+    for (const fence of [preImage, check, capability, spliceCall, write]) {
       expect(fence.length).toBeGreaterThan(0);
     }
 
     const dir = sandbox();
-    const state = join(dir, "state");
-    const bin = ghWithoutAttach(dir);
     const opened = [
       "## Summary",
       "",
@@ -3016,23 +3125,25 @@ describe("Slice 1 — the capability gap, executed (L1)", () => {
       "",
       "Closes #12",
     ].join("\n");
+    const env = ghStub(dir, { attach: false, body: opened });
+    const run = seedRun(dir, join(dir, "entries.json"));
 
     const script = [
-      `PATH=${JSON.stringify(bin)}:$PATH`,
-      `GH_STATE=${JSON.stringify(state)}`,
-      "export PATH GH_STATE",
-      "NUMBER=412",
-      "REPO_SPEC=github.com/owner/repo",
+      `RUN_DIR=${JSON.stringify(run)}`,
+      'NUMBER="$(cat "$RUN_DIR/number")"',
+      'REPO_SPEC="$(cat "$RUN_DIR/repo-spec")"',
+      preImage,
+      check,
       // The capability check is its own invocation, so its `exit 3` ends that
       // fence and not the run — which is what a session does with it.
       `( ${"\n"}${capability}${"\n"} ) ; CAP=$?`,
       `printf 'CAP=%s\\n' "$CAP"`,
       '[ "$CAP" = 3 ] || exit 9',
-      temporaries,
-      preImage,
-      check,
-      // Steps B and C are skipped: nothing is validated and nothing attaches.
-      // Step D renders the degraded section and writes once.
+      // The upload is skipped: nothing is validated and nothing attaches.
+      // Step D renders the degraded section — into the two paths its own
+      // render fence binds — and writes once.
+      'SECTION_FILE="$RUN_DIR/section.md"',
+      'NEW_BODY_FILE="$RUN_DIR/new-body.md"',
       `cat >"$SECTION_FILE" <<'PR_SCREENSHOTS_SECTION'`,
       "## Screenshots",
       "",
@@ -3040,26 +3151,20 @@ describe("Slice 1 — the capability gap, executed (L1)", () => {
       "",
       "> _note:_ 1 state skipped — see manifest",
       "PR_SCREENSHOTS_SECTION",
-      guard,
       spliceCall,
       write,
       `cat "$GH_STATE/body"`,
     ].join("\n");
 
-    const reset = () => {
-      rmSync(state, { recursive: true, force: true });
-      mkdirSync(state, { recursive: true });
-      writeFileSync(join(state, "body"), opened);
-    };
-    const run = runEveryShell(script, reset);
+    const result = runFences(script, env);
 
     // The run reaches the write and lands the degraded section, note included,
     // with the summary and the ticket reference intact.
-    expect({ status: run.status, stderr: run.stderr }).toEqual({
+    expect({ status: result.status, stderr: result.stderr }).toEqual({
       status: 0,
       stderr: "upgrade gh — attaching a file needs at least 2.100.0\n",
     });
-    expect(run.stdout).toBe(
+    expect(result.stdout).toBe(
       [
         "CAP=3",
         "## Summary",
@@ -3114,11 +3219,11 @@ describe("Slice 1 — containment, allowlist, and failure classes (L2)", () => {
     // `cd ""` succeeds as a no-op in bash, sh, and zsh, so an unbound value
     // rebinds the root to the working directory and `<repo>/.env` becomes
     // "contained".
-    const fence = validationFence();
-    expect(fence.length).toBeGreaterThan(0);
-    expect(fence).toContain(': "${CAPTURE_ROOT:?');
-    expect(fence).toContain('case "$CAPTURE_ROOT" in /*)');
-    expect(fence).toContain('CAPTURE_ROOT="$(cd -- "$CAPTURE_ROOT" && pwd -P)"');
+    const source = uploadScript();
+    expect(source.length).toBeGreaterThan(0);
+    expect(source).toContain('if [ -z "$CAPTURE_ROOT" ]; then');
+    expect(source).toContain('case "$CAPTURE_ROOT" in');
+    expect(source).toContain('CAPTURE_ROOT="$(cd -- "$CAPTURE_ROOT" && pwd -P)"');
     // The unguarded predecessor is gone from every file the skill ships.
     expect(corpus()).not.toContain("CAPTURE_DIR");
   });
@@ -3126,29 +3231,29 @@ describe("Slice 1 — containment, allowlist, and failure classes (L2)", () => {
   test("every path check the prose enumerates is in the copyable block", () => {
     // The guard is the part a model copying one fenced block at a time would
     // otherwise drop, so the block has to carry the whole set.
-    const fence = validationFence();
-    expect(fence.length).toBeGreaterThan(0);
+    const source = uploadScript();
+    expect(source.length).toBeGreaterThan(0);
     const checks: [string, string][] = [
       ["newline", "$NEWLINE"],
       ["hash", '*"#"*'],
       ["absolute", "/*)"],
-      ["exists", '[ -e "$ENTRY_PATH" ]'],
-      ["symlink", '[ -L "$ENTRY_PATH" ]'],
-      ["regular file", '[ -f "$ENTRY_PATH" ]'],
+      ["exists", '-e "$ENTRY_PATH"'],
+      ["symlink", '-L "$ENTRY_PATH"'],
+      ["regular file", '-f "$ENTRY_PATH"'],
       ["resolved", "pwd -P"],
       ["containment", '"$CAPTURE_ROOT"/*'],
       ["image content", "--mime-type"],
     ];
-    expect(checks.filter(([, token]) => !fence.includes(token)).map(([name]) => name)).toEqual([]);
+    expect(checks.filter(([, token]) => !source.includes(token)).map(([name]) => name)).toEqual([]);
   });
 
   test("an entry that fails a check carries a reason class of its own", () => {
     // `Not uploaded: <caption> — <reason>` is the whole account the operator
     // gets, so a check that falls through a bare `continue` reports nothing
     // actionable.
-    const fence = validationFence();
-    expect(fence.length).toBeGreaterThan(0);
-    expect((fence.match(/REASON=/g) ?? []).length).toBeGreaterThanOrEqual(8);
+    const source = uploadScript();
+    expect(source.length).toBeGreaterThan(0);
+    expect((source.match(/REASON=/g) ?? []).length).toBeGreaterThanOrEqual(8);
 
     const upload = squash(uploadRef());
     for (const label of [
@@ -3173,7 +3278,7 @@ describe("Slice 1 — containment, allowlist, and failure classes (L2)", () => {
     expect(upload.length).toBeGreaterThan(0);
     expect(upload).toContain("~/.ssh/id_ed25519");
     expect(upload).toContain(".env");
-    expect(validationFence()).toContain("file -b --mime-type");
+    expect(uploadScript()).toContain("file -b --mime-type");
   });
 
   test("the harvest binds the attachment host to the resolved PR", () => {
@@ -3182,12 +3287,14 @@ describe("Slice 1 — containment, allowlist, and failure classes (L2)", () => {
     // write access can append during the attach window — and which a
     // multi-repo run then copies verbatim into every companion PR.
     const upload = uploadRef();
+    const source = uploadScript();
     expect(upload.length).toBeGreaterThan(0);
-    expect(upload).toContain('PR_HOST="${PR_URL#https://}"');
+    expect(source.length).toBeGreaterThan(0);
+    expect(source).toContain('PR_HOST="${PR_URL#https://}"');
     expect(upload).toContain("*.githubusercontent.com");
-    expect(upload).toContain("PR_SCREENSHOTS_ASSET_HOST");
+    for (const text of [upload, source]) expect(text).toContain("PR_SCREENSHOTS_ASSET_HOST");
     // A host is a whole label, never a substring: userinfo is rejected.
-    expect(upload).toContain("*[!A-Za-z0-9.-]*");
+    expect(source).toContain("*[!A-Za-z0-9.-]*");
 
     expect(UNBOUND_HOST.test(upload)).toBe(false);
     // The detector fires on a planted positive.
@@ -3444,20 +3551,70 @@ describe("Slice 1 — the copyable blocks (L2)", () => {
     expect(LOOP_BRANCH.test(planted) && !LOOP_KEYWORD.test(planted)).toBe(true);
   });
 
-  test("validation and the attach it gates are one block, one loop", () => {
+  test("no fence depends on a construct the host shell decides the meaning of", () => {
+    // What the extraction bought, kept: the interpreter of a script is its own
+    // shebang, but a fence still runs in whatever shell the session has, and
+    // that shell is bash on some hosts and zsh on others. `set -- $VAR` and
+    // `for X in $VAR` split an unquoted PARAMETER expansion in bash and do not
+    // in zsh (`SH_WORD_SPLIT` is off by default) — which refused every
+    // multi-token invocation of this skill — and `[[ … =~ … ]]` matches in
+    // both while leaving `$BASH_REMATCH` unset in one. Anything needing them
+    // belongs in a file that pins bash.
+    const shellDependent: [string, RegExp][] = [
+      ["set -- on a parameter expansion", /set -- \$[A-Za-z_{]/],
+      ["for over a parameter expansion", /\bfor\s+[A-Za-z_][A-Za-z0-9_]*\s+in\s+\$[A-Za-z_{]/],
+      ["a regex match operator", /=~/],
+    ];
+    const blocks = skillBlocks().map(shellCode);
+    expect(blocks.length).toBeGreaterThan(0);
+    for (const [name, pattern] of shellDependent) {
+      expect({ name, offenders: blocks.filter((block) => pattern.test(block)) }).toEqual({
+        name,
+        offenders: [],
+      });
+    }
+
+    // Each detector fires on a planted positive — the shapes that shipped.
+    const planted = [
+      "set -- $ARGUMENTS",
+      "for CANDIDATE in $SUFFIX; do : ; done",
+      '[[ "$PR_ARG" =~ $PR_URL_PATTERN ]] || exit 1',
+    ];
+    for (const [index, [, pattern]] of shellDependent.entries()) {
+      expect(pattern.test(planted[index] as string)).toBe(true);
+    }
+    // And the scripts that DO carry them pin bash in their first line.
+    expect(scriptSource("resolve-pr.sh")).toContain("set -- $ARGUMENTS");
+    expect(scriptSource("resolve-pr.sh").split("\n")[0]).toBe("#!/usr/bin/env bash");
+  });
+
+  test("every script that branches out of a loop has one around it", () => {
+    // The same rule the fences carry, applied to the files the branches moved
+    // into: a `continue` outside a loop warns and falls through in bash, so
+    // the refused entry would be attached by the next command.
+    for (const name of SCRIPT_NAMES) {
+      const code = shellCode(scriptSource(name));
+      expect({ name, empty: code.length === 0 }).toEqual({ name, empty: false });
+      if (!LOOP_BRANCH.test(code)) continue;
+      expect({ name, loop: LOOP_KEYWORD.test(code) }).toEqual({ name, loop: true });
+    }
+  });
+
+  test("validation and the attach it gates are one program, one loop", () => {
     // `REASON` does not survive an invocation boundary, and neither does a
-    // refusal: a model running the validation fence as one Bash call and the
-    // attach fence as the next attaches the file the first call refused.
-    const fence = validationFence();
-    expect(fence.length).toBeGreaterThan(0);
-    expect(LOOP_KEYWORD.test(shellCode(fence))).toBe(true);
-    expect(fence).toContain("gh pr edit");
-    expect(fence).toContain("--attach");
+    // refusal: a session running the validation as one Bash call and the
+    // attach as the next attaches the file the first call refused.
+    const source = uploadScript();
+    expect(source.length).toBeGreaterThan(0);
+    expect(LOOP_KEYWORD.test(shellCode(source))).toBe(true);
+    expect(source).toContain("gh pr edit");
+    expect(source).toContain("--attach");
 
     // The attach takes the RESOLVED path — the one the symlink, containment,
     // and content checks ran against — and refuses to run at all when it is
     // unset or empty.
-    expect(fence).toContain('--attach "${RESOLVED:?}"');
+    expect(source).toContain('--attach "${RESOLVED:?}"');
+    expect(source).not.toContain('--attach "$ENTRY_PATH"');
     const attaches = skillBlocks().filter((block) => block.includes("--attach"));
     expect(attaches.length).toBeGreaterThan(0);
     expect(attaches.filter((block) => block.includes('--attach "$ENTRY_PATH"'))).toEqual([]);
@@ -3467,10 +3624,10 @@ describe("Slice 1 — the copyable blocks (L2)", () => {
   test("the symlink test runs before the existence test", () => {
     // `[ -e ]` follows the link, so a dangling symlink tested first reports as
     // `file missing` and hides the attempt behind the wrong class.
-    const fence = validationFence();
+    const fence = uploadScript();
     expect(fence.length).toBeGreaterThan(0);
-    const symlink = fence.indexOf('[ -L "$ENTRY_PATH" ]');
-    const exists = fence.indexOf('[ -e "$ENTRY_PATH" ]');
+    const symlink = fence.indexOf('-L "$ENTRY_PATH"');
+    const exists = fence.indexOf('-e "$ENTRY_PATH"');
     expect(symlink).toBeGreaterThanOrEqual(0);
     expect(exists).toBeGreaterThan(symlink);
   });
@@ -3480,10 +3637,13 @@ describe("Slice 1 — the copyable blocks (L2)", () => {
     // write access to any repository on the allowlisted host controls
     // `/attacker/repo/raw/main/user-attachments/evil.png`.
     const upload = uploadRef();
+    const source = uploadScript();
     expect(upload.length).toBeGreaterThan(0);
-    expect(upload).toContain("/user-attachments/assets/*)");
-    expect(upload).toContain("CANDIDATE_PATH");
-    expect(MIDPATH_ATTACHMENT.test(upload)).toBe(false);
+    expect(source.length).toBeGreaterThan(0);
+    expect(source).toContain("/user-attachments/assets/*)");
+    // The path is compared only after the host has been split off it.
+    expect(source).toContain('host="${rest%%/*}"');
+    expect(MIDPATH_ATTACHMENT.test(upload) || MIDPATH_ATTACHMENT.test(source)).toBe(false);
     // The detector fires on a planted positive — the shape that shipped.
     expect(MIDPATH_ATTACHMENT.test('case "$CANDIDATE" in https://*/user-attachments/*) : ;; *) continue ;; esac')).toBe(true);
 
@@ -3516,7 +3676,7 @@ describe("Slice 1 — refuse before mutating (L2)", () => {
     expect(upload).toContain("refused: <reason>");
 
     const check = upload.indexOf("--check --body-file");
-    const attach = upload.indexOf('--attach "$');
+    const attach = upload.indexOf("scripts/upload.sh");
     expect(check).toBeGreaterThanOrEqual(0);
     expect(attach).toBeGreaterThan(check);
 
@@ -3543,8 +3703,10 @@ describe("Slice 1 — refuse before mutating (L2)", () => {
     expect(input.length).toBeGreaterThan(0);
 
     // The exit-1 row assigns both outcomes, by the one fact that separates
-    // them: whether any asset landed.
-    const exitOne = upload.slice(upload.indexOf("| 1 |"), upload.indexOf("| 2 |"));
+    // them: whether any asset landed. Scoped to the splice's own table, since
+    // `upload.sh` tabulates its four exits above it.
+    const splice = upload.slice(upload.indexOf("Three exit codes"));
+    const exitOne = splice.slice(splice.indexOf("| 1 |"), splice.indexOf("| 2 |"));
     expect(exitOne.length).toBeGreaterThan(0);
     expect(exitOne).toContain("uploaded-not-written");
     expect(exitOne).toContain("refused");
@@ -3565,7 +3727,8 @@ describe("Slice 1 — refuse before mutating (L2)", () => {
     expect(/move the hand-authored image/.test(upload)).toBe(true);
     expect(/delete the HTML comment inside it/.test(upload)).toBe(true);
 
-    const exitOne = upload.slice(upload.indexOf("| 1 |"), upload.indexOf("| 2 |"));
+    const splice = upload.slice(upload.indexOf("Three exit codes"));
+    const exitOne = splice.slice(splice.indexOf("| 1 |"), splice.indexOf("| 2 |"));
     expect(exitOne).toContain("manual edit");
   });
 
@@ -3623,27 +3786,30 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     // Screenshots section as the WHOLE body, and the lost-update guard passed
     // vacuously because every string starts with "".
     const upload = uploadRef();
+    const source = preImageScript();
     expect(upload.length).toBeGreaterThan(0);
+    expect(source.length).toBeGreaterThan(0);
 
-    expect(UNGUARDED_PRE_IMAGE.test(upload)).toBe(false);
+    expect(UNGUARDED_PRE_IMAGE.test(source)).toBe(false);
     // The detector fires on a planted positive — the line that shipped.
     expect(UNGUARDED_PRE_IMAGE.test('PRE_IMAGE="$(gh pr view "$NUMBER" --repo "$R" --json body --jq .body)"')).toBe(true);
 
     // The read exits on failure, and an envelope check separates a failed call
     // from `{"body":""}`.
-    expect(upload).toContain('PRE_IMAGE_JSON="$(gh pr view "$NUMBER" --repo "$REPO_SPEC" --json body)" || exit 2');
-    expect(upload).toContain('has("body")');
+    expect(source).toContain('if ! PRE_IMAGE_JSON="$(gh pr view "$NUMBER" --repo "$REPO_SPEC" --json body </dev/null)"; then');
+    expect(source).toContain('has("body")');
 
     // The empty-pre-image arm of the lost-update guard exists and is separate
     // from the prefix test, which is vacuous on "".
     const flat = squash(upload);
     expect(flat).toContain("vacuous when the pre-image is empty");
-    expect(upload).toContain('case "$PRE_IMAGE" in');
-    const guard = upload.slice(upload.indexOf('case "$PRE_IMAGE" in'));
+    const guardSource = uploadScript();
+    expect(guardSource).toContain('if [ -z "$PRE_IMAGE" ]; then');
+    const guard = guardSource.slice(guardSource.indexOf('if [ -z "$PRE_IMAGE" ]; then'));
     expect(guard.indexOf('"$PRE_IMAGE"*)')).toBeGreaterThan(0);
 
     // The re-read inside the loop is guarded the same way.
-    expect(upload).toContain('AFTER_JSON="$(gh pr view "$NUMBER" --repo "$REPO_SPEC" --json body)"');
+    expect(guardSource).toContain('AFTER_JSON="$(gh pr view "$NUMBER" --repo "$REPO_SPEC" --json body </dev/null)"');
   });
 
   test("the validation loop binds its own inputs, in the same fence", () => {
@@ -3651,24 +3817,25 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     // skill produced either — so a session following the doc literally hits an
     // unbound root and has to invent its own jq extraction, which is the
     // improvisation this fence's own prose forbids.
-    const fence = validationFence();
+    const fence = uploadScript();
     expect(fence.length).toBeGreaterThan(0);
 
-    // Both inputs are produced, in the same fence that consumes them.
+    // Both inputs are produced, in the same program that consumes them.
     const rootBinding = fence.indexOf('CAPTURE_ROOT="$(jq -r');
-    const positional = fence.indexOf("set -- $(jq -r '.entries[].path'");
-    const loop = fence.indexOf('for ENTRY_PATH in "$@"');
+    const bridge = fence.indexOf("jq -r '.entries[].path'");
+    const loop = fence.indexOf('while IFS= read -r ENTRY_PATH');
     expect(rootBinding).toBeGreaterThanOrEqual(0);
-    expect(positional).toBeGreaterThan(rootBinding);
-    expect(loop).toBeGreaterThan(positional);
+    expect(bridge).toBeGreaterThan(rootBinding);
+    expect(loop).toBeGreaterThan(bridge);
 
     // The bridge cannot silently split a path on its own newline, which would
     // make the `newline in path` class unreachable.
     expect(fence).toContain("ENTRY_COUNT");
     expect(fence).toContain("LINE_COUNT");
-    expect(fence).toContain('[ "$ENTRY_COUNT" = "$LINE_COUNT" ] || exit 1');
-    // And an unquoted `set --` globs without this.
-    expect(fence).toContain("set -f");
+    expect(fence).toContain('if [ "$ENTRY_COUNT" != "$LINE_COUNT" ]; then');
+    // The bridge is a file read line by line, never an unquoted expansion:
+    // one would glob, and word-splitting it is a shell-dependent behaviour.
+    expect(/set -- \$[A-Za-z_(]/.test(fence)).toBe(false);
   });
 
   test("no fence reads a variable its own skill never binds", () => {
@@ -3741,7 +3908,7 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     // The arm fell through to the re-read and into step C, where the harvest
     // took whatever allowlisted URL the suffix held — the sole candidate, so
     // the ambiguity guard never fired, and it bound to this entry's caption.
-    const fence = validationFence();
+    const fence = uploadScript();
     expect(fence.length).toBeGreaterThan(0);
     expect(fence).toContain('REASON="attach failed" ; fail_entry ; continue');
 
@@ -3758,7 +3925,8 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     // `$SUFFIX` was the harvest's whole input and no fence bound it. A model
     // copying the fences greps an unset variable, harvests nothing, lands
     // `--landed 0`, and writes the degraded section over live assets.
-    const fence = validationFence();
+    const fence = uploadScript();
+    expect(fence.length).toBeGreaterThan(0);
     expect(fence).toContain('PREVIOUS="$AFTER"');
     expect(fence).toContain('SUFFIX="${AFTER#"$PREVIOUS"}"');
     // A body that no longer starts with the previous read is not a suffix at
@@ -3768,7 +3936,7 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     // The harvest block says where it runs, so the binding and the use are
     // one invocation.
     const upload = squash(uploadRef());
-    expect(upload).toContain("bound in step B's loop");
+    expect(upload).toContain("inside step B's own loop");
   });
 
   test("every entry ends recorded, as a landed URL or as a failure", () => {
@@ -3779,7 +3947,7 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     // every entry lands nothing, `LANDED_COUNT` is 0, and the body is written
     // in the DEGRADED form — "captured, not yet uploaded" published over assets
     // that are live on world-readable URLs, beside an empty failure list.
-    const fence = harvestFence();
+    const fence = uploadScript();
     expect(fence.length).toBeGreaterThan(0);
 
     // Two arms, one per file, and no third way out of the loop body.
@@ -3791,7 +3959,7 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     // into a line — the class that most needs a loud signal, since it fires
     // exactly when another writer appended a URL during the attach window.
     const ambiguous = fence.indexOf('REASON="ambiguous attachment URL"');
-    const loopEnd = fence.indexOf('done < "$CANDIDATES_FILE"');
+    const loopEnd = fence.indexOf('done <"$CANDIDATES_FILE"');
     expect(ambiguous).toBeGreaterThan(0);
     expect(loopEnd).toBeGreaterThan(ambiguous);
     expect(fence.indexOf("fail_entry", loopEnd)).toBeGreaterThan(loopEnd);
@@ -3810,33 +3978,34 @@ describe("Slice 1 — recipe gaps (L2)", () => {
   });
 
   test("the pre-image is written to the file every check reads", () => {
-    // `$PRE_IMAGE_FILE` was bound to a path, the normalization was prose, and
-    // no fence ever wrote the file. Followed literally that leaves an EMPTY
-    // file: `--check` passes vacuously on one — no heading, no fault — and step
-    // D splices against it, discarding the PR's real description.
+    // The path was bound in a fence, the normalization was prose, and no
+    // fence ever wrote the file. Followed literally that leaves an EMPTY
+    // file: `--check` passes vacuously on one — no heading, no fault — and
+    // step D splices against it, discarding the PR's real description.
     const upload = uploadRef();
-    const fence = fencedBlocks(upload).find((block) => block.includes("PRE_IMAGE_JSON=")) ?? "";
+    const fence = preImageScript();
     expect(fence.length).toBeGreaterThan(0);
 
-    // Read, normalized, and written in the one fence that binds it. The CR
-    // strip runs INSIDE jq, so `|| exit 2` observes jq's own status: piping
-    // into `tr` made `tr` the last stage, and without `pipefail` a jq failure
-    // exited 0 and bound `PRE_IMAGE=""`.
+    // Read, normalized, and written by the one program that takes it. The CR
+    // strip runs INSIDE jq, so the status observed is jq's own: piping into
+    // `tr` made `tr` the last stage, and without `pipefail` a jq failure
+    // exited 0 and bound an empty pre-image.
     expect(fence).toContain('jq -r \'.body | gsub("\\r";"")\'');
     expect(fence).not.toContain("| tr -d '\\r'");
-    expect(fence).toContain('printf \'%s\' "$PRE_IMAGE" >"$PRE_IMAGE_FILE"');
+    expect(fence).toContain('printf \'%s\' "$PRE_IMAGE" >"$RUN_DIR/pre-image.md"');
 
-    // And written BEFORE the check that reads it.
-    const write = upload.indexOf('>"$PRE_IMAGE_FILE"');
-    const check = upload.indexOf('--check --body-file "$PRE_IMAGE_FILE"');
+    // And written BEFORE the check that reads it: the step that writes the
+    // file is the step the reference runs first.
+    const write = upload.indexOf("scripts/pre-image.sh");
+    const check = upload.indexOf('--check --body-file "$RUN_DIR/pre-image.md"');
     expect(write).toBeGreaterThan(0);
     expect(check).toBeGreaterThan(write);
 
     // Both sides of the lost-update comparison get the same normalization, or
     // the guard refuses every run on a PR whose body carries CRLFs — and the
     // re-read binds through the same unpiped jq, for the same status reason.
-    expect(validationFence()).toContain('jq -r \'.body | gsub("\\r";"")\'');
-    expect(validationFence()).not.toContain("| tr -d '\\r'");
+    expect(uploadScript()).toContain('jq -r \'.body | gsub("\\r";"")\'');
+    expect(uploadScript()).not.toContain("| tr -d '\\r'");
   });
 
   test("the lost-update guard records what it does not cover", () => {
@@ -3851,34 +4020,36 @@ describe("Slice 1 — recipe gaps (L2)", () => {
   });
 
   test("a failed body read makes the run refuse to write, not write from a stale baseline", () => {
-    // The window is wider than a prose residual can carry: step D's write is
-    // computed from `$PRE_IMAGE_FILE`, so a concurrent replacement landing
-    // after a failed re-read is OVERWRITTEN rather than detected — the one
-    // loss this skill exists to prevent. The mark is set where every failure
-    // class already passes, and the refusal is the guard's first line.
-    const validation = validationFence();
+    // The window is wider than a prose residual can carry: the write is
+    // computed from the pre-image, so a concurrent replacement landing after
+    // a failed re-read is OVERWRITTEN rather than detected — the one loss this
+    // skill exists to prevent. The mark is set where every failure class
+    // already passes, and it is tested before either arm of the guard.
+    const validation = uploadScript();
     expect(validation.length).toBeGreaterThan(0);
     expect(validation).toContain("READ_FAILED=no");
-    expect(validation).toContain('[ "$REASON" = "body read failed" ] && READ_FAILED=yes');
+    expect(validation).toContain('if [ "$REASON" = "body read failed" ]; then');
+    expect(validation).toContain("READ_FAILED=yes");
 
-    const guard = fencedBlocks(uploadRef()).find((block) => block.includes('case "$PRE_IMAGE" in')) ?? "";
-    expect(guard.length).toBeGreaterThan(0);
-    expect(guard).toContain('[ "${READ_FAILED:-no}" = no ] || exit 1');
-    // First line, so no arm of the guard can run against the stale baseline.
-    expect(guard.split("\n").filter((line) => !/^\s*#/.test(line) && line.trim() !== "")[0]).toBe(
-      '[ "${READ_FAILED:-no}" = no ] || exit 1',
-    );
+    const mark = validation.indexOf('if [ "$READ_FAILED" = yes ]; then');
+    const empty = validation.indexOf('if [ -z "$PRE_IMAGE" ]; then');
+    expect(mark).toBeGreaterThan(0);
+    expect(empty).toBeGreaterThan(mark);
+    // Exit 4 is the lost-update status: the assets may be live, so the caller
+    // reports `uploaded-not-written` rather than `refused`.
+    expect(validation.slice(mark, empty)).toContain("exit 4");
+    expect(squash(uploadRef())).toContain("`uploaded-not-written`");
   });
 
   test("the capability check branches in the fence, never in the prose", () => {
-    // `$ATTACH_SUPPORTED` was SET by a fence and read by none: the
-    // short-circuit to the degraded path was left to a session's reading of
-    // the paragraph beside it — the last place in this recipe where control
-    // flow was inferred rather than executed.
-    const capability = fencedBlocks(uploadRef()).find((block) => block.includes("ATTACH_SUPPORTED")) ?? "";
+    // The short-circuit to the degraded path was once left to a session's
+    // reading of the paragraph beside it — the last place in this recipe
+    // where control flow was inferred rather than executed. Capability
+    // decides, never a version string: a parsed version pins a floor nothing
+    // else here pins and breaks on distro-patched version output.
+    const capability = fencedBlocks(uploadRef()).find((block) => block.includes("--attach")) ?? "";
     expect(capability.length).toBeGreaterThan(0);
-    expect(capability).toContain("gh pr edit --help | grep -q -- '--attach' || ATTACH_SUPPORTED=no");
-    expect(capability).toContain('if [ "${ATTACH_SUPPORTED:-yes}" = no ]; then');
+    expect(capability).toContain("if ! gh pr edit --help | grep -q -- '--attach'; then");
     // A status of its own, distinct from refusal (1) and fault (2).
     expect(capability).toContain("exit 3");
   });
@@ -3896,6 +4067,7 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     // the prose beside them names the rejected form on purpose. `03` states
     // the same rule as prose, so it is swept whole.
     expect(fencedBlocks(upload).filter((fence) => WILDCARD_PROXY_HOST.test(fence))).toEqual([]);
+    expect(WILDCARD_PROXY_HOST.test(shellCode(uploadScript()))).toBe(false);
     expect(WILDCARD_PROXY_HOST.test(verify)).toBe(false);
     // The detector fires on a planted positive — the rule that shipped.
     expect(WILDCARD_PROXY_HOST.test('case "$CANDIDATE_HOST" in *.githubusercontent.com) : ;; esac')).toBe(true);
@@ -3905,10 +4077,10 @@ describe("Slice 1 — recipe gaps (L2)", () => {
       expect(text).toContain("private-user-images.githubusercontent.com");
       expect(text).toContain("PR_SCREENSHOTS_ASSET_HOST");
     }
-    expect(upload).toContain('ASSET_PROXY_HOST="private-user-images.$PR_HOST"');
+    expect(uploadScript()).toContain('ASSET_PROXY_HOST="private-user-images.$PR_HOST"');
 
     // The proxy path is shaped, not "any path at all".
-    expect(upload).toContain('case "${CANDIDATE_FILE#/}" in');
+    expect(uploadScript()).toContain('case "${file#/}" in');
     expect(squash(verify)).toContain("one or two segments whose last names an image file");
   });
 
@@ -3940,11 +4112,11 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     expect(verify.length).toBeGreaterThan(0);
 
     // The harvest rejects it in the copyable block, before the anchor test.
-    const fence = fencedBlocks(upload).find((block) => block.includes("ASSET_PROXY_HOST=")) ?? "";
+    const fence = uploadScript();
     expect(fence.length).toBeGreaterThan(0);
-    expect(fence).toContain('case "$CANDIDATE_PATH" in *..|*../*|*/..|*/../*) continue ;; esac');
-    expect(fence).toContain('case "$CANDIDATE" in *%2[eEfF]*) continue ;; esac');
-    expect(fence.indexOf("*/../*")).toBeLessThan(fence.indexOf("/user-attachments/assets/*)"));
+    expect(fence).toContain('case "$path" in *..|*../*) continue ;; esac');
+    expect(fence).toContain('case "$candidate" in *%2[eEfF]*) continue ;; esac');
+    expect(fence.indexOf("*../*")).toBeLessThan(fence.indexOf("/user-attachments/assets/*)"));
 
     // The read-back checks the same rule, or it cannot detect what the harvest
     // let through.
@@ -3960,14 +4132,14 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     // `unverified` on a correct write.
     const upload = uploadRef();
     expect(upload.length).toBeGreaterThan(0);
-    const fence = fencedBlocks(upload).find((block) => block.includes("ASSET_PROXY_HOST=")) ?? "";
+    const fence = uploadScript();
     expect(fence.length).toBeGreaterThan(0);
     // Three or more segments is the reject arm; one and two are allowed.
     expect(fence).toContain("*/*/*) continue ;;");
     // The one-segment rule that rejected every real rewrite is gone: the arm
     // is now three-or-more, so `/<user-id>/<asset-id>-<uuid>.png` is admitted.
-    expect(fence).not.toContain("one segment, naming an image file");
-    expect(fence).toContain("one or two segments, naming an image file");
+    expect(fence).not.toContain("one segment, the last naming an image file");
+    expect(fence).toContain("one or two segments, the last naming an image file");
     // The extension test still bounds the last segment.
     expect(fence).toContain("*.png|*.jpg|*.jpeg|*.gif|*.webp|*.avif)");
     // A realistic rewrite is pinned, so the shape cannot drift back.
@@ -3980,35 +4152,45 @@ describe("Slice 1 — recipe gaps (L2)", () => {
     // The prose claimed the re-read "is guarded the same way the pre-image
     // is"; the pre-image checks the JSON envelope and the re-read did not, so
     // a rate-limited response became `""` — "the host removed the body".
-    const fence = validationFence();
+    const fence = uploadScript();
     expect(fence.length).toBeGreaterThan(0);
     const envelope = 'jq -e \'has("body") and (.body | type == "string")\'';
     expect(fence).toContain("AFTER_JSON=");
     expect(fence).toContain(envelope);
     expect(fence.indexOf(envelope)).toBeLessThan(fence.indexOf('AFTER="$(printf'));
     // Step A's pre-image read carries the same check, so the claim holds.
-    expect(uploadRef()).toContain("PRE_IMAGE_JSON=");
-    expect((uploadRef().match(/has\("body"\) and \(\.body \| type == "string"\)/g) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect(preImageScript()).toContain("PRE_IMAGE_JSON=");
+    const both = [preImageScript(), fence].join("\n");
+    expect((both.match(/has\("body"\) and \(\.body \| type == "string"\)/g) ?? []).length).toBeGreaterThanOrEqual(2);
   });
 
-  test("every load-bearing temporary and count is bound in a visible fence", () => {
-    // A variable a later fence expands but no fence binds is a variable the
-    // session invents — `$LANDED_COUNT` feeds the guard that keeps rule 4 from
-    // being satisfiable by caller text.
-    const fences = fencedBlocks(uploadRef()).join("\n");
+  test("every run-directory file a fence names is one a script writes", () => {
+    // The recurring defect in its file form: a fence handed `--body-file` a
+    // path nothing had written, so `--check` ran against an EMPTY body —
+    // where it passes vacuously — and the splice then replaced the PR's whole
+    // description. The run directory is the contract now, so every name a
+    // fence reads out of it must be a name a script puts there.
+    const fences = fencedBlocks([inputRef(), uploadRef(), verifyRef()].join("\n")).join("\n");
     expect(fences.length).toBeGreaterThan(0);
-    for (const binding of [
-      'PRE_IMAGE_FILE="$RUN_DIR/pre-image.md"',
-      'SECTION_FILE="$RUN_DIR/section.md"',
-      'NEW_BODY_FILE="$RUN_DIR/new-body.md"',
-      'CANDIDATES_FILE="$RUN_DIR/candidates.txt"',
-      "LANDED_COUNT=",
-      'ASSETS_FILE',
-    ]) {
-      expect(fences).toContain(binding);
-    }
-    // The count comes from the run's own record of what landed, not from prose.
-    expect(fences).toContain('LANDED_COUNT="$(wc -l <"$ASSETS_FILE"');
+
+    const scripts = SCRIPT_NAMES.map((name) => scriptSource(name)).join("\n");
+    const written = new Set<string>();
+    for (const match of scripts.matchAll(/>"\$RUN_DIR\/([A-Za-z0-9._-]+)"/g)) written.add(match[1] as string);
+    // Step D's two temporaries are the fence's own, bound where they are used.
+    for (const name of ["section.md", "new-body.md"]) written.add(name);
+
+    const named = [...fences.matchAll(/"\$RUN_DIR\/([A-Za-z0-9._-]+)"/g)].map((match) => match[1] as string);
+    expect(named.length).toBeGreaterThan(0);
+    expect([...new Set(named)].filter((name) => !written.has(name)).sort()).toEqual([]);
+    // The sweep can find a positive: a name no script writes is not in the set.
+    expect(written.has("never-written.md")).toBe(false);
+
+    expect(fences).toContain('SECTION_FILE="$RUN_DIR/section.md"');
+    expect(fences).toContain('NEW_BODY_FILE="$RUN_DIR/new-body.md"');
+    // The count comes from the run's own record of what landed, not from
+    // prose: it feeds the guard that keeps rule 4 from being satisfiable by
+    // caller text.
+    expect(fences).toContain('LANDED_COUNT="$(wc -l <"$RUN_DIR/assets.tsv"');
   });
 
   test("the entries file has a worked, non-interpolating construction", () => {

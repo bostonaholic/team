@@ -67,15 +67,6 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Ensure zsh
-        # tests/pr-screenshots-skill.test.ts executes the skill's shell fences
-        # under EVERY shell in its matrix (bash and zsh) and asserts identical
-        # bindings — a fence that splits correctly in bash and not in zsh is
-        # the defect the matrix exists to catch, and this machine's login shell
-        # is zsh. The suite fails loudly when a matrix shell is missing rather
-        # than comparing a run against itself, so the shell is installed here.
-        run: command -v zsh >/dev/null || { sudo apt-get update && sudo apt-get install -y zsh ; }
-
       - name: Type-check harness
         # `bun test` transpiles without type-checking, so type errors pass it
         # silently. `tsc --noEmit` is the cheapest deterministic gate (static,
