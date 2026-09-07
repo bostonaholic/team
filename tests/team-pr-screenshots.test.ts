@@ -225,7 +225,7 @@ describe("Slice 3: companion PRs get the same section, each verified", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Review round 1 — the companion splice recipe.
+// The companion splice recipe.
 // ---------------------------------------------------------------------------
 
 // A splice invocation whose stdout is redirected straight onto the final body
@@ -234,7 +234,7 @@ describe("Slice 3: companion PRs get the same section, each verified", () => {
 // `gh pr edit --body-file` — blanking that companion's body.
 const UNGUARDED_REDIRECT = /splice\.mjs[\s\S]{0,240}?>\s*"\$NEW_BODY_FILE"\s*$/m;
 
-describe("Review round 1: the companion recipe guards its own redirect", () => {
+describe("Slice 3: the companion recipe guards its own redirect", () => {
   test("the multi-repo splice never redirects straight onto the body file", () => {
     const multiRepo = multiRepoBlock();
     expect(multiRepo.length).toBeGreaterThan(0);

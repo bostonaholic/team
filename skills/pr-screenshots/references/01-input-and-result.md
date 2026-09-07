@@ -46,14 +46,18 @@ edited.
 One input, one file, JSON — because a caption may hold a tab, which no
 delimiter-separated format survives. `team-pr` writes it from the capture
 manifest. A session with no `--entries` flag writes the same JSON itself under
-`$(mktemp -d)` from the request, which is what lets a caller with no pipeline
-artifacts use this skill at all.
+`$(mktemp -d)` from the request — the paths exactly as the user gave them, and
+`root` set to the directory those images already live in, never to the
+directory the JSON was just written to. That is what lets a caller with no
+pipeline artifacts say "add these three screenshots to PR 412" and have it
+work.
 
 ```json
 {
+  "root": "/Users/dev/Desktop/shots",
   "entries": [
-    { "path": "/tmp/shots/login.png", "caption": "Login", "state": "default" },
-    { "path": "/tmp/shots/login-error.png", "caption": "Login", "state": "error", "note": "seeded" }
+    { "path": "/Users/dev/Desktop/shots/login.png", "caption": "Login", "state": "default" },
+    { "path": "/Users/dev/Desktop/shots/login-error.png", "caption": "Login", "state": "error", "note": "seeded" }
   ],
   "notes": ["2 states skipped — see manifest"]
 }
@@ -62,6 +66,15 @@ artifacts use this skill at all.
 Per entry: `path` and `caption` are required, `state` and `note` are optional.
 One top-level `notes` list carries caller-supplied discrepancy lines. Captions
 need not be unique.
+
+The top-level `root` is **required and absolute**. It is the directory every
+entry's `path` must resolve inside, and it is the directory the caller's images
+**already live in** — a Desktop, a Downloads directory, `$ARGUMENTS/screenshots/`
+for a `team-pr` run. It is never the `mktemp -d` directory this JSON is written
+to: nothing here copies or stages the caller's images, so a root taken from
+where the JSON sits would fail every entry of the run this skill exists to
+serve. What `root` bounds is scope, not trust — the check that survives a
+hostile entries file is in `references/02-upload-and-body-edit.md`, step B.
 
 ### Normalizing caller strings
 
@@ -116,7 +129,12 @@ Each of these fires before any `gh` call and mutates nothing.
   `entries` array. Refuse and report the parser's own message.
 - **An entry lacking `path` or `caption`.** Refuse for the whole run rather
   than dropping the entry: a silently shortened list is indistinguishable from
-  a caller that meant to send fewer images.
+  a caller that meant to send fewer images. Name the entry by its index in the
+  refusal, so a caller sending twelve of them does not have to guess which one.
+- **A missing, relative, or unresolvable top-level `root`.** Refuse and name
+  the field. Containment cannot be checked against a root that does not
+  resolve, and a run that skipped the check would attach from anywhere on the
+  machine.
 - **A malformed PR number or URL.** Refuse and report it. Never guess.
 - **A bare PR number with no local checkout.** No repository context exists to
   bind it to, so refuse and ask for the full PR URL.
@@ -156,8 +174,10 @@ anything weaker must not travel.
 
 For `uploaded-not-written`, `body_written: false` and `section: null`. The
 assets are live and are named in `assets`, and the appended tails the attach
-step left already render them, so the report tells the operator what is on the
-PR right now:
+step left already render them — under an alt text the host derives from the
+file it received, which this skill does not pin and does not clear on this
+path. Report each tail verbatim in `operator_note`, so the report tells the
+operator exactly what is on the PR right now:
 
 ```json
 {

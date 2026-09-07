@@ -51,45 +51,110 @@ baseline for the lost-update guard, and the subject of four checks:
    in an image line, and losing it is worse than a duplicate.
 
    The splice leaves that tail in place by construction, and the construction
-   is rule 1: a *standalone* image line — one whose predecessor is blank or
-   absent — joins the trailing block alongside the blank lines, the footer
-   sections, and the ticket references, so it leaves `content` before rule 2
-   chooses what to replace and is re-emitted byte-identical below the new
-   section. Standalone is the whole discriminator, and it works because this
-   skill always emits a `**caption**` line directly above each of its own
-   images while `gh pr edit --attach` appends a bare one. A body whose own
-   images are bare is therefore re-emitted below the new section rather than
-   replaced — a duplicate, which is the loss this rule prefers.
+   is rule 1: a *standalone* image RUN — one or more adjacent image-only lines
+   whose first member's predecessor is blank or absent — joins the trailing
+   block alongside the blank lines, the footer sections, and the ticket
+   references, so it leaves `content` before rule 2 chooses what to replace and
+   is re-emitted byte-identical below the new section, separated by a blank
+   line so the next run classifies it the same way. The run, not the line, is
+   the unit: `--attach` appends one bare line per upload, so a crash after
+   several leaves several. Standalone is the whole discriminator, and it works
+   because this skill always emits a `**caption**` line directly above each of
+   its own images while `gh pr edit --attach` appends a bare one. A body whose
+   own images are bare is therefore re-emitted below the new section rather
+   than replaced — a duplicate, which is the loss this rule prefers.
+
+   Preservation covers what trails the body. An image the splice would have to
+   delete *in place* — one inside the section, captioned, wrapped in a
+   `<details>`, or anywhere else with no trailing position to lift it into —
+   has nothing to be lifted into, so the splice **refuses** instead. Between
+   the two, "never delete what you did not write" holds in every shape: the
+   trailing run is preserved as a duplicate, and everything else is a refusal
+   with the offending line named.
 
 **Step B — attach one file per command.**
 
-Validate each entry's `path` first. The set is exhaustive: the file **exists**,
-is a **regular file**, is **not a symbolic link**, is **contained** in the
-declared capture directory, its path holds no **newline**, and its path holds
-no `#`.
+Validate each entry's `path` first. The set is exhaustive: the path is
+**absolute**, holds no **newline**, and holds no `#`; the file **exists**, is a
+**regular file**, is **not a symbolic link**, is **contained** in the run's
+declared root, and **is an image by content**. Each check names its own failure
+class, because `Not uploaded: <caption> — <reason>` is the whole account the
+operator gets:
 
-Two of those carry their own reason. The `#` check is not cosmetic — the host
-reads `#` in an attach argument as the alt-text delimiter, so a path such as
-one ending `login.png#after.png` would upload a different file under an alt the
-caller never chose. And a shell `-f` test *follows* symbolic links, so
-`-f` alone accepts an entry naming a link to `~/.ssh/id_ed25519` or to a `.env`
-and uploads that file to a live, world-readable `user-attachments` URL. Test
-the link itself, and resolve the path before comparing it to the capture
-directory so that `..` cannot climb out of it
+| Check | Failure class |
+| --- | --- |
+| Absolute path | `relative path` |
+| No newline in the path | `newline in path` |
+| No `#` in the path | `# in path` |
+| Exists | `file missing` |
+| Regular file | `not a regular file` |
+| Not a symbolic link | `symlink refused` |
+| Inside the declared root | `outside the declared root` |
+| Image by content | `not an image` |
+
+None of the last three is cosmetic. The host reads `#` in an attach argument as
+the alt-text delimiter, so a path such as one ending `login.png#after.png`
+would upload a different file under an alt the caller never chose. A shell `-f`
+test *follows* symbolic links, so `-f` alone accepts an entry naming a link to
+`~/.ssh/id_ed25519` or to a `.env` and uploads that file to a live,
+world-readable `user-attachments` URL — test the link itself, and resolve the
+path before comparing it to the root so that `..` cannot climb out of it
 (`skills/principle-never-interpolate/SKILL.md`, containment).
 
+**The content check is the one that survives a hostile entries file.** An
+entries file can name any path on the machine, and the root is declared by
+whoever wrote that file, so containment bounds a *mistake* — a stale manifest,
+a wrong glob, a path that drifted — and never a chosen target. What keeps
+`~/.ssh/id_ed25519`, a repository's `.env`, and `.git/config` off a
+world-readable URL is that none of them is an image, decided by content rather
+than by extension. An environment with no `file` command yields no type, which
+fails the check: unverified is not an image.
+
+The declared root is the entries file's own top-level `root`
+(`references/01-input-and-result.md`) — `$ARGUMENTS/screenshots/` for a
+`team-pr` run, and the directory the caller's images already live in for a
+standalone one. It is never the `mktemp -d` directory the entries JSON is
+written to: nothing here copies or stages the caller's images, so a root
+derived from where that JSON sits would fail every entry of a run over images
+on a Desktop or in a Downloads directory, and land on `outcome: degraded` with
+nothing uploaded and nothing an operator could act on.
+
+Validate the root and use it in the same invocation. `cd ""` succeeds as a
+no-op in bash, sh, and zsh, so an unbound value silently rebinds the root to
+the current working directory — after which an entry naming `<repo>/.env` or
+`<repo>/.git/config` is "contained".
+
 ```bash
-CAPTURE_DIR="$(cd "$CAPTURE_DIR" && pwd -P)"
-[ -f "$ENTRY_PATH" ] || continue          # exists, and is a regular file
-[ -L "$ENTRY_PATH" ] && continue          # never follow a symlink
-RESOLVED="$(cd "$(dirname "$ENTRY_PATH")" && pwd -P)/$(basename "$ENTRY_PATH")"
-case "$RESOLVED" in "$CAPTURE_DIR"/*) : ;; *) continue ;; esac
+: "${CAPTURE_ROOT:?the entries file must declare an absolute root}"
+case "$CAPTURE_ROOT" in /*) : ;; *) exit 1 ;; esac         # absolute, or refuse
+CAPTURE_ROOT="$(cd -- "$CAPTURE_ROOT" && pwd -P)" || exit 1
+NEWLINE='
+'
+# Per entry. Each arm records its class in REASON and continues the loop.
+case "$ENTRY_PATH" in
+  *"$NEWLINE"*) REASON="newline in path" ; continue ;;
+  *"#"*)        REASON="# in path"       ; continue ;;
+  /*)           : ;;
+  *)            REASON="relative path"   ; continue ;;
+esac
+[ -e "$ENTRY_PATH" ] || { REASON="file missing"        ; continue ; }
+[ -L "$ENTRY_PATH" ] && { REASON="symlink refused"     ; continue ; }
+[ -f "$ENTRY_PATH" ] || { REASON="not a regular file"  ; continue ; }
+RESOLVED="$(cd -- "$(dirname -- "$ENTRY_PATH")" && pwd -P)/$(basename -- "$ENTRY_PATH")" \
+  || { REASON="file missing" ; continue ; }
+case "$RESOLVED" in
+  "$CAPTURE_ROOT"/*) : ;;
+  *) REASON="outside the declared root" ; continue ;;
+esac
+case "$(file -b --mime-type -- "$RESOLVED")" in
+  image/*) : ;;
+  *) REASON="not an image" ; continue ;;
+esac
 ```
 
-The declared capture directory is the directory the entries file was written
-against — `$ARGUMENTS/screenshots/` for a `team-pr` run, and the `mktemp -d`
-directory for a standalone one. An entry failing any check is a failure and the
-loop continues.
+Every check the prose names is in that block, because the block is what a
+model copying one fenced command at a time actually runs. An entry failing any
+check is a failure with that class, and the loop continues.
 
 ```bash
 gh pr edit "$NUMBER" --repo "$OWNER/$REPO" --attach "$ENTRY_PATH"
@@ -112,16 +177,47 @@ An attach that exits non-zero may still have updated the PR, so never infer
 
 **Step C — harvest.** The suffix of `AFTER` past the previous read holds that
 entry's resolved absolute URL. Bind it to that entry — but only an URL on the
-**attachment origin**, which is `https://github.com/user-attachments/assets/…`
-or its enterprise and proxy forms (`https://<host>/user-attachments/assets/…`,
-`https://<host>/…/user-attachments/…`). Any absolute URL would be too wide:
-a party with write access can append their own URL to the body during the
-attach window and have it harvested, embedded, and — in a multi-repo run —
-copied verbatim into every companion PR.
+**attachment origin**: an `https://` URL whose path carries
+`/user-attachments/` and whose **host is on this run's allowlist**. Any
+absolute URL would be too wide, and so would a path-only rule that leaves the
+host a free variable: `https://…/user-attachments/…` on *any* host admits
+`https://attacker.example/x/user-attachments/y.png`. A party with write access
+can append their own URL to the body during the attach window and have it
+harvested, embedded, and — in a multi-repo run — copied verbatim into every
+companion PR, including repositories they cannot write to.
 
-A suffix yielding **more than one** attachment-origin candidate is a failure
-for that entry, not a guess between them. An empty suffix, or one yielding no
-attachment-origin URL, means the entry did not land.
+The canonical shape is `https://github.com/user-attachments/assets/<id>`, and
+the path test admits its enterprise and proxy variants alongside it. The host
+allowlist is derived from the PR this run already resolved, never hardcoded:
+
+- the host of `$PR_URL` — `github.com`, or the GitHub Enterprise host the PR
+  actually lives on;
+- any `*.githubusercontent.com` host, which is where a private repository's
+  proxy rewrite puts the asset;
+- one further host, and only when the operator set `PR_SCREENSHOTS_ASSET_HOST`
+  for an Enterprise install whose assets live off-host.
+
+```bash
+PR_HOST="${PR_URL#https://}"        ; PR_HOST="${PR_HOST%%/*}"
+CANDIDATE_HOST="${CANDIDATE#https://}" ; CANDIDATE_HOST="${CANDIDATE_HOST%%/*}"
+case "$CANDIDATE" in https://*/user-attachments/*) : ;; *) continue ;; esac
+case "$CANDIDATE_HOST" in
+  ""|*[!A-Za-z0-9.-]*) continue ;;   # empty, or carrying userinfo, a port, or worse
+esac
+case "$CANDIDATE_HOST" in
+  "$PR_HOST"|*.githubusercontent.com|"${PR_SCREENSHOTS_ASSET_HOST:-$PR_HOST}") : ;;
+  *) continue ;;
+esac
+```
+
+The host is compared as a whole label, never as a substring, and a host
+carrying anything but letters, digits, dots, and hyphens is rejected outright —
+`https://github.com@attacker.example/x/user-attachments/y.png` parses its host
+as `github.com@attacker.example`, and a substring test would call it ours.
+
+A suffix yielding **more than one** allowlisted candidate is a failure for that
+entry, not a guess between them. An empty suffix, or one yielding no
+allowlisted URL, means the entry did not land.
 
 **Step D — splice once, write once.**
 
@@ -129,9 +225,12 @@ Before writing, apply the lost-update guard: `AFTER` must start with the
 pre-image, after the CRLF normalization. If it does not, another writer
 replaced the body. Stop, report the lost update, and return
 `outcome: uploaded-not-written` with `body_written: false` and `section: null`.
-Stopping is safe: the assets landed, and the tails the attach step appended
-already render them and carry no local path. It is a guard rather than full
-coverage — a concurrent *append* keeps the prefix, passes the check, and is
+Stopping leaves the assets live and already rendered by the tails the attach
+step appended — under an alt text the **host** derives from the file it
+received. This skill neither pins that text nor clears those tails on this
+path, so report each appended tail verbatim in `operator_note` and let the
+operator decide whether to edit the body by hand. It is a guard rather than
+full coverage — a concurrent *append* keeps the prefix, passes the check, and is
 dropped by the pre-image-based write below. That residual window is accepted.
 
 Render the section (shape below), then splice it into the **pre-image** with
@@ -154,10 +253,30 @@ PR body. The recipe has to guard itself, because the guard is the part a model
 copying one fenced block at a time would otherwise drop.
 
 `--landed` is the count of entries that resolved to an attachment URL in step
-C. `splice.mjs` refuses a section carrying more `![screenshot-NN](http…)`
-references than that, so rule 4's no-downgrade count cannot be satisfied by
-caller-supplied text even if the normalization in
-`references/01-input-and-result.md` were ever weakened.
+C, and it is **required**: `splice.mjs` exits 2 without it. It refuses a
+section carrying more `![screenshot-NN](http…)` references than that count, so
+rule 4's no-downgrade count cannot be satisfied by caller-supplied text even if
+the normalization in `references/01-input-and-result.md` were ever weakened —
+and a guard a caller can switch off by omitting a flag is not a guard.
+
+The no-downgrade rule compares counts, not zero against non-zero: a section
+carrying fewer resolved images than the one it replaces is refused, so a run
+where all but one entry failed cannot replace three live assets with one. The
+count is taken over the range the splice would actually **delete** — an image
+lifted into the trailing block is preserved below the new section rather than
+deleted, so it is not counted, and that case ends in a duplicate rather than a
+loss.
+
+`splice.mjs` models a closed set of markdown constructs and **refuses any body
+carrying one it does not model**, rather than transforming it and hoping: an
+unbalanced code fence, an unterminated HTML comment, a comment that opens
+mid-line, a heading indented into a code block, two `## Screenshots` headings,
+an HTML comment inside the section it would replace, or an image inside that
+section which this skill did not write. Each refusal is exit 1 with its reason,
+and the body is byte-identical afterwards. That is the whole recovery path:
+report the reason, name the PR, and leave the section to a human edit. A
+refusal costs one manual edit; a wrong transform deletes text from a PR that
+may already be merged.
 
 Three exit codes, and they mean different things:
 
@@ -200,10 +319,12 @@ Not uploaded: <caption> — <reason>
 
 Omit the `(<state>)` parenthetical when the entry carries no `state`. List
 every failed entry under `Not uploaded:`, one line each, by caption and reason.
-The `<reason>` there is the failure class — "file missing", "symlink refused",
-"attach failed" — and **never a filesystem path**; the absolute path stays in
-`result.json` and the operator report. A run where every entry failed carries
-no resolved form at all, only the degraded one.
+The `<reason>` there is the failure class — one of the eight in step B's table,
+or `attach failed` when the upload itself did not land — and **never a
+filesystem path**; the absolute path stays in `result.json` and the operator
+report. Every check has a class of its own, so `outside the declared root`
+never reaches an operator as a bare "not uploaded". A run where every entry
+failed carries no resolved form at all, only the degraded one.
 
 The degraded form renders each local path as **plain text**, and as its
 **basename only** — a PR body is public, and an absolute path leaks the

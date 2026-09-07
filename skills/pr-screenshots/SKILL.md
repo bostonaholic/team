@@ -36,8 +36,12 @@ run, when, and which entries qualify, then calls this skill.
 - **Nothing blocks, prompts, or retry-loops.** A capability gap, a failed
   entry, or a failed read-back degrades the result and says so
   (`principle-optimization-never-dependency`, `principle-skip-loudly`).
-- **Never delete what you did not write.** A stray image line left by an
-  earlier crash is reported, never removed.
+- **Never delete what you did not write.** A trailing run of stray image lines
+  left by an earlier crash is reported and re-emitted below the new section,
+  never removed. Anything else this skill did not write — an image inside the
+  section, an HTML comment, a body shape the splice does not model — is a
+  refusal that leaves the body byte-identical, because a duplicate is
+  recoverable and a deletion is not.
 
 ## Procedure references
 

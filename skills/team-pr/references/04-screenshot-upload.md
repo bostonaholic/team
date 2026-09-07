@@ -21,6 +21,10 @@ open first, then attach and rewrite.
 
 Write a JSON entries file under `$(mktemp -d)`:
 
+- a top-level `root` of `$ARGUMENTS/screenshots/` — the directory the PNGs
+  live in, which is the directory every entry's path must resolve inside. The
+  entries file itself sits under `$(mktemp -d)`, and that is not where the
+  images are;
 - one entry per `## Captured` entry whose PNG exists on disk, in manifest
   order, carrying `path`, `caption`, and the entry's `state`;
 - a `## Captured` entry whose PNG is missing from disk is dropped, and the

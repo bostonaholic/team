@@ -7,13 +7,25 @@
  *     const { body, changed, reason } = splice(currentBody, section, { landed });
  *
  *     node "<skill-dir>/splice.mjs" --body-file <path> --section-file <path> \
- *       [--landed <count>]
+ *       --landed <count>
  *
  * `f(body, section, options) -> {body, changed, reason}`: no network, no `gh`,
- * no mutation of anything on disk. Fence tracking, the trailing-block split,
+ * no mutation of anything on disk. The document scan, the trailing-block split,
  * and the refusals are neither deterministic nor testable as prose, which is
  * why they are code (docs/testing.md, "L1: Pure unit"). `reason` is non-empty
  * whenever a rule refuses, and empty on a write.
+ *
+ * ## The model, and why refusing is the default
+ *
+ * This transform edits a live PR body that may already be merged. A refusal
+ * costs an operator one manual edit and leaves the body byte-identical; a
+ * wrong transform deletes text nobody can recover. So the scan below models a
+ * closed set of markdown constructs — fenced blocks, block-level HTML
+ * comments, ATX headings indented up to three spaces, setext headings, ticket
+ * references, and standalone image lines — and **refuses any body carrying a
+ * construct outside that set** rather than guessing at its boundaries
+ * (`principle-fail-closed`). Widening the set is a code change with a test;
+ * meeting an unmodeled shape at runtime is a refusal with a named reason.
  *
  * The CLI guard at the bottom follows resolve-transcript.mjs and
  * write-target.mjs: it runs only on direct execution, so a test import has no
@@ -52,25 +64,32 @@ const ANCHORS = ["## How to Verify", "## Review notes", "## References"];
  */
 const TICKET_REFERENCE = /^(?:Close[sd]?|Fix(?:es|ed)?|Resolve[sd]?|Part of|Refs?):?\s+\S/i;
 
-/** A level-two heading, and the Screenshots heading specifically. */
-const HEADING = /^##\s/;
-const SCREENSHOTS = /^##\s+Screenshots\s*$/;
+/** The heading this skill owns, by title. */
+const SCREENSHOTS_TITLE = "Screenshots";
 
 /**
- * What ends a `## ` section: a heading of level one or two. A level-one
- * heading outranks `## Screenshots`, so it bounds the section the same way the
- * next `## ` does — matching `^##\s` alone let rule 2's replace run straight
- * through a `# Release notes` section and delete it. A `### ` subheading is
- * deliberately NOT a boundary: it belongs to the section above it, so
- * replacing a section replaces its subheadings with it.
+ * An ATX heading: up to three spaces of indentation, one to six `#`, then
+ * whitespace or end of line (CommonMark 0.31.2 §4.2). The indentation bound is
+ * the spec's, not column zero: `   ## Test plan` is a heading, and a replace
+ * that reads it as body text runs straight through the section it opens.
  */
-const SECTION_BOUNDARY = /^#{1,2}\s/;
+const ATX_HEADING = /^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*$/;
+
+/** An ATX heading's optional closing sequence, which is not part of its title. */
+const ATX_CLOSING = /[ \t]+#+$/;
+
+/**
+ * A setext underline: `=` for level one, `-` for level two (CommonMark §4.3).
+ * The heading it forms starts at the first line of the paragraph above it, so
+ * the boundary is recorded there rather than on the underline.
+ */
+const SETEXT_UNDERLINE = /^ {0,3}(=+|-+)[ \t]*$/;
 
 /**
  * A line that is nothing but an absolute-URL image reference. `gh pr edit
  * --attach` appends exactly this shape, so a run of them at the end of a body
  * is the residue of an earlier crash between attach and write. This skill's
- * own images never match as *standalone* (see `standaloneImage`) because it
+ * own images never match as *standalone* (see `standaloneRun`) because it
  * always emits a `**caption**` line directly above each one.
  */
 const IMAGE_ONLY_LINE = /^\s*!\[[^\]]*\]\(\s*https?:\/\/[^\s)]*\s*\)\s*$/;
@@ -87,98 +106,203 @@ const IMAGE_ONLY_LINE = /^\s*!\[[^\]]*\]\(\s*https?:\/\/[^\s)]*\s*\)\s*$/;
 const FENCE_DELIMITER = /^\s*(`{3,}|~{3,})[ \t]*(.*)$/;
 
 /**
- * Rule 4 counts asymmetrically. The NEW section counts only the alt form this
- * skill emits, so caller text that is itself a complete image reference cannot
- * buy an all-failures run past the guard; the EXISTING section counts any
- * absolute-URL image, so the guard survives whatever URL form the host returns.
+ * A block-level HTML comment opens a line and runs to the line carrying its
+ * closer (CommonMark §4.6, HTML block type 2). Every line it spans is masked,
+ * which is what keeps a commented-out `## Screenshots` placeholder — the shape
+ * a PR template ships — from being read as this skill's own heading.
  */
-const NEW_SECTION_IMAGE = /!\[screenshot-\d+\]\(\s*https?:\/\//g;
-const EXISTING_IMAGE = /!\[[^\]]*\]\(\s*https?:\/\//g;
+const COMMENT_OPEN = /^ {0,3}<!--/;
+const COMMENT_CLOSE = /-->/;
 
 /**
- * Per-line "is inside a fenced block", with the delimiter lines themselves
- * true, plus whether every fence closed.
- *
- * A blind toggle is wrong twice over, and both ways lose text silently. An
- * unclosed fence masks the whole rest of the body, which hides the ticket
- * lines and headings that bound the replace. And a nested block — the
- * four-backtick `DATA` wrapper `skills/cross-model-review/SKILL.md` mandates,
- * carrying three-backtick blocks inside it — inverts the mask, which hides the
- * real `## Screenshots` heading and inserts a second one. So a closer must
- * match its opener's character, be at least as long, and carry no info string;
- * anything else is content.
+ * A heading-shaped line indented four or more spaces is an indented code block
+ * to CommonMark and a section boundary to every human reading the body. The
+ * scan models neither reading, so it refuses.
  */
-function fenceMask(lines) {
-  const mask = [];
-  let open = null;
-  for (const line of lines) {
-    const match = FENCE_DELIMITER.exec(line);
-    if (!match) {
-      mask.push(open !== null);
+const INDENTED_HEADING = /^ {4,}#{1,2}(?:[ \t]|$)/;
+
+/** An image reference of any shape, and the one this skill writes. */
+const ANY_IMAGE = /!\[[^\]]*\]\([^)]*\)/g;
+const OWN_IMAGE = /^!\[screenshot-\d+\]\(\s*https?:\/\/[^\s)]+\s*\)$/;
+
+/**
+ * Rule 4 counts the NEW section by the alt form this skill emits, so caller
+ * text that is itself a complete image reference cannot buy an all-failures
+ * run past the guard.
+ */
+const NEW_SECTION_IMAGE = /!\[screenshot-\d+\]\(\s*https?:\/\//g;
+
+/**
+ * The document scan: one pass, producing the masked lines, the section
+ * boundaries, the Screenshots headings, and the first construct the model does
+ * not cover.
+ *
+ * `mask[i]` is true for fenced content and for HTML-comment lines, delimiters
+ * included. A masked line is never a heading, a ticket reference, or an image
+ * this transform acts on, and a replace runs straight through it — so a fenced
+ * block is deleted whole or preserved whole, never split. `commented[i]` is the
+ * comment half of that mask on its own, because a comment inside the range a
+ * replace would cover is refused rather than deleted: a `-->` swallowed by a
+ * replace leaves the comment open, and CommonMark then runs the HTML block to
+ * end of document and renders the rest of the body as nothing.
+ *
+ * `boundary[i]` is true where a level-one or level-two section starts. A
+ * level-one heading outranks `## Screenshots` and ends it the same way the
+ * next `## ` does; a `### ` subheading belongs to the section above it and is
+ * deliberately not a boundary.
+ *
+ * `fault` is non-null when the body carries a construct outside the model. It
+ * is phrased as a predicate so a caller can attribute it: an unbalanced fence
+ * hides every boundary below it, an unterminated comment hides the rest of the
+ * document, a comment opening mid-line is inline HTML this scan does not
+ * track, and a heading indented into a code block reads as a boundary to a
+ * human and as text to a parser.
+ */
+function scan(lines) {
+  const mask = new Array(lines.length).fill(false);
+  const commented = new Array(lines.length).fill(false);
+  const boundary = new Array(lines.length).fill(false);
+  const labels = new Map();
+  const headings = [];
+  let fence = null;
+  let comment = false;
+  let fault = null;
+
+  const label = (index, level, title) => {
+    if (level > 2) return;
+    labels.set(index, `${"#".repeat(level)} ${title}`);
+    boundary[index] = true;
+    if (title === SCREENSHOTS_TITLE) headings.push(index);
+  };
+
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index];
+
+    if (fence !== null) {
+      mask[index] = true;
+      const closer = FENCE_DELIMITER.exec(line);
+      if (closer && closer[1][0] === fence.char && closer[1].length >= fence.length && closer[2].trim() === "") {
+        fence = null;
+      }
       continue;
     }
-    const run = match[1];
-    const info = match[2].trim();
-    if (open === null) {
-      open = { char: run[0], length: run.length };
-    } else if (run[0] === open.char && run.length >= open.length && info === "") {
-      open = null;
+    if (comment) {
+      mask[index] = true;
+      commented[index] = true;
+      if (COMMENT_CLOSE.test(line)) comment = false;
+      continue;
     }
-    mask.push(true);
+
+    const opener = FENCE_DELIMITER.exec(line);
+    if (opener) {
+      mask[index] = true;
+      fence = { char: opener[1][0], length: opener[1].length };
+      continue;
+    }
+    if (COMMENT_OPEN.test(line)) {
+      mask[index] = true;
+      commented[index] = true;
+      comment = !COMMENT_CLOSE.test(line.slice(line.indexOf("<!--") + 4));
+      continue;
+    }
+    if (fault === null && line.includes("<!--")) {
+      fault = "carries an HTML comment that opens mid-line, which this transform does not model";
+    }
+    if (fault === null && INDENTED_HEADING.test(line)) {
+      fault = "carries a heading-shaped line indented into a code block, which this transform does not model";
+    }
+
+    const atx = ATX_HEADING.exec(line);
+    if (atx) {
+      label(index, atx[1].length, (atx[2] ?? "").replace(ATX_CLOSING, "").trim());
+      continue;
+    }
+
+    const underline = SETEXT_UNDERLINE.exec(line);
+    if (underline && index > 0 && !SETEXT_UNDERLINE.test(lines[index - 1])) {
+      const start = paragraphStart(lines, mask, boundary, index - 1);
+      if (start >= 0) {
+        const level = underline[1][0] === "=" ? 1 : 2;
+        label(start, level, start === index - 1 ? lines[start].trim() : "");
+      }
+    }
   }
-  return { mask, balanced: open === null };
+
+  if (fence !== null) {
+    fault ??= "carries an unclosed code fence, so its section boundaries cannot be read";
+  }
+  if (comment) {
+    fault ??= "carries an unterminated HTML comment, so its section boundaries cannot be read";
+  }
+  return { mask, commented, boundary, labels, headings, fault };
 }
 
-/** The heading text of `line`, whitespace-collapsed, for an exact list test. */
-function headingTitle(line) {
-  return line.trim().replace(/\s+/g, " ");
+/**
+ * The first line of the paragraph ending at `from`, or -1 when no paragraph
+ * ends there. A setext heading takes the whole paragraph above its underline
+ * as its content, so that first line is where the section starts.
+ */
+function paragraphStart(lines, mask, boundary, from) {
+  if (mask[from] || boundary[from] || lines[from].trim() === "") return -1;
+  let start = from;
+  while (start - 1 >= 0 && !mask[start - 1] && !boundary[start - 1] && lines[start - 1].trim() !== "") {
+    start--;
+  }
+  return start;
 }
 
-/** The nearest non-fenced level-one-or-two heading at or above `from`, or -1. */
-function headingAbove(lines, mask, from) {
+/** The nearest section boundary at or above `from`, or -1. */
+function boundaryAbove(doc, from) {
   for (let index = from; index >= 0; index--) {
-    if (!mask[index] && SECTION_BOUNDARY.test(lines[index])) return index;
+    if (doc.boundary[index]) return index;
   }
   return -1;
 }
 
 /**
- * Rule 1's fourth member: an image-only line whose predecessor is blank or
- * absent. That is what `--attach` appends and what this skill never emits, so
- * it separates crash residue from the section's own captioned images without
- * needing to know which run wrote what.
+ * Rule 1's fourth member: the start of the run of image-only lines `index`
+ * belongs to, when the line above that whole run is blank or absent. A run is
+ * what `--attach` leaves after several uploads, and testing each line against
+ * its immediate predecessor would classify only the first member — leaving the
+ * rest inside the section, where the replace deletes them. Returns -1 when the
+ * run is not standalone, which is the shape this skill's own captioned images
+ * take.
  */
-function standaloneImage(lines, mask, index) {
-  if (mask[index] || !IMAGE_ONLY_LINE.test(lines[index])) return false;
-  const above = lines[index - 1];
-  return above === undefined || above.trim() === "";
+function standaloneRun(lines, doc, index) {
+  if (doc.mask[index] || !IMAGE_ONLY_LINE.test(lines[index])) return -1;
+  let start = index;
+  while (start - 1 >= 0 && !doc.mask[start - 1] && IMAGE_ONLY_LINE.test(lines[start - 1])) start--;
+  const above = lines[start - 1];
+  if (above === undefined) return start;
+  return !doc.mask[start - 1] && above.trim() === "" ? start : -1;
 }
 
 /**
  * Rule 1. The index of the last line of `content`: everything below it is the
  * maximal trailing run of blank lines, footer sections, ticket-reference
- * lines, and standalone absolute-URL image lines, in any order. Returns -1
- * when the whole body is that run.
+ * lines, and standalone absolute-URL image runs, in any order. Returns -1 when
+ * the whole body is that run.
  *
- * The image lines are in that run so the crash tail survives the splice by
+ * The image runs are in there so the crash tail survives the splice by
  * construction: it leaves `content` before rule 2 chooses what to replace, and
  * rule 3 re-emits it byte-identical below the new section.
  */
-function contentEnd(lines, mask) {
+function contentEnd(lines, doc) {
   let index = lines.length - 1;
   for (;;) {
-    while (index >= 0 && !mask[index] && lines[index].trim() === "") index--;
+    while (index >= 0 && !doc.mask[index] && lines[index].trim() === "") index--;
     if (index < 0) return -1;
-    if (!mask[index] && TICKET_REFERENCE.test(lines[index])) {
+    if (!doc.mask[index] && TICKET_REFERENCE.test(lines[index])) {
       index--;
       continue;
     }
-    if (standaloneImage(lines, mask, index)) {
-      index--;
+    const run = standaloneRun(lines, doc, index);
+    if (run >= 0) {
+      index = run - 1;
       continue;
     }
-    const heading = headingAbove(lines, mask, index);
-    if (heading >= 0 && FOOTER_SECTIONS.includes(headingTitle(lines[heading]))) {
+    const heading = boundaryAbove(doc, index);
+    if (heading >= 0 && FOOTER_SECTIONS.includes(doc.labels.get(heading))) {
       index = heading - 1;
       continue;
     }
@@ -188,23 +312,22 @@ function contentEnd(lines, mask) {
 
 /**
  * Rule 2's replace bound: the first line below `start` that is either the next
- * fence-aware section boundary or a ticket-reference line, whichever comes
- * first. The second half is what keeps a closing line alive when a crash tail
- * collapsed the trailing block and pushed that line into `content`.
+ * section boundary or a ticket-reference line, whichever comes first. The
+ * second half is what keeps a closing line alive when a crash tail collapsed
+ * the trailing block and pushed that line into `content`.
  */
-function replaceEnd(lines, mask, start) {
-  for (let index = start + 1; index < lines.length; index++) {
-    if (mask[index]) continue;
-    if (SECTION_BOUNDARY.test(lines[index]) || TICKET_REFERENCE.test(lines[index])) return index;
+function replaceEnd(lines, doc, start, limit) {
+  for (let index = start + 1; index < limit; index++) {
+    if (doc.mask[index]) continue;
+    if (doc.boundary[index] || TICKET_REFERENCE.test(lines[index])) return index;
   }
-  return lines.length;
+  return limit;
 }
 
 /** The index of the first anchor heading in `content`, or -1. */
-function anchorIndex(lines, mask) {
-  for (let index = 0; index < lines.length; index++) {
-    if (mask[index]) continue;
-    if (HEADING.test(lines[index]) && ANCHORS.includes(headingTitle(lines[index]))) return index;
+function anchorIndex(doc, limit) {
+  for (let index = 0; index < limit; index++) {
+    if (ANCHORS.includes(doc.labels.get(index))) return index;
   }
   return -1;
 }
@@ -237,18 +360,25 @@ function count(text, pattern) {
   return (text.match(pattern) ?? []).length;
 }
 
+/** The image references in `text` that this skill did not write. */
+function foreignImages(text) {
+  return (text.match(ANY_IMAGE) ?? []).filter((image) => !OWN_IMAGE.test(image));
+}
+
 /**
  * Splice `section` into `body`. The rules run in order: refuse a body or a
  * section this transform cannot read, refuse more image references than the
  * run landed, split the trailing block, then match/replace/insert inside
- * `content` only, then re-emit the trailing block, then refuse a downgrade,
- * then refuse an overflow.
+ * `content` only, then refuse to delete an image this skill did not write,
+ * then re-emit the trailing block, then refuse a downgrade, then refuse an
+ * overflow.
  *
  * `options.landed` is the run's count of assets that actually resolved to a
- * URL. When given, a section carrying more `![screenshot-NN](http…)`
- * references than that is refused: every reference past the count came from
- * caller text rather than from an upload, and rule 4 must not be satisfiable
- * by text the caller supplied.
+ * URL, and defaults to zero: a caller that does not say how many images landed
+ * is treated as having landed none, so a section carrying
+ * `![screenshot-NN](http…)` references it cannot account for is refused. Every
+ * reference past the count came from caller text rather than from an upload,
+ * and rule 4 must not be satisfiable by text the caller supplied.
  */
 export function splice(body, section, options = {}) {
   const original = typeof body === "string" ? body : "";
@@ -258,62 +388,79 @@ export function splice(body, section, options = {}) {
   if (sectionText.trim() === "") return refuse("the section to splice is empty");
 
   const lines = original.replace(/\r\n/g, "\n").split("\n");
-  const { mask, balanced } = fenceMask(lines);
-  if (!balanced) {
-    return refuse("the body carries an unclosed code fence, so its section boundaries cannot be read");
-  }
-  if (!fenceMask(sectionText.split("\n")).balanced) {
-    return refuse("the section carries an unclosed code fence");
+  const doc = scan(lines);
+  if (doc.fault) return refuse(`the body ${doc.fault}`);
+
+  const sectionScan = scan(sectionText.split("\n"));
+  if (sectionScan.fault) return refuse(`the section ${sectionScan.fault}`);
+
+  const landed = Number.isFinite(options?.landed) ? options.landed : 0;
+  const referenced = count(sectionText, NEW_SECTION_IMAGE);
+  if (referenced > landed) {
+    return refuse(`the section carries more screenshot references (${referenced}) than the run landed (${landed})`);
   }
 
-  const landed = options?.landed;
-  if (typeof landed === "number" && Number.isFinite(landed)) {
-    const referenced = count(sectionText, NEW_SECTION_IMAGE);
-    if (referenced > landed) {
-      return refuse(`the section carries more screenshot references (${referenced}) than the run landed (${landed})`);
-    }
-  }
+  const end = contentEnd(lines, doc);
+  const contentCount = end + 1;
+  const footerLines = lines.slice(contentCount);
 
-  const end = contentEnd(lines, mask);
-  const contentLines = lines.slice(0, end + 1);
-  const footerLines = lines.slice(end + 1);
-
-  const headings = [];
-  for (let index = 0; index < contentLines.length; index++) {
-    if (!mask[index] && SCREENSHOTS.test(contentLines[index])) headings.push(index);
-  }
-  if (headings.length > 1) {
-    return refuse(`the body carries ${headings.length} Screenshots headings; which one to replace is ambiguous`);
+  const found = doc.headings.filter((index) => index < contentCount);
+  if (found.length > 1) {
+    return refuse(`the body carries ${found.length} Screenshots headings; which one to replace is ambiguous`);
   }
 
   const sectionLines = trimmedLines(sectionText);
   let existing = "";
   let spliced;
 
-  if (headings.length === 1) {
-    const start = headings[0];
-    const stop = replaceEnd(contentLines, mask, start);
-    existing = contentLines.slice(start, stop).join("\n");
-    const tail = contentLines.slice(stop);
-    const head = contentLines.slice(0, start);
+  const start = found[0];
+  if (start !== undefined) {
+    const stop = replaceEnd(lines, doc, start, contentCount);
+    existing = lines.slice(start, stop).join("\n");
+    const foreign = foreignImages(existing);
+    if (foreign.length > 0) {
+      return refuse(
+        `the Screenshots section holds an image this skill did not write (${foreign[0]}), so replacing it would delete it`,
+      );
+    }
+    for (let index = start; index < stop; index++) {
+      if (doc.commented[index]) {
+        return refuse("the Screenshots section holds an HTML comment, so replacing it would delete text this skill did not write");
+      }
+    }
+    const tail = lines.slice(stop, contentCount);
+    const head = lines.slice(0, start);
     spliced = [...head, ...(tail.length > 0 ? blankTerminated(sectionLines) : sectionLines), ...tail];
   } else {
-    const anchor = anchorIndex(contentLines, mask);
+    const anchor = anchorIndex(doc, contentCount);
     spliced =
       anchor >= 0
         ? [
-            ...blankTerminated(contentLines.slice(0, anchor)),
+            ...blankTerminated(lines.slice(0, anchor)),
             ...blankTerminated(sectionLines),
-            ...contentLines.slice(anchor),
+            ...lines.slice(anchor, contentCount),
           ]
-        : [...blankTerminated(contentLines), ...sectionLines];
+        : [...blankTerminated(lines.slice(0, contentCount)), ...sectionLines];
   }
 
-  if (count(sectionText, NEW_SECTION_IMAGE) === 0 && count(existing, EXISTING_IMAGE) > 0) {
-    return refuse("the existing Screenshots section holds resolved images and the new one holds none");
+  const held = count(existing, ANY_IMAGE);
+  if (referenced < held) {
+    return refuse(
+      `the new section carries ${referenced} screenshot references and the one it replaces holds ${held}`,
+    );
   }
 
-  const written = [...spliced, ...footerLines].join("\n");
+  // A blank line separates the trailing block from the section above it.
+  // Joined flush, a lifted image line lands directly under the section's last
+  // line, which makes it non-standalone on the next run and sweeps it into the
+  // section the run after that replaces — so preservation would survive one
+  // round-trip and then delete.
+  const gap =
+    footerLines.length > 0 && footerLines[0].trim() !== "" && spliced.length > 0 && spliced[spliced.length - 1].trim() !== ""
+      ? [""]
+      : [];
+
+  const written = [...spliced, ...gap, ...footerLines].join("\n");
   if (written.length > BODY_LIMIT) {
     return refuse(`the spliced body is ${written.length} characters, over the ${BODY_LIMIT}-character limit`);
   }
@@ -325,9 +472,15 @@ export function splice(body, section, options = {}) {
 // CLI entry point — runs only on direct execution, never on import.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const argv = process.argv.slice(2);
+  // A flag whose next token is itself a flag has no value: returning that
+  // token would bind `--body-file --landed 2` to the string "--landed" and
+  // read a file by that name. `null` is "present and malformed", which is a
+  // usage fault rather than an absent flag.
   const flag = (name) => {
     const at = argv.indexOf(name);
-    return at >= 0 ? argv[at + 1] : undefined;
+    if (at < 0) return undefined;
+    const value = argv[at + 1];
+    return value === undefined || value.startsWith("--") ? null : value;
   };
   const bodyFile = flag("--body-file");
   const sectionFile = flag("--section-file");
@@ -338,15 +491,15 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(2);
   };
 
-  if (!bodyFile || !sectionFile) {
-    fail("usage: splice.mjs --body-file <path> --section-file <path> [--landed <count>]");
+  // `--landed` is required: the guard it feeds exists for the case where the
+  // caller-string escaping upstream has been weakened, and a guard that a
+  // caller can switch off by omitting a flag guards nothing.
+  if (!bodyFile || !sectionFile || !landedFlag) {
+    fail("usage: splice.mjs --body-file <path> --section-file <path> --landed <count>");
   }
 
-  let landed;
-  if (landedFlag !== undefined) {
-    landed = Number(landedFlag);
-    if (!Number.isInteger(landed) || landed < 0) fail(`--landed expects a non-negative integer, got "${landedFlag}"`);
-  }
+  const landed = Number(landedFlag);
+  if (!Number.isInteger(landed) || landed < 0) fail(`--landed expects a non-negative integer, got "${landedFlag}"`);
 
   // Exit 2, not 1: an unreadable input is an environment fault, and the caller
   // reads exit 1 as "no rule allowed the write". A stack trace on the refusal
