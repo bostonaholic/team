@@ -69,6 +69,14 @@ const splice: SpliceFn =
     ? (spliceModule.splice as SpliceFn)
     : () => NOT_LOADED;
 
+// The pre-image half of the transform, exported so the caller can run it in
+// step A — before the first attach — rather than only after (round-3 C3).
+// Absent, it reports "" (no refusal), which fails every assertion below that
+// expects a named one.
+type BodyRefusalFn = (body: string) => string;
+const bodyRefusal: BodyRefusalFn =
+  typeof spliceModule?.bodyRefusal === "function" ? (spliceModule.bodyRefusal as BodyRefusalFn) : () => "";
+
 // ---------------------------------------------------------------------------
 // L2 plumbing: defensive reads. A missing file reads as "" so content
 // assertions FAIL (not throw), and length guards below catch the vacuum.
@@ -445,12 +453,16 @@ describe("Slice 1 — skill prose (L2)", () => {
     expect(upload.length).toBeGreaterThan(0);
 
     const preImage = upload.indexOf("--json body --jq .body");
+    const check = upload.indexOf("--check --body-file");
     const attach = upload.indexOf('--attach "$');
-    const spliceCall = upload.indexOf("splice.mjs");
-    const write = upload.indexOf("--body-file");
+    const spliceCall = upload.indexOf("splice.mjs", attach);
+    const write = upload.indexOf('--body-file "$NEW_BODY_FILE"', spliceCall);
 
     expect(preImage).toBeGreaterThanOrEqual(0);
-    expect(attach).toBeGreaterThan(preImage);
+    // Step A's pre-image check sits between the read and the first attach, so
+    // a refusal it finds costs no upload (C3: refuse before mutating).
+    expect(check).toBeGreaterThan(preImage);
+    expect(attach).toBeGreaterThan(check);
     expect(spliceCall).toBeGreaterThan(attach);
     expect(write).toBeGreaterThan(spliceCall);
 
@@ -1304,6 +1316,154 @@ describe("Slice 1 — modeled shapes and unmodeled refusals (L1)", () => {
 });
 
 // ---------------------------------------------------------------------------
+// L1: constructs OUTSIDE the modeled set (round 3, C1 and C2).
+//
+// The scan dispatches on fences, comments, indented headings, ATX and setext
+// headings. A raw HTML container and every non-inline image form fell through
+// as ordinary text: a `## Screenshots`-shaped line inside a `<div>` was read
+// as this skill's own heading and the replace deleted the `</div>` around it,
+// and an `<img>`, an `![alt][ref]`, a `[ref]: <url>`, or a bare auto-embedded
+// URL inside the replaced section was deleted with `changed: true` and an
+// empty reason. Both are now faults, so the closed-set claim is testable.
+// ---------------------------------------------------------------------------
+
+// One out-of-model construct per entry, each with the loss it used to cause.
+const UNMODELED: { label: string; body: string; survives: string }[] = [
+  {
+    label: "a div container around the heading",
+    body: '<div align="center">\n## Screenshots\n</div>\n\n## Test plan\n\n- a\n',
+    survives: "</div>",
+  },
+  {
+    label: "a table container",
+    body: "## Screenshots\n\n<table>\n<tr><td>\n\n![shot](https://example.com/s.png)\n\n</td></tr>\n</table>\n\n## Test plan\n",
+    survives: "</table>",
+  },
+  {
+    label: "a details container",
+    body: "## Screenshots\n\n<details>\n<summary>Before</summary>\n\n![shot](https://example.com/s.png)\n\n</details>\n\n## Test plan\n",
+    survives: "</details>",
+  },
+  {
+    label: "a picture element",
+    body: '## Screenshots\n\n<picture>\n<source srcset="https://example.com/s.webp">\n<img src="https://example.com/s.png">\n</picture>\n\n## Test plan\n',
+    survives: "<picture>",
+  },
+  {
+    label: "an inline HTML image",
+    body: '## Screenshots\n\nBefore and after: <img src="https://example.com/s.png" width="600">\n\n## Test plan\n',
+    survives: '<img src="https://example.com/s.png"',
+  },
+  {
+    label: "a reference-style image",
+    body: "## Screenshots\n\n![before][shot]\n\n## Test plan\n\n[shot]: https://example.com/s.png\n",
+    survives: "![before][shot]",
+  },
+  {
+    label: "a link reference definition",
+    body: "## Screenshots\n\nold\n\n## Test plan\n\n[shot]: https://example.com/s.png\n",
+    survives: "[shot]: https://example.com/s.png",
+  },
+  {
+    label: "a bare attachment URL the host auto-embeds",
+    body: "## Screenshots\n\nhttps://github.com/user-attachments/assets/abcd\n\n## Test plan\n",
+    survives: "https://github.com/user-attachments/assets/abcd",
+  },
+  {
+    label: "a bare image URL the host auto-embeds",
+    body: "## Screenshots\n\nhttps://example.com/loose.png\n\n## Test plan\n",
+    survives: "https://example.com/loose.png",
+  },
+];
+
+describe("Slice 1 — constructs outside the model (L1)", () => {
+  test("every unmodeled construct refuses, and nothing it carries is deleted", () => {
+    const failures = UNMODELED.filter(({ body }) => {
+      const result = splice(body, SECTION, { landed: 2 });
+      return result.changed || result.body !== body || result.reason.length === 0;
+    }).map(({ label }) => label);
+    expect(failures).toEqual([]);
+
+    // And the text each one used to lose is still there, byte for byte.
+    const lost = UNMODELED.filter(({ body, survives }) => !splice(body, SECTION, { landed: 2 }).body.includes(survives)).map(
+      ({ label }) => label,
+    );
+    expect(lost).toEqual([]);
+  });
+
+  test("the model still writes through the shapes it does cover", () => {
+    // Blindness guard: a fault regex wide enough to refuse everything would
+    // satisfy the test above and check nothing.
+    const writes = [
+      "## Summary\n\nA plain body.\n\n## Test plan\n\n- a\n",
+      "## Summary\n\nSee <https://example.com> for context.\n\n## Test plan\n",
+      "## Summary\n\nA link: [the docs](https://example.com/docs)\n\n## Test plan\n",
+      "## Summary\n\n```html\n<div>fenced, so not a block</div>\n```\n\n## Test plan\n",
+      "<!--\n<div>commented out</div>\n-->\n\n## Summary\n\nhi\n",
+    ];
+    const refused = writes.filter((body) => !splice(body, SECTION, { landed: 2 }).changed);
+    expect(refused).toEqual([]);
+  });
+
+  test("bodyRefusal names the same refusal the splice does, from the body alone", () => {
+    // C3's contract: what step A's `--check` reports and what step D's splice
+    // reports are one function, so a pre-image the check cleared cannot refuse
+    // later for a body-only reason.
+    const mismatched = UNMODELED.filter(({ body }) => bodyRefusal(body) !== splice(body, SECTION, { landed: 2 }).reason).map(
+      ({ label }) => label,
+    );
+    expect(mismatched).toEqual([]);
+
+    // The two refusals over the EXISTING section are computable from the body
+    // alone too, so they belong to the check and not only to the splice.
+    const foreign = [
+      "## Screenshots",
+      "",
+      "**Hand-authored**",
+      "![diagram](https://example.com/d.png)",
+      "",
+      "## Test plan",
+      "",
+    ].join("\n");
+    const commented = ["## Screenshots", "", "<!-- keep this -->", "old", "", "## Test plan", ""].join("\n");
+    const ambiguous = ["## Screenshots", "", "a", "", "## Screenshots", "", "b", "", "## Test plan", ""].join("\n");
+    for (const body of [foreign, commented, ambiguous]) {
+      expect(bodyRefusal(body).length).toBeGreaterThan(0);
+      expect(bodyRefusal(body)).toBe(splice(body, SECTION, { landed: 2 }).reason);
+    }
+
+    // A body the splice writes has no pre-image refusal at all.
+    expect(bodyRefusal("## Summary\n\nhi\n\n## Test plan\n")).toBe("");
+  });
+
+  test("raw HTML in the SECTION is refused, and an escaped angle bracket is not", () => {
+    // The code-side backstop for the caller-string escaping: a weakened
+    // normalization must not splice an `<a href>` or an `<img src>` into a
+    // public body.
+    const body = "## Summary\n\nhi\n\n## Test plan\n";
+    const html = [
+      "## Screenshots",
+      "",
+      '**<a href="https://evil.example">Login</a>**',
+      "![screenshot-01](https://example.com/user-attachments/assets/1111)",
+    ].join("\n");
+    const refused = splice(body, html, { landed: 1 });
+    expect(refused.changed).toBe(false);
+    expect(refused.body).toBe(body);
+    expect(refused.reason.length).toBeGreaterThan(0);
+
+    // Escaped by the normalization, it is caller text that renders literally.
+    const escaped = [
+      "## Screenshots",
+      "",
+      "**\\<a href\\>Login\\</a\\>**",
+      "![screenshot-01](https://example.com/user-attachments/assets/1111)",
+    ].join("\n");
+    expect(splice(body, escaped, { landed: 1 }).changed).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // L1: a property sweep over splice(), because two review rounds found their
 // defects by trying a shape nobody had listed.
 //
@@ -1352,6 +1512,23 @@ const FREE_BLOCKS = [
   "Plain prose for block <N>.",
   "### Sub-heading <N>\n\nBody text for block <N>.",
   "<!--\n## Screenshots\ncommented placeholder <N>\n-->",
+];
+
+// The second pool: constructs deliberately OUTSIDE the model. The two pools
+// above are assembled from shapes already known to work, so by construction a
+// sweep over them cannot discover an unmodeled construct — which is how a raw
+// HTML container and four non-inline image forms reached round 3. A body
+// carrying any of these must produce `changed: false`, wherever it sits.
+const OUT_OF_MODEL_BLOCKS = [
+  '<div align="center">\n\n## Heading <N>\n\ntext <N>\n\n</div>',
+  "<table>\n<tr><td>\n\nrow <N>\n\n</td></tr>\n</table>",
+  "<details>\n<summary>Details <N></summary>\n\ntext <N>\n\n</details>",
+  '<picture>\n<source srcset="https://example.com/s<N>.webp">\n<img src="https://example.com/s<N>.png">\n</picture>',
+  'A diagram <N>: <img src="https://example.com/s<N>.png" width="600">',
+  "![alt <N>][ref<N>]",
+  "[ref<N>]: https://example.com/s<N>.png",
+  "https://github.com/user-attachments/assets/bare<N>",
+  "https://example.com/loose<N>.png",
 ];
 
 describe("Slice 1 — splice.mjs property sweep (L1)", () => {
@@ -1413,6 +1590,44 @@ describe("Slice 1 — splice.mjs property sweep (L1)", () => {
     // Blindness guard: a change that turned every generated body into a
     // refusal would satisfy every assertion above and check nothing.
     expect(wrote).toBe(300);
+  });
+
+  test("a body carrying one out-of-model block is always refused", () => {
+    // The same generator, with exactly one out-of-model block spliced in at a
+    // random position. Every draw must refuse and leave the body identical:
+    // silent loss is what a body-wide fault buys, and the price is a manual
+    // edit on a body that was going to be edited by hand anyway.
+    const random = mulberry32(0xd15ea5e);
+    const pick = <T,>(list: T[]): T => list[Math.floor(random() * list.length)] as T;
+    let index = 0;
+    const failures: { iteration: number; changed: boolean; mutated: boolean; reason: string }[] = [];
+
+    for (let iteration = 0; iteration < 400; iteration++) {
+      const blocks = [
+        ...Array.from({ length: Math.floor(random() * 3) }, () => pick([...BOUNDARY_BLOCKS, ...FREE_BLOCKS])),
+        ...(random() < 0.6 ? ["## Screenshots\n\n**Old**\n![screenshot-01](https://example.com/user-attachments/assets/old)"] : []),
+        pick(BOUNDARY_BLOCKS),
+        ...Array.from({ length: Math.floor(random() * 3) }, () => pick([...BOUNDARY_BLOCKS, ...FREE_BLOCKS])),
+      ];
+      blocks.splice(Math.floor(random() * (blocks.length + 1)), 0, pick(OUT_OF_MODEL_BLOCKS));
+
+      const body = blocks.map((text) => text.replace(/<N>/g, String(index++))).join("\n\n") + "\n";
+      const result = splice(body, SECTION, { landed: 2 });
+      if (result.changed || result.body !== body || result.reason.length === 0) {
+        failures.push({ iteration, changed: result.changed, mutated: result.body !== body, reason: result.reason });
+      }
+    }
+
+    expect(failures).toEqual([]);
+
+    // Blindness guard: the pool must be the reason, not an empty loop.
+    expect(OUT_OF_MODEL_BLOCKS.length).toBeGreaterThan(0);
+    // And each pool member on its own is what refuses — one dead template
+    // would otherwise hide behind the others in a random draw.
+    const inert = OUT_OF_MODEL_BLOCKS.filter(
+      (template) => splice(`## Summary\n\nhi\n\n${template.replace(/<N>/g, "9")}\n\n## Test plan\n`, SECTION, { landed: 2 }).changed,
+    );
+    expect(inert).toEqual([]);
   });
 
   test("the sweep can fail: a body whose protected block is deleted is caught", () => {
@@ -1479,6 +1694,32 @@ describe("Slice 1 — splice.mjs CLI exit codes (L1)", () => {
     const bad = run(["--body-file", bodyFile, "--section-file", sectionFile, "--landed", "x"]);
     expect(bad.status).toBe(2);
     expect(bad.stderr).toContain("splice.mjs: ");
+  });
+
+  test("--check runs the pre-image refusals with no section and no write", () => {
+    // C3. Step A has to be able to run these BEFORE the first attach, or a
+    // refusal arrives after `gh pr edit --attach` has already uploaded every
+    // entry to a PR that may be merged.
+    const clean = run(["--check", "--body-file", bodyFile]);
+    expect(clean.status).toBe(0);
+    expect(clean.stdout).toBe("");
+
+    const foreign = join(scratch, "foreign.md");
+    writeFileSync(foreign, "## Screenshots\n\n![diagram](https://example.com/d.png)\n\n## Test plan\n", "utf8");
+    const refused = run(["--check", "--body-file", foreign]);
+    expect(refused.status).toBe(1);
+    expect(refused.stderr).toContain("refused: ");
+    // The same body refuses the write, so the check cannot pass what the
+    // splice would reject.
+    expect(run(["--body-file", foreign, "--section-file", sectionFile, "--landed", "2"]).status).toBe(1);
+
+    const unmodeled = join(scratch, "unmodeled.md");
+    writeFileSync(unmodeled, '<div align="center">\n## Screenshots\n</div>\n\n## Test plan\n', "utf8");
+    expect(run(["--check", "--body-file", unmodeled]).status).toBe(1);
+
+    // An unreadable body is still a fault, and the mode still needs its input.
+    expect(run(["--check", "--body-file", join(scratch, "absent.md")]).status).toBe(2);
+    expect(run(["--check"]).status).toBe(2);
   });
 
   test("--landed is required, and a flag cannot swallow the next flag as its value", () => {
@@ -1824,5 +2065,215 @@ describe("Slice 1 — containment, allowlist, and failure classes (L2)", () => {
       expect(upload).toContain(shape);
     }
     expect(upload).toContain("byte-identical");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// L2: round-3 findings. The recipes are what a model copying one fenced block
+// at a time actually runs, so the contracts here are about the BLOCK — what is
+// in it, and what a shell does with it.
+// ---------------------------------------------------------------------------
+
+// A shell loop keyword, and the two statements that are only meaningful inside
+// one. Outside a loop, bash warns on stderr and FALLS THROUGH to the next
+// command (the block then exits 0), while zsh exits 1 — so the same block
+// refuses or attaches depending on the shell.
+const LOOP_KEYWORD = /(?:^|[\s;(])(?:for|while|until)\s/;
+const LOOP_BRANCH = /(?:^|[\s;{(])(?:continue|break)(?:[\s;}]|$)/;
+
+// A fenced block with its whole-line comments removed, so prose ABOUT
+// `continue` is not mistaken for a `continue`.
+function shellCode(block: string): string {
+  return block
+    .split("\n")
+    .filter((line) => !/^\s*#/.test(line))
+    .join("\n");
+}
+
+// Every fenced block the skill's own prose ships.
+function skillBlocks(): string[] {
+  return fencedBlocks([fileOr(SKILL), inputRef(), uploadRef(), verifyRef(), rejectedRef()].join("\n"));
+}
+
+// Offender detector: an attachment path matched mid-path, which admits
+// `https://github.com/attacker/repo/raw/main/user-attachments/evil.png` on the
+// allowlisted host.
+const MIDPATH_ATTACHMENT = /https:\/\/\*\/user-attachments\/\*\)/;
+// Offender detector: the overstated claim that the content check bounds a
+// hostile entries file, rather than bounding non-image files alone.
+const CONTENT_CHECK_OVERSTATED = /content check is the one that survives a hostile entries file/i;
+
+describe("Slice 1 — the copyable blocks (L2)", () => {
+  test("no fenced block uses continue or break without a loop around it", () => {
+    // Round-3 S1: the path-validation fence refused into a bare `continue`
+    // with no `for`, `while`, or `until` anywhere in the block, so in bash
+    // every refusal fell through and the block exited 0.
+    const blocks = skillBlocks();
+    expect(blocks.length).toBeGreaterThan(0);
+
+    const orphans = blocks.filter((block) => {
+      const code = shellCode(block);
+      return LOOP_BRANCH.test(code) && !LOOP_KEYWORD.test(code);
+    });
+    expect(orphans).toEqual([]);
+
+    // The detector fires on a planted positive — the exact shape that shipped.
+    const planted = shellCode('case "$ENTRY_PATH" in\n  *"#"*) REASON="# in path" ; continue ;;\nesac\n');
+    expect(LOOP_BRANCH.test(planted) && !LOOP_KEYWORD.test(planted)).toBe(true);
+  });
+
+  test("validation and the attach it gates are one block, one loop", () => {
+    // `REASON` does not survive an invocation boundary, and neither does a
+    // refusal: a model running the validation fence as one Bash call and the
+    // attach fence as the next attaches the file the first call refused.
+    const fence = validationFence();
+    expect(fence.length).toBeGreaterThan(0);
+    expect(LOOP_KEYWORD.test(shellCode(fence))).toBe(true);
+    expect(fence).toContain("gh pr edit");
+    expect(fence).toContain("--attach");
+
+    // The attach takes the RESOLVED path — the one the symlink, containment,
+    // and content checks ran against — and refuses to run at all when it is
+    // unset or empty.
+    expect(fence).toContain('--attach "${RESOLVED:?}"');
+    const attaches = skillBlocks().filter((block) => block.includes("--attach"));
+    expect(attaches.length).toBeGreaterThan(0);
+    expect(attaches.filter((block) => block.includes('--attach "$ENTRY_PATH"'))).toEqual([]);
+    expect(squash(uploadRef())).toContain("never `$ENTRY_PATH`");
+  });
+
+  test("the symlink test runs before the existence test", () => {
+    // `[ -e ]` follows the link, so a dangling symlink tested first reports as
+    // `file missing` and hides the attempt behind the wrong class.
+    const fence = validationFence();
+    expect(fence.length).toBeGreaterThan(0);
+    const symlink = fence.indexOf('[ -L "$ENTRY_PATH" ]');
+    const exists = fence.indexOf('[ -e "$ENTRY_PATH" ]');
+    expect(symlink).toBeGreaterThanOrEqual(0);
+    expect(exists).toBeGreaterThan(symlink);
+  });
+
+  test("the harvest anchors the attachment path at the host boundary", () => {
+    // The host binding alone leaves the path a free variable, and a party with
+    // write access to any repository on the allowlisted host controls
+    // `/attacker/repo/raw/main/user-attachments/evil.png`.
+    const upload = uploadRef();
+    expect(upload.length).toBeGreaterThan(0);
+    expect(upload).toContain("/user-attachments/assets/*)");
+    expect(upload).toContain("CANDIDATE_PATH");
+    expect(MIDPATH_ATTACHMENT.test(upload)).toBe(false);
+    // The detector fires on a planted positive — the shape that shipped.
+    expect(MIDPATH_ATTACHMENT.test('case "$CANDIDATE" in https://*/user-attachments/*) : ;; *) continue ;; esac')).toBe(true);
+
+    // The read-back asserts the same rule, not just the host half.
+    const verify = verifyRef();
+    expect(verify.length).toBeGreaterThan(0);
+    expect(verify).toContain("/user-attachments/assets/");
+    expect(verify).toContain("githubusercontent.com");
+  });
+
+  test("the PR URL split is guarded and binds the host it resolved", () => {
+    // `${PR_URL#https://github.com/}` is a no-op on an Enterprise URL, which
+    // leaves `OWNER` as `https:` and `REPO` empty for every later `--repo`.
+    const input = inputRef();
+    expect(input.length).toBeGreaterThan(0);
+    expect(input).not.toContain('REST="${PR_URL#https://github.com/}"');
+    expect(input).toContain("https://*/*/*/pull/[0-9]*)");
+    expect(input).toContain('PR_HOST="${REST%%/*}"');
+    expect(input).toContain('case "$NUMBER" in ""|*[!0-9]*)');
+  });
+});
+
+describe("Slice 1 — refuse before mutating (L2)", () => {
+  test("step A runs every pre-image refusal before the first attach", () => {
+    // C3. Six refusals computable from the pre-image fired only in step D,
+    // after `gh pr edit --attach` had run once per entry.
+    const upload = uploadRef();
+    expect(upload.length).toBeGreaterThan(0);
+    expect(upload).toContain("--check --body-file");
+    expect(upload).toContain("refused: <reason>");
+
+    const check = upload.indexOf("--check --body-file");
+    const attach = upload.indexOf('--attach "$');
+    expect(check).toBeGreaterThanOrEqual(0);
+    expect(attach).toBeGreaterThan(check);
+
+    // The set that call covers is named where it runs, so the ones that stay
+    // behind in step D are identifiable.
+    const stepA = squash(upload.slice(0, attach));
+    for (const shape of [
+      "two `## Screenshots` headings",
+      "raw HTML block",
+      "reference-style image",
+      "link reference definition",
+      "unterminated HTML comment",
+    ]) {
+      expect(stepA).toContain(shape);
+    }
+  });
+
+  test("a splice refusal after the attach step has a defined outcome", () => {
+    // `refused` means nothing changed anywhere, so it cannot describe a run
+    // whose assets are already live on an unauthenticated URL.
+    const upload = squash(uploadRef());
+    const input = squash(inputRef());
+    expect(upload.length).toBeGreaterThan(0);
+    expect(input.length).toBeGreaterThan(0);
+
+    // The exit-1 row assigns both outcomes, by the one fact that separates
+    // them: whether any asset landed.
+    const exitOne = upload.slice(upload.indexOf("| 1 |"), upload.indexOf("| 2 |"));
+    expect(exitOne.length).toBeGreaterThan(0);
+    expect(exitOne).toContain("uploaded-not-written");
+    expect(exitOne).toContain("refused");
+
+    // And the enum's own row covers it, so the six values stay exhaustive.
+    const enumTable = input.slice(input.indexOf("| `uploaded-not-written` |"));
+    const row = enumTable.slice(0, enumTable.indexOf("| `refused` |"));
+    expect(row.length).toBeGreaterThan(0);
+    expect(row).toContain("splice refusal");
+  });
+
+  test("the refusal report names the manual edit that clears it", () => {
+    // A reason with no next step leaves an operator holding a PR they cannot
+    // fix, and an agent skimming only the table reports the bare reason.
+    const upload = squash(uploadRef());
+    expect(upload.length).toBeGreaterThan(0);
+    expect(upload).toContain("re-run");
+    expect(/move the hand-authored image/.test(upload)).toBe(true);
+    expect(/delete the HTML comment inside it/.test(upload)).toBe(true);
+
+    const exitOne = upload.slice(upload.indexOf("| 1 |"), upload.indexOf("| 2 |"));
+    expect(exitOne).toContain("manual edit");
+  });
+
+  test("the content check claims only what a MIME sniff can bound", () => {
+    // A four-byte decision does not bound a hostile entries file: with no
+    // trustworthy root, any image anywhere is still uploadable.
+    const upload = squash(uploadRef());
+    expect(upload.length).toBeGreaterThan(0);
+    expect(CONTENT_CHECK_OVERSTATED.test(upload)).toBe(false);
+    // The detector fires on a planted positive — the claim that shipped.
+    expect(CONTENT_CHECK_OVERSTATED.test("**The content check is the one that survives a hostile entries file.**")).toBe(true);
+
+    // What it does bound is stated instead.
+    expect(upload).toContain("unmodified non-image file");
+    expect(upload).toContain("image/svg+xml");
+  });
+});
+
+describe("Slice 1 — the normalization backstops (L2)", () => {
+  test("the HTML half of caller-string escaping is backstopped in code", () => {
+    // The count half already had `--landed`. The HTML half had nothing, so a
+    // section carrying an unescaped `<a href>` or `<img src>` spliced clean
+    // into a public body.
+    const input = squash(inputRef());
+    expect(input.length).toBeGreaterThan(0);
+    expect(input).toContain("backstops");
+    expect(input).toContain("--landed");
+
+    const source = spliceSource();
+    expect(source.length).toBeGreaterThan(0);
+    expect(source).toContain("SECTION_HTML");
   });
 });

@@ -26,8 +26,11 @@ run, when, and which entries qualify, then calls this skill.
   attach and produced by `splice.mjs`. That single write also clears the tails
   the attach step appended.
 - **Refuse before mutating, never after.** Every check that can run against the
-  pre-image runs in step A, so a refusal always means nothing changed
-  (`principle-fail-closed`).
+  pre-image runs in step A, including `splice.mjs --check`, which is the
+  structural half of the body transform run against the pre-image alone — so a
+  refusal it finds means nothing changed (`principle-fail-closed`). What can
+  only be computed after the upload is named, and lands on
+  `uploaded-not-written` rather than on `refused`.
 - **Every caller-supplied string is data, not source and not markup.** A path,
   a caption, a note, and a failure reason each reach a command as one quoted
   `"$VAR"` expansion, and each is normalized by the same function before it
@@ -39,9 +42,10 @@ run, when, and which entries qualify, then calls this skill.
 - **Never delete what you did not write.** A trailing run of stray image lines
   left by an earlier crash is reported and re-emitted below the new section,
   never removed. Anything else this skill did not write — an image inside the
-  section, an HTML comment, a body shape the splice does not model — is a
-  refusal that leaves the body byte-identical, because a duplicate is
-  recoverable and a deletion is not.
+  section, an HTML comment, a raw HTML container, an image in any form the
+  splice cannot count, a body shape the splice does not model — is a refusal
+  that leaves the body byte-identical, because a duplicate is recoverable and a
+  deletion is not.
 
 ## Procedure references
 

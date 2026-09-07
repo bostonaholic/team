@@ -8,7 +8,7 @@ split at `skills/pr-watch-as-reviewer/references/02-input.md`, lines 11-42.
 Never use `[^/]+` for an owner or repo segment: that class admits `$`,
 backticks, parentheses, and spaces.
 
-Resolve the canonical URL in one call, then bind the three values from it. The
+Resolve the canonical URL in one call, then bind the four values from it. The
 resolution call carries `--repo` too, whenever the argument supplied one: for a
 URL argument `$ARG_NUMBER` is the trailing number alone, and `gh pr view` with
 no `--repo` resolves a bare number against the *current directory's* default
@@ -23,12 +23,28 @@ if [ -n "$ARG_OWNER" ]; then
 else
   PR_URL="$(gh pr view "$ARG_NUMBER" --json url --jq .url)"
 fi
-REST="${PR_URL#https://github.com/}"
-OWNER="${REST%%/*}"
-REST="${REST#*/}"
+case "$PR_URL" in
+  https://*/*/*/pull/[0-9]*) : ;;
+  *) exit 1 ;;                       # not a PR URL, so nothing below may split it
+esac
+REST="${PR_URL#https://}"
+PR_HOST="${REST%%/*}" ; REST="${REST#*/}"
+OWNER="${REST%%/*}"   ; REST="${REST#*/}"
 REPO="${REST%%/*}"
 NUMBER="${PR_URL##*/}"
+case "$PR_HOST$OWNER$REPO" in *[!A-Za-z0-9._-]*) exit 1 ;; esac
+case "$NUMBER" in ""|*[!0-9]*) exit 1 ;; esac
 ```
+
+**The split is guarded, and the host is a bound value of its own.** Stripping a
+literal `https://github.com/` prefix is a no-op on every other host: a GitHub
+Enterprise URL would leave `OWNER` as `https:` and `REPO` empty, and each later
+`--repo "$OWNER/$REPO"` would carry a repository that cannot exist. The shape
+test refuses a URL that is not a PR URL before any segment is read out of it,
+and the charset tests refuse a host, owner, repository, or number carrying
+anything else. `PR_HOST` is the value step C's attachment allowlist is derived
+from (`references/02-upload-and-body-edit.md`), so an Enterprise install
+harvests against its own host rather than a hardcoded one.
 
 The `else` branch is the bare-number form, which has no repository of its own
 and resolves against the checkout by design; with no checkout it resolves
@@ -95,6 +111,13 @@ HTML, which GitHub allows in a body: an unescaped caption can otherwise emit an
 `<a href>` to anywhere. `\` is escaped first, so no escape can be undone by a
 caller-supplied backslash.
 
+`splice.mjs` backstops the HTML half of this rule in code: it refuses a section
+carrying an unescaped `<a`, `<img`, or any other raw tag, so a weakened or
+skipped escape is a refusal rather than an `<a href>` in a public body. The
+count half is backstopped by `--landed`. Neither backstop replaces the
+normalization; both exist because the normalization is the part a rewrite can
+quietly drop.
+
 The members, all of them caller data:
 
 | String | Where it renders |
@@ -139,8 +162,11 @@ Each of these fires before any `gh` call and mutates nothing.
 - **A bare PR number with no local checkout.** No repository context exists to
   bind it to, so refuse and ask for the full PR URL.
 
-Step A of the upload adds three more refusals over the pre-image, listed in
-`references/02-upload-and-body-edit.md`.
+Step A of the upload adds the rest of the pre-image refusals, listed in
+`references/02-upload-and-body-edit.md`: the headroom check, the check for an
+image reference to a path being attached, and `splice.mjs --check`, which runs
+every structural refusal computable from the body alone. All of them land on
+`refused`, because all of them run before the first attach.
 
 ### The result
 
@@ -165,12 +191,19 @@ run's report.
 | `partial` | At least one entry landed and at least one failed |
 | `degraded` | Nothing landed; the body carries the note and the captured file names as plain text |
 | `unverified` | The body was written and the read-back did not pass |
-| `uploaded-not-written` | The assets landed and the body was left untouched — what the lost-update guard returns |
-| `refused` | Nothing changed anywhere |
+| `uploaded-not-written` | The assets landed and no body was written — the lost-update guard, and any splice refusal or fault reached after the attach step |
+| `refused` | Nothing changed anywhere: no asset landed and no body was written |
 
 **`section` is null unless a write landed at least one URL and the read-back
 passed.** That is the field `team-pr` copies into companion bodies, so
 anything weaker must not travel.
+
+`uploaded-not-written` covers both post-attach halts, because the state they
+leave is the same one: assets live, body untouched. The lost-update guard is
+one; a `splice.mjs` refusal or fault after the attach step is the other, and
+its `operator_note` carries the reason and the manual edit that clears it
+(`references/02-upload-and-body-edit.md`, step D). A splice refusal on a run
+where **nothing** landed is `refused` instead — nothing changed anywhere.
 
 For `uploaded-not-written`, `body_written: false` and `section: null`. The
 assets are live and are named in `assets`, and the appended tails the attach

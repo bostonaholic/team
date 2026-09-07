@@ -3,17 +3,25 @@
 /**
  * The Screenshots-section body transform, as a pure function.
  *
- *     import { splice } from "<skill-dir>/splice.mjs";
+ *     import { splice, bodyRefusal } from "<skill-dir>/splice.mjs";
  *     const { body, changed, reason } = splice(currentBody, section, { landed });
  *
  *     node "<skill-dir>/splice.mjs" --body-file <path> --section-file <path> \
  *       --landed <count>
+ *     node "<skill-dir>/splice.mjs" --check --body-file <path>
  *
  * `f(body, section, options) -> {body, changed, reason}`: no network, no `gh`,
  * no mutation of anything on disk. The document scan, the trailing-block split,
  * and the refusals are neither deterministic nor testable as prose, which is
  * why they are code (docs/testing.md, "L1: Pure unit"). `reason` is non-empty
  * whenever a rule refuses, and empty on a write.
+ *
+ * `--check` runs `bodyRefusal` alone: every refusal computable from the body
+ * by itself, with no section and no counts. It exists so the caller can run
+ * those refusals in step A, against the pre-image, BEFORE the first
+ * `gh pr edit --attach` — "refuse before mutating, never after"
+ * (`SKILL.md`). A refusal discovered only after the attach step leaves live
+ * assets on a body this transform then declines to write.
  *
  * ## The model, and why refusing is the default
  *
@@ -22,10 +30,14 @@
  * wrong transform deletes text nobody can recover. So the scan below models a
  * closed set of markdown constructs — fenced blocks, block-level HTML
  * comments, ATX headings indented up to three spaces, setext headings, ticket
- * references, and standalone image lines — and **refuses any body carrying a
- * construct outside that set** rather than guessing at its boundaries
- * (`principle-fail-closed`). Widening the set is a code change with a test;
- * meeting an unmodeled shape at runtime is a refusal with a named reason.
+ * references, and standalone INLINE image lines — and **refuses any body
+ * carrying a construct outside that set** rather than guessing at its
+ * boundaries (`principle-fail-closed`). Raw HTML blocks and every non-inline
+ * image form — `<img>`, `<picture>`, `![alt][ref]`, `[ref]: <url>`, a bare
+ * auto-embedded URL — are outside the set and fault, because the scan can
+ * neither find their boundaries nor count them as images it would delete.
+ * Widening the set is a code change with a test; meeting an unmodeled shape at
+ * runtime is a refusal with a named reason.
  *
  * The CLI guard at the bottom follows resolve-transcript.mjs and
  * write-target.mjs: it runs only on direct execution, so a test import has no
@@ -121,7 +133,60 @@ const COMMENT_CLOSE = /-->/;
  */
 const INDENTED_HEADING = /^ {4,}#{1,2}(?:[ \t]|$)/;
 
-/** An image reference of any shape, and the one this skill writes. */
+/**
+ * A raw HTML block opening a line (CommonMark §4.6, block types 1-7). The scan
+ * models block-level HTML comments and no other HTML, so a `<div>`, a
+ * `<table>`, a `<details>`, or a `<picture>` is an unmodeled construct: its
+ * lines read as ordinary text, a `## Screenshots` line inside one reads as
+ * this skill's own heading, and a replace that swallows the closing tag leaves
+ * the container open and unrenders everything below it. A tag name is
+ * required, so an autolink line such as `<https://example.com>` is not
+ * mistaken for one.
+ */
+const HTML_BLOCK_OPEN = /^ {0,3}<\/?[A-Za-z][A-Za-z0-9-]*(?:[ \t/>]|$)/;
+
+/**
+ * An HTML image anywhere on a line. `ANY_IMAGE` cannot see one, so an `<img>`
+ * inside the section a replace covers would be deleted with `changed: true`
+ * and no reason — the silent loss "never delete what you did not write"
+ * exists to prevent.
+ */
+const HTML_IMAGE = /<(?:img|picture|source|svg)\b/i;
+
+/**
+ * A reference-style, collapsed, or shortcut image — `![alt][ref]`, `![alt][]`,
+ * `![ref]`. Its URL lives in a link reference definition elsewhere in the
+ * document, so this transform can neither see the target nor keep the
+ * definition and the use on the same side of a replace.
+ */
+const REFERENCE_IMAGE = /!\[[^\]]*\](?!\()/;
+
+/** A link reference definition, the other half of a reference-style image. */
+const LINK_REFERENCE = /^ {0,3}\[[^\]]*\]:[ \t]*\S/;
+
+/**
+ * A bare absolute URL alone on a line that the host auto-embeds: an
+ * attachment URL, or one naming an image file. It renders as an image while
+ * matching no markdown image shape at all.
+ */
+const BARE_IMAGE_URL =
+  /^[ \t]*<?https?:\/\/[^\s<>]*(?:\/user-attachments\/[^\s<>]*|\.(?:png|jpe?g|gif|webp|svg|avif|bmp|tiff?)(?:[?#][^\s<>]*)?)>?[ \t]*$/i;
+
+/**
+ * Raw HTML in the SECTION, in any position, escaped or not. The section is
+ * assembled from caller strings the normalization in
+ * `references/01-input-and-result.md` backslash-escapes; this is the code-side
+ * backstop for that rule, so a weakened or skipped escape cannot splice an
+ * `<a href>` or an `<img src>` into a public body. An escaped `\<` is caller
+ * text that renders as a literal and is left alone.
+ */
+const SECTION_HTML = /(?<!\\)<[A-Za-z/!?]/;
+
+/**
+ * An INLINE markdown image reference — the only image shape that reaches this
+ * point, because `scan` faults on every other form. And the one this skill
+ * writes.
+ */
 const ANY_IMAGE = /!\[[^\]]*\]\([^)]*\)/g;
 const OWN_IMAGE = /^!\[screenshot-\d+\]\(\s*https?:\/\/[^\s)]+\s*\)$/;
 
@@ -131,6 +196,38 @@ const OWN_IMAGE = /^!\[screenshot-\d+\]\(\s*https?:\/\/[^\s)]+\s*\)$/;
  * run past the guard.
  */
 const NEW_SECTION_IMAGE = /!\[screenshot-\d+\]\(\s*https?:\/\//g;
+
+/**
+ * The construct on `line` that the model does not cover, or null. Called once
+ * per unmasked line, and only while no fault is recorded yet: the first one
+ * found is the one reported, and a fenced or commented line never reaches
+ * here. Each reason is a predicate over the document, so a caller can print it
+ * after "the body" or "the section".
+ */
+function unmodeled(line) {
+  if (line.includes("<!--")) {
+    return "carries an HTML comment that opens mid-line, which this transform does not model";
+  }
+  if (INDENTED_HEADING.test(line)) {
+    return "carries a heading-shaped line indented into a code block, which this transform does not model";
+  }
+  if (HTML_BLOCK_OPEN.test(line)) {
+    return "carries a raw HTML block, whose boundaries this transform does not model";
+  }
+  if (HTML_IMAGE.test(line)) {
+    return "carries an HTML image tag, which this transform cannot count as an image";
+  }
+  if (REFERENCE_IMAGE.test(line)) {
+    return "carries a reference-style image, whose target this transform cannot see";
+  }
+  if (LINK_REFERENCE.test(line)) {
+    return "carries a link reference definition, which this transform does not model";
+  }
+  if (BARE_IMAGE_URL.test(line)) {
+    return "carries a bare auto-embedded image URL, which this transform does not model";
+  }
+  return null;
+}
 
 /**
  * The document scan: one pass, producing the masked lines, the section
@@ -155,8 +252,8 @@ const NEW_SECTION_IMAGE = /!\[screenshot-\d+\]\(\s*https?:\/\//g;
  * is phrased as a predicate so a caller can attribute it: an unbalanced fence
  * hides every boundary below it, an unterminated comment hides the rest of the
  * document, a comment opening mid-line is inline HTML this scan does not
- * track, and a heading indented into a code block reads as a boundary to a
- * human and as text to a parser.
+ * track, a heading indented into a code block reads as a boundary to a human
+ * and as text to a parser, and `unmodeled` names the rest.
  */
 function scan(lines) {
   const mask = new Array(lines.length).fill(false);
@@ -205,12 +302,7 @@ function scan(lines) {
       comment = !COMMENT_CLOSE.test(line.slice(line.indexOf("<!--") + 4));
       continue;
     }
-    if (fault === null && line.includes("<!--")) {
-      fault = "carries an HTML comment that opens mid-line, which this transform does not model";
-    }
-    if (fault === null && INDENTED_HEADING.test(line)) {
-      fault = "carries a heading-shaped line indented into a code block, which this transform does not model";
-    }
+    if (fault === null) fault = unmodeled(line);
 
     const atx = ATX_HEADING.exec(line);
     if (atx) {
@@ -365,6 +457,50 @@ function foreignImages(text) {
   return (text.match(ANY_IMAGE) ?? []).filter((image) => !OWN_IMAGE.test(image));
 }
 
+/** `text` with CRLF normalized to LF, split into lines. */
+function bodyLines(text) {
+  return (typeof text === "string" ? text : "").replace(/\r\n/g, "\n").split("\n");
+}
+
+/**
+ * Every refusal computable from the body alone: the scan's fault, an ambiguous
+ * pair of Screenshots headings, and the two constructs a replace of the
+ * existing section would delete — a foreign image and an HTML comment. Returns
+ * the reason, or "" when nothing in the body refuses.
+ *
+ * It is a function of the pre-image and nothing else, which is the whole point:
+ * `--check` runs it in step A, before the first `gh pr edit --attach`, so a
+ * refusal that this body was always going to produce is found while the body
+ * is still untouched and the assets are still local. `splice` runs the same
+ * function first, so the two can never disagree.
+ */
+export function bodyRefusal(body) {
+  const lines = bodyLines(body);
+  const doc = scan(lines);
+  if (doc.fault) return `the body ${doc.fault}`;
+
+  const contentCount = contentEnd(lines, doc) + 1;
+  const found = doc.headings.filter((index) => index < contentCount);
+  if (found.length > 1) {
+    return `the body carries ${found.length} Screenshots headings; which one to replace is ambiguous`;
+  }
+
+  const start = found[0];
+  if (start === undefined) return "";
+
+  const stop = replaceEnd(lines, doc, start, contentCount);
+  const foreign = foreignImages(lines.slice(start, stop).join("\n"));
+  if (foreign.length > 0) {
+    return `the Screenshots section holds an image this skill did not write (${foreign[0]}), so replacing it would delete it`;
+  }
+  for (let index = start; index < stop; index++) {
+    if (doc.commented[index]) {
+      return "the Screenshots section holds an HTML comment, so replacing it would delete text this skill did not write";
+    }
+  }
+  return "";
+}
+
 /**
  * Splice `section` into `body`. The rules run in order: refuse a body or a
  * section this transform cannot read, refuse more image references than the
@@ -387,12 +523,20 @@ export function splice(body, section, options = {}) {
 
   if (sectionText.trim() === "") return refuse("the section to splice is empty");
 
-  const lines = original.replace(/\r\n/g, "\n").split("\n");
+  const lines = bodyLines(original);
   const doc = scan(lines);
-  if (doc.fault) return refuse(`the body ${doc.fault}`);
+
+  // The pre-image refusals, in the one place the `--check` mode reads them
+  // from, so a body that step A cleared cannot refuse here for a body-only
+  // reason and a body that step A refused cannot pass here.
+  const blocked = bodyRefusal(original);
+  if (blocked) return refuse(blocked);
 
   const sectionScan = scan(sectionText.split("\n"));
   if (sectionScan.fault) return refuse(`the section ${sectionScan.fault}`);
+  if (SECTION_HTML.test(sectionText)) {
+    return refuse("the section carries unescaped raw HTML, which must never reach a public body");
+  }
 
   const landed = Number.isFinite(options?.landed) ? options.landed : 0;
   const referenced = count(sectionText, NEW_SECTION_IMAGE);
@@ -404,10 +548,9 @@ export function splice(body, section, options = {}) {
   const contentCount = end + 1;
   const footerLines = lines.slice(contentCount);
 
+  // At most one, and its contents already cleared: an ambiguous pair, a
+  // foreign image, and an embedded comment are `bodyRefusal`'s to refuse.
   const found = doc.headings.filter((index) => index < contentCount);
-  if (found.length > 1) {
-    return refuse(`the body carries ${found.length} Screenshots headings; which one to replace is ambiguous`);
-  }
 
   const sectionLines = trimmedLines(sectionText);
   let existing = "";
@@ -417,17 +560,6 @@ export function splice(body, section, options = {}) {
   if (start !== undefined) {
     const stop = replaceEnd(lines, doc, start, contentCount);
     existing = lines.slice(start, stop).join("\n");
-    const foreign = foreignImages(existing);
-    if (foreign.length > 0) {
-      return refuse(
-        `the Screenshots section holds an image this skill did not write (${foreign[0]}), so replacing it would delete it`,
-      );
-    }
-    for (let index = start; index < stop; index++) {
-      if (doc.commented[index]) {
-        return refuse("the Screenshots section holds an HTML comment, so replacing it would delete text this skill did not write");
-      }
-    }
     const tail = lines.slice(stop, contentCount);
     const head = lines.slice(0, start);
     spliced = [...head, ...(tail.length > 0 ? blankTerminated(sectionLines) : sectionLines), ...tail];
@@ -482,6 +614,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const value = argv[at + 1];
     return value === undefined || value.startsWith("--") ? null : value;
   };
+  const checkOnly = argv.includes("--check");
   const bodyFile = flag("--body-file");
   const sectionFile = flag("--section-file");
   const landedFlag = flag("--landed");
@@ -494,12 +627,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   // `--landed` is required: the guard it feeds exists for the case where the
   // caller-string escaping upstream has been weakened, and a guard that a
   // caller can switch off by omitting a flag guards nothing.
-  if (!bodyFile || !sectionFile || !landedFlag) {
-    fail("usage: splice.mjs --body-file <path> --section-file <path> --landed <count>");
+  if (!bodyFile || (!checkOnly && (!sectionFile || !landedFlag))) {
+    fail(
+      "usage: splice.mjs --body-file <path> --section-file <path> --landed <count>\n" +
+        "       splice.mjs --check --body-file <path>",
+    );
   }
-
-  const landed = Number(landedFlag);
-  if (!Number.isInteger(landed) || landed < 0) fail(`--landed expects a non-negative integer, got "${landedFlag}"`);
 
   // Exit 2, not 1: an unreadable input is an environment fault, and the caller
   // reads exit 1 as "no rule allowed the write". A stack trace on the refusal
@@ -511,6 +644,21 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       return fail(`cannot read the ${label} at "${path}": ${error.message}`);
     }
   };
+
+  // `--check` is the step-A mode: the pre-image alone, no section, no write.
+  // Exit 1 here is a refusal the caller must act on BEFORE the first attach,
+  // which is what makes "refuse before mutating" true rather than aspirational.
+  if (checkOnly) {
+    const reason = bodyRefusal(slurp(bodyFile, "body file"));
+    if (reason) {
+      process.stderr.write(`refused: ${reason}\n`);
+      process.exit(1);
+    }
+    process.exit(0);
+  }
+
+  const landed = Number(landedFlag);
+  if (!Number.isInteger(landed) || landed < 0) fail(`--landed expects a non-negative integer, got "${landedFlag}"`);
 
   const result = splice(slurp(bodyFile, "body file"), slurp(sectionFile, "section file"), { landed });
   if (!result.changed) {

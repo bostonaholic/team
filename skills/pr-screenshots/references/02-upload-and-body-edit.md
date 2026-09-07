@@ -36,8 +36,42 @@ obey (`principle-untrusted-input-is-data`, matching
 Normalize CRLF to LF and keep the result. It is the input to the splice, the
 baseline for the lost-update guard, and the subject of four checks:
 
-1. **Two Screenshots headings.** Which one to replace is ambiguous, so refuse
-   here, before the first upload.
+1. **Every refusal `splice.mjs` computes from the pre-image alone.** Write the
+   normalized pre-image to a file and run the check mode against it, here,
+   before the first upload:
+
+   ```bash
+   if node "<skill-dir>/splice.mjs" --check --body-file "$PRE_IMAGE_FILE"; then
+     :                                   # the pre-image allows a write
+   else
+     case $? in
+       1) exit 1 ;;                      # `refused: <reason>` on stderr — refuse the run
+       *) exit 2 ;;                      # a fault, not a refusal
+     esac
+   fi
+   ```
+
+   Exit 1 prints `refused: <reason>` on stderr. Report that reason,
+   `outcome: refused`, and mutate nothing — no attach has run, so nothing is
+   uploaded and the body is untouched. Exit 2 is a usage or environment fault,
+   read the same way as in the table below.
+
+   The set it covers is every refusal that is a function of the body and
+   nothing else: two `## Screenshots` headings, where which one to replace is
+   ambiguous; an image inside that section which this skill did not write; an
+   HTML comment inside it; and each unmodeled construct the scan names — an
+   unclosed code fence, an unterminated HTML comment, a comment that opens
+   mid-line, a heading indented into a code block, a raw HTML block, an HTML
+   `<img>` or `<picture>`, a reference-style image, a link reference
+   definition, and a bare auto-embedded image URL.
+
+   **This call is what makes "refuse before mutating" true rather than
+   aspirational.** Every one of those refusals also fires in step D, and a
+   refusal that fires only there arrives after `gh pr edit --attach` has run
+   once per entry against a PR that may already be merged: the assets are live,
+   the body is not written, and the run lands on `uploaded-not-written` instead
+   of `refused`.
+
 2. **No headroom.** The pre-image plus the appended tails plus the section must
    stay under 65536 characters. An append can overflow the body on its own, so
    this refusal belongs here rather than after the loop.
@@ -101,14 +135,22 @@ world-readable `user-attachments` URL — test the link itself, and resolve the
 path before comparing it to the root so that `..` cannot climb out of it
 (`skills/principle-never-interpolate/SKILL.md`, containment).
 
-**The content check is the one that survives a hostile entries file.** An
-entries file can name any path on the machine, and the root is declared by
-whoever wrote that file, so containment bounds a *mistake* — a stale manifest,
-a wrong glob, a path that drifted — and never a chosen target. What keeps
-`~/.ssh/id_ed25519`, a repository's `.env`, and `.git/config` off a
-world-readable URL is that none of them is an image, decided by content rather
-than by extension. An environment with no `file` command yields no type, which
-fails the check: unverified is not an image.
+**The content check is what keeps an unmodified non-image file off a public
+URL, and it bounds nothing wider than that.** An entries file can name any path
+on the machine, and the root is declared by whoever wrote that file, so
+containment bounds a *mistake* — a stale manifest, a wrong glob, a path that
+drifted — and never a chosen target. What keeps `~/.ssh/id_ed25519`, a
+repository's `.env`, and `.git/config` off a world-readable URL is that none of
+them is an image, decided by content rather than by extension. An environment
+with no `file` command yields no type, which fails the check: unverified is not
+an image.
+
+State the bound honestly: a MIME sniff is a decision over the first few bytes,
+so with no trustworthy root any *image* anywhere on the machine is still
+uploadable — a screenshot of a credential vault, a photograph of a whiteboard,
+or an SVG, which is text carrying `image/svg+xml`. The check refuses a file
+that is not an image. It does not decide whether an image should be public,
+and nothing here does.
 
 The declared root is the entries file's own top-level `root`
 (`references/01-input-and-result.md`) — `$ARGUMENTS/screenshots/` for a
@@ -124,56 +166,88 @@ no-op in bash, sh, and zsh, so an unbound value silently rebinds the root to
 the current working directory — after which an entry naming `<repo>/.env` or
 `<repo>/.git/config` is "contained".
 
+**The validation and the attach it gates are one block and one loop.** Not two
+fenced blocks, and not a loop-shaped block with no loop keyword in it: a `case`
+arm ending in a bare `continue` outside a `for`, `while`, or `until` prints a
+warning in bash and **falls through to the next command**, so the block exits 0
+and a caller running the next fence attaches the file the arm just refused.
+`REASON` does not survive an invocation boundary either — the check and the use
+belong to the SAME invocation (`skills/principle-never-interpolate/SKILL.md`).
+Sibling skills put the loop keyword and the guarded action in one fence for the
+same reason (`skills/shipit/references/02-land-sequence.md`,
+`skills/groom-backlog/references/04-step-1-load-once-in-bulk.md`).
+
 ```bash
 : "${CAPTURE_ROOT:?the entries file must declare an absolute root}"
 case "$CAPTURE_ROOT" in /*) : ;; *) exit 1 ;; esac         # absolute, or refuse
 CAPTURE_ROOT="$(cd -- "$CAPTURE_ROOT" && pwd -P)" || exit 1
 NEWLINE='
 '
-# Per entry. Each arm records its class in REASON and continues the loop.
-case "$ENTRY_PATH" in
-  *"$NEWLINE"*) REASON="newline in path" ; continue ;;
-  *"#"*)        REASON="# in path"       ; continue ;;
-  /*)           : ;;
-  *)            REASON="relative path"   ; continue ;;
-esac
-[ -e "$ENTRY_PATH" ] || { REASON="file missing"        ; continue ; }
-[ -L "$ENTRY_PATH" ] && { REASON="symlink refused"     ; continue ; }
-[ -f "$ENTRY_PATH" ] || { REASON="not a regular file"  ; continue ; }
-RESOLVED="$(cd -- "$(dirname -- "$ENTRY_PATH")" && pwd -P)/$(basename -- "$ENTRY_PATH")" \
-  || { REASON="file missing" ; continue ; }
-case "$RESOLVED" in
-  "$CAPTURE_ROOT"/*) : ;;
-  *) REASON="outside the declared root" ; continue ;;
-esac
-case "$(file -b --mime-type -- "$RESOLVED")" in
-  image/*) : ;;
-  *) REASON="not an image" ; continue ;;
-esac
+# Records the entry's failure class for the report. Reads REASON and
+# ENTRY_PATH, which is what keeps every arm below one readable line.
+fail_entry() { printf '%s\t%s\n' "$REASON" "$ENTRY_PATH" >>"$FAILURES_FILE" ; }
+
+# One entry per iteration: validate, then attach, then re-read — all inside
+# this loop, so `continue` is a real `continue` and a refused entry can never
+# reach the attach below it.
+for ENTRY_PATH in "$@"; do
+  REASON=""
+  case "$ENTRY_PATH" in
+    *"$NEWLINE"*) REASON="newline in path" ; fail_entry ; continue ;;
+    *"#"*)        REASON="# in path"       ; fail_entry ; continue ;;
+    /*)           : ;;
+    *)            REASON="relative path"   ; fail_entry ; continue ;;
+  esac
+  [ -L "$ENTRY_PATH" ] && { REASON="symlink refused"    ; fail_entry ; continue ; }
+  [ -e "$ENTRY_PATH" ] || { REASON="file missing"       ; fail_entry ; continue ; }
+  [ -f "$ENTRY_PATH" ] || { REASON="not a regular file" ; fail_entry ; continue ; }
+  RESOLVED="$(cd -- "$(dirname -- "$ENTRY_PATH")" && pwd -P)/$(basename -- "$ENTRY_PATH")" \
+    || { REASON="file missing" ; fail_entry ; continue ; }
+  case "$RESOLVED" in
+    "$CAPTURE_ROOT"/*) : ;;
+    *) REASON="outside the declared root" ; fail_entry ; continue ;;
+  esac
+  case "$(file -b --mime-type -- "$RESOLVED")" in
+    image/*) : ;;
+    *) REASON="not an image" ; fail_entry ; continue ;;
+  esac
+
+  # The attach takes the path the checks above validated, and `:?` refuses to
+  # run the command at all on an unset or empty value.
+  gh pr edit "$NUMBER" --repo "$OWNER/$REPO" --attach "${RESOLVED:?}" \
+    || { REASON="attach failed" ; fail_entry ; }
+  AFTER="$(gh pr view "$NUMBER" --repo "$OWNER/$REPO" --json body --jq .body)"
+done
 ```
 
 Every check the prose names is in that block, because the block is what a
 model copying one fenced command at a time actually runs. An entry failing any
 check is a failure with that class, and the loop continues.
 
-```bash
-gh pr edit "$NUMBER" --repo "$OWNER/$REPO" --attach "$ENTRY_PATH"
-```
+`[ -L ]` runs **before** `[ -e ]`: `-e` follows the link, so a dangling symlink
+tested first reports as `file missing` and hides an attempted symlink behind
+the wrong class.
+
+**The attach argument is `$RESOLVED`, never `$ENTRY_PATH`.** The symlink,
+containment, and content checks all ran against `$RESOLVED`, and attaching the
+unresolved name would upload a path nothing validated — any process that can
+write a directory along it could swap the checked file for a link to
+`~/.ssh/id_ed25519` between the checks and the command. Attaching the resolved
+path closes that divergence. A residual TOCTOU window remains, because the file
+at `$RESOLVED` can still be replaced between the content check and the attach;
+closing it needs an open file descriptor the CLI does not accept, so it is
+accepted and recorded here rather than papered over.
 
 One file per command, so attribution is exact and the host's own multi-file cap
 never applies; the cost is two API calls per image. The path is one quoted
 `"$VAR"` expansion, so no caller text becomes a shell word. Never append an
 alt suffix to the argument — the alt this skill emits is `screenshot-<NN>`.
 
-Re-read the body after **every** attach:
-
-```bash
-AFTER="$(gh pr view "$NUMBER" --repo "$OWNER/$REPO" --json body --jq .body)"
-```
-
-An attach that exits non-zero may still have updated the PR, so never infer
-"nothing happened" from an exit code. Derive `assets`, `failures`, and
-`outcome` from what the read shows.
+The body is re-read after **every** attach, which is the `AFTER=` line inside
+the loop. An attach that exits non-zero may still have updated the PR, so never
+infer "nothing happened" from an exit code — the arm above records `attach
+failed` and still re-reads. Derive `assets`, `failures`, and `outcome` from what
+the read shows.
 
 **Step C — harvest.** The suffix of `AFTER` past the previous read holds that
 entry's resolved absolute URL. Bind it to that entry — but only an URL on the
@@ -187,8 +261,15 @@ harvested, embedded, and — in a multi-repo run — copied verbatim into every
 companion PR, including repositories they cannot write to.
 
 The canonical shape is `https://github.com/user-attachments/assets/<id>`, and
-the path test admits its enterprise and proxy variants alongside it. The host
-allowlist is derived from the PR this run already resolved, never hardcoded:
+**the path is anchored at the host boundary, not matched mid-path**: a rule
+that merely requires `/user-attachments/` somewhere in the path admits
+`https://github.com/attacker/repo/raw/main/user-attachments/evil.png`, which is
+on the allowlisted host and is content that party controls. The two variants
+are enumerated rather than wildcarded — the path is `/user-attachments/assets/…`
+on github.com and on a GitHub Enterprise host alike, and the private-repository
+proxy rewrite is the one form with a path of its own, allowed only on a
+`*.githubusercontent.com` host. The host allowlist is derived from the PR this
+run already resolved, never hardcoded:
 
 - the host of `$PR_URL` — `github.com`, or the GitHub Enterprise host the PR
   actually lives on;
@@ -197,27 +278,57 @@ allowlist is derived from the PR this run already resolved, never hardcoded:
 - one further host, and only when the operator set `PR_SCREENSHOTS_ASSET_HOST`
   for an Enterprise install whose assets live off-host.
 
+`$SUFFIX` below is that suffix of `AFTER`, and `$CANDIDATES_FILE` is a
+temporary file under the run's own `mktemp -d`:
+
 ```bash
-PR_HOST="${PR_URL#https://}"        ; PR_HOST="${PR_HOST%%/*}"
-CANDIDATE_HOST="${CANDIDATE#https://}" ; CANDIDATE_HOST="${CANDIDATE_HOST%%/*}"
-case "$CANDIDATE" in https://*/user-attachments/*) : ;; *) continue ;; esac
-case "$CANDIDATE_HOST" in
-  ""|*[!A-Za-z0-9.-]*) continue ;;   # empty, or carrying userinfo, a port, or worse
-esac
-case "$CANDIDATE_HOST" in
-  "$PR_HOST"|*.githubusercontent.com|"${PR_SCREENSHOTS_ASSET_HOST:-$PR_HOST}") : ;;
-  *) continue ;;
-esac
+PR_HOST="${PR_URL#https://}" ; PR_HOST="${PR_HOST%%/*}"
+ASSET_URL=""
+# One candidate per LINE, read from a file. `for X in $VAR` would split on
+# whitespace in bash and not split at all in zsh, where the whole suffix then
+# arrives as one "candidate" that satisfies the tests below and defeats the
+# ambiguity guard. A redirect keeps the loop in the current shell in both,
+# which a pipeline into `while` does not.
+printf '%s' "$SUFFIX" | grep -Eo 'https://[^][:space:]<>")]+' >"$CANDIDATES_FILE"
+# One candidate per iteration, inside the entry loop: `continue` needs a loop
+# around it, and a `case` arm that falls through instead would let a rejected
+# candidate be harvested by the line below it.
+while IFS= read -r CANDIDATE; do      # the absolute URLs the suffix of AFTER holds
+  case "$CANDIDATE" in https://*) : ;; *) continue ;; esac
+  CANDIDATE_REST="${CANDIDATE#https://}"
+  CANDIDATE_HOST="${CANDIDATE_REST%%/*}"
+  case "$CANDIDATE_REST" in
+    */*) CANDIDATE_PATH="/${CANDIDATE_REST#*/}" ;;
+    *)   CANDIDATE_PATH="/" ;;
+  esac
+  case "$CANDIDATE_HOST" in
+    ""|*[!A-Za-z0-9.-]*) continue ;;  # empty, or carrying userinfo, a port, or worse
+  esac
+  case "$CANDIDATE_PATH" in
+    /user-attachments/assets/*) : ;;  # github.com and GitHub Enterprise
+    *)                                # the private-repo proxy rewrite, on its own host
+      case "$CANDIDATE_HOST" in *.githubusercontent.com) : ;; *) continue ;; esac ;;
+  esac
+  case "$CANDIDATE_HOST" in
+    "$PR_HOST"|*.githubusercontent.com|"${PR_SCREENSHOTS_ASSET_HOST:-$PR_HOST}") : ;;
+    *) continue ;;
+  esac
+  [ -z "$ASSET_URL" ] || { ASSET_URL="" ; REASON="ambiguous attachment URL" ; break ; }
+  ASSET_URL="$CANDIDATE"
+done < "$CANDIDATES_FILE"
 ```
 
 The host is compared as a whole label, never as a substring, and a host
 carrying anything but letters, digits, dots, and hyphens is rejected outright —
 `https://github.com@attacker.example/x/user-attachments/y.png` parses its host
-as `github.com@attacker.example`, and a substring test would call it ours.
+as `github.com@attacker.example`, and a substring test would call it ours. The
+path is compared only after the host has been split off it, so `/user-attachments/assets/`
+means the *first* path segments and not any segment.
 
 A suffix yielding **more than one** allowlisted candidate is a failure for that
-entry, not a guess between them. An empty suffix, or one yielding no
-allowlisted URL, means the entry did not land.
+entry, not a guess between them — the loop above clears `ASSET_URL` and records
+the class. An empty suffix, or one yielding no allowlisted URL, means the entry
+did not land.
 
 **Step D — splice once, write once.**
 
@@ -270,21 +381,34 @@ loss.
 `splice.mjs` models a closed set of markdown constructs and **refuses any body
 carrying one it does not model**, rather than transforming it and hoping: an
 unbalanced code fence, an unterminated HTML comment, a comment that opens
-mid-line, a heading indented into a code block, two `## Screenshots` headings,
-an HTML comment inside the section it would replace, or an image inside that
-section which this skill did not write. Each refusal is exit 1 with its reason,
-and the body is byte-identical afterwards. That is the whole recovery path:
-report the reason, name the PR, and leave the section to a human edit. A
-refusal costs one manual edit; a wrong transform deletes text from a PR that
-may already be merged.
+mid-line, a heading indented into a code block, a raw HTML block such as a
+`<div>`, a `<table>`, or a `<details>`, an HTML `<img>` or `<picture>`, a
+reference-style image and the link reference definition that resolves it, a
+bare auto-embedded image URL, two `## Screenshots` headings, an HTML comment
+inside the section it would replace, or an image inside that section which this
+skill did not write. Each refusal is exit 1 with its reason, and the body is
+byte-identical afterwards. A refusal costs one manual edit; a wrong transform
+deletes text from a PR that may already be merged.
+
+**Every one of those is also step A's `--check`**, so on a normal run they have
+already fired before any upload. What reaches this point is the residue: a
+section-side refusal — the no-downgrade count, the overflow, a section carrying
+raw HTML, more references than the run landed — or a body another writer
+changed since step A.
+
+That is the whole recovery path: report the reason, name the PR, and recommend
+the manual edit that clears it. Name the edit, because the reason alone does not
+imply it — move the hand-authored image out of the `## Screenshots` section (or
+delete the HTML comment inside it) and re-run; for an unmodeled construct,
+either take it out of the body or write the section by hand. Then re-run.
 
 Three exit codes, and they mean different things:
 
 | Exit | Means | Do |
 | --- | --- | --- |
 | 0 | The new body is on stdout | Write it |
-| 1 | `unchanged: <reason>` on stderr — no rule allowed the write | Report the reason, leave the body alone |
-| 2 | `splice.mjs: <message>` on stderr — a usage or environment fault, such as an unreadable input path | Report it as a fault, not as a refusal; leave the body alone |
+| 1 | `unchanged: <reason>` on stderr — no rule allowed the write | Report the reason and the manual edit that clears it, leave the body alone, and set `outcome` to `uploaded-not-written` when any asset landed, `refused` when none did |
+| 2 | `splice.mjs: <message>` on stderr — a usage or environment fault, such as an unreadable input path | Report it as a fault, not as a refusal; leave the body alone, and set `outcome` the same way |
 
 On exit 0, one write lands it, and that same write also clears the tails the
 attach step appended:

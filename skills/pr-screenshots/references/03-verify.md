@@ -28,15 +28,21 @@ this check.
 
 1. **Every landed asset appears.** For each entry with a resolved URL, the
    section holds an image whose `alt` equals that entry's `screenshot-<NN>`.
-2. **Every image in the section is on the attachment allowlist.** No `src`
-   starts `/`, starts `./`, or starts `file:` — and each one is an `https://`
-   URL whose host is on the same allowlist step C harvested against: the host
-   of `$PR_URL`, any `*.githubusercontent.com` host, or the configured
-   `PR_SCREENSHOTS_ASSET_HOST`. A private repository's proxy rewrite lands on
-   `*.githubusercontent.com`, which is on that list, so asserting the host
-   cannot turn a good upload into a reported failure — while asserting nothing
-   would let an URL appended by another writer during the attach window pass
-   the read-back and travel to every companion PR.
+2. **Every image in the section passes the same test step C harvested
+   against** — the whole test, host and path alike, because a read-back that
+   checks a weaker rule than the harvest cannot detect what the harvest let
+   through. No `src` starts `/`, starts `./`, or starts `file:`; each one is an
+   `https://` URL; its host carries only letters, digits, dots, and hyphens and
+   is the host of `$PR_URL`, a `*.githubusercontent.com` host, or the
+   configured `PR_SCREENSHOTS_ASSET_HOST`; and its path — taken after the host
+   is split off, never matched mid-path — begins `/user-attachments/assets/`,
+   or is any path at all on a `*.githubusercontent.com` host, which is the
+   private-repository proxy rewrite and the only other shape allowed. A proxy
+   rewrite is therefore never turned into a reported failure, while
+   `https://github.com/attacker/repo/raw/main/user-attachments/evil.png` fails
+   here exactly as it fails the harvest. Asserting nothing would let an URL
+   appended by another writer during the attach window pass the read-back and
+   travel to every companion PR.
 3. **A degraded write is checked as text.** When nothing landed and the
    degraded note was written, the note wording and each captured file's
    basename must appear in the section as text, and rule 2 still holds. The
