@@ -246,7 +246,12 @@ export function declaredSessionId(headText) {
   return null;
 }
 
-/** Candidates whose own header agrees they are `sessionId`, dropping any that disagree. */
+/**
+ * Candidates whose own header agrees they are `sessionId`, dropping any that
+ * disagree. Only files the host's own naming already points at are opened, and
+ * only the declared id leaves this function — no span of any transcript, matched
+ * or not, reaches the caller.
+ */
 function confirmed(candidates, sessionId) {
   return candidates.filter((path) => {
     const declared = declaredSessionId(readHead(path));

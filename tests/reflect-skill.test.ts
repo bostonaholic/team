@@ -580,6 +580,18 @@ describe("Slice 1 — L1: the session id the host exported resolves the transcri
     expect(result.path).toBe(join(store, rolloutPath(id)));
   });
 
+  test("a header probe that lands mid-record still reads the id above it", () => {
+    // The header is read as a bounded byte probe, so its last line is routinely
+    // a truncated record. A parser that gave up there would reject every large
+    // transcript it was asked to confirm.
+    const id = "01a07c7b-16e9-73a2-8f5b-7638fd286088";
+    const store = tree("id-codex-truncated-probe", {
+      [rolloutPath(id)]: `${JSON.stringify(codexMeta(id))}\n${JSON.stringify(codexUser("hi")).slice(0, 40)}`,
+    });
+
+    expect(resolveIn("codex", store, { sessionId: id }).path).toBe(join(store, rolloutPath(id)));
+  });
+
   test("a rollout whose own header names a different thread is not this session", () => {
     // The filename is the host's claim; the header is the file's. A file that
     // was renamed, copied, or restored under another id must not resolve.

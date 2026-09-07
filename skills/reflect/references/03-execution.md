@@ -61,16 +61,17 @@ plausible.
 (`CLAUDE_CODE_SESSION_ID`, `CODEX_THREAD_ID`), which names the file directly and
 is re-checked against the file's own header. Only where a host exports none does
 the run fall back to a **fixed-string** search for the marker across that host's
-store. Either way the search **returns file names only**, so no unmatched
-session's content reaches a lens, a proposal, or this context — which is what
-makes searching wider than one directory acceptable. Nothing takes the newest
-file, guesses from the working directory, or picks among candidates. Named
-failures stop the run instead:
+store. **Neither path returns a transcript's content**: the marker search
+returns file names only, and the header check returns only the id it read. So
+no unmatched session's content reaches a lens, a proposal, or this context,
+which is what makes searching wider than one directory acceptable. Nothing takes
+the newest file, guesses from the working directory, or picks among candidates.
+Named failures stop the run instead:
 
 | Failure | What it means | What to report |
 |---------|---------------|----------------|
 | `unsupported-host` | neither supported agent exported a session id here | the host, and that reflect reads Claude Code and Codex stores — Conductor through whichever of the two it runs |
-| `ambiguous-host` | both agents' session variables are set in one process | both hosts named; no pick was made |
+| `ambiguous-host` | two agents claim this process — one is running inside the other's shell — and the marker settled neither transcript | both hosts named; no pick was made |
 | `invalid-session-id` | the exported id is not a session id shape | the value seen |
 | `no-session-store` | the host records no transcripts here | the path tried |
 | `no-match` | neither the session id nor the marker reached disk after one retry | every pattern tried |
