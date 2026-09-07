@@ -7,12 +7,13 @@
 //
 // L1 (pure unit, hermetic): the two bundled scripts,
 // skills/reflect/resources/resolve-transcript.mjs and skills/reflect/resources/write-target.mjs.
-// Resolution, record classification, the byte/record bounds, the untrusted
-// name pattern, <repo> containment, and the two-root tie-break are all
-// `f(input) -> output`, so docs/testing.md ("L1: Pure unit") puts them here
-// rather than in prose. Every fixture is synthetic JSONL written into a temp
-// dir keyed by pid+timestamp and removed afterwards — no test ever reads a real
-// ~/.claude/projects/.
+// Host detection, resolution, record classification, the byte/record bounds,
+// the untrusted name pattern, <repo> containment, and the two-root tie-break are
+// all `f(input) -> output`, so docs/testing.md ("L1: Pure unit") puts them here
+// rather than in prose. Every fixture is synthetic JSONL — sanitized values in
+// the record shapes each host really writes — written into a temp dir keyed by
+// pid+timestamp and removed afterwards. No test ever reads a real
+// ~/.claude/projects/ or ~/.codex/sessions/, and no test spawns an agent.
 //
 // L2 (static-invariant tripwires): the load-bearing rules of
 // skills/reflect/SKILL.md. These assert CONTRACTS — frontmatter keys and
@@ -46,9 +47,12 @@ import {
   MAX_RECORDS,
   MAX_TOTAL_BYTES,
   PER_SPAN_BYTE_CAP,
+  detectHost,
   isUserTurn,
   normalizeTranscript,
+  resolveSession,
   resolveTranscript,
+  storeRootFor,
 } from "../skills/reflect/resources/resolve-transcript.mjs";
 import {
   hasPluginMarker,
@@ -93,8 +97,10 @@ afterAll(() => {
 });
 
 // ---------------------------------------------------------------------------
-// Synthetic transcript records. Every shape here was measured from real
-// transcript files under ~/.claude/projects/.
+// Synthetic transcript records. Every shape here was measured from a real
+// transcript: Claude Code's under ~/.claude/projects/, Codex's under
+// ~/.codex/sessions/. Values are sanitized; the KEYS and nesting are verbatim,
+// because those are what the classifier reads.
 // ---------------------------------------------------------------------------
 
 const jsonl = (...records: unknown[]): string =>
@@ -152,6 +158,94 @@ function assistantStream(count: number, spanBytes: number): string {
 function totalSpanBytes(records: { text?: string }[]): number {
   return records.reduce((sum, record) => sum + (record.text ?? "").length, 0);
 }
+
+// ---------------------------------------------------------------------------
+// Codex rollout records. A rollout wraps every record in `{type, payload}`;
+// `session_meta` opens the file and `response_item` carries the conversation.
+// ---------------------------------------------------------------------------
+
+const codexMeta = (id: string, extra: Record<string, unknown> = {}) => ({
+  timestamp: "2026-09-07T15:27:17.620Z",
+  ordinal: 0,
+  type: "session_meta",
+  payload: {
+    session_id: id,
+    id,
+    cwd: "/w/repo",
+    originator: "codex_sdk_ts",
+    cli_version: "0.153.4",
+    source: "exec",
+    thread_source: "user",
+    ...extra,
+  },
+});
+
+const codexMessage = (role: string, blockType: string, text: string) => ({
+  type: "response_item",
+  payload: { type: "message", id: `msg_${role}`, role, content: [{ type: blockType, text }] },
+});
+
+const codexUser = (text: string) => codexMessage("user", "input_text", text);
+const codexDeveloper = (text: string) => codexMessage("developer", "input_text", text);
+const codexAssistant = (text: string) => codexMessage("assistant", "output_text", text);
+
+const codexToolCall = (name: string, input: string) => ({
+  type: "response_item",
+  payload: { type: "custom_tool_call", id: "ctc_1", call_id: "call_1", status: "completed", name, input },
+});
+
+const codexFunctionCall = (name: string, args: string) => ({
+  type: "response_item",
+  payload: { type: "function_call", id: "fc_1", call_id: "call_2", name, arguments: args },
+});
+
+const codexToolOutput = (text: string) => ({
+  type: "response_item",
+  payload: { type: "custom_tool_call_output", id: "ctco_1", call_id: "call_1", output: [{ type: "input_text", text }] },
+});
+
+const codexReasoning = () => ({
+  type: "response_item",
+  payload: { type: "reasoning", id: "rs_1", encrypted_content: "gAAAA-redacted", summary: [] },
+});
+
+// The UI event stream restates each assistant message, so keeping it would
+// double every reply the lenses read.
+const codexEvent = (message: string) => ({
+  type: "event_msg",
+  payload: { type: "agent_message", message, phase: "commentary" },
+});
+
+const codexTokens = () => ({ type: "token_usage_record", payload: { total_tokens: 9794 } });
+
+const codexCompacted = () => ({
+  type: "compacted",
+  payload: { message: "", window_number: 1, replacement_history: [] },
+});
+
+/** A rollout's path inside a Codex store: `<YYYY>/<MM>/<DD>/rollout-<ts>-<id>.jsonl`. */
+const rolloutPath = (id: string, day = "07"): string =>
+  `2026/09/${day}/rollout-2026-09-${day}T09-27-16-${id}.jsonl`;
+
+// ---------------------------------------------------------------------------
+// Resolution helpers. Every host goes through the same entry point, so these
+// only supply the host wiring each test would otherwise repeat.
+// ---------------------------------------------------------------------------
+
+type ResolveArgs = { marker?: string; sessionId?: string; retryDelayMs?: number };
+
+const resolveIn = (host: string, storeRoot: string, args: ResolveArgs = {}) =>
+  resolveTranscript({ host, storeRoot, retryDelayMs: 0, ...args });
+
+/** Claude Code, the host the pre-existing behavior below was written against. */
+const resolveClaude = (options: { marker?: string; projectsRoot: string; sessionId?: string; retryDelayMs?: number }) =>
+  resolveTranscript({
+    host: "claude-code",
+    storeRoot: options.projectsRoot,
+    marker: options.marker,
+    sessionId: options.sessionId,
+    retryDelayMs: options.retryDelayMs,
+  });
 
 // ---------------------------------------------------------------------------
 // L2 readers. A missing file reads as "" so content assertions FAIL, never
@@ -251,7 +345,7 @@ function fencedLines(): string[] {
 // Slice 1 — L1: resolution
 // ===========================================================================
 
-describe("Slice 1 — L1: resolve-transcript finds the invoking session by its own marker", () => {
+describe("Slice 1 — L1: Claude Code sessions resolve by marker", () => {
   test("a project file holding the marker resolves to that absolute path", () => {
     const marker = "/tmp/reflect-cache-a1b2c3";
     const projectsRoot = tree("resolve-hit", {
@@ -262,7 +356,7 @@ describe("Slice 1 — L1: resolve-transcript finds the invoking session by its o
       "-Users-dev-other/session-two.jsonl": jsonl(userPrompt("unrelated work")),
     });
 
-    const result = resolveTranscript({ marker, projectsRoot });
+    const result = resolveClaude({ marker, projectsRoot });
 
     expect(result.ok).toBe(true);
     expect(result.path).toBe(join(projectsRoot, "-Users-dev-team", "session-one.jsonl"));
@@ -273,7 +367,7 @@ describe("Slice 1 — L1: resolve-transcript finds the invoking session by its o
       "-Users-dev-team/session-one.jsonl": jsonl(userPrompt("reflect on this session")),
     });
 
-    const result = resolveTranscript({
+    const result = resolveClaude({
       marker: "/tmp/reflect-cache-never-written",
       projectsRoot,
       retryDelayMs: 0,
@@ -290,7 +384,7 @@ describe("Slice 1 — L1: resolve-transcript finds the invoking session by its o
       "-Users-dev-team-worktrees-x/session-two.jsonl": jsonl(toolResult(marker)),
     });
 
-    const result = resolveTranscript({ marker, projectsRoot });
+    const result = resolveClaude({ marker, projectsRoot });
 
     expect(result.failure).toBe("multiple-matches");
     expect(result.path).toBeUndefined();
@@ -306,7 +400,7 @@ describe("Slice 1 — L1: resolve-transcript finds the invoking session by its o
       "-Users-dev-other/session-two.jsonl": jsonl(toolResult("/tmp/reflectXaab1")),
     });
 
-    const result = resolveTranscript({ marker, projectsRoot });
+    const result = resolveClaude({ marker, projectsRoot });
 
     expect(result.ok).toBe(true);
     expect(result.path).toBe(join(projectsRoot, "-Users-dev-team", "session-one.jsonl"));
@@ -325,12 +419,12 @@ describe("Slice 1 — L1: resolve-transcript finds the invoking session by its o
 
     // Positive control: the same tree resolves a top-level marker, so a
     // resolver that finds nothing at all cannot pass the exclusion below.
-    expect(resolveTranscript({ marker: topLevelMarker, projectsRoot }).path).toBe(
+    expect(resolveClaude({ marker: topLevelMarker, projectsRoot }).path).toBe(
       join(projectsRoot, "-Users-dev-team", "9aec38dc.jsonl"),
     );
 
     expect(
-      resolveTranscript({ marker: subagentMarker, projectsRoot, retryDelayMs: 0 }).failure,
+      resolveClaude({ marker: subagentMarker, projectsRoot, retryDelayMs: 0 }).failure,
     ).toBe("no-match");
   });
 
@@ -347,29 +441,29 @@ describe("Slice 1 — L1: resolve-transcript finds the invoking session by its o
     });
 
     // Positive control, same tree.
-    expect(resolveTranscript({ marker: topLevelMarker, projectsRoot }).path).toBe(
+    expect(resolveClaude({ marker: topLevelMarker, projectsRoot }).path).toBe(
       join(projectsRoot, "-Users-dev-team", "9aec38dc.jsonl"),
     );
 
     expect(
-      resolveTranscript({ marker: sidecarMarker, projectsRoot, retryDelayMs: 0 }).failure,
+      resolveClaude({ marker: sidecarMarker, projectsRoot, retryDelayMs: 0 }).failure,
     ).toBe("no-match");
   });
 
-  test("a missing projects root is a named failure that states the path tried", () => {
-    // A non-Claude host has no ~/.claude/projects at all. Failing with
-    // "no-match" there would send the user hunting for a session that was
-    // never recorded, so the two failures are distinct and each names what it
-    // looked for.
+  test("a missing session store is a named failure that states the path tried", () => {
+    // A host that keeps no store at the path tried has recorded nothing.
+    // Failing with "no-match" there would send the user hunting for a session
+    // that was never recorded, so the two failures are distinct and each names
+    // what it looked for.
     const missingRoot = join(scratch("resolve-no-root"), "claude-projects-absent");
 
-    const result = resolveTranscript({
+    const result = resolveClaude({
       marker: "/tmp/reflect-cache-a1b2c3",
       projectsRoot: missingRoot,
       retryDelayMs: 0,
     });
 
-    expect(result.failure).toBe("no-projects-root");
+    expect(result.failure).toBe("no-session-store");
     expect((result.tried ?? []).join(" ")).toContain(missingRoot);
   });
 
@@ -386,10 +480,306 @@ describe("Slice 1 — L1: resolve-transcript finds the invoking session by its o
       ),
     });
 
-    const result = resolveTranscript({ marker, projectsRoot });
+    const result = resolveClaude({ marker, projectsRoot });
 
     expect(result.ok).toBe(true);
     expect(result.path).toBe(join(projectsRoot, "-Users-dev-team", "session-one.jsonl"));
+  });
+});
+
+// ===========================================================================
+// Slice 1 — L1: host detection and multi-host resolution
+// ===========================================================================
+
+describe("Slice 1 — L1: detectHost names every host claiming this process", () => {
+  test("Claude Code is detected from the session id it exports", () => {
+    expect(detectHost({ CLAUDECODE: "1", CLAUDE_CODE_SESSION_ID: "df48a6dc-3bfa-4bc1-94b5-799582807858" })).toEqual([
+      { host: "claude-code", sessionId: "df48a6dc-3bfa-4bc1-94b5-799582807858" },
+    ]);
+  });
+
+  test("Codex is detected from its thread id, which names the rollout file", () => {
+    // CODEX_THREAD_ID is this thread's own id. CODEX_SESSION_ID names the root
+    // thread and is the same value for a top-level session, so it is only the
+    // fallback.
+    expect(detectHost({ CODEX_THREAD_ID: "01a07c7b-16e9-73a2-8f5b-7638fd286088" })).toEqual([
+      { host: "codex", sessionId: "01a07c7b-16e9-73a2-8f5b-7638fd286088" },
+    ]);
+    expect(detectHost({ CODEX_SESSION_ID: "01a07c7b-16e9-73a2-8f5b-7638fd286088" })).toEqual([
+      { host: "codex", sessionId: "01a07c7b-16e9-73a2-8f5b-7638fd286088" },
+    ]);
+  });
+
+  test("Conductor's own variables never decide the host — the backend's do", () => {
+    // Conductor runs Claude Code, Codex, Cursor Agent, or OpenCode. It sets the
+    // same CONDUCTOR_* variables whichever it launched, so a resolver that read
+    // them would resolve the same way for a backend it cannot read at all.
+    const conductor = {
+      CONDUCTOR_WORKSPACE_NAME: "monaco",
+      CONDUCTOR_WORKSPACE_PATH: "/Users/dev/conductor/workspaces/team/monaco",
+      CONDUCTOR_SESSION_ID: "b18ebf27-14fe-41af-bec5-9110bcb92478",
+      CONDUCTOR_IS_LOCAL: "1",
+    };
+
+    expect(detectHost({ ...conductor, CLAUDE_CODE_SESSION_ID: "df48a6dc" })).toEqual([
+      { host: "claude-code", sessionId: "df48a6dc" },
+    ]);
+    expect(detectHost({ ...conductor, CODEX_THREAD_ID: "01a07c7b" })).toEqual([
+      { host: "codex", sessionId: "01a07c7b" },
+    ]);
+    // A Conductor workspace running a backend reflect cannot read resolves to
+    // no host at all, rather than to whichever store happens to exist.
+    expect(detectHost(conductor)).toEqual([]);
+  });
+
+  test("both agents' variables in one process yields both candidates, not a pick", () => {
+    // Real state, not a bug: a Codex process launched from a Claude Code shell
+    // inherits CLAUDE_CODE_SESSION_ID. Precedence would be a guess, so the tie
+    // is broken on evidence in resolveSession.
+    expect(detectHost({ CLAUDE_CODE_SESSION_ID: "df48a6dc", CODEX_THREAD_ID: "01a07c7b" }).length).toBe(2);
+  });
+
+  test("each host's store root follows that host's own override variable", () => {
+    const env = { HOME: "/home/dev", CODEX_HOME: "/home/dev/.codex-alt", CLAUDE_CONFIG_DIR: "/home/dev/.claude-alt" };
+
+    expect(storeRootFor("codex", env)).toBe(join("/home/dev/.codex-alt", "sessions"));
+    expect(storeRootFor("claude-code", env)).toBe(join("/home/dev/.claude-alt", "projects"));
+    expect(storeRootFor("codex", { HOME: "/home/dev" })).toBe(join("/home/dev", ".codex", "sessions"));
+    expect(storeRootFor("claude-code", { HOME: "/home/dev" })).toBe(join("/home/dev", ".claude", "projects"));
+  });
+});
+
+describe("Slice 1 — L1: the session id the host exported resolves the transcript", () => {
+  test("Claude Code resolves <session-id>.jsonl without searching content", () => {
+    const projectsRoot = tree("id-claude", {
+      "-Users-dev-team/df48a6dc-3bfa-4bc1-94b5-799582807858.jsonl": jsonl(userPrompt("reflect on this session")),
+      "-Users-dev-other/9aec38dc-0000-4000-8000-000000000002.jsonl": jsonl(userPrompt("unrelated work")),
+    });
+
+    const result = resolveClaude({ projectsRoot, sessionId: "df48a6dc-3bfa-4bc1-94b5-799582807858" });
+
+    expect(result.ok).toBe(true);
+    expect(result.via).toBe("session-id");
+    expect(result.path).toBe(join(projectsRoot, "-Users-dev-team", "df48a6dc-3bfa-4bc1-94b5-799582807858.jsonl"));
+  });
+
+  test("Codex resolves rollout-<timestamp>-<thread-id>.jsonl three levels down", () => {
+    const id = "01a07c7b-16e9-73a2-8f5b-7638fd286088";
+    const store = tree("id-codex", {
+      [rolloutPath(id)]: jsonl(codexMeta(id), codexUser("reflect on this session")),
+      [rolloutPath("01a07c68-3b6a-7f31-85dd-9c4b6e04b97c", "06")]: jsonl(
+        codexMeta("01a07c68-3b6a-7f31-85dd-9c4b6e04b97c"),
+        codexUser("unrelated work"),
+      ),
+    });
+
+    const result = resolveIn("codex", store, { sessionId: id });
+
+    expect(result.ok).toBe(true);
+    expect(result.via).toBe("session-id");
+    expect(result.path).toBe(join(store, rolloutPath(id)));
+  });
+
+  test("a rollout whose own header names a different thread is not this session", () => {
+    // The filename is the host's claim; the header is the file's. A file that
+    // was renamed, copied, or restored under another id must not resolve.
+    const id = "01a07c7b-16e9-73a2-8f5b-7638fd286088";
+    const store = tree("id-codex-header-mismatch", {
+      [rolloutPath(id)]: jsonl(codexMeta("01a06c22-7c2a-73d2-b559-bc5ba98ea18c"), codexUser("someone else")),
+    });
+
+    expect(resolveIn("codex", store, { sessionId: id }).failure).toBe("no-match");
+  });
+
+  test("an exported id with no transcript fails by name and never falls back to a search", () => {
+    // Falling back to the marker here would search on behalf of an id already
+    // known to be authoritative, and could land on any session that happens to
+    // mention the run cache path.
+    const marker = "/tmp/reflect-cache-a1b2c3";
+    const projectsRoot = tree("id-claude-miss", {
+      "-Users-dev-other/9aec38dc-0000-4000-8000-000000000002.jsonl": jsonl(toolResult(marker)),
+    });
+
+    // Positive control: the same marker in the same tree does resolve when no
+    // session id is exported, so the failure below is the id path refusing.
+    expect(resolveClaude({ projectsRoot, marker }).ok).toBe(true);
+
+    const result = resolveClaude({ projectsRoot, marker, sessionId: "df48a6dc-3bfa-4bc1-94b5-799582807858" });
+    expect(result.failure).toBe("no-match");
+    expect(result.path).toBeUndefined();
+  });
+
+  test("an exported id that is not a session id shape is refused before any lookup", () => {
+    const store = tree("id-invalid", { [rolloutPath("01a07c7b")]: jsonl(codexMeta("01a07c7b")) });
+
+    expect(resolveIn("codex", store, { sessionId: "../../etc/passwd" }).failure).toBe("invalid-session-id");
+    // Empty is absent, not invalid — and with no marker either there is nothing
+    // left to identify the session with. An empty marker would reach
+    // `grep -F -e ""`, which matches every transcript in the store.
+    expect(resolveIn("codex", store, { sessionId: "" }).failure).toBe("no-match");
+    expect(resolveIn("codex", store, { sessionId: "", marker: "" }).failure).toBe("no-match");
+    expect(resolveIn("codex", store, { marker: "" }).path).toBeUndefined();
+  });
+
+  test("a host reflect cannot read is a named failure, never a resolved transcript", () => {
+    const store = tree("unsupported", { "sessions/whatever.jsonl": jsonl(userPrompt("hi")) });
+
+    expect(resolveIn("cursor-agent", store, { marker: "/tmp/x" }).failure).toBe("unsupported-host");
+    expect(resolveIn("opencode", store, { marker: "/tmp/x" }).failure).toBe("unsupported-host");
+    expect(resolveTranscript({ host: null, storeRoot: store, marker: "/tmp/x" }).failure).toBe("unsupported-host");
+  });
+});
+
+describe("Slice 1 — L1: concurrent sessions in one workspace never cross", () => {
+  test("two Claude sessions in one project slug are told apart by the exported id", () => {
+    // Two Conductor workspaces on one repo, or two windows on one worktree,
+    // put several live transcripts in the same project directory.
+    const mine = "df48a6dc-3bfa-4bc1-94b5-799582807858";
+    const theirs = "9aec38dc-0000-4000-8000-000000000002";
+    const projectsRoot = tree("concurrent-claude", {
+      [`-Users-dev-team/${mine}.jsonl`]: jsonl(userPrompt("reflect on this session")),
+      [`-Users-dev-team/${theirs}.jsonl`]: jsonl(userPrompt("a different session, same workspace")),
+    });
+
+    expect(resolveClaude({ projectsRoot, sessionId: mine }).path).toBe(
+      join(projectsRoot, "-Users-dev-team", `${mine}.jsonl`),
+    );
+    expect(resolveClaude({ projectsRoot, sessionId: theirs }).path).toBe(
+      join(projectsRoot, "-Users-dev-team", `${theirs}.jsonl`),
+    );
+  });
+
+  test("two Codex threads recorded the same day are told apart by the exported id", () => {
+    const mine = "01a07c7b-16e9-73a2-8f5b-7638fd286088";
+    const theirs = "01a07c68-3b6a-7f31-85dd-9c4b6e04b97c";
+    const store = tree("concurrent-codex", {
+      [rolloutPath(mine)]: jsonl(codexMeta(mine), codexUser("reflect on this session")),
+      [rolloutPath(theirs)]: jsonl(codexMeta(theirs), codexUser("a different session, same workspace")),
+    });
+
+    expect(resolveIn("codex", store, { sessionId: mine }).path).toBe(join(store, rolloutPath(mine)));
+    expect(resolveIn("codex", store, { sessionId: theirs }).path).toBe(join(store, rolloutPath(theirs)));
+  });
+
+  test("a neighbouring session that merely mentions the run cache path is not selected", () => {
+    // Two sessions in one workspace can both name the same path — one printed
+    // it, the other read the report. The id is what decides, and where there is
+    // no id, two marker hits are an ambiguity failure rather than a pick.
+    const marker = "/tmp/reflect.A0DYJB9o";
+    const mine = "df48a6dc-3bfa-4bc1-94b5-799582807858";
+    const projectsRoot = tree("concurrent-mention", {
+      [`-Users-dev-team/${mine}.jsonl`]: jsonl(toolResult(`run cache: ${marker}`)),
+      "-Users-dev-team/9aec38dc-0000-4000-8000-000000000002.jsonl": jsonl(
+        userPrompt(`did the other window write ${marker}?`),
+      ),
+    });
+
+    expect(resolveClaude({ projectsRoot, marker, sessionId: mine }).path).toBe(
+      join(projectsRoot, "-Users-dev-team", `${mine}.jsonl`),
+    );
+    expect(resolveClaude({ projectsRoot, marker }).failure).toBe("multiple-matches");
+  });
+
+  test("a Codex subagent thread's own rollout is never resolved for its parent", () => {
+    // A subagent gets its own thread id and its own file. Resolving the parent
+    // must return the parent's file, whatever the child's contains.
+    const parent = "01a0676d-0eca-7791-b069-436d26e7eec8";
+    const child = "01a06c22-7c2a-73d2-b559-bc5ba98ea18c";
+    const store = tree("codex-subagent", {
+      [rolloutPath(parent)]: jsonl(codexMeta(parent), codexUser("reflect on this session")),
+      [rolloutPath(child)]: jsonl(
+        codexMeta(child, { session_id: parent, parent_thread_id: parent, thread_source: "subagent" }),
+        codexUser("scout the callers"),
+      ),
+    });
+
+    expect(resolveIn("codex", store, { sessionId: parent }).path).toBe(join(store, rolloutPath(parent)));
+    expect(resolveIn("codex", store, { sessionId: child }).path).toBe(join(store, rolloutPath(child)));
+  });
+});
+
+describe("Slice 1 — L1: resolveSession breaks a two-host tie on evidence", () => {
+  const claudeId = "df48a6dc-3bfa-4bc1-94b5-799582807858";
+  const codexId = "01a07c7b-16e9-73a2-8f5b-7638fd286088";
+  const bothHosts = [
+    { host: "codex", sessionId: codexId },
+    { host: "claude-code", sessionId: claudeId },
+  ] as const;
+
+  function twoStores(label: string, options: { markerInClaude: boolean; markerInCodex: boolean; marker: string }) {
+    const claudeRoot = tree(`${label}-claude`, {
+      [`-Users-dev-team/${claudeId}.jsonl`]: jsonl(
+        userPrompt("reflect on this session"),
+        ...(options.markerInClaude ? [toolResult(`run cache: ${options.marker}`)] : []),
+      ),
+    });
+    const codexRoot = tree(`${label}-codex`, {
+      [rolloutPath(codexId)]: jsonl(
+        codexMeta(codexId),
+        codexUser("reflect on this session"),
+        ...(options.markerInCodex ? [codexToolOutput(`run cache: ${options.marker}`)] : []),
+      ),
+    });
+    return { claudeRoot, codexRoot, storeRootOf: (host: string) => (host === "codex" ? codexRoot : claudeRoot) };
+  }
+
+  test("the host whose transcript carries this run's marker wins", () => {
+    const marker = "/tmp/reflect.Vl7d3fCN";
+    const { codexRoot, storeRootOf } = twoStores("tie-codex", { marker, markerInCodex: true, markerInClaude: false });
+
+    const result = resolveSession({ candidates: bothHosts, storeRootOf, marker, retryDelayMs: 0 });
+
+    expect(result.ok).toBe(true);
+    expect(result.host).toBe("codex");
+    expect(result.via).toBe("session-id+marker");
+    expect(result.path).toBe(join(codexRoot, rolloutPath(codexId)));
+  });
+
+  test("the tie-break is symmetric — the inherited variable does not win by order", () => {
+    const marker = "/tmp/reflect.A0DYJB9o";
+    const { claudeRoot, storeRootOf } = twoStores("tie-claude", { marker, markerInCodex: false, markerInClaude: true });
+
+    const result = resolveSession({ candidates: bothHosts, storeRootOf, marker, retryDelayMs: 0 });
+
+    expect(result.host).toBe("claude-code");
+    expect(result.path).toBe(join(claudeRoot, "-Users-dev-team", `${claudeId}.jsonl`));
+  });
+
+  test("a marker in neither transcript is ambiguous-host, and picks neither", () => {
+    const marker = "/tmp/reflect.NotFlushedYet";
+    const { storeRootOf } = twoStores("tie-none", { marker, markerInCodex: false, markerInClaude: false });
+
+    const result = resolveSession({ candidates: bothHosts, storeRootOf, marker, retryDelayMs: 0 });
+
+    expect(result.failure).toBe("ambiguous-host");
+    expect(result.path).toBeUndefined();
+    expect((result.tried ?? []).join(" ")).toContain("codex");
+    expect((result.tried ?? []).join(" ")).toContain("claude-code");
+  });
+
+  test("a marker in both transcripts is ambiguous-host, and picks neither", () => {
+    const marker = "/tmp/reflect.InBoth";
+    const { storeRootOf } = twoStores("tie-both", { marker, markerInCodex: true, markerInClaude: true });
+
+    expect(resolveSession({ candidates: bothHosts, storeRootOf, marker, retryDelayMs: 0 }).failure).toBe(
+      "ambiguous-host",
+    );
+  });
+
+  test("one candidate resolves directly, and no candidate is unsupported-host", () => {
+    const marker = "/tmp/reflect.Solo";
+    const { codexRoot, storeRootOf } = twoStores("tie-solo", { marker, markerInCodex: true, markerInClaude: false });
+
+    const single = resolveSession({
+      candidates: [{ host: "codex", sessionId: codexId }] as const,
+      storeRootOf,
+      marker,
+      retryDelayMs: 0,
+    });
+    expect(single.path).toBe(join(codexRoot, rolloutPath(codexId)));
+    expect(single.via).toBe("session-id");
+
+    expect(resolveSession({ candidates: [], storeRootOf, marker, retryDelayMs: 0 }).failure).toBe("unsupported-host");
   });
 });
 
@@ -505,6 +895,152 @@ describe("Slice 1 — L1: normalizeTranscript classifies records and bounds the 
 
     expect(normalized.malformedLines).toBe(1);
     expect(normalized.records.length).toBe(2);
+  });
+});
+
+// ===========================================================================
+// Slice 1 — L1: Codex normalization into the same bounded contract
+// ===========================================================================
+
+describe("Slice 1 — L1: a Codex rollout normalizes into the same record shape", () => {
+  test("prompts, replies, and tool calls survive with their names and arguments", () => {
+    const normalized = normalizeTranscript(
+      jsonl(
+        codexMeta("01a07c7b-16e9-73a2-8f5b-7638fd286088"),
+        codexUser("reflect on this session"),
+        codexToolCall("exec", 'text(await tools.exec_command({cmd:"bun test"}));'),
+        codexToolOutput("Script completed\nOutput:\n42 pass"),
+        codexAssistant("every check is green"),
+      ),
+    );
+
+    expect(normalized.format).toBe("codex");
+    expect(normalized.records.map((record) => record.type)).toEqual(["user", "assistant", "user", "assistant"]);
+    expect(normalized.records[0]?.isUserTurn).toBe(true);
+    expect(normalized.records[0]?.text).toBe("reflect on this session");
+    // The tooling lens's evidence is the invocation, so the tool's name and its
+    // arguments both have to reach the normalized file.
+    expect(normalized.records[1]?.text).toContain("exec");
+    expect(normalized.records[1]?.text).toContain("bun test");
+    expect(normalized.records[2]?.text).toContain("42 pass");
+    expect(normalized.records[3]?.text).toBe("every check is green");
+    expect(normalized.unrecognizedRecords).toBe(0);
+  });
+
+  test("a function_call carries its name and arguments the same way a custom_tool_call does", () => {
+    // Codex writes tool calls two ways. Both are the same evidence, so both
+    // normalize to the same rendering rather than one of them vanishing.
+    const normalized = normalizeTranscript(jsonl(codexFunctionCall("wait", '{"cell_id":"18"}')));
+
+    expect(normalized.records.length).toBe(1);
+    expect(normalized.records[0]?.text).toContain("wait");
+    expect(normalized.records[0]?.text).toContain("cell_id");
+  });
+
+  test("rollout bookkeeping is dropped under its own name and counted", () => {
+    // event_msg restates each assistant message, so keeping it would double
+    // every reply. Reasoning is encrypted. The rest is accounting. Each drop is
+    // counted, because a silent drop reads exactly like a parser that never saw
+    // the record.
+    const normalized = normalizeTranscript(
+      jsonl(
+        codexMeta("01a07c7b-16e9-73a2-8f5b-7638fd286088"),
+        codexDeveloper("<skills_instructions>"),
+        codexReasoning(),
+        codexEvent("every check is green"),
+        codexTokens(),
+        codexAssistant("every check is green"),
+      ),
+    );
+
+    expect(normalized.droppedByType).toEqual({
+      session_meta: 1,
+      developer: 1,
+      "response_item:reasoning": 1,
+      event_msg: 1,
+      token_usage_record: 1,
+    });
+    expect(normalized.records.length).toBe(1);
+  });
+
+  test("a Codex host injection is kept as a record but is not a user turn", () => {
+    // Codex delivers project instructions and Conductor's own preamble as
+    // role: "user" messages. Counting those as prompts would make every session
+    // look like it opened with three turns nobody typed.
+    expect(isUserTurn(codexUser("reflect on this session"))).toBe(true);
+    expect(isUserTurn(codexUser("# AGENTS.md instructions for /w/repo\n\n<INSTRUCTIONS>"))).toBe(false);
+    expect(isUserTurn(codexUser("\n<system_instruction>\nYou are working inside Conductor"))).toBe(false);
+    expect(isUserTurn(codexUser("<recommended_plugins>\nHere is a list of plugins"))).toBe(false);
+    // A prompt that merely mentions an injection mid-sentence is still a prompt:
+    // the wrappers open their span, so the test is a prefix, not a substring.
+    expect(isUserTurn(codexUser("why does <system_instruction> show up in the transcript?"))).toBe(true);
+  });
+
+  test("the byte cap, record ceiling, and malformed-line count apply to Codex too", () => {
+    const capped = normalizeTranscript(jsonl(codexAssistant("y".repeat(10_000))));
+    expect((capped.records[0]?.text ?? "").length).toBe(PER_SPAN_BYTE_CAP);
+    expect(capped.truncatedSpans).toBe(1);
+
+    const bounded = normalizeTranscript(
+      jsonl(...Array.from({ length: MAX_RECORDS + 1 }, (_, index) => codexUser(`turn-${index}`))),
+    );
+    expect(bounded.records.length).toBe(MAX_RECORDS);
+    expect(bounded.droppedForCeiling).toBe(1);
+
+    const malformed = normalizeTranscript(
+      `${JSON.stringify(codexUser("reflect"))}\n{"type":"response_item",\n${JSON.stringify(codexAssistant("ok"))}\n`,
+    );
+    expect(malformed.malformedLines).toBe(1);
+    expect(malformed.records.length).toBe(2);
+  });
+
+  test("a forked thread reports the prior history this file does not carry", () => {
+    // A forked or spawned Codex thread starts its own rollout, and the turns
+    // before the fork stay in the parent's file — which this run does not read,
+    // because it is a different session. Reporting the gap is the alternative
+    // to filling it in from memory.
+    const parent = "01a073aa-6b96-7221-a294-a4008eacc046";
+    const forked = normalizeTranscript(
+      jsonl(
+        codexMeta("01a074fd-169c-70d3-823d-dbc2318360e8", { forked_from_id: parent, history_mode: "paginated" }),
+        codexUser("carry on from there"),
+      ),
+    );
+
+    expect(forked.priorHistory).toBe(parent);
+    // A session that was never forked reports no gap, so the field can tell the
+    // two apart.
+    expect(normalizeTranscript(jsonl(codexMeta("01a07c7b"), codexUser("hi"))).priorHistory).toBeNull();
+  });
+
+  test("a compaction boundary is reported rather than absorbed", () => {
+    // Codex writes a `compacted` record where it replaced earlier turns in
+    // context. The raw records stay in the file, so the read is still complete —
+    // the count is what tells a reader the session had one.
+    const normalized = normalizeTranscript(
+      jsonl(codexUser("a long session"), codexCompacted(), codexAssistant("carrying on")),
+    );
+
+    expect(normalized.droppedByType.compacted).toBe(1);
+    expect(normalized.records.length).toBe(2);
+  });
+
+  test("records no supported host writes are counted, and the stream reports unknown", () => {
+    // The alternative to a named failure here is three lenses reading an empty
+    // file and reporting, truthfully and uselessly, that the session taught
+    // nothing.
+    const normalized = normalizeTranscript(
+      jsonl({ id: "1", role: "user", parts: [{ text: "some other agent's format" }] }, { foo: "bar" }),
+    );
+
+    expect(normalized.format).toBe("unknown");
+    expect(normalized.unrecognizedRecords).toBe(2);
+    expect(normalized.records.length).toBe(0);
+  });
+
+  test("each host's own format is reported, so a caller can tell them apart", () => {
+    expect(normalizeTranscript(jsonl(userPrompt("hi"))).format).toBe("claude-code");
+    expect(normalizeTranscript(jsonl(codexUser("hi"))).format).toBe("codex");
   });
 });
 
@@ -710,6 +1246,52 @@ describe("Slice 1 — L2: reflect's three reporting lenses", () => {
     // Guard: an empty corpus would make the sweep pass vacuously.
     expect(fenced.length).toBeGreaterThan(0);
     expect(fenced.filter((line) => /\brm\s+-[rRf]/.test(line))).toEqual([]);
+  });
+
+  test("step 2 names the store each supported host keeps, and Conductor as neither", () => {
+    // Conductor runs Claude Code, Codex, Cursor Agent, or OpenCode inside a
+    // worktree; the backend writes the transcript. A body that named a
+    // "Conductor transcript" would send a reader looking for a file that does
+    // not exist.
+    const step = section(/^##\s+Execution\s*$/) || prose();
+    expect(step.length).toBeGreaterThan(0);
+
+    const flattened = flat(step);
+    expect(flattened).toContain("~/.claude/projects");
+    expect(flattened).toContain("${CODEX_HOME:-~/.codex}/sessions");
+    expect(flattened).toContain("CLAUDE_CODE_SESSION_ID");
+    expect(flattened).toContain("CODEX_THREAD_ID");
+  });
+
+  test("every failure the resolver can emit is documented in the skill body", () => {
+    // A drift tripwire between the script and the prose that tells the model
+    // what to report. A new failure name that reaches a user with no entry here
+    // stops a run with a word nothing explains.
+    const script = read(join(REPO_ROOT, "skills", "reflect", "resources", "resolve-transcript.mjs"));
+    const failures = [...script.matchAll(/failure:\s*"([a-z-]+)"/g)].map((match) => match[1]);
+    const unique = [...new Set(failures)].sort();
+
+    // Positive control: the sweep must actually find the names it is checking.
+    expect(unique).toContain("no-match");
+    expect(unique).toContain("multiple-matches");
+    expect(unique.length).toBeGreaterThanOrEqual(6);
+
+    const documented = flat(body());
+    expect(documented.length).toBeGreaterThan(0);
+    expect(unique.filter((failure) => !documented.includes(`\`${failure}\``))).toEqual([]);
+    // unsupported-format is raised by the format check rather than by a
+    // `failure:` literal, so it is asserted by name.
+    expect(documented).toContain("`unsupported-format`");
+  });
+
+  test("a bounded or missing read is reported, never filled in from memory", () => {
+    // The whole reason the run reads a file is that context already lost the
+    // early turns. A partial read that gets topped up from memory reintroduces
+    // exactly the source the skill exists to avoid.
+    const step = section(/^##\s+Execution\s*$/);
+    expect(step.length).toBeGreaterThan(0);
+    expect(flat(step)).toContain("unrecognized records");
+    expect(flat(step)).toContain("prior history");
   });
 
   test("nothing in the skill depends on the frog binary the plugin does not install", () => {
