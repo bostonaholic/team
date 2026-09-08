@@ -46,6 +46,9 @@ authorization, and resource limits. Put deliberate exclusions in Non-Goals.
 For every major choice, record the decision, each serious alternative and why
 it lost, plus the chosen approach's risk and mitigation.
 
+Call the Skill tool with `decision-making` before choosing among multiple viable
+alternatives. Record its decision basis in this section.
+
 ### Rollout Plan
 
 Cover migration/compatibility, feature flags, rollback/reversibility, and

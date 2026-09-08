@@ -4,6 +4,9 @@ The read-and-plan phase stops before any mutation. Present one question per muta
 that the plan actually contains, never a fixed count. Make each one a structured question
 with exactly one recommendation, never zero and never two. Then end the turn. Five recur:
 
+Call the Skill tool with `decision-making` for each consequential choice with multiple
+viable options. Use its result as the recommendation.
+
 - **placement strategy** — extend existing constructs, or open a new wave for work that
   arrived after the original plan
 - **date strategy** — retarget everything, retarget only where work remains, or leave dates

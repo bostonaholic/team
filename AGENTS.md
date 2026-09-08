@@ -60,7 +60,6 @@ Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-
 | `/team-plan` | Tactical plan from the structure |
 | `/team-implement` | Test-first + slice execution + 5-reviewer verify, on stated intent or as the IMPLEMENT phase — it commits each slice |
 | `/team-pr` | Commit + open PR, on stated intent or as the PR phase — it pushes and moves the ticket |
-| `/decision-making <decision>` | Decide reversible choices quickly; rigorously score consequential choices |
 
 ## Agents (13)
 

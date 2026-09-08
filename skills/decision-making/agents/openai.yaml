@@ -1,4 +1,4 @@
 interface:
   display_name: "Decision Making"
-  short_description: "Make decisions based on reversibility and risk"
-  default_prompt: "Use $decision-making to make decisions based on reversibility and risk."
+  short_description: "Choose options based on reversibility and risk"
+  default_prompt: "Use $decision-making to choose options based on reversibility and risk."

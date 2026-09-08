@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: pipeline entry-point slash commands, standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, reflect, why, how, no-comments, decision-making), and methodology skills loaded by agents, each with the skills it loads."
+description: "The Team plugin's skills: pipeline entry-point slash commands, standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, reflect, why, how, no-comments), and methodology skills loaded by agents, each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -148,6 +148,10 @@ Lands a reviewed pull request.
 
 Triages unresolved PR review comments.
 
+**Loads:**
+
+- `decision-making`
+
 ### [pr-watch-as-author](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md)
 
 Watches an authored PR for feedback.
@@ -169,6 +173,10 @@ Watches a reviewed PR and approves settled feedback.
 ### [groom-backlog](https://github.com/bostonaholic/team/blob/main/skills/groom-backlog/SKILL.md)
 
 Grooms a project backlog and proposes tracker changes.
+
+**Loads:**
+
+- `decision-making`
 
 ### [pr-cleanup](https://github.com/bostonaholic/team/blob/main/skills/pr-cleanup/SKILL.md)
 
@@ -237,10 +245,6 @@ Removes low-value source comments and encodes valid constraints.
 - `reviewing-comments`
 - `running-quality-checks`
 
-### [decision-making](https://github.com/bostonaholic/team/blob/main/skills/decision-making/SKILL.md)
-
-Makes decisions by classifying reversibility and risk, choosing two-way doors quickly, and scoring one-way doors.
-
 ## Methodology skills
 
 These carry no `argument-hint`. They are never invoked directly; agents load
@@ -276,12 +280,17 @@ Defines the design-document procedure.
 
 **Loads:**
 
+- `decision-making`
 - `systems-thinking`
 - `writing-prose`
 
 ### [slicing-work](https://github.com/bostonaholic/team/blob/main/skills/slicing-work/SKILL.md)
 
 Defines vertical slices and verification checkpoints.
+
+**Loads:**
+
+- `decision-making`
 
 ### [planning-implementation](https://github.com/bostonaholic/team/blob/main/skills/planning-implementation/SKILL.md)
 
@@ -391,12 +400,17 @@ Requires one live ledger for ordered procedures.
 
 Defines safe nested-agent dispatch and fallback.
 
+### [decision-making](https://github.com/bostonaholic/team/blob/main/skills/decision-making/SKILL.md)
+
+Defines a decision method based on reversibility and risk.
+
 ### [documenting-decisions](https://github.com/bostonaholic/team/blob/main/skills/documenting-decisions/SKILL.md)
 
 Defines ADR structure and lifecycle.
 
 **Loads:**
 
+- `decision-making`
 - `writing-prose`
 
 ### [technical-design-doc](https://github.com/bostonaholic/team/blob/main/skills/technical-design-doc/SKILL.md)
@@ -405,6 +419,7 @@ Defines technical design sections and decision content.
 
 **Loads:**
 
+- `decision-making`
 - `writing-prose`
 
 ### [product-requirements-doc](https://github.com/bostonaholic/team/blob/main/skills/product-requirements-doc/SKILL.md)
@@ -602,7 +617,6 @@ skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see
 | `reflect` | user (direct invocation, on explicit reflection intent; model invocation disabled) | Standalone: mine the session transcript for durable learnings (not a QRSPI phase) |
 | `why` | user or model (direct invocation). `team-fix` and `reviewing-code` (conditional load) | Standalone: design-rationale investigation (not a QRSPI phase). Dispatches read-only Explore investigators |
 | `how` | user or model (direct invocation) | Standalone: architectural explanation + optional critique (not a QRSPI phase). Dispatches read-only Explore explorers |
-| `decision-making` | user or model (direct invocation) | Standalone: fast reversible decisions or rigorous consequential comparisons (not a QRSPI phase) |
 | `qrspi-workflow` | orchestrator skills | All phases |
 | `artifact-frontmatter` | orchestrator skills. Artifact authors (just-in-time through pointers) | All phases: artifact schema |
 | `code-review` | user or model (direct invocation) | Standalone: dispatch a fresh-context code review (not a QRSPI phase) |
@@ -630,6 +644,7 @@ skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see
 | `systematic-debugging` | implementer (inline Load on non-obvious failures). Other agents when debugging (advisory) | Implement, and Any (debugging) |
 | `principle-progress-tracking` | every multi-step agent; cited by `team`, `team-implement`, `team-fix`, `pr-screenshots`, `no-comments` | Any (multi-step procedure) |
 | `nested-agents` | researcher, implementer, code-reviewer, security-reviewer | Research, Implement (scouts + skeptic passes) |
+| `decision-making` | `authoring-designs`, `documenting-decisions`, `groom-backlog`, `pr-open-comments`, `slicing-work`, `technical-design-doc` | Design, Structure, Plan, and standalone recommendations |
 | `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
 | `technical-design-doc` | planner | Plan |
 | `product-requirements-doc` | questioner (through `decomposing-intent`, conditional). Design-author (through `authoring-designs`) | Question, Design |

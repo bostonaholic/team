@@ -22,6 +22,9 @@ When all candidates resolve, write `docs/plans/<id>/4-repos.md` from `skills/art
 
 Never pause for user input. Record every resolved choice in `## Decisions made` as “Assumption — chosen without user review”; defer only low-stakes items to `## Open questions (deferred)` (`principle-record-assumptions`). On revision, address reviewer findings verbatim and record new assumptions the same way.
 
+Call the Skill tool with `decision-making` before resolving a technical choice
+with two or more viable options. Record its decision basis with the assumption.
+
 ## Design contract
 
 Read [references/design-template.md](references/design-template.md) before drafting. The required sections are `## Current state`, `## Desired end state`, `## Patterns to follow`, `## Decisions made`, `## Out of scope`, optional `## Surfaces`, `## Open questions (deferred)`, and `## Risks`.

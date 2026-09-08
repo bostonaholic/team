@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **A new [`/decision-making`](https://github.com/bostonaholic/team/blob/main/skills/decision-making/SKILL.md) framework matches decision rigor to reversibility and risk.** It frames the desired outcome, generates viable options when needed, and checks hard constraints. It treats low-risk, reversible choices as two-way doors: choose quickly, give one reason, and continue. One-way doors receive a weighted comparison in which Reversibility and Risk are the two largest criteria and together exceed half the total weight. Every option receives the same evidence standard; missing facts produce visible ranges rather than invented values. **What this asks of you:** provide the decision and its context.
+- **A new [`decision-making`](https://github.com/bostonaholic/team/blob/main/skills/decision-making/SKILL.md) methodology matches decision rigor to reversibility and risk.** Two-way doors get a quick choice. One-way doors get a weighted comparison in which Reversibility and Risk receive the two largest weights and together exceed half the total. Design authoring, ADR drafting, technical design, slice planning, PR-comment triage, and backlog grooming load the method when viable options remain. It does not add a slash command.
 
 ## [0.95.0] - 2026-09-08
 
