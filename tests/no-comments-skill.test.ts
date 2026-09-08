@@ -2,8 +2,17 @@
 // reviewing-comments methodology. The front door may edit source only after
 // a fresh, read-only reviewer classifies the scoped comments.
 
-import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { spawnSync } from "node:child_process";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { frontmatter, read, squash } from "./helpers/text";
@@ -13,6 +22,7 @@ const REPO_ROOT = process.cwd();
 const FRONT_DOOR = join(REPO_ROOT, "skills", "no-comments", "SKILL.md");
 const METHODOLOGY = join(REPO_ROOT, "skills", "reviewing-comments", "SKILL.md");
 const OPENAI_MANIFEST = join(REPO_ROOT, "skills", "no-comments", "agents", "openai.yaml");
+const CHANGED_FILES = join(REPO_ROOT, "skills", "no-comments", "scripts", "changed-files.sh");
 
 function source(path: string): string {
   return existsSync(path) ? read(path) : "";
@@ -84,7 +94,11 @@ describe("no-comments skill: reviewer separation", () => {
 
 describe("no-comments skill: scope and mutation gates", () => {
   test("default scope resolves PR base, origin HEAD, then main", () => {
-    const text = source(FRONT_DOOR);
+    const frontDoor = source(FRONT_DOOR);
+    const text = source(CHANGED_FILES);
+    expect(frontDoor).toContain("scripts/changed-files.sh");
+    expect(frontDoor).not.toContain("git diff --name-only");
+    expect(existsSync(CHANGED_FILES)).toBe(true);
     expect(text).toContain("gh pr view");
     expect(text).toContain("--json baseRefName");
     expect(text).toContain("git symbolic-ref refs/remotes/origin/HEAD");
@@ -105,5 +119,81 @@ describe("no-comments skill: scope and mutation gates", () => {
 
   test("an invalid reviewer report gets at most one retry", () => {
     expect(squash(source(FRONT_DOOR))).toContain("Retry limit: 1");
+  });
+});
+
+function git(cwd: string, ...args: string[]): string {
+  const result = spawnSync(
+    "git",
+    ["-c", "user.email=test@test", "-c", "user.name=test", ...args],
+    { cwd, encoding: "utf8" },
+  );
+  if (result.status !== 0) {
+    throw new Error(`git ${args.join(" ")} failed: ${result.stderr}`);
+  }
+  return result.stdout.trim();
+}
+
+let scopeRoot: string;
+let scopeRepo: string;
+let fakeBin: string;
+
+beforeAll(() => {
+  scopeRoot = mkdtempSync(join(tmpdir(), `no-comments-scope-${process.pid}-`));
+  const origin = join(scopeRoot, "origin.git");
+  mkdirSync(origin);
+  git(origin, "init", "--bare", "-b", "main");
+
+  const seed = join(scopeRoot, "seed");
+  mkdirSync(seed);
+  git(seed, "init", "-b", "main");
+  writeFileSync(join(seed, "modified.txt"), "base\n");
+  git(seed, "add", "modified.txt");
+  git(seed, "commit", "-m", "base");
+  git(seed, "remote", "add", "origin", origin);
+  git(seed, "push", "-u", "origin", "main");
+
+  scopeRepo = join(scopeRoot, "work");
+  git(scopeRoot, "clone", origin, scopeRepo);
+  git(scopeRepo, "switch", "-c", "feature");
+  writeFileSync(join(scopeRepo, "committed.txt"), "committed\n");
+  git(scopeRepo, "add", "committed.txt");
+  git(scopeRepo, "commit", "-m", "feature");
+  writeFileSync(join(scopeRepo, "staged.txt"), "staged\n");
+  git(scopeRepo, "add", "staged.txt");
+  writeFileSync(join(scopeRepo, "modified.txt"), "changed\n");
+
+  fakeBin = join(scopeRoot, "bin");
+  mkdirSync(fakeBin);
+  writeFileSync(join(fakeBin, "gh"), "#!/usr/bin/env bash\nexit 1\n");
+  chmodSync(join(fakeBin, "gh"), 0o755);
+});
+
+afterAll(() => {
+  if (scopeRoot) rmSync(scopeRoot, { recursive: true, force: true });
+});
+
+describe("no-comments changed-files helper", () => {
+  test("prints the sorted union of committed, staged, and unstaged files", () => {
+    const env = { ...process.env, PATH: `${fakeBin}:${process.env.PATH ?? ""}` };
+    const result = spawnSync(CHANGED_FILES, [], {
+      cwd: scopeRepo,
+      encoding: "utf8",
+      env,
+    });
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(result.stdout.trim().split("\n")).toEqual([
+      "committed.txt",
+      "modified.txt",
+      "staged.txt",
+    ]);
+  });
+
+  test("rejects arguments", () => {
+    const result = spawnSync(CHANGED_FILES, ["main"], { encoding: "utf8" });
+    expect(result.status).toBe(2);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain("usage:");
   });
 });
