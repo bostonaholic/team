@@ -34,6 +34,9 @@ Store ADRs under `docs/decisions/` with zero-padded sequence names: `0001-use-ty
 
 Write one when choosing among alternatives, accepting important trade-offs, breaking an established convention, or adding a long-lived dependency. For dependencies, record why it beat alternatives and the exit strategy.
 
+Call the Skill tool with `decision-making` when a Proposed ADR still has two or
+more viable options. Do not reopen an Accepted decision.
+
 Do not write one for an obvious choice, use of an established pattern, minor implementation details (names, variable scope, loop form), or a choice reversible in minutes without downstream effects.
 
 ## Status rules

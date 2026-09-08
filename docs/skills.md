@@ -148,6 +148,10 @@ Lands a reviewed pull request.
 
 Triages unresolved PR review comments.
 
+**Loads:**
+
+- `decision-making`
+
 ### [pr-watch-as-author](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md)
 
 Watches an authored PR for feedback.
@@ -169,6 +173,10 @@ Watches a reviewed PR and approves settled feedback.
 ### [groom-backlog](https://github.com/bostonaholic/team/blob/main/skills/groom-backlog/SKILL.md)
 
 Grooms a project backlog and proposes tracker changes.
+
+**Loads:**
+
+- `decision-making`
 
 ### [pr-cleanup](https://github.com/bostonaholic/team/blob/main/skills/pr-cleanup/SKILL.md)
 
@@ -272,12 +280,17 @@ Defines the design-document procedure.
 
 **Loads:**
 
+- `decision-making`
 - `systems-thinking`
 - `writing-prose`
 
 ### [slicing-work](https://github.com/bostonaholic/team/blob/main/skills/slicing-work/SKILL.md)
 
 Defines vertical slices and verification checkpoints.
+
+**Loads:**
+
+- `decision-making`
 
 ### [planning-implementation](https://github.com/bostonaholic/team/blob/main/skills/planning-implementation/SKILL.md)
 
@@ -387,12 +400,17 @@ Requires one live ledger for ordered procedures.
 
 Defines safe nested-agent dispatch and fallback.
 
+### [decision-making](https://github.com/bostonaholic/team/blob/main/skills/decision-making/SKILL.md)
+
+Defines a decision method based on reversibility and risk.
+
 ### [documenting-decisions](https://github.com/bostonaholic/team/blob/main/skills/documenting-decisions/SKILL.md)
 
 Defines ADR structure and lifecycle.
 
 **Loads:**
 
+- `decision-making`
 - `writing-prose`
 
 ### [technical-design-doc](https://github.com/bostonaholic/team/blob/main/skills/technical-design-doc/SKILL.md)
@@ -401,6 +419,7 @@ Defines technical design sections and decision content.
 
 **Loads:**
 
+- `decision-making`
 - `writing-prose`
 
 ### [product-requirements-doc](https://github.com/bostonaholic/team/blob/main/skills/product-requirements-doc/SKILL.md)
@@ -625,6 +644,7 @@ skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see
 | `systematic-debugging` | implementer (inline Load on non-obvious failures). Other agents when debugging (advisory) | Implement, and Any (debugging) |
 | `principle-progress-tracking` | every multi-step agent; cited by `team`, `team-implement`, `team-fix`, `pr-screenshots`, `no-comments` | Any (multi-step procedure) |
 | `nested-agents` | researcher, implementer, code-reviewer, security-reviewer | Research, Implement (scouts + skeptic passes) |
+| `decision-making` | `authoring-designs`, `documenting-decisions`, `groom-backlog`, `pr-open-comments`, `slicing-work`, `technical-design-doc` | Design, Structure, Plan, and standalone recommendations |
 | `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
 | `technical-design-doc` | planner | Plan |
 | `product-requirements-doc` | questioner (through `decomposing-intent`, conditional). Design-author (through `authoring-designs`) | Question, Design |
