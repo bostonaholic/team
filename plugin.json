@@ -1,4 +1,5 @@
 {
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "team",
   "version": "0.96.0",
   "description": "Orchestrates specialized agents to autonomously implement entire features end-to-end",

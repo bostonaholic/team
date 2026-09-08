@@ -273,3 +273,24 @@ describe.if(HAS_JQ)("version-bump-required.sh: input validation", () => {
     expect(r.err).toMatch(/semver/);
   });
 });
+
+describe.if(HAS_JQ)("Native compatibility and documented distribution boundaries remain verifiable", () => {
+  test("exporter-only runtime change without a bump is rejected", () => {
+    const { dir, headSha, baseSha } = scenario({
+      forkVersion: "0.13.1",
+      branchEdits: (d) => writeFile(d, "scripts/export-agent-plugin.ts", "export const profile = 1;\n"),
+    });
+    expect(run(dir, { HEAD_SHA: headSha, BASE_SHA: baseSha }).status).not.toBe(0);
+  });
+
+  test("exporter-only runtime change with a forward bump is accepted", () => {
+    const { dir, headSha, baseSha } = scenario({
+      forkVersion: "0.13.1",
+      branchEdits: (d) => {
+        writeFile(d, "scripts/export-agent-plugin.ts", "export const profile = 1;\n");
+        writePlugin(d, "0.14.0");
+      },
+    });
+    expect(run(dir, { HEAD_SHA: headSha, BASE_SHA: baseSha }).status).toBe(0);
+  });
+});

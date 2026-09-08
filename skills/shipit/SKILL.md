@@ -15,7 +15,7 @@ the title, that version shows up in `git log`. It
 does no versioning, changelog editing, or release work. If a project assigns a
 version at land time, that happens in a separate project-specific step *before*
 `/shipit` (in this repo, the dev `version-bump` skill — see
-[docs/versioning.md](../../docs/versioning.md)). `shipit` only cares that the
+[docs/versioning.md](https://github.com/bostonaholic/team/blob/main/docs/versioning.md)). `shipit` only cares that the
 branch is ready to land.
 
 `gh pr merge` is irreversible, so two things guard it — neither of them a

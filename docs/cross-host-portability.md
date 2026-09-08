@@ -8,6 +8,11 @@ nav_label: portability
 
 # Cross-host portability
 
+Team also generates an [Agent Plugins 1.0.0 package](agent-plugins.md).
+It exports validated skills and resources, omits four guarded discovery files,
+and supplies no native agent registrations, hooks, or invocation enforcement.
+Generic format compatibility does not establish full pipeline support.
+
 > **What this is.** A portability study. It shows how Team's Claude Code plugin
 > primitives map onto Codex CLI, and gives the strategy we chose to support
 > that host alongside Claude Code. Team also runs on
