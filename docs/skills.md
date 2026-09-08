@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: pipeline entry-point slash commands, standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, reflect, why, how, no-comments, compare-options), and methodology skills loaded by agents, each with the skills it loads."
+description: "The Team plugin's skills: pipeline entry-point slash commands, standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, reflect, why, how, no-comments, decision-making), and methodology skills loaded by agents, each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -237,9 +237,9 @@ Removes low-value source comments and encodes valid constraints.
 - `reviewing-comments`
 - `running-quality-checks`
 
-### [compare-options](https://github.com/bostonaholic/team/blob/main/skills/compare-options/SKILL.md)
+### [decision-making](https://github.com/bostonaholic/team/blob/main/skills/decision-making/SKILL.md)
 
-Classifies choices as one-way or two-way doors, then scores only consequential options.
+Makes decisions by classifying reversibility and risk, choosing two-way doors quickly, and scoring one-way doors.
 
 ## Methodology skills
 
@@ -602,7 +602,7 @@ skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see
 | `reflect` | user (direct invocation, on explicit reflection intent; model invocation disabled) | Standalone: mine the session transcript for durable learnings (not a QRSPI phase) |
 | `why` | user or model (direct invocation). `team-fix` and `reviewing-code` (conditional load) | Standalone: design-rationale investigation (not a QRSPI phase). Dispatches read-only Explore investigators |
 | `how` | user or model (direct invocation) | Standalone: architectural explanation + optional critique (not a QRSPI phase). Dispatches read-only Explore explorers |
-| `compare-options` | user or model (direct invocation) | Standalone: fast reversible decisions or rigorous consequential comparisons (not a QRSPI phase) |
+| `decision-making` | user or model (direct invocation) | Standalone: fast reversible decisions or rigorous consequential comparisons (not a QRSPI phase) |
 | `qrspi-workflow` | orchestrator skills | All phases |
 | `artifact-frontmatter` | orchestrator skills. Artifact authors (just-in-time through pointers) | All phases: artifact schema |
 | `code-review` | user or model (direct invocation) | Standalone: dispatch a fresh-context code review (not a QRSPI phase) |

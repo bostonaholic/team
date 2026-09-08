@@ -1,4 +1,0 @@
-interface:
-  display_name: "Compare Options"
-  short_description: "Compare choices by reversibility and risk"
-  default_prompt: "Use $compare-options to compare choices by reversibility and risk."
