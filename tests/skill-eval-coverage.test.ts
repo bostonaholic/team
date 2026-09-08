@@ -30,7 +30,8 @@
 // team-pr is demoted; no protocol.test.ts sentinel, that convention is for
 // the pipeline-skill demotions):
 //   shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer,
-//   groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, reflect
+//   groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, reflect,
+//   no-comments
 
 import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
@@ -668,6 +669,26 @@ describe("L2 coverage: reflect (executable utility, not L5)", () => {
   });
 });
 
+// `no-comments` combines a fresh reviewer dispatch, producer-owned source
+// edits, and an interactive approval for constraint encodings. Its dedicated
+// L2 tripwire pins those host orchestration and authorization contracts. An
+// output-only L5 fixture cannot exercise the two-role mutation boundary or the
+// approval surface faithfully.
+
+describe("L2 coverage: no-comments (executable utility, not L5)", () => {
+  test("no-comments has no evals/fixtures/no-comments/ directory (no L5 eval)", () => {
+    expect(existsSync(fixtureDir("no-comments"))).toBe(false);
+  });
+
+  test("no-comments has no tests/no-comments.evals.ts file (no L5 eval)", () => {
+    expect(existsSync(evalsFilePath("no-comments"))).toBe(false);
+  });
+
+  test("no-comments is pinned by its dedicated L2 tripwire tests/no-comments-skill.test.ts", () => {
+    expect(existsSync(join(TESTS_ROOT, "no-comments-skill.test.ts"))).toBe(true);
+  });
+});
+
 // List-driven sweep over every executable utility skill. The per-skill blocks
 // above each carry that skill's own tier rationale; this one carries the
 // invariant that every skill on the list has coverage, so a utility added to
@@ -684,6 +705,7 @@ const UTILITY_SKILLS = [
   "pr-screenshots",
   "pr-rebase",
   "reflect",
+  "no-comments",
 ] as const;
 
 describe("L2 coverage: every executable utility skill is actually pinned", () => {

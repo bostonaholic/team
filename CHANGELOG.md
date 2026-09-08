@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.95.0] - 2026-09-08
+
+### Added
+
+- **Added `/no-comments`, an explicit-only utility that sends source comments to a fresh, read-only reviewer before removing them.** It asks before replacing constraint comments with types, checks, tests, lint rules, or CI rules. The utility never commits or pushes.
+
 ## [0.94.0] - 2026-09-07
 
 ### Added
@@ -843,7 +849,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.94.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.95.0...HEAD
+[0.95.0]: https://github.com/bostonaholic/team/compare/v0.94.0...v0.95.0
 [0.94.0]: https://github.com/bostonaholic/team/compare/v0.93.0...v0.94.0
 [0.93.0]: https://github.com/bostonaholic/team/compare/v0.92.0...v0.93.0
 [0.92.0]: https://github.com/bostonaholic/team/compare/v0.91.0...v0.92.0
