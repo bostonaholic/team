@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.96.0] - 2026-09-08
+
 ### Added
 
 - **A new [`decision-making`](https://github.com/bostonaholic/team/blob/main/skills/decision-making/SKILL.md) methodology matches decision rigor to reversibility and risk.** Two-way doors get a quick choice. One-way doors get a weighted comparison in which Reversibility and Risk receive the two largest weights and together exceed half the total. Design authoring, ADR drafting, technical design, slice planning, PR-comment triage, and backlog grooming load the method when viable options remain. It does not add a slash command.
@@ -853,7 +855,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.95.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.96.0...HEAD
+[0.96.0]: https://github.com/bostonaholic/team/compare/v0.95.0...v0.96.0
 [0.95.0]: https://github.com/bostonaholic/team/compare/v0.94.0...v0.95.0
 [0.94.0]: https://github.com/bostonaholic/team/compare/v0.93.0...v0.94.0
 [0.93.0]: https://github.com/bostonaholic/team/compare/v0.92.0...v0.93.0
