@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **A new [`/compare-options`](https://github.com/bostonaholic/team/blob/main/skills/compare-options/SKILL.md) utility scores alternatives against one context-specific heuristic before recommending one.** It defines hard constraints, weighted criteria, score anchors, and evidence standards before evaluating options. Every option receives a score for every criterion; missing facts produce visible ranges rather than invented values. The recommendation follows the highest-scoring eligible option and reports when uncertainty or reasonable weight changes could reverse it. **What this asks of you:** provide the options and decision context.
+- **A new [`/compare-options`](https://github.com/bostonaholic/team/blob/main/skills/compare-options/SKILL.md) utility matches decision rigor to reversibility and risk.** It treats low-risk, reversible choices as two-way doors: choose quickly, give one reason, and continue. One-way doors receive a weighted comparison in which Reversibility and Risk are the two largest criteria and together exceed half the total weight. Every option receives the same evidence standard; missing facts produce visible ranges rather than invented values. **What this asks of you:** provide the options and decision context.
 
 ## [0.95.0] - 2026-09-08
 

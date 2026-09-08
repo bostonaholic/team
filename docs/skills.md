@@ -239,7 +239,7 @@ Removes low-value source comments and encodes valid constraints.
 
 ### [compare-options](https://github.com/bostonaholic/team/blob/main/skills/compare-options/SKILL.md)
 
-Compares options with a context-specific weighted heuristic and recommends one from the evidence.
+Classifies choices as one-way or two-way doors, then scores only consequential options.
 
 ## Methodology skills
 
@@ -602,7 +602,7 @@ skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see
 | `reflect` | user (direct invocation, on explicit reflection intent; model invocation disabled) | Standalone: mine the session transcript for durable learnings (not a QRSPI phase) |
 | `why` | user or model (direct invocation). `team-fix` and `reviewing-code` (conditional load) | Standalone: design-rationale investigation (not a QRSPI phase). Dispatches read-only Explore investigators |
 | `how` | user or model (direct invocation) | Standalone: architectural explanation + optional critique (not a QRSPI phase). Dispatches read-only Explore explorers |
-| `compare-options` | user or model (direct invocation) | Standalone: evidence-based comparison and recommendation (not a QRSPI phase) |
+| `compare-options` | user or model (direct invocation) | Standalone: fast reversible decisions or rigorous consequential comparisons (not a QRSPI phase) |
 | `qrspi-workflow` | orchestrator skills | All phases |
 | `artifact-frontmatter` | orchestrator skills. Artifact authors (just-in-time through pointers) | All phases: artifact schema |
 | `code-review` | user or model (direct invocation) | Standalone: dispatch a fresh-context code review (not a QRSPI phase) |
