@@ -82,7 +82,7 @@ Never put `$` followed by a digit in `SKILL.md`; hosts may substitute it as an a
 
 - Add entry points to the `AGENTS.md` routing table and `docs/skills.md`.
 - Add methodology and principles to `docs/skills.md`.
-- Write every `docs/skills.md` entry as its heading and the verbatim first sentence of the frontmatter `description`, followed by a `**Loads:**` list only when the skill's own `.md` files instruct a load of at least one other skill; omit the block entirely when they load none. Rewriting a `description` updates that entry in the same commit.
+- Write every `docs/skills.md` entry as its heading and the verbatim first sentence of the frontmatter `description`, followed by one non-empty `**Invoked / loaded by:**` line, then one non-empty `**Phase / context:**` line, then a `**Loads:**` list only when the skill's own `.md` files instruct a load of at least one other skill; omit the block entirely when they load none. Rewriting a `description` updates that entry in the same commit.
 - List under `Loads:` only the skills the files load through ``Call the Skill tool with `<name>` ``, in any `.md` under `skills/<name>/`, references and prompt templates included. A citation is not a load, so a skill it merely names by path or in prose stays off the list — the list is a directed dependency edge, not a cross-reference. Sort in codepoint order (plain `sort`, so `pr-verify` precedes `principle-fail-closed`). `tests/docs-skills-catalog.test.ts` is the gate.
 - Add one TodoWrite item per ordered step by applying `principle-progress-tracking`; do not copy its banner into the skill.
 - Update `agents/openai.yaml` whenever the description changes.
