@@ -1,0 +1,4 @@
+interface:
+  display_name: "Compare Options"
+  short_description: "Compare options with a weighted decision rubric"
+  default_prompt: "Use $compare-options to compare options with a weighted decision rubric."
