@@ -56,12 +56,6 @@ type Entry = {
 
 type EntryDraft = Pick<Entry, "name" | "section" | "body">;
 
-type RelationshipRow = {
-  name: string;
-  invokedBy: string;
-  phaseContext: string;
-};
-
 // ---------------------------------------------------------------------------
 // Parse and file walk. Scaffolding: no rule lives here.
 // ---------------------------------------------------------------------------
@@ -384,85 +378,6 @@ function mentions(text: string, name: string): boolean {
   return new RegExp(`(?:^|[^\\w-])${name}(?:$|[^\\w-])`).test(text);
 }
 
-function migrationRelationshipOffenders(page: string, entries: Entry[]): string[] {
-  const start = page.indexOf("## Skill ↔ agent ↔ phase");
-  const end = page.indexOf("## Name-collision pairs", start);
-  if (start === -1 || end === -1) return ["migration relationship section is missing"];
-
-  const rows: RelationshipRow[] = [...page.slice(start, end).matchAll(
-    /^\| `([^`]+)` \| (.*?) \| (.*?) \|$/gm,
-  )].map((match) => ({
-    name: match[1] as string,
-    invokedBy: match[2] as string,
-    phaseContext: match[3] as string,
-  }));
-  const rowsByName = new Map(rows.map((row) => [row.name, row]));
-  const entriesByName = new Map(entries.map((entry) => [entry.name, entry]));
-  const invokedAdditions = new Map([
-    ["reviewing-code", ". `reviewing-designs` read-only Explore reviewer"],
-    ["engineering-standards", ". `reviewing-designs` read-only Explore reviewer"],
-    ["documenting-decisions", ". `reviewing-designs` read-only Explore reviewer"],
-    ["technical-design-doc", ". `reviewing-designs` read-only Explore reviewer"],
-    ["conventional-comments", ". `reviewing-designs` read-only Explore reviewer"],
-    ["writing-prose", ". `reviewing-designs` read-only Explore reviewer"],
-    [
-      "cross-model-review",
-      ". `reviewing-designs` read-only Explore reviewer (conditional, on `## External review input`)",
-    ],
-  ]);
-  const phaseAdditions = new Map([
-    ["reviewing-code", ", and Design (review gate)"],
-    ["engineering-standards", ", and Design (review gate)"],
-    ["documenting-decisions", ", and Design (review gate)"],
-    ["technical-design-doc", ", and Design (review gate)"],
-    ["conventional-comments", ", and Design (review gate): finding format"],
-    ["writing-prose", ". Design (review gate): prose bar"],
-  ]);
-  const offenders = [
-    ...(rows.length === 88 ? [] : [`migration parsed ${rows.length} relationship rows, expected 88`]),
-    ...(rows.length * 2 === 176 ? [] : [`migration parsed ${rows.length * 2} old cells, expected 176`]),
-    ...(rowsByName.size === rows.length ? [] : ["migration relationship rows contain duplicate names"]),
-    ...(entries.length === 90 ? [] : [`migration parsed ${entries.length} entries, expected 90`]),
-    ...(entriesByName.size === entries.length ? [] : ["migration catalog entries contain duplicate names"]),
-  ];
-
-  for (const row of rows) {
-    const entry = entriesByName.get(row.name);
-    if (!entry) {
-      offenders.push(`${row.name}: migration catalog entry missing`);
-      continue;
-    }
-    const expectedInvokedBy = row.invokedBy + (invokedAdditions.get(row.name) ?? "");
-    const expectedPhaseContext = row.phaseContext + (phaseAdditions.get(row.name) ?? "");
-    if (entry.invokedBy !== expectedInvokedBy) {
-      offenders.push(`${row.name}: migration consumer field differs from approved value`);
-    }
-    if (entry.phaseContext !== expectedPhaseContext) {
-      offenders.push(`${row.name}: migration context field differs from approved value`);
-    }
-  }
-
-  const tableless = new Map([
-    ["no-comments", [
-      "user (direct invocation; model invocation disabled)",
-      "Standalone: comment cleanup (not a QRSPI phase)",
-    ]],
-    ["reviewing-comments", [
-      "`no-comments` (direct load for read-only Explore review)",
-      "Standalone: source-comment review methodology",
-    ]],
-  ]);
-  for (const [name, [invokedBy, phaseContext]] of tableless) {
-    const entry = entriesByName.get(name);
-    if (!entry) offenders.push(`${name}: migration catalog entry missing`);
-    if (entry?.invokedBy !== invokedBy) offenders.push(`${name}: migration consumer field differs from source`);
-    if (entry?.phaseContext !== phaseContext) offenders.push(`${name}: migration context field differs from source`);
-    if (rowsByName.has(name)) offenders.push(`${name}: migration table unexpectedly contains a row`);
-  }
-
-  return offenders;
-}
-
 const REVIEWING_DESIGNS_LOADS = [...deriveLoads(
   SKILL_MD_TEXT.get("reviewing-designs") ?? "",
   "reviewing-designs",
@@ -498,11 +413,25 @@ function authoringContractOffenders(text: string): string[] {
   ];
 }
 
+function removedRelationshipPresentation(text: string): string[] {
+  return [
+    ...(/^## Skill ↔ agent ↔ phase$/m.test(text) ? ["relationship heading remains"] : []),
+    ...(text.includes("#skill--agent--phase") ? ["relationship anchor link remains"] : []),
+  ];
+}
+
 const CREATE_TEAM_SKILL_OFFENDERS = authoringContractOffenders(
   read(join(REPO_ROOT, ".claude", "skills", "create-team-skill", "SKILL.md")),
 );
 const CATALOG_TEXT = read(CATALOG);
-const MIGRATION_RELATIONSHIP_OFFENDERS = migrationRelationshipOffenders(CATALOG_TEXT, ENTRIES);
+const CATALOG_INTRODUCTION = CATALOG_TEXT.slice(
+  0,
+  CATALOG_TEXT.indexOf("\n## Entry-point skills"),
+);
+const REMOVED_RELATIONSHIP_OFFENDERS = removedRelationshipPresentation(CATALOG_TEXT);
+const MISSING_INTRODUCTION_LABELS = [INVOKED_HEADER, PHASE_HEADER].filter(
+  (label) => !CATALOG_INTRODUCTION.includes(label),
+);
 const LONG_RELATIONSHIP_BODY = [
   "Long relationship.",
   `${INVOKED_HEADER} ${"consumer ".repeat(40).trim()}`,
@@ -566,10 +495,11 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     expect(CREATE_TEAM_SKILL_OFFENDERS).toEqual([]);
   });
 
-  test("migration checkpoint preserves every relationship before table deletion", () => {
-    expect(MIGRATION_RELATIONSHIP_OFFENDERS).toEqual([]);
+  test("catalog omits the relationship section and its anchor link", () => {
+    expect(CATALOG_TEXT.length).toBeGreaterThan(0);
+    expect(REMOVED_RELATIONSHIP_OFFENDERS).toEqual([]);
+    expect(MISSING_INTRODUCTION_LABELS).toEqual([]);
   });
-
 
   test("the page-side rules each see a planted positive", () => {
     // A well-formed body, used as the negative control for every rule below.
@@ -639,6 +569,12 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
       `${INVOKED_HEADER} user`,
       `${PHASE_HEADER} Any`,
     ]);
+
+    expect(
+      removedRelationshipPresentation(
+        "[old link](#skill--agent--phase)\n\n## Skill ↔ agent ↔ phase\n",
+      ),
+    ).toEqual(["relationship heading remains", "relationship anchor link remains"]);
 
     // Phantom name: a bullet naming no skill on disk.
     const derived = new Set(["pr-verify", "principle-fail-closed"]);

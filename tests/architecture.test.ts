@@ -8,15 +8,29 @@ import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 
-// Keep lines containing `key`, drop lines matching the `exclude` regex, take
-// the first 5, join. Isolates a single table row from a methodology doc.
-function filterRows(text: string, key: string, exclude: RegExp): string {
-  return text
-    .split("\n")
-    .filter((line) => line.includes(key))
-    .filter((line) => !exclude.test(line))
-    .slice(0, 5)
-    .join("\n");
+function catalogConsumerField(page: string, name: string): string {
+  const heading = `### [${name}]`;
+  const start = page.indexOf(heading);
+  if (start === -1) return "";
+  const section = page.slice(start + heading.length);
+  const end = section.search(/\n#{2,3} /);
+  const entry = end === -1 ? section : section.slice(0, end);
+  const line = entry.split("\n").find((value) => value.startsWith("**Invoked / loaded by:**"));
+  return line?.slice("**Invoked / loaded by:**".length).trim() ?? "";
+}
+
+function mentions(text: string, name: string): boolean {
+  return new RegExp(`(?:^|[^\\w-])${name}(?:$|[^\\w-])`).test(text);
+}
+
+function consumerContractOffenders(page: string, contracts: Record<string, string[]>): string[] {
+  return Object.entries(contracts).flatMap(([skill, consumers]) => {
+    const field = catalogConsumerField(page, skill);
+    if (field === "") return [`${skill}: consumer field missing or empty`];
+    return consumers
+      .filter((consumer) => !mentions(field, consumer))
+      .map((consumer) => `${skill}: consumer field omits ${consumer}`);
+  });
 }
 
 // Absence check: runs grep through execFileSync. A non-zero exit (grep found
@@ -73,13 +87,21 @@ describe("skill architecture", () => {
     expect(read(VERIFIER)).not.toContain("reviewing-code/SKILL.md");
   });
 
-  test("reviewing-code row in docs/skills.md names all 4 consumer agents", () => {
-    // Key on the table-row delimiter so prose mentions of the skill name
-    // elsewhere in the doc cannot crowd the row out of the 5-line window.
-    const row = filterRows(read(SKILLS_MD), "| `reviewing-code` |", /^#|^>|SKILL\.md|\/\/|event/);
-    for (const agent of ["code-reviewer", "security-reviewer", "ux-reviewer", "technical-writer"]) {
-      expect(row).toContain(agent);
-    }
+  test("catalog consumer fields satisfy architecture and methodology contracts", () => {
+    expect(
+      consumerContractOffenders(read(SKILLS_MD), {
+        "reviewing-code": [
+          "code-reviewer",
+          "security-reviewer",
+          "ux-reviewer",
+          "technical-writer",
+          "reviewing-designs",
+        ],
+        "engineering-standards": ["planner", "implementer", "code-reviewer", "reviewing-designs"],
+        solid: ["implementer", "code-reviewer", "engineering-standards", "reviewing-code"],
+        "refactoring-to-patterns": ["implementer"],
+      }),
+    ).toEqual([]);
   });
 
   test("extraction threshold documented in docs/architecture.md", () => {

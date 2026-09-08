@@ -29,15 +29,15 @@ function body(text: string): string {
   return out.join("\n");
 }
 
-// Keep lines containing `key`, drop lines matching the `exclude` regex, take
-// the first 5, join. Isolates a single table row from a methodology doc.
-function filterRows(text: string, key: string, exclude: RegExp): string {
-  return text
-    .split("\n")
-    .filter((line) => line.includes(key))
-    .filter((line) => !exclude.test(line))
-    .slice(0, 5)
-    .join("\n");
+function catalogConsumerField(page: string, name: string): string {
+  const heading = `### [${name}]`;
+  const start = page.indexOf(heading);
+  if (start === -1) return "";
+  const section = page.slice(start + heading.length);
+  const end = section.search(/\n#{2,3} /);
+  const entry = end === -1 ? section : section.slice(0, end);
+  const line = entry.split("\n").find((value) => value.startsWith("**Invoked / loaded by:**"));
+  return line?.slice("**Invoked / loaded by:**".length).trim() ?? "";
 }
 
 // Text between two markers; "" when either marker is missing. Callers guard
@@ -79,7 +79,6 @@ function grepA4(text: string, pattern: RegExp): string {
 
 describe("engineering-standards methodology", () => {
   const SKILL_FILE = join(REPO_ROOT, "skills", "engineering-standards", "SKILL.md");
-  const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const PLANNER = join(REPO_ROOT, "agents", "planner.md");
   const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
   const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
@@ -140,23 +139,6 @@ describe("engineering-standards methodology", () => {
     expect(loadsSkill(read(CODE_REVIEWER), "engineering-standards")).toBe(true);
   });
 
-  test("skills.md methodology table includes engineering-standards row with all 3 consumers", () => {
-    const row = filterRows(read(SKILLS_MD), "| `engineering-standards` |", /^#|^>|\/\/|event/);
-    expect(row.length).toBeGreaterThan(0);
-    for (const agent of ["planner", "implementer", "code-reviewer"]) {
-      expect(row).toContain(agent);
-    }
-  });
-
-  test("skills.md reviewing-code row unchanged", () => {
-    // Key on the table-row delimiter so prose mentions of the skill name
-    // elsewhere in the doc cannot crowd the row out of the 5-line window.
-    const row = filterRows(read(SKILLS_MD), "| `reviewing-code` |", /^#|^>|SKILL\.md|\/\/|event/);
-    for (const agent of ["code-reviewer", "security-reviewer", "ux-reviewer", "technical-writer"]) {
-      expect(row).toContain(agent);
-    }
-  });
-
   test("skill defers to solid for LSP/SRP", () => {
     expect(read(SKILL_FILE)).toContain("solid/SKILL.md");
   });
@@ -189,15 +171,6 @@ describe("engineering-standards methodology", () => {
   // The working-tree `git diff` cleanliness check is a CI-hygiene concern, not
   // a property of the code under test, so it is intentionally not covered here.
 
-  test("skills.md methodology table includes solid row", () => {
-    const row = filterRows(read(SKILLS_MD), "| `solid` |", /^#|^>|\/\/|event/);
-    expect(row.length).toBeGreaterThan(0);
-  });
-
-  test("skills.md methodology table includes refactoring-to-patterns row", () => {
-    const row = filterRows(read(SKILLS_MD), "| `refactoring-to-patterns` |", /^#|^>|\/\/|event/);
-    expect(row.length).toBeGreaterThan(0);
-  });
 });
 
 describe("product-thinking methodology", () => {
@@ -1873,16 +1846,12 @@ describe("principle-untrusted-input-is-data (L2 content tripwire)", () => {
   });
 });
 
-// The "Skill ↔ agent ↔ phase" table drifted: new bare principle-name citations
-// landed and the row did not follow. This gate makes that drift class
+// Consumer metadata drifted: new bare principle-name citations landed and the
+// catalog entry did not follow. This gate makes that drift class
 // deterministic: for every principle-* skill, every file under agents/ or
-// skills/ that cites its backticked name must appear in that skill's table
-// row. This is where inbound *agent* citers are covered, since the per-entry
-// Mentions: sweep in tests/docs-skills-catalog.test.ts reads nothing under
-// agents/. All parsing is precomputed once at module level: each file is read
-// once, and each test body is a declarative assertion whose failure value
-// names the skill and the missing consumer.
-describe("docs/skills.md principle table rows match on-disk citations (L2 tripwire)", () => {
+// skills/ that cites its backticked name must appear in that skill entry's
+// consumer field. All parsing is precomputed once at module level.
+describe("docs/skills.md principle consumer fields match on-disk citations (L2 tripwire)", () => {
   const SKILLS_DIR = join(REPO_ROOT, "skills");
   const AGENTS_DIR = join(REPO_ROOT, "agents");
   const SKILLS_MD = read(join(REPO_ROOT, "docs", "skills.md"));
@@ -1926,13 +1895,8 @@ describe("docs/skills.md principle table rows match on-disk citations (L2 tripwi
     }),
   );
 
-  // The `| \`<name>\` | ... |` row of the "Skill ↔ agent ↔ phase" table.
-  // "" when the row is missing, so the assertion fails loud, never vacuously.
-  const tableRows = new Map(
-    principleSkills.map((name) => {
-      const match = SKILLS_MD.match(new RegExp(`^\\| \`${name}\` \\|.*$`, "m"));
-      return [name, match ? match[0] : ""] as const;
-    }),
+  const consumerFields = new Map(
+    principleSkills.map((name) => [name, catalogConsumerField(SKILLS_MD, name)] as const),
   );
 
   // `name` bounded by non-name characters, so `code-review` never matches
@@ -1941,20 +1905,18 @@ describe("docs/skills.md principle table rows match on-disk citations (L2 tripwi
     return new RegExp(`(?:^|[^\\w-])${name}(?:$|[^\\w-])`).test(text);
   }
 
-  test("the principle tier exists on disk (the loops below cannot go vacuous)", () => {
-    expect(principleSkills.length).toBeGreaterThan(20);
+  const missingConsumers = extractedPrinciples.flatMap((principle) => {
+    const field = consumerFields.get(principle) ?? "";
+    if (field === "") return [`${principle}: consumer field missing or empty`];
+    return (citersByPrinciple.get(principle) ?? [])
+      .filter((citer) => !mentions(field, citer))
+      .map((citer) => `${principle}: consumer field omits ${citer}`);
   });
 
-  for (const principle of extractedPrinciples) {
-    test(`table row for ${principle} omits no file that cites it by name`, () => {
-      const row = tableRows.get(principle) ?? "";
-      expect(row.length).toBeGreaterThan(0);
-      const missing = (citersByPrinciple.get(principle) ?? [])
-        .filter((citer) => !mentions(row, citer))
-        .map((citer) => `${principle}: table row omits consumer ${citer}`);
-      expect(missing).toEqual([]);
-    });
-  }
+  test("principle consumer fields include every source-derived citer", () => {
+    expect(principleSkills.length).toBeGreaterThan(20);
+    expect(missingConsumers).toEqual([]);
+  });
 });
 
 // ---------------------------------------------------------------------------

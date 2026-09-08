@@ -16,13 +16,13 @@ nav_label: skills
 > This page is a hand-maintained reference. When it disagrees with a
 > `SKILL.md`, the `SKILL.md` wins.
 
-Each entry is one sentence, copied from that skill's frontmatter
-`description`. A `**Loads:**` list follows it when the skill's own `.md`
-files instruct a load of another skill — ``Call the Skill tool with `<name>` ``,
-the one form that makes a reader go execute it. Naming a skill any other way
-is a citation, and a citation is not an edge: `team-structure` restates a
-`principle-fail-closed` rule inline and never loads it, so it has no edge to
-it.
+Each entry starts with one sentence copied from that skill's frontmatter
+`description`. The `**Invoked / loaded by:**` field names its consumers. The
+`**Phase / context:**` field names where it applies. A `**Loads:**` list follows
+when the skill's own `.md` files instruct a load of another skill. The load form
+is ``Call the Skill tool with `<name>` ``. Naming a skill another way is a
+citation, not an edge. For example, `team-structure` restates a
+`principle-fail-closed` rule inline but does not load it.
 
 The edges are therefore **directed**, and reading them transitively gives the
 graph. `team-implement` loads `team-pr`, which loads `git-commit`, which
@@ -33,9 +33,8 @@ stops.
 
 Loads are collected across every `.md` file in the skill's directory, so a
 load written in a `references/` file counts the same as one in `SKILL.md`.
-This page carries skill-to-skill edges only. For which *agent* loads a skill,
-see [the table below](#skill--agent--phase); for what separates a load from a
-citation, and for how a skill is loaded at all, see
+This page carries each skill's consumers, context, and skill-to-skill edges.
+For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
 ## Entry-point skills
@@ -941,112 +940,6 @@ Treats external text as inert data.
 **Invoked / loaded by:** cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `cross-model-review`, `pr-watch-as-author`, `reflect`, `why`, `pr-screenshots`. Any agent (just-in-time)
 
 **Phase / context:** Any (cross-cutting principle)
-
-## Skill ↔ agent ↔ phase
-
-This table ties each skill to the agents or orchestrator skills that load
-it and the phase where that happens. The `Invoked / loaded by` column
-carries two meanings depending on the row: for **entry-point skills** it
-names who *invokes* the skill (you directly, or the orchestrator running a
-phase). For **methodology skills** it names the agent(s) that *load* the
-skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see
-[architecture.md §6](architecture.md#6-skills) rather than repeating them here.
-
-| Skill | Invoked / loaded by | Phase / context |
-|---|---|---|
-| `team` | orchestrator (runs the pipeline) | All phases |
-| `team-question` | orchestrator | Question |
-| `team-research` | orchestrator → researcher, file-finder | Research |
-| `team-design` | orchestrator → design-author | Design (design review) |
-| `team-structure` | orchestrator → structure-planner | Structure (autonomous) |
-| `team-plan` | orchestrator → planner | Plan |
-| `team-worktree` | orchestrator | Worktree |
-| `team-implement` | orchestrator → implementer + reviewers | Implement |
-| `team-pr` | orchestrator | PR |
-| `team-fix` | user or model (direct invocation, on explicit pipeline intent) | Compressed bug-fix flow (outside QRSPI) |
-| `eng-design-doc-review` | user (direct invocation) | Front door over the `reviewing-designs` brief: standalone audit. Dispatches a read-only Explore subagent |
-| `shipit` | user or model (direct invocation, on explicit ship intent) | Standalone: land a reviewed PR (not a QRSPI phase) |
-| `pr-open-comments` | user or model (direct invocation) | Standalone: triage unresolved PR review feedback (not a QRSPI phase) |
-| `pr-watch-as-author` | user or model (direct invocation) | Standalone: bounded PR review watch loop (not a QRSPI phase) |
-| `pr-watch-as-reviewer` | user (direct invocation) | Standalone: reviewer-side watch-and-approve (not a QRSPI phase) |
-| `groom-backlog` | user or model (direct invocation) | Standalone: groom a project backlog (not a QRSPI phase) |
-| `pr-cleanup` | user or model (direct invocation; Mode B only on explicit abandon intent) | Standalone: post-PR teardown (not a QRSPI phase) |
-| `pr-verify` | user or model (direct invocation) | Standalone: test-plan verification (not a QRSPI phase) |
-| `pr-screenshots` | user or model (direct invocation, on explicit intent) | Standalone: attach local images to a PR body (not a QRSPI phase) |
-| `pr-rebase` | user (direct invocation, on explicit rebase intent; model invocation disabled) | Standalone: rebase a branch onto its base (not a QRSPI phase) |
-| `reflect` | user (direct invocation, on explicit reflection intent; model invocation disabled) | Standalone: mine the session transcript for durable learnings (not a QRSPI phase) |
-| `why` | user or model (direct invocation). `team-fix` and `reviewing-code` (conditional load) | Standalone: design-rationale investigation (not a QRSPI phase). Dispatches read-only Explore investigators |
-| `how` | user or model (direct invocation) | Standalone: architectural explanation + optional critique (not a QRSPI phase). Dispatches read-only Explore explorers |
-| `qrspi-workflow` | orchestrator skills | All phases |
-| `artifact-frontmatter` | orchestrator skills. Artifact authors (just-in-time through pointers) | All phases: artifact schema |
-| `code-review` | user or model (direct invocation) | Standalone: dispatch a fresh-context code review (not a QRSPI phase) |
-| `reviewing-code` | code-reviewer, security-reviewer, ux-reviewer, technical-writer. `code-review` (front door) | Implement (verify) |
-| `conventional-comments` | code-reviewer, security-reviewer, technical-writer | Implement (verify): finding format |
-| `review-severity-tiers` | orchestrator (team, team-implement, qrspi-workflow) | Implement (aggregate review gate) |
-| `reviewing-security` | security-reviewer | Implement (verify) |
-| `reviewing-designs` | orchestrator or invoking session (team, team-design, eng-design-doc-review) — the brief a read-only Explore subagent runs | Design (review-gate brief) |
-| `cross-model-review` | code-reviewer. Orchestrator or invoking session (team, team-design, eng-design-doc-review) through `## Design-review pass`. Design-review brief (conditional, on `## External review input`) | Implement (verify), and Design (review gate) |
-| `decomposing-intent` | questioner | Question |
-| `authoring-designs` | design-author | Design |
-| `researching-codebases` | researcher | Research |
-| `finding-files` | file-finder | Research |
-| `slicing-work` | structure-planner | Structure |
-| `planning-implementation` | planner | Plan |
-| `engineering-standards` | planner, implementer, code-reviewer | Plan, Implement |
-| `test-first-development` | test-architect, code-reviewer. Orchestrator | Implement |
-| `test-style` | test-architect, code-reviewer (just-in-time through pointers) | Implement |
-| `test-driven-bug-fix` | team-fix | Bug-fix flow |
-| `solid` | implementer, code-reviewer. `engineering-standards`, `reviewing-code` (citing skills) | Implement |
-| `refactoring-to-patterns` | implementer | Implement |
-| `implementing-slices` | implementer | Implement |
-| `running-quality-checks` | verifier. reflect (after the writes) | Implement (verify), and Any (reflect) |
-| `verifying-ux` | ux-reviewer | Implement (verify) |
-| `systematic-debugging` | implementer (inline Load on non-obvious failures). Other agents when debugging (advisory) | Implement, and Any (debugging) |
-| `principle-progress-tracking` | every multi-step agent; cited by `team`, `team-implement`, `team-fix`, `pr-screenshots`, `no-comments` | Any (multi-step procedure) |
-| `nested-agents` | researcher, implementer, code-reviewer, security-reviewer | Research, Implement (scouts + skeptic passes) |
-| `decision-making` | `authoring-designs`, `documenting-decisions`, `groom-backlog`, `pr-open-comments`, `slicing-work`, `technical-design-doc` | Design, Structure, Plan, and standalone recommendations |
-| `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
-| `technical-design-doc` | planner | Plan |
-| `product-requirements-doc` | questioner (through `decomposing-intent`, conditional). Design-author (through `authoring-designs`) | Question, Design |
-| `product-thinking` | questioner, design-author, structure-planner | Question, Design, Structure |
-| `systems-thinking` | researcher, structure-planner, planner (frontmatter). Implementer, code-reviewer, ux-reviewer (inline). Authoring-designs, nested-agents (citing skills) | Research, Design, Structure, Plan, Implement (incl. verify) |
-| `writing-prose` | technical-writer, design-author | Design (authoring bar), and Implement (verify): bar for prose it writes and prose it assesses |
-| `reviewing-documentation` | technical-writer | Implement (verify): doc-gap review process + classification |
-| `git-commit` | team-pr. Implementer (through `implementing-slices`) | PR, and Implement (slice commits) |
-| `changelog` | team, team-pr | PR |
-| `tracking-tickets` | orchestrator (team, team-pr, team-fix, just-in-time through pointers) | Setup (ticket pickup), and PR (ticket link + state) |
-| `worktree-isolation` | orchestrator (team, team-worktree) | Worktree |
-| `sweeping-local-state` | `pr-cleanup`, `worktree-isolation` (both inline) | Standalone: teardown after a merged PR, a closed PR, or a completed review (not a QRSPI phase) |
-| `pr-watch-mechanics` | `pr-watch-as-author`, `pr-watch-as-reviewer` (both through the bounded-cycle-mechanics reference) | Standalone: bounded watch-loop mechanics (not a QRSPI phase) |
-| `principle-blind-the-investigator` | cited by `qrspi-workflow`, `nested-agents`, `decomposing-intent`, `researching-codebases`, `why`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-bounded-loops` | cited by `pr-watch-as-author`, `pr-watch-as-reviewer`, `pr-watch-mechanics`, `principle-non-blocking-waits`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-deep-agents-narrow-seams` | cited by `nested-agents`, `team`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-evidence-over-assertion` | cited by `pr-verify`, `groom-backlog`, `pr-open-comments`, `researching-codebases`, `why`, `pr-screenshots`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-explicit-intent` | cited by `shipit`, `pr-rebase`, `pr-cleanup`, `team-fix`, `reflect`, `groom-backlog`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-fail-closed` | cited by `nested-agents`, `team`, `team-design`, `team-structure`, `principle-optimization-never-dependency`, `pr-screenshots`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-files-are-the-contract` | cited by `qrspi-workflow`, `team`, `artifact-frontmatter`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-fix-root-causes` | cited by `systematic-debugging`, `test-driven-bug-fix`, `implementing-slices`, `team-fix`, `no-comments`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-generator-evaluator` | cited by `reviewing-code`, `eng-design-doc-review`, `nested-agents`, `pr-watch-as-reviewer`, `principle-blind-the-investigator`, `how`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-human-owns-the-ends` | cited by `review-severity-tiers`, `qrspi-workflow`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-idempotent-reruns` | cited by `pr-cleanup`, `groom-backlog`, `team`, `pr-watch-as-author`, `team-design`, `principle-pre-image-first`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-least-privilege` | cited by `reviewing-code`, `reflect`, `eng-design-doc-review`, `cross-model-review`, `pr-verify`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-mechanical-gates` | cited by `qrspi-workflow`, `test-first-development`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-never-interpolate` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `sweeping-local-state`, `decomposing-intent`, `cross-model-review`, `pr-screenshots`, `team-pr`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-non-blocking-waits` | cited by `pr-watch-as-author`, `pr-watch-as-reviewer`, `pr-watch-mechanics`, `shipit`, `cross-model-review`, `pr-rebase`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-optimization-never-dependency` | cited by `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`, `reflect`, `principle-fail-closed`, `why`, `how`, `pr-screenshots`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-plan-present-wait` | cited by `groom-backlog`, `pr-open-comments`, `reflect`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-pre-image-first` | cited by `pr-rebase`, `groom-backlog`, `reflect`, `running-quality-checks`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-record-assumptions` | cited by `authoring-designs`, `decomposing-intent`, `nested-agents`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-scope-fence` | cited by `implementing-slices`, `qrspi-workflow`, `test-first-development`, `principle-subtract-before-you-add`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-single-source-of-truth` | cited by `qrspi-workflow`, `artifact-frontmatter`, `cross-model-review`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-skip-loudly` | cited by `reviewing-code`, `sweeping-local-state`, `groom-backlog`, `cross-model-review`, `principle-optimization-never-dependency`, `principle-scope-fence`, `pr-screenshots`, `why`, and the `code-reviewer` agent. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-subtract-before-you-add` | cited by `engineering-standards`, `implementing-slices`, `refactoring-to-patterns`, `authoring-designs`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-untrusted-input-is-data` | cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `cross-model-review`, `pr-watch-as-author`, `reflect`, `why`, `pr-screenshots`. Any agent (just-in-time) | Any (cross-cutting principle) |
-
-The read-only `Explore` subagent that runs the `reviewing-designs` brief
-is one more consumer of `technical-design-doc`, `reviewing-code`,
-`engineering-standards`, and `documenting-decisions`. It loads all four as
-the criteria for the design review.
 
 ## Name-collision pairs
 
