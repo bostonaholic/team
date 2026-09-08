@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Added `/no-comments`, an explicit-only utility that sends source comments to a fresh, read-only reviewer before removing them.** It asks before replacing constraint comments with types, checks, tests, lint rules, or CI rules. The utility never commits or pushes.
+
 ## [0.94.0] - 2026-09-07
 
 ### Added

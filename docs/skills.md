@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: pipeline entry-point slash commands, standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, reflect, why, how), and methodology skills loaded by agents, each with the skills it loads."
+description: "The Team plugin's skills: pipeline entry-point slash commands, standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, reflect, why, how, no-comments), and methodology skills loaded by agents, each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -226,6 +226,17 @@ Reviews a diff with fresh context.
 
 - `reviewing-code`
 
+### [no-comments](https://github.com/bostonaholic/team/blob/main/skills/no-comments/SKILL.md)
+
+Removes low-value source comments and encodes valid constraints.
+
+**Loads:**
+
+- `principle-fix-root-causes`
+- `principle-progress-tracking`
+- `reviewing-comments`
+- `running-quality-checks`
+
 ## Methodology skills
 
 These carry no `argument-hint`. They are never invoked directly; agents load
@@ -283,6 +294,14 @@ Defines adversarial code review and evidence-based findings.
 - `test-style`
 - `why`
 - `writing-prose`
+
+### [reviewing-comments](https://github.com/bostonaholic/team/blob/main/skills/reviewing-comments/SKILL.md)
+
+Defines fresh-context source-comment review and findings.
+
+**Loads:**
+
+- `engineering-standards`
 
 ### [reviewing-designs](https://github.com/bostonaholic/team/blob/main/skills/reviewing-designs/SKILL.md)
 
@@ -604,7 +623,7 @@ skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see
 | `running-quality-checks` | verifier. reflect (after the writes) | Implement (verify), and Any (reflect) |
 | `verifying-ux` | ux-reviewer | Implement (verify) |
 | `systematic-debugging` | implementer (inline Load on non-obvious failures). Other agents when debugging (advisory) | Implement, and Any (debugging) |
-| `principle-progress-tracking` | every multi-step agent; cited by `team`, `team-implement`, `team-fix`, `pr-screenshots` | Any (multi-step procedure) |
+| `principle-progress-tracking` | every multi-step agent; cited by `team`, `team-implement`, `team-fix`, `pr-screenshots`, `no-comments` | Any (multi-step procedure) |
 | `nested-agents` | researcher, implementer, code-reviewer, security-reviewer | Research, Implement (scouts + skeptic passes) |
 | `documenting-decisions` | planner, orchestrator (advisory) | Any (when decisions are recorded) |
 | `technical-design-doc` | planner | Plan |
@@ -626,7 +645,7 @@ skill. For the `$ARGUMENTS` shapes and the three-tier discovery, see
 | `principle-explicit-intent` | cited by `shipit`, `pr-rebase`, `pr-cleanup`, `team-fix`, `reflect`, `groom-backlog`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-fail-closed` | cited by `nested-agents`, `team`, `team-design`, `team-structure`, `principle-optimization-never-dependency`, `pr-screenshots`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-files-are-the-contract` | cited by `qrspi-workflow`, `team`, `artifact-frontmatter`. Any agent (just-in-time) | Any (cross-cutting principle) |
-| `principle-fix-root-causes` | cited by `systematic-debugging`, `test-driven-bug-fix`, `implementing-slices`, `team-fix`. Any agent (just-in-time) | Any (cross-cutting principle) |
+| `principle-fix-root-causes` | cited by `systematic-debugging`, `test-driven-bug-fix`, `implementing-slices`, `team-fix`, `no-comments`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-generator-evaluator` | cited by `reviewing-code`, `eng-design-doc-review`, `nested-agents`, `pr-watch-as-reviewer`, `principle-blind-the-investigator`, `how`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-human-owns-the-ends` | cited by `review-severity-tiers`, `qrspi-workflow`. Any agent (just-in-time) | Any (cross-cutting principle) |
 | `principle-idempotent-reruns` | cited by `pr-cleanup`, `groom-backlog`, `team`, `pr-watch-as-author`, `team-design`, `principle-pre-image-first`. Any agent (just-in-time) | Any (cross-cutting principle) |

@@ -32,10 +32,10 @@ const SURFACES = [
   join("docs", "cross-host-portability.md"),
 ];
 
-// The guarded set as a deliberate list. This is the creep fence: a fourth
+// The guarded set as a deliberate list. This is the creep fence: a new
 // skill setting the flag is a decision that must update this list, and
 // updating it forces every surface below to name the new skill.
-const EXPECTED_GUARDED = ["pr-rebase", "pr-watch-as-reviewer", "reflect"];
+const EXPECTED_GUARDED = ["no-comments", "pr-rebase", "pr-watch-as-reviewer", "reflect"];
 
 // Defensive read: a missing file reads as "" so assertions FAIL, never throw.
 function surface(relative: string): string {
