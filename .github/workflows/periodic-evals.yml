@@ -67,6 +67,7 @@ jobs:
           - { name: team-question, file: ./tests/team-question.evals.ts }
           - { name: team-research, file: ./tests/team-research.evals.ts }
           - { name: team-structure, file: ./tests/team-structure.evals.ts }
+          - { name: unslop, file: ./tests/unslop.evals.ts }
     steps:
       - uses: actions/checkout@v7
         with:

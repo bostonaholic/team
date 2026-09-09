@@ -516,6 +516,14 @@ Defines plain-language prose rules.
 
 **Uses:** None
 
+### [unslop](https://github.com/bostonaholic/team/blob/main/skills/unslop/SKILL.md)
+
+Removes AI-writing patterns while preserving meaning, tone, evidence, and exact contracts.
+
+**Used by:** None
+
+**Uses:** None
+
 ### [reviewing-documentation](https://github.com/bostonaholic/team/blob/main/skills/reviewing-documentation/SKILL.md)
 
 Defines documentation-gap review and REQUIRED/RECOMMENDED findings.

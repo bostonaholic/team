@@ -152,6 +152,51 @@ export function loadSkillContext(skills: string[], repoRoot?: string): string {
     .join("\n\n---\n\n");
 }
 
+export function loadInstructionContext(paths: string[], repoRoot?: string): string {
+  const root = repoRoot ?? process.cwd();
+  if (paths.length === 0) throw new Error("loadInstructionContext: no paths named");
+  return paths
+    .map((relativePath) => {
+      try {
+        const text = readFileSync(join(root, relativePath), "utf8");
+        return `# Instruction file: ${relativePath}\n\n${text}`;
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        throw new Error(`loadInstructionContext: cannot read ${relativePath}: ${reason}`);
+      }
+    })
+    .join("\n\n---\n\n");
+}
+
+export interface AgentInstructionContext {
+  body: string;
+  model: string;
+}
+
+export function loadAgentInstructionContext(
+  agent: string,
+  repoRoot?: string,
+): AgentInstructionContext {
+  const root = repoRoot ?? process.cwd();
+  const relativePath = join("agents", `${agent}.md`);
+  let text: string;
+  try {
+    text = readFileSync(join(root, relativePath), "utf8");
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new Error(`loadAgentInstructionContext: cannot read ${relativePath}: ${reason}`);
+  }
+  const close = text.indexOf("\n---", 3);
+  if (!text.startsWith("---\n") || close < 0) {
+    throw new Error(`loadAgentInstructionContext: ${relativePath} has invalid frontmatter`);
+  }
+  const match = /^model:\s*(\S+)\s*$/m.exec(text.slice(0, close))?.[1];
+  if (match === undefined || !["haiku", "sonnet", "opus", "fable"].includes(match)) {
+    throw new Error(`loadAgentInstructionContext: ${relativePath} has invalid model`);
+  }
+  return { body: text.slice(close + 4).replace(/^\r?\n(?:\r?\n)?/, ""), model: match };
+}
+
 export function loadFixture(agent: string, caseName: string, fixtureRoot?: string): Fixture {
   const root = fixtureRoot ?? join(process.cwd(), "evals", "fixtures");
   const inputPath = join(root, agent, caseName, "input.md");

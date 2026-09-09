@@ -1,0 +1,24 @@
+{
+  "bugs": [
+    {
+      "id": "definition",
+      "description": "Names the normalization definition with file evidence",
+      "detection_hint": "src/normalize-label\\.pseudo:1"
+    },
+    {
+      "id": "consumer",
+      "description": "Names the consumer with file evidence",
+      "detection_hint": "src/label-consumer\\.pseudo:1"
+    },
+    {
+      "id": "behavior",
+      "description": "Names the behavior test with file evidence",
+      "detection_hint": "tests/normalize-label\\.test\\.pseudo:1"
+    }
+  ],
+  "minimum_detection": 1,
+  "canary": "TASK_CANARY_LOWERCASE_LABELS_9F4A",
+  "required_facts": ["replaces spaces with hyphens", "fixture-language 1"],
+  "helper_evidence": ["src/normalize-label.pseudo:1", "src/label-consumer.pseudo:1"],
+  "inline_fallback_evidence": "src/normalize-label.pseudo:1"
+}

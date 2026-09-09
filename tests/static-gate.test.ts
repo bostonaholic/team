@@ -144,6 +144,7 @@ describe("static gate: periodic-evals workflow", () => {
       expect(workflow).toContain(`./tests/${file}`);
     }
   });
+
 });
 
 describe("static gate: package eval commands", () => {

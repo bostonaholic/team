@@ -759,6 +759,16 @@ Team's side, and the workarounds that look plausible all fail — see
 [cross-host-portability.md](cross-host-portability.md#57-codex-port)
 before spending time on it.
 
+`unslop` follows this model-invocable methodology contract. The shared
+`skills/` directory exposes it to every host, and `agents/openai.yaml` supplies
+Codex discovery metadata. Its dated rule table assigns each upstream ID to one
+owner across `unslop` and `writing-prose`.
+
+When both prose methods apply, the author scans the untouched draft with
+`unslop` before `writing-prose` edits it. Exact source text stays byte-identical.
+The semantic guard protects normative force, permission, real uncertainty, and
+meaningful time relations. It outranks style substitutions.
+
 The trigger-phrase convention keys on the `user-invocable` field —
 not on `argument-hint`, which `docs/skills.md` uses to sort skill
 *flavor*. A skill that does not set `user-invocable: false` must state,

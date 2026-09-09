@@ -6,9 +6,12 @@ user-invocable: false
 
 # Writing Prose
 
-Apply plain language and Simplified Technical English (ASD-STE100) to
-documentation. Read [references/style-guide.md](references/style-guide.md)
+Apply plain language and Simplified Technical English (ASD-STE100) to documentation.
+Read [references/style-guide.md](references/style-guide.md)
 first. It carries the word table, examples, score command, and review criteria.
+
+When `unslop` is loaded, wait for its untouched authored draft checklist before
+any edit. Without `unslop`, use the normal sequence below.
 
 ## One busy reader
 
@@ -42,16 +45,15 @@ A consuming skill's format contract wins. These modes govern sentence prose.
 - Use simple tenses and active voice unless the actor is unknown, irrelevant,
   or deliberately omitted.
 - Keep noun clusters to three words. Do not omit subjects, verbs, or articles.
-- Use lists for complex text. Never use semicolons. Keep paragraphs to six
-  sentences and one topic.
+- Use lists for complex text. Never use semicolons. Keep paragraphs to six sentences and one topic.
 - Put warnings and cautions before the protected step.
 - Name concrete files, commands, paths, identifiers, and components.
 - Use the substitutions, restricted meanings, and exceptions in the style guide.
 
 ## Words and phrases to delete
 
-Delete marketing adjectives, modal prefaces, filler, and false-ease words such
-as `simply`, `just`, `of course`, and `obviously`. Preserve them only in verbatim
+Delete marketing adjectives, modal prefaces, filler, and false-ease words such as
+`simply`, `just`, `of course`, and `obviously`. Preserve them only in verbatim
 quotes, code or proper nouns, or established technical terms whose meaning would
 change. State measurable properties instead of evaluative adjectives.
 
@@ -68,13 +70,11 @@ Before returning text, fix every:
 7. disallowed conditional mood;
 8. closer with no measurable fact.
 
-Do not self-lint counter-examples in the style guide. Review disagreements use
-`conventional-comments`.
+Do not self-lint style-guide counter-examples. Review disagreements use `conventional-comments`.
 
 ## Documentation review
 
-Assess accuracy, completeness, and readability. Verify commands, APIs, flags,
-versions, failure cases, prerequisites, and links. A reader must locate a
-specific answer within 30 seconds. For documentation-gap review and
-`REQUIRED`/`RECOMMENDED` classification, read
+Assess accuracy, completeness, and readability. Verify commands, APIs, flags, versions,
+failure cases, prerequisites, and links. A reader must locate a specific answer within 30 seconds.
+For documentation-gap review and `REQUIRED`/`RECOMMENDED` classification, read
 `skills/reviewing-documentation/SKILL.md`.

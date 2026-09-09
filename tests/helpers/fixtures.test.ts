@@ -5,7 +5,11 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { loadFixture } from "./fixtures";
+import {
+  loadAgentInstructionContext,
+  loadFixture,
+  loadInstructionContext,
+} from "./fixtures";
 
 let root = "";
 
@@ -100,5 +104,44 @@ describe("loadFixture", () => {
       { bugs: [{ id: "x", description: "y", detection_hint: "z" }], minimum_detection: 1 },
     );
     expect(() => loadFixture("code-reviewer", "empty-deps", root)).toThrow(/deps/);
+  });
+});
+
+describe("loadInstructionContext", () => {
+  test("loads labeled files in the requested order without changing bytes", () => {
+    mkdirSync(join(root, "instructions"), { recursive: true });
+    writeFileSync(join(root, "instructions", "a.md"), "first\n", "utf8");
+    writeFileSync(join(root, "instructions", "b.md"), "second\n", "utf8");
+
+    expect(loadInstructionContext(["instructions/a.md", "instructions/b.md"], root)).toBe(
+      "# Instruction file: instructions/a.md\n\nfirst\n\n\n---\n\n# Instruction file: instructions/b.md\n\nsecond\n",
+    );
+  });
+
+  test("fails with the missing path", () => {
+    expect(() => loadInstructionContext([], root)).toThrow(/no paths named/);
+    expect(() => loadInstructionContext(["missing.md"], root)).toThrow(/missing\.md/);
+  });
+});
+
+describe("loadAgentInstructionContext", () => {
+  test("returns the exact body and production model", () => {
+    mkdirSync(join(root, "agents"), { recursive: true });
+    writeFileSync(join(root, "agents", "reader.md"), "---\nname: reader\nmodel: sonnet\n---\n\nBody.\n", "utf8");
+
+    expect(loadAgentInstructionContext("reader", root)).toEqual({
+      body: "Body.\n",
+      model: "sonnet",
+    });
+  });
+
+  test("rejects missing files, frontmatter, and invalid models", () => {
+    mkdirSync(join(root, "agents"), { recursive: true });
+    writeFileSync(join(root, "agents", "bad.md"), "---\nname: bad\nmodel: unknown\n---\nBody\n", "utf8");
+    writeFileSync(join(root, "agents", "open.md"), "---\nname: open\nmodel: sonnet\n", "utf8");
+
+    expect(() => loadAgentInstructionContext("missing", root)).toThrow(/agents\/missing\.md/);
+    expect(() => loadAgentInstructionContext("bad", root)).toThrow(/invalid model/);
+    expect(() => loadAgentInstructionContext("open", root)).toThrow(/invalid frontmatter/);
   });
 });
