@@ -1846,11 +1846,6 @@ describe("principle-untrusted-input-is-data (L2 content tripwire)", () => {
   });
 });
 
-// Consumer metadata drifted: new bare principle-name citations landed and the
-// catalog entry did not follow. This gate makes that drift class
-// deterministic: for every principle-* skill, every file under agents/ or
-// skills/ that cites its backticked name must appear in that skill entry's
-// consumer field. All parsing is precomputed once at module level.
 describe("docs/skills.md principle consumer fields match on-disk citations (L2 tripwire)", () => {
   const SKILLS_DIR = join(REPO_ROOT, "skills");
   const AGENTS_DIR = join(REPO_ROOT, "agents");

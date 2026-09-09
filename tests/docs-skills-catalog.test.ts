@@ -102,7 +102,6 @@ function loadBullets(body: string[]): string[] {
   });
 }
 
-/** Structured fields from one entry body. Invalid bodies return empty fields. */
 function entryFields(body: string[]): Pick<Entry, "description" | "invokedBy" | "phaseContext" | "loads"> {
   const invokedLines = body.filter((line) => line.startsWith(INVOKED_HEADER));
   const phaseLines = body.filter((line) => line.startsWith(PHASE_HEADER));
@@ -477,7 +476,6 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     // Every skill on disk has an entry. Fails loud rather than skipping.
     expect(MISSING_CATALOG_ENTRIES).toEqual([]);
 
-    // The three source-preservation sweeps, over every entry.
     expect(SENTENCE_OFFENDERS).toEqual([]);
     expect(LOAD_SET_OFFENDERS).toEqual([]);
     expect(LOAD_ORDER_OFFENDERS).toEqual([]);
@@ -547,8 +545,6 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     expect(sentence(["Lands a reviewed PR."], description)).toEqual([]);
     expect(sentence(["Lands a merged PR."], description)).not.toEqual([]);
 
-    // Relationship-field shape, including leaf, one-value, long-value, and
-    // final-entry boundaries from the design's edge-case inventory.
     expect(shape(["Leaf skill.", `${INVOKED_HEADER} user`, `${PHASE_HEADER} Any`])).toEqual([]);
     expect(shape(["Leaf skill.", `${PHASE_HEADER} Any`])).not.toEqual([]);
     expect(shape(["Leaf skill.", INVOKED_HEADER, `${PHASE_HEADER} Any`])).not.toEqual([]);
