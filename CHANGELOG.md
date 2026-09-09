@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The skills catalog now shows which skills use each skill and which skills it uses.** The separate relationship table is gone, so each entry shows both directions of every skill load. **What this asks of you:** nothing.
+
 ## [0.96.0] - 2026-09-08
 
 ### Added

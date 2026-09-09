@@ -39,10 +39,19 @@ const REPO_ROOT = join(import.meta.dir, "..");
 const CATALOG = join(REPO_ROOT, "docs", "skills.md");
 const SKILLS_ROOT = join(REPO_ROOT, "skills");
 
-const LOADS_HEADER = "**Loads:**";
-const LOAD_BULLET = /^- `([a-z0-9-]+)`$/;
+const USES_HEADER = "**Uses:**";
+const USED_BY_HEADER = "**Used by:**";
 
-type Entry = { name: string; section: string; body: string[] };
+type Entry = {
+  name: string;
+  section: string;
+  body: string[];
+  description: string[];
+  usedBy: string;
+  loads: string[];
+};
+
+type EntryDraft = Pick<Entry, "name" | "section" | "body">;
 
 // ---------------------------------------------------------------------------
 // Parse and file walk. Scaffolding: no rule lives here.
@@ -56,9 +65,9 @@ type Entry = { name: string; section: string; body: string[] };
  * as catalogEntries() in tests/methodology-not-user-invocable.test.ts.
  */
 function catalogEntries(page: string): Entry[] {
-  const out: Entry[] = [];
+  const out: EntryDraft[] = [];
   let section = "";
-  let current: Entry | undefined;
+  let current: EntryDraft | undefined;
   for (const line of page.split("\n")) {
     if (/^#{2,3} /.test(line)) current = undefined;
     if (line.startsWith("## ")) section = line.trim();
@@ -70,7 +79,7 @@ function catalogEntries(page: string): Entry[] {
     }
     if (current && line.trim() !== "") current.body.push(line);
   }
-  return out;
+  return out.map((entry) => ({ ...entry, ...entryFields(entry.body) }));
 }
 
 /** Every `.md` file under `dir`, at any depth: references/ and prompt templates included. */
@@ -82,23 +91,29 @@ function markdownFiles(dir: string): string[] {
   });
 }
 
-/** The names on the entry's load bullets, in authored order. */
-function loadBullets(body: string[]): string[] {
-  return body.flatMap((line) => {
-    const bullet = LOAD_BULLET.exec(line.trim());
-    return bullet ? [bullet[1] as string] : [];
-  });
+/** The names in a relationship field, in authored order. */
+function relationshipNames(value: string): string[] | undefined {
+  if (value === "None") return [];
+  if (!/^`[a-z0-9-]+`(?:, `[a-z0-9-]+`)*$/.test(value)) return undefined;
+  return [...value.matchAll(/`([a-z0-9-]+)`/g)].map((match) => match[1] as string);
 }
 
-/** True when the body carries the loads header. */
-function hasLoadsHeader(body: string[]): boolean {
-  return body.some((line) => line.trim() === LOADS_HEADER);
-}
+function entryFields(body: string[]): Pick<Entry, "description" | "usedBy" | "loads"> {
+  const usedByLines = body.filter((line) => line.startsWith(USED_BY_HEADER));
+  const usesLines = body.filter((line) => line.startsWith(USES_HEADER));
+  const usedByIndex = body.findIndex((line) => line.startsWith(USED_BY_HEADER));
+  const uses = usesLines.length === 1
+    ? (usesLines[0] as string).slice(USES_HEADER.length).trim()
+    : "";
 
-/** A body line that is neither the loads header nor a load bullet. */
-function isProse(line: string): boolean {
-  const trimmed = line.trim();
-  return trimmed !== LOADS_HEADER && !LOAD_BULLET.test(trimmed);
+  return {
+    description: usedByIndex === -1 ? [] : body.slice(0, usedByIndex),
+    usedBy:
+      usedByLines.length === 1
+        ? (usedByLines[0] as string).slice(USED_BY_HEADER.length).trim()
+        : "",
+    loads: relationshipNames(uses) ?? [],
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -109,53 +124,53 @@ function isProse(line: string): boolean {
 
 /**
  * Shape offenders for one entry body, each naming the offending line. The body
- * must be one or more prose lines, then optionally the loads header followed
- * by one or more load bullets, and nothing after. Eight offenders: (1) zero
- * prose lines; (2) a line starting `- ` that is not exactly a load bullet
- * (a surviving `**Purpose:**` bullet, a trailing clause after a name); (3) a
- * prose line after the loads header; (4) a loads header with no bullet
- * under it; (5) a load bullet with no header above it; (6) a second loads
- * header; (7) a duplicate name among the bullets; (8) any body line with
- * leading whitespace, first line included.
+ * must be one or more prose lines, then one Used by line and one Uses line.
+ * Both relationship fields use comma-separated skill names or `None`.
  */
 function shape(body: string[]): string[] {
   const offenders: string[] = [];
-  const seen = new Set<string>();
-  let headers = 0;
-  let prose = 0;
-  let bullets = 0;
+  const usedByIndexes = body.flatMap((line, index) =>
+    line.startsWith(USED_BY_HEADER) ? [index] : [],
+  );
+  const usesIndexes = body.flatMap((line, index) =>
+    line.startsWith(USES_HEADER) ? [index] : [],
+  );
 
-  for (const line of body) {
+  for (const [index, line] of body.entries()) {
     const trimmed = line.trim();
     if (line !== trimmed) offenders.push(`indented body line: ${JSON.stringify(line)}`);
 
-    if (trimmed === LOADS_HEADER) {
-      headers++;
-      if (headers > 1) offenders.push("second loads header");
+    if (trimmed.startsWith(USED_BY_HEADER) || trimmed.startsWith(USES_HEADER)) {
+      const header = trimmed.startsWith(USED_BY_HEADER) ? USED_BY_HEADER : USES_HEADER;
+      const value = trimmed.slice(header.length).trim();
+      const names = relationshipNames(value);
+      if (names === undefined) offenders.push(`invalid ${header} list: ${JSON.stringify(value)}`);
+      if (names && new Set(names).size !== names.length) {
+        offenders.push(`duplicate name in ${header} list`);
+      }
       continue;
     }
 
-    const bullet = LOAD_BULLET.exec(trimmed);
-    if (bullet) {
-      const name = bullet[1] as string;
-      bullets++;
-      if (headers === 0) offenders.push(`load bullet with no header above it: ${name}`);
-      if (seen.has(name)) offenders.push(`duplicate load: ${name}`);
-      seen.add(name);
-      continue;
+    if ((usedByIndexes[0] ?? body.length) < index) {
+      offenders.push(`prose line after the Used by field: ${JSON.stringify(trimmed)}`);
     }
-
-    if (trimmed.startsWith("- ")) {
-      offenders.push(`bullet that is not a bare load: ${JSON.stringify(trimmed)}`);
-      continue;
-    }
-
-    prose++;
-    if (headers > 0) offenders.push(`prose line after the loads header: ${JSON.stringify(trimmed)}`);
   }
 
-  if (prose === 0) offenders.push("no prose line");
-  if (headers > 0 && bullets === 0) offenders.push("loads header with no bullet under it");
+  if (usedByIndexes.length !== 1) {
+    offenders.push(`${usedByIndexes.length} Used by fields`);
+  }
+  if (usesIndexes.length !== 1) {
+    offenders.push(`${usesIndexes.length} Uses fields`);
+  }
+  if (usedByIndexes.length === 1 && usesIndexes.length === 1) {
+    const usedByIndex = usedByIndexes[0] as number;
+    const usesIndex = usesIndexes[0] as number;
+    if (usedByIndex === 0) offenders.push("no description before the Used by field");
+    if (usesIndex !== usedByIndex + 1) {
+      offenders.push("Uses does not immediately follow Used by");
+    }
+    if (usesIndex !== body.length - 1) offenders.push("content follows the Uses field");
+  }
   return offenders;
 }
 
@@ -166,7 +181,7 @@ function shape(body: string[]): string[] {
  * A missing/empty description and a description with no sentence terminator are
  * each a named offender — no skip, no vacuous pass.
  */
-function sentence(body: string[], description: string): string[] {
+function sentence(descriptionLines: string[], description: string): string[] {
   const value = description.trim();
   if (value === "") return ["description is missing or empty"];
 
@@ -174,7 +189,7 @@ function sentence(body: string[], description: string): string[] {
   if (!cut) return [`description has no sentence terminator: ${JSON.stringify(value)}`];
 
   const expected = squash(cut[0]).trim();
-  const actual = squash(body.filter(isProse).join(" ")).trim();
+  const actual = squash(descriptionLines.join(" ")).trim();
 
   return actual === expected
     ? []
@@ -183,29 +198,29 @@ function sentence(body: string[], description: string): string[] {
 
 /**
  * Load-set offenders, each naming the offending name: a derived name missing
- * from the bullets, a listed name absent from the derived set, and a listed name
+ * from the field, a listed name absent from the derived set, and a listed name
  * that is not a real skill at all. The second one is the direction check — a
  * skill that only *names* another skill has no edge to it, so listing it here
  * would draw an arrow the source never authorized.
  */
-function loadSet(bullets: string[], derived: Set<string>, names: Set<string>): string[] {
-  const listed = new Set(bullets);
+function loadSet(values: string[], derived: Set<string>, names: Set<string>): string[] {
+  const listed = new Set(values);
   return [
     ...[...derived].filter((name) => !listed.has(name)).map((name) => `loads omit ${name}`),
-    ...bullets.filter((name) => !derived.has(name)).map((name) => `loads list ${name}, which its files never load`),
-    ...bullets.filter((name) => !names.has(name)).map((name) => `loads list ${name}, which is not a skill`),
+    ...values.filter((name) => !derived.has(name)).map((name) => `loads list ${name}, which its files never load`),
+    ...values.filter((name) => !names.has(name)).map((name) => `loads list ${name}, which is not a skill`),
   ];
 }
 
 /**
- * Order offenders: the authored bullet names compared to that same array under
+ * Order offenders: the authored names compared to that same array under
  * `[...names].sort()` — codepoint order, so `pr-verify` precedes
  * `principle-fail-closed`. Names the first name out of place.
  */
-function loadOrder(bullets: string[]): string[] {
-  const sorted = [...bullets].sort();
-  const at = bullets.findIndex((name, index) => name !== sorted[index]);
-  return at === -1 ? [] : [`loads out of order at ${bullets[at]}, expected ${sorted[at]}`];
+function loadOrder(values: string[]): string[] {
+  const sorted = [...values].sort();
+  const at = values.findIndex((name, index) => name !== sorted[index]);
+  return at === -1 ? [] : [`loads out of order at ${values[at]}, expected ${sorted[at]}`];
 }
 
 /**
@@ -274,96 +289,205 @@ const shapeOffenders = (name: string): string[] =>
   shape(bodyOf(name)).map((offender) => `${name}: ${offender}`);
 
 const sentenceOffenders = (name: string): string[] =>
-  sentence(bodyOf(name), description(SKILL_MD_TEXT.get(name) ?? "")).map(
+  sentence(ENTRY_BY_NAME.get(name)?.description ?? [], description(SKILL_MD_TEXT.get(name) ?? "")).map(
     (offender) => `${name}: ${offender}`,
   );
 
 const loadSetOffenders = (name: string): string[] =>
   loadSet(
-    loadBullets(bodyOf(name)),
+    ENTRY_BY_NAME.get(name)?.loads ?? [],
     deriveLoads(ALL_MD_TEXT.get(name) ?? "", name, NAMES),
     NAMES,
   ).map((offender) => `${name}: ${offender}`);
 
 const loadOrderOffenders = (name: string): string[] =>
-  loadOrder(loadBullets(bodyOf(name))).map((offender) => `${name}: ${offender}`);
+  loadOrder(ENTRY_BY_NAME.get(name)?.loads ?? []).map((offender) => `${name}: ${offender}`);
+
+const MISSING_CATALOG_ENTRIES = SKILL_DIRECTORIES.filter((name) => !ENTRY_BY_NAME.has(name));
+const SENTENCE_OFFENDERS = SKILL_DIRECTORIES.flatMap(sentenceOffenders);
+const LOAD_SET_OFFENDERS = SKILL_DIRECTORIES.flatMap(loadSetOffenders);
+const LOAD_ORDER_OFFENDERS = SKILL_DIRECTORIES.flatMap(loadOrderOffenders);
+const SHAPE_OFFENDERS = SKILL_DIRECTORIES.flatMap(shapeOffenders);
+const ALL_EDGES = edgeSet(ALL_MD_TEXT);
+const NAMED_EDGES = new Set(
+  [...ALL_MD_TEXT].flatMap(([owner, text]) =>
+    [...namedSkills(text, owner, NAMES)].map((name) => `${owner} -> ${name}`),
+  ),
+);
+const SKILL_MD_EDGES = edgeSet(SKILL_MD_TEXT);
+const ENTRIES_WITH_USES = ENTRIES.filter((entry) => entry.loads.length > 0).length;
+const ENTRIES_WITHOUT_USES = ENTRIES.filter((entry) => entry.loads.length === 0).length;
+const EMPTY_ENTRY_BODIES = ENTRIES.filter((entry) => entry.body.length === 0).map(
+  (entry) => entry.name,
+);
+const LOAD_EDGES_WITHOUT_MENTIONS = [...ALL_EDGES].filter((edge) => !NAMED_EDGES.has(edge));
+const SKILL_MD_EDGES_OUTSIDE_FULL_SCAN = [...SKILL_MD_EDGES].filter(
+  (edge) => !ALL_EDGES.has(edge),
+);
+
+function usageReciprocityOffenders(entries: Entry[]): string[] {
+  const expected = new Map(entries.map((entry) => [entry.name, [] as string[]]));
+  const unknownLoads: string[] = [];
+
+  for (const entry of entries) {
+    for (const load of entry.loads) {
+      const usedBy = expected.get(load);
+      if (!usedBy) unknownLoads.push(`${entry.name}: loads unknown skill ${load}`);
+      else usedBy.push(entry.name);
+    }
+  }
+
+  return [
+    ...unknownLoads,
+    ...entries.flatMap((entry) => {
+      const actual = relationshipNames(entry.usedBy);
+      if (!actual) return [`${entry.name}: invalid Used by list ${JSON.stringify(entry.usedBy)}`];
+      const names = (expected.get(entry.name) ?? []).sort();
+      return actual.length === names.length && actual.every((name, index) => name === names[index])
+        ? []
+        : [`${entry.name}: expected Used by ${JSON.stringify(names)}, got ${JSON.stringify(actual)}`];
+    }),
+  ];
+}
+
+function authoringContractOffenders(text: string): string[] {
+  const usedBy = text.indexOf(USED_BY_HEADER);
+  const uses = text.indexOf(USES_HEADER);
+  return [
+    ...(usedBy === -1 ? [`create-team-skill omits ${USED_BY_HEADER}`] : []),
+    ...(uses === -1 ? [`create-team-skill omits ${USES_HEADER}`] : []),
+    ...(usedBy !== -1 && uses !== -1 && uses < usedBy
+      ? ["create-team-skill orders Uses before Used by"]
+      : []),
+  ];
+}
+
+function removedRelationshipPresentation(text: string): string[] {
+  return [
+    ...(/^## Skill ↔ agent ↔ phase$/m.test(text) ? ["relationship heading remains"] : []),
+    ...(text.includes("#skill--agent--phase") ? ["relationship anchor link remains"] : []),
+  ];
+}
+
+const CREATE_TEAM_SKILL_OFFENDERS = authoringContractOffenders(
+  read(join(REPO_ROOT, ".claude", "skills", "create-team-skill", "SKILL.md")),
+);
+const CATALOG_TEXT = read(CATALOG);
+const CATALOG_INTRODUCTION = CATALOG_TEXT.slice(
+  0,
+  CATALOG_TEXT.indexOf("\n## Entry-point skills"),
+);
+const REMOVED_RELATIONSHIP_OFFENDERS = removedRelationshipPresentation(CATALOG_TEXT);
+const MISSING_INTRODUCTION_LABELS = [USED_BY_HEADER, USES_HEADER].filter(
+  (label) => !CATALOG_INTRODUCTION.includes(label),
+);
+const CONTEXT_FIELD_OFFENDERS = CATALOG_TEXT.includes("**Context:**")
+  ? ["context field remains"]
+  : [];
+const USAGE_RECIPROCITY_OFFENDERS = usageReciprocityOffenders(ENTRIES);
+const LONG_USED_BY_BODY = [
+  "Long relationship.",
+  `${USED_BY_HEADER} ${Array.from({ length: 40 }, (_, index) => `\`skill-${index}\``).join(", ")}`,
+  `${USES_HEADER} None`,
+];
+const FINAL_ENTRY_BODY = catalogEntries([
+  "## Methodology skills",
+  "### [final-skill](target)",
+  "Final skill.",
+  `${USED_BY_HEADER} None`,
+  `${USES_HEADER} None`,
+  "## Name-collision pairs",
+  "not part of the entry",
+].join("\n"))[0]?.body;
 
 describe("docs/skills.md catalog matches the skills on disk", () => {
-  test("every entry's shape, sentence, load set, and load order match disk", () => {
+  test("catalog entries preserve sourced descriptions and direct loads", () => {
     // Seven vacuity guards. Each names the property that vanished, because a
     // mis-scoped haystack makes every sweep below pass for the wrong reason
     // (docs/testing.md, "Prove a negative check can find a positive").
     expect(SKILL_DIRECTORIES.length).toBeGreaterThan(60); // (1) skills/ tree parsed
     expect(ENTRIES.length).toBeGreaterThan(60); // (2) page parsed
-    expect(ENTRIES.filter((entry) => hasLoadsHeader(entry.body)).length).toBeGreaterThan(0); // (3)
-    expect(ENTRIES.filter((entry) => !hasLoadsHeader(entry.body)).length).toBeGreaterThan(0); // (4)
-    expect(ENTRIES.filter((entry) => entry.body.length === 0).map((entry) => entry.name)).toEqual(
-      [],
-    ); // (5) every parsed body non-empty
+    expect(ENTRIES_WITH_USES).toBeGreaterThan(0); // (3)
+    expect(ENTRIES_WITHOUT_USES).toBeGreaterThan(0); // (4)
+    expect(EMPTY_ENTRY_BODIES).toEqual([]); // (5) every parsed body non-empty
 
     // (6) Discrimination axis: a load is STRICTLY narrower than a mention. Every
     // load edge is also a mention edge, and dozens of mention edges are not load
     // edges — a `principle-*` citation, a "see also", a name in prose. An equal
     // pair means the extractor collapsed back into a name grep, which is exactly
     // the wrong relation: it would draw `b -> a` from `b` merely naming `a`.
-    const allEdges = edgeSet(ALL_MD_TEXT);
-    const namedEdges = new Set(
-      [...ALL_MD_TEXT].flatMap(([owner, text]) =>
-        [...namedSkills(text, owner, NAMES)].map((name) => `${owner} -> ${name}`),
-      ),
-    );
-    expect([...allEdges].filter((edge) => !namedEdges.has(edge))).toEqual([]);
-    expect(allEdges.size).toBeLessThan(namedEdges.size);
+    expect(LOAD_EDGES_WITHOUT_MENTIONS).toEqual([]);
+    expect(ALL_EDGES.size).toBeLessThan(NAMED_EDGES.size);
 
     // (7) Depth axis: the edge set over the SKILL.md files alone is a STRICT
     // subset of the set over every `.md` file. Dozens of edges live only in
     // references/ and the two prompt templates, so the margin is wide; an equal
     // pair means the walk shrank — a shallow glob or a missed references/
     // directory.
-    const skillMdEdges = edgeSet(SKILL_MD_TEXT);
-    expect([...skillMdEdges].filter((edge) => !allEdges.has(edge))).toEqual([]);
-    expect(skillMdEdges.size).toBeLessThan(allEdges.size);
+    expect(SKILL_MD_EDGES_OUTSIDE_FULL_SCAN).toEqual([]);
+    expect(SKILL_MD_EDGES.size).toBeLessThan(ALL_EDGES.size);
 
     // Every skill on disk has an entry. Fails loud rather than skipping.
-    expect(SKILL_DIRECTORIES.filter((name) => !ENTRY_BY_NAME.has(name))).toEqual([]);
+    expect(MISSING_CATALOG_ENTRIES).toEqual([]);
 
-    // The four sweeps, over every entry.
-    expect(SKILL_DIRECTORIES.flatMap(shapeOffenders)).toEqual([]);
-    expect(SKILL_DIRECTORIES.flatMap(sentenceOffenders)).toEqual([]);
-    expect(SKILL_DIRECTORIES.flatMap(loadSetOffenders)).toEqual([]);
-    expect(SKILL_DIRECTORIES.flatMap(loadOrderOffenders)).toEqual([]);
+    expect(SENTENCE_OFFENDERS).toEqual([]);
+    expect(LOAD_SET_OFFENDERS).toEqual([]);
+    expect(LOAD_ORDER_OFFENDERS).toEqual([]);
+  });
+
+  test("catalog Used by and Uses fields are exact reciprocals", () => {
+    expect(SKILL_DIRECTORIES.length).toBe(90);
+    expect(ENTRIES.length).toBe(90);
+    expect(SHAPE_OFFENDERS).toEqual([]);
+    expect(USAGE_RECIPROCITY_OFFENDERS).toEqual([]);
+  });
+
+  test("create-team-skill instructions preserve the reciprocal call graph contract", () => {
+    expect(CREATE_TEAM_SKILL_OFFENDERS).toEqual([]);
+  });
+
+  test("catalog omits the relationship section, its anchor link, and context fields", () => {
+    expect(CATALOG_TEXT.length).toBeGreaterThan(0);
+    expect(REMOVED_RELATIONSHIP_OFFENDERS).toEqual([]);
+    expect(MISSING_INTRODUCTION_LABELS).toEqual([]);
+    expect(CONTEXT_FIELD_OFFENDERS).toEqual([]);
   });
 
   test("the page-side rules each see a planted positive", () => {
     // A well-formed body, used as the negative control for every rule below.
     const clean = [
       "Lands a reviewed PR.",
-      LOADS_HEADER,
-      "- `pr-verify`",
-      "- `principle-fail-closed`",
+      `${USED_BY_HEADER} None`,
+      `${USES_HEADER} \`pr-verify\`, \`principle-fail-closed\``,
     ];
     expect(shape(clean)).toEqual([]);
 
     // Leftover bullet: a `**Purpose:**` line that survived the rewrite.
-    expect(shape(["Lands a reviewed PR.", "- **Purpose:** Lands a reviewed PR."])).not.toEqual([]);
+    expect(
+      shape([
+        "Lands a reviewed PR.",
+        `${USED_BY_HEADER} None`,
+        "- **Purpose:** Lands a reviewed PR.",
+      ]),
+    ).not.toEqual([]);
 
-    // Second loads header.
-    expect(shape([...clean, LOADS_HEADER, "- `shipit`"])).not.toEqual([]);
+    // Second Uses field.
+    expect(shape([...clean, `${USES_HEADER} \`shipit\``])).not.toEqual([]);
 
     // Trailing clause after a name.
     expect(
-      shape(["Lands a reviewed PR.", LOADS_HEADER, "- `pr-verify` for the checks"]),
+      shape(["Lands a reviewed PR.", `${USED_BY_HEADER} None`, `${USES_HEADER} \`pr-verify\` for the checks`]),
     ).not.toEqual([]);
 
-    // Duplicate name among the bullets.
+    // Duplicate name in the comma list.
     expect(
-      shape(["Lands a reviewed PR.", LOADS_HEADER, "- `pr-verify`", "- `pr-verify`"]),
+      shape(["Lands a reviewed PR.", `${USED_BY_HEADER} None`, `${USES_HEADER} \`pr-verify\`, \`pr-verify\``]),
     ).not.toEqual([]);
 
     // Indented line, as the first line and as a later line.
     expect(shape(["  Lands a reviewed PR."])).not.toEqual([]);
     expect(
-      shape(["Lands a reviewed PR.", LOADS_HEADER, "- `pr-verify`", "  continued"]),
+      shape(["Lands a reviewed PR.", `${USED_BY_HEADER} None`, `${USES_HEADER} None`, "  continued"]),
     ).not.toEqual([]);
 
     // Drifted sentence: the page no longer copies the description's first sentence.
@@ -371,7 +495,49 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     expect(sentence(["Lands a reviewed PR."], description)).toEqual([]);
     expect(sentence(["Lands a merged PR."], description)).not.toEqual([]);
 
-    // Phantom name: a bullet naming no skill on disk.
+    expect(shape(["Leaf skill.", `${USED_BY_HEADER} None`, `${USES_HEADER} None`])).toEqual([]);
+    expect(shape(["Leaf skill."])).not.toEqual([]);
+    expect(shape(["Leaf skill.", USED_BY_HEADER])).not.toEqual([]);
+    expect(
+      shape([
+        "Leaf skill.",
+        `${USED_BY_HEADER} None`,
+        `${USED_BY_HEADER} \`agent\``,
+        `${USES_HEADER} None`,
+      ]),
+    ).not.toEqual([]);
+    expect(shape(LONG_USED_BY_BODY)).toEqual([]);
+    expect(FINAL_ENTRY_BODY).toEqual([
+      "Final skill.",
+      `${USED_BY_HEADER} None`,
+      `${USES_HEADER} None`,
+    ]);
+
+    const reciprocal = catalogEntries([
+      "## Methodology skills",
+      "### [a](target)",
+      "A skill.",
+      `${USED_BY_HEADER} None`,
+      `${USES_HEADER} \`b\``,
+      "### [b](target)",
+      "B skill.",
+      `${USED_BY_HEADER} \`a\``,
+      `${USES_HEADER} None`,
+    ].join("\n"));
+    expect(usageReciprocityOffenders(reciprocal)).toEqual([]);
+    expect(
+      usageReciprocityOffenders(
+        reciprocal.map((entry) => entry.name === "b" ? { ...entry, usedBy: "None" } : entry),
+      ),
+    ).not.toEqual([]);
+
+    expect(
+      removedRelationshipPresentation(
+        "[old link](#skill--agent--phase)\n\n## Skill ↔ agent ↔ phase\n",
+      ),
+    ).toEqual(["relationship heading remains", "relationship anchor link remains"]);
+
+    // Phantom name: a field naming no skill on disk.
     const derived = new Set(["pr-verify", "principle-fail-closed"]);
     expect(loadSet(["pr-verify", "principle-fail-closed"], derived, NAMES)).toEqual([]);
     expect(
