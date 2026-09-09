@@ -12,15 +12,15 @@ import {
   FALLBACK_CANDIDATE_PATH,
 } from "./helpers/unslop-cases";
 import {
-  RULE_26_REPLACEMENTS,
-  RULE_26_TERMS,
+  VAGUE_METAPHOR_REWRITES,
+  VAGUE_METAPHORS,
   extractUntrustedEvidence,
   longestBacktickRun,
   normalizedLineCount,
-  rule13RewritePreservesMeaning,
-  rule18RewritePreservesMeaning,
-  rule26RewritePreservesMeaning,
-  rule26Terms,
+  punctuationRewritePreservesMeaning,
+  instructionRewritePreservesMeaning,
+  vagueMetaphorRewritePreservesMeaning,
+  vagueMetaphorTerms,
   unslopCoreMeaningChecks,
   wrapUntrustedEvidence,
 } from "./helpers/unslop-core";
@@ -31,48 +31,11 @@ const readOrEmpty = (file: string): string => (existsSync(file) ? read(file) : "
 
 const UNSLOP = path("skills", "unslop", "SKILL.md");
 const RULES = path("skills", "unslop", "references", "rules.md");
-const LICENSE = path("skills", "unslop", "LICENSE");
 const OPENAI = path("skills", "unslop", "agents", "openai.yaml");
 const EVALS = path("tests", "unslop.evals.ts");
 const COMPLETE_CORE_OUTPUT = `ZERO: The API returns cached data.
 ONE: Operators may use this option.
 MANY: The cache module stores request IDs.`;
-
-const UPSTREAM_IDS = [
-  3, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23,
-  24, 25, 26, 27, 28, 29, 30, 31, 32, 33,
-];
-
-const UPSTREAM_MEANINGS: Record<number, string> = {
-  3: "superficial-ing",
-  5: "vague-attribution",
-  7: "ai-vocabulary",
-  8: "fancy-is",
-  9: "not-just-x-but-y",
-  10: "rule-of-three",
-  11: "synonym-cycling",
-  12: "false-ranges",
-  13: "em-dash",
-  14: "colon",
-  15: "boldface",
-  16: "inline-header-lists",
-  17: "title-case-headings",
-  18: "decorative-emoji",
-  19: "curly-quotes",
-  20: "chatbot-phrases",
-  22: "sycophancy",
-  23: "filler",
-  24: "excessive-hedging",
-  25: "generic-conclusions",
-  26: "abstract-metaphor-nouns",
-  27: "mechanism-fact-not-feeling",
-  28: "dense-sentences",
-  29: "active-voice",
-  30: "cut-adverbs-stronger-verb",
-  31: "plain-word",
-  32: "mannered-prose",
-  33: "over-compression",
-};
 
 function preloads(file: string): string[] {
   const lines = frontmatter(readOrEmpty(file)).split("\n");
@@ -91,20 +54,6 @@ function preloads(file: string): string[] {
   return names;
 }
 
-function ownershipRows(text: string): { id: number; owner: string }[] {
-  return [...text.matchAll(/^\|\s*(\d+)\s*\|\s*`?([a-z-]+)`?\s*\|/gm)].map(
-    (match) => ({ id: Number(match[1]), owner: match[2] ?? "" }),
-  );
-}
-
-function meaningRows(text: string): Record<number, string> {
-  return Object.fromEntries(
-    [...text.matchAll(/^\|\s*(\d+)\s*\|\s*`?[a-z-]+`?\s*\|\s*`([^`]+)`\s*\|/gm)].map(
-      (match) => [Number(match[1]), match[2] ?? ""],
-    ),
-  );
-}
-
 function orderedLoads(file: string): string[] {
   return loadedSkills(readOrEmpty(file)).filter(
     (name) => name === "unslop" || name === "writing-prose",
@@ -121,50 +70,34 @@ function registry(): {
   };
 }
 
-test("unslop package and ownership contract", () => {
+test("unslop package is Team-authored and always applies", () => {
   const router = readOrEmpty(UNSLOP);
   const rules = readOrEmpty(RULES);
-  const license = readOrEmpty(LICENSE);
   const manifest = readOrEmpty(OPENAI);
   const metadata = frontmatter(router);
-  const ownership = ownershipRows(rules);
-  const ids = ownership.map(({ id }) => id).sort((a, b) => a - b);
 
   expect(existsSync(UNSLOP)).toBe(true);
   expect(existsSync(RULES)).toBe(true);
-  expect(existsSync(LICENSE)).toBe(true);
+  expect(existsSync(path("skills", "unslop", "LICENSE"))).toBe(false);
   expect(existsSync(OPENAI)).toBe(true);
   expect(metadata).toMatch(/^name:\s*unslop\s*$/m);
   expect(metadata).toMatch(/^user-invocable:\s*false\s*$/m);
   expect(metadata).not.toMatch(/^disable-model-invocation:/m);
   expect(description(router).length).toBeGreaterThan(0);
   expect(description(router).length).toBeLessThanOrEqual(150);
+  expect(description(router)).toBe(
+    "Use whenever writing or revising prose. Must always apply.",
+  );
   expect(router.split("\n").length - Number(router.endsWith("\n"))).toBeLessThanOrEqual(80);
   expect(manifest).toMatch(/^interface:\s*$/m);
   expect(manifest).toMatch(/^\s+display_name:\s*"Unslop"\s*$/m);
   expect(manifest).toMatch(/^\s+short_description:\s*"[^"]{25,64}"\s*$/m);
-  expect(manifest).toMatch(/^\s+default_prompt:\s*"Use \$unslop to .+\."\s*$/m);
+  expect(manifest).toContain('default_prompt: "Use $unslop to remove AI-writing patterns without changing meaning."');
   expect(manifest).not.toMatch(/allow_implicit_invocation:\s*false/);
-  expect(license).toContain("MIT License");
-  expect(license).toContain("Copyright (c) 2026 Lauren Tan");
-  expect(rules).toContain("https://raw.githubusercontent.com/cursor/plugins/main/pstack/skills/unslop/SKILL.md");
-  expect(rules).toContain("2026-09-09");
-  expect(ids).toEqual(UPSTREAM_IDS);
-  expect(meaningRows(rules)).toEqual(UPSTREAM_MEANINGS);
-  expect(new Set(ids).size).toBe(UPSTREAM_IDS.length);
-  expect(ids).toContain(5);
-  expect(ids).toContain(22);
-  expect(ids).not.toContain(4);
-  expect(ids).not.toContain(21);
-  expect(ownership.every(({ owner }) => owner === "unslop" || owner === "writing-prose")).toBe(true);
-  expect(ownership.find(({ id }) => id === 3)?.owner).toBe("unslop");
-  expect(ownership.find(({ id }) => id === 7)?.owner).toBe("unslop");
-  expect(squash(rules)).toContain("highlighting ensuring reflecting showcasing fostering");
-  expect(squash(rules)).toContain("delete unsupported");
-  expect(squash(rules)).toContain("concrete facts");
-  expect(squash(rules)).toMatch(/real (?:cited )?sources?/i);
-  expect(squash(rules)).toContain("additionally crucial delve enduring enhance fostering garner interplay intricate landscape pivotal showcase tapestry testament underscore vibrant");
-  expect(squash(rules)).toMatch(/additionally.*writing-prose/i);
+  expect(rules).toContain("https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md");
+  expect(rules).toMatch(/inspired by Lauren Tan/i);
+  expect(rules).toMatch(/authored for Team/i);
+  expect(rules).not.toMatch(/adapted .*MIT|upstream rule|\|\s*ID\s*\|/i);
 });
 
 test("ordered prose composition preserves semantics and contracts", () => {
@@ -210,45 +143,27 @@ test("ordered prose composition preserves semantics and contracts", () => {
   expect(writing).toMatch(/before .*edit/i);
 });
 
-test("owned rule adaptations preserve upstream detection and rewrite details", () => {
-  const source = readOrEmpty(RULES);
-  const rules = squash(source);
+test("Team rule groups cover evidence, directness, concrete language, format, and voice", () => {
+  const rules = squash(readOrEmpty(RULES));
 
-  expect(rules).toContain("Detect “Experts believe”, “Industry reports suggest”, and “Some critics argue”");
-  expect(rules).toContain("Apply `landscape` and `tapestry` only when abstract");
-  expect(rules).toContain("Replace “serves as”, “stands as”, “boasts”, and “features” with `is` or `has`");
-  expect(rules).toContain("“protagonist”, “main character”, “central figure”, and “hero”");
-  expect(rules).toContain("List the topics directly");
-  expect(rules).toContain("Avoid every em dash");
-  expect(rules).toContain("Do not use parentheses, an en dash, or a hyphen as a dash substitute");
-  expect(rules).toContain("Keep colons before lists or examples");
-  expect(rules).toContain("proper noun or acronym");
-  expect(rules).toContain("bold lead-in that ends in a period, names the item, and adds new detail is allowed");
-  expect(rules).toContain("I hope this helps!”, “Let me know if...”, “Of course!”, “Certainly!”, and “Found the smoking gun!”");
-  expect(rules).toContain("Great question!” and “You're absolutely right!”");
-  expect(rules).toContain("In order to” with “To” and “Due to the fact that” with “Because");
-  expect(rules).toContain("could potentially possibly be argued that it might” with “may");
-  expect(rules).toContain("The future looks bright.” State specific plans or facts");
-  expect(rules).toContain(
-    "substrate, wedge, vector, locus, vantage, nexus, primitive as a noun, harness as a metaphor, surface in “API surface”, bedrock, scaffolding as a metaphor, modality, paradigm, gold-plating, ratchet as a metaphor, evacuate for moving code, endgame, north star, and flywheel",
-  );
-  expect(source).toContain("| `substrate` | `base` |");
-  expect(source).toContain("| `wedge in` | `add` |");
-  expect(source).toContain("| `vector` | `way` or `method` |");
-  expect(source).toContain("| `gold-plating` | `more than the job needs` |");
-  expect(source).toContain("| `ratchet` | The mechanism's real name or `a limit that only tightens` |");
-  expect(source).toContain("| `evacuate` | `move out` |");
-  expect(source).toContain("| `endgame` | `the last phase` |");
-  expect(rules).toContain("could appear unchanged in another project's docs");
-  expect(rules).toContain("If a reader must backtrack, split the sentence or drop clauses");
-  expect(rules).toContain("`is`, `are`, `was`, or `were` plus a past participle and name the actor");
-  expect(rules).toContain("runs quickly” with “is fast” or a number");
-  expect(rules).toContain("significantly improves” with the measured delta");
-  expect(rules).toContain("“utilize” and “leverage” with “use”, “facilitate” with “help”, “numerous” with “many”, and “in the event that” with “if”");
-  expect(rules).toContain("aphorisms, rhetorical fragments, personified code, figurative verbs, and stock framing phrases");
-  expect(rules).toContain("a dial worth turning” with “a parameter worth varying");
-  expect(rules).toContain("Rule 26 owns metaphor nouns");
-  expect(rules).toContain("Parser rejects bad date → exit 2, no write” with a complete sentence");
+  expect(rules).toContain("Claims must earn their place");
+  expect(rules).toContain("State facts directly");
+  expect(rules).toContain("Name the concrete subject");
+  expect(rules).toContain("Format only for structure");
+  expect(rules).toContain("Remove assistant mannerisms");
+  expect(rules).toMatch(/evidence does not support/i);
+  expect(rules).toMatch(/name the source/i);
+  expect(rules).toMatch(/real uncertainty/i);
+  expect(rules).toMatch(/groups of three/i);
+  expect(rules).toMatch(/actual endpoints/i);
+  expect(rules).toMatch(/file, function, service, boundary, action/i);
+  expect(rules).toContain('"center of gravity", "moves the needle", "surface area", "shape of the problem", "the right seam", "unlocks", and "tees up"');
+  expect(rules).toMatch(/headings, lists, and bold text/i);
+  expect(rules).toMatch(/sentence case/i);
+  expect(rules).toMatch(/decorative emoji/i);
+  expect(rules).toMatch(/greetings, congratulations, praise/i);
+  expect(rules).toMatch(/offers for more help/i);
+  expect(rules).toMatch(/claim, evidence, normative force, uncertainty, and time relation/i);
 });
 test("registry-derived producer coverage", () => {
   const inventory = registry();
@@ -324,10 +239,10 @@ test("unslop live-model coverage stays periodic", () => {
 test("unslop live-model gates require complete semantic and exact-source results", () => {
   const evals = readOrEmpty(EVALS);
 
-  expect(evals).toContain("unsupportedRule3 === UNSUPPORTED_RULE3_FACT");
-  expect(evals).toContain("expect(unsupportedRule3).toBe(UNSUPPORTED_RULE3_FACT)");
+  expect(evals).toContain("unsupportedClaim === UNSUPPORTED_CLAIM_FACT");
+  expect(evals).toContain("expect(unsupportedClaim).toBe(UNSUPPORTED_CLAIM_FACT)");
   expect(evals).toContain('expect(exactQuote).toBe("may remain")');
-  expect(evals).toContain('expect(exactUserText).toBe("[USER] crucial")');
+  expect(evals).toContain('expect(exactUserText).toBe("[USER] seamless")');
   expect(evals.match(/expect\(researchReturn\([^\n]+\)\)\.toBe\((?:FILE_FINDER_RETURN|RESEARCHER_RETURN)\)/g)?.length).toBe(4);
 });
 
@@ -346,7 +261,7 @@ test("fallback candidate has valid fixture evidence before the prose-read failur
     `${FALLBACK_CANDIDATE_MARKER} ${FALLBACK_CANDIDATE_PATH}:1 ${FALLBACK_CANDIDATE_FACT}`,
   );
   expect(FALLBACK_CANDIDATE).not.toContain("missing.pseudo");
-  expect(FALLBACK_CANDIDATE).not.toMatch(/lowercases labels|additionally|pivotal/i);
+  expect(FALLBACK_CANDIDATE).not.toMatch(/lowercases labels|seamless|robust/i);
 });
 
 test("fallback acceptance requires a successful Read of its cited source", () => {
@@ -512,114 +427,88 @@ test("core behavior accepts storage with an unrelated exclusion", () => {
   expect(unslopCoreMeaningChecks(output).many).toBe(true);
 });
 
-test("Rule 13 behavior rejects em dashes and substitute punctuation", () => {
+test("Punctuation behavior rejects em dashes and substitute punctuation", () => {
   const emDash = "The worker retries once—the request can still fail.";
   const enDash = "The worker retries once – the request can still fail.";
   const hyphen = "The worker retries once - the request can still fail.";
   const parentheses = "The worker retries once (the request can still fail).";
 
-  expect(rule13RewritePreservesMeaning(emDash)).toBe(false);
-  expect(rule13RewritePreservesMeaning(enDash)).toBe(false);
-  expect(rule13RewritePreservesMeaning(hyphen)).toBe(false);
-  expect(rule13RewritePreservesMeaning(parentheses)).toBe(false);
+  expect(punctuationRewritePreservesMeaning(emDash)).toBe(false);
+  expect(punctuationRewritePreservesMeaning(enDash)).toBe(false);
+  expect(punctuationRewritePreservesMeaning(hyphen)).toBe(false);
+  expect(punctuationRewritePreservesMeaning(parentheses)).toBe(false);
 });
 
-test("Rule 13 behavior accepts periods and commas", () => {
+test("Punctuation behavior accepts periods and commas", () => {
   const period = "The worker retries once. The request can still fail.";
   const comma = "The worker retries once, but the request can still fail.";
 
-  expect(rule13RewritePreservesMeaning(period)).toBe(true);
-  expect(rule13RewritePreservesMeaning(comma)).toBe(true);
+  expect(punctuationRewritePreservesMeaning(period)).toBe(true);
+  expect(punctuationRewritePreservesMeaning(comma)).toBe(true);
 });
 
-test("Rule 18 behavior accepts both imperative orders", () => {
-  expect(rule18RewritePreservesMeaning("Deploy after tests pass.")).toBe(true);
-  expect(rule18RewritePreservesMeaning("After tests pass, deploy.")).toBe(true);
+test("Instruction behavior accepts both imperative orders", () => {
+  expect(instructionRewritePreservesMeaning("Deploy after tests pass.")).toBe(true);
+  expect(instructionRewritePreservesMeaning("After tests pass, deploy.")).toBe(true);
 });
 
-test("Rule 18 behavior rejects decorative emoji and noun fragments", () => {
-  expect(rule18RewritePreservesMeaning("✅ After tests pass, deploy.")).toBe(false);
-  expect(rule18RewritePreservesMeaning("Deployment: After tests pass.")).toBe(false);
+test("Instruction behavior rejects decorative emoji and noun fragments", () => {
+  expect(instructionRewritePreservesMeaning("✅ After tests pass, deploy.")).toBe(false);
+  expect(instructionRewritePreservesMeaning("Deployment: After tests pass.")).toBe(false);
 });
 
-test("Rule 26 detection covers every upstream metaphor term", () => {
-  const text = "substrate wedge vector locus vantage nexus primitive harness surface bedrock scaffolding modality paradigm gold-plating ratchet evacuate endgame north star flywheel";
+test("Vague-metaphor detection covers Team terms", () => {
+  const text = "center of gravity moves the needle surface area shape of the problem right seam unlocks tees up";
 
-  expect(rule26Terms(text)).toEqual([...RULE_26_TERMS]);
+  expect(vagueMetaphorTerms(text)).toEqual([...VAGUE_METAPHORS]);
 });
 
-test("Rule 26 replacements match the upstream named rewrites", () => {
-  expect(RULE_26_REPLACEMENTS).toEqual({
-    substrate: "base",
-    wedge: "add",
-    vector: "way or method",
-    "gold-plating": "more than the job needs",
-    ratchet: "the mechanism's real name or a limit that only tightens",
-    evacuate: "move out",
-    endgame: "the last phase",
+test("Vague-metaphor rewrites use Team guidance", () => {
+  expect(VAGUE_METAPHOR_REWRITES).toEqual({
+    "center of gravity": "name the responsible component",
+    "moves the needle": "state the measured change",
+    "surface area": "name the files, interfaces, or endpoints",
+    "shape of the problem": "state the constraints",
+    "right seam": "name the boundary",
+    unlocks: "enables",
+    "tees up": "prepares",
   });
 });
 
-test("Rule 26 behavior accepts the named concrete replacements", () => {
-  const output = `RULE26_SUBSTRATE: The settings base stores defaults.
-RULE26_WEDGE: Add a timeout check.
-RULE26_VECTOR: The retry method is exponential backoff.
-RULE26_GOLD: This adds more than the job needs.
-RULE26_RATCHET: The retry limit only tightens.
-RULE26_EVACUATE: Move retry code out of the worker.
-RULE26_ENDGAME: Rollout is the last phase.`;
+test("Vague-metaphor behavior accepts the named concrete replacements", () => {
+  const output = `METAPHOR_OWNER: The job runner handles retries.
+METAPHOR_MEASUREMENT: The cache reduces requests from two to one.
+METAPHOR_ENDPOINT: Remove the status endpoint.
+METAPHOR_CONSTRAINT: Stale data causes retry failures.
+METAPHOR_BOUNDARY: Split at the HTTP boundary.
+METAPHOR_CAPABILITY: This enables retries.
+METAPHOR_PREPARATION: This prepares rollout.`;
 
-  expect(rule26RewritePreservesMeaning(output)).toBe(true);
+  expect(vagueMetaphorRewritePreservesMeaning(output)).toBe(true);
 });
 
-test("Rule 26 behavior accepts concrete retry-method paraphrases", () => {
-  const variants = [
-    "Use exponential backoff for retries.",
-    "Retries use exponential backoff.",
-    "Exponential backoff handles retries.",
-  ];
+test("Vague-metaphor behavior rejects reversed concrete instructions", () => {
+  const output = `METAPHOR_OWNER: The job runner handles retries.
+METAPHOR_MEASUREMENT: The cache does not reduce requests from two to one.
+METAPHOR_ENDPOINT: Remove the status endpoint.
+METAPHOR_CONSTRAINT: Stale data causes retry failures.
+METAPHOR_BOUNDARY: Split at the HTTP boundary.
+METAPHOR_CAPABILITY: This enables retries.
+METAPHOR_PREPARATION: This prepares rollout.`;
 
-  for (const vector of variants) {
-    const output = `RULE26_SUBSTRATE: The settings base stores defaults.
-RULE26_WEDGE: Add a timeout check.
-RULE26_VECTOR: ${vector}
-RULE26_GOLD: This adds more than the job needs.
-RULE26_RATCHET: The retry limit only tightens.
-RULE26_EVACUATE: Move retry code out of the worker.
-RULE26_ENDGAME: Rollout is the last phase.`;
-    expect(rule26RewritePreservesMeaning(output)).toBe(true);
-  }
+  expect(vagueMetaphorRewritePreservesMeaning(output)).toBe(false);
 });
 
-test("Rule 26 behavior rejects reversed concrete instructions", () => {
-  const reversed = [
-    ["Do not add a timeout check.", "The retry method is exponential backoff."],
-    ["Add a timeout check.", "Do not use exponential backoff for retries."],
-    ["Add a timeout check.", "Use a fixed delay, not exponential backoff, for retries."],
-  ];
+test("Vague-metaphor behavior rejects retained metaphor terms", () => {
+  const output = `METAPHOR_OWNER: Retry handling is the center of gravity for the job runner.
+METAPHOR_MEASUREMENT: The cache reduces requests from two to one.
+METAPHOR_ENDPOINT: Remove the status endpoint.
+METAPHOR_CONSTRAINT: Stale data causes retry failures.
+METAPHOR_BOUNDARY: Split at the HTTP boundary.
+METAPHOR_CAPABILITY: This enables retries.
+METAPHOR_PREPARATION: This prepares rollout.`;
 
-  for (const [wedge, vector] of reversed) {
-    const output = `RULE26_SUBSTRATE: The settings base stores defaults.
-RULE26_WEDGE: ${wedge}
-RULE26_VECTOR: ${vector}
-RULE26_GOLD: This adds more than the job needs.
-RULE26_RATCHET: The retry limit only tightens.
-RULE26_EVACUATE: Move retry code out of the worker.
-RULE26_ENDGAME: Rollout is the last phase.`;
-    expect(rule26RewritePreservesMeaning(output)).toBe(false);
-  }
-});
-
-test("Rule 26 behavior rejects retained metaphor terms", () => {
-  const output = `RULE26_SUBSTRATE: The settings substrate stores defaults.
-RULE26_WEDGE: Add a timeout check.
-RULE26_VECTOR: The retry method is exponential backoff.
-RULE26_GOLD: This adds more than the job needs.
-RULE26_RATCHET: The retry limit only tightens.
-RULE26_EVACUATE: Move retry code out of the worker.
-RULE26_ENDGAME: Rollout is the last phase.`;
-
-  expect(rule26RewritePreservesMeaning(output)).toBe(false);
+  expect(vagueMetaphorRewritePreservesMeaning(output)).toBe(false);
 });
 
 test("Research producer budgets preserve exact returns within the artifact limit", () => {
@@ -781,22 +670,22 @@ test("core eval gates every marker and tracks its meaning checker", () => {
   expect(evals).toContain("expect(coreMeaning.zero).toBe(true)");
   expect(evals).toContain("expect(coreMeaning.one).toBe(true)");
   expect(evals).toContain("expect(coreMeaning.many).toBe(true)");
-  expect(evals).toContain("RULE13_EM_DASH:");
-  expect(evals).toContain("RULE13_EN_DASH:");
-  expect(evals).toContain("RULE13_HYPHEN:");
-  expect(evals).toContain("RULE13_PARENTHESES:");
-  expect(evals).toContain("rule13RewritePreservesMeaning");
-  expect(evals).toContain("rule18RewritePreservesMeaning");
-  expect(evals).toContain("rule26RewritePreservesMeaning");
+  expect(evals).toContain("DASH_EM:");
+  expect(evals).toContain("DASH_EN:");
+  expect(evals).toContain("DASH_HYPHEN:");
+  expect(evals).toContain("DASH_PARENTHESES:");
+  expect(evals).toContain("punctuationRewritePreservesMeaning");
+  expect(evals).toContain("instructionRewritePreservesMeaning");
+  expect(evals).toContain("vagueMetaphorRewritePreservesMeaning");
   expect(touchfiles).toContain("tests/helpers/unslop-core.ts");
 });
 
-test("Rule 5 accepts grounded rewrites without a fixed phrase", () => {
+test("Vague-source checks accept grounded rewrites without a fixed phrase", () => {
   const evals = readOrEmpty(EVALS);
 
-  expect(evals).toContain("async function rule5GroundingScore");
-  expect(evals).toContain("rule5Grounding >= 4");
+  expect(evals).toContain("async function attributionGroundingScore");
+  expect(evals).toContain("sourceGrounding >= 4");
   expect(evals).toContain("every factual or mechanism claim");
   expect(evals).toContain("vague attribution");
-  expect(evals).not.toContain('/cache prevents two reads/i.test(markedLine(authored, "RULE5"))');
+  expect(evals).not.toContain('/cache prevents two reads/i.test(markedLine(authored, "VAGUE_SOURCE"))');
 });

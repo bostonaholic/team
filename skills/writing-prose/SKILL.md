@@ -1,6 +1,6 @@
 ---
 name: writing-prose
-description: 'Defines plain-language prose rules. Load when writing or assessing documentation in strict or STE-flavored modes.'
+description: 'Defines strict and STE-flavored prose rules.'
 user-invocable: false
 ---
 

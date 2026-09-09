@@ -761,8 +761,8 @@ before spending time on it.
 
 `unslop` follows this model-invocable methodology contract. The shared
 `skills/` directory exposes it to every host, and `agents/openai.yaml` supplies
-Codex discovery metadata. Its dated rule table assigns each upstream ID to one
-owner across `unslop` and `writing-prose`.
+Codex discovery metadata. Its Team-authored categories separate AI-pattern
+detection from the sentence mechanics owned by `writing-prose`.
 
 When both prose methods apply, the author scans the untouched draft with
 `unslop` before `writing-prose` edits it. Exact source text stays byte-identical.

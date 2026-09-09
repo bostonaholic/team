@@ -1,13 +1,13 @@
 ---
 name: unslop
-description: 'Removes AI-writing patterns while preserving meaning, tone, evidence, and exact contracts.'
+description: 'Use whenever writing or revising prose. Must always apply.'
 user-invocable: false
 ---
 
 # Unslop
 
-Apply this method only to prose you author. Read
-[references/rules.md](references/rules.md) before finalizing it.
+Apply this method whenever you write or revise prose. Apply it only to prose you
+author. Read [references/rules.md](references/rules.md) before finalizing it.
 
 ## Protect exact text first
 

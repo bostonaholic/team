@@ -4,44 +4,32 @@ export interface CoreMeaningChecks {
   many: boolean;
 }
 
-export const RULE_26_TERMS = [
-  "substrate",
-  "wedge",
-  "vector",
-  "locus",
-  "vantage",
-  "nexus",
-  "primitive",
-  "harness",
-  "surface",
-  "bedrock",
-  "scaffolding",
-  "modality",
-  "paradigm",
-  "gold-plating",
-  "ratchet",
-  "evacuate",
-  "endgame",
-  "north star",
-  "flywheel",
+export const VAGUE_METAPHORS = [
+  "center of gravity",
+  "moves the needle",
+  "surface area",
+  "shape of the problem",
+  "right seam",
+  "unlocks",
+  "tees up",
 ] as const;
 
-export const RULE_26_REPLACEMENTS = {
-  substrate: "base",
-  wedge: "add",
-  vector: "way or method",
-  "gold-plating": "more than the job needs",
-  ratchet: "the mechanism's real name or a limit that only tightens",
-  evacuate: "move out",
-  endgame: "the last phase",
+export const VAGUE_METAPHOR_REWRITES = {
+  "center of gravity": "name the responsible component",
+  "moves the needle": "state the measured change",
+  "surface area": "name the files, interfaces, or endpoints",
+  "shape of the problem": "state the constraints",
+  "right seam": "name the boundary",
+  unlocks: "enables",
+  "tees up": "prepares",
 } as const;
 
-export function rule13RewritePreservesMeaning(line: string): boolean {
+export function punctuationRewritePreservesMeaning(line: string): boolean {
   return /\b(?:the\s+)?worker retries once(?:\.|,\s*(?:(?:but|and)\s+)?)\s*the request can still fail\b/i
     .test(line);
 }
 
-export function rule18RewritePreservesMeaning(line: string): boolean {
+export function instructionRewritePreservesMeaning(line: string): boolean {
   const text = line.trim();
   if (/\p{Extended_Pictographic}/u.test(text)) return false;
   return /^(?:deploy after (?:the )?tests pass|after (?:the )?tests pass,\s*deploy)\.?$/i
@@ -83,33 +71,30 @@ function termPattern(term: string): RegExp {
   return new RegExp(`\\b${pattern}\\b`, "i");
 }
 
-export function rule26Terms(text: string): string[] {
-  return RULE_26_TERMS.filter((term) => termPattern(term).test(text));
+export function vagueMetaphorTerms(text: string): string[] {
+  return VAGUE_METAPHORS.filter((term) => termPattern(term).test(text));
 }
 
-export function rule26RewritePreservesMeaning(text: string): boolean {
-  const substrate = markedLine(text, "RULE26_SUBSTRATE");
-  const wedge = markedLine(text, "RULE26_WEDGE");
-  const vector = markedLine(text, "RULE26_VECTOR");
-  const gold = markedLine(text, "RULE26_GOLD");
-  const ratchet = markedLine(text, "RULE26_RATCHET");
-  const evacuate = markedLine(text, "RULE26_EVACUATE");
-  const endgame = markedLine(text, "RULE26_ENDGAME");
+export function vagueMetaphorRewritePreservesMeaning(text: string): boolean {
+  const owner = markedLine(text, "METAPHOR_OWNER");
+  const measurement = markedLine(text, "METAPHOR_MEASUREMENT");
+  const endpoint = markedLine(text, "METAPHOR_ENDPOINT");
+  const constraint = markedLine(text, "METAPHOR_CONSTRAINT");
+  const boundary = markedLine(text, "METAPHOR_BOUNDARY");
+  const capability = markedLine(text, "METAPHOR_CAPABILITY");
+  const preparation = markedLine(text, "METAPHOR_PREPARATION");
   const reversesInstruction = (line: string): boolean =>
     /\b(?:do not|don't|does not|doesn't|is not|isn't|are not|aren't|cannot|can't|not|never|avoid|without|instead of|rather than|remove|disable|stop)\b/i.test(line);
-  const vectorNamesConcreteMethod =
-    /\bretr(?:y|ies)\b.*\b(?:use|uses|method is)\b.*\bexponential backoff\b/i.test(vector) ||
-    /\b(?:use|uses)\b.*\bexponential backoff\b.*\bfor retr(?:y|ies)\b/i.test(vector) ||
-    /\bexponential backoff\b.*\b(?:handles|drives)\b.*\bretr(?:y|ies)\b/i.test(vector);
-  return rule26Terms(text).length === 0 &&
-    ![substrate, wedge, vector, gold, ratchet, evacuate, endgame].some(reversesInstruction) &&
-    /\bsettings base stores defaults\b/i.test(substrate) &&
-    /^adds?\s+(?:a\s+)?timeout check\b/i.test(wedge) &&
-    vectorNamesConcreteMethod &&
-    /\bmore than (?:the )?(?:job|request|task) needs\b/i.test(gold) &&
-    /\bretry (?:limit|mechanism)\b.*\bonly (?:tightens|permits stricter limits)\b/i.test(ratchet) &&
-    /\bmove\b.*\bretry code\b.*\bout of\b.*\bworker\b/i.test(evacuate) &&
-    /\b(?:rollout.*(?:last|final) phase|(?:last|final) phase.*rollout)\b/i.test(endgame);
+  return vagueMetaphorTerms(text).length === 0 &&
+    ![owner, measurement, constraint, boundary, capability, preparation]
+      .some(reversesInstruction) &&
+    /\bjob runner handles retries\b/i.test(owner) &&
+    /\bcache reduces requests from two to one\b/i.test(measurement) &&
+    /\bremove(?:s|d)?\b.*\bstatus endpoint\b/i.test(endpoint) &&
+    /\bstale data causes retry failures\b/i.test(constraint) &&
+    /\bsplit\b.*\bHTTP boundary\b/i.test(boundary) &&
+    /\benables retries\b/i.test(capability) &&
+    /\bprepares rollout\b/i.test(preparation);
 }
 
 function markedLine(text: string, label: string): string {

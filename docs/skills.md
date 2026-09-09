@@ -510,7 +510,7 @@ Defines system-boundary, feedback, and dependency analysis.
 
 ### [writing-prose](https://github.com/bostonaholic/team/blob/main/skills/writing-prose/SKILL.md)
 
-Defines plain-language prose rules.
+Defines strict and STE-flavored prose rules.
 
 **Used by:** `authoring-designs`, `changelog`, `documenting-decisions`, `eng-design-doc-review`, `git-commit`, `product-requirements-doc`, `reviewing-code`, `reviewing-designs`, `team`, `team-design`, `team-implement`, `team-plan`, `team-pr`, `team-question`, `team-research`, `team-structure`, `team-worktree`, `technical-design-doc`
 
@@ -518,7 +518,7 @@ Defines plain-language prose rules.
 
 ### [unslop](https://github.com/bostonaholic/team/blob/main/skills/unslop/SKILL.md)
 
-Removes AI-writing patterns while preserving meaning, tone, evidence, and exact contracts.
+Use whenever writing or revising prose.
 
 **Used by:** `reviewing-designs`, `team`, `team-design`, `team-implement`, `team-plan`, `team-pr`, `team-question`, `team-research`, `team-structure`, `team-worktree`
 
