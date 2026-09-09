@@ -36,8 +36,8 @@ function catalogConsumerField(page: string, name: string): string {
   const section = page.slice(start + heading.length);
   const end = section.search(/\n#{2,3} /);
   const entry = end === -1 ? section : section.slice(0, end);
-  const line = entry.split("\n").find((value) => value.startsWith("**Invoked / loaded by:**"));
-  return line?.slice("**Invoked / loaded by:**".length).trim() ?? "";
+  const line = entry.split("\n").find((value) => value.startsWith("**Consumers:**"));
+  return line?.slice("**Consumers:**".length).trim() ?? "";
 }
 
 // Text between two markers; "" when either marker is missing. Callers guard

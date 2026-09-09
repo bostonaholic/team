@@ -41,8 +41,8 @@ const SKILLS_ROOT = join(REPO_ROOT, "skills");
 
 const LOADS_HEADER = "**Loads:**";
 const LOAD_BULLET = /^- `([a-z0-9-]+)`$/;
-const INVOKED_HEADER = "**Invoked / loaded by:**";
-const PHASE_HEADER = "**Phase / context:**";
+const INVOKED_HEADER = "**Consumers:**";
+const PHASE_HEADER = "**Context:**";
 
 type Entry = {
   name: string;
@@ -191,9 +191,9 @@ function shape(body: string[]): string[] {
   }
 
   if (invokedIndexes.length !== 1) {
-    offenders.push(`${invokedIndexes.length} invoked / loaded by fields`);
+    offenders.push(`${invokedIndexes.length} consumer fields`);
   }
-  if (phaseIndexes.length !== 1) offenders.push(`${phaseIndexes.length} phase / context fields`);
+  if (phaseIndexes.length !== 1) offenders.push(`${phaseIndexes.length} context fields`);
 
   if (invokedIndexes.length === 1 && phaseIndexes.length === 1) {
     const invokedIndex = invokedIndexes[0] as number;
@@ -203,10 +203,10 @@ function shape(body: string[]): string[] {
       offenders.push("relationship fields are not adjacent and ordered");
     }
     if ((body[invokedIndex] as string).slice(INVOKED_HEADER.length).trim() === "") {
-      offenders.push("invoked / loaded by field is empty");
+      offenders.push("consumer field is empty");
     }
     if ((body[phaseIndex] as string).slice(PHASE_HEADER.length).trim() === "") {
-      offenders.push("phase / context field is empty");
+      offenders.push("context field is empty");
     }
 
     const loadsIndex = body.findIndex((line) => line === LOADS_HEADER);
