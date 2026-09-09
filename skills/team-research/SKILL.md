@@ -7,6 +7,9 @@ argument-hint: "[docs/plans/<id>/]"
 
 # Team Research — Answer the Questions
 
+Before finalizing prose you author, call the Skill tool with `unslop` and
+`writing-prose`, in that order.
+
 Run the RESEARCH phase only, then stop. The researcher and file-finder
 read `2-questions.md` (and optionally `4-repos.md`) — never the user's
 original task description.

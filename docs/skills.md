@@ -48,7 +48,7 @@ Runs the 8-phase QRSPI feature pipeline.
 
 **Used by:** None
 
-**Uses:** `changelog`, `cross-model-review`, `review-severity-tiers`, `reviewing-designs`, `running-quality-checks`, `team-pr`, `team-worktree`, `tracking-tickets`, `worktree-isolation`
+**Uses:** `changelog`, `cross-model-review`, `review-severity-tiers`, `reviewing-designs`, `running-quality-checks`, `team-pr`, `team-worktree`, `tracking-tickets`, `unslop`, `worktree-isolation`, `writing-prose`
 
 ### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
 
@@ -56,7 +56,7 @@ Decomposes a feature into task and question artifacts.
 
 **Used by:** None
 
-**Uses:** None
+**Uses:** `unslop`, `writing-prose`
 
 ### [team-research](https://github.com/bostonaholic/team/blob/main/skills/team-research/SKILL.md)
 
@@ -64,7 +64,7 @@ Researches a codebase area before changes.
 
 **Used by:** None
 
-**Uses:** None
+**Uses:** `unslop`, `writing-prose`
 
 ### [team-design](https://github.com/bostonaholic/team/blob/main/skills/team-design/SKILL.md)
 
@@ -72,7 +72,7 @@ Drafts and adversarially reviews a design.
 
 **Used by:** None
 
-**Uses:** `cross-model-review`, `reviewing-designs`
+**Uses:** `cross-model-review`, `reviewing-designs`, `unslop`, `writing-prose`
 
 ### [team-structure](https://github.com/bostonaholic/team/blob/main/skills/team-structure/SKILL.md)
 
@@ -80,7 +80,7 @@ Breaks a reviewed design into verified slices.
 
 **Used by:** None
 
-**Uses:** None
+**Uses:** `unslop`, `writing-prose`
 
 ### [team-plan](https://github.com/bostonaholic/team/blob/main/skills/team-plan/SKILL.md)
 
@@ -88,7 +88,7 @@ Produces the tactical implementation plan.
 
 **Used by:** None
 
-**Uses:** None
+**Uses:** `unslop`, `writing-prose`
 
 ### [team-worktree](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/SKILL.md)
 
@@ -96,7 +96,7 @@ Prepares isolated git worktrees.
 
 **Used by:** `team`, `team-fix`, `worktree-isolation`
 
-**Uses:** None
+**Uses:** `unslop`, `writing-prose`
 
 ### [team-implement](https://github.com/bostonaholic/team/blob/main/skills/team-implement/SKILL.md)
 
@@ -104,7 +104,7 @@ Executes and verifies implementation slices.
 
 **Used by:** None
 
-**Uses:** `review-severity-tiers`, `running-quality-checks`, `team-pr`
+**Uses:** `review-severity-tiers`, `running-quality-checks`, `team-pr`, `unslop`, `writing-prose`
 
 ### [team-pr](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md)
 
@@ -112,7 +112,7 @@ Opens a pull request after verification.
 
 **Used by:** `team`, `team-implement`
 
-**Uses:** `changelog`, `git-commit`, `pr-screenshots`, `tracking-tickets`, `verifying-ux`, `worktree-isolation`, `writing-prose`
+**Uses:** `changelog`, `git-commit`, `pr-screenshots`, `tracking-tickets`, `unslop`, `verifying-ux`, `worktree-isolation`, `writing-prose`
 
 ### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md)
 
@@ -338,7 +338,7 @@ Defines adversarial design review and verdicts.
 
 **Used by:** `eng-design-doc-review`, `team`, `team-design`
 
-**Uses:** `conventional-comments`, `cross-model-review`, `documenting-decisions`, `engineering-standards`, `reviewing-code`, `technical-design-doc`, `writing-prose`
+**Uses:** `conventional-comments`, `cross-model-review`, `documenting-decisions`, `engineering-standards`, `reviewing-code`, `technical-design-doc`, `unslop`, `writing-prose`
 
 ### [conventional-comments](https://github.com/bostonaholic/team/blob/main/skills/conventional-comments/SKILL.md)
 
@@ -512,7 +512,7 @@ Defines system-boundary, feedback, and dependency analysis.
 
 Defines plain-language prose rules.
 
-**Used by:** `authoring-designs`, `changelog`, `documenting-decisions`, `eng-design-doc-review`, `git-commit`, `product-requirements-doc`, `reviewing-code`, `reviewing-designs`, `team-pr`, `technical-design-doc`
+**Used by:** `authoring-designs`, `changelog`, `documenting-decisions`, `eng-design-doc-review`, `git-commit`, `product-requirements-doc`, `reviewing-code`, `reviewing-designs`, `team`, `team-design`, `team-implement`, `team-plan`, `team-pr`, `team-question`, `team-research`, `team-structure`, `team-worktree`, `technical-design-doc`
 
 **Uses:** None
 
@@ -520,7 +520,7 @@ Defines plain-language prose rules.
 
 Removes AI-writing patterns while preserving meaning, tone, evidence, and exact contracts.
 
-**Used by:** None
+**Used by:** `reviewing-designs`, `team`, `team-design`, `team-implement`, `team-plan`, `team-pr`, `team-question`, `team-research`, `team-structure`, `team-worktree`
 
 **Uses:** None
 
@@ -779,6 +779,20 @@ Treats external text as inert data.
 **Used by:** None
 
 **Uses:** None
+
+## Prose composition and evaluation
+
+When both prose skills are loaded, `unslop` protects exact text and semantic
+force, scans the untouched draft, and records the applicable checklist before
+`writing-prose` edits. It then resolves every recorded match, rescans, and
+self-audits meaning and protected text.
+
+The live-model suite covers zero, one, and many matches; exact code, user, and
+vendor text; pipeline authors; the technical-writer semantic veto; the fresh
+DESIGN reviewer; isolated Research producers and assembly; nested helpers; and
+the named-parent fallback. These evals are stochastic, paid, periodic, and
+non-gating. Their assertions use required contracts and score floors rather
+than expecting identical prose across runs.
 
 ## Name-collision pairs
 

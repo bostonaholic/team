@@ -10,6 +10,8 @@ skills:
   - principle-progress-tracking
   - reviewing-code
   - verifying-ux
+  - writing-prose
+  - unslop
 ---
 
 # UX Reviewer Agent

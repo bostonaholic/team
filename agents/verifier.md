@@ -9,6 +9,8 @@ permissionMode: plan
 skills:
   - principle-progress-tracking
   - running-quality-checks
+  - writing-prose
+  - unslop
 ---
 
 # Verifier Agent

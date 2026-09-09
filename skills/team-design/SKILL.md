@@ -7,6 +7,9 @@ argument-hint: "[docs/plans/<id>/]"
 
 # Team Design — Where Are We Going?
 
+Before finalizing prose you author, call the Skill tool with `unslop` and
+`writing-prose`, in that order. Relay completed review reports unchanged.
+
 Run the DESIGN phase. The design-author decides the approach — recording
 every self-resolved choice as an auditable assumption — and the
 adversarial design review gates advancement. No mid-run prompt fires.

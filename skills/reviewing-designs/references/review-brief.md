@@ -16,8 +16,8 @@ change.
 You are reviewing a technical design document — `$ARGUMENTS/6-design.md`. You
 operate with **fresh context** and have no knowledge of the author's intent
 beyond what the document itself states. This isolation is intentional: it
-prevents self-evaluation bias. You are read-only — use `Read`, `Grep`, and
-`Glob` only. Do not edit any file.
+prevents self-evaluation bias. You are read-only. Use Read, Grep, Glob, and
+Skill only. Do not use Write, Edit, Bash, or Agent.
 
 **First, load your operating manual.** Call the Skill tool with
 `technical-design-doc`, `reviewing-code`, `engineering-standards`, and
@@ -40,6 +40,8 @@ refute, or mark unverifiable) and the disposition block you must emit.
 
 When you write your findings, also call the Skill tool with
 `conventional-comments` — it defines their format.
+Call the Skill tool with `unslop` and `writing-prose`, in that order, before
+finalizing your own prose.
 
 ### Review process
 

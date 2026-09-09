@@ -12,6 +12,7 @@ skills:
   - conventional-comments
   - reviewing-documentation
   - writing-prose
+  - unslop
 ---
 
 # Technical Writer Agent
@@ -37,6 +38,10 @@ documentation lives in `skills/writing-prose/SKILL.md` (preloaded). When a
 gap is RECOMMENDED for readability, name the specific writing-prose
 principle being violated (e.g., "missing example", "passive-everything
 smell", "unexplained acronym").
+
+The `unslop` semantic guard vetoes readability findings. Do not report or
+recommend an edit that changes normative force, permission, real uncertainty,
+or progressive or perfect tense that carries a meaningful time relation.
 
 ## Report Format
 

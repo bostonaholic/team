@@ -11,6 +11,8 @@ skills:
   - nested-agents
   - systems-thinking
   - researching-codebases
+  - writing-prose
+  - unslop
 ---
 
 # Researcher Agent

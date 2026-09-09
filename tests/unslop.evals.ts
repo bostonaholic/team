@@ -353,6 +353,183 @@ ${vendor}
   },
   360_000,
 );
+
+testUnslop(
+  "pipeline author behavior evaluation",
+  async () => {
+    requireImplementation();
+    const questioner = loadAgentInstructionContext("questioner", ROOT);
+    const workDir = mkdtempSync(join(tmpdir(), "unslop-pipeline-"));
+    const completedReport = "issue (blocking): The pivotal parser may fail.\nfile: src/parser.ts:8\nAPPROVE";
+    try {
+      const result = await runAgentTest({
+        prompt:
+          "Act as the pipeline questioner and root orchestrator. Author a concise QUESTION status and a handoff from these facts: the parser reads one file and may reject malformed input. " +
+          "Then relay the completed reviewer report byte-identically between the supplied markers. Preserve its verdict token and final-line placement.\n\n" +
+          `<<<COMPLETED_REPORT>>>\n${completedReport}\n<<<END_COMPLETED_REPORT>>>`,
+        workingDirectory: workDir,
+        maxTurns: 6,
+        timeout: 240_000,
+        testName: "pipeline author behavior evaluation",
+        model: questioner.model,
+        systemPromptAppend: `${questioner.body}\n\n---\n\n${instructionContext(["skills/team/SKILL.md", ...PROSE_FILES])}`,
+        disallowedTools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "Task", "Agent"],
+      });
+      const authored = authoredWithoutSourceBlocks(result.output);
+      const relayed = /<<<COMPLETED_REPORT>>>\n([\s\S]*?)\n<<<END_COMPLETED_REPORT>>>/.exec(result.output)?.[1] ?? "";
+      const quality = result.exitReason === "success" && !hasSlopPattern(authored)
+        ? await judgeQuality(authored)
+        : { clarity: 1, completeness: 1, actionability: 1, reasoning: "deterministic gate failed" };
+      const passed = result.exitReason === "success" && !hasSlopPattern(authored) && relayed === completedReport && quality.clarity >= 3;
+      addResult("pipeline author behavior evaluation", result, passed, {
+        both_audits: hasSlopPattern(authored) ? 0 : 1,
+        exact_relay: relayed === completedReport ? 1 : 0,
+        tone: quality.clarity,
+      });
+
+      expect(result.exitReason).toBe("success");
+      expect(hasSlopPattern(authored)).toBe(false);
+      expect(authored).toContain("may reject malformed input");
+      expect(relayed).toBe(completedReport);
+      expect(relayed.endsWith("APPROVE")).toBe(true);
+      expect(quality.clarity).toBeGreaterThanOrEqual(3);
+    } finally {
+      rmSync(workDir, { recursive: true, force: true });
+    }
+  },
+  360_000,
+);
+
+async function semanticReviewScore(
+  role: "technical-writer" | "fresh-design-reviewer",
+  source: string,
+  output: string,
+): Promise<number> {
+  const judged = (await callJudge(
+    "Return JSON only as {\"semantic_guard\":N}, where N is 1-5. " +
+      "Score 5 only when the review applies its role, does not recommend changing normative force, permission, uncertainty, or meaningful progressive/perfect tense, and does not mistake those forms for readability defects. " +
+      "For the technical-writer, also require it to identify the unexplained RPC acronym as the actual readability issue. " +
+      "For the fresh design reviewer, also require a valid terminal design-review verdict and findings based only on the supplied design.\n\n" +
+      `Role: ${role}\nSource:\n${wrapUntrusted(source)}\n\nReview:\n${wrapUntrusted(output)}`,
+  )) as Record<string, unknown>;
+  return typeof judged.semantic_guard === "number" ? judged.semantic_guard : 1;
+}
+
+testUnslop(
+  "technical-writer semantic veto evaluation",
+  async () => {
+    requireImplementation();
+    const technicalWriter = loadAgentInstructionContext("technical-writer", ROOT);
+    const source = `The worker must retain request IDs. Users may retry. The cache might reduce load. The worker could still fail. The migration is running now. The worker has retried twice. RPC carries the request.`;
+    const workDir = mkdtempSync(join(tmpdir(), "unslop-technical-writer-"));
+    try {
+      const result = await runAgentTest({
+        prompt: `Review this documentation excerpt for readability. The public behavior is documented completely. Do not rewrite it. Report only genuine documentation gaps or writing-prose violations.\n\n${source}`,
+        workingDirectory: workDir,
+        maxTurns: 6,
+        timeout: 240_000,
+        testName: "technical-writer semantic veto evaluation",
+        model: technicalWriter.model,
+        systemPromptAppend: `${technicalWriter.body}\n\n---\n\n${instructionContext([
+          "skills/reviewing-code/SKILL.md",
+          "skills/conventional-comments/SKILL.md",
+          "skills/reviewing-documentation/SKILL.md",
+          ...PROSE_FILES,
+        ])}`,
+        disallowedTools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "Task", "Agent"],
+      });
+      const semanticGuard = result.exitReason === "success"
+        ? await semanticReviewScore("technical-writer", source, result.output)
+        : 1;
+      const passed = result.exitReason === "success" && semanticGuard >= 4;
+      addResult("technical-writer semantic veto evaluation", result, passed, {
+        semantic_guard: semanticGuard,
+      });
+
+      expect(result.exitReason).toBe("success");
+      expect(semanticGuard).toBeGreaterThanOrEqual(4);
+    } finally {
+      rmSync(workDir, { recursive: true, force: true });
+    }
+  },
+  360_000,
+);
+
+testUnslop(
+  "fresh DESIGN reviewer prose evaluation",
+  async () => {
+    requireImplementation();
+    const source = `# Design: request cache
+
+## Current state
+The worker has retried failed reads twice. Evidence: src/cache.pseudo:1.
+
+## Desired end state
+The worker must retain request IDs. Users may retry. The cache might reduce load, and the worker could still fail. The migration is running now.
+
+## Patterns to follow
+Keep the single cache module in src/cache.pseudo:1.
+
+## Decisions made
+Use the existing cache because it avoids a second store. Reject a new store because it adds an external dependency. The risk is stale data for one request. Callers of src/cache.pseudo:1 are affected.
+
+## Out of scope
+Cross-region storage and authorization changes.
+
+## Edge cases
+Empty keys are rejected. Concurrent reads share one result. Store failures return the original read error. The cache has a 100-entry limit.
+
+## Open questions (deferred)
+None.
+
+## Rollout
+Deploy to one worker, measure duplicate reads, then deploy to all workers. Rollback disables the cache flag.`;
+    const workDir = mkdtempSync(join(tmpdir(), "unslop-design-reviewer-"));
+    try {
+      const designPath = join(workDir, "docs", "plans", "request-cache", "6-design.md");
+      mkdirSync(dirname(designPath), { recursive: true });
+      writeFileSync(designPath, source);
+      mkdirSync(join(workDir, "src"), { recursive: true });
+      writeFileSync(join(workDir, "src", "cache.pseudo"), "cache(request) returns one stored result\n", { flag: "w" });
+      const result = await runAgentTest({
+        prompt: "Review docs/plans/request-cache/6-design.md with fresh context. Return the review report and terminal verdict only.",
+        workingDirectory: workDir,
+        maxTurns: 8,
+        timeout: 300_000,
+        testName: "fresh DESIGN reviewer prose evaluation",
+        systemPromptAppend: instructionContext([
+          "skills/reviewing-designs/SKILL.md",
+          "skills/reviewing-designs/references/review-brief.md",
+          "skills/technical-design-doc/SKILL.md",
+          "skills/reviewing-code/SKILL.md",
+          "skills/engineering-standards/SKILL.md",
+          "skills/documenting-decisions/SKILL.md",
+          "skills/conventional-comments/SKILL.md",
+          ...PROSE_FILES,
+        ]),
+        allowedTools: ["Read", "Grep", "Glob"],
+        disallowedTools: ["Bash", "Write", "Edit", "Task", "Agent", "SendMessage"],
+      });
+      const semanticGuard = result.exitReason === "success"
+        ? await semanticReviewScore("fresh-design-reviewer", source, result.output)
+        : 1;
+      const terminalVerdict = /(?:APPROVE|REQUEST CHANGES|COMMENT)$/.test(result.output.trim());
+      const passed = result.exitReason === "success" && terminalVerdict && semanticGuard >= 4;
+      addResult("fresh DESIGN reviewer prose evaluation", result, passed, {
+        semantic_guard: semanticGuard,
+        terminal_verdict: terminalVerdict ? 1 : 0,
+      });
+
+      expect(result.exitReason).toBe("success");
+      expect(terminalVerdict).toBe(true);
+      expect(semanticGuard).toBeGreaterThanOrEqual(4);
+    } finally {
+      rmSync(workDir, { recursive: true, force: true });
+    }
+  },
+  420_000,
+);
+
 afterAll(async () => {
   await collector.finalize();
   assertNoBudgetRegressions(collector);

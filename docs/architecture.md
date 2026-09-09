@@ -769,6 +769,17 @@ When both prose methods apply, the author scans the untouched draft with
 The semantic guard protects normative force, permission, real uncertainty, and
 meaningful time relations. It outranks style substitutions.
 
+All registry phase agents preload both prose owners. The root `team` skill and
+each registry-derived phase entry explicitly reload them for orchestrator prose.
+Agents audit only text they author. Orchestrators store and relay completed agent
+and vendor reports unchanged. The fresh design reviewer can use Read, Grep,
+Glob, and Skill, but no mutating tool. The technical writer uses the semantic
+guard to veto a readability finding that would change meaning.
+
+Claude Code may retain both methods for later utilities in the same context
+before compaction. Compaction can evict that retained content. A recovered
+pipeline phase uses its phase entry and reloads both methods explicitly.
+
 The trigger-phrase convention keys on the `user-invocable` field —
 not on `argument-hint`, which `docs/skills.md` uses to sort skill
 *flavor*. A skill that does not set `user-invocable: false` must state,

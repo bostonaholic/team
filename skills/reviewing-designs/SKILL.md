@@ -13,14 +13,15 @@ artifact directory `docs/plans/<id>/` for `$ARGUMENTS`. The reviewer must first
 read [references/review-brief.md](references/review-brief.md) completely; it
 owns the full criteria, exceptions, and output rules.
 
-Review `$ARGUMENTS/6-design.md` with no author conversation. Use only Read,
-Grep, and Glob. Never edit files or run state-changing commands.
+Review `$ARGUMENTS/6-design.md` with no author conversation. Use Read, Grep,
+Glob, and Skill only. Do not use Write, Edit, Bash, or Agent.
 
 Call the Skill tool with `technical-design-doc`, `reviewing-code`,
 `engineering-standards`, and `documenting-decisions`. Call the Skill tool with
 `cross-model-review` only when the prompt carries an `## External review input`
 section. Call the Skill tool with `conventional-comments` for findings and
-`writing-prose` for STE-flavored prose and Self-lint.
+call the Skill tool with `unslop` and `writing-prose`, in that order, before
+finalizing STE-flavored prose.
 
 ### Review process
 

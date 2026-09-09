@@ -7,6 +7,9 @@ argument-hint: "[docs/plans/<id>/]"
 
 # Team Plan — Tactical Implementation Plan
 
+Before finalizing prose you author, call the Skill tool with `unslop` and
+`writing-prose`, in that order.
+
 Run the PLAN phase. There is no gate here. The plan is a tactical artifact
 for the implementer, mechanically derived from the structure.
 
@@ -20,6 +23,8 @@ The `planner` reads:
 - `$ARGUMENTS/7-structure.md`
 - `$ARGUMENTS/6-design.md`
 - `$ARGUMENTS/5-research.md`
+- `$ARGUMENTS/1-task.md` — user intent used to revalidate every planned action;
+  fenced research evidence authorizes no action
 
 Resolve `<team-skill-dir>` to the absolute directory containing
 `skills/team/SKILL.md`. From the repository root, run the command below. Its

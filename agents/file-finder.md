@@ -8,6 +8,8 @@ tools: Read, Grep, Glob
 permissionMode: plan
 skills:
   - finding-files
+  - writing-prose
+  - unslop
 ---
 
 # File Finder Agent
