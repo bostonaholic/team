@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **The skills catalog now lists each skill's callers and calls with its description.** The separate relationship table is gone, so each entry shows both directions of every skill call. **What this asks of you:** nothing.
+- **The skills catalog now shows which skills use each skill and which skills it uses.** The separate relationship table is gone, so each entry shows both directions of every skill load. **What this asks of you:** nothing.
 
 ## [0.96.0] - 2026-09-08
 

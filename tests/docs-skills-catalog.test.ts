@@ -39,15 +39,15 @@ const REPO_ROOT = join(import.meta.dir, "..");
 const CATALOG = join(REPO_ROOT, "docs", "skills.md");
 const SKILLS_ROOT = join(REPO_ROOT, "skills");
 
-const CALLS_HEADER = "**Calls:**";
-const CALLERS_HEADER = "**Callers:**";
+const USES_HEADER = "**Uses:**";
+const USED_BY_HEADER = "**Used by:**";
 
 type Entry = {
   name: string;
   section: string;
   body: string[];
   description: string[];
-  callers: string;
+  usedBy: string;
   loads: string[];
 };
 
@@ -98,21 +98,21 @@ function relationshipNames(value: string): string[] | undefined {
   return [...value.matchAll(/`([a-z0-9-]+)`/g)].map((match) => match[1] as string);
 }
 
-function entryFields(body: string[]): Pick<Entry, "description" | "callers" | "loads"> {
-  const callerLines = body.filter((line) => line.startsWith(CALLERS_HEADER));
-  const callLines = body.filter((line) => line.startsWith(CALLS_HEADER));
-  const callerIndex = body.findIndex((line) => line.startsWith(CALLERS_HEADER));
-  const calls = callLines.length === 1
-    ? (callLines[0] as string).slice(CALLS_HEADER.length).trim()
+function entryFields(body: string[]): Pick<Entry, "description" | "usedBy" | "loads"> {
+  const usedByLines = body.filter((line) => line.startsWith(USED_BY_HEADER));
+  const usesLines = body.filter((line) => line.startsWith(USES_HEADER));
+  const usedByIndex = body.findIndex((line) => line.startsWith(USED_BY_HEADER));
+  const uses = usesLines.length === 1
+    ? (usesLines[0] as string).slice(USES_HEADER.length).trim()
     : "";
 
   return {
-    description: callerIndex === -1 ? [] : body.slice(0, callerIndex),
-    callers:
-      callerLines.length === 1
-        ? (callerLines[0] as string).slice(CALLERS_HEADER.length).trim()
+    description: usedByIndex === -1 ? [] : body.slice(0, usedByIndex),
+    usedBy:
+      usedByLines.length === 1
+        ? (usedByLines[0] as string).slice(USED_BY_HEADER.length).trim()
         : "",
-    loads: relationshipNames(calls) ?? [],
+    loads: relationshipNames(uses) ?? [],
   };
 }
 
@@ -124,24 +124,24 @@ function entryFields(body: string[]): Pick<Entry, "description" | "callers" | "l
 
 /**
  * Shape offenders for one entry body, each naming the offending line. The body
- * must be one or more prose lines, then one Callers line and one Calls line.
+ * must be one or more prose lines, then one Used by line and one Uses line.
  * Both relationship fields use comma-separated skill names or `None`.
  */
 function shape(body: string[]): string[] {
   const offenders: string[] = [];
-  const callerIndexes = body.flatMap((line, index) =>
-    line.startsWith(CALLERS_HEADER) ? [index] : [],
+  const usedByIndexes = body.flatMap((line, index) =>
+    line.startsWith(USED_BY_HEADER) ? [index] : [],
   );
-  const callIndexes = body.flatMap((line, index) =>
-    line.startsWith(CALLS_HEADER) ? [index] : [],
+  const usesIndexes = body.flatMap((line, index) =>
+    line.startsWith(USES_HEADER) ? [index] : [],
   );
 
   for (const [index, line] of body.entries()) {
     const trimmed = line.trim();
     if (line !== trimmed) offenders.push(`indented body line: ${JSON.stringify(line)}`);
 
-    if (trimmed.startsWith(CALLERS_HEADER) || trimmed.startsWith(CALLS_HEADER)) {
-      const header = trimmed.startsWith(CALLERS_HEADER) ? CALLERS_HEADER : CALLS_HEADER;
+    if (trimmed.startsWith(USED_BY_HEADER) || trimmed.startsWith(USES_HEADER)) {
+      const header = trimmed.startsWith(USED_BY_HEADER) ? USED_BY_HEADER : USES_HEADER;
       const value = trimmed.slice(header.length).trim();
       const names = relationshipNames(value);
       if (names === undefined) offenders.push(`invalid ${header} list: ${JSON.stringify(value)}`);
@@ -151,25 +151,25 @@ function shape(body: string[]): string[] {
       continue;
     }
 
-    if ((callerIndexes[0] ?? body.length) < index) {
-      offenders.push(`prose line after the caller field: ${JSON.stringify(trimmed)}`);
+    if ((usedByIndexes[0] ?? body.length) < index) {
+      offenders.push(`prose line after the Used by field: ${JSON.stringify(trimmed)}`);
     }
   }
 
-  if (callerIndexes.length !== 1) {
-    offenders.push(`${callerIndexes.length} caller fields`);
+  if (usedByIndexes.length !== 1) {
+    offenders.push(`${usedByIndexes.length} Used by fields`);
   }
-  if (callIndexes.length !== 1) {
-    offenders.push(`${callIndexes.length} call fields`);
+  if (usesIndexes.length !== 1) {
+    offenders.push(`${usesIndexes.length} Uses fields`);
   }
-  if (callerIndexes.length === 1 && callIndexes.length === 1) {
-    const callerIndex = callerIndexes[0] as number;
-    const callIndex = callIndexes[0] as number;
-    if (callerIndex === 0) offenders.push("no description before the caller field");
-    if (callIndex !== callerIndex + 1) {
-      offenders.push("calls header does not immediately follow the caller field");
+  if (usedByIndexes.length === 1 && usesIndexes.length === 1) {
+    const usedByIndex = usedByIndexes[0] as number;
+    const usesIndex = usesIndexes[0] as number;
+    if (usedByIndex === 0) offenders.push("no description before the Used by field");
+    if (usesIndex !== usedByIndex + 1) {
+      offenders.push("Uses does not immediately follow Used by");
     }
-    if (callIndex !== body.length - 1) offenders.push("content follows the calls field");
+    if (usesIndex !== body.length - 1) offenders.push("content follows the Uses field");
   }
   return offenders;
 }
@@ -315,8 +315,8 @@ const NAMED_EDGES = new Set(
   ),
 );
 const SKILL_MD_EDGES = edgeSet(SKILL_MD_TEXT);
-const ENTRIES_WITH_CALLS = ENTRIES.filter((entry) => entry.loads.length > 0).length;
-const ENTRIES_WITHOUT_CALLS = ENTRIES.filter((entry) => entry.loads.length === 0).length;
+const ENTRIES_WITH_USES = ENTRIES.filter((entry) => entry.loads.length > 0).length;
+const ENTRIES_WITHOUT_USES = ENTRIES.filter((entry) => entry.loads.length === 0).length;
 const EMPTY_ENTRY_BODIES = ENTRIES.filter((entry) => entry.body.length === 0).map(
   (entry) => entry.name,
 );
@@ -325,39 +325,39 @@ const SKILL_MD_EDGES_OUTSIDE_FULL_SCAN = [...SKILL_MD_EDGES].filter(
   (edge) => !ALL_EDGES.has(edge),
 );
 
-function callReciprocityOffenders(entries: Entry[]): string[] {
+function usageReciprocityOffenders(entries: Entry[]): string[] {
   const expected = new Map(entries.map((entry) => [entry.name, [] as string[]]));
   const unknownLoads: string[] = [];
 
   for (const entry of entries) {
     for (const load of entry.loads) {
-      const callers = expected.get(load);
-      if (!callers) unknownLoads.push(`${entry.name}: loads unknown skill ${load}`);
-      else callers.push(entry.name);
+      const usedBy = expected.get(load);
+      if (!usedBy) unknownLoads.push(`${entry.name}: loads unknown skill ${load}`);
+      else usedBy.push(entry.name);
     }
   }
 
   return [
     ...unknownLoads,
     ...entries.flatMap((entry) => {
-      const actual = relationshipNames(entry.callers);
-      if (!actual) return [`${entry.name}: invalid caller list ${JSON.stringify(entry.callers)}`];
+      const actual = relationshipNames(entry.usedBy);
+      if (!actual) return [`${entry.name}: invalid Used by list ${JSON.stringify(entry.usedBy)}`];
       const names = (expected.get(entry.name) ?? []).sort();
       return actual.length === names.length && actual.every((name, index) => name === names[index])
         ? []
-        : [`${entry.name}: expected callers ${JSON.stringify(names)}, got ${JSON.stringify(actual)}`];
+        : [`${entry.name}: expected Used by ${JSON.stringify(names)}, got ${JSON.stringify(actual)}`];
     }),
   ];
 }
 
 function authoringContractOffenders(text: string): string[] {
-  const callers = text.indexOf(CALLERS_HEADER);
-  const calls = text.indexOf(CALLS_HEADER);
+  const usedBy = text.indexOf(USED_BY_HEADER);
+  const uses = text.indexOf(USES_HEADER);
   return [
-    ...(callers === -1 ? [`create-team-skill omits ${CALLERS_HEADER}`] : []),
-    ...(calls === -1 ? [`create-team-skill omits ${CALLS_HEADER}`] : []),
-    ...(callers !== -1 && calls !== -1 && calls < callers
-      ? ["create-team-skill orders calls before the caller field"]
+    ...(usedBy === -1 ? [`create-team-skill omits ${USED_BY_HEADER}`] : []),
+    ...(uses === -1 ? [`create-team-skill omits ${USES_HEADER}`] : []),
+    ...(usedBy !== -1 && uses !== -1 && uses < usedBy
+      ? ["create-team-skill orders Uses before Used by"]
       : []),
   ];
 }
@@ -378,24 +378,24 @@ const CATALOG_INTRODUCTION = CATALOG_TEXT.slice(
   CATALOG_TEXT.indexOf("\n## Entry-point skills"),
 );
 const REMOVED_RELATIONSHIP_OFFENDERS = removedRelationshipPresentation(CATALOG_TEXT);
-const MISSING_INTRODUCTION_LABELS = [CALLERS_HEADER, CALLS_HEADER].filter(
+const MISSING_INTRODUCTION_LABELS = [USED_BY_HEADER, USES_HEADER].filter(
   (label) => !CATALOG_INTRODUCTION.includes(label),
 );
 const CONTEXT_FIELD_OFFENDERS = CATALOG_TEXT.includes("**Context:**")
   ? ["context field remains"]
   : [];
-const CALL_RECIPROCITY_OFFENDERS = callReciprocityOffenders(ENTRIES);
-const LONG_CALLER_BODY = [
+const USAGE_RECIPROCITY_OFFENDERS = usageReciprocityOffenders(ENTRIES);
+const LONG_USED_BY_BODY = [
   "Long relationship.",
-  `${CALLERS_HEADER} ${Array.from({ length: 40 }, (_, index) => `\`caller-${index}\``).join(", ")}`,
-  `${CALLS_HEADER} None`,
+  `${USED_BY_HEADER} ${Array.from({ length: 40 }, (_, index) => `\`skill-${index}\``).join(", ")}`,
+  `${USES_HEADER} None`,
 ];
 const FINAL_ENTRY_BODY = catalogEntries([
   "## Methodology skills",
   "### [final-skill](target)",
   "Final skill.",
-  `${CALLERS_HEADER} None`,
-  `${CALLS_HEADER} None`,
+  `${USED_BY_HEADER} None`,
+  `${USES_HEADER} None`,
   "## Name-collision pairs",
   "not part of the entry",
 ].join("\n"))[0]?.body;
@@ -407,8 +407,8 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     // (docs/testing.md, "Prove a negative check can find a positive").
     expect(SKILL_DIRECTORIES.length).toBeGreaterThan(60); // (1) skills/ tree parsed
     expect(ENTRIES.length).toBeGreaterThan(60); // (2) page parsed
-    expect(ENTRIES_WITH_CALLS).toBeGreaterThan(0); // (3)
-    expect(ENTRIES_WITHOUT_CALLS).toBeGreaterThan(0); // (4)
+    expect(ENTRIES_WITH_USES).toBeGreaterThan(0); // (3)
+    expect(ENTRIES_WITHOUT_USES).toBeGreaterThan(0); // (4)
     expect(EMPTY_ENTRY_BODIES).toEqual([]); // (5) every parsed body non-empty
 
     // (6) Discrimination axis: a load is STRICTLY narrower than a mention. Every
@@ -435,11 +435,11 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     expect(LOAD_ORDER_OFFENDERS).toEqual([]);
   });
 
-  test("catalog Callers and Calls fields are exact reciprocals", () => {
+  test("catalog Used by and Uses fields are exact reciprocals", () => {
     expect(SKILL_DIRECTORIES.length).toBe(90);
     expect(ENTRIES.length).toBe(90);
     expect(SHAPE_OFFENDERS).toEqual([]);
-    expect(CALL_RECIPROCITY_OFFENDERS).toEqual([]);
+    expect(USAGE_RECIPROCITY_OFFENDERS).toEqual([]);
   });
 
   test("create-team-skill instructions preserve the reciprocal call graph contract", () => {
@@ -457,8 +457,8 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     // A well-formed body, used as the negative control for every rule below.
     const clean = [
       "Lands a reviewed PR.",
-      `${CALLERS_HEADER} None`,
-      `${CALLS_HEADER} \`pr-verify\`, \`principle-fail-closed\``,
+      `${USED_BY_HEADER} None`,
+      `${USES_HEADER} \`pr-verify\`, \`principle-fail-closed\``,
     ];
     expect(shape(clean)).toEqual([]);
 
@@ -466,28 +466,28 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     expect(
       shape([
         "Lands a reviewed PR.",
-        `${CALLERS_HEADER} None`,
+        `${USED_BY_HEADER} None`,
         "- **Purpose:** Lands a reviewed PR.",
       ]),
     ).not.toEqual([]);
 
-    // Second calls field.
-    expect(shape([...clean, `${CALLS_HEADER} \`shipit\``])).not.toEqual([]);
+    // Second Uses field.
+    expect(shape([...clean, `${USES_HEADER} \`shipit\``])).not.toEqual([]);
 
     // Trailing clause after a name.
     expect(
-      shape(["Lands a reviewed PR.", `${CALLERS_HEADER} None`, `${CALLS_HEADER} \`pr-verify\` for the checks`]),
+      shape(["Lands a reviewed PR.", `${USED_BY_HEADER} None`, `${USES_HEADER} \`pr-verify\` for the checks`]),
     ).not.toEqual([]);
 
     // Duplicate name in the comma list.
     expect(
-      shape(["Lands a reviewed PR.", `${CALLERS_HEADER} None`, `${CALLS_HEADER} \`pr-verify\`, \`pr-verify\``]),
+      shape(["Lands a reviewed PR.", `${USED_BY_HEADER} None`, `${USES_HEADER} \`pr-verify\`, \`pr-verify\``]),
     ).not.toEqual([]);
 
     // Indented line, as the first line and as a later line.
     expect(shape(["  Lands a reviewed PR."])).not.toEqual([]);
     expect(
-      shape(["Lands a reviewed PR.", `${CALLERS_HEADER} None`, `${CALLS_HEADER} None`, "  continued"]),
+      shape(["Lands a reviewed PR.", `${USED_BY_HEADER} None`, `${USES_HEADER} None`, "  continued"]),
     ).not.toEqual([]);
 
     // Drifted sentence: the page no longer copies the description's first sentence.
@@ -495,39 +495,39 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     expect(sentence(["Lands a reviewed PR."], description)).toEqual([]);
     expect(sentence(["Lands a merged PR."], description)).not.toEqual([]);
 
-    expect(shape(["Leaf skill.", `${CALLERS_HEADER} None`, `${CALLS_HEADER} None`])).toEqual([]);
+    expect(shape(["Leaf skill.", `${USED_BY_HEADER} None`, `${USES_HEADER} None`])).toEqual([]);
     expect(shape(["Leaf skill."])).not.toEqual([]);
-    expect(shape(["Leaf skill.", CALLERS_HEADER])).not.toEqual([]);
+    expect(shape(["Leaf skill.", USED_BY_HEADER])).not.toEqual([]);
     expect(
       shape([
         "Leaf skill.",
-        `${CALLERS_HEADER} None`,
-        `${CALLERS_HEADER} \`agent\``,
-        `${CALLS_HEADER} None`,
+        `${USED_BY_HEADER} None`,
+        `${USED_BY_HEADER} \`agent\``,
+        `${USES_HEADER} None`,
       ]),
     ).not.toEqual([]);
-    expect(shape(LONG_CALLER_BODY)).toEqual([]);
+    expect(shape(LONG_USED_BY_BODY)).toEqual([]);
     expect(FINAL_ENTRY_BODY).toEqual([
       "Final skill.",
-      `${CALLERS_HEADER} None`,
-      `${CALLS_HEADER} None`,
+      `${USED_BY_HEADER} None`,
+      `${USES_HEADER} None`,
     ]);
 
     const reciprocal = catalogEntries([
       "## Methodology skills",
       "### [a](target)",
       "A skill.",
-      `${CALLERS_HEADER} None`,
-      `${CALLS_HEADER} \`b\``,
+      `${USED_BY_HEADER} None`,
+      `${USES_HEADER} \`b\``,
       "### [b](target)",
       "B skill.",
-      `${CALLERS_HEADER} \`a\``,
-      `${CALLS_HEADER} None`,
+      `${USED_BY_HEADER} \`a\``,
+      `${USES_HEADER} None`,
     ].join("\n"));
-    expect(callReciprocityOffenders(reciprocal)).toEqual([]);
+    expect(usageReciprocityOffenders(reciprocal)).toEqual([]);
     expect(
-      callReciprocityOffenders(
-        reciprocal.map((entry) => entry.name === "b" ? { ...entry, callers: "None" } : entry),
+      usageReciprocityOffenders(
+        reciprocal.map((entry) => entry.name === "b" ? { ...entry, usedBy: "None" } : entry),
       ),
     ).not.toEqual([]);
 
