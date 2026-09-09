@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Team now applies the [`unslop`](https://github.com/bostonaholic/team/blob/main/skills/unslop/SKILL.md) methodology across every `/team` phase and all phase agents.** It removes common AI prose patterns while preserving meaning, schemas, quoted text, verdicts, and other protected content. Research helper output remains byte-identical inside untrusted-data fences. **What this asks of you:** nothing.
+
 ## [0.100.0] - 2026-09-10
 
 ### Changed
