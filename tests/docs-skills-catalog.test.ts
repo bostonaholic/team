@@ -39,18 +39,16 @@ const REPO_ROOT = join(import.meta.dir, "..");
 const CATALOG = join(REPO_ROOT, "docs", "skills.md");
 const SKILLS_ROOT = join(REPO_ROOT, "skills");
 
-const LOADS_HEADER = "**Loads:**";
+const CALLS_HEADER = "**Calls:**";
 const LOAD_BULLET = /^- `([a-z0-9-]+)`$/;
-const INVOKED_HEADER = "**Consumers:**";
-const PHASE_HEADER = "**Context:**";
+const CALLERS_HEADER = "**Callers:**";
 
 type Entry = {
   name: string;
   section: string;
   body: string[];
   description: string[];
-  invokedBy: string;
-  phaseContext: string;
+  callers: string;
   loads: string[];
 };
 
@@ -102,28 +100,29 @@ function loadBullets(body: string[]): string[] {
   });
 }
 
-function entryFields(body: string[]): Pick<Entry, "description" | "invokedBy" | "phaseContext" | "loads"> {
-  const invokedLines = body.filter((line) => line.startsWith(INVOKED_HEADER));
-  const phaseLines = body.filter((line) => line.startsWith(PHASE_HEADER));
-  const invokedIndex = body.findIndex((line) => line.startsWith(INVOKED_HEADER));
+function callerNames(value: string): string[] | undefined {
+  if (value === "None") return [];
+  if (!/^`[a-z0-9-]+`(?:, `[a-z0-9-]+`)*$/.test(value)) return undefined;
+  return [...value.matchAll(/`([a-z0-9-]+)`/g)].map((match) => match[1] as string);
+}
+
+function entryFields(body: string[]): Pick<Entry, "description" | "callers" | "loads"> {
+  const callerLines = body.filter((line) => line.startsWith(CALLERS_HEADER));
+  const callerIndex = body.findIndex((line) => line.startsWith(CALLERS_HEADER));
 
   return {
-    description: invokedIndex === -1 ? [] : body.slice(0, invokedIndex),
-    invokedBy:
-      invokedLines.length === 1
-        ? (invokedLines[0] as string).slice(INVOKED_HEADER.length).trim()
-        : "",
-    phaseContext:
-      phaseLines.length === 1
-        ? (phaseLines[0] as string).slice(PHASE_HEADER.length).trim()
+    description: callerIndex === -1 ? [] : body.slice(0, callerIndex),
+    callers:
+      callerLines.length === 1
+        ? (callerLines[0] as string).slice(CALLERS_HEADER.length).trim()
         : "",
     loads: loadBullets(body),
   };
 }
 
-/** True when the body carries the loads header. */
-function hasLoadsHeader(body: string[]): boolean {
-  return body.some((line) => line.trim() === LOADS_HEADER);
+/** True when the body carries the calls header. */
+function hasCallsHeader(body: string[]): boolean {
+  return body.some((line) => line.trim() === CALLS_HEADER);
 }
 
 // ---------------------------------------------------------------------------
@@ -134,11 +133,11 @@ function hasLoadsHeader(body: string[]): boolean {
 
 /**
  * Shape offenders for one entry body, each naming the offending line. The body
- * must be one or more prose lines, then optionally the loads header followed
+ * must be one or more prose lines, then optionally the calls header followed
  * by one or more load bullets, and nothing after. Eight offenders: (1) zero
  * prose lines; (2) a line starting `- ` that is not exactly a load bullet
  * (a surviving `**Purpose:**` bullet, a trailing clause after a name); (3) a
- * prose line after the loads header; (4) a loads header with no bullet
+ * prose line after the calls header; (4) a calls header with no bullet
  * under it; (5) a load bullet with no header above it; (6) a second loads
  * header; (7) a duplicate name among the bullets; (8) any body line with
  * leading whitespace, first line included.
@@ -146,11 +145,8 @@ function hasLoadsHeader(body: string[]): boolean {
 function shape(body: string[]): string[] {
   const offenders: string[] = [];
   const seen = new Set<string>();
-  const invokedIndexes = body.flatMap((line, index) =>
-    line.startsWith(INVOKED_HEADER) ? [index] : [],
-  );
-  const phaseIndexes = body.flatMap((line, index) =>
-    line.startsWith(PHASE_HEADER) ? [index] : [],
+  const callerIndexes = body.flatMap((line, index) =>
+    line.startsWith(CALLERS_HEADER) ? [index] : [],
   );
   let headers = 0;
   let bullets = 0;
@@ -159,13 +155,13 @@ function shape(body: string[]): string[] {
     const trimmed = line.trim();
     if (line !== trimmed) offenders.push(`indented body line: ${JSON.stringify(line)}`);
 
-    if (trimmed.startsWith(INVOKED_HEADER) || trimmed.startsWith(PHASE_HEADER)) {
+    if (trimmed.startsWith(CALLERS_HEADER)) {
       continue;
     }
 
-    if (trimmed === LOADS_HEADER) {
+    if (trimmed === CALLS_HEADER) {
       headers++;
-      if (headers > 1) offenders.push("second loads header");
+      if (headers > 1) offenders.push("second calls header");
       continue;
     }
 
@@ -184,41 +180,32 @@ function shape(body: string[]): string[] {
       continue;
     }
 
-    if (headers > 0) offenders.push(`prose line after the loads header: ${JSON.stringify(trimmed)}`);
-    if ((phaseIndexes[0] ?? body.length) < index) {
-      offenders.push(`prose line after relationship fields: ${JSON.stringify(trimmed)}`);
+    if (headers > 0) offenders.push(`prose line after the calls header: ${JSON.stringify(trimmed)}`);
+    if ((callerIndexes[0] ?? body.length) < index) {
+      offenders.push(`prose line after the caller field: ${JSON.stringify(trimmed)}`);
     }
   }
 
-  if (invokedIndexes.length !== 1) {
-    offenders.push(`${invokedIndexes.length} consumer fields`);
+  if (callerIndexes.length !== 1) {
+    offenders.push(`${callerIndexes.length} caller fields`);
   }
-  if (phaseIndexes.length !== 1) offenders.push(`${phaseIndexes.length} context fields`);
-
-  if (invokedIndexes.length === 1 && phaseIndexes.length === 1) {
-    const invokedIndex = invokedIndexes[0] as number;
-    const phaseIndex = phaseIndexes[0] as number;
-    if (invokedIndex === 0) offenders.push("no description before relationship fields");
-    if (phaseIndex !== invokedIndex + 1) {
-      offenders.push("relationship fields are not adjacent and ordered");
-    }
-    if ((body[invokedIndex] as string).slice(INVOKED_HEADER.length).trim() === "") {
-      offenders.push("consumer field is empty");
-    }
-    if ((body[phaseIndex] as string).slice(PHASE_HEADER.length).trim() === "") {
-      offenders.push("context field is empty");
+  if (callerIndexes.length === 1) {
+    const callerIndex = callerIndexes[0] as number;
+    if (callerIndex === 0) offenders.push("no description before the caller field");
+    if ((body[callerIndex] as string).slice(CALLERS_HEADER.length).trim() === "") {
+      offenders.push("caller field is empty");
     }
 
-    const loadsIndex = body.findIndex((line) => line === LOADS_HEADER);
-    if (loadsIndex === -1 && phaseIndex !== body.length - 1) {
-      offenders.push("content follows relationship fields without a loads header");
+    const loadsIndex = body.findIndex((line) => line === CALLS_HEADER);
+    if (loadsIndex === -1 && callerIndex !== body.length - 1) {
+      offenders.push("content follows the caller field without a calls header");
     }
-    if (loadsIndex !== -1 && loadsIndex !== phaseIndex + 1) {
-      offenders.push("loads header does not immediately follow relationship fields");
+    if (loadsIndex !== -1 && loadsIndex !== callerIndex + 1) {
+      offenders.push("calls header does not immediately follow the caller field");
     }
   }
 
-  if (headers > 0 && bullets === 0) offenders.push("loads header with no bullet under it");
+  if (headers > 0 && bullets === 0) offenders.push("calls header with no bullet under it");
   return offenders;
 }
 
@@ -363,8 +350,8 @@ const NAMED_EDGES = new Set(
   ),
 );
 const SKILL_MD_EDGES = edgeSet(SKILL_MD_TEXT);
-const ENTRIES_WITH_LOADS = ENTRIES.filter((entry) => hasLoadsHeader(entry.body)).length;
-const ENTRIES_WITHOUT_LOADS = ENTRIES.filter((entry) => !hasLoadsHeader(entry.body)).length;
+const ENTRIES_WITH_CALLS = ENTRIES.filter((entry) => hasCallsHeader(entry.body)).length;
+const ENTRIES_WITHOUT_CALLS = ENTRIES.filter((entry) => !hasCallsHeader(entry.body)).length;
 const EMPTY_ENTRY_BODIES = ENTRIES.filter((entry) => entry.body.length === 0).map(
   (entry) => entry.name,
 );
@@ -373,42 +360,45 @@ const SKILL_MD_EDGES_OUTSIDE_FULL_SCAN = [...SKILL_MD_EDGES].filter(
   (edge) => !ALL_EDGES.has(edge),
 );
 
-function mentions(text: string, name: string): boolean {
-  return new RegExp(`(?:^|[^\\w-])${name}(?:$|[^\\w-])`).test(text);
+function callReciprocityOffenders(entries: Entry[]): string[] {
+  const expected = new Map(entries.map((entry) => [entry.name, [] as string[]]));
+  const unknownLoads: string[] = [];
+
+  for (const entry of entries) {
+    for (const load of entry.loads) {
+      const callers = expected.get(load);
+      if (!callers) unknownLoads.push(`${entry.name}: loads unknown skill ${load}`);
+      else callers.push(entry.name);
+    }
+  }
+
+  return [
+    ...unknownLoads,
+    ...entries.flatMap((entry) => {
+      const actual = callerNames(entry.callers);
+      if (!actual) return [`${entry.name}: invalid caller list ${JSON.stringify(entry.callers)}`];
+      const names = (expected.get(entry.name) ?? []).sort();
+      return actual.length === names.length && actual.every((name, index) => name === names[index])
+        ? []
+        : [`${entry.name}: expected callers ${JSON.stringify(names)}, got ${JSON.stringify(actual)}`];
+    }),
+  ];
 }
 
-const REVIEWING_DESIGNS_LOADS = [...deriveLoads(
-  SKILL_MD_TEXT.get("reviewing-designs") ?? "",
-  "reviewing-designs",
-  NAMES,
-)].sort();
-
-const REVIEWING_DESIGNS_OFFENDERS = REVIEWING_DESIGNS_LOADS.flatMap((name) => {
-  const entry = ENTRY_BY_NAME.get(name);
-  if (!entry) return [`${name}: catalog entry missing`];
-  return [
-    ...(mentions(entry.invokedBy, "reviewing-designs")
-      ? []
-      : [`${name}: consumer field omits reviewing-designs`]),
-    ...(/\bDesign\b/.test(entry.phaseContext)
-      ? []
-      : [`${name}: context field omits Design`]),
-  ];
-});
-
 function authoringContractOffenders(text: string): string[] {
-  const invoked = text.indexOf(INVOKED_HEADER);
-  const phase = text.indexOf(PHASE_HEADER);
-  const loads = text.indexOf(LOADS_HEADER);
+  const callers = text.indexOf(CALLERS_HEADER);
+  const calls = text.indexOf(CALLS_HEADER);
   return [
-    ...(invoked === -1 ? [`create-team-skill omits ${INVOKED_HEADER}`] : []),
-    ...(phase === -1 ? [`create-team-skill omits ${PHASE_HEADER}`] : []),
-    ...(invoked !== -1 && phase !== -1 && phase < invoked
-      ? ["create-team-skill orders phase before consumer"]
+    ...(callers === -1 ? [`create-team-skill omits ${CALLERS_HEADER}`] : []),
+    ...(callers !== -1 && calls !== -1 && calls < callers
+      ? ["create-team-skill orders calls before the caller field"]
       : []),
-    ...(phase !== -1 && loads !== -1 && loads < phase
-      ? ["create-team-skill orders loads before relationship fields"]
-      : []),
+    ...(text.includes("Set `**Callers:**` to `None`")
+      ? []
+      : ["create-team-skill omits the zero-caller rule"]),
+    ...(text.includes("every skill whose `**Calls:**` list names it")
+      ? []
+      : ["create-team-skill omits the reciprocal caller rule"]),
   ];
 }
 
@@ -428,20 +418,22 @@ const CATALOG_INTRODUCTION = CATALOG_TEXT.slice(
   CATALOG_TEXT.indexOf("\n## Entry-point skills"),
 );
 const REMOVED_RELATIONSHIP_OFFENDERS = removedRelationshipPresentation(CATALOG_TEXT);
-const MISSING_INTRODUCTION_LABELS = [INVOKED_HEADER, PHASE_HEADER].filter(
+const MISSING_INTRODUCTION_LABELS = [CALLERS_HEADER].filter(
   (label) => !CATALOG_INTRODUCTION.includes(label),
 );
-const LONG_RELATIONSHIP_BODY = [
+const CONTEXT_FIELD_OFFENDERS = CATALOG_TEXT.includes("**Context:**")
+  ? ["context field remains"]
+  : [];
+const CALL_RECIPROCITY_OFFENDERS = callReciprocityOffenders(ENTRIES);
+const LONG_CALLER_BODY = [
   "Long relationship.",
-  `${INVOKED_HEADER} ${"consumer ".repeat(40).trim()}`,
-  `${PHASE_HEADER} Design`,
+  `${CALLERS_HEADER} ${Array.from({ length: 40 }, (_, index) => `\`caller-${index}\``).join(", ")}`,
 ];
 const FINAL_ENTRY_BODY = catalogEntries([
   "## Methodology skills",
   "### [final-skill](target)",
   "Final skill.",
-  `${INVOKED_HEADER} user`,
-  `${PHASE_HEADER} Any`,
+  `${CALLERS_HEADER} None`,
   "## Name-collision pairs",
   "not part of the entry",
 ].join("\n"))[0]?.body;
@@ -453,8 +445,8 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     // (docs/testing.md, "Prove a negative check can find a positive").
     expect(SKILL_DIRECTORIES.length).toBeGreaterThan(60); // (1) skills/ tree parsed
     expect(ENTRIES.length).toBeGreaterThan(60); // (2) page parsed
-    expect(ENTRIES_WITH_LOADS).toBeGreaterThan(0); // (3)
-    expect(ENTRIES_WITHOUT_LOADS).toBeGreaterThan(0); // (4)
+    expect(ENTRIES_WITH_CALLS).toBeGreaterThan(0); // (3)
+    expect(ENTRIES_WITHOUT_CALLS).toBeGreaterThan(0); // (4)
     expect(EMPTY_ENTRY_BODIES).toEqual([]); // (5) every parsed body non-empty
 
     // (6) Discrimination axis: a load is STRICTLY narrower than a mention. Every
@@ -481,31 +473,30 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     expect(LOAD_ORDER_OFFENDERS).toEqual([]);
   });
 
-  test("catalog relationship fields are ordered, non-empty, and complete for every skill", () => {
+  test("catalog Callers and Calls fields are exact reciprocals", () => {
     expect(SKILL_DIRECTORIES.length).toBe(90);
     expect(ENTRIES.length).toBe(90);
     expect(SHAPE_OFFENDERS).toEqual([]);
+    expect(CALL_RECIPROCITY_OFFENDERS).toEqual([]);
   });
 
-  test("reviewing-designs dependencies and create-team-skill instructions preserve the metadata contract", () => {
-    expect(REVIEWING_DESIGNS_LOADS.length).toBe(7);
-    expect(REVIEWING_DESIGNS_OFFENDERS).toEqual([]);
+  test("create-team-skill instructions preserve the reciprocal call graph contract", () => {
     expect(CREATE_TEAM_SKILL_OFFENDERS).toEqual([]);
   });
 
-  test("catalog omits the relationship section and its anchor link", () => {
+  test("catalog omits the relationship section, its anchor link, and context fields", () => {
     expect(CATALOG_TEXT.length).toBeGreaterThan(0);
     expect(REMOVED_RELATIONSHIP_OFFENDERS).toEqual([]);
     expect(MISSING_INTRODUCTION_LABELS).toEqual([]);
+    expect(CONTEXT_FIELD_OFFENDERS).toEqual([]);
   });
 
   test("the page-side rules each see a planted positive", () => {
     // A well-formed body, used as the negative control for every rule below.
     const clean = [
       "Lands a reviewed PR.",
-      `${INVOKED_HEADER} user`,
-      `${PHASE_HEADER} Standalone`,
-      LOADS_HEADER,
+      `${CALLERS_HEADER} None`,
+      CALLS_HEADER,
       "- `pr-verify`",
       "- `principle-fail-closed`",
     ];
@@ -515,29 +506,28 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     expect(
       shape([
         "Lands a reviewed PR.",
-        `${INVOKED_HEADER} user`,
-        `${PHASE_HEADER} Standalone`,
+        `${CALLERS_HEADER} None`,
         "- **Purpose:** Lands a reviewed PR.",
       ]),
     ).not.toEqual([]);
 
-    // Second loads header.
-    expect(shape([...clean, LOADS_HEADER, "- `shipit`"])).not.toEqual([]);
+    // Second calls header.
+    expect(shape([...clean, CALLS_HEADER, "- `shipit`"])).not.toEqual([]);
 
     // Trailing clause after a name.
     expect(
-      shape(["Lands a reviewed PR.", LOADS_HEADER, "- `pr-verify` for the checks"]),
+      shape(["Lands a reviewed PR.", CALLS_HEADER, "- `pr-verify` for the checks"]),
     ).not.toEqual([]);
 
     // Duplicate name among the bullets.
     expect(
-      shape(["Lands a reviewed PR.", LOADS_HEADER, "- `pr-verify`", "- `pr-verify`"]),
+      shape(["Lands a reviewed PR.", CALLS_HEADER, "- `pr-verify`", "- `pr-verify`"]),
     ).not.toEqual([]);
 
     // Indented line, as the first line and as a later line.
     expect(shape(["  Lands a reviewed PR."])).not.toEqual([]);
     expect(
-      shape(["Lands a reviewed PR.", LOADS_HEADER, "- `pr-verify`", "  continued"]),
+      shape(["Lands a reviewed PR.", CALLS_HEADER, "- `pr-verify`", "  continued"]),
     ).not.toEqual([]);
 
     // Drifted sentence: the page no longer copies the description's first sentence.
@@ -545,26 +535,39 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     expect(sentence(["Lands a reviewed PR."], description)).toEqual([]);
     expect(sentence(["Lands a merged PR."], description)).not.toEqual([]);
 
-    expect(shape(["Leaf skill.", `${INVOKED_HEADER} user`, `${PHASE_HEADER} Any`])).toEqual([]);
-    expect(shape(["Leaf skill.", `${PHASE_HEADER} Any`])).not.toEqual([]);
-    expect(shape(["Leaf skill.", INVOKED_HEADER, `${PHASE_HEADER} Any`])).not.toEqual([]);
+    expect(shape(["Leaf skill.", `${CALLERS_HEADER} None`])).toEqual([]);
+    expect(shape(["Leaf skill."])).not.toEqual([]);
+    expect(shape(["Leaf skill.", CALLERS_HEADER])).not.toEqual([]);
     expect(
       shape([
         "Leaf skill.",
-        `${INVOKED_HEADER} user`,
-        `${INVOKED_HEADER} agent`,
-        `${PHASE_HEADER} Any`,
+        `${CALLERS_HEADER} None`,
+        `${CALLERS_HEADER} \`agent\``,
       ]),
     ).not.toEqual([]);
-    expect(
-      shape(["Leaf skill.", `${PHASE_HEADER} Any`, `${INVOKED_HEADER} user`]),
-    ).not.toEqual([]);
-    expect(shape(LONG_RELATIONSHIP_BODY)).toEqual([]);
+    expect(shape(LONG_CALLER_BODY)).toEqual([]);
     expect(FINAL_ENTRY_BODY).toEqual([
       "Final skill.",
-      `${INVOKED_HEADER} user`,
-      `${PHASE_HEADER} Any`,
+      `${CALLERS_HEADER} None`,
     ]);
+
+    const reciprocal = catalogEntries([
+      "## Methodology skills",
+      "### [a](target)",
+      "A skill.",
+      `${CALLERS_HEADER} None`,
+      CALLS_HEADER,
+      "- `b`",
+      "### [b](target)",
+      "B skill.",
+      `${CALLERS_HEADER} \`a\``,
+    ].join("\n"));
+    expect(callReciprocityOffenders(reciprocal)).toEqual([]);
+    expect(
+      callReciprocityOffenders(
+        reciprocal.map((entry) => entry.name === "b" ? { ...entry, callers: "None" } : entry),
+      ),
+    ).not.toEqual([]);
 
     expect(
       removedRelationshipPresentation(

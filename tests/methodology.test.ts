@@ -29,17 +29,6 @@ function body(text: string): string {
   return out.join("\n");
 }
 
-function catalogConsumerField(page: string, name: string): string {
-  const heading = `### [${name}]`;
-  const start = page.indexOf(heading);
-  if (start === -1) return "";
-  const section = page.slice(start + heading.length);
-  const end = section.search(/\n#{2,3} /);
-  const entry = end === -1 ? section : section.slice(0, end);
-  const line = entry.split("\n").find((value) => value.startsWith("**Consumers:**"));
-  return line?.slice("**Consumers:**".length).trim() ?? "";
-}
-
 // Text between two markers; "" when either marker is missing. Callers guard
 // the slice as non-empty so a missing section fails loud, never vacuously
 // (pattern: tests/protocol.test.ts softSection guard).
@@ -1843,74 +1832,6 @@ describe("principle-untrusted-input-is-data (L2 content tripwire)", () => {
 
   test("citation site: pr-cleanup cites the principle by name", () => {
     expect(read(join(REPO_ROOT, "skills", "pr-cleanup", "SKILL.md"))).toContain("principle-untrusted-input-is-data");
-  });
-});
-
-describe("docs/skills.md principle consumer fields match on-disk citations (L2 tripwire)", () => {
-  const SKILLS_DIR = join(REPO_ROOT, "skills");
-  const AGENTS_DIR = join(REPO_ROOT, "agents");
-  const SKILLS_MD = read(join(REPO_ROOT, "docs", "skills.md"));
-
-  const skillNames = readdirSync(SKILLS_DIR).filter((name) =>
-    existsSync(join(SKILLS_DIR, name, "SKILL.md")),
-  );
-  const agentNames = readdirSync(AGENTS_DIR)
-    .filter((name) => name.endsWith(".md"))
-    .map((name) => name.replace(/\.md$/, ""));
-  const principleSkills = skillNames.filter((name) => name.startsWith("principle-")).sort();
-
-  // Every principle-prefixed skill is a single-invariant skill with a
-  // citer list; the multi-rule methodology sets carry no prefix.
-  const extractedPrinciples = principleSkills;
-
-  // Each skill and agent file is read exactly once.
-  const skillContents = new Map(
-    skillNames.map((skill) => [skill, read(join(SKILLS_DIR, skill, "SKILL.md"))]),
-  );
-  const agentContents = new Map(
-    agentNames.map((agent) => [agent, read(join(AGENTS_DIR, `${agent}.md`))]),
-  );
-
-  // Every agents/ and skills/ file (other than the skill's own) whose
-  // skill content cites the bare, backticked principle name; agent content
-  // retains the full path contract.
-  const citersByPrinciple = new Map(
-    principleSkills.map((principle) => {
-      const skillNeedle = `\`${principle}\``;
-      const agentNeedle = `skills/${principle}/SKILL.md`;
-      return [
-        principle,
-        [
-          ...skillNames.filter(
-            (skill) => skill !== principle && (skillContents.get(skill) ?? "").includes(skillNeedle),
-          ),
-          ...agentNames.filter((agent) => (agentContents.get(agent) ?? "").includes(agentNeedle)),
-        ],
-      ] as const;
-    }),
-  );
-
-  const consumerFields = new Map(
-    principleSkills.map((name) => [name, catalogConsumerField(SKILLS_MD, name)] as const),
-  );
-
-  // `name` bounded by non-name characters, so `code-review` never matches
-  // inside `code-reviewer` and `planner` never inside `structure-planner`.
-  function mentions(text: string, name: string): boolean {
-    return new RegExp(`(?:^|[^\\w-])${name}(?:$|[^\\w-])`).test(text);
-  }
-
-  const missingConsumers = extractedPrinciples.flatMap((principle) => {
-    const field = consumerFields.get(principle) ?? "";
-    if (field === "") return [`${principle}: consumer field missing or empty`];
-    return (citersByPrinciple.get(principle) ?? [])
-      .filter((citer) => !mentions(field, citer))
-      .map((citer) => `${principle}: consumer field omits ${citer}`);
-  });
-
-  test("principle consumer fields include every source-derived citer", () => {
-    expect(principleSkills.length).toBeGreaterThan(20);
-    expect(missingConsumers).toEqual([]);
   });
 });
 

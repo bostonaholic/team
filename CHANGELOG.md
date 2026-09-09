@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **The skills catalog now lists each skill's consumers and runtime context with its description.** The separate relationship table is gone, so each entry holds its purpose, consumers, context, and direct loads. **What this asks of you:** nothing.
+- **The skills catalog now lists each skill's callers and calls with its description.** The separate relationship table is gone, so each entry shows both directions of every skill call. **What this asks of you:** nothing.
 
 ## [0.96.0] - 2026-09-08
 

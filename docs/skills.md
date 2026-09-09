@@ -17,23 +17,22 @@ nav_label: skills
 > `SKILL.md`, the `SKILL.md` wins.
 
 Each entry starts with one sentence copied from that skill's frontmatter
-`description`. `**Consumers:**` lists its consumers. `**Context:**` names where
-it applies. A `**Loads:**` list follows
-when the skill's own `.md` files instruct a load of another skill. The load form
-is ``Call the Skill tool with `<name>` ``. Naming a skill another way is a
+`description`. `**Calls:**` lists the skills it loads. `**Callers:**` lists
+the inverse: skills that load it. `None` means no skill does. The load form is
+``Call the Skill tool with `<name>` ``. Naming a skill another way is a
 citation, not an edge. For example, `team-structure` restates a
 `principle-fail-closed` rule inline but does not load it.
 
 The edges are therefore **directed**, and reading them transitively gives the
 graph. `team-implement` loads `team-pr`, which loads `git-commit`, which
 loads `writing-prose`. None of the three loads back. An entry with no
-`**Loads:**` block is a leaf: it loads nothing, which is the normal shape for
+`**Calls:**` block is a leaf: it loads nothing, which is the normal shape for
 a `principle-*` skill and for a methodology skill that states one rule and
 stops.
 
 Loads are collected across every `.md` file in the skill's directory, so a
 load written in a `references/` file counts the same as one in `SKILL.md`.
-This page carries each skill's consumers, context, and skill-to-skill edges.
+This page carries both directions of each skill-to-skill load edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
@@ -46,11 +45,9 @@ full run or drives one phase of the QRSPI pipeline.
 
 Runs the 8-phase QRSPI feature pipeline.
 
-**Consumers:** orchestrator (runs the pipeline)
+**Callers:** None
 
-**Context:** All phases
-
-**Loads:**
+**Calls:**
 
 - `changelog`
 - `cross-model-review`
@@ -66,27 +63,21 @@ Runs the 8-phase QRSPI feature pipeline.
 
 Decomposes a feature into task and question artifacts.
 
-**Consumers:** orchestrator
-
-**Context:** Question
+**Callers:** None
 
 ### [team-research](https://github.com/bostonaholic/team/blob/main/skills/team-research/SKILL.md)
 
 Researches a codebase area before changes.
 
-**Consumers:** orchestrator → researcher, file-finder
-
-**Context:** Research
+**Callers:** None
 
 ### [team-design](https://github.com/bostonaholic/team/blob/main/skills/team-design/SKILL.md)
 
 Drafts and adversarially reviews a design.
 
-**Consumers:** orchestrator → design-author
+**Callers:** None
 
-**Context:** Design (design review)
-
-**Loads:**
+**Calls:**
 
 - `cross-model-review`
 - `reviewing-designs`
@@ -95,35 +86,27 @@ Drafts and adversarially reviews a design.
 
 Breaks a reviewed design into verified slices.
 
-**Consumers:** orchestrator → structure-planner
-
-**Context:** Structure (autonomous)
+**Callers:** None
 
 ### [team-plan](https://github.com/bostonaholic/team/blob/main/skills/team-plan/SKILL.md)
 
 Produces the tactical implementation plan.
 
-**Consumers:** orchestrator → planner
-
-**Context:** Plan
+**Callers:** None
 
 ### [team-worktree](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/SKILL.md)
 
 Prepares isolated git worktrees.
 
-**Consumers:** orchestrator
-
-**Context:** Worktree
+**Callers:** `team`, `team-fix`, `worktree-isolation`
 
 ### [team-implement](https://github.com/bostonaholic/team/blob/main/skills/team-implement/SKILL.md)
 
 Executes and verifies implementation slices.
 
-**Consumers:** orchestrator → implementer + reviewers
+**Callers:** None
 
-**Context:** Implement
-
-**Loads:**
+**Calls:**
 
 - `review-severity-tiers`
 - `running-quality-checks`
@@ -133,11 +116,9 @@ Executes and verifies implementation slices.
 
 Opens a pull request after verification.
 
-**Consumers:** orchestrator
+**Callers:** `team`, `team-implement`
 
-**Context:** PR
-
-**Loads:**
+**Calls:**
 
 - `changelog`
 - `git-commit`
@@ -151,11 +132,9 @@ Opens a pull request after verification.
 
 Runs the compressed bug-fix pipeline.
 
-**Consumers:** user or model (direct invocation, on explicit pipeline intent)
+**Callers:** None
 
-**Context:** Compressed bug-fix flow (outside QRSPI)
-
-**Loads:**
+**Calls:**
 
 - `systematic-debugging`
 - `team-worktree`
@@ -168,11 +147,9 @@ Runs the compressed bug-fix pipeline.
 
 Reviews a technical design document with fresh context.
 
-**Consumers:** user (direct invocation)
+**Callers:** None
 
-**Context:** Front door over the `reviewing-designs` brief: standalone audit. Dispatches a read-only Explore subagent
-
-**Loads:**
+**Calls:**
 
 - `cross-model-review`
 - `reviewing-designs`
@@ -187,19 +164,15 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 Lands a reviewed pull request.
 
-**Consumers:** user or model (direct invocation, on explicit ship intent)
-
-**Context:** Standalone: land a reviewed PR
+**Callers:** None
 
 ### [pr-open-comments](https://github.com/bostonaholic/team/blob/main/skills/pr-open-comments/SKILL.md)
 
 Triages unresolved PR review comments.
 
-**Consumers:** user or model (direct invocation)
+**Callers:** `pr-watch-as-author`
 
-**Context:** Standalone: triage unresolved PR review feedback
-
-**Loads:**
+**Calls:**
 
 - `decision-making`
 
@@ -207,11 +180,9 @@ Triages unresolved PR review comments.
 
 Watches an authored PR for feedback.
 
-**Consumers:** user or model (direct invocation)
+**Callers:** None
 
-**Context:** Standalone: bounded PR review watch loop
-
-**Loads:**
+**Calls:**
 
 - `pr-open-comments`
 - `pr-watch-mechanics`
@@ -221,11 +192,9 @@ Watches an authored PR for feedback.
 
 Watches a reviewed PR and approves settled feedback.
 
-**Consumers:** user (direct invocation)
+**Callers:** None
 
-**Context:** Standalone: reviewer-side watch-and-approve
-
-**Loads:**
+**Calls:**
 
 - `pr-watch-mechanics`
 
@@ -233,11 +202,9 @@ Watches a reviewed PR and approves settled feedback.
 
 Grooms a project backlog and proposes tracker changes.
 
-**Consumers:** user or model (direct invocation)
+**Callers:** None
 
-**Context:** Standalone: groom a project backlog
-
-**Loads:**
+**Calls:**
 
 - `decision-making`
 
@@ -245,19 +212,15 @@ Grooms a project backlog and proposes tracker changes.
 
 Cleans PR state.
 
-**Consumers:** user or model (direct invocation; Mode B only on explicit abandon intent)
-
-**Context:** Standalone: post-PR teardown
+**Callers:** None
 
 ### [pr-verify](https://github.com/bostonaholic/team/blob/main/skills/pr-verify/SKILL.md)
 
 Verifies a PR test plan with evidence-rated verdicts.
 
-**Consumers:** user or model (direct invocation)
+**Callers:** None
 
-**Context:** Standalone: test-plan verification
-
-**Loads:**
+**Calls:**
 
 - `running-quality-checks`
 
@@ -265,19 +228,15 @@ Verifies a PR test plan with evidence-rated verdicts.
 
 Attaches local images to a PR body.
 
-**Consumers:** user or model (direct invocation, on explicit intent)
-
-**Context:** Standalone: attach local images to a PR body
+**Callers:** `team-pr`
 
 ### [pr-rebase](https://github.com/bostonaholic/team/blob/main/skills/pr-rebase/SKILL.md)
 
 Rebases a branch onto its base.
 
-**Consumers:** user (direct invocation, on explicit rebase intent; model invocation disabled)
+**Callers:** None
 
-**Context:** Standalone: rebase a branch onto its base
-
-**Loads:**
+**Calls:**
 
 - `running-quality-checks`
 
@@ -285,11 +244,9 @@ Rebases a branch onto its base.
 
 Mines a session for durable learnings.
 
-**Consumers:** user (direct invocation, on explicit reflection intent; model invocation disabled)
+**Callers:** None
 
-**Context:** Standalone: mine the session transcript for durable learnings
-
-**Loads:**
+**Calls:**
 
 - `running-quality-checks`
 
@@ -297,11 +254,9 @@ Mines a session for durable learnings.
 
 Investigates design rationale behind code.
 
-**Consumers:** user or model (direct invocation). `team-fix` and `reviewing-code` (conditional load)
+**Callers:** `how`, `reviewing-code`, `team-fix`
 
-**Context:** Standalone: design-rationale investigation. Dispatches read-only Explore investigators
-
-**Loads:**
+**Calls:**
 
 - `systematic-debugging`
 
@@ -309,11 +264,9 @@ Investigates design rationale behind code.
 
 Explains subsystem architecture and runtime flow.
 
-**Consumers:** user or model (direct invocation)
+**Callers:** None
 
-**Context:** Standalone: architectural explanation + optional critique. Dispatches read-only Explore explorers
-
-**Loads:**
+**Calls:**
 
 - `why`
 
@@ -321,11 +274,9 @@ Explains subsystem architecture and runtime flow.
 
 Reviews a diff with fresh context.
 
-**Consumers:** user or model (direct invocation)
+**Callers:** None
 
-**Context:** Standalone: dispatch a fresh-context code review
-
-**Loads:**
+**Calls:**
 
 - `reviewing-code`
 
@@ -333,11 +284,9 @@ Reviews a diff with fresh context.
 
 Removes low-value source comments and encodes valid constraints.
 
-**Consumers:** user (direct invocation; model invocation disabled)
+**Callers:** None
 
-**Context:** Standalone: comment cleanup
-
-**Loads:**
+**Calls:**
 
 - `principle-fix-root-causes`
 - `principle-progress-tracking`
@@ -353,43 +302,33 @@ them.
 
 Defines QRSPI phases, artifacts, gates, and state transitions.
 
-**Consumers:** orchestrator skills
-
-**Context:** All phases
+**Callers:** None
 
 ### [artifact-frontmatter](https://github.com/bostonaholic/team/blob/main/skills/artifact-frontmatter/SKILL.md)
 
 Defines pipeline artifact schemas.
 
-**Consumers:** orchestrator skills. Artifact authors (just-in-time through pointers)
-
-**Context:** All phases: artifact schema
+**Callers:** None
 
 ### [researching-codebases](https://github.com/bostonaholic/team/blob/main/skills/researching-codebases/SKILL.md)
 
 Defines evidence-only codebase research and `5-research.md`.
 
-**Consumers:** researcher
-
-**Context:** Research
+**Callers:** None
 
 ### [finding-files](https://github.com/bostonaholic/team/blob/main/skills/finding-files/SKILL.md)
 
 Locates files by naming, structure, and imports.
 
-**Consumers:** file-finder
-
-**Context:** Research
+**Callers:** None
 
 ### [decomposing-intent](https://github.com/bostonaholic/team/blob/main/skills/decomposing-intent/SKILL.md)
 
 Defines task and question artifacts plus multi-repo detection.
 
-**Consumers:** questioner
+**Callers:** None
 
-**Context:** Question
-
-**Loads:**
+**Calls:**
 
 - `product-requirements-doc`
 
@@ -397,11 +336,9 @@ Defines task and question artifacts plus multi-repo detection.
 
 Defines the design-document procedure.
 
-**Consumers:** design-author
+**Callers:** None
 
-**Context:** Design
-
-**Loads:**
+**Calls:**
 
 - `decision-making`
 - `systems-thinking`
@@ -411,11 +348,9 @@ Defines the design-document procedure.
 
 Defines vertical slices and verification checkpoints.
 
-**Consumers:** structure-planner
+**Callers:** None
 
-**Context:** Structure
-
-**Loads:**
+**Calls:**
 
 - `decision-making`
 
@@ -423,19 +358,15 @@ Defines vertical slices and verification checkpoints.
 
 Defines the tactical plan schema.
 
-**Consumers:** planner
-
-**Context:** Plan
+**Callers:** None
 
 ### [reviewing-code](https://github.com/bostonaholic/team/blob/main/skills/reviewing-code/SKILL.md)
 
 Defines adversarial code review and evidence-based findings.
 
-**Consumers:** code-reviewer, security-reviewer, ux-reviewer, technical-writer. `code-review` (front door). `reviewing-designs` read-only Explore reviewer
+**Callers:** `code-review`, `reviewing-designs`
 
-**Context:** Implement (verify), and Design (review gate)
-
-**Loads:**
+**Calls:**
 
 - `engineering-standards`
 - `review-severity-tiers`
@@ -447,11 +378,9 @@ Defines adversarial code review and evidence-based findings.
 
 Defines fresh-context source-comment review and findings.
 
-**Consumers:** `no-comments` (direct load for read-only Explore review)
+**Callers:** `no-comments`
 
-**Context:** Standalone: source-comment review methodology
-
-**Loads:**
+**Calls:**
 
 - `engineering-standards`
 
@@ -459,11 +388,9 @@ Defines fresh-context source-comment review and findings.
 
 Defines adversarial design review and verdicts.
 
-**Consumers:** orchestrator or invoking session (team, team-design, eng-design-doc-review) — the brief a read-only Explore subagent runs
+**Callers:** `eng-design-doc-review`, `team`, `team-design`
 
-**Context:** Design (review-gate brief)
-
-**Loads:**
+**Calls:**
 
 - `conventional-comments`
 - `cross-model-review`
@@ -477,67 +404,51 @@ Defines adversarial design review and verdicts.
 
 Defines review labels and decorations.
 
-**Consumers:** code-reviewer, security-reviewer, technical-writer. `reviewing-designs` read-only Explore reviewer
-
-**Context:** Implement (verify): finding format, and Design (review gate): finding format
+**Callers:** `reviewing-designs`
 
 ### [reviewing-security](https://github.com/bostonaholic/team/blob/main/skills/reviewing-security/SKILL.md)
 
 Defines threat and OWASP review with evidence-rated findings.
 
-**Consumers:** security-reviewer
-
-**Context:** Implement (verify)
+**Callers:** None
 
 ### [cross-model-review](https://github.com/bostonaholic/team/blob/main/skills/cross-model-review/SKILL.md)
 
 Runs second-vendor reviews through machine-only CLI adapters.
 
-**Consumers:** code-reviewer. Orchestrator or invoking session (team, team-design, eng-design-doc-review) through `## Design-review pass`. Design-review brief (conditional, on `## External review input`). `reviewing-designs` read-only Explore reviewer (conditional, on `## External review input`)
-
-**Context:** Implement (verify), and Design (review gate)
+**Callers:** `eng-design-doc-review`, `reviewing-designs`, `team`, `team-design`
 
 ### [review-severity-tiers](https://github.com/bostonaholic/team/blob/main/skills/review-severity-tiers/SKILL.md)
 
 Maps reviewer findings to Blocking, Major, or Minor actions.
 
-**Consumers:** orchestrator (team, team-implement, qrspi-workflow)
-
-**Context:** Implement (aggregate review gate)
+**Callers:** `reviewing-code`, `team`, `team-implement`
 
 ### [engineering-standards](https://github.com/bostonaholic/team/blob/main/skills/engineering-standards/SKILL.md)
 
 Defines code design, comment, and review standards.
 
-**Consumers:** planner, implementer, code-reviewer. `reviewing-designs` read-only Explore reviewer
-
-**Context:** Plan, Implement, and Design (review gate)
+**Callers:** `reviewing-code`, `reviewing-comments`, `reviewing-designs`
 
 ### [test-first-development](https://github.com/bostonaholic/team/blob/main/skills/test-first-development/SKILL.md)
 
 Defines acceptance tests as the implementation scope contract.
 
-**Consumers:** test-architect, code-reviewer. Orchestrator
-
-**Context:** Implement
+**Callers:** None
 
 ### [test-style](https://github.com/bostonaholic/team/blob/main/skills/test-style/SKILL.md)
 
 Defines deterministic behavioral tests and flaky-test red flags.
 
-**Consumers:** test-architect, code-reviewer (just-in-time through pointers)
-
-**Context:** Implement
+**Callers:** `reviewing-code`
 
 ### [test-driven-bug-fix](https://github.com/bostonaholic/team/blob/main/skills/test-driven-bug-fix/SKILL.md)
 
 Defines reproduce-red-green-refactor bug fixes.
 
-**Consumers:** team-fix
+**Callers:** `team-fix`
 
-**Context:** Bug-fix flow
-
-**Loads:**
+**Calls:**
 
 - `systematic-debugging`
 
@@ -545,27 +456,21 @@ Defines reproduce-red-green-refactor bug fixes.
 
 Defines SOLID design and review rules.
 
-**Consumers:** implementer, code-reviewer. `engineering-standards`, `reviewing-code` (citing skills)
-
-**Context:** Implement
+**Callers:** None
 
 ### [refactoring-to-patterns](https://github.com/bostonaholic/team/blob/main/skills/refactoring-to-patterns/SKILL.md)
 
 Maps code smells to behavior-preserving refactorings.
 
-**Consumers:** implementer
-
-**Context:** Implement
+**Callers:** None
 
 ### [implementing-slices](https://github.com/bostonaholic/team/blob/main/skills/implementing-slices/SKILL.md)
 
 Defines test-first slice execution, commits, and review fixes.
 
-**Consumers:** implementer
+**Callers:** None
 
-**Context:** Implement
-
-**Loads:**
+**Calls:**
 
 - `git-commit`
 - `principle-fix-root-causes`
@@ -575,51 +480,39 @@ Defines test-first slice execution, commits, and review fixes.
 
 Defines reproduce, hypothesize, isolate, and fix workflow.
 
-**Consumers:** implementer (inline Load on non-obvious failures). Other agents when debugging (advisory)
-
-**Context:** Implement, and Any (debugging)
+**Callers:** `implementing-slices`, `team-fix`, `test-driven-bug-fix`, `why`
 
 ### [running-quality-checks](https://github.com/bostonaholic/team/blob/main/skills/running-quality-checks/SKILL.md)
 
 Runs project-native tests, static checks, builds, and linters.
 
-**Consumers:** verifier. reflect (after the writes)
-
-**Context:** Implement (verify), and Any (reflect)
+**Callers:** `no-comments`, `pr-rebase`, `pr-verify`, `reflect`, `team`, `team-implement`
 
 ### [principle-progress-tracking](https://github.com/bostonaholic/team/blob/main/skills/principle-progress-tracking/SKILL.md)
 
 Requires one live ledger for ordered procedures.
 
-**Consumers:** every multi-step agent; cited by `team`, `team-implement`, `team-fix`, `pr-screenshots`, `no-comments`
-
-**Context:** Any (multi-step procedure)
+**Callers:** `no-comments`
 
 ### [nested-agents](https://github.com/bostonaholic/team/blob/main/skills/nested-agents/SKILL.md)
 
 Defines safe nested-agent dispatch and fallback.
 
-**Consumers:** researcher, implementer, code-reviewer, security-reviewer
-
-**Context:** Research, Implement (scouts + skeptic passes)
+**Callers:** None
 
 ### [decision-making](https://github.com/bostonaholic/team/blob/main/skills/decision-making/SKILL.md)
 
 Defines a decision method based on reversibility and risk.
 
-**Consumers:** `authoring-designs`, `documenting-decisions`, `groom-backlog`, `pr-open-comments`, `slicing-work`, `technical-design-doc`
-
-**Context:** Design, Structure, Plan, and standalone recommendations
+**Callers:** `authoring-designs`, `documenting-decisions`, `groom-backlog`, `pr-open-comments`, `slicing-work`, `technical-design-doc`
 
 ### [documenting-decisions](https://github.com/bostonaholic/team/blob/main/skills/documenting-decisions/SKILL.md)
 
 Defines ADR structure and lifecycle.
 
-**Consumers:** planner, orchestrator (advisory). `reviewing-designs` read-only Explore reviewer
+**Callers:** `reviewing-designs`
 
-**Context:** Any (when decisions are recorded), and Design (review gate)
-
-**Loads:**
+**Calls:**
 
 - `decision-making`
 - `writing-prose`
@@ -628,11 +521,9 @@ Defines ADR structure and lifecycle.
 
 Defines technical design sections and decision content.
 
-**Consumers:** planner. `reviewing-designs` read-only Explore reviewer
+**Callers:** `reviewing-designs`
 
-**Context:** Plan, and Design (review gate)
-
-**Loads:**
+**Calls:**
 
 - `decision-making`
 - `writing-prose`
@@ -641,11 +532,9 @@ Defines technical design sections and decision content.
 
 Defines when and how to write `3-prd.md`.
 
-**Consumers:** questioner (through `decomposing-intent`, conditional). Design-author (through `authoring-designs`)
+**Callers:** `decomposing-intent`
 
-**Context:** Question, Design
-
-**Loads:**
+**Calls:**
 
 - `writing-prose`
 
@@ -653,51 +542,39 @@ Defines when and how to write `3-prd.md`.
 
 Defines product-need lenses.
 
-**Consumers:** questioner, design-author, structure-planner
-
-**Context:** Question, Design, Structure
+**Callers:** None
 
 ### [systems-thinking](https://github.com/bostonaholic/team/blob/main/skills/systems-thinking/SKILL.md)
 
 Defines system-boundary, feedback, and dependency analysis.
 
-**Consumers:** researcher, structure-planner, planner (frontmatter). Implementer, code-reviewer, ux-reviewer (inline). Authoring-designs, nested-agents (citing skills)
-
-**Context:** Research, Design, Structure, Plan, Implement (incl. verify)
+**Callers:** `authoring-designs`
 
 ### [writing-prose](https://github.com/bostonaholic/team/blob/main/skills/writing-prose/SKILL.md)
 
 Defines plain-language prose rules.
 
-**Consumers:** technical-writer, design-author. `reviewing-designs` read-only Explore reviewer
-
-**Context:** Design (authoring bar), and Implement (verify): bar for prose it writes and prose it assesses. Design (review gate): prose bar
+**Callers:** `authoring-designs`, `changelog`, `documenting-decisions`, `eng-design-doc-review`, `git-commit`, `product-requirements-doc`, `reviewing-code`, `reviewing-designs`, `team-pr`, `technical-design-doc`
 
 ### [reviewing-documentation](https://github.com/bostonaholic/team/blob/main/skills/reviewing-documentation/SKILL.md)
 
 Defines documentation-gap review and REQUIRED/RECOMMENDED findings.
 
-**Consumers:** technical-writer
-
-**Context:** Implement (verify): doc-gap review process + classification
+**Callers:** None
 
 ### [verifying-ux](https://github.com/bostonaholic/team/blob/main/skills/verifying-ux/SKILL.md)
 
 Defines live application and screenshot verification.
 
-**Consumers:** ux-reviewer
-
-**Context:** Implement (verify)
+**Callers:** `team-pr`
 
 ### [git-commit](https://github.com/bostonaholic/team/blob/main/skills/git-commit/SKILL.md)
 
 Defines Conventional Commit subjects and safe commit procedure.
 
-**Consumers:** team-pr. Implementer (through `implementing-slices`)
+**Callers:** `implementing-slices`, `team-pr`
 
-**Context:** PR, and Implement (slice commits)
-
-**Loads:**
+**Calls:**
 
 - `writing-prose`
 
@@ -705,11 +582,9 @@ Defines Conventional Commit subjects and safe commit procedure.
 
 Defines Keep a Changelog updates.
 
-**Consumers:** team, team-pr
+**Callers:** `team`, `team-pr`
 
-**Context:** PR
-
-**Loads:**
+**Calls:**
 
 - `writing-prose`
 
@@ -717,19 +592,15 @@ Defines Keep a Changelog updates.
 
 Defines tracker status transitions and closing rules.
 
-**Consumers:** orchestrator (team, team-pr, team-fix, just-in-time through pointers)
-
-**Context:** Setup (ticket pickup), and PR (ticket link + state)
+**Callers:** `pr-watch-as-author`, `team`, `team-fix`, `team-pr`
 
 ### [worktree-isolation](https://github.com/bostonaholic/team/blob/main/skills/worktree-isolation/SKILL.md)
 
 Defines Team worktree creation, validation, and teardown.
 
-**Consumers:** orchestrator (team, team-worktree)
+**Callers:** `team`, `team-fix`, `team-pr`
 
-**Context:** Worktree
-
-**Loads:**
+**Calls:**
 
 - `team-worktree`
 
@@ -737,209 +608,157 @@ Defines Team worktree creation, validation, and teardown.
 
 Defines machine-local teardown.
 
-**Consumers:** `pr-cleanup`, `worktree-isolation` (both inline)
-
-**Context:** Standalone: teardown after a merged PR, a closed PR, or a completed review
+**Callers:** None
 
 ### [pr-watch-mechanics](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-mechanics/SKILL.md)
 
 Bounded watch-loop mechanics for the pr-watch skills: cycle timing, soft cap, handoff.
 
-**Consumers:** `pr-watch-as-author`, `pr-watch-as-reviewer` (both through the bounded-cycle-mechanics reference)
-
-**Context:** Standalone: bounded watch-loop mechanics
+**Callers:** `pr-watch-as-author`, `pr-watch-as-reviewer`
 
 ### [principle-blind-the-investigator](https://github.com/bostonaholic/team/blob/main/skills/principle-blind-the-investigator/SKILL.md)
 
 Keeps desired outcomes out of research prompts.
 
-**Consumers:** cited by `qrspi-workflow`, `nested-agents`, `decomposing-intent`, `researching-codebases`, `why`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-bounded-loops](https://github.com/bostonaholic/team/blob/main/skills/principle-bounded-loops/SKILL.md)
 
 Requires explicit retry and watch limits.
 
-**Consumers:** cited by `pr-watch-as-author`, `pr-watch-as-reviewer`, `pr-watch-mechanics`, `principle-non-blocking-waits`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-deep-agents-narrow-seams](https://github.com/bostonaholic/team/blob/main/skills/principle-deep-agents-narrow-seams/SKILL.md)
 
 Keeps agent interfaces narrow and internal work deep.
 
-**Consumers:** cited by `nested-agents`, `team`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-evidence-over-assertion](https://github.com/bostonaholic/team/blob/main/skills/principle-evidence-over-assertion/SKILL.md)
 
 Requires evidence for claims and verdicts.
 
-**Consumers:** cited by `pr-verify`, `groom-backlog`, `pr-open-comments`, `researching-codebases`, `why`, `pr-screenshots`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-explicit-intent](https://github.com/bostonaholic/team/blob/main/skills/principle-explicit-intent/SKILL.md)
 
 Requires stated intent for irreversible actions.
 
-**Consumers:** cited by `shipit`, `pr-rebase`, `pr-cleanup`, `team-fix`, `reflect`, `groom-backlog`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-fail-closed](https://github.com/bostonaholic/team/blob/main/skills/principle-fail-closed/SKILL.md)
 
 Treats unknown guarantees as failures.
 
-**Consumers:** cited by `nested-agents`, `team`, `team-design`, `team-structure`, `principle-optimization-never-dependency`, `pr-screenshots`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-files-are-the-contract](https://github.com/bostonaholic/team/blob/main/skills/principle-files-are-the-contract/SKILL.md)
 
 Requires durable files for cross-step state.
 
-**Consumers:** cited by `qrspi-workflow`, `team`, `artifact-frontmatter`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-fix-root-causes](https://github.com/bostonaholic/team/blob/main/skills/principle-fix-root-causes/SKILL.md)
 
 Requires diagnosis and repair of root causes.
 
-**Consumers:** cited by `systematic-debugging`, `test-driven-bug-fix`, `implementing-slices`, `team-fix`, `no-comments`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** `implementing-slices`, `no-comments`
 
 ### [principle-generator-evaluator](https://github.com/bostonaholic/team/blob/main/skills/principle-generator-evaluator/SKILL.md)
 
 Separates producers from evaluators.
 
-**Consumers:** cited by `reviewing-code`, `eng-design-doc-review`, `nested-agents`, `pr-watch-as-reviewer`, `principle-blind-the-investigator`, `how`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-human-owns-the-ends](https://github.com/bostonaholic/team/blob/main/skills/principle-human-owns-the-ends/SKILL.md)
 
 Reserves goals and shipping decisions for the user.
 
-**Consumers:** cited by `review-severity-tiers`, `qrspi-workflow`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-idempotent-reruns](https://github.com/bostonaholic/team/blob/main/skills/principle-idempotent-reruns/SKILL.md)
 
 Requires reruns to converge without duplicate effects.
 
-**Consumers:** cited by `pr-cleanup`, `groom-backlog`, `team`, `pr-watch-as-author`, `team-design`, `principle-pre-image-first`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-least-privilege](https://github.com/bostonaholic/team/blob/main/skills/principle-least-privilege/SKILL.md)
 
 Limits tools, credentials, and environment to the task.
 
-**Consumers:** cited by `reviewing-code`, `reflect`, `eng-design-doc-review`, `cross-model-review`, `pr-verify`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-mechanical-gates](https://github.com/bostonaholic/team/blob/main/skills/principle-mechanical-gates/SKILL.md)
 
 Requires deterministic enforcement for reliable rules.
 
-**Consumers:** cited by `qrspi-workflow`, `test-first-development`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-never-interpolate](https://github.com/bostonaholic/team/blob/main/skills/principle-never-interpolate/SKILL.md)
 
 Keeps external text out of shell syntax.
 
-**Consumers:** cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `sweeping-local-state`, `decomposing-intent`, `cross-model-review`, `pr-screenshots`, `team-pr`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-non-blocking-waits](https://github.com/bostonaholic/team/blob/main/skills/principle-non-blocking-waits/SKILL.md)
 
 Requires resumable waits for external state.
 
-**Consumers:** cited by `pr-watch-as-author`, `pr-watch-as-reviewer`, `pr-watch-mechanics`, `shipit`, `cross-model-review`, `pr-rebase`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-optimization-never-dependency](https://github.com/bostonaholic/team/blob/main/skills/principle-optimization-never-dependency/SKILL.md)
 
 Keeps optional enhancements off the correctness path.
 
-**Consumers:** cited by `nested-agents`, `cross-model-review`, `team-pr`, `pr-verify`, `reflect`, `principle-fail-closed`, `why`, `how`, `pr-screenshots`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-plan-present-wait](https://github.com/bostonaholic/team/blob/main/skills/principle-plan-present-wait/SKILL.md)
 
 Requires a written plan and user approval before mutations.
 
-**Consumers:** cited by `groom-backlog`, `pr-open-comments`, `reflect`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-pre-image-first](https://github.com/bostonaholic/team/blob/main/skills/principle-pre-image-first/SKILL.md)
 
 Requires a recoverable baseline before destructive changes.
 
-**Consumers:** cited by `pr-rebase`, `groom-backlog`, `reflect`, `running-quality-checks`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-record-assumptions](https://github.com/bostonaholic/team/blob/main/skills/principle-record-assumptions/SKILL.md)
 
 Records autonomous resolutions as assumptions.
 
-**Consumers:** cited by `authoring-designs`, `decomposing-intent`, `nested-agents`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-scope-fence](https://github.com/bostonaholic/team/blob/main/skills/principle-scope-fence/SKILL.md)
 
 Restricts execution to approved scope.
 
-**Consumers:** cited by `implementing-slices`, `qrspi-workflow`, `test-first-development`, `principle-subtract-before-you-add`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-single-source-of-truth](https://github.com/bostonaholic/team/blob/main/skills/principle-single-source-of-truth/SKILL.md)
 
 Requires one authoritative definition per rule or schema.
 
-**Consumers:** cited by `qrspi-workflow`, `artifact-frontmatter`, `cross-model-review`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-skip-loudly](https://github.com/bostonaholic/team/blob/main/skills/principle-skip-loudly/SKILL.md)
 
 Requires skipped work to be reported explicitly.
 
-**Consumers:** cited by `reviewing-code`, `sweeping-local-state`, `groom-backlog`, `cross-model-review`, `principle-optimization-never-dependency`, `principle-scope-fence`, `pr-screenshots`, `why`, and the `code-reviewer` agent. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-subtract-before-you-add](https://github.com/bostonaholic/team/blob/main/skills/principle-subtract-before-you-add/SKILL.md)
 
 Requires removal before addition.
 
-**Consumers:** cited by `engineering-standards`, `implementing-slices`, `refactoring-to-patterns`, `authoring-designs`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ### [principle-untrusted-input-is-data](https://github.com/bostonaholic/team/blob/main/skills/principle-untrusted-input-is-data/SKILL.md)
 
 Treats external text as inert data.
 
-**Consumers:** cited by `pr-cleanup`, `pr-rebase`, `groom-backlog`, `cross-model-review`, `pr-watch-as-author`, `reflect`, `why`, `pr-screenshots`. Any agent (just-in-time)
-
-**Context:** Any (cross-cutting principle)
+**Callers:** None
 
 ## Name-collision pairs
 

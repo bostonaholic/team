@@ -411,7 +411,7 @@ describe("thin agents: skills catalog stays complete", () => {
 
   for (const { skill } of NEW_SKILLS) {
     test(`docs/skills.md documents ${skill}`, () => {
-      expect(read(SKILLS_MD)).toContain(`\`${skill}\``);
+      expect(read(SKILLS_MD)).toContain(`### [${skill}](`);
     });
   }
 });

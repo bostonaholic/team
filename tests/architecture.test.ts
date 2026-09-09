@@ -8,31 +8,6 @@ import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 
-function catalogConsumerField(page: string, name: string): string {
-  const heading = `### [${name}]`;
-  const start = page.indexOf(heading);
-  if (start === -1) return "";
-  const section = page.slice(start + heading.length);
-  const end = section.search(/\n#{2,3} /);
-  const entry = end === -1 ? section : section.slice(0, end);
-  const line = entry.split("\n").find((value) => value.startsWith("**Consumers:**"));
-  return line?.slice("**Consumers:**".length).trim() ?? "";
-}
-
-function mentions(text: string, name: string): boolean {
-  return new RegExp(`(?:^|[^\\w-])${name}(?:$|[^\\w-])`).test(text);
-}
-
-function consumerContractOffenders(page: string, contracts: Record<string, string[]>): string[] {
-  return Object.entries(contracts).flatMap(([skill, consumers]) => {
-    const field = catalogConsumerField(page, skill);
-    if (field === "") return [`${skill}: consumer field missing or empty`];
-    return consumers
-      .filter((consumer) => !mentions(field, consumer))
-      .map((consumer) => `${skill}: consumer field omits ${consumer}`);
-  });
-}
-
 // Absence check: runs grep through execFileSync. A non-zero exit (grep found
 // nothing) is the PASS and returns true; a zero exit (a match was found)
 // returns false. grep's exit code 2 (a real error, e.g. unreadable path)
@@ -55,7 +30,6 @@ describe("skill architecture", () => {
   const TECHNICAL_WRITER = join(REPO_ROOT, "agents", "technical-writer.md");
   const VERIFIER = join(REPO_ROOT, "agents", "verifier.md");
   const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
-  const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
 
   test("code-reviewer references reviewing-code/SKILL.md", () => {
@@ -85,23 +59,6 @@ describe("skill architecture", () => {
     // methodology wherever it lives and must not dispatch a reviewer either.
     expect(read(VERIFIER)).not.toContain("code-review/SKILL.md");
     expect(read(VERIFIER)).not.toContain("reviewing-code/SKILL.md");
-  });
-
-  test("catalog consumer fields satisfy architecture and methodology contracts", () => {
-    expect(
-      consumerContractOffenders(read(SKILLS_MD), {
-        "reviewing-code": [
-          "code-reviewer",
-          "security-reviewer",
-          "ux-reviewer",
-          "technical-writer",
-          "reviewing-designs",
-        ],
-        "engineering-standards": ["planner", "implementer", "code-reviewer", "reviewing-designs"],
-        solid: ["implementer", "code-reviewer", "engineering-standards", "reviewing-code"],
-        "refactoring-to-patterns": ["implementer"],
-      }),
-    ).toEqual([]);
   });
 
   test("extraction threshold documented in docs/architecture.md", () => {
