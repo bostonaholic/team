@@ -40,7 +40,6 @@ const CATALOG = join(REPO_ROOT, "docs", "skills.md");
 const SKILLS_ROOT = join(REPO_ROOT, "skills");
 
 const CALLS_HEADER = "**Calls:**";
-const LOAD_BULLET = /^- `([a-z0-9-]+)`$/;
 const CALLERS_HEADER = "**Callers:**";
 
 type Entry = {
@@ -92,15 +91,8 @@ function markdownFiles(dir: string): string[] {
   });
 }
 
-/** The names on the entry's load bullets, in authored order. */
-function loadBullets(body: string[]): string[] {
-  return body.flatMap((line) => {
-    const bullet = LOAD_BULLET.exec(line.trim());
-    return bullet ? [bullet[1] as string] : [];
-  });
-}
-
-function callerNames(value: string): string[] | undefined {
+/** The names in a relationship field, in authored order. */
+function relationshipNames(value: string): string[] | undefined {
   if (value === "None") return [];
   if (!/^`[a-z0-9-]+`(?:, `[a-z0-9-]+`)*$/.test(value)) return undefined;
   return [...value.matchAll(/`([a-z0-9-]+)`/g)].map((match) => match[1] as string);
@@ -108,7 +100,11 @@ function callerNames(value: string): string[] | undefined {
 
 function entryFields(body: string[]): Pick<Entry, "description" | "callers" | "loads"> {
   const callerLines = body.filter((line) => line.startsWith(CALLERS_HEADER));
+  const callLines = body.filter((line) => line.startsWith(CALLS_HEADER));
   const callerIndex = body.findIndex((line) => line.startsWith(CALLERS_HEADER));
+  const calls = callLines.length === 1
+    ? (callLines[0] as string).slice(CALLS_HEADER.length).trim()
+    : "";
 
   return {
     description: callerIndex === -1 ? [] : body.slice(0, callerIndex),
@@ -116,13 +112,8 @@ function entryFields(body: string[]): Pick<Entry, "description" | "callers" | "l
       callerLines.length === 1
         ? (callerLines[0] as string).slice(CALLERS_HEADER.length).trim()
         : "",
-    loads: loadBullets(body),
+    loads: relationshipNames(calls) ?? [],
   };
-}
-
-/** True when the body carries the calls header. */
-function hasCallsHeader(body: string[]): boolean {
-  return body.some((line) => line.trim() === CALLS_HEADER);
 }
 
 // ---------------------------------------------------------------------------
@@ -133,54 +124,33 @@ function hasCallsHeader(body: string[]): boolean {
 
 /**
  * Shape offenders for one entry body, each naming the offending line. The body
- * must be one or more prose lines, then optionally the calls header followed
- * by one or more load bullets, and nothing after. Eight offenders: (1) zero
- * prose lines; (2) a line starting `- ` that is not exactly a load bullet
- * (a surviving `**Purpose:**` bullet, a trailing clause after a name); (3) a
- * prose line after the calls header; (4) a calls header with no bullet
- * under it; (5) a load bullet with no header above it; (6) a second loads
- * header; (7) a duplicate name among the bullets; (8) any body line with
- * leading whitespace, first line included.
+ * must be one or more prose lines, then one Callers line and one Calls line.
+ * Both relationship fields use comma-separated skill names or `None`.
  */
 function shape(body: string[]): string[] {
   const offenders: string[] = [];
-  const seen = new Set<string>();
   const callerIndexes = body.flatMap((line, index) =>
     line.startsWith(CALLERS_HEADER) ? [index] : [],
   );
-  let headers = 0;
-  let bullets = 0;
+  const callIndexes = body.flatMap((line, index) =>
+    line.startsWith(CALLS_HEADER) ? [index] : [],
+  );
 
   for (const [index, line] of body.entries()) {
     const trimmed = line.trim();
     if (line !== trimmed) offenders.push(`indented body line: ${JSON.stringify(line)}`);
 
-    if (trimmed.startsWith(CALLERS_HEADER)) {
+    if (trimmed.startsWith(CALLERS_HEADER) || trimmed.startsWith(CALLS_HEADER)) {
+      const header = trimmed.startsWith(CALLERS_HEADER) ? CALLERS_HEADER : CALLS_HEADER;
+      const value = trimmed.slice(header.length).trim();
+      const names = relationshipNames(value);
+      if (names === undefined) offenders.push(`invalid ${header} list: ${JSON.stringify(value)}`);
+      if (names && new Set(names).size !== names.length) {
+        offenders.push(`duplicate name in ${header} list`);
+      }
       continue;
     }
 
-    if (trimmed === CALLS_HEADER) {
-      headers++;
-      if (headers > 1) offenders.push("second calls header");
-      continue;
-    }
-
-    const bullet = LOAD_BULLET.exec(trimmed);
-    if (bullet) {
-      const name = bullet[1] as string;
-      bullets++;
-      if (headers === 0) offenders.push(`load bullet with no header above it: ${name}`);
-      if (seen.has(name)) offenders.push(`duplicate load: ${name}`);
-      seen.add(name);
-      continue;
-    }
-
-    if (trimmed.startsWith("- ")) {
-      offenders.push(`bullet that is not a bare load: ${JSON.stringify(trimmed)}`);
-      continue;
-    }
-
-    if (headers > 0) offenders.push(`prose line after the calls header: ${JSON.stringify(trimmed)}`);
     if ((callerIndexes[0] ?? body.length) < index) {
       offenders.push(`prose line after the caller field: ${JSON.stringify(trimmed)}`);
     }
@@ -189,23 +159,18 @@ function shape(body: string[]): string[] {
   if (callerIndexes.length !== 1) {
     offenders.push(`${callerIndexes.length} caller fields`);
   }
-  if (callerIndexes.length === 1) {
+  if (callIndexes.length !== 1) {
+    offenders.push(`${callIndexes.length} call fields`);
+  }
+  if (callerIndexes.length === 1 && callIndexes.length === 1) {
     const callerIndex = callerIndexes[0] as number;
+    const callIndex = callIndexes[0] as number;
     if (callerIndex === 0) offenders.push("no description before the caller field");
-    if ((body[callerIndex] as string).slice(CALLERS_HEADER.length).trim() === "") {
-      offenders.push("caller field is empty");
-    }
-
-    const loadsIndex = body.findIndex((line) => line === CALLS_HEADER);
-    if (loadsIndex === -1 && callerIndex !== body.length - 1) {
-      offenders.push("content follows the caller field without a calls header");
-    }
-    if (loadsIndex !== -1 && loadsIndex !== callerIndex + 1) {
+    if (callIndex !== callerIndex + 1) {
       offenders.push("calls header does not immediately follow the caller field");
     }
+    if (callIndex !== body.length - 1) offenders.push("content follows the calls field");
   }
-
-  if (headers > 0 && bullets === 0) offenders.push("calls header with no bullet under it");
   return offenders;
 }
 
@@ -233,29 +198,29 @@ function sentence(descriptionLines: string[], description: string): string[] {
 
 /**
  * Load-set offenders, each naming the offending name: a derived name missing
- * from the bullets, a listed name absent from the derived set, and a listed name
+ * from the field, a listed name absent from the derived set, and a listed name
  * that is not a real skill at all. The second one is the direction check — a
  * skill that only *names* another skill has no edge to it, so listing it here
  * would draw an arrow the source never authorized.
  */
-function loadSet(bullets: string[], derived: Set<string>, names: Set<string>): string[] {
-  const listed = new Set(bullets);
+function loadSet(values: string[], derived: Set<string>, names: Set<string>): string[] {
+  const listed = new Set(values);
   return [
     ...[...derived].filter((name) => !listed.has(name)).map((name) => `loads omit ${name}`),
-    ...bullets.filter((name) => !derived.has(name)).map((name) => `loads list ${name}, which its files never load`),
-    ...bullets.filter((name) => !names.has(name)).map((name) => `loads list ${name}, which is not a skill`),
+    ...values.filter((name) => !derived.has(name)).map((name) => `loads list ${name}, which its files never load`),
+    ...values.filter((name) => !names.has(name)).map((name) => `loads list ${name}, which is not a skill`),
   ];
 }
 
 /**
- * Order offenders: the authored bullet names compared to that same array under
+ * Order offenders: the authored names compared to that same array under
  * `[...names].sort()` — codepoint order, so `pr-verify` precedes
  * `principle-fail-closed`. Names the first name out of place.
  */
-function loadOrder(bullets: string[]): string[] {
-  const sorted = [...bullets].sort();
-  const at = bullets.findIndex((name, index) => name !== sorted[index]);
-  return at === -1 ? [] : [`loads out of order at ${bullets[at]}, expected ${sorted[at]}`];
+function loadOrder(values: string[]): string[] {
+  const sorted = [...values].sort();
+  const at = values.findIndex((name, index) => name !== sorted[index]);
+  return at === -1 ? [] : [`loads out of order at ${values[at]}, expected ${sorted[at]}`];
 }
 
 /**
@@ -350,8 +315,8 @@ const NAMED_EDGES = new Set(
   ),
 );
 const SKILL_MD_EDGES = edgeSet(SKILL_MD_TEXT);
-const ENTRIES_WITH_CALLS = ENTRIES.filter((entry) => hasCallsHeader(entry.body)).length;
-const ENTRIES_WITHOUT_CALLS = ENTRIES.filter((entry) => !hasCallsHeader(entry.body)).length;
+const ENTRIES_WITH_CALLS = ENTRIES.filter((entry) => entry.loads.length > 0).length;
+const ENTRIES_WITHOUT_CALLS = ENTRIES.filter((entry) => entry.loads.length === 0).length;
 const EMPTY_ENTRY_BODIES = ENTRIES.filter((entry) => entry.body.length === 0).map(
   (entry) => entry.name,
 );
@@ -375,7 +340,7 @@ function callReciprocityOffenders(entries: Entry[]): string[] {
   return [
     ...unknownLoads,
     ...entries.flatMap((entry) => {
-      const actual = callerNames(entry.callers);
+      const actual = relationshipNames(entry.callers);
       if (!actual) return [`${entry.name}: invalid caller list ${JSON.stringify(entry.callers)}`];
       const names = (expected.get(entry.name) ?? []).sort();
       return actual.length === names.length && actual.every((name, index) => name === names[index])
@@ -390,15 +355,10 @@ function authoringContractOffenders(text: string): string[] {
   const calls = text.indexOf(CALLS_HEADER);
   return [
     ...(callers === -1 ? [`create-team-skill omits ${CALLERS_HEADER}`] : []),
+    ...(calls === -1 ? [`create-team-skill omits ${CALLS_HEADER}`] : []),
     ...(callers !== -1 && calls !== -1 && calls < callers
       ? ["create-team-skill orders calls before the caller field"]
       : []),
-    ...(text.includes("Set `**Callers:**` to `None`")
-      ? []
-      : ["create-team-skill omits the zero-caller rule"]),
-    ...(text.includes("every skill whose `**Calls:**` list names it")
-      ? []
-      : ["create-team-skill omits the reciprocal caller rule"]),
   ];
 }
 
@@ -418,7 +378,7 @@ const CATALOG_INTRODUCTION = CATALOG_TEXT.slice(
   CATALOG_TEXT.indexOf("\n## Entry-point skills"),
 );
 const REMOVED_RELATIONSHIP_OFFENDERS = removedRelationshipPresentation(CATALOG_TEXT);
-const MISSING_INTRODUCTION_LABELS = [CALLERS_HEADER].filter(
+const MISSING_INTRODUCTION_LABELS = [CALLERS_HEADER, CALLS_HEADER].filter(
   (label) => !CATALOG_INTRODUCTION.includes(label),
 );
 const CONTEXT_FIELD_OFFENDERS = CATALOG_TEXT.includes("**Context:**")
@@ -428,12 +388,14 @@ const CALL_RECIPROCITY_OFFENDERS = callReciprocityOffenders(ENTRIES);
 const LONG_CALLER_BODY = [
   "Long relationship.",
   `${CALLERS_HEADER} ${Array.from({ length: 40 }, (_, index) => `\`caller-${index}\``).join(", ")}`,
+  `${CALLS_HEADER} None`,
 ];
 const FINAL_ENTRY_BODY = catalogEntries([
   "## Methodology skills",
   "### [final-skill](target)",
   "Final skill.",
   `${CALLERS_HEADER} None`,
+  `${CALLS_HEADER} None`,
   "## Name-collision pairs",
   "not part of the entry",
 ].join("\n"))[0]?.body;
@@ -496,9 +458,7 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     const clean = [
       "Lands a reviewed PR.",
       `${CALLERS_HEADER} None`,
-      CALLS_HEADER,
-      "- `pr-verify`",
-      "- `principle-fail-closed`",
+      `${CALLS_HEADER} \`pr-verify\`, \`principle-fail-closed\``,
     ];
     expect(shape(clean)).toEqual([]);
 
@@ -511,23 +471,23 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
       ]),
     ).not.toEqual([]);
 
-    // Second calls header.
-    expect(shape([...clean, CALLS_HEADER, "- `shipit`"])).not.toEqual([]);
+    // Second calls field.
+    expect(shape([...clean, `${CALLS_HEADER} \`shipit\``])).not.toEqual([]);
 
     // Trailing clause after a name.
     expect(
-      shape(["Lands a reviewed PR.", CALLS_HEADER, "- `pr-verify` for the checks"]),
+      shape(["Lands a reviewed PR.", `${CALLERS_HEADER} None`, `${CALLS_HEADER} \`pr-verify\` for the checks`]),
     ).not.toEqual([]);
 
-    // Duplicate name among the bullets.
+    // Duplicate name in the comma list.
     expect(
-      shape(["Lands a reviewed PR.", CALLS_HEADER, "- `pr-verify`", "- `pr-verify`"]),
+      shape(["Lands a reviewed PR.", `${CALLERS_HEADER} None`, `${CALLS_HEADER} \`pr-verify\`, \`pr-verify\``]),
     ).not.toEqual([]);
 
     // Indented line, as the first line and as a later line.
     expect(shape(["  Lands a reviewed PR."])).not.toEqual([]);
     expect(
-      shape(["Lands a reviewed PR.", CALLS_HEADER, "- `pr-verify`", "  continued"]),
+      shape(["Lands a reviewed PR.", `${CALLERS_HEADER} None`, `${CALLS_HEADER} None`, "  continued"]),
     ).not.toEqual([]);
 
     // Drifted sentence: the page no longer copies the description's first sentence.
@@ -535,7 +495,7 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     expect(sentence(["Lands a reviewed PR."], description)).toEqual([]);
     expect(sentence(["Lands a merged PR."], description)).not.toEqual([]);
 
-    expect(shape(["Leaf skill.", `${CALLERS_HEADER} None`])).toEqual([]);
+    expect(shape(["Leaf skill.", `${CALLERS_HEADER} None`, `${CALLS_HEADER} None`])).toEqual([]);
     expect(shape(["Leaf skill."])).not.toEqual([]);
     expect(shape(["Leaf skill.", CALLERS_HEADER])).not.toEqual([]);
     expect(
@@ -543,12 +503,14 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
         "Leaf skill.",
         `${CALLERS_HEADER} None`,
         `${CALLERS_HEADER} \`agent\``,
+        `${CALLS_HEADER} None`,
       ]),
     ).not.toEqual([]);
     expect(shape(LONG_CALLER_BODY)).toEqual([]);
     expect(FINAL_ENTRY_BODY).toEqual([
       "Final skill.",
       `${CALLERS_HEADER} None`,
+      `${CALLS_HEADER} None`,
     ]);
 
     const reciprocal = catalogEntries([
@@ -556,11 +518,11 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
       "### [a](target)",
       "A skill.",
       `${CALLERS_HEADER} None`,
-      CALLS_HEADER,
-      "- `b`",
+      `${CALLS_HEADER} \`b\``,
       "### [b](target)",
       "B skill.",
       `${CALLERS_HEADER} \`a\``,
+      `${CALLS_HEADER} None`,
     ].join("\n"));
     expect(callReciprocityOffenders(reciprocal)).toEqual([]);
     expect(
@@ -575,7 +537,7 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
       ),
     ).toEqual(["relationship heading remains", "relationship anchor link remains"]);
 
-    // Phantom name: a bullet naming no skill on disk.
+    // Phantom name: a field naming no skill on disk.
     const derived = new Set(["pr-verify", "principle-fail-closed"]);
     expect(loadSet(["pr-verify", "principle-fail-closed"], derived, NAMES)).toEqual([]);
     expect(
