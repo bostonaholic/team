@@ -13,6 +13,13 @@ const REPO_ROOT = process.cwd();
 const AGENTS_DIR = join(REPO_ROOT, "agents");
 const NESTED_SKILL = join(REPO_ROOT, "skills", "nested-agents", "SKILL.md");
 const NESTED_VERSION_CHECK = join(REPO_ROOT, "skills", "nested-agents", "supports-nesting.mjs");
+const NESTED_DISPATCH = join(REPO_ROOT, "skills", "nested-agents", "references", "per-agent-dispatch.md");
+const PROSE_PATHS = [
+  "${CLAUDE_PLUGIN_ROOT}/skills/unslop/SKILL.md",
+  "${CLAUDE_PLUGIN_ROOT}/skills/unslop/references/rules.md",
+  "${CLAUDE_PLUGIN_ROOT}/skills/writing-prose/SKILL.md",
+  "${CLAUDE_PLUGIN_ROOT}/skills/writing-prose/references/style-guide.md",
+];
 
 const agent = (name: string) => join(AGENTS_DIR, `${name}.md`);
 const readOrEmpty = (path: string): string => (existsSync(path) ? read(path) : "");
@@ -254,4 +261,45 @@ describe("skeptic pass safety pins (protects true-positive detection)", () => {
       expect(flat(read(agent(name)))).toContain("never remove a true positive");
     });
   }
+});
+
+describe("non-vendor nested prose contract", () => {
+  test("parent and dispatch procedure name every installed prose path", () => {
+    for (const file of [NESTED_SKILL, NESTED_DISPATCH]) {
+      for (const prosePath of PROSE_PATHS) expect(read(file)).toContain(prosePath);
+    }
+  });
+
+  test("helpers read before the ordered audit and preserve reply contracts", () => {
+    const text = flat(read(NESTED_DISPATCH));
+    expect(text).toMatch(/Read all four.*untouched authored draft.*checklist.*writing-prose.*rescan/i);
+    expect(text).toMatch(/(?:<=|at most) 30 lines/i);
+    expect(text).toMatch(/(?:<=|at most) 10 lines/i);
+    expect(text).toContain("file:line");
+    expect(text).toContain("REFUTED");
+    expect(text).toContain("CONFIRMED");
+  });
+
+  test("research isolation permits fixed method text but restricts task-derived content", () => {
+    const text = flat(read(NESTED_DISPATCH));
+    expect(text).toContain("Restrict task-derived content");
+    expect(text).toContain("allowed operational method text");
+    expect(text).toContain("question text copied verbatim from `2-questions.md`");
+    expect(text).toContain("repo slugs/paths from `4-repos.md`");
+    expect(text).toMatch(/Never add task framing.*`1-task\.md`.*intent/i);
+  });
+
+  test("failed reads discard helper output and retain role-specific fallbacks", () => {
+    const text = flat(read(NESTED_SKILL));
+    expect(text).toMatch(/cannot Read one, discard/i);
+    expect(text).toMatch(/scout parent.*inline/i);
+    expect(text).toMatch(/reviewer.*default-keep/i);
+  });
+
+  test("vendor couriers bypass prose reads and preserve stdout bytes", () => {
+    const courier = flat(read(NESTED_DISPATCH).split("## `code-reviewer` — vendor couriers")[1] ?? "");
+    expect(courier.length).toBeGreaterThan(0);
+    expect(courier).toMatch(/do not receive or Read the prose files/i);
+    expect(courier).toMatch(/stdout verbatim/i);
+  });
 });

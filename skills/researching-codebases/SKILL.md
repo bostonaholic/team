@@ -17,7 +17,11 @@ Answer every neutral question in `2-questions.md` with objective, compressed, fi
 
 ## Output format
 
-Keep `docs/plans/<id>/5-research.md` under 100 lines, or under 150 for multi-repo output. Prefix multi-repo references with the `4-repos.md` slug, e.g. `frontend:src/App.tsx:42`.
+Return at most 60 physical lines, or 100 in multi-repo mode. Terminal empty or
+whitespace-only lines count toward the limit. The assembler keeps this return
+unchanged inside a labeled, untrusted-evidence fence in
+`5-research.md`. Prefix multi-repo references with the `4-repos.md` slug, e.g.
+`frontend:src/App.tsx:42`.
 
 ```markdown
 ## Tech Stack

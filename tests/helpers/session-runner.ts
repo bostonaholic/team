@@ -14,7 +14,7 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { readFileSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 export type ExitReason = "success" | "timeout" | `exit_code_${number}`;
 
@@ -22,6 +22,7 @@ export interface ToolCall {
   tool: string;
   input: unknown;
   output: string;
+  isError: boolean | null;
 }
 
 export interface CostEstimate {
@@ -57,6 +58,23 @@ export interface RunAgentTestOptions {
   // run the suite makes it reach for Bash; in `-p` mode that permission
   // request has no one to answer it and the run hangs to the timeout.
   disallowedTools?: string[];
+}
+
+export function successfullyReadEveryPath(
+  toolCalls: ToolCall[],
+  paths: string[],
+  workingDirectory: string,
+): boolean {
+  const successfulReads = toolCalls
+    .filter(({ tool, isError }) => tool === "Read" && isError === false)
+    .map(({ input }) => {
+      if (typeof input !== "object" || input === null) return null;
+      const fields = input as Record<string, unknown>;
+      if ("offset" in fields || "limit" in fields) return null;
+      const readPath = typeof fields.file_path === "string" ? fields.file_path : fields.file;
+      return typeof readPath === "string" ? resolve(workingDirectory, readPath) : null;
+    });
+  return paths.every((path) => successfulReads.includes(resolve(workingDirectory, path)));
 }
 
 // Matches what plugin users get: the shipped agents use floating aliases,
@@ -119,6 +137,7 @@ interface DerivedFromEvents {
 
 export function extractToolCallsAndUsage(events: unknown[]): DerivedFromEvents {
   const toolCalls: ToolCall[] = [];
+  const toolCallsById = new Map<string, ToolCall>();
   let inputTokens = 0;
   let outputTokens = 0;
   let finalOutput = "";
@@ -135,11 +154,14 @@ export function extractToolCallsAndUsage(events: unknown[]): DerivedFromEvents {
           if (typeof item !== "object" || item === null) continue;
           const it = item as Record<string, unknown>;
           if (it.type === "tool_use" && typeof it.name === "string") {
-            toolCalls.push({
+            const toolCall = {
               tool: it.name,
               input: it.input ?? {},
               output: "",
-            });
+              isError: null,
+            };
+            toolCalls.push(toolCall);
+            if (typeof it.id === "string") toolCallsById.set(it.id, toolCall);
           } else if (it.type === "text" && typeof it.text === "string") {
             finalOutput += it.text;
           }
@@ -153,8 +175,7 @@ export function extractToolCallsAndUsage(events: unknown[]): DerivedFromEvents {
       if (typeof usage.output_tokens === "number") outputTokens += usage.output_tokens;
     }
 
-    // tool_result events carry the tool's output; pair with the most recent
-    // tool_use that has not been resolved.
+    // tool_result events carry the tool's output; pair them by tool_use ID.
     if (ev.type === "user" && typeof ev.message === "object" && ev.message !== null) {
       const message = ev.message as Record<string, unknown>;
       const content = message.content;
@@ -166,13 +187,11 @@ export function extractToolCallsAndUsage(events: unknown[]): DerivedFromEvents {
             const output = typeof it.content === "string"
               ? it.content
               : JSON.stringify(it.content ?? "");
-            // Attach to the last tool call that has not been resolved.
-            for (let i = toolCalls.length - 1; i >= 0; i--) {
-              const tc = toolCalls[i];
-              if (tc && tc.output === "") {
-                tc.output = output;
-                break;
-              }
+            const toolCall = toolCallsById.get(it.tool_use_id);
+            if (toolCall && toolCall.isError === null) {
+              toolCall.output = output;
+              toolCall.isError = it.is_error === true;
+              toolCallsById.delete(it.tool_use_id);
             }
           }
         }

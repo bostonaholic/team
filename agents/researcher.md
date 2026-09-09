@@ -42,9 +42,10 @@ and answer the literal question.
 
 The constraints on your findings and the research-report output format
 live in `skills/researching-codebases/SKILL.md` (preloaded). Answer every
-question with evidence from code you read in this run. Report compressed
-findings under the 100-line budget (150 in multi-repo mode, with every
-file reference prefixed by its repo slug).
+question with evidence from code you read in this run. Return compressed
+findings in at most 60 physical lines, or 100 in multi-repo mode. Terminal
+empty or whitespace-only lines count toward the limit. Prefix every
+multi-repo file reference with its repo slug.
 
 ## Nested exploration scouts (optional)
 

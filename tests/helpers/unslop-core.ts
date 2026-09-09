@@ -48,6 +48,36 @@ export function rule18RewritePreservesMeaning(line: string): boolean {
     .test(text);
 }
 
+export function normalizedLineCount(text: string): number {
+  const normalized = text.replace(/\r\n?/g, "\n");
+  return normalized.length === 0 ? 0 : normalized.split("\n").length;
+}
+
+export function longestBacktickRun(text: string): number {
+  return Math.max(0, ...[...text.matchAll(/`+/g)].map(([run]) => run.length));
+}
+
+export function wrapUntrustedEvidence(label: string, text: string): string {
+  const fence = "`".repeat(Math.max(3, longestBacktickRun(text) + 1));
+  return `${fence}untrusted-evidence-${label}\n${text}\n${fence}`;
+}
+
+export function extractUntrustedEvidence(text: string, label: string): string | null {
+  const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const opener = new RegExp(`^(` + "`{3,}" + `)untrusted-evidence-${escapedLabel}[ \\t]*$`, "m").exec(text);
+  if (!opener || opener.index === undefined) return null;
+
+  const fence = opener[1] ?? "";
+  const payloadStart = opener.index + opener[0].length;
+  if (text[payloadStart] !== "\n") return null;
+  const remainder = text.slice(payloadStart + 1);
+  const close = new RegExp(`^${fence}$`, "m").exec(remainder);
+  if (!close || close.index === undefined) return null;
+
+  const payload = remainder.slice(0, close.index).replace(/\n$/, "");
+  return fence.length > longestBacktickRun(payload) ? payload : null;
+}
+
 function termPattern(term: string): RegExp {
   const pattern = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+");
   return new RegExp(`\\b${pattern}\\b`, "i");

@@ -48,7 +48,7 @@ jobs:
     # and set required reviewers and/or restrict deployment branches to `main`.
     environment: evals
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     permissions:
       contents: read
     strategy:

@@ -6,14 +6,17 @@
 import { test, expect, describe } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 import {
   parseNDJSON,
   extractToolCallsAndUsage,
   computeTimings,
   runAgentTest,
+  successfullyReadEveryPath,
 } from "./session-runner";
+
+const AGENT_WORKING_DIRECTORY = resolve("agent-work");
 
 describe("parseNDJSON", () => {
   test("parses one event per line", () => {
@@ -59,12 +62,12 @@ describe("extractToolCallsAndUsage", () => {
     expect(finalOutput).toContain("read x.ts");
   });
 
-  test("attaches tool_result outputs to the most recent unresolved tool call", () => {
+  test("attaches tool_result outputs to the tool call with the matching ID", () => {
     const events = [
       {
         type: "assistant",
         message: {
-          content: [{ type: "tool_use", name: "Bash", input: { cmd: "ls" } }],
+          content: [{ type: "tool_use", id: "abc", name: "Bash", input: { cmd: "ls" } }],
         },
       },
       {
@@ -78,6 +81,152 @@ describe("extractToolCallsAndUsage", () => {
     ];
     const { toolCalls } = extractToolCallsAndUsage(events);
     expect(toolCalls[0]?.output).toBe("a\nb\nc");
+    expect(toolCalls[0]?.isError).toBe(false);
+  });
+
+  test("failed Read results do not satisfy successful path coverage", () => {
+    const events = [
+      {
+        type: "assistant",
+        message: {
+          content: [{ type: "tool_use", id: "read-1", name: "Read", input: { file_path: "x.ts" } }],
+        },
+      },
+      {
+        type: "user",
+        message: {
+          content: [{
+            type: "tool_result",
+            tool_use_id: "read-1",
+            is_error: true,
+            content: "File does not exist.",
+          }],
+        },
+      },
+    ];
+    const { toolCalls } = extractToolCallsAndUsage(events);
+
+    expect(toolCalls[0]?.isError).toBe(true);
+    expect(successfullyReadEveryPath(toolCalls, ["x.ts"], AGENT_WORKING_DIRECTORY)).toBe(false);
+  });
+
+  test("parallel tool results stay paired by ID when the required Read fails", () => {
+    const events = [
+      {
+        type: "assistant",
+        message: {
+          content: [
+            { type: "tool_use", id: "required", name: "Read", input: { file_path: "required.ts" } },
+            { type: "tool_use", id: "other", name: "Read", input: { file_path: "other.ts" } },
+          ],
+        },
+      },
+      {
+        type: "user",
+        message: {
+          content: [
+            { type: "tool_result", tool_use_id: "required", is_error: true, content: "Read failed." },
+            { type: "tool_result", tool_use_id: "other", content: "export const other = true;" },
+          ],
+        },
+      },
+    ];
+    const { toolCalls } = extractToolCallsAndUsage(events);
+
+    expect(toolCalls[0]?.isError).toBe(true);
+    expect(toolCalls[1]?.isError).toBe(false);
+    expect(successfullyReadEveryPath(toolCalls, ["required.ts"], AGENT_WORKING_DIRECTORY)).toBe(false);
+  });
+
+  test("Glob path text does not satisfy successful Read coverage", () => {
+    const toolCalls = [{
+      tool: "Glob",
+      input: { pattern: "src/required.ts" },
+      output: "src/required.ts",
+      isError: false,
+    }];
+
+    expect(successfullyReadEveryPath(toolCalls, ["src/required.ts"], AGENT_WORKING_DIRECTORY)).toBe(false);
+  });
+
+  test("an exact successful Read satisfies path coverage", () => {
+    const toolCalls = [{
+      tool: "Read",
+      input: { file_path: "src/required.ts" },
+      output: "export const required = true;",
+      isError: false,
+    }];
+
+    expect(successfullyReadEveryPath(toolCalls, ["src/required.ts"], AGENT_WORKING_DIRECTORY)).toBe(true);
+  });
+
+  test("Read paths containing the required path do not satisfy coverage", () => {
+    const backupRead = [{
+      tool: "Read",
+      input: { file_path: "src/required.ts.backup" },
+      output: "backup",
+      isError: false,
+    }];
+    const prefixedRead = [{
+      tool: "Read",
+      input: { file_path: "archive/src/required.ts" },
+      output: "archived",
+      isError: false,
+    }];
+
+    expect(successfullyReadEveryPath(backupRead, ["src/required.ts"], AGENT_WORKING_DIRECTORY)).toBe(false);
+    expect(successfullyReadEveryPath(prefixedRead, ["src/required.ts"], AGENT_WORKING_DIRECTORY)).toBe(false);
+  });
+
+  test("relative Reads resolve from the agent working directory without sibling matches", () => {
+    const exactRead = [{
+      tool: "Read",
+      input: { file_path: "src/required.ts" },
+      output: "export const required = true;",
+      isError: false,
+    }];
+    const siblingRead = [{
+      tool: "Read",
+      input: { file_path: "../sibling/src/required.ts" },
+      output: "sibling",
+      isError: false,
+    }];
+    const backupRead = [{
+      tool: "Read",
+      input: { file_path: "src/required.ts.backup" },
+      output: "backup",
+      isError: false,
+    }];
+    const requiredPath = join(AGENT_WORKING_DIRECTORY, "src", "required.ts");
+
+    expect(successfullyReadEveryPath(exactRead, [requiredPath], AGENT_WORKING_DIRECTORY)).toBe(true);
+    expect(successfullyReadEveryPath(siblingRead, [requiredPath], AGENT_WORKING_DIRECTORY)).toBe(false);
+    expect(successfullyReadEveryPath(backupRead, [requiredPath], AGENT_WORKING_DIRECTORY)).toBe(false);
+  });
+
+  test("range-limited Reads do not satisfy full-file coverage", () => {
+    const oneLineRead = [{
+      tool: "Read",
+      input: { file_path: "src/required.ts", limit: 1 },
+      output: "first line",
+      isError: false,
+    }];
+    const offsetRead = [{
+      tool: "Read",
+      input: { file_path: "src/required.ts", offset: 2 },
+      output: "later lines",
+      isError: false,
+    }];
+    const completeRead = [{
+      tool: "Read",
+      input: { file_path: "src/required.ts" },
+      output: "complete file",
+      isError: false,
+    }];
+
+    expect(successfullyReadEveryPath(oneLineRead, ["src/required.ts"], AGENT_WORKING_DIRECTORY)).toBe(false);
+    expect(successfullyReadEveryPath(offsetRead, ["src/required.ts"], AGENT_WORKING_DIRECTORY)).toBe(false);
+    expect(successfullyReadEveryPath(completeRead, ["src/required.ts"], AGENT_WORKING_DIRECTORY)).toBe(true);
   });
 
   test("sums usage tokens across result events", () => {

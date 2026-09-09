@@ -44,6 +44,8 @@ Return a structured report organized by category. In multi-repo mode,
 prefix every file path with the repo slug, e.g.
 `frontend:src/App.tsx`, so the implementer can resolve it later. The
 slug is the `name` field from the matching entry in `4-repos.md`.
+Return at most 28 physical lines, or 38 in multi-repo mode. Terminal empty or
+whitespace-only lines count toward the limit.
 
 ```
 ## Found Files
