@@ -37,3 +37,7 @@ Resolve `<name>` only at `<root>/../<name>`. Require `git -C <path> rev-parse --
 5. Draft neutral questions; in multi-repo mode prefix each with `in repo <name>`.
 6. Confirm `Codebase context` describes existing code without desired behavior.
 7. Write `1-task.md`, `2-questions.md`, and conditional `3-prd.md`/`4-repos.md`; return the structured result.
+
+## Applied principles
+
+Call the Skill tool with `principle-record-assumptions`.

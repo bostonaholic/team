@@ -61,3 +61,7 @@ Every item gates progress: **Single Responsibility**; **Clear Naming**; **No Mag
 - Check for Design-First evidence in interfaces and boundaries.
 - Rank failure isolation (Armstrong) and interface contracts (Liskov) above formatting (Knuth).
 - Flag validators, guards, options, and parallel mechanisms that no design, plan, or test demands (`principle-subtract-before-you-add`).
+
+## Applied principles
+
+Call the Skill tool with `principle-subtract-before-you-add`.

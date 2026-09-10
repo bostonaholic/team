@@ -78,4 +78,4 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-optimization-never-dependency`.
+Call the Skill tool with `principle-optimization-never-dependency`.

@@ -50,5 +50,6 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-never-interpolate`, `principle-pre-image-first`,
-`principle-untrusted-input-is-data`, and `principle-non-blocking-waits`.
+Call the Skill tool with `principle-never-interpolate`,
+`principle-pre-image-first`, `principle-untrusted-input-is-data`, and
+`principle-non-blocking-waits`.

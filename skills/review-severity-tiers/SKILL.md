@@ -47,3 +47,7 @@ write Minor-and-below to PR `## Review notes`, tagged by reviewer.
 
 Loop until Blocking/Major are zero. No round limit or consultation ends it.
 Never aggregate a Blocking/Major away; one CRITICAL blocks shipping.
+
+## Applied principles
+
+Call the Skill tool with `principle-human-owns-the-ends`.

@@ -43,7 +43,7 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-evidence-over-assertion`, `principle-explicit-intent`,
-`principle-idempotent-reruns`, `principle-never-interpolate`,
-`principle-pre-image-first`, `principle-skip-loudly`, and
-`principle-untrusted-input-is-data`.
+Call the Skill tool with `principle-evidence-over-assertion`,
+`principle-explicit-intent`, `principle-idempotent-reruns`,
+`principle-never-interpolate`, `principle-pre-image-first`,
+`principle-skip-loudly`, and `principle-untrusted-input-is-data`.

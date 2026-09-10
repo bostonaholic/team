@@ -49,5 +49,6 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-bounded-loops`, `principle-idempotent-reruns`,
-`principle-non-blocking-waits`, and `principle-untrusted-input-is-data`.
+Call the Skill tool with `principle-bounded-loops`,
+`principle-idempotent-reruns`, `principle-non-blocking-waits`, and
+`principle-untrusted-input-is-data`.

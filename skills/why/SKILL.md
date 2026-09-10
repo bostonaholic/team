@@ -36,6 +36,6 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-blind-the-investigator`,
-`principle-evidence-over-assertion`, `principle-optimization-never-dependency`,
-and `principle-skip-loudly`.
+Call the Skill tool with `principle-blind-the-investigator`,
+`principle-evidence-over-assertion`,
+`principle-optimization-never-dependency`, and `principle-skip-loudly`.

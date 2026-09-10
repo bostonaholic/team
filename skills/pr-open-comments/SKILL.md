@@ -38,5 +38,5 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-evidence-over-assertion` and
+Call the Skill tool with `principle-evidence-over-assertion` and
 `principle-plan-present-wait`.

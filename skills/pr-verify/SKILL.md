@@ -23,5 +23,5 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-evidence-over-assertion`, `principle-least-privilege`,
-and `principle-optimization-never-dependency`.
+Call the Skill tool with `principle-evidence-over-assertion`,
+`principle-least-privilege`, and `principle-optimization-never-dependency`.

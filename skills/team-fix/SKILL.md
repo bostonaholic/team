@@ -35,4 +35,5 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-fix-root-causes` and `principle-progress-tracking`.
+Call the Skill tool with `principle-fix-root-causes` and
+`principle-progress-tracking`.
