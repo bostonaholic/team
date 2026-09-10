@@ -118,9 +118,11 @@ option for everything on the punch list. Step 7 states each option's
 reaction in the menu, so choosing an option is choosing the signal it sends.
 
 The verdict feeds steps 5–7. `ALREADY ADDRESSED` maps to option **F**.
-`STALE` and `INACCURATE` usually map to a clarifying reply (**C**/**G**)
-rather than a code change. Never mark a thread stale or inaccurate on a
-hunch — cite the file, line, or commit that proves it.
+`STALE` and `INACCURATE` usually map to a reply that answers the reviewer
+(**C**), or to a decline (**D**) where the claim does not hold, rather than
+to a code change. Neither maps to **G** — both are verdicts you reached
+with evidence, so the ask is understood. Never mark a thread stale or
+inaccurate on a hunch — cite the file, line, or commit that proves it.
 
 ### Step 5 — Classify each open thread
 
@@ -164,16 +166,22 @@ class, and the current diff — never pick it blindly.
 
 Standard option menu (pick the options that apply):
 
-- **A. Apply the change** — edit `<file>` to do `<specific change>`.
+- **A. Apply the change** — edit `<file>` to do `<specific change>`. When the
+  ask is an image rather than code, capture it first, then run
+  `/pr-screenshots` against this PR to put it in the description; the upload
+  mechanics are in `skills/pr-screenshots/SKILL.md`.
 - **B. Apply a variation** — `<a variant that addresses the concern differently>`.
-- **C. Reply to clarify / answer** — `<one-line reply sketch>`.
+- **C. Reply with the answer** — `<one-line reply sketch>`.
 - **D. Decline (will not fix)** — reply with `<one-line rationale>`.
 - **E. Defer** — file a follow-up issue / TODO and resolve with a link.
 - **F. Mark resolved as-is** — current code already addresses it (cite commit/line).
 - **G. Needs clarification** — ask the reviewer `<specific question>` before acting.
-- **H. Attach the screenshot they asked for** — capture the image first, then
-  run `/pr-screenshots` against this PR to put it in the description. The
-  upload mechanics are in `skills/pr-screenshots/SKILL.md`.
+
+**C answers, G asks.** Both post a reply and touch no code, and the
+direction is the whole difference: C is the answer to a reviewer's question
+you understood, and G is your question about an ask you did not. Only G is
+a Hard Rule 3 exclusion, so only a G item can never auto-apply at any
+confidence.
 
 Each option also carries the reaction it places on the thread's opening
 comment, and the menu states it, so the user picks the signal along with
@@ -183,12 +191,11 @@ the action. Nothing is posted until they do.
 |--------|----------|
 | A. Apply the change | 👍 `THUMBS_UP` |
 | B. Apply a variation | 👍 `THUMBS_UP` |
-| C. Reply to clarify / answer | none — the thread is still a conversation |
+| C. Reply with the answer | none — the thread is still a conversation |
 | D. Decline (will not fix) | 👎 `THUMBS_DOWN` when the decline rests on an `INACCURATE` verdict; none when the ask is sound and only the priority or scope is wrong |
 | E. Defer | 👍 `THUMBS_UP` |
 | F. Mark resolved as-is | 👍 `THUMBS_UP` |
 | G. Needs clarification | none — the ask is not understood well enough to judge |
-| H. Attach the screenshot | 👍 `THUMBS_UP` |
 
 The user can override any of these — say so when presenting a 👎, since
 that is the one signal a reviewer reads as a rejection. A reaction is never

@@ -157,13 +157,41 @@ describe("pr-open-comments skill: the reaction follows the user's decision", () 
     expect(step).not.toContain("addReaction");
   });
 
-  test("every standard option names the reaction it places, keyed by option letter", () => {
-    const t = squash(body());
-    // Guard: an empty body must fail before the per-letter checks run.
-    expect(t.length).toBeGreaterThan(0);
-    for (const letter of ["A", "B", "C", "D", "E", "F", "G", "H"]) {
-      expect(new RegExp(`\\|\\s*${letter}[^|]*\\|[^|]*(THUMBS_UP|THUMBS_DOWN|none)`).test(t)).toBe(true);
+  // The standard option menu's letters, read off the bullet list in step 7.
+  function menuLetters(text: string): string[] {
+    return [...text.matchAll(/^- \*\*([A-Z])\. /gm)].map((m) => m[1]!);
+  }
+
+  // The option-to-reaction table's letters, read off its rows.
+  function tableLetters(text: string): string[] {
+    return [...text.matchAll(/^\| ([A-Z])\. .*\|/gm)].map((m) => m[1]!);
+  }
+
+  test("the reaction table has one row per standard option, and no extras", () => {
+    const text = existsSync(join(REFERENCES, "04-execution.md")) ? read(join(REFERENCES, "04-execution.md")) : "";
+    const menu = menuLetters(text);
+    // Guard: an unparsed menu must fail, not vacuously match an empty table.
+    expect(menu.length).toBeGreaterThan(1);
+    expect(tableLetters(text)).toEqual(menu);
+  });
+
+  test("every table row names the reaction its option places", () => {
+    const text = existsSync(join(REFERENCES, "04-execution.md")) ? read(join(REFERENCES, "04-execution.md")) : "";
+    const rows = [...text.matchAll(/^\| [A-Z]\. [^|]*\|([^|]*)\|/gm)].map((m) => m[1]!);
+    expect(rows.length).toBeGreaterThan(1);
+    for (const reaction of rows) {
+      expect(/THUMBS_UP|THUMBS_DOWN|none/.test(reaction)).toBe(true);
     }
+  });
+
+  test("only one option is the clarification ask — C answers, G asks", () => {
+    const text = existsSync(join(REFERENCES, "04-execution.md")) ? read(join(REFERENCES, "04-execution.md")) : "";
+    // The two options both post a reply and touch no code, so a shared name in
+    // their labels makes them read as duplicates. Only G's is the ask, and only
+    // G is a Hard Rule 3 exclusion.
+    const labels = [...text.matchAll(/^- \*\*([A-Z])\. ([^*]*)\*\*/gm)].map((m) => ({ letter: m[1]!, label: m[2]! }));
+    expect(labels.length).toBeGreaterThan(1);
+    expect(labels.filter((o) => /clarif/i.test(o.label)).map((o) => o.letter)).toEqual(["G"]);
   });
 
   test("both reaction content values appear in the option-to-reaction mapping", () => {
