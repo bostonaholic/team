@@ -45,33 +45,66 @@ elif [ -e "$LEGACY_LINK" ]; then
 fi
 
 # --- The native plugin install -----------------------------------------------
+# Codex lists nothing while any configured marketplace root has no manifest: it
+# exits 1 with the offending name and path on stderr and an empty stdout. A
+# root that has been deleted is exactly the state someone reaches for an
+# uninstall in, so an unreadable listing reports what Codex said and the
+# teardown continues on what it can still do — `marketplace remove` and the
+# cache sweep both work while the listing does not.
+read_codex_json() {
+  local stderr_file status output
+  stderr_file="$(mktemp "${TMPDIR:-/tmp}/team-codex-stderr.XXXXXX")"
+  output="$(codex "$@" 2>"$stderr_file")" && status=0 || status=$?
+
+  if [ "$status" -eq 0 ]; then
+    rm -f "$stderr_file"
+    printf '%s' "$output"
+    return 0
+  fi
+
+  echo "  Note: \`codex $*\` failed (exit ${status}). Codex reported:" >&2
+  sed 's/^/    /' "$stderr_file" >&2
+  rm -f "$stderr_file"
+  return 1
+}
+
 if command -v codex >/dev/null 2>&1; then
-  # shellcheck disable=SC2016
-  INSTALLED=$(
-    codex plugin list --json |
-      PLUGIN_ID="${PLUGIN}@${MARKETPLACE}" node -e '
-        const parsed = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
+  CODEX_STATE_READABLE=true
+
+  if PLUGIN_LISTING=$(read_codex_json plugin list --json); then
+    # shellcheck disable=SC2016
+    INSTALLED=$(
+      PLUGIN_ID="${PLUGIN}@${MARKETPLACE}" LISTING="$PLUGIN_LISTING" node -e '
+        const parsed = JSON.parse(process.env.LISTING);
         const list = Array.isArray(parsed) ? parsed : (parsed.installed ?? []);
         if (list.some((entry) => entry.pluginId === process.env.PLUGIN_ID && entry.installed)) {
           process.stdout.write("yes");
         }
       '
-  )
+    )
+  else
+    CODEX_STATE_READABLE=false
+    INSTALLED=""
+  fi
   if [ -n "$INSTALLED" ]; then
     codex plugin remove "${PLUGIN}@${MARKETPLACE}" 2>&1
     REMOVED_SOMETHING=true
   fi
 
-  # shellcheck disable=SC2016
-  REGISTERED=$(
-    codex plugin marketplace list --json |
-      MARKETPLACE="$MARKETPLACE" node -e '
-        const entries = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
+  if MARKETPLACE_LISTING=$(read_codex_json plugin marketplace list --json); then
+    # shellcheck disable=SC2016
+    REGISTERED=$(
+      MARKETPLACE="$MARKETPLACE" LISTING="$MARKETPLACE_LISTING" node -e '
+        const entries = JSON.parse(process.env.LISTING);
         const list = Array.isArray(entries) ? entries : (entries.marketplaces ?? []);
         const match = list.find((entry) => entry.name === process.env.MARKETPLACE);
         if (match) process.stdout.write(String(match.root ?? ""));
       '
-  )
+    )
+  else
+    CODEX_STATE_READABLE=false
+    REGISTERED=""
+  fi
   if [ -n "$REGISTERED" ]; then
     if [ "$REGISTERED" != "$PLUGIN_ROOT" ]; then
       echo "  Note: the ${MARKETPLACE} marketplace points at another checkout:"
@@ -79,6 +112,13 @@ if command -v codex >/dev/null 2>&1; then
     fi
     codex plugin marketplace remove "$MARKETPLACE" 2>&1
     REMOVED_SOMETHING=true
+  elif [ "$CODEX_STATE_READABLE" = false ]; then
+    # Whether Team is registered is unknown, so ask Codex to remove it and read
+    # the answer from the attempt. It fails harmlessly when it was not there.
+    if codex plugin marketplace remove "$MARKETPLACE" >/dev/null 2>&1; then
+      echo "  Removed the ${MARKETPLACE} marketplace registration."
+      REMOVED_SOMETHING=true
+    fi
   fi
 else
   echo "  Note: the codex CLI is not on PATH. Removing Team's files only."

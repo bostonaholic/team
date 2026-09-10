@@ -14,6 +14,9 @@
 //   add.
 // - `plugin remove` deletes the cached version directory without following
 //   symlinks inside it.
+// - `plugin list` and `plugin marketplace list` both fail, exit 1, when any
+//   configured root has no manifest, while `plugin marketplace remove` still
+//   works — which is what makes removal the recovery from that state.
 //
 // State lives entirely under $HOME, so each test isolates with HOME=<tempdir>.
 // Invocations are appended to $HOME/.fake-codex-calls for assertions.
@@ -67,6 +70,27 @@ function manifestVersion(root) {
   return JSON.parse(readFileSync(manifest, "utf8")).version;
 }
 
+/**
+ * Codex loads every configured marketplace before it lists anything, so one
+ * root without a manifest — a deleted checkout, most often — fails the whole
+ * command: exit 1, the offending name and path on stderr, nothing on stdout.
+ * The two commands word it differently, which is why the headline is a
+ * parameter.
+ */
+function assertRootsLoadable(entries, headline) {
+  const broken = entries.filter(
+    (entry) => !existsSync(join(entry.root, ".agents", "plugins", "marketplace.json")),
+  );
+  if (broken.length === 0) return;
+  const detail = broken
+    .map(
+      (entry) =>
+        `- \`${entry.name}\` at ${entry.root}: marketplace root does not contain a supported manifest`,
+    )
+    .join("\n");
+  fail(`Error: failed to load ${headline}:\n${detail}`);
+}
+
 function marketplaceName(root) {
   const manifest = join(root, ".agents", "plugins", "marketplace.json");
   if (!existsSync(manifest)) fail(`error: no .agents/plugins/marketplace.json in ${root}`);
@@ -83,6 +107,7 @@ if (command === "marketplace") {
   const entries = readRegistry();
 
   if (sub === "list") {
+    assertRootsLoadable(entries, "marketplace(s)");
     if (subArgs.includes("--json")) {
       process.stdout.write(
         JSON.stringify(
@@ -126,6 +151,7 @@ if (command === "marketplace") {
 
 if (command === "list") {
   const installed = [];
+  assertRootsLoadable(readRegistry(), "configured marketplace snapshot(s)");
   for (const entry of readRegistry()) {
     for (const plugin of entry.plugins) {
       installed.push({

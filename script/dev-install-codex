@@ -130,31 +130,65 @@ migrate_legacy_link() {
 }
 
 # --- Codex state readers -----------------------------------------------------
+# Codex lists nothing while any configured marketplace root has no manifest: it
+# exits 1 with the offending name and path on stderr and an empty stdout. A
+# deleted worktree that once held a checkout is the common way to get there. So
+# every reader goes through this, which checks the status before a parser sees
+# the output — piped straight into node, that empty stdout reports a JSON syntax
+# error and never says which marketplace is broken.
+read_codex_json() {
+  local stderr_file status output
+  stderr_file="$(mktemp "${TMPDIR:-/tmp}/team-codex-stderr.XXXXXX")"
+  output="$(codex "$@" 2>"$stderr_file")" && status=0 || status=$?
+
+  if [ "$status" -eq 0 ]; then
+    rm -f "$stderr_file"
+    printf '%s' "$output"
+    return 0
+  fi
+
+  echo "Error: \`codex $*\` failed (exit ${status}). Codex reported:" >&2
+  sed 's/^/  /' "$stderr_file" >&2
+  rm -f "$stderr_file"
+  echo "If a root above no longer exists, drop its registration and re-run." >&2
+  echo "For Team's own: codex plugin marketplace remove ${MARKETPLACE}" >&2
+  return 1
+}
+
+MARKETPLACE_ROOT=""
+INSTALLED_VERSION=""
+
+# Both readers set a global rather than printing, for the same reason
+# stamp_cachebuster does: a command substitution runs the function in a
+# subshell, and `set -e` does not carry an inner failure back out through one,
+# so a reader that printed its answer could not stop the run on a failed read.
 read_marketplace_root() {
+  local listing
+  listing="$(read_codex_json plugin marketplace list --json)" || exit 1
   # The JavaScript template literal is intentionally protected from the shell.
   # shellcheck disable=SC2016
-  codex plugin marketplace list --json |
-    MARKETPLACE="$MARKETPLACE" node -e '
-      const entries = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
-      const list = Array.isArray(entries) ? entries : (entries.marketplaces ?? []);
-      const matches = list.filter((entry) => entry.name === process.env.MARKETPLACE);
-      if (matches.length > 1) throw new Error("multiple team-dev marketplaces found");
-      if (matches.length === 1) process.stdout.write(String(matches[0].root ?? ""));
-    '
+  MARKETPLACE_ROOT="$(MARKETPLACE="$MARKETPLACE" LISTING="$listing" node -e '
+    const entries = JSON.parse(process.env.LISTING);
+    const list = Array.isArray(entries) ? entries : (entries.marketplaces ?? []);
+    const matches = list.filter((entry) => entry.name === process.env.MARKETPLACE);
+    if (matches.length > 1) throw new Error("multiple team-dev marketplaces found");
+    if (matches.length === 1) process.stdout.write(String(matches[0].root ?? ""));
+  ')"
 }
 
 read_installed_version() {
+  local listing
+  listing="$(read_codex_json plugin list --json)" || exit 1
   # shellcheck disable=SC2016
-  codex plugin list --json |
-    PLUGIN_ID="${PLUGIN}@${MARKETPLACE}" node -e '
-      const parsed = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
-      const list = Array.isArray(parsed) ? parsed : (parsed.installed ?? []);
-      const matches = list.filter(
-        (entry) => entry.pluginId === process.env.PLUGIN_ID && entry.installed,
-      );
-      if (matches.length > 1) throw new Error("multiple Team installs found");
-      if (matches.length === 1) process.stdout.write(String(matches[0].version ?? ""));
-    '
+  INSTALLED_VERSION="$(PLUGIN_ID="${PLUGIN}@${MARKETPLACE}" LISTING="$listing" node -e '
+    const parsed = JSON.parse(process.env.LISTING);
+    const list = Array.isArray(parsed) ? parsed : (parsed.installed ?? []);
+    const matches = list.filter(
+      (entry) => entry.pluginId === process.env.PLUGIN_ID && entry.installed,
+    );
+    if (matches.length > 1) throw new Error("multiple Team installs found");
+    if (matches.length === 1) process.stdout.write(String(matches[0].version ?? ""));
+  ')"
 }
 
 # --- Prune every cached copy but the one just installed ------------------------
@@ -181,7 +215,7 @@ echo
 
 migrate_legacy_link
 
-MARKETPLACE_ROOT=$(read_marketplace_root)
+read_marketplace_root
 if [ -z "$MARKETPLACE_ROOT" ]; then
   # Only the personal marketplace (~/.agents/plugins/marketplace.json) is
   # discovered implicitly. A repo marketplace has to be registered.
@@ -189,7 +223,15 @@ if [ -z "$MARKETPLACE_ROOT" ]; then
 elif [ "$MARKETPLACE_ROOT" != "$PLUGIN_ROOT" ]; then
   echo "Error: the ${MARKETPLACE} marketplace already points at a different checkout:" >&2
   echo "  ${MARKETPLACE_ROOT}" >&2
-  echo "Run script/dev-uninstall codex from that checkout first." >&2
+  if [ -f "${MARKETPLACE_ROOT}/.codex-plugin/plugin.json" ]; then
+    echo "Run script/dev-uninstall codex from that checkout first." >&2
+  else
+    # That path is no longer a Team checkout, so the uninstall script it would
+    # otherwise name is not there to run. Dropping the registration is the
+    # whole recovery.
+    echo "That path is not a Team checkout, so drop the registration instead:" >&2
+    echo "  codex plugin marketplace remove ${MARKETPLACE}" >&2
+  fi
   exit 1
 fi
 
@@ -198,7 +240,7 @@ echo "  Cachebuster: ${STAMPED_VERSION}"
 
 codex plugin add "${PLUGIN}@${MARKETPLACE}" 2>&1
 
-INSTALLED_VERSION=$(read_installed_version)
+read_installed_version
 if [ "$INSTALLED_VERSION" != "$STAMPED_VERSION" ]; then
   echo "Error: Codex reports Team at '${INSTALLED_VERSION}', not '${STAMPED_VERSION}'." >&2
   exit 1
