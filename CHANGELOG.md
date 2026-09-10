@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.98.0] - 2026-09-10
+
 ### Fixed
 
 - **`script/dev-install claude` no longer replaces Claude Code's copy of the plugin with a symlink to your checkout.** The cache path carries the version, so the directory name was fixed at install time while its contents followed the checkout: on a branch that bumped the version, `claude plugin list` named the old release while Claude ran the new code. The install now follows the loop Claude Code documents for local plugins: stamp a `+claude.<timestamp>` cachebuster onto `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` — the plugin cache is keyed on the version and `claude plugin update` copies nothing when it has not moved — refresh the marketplace, install, then restore the manifests and prune the copy the previous run left. `script/dev-uninstall claude` now sweeps the whole cache tree, including a symlink an install from before this change left behind. **What this asks of you:** the install is a copy now, so a skill you edit does not reach Claude Code until you re-run `script/dev-install claude`. The clone-local pull hooks already re-run it after a merge or rebase pull. Verified on 2026-09-10.
@@ -877,7 +879,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.97.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.98.0...HEAD
+[0.98.0]: https://github.com/bostonaholic/team/compare/v0.97.0...v0.98.0
 [0.97.0]: https://github.com/bostonaholic/team/compare/v0.96.0...v0.97.0
 [0.96.0]: https://github.com/bostonaholic/team/compare/v0.95.0...v0.96.0
 [0.95.0]: https://github.com/bostonaholic/team/compare/v0.94.0...v0.95.0
