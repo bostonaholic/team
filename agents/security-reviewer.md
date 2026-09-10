@@ -12,6 +12,8 @@ skills:
   - reviewing-code
   - conventional-comments
   - reviewing-security
+  - writing-prose
+  - unslop
 ---
 
 # Security Reviewer Agent

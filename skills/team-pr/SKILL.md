@@ -7,6 +7,9 @@ argument-hint: "[docs/plans/<id>/]"
 
 # Team PR — Create the Pull Request
 
+Before finalizing prose you author, call the Skill tool with `unslop` and
+`writing-prose`, in that order. Preserve exact commands, tokens, and templates.
+
 Run the PR phase. Two modes:
 
 - **Resume mode** — Implement passed the aggregate gate. The topic branch

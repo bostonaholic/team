@@ -7,6 +7,9 @@ argument-hint: "<ticket id, issue URL, or task description>"
 
 # Team Question — Decompose the Task
 
+Before finalizing prose you author, call the Skill tool with `unslop` and
+`writing-prose`, in that order.
+
 Run the QUESTION phase only, then stop. The Question phase decomposes the
 user's intent into the artifacts that the rest of the QRSPI pipeline
 consumes:

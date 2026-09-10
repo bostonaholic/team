@@ -12,6 +12,8 @@ skills:
   - reviewing-code
   - conventional-comments
   - cross-model-review
+  - writing-prose
+  - unslop
 ---
 
 # Code Reviewer Agent

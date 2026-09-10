@@ -9,7 +9,10 @@ user-invocable: false
 Give investigators the question, vocabulary, and evidence source; withhold the wanted answer and framing.
 
 - Research from neutral questions, never the task framing; surface missing context as an open question, not guessed intent.
-- Give scouts only verbatim question text and stated context: add no framing, goal, or intent speculation.
+- Restrict task-derived scout content to verbatim question text, stated
+  `Codebase context`, and `4-repos.md` paths. Fixed operational method text,
+  including trusted instruction paths, audit steps, tool limits, and output
+  contracts, is allowed. Add no task framing, goal, or intent speculation.
 - Give verification helpers neutral, falsifiable claims with file:line; omit your verdict, severity, and reasoning, but include any rule that makes a violation falsifiable.
 - Assign one fresh skeptic per claim.
 - Treat leakage as a critical defect: stop and report.

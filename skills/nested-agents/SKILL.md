@@ -24,6 +24,22 @@ Only `supported` with exit `0` permits nesting for the turn. Any non-zero, older
 
 ## Dispatch invariants
 
+Before dispatching a non-vendor helper, the parent resolves and Reads these
+four installed, read-only files. Pass the resolved absolute paths in every
+initial or follow-up prompt:
+
+- `${CLAUDE_PLUGIN_ROOT}/skills/unslop/SKILL.md`
+- `${CLAUDE_PLUGIN_ROOT}/skills/unslop/references/rules.md`
+- `${CLAUDE_PLUGIN_ROOT}/skills/writing-prose/SKILL.md`
+- `${CLAUDE_PLUGIN_ROOT}/skills/writing-prose/references/style-guide.md`
+
+The helper Reads all four before finalizing prose. If the parent or helper
+cannot Read one, discard that helper return. A scout parent does the reading
+inline. A reviewer keeps the unverified finding under the skeptic default-keep
+rule. Vendor couriers do not Read prose files and relay stdout byte-for-byte.
+These fixed paths and audit instructions are operational method text, not
+task-derived Research content.
+
 - Helpers are read-only: built-in `Explore`, `team:file-finder`, or `general-purpose` with an explicitly read-only prompt. They NEVER write files, commit, or write under `docs/plans/`; the parent or orchestrator writes artifacts.
 - Every call passes `model:`: `haiku` for location, grep, and bulk reading; `sonnet` for subsystem traces or claim checks; `opus` only after a `sonnet` helper was inconclusive, with that failure named. Effort: `low` for lookups, `medium` for tracing, never `xhigh`.
 - You are at depth 2 of 5. Spawn at most ONE more level; every helper must work directly and never spawn (`principle-deep-agents-narrow-seams`).

@@ -15,6 +15,7 @@ const FIXTURE_ROOT = join(process.cwd(), "evals", "fixtures");
 const RUBRIC_ROOT = join(process.cwd(), "evals", "rubrics");
 const TESTS_ROOT = join(process.cwd(), "tests");
 const PACKAGE_JSON = join(process.cwd(), "package.json");
+const UNSLOP_EVALS = join(process.cwd(), "tests", "unslop.evals.ts");
 const PERIODIC_EVALS_WORKFLOW = join(
   process.cwd(),
   ".github",
@@ -117,6 +118,9 @@ describe("static gate: periodic-evals workflow", () => {
   const workflow = existsSync(PERIODIC_EVALS_WORKFLOW)
     ? readFileSync(PERIODIC_EVALS_WORKFLOW, "utf8")
     : "";
+  const unslopEvals = existsSync(UNSLOP_EVALS)
+    ? readFileSync(UNSLOP_EVALS, "utf8")
+    : "";
 
   test("workflow file exists", () => {
     expect(existsSync(PERIODIC_EVALS_WORKFLOW)).toBe(true);
@@ -144,6 +148,16 @@ describe("static gate: periodic-evals workflow", () => {
       expect(workflow).toContain(`./tests/${file}`);
     }
   });
+
+  test("unslop job timeout exceeds its sequential case budgets", () => {
+    const jobTimeout = Number(workflow.match(/^\s{4}timeout-minutes:\s*(\d+)\s*$/m)?.[1] ?? 0);
+    const caseTimeouts = [...unslopEvals.matchAll(/\n\s{2}([0-9][0-9_]+),\n\);/g)]
+      .map((match) => Number((match[1] ?? "0").replaceAll("_", "")));
+    const sequentialBudgetMinutes = caseTimeouts.reduce((total, timeout) => total + timeout, 0) / 60_000;
+
+    expect(caseTimeouts).toHaveLength(7);
+    expect(jobTimeout).toBeGreaterThan(sequentialBudgetMinutes);
+  });
 });
 
 describe("static gate: package eval commands", () => {
@@ -163,6 +177,7 @@ describe("static gate: package eval commands", () => {
     expect(scripts["test:evals:all"]).toContain("EVALS_ALL=1");
     expect(scripts["test:evals:all"]).toContain("./tests/*.evals.ts");
   });
+
 });
 
 // Token-consuming CI must never run for an untrusted PR author (issue #51):

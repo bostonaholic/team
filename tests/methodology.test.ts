@@ -1308,10 +1308,11 @@ describe("principle-blind-the-investigator (L2 content tripwire)", () => {
     expect(/^user-invocable:\s*false\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
   });
 
-  test("pins the isolation contract (neutral questions, verbatim scout prompts)", () => {
+  test("pins the isolation contract (neutral questions, bounded task-derived scout content)", () => {
     const text = squash(read(SKILL_FILE));
     expect(text).toContain("neutral questions, never the task framing");
-    expect(text).toContain("verbatim question text");
+    expect(text).toContain("Restrict task-derived scout content");
+    expect(text).toContain("Fixed operational method text");
   });
 
   test("citation site: qrspi-workflow cites the principle by name", () => {

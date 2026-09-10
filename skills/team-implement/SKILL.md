@@ -7,6 +7,9 @@ argument-hint: "[docs/plans/<id>/]"
 
 # Team Implement — Execute the Plan
 
+Before finalizing prose you author, call the Skill tool with `unslop` and
+`writing-prose`, in that order. Relay completed reviewer reports unchanged.
+
 Run the IMPLEMENT phase. Three internal sub-steps:
 
 1. **Test-first** — `test-architect` writes failing acceptance tests

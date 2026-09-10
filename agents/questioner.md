@@ -10,6 +10,8 @@ skills:
   - product-thinking
   - principle-progress-tracking
   - decomposing-intent
+  - writing-prose
+  - unslop
 ---
 
 # Questioner Agent

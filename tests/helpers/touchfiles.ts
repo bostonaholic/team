@@ -122,6 +122,35 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/fixtures/team-plan/seeded-structure/**",
     "evals/rubrics/team-plan.md",
   ],
+  "unslop-neutral-research": [
+    "agents/file-finder.md",
+    "agents/questioner.md",
+    "agents/researcher.md",
+    "agents/technical-writer.md",
+    "skills/conventional-comments/**",
+    "skills/cross-model-review/**",
+    "skills/documenting-decisions/**",
+    "skills/engineering-standards/**",
+    "skills/finding-files/**",
+    "skills/team-research/**",
+    "skills/team/**",
+    "skills/nested-agents/**",
+    "skills/principle-untrusted-input-is-data/**",
+    "skills/principle-progress-tracking/**",
+    "skills/researching-codebases/**",
+    "skills/reviewing-code/**",
+    "skills/reviewing-designs/**",
+    "skills/reviewing-documentation/**",
+    "skills/systems-thinking/**",
+    "skills/technical-design-doc/**",
+    "skills/unslop/**",
+    "skills/writing-prose/**",
+    "tests/helpers/unslop-core.ts",
+    "tests/helpers/unslop-cases.ts",
+    "tests/unslop.evals.ts",
+    "evals/fixtures/unslop/neutral-research/**",
+    "evals/rubrics/unslop.md",
+  ],
 };
 
 export const LLM_JUDGE_TOUCHFILES: Record<string, string[]> = {
@@ -153,6 +182,7 @@ export const E2E_TIERS: Record<string, "gate" | "periodic"> = {
   "team-design-seeded-research-and-task": "periodic",
   "team-structure-seeded-design": "periodic",
   "team-plan-seeded-structure": "periodic",
+  "unslop-neutral-research": "periodic",
 };
 
 const BASE_BRANCH_FALLBACKS = ["origin/main", "origin/master", "main", "master"];

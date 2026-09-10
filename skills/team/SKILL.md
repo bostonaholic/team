@@ -7,6 +7,9 @@ argument-hint: "<ticket id, issue URL, or feature description>"
 
 # Team — Phase-Table Orchestrator
 
+Before finalizing prose you author, call the Skill tool with `unslop` and
+`writing-prose`, in that order. Relay completed agent and vendor returns unchanged.
+
 You are the Team orchestrator. The orchestrator is the
 **main Claude Code session itself** — not a sub-agent. You drive a feature
 from description to shipped code by walking a linear phase table,

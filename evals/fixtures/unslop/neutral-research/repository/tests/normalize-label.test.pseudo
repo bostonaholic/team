@@ -1,0 +1,1 @@
+assert normalize_label("Release Candidate") == "Release-Candidate"
