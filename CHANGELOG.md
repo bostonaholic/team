@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.99.0] - 2026-09-10
+
+### Changed
+
+- **`/team` now uses high effort for full-pipeline coordination.** The design author and structure planner use extra-high effort because their artifacts determine later implementation work; all other model and effort assignments remain at their existing cost-based tiers.
+
 ## [0.98.0] - 2026-09-10
 
 ### Fixed
@@ -879,7 +885,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.98.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.99.0...HEAD
+[0.99.0]: https://github.com/bostonaholic/team/compare/v0.98.0...v0.99.0
 [0.98.0]: https://github.com/bostonaholic/team/compare/v0.97.0...v0.98.0
 [0.97.0]: https://github.com/bostonaholic/team/compare/v0.96.0...v0.97.0
 [0.96.0]: https://github.com/bostonaholic/team/compare/v0.95.0...v0.96.0
