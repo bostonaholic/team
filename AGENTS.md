@@ -30,6 +30,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 | Behavioral regression harness | `tests/`, `evals/` | Plugin developers |
 | Versioning & release automation | [docs/versioning.md](docs/versioning.md), `.claude/skills/version-bump/`, `.claude/scripts/next-version.sh`, `.github/workflows/` | Plugin developers |
 | Dev install, per harness | `script/dev-install`/`dev-uninstall` (dispatch), `dev-install-<harness>` | Plugin developers |
+| Instruction-surface nuke experiment | `.claude/skills/nuke-team-plugin/` | Plugin developers |
 
 **Rule of thumb:** If it validates that the plugin is *built correctly*, it is a dev concern (`.claude/`). If it runs *as part of the plugin's functionality*, it is runtime (`hooks/`).
 
