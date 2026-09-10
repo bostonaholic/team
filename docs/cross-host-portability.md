@@ -173,6 +173,7 @@ facility, so the design must work around it.
 | Agent/skill Markdown bodies | native (loaded as-is) | native (system-prompt body) |
 | Custom slash entry points | native (SKILL.md auto-register) | native (built-ins and Skills. Prompts are deprecated in favor of Skills.) |
 | On-demand SKILL.md injection | native (`skills:` + auto-load) | native (`skills/<name>/SKILL.md` under an installed plugin, description-matched implicit invocation). A skill opts out through `policy.allow_implicit_invocation: false` in its `agents/openai.yaml` — [documented](https://learn.chatgpt.com/docs/build-skills) to block implicit invocation while leaving `$skill` working |
+| Hide a skill from the user's menu | native (`user-invocable: false` keeps it out of `/`) | **hard gap**: every discovered skill is listed in the `$` picker; no frontmatter or manifest field suppresses one |
 | Subagent dispatch (parallel) | native (Agent/Task tool) | native (`spawn_agent`/`wait_agent`…, `features.multi_agent`) |
 | Nested subagents | native (depth 2, ≤4, read-only) | workaround: `max_depth=1`, nesting capped one level |
 | Structured agent→caller output | native (final-text JSON envelope) | native and strongest (`--output-schema` JSON Schema). A silent-drop bug under tools ([codex#15451](https://github.com/openai/codex/issues/15451)) was fixed April 2026 |
@@ -200,9 +201,11 @@ is in [its own section](#antigravity-cli); the rest sits in
 Reading the matrix: every row that Team's *behavior* depends on is native or
 workaround on Codex CLI. There is no hook-event gap. All four events map
 natively, and on-demand skills, subagents, MCP tools, and MCP resources are
-native. The one remaining hard gap is narrow. Codex does not surface MCP
-**prompts** as slash commands. Its MCP tools and resources are fine. It also has
-a clean detour: route slash entry through Codex Skills, below.
+native. The two remaining hard gaps are narrow. Codex does not surface MCP
+**prompts** as slash commands — its MCP tools and resources are fine, and it has
+a clean detour: route slash entry through Codex Skills, below. And Codex offers
+no way to hide a skill from the user's `$` picker, which costs presentation
+rather than behavior.
 
 > The landscape is recent. As of mid-2026 Codex CLI ships a full hooks system,
 > parallel subagents, custom slash commands, on-demand skills, MCP, and
@@ -214,7 +217,7 @@ a clean detour: route slash entry through Codex Skills, below.
 ## Gap analysis
 
 After verifying every capability against the host repos (2026-06-27), the gap
-picture is narrower than the earlier draft assumed. One hard gap remains, plus a
+picture is narrower than the earlier draft assumed. Two hard gaps remain, plus a
 cross-cutting recency caveat:
 
 1. **Codex does not expose MCP *prompts* as slash commands (hard gap).** Codex MCP
@@ -225,7 +228,17 @@ cross-cutting recency caveat:
    prompts, and not through MCP. This is why the chosen strategy does not depend
    on MCP (decision 4).
 
-2. **Recency risk.** This is cross-cutting rather than a primitive gap. Codex's
+2. **Codex lists every skill in the `$` picker, so `user-invocable: false` is a
+   Claude-Code-only guarantee (hard gap).** Team's 66 methodology and
+   `principle-*` skills are reference material an agent loads, never something a
+   human runs. On Claude Code, `user-invocable: false` keeps them out of the `/`
+   menu. Codex has no equivalent, so they all appear under `$` and a user can
+   invoke any of them directly. There is no workaround short of moving those
+   skills out of `skills/` entirely, which would end load-by-name on both hosts.
+   Team accepts the clutter. See
+   [the divergence note](#57-codex-port) for the evidence behind that.
+
+3. **Recency risk.** This is cross-cutting rather than a primitive gap. Codex's
    hooks and multi-agent are young. They rolled out from March to May 2026
    across v0.114-v0.129 (latest v0.142.3). Treat its contracts as moving
    targets. The shim layer (decision 1) absorbs breaking changes in one place.
@@ -355,6 +368,30 @@ full parity. It starts from the matrix and works around the named gaps.
   equivalent — `policy.allow_implicit_invocation: false` in each skill's
   `agents/openai.yaml` — keeps all four out of the implicit catalog. The
   divergence is deliberate and the validator finding is expected.
+- **Codex ignores `user-invocable: false`, so every methodology and
+  `principle-*` skill shows up in its `$` picker. Do not try to fix this.** The
+  `$` picker is fed by the `skills/list` app-server method, which returned all
+  100 Team skills with `enabled: true`, `team:principle-fix-root-causes` among
+  them. Its `SkillMetadata` payload carries nine fields — `dependencies`,
+  `description`, `enabled`, `interface`, `name`, `path`, `pluginId`, `scope`,
+  `shortDescription` — and none of them expresses invocability. The strings
+  `user-invocable` and `disable-model-invocation` do appear in the Codex binary,
+  but only inside its embedded skill-authoring prompt and `plugin-creator`'s
+  Python validator, never in the Rust loader. The three things that look like
+  levers are not:
+  - `policy.allow_implicit_invocation: false` governs model-context injection
+    only. Codex's own docs for the field say the skill "can still be invoked
+    explicitly via `$skill`".
+  - Deleting a skill's `agents/openai.yaml` drops its display name, blurb, and
+    default prompt, but the row stays: with the file moved aside, `skills/list`
+    still returned the skill, falling back to the SKILL.md `description`.
+  - Nesting a skill deeper to hide it from discovery fails on *both* hosts. A
+    probe at `skills/probe-nest/inner-probe/SKILL.md` was invisible to Codex's
+    `skills/list` and to `claude plugin details`, while its flat sibling
+    appeared in both. Each host walks exactly one level.
+
+  Verified on codex-cli 0.153.4, 2026-09-10. The only real fix is a Codex
+  feature (honoring `user-invocable`, or a `policy.allow_explicit_invocation`).
 - Hooks: reuse the 4 `.mjs` files. The shim adapts to Codex
   `hooks.json`/`[hooks]`, whose schema mirrors Claude closely
   (`permissionDecision:"deny"`/exit 2). Events map nearly 1:1
