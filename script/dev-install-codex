@@ -1,71 +1,216 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Mirrors script/dev-install for Codex CLI. Symlinks this checkout's
-# skills/ into Codex's user-scope skill root, so edits are live.
+# Mirrors script/dev-install for Codex CLI: a native plugin install, following
+# Codex's own local-development loop.
 #
-# Codex follows directory symlinks when it scans, and canonicalizes each
-# skill back to this checkout — so it finds .claude-plugin/plugin.json
-# above them and names them `team:<name>`.
+# `codex plugin add` copies the marketplace root into
+# ~/.codex/plugins/cache/<marketplace>/<plugin>/<version>, and the version
+# string is the cache key. Codex's `plugin-creator` skill documents the way to
+# make it re-copy: rewrite the manifest version to a single cachebuster suffix,
+# `<base-version>+codex.<cachebuster>`, then reinstall. Nothing here invents a
+# mechanism on top of that — this script is that loop, run for you.
 #
-# Never touch Codex's plugin cache. Replacing that cached copy with a
-# symlink — the trick script/dev-install uses for Claude Code — makes
-# Codex report the plugin `not installed` and empties the catalog.
+# The stamped version is not committed. `.codex-plugin/plugin.json` carries one
+# of Team's six pinned version strings, so a cachebuster left in the working
+# tree turns `bun test` red. The stamp is therefore restored on the way out,
+# including on an interrupted run, and the tree is byte-identical afterwards.
+#
+# Because the install is a copy, a skill edited after it does not reach Codex
+# until this script runs again. That is the documented behavior of a local
+# plugin, and re-running is the documented remedy.
+#
+# It also removes the collection symlink an earlier version of this script
+# created at ~/.agents/skills/team. That link exposed the checkout's whole
+# skills/ tree as one nested standalone skill, so Codex registered every skill
+# a second time, under both roots, and each description was truncated to about
+# a quarter of its length to fit the doubled catalog.
+#
+# References (installed with Codex, at ~/.codex/skills/.system/plugin-creator/):
+#   references/installing-and-updating.md — the update loop and cachebuster policy
+#   references/plugin-json-spec.md        — the manifest this stamps
 
 PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SKILLS_SRC="${PLUGIN_ROOT}/skills"
-TARGET="${HOME}/.agents/skills/team"
+MANIFEST="${PLUGIN_ROOT}/.codex-plugin/plugin.json"
+LEGACY_LINK="${HOME}/.agents/skills/team"
+MARKETPLACE="team-dev"
+PLUGIN="team"
+CACHE_ROOT="${HOME}/.codex/plugins/cache/${MARKETPLACE}/${PLUGIN}"
 
 if [ ! -d "$SKILLS_SRC" ]; then
   echo "Error: no skills/ directory at ${PLUGIN_ROOT}" >&2
   exit 1
 fi
 
-# Refuse to stack this on top of a native plugin install. Codex would then find
-# the same 82 skills under two roots and render every one twice, which doubles
-# the catalog, worsens description truncation, and leaves the source ambiguous.
-# A registered-but-uninstalled marketplace row reads `not installed` and is
-# fine; only an installed row collides.
-if command -v codex >/dev/null 2>&1; then
-  plugin_list=$(codex plugin list 2>&1) || plugin_list=""
-  while IFS= read -r line; do
-    case "$line" in
-      *team@*)
-        case "$line" in
-          *"not installed"*) ;;
-          *)
-            echo "Error: a Codex plugin install of Team is already present:" >&2
-            echo "  ${line}" >&2
-            echo "Installing the dev symlink too would load every skill twice." >&2
-            echo "Remove one first, e.g. codex plugin remove team@<marketplace>" >&2
-            exit 1
-            ;;
-        esac
-        ;;
-    esac
-  done <<<"$plugin_list"
-fi
-
-# Already linked — nothing to do
-if [ -L "$TARGET" ] && [ "$(readlink "$TARGET")" = "$SKILLS_SRC" ]; then
-  echo "Team already installed for Codex (dev)."
-  exit 0
-fi
-
-# The parent can be a user-owned checkout (a dotfiles repo, say), so
-# refuse anything this script did not create rather than replacing it.
-if [ -e "$TARGET" ] && [ ! -L "$TARGET" ]; then
-  echo "Error: ${TARGET} exists and is not a symlink. Move it, then re-run." >&2
+if [ ! -f "$MANIFEST" ]; then
+  echo "Error: no .codex-plugin/plugin.json at ${PLUGIN_ROOT}" >&2
   exit 1
 fi
 
+if ! command -v codex >/dev/null 2>&1; then
+  echo "Error: the codex CLI is not on PATH." >&2
+  echo "Install Codex first: https://developers.openai.com/codex/cli" >&2
+  exit 1
+fi
+
+# --- Manifest stamp, and its guaranteed undo -----------------------------------
+MANIFEST_BACKUP=""
+
+restore_manifest() {
+  # Runs on every exit path, so an interrupted install never leaves a
+  # cachebuster in a tracked file.
+  if [ -n "$MANIFEST_BACKUP" ] && [ -f "$MANIFEST_BACKUP" ]; then
+    mv -f "$MANIFEST_BACKUP" "$MANIFEST"
+    MANIFEST_BACKUP=""
+  fi
+}
+trap restore_manifest EXIT INT TERM
+
+STAMPED_VERSION=""
+
+stamp_cachebuster() {
+  # Sets the two globals rather than printing, because a command substitution
+  # would run this in a subshell and strand MANIFEST_BACKUP there — leaving the
+  # trap with nothing to restore.
+  #
+  # The format and the default token both come from Codex's own
+  # scripts/update_plugin_cachebuster.py: preserve everything before `+`, and
+  # replace the suffix rather than appending a second one.
+  MANIFEST_BACKUP="$(mktemp "${TMPDIR:-/tmp}/team-codex-manifest.XXXXXX")"
+  cp "$MANIFEST" "$MANIFEST_BACKUP"
+  STAMPED_VERSION="$(MANIFEST="$MANIFEST" node -e '
+    const fs = require("node:fs");
+    const path = process.env.MANIFEST;
+    const manifest = JSON.parse(fs.readFileSync(path, "utf8"));
+    const version = manifest.version;
+    if (typeof version !== "string" || version.trim() === "") {
+      throw new Error(`${path} must contain a non-empty string "version"`);
+    }
+    const stamp = new Date().toISOString().replace(/\D/g, "").slice(0, 14);
+    manifest.version = `${version.split("+", 1)[0]}+codex.${stamp}`;
+    fs.writeFileSync(path, `${JSON.stringify(manifest, null, 2)}\n`);
+    process.stdout.write(manifest.version);
+  ')"
+}
+
+# --- Migrate off the legacy collection symlink -------------------------------
+# A precondition, not a side effect: nothing installs until the duplicate
+# registration is gone, so a refusal here leaves the machine as it was.
+migrate_legacy_link() {
+  [ -e "$LEGACY_LINK" ] || [ -L "$LEGACY_LINK" ] || return 0
+
+  if [ ! -L "$LEGACY_LINK" ]; then
+    echo "Error: ${LEGACY_LINK} exists and is not a symlink." >&2
+    echo "This script did not create it. Move it, then re-run." >&2
+    exit 1
+  fi
+
+  local target
+  target="$(readlink "$LEGACY_LINK")"
+
+  # A link whose target is gone is dangling by definition — remove it and say so.
+  if [ ! -d "$target" ]; then
+    rm "$LEGACY_LINK"
+    echo "  Removed the legacy skill link: ${LEGACY_LINK} (dangling → ${target})"
+    return 0
+  fi
+
+  # Only Team's own link is ours to remove. A Team checkout is the one that
+  # carries the Codex plugin manifest beside the skills/ this link points at.
+  if [ ! -f "$(dirname "$target")/.codex-plugin/plugin.json" ]; then
+    echo "Error: ${LEGACY_LINK} does not point at a Team checkout:" >&2
+    echo "  ${target}" >&2
+    echo "Nothing was removed. Move it by hand if you meant to." >&2
+    exit 1
+  fi
+
+  rm "$LEGACY_LINK"
+  echo "  Removed the legacy skill link: ${LEGACY_LINK} → ${target}"
+}
+
+# --- Codex state readers -----------------------------------------------------
+read_marketplace_root() {
+  # The JavaScript template literal is intentionally protected from the shell.
+  # shellcheck disable=SC2016
+  codex plugin marketplace list --json |
+    MARKETPLACE="$MARKETPLACE" node -e '
+      const entries = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
+      const list = Array.isArray(entries) ? entries : (entries.marketplaces ?? []);
+      const matches = list.filter((entry) => entry.name === process.env.MARKETPLACE);
+      if (matches.length > 1) throw new Error("multiple team-dev marketplaces found");
+      if (matches.length === 1) process.stdout.write(String(matches[0].root ?? ""));
+    '
+}
+
+read_installed_version() {
+  # shellcheck disable=SC2016
+  codex plugin list --json |
+    PLUGIN_ID="${PLUGIN}@${MARKETPLACE}" node -e '
+      const parsed = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
+      const list = Array.isArray(parsed) ? parsed : (parsed.installed ?? []);
+      const matches = list.filter(
+        (entry) => entry.pluginId === process.env.PLUGIN_ID && entry.installed,
+      );
+      if (matches.length > 1) throw new Error("multiple Team installs found");
+      if (matches.length === 1) process.stdout.write(String(matches[0].version ?? ""));
+    '
+}
+
+# --- Prune every cached copy but the one just installed ------------------------
+# Each reinstall mints a new cachebuster, so without this the cache grows by a
+# full copy of the plugin per run.
+prune_other_versions() {
+  local keep="$1" entry name
+  [ -d "$CACHE_ROOT" ] || return 0
+  for entry in "$CACHE_ROOT"/*; do
+    [ -e "$entry" ] || [ -L "$entry" ] || continue
+    name="$(basename "$entry")"
+    [ "$name" != "$keep" ] || continue
+    # A stale entry can be a symlink an earlier dev install left pointing at a
+    # checkout. `rm -rf` unlinks it; it never descends into the target.
+    rm -rf "$entry"
+    echo "  Pruned stale cache: ${name}"
+  done
+}
+
+# --- Install -------------------------------------------------------------------
 echo "Installing Team for Codex (dev)..."
-echo "  Source: ${SKILLS_SRC}"
+echo "  Source: ${PLUGIN_ROOT}"
 echo
 
-mkdir -p "$(dirname "$TARGET")"
-ln -sfn "$SKILLS_SRC" "$TARGET"
-echo "  Linked: ${TARGET} → ${SKILLS_SRC}"
+migrate_legacy_link
+
+MARKETPLACE_ROOT=$(read_marketplace_root)
+if [ -z "$MARKETPLACE_ROOT" ]; then
+  # Only the personal marketplace (~/.agents/plugins/marketplace.json) is
+  # discovered implicitly. A repo marketplace has to be registered.
+  codex plugin marketplace add "$PLUGIN_ROOT" 2>&1
+elif [ "$MARKETPLACE_ROOT" != "$PLUGIN_ROOT" ]; then
+  echo "Error: the ${MARKETPLACE} marketplace already points at a different checkout:" >&2
+  echo "  ${MARKETPLACE_ROOT}" >&2
+  echo "Run script/dev-uninstall codex from that checkout first." >&2
+  exit 1
+fi
+
+stamp_cachebuster
+echo "  Cachebuster: ${STAMPED_VERSION}"
+
+codex plugin add "${PLUGIN}@${MARKETPLACE}" 2>&1
+
+INSTALLED_VERSION=$(read_installed_version)
+if [ "$INSTALLED_VERSION" != "$STAMPED_VERSION" ]; then
+  echo "Error: Codex reports Team at '${INSTALLED_VERSION}', not '${STAMPED_VERSION}'." >&2
+  exit 1
+fi
+if [ ! -d "${CACHE_ROOT}/${STAMPED_VERSION}/skills" ]; then
+  echo "Error: no skills/ in ${CACHE_ROOT}/${STAMPED_VERSION}." >&2
+  exit 1
+fi
+
+prune_other_versions "$STAMPED_VERSION"
+restore_manifest
 
 echo
-echo "Done. Codex loads the skills at the next thread start."
+echo "Installed Team for Codex (dev). Start a new Codex thread to pick it up."
+echo "The install is a copy — re-run this after changing a skill."

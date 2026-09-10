@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.97.0] - 2026-09-10
+
+### Fixed
+
+- **`script/dev-install codex` now runs Codex's own plugin install instead of linking the checkout's whole `skills/` directory into `~/.agents/skills/team`.** That collection link made Codex read every Team skill as one nested standalone skill root, so with a plugin install also present each skill registered twice and the doubled catalog truncated every description to roughly a quarter of its length. It also kept Team out of any index that discovers skills through Codex's plugin install, so those indexes attributed every Team skill to Claude Code. The install now follows the loop Codex documents for local plugins: register the checkout as a marketplace, stamp a `+codex.<timestamp>` cachebuster onto the manifest version — the plugin cache is keyed on it — run `codex plugin add team@team-dev`, then restore the manifest and prune the copy the previous run left. The install is a copy, so re-run it after changing a skill. `script/dev-uninstall codex` removes the plugin, the marketplace entry, and the cache tree, and leaves no dangling link behind. **What this asks of you:** nothing — both scripts delete the old `~/.agents/skills/team` link for you, and refuse to touch that path if it holds anything they did not create. Verified against codex-cli 0.153.4.
+
+- **Team's Codex plugin manifest now passes Codex's own plugin validator.** `.codex-plugin/plugin.json` was missing `author`, `interface.longDescription`, `interface.defaultPrompt`, and `interface.capabilities`, all of which `plugin-creator`'s `validate_plugin.py` requires. It reports nothing against Team now except the four skills that set `disable-model-invocation: true` — a key Claude Code needs and Codex's validator rejects. Codex's runtime does not enforce it, and Team already ships that host's own equivalent (`policy.allow_implicit_invocation: false` in each skill's `agents/openai.yaml`), so all four stay out of Codex's implicit catalog exactly as intended. **What this asks of you:** nothing.
+
+- **`script/dev-install claude` now prunes the cached copies it used to leave behind.** The Claude Code cache path carries the plugin version, so every version ever installed from a checkout kept a full copy of the plugin — eighteen of them on the machine this was found on, alongside a stale symlink from an older dev install. The installer now keeps the version it just installed plus any other install Claude still reports, and removes the rest. A stale entry that is a symlink is unlinked, never followed. **What this asks of you:** nothing, though the first run after this change will report the copies it swept.
+
 ### Changed
 
 - **The skills catalog now shows which skills use each skill and which skills it uses.** The separate relationship table is gone, so each entry shows both directions of every skill load. **What this asks of you:** nothing.
@@ -859,7 +869,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.96.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.97.0...HEAD
+[0.97.0]: https://github.com/bostonaholic/team/compare/v0.96.0...v0.97.0
 [0.96.0]: https://github.com/bostonaholic/team/compare/v0.95.0...v0.96.0
 [0.95.0]: https://github.com/bostonaholic/team/compare/v0.94.0...v0.95.0
 [0.94.0]: https://github.com/bostonaholic/team/compare/v0.93.0...v0.94.0

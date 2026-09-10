@@ -95,8 +95,10 @@ its host's idiom. Claude Code keeps its current `.claude-plugin/plugin.json` and
 `skills:` injection. Antigravity CLI's shim already ships: the root
 `plugin.json` manifest, which the host resolves with `skills/` and `agents/`
 beside it. A Codex build emits `.codex/` with config.toml or hooks.json and
-`agents/*.md`. Skills need no build step on Codex, which discovers
-`.claude-plugin/plugin.json` and loads `skills/` directly.
+`agents/*.md`. Skills need no build step on Codex: `.codex-plugin/plugin.json`
+and `.agents/plugins/marketplace.json` already make the checkout an installable
+Codex plugin, and `codex plugin add` reads `skills/<name>/SKILL.md` out of it
+directly.
 The high-churn binding layer stays isolated from the stable cores. A host API
 change thus touches one shim, not 68 definition files.
 
@@ -170,7 +172,7 @@ facility, so the design must work around it.
 |----------------|-------------|-----------|
 | Agent/skill Markdown bodies | native (loaded as-is) | native (system-prompt body) |
 | Custom slash entry points | native (SKILL.md auto-register) | native (built-ins and Skills. Prompts are deprecated in favor of Skills.) |
-| On-demand SKILL.md injection | native (`skills:` + auto-load) | native (`.agents/skills/SKILL.md`, description-matched implicit invocation). A skill opts out through `policy.allow_implicit_invocation: false` in its `agents/openai.yaml` — [documented](https://learn.chatgpt.com/docs/build-skills) to block implicit invocation while leaving `$skill` working |
+| On-demand SKILL.md injection | native (`skills:` + auto-load) | native (`skills/<name>/SKILL.md` under an installed plugin, description-matched implicit invocation). A skill opts out through `policy.allow_implicit_invocation: false` in its `agents/openai.yaml` — [documented](https://learn.chatgpt.com/docs/build-skills) to block implicit invocation while leaving `$skill` working |
 | Subagent dispatch (parallel) | native (Agent/Task tool) | native (`spawn_agent`/`wait_agent`…, `features.multi_agent`) |
 | Nested subagents | native (depth 2, ≤4, read-only) | workaround: `max_depth=1`, nesting capped one level |
 | Structured agent→caller output | native (final-text JSON envelope) | native and strongest (`--output-schema` JSON Schema). A silent-drop bug under tools ([codex#15451](https://github.com/openai/codex/issues/15451)) was fixed April 2026 |
@@ -184,7 +186,7 @@ facility, so the design must work around it.
 | MCP tools | native | native (stdio/HTTP, OAuth, per-tool approval) |
 | MCP prompts-as-slash-commands | native | **hard gap**: MCP prompts unsupported client-side, so route through Skills |
 | MCP resources | native | native (`read_mcp_resource`/`list_mcp_resources`) |
-| Manifest / binding format | `.claude-plugin/plugin.json` | `config.toml`/`hooks.json` + `.codex/` |
+| Manifest / binding format | `.claude-plugin/plugin.json` | `.codex-plugin/plugin.json` + `.agents/plugins/marketplace.json` for the package; `config.toml`/`hooks.json` + `.codex/` for hooks and agents |
 | Per-project config (host-neutral) | `.team/config.json` (plain JSON, read by portable core) | `.team/config.json` (same file, unchanged) |
 | Abstract model tier → host model | native (`model:` is a literal Claude model) | workaround: resolve tier through `.team/config.json` map |
 
@@ -307,11 +309,34 @@ full parity. It starts from the matrix and works around the named gaps.
 
 - Bodies port as-is. Agent roles → TOML in `.codex/agents/` with the same
   system-prompt body.
-- Skills port natively to `.agents/skills/SKILL.md` (description-matched implicit
-  invocation). Each skill also ships `agents/openai.yaml`, which names it in the
-  catalog; the three guarded skills declare `policy.allow_implicit_invocation:
+- Skills port natively, through Codex's own plugin install:
+  `.codex-plugin/plugin.json` plus `.agents/plugins/marketplace.json` make the
+  checkout installable with `codex plugin add team@team-dev`, and Codex reads
+  every skill from `skills/<name>/SKILL.md` under the installed plugin root.
+  They arrive namespaced as `team:<name>`, with description-matched implicit
+  invocation. Each skill also ships `agents/openai.yaml`, which names it in the
+  catalog; the guarded skills declare `policy.allow_implicit_invocation:
   false` there to opt out of that matching, which is this host's documented
   equivalent of `disable-model-invocation`.
+- **Do not also link the checkout's `skills/` into `~/.agents/skills/`.** That
+  collection link registers every skill a second time, under both roots, and
+  Codex truncates each description to roughly a quarter of its length to fit
+  the doubled catalog. Verified on codex-cli 0.153.4, 2026-09-09.
+- **The install is a copy, and the manifest version is its cache key.** Codex
+  copies the marketplace root to
+  `~/.codex/plugins/cache/<marketplace>/<plugin>/<version>/`, so an edited
+  skill does not reach it until the plugin is installed again. Codex's
+  `plugin-creator` reference prescribes a `<base>+codex.<cachebuster>` version
+  suffix to force the re-copy rather than a version bump;
+  `script/dev-install-codex` stamps one, reinstalls, restores the manifest, and
+  prunes the previous copy.
+- **Codex's plugin validator rejects `disable-model-invocation`.**
+  `plugin-creator`'s `validate_plugin.py` requires the key to be absent or
+  `false`, and Team's four guarded skills set it `true` because Claude Code
+  needs it. The runtime does not enforce the rule, and this host's own
+  equivalent — `policy.allow_implicit_invocation: false` in each skill's
+  `agents/openai.yaml` — keeps all four out of the implicit catalog. The
+  divergence is deliberate and the validator finding is expected.
 - Hooks: reuse the 4 `.mjs` files. The shim adapts to Codex
   `hooks.json`/`[hooks]`, whose schema mirrors Claude closely
   (`permissionDecision:"deny"`/exit 2). Events map nearly 1:1

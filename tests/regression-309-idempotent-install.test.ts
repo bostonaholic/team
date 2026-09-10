@@ -1,7 +1,6 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import {
-  chmodSync,
   existsSync,
   lstatSync,
   mkdirSync,
@@ -14,6 +13,8 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { writeFakeClaude } from "./helpers/fake-claude";
+
 const REPO_ROOT = join(import.meta.dir, "..");
 const INSTALL = join(REPO_ROOT, "script", "dev-install-claude");
 const VERSION = JSON.parse(
@@ -24,66 +25,8 @@ const tempDirs: string[] = [];
 
 function newHome(): string {
   const home = mkdtempSync(join(tmpdir(), `team-install-${process.pid}-`));
-  const binDir = join(home, "bin");
-  mkdirSync(binDir);
   tempDirs.push(home);
-
-  const stub = join(binDir, "claude");
-  writeFileSync(
-    stub,
-    `#!/usr/bin/env bash
-set -euo pipefail
-
-STATE="$HOME/state"
-mkdir -p "$STATE"
-printf '%s\n' "$*" >> "$STATE/calls"
-
-case "$1 $2 $3" in
-  "plugin marketplace list")
-    if [ -f "$STATE/marketplace-path" ]; then
-      path=$(<"$STATE/marketplace-path")
-      printf '[{"name":"team-dev","source":"directory","path":"%s"}]\n' "$path"
-    else
-      printf '[]\n'
-    fi
-    ;;
-  "plugin marketplace add")
-    if [ -f "$STATE/marketplace-path" ]; then
-      echo "Marketplace 'team-dev' is already installed" >&2
-      exit 1
-    fi
-    printf '%s' "$4" > "$STATE/marketplace-path"
-    ;;
-  "plugin marketplace update")
-    ;;
-  "plugin install team@team-dev")
-    if [ -f "$STATE/installed-version" ]; then
-      echo "Plugin 'team@team-dev' is already installed" >&2
-      exit 1
-    fi
-    printf '%s' "$PLUGIN_VERSION" > "$STATE/installed-version"
-    mkdir -p "$HOME/.claude/plugins/cache/team-dev/team/$PLUGIN_VERSION"
-    ;;
-  "plugin update team@team-dev")
-    printf '%s' "$PLUGIN_VERSION" > "$STATE/installed-version"
-    mkdir -p "$HOME/.claude/plugins/cache/team-dev/team/$PLUGIN_VERSION"
-    ;;
-  "plugin list --json")
-    if [ -f "$STATE/installed-version" ]; then
-      version=$(<"$STATE/installed-version")
-      printf '[{"id":"team@team-dev","version":"%s","scope":"user","installPath":"%s/.claude/plugins/cache/team-dev/team/%s"}]\n' "$version" "$HOME" "$version"
-    else
-      printf '[]\n'
-    fi
-    ;;
-  *)
-    echo "Unexpected claude call: $*" >&2
-    exit 64
-    ;;
-esac
-`,
-  );
-  chmodSync(stub, 0o755);
+  writeFakeClaude(home);
   return home;
 }
 

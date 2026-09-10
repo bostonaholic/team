@@ -116,5 +116,36 @@ else
   exit 1
 fi
 
+# Every version ever installed from this checkout leaves a directory behind,
+# because the cache path carries the version. Left alone they accumulate one
+# copy of the whole plugin per release. Sweep the ones Claude no longer serves.
+CACHE_ROOT="$(dirname "$CACHE_PATH")"
+if [ -d "$CACHE_ROOT" ]; then
+  # An install Claude still reports — another scope, another version — stays.
+  # shellcheck disable=SC2016
+  LIVE_PATHS=$(
+    claude plugin list --json |
+      node -e '
+        const entries = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
+        for (const entry of entries) {
+          if (entry.id === "team@team-dev" && typeof entry.installPath === "string") {
+            process.stdout.write(`${entry.installPath}\n`);
+          }
+        }
+      '
+  )
+  for entry in "$CACHE_ROOT"/*; do
+    [ -e "$entry" ] || [ -L "$entry" ] || continue
+    [ "$entry" != "$CACHE_PATH" ] || continue
+    if printf '%s\n' "$LIVE_PATHS" | grep -qxF "$entry"; then
+      continue
+    fi
+    # A stale entry can be a symlink an older dev install left pointing at the
+    # checkout. `rm -rf` unlinks it; it never descends into the target.
+    rm -rf "$entry"
+    echo "  Pruned stale cache: $(basename "$entry")"
+  done
+fi
+
 echo
 echo "Done. Restart Claude Code to load the plugin."

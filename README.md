@@ -82,10 +82,36 @@ codex plugin marketplace add /path/to/team
 codex plugin add team@team-dev
 ```
 
+The install copies the checkout into Codex's plugin cache and reads every skill
+from the plugin's own `skills/<name>/SKILL.md`, so a later `codex plugin add`
+picks up new skills with no extra links and no sync step. Remove it with:
+
+```bash
+codex plugin remove team@team-dev
+```
+
 Skills arrive **namespaced** — ask for `team:shipit`, not `shipit`. Codex budgets
 its skill catalog, so it shortens the longest descriptions; the skills still
 work. The `/team-*` pipeline commands load but cannot dispatch Claude Code
 agents, so they will not run the pipeline. The standalone utilities do.
+
+Developing Team itself? Run the loop Codex documents for local plugins:
+
+```bash
+script/dev-install codex
+script/dev-uninstall codex
+```
+
+Codex keys its plugin cache on the manifest version, so the install stamps a
+`+codex.<timestamp>` cachebuster onto it, reinstalls, restores the manifest,
+and prunes the copy the last run left. The install is a copy either way, so
+**re-run it after changing a skill** and start a new Codex thread.
+
+**Installed Team for Codex before?** An earlier version of `script/dev-install
+codex` linked `~/.agents/skills/team` at the checkout's whole `skills/`
+directory. Keeping that link alongside a plugin install registers every skill
+twice, which halves the description budget Codex renders each one with. Both
+`script/dev-install codex` and `script/dev-uninstall codex` remove it for you.
 
 </details>
 
