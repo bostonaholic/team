@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.100.0] - 2026-09-10
+
 ### Changed
 
 - **`/pr-open-comments`' punch-list menu drops from eight options to seven, and two of them stop reading as duplicates.** "Attach the screenshot they asked for" was a peer option, but A–G are response postures — apply, vary, answer, decline, defer, resolve as-is, clarify — and a screenshot request is one request *type* whose posture is A. The routing to `/pr-screenshots` moves into A's text, where it still fires when a reviewer asks for an image. Separately, C was labelled "Reply to clarify / answer", which read as G ("Needs clarification") even though the two run opposite directions: C is your answer to a question you understood, G is your question about an ask you did not. C is now "Reply with the answer", and only G is a Hard Rule 3 exclusion that can never auto-apply. A `STALE` or `INACCURATE` verdict now routes to C or D rather than to "a clarifying reply (C/G)" — both are verdicts you reached with evidence, so neither is a clarification ask. **What this asks of you:** nothing, unless you refer to these options by letter in your own notes; H is gone and C is renamed.
@@ -893,7 +895,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.99.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.100.0...HEAD
+[0.100.0]: https://github.com/bostonaholic/team/compare/v0.99.0...v0.100.0
 [0.99.0]: https://github.com/bostonaholic/team/compare/v0.98.0...v0.99.0
 [0.98.0]: https://github.com/bostonaholic/team/compare/v0.97.0...v0.98.0
 [0.97.0]: https://github.com/bostonaholic/team/compare/v0.96.0...v0.97.0
