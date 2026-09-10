@@ -5,8 +5,8 @@
 // standalone skill root, so with a plugin install also present it finds every
 // Team skill under two roots and renders each one twice — a doubled catalog in
 // which each description truncates to roughly a quarter of its length. The
-// same nesting is what kept Team out of Nexus's index, which found only the
-// Claude plugin copy and labelled every skill `claude`.
+// same nesting kept Team out of any skill index that discovers skills through
+// Codex's plugin install, so those indexes saw only the Claude plugin copy.
 //
 // The single fact this pins: after an install, exactly one root serves Team's
 // skills, and it is the plugin's own. `~/.agents/skills/team` is gone, and the
