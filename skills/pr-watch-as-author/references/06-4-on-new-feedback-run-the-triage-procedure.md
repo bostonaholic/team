@@ -27,17 +27,19 @@ is applied. Three differences apply to a plain comment:
   target and edit it.
 
 **The usefulness reaction carries over to every shape.** The delegated
-procedure's step-4 rule — 👍 when the comment named something real, 👎
-when its claim does not hold, nothing when the verdict is `STALE` or
-the ask is unclear — applies to a plain PR comment and to a review
+procedure places it at the decision that picks it — 👍 as an
+auto-applied change lands, and otherwise the reaction the user's chosen
+option carries — and that applies to a plain PR comment and to a review
 submission body exactly as it does to an inline thread. All three are
 `Reactable`, so one `addReaction` call covers them (see
 `skills/pr-open-comments/SKILL.md`, `## Reaction mechanics`). Where a
 review body and its threads say the same thing, react on each subject
 you triaged as an item, and no others — the reaction tracks items, not
-reviewers.
+reviewers. A presented item carries no reaction until the user picks,
+which matters more here than in a one-shot triage: an unattended loop
+would otherwise publish a verdict on every wake with nobody reading it.
 
-React once, when the item is triaged, and never again. The
+React once, when the decision lands, and never again. The
 triaged-comment id set is what keeps that true across cycles: a comment
 that re-enters triage would otherwise collect a second reaction every
 wake. The `viewerHasReacted` guard is the backstop, not the plan — after
@@ -69,9 +71,10 @@ ambiguous about authorization, run present-then-stop — never authorized
 mode. Every loop report — the poll snapshot and the batch report — names
 the active mode and lists any auto-applied items with their confidence
 and landing commit SHA, so the loop stays auditable. The batch report
-also names the reaction each triaged item received, so a 👎 the user
-would have argued with shows up in the transcript rather than only on
-GitHub. A soft-cap re-arm
+names the reaction each item received and, for a presented item, the
+reaction each of its options would place, so a 👎 the user would have
+argued with is a choice in the transcript rather than a fact on GitHub.
+A soft-cap re-arm
 keeps the mode. A exclusion stop ends the authorization, so a re-arm
 after one starts in present-then-stop. Authorized mode re-arms **after a
 exclusion stop** only when the user restates authorization.

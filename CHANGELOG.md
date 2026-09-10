@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`/pr-open-comments` no longer reacts to a review comment before you have decided what to do about it.** Triage placed the 👍/👎 during verification, keyed to its own verdict, so an item that then landed on the punch list already carried a public signal — and when you read the same comment as invalid and declined it, the 👍 was already on GitHub and there is no honest way to take one back. The reaction now waits for the decision that picks it: an item the skill auto-applies above the 90% bar reacts 👍 as the change lands, and every presented item reports `Reaction: none yet` and states in its option menu which reaction each option would place, so choosing an action is choosing the signal it sends. Declining still reads as 👎 only when the decline rests on the claim not holding; a sound ask you are deferring on scope or priority gets no thumbs-down. `/pr-watch-as-author`, which delegates its triage here, inherits all of it — the fix matters more in an unattended loop, which would otherwise publish a verdict on every wake with nobody reading it. **What this asks of you:** nothing, though a punch list now shows one more line per item.
+
 ## [0.99.0] - 2026-09-10
 
 ### Changed
