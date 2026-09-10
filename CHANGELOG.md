@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.101.0] - 2026-09-10
+
 ### Added
 
 - **Team now applies the [`unslop`](https://github.com/bostonaholic/team/blob/main/skills/unslop/SKILL.md) methodology across every `/team` phase and all phase agents.** It removes common AI prose patterns while preserving meaning, schemas, quoted text, verdicts, and other protected content. Research helper output remains byte-identical inside untrusted-data fences. **What this asks of you:** nothing.
@@ -899,7 +901,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.100.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.101.0...HEAD
+[0.101.0]: https://github.com/bostonaholic/team/compare/v0.100.0...v0.101.0
 [0.100.0]: https://github.com/bostonaholic/team/compare/v0.99.0...v0.100.0
 [0.99.0]: https://github.com/bostonaholic/team/compare/v0.98.0...v0.99.0
 [0.98.0]: https://github.com/bostonaholic/team/compare/v0.97.0...v0.98.0
