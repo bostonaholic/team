@@ -731,6 +731,13 @@ every multi-step skill carries), and a pointer to a skill the frontmatter
 already preloaded. Turning one of those into a tool call would spend a call
 and a slice of context on content nobody asked for.
 
+**A `principle-*` skill is the one case with no citation-only option.** Every
+skill that applies one lists it under `## Applied principles` and loads it
+there through the Skill tool, so the rule arrives rather than being alluded
+to. A passing mention elsewhere in the same skill stays a citation and adds
+no edge. See "Principle skills" under
+[Design guidelines](#design-guidelines).
+
 The sweep asserts the *reference*, not the sentence around it — the same
 thing the path assertions always asserted, which is why
 [testing.md](testing.md#a-tripwire-asserts-a-contract-never-a-wording)
@@ -897,8 +904,20 @@ entry points. Descriptions are at most 200 characters, or 150 for methodology.
 3. **Principle skills:** some skills carry the `principle-` prefix, and the
    prefix is a claim, not a namespace. Each states one cross-cutting
    invariant — fail closed, bounded loops, evidence over assertion, and
-   their siblings. The skills that apply a rule consult it by citation,
-   and any agent can load it just-in-time. A preloaded principle skill
+   their siblings. **A principle skill is loaded the same way every other
+   skill is: through the Skill tool, with the load phrase.** It gets no
+   second mechanism. Every skill that applies one carries an `## Applied
+   principles` section, and that section is where the load happens —
+   ``Call the Skill tool with `principle-<name>` ``, bare names, no path.
+   Prose elsewhere in the skill may still name a principle in passing, as
+   a pointer to where the rule is defined; that is a citation and carries
+   no load, so the section is what makes the rule actually arrive.
+   `tests/skill-tool-invocation.test.ts` holds both halves: every name
+   inside an `## Applied principles` section sits behind the load phrase,
+   and every `principle-*` directory on disk is loaded by some body. The
+   second half is what keeps a principle's invocation count honest — a
+   count of zero means nothing called it, never that a load went
+   unmeasured. A preloaded principle skill
    counts against the load limit like any other name: twelve of the
    thirteen agents preload `principle-progress-tracking`, and
    `file-finder` is the one that does not. Each exists so the rule is

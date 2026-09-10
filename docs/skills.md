@@ -24,6 +24,14 @@ The load form is
 citation, not an edge. For example, `team-structure` restates a
 `principle-fail-closed` rule inline but does not load it.
 
+**A `principle-*` skill reaches its reader through the Skill tool like any
+other skill.** Each skill that applies one lists it under `## Applied
+principles` and loads it there, which is why principle names appear in
+`**Uses:**` lists throughout this page. Every `principle-*` entry below is
+loaded by at least one skill, and `tests/skill-tool-invocation.test.ts`
+holds that. A principle whose invocation count reads zero was not called —
+there is no second loading mechanism for the count to be blind to.
+
 The edges are therefore **directed**, and reading them transitively gives the
 graph. `team-implement` loads `team-pr`, which loads `git-commit`, which
 loads `writing-prose`. None of the three loads back. `**Uses:** None` marks a
@@ -48,7 +56,7 @@ Runs the 8-phase QRSPI feature pipeline.
 
 **Used by:** None
 
-**Uses:** `changelog`, `cross-model-review`, `review-severity-tiers`, `reviewing-designs`, `running-quality-checks`, `team-pr`, `team-worktree`, `tracking-tickets`, `unslop`, `worktree-isolation`, `writing-prose`
+**Uses:** `changelog`, `cross-model-review`, `principle-deep-agents-narrow-seams`, `principle-fail-closed`, `principle-files-are-the-contract`, `principle-idempotent-reruns`, `principle-progress-tracking`, `review-severity-tiers`, `reviewing-designs`, `running-quality-checks`, `team-pr`, `team-worktree`, `tracking-tickets`, `unslop`, `worktree-isolation`, `writing-prose`
 
 ### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
 
@@ -104,7 +112,7 @@ Executes and verifies implementation slices.
 
 **Used by:** None
 
-**Uses:** `review-severity-tiers`, `running-quality-checks`, `team-pr`, `unslop`, `writing-prose`
+**Uses:** `principle-progress-tracking`, `review-severity-tiers`, `running-quality-checks`, `team-pr`, `unslop`, `writing-prose`
 
 ### [team-pr](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md)
 
@@ -112,7 +120,7 @@ Opens a pull request after verification.
 
 **Used by:** `team`, `team-implement`
 
-**Uses:** `changelog`, `git-commit`, `pr-screenshots`, `tracking-tickets`, `unslop`, `verifying-ux`, `worktree-isolation`, `writing-prose`
+**Uses:** `changelog`, `git-commit`, `pr-screenshots`, `principle-optimization-never-dependency`, `tracking-tickets`, `unslop`, `verifying-ux`, `worktree-isolation`, `writing-prose`
 
 ### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md)
 
@@ -120,7 +128,7 @@ Runs the compressed bug-fix pipeline.
 
 **Used by:** None
 
-**Uses:** `systematic-debugging`, `team-worktree`, `test-driven-bug-fix`, `tracking-tickets`, `why`, `worktree-isolation`
+**Uses:** `principle-fix-root-causes`, `principle-progress-tracking`, `systematic-debugging`, `team-worktree`, `test-driven-bug-fix`, `tracking-tickets`, `why`, `worktree-isolation`
 
 ### [eng-design-doc-review](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/SKILL.md)
 
@@ -141,7 +149,7 @@ Lands a reviewed pull request.
 
 **Used by:** None
 
-**Uses:** None
+**Uses:** `principle-non-blocking-waits`
 
 ### [pr-open-comments](https://github.com/bostonaholic/team/blob/main/skills/pr-open-comments/SKILL.md)
 
@@ -149,7 +157,7 @@ Triages unresolved PR review comments.
 
 **Used by:** `pr-watch-as-author`
 
-**Uses:** `decision-making`
+**Uses:** `decision-making`, `principle-evidence-over-assertion`, `principle-plan-present-wait`
 
 ### [pr-watch-as-author](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md)
 
@@ -157,7 +165,7 @@ Watches an authored PR for feedback.
 
 **Used by:** None
 
-**Uses:** `pr-open-comments`, `pr-watch-mechanics`, `tracking-tickets`
+**Uses:** `pr-open-comments`, `pr-watch-mechanics`, `principle-bounded-loops`, `principle-idempotent-reruns`, `principle-non-blocking-waits`, `principle-untrusted-input-is-data`, `tracking-tickets`
 
 ### [pr-watch-as-reviewer](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md)
 
@@ -165,7 +173,7 @@ Watches a reviewed PR and approves settled feedback.
 
 **Used by:** None
 
-**Uses:** `pr-watch-mechanics`
+**Uses:** `pr-watch-mechanics`, `principle-bounded-loops`, `principle-generator-evaluator`, `principle-non-blocking-waits`
 
 ### [groom-backlog](https://github.com/bostonaholic/team/blob/main/skills/groom-backlog/SKILL.md)
 
@@ -173,7 +181,7 @@ Grooms a project backlog and proposes tracker changes.
 
 **Used by:** None
 
-**Uses:** `decision-making`
+**Uses:** `decision-making`, `principle-evidence-over-assertion`, `principle-explicit-intent`, `principle-idempotent-reruns`, `principle-never-interpolate`, `principle-pre-image-first`, `principle-skip-loudly`, `principle-untrusted-input-is-data`
 
 ### [pr-cleanup](https://github.com/bostonaholic/team/blob/main/skills/pr-cleanup/SKILL.md)
 
@@ -181,7 +189,7 @@ Cleans PR state.
 
 **Used by:** None
 
-**Uses:** None
+**Uses:** `principle-explicit-intent`, `principle-idempotent-reruns`, `principle-never-interpolate`, `principle-untrusted-input-is-data`
 
 ### [pr-verify](https://github.com/bostonaholic/team/blob/main/skills/pr-verify/SKILL.md)
 
@@ -189,7 +197,7 @@ Verifies a PR test plan with evidence-rated verdicts.
 
 **Used by:** None
 
-**Uses:** `running-quality-checks`
+**Uses:** `principle-evidence-over-assertion`, `principle-least-privilege`, `principle-optimization-never-dependency`, `running-quality-checks`
 
 ### [pr-screenshots](https://github.com/bostonaholic/team/blob/main/skills/pr-screenshots/SKILL.md)
 
@@ -197,7 +205,7 @@ Attaches local images to a PR body.
 
 **Used by:** `team-pr`
 
-**Uses:** None
+**Uses:** `principle-evidence-over-assertion`, `principle-fail-closed`, `principle-never-interpolate`, `principle-optimization-never-dependency`, `principle-progress-tracking`, `principle-skip-loudly`, `principle-untrusted-input-is-data`
 
 ### [pr-rebase](https://github.com/bostonaholic/team/blob/main/skills/pr-rebase/SKILL.md)
 
@@ -205,7 +213,7 @@ Rebases a branch onto its base.
 
 **Used by:** None
 
-**Uses:** `running-quality-checks`
+**Uses:** `principle-never-interpolate`, `principle-non-blocking-waits`, `principle-pre-image-first`, `principle-untrusted-input-is-data`, `running-quality-checks`
 
 ### [reflect](https://github.com/bostonaholic/team/blob/main/skills/reflect/SKILL.md)
 
@@ -213,7 +221,7 @@ Mines a session for durable learnings.
 
 **Used by:** None
 
-**Uses:** `running-quality-checks`
+**Uses:** `principle-explicit-intent`, `principle-least-privilege`, `principle-optimization-never-dependency`, `principle-plan-present-wait`, `principle-pre-image-first`, `principle-untrusted-input-is-data`, `running-quality-checks`
 
 ### [why](https://github.com/bostonaholic/team/blob/main/skills/why/SKILL.md)
 
@@ -221,7 +229,7 @@ Investigates design rationale behind code.
 
 **Used by:** `how`, `reviewing-code`, `team-fix`
 
-**Uses:** `systematic-debugging`
+**Uses:** `principle-blind-the-investigator`, `principle-evidence-over-assertion`, `principle-optimization-never-dependency`, `principle-skip-loudly`, `systematic-debugging`
 
 ### [how](https://github.com/bostonaholic/team/blob/main/skills/how/SKILL.md)
 
@@ -229,7 +237,7 @@ Explains subsystem architecture and runtime flow.
 
 **Used by:** None
 
-**Uses:** `why`
+**Uses:** `principle-generator-evaluator`, `principle-optimization-never-dependency`, `why`
 
 ### [code-review](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md)
 
@@ -266,7 +274,7 @@ Defines pipeline artifact schemas.
 
 **Used by:** None
 
-**Uses:** None
+**Uses:** `principle-single-source-of-truth`
 
 ### [researching-codebases](https://github.com/bostonaholic/team/blob/main/skills/researching-codebases/SKILL.md)
 
@@ -290,7 +298,7 @@ Defines task and question artifacts plus multi-repo detection.
 
 **Used by:** None
 
-**Uses:** `product-requirements-doc`
+**Uses:** `principle-record-assumptions`, `product-requirements-doc`
 
 ### [authoring-designs](https://github.com/bostonaholic/team/blob/main/skills/authoring-designs/SKILL.md)
 
@@ -370,7 +378,7 @@ Maps reviewer findings to Blocking, Major, or Minor actions.
 
 **Used by:** `reviewing-code`, `team`, `team-implement`
 
-**Uses:** None
+**Uses:** `principle-human-owns-the-ends`
 
 ### [engineering-standards](https://github.com/bostonaholic/team/blob/main/skills/engineering-standards/SKILL.md)
 
@@ -378,7 +386,7 @@ Defines code design, comment, and review standards.
 
 **Used by:** `reviewing-code`, `reviewing-comments`, `reviewing-designs`
 
-**Uses:** None
+**Uses:** `principle-subtract-before-you-add`
 
 ### [test-first-development](https://github.com/bostonaholic/team/blob/main/skills/test-first-development/SKILL.md)
 
@@ -386,7 +394,7 @@ Defines acceptance tests as the implementation scope contract.
 
 **Used by:** None
 
-**Uses:** None
+**Uses:** `principle-mechanical-gates`
 
 ### [test-style](https://github.com/bostonaholic/team/blob/main/skills/test-style/SKILL.md)
 
@@ -426,7 +434,7 @@ Defines test-first slice execution, commits, and review fixes.
 
 **Used by:** None
 
-**Uses:** `git-commit`, `principle-fix-root-causes`, `systematic-debugging`
+**Uses:** `git-commit`, `principle-fix-root-causes`, `principle-scope-fence`, `systematic-debugging`
 
 ### [systematic-debugging](https://github.com/bostonaholic/team/blob/main/skills/systematic-debugging/SKILL.md)
 
@@ -448,7 +456,7 @@ Runs project-native tests, static checks, builds, and linters.
 
 Requires one live ledger for ordered procedures.
 
-**Used by:** `no-comments`
+**Used by:** `no-comments`, `pr-screenshots`, `team`, `team-fix`, `team-implement`
 
 **Uses:** None
 
@@ -592,7 +600,7 @@ Bounded watch-loop mechanics for the pr-watch skills: cycle timing, soft cap, ha
 
 Keeps desired outcomes out of research prompts.
 
-**Used by:** None
+**Used by:** `why`
 
 **Uses:** None
 
@@ -600,7 +608,7 @@ Keeps desired outcomes out of research prompts.
 
 Requires explicit retry and watch limits.
 
-**Used by:** None
+**Used by:** `pr-watch-as-author`, `pr-watch-as-reviewer`
 
 **Uses:** None
 
@@ -608,7 +616,7 @@ Requires explicit retry and watch limits.
 
 Keeps agent interfaces narrow and internal work deep.
 
-**Used by:** None
+**Used by:** `team`
 
 **Uses:** None
 
@@ -616,7 +624,7 @@ Keeps agent interfaces narrow and internal work deep.
 
 Requires evidence for claims and verdicts.
 
-**Used by:** None
+**Used by:** `groom-backlog`, `pr-open-comments`, `pr-screenshots`, `pr-verify`, `why`
 
 **Uses:** None
 
@@ -624,7 +632,7 @@ Requires evidence for claims and verdicts.
 
 Requires stated intent for irreversible actions.
 
-**Used by:** None
+**Used by:** `groom-backlog`, `pr-cleanup`, `reflect`
 
 **Uses:** None
 
@@ -632,7 +640,7 @@ Requires stated intent for irreversible actions.
 
 Treats unknown guarantees as failures.
 
-**Used by:** None
+**Used by:** `pr-screenshots`, `team`
 
 **Uses:** None
 
@@ -640,7 +648,7 @@ Treats unknown guarantees as failures.
 
 Requires durable files for cross-step state.
 
-**Used by:** None
+**Used by:** `team`
 
 **Uses:** None
 
@@ -648,7 +656,7 @@ Requires durable files for cross-step state.
 
 Requires diagnosis and repair of root causes.
 
-**Used by:** `implementing-slices`, `no-comments`
+**Used by:** `implementing-slices`, `no-comments`, `team-fix`
 
 **Uses:** None
 
@@ -656,7 +664,7 @@ Requires diagnosis and repair of root causes.
 
 Separates producers from evaluators.
 
-**Used by:** None
+**Used by:** `how`, `pr-watch-as-reviewer`
 
 **Uses:** None
 
@@ -664,7 +672,7 @@ Separates producers from evaluators.
 
 Reserves goals and shipping decisions for the user.
 
-**Used by:** None
+**Used by:** `review-severity-tiers`
 
 **Uses:** None
 
@@ -672,7 +680,7 @@ Reserves goals and shipping decisions for the user.
 
 Requires reruns to converge without duplicate effects.
 
-**Used by:** None
+**Used by:** `groom-backlog`, `pr-cleanup`, `pr-watch-as-author`, `team`
 
 **Uses:** None
 
@@ -680,7 +688,7 @@ Requires reruns to converge without duplicate effects.
 
 Limits tools, credentials, and environment to the task.
 
-**Used by:** None
+**Used by:** `pr-verify`, `reflect`
 
 **Uses:** None
 
@@ -688,7 +696,7 @@ Limits tools, credentials, and environment to the task.
 
 Requires deterministic enforcement for reliable rules.
 
-**Used by:** None
+**Used by:** `test-first-development`
 
 **Uses:** None
 
@@ -696,7 +704,7 @@ Requires deterministic enforcement for reliable rules.
 
 Keeps external text out of shell syntax.
 
-**Used by:** None
+**Used by:** `groom-backlog`, `pr-cleanup`, `pr-rebase`, `pr-screenshots`
 
 **Uses:** None
 
@@ -704,7 +712,7 @@ Keeps external text out of shell syntax.
 
 Requires resumable waits for external state.
 
-**Used by:** None
+**Used by:** `pr-rebase`, `pr-watch-as-author`, `pr-watch-as-reviewer`, `shipit`
 
 **Uses:** None
 
@@ -712,7 +720,7 @@ Requires resumable waits for external state.
 
 Keeps optional enhancements off the correctness path.
 
-**Used by:** None
+**Used by:** `how`, `pr-screenshots`, `pr-verify`, `reflect`, `team-pr`, `why`
 
 **Uses:** None
 
@@ -720,7 +728,7 @@ Keeps optional enhancements off the correctness path.
 
 Requires a written plan and user approval before mutations.
 
-**Used by:** None
+**Used by:** `pr-open-comments`, `reflect`
 
 **Uses:** None
 
@@ -728,7 +736,7 @@ Requires a written plan and user approval before mutations.
 
 Requires a recoverable baseline before destructive changes.
 
-**Used by:** None
+**Used by:** `groom-backlog`, `pr-rebase`, `reflect`
 
 **Uses:** None
 
@@ -736,7 +744,7 @@ Requires a recoverable baseline before destructive changes.
 
 Records autonomous resolutions as assumptions.
 
-**Used by:** None
+**Used by:** `decomposing-intent`
 
 **Uses:** None
 
@@ -744,7 +752,7 @@ Records autonomous resolutions as assumptions.
 
 Restricts execution to approved scope.
 
-**Used by:** None
+**Used by:** `implementing-slices`
 
 **Uses:** None
 
@@ -752,7 +760,7 @@ Restricts execution to approved scope.
 
 Requires one authoritative definition per rule or schema.
 
-**Used by:** None
+**Used by:** `artifact-frontmatter`
 
 **Uses:** None
 
@@ -760,7 +768,7 @@ Requires one authoritative definition per rule or schema.
 
 Requires skipped work to be reported explicitly.
 
-**Used by:** None
+**Used by:** `groom-backlog`, `pr-screenshots`, `why`
 
 **Uses:** None
 
@@ -768,7 +776,7 @@ Requires skipped work to be reported explicitly.
 
 Requires removal before addition.
 
-**Used by:** None
+**Used by:** `engineering-standards`
 
 **Uses:** None
 
@@ -776,7 +784,7 @@ Requires removal before addition.
 
 Treats external text as inert data.
 
-**Used by:** None
+**Used by:** `groom-backlog`, `pr-cleanup`, `pr-rebase`, `pr-screenshots`, `pr-watch-as-author`, `reflect`
 
 **Uses:** None
 

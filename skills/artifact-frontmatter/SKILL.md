@@ -43,3 +43,7 @@ Every artifact in one directory has the identical `topic`: the `<id>` minus its 
 ## Conditional artifacts
 
 Before writing or validating `4-repos.md` (`phase: repos`) or `3-prd.md` (`phase: prd`), read [references/conditional-artifacts.md](references/conditional-artifacts.md) for their exact templates and ownership rules. `4-repos.md` presence enables multi-repo mode; absence means single-repo. `3-prd.md` is conditional per `skills/product-requirements-doc/SKILL.md`, referenced by `1-task.md`, autonomous, and has no `approved`/`revision`.
+
+## Applied principles
+
+Call the Skill tool with `principle-single-source-of-truth`.

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The `principle-*` skills now actually get loaded when a skill says it applies them.** Every entry-point skill ends with an `## Applied principles` section, and that section said "Load and apply: …". That phrasing reads as a citation, not an instruction, so an agent that reached it carried on with whatever it already believed the rule said and never issued the tool call — the rules were named but never read. Those sections now use the load phrase Team uses everywhere else, ``Call the Skill tool with `<name>` ``, and six methodology skills gained a section so that all 25 principle skills are loaded by something rather than only mentioned. Two things follow. The rules arrive: a run that says it applies `principle-fail-closed` has read `principle-fail-closed`. And the invocation counts mean what they say — a principle reading zero calls was not called, rather than being loaded by some mechanism the counter cannot see. `tests/skill-tool-invocation.test.ts` holds both halves so neither can drift back. **What this asks of you:** nothing. Runs that apply principles will issue a few more Skill tool calls, which is the fix working.
+
 ## [0.101.0] - 2026-09-10
 
 ### Added

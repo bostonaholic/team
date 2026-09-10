@@ -49,4 +49,4 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-non-blocking-waits`.
+Call the Skill tool with `principle-non-blocking-waits`.

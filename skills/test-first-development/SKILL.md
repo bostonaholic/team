@@ -61,3 +61,7 @@ no approval step.
 
 Proceed to VERIFY only when all acceptance tests pass unchanged, none were
 added or removed, and the full prior suite has no regression.
+
+## Applied principles
+
+Call the Skill tool with `principle-mechanical-gates`.

@@ -76,5 +76,5 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-bounded-loops`, `principle-generator-evaluator`,
-`principle-non-blocking-waits`.
+Call the Skill tool with `principle-bounded-loops`,
+`principle-generator-evaluator`, `principle-non-blocking-waits`.

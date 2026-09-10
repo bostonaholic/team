@@ -36,5 +36,6 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-explicit-intent`, `principle-idempotent-reruns`,
-`principle-never-interpolate`, and `principle-untrusted-input-is-data`.
+Call the Skill tool with `principle-explicit-intent`,
+`principle-idempotent-reruns`, `principle-never-interpolate`, and
+`principle-untrusted-input-is-data`.

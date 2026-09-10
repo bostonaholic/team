@@ -42,3 +42,7 @@ Then run the full suite, resolve every failure type from the round, and report e
 1. Record what is blocked, why, and the required unblocker.
 2. Continue only with dependency-safe unblocked slices.
 3. Revisit blocked slices after unblocked work completes.
+
+## Applied principles
+
+Call the Skill tool with `principle-scope-fence`.
