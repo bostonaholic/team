@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`/team` now uses extra-high effort for full-pipeline coordination.** The design author and structure planner also use extra-high effort because their artifacts determine later implementation work; all other model and effort assignments remain at their existing cost-based tiers.
+
 ## [0.98.0] - 2026-09-10
 
 ### Fixed

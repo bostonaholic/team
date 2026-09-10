@@ -271,14 +271,14 @@ describe("effort tiering", () => {
   // EXPECTED_MODELS in describe("model tiering") below.
   const EXPECTED_EFFORTS: Record<string, string> = {
     "code-reviewer": "high",
-    "design-author": "high",
+    "design-author": "xhigh",
     "file-finder": "low",
     implementer: "high",
     planner: "high",
     questioner: "high",
     researcher: "medium",
     "security-reviewer": "high",
-    "structure-planner": "high",
+    "structure-planner": "xhigh",
     "technical-writer": "low",
     "test-architect": "high",
     "ux-reviewer": "medium",
@@ -314,6 +314,49 @@ describe("effort tiering", () => {
     expect(effortMismatch("planted-agent", "xhigh", "model: opus\n")).toBe(
       "planted-agent: expected effort xhigh, got none",
     );
+  });
+
+  const EXPECTED_SKILL_EFFORTS: Record<string, string> = {
+    "code-review": "high",
+    "eng-design-doc-review": "high",
+    "groom-backlog": "high",
+    how: "medium",
+    "no-comments": "high",
+    "pr-cleanup": "medium",
+    "pr-open-comments": "high",
+    "pr-rebase": "high",
+    "pr-screenshots": "medium",
+    "pr-verify": "high",
+    "pr-watch-as-author": "medium",
+    "pr-watch-as-reviewer": "medium",
+    reflect: "high",
+    shipit: "medium",
+    team: "xhigh",
+    "team-design": "medium",
+    "team-fix": "high",
+    "team-implement": "medium",
+    "team-plan": "medium",
+    "team-pr": "medium",
+    "team-question": "medium",
+    "team-research": "medium",
+    "team-structure": "medium",
+    "team-worktree": "low",
+    why: "high",
+  };
+
+  test("EXPECTED_SKILL_EFFORTS pins every user-facing skill to its level", () => {
+    const files = skillFiles().filter((file) =>
+      /^argument-hint:/m.test(frontmatter(read(join(REPO_ROOT, file)))),
+    );
+    const names = files.map((file) => basename(join(REPO_ROOT, file, "..")));
+    expect(Object.keys(EXPECTED_SKILL_EFFORTS).sort()).toEqual(names);
+    const offenders: string[] = [];
+    for (const [skill, level] of Object.entries(EXPECTED_SKILL_EFFORTS)) {
+      const fm = frontmatter(read(join(REPO_ROOT, "skills", skill, "SKILL.md")));
+      const offender = effortMismatch(skill, level, fm);
+      if (offender) offenders.push(offender);
+    }
+    expect(offenders).toEqual([]);
   });
 
   test("each agent's frontmatter carries exactly one effort: key", () => {
