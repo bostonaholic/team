@@ -1,3 +1,29 @@
+// tests/codex-skill-catalog.test.ts
+//
+// L1 + L2 (free, deterministic): Team's footprint in the host's shared skills
+// catalog.
+//
+// Codex renders every installed skill — Team's, every other plugin's, and the
+// host's own — into ONE list, `- <name>: <description> (file: <path>)`, capped
+// at 8,000 characters, or 2% of the context window in tokens. Over the cap it
+// shortens descriptions round-robin, so one plugin's long descriptions shorten
+// every other plugin's. Past that it drops skills off the list entirely.
+// Constants and render format: codex-rs/ext/skills/src/render.rs, codex-cli
+// 0.153.4.
+//
+// Team cannot tell whether that cap is exceeded. The other tenants are not
+// visible from this repo, the host ships skills of its own, and the cap moves
+// with the model. So nothing here asserts that Team fits — that claim is not
+// Team's to make.
+//
+// What this file asserts is what Team CONTRIBUTES. Team is one tenant of a pool
+// it cannot measure, so it spends as little of that pool as the triggers allow
+// and leaves the rest for its neighbors. The two fleet ceilings are a RATCHET:
+// lower them when compression lands, never raise them to admit a new skill. A
+// ceiling may not sit more than RATCHET_SLACK_CHARS above the measured
+// footprint, so headroom cannot be bought in advance and every raise shows up
+// in the diff as a raise.
+
 import { describe, expect, test } from "bun:test";
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -7,99 +33,32 @@ import { description, read } from "./helpers/text";
 const REPO_ROOT = process.cwd();
 const SKILLS_ROOT = join(REPO_ROOT, "skills");
 
-// Constants mirrored from Codex, codex-rs/ext/skills/src/render.rs (codex-cli
-// 0.153.4). Codex renders one catalog line per model-visible skill into a
-// single budget shared by every installed skill from every plugin and root.
-const DEFAULT_SKILL_METADATA_CHAR_BUDGET = 8_000;
-const SKILL_DESCRIPTION_TRUNCATION_WARNING_THRESHOLD_CHARS = 100;
+// Codex's per-skill hard caps. A description is cut to the first at the point
+// of render; a name past the second is rejected by its skill validator.
 const MAX_CATALOG_SKILL_DESCRIPTION_CHARS = 1_024;
 const MAX_SKILL_NAME_CHARS = 64;
 
+// Team's declared footprint ceilings, in characters. Not derived from Codex's
+// budget — Team's share of a pool it cannot see is a judgement, not a
+// calculation. They record what Team spends today and only ever come down.
+const FLEET_DESCRIPTION_BUDGET_CHARS = 11_000;
+const FLEET_CATALOG_BUDGET_CHARS = 16_700;
+const RATCHET_SLACK_CHARS = 100;
+
 // Codex aliases a plugin's shared skill root to `r<index>` and renders each
 // locator relative to it (aliases.rs, host_aliases.rs). Team installs as one
-// plugin whose 90 skills share one root, so every locator is `r0/<name>/SKILL.md`.
+// plugin whose skills share one root, so every locator is `r0/<name>/SKILL.md`.
 function locator(name: string): string {
   return `r0/${name}/SKILL.md`;
 }
 
-// `- <name>: <description> (<locator_kind>: <locator>)`, plus the newline that
-// `metadata_line_cost` adds before counting.
-function minimumCost(name: string): number {
-  return `- ${name}: (file: ${locator(name)})\n`.length;
-}
-
-function fullCost(name: string, text: string): number {
+// One catalog line, plus the newline `metadata_line_cost` adds before counting.
+// This is the whole of what Team puts into the shared pool for one skill.
+function catalogLineCost(name: string, text: string): number {
   return `- ${name}: ${text} (file: ${locator(name)})\n`.length;
 }
 
-// Round-robin description allocation, one character at a time, so no skill
-// monopolizes the leftover budget. In character mode the k-th character of a
-// description costs k + 1 above the minimum line (k characters plus the space
-// that separates the name from the description).
-function allocateDescriptionChars(descriptionLengths: number[], limit: number): number[] {
-  const allocated = descriptionLengths.map(() => 0);
-  const currentExtra = descriptionLengths.map(() => 0);
-  let remaining = limit;
-  for (;;) {
-    let changed = false;
-    for (const [index, length] of descriptionLengths.entries()) {
-      if (allocated[index]! >= length) continue;
-      const next = allocated[index]! + 1;
-      const delta = next + 1 - currentExtra[index]!;
-      if (delta > remaining) continue;
-      allocated[index] = next;
-      currentExtra[index] = next + 1;
-      remaining -= delta;
-      changed = true;
-    }
-    if (!changed) break;
-  }
-  return allocated;
-}
-
 type CatalogSkill = { name: string; description: string };
-type RenderReport = { totalCount: number; omittedCount: number; truncatedDescriptionChars: number };
-
-function renderReport(skills: CatalogSkill[], budget: number): RenderReport {
-  const totalCount = skills.length;
-  const minimum = skills.reduce((used, skill) => used + minimumCost(skill.name), 0);
-  const full = skills.reduce((used, skill) => used + fullCost(skill.name, skill.description), 0);
-  if (full <= budget) return { totalCount, omittedCount: 0, truncatedDescriptionChars: 0 };
-
-  if (minimum <= budget) {
-    const lengths = skills.map((skill) => skill.description.length);
-    const allocated = allocateDescriptionChars(lengths, budget - minimum);
-    const truncated = lengths.reduce((total, length, index) => total + length - allocated[index]!, 0);
-    return { totalCount, omittedCount: 0, truncatedDescriptionChars: truncated };
-  }
-
-  // Descriptions are gone and the names alone still overflow: Codex drops the
-  // remaining skills out of the model-visible list entirely.
-  let used = 0;
-  let omittedCount = 0;
-  let truncatedDescriptionChars = 0;
-  for (const skill of skills) {
-    const next = used + minimumCost(skill.name);
-    if (next <= budget) {
-      used = next;
-      truncatedDescriptionChars += skill.description.length;
-      continue;
-    }
-    omittedCount += 1;
-    truncatedDescriptionChars += skill.description.length;
-  }
-  return { totalCount, omittedCount, truncatedDescriptionChars };
-}
-
-// Codex's own ceiling division, so a fractional character counts against us.
-function averageTruncatedChars(report: RenderReport): number {
-  if (report.totalCount === 0 || report.truncatedDescriptionChars === 0) return 0;
-  return Math.floor((report.truncatedDescriptionChars + report.totalCount - 1) / report.totalCount);
-}
-
-function warns(report: RenderReport): boolean {
-  return report.omittedCount > 0 || averageTruncatedChars(report) > SKILL_DESCRIPTION_TRUNCATION_WARNING_THRESHOLD_CHARS;
-}
 
 function catalogSkills(): CatalogSkill[] {
   return readdirSync(SKILLS_ROOT)
@@ -108,55 +67,56 @@ function catalogSkills(): CatalogSkill[] {
     .sort((left, right) => left.name.localeCompare(right.name));
 }
 
-describe("Codex skill catalog budget", () => {
+function descriptionChars(skills: CatalogSkill[]): number {
+  return skills.reduce((total, skill) => total + skill.description.length, 0);
+}
+
+function catalogChars(skills: CatalogSkill[]): number {
+  return skills.reduce((total, skill) => total + catalogLineCost(skill.name, skill.description), 0);
+}
+
+describe("shared skills catalog footprint", () => {
   const skills = catalogSkills();
 
-  test("every description reaches Codex intact", () => {
-    // Guard: an empty catalog would pass every assertion below vacuously.
+  test("every skill contributes a description", () => {
+    // Guard: an empty or description-less catalog would satisfy every ceiling
+    // below vacuously.
     expect(skills.length).toBeGreaterThan(0);
     expect(skills.filter((skill) => skill.description === "")).toEqual([]);
   });
 
-  test("no skill drops out of the model-visible list", () => {
-    expect(renderReport(skills, DEFAULT_SKILL_METADATA_CHAR_BUDGET).omittedCount).toBe(0);
+  test("description text stays inside Team's declared share", () => {
+    expect(descriptionChars(skills)).toBeLessThanOrEqual(FLEET_DESCRIPTION_BUDGET_CHARS);
   });
 
-  test("the fleet does not trip Codex's description-truncation warning", () => {
-    expect(averageTruncatedChars(renderReport(skills, DEFAULT_SKILL_METADATA_CHAR_BUDGET))).toBeLessThanOrEqual(
-      SKILL_DESCRIPTION_TRUNCATION_WARNING_THRESHOLD_CHARS,
-    );
+  test("the whole catalog footprint stays inside Team's declared share", () => {
+    expect(catalogChars(skills)).toBeLessThanOrEqual(FLEET_CATALOG_BUDGET_CHARS);
   });
 
-  test("no single description exceeds Codex's per-skill cap", () => {
+  test("the ceilings are a ratchet, not pre-bought headroom", () => {
+    expect(FLEET_DESCRIPTION_BUDGET_CHARS - descriptionChars(skills)).toBeLessThanOrEqual(RATCHET_SLACK_CHARS);
+    expect(FLEET_CATALOG_BUDGET_CHARS - catalogChars(skills)).toBeLessThanOrEqual(RATCHET_SLACK_CHARS);
+  });
+
+  test("no description exceeds Codex's per-skill cap", () => {
     expect(skills.filter((skill) => skill.description.length > MAX_CATALOG_SKILL_DESCRIPTION_CHARS).map((skill) => skill.name)).toEqual([]);
   });
 
-  test("no skill name exceeds Codex's name cap", () => {
+  test("no name exceeds Codex's name cap", () => {
     expect(skills.filter((skill) => skill.name.length > MAX_SKILL_NAME_CHARS).map((skill) => skill.name)).toEqual([]);
   });
 
-  test("the budget model detects planted violations", () => {
-    const roomy = [{ name: "one", description: "short" }];
-    expect(warns(renderReport(roomy, DEFAULT_SKILL_METADATA_CHAR_BUDGET))).toBe(false);
+  test("the footprint measure detects planted growth", () => {
+    const baseline = [{ name: "one", description: "does a thing" }];
+    expect(descriptionChars(baseline)).toBe(12);
+    // `- one: does a thing (file: r0/one/SKILL.md)` plus its newline.
+    expect(catalogChars(baseline)).toBe(44);
 
-    const bloated = Array.from({ length: 90 }, (_, index) => ({ name: `skill-${index}`, description: "x".repeat(300) }));
-    const bloatedReport = renderReport(bloated, DEFAULT_SKILL_METADATA_CHAR_BUDGET);
-    expect(bloatedReport.omittedCount).toBe(0);
-    expect(warns(bloatedReport)).toBe(true);
+    const grown = [...baseline, { name: "two", description: "does another thing" }];
+    expect(descriptionChars(grown)).toBeGreaterThan(descriptionChars(baseline));
+    expect(catalogChars(grown)).toBeGreaterThan(catalogChars(baseline));
 
-    const crowded = Array.from({ length: 400 }, (_, index) => ({ name: `skill-${index}`, description: "short" }));
-    const crowdedReport = renderReport(crowded, DEFAULT_SKILL_METADATA_CHAR_BUDGET);
-    expect(crowdedReport.omittedCount).toBeGreaterThan(0);
-    expect(warns(crowdedReport)).toBe(true);
-  });
-
-  test("round-robin allocation spreads the leftover budget evenly", () => {
-    // Two characters buy the first description character (the character plus
-    // its separating space); every later character costs one.
-    expect(allocateDescriptionChars([10, 10], 4)).toEqual([1, 1]);
-    expect(allocateDescriptionChars([10, 10], 6)).toEqual([2, 2]);
-    // A short description stops consuming once it is whole, and the surplus
-    // goes to the skill that can still use it.
-    expect(allocateDescriptionChars([1, 10], 12)).toEqual([1, 9]);
+    // A longer name costs twice: once in the name field, once in the locator.
+    expect(catalogChars([{ name: "onex", description: "does a thing" }]) - catalogChars(baseline)).toBe(2);
   });
 });

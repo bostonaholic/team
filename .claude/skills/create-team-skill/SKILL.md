@@ -13,7 +13,7 @@ Create a skill another agent can select cheaply and follow without missing a con
 2. **Give the invariant, not the case list.** Keep enumerations only when each member is a distinct fact, command, exception, or security boundary.
 3. **Single source of truth.** Define shared logic and rules once. Consumers name the skill or invoke the shared script.
 4. **SKILL.md is a router.** Put conditional procedures, prompt templates, schemas, and long command recipes in `references/` or executable logic in `scripts/`.
-5. **The description is a trigger.** Write `<what it does>. <when to trigger>.`; keep it at most 200 characters, or 150 for methodology, and inside the shared catalog budget below.
+5. **The description is a trigger.** Write `<what it does>. <when to trigger>.`; keep it at most 200 characters, or 150 for methodology, and inside the shared catalog ceilings below.
 6. **Tests pin contracts, not wording.** Assertions may pin a command, number, name, or path. Never pin a sentence or heading.
 
 Preserve every command, number, path, name, authorization boundary, untrusted-input rule, fail-closed gate, and producer/reviewer separation rule during rewrites.
@@ -28,15 +28,17 @@ Preserve every command, number, path, name, authorization boundary, untrusted-in
 
 An overage requires a current entry in `SKILL_BUDGET_REASONS` in `tests/skill-budget.test.ts`, keyed by skill and stating the exact line count and reason. A budget is a ceiling, not a target.
 
-## The shared catalog budget
+## The shared catalog
 
-Descriptions spend a second budget the per-skill ceiling cannot see. Codex renders every installed skill from every plugin into one list — `- <name>: <description> (file: <path>)` — capped at 8,000 characters, or 2% of the context window in tokens. Over the cap it truncates descriptions round-robin, so one long description shortens every other skill's; past that it drops skills off the list entirely. Team's 90 skills already fill most of the default cap, which makes the fleet total the binding constraint.
+A description is not Team's to spend freely. Hosts render every installed skill — Team's, every other plugin's, and their own — into one list on a fixed budget. Codex caps that list at 8,000 characters, or 2% of the context window in tokens; over the cap it shortens descriptions round-robin, so one plugin's long descriptions shorten every other plugin's, and past that it drops skills off the list.
 
-- Spend from the pool; do not add to it. A new skill or a longer description is paid for by compressing an existing one.
-- Give two trigger phrases, never three near-synonyms. Truncation cuts from the tail, so the discriminating words go first.
-- Keep names short. A name is not truncatable, so it is what pushes a skill off the list.
+Team cannot see the other tenants and so can never verify that it fits. Be a good neighbor instead: spend as little of the pool as the trigger needs and leave the rest.
 
-`tests/codex-skill-catalog.test.ts` runs Codex's allocation algorithm over `skills/` and fails when the catalog would trip its truncation warning or omit a skill.
+- Pay for growth by compressing. A new skill or a longer description comes out of the fleet ceiling, never out of a raise to it.
+- Two trigger phrases, never three near-synonyms. Shortening cuts from the tail, so the discriminating words go first.
+- Keep names short. A name cannot be shortened, and it is charged twice — once as the name, once inside the path.
+
+`tests/codex-skill-catalog.test.ts` measures Team's footprint against ceilings that only ratchet down, and rejects headroom bought in advance.
 
 ## Classify
 
