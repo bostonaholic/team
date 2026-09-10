@@ -2,6 +2,12 @@
   "name": "team",
   "version": "0.96.0",
   "description": "Orchestrates specialized agents to autonomously implement entire features end-to-end",
+  "author": {
+    "name": "Matthew Boston",
+    "url": "https://matthewboston.com"
+  },
+  "homepage": "https://team.bostonaholic.dev",
+  "license": "MIT",
   "keywords": [
     "agents",
     "orchestration",
@@ -12,8 +18,19 @@
   "interface": {
     "displayName": "Team",
     "shortDescription": "Autonomous feature pipeline: question, research, design, plan, implement, PR.",
+    "longDescription": "Team turns a feature description into a reviewed pull request. It walks an eight-phase pipeline — worktree, question, research, design, structure, plan, implement, PR — dispatching a specialist agent at each phase and persisting every artifact to disk. An adversarial design review gates the design and five reviewers gate the implementation, so the only human checkpoint is the pull request at the end. On Codex the standalone utilities run; the full pipeline needs Claude Code, which is the host that dispatches the agents.",
     "developerName": "Matthew Boston",
     "category": "engineering",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Explain how this subsystem works.",
+      "Investigate why this code was written this way.",
+      "Review the open comments on this pull request."
+    ],
     "websiteURL": "https://team.bostonaholic.dev"
   }
 }

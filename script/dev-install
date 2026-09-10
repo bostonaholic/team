@@ -10,11 +10,14 @@ set -euo pipefail
 # a plugin its own way. Adding a harness means adding `dev-install-<name>` and
 # `dev-uninstall-<name>`, then listing it below.
 # The Claude target also installs clone-local hooks that refresh its versioned
-# cache after merge-based and rebase-based pulls. Only Claude needs them: its
-# install path embeds the plugin version, so a pull that bumps plugin.json
-# strands the link, while Codex and Antigravity link a fixed path that resolves
-# through to the checkout whatever a pull changes. That asymmetry is an
-# implementation detail — keep it out of the output the user reads.
+# cache after merge-based and rebase-based pulls. Only Claude needs them,
+# because only its link IS the versioned path: a pull that bumps plugin.json
+# renames the path Claude looks under and strands the link. Codex's cache path
+# is versioned too, but the link sits inside it, at <version>/skills, so a bump
+# leaves the skills resolving through to the checkout and only the version
+# Codex reports lags — until the next install prunes the old directory.
+# Antigravity links a fixed path and is unaffected either way. That asymmetry
+# is an implementation detail — keep it out of the output the user reads.
 
 HARNESSES=(claude codex antigravity)
 HERE="$(cd "$(dirname "$0")" && pwd)"
