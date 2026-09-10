@@ -3,20 +3,27 @@
 // Acceptance tests for the Codex half of the dev install,
 // `script/dev-install-codex` and `script/dev-uninstall-codex`.
 //
-// Two layers:
+// L3 subprocess-snapshot. Every test isolates with HOME=<tempdir>, puts
+// tests/helpers/fake-codex.mjs first on PATH as `codex`, and runs the scripts
+// from a disposable copy of the plugin root
+// (tests/helpers/codex-plugin-fixture.ts) — the install stamps the manifest,
+// and no test may mutate the tracked one.
 //
-// - L2 forbidden-pattern tripwire: the Codex scripts must NEVER
-//   reference Codex's `plugins/cache` path. The Claude Code dev-install
-//   trick — replacing the plugin cache dir with a symlink to the checkout —
-//   makes Codex report the plugin `not installed` and drops the catalog to
-//   zero skills. Porting it would silently break the install.
+// The install follows Codex's documented local-development loop: rewrite the
+// manifest version to `<base>+codex.<cachebuster>`, then `codex plugin add`,
+// because the version string is the plugin cache key. Three properties follow,
+// and these tests hold each of them down:
 //
-// - L3 subprocess-snapshot: both scripts derive their target from
-//   `${HOME}/.agents/skills`, so every test isolates with HOME=<tempdir>.
-//   The target's parent is often a checkout the user owns (a dotfiles
-//   repo), so the scripts must touch only the one symlink they create.
-//   Nothing here drives the real `codex` binary; the catalog is Codex's
-//   concern, not this pair's.
+// - The stamp never survives the run. `.codex-plugin/plugin.json` carries one
+//   of Team's six pinned version strings, so a cachebuster left behind turns
+//   `bun test` red.
+// - Exactly one cached copy survives. Each run mints a new version, so without
+//   a prune the cache grows by a full copy of the plugin per install.
+// - `~/.agents/skills/team` does not survive. That collection symlink, which
+//   an earlier version of this script created, exposes the checkout's whole
+//   skills/ tree as one nested standalone skill, so Codex registers every
+//   skill a second time and halves the description budget each one is
+//   rendered with.
 
 import { afterAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
@@ -27,49 +34,62 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
-  readlinkSync,
+  readdirSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import {
+  fixtureBaseVersion,
+  makePluginFixture,
+  type PluginFixture,
+} from "./helpers/codex-plugin-fixture";
+
 const REPO_ROOT = join(import.meta.dir, "..");
-const INSTALL = join(REPO_ROOT, "script", "dev-install-codex");
-const UNINSTALL = join(REPO_ROOT, "script", "dev-uninstall-codex");
+const FAKE_CODEX = join(REPO_ROOT, "tests", "helpers", "fake-codex.mjs");
 
-const tempDirs: string[] = [];
+const disposable: string[] = [];
 
-function newHome(): string {
-  const dir = mkdtempSync(join(tmpdir(), `codex-dev-${process.pid}-`));
-  tempDirs.push(dir);
-  return dir;
+afterAll(() => {
+  for (const dir of disposable) rmSync(dir, { force: true, recursive: true });
+});
+
+function newFixture(): PluginFixture {
+  const fixture = makePluginFixture();
+  disposable.push(fixture.root);
+  return fixture;
 }
 
-/**
- * Put a fake `codex` first on PATH that prints `output` for any invocation.
- * The scripts shell out to `codex plugin list`; the real binary is not the
- * subject here, so it is stubbed at the boundary. Returns the dir to prepend.
- */
-function stubCodex(home: string, output: string): string {
+function newHome(): string {
+  const home = mkdtempSync(join(tmpdir(), `codex-dev-${process.pid}-`));
+  disposable.push(home);
+  return home;
+}
+
+/** Put the fake `codex` first on PATH. Returns the directory to prepend. */
+function stubCodex(home: string): string {
   const binDir = join(home, "stub-bin");
   mkdirSync(binDir, { recursive: true });
   const stub = join(binDir, "codex");
-  writeFileSync(stub, `#!/usr/bin/env bash\nprintf '%b\\n' "${output}"\n`);
+  writeFileSync(stub, `#!/usr/bin/env bash\nexec node "${FAKE_CODEX}" "$@"\n`);
   chmodSync(stub, 0o755);
   return binDir;
 }
 
-/** Run a script with an isolated HOME. Never touches the real one. */
-function run(script: string, home: string, pathPrefix?: string) {
+function run(script: string, home: string, options: { codex?: boolean } = {}) {
+  const withCodex = options.codex ?? true;
   const result = spawnSync("bash", [script], {
     encoding: "utf8",
     env: {
       ...process.env,
       HOME: home,
-      ...(pathPrefix
-        ? { PATH: `${pathPrefix}:${process.env.PATH ?? ""}` }
-        : {}),
+      PATH: withCodex
+        ? `${stubCodex(home)}:${process.env.PATH ?? ""}`
+        : // A PATH with no `codex` on it, but still enough to run the script.
+          "/usr/bin:/bin",
     },
   });
   return {
@@ -79,112 +99,254 @@ function run(script: string, home: string, pathPrefix?: string) {
 }
 
 const teamLink = (home: string) => join(home, ".agents", "skills", "team");
+const cacheRoot = (home: string) =>
+  join(home, ".codex", "plugins", "cache", "team-dev", "team");
+const cachedVersions = (home: string) =>
+  existsSync(cacheRoot(home)) ? readdirSync(cacheRoot(home)).sort() : [];
+const calls = (home: string) =>
+  existsSync(join(home, ".fake-codex-calls"))
+    ? readFileSync(join(home, ".fake-codex-calls"), "utf8")
+    : "";
+const manifestVersion = (fixture: PluginFixture) =>
+  JSON.parse(readFileSync(fixture.manifest, "utf8")).version;
 
-afterAll(() => {
-  for (const dir of tempDirs) rmSync(dir, { force: true, recursive: true });
-});
+/** Plant the collection symlink the old installer created. */
+function plantLegacyLink(home: string, target = join(REPO_ROOT, "skills")) {
+  mkdirSync(join(home, ".agents", "skills"), { recursive: true });
+  symlinkSync(target, teamLink(home));
+}
 
 describe("dev install: codex harness", () => {
-  test("L2 tripwire: never reference Codex's plugin cache", () => {
-    const scripts = [INSTALL, UNINSTALL].filter((path) => existsSync(path));
-    // Guard against a vacuous pass if the scripts are ever renamed.
-    expect(scripts.length).toBe(2);
-    for (const path of scripts) {
-      expect(readFileSync(path, "utf8")).not.toContain("plugins/cache");
+  test("install registers the marketplace and adds the plugin", () => {
+    const fixture = newFixture();
+    const home = newHome();
+
+    const { status, output } = run(fixture.install, home);
+
+    expect(status).toBe(0);
+    expect(calls(home)).toContain(`plugin marketplace add ${fixture.root}`);
+    expect(calls(home)).toContain("plugin add team@team-dev");
+    expect(output).toContain("Installed Team for Codex");
+  });
+
+  // Codex keys its plugin cache on the version string, and its plugin-creator
+  // reference prescribes `<base>+codex.<cachebuster>` to force a re-copy.
+  test("install stamps a cachebuster onto the base version", () => {
+    const fixture = newFixture();
+    const base = fixtureBaseVersion(fixture);
+    const home = newHome();
+
+    const { status, output } = run(fixture.install, home);
+
+    expect(status).toBe(0);
+    expect(cachedVersions(home)).toHaveLength(1);
+    const installed = cachedVersions(home)[0];
+    expect(installed).toStartWith(`${base}+codex.`);
+    expect(installed).toMatch(/\+codex\.\d{14}$/);
+    expect(output).toContain(installed);
+  });
+
+  test("install leaves the tracked manifest byte-identical", () => {
+    const fixture = newFixture();
+    const before = readFileSync(fixture.manifest, "utf8");
+    const home = newHome();
+
+    expect(run(fixture.install, home).status).toBe(0);
+
+    expect(readFileSync(fixture.manifest, "utf8")).toBe(before);
+    expect(manifestVersion(fixture)).not.toContain("+codex.");
+  });
+
+  // The stamp is written before `codex plugin add` runs, so a failure there
+  // must not strand it in a tracked file.
+  test("a failed install still restores the manifest", () => {
+    const fixture = newFixture();
+    const before = readFileSync(fixture.manifest, "utf8");
+    const home = newHome();
+    // A marketplace registered from another root makes `codex plugin add`
+    // resolve a different plugin, so the version check fails after the stamp.
+    const binDir = stubCodex(home);
+    const decoy = newFixture();
+    spawnSync("bash", ["-c", `"${binDir}/codex" plugin marketplace add "${decoy.root}"`], {
+      env: { ...process.env, HOME: home },
+    });
+
+    const { status } = run(fixture.install, home);
+
+    expect(status).not.toBe(0);
+    expect(readFileSync(fixture.manifest, "utf8")).toBe(before);
+  });
+
+  // Every install mints a version, so without a prune the cache grows by a
+  // full copy of the plugin per run. Both shapes it can hold are covered: the
+  // plain version an end-user `codex plugin add` writes, and the cachebusted
+  // one a previous dev install left.
+  test("install prunes every cached copy but its own", () => {
+    const fixture = newFixture();
+    const base = fixtureBaseVersion(fixture);
+    const home = newHome();
+    const stale = [base, `${base}+codex.20200101000000`];
+    for (const version of stale) {
+      mkdirSync(join(cacheRoot(home), version), { recursive: true });
+      writeFileSync(join(cacheRoot(home), version, "marker"), `${version}\n`);
+    }
+
+    const { status, output } = run(fixture.install, home);
+
+    expect(status).toBe(0);
+    expect(cachedVersions(home)).toHaveLength(1);
+    for (const version of stale) {
+      expect(output).toContain(`Pruned stale cache: ${version}`);
     }
   });
 
-  test("install links skills/ into the Codex skill root", () => {
+  test("install prunes a stale symlink without following it", () => {
+    const fixture = newFixture();
     const home = newHome();
-    const { status, output } = run(INSTALL, home);
+    mkdirSync(cacheRoot(home), { recursive: true });
+    symlinkSync(fixture.root, join(cacheRoot(home), "0.0.1-stale"));
+
+    expect(run(fixture.install, home).status).toBe(0);
+
+    expect(cachedVersions(home)).toHaveLength(1);
+    expect(existsSync(fixture.manifest)).toBe(true);
+    expect(existsSync(join(REPO_ROOT, "skills", "team", "SKILL.md"))).toBe(true);
+  });
+
+  test("install removes the legacy collection symlink", () => {
+    const fixture = newFixture();
+    const home = newHome();
+    plantLegacyLink(home);
+
+    const { status, output } = run(fixture.install, home);
 
     expect(status).toBe(0);
-    expect(output).toContain("Linked:");
-    expect(lstatSync(teamLink(home)).isSymbolicLink()).toBe(true);
-    expect(readlinkSync(teamLink(home))).toBe(join(REPO_ROOT, "skills"));
-  });
-
-  // Stacking the dev symlink on a native plugin install makes Codex find the
-  // same skills under two roots and render every one twice — a doubled
-  // catalog, worse truncation, and an ambiguous source. The guard reads the
-  // STATUS column, so a registered-but-uninstalled marketplace row is fine.
-  test("install aborts when a Codex plugin install is already present", () => {
-    const home = newHome();
-    const stub = stubCodex(
-      home,
-      "PLUGIN         STATUS              VERSION  PATH\\nteam@team-dev  installed, enabled  0.29.1   /somewhere",
-    );
-
-    const { status, output } = run(INSTALL, home, stub);
-
-    expect(status).not.toBe(0);
-    expect(output).toContain("already present");
-    expect(existsSync(teamLink(home))).toBe(false);
-  });
-
-  test("install proceeds past a registered-but-uninstalled plugin row", () => {
-    const home = newHome();
-    const stub = stubCodex(
-      home,
-      "PLUGIN         STATUS         VERSION  PATH\\nteam@team-dev  not installed           /somewhere",
-    );
-
-    const { status } = run(INSTALL, home, stub);
-
-    expect(status).toBe(0);
-    expect(lstatSync(teamLink(home)).isSymbolicLink()).toBe(true);
-  });
-
-  test("install is idempotent", () => {
-    const home = newHome();
-    expect(run(INSTALL, home).status).toBe(0);
-
-    const second = run(INSTALL, home);
-    expect(second.status).toBe(0);
-    expect(second.output).toContain("already installed");
-    expect(readlinkSync(teamLink(home))).toBe(join(REPO_ROOT, "skills"));
-  });
-
-  test("install refuses to replace a target it did not create", () => {
-    const home = newHome();
-    const target = teamLink(home);
-    mkdirSync(target, { recursive: true });
-    const userFile = join(target, "USER_DATA.md");
-    writeFileSync(userFile, "not ours\n");
-
-    const { status, output } = run(INSTALL, home);
-
-    expect(status).not.toBe(0);
-    expect(output).toContain("not a symlink");
-    expect(readFileSync(userFile, "utf8")).toBe("not ours\n");
-  });
-
-  test("uninstall removes the link and leaves its parents alone", () => {
-    const home = newHome();
-    expect(run(INSTALL, home).status).toBe(0);
-
-    const { status, output } = run(UNINSTALL, home);
-
-    expect(status).toBe(0);
-    expect(output).toContain("Removed:");
-    expect(existsSync(teamLink(home))).toBe(false);
+    expect(lstatSync(teamLink(home), { throwIfNoEntry: false })).toBeUndefined();
+    expect(output).toContain("Removed the legacy skill link");
     // The parents can be a user-owned dotfiles checkout — never removed.
     expect(existsSync(join(home, ".agents", "skills"))).toBe(true);
   });
 
-  test("uninstall is idempotent and refuses a foreign target", () => {
+  test("install removes a legacy link whose target is gone", () => {
+    const fixture = newFixture();
     const home = newHome();
-    const absent = run(UNINSTALL, home);
-    expect(absent.status).toBe(0);
-    expect(absent.output).toContain("Nothing to do");
+    plantLegacyLink(home, join(home, "deleted-checkout", "skills"));
 
+    const { status, output } = run(fixture.install, home);
+
+    expect(status).toBe(0);
+    expect(lstatSync(teamLink(home), { throwIfNoEntry: false })).toBeUndefined();
+    expect(output).toContain("dangling");
+  });
+
+  test("install refuses a legacy path it did not create", () => {
+    const fixture = newFixture();
+    const home = newHome();
     const target = teamLink(home);
     mkdirSync(target, { recursive: true });
     writeFileSync(join(target, "USER_DATA.md"), "not ours\n");
 
-    const foreign = run(UNINSTALL, home);
-    expect(foreign.status).not.toBe(0);
-    expect(foreign.output).toContain("not a symlink");
+    const { status, output } = run(fixture.install, home);
+
+    expect(status).not.toBe(0);
+    expect(output).toContain("not a symlink");
+    expect(readFileSync(join(target, "USER_DATA.md"), "utf8")).toBe("not ours\n");
+    // Nothing installed: the migration is a precondition, not a side effect.
+    expect(cachedVersions(home)).toHaveLength(0);
+  });
+
+  test("install refuses a legacy link that points outside a Team checkout", () => {
+    const fixture = newFixture();
+    const home = newHome();
+    const foreign = join(newHome(), "somebody-elses-skills");
+    mkdirSync(foreign, { recursive: true });
+    plantLegacyLink(home, foreign);
+
+    const { status, output } = run(fixture.install, home);
+
+    expect(status).not.toBe(0);
+    expect(output).toContain("does not point at a Team checkout");
+    expect(lstatSync(teamLink(home)).isSymbolicLink()).toBe(true);
+    expect(cachedVersions(home)).toHaveLength(0);
+  });
+
+  test("install reports when codex is not installed", () => {
+    const fixture = newFixture();
+    const home = newHome();
+
+    const { status, output } = run(fixture.install, home, { codex: false });
+
+    expect(status).not.toBe(0);
+    expect(output).toContain("codex");
+    expect(cachedVersions(home)).toHaveLength(0);
+  });
+
+  test("install refuses a team-dev marketplace from another checkout", () => {
+    const fixture = newFixture();
+    const other = newFixture();
+    const home = newHome();
+    const binDir = stubCodex(home);
+    spawnSync("bash", ["-c", `"${binDir}/codex" plugin marketplace add "${other.root}"`], {
+      env: { ...process.env, HOME: home },
+    });
+
+    const { status, output } = run(fixture.install, home);
+
+    expect(status).not.toBe(0);
+    expect(output).toContain(other.root);
+    expect(output).toContain("dev-uninstall");
+  });
+});
+
+describe("dev uninstall: codex harness", () => {
+  test("uninstall removes the plugin, the marketplace, and the cache", () => {
+    const fixture = newFixture();
+    const home = newHome();
+    expect(run(fixture.install, home).status).toBe(0);
+
+    const { status, output } = run(fixture.uninstall, home);
+
+    expect(status).toBe(0);
+    expect(calls(home)).toContain("plugin remove team@team-dev");
+    expect(calls(home)).toContain("plugin marketplace remove team-dev");
+    expect(output).toContain("Uninstalled Team for Codex");
+    expect(existsSync(join(home, ".codex", "plugins", "cache", "team-dev"))).toBe(false);
+  });
+
+  test("uninstall removes the legacy collection symlink too", () => {
+    const fixture = newFixture();
+    const home = newHome();
+    plantLegacyLink(home);
+
+    const { status } = run(fixture.uninstall, home);
+
+    expect(status).toBe(0);
+    expect(lstatSync(teamLink(home), { throwIfNoEntry: false })).toBeUndefined();
+    // The parents can be a user-owned dotfiles checkout — never removed.
+    expect(existsSync(join(home, ".agents", "skills"))).toBe(true);
+  });
+
+  test("uninstall is idempotent", () => {
+    const fixture = newFixture();
+    const home = newHome();
+
+    const absent = run(fixture.uninstall, home);
+
+    expect(absent.status).toBe(0);
+    expect(absent.output).toContain("Nothing to do");
+  });
+
+  test("uninstall refuses a legacy path it did not create", () => {
+    const fixture = newFixture();
+    const home = newHome();
+    const target = teamLink(home);
+    mkdirSync(target, { recursive: true });
+    writeFileSync(join(target, "USER_DATA.md"), "not ours\n");
+
+    const { status, output } = run(fixture.uninstall, home);
+
+    expect(status).not.toBe(0);
+    expect(output).toContain("not a symlink");
     expect(existsSync(join(target, "USER_DATA.md"))).toBe(true);
   });
 });
