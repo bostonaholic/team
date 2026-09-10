@@ -1,7 +1,7 @@
 ---
 name: team
 description: 'Runs the 8-phase QRSPI feature pipeline. Trigger on "hey team", "build a feature", or "/team" only; never infer pipeline intent from a plain coding request.'
-effort: xhigh
+effort: high
 argument-hint: "<ticket id, issue URL, or feature description>"
 ---
 

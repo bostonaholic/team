@@ -602,7 +602,7 @@ pins all thirteen values in both directions. Methodology skills carry no
 `effort`. They inherit it from the loading agent.
 
 User-facing skills use the same ladder. The full `/team` orchestrator runs at
-`xhigh` because it maintains state and applies gates across all eight phases.
+`high` because it maintains state and applies gates across all eight phases.
 Single-phase orchestrators stay at `medium`; their specialist agents perform
 the complex work. Mechanical worktree setup runs at `low`, while entry points
 that directly perform complex analysis or conflict resolution run at `high`.
