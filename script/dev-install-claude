@@ -1,36 +1,117 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Installs Team for Claude Code from a local checkout, using only Claude Code's
+# own plugin commands.
+#
+# `claude plugin install` copies the marketplace root into
+# ~/.claude/plugins/cache/<marketplace>/<plugin>/<version>, and the version
+# string is the cache key: `claude plugin update` reports "already at the
+# latest version" and copies nothing when the version has not moved. So a
+# skill edited in the checkout does not reach Claude on its own. This script
+# moves the version for you — it stamps a `<base-version>+claude.<cachebuster>`
+# suffix onto the manifests, refreshes the catalog, and installs.
+#
+# An earlier version of this script deleted the copy and put a symlink to the
+# checkout in its place, so edits took effect immediately. That symlink is why
+# this one does not: the directory name is fixed at install time while its
+# contents follow the checkout, so Claude reports the version the directory is
+# named after rather than the one it is loading. On a branch that bumps the
+# version, `claude plugin list` names the old release while running the new
+# code (#355).
+#
+# The stamped version is not committed. These manifests carry three of Team's
+# six pinned version strings, so a cachebuster left in the working tree turns
+# `bun test` red. The stamp is restored on the way out, including on an
+# interrupted run, and the tree is byte-identical afterwards.
+
 PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PLUGIN_VERSION=$(node -p "require('${PLUGIN_ROOT}/.claude-plugin/plugin.json').version")
-CACHE_PATH="${HOME}/.claude/plugins/cache/team-dev/team/${PLUGIN_VERSION}"
+PLUGIN_MANIFEST="${PLUGIN_ROOT}/.claude-plugin/plugin.json"
+MARKETPLACE_MANIFEST="${PLUGIN_ROOT}/.claude-plugin/marketplace.json"
+MARKETPLACE="team-dev"
+PLUGIN="team"
+CACHE_ROOT="${HOME}/.claude/plugins/cache/${MARKETPLACE}/${PLUGIN}"
 
-if [ -z "$PLUGIN_VERSION" ]; then
-  echo "Error: could not read version from plugin.json" >&2
+for manifest in "$PLUGIN_MANIFEST" "$MARKETPLACE_MANIFEST"; do
+  if [ ! -f "$manifest" ]; then
+    echo "Error: no $(basename "$manifest") at ${PLUGIN_ROOT}/.claude-plugin" >&2
+    exit 1
+  fi
+done
+
+if ! command -v claude >/dev/null 2>&1; then
+  echo "Error: the claude CLI is not on PATH." >&2
+  echo "Install Claude Code first: https://code.claude.com/docs" >&2
   exit 1
 fi
 
-if [ -L "$CACHE_PATH" ] && [ "$(readlink "$CACHE_PATH")" != "$PLUGIN_ROOT" ]; then
-  echo "Error: ${CACHE_PATH} already links a different checkout:" >&2
-  echo "  $(readlink "$CACHE_PATH")" >&2
-  echo "Run script/dev-uninstall claude from that checkout first." >&2
-  exit 1
-fi
+# --- Manifest stamp, and its guaranteed undo -----------------------------------
+BACKUP_DIR=""
 
-if [ -e "$CACHE_PATH" ] && [ ! -d "$CACHE_PATH" ]; then
-  echo "Error: ${CACHE_PATH} exists and is not a directory or symlink." >&2
-  exit 1
-fi
+restore_manifests() {
+  # Runs on every exit path, so an interrupted install never leaves a
+  # cachebuster in a tracked file.
+  if [ -n "$BACKUP_DIR" ] && [ -d "$BACKUP_DIR" ]; then
+    mv -f "${BACKUP_DIR}/plugin.json" "$PLUGIN_MANIFEST"
+    mv -f "${BACKUP_DIR}/marketplace.json" "$MARKETPLACE_MANIFEST"
+    rmdir "$BACKUP_DIR"
+    BACKUP_DIR=""
+  fi
+}
+trap restore_manifests EXIT INT TERM
 
-echo "Installing Team for Claude Code (dev)..."
-echo "  Source: ${PLUGIN_ROOT}"
-echo
+STAMPED_VERSION=""
 
-MARKETPLACE_PATH=$(
+stamp_cachebuster() {
+  # Sets the two globals rather than printing, because a command substitution
+  # would run this in a subshell and strand BACKUP_DIR there — leaving the trap
+  # with nothing to restore.
+  #
+  # All three Claude-side strings move together. The catalog is what
+  # `plugin install` and `plugin update` read, and the plugin manifest is what
+  # Claude reports for the installed copy; stamping only one of them leaves the
+  # two disagreeing about what is installed.
+  BACKUP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/team-claude-manifests.XXXXXX")"
+  cp "$PLUGIN_MANIFEST" "${BACKUP_DIR}/plugin.json"
+  cp "$MARKETPLACE_MANIFEST" "${BACKUP_DIR}/marketplace.json"
+  STAMPED_VERSION="$(
+    PLUGIN_MANIFEST="$PLUGIN_MANIFEST" MARKETPLACE_MANIFEST="$MARKETPLACE_MANIFEST" node -e '
+      const fs = require("node:fs");
+      const read = (path) => JSON.parse(fs.readFileSync(path, "utf8"));
+      const write = (path, value) =>
+        fs.writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
+
+      const pluginPath = process.env.PLUGIN_MANIFEST;
+      const marketplacePath = process.env.MARKETPLACE_MANIFEST;
+      const plugin = read(pluginPath);
+      if (typeof plugin.version !== "string" || plugin.version.trim() === "") {
+        throw new Error(`${pluginPath} must contain a non-empty string "version"`);
+      }
+      const stamp = new Date().toISOString().replace(/\D/g, "").slice(0, 14);
+      // Replace any existing suffix rather than appending a second one.
+      const stamped = `${plugin.version.split("+", 1)[0]}+claude.${stamp}`;
+
+      plugin.version = stamped;
+      write(pluginPath, plugin);
+
+      const marketplace = read(marketplacePath);
+      marketplace.metadata.version = stamped;
+      for (const entry of marketplace.plugins) entry.version = stamped;
+      write(marketplacePath, marketplace);
+
+      process.stdout.write(stamped);
+    '
+  )"
+}
+
+# --- Claude state readers ------------------------------------------------------
+read_marketplace_path() {
+  # The JavaScript template literal is intentionally protected from the shell.
+  # shellcheck disable=SC2016
   claude plugin marketplace list --json |
-    node -e '
+    MARKETPLACE="$MARKETPLACE" node -e '
       const entries = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
-      const matches = entries.filter((entry) => entry.name === "team-dev");
+      const matches = entries.filter((entry) => entry.name === process.env.MARKETPLACE);
       if (matches.length > 1) throw new Error("multiple team-dev marketplaces found");
       if (matches.length === 1) {
         const entry = matches[0];
@@ -40,27 +121,15 @@ MARKETPLACE_PATH=$(
         process.stdout.write(entry.path);
       }
     '
-)
-
-MARKETPLACE_ADDED=false
-if [ -z "$MARKETPLACE_PATH" ]; then
-  claude plugin marketplace add "$PLUGIN_ROOT" --scope user 2>&1
-  MARKETPLACE_ADDED=true
-elif [ "$MARKETPLACE_PATH" != "$PLUGIN_ROOT" ]; then
-  echo "Error: team-dev already points to a different checkout:" >&2
-  echo "  ${MARKETPLACE_PATH}" >&2
-  echo "Run script/dev-uninstall claude from that checkout first." >&2
-  exit 1
-fi
+}
 
 read_plugin_state() {
-  # The JavaScript template literal is intentionally protected from the shell.
   # shellcheck disable=SC2016
   claude plugin list --json |
-    node -e '
+    PLUGIN_ID="${PLUGIN}@${MARKETPLACE}" node -e '
       const entries = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
       const matches = entries.filter(
-        (entry) => entry.id === "team@team-dev" && entry.scope === "user",
+        (entry) => entry.id === process.env.PLUGIN_ID && entry.scope === "user",
       );
       if (matches.length > 1) throw new Error("multiple user-scope Team installs found");
       if (matches.length === 1) {
@@ -73,62 +142,20 @@ read_plugin_state() {
     '
 }
 
-PLUGIN_STATE=$(read_plugin_state)
-INSTALLED_VERSION=""
-INSTALLED_PATH=""
-if [ -n "$PLUGIN_STATE" ]; then
-  IFS=$'\t' read -r INSTALLED_VERSION INSTALLED_PATH <<< "$PLUGIN_STATE"
-fi
-
-if [ -z "$INSTALLED_VERSION" ]; then
-  if [ "$MARKETPLACE_ADDED" = false ]; then
-    claude plugin marketplace update team-dev 2>&1
-  fi
-  if [ -L "$CACHE_PATH" ]; then
-    rm "$CACHE_PATH"
-  fi
-  claude plugin install team@team-dev --scope user 2>&1
-  PLUGIN_STATE=$(read_plugin_state)
-elif [ "$INSTALLED_VERSION" != "$PLUGIN_VERSION" ] || [ "$INSTALLED_PATH" != "$CACHE_PATH" ]; then
-  if [ -L "$CACHE_PATH" ]; then
-    rm "$CACHE_PATH"
-  fi
-  claude plugin marketplace update team-dev 2>&1
-  claude plugin update team@team-dev --scope user 2>&1
-  PLUGIN_STATE=$(read_plugin_state)
-fi
-
-IFS=$'\t' read -r INSTALLED_VERSION INSTALLED_PATH <<< "$PLUGIN_STATE"
-if [ "$INSTALLED_VERSION" != "$PLUGIN_VERSION" ] || [ "$INSTALLED_PATH" != "$CACHE_PATH" ]; then
-  echo "Error: Claude Code did not install Team ${PLUGIN_VERSION} at ${CACHE_PATH}." >&2
-  exit 1
-fi
-
-# Replace the cached copy with a symlink to the source
-if [ -d "$CACHE_PATH" ] && [ ! -L "$CACHE_PATH" ]; then
-  rm -rf "$CACHE_PATH"
-  ln -s "$PLUGIN_ROOT" "$CACHE_PATH"
-  echo "  Linked: ${CACHE_PATH} → ${PLUGIN_ROOT}"
-elif [ -L "$CACHE_PATH" ]; then
-  echo "Team already installed for Claude Code (dev)."
-else
-  echo "Error: Claude Code reported Team at ${CACHE_PATH}, but that directory does not exist." >&2
-  exit 1
-fi
-
-# Every version ever installed from this checkout leaves a directory behind,
-# because the cache path carries the version. Left alone they accumulate one
-# copy of the whole plugin per release. Sweep the ones Claude no longer serves.
-CACHE_ROOT="$(dirname "$CACHE_PATH")"
-if [ -d "$CACHE_ROOT" ]; then
-  # An install Claude still reports — another scope, another version — stays.
+# --- Prune every cached copy but the one just installed ------------------------
+# Each reinstall mints a new cachebuster, so without this the cache grows by a
+# full copy of the plugin per run. An install Claude still reports — another
+# scope, another version — stays.
+prune_other_versions() {
+  local keep="$1" live entry
+  [ -d "$CACHE_ROOT" ] || return 0
   # shellcheck disable=SC2016
-  LIVE_PATHS=$(
+  live=$(
     claude plugin list --json |
-      node -e '
+      PLUGIN_ID="${PLUGIN}@${MARKETPLACE}" node -e '
         const entries = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
         for (const entry of entries) {
-          if (entry.id === "team@team-dev" && typeof entry.installPath === "string") {
+          if (entry.id === process.env.PLUGIN_ID && typeof entry.installPath === "string") {
             process.stdout.write(`${entry.installPath}\n`);
           }
         }
@@ -136,8 +163,8 @@ if [ -d "$CACHE_ROOT" ]; then
   )
   for entry in "$CACHE_ROOT"/*; do
     [ -e "$entry" ] || [ -L "$entry" ] || continue
-    [ "$entry" != "$CACHE_PATH" ] || continue
-    if printf '%s\n' "$LIVE_PATHS" | grep -qxF "$entry"; then
+    [ "$entry" != "$keep" ] || continue
+    if printf '%s\n' "$live" | grep -qxF "$entry"; then
       continue
     fi
     # A stale entry can be a symlink an older dev install left pointing at the
@@ -145,7 +172,63 @@ if [ -d "$CACHE_ROOT" ]; then
     rm -rf "$entry"
     echo "  Pruned stale cache: $(basename "$entry")"
   done
+}
+
+# --- Install -------------------------------------------------------------------
+echo "Installing Team for Claude Code (dev)..."
+echo "  Source: ${PLUGIN_ROOT}"
+echo
+
+MARKETPLACE_PATH=$(read_marketplace_path)
+if [ -n "$MARKETPLACE_PATH" ] && [ "$MARKETPLACE_PATH" != "$PLUGIN_ROOT" ]; then
+  echo "Error: ${MARKETPLACE} already points to a different checkout:" >&2
+  echo "  ${MARKETPLACE_PATH}" >&2
+  echo "Run script/dev-uninstall claude from that checkout first." >&2
+  exit 1
 fi
 
+stamp_cachebuster
+echo "  Cachebuster: ${STAMPED_VERSION}"
+
+# The catalog is a snapshot taken when the marketplace is added or updated, so
+# it has to be refreshed after the stamp and before the install reads it.
+if [ -z "$MARKETPLACE_PATH" ]; then
+  claude plugin marketplace add "$PLUGIN_ROOT" --scope user 2>&1
+else
+  claude plugin marketplace update "$MARKETPLACE" 2>&1
+fi
+
+if [ -z "$(read_plugin_state)" ]; then
+  claude plugin install "${PLUGIN}@${MARKETPLACE}" --scope user 2>&1
+else
+  claude plugin update "${PLUGIN}@${MARKETPLACE}" --scope user 2>&1
+fi
+
+PLUGIN_STATE=$(read_plugin_state)
+INSTALLED_VERSION=""
+INSTALLED_PATH=""
+if [ -n "$PLUGIN_STATE" ]; then
+  IFS=$'\t' read -r INSTALLED_VERSION INSTALLED_PATH <<< "$PLUGIN_STATE"
+fi
+
+if [ "$INSTALLED_VERSION" != "$STAMPED_VERSION" ]; then
+  echo "Error: Claude Code reports Team at '${INSTALLED_VERSION}', not '${STAMPED_VERSION}'." >&2
+  exit 1
+fi
+# Claude rewrites `+` to `-` for the directory name, so the served path comes
+# from what Claude reports rather than from the version string.
+if [ -L "$INSTALLED_PATH" ] || [ ! -d "$INSTALLED_PATH" ]; then
+  echo "Error: ${INSTALLED_PATH} is not a directory Claude Code copied there." >&2
+  exit 1
+fi
+if [ ! -d "${INSTALLED_PATH}/skills" ]; then
+  echo "Error: no skills/ in ${INSTALLED_PATH}." >&2
+  exit 1
+fi
+
+prune_other_versions "$INSTALLED_PATH"
+restore_manifests
+
 echo
-echo "Done. Restart Claude Code to load the plugin."
+echo "Installed Team for Claude Code (dev). Restart Claude Code to load it."
+echo "The install is a copy — re-run this after changing a skill."

@@ -330,6 +330,24 @@ full parity. It starts from the matrix and works around the named gaps.
   suffix to force the re-copy rather than a version bump;
   `script/dev-install-codex` stamps one, reinstalls, restores the manifest, and
   prunes the previous copy.
+- **Claude Code installs the same way, and takes the same loop.** `claude
+  plugin install` copies the marketplace root to
+  `~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/`, and `claude
+  plugin update` reports "already at the latest version" and copies nothing
+  when the version has not moved, so `script/dev-install-claude` stamps
+  `<base>+claude.<cachebuster>` onto `.claude-plugin/plugin.json` and both
+  version strings in `.claude-plugin/marketplace.json` — the catalog is a
+  snapshot taken when the marketplace is added or updated, so the stamp has to
+  land before the refresh. Two details differ from Codex: the cache directory
+  is named with `+` rewritten to `-` while the reported version keeps the `+`,
+  so the served path comes from what `claude plugin list` reports rather than
+  from the version string; and there is no legacy collection link to migrate.
+  Verified on 2026-09-10.
+- **Do not replace the cached copy with a symlink to the checkout.** It makes
+  edits take effect without a reinstall, and it decouples the served content
+  from the version Claude reports: the directory name is fixed at install time
+  while the contents follow the checkout, so a branch that bumps the version
+  runs the new code under the old number (#355).
 - **Codex's plugin validator rejects `disable-model-invocation`.**
   `plugin-creator`'s `validate_plugin.py` requires the key to be absent or
   `false`, and Team's four guarded skills set it `true` because Claude Code
