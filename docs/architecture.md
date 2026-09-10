@@ -744,6 +744,13 @@ add a new methodology skill, set `user-invocable: false`. When you add a
 new entry-point skill, leave it unset, so it registers as a slash
 command.
 
+The field is honored by Claude Code only. Codex reads no invocability
+field at all, so it lists every methodology and `principle-*` skill in
+its `$` picker and a user can invoke any of them. There is no fix on
+Team's side, and the workarounds that look plausible all fail — see
+[cross-host-portability.md](cross-host-portability.md#57-codex-port)
+before spending time on it.
+
 The trigger-phrase convention keys on the `user-invocable` field —
 not on `argument-hint`, which `docs/skills.md` uses to sort skill
 *flavor*. A skill that does not set `user-invocable: false` must state,
