@@ -1,6 +1,6 @@
 ---
 name: pr-rebase
-description: 'Rebases a branch onto its base. Trigger on "rebase onto main", "pull main and rebase", "update the branch", or "/pr-rebase" only; never infer intent from a branch being behind.'
+description: 'Rebases a branch onto its base. Trigger on "rebase onto main", "update the branch", or "/pr-rebase" only; never infer intent from a branch being behind.'
 effort: high
 argument-hint: "[<pr-number-or-url>]"
 disable-model-invocation: true

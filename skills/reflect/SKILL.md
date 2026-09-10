@@ -1,6 +1,6 @@
 ---
 name: reflect
-description: 'Mines a session for durable learnings. Trigger on "reflect on this session", "capture what we learned", or "/reflect" only; never infer intent from session end or friction.'
+description: 'Mines a session for durable learnings. Trigger on "reflect on this session" or "/reflect" only; never infer intent from session end or friction.'
 effort: high
 argument-hint: "[skill-name]"
 disable-model-invocation: true

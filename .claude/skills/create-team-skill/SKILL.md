@@ -13,7 +13,7 @@ Create a skill another agent can select cheaply and follow without missing a con
 2. **Give the invariant, not the case list.** Keep enumerations only when each member is a distinct fact, command, exception, or security boundary.
 3. **Single source of truth.** Define shared logic and rules once. Consumers name the skill or invoke the shared script.
 4. **SKILL.md is a router.** Put conditional procedures, prompt templates, schemas, and long command recipes in `references/` or executable logic in `scripts/`.
-5. **The description is a trigger.** Write `<what it does>. <when to trigger>.`; keep it at most 200 characters, or 150 for methodology.
+5. **The description is a trigger.** Write `<what it does>. <when to trigger>.`; keep it at most 200 characters, or 150 for methodology, and inside the shared catalog budget below.
 6. **Tests pin contracts, not wording.** Assertions may pin a command, number, name, or path. Never pin a sentence or heading.
 
 Preserve every command, number, path, name, authorization boundary, untrusted-input rule, fail-closed gate, and producer/reviewer separation rule during rewrites.
@@ -27,6 +27,16 @@ Preserve every command, number, path, name, authorization boundary, untrusted-in
 | Entry point | otherwise | 150 lines |
 
 An overage requires a current entry in `SKILL_BUDGET_REASONS` in `tests/skill-budget.test.ts`, keyed by skill and stating the exact line count and reason. A budget is a ceiling, not a target.
+
+## The shared catalog budget
+
+Descriptions spend a second budget the per-skill ceiling cannot see. Codex renders every installed skill from every plugin into one list — `- <name>: <description> (file: <path>)` — capped at 8,000 characters, or 2% of the context window in tokens. Over the cap it truncates descriptions round-robin, so one long description shortens every other skill's; past that it drops skills off the list entirely. Team's 90 skills already fill most of the default cap, which makes the fleet total the binding constraint.
+
+- Spend from the pool; do not add to it. A new skill or a longer description is paid for by compressing an existing one.
+- Give two trigger phrases, never three near-synonyms. Truncation cuts from the tail, so the discriminating words go first.
+- Keep names short. A name is not truncatable, so it is what pushes a skill off the list.
+
+`tests/codex-skill-catalog.test.ts` runs Codex's allocation algorithm over `skills/` and fails when the catalog would trip its truncation warning or omit a skill.
 
 ## Classify
 
@@ -94,7 +104,7 @@ Never put `$` followed by a digit in `SKILL.md`; hosts may substitute it as an a
 Read `docs/testing.md` before changing tests. Convert exact-heading or sentence assertions to command, number, name, path, ordering, occurrence, or behavioral checks. Run the narrowest relevant tests, then:
 
 ```bash
-bun test tests/skill-budget.test.ts tests/skill-openai-yaml.test.ts tests/docs-skills-catalog.test.ts
+bun test tests/skill-budget.test.ts tests/codex-skill-catalog.test.ts tests/skill-openai-yaml.test.ts tests/docs-skills-catalog.test.ts
 bash .claude/scripts/check-discovery-consistency.sh
 bun run typecheck
 bun test

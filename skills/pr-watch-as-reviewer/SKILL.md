@@ -1,6 +1,6 @@
 ---
 name: pr-watch-as-reviewer
-description: 'Watches a reviewed PR and approves settled feedback. Trigger on "approve the PR when my comments are resolved", "watch and approve", or "/pr-watch-as-reviewer"; user-invoked only.'
+description: 'Watches a reviewed PR and approves settled feedback. Trigger on "watch and approve" or "/pr-watch-as-reviewer"; user-invoked only.'
 effort: medium
 argument-hint: "[<pr-number-or-url>]"
 disable-model-invocation: true

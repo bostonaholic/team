@@ -1,6 +1,6 @@
 ---
 name: groom-backlog
-description: 'Grooms a project backlog and proposes tracker changes. Trigger on "groom the backlog", "groom the board", "clean up the backlog", or "/groom-backlog"; changes require user approval.'
+description: 'Grooms a project backlog and proposes tracker changes. Trigger on "groom the backlog", "groom the board", or "/groom-backlog"; changes require user approval.'
 effort: high
 argument-hint: "[<project-number-or-url>] [--promote <issue-number>]"
 ---

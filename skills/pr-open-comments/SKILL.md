@@ -1,6 +1,6 @@
 ---
 name: pr-open-comments
-description: 'Triages unresolved PR review comments. Trigger on "address PR comments", "triage PR feedback", "handle the comments", or "/pr-open-comments"; never infer triage intent from unresolved comments.'
+description: 'Triages unresolved PR review comments. Trigger on "address PR comments", "triage PR feedback", or "/pr-open-comments"; never infer triage intent from unresolved comments.'
 effort: high
 argument-hint: "[<pr-number-or-url>]"
 ---

@@ -1,6 +1,6 @@
 ---
 name: shipit
-description: 'Lands a reviewed pull request. Trigger on "ship it", "land the PR", "land this", or "/shipit" only; never infer ship intent from approval, green CI, or completion.'
+description: 'Lands a reviewed pull request. Trigger on "ship it", "land the PR", or "/shipit" only; never infer ship intent from approval, green CI, or completion.'
 effort: medium
 argument-hint: "[<pr-number>]"
 ---
