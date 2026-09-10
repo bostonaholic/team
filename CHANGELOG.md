@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.97.0] - 2026-09-10
+
 ### Fixed
 
 - **`script/dev-install codex` now runs Codex's own plugin install instead of linking the checkout's whole `skills/` directory into `~/.agents/skills/team`.** That collection link made Codex read every Team skill as one nested standalone skill root, so with a plugin install also present each skill registered twice and the doubled catalog truncated every description to roughly a quarter of its length. It also kept Team out of any index that discovers skills through Codex's plugin install, so those indexes attributed every Team skill to Claude Code. The install now follows the loop Codex documents for local plugins: register the checkout as a marketplace, stamp a `+codex.<timestamp>` cachebuster onto the manifest version — the plugin cache is keyed on it — run `codex plugin add team@team-dev`, then restore the manifest and prune the copy the previous run left. The install is a copy, so re-run it after changing a skill. `script/dev-uninstall codex` removes the plugin, the marketplace entry, and the cache tree, and leaves no dangling link behind. **What this asks of you:** nothing — both scripts delete the old `~/.agents/skills/team` link for you, and refuse to touch that path if it holds anything they did not create. Verified against codex-cli 0.153.4.
@@ -867,7 +869,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.96.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.97.0...HEAD
+[0.97.0]: https://github.com/bostonaholic/team/compare/v0.96.0...v0.97.0
 [0.96.0]: https://github.com/bostonaholic/team/compare/v0.95.0...v0.96.0
 [0.95.0]: https://github.com/bostonaholic/team/compare/v0.94.0...v0.95.0
 [0.94.0]: https://github.com/bostonaholic/team/compare/v0.93.0...v0.94.0
