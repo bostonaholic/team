@@ -94,6 +94,42 @@ const REQUIRED_LOADS_BY_COMPONENT: Record<string, readonly string[]> = {
   "agents/implementer.md": ["engineering-standards", "solid", "refactoring-to-patterns", "systems-thinking"],
 };
 
+const APPLIED_PRINCIPLES = "## Applied principles";
+
+// The body of `heading`'s section: every line after it up to the next `## ` or
+// `### ` heading, or EOF. `undefined` when the section is absent, so a caller
+// can tell "no section" from "empty section".
+function sectionBody(text: string, heading: string): string | undefined {
+  const lines = text.split("\n");
+  const start = lines.findIndex((line) => line.trim() === heading);
+  if (start < 0) return undefined;
+  const rest = lines.slice(start + 1);
+  const end = rest.findIndex((line) => /^#{2,3} /.test(line));
+  return (end < 0 ? rest : rest.slice(0, end)).join("\n");
+}
+
+/** Every backticked `principle-*` name in `text`, deduped, in first-seen order. */
+function namedPrinciples(text: string): string[] {
+  const found: string[] = [];
+  for (const match of text.matchAll(/`(principle-[a-z0-9-]+)`/g)) {
+    const name = match[1] as string;
+    if (!found.includes(name)) found.push(name);
+  }
+  return found;
+}
+
+/**
+ * Offenders in one `## Applied principles` section: a principle the section
+ * names but does not put behind the load phrase. The section exists to send its
+ * reader to go execute those skills, so every name in it is a load by
+ * definition — "Load and apply X", "see X", and "per X" all read as citations,
+ * and a model that reads one never issues the tool call.
+ */
+function citedRatherThanLoaded(section: string): string[] {
+  const loaded = new Set(loadedSkills(section));
+  return namedPrinciples(section).filter((name) => !loaded.has(name));
+}
+
 // Every distributed prose surface that can carry a load: the 13 agent bodies
 // and every skill body. Dev tooling under .claude/ is out of scope — it ships
 // to nobody.
@@ -172,5 +208,46 @@ describe("Skill-tool loads resolve to real skills", () => {
       }
     }
     expect(missing).toEqual([]);
+  });
+});
+
+// Every `principle-*` skill reaches its reader the same way every other skill
+// does: a Skill tool call. Nothing else counts. A principle named in prose that
+// no body loads is a rule the run never actually read, and the miss is silent —
+// the skill's invocation count reads zero and looks like a measurement gap
+// rather than the real answer, which is that nothing ever called it.
+describe("Every principle skill is loaded through the Skill tool", () => {
+  const bodies = distributedBodies();
+  const principles = [...skillNames(REPO_ROOT)].filter((name) => name.startsWith("principle-")).sort();
+
+  test("the sweep sees the principle skills, not an empty haystack", () => {
+    // Blindness guard: a mis-scoped read would make both checks below vacuous
+    // (docs/testing.md, "Prove a negative check can find a positive"). Floors,
+    // not exact counts — adding a principle skill is ordinary work.
+    expect(principles.length).toBeGreaterThan(20);
+    expect(bodies.filter(({ text }) => sectionBody(text, APPLIED_PRINCIPLES) !== undefined).length).toBeGreaterThan(15);
+  });
+
+  test("an Applied principles section loads every principle it names", () => {
+    const offenders: string[] = [];
+    for (const { rel, text } of bodies) {
+      const section = sectionBody(text, APPLIED_PRINCIPLES);
+      if (section === undefined) continue;
+      for (const name of citedRatherThanLoaded(section)) offenders.push(`${rel} -> ${name}`);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  test("every principle skill on disk is loaded by some body", () => {
+    const loaded = new Set(bodies.flatMap(({ text }) => loadedSkills(text)));
+    expect(principles.filter((name) => !loaded.has(name))).toEqual([]);
+  });
+
+  test("the checks detect planted violations", () => {
+    expect(citedRatherThanLoaded("Load and apply: `principle-fail-closed`.")).toEqual(["principle-fail-closed"]);
+    expect(citedRatherThanLoaded("Call the Skill tool with `principle-fail-closed`.")).toEqual([]);
+    expect(sectionBody("# Skill\n\n## Other\n\nbody\n", APPLIED_PRINCIPLES)).toBeUndefined();
+    expect(sectionBody(`${APPLIED_PRINCIPLES}\n\nfirst\n\n## Next\n\nsecond\n`, APPLIED_PRINCIPLES)).toContain("first");
+    expect(sectionBody(`${APPLIED_PRINCIPLES}\n\nfirst\n\n## Next\n\nsecond\n`, APPLIED_PRINCIPLES)).not.toContain("second");
   });
 });
