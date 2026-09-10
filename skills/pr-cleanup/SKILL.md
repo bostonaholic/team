@@ -1,6 +1,6 @@
 ---
 name: pr-cleanup
-description: 'Cleans PR state. Trigger on "the PR was merged", "clean up the branch", "abandon this", or "/pr-cleanup"; Mode B needs stated abandon intent; never infer abandon intent from staleness.'
+description: 'Cleans PR state. Trigger on "the PR was merged", "clean up the branch", "abandon this", or "/pr-cleanup"; never infer abandon intent from staleness.'
 effort: medium
 argument-hint: "[<pr-number-or-url-or-branch>]"
 ---
