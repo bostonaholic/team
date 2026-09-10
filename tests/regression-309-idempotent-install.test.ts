@@ -1,27 +1,51 @@
+// Regression test for issue #309.
+//
+// `script/dev-install-claude` was not idempotent: a second run against an
+// already-installed checkout could leave the cache in a state Claude could not
+// serve from, and an older installed version was never moved off.
+//
+// The bug is pinned here; its expression moved. #309 was fixed while the
+// installer replaced Claude's copy with a symlink to the checkout, so these
+// tests used to assert that a re-run restored that symlink. #355 removed the
+// symlink — it made Claude report a version that did not describe what it
+// loaded — so convergence is now expressed as "exactly one served copy, and it
+// is the one Claude reports".
+//
+// L3 subprocess-snapshot: an isolated HOME, the fake `claude` from
+// tests/helpers/fake-claude.ts on PATH, and a disposable plugin root, because
+// the install stamps the manifests.
+
 import { afterAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import {
   existsSync,
-  lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
-  readlinkSync,
+  readdirSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import {
+  type ClaudePluginFixture,
+  makeClaudePluginFixture,
+} from "./helpers/claude-plugin-fixture";
 import { writeFakeClaude } from "./helpers/fake-claude";
 
-const REPO_ROOT = join(import.meta.dir, "..");
-const INSTALL = join(REPO_ROOT, "script", "dev-install-claude");
-const VERSION = JSON.parse(
-  readFileSync(join(REPO_ROOT, ".claude-plugin", "plugin.json"), "utf8"),
-).version;
-
 const tempDirs: string[] = [];
+
+afterAll(() => {
+  for (const dir of tempDirs) rmSync(dir, { force: true, recursive: true });
+});
+
+function newFixture(): ClaudePluginFixture {
+  const fixture = makeClaudePluginFixture();
+  tempDirs.push(fixture.root);
+  return fixture;
+}
 
 function newHome(): string {
   const home = mkdtempSync(join(tmpdir(), `team-install-${process.pid}-`));
@@ -30,14 +54,13 @@ function newHome(): string {
   return home;
 }
 
-function run(home: string) {
-  const result = spawnSync("bash", [INSTALL], {
+function run(install: string, home: string) {
+  const result = spawnSync("bash", [install], {
     encoding: "utf8",
     env: {
       ...process.env,
       HOME: home,
       PATH: `${join(home, "bin")}:${process.env.PATH ?? ""}`,
-      PLUGIN_VERSION: VERSION,
     },
   });
   return {
@@ -46,57 +69,54 @@ function run(home: string) {
   };
 }
 
-const cachePath = (home: string) =>
-  join(home, ".claude", "plugins", "cache", "team-dev", "team", VERSION);
+const cacheRoot = (home: string) =>
+  join(home, ".claude", "plugins", "cache", "team-dev", "team");
 const statePath = (home: string, name: string) => join(home, "state", name);
-
-afterAll(() => {
-  for (const dir of tempDirs) rmSync(dir, { force: true, recursive: true });
-});
+const reportedVersion = (home: string) =>
+  readFileSync(statePath(home, "installed-version"), "utf8");
 
 describe("regression #309: Claude dev installation is idempotent", () => {
-  test("a repeated install restores a cache directory to the checkout symlink", () => {
+  test("a repeated install converges on one copy Claude can serve", () => {
+    const fixture = newFixture();
     const home = newHome();
-    expect(run(home).status).toBe(0);
+    expect(run(fixture.install, home).status).toBe(0);
 
-    rmSync(cachePath(home));
-    mkdirSync(cachePath(home));
-    writeFileSync(join(cachePath(home), "copied-cache"), "owned by Claude\n");
-    writeFileSync(statePath(home, "calls"), "");
+    // Corrupt what Claude serves: a directory with none of the plugin in it.
+    const served = join(cacheRoot(home), reportedVersion(home).replace("+", "-"));
+    rmSync(served, { force: true, recursive: true });
+    mkdirSync(served, { recursive: true });
+    writeFileSync(join(served, "not-the-plugin"), "junk\n");
+    // Each run stamps a 14-digit second-resolution timestamp, so two runs in
+    // the same second would mint the same version and copy nothing.
+    spawnSync("sleep", ["1.1"]);
 
-    const second = run(home);
+    const second = run(fixture.install, home);
 
     expect(second.status).toBe(0);
-    expect(lstatSync(cachePath(home)).isSymbolicLink()).toBe(true);
-    expect(readlinkSync(cachePath(home))).toBe(REPO_ROOT);
-    expect(existsSync(join(cachePath(home), "copied-cache"))).toBe(false);
-    expect(readFileSync(statePath(home, "calls"), "utf8")).not.toMatch(
-      /marketplace (add|update)|plugin (install|update)/,
-    );
-
-    const third = run(home);
-    expect(third.status).toBe(0);
-    expect(third.output).toContain("already installed");
-    expect(readlinkSync(cachePath(home))).toBe(REPO_ROOT);
+    const versions = readdirSync(cacheRoot(home));
+    expect(versions).toHaveLength(1);
+    const [current = ""] = versions;
+    expect(current).toBe(reportedVersion(home).replace("+", "-"));
+    expect(existsSync(join(cacheRoot(home), current, "skills", "team", "SKILL.md"))).toBe(true);
+    expect(existsSync(join(cacheRoot(home), current, "not-the-plugin"))).toBe(false);
   });
 
-  test("a repeated install updates an older installed version", () => {
+  test("a repeated install moves an older installed version off", () => {
+    const fixture = newFixture();
     const home = newHome();
-    mkdirSync(join(home, "state"));
-    writeFileSync(statePath(home, "marketplace-path"), REPO_ROOT);
+    mkdirSync(join(home, "state"), { recursive: true });
+    writeFileSync(statePath(home, "marketplace-path"), fixture.root);
+    writeFileSync(statePath(home, "catalog-version"), "0.0.1");
     writeFileSync(statePath(home, "installed-version"), "0.0.1");
-    mkdirSync(join(home, ".claude/plugins/cache/team-dev/team/0.0.1"), {
-      recursive: true,
-    });
+    mkdirSync(join(cacheRoot(home), "0.0.1"), { recursive: true });
 
-    const result = run(home);
+    const result = run(fixture.install, home);
 
     expect(result.status).toBe(0);
-    expect(readFileSync(statePath(home, "installed-version"), "utf8")).toBe(
-      VERSION,
-    );
-    expect(lstatSync(cachePath(home)).isSymbolicLink()).toBe(true);
-    expect(readlinkSync(cachePath(home))).toBe(REPO_ROOT);
+    expect(reportedVersion(home)).toMatch(/\+claude\.\d{14}$/);
+    expect(existsSync(join(cacheRoot(home), "0.0.1"))).toBe(false);
+    // The catalog is a snapshot, so refreshing it is what makes the update
+    // see a new version at all. Ordering is the whole fix.
     const calls = readFileSync(statePath(home, "calls"), "utf8");
     expect(calls.indexOf("plugin marketplace update team-dev")).toBeLessThan(
       calls.indexOf("plugin update team@team-dev"),
@@ -104,18 +124,19 @@ describe("regression #309: Claude dev installation is idempotent", () => {
   });
 
   test("an existing marketplace for another checkout is refused", () => {
+    const fixture = newFixture();
     const home = newHome();
     const foreign = join(home, "other-team-checkout");
-    mkdirSync(join(home, "state"));
+    mkdirSync(join(home, "state"), { recursive: true });
     writeFileSync(statePath(home, "marketplace-path"), foreign);
 
-    const result = run(home);
+    const result = run(fixture.install, home);
 
     expect(result.status).not.toBe(0);
     expect(result.output).toContain("different checkout");
-    expect(readFileSync(statePath(home, "marketplace-path"), "utf8")).toBe(
-      foreign,
-    );
-    expect(existsSync(cachePath(home))).toBe(false);
+    // Refused before the stamp, so there is nothing to undo.
+    expect(result.output).not.toContain("Cachebuster:");
+    expect(readFileSync(statePath(home, "marketplace-path"), "utf8")).toBe(foreign);
+    expect(existsSync(cacheRoot(home))).toBe(false);
   });
 });
