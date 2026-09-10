@@ -25,16 +25,22 @@ The first command registers the checkout as a marketplace; the second installs
 from it. Skills register as slash commands (`/team`, `/shipit`), and agents and
 hooks load with them.
 
-For a clone-backed install that updates when `git pull` changes the checkout:
+Developing Team itself? Run the loop Claude Code documents for local plugins:
 
 ```bash
 script/dev-install claude
 ```
 
-This adds clone-local hooks for merge and rebase pulls. Existing non-Team hooks
-and a `core.hooksPath` outside the clone are never overwritten: the install
-still completes, and reports that it skipped the hooks and how to wire them up
-yourself. Remove the install and Team-owned hooks with:
+Claude Code keys its plugin cache on the manifest version and reports "already
+at the latest version" when it has not moved, so the install stamps a
+`+claude.<timestamp>` cachebuster onto the manifests, refreshes the catalog,
+installs, restores the manifests, and prunes the copy the last run left. The
+install is a copy either way, so **re-run it after changing a skill.**
+
+It also adds clone-local hooks that re-run it after merge and rebase pulls.
+Existing non-Team hooks and a `core.hooksPath` outside the clone are never
+overwritten: the install still completes, and reports that it skipped the hooks
+and how to wire them up yourself. Remove the install and Team-owned hooks with:
 
 ```bash
 script/dev-uninstall claude

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`script/dev-install claude` no longer replaces Claude Code's copy of the plugin with a symlink to your checkout.** The cache path carries the version, so the directory name was fixed at install time while its contents followed the checkout: on a branch that bumped the version, `claude plugin list` named the old release while Claude ran the new code. The install now follows the loop Claude Code documents for local plugins: stamp a `+claude.<timestamp>` cachebuster onto `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` — the plugin cache is keyed on the version and `claude plugin update` copies nothing when it has not moved — refresh the marketplace, install, then restore the manifests and prune the copy the previous run left. `script/dev-uninstall claude` now sweeps the whole cache tree, including a symlink an install from before this change left behind. **What this asks of you:** the install is a copy now, so a skill you edit does not reach Claude Code until you re-run `script/dev-install claude`. The clone-local pull hooks already re-run it after a merge or rebase pull. Verified on 2026-09-10.
+
 ## [0.97.0] - 2026-09-10
 
 ### Fixed

@@ -1,21 +1,59 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PLUGIN_VERSION=$(node -p "require('${PLUGIN_ROOT}/.claude-plugin/plugin.json').version")
-CACHE_PATH="${HOME}/.claude/plugins/cache/team-dev/team/${PLUGIN_VERSION}"
+# Removes the Claude Code dev install: the plugin, the marketplace entry, and
+# the cache tree.
+#
+# The cache is swept wholesale rather than by version. Each dev install mints a
+# `+claude.<cachebuster>` version of its own, an interrupted run can leave the
+# copy from the run before it, and an install from before #355 left a symlink
+# to the checkout at a version-named path. `rm -rf` on the tree unlinks any
+# such symlink; it never descends into the checkout it points at.
+
+MARKETPLACE="team-dev"
+PLUGIN="team"
+CACHE_ROOT="${HOME}/.claude/plugins/cache/${MARKETPLACE}"
 
 echo "Uninstalling Team for Claude Code (dev)..."
 echo
 
-claude plugin uninstall team@team-dev 2>&1 || true
-claude plugin marketplace remove team-dev 2>&1 || true
+REMOVED=false
 
-# Clean up the symlink left in the cache
-if [ -L "$CACHE_PATH" ]; then
-  rm "$CACHE_PATH"
-  rmdir "${HOME}/.claude/plugins/cache/team-dev/team" 2>/dev/null || true
-  rmdir "${HOME}/.claude/plugins/cache/team-dev" 2>/dev/null || true
+if command -v claude >/dev/null 2>&1; then
+  # shellcheck disable=SC2016
+  INSTALLED=$(
+    claude plugin list --json 2>/dev/null |
+      PLUGIN_ID="${PLUGIN}@${MARKETPLACE}" node -e '
+        let raw = "";
+        try {
+          raw = require("node:fs").readFileSync(0, "utf8");
+        } catch {
+          process.exit(0);
+        }
+        const entries = raw.trim() === "" ? [] : JSON.parse(raw);
+        if (entries.some((entry) => entry.id === process.env.PLUGIN_ID)) {
+          process.stdout.write("yes");
+        }
+      ' || true
+  )
+  if [ "$INSTALLED" = "yes" ]; then
+    claude plugin uninstall "${PLUGIN}@${MARKETPLACE}" 2>&1
+    REMOVED=true
+  fi
+  if claude plugin marketplace remove "$MARKETPLACE" 2>&1; then
+    REMOVED=true
+  fi
+fi
+
+if [ -e "$CACHE_ROOT" ] || [ -L "$CACHE_ROOT" ]; then
+  rm -rf "$CACHE_ROOT"
+  echo "  Removed the plugin cache: ${CACHE_ROOT}"
+  REMOVED=true
+fi
+
+if [ "$REMOVED" = false ]; then
+  echo "Nothing to do: Team is not installed for Claude Code."
+  exit 0
 fi
 
 echo
