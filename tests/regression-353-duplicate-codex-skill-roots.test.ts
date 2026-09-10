@@ -89,7 +89,8 @@ describe("regression #353: Team's skills are served by exactly one Codex root", 
     const versions = readdirSync(cacheRoot(home));
     expect(versions).toHaveLength(1);
 
-    const skills = join(cacheRoot(home), versions[0], "skills");
+    const [version = ""] = versions;
+    const skills = join(cacheRoot(home), version, "skills");
     // Every skill is reachable through that one root, so none needs a link of
     // its own and a new one needs no sync step.
     for (const name of ["team", "team-design", "why"]) {

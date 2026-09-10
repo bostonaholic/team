@@ -139,8 +139,9 @@ describe("dev install: codex harness", () => {
     const { status, output } = run(fixture.install, home);
 
     expect(status).toBe(0);
-    expect(cachedVersions(home)).toHaveLength(1);
-    const installed = cachedVersions(home)[0];
+    const versions = cachedVersions(home);
+    expect(versions).toHaveLength(1);
+    const [installed = ""] = versions;
     expect(installed).toStartWith(`${base}+codex.`);
     expect(installed).toMatch(/\+codex\.\d{14}$/);
     expect(output).toContain(installed);

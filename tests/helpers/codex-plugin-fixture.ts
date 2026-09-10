@@ -69,5 +69,6 @@ export function makePluginFixture(): PluginFixture {
 /** The base version the fixture's manifest carries, before any cachebuster. */
 export function fixtureBaseVersion(fixture: PluginFixture): string {
   const manifest = JSON.parse(readFileSync(fixture.manifest, "utf8"));
-  return String(manifest.version).split("+")[0];
+  const [base = ""] = String(manifest.version).split("+");
+  return base;
 }
