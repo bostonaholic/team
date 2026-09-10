@@ -24,15 +24,15 @@ weaken a rule below.
    that hits one is presented, never auto-applied, at any confidence.
 4. **Present, then stop for everything else.** Every item that does not
    clear the auto-apply bar goes on the punch list, and what step 4 may
-   do for such an item is a **closed list of two**. **One:** the
-   usefulness reaction — it carries no ask, resolves nothing, and every
-   reviewer earns that signal whether or not their comment led to a
-   change. **Two:** a throwaway verification test written in step 4 to
-   prove a comment's claim — never stage or commit it, and
+   do for such an item is **one thing**: a throwaway verification test
+   written to prove a comment's claim — never stage or commit it, and
    delete it before step 6 (auto-apply) runs; under the red-green proof,
    delete it after the passing run and before the commit itself, so an
    autonomous commit can never contain a reproduction test. Nothing else:
-   no edit to any other file, no reply, no resolution. After you
+   no edit to any other file, no reply, no resolution, **and no
+   reaction.** A reaction is public and unretractable, and the verdict
+   that would pick it is the agent's reading rather than the author's
+   answer, so it waits for the user's chosen option (step 7). After you
    render the punch list, end the turn and wait for the user to pick
    actions. Each chosen action runs in a separate, follow-up turn.
    Rules 2–4 are `principle-plan-present-wait` applied per

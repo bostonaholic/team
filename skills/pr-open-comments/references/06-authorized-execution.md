@@ -84,11 +84,11 @@ To capture the ids needed above, add `id` (the thread node id) and
   is behavioral, the evidence is a specific named test with its run
   result. Otherwise current code, diff, or a commit SHA. No comment is
   triaged on the assumption that it is still accurate.
-- Every item another author wrote carries the reaction its verdict
-  calls for — 👍, 👎, or a deliberate none — and the report names which.
-  Auto-applied items carry it on their one-line entry, punch-list items
-  on their `Reacted:` line. No item is reacted to twice, and no reaction
-  failure stopped the triage.
+- No reaction went out ahead of the decision that picks it. An
+  auto-applied item another author wrote carries 👍 on its one-line
+  entry. A punch-list item carries none yet, and its menu names the
+  reaction each option would place. No item is reacted to twice, and no
+  reaction failure stopped the triage.
 - Delete throwaway reproduction tests written during verification before
   step 6 (auto-apply) runs, and always before any commit. Leave the
   working tree as you found it.

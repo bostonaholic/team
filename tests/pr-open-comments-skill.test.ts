@@ -20,7 +20,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { frontmatter, read, squash } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 // pr-open-comments is a RUNTIME skill — under skills/ (distributed), not .claude/.
@@ -129,5 +129,90 @@ describe("pr-open-comments skill: punch-list deliverable", () => {
     const t = body();
     expect(t).toContain("Auto-applied");
     expect(t).toContain("Needs your decision");
+  });
+});
+
+// Regression: the reaction used to land at verdict time, so a punch-list item
+// carried a public 👍 keyed to the agent's own verdict before the user had
+// picked anything. A user who then judged the comment invalid could not
+// retract it. The reaction is now a consequence of the chosen option, and the
+// menu states which reaction each option places.
+describe("pr-open-comments skill: the reaction follows the user's decision", () => {
+  // The verification step, bounded by the next numbered step heading. "" when
+  // either anchor moves, so the absence assertions below fail rather than pass
+  // vacuously.
+  function verifyStep(): string {
+    const text = existsSync(join(REFERENCES, "04-execution.md")) ? read(join(REFERENCES, "04-execution.md")) : "";
+    const start = text.indexOf("### Step 4");
+    const end = text.indexOf("### Step 5");
+    return start >= 0 && end > start ? text.slice(start, end) : "";
+  }
+
+  test("verification places no reaction — nothing is posted before the user picks", () => {
+    const step = verifyStep();
+    // Guard: a moved step heading must fail, not vacuously pass the absences.
+    expect(step.length).toBeGreaterThan(0);
+    expect(step).not.toContain("THUMBS_UP");
+    expect(step).not.toContain("THUMBS_DOWN");
+    expect(step).not.toContain("addReaction");
+  });
+
+  // The standard option menu's letters, read off the bullet list in step 7.
+  function menuLetters(text: string): string[] {
+    return [...text.matchAll(/^- \*\*([A-Z])\. /gm)].map((m) => m[1]!);
+  }
+
+  // The option-to-reaction table's letters, read off its rows.
+  function tableLetters(text: string): string[] {
+    return [...text.matchAll(/^\| ([A-Z])\. .*\|/gm)].map((m) => m[1]!);
+  }
+
+  test("the reaction table has one row per standard option, and no extras", () => {
+    const text = existsSync(join(REFERENCES, "04-execution.md")) ? read(join(REFERENCES, "04-execution.md")) : "";
+    const menu = menuLetters(text);
+    // Guard: an unparsed menu must fail, not vacuously match an empty table.
+    expect(menu.length).toBeGreaterThan(1);
+    expect(tableLetters(text)).toEqual(menu);
+  });
+
+  test("every table row names the reaction its option places", () => {
+    const text = existsSync(join(REFERENCES, "04-execution.md")) ? read(join(REFERENCES, "04-execution.md")) : "";
+    const rows = [...text.matchAll(/^\| [A-Z]\. [^|]*\|([^|]*)\|/gm)].map((m) => m[1]!);
+    expect(rows.length).toBeGreaterThan(1);
+    for (const reaction of rows) {
+      expect(/THUMBS_UP|THUMBS_DOWN|none/.test(reaction)).toBe(true);
+    }
+  });
+
+  test("only one option is the clarification ask — C answers, G asks", () => {
+    const text = existsSync(join(REFERENCES, "04-execution.md")) ? read(join(REFERENCES, "04-execution.md")) : "";
+    // The two options both post a reply and touch no code, so a shared name in
+    // their labels makes them read as duplicates. Only G's is the ask, and only
+    // G is a Hard Rule 3 exclusion.
+    const labels = [...text.matchAll(/^- \*\*([A-Z])\. ([^*]*)\*\*/gm)].map((m) => ({ letter: m[1]!, label: m[2]! }));
+    expect(labels.length).toBeGreaterThan(1);
+    expect(labels.filter((o) => /clarif/i.test(o.label)).map((o) => o.letter)).toEqual(["G"]);
+  });
+
+  test("both reaction content values appear in the option-to-reaction mapping", () => {
+    const t = body();
+    expect(t).toContain("THUMBS_UP");
+    expect(t).toContain("THUMBS_DOWN");
+  });
+
+  test("the punch-list block reports the reaction as pending, never as already placed", () => {
+    const t = body();
+    expect(t.length).toBeGreaterThan(0);
+    // `Reacted:` is the past-tense field the verdict-time reaction printed.
+    expect(t).not.toContain("Reacted:");
+  });
+
+  test("an auto-applied item still reacts — the agent is authorized above the bar", () => {
+    const text = existsSync(join(REFERENCES, "04-execution.md")) ? read(join(REFERENCES, "04-execution.md")) : "";
+    const start = text.indexOf("### Step 6");
+    const end = text.indexOf("### Step 7");
+    const step = start >= 0 && end > start ? text.slice(start, end) : "";
+    expect(step.length).toBeGreaterThan(0);
+    expect(step).toContain("THUMBS_UP");
   });
 });

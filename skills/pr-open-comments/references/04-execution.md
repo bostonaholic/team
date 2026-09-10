@@ -107,31 +107,22 @@ code can have moved since. For every unresolved thread:
    fails before the fix and passes
    after the fix is applied, with the passing run
    happening before any push. Without that proof the rating caps at 90%.
-6. **React to signal usefulness.** Add exactly one reaction to the
-   comment that opened the thread, so the reviewer learns whether their
-   feedback landed. Do this here, right after the verdict, not at
-   auto-apply time — an item that ends on the punch list has still been
-   read and judged, and its author deserves the same signal. The verdict
-   picks the reaction:
-   - 👍 `THUMBS_UP` — `STILL RELEVANT` or `ALREADY ADDRESSED`. The
-     comment named something real in the code; whether the fix lands now
-     or landed already does not change that.
-   - 👎 `THUMBS_DOWN` — `INACCURATE`. The claim does not hold against
-     the code, and the verdict's evidence says why.
-   - No reaction — `STALE`, or any item flagged `NEEDS CLARIFICATION`.
-     Neither judgment would be honest: the code moved out from under a
-     comment that may well have been right, or the ask is not yet
-     understood well enough to rate.
 
-   Never react to a comment you wrote yourself. A reaction is a signal
-   and never a substitute for the reply — a 👎 item still gets the
-   clarifying reply its option menu recommends, and a 👍 item still gets
-   its SHA-cited reply when it auto-applies.
+**Post nothing during verification.** A verdict is your reading of the
+code, not the author's answer to the reviewer, and the two can disagree —
+the user may take a comment you rated `STILL RELEVANT` and decline it, or
+answer an `INACCURATE` one with a question instead of a 👎. A reaction is
+public and cannot be honestly retracted, so it waits for the decision that
+picks it: step 6 for an item the agent auto-applies, and the user's chosen
+option for everything on the punch list. Step 7 states each option's
+reaction in the menu, so choosing an option is choosing the signal it sends.
 
 The verdict feeds steps 5–7. `ALREADY ADDRESSED` maps to option **F**.
-`STALE` and `INACCURATE` usually map to a clarifying reply (**C**/**G**)
-rather than a code change. Never mark a thread stale or inaccurate on a
-hunch — cite the file, line, or commit that proves it.
+`STALE` and `INACCURATE` usually map to a reply that answers the reviewer
+(**C**), or to a decline (**D**) where the claim does not hold, rather than
+to a code change. Neither maps to **G** — both are verdicts you reached
+with evidence, so the ask is understood. Never mark a thread stale or
+inaccurate on a hunch — cite the file, line, or commit that proves it.
 
 ### Step 5 — Classify each open thread
 
@@ -159,6 +150,11 @@ bounded to the thread's anchored file and lines, push, post the SHA-cited
 reply, and resolve. Record each auto-applied item with its confidence and
 the landing commit SHA for the step 7 report.
 
+Add 👍 `THUMBS_UP` to the comment that opened the thread as the change
+lands. The decision here is the agent's to make — the item cleared the bar
+— and applying the fix is what the reaction claims, so the two go
+together. Never react to a comment you wrote yourself.
+
 ### Step 7 — Present the report and punch list (the deliverable)
 
 Report in two sections. First, **Auto-applied** — one line per step 6
@@ -170,16 +166,40 @@ class, and the current diff — never pick it blindly.
 
 Standard option menu (pick the options that apply):
 
-- **A. Apply the change** — edit `<file>` to do `<specific change>`.
+- **A. Apply the change** — edit `<file>` to do `<specific change>`. When the
+  ask is an image rather than code, capture it first, then run
+  `/pr-screenshots` against this PR to put it in the description; the upload
+  mechanics are in `skills/pr-screenshots/SKILL.md`.
 - **B. Apply a variation** — `<a variant that addresses the concern differently>`.
-- **C. Reply to clarify / answer** — `<one-line reply sketch>`.
+- **C. Reply with the answer** — `<one-line reply sketch>`.
 - **D. Decline (will not fix)** — reply with `<one-line rationale>`.
 - **E. Defer** — file a follow-up issue / TODO and resolve with a link.
 - **F. Mark resolved as-is** — current code already addresses it (cite commit/line).
 - **G. Needs clarification** — ask the reviewer `<specific question>` before acting.
-- **H. Attach the screenshot they asked for** — capture the image first, then
-  run `/pr-screenshots` against this PR to put it in the description. The
-  upload mechanics are in `skills/pr-screenshots/SKILL.md`.
+
+**C answers, G asks.** Both post a reply and touch no code, and the
+direction is the whole difference: C is the answer to a reviewer's question
+you understood, and G is your question about an ask you did not. Only G is
+a Hard Rule 3 exclusion, so only a G item can never auto-apply at any
+confidence.
+
+Each option also carries the reaction it places on the thread's opening
+comment, and the menu states it, so the user picks the signal along with
+the action. Nothing is posted until they do.
+
+| Option | Reaction |
+|--------|----------|
+| A. Apply the change | 👍 `THUMBS_UP` |
+| B. Apply a variation | 👍 `THUMBS_UP` |
+| C. Reply with the answer | none — the thread is still a conversation |
+| D. Decline (will not fix) | 👎 `THUMBS_DOWN` when the decline rests on an `INACCURATE` verdict; none when the ask is sound and only the priority or scope is wrong |
+| E. Defer | 👍 `THUMBS_UP` |
+| F. Mark resolved as-is | 👍 `THUMBS_UP` |
+| G. Needs clarification | none — the ask is not understood well enough to judge |
+
+The user can override any of these — say so when presenting a 👎, since
+that is the one signal a reviewer reads as a rejection. A reaction is never
+a substitute for the reply the chosen option calls for.
 
 Block format:
 
@@ -188,14 +208,14 @@ Block format:
     > <1–2 line excerpt of the comment body>
     URL: <thread url>
     Verified: <STILL RELEVANT|ALREADY ADDRESSED|STALE|INACCURATE>  —  <one-line evidence>
-    Reacted: <👍|👎|none>
+    Reaction: none yet — the option you pick places it
     Confidence: <NN%>  —  <one-line why it did not clear the auto-apply bar>
 
     Options:
-      A. <concrete option tailored to this comment>
-      B. <alternative option>
-      C. <reply-only option>
-      D. <decline option with rationale sketch>
+      A. <concrete option tailored to this comment>  →  reacts 👍
+      B. <alternative option>  →  reacts 👍
+      C. <reply-only option>  →  reacts none
+      D. <decline option with rationale sketch>  →  reacts <👎|none>
 
     Recommendation: <A|B|C|D|…>  —  <one-line why>
 ```
