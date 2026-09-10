@@ -20,7 +20,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { frontmatter, read, squash } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 // pr-open-comments is a RUNTIME skill — under skills/ (distributed), not .claude/.
@@ -129,5 +129,62 @@ describe("pr-open-comments skill: punch-list deliverable", () => {
     const t = body();
     expect(t).toContain("Auto-applied");
     expect(t).toContain("Needs your decision");
+  });
+});
+
+// Regression: the reaction used to land at verdict time, so a punch-list item
+// carried a public 👍 keyed to the agent's own verdict before the user had
+// picked anything. A user who then judged the comment invalid could not
+// retract it. The reaction is now a consequence of the chosen option, and the
+// menu states which reaction each option places.
+describe("pr-open-comments skill: the reaction follows the user's decision", () => {
+  // The verification step, bounded by the next numbered step heading. "" when
+  // either anchor moves, so the absence assertions below fail rather than pass
+  // vacuously.
+  function verifyStep(): string {
+    const text = existsSync(join(REFERENCES, "04-execution.md")) ? read(join(REFERENCES, "04-execution.md")) : "";
+    const start = text.indexOf("### Step 4");
+    const end = text.indexOf("### Step 5");
+    return start >= 0 && end > start ? text.slice(start, end) : "";
+  }
+
+  test("verification places no reaction — nothing is posted before the user picks", () => {
+    const step = verifyStep();
+    // Guard: a moved step heading must fail, not vacuously pass the absences.
+    expect(step.length).toBeGreaterThan(0);
+    expect(step).not.toContain("THUMBS_UP");
+    expect(step).not.toContain("THUMBS_DOWN");
+    expect(step).not.toContain("addReaction");
+  });
+
+  test("every standard option names the reaction it places, keyed by option letter", () => {
+    const t = squash(body());
+    // Guard: an empty body must fail before the per-letter checks run.
+    expect(t.length).toBeGreaterThan(0);
+    for (const letter of ["A", "B", "C", "D", "E", "F", "G", "H"]) {
+      expect(new RegExp(`\\|\\s*${letter}[^|]*\\|[^|]*(THUMBS_UP|THUMBS_DOWN|none)`).test(t)).toBe(true);
+    }
+  });
+
+  test("both reaction content values appear in the option-to-reaction mapping", () => {
+    const t = body();
+    expect(t).toContain("THUMBS_UP");
+    expect(t).toContain("THUMBS_DOWN");
+  });
+
+  test("the punch-list block reports the reaction as pending, never as already placed", () => {
+    const t = body();
+    expect(t.length).toBeGreaterThan(0);
+    // `Reacted:` is the past-tense field the verdict-time reaction printed.
+    expect(t).not.toContain("Reacted:");
+  });
+
+  test("an auto-applied item still reacts — the agent is authorized above the bar", () => {
+    const text = existsSync(join(REFERENCES, "04-execution.md")) ? read(join(REFERENCES, "04-execution.md")) : "";
+    const start = text.indexOf("### Step 6");
+    const end = text.indexOf("### Step 7");
+    const step = start >= 0 && end > start ? text.slice(start, end) : "";
+    expect(step.length).toBeGreaterThan(0);
+    expect(step).toContain("THUMBS_UP");
   });
 });
