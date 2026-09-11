@@ -851,3 +851,111 @@ No local paid evaluation, native-host instruction-use probe, or actual Golden Ma
   ]
 }
 ```
+
+## Installed resource delivery
+
+The Slice 2 replay passed all eight new cases across the Claude and Codex suites.
+The combined suites reported 34 passes, zero failures, and 269 assertions in 23.88 seconds.
+Measured wall duration was 23.9172294169839 seconds. The command exited 0.
+Confidence: high, from the retained command output and per-case records below.
+
+The command was `bun test ./tests/dev-install-claude.test.ts ./tests/dev-install-codex.test.ts`.
+Source revision was `b914f41f91112b89d4e02013552a045c5016d38f`, with only the two installer test files changed during this focused run.
+The test architect's locked file hashes matched before the run. This dispatch added no fixture support or test changes.
+The architect's earlier run separately recorded 34 passes, 269 assertions, and 24.03 seconds at the same revision.
+
+Raw streams and command metadata remain under `.context/verification/gh-369-slice-2-implementer/` as `focused.stdout.log`, `focused.stderr.log`, and `focused.json`.
+`manual-inspection.json` retains the per-case audit. These concise records remain useful after temporary directories and local logs disappear.
+
+Both hosts read six source-equal samples before source removal and six after removal: 24 successful sample reads.
+The two missing-resource cases first read another 12 samples, then returned the expected missing-path errors.
+Each resolved path equaled its case's `installedRoot` plus `/` plus the sample path below.
+Source and installed byte counts and SHA-256 digests matched at both stages for both hosts:
+
+| Sample path | Source / installed bytes | Source / installed SHA-256 |
+| --- | ---: | --- |
+| `skills/team/SKILL.md` | 4596 | `4fb9c79b8205bee65e16101ea07988f12ce991147b632520b886df964b34eed1` |
+| `skills/authoring-designs/SKILL.md` | 3525 | `d5c9954b053e6ed247c3d46a4032d3b0a1e2be2fff0175f775a1c20ddebae058` |
+| `skills/principle-fail-closed/SKILL.md` | 858 | `4de4613b6b653a8a4f2c96ff6473b57813bf850fa6e5097fb514748a45b2b339` |
+| `skills/authoring-designs/references/design-template.md` | 1777 | `6c512b2e21fe61e59e60b3591d34c8d66b087a8142a5fbb35b4117403e3124ed` |
+| `skills/team/registry.json` | 2710 | `4e2696ab094c53041e3c28cbc03900840f905d1188a0128f66b104d1c226d549` |
+| `skills/team/discover-topic.sh` | 2145 | `6be5bfffa8c6a6497e9196f4dac0ed477d2db8c4b26332e0a56377fe98943e01` |
+
+The records below preserve each case's source revision, temporary consumer, expected result, observed result, and subprocess duration.
+Read-case `readExits` and `readDurationMs` list before-removal and after-removal results in that order.
+Discovery invokes the installed helper with three separate arguments. The empty first argument selects bare discovery.
+Missing-resource records retain the exact diagnostic line. Full stderr remains in the raw log.
+Temporary paths identify removed fixtures. They are evidence labels, not reusable directories.
+
+```json
+{
+  "installedResourceCases": [
+    {"host": "claude", "case": "Installed resource bytes survive source removal", "revision": "b914f41f91112b89d4e02013552a045c5016d38f", "consumer": "/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/team-claude-consumer-Xl5sNd", "installExit": 0, "installDurationMs": 704.7408329999998, "installedRoot": "/private/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/claude-install-15549-Cvd94s/.claude/plugins/cache/team-dev/team/0.104.0-claude.20260911170841", "sourceFixture": "/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/team-claude-plugin-15549-OJmHv8", "expected": "six source-equal samples at both stages", "actual": "six source-equal samples at both stages", "readExits": [0, 0], "readDurationMs": [91.42020899999989, 88.72708299999977]},
+    {"host": "claude", "case": "Installed discovery observes the review requirement", "revision": "b914f41f91112b89d4e02013552a045c5016d38f", "consumer": "/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/team-claude-consumer-zMYKEt", "installExit": 0, "installDurationMs": 661.2527500000006, "scenario": "approved design", "helper": "/private/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/claude-install-15549-O3g5Un/.claude/plugins/cache/team-dev/team/0.104.0-claude.20260911170842/skills/team/discover-topic.sh", "args": ["", "6-design.md", "--require-passing-review"], "expected": {"status": 0, "stdout": "docs/plans/GH-369-approved/\n", "stderr": ""}, "actual": {"status": 0, "stdout": "docs/plans/GH-369-approved/\n", "stderr": ""}, "durationMs": 24.681291999999303},
+    {"host": "claude", "case": "Installed discovery observes the review requirement", "revision": "b914f41f91112b89d4e02013552a045c5016d38f", "consumer": "/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/team-claude-consumer-VNCWQ0", "installExit": 0, "installDurationMs": 670.8077080000003, "scenario": "missing verdict", "helper": "/private/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/claude-install-15549-TKAbzH/.claude/plugins/cache/team-dev/team/0.104.0-claude.20260911170843/skills/team/discover-topic.sh", "args": ["", "6-design.md", "--require-passing-review"], "expected": {"status": 0, "stdout": "", "stderr": ""}, "actual": {"status": 0, "stdout": "", "stderr": ""}, "durationMs": 15.300334000001385},
+    {"host": "claude", "case": "Missing installed resources fail without checkout fallback", "revision": "b914f41f91112b89d4e02013552a045c5016d38f", "consumer": "/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/team-claude-consumer-jClV0d", "installExit": 0, "installDurationMs": 673.6068750000013, "expected": {"status": 1, "missingPath": "/private/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/claude-install-15549-GMXRf6/.claude/plugins/cache/team-dev/team/0.104.0-claude.20260911170843/skills/authoring-designs/references/design-template.md"}, "actual": {"status": 1, "stdout": "", "stderrExcerpt": "Error: ENOENT: no such file or directory, lstat '/private/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/claude-install-15549-GMXRf6/.claude/plugins/cache/team-dev/team/0.104.0-claude.20260911170843/skills/authoring-designs/references/design-template.md'"}, "durationMs": 94.26362499999959},
+    {"host": "codex", "case": "Installed resource bytes survive source removal", "revision": "b914f41f91112b89d4e02013552a045c5016d38f", "consumer": "/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/team-codex-consumer-mJz0CQ", "installExit": 0, "installDurationMs": 849.2423750000016, "installedRoot": "/private/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/codex-dev-15549-HmR4AO/.codex/plugins/cache/team-dev/team/0.104.0+codex.20260911170854", "sourceFixture": "/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/team-plugin-15549-hdQfil", "expected": "six source-equal samples at both stages", "actual": "six source-equal samples at both stages", "readExits": [0, 0], "readDurationMs": [90.48454200000197, 91.09045799999876]},
+    {"host": "codex", "case": "Installed discovery observes the review requirement", "revision": "b914f41f91112b89d4e02013552a045c5016d38f", "consumer": "/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/team-codex-consumer-1jA54o", "installExit": 0, "installDurationMs": 849.4063749999987, "scenario": "approved design", "helper": "/private/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/codex-dev-15549-2vLyVs/.codex/plugins/cache/team-dev/team/0.104.0+codex.20260911170855/skills/team/discover-topic.sh", "args": ["", "6-design.md", "--require-passing-review"], "expected": {"status": 0, "stdout": "docs/plans/GH-369-approved/\n", "stderr": ""}, "actual": {"status": 0, "stdout": "docs/plans/GH-369-approved/\n", "stderr": ""}, "durationMs": 26.500458000002254},
+    {"host": "codex", "case": "Installed discovery observes the review requirement", "revision": "b914f41f91112b89d4e02013552a045c5016d38f", "consumer": "/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/team-codex-consumer-z6EvU8", "installExit": 0, "installDurationMs": 856.4603750000024, "scenario": "missing verdict", "helper": "/private/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/codex-dev-15549-zladQK/.codex/plugins/cache/team-dev/team/0.104.0+codex.20260911170856/skills/team/discover-topic.sh", "args": ["", "6-design.md", "--require-passing-review"], "expected": {"status": 0, "stdout": "", "stderr": ""}, "actual": {"status": 0, "stdout": "", "stderr": ""}, "durationMs": 14.78324999999677},
+    {"host": "codex", "case": "Missing installed resources fail without checkout fallback", "revision": "b914f41f91112b89d4e02013552a045c5016d38f", "consumer": "/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/team-codex-consumer-T6o1Yo", "installExit": 0, "installDurationMs": 853.0799160000024, "expected": {"status": 1, "missingPath": "/private/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/codex-dev-15549-XGFse2/.codex/plugins/cache/team-dev/team/0.104.0+codex.20260911170857/skills/authoring-designs/references/design-template.md"}, "actual": {"status": 1, "stdout": "", "stderrExcerpt": "Error: ENOENT: no such file or directory, lstat '/private/var/folders/kh/pd_9h5n12595s7k0bxs3xdrw0000gn/T/codex-dev-15549-XGFse2/.codex/plugins/cache/team-dev/team/0.104.0+codex.20260911170857/skills/authoring-designs/references/design-template.md'"}, "durationMs": 92.02375000000029}
+  ]
+}
+```
+
+The focused output contains 52 operation records, including 24 cleanup records for eight plugin/home/consumer groups.
+Each cleanup expected `absent` and observed `absent`. The post-run audit found no remaining owned paths.
+Both expected missing-resource failures retained diagnostics before cleanup and removed their three owned paths.
+The source-revision query records initially carry an empty revision. Each returned the full revision used by its subsequent case records.
+
+Each new subprocess uses a 15-second timeout and reports errors or signals before assertions fail.
+No deliberate installer timeout was injected. No new-case installer failure occurred, so neither recovery path has observed failure evidence here.
+These are fake-host installation, filesystem-read, and installed-shell-helper observations. They do not prove live-host instruction use.
+The initial inventory remains unchanged. No paid evaluation or external Golden Master run occurred.
+Confidence: high for measured results and cleanup, from retained records and direct post-run path inspection.
+
+### Slice 2 verification checkpoint
+
+All commands below exited 0 at `b914f41f91112b89d4e02013552a045c5016d38f`.
+The tested working changes were both locked installer suites and both verification documents.
+`checkpoint-state.json` retains their exact SHA-256 hashes before these result excerpts were appended.
+Only observed output excerpts changed afterward. The full suite and typecheck were not repeated for that append.
+
+| Command | Observed result | Wall duration, seconds | Retained files under the evidence directory |
+| --- | --- | ---: | --- |
+| `bun test ./tests/migration-inventory.test.ts` | 3 pass, 0 fail, 224 assertions | 0.26085808299831115 | `inventory.json`, `inventory.stdout.log`, `inventory.stderr.log` |
+| `bun run typecheck` | Exit 0 | 0.3990618340030778 | `typecheck.json`, `typecheck.stdout.log`, `typecheck.stderr.log` |
+| `bash .claude/scripts/check-discovery-consistency.sh` | All discovery-consistency assertions passed. | 0.5332584169809707 | `discovery.json`, `discovery.stdout.log`, `discovery.stderr.log` |
+| `bun test` | 2575 pass, 4 skip, 0 fail, 9694 assertions, 2579 tests, 78 files | 126.56984687500517 | `full.json`, `full.stdout.log`, `full.stderr.log` |
+
+The full suite includes Slice 1 acceptance, all eight Slice 2 cases, and the existing fixture-caller regressions.
+Its four conditional hook-schema skips retain the reasons recorded above.
+The full replay also emitted 52 operation records and 24 successful cleanup records, with no owned paths remaining afterward.
+`full-cleanup-inspection.json` retains that separate audit.
+Confidence: high, from command output, locked hashes, and post-run path inspection.
+
+Exact full-suite count excerpt:
+
+```text
+ 2575 pass
+ 4 skip
+ 0 fail
+ 9694 expect() calls
+Ran 2579 tests across 78 files. [126.47s]
+```
+
+Exact typecheck stderr:
+
+```text
+$ tsc --noEmit
+```
+
+Exact discovery stdout:
+
+```text
+
+All discovery-consistency assertions passed.
+```
+
+No acceptance-test defect surfaced in these runs.
+The installer-error and deliberate-timeout paths remain unmeasured in the new cases.
+The coordinator owns the signed slice commit and the subsequent committed-diff evaluation selection.

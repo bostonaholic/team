@@ -11,6 +11,7 @@ The supplied baseline used Bun 1.4.2. Free checks need no model credentials.
 | --- | --- | --- |
 | `bun run scripts/migration-inventory.ts <checkout-root>` | JSON on stdout, exit 0 | [Initial inventory](baselines/m01.json) |
 | `bun test ./tests/migration-inventory.test.ts` | Three passing acceptance cases | [Replay records](migration-baseline.md) |
+| `bun test ./tests/dev-install-claude.test.ts ./tests/dev-install-codex.test.ts` | Both installer suites pass | [Installed delivery observations](migration-baseline.md#installed-resource-delivery) |
 | `bun test` | No failures, with conditional skips named | [Free-suite observations](migration-baseline.md) |
 | `bun run typecheck` | Exit 0 | [Typecheck observations](migration-baseline.md) |
 | `bash .claude/scripts/check-discovery-consistency.sh` | `All discovery-consistency assertions passed.` | [Discovery observations](migration-baseline.md) |
@@ -71,3 +72,50 @@ It excludes staged, unstaged, and untracked edits. Run it again after the coordi
 Zero selected evaluations establishes only selection, without any paid evaluation execution.
 Local paid checks, native-host probes, and the external Golden Master need their own available credentials and evidence.
 Confidence: high for command and output contracts, from the reporter, locked acceptance cases, and existing harness sources.
+
+## Installed resource delivery
+
+Run both installer suites from the Team checkout:
+
+```bash
+mkdir -p .context/verification/installed-resources
+bun test ./tests/dev-install-claude.test.ts ./tests/dev-install-codex.test.ts > .context/verification/installed-resources/installers.stdout.log 2> .context/verification/installed-resources/installers.stderr.log
+result=$?
+printf '%s\n' "$result" > .context/verification/installed-resources/installers.exit
+```
+
+Use a fresh evidence directory for each run. The dependency list above applies.
+The suites use fake Claude and Codex commands, disposable plugin copies, temporary homes, and outside consumer directories.
+They need writable temporary storage and no host login.
+Both suites copy `team/`, `authoring-designs/`, and `principle-fail-closed/` only for these cases.
+The Codex fixture unlinks its disposable `skills/` symlink before it copies files.
+Shared fixture constructors and ordinary installer cases retain their defaults.
+
+The reader samples these paths beneath each installed root:
+
+- `skills/team/SKILL.md`
+- `skills/authoring-designs/SKILL.md`
+- `skills/principle-fail-closed/SKILL.md`
+- `skills/authoring-designs/references/design-template.md`
+- `skills/team/registry.json`
+- `skills/team/discover-topic.sh`
+
+Expect equal source and installed bytes and SHA-256 digests before and after source-fixture removal.
+Each resolved sample path must remain inside its installed root.
+Bare gated discovery must select `docs/plans/GH-369-approved/` and exclude the separate topic whose review lacks a verdict.
+Deleting the installed template must return exit 1 and name its missing installed path, even while the source template exists.
+
+Standard output retains one JSON record per operation before cleanup.
+Records identify the host, case, source revision, command, consumer directory, expected and actual results, and duration.
+Read records include the installed root, resolved paths, byte counts, and digests.
+The initial revision-query record has an empty `revision` field. Its stdout supplies the revision for subsequent records.
+Standard error retains Bun's case results, counts, and suite duration.
+Keep both streams when a case fails.
+
+Each new subprocess has a 15-second timeout. Errors and signals fail the case after the suite prints diagnostics.
+After each case, teardown removes its registered plugin, home, and consumer paths and reports their absence.
+Cleanup failures fail the case. Retain the logs after teardown.
+The [measured records](migration-baseline.md#installed-resource-delivery) include successful reads, expected missing-resource failures, and cleanup results.
+No deliberate installer timeout was injected in this baseline.
+These checks establish fake-host installation and filesystem delivery. Live-host instruction use remains unmeasured.
+Confidence: high for these contracts, from both installer suites and their retained operation records.
