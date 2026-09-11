@@ -5,7 +5,7 @@ Use the [verification commands](verification/README.md) and [revision-bound obse
 
 - Keep runtime routing, authorization, permissions, artifact schemas, registrations, and agent preloads unchanged.
 - Keep current catalog, context, and evaluation-selection budgets and mappings unchanged.
-- Preserve the [frozen Golden Master prompt](../golden-master/prompt.md), its pinned digest, and Linkboard's `golden-master-baseline` at `2cfee1a`.
+- Preserve the [frozen Golden Master prompt](https://github.com/bostonaholic/team/blob/main/golden-master/prompt.md), its pinned digest, and Linkboard's `golden-master-baseline` at `2cfee1a`.
 - Preserve the [initial inventory](verification/baselines/m01.json). Explain later name or count differences against its revision.
 - Treat 91 skills as the measured starting catalog. Document current-main drift without forcing a reduction.
 - Reuse existing harness commands. Add no general verification runner or runtime migration.
@@ -16,6 +16,7 @@ Supplied continuous integration (CI) attempts remain historical observations, wi
 Unavailable local paid evaluations, unavailable live-host checks, and unavailable full Golden Master runs remain explicit gaps.
 Prepared application checkouts and application tests establish only benchmark preparation.
 
-Slice 1 records inventory and existing checks. Later M01 slices own installed-resource cases, recovery characterization, and runbook protocol alignment.
+M01 records inventory, installed-resource delivery, recovery behavior, and the autonomous Golden Master review protocol.
+The published verification pages build with the repository's locked Jekyll dependencies.
 [The test strategy](testing.md) defines the applicable evidence layers.
 Confidence: high for this scope, from [milestone #369](https://github.com/bostonaholic/team/issues/369).

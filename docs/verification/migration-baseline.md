@@ -55,7 +55,8 @@ The DESIGN reviewer, Explore, and vendor-courier cases changed from failure to p
 These are artifact case counts. Bun groups helper subcases into one test, so its unslop test counts differ.
 Attempt 1's Bun summary reports 1 pass and 6 fail. Attempt 2's summary reports 3 pass and 4 fail.
 Each failure below retains its exact case name, assertion output, and artifact scores. Every `cause` remains null.
-The workflow tracked attempt 1 in #383 and attempt 2 in #384. Both issues carry Bugs/P0 status.
+The workflow tracked attempt 1 in [#383](https://github.com/bostonaholic/team/issues/383) and attempt 2 in [#384](https://github.com/bostonaholic/team/issues/384).
+Both are historical baseline bug reports, not failures introduced by this M01 change.
 These two stochastic attempts establish no failure cause.
 Confidence: high for observed outcomes, from the supplied summaries, artifacts, and failure logs.
 
@@ -76,9 +77,10 @@ bin/setup:7:in 'Kernel#system': Command failed with exit 1: npm (RuntimeError)
 ```
 
 The supplied Linkboard preparation used `golden-master-baseline` at `2cfee1a864760bc7a11bd875507f72c08c1641e3`.
-Setup succeeded under Node 22.21.1. Application tests reported 117 runs, 328 assertions, and no failures, errors, or skips.
+`NODENV_VERSION=22.21.1 bin/setup --skip-server` completed without starting `bin/dev`.
+Application tests reported 117 runs, 328 assertions, and no failures, errors, or skips.
 The preflight records the actual pipeline as `not_run`, with Claude logged out and no local eval API key.
-This work establishes preparation only. Slice 4 owns the runbook correction.
+This work establishes preparation only. It is not a Golden Master pipeline run.
 Confidence: high, from the supplied preflight and application logs.
 
 The supplied preparation report also compared installed Team `0.104.0+codex.20260911155349` skill bytes with source and found zero differing files.
@@ -971,7 +973,10 @@ Confidence: high, from the focused replay and file digest.
 Evidence lives in `.context/verification/m01-slice3/`.
 `focused.stdout.log` retains all fixture inputs and subprocess observations before each cleanup.
 `focused.stderr.log` retains exact case names and Bun results. `focused.json` records command, revision, exit status, and wall duration.
-`case-records.json` retains per-case source revisions, full consumer paths, commands, expected results, actual results, and durations.
+`case-records.json` retains typed records for each case. Subprocess records
+include source revisions, consumer paths, commands, expected and actual results,
+and durations. Fixture, parsed-context, revision-query, and cleanup records use
+their own fields.
 Temporary paths identify removed fixtures and are not reusable directories.
 
 The earlier test-architect run remains separate under `.context/verification/slice3-author-hfizh75g/`.
@@ -1124,3 +1129,121 @@ $ tsc --noEmit
 No acceptance-test defect or unresolved Slice 3 failure surfaced.
 No newly passing case followed an implementation fix. All 48 characterization cases were already green.
 The coordinator owns the signed slice commit and subsequent committed-diff evaluation selection.
+
+## Golden Master autonomous review protocol
+
+Both Slice 4 manual acceptance checks passed against source revision
+`61c70c8473671a72d014aaa50d4372974da7de76` with the four documentation files
+changed in the working tree. No runtime file or frozen input changed.
+
+### Runbook uses one autonomous review protocol
+
+Expected result: all ten checks in the locked manual handoff pass.
+
+Observed result: PASS. Isolation rule 5 requires an unsteered run and links the
+[autonomous gate contract](https://github.com/bostonaholic/team/blob/main/skills/team/references/08-design-review-gate-design.md).
+Pipeline step 3 records review rounds, terminal verdicts, and a missing-verdict
+halt. Metrics and the result example use `autonomous-design-review-v1`.
+They retain `human_gate_round_trips` and set it to zero for compliant runs.
+The runbook keeps human PR review as the final checkpoint. Benchmark output
+never merges into Linkboard `main`.
+
+Historical approval-based runs retain their measured `human_gate_round_trips`.
+Their interaction counts and elapsed times are not directly comparable with
+autonomous runs. Human steering before the PR invalidates new comparison data.
+
+### Frozen benchmark inputs remain identical
+
+Expected result: the prompt digest passes, the original inputs have no diff,
+and both Linkboard baseline references remain present.
+
+Observed result: PASS. The exact digest output was:
+
+```text
+golden-master/prompt.md: OK
+```
+
+The comparison with `e5f8538c2183654fe814010a38e55b2d531623e8`
+exited 0 with no diff. `golden-master-baseline` and `2cfee1a` remain in both
+Golden Master documents. The full external pipeline was unavailable and did
+not run. The prepared Linkboard checkout and its 117 application tests remain
+separate preparation evidence.
+
+Retained evidence is under `.context/verification/m01-slice4/`:
+`manual-checks.md`, `prompt-digest.stdout.log`, `frozen-diff.stdout.log`, and
+`baseline-refs.stdout.log`. The committed observations above do not depend on
+those ignored files.
+
+## Published documentation build
+
+Before the Slice 4 edits, the coordinator ran the existing Pages command at
+`61c70c8473671a72d014aaa50d4372974da7de76`. It exited 0 in
+1.5117295829986688 seconds and generated the four expected paths. Inspection
+preceded cleanup, and cleanup removed the owned scratch directory. This free
+site build is separate from the original `e5f8538c2183654fe814010a38e55b2d531623e8`
+baseline.
+
+The final Pages command also passed at source revision
+`61c70c8473671a72d014aaa50d4372974da7de76` with the final four documentation
+files changed in the working tree. The command was:
+
+```text
+RBENV_VERSION=3.3.6 BUNDLE_PATH=/Users/matthew/conductor/workspaces/team/tripoli/.context/verification/m01-site-gems BUNDLE_FROZEN=true JEKYLL_ENV=production rbenv exec bundle exec jekyll build --destination /private/tmp/team-m01-slice4-site.XyBSgb/site
+```
+
+The initial dependency command used `/opt/homebrew/bin/ruby` 4.0.6 and exited
+5. `commonmarker` requires Ruby below 4.0. The corrected command used Ruby
+3.3.6 from `docs/.ruby-version`:
+
+```text
+RBENV_VERSION=3.3.6 BUNDLE_PATH=/Users/matthew/conductor/workspaces/team/tripoli/.context/verification/m01-site-gems BUNDLE_FROZEN=true rbenv exec bundle install
+```
+
+That frozen install exited 0 without a manifest, lockfile, or Bundler config
+change. The retained logs are `.context/verification/m01-site-install.log` and
+`.context/verification/m01-site-install-ruby336.log`.
+
+An intermediate Slice 4 build exited 0 in 1.401934862 seconds before the
+record-schema reconciliation. The final site build exited 0 in 1.379803896 wall
+seconds. Both builds generated all four expected paths:
+
+- `migration-contract.html`
+- `verification/index.html`
+- `verification/migration-baseline.html`
+- `verification/baselines/m01.json`
+
+The build used no incremental flag. Jekyll 3 has no `--disable-disk-cache`
+option. Inspection happened before cleanup. Cleanup removed the owned external
+scratch directory. Retained evidence is under
+`.context/verification/m01-slice4-site/`.
+
+Only observed result values changed after the final site build. The final
+focused inventory check read the reconciled verification documents. The full
+suite and typecheck were not repeated for the output-only edit.
+
+### Slice 4 verification checkpoint
+
+All commands ran at `61c70c8473671a72d014aaa50d4372974da7de76` with changes
+limited to `golden-master/RUNBOOK.md`, `docs/migration-contract.md`, and the two
+verification documents. The frozen prompt, its digest, and
+`docs/verification/baselines/m01.json` remained unchanged.
+
+| Check | Observed result | Wall duration, seconds | Retained evidence |
+| --- | --- | ---: | --- |
+| Runbook protocol review | PASS, all ten semantic checks | manual | `.context/verification/m01-slice4/manual-checks.md` |
+| Frozen benchmark inputs | PASS, digest OK and original-input diff empty | manual | `.context/verification/m01-slice4/` |
+| `bun run typecheck` | Exit 0, `$ tsc --noEmit` | 0.341395140 | `.context/verification/m01-slice4/typecheck.*` |
+| `bun test ./tests/protocol.test.ts` | 134 pass, 0 fail, 332 assertions | 0.119678974 | `.context/verification/m01-slice4/protocol.*` |
+| `bun test ./tests/migration-inventory.test.ts` | 3 pass, 0 fail, 224 assertions | 0.197880030 | `.context/verification/m01-slice4/inventory-final.*` |
+| Initial `bun test` | 2622 pass, 4 skip, 1 fail, 10088 assertions | 96.375592947 | `.context/verification/m01-slice4/full-initial.*` |
+| Final `bun test` | 2623 pass, 4 skip, 0 fail, 10088 assertions | 93.321807146 | `.context/verification/m01-slice4/full.*` |
+| Jekyll production build | Exit 0, four expected outputs | 1.379803896 | `.context/verification/m01-slice4-site/` |
+
+The initial full run found an obsolete approval term in this document. The
+existing L2 tripwire forbids approval checkpoints during the pipeline.
+Replacing that term with `approval-based` made the focused and full suites
+pass. The locked test did not change.
+
+The complete output streams remain separate in the retained evidence. No paid
+evaluation, live-host probe, or full external Golden Master pipeline ran.
+No acceptance-test defect or unresolved Slice 4 failure surfaced.

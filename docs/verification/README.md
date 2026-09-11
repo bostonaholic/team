@@ -16,6 +16,8 @@ The supplied baseline used Bun 1.4.2. Free checks need no model credentials.
 | `bun test` | No failures, with conditional skips named | [Free-suite observations](migration-baseline.md) |
 | `bun run typecheck` | Exit 0 | [Typecheck observations](migration-baseline.md) |
 | `bash .claude/scripts/check-discovery-consistency.sh` | `All discovery-consistency assertions passed.` | [Discovery observations](migration-baseline.md#manual-inspection-and-cleanup) |
+| `echo "8c5bb38e357103f783d2ad80dcc8fa551891a586356ab49b3dcebf378580fa4f  golden-master/prompt.md" \| shasum -a 256 -c` | `golden-master/prompt.md: OK` | [Golden Master observations](migration-baseline.md#golden-master-autonomous-review-protocol) |
+| `RBENV_VERSION=3.3.6 BUNDLE_PATH=<bundle-path> BUNDLE_FROZEN=true JEKYLL_ENV=production rbenv exec bundle exec jekyll build --destination <outside-scratch>/site` from `docs/` | Exit 0 with the migration pages and baseline JSON | [Published-doc build](migration-baseline.md#published-documentation-build) |
 | `bun run eval:select` | Exit 0 with the selected evaluation names | [Selection observations](migration-baseline.md) |
 
 `<checkout-root>` identifies the measured checkout. The command uses its Git revision, skills, agents, manifests, and OpenCode sources.
@@ -107,9 +109,10 @@ Bare gated discovery must select `docs/plans/GH-369-approved/` and exclude the s
 Deleting the installed template must return exit 1 and name its missing installed path, even while the source template exists.
 
 Standard output retains one JSON record per operation before cleanup.
-Records identify the host, case, source revision, command, consumer directory, expected and actual results, and duration.
+Only subprocess records consistently include a command, duration, and expected and actual results.
+Fixture, read, revision-query, and cleanup records use case-specific fields.
 Read records include the installed root, resolved paths, byte counts, and digests.
-The initial revision-query record has an empty `revision` field. Its stdout supplies the revision for subsequent records.
+The initial revision-query record has an empty `revision` field. Its stdout supplies the revision for later records.
 Standard error retains Bun's case results, counts, and suite duration.
 Keep both streams when a case fails.
 
@@ -153,7 +156,8 @@ An existing explicit directory bypasses review filtering, including when `--requ
 Explicit-path selection supplies no evidence of review enforcement.
 
 Standard output retains JSON records for fixtures, subprocess results, parsed contexts, and cleanup.
-Each operation records its case, scenario, source revision, consumer, command, expected result, actual result, and duration.
+Only subprocess records consistently include a command, duration, and expected and actual results.
+Fixture, parsed-context, revision-query, and cleanup records use case-specific fields.
 Hook subprocess stdout stays empty. Recovery context appears in stderr JSON under `hookSpecificOutput.additionalContext`.
 No eligible topic produces empty stderr. Bun writes case results and counts to the suite's stderr log.
 
@@ -164,3 +168,48 @@ The discovery script suppresses cleanup errors. Run it with an owned temporary r
 No deliberate timeout was injected in the recorded run.
 These checks measure phase inference and shell discovery. Source reads and installed resource reads do not prove live-host behavior.
 Confidence: high, from the locked suite, runtime parsers, and retained case observations.
+
+## Golden Master protocol and published documentation
+
+Review isolation rule 5, pipeline step 3, metrics, and the result example in
+[`golden-master/RUNBOOK.md`](https://github.com/bostonaholic/team/blob/main/golden-master/RUNBOOK.md).
+Compare them with the [autonomous gate contract](https://github.com/bostonaholic/team/blob/main/skills/team/references/08-design-review-gate-design.md).
+Use the `autonomous-design-review-v1` protocol label for new compliant runs.
+Record zero `human_gate_round_trips` for those runs. Keep historical values.
+
+Run the prompt digest command from the checkout root. Then compare the frozen
+files with the original M01 revision:
+
+```bash
+git diff --exit-code e5f8538c2183654fe814010a38e55b2d531623e8 -- golden-master/prompt.md golden-master/README.md
+rg -n 'golden-master-baseline|2cfee1a' golden-master/RUNBOOK.md golden-master/README.md
+```
+
+These commands inspect local documentation and frozen inputs. They do not run
+the external Golden Master pipeline. Linkboard setup and application tests are
+preparation evidence only.
+
+The [Pages workflow](https://github.com/bostonaholic/team/blob/main/.github/workflows/pages.yml)
+builds `docs/` with Jekyll. Use Ruby 3.3.6 from
+[`docs/.ruby-version`](https://github.com/bostonaholic/team/blob/main/docs/.ruby-version)
+and the frozen lockfile. Set
+`<bundle-path>` to an owned directory with the locked gems. Set
+`<outside-scratch>` to an owned temporary directory outside the checkout.
+Inspect these generated paths before removing that directory:
+
+- `migration-contract.html`
+- `verification/index.html`
+- `verification/migration-baseline.html`
+- `verification/baselines/m01.json`
+
+Jekyll 3 has no `--disable-disk-cache` option. Do not use an incremental build.
+The command writes only beneath `<outside-scratch>/site`.
+
+The initial local install used Ruby 4.0.6 and exited 5 because `commonmarker`
+requires Ruby below 4.0. The corrected frozen install command is:
+
+```bash
+RBENV_VERSION=3.3.6 BUNDLE_PATH=<bundle-path> BUNDLE_FROZEN=true rbenv exec bundle install
+```
+
+Run it from `docs/`. It changes no manifest, lockfile, or Bundler config.
