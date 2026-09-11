@@ -1,0 +1,4561 @@
+{
+  "revision": "e5f8538c2183654fe814010a38e55b2d531623e8",
+  "inputs": [
+    ".agents/plugins/marketplace.json",
+    ".claude-plugin/marketplace.json",
+    ".claude-plugin/plugin.json",
+    ".codex-plugin/plugin.json",
+    "agents/code-reviewer.md",
+    "agents/design-author.md",
+    "agents/file-finder.md",
+    "agents/implementer.md",
+    "agents/planner.md",
+    "agents/questioner.md",
+    "agents/researcher.md",
+    "agents/security-reviewer.md",
+    "agents/structure-planner.md",
+    "agents/technical-writer.md",
+    "agents/test-architect.md",
+    "agents/ux-reviewer.md",
+    "agents/verifier.md",
+    "opencode/catalog.mjs",
+    "opencode/team.js",
+    "plugin.json",
+    "skills/.gitkeep",
+    "skills/artifact-frontmatter/SKILL.md",
+    "skills/artifact-frontmatter/agents/openai.yaml",
+    "skills/artifact-frontmatter/references/conditional-artifacts.md",
+    "skills/authoring-designs/SKILL.md",
+    "skills/authoring-designs/agents/openai.yaml",
+    "skills/authoring-designs/references/design-template.md",
+    "skills/changelog/SKILL.md",
+    "skills/changelog/agents/openai.yaml",
+    "skills/changelog/references/baseline-and-filter.md",
+    "skills/changelog/references/format-and-examples.md",
+    "skills/code-review/SKILL.md",
+    "skills/code-review/agents/openai.yaml",
+    "skills/conventional-comments/SKILL.md",
+    "skills/conventional-comments/agents/openai.yaml",
+    "skills/cross-model-review/SKILL.md",
+    "skills/cross-model-review/agents/openai.yaml",
+    "skills/cross-model-review/external-review.mjs",
+    "skills/cross-model-review/prompt-template-code-review.md",
+    "skills/cross-model-review/prompt-template-design-review.md",
+    "skills/cross-model-review/references/procedure.md",
+    "skills/decision-making/SKILL.md",
+    "skills/decision-making/agents/openai.yaml",
+    "skills/decomposing-intent/SKILL.md",
+    "skills/decomposing-intent/agents/openai.yaml",
+    "skills/decomposing-intent/references/artifact-templates.md",
+    "skills/decomposing-intent/references/multi-repo.md",
+    "skills/documenting-decisions/SKILL.md",
+    "skills/documenting-decisions/agents/openai.yaml",
+    "skills/eng-design-doc-review/SKILL.md",
+    "skills/eng-design-doc-review/agents/openai.yaml",
+    "skills/engineering-standards/SKILL.md",
+    "skills/engineering-standards/agents/openai.yaml",
+    "skills/finding-files/SKILL.md",
+    "skills/finding-files/agents/openai.yaml",
+    "skills/git-commit/SKILL.md",
+    "skills/git-commit/agents/openai.yaml",
+    "skills/git-commit/references/formats-and-examples.md",
+    "skills/groom-backlog/SKILL.md",
+    "skills/groom-backlog/agents/openai.yaml",
+    "skills/groom-backlog/references/01-vocabulary.md",
+    "skills/groom-backlog/references/02-input.md",
+    "skills/groom-backlog/references/03-the-board-level-pass.md",
+    "skills/groom-backlog/references/04-step-1-load-once-in-bulk.md",
+    "skills/groom-backlog/references/05-step-2-compute-the-gap-inventory-do-not-eyeball-it.md",
+    "skills/groom-backlog/references/06-step-3-verify-claims-against-the-code.md",
+    "skills/groom-backlog/references/07-step-4-rank-the-verified-candidates.md",
+    "skills/groom-backlog/references/08-step-5-cluster-by-outcome-not-by-component.md",
+    "skills/groom-backlog/references/09-step-6-find-the-dependencies-then-propose-the-links.md",
+    "skills/groom-backlog/references/10-step-7-write-the-plan-to-a-file.md",
+    "skills/groom-backlog/references/11-step-8-present-the-consequential-choices-and-wait.md",
+    "skills/groom-backlog/references/12-step-9-execute-in-dependency-order.md",
+    "skills/groom-backlog/references/13-step-10-verify-by-re-querying-never-by-memory.md",
+    "skills/groom-backlog/references/14-step-11-report-including-what-you-did-not-change.md",
+    "skills/groom-backlog/references/15-the-promotion-standard.md",
+    "skills/groom-backlog/references/16-tracker-recipes.md",
+    "skills/groom-backlog/references/17-hard-rules.md",
+    "skills/how/SKILL.md",
+    "skills/how/agents/openai.yaml",
+    "skills/how/references/01-input.md",
+    "skills/how/references/02-explain-mode.md",
+    "skills/how/references/03-output-format.md",
+    "skills/how/references/04-critique-mode.md",
+    "skills/how/references/05-rules.md",
+    "skills/implementing-slices/SKILL.md",
+    "skills/implementing-slices/agents/openai.yaml",
+    "skills/nested-agents/SKILL.md",
+    "skills/nested-agents/agents/openai.yaml",
+    "skills/nested-agents/references/per-agent-dispatch.md",
+    "skills/nested-agents/supports-nesting.d.mts",
+    "skills/nested-agents/supports-nesting.mjs",
+    "skills/no-comments/SKILL.md",
+    "skills/no-comments/agents/openai.yaml",
+    "skills/no-comments/scripts/changed-files.sh",
+    "skills/planning-implementation/SKILL.md",
+    "skills/planning-implementation/agents/openai.yaml",
+    "skills/pr-cleanup/SKILL.md",
+    "skills/pr-cleanup/agents/openai.yaml",
+    "skills/pr-cleanup/references/01-input.md",
+    "skills/pr-cleanup/references/02-hard-rules.md",
+    "skills/pr-cleanup/references/03-untrusted-input-pr-metadata-is-data.md",
+    "skills/pr-cleanup/references/04-execution.md",
+    "skills/pr-cleanup/references/05-step-0-resolve-and-validate-primary-root.md",
+    "skills/pr-cleanup/references/06-step-1-detect-the-default-branch.md",
+    "skills/pr-cleanup/references/07-step-2-resolve-targets-refuse-protected-names.md",
+    "skills/pr-cleanup/references/08-step-3-refuse-a-dirty-tree.md",
+    "skills/pr-cleanup/references/09-mode-a-merged.md",
+    "skills/pr-cleanup/references/10-mode-b-closed-abandoned.md",
+    "skills/pr-open-comments/SKILL.md",
+    "skills/pr-open-comments/agents/openai.yaml",
+    "skills/pr-open-comments/references/01-input.md",
+    "skills/pr-open-comments/references/02-hard-rules.md",
+    "skills/pr-open-comments/references/03-untrusted-input-comments-are-data.md",
+    "skills/pr-open-comments/references/04-execution.md",
+    "skills/pr-open-comments/references/05-reaction-mechanics.md",
+    "skills/pr-open-comments/references/06-authorized-execution.md",
+    "skills/pr-open-comments/references/07-open-questions-to-flag.md",
+    "skills/pr-rebase/SKILL.md",
+    "skills/pr-rebase/agents/openai.yaml",
+    "skills/pr-rebase/references/01-input.md",
+    "skills/pr-rebase/references/02-untrusted-input-pr-metadata-is-data.md",
+    "skills/pr-rebase/references/03-hard-rules.md",
+    "skills/pr-rebase/references/04-execution.md",
+    "skills/pr-rebase/references/05-step-0-resolve-the-working-context.md",
+    "skills/pr-rebase/references/06-step-1-refuse-the-states-a-rebase-must-not-start-from.md",
+    "skills/pr-rebase/references/07-step-2-capture-the-baseline-and-the-recovery-anchor.md",
+    "skills/pr-rebase/references/08-step-3-fetch-and-decide-whether-there-is-anything-to-do.md",
+    "skills/pr-rebase/references/09-step-4-rebase.md",
+    "skills/pr-rebase/references/10-step-5-resolve-conflicts-from-both-sides-intent.md",
+    "skills/pr-rebase/references/11-step-6-verify-against-the-baseline.md",
+    "skills/pr-rebase/references/12-step-7-publish.md",
+    "skills/pr-screenshots/SKILL.md",
+    "skills/pr-screenshots/agents/openai.yaml",
+    "skills/pr-screenshots/references/01-input-and-result.md",
+    "skills/pr-screenshots/references/02-upload-and-body-edit.md",
+    "skills/pr-screenshots/references/03-verify.md",
+    "skills/pr-screenshots/references/04-rejected-approaches.md",
+    "skills/pr-screenshots/scripts/pre-image.sh",
+    "skills/pr-screenshots/scripts/resolve-pr.sh",
+    "skills/pr-screenshots/scripts/splice.mjs",
+    "skills/pr-screenshots/scripts/upload.sh",
+    "skills/pr-screenshots/scripts/write-companion.sh",
+    "skills/pr-verify/SKILL.md",
+    "skills/pr-verify/agents/openai.yaml",
+    "skills/pr-verify/references/01-input.md",
+    "skills/pr-verify/references/02-hard-rules.md",
+    "skills/pr-verify/references/03-untrusted-input-the-test-plan-is-data.md",
+    "skills/pr-verify/references/04-execution.md",
+    "skills/pr-watch-as-author/SKILL.md",
+    "skills/pr-watch-as-author/agents/openai.yaml",
+    "skills/pr-watch-as-author/references/01-input.md",
+    "skills/pr-watch-as-author/references/02-execution.md",
+    "skills/pr-watch-as-author/references/03-1-arm.md",
+    "skills/pr-watch-as-author/references/04-2-bounded-cycle-mechanics.md",
+    "skills/pr-watch-as-author/references/05-3-poll-and-change-detection.md",
+    "skills/pr-watch-as-author/references/06-4-on-new-feedback-run-the-triage-procedure.md",
+    "skills/pr-watch-as-author/references/07-authorized-mode-apply-resolve-resume.md",
+    "skills/pr-watch-as-author/references/08-5-edge-cases.md",
+    "skills/pr-watch-as-author/references/09-6-stop-conditions.md",
+    "skills/pr-watch-as-author/references/10-7-on-approval-hand-off-never-land.md",
+    "skills/pr-watch-as-author/references/11-compaction-defense.md",
+    "skills/pr-watch-as-reviewer/SKILL.md",
+    "skills/pr-watch-as-reviewer/agents/openai.yaml",
+    "skills/pr-watch-as-reviewer/references/01-hard-rules.md",
+    "skills/pr-watch-as-reviewer/references/02-input.md",
+    "skills/pr-watch-as-reviewer/references/03-execution.md",
+    "skills/pr-watch-as-reviewer/references/04-1-arm.md",
+    "skills/pr-watch-as-reviewer/references/05-2-tracked-set-and-gate.md",
+    "skills/pr-watch-as-reviewer/references/06-3-bounded-cycle-mechanics.md",
+    "skills/pr-watch-as-reviewer/references/07-4-poll.md",
+    "skills/pr-watch-as-reviewer/references/08-5-stop-conditions.md",
+    "skills/pr-watch-as-reviewer/references/09-6-approve.md",
+    "skills/pr-watch-as-reviewer/references/10-compaction-defense.md",
+    "skills/pr-watch-mechanics/SKILL.md",
+    "skills/pr-watch-mechanics/agents/openai.yaml",
+    "skills/principle-blind-the-investigator/SKILL.md",
+    "skills/principle-blind-the-investigator/agents/openai.yaml",
+    "skills/principle-bounded-loops/SKILL.md",
+    "skills/principle-bounded-loops/agents/openai.yaml",
+    "skills/principle-deep-agents-narrow-seams/SKILL.md",
+    "skills/principle-deep-agents-narrow-seams/agents/openai.yaml",
+    "skills/principle-evidence-over-assertion/SKILL.md",
+    "skills/principle-evidence-over-assertion/agents/openai.yaml",
+    "skills/principle-explicit-intent/SKILL.md",
+    "skills/principle-explicit-intent/agents/openai.yaml",
+    "skills/principle-fail-closed/SKILL.md",
+    "skills/principle-fail-closed/agents/openai.yaml",
+    "skills/principle-files-are-the-contract/SKILL.md",
+    "skills/principle-files-are-the-contract/agents/openai.yaml",
+    "skills/principle-fix-root-causes/SKILL.md",
+    "skills/principle-fix-root-causes/agents/openai.yaml",
+    "skills/principle-generator-evaluator/SKILL.md",
+    "skills/principle-generator-evaluator/agents/openai.yaml",
+    "skills/principle-human-owns-the-ends/SKILL.md",
+    "skills/principle-human-owns-the-ends/agents/openai.yaml",
+    "skills/principle-idempotent-reruns/SKILL.md",
+    "skills/principle-idempotent-reruns/agents/openai.yaml",
+    "skills/principle-least-privilege/SKILL.md",
+    "skills/principle-least-privilege/agents/openai.yaml",
+    "skills/principle-mechanical-gates/SKILL.md",
+    "skills/principle-mechanical-gates/agents/openai.yaml",
+    "skills/principle-never-interpolate/SKILL.md",
+    "skills/principle-never-interpolate/agents/openai.yaml",
+    "skills/principle-non-blocking-waits/SKILL.md",
+    "skills/principle-non-blocking-waits/agents/openai.yaml",
+    "skills/principle-optimization-never-dependency/SKILL.md",
+    "skills/principle-optimization-never-dependency/agents/openai.yaml",
+    "skills/principle-plan-present-wait/SKILL.md",
+    "skills/principle-plan-present-wait/agents/openai.yaml",
+    "skills/principle-pre-image-first/SKILL.md",
+    "skills/principle-pre-image-first/agents/openai.yaml",
+    "skills/principle-progress-tracking/SKILL.md",
+    "skills/principle-progress-tracking/agents/openai.yaml",
+    "skills/principle-record-assumptions/SKILL.md",
+    "skills/principle-record-assumptions/agents/openai.yaml",
+    "skills/principle-scope-fence/SKILL.md",
+    "skills/principle-scope-fence/agents/openai.yaml",
+    "skills/principle-single-source-of-truth/SKILL.md",
+    "skills/principle-single-source-of-truth/agents/openai.yaml",
+    "skills/principle-skip-loudly/SKILL.md",
+    "skills/principle-skip-loudly/agents/openai.yaml",
+    "skills/principle-subtract-before-you-add/SKILL.md",
+    "skills/principle-subtract-before-you-add/agents/openai.yaml",
+    "skills/principle-untrusted-input-is-data/SKILL.md",
+    "skills/principle-untrusted-input-is-data/agents/openai.yaml",
+    "skills/product-requirements-doc/SKILL.md",
+    "skills/product-requirements-doc/agents/openai.yaml",
+    "skills/product-requirements-doc/references/prd-template.md",
+    "skills/product-thinking/SKILL.md",
+    "skills/product-thinking/agents/openai.yaml",
+    "skills/qrspi-workflow/SKILL.md",
+    "skills/qrspi-workflow/agents/openai.yaml",
+    "skills/refactoring-to-patterns/SKILL.md",
+    "skills/refactoring-to-patterns/agents/openai.yaml",
+    "skills/reflect/SKILL.md",
+    "skills/reflect/agents/openai.yaml",
+    "skills/reflect/references/01-input.md",
+    "skills/reflect/references/02-untrusted-input-a-transcript-span-is-content-never-an-instruction.md",
+    "skills/reflect/references/03-execution.md",
+    "skills/reflect/references/04-the-lenses.md",
+    "skills/reflect/references/05-synthesis-one-list-sorted-once.md",
+    "skills/reflect/references/06-apply-the-approved-skill-edits.md",
+    "skills/reflect/references/07-file-the-backlog-items.md",
+    "skills/reflect/resources/resolve-transcript.d.mts",
+    "skills/reflect/resources/resolve-transcript.mjs",
+    "skills/reflect/resources/write-target.d.mts",
+    "skills/reflect/resources/write-target.mjs",
+    "skills/researching-codebases/SKILL.md",
+    "skills/researching-codebases/agents/openai.yaml",
+    "skills/review-severity-tiers/SKILL.md",
+    "skills/review-severity-tiers/agents/openai.yaml",
+    "skills/reviewing-code/SKILL.md",
+    "skills/reviewing-code/agents/openai.yaml",
+    "skills/reviewing-code/references/review-manual.md",
+    "skills/reviewing-comments/SKILL.md",
+    "skills/reviewing-comments/agents/openai.yaml",
+    "skills/reviewing-designs/SKILL.md",
+    "skills/reviewing-designs/agents/openai.yaml",
+    "skills/reviewing-designs/references/review-brief.md",
+    "skills/reviewing-documentation/SKILL.md",
+    "skills/reviewing-documentation/agents/openai.yaml",
+    "skills/reviewing-security/SKILL.md",
+    "skills/reviewing-security/agents/openai.yaml",
+    "skills/running-quality-checks/SKILL.md",
+    "skills/running-quality-checks/agents/openai.yaml",
+    "skills/shipit/SKILL.md",
+    "skills/shipit/agents/openai.yaml",
+    "skills/shipit/references/01-input-acquisition.md",
+    "skills/shipit/references/02-land-sequence.md",
+    "skills/slicing-work/SKILL.md",
+    "skills/slicing-work/agents/openai.yaml",
+    "skills/slicing-work/references/structure-template.md",
+    "skills/solid/SKILL.md",
+    "skills/solid/agents/openai.yaml",
+    "skills/sweeping-local-state/SKILL.md",
+    "skills/sweeping-local-state/agents/openai.yaml",
+    "skills/sweeping-local-state/references/procedure.md",
+    "skills/systematic-debugging/SKILL.md",
+    "skills/systematic-debugging/agents/openai.yaml",
+    "skills/systematic-debugging/references/investigation.md",
+    "skills/systems-thinking/SKILL.md",
+    "skills/systems-thinking/agents/openai.yaml",
+    "skills/systems-thinking/references/lenses.md",
+    "skills/team-design/SKILL.md",
+    "skills/team-design/agents/openai.yaml",
+    "skills/team-fix/SKILL.md",
+    "skills/team-fix/agents/openai.yaml",
+    "skills/team-fix/references/01-input.md",
+    "skills/team-fix/references/02-when-to-use.md",
+    "skills/team-fix/references/03-pipeline.md",
+    "skills/team-fix/references/04-setup.md",
+    "skills/team-fix/references/05-worktree.md",
+    "skills/team-fix/references/06-execution.md",
+    "skills/team-fix/references/07-ship.md",
+    "skills/team-fix/references/08-aborting.md",
+    "skills/team-implement/SKILL.md",
+    "skills/team-implement/agents/openai.yaml",
+    "skills/team-implement/references/01-input.md",
+    "skills/team-implement/references/02-worktree-check.md",
+    "skills/team-implement/references/03-execution.md",
+    "skills/team-implement/references/04-quality-loop.md",
+    "skills/team-implement/references/05-standalone-mode-tradeoffs.md",
+    "skills/team-plan/SKILL.md",
+    "skills/team-plan/agents/openai.yaml",
+    "skills/team-pr/SKILL.md",
+    "skills/team-pr/agents/openai.yaml",
+    "skills/team-pr/references/01-input.md",
+    "skills/team-pr/references/02-execution.md",
+    "skills/team-pr/references/03-pr-body-template.md",
+    "skills/team-pr/references/04-screenshot-upload.md",
+    "skills/team-pr/references/05-changelog-update.md",
+    "skills/team-pr/references/06-commit-discipline.md",
+    "skills/team-question/SKILL.md",
+    "skills/team-question/agents/openai.yaml",
+    "skills/team-research/SKILL.md",
+    "skills/team-research/agents/openai.yaml",
+    "skills/team-structure/SKILL.md",
+    "skills/team-structure/agents/openai.yaml",
+    "skills/team-worktree/SKILL.md",
+    "skills/team-worktree/agents/openai.yaml",
+    "skills/team-worktree/references/01-input.md",
+    "skills/team-worktree/references/02-detect-mode.md",
+    "skills/team-worktree/references/03-detect-existing-worktree.md",
+    "skills/team-worktree/references/04-execution.md",
+    "skills/team/SKILL.md",
+    "skills/team/agents/openai.yaml",
+    "skills/team/discover-topic.sh",
+    "skills/team/references/01-input.md",
+    "skills/team/references/02-setup.md",
+    "skills/team/references/03-the-phase-loop.md",
+    "skills/team/references/04-research-isolation-invariant.md",
+    "skills/team/references/05-where-a-phase-agent-s-output-lives.md",
+    "skills/team/references/06-gate-handling.md",
+    "skills/team/references/07-orchestrator-emit-gate-leading-worktree.md",
+    "skills/team/references/08-design-review-gate-design.md",
+    "skills/team/references/09-structure-no-gate-autonomous.md",
+    "skills/team/references/10-orchestrator-emit-gate-post-design-review-secondary-worktrees.md",
+    "skills/team/references/11-mechanical-gate-test-confirmation.md",
+    "skills/team/references/12-aggregate-gate-review-collection.md",
+    "skills/team/references/13-orchestrator-emit-gate-pr-ship.md",
+    "skills/team/references/14-rules.md",
+    "skills/team/references/15-host-dispatch.md",
+    "skills/team/registry.json",
+    "skills/technical-design-doc/SKILL.md",
+    "skills/technical-design-doc/agents/openai.yaml",
+    "skills/technical-design-doc/references/template.md",
+    "skills/test-driven-bug-fix/SKILL.md",
+    "skills/test-driven-bug-fix/agents/openai.yaml",
+    "skills/test-driven-bug-fix/references/procedure.md",
+    "skills/test-first-development/SKILL.md",
+    "skills/test-first-development/agents/openai.yaml",
+    "skills/test-first-development/references/procedure.md",
+    "skills/test-style/SKILL.md",
+    "skills/test-style/agents/openai.yaml",
+    "skills/test-style/references/test-style-manual.md",
+    "skills/tracking-tickets/SKILL.md",
+    "skills/tracking-tickets/agents/openai.yaml",
+    "skills/unslop/SKILL.md",
+    "skills/unslop/agents/openai.yaml",
+    "skills/unslop/references/rules.md",
+    "skills/verifying-ux/SKILL.md",
+    "skills/verifying-ux/agents/openai.yaml",
+    "skills/verifying-ux/references/procedure.md",
+    "skills/why/SKILL.md",
+    "skills/why/agents/openai.yaml",
+    "skills/why/references/01-input.md",
+    "skills/why/references/02-confidence-tiers.md",
+    "skills/why/references/03-execution.md",
+    "skills/why/references/04-output-format.md",
+    "skills/why/references/05-rules.md",
+    "skills/worktree-isolation/SKILL.md",
+    "skills/worktree-isolation/agents/openai.yaml",
+    "skills/worktree-isolation/references/lifecycle.md",
+    "skills/writing-prose/SKILL.md",
+    "skills/writing-prose/agents/openai.yaml",
+    "skills/writing-prose/references/style-guide.md",
+    "skills/writing-prose/ste-lint.mjs"
+  ],
+  "dirtyInputs": [],
+  "initialBaselineEligible": true,
+  "files": [
+    {
+      "path": "agents/code-reviewer.md",
+      "words": 767,
+      "bytes": 5326
+    },
+    {
+      "path": "agents/design-author.md",
+      "words": 653,
+      "bytes": 4560
+    },
+    {
+      "path": "agents/file-finder.md",
+      "words": 431,
+      "bytes": 2892
+    },
+    {
+      "path": "agents/implementer.md",
+      "words": 584,
+      "bytes": 3894
+    },
+    {
+      "path": "agents/planner.md",
+      "words": 476,
+      "bytes": 3367
+    },
+    {
+      "path": "agents/questioner.md",
+      "words": 597,
+      "bytes": 4209
+    },
+    {
+      "path": "agents/researcher.md",
+      "words": 503,
+      "bytes": 3498
+    },
+    {
+      "path": "agents/security-reviewer.md",
+      "words": 503,
+      "bytes": 3470
+    },
+    {
+      "path": "agents/structure-planner.md",
+      "words": 585,
+      "bytes": 4061
+    },
+    {
+      "path": "agents/technical-writer.md",
+      "words": 420,
+      "bytes": 3201
+    },
+    {
+      "path": "agents/test-architect.md",
+      "words": 575,
+      "bytes": 3776
+    },
+    {
+      "path": "agents/ux-reviewer.md",
+      "words": 394,
+      "bytes": 2780
+    },
+    {
+      "path": "agents/verifier.md",
+      "words": 325,
+      "bytes": 2182
+    },
+    {
+      "path": "skills/artifact-frontmatter/SKILL.md",
+      "words": 476,
+      "bytes": 4012
+    },
+    {
+      "path": "skills/artifact-frontmatter/references/conditional-artifacts.md",
+      "words": 209,
+      "bytes": 1655
+    },
+    {
+      "path": "skills/authoring-designs/SKILL.md",
+      "words": 458,
+      "bytes": 3525
+    },
+    {
+      "path": "skills/authoring-designs/references/design-template.md",
+      "words": 250,
+      "bytes": 1777
+    },
+    {
+      "path": "skills/changelog/SKILL.md",
+      "words": 409,
+      "bytes": 3062
+    },
+    {
+      "path": "skills/changelog/references/baseline-and-filter.md",
+      "words": 270,
+      "bytes": 1859
+    },
+    {
+      "path": "skills/changelog/references/format-and-examples.md",
+      "words": 182,
+      "bytes": 1145
+    },
+    {
+      "path": "skills/code-review/SKILL.md",
+      "words": 211,
+      "bytes": 1328
+    },
+    {
+      "path": "skills/conventional-comments/SKILL.md",
+      "words": 196,
+      "bytes": 1616
+    },
+    {
+      "path": "skills/cross-model-review/SKILL.md",
+      "words": 510,
+      "bytes": 3890
+    },
+    {
+      "path": "skills/cross-model-review/prompt-template-code-review.md",
+      "words": 221,
+      "bytes": 1354
+    },
+    {
+      "path": "skills/cross-model-review/prompt-template-design-review.md",
+      "words": 285,
+      "bytes": 1785
+    },
+    {
+      "path": "skills/cross-model-review/references/procedure.md",
+      "words": 2295,
+      "bytes": 14806
+    },
+    {
+      "path": "skills/decision-making/SKILL.md",
+      "words": 544,
+      "bytes": 3779
+    },
+    {
+      "path": "skills/decomposing-intent/SKILL.md",
+      "words": 416,
+      "bytes": 3314
+    },
+    {
+      "path": "skills/decomposing-intent/references/artifact-templates.md",
+      "words": 220,
+      "bytes": 1543
+    },
+    {
+      "path": "skills/decomposing-intent/references/multi-repo.md",
+      "words": 182,
+      "bytes": 1395
+    },
+    {
+      "path": "skills/documenting-decisions/SKILL.md",
+      "words": 308,
+      "bytes": 2349
+    },
+    {
+      "path": "skills/eng-design-doc-review/SKILL.md",
+      "words": 1122,
+      "bytes": 7926
+    },
+    {
+      "path": "skills/engineering-standards/SKILL.md",
+      "words": 652,
+      "bytes": 4958
+    },
+    {
+      "path": "skills/finding-files/SKILL.md",
+      "words": 244,
+      "bytes": 1694
+    },
+    {
+      "path": "skills/git-commit/SKILL.md",
+      "words": 266,
+      "bytes": 1995
+    },
+    {
+      "path": "skills/git-commit/references/formats-and-examples.md",
+      "words": 182,
+      "bytes": 1214
+    },
+    {
+      "path": "skills/groom-backlog/SKILL.md",
+      "words": 332,
+      "bytes": 3121
+    },
+    {
+      "path": "skills/groom-backlog/references/01-vocabulary.md",
+      "words": 459,
+      "bytes": 2693
+    },
+    {
+      "path": "skills/groom-backlog/references/02-input.md",
+      "words": 343,
+      "bytes": 2199
+    },
+    {
+      "path": "skills/groom-backlog/references/03-the-board-level-pass.md",
+      "words": 52,
+      "bytes": 277
+    },
+    {
+      "path": "skills/groom-backlog/references/04-step-1-load-once-in-bulk.md",
+      "words": 802,
+      "bytes": 5122
+    },
+    {
+      "path": "skills/groom-backlog/references/05-step-2-compute-the-gap-inventory-do-not-eyeball-it.md",
+      "words": 164,
+      "bytes": 972
+    },
+    {
+      "path": "skills/groom-backlog/references/06-step-3-verify-claims-against-the-code.md",
+      "words": 713,
+      "bytes": 4302
+    },
+    {
+      "path": "skills/groom-backlog/references/07-step-4-rank-the-verified-candidates.md",
+      "words": 176,
+      "bytes": 1200
+    },
+    {
+      "path": "skills/groom-backlog/references/08-step-5-cluster-by-outcome-not-by-component.md",
+      "words": 247,
+      "bytes": 1525
+    },
+    {
+      "path": "skills/groom-backlog/references/09-step-6-find-the-dependencies-then-propose-the-links.md",
+      "words": 372,
+      "bytes": 2214
+    },
+    {
+      "path": "skills/groom-backlog/references/10-step-7-write-the-plan-to-a-file.md",
+      "words": 215,
+      "bytes": 1320
+    },
+    {
+      "path": "skills/groom-backlog/references/11-step-8-present-the-consequential-choices-and-wait.md",
+      "words": 482,
+      "bytes": 3048
+    },
+    {
+      "path": "skills/groom-backlog/references/12-step-9-execute-in-dependency-order.md",
+      "words": 552,
+      "bytes": 3370
+    },
+    {
+      "path": "skills/groom-backlog/references/13-step-10-verify-by-re-querying-never-by-memory.md",
+      "words": 173,
+      "bytes": 1080
+    },
+    {
+      "path": "skills/groom-backlog/references/14-step-11-report-including-what-you-did-not-change.md",
+      "words": 335,
+      "bytes": 2090
+    },
+    {
+      "path": "skills/groom-backlog/references/15-the-promotion-standard.md",
+      "words": 1235,
+      "bytes": 7669
+    },
+    {
+      "path": "skills/groom-backlog/references/16-tracker-recipes.md",
+      "words": 927,
+      "bytes": 6442
+    },
+    {
+      "path": "skills/groom-backlog/references/17-hard-rules.md",
+      "words": 1247,
+      "bytes": 7785
+    },
+    {
+      "path": "skills/how/SKILL.md",
+      "words": 202,
+      "bytes": 1546
+    },
+    {
+      "path": "skills/how/references/01-input.md",
+      "words": 121,
+      "bytes": 773
+    },
+    {
+      "path": "skills/how/references/02-explain-mode.md",
+      "words": 505,
+      "bytes": 3387
+    },
+    {
+      "path": "skills/how/references/03-output-format.md",
+      "words": 172,
+      "bytes": 1078
+    },
+    {
+      "path": "skills/how/references/04-critique-mode.md",
+      "words": 323,
+      "bytes": 2296
+    },
+    {
+      "path": "skills/how/references/05-rules.md",
+      "words": 72,
+      "bytes": 492
+    },
+    {
+      "path": "skills/implementing-slices/SKILL.md",
+      "words": 477,
+      "bytes": 3365
+    },
+    {
+      "path": "skills/nested-agents/SKILL.md",
+      "words": 581,
+      "bytes": 4541
+    },
+    {
+      "path": "skills/nested-agents/references/per-agent-dispatch.md",
+      "words": 771,
+      "bytes": 5409
+    },
+    {
+      "path": "skills/no-comments/SKILL.md",
+      "words": 427,
+      "bytes": 3136
+    },
+    {
+      "path": "skills/planning-implementation/SKILL.md",
+      "words": 322,
+      "bytes": 2361
+    },
+    {
+      "path": "skills/pr-cleanup/SKILL.md",
+      "words": 227,
+      "bytes": 1956
+    },
+    {
+      "path": "skills/pr-cleanup/references/01-input.md",
+      "words": 323,
+      "bytes": 2034
+    },
+    {
+      "path": "skills/pr-cleanup/references/02-hard-rules.md",
+      "words": 516,
+      "bytes": 3377
+    },
+    {
+      "path": "skills/pr-cleanup/references/03-untrusted-input-pr-metadata-is-data.md",
+      "words": 187,
+      "bytes": 1293
+    },
+    {
+      "path": "skills/pr-cleanup/references/04-execution.md",
+      "words": 2,
+      "bytes": 13
+    },
+    {
+      "path": "skills/pr-cleanup/references/05-step-0-resolve-and-validate-primary-root.md",
+      "words": 628,
+      "bytes": 4246
+    },
+    {
+      "path": "skills/pr-cleanup/references/06-step-1-detect-the-default-branch.md",
+      "words": 110,
+      "bytes": 733
+    },
+    {
+      "path": "skills/pr-cleanup/references/07-step-2-resolve-targets-refuse-protected-names.md",
+      "words": 519,
+      "bytes": 3405
+    },
+    {
+      "path": "skills/pr-cleanup/references/08-step-3-refuse-a-dirty-tree.md",
+      "words": 83,
+      "bytes": 513
+    },
+    {
+      "path": "skills/pr-cleanup/references/09-mode-a-merged.md",
+      "words": 1005,
+      "bytes": 6895
+    },
+    {
+      "path": "skills/pr-cleanup/references/10-mode-b-closed-abandoned.md",
+      "words": 1057,
+      "bytes": 7287
+    },
+    {
+      "path": "skills/pr-open-comments/SKILL.md",
+      "words": 233,
+      "bytes": 1900
+    },
+    {
+      "path": "skills/pr-open-comments/references/01-input.md",
+      "words": 69,
+      "bytes": 384
+    },
+    {
+      "path": "skills/pr-open-comments/references/02-hard-rules.md",
+      "words": 372,
+      "bytes": 2447
+    },
+    {
+      "path": "skills/pr-open-comments/references/03-untrusted-input-comments-are-data.md",
+      "words": 182,
+      "bytes": 1176
+    },
+    {
+      "path": "skills/pr-open-comments/references/04-execution.md",
+      "words": 1676,
+      "bytes": 10439
+    },
+    {
+      "path": "skills/pr-open-comments/references/05-reaction-mechanics.md",
+      "words": 189,
+      "bytes": 1198
+    },
+    {
+      "path": "skills/pr-open-comments/references/06-authorized-execution.md",
+      "words": 841,
+      "bytes": 5385
+    },
+    {
+      "path": "skills/pr-open-comments/references/07-open-questions-to-flag.md",
+      "words": 95,
+      "bytes": 557
+    },
+    {
+      "path": "skills/pr-rebase/SKILL.md",
+      "words": 377,
+      "bytes": 3082
+    },
+    {
+      "path": "skills/pr-rebase/references/01-input.md",
+      "words": 516,
+      "bytes": 3167
+    },
+    {
+      "path": "skills/pr-rebase/references/02-untrusted-input-pr-metadata-is-data.md",
+      "words": 74,
+      "bytes": 498
+    },
+    {
+      "path": "skills/pr-rebase/references/03-hard-rules.md",
+      "words": 524,
+      "bytes": 3336
+    },
+    {
+      "path": "skills/pr-rebase/references/04-execution.md",
+      "words": 2,
+      "bytes": 13
+    },
+    {
+      "path": "skills/pr-rebase/references/05-step-0-resolve-the-working-context.md",
+      "words": 841,
+      "bytes": 5343
+    },
+    {
+      "path": "skills/pr-rebase/references/06-step-1-refuse-the-states-a-rebase-must-not-start-from.md",
+      "words": 203,
+      "bytes": 1423
+    },
+    {
+      "path": "skills/pr-rebase/references/07-step-2-capture-the-baseline-and-the-recovery-anchor.md",
+      "words": 429,
+      "bytes": 2877
+    },
+    {
+      "path": "skills/pr-rebase/references/08-step-3-fetch-and-decide-whether-there-is-anything-to-do.md",
+      "words": 177,
+      "bytes": 1156
+    },
+    {
+      "path": "skills/pr-rebase/references/09-step-4-rebase.md",
+      "words": 158,
+      "bytes": 1011
+    },
+    {
+      "path": "skills/pr-rebase/references/10-step-5-resolve-conflicts-from-both-sides-intent.md",
+      "words": 1362,
+      "bytes": 8433
+    },
+    {
+      "path": "skills/pr-rebase/references/11-step-6-verify-against-the-baseline.md",
+      "words": 372,
+      "bytes": 2145
+    },
+    {
+      "path": "skills/pr-rebase/references/12-step-7-publish.md",
+      "words": 1122,
+      "bytes": 7054
+    },
+    {
+      "path": "skills/pr-screenshots/SKILL.md",
+      "words": 804,
+      "bytes": 5494
+    },
+    {
+      "path": "skills/pr-screenshots/references/01-input-and-result.md",
+      "words": 3050,
+      "bytes": 18898
+    },
+    {
+      "path": "skills/pr-screenshots/references/02-upload-and-body-edit.md",
+      "words": 5506,
+      "bytes": 33946
+    },
+    {
+      "path": "skills/pr-screenshots/references/03-verify.md",
+      "words": 833,
+      "bytes": 5645
+    },
+    {
+      "path": "skills/pr-screenshots/references/04-rejected-approaches.md",
+      "words": 444,
+      "bytes": 2889
+    },
+    {
+      "path": "skills/pr-verify/SKILL.md",
+      "words": 122,
+      "bytes": 1042
+    },
+    {
+      "path": "skills/pr-verify/references/01-input.md",
+      "words": 104,
+      "bytes": 591
+    },
+    {
+      "path": "skills/pr-verify/references/02-hard-rules.md",
+      "words": 184,
+      "bytes": 1180
+    },
+    {
+      "path": "skills/pr-verify/references/03-untrusted-input-the-test-plan-is-data.md",
+      "words": 97,
+      "bytes": 595
+    },
+    {
+      "path": "skills/pr-verify/references/04-execution.md",
+      "words": 945,
+      "bytes": 5978
+    },
+    {
+      "path": "skills/pr-watch-as-author/SKILL.md",
+      "words": 344,
+      "bytes": 2684
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/01-input.md",
+      "words": 83,
+      "bytes": 420
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/02-execution.md",
+      "words": 2,
+      "bytes": 13
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/03-1-arm.md",
+      "words": 325,
+      "bytes": 1972
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/04-2-bounded-cycle-mechanics.md",
+      "words": 81,
+      "bytes": 524
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/05-3-poll-and-change-detection.md",
+      "words": 273,
+      "bytes": 1710
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/06-4-on-new-feedback-run-the-triage-procedure.md",
+      "words": 872,
+      "bytes": 5336
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/07-authorized-mode-apply-resolve-resume.md",
+      "words": 159,
+      "bytes": 1109
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/08-5-edge-cases.md",
+      "words": 133,
+      "bytes": 821
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/09-6-stop-conditions.md",
+      "words": 48,
+      "bytes": 289
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/10-7-on-approval-hand-off-never-land.md",
+      "words": 53,
+      "bytes": 299
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/11-compaction-defense.md",
+      "words": 192,
+      "bytes": 1226
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/SKILL.md",
+      "words": 536,
+      "bytes": 3765
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/01-hard-rules.md",
+      "words": 826,
+      "bytes": 5097
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/02-input.md",
+      "words": 356,
+      "bytes": 2426
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/03-execution.md",
+      "words": 2,
+      "bytes": 13
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/04-1-arm.md",
+      "words": 1666,
+      "bytes": 10504
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/05-2-tracked-set-and-gate.md",
+      "words": 685,
+      "bytes": 4148
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/06-3-bounded-cycle-mechanics.md",
+      "words": 94,
+      "bytes": 600
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/07-4-poll.md",
+      "words": 2873,
+      "bytes": 17786
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/08-5-stop-conditions.md",
+      "words": 413,
+      "bytes": 2490
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/09-6-approve.md",
+      "words": 1389,
+      "bytes": 8535
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/10-compaction-defense.md",
+      "words": 680,
+      "bytes": 4220
+    },
+    {
+      "path": "skills/pr-watch-mechanics/SKILL.md",
+      "words": 462,
+      "bytes": 2813
+    },
+    {
+      "path": "skills/principle-blind-the-investigator/SKILL.md",
+      "words": 152,
+      "bytes": 1148
+    },
+    {
+      "path": "skills/principle-bounded-loops/SKILL.md",
+      "words": 145,
+      "bytes": 946
+    },
+    {
+      "path": "skills/principle-deep-agents-narrow-seams/SKILL.md",
+      "words": 123,
+      "bytes": 833
+    },
+    {
+      "path": "skills/principle-evidence-over-assertion/SKILL.md",
+      "words": 152,
+      "bytes": 1048
+    },
+    {
+      "path": "skills/principle-explicit-intent/SKILL.md",
+      "words": 152,
+      "bytes": 1056
+    },
+    {
+      "path": "skills/principle-fail-closed/SKILL.md",
+      "words": 121,
+      "bytes": 858
+    },
+    {
+      "path": "skills/principle-files-are-the-contract/SKILL.md",
+      "words": 130,
+      "bytes": 903
+    },
+    {
+      "path": "skills/principle-fix-root-causes/SKILL.md",
+      "words": 137,
+      "bytes": 909
+    },
+    {
+      "path": "skills/principle-generator-evaluator/SKILL.md",
+      "words": 128,
+      "bytes": 893
+    },
+    {
+      "path": "skills/principle-human-owns-the-ends/SKILL.md",
+      "words": 126,
+      "bytes": 808
+    },
+    {
+      "path": "skills/principle-idempotent-reruns/SKILL.md",
+      "words": 106,
+      "bytes": 753
+    },
+    {
+      "path": "skills/principle-least-privilege/SKILL.md",
+      "words": 145,
+      "bytes": 974
+    },
+    {
+      "path": "skills/principle-mechanical-gates/SKILL.md",
+      "words": 113,
+      "bytes": 751
+    },
+    {
+      "path": "skills/principle-never-interpolate/SKILL.md",
+      "words": 176,
+      "bytes": 1216
+    },
+    {
+      "path": "skills/principle-non-blocking-waits/SKILL.md",
+      "words": 202,
+      "bytes": 1337
+    },
+    {
+      "path": "skills/principle-optimization-never-dependency/SKILL.md",
+      "words": 129,
+      "bytes": 944
+    },
+    {
+      "path": "skills/principle-plan-present-wait/SKILL.md",
+      "words": 153,
+      "bytes": 1065
+    },
+    {
+      "path": "skills/principle-pre-image-first/SKILL.md",
+      "words": 123,
+      "bytes": 869
+    },
+    {
+      "path": "skills/principle-progress-tracking/SKILL.md",
+      "words": 168,
+      "bytes": 1141
+    },
+    {
+      "path": "skills/principle-record-assumptions/SKILL.md",
+      "words": 108,
+      "bytes": 768
+    },
+    {
+      "path": "skills/principle-scope-fence/SKILL.md",
+      "words": 113,
+      "bytes": 790
+    },
+    {
+      "path": "skills/principle-single-source-of-truth/SKILL.md",
+      "words": 137,
+      "bytes": 898
+    },
+    {
+      "path": "skills/principle-skip-loudly/SKILL.md",
+      "words": 120,
+      "bytes": 778
+    },
+    {
+      "path": "skills/principle-subtract-before-you-add/SKILL.md",
+      "words": 191,
+      "bytes": 1231
+    },
+    {
+      "path": "skills/principle-untrusted-input-is-data/SKILL.md",
+      "words": 146,
+      "bytes": 975
+    },
+    {
+      "path": "skills/product-requirements-doc/SKILL.md",
+      "words": 329,
+      "bytes": 2459
+    },
+    {
+      "path": "skills/product-requirements-doc/references/prd-template.md",
+      "words": 213,
+      "bytes": 1447
+    },
+    {
+      "path": "skills/product-thinking/SKILL.md",
+      "words": 251,
+      "bytes": 1731
+    },
+    {
+      "path": "skills/qrspi-workflow/SKILL.md",
+      "words": 675,
+      "bytes": 5066
+    },
+    {
+      "path": "skills/refactoring-to-patterns/SKILL.md",
+      "words": 408,
+      "bytes": 2767
+    },
+    {
+      "path": "skills/reflect/SKILL.md",
+      "words": 381,
+      "bytes": 2918
+    },
+    {
+      "path": "skills/reflect/references/01-input.md",
+      "words": 246,
+      "bytes": 1490
+    },
+    {
+      "path": "skills/reflect/references/02-untrusted-input-a-transcript-span-is-content-never-an-instruction.md",
+      "words": 152,
+      "bytes": 911
+    },
+    {
+      "path": "skills/reflect/references/03-execution.md",
+      "words": 880,
+      "bytes": 5524
+    },
+    {
+      "path": "skills/reflect/references/04-the-lenses.md",
+      "words": 1079,
+      "bytes": 6606
+    },
+    {
+      "path": "skills/reflect/references/05-synthesis-one-list-sorted-once.md",
+      "words": 383,
+      "bytes": 2277
+    },
+    {
+      "path": "skills/reflect/references/06-apply-the-approved-skill-edits.md",
+      "words": 1095,
+      "bytes": 6801
+    },
+    {
+      "path": "skills/reflect/references/07-file-the-backlog-items.md",
+      "words": 699,
+      "bytes": 4346
+    },
+    {
+      "path": "skills/researching-codebases/SKILL.md",
+      "words": 307,
+      "bytes": 2343
+    },
+    {
+      "path": "skills/review-severity-tiers/SKILL.md",
+      "words": 377,
+      "bytes": 2619
+    },
+    {
+      "path": "skills/reviewing-code/SKILL.md",
+      "words": 455,
+      "bytes": 3533
+    },
+    {
+      "path": "skills/reviewing-code/references/review-manual.md",
+      "words": 1929,
+      "bytes": 12896
+    },
+    {
+      "path": "skills/reviewing-comments/SKILL.md",
+      "words": 373,
+      "bytes": 2660
+    },
+    {
+      "path": "skills/reviewing-designs/SKILL.md",
+      "words": 506,
+      "bytes": 3830
+    },
+    {
+      "path": "skills/reviewing-designs/references/review-brief.md",
+      "words": 1371,
+      "bytes": 9279
+    },
+    {
+      "path": "skills/reviewing-documentation/SKILL.md",
+      "words": 397,
+      "bytes": 2928
+    },
+    {
+      "path": "skills/reviewing-security/SKILL.md",
+      "words": 421,
+      "bytes": 3213
+    },
+    {
+      "path": "skills/running-quality-checks/SKILL.md",
+      "words": 606,
+      "bytes": 3949
+    },
+    {
+      "path": "skills/shipit/SKILL.md",
+      "words": 388,
+      "bytes": 2491
+    },
+    {
+      "path": "skills/shipit/references/01-input-acquisition.md",
+      "words": 181,
+      "bytes": 1162
+    },
+    {
+      "path": "skills/shipit/references/02-land-sequence.md",
+      "words": 1361,
+      "bytes": 8316
+    },
+    {
+      "path": "skills/slicing-work/SKILL.md",
+      "words": 319,
+      "bytes": 2254
+    },
+    {
+      "path": "skills/slicing-work/references/structure-template.md",
+      "words": 890,
+      "bytes": 5615
+    },
+    {
+      "path": "skills/solid/SKILL.md",
+      "words": 301,
+      "bytes": 2362
+    },
+    {
+      "path": "skills/sweeping-local-state/SKILL.md",
+      "words": 418,
+      "bytes": 3218
+    },
+    {
+      "path": "skills/sweeping-local-state/references/procedure.md",
+      "words": 1582,
+      "bytes": 9911
+    },
+    {
+      "path": "skills/systematic-debugging/SKILL.md",
+      "words": 357,
+      "bytes": 2589
+    },
+    {
+      "path": "skills/systematic-debugging/references/investigation.md",
+      "words": 1137,
+      "bytes": 7230
+    },
+    {
+      "path": "skills/systems-thinking/SKILL.md",
+      "words": 302,
+      "bytes": 2163
+    },
+    {
+      "path": "skills/systems-thinking/references/lenses.md",
+      "words": 882,
+      "bytes": 5570
+    },
+    {
+      "path": "skills/team-design/SKILL.md",
+      "words": 850,
+      "bytes": 6193
+    },
+    {
+      "path": "skills/team-fix/SKILL.md",
+      "words": 200,
+      "bytes": 1538
+    },
+    {
+      "path": "skills/team-fix/references/01-input.md",
+      "words": 97,
+      "bytes": 605
+    },
+    {
+      "path": "skills/team-fix/references/02-when-to-use.md",
+      "words": 85,
+      "bytes": 475
+    },
+    {
+      "path": "skills/team-fix/references/03-pipeline.md",
+      "words": 32,
+      "bytes": 190
+    },
+    {
+      "path": "skills/team-fix/references/04-setup.md",
+      "words": 287,
+      "bytes": 1899
+    },
+    {
+      "path": "skills/team-fix/references/05-worktree.md",
+      "words": 413,
+      "bytes": 2715
+    },
+    {
+      "path": "skills/team-fix/references/06-execution.md",
+      "words": 177,
+      "bytes": 1127
+    },
+    {
+      "path": "skills/team-fix/references/07-ship.md",
+      "words": 187,
+      "bytes": 1141
+    },
+    {
+      "path": "skills/team-fix/references/08-aborting.md",
+      "words": 56,
+      "bytes": 351
+    },
+    {
+      "path": "skills/team-implement/SKILL.md",
+      "words": 239,
+      "bytes": 1911
+    },
+    {
+      "path": "skills/team-implement/references/01-input.md",
+      "words": 376,
+      "bytes": 2768
+    },
+    {
+      "path": "skills/team-implement/references/02-worktree-check.md",
+      "words": 222,
+      "bytes": 1534
+    },
+    {
+      "path": "skills/team-implement/references/03-execution.md",
+      "words": 845,
+      "bytes": 5745
+    },
+    {
+      "path": "skills/team-implement/references/04-quality-loop.md",
+      "words": 44,
+      "bytes": 548
+    },
+    {
+      "path": "skills/team-implement/references/05-standalone-mode-tradeoffs.md",
+      "words": 152,
+      "bytes": 981
+    },
+    {
+      "path": "skills/team-plan/SKILL.md",
+      "words": 306,
+      "bytes": 2301
+    },
+    {
+      "path": "skills/team-pr/SKILL.md",
+      "words": 427,
+      "bytes": 3149
+    },
+    {
+      "path": "skills/team-pr/references/01-input.md",
+      "words": 176,
+      "bytes": 1209
+    },
+    {
+      "path": "skills/team-pr/references/02-execution.md",
+      "words": 850,
+      "bytes": 5698
+    },
+    {
+      "path": "skills/team-pr/references/03-pr-body-template.md",
+      "words": 1169,
+      "bytes": 7543
+    },
+    {
+      "path": "skills/team-pr/references/04-screenshot-upload.md",
+      "words": 1292,
+      "bytes": 8719
+    },
+    {
+      "path": "skills/team-pr/references/05-changelog-update.md",
+      "words": 108,
+      "bytes": 732
+    },
+    {
+      "path": "skills/team-pr/references/06-commit-discipline.md",
+      "words": 155,
+      "bytes": 969
+    },
+    {
+      "path": "skills/team-question/SKILL.md",
+      "words": 646,
+      "bytes": 4719
+    },
+    {
+      "path": "skills/team-research/SKILL.md",
+      "words": 707,
+      "bytes": 5079
+    },
+    {
+      "path": "skills/team-structure/SKILL.md",
+      "words": 479,
+      "bytes": 3619
+    },
+    {
+      "path": "skills/team-worktree/SKILL.md",
+      "words": 213,
+      "bytes": 1613
+    },
+    {
+      "path": "skills/team-worktree/references/01-input.md",
+      "words": 165,
+      "bytes": 1154
+    },
+    {
+      "path": "skills/team-worktree/references/02-detect-mode.md",
+      "words": 70,
+      "bytes": 451
+    },
+    {
+      "path": "skills/team-worktree/references/03-detect-existing-worktree.md",
+      "words": 269,
+      "bytes": 1812
+    },
+    {
+      "path": "skills/team-worktree/references/04-execution.md",
+      "words": 716,
+      "bytes": 5070
+    },
+    {
+      "path": "skills/team/SKILL.md",
+      "words": 537,
+      "bytes": 4596
+    },
+    {
+      "path": "skills/team/references/01-input.md",
+      "words": 63,
+      "bytes": 411
+    },
+    {
+      "path": "skills/team/references/02-setup.md",
+      "words": 455,
+      "bytes": 3298
+    },
+    {
+      "path": "skills/team/references/03-the-phase-loop.md",
+      "words": 746,
+      "bytes": 6162
+    },
+    {
+      "path": "skills/team/references/04-research-isolation-invariant.md",
+      "words": 92,
+      "bytes": 687
+    },
+    {
+      "path": "skills/team/references/05-where-a-phase-agent-s-output-lives.md",
+      "words": 210,
+      "bytes": 1349
+    },
+    {
+      "path": "skills/team/references/06-gate-handling.md",
+      "words": 3,
+      "bytes": 17
+    },
+    {
+      "path": "skills/team/references/07-orchestrator-emit-gate-leading-worktree.md",
+      "words": 621,
+      "bytes": 4100
+    },
+    {
+      "path": "skills/team/references/08-design-review-gate-design.md",
+      "words": 798,
+      "bytes": 5614
+    },
+    {
+      "path": "skills/team/references/09-structure-no-gate-autonomous.md",
+      "words": 44,
+      "bytes": 353
+    },
+    {
+      "path": "skills/team/references/10-orchestrator-emit-gate-post-design-review-secondary-worktrees.md",
+      "words": 319,
+      "bytes": 2235
+    },
+    {
+      "path": "skills/team/references/11-mechanical-gate-test-confirmation.md",
+      "words": 397,
+      "bytes": 2407
+    },
+    {
+      "path": "skills/team/references/12-aggregate-gate-review-collection.md",
+      "words": 570,
+      "bytes": 3719
+    },
+    {
+      "path": "skills/team/references/13-orchestrator-emit-gate-pr-ship.md",
+      "words": 395,
+      "bytes": 2508
+    },
+    {
+      "path": "skills/team/references/14-rules.md",
+      "words": 498,
+      "bytes": 3533
+    },
+    {
+      "path": "skills/team/references/15-host-dispatch.md",
+      "words": 473,
+      "bytes": 3258
+    },
+    {
+      "path": "skills/technical-design-doc/SKILL.md",
+      "words": 305,
+      "bytes": 2292
+    },
+    {
+      "path": "skills/technical-design-doc/references/template.md",
+      "words": 832,
+      "bytes": 5619
+    },
+    {
+      "path": "skills/test-driven-bug-fix/SKILL.md",
+      "words": 335,
+      "bytes": 2199
+    },
+    {
+      "path": "skills/test-driven-bug-fix/references/procedure.md",
+      "words": 961,
+      "bytes": 5796
+    },
+    {
+      "path": "skills/test-first-development/SKILL.md",
+      "words": 338,
+      "bytes": 2377
+    },
+    {
+      "path": "skills/test-first-development/references/procedure.md",
+      "words": 867,
+      "bytes": 5564
+    },
+    {
+      "path": "skills/test-style/SKILL.md",
+      "words": 485,
+      "bytes": 3316
+    },
+    {
+      "path": "skills/test-style/references/test-style-manual.md",
+      "words": 1780,
+      "bytes": 12327
+    },
+    {
+      "path": "skills/tracking-tickets/SKILL.md",
+      "words": 541,
+      "bytes": 3354
+    },
+    {
+      "path": "skills/unslop/SKILL.md",
+      "words": 286,
+      "bytes": 1944
+    },
+    {
+      "path": "skills/unslop/references/rules.md",
+      "words": 485,
+      "bytes": 3152
+    },
+    {
+      "path": "skills/verifying-ux/SKILL.md",
+      "words": 405,
+      "bytes": 3006
+    },
+    {
+      "path": "skills/verifying-ux/references/procedure.md",
+      "words": 1025,
+      "bytes": 6869
+    },
+    {
+      "path": "skills/why/SKILL.md",
+      "words": 219,
+      "bytes": 1731
+    },
+    {
+      "path": "skills/why/references/01-input.md",
+      "words": 143,
+      "bytes": 923
+    },
+    {
+      "path": "skills/why/references/02-confidence-tiers.md",
+      "words": 318,
+      "bytes": 1953
+    },
+    {
+      "path": "skills/why/references/03-execution.md",
+      "words": 654,
+      "bytes": 4522
+    },
+    {
+      "path": "skills/why/references/04-output-format.md",
+      "words": 222,
+      "bytes": 1386
+    },
+    {
+      "path": "skills/why/references/05-rules.md",
+      "words": 114,
+      "bytes": 692
+    },
+    {
+      "path": "skills/worktree-isolation/SKILL.md",
+      "words": 412,
+      "bytes": 3030
+    },
+    {
+      "path": "skills/worktree-isolation/references/lifecycle.md",
+      "words": 1799,
+      "bytes": 12209
+    },
+    {
+      "path": "skills/writing-prose/SKILL.md",
+      "words": 467,
+      "bytes": 3283
+    },
+    {
+      "path": "skills/writing-prose/references/style-guide.md",
+      "words": 2235,
+      "bytes": 14083
+    }
+  ],
+  "resources": [
+    "skills/.gitkeep",
+    "skills/artifact-frontmatter/agents/openai.yaml",
+    "skills/authoring-designs/agents/openai.yaml",
+    "skills/changelog/agents/openai.yaml",
+    "skills/code-review/agents/openai.yaml",
+    "skills/conventional-comments/agents/openai.yaml",
+    "skills/cross-model-review/agents/openai.yaml",
+    "skills/cross-model-review/external-review.mjs",
+    "skills/decision-making/agents/openai.yaml",
+    "skills/decomposing-intent/agents/openai.yaml",
+    "skills/documenting-decisions/agents/openai.yaml",
+    "skills/eng-design-doc-review/agents/openai.yaml",
+    "skills/engineering-standards/agents/openai.yaml",
+    "skills/finding-files/agents/openai.yaml",
+    "skills/git-commit/agents/openai.yaml",
+    "skills/groom-backlog/agents/openai.yaml",
+    "skills/how/agents/openai.yaml",
+    "skills/implementing-slices/agents/openai.yaml",
+    "skills/nested-agents/agents/openai.yaml",
+    "skills/nested-agents/supports-nesting.d.mts",
+    "skills/nested-agents/supports-nesting.mjs",
+    "skills/no-comments/agents/openai.yaml",
+    "skills/no-comments/scripts/changed-files.sh",
+    "skills/planning-implementation/agents/openai.yaml",
+    "skills/pr-cleanup/agents/openai.yaml",
+    "skills/pr-open-comments/agents/openai.yaml",
+    "skills/pr-rebase/agents/openai.yaml",
+    "skills/pr-screenshots/agents/openai.yaml",
+    "skills/pr-screenshots/scripts/pre-image.sh",
+    "skills/pr-screenshots/scripts/resolve-pr.sh",
+    "skills/pr-screenshots/scripts/splice.mjs",
+    "skills/pr-screenshots/scripts/upload.sh",
+    "skills/pr-screenshots/scripts/write-companion.sh",
+    "skills/pr-verify/agents/openai.yaml",
+    "skills/pr-watch-as-author/agents/openai.yaml",
+    "skills/pr-watch-as-reviewer/agents/openai.yaml",
+    "skills/pr-watch-mechanics/agents/openai.yaml",
+    "skills/principle-blind-the-investigator/agents/openai.yaml",
+    "skills/principle-bounded-loops/agents/openai.yaml",
+    "skills/principle-deep-agents-narrow-seams/agents/openai.yaml",
+    "skills/principle-evidence-over-assertion/agents/openai.yaml",
+    "skills/principle-explicit-intent/agents/openai.yaml",
+    "skills/principle-fail-closed/agents/openai.yaml",
+    "skills/principle-files-are-the-contract/agents/openai.yaml",
+    "skills/principle-fix-root-causes/agents/openai.yaml",
+    "skills/principle-generator-evaluator/agents/openai.yaml",
+    "skills/principle-human-owns-the-ends/agents/openai.yaml",
+    "skills/principle-idempotent-reruns/agents/openai.yaml",
+    "skills/principle-least-privilege/agents/openai.yaml",
+    "skills/principle-mechanical-gates/agents/openai.yaml",
+    "skills/principle-never-interpolate/agents/openai.yaml",
+    "skills/principle-non-blocking-waits/agents/openai.yaml",
+    "skills/principle-optimization-never-dependency/agents/openai.yaml",
+    "skills/principle-plan-present-wait/agents/openai.yaml",
+    "skills/principle-pre-image-first/agents/openai.yaml",
+    "skills/principle-progress-tracking/agents/openai.yaml",
+    "skills/principle-record-assumptions/agents/openai.yaml",
+    "skills/principle-scope-fence/agents/openai.yaml",
+    "skills/principle-single-source-of-truth/agents/openai.yaml",
+    "skills/principle-skip-loudly/agents/openai.yaml",
+    "skills/principle-subtract-before-you-add/agents/openai.yaml",
+    "skills/principle-untrusted-input-is-data/agents/openai.yaml",
+    "skills/product-requirements-doc/agents/openai.yaml",
+    "skills/product-thinking/agents/openai.yaml",
+    "skills/qrspi-workflow/agents/openai.yaml",
+    "skills/refactoring-to-patterns/agents/openai.yaml",
+    "skills/reflect/agents/openai.yaml",
+    "skills/reflect/resources/resolve-transcript.d.mts",
+    "skills/reflect/resources/resolve-transcript.mjs",
+    "skills/reflect/resources/write-target.d.mts",
+    "skills/reflect/resources/write-target.mjs",
+    "skills/researching-codebases/agents/openai.yaml",
+    "skills/review-severity-tiers/agents/openai.yaml",
+    "skills/reviewing-code/agents/openai.yaml",
+    "skills/reviewing-comments/agents/openai.yaml",
+    "skills/reviewing-designs/agents/openai.yaml",
+    "skills/reviewing-documentation/agents/openai.yaml",
+    "skills/reviewing-security/agents/openai.yaml",
+    "skills/running-quality-checks/agents/openai.yaml",
+    "skills/shipit/agents/openai.yaml",
+    "skills/slicing-work/agents/openai.yaml",
+    "skills/solid/agents/openai.yaml",
+    "skills/sweeping-local-state/agents/openai.yaml",
+    "skills/systematic-debugging/agents/openai.yaml",
+    "skills/systems-thinking/agents/openai.yaml",
+    "skills/team-design/agents/openai.yaml",
+    "skills/team-fix/agents/openai.yaml",
+    "skills/team-implement/agents/openai.yaml",
+    "skills/team-plan/agents/openai.yaml",
+    "skills/team-pr/agents/openai.yaml",
+    "skills/team-question/agents/openai.yaml",
+    "skills/team-research/agents/openai.yaml",
+    "skills/team-structure/agents/openai.yaml",
+    "skills/team-worktree/agents/openai.yaml",
+    "skills/team/agents/openai.yaml",
+    "skills/team/discover-topic.sh",
+    "skills/team/registry.json",
+    "skills/technical-design-doc/agents/openai.yaml",
+    "skills/test-driven-bug-fix/agents/openai.yaml",
+    "skills/test-first-development/agents/openai.yaml",
+    "skills/test-style/agents/openai.yaml",
+    "skills/tracking-tickets/agents/openai.yaml",
+    "skills/unslop/agents/openai.yaml",
+    "skills/verifying-ux/agents/openai.yaml",
+    "skills/why/agents/openai.yaml",
+    "skills/worktree-isolation/agents/openai.yaml",
+    "skills/writing-prose/agents/openai.yaml",
+    "skills/writing-prose/ste-lint.mjs"
+  ],
+  "citations": [
+    {
+      "path": "agents/code-reviewer.md",
+      "target": "skills/conventional-comments/SKILL.md"
+    },
+    {
+      "path": "agents/code-reviewer.md",
+      "target": "skills/cross-model-review/SKILL.md"
+    },
+    {
+      "path": "agents/code-reviewer.md",
+      "target": "skills/nested-agents/SKILL.md"
+    },
+    {
+      "path": "agents/code-reviewer.md",
+      "target": "skills/principle-skip-loudly/SKILL.md"
+    },
+    {
+      "path": "agents/code-reviewer.md",
+      "target": "skills/reviewing-code/SKILL.md"
+    },
+    {
+      "path": "agents/design-author.md",
+      "target": "skills/authoring-designs/SKILL.md"
+    },
+    {
+      "path": "agents/implementer.md",
+      "target": "skills/implementing-slices/SKILL.md"
+    },
+    {
+      "path": "agents/implementer.md",
+      "target": "skills/nested-agents/SKILL.md"
+    },
+    {
+      "path": "agents/planner.md",
+      "target": "skills/planning-implementation/SKILL.md"
+    },
+    {
+      "path": "agents/planner.md",
+      "target": "skills/systems-thinking/SKILL.md"
+    },
+    {
+      "path": "agents/questioner.md",
+      "target": "skills/decomposing-intent/SKILL.md"
+    },
+    {
+      "path": "agents/researcher.md",
+      "target": "skills/nested-agents/SKILL.md"
+    },
+    {
+      "path": "agents/researcher.md",
+      "target": "skills/researching-codebases/SKILL.md"
+    },
+    {
+      "path": "agents/researcher.md",
+      "target": "skills/systems-thinking/SKILL.md"
+    },
+    {
+      "path": "agents/security-reviewer.md",
+      "target": "skills/conventional-comments/SKILL.md"
+    },
+    {
+      "path": "agents/security-reviewer.md",
+      "target": "skills/nested-agents/SKILL.md"
+    },
+    {
+      "path": "agents/security-reviewer.md",
+      "target": "skills/reviewing-code/SKILL.md"
+    },
+    {
+      "path": "agents/security-reviewer.md",
+      "target": "skills/reviewing-security/SKILL.md"
+    },
+    {
+      "path": "agents/structure-planner.md",
+      "target": "skills/slicing-work/SKILL.md"
+    },
+    {
+      "path": "agents/technical-writer.md",
+      "target": "skills/conventional-comments/SKILL.md"
+    },
+    {
+      "path": "agents/technical-writer.md",
+      "target": "skills/review-severity-tiers/SKILL.md"
+    },
+    {
+      "path": "agents/technical-writer.md",
+      "target": "skills/reviewing-code/SKILL.md"
+    },
+    {
+      "path": "agents/technical-writer.md",
+      "target": "skills/reviewing-documentation/SKILL.md"
+    },
+    {
+      "path": "agents/technical-writer.md",
+      "target": "skills/writing-prose/SKILL.md"
+    },
+    {
+      "path": "agents/test-architect.md",
+      "target": "skills/test-first-development/SKILL.md"
+    },
+    {
+      "path": "agents/ux-reviewer.md",
+      "target": "skills/review-severity-tiers/SKILL.md"
+    },
+    {
+      "path": "agents/ux-reviewer.md",
+      "target": "skills/reviewing-code/SKILL.md"
+    },
+    {
+      "path": "agents/ux-reviewer.md",
+      "target": "skills/verifying-ux/SKILL.md"
+    },
+    {
+      "path": "agents/verifier.md",
+      "target": "skills/running-quality-checks/SKILL.md"
+    },
+    {
+      "path": "skills/artifact-frontmatter/SKILL.md",
+      "target": "skills/product-requirements-doc/SKILL.md"
+    },
+    {
+      "path": "skills/artifact-frontmatter/SKILL.md",
+      "target": "skills/qrspi-workflow/SKILL.md"
+    },
+    {
+      "path": "skills/artifact-frontmatter/references/conditional-artifacts.md",
+      "target": "skills/product-requirements-doc/SKILL.md"
+    },
+    {
+      "path": "skills/artifact-frontmatter/references/conditional-artifacts.md",
+      "target": "skills/worktree-isolation/SKILL.md"
+    },
+    {
+      "path": "skills/authoring-designs/SKILL.md",
+      "target": "skills/artifact-frontmatter/SKILL.md"
+    },
+    {
+      "path": "skills/authoring-designs/SKILL.md",
+      "target": "skills/how/SKILL.md"
+    },
+    {
+      "path": "skills/authoring-designs/SKILL.md",
+      "target": "skills/product-requirements-doc/SKILL.md"
+    },
+    {
+      "path": "skills/authoring-designs/SKILL.md",
+      "target": "skills/why/SKILL.md"
+    },
+    {
+      "path": "skills/cross-model-review/SKILL.md",
+      "target": "skills/reviewing-code/SKILL.md"
+    },
+    {
+      "path": "skills/cross-model-review/references/procedure.md",
+      "target": "skills/artifact-frontmatter/SKILL.md"
+    },
+    {
+      "path": "skills/cross-model-review/references/procedure.md",
+      "target": "skills/nested-agents/SKILL.md"
+    },
+    {
+      "path": "skills/cross-model-review/references/procedure.md",
+      "target": "skills/review-severity-tiers/SKILL.md"
+    },
+    {
+      "path": "skills/cross-model-review/references/procedure.md",
+      "target": "skills/reviewing-code/SKILL.md"
+    },
+    {
+      "path": "skills/cross-model-review/references/procedure.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/decomposing-intent/SKILL.md",
+      "target": "skills/artifact-frontmatter/SKILL.md"
+    },
+    {
+      "path": "skills/decomposing-intent/references/multi-repo.md",
+      "target": "skills/artifact-frontmatter/SKILL.md"
+    },
+    {
+      "path": "skills/eng-design-doc-review/SKILL.md",
+      "target": "skills/cross-model-review/SKILL.md"
+    },
+    {
+      "path": "skills/eng-design-doc-review/SKILL.md",
+      "target": "skills/reviewing-designs/SKILL.md"
+    },
+    {
+      "path": "skills/eng-design-doc-review/SKILL.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/engineering-standards/SKILL.md",
+      "target": "skills/conventional-comments/SKILL.md"
+    },
+    {
+      "path": "skills/engineering-standards/SKILL.md",
+      "target": "skills/solid/SKILL.md"
+    },
+    {
+      "path": "skills/how/SKILL.md",
+      "target": "skills/why/SKILL.md"
+    },
+    {
+      "path": "skills/how/references/02-explain-mode.md",
+      "target": "skills/researching-codebases/SKILL.md"
+    },
+    {
+      "path": "skills/nested-agents/SKILL.md",
+      "target": "skills/cross-model-review/SKILL.md"
+    },
+    {
+      "path": "skills/nested-agents/SKILL.md",
+      "target": "skills/systems-thinking/SKILL.md"
+    },
+    {
+      "path": "skills/nested-agents/SKILL.md",
+      "target": "skills/unslop/SKILL.md"
+    },
+    {
+      "path": "skills/nested-agents/SKILL.md",
+      "target": "skills/writing-prose/SKILL.md"
+    },
+    {
+      "path": "skills/nested-agents/references/per-agent-dispatch.md",
+      "target": "skills/cross-model-review/SKILL.md"
+    },
+    {
+      "path": "skills/nested-agents/references/per-agent-dispatch.md",
+      "target": "skills/systems-thinking/SKILL.md"
+    },
+    {
+      "path": "skills/nested-agents/references/per-agent-dispatch.md",
+      "target": "skills/unslop/SKILL.md"
+    },
+    {
+      "path": "skills/nested-agents/references/per-agent-dispatch.md",
+      "target": "skills/writing-prose/SKILL.md"
+    },
+    {
+      "path": "skills/no-comments/SKILL.md",
+      "target": "skills/reviewing-comments/SKILL.md"
+    },
+    {
+      "path": "skills/pr-cleanup/references/10-mode-b-closed-abandoned.md",
+      "target": "skills/sweeping-local-state/SKILL.md"
+    },
+    {
+      "path": "skills/pr-open-comments/references/04-execution.md",
+      "target": "skills/pr-screenshots/SKILL.md"
+    },
+    {
+      "path": "skills/pr-rebase/references/01-input.md",
+      "target": "skills/pr-cleanup/SKILL.md"
+    },
+    {
+      "path": "skills/pr-rebase/references/07-step-2-capture-the-baseline-and-the-recovery-anchor.md",
+      "target": "skills/artifact-frontmatter/SKILL.md"
+    },
+    {
+      "path": "skills/pr-screenshots/references/02-upload-and-body-edit.md",
+      "target": "skills/principle-never-interpolate/SKILL.md"
+    },
+    {
+      "path": "skills/pr-verify/references/04-execution.md",
+      "target": "skills/nested-agents/SKILL.md"
+    },
+    {
+      "path": "skills/pr-watch-as-author/SKILL.md",
+      "target": "skills/pr-open-comments/SKILL.md"
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/05-3-poll-and-change-detection.md",
+      "target": "skills/pr-open-comments/SKILL.md"
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/06-4-on-new-feedback-run-the-triage-procedure.md",
+      "target": "skills/pr-open-comments/SKILL.md"
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/07-authorized-mode-apply-resolve-resume.md",
+      "target": "skills/pr-open-comments/SKILL.md"
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/07-4-poll.md",
+      "target": "skills/conventional-comments/SKILL.md"
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/07-4-poll.md",
+      "target": "skills/pr-open-comments/SKILL.md"
+    },
+    {
+      "path": "skills/principle-generator-evaluator/SKILL.md",
+      "target": "skills/reviewing-code/SKILL.md"
+    },
+    {
+      "path": "skills/principle-progress-tracking/SKILL.md",
+      "target": "skills/qrspi-workflow/SKILL.md"
+    },
+    {
+      "path": "skills/qrspi-workflow/SKILL.md",
+      "target": "skills/artifact-frontmatter/SKILL.md"
+    },
+    {
+      "path": "skills/qrspi-workflow/SKILL.md",
+      "target": "skills/review-severity-tiers/SKILL.md"
+    },
+    {
+      "path": "skills/qrspi-workflow/SKILL.md",
+      "target": "skills/slicing-work/SKILL.md"
+    },
+    {
+      "path": "skills/qrspi-workflow/SKILL.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/qrspi-workflow/SKILL.md",
+      "target": "skills/worktree-isolation/SKILL.md"
+    },
+    {
+      "path": "skills/reflect/references/04-the-lenses.md",
+      "target": "skills/finding-files/SKILL.md"
+    },
+    {
+      "path": "skills/reflect/references/04-the-lenses.md",
+      "target": "skills/nested-agents/SKILL.md"
+    },
+    {
+      "path": "skills/review-severity-tiers/SKILL.md",
+      "target": "skills/reviewing-code/SKILL.md"
+    },
+    {
+      "path": "skills/reviewing-code/SKILL.md",
+      "target": "skills/conventional-comments/SKILL.md"
+    },
+    {
+      "path": "skills/reviewing-code/SKILL.md",
+      "target": "skills/cross-model-review/SKILL.md"
+    },
+    {
+      "path": "skills/reviewing-code/SKILL.md",
+      "target": "skills/reviewing-security/SKILL.md"
+    },
+    {
+      "path": "skills/reviewing-code/SKILL.md",
+      "target": "skills/test-style/SKILL.md"
+    },
+    {
+      "path": "skills/reviewing-code/references/review-manual.md",
+      "target": "skills/conventional-comments/SKILL.md"
+    },
+    {
+      "path": "skills/reviewing-code/references/review-manual.md",
+      "target": "skills/cross-model-review/SKILL.md"
+    },
+    {
+      "path": "skills/reviewing-code/references/review-manual.md",
+      "target": "skills/reviewing-security/SKILL.md"
+    },
+    {
+      "path": "skills/reviewing-code/references/review-manual.md",
+      "target": "skills/solid/SKILL.md"
+    },
+    {
+      "path": "skills/reviewing-code/references/review-manual.md",
+      "target": "skills/test-style/SKILL.md"
+    },
+    {
+      "path": "skills/reviewing-designs/references/review-brief.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/reviewing-designs/references/review-brief.md",
+      "target": "skills/writing-prose/SKILL.md"
+    },
+    {
+      "path": "skills/reviewing-documentation/SKILL.md",
+      "target": "skills/writing-prose/SKILL.md"
+    },
+    {
+      "path": "skills/sweeping-local-state/SKILL.md",
+      "target": "skills/pr-cleanup/SKILL.md"
+    },
+    {
+      "path": "skills/sweeping-local-state/references/procedure.md",
+      "target": "skills/pr-cleanup/SKILL.md"
+    },
+    {
+      "path": "skills/systematic-debugging/SKILL.md",
+      "target": "skills/why/SKILL.md"
+    },
+    {
+      "path": "skills/systematic-debugging/references/investigation.md",
+      "target": "skills/why/SKILL.md"
+    },
+    {
+      "path": "skills/systems-thinking/SKILL.md",
+      "target": "skills/reviewing-code/SKILL.md"
+    },
+    {
+      "path": "skills/systems-thinking/references/lenses.md",
+      "target": "skills/reviewing-code/SKILL.md"
+    },
+    {
+      "path": "skills/team-design/SKILL.md",
+      "target": "skills/artifact-frontmatter/SKILL.md"
+    },
+    {
+      "path": "skills/team-design/SKILL.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/team-fix/references/05-worktree.md",
+      "target": "skills/team-worktree/SKILL.md"
+    },
+    {
+      "path": "skills/team-implement/references/01-input.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/team-implement/references/03-execution.md",
+      "target": "skills/artifact-frontmatter/SKILL.md"
+    },
+    {
+      "path": "skills/team-plan/SKILL.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/team-pr/references/01-input.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/team-pr/references/03-pr-body-template.md",
+      "target": "skills/git-commit/SKILL.md"
+    },
+    {
+      "path": "skills/team-pr/references/03-pr-body-template.md",
+      "target": "skills/tracking-tickets/SKILL.md"
+    },
+    {
+      "path": "skills/team-question/SKILL.md",
+      "target": "skills/decomposing-intent/SKILL.md"
+    },
+    {
+      "path": "skills/team-question/SKILL.md",
+      "target": "skills/product-requirements-doc/SKILL.md"
+    },
+    {
+      "path": "skills/team-question/SKILL.md",
+      "target": "skills/qrspi-workflow/SKILL.md"
+    },
+    {
+      "path": "skills/team-research/SKILL.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/team-structure/SKILL.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/team-worktree/references/01-input.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/team-worktree/references/02-detect-mode.md",
+      "target": "skills/qrspi-workflow/SKILL.md"
+    },
+    {
+      "path": "skills/team-worktree/references/04-execution.md",
+      "target": "skills/worktree-isolation/SKILL.md"
+    },
+    {
+      "path": "skills/team/references/03-the-phase-loop.md",
+      "target": "skills/artifact-frontmatter/SKILL.md"
+    },
+    {
+      "path": "skills/team/references/07-orchestrator-emit-gate-leading-worktree.md",
+      "target": "skills/team-worktree/SKILL.md"
+    },
+    {
+      "path": "skills/team/references/07-orchestrator-emit-gate-leading-worktree.md",
+      "target": "skills/worktree-isolation/SKILL.md"
+    },
+    {
+      "path": "skills/team/references/08-design-review-gate-design.md",
+      "target": "skills/artifact-frontmatter/SKILL.md"
+    },
+    {
+      "path": "skills/team/references/08-design-review-gate-design.md",
+      "target": "skills/qrspi-workflow/SKILL.md"
+    },
+    {
+      "path": "skills/team/references/10-orchestrator-emit-gate-post-design-review-secondary-worktrees.md",
+      "target": "skills/team-worktree/SKILL.md"
+    },
+    {
+      "path": "skills/team/references/10-orchestrator-emit-gate-post-design-review-secondary-worktrees.md",
+      "target": "skills/worktree-isolation/SKILL.md"
+    },
+    {
+      "path": "skills/team/references/12-aggregate-gate-review-collection.md",
+      "target": "skills/artifact-frontmatter/SKILL.md"
+    },
+    {
+      "path": "skills/team/references/12-aggregate-gate-review-collection.md",
+      "target": "skills/team-implement/SKILL.md"
+    },
+    {
+      "path": "skills/team/references/14-rules.md",
+      "target": "skills/artifact-frontmatter/SKILL.md"
+    },
+    {
+      "path": "skills/test-first-development/SKILL.md",
+      "target": "skills/test-style/SKILL.md"
+    },
+    {
+      "path": "skills/test-first-development/references/procedure.md",
+      "target": "skills/test-style/SKILL.md"
+    },
+    {
+      "path": "skills/test-style/SKILL.md",
+      "target": "skills/reviewing-code/SKILL.md"
+    },
+    {
+      "path": "skills/test-style/references/test-style-manual.md",
+      "target": "skills/reviewing-code/SKILL.md"
+    },
+    {
+      "path": "skills/test-style/references/test-style-manual.md",
+      "target": "skills/test-first-development/SKILL.md"
+    },
+    {
+      "path": "skills/unslop/references/rules.md",
+      "target": "skills/unslop/SKILL.md"
+    },
+    {
+      "path": "skills/why/SKILL.md",
+      "target": "skills/how/SKILL.md"
+    },
+    {
+      "path": "skills/why/references/04-output-format.md",
+      "target": "skills/documenting-decisions/SKILL.md"
+    },
+    {
+      "path": "skills/worktree-isolation/SKILL.md",
+      "target": "skills/pr-cleanup/SKILL.md"
+    },
+    {
+      "path": "skills/worktree-isolation/SKILL.md",
+      "target": "skills/sweeping-local-state/SKILL.md"
+    },
+    {
+      "path": "skills/worktree-isolation/references/lifecycle.md",
+      "target": "skills/pr-cleanup/SKILL.md"
+    },
+    {
+      "path": "skills/worktree-isolation/references/lifecycle.md",
+      "target": "skills/sweeping-local-state/SKILL.md"
+    },
+    {
+      "path": "skills/writing-prose/SKILL.md",
+      "target": "skills/reviewing-documentation/SKILL.md"
+    },
+    {
+      "path": "skills/writing-prose/references/style-guide.md",
+      "target": "skills/reviewing-documentation/SKILL.md"
+    }
+  ],
+  "categories": {
+    "entry": 25,
+    "methodology": 41,
+    "principle": 25
+  },
+  "skills": [
+    {
+      "name": "artifact-frontmatter",
+      "category": "methodology",
+      "root": {
+        "words": 476,
+        "bytes": 4012
+      },
+      "totals": {
+        "files": 2,
+        "words": 685,
+        "bytes": 5667
+      },
+      "callers": []
+    },
+    {
+      "name": "authoring-designs",
+      "category": "methodology",
+      "root": {
+        "words": 458,
+        "bytes": 3525
+      },
+      "totals": {
+        "files": 2,
+        "words": 708,
+        "bytes": 5302
+      },
+      "callers": [
+        {
+          "path": "agents/design-author.md",
+          "kind": "preload"
+        }
+      ]
+    },
+    {
+      "name": "changelog",
+      "category": "methodology",
+      "root": {
+        "words": 409,
+        "bytes": 3062
+      },
+      "totals": {
+        "files": 3,
+        "words": 861,
+        "bytes": 6066
+      },
+      "callers": [
+        {
+          "path": "skills/team-pr/references/05-changelog-update.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/references/13-orchestrator-emit-gate-pr-ship.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "code-review",
+      "category": "entry",
+      "root": {
+        "words": 211,
+        "bytes": 1328
+      },
+      "totals": {
+        "files": 1,
+        "words": 211,
+        "bytes": 1328
+      },
+      "callers": []
+    },
+    {
+      "name": "conventional-comments",
+      "category": "methodology",
+      "root": {
+        "words": 196,
+        "bytes": 1616
+      },
+      "totals": {
+        "files": 1,
+        "words": 196,
+        "bytes": 1616
+      },
+      "callers": [
+        {
+          "path": "agents/code-reviewer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/security-reviewer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/technical-writer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "skills/reviewing-designs/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-designs/references/review-brief.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "cross-model-review",
+      "category": "methodology",
+      "root": {
+        "words": 510,
+        "bytes": 3890
+      },
+      "totals": {
+        "files": 4,
+        "words": 3311,
+        "bytes": 21835
+      },
+      "callers": [
+        {
+          "path": "agents/code-reviewer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "skills/eng-design-doc-review/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-designs/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-designs/references/review-brief.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-design/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/references/08-design-review-gate-design.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "decision-making",
+      "category": "methodology",
+      "root": {
+        "words": 544,
+        "bytes": 3779
+      },
+      "totals": {
+        "files": 1,
+        "words": 544,
+        "bytes": 3779
+      },
+      "callers": [
+        {
+          "path": "skills/authoring-designs/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/documenting-decisions/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/groom-backlog/references/11-step-8-present-the-consequential-choices-and-wait.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/pr-open-comments/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/slicing-work/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/technical-design-doc/SKILL.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "decomposing-intent",
+      "category": "methodology",
+      "root": {
+        "words": 416,
+        "bytes": 3314
+      },
+      "totals": {
+        "files": 3,
+        "words": 818,
+        "bytes": 6252
+      },
+      "callers": [
+        {
+          "path": "agents/questioner.md",
+          "kind": "preload"
+        }
+      ]
+    },
+    {
+      "name": "documenting-decisions",
+      "category": "methodology",
+      "root": {
+        "words": 308,
+        "bytes": 2349
+      },
+      "totals": {
+        "files": 1,
+        "words": 308,
+        "bytes": 2349
+      },
+      "callers": [
+        {
+          "path": "skills/reviewing-designs/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-designs/references/review-brief.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "eng-design-doc-review",
+      "category": "entry",
+      "root": {
+        "words": 1122,
+        "bytes": 7926
+      },
+      "totals": {
+        "files": 1,
+        "words": 1122,
+        "bytes": 7926
+      },
+      "callers": []
+    },
+    {
+      "name": "engineering-standards",
+      "category": "methodology",
+      "root": {
+        "words": 652,
+        "bytes": 4958
+      },
+      "totals": {
+        "files": 1,
+        "words": 652,
+        "bytes": 4958
+      },
+      "callers": [
+        {
+          "path": "agents/code-reviewer.md",
+          "kind": "direct"
+        },
+        {
+          "path": "agents/implementer.md",
+          "kind": "direct"
+        },
+        {
+          "path": "agents/planner.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-code/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-code/references/review-manual.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-comments/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-designs/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-designs/references/review-brief.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "finding-files",
+      "category": "methodology",
+      "root": {
+        "words": 244,
+        "bytes": 1694
+      },
+      "totals": {
+        "files": 1,
+        "words": 244,
+        "bytes": 1694
+      },
+      "callers": [
+        {
+          "path": "agents/file-finder.md",
+          "kind": "preload"
+        }
+      ]
+    },
+    {
+      "name": "git-commit",
+      "category": "methodology",
+      "root": {
+        "words": 266,
+        "bytes": 1995
+      },
+      "totals": {
+        "files": 2,
+        "words": 448,
+        "bytes": 3209
+      },
+      "callers": [
+        {
+          "path": "skills/implementing-slices/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-pr/references/06-commit-discipline.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "groom-backlog",
+      "category": "entry",
+      "root": {
+        "words": 332,
+        "bytes": 3121
+      },
+      "totals": {
+        "files": 18,
+        "words": 8826,
+        "bytes": 56429
+      },
+      "callers": []
+    },
+    {
+      "name": "how",
+      "category": "entry",
+      "root": {
+        "words": 202,
+        "bytes": 1546
+      },
+      "totals": {
+        "files": 6,
+        "words": 1395,
+        "bytes": 9572
+      },
+      "callers": []
+    },
+    {
+      "name": "implementing-slices",
+      "category": "methodology",
+      "root": {
+        "words": 477,
+        "bytes": 3365
+      },
+      "totals": {
+        "files": 1,
+        "words": 477,
+        "bytes": 3365
+      },
+      "callers": [
+        {
+          "path": "agents/implementer.md",
+          "kind": "preload"
+        }
+      ]
+    },
+    {
+      "name": "nested-agents",
+      "category": "methodology",
+      "root": {
+        "words": 581,
+        "bytes": 4541
+      },
+      "totals": {
+        "files": 2,
+        "words": 1352,
+        "bytes": 9950
+      },
+      "callers": [
+        {
+          "path": "agents/code-reviewer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/implementer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/researcher.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/security-reviewer.md",
+          "kind": "preload"
+        }
+      ]
+    },
+    {
+      "name": "no-comments",
+      "category": "entry",
+      "root": {
+        "words": 427,
+        "bytes": 3136
+      },
+      "totals": {
+        "files": 1,
+        "words": 427,
+        "bytes": 3136
+      },
+      "callers": []
+    },
+    {
+      "name": "planning-implementation",
+      "category": "methodology",
+      "root": {
+        "words": 322,
+        "bytes": 2361
+      },
+      "totals": {
+        "files": 1,
+        "words": 322,
+        "bytes": 2361
+      },
+      "callers": [
+        {
+          "path": "agents/planner.md",
+          "kind": "preload"
+        }
+      ]
+    },
+    {
+      "name": "pr-cleanup",
+      "category": "entry",
+      "root": {
+        "words": 227,
+        "bytes": 1956
+      },
+      "totals": {
+        "files": 11,
+        "words": 4657,
+        "bytes": 31752
+      },
+      "callers": []
+    },
+    {
+      "name": "pr-open-comments",
+      "category": "entry",
+      "root": {
+        "words": 233,
+        "bytes": 1900
+      },
+      "totals": {
+        "files": 8,
+        "words": 3657,
+        "bytes": 23486
+      },
+      "callers": [
+        {
+          "path": "skills/pr-watch-as-author/references/06-4-on-new-feedback-run-the-triage-procedure.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "pr-rebase",
+      "category": "entry",
+      "root": {
+        "words": 377,
+        "bytes": 3082
+      },
+      "totals": {
+        "files": 13,
+        "words": 6157,
+        "bytes": 39538
+      },
+      "callers": []
+    },
+    {
+      "name": "pr-screenshots",
+      "category": "entry",
+      "root": {
+        "words": 804,
+        "bytes": 5494
+      },
+      "totals": {
+        "files": 5,
+        "words": 10637,
+        "bytes": 66872
+      },
+      "callers": [
+        {
+          "path": "skills/team-pr/references/04-screenshot-upload.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "pr-verify",
+      "category": "entry",
+      "root": {
+        "words": 122,
+        "bytes": 1042
+      },
+      "totals": {
+        "files": 5,
+        "words": 1452,
+        "bytes": 9386
+      },
+      "callers": []
+    },
+    {
+      "name": "pr-watch-as-author",
+      "category": "entry",
+      "root": {
+        "words": 344,
+        "bytes": 2684
+      },
+      "totals": {
+        "files": 12,
+        "words": 2565,
+        "bytes": 16403
+      },
+      "callers": []
+    },
+    {
+      "name": "pr-watch-as-reviewer",
+      "category": "entry",
+      "root": {
+        "words": 536,
+        "bytes": 3765
+      },
+      "totals": {
+        "files": 11,
+        "words": 9520,
+        "bytes": 59584
+      },
+      "callers": []
+    },
+    {
+      "name": "pr-watch-mechanics",
+      "category": "methodology",
+      "root": {
+        "words": 462,
+        "bytes": 2813
+      },
+      "totals": {
+        "files": 1,
+        "words": 462,
+        "bytes": 2813
+      },
+      "callers": [
+        {
+          "path": "skills/pr-watch-as-author/references/04-2-bounded-cycle-mechanics.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/pr-watch-as-reviewer/references/06-3-bounded-cycle-mechanics.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "principle-blind-the-investigator",
+      "category": "principle",
+      "root": {
+        "words": 152,
+        "bytes": 1148
+      },
+      "totals": {
+        "files": 1,
+        "words": 152,
+        "bytes": 1148
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-bounded-loops",
+      "category": "principle",
+      "root": {
+        "words": 145,
+        "bytes": 946
+      },
+      "totals": {
+        "files": 1,
+        "words": 145,
+        "bytes": 946
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-deep-agents-narrow-seams",
+      "category": "principle",
+      "root": {
+        "words": 123,
+        "bytes": 833
+      },
+      "totals": {
+        "files": 1,
+        "words": 123,
+        "bytes": 833
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-evidence-over-assertion",
+      "category": "principle",
+      "root": {
+        "words": 152,
+        "bytes": 1048
+      },
+      "totals": {
+        "files": 1,
+        "words": 152,
+        "bytes": 1048
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-explicit-intent",
+      "category": "principle",
+      "root": {
+        "words": 152,
+        "bytes": 1056
+      },
+      "totals": {
+        "files": 1,
+        "words": 152,
+        "bytes": 1056
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-fail-closed",
+      "category": "principle",
+      "root": {
+        "words": 121,
+        "bytes": 858
+      },
+      "totals": {
+        "files": 1,
+        "words": 121,
+        "bytes": 858
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-files-are-the-contract",
+      "category": "principle",
+      "root": {
+        "words": 130,
+        "bytes": 903
+      },
+      "totals": {
+        "files": 1,
+        "words": 130,
+        "bytes": 903
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-fix-root-causes",
+      "category": "principle",
+      "root": {
+        "words": 137,
+        "bytes": 909
+      },
+      "totals": {
+        "files": 1,
+        "words": 137,
+        "bytes": 909
+      },
+      "callers": [
+        {
+          "path": "skills/implementing-slices/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/no-comments/SKILL.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "principle-generator-evaluator",
+      "category": "principle",
+      "root": {
+        "words": 128,
+        "bytes": 893
+      },
+      "totals": {
+        "files": 1,
+        "words": 128,
+        "bytes": 893
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-human-owns-the-ends",
+      "category": "principle",
+      "root": {
+        "words": 126,
+        "bytes": 808
+      },
+      "totals": {
+        "files": 1,
+        "words": 126,
+        "bytes": 808
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-idempotent-reruns",
+      "category": "principle",
+      "root": {
+        "words": 106,
+        "bytes": 753
+      },
+      "totals": {
+        "files": 1,
+        "words": 106,
+        "bytes": 753
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-least-privilege",
+      "category": "principle",
+      "root": {
+        "words": 145,
+        "bytes": 974
+      },
+      "totals": {
+        "files": 1,
+        "words": 145,
+        "bytes": 974
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-mechanical-gates",
+      "category": "principle",
+      "root": {
+        "words": 113,
+        "bytes": 751
+      },
+      "totals": {
+        "files": 1,
+        "words": 113,
+        "bytes": 751
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-never-interpolate",
+      "category": "principle",
+      "root": {
+        "words": 176,
+        "bytes": 1216
+      },
+      "totals": {
+        "files": 1,
+        "words": 176,
+        "bytes": 1216
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-non-blocking-waits",
+      "category": "principle",
+      "root": {
+        "words": 202,
+        "bytes": 1337
+      },
+      "totals": {
+        "files": 1,
+        "words": 202,
+        "bytes": 1337
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-optimization-never-dependency",
+      "category": "principle",
+      "root": {
+        "words": 129,
+        "bytes": 944
+      },
+      "totals": {
+        "files": 1,
+        "words": 129,
+        "bytes": 944
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-plan-present-wait",
+      "category": "principle",
+      "root": {
+        "words": 153,
+        "bytes": 1065
+      },
+      "totals": {
+        "files": 1,
+        "words": 153,
+        "bytes": 1065
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-pre-image-first",
+      "category": "principle",
+      "root": {
+        "words": 123,
+        "bytes": 869
+      },
+      "totals": {
+        "files": 1,
+        "words": 123,
+        "bytes": 869
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-progress-tracking",
+      "category": "principle",
+      "root": {
+        "words": 168,
+        "bytes": 1141
+      },
+      "totals": {
+        "files": 1,
+        "words": 168,
+        "bytes": 1141
+      },
+      "callers": [
+        {
+          "path": "agents/code-reviewer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/design-author.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/implementer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/planner.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/questioner.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/researcher.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/security-reviewer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/structure-planner.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/technical-writer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/test-architect.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/ux-reviewer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/verifier.md",
+          "kind": "preload"
+        },
+        {
+          "path": "skills/no-comments/SKILL.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "principle-record-assumptions",
+      "category": "principle",
+      "root": {
+        "words": 108,
+        "bytes": 768
+      },
+      "totals": {
+        "files": 1,
+        "words": 108,
+        "bytes": 768
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-scope-fence",
+      "category": "principle",
+      "root": {
+        "words": 113,
+        "bytes": 790
+      },
+      "totals": {
+        "files": 1,
+        "words": 113,
+        "bytes": 790
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-single-source-of-truth",
+      "category": "principle",
+      "root": {
+        "words": 137,
+        "bytes": 898
+      },
+      "totals": {
+        "files": 1,
+        "words": 137,
+        "bytes": 898
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-skip-loudly",
+      "category": "principle",
+      "root": {
+        "words": 120,
+        "bytes": 778
+      },
+      "totals": {
+        "files": 1,
+        "words": 120,
+        "bytes": 778
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-subtract-before-you-add",
+      "category": "principle",
+      "root": {
+        "words": 191,
+        "bytes": 1231
+      },
+      "totals": {
+        "files": 1,
+        "words": 191,
+        "bytes": 1231
+      },
+      "callers": []
+    },
+    {
+      "name": "principle-untrusted-input-is-data",
+      "category": "principle",
+      "root": {
+        "words": 146,
+        "bytes": 975
+      },
+      "totals": {
+        "files": 1,
+        "words": 146,
+        "bytes": 975
+      },
+      "callers": []
+    },
+    {
+      "name": "product-requirements-doc",
+      "category": "methodology",
+      "root": {
+        "words": 329,
+        "bytes": 2459
+      },
+      "totals": {
+        "files": 2,
+        "words": 542,
+        "bytes": 3906
+      },
+      "callers": [
+        {
+          "path": "skills/decomposing-intent/SKILL.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "product-thinking",
+      "category": "methodology",
+      "root": {
+        "words": 251,
+        "bytes": 1731
+      },
+      "totals": {
+        "files": 1,
+        "words": 251,
+        "bytes": 1731
+      },
+      "callers": [
+        {
+          "path": "agents/design-author.md",
+          "kind": "direct"
+        },
+        {
+          "path": "agents/design-author.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/questioner.md",
+          "kind": "direct"
+        },
+        {
+          "path": "agents/questioner.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/structure-planner.md",
+          "kind": "direct"
+        },
+        {
+          "path": "agents/structure-planner.md",
+          "kind": "preload"
+        }
+      ]
+    },
+    {
+      "name": "qrspi-workflow",
+      "category": "methodology",
+      "root": {
+        "words": 675,
+        "bytes": 5066
+      },
+      "totals": {
+        "files": 1,
+        "words": 675,
+        "bytes": 5066
+      },
+      "callers": []
+    },
+    {
+      "name": "refactoring-to-patterns",
+      "category": "methodology",
+      "root": {
+        "words": 408,
+        "bytes": 2767
+      },
+      "totals": {
+        "files": 1,
+        "words": 408,
+        "bytes": 2767
+      },
+      "callers": [
+        {
+          "path": "agents/implementer.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "reflect",
+      "category": "entry",
+      "root": {
+        "words": 381,
+        "bytes": 2918
+      },
+      "totals": {
+        "files": 8,
+        "words": 4915,
+        "bytes": 30873
+      },
+      "callers": []
+    },
+    {
+      "name": "researching-codebases",
+      "category": "methodology",
+      "root": {
+        "words": 307,
+        "bytes": 2343
+      },
+      "totals": {
+        "files": 1,
+        "words": 307,
+        "bytes": 2343
+      },
+      "callers": [
+        {
+          "path": "agents/researcher.md",
+          "kind": "preload"
+        }
+      ]
+    },
+    {
+      "name": "review-severity-tiers",
+      "category": "methodology",
+      "root": {
+        "words": 377,
+        "bytes": 2619
+      },
+      "totals": {
+        "files": 1,
+        "words": 377,
+        "bytes": 2619
+      },
+      "callers": [
+        {
+          "path": "skills/reviewing-code/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-code/references/review-manual.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-implement/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-implement/references/03-execution.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/references/12-aggregate-gate-review-collection.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "reviewing-code",
+      "category": "methodology",
+      "root": {
+        "words": 455,
+        "bytes": 3533
+      },
+      "totals": {
+        "files": 2,
+        "words": 2384,
+        "bytes": 16429
+      },
+      "callers": [
+        {
+          "path": "agents/code-reviewer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/security-reviewer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/technical-writer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/ux-reviewer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "skills/code-review/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-designs/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-designs/references/review-brief.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "reviewing-comments",
+      "category": "methodology",
+      "root": {
+        "words": 373,
+        "bytes": 2660
+      },
+      "totals": {
+        "files": 1,
+        "words": 373,
+        "bytes": 2660
+      },
+      "callers": [
+        {
+          "path": "skills/no-comments/SKILL.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "reviewing-designs",
+      "category": "methodology",
+      "root": {
+        "words": 506,
+        "bytes": 3830
+      },
+      "totals": {
+        "files": 2,
+        "words": 1877,
+        "bytes": 13109
+      },
+      "callers": [
+        {
+          "path": "skills/eng-design-doc-review/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-design/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/references/08-design-review-gate-design.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "reviewing-documentation",
+      "category": "methodology",
+      "root": {
+        "words": 397,
+        "bytes": 2928
+      },
+      "totals": {
+        "files": 1,
+        "words": 397,
+        "bytes": 2928
+      },
+      "callers": [
+        {
+          "path": "agents/technical-writer.md",
+          "kind": "preload"
+        }
+      ]
+    },
+    {
+      "name": "reviewing-security",
+      "category": "methodology",
+      "root": {
+        "words": 421,
+        "bytes": 3213
+      },
+      "totals": {
+        "files": 1,
+        "words": 421,
+        "bytes": 3213
+      },
+      "callers": [
+        {
+          "path": "agents/security-reviewer.md",
+          "kind": "preload"
+        }
+      ]
+    },
+    {
+      "name": "running-quality-checks",
+      "category": "methodology",
+      "root": {
+        "words": 606,
+        "bytes": 3949
+      },
+      "totals": {
+        "files": 1,
+        "words": 606,
+        "bytes": 3949
+      },
+      "callers": [
+        {
+          "path": "agents/verifier.md",
+          "kind": "preload"
+        },
+        {
+          "path": "skills/no-comments/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/pr-rebase/references/07-step-2-capture-the-baseline-and-the-recovery-anchor.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/pr-verify/references/04-execution.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reflect/references/06-apply-the-approved-skill-edits.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-implement/references/03-execution.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/references/11-mechanical-gate-test-confirmation.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "shipit",
+      "category": "entry",
+      "root": {
+        "words": 388,
+        "bytes": 2491
+      },
+      "totals": {
+        "files": 3,
+        "words": 1930,
+        "bytes": 11969
+      },
+      "callers": []
+    },
+    {
+      "name": "slicing-work",
+      "category": "methodology",
+      "root": {
+        "words": 319,
+        "bytes": 2254
+      },
+      "totals": {
+        "files": 2,
+        "words": 1209,
+        "bytes": 7869
+      },
+      "callers": [
+        {
+          "path": "agents/structure-planner.md",
+          "kind": "preload"
+        }
+      ]
+    },
+    {
+      "name": "solid",
+      "category": "methodology",
+      "root": {
+        "words": 301,
+        "bytes": 2362
+      },
+      "totals": {
+        "files": 1,
+        "words": 301,
+        "bytes": 2362
+      },
+      "callers": [
+        {
+          "path": "agents/code-reviewer.md",
+          "kind": "direct"
+        },
+        {
+          "path": "agents/implementer.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "sweeping-local-state",
+      "category": "methodology",
+      "root": {
+        "words": 418,
+        "bytes": 3218
+      },
+      "totals": {
+        "files": 2,
+        "words": 2000,
+        "bytes": 13129
+      },
+      "callers": []
+    },
+    {
+      "name": "systematic-debugging",
+      "category": "methodology",
+      "root": {
+        "words": 357,
+        "bytes": 2589
+      },
+      "totals": {
+        "files": 2,
+        "words": 1494,
+        "bytes": 9819
+      },
+      "callers": [
+        {
+          "path": "skills/implementing-slices/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-fix/references/06-execution.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/test-driven-bug-fix/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/test-driven-bug-fix/references/procedure.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/why/references/05-rules.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "systems-thinking",
+      "category": "methodology",
+      "root": {
+        "words": 302,
+        "bytes": 2163
+      },
+      "totals": {
+        "files": 2,
+        "words": 1184,
+        "bytes": 7733
+      },
+      "callers": [
+        {
+          "path": "agents/code-reviewer.md",
+          "kind": "direct"
+        },
+        {
+          "path": "agents/implementer.md",
+          "kind": "direct"
+        },
+        {
+          "path": "agents/planner.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/researcher.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/structure-planner.md",
+          "kind": "direct"
+        },
+        {
+          "path": "agents/structure-planner.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/ux-reviewer.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/authoring-designs/SKILL.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "team",
+      "category": "entry",
+      "root": {
+        "words": 537,
+        "bytes": 4596
+      },
+      "totals": {
+        "files": 16,
+        "words": 6221,
+        "bytes": 44247
+      },
+      "callers": []
+    },
+    {
+      "name": "team-design",
+      "category": "entry",
+      "root": {
+        "words": 850,
+        "bytes": 6193
+      },
+      "totals": {
+        "files": 1,
+        "words": 850,
+        "bytes": 6193
+      },
+      "callers": []
+    },
+    {
+      "name": "team-fix",
+      "category": "entry",
+      "root": {
+        "words": 200,
+        "bytes": 1538
+      },
+      "totals": {
+        "files": 9,
+        "words": 1534,
+        "bytes": 10041
+      },
+      "callers": []
+    },
+    {
+      "name": "team-implement",
+      "category": "entry",
+      "root": {
+        "words": 239,
+        "bytes": 1911
+      },
+      "totals": {
+        "files": 6,
+        "words": 1878,
+        "bytes": 13487
+      },
+      "callers": []
+    },
+    {
+      "name": "team-plan",
+      "category": "entry",
+      "root": {
+        "words": 306,
+        "bytes": 2301
+      },
+      "totals": {
+        "files": 1,
+        "words": 306,
+        "bytes": 2301
+      },
+      "callers": []
+    },
+    {
+      "name": "team-pr",
+      "category": "entry",
+      "root": {
+        "words": 427,
+        "bytes": 3149
+      },
+      "totals": {
+        "files": 7,
+        "words": 4177,
+        "bytes": 28019
+      },
+      "callers": [
+        {
+          "path": "skills/team-implement/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-implement/references/03-execution.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-implement/references/05-standalone-mode-tradeoffs.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/references/13-orchestrator-emit-gate-pr-ship.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "team-question",
+      "category": "entry",
+      "root": {
+        "words": 646,
+        "bytes": 4719
+      },
+      "totals": {
+        "files": 1,
+        "words": 646,
+        "bytes": 4719
+      },
+      "callers": []
+    },
+    {
+      "name": "team-research",
+      "category": "entry",
+      "root": {
+        "words": 707,
+        "bytes": 5079
+      },
+      "totals": {
+        "files": 1,
+        "words": 707,
+        "bytes": 5079
+      },
+      "callers": []
+    },
+    {
+      "name": "team-structure",
+      "category": "entry",
+      "root": {
+        "words": 479,
+        "bytes": 3619
+      },
+      "totals": {
+        "files": 1,
+        "words": 479,
+        "bytes": 3619
+      },
+      "callers": []
+    },
+    {
+      "name": "team-worktree",
+      "category": "entry",
+      "root": {
+        "words": 213,
+        "bytes": 1613
+      },
+      "totals": {
+        "files": 5,
+        "words": 1433,
+        "bytes": 10100
+      },
+      "callers": [
+        {
+          "path": "skills/team-fix/references/05-worktree.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/references/07-orchestrator-emit-gate-leading-worktree.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/references/10-orchestrator-emit-gate-post-design-review-secondary-worktrees.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/worktree-isolation/references/lifecycle.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "technical-design-doc",
+      "category": "methodology",
+      "root": {
+        "words": 305,
+        "bytes": 2292
+      },
+      "totals": {
+        "files": 2,
+        "words": 1137,
+        "bytes": 7911
+      },
+      "callers": [
+        {
+          "path": "skills/reviewing-designs/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-designs/references/review-brief.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "test-driven-bug-fix",
+      "category": "methodology",
+      "root": {
+        "words": 335,
+        "bytes": 2199
+      },
+      "totals": {
+        "files": 2,
+        "words": 1296,
+        "bytes": 7995
+      },
+      "callers": [
+        {
+          "path": "skills/team-fix/references/06-execution.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "test-first-development",
+      "category": "methodology",
+      "root": {
+        "words": 338,
+        "bytes": 2377
+      },
+      "totals": {
+        "files": 2,
+        "words": 1205,
+        "bytes": 7941
+      },
+      "callers": [
+        {
+          "path": "agents/test-architect.md",
+          "kind": "preload"
+        }
+      ]
+    },
+    {
+      "name": "test-style",
+      "category": "methodology",
+      "root": {
+        "words": 485,
+        "bytes": 3316
+      },
+      "totals": {
+        "files": 2,
+        "words": 2265,
+        "bytes": 15643
+      },
+      "callers": [
+        {
+          "path": "agents/code-reviewer.md",
+          "kind": "direct"
+        },
+        {
+          "path": "agents/test-architect.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-code/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-code/references/review-manual.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "tracking-tickets",
+      "category": "methodology",
+      "root": {
+        "words": 541,
+        "bytes": 3354
+      },
+      "totals": {
+        "files": 1,
+        "words": 541,
+        "bytes": 3354
+      },
+      "callers": [
+        {
+          "path": "skills/pr-watch-as-author/references/03-1-arm.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-fix/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-fix/references/04-setup.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-fix/references/07-ship.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-pr/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-pr/references/02-execution.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/references/02-setup.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/references/13-orchestrator-emit-gate-pr-ship.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "unslop",
+      "category": "methodology",
+      "root": {
+        "words": 286,
+        "bytes": 1944
+      },
+      "totals": {
+        "files": 2,
+        "words": 771,
+        "bytes": 5096
+      },
+      "callers": [
+        {
+          "path": "agents/code-reviewer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/design-author.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/file-finder.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/implementer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/planner.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/questioner.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/researcher.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/security-reviewer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/structure-planner.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/technical-writer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/test-architect.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/ux-reviewer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/verifier.md",
+          "kind": "preload"
+        },
+        {
+          "path": "skills/reviewing-designs/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-designs/references/review-brief.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-design/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-implement/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-plan/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-pr/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-question/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-research/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-structure/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-worktree/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/SKILL.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "verifying-ux",
+      "category": "methodology",
+      "root": {
+        "words": 405,
+        "bytes": 3006
+      },
+      "totals": {
+        "files": 2,
+        "words": 1430,
+        "bytes": 9875
+      },
+      "callers": [
+        {
+          "path": "agents/ux-reviewer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "skills/team-pr/references/02-execution.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "why",
+      "category": "entry",
+      "root": {
+        "words": 219,
+        "bytes": 1731
+      },
+      "totals": {
+        "files": 6,
+        "words": 1670,
+        "bytes": 11207
+      },
+      "callers": [
+        {
+          "path": "skills/how/references/05-rules.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-code/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-code/references/review-manual.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-fix/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-fix/references/06-execution.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "worktree-isolation",
+      "category": "methodology",
+      "root": {
+        "words": 412,
+        "bytes": 3030
+      },
+      "totals": {
+        "files": 2,
+        "words": 2211,
+        "bytes": 15239
+      },
+      "callers": [
+        {
+          "path": "skills/team-fix/references/05-worktree.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-pr/references/02-execution.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/references/10-orchestrator-emit-gate-post-design-review-secondary-worktrees.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/references/13-orchestrator-emit-gate-pr-ship.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "writing-prose",
+      "category": "methodology",
+      "root": {
+        "words": 467,
+        "bytes": 3283
+      },
+      "totals": {
+        "files": 2,
+        "words": 2702,
+        "bytes": 17366
+      },
+      "callers": [
+        {
+          "path": "agents/code-reviewer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/design-author.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/file-finder.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/implementer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/planner.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/questioner.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/researcher.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/security-reviewer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/structure-planner.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/technical-writer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/test-architect.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/ux-reviewer.md",
+          "kind": "preload"
+        },
+        {
+          "path": "agents/verifier.md",
+          "kind": "preload"
+        },
+        {
+          "path": "skills/authoring-designs/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/changelog/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/documenting-decisions/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/eng-design-doc-review/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/git-commit/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/product-requirements-doc/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-code/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-code/references/review-manual.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-designs/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/reviewing-designs/references/review-brief.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-design/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-implement/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-plan/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-pr/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-question/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-research/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-structure/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-worktree/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/technical-design-doc/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/technical-design-doc/references/template.md",
+          "kind": "direct"
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "files": 262,
+    "words": 127433,
+    "bytes": 851642
+  },
+  "registrations": {
+    "skills": 91,
+    "agents": 13,
+    "codexManifests": 91,
+    "hosts": {
+      "claude": {
+        "count": 91,
+        "evidence": "source-derived",
+        "sources": [
+          ".claude-plugin/marketplace.json",
+          ".claude-plugin/plugin.json"
+        ]
+      },
+      "codex": {
+        "count": 91,
+        "evidence": "source-derived",
+        "sources": [
+          ".agents/plugins/marketplace.json",
+          ".codex-plugin/plugin.json"
+        ]
+      },
+      "antigravity": {
+        "count": 91,
+        "evidence": "source-derived",
+        "sources": [
+          "plugin.json"
+        ]
+      }
+    },
+    "opencode": {
+      "commands": 91,
+      "discoveryPaths": 87
+    }
+  }
+}
