@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.104.0] - 2026-09-11
+
 ### Fixed
 
 - **`file-finder` now fits the files it finds inside its output budget.** The 28-line cap was smaller than the report format it was paired with: the title, four category headings, blank separators, and two-line wrapped descriptions spent roughly twenty-one lines before the first extra finding, so a normal repo pushed the return over the cap, the single retry also overflowed, and the RESEARCH phase stopped blocked. The output format now emits a heading only for populated categories, writes no blank or separator lines, and holds exactly one finding per line, and the producer cap rises to 40 lines (60 in multi-repo mode). The nested `team:file-finder`/`Explore` scout caps in the `nested-agents` skill rise from 28 and 30 to 40 to match. The assembled `5-research.md` ceiling moves from 99/149 lines to 111/171. **What this asks of you:** nothing.
@@ -917,7 +919,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.103.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.104.0...HEAD
+[0.104.0]: https://github.com/bostonaholic/team/compare/v0.103.0...v0.104.0
 [0.103.0]: https://github.com/bostonaholic/team/compare/v0.102.0...v0.103.0
 [0.102.0]: https://github.com/bostonaholic/team/compare/v0.101.0...v0.102.0
 [0.101.0]: https://github.com/bostonaholic/team/compare/v0.100.0...v0.101.0
