@@ -69,7 +69,7 @@ testIfSelected(
           "skills/team/references/artifacts.md",
           "skills/planning-implementation/SKILL.md",
           "skills/engineering-standards/SKILL.md",
-          "skills/systems-thinking/SKILL.md",
+          "skills/team/references/dependencies.md",
         ]),
         workingDirectory: workDir,
         maxTurns: 8,

@@ -176,7 +176,7 @@
       ]
     },
     {
-      "path": "skills/authoring-designs/SKILL.md",
+      "path": "skills/team/playbooks/design.md",
       "destinations": [
         "skills/team/principles/focused-work.md",
         "skills/team/references/decisions.md"
@@ -205,7 +205,7 @@
       ]
     },
     {
-      "path": "skills/decomposing-intent/SKILL.md",
+      "path": "skills/team/playbooks/question.md",
       "destinations": [
         "skills/team/principles/independent-review.md",
         "skills/team/references/decisions.md"
@@ -506,7 +506,7 @@
       ]
     },
     {
-      "path": "skills/researching-codebases/SKILL.md",
+      "path": "skills/team/playbooks/research.md",
       "destinations": [
         "skills/team/principles/independent-review.md",
         "skills/team/principles/verified-results.md"
@@ -754,17 +754,12 @@
     }
   ],
   "registrations": [
-    "authoring-designs",
     "changelog",
     "code-review",
     "conventional-comments",
     "cross-model-review",
-    "decision-making",
-    "decomposing-intent",
-    "documenting-decisions",
     "eng-design-doc-review",
     "engineering-standards",
-    "finding-files",
     "git-commit",
     "groom-backlog",
     "how",
@@ -780,12 +775,9 @@
     "pr-watch-as-author",
     "pr-watch-as-reviewer",
     "pr-watch-mechanics",
-    "product-requirements-doc",
-    "product-thinking",
     "qrspi-workflow",
     "refactoring-to-patterns",
     "reflect",
-    "researching-codebases",
     "review-severity-tiers",
     "reviewing-code",
     "reviewing-comments",
@@ -798,7 +790,6 @@
     "solid",
     "sweeping-local-state",
     "systematic-debugging",
-    "systems-thinking",
     "team",
     "team-design",
     "team-fix",
@@ -809,7 +800,6 @@
     "team-research",
     "team-structure",
     "team-worktree",
-    "technical-design-doc",
     "test-driven-bug-fix",
     "test-first-development",
     "test-style",

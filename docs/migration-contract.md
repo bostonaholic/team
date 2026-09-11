@@ -182,3 +182,48 @@ The artifact `docs/plans/GH-371-shared-principles/caller-ledger.md` records indi
 Historical plans and measured baseline records keep their original paths and counts. Current catalogs and executable verification recipes use the migrated resources.
 Evaluation calls explicitly inject moved bytes alongside retained procedures. Fixture dependencies and selector entries change together.
 Installed fixture delivery, prompt capture, and selection checks do not establish native receiving-agent behavior or paid evaluation outcomes.
+
+## M04: intent, research, and design procedures
+
+The catalog retains 25 commands and 30 methodologies, totaling 55 registrations, with 13 unchanged agent roles.
+Ten registrations move into three playbooks, five reference resources, and one shared dependency checklist. No compatibility stubs remain.
+Standalone phase commands, neutral research inputs, researcher/file-finder return contracts, topic invariants, conditional PRD/repo artifacts, and the design-review gate retain their existing behavior.
+
+| Retired registration | Destination | Retained contract |
+| --- | --- | --- |
+| `decomposing-intent` | `skills/team/playbooks/question.md` | Task/question decomposition, topic invariants, research isolation, multi-repo detection. |
+| `product-requirements-doc` | `skills/team/playbooks/question.md`; `skills/team/references/prd-template.md` | Conditional `3-prd.md` criteria and section contract. |
+| `researching-codebases` | `skills/team/playbooks/research.md` | Evidence-only findings, 60/100-line researcher return contract. |
+| `finding-files` | `skills/team/playbooks/research.md` | Search strategies and 40/60-line file-finder return contract. |
+| `authoring-designs` | `skills/team/playbooks/design.md`; `skills/team/references/design-template.md` | Repo-scope resolution, autonomous assumptions, design section contract. |
+| `technical-design-doc` | `skills/team/references/design-template.md` | Edge-case categories, trade-offs, and rollout folded into one design template. |
+| `decision-making` | `skills/team/references/decisions.md` | Reversibility/risk classification and the one-way-door scorecard. |
+| `documenting-decisions` | `skills/team/references/decisions.md` | ADR format, file convention, and status lifecycle. |
+| `product-thinking` | `question.md`, `design.md`, and the structure-planner body | Demand evidence, smallest-version, and slice-1-value lenses. |
+| `systems-thinking` | `skills/team/references/dependencies.md` | Co-changing caller checks across Research, Design, Structure, Plan, Implement, and Review. |
+
+`skills/team/references/multi-repo.md` and `question-templates.md` carry the multi-repo safety rules and the task/questions body templates.
+The shared dependency checklist at `skills/team/references/dependencies.md` replaces the `systems-thinking` lens and its six role sections.
+Structure, Plan, Implement, and Review surfaces read that checklist directly instead of preloading a skill; later milestones move their sections into the corresponding playbooks and review briefs.
+
+### Named runtime consumers
+
+| Consumer | Operation | Replacement |
+| --- | --- | --- |
+| `agents/questioner.md` | Decompose task and questions | Read `skills/team/playbooks/question.md` from the installed definition |
+| `agents/researcher.md` | Answer neutral questions | Read `skills/team/playbooks/research.md` from the installed definition |
+| `agents/file-finder.md` | Locate files | Read `skills/team/playbooks/research.md` from the installed definition |
+| `agents/design-author.md` | Draft the design | Read `skills/team/playbooks/design.md` from the installed definition |
+| `agents/structure-planner.md` | Slice the design | Inline product-need lens; read `skills/team/references/dependencies.md` |
+| `agents/planner.md` | Write the tactical plan | Read `skills/team/references/dependencies.md` |
+| `agents/implementer.md` | Execute slices | Read `skills/team/references/dependencies.md` |
+| `agents/ux-reviewer.md` | Verify adjacent flows | Read `skills/team/references/dependencies.md` |
+| `agents/code-reviewer.md` | Review System fit | Read `skills/team/references/dependencies.md` |
+| `skills/team-question/SKILL.md` | Dispatch the questioner | Reference `question.md` and `prd-template.md` |
+| `skills/reviewing-designs/SKILL.md` and `review-brief.md` | Review a design | Read `design-template.md` and `decisions.md` |
+| `skills/nested-agents/SKILL.md` and `per-agent-dispatch.md` | Weigh a stated rule above precedent | Read `dependencies.md` |
+| `skills/slicing-work/SKILL.md`, `skills/pr-open-comments/SKILL.md`, `skills/groom-backlog/references/11-*` | Resolve consequential choices | Read `decisions.md` |
+
+The Question-to-Design eval fixtures (`team-question`, `team-research`, `team-design`, `eng-design-doc-review`) inject the playbook and reference bytes alongside the retained principles and review briefs.
+Installer fixtures sample `skills/team/playbooks/design.md` and `skills/team/references/design-template.md` for nested-resource delivery.
+Catalog description and catalog-line budgets ratchet from 8,200/11,800 to 7,000/10,000 characters after the ten registrations move.

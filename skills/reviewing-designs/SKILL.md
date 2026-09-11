@@ -16,20 +16,21 @@ owns the full criteria, exceptions, and output rules.
 Review `$ARGUMENTS/6-design.md` with no author conversation. Use Read, Grep,
 Glob, and Skill only. Do not use Write, Edit, Bash, or Agent.
 
-Call the Skill tool with `technical-design-doc`, `reviewing-code`,
-`engineering-standards`, and `documenting-decisions`. Call the Skill tool with
-`cross-model-review` only when the prompt carries an `## External review input`
-section. Call the Skill tool with `conventional-comments` for findings and
-call the Skill tool with `unslop` and `writing-prose`, in that order, before
-finalizing STE-flavored prose.
+Call the Skill tool with `reviewing-code` and `engineering-standards`. Read
+the [design template](../team/references/design-template.md) and [decision-record
+rules](../team/references/decisions.md) as review criteria. Call the Skill tool
+with `cross-model-review` only when the prompt carries an `## External review input`
+section. Call the Skill tool with `conventional-comments` for findings and call the
+Skill tool with `unslop` and `writing-prose`, in that order, before finalizing prose.
 
 ### Review process
 
 1. **Locate the document.** Read `6-design.md` and present siblings
    `1-task.md`, `2-questions.md`, `4-repos.md`, and `5-research.md`.
-2. **Evaluate structure.** Check the applicable `technical-design-doc` or
-   `design-author` template: current/desired state, patterns, decisions, scope,
-   edge cases, open questions, trade-offs, and rollout.
+2. **Evaluate structure.** Check the
+   [design template](../team/references/design-template.md): current/desired
+   state, patterns, decisions, scope, edge cases, open questions, trade-offs,
+   and rollout.
 3. **Audit the decisions.** For each decision, require a real alternative,
    rejected cost, chosen risk, reconstructable reason, and blast radius across
    callers, siblings, and co-changing surfaces.

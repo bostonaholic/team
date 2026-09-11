@@ -95,7 +95,7 @@ Never put `$` followed by a digit in `SKILL.md`; hosts may substitute it as an a
 - Add methodology registrations to `docs/skills.md`. Document ordinary resources separately.
 - Write every `docs/skills.md` entry as its heading, the verbatim first sentence of the frontmatter `description`, one `**Used by:**` line, then one `**Uses:**` line. Use comma-separated backticked names, or `None`. Rewriting a `description` updates that entry in the same commit.
 - `Used by` lists, in codepoint order, every skill whose `Uses` list names this skill.
-- `Uses` lists only the skills the files load through ``Call the Skill tool with `<name>` ``, in any `.md` under `skills/<name>/`, references and prompt templates included. A citation is not a use, so a skill it merely names by path or in prose stays off the list. Sort in codepoint order (plain `sort`, so `pr-verify` precedes `product-thinking`). `tests/docs-skills-catalog.test.ts` is the gate.
+- `Uses` lists only the skills the files load through ``Call the Skill tool with `<name>` ``, in any `.md` under `skills/<name>/`, references and prompt templates included. A citation is not a use, so a skill it merely names by path or in prose stays off the list. Sort in codepoint order (plain `sort`, so `pr-verify` precedes `reviewing-code`). `tests/docs-skills-catalog.test.ts` is the gate.
 - Add one TodoWrite item per ordered step by applying [execution rules](../../../skills/team/references/execution.md); do not copy its banner into the skill.
 - Update `agents/openai.yaml` whenever the description changes.
 - For runtime behavior, update `CHANGELOG.md` under `Unreleased`; version only at land time.

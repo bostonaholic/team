@@ -97,16 +97,16 @@ printf '%s\n' "$result" > .context/verification/installed-resources/installers.e
 Use a fresh evidence directory for each run. The dependency list above applies.
 The suites use fake Claude and Codex commands, disposable plugin copies, temporary homes, and outside consumer directories.
 They need writable temporary storage and no host login.
-Both suites copy `team/` and `authoring-designs/` only for these cases.
+Both suites copy `team/` only for these cases.
 The Codex fixture unlinks its disposable `skills/` symlink before it copies files.
 Shared fixture constructors and ordinary installer cases retain their defaults.
 
 The reader samples these paths beneath each installed root:
 
 - `skills/team/SKILL.md`
-- `skills/authoring-designs/SKILL.md`
+- `skills/team/playbooks/design.md`
 - `skills/team/principles/verified-results.md`
-- `skills/authoring-designs/references/design-template.md`
+- `skills/team/references/design-template.md`
 - `skills/team/registry.json`
 - `skills/team/discover-topic.sh`
 

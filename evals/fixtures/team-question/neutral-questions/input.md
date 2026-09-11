@@ -6,11 +6,10 @@ deps:
   - skills/team/principles/independent-review.md
   - skills/team/references/decisions.md
   - skills/team/references/artifacts.md
-  - skills/decomposing-intent/SKILL.md
-  - skills/decomposing-intent/references/artifact-templates.md
+  - skills/team/playbooks/question.md
+  - skills/team/references/question-templates.md
   - skills/team/references/external-data.md
   - skills/team-question/**
-  - skills/decomposing-intent/**
   - agents/questioner.md
 ---
 

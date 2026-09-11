@@ -30,8 +30,8 @@ The receiver reads them before work. Missing resources stop that step with the e
    picture: reconcile overlaps, resolve contradictions by checking the
    code yourself, and weave the slices together. Reference specific
    files and functions so the reader can go look — the evidence bar for
-   claims about code is a `file:line` citation, per
-   `skills/researching-codebases/SKILL.md`. Acknowledge any gap an
+   claims about code is a `file:line` citation, per the
+   [research playbook](../../team/playbooks/research.md). Acknowledge any gap an
    explorer flagged instead of papering over it. Then write the
    `## Output format`.
 

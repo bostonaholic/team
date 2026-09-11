@@ -58,8 +58,8 @@ describe("methodology skills are never user-invocable", () => {
 
   // Guard: an empty or mis-parsed catalog would pass every check below.
   test("the catalog parse sees both kinds of section", () => {
-    expect(entries.length).toBe(65);
-    expect(entries.filter((e) => e.section === METHODOLOGY_SECTION).length).toBe(40);
+    expect(entries.length).toBe(55);
+    expect(entries.filter((e) => e.section === METHODOLOGY_SECTION).length).toBe(30);
     expect(entries.filter((e) => COMMAND_SECTIONS.includes(e.section)).length).toBe(25);
   });
 
@@ -188,8 +188,8 @@ describe("skill flavor and catalog completeness", () => {
   // Guard: a mis-parsed catalog or an unreadable skills/ tree would pass every
   // offender check below vacuously.
   test("the catalog and the skills directory both parse non-empty", () => {
-    expect(directories.length).toBeGreaterThan(60);
-    expect(entries.length).toBeGreaterThan(60);
+    expect(directories.length).toBeGreaterThan(50);
+    expect(entries.length).toBeGreaterThan(50);
   });
 
   test("the three flavor classifiers agree for every catalogued skill", () => {

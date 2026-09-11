@@ -117,10 +117,10 @@ describe("how skill: dispatch contract", () => {
     );
   });
 
-  test("evidence bar is file:line per researching-codebases", () => {
+  test("evidence bar is file:line per the research playbook", () => {
     const t = body();
     expect(t).toContain("file:line");
-    expect(t).toContain("skills/researching-codebases/SKILL.md");
+    expect(t).toContain("team/playbooks/research.md");
   });
 });
 

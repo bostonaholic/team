@@ -75,10 +75,6 @@ const NEW_SKILLS: { skill: string; agent: string; anchor: string }[] = [
   { skill: "implementing-slices", agent: "implementer", anchor: "acceptance test" },
   { skill: "running-quality-checks", agent: "verifier", anchor: "speed order" },
   { skill: "verifying-ux", agent: "ux-reviewer", anchor: "curl" },
-  { skill: "decomposing-intent", agent: "questioner", anchor: "2-questions.md" },
-  { skill: "authoring-designs", agent: "design-author", anchor: "6-design.md" },
-  { skill: "researching-codebases", agent: "researcher", anchor: "5-research.md" },
-  { skill: "finding-files", agent: "file-finder", anchor: "2-questions.md" },
   { skill: "slicing-work", agent: "structure-planner", anchor: "7-structure.md" },
   { skill: "planning-implementation", agent: "planner", anchor: "8-plan.md" },
 ];
@@ -115,14 +111,14 @@ describe("thin agents: new skills carry the moved procedure content", () => {
 describe("thin agents: frontmatter skills preloads per agent", () => {
   const EXPECTED_PRELOADS: Record<string, string[]> = {
     "code-reviewer": ["conventional-comments", "cross-model-review", "nested-agents", "reviewing-code", "unslop", "writing-prose"],
-    "design-author": ["authoring-designs", "product-thinking", "unslop", "writing-prose"],
-    "file-finder": ["finding-files", "unslop", "writing-prose"],
+    "design-author": ["unslop", "writing-prose"],
+    "file-finder": ["unslop", "writing-prose"],
     implementer: ["implementing-slices", "nested-agents", "unslop", "writing-prose"],
-    planner: ["planning-implementation", "systems-thinking", "unslop", "writing-prose"],
-    questioner: ["decomposing-intent", "product-thinking", "unslop", "writing-prose"],
-    researcher: ["nested-agents", "researching-codebases", "systems-thinking", "unslop", "writing-prose"],
+    planner: ["planning-implementation", "unslop", "writing-prose"],
+    questioner: ["unslop", "writing-prose"],
+    researcher: ["nested-agents", "unslop", "writing-prose"],
     "security-reviewer": ["conventional-comments", "nested-agents", "reviewing-code", "reviewing-security", "unslop", "writing-prose"],
-    "structure-planner": ["product-thinking", "slicing-work", "systems-thinking", "unslop", "writing-prose"],
+    "structure-planner": ["slicing-work", "unslop", "writing-prose"],
     "technical-writer": ["conventional-comments", "reviewing-code", "reviewing-documentation", "unslop", "writing-prose"],
     "test-architect": ["test-first-development", "unslop", "writing-prose"],
     "ux-reviewer": ["reviewing-code", "unslop", "verifying-ux", "writing-prose"],
@@ -169,29 +165,6 @@ const PRELOAD_BUDGET_REASONS: Record<string, BudgetReason> = {
     count: 5,
     reason:
       "It keeps four documentation methods, including `writing-prose`, and adds the shared `unslop` owner.",
-  },
-  "design-author": {
-    count: 4,
-    reason:
-      "It keeps three design methods, including `writing-prose`, and adds the shared `unslop` owner.",
-  },
-  researcher: {
-    count: 5,
-    reason:
-      "It keeps three Research methods plus the shared `writing-prose` and `unslop` owners.",
-  },
-  "structure-planner": {
-    count: 5,
-    reason:
-      "It keeps three structure methods plus the shared `writing-prose` and `unslop` owners.",
-  },
-  questioner: {
-    count: 4,
-    reason: "It keeps two intent methods plus the shared `writing-prose` and `unslop` owners.",
-  },
-  planner: {
-    count: 4,
-    reason: "It keeps two planning methods plus the shared `writing-prose` and `unslop` owners.",
   },
   implementer: {
     count: 4,
@@ -414,7 +387,7 @@ describe("thin agents: duplicated summaries deleted from wrappers", () => {
 describe("thin agents: haiku skills are self-contained", () => {
   // verifier and file-finder run on haiku, which cannot be trusted to chase
   // cross-references — their skills must carry everything inline.
-  for (const skill of ["finding-files", "running-quality-checks"]) {
+  for (const skill of ["running-quality-checks"]) {
     test(`${skill} has no skills/ cross-references`, () => {
       const content = readOrEmpty(skillPath(skill));
       expect(content.length).toBeGreaterThan(0);
@@ -436,8 +409,6 @@ describe("thin agents: skills catalog stays complete", () => {
 describe("thin agents: name-collision pairs documented", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const COLLISION_PAIRS: [string, string][] = [
-    ["finding-files", "file-finder"],
-    ["authoring-designs", "design-author"],
     ["implementing-slices", "implementer"],
     ["planning-implementation", "planner"],
     ["verifying-ux", "ux-reviewer"],
@@ -453,12 +424,12 @@ describe("thin agents: name-collision pairs documented", () => {
 
 describe("thin agents: eval diff-selection keeps firing on the new skills", () => {
   const TOUCHFILE_ADDITIONS: Record<string, string[]> = {
-    "team-question-neutral-questions": ["skills/decomposing-intent/**"],
-    "team-design-seeded-research-and-task": ["skills/authoring-designs/**"],
-    "team-research-answers-seeded-questions": ["skills/researching-codebases/**", "skills/finding-files/**"],
-    "team-structure-seeded-design": ["skills/slicing-work/**"],
-    "team-plan-seeded-structure": ["skills/planning-implementation/**"],
-    "eng-design-doc-review-planted-missing-alternatives": ["skills/documenting-decisions/**", "skills/technical-design-doc/**", "skills/reviewing-designs/**"],
+    "team-question-neutral-questions": ["skills/team/playbooks/question.md", "skills/team/references/question-templates.md"],
+    "team-design-seeded-research-and-task": ["skills/team/playbooks/design.md", "skills/team/references/design-template.md"],
+    "team-research-answers-seeded-questions": ["skills/team/playbooks/research.md"],
+    "team-structure-seeded-design": ["skills/team/references/dependencies.md"],
+    "team-plan-seeded-structure": ["skills/team/references/dependencies.md"],
+    "eng-design-doc-review-planted-missing-alternatives": ["skills/team/references/design-template.md", "skills/team/references/decisions.md", "skills/reviewing-designs/**"],
   };
 
   const FIXTURE_INPUTS: Record<string, string> = {

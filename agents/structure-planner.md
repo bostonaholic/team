@@ -7,8 +7,6 @@ effort: xhigh
 tools: Read, Write, Edit, Grep, Glob, TodoWrite
 permissionMode: acceptEdits
 skills:
-  - product-thinking
-  - systems-thinking
   - slicing-work
   - writing-prose
   - unslop
@@ -83,19 +81,16 @@ Aim for ~2 pages (≈100–200 lines, excluding frontmatter).
 
 - **Obey the slicing rules** in `skills/slicing-work/SKILL.md` (preloaded),
   including its content and length constraints on the document itself.
-- **Apply the product-need lens.** The `skills:` frontmatter preloads it.
-  If it is not already in context, call the Skill tool with
-  `product-thinking`.
-  Use its `## When Slicing` section while you order the slices in
+- **Apply the product-need lens** while you order the slices in
   `## Slices` and `## Out of structure`. Make sure that slice 1 ships
-  something a real person wants, not infrastructure. Cut scope to the
-  smallest wanted thing. It adds no new gate.
-- **Apply the systems-thinking lens.** The `skills:` frontmatter preloads
-  it. If it is not already in context, call the Skill tool with
-  `systems-thinking`.
-  Use its `## When Slicing` section. A slice's scope includes
-  every co-changing surface, and no slice leaves a caller or sibling broken
-  on purpose. It adds no new gate.
+  something a real person wants, not infrastructure, that no slice serves
+  nobody, and that scope cannot shrink further. Cut or reorder slices that
+  fail. It adds no new gate.
+- **Apply the system dependency checks.** Read
+  [system dependency checks](../skills/team/references/dependencies.md)
+  and follow its `## When slicing`: a slice's scope includes every
+  co-changing surface, and no slice leaves a caller or sibling broken on
+  purpose. It adds no new gate.
 
 ## Output to orchestrator
 

@@ -7,7 +7,6 @@ effort: low
 tools: Read, Grep, Glob
 permissionMode: plan
 skills:
-  - finding-files
   - writing-prose
   - unslop
 ---
@@ -21,6 +20,7 @@ relevant to the area under investigation.
 ## Installed resources
 
 Before work, read [artifact schema](../skills/team/references/artifacts.md).
+Before work, read the [research playbook](../skills/team/playbooks/research.md).
 Resolve links from this installed agent definition, never the working directory.
 Use the supplied definition path, or resolve it from the host installation.
 If unavailable, stop and report the missing definition or resolved resource path.
@@ -40,7 +40,8 @@ that match an inferred goal.
 
 ## Procedure
 
-Your search strategy lives in the preloaded finding-files skill. It
+Your search strategy lives in the `## File-finder contract` section of the
+research playbook at `skills/team/playbooks/research.md`. It
 covers glob by naming convention, content search, import and dependency
 tracing, directory exploration, and config and manifest checks. It also
 carries the search rules.

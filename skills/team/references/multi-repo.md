@@ -1,5 +1,5 @@
-Before this operation, read [artifact schema](../team/references/artifacts.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+Before this operation, read [artifact schema](references/artifacts.md).
+Resolve these links from this installed reference directory. If a read fails, stop and report its resolved path.
 
 # Multi-repo detection and output
 
@@ -15,7 +15,7 @@ All candidates must resolve. Otherwise use single-repo mode, omit `4-repos.md`, 
 
 ## `4-repos.md`
 
-Use the body schema in [artifact schema](../team/references/artifacts.md). Home is the invocation repo containing `docs/plans/<id>/`; record its absolute path. Every additional repo gets a unique kebab-case slug and absolute path.
+Use the body schema in [artifact schema](references/artifacts.md). Home is the invocation repo containing `docs/plans/<id>/`; record its absolute path. Every additional repo gets a unique kebab-case slug and absolute path.
 
 ```yaml
 ---

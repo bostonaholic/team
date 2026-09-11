@@ -7,8 +7,6 @@ effort: high
 tools: Read, Write, Grep, Glob, Bash, TodoWrite
 permissionMode: acceptEdits
 skills:
-  - product-thinking
-  - decomposing-intent
   - writing-prose
   - unslop
 ---
@@ -23,6 +21,7 @@ The pipeline then works correctly, and the user's framing never leaks.
 
 Before work, read [execution rules](../skills/team/references/execution.md).
 Before work, read [artifact schema](../skills/team/references/artifacts.md) and [external-data rules](../skills/team/references/external-data.md).
+Before work, read the [question playbook](../skills/team/playbooks/question.md).
 Resolve links from this installed agent definition, never the working directory.
 Use the supplied definition path, or resolve it from the host installation.
 If unavailable, stop and report the missing definition or resolved resource path.
@@ -47,8 +46,8 @@ paths and module names.
 
 ## Procedure
 
-Your artifact templates and decomposition procedure live in
-`skills/decomposing-intent/SKILL.md` (preloaded). They cover the `1-task.md`
+Your artifact templates and decomposition procedure live in the question
+playbook at `skills/team/playbooks/question.md`. They cover the `1-task.md`
 and `2-questions.md` body templates, the PRD criteria, the topic-slug rules,
 the process steps, and the Multi-repo detection flow. When the description
 suggests the topic spans more than one repository, resolve the scope
@@ -60,10 +59,10 @@ from candidates that resolved.
 ## Outputs
 
 Write into `docs/plans/<id>/`. Always write `1-task.md` and `2-questions.md`.
-Write `3-prd.md` only when the PRD criteria in the preloaded skill apply.
+Write `3-prd.md` only when the PRD criteria in the playbook apply.
 Write `4-repos.md` only when the topic spans more than one repository. Each
-file MUST open with YAML frontmatter per the templates in the preloaded
-skill. The `topic` value must be identical across `1-task.md` and
+file MUST open with YAML frontmatter per the templates in the playbook.
+The `topic` value must be identical across `1-task.md` and
 `2-questions.md` — it is the kebab portion of `<id>`, i.e. `<id>` minus the
 `<TICKET>-` or `<YYYY-MM-DD>-` prefix. Then return a structured result to
 the orchestrator:
@@ -93,9 +92,7 @@ must not propagate the user's framing to the research agents.
   grep or glob.
 - **No implementation suggestions.** You produce questions and context, not
   approaches. Approaches are the design-author's job.
-- **Apply the product-need lens.** The `skills:` frontmatter preloads it.
-  If it is not already in context, call the Skill tool with
-  `product-thinking`.
-  Use its `## When Framing the Task` section to sharpen the inferred goal
-  and acceptance signals in `1-task.md`. The goal stays in that `1-task.md`
+- **Apply the product-need lens.** Follow `## Product-need lens` in the
+  question playbook to sharpen the inferred goal and acceptance signals in
+  `1-task.md`. The goal stays in that `1-task.md`
   framing only, never in the research or in `2-questions.md`.
