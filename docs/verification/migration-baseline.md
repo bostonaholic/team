@@ -959,3 +959,168 @@ All discovery-consistency assertions passed.
 No acceptance-test defect surfaced in these runs.
 The installer-error and deliberate-timeout paths remain unmeasured in the new cases.
 The coordinator owns the signed slice commit and the subsequent committed-diff evaluation selection.
+
+## Topic recovery and verdict parsing
+
+The locked recovery suite passed all 48 cases with 394 assertions at `e59a62ad7c185f937083706b3b21ca24b697ef93`.
+No fixture support change was necessary. These characterization cases passed before implementation.
+The implementer changed only the two verification documents. The test-architect file remains byte-identical.
+Its SHA-256 is `6a7ea5605b5826477ccfca3187665ecca90a2ce32a885bbde4b0ab4cb0a08a16`.
+Confidence: high, from the focused replay and file digest.
+
+Evidence lives in `.context/verification/m01-slice3/`.
+`focused.stdout.log` retains all fixture inputs and subprocess observations before each cleanup.
+`focused.stderr.log` retains exact case names and Bun results. `focused.json` records command, revision, exit status, and wall duration.
+`case-records.json` retains per-case source revisions, full consumer paths, commands, expected results, actual results, and durations.
+Temporary paths identify removed fixtures and are not reusable directories.
+
+The earlier test-architect run remains separate under `.context/verification/slice3-author-hfizh75g/`.
+Its `audit.json` records 48 cases, 48 removed fixtures, and 610 unchanged tracked files at the same revision.
+Its focused replay passed with 394 assertions in 4.483504667 wall seconds.
+The implementer replay took 4.414014667010633 wall seconds and exited 0.
+Both runs used the untracked locked test file on that HEAD.
+Confidence: high, from both retained command records, output streams, and audits.
+
+Exact implementer focused count excerpt:
+
+```text
+ 48 pass
+ 0 fail
+ 394 expect() calls
+Ran 48 tests across 1 file. [4.36s]
+```
+
+### Per-hook observations
+
+Every case in the tables below has source revision `e59a62ad7c185f937083706b3b21ca24b697ef93`.
+Each result cell gives the topic ID and phase. Its artifact directory is `<consumer>/docs/plans/<ID>`.
+The suite asserted each full directory against that case's consumer path before cleanup.
+`none` means empty stdout and stderr, without a recovered topic or phase.
+Every hook invocation exited 0 with empty stdout and no subprocess error or signal.
+For eligible topics, stderr contained JSON recovery context. The tables record the parsed topic and phase separately for each hook.
+
+| Scenario | Expected topic / phase | session-start-recover.mjs actual | pre-compact-anchor.mjs actual |
+| --- | --- | --- | --- |
+| zero topics | none | none | none |
+| one researched topic | `GH-369-researched` / DESIGN | `GH-369-researched` / DESIGN | `GH-369-researched` / DESIGN |
+| structure resumes at PLAN | `GH-369-structured` / PLAN | `GH-369-structured` / PLAN | `GH-369-structured` / PLAN |
+| newest phase artifact selects the topic | `GH-369-z-newer` / DESIGN | `GH-369-z-newer` / DESIGN | `GH-369-z-newer` / DESIGN |
+| invalid prefix alone is ineligible | none | none | none |
+| newer invalid prefix cannot replace an eligible topic | `GH-369-eligible` / DESIGN | `GH-369-eligible` / DESIGN | `GH-369-eligible` / DESIGN |
+| malformed JSON falls back to subprocess cwd | `GH-369-fallback` / DESIGN | `GH-369-fallback` / DESIGN | `GH-369-fallback` / DESIGN |
+| missing review | `GH-369-review` / DESIGN | `GH-369-review` / DESIGN | `GH-369-review` / DESIGN |
+| missing verdict | `GH-369-review` / DESIGN | `GH-369-review` / DESIGN | `GH-369-review` / DESIGN |
+| unknown verdict | `GH-369-review` / DESIGN | `GH-369-review` / DESIGN | `GH-369-review` / DESIGN |
+| REQUEST CHANGES | `GH-369-review` / DESIGN | `GH-369-review` / DESIGN | `GH-369-review` / DESIGN |
+| APPROVE | `GH-369-review` / STRUCTURE | `GH-369-review` / STRUCTURE | `GH-369-review` / STRUCTURE |
+| COMMENT | `GH-369-review` / STRUCTURE | `GH-369-review` / STRUCTURE | `GH-369-review` / STRUCTURE |
+| failing review 10 supersedes passing review 9 | `GH-369-review` / DESIGN | `GH-369-review` / DESIGN | `GH-369-review` / DESIGN |
+| verdict at line 60 | `GH-369-boundary` / STRUCTURE | `GH-369-boundary` / STRUCTURE | `GH-369-boundary` / STRUCTURE |
+| verdict at line 61 | `GH-369-boundary` / DESIGN | `GH-369-boundary` / DESIGN | `GH-369-boundary` / DESIGN |
+| closing delimiter at line 60 | `GH-369-boundary` / STRUCTURE | `GH-369-boundary` / STRUCTURE | `GH-369-boundary` / STRUCTURE |
+| closing delimiter at line 61 | `GH-369-boundary` / STRUCTURE | `GH-369-boundary` / STRUCTURE | `GH-369-boundary` / STRUCTURE |
+| unclosed passing header | `GH-369-boundary` / STRUCTURE | `GH-369-boundary` / STRUCTURE | `GH-369-boundary` / STRUCTURE |
+
+The first seven rows cover topic selection. The next seven cover review selection. The final five cover parser boundaries.
+Review cases use `GH-369-review` with complete artifacts through `6-design.md`.
+Nonempty ordinary verdict fields appear on line 5 with closure on line 6.
+The numeric-order case writes failing review 10 before passing review 9 and gives review 9 the later mtime.
+Both hooks still choose review 10 and retain DESIGN.
+
+The recency case gives `GH-369-z-newer/5-research.md` mtime 1767398400.
+Its older peer, `GH-369-a-older`, has phase-artifact mtimes from 1767312000 through 1767312240.
+Both hooks choose the newer researched topic despite alphabetical order and the older topic's later phase.
+The malformed-JSON input is exactly `{malformed`. Both hooks recover `GH-369-fallback` through subprocess cwd.
+Confidence: high, from the fixture records, parsed contexts, and passing assertions for both hooks.
+
+### Discovery boundary observations
+
+Every row below uses the same exact source revision stated above and topic `GH-369-boundary`.
+Each mode ran in its own fresh consumer. Expected and actual outputs matched in all ten cases.
+All ten subprocesses exited 0 with empty stderr, no signal, and no error.
+Bare discovery passed arguments `""`, `6-design.md`, and `--require-passing-review`.
+Explicit discovery replaced the empty argument with `docs/plans/GH-369-boundary`.
+
+| Scenario | Verdict / closing delimiter lines | Bare expected stdout | Bare actual stdout | Explicit expected stdout | Explicit actual stdout |
+| --- | --- | --- | --- | --- | --- |
+| verdict at line 60 | 60 / 61 | `""` | `""` | `"docs/plans/GH-369-boundary\n"` | `"docs/plans/GH-369-boundary\n"` |
+| verdict at line 61 | 61 / 62 | `""` | `""` | `"docs/plans/GH-369-boundary\n"` | `"docs/plans/GH-369-boundary\n"` |
+| closing delimiter at line 60 | 5 / 60 | `"docs/plans/GH-369-boundary/\n"` | `"docs/plans/GH-369-boundary/\n"` | `"docs/plans/GH-369-boundary\n"` | `"docs/plans/GH-369-boundary\n"` |
+| closing delimiter at line 61 | 5 / 61 | `""` | `""` | `"docs/plans/GH-369-boundary\n"` | `"docs/plans/GH-369-boundary\n"` |
+| unclosed passing header | 5 / absent | `""` | `""` | `"docs/plans/GH-369-boundary\n"` | `"docs/plans/GH-369-boundary\n"` |
+
+The table uses JSON string notation, including the exact newline and trailing-slash differences.
+All five boundary fixtures contain `APPROVE` and start with `---` on physical line 1.
+A verdict at line 60 advances both hooks to STRUCTURE despite closure at line 61.
+A verdict at line 61 leaves both hooks at DESIGN.
+Closure at line 60 permits bare discovery. Closure at line 61 or no closure excludes the topic.
+Both hooks accept a line-5 passing verdict with no closing delimiter.
+Explicit discovery returns the supplied existing path in every case. This bypass supplies no evidence of review enforcement.
+Confidence: high, from the ten discovery subprocess records and corresponding hook cases.
+
+### Manual inspection and cleanup
+
+Inspection compared all 34 emitted hook contexts against their expected full directories, topic IDs, and phases.
+The remaining four hook cases produced empty context: zero topics and invalid-prefix-only, once per hook.
+All 48 subprocess observations preceded their case's cleanup record. All 48 cleanup records reported expected and actual `absent`.
+A direct post-run path inspection found no remaining consumers. `focused-inspection.json` retains the counts and digest.
+
+Inspection also compared the boundary results with `.claude/scripts/check-discovery-consistency.sh`.
+Its unclosed-header and over-cap cases exclude bare candidates. Its explicit-path case accepts `NotAValidId` despite review gating.
+The script passed at the same revision in 0.5216556249943096 wall seconds, with exit 0 and empty stderr.
+It used an owned temporary root. Post-run inspection found no children and removed that empty root.
+`discovery.json` retains its exact path, cleanup result, command, revision, and duration.
+
+Exact discovery stdout:
+
+```text
+
+All discovery-consistency assertions passed.
+```
+
+No case timed out, and no timeout was deliberately injected. Timeout cleanup remains unmeasured under an actual timeout.
+These observations characterize phase inference and discovery only. They do not establish full orchestrator execution or live-host instruction use.
+Wrong-type cwd inputs, concurrent writers, and branch-derived IMPLEMENT inference remain outside this case matrix.
+The initial inventory, runtime parsers, plugin registration, and frozen Golden Master inputs remain unchanged.
+Confidence: high for observed results and cleanup, from retained subprocess evidence and direct file inspection.
+
+### Slice 3 verification checkpoint
+
+All four commands exited 0 at `e59a62ad7c185f937083706b3b21ca24b697ef93`.
+The full suite and typecheck tested the unchanged locked recovery file and both updated verification documents.
+`checkpoint-state.json` retains their exact SHA-256 hashes. Adjacent `.checkpoint` copies retain the tested bytes.
+Only this observed-output checkpoint was appended afterward. The passing full suite and typecheck were not repeated for that append.
+
+| Command | Observed result | Wall duration, seconds | Evidence under `.context/verification/m01-slice3/` |
+| --- | --- | ---: | --- |
+| `bun test ./tests/pipeline-recovery.test.ts` | 48 pass, 0 fail, 394 assertions | 4.414014667010633 | `focused.json`, `focused.stdout.log`, `focused.stderr.log` |
+| `bash .claude/scripts/check-discovery-consistency.sh` | All discovery-consistency assertions passed. | 0.5216556249943096 | `discovery.json`, `discovery.stdout.log`, `discovery.stderr.log` |
+| `bun run typecheck` | Exit 0 | 0.42112641598214395 | `typecheck.json`, `typecheck.stdout.log`, `typecheck.stderr.log` |
+| `bun test` | 2623 pass, 4 skip, 0 fail, 10088 assertions, 2627 tests, 79 files | 131.60972025000956 | `full.json`, `full.stdout.log`, `full.stderr.log` |
+
+The full suite includes Slice 1's three acceptance cases, Slice 2's eight cases, and Slice 3's 48 cases.
+Its four conditional hook-schema skips retain the reasons recorded above.
+The full replay removed all 48 recovery consumers and all 24 registered installer paths.
+Post-run inspection found no remaining paths. `full-cleanup-inspection.json` retains that audit separately from the focused audit.
+`manual-inspection.json` records the parser comparison, output checks, evidence order, and unchanged protected files.
+Confidence: high, from complete command logs, file hashes, and direct path inspection.
+
+Exact full-suite count excerpt:
+
+```text
+ 2623 pass
+ 4 skip
+ 0 fail
+ 10088 expect() calls
+Ran 2627 tests across 79 files. [131.57s]
+```
+
+Exact typecheck stderr:
+
+```text
+$ tsc --noEmit
+```
+
+No acceptance-test defect or unresolved Slice 3 failure surfaced.
+No newly passing case followed an implementation fix. All 48 characterization cases were already green.
+The coordinator owns the signed slice commit and subsequent committed-diff evaluation selection.

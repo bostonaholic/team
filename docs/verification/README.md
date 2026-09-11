@@ -12,9 +12,10 @@ The supplied baseline used Bun 1.4.2. Free checks need no model credentials.
 | `bun run scripts/migration-inventory.ts <checkout-root>` | JSON on stdout, exit 0 | [Initial inventory](baselines/m01.json) |
 | `bun test ./tests/migration-inventory.test.ts` | Three passing acceptance cases | [Replay records](migration-baseline.md) |
 | `bun test ./tests/dev-install-claude.test.ts ./tests/dev-install-codex.test.ts` | Both installer suites pass | [Installed delivery observations](migration-baseline.md#installed-resource-delivery) |
+| `bun test ./tests/pipeline-recovery.test.ts` | 48 passing recovery and discovery cases | [Recovery observations](migration-baseline.md#topic-recovery-and-verdict-parsing) |
 | `bun test` | No failures, with conditional skips named | [Free-suite observations](migration-baseline.md) |
 | `bun run typecheck` | Exit 0 | [Typecheck observations](migration-baseline.md) |
-| `bash .claude/scripts/check-discovery-consistency.sh` | `All discovery-consistency assertions passed.` | [Discovery observations](migration-baseline.md) |
+| `bash .claude/scripts/check-discovery-consistency.sh` | `All discovery-consistency assertions passed.` | [Discovery observations](migration-baseline.md#manual-inspection-and-cleanup) |
 | `bun run eval:select` | Exit 0 with the selected evaluation names | [Selection observations](migration-baseline.md) |
 
 `<checkout-root>` identifies the measured checkout. The command uses its Git revision, skills, agents, manifests, and OpenCode sources.
@@ -119,3 +120,47 @@ The [measured records](migration-baseline.md#installed-resource-delivery) includ
 No deliberate installer timeout was injected in this baseline.
 These checks establish fake-host installation and filesystem delivery. Live-host instruction use remains unmeasured.
 Confidence: high for these contracts, from both installer suites and their retained operation records.
+
+## Topic recovery and verdict parsing
+
+Run the recovery suite and discovery acceptance script from the Team checkout:
+
+```bash
+mkdir -p .context/verification/recovery
+bun test ./tests/pipeline-recovery.test.ts > .context/verification/recovery/recovery.stdout.log 2> .context/verification/recovery/recovery.stderr.log
+result=$?
+printf '%s\n' "$result" > .context/verification/recovery/recovery.exit
+bash .claude/scripts/check-discovery-consistency.sh > .context/verification/recovery/discovery.stdout.log 2> .context/verification/recovery/discovery.stderr.log
+result=$?
+printf '%s\n' "$result" > .context/verification/recovery/discovery.exit
+```
+
+Use a fresh evidence directory for each run. The dependency list above applies.
+The recovery suite needs writable temporary storage and no host credentials.
+It uses unique non-Git consumer directories, complete artifacts, supported topic IDs, and distinct controlled artifact modification times.
+Both hooks receive the consumer directory through JSON and subprocess cwd.
+The malformed-JSON case omits `CLAUDE_PROJECT_DIR` and uses subprocess cwd.
+
+Expect 48 passing cases: 19 per hook, five bare discovery cases, and five explicit discovery cases.
+The [case tables](migration-baseline.md#topic-recovery-and-verdict-parsing) distinguish each hook from both discovery modes.
+Research resumes at DESIGN. Structure resumes at PLAN.
+Missing reviews, absent verdict fields, unknown tokens, and REQUEST CHANGES retain DESIGN for a design-only topic.
+APPROVE and COMMENT advance it to STRUCTURE. Review 10 supersedes review 9.
+
+Both hooks read verdicts through physical line 60 without requiring a closing header delimiter.
+Bare gated discovery requires that delimiter within 60 lines.
+An existing explicit directory bypasses review filtering, including when `--require-passing-review` is present.
+Explicit-path selection supplies no evidence of review enforcement.
+
+Standard output retains JSON records for fixtures, subprocess results, parsed contexts, and cleanup.
+Each operation records its case, scenario, source revision, consumer, command, expected result, actual result, and duration.
+Hook subprocess stdout stays empty. Recovery context appears in stderr JSON under `hookSpecificOutput.additionalContext`.
+No eligible topic produces empty stderr. Bun writes case results and counts to the suite's stderr log.
+
+Each subprocess has a 15-second timeout. Errors, signals, and unexpected statuses fail the case after diagnostics print.
+Teardown removes each registered consumer after its case and reports its absence. Cleanup failures fail the case.
+Retain both output streams after cleanup. Inspect recorded paths for leftovers.
+The discovery script suppresses cleanup errors. Run it with an owned temporary root and inspect that root separately.
+No deliberate timeout was injected in the recorded run.
+These checks measure phase inference and shell discovery. Source reads and installed resource reads do not prove live-host behavior.
+Confidence: high, from the locked suite, runtime parsers, and retained case observations.
