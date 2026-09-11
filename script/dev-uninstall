@@ -7,7 +7,7 @@ set -euo pipefail
 #   script/dev-uninstall          every harness
 #   script/dev-uninstall codex    just that one
 
-HARNESSES=(claude codex antigravity)
+HARNESSES=(claude codex antigravity opencode)
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(dirname "$HERE")"
 HOOK_MARKER="# Managed by Team dev install."

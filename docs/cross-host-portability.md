@@ -1,6 +1,6 @@
 ---
 title: Cross-host portability
-description: "A capability matrix mapping Team's Claude Code plugin primitives onto the other hosts it runs on — Codex CLI and Antigravity CLI — and the portability strategy chosen for them."
+description: "A capability matrix mapping Team's Claude Code plugin primitives onto the other hosts it runs on — Codex CLI, Antigravity CLI, and OpenCode — and their supported capabilities."
 audience: [developer]
 nav_order: 9
 nav_label: portability
@@ -40,6 +40,7 @@ nav_label: portability
 - [Decisions made](#decisions-made)
 - [What #57 builds against](#what-57-builds-against)
 - [Antigravity CLI](#antigravity-cli)
+- [OpenCode](#opencode)
 - [Out of scope](#out-of-scope)
 - [Edge cases](#edge-cases)
 - [Open questions (deferred to the port epic)](#open-questions-deferred-to-the-port-epic)
@@ -546,6 +547,90 @@ definition and dispatches it through the host's subagent facility (see
 remain unported on this host. That work stays with
 [#56](https://github.com/bostonaholic/team/issues/56).
 
+## OpenCode
+
+OpenCode loads the native `opencode/team.js` plugin through one symlink in its
+configuration directory. `script/dev-install opencode` and
+`script/dev-uninstall opencode` manage that exact-owned registration; see
+[installation](index.md#opencode) for prerequisites, overrides, restart, worktrees,
+conflicts, dangling targets, and lock recovery. Installation validates the
+checkout without reading user JSON/JSONC or invoking OpenCode. Its success says
+registered. Malformed native configuration can still prevent loading afterward.
+
+`opencode/catalog.mjs` owns catalog validation for both installation and plugin
+initialization. The entry resolves its real file before importing the helper, so
+checkout aliases and linked worktrees resolve to canonical file/base paths.
+Each immediate real skill directory contributes one regular `SKILL.md`. The
+validator walks its tree once without following symlinks. It rejects linked
+entries, nested `SKILL.md`, duplicate names, ambiguous consumed frontmatter, and
+empty catalogs. Ordinary references and scripts stay available. Headers are read
+once. Bodies stay on disk. Canonical paths containing `$`, backticks, or `@` are
+rejected before registration or config contribution. Spaces and Unicode are
+supported. Existing command collisions or wrong consumed config types reject the
+whole contribution before paths or commands change.
+
+Every skill gets a native configured command with its description and a quoted
+absolute file/base pointer. The template declares explicit invocation, requests
+a filesystem read, resolves relative references against the canonical base, and
+supplies `$ARGUMENTS`. It embeds no skill body and sets no model or agent override.
+This preserves literal shell examples and argument references inside canonical
+skill content. Even `user-invocable: false` methodology skills appear in the
+command menu. Commands include `/reflect`, whose description states that OpenCode
+session reflection is unsupported: its transcript resolver supports Claude Code
+and Codex only.
+
+`disable-model-invocation: true` excludes a directory from **Team's added
+`skills.paths` only**. Other paths retain their order and exact duplicates are
+removed. Team does not rewrite user-owned skill sources. An external source can
+expose its own guarded copies or win resolution of a duplicate skill name.
+Inspect the resolved skill's location separately from the command template:
+Team's configured commands retain canonical pointers despite duplicate skill
+sources. Later plugins or MCP commands can still collide; the initialization
+collision check cannot guarantee ownership after other contributors run.
+
+### Command permissions and preprocessing
+
+A Team command requests a filesystem read subject to native `read` and
+`external_directory` rules. An unguarded skill-tool call instead uses `skill`
+permission and returns content cached by native discovery. `read: deny` does
+**not** deny that cached route. Guarded skills remain available as explicit
+command-file read requests. Team leaves existing `read`, `external_directory`,
+`skill`, and `bash` rules unchanged and adds no permission overrides.
+
+OpenCode preprocesses supplied command arguments. For example, the native syntax
+below can run `printf` before any model call:
+
+```text
+/team-question !`printf example`
+```
+
+This shell substitution runs outside model-tool permission checks, including
+`bash: deny`. Native file references and placeholders also retain their native
+argument behavior. Canonical file pointers protect skill **body text**, not
+untrusted arguments. Team adds no argument escaping or expansion adapter.
+
+### Lifecycle and support limits
+
+The shared Node lifecycle helper creates the plugin parent only for installation,
+canonicalizes it, then atomically acquires `plugins/team.js.lock` before inspecting
+or changing the target. Config aliases therefore share a lock. Matching absolute
+symlinks converge on reinstall/removal, including a missing runtime target on
+uninstall. Foreign links and non-link targets fail unchanged. Cleanup removes only
+the acquired empty lock. A busy/stale lock requires manual recovery after checking
+no lifecycle process remains. Config, credentials, other plugins, and existing
+parents remain untouched.
+
+Concurrent checkout edits during catalog loading and external programs replacing
+files without the lifecycle lock are unsupported. A new OpenCode process reads
+current checkout content. No generated catalog, cache copy, provider call, or
+persistent Team process is introduced.
+
+Native discovery was observed on OpenCode 1.18.20. Support covers registration,
+skill/command discovery, and the developer lifecycle. Full QRSPI execution,
+specialist/nested-agent dispatch, translated reviewer permissions, and runtime
+hooks remain unverified. No provider, credentials, model-tier translation, or
+model-quality guarantee is installed. `/reflect` cannot process OpenCode sessions.
+
 ## Out of scope
 
 - **Writing any of the port code.** #56 and #57 own the implementation. This is
@@ -556,10 +641,9 @@ remain unported on this host. That work stays with
   `.github/`), which is never distributed and never ported.
 - **Adopting MCP as a transport.** Documented as fallback only (decision 4).
 - **Reduced-MVP parity.** Explicitly rejected: full parity is the target.
-- **A fourth host.** Claude Code, Codex CLI, and Antigravity CLI are the three
-  this study covers. Only the first two are scored in the matrix; Antigravity
-  has its own section instead, because what is known about it covers one version
-  rather than every primitive.
+- **Full OpenCode parity.** Its native installation/discovery adapter is covered
+  separately above; the pipeline portability matrix does not certify OpenCode
+  execution, agent permissions, or hooks.
 - **Guaranteeing host API stability.** The young-API recency risk is surfaced and
   assigned to the shim layer plus version pinning, not eliminated.
 

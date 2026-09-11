@@ -65,8 +65,8 @@ someone recomputes it. This is what happened on PR #208, which opened as
 
 The version, changelog, and release exist for **plugin end users**, so a bump is
 warranted **only when a PR changes the distributed plugin**: `agents/`,
-`skills/`, `hooks/`, or host manifest *content* — `.claude-plugin/`,
-`.codex-plugin/`, `.agents/plugins/` — (the
+`skills/`, `hooks/`, `opencode/`, or host manifest *content* — `.claude-plugin/`,
+`.codex-plugin/`, `.agents/plugins/`, root `plugin.json` — (the
 [Runtime vs. development](../AGENTS.md) split). Contributor-facing and
 plugin-developer infrastructure (`.github/`, `.claude/`, `docs/`, `tests/`,
 `evals/`, and build tooling) **never bumps**, whatever its conventional-commit

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Native OpenCode installation from a live Team checkout.** `script/dev-install opencode` registers canonical skills and file-reading commands; `script/dev-uninstall opencode` removes only that checkout's link. Aggregate lifecycle commands include OpenCode. Registration preserves native configuration and credentials. Full pipeline execution, reviewer isolation, and hooks remain unverified; OpenCode session `/reflect` is unsupported.
+
 ## [0.102.0] - 2026-09-10
 
 ### Changed

@@ -23,6 +23,7 @@ nav_label: architecture
 - [4. Agent roster](#4-agent-roster)
 - [5. Phase-table orchestrator](#5-phase-table-orchestrator)
 - [6. Skills](#6-skills)
+- [OpenCode adapter](#opencode-adapter)
 - [7. Hooks](#7-hooks)
 - [8. Behavioral evals](#8-behavioral-evals)
 - [9. State management](#9-state-management)
@@ -934,6 +935,51 @@ directions.
 `short_description` has no mechanical derivation. The creation guide requires
 updating `agents/openai.yaml` whenever `description:` changes; the manifest gate
 checks its shape and length.
+
+## OpenCode adapter
+
+Distributed `opencode/team.js` exports only the native plugin function. It resolves
+its real checkout and imports `opencode/catalog.mjs`, the same catalog validator
+used by `script/dev-opencode.mjs`. The Bash lifecycle entry scripts require Node.
+`script/dev-install`/`dev-uninstall` and `dev.yml` route the OpenCode target to them.
+`opencode/` counts as distributed runtime for land-time versioning.
+
+The catalog enumerates immediate real skill directories in stable order, reads
+each header once, and walks each tree once without following links. It rejects
+nested skill files, symlinks, invalid/ambiguous consumed frontmatter, duplicate
+names, empty catalogs, and canonical template-marker paths. References and
+scripts remain canonical files. Install validates before registration; plugin
+initialization validates before returning config contributions. Existing command
+collisions and invalid consumed config types fail before any config mutation.
+
+All skills receive native configured commands containing canonical file/base
+pointers and `$ARGUMENTS`, without embedded bodies, model overrides, or agent
+overrides. This includes methodology skills marked `user-invocable: false`.
+Frontmatter `disable-model-invocation: true` excludes only Team's added native
+skill paths. Those skills still have explicit commands. Existing external skill
+sources may expose their own guarded copies or resolve duplicate names to other
+files. Team commands retain canonical pointers, but later plugins/MCP can collide.
+
+Command-file reads use native `read` and `external_directory` permission. Unguarded
+cached skill loading uses `skill` permission. `read: deny` does not block that
+route. Supplied arguments retain native preprocessing, including shell syntax
+such as `` !`printf example` `` that can run before a model call, outside
+model-tool rules including `bash: deny`. File pointers preserve body text. They
+do not make arguments inert. See [OpenCode support](cross-host-portability.md#opencode)
+for usage and resolved-skill versus command-template diagnostics.
+
+Lifecycle operations canonicalize the existing plugin parent, acquire its atomic
+`team.js.lock` directory, then inspect/change only the exact-owned symlink. They
+release only their acquired empty lock, refuse busy/stale locks, preserve config
+and credentials without reading them, and never invoke OpenCode. Install success
+means registered. Native config loading remains separate. New host processes read
+live checkout edits. Concurrent checkout edits or external replacement without
+the lifecycle lock are unsupported.
+
+This adapter establishes discovery and lifecycle support. Full QRSPI execution,
+specialist/nested dispatch, reviewer isolation, and hooks on OpenCode remain
+unverified. `/reflect` stays guarded and discoverable but cannot process OpenCode
+sessions because its mandatory transcript resolver supports Claude Code/Codex.
 
 ## 7. Hooks
 

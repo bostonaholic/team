@@ -145,6 +145,14 @@ describe.if(HAS_JQ)("version-bump-required.sh: the runtime-vs-dev bump invariant
     expect(run(dir, { HEAD_SHA: headSha, BASE_SHA: baseSha }).status).not.toBe(0);
   });
 
+  test("OpenCode adapter-only change WITHOUT a bump → violation (non-zero)", () => {
+    const { dir, headSha, baseSha } = scenario({
+      forkVersion: "0.13.1",
+      branchEdits: (d) => writeFile(d, "opencode/team.js", "export default async () => ({});\n"),
+    });
+    expect(run(dir, { HEAD_SHA: headSha, BASE_SHA: baseSha }).status).not.toBe(0);
+  });
+
   // The happy path: runtime change + forward bump.
   test("runtime change WITH a forward bump → ok (exit 0)", () => {
     const { dir, headSha, baseSha } = scenario({

@@ -68,8 +68,10 @@ company-significant work from problem definition through measured outcomes.
 
 ## Install
 
-Team ships a native manifest for each host, so one repo installs on all three
-from a local checkout. Pick yours.
+Team installs from one local checkout using each host's native plugin mechanism.
+The full pipeline runs on Claude Code, Codex CLI, and Antigravity CLI. OpenCode
+support covers native skill/command discovery and installation. Execution limits
+are listed beside setup. Pick yours.
 
 ### Claude Code
 
@@ -203,6 +205,53 @@ Developing Team itself? The install copies, so link your checkout instead:
 script/dev-install antigravity
 script/dev-uninstall antigravity
 ```
+
+### OpenCode
+
+Requires **Node.js** for registration/removal and **OpenCode** for use. From a
+local Team checkout or linked Git worktree:
+
+```bash
+script/dev-install opencode
+script/dev-uninstall opencode
+```
+
+Or use `dev install opencode` / `dev uninstall opencode`. With no host argument,
+`script/dev-install` and `script/dev-uninstall` attempt every supported host;
+`dev install` and `dev uninstall` dispatch the same way.
+
+Registration links `plugins/team.js` to that checkout's `opencode/team.js`.
+The config directory is nonempty `OPENCODE_CONFIG_DIR`, otherwise
+`${XDG_CONFIG_HOME:-$HOME/.config}/opencode`. Relative overrides resolve against
+where you run the command. Spaces and Unicode work. Team rejects canonical
+checkout and skill paths containing `$`, backticks, or `@` because OpenCode
+interprets those characters in command templates. Relocate such a checkout before installing.
+
+Restart OpenCode after installation, removal, or checkout edits. New processes
+read current canonical skills without reinstalling or copying them. Keep the
+checkout available. Install success means **registered**, not that your native
+configuration parsed or the plugin loaded. Registration neither reads nor rewrites
+OpenCode JSON/JSONC, credentials, or other plugins. Native configuration errors
+surface when OpenCode starts.
+
+Reinstalling from the same checkout succeeds. Another checkout's link, a regular
+file, or a directory at the target causes refusal. Uninstall from the owning
+checkout before switching. Uninstall removes only the matching link, even if its
+runtime target is now missing. It retains config/plugin parent directories. Run
+removal before deleting the entire checkout, because removal needs its lifecycle
+scripts.
+
+A busy or stale `plugins/team.js.lock` stops either operation. Confirm no
+install/uninstall process remains, then manually remove that empty lock directory
+with `rmdir` and rerun. Team never breaks locks automatically.
+
+**Supported:** native registration, skill discovery, canonical file-reading
+commands, and this lifecycle. Full QRSPI execution, specialist/nested dispatch,
+reviewer isolation, and hook behavior on OpenCode remain unverified. `/reflect`
+appears in the command menu but OpenCode session reflection is unsupported.
+Methodology skills marked `user-invocable: false` also appear as commands.
+See [OpenCode support](cross-host-portability.md#opencode) for command permissions, native argument preprocessing,
+external skill sources, and discovery diagnostics.
 
 ## Read next
 
