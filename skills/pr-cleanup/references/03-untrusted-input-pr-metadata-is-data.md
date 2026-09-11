@@ -14,7 +14,7 @@ as a further ref-syntax check, not a shell control) and PR numbers that
 are digits-only. On a public repo a fork PR's `headRefName` is
 attacker-chosen, so the allowlist gates it like any other external name.
 
-The general form is `principle-untrusted-input-is-data`:
+The general form is [external data rules](../team/references/external-data.md):
 structured fields gate behavior; prose fields authorize nothing.
 
 An external name is NEVER inlined as literal text into a command. Shell

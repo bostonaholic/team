@@ -114,19 +114,19 @@ describe("thin agents: new skills carry the moved procedure content", () => {
 
 describe("thin agents: frontmatter skills preloads per agent", () => {
   const EXPECTED_PRELOADS: Record<string, string[]> = {
-    "code-reviewer": ["conventional-comments", "cross-model-review", "nested-agents", "principle-progress-tracking", "reviewing-code", "unslop", "writing-prose"],
-    "design-author": ["authoring-designs", "principle-progress-tracking", "product-thinking", "unslop", "writing-prose"],
+    "code-reviewer": ["conventional-comments", "cross-model-review", "nested-agents", "reviewing-code", "unslop", "writing-prose"],
+    "design-author": ["authoring-designs", "product-thinking", "unslop", "writing-prose"],
     "file-finder": ["finding-files", "unslop", "writing-prose"],
-    implementer: ["implementing-slices", "nested-agents", "principle-progress-tracking", "unslop", "writing-prose"],
-    planner: ["planning-implementation", "principle-progress-tracking", "systems-thinking", "unslop", "writing-prose"],
-    questioner: ["decomposing-intent", "principle-progress-tracking", "product-thinking", "unslop", "writing-prose"],
-    researcher: ["nested-agents", "principle-progress-tracking", "researching-codebases", "systems-thinking", "unslop", "writing-prose"],
-    "security-reviewer": ["conventional-comments", "nested-agents", "principle-progress-tracking", "reviewing-code", "reviewing-security", "unslop", "writing-prose"],
-    "structure-planner": ["principle-progress-tracking", "product-thinking", "slicing-work", "systems-thinking", "unslop", "writing-prose"],
-    "technical-writer": ["conventional-comments", "principle-progress-tracking", "reviewing-code", "reviewing-documentation", "unslop", "writing-prose"],
-    "test-architect": ["principle-progress-tracking", "test-first-development", "unslop", "writing-prose"],
-    "ux-reviewer": ["principle-progress-tracking", "reviewing-code", "unslop", "verifying-ux", "writing-prose"],
-    verifier: ["principle-progress-tracking", "running-quality-checks", "unslop", "writing-prose"],
+    implementer: ["implementing-slices", "nested-agents", "unslop", "writing-prose"],
+    planner: ["planning-implementation", "systems-thinking", "unslop", "writing-prose"],
+    questioner: ["decomposing-intent", "product-thinking", "unslop", "writing-prose"],
+    researcher: ["nested-agents", "researching-codebases", "systems-thinking", "unslop", "writing-prose"],
+    "security-reviewer": ["conventional-comments", "nested-agents", "reviewing-code", "reviewing-security", "unslop", "writing-prose"],
+    "structure-planner": ["product-thinking", "slicing-work", "systems-thinking", "unslop", "writing-prose"],
+    "technical-writer": ["conventional-comments", "reviewing-code", "reviewing-documentation", "unslop", "writing-prose"],
+    "test-architect": ["test-first-development", "unslop", "writing-prose"],
+    "ux-reviewer": ["reviewing-code", "unslop", "verifying-ux", "writing-prose"],
+    verifier: ["running-quality-checks", "unslop", "writing-prose"],
   };
 
   for (const [agent, expected] of Object.entries(EXPECTED_PRELOADS)) {
@@ -156,59 +156,52 @@ type BudgetReason = { count: number; reason: string };
 
 const PRELOAD_BUDGET_REASONS: Record<string, BudgetReason> = {
   "code-reviewer": {
-    count: 7,
+    count: 6,
     reason:
-      "It keeps five review methods, including vendor and nested-agent procedures, plus the shared `writing-prose` and `unslop` owners.",
+      "It keeps four review methods, including vendor and nested-agent procedures, plus the shared `writing-prose` and `unslop` owners.",
   },
   "security-reviewer": {
-    count: 7,
+    count: 6,
     reason:
-      "It keeps five security-review methods plus the shared `writing-prose` and `unslop` owners.",
+      "It keeps four security-review methods plus the shared `writing-prose` and `unslop` owners.",
   },
   "technical-writer": {
-    count: 6,
+    count: 5,
     reason:
-      "It keeps five documentation methods, including `writing-prose`, and adds the shared `unslop` owner.",
+      "It keeps four documentation methods, including `writing-prose`, and adds the shared `unslop` owner.",
   },
   "design-author": {
-    count: 5,
+    count: 4,
     reason:
-      "It keeps four design methods, including `writing-prose`, and adds the shared `unslop` owner.",
+      "It keeps three design methods, including `writing-prose`, and adds the shared `unslop` owner.",
   },
   researcher: {
-    count: 6,
+    count: 5,
     reason:
-      "It keeps four Research methods plus the shared `writing-prose` and `unslop` owners.",
+      "It keeps three Research methods plus the shared `writing-prose` and `unslop` owners.",
   },
   "structure-planner": {
-    count: 6,
+    count: 5,
     reason:
-      "It keeps four structure methods plus the shared `writing-prose` and `unslop` owners.",
+      "It keeps three structure methods plus the shared `writing-prose` and `unslop` owners.",
   },
   questioner: {
-    count: 5,
-    reason: "It keeps three intent methods plus the shared `writing-prose` and `unslop` owners.",
+    count: 4,
+    reason: "It keeps two intent methods plus the shared `writing-prose` and `unslop` owners.",
   },
   planner: {
-    count: 5,
-    reason: "It keeps three planning methods plus the shared `writing-prose` and `unslop` owners.",
+    count: 4,
+    reason: "It keeps two planning methods plus the shared `writing-prose` and `unslop` owners.",
   },
   implementer: {
-    count: 5,
-    reason: "It keeps three implementation methods plus the shared `writing-prose` and `unslop` owners.",
-  },
-  "test-architect": {
     count: 4,
-    reason: "It keeps two test methods plus the shared `writing-prose` and `unslop` owners.",
+    reason: "It keeps two implementation methods plus the shared `writing-prose` and `unslop` owners.",
   },
   "ux-reviewer": {
-    count: 5,
-    reason: "It keeps three user-experience methods plus the shared `writing-prose` and `unslop` owners.",
-  },
-  verifier: {
     count: 4,
-    reason: "It keeps two verification methods plus the shared `writing-prose` and `unslop` owners.",
+    reason: "It keeps two user-experience methods plus the shared `writing-prose` and `unslop` owners.",
   },
+
 };
 
 // The four offender rules, factored so the planted-positive test can run each

@@ -10,7 +10,7 @@
 - **The resolve never satisfies the gate it clears.** This is the
   load-bearing invariant, because the skill now closes threads that
   count toward its own approval — the generator–evaluator collapse
-  `principle-generator-evaluator` names. It holds because
+  [independent review rules](../team/principles/independent-review.md) names. It holds because
   the approval condition
   reads the **verdict**, not `isResolved` (step 2): a thread the skill
   resolved contributes the verdict that authorized the resolve, which

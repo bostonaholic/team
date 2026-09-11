@@ -180,5 +180,5 @@ byte-identical, so a companion edit neither duplicates nor drops it.
 **Failure posture:** every branch ends with an open PR, a visible note, and
 local paths. Upload problems never block the PR, retry-loop, or prompt the
 user — the upload is an enhancement per
-`principle-optimization-never-dependency`, and its absence
+[focused work rules](../team/principles/focused-work.md), and its absence
 costs nothing but the note.

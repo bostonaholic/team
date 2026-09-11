@@ -361,7 +361,7 @@ describe("Slice 2: installed resources: codex", () => {
   const samples = [
     "skills/team/SKILL.md",
     "skills/authoring-designs/SKILL.md",
-    "skills/principle-fail-closed/SKILL.md",
+    "skills/team/principles/verified-results.md",
     "skills/authoring-designs/references/design-template.md",
     "skills/team/registry.json",
     "skills/team/discover-topic.sh",
@@ -441,7 +441,7 @@ describe("Slice 2: installed resources: codex", () => {
     revision = source.stdout.trim();
     unlinkSync(join(fixture.root, "skills"));
     mkdirSync(join(fixture.root, "skills"), { recursive: true });
-    for (const name of ["team", "authoring-designs", "principle-fail-closed"]) {
+    for (const name of ["team", "authoring-designs"]) {
       cpSync(join(REPO_ROOT, "skills", name), join(fixture.root, "skills", name), { recursive: true });
     }
   });

@@ -53,6 +53,10 @@ testIfSelected(
       const result = await runAgentTest({
         prompt,
         systemPromptAppend: loadInstructionContext([
+          "skills/team/principles/durable-state.md",
+          "skills/team/principles/independent-review.md",
+          "skills/team/principles/verified-results.md",
+          "skills/team/principles/focused-work.md",
           "skills/reviewing-designs/SKILL.md",
           "skills/reviewing-designs/references/review-brief.md",
           "skills/technical-design-doc/SKILL.md",

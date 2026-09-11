@@ -7,6 +7,9 @@ argument-hint: "[<pr-number-or-url>]"
 
 # pr-watch-as-author — bounded PR review watch loop
 
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 `pr-watch-as-author` closes the gap between "PR open" and "ship it". It promotes the
 PR out of draft, takes a baseline snapshot, and polls GitHub on a bounded
 cycle. When new review feedback arrives, it runs the triage procedure in
@@ -49,5 +52,6 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-bounded-loops`, `principle-idempotent-reruns`,
-`principle-non-blocking-waits`, and `principle-untrusted-input-is-data`.
+Read and apply: [execution rules](../team/references/execution.md),
+[durable state rules](../team/principles/durable-state.md), and
+[external data rules](../team/references/external-data.md).

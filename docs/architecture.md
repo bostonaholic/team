@@ -689,9 +689,9 @@ agent's frontmatter, one indented `- <name>` per line. For example,
 ```yaml
 skills:
   - product-thinking
-  - principle-progress-tracking
   - authoring-designs
   - writing-prose
+  - unslop
 ```
 
 That is four counted names against the load limit in the Design
@@ -725,15 +725,13 @@ path's rename-detection, and it is strictly stronger — it catches a rename
 *and* a typo, where a path assertion only ever confirmed a string was
 present. `skills/git-commmit/SKILL.md` passed the old check.
 
-Artifact schemas and shell rules use ordinary resources under `skills/team/references/`, outside skill registration.
+Shared principles use five ordinary documents under `skills/team/principles/`. Artifact and operational rules use scoped references, outside registration.
 Consumers explicitly read their installed paths before work; missing files stop the consuming operation with the resolved path.
 The [dispatch contract](https://github.com/bostonaholic/team/blob/main/skills/team/references/15-host-dispatch.md) supplies definition and resource paths for named, body-loaded, and standalone agents.
 
 The load form applies **only where the other skill is genuinely needed**. A
 citation keeps its path and its ordinary wording: a schema lookup, a "see
-also", a rule already restated inline (the `principle-progress-tracking` blockquote
-every multi-step skill carries), and a pointer to a skill the frontmatter
-already preloaded. Turning one of those into a tool call would spend a call
+also", and a pointer to a skill the frontmatter already preloaded. Turning one of those into a tool call would spend a call
 and a slice of context on content nobody asked for.
 
 The sweep asserts the *reference*, not the sentence around it — the same
@@ -758,7 +756,7 @@ new entry-point skill, leave it unset, so it registers as a slash
 command.
 
 The field is honored by Claude Code only. Codex reads no invocability
-field at all, so it lists every methodology and `principle-*` skill in
+field at all, so it lists every registered methodology skill in
 its `$` picker and a user can invoke any of them. There is no fix on
 Team's side, and the workarounds that look plausible all fail — see
 [cross-host-portability.md](cross-host-portability.md#57-codex-port)
@@ -815,7 +813,7 @@ rather than authoring it.
 
 **Second tier: a skill that gates every mutation on its own in-run
 approval** carries the guard there instead, which is where
-`skills/principle-explicit-intent/SKILL.md` puts it. `groom-backlog` is
+[human-control rules](https://github.com/bostonaholic/team/blob/main/skills/team/principles/human-control.md) puts it. `groom-backlog` is
 the worked example — it presents each irreversible close and waits.
 Setting `disable-model-invocation` is a further per-skill call with its
 own recorded reason, never a property of this class. An in-class skill
@@ -872,15 +870,14 @@ of exhaustive case lists; define shared rules once; keep `SKILL.md` as a router
 to `references/` and scripts; use descriptions only for capability and trigger;
 and test commands, numbers, names, paths, or behavior rather than prose wording.
 
-Source budgets are 25 lines for `principle-*`, 80 for methodology, and 150 for
+Source budgets remain 80 lines for methodology and 150 for
 entry points. Descriptions are at most 200 characters, or 150 for methodology.
 `tests/skill-budget.test.ts` enforces these limits. An overage requires a current
 `SKILL_BUDGET_REASONS` entry with its exact line count and reviewed reason.
 
 1. **Methodology skill load limit:** three methodology skills is what an
    agent gets without argument. **Every name in the agent's `skills:`
-   block counts** — a `principle-` skill and the agent's own extracted
-   procedure skill alike. An agent that lists more than three carries one
+   block counts**, including the agent's own procedure skill. An agent that lists more than three carries one
    recorded reason, and that record names the count it justifies. The
    record is `PRELOAD_BUDGET_REASONS` in `tests/thin-agents.test.ts`,
    keyed by agent; the reason is reviewed prose and the count is what the
@@ -899,23 +896,13 @@ entry points. Descriptions are at most 200 characters, or 150 for methodology.
    that is only meaningful inside one consumer's procedure, a
    **procedure fragment**, stays inline in that consumer.
 
-3. **Principle skills:** some skills carry the `principle-` prefix, and the
-   prefix is a claim, not a namespace. Each states one cross-cutting
-   invariant — fail closed, bounded loops, evidence over assertion, and
-   their siblings. The skills that apply a rule consult it by citation,
-   and any agent can load it just-in-time. A preloaded principle skill
-   counts against the load limit like any other name: twelve of the
-   thirteen agents preload `principle-progress-tracking`, and
-   `file-finder` is the one that does not. Each exists so the rule is
-   defined once, not restated in every skill that obeys it. The set is
-   enumerated in one place, `docs/skills.md` under `## Methodology
-   skills`: one `### [principle-<name>]` entry per directory on disk, an
-   equality `tests/methodology.test.ts` asserts in both directions. The
-   multi-rule methodology sets — `solid`, `product-thinking`, and
-   `systems-thinking` — deliberately carry no prefix: they are preloaded
-   or agent-loaded (see the Methodology skills section above) and count
-   toward the limit like any methodology skill. A bundle of rules never
-   takes the prefix, however principle-shaped its content.
+3. **Shared principles:** five ordinary documents define human control, durable state, verified results, independent review, and focused work.
+   Execution, external-data, decisions, and bug-fix resources own the remaining operational rules.
+   Read only applicable resources from the installed skill or agent base. Stop missing reads with the exact path.
+   Twelve agent bodies read execution rules. File-finder retains its single-step contract.
+   Resources use no skill frontmatter or discovery metadata. Keep the 40 methodologies and 25 commands registered.
+   Do not add principle registrations, recursive loading, compatibility stubs, or a resource registry.
+   `solid`, `product-thinking`, and `systems-thinking` remain methodology skills and count toward preload limits.
 
 ### Codex host manifests
 
@@ -926,8 +913,7 @@ upstream and mandatory here, gated by `tests/skill-openai-yaml.test.ts`.
 
 Three fields, each derived from the skill's own `SKILL.md` frontmatter rather
 than stored twice: `display_name` title-cases the kebab `name:` through two
-closed lists (acronyms up, joiners down) with a `principle-` prefix rendered as
-`Principle: `; `short_description` is an imperative phrase in the spec's 25-64
+closed lists (acronyms up, joiners down); `short_description` is an imperative phrase in the spec's 25-64
 character window; `default_prompt` is `Use $<name> to <short_description with
 its first character lowercased>.`, using the skill's own declared name as the
 explicit-invocation token. No

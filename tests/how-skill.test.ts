@@ -113,7 +113,7 @@ describe("how skill: dispatch contract", () => {
 
   test("falls back inline when dispatch is unavailable (optimization, never dependency)", () => {
     expect(body()).toContain(
-      "principle-optimization-never-dependency",
+      "team/principles/focused-work.md",
     );
   });
 
@@ -127,7 +127,7 @@ describe("how skill: dispatch contract", () => {
 describe("how skill: critique-mode vocabulary", () => {
   test("critics are fresh-context per generator-evaluator", () => {
     const s = sliceBetween("## Critique mode", "\n## ");
-    expect(s).toContain("principle-generator-evaluator");
+    expect(s).toContain("team/principles/independent-review.md");
   });
 
   test("findings are rated structural / concern / observation", () => {

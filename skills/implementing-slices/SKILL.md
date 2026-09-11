@@ -6,6 +6,9 @@ user-invocable: false
 
 # Implementing Slices
 
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 Consume `docs/plans/<id>/`, implement one vertical slice at a time, and commit each atomically when its tests pass.
 
 ## Dispatch modes
@@ -20,7 +23,7 @@ The orchestrator supplies a typed failure class and reviewer findings. Fix every
 
 - Security: fix the vulnerability directly—parameterize queries, remove secrets, add auth, escape output; never weaken the fix.
 - Tests: change code, never the immutable tests. Code review: fix every `issue:`. Lint/format/typecheck/build: rerun until passing; use `--fix` first where available.
-- For a non-obvious failure whose first fix is a guess, call the Skill tool with `systematic-debugging` and complete **Root Cause Analysis (5 Whys)** (`principle-fix-root-causes`). Skip it for an obvious typo, named assertion, or one-line correction.
+- For a non-obvious failure whose first fix is a guess, call the Skill tool with `systematic-debugging` and complete **Root Cause Analysis (5 Whys)** ([bug fix rules](../team-fix/playbooks/bug-fix.md)). Skip it for an obvious typo, named assertion, or one-line correction.
 
 Then run the full suite, resolve every failure type from the round, and report each fix. The orchestrator re-dispatches ALL 5 reviewers.
 
@@ -34,8 +37,8 @@ Then run the full suite, resolve every failure type from the round, and report e
 ## TDD and scope invariants
 
 - Write only minimal code exercised by the current slice's tests. Do not preempt later slices; do not optimize/refactor before green. Stop if code has no test.
-- Apply `principle-subtract-before-you-add`: remove what the slice replaces before adding its replacement, and add no guard its tests do not exercise.
-- Apply `principle-scope-fence`: the plan authorizes exactly its named changes. Do NOT change acceptance tests or invent files/directories absent from the plan. Record concerns but satisfy tests as written.
+- Apply [focused work rules](../team/principles/focused-work.md): remove what the slice replaces before adding its replacement, and add no guard its tests do not exercise.
+- Apply [human control rules](../team/principles/human-control.md): the plan authorizes exactly its named changes. Do NOT change acceptance tests or invent files/directories absent from the plan. Record concerns but satisfy tests as written.
 
 ## Blockers
 

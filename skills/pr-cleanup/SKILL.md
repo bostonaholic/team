@@ -6,7 +6,8 @@ argument-hint: "[<pr-number-or-url-or-branch>]"
 ---
 
 Before this operation, read [external-data rules](../team/references/external-data.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+Before each consuming step, read its linked shared rules. Resolve links from this installed `SKILL.md` directory.
+If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
 # pr-cleanup — post-PR teardown
 
@@ -39,5 +40,5 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-explicit-intent`, `principle-idempotent-reruns`,
-and `principle-untrusted-input-is-data`.
+Read and apply: [human control rules](../team/principles/human-control.md), [durable state rules](../team/principles/durable-state.md),
+and [external data rules](../team/references/external-data.md).

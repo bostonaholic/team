@@ -215,7 +215,7 @@ function loadSet(values: string[], derived: Set<string>, names: Set<string>): st
 /**
  * Order offenders: the authored names compared to that same array under
  * `[...names].sort()` — codepoint order, so `pr-verify` precedes
- * `principle-fail-closed`. Names the first name out of place.
+ * `product-thinking`. Names the first name out of place.
  */
 function loadOrder(values: string[]): string[] {
   const sorted = [...values].sort();
@@ -458,7 +458,7 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     const clean = [
       "Lands a reviewed PR.",
       `${USED_BY_HEADER} None`,
-      `${USES_HEADER} \`pr-verify\`, \`principle-fail-closed\``,
+      `${USES_HEADER} \`pr-verify\`, \`product-thinking\``,
     ];
     expect(shape(clean)).toEqual([]);
 
@@ -538,10 +538,10 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     ).toEqual(["relationship heading remains", "relationship anchor link remains"]);
 
     // Phantom name: a field naming no skill on disk.
-    const derived = new Set(["pr-verify", "principle-fail-closed"]);
-    expect(loadSet(["pr-verify", "principle-fail-closed"], derived, NAMES)).toEqual([]);
+    const derived = new Set(["pr-verify", "product-thinking"]);
+    expect(loadSet(["pr-verify", "product-thinking"], derived, NAMES)).toEqual([]);
     expect(
-      loadSet(["pr-verify", "principle-fail-closed", "not-a-skill"], derived, NAMES),
+      loadSet(["pr-verify", "product-thinking", "not-a-skill"], derived, NAMES),
     ).not.toEqual([]);
 
     // Dropped name: a derived name the page omits.
@@ -549,14 +549,14 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
 
     // Invented edge: a name the skill only mentions, listed as if it loaded it.
     // This is the direction rule — `b` naming `a` is not `b -> a`.
-    expect(loadSet(["pr-verify", "principle-fail-closed", "shipit"], derived, NAMES)).not.toEqual(
+    expect(loadSet(["pr-verify", "product-thinking", "shipit"], derived, NAMES)).not.toEqual(
       [],
     );
 
     // Correct set, wrong order. Codepoint sort: `pr-verify` precedes
-    // `principle-fail-closed`, which a dictionary sort would reverse.
-    expect(loadOrder(["pr-verify", "principle-fail-closed"])).toEqual([]);
-    expect(loadOrder(["principle-fail-closed", "pr-verify"])).not.toEqual([]);
+    // `product-thinking`, which a dictionary sort would reverse.
+    expect(loadOrder(["pr-verify", "product-thinking"])).toEqual([]);
+    expect(loadOrder(["product-thinking", "pr-verify"])).not.toEqual([]);
   });
 
   test("the scanner takes loads and leaves every other reference behind", () => {
@@ -570,7 +570,7 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
       "# Fixture skill body",
       "",
       "Call the Skill tool with `pr-verify` before landing.",
-      "The fail-closed rule is restated at skills/principle-fail-closed/SKILL.md.",
+      "The fail-closed rule is restated at skills/product-thinking/SKILL.md.",
       "This is not a `git-commit`, and `shipit` never runs `not-a-real-skill`.",
     ].join("\n");
 
@@ -581,7 +581,7 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     expect([...namedSkills(fixture, "shipit", NAMES)].sort()).toEqual([
       "git-commit",
       "pr-verify",
-      "principle-fail-closed",
+      "product-thinking",
     ]);
   });
 });

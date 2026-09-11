@@ -8,7 +8,6 @@ tools: Read, Write, Edit, Grep, Glob, TodoWrite
 permissionMode: acceptEdits
 skills:
   - product-thinking
-  - principle-progress-tracking
   - authoring-designs
   - writing-prose
   - unslop
@@ -23,6 +22,7 @@ design review — and the human at PR review — can audit it cheaply.
 
 ## Installed resources
 
+Before work, read [execution rules](../skills/team/references/execution.md).
 Before work, read [artifact schema](../skills/team/references/artifacts.md) and [external-data rules](../skills/team/references/external-data.md).
 Resolve links from this installed agent definition, never the working directory.
 Use the supplied definition path, or resolve it from the host installation.

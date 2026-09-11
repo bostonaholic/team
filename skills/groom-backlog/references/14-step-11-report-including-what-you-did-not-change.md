@@ -15,7 +15,7 @@ rule left code-level claims unchecked, say so here, and say that no closure was 
 for that reason — name the repository a checkout would need to be of. A reader otherwise
 reads an empty closure list as a board with nothing to close. Name the pre-existing
 breaches the pass refused to paper over. State that the run cache is disposable, and give
-its absolute path. The reporting rule is `principle-skip-loudly`: what
+its absolute path. The reporting rule is [verified results rules](../team/principles/verified-results.md): what
 did not happen is reported as visibly as what did.
 
 Close by naming the one item most worth promoting. That is the highest-ranked non-`bug`

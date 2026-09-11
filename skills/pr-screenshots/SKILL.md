@@ -6,7 +6,8 @@ argument-hint: "[<pr-number-or-url>] [--entries <path>]"
 ---
 
 Before this operation, read [external-data rules](../team/references/external-data.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+Before each consuming step, read its linked shared rules. Resolve links from this installed `SKILL.md` directory.
+If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
 # pr-screenshots — inline images in any PR body
 
@@ -39,17 +40,17 @@ reader benefits from seeing it.
 - **Refuse before mutating, never after.** Every check that can run against the
   pre-image runs in step A, including `scripts/splice.mjs --check`, which is the
   structural half of the body transform run against the pre-image alone — so a
-  refusal it finds means nothing changed (`principle-fail-closed`). What can
+  refusal it finds means nothing changed ([verified results rules](../team/principles/verified-results.md)). What can
   only be computed after the upload is named, and lands on
   `uploaded-not-written` rather than on `refused`.
 - **Every caller-supplied string is data, not source and not markup.** A path,
   a caption, a note, and a failure reason each reach a command as one quoted
   `"$VAR"` expansion, and each is normalized by the same function before it
   renders into a body ([external-data rules](../team/references/external-data.md),
-  `principle-untrusted-input-is-data`).
+  [external data rules](../team/references/external-data.md)).
 - **Nothing blocks, prompts, or retry-loops.** A capability gap, a failed
   entry, or a failed read-back degrades the result and says so
-  (`principle-optimization-never-dependency`, `principle-skip-loudly`).
+  ([focused work rules](../team/principles/focused-work.md), [verified results rules](../team/principles/verified-results.md)).
 - **Never delete what you did not write.** A trailing run of stray image lines
   left by an earlier crash is reported and re-emitted below the new section,
   never removed. Anything else this skill did not write is a refusal that
@@ -78,7 +79,7 @@ reader benefits from seeing it.
 Read each reference completely when reaching that stage. Follow them in order;
 later stages depend on state and gates established earlier. Seed one TodoWrite
 item per numbered step of the reference you are in before starting it
-(`principle-progress-tracking`).
+([execution rules](../team/references/execution.md)).
 
 1. [Input and result](references/01-input-and-result.md) — PR resolution, the
    entries file, caller-string normalization, `result.json`, every refusal.
@@ -92,7 +93,7 @@ item per numbered step of the reference you are in before starting it
 
 ## Applied principles
 
-Load and apply: `principle-evidence-over-assertion`, `principle-fail-closed`,
-`principle-optimization-never-dependency`,
-`principle-progress-tracking`, `principle-skip-loudly`, and
-`principle-untrusted-input-is-data`.
+Read and apply: [verified results rules](../team/principles/verified-results.md),
+[focused work rules](../team/principles/focused-work.md),
+[execution rules](../team/references/execution.md), and
+[external data rules](../team/references/external-data.md).

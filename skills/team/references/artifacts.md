@@ -1,10 +1,10 @@
 # Artifact Frontmatter
 
-This is the schema contract for durable pipeline state under `docs/plans/<id>/`. Phase behavior lives in `skills/qrspi-workflow/SKILL.md`; files are the phase interface (`principle-files-are-the-contract`).
+This is the schema contract for durable pipeline state under `docs/plans/<id>/`. Phase behavior lives in `skills/qrspi-workflow/SKILL.md`; files are the phase interface ([durable state rules](principles/durable-state.md)).
 
 ## Artifact inventory
 
-`<id>` is `<TICKET>-<kebab-topic>` (for example `ENG-1234-add-rate-limiting`) or `<YYYY-MM-DD>-<kebab-topic>` (for example `2026-05-01-add-rate-limiting`). `hooks/session-start-recover.mjs` owns executable `ID_RE` and `PHASE_FILES` definitions (`principle-single-source-of-truth`).
+`<id>` is `<TICKET>-<kebab-topic>` (for example `ENG-1234-add-rate-limiting`) or `<YYYY-MM-DD>-<kebab-topic>` (for example `2026-05-01-add-rate-limiting`). `hooks/session-start-recover.mjs` owns executable `ID_RE` and `PHASE_FILES` definitions ([durable state rules](principles/durable-state.md)).
 
 | Artifact | Path | Created by | Required |
 |---|---|---|---|

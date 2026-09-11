@@ -1,3 +1,6 @@
+Before dispatch, resolve [focused work](../team/principles/focused-work.md). Pass their absolute installed paths with the retained brief.
+The receiver reads them before work. Missing resources stop that step with the exact path, without source fallback.
+
 ## Explain mode
 
 1. **Assess complexity.** A single module, one utility, or a narrow
@@ -20,7 +23,7 @@
 
    If the `Agent` tool or the `Explore` type is unavailable, explore
    every angle yourself inline — the fan-out is an optimization, never a
-   dependency (`principle-optimization-never-dependency`).
+   dependency ([focused work rules](../team/principles/focused-work.md)).
    Never substitute a full-tool agent silently.
 
 4. **Synthesize.** Merge the explorers' findings into one coherent

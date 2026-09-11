@@ -2,6 +2,9 @@
 agent: team-design
 tier: periodic
 deps:
+  - skills/team/principles/durable-state.md
+  - skills/team/principles/focused-work.md
+  - skills/team/references/decisions.md
   - skills/team/references/artifacts.md
   - skills/authoring-designs/SKILL.md
   - skills/authoring-designs/references/design-template.md

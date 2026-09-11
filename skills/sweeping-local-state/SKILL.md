@@ -5,7 +5,7 @@ user-invocable: false
 ---
 
 # Sweeping Local State
-
+Before each consuming step, read its linked shared rules from this installed skill directory. If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 Read [external-data rules](../team/references/external-data.md) from the installed skill directory before teardown; stop with the resolved path on failure.
 Remove only provisioned resources and recorded temp paths. Read [references/procedure.md](references/procedure.md). `skills/pr-cleanup/SKILL.md` and `worktree-isolation` own git state.
 
@@ -77,4 +77,4 @@ the author's remote branch, close the PR, or run unlanded `.teamteardown`.
 
 Report each command outcome (`ok`, `FAILED (exit N)`, or `TIMEOUT`), removed path,
 refusal, and leftover. Use `No .teamteardown on <default> — nothing declared.` or
-`No recorded temp paths.` when applicable. Never block caller teardown (`principle-skip-loudly`).
+`No recorded temp paths.` when applicable. Never block caller teardown ([verified results rules](../team/principles/verified-results.md)).

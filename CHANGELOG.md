@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Consolidate shared principles into ordinary installed resources while preserving command scope, review gates, and evaluation inputs.
 - Load artifact schemas and shell safety rules as explicit installed resources, with connected evaluation inputs.
 
 ## [0.104.0] - 2026-09-11

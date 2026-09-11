@@ -18,6 +18,7 @@ in both dispatch forms. The receiver reads those resources before acting.
 Resolve skill links from the loaded `SKILL.md` directory and agent links from
 the installed definition's directory. A resource's explicitly local template
 link resolves beside that resource. Read conditional templates only when needed.
+Include [execution rules](references/execution.md) for every multi-step Team agent, including retries and review-fix dispatch. File-finder remains single-step.
 Keep remaining skill preloads. Do not crawl links or preload the resource tree.
 If any required read fails, stop its consuming step and report the resolved path.
 Never substitute a source-checkout file for a missing installed resource.
@@ -39,7 +40,7 @@ Resolve every dispatch in this order:
    agent's body in the orchestrator's own context. Never run a **reviewer**
    inline: a reviewer sharing the author's context cannot judge it, so the
    generator/evaluator invariant is unsatisfiable. Stop and report instead
-   (`principle-generator-evaluator`).
+   ([independent review rules](principles/independent-review.md)).
 
 Capability mapping for the body-load path:
 
@@ -49,7 +50,7 @@ Capability mapping for the body-load path:
   default model and record the substitution in the run report.
 - **Tools.** Grant the subagent only the tools named in the definition's
   `tools:`. Reviewers receive no `Write` or `Edit` tool and no shell mutation
-  (`principle-least-privilege`, `principle-generator-evaluator`).
+  ([independent review rules](principles/independent-review.md)).
 - **Preloaded skills.** Hosts that honor the `skills:` YAML block inject those
   skill names automatically. On hosts that do not, name the definition's
   preloaded skill paths in the dispatch payload so the subagent reads them

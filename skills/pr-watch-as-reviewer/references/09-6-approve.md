@@ -77,7 +77,7 @@ path, there is no loop to resume and none is silently started — stop and
 report the reopened gate under the **confirmation declined** stop, and
 offer to re-arm. Neither outcome consumes a confirmation round, because
 the cap counts confirmations asked. The confirm-then-re-poll loop is
-bounded per `principle-bounded-loops`: at three
+bounded per [execution rules](../team/references/execution.md): at three
 consecutive re-polls that each trigger a new confirmation, stop without
 approving and report the churn under the **confirmation declined** stop —
 re-arming remains available.

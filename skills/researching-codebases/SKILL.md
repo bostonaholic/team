@@ -6,11 +6,14 @@ user-invocable: false
 
 # Researching Codebases
 
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 Answer every neutral question in `2-questions.md` with objective, compressed, file-referenced findings. Scope by its `Codebase context` and by repo slug/path in `4-repos.md` when present.
 
 ## Investigation contract
 
-- Every claim comes from code read in this run and cites `file:line`; trace runtime behavior beyond suggestive names (`principle-evidence-over-assertion`).
+- Every claim comes from code read in this run and cites `file:line`; trace runtime behavior beyond suggestive names ([verified results rules](../team/principles/verified-results.md)).
 - Record visible versions per repo, for example `frontend: React 18; api: Go 1.22`.
 - In multi-repo mode, record shared types/API schemas under `## Constraints` and differing conventions under `## Patterns Observed`.
 - Choose the investigation path needed to answer all questions; never infer the user's goal.
@@ -55,7 +58,7 @@ unchanged inside a labeled, untrusted-evidence fence in
 
 ## Reporting rules
 
-- Report what IS, never what SHOULD BE or recommended approaches (`principle-blind-the-investigator`).
+- Report what IS, never what SHOULD BE or recommended approaches ([independent review rules](../team/principles/independent-review.md)).
 - Compress without generalizing: retain function names, type signatures, and paths; delete prose without information.
 - If over budget, remove the least information-dense material.
 - Return underspecified questions in `## Open Questions`; never guess.

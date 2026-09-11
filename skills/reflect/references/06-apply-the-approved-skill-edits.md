@@ -10,7 +10,7 @@ Ask one `AskUserQuestion` for the whole skill-write class, presenting each
 proposed edit with its target path, the learning it lands, and its evidence
 line. Nothing is written before the answer. No answer writes nothing; a
 partial answer writes only the subset that was answered.
-The gate is `principle-plan-present-wait`: the ask and the
+The gate is [human control rules](../team/principles/human-control.md): the ask and the
 act are separate turns, and the executing turn re-reads the plan from disk.
 
 One question for the class is enough **because of the precondition below**, not
@@ -34,7 +34,7 @@ for the absolute plan path rather than guessing at one.
 The two kinds of write have different undos, so they carry different
 preconditions. Hold an edit to the tracked-and-clean fence; hold a creation to
 the absence of its target.
-This is `principle-pre-image-first`: the undo defines the
+This is [durable state rules](../team/principles/durable-state.md): the undo defines the
 precondition, and a write with no recoverable before-state does not run.
 
 **An edit** is applied only while its target is tracked and clean:

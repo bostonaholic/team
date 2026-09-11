@@ -27,4 +27,4 @@
 6. **Seed the TodoWrite ledger** with the bug-fix phases:
    `Worktree → Reproduce → Red (failing test) → Green (minimal fix) → Verify → Ship`.
    Mark `Worktree` as `in_progress`.
-   See `principle-progress-tracking` for the per-step tracking convention agents follow within each phase.
+   See [execution rules](../team/references/execution.md) for the per-step tracking convention agents follow within each phase.

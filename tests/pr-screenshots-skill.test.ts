@@ -626,7 +626,7 @@ describe("Slice 1 — skill prose (L2)", () => {
     expect(detection).toBeLessThan(attach);
 
     // Reported loudly rather than silently repaired.
-    expect(corpus()).toContain("principle-skip-loudly");
+    expect(corpus()).toContain("team/principles/verified-results.md");
   });
 
   test("Pre-merge is excluded by the anchor list, not by rule 1", () => {
@@ -2602,7 +2602,7 @@ describe("Slice 1 — resolution, normalization, and harvest (L2)", () => {
     // anyone with write access authored it, so it is data, never instruction.
     const upload = uploadRef();
     expect(upload.length).toBeGreaterThan(0);
-    expect(upload).toContain("principle-untrusted-input-is-data");
+    expect(upload).toContain("team/references/external-data.md");
     expect(squash(upload)).toContain("untrusted");
   });
 
@@ -3617,7 +3617,7 @@ describe("Slice 1 — containment, allowlist, and failure classes (L2)", () => {
     // tokens, so the rule belongs at the top of it, not only at the pre-image.
     const verify = verifyRef();
     expect(verify.length).toBeGreaterThan(0);
-    expect(verify).toContain("principle-untrusted-input-is-data");
+    expect(verify).toContain("team/references/external-data.md");
     expect(verify).toContain("body_html");
     expect(verify).toContain("/markdown");
   });

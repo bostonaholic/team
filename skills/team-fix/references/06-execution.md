@@ -7,7 +7,7 @@ When the failure is non-obvious, call the Skill tool with
 `systematic-debugging` and drill its
 **Root Cause Analysis (5 Whys)** causal chain to the root before proposing a
 fix. The fix lands at the root, never at the symptom, per
-`principle-fix-root-causes`.
+[bug fix rules](playbooks/bug-fix.md).
 
 When the buggy behavior looks deliberate — a guard, a threshold, a
 workaround, anything an author plausibly wrote on purpose — call the

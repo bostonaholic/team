@@ -169,6 +169,10 @@ function registerPlantedBugEval(options: {
           timeout: 300_000,
           testName: fixtureName,
           systemPromptAppend: loadInstructionContext([
+          "skills/team/principles/durable-state.md",
+          "skills/team/principles/independent-review.md",
+          "skills/team/principles/verified-results.md",
+          "skills/team/principles/focused-work.md",
             "skills/reviewing-code/SKILL.md",
             "skills/conventional-comments/SKILL.md",
             "skills/engineering-standards/SKILL.md",

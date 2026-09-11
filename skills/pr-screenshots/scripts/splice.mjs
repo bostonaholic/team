@@ -32,7 +32,7 @@
  * comments, ATX headings indented up to three spaces, setext headings, ticket
  * references, and standalone INLINE image lines — and **refuses any body
  * carrying a construct outside that set** rather than guessing at its
- * boundaries (`principle-fail-closed`). A raw HTML tag in ANY position — line
+ * boundaries. A raw HTML tag in ANY position — line
  * start, list item, or mid-sentence — and every non-inline image form —
  * `<img>`, `<picture>`, `![alt][ref]`, `[ref]: <url>`, a bare auto-embedded
  * URL — are outside the set and fault, because the scan can neither find their
@@ -840,7 +840,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
 
   // Exit 2, not 1: an unreadable input is an environment fault, and the caller
   // reads exit 1 as "no rule allowed the write". A stack trace on the refusal
-  // code makes those two indistinguishable (principle-fail-closed).
+  // code makes those two indistinguishable.
   const slurp = (path, label) => {
     try {
       return readFileSync(path, "utf8");

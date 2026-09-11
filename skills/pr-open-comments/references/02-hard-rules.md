@@ -10,7 +10,7 @@ weaken a rule below.
    claim exceeds 90% only when verification produced a named reproduction
    test that fails before the fix and passes after the fix is applied —
    run the passing check before any push.
-   The general rule: `principle-evidence-over-assertion` —
+   The general rule: [verified results rules](../team/principles/verified-results.md) —
    no verdict without cited evidence.
 2. **The auto-apply bar is 90%.** In default mode, an item that rates
    above 90% confidence, hits no exclusion, and stays inside the anchored
@@ -35,6 +35,6 @@ weaken a rule below.
    answer, so it waits for the user's chosen option (step 7). After you
    render the punch list, end the turn and wait for the user to pick
    actions. Each chosen action runs in a separate, follow-up turn.
-   Rules 2–4 are `principle-plan-present-wait` applied per
+   Rules 2–4 are [human control rules](../team/principles/human-control.md) applied per
    item: above a verified bar and inside every hard rule an item may skip
    the wait; everything else is presented, never auto-applied.

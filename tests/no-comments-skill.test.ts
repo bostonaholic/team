@@ -61,9 +61,9 @@ describe("no-comments skill: invocation surface", () => {
 describe("no-comments skill: reviewer separation", () => {
   test("front door loads the shared methodology and execution rules", () => {
     const text = source(FRONT_DOOR);
+    expect(text).toContain("../team/references/execution.md");
+    expect(text).toContain("../team-fix/playbooks/bug-fix.md");
     for (const dependency of [
-      "principle-fix-root-causes",
-      "principle-progress-tracking",
       "reviewing-comments",
       "running-quality-checks",
     ]) {
