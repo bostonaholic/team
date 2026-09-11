@@ -9,20 +9,19 @@ set -euo pipefail
 # Each harness has its own script beside this one, because each host installs
 # a plugin its own way. Adding a harness means adding `dev-install-<name>` and
 # `dev-uninstall-<name>`, then listing it below.
-# The Claude target also installs clone-local hooks that reinstall after
-# merge-based and rebase-based pulls. Claude Code and Codex both install by
-# copying, so a pull moves the checkout without moving what either host serves;
-# the hooks exist so that at least one host stays current without being asked.
-# They are Claude-only because Claude Code is the host that runs the pipeline,
-# so a stale copy there is the one that costs a run. Codex and Antigravity are
-# re-run by hand. That asymmetry is an implementation detail — keep it out of
-# the output the user reads.
+# Every target also installs clone-local hooks that re-run the whole dev
+# install after merge-based and rebase-based pulls. Claude Code and Codex
+# install by copying, so a pull moves the checkout without moving what either
+# host serves; the hooks keep every installed harness current without being
+# asked. The hooks are host-neutral, so they belong to the install rather than
+# to any one harness — keep harness names out of the skip message the user
+# reads.
 
 HARNESSES=(claude codex antigravity opencode)
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(dirname "$HERE")"
 HOOK_MARKER="# Managed by Team dev install."
-PULL_HOOK_SOURCE="${HERE}/dev-install-claude-pull-hook"
+PULL_HOOK_SOURCE="${HERE}/dev-install-pull-hook"
 
 resolve_pull_hooks_dir() {
   local common_dir hooks_dir
@@ -66,9 +65,9 @@ preflight_pull_hooks() {
 
 report_skipped_pull_hooks() {
   # Names the command the user actually typed, so the remedy never asks them to
-  # care that Claude is the only harness a pull can strand.
+  # care which harness installs by copying.
   echo "Skipped this clone's Git hooks (see the warning above)." >&2
-  echo "Every targeted harness installed. To keep the install current, either" >&2
+  echo "Every requested harness installed. To keep the install current, either" >&2
   echo "re-run '${INVOCATION}' after each pull, or call it from your own" >&2
   echo "post-merge and post-rewrite hooks." >&2
 }
@@ -113,19 +112,12 @@ case "${1:-}" in
     ;;
 esac
 
-CLAUDE_TARGETED=false
-for harness in "${targets[@]}"; do
-  if [ "$harness" = "claude" ]; then
-    CLAUDE_TARGETED=true
-    break
-  fi
-done
 # Decide the pull hooks before the harness output scrolls by, but never gate the
-# install on them: they only re-run the Claude installer after a pull, so a
-# hooks surface Team cannot own is a skip, not a failure.
+# install on them: they only re-run the installer after a pull, so a hooks
+# surface Team cannot own is a skip, not a failure.
 # See skills/principle-optimization-never-dependency/SKILL.md.
 PULL_HOOKS_OWNED=false
-if [ "$CLAUDE_TARGETED" = true ] && preflight_pull_hooks; then
+if preflight_pull_hooks; then
   PULL_HOOKS_OWNED=true
 fi
 
@@ -143,8 +135,6 @@ if [ ${#failed[@]} -gt 0 ]; then
   exit 1
 fi
 
-if [ "$CLAUDE_TARGETED" = true ]; then
-  if [ "$PULL_HOOKS_OWNED" = false ] || ! install_pull_hooks; then
-    report_skipped_pull_hooks
-  fi
+if [ "$PULL_HOOKS_OWNED" = false ] || ! install_pull_hooks; then
+  report_skipped_pull_hooks
 fi
